@@ -53,6 +53,10 @@ docs::
 
 lint::
 	golangci-lint run
+	go run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@v0.20.0 -test -category "-omitzero" -c 0 ./...
+
+modernize:
+	go run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@v0.20.0 -test -category "-omitzero" -fix ./...
 
 lint-ui::
 	npm run lint

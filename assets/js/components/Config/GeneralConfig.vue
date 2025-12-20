@@ -97,8 +97,7 @@ export default {
 			return settings.hiddenFeatures === true;
 		},
 		networkStatus() {
-			const { host, port } = store.state?.network || {};
-			return host ? `${host}:${port}` : `${port || ""}`;
+			return `${store.state?.network?.port ?? ""}`;
 		},
 		controlStatus() {
 			const sec = store.state?.interval;
@@ -106,7 +105,8 @@ export default {
 		},
 		sponsorStatus() {
 			const sponsor = store.state?.sponsor || {};
-			const { name, expiresSoon } = sponsor;
+			const name = sponsor.status.name;
+			const expiresSoon = sponsor.status.expiresSoon;
 			let textClass = "";
 			let badgeClass = "";
 			let title = name;

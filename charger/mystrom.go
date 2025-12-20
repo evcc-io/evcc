@@ -24,7 +24,7 @@ type MyStrom struct {
 }
 
 // NewMyStromFromConfig creates a myStrom charger from generic config
-func NewMyStromFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewMyStromFromConfig(other map[string]any) (api.Charger, error) {
 	cc := struct {
 		embed        `mapstructure:",squash"`
 		URI          string

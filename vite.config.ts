@@ -24,6 +24,7 @@ export default defineConfig({
     proxy: {
       "/api": "http://localhost:7070",
       "/i18n": "http://localhost:7070",
+      "/providerauth": "http://localhost:7070",
       "/ws": { target: "ws://localhost:7070", ws: true },
     },
   },

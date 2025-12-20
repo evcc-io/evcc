@@ -173,7 +173,7 @@ func (m *Client) Cleanup(topic string, retained bool) error {
 }
 
 // Publish asynchronously publishes payload using client qos
-func (m *Client) Publish(topic string, retained bool, payload interface{}) {
+func (m *Client) Publish(topic string, retained bool, payload any) {
 	go func() {
 		ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
 		defer cancel()

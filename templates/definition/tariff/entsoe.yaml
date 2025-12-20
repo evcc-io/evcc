@@ -24,8 +24,10 @@ params:
       de: "siehe https://transparency.entsoe.eu/content/static_content/Static%20content/web%20api/Guide.html#_areas"
       en: "see https://transparency.entsoe.eu/content/static_content/Static%20content/web%20api/Guide.html#_areas"
   - preset: tariff-base
+  - preset: tariff-features
 render: |
   type: entsoe
   securitytoken: {{ .securitytoken }}
   domain: {{ .domain }}
   {{ include "tariff-base" . }}
+  {{ include "tariff-features" . }}

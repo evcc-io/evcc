@@ -13,15 +13,6 @@ import (
 
 const ApiURL = "https://api-cardata.bmwgroup.com"
 
-var Config = oauth2.Config{
-	Scopes: []string{"authenticate_user", "openid", "cardata:streaming:read", "cardata:api:read"},
-	Endpoint: oauth2.Endpoint{
-		DeviceAuthURL: "https://customer.bmwgroup.com/gcdm/oauth/device/code",
-		TokenURL:      "https://customer.bmwgroup.com/gcdm/oauth/token",
-		AuthStyle:     oauth2.AuthStyleInParams,
-	},
-}
-
 // requiredKeys are the necessary data dictionary entities according to
 // https://mybmwweb-utilities.api.bmw/de-de/utilities/bmw/api/cd/catalogue/file
 var requiredKeys = []string{
@@ -29,12 +20,15 @@ var requiredKeys = []string{
 	"vehicle.cabin.hvac.preconditioning.status.comfortState",
 	"vehicle.drivetrain.batteryManagement.header",
 	"vehicle.drivetrain.electricEngine.charging.hvStatus",
-	"vehicle.drivetrain.electricEngine.charging.level",
-	"vehicle.drivetrain.electricEngine.charging.timeToFullyCharged",
+	"vehicle.drivetrain.electricEngine.charging.status",
+	"vehicle.drivetrain.electricEngine.charging.timeRemaining",
 	"vehicle.drivetrain.electricEngine.kombiRemainingElectricRange",
 	"vehicle.powertrain.electric.battery.stateOfCharge.target",
+	"vehicle.vehicle.preConditioning.activity",
 	"vehicle.vehicle.travelledDistance",
 }
+
+const requiredVersion = "v3"
 
 type API struct {
 	*request.Helper
@@ -78,73 +72,24 @@ func (v *API) GetContainers() ([]Container, error) {
 	if err := v.GetJSON(ApiURL+"/customers/containers", &res); err != nil {
 		return nil, err
 	}
-	return lo.Filter(res.Containers, func(c Container, _ int) bool {
-		return c.Name == "evcc.io"
-	}), nil
+	return res.Containers, nil
 }
 
-func (v *API) CreateContainer() error {
-	data := CreateContainer{
-		Name:                 "evcc.io",
-		Purpose:              "evcc.io",
-		TechnicalDescriptors: requiredKeys,
-	}
-
-	var res any
+func (v *API) CreateContainer(data CreateContainer) (Container, error) {
+	var res Container
 	req, _ := request.New(http.MethodPost, ApiURL+"/customers/containers", request.MarshalJSON(data))
+	err := v.DoJSON(req, &res)
+	return res, err
+}
+
+func (v *API) DeleteContainer(id string) error {
+	req, _ := request.New(http.MethodDelete, ApiURL+"/customers/containers/"+id, nil)
+	var res any
 	return v.DoJSON(req, &res)
 }
 
-// func (v *API) DeleteContainer() error {
-// if *deleteContainer && len(containers) == 1 {
-// 	req, _ := request.New(http.MethodDelete, apiUrl+"/customers/containers/"+containers[0].ContainerId, nil)
-
-// 	var res any
-// 	if err := client.DoJSON(req, &res); err != nil {
-// 		return err
-// 	}
-
-// 	containers = nil
-// }
-// }
-
-func (v *API) EnsureContainer() (string, error) {
-	containers, err := v.GetContainers()
-	if err != nil {
-		return "", err
-	}
-
-	if len(containers) > 0 {
-		return containers[0].ContainerId, nil
-	}
-
-	data := CreateContainer{
-		Name:    "evcc.io",
-		Purpose: "evcc.io",
-		TechnicalDescriptors: []string{
-			// https://mybmwweb-utilities.api.bmw/de-de/utilities/bmw/api/cd/catalogue/file
-			"vehicle.body.chargingPort.status",
-			"vehicle.cabin.hvac.preconditioning.status.comfortState",
-			"vehicle.drivetrain.batteryManagement.header",
-			"vehicle.drivetrain.electricEngine.charging.hvStatus",
-			"vehicle.drivetrain.electricEngine.charging.level",
-			"vehicle.drivetrain.electricEngine.charging.timeToFullyCharged",
-			"vehicle.drivetrain.electricEngine.kombiRemainingElectricRange",
-			"vehicle.powertrain.electric.battery.stateOfCharge.target",
-			"vehicle.vehicle.travelledDistance",
-		},
-	}
-
-	var res Container
-
-	req, _ := request.New(http.MethodPost, ApiURL+"/customers/containers", request.MarshalJSON(data))
-	err = v.DoJSON(req, &res)
-
-	return res.ContainerId, err
-}
-
-func (v *API) GetTelematics(vin, container string) (TelematicData, error) {
-	var res TelematicData
+func (v *API) GetTelematics(vin, container string) (ContainerContents, error) {
+	var res ContainerContents
 	uri := fmt.Sprintf(ApiURL+"/customers/vehicles/%s/telematicData?containerId=%s", vin, container)
 	err := v.GetJSON(uri, &res)
 	return res, err

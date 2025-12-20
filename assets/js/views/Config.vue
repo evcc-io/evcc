@@ -1,8 +1,18 @@
 <template>
 	<div class="root safe-area-inset">
 		<div class="container px-4">
-			<TopHeader :title="$t('config.main.title')" />
+			<TopHeader
+				ref="header"
+				:title="$t('config.main.title')"
+				:notifications="notifications"
+			/>
 			<div class="wrapper pb-5">
+				<AuthSuccessBanner
+					v-if="callbackCompleted || callbackError"
+					:provider-id="callbackCompleted"
+					:error="callbackError"
+					:auth-providers="authProviders"
+				/>
 				<WelcomeBanner v-if="loadpointsRequired" />
 				<ExperimentalBanner v-else-if="$hiddenFeatures()" />
 
@@ -80,22 +90,15 @@
 
 					<h2 class="my-4 mt-5">{{ $t("config.section.grid") }} 🧪</h2>
 					<div class="p-0 config-list">
-						<DeviceCard
+						<MeterCard
 							v-if="gridMeter"
+							:meter="gridMeter"
 							:title="$t('config.grid.title')"
-							:name="gridMeter.name"
-							:editable="!!gridMeter.id"
-							:error="hasDeviceError('meter', gridMeter.name)"
-							data-testid="grid"
-							@edit="editMeter('grid', gridMeter.id)"
-						>
-							<template #icon>
-								<shopicon-regular-powersupply></shopicon-regular-powersupply>
-							</template>
-							<template #tags>
-								<DeviceTags :tags="deviceTags('meter', gridMeter.name)" />
-							</template>
-						</DeviceCard>
+							meter-type="grid"
+							:has-error="hasDeviceError('meter', gridMeter.name)"
+							:tags="deviceTags('meter', gridMeter.name)"
+							@edit="editMeter"
+						/>
 						<NewDeviceButton
 							v-else
 							:title="$t('config.main.addGrid')"
@@ -126,48 +129,24 @@
 					</div>
 					<h2 class="my-4 mt-5">{{ $t("config.section.meter") }} 🧪</h2>
 					<div class="p-0 config-list">
-						<DeviceCard
+						<MeterCard
 							v-for="meter in pvMeters"
 							:key="meter.name"
-							:title="
-								meter.deviceTitle ||
-								meter.config?.template ||
-								$t('config.devices.solarSystem')
-							"
-							:name="meter.name"
-							:editable="!!meter.id"
-							:error="hasDeviceError('meter', meter.name)"
-							data-testid="pv"
-							@edit="editMeter('pv', meter.id)"
-						>
-							<template #icon>
-								<shopicon-regular-sun></shopicon-regular-sun>
-							</template>
-							<template #tags>
-								<DeviceTags :tags="deviceTags('meter', meter.name)" />
-							</template>
-						</DeviceCard>
-						<DeviceCard
+							:meter="meter"
+							meter-type="pv"
+							:has-error="hasDeviceError('meter', meter.name)"
+							:tags="deviceTags('meter', meter.name)"
+							@edit="editMeter"
+						/>
+						<MeterCard
 							v-for="meter in batteryMeters"
 							:key="meter.name"
-							:title="
-								meter.deviceTitle ||
-								meter.config?.template ||
-								$t('config.devices.batteryStorage')
-							"
-							:name="meter.name"
-							:editable="!!meter.id"
-							:error="hasDeviceError('meter', meter.name)"
-							data-testid="battery"
-							@edit="editMeter('battery', meter.id)"
-						>
-							<template #icon>
-								<shopicon-regular-batterythreequarters></shopicon-regular-batterythreequarters>
-							</template>
-							<template #tags>
-								<DeviceTags :tags="deviceTags('meter', meter.name)" />
-							</template>
-						</DeviceCard>
+							:meter="meter"
+							meter-type="battery"
+							:has-error="hasDeviceError('meter', meter.name)"
+							:tags="deviceTags('meter', meter.name)"
+							@edit="editMeter"
+						/>
 						<NewDeviceButton
 							:title="$t('config.main.addPvBattery')"
 							@click="addSolarBatteryMeter"
@@ -176,27 +155,24 @@
 
 					<h2 class="my-4 mt-5">{{ $t("config.section.additionalMeter") }} 🧪</h2>
 					<div class="p-0 config-list">
-						<DeviceCard
+						<MeterCard
 							v-for="meter in auxMeters"
 							:key="meter.name"
-							:title="
-								meter.deviceTitle ||
-								meter.config?.template ||
-								$t('config.devices.auxMeter')
-							"
-							:name="meter.name"
-							:editable="!!meter.id"
-							:error="hasDeviceError('meter', meter.name)"
-							data-testid="aux"
-							@edit="editMeter('aux', meter.id)"
-						>
-							<template #icon>
-								<VehicleIcon :name="meter.deviceIcon || 'smartconsumer'" />
-							</template>
-							<template #tags>
-								<DeviceTags :tags="deviceTags('meter', meter.name)" />
-							</template>
-						</DeviceCard>
+							:meter="meter"
+							meter-type="aux"
+							:has-error="hasDeviceError('meter', meter.name)"
+							:tags="deviceTags('meter', meter.name)"
+							@edit="editMeter"
+						/>
+						<MeterCard
+							v-for="meter in extMeters"
+							:key="meter.name"
+							:meter="meter"
+							meter-type="ext"
+							:has-error="hasDeviceError('meter', meter.name)"
+							:tags="deviceTags('meter', meter.name)"
+							@edit="editMeter"
+						/>
 						<NewDeviceButton
 							:title="$t('config.main.addAdditional')"
 							@click="newAdditionalMeter"
@@ -206,6 +182,11 @@
 					<h2 class="my-4 mt-5">{{ $t("config.section.integrations") }} 🧪</h2>
 
 					<div class="p-0 config-list">
+						<AuthProvidersCard
+							:providers="authProviders"
+							data-testid="auth-providers"
+							@auth-request="handleProviderAuthRequest"
+						/>
 						<DeviceCard
 							:title="$t('config.mqtt.title')"
 							editable
@@ -252,6 +233,18 @@
 							<template #icon><EebusIcon /></template>
 							<template #tags>
 								<DeviceTags :tags="eebusTags" />
+							</template>
+						</DeviceCard>
+						<DeviceCard
+							:title="$t('config.ocpp.title')"
+							editable
+							:error="hasClassError('ocpp')"
+							data-testid="ocpp"
+							@edit="openModal('ocppModal')"
+						>
+							<template #icon><OcppIcon /></template>
+							<template #tags>
+								<DeviceTags :tags="ocppTags" />
 							</template>
 						</DeviceCard>
 
@@ -351,20 +344,24 @@
 					:chargerValues="deviceValues['charger']"
 					:meters="meters"
 					:circuits="circuits"
-					:fade="loadpointSubModalOpen ? 'left' : ''"
+					:fade="loadpointSubModalOpen ? 'left' : undefined"
 					:hasDeviceError="hasDeviceError"
 					@updated="loadpointChanged"
 					@open-charger-modal="editLoadpointCharger"
 					@open-meter-modal="editLoadpointMeter"
 					@opened="loadpointSubModalOpen = false"
 				/>
-				<VehicleModal :id="selectedVehicleId" @vehicle-changed="vehicleChanged" />
+				<VehicleModal
+					:id="selectedVehicleId"
+					:is-sponsor="isSponsor"
+					@vehicle-changed="vehicleChanged"
+				/>
 				<MeterModal
 					:id="selectedMeterId"
-					:name="selectedMeterName"
 					:type="selectedMeterType"
 					:typeChoices="selectedMeterTypeChoices"
-					:fade="loadpointSubModalOpen ? 'right' : ''"
+					:fade="loadpointSubModalOpen ? 'right' : undefined"
+					:is-sponsor="isSponsor"
 					@added="meterAdded"
 					@updated="meterChanged"
 					@removed="meterRemoved"
@@ -372,10 +369,10 @@
 				/>
 				<ChargerModal
 					:id="selectedChargerId"
-					:name="selectedChargerName"
 					:loadpointType="selectedLoadpointType"
-					:fade="loadpointSubModalOpen ? 'right' : ''"
-					:isSponsor="isSponsor"
+					:fade="loadpointSubModalOpen ? 'right' : undefined"
+					:is-sponsor="isSponsor"
+					:ocpp="ocpp"
 					@added="chargerAdded"
 					@updated="chargerChanged"
 					@removed="chargerRemoved"
@@ -385,21 +382,22 @@
 				<MqttModal @changed="loadDirty" />
 				<NetworkModal @changed="loadDirty" />
 				<ControlModal @changed="loadDirty" />
-				<SponsorModal :error="hasClassError('sponsorship')" @changed="loadDirty" />
-				<HemsModal @changed="yamlChanged" />
+				<HemsModal :fromYaml="hems?.fromYaml" @changed="yamlChanged" />
 				<ShmModal @changed="loadDirty" />
 				<MessagingModal @changed="yamlChanged" />
 				<TariffsModal @changed="yamlChanged" />
 				<TelemetryModal :sponsor="sponsor" :telemetry="telemetry" />
-				<ModbusProxyModal @changed="yamlChanged" />
+				<ModbusProxyModal :is-sponsor="isSponsor" @changed="loadDirty" />
 				<CircuitsModal
 					:gridMeter="gridMeter"
 					:extMeters="extMeters"
 					@changed="yamlChanged"
 				/>
 				<EebusModal @changed="yamlChanged" />
+				<OcppModal :ocpp="ocpp" />
 				<BackupRestoreModal v-bind="backupRestoreProps" />
 				<PasswordModal update-mode />
+				<SponsorModal :error="hasClassError('sponsorship')" @changed="loadDirty" />
 			</div>
 		</div>
 	</div>
@@ -421,6 +419,8 @@ import DeviceCard from "../components/Config/DeviceCard.vue";
 import DeviceTags from "../components/Config/DeviceTags.vue";
 import EebusIcon from "../components/MaterialIcon/Eebus.vue";
 import EebusModal from "../components/Config/EebusModal.vue";
+import OcppIcon from "../components/MaterialIcon/Ocpp.vue";
+import OcppModal from "../components/Config/OcppModal.vue";
 import formatter from "../mixins/formatter";
 import GeneralConfig from "../components/Config/GeneralConfig.vue";
 import HemsIcon from "../components/MaterialIcon/Hems.vue";
@@ -433,6 +433,7 @@ import LoadpointModal from "../components/Config/LoadpointModal.vue";
 import LoadpointIcon from "../components/MaterialIcon/Loadpoint.vue";
 import MessagingModal from "../components/Config/MessagingModal.vue";
 import MeterModal from "../components/Config/MeterModal.vue";
+import MeterCard from "../components/Config/MeterCard.vue";
 import Modal from "bootstrap/js/dist/modal";
 import ModbusProxyIcon from "../components/MaterialIcon/ModbusProxy.vue";
 import ModbusProxyModal from "../components/Config/ModbusProxyModal.vue";
@@ -448,7 +449,7 @@ import TelemetryModal from "../components/Config/TelemetryModal.vue";
 import Header from "../components/Top/Header.vue";
 import VehicleIcon from "../components/VehicleIcon";
 import VehicleModal from "../components/Config/VehicleModal.vue";
-import { defineComponent } from "vue";
+import { defineComponent, type PropType } from "vue";
 import type {
 	Circuit,
 	ConfigCharger,
@@ -458,16 +459,19 @@ import type {
 	ConfigMeter,
 	LoadpointType,
 	Timeout,
-	SelectedMeterType,
+	MeterType,
 	SiteConfig,
 	DeviceType,
+	Notification,
 } from "@/types/evcc";
 
 type DeviceValuesMap = Record<DeviceType, Record<string, any>>;
 import BackupRestoreModal from "@/components/Config/BackupRestoreModal.vue";
 import WelcomeBanner from "../components/Config/WelcomeBanner.vue";
 import ExperimentalBanner from "../components/Config/ExperimentalBanner.vue";
+import AuthSuccessBanner from "../components/Config/AuthSuccessBanner.vue";
 import PasswordModal from "../components/Auth/PasswordModal.vue";
+import AuthProvidersCard from "../components/Config/AuthProvidersCard.vue";
 
 export default defineComponent({
 	name: "Config",
@@ -482,7 +486,10 @@ export default defineComponent({
 		DeviceTags,
 		EebusIcon,
 		EebusModal,
+		OcppIcon,
+		OcppModal,
 		ExperimentalBanner,
+		AuthSuccessBanner,
 		GeneralConfig,
 		HemsIcon,
 		HemsModal,
@@ -492,6 +499,7 @@ export default defineComponent({
 		InfluxModal,
 		MessagingModal,
 		MeterModal,
+		MeterCard,
 		LoadpointModal,
 		LoadpointIcon,
 		ModbusProxyIcon,
@@ -508,11 +516,12 @@ export default defineComponent({
 		VehicleModal,
 		WelcomeBanner,
 		PasswordModal,
+		AuthProvidersCard,
 	},
 	mixins: [formatter, collector],
 	props: {
 		offline: Boolean,
-		notifications: Array,
+		notifications: { type: Array as PropType<Notification[]>, default: () => [] },
 	},
 	data() {
 		return {
@@ -523,8 +532,8 @@ export default defineComponent({
 			circuits: [] as ConfigCircuit[],
 			selectedVehicleId: undefined as number | undefined,
 			selectedMeterId: undefined as number | undefined,
-			selectedMeterType: undefined as SelectedMeterType | undefined,
-			selectedMeterTypeChoices: [] as string[],
+			selectedMeterType: undefined as MeterType | undefined,
+			selectedMeterTypeChoices: [] as MeterType[],
 			selectedChargerId: undefined as number | undefined,
 			selectedLoadpointId: undefined as number | undefined,
 			selectedLoadpointType: undefined as LoadpointType | undefined,
@@ -552,6 +561,15 @@ export default defineComponent({
 		return { title: this.$t("config.main.title") };
 	},
 	computed: {
+		callbackCompleted() {
+			return this.$route.query["callbackCompleted"] as string | undefined;
+		},
+		callbackError() {
+			return this.$route.query["callbackError"] as string | undefined;
+		},
+		authProviders() {
+			return store.state?.authProviders;
+		},
 		loadpointsRequired() {
 			return this.loadpoints.length === 0;
 		},
@@ -640,8 +658,11 @@ export default defineComponent({
 		shmTags() {
 			return { configured: { value: true } };
 		},
+		hems() {
+			return store.state?.hems;
+		},
 		hemsTags() {
-			const { type } = store.state?.hems || {};
+			const type = this.hems?.config?.type;
 			if (!type) {
 				return { configured: { value: false } };
 			}
@@ -660,12 +681,14 @@ export default defineComponent({
 
 			return result;
 		},
-		isSponsor() {
-			const { name } = store.state?.sponsor || {};
-			return !!name;
-		},
 		sponsor() {
 			return store.state?.sponsor;
+		},
+		isSponsor(): boolean {
+			return !!this.sponsor?.status.name;
+		},
+		ocpp() {
+			return store.state?.ocpp;
 		},
 		telemetry() {
 			// @ts-expect-error: telemetry property exists but not in TypeScript definitions
@@ -673,6 +696,28 @@ export default defineComponent({
 		},
 		eebusTags() {
 			return { configured: { value: store.state?.eebus || false } };
+		},
+		ocppTags() {
+			const ocpp = store.state?.ocpp;
+			const stations = ocpp?.status?.stations || [];
+			if (stations.length === 0) {
+				return { configured: { value: false } };
+			}
+
+			const connected = stations.filter((s) => s.status === "connected").length;
+			const configured = stations.filter((s) => s.status === "configured").length;
+			const detected = stations.filter((s) => s.status === "unknown").length;
+			const total = connected + configured;
+
+			const tags: Record<string, any> = {
+				connections: { value: `${connected}/${total}` },
+			};
+
+			if (detected > 0) {
+				tags["detected"] = { value: detected };
+			}
+
+			return tags;
 		},
 		modbusproxyTags() {
 			const config = store.state?.modbusproxy || [];
@@ -777,11 +822,13 @@ export default defineComponent({
 			const response = await api.get("/config/loadpoints");
 			this.loadpoints = response.data || [];
 		},
-		getMetersByNames(names: string[] | null) {
+		getMetersByNames(names: string[] | null): ConfigMeter[] {
 			if (!names || !this.meters) {
 				return [];
 			}
-			return this.meters.filter((m) => names.includes(m.name));
+			return names
+				.map((name) => this.meters.find((m) => m.name === name))
+				.filter((m): m is ConfigMeter => m !== undefined);
 		},
 		getMeterById(id?: number) {
 			if (!id || !this.meters) {
@@ -835,12 +882,12 @@ export default defineComponent({
 			this.loadpointModal().hide();
 			this.$nextTick(() => this.editMeter("charge", meter?.id));
 		},
-		editMeter(type: SelectedMeterType, id?: number) {
+		editMeter(type: MeterType, id?: number) {
 			this.selectedMeterType = type;
 			this.selectedMeterId = id;
 			this.$nextTick(() => this.meterModal().show());
 		},
-		newMeter(type: SelectedMeterType) {
+		newMeter(type: MeterType) {
 			this.selectedMeterId = undefined;
 			this.selectedMeterType = type;
 			this.$nextTick(() => this.meterModal().show());
@@ -848,13 +895,13 @@ export default defineComponent({
 		addSolarBatteryMeter() {
 			this.selectedMeterId = undefined;
 			this.selectedMeterType = undefined;
-			this.selectedMeterTypeChoices = ["pv", "battery"];
+			this.selectedMeterTypeChoices = ["pv", "battery"] as MeterType[];
 			this.$nextTick(() => this.meterModal().show());
 		},
 		newAdditionalMeter() {
 			this.selectedMeterId = undefined;
 			this.selectedMeterType = undefined;
-			this.selectedMeterTypeChoices = ["aux", "ext"];
+			this.selectedMeterTypeChoices = ["aux", "ext"] as MeterType[];
 			this.$nextTick(() => this.meterModal().show());
 		},
 		editCharger(id?: number, loadpointType?: LoadpointType) {
@@ -909,7 +956,7 @@ export default defineComponent({
 		yamlChanged() {
 			this.loadDirty();
 		},
-		meterAdded(type: SelectedMeterType, name: string) {
+		meterAdded(type: MeterType, name: string) {
 			if (type === "charge") {
 				// update loadpoint
 				(
@@ -943,7 +990,7 @@ export default defineComponent({
 			}
 			this.meterChanged();
 		},
-		meterRemoved(type: SelectedMeterType) {
+		meterRemoved(type: MeterType) {
 			if (type === "charge") {
 				// update loadpoint
 				(
@@ -1076,6 +1123,10 @@ export default defineComponent({
 			const charger = this.chargers.find((c) => c.name === chargerName);
 
 			return charger?.config?.icon || this.deviceValues["charger"][chargerName]?.icon?.value;
+		},
+		handleProviderAuthRequest(providerId: string) {
+			const header = this.$refs["header"] as InstanceType<typeof Header> | undefined;
+			header?.requestAuthProvider(providerId);
 		},
 	},
 });

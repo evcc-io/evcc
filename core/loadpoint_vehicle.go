@@ -3,7 +3,6 @@ package core
 import (
 	"errors"
 	"regexp"
-	"slices"
 	"strings"
 	"time"
 
@@ -219,8 +218,7 @@ func (lp *Loadpoint) unpublishVehicle() {
 
 // vehicleHasFeature checks availability of vehicle feature
 func (lp *Loadpoint) vehicleHasFeature(f api.Feature) bool {
-	v, ok := lp.GetVehicle().(api.FeatureDescriber)
-	return ok && slices.Contains(v.Features(), f)
+	return hasFeature(lp.GetVehicle(), f)
 }
 
 // vehicleUnidentified returns true if there are associated vehicles and detection is running.
@@ -321,20 +319,17 @@ func (lp *Loadpoint) vehicleOdometer() {
 
 // vehicleClimatePollAllowed determines if polling depending on mode and connection status
 func (lp *Loadpoint) vehicleClimatePollAllowed() bool {
-	switch {
-	case lp.Soc.Poll.Mode == loadpoint.PollCharging && lp.charging():
+	if lp.charging() || lp.vehicleHasFeature(api.Streaming) {
 		return true
-	case (lp.Soc.Poll.Mode == loadpoint.PollConnected || lp.Soc.Poll.Mode == loadpoint.PollAlways) && lp.connected():
-		return true
-	default:
-		return false
 	}
+
+	return (lp.Soc.Poll.Mode == loadpoint.PollConnected || lp.Soc.Poll.Mode == loadpoint.PollAlways) && lp.connected()
 }
 
 // vehicleSocPollAllowed validates charging state against polling mode
 func (lp *Loadpoint) vehicleSocPollAllowed() bool {
 	// always update soc when charging
-	if lp.charging() {
+	if lp.charging() || lp.vehicleHasFeature(api.Streaming) {
 		return true
 	}
 

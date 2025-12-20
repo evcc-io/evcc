@@ -34,7 +34,17 @@ export interface InfluxConfig {
 }
 
 export interface HemsConfig {
-  type: any;
+  type: string;
+}
+
+export interface HemsStatus {
+  maxPower: number;
+}
+
+export interface Hems {
+  status?: HemsStatus;
+  config: HemsConfig;
+  fromYaml: boolean;
 }
 
 export interface ShmConfig {
@@ -50,26 +60,30 @@ export interface FatalError {
 
 export interface State {
   offline: boolean;
-  startup?: boolean;
+  setupRequired?: boolean;
+  startupCompleted?: boolean;
   loadpoints: Loadpoint[];
-  forecast?: Forecast;
+  forecast: Forecast;
   currency?: CURRENCY;
   fatal?: FatalError[];
   authProviders?: AuthProviders;
   evopt?: EvOpt;
   version?: string;
-  battery?: Battery[];
+  battery?: BatteryMeter[];
+  pv?: Meter[];
+  aux?: Meter[];
+  ext?: Meter[];
   tariffGrid?: number;
   tariffFeedIn?: number;
   tariffCo2?: number;
   tariffSolar?: number;
   mqtt?: MqttConfig;
   influx?: InfluxConfig;
-  hems?: HemsConfig;
+  hems?: Hems;
   shm?: ShmConfig;
   sponsor?: Sponsor;
   eebus?: any;
-  modbusproxy?: [];
+  modbusproxy?: ModbusProxy[];
   messaging?: any;
   interval?: number;
   circuits?: Record<string, Circuit>;
@@ -78,6 +92,32 @@ export interface State {
   authDisabled?: boolean;
   config?: string;
   database?: string;
+  ocpp?: Ocpp;
+}
+
+export interface OcppConfig {
+  port: number;
+}
+
+export interface OcppStatus {
+  externalUrl?: string;
+  stations: OcppStationStatus[];
+}
+
+export interface Ocpp {
+  config: OcppConfig;
+  status: OcppStatus;
+}
+
+export interface OcppStationStatus {
+  id: string;
+  status: OCPP_STATION_STATUS;
+}
+
+export enum OCPP_STATION_STATUS {
+  UNKNOWN = "unknown",
+  CONFIGURED = "configured",
+  CONNECTED = "connected",
 }
 
 export interface Config {
@@ -109,7 +149,8 @@ export enum ConfigType {
   Heatpump = "heatpump",
   SwitchSocket = "switchsocket",
   SgReady = "sgready",
-  SgReadyBoost = "sgready-boost",
+  SgReadyRelay = "sgready-relay",
+  SgReadyBoost = "sgready-boost", // deprecated
 }
 
 export type ConfigVehicle = Entity;
@@ -257,6 +298,8 @@ export interface UiLoadpoint extends Loadpoint {
   icon: string;
   order: number | null;
   visible: boolean;
+  lastSmartCostLimit: number | undefined;
+  lastSmartFeedInPriorityLimit: number | undefined;
 }
 
 export enum THEME {
@@ -338,12 +381,67 @@ export type SessionInfoKey =
   | "price"
   | "co2";
 
-export interface Sponsor {
-  name: string;
-  expiresAt: string;
-  expiresSoon: boolean;
+export interface SponsorStatus {
+  name?: string;
+  expiresAt?: string;
+  expiresSoon?: boolean;
   token?: string;
+}
+
+export interface Sponsor {
+  status: SponsorStatus;
   fromYaml: boolean;
+}
+
+export enum MODBUS_BAUDRATE {
+  _1200 = 1200,
+  _9600 = 9600,
+  _19200 = 19200,
+  _38400 = 38400,
+  _57600 = 57600,
+  _115200 = 115200,
+}
+
+export enum MODBUS_TYPE {
+  RS485_SERIAL = "rs485serial",
+  RS485_TCPIP = "rs485tcpip",
+  TCPIP = "tcpip",
+}
+
+export enum MODBUS_COMSET {
+  _8N1 = "8N1",
+  _8E1 = "8E1",
+  _8N2 = "8N2",
+}
+
+export enum MODBUS_PROXY_READONLY {
+  FALSE = "false",
+  TRUE = "true",
+  DENY = "deny",
+}
+
+export enum MODBUS_CONNECTION {
+  TCPIP = "tcpip",
+  SERIAL = "serial",
+}
+
+export enum MODBUS_PROTOCOL {
+  TCP = "tcp",
+  RTU = "rtu",
+}
+
+export type ModbusProxy = {
+  port: number;
+  readonly: MODBUS_PROXY_READONLY;
+  settings: ModbusProxySettings;
+};
+
+export interface ModbusProxySettings {
+  uri?: string;
+  rtu?: boolean;
+  device?: string;
+  baudrate?: MODBUS_BAUDRATE;
+  comset?: MODBUS_COMSET;
 }
 
 export interface Notification {
@@ -354,12 +452,17 @@ export interface Notification {
   count: number;
 }
 
-export interface Battery {
+export interface Meter {
   power: number;
+  title?: string;
+  icon?: string;
+  energy?: number;
+}
+
+export interface BatteryMeter extends Meter {
   soc: number;
   controllable: boolean;
   capacity: number; // 0 when not specified
-  title?: string;
 }
 
 export interface Vehicle {
@@ -367,7 +470,7 @@ export interface Vehicle {
   minSoc?: number;
   limitSoc?: number;
   plan?: StaticPlan;
-  repeatingPlans: RepeatingPlan[];
+  repeatingPlans: RepeatingPlan[] | null;
   title: string;
   features?: string[];
   capacity?: number;
@@ -415,7 +518,8 @@ export interface SelectOption<T> {
 }
 
 export type DeviceType = "charger" | "meter" | "vehicle" | "loadpoint";
-export type SelectedMeterType = "grid" | "pv" | "battery" | "charge" | "aux" | "ext";
+export type MeterType = "grid" | "pv" | "battery" | "charge" | "aux" | "ext";
+export type MeterTemplateUsage = "grid" | "pv" | "battery" | "charge" | "aux";
 
 // see https://stackoverflow.com/a/54178819
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;

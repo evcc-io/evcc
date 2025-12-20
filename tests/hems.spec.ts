@@ -29,6 +29,49 @@ test.afterEach(async () => {
 const CONFIG = "fast.evcc.yaml";
 
 test.describe("HEMS", () => {
+  test("grid sessions", async ({ page }) => {
+    await start(CONFIG, "hems.sql");
+    await page.goto("/#/config");
+    await enableExperimental(page);
+
+    await page.getByTestId("hems").getByRole("button", { name: "edit" }).click();
+    const hemsModal = page.getByTestId("hems-modal");
+    await expectModalVisible(hemsModal);
+
+    await expect(hemsModal.getByTestId("grid-sessions")).toBeVisible();
+    await expect(hemsModal).toContainText("Recorded 3 grid limitation events");
+    await expect(hemsModal).toContainText("Most recent");
+
+    const csvLink = hemsModal.getByRole("link", { name: "Download CSV" });
+    await expect(csvLink).toHaveAttribute("href", /\.\/api\/gridsessions\?format=csv&lang=en/);
+
+    await expect(hemsModal.getByTestId("yaml-editor")).toBeVisible();
+    await expect(hemsModal.getByRole("button", { name: "Save" })).toBeVisible();
+    await expect(hemsModal).not.toContainText("Configured via evcc.yaml");
+
+    await hemsModal.getByRole("button", { name: "Cancel" }).click();
+    await expectModalHidden(hemsModal);
+  });
+
+  test("modal yaml-configured", async ({ page }) => {
+    await start("hems-yaml.evcc.yaml");
+    await page.goto("/#/config");
+    await enableExperimental(page);
+
+    await page.getByTestId("hems").getByRole("button", { name: "edit" }).click();
+    const hemsModal = page.getByTestId("hems-modal");
+    await expectModalVisible(hemsModal);
+
+    await expect(hemsModal.getByTestId("grid-sessions")).not.toBeVisible();
+    await expect(hemsModal).toContainText("Configured via evcc.yaml");
+    await expect(hemsModal.getByTestId("yaml-editor")).not.toBeVisible();
+    await expect(hemsModal.getByRole("button", { name: "Save" })).not.toBeVisible();
+    await expect(hemsModal.getByRole("button", { name: "Cancel" })).toBeVisible();
+
+    await hemsModal.getByRole("button", { name: "Cancel" }).click();
+    await expectModalHidden(hemsModal);
+  });
+
   test("configure loadmanagement and hems via UI, verify logic", async ({ page }) => {
     await start(CONFIG);
 
