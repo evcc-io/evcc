@@ -8,8 +8,9 @@
 			/>
 			<div class="wrapper pb-5">
 				<AuthSuccessBanner
-					v-if="callbackCompleted"
+					v-if="callbackCompleted || callbackError"
 					:provider-id="callbackCompleted"
+					:error="callbackError"
 					:auth-providers="authProviders"
 				/>
 
@@ -562,6 +563,9 @@ export default defineComponent({
 	computed: {
 		callbackCompleted() {
 			return this.$route.query["callbackCompleted"] as string | undefined;
+		},
+		callbackError() {
+			return this.$route.query["callbackError"] as string | undefined;
 		},
 		authProviders() {
 			return store.state?.authProviders;
