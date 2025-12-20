@@ -135,6 +135,16 @@ const updateOcppState = () => {
   }));
 };
 
+const demoAuthMiddleware = (
+  _req: Connect.IncomingMessage,
+  _res: ServerResponse,
+  next: Connect.NextFunction
+) => {
+  // Mock login requests are now handled by the Vue app
+  // This middleware is kept for potential future extensions
+  next();
+};
+
 const ocppMiddleware = (
   req: Connect.IncomingMessage,
   res: ServerResponse,
@@ -213,6 +223,7 @@ export default () => ({
       server.middlewares.use(openemsMiddleware);
       server.middlewares.use(teslaloggerMiddleware);
       server.middlewares.use(shellyMiddleware);
+      server.middlewares.use(demoAuthMiddleware);
       server.middlewares.use(ocppMiddleware);
     };
   },
