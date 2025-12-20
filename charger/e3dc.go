@@ -55,7 +55,7 @@ func init() {
 //   - key: RSCP encryption key (configured in E3DC Hauskraftwerk settings)
 //   - id: Wallbox index (0 = first wallbox)
 //   - timeout: Connection timeout (optional)
-func NewE3dcFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewE3dcFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		Uri      string
 		User     string

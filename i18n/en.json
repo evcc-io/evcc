@@ -2,7 +2,9 @@
   "authProviders": {
     "authCode": "Authentication Code",
     "authCodeHelp": "Copy this code and use it in the next step. Valid for {duration}.",
+    "authorizationFailed": "Authorization Failed",
     "authorizationRequired": "Authorization Required",
+    "authorizationSuccessful": "Authorization Successful",
     "buttonConnect": "Connect to {provider}",
     "buttonDisconnect": "Disconnect",
     "confirmLogout": "Are you sure you want to disconnect {title}?",
@@ -12,7 +14,7 @@
     "logoutFailed": "Failed to logout",
     "modalDescriptionLogin": "Complete the authorization process to establish connection with {provider}.",
     "modalDescriptionLogout": "This will disconnect your {provider} account and remove access to its data.",
-    "success": "Authorization with {title} was successful.",
+    "success": "{title} is now connected and ready to use.",
     "successCloseModal": "You can now close this dialog.",
     "successCloseTab": "You can now close this tab.",
     "title": "Authorization Status"
@@ -727,6 +729,8 @@
       "maximumCurrentHelp": "Must be greater than minimum current.",
       "maximumPhases": "Maximum phases",
       "maximumPhasesHelp": "How many phases can this vehicle charge with? Used to calculate required minimum solar surplus and plan duration.",
+      "maximumPower": "Maximum charging power",
+      "maximumPowerHelp": "Maximum power the vehicle can consume",
       "minimumCurrent": "Minimum current",
       "minimumCurrentHelp": "Only go below 6A if you know what you're doing.",
       "online": "Vehicles with online API",
