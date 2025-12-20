@@ -110,8 +110,8 @@ func NewHTTP(log *util.Logger, method, uri string, insecure bool, cache time.Dur
 		// remove no-cache response headers
 		p.Client.Transport = &transport.Modifier{
 			Modifier: func(resp *http.Response) error {
-				resp.Header.Del("Cache-Control")
-				resp.Header.Del("Pragma")
+				dropNoCache(resp, "Cache-Control")
+				dropNoCache(resp, "Pragma")
 				return nil
 			},
 			Base: p.Client.Transport,
@@ -140,6 +140,24 @@ func NewHTTP(log *util.Logger, method, uri string, insecure bool, cache time.Dur
 	}
 
 	return p
+}
+
+func dropNoCache(resp *http.Response, header string) {
+	if h := resp.Header.Get(header); h != "" {
+		var hh []string
+
+		for _, h := range strings.Split(h, ",") {
+			if s := strings.TrimSpace(h); strings.ToLower(s) != "no-cache" {
+				hh = append(hh, s)
+			}
+		}
+
+		if len(hh) == 0 {
+			resp.Header.Del(header)
+		} else {
+			resp.Header.Set(header, strings.Join(hh, ","))
+		}
+	}
 }
 
 // WithBody adds request body
