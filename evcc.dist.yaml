@@ -149,6 +149,12 @@ tariffs:
         price: 0.2 # EUR/kWh
       - days: Sat,Sun
         price: 0.15 # EUR/kWh
+    # or variable/dynamic grid price (examples):
+    # type: template
+    # template: pstryk-pl # Poland - Pstryk.pl day-ahead pricing
+    # token: sk-your-token-here # get from Pstryk App
+    # plan: pricing # or "prosumer-pricing"
+    # interval: 12h # REQUIRED to avoid API rate limits (429 errors)
     # see: https://docs.evcc.io/en/docs/devices/tariffs
   feedin:
     # rate for feeding excess (pv) energy to the grid

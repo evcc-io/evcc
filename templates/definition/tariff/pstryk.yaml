@@ -1,10 +1,10 @@
-template: pstryk
+template: pstryk-pl
 products:
   - brand: Pstryk.pl
 requirements:
   description:
-    en: "Get your API token from the Pstryk App"
-    de: "Hol dir deinen API-Token aus der Pstryk App"
+    en: "Get your API token from the Pstryk App. IMPORTANT: Add 'interval: 12h' to your tariff config to avoid rate limiting (429 errors)."
+    de: "Hol dir deinen API-Token aus der Pstryk App. WICHTIG: Füge 'interval: 12h' zu deiner Tarif-Konfiguration hinzu, um Rate-Limiting (429-Fehler) zu vermeiden."
   evcc: ["skiptest"]
 group: price
 countries: ["PL"]
@@ -36,16 +36,25 @@ render: |
   {{ include "tariff-base" . }}
   forecast:
     source: http
-    timeout: 5s
-    cache: 24h
-    uri: uri: https://api.pstryk.pl/integrations/pricing/?resolution=hour&window_start={{ (dateModify "-24h" now) | dateInZone "2006-01-02" "Europe/Warsaw" }}T{{ if eq (now.Local | date "MST") "CEST" }}22:00:00Z{{ else }}23:00:00Z{{ end }}&window_end={{ if lt (now | dateInZone "15" "Europe/Warsaw") "13" }}{{ now | dateInZone "2006-01-02" "Europe/Warsaw" }}{{ else }}{{ (dateModify "+24h" now) | dateInZone "2006-01-02" "Europe/Warsaw" }}{{ end }}T{{ if eq (now.Local | date "MST") "CEST" }}22:00:00Z{{ else }}23:00:00Z{{ end }}
+    timeout: 10s
+    cache: 12h
+    uri: https://api.pstryk.pl/integrations/{{ .plan }}/?resolution=hour&window_start={{ `{{ dateModify "-24h" now | dateInZone "2006-01-02" "Europe/Warsaw" }}T{{ if eq (dateInZone "MST" "Europe/Warsaw" now) "CEST" }}22:00:00Z{{ else }}23:00:00Z{{ end }}` }}&window_end={{ `{{ dateModify "+48h" now | dateInZone "2006-01-02" "Europe/Warsaw" }}T{{ if eq (dateInZone "MST" "Europe/Warsaw" now) "CEST" }}22:00:00Z{{ else }}23:00:00Z{{ end }}` }}
     headers:
       Authorization: {{ .token }}
       Accept: application/json
       User-Agent: evcc-pstryk-template
     jq: |
-      [ (.frames // [])[]
-        | { start: (.start | sub("\\+00:00$"; "Z")),
-            end:   (.end   | sub("\\+00:00$"; "Z")),
-            value: .price_gross }
+      (.frames // []) as $all
+      | ($all[-24:] | map(.price_gross) | add) as $last24_sum
+      | ($all[-24:] | length) as $last24_count
+      | (if $last24_sum == 0 and $last24_count >= 20
+         then $all[:-24]
+         else $all
+         end) as $filtered
+      | [$filtered[]
+        | {
+          start: (.start | sub("\\+00:00$"; "Z")),
+          end: (.end | sub("\\+00:00$"; "Z")),
+          value: .price_gross
+        }
       ]

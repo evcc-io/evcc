@@ -1,4 +1,12 @@
-## required attributes
+## Template-based meter example (recommended)
+## Use WebUI device selector to configure automatically
+
+#type: template
+#template: pstryk # Pstryk.pl 3-phase meter
+#usage: grid # or "pv" or "charge"
+#host: 192.168.1.100 # meter IP address
+
+## Custom meter example (advanced)
 
 power: # current power
   source: const
