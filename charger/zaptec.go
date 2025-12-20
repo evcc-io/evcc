@@ -106,12 +106,12 @@ func NewZaptec(ctx context.Context, user, password, id string, priority bool, pa
 
 	// Create a separate HTTP client for OAuth token requests to avoid circular dependency
 	// (c.Transport will be modified to use oauth2.Transport, which would create a loop)
-	tokenClient := &http.Client{
+	tsCtx := context.WithValue(context.Background(), oauth2.HTTPClient, &http.Client{
 		Transport: c.Transport,
-	}
+	})
 
 	// Get shared token source for this user (per-user uniqueness)
-	ts, err := zaptec.GetTokenSource(ctx, tokenClient, user, password)
+	ts, err := zaptec.GetTokenSource(tsCtx, user, password)
 	if err != nil {
 		return nil, err
 	}

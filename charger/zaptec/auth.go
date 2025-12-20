@@ -3,7 +3,6 @@ package zaptec
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"sync"
 
 	"github.com/coreos/go-oidc/v3/oidc"
@@ -44,7 +43,7 @@ func getOIDCProvider(ctx context.Context) (*oidc.Provider, error) {
 // GetTokenSource returns a shared oauth2.TokenSource for the given user credentials.
 // Multiple chargers using the same user credentials will share the same TokenSource,
 // ensuring tokens are reused and authentication is deduplicated.
-func GetTokenSource(ctx context.Context, httpClient *http.Client, user, pass string) (oauth2.TokenSource, error) {
+func GetTokenSource(ctx context.Context, user, pass string) (oauth2.TokenSource, error) {
 	tokenSourceMu.Lock()
 	defer tokenSourceMu.Unlock()
 
@@ -66,10 +65,8 @@ func GetTokenSource(ctx context.Context, httpClient *http.Client, user, pass str
 		},
 	}
 
-	oauthCtx := context.WithValue(ctx, oauth2.HTTPClient, httpClient)
-
 	// Get initial token
-	token, err := oc.PasswordCredentialsToken(oauthCtx, user, pass)
+	token, err := oc.PasswordCredentialsToken(ctx, user, pass)
 	if err != nil {
 		return nil, err
 	}
