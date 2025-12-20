@@ -41,10 +41,10 @@
 				<div v-if="values.events">
 					<div v-for="event in Object.values(MESSAGING_EVENTS)" :key="event" class="mb-5">
 						<EventItem
-							:type="event"
 							v-model:disabled="values.events[event].disabled"
 							v-model:title="values.events[event].title"
 							v-model:message="values.events[event].msg"
+							:type="event"
 						/>
 					</div>
 				</div>

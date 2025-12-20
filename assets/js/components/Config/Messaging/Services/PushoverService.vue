@@ -1,14 +1,12 @@
 <template>
 	<div>
-		<FormRow
-			id="messagingServicePushoverApp"
-			:label="$t('config.messaging.service.pushover.app')"
-			:help="
-				$t('config.messaging.service.pushover.appHelp', {
-					url: '[pushover.net](https://pushover.net/apps/build)',
-				})
-			"
+		<MessagingFormRow
+			:serviceType="service.type"
+			inputName="app"
 			example="azGDORePK8gMaC0QOYAMyEEuzJnyUi"
+			:helpTranslationParameter="{
+				url: '[pushover.net](https://pushover.net/apps/build)',
+			}"
 		>
 			<PropertyField
 				id="messagingServicePushoverApp"
@@ -16,11 +14,11 @@
 				type="String"
 				required
 			/>
-		</FormRow>
-		<FormRow
-			id="messagingServicePushoverRecipients"
-			:label="$t('config.messaging.service.pushover.recipients')"
-			:help="$t('config.messaging.service.pushover.recipientsHelp')"
+		</MessagingFormRow>
+
+		<MessagingFormRow
+			:serviceType="service.type"
+			inputName="recipients"
 			example="uQiRzpo4DXghDmr9QzzfQu27cmVRsG"
 		>
 			<PropertyField
@@ -32,13 +30,9 @@
 				class="me-2"
 				required
 			/>
-		</FormRow>
-		<FormRow
-			id="messagingServicePushoverDevices"
-			:label="$t('config.messaging.service.pushover.devices')"
-			:help="$t('config.messaging.service.pushover.devicesHelp')"
-			example="droid2"
-		>
+		</MessagingFormRow>
+
+		<MessagingFormRow :serviceType="service.type" inputName="devices" example="droid2">
 			<PropertyField
 				id="messagingServicePushoverDevices"
 				v-model="pushoverOther.devices"
@@ -46,19 +40,19 @@
 				type="List"
 				required
 			/>
-		</FormRow>
+		</MessagingFormRow>
 	</div>
 </template>
 
 <script lang="ts">
 import { type MessagingServicePushover } from "@/types/evcc";
-import FormRow from "../../FormRow.vue";
 import PropertyField from "../../PropertyField.vue";
 import type { PropType } from "vue";
+import MessagingFormRow from "./MessagingFormRow.vue";
 
 export default {
 	name: "PushoverService",
-	components: { FormRow, PropertyField },
+	components: { MessagingFormRow, PropertyField },
 	props: {
 		service: {
 			type: Object as PropType<MessagingServicePushover>,

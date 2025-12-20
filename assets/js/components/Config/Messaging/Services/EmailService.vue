@@ -1,9 +1,8 @@
 <template>
 	<div v-for="p in emailProperties" :key="p">
-		<FormRow
-			:id="'messagingServiceEmail' + p"
-			:label="$t(`config.messaging.service.email.${p}`)"
-			:help="$t(`config.messaging.service.email.${p}Help`)"
+		<MessagingFormRow
+			:serviceType="service.type"
+			:inputName="p"
 			:example="EMAIL_PROPERTIES_EXAMPLES[p]"
 		>
 			<PropertyField
@@ -13,15 +12,15 @@
 				required
 				@update:model-value="(e) => updateEmail(p, e)"
 			/>
-		</FormRow>
+		</MessagingFormRow>
 	</div>
 </template>
 
 <script lang="ts">
 import { type MessagingServiceEmail } from "@/types/evcc";
 import type { PropType } from "vue";
-import FormRow from "../../FormRow.vue";
 import PropertyField from "../../PropertyField.vue";
+import MessagingFormRow from "./MessagingFormRow.vue";
 
 const EMAIL_PROPERTIES = {
 	HOST: "host",
@@ -43,7 +42,7 @@ const EMAIL_PROPERTIES_EXAMPLES = {
 
 export default {
 	name: "EmailService",
-	components: { FormRow, PropertyField },
+	components: { MessagingFormRow, PropertyField },
 	props: {
 		service: {
 			type: Object as PropType<MessagingServiceEmail>,

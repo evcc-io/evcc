@@ -1,15 +1,13 @@
 <template>
 	<div>
-		<FormRow
-			id="messagingServiceCustomEncoding"
-			:label="$t('config.messaging.service.custom.encoding')"
-			:help="
-				$t('config.messaging.service.custom.encodingHelp', {
-					send: '`${send}`',
-					format: getEncodingFormat,
-				})
-			"
+		<MessagingFormRow
+			:serviceType="service.type"
+			inputName="encoding"
 			optional
+			:helpTranslationParameter="{
+				send: '`${send}`',
+				format: getEncodingFormat,
+			}"
 		>
 			<PropertyField
 				id="messagingServiceCustomEncoding"
@@ -20,33 +18,32 @@
 				:model-value="serviceData.other.encoding"
 				@update:model-value="(e) => (serviceData.other.encoding = e)"
 			/>
-		</FormRow>
-		<FormRow
-			id="messagingServiceCustomSend"
-			:label="$t('config.messaging.service.custom.send')"
-			:help="
-				$t('config.messaging.service.custom.sendHelp', {
-					url: '[docs.evcc.io](https://docs.evcc.io/en/docs/devices/plugins)',
-				})
-			"
+		</MessagingFormRow>
+
+		<MessagingFormRow
+			:serviceType="service.type"
+			inputName="send"
+			:helpTranslationParameter="{
+				url: '[docs.evcc.io](https://docs.evcc.io/en/docs/devices/plugins)',
+			}"
 		>
 			<YamlEditorContainer v-model="serviceData.other.send" />
-		</FormRow>
+		</MessagingFormRow>
 	</div>
 </template>
 
 <script lang="ts">
 import { type MessagingServiceCustom, MESSAGING_SERVICE_CUSTOM_ENCODING } from "@/types/evcc";
 import type { PropType } from "vue";
-import FormRow from "../../FormRow.vue";
 import PropertyField from "../../PropertyField.vue";
 import YamlEditorContainer from "../../YamlEditorContainer.vue";
+import MessagingFormRow from "./MessagingFormRow.vue";
 
 const DEAFULT_SEND_PLUGIN = 'cmd: /usr/local/bin/evcc_message "{{.send}}"\nsource: script';
 
 export default {
 	name: "CustomService",
-	components: { FormRow, PropertyField, YamlEditorContainer },
+	components: { MessagingFormRow, PropertyField, YamlEditorContainer },
 	props: {
 		service: {
 			type: Object as PropType<MessagingServiceCustom>,

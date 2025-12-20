@@ -1,11 +1,6 @@
 <template>
 	<div>
-		<FormRow
-			id="messagingServiceNtfyHost"
-			:label="$t('config.messaging.service.ntfy.host')"
-			:help="$t('config.messaging.service.ntfy.hostHelp')"
-			example="ntfy.sh"
-		>
+		<MessagingFormRow :serviceType="service.type" inputName="host" example="ntfy.sh">
 			<PropertyField
 				id="messagingServiceNtfyHost"
 				:model-value="decoded['host']"
@@ -13,13 +8,9 @@
 				required
 				@update:model-value="(e) => updateNtfy('host', e)"
 			/>
-		</FormRow>
-		<FormRow
-			id="messagingServiceNtfyTopics"
-			:label="$t('config.messaging.service.ntfy.topics')"
-			:help="$t('config.messaging.service.ntfy.topicsHelp')"
-			example="evcc_alert"
-		>
+		</MessagingFormRow>
+
+		<MessagingFormRow :serviceType="service.type" inputName="topics" example="evcc_alert">
 			<PropertyField
 				id="messagingServiceNtfyTopics"
 				:model-value="(decoded['topics'] ?? '').split(',')"
@@ -28,17 +19,9 @@
 				required
 				@update:model-value="(e) => updateNtfy('topics', e)"
 			/>
-		</FormRow>
-		<FormRow
-			id="messagingServiceNtfyPriority"
-			:label="$t('config.messaging.service.ntfy.priority')"
-			:help="
-				$t('config.messaging.service.ntfy.priorityHelp', {
-					url: '[docs.ntfy.sh](https://docs.ntfy.sh/publish/#message-priority)',
-				})
-			"
-			optional
-		>
+		</MessagingFormRow>
+
+		<MessagingFormRow :serviceType="service.type" inputName="priority" optional>
 			<PropertyField
 				id="messagingServiceNtfyPriority"
 				property="priority"
@@ -48,15 +31,11 @@
 				:model-value="ntfyOther.priority"
 				@update:model-value="(e) => (ntfyOther.priority = e)"
 			/>
-		</FormRow>
-		<FormRow
-			id="messagingServiceNtfyTags"
-			:label="$t('config.messaging.service.ntfy.tags')"
-			:help="
-				$t('config.messaging.service.ntfy.tagsHelp', {
-					url: '[docs.ntfy.sh](https://docs.ntfy.sh/publish/#tags-emojis)',
-				})
-			"
+		</MessagingFormRow>
+
+		<MessagingFormRow
+			:serviceType="service.type"
+			inputName="tags"
 			example="electric_plug,blue_car"
 			optional
 		>
@@ -67,19 +46,19 @@
 				type="List"
 				@update:model-value="(e: string[]) => (ntfyOther.tags = e.join())"
 			/>
-		</FormRow>
+		</MessagingFormRow>
 	</div>
 </template>
 
 <script lang="ts">
 import { type MessagingServiceNtfy, MESSAGING_SERVICE_NTFY_PRIORITY } from "@/types/evcc";
 import type { PropType } from "vue";
-import FormRow from "../../FormRow.vue";
 import PropertyField from "../../PropertyField.vue";
+import MessagingFormRow from "./MessagingFormRow.vue";
 
 export default {
 	name: "NtfyService",
-	components: { FormRow, PropertyField },
+	components: { MessagingFormRow, PropertyField },
 	props: {
 		service: {
 			type: Object as PropType<MessagingServiceNtfy>,
