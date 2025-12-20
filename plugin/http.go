@@ -14,7 +14,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
-	"github.com/gregjones/httpcache"
+	"github.com/sandrolain/httpcache"
 )
 
 // HTTP implements HTTP request provider
