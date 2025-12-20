@@ -155,7 +155,7 @@ func dropNoCache(resp *http.Response, header string) {
 		if len(hh) == 0 {
 			resp.Header.Del(header)
 		} else {
-			resp.Header.Set(header, strings.Join(hh, ","))
+			resp.Header.Set(header, strings.Join(hh, ", "))
 		}
 	}
 }
