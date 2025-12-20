@@ -11,7 +11,6 @@ type Decorator struct {
 	Decorator func(*http.Request) error
 
 	// Base is the base RoundTripper used to make HTTP requests.
-	// If nil, http.DefaultTransport is used.
 	Base http.RoundTripper
 }
 

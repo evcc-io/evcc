@@ -11,7 +11,6 @@ type Modifier struct {
 	Modifier func(*http.Response) error
 
 	// Base is the base RoundTripper used to make HTTP responses.
-	// If nil, http.DefaultTransport is used.
 	Base http.RoundTripper
 }
 
