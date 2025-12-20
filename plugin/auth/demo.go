@@ -88,7 +88,11 @@ func (o *demo) Login(state string) (string, *oauth2.DeviceAuthResponse, error) {
 	}
 
 	// Build mock login URL with state and redirectUri (complete callback URL)
-	mockLoginURL := fmt.Sprintf("%s/mock-login?state=%s&redirectUri=%s", o.server, state, o.redirectUri)
+	values := url.Values{}
+	values.Set("state", state)
+	values.Set("redirectUri", o.redirectUri)
+
+	mockLoginURL := fmt.Sprintf("%s/mock-login?%s", o.server, values.Encode())
 
 	if o.method == "device-code" {
 		// Device code flow: URI comes from DeviceAuthResponse
