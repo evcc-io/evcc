@@ -31,6 +31,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
+	"github.com/evcc-io/evcc/util/transport"
 	"golang.org/x/oauth2"
 )
 
@@ -92,6 +93,14 @@ func NewZaptec(ctx context.Context, user, password, id string, priority bool, pa
 		log:      log,
 		priority: priority,
 		passive:  passive,
+	}
+
+	// Add User-Agent header for Zaptec API compliance
+	c.Client.Transport = &transport.Decorator{
+		Decorator: transport.DecorateHeaders(map[string]string{
+			"User-Agent": "evcc/" + util.Version,
+		}),
+		Base: c.Client.Transport,
 	}
 
 	// setup cached values
