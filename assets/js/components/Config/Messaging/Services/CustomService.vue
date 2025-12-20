@@ -26,7 +26,7 @@
 			:label="$t('config.messaging.service.custom.send')"
 			:help="
 				$t('config.messaging.service.custom.sendHelp', {
-					url: '[docs.evcc.io](https://docs.evcc.io/en/docs/devices/plugins#plugins-1)',
+					url: '[docs.evcc.io](https://docs.evcc.io/en/docs/devices/plugins)',
 				})
 			"
 		>
