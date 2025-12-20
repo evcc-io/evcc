@@ -7,7 +7,7 @@ import {
   simulatorHost,
   simulatorApply,
 } from "./simulator";
-import { enableExperimental, expectModalHidden, expectModalVisible } from "./utils";
+import { expectModalHidden, expectModalVisible } from "./utils";
 
 const CONFIG_ONE_LP = "config-one-lp.evcc.yaml";
 
@@ -38,7 +38,6 @@ test.describe("grid meter", async () => {
     await simulatorApply(page);
 
     await page.goto("/#/config");
-    await enableExperimental(page, false);
 
     await expect(page.getByTestId("grid")).toHaveCount(0);
     await expect(page.getByTestId("add-grid")).toBeVisible();
