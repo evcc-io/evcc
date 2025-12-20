@@ -1,6 +1,6 @@
 module github.com/evcc-io/evcc
 
-go 1.25.0
+go 1.25.3
 
 require (
 	dario.cat/mergo v1.0.2
@@ -53,7 +53,6 @@ require (
 	github.com/gorilla/mux v1.8.1
 	github.com/gosimple/slug v1.15.0
 	github.com/gregdel/pushover v1.4.0
-	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79
 	github.com/grid-x/modbus v0.0.0-20251121133955-8a6c959be366
 	github.com/hashicorp/go-version v1.8.0
 	github.com/hasura/go-graphql-client v0.15.1
@@ -86,6 +85,7 @@ require (
 	github.com/prometheus/common v0.67.4
 	github.com/robertkrimen/otto v0.5.1
 	github.com/samber/lo v1.52.0
+	github.com/sandrolain/httpcache v1.4.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/smallnest/chanx v1.2.0
@@ -216,7 +216,7 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/client_model v0.6.2 // indirect
-	github.com/prometheus/procfs v0.16.1 // indirect
+	github.com/prometheus/procfs v0.19.2 // indirect
 	github.com/quic-go/qpack v0.6.0 // indirect
 	github.com/quic-go/quic-go v0.57.0 // indirect
 	github.com/quic-go/webtransport-go v0.9.0 // indirect
@@ -243,7 +243,7 @@ require (
 	golang.org/x/mod v0.31.0 // indirect
 	golang.org/x/sys v0.39.0 // indirect
 	golang.org/x/term v0.38.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20251022142026-3a174f9686a8 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20251103181224-f26f9409b101 // indirect
 	gopkg.in/go-playground/validator.v9 v9.31.0 // indirect
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
