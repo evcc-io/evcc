@@ -227,10 +227,6 @@ test.describe("config device auth", async () => {
 
   test("authorization card connect and disconnect flow", async ({ page }) => {
     await page.goto("/#/config");
-<<<<<<< HEAD
-=======
-    await enableExperimental(page, true);
->>>>>>> master
 
     // create a grid meter with auth and prepare connection
     await page.getByRole("button", { name: "Add grid meter" }).click();
