@@ -11,6 +11,7 @@ import (
 
 // passwordTokenSource implements oauth2.TokenSource for password grant flow
 type passwordTokenSource struct {
+	ctx    context.Context
 	config *oauth2.Config
 	user   string
 	pass   string
@@ -19,7 +20,7 @@ type passwordTokenSource struct {
 // Token returns a token or an error.
 // Implements oauth2.TokenSource interface
 func (p *passwordTokenSource) Token() (*oauth2.Token, error) {
-	return p.config.PasswordCredentialsToken(context.Background(), p.user, p.pass)
+	return p.config.PasswordCredentialsToken(p.ctx, p.user, p.pass)
 }
 
 // tokenSourceCache stores per-user token sources
@@ -65,17 +66,18 @@ func GetTokenSource(ctx context.Context, user, pass string) (oauth2.TokenSource,
 		},
 	}
 
-	// Get initial token
-	token, err := oc.PasswordCredentialsToken(ctx, user, pass)
-	if err != nil {
-		return nil, err
-	}
-
 	// Create the password token source
 	pts := &passwordTokenSource{
+		ctx:    ctx,
 		config: oc,
 		user:   user,
 		pass:   pass,
+	}
+
+	// Get initial token
+	token, err := pts.Token()
+	if err != nil {
+		return nil, err
 	}
 
 	// Wrap with ReuseTokenSource to cache tokens
