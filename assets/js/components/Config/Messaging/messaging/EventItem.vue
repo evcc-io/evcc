@@ -3,13 +3,13 @@
 		<div class="d-flex align-items-center mb-3">
 			<div class="form-switch me-2">
 				<input
-					:value="enabled"
+					:value="disabled"
 					class="form-check-input"
 					type="checkbox"
 					role="switch"
 					:data-testid="`event-${type}-switch`"
 					tabindex="0"
-					@change="updateEnabled(($event.target as HTMLInputElement).value)"
+					@change="updateDisabled(($event.target as HTMLInputElement).value)"
 				/>
 			</div>
 			<h6 class="my-0">{{ $t(`config.messaging.event.${type}.title`) }}</h6>
@@ -25,7 +25,7 @@
 					:model-value="title"
 					:data-testid="`event-${type}-title`"
 					type="String"
-					:disabled="!enabled"
+					:disabled="!disabled"
 					required
 					@change="updateTitle($event.target.value)"
 				/>
@@ -42,7 +42,7 @@
 					:data-testid="`event-${type}-message`"
 					type="String"
 					property="eventMessage"
-					:disabled="!enabled"
+					:disabled="!disabled"
 					required
 					@change="updateTitle($event.target.value)"
 				/>
@@ -61,11 +61,11 @@ export default {
 	components: { PropertyField },
 	props: {
 		type: { type: String as PropType<MESSAGING_EVENTS>, required: true },
-		enabled: { type: Boolean, required: true },
+		disabled: { type: Boolean, required: true },
 		title: { type: String, required: true },
 		message: { type: String, required: true },
 	},
-	emits: ["update:enabled", "update:title", "update:message"],
+	emits: ["update:disabled", "update:title", "update:message"],
 	mounted() {
 		if (!this.title) {
 			this.updateTitle(this.$t(`config.messaging.event.${this.type}.titleDefault`));
@@ -105,8 +105,8 @@ export default {
 		formId(name: string) {
 			return `messaging-event-${this.type}-${name}`;
 		},
-		updateEnabled(newValue: string) {
-			this.$emit("update:enabled", newValue === "false");
+		updateDisabled(newValue: string) {
+			this.$emit("update:disabled", newValue === "false");
 		},
 		updateTitle(newValue: string) {
 			this.$emit("update:title", newValue);

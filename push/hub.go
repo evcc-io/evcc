@@ -36,7 +36,7 @@ func NewHub(cc map[string]globalconfig.MessagingEventTemplate, vv Vehicles, cach
 	// keep only enabled events
 	filtered := make(map[string]globalconfig.MessagingEventTemplate, len(cc))
 	for k, v := range cc {
-		if v.Enabled {
+		if !v.Disabled {
 			filtered[k] = v
 		}
 	}

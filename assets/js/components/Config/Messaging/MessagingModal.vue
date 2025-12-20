@@ -22,7 +22,7 @@
 						@click.prevent="activeEventsTab = true"
 					>
 						Events ({{
-							Object.values(values.events ?? {}).filter((e) => e.enabled).length
+							Object.values(values.events ?? {}).filter((e) => !e.disabled).length
 						}})
 					</a>
 				</li>
@@ -42,7 +42,7 @@
 					<div v-for="event in Object.values(MESSAGING_EVENTS)" :key="event" class="mb-5">
 						<EventItem
 							:type="event"
-							v-model:enabled="values.events[event].enabled"
+							v-model:disabled="values.events[event].disabled"
 							v-model:title="values.events[event].title"
 							v-model:message="values.events[event].msg"
 						/>
@@ -197,7 +197,7 @@ export default {
 			Object.values(MESSAGING_EVENTS).forEach((evt) => {
 				const e = v.events![evt];
 				v.events![evt] = {
-					enabled: e?.enabled ?? false,
+					disabled: e?.disabled ?? true,
 					title: e?.title ?? "",
 					msg: e?.msg ?? "",
 				};

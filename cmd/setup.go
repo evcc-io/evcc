@@ -810,7 +810,7 @@ func configureMessengers(conf *globalconfig.Messaging, vehicles push.Vehicles, v
 			}
 			// events already created by the user in yaml should be enabled
 			for k, v := range data.Events {
-				v.Enabled = true
+				v.Disabled = false
 				data.Events[k] = v
 			}
 			if err := normalizeMessagingCustomSend(data.Services); err != nil {

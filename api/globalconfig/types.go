@@ -144,9 +144,9 @@ type Messaging struct {
 
 // MessagingEventTemplate is the push message configuration for an event
 type MessagingEventTemplate struct {
-	Title   string `json:"title"`
-	Msg     string `json:"msg"`
-	Enabled bool   `json:"enabled"`
+	Title    string `json:"title"`
+	Msg      string `json:"msg"`
+	Disabled bool   `json:"disabled"`
 }
 
 func (c Messaging) Configured() bool {
