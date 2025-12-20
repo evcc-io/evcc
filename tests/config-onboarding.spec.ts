@@ -39,6 +39,7 @@ test.describe("onboarding", async () => {
     // config page
     await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible();
     await expect(page.getByTestId("welcome-banner")).toBeVisible();
+    await expect(page.getByTestId("welcome-banner")).toContainText("Start with creating a");
 
     // create loadpoint with charger
     await page.getByTestId("add-loadpoint").click();
