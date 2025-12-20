@@ -79,6 +79,20 @@ func (c Hems) Redacted() any {
 
 var _ api.Redactor = (*Mqtt)(nil)
 
+func maskedMap(m map[string]any) map[string]any {
+	r := map[string]any{}
+
+	for key, value := range m {
+		if subMap, ok := value.(map[string]any); ok {
+			r[key] = maskedMap(subMap)
+		} else {
+			r[key] = masked(value)
+		}
+	}
+
+	return r
+}
+
 func masked(s any) string {
 	if s != "" {
 		return "***"
@@ -151,6 +165,22 @@ type MessagingEventTemplate struct {
 
 func (c Messaging) Configured() bool {
 	return len(c.Services) > 0 || len(c.Events) > 0
+}
+
+// Redacted implements the redactor interface used by the tee publisher
+func (m Messaging) Redacted() any {
+	r := Messaging{
+		Events: m.Events,
+	}
+
+	for _, s := range m.Services {
+		r.Services = append(r.Services, config.Typed{
+			Type:  s.Type,
+			Other: maskedMap(s.Other),
+		})
+	}
+
+	return r
 }
 
 type Tariffs struct {
