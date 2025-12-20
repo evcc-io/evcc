@@ -20,7 +20,7 @@
 #  asleep:
 #    title: Vehicle asleep
 #    msg: Charge release, vehicle {{ if .vehicleTitle }}{{ .vehicleTitle }} {{ end }}not charging.
-#  overrun:
+#  planoverrun:
 #    title: Plan overrun
 #    msg: "Plan {{- if .vehicleTitle }} for {{ .vehicleTitle }} will overrun.{{ else }} will overrun.{{end}}"
 

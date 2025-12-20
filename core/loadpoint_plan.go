@@ -156,7 +156,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		overrun = fmt.Sprintf("overruns by %v, ", excessDuration.Round(time.Second))
 		planOverrun = excessDuration
 		if !lp.planOverrunSent {
-			lp.pushEvent("overrun")
+			lp.pushEvent("planoverrun")
 			lp.planOverrunSent = true
 		}
 	}
