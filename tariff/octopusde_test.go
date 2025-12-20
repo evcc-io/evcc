@@ -3,13 +3,10 @@ package tariff
 import (
 	"testing"
 
-	"github.com/evcc-io/evcc/util/test"
 	"github.com/stretchr/testify/require"
 )
 
 func TestOctopusDeConfigParse(t *testing.T) {
-	test.SkipCI(t)
-
 	validConfig := map[string]any{
 		"email":         "test@example.com",
 		"password":      "testpassword",
