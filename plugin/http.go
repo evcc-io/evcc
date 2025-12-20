@@ -101,6 +101,23 @@ func NewHTTP(log *util.Logger, method, uri string, insecure bool, cache time.Dur
 		method: method,
 	}
 
+	// override the transport to accept self-signed certificates
+	if insecure {
+		p.Client.Transport = request.NewTripper(log, transport.Insecure())
+	}
+
+	if cache > 0 {
+		// remove no-cache response headers
+		p.Client.Transport = &transport.Modifier{
+			Modifier: func(resp *http.Response) error {
+				resp.Header.Del("Cache-Control")
+				resp.Header.Del("Pragma")
+				return nil
+			},
+			Base: p.Client.Transport,
+		}
+	}
+
 	// http cache
 	p.Client.Transport = &httpcache.Transport{
 		Cache:     mc,
@@ -120,11 +137,6 @@ func NewHTTP(log *util.Logger, method, uri string, insecure bool, cache time.Dur
 		if method == http.MethodGet {
 			p.mu = muForKey(p.url)
 		}
-	}
-
-	// ignore the self signed certificate
-	if insecure {
-		p.Client.Transport = request.NewTripper(log, transport.Insecure())
 	}
 
 	return p
