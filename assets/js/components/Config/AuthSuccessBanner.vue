@@ -6,11 +6,14 @@
 		:data-testid="testId"
 	>
 		<p v-if="isError">
+			<strong>{{ $t("authProviders.authorizationFailed") }}</strong
+			><br />
 			{{ errorMessage }}
 		</p>
 		<p v-else>
+			<strong>{{ $t("authProviders.authorizationSuccessful") }}</strong
+			><br />
 			{{ $t("authProviders.success", { title: providerName }) }}
-			{{ $t("authProviders.successCloseTab") }}
 		</p>
 	</div>
 </template>
@@ -31,7 +34,7 @@ export default defineComponent({
 			return !!this.error;
 		},
 		errorMessage() {
-			return this.error || "Authentication failed";
+			return this.error || "";
 		},
 		providerName() {
 			for (const [name, provider] of Object.entries(this.authProviders)) {

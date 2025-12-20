@@ -71,6 +71,12 @@ test.describe("config device auth", async () => {
     // Wait for redirect back to config page
     await page.waitForURL(/.*\/#\/config.*/);
 
+    // Verify success banner appears
+    const successBanner = page.getByTestId("auth-success-banner");
+    await expect(successBanner).toBeVisible();
+    await expect(successBanner).toContainText("Authorization Successful");
+    await expect(successBanner).toContainText("Demo Auth is now connected and ready to use");
+
     // After successful auth, reopen the meter modal to continue configuration
     await page.getByRole("button", { name: "Add grid meter" }).click();
     await expectModalVisible(meterModal);
@@ -170,6 +176,20 @@ test.describe("config device auth", async () => {
     // clear error on input change
     await meterModal.getByLabel("Server").fill(simulatorUrl());
     await expect(meterModal).not.toContainText("server must start with http:// or https://");
+
+    // test invalid redirect URI
+    await meterModal.getByLabel("Redirect URI").fill("invalid-redirect");
+    await meterModal.getByRole("button", { name: "Prepare connection" }).click();
+
+    await expect(meterModal).toContainText("redirectUri must start with http:// or https://");
+    await expect(meterModal.getByRole("button", { name: "Prepare connection" })).toBeVisible();
+    await expect(meterModal.getByRole("link", { name: "Connect to localhost" })).not.toBeVisible();
+    await expect(meterModal.getByLabel("Authentication Code")).not.toBeVisible();
+    await expect(meterModal.getByLabel("Power")).not.toBeVisible();
+
+    // clear error on input change
+    await meterModal.getByLabel("Redirect URI").fill(getRedirectUri(page.url()));
+    await expect(meterModal).not.toContainText("redirectUri must start with http:// or https://");
   });
 
   test("user denies authorization shows error banner", async ({ page }) => {

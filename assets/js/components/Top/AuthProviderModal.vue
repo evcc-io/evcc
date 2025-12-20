@@ -175,7 +175,7 @@ export default defineComponent({
 			this.reset();
 		},
 		async prepareAuthentication() {
-			if (!this.providerId && !this.isAuthenticated) return;
+			if (!this.providerId || this.isAuthenticated) return;
 			await prepareAuthLogin(this.auth, this.providerId);
 		},
 		async performLogout() {
