@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"net/http"
 	"sort"
+	"sync"
 	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
@@ -32,11 +33,22 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
+	"github.com/evcc-io/evcc/util/transport"
 	"golang.org/x/oauth2"
 )
 
 // https://api.zaptec.com/help/index.html
 // https://api.zaptec.com/.well-known/openid-configuration/
+
+// authMu serializes authentication requests to comply with Zaptec's rate limit
+var (
+	authMu       sync.Mutex
+	lastAuthTime time.Time
+)
+
+// authRateLimit enforces minimum delay between auth requests (Zaptec allows 1 req/sec)
+// Adding 100ms buffer to avoid edge cases
+const authRateLimit = 1100 * time.Millisecond
 
 // Zaptec charger implementation
 type Zaptec struct {
@@ -64,7 +76,26 @@ type passwordTokenSource struct {
 }
 
 func (p passwordTokenSource) Token() (*oauth2.Token, error) {
-	return p.config.PasswordCredentialsToken(p.ctx, p.user, p.pass)
+	return rateLimitedAuth(func() (*oauth2.Token, error) {
+		return p.config.PasswordCredentialsToken(p.ctx, p.user, p.pass)
+	})
+}
+
+// rateLimitedAuth serializes and rate-limits authentication requests
+// to comply with Zaptec's 1 request/second limit
+func rateLimitedAuth(auth func() (*oauth2.Token, error)) (*oauth2.Token, error) {
+	authMu.Lock()
+	defer authMu.Unlock()
+
+	// wait if we authenticated recently
+	if elapsed := time.Since(lastAuthTime); elapsed < authRateLimit {
+		time.Sleep(authRateLimit - elapsed)
+	}
+
+	token, err := auth()
+	lastAuthTime = time.Now()
+
+	return token, err
 }
 
 //go:generate go tool decorate -f decorateZaptec -b *Zaptec -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
@@ -107,6 +138,14 @@ func NewZaptec(ctx context.Context, user, password, id string, priority bool, pa
 		passive:  passive,
 	}
 
+	// Add User-Agent header for Zaptec API compliance
+	c.Client.Transport = &transport.Decorator{
+		Decorator: transport.DecorateHeaders(map[string]string{
+			"User-Agent": "evcc/" + util.Version,
+		}),
+		Base: c.Client.Transport,
+	}
+
 	// setup cached values
 	c.statusG = util.ResettableCached(func() (zaptec.StateResponse, error) {
 		var res zaptec.StateResponse
@@ -141,7 +180,11 @@ func NewZaptec(ctx context.Context, user, password, id string, priority bool, pa
 		tokenClient,
 	)
 
-	token, err := oc.PasswordCredentialsToken(oauthCtx, user, password)
+	// Use rate-limited auth for initial token to avoid exceeding Zaptec's
+	// 1 request/second limit when multiple chargers initialize simultaneously
+	token, err := rateLimitedAuth(func() (*oauth2.Token, error) {
+		return oc.PasswordCredentialsToken(oauthCtx, user, password)
+	})
 	if err != nil {
 		return nil, err
 	}
