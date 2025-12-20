@@ -99,7 +99,7 @@
     },
     "control": {
       "description": "Usually the default values are fine. Only change them if you know what you are doing.",
-      "descriptionInterval": "Control loop update cycle in seconds. Defines how often evcc reads meter data, adjusts charging power and updates the UI. Short intervals (< 30s) can cause oscillations and unwanted behavior.",
+      "descriptionInterval": "Update cycle in seconds. Defines how often evcc reads meter data and adjusts charging. Default is 10 seconds. If you observe erratic behavior, error messages, or highly fluctuating values, choose an interval of 30 seconds or more.",
       "descriptionResidualPower": "Shifts the operation point of the control loop. If you have a home battery it's recommended to set a value of 100 W. This way the battery will get slight priority over grid use.",
       "labelInterval": "Update interval",
       "labelResidualPower": "Residual power",
