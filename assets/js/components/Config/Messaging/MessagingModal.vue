@@ -40,7 +40,12 @@
 			<div v-if="activeEventsTab">
 				<div v-if="values.events">
 					<div v-for="event in Object.values(MESSAGING_EVENTS)" :key="event" class="mb-5">
-						<EventItem :eventType="event" :eventObject="values.events[event]" />
+						<EventItem
+							:type="event"
+							v-model:enabled="values.events[event].enabled"
+							v-model:title="values.events[event].title"
+							v-model:message="values.events[event].msg"
+						/>
 					</div>
 				</div>
 			</div>

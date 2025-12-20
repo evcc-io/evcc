@@ -3,15 +3,16 @@
 		<div class="d-flex align-items-center mb-3">
 			<div class="form-switch me-2">
 				<input
-					v-model="eventObjectData.enabled"
+					:value="enabled"
 					class="form-check-input"
 					type="checkbox"
 					role="switch"
-					:data-testid="`event-${eventType}-switch`"
+					:data-testid="`event-${type}-switch`"
 					tabindex="0"
+					@change="updateEnabled(($event.target as HTMLInputElement).value)"
 				/>
 			</div>
-			<h6 class="my-0">{{ $t(`config.messaging.event.${eventType}.title`) }}</h6>
+			<h6 class="my-0">{{ $t(`config.messaging.event.${type}.title`) }}</h6>
 		</div>
 		<div class="container"></div>
 		<div class="row mb-3">
@@ -21,11 +22,12 @@
 			<div class="col-10">
 				<PropertyField
 					:id="formId('title')"
-					v-model="eventObjectData.title"
-					:data-testid="`event-${eventType}-title`"
+					:model-value="title"
+					:data-testid="`event-${type}-title`"
 					type="String"
-					:disabled="!eventObjectData.enabled"
+					:disabled="!enabled"
 					required
+					@change="updateTitle($event.target.value)"
 				/>
 			</div>
 		</div>
@@ -36,12 +38,13 @@
 			<div class="col-10">
 				<PropertyField
 					:id="formId('message')"
-					v-model="eventObjectData.msg"
-					:data-testid="`event-${eventType}-message`"
+					:model-value="message"
+					:data-testid="`event-${type}-message`"
 					type="String"
 					property="eventMessage"
-					:disabled="!eventObjectData.enabled"
+					:disabled="!enabled"
 					required
+					@change="updateTitle($event.target.value)"
 				/>
 			</div>
 		</div>
@@ -51,34 +54,27 @@
 <script lang="ts">
 import type { PropType } from "vue";
 import PropertyField from "../../PropertyField.vue";
-import { MESSAGING_EVENTS, type MessagingEvent } from "@/types/evcc";
+import { MESSAGING_EVENTS } from "@/types/evcc";
 
 export default {
 	name: "EventItem",
 	components: { PropertyField },
 	props: {
-		eventType: { type: String as PropType<MESSAGING_EVENTS>, required: true },
-		eventObject: {
-			type: Object as () => MessagingEvent,
-			required: true,
-		},
+		type: { type: String as PropType<MESSAGING_EVENTS>, required: true },
+		enabled: { type: Boolean, required: true },
+		title: { type: String, required: true },
+		message: { type: String, required: true },
 	},
-	data() {
-		return {
-			eventObjectData: this.eventObject,
-		};
-	},
+	emits: ["update:enabled", "update:title", "update:message"],
 	mounted() {
-		if (!this.eventObjectData.title) {
-			this.eventObjectData.title = this.$t(
-				`config.messaging.event.${this.eventType}.titleDefault`
-			);
+		if (!this.title) {
+			this.updateTitle(this.$t(`config.messaging.event.${this.type}.titleDefault`));
 		}
 
-		if (!this.eventObjectData.msg) {
+		if (!this.message) {
 			let p = {};
 
-			switch (this.eventType) {
+			switch (this.type) {
 				case MESSAGING_EVENTS.ASLEEP:
 					p = { vehicleName: "{{ if .vehicleTitle }}{{ .vehicleTitle }} {{ end }}" };
 					break;
@@ -102,15 +98,21 @@ export default {
 					break;
 			}
 
-			this.eventObjectData.msg = this.$t(
-				`config.messaging.event.${this.eventType}.messageDefault`,
-				p
-			);
+			this.updateMessage(this.$t(`config.messaging.event.${this.type}.messageDefault`, p));
 		}
 	},
 	methods: {
 		formId(name: string) {
-			return `messaging-event-${this.eventType}-${name}`;
+			return `messaging-event-${this.type}-${name}`;
+		},
+		updateEnabled(newValue: string) {
+			this.$emit("update:enabled", newValue === "false");
+		},
+		updateTitle(newValue: string) {
+			this.$emit("update:title", newValue);
+		},
+		updateMessage(newValue: string) {
+			this.$emit("update:message", newValue);
 		},
 	},
 };
