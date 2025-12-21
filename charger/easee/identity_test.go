@@ -3,7 +3,6 @@ package easee
 import (
 	"testing"
 
-	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -12,24 +11,17 @@ func TestClearTokenCache(t *testing.T) {
 	password := "testpass"
 
 	// Manually add an entry to the cache
-	key := oauth.CredentialsCacheKey(user, password)
-	tokenSourceMu.Lock()
-	tokenSourceCache[key] = nil // dummy value
-	tokenSourceMu.Unlock()
+	tokenSourceCache.Set(user, password, nil) // dummy value
 
 	// Verify entry exists
-	tokenSourceMu.Lock()
-	_, exists := tokenSourceCache[key]
-	tokenSourceMu.Unlock()
+	_, exists := tokenSourceCache.Get(user, password)
 	assert.True(t, exists, "cache entry should exist before clearing")
 
 	// Clear the cache
 	ClearTokenCache(user, password)
 
 	// Verify entry is removed
-	tokenSourceMu.Lock()
-	_, exists = tokenSourceCache[key]
-	tokenSourceMu.Unlock()
+	_, exists = tokenSourceCache.Get(user, password)
 	assert.False(t, exists, "cache entry should be removed after clearing")
 }
 
@@ -47,21 +39,15 @@ func TestClearTokenCache_DifferentCredentials(t *testing.T) {
 	password2 := "pass2"
 
 	// Add two different entries
-	key1 := oauth.CredentialsCacheKey(user1, password1)
-	key2 := oauth.CredentialsCacheKey(user2, password2)
-	tokenSourceMu.Lock()
-	tokenSourceCache[key1] = nil
-	tokenSourceCache[key2] = nil
-	tokenSourceMu.Unlock()
+	tokenSourceCache.Set(user1, password1, nil)
+	tokenSourceCache.Set(user2, password2, nil)
 
 	// Clear only the first entry
 	ClearTokenCache(user1, password1)
 
 	// Verify only the first entry is removed
-	tokenSourceMu.Lock()
-	_, exists1 := tokenSourceCache[key1]
-	_, exists2 := tokenSourceCache[key2]
-	tokenSourceMu.Unlock()
+	_, exists1 := tokenSourceCache.Get(user1, password1)
+	_, exists2 := tokenSourceCache.Get(user2, password2)
 
 	assert.False(t, exists1, "first cache entry should be removed")
 	assert.True(t, exists2, "second cache entry should still exist")
@@ -73,26 +59,17 @@ func TestClearTokenCache_PasswordChange(t *testing.T) {
 	newPassword := "newpass"
 
 	// Add entry with old password
-	oldKey := oauth.CredentialsCacheKey(user, oldPassword)
-	tokenSourceMu.Lock()
-	tokenSourceCache[oldKey] = nil
-	tokenSourceMu.Unlock()
+	tokenSourceCache.Set(user, oldPassword, nil)
 
 	// Clear cache with new password should not affect old entry
 	ClearTokenCache(user, newPassword)
 
-	tokenSourceMu.Lock()
-	_, oldExists := tokenSourceCache[oldKey]
-	tokenSourceMu.Unlock()
-
+	_, oldExists := tokenSourceCache.Get(user, oldPassword)
 	assert.True(t, oldExists, "old cache entry should still exist when clearing with different password")
 
 	// Clear with correct old password should remove it
 	ClearTokenCache(user, oldPassword)
 
-	tokenSourceMu.Lock()
-	_, oldExists = tokenSourceCache[oldKey]
-	tokenSourceMu.Unlock()
-
+	_, oldExists = tokenSourceCache.Get(user, oldPassword)
 	assert.False(t, oldExists, "old cache entry should be removed when clearing with correct password")
 }

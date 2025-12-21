@@ -3,7 +3,6 @@ package easee
 import (
 	"fmt"
 	"net/http"
-	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/util"
@@ -40,31 +39,20 @@ type tokenSource struct {
 }
 
 // tokenSourceCache stores per-user token sources
-var (
-	tokenSourceMu    sync.Mutex
-	tokenSourceCache = make(map[string]oauth2.TokenSource)
-)
+var tokenSourceCache = oauth.NewTokenSourceCache()
 
 // ClearTokenCache removes the cached token source for the given user credentials.
 // This should be called when credentials change or when a charger is reconfigured.
 func ClearTokenCache(user, password string) {
-	tokenSourceMu.Lock()
-	defer tokenSourceMu.Unlock()
-
-	key := oauth.CredentialsCacheKey(user, password)
-	delete(tokenSourceCache, key)
+	tokenSourceCache.Clear(user, password)
 }
 
 // GetTokenSource returns a shared oauth2.TokenSource for the given user credentials.
 // Multiple chargers using the same user credentials will share the same TokenSource,
 // ensuring tokens are reused and authentication is deduplicated.
 func GetTokenSource(log *util.Logger, user, password string) (oauth2.TokenSource, error) {
-	tokenSourceMu.Lock()
-	defer tokenSourceMu.Unlock()
-
-	// Use hash of username+password as the cache key
-	key := oauth.CredentialsCacheKey(user, password)
-	if ts, exists := tokenSourceCache[key]; exists {
+	// Check if token source exists in cache
+	if ts, exists := tokenSourceCache.Get(user, password); exists {
 		return ts, nil
 	}
 
@@ -80,7 +68,7 @@ func GetTokenSource(log *util.Logger, user, password string) (oauth2.TokenSource
 	}
 
 	ts := oauth.RefreshTokenSource(token.AsOAuth2Token(), c)
-	tokenSourceCache[key] = ts
+	tokenSourceCache.Set(user, password, ts)
 
 	return ts, nil
 }
