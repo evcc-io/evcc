@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -79,18 +80,22 @@ func (c Hems) Redacted() any {
 
 var _ api.Redactor = (*Mqtt)(nil)
 
-func maskedMap(m map[string]any) map[string]any {
-	r := map[string]any{}
+func maskedMap(m map[string]any, r []string) map[string]any {
+	redacted := make(map[string]any, len(m))
 
 	for key, value := range m {
-		if subMap, ok := value.(map[string]any); ok {
-			r[key] = maskedMap(subMap)
+		if slices.Contains(r, key) {
+			if s, ok := value.(string); ok {
+				redacted[key] = masked(s)
+			} else {
+				redacted[key] = value
+			}
 		} else {
-			r[key] = masked(value)
+			redacted[key] = value
 		}
 	}
 
-	return r
+	return redacted
 }
 
 func masked(s any) string {
@@ -174,9 +179,22 @@ func (m Messaging) Redacted() any {
 	}
 
 	for _, s := range m.Services {
+		var keysToRedact []string
+
+		switch s.Type {
+		case "pushover":
+			keysToRedact = []string{"app"}
+
+		case "telegram":
+			keysToRedact = []string{"token"}
+
+		case "email":
+			// TODO: redact email password
+		}
+
 		r.Services = append(r.Services, config.Typed{
 			Type:  s.Type,
-			Other: maskedMap(s.Other),
+			Other: maskedMap(s.Other, keysToRedact),
 		})
 	}
 

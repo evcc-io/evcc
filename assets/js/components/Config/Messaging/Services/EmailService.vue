@@ -21,6 +21,7 @@ import { type MessagingServiceEmail } from "@/types/evcc";
 import type { PropType } from "vue";
 import PropertyField from "../../PropertyField.vue";
 import MessagingFormRow from "./MessagingFormRow.vue";
+import formatter from "@/mixins/formatter";
 
 type EmailProperties = {
 	host: string;
@@ -34,6 +35,7 @@ type EmailProperties = {
 export default {
 	name: "EmailService",
 	components: { MessagingFormRow, PropertyField },
+	mixins: [formatter],
 	props: {
 		service: {
 			type: Object as PropType<MessagingServiceEmail>,
@@ -87,7 +89,7 @@ export default {
 			return (Object.entries(fieldExamples) as [keyof EmailProperties, string][]).map(
 				([key, example]) => ({
 					key,
-					id: `messagingServiceEmail${key}`,
+					id: `messagingServiceEmail${this.capitalizeFirstLetter(key)}`,
 					value: this.decoded[key] ?? "",
 					example: example,
 				})

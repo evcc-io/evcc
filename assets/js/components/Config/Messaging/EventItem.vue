@@ -3,7 +3,7 @@
 		<div class="d-flex align-items-center mb-3">
 			<div class="form-switch me-2">
 				<input
-					:value="disabled"
+					:checked="!disabled"
 					class="form-check-input"
 					type="checkbox"
 					role="switch"
@@ -45,7 +45,7 @@
 					:disabled="disabled"
 					required
 					rows
-					@change="updateTitle($event.target.value)"
+					@change="updateMessage($event.target.value)"
 				/>
 			</div>
 		</div>
@@ -72,7 +72,7 @@ export default {
 			this.updateTitle(this.$t(`config.messaging.event.${this.type}.titleDefault`));
 		}
 
-		if (!this.message) {
+		if (!this.message || this.message === "") {
 			let p = {};
 
 			switch (this.type) {
@@ -107,7 +107,7 @@ export default {
 			return `messaging-event-${this.type}-${name}`;
 		},
 		updateDisabled(newValue: string) {
-			this.$emit("update:disabled", newValue === "false");
+			this.$emit("update:disabled", newValue === "true");
 		},
 		updateTitle(newValue: string) {
 			this.$emit("update:title", newValue);

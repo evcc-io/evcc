@@ -11,7 +11,7 @@ async function validateServices(modal: Locator) {
   const pushoverRecipients = pushoverBox.getByLabel("Recipients");
   const pushoverDevices = pushoverBox.getByLabel("Device names");
 
-  await expect(pushoverToken).toHaveValue("pushoverToken");
+  await expect(pushoverToken).toHaveValue("***");
   await expect(pushoverRecipients).toHaveValue(
     ["recipient1", "recipient2", "recipient3"].join("\n")
   );
@@ -22,7 +22,7 @@ async function validateServices(modal: Locator) {
   const telegramToken = telegramBox.getByLabel("Token");
   const telegramRecipients = telegramBox.getByLabel("Chat IDs");
 
-  await expect(telegramToken).toHaveValue("telegramToken");
+  await expect(telegramToken).toHaveValue("***");
   await expect(telegramRecipients).toHaveValue(["12345", "-54321", "111"].join("\n"));
 
   // Validate Email

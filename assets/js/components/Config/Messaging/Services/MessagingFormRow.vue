@@ -1,5 +1,5 @@
 <template>
-	<FormRow :id="id" :label="label" :help="help" :example="example" optional>
+	<FormRow :id="id" :label="label" :help="help" :example="example" :optional="optional">
 		<slot />
 	</FormRow>
 </template>
