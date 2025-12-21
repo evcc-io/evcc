@@ -66,7 +66,7 @@
       "ocppNextStep": "Nästa steg",
       "ocppStep1": "Konfigurera din laddare att använda evcc som OCPP-server.",
       "ocppStep2": "Vänta, din laddare ansluter till evcc.",
-      "ocppStep3": "Fortsätt och slutför din konfiguration.",
+      "ocppStep3": "Fortsätt och slutför konfigurationen.",
       "ocppWaiting": "Väntar på anslutning",
       "switchsockets": "Byt kontakt",
       "template": "Tillverkare",
@@ -491,6 +491,7 @@
       "detectedChargers": "Upptäckta IDn",
       "detectedHelp": "Dessa laddare har försökt ansluta till evcc. För att använda en laddare, skapa en laddplats med dess ID.",
       "noChargers": "Inga OCPP-laddare hittades.",
+      "noStations": "Inga laddare är anslutna",
       "status": {
         "configured": "Ej ansluten",
         "connected": "Ansluten",
@@ -498,7 +499,7 @@
       },
       "title": "OCPP-server",
       "url": "Server URL",
-      "urlHelp": "Kopiera denna URL till din laddares konfiguration. Kontrollera tillverkarens manual för detaljer. Laddaren förväntas automatiskt lägga till sin unika identifierare (stationens ID) i webbadressen. I sällsynta fall kan du behöva ange identifieraren manuellt. Exempel: {url}"
+      "urlHelp": "Kopiera denna URL till laddarens konfiguration. Se tillverkarens manual för mer information. Laddaren ska automatiskt lägga till sin unika identifierare (stations-ID) till URL:en. I sällsynta fall kan du behöva ange identifieraren manuellt. Exempel: `{url}`Kopiera denna URL till laddarens konfiguration. Se tillverkarens manual för mer information. Laddaren ska automatiskt lägga till sin unika identifierare (stations-ID) till URL:en. I sällsynta fall kan du behöva ange identifieraren manuellt. Exempel: `{url}`"
     },
     "options": {
       "boolean": {
