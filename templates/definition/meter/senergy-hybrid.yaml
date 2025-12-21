@@ -15,10 +15,14 @@ params:
     id: 1
   - name: capacity
     advanced: true
+  - name: maxchargepower
+    default: 10000
+  - name: maxdischargepower
+    default: 10000    
   - name: minsoc
-    advanced: true
+    default: 10
   - name: maxsoc
-    advanced: true
+    default: 100
   - name: maxacpower
 render: |
   type: custom
@@ -120,17 +124,108 @@ render: |
       address: 0x2000 # Battery SOC
       type: holding
       decode: uint16
-  limitsoc:
-    source: convert
-    convert: float2int
+  batterymode:
+    source: switch
+    switch:
     set:
-      source: modbus
-      {{- include "modbus" . | indent 4 }}
-      register:
-        address: 0x211B # Capacity of discharge end (%) 
-        type: writesingle
-        decode: uint16
+      source: switch
+      switch:
+      - case: 1 # normal
+        set:
+          source: sequence
+          set:
+          - source: const
+            value: 0 # Self used mode
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 0x2100 # Hybrid work mode
+                type: writesingle
+                encoding: uint16
+          - source: const
+            value: 0 # disable
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 0x214C # Time-based control Enable
+                type: writesingle
+                encoding: uint16
+      - case: 2 # hold - stop battery discharge
+        set:
+          source: sequence
+          set:
+          - source: const
+            value: 3 # Back-up mode
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 0x2100 # Hybrid work mode
+                type: writesingle
+                encoding: uint16
+          - source: const
+            value: 0 # disable
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 0x214C # Time-based control Enable
+                type: writesingle
+                encoding: uint16
+      - case: 3 # charge - force battery charge
+        set:
+          source: sequence
+          set:
+          - source: const
+            value: 1 # Every day
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 0x2101 # Once/Everyday
+                type: writesingle
+                encoding: uint16
+          - source: const
+            value: 0x0000 # 00:00
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 0x2102 # Charge start time 1
+                type: writesingle
+                encoding: uint16
+          - source: const
+            value: 0x173B # 23:59
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 0x2103 # Charge end time 1
+                type: writesingle
+                encoding: uint16
+          - source: const
+            value: 0 # Self used mode
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 0x2100 # Hybrid work mode
+                type: writesingle
+                encoding: uint16
+          - source: const
+            value: 1 # disable
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 0x214C # Time-based control Enable
+                type: writesingle
+                encoding: uint16
   capacity: {{ .capacity }} # kWh
+  maxchargepower: {{ .maxchargepower }} # W
+  maxdischargepower: {{ .maxdischargepower }} # W
   minsoc: {{ .minsoc }} # %
   maxsoc: {{ .maxsoc }} # %
   {{- end }}
