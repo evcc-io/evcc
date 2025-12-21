@@ -858,7 +858,6 @@ func configureMessengers(conf *globalconfig.Messaging, vehicles push.Vehicles, v
 
 					delete(s.Other, "uri")
 				}
-
 			}
 			// migrate from yaml to json
 			migrateYamlToJsonByData(keys.Messaging, data)

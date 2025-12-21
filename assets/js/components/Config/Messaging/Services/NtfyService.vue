@@ -37,11 +37,11 @@
 		<MessagingFormRow :serviceType="service.type" inputName="priority" optional>
 			<PropertyField
 				id="messagingServiceNtfyPriority"
+				v-model="serviceData.other.priority"
 				property="priority"
 				type="Choice"
 				class="me-2 w-25"
 				:choice="Object.values(MESSAGING_SERVICE_NTFY_PRIORITY)"
-				v-model="serviceData.other.priority"
 			/>
 		</MessagingFormRow>
 
