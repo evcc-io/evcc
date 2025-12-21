@@ -1,16 +1,16 @@
 <template>
-	<div v-for="p in emailProperties" :key="p">
+	<div v-for="field in fields" :key="field.key">
 		<MessagingFormRow
 			:serviceType="service.type"
-			:inputName="p"
-			:example="EMAIL_PROPERTIES_EXAMPLES[p]"
+			:inputName="field.key"
+			:example="field.example"
 		>
 			<PropertyField
-				:id="'messagingServiceEmail' + p"
-				:model-value="decoded[p] ?? ''"
+				:id="field.id"
+				:model-value="field.value"
 				type="String"
 				required
-				@update:model-value="(e) => updateEmail(p, e)"
+				@update:model-value="(e) => updateEmail(field.key, e)"
 			/>
 		</MessagingFormRow>
 	</div>
@@ -22,23 +22,14 @@ import type { PropType } from "vue";
 import PropertyField from "../../PropertyField.vue";
 import MessagingFormRow from "./MessagingFormRow.vue";
 
-const EMAIL_PROPERTIES = {
-	HOST: "host",
-	PORT: "port",
-	USER: "user",
-	PASSWORD: "password",
-	FROM: "from",
-	TO: "to",
-} as const;
-
-const EMAIL_PROPERTIES_EXAMPLES = {
-	[EMAIL_PROPERTIES.HOST]: "emailserver.example.com",
-	[EMAIL_PROPERTIES.PORT]: "587",
-	[EMAIL_PROPERTIES.USER]: "john.doe",
-	[EMAIL_PROPERTIES.PASSWORD]: "secret123",
-	[EMAIL_PROPERTIES.FROM]: "john.doe@mail.com",
-	[EMAIL_PROPERTIES.TO]: "recipient@mail.com",
-} as const;
+type EmailProperties = {
+	host: string;
+	port: string;
+	user: string;
+	password: string;
+	from: string;
+	to: string;
+};
 
 export default {
 	name: "EmailService",
@@ -49,12 +40,10 @@ export default {
 			required: true,
 		},
 	},
-	data() {
-		return { emailProperties: Object.values(EMAIL_PROPERTIES), EMAIL_PROPERTIES_EXAMPLES };
-	},
 	computed: {
-		decoded(): Record<string, string> {
-			const emailOther = this.service.other as any;
+		decoded(): EmailProperties {
+			const emailOther = this.service.other;
+
 			let hostname = "";
 			let port = "";
 			let username = "";
@@ -77,21 +66,39 @@ export default {
 			}
 
 			return {
-				[EMAIL_PROPERTIES.HOST]: hostname,
-				[EMAIL_PROPERTIES.PORT]: port,
-				[EMAIL_PROPERTIES.USER]: username,
-				[EMAIL_PROPERTIES.PASSWORD]: password,
-				[EMAIL_PROPERTIES.FROM]: from,
-				[EMAIL_PROPERTIES.TO]: to,
+				host: hostname,
+				port: port,
+				user: username,
+				password: password,
+				from: from,
+				to: to,
 			};
+		},
+		fields() {
+			const fieldExamples: EmailProperties = {
+				host: "emailserver.example.com",
+				port: "587",
+				user: "john.doe",
+				password: "secret123",
+				from: "john.doe@mail.com",
+				to: "recipient@mail.com",
+			};
+
+			return (Object.entries(fieldExamples) as [keyof EmailProperties, string][]).map(
+				([key, example]) => ({
+					key,
+					id: `messagingServiceEmail${key}`,
+					value: this.decoded[key] ?? "",
+					example: example,
+				})
+			);
 		},
 	},
 	methods: {
 		updateEmail(p: string, v: string) {
-			const emailOther = this.service.other as any;
-			const d = this.decoded;
-			d[p] = v;
-			emailOther.uri = `smtp://${d[EMAIL_PROPERTIES.USER]}:${d[EMAIL_PROPERTIES.PASSWORD]}@${d[EMAIL_PROPERTIES.HOST]}:${d[EMAIL_PROPERTIES.PORT]}/?fromAddress=${d[EMAIL_PROPERTIES.FROM]}&toAddresses=${d[EMAIL_PROPERTIES.TO]}`;
+			const emailOther = this.service.other;
+			const d = { ...this.decoded, [p]: v };
+			emailOther.uri = `smtp://${d.user}:${d.password}@${d.host}:${d.port}/?fromAddress=${d.from}&toAddresses=${d.to}`;
 		},
 	},
 };
