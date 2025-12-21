@@ -838,6 +838,8 @@
       "stepTwo": "Step 2: Copy additional information",
       "title": "GitHub Problem Summary"
     },
+    "system": "System",
+    "timezone": "Timezone",
     "title": "Report a problem",
     "version": "Version"
   },
