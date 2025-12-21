@@ -922,7 +922,7 @@ func configureTariffs(conf *globalconfig.Tariffs) (*tariff.Tariffs, error) {
 	eg.Go(func() error { return configureTariff(api.TariffUsagePlanner, conf.Planner, &tariffs.Planner) })
 	if len(conf.Solar) == 1 {
 		eg.Go(func() error { return configureTariff(api.TariffUsageSolar, conf.Solar[0], &tariffs.Solar) })
-	} else {
+	} else if len(conf.Solar) > 1 {
 		eg.Go(func() error { return configureSolarTariff(conf.Solar, &tariffs.Solar) })
 	}
 
