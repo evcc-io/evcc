@@ -180,7 +180,8 @@ func mergeMasked(class templates.Class, conf, old map[string]any) (map[string]an
 func validateParams(class templates.Class, conf map[string]any) error {
 	tmpl, err := templateForConfig(class, conf)
 	if err != nil {
-		return err
+		// no template, no validation
+		return nil
 	}
 
 	for k, v := range conf {
