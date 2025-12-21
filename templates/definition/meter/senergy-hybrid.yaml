@@ -127,102 +127,99 @@ render: |
   batterymode:
     source: switch
     switch:
-    set:
-      source: switch
-      switch:
-      - case: 1 # normal
+    - case: 1 # normal
+      set:
+        source: sequence
         set:
-          source: sequence
+        - source: const
+          value: 0 # Self used mode
           set:
-          - source: const
-            value: 0 # Self used mode
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 0x2100 # Hybrid work mode
-                type: writesingle
-                encoding: uint16
-          - source: const
-            value: 0 # disable
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 0x214C # Time-based control Enable
-                type: writesingle
-                encoding: uint16
-      - case: 2 # hold - stop battery discharge
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 0x2100 # Hybrid work mode
+              type: writesingle
+              encoding: uint16
+        - source: const
+          value: 0 # disable
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 0x214C # Time-based control Enable
+              type: writesingle
+              encoding: uint16
+    - case: 2 # hold - stop battery discharge
+      set:
+        source: sequence
         set:
-          source: sequence
+        - source: const
+          value: 3 # Back-up mode
           set:
-          - source: const
-            value: 3 # Back-up mode
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 0x2100 # Hybrid work mode
-                type: writesingle
-                encoding: uint16
-          - source: const
-            value: 0 # disable
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 0x214C # Time-based control Enable
-                type: writesingle
-                encoding: uint16
-      - case: 3 # charge - force battery charge
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 0x2100 # Hybrid work mode
+              type: writesingle
+              encoding: uint16
+        - source: const
+          value: 0 # disable
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 0x214C # Time-based control Enable
+              type: writesingle
+              encoding: uint16
+    - case: 3 # charge - force battery charge
+      set:
+        source: sequence
         set:
-          source: sequence
+        - source: const
+          value: 1 # Every day
           set:
-          - source: const
-            value: 1 # Every day
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 0x2101 # Once/Everyday
-                type: writesingle
-                encoding: uint16
-          - source: const
-            value: 0x0000 # 00:00
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 0x2102 # Charge start time 1
-                type: writesingle
-                encoding: uint16
-          - source: const
-            value: 0x173B # 23:59
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 0x2103 # Charge end time 1
-                type: writesingle
-                encoding: uint16
-          - source: const
-            value: 0 # Self used mode
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 0x2100 # Hybrid work mode
-                type: writesingle
-                encoding: uint16
-          - source: const
-            value: 1 # disable
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 0x214C # Time-based control Enable
-                type: writesingle
-                encoding: uint16
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 0x2101 # Once/Everyday
+              type: writesingle
+              encoding: uint16
+        - source: const
+          value: 0x0000 # 00:00
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 0x2102 # Charge start time 1
+              type: writesingle
+              encoding: uint16
+        - source: const
+          value: 0x173B # 23:59
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 0x2103 # Charge end time 1
+              type: writesingle
+              encoding: uint16
+        - source: const
+          value: 0 # Self used mode
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 0x2100 # Hybrid work mode
+              type: writesingle
+              encoding: uint16
+        - source: const
+          value: 1 # disable
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 0x214C # Time-based control Enable
+              type: writesingle
+              encoding: uint16
   capacity: {{ .capacity }} # kWh
   maxchargepower: {{ .maxchargepower }} # W
   maxdischargepower: {{ .maxdischargepower }} # W
