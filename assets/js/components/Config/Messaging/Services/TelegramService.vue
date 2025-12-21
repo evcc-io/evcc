@@ -20,6 +20,7 @@
 				property="chats"
 				type="List"
 				required
+				rows
 			/>
 		</MessagingFormRow>
 	</div>

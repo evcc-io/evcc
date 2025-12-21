@@ -29,6 +29,7 @@
 				size="w-100"
 				class="me-2"
 				required
+				rows
 			/>
 		</MessagingFormRow>
 
@@ -39,6 +40,7 @@
 				property="devices"
 				type="List"
 				required
+				rows
 			/>
 		</MessagingFormRow>
 	</div>

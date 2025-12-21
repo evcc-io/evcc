@@ -17,6 +17,7 @@
 				property="topics"
 				type="List"
 				required
+				rows
 				@update:model-value="(e) => updateNtfy('topics', e)"
 			/>
 		</MessagingFormRow>
@@ -43,6 +44,7 @@
 				id="messagingServiceNtfyTags"
 				:model-value="ntfyOther.tags?.split(',')"
 				property="tags"
+				rows
 				type="List"
 				@update:model-value="(e: string[]) => (ntfyOther.tags = e.join())"
 			/>

@@ -44,6 +44,7 @@
 					property="eventMessage"
 					:disabled="!disabled"
 					required
+					rows
 					@change="updateTitle($event.target.value)"
 				/>
 			</div>

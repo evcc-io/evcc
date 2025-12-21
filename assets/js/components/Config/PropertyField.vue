@@ -82,7 +82,7 @@
 		</template>
 	</select>
 	<textarea
-		v-else-if="textarea"
+		v-else-if="rows"
 		:id="id"
 		v-model="value"
 		class="form-control"
@@ -152,6 +152,7 @@ export default {
 		modelValue: [String, Number, Boolean, Object],
 		label: String,
 		serviceValues: { type: Array, default: () => [] },
+		rows: Boolean,
 	},
 	emits: ["update:modelValue"],
 	data: () => {
@@ -226,13 +227,6 @@ export default {
 			return [
 				"accessToken",
 				"refreshToken",
-				"identifiers",
-				"recipients",
-				"devices",
-				"chats",
-				"topics",
-				"tags",
-				"eventMessage",
 			].includes(this.property);
 		},
 		getTextAreaRows() {
