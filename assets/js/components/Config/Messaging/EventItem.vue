@@ -97,6 +97,11 @@ export default {
 						chargeDuration: "${chargeDuration}",
 					};
 					break;
+				case MESSAGING_EVENTS.PLANOVERRUN:
+					p = {
+						vehicleTitle: "{{ if .vehicleTitle }} {{ .vehicleTitle }} {{end}}",
+					};
+					break;
 			}
 
 			this.updateMessage(this.$t(`config.messaging.event.${this.type}.messageDefault`, p));

@@ -457,6 +457,7 @@ export enum MESSAGING_EVENTS {
   SOC = "soc",
   GUEST = "guest",
   ASLEEP = "asleep",
+  PLANOVERRUN = "planoverrun",
 }
 
 export interface MessagingEvent {

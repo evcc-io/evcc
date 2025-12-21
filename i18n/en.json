@@ -414,6 +414,11 @@
           "title": "When an unknown car connects",
           "titleDefault": "Unknown vehicle"
         },
+        "planoverrun": {
+          "messageDefault": "{vehicleTitle}: Plan will overrun.",
+          "title": "When plan charging is going to overrun",
+          "titleDefault": "Plan overrun"
+        },
         "soc": {
           "messageDefault": "Battery charged to {vehicleSoc}%",
           "title": "For SoC updates",
