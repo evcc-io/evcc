@@ -54,8 +54,8 @@
 
 <script lang="ts">
 import type { PropType } from "vue";
-import PropertyField from "../../PropertyField.vue";
 import { MESSAGING_EVENTS } from "@/types/evcc";
+import PropertyField from "../PropertyField.vue";
 
 export default {
 	name: "EventItem",

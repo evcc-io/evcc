@@ -224,10 +224,7 @@ export default {
 			return this.property === "icon";
 		},
 		textarea() {
-			return [
-				"accessToken",
-				"refreshToken",
-			].includes(this.property);
+			return ["accessToken", "refreshToken"].includes(this.property);
 		},
 		getTextAreaRows() {
 			switch (this.property) {

@@ -17,13 +17,13 @@
 			<PropertyField
 				id="messagingServiceTelegramChats"
 				:model-value="telegramOther.chats"
-				@update:modelValue="
-					(e: string[]) => (telegramOther.chats = e.map((v) => Number(v)))
-				"
 				property="chats"
 				type="List"
 				required
 				rows
+				@update:model-value="
+					(e: string[]) => (telegramOther.chats = e.map((v) => Number(v)))
+				"
 			/>
 		</MessagingFormRow>
 	</div>

@@ -729,7 +729,7 @@ export default defineComponent({
 			}
 			return { configured: { value: false } };
 		},
-		messagingTags() {
+		messagingTags(): DeviceTags {
 			const config = store.state?.messaging?.services || [];
 			if (config.length > 0) {
 				return { amount: { value: config.length } };
