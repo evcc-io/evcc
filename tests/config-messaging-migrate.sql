@@ -42,6 +42,7 @@ services:
   uri: https://ntfy.sh/evcc_alert,evcc_pushmessage
   priority: low
   tags: +1,blue_car
+  authtoken: accessToken
 - type: custom
   encoding: title
   send:

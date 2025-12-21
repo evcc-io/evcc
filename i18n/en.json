@@ -452,6 +452,8 @@
           "userHelp": "Username for the email server."
         },
         "ntfy": {
+          "authtoken": "Access token",
+          "authtokenHelp": "Used for secure access to the private ntfy server.",
           "host": "Host",
           "hostHelp": "Host name or IP address of the ntfy server.",
           "priority": "Priority",

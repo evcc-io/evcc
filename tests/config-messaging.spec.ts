@@ -51,11 +51,13 @@ async function validateServices(modal: Locator) {
   const ntfyBox = modal.getByTestId("service-box-ntfy");
   const ntfyHost = ntfyBox.getByLabel("Host");
   const ntfyTopics = ntfyBox.getByLabel("Topics");
+  const ntfyAccesstoken = ntfyBox.getByLabel("Access token");
   const ntfyPriority = ntfyBox.getByLabel("Priority");
   const ntfyTagsAndEmojis = ntfyBox.getByLabel("Tags & emojis");
 
   await expect(ntfyHost).toHaveValue("ntfy.sh");
   await expect(ntfyTopics).toHaveValue(["evcc_alert", "evcc_pushmessage"].join("\n"));
+  await expect(ntfyAccesstoken).toHaveValue("accessToken");
   await expect(ntfyPriority).toHaveValue("low");
   await expect(ntfyTagsAndEmojis).toHaveValue(["+1", "blue_car"].join("\n"));
 
@@ -209,11 +211,13 @@ test.describe("messaging", async () => {
     const ntfyBox = modal.getByTestId("service-box-ntfy");
     const ntfyHost = ntfyBox.getByLabel("Host");
     const ntfyTopics = ntfyBox.getByLabel("Topics");
+    const ntfyAccesstoken = ntfyBox.getByLabel("Access token");
     const ntfyPriority = ntfyBox.getByLabel("Priority");
     const ntfyTagsAndEmojis = ntfyBox.getByLabel("Tags & emojis");
 
     await ntfyHost.fill("ntfy.sh");
     await ntfyTopics.fill(["evcc_alert", "evcc_pushmessage"].join("\n"));
+    await ntfyAccesstoken.fill("accessToken");
     await ntfyPriority.selectOption({ label: "low" });
     await ntfyTagsAndEmojis.fill(["+1", "blue_car"].join("\n"));
 

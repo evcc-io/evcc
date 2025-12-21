@@ -22,6 +22,20 @@
 			/>
 		</MessagingFormRow>
 
+		<MessagingFormRow
+			:serviceType="service.type"
+			inputName="authtoken"
+			example="tk_7eevizlsiwf9yi4uxsrs83r4352o0"
+			optional
+		>
+			<PropertyField
+				id="messagingServiceNtfyAuthtoken"
+				v-model="ntfyOther.authtoken"
+				type="String"
+				required
+			/>
+		</MessagingFormRow>
+
 		<MessagingFormRow :serviceType="service.type" inputName="priority" optional>
 			<PropertyField
 				id="messagingServiceNtfyPriority"
@@ -71,7 +85,7 @@ export default {
 		return { MESSAGING_SERVICE_NTFY_PRIORITY };
 	},
 	computed: {
-		ntfyOther(): any {
+		ntfyOther() {
 			return this.service.other;
 		},
 		decoded(): Record<string, string> {

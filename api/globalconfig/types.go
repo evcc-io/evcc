@@ -188,6 +188,9 @@ func (m Messaging) Redacted() any {
 		case "telegram":
 			keysToRedact = []string{"token"}
 
+		case "ntfy":
+			keysToRedact = []string{"authtoken"}
+
 		case "email":
 			// TODO: redact email password
 		}

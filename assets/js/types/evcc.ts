@@ -509,7 +509,12 @@ export interface MessagingServiceShout {
 }
 export interface MessagingServiceNtfy {
   type: MESSAGING_SERVICE_TYPE.NTFY;
-  other: { uri: string; priority?: MESSAGING_SERVICE_NTFY_PRIORITY; tags?: string };
+  other: {
+    uri: string;
+    priority?: MESSAGING_SERVICE_NTFY_PRIORITY;
+    tags?: string;
+    authtoken?: string;
+  };
 }
 export enum MESSAGING_SERVICE_NTFY_PRIORITY {
   MAX = "max",
