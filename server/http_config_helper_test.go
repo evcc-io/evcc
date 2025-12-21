@@ -179,3 +179,35 @@ func TestFilterValidTemplateParams(t *testing.T) {
 	assert.Equal(t, "grid", result["usage"], "usage")
 	assert.NotContains(t, result, "outdatedField")
 }
+
+func TestValidateHostPattern(t *testing.T) {
+	tests := []struct {
+		host  string
+		valid bool
+	}{
+		{"192.168.1.100", true},
+		{"192.168.1.100:8080", true},
+		{"example.com", true},
+		{"http://192.168.1.100", false},
+		{"192.168.1.100/admin", false},
+		{"192.168.1.100 ", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.host, func(t *testing.T) {
+			conf := map[string]any{
+				"template": "tasmota",
+				"host":     tt.host,
+				"usage":    "pv",
+			}
+
+			err := validateParams(templates.Meter, conf)
+			if tt.valid {
+				require.NoError(t, err)
+			} else {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), "does not match required pattern")
+			}
+		})
+	}
+}

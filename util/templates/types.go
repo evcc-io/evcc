@@ -201,6 +201,7 @@ type Param struct {
 	Type        ParamType    // string representation of the value type, "string" is default
 	Choice      []string     `json:",omitempty"` // defines a set of choices, e.g. "grid", "pv", "battery", "charge" for "usage"
 	Service     string       `json:",omitempty"` // defines a service to provide choices
+	Pattern     string       `json:",omitempty"` // regex pattern for input validation (used HTML input[pattern] and in Go validation)
 	AllInOne    bool         `json:"-"`          // defines if the defined usages can all be present in a single device
 
 	// TODO move somewhere else should not be part of the param definition

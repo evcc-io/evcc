@@ -20,6 +20,7 @@ params:
       de: IP-Adresse oder Hostname
       en: IP address or hostname
     example: 192.0.2.2
+    pattern: "^[^\\/\\s]+(:[0-9]{1,5})?$" # any char except slash/space, optional :port
   - name: ip
     description:
       de: IP-Adresse

@@ -258,6 +258,10 @@ func deviceStatusHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func newDevice[T any](ctx context.Context, class templates.Class, req configReq, newFromConf newFromConfFunc[T], h config.Handler[T], force bool) (*config.Config, error) {
+	if err := validateParams(class, req.Other); err != nil {
+		return nil, err
+	}
+
 	instance, err := newFromConf(ctx, req.Type, req.Other)
 	if err != nil && !force {
 		return nil, err
@@ -554,6 +558,10 @@ func deleteDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Requ
 
 func testConfig[T any](ctx context.Context, id int, class templates.Class, req configReq, newFromConf newFromConfFunc[T], h config.Handler[T]) (T, error) {
 	if id == 0 {
+		if err := validateParams(class, req.Other); err != nil {
+			var zero T
+			return zero, err
+		}
 		return newFromConf(ctx, req.Type, req.Other)
 	}
 

@@ -7,6 +7,7 @@
 			:step="step"
 			:placeholder="placeholder"
 			:required="required"
+			:pattern="pattern"
 			:aria-describedby="id + '_unit'"
 			class="form-control"
 			:class="{ 'text-end': endAlign }"
@@ -87,6 +88,7 @@
 			:step="step"
 			:placeholder="placeholder"
 			:required="required"
+			:pattern="pattern"
 			:autocomplete="masked || datalistId ? 'off' : null"
 		/>
 		<button
@@ -129,6 +131,7 @@ export default {
 		scale: Number,
 		required: Boolean,
 		invalid: Boolean,
+		pattern: String,
 		choice: { type: Array, default: () => [] },
 		modelValue: [String, Number, Boolean, Object],
 		label: String,
