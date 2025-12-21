@@ -18,7 +18,7 @@ params:
   - name: maxchargepower
     default: 10000
   - name: maxdischargepower
-    default: 10000    
+    default: 10000
   - name: minsoc
     default: 10
   - name: maxsoc
