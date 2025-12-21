@@ -610,7 +610,7 @@ export interface SelectActionOption<T> {
   value: T;
 }
 
-export type DeviceType = "charger" | "meter" | "vehicle" | "loadpoint" | "messaging";
+export type DeviceType = "charger" | "meter" | "vehicle" | "loadpoint";
 export type MeterType = "grid" | "pv" | "battery" | "charge" | "aux" | "ext";
 export type MeterTemplateUsage = "grid" | "pv" | "battery" | "charge" | "aux";
 
