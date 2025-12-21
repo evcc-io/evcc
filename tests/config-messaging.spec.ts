@@ -1,12 +1,6 @@
 import { test, expect, type Locator } from "@playwright/test";
 import { start, stop, baseUrl, restart } from "./evcc";
-import {
-  editorClear,
-  editorPaste,
-  enableExperimental,
-  expectModalHidden,
-  expectModalVisible,
-} from "./utils";
+import { editorClear, editorPaste, expectModalHidden, expectModalVisible } from "./utils";
 
 const CONFIG_MESSAGING_MIGRATE = "config-messaging-migrate.sql";
 
@@ -86,7 +80,6 @@ test.describe("messaging", async () => {
   test("messaging not configured", async ({ page }) => {
     await start();
     await page.goto("/#/config");
-    await enableExperimental(page, false);
 
     const messagingCard = page.getByTestId("messaging");
 
@@ -97,7 +90,6 @@ test.describe("messaging", async () => {
   test("messaging events via ui", async ({ page }) => {
     await start();
     await page.goto("/#/config");
-    await enableExperimental(page, false);
 
     const messagingCard = page.getByTestId("messaging");
 
@@ -150,7 +142,6 @@ test.describe("messaging", async () => {
   test("messaging services via ui", async ({ page }) => {
     await start();
     await page.goto("/#/config");
-    await enableExperimental(page, false);
 
     const messagingCard = page.getByTestId("messaging");
 
@@ -270,7 +261,6 @@ test.describe("messaging", async () => {
   test("messaging via db (yaml to json migration)", async ({ page }) => {
     await start(undefined, CONFIG_MESSAGING_MIGRATE);
     await page.goto("/#/config");
-    await enableExperimental(page, false);
 
     const messagingCard = page.getByTestId("messaging");
     await expect(messagingCard).toContainText(["Amount", "6"].join(""));
