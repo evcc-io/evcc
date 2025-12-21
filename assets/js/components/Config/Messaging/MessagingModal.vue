@@ -130,7 +130,7 @@ import EmailService from "./Services/EmailService.vue";
 import ShoutService from "./Services/ShoutService.vue";
 import NtfyService from "./Services/NtfyService.vue";
 import CustomService from "./Services/CustomService.vue";
-import EventItem from "./messaging/EventItem.vue";
+import EventItem from "./EventItem.vue";
 import DropdownButton from "@/components/Helper/DropdownButton.vue";
 import formatter from "@/mixins/formatter";
 
