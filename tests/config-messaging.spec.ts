@@ -37,7 +37,7 @@ async function validateServices(modal: Locator) {
   await expect(emailHost).toHaveValue("emailserver.example.com");
   await expect(emailPort).toHaveValue("587");
   await expect(emailUser).toHaveValue("john.doe");
-  await expect(emailPassword).toHaveValue("secret123");
+  await expect(emailPassword).toHaveValue("***");
   await expect(emailFrom).toHaveValue("john.doe@mail.com");
   await expect(emailTo).toHaveValue("recipient@mail.com");
 
