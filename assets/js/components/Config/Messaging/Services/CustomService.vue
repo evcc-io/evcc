@@ -27,7 +27,10 @@
 				url: '[docs.evcc.io](https://docs.evcc.io/en/docs/devices/plugins)',
 			}"
 		>
-			<YamlEditorContainer v-model="serviceData.other.send" />
+			<YamlEditorContainer
+				:model-value="getContent()"
+				@change="setContent($event.target.value)"
+			/>
 		</MessagingFormRow>
 	</div>
 </template>
@@ -39,7 +42,10 @@ import PropertyField from "../../PropertyField.vue";
 import YamlEditorContainer from "../../YamlEditorContainer.vue";
 import MessagingFormRow from "./MessagingFormRow.vue";
 
-const DEAFULT_SEND_PLUGIN = 'cmd: /usr/local/bin/evcc_message "{{.send}}"\nsource: script';
+const DEAFULT_SEND_PLUGIN = {
+	cmd: `/usr/local/bin/evcc_message "{{.send}}"`,
+	source: "script",
+};
 
 export default {
 	name: "CustomService",
@@ -71,6 +77,21 @@ export default {
 				default:
 					return "`<MSG>`";
 			}
+		},
+	},
+	methods: {
+		setContent(v: string) {
+			this.serviceData.other.send = Object.fromEntries(
+				v.split("\n").map((line) => {
+					const [key, ...rest] = line.split(":");
+					return [(key || "").trim(), rest.join(":").trim()];
+				})
+			);
+		},
+		getContent() {
+			return Object.entries(this.service.other.send)
+				.map(([key, value]) => `${key}: ${value}`)
+				.join("\n");
 		},
 	},
 	mounted() {
