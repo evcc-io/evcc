@@ -841,9 +841,7 @@ func configureMessengers(conf *globalconfig.Messaging, vehicles push.Vehicles, v
 				delete(s.Other, "uri")
 			}
 			// migrate from yaml to json
-			if err := migrateYamlToJson[globalconfig.Messaging](keys.Messaging); err != nil {
-				return nil, err
-			}
+			migrateYamlToJsonByData(keys.Messaging, data)
 		}
 
 		if err := settings.Json(keys.Messaging, &conf); err != nil {
@@ -1008,18 +1006,29 @@ func configureDevices(conf globalconfig.All) error {
 	return joinErrors(errs...)
 }
 
-// migrateYamlToJson converts a settings value from yaml to json if needed
-func migrateYamlToJson[T any](key string) error {
-	var err error
+// migrateYamlToJsonByKey converts a settings value from yaml to json by key if needed
+func migrateYamlToJsonByData(key string, data any) error {
 	if settings.IsJson(key) {
 		// already JSON, nothing to do
 		return nil
 	}
 
+	err := settings.SetJson(key, data)
+	log.INFO.Printf("migrated %s setting to JSON", key)
+	return err
+}
+
+// migrateYamlToJson converts a settings value from yaml to json by key if needed
+func migrateYamlToJson[T any](key string) error {
+	if settings.IsJson(key) {
+		// already JSON, nothing to do
+		return nil
+	}
+
+	var err error
 	var data T
 	if err := settings.Yaml(key, new(T), &data); err == nil {
-		settings.SetJson(key, data)
-		log.INFO.Printf("migrated %s setting to JSON", key)
+		migrateYamlToJsonByData(key, data)
 	}
 
 	return err
