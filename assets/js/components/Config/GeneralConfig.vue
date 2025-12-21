@@ -26,17 +26,15 @@
 			test-id="generalconfig-experimental"
 			:label="$t('config.general.experimental')"
 			:text="$t(`config.general.${hiddenFeatures ? 'on' : 'off'}`)"
-			modal-id="globalSettingsModal"
+			modal-id="experimentalModal"
 		/>
 
 		<GeneralConfigEntry
-			v-if="$hiddenFeatures()"
 			test-id="generalconfig-sponsoring"
 			:label="$t('config.sponsor.title')"
 			:text="sponsorStatus.title"
 			:text-class="sponsorStatus.textClass"
 			modal-id="sponsorModal"
-			experimental
 		>
 			<template #text-prefix>
 				<span
@@ -48,21 +46,17 @@
 		</GeneralConfigEntry>
 
 		<GeneralConfigEntry
-			v-if="$hiddenFeatures()"
 			test-id="generalconfig-network"
 			:label="$t('config.network.title')"
 			:text="networkStatus"
 			modal-id="networkModal"
-			experimental
 		/>
 
 		<GeneralConfigEntry
-			v-if="$hiddenFeatures()"
 			test-id="generalconfig-control"
 			:label="$t('config.control.title')"
 			:text="controlStatus"
 			modal-id="controlModal"
-			experimental
 		/>
 		<TitleModal ref="titleModal" @changed="load" />
 	</div>
@@ -105,7 +99,8 @@ export default {
 		},
 		sponsorStatus() {
 			const sponsor = store.state?.sponsor || {};
-			const { name, expiresSoon } = sponsor;
+			const name = sponsor.status.name;
+			const expiresSoon = sponsor.status.expiresSoon;
 			let textClass = "";
 			let badgeClass = "";
 			let title = name;

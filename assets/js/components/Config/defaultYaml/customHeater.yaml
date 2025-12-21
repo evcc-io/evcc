@@ -19,6 +19,7 @@ features:
 
 icon: heater # icon for UI purpose only
 
+
 ## optional attributes (read-only)
 
 #power: # heating power in W

@@ -43,7 +43,9 @@
 				<div v-else>
 					<p v-if="loadingTemplate">{{ $t("config.general.templateLoading") }}</p>
 					<SponsorTokenRequired v-if="sponsorTokenRequired" />
-					<Markdown v-if="description" :markdown="description" class="my-4" />
+					<slot name="template-description">
+						<Markdown v-if="description" :markdown="description" class="my-4" />
+					</slot>
 
 					<div v-if="authRequired">
 						<PropertyEntry
@@ -54,14 +56,26 @@
 							v-model="values[param.Name]"
 							:service-values="serviceValues[param.Name]"
 						/>
-						<p v-if="authError" class="text-danger">{{ authError }}</p>
 
-						<div class="my-4 d-flex justify-content-between align-items-baseline">
+						<div v-if="auth.code">
+							<hr class="my-5" />
+							<AuthCodeDisplay
+								:id="`${deviceType}AuthCode`"
+								:code="auth.code"
+								:expiry="auth.expiry"
+							/>
+						</div>
+
+						<p v-if="auth.error" class="text-danger">{{ auth.error }}</p>
+
+						<div
+							class="my-4 d-flex align-items-stretch justify-content-sm-between align-items-sm-baseline flex-column-reverse flex-sm-row gap-2"
+						>
 							<!-- delete / cancel -->
 							<button
 								v-if="isDeletable"
 								type="button"
-								class="btn btn-link text-danger"
+								class="btn btn-link text-danger align-self-start"
 								tabindex="0"
 								@click.prevent="handleRemove"
 							>
@@ -70,85 +84,66 @@
 							<button
 								v-else
 								type="button"
-								class="btn btn-link text-muted"
+								class="btn btn-link text-muted align-self-start"
 								data-bs-dismiss="modal"
 								tabindex="0"
 							>
 								{{ $t("config.general.cancel") }}
 							</button>
 							<!-- perform auth -->
-							<div
-								v-if="authProviderUrl"
-								class="d-flex flex-column align-items-end gap-2"
-							>
-								<a :href="authProviderUrl" target="_blank" class="btn btn-primary">
-									{{
-										$t("config.general.authPerform", {
-											provider: authProviderDomain,
-										})
-									}}
-								</a>
-								<small>{{ $t("config.general.authPerformHint") }}</small>
-							</div>
-							<button
-								v-else
-								class="btn btn-outline-primary"
-								:disabled="authLoading"
-								@click.prevent="checkAuthStatus"
-							>
-								<span
-									v-if="authLoading"
-									class="spinner-border spinner-border-sm me-2"
-									role="status"
-									aria-hidden="true"
-								></span>
-								{{ $t("config.general.authPrepare") }}
-							</button>
+							<AuthConnectButton
+								:provider-url="auth.providerUrl ?? undefined"
+								:loading="auth.loading"
+								@prepare="checkAuthStatus"
+							/>
 						</div>
 					</div>
 					<div v-else>
 						<slot name="after-template-info" :values="values"></slot>
 
-						<Modbus
-							v-if="modbus"
-							v-model:modbus="values['modbus']"
-							v-model:id="values['id']"
-							v-model:host="values['host']"
-							v-model:port="values['port']"
-							v-model:device="values['device']"
-							v-model:baudrate="values['baudrate']"
-							v-model:comset="values['comset']"
-							:defaultId="modbus.ID ? Number(modbus.ID) : undefined"
-							:defaultComset="modbus.Comset"
-							:defaultBaudrate="modbus.Baudrate"
-							:defaultPort="modbus.Port"
-							:capabilities="modbusCapabilities"
-						/>
+						<div v-if="!hideTemplateFields">
+							<Modbus
+								v-if="modbus"
+								v-model:modbus="values['modbus']"
+								v-model:id="values['id']"
+								v-model:host="values['host']"
+								v-model:port="values['port']"
+								v-model:device="values['device']"
+								v-model:baudrate="values['baudrate']"
+								v-model:comset="values['comset']"
+								component-id="device"
+								:defaultId="modbus.ID ? Number(modbus.ID) : undefined"
+								:defaultComset="modbus.Comset"
+								:defaultBaudrate="modbus.Baudrate"
+								:defaultPort="modbus.Port"
+								:capabilities="modbusCapabilities"
+							/>
 
-						<PropertyEntry
-							v-for="param in normalParams"
-							:id="`${deviceType}Param${param.Name}`"
-							:key="param.Name"
-							v-bind="param"
-							v-model="values[param.Name]"
-							:service-values="serviceValues[param.Name]"
-						/>
+							<PropertyEntry
+								v-for="param in normalParams"
+								:id="`${deviceType}Param${param.Name}`"
+								:key="param.Name"
+								v-bind="param"
+								v-model="values[param.Name]"
+								:service-values="serviceValues[param.Name]"
+							/>
 
-						<PropertyCollapsible>
-							<template v-if="advancedParams.length" #advanced>
-								<PropertyEntry
-									v-for="param in advancedParams"
-									:id="`${deviceType}Param${param.Name}`"
-									:key="param.Name"
-									v-bind="param"
-									v-model="values[param.Name]"
-									:service-values="serviceValues[param.Name]"
-								/>
-							</template>
-							<template v-if="$slots['collapsible-more']" #more>
-								<slot name="collapsible-more" :values="values"></slot>
-							</template>
-						</PropertyCollapsible>
+							<PropertyCollapsible>
+								<template v-if="advancedParams.length" #advanced>
+									<PropertyEntry
+										v-for="param in advancedParams"
+										:id="`${deviceType}Param${param.Name}`"
+										:key="param.Name"
+										v-bind="param"
+										v-model="values[param.Name]"
+										:service-values="serviceValues[param.Name]"
+									/>
+								</template>
+								<template v-if="$slots['collapsible-more']" #more>
+									<slot name="collapsible-more" :values="values"></slot>
+								</template>
+							</PropertyCollapsible>
+						</div>
 					</div>
 				</div>
 
@@ -180,9 +175,11 @@ import Markdown from "../Markdown.vue";
 import SponsorTokenRequired from "./SponsorTokenRequired.vue";
 import TemplateSelector, { type TemplateGroup } from "./TemplateSelector.vue";
 import YamlEntry from "./YamlEntry.vue";
+import AuthCodeDisplay from "../AuthCodeDisplay.vue";
+import AuthConnectButton from "../AuthConnectButton.vue";
 import { initialTestState, performTest } from "../utils/test";
+import { initialAuthState, prepareAuthLogin } from "../utils/authProvider";
 import sleep from "@/utils/sleep";
-import { extractDomain } from "@/utils/extractDomain";
 import { ConfigType } from "@/types/evcc";
 import type { DeviceType, Timeout } from "@/types/evcc";
 import {
@@ -214,6 +211,8 @@ export default defineComponent({
 		SponsorTokenRequired,
 		TemplateSelector,
 		YamlEntry,
+		AuthCodeDisplay,
+		AuthConnectButton,
 	},
 	props: {
 		deviceType: { type: String as PropType<DeviceType>, required: true },
@@ -257,8 +256,18 @@ export default defineComponent({
 		onConfigurationLoaded: Function as PropType<(values: DeviceValues) => void>,
 		// Optional: external template selection control (for parent to reset template)
 		externalTemplate: String as PropType<string | null>,
+		// Optional: hide template fields, e.g. because ocpp step was not completed
+		hideTemplateFields: { type: Boolean, default: false },
 	},
-	emits: ["added", "updated", "removed", "close", "template-changed", "update:externalTemplate"],
+	emits: [
+		"added",
+		"updated",
+		"removed",
+		"close",
+		"template-changed",
+		"update:externalTemplate",
+		"reset",
+	],
 	data() {
 		return {
 			isModalVisible: false,
@@ -266,10 +275,7 @@ export default defineComponent({
 			templateName: null as string | null,
 			template: null as Template | null,
 			saving: false,
-			authOk: false,
-			authLoading: false,
-			authError: null as string | null,
-			authProviderUrl: null as string | null,
+			auth: initialAuthState(),
 			succeeded: false,
 			loadingTemplate: false,
 			values: { ...this.initialValues } as DeviceValues,
@@ -375,7 +381,19 @@ export default defineComponent({
 			return !this.isNew;
 		},
 		showActions() {
-			return (this.templateName && !this.authRequired) || this.showYamlInput;
+			// explicitly hide template fields (ocpp step 1)
+			if (this.hideTemplateFields) {
+				return false;
+			}
+			// yaml input type
+			if (this.showYamlInput) {
+				return true;
+			}
+			// template selected and no auth prerequisit
+			if (this.templateName && !this.authRequired) {
+				return true;
+			}
+			return false;
 		},
 		showYamlInput() {
 			return this.isYamlInputTypeByValue(this.values.type);
@@ -387,9 +405,10 @@ export default defineComponent({
 			return this.isTypeDeprecated && this.isTypeDeprecated(this.values.type);
 		},
 		authRequired() {
-			return this.template?.Auth && !this.authOk;
+			return this.template?.Auth && !this.auth.ok;
 		},
 		authValuesMissing() {
+			console.log("authValuesMissing", this.authValues);
 			return this.template?.Auth && Object.values(this.authValues).some((value) => !value);
 		},
 		authValues() {
@@ -401,9 +420,6 @@ export default defineComponent({
 				},
 				{} as Record<string, any>
 			);
-		},
-		authProviderDomain() {
-			return this.authProviderUrl ? extractDomain(this.authProviderUrl) : null;
 		},
 	},
 	watch: {
@@ -509,6 +525,7 @@ export default defineComponent({
 			this.values = { ...this.initialValues } as DeviceValues;
 			this.test = initialTestState();
 			this.resetAuthStatus();
+			this.$emit("reset");
 		},
 		async loadConfiguration() {
 			try {
@@ -571,10 +588,7 @@ export default defineComponent({
 			this.loadingTemplate = false;
 		},
 		resetAuthStatus() {
-			this.authOk = false;
-			this.authProviderUrl = null;
-			this.authError = null;
-			this.authLoading = false;
+			this.auth = initialAuthState();
 		},
 		async checkAuthStatus() {
 			this.resetAuthStatus();
@@ -594,33 +608,22 @@ export default defineComponent({
 
 			const { type } = this.template.Auth;
 			const values = this.authValues;
-			this.authLoading = true;
+			this.auth.loading = true;
 			const result = await this.device.checkAuth(type, values);
-			this.authLoading = false;
+			this.auth.loading = false;
 			if (result.success) {
 				// login already exists
-				this.authError = null;
-				this.authOk = true;
+				this.auth.error = null;
+				this.auth.ok = true;
 			} else if (result.authId) {
-				// todo, save form field state and restore on callback
-				await this.performAuthLogin(result.authId);
+				await this.prepareAuthLogin(result.authId);
 			} else {
 				// something else failed
-				this.authError = result.error ?? "unknown error";
+				this.auth.error = result.error ?? "unknown error";
 			}
 		},
-		async performAuthLogin(authId: string) {
-			// trigger external login flow
-			try {
-				this.authLoading = true;
-				this.authProviderUrl = await this.device.getAuthProviderUrl(authId);
-				this.authLoading = false;
-			} catch (e) {
-				console.error("performAuthLogin failed", e);
-				this.authError = (e as any).message;
-			} finally {
-				this.authLoading = false;
-			}
+		async prepareAuthLogin(authId: string) {
+			await prepareAuthLogin(this.auth, authId);
 		},
 		async create(force = false) {
 			if (this.test.isUnknown && !force) {
@@ -644,7 +647,7 @@ export default defineComponent({
 				const { name } = await this.device.create(this.apiData, force);
 				this.saving = false;
 				this.succeeded = true;
-				await sleep(1000);
+				await sleep(500);
 				this.$emit("added", name);
 				(this.$refs["modal"] as any).close();
 			} catch (e) {
@@ -678,7 +681,7 @@ export default defineComponent({
 				console.log("update succeeded, closing modal");
 				this.saving = false;
 				this.succeeded = true;
-				await sleep(1000);
+				await sleep(500);
 				this.$emit("updated");
 				(this.$refs["modal"] as any).close();
 			} catch (e) {

@@ -33,12 +33,14 @@ var (
 	settings []setting
 )
 
-func Init() error {
-	err := db.Instance.AutoMigrate(new(setting))
-	if err == nil {
-		err = db.Instance.Find(&settings).Error
-	}
-	return err
+func init() {
+	db.Register(func() error {
+		if err := db.Instance.AutoMigrate(new(setting)); err != nil {
+			return err
+		}
+
+		return db.Instance.Find(&settings).Error
+	})
 }
 
 func Persist() error {

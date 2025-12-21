@@ -40,7 +40,7 @@
       "chargers": "EV nabíječky",
       "generic": "Obecné integrace",
       "heatingdevices": "Zařízení pro vytápění",
-      "ocppHelp": "Zkopíruj tuto adresu do konfiguračního nástroje nabíječky.",
+      "ocppHelp": "Zkopírujte tuto URL adresu do konfigurace vaší nabíječky. Podrobnosti naleznete v manuálu výrobce. Nabíječka automaticky připojí svůj unikátní identifikátor (ID stanice) k URL. Ve vzácných případech může být nutné identifikátor zadat ručně. Příklad: `{url}`",
       "ocppLabel": "OCPP-Server URL",
       "switchsockets": "Přepínatelné zásuvky",
       "template": "Výrobce",
@@ -1158,8 +1158,10 @@
       "show": "Zobrazit {title}"
     },
     "sponsorToken": {
-      "expires": "Váš sponzorský token vyprší za {inXDays}. {getNewToken} a aktualizujte ho zde.",
-      "getNew": "Vezmi čerstvý",
+      "expires": "Váš sponzorský token vyprší za {inXDays}.",
+      "expiresUpdateUi": "{getNewToken} a aktualizujte ho zde.",
+      "expiresUpdateYaml": "{getNewToken} a aktualizujte ho ve vašem evcc.yaml.",
+      "getNewToken": "Vezmi čerstvý",
       "hint": "Poznámka: Toto v budoucnu zautomatizujeme."
     },
     "telemetry": {
