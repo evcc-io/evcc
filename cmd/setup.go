@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/url"
 	"os"
 	"regexp"
 	"slices"
@@ -810,6 +811,34 @@ func configureMessengers(conf *globalconfig.Messaging, vehicles push.Vehicles, v
 			for k, v := range data.Events {
 				v.Disabled = false
 				data.Events[k] = v
+			}
+			for i := range data.Services {
+				s := &data.Services[i]
+
+				if s.Type != "email" {
+					continue
+				}
+
+				uri, ok := s.Other["uri"].(string)
+				if !ok {
+					return nil, fmt.Errorf("failed to migrate email service due to missing uri")
+				}
+
+				u, err := url.Parse(uri)
+				if err != nil {
+					return nil, err
+				}
+
+				s.Other["host"] = u.Hostname()
+				s.Other["user"] = u.User.Username()
+				s.Other["port"] = u.Port()
+				s.Other["from"] = u.Query().Get("fromAddress")
+				s.Other["to"] = u.Query()["toAddresses"]
+				if pw, ok := u.User.Password(); ok {
+					s.Other["password"] = pw
+				}
+
+				delete(s.Other, "uri")
 			}
 			// migrate from yaml to json
 			if err := migrateYamlToJson[globalconfig.Messaging](keys.Messaging); err != nil {

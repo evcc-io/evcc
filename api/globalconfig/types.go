@@ -192,7 +192,7 @@ func (m Messaging) Redacted() any {
 			keysToRedact = []string{"authtoken"}
 
 		case "email":
-			// TODO: redact email password
+			keysToRedact = []string{"password"}
 		}
 
 		r.Services = append(r.Services, config.Typed{

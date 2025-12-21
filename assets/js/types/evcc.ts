@@ -501,7 +501,12 @@ export interface MessagingServiceTelegram {
 export interface MessagingServiceEmail {
   type: MESSAGING_SERVICE_TYPE.EMAIL;
   other: {
-    uri: string;
+    host: string;
+    port: number;
+    user: string;
+    password: string;
+    from: string;
+    to: string;
   };
 }
 export interface MessagingServiceShout {
