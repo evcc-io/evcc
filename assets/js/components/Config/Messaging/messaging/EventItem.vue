@@ -25,7 +25,7 @@
 					:model-value="title"
 					:data-testid="`event-${type}-title`"
 					type="String"
-					:disabled="!disabled"
+					:disabled="disabled"
 					required
 					@change="updateTitle($event.target.value)"
 				/>
@@ -42,7 +42,7 @@
 					:data-testid="`event-${type}-message`"
 					type="String"
 					property="eventMessage"
-					:disabled="!disabled"
+					:disabled="disabled"
 					required
 					rows
 					@change="updateTitle($event.target.value)"
