@@ -122,7 +122,7 @@ func NewEasee(ctx context.Context, user, password, charger string, timeout time.
 
 	// Clear any cached token source for these credentials to ensure fresh authentication
 	// on reconfiguration (e.g., password change)
-	easee.ClearTokenCache(user, password)
+	easee.TokenSourceCache.Clear(user, password)
 
 	ts, err := easee.GetTokenSource(log, user, password)
 	if err != nil {

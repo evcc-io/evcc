@@ -24,20 +24,14 @@ func (p *passwordTokenSource) Token() (*oauth2.Token, error) {
 	return p.config.PasswordCredentialsToken(p.ctx, p.user, p.pass)
 }
 
-// tokenSourceCache stores per-user token sources
 var (
-	tokenSourceCache = oauth.NewTokenSourceCache()
+	// TokenSourceCache stores per-user token sources
+	TokenSourceCache = oauth.NewTokenSourceCache()
 
 	oidcProvider     *oidc.Provider
 	oidcProviderOnce sync.Once
 	oidcProviderErr  error
 )
-
-// ClearTokenCache removes the cached token source for the given user credentials.
-// This should be called when credentials change or when a charger is reconfigured.
-func ClearTokenCache(user, pass string) {
-	tokenSourceCache.Clear(user, pass)
-}
 
 // getOIDCProvider returns the cached OIDC provider, initializing it once if needed
 func getOIDCProvider(ctx context.Context) (*oidc.Provider, error) {
@@ -52,7 +46,7 @@ func getOIDCProvider(ctx context.Context) (*oidc.Provider, error) {
 // ensuring tokens are reused and authentication is deduplicated.
 func GetTokenSource(ctx context.Context, user, pass string) (oauth2.TokenSource, error) {
 	// Check if token source exists in cache
-	if ts, exists := tokenSourceCache.Get(user, pass); exists {
+	if ts, exists := TokenSourceCache.Get(user, pass); exists {
 		return ts, nil
 	}
 
@@ -85,7 +79,7 @@ func GetTokenSource(ctx context.Context, user, pass string) (oauth2.TokenSource,
 
 	// Wrap with ReuseTokenSource to cache tokens
 	ts := oauth2.ReuseTokenSource(token, pts)
-	tokenSourceCache.Set(user, pass, ts)
+	TokenSourceCache.Set(user, pass, ts)
 
 	return ts, nil
 }
