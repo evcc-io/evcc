@@ -16,7 +16,10 @@
 		<MessagingFormRow :serviceType="service.type" inputName="chats" example="-210987654">
 			<PropertyField
 				id="messagingServiceTelegramChats"
-				v-model="telegramOther.chats"
+				:model-value="telegramOther.chats"
+				@update:modelValue="
+					(e: string[]) => (telegramOther.chats = e.map((v) => Number(v)))
+				"
 				property="chats"
 				type="List"
 				required
@@ -42,7 +45,7 @@ export default {
 		},
 	},
 	computed: {
-		telegramOther(): any {
+		telegramOther() {
 			return this.service.other;
 		},
 	},
