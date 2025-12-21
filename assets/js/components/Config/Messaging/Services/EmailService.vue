@@ -10,7 +10,7 @@
 			type="String"
 			required
 	/></MessagingFormRow>
-	<MessagingFormRow :serviceType="service.type" inputName="port" example="587">
+	<MessagingFormRow :serviceType="service.type" inputName="port" example="465">
 		<PropertyField
 			id="messagingServiceEmailPort"
 			v-model="serviceData.other.port"

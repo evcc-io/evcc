@@ -221,7 +221,7 @@ export default {
 				case MESSAGING_SERVICE_TYPE.EMAIL:
 					return {
 						type: MESSAGING_SERVICE_TYPE.EMAIL,
-						other: { uri: "" },
+						other: { host: "", port: 465, user: "", password: "", from: "", to: "" },
 					};
 
 				case MESSAGING_SERVICE_TYPE.SHOUT:
@@ -239,7 +239,7 @@ export default {
 				default:
 					return {
 						type: MESSAGING_SERVICE_TYPE.CUSTOM,
-						other: { encoding: MESSAGING_SERVICE_CUSTOM_ENCODING.JSON, send: "" },
+						other: { encoding: MESSAGING_SERVICE_CUSTOM_ENCODING.JSON, send: {} },
 					};
 			}
 		},
