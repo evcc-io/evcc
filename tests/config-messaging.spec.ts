@@ -57,7 +57,7 @@ async function validateServices(modal: Locator) {
 
   await expect(ntfyHost).toHaveValue("ntfy.sh");
   await expect(ntfyTopics).toHaveValue(["evcc_alert", "evcc_pushmessage"].join("\n"));
-  await expect(ntfyAccesstoken).toHaveValue("accessToken");
+  await expect(ntfyAccesstoken).toHaveValue("***");
   await expect(ntfyPriority).toHaveValue("low");
   await expect(ntfyTagsAndEmojis).toHaveValue(["+1", "blue_car"].join("\n"));
 
