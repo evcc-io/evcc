@@ -9,7 +9,7 @@
 					role="switch"
 					:data-testid="`event-${type}-switch`"
 					tabindex="0"
-					@change="updateDisabled(($event.target as HTMLInputElement).value)"
+					@change="updateDisabled(($event.target as HTMLInputElement).checked)"
 				/>
 			</div>
 			<h6 class="my-0">{{ $t(`config.messaging.event.${type}.title`) }}</h6>
@@ -111,8 +111,8 @@ export default {
 		formId(name: string) {
 			return `messaging-event-${this.type}-${name}`;
 		},
-		updateDisabled(newValue: string) {
-			this.$emit("update:disabled", newValue === "true");
+		updateDisabled(newValue: boolean) {
+			this.$emit("update:disabled", newValue);
 		},
 		updateTitle(newValue: string) {
 			this.$emit("update:title", newValue);
