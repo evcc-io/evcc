@@ -212,7 +212,7 @@ render: |
               type: writesingle
               encoding: uint16
         - source: const
-          value: 1 # disable
+          value: 1 # enable
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
