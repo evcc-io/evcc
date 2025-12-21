@@ -2,6 +2,7 @@ package zaptec
 
 import (
 	"context"
+	"crypto/sha256"
 	"fmt"
 	"sync"
 
@@ -33,6 +34,25 @@ var (
 	oidcProviderErr  error
 )
 
+// cacheKey generates a unique cache key from user credentials
+func cacheKey(user, pass string) string {
+	h := sha256.New()
+	h.Write([]byte(user))
+	h.Write([]byte(":"))
+	h.Write([]byte(pass))
+	return fmt.Sprintf("%x", h.Sum(nil))
+}
+
+// ClearTokenCache removes the cached token source for the given user credentials.
+// This should be called when credentials change or when a charger is reconfigured.
+func ClearTokenCache(user, pass string) {
+	tokenSourceMu.Lock()
+	defer tokenSourceMu.Unlock()
+
+	key := cacheKey(user, pass)
+	delete(tokenSourceCache, key)
+}
+
 // getOIDCProvider returns the cached OIDC provider, initializing it once if needed
 func getOIDCProvider(ctx context.Context) (*oidc.Provider, error) {
 	oidcProviderOnce.Do(func() {
@@ -48,8 +68,9 @@ func GetTokenSource(ctx context.Context, user, pass string) (oauth2.TokenSource,
 	tokenSourceMu.Lock()
 	defer tokenSourceMu.Unlock()
 
-	// Use username as the cache key (assuming username is unique)
-	if ts, exists := tokenSourceCache[user]; exists {
+	// Use hash of username+password as the cache key
+	key := cacheKey(user, pass)
+	if ts, exists := tokenSourceCache[key]; exists {
 		return ts, nil
 	}
 
@@ -82,7 +103,7 @@ func GetTokenSource(ctx context.Context, user, pass string) (oauth2.TokenSource,
 
 	// Wrap with ReuseTokenSource to cache tokens
 	ts := oauth2.ReuseTokenSource(token, pts)
-	tokenSourceCache[user] = ts
+	tokenSourceCache[key] = ts
 
 	return ts, nil
 }

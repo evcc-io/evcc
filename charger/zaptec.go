@@ -119,6 +119,10 @@ func NewZaptec(ctx context.Context, user, password, id string, priority bool, pa
 		Transport: c.Transport,
 	})
 
+	// Clear any cached token source for these credentials to ensure fresh authentication
+	// on reconfiguration (e.g., password change)
+	zaptec.ClearTokenCache(user, password)
+
 	// Get shared token source for this user (per-user uniqueness)
 	ts, err := zaptec.GetTokenSource(tsCtx, user, password)
 	if err != nil {

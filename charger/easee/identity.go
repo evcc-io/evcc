@@ -1,6 +1,7 @@
 package easee
 
 import (
+	"crypto/sha256"
 	"fmt"
 	"net/http"
 	"sync"
@@ -45,6 +46,25 @@ var (
 	tokenSourceCache = make(map[string]oauth2.TokenSource)
 )
 
+// cacheKey generates a unique cache key from user credentials
+func cacheKey(user, password string) string {
+	h := sha256.New()
+	h.Write([]byte(user))
+	h.Write([]byte(":"))
+	h.Write([]byte(password))
+	return fmt.Sprintf("%x", h.Sum(nil))
+}
+
+// ClearTokenCache removes the cached token source for the given user credentials.
+// This should be called when credentials change or when a charger is reconfigured.
+func ClearTokenCache(user, password string) {
+	tokenSourceMu.Lock()
+	defer tokenSourceMu.Unlock()
+
+	key := cacheKey(user, password)
+	delete(tokenSourceCache, key)
+}
+
 // GetTokenSource returns a shared oauth2.TokenSource for the given user credentials.
 // Multiple chargers using the same user credentials will share the same TokenSource,
 // ensuring tokens are reused and authentication is deduplicated.
@@ -52,8 +72,9 @@ func GetTokenSource(log *util.Logger, user, password string) (oauth2.TokenSource
 	tokenSourceMu.Lock()
 	defer tokenSourceMu.Unlock()
 
-	// Use username as the cache key (assuming username is unique)
-	if ts, exists := tokenSourceCache[user]; exists {
+	// Use hash of username+password as the cache key
+	key := cacheKey(user, password)
+	if ts, exists := tokenSourceCache[key]; exists {
 		return ts, nil
 	}
 
@@ -69,7 +90,7 @@ func GetTokenSource(log *util.Logger, user, password string) (oauth2.TokenSource
 	}
 
 	ts := oauth.RefreshTokenSource(token.AsOAuth2Token(), c)
-	tokenSourceCache[user] = ts
+	tokenSourceCache[key] = ts
 
 	return ts, nil
 }
