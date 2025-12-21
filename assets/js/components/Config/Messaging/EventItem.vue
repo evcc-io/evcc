@@ -112,7 +112,7 @@ export default {
 			return `messaging-event-${this.type}-${name}`;
 		},
 		updateDisabled(newValue: boolean) {
-			this.$emit("update:disabled", newValue);
+			this.$emit("update:disabled", !newValue);
 		},
 		updateTitle(newValue: string) {
 			this.$emit("update:title", newValue);
