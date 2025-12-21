@@ -2,11 +2,11 @@ package zaptec
 
 import (
 	"context"
-	"crypto/sha256"
 	"fmt"
 	"sync"
 
 	"github.com/coreos/go-oidc/v3/oidc"
+	"github.com/evcc-io/evcc/util/oauth"
 	"golang.org/x/oauth2"
 )
 
@@ -34,22 +34,13 @@ var (
 	oidcProviderErr  error
 )
 
-// cacheKey generates a unique cache key from user credentials
-func cacheKey(user, pass string) string {
-	h := sha256.New()
-	h.Write([]byte(user))
-	h.Write([]byte(":"))
-	h.Write([]byte(pass))
-	return fmt.Sprintf("%x", h.Sum(nil))
-}
-
 // ClearTokenCache removes the cached token source for the given user credentials.
 // This should be called when credentials change or when a charger is reconfigured.
 func ClearTokenCache(user, pass string) {
 	tokenSourceMu.Lock()
 	defer tokenSourceMu.Unlock()
 
-	key := cacheKey(user, pass)
+	key := oauth.CredentialsCacheKey(user, pass)
 	delete(tokenSourceCache, key)
 }
 
@@ -69,7 +60,7 @@ func GetTokenSource(ctx context.Context, user, pass string) (oauth2.TokenSource,
 	defer tokenSourceMu.Unlock()
 
 	// Use hash of username+password as the cache key
-	key := cacheKey(user, pass)
+	key := oauth.CredentialsCacheKey(user, pass)
 	if ts, exists := tokenSourceCache[key]; exists {
 		return ts, nil
 	}
