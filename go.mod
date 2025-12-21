@@ -78,7 +78,6 @@ require (
 	github.com/muka/go-bluetooth v0.0.0-20240701044517-04c4f09c514e
 	github.com/mxschmitt/golang-combinations v1.2.0
 	github.com/nicksnyder/go-i18n/v2 v2.6.0
-	github.com/oasdiff/yaml v0.0.0-20250309154309-f31be36b4037
 	github.com/olekukonko/tablewriter v1.1.2
 	github.com/philippseith/signalr v0.8.0
 	github.com/prometheus-community/pro-bing v0.7.0
@@ -205,6 +204,7 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/ncruces/go-strftime v0.1.9 // indirect
 	github.com/oapi-codegen/runtime v1.1.1 // indirect
+	github.com/oasdiff/yaml v0.0.0-20250309154309-f31be36b4037 // indirect
 	github.com/oasdiff/yaml3 v0.0.0-20250309153720-d2182401db90 // indirect
 	github.com/olekukonko/cat v0.0.0-20250911104152-50322a0618f6 // indirect
 	github.com/olekukonko/errors v1.1.0 // indirect

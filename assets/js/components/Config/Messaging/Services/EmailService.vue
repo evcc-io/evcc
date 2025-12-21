@@ -5,43 +5,43 @@
 		example="emailserver.example.com"
 	>
 		<PropertyField
-			id="messagingServiceEmailyHost"
-			v-model="service.other.host"
+			id="messagingServiceEmailHost"
+			v-model="serviceData.other.host"
 			type="String"
 			required
 	/></MessagingFormRow>
 	<MessagingFormRow :serviceType="service.type" inputName="port" example="587">
 		<PropertyField
-			id="messagingServiceEmailyPort"
-			v-model="service.other.port"
+			id="messagingServiceEmailPort"
+			v-model="serviceData.other.port"
 			type="String"
 			required
 	/></MessagingFormRow>
 	<MessagingFormRow :serviceType="service.type" inputName="user" example="john.doe">
 		<PropertyField
-			id="messagingServiceEmailyUser"
-			v-model="service.other.user"
+			id="messagingServiceEmailUser"
+			v-model="serviceData.other.user"
 			type="String"
 			required
 	/></MessagingFormRow>
 	<MessagingFormRow :serviceType="service.type" inputName="password" example="secret123">
 		<PropertyField
-			id="messagingServiceEmailyPassword"
-			v-model="service.other.password"
+			id="messagingServiceEmailPassword"
+			v-model="serviceData.other.password"
 			type="String"
 			required
 	/></MessagingFormRow>
 	<MessagingFormRow :serviceType="service.type" inputName="from" example="john.doe@mail.com">
 		<PropertyField
-			id="messagingServiceEmailyFrom"
-			v-model="service.other.from"
+			id="messagingServiceEmailFrom"
+			v-model="serviceData.other.from"
 			type="String"
 			required
 	/></MessagingFormRow>
 	<MessagingFormRow :serviceType="service.type" inputName="to" example="recipient@mail.com">
 		<PropertyField
-			id="messagingServiceEmailyTo"
-			v-model="service.other.to"
+			id="messagingServiceEmailTo"
+			v-model="serviceData.other.to"
 			type="String"
 			required
 	/></MessagingFormRow>
@@ -63,6 +63,11 @@ export default {
 			type: Object as PropType<MessagingServiceEmail>,
 			required: true,
 		},
+	},
+	data() {
+		return {
+			serviceData: this.service,
+		};
 	},
 };
 </script>

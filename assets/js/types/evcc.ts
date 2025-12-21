@@ -533,7 +533,7 @@ export interface MessagingServiceCustom {
   type: MESSAGING_SERVICE_TYPE.CUSTOM;
   other: {
     encoding?: MESSAGING_SERVICE_CUSTOM_ENCODING;
-    send: Object;
+    send: object;
   };
 }
 export enum MESSAGING_SERVICE_CUSTOM_ENCODING {

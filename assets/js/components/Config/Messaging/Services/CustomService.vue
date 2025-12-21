@@ -79,6 +79,11 @@ export default {
 			}
 		},
 	},
+	mounted() {
+		if (!this.serviceData.other.send) {
+			this.serviceData.other.send = DEAFULT_SEND_PLUGIN;
+		}
+	},
 	methods: {
 		setContent(v: string) {
 			this.serviceData.other.send = Object.fromEntries(
@@ -93,11 +98,6 @@ export default {
 				.map(([key, value]) => `${key}: ${value}`)
 				.join("\n");
 		},
-	},
-	mounted() {
-		if (!this.serviceData.other.send) {
-			this.serviceData.other.send = DEAFULT_SEND_PLUGIN;
-		}
 	},
 };
 </script>
