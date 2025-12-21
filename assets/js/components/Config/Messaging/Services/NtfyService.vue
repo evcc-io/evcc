@@ -3,22 +3,20 @@
 		<MessagingFormRow :serviceType="service.type" inputName="host" example="ntfy.sh">
 			<PropertyField
 				id="messagingServiceNtfyHost"
-				:model-value="decoded['host']"
+				v-model="serviceData.other.host"
 				type="String"
 				required
-				@update:model-value="(e) => updateNtfy('host', e)"
 			/>
 		</MessagingFormRow>
 
 		<MessagingFormRow :serviceType="service.type" inputName="topics" example="evcc_alert">
 			<PropertyField
 				id="messagingServiceNtfyTopics"
-				:model-value="(decoded['topics'] ?? '').split(',')"
+				v-model="serviceData.other.topics"
 				property="topics"
 				type="List"
 				required
 				rows
-				@update:model-value="(e) => updateNtfy('topics', e)"
 			/>
 		</MessagingFormRow>
 
@@ -30,7 +28,7 @@
 		>
 			<PropertyField
 				id="messagingServiceNtfyAuthtoken"
-				v-model="ntfyOther.authtoken"
+				v-model="serviceData.other.authtoken"
 				type="String"
 				required
 			/>
@@ -43,8 +41,7 @@
 				type="Choice"
 				class="me-2 w-25"
 				:choice="Object.values(MESSAGING_SERVICE_NTFY_PRIORITY)"
-				:model-value="ntfyOther.priority"
-				@update:model-value="(e) => (ntfyOther.priority = e)"
+				v-model="serviceData.other.priority"
 			/>
 		</MessagingFormRow>
 
@@ -56,11 +53,11 @@
 		>
 			<PropertyField
 				id="messagingServiceNtfyTags"
-				:model-value="ntfyOther.tags?.split(',')"
+				:model-value="serviceData.other.tags?.split(',')"
 				property="tags"
 				rows
 				type="List"
-				@update:model-value="(e: string[]) => (ntfyOther.tags = e.join())"
+				@update:model-value="(e: string[]) => (serviceData.other.tags = e.join())"
 			/>
 		</MessagingFormRow>
 	</div>
@@ -82,38 +79,7 @@ export default {
 		},
 	},
 	data() {
-		return { MESSAGING_SERVICE_NTFY_PRIORITY };
-	},
-	computed: {
-		ntfyOther() {
-			return this.service.other;
-		},
-		decoded(): Record<string, string> {
-			const ntfyOther = this.service.other as any;
-			let hostname = "";
-			let pathname = "";
-
-			try {
-				const url = new URL(ntfyOther.uri);
-				hostname = url.hostname;
-				pathname = url.pathname.replace("/", "");
-			} catch (e) {
-				console.warn(e);
-			}
-
-			return {
-				host: hostname,
-				topics: pathname,
-			};
-		},
-	},
-	methods: {
-		updateNtfy(p: string, v: string | string[]) {
-			const ntfyOther = this.service.other as any;
-			const d = this.decoded;
-			d[p] = Array.isArray(v) ? v.join(",") : v;
-			ntfyOther.uri = `https://${d["host"]}/${d["topics"]}`;
-		},
+		return { serviceData: this.service, MESSAGING_SERVICE_NTFY_PRIORITY };
 	},
 };
 </script>

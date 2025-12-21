@@ -233,7 +233,7 @@ export default {
 				case MESSAGING_SERVICE_TYPE.NTFY:
 					return {
 						type: MESSAGING_SERVICE_TYPE.NTFY,
-						other: { uri: "" },
+						other: { host: "ntfy.sh", topics: [] },
 					};
 
 				default:
