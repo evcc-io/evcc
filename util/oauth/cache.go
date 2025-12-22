@@ -35,7 +35,6 @@ func (c *TokenSourceCache) GetOrCreate(user string, createFn func() (oauth2.Toke
 		return ts, nil
 	}
 
-	// Slow path: create new TokenSource with write lock
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
