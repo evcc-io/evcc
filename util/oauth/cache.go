@@ -10,7 +10,7 @@ import (
 // keyed by username. This allows multiple components using the same username
 // to share a single TokenSource, avoiding duplicate authentication.
 type TokenSourceCache struct {
-	mu    sync.RWMutex
+	mu    sync.Mutex
 	cache map[string]oauth2.TokenSource
 }
 
@@ -27,18 +27,9 @@ func NewTokenSourceCache() *TokenSourceCache {
 // This prevents duplicate authentication requests when multiple chargers
 // are initialized concurrently with the same credentials.
 func (c *TokenSourceCache) GetOrCreate(user string, createFn func() (oauth2.TokenSource, error)) (oauth2.TokenSource, error) {
-	c.mu.RLock()
-	ts := c.cache[user]
-	c.mu.RUnlock()
-
-	if ts != nil {
-		return ts, nil
-	}
-
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	// Double-check: another goroutine might have created it while we waited for the lock
 	if ts := c.cache[user]; ts != nil {
 		return ts, nil
 	}
