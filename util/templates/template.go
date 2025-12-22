@@ -3,6 +3,7 @@ package templates
 import (
 	"bytes"
 	_ "embed"
+	"errors"
 	"fmt"
 	"regexp"
 	"slices"
@@ -40,19 +41,24 @@ func (t *Template) UpdateParamsWithDefaults() error {
 }
 
 // validatePattern checks if a value matches a pattern and returns a descriptive error if not
-func validatePattern(pattern, value string, examples []string) error {
-	matched, err := regexp.MatchString(pattern, value)
+func validatePattern(regex, value string, examples []string) error {
+	if regex == "" {
+		return nil
+	}
+
+	matched, err := regexp.MatchString(regex, value)
 	if err != nil {
 		return fmt.Errorf("invalid regex pattern: %w", err)
 	}
-	if !matched {
-		errMsg := fmt.Sprintf("value %q does not match required pattern", value)
-		if len(examples) > 0 {
-			errMsg += fmt.Sprintf(". Valid examples: %s", strings.Join(examples, ", "))
-		}
-		return fmt.Errorf("%s", errMsg)
+	if matched {
+		return nil
 	}
-	return nil
+
+	errMsg := fmt.Sprintf("value %q does not match required pattern", value)
+	if len(examples) > 0 {
+		errMsg += fmt.Sprintf(". Valid examples: %s", strings.Join(examples, ", "))
+	}
+	return errors.New(errMsg)
 }
 
 // validate the template (only rudimentary for now)
@@ -111,10 +117,10 @@ func (t *Template) Validate() error {
 		}
 
 		// validate pattern examples against pattern
-		if p.Pattern != "" && len(p.PatternExamples) > 0 {
-			for _, example := range p.PatternExamples {
-				if err := validatePattern(p.Pattern, example, nil); err != nil {
-					return fmt.Errorf("param %s: pattern example %q is invalid: pattern=%q", p.Name, example, p.Pattern)
+		if p.Pattern.Regex != "" && len(p.Pattern.Examples) > 0 {
+			for _, example := range p.Pattern.Examples {
+				if err := validatePattern(p.Pattern.Regex, example, nil); err != nil {
+					return fmt.Errorf("param %s: pattern example %q is invalid: pattern=%q", p.Name, example, p.Pattern.Regex)
 				}
 			}
 		}
@@ -389,10 +395,10 @@ func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, m
 				}
 
 				// validate pattern if defined
-				if s != "" && p.Pattern != "" {
+				if s != "" && p.Pattern.Regex != "" {
 					// convert value to string for validation (remove yaml quotes if present)
 					valueStr := fmt.Sprintf("%v", val)
-					if err := validatePattern(p.Pattern, valueStr, p.PatternExamples); err != nil {
+					if err := validatePattern(p.Pattern.Regex, valueStr, p.Pattern.Examples); err != nil {
 						return nil, nil, fmt.Errorf("%s: %w", p.Name, err)
 					}
 				}

@@ -7,7 +7,7 @@
 			:step="step"
 			:placeholder="placeholder"
 			:required="required"
-			:pattern="pattern"
+			:pattern="patternRegex"
 			:title="patternTitle"
 			:aria-describedby="id + '_unit'"
 			class="form-control"
@@ -89,7 +89,7 @@
 			:step="step"
 			:placeholder="placeholder"
 			:required="required"
-			:pattern="pattern"
+			:pattern="patternRegex"
 			:title="patternTitle"
 			:autocomplete="masked || datalistId ? 'off' : null"
 		/>
@@ -133,8 +133,7 @@ export default {
 		scale: Number,
 		required: Boolean,
 		invalid: Boolean,
-		pattern: String,
-		patternExamples: { type: Array, default: () => [] },
+		pattern: { type: Object, default: () => ({}) },
 		choice: { type: Array, default: () => [] },
 		modelValue: [String, Number, Boolean, Object],
 		label: String,
@@ -145,9 +144,13 @@ export default {
 		return { selectMode: false };
 	},
 	computed: {
+		patternRegex() {
+			return this.pattern.Regex || null;
+		},
 		patternTitle() {
-			if (!this.patternExamples?.length) return null;
-			return this.patternExamples.join(", ");
+			const examples = this.pattern.Examples || [];
+			if (!examples.length) return null;
+			return examples.join(", ");
 		},
 		datalistId() {
 			return this.serviceValues.length > 0 ? `${this.id}-datalist` : null;

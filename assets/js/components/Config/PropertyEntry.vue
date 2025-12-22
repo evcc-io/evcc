@@ -17,7 +17,6 @@
 			:unit="Unit"
 			:required="Required"
 			:pattern="Pattern"
-			:pattern-examples="PatternExamples"
 			:choice="Choice"
 			:service-values="serviceValues"
 			:label="label"
@@ -44,8 +43,7 @@ export default {
 		Type: String,
 		Unit: String,
 		Mask: Boolean,
-		Pattern: String,
-		PatternExamples: Array,
+		Pattern: { type: Object, default: () => ({}) },
 		Choice: Array,
 		serviceValues: Array,
 		modelValue: [String, Number, Boolean, Object],
