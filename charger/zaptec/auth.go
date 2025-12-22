@@ -26,7 +26,7 @@ func (p *passwordTokenSource) Token() (*oauth2.Token, error) {
 
 var (
 	// TokenSourceCache stores per-user token sources
-	TokenSourceCache = oauth.NewTokenSourceCache()
+	tokenSourceCache = oauth.NewTokenSourceCache()
 
 	oidcProvider     *oidc.Provider
 	oidcProviderOnce sync.Once
@@ -46,7 +46,7 @@ func getOIDCProvider(ctx context.Context) (*oidc.Provider, error) {
 // ensuring tokens are reused and authentication is deduplicated.
 func GetTokenSource(ctx context.Context, user, pass string) (oauth2.TokenSource, error) {
 	// Check if token source exists in cache
-	if ts, exists := TokenSourceCache.Get(user, pass); exists {
+	if ts, exists := tokenSourceCache.Get(user, pass); exists {
 		return ts, nil
 	}
 
@@ -79,7 +79,7 @@ func GetTokenSource(ctx context.Context, user, pass string) (oauth2.TokenSource,
 
 	// Wrap with ReuseTokenSource to cache tokens
 	ts := oauth2.ReuseTokenSource(token, pts)
-	TokenSourceCache.Set(user, pass, ts)
+	tokenSourceCache.Set(user, pass, ts)
 
 	return ts, nil
 }
