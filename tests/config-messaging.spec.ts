@@ -68,7 +68,7 @@ async function validateServices(modal: Locator) {
 
   await expect(customEncoding).toHaveValue("title");
   await expect(customPlugin).toHaveText(
-    ["12", 'cmd: /usr/local/bin/evcc "Title={{.send}}"', "source: script"].join("")
+    ["123", 'cmd: /usr/local/bin/evcc "Title={{.send}}"', "source: script"].join("")
   );
 }
 
@@ -118,7 +118,7 @@ test.describe("messaging", async () => {
     await messageInput.fill("event-start-message");
 
     // validate connection
-    await modal.getByRole("button", { name: "Save" }).click();
+    await modal.getByRole("button", { name: "Save", exact: true }).click();
     await expectModalHidden(modal);
     await expect(messagingCard).toContainText(["Configured", "no"].join(""));
 
@@ -231,7 +231,7 @@ test.describe("messaging", async () => {
 
     await customEncoding.selectOption({ label: "title" });
     await expect(customPlugin).toHaveText(
-      ["12", 'cmd: /usr/local/bin/evcc_message "{{.send}}"', "source: script"].join("")
+      ["123", 'cmd: /usr/local/bin/evcc_message "{{.send}}"', "source: script"].join("")
     );
 
     await editorClear(customPlugin);
@@ -240,9 +240,10 @@ test.describe("messaging", async () => {
       page,
       ['cmd: /usr/local/bin/evcc "Title={{.send}}"', "source: script"].join("\n")
     );
+    await customBox.getByRole("button", { name: "Format & Save", exact: true }).click();
 
     // validate connection
-    await modal.getByRole("button", { name: "Save" }).click();
+    await modal.getByRole("button", { name: "Save", exact: true }).click();
     await expectModalHidden(modal);
     await expect(messagingCard).toContainText(["Amount", "6"].join(""));
 

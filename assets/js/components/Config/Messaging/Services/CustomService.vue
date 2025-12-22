@@ -28,9 +28,18 @@
 			}"
 		>
 			<YamlEditorContainer
-				:model-value="getContent()"
-				@change="setContent($event.target.value)"
+				:model-value="getContent"
+				@update:model-value="storeNewContent($event)"
 			/>
+			<button
+				v-if="changed"
+				type="button"
+				class="d-flex btn btn-sm btn-outline-primary border-0 align-items-center gap-2 ms-auto px-0 text-decoration-underline"
+				tabindex="0"
+				@click="formatAndSave"
+			>
+				{{ $t("config.messaging.service.custom.formatAndSave") }}
+			</button>
 		</MessagingFormRow>
 	</div>
 </template>
@@ -41,6 +50,7 @@ import type { PropType } from "vue";
 import PropertyField from "../../PropertyField.vue";
 import YamlEditorContainer from "../../YamlEditorContainer.vue";
 import MessagingFormRow from "./MessagingFormRow.vue";
+import { load, dump } from "js-yaml";
 
 const DEAFULT_SEND_PLUGIN = {
 	cmd: `/usr/local/bin/evcc_message "{{.send}}"`,
@@ -58,6 +68,8 @@ export default {
 	data() {
 		return {
 			serviceType: MESSAGING_SERVICE_TYPE.CUSTOM,
+			newContent: {},
+			changed: false,
 			MESSAGING_SERVICE_CUSTOM_ENCODING,
 			DEAFULT_SEND_PLUGIN,
 		};
@@ -77,9 +89,12 @@ export default {
 					return "`<MSG>`";
 			}
 		},
+		getContent() {
+			return dump(this.send);
+		},
 	},
 	mounted() {
-		if (!this.send) {
+		if (!this.send || Object.entries(this.send).length === 0) {
 			this.updateSend(DEAFULT_SEND_PLUGIN);
 		}
 	},
@@ -87,20 +102,20 @@ export default {
 		updateSend(v: object) {
 			this.$emit("update:send", v);
 		},
-		setContent(v: string) {
-			this.updateSend(
-				Object.fromEntries(
-					v.split("\n").map((line) => {
-						const [key, ...rest] = line.split(":");
-						return [(key || "").trim(), rest.join(":").trim()];
-					})
-				)
-			);
+		storeNewContent(s: string) {
+			try {
+				const o = load(s);
+				if (o && typeof o === "object") {
+					this.newContent = o;
+					this.changed = true;
+				}
+			} catch {
+				// tslint:disable-line:no-empty
+			}
 		},
-		getContent() {
-			return Object.entries(this.send ?? {})
-				.map(([key, value]) => `${key}: ${value}`)
-				.join("\n");
+		formatAndSave() {
+			this.updateSend(this.newContent);
+			this.changed = false;
 		},
 	},
 };

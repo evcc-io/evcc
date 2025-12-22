@@ -439,6 +439,7 @@
         "custom": {
           "encoding": "Encoding",
           "encodingHelp": "The value for {send} is provided in the format {format}.",
+          "formatAndSave": "Format & Save",
           "send": "Plugin for sending",
           "sendHelp": "Defines the plugin to be used to send the title and/or message. The plugin must support write mode. For more details, see {url}."
         },
