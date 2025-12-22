@@ -2,7 +2,9 @@
   "authProviders": {
     "authCode": "Authenticatie code",
     "authCodeHelp": "Kopieer deze code en gebruik het in de volgende stap. Geldig voor {duration}.",
+    "authorizationFailed": "authorisatie mislukt",
     "authorizationRequired": "Autorisatie vereist",
+    "authorizationSuccessful": "authorisatie gelukt",
     "buttonConnect": "Verbind met {provider}",
     "buttonDisconnect": "Verbinding verbreken",
     "confirmLogout": "Weet je zeker dat je de verbinding wilt verbreken met {title}?",
@@ -58,8 +60,16 @@
       "chargers": "EV laders",
       "generic": "Algemene integraties",
       "heatingdevices": "Warmtepompen",
+      "ocppConfirmContinue": "Uw lader is nog niet verbonden met evcc. Wil u zeker verder gaan?",
+      "ocppConnected": "Geconnecteerd!",
+      "ocppDescription": "evcc heeft een ingebouwde OCPP server. Volg de volgende stappen:",
       "ocppHelp": "Kopieer deze URL naar de configuratie van je lader. Raadpleeg de handleiding van de fabrikant voor details. De lader voegt automatisch zijn unieke identificatie (station-ID) toe aan de URL. In zeldzame gevallen moet je de identificatie mogelijk handmatig opgeven. Voorbeeld: `{url}`",
       "ocppLabel": "OCPP-Server URL",
+      "ocppNextStep": "Volgende stap",
+      "ocppStep1": "Configureer uw lader om evcc als OCPP server te gebruiken.",
+      "ocppStep2": "Wacht tot uw lader verbonden is met evcc.",
+      "ocppStep3": "Ga verder en vervolledig de configuratie.",
+      "ocppWaiting": "Wachtend op verbinding",
       "switchsockets": "schakelbare stopcontacten",
       "template": "Fabrikant",
       "titleAdd": {
@@ -109,10 +119,12 @@
       "chargedEnergy": "Geladen",
       "co2": "Net-CO₂",
       "configured": "Geconfigureerd",
+      "connections": "Verbindingen",
       "controllable": "Stuurbaar",
       "currency": "Valuta",
       "current": "Stroomsterkte",
       "currentRange": "Stroomsterkte",
+      "detected": "Gedetecteerd",
       "dimmed": "Gedimd",
       "enabled": "Ingeschakeld",
       "energy": "Energie",
@@ -162,6 +174,10 @@
     "eebus": {
       "description": "Configuratie voor communicatie met andere EEBus apparaten.",
       "title": "EEBus"
+    },
+    "experimental": {
+      "description": "Toon eigenschappen in de gebruikers interface die nog onder test zijn en nog in volgende versies kunnen wijzigen.",
+      "title": "Experimenteel"
     },
     "ext": {
       "description": "Registreert energie van ongestuurde verbruikers (bijv. koelkast, wasmachine, etc) voor statistieken. Deze meters kunnen ook gebruikt worden voor electriciteitsnetwerk beheer (bijv onderverdeling).",
@@ -220,7 +236,15 @@
       "titleEdit": "Bewerk netmeter"
     },
     "hems": {
+      "csv": {
+        "created": "Aangemaakt",
+        "finished": "Voltooid",
+        "gridpower": "Vermogen van de Netaansluiting (kW)",
+        "limitpower": "Limiet (kW)",
+        "type": "Type"
+      },
       "description": "Stroombegrenzing door externe systemen (zoals EnWG 14a controllers). Vereist load management configuratie.",
+      "downloadCsv": "Download CSV",
       "title": "HEMS"
     },
     "icon": {
