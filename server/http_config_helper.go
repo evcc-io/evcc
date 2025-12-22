@@ -4,10 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"reflect"
-	"regexp"
 	"slices"
 	"strings"
 	"sync"
@@ -177,39 +175,6 @@ func mergeMasked(class templates.Class, conf, old map[string]any) (map[string]an
 	return filterValidTemplateParams(&tmpl, res), nil
 }
 
-func validateParams(class templates.Class, conf map[string]any) error {
-	tmpl, err := templateForConfig(class, conf)
-	if err != nil {
-		// no template, no validation
-		return nil
-	}
-
-	for k, v := range conf {
-		// find param definition in template
-		i, p := tmpl.ParamByName(k)
-		if i < 0 || p.Pattern == "" {
-			continue
-		}
-
-		// convert value to string for validation
-		valueStr := fmt.Sprintf("%v", v)
-		if valueStr == "" {
-			continue
-		}
-
-		// validate against pattern
-		matched, err := regexp.MatchString(p.Pattern, valueStr)
-		if err != nil {
-			return fmt.Errorf("invalid regex pattern for %s: %w", k, err)
-		}
-		if !matched {
-			return fmt.Errorf("%s: value %q does not match required pattern", k, valueStr)
-		}
-	}
-
-	return nil
-}
-
 func startDeviceTimeout() (context.Context, context.CancelFunc, chan struct{}) {
 	done := make(chan struct{})
 	ctx, cancel := context.WithCancel(context.Background())
@@ -245,10 +210,6 @@ func deviceInstanceFromMergedConfig[T any](ctx context.Context, id int, class te
 
 	merged, err := mergeMasked(class, req.Other, conf.Other)
 	if err != nil {
-		return nil, zero, nil, err
-	}
-
-	if err := validateParams(class, merged); err != nil {
 		return nil, zero, nil, err
 	}
 

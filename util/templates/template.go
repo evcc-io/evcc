@@ -4,6 +4,7 @@ import (
 	"bytes"
 	_ "embed"
 	"fmt"
+	"regexp"
 	"slices"
 	"strconv"
 	"strings"
@@ -35,6 +36,22 @@ func (t *Template) UpdateParamsWithDefaults() error {
 		}
 	}
 
+	return nil
+}
+
+// validatePattern checks if a value matches a pattern and returns a descriptive error if not
+func validatePattern(pattern, value string, examples []string) error {
+	matched, err := regexp.MatchString(pattern, value)
+	if err != nil {
+		return fmt.Errorf("invalid regex pattern: %w", err)
+	}
+	if !matched {
+		errMsg := fmt.Sprintf("value %q does not match required pattern", value)
+		if len(examples) > 0 {
+			errMsg += fmt.Sprintf(". Valid examples: %s", strings.Join(examples, ", "))
+		}
+		return fmt.Errorf("%s", errMsg)
+	}
 	return nil
 }
 
@@ -89,6 +106,15 @@ func (t *Template) Validate() error {
 			for _, c := range p.Choice {
 				if !slices.Contains(ValidModbusChoices, c) {
 					return fmt.Errorf("invalid modbus type: '%s'", c)
+				}
+			}
+		}
+
+		// validate pattern examples against pattern
+		if p.Pattern != "" && len(p.PatternExamples) > 0 {
+			for _, example := range p.PatternExamples {
+				if err := validatePattern(p.Pattern, example, nil); err != nil {
+					return fmt.Errorf("param %s: pattern example %q is invalid: pattern=%q", p.Name, example, p.Pattern)
 				}
 			}
 		}
@@ -361,6 +387,16 @@ func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, m
 					renderMode == RenderModeInstance && !testing.Testing()) {
 					return nil, nil, fmt.Errorf("missing required `%s`", p.Name)
 				}
+
+				// validate pattern if defined
+				if s != "" && p.Pattern != "" {
+					// convert value to string for validation (remove yaml quotes if present)
+					valueStr := fmt.Sprintf("%v", val)
+					if err := validatePattern(p.Pattern, valueStr, p.PatternExamples); err != nil {
+						return nil, nil, fmt.Errorf("%s: %w", p.Name, err)
+					}
+				}
+
 
 				res[out] = s
 			}
