@@ -42,8 +42,6 @@ type tokenSource struct {
 var tokenSourceCache = oauth.NewTokenSourceCache()
 
 // TokenSource returns a shared oauth2.TokenSource for the given user.
-// Multiple chargers using the same username will share the same TokenSource,
-// ensuring tokens are reused and authentication is deduplicated.
 func TokenSource(log *util.Logger, user, password string) (oauth2.TokenSource, error) {
 	return tokenSourceCache.GetOrCreate(user, func() (oauth2.TokenSource, error) {
 		c := &tokenSource{
