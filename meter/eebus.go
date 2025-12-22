@@ -34,8 +34,8 @@ type EEBus struct {
 
 	power    *util.Value[float64]
 	energy   *util.Value[float64]
-	currents *util.Value[[]float64]
-	voltages *util.Value[[]float64]
+	currents *util.Value[map[model.ElectricalConnectionPhaseNameType]float64]
+	voltages *util.Value[map[model.ElectricalConnectionPhaseNameType]float64]
 
 	// TODO use util.Value
 	mu               sync.Mutex
@@ -48,8 +48,8 @@ type EEBus struct {
 type measurements interface {
 	Power(entity spineapi.EntityRemoteInterface) (float64, error)
 	EnergyConsumed(entity spineapi.EntityRemoteInterface) (float64, error)
-	CurrentPerPhase(entity spineapi.EntityRemoteInterface) ([]float64, error)
-	VoltagePerPhase(entity spineapi.EntityRemoteInterface) ([]float64, error)
+	CurrentPerPhase(entity spineapi.EntityRemoteInterface) (map[model.ElectricalConnectionPhaseNameType]float64, error)
+	VoltagePerPhase(entity spineapi.EntityRemoteInterface) (map[model.ElectricalConnectionPhaseNameType]float64, error)
 }
 
 func init() {
@@ -100,8 +100,8 @@ func NewEEBus(ctx context.Context, ski, ip string, usage *templates.Usage, timeo
 		Connector: eebus.NewConnector(),
 		power:     util.NewValue[float64](timeout),
 		energy:    util.NewValue[float64](timeout),
-		currents:  util.NewValue[[]float64](timeout),
-		voltages:  util.NewValue[[]float64](timeout),
+		currents:  util.NewValue[map[model.ElectricalConnectionPhaseNameType]float64](timeout),
+		voltages:  util.NewValue[map[model.ElectricalConnectionPhaseNameType]float64](timeout),
 	}
 
 	if err := eebus.Instance.RegisterDevice(ski, ip, c); err != nil {
@@ -207,7 +207,8 @@ func (c *EEBus) Currents() (float64, float64, float64, error) {
 	if len(res) != 3 {
 		return 0, 0, 0, errors.New("invalid phase currents")
 	}
-	return res[0], res[1], res[2], nil
+	// return res[0], res[1], res[2], nil
+	return 0, 0, 0, api.ErrNotAvailable
 }
 
 var _ api.PhaseVoltages = (*EEBus)(nil)
@@ -220,7 +221,8 @@ func (c *EEBus) Voltages() (float64, float64, float64, error) {
 	if len(res) != 3 {
 		return 0, 0, 0, errors.New("invalid phase voltages")
 	}
-	return res[0], res[1], res[2], nil
+	// return res[0], res[1], res[2], nil
+	return 0, 0, 0, api.ErrNotAvailable
 }
 
 //
