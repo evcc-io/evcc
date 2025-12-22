@@ -367,10 +367,7 @@ func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, m
 		}
 	}
 
-	tmpl, err := baseTmpl.Clone()
-	if err == nil {
-		tmpl, err = FuncMap(tmpl).Parse(t.Render)
-	}
+	tmpl, err := FuncMap(template.Must(baseTmpl.Clone())).Parse(t.Render)
 	if err != nil {
 		return nil, res, err
 	}
