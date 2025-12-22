@@ -391,7 +391,7 @@ export interface SponsorStatus {
 }
 
 export interface Sponsor {
-  status: SponsorStatus;
+  status?: SponsorStatus;
   fromYaml: boolean;
 }
 
