@@ -848,6 +848,8 @@
       "stepTwo": "2 žingsnis: nukopijuoti papildomą informaciją",
       "title": "GitHub pranešimo apie problemą santrauka"
     },
+    "system": "Sistema",
+    "timezone": "Laiko juosta",
     "title": "Pranešti apie problemą",
     "version": "Versija"
   },
