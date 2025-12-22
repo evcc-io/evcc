@@ -33,10 +33,10 @@ import (
 
 // Em2Go charger implementation
 type Em2Go struct {
-	log        *util.Logger
-	conn       *modbus.Connection
-	current    uint16
-	phases     int
+	log		*util.Logger
+	conn	*modbus.Connection
+	current	uint16
+	phases	int
 }
 
 const (
