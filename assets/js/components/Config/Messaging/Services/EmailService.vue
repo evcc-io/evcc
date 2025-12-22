@@ -31,21 +31,21 @@
 			required
 			@update:model-value="$emit('update:password', $event)"
 	/></MessagingFormRow>
-	<MessagingFormRow
-		:serviceType="serviceType"
-		inputName="from"
-		example="john.doe@mail.com"
-		@update:model-value="$emit('update:from', $event)"
-	>
-		<PropertyField id="messagingServiceEmailFrom" :model-value="from" type="String" required
+	<MessagingFormRow :serviceType="serviceType" inputName="from" example="john.doe@mail.com">
+		<PropertyField
+			id="messagingServiceEmailFrom"
+			:model-value="from"
+			type="String"
+			required
+			@update:model-value="$emit('update:from', $event)"
 	/></MessagingFormRow>
-	<MessagingFormRow
-		:serviceType="serviceType"
-		inputName="to"
-		example="recipient@mail.com"
-		@update:model-value="$emit('update:to', $event)"
-	>
-		<PropertyField id="messagingServiceEmailTo" :model-value="to" type="String" required
+	<MessagingFormRow :serviceType="serviceType" inputName="to" example="recipient@mail.com">
+		<PropertyField
+			id="messagingServiceEmailTo"
+			:model-value="to"
+			type="String"
+			required
+			@update:model-value="$emit('update:to', $event)"
 	/></MessagingFormRow>
 </template>
 
