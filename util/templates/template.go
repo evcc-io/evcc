@@ -7,6 +7,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"testing"
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
@@ -354,15 +355,19 @@ func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, m
 				if val != nil {
 					s = p.yamlQuote(fmt.Sprintf("%v", val))
 				}
+
+				// validate required fields from yaml
+				if s == "" && p.IsRequired() && (renderMode == RenderModeUnitTest ||
+					renderMode == RenderModeInstance && !testing.Testing()) {
+					return nil, nil, fmt.Errorf("missing required `%s`", p.Name)
+				}
+
 				res[out] = s
 			}
 		}
 	}
 
-	tmpl, err := baseTmpl.Clone()
-	if err == nil {
-		tmpl, err = FuncMap(tmpl).Parse(t.Render)
-	}
+	tmpl, err := FuncMap(template.Must(baseTmpl.Clone())).Parse(t.Render)
 	if err != nil {
 		return nil, res, err
 	}
