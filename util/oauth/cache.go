@@ -23,23 +23,6 @@ func NewTokenSourceCache() *TokenSourceCache {
 	}
 }
 
-// Set stores a TokenSource for the given user in the cache.
-func (c *TokenSourceCache) Set(user string, ts oauth2.TokenSource) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	c.cache[user] = ts
-}
-
-// Clear removes the cached TokenSource for the given user.
-// This should be called when credentials change or when reconfiguring.
-func (c *TokenSourceCache) Clear(user string) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	delete(c.cache, user)
-}
-
 // GetOrCreate atomically gets or creates a TokenSource for the given user.
 // If multiple goroutines call this concurrently for the same user, only one
 // will execute createFn and others will wait for and share the result.
