@@ -396,9 +396,7 @@ func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, m
 
 				// validate pattern if defined
 				if s != "" && p.Pattern.Regex != "" {
-					// convert value to string for validation (remove yaml quotes if present)
-					valueStr := fmt.Sprintf("%v", val)
-					if err := validatePattern(p.Pattern.Regex, valueStr, p.Pattern.Examples); err != nil {
+					if err := validatePattern(p.Pattern.Regex, s, p.Pattern.Examples); err != nil {
 						return nil, nil, fmt.Errorf("%s: %w", p.Name, err)
 					}
 				}
