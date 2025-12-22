@@ -46,7 +46,7 @@ func getOIDCProvider(ctx context.Context) (*oidc.Provider, error) {
 // ensuring tokens are reused and authentication is deduplicated.
 func GetTokenSource(ctx context.Context, user, pass string) (oauth2.TokenSource, error) {
 	// Check if token source exists in cache
-	if ts, exists := tokenSourceCache.Get(user); exists {
+	if ts := tokenSourceCache.Get(user); ts != nil {
 		return ts, nil
 	}
 

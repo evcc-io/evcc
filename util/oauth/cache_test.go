@@ -20,18 +20,17 @@ func TestTokenSourceCache_Clear(t *testing.T) {
 	user := "test@example.com"
 
 	// Manually add an entry to the cache
-	cache.Set(user, nil) // dummy value
+	ts := &stubTokenSource{}
+	cache.Set(user, ts)
 
 	// Verify entry exists
-	_, exists := cache.Get(user)
-	assert.True(t, exists, "cache entry should exist before clearing")
+	assert.NotNil(t, cache.Get(user), "cache entry should exist before clearing")
 
 	// Clear the cache
 	cache.Clear(user)
 
 	// Verify entry is removed
-	_, exists = cache.Get(user)
-	assert.False(t, exists, "cache entry should be removed after clearing")
+	assert.Nil(t, cache.Get(user), "cache entry should be removed after clearing")
 }
 
 func TestTokenSourceCache_Clear_NotExisting(t *testing.T) {
@@ -49,18 +48,15 @@ func TestTokenSourceCache_Clear_DifferentUsers(t *testing.T) {
 	user2 := "user2@example.com"
 
 	// Add two different entries
-	cache.Set(user1, nil)
-	cache.Set(user2, nil)
+	cache.Set(user1, &stubTokenSource{})
+	cache.Set(user2, &stubTokenSource{})
 
 	// Clear only the first entry
 	cache.Clear(user1)
 
 	// Verify only the first entry is removed
-	_, exists1 := cache.Get(user1)
-	_, exists2 := cache.Get(user2)
-
-	assert.False(t, exists1, "first cache entry should be removed")
-	assert.True(t, exists2, "second cache entry should still exist")
+	assert.Nil(t, cache.Get(user1), "first cache entry should be removed")
+	assert.NotNil(t, cache.Get(user2), "second cache entry should still exist")
 }
 
 func TestTokenSourceCache_GetSet(t *testing.T) {
@@ -68,17 +64,16 @@ func TestTokenSourceCache_GetSet(t *testing.T) {
 	user := "test@example.com"
 
 	// Initially, cache should be empty
-	value, exists := cache.Get(user)
-	assert.False(t, exists, "cache should be empty initially")
-	assert.Nil(t, value, "cache value should be nil when entry does not exist")
+	value := cache.Get(user)
+	assert.Nil(t, value, "cache should be empty initially")
 
 	// Set a non-nil TokenSource
 	expected := &stubTokenSource{}
 	cache.Set(user, expected)
 
 	// Get should return the same TokenSource instance
-	actual, exists := cache.Get(user)
-	assert.True(t, exists, "cache should contain the entry after Set")
+	actual := cache.Get(user)
+	assert.NotNil(t, actual, "cache should contain the entry after Set")
 	assert.Same(t, expected, actual, "cached TokenSource instance should be the same as the one stored")
 }
 
@@ -98,8 +93,7 @@ func TestTokenSourceCache_ConcurrentGetSet(t *testing.T) {
 			ts := &stubTokenSource{}
 			for j := 0; j < iterations; j++ {
 				cache.Set(user, ts)
-				_, exists := cache.Get(user)
-				assert.True(t, exists, "cache should contain entry during concurrent access")
+				assert.NotNil(t, cache.Get(user), "cache should contain entry during concurrent access")
 			}
 		}(i)
 	}
@@ -107,8 +101,7 @@ func TestTokenSourceCache_ConcurrentGetSet(t *testing.T) {
 	wg.Wait()
 
 	// Verify cache is in a consistent state
-	_, exists := cache.Get(user)
-	assert.True(t, exists, "cache should contain entry after concurrent operations")
+	assert.NotNil(t, cache.Get(user), "cache should contain entry after concurrent operations")
 }
 
 func TestTokenSourceCache_ConcurrentClearWithReadWrite(t *testing.T) {

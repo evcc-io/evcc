@@ -46,7 +46,7 @@ var TokenSourceCache = oauth.NewTokenSourceCache()
 // ensuring tokens are reused and authentication is deduplicated.
 func TokenSource(log *util.Logger, user, password string) (oauth2.TokenSource, error) {
 	// Check if token source exists in cache
-	if ts, exists := TokenSourceCache.Get(user); exists {
+	if ts := TokenSourceCache.Get(user); ts != nil {
 		return ts, nil
 	}
 
