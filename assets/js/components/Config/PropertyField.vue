@@ -82,7 +82,7 @@
 		</template>
 	</select>
 	<textarea
-		v-else-if="rows"
+		v-else-if="rows || textarea"
 		:id="id"
 		v-model="value"
 		class="form-control"
