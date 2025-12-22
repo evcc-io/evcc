@@ -4,7 +4,6 @@ import (
 	"bytes"
 	_ "embed"
 	"fmt"
-	"reflect"
 	"slices"
 	"strconv"
 	"strings"
@@ -358,11 +357,9 @@ func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, m
 				}
 
 				// validate required fields from yaml
-				if p.IsRequired() && (renderMode == RenderModeUnitTest ||
+				if s == "" && p.IsRequired() && (renderMode == RenderModeUnitTest ||
 					renderMode == RenderModeInstance && !testing.Testing()) {
-					if rv := reflect.ValueOf(s); rv.IsZero() {
-						return nil, nil, fmt.Errorf("missing required `%s`", p.Name)
-					}
+					return nil, nil, fmt.Errorf("missing required `%s`", p.Name)
 				}
 
 				res[out] = s
