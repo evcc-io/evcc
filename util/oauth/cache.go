@@ -7,8 +7,8 @@ import (
 )
 
 // TokenSourceCache provides thread-safe caching of oauth2.TokenSource instances
-// keyed by user credentials. This allows multiple components using the same
-// credentials to share a single TokenSource, avoiding duplicate authentication.
+// keyed by username. This allows multiple components using the same username
+// to share a single TokenSource, avoiding duplicate authentication.
 type TokenSourceCache struct {
 	mu    sync.Mutex
 	cache map[string]oauth2.TokenSource
@@ -21,32 +21,29 @@ func NewTokenSourceCache() *TokenSourceCache {
 	}
 }
 
-// Get retrieves a cached TokenSource for the given credentials.
+// Get retrieves a cached TokenSource for the given user.
 // Returns the TokenSource and true if found, nil and false otherwise.
-func (c *TokenSourceCache) Get(user, password string) (oauth2.TokenSource, bool) {
+func (c *TokenSourceCache) Get(user string) (oauth2.TokenSource, bool) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	key := CredentialsCacheKey(user, password)
-	ts, exists := c.cache[key]
+	ts, exists := c.cache[user]
 	return ts, exists
 }
 
-// Set stores a TokenSource for the given credentials in the cache.
-func (c *TokenSourceCache) Set(user, password string, ts oauth2.TokenSource) {
+// Set stores a TokenSource for the given user in the cache.
+func (c *TokenSourceCache) Set(user string, ts oauth2.TokenSource) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	key := CredentialsCacheKey(user, password)
-	c.cache[key] = ts
+	c.cache[user] = ts
 }
 
-// Clear removes the cached TokenSource for the given credentials.
+// Clear removes the cached TokenSource for the given user.
 // This should be called when credentials change or when reconfiguring.
-func (c *TokenSourceCache) Clear(user, password string) {
+func (c *TokenSourceCache) Clear(user string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	key := CredentialsCacheKey(user, password)
-	delete(c.cache, key)
+	delete(c.cache, user)
 }

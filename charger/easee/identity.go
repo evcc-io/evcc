@@ -41,12 +41,12 @@ type tokenSource struct {
 // TokenSourceCache stores per-user token sources
 var TokenSourceCache = oauth.NewTokenSourceCache()
 
-// TokenSource returns a shared oauth2.TokenSource for the given user credentials.
-// Multiple chargers using the same user credentials will share the same TokenSource,
+// TokenSource returns a shared oauth2.TokenSource for the given user.
+// Multiple chargers using the same username will share the same TokenSource,
 // ensuring tokens are reused and authentication is deduplicated.
 func TokenSource(log *util.Logger, user, password string) (oauth2.TokenSource, error) {
 	// Check if token source exists in cache
-	if ts, exists := TokenSourceCache.Get(user, password); exists {
+	if ts, exists := TokenSourceCache.Get(user); exists {
 		return ts, nil
 	}
 
@@ -62,7 +62,7 @@ func TokenSource(log *util.Logger, user, password string) (oauth2.TokenSource, e
 	}
 
 	ts := oauth.RefreshTokenSource(token.AsOAuth2Token(), c)
-	TokenSourceCache.Set(user, password, ts)
+	TokenSourceCache.Set(user, ts)
 
 	return ts, nil
 }
