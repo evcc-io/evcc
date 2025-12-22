@@ -41,12 +41,10 @@ func getOIDCProvider(ctx context.Context) (*oidc.Provider, error) {
 	return oidcProvider, oidcProviderErr
 }
 
-// GetTokenSource returns a shared oauth2.TokenSource for the given user.
-// Multiple chargers using the same username will share the same TokenSource,
-// ensuring tokens are reused and authentication is deduplicated.
-func GetTokenSource(ctx context.Context, user, pass string) (oauth2.TokenSource, error) {
+// TokenSource returns a shared oauth2.TokenSource for the given user.
+// Multiple chargers using the same username will share the same TokenSource.
+func TokenSource(ctx context.Context, user, pass string) (oauth2.TokenSource, error) {
 	return tokenSourceCache.GetOrCreate(user, func() (oauth2.TokenSource, error) {
-		// Get the cached OIDC provider (initialized once)
 		provider, err := getOIDCProvider(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("failed to initialize OIDC provider: %w", err)
