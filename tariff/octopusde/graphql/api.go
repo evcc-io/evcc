@@ -21,18 +21,8 @@ const BaseURI = "https://api.oeg-kraken.energy/v1/graphql/"
 
 // OctopusDeGraphQLClient provides an interface for communicating with Octopus Energy Germany's Kraken platform.
 type OctopusDeGraphQLClient struct {
-	*graphql.Client
-
-	// Local logging utility.
 	log *util.Logger
-
-	// email is the Octopus Energy Germany account email
-	email string
-
-	// password is the Octopus Energy Germany account password
-	password string
-
-	// accountNumber is the Octopus Energy Germany account number
+	*graphql.Client
 	accountNumber string
 }
 
