@@ -73,7 +73,6 @@ func GetTokenSource(ctx context.Context, user, pass string) (oauth2.TokenSource,
 			return nil, err
 		}
 
-		// Wrap with ReuseTokenSource to cache tokens
 		return oauth2.ReuseTokenSource(token, pts), nil
 	})
 }
