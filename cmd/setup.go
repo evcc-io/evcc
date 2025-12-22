@@ -61,7 +61,7 @@ import (
 )
 
 var conf = globalconfig.All{
-	Interval: 10 * time.Second,
+	Interval: 30 * time.Second,
 	Log:      "info",
 	Network: globalconfig.Network{
 		Host: "",

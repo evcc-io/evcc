@@ -688,7 +688,7 @@ export default defineComponent({
 			return store.state?.sponsor;
 		},
 		isSponsor(): boolean {
-			return !!this.sponsor?.status.name;
+			return !!this.sponsor?.status?.name;
 		},
 		ocpp() {
 			return store.state?.ocpp;
