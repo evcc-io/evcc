@@ -99,11 +99,8 @@ func (c *OctopusDeGraphQLClient) RefreshToken(_ *oauth2.Token) (*oauth2.Token, e
 		expiry = time.Unix(int64(exp), 0)
 	} else {
 		// Fallback to 1 hour if exp claim is missing
-		c.log.DEBUG.Println("JWT exp claim missing, using 1 hour default")
 		expiry = time.Now().Add(time.Hour)
 	}
-
-	c.log.TRACE.Printf("GraphQL: refreshed token, expires at %s", expiry)
 
 	return &oauth2.Token{
 		AccessToken: q.ObtainKrakenToken.Token,
