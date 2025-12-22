@@ -120,7 +120,7 @@ func NewServer(other Config) (*EEBus, error) {
 	// TODO: get the voltage from the site
 	configuration, err := eebusapi.NewConfiguration(
 		BrandName, BrandName, Model, serial,
-		model.DeviceTypeTypeEnergyManagementSystem,
+[]shipapi.DeviceCategoryType{}, model.DeviceTypeTypeEnergyManagementSystem,
 		[]model.EntityTypeType{model.EntityTypeTypeCEM},
 		port, certificate, time.Second*4,
 	)
@@ -208,7 +208,7 @@ func (c *EEBus) RegisterDevice(ski, ip string, device Device) error {
 	if len(ip) > 0 {
 		c.service.RemoteServiceForSKI(ski).SetIPv4(ip)
 	}
-	c.service.RegisterRemoteSKI(ski)
+c.service.RegisterRemoteSKI(ski, "")
 
 	c.mux.Lock()
 	defer c.mux.Unlock()
