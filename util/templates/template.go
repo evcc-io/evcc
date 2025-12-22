@@ -397,7 +397,6 @@ func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, m
 					}
 				}
 
-
 				res[out] = s
 			}
 		}
