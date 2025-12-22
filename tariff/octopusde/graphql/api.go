@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"strconv"
 	"time"
 
@@ -39,6 +40,25 @@ type OctopusDeGraphQLClient struct {
 	oauth2.TokenSource
 }
 
+// krakenTransport is a custom transport that sets Authorization header without "Bearer" prefix.
+// The Kraken API requires the token directly without the "Bearer" prefix.
+type krakenTransport struct {
+	Base   http.RoundTripper
+	Source oauth2.TokenSource
+}
+
+// RoundTrip implements http.RoundTripper and adds the Authorization header without "Bearer" prefix.
+func (t *krakenTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	reqCopy := req.Clone(req.Context())
+	token, err := t.Source.Token()
+	if err != nil {
+		return nil, err
+	}
+	// Set Authorization header without "Bearer" prefix
+	reqCopy.Header.Set("Authorization", token.AccessToken)
+	return t.Base.RoundTrip(reqCopy)
+}
+
 // NewClient returns a new, authenticated instance of OctopusDeGraphQLClient.
 func NewClient(log *util.Logger, email, password, accountNumber string) (*OctopusDeGraphQLClient, error) {
 	gq := &OctopusDeGraphQLClient{
@@ -51,9 +71,10 @@ func NewClient(log *util.Logger, email, password, accountNumber string) (*Octopu
 	// Initialize TokenSource with oauth pattern
 	gq.TokenSource = oauth.RefreshTokenSource(new(oauth2.Token), gq)
 
-	// Create HTTP client with OAuth2 transport
+	// Create HTTP client with custom Kraken transport
+	// Kraken API requires Authorization header without "Bearer" prefix
 	cli := request.NewClient(log)
-	cli.Transport = &oauth2.Transport{
+	cli.Transport = &krakenTransport{
 		Base:   cli.Transport,
 		Source: gq.TokenSource,
 	}
