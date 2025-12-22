@@ -44,7 +44,7 @@ func init() {
 //go:generate go tool decorate -f decorateWallbe -b *Wallbe -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.ChargerEx,MaxCurrentMillis,func(float64) error"
 
 // NewWallbeFromConfig creates a Wallbe charger from generic config
-func NewWallbeFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewWallbeFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		URI    string
 		Legacy bool

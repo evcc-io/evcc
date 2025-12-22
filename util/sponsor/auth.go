@@ -15,7 +15,6 @@ import (
 var (
 	mu             sync.RWMutex
 	Subject, Token string
-	fromYaml       bool = true
 	ExpiresAt      time.Time
 )
 
@@ -34,13 +33,6 @@ func IsAuthorizedForApi() bool {
 	mu.RLock()
 	defer mu.RUnlock()
 	return IsAuthorized() && Subject != unavailable && Token != ""
-}
-
-// SetFromYaml sets whether the token comes from YAML config or database
-func SetFromYaml(val bool) {
-	mu.Lock()
-	defer mu.Unlock()
-	fromYaml = val
 }
 
 // check and set sponsorship token
@@ -98,16 +90,15 @@ func redactToken(token string) string {
 	return token[:6] + "......." + token[len(token)-6:]
 }
 
-type sponsorStatus struct {
+type Status struct {
 	Name        string    `json:"name"`
 	ExpiresAt   time.Time `json:"expiresAt,omitempty"`
 	ExpiresSoon bool      `json:"expiresSoon,omitempty"`
 	Token       string    `json:"token,omitempty"`
-	FromYaml    bool      `json:"fromYaml"`
 }
 
-// Status returns the sponsorship status
-func Status() sponsorStatus {
+// GetStatus returns the sponsorship status
+func GetStatus() Status {
 	mu.RLock()
 	defer mu.RUnlock()
 
@@ -116,11 +107,10 @@ func Status() sponsorStatus {
 		expiresSoon = true
 	}
 
-	return sponsorStatus{
+	return Status{
 		Name:        Subject,
 		ExpiresAt:   ExpiresAt,
 		ExpiresSoon: expiresSoon,
 		Token:       redactToken(Token),
-		FromYaml:    fromYaml,
 	}
 }

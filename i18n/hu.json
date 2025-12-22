@@ -40,7 +40,7 @@
       "chargers": "EV töltők",
       "generic": "Általános integrációk",
       "heatingdevices": "Fűtőberendezések",
-      "ocppHelp": "Másolja be ezt a címet a töltő konfigurációjába.",
+      "ocppHelp": "Másolja ezt az URL-t a töltő konfigurációjába. A részletekért tekintse meg a gyártó kézikönyvét. A töltő automatikusan hozzáfűzi egyedi azonosítóját (állomás azonosító) az URL-hez. Ritka esetekben előfordulhat, hogy az azonosítót manuálisan kell megadnia. Példa: `{url}`",
       "ocppLabel": "OCPP-Server URL",
       "switchsockets": "Kapcsolható dugaljak",
       "template": "Gyártó",
@@ -58,8 +58,8 @@
           "heating": "Felhasználó által meghatározott fűtőberendezés"
         },
         "heatpump": "Felhasználó által meghatározott hőszivattyú",
-        "sgready": "Felhasználó által meghatározott hőszivattyú (sg-ready, all)",
-        "sgready-boost": "Felhasználó által meghatározott hőszivattyú (sg-ready, boost)",
+        "sgready": "Felhasználó által meghatározott hőszivattyú (sg-ready pluginokon keresztül)",
+        "sgready-relay": "Felhasználó által meghatározott hőszivattyú (sg-ready reléken keresztül)",
         "switchsocket": "Felhasználó által meghatározott dugalj"
       }
     },
@@ -118,7 +118,7 @@
       "temp": "Hőmérséklet",
       "topic": "Téma",
       "url": "URL",
-      "vehicleLimitSoc": "Jármű limit",
+      "vehicleLimitSoc": "Töltési limit",
       "yes": "igen"
     },
     "deviceValueChargeStatus": {
@@ -133,6 +133,7 @@
     "devices": {
       "auxMeter": "Okos fogyasztó",
       "batteryStorage": "Akkumulátoros tároló",
+      "consumer": "Fogyasztó",
       "solarSystem": "Naperőmű"
     },
     "editor": {
@@ -143,9 +144,9 @@
       "title": "EEBus"
     },
     "ext": {
-      "description": "Használható töltés menedzsmentre vagy statisztikai célokra.",
-      "titleAdd": "Külső Mérő Hozzáadása",
-      "titleEdit": "Külső Mérő Szerkesztése"
+      "description": "Statisztikai célokra rögzíti a szabályozatlan fogyasztók (pl. hűtőszekrény, mosógép stb.) energiaértékeit. Ezek a mérők terheléskezelésre is használhatók (pl. alelosztó).",
+      "titleAdd": "Fogyasztásmérő hozzáadása",
+      "titleEdit": "Fogyasztásmérő Szerkesztése"
     },
     "form": {
       "danger": "Veszély",
@@ -182,6 +183,7 @@
       "telemetry": "Telemetria",
       "templateLoading": "Betöltés...",
       "title": "Cím",
+      "typeDeprecated": "A(z) '{type}' típus elavult, és egy későbbi verzióban eltávolításra kerül. Kérjük, ellenőrizze a változásnaplót, és hozza létre újra az eszközt.",
       "validateSave": "Ellenőrzés & mentés"
     },
     "grid": {
@@ -194,7 +196,8 @@
       "title": "HEMS"
     },
     "icon": {
-      "change": "változtatás"
+      "change": "változtatás",
+      "label": "Ikon"
     },
     "influx": {
       "description": "Lementi a töltési adatokat és egyéb metrikákat az InfluxDB-be. Használd a Grafana-t vagy egyéb eszközöket az adatok vizualizálásához.",
@@ -349,6 +352,15 @@
       "specific": "Specifikus integrációk",
       "template": "Gyártó",
       "titleChoice": "Mit szeretnél hozzáadni?",
+      "titleLabel": "Cím",
+      "usage": {
+        "aux": "Önszabályozó fogyasztó",
+        "battery": "Akkumulátor",
+        "charge": "Fogyasztó / Töltő",
+        "grid": "Hálózat",
+        "label": "Használat",
+        "pv": "Termelés"
+      },
       "validateSave": "Ellenőrzés & mentés"
     },
     "modbus": {
@@ -473,7 +485,6 @@
         "backup": {
           "action": "Biztonsági mentés letöltése...",
           "confirmationButton": "Biztonsági mentés letöltése",
-          "confirmationText": "Kérjük, adja meg jelszavát az adatbázisfájl letöltéséhez.",
           "description": "Készítsen biztonsági másolatot adatairól egy fájlba. Ez a fájl használható az adatok visszaállítására rendszerhiba esetén.",
           "title": "Biztonsági mentés"
         },
@@ -656,6 +667,7 @@
     "about": "Névjegy",
     "authProviders": {
       "confirmLogout": "Biztosan le szeretnéd választani a(z) {title}?",
+      "loggedOut": "Sikeresen kijelentkezve",
       "title": "Engedélyezési állapot"
     },
     "blog": "Blog",
@@ -967,7 +979,7 @@
       "targetChargeActive": "Töltési terv aktív. Becsült befejezés {duration}.",
       "targetChargePlanned": "A töltési tervezet ekkor keződik: {duration}.",
       "targetChargeWaitForVehicle": "Töltési terv üzemkész. Járműre várakozás…",
-      "vehicleLimit": "Jármű limi.",
+      "vehicleLimit": "Jármű limit.",
       "vehicleLimitReached": "Jármű limit elérve.",
       "waitForVehicle": "Üzemkész. Járműre várakozás…",
       "welcome": "Rövid kezdeti töltés a csatlakozás megerősítéséhez."
@@ -1117,8 +1129,10 @@
       "show": "Mutasd a {title}-t"
     },
     "sponsorToken": {
-      "expires": "A szponzor token-ed le fog járni {inXDays}. {getNewToken} és frissítsd itt.",
-      "getNew": "Kérj egy újat",
+      "expires": "A szponzor token-ed le fog járni {inXDays}.",
+      "expiresUpdateUi": "{getNewToken} és frissítsd itt.",
+      "expiresUpdateYaml": "{getNewToken} és frissítsd az evcc.yaml fájlodban.",
+      "getNewToken": "Kérj egy újat",
       "hint": "Megjegyzés: Ezt a jövőben automatizálni fogjuk."
     },
     "telemetry": {

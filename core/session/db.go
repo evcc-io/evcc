@@ -17,12 +17,14 @@ var (
 	sessions Sessions
 )
 
-func Init() error {
-	err := db.Instance.AutoMigrate(new(Session))
-	if err == nil {
-		err = db.Instance.Find(&sessions).Error
-	}
-	return err
+func init() {
+	db.Register(func() error {
+		if err := db.Instance.AutoMigrate(new(Session)); err != nil {
+			return err
+		}
+
+		return db.Instance.Find(&sessions).Error
+	})
 }
 
 // NewStore creates a session store
@@ -52,7 +54,7 @@ func (s *DB) New(meter float64) *Session {
 }
 
 // Persist creates or updates a transaction in the database
-func (s *DB) Persist(session interface{}) {
+func (s *DB) Persist(session any) {
 	if err := s.db.Save(session).Error; err != nil {
 		s.log.ERROR.Printf("persist: %v", err)
 	}
@@ -68,7 +70,7 @@ func (s *DB) Sessions() (Sessions, error) {
 
 func (s *DB) ClosePendingSessionsInHistory(chargeMeterTotal float64) error {
 	var res Sessions
-	if tx := s.db.Find(&res, map[string]interface{}{"finished": "0001-01-01 00:00:00+00:00", "Loadpoint": s.name}); tx.Error != nil {
+	if tx := s.db.Find(&res, map[string]any{"finished": "0001-01-01 00:00:00+00:00", "Loadpoint": s.name}); tx.Error != nil {
 		return tx.Error
 	}
 

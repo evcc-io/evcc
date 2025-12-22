@@ -564,8 +564,12 @@ input::-webkit-datetime-edit {
 }
 input.form-control:disabled,
 input.form-control:read-only,
+textarea.form-control:disabled,
+textarea.form-control:read-only,
 .dark input.form-control:disabled,
-.dark input.form-control:read-only {
+.dark input.form-control:read-only,
+.dark textarea.form-control:disabled,
+.dark textarea.form-control:read-only {
 	background-color: var(--evcc-gray-10);
 	color: var(--bs-default-text);
 	opacity: 1;
@@ -576,12 +580,42 @@ input.form-control:read-only,
 	color: var(--evcc-default-text);
 }
 
-.dark .form-control::placeholder {
-	color: var(--bs-gray-medium);
+.form-control::placeholder {
+	opacity: 0.5 !important;
 }
 
 input[type="time"]::-webkit-calendar-picker-indicator {
 	display: none;
+}
+
+input[list]::-webkit-list-button {
+	display: none !important;
+	appearance: none !important;
+}
+
+.form-control-clear {
+	position: absolute;
+	right: 0.75rem;
+	top: 0;
+	bottom: 0;
+	justify-content: center;
+	display: flex;
+	align-items: center;
+	justify-self: center;
+	width: 1.1rem;
+	font-size: 1.5rem;
+	font-weight: normal;
+	color: var(--evcc-default-text);
+	border: none;
+	background-color: transparent;
+	padding: 0;
+	margin: 0;
+	cursor: pointer;
+}
+
+/* hide dropdown arrow if clear is visible */
+.form-select.has-clear-button {
+	background-image: none;
 }
 
 .table {
@@ -671,11 +705,29 @@ html.app .modal-dialog {
 }
 
 .dark .round-box--error {
+	box-shadow: 0 0 0.5rem var(--bs-danger);
+	border: 1px solid var(--bs-danger);
+}
+
+.dark .round-box--error .tags * {
+	color: var(--bs-danger) !important;
+}
+
+.round-box--warning {
 	box-shadow: 0 0 0.5rem var(--bs-warning);
 	border: 1px solid var(--bs-warning);
 }
 
-.dark .round-box--error .tags * {
+.round-box--warning .tags * {
+	color: var(--bs-warning-text-emphasis) !important;
+}
+
+.dark .round-box--warning {
+	box-shadow: 0 0 0.5rem var(--bs-warning);
+	border: 1px solid var(--bs-warning);
+}
+
+.dark .round-box--warning .tags * {
 	color: var(--bs-warning) !important;
 }
 

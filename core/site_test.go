@@ -166,7 +166,7 @@ func TestUpdateHomeConsumption(t *testing.T) {
 	clock := clock.NewMock()
 
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
-	metrics.Init()
+	require.NoError(t, metrics.SetupSchema())
 
 	s := &Site{
 		log:             util.NewLogger("foo"),

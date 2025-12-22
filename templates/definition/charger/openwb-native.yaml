@@ -1,0 +1,154 @@
+template: openwb-native
+products:
+  - brand: openWB
+    description:
+      generic: Embedded software replacement
+capabilities: ["1p3p", "rfid", "mA"]
+requirements:
+  description:
+    de: |
+      Ersatz für die OpenWB Software, wenn evcc direkt auf der OpenWB Hardware läuft. Unterstützte Hardware ist die OpenWB Series2.
+      mA Regelung wird automatisch benutzt wenn die EVSE-Firmware es unterstützt.
+
+      Achtung: Die Installation von evcc auf der OpenWB Hardware führt zum Verlust der Garantie!
+
+      Installation ohne Display:
+      - Raspberry Pi OS Lite (64bit) Image installieren und konfigurieren.
+      - Folgendes am Ende von `/boot/firmware/config.txt` hinzufügen:
+        ```ini
+        [all]
+        gpio=4,5,7,11,17,22,23,24,25,26,27=op,dl
+        gpio=6,8,9,10,12,13,16,21=ip,pu
+        ```
+      - evcc nach Anleitung installieren.
+      - Notwendige Gruppen zum Zugriff auf die Hardware für user evcc setzen (als root): `usermod -a -G gpio,dialout,input evcc`
+      - evcc konfigurieren. Es gibt unterschiedliche Hardware Versionen, die bezüglich der verbauten Modbus Adapter und Wallbox Zähler variieren.
+        - Der oder die Modbus Adapter sind entweder auf `/dev/ttyUSB0`, `/dev/ttyUSB1` (manche Duo) oder `/dev/ttyACM0` zu finden. 
+          Manche Duo's haben zwei Modbus Adapter, manche nur einen.
+        - Die EVSE für den ersten Ladepunkt hat immer die ID 1, die für den zweiten ID 2.
+        - Die verschiedenen möglichen Zähler sind:
+          - Bernecker Engineering MPM3PM (template: mpm3pm) mit ID 5 oder ID 6 für den zweiten Ladepunkt bei der Duo.
+          - SDM630/SDM72 (template: eastron) mit ID 105 oder ID 106 für den zweiten Ladepunkt bei der Duo.
+          - ABB B23 (template: abb-ab) mit ID 201
+
+      Zusätzlich für die Anzeige von evcc im Display (Achtung dann können auch Unbefugte laden!):
+      - `apt install labwc wayfire seatd xdg-user-dirs firefox swayidle wlopm`
+      - Datei `/home/pi/.config/labwc/autostart` mit folgendem Inhalt anlegen:
+        ```bash
+        /usr/bin/firefox --kiosk http://localhost:7070/ &
+        /usr/bin/swayidle -w timeout 600 'wlopm --off \*' resume 'wlopm --on \*' &
+        ```
+      - Datei `/home/pi/.config/systemd/user/kiosk.service` mit folgendem Inhalt anlegen:
+        ```ini
+        [Unit]
+        Description=Start Kiosk mode
+        [Service]
+        Type=simple
+        ExecStart=/usr/bin/labwc
+        [Install]
+        WantedBy=default.target
+        ```
+      - Kiosk Modus Autostart aktivieren: `systemctl --user enable kiosk`
+      - Als root: Starten von systemd user units ohne login des Users aktivieren: `loginctl enable-linger pi`
+
+      Unter https://github.com/evcc-io/images gibt es auch fertige Images für beide Varianten.
+
+    en: |
+      Replacement for the OpenWB software, when evcc runs directly on the OpenWB hardware. Currently supported Hardware is OpenWB Series2.
+      mA control is used automatically if the EVSE firmware supports it.
+
+      Please be aware that installing evcc on the OpenWB Hardware will void your guarantee!
+
+      Installation without display:
+      - Install and configure Raspberry Pi OS Lite (64bit) image.
+      - Add the following at then end of `/boot/firmware/config.txt`:
+        ```ini
+        [all]
+        gpio=4,5,7,11,17,22,23,24,25,26,27=op,dl
+        gpio=6,8,9,10,12,13,16,21=ip,pu
+        ```
+      - Install evcc according to the manual.
+      - Add the groups required for user evcc to access the hardware: `usermod -a -G gpio,dialout,input evcc`
+      - Configure evcc according to the manual. There are multiple distinct Hardware versions, which differ regarding the built-in modbus
+        adapters and charge meters.
+        - A single or multiple Modbus adapters are found at `/dev/ttyUSB0`, `/dev/ttyUSB1` (some Duo) or `/dev/ttyACM0`. 
+          Some Duo's contain two Modbus adapters, some just one.
+        - The EVSE for the first connector has always the ID 1, the one for the second ID 2.
+        - The different possible charge meters are:
+          - Bernecker Engineering MPM3PM (template: mpm3pm) with ID 5 or ID 6 for the Duo's second connector.
+          - SDM630/SDM72 (template: eastron) with ID 105 or ID 106 for the Duo's second connector.
+          - ABB B23 (template: abb-ab) with ID 201
+
+      Additional steps for showing evcc on the display (be careful, because this will allow anybody to enable charging!):
+      - `apt install labwc wayfire seatd xdg-user-dirs firefox swayidle wlopm`
+      - Create the file `/home/pi/.config/labwc/autostart` with the following contents:
+        ```bash
+        /usr/bin/firefox --kiosk http://localhost:7070/ &
+        /usr/bin/swayidle -w timeout 600 'wlopm --off \*' resume 'wlopm --on \*' &
+        ```
+      - Create file `/home/pi/.config/systemd/user/kiosk.service` with the following content:
+        ```ini
+        [Unit]
+        Description=Start Kiosk mode
+        [Service]
+        Type=simple
+        ExecStart=/usr/bin/labwc
+        [Install]
+        WantedBy=default.target
+        ```
+      - Enable autostart of kiosk mode: `systemctl --user enable kiosk`
+      - As root: Enable start of systemd user units without the user having to log-in: `loginctl enable-linger pi`
+
+      At https://github.com/evcc-io/images complete images for both variants are available.
+
+params:
+  - name: modbus
+    choice: ["rs485"]
+    baudrate: 9600
+    comset: 8N1
+  - name: phases1p3p
+    type: bool
+    description:
+      en: Phase switching
+      de: Phasenumschaltung
+    help:
+      en: Device is equipped with phase switching option
+      de: Gerät ist mit Phasenumschaltungsoption ausgestattet
+    default: false
+  - name: rfid
+    type: string
+    example: "413d:2107"
+    description:
+      en: RFID card reader USB VID:PID
+      de: RFID-Kartenleser USB VID:PID
+    help:
+      en: RFID card reader USB VID:PID value (as be obtained from lsusb), leave empty for no RFID card reader
+      de: RFID-Kartenleser USB VID:PID Wert (kann der Ausgabe von lsusb entnommen werden), leer wenn kein RFID Kartenleser vorhanden ist
+    default: ""
+  - name: cpwait
+    type: duration
+    description:
+      en: Duration of CP interruption
+      de: Dauer der CP Unterbrechnung
+    help:
+      en: when phase-switching and waking up car. Minimum 5 seconds.
+      de: bei der Phasenumschaltung und Aufwecken des Autos. Mindestens 5 Sekunden.
+    default: 10s
+    advanced: true
+  - name: connector
+    type: int
+    description:
+      en: Connector
+      de: Ladepunkt
+    help:
+      en: 1 or 2, usually 1, except for Duo
+      de: 1 oder 2, normalerweise 1, ausser bei Duo
+    default: 1
+    advanced: true
+render: |
+  type: openwb-native
+  phases1p3p: {{ .phases1p3p }}
+  rfid: {{ .rfid }}
+  cpwait: {{ .cpwait }}
+  connector: {{ .connector }}
+  {{- include "modbus" . }}

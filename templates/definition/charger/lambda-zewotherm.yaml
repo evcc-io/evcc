@@ -43,6 +43,13 @@ params:
     type: duration
     default: 60s
     advanced: true
+  - name: firmware
+    type: choice
+    choice: ["<1.1.3", ">=1.1.3"]
+    default: "<1.1.3"
+    description:
+      de: Firmware version. Wähle '>=1.1.3' für Word-Swap
+      en: Firmware version. Choose '>=1.1.3' for word-swap
 render: |
   type: heatpump
   setmaxpower:
@@ -73,7 +80,7 @@ render: |
     register:
       address: 1020 # kumulierter Stromverbrauch (Energieaufnahme) [E / Wh] seit dem letzten Reset
       type: holding
-      decode: int32
+      decode: {{ if eq .firmware "<1.1.3" }}int32{{ else }}int32s{{ end }}
     scale: 0.001
   {{- if .tempsource }}
   temp:

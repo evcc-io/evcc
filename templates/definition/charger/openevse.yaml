@@ -8,9 +8,7 @@ requirements:
 params:
   - name: host
   - name: user
-    required: false
   - name: password
-    required: false
     mask: true
 render: |
   type: openevse

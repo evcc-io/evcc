@@ -18,9 +18,18 @@ params:
       en: Battery number
       de: Batteriespeichernummer
     choice: [1, 2]
+    usages: ["battery"]
   - name: capacity
     advanced: true
   - name: maxacpower
+  - name: maxchargepower
+    default: 10000
+  - name: maxdischargepower
+    default: 10000
+  - name: minsoc
+    default: 10
+  - name: maxsoc
+    default: 100
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -213,7 +222,7 @@ render: |
                 type: writesingle
                 encoding: uint16
           - source: const
-            value: 10000 # For charge battery mode: Maximum allowed power from Grid in W 
+            value: {{ .maxchargepower }} # For charge battery mode: Maximum allowed power from Grid in W 
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
@@ -222,4 +231,8 @@ render: |
                 type: writemultiple
                 encoding: uint16
   capacity: {{ .capacity }} # kWh
+  maxchargepower: {{ .maxchargepower }} # W
+  maxdischargepower: {{ .maxdischargepower }} # W
+  minsoc: {{ .minsoc }} # %
+  maxsoc: {{ .maxsoc }} # %
   {{- end }}

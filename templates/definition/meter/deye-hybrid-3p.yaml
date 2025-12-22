@@ -23,6 +23,34 @@ params:
   - name: maxsoc
     advanced: true
   - name: maxacpower
+  - name: maxdischargecurrent
+    required: true
+    default: 100
+    advanced: true
+    description:
+      en: Max Discharge Current
+      de: Max Entladestrom
+    help:
+      en: |
+        Maximum battery discharge current in Amperes (A) for normal mode. Typical range 50-350A depending on battery capacity.
+        Power calculation: P(W) = Current(A) * Voltage(V). Example with 48V battery: 100A * 48V = 4800W (4.8kW).
+      de: |
+        Maximaler Batterieentladestrom in Ampere (A) für Normalmodus. Typischer Bereich 50-350A abhängig von Batteriekapazität.
+        Leistungsberechnung: P(W) = Strom(A) * Spannung(V). Beispiel mit 48V Batterie: 100A * 48V = 4800W (4,8kW).
+  - name: gridchargecurrent
+    required: true
+    default: 60
+    advanced: true
+    description:
+      en: Grid Charge Current
+      de: Netzladestrom
+    help:
+      en: |
+        Maximum battery charging current in Amperes (A) from grid for charge mode. Typical range 30-350A depending on battery and inverter capacity.
+        Power calculation: P(W) = Current(A) * Voltage(V). Example with 48V battery: 60A * 48V = 2880W (2.9kW).
+      de: |
+        Maximaler Batterieladestrom in Ampere (A) aus dem Netz für Lademodus. Typischer Bereich 30-350A abhängig von Batterie- und Wechselrichterkapazität.
+        Leistungsberechnung: P(W) = Strom(A) * Spannung(V). Beispiel mit 48V Batterie: 60A * 48V = 2880W (2,9kW).
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -133,120 +161,230 @@ render: |
         source: sequence
         set:
         - source: const
-          value: {{ .minsoc }} 
+          value: {{ .minsoc }}
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
-              address: 166 
+              address: 127 # Battery Grid Charging Start (set to minsoc)
               type: writemultiple
-              decode: int32s
+              decode: uint16
         - source: const
-          value: 0
+          value: {{ .minsoc }}
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
-              address: 148 
+              address: 166 # Program 1 SOC
               type: writemultiple
-              decode: int32s
+              decode: uint16
         - source: const
-          value: 2355 
+          value: {{ .minsoc }}
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
-              address: 149 
+              address: 167 # Program 2 SOC
               type: writemultiple
-              decode: int32s
+              decode: uint16
         - source: const
-          value: 0 
+          value: {{ .minsoc }}
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
-              address: 172 
+              address: 168 # Program 3 SOC
               type: writemultiple
-              decode: int32s  
-    - case: 2 # hold
+              decode: uint16
+        - source: const
+          value: {{ .minsoc }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 169 # Program 4 SOC
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: {{ .minsoc }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 170 # Program 5 SOC
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: {{ .minsoc }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 171 # Program 6 SOC
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: 1 # enabled
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 130 # Battery Grid Charging
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: 0x00FF # Week, enable TOU
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 146 # Time of Use
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: {{ .maxdischargecurrent }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 109 # Battery Max Discharging Current
+              type: writemultiple
+              decode: uint16
+    - case: 2 # hold - prevent discharge
       set:
         source: sequence
         set:
         - source: const
-          value: {{ .maxsoc }}
+          value: {{ .minsoc }}
           set:
             source: modbus
-            {{- include "modbus" . | indent 10 }}        
+            {{- include "modbus" . | indent 10 }}
             register:
-              address: 166 
+              address: 127 # Battery Grid Charging Start (set to minsoc)
               type: writemultiple
-              decode: int32s
+              decode: uint16
+        - source: const
+          value: {{ .minsoc }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 166 # Program 1 SOC
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: {{ .minsoc }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 167 # Program 2 SOC
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: {{ .minsoc }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 168 # Program 3 SOC
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: {{ .minsoc }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 169 # Program 4 SOC
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: {{ .minsoc }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 170 # Program 5 SOC
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: {{ .minsoc }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 171 # Program 6 SOC
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: 0x00FF # Week, enable TOU
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 146 # Time of Use
+              type: writemultiple
+              decode: uint16
         - source: const
           value: 0
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
-              address: 148 # soc time of use 1
+              address: 109 # Battery Max Discharging Current
               type: writemultiple
-              decode: int32s
-        - source: const
-          value: 2355 
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 149 # soc time of use 1
-              type: writemultiple
-              decode: int32s
-        - source: const
-          value: 0 
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 172 
-              type: writemultiple
-              decode: int32s  
-    - case: 3 # charge
+              decode: uint16
+    - case: 3 # charge - enable grid charging
       set:
         source: sequence
         set:
         - source: const
+          value: {{ .gridchargecurrent }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 128 # Battery Grid Charging Current
+              type: writemultiple
+              decode: uint16
+        - source: const
           value: {{ .maxsoc }}
           set:
             source: modbus
-            {{- include "modbus" . | indent 10 }}        
+            {{- include "modbus" . | indent 10 }}
             register:
-              address: 166 
+              address: 127 # Battery Grid Charging Start (SOC target)
               type: writemultiple
-              decode: int32s
+              decode: uint16
         - source: const
-          value: 0
+          value: 1 # enabled
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
-              address: 148 # soc time of use 1
+              address: 130 # Battery Grid Charging
               type: writemultiple
-              decode: int32s
+              decode: uint16
         - source: const
-          value: 2355 
+          value: 0x0000 # Disabled, ignore TOU schedule
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
-              address: 149 # soc time of use 1
+              address: 146 # Time of Use
               type: writemultiple
-              decode: int32s
+              decode: uint16
         - source: const
-          value: 1 
+          value: {{ .maxdischargecurrent }}
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
-              address: 172 
+              address: 109 # Battery Max Discharging Current
               type: writemultiple
-              decode: int32s  
+              decode: uint16
   capacity: {{ .capacity }} # kWh
+  minsoc: {{ .minsoc }} # %
+  maxsoc: {{ .maxsoc }} # %
   {{- end }}
