@@ -3,8 +3,8 @@ products:
   - brand: Pstryk.pl
 requirements:
   description:
-    en: "Get your API token from the Pstryk App. IMPORTANT: Add 'interval: 12h' to your tariff config to avoid rate limiting (429 errors)."
-    de: "Hol dir deinen API-Token aus der Pstryk App. WICHTIG: Füge 'interval: 12h' zu deiner Tarif-Konfiguration hinzu, um Rate-Limiting (429-Fehler) zu vermeiden."
+    en: "Get your API token from the Pstryk App. The template uses a 1h5m refresh interval by default to respect API rate limits."
+    de: "Hol dir deinen API-Token aus der Pstryk App. Das Template verwendet standardmäßig ein 1h5m Aktualisierungsintervall, um API-Rate-Limits zu respektieren."
   evcc: ["skiptest"]
 group: price
 countries: ["PL"]
@@ -29,6 +29,10 @@ params:
       en: "Tariff source."
       de: "Tarifquelle."
 
+  - name: interval
+    default: 1h5m
+    advanced: true
+
   - preset: tariff-base
 
 render: |
@@ -37,8 +41,8 @@ render: |
   forecast:
     source: http
     timeout: 10s
-    cache: 12h
-    uri: https://api.pstryk.pl/integrations/{{ .plan }}/?resolution=hour&window_start={{ `{{ dateModify "-24h" now | dateInZone "2006-01-02" "Europe/Warsaw" }}T{{ if eq (dateInZone "MST" "Europe/Warsaw" now) "CEST" }}22:00:00Z{{ else }}23:00:00Z{{ end }}` }}&window_end={{ `{{ dateModify "+48h" now | dateInZone "2006-01-02" "Europe/Warsaw" }}T{{ if eq (dateInZone "MST" "Europe/Warsaw" now) "CEST" }}22:00:00Z{{ else }}23:00:00Z{{ end }}` }}
+    cache: 1h
+    uri: https://api.pstryk.pl/integrations/{{ .plan }}/?resolution=hour&window_start={{ `{{ now | mustDateModify "-24h" | date "2006-01-02" }}` }}&window_end={{ `{{ now | mustDateModify "+72h" | date "2006-01-02" }}` }}
     headers:
       Authorization: {{ .token }}
       Accept: application/json
@@ -58,3 +62,4 @@ render: |
           value: .price_gross
         }
       ]
+  interval: {{ .interval }}
