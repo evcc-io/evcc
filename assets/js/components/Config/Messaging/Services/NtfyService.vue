@@ -1,70 +1,74 @@
 <template>
 	<div>
-		<MessagingFormRow :serviceType="service.type" inputName="host" example="ntfy.sh">
+		<MessagingFormRow :serviceType="serviceType" inputName="host" example="ntfy.sh">
 			<PropertyField
 				id="messagingServiceNtfyHost"
-				v-model="serviceData.other.host"
+				:model-value="host"
 				type="String"
 				required
+				@update:model-value="$emit('update:host', $event)"
 			/>
 		</MessagingFormRow>
 
-		<MessagingFormRow :serviceType="service.type" inputName="topics" example="evcc_alert">
+		<MessagingFormRow :serviceType="serviceType" inputName="topics" example="evcc_alert">
 			<PropertyField
 				id="messagingServiceNtfyTopics"
-				v-model="serviceData.other.topics"
+				:model-value="topics"
 				property="topics"
 				type="List"
 				required
 				rows
+				@update:model-value="$emit('update:topics', $event)"
 			/>
 		</MessagingFormRow>
 
 		<MessagingFormRow
-			:serviceType="service.type"
+			:serviceType="serviceType"
 			inputName="authtoken"
 			example="tk_7eevizlsiwf9yi4uxsrs83r4352o0"
 			optional
 		>
 			<PropertyField
 				id="messagingServiceNtfyAuthtoken"
-				v-model="serviceData.other.authtoken"
+				:model-value="authtoken"
 				type="String"
 				required
+				@update:model-value="$emit('update:authtoken', $event)"
 			/>
 		</MessagingFormRow>
 
-		<MessagingFormRow :serviceType="service.type" inputName="priority" optional>
+		<MessagingFormRow :serviceType="serviceType" inputName="priority" optional>
 			<PropertyField
 				id="messagingServiceNtfyPriority"
-				v-model="serviceData.other.priority"
+				:model-value="priority"
 				property="priority"
 				type="Choice"
 				class="me-2 w-25"
 				:choice="Object.values(MESSAGING_SERVICE_NTFY_PRIORITY)"
+				@update:model-value="$emit('update:priority', $event)"
 			/>
 		</MessagingFormRow>
 
 		<MessagingFormRow
-			:serviceType="service.type"
+			:serviceType="serviceType"
 			inputName="tags"
 			example="electric_plug,blue_car"
 			optional
 		>
 			<PropertyField
 				id="messagingServiceNtfyTags"
-				:model-value="serviceData.other.tags?.split(',')"
+				:model-value="tags?.split(',')"
 				property="tags"
 				rows
 				type="List"
-				@update:model-value="(e: string[]) => (serviceData.other.tags = e.join())"
+				@update:model-value="$emit('update:tags', $event.join())"
 			/>
 		</MessagingFormRow>
 	</div>
 </template>
 
 <script lang="ts">
-import { type MessagingServiceNtfy, MESSAGING_SERVICE_NTFY_PRIORITY } from "@/types/evcc";
+import { MESSAGING_SERVICE_NTFY_PRIORITY, MESSAGING_SERVICE_TYPE } from "@/types/evcc";
 import type { PropType } from "vue";
 import PropertyField from "../../PropertyField.vue";
 import MessagingFormRow from "./MessagingFormRow.vue";
@@ -73,13 +77,21 @@ export default {
 	name: "NtfyService",
 	components: { MessagingFormRow, PropertyField },
 	props: {
-		service: {
-			type: Object as PropType<MessagingServiceNtfy>,
+		host: {
+			type: String,
 			required: true,
 		},
+		topics: {
+			type: Array as PropType<string[]>,
+			required: true,
+		},
+		priority: String as PropType<MESSAGING_SERVICE_NTFY_PRIORITY>,
+		tags: String,
+		authtoken: String,
 	},
+	emits: ["update:host", "update:topics", "update:priority", "update:tags", "update:authtoken"],
 	data() {
-		return { serviceData: this.service, MESSAGING_SERVICE_NTFY_PRIORITY };
+		return { serviceType: MESSAGING_SERVICE_TYPE.NTFY, MESSAGING_SERVICE_NTFY_PRIORITY };
 	},
 };
 </script>

@@ -59,9 +59,44 @@
 								</div>
 							</h5>
 						</div>
-
 						<div :data-testid="`service-box-${s.type.toLowerCase()}`">
-							<component :is="getServiceComponent(s.type)" :service="s" />
+							<CustomService
+								v-if="s.type === MESSAGING_SERVICE_TYPE.CUSTOM"
+								v-model:encoding="s.other.encoding"
+								v-model:send="s.other.send"
+							/>
+							<EmailService
+								v-else-if="s.type === MESSAGING_SERVICE_TYPE.EMAIL"
+								v-model:host="s.other.host"
+								v-model:port="s.other.port"
+								v-model:user="s.other.user"
+								v-model:password="s.other.password"
+								v-model:from="s.other.from"
+								v-model:to="s.other.to"
+							/>
+							<NtfyService
+								v-else-if="s.type === MESSAGING_SERVICE_TYPE.NTFY"
+								v-model:host="s.other.host"
+								v-model:topics="s.other.topics"
+								v-model:priority="s.other.priority"
+								v-model:tags="s.other.tags"
+								v-model:authtoken="s.other.authtoken"
+							/>
+							<PushoverService
+								v-else-if="s.type === MESSAGING_SERVICE_TYPE.PUSHOVER"
+								v-model:app="s.other.app"
+								v-model:recipients="s.other.recipients"
+								v-model:devices="s.other.devices"
+							/>
+							<ShoutService
+								v-else-if="s.type === MESSAGING_SERVICE_TYPE.SHOUT"
+								v-model:uri="s.other.uri"
+							/>
+							<TelegramService
+								v-else
+								v-model:token="s.other.token"
+								v-model:chats="s.other.chats"
+							/>
 						</div>
 					</div>
 
@@ -121,26 +156,20 @@ import "@h2d2/shopicons/es/regular/trash";
 import "@h2d2/shopicons/es/regular/arrowright";
 import deepEqual from "@/utils/deepEqual";
 import JsonModal from "../JsonModal.vue";
-import FormRow from "../FormRow.vue";
-import PropertyField from "../PropertyField.vue";
-import YamlEntry from "../DeviceModal/YamlEntry.vue";
 import PushoverService from "./Services/PushoverService.vue";
 import TelegramService from "./Services/TelegramService.vue";
 import EmailService from "./Services/EmailService.vue";
 import ShoutService from "./Services/ShoutService.vue";
 import NtfyService from "./Services/NtfyService.vue";
-import CustomService from "./Services/CustomService.vue";
 import EventItem from "./EventItem.vue";
 import DropdownButton from "@/components/Helper/DropdownButton.vue";
 import formatter from "@/mixins/formatter";
+import CustomService from "./Services/CustomService.vue";
 
 export default {
 	name: "MessagingModal",
 	components: {
 		JsonModal,
-		FormRow,
-		PropertyField,
-		YamlEntry,
 		PushoverService,
 		TelegramService,
 		EmailService,

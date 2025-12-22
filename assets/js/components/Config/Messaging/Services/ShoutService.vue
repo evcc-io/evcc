@@ -1,7 +1,7 @@
 <template>
 	<div>
 		<MessagingFormRow
-			:serviceType="service.type"
+			:serviceType="MESSAGING_SERVICE_TYPE.SHOUT"
 			inputName="uri"
 			example="gotify://gotify.example.com:443/AzyoeNS.D4iJLVa/?priority=1"
 			:helpTranslationParameter="{
@@ -10,32 +10,33 @@
 		>
 			<PropertyField
 				id="messagingServiceShoutUri"
-				v-model="serviceData.other.uri"
+				:model-value="uri"
 				type="String"
 				required
+				@update:model-value="$emit('update:uri', $event)"
 			/>
 		</MessagingFormRow>
 	</div>
 </template>
 
 <script lang="ts">
-import { type MessagingServiceShout } from "@/types/evcc";
+import { MESSAGING_SERVICE_TYPE } from "@/types/evcc";
 import PropertyField from "../../PropertyField.vue";
-import type { PropType } from "vue";
 import MessagingFormRow from "./MessagingFormRow.vue";
 
 export default {
 	name: "ShoutService",
 	components: { MessagingFormRow, PropertyField },
 	props: {
-		service: {
-			type: Object as PropType<MessagingServiceShout>,
+		uri: {
+			type: String,
 			required: true,
 		},
 	},
+	emits: ["update:uri"],
 	data() {
 		return {
-			serviceData: this.service,
+			MESSAGING_SERVICE_TYPE,
 		};
 	},
 };

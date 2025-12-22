@@ -1,28 +1,32 @@
 <template>
 	<div>
 		<MessagingFormRow
-			:serviceType="service.type"
+			:serviceType="serviceType"
 			inputName="token"
 			example="123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11"
 		>
 			<PropertyField
 				id="messagingServiceTelegramToken"
-				v-model="telegramOther.token"
+				:model-value="token"
 				type="String"
 				required
+				@update:model-value="$emit('update:token', $event)"
 			/>
 		</MessagingFormRow>
 
-		<MessagingFormRow :serviceType="service.type" inputName="chats" example="-210987654">
+		<MessagingFormRow :serviceType="serviceType" inputName="chats" example="-210987654">
 			<PropertyField
 				id="messagingServiceTelegramChats"
-				:model-value="telegramOther.chats"
+				:model-value="chats"
 				property="chats"
 				type="List"
 				required
 				rows
 				@update:model-value="
-					(e: string[]) => (telegramOther.chats = e.map((v) => Number(v)))
+					$emit(
+						'update:chats',
+						$event.map((v: string) => Number(v))
+					)
 				"
 			/>
 		</MessagingFormRow>
@@ -30,7 +34,7 @@
 </template>
 
 <script lang="ts">
-import { type MessagingServiceTelegram } from "@/types/evcc";
+import { MESSAGING_SERVICE_TYPE } from "@/types/evcc";
 import PropertyField from "../../PropertyField.vue";
 import type { PropType } from "vue";
 import MessagingFormRow from "./MessagingFormRow.vue";
@@ -39,15 +43,15 @@ export default {
 	name: "TelegramService",
 	components: { MessagingFormRow, PropertyField },
 	props: {
-		service: {
-			type: Object as PropType<MessagingServiceTelegram>,
+		token: {
+			type: String,
 			required: true,
 		},
+		chats: Array as PropType<number[]>,
 	},
-	computed: {
-		telegramOther() {
-			return this.service.other;
-		},
+	emits: ["update:token", "update:chats"],
+	data() {
+		return { serviceType: MESSAGING_SERVICE_TYPE.TELEGRAM };
 	},
 };
 </script>
