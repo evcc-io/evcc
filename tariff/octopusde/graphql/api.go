@@ -12,9 +12,7 @@ import (
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/hasura/go-graphql-client"
-	"golang.org/x/oauth2"
 )
 
 // BaseURI is Octopus Energy Germany's Kraken API root.
@@ -40,15 +38,11 @@ type OctopusDeGraphQLClient struct {
 
 // NewClient returns a new, authenticated instance of OctopusDeGraphQLClient.
 func NewClient(log *util.Logger, email, password, accountNumber string) (*OctopusDeGraphQLClient, error) {
-	gq := &OctopusDeGraphQLClient{
-		log:           log,
-		email:         email,
-		password:      password,
-		accountNumber: accountNumber,
-	}
-
-	// Initialize TokenSource with oauth pattern
-	ts := oauth.RefreshTokenSource(nil, gq)
+	ts := oauth.RefreshTokenSource(nil, &TokenSource{
+		log:      log,
+		email:    email,
+		password: password,
+	})
 
 	cli := request.NewClient(log)
 	cli.Transport = &transport.Decorator{
@@ -64,46 +58,13 @@ func NewClient(log *util.Logger, email, password, accountNumber string) (*Octopu
 		Base: cli.Transport,
 	}
 
-	gq.Client = graphql.NewClient(BaseURI, cli)
+	gq := &OctopusDeGraphQLClient{
+		log:           log,
+		accountNumber: accountNumber,
+		Client:        graphql.NewClient(BaseURI, cli),
+	}
 
 	return gq, nil
-}
-
-// RefreshToken implements oauth.TokenRefresher to obtain a new JWT token.
-// It parses the JWT to extract the actual expiry time from the token claims.
-func (c *OctopusDeGraphQLClient) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
-	defer cancel()
-
-	// Create a temporary client without authentication for the token request
-	cli := request.NewClient(c.log)
-	tempClient := graphql.NewClient(BaseURI, cli)
-
-	var q krakenTokenAuthentication
-	if err := tempClient.Mutate(ctx, &q, map[string]any{
-		"email":    c.email,
-		"password": c.password,
-	}); err != nil {
-		return nil, fmt.Errorf("authentication failed: %w", err)
-	}
-
-	// Parse JWT to extract expiry time using RegisteredClaims
-	// We use ParseUnverified since we don't have the signing key and trust the token from the API
-	var claims jwt.RegisteredClaims
-	if _, _, err := jwt.NewParser(jwt.WithoutClaimsValidation()).ParseUnverified(q.ObtainKrakenToken.Token, &claims); err != nil {
-		return nil, fmt.Errorf("failed to parse JWT: %w", err)
-	}
-
-	// Extract expiry from JWT claims
-	expiry := time.Now().Add(time.Hour)
-	if claims.ExpiresAt != nil {
-		expiry = claims.ExpiresAt.Time
-	}
-
-	return &oauth2.Token{
-		AccessToken: q.ObtainKrakenToken.Token,
-		Expiry:      expiry,
-	}, nil
 }
 
 // UnitRateForecast queries the day-ahead price forecast for the account
