@@ -99,7 +99,7 @@
     },
     "control": {
       "description": "Usually the default values are fine. Only change them if you know what you are doing.",
-      "descriptionInterval": "Update cycle in seconds. Defines how often evcc reads meter data and adjusts charging. Default is 10 seconds. If you observe erratic behavior, error messages, or highly fluctuating values, choose an interval of 30 seconds or more.",
+      "descriptionInterval": "Update cycle in seconds. Defines how often evcc reads meter data and adjusts charging. The default of 30 seconds is a safe choice. Devices like vehicles, wallboxes and inverters typically need several seconds to adjust their behavior. If your components react quickly you can use lower values. We strongly recommend not going below 10 seconds. If you observe erratic control behavior or jumping power values choose a larger interval.",
       "descriptionResidualPower": "Shifts the operation point of the control loop. If you have a home battery it's recommended to set a value of 100 W. This way the battery will get slight priority over grid use.",
       "labelInterval": "Update interval",
       "labelResidualPower": "Residual power",
