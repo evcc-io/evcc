@@ -2,7 +2,9 @@
   "authProviders": {
     "authCode": "Autentifikavimo kodas",
     "authCodeHelp": "Nukopijuokite šį kodą ir panaudokite jį kitame žingsnyje. Galioja {duration}.",
+    "authorizationFailed": "Autorizacija nepavyko",
     "authorizationRequired": "Reikalingas autorizavimas",
+    "authorizationSuccessful": "Autorizacija Sėkminga",
     "buttonConnect": "Prisijungti prie {provider}",
     "buttonDisconnect": "Atsijungti",
     "confirmLogout": "Ar tikrai norite atjungti {title}?",
@@ -12,7 +14,7 @@
     "logoutFailed": "Nepavyko atsijungti",
     "modalDescriptionLogin": "Užbaikite autorizacijos procesą, kad užmegztumėte ryšį su {provider}.",
     "modalDescriptionLogout": "Tai atjungs jūsų {provider} paskyrą ir panaikins prieigą prie jos duomenų.",
-    "success": "Autorizacija su {title} sėkminga.",
+    "success": "{title} dabar prijungtas ir paruoštas naudoti.",
     "successCloseModal": "Dabar galite uždaryti šį dialogo langą.",
     "successCloseTab": "Dabar galite uždaryti šį skirtuką.",
     "title": "Autorizacijos būsena"
@@ -58,8 +60,16 @@
       "chargers": "Elektromobilių įkrovikliai",
       "generic": "Tipinės integracijos",
       "heatingdevices": "Šildymo prietaisai",
+      "ocppConfirmContinue": "Jūsų įkroviklis dar neprisijungė prie evcc. Ar tikrai norite tęsti?",
+      "ocppConnected": "Prijungta!",
+      "ocppDescription": "evcc turi integruotą OCPP serverį. Atlikite šiuos veiksmus:",
       "ocppHelp": "Nukopijuokite šį URL į savo įkroviklio konfigūraciją. Išsamesnės informacijos ieškokite gamintojo vadove. Įkroviklis automatiškai pridės savo unikalų identifikatorių (stoties ID) prie URL. Retais atvejais gali tekti rankiniu būdu nurodyti identifikatorių. Pavyzdys: `{url}`",
       "ocppLabel": "OCPP-Serverio URL",
+      "ocppNextStep": "Kitas žingsnis",
+      "ocppStep1": "Sukonfigūruokite įkroviklį, kad jis naudotų evcc kaip OCPP serverį.",
+      "ocppStep2": "Palaukite, kol įkroviklis prisijungs prie evcc.",
+      "ocppStep3": "Tęskite ir užbaikite konfigūraciją.",
+      "ocppWaiting": "Laukiama ryšio",
       "switchsockets": "Išmanios rozetės",
       "template": "Gamintojas",
       "titleAdd": {
@@ -109,10 +119,12 @@
       "chargedEnergy": "Įkrauta",
       "co2": "Tinklo CO₂",
       "configured": "Sukonfigūruota",
+      "connections": "Sąsajos",
       "controllable": "Valdomas",
       "currency": "Valiuta",
       "current": "Srovė",
       "currentRange": "Srovė",
+      "detected": "Aptikta",
       "dimmed": "Galia sumažinta",
       "enabled": "Aktyvuotas",
       "energy": "Energija",
@@ -162,6 +174,10 @@
     "eebus": {
       "description": "Konfigūracija, leidžianti evcc susisiekti su EEBus įrenginiais.",
       "title": "EEBus"
+    },
+    "experimental": {
+      "description": "Įjungti vartotojo sąsają funkcijoms, kurios vis dar testuojamos ir gali keistis būsimose versijose.",
+      "title": "Eksperimentinis"
     },
     "ext": {
       "description": "Įrašo nekontroliuojamų įrenginių (pvz., šaldytuvo, skalbimo mašinos ir kt.) energijos vertes statistikos tikslais. Šie skaitikliai taip pat gali būti naudojami apkrovos valdymui (pvz., paskirstymui).",
@@ -371,6 +387,8 @@
       "title": "Konfigūracija",
       "unconfigured": "nesukonfigūruota",
       "vehicles": "Mano automobiliai",
+      "welcomeBannerText": "Pradėkite nuo **įkroviklio arba šildytuvo** sukūrimo. Jei dar neturite tikro įkroviklio, pasirinkite **demonstracinį įkroviklį**.",
+      "welcomeBannerTitle": "Sukonfigūruokime jūsų sistemą!",
       "yaml": "Įtaisas iš evcc.yaml , čia konfigūruoti neina."
     },
     "messaging": {
@@ -473,6 +491,23 @@
       "labelPort": "Port",
       "labelSchema": "Schema",
       "title": "Tinklas"
+    },
+    "ocpp": {
+      "connectedChargers": "Prijungti įkrovikliai",
+      "connectionStatus": "Esami stotelių ID",
+      "connectionStatusHelp": "Sukonfigūruotų įkroviklių ryšio būsena.",
+      "detectedChargers": "Atpažinti stotelių ID",
+      "detectedHelp": "Šie įkrovikliai bandė prisijungti prie evcc. Norėdami naudoti įkroviklį, sukurkite įkroviklį su jo stotelės ID.",
+      "noChargers": "Neaptikta jokių OCPP įkroviklių.",
+      "noStations": "Nėra prijungtų stotelių",
+      "status": {
+        "configured": "Neprijungta",
+        "connected": "Prijungta",
+        "unknown": "Nežinomas"
+      },
+      "title": "OCPP Serveris",
+      "url": "Serverio URL",
+      "urlHelp": "Nukopijuokite šį URL į savo įkroviklio konfigūraciją. Išsamesnės informacijos ieškokite gamintojo vadove. Įkroviklis turėtų automatiškai pridėti savo unikalų identifikatorių (stotelės ID) prie URL. Retais atvejais gali tekti rankiniu būdu nurodyti identifikatorių. Pavyzdys: `{url}`"
     },
     "options": {
       "boolean": {
@@ -616,6 +651,8 @@
       "maximumCurrentHelp": "Turi būti didesnė nei minimali srovė.",
       "maximumPhases": "Maksimalus fazių skaičius",
       "maximumPhasesHelp": "Kiek fazių įkrovimui gali panaudoti šis automobilis? Naudojama norint apskaičiuoti reikiamą minimalų saulės energijos perteklių ir planuoti trukmę.",
+      "maximumPower": "Didžiausia įkrovimo galia",
+      "maximumPowerHelp": "Maksimali galia, kurią gali paimti automobilis",
       "minimumCurrent": "Minimali srovė",
       "minimumCurrentHelp": "Ne mažiau 6A. Nebent tiksliai žinote, ką darote.",
       "online": "Automobiliai su internetiniu API",

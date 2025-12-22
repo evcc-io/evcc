@@ -15,21 +15,42 @@ params:
     id: 1
   - name: capacity
     advanced: true
+  - name: maxchargepower
+    default: 10000
+  - name: maxdischargepower
+    default: 10000
   - name: minsoc
-    advanced: true
+    default: 10
   - name: maxsoc
-    advanced: true
+    default: 100
   - name: maxacpower
 render: |
   type: custom
   {{- if eq .usage "grid" }}
   power:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 0x1066 # Grid Total Power
-      type: holding
-      decode: int32
+    source: calc
+    add:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 0x1300 # L1 watt of grid
+        type: holding
+        decode: int32
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 0x1302 # L2 watt of grid
+        type: holding
+        decode: int32
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 0x1304 # L3 watt of grid
+        type: holding
+        decode: int32
+      scale: 0.1
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -45,21 +66,21 @@ render: |
         address: 0x131D # Grid Phase A Current
         type: holding
         decode: int32
-      scale: 100
+      scale: 0.01
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
         address: 0x131F # Grid Phase B Current
         type: holding
         decode: int32
-      scale: 100
+      scale: 0.01
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
         address: 0x1321 # Grid Phase C Current
         type: holding
         decode: int32
-      scale: 100
+      scale: 0.01
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
@@ -69,23 +90,15 @@ render: |
       address: 0x1048 # PV Total Input Power
       type: holding
       decode: uint32
-    scale: 10
+    scale: 0.1
   energy:
-    source: calc
-    add:
-    - source: modbus
-      {{- include "modbus" . | indent 4 }}
-      register:
-        address: 0x1021 # Total Energy 
-        type: holding
-        decode: uint32
-    - source: modbus
-      {{- include "modbus" . | indent 4 }}
-      register:
-        address: 0x104C # Decimals of total energy 
-        type: holding
-        decode: uint32
-      scale: 0.001
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 0x1021 # Total Energy
+      type: holding
+      decode: uint32
+  maxacpower: {{ .maxacpower }} # W
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
@@ -111,7 +124,105 @@ render: |
       address: 0x2000 # Battery SOC
       type: holding
       decode: uint16
+  batterymode:
+    source: switch
+    switch:
+    - case: 1 # normal
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 0 # Self used mode
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 0x2100 # Hybrid work mode
+              type: writesingle
+              encoding: uint16
+        - source: const
+          value: 0 # disable
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 0x214C # Time-based control Enable
+              type: writesingle
+              encoding: uint16
+    - case: 2 # hold - stop battery discharge
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 3 # Back-up mode
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 0x2100 # Hybrid work mode
+              type: writesingle
+              encoding: uint16
+        - source: const
+          value: 0 # disable
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 0x214C # Time-based control Enable
+              type: writesingle
+              encoding: uint16
+    - case: 3 # charge - force battery charge
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 1 # Every day
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 0x2101 # Once/Everyday 1
+              type: writesingle
+              encoding: uint16
+        - source: const
+          value: 0x0000 # 00:00
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 0x2102 # Charge start time 1
+              type: writesingle
+              encoding: uint16
+        - source: const
+          value: 0x173B # 23:59
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 0x2103 # Charge end time 1
+              type: writesingle
+              encoding: uint16
+        - source: const
+          value: 0 # Self used mode
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 0x2100 # Hybrid work mode
+              type: writesingle
+              encoding: uint16
+        - source: const
+          value: 1 # enable
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 0x214C # Time-based control Enable
+              type: writesingle
+              encoding: uint16
   capacity: {{ .capacity }} # kWh
+  maxchargepower: {{ .maxchargepower }} # W
+  maxdischargepower: {{ .maxdischargepower }} # W
   minsoc: {{ .minsoc }} # %
   maxsoc: {{ .maxsoc }} # %
   {{- end }}

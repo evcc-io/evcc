@@ -1,7 +1,12 @@
 <template>
 	<!-- Connect to provider button (when URL is available) -->
 	<div v-if="providerUrl" class="d-flex flex-column align-items-end gap-2">
-		<a :href="providerUrl" target="_blank" class="btn btn-primary">
+		<a
+			:href="providerUrl"
+			target="_blank"
+			class="btn btn-primary"
+			@click="$emit('external-click')"
+		>
 			{{
 				$t("authProviders.buttonConnect", {
 					provider: providerDomain,
@@ -40,7 +45,7 @@ export default defineComponent({
 		loading: { type: Boolean, default: false },
 		showHint: { type: Boolean, default: true },
 	},
-	emits: ["prepare"],
+	emits: ["prepare", "external-click"],
 	computed: {
 		providerDomain(): string | null {
 			return this.providerUrl ? extractDomain(this.providerUrl) : null;

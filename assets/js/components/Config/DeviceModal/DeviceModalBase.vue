@@ -647,7 +647,7 @@ export default defineComponent({
 				const { name } = await this.device.create(this.apiData, force);
 				this.saving = false;
 				this.succeeded = true;
-				await sleep(1000);
+				await sleep(500);
 				this.$emit("added", name);
 				(this.$refs["modal"] as any).close();
 			} catch (e) {
@@ -681,7 +681,7 @@ export default defineComponent({
 				console.log("update succeeded, closing modal");
 				this.saving = false;
 				this.succeeded = true;
-				await sleep(1000);
+				await sleep(500);
 				this.$emit("updated");
 				(this.$refs["modal"] as any).close();
 			} catch (e) {
