@@ -3,6 +3,7 @@ package oauth
 import (
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/oauth2"
@@ -50,15 +51,21 @@ func TestTokenSourceCache_ConcurrentGetOrCreate(t *testing.T) {
 
 	expected := &stubTokenSource{}
 
+	// Starting gate to ensure goroutines start concurrently
+	start := make(chan struct{})
+
 	// Launch multiple goroutines that concurrently call GetOrCreate
 	// The singleflight mechanism should ensure createFn is only called once
 	for i := 0; i < goroutines; i++ {
 		wg.Add(1)
 		go func(id int) {
 			defer wg.Done()
+			<-start // Wait for starting signal
 			result, err := cache.GetOrCreate(user, func() (oauth2.TokenSource, error) {
 				// Track that this goroutine's createFn was called
 				callCount.Store(id, true)
+				// Simulate realistic OAuth token creation which involves network calls
+				time.Sleep(10 * time.Millisecond)
 				return expected, nil
 			})
 			assert.NoError(t, err)
@@ -66,6 +73,7 @@ func TestTokenSourceCache_ConcurrentGetOrCreate(t *testing.T) {
 		}(i)
 	}
 
+	close(start) // Release all goroutines at once
 	wg.Wait()
 
 	// Count how many goroutines had their createFn called

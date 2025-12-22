@@ -29,16 +29,15 @@ func NewTokenSourceCache() *TokenSourceCache {
 // This prevents duplicate authentication requests when multiple chargers
 // are initialized concurrently with the same credentials.
 func (c *TokenSourceCache) GetOrCreate(user string, createFn func() (oauth2.TokenSource, error)) (oauth2.TokenSource, error) {
-	// Fast path: check cache without singleflight overhead
-	c.mu.Lock()
-	if ts := c.cache[user]; ts != nil {
-		c.mu.Unlock()
-		return ts, nil
-	}
-	c.mu.Unlock()
-
-	// Slow path: use singleflight to deduplicate concurrent creates
 	result, err, _ := c.group.Do(user, func() (interface{}, error) {
+		// Check cache first to avoid duplicate work
+		c.mu.Lock()
+		if ts := c.cache[user]; ts != nil {
+			c.mu.Unlock()
+			return ts, nil
+		}
+		c.mu.Unlock()
+
 		// Create new token source
 		ts, err := createFn()
 		if err != nil {
