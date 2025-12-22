@@ -120,7 +120,7 @@ func NewEasee(ctx context.Context, user, password, charger string, timeout time.
 
 	c.Client.Timeout = timeout
 
-	ts, err := easee.GetTokenSource(log, user, password)
+	ts, err := easee.TokenSource(log, user, password)
 	if err != nil {
 		return nil, err
 	}
