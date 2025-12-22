@@ -114,41 +114,16 @@ func NewEm2Go(ctx context.Context, uri string, slaveID uint8) (api.Charger, erro
 // initialize performs common initialization for both Em2Go models
 func (wb *Em2Go) initialize() (api.Charger, error) {
 	var (
-		maxCurrent func(float64) error
 		phases1p3p func(int) error
 		phasesG    func() (int, error)
 	)
-
-	// test if workaround is needed (Home fw <1.3)
-	if err := wb.maxCurrentMillis(6.1); err != nil {
-		return nil, err
-	}
-
-	chargerCurrent, err := wb.GetMaxCurrent()
-	if err != nil {
-		return nil, err
-	}
-
-	// did rounding occur?
-	if chargerCurrent == 6 {
-		wb.workaround = true
-	} else {
-		maxCurrent = wb.maxCurrentMillis
-	}
-
-	// experimental workaround for EM2GO home FW >= 1.4
-	// https://github.com/evcc-io/evcc/discussions/25940#discussioncomment-15221487
-	// https://github.com/evcc-io/evcc/discussions/26014#discussioncomment-15281715
-	// disable charger as wb.maxCurrentMillis(6.1) above might have been started
-	// charging as non-compliant side effect
-	wb.Enable(false)
 
 	if _, err := wb.conn.ReadHoldingRegisters(em2GoRegPhases, 1); err == nil {
 		phases1p3p = wb.phases1p3p
 		phasesG = wb.getPhases
 	}
 
-	return decorateEm2Go(wb, maxCurrent, phases1p3p, phasesG), nil
+	return decorateEm2Go(wb, wb.maxCurrentMillis, phases1p3p, phasesG), nil
 }
 
 // Status implements the api.Charger interface
@@ -193,19 +168,6 @@ func (wb *Em2Go) Enable(enable bool) error {
 
 	if _, err := wb.conn.WriteMultipleRegisters(em2GoRegChargeCommand, 1, b); err != nil {
 		return err
-	}
-
-	// re-set 1p if required
-	if wb.workaround && enable {
-		if wb.phases == 1 {
-			binary.BigEndian.PutUint16(b, uint16(wb.phases))
-			if _, err := wb.conn.WriteMultipleRegisters(em2GoRegPhases, 1, b); err != nil {
-				return err
-			}
-		}
-
-		// send default current
-		return wb.setCurrent(wb.current)
 	}
 
 	// experimental workaround for EM2GO home FW 1.4
