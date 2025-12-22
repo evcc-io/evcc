@@ -2,7 +2,9 @@
   "authProviders": {
     "authCode": "Godkendelseskode",
     "authCodeHelp": "Kopiér koden og anvend den i næste trin. Den er gyldig i {duration}.",
+    "authorizationFailed": "Godkendelse mislykkedes",
     "authorizationRequired": "Godkendelse krævet",
+    "authorizationSuccessful": "Godkendelse lykkedes",
     "buttonConnect": "Opret forbindelse til {provider}",
     "buttonDisconnect": "Afbryd forbindelse",
     "confirmLogout": "Er du sikker på, at du vil afbryde {title}?",
@@ -12,7 +14,7 @@
     "logoutFailed": "Kunne ikke logge ud",
     "modalDescriptionLogin": "Fuldfør autorisationsprocessen for at etablere forbindelsen med {provider}.",
     "modalDescriptionLogout": "Dette vil afbryde din {provider}-konto og fjerne adgangen til dens data.",
-    "success": "Godkendelse med {title} er gennemført.",
+    "success": "{title} er nu forbundet og klar til brug.",
     "successCloseModal": "Du kan nu lukke dialogboksen.",
     "successCloseTab": "Du kan nu lukke denne fane.",
     "title": "Godkendelsesstatus"
@@ -172,6 +174,10 @@
     "eebus": {
       "description": "Indstilling der tillader evcc at kommunikere med andre EEBus enheder.",
       "title": "EEBus"
+    },
+    "experimental": {
+      "description": "Aktivér brugerfladen for funktioner, som stadig testes og kan ændres i kommende versioner.",
+      "title": "Eksperimentel"
     },
     "ext": {
       "description": "Måler energiforbrug fra enheder, der ikke styres (som f.eks. køleskab eller vaskemaskine), til statistik. Måleren kan også bruges til belastningsstyring, f.eks. i en undergruppe.",
@@ -381,6 +387,8 @@
       "title": "Opsætning",
       "unconfigured": "ikke konfigureret",
       "vehicles": "Mine køretøjer",
+      "welcomeBannerText": "Start med at oprette en **lader eller varmer**. Hvis du endnu ikke har en fysisk lader, kan du vælge en **demolader**.",
+      "welcomeBannerTitle": "Lad os konfigurere dit system!",
       "yaml": "Enheder fra evcc.yaml kan ikke ændres her."
     },
     "messaging": {
@@ -840,6 +848,8 @@
       "stepTwo": "Trin 2: Kopiér yderligere oplysninger",
       "title": "GitHub-problemoversigt"
     },
+    "system": "System",
+    "timezone": "Tidszone",
     "title": "Indberet et problem",
     "version": "Version"
   },
@@ -1210,7 +1220,7 @@
     },
     "hiddenFeatures": {
       "label": "Experimentalt",
-      "value": "Vis eksperimentelle brugergrænsefladefunktioner."
+      "value": "Vis eksperimentelle funktioner."
     },
     "language": {
       "auto": "Automatisk",
