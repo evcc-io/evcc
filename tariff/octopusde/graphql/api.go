@@ -106,13 +106,11 @@ func (c *OctopusDeGraphQLClient) UnitRateForecast() ([]RatePeriod, error) {
 				// Parse string values to float64
 				netRate, err := parseFloat(rate.NetUnitRateCentsPerKwh)
 				if err != nil {
-					c.log.DEBUG.Printf("failed to parse net unit rate '%s': %v", rate.NetUnitRateCentsPerKwh, err)
 					return nil, fmt.Errorf("failed to parse net unit rate: %w", err)
 				}
 
 				grossRate, err := parseFloat(rate.LatestGrossUnitRateCentsPerKwh)
 				if err != nil {
-					c.log.DEBUG.Printf("failed to parse gross unit rate '%s': %v", rate.LatestGrossUnitRateCentsPerKwh, err)
 					return nil, fmt.Errorf("failed to parse gross unit rate: %w", err)
 				}
 
@@ -130,7 +128,6 @@ func (c *OctopusDeGraphQLClient) UnitRateForecast() ([]RatePeriod, error) {
 		return nil, errors.New("no rate forecast available")
 	}
 
-	c.log.TRACE.Printf("GraphQL: retrieved %d rate periods", len(rates))
 	return rates, nil
 }
 
