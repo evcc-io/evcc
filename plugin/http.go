@@ -61,7 +61,7 @@ func NewHTTPPluginFromConfig(ctx context.Context, other map[string]any) (Plugin,
 		return nil, errors.New("missing uri")
 	}
 
-	log := contextLogger(ctx, util.NewLogger("http"))
+	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("http"))
 	p := NewHTTP(
 		log,
 		strings.ToUpper(cc.Method),

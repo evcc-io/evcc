@@ -92,7 +92,7 @@ func NewOAuth(ctx context.Context, name, device string, oc *oauth2.Config, opts 
 		return instance, nil
 	}
 
-	log := util.NewLogger("oauth-" + hash)
+	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("oauth-"+hash))
 
 	if client, ok := ctx.Value(oauth2.HTTPClient).(*http.Client); client == nil || !ok {
 		ctx = context.WithValue(ctx, oauth2.HTTPClient, request.NewClient(log))

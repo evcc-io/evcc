@@ -176,7 +176,7 @@ export default defineComponent({
 			return this.providers.length > 0;
 		},
 		sponsorExpires(): boolean {
-			return !!this.sponsor?.status.expiresSoon;
+			return !!this.sponsor?.status?.expiresSoon;
 		},
 		showConfigBadge() {
 			return this.sponsorExpires || isUserConfigError(this.fatal);

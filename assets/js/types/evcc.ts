@@ -69,6 +69,8 @@ export interface State {
   authProviders?: AuthProviders;
   evopt?: EvOpt;
   version?: string;
+  system?: string;
+  timezone?: string;
   battery?: BatteryMeter[];
   pv?: Meter[];
   aux?: Meter[];
@@ -389,7 +391,7 @@ export interface SponsorStatus {
 }
 
 export interface Sponsor {
-  status: SponsorStatus;
+  status?: SponsorStatus;
   fromYaml: boolean;
 }
 
