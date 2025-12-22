@@ -36,7 +36,6 @@ type Em2Go struct {
 	log        *util.Logger
 	conn       *modbus.Connection
 	current    uint16
-	workaround bool
 	phases     int
 }
 
@@ -282,26 +281,6 @@ func (wb *Em2Go) ChargeDuration() (time.Duration, error) {
 
 // phases1p3p implements the api.PhaseSwitcher interface
 func (wb *Em2Go) phases1p3p(phases int) error {
-	if wb.workaround {
-		// when enabled, disable, wait 10 seconds, enable and set phases
-		enabled, err := wb.Enabled()
-		if err != nil {
-			return err
-		}
-
-		if enabled {
-			if err := wb.Enable(false); err != nil {
-				return err
-			}
-
-			time.Sleep(10 * time.Second)
-
-			if err := wb.Enable(true); err != nil {
-				return err
-			}
-		}
-	}
-
 	b := make([]byte, 2)
 	binary.BigEndian.PutUint16(b, uint16(phases))
 
