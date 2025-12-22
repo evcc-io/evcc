@@ -23,15 +23,6 @@ func NewTokenSourceCache() *TokenSourceCache {
 	}
 }
 
-// Get retrieves a cached TokenSource for the given user.
-// Returns nil if no TokenSource is found for the given key.
-func (c *TokenSourceCache) Get(user string) oauth2.TokenSource {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	return c.cache[user]
-}
-
 // Set stores a TokenSource for the given user in the cache.
 func (c *TokenSourceCache) Set(user string, ts oauth2.TokenSource) {
 	c.mu.Lock()
