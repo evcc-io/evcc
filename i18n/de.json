@@ -2,7 +2,9 @@
   "authProviders": {
     "authCode": "Autorisierungscode",
     "authCodeHelp": "Kopiere diesen Code und verwende ihn im nächsten Schritt. Gültig für {duration}.",
+    "authorizationFailed": "Autorisierung fehlgeschlagen",
     "authorizationRequired": "Autorisierung erforderlich",
+    "authorizationSuccessful": "Autorisierung erfolgreich",
     "buttonConnect": "Mit {provider} verbinden",
     "buttonDisconnect": "Trennen",
     "confirmLogout": "Sicher, dass du {title} trennen möchtest?",
@@ -12,7 +14,7 @@
     "logoutFailed": "Abmeldung fehlgeschlagen",
     "modalDescriptionLogin": "Schließe die Autorisierung ab, um eine Verbindung mit {provider} herzustellen.",
     "modalDescriptionLogout": "Dies trennt dein {provider}-Konto und entfernt den Zugriff auf dessen Daten.",
-    "success": "Die Autorisierung mit {title} war erfolgreich.",
+    "success": "{title} ist jetzt verbunden und einsatzbereit.",
     "successCloseModal": "Du kannst diesen Dialog jetzt schließen.",
     "successCloseTab": "Du kannst diesen Tab jetzt schließen.",
     "title": "Autorisierungsstatus"
@@ -97,7 +99,7 @@
     },
     "control": {
       "description": "Normalerweise sind die Standardwerte in Ordnung. Ändere nur etwas, wenn du weißt, was du tust.",
-      "descriptionInterval": "Regelkreis Aktualisierungszyklus in Sekunden. Definiert, wie oft evcc Messdaten liest, die Ladeleistung anpasst und die Benutzeroberfläche aktualisiert. Kurze Intervalle (< 30s) können zu Oszillationen und unerwünschtem Verhalten führen.",
+      "descriptionInterval": "Aktualisierungszyklus in Sekunden. Definiert, wie oft evcc Messdaten liest und die Ladung anpasst. Die Standardeinstellung von 30 Sekunden ist eine sichere Wahl. Geräte wie Fahrzeuge, Wallbox und Wechselrichter brauchen in der Regel mehrere Sekunden um ihr Verhalten anzupassen. Wenn deine Komponenten schnell reagieren kannst du niedrigere Werte verwenden. Wir empfehlen dringend nicht unter 10 Sekunden zu gehen. Wenn du komisches Regelverhalten oder springende Leistungswerte beobachtest wähle ein größeres Intervall.",
       "descriptionResidualPower": "Verschiebt den Betriebspunkt des Regelkreises. Wenn du eine Hausbatterie hast, wird empfohlen, einen Wert von 100 W einzustellen. Auf diese Weise erhält die Batterie eine leichte Priorität gegenüber dem Netzbezug.",
       "labelInterval": "Aktualisierungsintervall",
       "labelResidualPower": "Residualleistung",
@@ -172,6 +174,10 @@
     "eebus": {
       "description": "Grundkonfiguration für die Kommunikation mit anderen EEBus-Geräten.",
       "title": "EEBus"
+    },
+    "experimental": {
+      "description": "Aktiviert die Benutzeroberfläche für Funktionen, die sich noch in der Testphase befinden und sich in zukünftigen Versionen ändern können.",
+      "title": "Experimentell"
     },
     "ext": {
       "description": "Erfasst Energiewerte ungeregelter Verbraucher (bspw. Kühlschrank, Waschmaschine, etc.) für Statistikzwecke. Diese Zähler können auch für Lastmanagement verwendet werden (bspw. Unterverteilung).",
@@ -381,6 +387,8 @@
       "title": "Konfiguration",
       "unconfigured": "nicht konfiguriert",
       "vehicles": "Meine Fahrzeuge",
+      "welcomeBannerText": "Lege zunächst eine **Wallbox oder Heizung** an. Falls du noch keine echte Wallbox hast, wähle eine **Demowallbox**.",
+      "welcomeBannerTitle": "Los geht's mit der Konfiguration!",
       "yaml": "Geräte aus evcc.yaml sind nicht editierbar."
     },
     "messaging": {
@@ -830,6 +838,8 @@
       "stepTwo": "Schritt 2: Zusätzliche Informationen kopieren",
       "title": "GitHub Problem-Zusammenfassung"
     },
+    "system": "System",
+    "timezone": "Zeitzone",
     "title": "Problem melden",
     "version": "Version"
   },
@@ -1199,7 +1209,7 @@
     },
     "hiddenFeatures": {
       "label": "Experimentell",
-      "value": "Experimentelle UI-Funktionen zeigen."
+      "value": "Experimentelle Funktionen anzeigen."
     },
     "language": {
       "auto": "Automatisch",

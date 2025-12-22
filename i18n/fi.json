@@ -1,4 +1,22 @@
 {
+  "authProviders": {
+    "authCode": "Varmistuskoodi",
+    "authCodeHelp": "Kopioi tämä koodi leikepöydälle ja käytä sitä seuraavassa vaiheessa. Se on voimassa {duration}.",
+    "authorizationRequired": "Vaaditaan valtuutus",
+    "buttonConnect": "Yhdistä {provider}:een",
+    "buttonDisconnect": "Katkaise yhteys",
+    "confirmLogout": "Haluatko varmasti katkaista yhteyden {title}:een?",
+    "connect": "yhdistä",
+    "disconnect": "katkaise yhteys",
+    "loggedOut": "Uloskirjautuminen onnistui",
+    "logoutFailed": "Uloskirjautuminen epäonnistui",
+    "modalDescriptionLogin": "Tee valtuutusprosessi loppuun yhdistääksesi {provider}:een.",
+    "modalDescriptionLogout": "Tämä katkaisee yhteyden {provider}-tiliisi ja poistaa pääsyn sen dataan.",
+    "success": "Valtuutus {title}:n kanssa onnistui.",
+    "successCloseModal": "Voit sulkea tämän valikon.",
+    "successCloseTab": "Voit sulkea tämän välilehden.",
+    "title": "Valtuutuksen tila"
+  },
   "batterySettings": {
     "batteryLevel": "Akun varaustaso",
     "bufferStart": {
@@ -40,8 +58,16 @@
       "chargers": "Sähköauton latausasemat",
       "generic": "Yleiset integraatiot",
       "heatingdevices": "Lämmityslaitteet",
+      "ocppConfirmContinue": "Laturisi ei ole vielä yhdistetty evcc:hen. Oletko varma, että haluat jatkaa?",
+      "ocppConnected": "Yhdistetty!",
+      "ocppDescription": "evcc:ssä on sisäänrakennettu OCPP-palvelin. Seuraa seuraavia ohjeita:",
       "ocppHelp": "Kopioi tämä URL-osoite laturisi asetuksiin. Katso lisätietoja valmistajan käsikirjasta. Laturi lisää automaattisesti yksilöllisen tunnisteensa (aseman tunniste) URL-osoitteeseen. Harvinaisissa tapauksissa saatat joutua määrittämään tunnisteen manuaalisesti. Esimerkki: `{url}`",
       "ocppLabel": "OCPP-palvelimen URL",
+      "ocppNextStep": "Seuraava vaihe",
+      "ocppStep1": "Muokkaa laturisi asetuksia käyttämään evcc:tä OCPP-palvelimena.",
+      "ocppStep2": "Odota laturisi yhteydenottoa evcc:hen.",
+      "ocppStep3": "Jatka ja täydennä asetukset.",
+      "ocppWaiting": "Odotetaan yhdistämistä",
       "switchsockets": "Kytkettävät pistorasiat",
       "template": "Valmistaja",
       "titleAdd": {
@@ -91,10 +117,12 @@
       "chargedEnergy": "Ladattu",
       "co2": "Verkon CO₂",
       "configured": "Määritetty",
+      "connections": "Yhteydet",
       "controllable": "Hallittava",
       "currency": "Valuutta",
       "current": "Virta",
       "currentRange": "Virta",
+      "detected": "Tunnistettu",
       "dimmed": "Himmennetty",
       "enabled": "Käytössä",
       "energy": "Energia",
@@ -164,6 +192,8 @@
       "cancel": "Peruuta",
       "clear": "Tyhjennä",
       "close": "Sulje",
+      "copied": "Kopioitu!",
+      "copy": "Kopioi",
       "customHelp": "Luo itsemääritelty laite käyttäen EVCC:n lisäosaa.",
       "customOption": "Itsemääritelty laite",
       "delete": "Poista",
@@ -200,8 +230,19 @@
       "titleEdit": "Muokkaa sähköverkonmittaria"
     },
     "hems": {
+      "csv": {
+        "created": "Luotu",
+        "finished": "Valmis",
+        "gridpower": "Sähköverkon teho (kW)",
+        "limitpower": "Raja (kW)",
+        "type": "Tyyppi"
+      },
       "description": "Ulkoisen järjestelmän (kuten EnWG kontrolleri) asettama tehon rajoitus. Vaatii kuormanhallinnan määrittämistä.",
-      "title": "HEMS"
+      "downloadCsv": "Lataa CSV-taulukko",
+      "eventsRecorded": "Tallennettu {count} verkon rajoitustapahtumaa.",
+      "lastEvent": "Viimeisin {timeAgo}.",
+      "title": "HEMS",
+      "yamlConfigured": "Huomio: Asetus on evcc.yaml-tiedostosta. Poista asetus tiedostosta, jotta voisit muokata sitä täällä."
     },
     "icon": {
       "change": "vaihda",
@@ -375,9 +416,9 @@
       "baudrate": "bittisiirtonopeus",
       "comset": "ComSet",
       "connection": "Modbus-yhteys",
-      "connectionHintSerial": "Laite on yhdistetty suoraan EVCC:n RS485-rajapinnalla.",
-      "connectionHintTcpip": "Laite on saavutettavissa LAN/WiFi-yhteydellä EVCC:stä.",
-      "connectionValueSerial": "Sarjaportti / USB",
+      "connectionHintSerial": "Laite on yhdistetty suoraan EVCC:n RS485-liittimellä (tai USB-RS485-sovittimella).",
+      "connectionHintTcpip": "Laite on saavutettavissa lähiverkosta (LAN/WiFi-yhteydellä).",
+      "connectionValueSerial": "RS485 (sarjaportti)",
       "connectionValueTcpip": "Verkko",
       "device": "Laitenimi",
       "deviceHint": "Esim. /dev/ttyUSB0",
@@ -442,6 +483,23 @@
       "labelPort": "Portti",
       "labelSchema": "Kaavio",
       "title": "Verkko"
+    },
+    "ocpp": {
+      "connectedChargers": "Yhdistetyt laturit",
+      "connectionStatus": "Määritettyjen asemien ID:t",
+      "connectionStatusHelp": "Määritettyjen laturien yhteyden tila.",
+      "detectedChargers": "Havaittujen asemien ID:t",
+      "detectedHelp": "Nämä laturit ovat yrittäneet yhdistää itseään evcc:hen. Käyttääksesi tätä laturia, luo latausasema sen asematunnuksella (ID).",
+      "noChargers": "Ei havaittu OCPP-latureita.",
+      "noStations": "Asemia ei yhdistetty",
+      "status": {
+        "configured": "Ei yhteyttä",
+        "connected": "Yhdistetty",
+        "unknown": "Tuntematon"
+      },
+      "title": "OCPP-palvelin",
+      "url": "Palvelimen URL",
+      "urlHelp": "Kopioi tämä URL laturisi asetuksiin. Tarkista laturivalmistajan ohjeista yksityiskohdat. Laturin odotetaan lisäävän URL-osoitteeseen yksilöllinen tunnus (aseman ID). Joissain harvoissa tapauksissa sinun täytyy käsin lisätä tämä tunnus. Esim: `{url}`"
     },
     "options": {
       "boolean": {
@@ -584,6 +642,8 @@
       "maximumCurrentHelp": "Täytyy olla minimivirtaa suurempi.",
       "maximumPhases": "Vaiheiden maksimimäärä",
       "maximumPhasesHelp": "Kuinka monella vaiheella ajoneuvo voi vastaanottaa latausta? Tietoa käytetään minimiaurikosähkön ylituotannon laskemiseen ja latauskeston aikataulusuunnitteluun.",
+      "maximumPower": "Maksimilatausteho",
+      "maximumPowerHelp": "Maksimiteho, jonka ajoneuvo voi käyttää",
       "minimumCurrent": "Minimivirta",
       "minimumCurrentHelp": "Aseta arvoksi alle 6A ainoastaan jos tiedät mitä olet tekemässä.",
       "online": "Ajoneuvot, joissa API-käyttöliittymä",

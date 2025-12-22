@@ -60,7 +60,7 @@ import (
 )
 
 var conf = globalconfig.All{
-	Interval: 10 * time.Second,
+	Interval: 30 * time.Second,
 	Log:      "info",
 	Network: globalconfig.Network{
 		Host: "",
@@ -920,10 +920,13 @@ func configureTariffs(conf *globalconfig.Tariffs) (*tariff.Tariffs, error) {
 	eg.Go(func() error { return configureTariff(api.TariffUsageFeedIn, conf.FeedIn, &tariffs.FeedIn) })
 	eg.Go(func() error { return configureTariff(api.TariffUsageCo2, conf.Co2, &tariffs.Co2) })
 	eg.Go(func() error { return configureTariff(api.TariffUsagePlanner, conf.Planner, &tariffs.Planner) })
-	if len(conf.Solar) == 1 {
-		eg.Go(func() error { return configureTariff(api.TariffUsageSolar, conf.Solar[0], &tariffs.Solar) })
-	} else {
-		eg.Go(func() error { return configureSolarTariff(conf.Solar, &tariffs.Solar) })
+	if len(conf.Solar) > 0 {
+		eg.Go(func() error {
+			if len(conf.Solar) == 1 {
+				return configureTariff(api.TariffUsageSolar, conf.Solar[0], &tariffs.Solar)
+			}
+			return configureSolarTariff(conf.Solar, &tariffs.Solar)
+		})
 	}
 
 	if err := eg.Wait(); err != nil {

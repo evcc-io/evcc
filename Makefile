@@ -80,7 +80,7 @@ test-ui::
 
 test::
 	@echo "Running testsuite"
-	CGO_ENABLED=0 go test $(BUILD_TAGS) -coverprofile=coverage.out -covermode=atomic ./...
+	CGO_ENABLED=0 go test $(BUILD_TAGS) ./...
 
 porcelain::
 	gofmt -w -l $$(find . -name '*.go')

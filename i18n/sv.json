@@ -58,8 +58,16 @@
       "chargers": "Elbilsladdare",
       "generic": "Generisk integration",
       "heatingdevices": "Värmeenheter",
+      "ocppConfirmContinue": "Laddaren har inte anslutits till evcc än. Är du säker på att du vill fortsätta?",
+      "ocppConnected": "Ansluten!",
+      "ocppDescription": "evcc har en inbyggd OCPP-server. Följ dessa steg:",
       "ocppHelp": "Kopiera denna URL till din laddares konfiguration. Kontrollera tillverkarens manual för detaljer. Laddaren kommer automatiskt att lägga till sin unika identifierare (stations-ID) till URL:en. I sällsynta fall kan du behöva ange identifieraren manuellt. Exempel: `{url}`",
       "ocppLabel": "OCPP-Server URL",
+      "ocppNextStep": "Nästa steg",
+      "ocppStep1": "Konfigurera din laddare att använda evcc som OCPP-server.",
+      "ocppStep2": "Vänta, din laddare ansluter till evcc.",
+      "ocppStep3": "Fortsätt och slutför konfigurationen.",
+      "ocppWaiting": "Väntar på anslutning",
       "switchsockets": "Byt kontakt",
       "template": "Tillverkare",
       "titleAdd": {
@@ -109,10 +117,12 @@
       "chargedEnergy": "Laddad",
       "co2": "Elnät CO₂",
       "configured": "Konfigurerad",
+      "connections": "Anslutningar",
       "controllable": "Kontrollerbar",
       "currency": "Valuta",
       "current": "Ström",
       "currentRange": "Ström",
+      "detected": "Upptäckt",
       "dimmed": "Nedtonad",
       "enabled": "Aktiverad",
       "energy": "Energi",
@@ -474,6 +484,23 @@
       "labelSchema": "Schema",
       "title": "Nätverk"
     },
+    "ocpp": {
+      "connectedChargers": "Anslutna laddare",
+      "connectionStatus": "Konfigurerade IDn",
+      "connectionStatusHelp": "Anslutningsstatus för konfigurerade laddare.",
+      "detectedChargers": "Upptäckta IDn",
+      "detectedHelp": "Dessa laddare har försökt ansluta till evcc. För att använda en laddare, skapa en laddplats med dess ID.",
+      "noChargers": "Inga OCPP-laddare hittades.",
+      "noStations": "Inga laddare är anslutna",
+      "status": {
+        "configured": "Ej ansluten",
+        "connected": "Ansluten",
+        "unknown": "Okänd"
+      },
+      "title": "OCPP-server",
+      "url": "Server URL",
+      "urlHelp": "Kopiera denna URL till laddarens konfiguration. Se tillverkarens manual för mer information. Laddaren ska automatiskt lägga till sin unika identifierare (stations-ID) till URL:en. I sällsynta fall kan du behöva ange identifieraren manuellt. Exempel: `{url}`Kopiera denna URL till laddarens konfiguration. Se tillverkarens manual för mer information. Laddaren ska automatiskt lägga till sin unika identifierare (stations-ID) till URL:en. I sällsynta fall kan du behöva ange identifieraren manuellt. Exempel: `{url}`"
+    },
     "options": {
       "boolean": {
         "no": "nej",
@@ -616,6 +643,8 @@
       "maximumCurrentHelp": "Måste vara högre än minimi-ström.",
       "maximumPhases": "Maximalt antal faser",
       "maximumPhasesHelp": "Hur många faser kan fordonet laddas med? Används för att räkna ut minsta solöverskott och tidsåtgång.",
+      "maximumPower": "Maximal laddeffekt",
+      "maximumPowerHelp": "Maximal effekt som fordonet kan ta emot",
       "minimumCurrent": "Minimi ström",
       "minimumCurrentHelp": "Ställ enbart under 6A om du är medveten om konsekvenserna.",
       "online": "Fordon med online API",

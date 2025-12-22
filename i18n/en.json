@@ -2,7 +2,9 @@
   "authProviders": {
     "authCode": "Authentication Code",
     "authCodeHelp": "Copy this code and use it in the next step. Valid for {duration}.",
+    "authorizationFailed": "Authorization Failed",
     "authorizationRequired": "Authorization Required",
+    "authorizationSuccessful": "Authorization Successful",
     "buttonConnect": "Connect to {provider}",
     "buttonDisconnect": "Disconnect",
     "confirmLogout": "Are you sure you want to disconnect {title}?",
@@ -12,7 +14,7 @@
     "logoutFailed": "Failed to logout",
     "modalDescriptionLogin": "Complete the authorization process to establish connection with {provider}.",
     "modalDescriptionLogout": "This will disconnect your {provider} account and remove access to its data.",
-    "success": "Authorization with {title} was successful.",
+    "success": "{title} is now connected and ready to use.",
     "successCloseModal": "You can now close this dialog.",
     "successCloseTab": "You can now close this tab.",
     "title": "Authorization Status"
@@ -97,7 +99,7 @@
     },
     "control": {
       "description": "Usually the default values are fine. Only change them if you know what you are doing.",
-      "descriptionInterval": "Control loop update cycle in seconds. Defines how often evcc reads meter data, adjusts charging power and updates the UI. Short intervals (< 30s) can cause oscillations and unwanted behavior.",
+      "descriptionInterval": "Update cycle in seconds. Defines how often evcc reads meter data and adjusts charging. The default of 30 seconds is a safe choice. Devices like vehicles, wallboxes and inverters typically need several seconds to adjust their behavior. If your components react quickly you can use lower values. We strongly recommend not going below 10 seconds. If you observe erratic control behavior or jumping power values choose a larger interval.",
       "descriptionResidualPower": "Shifts the operation point of the control loop. If you have a home battery it's recommended to set a value of 100 W. This way the battery will get slight priority over grid use.",
       "labelInterval": "Update interval",
       "labelResidualPower": "Residual power",
@@ -172,6 +174,10 @@
     "eebus": {
       "description": "Configuration that enables evcc to communicate with other EEBus devices.",
       "title": "EEBus"
+    },
+    "experimental": {
+      "description": "Enable user interface for features that are still being tested and may change in future versions.",
+      "title": "Experimental"
     },
     "ext": {
       "description": "Records energy values of uncontrolled consumers (e.g. refrigerator, washing machine, etc.) for statistical purposes. These meters can also be used for load management (e.g. sub-distribution).",
@@ -381,6 +387,8 @@
       "title": "Configuration",
       "unconfigured": "not configured",
       "vehicles": "My Vehicles",
+      "welcomeBannerText": "Start with creating a **charger or heater**. If you don't have a real charger yet, choose a **demo charger**.",
+      "welcomeBannerTitle": "Let's configure your system!",
       "yaml": "Devices from evcc.yaml are not editable."
     },
     "messaging": {
@@ -830,6 +838,8 @@
       "stepTwo": "Step 2: Copy additional information",
       "title": "GitHub Problem Summary"
     },
+    "system": "System",
+    "timezone": "Timezone",
     "title": "Report a problem",
     "version": "Version"
   },
@@ -1199,7 +1209,7 @@
     },
     "hiddenFeatures": {
       "label": "Experimental",
-      "value": "Show experimental UI features."
+      "value": "Show experimental features."
     },
     "language": {
       "auto": "Automatic",
