@@ -27,7 +27,6 @@ func NewTokenSourceCache() *TokenSourceCache {
 // This prevents duplicate authentication requests when multiple chargers
 // are initialized concurrently with the same credentials.
 func (c *TokenSourceCache) GetOrCreate(user string, createFn func() (oauth2.TokenSource, error)) (oauth2.TokenSource, error) {
-	// Fast path: check if already exists with read lock
 	c.mu.RLock()
 	ts := c.cache[user]
 	c.mu.RUnlock()
