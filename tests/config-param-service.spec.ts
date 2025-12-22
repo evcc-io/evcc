@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import type { Page } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
-import { enableExperimental, expectModalVisible, getDatalistOptions } from "./utils";
+import { expectModalVisible, getDatalistOptions } from "./utils";
 
 test.use({ baseURL: baseUrl() });
 
@@ -23,7 +23,6 @@ test.afterAll(async () => {
 
 async function openMeterModal(page: Page) {
   await page.goto("/#/config");
-  await enableExperimental(page, true);
   await page.getByRole("button", { name: "Add grid meter" }).click();
   const meterModal = page.getByTestId("meter-modal");
   await expectModalVisible(meterModal);

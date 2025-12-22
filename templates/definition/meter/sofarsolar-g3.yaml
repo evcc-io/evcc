@@ -51,6 +51,16 @@ params:
     type: int
     advanced: true
     deprecated: true
+  - name: externalpower
+    type: bool
+    description:
+      de: Externe Quelle einschließen
+      en: Include external power
+    help:
+      de: Bezieht alle angeschlossenen externen Quellen, wie die Leistung von kaskadierten Wechselrichter, in die PV-Leistungsberechnung mit ein.
+      en: Includes all connected external sources, like the power generation of cascaded inverters, into the PV power calculation.
+    advanced: true
+    usages: ["pv"]
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -147,6 +157,15 @@ render: |
           type: holding
           decode: uint16
         scale: 10
+      {{- if eq .externalpower "true" }}
+      - source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register: 
+          address: 0x4AE #ActivePower_PV_Ext
+          type: holding
+          decode: uint16
+        scale: 10
+      {{- end }}
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}

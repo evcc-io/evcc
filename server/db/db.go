@@ -22,21 +22,44 @@ func New(driver, dsn string) (*gorm.DB, error) {
 
 	switch driver {
 	case "sqlite":
-		file, err := homedir.Expand(dsn)
+
+		// Example DSNs:
+		//"path/to/database.db"
+		// "~/database.db",
+		// "database.db?cache=shared&journal_mode=WAL"
+		// ":memory:"
+
+		// Split database path and connection parameters
+		dbPath, connectionParams, _ := strings.Cut(dsn, "?")
+
+		file, err := homedir.Expand(dbPath)
 		if err != nil {
+			return nil, err
+		}
+
+		if err := os.MkdirAll(filepath.Dir(file), 0700); err != nil {
 			return nil, err
 		}
 
 		// Store the expanded file path for later use
 		FilePath = file
-		if err := os.MkdirAll(filepath.Dir(file), 0700); err != nil {
-			return nil, err
+
+		// Add busy_timeout pragma if not already present
+		if !strings.Contains(connectionParams, "_pragma=busy_timeout") {
+			// Append '&' if there are existing connection parameters
+			if len(connectionParams) > 0 {
+				connectionParams += "&"
+			}
+
+			// Add busy_timeout pragma to connection parameters
+			connectionParams += "_pragma=busy_timeout(5000)"
 		}
 
-		util.NewLogger("main").INFO.Println("using sqlite database:", file)
+		connectionStr := file + "?" + connectionParams
 
-		// avoid busy errors
-		dialect = sqlite.Open(file + "?_pragma=busy_timeout(5000)")
+		util.NewLogger("main").INFO.Println("using sqlite database:", connectionStr)
+
+		dialect = sqlite.Open(connectionStr)
 	// case "postgres":
 	// 	dialect = postgres.Open(dsn)
 	// case "mysql":
@@ -50,9 +73,24 @@ func New(driver, dsn string) (*gorm.DB, error) {
 	})
 }
 
-func NewInstance(driver, dsn string) (err error) {
-	Instance, err = New(strings.ToLower(driver), dsn)
-	return
+func NewInstance(driver, dsn string) error {
+	inst, err := New(strings.ToLower(driver), dsn)
+	if err != nil {
+		return err
+	}
+
+	Instance = inst
+
+	mu.Lock()
+	defer mu.Unlock()
+
+	for _, f := range registry {
+		if err := f(); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func Close() error {
