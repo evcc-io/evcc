@@ -45,41 +45,35 @@ func getOIDCProvider(ctx context.Context) (*oidc.Provider, error) {
 // Multiple chargers using the same username will share the same TokenSource,
 // ensuring tokens are reused and authentication is deduplicated.
 func GetTokenSource(ctx context.Context, user, pass string) (oauth2.TokenSource, error) {
-	// Check if token source exists in cache
-	if ts := tokenSourceCache.Get(user); ts != nil {
-		return ts, nil
-	}
+	return tokenSourceCache.GetOrCreate(user, func() (oauth2.TokenSource, error) {
+		// Get the cached OIDC provider (initialized once)
+		provider, err := getOIDCProvider(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to initialize OIDC provider: %w", err)
+		}
 
-	// Get the cached OIDC provider (initialized once)
-	provider, err := getOIDCProvider(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to initialize OIDC provider: %w", err)
-	}
+		oc := &oauth2.Config{
+			Endpoint: provider.Endpoint(),
+			Scopes: []string{
+				oidc.ScopeOpenID,
+			},
+		}
 
-	oc := &oauth2.Config{
-		Endpoint: provider.Endpoint(),
-		Scopes: []string{
-			oidc.ScopeOpenID,
-		},
-	}
+		// Create the password token source
+		pts := &passwordTokenSource{
+			ctx:    ctx,
+			config: oc,
+			user:   user,
+			pass:   pass,
+		}
 
-	// Create the password token source
-	pts := &passwordTokenSource{
-		ctx:    ctx,
-		config: oc,
-		user:   user,
-		pass:   pass,
-	}
+		// Get initial token
+		token, err := pts.Token()
+		if err != nil {
+			return nil, err
+		}
 
-	// Get initial token
-	token, err := pts.Token()
-	if err != nil {
-		return nil, err
-	}
-
-	// Wrap with ReuseTokenSource to cache tokens
-	ts := oauth2.ReuseTokenSource(token, pts)
-	tokenSourceCache.Set(user, ts)
-
-	return ts, nil
+		// Wrap with ReuseTokenSource to cache tokens
+		return oauth2.ReuseTokenSource(token, pts), nil
+	})
 }
