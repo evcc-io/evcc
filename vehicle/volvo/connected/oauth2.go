@@ -21,9 +21,10 @@ func init() {
 			return nil, err
 		}
 
+		log := util.NewLogger("volvo").Redact(cc.ClientID)
 		oc := OAuthConfig(cc.ClientID, cc.ClientSecret, cc.RedirectUri)
 
-		return NewOAuth(oc, "")
+		return NewOAuth(util.WithLogger(context.Background(), log), oc, "")
 	})
 }
 
@@ -46,6 +47,6 @@ func OAuthConfig(id, secret, redirectUri string) *oauth2.Config {
 	}
 }
 
-func NewOAuth(oc *oauth2.Config, title string) (oauth2.TokenSource, error) {
-	return auth.NewOAuth(context.Background(), "Volvo", title, oc)
+func NewOAuth(ctx context.Context, oc *oauth2.Config, title string) (oauth2.TokenSource, error) {
+	return auth.NewOAuth(ctx, "Volvo", title, oc)
 }
