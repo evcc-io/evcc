@@ -1,17 +1,8 @@
-#currency: PLN # use EUR, PLN, USD, etc.
+#currency: EUR
 
 #grid: # price using energy from the grid
 #  type: fixed
 #  price: 0.294 # EUR/kWh
-
-## Dynamic pricing (Poland - Pstryk.pl)
-## IMPORTANT: Add interval: 12h to avoid rate limiting (429 errors)
-#grid:
-#  type: template
-#  template: pstryk-pl
-#  token: sk-your-token-here # get from Pstryk App
-#  plan: pricing # or "prosumer-pricing"
-#  interval: 12h # REQUIRED to avoid API rate limits
 
 #feedin: # price for feeding solar energy to the grid
 #  type: fixed
