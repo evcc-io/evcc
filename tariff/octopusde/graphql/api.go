@@ -104,20 +104,15 @@ func (c *OctopusDeGraphQLClient) RefreshToken(_ *oauth2.Token) (*oauth2.Token, e
 
 	// Parse JWT to extract expiry time using RegisteredClaims
 	// We use ParseUnverified since we don't have the signing key and trust the token from the API
-	claims := &jwt.RegisteredClaims{}
-	parser := jwt.NewParser(jwt.WithoutClaimsValidation())
-	_, _, err := parser.ParseUnverified(q.ObtainKrakenToken.Token, claims)
-	if err != nil {
+	var claims jwt.RegisteredClaims
+	if _, _, err := jwt.NewParser(jwt.WithoutClaimsValidation()).ParseUnverified(q.ObtainKrakenToken.Token, &claims); err != nil {
 		return nil, fmt.Errorf("failed to parse JWT: %w", err)
 	}
 
 	// Extract expiry from JWT claims
-	var expiry time.Time
+	expiry := time.Now().Add(time.Hour)
 	if claims.ExpiresAt != nil {
 		expiry = claims.ExpiresAt.Time
-	} else {
-		// Fallback to 1 hour if exp claim is missing
-		expiry = time.Now().Add(time.Hour)
 	}
 
 	return &oauth2.Token{
