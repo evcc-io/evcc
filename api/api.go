@@ -5,6 +5,8 @@ import (
 	"io"
 	"net/url"
 	"time"
+
+	"golang.org/x/oauth2"
 )
 
 //go:generate go tool mockgen -package api -destination mock.go github.com/evcc-io/evcc/api Charger,ChargeState,CurrentLimiter,CurrentGetter,PhaseSwitcher,PhaseGetter,FeatureDescriber,Identifier,Meter,MeterEnergy,PhaseCurrents,Vehicle,ConnectionTimer,ChargeRater,Battery,BatteryController,BatterySocLimiter,Circuit,Dimmer,Tariff
@@ -214,7 +216,7 @@ type Tariff interface {
 
 // AuthProvider is the ability to provide OAuth authentication through the ui
 type AuthProvider interface {
-	Login(state string) (string, error)
+	Login(state string) (string, *oauth2.DeviceAuthResponse, error)
 	Logout() error
 	HandleCallback(params url.Values) error
 	Authenticated() bool

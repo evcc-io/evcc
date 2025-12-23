@@ -297,7 +297,7 @@ export default defineComponent({
 			return this.pvConfigured || this.gridConfigured;
 		},
 		batteryBoostAvailable() {
-			return this.batteryConfigured && this.$hiddenFeatures();
+			return this.batteryConfigured;
 		},
 		batteryBoostActive() {
 			return (

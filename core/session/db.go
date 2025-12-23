@@ -17,12 +17,14 @@ var (
 	sessions Sessions
 )
 
-func Init() error {
-	err := db.Instance.AutoMigrate(new(Session))
-	if err == nil {
-		err = db.Instance.Find(&sessions).Error
-	}
-	return err
+func init() {
+	db.Register(func() error {
+		if err := db.Instance.AutoMigrate(new(Session)); err != nil {
+			return err
+		}
+
+		return db.Instance.Find(&sessions).Error
+	})
 }
 
 // NewStore creates a session store
