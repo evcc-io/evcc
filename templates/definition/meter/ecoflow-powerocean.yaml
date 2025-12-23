@@ -3,7 +3,6 @@ products:
   - brand: EcoFlow
     description:
       generic: PowerOcean
-capabilities: ["battery-control"]
 requirements:
   description:
     de: |

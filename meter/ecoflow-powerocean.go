@@ -59,11 +59,9 @@ func NewEcoFlowPowerOceanFromConfig(other map[string]interface{}) (api.Meter, er
 	if err != nil {
 		return nil, err
 	}
-	// Validate connection and fail if it doesn't work
-	if err := m.validateConnection(); err != nil {
-		return nil, fmt.Errorf("ecoflow-powerocean connection failed: %w", err)
+	if cc.Usage == "battery" {
+		return &EcoFlowPowerOceanBattery{m}, nil
 	}
-
 	return m, nil
 }
 
@@ -80,14 +78,6 @@ func NewEcoFlowPowerOcean(accessKey, secretKey, deviceId, usage string, cache ti
 	}
 	m.dataG = util.Cached(m.getData, cache)
 	return m, nil
-}
-
-// validateConnection calls one of the data methods to validate API connection
-func (m *EcoFlowPowerOcean) validateConnection() error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	_, err := m.client.GetDeviceParameters(ctx, m.deviceId, []string{"sysGridPwr"})
-	return err
 }
 
 // getData retrieves device parameters from EcoFlow API
@@ -147,12 +137,13 @@ func extractFloat(data map[string]interface{}, key string) (float64, error) {
 	return 0, fmt.Errorf("data not available for key: %s", key)
 }
 
-// Soc implements the api.Battery interface for battery usage
-func (m *EcoFlowPowerOcean) Soc() (float64, error) {
-	if m.usage != "battery" {
-		return 0, api.ErrNotAvailable
-	}
+// EcoFlowPowerOceanBattery represents the EcoFlow PowerOcean battery decorator
+type EcoFlowPowerOceanBattery struct {
+	*EcoFlowPowerOcean
+}
 
+// Soc implements the api.Battery interface for battery usage
+func (m *EcoFlowPowerOceanBattery) Soc() (float64, error) {
 	response, err := m.dataG()
 	if err != nil {
 		return 0, err
