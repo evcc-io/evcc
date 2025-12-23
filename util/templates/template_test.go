@@ -84,6 +84,12 @@ func TestRequiredPerUsage(t *testing.T) {
 
 	_, _, err := tmpl.RenderResult(RenderModeUnitTest, map[string]any{
 		"Param": nil,
+		"Usage": nil,
+	})
+	require.NoError(t, err)
+
+	_, _, err = tmpl.RenderResult(RenderModeUnitTest, map[string]any{
+		"Param": nil,
 		"Usage": "pv",
 	})
 	require.NoError(t, err)
