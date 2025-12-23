@@ -1,4 +1,22 @@
 {
+  "authProviders": {
+    "authCode": "Godkendelseskode",
+    "authCodeHelp": "Kopiér koden og anvend den i næste trin. Den er gyldig i {duration}.",
+    "authorizationRequired": "Godkendelse krævet",
+    "buttonConnect": "Opret forbindelse til {provider}",
+    "buttonDisconnect": "Afbryd forbindelse",
+    "confirmLogout": "Er du sikker på, at du vil afbryde {title}?",
+    "connect": "forbind",
+    "disconnect": "afbryd",
+    "loggedOut": "Du er nu logget ud",
+    "logoutFailed": "Kunne ikke logge ud",
+    "modalDescriptionLogin": "Fuldfør autorisationsprocessen for at etablere forbindelsen med {provider}.",
+    "modalDescriptionLogout": "Dette vil afbryde din {provider}-konto og fjerne adgangen til dens data.",
+    "success": "Godkendelse med {title} er gennemført.",
+    "successCloseModal": "Du kan nu lukke dialogboksen.",
+    "successCloseTab": "Du kan nu lukke denne fane.",
+    "title": "Godkendelsesstatus"
+  },
   "batterySettings": {
     "batteryLevel": "Batteri-niveau",
     "bufferStart": {
@@ -40,8 +58,16 @@
       "chargers": "EV opladere",
       "generic": "Generisk integration",
       "heatingdevices": "Varmeenheder",
-      "ocppHelp": "Kopier denne adresse til opladerens konfiguration.",
+      "ocppConfirmContinue": "Din lader er endnu ikke forbundet til evcc. Vil du fortsætte alligevel?",
+      "ocppConnected": "Forbundet!",
+      "ocppDescription": "evcc indeholder en OCPP-server. Følg disse trin:",
+      "ocppHelp": "Kopier denne URL til konfigurationen af din oplader. Se producentens manual for detaljer. Opladeren vil automatisk tilføje sin unikke identifikator (stations-ID) til URL'en. I sjældne tilfælde skal du muligvis angive identifikatoren manuelt. Eksempel: `{url}`",
       "ocppLabel": "OCPP-Server URL",
+      "ocppNextStep": "Fortsæt",
+      "ocppStep1": "Indstil din lader til at bruge evcc som OCPP-server.",
+      "ocppStep2": "Afvent, at din lader tilslutter sig evcc.",
+      "ocppStep3": "Fortsæt og fuldfør konfigurationen.",
+      "ocppWaiting": "Venter på forbindelse",
       "switchsockets": "Omskiftelige stikkontakter",
       "template": "Fabrikant",
       "titleAdd": {
@@ -91,10 +117,12 @@
       "chargedEnergy": "Opladet",
       "co2": "Elnettet CO₂",
       "configured": "Konfigureret",
+      "connections": "Tilslutninger",
       "controllable": "Kan styres",
       "currency": "Møntenhed",
       "current": "Ström",
       "currentRange": "Strømstyrke",
+      "detected": "Registreret",
       "dimmed": "Reduceret",
       "enabled": "Aktiveret",
       "energy": "Energi",
@@ -164,6 +192,8 @@
       "cancel": "Afbryd",
       "clear": "Slet",
       "close": "Luk",
+      "copied": "Kopieret!",
+      "copy": "Kopier",
       "customHelp": "Opret en brugerdefineret enhed ved hjælp af evcc's plugin-system.",
       "customOption": "Brugerdefineret enhed",
       "delete": "Slet",
@@ -200,8 +230,19 @@
       "titleEdit": "Rediger måler for elnettet"
     },
     "hems": {
+      "csv": {
+        "created": "Oprettet",
+        "finished": "Afsluttet",
+        "gridpower": "Strømforbrug fra elnettet (kW)",
+        "limitpower": "Grænse (kW)",
+        "type": "Type"
+      },
       "description": "Effektbegrænsning fra eksterne systemer (fx EnWG 14a-styringer). Kræver konfiguration af belastningsstyring.",
-      "title": "HEMS"
+      "downloadCsv": "Download CSV",
+      "eventsRecorded": "Registrerede {count} netbegrænsningshændelser.",
+      "lastEvent": "Sidst {timeAgo}.",
+      "title": "HEMS",
+      "yamlConfigured": "Bemærk: Er konfigureret via evcc.yaml. Fjern indtastningen fra filen for at aktivere redigering her."
     },
     "icon": {
       "change": "ændre",
@@ -375,9 +416,9 @@
       "baudrate": "Baudrate",
       "comset": "ComSet",
       "connection": "Modbus forbindelse",
-      "connectionHintSerial": "Enheden er direkte forbundet til evcc via et RS485-interface.",
-      "connectionHintTcpip": "Enheden kan adresseres fra evcc via LAN/Wifi.",
-      "connectionValueSerial": "Serial / USB",
+      "connectionHintSerial": "Enheden er direkte forbundet via RS485 (eller USB-til-RS485-adapter).",
+      "connectionHintTcpip": "Enheden er tilgængelig via netværk (LAN/WiFi).",
+      "connectionValueSerial": "RS485",
       "connectionValueTcpip": "Netværk",
       "device": "Enhedsnavn",
       "deviceHint": "Eksempel: /dev/ttyUSB0",
@@ -442,6 +483,23 @@
       "labelPort": "port",
       "labelSchema": "Skema",
       "title": "Netværk"
+    },
+    "ocpp": {
+      "connectedChargers": "Tilsluttede ladere",
+      "connectionStatus": "Konfigurerede stations-ID’er",
+      "connectionStatusHelp": "Forbindelsesstatus for konfigurerede ladere.",
+      "detectedChargers": "Registrerede stations-ID’er",
+      "detectedHelp": "Disse ladere har forsøgt at forbinde til evcc. For at bruge en lader skal du oprette et loadpoint med dens stations-ID.",
+      "noChargers": "Ingen OCPP-ladere fundet.",
+      "noStations": "Ingen stationer tilsluttet",
+      "status": {
+        "configured": "Ikke tilsluttet",
+        "connected": "Tilsluttet",
+        "unknown": "Ukendt"
+      },
+      "title": "OCPP Server",
+      "url": "Server URL",
+      "urlHelp": "Kopier denne URL til din laders opsætning. Tjek producentens vejledning for detaljer. Laderen tilføjer normalt automatisk sit unikke ID (stations-id) til URL’en. I sjældne tilfælde skal ID’et angives manuelt. Eksempel: {url}"
     },
     "options": {
       "boolean": {
@@ -585,6 +643,8 @@
       "maximumCurrentHelp": "Skal være højere end minimal strømstyrke.",
       "maximumPhases": "Maksimal antal faser",
       "maximumPhasesHelp": "Hvor mange faser kan dette køretøj oplades med? Bruges til at beregne det krævede minimale soloverskud og planens varighed.",
+      "maximumPower": "Maksimal ladeeffekt",
+      "maximumPowerHelp": "Maksimal effekt, som køretøjet kan oplades med",
       "minimumCurrent": "Minimal strømstyrke",
       "minimumCurrentHelp": "Gå kun under 6A, hvis du ved, hvad du har med at gøre.",
       "online": "Køretøj med online API",
@@ -1163,8 +1223,10 @@
       "show": "Vis {title}"
     },
     "sponsorToken": {
-      "expires": "Din sponsortoken udløber {inXDays}. {getNewToken} og opdater det her.",
-      "getNew": "Hent en ny",
+      "expires": "Din sponsortoken udløber {inXDays}.",
+      "expiresUpdateUi": "{getNewToken} og opdater det her.",
+      "expiresUpdateYaml": "{getNewToken} og opdater det i din evcc.yaml.",
+      "getNewToken": "Hent en ny",
       "hint": "Note: Vi automatiserer dette i fremtiden."
     },
     "telemetry": {

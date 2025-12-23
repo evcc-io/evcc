@@ -40,7 +40,7 @@
       "chargers": "Ładowarki EV",
       "generic": "Ogólne integracje",
       "heatingdevices": "Urządzenia grzewcze",
-      "ocppHelp": "Skopiuj ten adres do konfiguracji twojej ładowarki.",
+      "ocppHelp": "Skopiuj ten adres URL do konfiguracji swojej ładowarki. Sprawdź instrukcję producenta, aby uzyskać szczegóły. Ładowarka automatycznie doda swój unikalny identyfikator (ID stacji) do adresu URL. W rzadkich przypadkach może być konieczne ręczne określenie identyfikatora. Przykład: `{url}`",
       "ocppLabel": "Adres URL serwera OCPP",
       "switchsockets": "Gniazdka przełączalne",
       "template": "Producent",
@@ -560,7 +560,7 @@
       "co2": "⌀ CO₂",
       "duration": "Czas trwania",
       "fallbackName": "Punkt odbioru energii",
-      "finished": "Czas zakończenia",
+      "finished": "Godzina zakończenia",
       "power": "Moc",
       "price": "Koszt",
       "remaining": "Pozostało",
@@ -697,7 +697,7 @@
       "pvEnable": "Dostępna nadwyżka. Wkrótce rozpoczęcie.",
       "scale1p": "Wkrótce zredukowanie na ładowanie jednofazowe.",
       "scale3p": "Wkrótce zwiększenie na ładowanie 3-fazowe.",
-      "targetChargeActive": "Plan ładowania aktywny. Szacunkowy czas zakończenia za {duration}.",
+      "targetChargeActive": "Plan ładowania aktywny. Szacunkowy czas do zakończenia {duration}.",
       "targetChargePlanned": "Zaplanowane ładowanie zacznie się za {duration}.",
       "targetChargeWaitForVehicle": "Plan ładowania gotowy. Czekam na pojazd…",
       "vehicleLimit": "Limit pojazdu",
@@ -847,8 +847,10 @@
       "show": "Pokaż {title}"
     },
     "sponsorToken": {
-      "expires": "Twój token sponsora wygasa {inXDays}. {getNewToken} i zaktualizuj tutaj.",
-      "getNew": "Weź świeżego",
+      "expires": "Twój token sponsora wygasa {inXDays}.",
+      "expiresUpdateUi": "{getNewToken} i zaktualizuj tutaj.",
+      "expiresUpdateYaml": "{getNewToken} i zaktualizuj w swoim evcc.yaml.",
+      "getNewToken": "Weź świeżego",
       "hint": "Uwaga: zautomatyzujemy to w przyszłości."
     },
     "telemetry": {

@@ -1,0 +1,42 @@
+# Documentation: https://api.tariffs.ekz.ch/swagger
+# Tariff names: https://www.ekz.ch/dam/ekz/privatkunden/strom/tarife-und-agb/Tarif-bersicht_EKZ_2026.json
+#
+# Limitations:
+# - Fallback in case of non-avaiable API is not implemented. Docs: "In case of API unavailability between 18:00 and 24:00 the fallback stated in EKZ tariff publication applies (for 2026 the standard tariff applies for the following day)."
+# - Public "/tariffs" endpoint is used. Protected "/customerTariffs" is not supported.
+
+template: ekz
+products:
+  - brand: EKZ
+requirements:
+  evcc: ["skiptest"]
+group: price
+countries: ["CH"]
+params:
+  - name: tariff_name
+    description:
+      generic: Desired tariff (400D for dynamic).
+    example: 400D
+    type: choice
+    choice: ["400D", "400F", "400ST", "400WP", "400L", "400LS", "16L", "16LS"]
+    required: true
+    default: 400D
+  - name: interval
+    default: 1h
+    advanced: true
+render: |
+  type: custom
+  {{ include "tariff-base" . }}
+  forecast:
+    source: http
+    uri: https://api.tariffs.ekz.ch/v1/tariffs?tariff_name=integrated_{{ .tariff_name }}&start_timestamp={{ `{{ now.Local | date "2006-01-02T15" }}` }}:00:00%2B02%3A00&end_timestamp={{ `{{ addDate now.Local 0 0 2 | date "2006-01-02T15" }}` }}:00:00
+    jq: |
+      [.prices[] |
+        {
+          start: (.start_timestamp),
+          end: (.end_timestamp),
+          value: (.integrated[] | select(.unit == "CHF_kWh") | .value)
+        }
+      ] | tostring
+  cache: 1h
+  interval: {{ .interval }}

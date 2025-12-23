@@ -40,7 +40,7 @@
       "chargers": "EV töltők",
       "generic": "Általános integrációk",
       "heatingdevices": "Fűtőberendezések",
-      "ocppHelp": "Másolja be ezt a címet a töltő konfigurációjába.",
+      "ocppHelp": "Másolja ezt az URL-t a töltő konfigurációjába. A részletekért tekintse meg a gyártó kézikönyvét. A töltő automatikusan hozzáfűzi egyedi azonosítóját (állomás azonosító) az URL-hez. Ritka esetekben előfordulhat, hogy az azonosítót manuálisan kell megadnia. Példa: `{url}`",
       "ocppLabel": "OCPP-Server URL",
       "switchsockets": "Kapcsolható dugaljak",
       "template": "Gyártó",
@@ -1129,8 +1129,10 @@
       "show": "Mutasd a {title}-t"
     },
     "sponsorToken": {
-      "expires": "A szponzor token-ed le fog járni {inXDays}. {getNewToken} és frissítsd itt.",
-      "getNew": "Kérj egy újat",
+      "expires": "A szponzor token-ed le fog járni {inXDays}.",
+      "expiresUpdateUi": "{getNewToken} és frissítsd itt.",
+      "expiresUpdateYaml": "{getNewToken} és frissítsd az evcc.yaml fájlodban.",
+      "getNewToken": "Kérj egy újat",
       "hint": "Megjegyzés: Ezt a jövőben automatizálni fogjuk."
     },
     "telemetry": {

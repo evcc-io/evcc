@@ -34,6 +34,12 @@ params:
   - name: defaultmode
     default: 0 # "SelfUse"
     advanced: true
+  - name: maxchargepower
+  - name: maxdischargepower
+  - name: minsoc
+    advanced: true
+  - name: maxsoc
+    advanced: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -119,6 +125,8 @@ render: |
   #     type: input
   #     decode: uint32s
   #   scale: 0.1
+  minsoc: {{ .minsoc }} # %
+  maxsoc: {{ .maxsoc }} # %
   batterymode:
     source: switch
     switch:
@@ -178,4 +186,6 @@ render: |
               type: writesingle
               decode: uint16
   capacity: {{ .capacity }} # kWh
+  maxchargepower: {{ .maxchargepower }} # W
+  maxdischargepower: {{ .maxdischargepower }} # W
   {{- end }}

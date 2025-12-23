@@ -86,8 +86,6 @@ export function handleError(e: any, msg: string) {
   alert(message);
 }
 
-export const timeout = 15000;
-
 export function applyDefaultsFromTemplate(template: Template | null, values: DeviceValues) {
   const params = template?.Params || [];
   params
@@ -198,7 +196,7 @@ export function createDeviceUtils(deviceType: DeviceType) {
     if (id !== undefined) {
       url += `/merge/${id}`;
     }
-    return api.post(url, data, { timeout });
+    return api.post(url, data);
   }
 
   function update(id: number, data: any, force = false) {

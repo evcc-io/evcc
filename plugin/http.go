@@ -14,7 +14,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
-	"github.com/gregjones/httpcache"
+	"github.com/sandrolain/httpcache"
 )
 
 // HTTP implements HTTP request provider
@@ -61,7 +61,7 @@ func NewHTTPPluginFromConfig(ctx context.Context, other map[string]any) (Plugin,
 		return nil, errors.New("missing uri")
 	}
 
-	log := contextLogger(ctx, util.NewLogger("http"))
+	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("http"))
 	p := NewHTTP(
 		log,
 		strings.ToUpper(cc.Method),
@@ -101,10 +101,28 @@ func NewHTTP(log *util.Logger, method, uri string, insecure bool, cache time.Dur
 		method: method,
 	}
 
+	// override the transport to accept self-signed certificates
+	if insecure {
+		p.Client.Transport = request.NewTripper(log, transport.Insecure())
+	}
+
+	if cache > 0 {
+		// remove no-cache response headers
+		p.Client.Transport = &transport.Modifier{
+			Modifier: func(resp *http.Response) error {
+				dropNoCache(resp, "Cache-Control")
+				dropNoCache(resp, "Pragma")
+				return nil
+			},
+			Base: p.Client.Transport,
+		}
+	}
+
 	// http cache
 	p.Client.Transport = &httpcache.Transport{
-		Cache:     mc,
-		Transport: p.Client.Transport,
+		Cache:               mc,
+		MarkCachedResponses: true,
+		Transport:           p.Client.Transport,
 	}
 
 	if cache > 0 {
@@ -122,12 +140,25 @@ func NewHTTP(log *util.Logger, method, uri string, insecure bool, cache time.Dur
 		}
 	}
 
-	// ignore the self signed certificate
-	if insecure {
-		p.Client.Transport = request.NewTripper(log, transport.Insecure())
-	}
-
 	return p
+}
+
+func dropNoCache(resp *http.Response, header string) {
+	if h := resp.Header.Get(header); h != "" {
+		var hh []string
+
+		for _, h := range strings.Split(h, ",") {
+			if s := strings.TrimSpace(h); strings.ToLower(s) != "no-cache" {
+				hh = append(hh, s)
+			}
+		}
+
+		if len(hh) == 0 {
+			resp.Header.Del(header)
+		} else {
+			resp.Header.Set(header, strings.Join(hh, ", "))
+		}
+	}
 }
 
 // WithBody adds request body
