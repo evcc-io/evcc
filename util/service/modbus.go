@@ -129,7 +129,6 @@ func readRegisterValue(ctx context.Context, query Query) (res any, err error) {
 
 	defer func() {
 		if r := recover(); r != nil {
-			res = nil
 			err = fmt.Errorf("read failed: %v", r)
 		}
 	}()
