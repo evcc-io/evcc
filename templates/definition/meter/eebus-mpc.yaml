@@ -1,4 +1,5 @@
-template: eebus-mcp
+template: eebus-mpc
+covers: [eebus-mcp]
 products:
   - description:
       de: "EEBus Verbraucher"
