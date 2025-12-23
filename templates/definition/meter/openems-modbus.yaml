@@ -213,6 +213,7 @@ render: |
               encoding: float32
       - case: 3 # charge
         set:
+          {{- if .maxchargepower }}
           source: const
           value: {{ mul .maxchargepower -1 }} # charge power is negative
           set:
@@ -222,6 +223,10 @@ render: |
               address: {{ .battery_set_register }}
               type: writemultiple
               encoding: float32
+          {{- else }}
+          source: error
+          error: ErrNotAvailable
+          {{- end }}              
   {{- end }}
   minsoc: {{ .minsoc }} # %
   maxsoc: {{ .maxsoc }} # %
