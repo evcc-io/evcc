@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
@@ -24,7 +23,6 @@ type cacheEntry struct {
 }
 
 var (
-	log      = util.NewLogger("modbus")
 	cache    = make(map[string]cacheEntry)
 	mu       sync.RWMutex
 	cacheTTL = 1 * time.Minute // Cache for 1 minute
@@ -40,14 +38,14 @@ type Query struct {
 
 func init() {
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /params", getParams)
+	mux.HandleFunc("GET /read", modbusRead)
 
 	service.Register("modbus", mux)
 }
 
-// getParams reads a parameter value from a device based on URL parameters
+// modbusRead reads a parameter value from a device based on URL parameters
 // Returns single value as array (for UI compatibility)
-func getParams(w http.ResponseWriter, req *http.Request) {
+func modbusRead(w http.ResponseWriter, req *http.Request) {
 	// Convert URL query parameters to map for decoding
 	cc := make(map[string]any)
 	for k := range req.URL.Query() {
@@ -71,11 +69,7 @@ func getParams(w http.ResponseWriter, req *http.Request) {
 	}
 
 	// Create cache key from connection string and register address
-	connStr := query.URI
-	if connStr == "" {
-		connStr = query.Device
-	}
-	cacheKey := fmt.Sprintf("%s:%d", connStr, query.Address)
+	cacheKey := fmt.Sprintf("%s:%s:%d", query.URI, query.Device, query.Address)
 
 	// Check cache first
 	mu.RLock()
@@ -90,7 +84,6 @@ func getParams(w http.ResponseWriter, req *http.Request) {
 	// Use background context so connection isn't tied to HTTP request lifecycle
 	value, err := readRegisterValue(context.TODO(), query)
 	if err != nil {
-		log.TRACE.Printf("failed to read register %d from %s: %v", query.Address, cacheKey, err)
 		jsonError(w, http.StatusInternalServerError, err)
 		return
 	}
@@ -99,8 +92,6 @@ func getParams(w http.ResponseWriter, req *http.Request) {
 	if query.ResultType != "" {
 		value = applyCast(value, query.ResultType)
 	}
-
-	log.TRACE.Printf("read register %d from %s: %v", query.Address, cacheKey, value)
 
 	// Store in cache
 	mu.Lock()
@@ -151,32 +142,4 @@ func readRegisterValue(ctx context.Context, query Query) (res any, err error) {
 		return nil, err
 	}
 	return g()
-}
-
-// applyCast applies optional type casting
-func applyCast(value any, castType string) any {
-	switch strings.ToLower(castType) {
-	case "int":
-		return cast.ToInt64(value)
-	case "float":
-		return cast.ToFloat64(value)
-	case "bool":
-		return cast.ToBool(value)
-	case "string":
-		return cast.ToString(value)
-	default:
-		return value
-	}
-}
-
-// jsonWrite writes a JSON response
-func jsonWrite(w http.ResponseWriter, data any) {
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(data)
-}
-
-// jsonError writes an error response
-func jsonError(w http.ResponseWriter, status int, err error) {
-	w.WriteHeader(status)
-	jsonWrite(w, util.ErrorAsJson(err))
 }

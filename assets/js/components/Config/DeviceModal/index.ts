@@ -22,6 +22,12 @@ export type Template = {
 
 export type TemplateParamUsage = "vehicle" | "battery" | "grid" | "pv" | "charger" | "aux" | "ext";
 
+export type ServiceConfig = {
+  endpoint?: string;
+  params?: Record<string, any>;
+  dependencies?: string[][];
+};
+
 export type TemplateParam = {
   Name: string;
   Required: boolean;
@@ -29,13 +35,14 @@ export type TemplateParam = {
   Deprecated: boolean;
   Default?: string | number | boolean;
   Choice?: string[];
-  Service?: string;
+  Service?: string | ServiceConfig;
   Usages?: TemplateParamUsage[];
 };
 
 export type ParamService = {
   name: string;
   dependencies: string[];
+  dependencyGroups?: string[][];
   url: (values: Record<string, any>) => string;
 };
 
@@ -97,18 +104,15 @@ export function applyDefaultsFromTemplate(template: Template | null, values: Dev
   // Apply modbus defaults from template (for service dependency resolution)
   const modbusParam = params.find((p) => p.Name === "modbus") as ModbusParam | undefined;
   if (modbusParam) {
-    if (!values["id"] && modbusParam.ID) {
-      values["id"] = modbusParam.ID;
-    }
-    if (!values["port"] && modbusParam.Port) {
-      values["port"] = modbusParam.Port;
-    }
-    if (!values["comset"] && modbusParam.Comset) {
-      values["comset"] = modbusParam.Comset;
-    }
-    if (!values["baudrate"] && modbusParam.Baudrate) {
-      values["baudrate"] = modbusParam.Baudrate;
-    }
+    const modbusDefaults: Record<string, any> = {
+      id: modbusParam.ID,
+      port: modbusParam.Port,
+      comset: modbusParam.Comset,
+      baudrate: modbusParam.Baudrate,
+    };
+    Object.entries(modbusDefaults).forEach(([key, val]) => {
+      if (!values[key] && val) values[key] = val;
+    });
   }
 }
 
@@ -135,26 +139,90 @@ export async function loadServiceValues(path: string) {
   }
 }
 
+// Convert values to strings, filtering out null/undefined
+const stringValues = (values: Record<string, any>): Record<string, string> =>
+  Object.entries(values).reduce(
+    (acc, [key, val]) => {
+      if (val !== undefined && val !== null) acc[key] = String(val);
+      return acc;
+    },
+    {} as Record<string, string>
+  );
+
+// Simple placeholder substitution without encoding (URLSearchParams handles encoding)
+const substitutePlaceholders = (template: string, vals: Record<string, string>): string =>
+  template.replace(/\{(\w+)\}/g, (match, key) => vals[key] ?? match);
+
+// Check if all dependencies in a group have values
+const isGroupSatisfied = (group: string[], values: Record<string, any>): boolean =>
+  group.every((dep) => values[dep] !== undefined && values[dep] !== null && values[dep] !== "");
+
 export const createServiceEndpoints = (params: TemplateParam[]): ParamService[] => {
   return params
     .map((param) => {
       if (!param.Service) {
         return null;
       }
-      const stringValues = (values: Record<string, any>): Record<string, string> =>
-        Object.entries(values).reduce(
-          (acc, [key, val]) => {
-            if (val !== undefined && val !== null) acc[key] = String(val);
-            return acc;
-          },
-          {} as Record<string, string>
-        );
+
+      // Handle string shorthand: "hardware/serial"
+      if (typeof param.Service === "string") {
+        return {
+          name: param.Name,
+          dependencies: extractPlaceholders(param.Service),
+          url: (values: Record<string, any>) =>
+            replacePlaceholders(param.Service as string, stringValues(values)),
+        } as ParamService;
+      }
+
+      // Handle object format with params/dependencies
+      const svc = param.Service as Record<string, any>;
+      const serviceConfig: ServiceConfig = {
+        endpoint: svc["endpoint"],
+        params: svc["params"],
+        dependencies: svc["dependencies"],
+      };
+
+      // Collect all unique dependency fields
+      const allDepFields = new Set((serviceConfig.dependencies || []).flat());
+
+      // Find which fields are already used as placeholders in explicit params
+      const usedPlaceholders = new Set(
+        Object.values(serviceConfig.params || {}).flatMap((v) => extractPlaceholders(String(v)))
+      );
+
+      // Auto-add dependency fields not already used in params as "{field}"
+      const autoParams: Record<string, string> = {};
+      allDepFields.forEach((field) => {
+        if (!usedPlaceholders.has(field)) {
+          autoParams[field] = `{${field}}`;
+        }
+      });
+
+      // Merge explicit params with auto-generated ones (explicit wins)
+      const fullParams = { ...autoParams, ...serviceConfig.params };
+
+      // Extract all dependencies (from both explicit and auto params)
+      const extractDeps = Object.values(fullParams).flatMap((v) => extractPlaceholders(String(v)));
 
       return {
         name: param.Name,
-        dependencies: extractPlaceholders(param.Service),
-        url: (values: Record<string, any>) =>
-          replacePlaceholders(param.Service!, stringValues(values)),
+        dependencies: extractDeps,
+        dependencyGroups: serviceConfig.dependencies,
+        url: (values: Record<string, any>) => {
+          // Substitute placeholders in param values and filter unresolved ones
+          const resolved = Object.entries(fullParams).reduce(
+            (acc, [key, val]) => {
+              const substituted = substitutePlaceholders(String(val), stringValues(values));
+              if (substituted && !substituted.includes("{")) {
+                acc[key] = substituted;
+              }
+              return acc;
+            },
+            {} as Record<string, string>
+          );
+          const query = new URLSearchParams(resolved).toString();
+          return query ? `${serviceConfig.endpoint}?${query}` : serviceConfig.endpoint || "";
+        },
       } as ParamService;
     })
     .filter((endpoint): endpoint is ParamService => endpoint !== null);
@@ -162,26 +230,39 @@ export const createServiceEndpoints = (params: TemplateParam[]): ParamService[] 
 
 export const fetchServiceValues = async (
   templateParams: TemplateParam[],
-  values: DeviceValues
+  values: DeviceValues,
+  loader = loadServiceValues
 ): Promise<Record<string, string[]>> => {
   const endpoints = createServiceEndpoints(templateParams);
   const result: Record<string, string[]> = {};
 
   await Promise.all(
     endpoints.map(async (endpoint) => {
-      const params: Record<string, any> = {};
-      endpoint.dependencies.forEach((dependency) => {
-        if (values[dependency]) {
-          params[dependency] = values[dependency];
+      let params: Record<string, any> | undefined;
+
+      // Check dependency groups with OR logic
+      if (endpoint.dependencyGroups?.length) {
+        // Find first satisfied group
+        const group = endpoint.dependencyGroups.find((g) => isGroupSatisfied(g, values));
+        if (group) {
+          params = Object.fromEntries(group.map((dep) => [dep, values[dep]]));
         }
-      });
-      if (Object.keys(params).length !== endpoint.dependencies.length) {
-        // missing dependency values, skip
+      } else {
+        // Fallback: Old logic for backward compatibility
+        const resolved = endpoint.dependencies.filter(
+          (dep) => values[dep] != null && values[dep] !== ""
+        );
+        if (resolved.length === endpoint.dependencies.length) {
+          params = Object.fromEntries(resolved.map((dep) => [dep, values[dep]]));
+        }
+      }
+
+      if (!params) {
         return;
       }
-      const url = endpoint.url(params);
-      const data = await loadServiceValues(url);
-      if (data) {
+
+      const data = await loader(endpoint.url(params));
+      if (data.length) {
         result[endpoint.name] = data;
       }
     })
