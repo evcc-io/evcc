@@ -71,6 +71,9 @@ func TestRequiredPerUsage(t *testing.T) {
 		TemplateDefinition: TemplateDefinition{
 			Params: []Param{
 				{
+					Name: "usage",
+				},
+				{
 					Name:     "param",
 					Required: true,
 					Usages:   []string{"battery"},
