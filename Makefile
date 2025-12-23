@@ -80,7 +80,14 @@ test-ui::
 
 test::
 	@echo "Running testsuite"
-	CGO_ENABLED=0 go test $(BUILD_TAGS) ./...
+	@OS=$$(go env GOOS); \
+	if [ "$$OS" = "linux" ]; then \
+		CGO_ENABLED=1 go test -race $(BUILD_TAGS) ./...; \
+	elif [ "$$OS" = "darwin" ]; then \
+		CGO_ENABLED=0 go test -race $(BUILD_TAGS) ./...; \
+	else \
+	    CGO_ENABLED=0 go test $(BUILD_TAGS) ./...; \
+	fi
 
 porcelain::
 	gofmt -w -l $$(find . -name '*.go')
