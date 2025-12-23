@@ -48,14 +48,8 @@ render: |
       Accept: application/json
       User-Agent: evcc-pstryk-template
     jq: |
-      (.frames // []) as $all
-      | ($all[-24:] | map(.price_gross) | add) as $last24_sum
-      | ($all[-24:] | length) as $last24_count
-      | (if $last24_sum == 0 and $last24_count >= 20
-         then $all[:-24]
-         else $all
-         end) as $filtered
-      | [$filtered[]
+      [(.frames // [])[]
+        | select(.is_cheap != null or .is_expensive != null)
         | {
           start: (.start | sub("\\+00:00$"; "Z")),
           end: (.end | sub("\\+00:00$"; "Z")),
