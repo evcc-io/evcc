@@ -116,11 +116,8 @@ params:
     type: duration
     default: 60s
     description:
-      de: FEMS/OpenEMS Batteriesteuerung API-Timeout
-      en: FEMS/OpenEMS battery control API timeout
-    help:
-      de: FEMS/OpenEMS Standard 60s
-      en: FEMS/OpenEMS standard 60s
+      de: Batteriesteuerung API-Timeout
+      en: battery control API timeout
     usages: ["battery"]
     advanced: true
   - name: minsoc
