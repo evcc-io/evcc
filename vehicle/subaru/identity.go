@@ -40,41 +40,44 @@ func (v *Identity) IDToken() string {
 	return v.idToken
 }
 
-func (v *Identity) authenticate(auth Auth, user, password string, passwordSet bool) (*Token, error) {
+func (v *Identity) authenticate(initial Auth, user, password string) (*Token, error) {
 	uri := fmt.Sprintf("%s/%s", BaseUrl, AuthenticationPath)
 
-	for id, cb := range auth.Callbacks {
-		switch cb.Type {
-		case "NameCallback":
-			outputValue, ok := cb.Output[0].Value.(string)
-			if ok && outputValue == "User Name" {
-				auth.Callbacks[id].Input[0].Value = user
+	auth := initial
+	passwordSet := false
+
+	for {
+		for i, cb := range auth.Callbacks {
+			switch cb.Type {
+			case "NameCallback":
+				if outputValue, ok := cb.Output[0].Value.(string); ok && outputValue == "User Name" {
+					auth.Callbacks[i].Input[0].Value = user
+				}
+			case "PasswordCallback":
+				auth.Callbacks[i].Input[0].Value = password
+				passwordSet = true
 			}
-		case "PasswordCallback":
-			auth.Callbacks[id].Input[0].Value = password
-			passwordSet = true
 		}
-	}
 
-	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(auth), request.JSONEncoding)
-	if err != nil {
-		return nil, err
-	}
-
-	if passwordSet {
-		var token Token
-		if err := v.DoJSON(req, &token); err != nil {
+		req, err := request.New(http.MethodPost, uri, request.MarshalJSON(auth), request.JSONEncoding)
+		if err != nil {
 			return nil, err
 		}
-		return &token, nil
-	}
 
-	var res Auth
-	if err := v.DoJSON(req, &res); err != nil {
-		return nil, err
-	}
+		if passwordSet {
+			var token Token
+			if err := v.DoJSON(req, &token); err != nil {
+				return nil, err
+			}
+			return &token, nil
+		}
 
-	return v.authenticate(res, user, password, passwordSet)
+		var next Auth
+		if err := v.DoJSON(req, &next); err != nil {
+			return nil, err
+		}
+		auth = next
+	}
 }
 
 func (v *Identity) authorize(token Token) (string, error) {
@@ -193,7 +196,7 @@ func (v *Identity) Login(user, password string) error {
 		return fmt.Errorf("failed to get initial auth response: %w", err)
 	}
 
-	token, err := v.authenticate(auth, user, password, false)
+	token, err := v.authenticate(auth, user, password)
 	if err != nil {
 		return fmt.Errorf("authentication failed: %w", err)
 	}
