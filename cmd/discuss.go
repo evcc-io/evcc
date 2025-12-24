@@ -10,6 +10,7 @@ import (
 
 	"github.com/cli/browser"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/redact"
 	"github.com/spf13/cobra"
 )
 
@@ -44,7 +45,7 @@ func runDiscuss(cmd *cobra.Command, args []string) {
 
 	var redacted string
 	if src, err := os.ReadFile(cfgFile); err == nil {
-		redacted = redact(string(src))
+		redacted = redact.String(string(src))
 	}
 
 	tmpl := template.Must(template.New("discuss").Parse(discussTmpl))

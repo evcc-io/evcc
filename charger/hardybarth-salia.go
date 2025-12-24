@@ -56,7 +56,7 @@ func init() {
 //go:generate go tool decorate -f decorateSalia -b *Salia -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
 
 // NewSaliaFromConfig creates a Salia cPH2 charger from generic config
-func NewSaliaFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewSaliaFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		URI      string
 		User     string
@@ -163,7 +163,8 @@ func NewSalia(ctx context.Context, uri, user, password string, cache time.Durati
 func (wb *Salia) heartbeat(ctx context.Context) {
 	bo := backoff.NewExponentialBackOff(
 		backoff.WithInitialInterval(5*time.Second),
-		backoff.WithMaxInterval(time.Minute))
+		backoff.WithMaxInterval(time.Minute),
+		backoff.WithMaxElapsedTime(0))
 
 	for tick := time.Tick(30 * time.Second); ; {
 		select {

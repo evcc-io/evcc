@@ -47,7 +47,7 @@ func init() {
 }
 
 // NewAlphatecFromConfig creates a Alphatec charger from generic config
-func NewAlphatecFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewAlphatecFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := modbus.Settings{
 		ID: 1,
 	}

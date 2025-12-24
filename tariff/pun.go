@@ -48,7 +48,7 @@ func init() {
 	registry.Add("pun", NewPunFromConfig)
 }
 
-func NewPunFromConfig(other map[string]interface{}) (api.Tariff, error) {
+func NewPunFromConfig(other map[string]any) (api.Tariff, error) {
 	var cc embed
 
 	if err := util.DecodeOther(other, &cc); err != nil {

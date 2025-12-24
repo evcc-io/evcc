@@ -15,6 +15,7 @@ import (
 	"github.com/evcc-io/evcc/hems/shm"
 	"github.com/evcc-io/evcc/server/assets"
 	"github.com/evcc-io/evcc/server/eebus"
+	"github.com/evcc-io/evcc/server/service"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/auth"
 	"github.com/evcc-io/evcc/util/config"
@@ -23,6 +24,8 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
+
+type publisher func(string, any)
 
 type route struct {
 	Method      string
@@ -155,6 +158,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 		"sessions":                {"GET", "/sessions", sessionHandler},
 		"updatesession":           {"PUT", "/session/{id:[0-9]+}", updateSessionHandler},
 		"deletesession":           {"DELETE", "/session/{id:[0-9]+}", deleteSessionHandler},
+		"gridsessions":            {"GET", "/gridsessions", gridSessionsHandler},
 		"telemetry2":              {"POST", "/settings/telemetry/{value:[01truefalse]+}", boolHandler(telemetry.Enable, telemetry.Enabled)},
 	}
 
@@ -220,7 +224,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 }
 
 // RegisterSystemHandler provides system level handlers
-func (s *HTTPd) RegisterSystemHandler(site *core.Site, valueChan chan<- util.Param, cache *util.ParamCache, auth auth.Auth, shutdown func(), configFile string) {
+func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *util.ParamCache, auth auth.Auth, shutdown func(), configFile string) {
 	router := s.Server.Handler.(*mux.Router)
 
 	// api
@@ -273,6 +277,7 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, valueChan chan<- util.Par
 		api.Use(ensureAuthHandler(auth))
 
 		routes := map[string]route{
+			"auth":               {"POST", "/auth", authHandler},
 			"templates":          {"GET", "/templates/{class:[a-z]+}", templatesHandler},
 			"products":           {"GET", "/products/{class:[a-z]+}", productsHandler},
 			"devices":            {"GET", "/devices/{class:[a-z]+}", devicesConfigHandler},
@@ -286,18 +291,17 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, valueChan chan<- util.Par
 			"testconfig":         {"POST", "/test/{class:[a-z]+}", testConfigHandler},
 			"testmerged":         {"POST", "/test/{class:[a-z]+}/merge/{id:[0-9.]+}", testConfigHandler},
 			"interval":           {"POST", "/interval/{value:[0-9.]+}", settingsSetDurationHandler(keys.Interval)},
-			"updatesponsortoken": {"POST", "/sponsortoken", updateSponsortokenHandler},
-			"deletesponsortoken": {"DELETE", "/sponsortoken", deleteSponsorTokenHandler},
+			"updatesponsortoken": {"POST", "/sponsortoken", updateSponsortokenHandler(pub)},
+			"deletesponsortoken": {"DELETE", "/sponsortoken", deleteSponsorTokenHandler(pub)},
 		}
 
 		// yaml handlers
 		for key, fun := range map[string]func() (any, any){
-			keys.EEBus:       func() (any, any) { return map[string]any{}, eebus.Config{} },
-			keys.Hems:        func() (any, any) { return map[string]any{}, config.Typed{} },
-			keys.Tariffs:     func() (any, any) { return map[string]any{}, globalconfig.Tariffs{} },
-			keys.Messaging:   func() (any, any) { return map[string]any{}, globalconfig.Messaging{} },       // has default
-			keys.ModbusProxy: func() (any, any) { return []map[string]any{}, []globalconfig.ModbusProxy{} }, // slice
-			keys.Circuits:    func() (any, any) { return []map[string]any{}, []config.Named{} },             // slice
+			keys.EEBus:     func() (any, any) { return map[string]any{}, eebus.Config{} },
+			keys.Hems:      func() (any, any) { return map[string]any{}, config.Typed{} },
+			keys.Tariffs:   func() (any, any) { return map[string]any{}, globalconfig.Tariffs{} },
+			keys.Messaging: func() (any, any) { return map[string]any{}, globalconfig.Messaging{} }, // has default
+			keys.Circuits:  func() (any, any) { return []map[string]any{}, []config.Named{} },       // slice
 		} {
 			other, struc := fun()
 			routes[key] = route{Method: "GET", Pattern: "/" + key, HandlerFunc: settingsGetStringHandler(key)}
@@ -307,18 +311,22 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, valueChan chan<- util.Par
 
 		// json handlers
 		for key, fun := range map[string]func() any{
-			keys.Network: func() any { return new(globalconfig.Network) }, // has default
-			keys.Mqtt:    func() any { return new(globalconfig.Mqtt) },    // has default
-			keys.Shm:     func() any { return new(shm.Config) },
-			keys.Influx:  func() any { return new(globalconfig.Influx) },
+			keys.Network:     func() any { return new(globalconfig.Network) },       // has default
+			keys.Mqtt:        func() any { return new(globalconfig.Mqtt) },          // has default
+			keys.ModbusProxy: func() any { return new([]globalconfig.ModbusProxy) }, // slice
+			keys.Shm:         func() any { return new(shm.Config) },
+			keys.Influx:      func() any { return new(globalconfig.Influx) },
 		} {
-			routes["update"+key] = route{Method: "POST", Pattern: "/" + key, HandlerFunc: settingsSetJsonHandler(key, valueChan, fun)}
-			routes["delete"+key] = route{Method: "DELETE", Pattern: "/" + key, HandlerFunc: settingsDeleteJsonHandler(key, valueChan, fun())}
+			routes["update"+key] = route{Method: "POST", Pattern: "/" + key, HandlerFunc: settingsSetJsonHandler(key, pub, fun)}
+			routes["delete"+key] = route{Method: "DELETE", Pattern: "/" + key, HandlerFunc: settingsDeleteJsonHandler(key, pub, fun())}
 		}
 
 		for _, r := range routes {
 			api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
 		}
+
+		// services
+		api.PathPrefix("/service").Handler(http.StripPrefix("/api/config/service", service.Handler()))
 
 		// site
 		for _, r := range map[string]route{

@@ -1,7 +1,6 @@
 package charger
 
 import (
-	"context"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -255,8 +254,7 @@ func TestSEMPCharger(t *testing.T) {
 	server := httptest.NewServer(handler)
 	defer server.Close()
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 
 	wb, err := NewSEMP(ctx, server.URL+"/semp", "F-12345678-ABCDEF123456-00", time.Second)
 	require.NoError(t, err)
@@ -323,8 +321,7 @@ func TestSEMPChargerOff(t *testing.T) {
 	server := httptest.NewServer(handler)
 	defer server.Close()
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 
 	wb, err := NewSEMP(ctx, server.URL+"/semp", "F-12345678-ABCDEF123456-00", time.Second)
 	require.NoError(t, err)
@@ -359,10 +356,8 @@ func TestSEMPChargerDeviceNotFound(t *testing.T) {
 	server := httptest.NewServer(handler)
 	defer server.Close()
 
-	ctx := context.Background()
-
 	// NewSEMP now calls Enabled() which will fail if device is not found
-	_, err := NewSEMP(ctx, server.URL+"/semp", "F-12345678-ABCDEF123456-00", time.Second)
+	_, err := NewSEMP(t.Context(), server.URL+"/semp", "F-12345678-ABCDEF123456-00", time.Second)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "device F-12345678-ABCDEF123456-00 not found")
 }
@@ -376,8 +371,7 @@ func TestSEMPChargerReady(t *testing.T) {
 	server := httptest.NewServer(handler)
 	defer server.Close()
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 
 	wb, err := NewSEMP(ctx, server.URL+"/semp", "F-12345678-ABCDEF123456-00", time.Second)
 	require.NoError(t, err)
@@ -405,8 +399,7 @@ func TestSEMPChargerPhases1p3p(t *testing.T) {
 	server := httptest.NewServer(handler)
 	defer server.Close()
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 
 	wb, err := NewSEMP(ctx, server.URL+"/semp", "F-12345678-ABCDEF123456-00", time.Second)
 	require.NoError(t, err)
@@ -450,8 +443,7 @@ func TestSEMPChargerChargedEnergy(t *testing.T) {
 	server := httptest.NewServer(handler)
 	defer server.Close()
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 
 	wb, err := NewSEMP(ctx, server.URL+"/semp", "F-12345678-ABCDEF123456-00", time.Second)
 	require.NoError(t, err)
@@ -476,9 +468,7 @@ func TestSEMPChargerChargedEnergy(t *testing.T) {
 		server2 := httptest.NewServer(handler2)
 		defer server2.Close()
 
-		ctx2 := context.Background()
-
-		wb2, err := NewSEMP(ctx2, server2.URL+"/semp", "F-12345678-ABCDEF123456-00", time.Second)
+		wb2, err := NewSEMP(t.Context(), server2.URL+"/semp", "F-12345678-ABCDEF123456-00", time.Second)
 		require.NoError(t, err)
 
 		// ChargeRater interface should NOT be available when parameters are not supported
@@ -496,8 +486,7 @@ func TestSEMPChargerAutoDetectDeviceID(t *testing.T) {
 	server := httptest.NewServer(handler)
 	defer server.Close()
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 
 	// Create charger without deviceID - should auto-detect
 	wb, err := NewSEMP(ctx, server.URL+"/semp", "", time.Second)

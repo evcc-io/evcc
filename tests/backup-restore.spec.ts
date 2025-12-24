@@ -1,11 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, baseUrl, restart } from "./evcc";
-import {
-  enableExperimental,
-  openTopNavigation,
-  expectModalVisible,
-  expectModalHidden,
-} from "./utils";
+import { openTopNavigation, expectModalVisible, expectModalHidden } from "./utils";
 import fs from "fs";
 import path from "path";
 
@@ -22,7 +17,6 @@ test.describe("reset", async () => {
     // open backup & restore modal
     await openTopNavigation(page);
     await page.getByRole("link", { name: "Configuration" }).click();
-    await enableExperimental(page);
     await page.getByRole("button", { name: "Backup & Restore" }).click();
     const modal = page.getByTestId("backup-restore-modal");
     await expectModalVisible(modal);
@@ -56,7 +50,6 @@ test.describe("reset", async () => {
 
     // create grid meter and title via UI
     await page.goto("/#/config");
-    await enableExperimental(page);
     await page.getByTestId("add-grid").click();
     const meterModal = page.getByTestId("meter-modal");
     await expectModalVisible(meterModal);
@@ -119,7 +112,6 @@ test.describe("backup and restore", async () => {
 
     await start();
     await page.goto("/#/config");
-    await enableExperimental(page);
 
     // set initial title
     await page.getByTestId("generalconfig-title").getByRole("button", { name: "edit" }).click();
@@ -223,8 +215,6 @@ test.describe("backup and restore", async () => {
     await loginModal.getByLabel("Password").fill("secret");
     await loginModal.getByRole("button", { name: "Login" }).click();
     await expectModalHidden(loginModal);
-
-    await enableExperimental(page);
 
     // open backup & restore modal
     await page.getByRole("button", { name: "Backup & Restore" }).click();

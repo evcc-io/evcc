@@ -6,31 +6,32 @@
 				data-testid="header"
 			>
 				<h1 class="d-block my-0">
-					<span v-if="!isInitialSetup">
+					<span v-if="!setupRequired">
 						{{ siteTitle || "evcc" }}
 					</span>
 				</h1>
-				<div class="d-flex">
-					<Notifications
-						:notifications="notifications"
-						:loadpointTitles="loadpointTitles"
-						class="me-2"
-					/>
-					<TopNavigation v-bind="topNavigation" />
-				</div>
+				<TopNavigationArea :notifications="notifications" />
 			</div>
 			<HemsWarning :circuits="circuits" />
-			<Energyflow v-if="loadpoints.length > 0" v-bind="energyflow" />
+			<Energyflow v-if="!setupRequired && !hasFatalError" v-bind="energyflow" />
 		</div>
 		<div class="d-flex flex-column justify-content-between content-area">
 			<div
 				v-if="hasFatalError"
 				class="flex-grow-1 align-items-center d-flex justify-content-center"
 			>
-				<h1 class="mb-5 text-gray fs-4">{{ $t("startupError.title") }}</h1>
+				<div class="d-flex flex-column align-items-center mb-5 gap-4 mx-4 text-center">
+					<h1 class="text-gray fs-4 my-0">{{ $t("startupError.title") }}</h1>
+					<p v-for="fatalText in fatalTexts" :key="fatalText" class="text-break my-0">
+						{{ fatalText }}
+					</p>
+					<router-link class="btn btn-secondary" to="/config">
+						{{ $t("startupError.editConfiguration") }}
+					</router-link>
+				</div>
 			</div>
 			<div
-				v-else-if="isInitialSetup"
+				v-else-if="setupRequired"
 				class="flex-grow-1 d-flex align-items-center justify-content-center p-3"
 			>
 				<div
@@ -75,8 +76,7 @@
 
 <script lang="ts">
 import "@h2d2/shopicons/es/regular/arrowup";
-import Navigation from "../Top/Navigation.vue";
-import Notifications from "../Top/Notifications.vue";
+import TopNavigationArea from "../Top/TopNavigationArea.vue";
 import Energyflow from "../Energyflow/Energyflow.vue";
 import HemsWarning from "../HemsWarning.vue";
 import Loadpoints from "../Loadpoints/Loadpoints.vue";
@@ -108,8 +108,7 @@ export default defineComponent({
 		Energyflow,
 		Footer,
 		HemsWarning,
-		Notifications,
-		TopNavigation: Navigation,
+		TopNavigationArea,
 		WelcomeIcons,
 	},
 	mixins: [formatter, collector],
@@ -118,6 +117,7 @@ export default defineComponent({
 
 		notifications: { type: Array as PropType<Notification[]>, default: () => [] },
 		offline: Boolean,
+		setupRequired: Boolean,
 
 		// details
 		gridConfigured: Boolean,
@@ -185,22 +185,13 @@ export default defineComponent({
 		energyflow() {
 			return this.collectProps(Energyflow);
 		},
-		loadpointTitles() {
-			return this.orderedVisibleLoadpoints.map((lp) => lp.displayTitle);
-		},
 		vehicleList() {
 			const vehicles = this.vehicles || {};
 			return Object.entries(vehicles).map(([name, vehicle]) => ({ name, ...vehicle }));
 		},
-		topNavigation() {
-			return this.collectProps(Navigation);
-		},
 		showParkingLot() {
 			// work in progess
 			return false;
-		},
-		isInitialSetup() {
-			return this.loadpoints.length === 0;
 		},
 		footer() {
 			return {
@@ -225,6 +216,11 @@ export default defineComponent({
 		},
 		hasFatalError() {
 			return this.fatal.length > 0;
+		},
+		fatalTexts() {
+			return this.fatal.map(({ error, class: errorClass }) =>
+				errorClass ? `${errorClass}: ${error}` : error
+			);
 		},
 	},
 	methods: {

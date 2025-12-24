@@ -181,7 +181,11 @@ export default defineComponent({
 			return null;
 		},
 		repeatingPlans(): RepeatingPlan[] {
-			if (this.vehicle && this.vehicle.repeatingPlans.length > 0) {
+			if (
+				this.vehicle &&
+				this.vehicle.repeatingPlans &&
+				this.vehicle.repeatingPlans.length > 0
+			) {
 				return [...this.vehicle.repeatingPlans];
 			}
 			return [];
@@ -301,7 +305,7 @@ export default defineComponent({
 			}
 		},
 		updateRepeatingPlans(plans: RepeatingPlan[]): void {
-			api.post(`${this.apiVehicle}plan/repeating`, { plans });
+			api.post(`${this.apiVehicle}plan/repeating`, plans);
 		},
 		setMinSoc(soc: number): void {
 			api.post(`${this.apiVehicle}minsoc/${soc}`);

@@ -52,7 +52,7 @@ func init() {
 }
 
 // NewTrydanFromConfig creates a Trydan charger from generic config
-func NewTrydanFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewTrydanFromConfig(other map[string]any) (api.Charger, error) {
 	cc := struct {
 		URI   string
 		Cache time.Duration
