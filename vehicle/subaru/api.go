@@ -20,9 +20,9 @@ const (
 	AuthenticationPath       = "json/realms/root/realms/alliance-subaru/authenticate?authIndexType=service&authIndexValue=oneapp"
 	AuthorizationPath        = "oauth2/realms/root/realms/alliance-subaru/authorize?client_id=8c4921b0b08901fef389ce1af49c4e10.subaru.com&scope=openid+profile+write&response_type=code&redirect_uri=com.subaru.oneapp:/oauth2Callback&code_challenge=plain&code_challenge_method=plain"
 	VehicleGuidPath          = "v2/vehicle/guid"
-	RemoteElectricStatusPath = "v1/global/remote/electric/status"
+	RemoteElectricStatusPath = "v1/vehicle/electric/status"
 	ApiKey                   = "tTZipv6liF74PwMfk9Ed68AQ0bISswwf3iHQdqcF"
-	ClientRefKey             = "2.17.0"
+	ClientRefKey             = "2.19.0"
 )
 
 type API struct {
@@ -78,7 +78,7 @@ func (v *API) Vehicles() ([]string, error) {
 }
 
 func (v *API) Status(vin string) (Status, error) {
-	uri := fmt.Sprintf("%s/%s", ApiBaseUrl, RemoteElectricStatusPath)
+	uri := fmt.Sprintf("%s/%s?vin=%s", ApiBaseUrl, RemoteElectricStatusPath, vin)
 
 	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
 		"Accept":       request.JSONContent,
