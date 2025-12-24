@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/redact"
 )
 
 // configYamlHandler returns the redacted evcc.yaml configuration file
@@ -25,7 +25,7 @@ func configYamlHandler(configFilePath string) http.HandlerFunc {
 		}
 
 		// Redact sensitive information
-		redacted := util.RedactConfigString(string(src))
+		redacted := redact.String(string(src))
 
 		// Return the redacted content as plain text
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")

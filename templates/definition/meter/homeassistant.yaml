@@ -1,32 +1,37 @@
 template: homeassistant
 products:
   - brand: Home Assistant
-    description:
-      de: Meter
-      en: Meter
 group: generic
 requirements:
   description:
-    en: Home Assistant instance with API access
-    de: Home Assistant Instanz mit API-Zugriff
+    en: Home Assistant instances in your network will be auto-discovered and suitable entities (e.g. `sensor.*`) will be suggested.
+    de: Home Assistant Instanzen in deinem Netzwerk werden automatisch erkannt und passende Entitäten (z.B. `sensor.*`) werden vorgeschlagen.
+auth:
+  type: homeassistant
+  params: [uri]
 params:
   - name: usage
     choice: ["grid", "pv", "battery", "aux", "charge"]
   - name: uri
-    required: true
-    example: "http://homeassistant.local:8123"
-  - name: token
     description:
-      de: Home Assistant Long-Lived Access Token
-      en: Home Assistant Long-Lived Access Token
-    example: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+      de: Home Assistant URI
+      en: Home Assistant URI
+    example: http://homeassistant.local:8123
+    help:
+      en: " " # overwrite default
+      de: " " # overwrite default
+    service: homeassistant/instances
     required: true
-    mask: true
+  - name: token
+    deprecated: true
+  - name: home
+    deprecated: true
   - name: power
     description:
       de: Leistungsentität
       en: Power Entity
     required: true
+    service: homeassistant/entities?uri={uri}&domain=sensor
     example: "sensor.house_power"
     help:
       en: Entity ID for instantaneous power measurement in watts. The entity must provide numeric values only (e.g., "1234", not "1234 W").
@@ -35,6 +40,7 @@ params:
     description:
       de: Energieentität
       en: Energy Entity
+    service: homeassistant/entities?uri={uri}&domain=sensor
     example: "sensor.house_energy"
     advanced: true
     help:
@@ -44,6 +50,7 @@ params:
     description:
       de: L1 Stromentität
       en: L1 Current Entity
+    service: homeassistant/entities?uri={uri}&domain=sensor
     example: "sensor.house_current_l1"
     advanced: true
     help:
@@ -53,6 +60,7 @@ params:
     description:
       de: L2 Stromentität
       en: L2 Current Entity
+    service: homeassistant/entities?uri={uri}&domain=sensor
     example: "sensor.house_current_l2"
     advanced: true
     help:
@@ -62,6 +70,7 @@ params:
     description:
       de: L3 Stromentität
       en: L3 Current Entity
+    service: homeassistant/entities?uri={uri}&domain=sensor
     example: "sensor.house_current_l3"
     advanced: true
     help:
@@ -71,6 +80,7 @@ params:
     description:
       de: L1 Spannungsentität
       en: L1 Voltage Entity
+    service: homeassistant/entities?uri={uri}&domain=sensor
     example: "sensor.house_voltage_l1"
     advanced: true
     help:
@@ -80,6 +90,7 @@ params:
     description:
       de: L2 Spannungsentität
       en: L2 Voltage Entity
+    service: homeassistant/entities?uri={uri}&domain=sensor
     example: "sensor.house_voltage_l2"
     advanced: true
     help:
@@ -89,6 +100,7 @@ params:
     description:
       de: L3 Spannungsentität
       en: L3 Voltage Entity
+    service: homeassistant/entities?uri={uri}&domain=sensor
     example: "sensor.house_voltage_l3"
     advanced: true
     help:
@@ -98,6 +110,7 @@ params:
     description:
       de: Batterieladestand
       en: Battery State of Charge
+    service: homeassistant/entities?uri={uri}&domain=sensor
     example: "sensor.battery_soc"
     advanced: true
     help:
@@ -112,7 +125,7 @@ params:
 render: |
   type: homeassistant
   uri: {{ .uri }}
-  token: {{ .token }}
+  home: {{ .home }} # deprecated
   power: {{ .power }}
   energy: {{ .energy }}
   currents:

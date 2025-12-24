@@ -7,6 +7,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"testing"
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
@@ -60,6 +61,11 @@ func (t *Template) Validate() error {
 	for _, p := range t.Params {
 		if p.IsDeprecated() {
 			continue
+		}
+
+		// Validate that a param cannot be both masked and private
+		if p.Mask && p.Private {
+			return fmt.Errorf("param %s: 'mask' and 'private' cannot be used together. Use 'mask' for sensitive data like passwords/tokens that should be hidden in UI. Use 'private' for personal data like emails/locations that should only be redacted from bug reports", p.Name)
 		}
 
 		if p.Description.String("en") == "" || p.Description.String("de") == "" {
@@ -306,7 +312,8 @@ func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, m
 	// The actual key name is taken from the parameter to make it unique.
 	// Since predefined properties are not matched by actual parameters using
 	// ParamByName(), the lower case key name is used instead.
-	// All keys *must* be assigned or rendering will create "<no value>" artifacts.
+	// All keys *must* be assigned or rendering will create "<no value>" artifacts. For this reason,
+	// deprecated parameters (that may still be rendered) must be evaluated, too.
 
 	for key, val := range values {
 		out := strings.ToLower(key)
@@ -316,8 +323,6 @@ func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, m
 			if !slices.Contains(predefinedTemplateProperties, out) {
 				return nil, values, fmt.Errorf("invalid key: %s", key)
 			}
-		} else if p.IsDeprecated() {
-			continue
 		} else {
 			out = p.Name
 		}
@@ -350,15 +355,19 @@ func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, m
 				if val != nil {
 					s = p.yamlQuote(fmt.Sprintf("%v", val))
 				}
+
+				// validate required fields from yaml
+				if s == "" && p.IsRequired() && (renderMode == RenderModeUnitTest ||
+					renderMode == RenderModeInstance && !testing.Testing()) {
+					return nil, nil, fmt.Errorf("missing required `%s`", p.Name)
+				}
+
 				res[out] = s
 			}
 		}
 	}
 
-	tmpl, err := baseTmpl.Clone()
-	if err == nil {
-		tmpl, err = FuncMap(tmpl).Parse(t.Render)
-	}
+	tmpl, err := FuncMap(template.Must(baseTmpl.Clone())).Parse(t.Render)
 	if err != nil {
 		return nil, res, err
 	}

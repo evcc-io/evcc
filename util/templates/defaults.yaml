@@ -43,6 +43,7 @@ params:
     choice: ["https", "http"]
     default: https
   - name: user
+    private: true
     description:
       de: Benutzerkonto
       en: Username
@@ -76,6 +77,7 @@ params:
     usages: ["pv"]
     advanced: true
   - name: vin
+    private: true
     description:
       de: Fahrzeugidentifikationsnummer
       en: Vehicle Identification Number
@@ -164,6 +166,15 @@ params:
       en: The maximum amperage per connected phase that can be used
     example: 16
     type: int
+  - name: maxpower
+    unit: W
+    description:
+      de: Maximale Ladeleistung des Fahrzeugs
+      en: Maximum vehicle charging power
+    help:
+      de: Definiert die maximale Ladeleistung des Fahrzeugs. Hilft, die Ladeplanung zu verbessern, wenn das Fahrzeug üblicherweise weniger Strom nutzt als angeboten oder höhere Ströme bei einphasigem Laden erlaubt als bei dreiphasigem. Der bereitgestellte Strom des Ladepunktes wird nicht beeinflusst.
+      en: Defines the maximum charging power of the vehicle. Helps improve charge plan accuracy when the vehicle typically uses less than the offered current or supports higher single-phase current compared to three-phase. The offered current of the loadpoint is not affected.
+    type: int
   - name: identifiers
     description:
       de: Identifikation
@@ -186,8 +197,8 @@ params:
       de: Standby-Leistung
       en: Standby power
     help:
-      de: Leistung oberhalb des angegebenen Wertes wird als Ladeleistung gewertet
-      en: Power values above this value will be considered as charging power
+      de: Leistung oberhalb des angegebenen Wertes wird als Ladeleistung und damit Status "laden" gewertet. Negative Werte deaktivieren die Statuserkennung.
+      en: Power values above this value will be considered as charging power and hence status "charging". Negative values deactivate status detection.
     type: int
   - name: language
     description:
@@ -247,6 +258,7 @@ params:
 
   - name: ski
     required: true
+    private: true
     description:
       en: Subject Key Identifier (SKI)
       de: Identifikationsschlüssel (SKI)
@@ -254,16 +266,18 @@ params:
       en: Usually found on the web interface of the wallbox
       de: Üblicherweise im Web Interface der Wallbox zu finden
   - name: uri
+    private: true
     description:
       generic: URI
     help:
       en: HTTP(S) address
       de: HTTP(S) Adresse
   - name: url
+    private: true
     description:
       generic: URL
   - name: ain
-    mask: true
+    private: true
     example: "307788992233"
     description:
       en: Actor Identification Number (AIN)
@@ -340,12 +354,15 @@ params:
     advanced: true
 
   - name: accesstoken
+    mask: true
     description:
       generic: Access token
   - name: refreshtoken
+    mask: true
     description:
       generic: Refresh token
   - name: serial
+    private: true
     description:
       en: Serial
       de: Seriennummer
@@ -360,9 +377,11 @@ params:
     description:
       generic: Client ID
   - name: clientsecret
+    mask: true
     description:
       generic: Client Secret
   - name: token
+    mask: true
     description:
       generic: Token
   - name: interval
@@ -370,13 +389,16 @@ params:
       de: Intervall
       en: Interval
   - name: mac
+    private: true
     description:
       en: MAC Address
       de: MAC Adresse
   - name: pin
+    mask: true
     description:
       generic: PIN
   - name: serial_number
+    private: true
     description:
       en: Serial Number
       de: Seriennummer
@@ -384,9 +406,11 @@ params:
     description:
       generic: Watchdog
   - name: uuid
+    private: true
     description:
       generic: UUID
   - name: zip
+    private: true
     description:
       en: ZIP code
       de: Postleitzahl
@@ -420,12 +444,14 @@ params:
       de: Temperaturquelle
       en: Temperature source
   - name: lat
+    private: true
     description:
       en: Latitude
       de: Breitengrad
     type: float
     example: 55.7351
   - name: lon
+    private: true
     description:
       en: Longitude
       de: Längengrad
@@ -452,6 +478,8 @@ presets:
       advanced: true
     - name: maxCurrent
       advanced: true
+    - name: maxPower
+      advanced: true
     - name: identifiers
       advanced: true
     - name: priority
@@ -472,6 +500,8 @@ presets:
     - name: minCurrent
       advanced: true
     - name: maxCurrent
+      advanced: true
+    - name: maxPower
       advanced: true
     - name: identifiers
       advanced: true
@@ -579,8 +609,8 @@ presets:
       description:
         generic: Station ID
       help:
-        en: "Station ID of the charging point. Note: In exceptional cases, it may be necessary to manually append this ID to the OCPP URL of the charging station in the form `ws://<evcc-address>:8887/<stationid>`. Most charging stations automatically add the ID internally."
-        de: "Station ID des Ladepunktes. Hinweis: In Ausnahmefällen kann es erforderlich sein, diese ID manuell an die OCPP-URL der Ladestation in der Form `ws://<evcc-adresse>:8887/<stationid>` anzuhängen. Die meisten Ladestationen fügen die ID intern automatisch hinzu."
+        en: Unique identifier of the charger. evcc auto-detects this once the charger connects.
+        de: Eindeutige Wallbox-Kennung. evcc erkennt diese automatisch, sobald sich die Wallbox verbindet.
       example: EVB-P12354
     - name: connector
       description:
@@ -601,6 +631,7 @@ presets:
         en: Only enable this option if there is no way to initiate transactions from the charger side! This is only the case if e.g. no RFID reader is available and charging processes would have to be released individually via app. Normally, the charger should always be configured at the device so that either an RFID card is used for activation or the charger is set to "Autostart", "Free Charging" or similar. First check the documentation and configuration possibilities of the charger, ask the manufacturer if necessary! (Uses OCPP RemoteStartTransaction)
     - name: idtag
       advanced: true
+      private: true
       type: string
       description:
         en: Authentication token
@@ -688,6 +719,7 @@ modbus:
       help:
         de: USB-RS485 Gerätename
         en: USB-RS485 device name
+      service: hardware/serial # not actually used
       example: /dev/ttyUSB0
     - name: baudrate
       description:

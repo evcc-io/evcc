@@ -30,7 +30,7 @@
     "charger": {
       "generic": "Integraciones genéricas",
       "heatingdevices": "Dispositivos de calefacción",
-      "ocppHelp": "Copia esta dirección en la configuración de cargadores.",
+      "ocppHelp": "Copia esta URL en la configuración de tu cargador. Consulta el manual del fabricante para más detalles. El cargador añadirá automáticamente su identificador único (ID de estación) a la URL. En casos excepcionales, es posible que debas especificar el identificador manualmente. Ejemplo: `{url}`",
       "ocppLabel": "URL del servidor OCPP",
       "switchsockets": "Tomas conmutables",
       "template": "Fabricante",
@@ -728,8 +728,10 @@
       "label": "Idioma"
     },
     "sponsorToken": {
-      "expires": "Tu token de patrocinador expira en {inXDays}. {getNewToken} y puedes renovarlo aquí.",
-      "getNew": "Coge uno nuevo",
+      "expires": "Tu token de patrocinador expira en {inXDays}.",
+      "expiresUpdateUi": "{getNewToken} y puedes renovarlo aquí.",
+      "expiresUpdateYaml": "{getNewToken} y actualízalo en tu evcc.yaml.",
+      "getNewToken": "Coge uno nuevo",
       "hint": "Nota: automatizaremos esto en el futuro."
     },
     "telemetry": {

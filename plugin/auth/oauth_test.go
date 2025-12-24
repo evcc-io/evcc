@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -15,13 +14,13 @@ func TestOAuth(t *testing.T) {
 		return t
 	}
 
-	ts, err := NewOauth(context.TODO(), "foo", "bar", &oauth2.Config{
+	ts, err := NewOAuth(t.Context(), "foo", "bar", &oauth2.Config{
 		ClientID: "baz",
 	}, WithTokenStorerOption(storer))
 	require.NoError(t, err)
 
 	token, err := ts.Token()
-	require.ErrorContains(t, err, "missing token credentials")
+	require.ErrorContains(t, err, "login required")
 	require.False(t, token.Valid())
 	require.Equal(t, 0, storerCalled)
 

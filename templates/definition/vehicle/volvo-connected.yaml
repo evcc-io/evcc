@@ -50,6 +50,7 @@ params:
     help:
       en: "Redirect URI of your evcc instance. Must match the redirect URI set in your Volvo Developer App."
       de: "Redirect-URI deiner evcc-Instanz. Muss mit der Redirect-URI übereinstimmen, die in deiner Volvo Developer App festgelegt ist."
+    service: auth/redirecturi
     example: "https://evcc.example.org/providerauth/callback"
   - name: vin
     example: WF0FXX...
@@ -58,6 +59,9 @@ params:
     deprecated: true
   - name: refreshToken
     deprecated: true
+auth:
+  type: volvo-connected
+  params: [clientId, clientSecret, redirectUri]
 render: |
   type: volvo-connected
   vccapikey: {{ .vccapikey }}

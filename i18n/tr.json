@@ -40,7 +40,7 @@
       "chargers": "Doldurma cihazları",
       "generic": "Genel entegrasyon",
       "heatingdevices": "Isıtma cihazları",
-      "ocppHelp": "Bu adresi doldurma cihazının yapılandırmasına kopyala.",
+      "ocppHelp": "Bu URL'yi şarj cihazınızın yapılandırmasına kopyalayın. Ayrıntılar için üreticinin kılavuzuna bakın. Şarj cihazı, benzersiz tanımlayıcısını (istasyon kimliği) URL'ye otomatik olarak ekleyecektir. Nadir durumlarda tanımlayıcıyı manuel olarak belirtmeniz gerekebilir. Örnek: `{url}`",
       "ocppLabel": "OCPP sunucusu URL'si",
       "switchsockets": "“Açılıp kapanabilen prizler”",
       "template": "Üretici",
@@ -158,7 +158,11 @@
     },
     "general": {
       "applyAndClose": "Uygula ve kapat",
+      "authPerform": "{provider} ile bağlantı kur",
+      "authPerformHint": "Yeni bir sekmede açılacak. Devam etmek için buraya geri dön.",
+      "authPrepare": "Bağlantıyı hazırla",
       "cancel": "İptal",
+      "clear": "Temizle",
       "close": "Kapat",
       "customHelp": "evcc'nin eklenti sistemini kullanarak kullanıcı tanımlı bir cihaz oluştur.",
       "customOption": "Kullanıcı tanımlı cihaz",
@@ -427,10 +431,14 @@
       "title": "MQTT"
     },
     "network": {
-      "descriptionHost": "mDNS'yi etkinleştirmek için .local sonekini kullan. Mobil uygulamanın ve bazı OCPP doldurma cihazlarının tanınması ile ilgili.",
+      "descriptionExternalUrl": "evcc'ye bağlanmak isteyen diğer cihazlar ve evcc uygulamasının otomatik keşfi için adres.",
+      "descriptionHost": "Yerel ağında evcc'yi duyurmak için kullanılır.",
+      "descriptionInternalUrl": "evcc'nin yerel ağ adresi.",
       "descriptionPort": "Web arayüzü ve API için bağlantı noktası. Bunu değiştirirsen tarayıcının URL'sini güncellemen gerekir.",
       "descriptionSchema": "Yalnızca URL'lerin oluşturuluşunu etkiler. HTTPS'nin seçilmesi şifrelemeyi etkinleştirmez.",
-      "labelHost": "Ana makine adı",
+      "labelExternalUrl": "Harici URL",
+      "labelHost": "mDNS Ana Bilgisayar Adı",
+      "labelInternalUrl": "Dahili URL",
       "labelPort": "Port",
       "labelSchema": "Şema",
       "title": "Ağ"
@@ -1020,7 +1028,8 @@
     "message": "Ana makineye bağlantı yok.",
     "restart": "Yeniden başlat",
     "restartNeeded": "Değişiklikleri uygulamak için gerekli.",
-    "restarting": "Sunucu birazdan dönecek."
+    "restarting": "Sunucu birazdan dönecek.",
+    "starting": "Sunucu başlatılıyor..."
   },
   "passwordModal": {
     "description": "Yapılandırma ayarlarını korumak için bir şifre belirle. Ana görünüme erişim oturum açmadan da mümkün.",
@@ -1152,8 +1161,10 @@
       "show": "{title} göster"
     },
     "sponsorToken": {
-      "expires": "Sponsor jetonun {inXDays} sonra sona erecek. {getNewToken} ve burada güncelle.",
-      "getNew": "Yeni bir tane al",
+      "expires": "Sponsor jetonun {inXDays} sonra sona erecek.",
+      "expiresUpdateUi": "{getNewToken} ve burada güncelle.",
+      "expiresUpdateYaml": "{getNewToken} ve evcc.yaml dosyanızda güncelle.",
+      "getNewToken": "Yeni bir tane al",
       "hint": "Not: İleride bunu otomatik hale getireceğiz."
     },
     "telemetry": {
@@ -1209,6 +1220,7 @@
     "configuration": "Yapılandırma",
     "description": "Lütfen yapılandırma dosyanı kontrol et. Hata mesajı yardımcı olmuyorsa, çözüm için {0}'na göz at.",
     "discussions": "GitHub Tartışmaları",
+    "editConfiguration": "Yapılandırmayı düzenle",
     "fixAndRestart": "Lütfen sorunu düzelt ve ana makineyi yeniden başlat.",
     "hint": "Not: Ayrıca hatalı bir cihaz da (güç çevirici, sayaç, …) sebeb olabilir. Ağ bağlantılarını gözden geçir.",
     "lineError": "{0} içinde hata bulundu.",
