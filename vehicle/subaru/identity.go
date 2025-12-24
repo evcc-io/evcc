@@ -85,6 +85,10 @@ func (v *Identity) authorize(token Token) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
+	originalCheckRedirect := v.Client.CheckRedirect
+	defer func() { v.Client.CheckRedirect = originalCheckRedirect }()
+
 	var param request.InterceptResult
 	v.Client.CheckRedirect, param = request.InterceptRedirect("code", true)
 	var code string
@@ -105,7 +109,10 @@ func (v *Identity) fetchTokenCredentials(code string) error {
 		"code_verifier": {"plain"},
 	}
 
-	headers := request.URLEncoding
+	headers := make(map[string]string)
+	for k, v := range request.URLEncoding {
+		headers[k] = v
+	}
 	headers["Authorization"] = AppAuthorization
 	req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), headers)
 	if err != nil {
@@ -152,10 +159,16 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 		"refresh_token": {token.RefreshToken},
 	}
 
-	headers := request.URLEncoding
+	headers := make(map[string]string)
+	for k, v := range request.URLEncoding {
+		headers[k] = v
+	}
 	headers["Authorization"] = AppAuthorization
 	var res oauth2.Token
-	req, _ := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), headers)
+	req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), headers)
+	if err != nil {
+		return nil, err
+	}
 	if err := v.DoJSON(req, &res); err != nil {
 		return nil, err
 	}
