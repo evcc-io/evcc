@@ -10,6 +10,7 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/transport"
 	"golang.org/x/oauth2"
 )
 
@@ -41,31 +42,40 @@ func NewAPI(log *util.Logger, identity *Identity) *API {
 
 	v.Timeout = 120 * time.Second
 
-	// replace client transport with authenticated transport
 	v.Transport = &oauth2.Transport{
 		Source: identity,
 		Base:   v.Transport,
 	}
 
-	// create HMAC digest for x-client-ref header
 	h := hmac.New(sha256.New, []byte(ClientRefKey))
 	h.Write([]byte(v.identity.uuid))
 	v.clientRef = hex.EncodeToString(h.Sum(nil))
 
-	return v
-}
-
-func (v *API) Vehicles() ([]string, error) {
-	uri := fmt.Sprintf("%s/%s", ApiBaseUrl, VehicleGuidPath)
-
-	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
+	headers := map[string]string{
 		"Accept":       request.JSONContent,
 		"x-guid":       v.identity.uuid,
 		"x-api-key":    ApiKey,
 		"x-client-ref": v.clientRef,
 		"x-appversion": ClientRefKey,
 		"X-Appbrand":   "S",
-	})
+	}
+
+	v.Transport = &transport.Decorator{
+		Decorator: transport.DecorateHeaders(headers),
+		Base:      v.Transport,
+	}
+
+	return v
+}
+
+func (v *API) IDToken() string {
+	return v.identity.IDToken()
+}
+
+func (v *API) Vehicles() ([]string, error) {
+	uri := fmt.Sprintf("%s/%s", ApiBaseUrl, VehicleGuidPath)
+
+	req, err := request.New(http.MethodGet, uri, nil, nil)
 	var resp Vehicles
 	if err == nil {
 		err = v.DoJSON(req, &resp)
@@ -81,12 +91,7 @@ func (v *API) Status(vin string) (Status, error) {
 	uri := fmt.Sprintf("%s/%s?vin=%s", ApiBaseUrl, RemoteElectricStatusPath, vin)
 
 	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
-		"Accept":       request.JSONContent,
-		"x-guid":       v.identity.uuid,
-		"x-api-key":    ApiKey,
-		"x-client-ref": v.clientRef,
-		"x-appversion": ClientRefKey,
-		"vin":          vin,
+		"vin": vin,
 	})
 	var status Status
 	if err == nil {

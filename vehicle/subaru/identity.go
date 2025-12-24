@@ -25,7 +25,8 @@ type Identity struct {
 	log *util.Logger
 	*request.Helper
 	oauth2.TokenSource
-	uuid string
+	uuid    string
+	idToken string
 }
 
 func NewIdentity(log *util.Logger) *Identity {
@@ -35,10 +36,13 @@ func NewIdentity(log *util.Logger) *Identity {
 	}
 }
 
+func (v *Identity) IDToken() string {
+	return v.idToken
+}
+
 func (v *Identity) authenticate(auth Auth, user, password string, passwordSet bool) (*Token, error) {
 	uri := fmt.Sprintf("%s/%s", BaseUrl, AuthenticationPath)
 
-	// Update callbacks with credentials
 	for id, cb := range auth.Callbacks {
 		switch cb.Type {
 		case "NameCallback":
@@ -52,13 +56,11 @@ func (v *Identity) authenticate(auth Auth, user, password string, passwordSet bo
 		}
 	}
 
-	// Send authentication request
 	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(auth), request.JSONEncoding)
 	if err != nil {
 		return nil, err
 	}
 
-	// If we've already set the password, expect a token response
 	if passwordSet {
 		var token Token
 		if err := v.DoJSON(req, &token); err != nil {
@@ -67,13 +69,11 @@ func (v *Identity) authenticate(auth Auth, user, password string, passwordSet bo
 		return &token, nil
 	}
 
-	// Otherwise continue with Auth flow
 	var res Auth
 	if err := v.DoJSON(req, &res); err != nil {
 		return nil, err
 	}
 
-	// Continue authentication flow
 	return v.authenticate(res, user, password, passwordSet)
 }
 
@@ -120,7 +120,8 @@ func (v *Identity) fetchTokenCredentials(code string) error {
 		return fmt.Errorf("failed to fetch token credentials: %w", err)
 	}
 
-	// Parse ID token without verification to extract UUID
+	v.idToken = res.IDToken
+
 	parser := jwt.NewParser(jwt.WithoutClaimsValidation())
 	token, _, err := parser.ParseUnverified(res.IDToken, jwt.MapClaims{})
 	if err != nil {
