@@ -3,24 +3,12 @@ products:
   - brand: Subaru
 requirements:
   description:
-    de: |
-      Benötigt Subaru Connected Services Account.
-    en: |
-      Requires Subaru Connected Services Account.
+    de: Benötigt Subaru Connected Services Account
+    en: Requires Subaru Connected Services Account
 params:
-  - preset: vehicle-common
-  - name: user
-    required: true
-  - name: password
-    required: true
+  - preset: vehicle-base
   - name: vin
     example: JF...
-  - name: cache
-    default: 15m
 render: |
   type: subaru
-  {{ include "vehicle-common" . }}
-  user: {{ .user }}
-  password: {{ .password }}
-  vin: {{ .vin }}
-  cache: {{ .cache }}
+  {{ include "vehicle-base" . }}
