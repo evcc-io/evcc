@@ -28,7 +28,7 @@ func init() {
 }
 
 // NewEcoFlowPowerOceanFromConfig creates an EcoFlow PowerOcean meter from generic config
-func NewEcoFlowPowerOceanFromConfig(other map[string]interface{}) (api.Meter, error) {
+func NewEcoFlowPowerOceanFromConfig(other map[string]any) (api.Meter, error) {
 	cc := struct {
 		AccessKey string
 		SecretKey string
@@ -59,9 +59,11 @@ func NewEcoFlowPowerOceanFromConfig(other map[string]interface{}) (api.Meter, er
 	if err != nil {
 		return nil, err
 	}
+
 	if cc.Usage == "battery" {
 		return &EcoFlowPowerOceanBattery{m}, nil
 	}
+
 	return m, nil
 }
 
@@ -128,7 +130,7 @@ func (m *EcoFlowPowerOcean) CurrentPower() (float64, error) {
 }
 
 // extractFloat extracts a float64 or int value from a map by key.
-func extractFloat(data map[string]interface{}, key string) (float64, error) {
+func extractFloat(data map[string]any, key string) (float64, error) {
 	if data != nil {
 		if v, ok := data[key]; ok {
 			return cast.ToFloat64E(v)
