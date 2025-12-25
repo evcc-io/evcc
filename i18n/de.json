@@ -99,8 +99,8 @@
     },
     "control": {
       "description": "Normalerweise sind die Standardwerte in Ordnung. Ändere nur etwas, wenn du weißt, was du tust.",
-      "descriptionInterval": "Regelkreis Aktualisierungszyklus in Sekunden. Definiert, wie oft evcc Messdaten liest, die Ladeleistung anpasst und die Benutzeroberfläche aktualisiert. Kurze Intervalle (< 30s) können zu Oszillationen und unerwünschtem Verhalten führen.",
-      "descriptionResidualPower": "Verschiebt den Betriebspunkt des Regelkreises. Wenn du eine Hausbatterie hast, wird empfohlen, einen Wert von 100 W einzustellen. Auf diese Weise erhält die Batterie eine leichte Priorität gegenüber dem Netzbezug.",
+      "descriptionInterval": "Aktualisierungszyklus in Sekunden. Definiert, wie oft evcc Messdaten liest und die Ladung anpasst. Die Standardeinstellung von 30 Sekunden ist eine sichere Wahl. Geräte wie Fahrzeuge, Wallbox und Wechselrichter brauchen in der Regel mehrere Sekunden um ihr Verhalten anzupassen. Wenn deine Komponenten schnell reagieren kannst du niedrigere Werte verwenden. Wir empfehlen dringend nicht unter 10 Sekunden zu gehen. Wenn du komisches Regelverhalten oder springende Leistungswerte beobachtest wähle ein größeres Intervall.",
+      "descriptionResidualPower": "Verschiebt den Betriebspunkt des Regelkreises. Der Standardwert von 100 W gibt Hausbatterien eine leichte Priorität gegenüber dem Netzbezug. Wenn du keine Batterie hast, kannst du den Wert auf 0 W setzen, um den Netzbezug im PV-Modus zu minimieren.",
       "labelInterval": "Aktualisierungsintervall",
       "labelResidualPower": "Residualleistung",
       "title": "Regelverhalten"
@@ -174,6 +174,10 @@
     "eebus": {
       "description": "Grundkonfiguration für die Kommunikation mit anderen EEBus-Geräten.",
       "title": "EEBus"
+    },
+    "experimental": {
+      "description": "Aktiviert die Benutzeroberfläche für Funktionen, die sich noch in der Testphase befinden und sich in zukünftigen Versionen ändern können.",
+      "title": "Experimentell"
     },
     "ext": {
       "description": "Erfasst Energiewerte ungeregelter Verbraucher (bspw. Kühlschrank, Waschmaschine, etc.) für Statistikzwecke. Diese Zähler können auch für Lastmanagement verwendet werden (bspw. Unterverteilung).",
@@ -383,6 +387,8 @@
       "title": "Konfiguration",
       "unconfigured": "nicht konfiguriert",
       "vehicles": "Meine Fahrzeuge",
+      "welcomeBannerText": "Lege zunächst eine **Wallbox oder Heizung** an. Falls du noch keine echte Wallbox hast, wähle eine **Demowallbox**.",
+      "welcomeBannerTitle": "Los geht's mit der Konfiguration!",
       "yaml": "Geräte aus evcc.yaml sind nicht editierbar."
     },
     "messaging": {
@@ -832,6 +838,8 @@
       "stepTwo": "Schritt 2: Zusätzliche Informationen kopieren",
       "title": "GitHub Problem-Zusammenfassung"
     },
+    "system": "System",
+    "timezone": "Zeitzone",
     "title": "Problem melden",
     "version": "Version"
   },
@@ -1201,7 +1209,7 @@
     },
     "hiddenFeatures": {
       "label": "Experimentell",
-      "value": "Experimentelle UI-Funktionen zeigen."
+      "value": "Experimentelle Funktionen anzeigen."
     },
     "language": {
       "auto": "Automatisch",

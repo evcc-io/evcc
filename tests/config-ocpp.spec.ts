@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
 import { startSimulator, stopSimulator, simulatorUrl } from "./simulator";
-import { expectModalVisible, enableExperimental } from "./utils";
+import { expectModalVisible } from "./utils";
 import axios from "axios";
 
 test.use({ baseURL: baseUrl() });
@@ -22,7 +22,6 @@ test.describe("ocpp", () => {
   test("ocpp modal", async ({ page }) => {
     // Navigate to config page
     await page.goto("/#/config");
-    await enableExperimental(page, true);
 
     // Open OCPP card
     const ocppCard = page.getByTestId("ocpp");
@@ -55,7 +54,6 @@ test.describe("ocpp", () => {
 
   test("create ocpp charger", async ({ page }) => {
     await page.goto("/#/config");
-    await enableExperimental(page, true);
 
     // Open loadpoint modal and select charging point type
     await page.getByRole("button", { name: "Add charger or heater" }).click();

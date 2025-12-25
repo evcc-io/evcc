@@ -58,8 +58,16 @@
       "chargers": "EV opladere",
       "generic": "Generisk integration",
       "heatingdevices": "Varmeenheder",
+      "ocppConfirmContinue": "Din lader er endnu ikke forbundet til evcc. Vil du fortsætte alligevel?",
+      "ocppConnected": "Forbundet!",
+      "ocppDescription": "evcc indeholder en OCPP-server. Følg disse trin:",
       "ocppHelp": "Kopier denne URL til konfigurationen af din oplader. Se producentens manual for detaljer. Opladeren vil automatisk tilføje sin unikke identifikator (stations-ID) til URL'en. I sjældne tilfælde skal du muligvis angive identifikatoren manuelt. Eksempel: `{url}`",
       "ocppLabel": "OCPP-Server URL",
+      "ocppNextStep": "Fortsæt",
+      "ocppStep1": "Indstil din lader til at bruge evcc som OCPP-server.",
+      "ocppStep2": "Afvent, at din lader tilslutter sig evcc.",
+      "ocppStep3": "Fortsæt og fuldfør konfigurationen.",
+      "ocppWaiting": "Venter på forbindelse",
       "switchsockets": "Omskiftelige stikkontakter",
       "template": "Fabrikant",
       "titleAdd": {
@@ -109,10 +117,12 @@
       "chargedEnergy": "Opladet",
       "co2": "Elnettet CO₂",
       "configured": "Konfigureret",
+      "connections": "Tilslutninger",
       "controllable": "Kan styres",
       "currency": "Møntenhed",
       "current": "Ström",
       "currentRange": "Strømstyrke",
+      "detected": "Registreret",
       "dimmed": "Reduceret",
       "enabled": "Aktiveret",
       "energy": "Energi",
@@ -474,6 +484,23 @@
       "labelSchema": "Skema",
       "title": "Netværk"
     },
+    "ocpp": {
+      "connectedChargers": "Tilsluttede ladere",
+      "connectionStatus": "Konfigurerede stations-ID’er",
+      "connectionStatusHelp": "Forbindelsesstatus for konfigurerede ladere.",
+      "detectedChargers": "Registrerede stations-ID’er",
+      "detectedHelp": "Disse ladere har forsøgt at forbinde til evcc. For at bruge en lader skal du oprette et loadpoint med dens stations-ID.",
+      "noChargers": "Ingen OCPP-ladere fundet.",
+      "noStations": "Ingen stationer tilsluttet",
+      "status": {
+        "configured": "Ikke tilsluttet",
+        "connected": "Tilsluttet",
+        "unknown": "Ukendt"
+      },
+      "title": "OCPP Server",
+      "url": "Server URL",
+      "urlHelp": "Kopier denne URL til din laders opsætning. Tjek producentens vejledning for detaljer. Laderen tilføjer normalt automatisk sit unikke ID (stations-id) til URL’en. I sjældne tilfælde skal ID’et angives manuelt. Eksempel: {url}"
+    },
     "options": {
       "boolean": {
         "no": "nej",
@@ -616,6 +643,8 @@
       "maximumCurrentHelp": "Skal være højere end minimal strømstyrke.",
       "maximumPhases": "Maksimal antal faser",
       "maximumPhasesHelp": "Hvor mange faser kan dette køretøj oplades med? Bruges til at beregne det krævede minimale soloverskud og planens varighed.",
+      "maximumPower": "Maksimal ladeeffekt",
+      "maximumPowerHelp": "Maksimal effekt, som køretøjet kan oplades med",
       "minimumCurrent": "Minimal strømstyrke",
       "minimumCurrentHelp": "Gå kun under 6A, hvis du ved, hvad du har med at gøre.",
       "online": "Køretøj med online API",

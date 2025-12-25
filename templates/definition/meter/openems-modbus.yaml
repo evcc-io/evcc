@@ -13,8 +13,8 @@ requirements:
       ##### Lizenzhinweis:
       Für FENECON FEMS Systeme ist für die aktive Batteriesteuerung eine kommerzielle Lizenz *FEMS App Modbus/TCP Schreibzugriff* erforderlich.<br/><br/>
       ##### FEMS-Dokumentation:
-      - [FEMS App Modbus/TCP – Lesezugriff](https://docs.fenecon.de/de/fems/fems-app/App_ModbusTCP_Lesezugriff.html)
-      - [FEMS App Modbus/TCP – Schreibzugriff](https://docs.fenecon.de/de/fems/fems-app/App_ModbusTCP_Schreibzugriff.html)
+      - [FEMS App Modbus/TCP — Lesezugriff](https://docs.fenecon.de/de/fems/fems-app/App_ModbusTCP_Lesezugriff.html)
+      - [FEMS App Modbus/TCP — Schreibzugriff](https://docs.fenecon.de/de/fems/fems-app/App_ModbusTCP_Schreibzugriff.html)
       ##### OpenEMS-Dokumentation:
       - [OpenEMS Edge Api Modbus Controller](https://openems.github.io/openems.io/openems/latest/edge/controller.html#_api_modbus)
     en: |
@@ -116,11 +116,8 @@ params:
     type: duration
     default: 60s
     description:
-      de: FEMS/OpenEMS Batteriesteuerung API-Timeout
-      en: FEMS/OpenEMS battery control API timeout
-    help:
-      de: FEMS/OpenEMS Standard 60s
-      en: FEMS/OpenEMS standard 60s
+      de: Batteriesteuerung API-Timeout
+      en: battery control API timeout
     usages: ["battery"]
     advanced: true
   - name: minsoc
@@ -216,6 +213,7 @@ render: |
               encoding: float32
       - case: 3 # charge
         set:
+          {{- if .maxchargepower }}
           source: const
           value: {{ mul .maxchargepower -1 }} # charge power is negative
           set:
@@ -225,6 +223,10 @@ render: |
               address: {{ .battery_set_register }}
               type: writemultiple
               encoding: float32
+          {{- else }}
+          source: error
+          error: ErrNotAvailable
+          {{- end }}              
   {{- end }}
   minsoc: {{ .minsoc }} # %
   maxsoc: {{ .maxsoc }} # %
