@@ -115,7 +115,7 @@ render: |
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
-              address: 1034 # Battery charge power (DC) setpoint, absolute [W]
+              address: 1040 # Battery max. discharge power limit, absolute [W]
               type: writemultiple
               encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
       - case: 3 # charge
