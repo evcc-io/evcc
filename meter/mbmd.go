@@ -112,19 +112,19 @@ func NewModbusMbmdFromConfig(ctx context.Context, other map[string]any) (api.Met
 	}
 
 	// decorate currents
-	currentsG, err := m.buildPhaseProviders(ops, cc.Currents)
+	currentsG, err := m.buildPhaseProviders(ops, cc.Currents, true)
 	if err != nil {
 		return nil, fmt.Errorf("currents: %w", err)
 	}
 
 	// decorate voltages
-	voltagesG, err := m.buildPhaseProviders(ops, cc.Voltages)
+	voltagesG, err := m.buildPhaseProviders(ops, cc.Voltages, false)
 	if err != nil {
 		return nil, fmt.Errorf("voltages: %w", err)
 	}
 
 	// decorate powers
-	powersG, err := m.buildPhaseProviders(ops, cc.Powers)
+	powersG, err := m.buildPhaseProviders(ops, cc.Powers, true)
 	if err != nil {
 		return nil, fmt.Errorf("powers: %w", err)
 	}
@@ -145,7 +145,7 @@ func NewModbusMbmdFromConfig(ctx context.Context, other map[string]any) (api.Met
 	return decorateModbusMbmd(m, totalEnergy, currentsG, voltagesG, powersG, soc, cc.batteryCapacity.Decorator()), nil
 }
 
-func (m *ModbusMbmd) buildPhaseProviders(ops []rs485.Operation, readings []string) (func() (float64, float64, float64, error), error) {
+func (m *ModbusMbmd) buildPhaseProviders(ops []rs485.Operation, readings []string, allowInversion bool) (func() (float64, float64, float64, error), error) {
 	if len(readings) == 0 {
 		return nil, nil
 	}
@@ -163,7 +163,7 @@ func (m *ModbusMbmd) buildPhaseProviders(ops []rs485.Operation, readings []strin
 
 		// Capture variables for closure
 		op := opWithInv.op
-		invert := opWithInv.invert
+		invert := opWithInv.invert && allowInversion
 		phases[idx] = func() (float64, error) {
 			return m.floatGetterWithInversion(op, invert)
 		}
