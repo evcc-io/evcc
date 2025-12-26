@@ -497,7 +497,7 @@
       "connectionStatus": "Konfiguréiert Station-IDs",
       "connectionStatusHelp": "Verbindungsstatus vun de konfiguréierte Wallboxen.",
       "detectedChargers": "Erkannt Station-IDs",
-      "detectedHelp": "Dës Wallboxen hu probéiert sech mat evcc ze verbannen. Fir eng Dës Ladegeräter hunn probéiert sech mat evcc ze verbannen. Fir eng Wallbox ze benotzen, erstellt eng Wallbox mat senger Statiouns-ID.",
+      "detectedHelp": "Dës Wallboxen hu probéiert sech mat evcc ze verbannen. Fir eng Wallbox ze benotzen, erstellt eng Wallbox mat senger Statiouns-ID.",
       "noChargers": "Keng OCPP-Wallbox erkannt.",
       "noStations": "Keng Statioune verbonnen",
       "status": {
