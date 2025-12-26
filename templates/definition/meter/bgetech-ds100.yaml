@@ -82,7 +82,7 @@ render: |
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 0x0410 # Active power of A phase
+      address: 0x041A # Active power of A phase
       type: holding
       decode: int32
     {{- if eq .usage "pv" }}
@@ -91,7 +91,7 @@ render: |
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 0x0412 # Active power of B phase
+      address: 0x041C # Active power of B phase
       type: holding
       decode: int32
     {{- if eq .usage "pv" }}
@@ -100,7 +100,7 @@ render: |
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 0x0414 # Active power of C phase
+      address: 0x041E # Active power of C phase
       type: holding
       decode: int32
     {{- if eq .usage "pv" }}
