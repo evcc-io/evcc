@@ -99,8 +99,8 @@
     },
     "control": {
       "description": "Standardværdierne er normalt fine. Kun hvis du ved, hvad du gør, kan du ændre dem.",
-      "descriptionInterval": "Opdateringscyklus i sekunder. Definerer, hvor ofte evcc læser målerdata, justerer ladeeffekt og opdaterer brugergrænsefladen. Korte intervaller (< 30s) kan forårsage store udsving og fejlagtigt resultat.",
-      "descriptionResidualPower": "Skifter driftspunktet for kontrolsløjfen. Hvis du har et hjemmebatteri, anbefales det at indstille en værdi på 100 W. På denne måde vil batteriet få en lille prioritet frem for netbrug.",
+      "descriptionInterval": "Opdateringsinterval i sekunder. Angiver, hvor ofte evcc aflæser målerdata og justerer opladningen. Standardværdien på 30 sekunder er et sikkert valg. Enheder som køretøjer, ladere og invertere har typisk brug for flere sekunder til at tilpasse deres adfærd. Hvis dine komponenter reagerer hurtigt, kan du anvende lavere værdier. Vi anbefaler kraftigt ikke at gå under 10 sekunder. Hvis du observerer ustabil regulering eller springende effektværdier, bør du vælge et længere interval.",
+      "descriptionResidualPower": "Forskubber reguleringspunktet. Standardværdien på 100 W giver hjemmebatteriet let prioritet over elnettet. Uden batteri kan værdien sættes til 0 W for at minimere netforbrug i soltilstand.",
       "labelInterval": "Opdateringsinterval",
       "labelResidualPower": "Tilbageværende effekt",
       "title": "kontrol adfærd"
