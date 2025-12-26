@@ -1,7 +1,7 @@
 {
   "authProviders": {
     "authCode": "Código de autorização",
-    "authCodeHelp": "Copie este código e utilize-o na próxima etapa. Válido por {duração}.",
+    "authCodeHelp": "Copie este código e utilize-o na próxima etapa. Válido por {duration}.",
     "authorizationFailed": "A autorização falhou",
     "authorizationRequired": "Autorização necessária",
     "authorizationSuccessful": "Autorização bem-sucedida",
