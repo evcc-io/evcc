@@ -19,6 +19,7 @@ type circuitStruct struct {
 	MaxPower   float64  `json:"maxPower,omitempty"`
 	MaxCurrent float64  `json:"maxCurrent,omitempty"`
 	Dimmed     bool     `json:"dimmed"`
+	Curtailed  bool     `json:"curtailed"`
 }
 
 // publishCircuits returns a list of circuit titles
@@ -37,6 +38,7 @@ func (site *Site) publishCircuits() {
 			MaxPower:   instance.GetMaxPower(),
 			MaxCurrent: instance.GetMaxCurrent(),
 			Dimmed:     instance.Dimmed(),
+			Curtailed:  instance.Curtailed(),
 		}
 
 		if instance.GetMaxCurrent() > 0 {
