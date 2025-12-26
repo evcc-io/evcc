@@ -24,7 +24,7 @@ type operationWithInversion struct {
 	invert bool
 }
 
-// rs485FindDeviceOp checks is RS485 device supports operation.
+// rs485FindDeviceOp checks if RS485 device supports operation.
 // If the name starts with '-', the value will be inverted.
 func rs485FindDeviceOp(ops []rs485.Operation, name string) (operationWithInversion, error) {
 	// Check for inversion prefix

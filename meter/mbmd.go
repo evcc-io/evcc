@@ -105,8 +105,11 @@ func NewModbusMbmdFromConfig(ctx context.Context, other map[string]any) (api.Met
 		if err != nil {
 			return nil, fmt.Errorf("invalid measurement for energy: %s", cc.Energy)
 		}
+		if opWithInv.invert {
+			// Energy inversion is not supported - energy values should always be positive
+			return nil, fmt.Errorf("energy inversion not supported for measurement: %s", cc.Energy)
+		}
 		m.opEnergy = opWithInv.op
-		// Energy inversion is not supported - energy values should always be positive
 
 		totalEnergy = m.totalEnergy
 	}
@@ -136,9 +139,12 @@ func NewModbusMbmdFromConfig(ctx context.Context, other map[string]any) (api.Met
 		if err != nil {
 			return nil, fmt.Errorf("invalid measurement for soc: %s", cc.Soc)
 		}
-		m.opSoc = opWithInv.op
 		// SOC inversion is not supported - SOC values should always be positive
+		if opWithInv.invert {
+			return nil, fmt.Errorf("soc inversion not supported: %s", cc.Soc)
+		}
 
+		m.opSoc = opWithInv.op
 		soc = m.soc
 	}
 
