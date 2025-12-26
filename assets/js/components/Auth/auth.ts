@@ -34,7 +34,6 @@ export async function updateAuthStatus() {
       auth.loggedIn = false;
     }
     if (res.status === 404) {
-      auth.loggedIn = null;
       console.log("unable to fetch auth status, server not ready yet", res);
     }
     if (res.status === 500) {
