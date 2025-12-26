@@ -17,11 +17,12 @@ import (
 
 // ModbusMbmd is an api.Meter implementation with configurable getters and setters.
 type ModbusMbmd struct {
-	conn     *modbus.Connection
-	device   *rs485.RS485
-	opPower  rs485.Operation
-	opEnergy rs485.Operation
-	opSoc    rs485.Operation
+	conn        *modbus.Connection
+	device      *rs485.RS485
+	opPower     rs485.Operation
+	opEnergy    rs485.Operation
+	opSoc       rs485.Operation
+	invertPower bool
 }
 
 func init() {
@@ -90,18 +91,22 @@ func NewModbusMbmdFromConfig(ctx context.Context, other map[string]any) (api.Met
 
 	ops := device.Producer().Produce()
 
-	m.opPower, err = rs485FindDeviceOp(ops, cc.Power)
+	opWithInv, err := rs485FindDeviceOp(ops, cc.Power)
 	if err != nil {
 		return nil, fmt.Errorf("invalid measurement for power: %s", cc.Power)
 	}
+	m.opPower = opWithInv.op
+	m.invertPower = opWithInv.invert
 
 	// decorate energy
 	var totalEnergy func() (float64, error)
 	if cc.Energy != "" {
-		m.opEnergy, err = rs485FindDeviceOp(ops, cc.Energy)
+		opWithInv, err = rs485FindDeviceOp(ops, cc.Energy)
 		if err != nil {
 			return nil, fmt.Errorf("invalid measurement for energy: %s", cc.Energy)
 		}
+		m.opEnergy = opWithInv.op
+		// Energy inversion is not supported - energy values should always be positive
 
 		totalEnergy = m.totalEnergy
 	}
@@ -127,10 +132,12 @@ func NewModbusMbmdFromConfig(ctx context.Context, other map[string]any) (api.Met
 	// decorate soc
 	var soc func() (float64, error)
 	if cc.Soc != "" {
-		m.opSoc, err = rs485FindDeviceOp(ops, cc.Soc)
+		opWithInv, err = rs485FindDeviceOp(ops, cc.Soc)
 		if err != nil {
 			return nil, fmt.Errorf("invalid measurement for soc: %s", cc.Soc)
 		}
+		m.opSoc = opWithInv.op
+		// SOC inversion is not supported - SOC values should always be positive
 
 		soc = m.soc
 	}
@@ -149,13 +156,16 @@ func (m *ModbusMbmd) buildPhaseProviders(ops []rs485.Operation, readings []strin
 
 	var phases [3]func() (float64, error)
 	for idx, reading := range readings {
-		opCurrent, err := rs485FindDeviceOp(ops, reading)
+		opWithInv, err := rs485FindDeviceOp(ops, reading)
 		if err != nil {
 			return nil, fmt.Errorf("invalid measurement [%d]: %s", idx, reading)
 		}
 
+		// Capture variables for closure
+		op := opWithInv.op
+		invert := opWithInv.invert
 		phases[idx] = func() (float64, error) {
-			return m.floatGetter(opCurrent)
+			return m.floatGetterWithInversion(op, invert)
 		}
 	}
 
@@ -175,9 +185,23 @@ func (m *ModbusMbmd) floatGetter(op rs485.Operation) (float64, error) {
 	return res.Value, err
 }
 
+// floatGetterWithInversion executes configured modbus read operation and optionally inverts the result
+func (m *ModbusMbmd) floatGetterWithInversion(op rs485.Operation, invert bool) (float64, error) {
+	val, err := m.floatGetter(op)
+	if err != nil {
+		return val, err
+	}
+
+	if invert {
+		return -val, nil
+	}
+
+	return val, nil
+}
+
 // CurrentPower implements the api.Meter interface
 func (m *ModbusMbmd) CurrentPower() (float64, error) {
-	return m.floatGetter(m.opPower)
+	return m.floatGetterWithInversion(m.opPower, m.invertPower)
 }
 
 // totalEnergy implements the api.MeterEnergy interface

@@ -18,18 +18,32 @@ func isRS485(model string) bool {
 	return false
 }
 
-// rs485FindDeviceOp checks is RS485 device supports operation
-func rs485FindDeviceOp(ops []rs485.Operation, name string) (op rs485.Operation, err error) {
+// operationWithInversion holds an operation and whether its value should be inverted
+type operationWithInversion struct {
+	op     rs485.Operation
+	invert bool
+}
+
+// rs485FindDeviceOp checks is RS485 device supports operation.
+// If the name starts with '-', the value will be inverted.
+func rs485FindDeviceOp(ops []rs485.Operation, name string) (operationWithInversion, error) {
+	// Check for inversion prefix
+	invert := false
+	if strings.HasPrefix(name, "-") {
+		invert = true
+		name = strings.TrimPrefix(name, "-")
+	}
+
 	measurement, err := meters.MeasurementString(name)
 	if err != nil {
-		return rs485.Operation{}, fmt.Errorf("invalid measurement: %s", name)
+		return operationWithInversion{}, fmt.Errorf("invalid measurement: %s", name)
 	}
 
 	for _, op := range ops {
 		if op.IEC61850 == measurement {
-			return op, nil
+			return operationWithInversion{op: op, invert: invert}, nil
 		}
 	}
 
-	return op, fmt.Errorf("unsupported measurement: %s", measurement.String())
+	return operationWithInversion{}, fmt.Errorf("unsupported measurement: %s", measurement.String())
 }
