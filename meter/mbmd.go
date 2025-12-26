@@ -22,7 +22,7 @@ type ModbusMbmd struct {
 	opPower     rs485.Operation
 	opEnergy    rs485.Operation
 	opSoc       rs485.Operation
-	invertPower bool
+	invertValue bool
 }
 
 func init() {
@@ -96,7 +96,7 @@ func NewModbusMbmdFromConfig(ctx context.Context, other map[string]any) (api.Met
 		return nil, fmt.Errorf("invalid measurement for power: %s", cc.Power)
 	}
 	m.opPower = opWithInv.op
-	m.invertPower = opWithInv.invert
+	m.invertValue = opWithInv.invert
 
 	// decorate energy
 	var totalEnergy func() (float64, error)
@@ -207,7 +207,7 @@ func (m *ModbusMbmd) floatGetterWithInversion(op rs485.Operation, invert bool) (
 
 // CurrentPower implements the api.Meter interface
 func (m *ModbusMbmd) CurrentPower() (float64, error) {
-	return m.floatGetterWithInversion(m.opPower, m.invertPower)
+	return m.floatGetterWithInversion(m.opPower, m.invertValue)
 }
 
 // totalEnergy implements the api.MeterEnergy interface

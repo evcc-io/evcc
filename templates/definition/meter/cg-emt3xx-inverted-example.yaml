@@ -1,0 +1,46 @@
+# Beispiel Template für einen CG EMT3xx Zähler mit invertierten Werten
+# Dies demonstriert die neue Inversions-Funktionalität für mbmd-Zähler
+
+template: cg-emt3xx-inverted-example
+products:
+  - brand: Carlo Gavazzi
+    description:
+      generic: ET330/ET340 (mit invertierter Leistung)
+params:
+  - name: usage
+    choice: ["grid", "charge"]
+  - name: modbus
+    choice: ["rs485", "tcpip"]
+
+render: |
+  type: mbmd
+  {{- include "modbus" . }}
+  model: cgex3x0
+  
+  # Beispiel 1: Normale Power-Messung
+  power: Power
+  
+  # Beispiel 2: Invertierte Power-Messung (mit "-" Präfix)
+  # power: -Power
+  
+  energy: Import
+  
+  currents:
+    - CurrentL1
+    - CurrentL2
+    - CurrentL3
+  
+  {{- if eq .usage "grid" }}
+  powers:
+    # Beispiel für invertierte Phasenleistungen
+    - -PowerL1
+    - -PowerL2
+    - -PowerL3
+  {{- end }}
+  
+  {{- if eq .usage "charge" }}
+  voltages:
+    - VoltageL1
+    - VoltageL2
+    - VoltageL3
+  {{- end }}
