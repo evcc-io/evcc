@@ -100,7 +100,7 @@ render: |
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 0x 041E # Active power of C phase
+      address: 0x041E # Active power of C phase
       type: holding
       decode: int32
     {{- if eq .usage "pv" }}
