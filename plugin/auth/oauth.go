@@ -71,6 +71,8 @@ func NewOAuthFromConfig(ctx context.Context, other map[string]any) (oauth2.Token
 var _ api.AuthProvider = (*OAuth)(nil)
 var _ oauth2.TokenSource = (*OAuth)(nil)
 
+// NewOAuth creates an oauth2.TokenSource supporting login via UI.
+// TokenSource is ensured to be unique per given oauth2.Config.
 func NewOAuth(ctx context.Context, name, device string, oc *oauth2.Config, opts ...func(o *OAuth)) (*OAuth, error) {
 	if name == "" {
 		return nil, errors.New("instance name must not be empty")
