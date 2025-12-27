@@ -889,11 +889,12 @@
       "modalTitle": "Тарифний план",
       "none": "немає",
       "planNumber": "План {number}",
-      "preconditionDescription": "Зарядіть {duration} перед відправленням для попередньої підготовки акумулятора.",
-      "preconditionLong": "Пізня зарядка",
-      "preconditionOptionAll": "все",
-      "preconditionOptionNo": "ні",
-      "preconditionShort": "Пізно",
+      "precondition": {
+        "description": "Зарядіть {duration} перед відправленням для попередньої підготовки акумулятора.",
+        "label": "Пізня зарядка",
+        "optionAll": "все",
+        "optionNo": "ні"
+      },
       "remove": "Yсувати",
       "repeating": "повторення",
       "repeatingPlans": "Повторювані плани",
