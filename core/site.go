@@ -506,15 +506,7 @@ func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) [
 
 		// power
 		var b bytes.Buffer
-		power, err := backoff.RetryWithData(func() (float64, error) {
-			start := time.Now()
-			f, err := meter.CurrentPower()
-			if err != nil {
-				d := time.Since(start)
-				fmt.Fprintf(&b, "%v !! %3dms %v\n", start, d.Milliseconds(), err)
-			}
-			return f, err
-		}, modbus.Backoff())
+		power, err := backoff.RetryWithData(meter.CurrentPower, modbus.Backoff())
 		if err == nil {
 			site.log.DEBUG.Printf("%s %d power: %.0fW", key, i+1, power)
 		} else {
