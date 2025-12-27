@@ -107,15 +107,19 @@ func (cp *CP) Setup(ctx context.Context, meterValues string, meterInterval time.
 
 	// see who's there
 	if cp.HasRemoteTriggerFeature {
-		if err := cp.TriggerMessageRequest(0, core.BootNotificationFeatureName); err != nil {
-			cp.log.DEBUG.Printf("failed triggering BootNotification: %v", err)
-		}
+		if cp.BootNotificationResult != nil {
+			cp.log.DEBUG.Printf("BootNotification is already here (BootNotificationResult set)")
+		} else {
+			// Noch keine BootNotification, daher Trigger senden und warten
+			if err := cp.TriggerMessageRequest(0, core.BootNotificationFeatureName); err != nil {
+				cp.log.DEBUG.Printf("failed triggering BootNotification: %v", err)
+			}
 
-		select {
-		case <-time.After(Timeout):
-			cp.log.DEBUG.Printf("BootNotification timeout")
-		case res := <-cp.bootNotificationRequestC:
-			cp.BootNotificationResult = res
+			select {
+			case <-time.After(Timeout):
+				cp.log.DEBUG.Printf("BootNotification timeout part2")
+			case <-cp.HasBootNotification():
+			}
 		}
 	}
 
