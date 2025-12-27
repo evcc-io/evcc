@@ -7,23 +7,19 @@ import (
 	"golang.org/x/oauth2"
 )
 
-type TokenRefresher interface {
-	RefreshToken(token *oauth2.Token) (*oauth2.Token, error)
-}
-
-type TokenSource struct {
+type refreshTokenSource struct {
 	mu        sync.Mutex
 	token     *oauth2.Token
-	refresher TokenRefresher
+	refresher func(token *oauth2.Token) (*oauth2.Token, error)
 }
 
-func RefreshTokenSource(token *oauth2.Token, refresher TokenRefresher) oauth2.TokenSource {
+func RefreshTokenSource(token *oauth2.Token, refresher func(token *oauth2.Token) (*oauth2.Token, error)) oauth2.TokenSource {
 	if token == nil {
 		// allocate an (expired) token or mergeToken will fail
 		token = new(oauth2.Token)
 	}
 
-	ts := &TokenSource{
+	ts := &refreshTokenSource{
 		token:     token,
 		refresher: refresher,
 	}
@@ -31,7 +27,7 @@ func RefreshTokenSource(token *oauth2.Token, refresher TokenRefresher) oauth2.To
 	return ts
 }
 
-func (ts *TokenSource) Token() (*oauth2.Token, error) {
+func (ts *refreshTokenSource) Token() (*oauth2.Token, error) {
 	ts.mu.Lock()
 	defer ts.mu.Unlock()
 
@@ -39,7 +35,7 @@ func (ts *TokenSource) Token() (*oauth2.Token, error) {
 		return ts.token, nil
 	}
 
-	token, err := ts.refresher.RefreshToken(ts.token)
+	token, err := ts.refresher(ts.token)
 	if err != nil {
 		return ts.token, err
 	}

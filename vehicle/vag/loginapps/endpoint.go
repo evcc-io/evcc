@@ -84,13 +84,13 @@ func (v *Service) Refresh(token *Token) (*Token, error) {
 	return &t, err
 }
 
-// RefreshToken implements oauth.TokenRefresher
-func (v *Service) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
+// refreshToken renews the LoginApps token
+func (v *Service) refreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	res, err := v.Refresh((*Token)(token))
 	return (*oauth2.Token)(res), err
 }
 
 // TokenSource creates a refreshing oauth2 token source
 func (v *Service) TokenSource(token *Token) oauth2.TokenSource {
-	return oauth.RefreshTokenSource((*oauth2.Token)(token), v)
+	return oauth.RefreshTokenSource((*oauth2.Token)(token), v.refreshToken)
 }

@@ -56,7 +56,7 @@ func (v *Identity) Login() error {
 		return err
 	}
 
-	v.TokenSource = oauth2.ReuseTokenSourceWithExpiry(token, oauth.RefreshTokenSource(token, v), 15*time.Minute)
+	v.TokenSource = oauth2.ReuseTokenSourceWithExpiry(token, oauth.RefreshTokenSource(token, v.refreshToken), 15*time.Minute)
 
 	return nil
 }
@@ -112,7 +112,7 @@ func (v *Identity) retrieveToken(data url.Values) (*oauth2.Token, error) {
 	return nil, err
 }
 
-func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
+func (v *Identity) refreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	data := url.Values{
 		"refresh_token": {token.RefreshToken},
 		"grant_type":    {"refresh_token"},

@@ -64,7 +64,7 @@ func (v *Identity) Login() error {
 		return fmt.Errorf("login failed: %w", err)
 	}
 
-	v.TokenSource = oauth.RefreshTokenSource(token, v)
+	v.TokenSource = oauth2.ReuseTokenSource(token, oauth.BootstrapTokenSource(v.login))
 	return nil
 }
 
@@ -95,10 +95,4 @@ func (v *Identity) login() (*oauth2.Token, error) {
 		RefreshToken: res.RefreshToken,
 		Expiry:       time.Now().Add(time.Duration(expiresIn) * time.Second),
 	}, nil
-}
-
-// RefreshToken implements oauth.TokenRefresher
-// US API doesn't have a refresh endpoint, so we re-login with credentials
-func (v *Identity) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
-	return v.login()
 }

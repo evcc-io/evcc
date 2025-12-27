@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/oauth2"
 )
@@ -15,10 +14,10 @@ type tokenSource struct {
 }
 
 func TokenSource(log *util.Logger, token *oauth2.Token) oauth2.TokenSource {
-	return oauth.RefreshTokenSource(token, &tokenSource{log})
+	return oauth2.ReuseTokenSource(token, &tokenSource{log})
 }
 
-func (ts *tokenSource) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
+func (ts *tokenSource) Token() (*oauth2.Token, error) {
 	//	"Content-Type: application/json" \
 	// --request POST \
 	// https://console.corrently.io/v2.0/auth/requestToken
