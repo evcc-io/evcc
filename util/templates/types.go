@@ -171,14 +171,6 @@ type LinkedTemplate struct {
 	ExcludeTemplate string // only consider this if no device of the named linked template was added
 }
 
-// ServiceConfig holds structured service configuration for fetching param choices
-// Service params are always stored as any to support native types (numbers, floats, etc.)
-type ServiceConfig struct {
-	Endpoint     string         `json:",omitempty" yaml:",omitempty"` // optional service endpoint (e.g., "modbus/read"), can be omitted if same as param's service value
-	Params       map[string]any `json:",omitempty" yaml:",omitempty"` // params with placeholders like {host}
-	Dependencies [][]string     `json:",omitempty" yaml:",omitempty"` // dependency groups with OR logic
-}
-
 // Param is a proxy template parameter
 // Params can be defined:
 // 1. in the template: uses entries in 4. for default properties and values, can be overwritten here
@@ -208,10 +200,8 @@ type Param struct {
 	Usages      []string     `json:",omitempty"` // restrict param to these usage types, e.g. "battery" for home battery capacity
 	Type        ParamType    // string representation of the value type, "string" is default
 	Choice      []string     `json:",omitempty"` // defines a set of choices, e.g. "grid", "pv", "battery", "charge" for "usage"
+	Service     string       `json:",omitempty"` // defines a service to provide choices
 	AllInOne    bool         `json:"-"`          // defines if the defined usages can all be present in a single device
-
-	// Service definitions
-	Service interface{} `json:",omitempty"` // service to provide choices: string (shorthand) or ServiceConfig (with params/dependencies)
 
 	// TODO move somewhere else should not be part of the param definition
 	Baudrate int    `json:",omitempty"` // device specific default for modbus RS485 baudrate
