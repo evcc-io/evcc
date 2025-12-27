@@ -132,35 +132,19 @@ export async function loadServiceValues(path: string) {
   }
 }
 
-// Convert values to strings, filtering out null/undefined
-const stringValues = (values: Record<string, any>): Record<string, string> =>
-  Object.entries(values).reduce(
-    (acc, [key, val]) => {
-      if (val !== undefined && val !== null) acc[key] = String(val);
-      return acc;
-    },
-    {} as Record<string, string>
-  );
-
-// Expand {modbus} meta-placeholder based on available connection values
-// TCP requires: host, port, id -> expands to uri={host}:{port}&id={id}
-// Serial requires: device, baudrate, comset, id -> expands to device={device}&baudrate={baudrate}&comset={comset}&id={id}
-const expandModbus = (url: string, values: Record<string, any>): string => {
-  if (!url.includes("{modbus}")) return url;
-
-  const hasSerial =
-    values.device !== undefined && values.device !== "" && values.device !== null;
-  const hasTcp = values.host !== undefined && values.host !== "" && values.host !== null;
-
-  let modbusParams: string;
-  if (hasSerial) {
-    modbusParams = "device={device}&baudrate={baudrate}&comset={comset}&id={id}";
-  } else if (hasTcp) {
-    modbusParams = "uri={host}:{port}&id={id}";
-  } else {
-    return url; // Can't expand yet - missing connection params
+// Expand {modbus} to actual connection params based on values
+const expandModbus = (service: string, values: Record<string, any>): string => {
+  if (!service.includes("{modbus}")) return service;
+  if (values["device"]) {
+    return service.replace(
+      "{modbus}",
+      "device={device}&baudrate={baudrate}&comset={comset}&id={id}"
+    );
   }
-  return url.replace("{modbus}", modbusParams);
+  if (values["host"]) {
+    return service.replace("{modbus}", "uri={host}:{port}&id={id}");
+  }
+  return service;
 };
 
 export const createServiceEndpoints = (params: TemplateParam[]): ParamService[] => {
@@ -169,20 +153,21 @@ export const createServiceEndpoints = (params: TemplateParam[]): ParamService[] 
       if (!param.Service || typeof param.Service !== "string") {
         return null;
       }
-
-      const service = param.Service;
+      const stringValues = (values: Record<string, any>): Record<string, string> =>
+        Object.entries(values).reduce(
+          (acc, [key, val]) => {
+            // Filter out 'modbus' - it's a meta-placeholder expanded by expandModbus
+            if (val !== undefined && val !== null && key !== "modbus") acc[key] = String(val);
+            return acc;
+          },
+          {} as Record<string, string>
+        );
 
       return {
         name: param.Name,
-        dependencies: extractPlaceholders(service),
-        url: (values: Record<string, any>) => {
-          const expanded = expandModbus(service, values);
-          // Filter out 'modbus' - it's a meta-placeholder, not a value
-          const filtered = Object.fromEntries(
-            Object.entries(values).filter(([k]) => k !== "modbus")
-          );
-          return replacePlaceholders(expanded, stringValues(filtered));
-        },
+        dependencies: extractPlaceholders(param.Service),
+        url: (values: Record<string, any>) =>
+          replacePlaceholders(expandModbus(param.Service!, values), stringValues(values)),
       } as ParamService;
     })
     .filter((endpoint): endpoint is ParamService => endpoint !== null);
@@ -190,24 +175,29 @@ export const createServiceEndpoints = (params: TemplateParam[]): ParamService[] 
 
 export const fetchServiceValues = async (
   templateParams: TemplateParam[],
-  values: DeviceValues,
-  loader = loadServiceValues
+  values: DeviceValues
 ): Promise<Record<string, string[]>> => {
   const endpoints = createServiceEndpoints(templateParams);
   const result: Record<string, string[]> = {};
 
   await Promise.all(
     endpoints.map(async (endpoint) => {
-      // Build URL - expansion handles modbus connection type selection
-      const url = endpoint.url(values);
-
-      // Skip if URL still contains unresolved placeholders
-      if (url.includes("{")) {
+      const params: Record<string, any> = {};
+      endpoint.dependencies.forEach((dependency) => {
+        // For {modbus}, check actual connection params instead
+        if (dependency === "modbus") {
+          if (values["host"] || values["device"]) params[dependency] = true;
+        } else if (values[dependency]) {
+          params[dependency] = values[dependency];
+        }
+      });
+      if (Object.keys(params).length !== endpoint.dependencies.length) {
+        // missing dependency values, skip
         return;
       }
-
-      const data = await loader(url);
-      if (data.length) {
+      const url = endpoint.url(values);
+      const data = await loadServiceValues(url);
+      if (data) {
         result[endpoint.name] = data;
       }
     })
