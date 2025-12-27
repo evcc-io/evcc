@@ -8,16 +8,6 @@ import (
 	"golang.org/x/oauth2"
 )
 
-type tkr struct{}
-
-func (tkr *tkr) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
-	return (&oauth2.Token{
-		AccessToken: "new",
-	}).WithExtra(map[string]any{
-		"foo": "bar",
-	}), nil
-}
-
 func TestMerge(t *testing.T) {
 	ts := &refreshTokenSource{
 		token: &oauth2.Token{
@@ -25,7 +15,13 @@ func TestMerge(t *testing.T) {
 			RefreshToken: "refresh",
 			Expiry:       time.Now(),
 		},
-		refresher: new(tkr),
+		refresher: func(_ *oauth2.Token) (*oauth2.Token, error) {
+			return (&oauth2.Token{
+				AccessToken: "new",
+			}).WithExtra(map[string]any{
+				"foo": "bar",
+			}), nil
+		},
 	}
 
 	r, err := ts.Token()
