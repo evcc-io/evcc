@@ -11,7 +11,7 @@ type TokenRefresher interface {
 	RefreshToken(token *oauth2.Token) (*oauth2.Token, error)
 }
 
-type TokenSource struct {
+type refreshTokenSource struct {
 	mu        sync.Mutex
 	token     *oauth2.Token
 	refresher TokenRefresher
@@ -23,7 +23,7 @@ func RefreshTokenSource(token *oauth2.Token, refresher TokenRefresher) oauth2.To
 		token = new(oauth2.Token)
 	}
 
-	ts := &TokenSource{
+	ts := &refreshTokenSource{
 		token:     token,
 		refresher: refresher,
 	}
@@ -31,7 +31,7 @@ func RefreshTokenSource(token *oauth2.Token, refresher TokenRefresher) oauth2.To
 	return ts
 }
 
-func (ts *TokenSource) Token() (*oauth2.Token, error) {
+func (ts *refreshTokenSource) Token() (*oauth2.Token, error) {
 	ts.mu.Lock()
 	defer ts.mu.Unlock()
 
