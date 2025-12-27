@@ -268,7 +268,15 @@ export default defineComponent({
 				this.setConnectionAndProtocolByModbus(newValue);
 			}
 		},
-		connection() {
+		connection(newValue: MODBUS_CONNECTION, oldValue: MODBUS_CONNECTION) {
+			if (newValue !== oldValue) {
+				// Clear connection-specific parameters to ensure correct dependency group is used
+				if (newValue === MODBUS_CONNECTION.TCPIP) {
+					this.$emit("update:device", undefined);
+				} else if (newValue === MODBUS_CONNECTION.SERIAL) {
+					this.$emit("update:host", undefined);
+				}
+			}
 			this.applyServiceDefault();
 		},
 		device(newValue: string | undefined) {

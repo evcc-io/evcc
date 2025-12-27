@@ -1,17 +1,43 @@
 <template>
-	<div v-if="unitValue" class="input-group" :class="inputClasses">
-		<input
-			:id="id"
-			v-model="value"
-			:type="inputType"
-			:step="step"
-			:placeholder="placeholder"
-			:required="required"
-			:aria-describedby="id + '_unit'"
-			class="form-control"
-			:class="{ 'text-end': endAlign }"
-		/>
-		<span :id="id + '_unit'" class="input-group-text">{{ unitValue }}</span>
+	<div v-if="unitValue" :class="sizeClass">
+		<div class="d-flex">
+			<div class="position-relative flex-grow-1">
+				<input
+					:id="id"
+					v-model="value"
+					:list="datalistId"
+					:type="inputType"
+					:step="step"
+					:placeholder="placeholder"
+					:required="required"
+					:aria-describedby="id + '_unit'"
+					:class="`${datalistId && serviceValues.length > 0 ? 'form-select' : 'form-control'} ${showClearButton ? 'has-clear-button' : ''} ${invalid ? 'is-invalid' : ''}`"
+					class="text-end"
+					style="border-top-right-radius: 0; border-bottom-right-radius: 0"
+					:autocomplete="masked || datalistId ? 'off' : null"
+				/>
+				<button
+					v-if="showClearButton"
+					type="button"
+					class="form-control-clear"
+					:aria-label="$t('config.general.clear')"
+					@click="value = ''"
+				>
+					&times;
+				</button>
+				<datalist v-if="showDatalist" :id="datalistId">
+					<option v-for="v in serviceValues" :key="v" :value="v">
+						{{ v }}
+					</option>
+				</datalist>
+			</div>
+			<span
+				:id="id + '_unit'"
+				class="input-group-text"
+				style="border-top-left-radius: 0; border-bottom-left-radius: 0"
+				>{{ unitValue }}</span
+			>
+		</div>
 	</div>
 	<div v-else-if="icons" class="d-flex flex-wrap">
 		<div
@@ -148,7 +174,15 @@ export default {
 			// no values
 			if (length === 0) return false;
 			// value selected, dont offer single same option again
-			if (this.value && this.serviceValues.includes(this.value)) return false;
+			// Convert both to strings for comparison to handle number/string type mismatches
+			const valueStr = String(this.value ?? "");
+			if (
+				this.value != null &&
+				valueStr !== "" &&
+				this.serviceValues.some((v) => String(v) === valueStr)
+			) {
+				return false;
+			}
 			return true;
 		},
 		showClearButton() {
@@ -294,7 +328,7 @@ export default {
 };
 </script>
 
-<style>
+<style scoped>
 input[type="number"] {
 	appearance: textfield;
 }
@@ -311,5 +345,37 @@ input[type="number"]::-webkit-inner-spin-button {
 }
 .w-min-200 {
 	min-width: min(200px, 100%);
+}
+
+/* Clear button styling */
+.form-control-clear {
+	position: absolute;
+	right: 0.75rem;
+	top: 50%;
+	transform: translateY(-50%);
+	z-index: 5;
+	background: none;
+	border: none;
+	color: #6c757d;
+	font-size: 1.5rem;
+	line-height: 1;
+	cursor: pointer;
+	padding: 0;
+	width: 1.5rem;
+	height: 1.5rem;
+}
+
+/* Adjust input padding when clear button is visible */
+.form-control.has-clear-button {
+	padding-right: 2rem;
+}
+
+/* For form-select with datalist */
+.form-select.has-clear-button {
+	padding-right: 2rem;
+}
+
+.form-select.has-clear-button + .form-control-clear {
+	right: 0.5rem;
 }
 </style>

@@ -329,15 +329,6 @@ export default defineComponent({
 		modbusCapabilities() {
 			return (this.modbus?.Choice || []) as ModbusCapability[];
 		},
-		modbusDefaults() {
-			const { ID, Comset, Baudrate, Port } = this.modbus || {};
-			return {
-				id: ID,
-				comset: Comset,
-				baudrate: Baudrate,
-				port: Port,
-			};
-		},
 		description() {
 			return this.template?.Requirements?.Description;
 		},
@@ -353,7 +344,6 @@ export default defineComponent({
 		},
 		apiData(): ApiData {
 			let data: ApiData = {
-				...this.modbusDefaults,
 				...this.values,
 			};
 			if (this.values.type === ConfigType.Template && this.templateName) {

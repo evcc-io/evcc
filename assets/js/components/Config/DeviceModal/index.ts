@@ -93,6 +93,20 @@ export function applyDefaultsFromTemplate(template: Template | null, values: Dev
     .forEach((p) => {
       values[p.Name] = p.Default;
     });
+
+  // Apply modbus defaults from template (for service dependency resolution)
+  const modbusParam = params.find((p) => p.Name === "modbus") as ModbusParam | undefined;
+  if (modbusParam) {
+    const modbusDefaults: Record<string, any> = {
+      id: modbusParam.ID,
+      port: modbusParam.Port,
+      comset: modbusParam.Comset,
+      baudrate: modbusParam.Baudrate,
+    };
+    Object.entries(modbusDefaults).forEach(([key, val]) => {
+      if (!values[key] && val) values[key] = val;
+    });
+  }
 }
 
 export function customChargerName(type: ConfigType, isHeating: boolean) {
@@ -118,16 +132,32 @@ export async function loadServiceValues(path: string) {
   }
 }
 
+// Expand {modbus} to actual connection params based on values
+const expandModbus = (service: string, values: Record<string, any>): string => {
+  if (!service.includes("{modbus}")) return service;
+  if (values["device"]) {
+    return service.replace(
+      "{modbus}",
+      "device={device}&baudrate={baudrate}&comset={comset}&id={id}"
+    );
+  }
+  if (values["host"]) {
+    return service.replace("{modbus}", "uri={host}:{port}&id={id}");
+  }
+  return service;
+};
+
 export const createServiceEndpoints = (params: TemplateParam[]): ParamService[] => {
   return params
     .map((param) => {
-      if (!param.Service) {
+      if (!param.Service || typeof param.Service !== "string") {
         return null;
       }
       const stringValues = (values: Record<string, any>): Record<string, string> =>
         Object.entries(values).reduce(
           (acc, [key, val]) => {
-            if (val !== undefined && val !== null) acc[key] = String(val);
+            // Filter out 'modbus' - it's a meta-placeholder expanded by expandModbus
+            if (val !== undefined && val !== null && key !== "modbus") acc[key] = String(val);
             return acc;
           },
           {} as Record<string, string>
@@ -137,7 +167,7 @@ export const createServiceEndpoints = (params: TemplateParam[]): ParamService[] 
         name: param.Name,
         dependencies: extractPlaceholders(param.Service),
         url: (values: Record<string, any>) =>
-          replacePlaceholders(param.Service!, stringValues(values)),
+          replacePlaceholders(expandModbus(param.Service!, values), stringValues(values)),
       } as ParamService;
     })
     .filter((endpoint): endpoint is ParamService => endpoint !== null);
@@ -154,7 +184,10 @@ export const fetchServiceValues = async (
     endpoints.map(async (endpoint) => {
       const params: Record<string, any> = {};
       endpoint.dependencies.forEach((dependency) => {
-        if (values[dependency]) {
+        // For {modbus}, check actual connection params instead
+        if (dependency === "modbus") {
+          if (values["host"] || values["device"]) params[dependency] = true;
+        } else if (values[dependency]) {
           params[dependency] = values[dependency];
         }
       });
@@ -162,7 +195,7 @@ export const fetchServiceValues = async (
         // missing dependency values, skip
         return;
       }
-      const url = endpoint.url(params);
+      const url = endpoint.url(values);
       const data = await loadServiceValues(url);
       if (data) {
         result[endpoint.name] = data;
