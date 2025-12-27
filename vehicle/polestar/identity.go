@@ -35,7 +35,7 @@ type Identity struct {
 }
 
 // NewIdentity creates Polestar identity
-func NewIdentity(log *util.Logger, user, password string) (*Identity, error) {
+func NewIdentity(log *util.Logger, user, password string) (oauth2.TokenSource, error) {
 	v := &Identity{
 		Helper:   request.NewHelper(log),
 		user:     user,
