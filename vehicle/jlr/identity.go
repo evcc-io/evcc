@@ -34,7 +34,7 @@ func Headers(device string, headers map[string]string) map[string]string {
 	return res
 }
 
-// NewIdentity creates Fiat identity
+// NewIdentity creates JLR identity
 func NewIdentity(log *util.Logger, user, password, device string) *Identity {
 	return &Identity{
 		Helper:   request.NewHelper(log),
