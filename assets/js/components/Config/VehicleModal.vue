@@ -140,6 +140,7 @@
 					property="identifiers"
 					size="w-100"
 					class="me-2"
+					rows
 				/>
 			</FormRow>
 		</template>
