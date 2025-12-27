@@ -22,12 +22,6 @@ export type Template = {
 
 export type TemplateParamUsage = "vehicle" | "battery" | "grid" | "pv" | "charger" | "aux" | "ext";
 
-export type ServiceConfig = {
-  endpoint?: string;
-  params?: Record<string, any>;
-  dependencies?: string[][];
-};
-
 export type TemplateParam = {
   Name: string;
   Required: boolean;
@@ -35,14 +29,13 @@ export type TemplateParam = {
   Deprecated: boolean;
   Default?: string | number | boolean;
   Choice?: string[];
-  Service?: string | ServiceConfig;
+  Service?: string;
   Usages?: TemplateParamUsage[];
 };
 
 export type ParamService = {
   name: string;
   dependencies: string[];
-  dependencyGroups?: string[][];
   url: (values: Record<string, any>) => string;
 };
 
@@ -149,79 +142,44 @@ const stringValues = (values: Record<string, any>): Record<string, string> =>
     {} as Record<string, string>
   );
 
-// Simple placeholder substitution without encoding (URLSearchParams handles encoding)
-const substitutePlaceholders = (template: string, vals: Record<string, string>): string =>
-  template.replace(/\{(\w+)\}/g, (match, key) => vals[key] ?? match);
+// Expand {modbus} meta-placeholder based on available connection values
+// TCP requires: host, port, id -> expands to uri={host}:{port}&id={id}
+// Serial requires: device, baudrate, comset, id -> expands to device={device}&baudrate={baudrate}&comset={comset}&id={id}
+const expandModbus = (url: string, values: Record<string, any>): string => {
+  if (!url.includes("{modbus}")) return url;
 
-// Check if all dependencies in a group have values
-const isGroupSatisfied = (group: string[], values: Record<string, any>): boolean =>
-  group.every((dep) => values[dep] !== undefined && values[dep] !== null && values[dep] !== "");
+  const hasSerial =
+    values.device !== undefined && values.device !== "" && values.device !== null;
+  const hasTcp = values.host !== undefined && values.host !== "" && values.host !== null;
+
+  let modbusParams: string;
+  if (hasSerial) {
+    modbusParams = "device={device}&baudrate={baudrate}&comset={comset}&id={id}";
+  } else if (hasTcp) {
+    modbusParams = "uri={host}:{port}&id={id}";
+  } else {
+    return url; // Can't expand yet - missing connection params
+  }
+  return url.replace("{modbus}", modbusParams);
+};
 
 export const createServiceEndpoints = (params: TemplateParam[]): ParamService[] => {
   return params
     .map((param) => {
-      if (!param.Service) {
+      if (!param.Service || typeof param.Service !== "string") {
         return null;
       }
 
-      // Handle string shorthand: "hardware/serial"
-      if (typeof param.Service === "string") {
-        return {
-          name: param.Name,
-          dependencies: extractPlaceholders(param.Service),
-          url: (values: Record<string, any>) =>
-            replacePlaceholders(param.Service as string, stringValues(values)),
-        } as ParamService;
-      }
-
-      // Handle object format with params/dependencies
-      const svc = param.Service as Record<string, any>;
-      const serviceConfig: ServiceConfig = {
-        endpoint: svc["endpoint"],
-        params: svc["params"],
-        dependencies: svc["dependencies"],
-      };
-
-      // Collect all unique dependency fields
-      const allDepFields = new Set((serviceConfig.dependencies || []).flat());
-
-      // Find which fields are already used as placeholders in explicit params
-      const usedPlaceholders = new Set(
-        Object.values(serviceConfig.params || {}).flatMap((v) => extractPlaceholders(String(v)))
-      );
-
-      // Auto-add dependency fields not already used in params as "{field}"
-      const autoParams: Record<string, string> = {};
-      allDepFields.forEach((field) => {
-        if (!usedPlaceholders.has(field)) {
-          autoParams[field] = `{${field}}`;
-        }
-      });
-
-      // Merge explicit params with auto-generated ones (explicit wins)
-      const fullParams = { ...autoParams, ...serviceConfig.params };
-
-      // Extract all dependencies (from both explicit and auto params)
-      const extractDeps = Object.values(fullParams).flatMap((v) => extractPlaceholders(String(v)));
+      const service = param.Service;
 
       return {
         name: param.Name,
-        dependencies: extractDeps,
-        dependencyGroups: serviceConfig.dependencies,
+        dependencies: extractPlaceholders(service),
         url: (values: Record<string, any>) => {
-          // Substitute placeholders in param values and filter unresolved ones
-          const resolved = Object.entries(fullParams).reduce(
-            (acc, [key, val]) => {
-              const substituted = substitutePlaceholders(String(val), stringValues(values));
-              if (substituted && !substituted.includes("{")) {
-                acc[key] = substituted;
-              }
-              return acc;
-            },
-            {} as Record<string, string>
-          );
-          const query = new URLSearchParams(resolved).toString();
-          return query ? `${serviceConfig.endpoint}?${query}` : serviceConfig.endpoint || "";
+          const expanded = expandModbus(service, values);
+          // Filter out 'modbus' - it's a meta-placeholder, not a value
+          const { modbus: _, ...rest } = values;
+          return replacePlaceholders(expanded, stringValues(rest));
         },
       } as ParamService;
     })
@@ -238,30 +196,15 @@ export const fetchServiceValues = async (
 
   await Promise.all(
     endpoints.map(async (endpoint) => {
-      let params: Record<string, any> | undefined;
+      // Build URL - expansion handles modbus connection type selection
+      const url = endpoint.url(values);
 
-      // Check dependency groups with OR logic
-      if (endpoint.dependencyGroups?.length) {
-        // Find first satisfied group
-        const group = endpoint.dependencyGroups.find((g) => isGroupSatisfied(g, values));
-        if (group) {
-          params = Object.fromEntries(group.map((dep) => [dep, values[dep]]));
-        }
-      } else {
-        // Fallback: Old logic for backward compatibility
-        const resolved = endpoint.dependencies.filter(
-          (dep) => values[dep] != null && values[dep] !== ""
-        );
-        if (resolved.length === endpoint.dependencies.length) {
-          params = Object.fromEntries(resolved.map((dep) => [dep, values[dep]]));
-        }
-      }
-
-      if (!params) {
+      // Skip if URL still contains unresolved placeholders
+      if (url.includes("{")) {
         return;
       }
 
-      const data = await loader(endpoint.url(params));
+      const data = await loader(url);
       if (data.length) {
         result[endpoint.name] = data;
       }
