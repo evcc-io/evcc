@@ -5,7 +5,7 @@ products:
       generic: DVH4013
 params:
   - name: usage
-    choice: ["charge", "pv"]
+    choice: ["pv", "charge"]
   - name: modbus
     choice: ["rs485"]
 render: |

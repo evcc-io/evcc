@@ -32,10 +32,6 @@ render: |
     - PowerL1
     - PowerL2
     - PowerL3
-  voltages:
-    - VoltageL1
-    - VoltageL2
-    - VoltageL3
   {{- else }}
   power: -Power
   energy: Export
