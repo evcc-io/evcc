@@ -153,7 +153,13 @@
 					@show-session="showDetails"
 				/>
 				<div class="d-flex gap-2 mt-1 mb-5">
-					<a class="btn btn-outline-secondary" tabindex="0" :href="csvLink" download>
+					<a
+						id="sessionsDownload"
+						class="btn btn-outline-secondary"
+						tabindex="0"
+						:href="csvLink"
+						download
+					>
 						{{ csvLinkLabel }}
 					</a>
 					<button
