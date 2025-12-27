@@ -19,7 +19,7 @@ func (tkr *tkr) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
 }
 
 func TestMerge(t *testing.T) {
-	ts := &TokenSource{
+	ts := &refreshTokenSource{
 		token: &oauth2.Token{
 			AccessToken:  "access",
 			RefreshToken: "refresh",
