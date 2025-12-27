@@ -178,8 +178,10 @@ export const createServiceEndpoints = (params: TemplateParam[]): ParamService[] 
         url: (values: Record<string, any>) => {
           const expanded = expandModbus(service, values);
           // Filter out 'modbus' - it's a meta-placeholder, not a value
-          const { modbus: _, ...rest } = values;
-          return replacePlaceholders(expanded, stringValues(rest));
+          const filtered = Object.fromEntries(
+            Object.entries(values).filter(([k]) => k !== "modbus")
+          );
+          return replacePlaceholders(expanded, stringValues(filtered));
         },
       } as ParamService;
     })
