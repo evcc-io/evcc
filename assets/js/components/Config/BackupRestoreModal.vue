@@ -144,6 +144,7 @@
 					</button>
 
 					<button
+						id="backuprestoreDownloadButton"
 						type="submit"
 						class="btn text-truncate"
 						:class="confirmType === 'backup' ? 'btn-primary' : 'btn-danger'"
