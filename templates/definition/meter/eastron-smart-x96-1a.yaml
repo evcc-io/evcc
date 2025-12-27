@@ -1,8 +1,8 @@
-template: inepro
+template: eastron-smart-x96-1a
 products:
-  - brand: inepro
+  - brand: Eastron
     description:
-      generic: PRO380-MOD
+      generic: SMART X96-1A
 params:
   - name: usage
     choice: ["grid", "pv", "charge"]
@@ -11,7 +11,7 @@ params:
 render: |
   type: mbmd
   {{- include "modbus" . }}
-  model: inepro
+  model: x961a
   {{- if ne .usage "pv" }}
   power: Power
   energy: Import

@@ -1,17 +1,17 @@
-template: eastron-sdm72
+template: bg-ws100
 products:
-  - brand: Eastron
+  - brand: B+G e-tech
     description:
-      generic: SDM72D-M
+      generic: WS100
 params:
   - name: usage
-    choice: ["grid", "pv", "charge"]
+    choice: ["pv", "charge"]
   - name: modbus
     choice: ["rs485"]
 render: |
   type: mbmd
   {{- include "modbus" . }}
-  model: sdm72
+  model: ws100
   {{- if ne .usage "pv" }}
   power: Power
   energy: Import

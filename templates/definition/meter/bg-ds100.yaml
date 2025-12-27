@@ -1,8 +1,8 @@
-template: inepro
+template: bg-ds100
 products:
-  - brand: inepro
+  - brand: B+G e-tech
     description:
-      generic: PRO380-MOD
+      generic: DS100
 params:
   - name: usage
     choice: ["grid", "pv", "charge"]
@@ -11,7 +11,7 @@ params:
 render: |
   type: mbmd
   {{- include "modbus" . }}
-  model: inepro
+  model: ds100
   {{- if ne .usage "pv" }}
   power: Power
   energy: Import

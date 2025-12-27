@@ -1,8 +1,8 @@
-template: inepro
+template: solaredge-se-mtr-3y
 products:
-  - brand: inepro
+  - brand: SolarEdge
     description:
-      generic: PRO380-MOD
+      generic: SE-MTR-3Y
 params:
   - name: usage
     choice: ["grid", "pv", "charge"]
@@ -11,7 +11,7 @@ params:
 render: |
   type: mbmd
   {{- include "modbus" . }}
-  model: inepro
+  model: semtr
   {{- if ne .usage "pv" }}
   power: Power
   energy: Import

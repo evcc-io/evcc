@@ -1,17 +1,17 @@
-template: eastron-sdm72
+template: orno-we504
 products:
-  - brand: Eastron
+  - brand: ORNO
     description:
-      generic: SDM72D-M
+      generic: WE-504
 params:
   - name: usage
-    choice: ["grid", "pv", "charge"]
+    choice: ["pv", "charge"]
   - name: modbus
     choice: ["rs485"]
 render: |
   type: mbmd
   {{- include "modbus" . }}
-  model: sdm72
+  model: orno1p504
   {{- if ne .usage "pv" }}
   power: Power
   energy: Import

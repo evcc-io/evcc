@@ -1,8 +1,8 @@
-template: inepro
+template: lovato-dmg610
 products:
-  - brand: inepro
+  - brand: Lovato
     description:
-      generic: PRO380-MOD
+      generic: DMG610
 params:
   - name: usage
     choice: ["grid", "pv", "charge"]
@@ -11,7 +11,7 @@ params:
 render: |
   type: mbmd
   {{- include "modbus" . }}
-  model: inepro
+  model: dmg610
   {{- if ne .usage "pv" }}
   power: Power
   energy: Import

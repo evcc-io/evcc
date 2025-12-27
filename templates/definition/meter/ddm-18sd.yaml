@@ -1,17 +1,17 @@
-template: eastron-sdm72
+template: ddm-18sd
 products:
-  - brand: Eastron
+  - brand: DDM
     description:
-      generic: SDM72D-M
+      generic: DDM18SD
 params:
   - name: usage
-    choice: ["grid", "pv", "charge"]
+    choice: ["pv", "charge"]
   - name: modbus
     choice: ["rs485"]
 render: |
   type: mbmd
   {{- include "modbus" . }}
-  model: sdm72
+  model: ddm
   {{- if ne .usage "pv" }}
   power: Power
   energy: Import

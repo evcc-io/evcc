@@ -1,8 +1,8 @@
-template: inepro
+template: eastron-sdm54
 products:
-  - brand: inepro
+  - brand: Eastron
     description:
-      generic: PRO380-MOD
+      generic: SDM54
 params:
   - name: usage
     choice: ["grid", "pv", "charge"]
@@ -11,7 +11,7 @@ params:
 render: |
   type: mbmd
   {{- include "modbus" . }}
-  model: inepro
+  model: sdm54
   {{- if ne .usage "pv" }}
   power: Power
   energy: Import
