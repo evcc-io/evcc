@@ -9,10 +9,10 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
 	"github.com/hasura/go-graphql-client"
+	"golang.org/x/oauth2"
 )
 
 // BaseURI is Octopus Energy Germany's Kraken API root.
@@ -28,7 +28,7 @@ type OctopusDeGraphQLClient struct {
 
 // NewClient returns a new, authenticated instance of OctopusDeGraphQLClient.
 func NewClient(log *util.Logger, email, password, accountNumber string) (*OctopusDeGraphQLClient, error) {
-	ts := oauth.RefreshTokenSource(nil, &TokenSource{
+	ts := oauth2.ReuseTokenSource(nil, &tokenSource{
 		log:      log,
 		email:    email,
 		password: password,
