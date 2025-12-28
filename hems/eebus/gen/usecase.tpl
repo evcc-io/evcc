@@ -6,7 +6,6 @@ import (
 	"time"
 )
 
-// TODO check state machine against spec
 func (c *EEBus) handle{{.Uc}}() error {
 	c.mux.Lock()
 	defer c.mux.Unlock()
@@ -22,11 +21,6 @@ func (c *EEBus) handle{{.Uc}}() error {
 
 		return nil
 	}
-
-	// TODO
-	// status init
-	// status Unlimited/controlled
-	// status Unlimited/autonomous
 
 	switch c.{{.uc}}Status {
 	case StatusUnlimited:
