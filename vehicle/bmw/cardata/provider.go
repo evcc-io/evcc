@@ -190,15 +190,15 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 		status = api.StatusB
 	}
 
-	hv, err := v.String("vehicle.drivetrain.electricEngine.charging.status")
-	if err != nil || hv == "" || hv == "INVALID" {
-		hv, err = v.String("vehicle.drivetrain.electricEngine.charging.hvStatus")
+	cs, err := v.String("vehicle.drivetrain.electricEngine.charging.status")
+	if err != nil || cs == "" {
+		cs, err = v.String("vehicle.drivetrain.electricEngine.charging.hvStatus")
 	}
 
 	if slices.Contains([]string{
-		"CHARGING",       // vehicle.drivetrain.electricEngine.charging.hvStatus
 		"CHARGINGACTIVE", // vehicle.drivetrain.electricEngine.charging.status
-	}, hv) {
+		"CHARGING",       // vehicle.drivetrain.electricEngine.charging.hvStatus
+	}, cs) {
 		return api.StatusC, nil
 	}
 
