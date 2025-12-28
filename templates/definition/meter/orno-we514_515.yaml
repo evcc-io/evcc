@@ -17,8 +17,8 @@ render: |
   model: orno1p
   {{- if ne .usage "pv" }}
   power: Power
-  energy: Import
+  energy: Sum
   {{- else }}
   power: -Power
-  energy: Export
+  energy: Sum
   {{- end }}
