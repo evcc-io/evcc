@@ -2,6 +2,7 @@ package subaru
 
 import (
 	"fmt"
+	"maps"
 	"net/http"
 	"net/url"
 	"strings"
@@ -113,9 +114,7 @@ func (v *Identity) fetchTokenCredentials(code string) error {
 	}
 
 	headers := make(map[string]string)
-	for k, v := range request.URLEncoding {
-		headers[k] = v
-	}
+	maps.Copy(headers, request.URLEncoding)
 	headers["Authorization"] = AppAuthorization
 	req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), headers)
 	if err != nil {
@@ -163,9 +162,7 @@ func (v *Identity) refreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	}
 
 	headers := make(map[string]string)
-	for k, v := range request.URLEncoding {
-		headers[k] = v
-	}
+	maps.Copy(headers, request.URLEncoding)
 	headers["Authorization"] = AppAuthorization
 	var res oauth2.Token
 	req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), headers)

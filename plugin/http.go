@@ -147,7 +147,7 @@ func dropNoCache(resp *http.Response, header string) {
 	if h := resp.Header.Get(header); h != "" {
 		var hh []string
 
-		for _, h := range strings.Split(h, ",") {
+		for h := range strings.SplitSeq(h, ",") {
 			if s := strings.TrimSpace(h); strings.ToLower(s) != "no-cache" {
 				hh = append(hh, s)
 			}
