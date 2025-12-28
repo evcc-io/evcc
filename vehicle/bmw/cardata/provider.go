@@ -190,9 +190,9 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 		status = api.StatusB
 	}
 
-	hv, err := v.String("vehicle.drivetrain.electricEngine.charging.hvStatus")
+	hv, err := v.String("vehicle.drivetrain.electricEngine.charging.status")
 	if err != nil || hv == "" || hv == "INVALID" {
-		hv, err = v.String("vehicle.drivetrain.electricEngine.charging.status")
+		hv, err = v.String("vehicle.drivetrain.electricEngine.charging.hvStatus")
 	}
 
 	if slices.Contains([]string{
