@@ -1,0 +1,41 @@
+template: lovato-dmg610
+products:
+  - brand: Lovato
+    description:
+      generic: DMG610
+params:
+  - name: usage
+    choice: ["grid", "pv", "charge"]
+  - name: modbus
+    choice: ["rs485"]
+render: |
+  type: mbmd
+  {{- include "modbus" . }}
+  model: dmg610
+  {{- if ne .usage "pv" }}
+  power: Power
+  energy: Import
+  currents:
+    - CurrentL1
+    - CurrentL2
+    - CurrentL3
+  powers:
+    - PowerL1
+    - PowerL2
+    - PowerL3
+  {{- else }}
+  power: -Power
+  energy: Export
+  currents:
+    - -CurrentL1
+    - -CurrentL2
+    - -CurrentL3
+  powers:
+    - -PowerL1
+    - -PowerL2
+    - -PowerL3
+  {{- end }}
+  voltages:
+    - VoltageL1
+    - VoltageL2
+    - VoltageL3
