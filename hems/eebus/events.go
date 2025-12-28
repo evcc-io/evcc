@@ -21,7 +21,7 @@ func (c *EEBus) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spineapi.E
 	//
 	// Use Case LPC, Scenario 1
 	case lpc.DataUpdateLimit:
-		c.dataUpdateConsumptionLimit()
+		c.updateConsumptionLimit()
 
 	// An incoming load control obligation limit needs to be approved or denied
 	//
@@ -39,7 +39,7 @@ func (c *EEBus) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spineapi.E
 	//
 	// Use Case LPC, Scenario 2
 	case lpc.DataUpdateFailsafeConsumptionActivePowerLimit:
-		c.dataUpdateFailsafeConsumptionActivePowerLimit()
+		c.updateFailsafeConsumptionActivePowerLimit()
 
 	// Minimum time the Controllable System remains in "failsafe state" unless conditions
 	// specified in this Use Case permit leaving the "failsafe state" data update received
@@ -48,14 +48,14 @@ func (c *EEBus) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spineapi.E
 	//
 	// Use Case LPC, Scenario 2
 	case lpc.DataUpdateFailsafeDurationMinimum:
-		c.dataUpdateFailsafeConsumptionDurationMinimum()
+		c.updateFailsafeConsumptionDurationMinimum()
 
 	// Indicates a notify heartbeat event the application should care of.
 	// E.g. going into or out of the Failsafe state
 	//
 	// Use Case LPC, Scenario 3
 	case lpc.DataUpdateHeartbeat:
-		c.dataUpdateConsumptionHeartbeat()
+		c.updateConsumptionHeartbeat()
 
 	// Load control obligation limit data update received
 	//
@@ -63,7 +63,7 @@ func (c *EEBus) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spineapi.E
 	//
 	// Use Case LPC, Scenario 1
 	case lpp.DataUpdateLimit:
-		c.dataUpdateProductionLimit()
+		c.updateProductionLimit()
 
 	// An incoming load control obligation limit needs to be approved or denied
 	//
@@ -81,7 +81,7 @@ func (c *EEBus) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spineapi.E
 	//
 	// Use Case LPP, Scenario 2
 	case lpp.DataUpdateFailsafeProductionActivePowerLimit:
-		c.dataUpdateFailsafeProductionActivePowerLimit()
+		c.updateFailsafeProductionActivePowerLimit()
 
 	// Minimum time the Controllable System remains in "failsafe state" unless conditions
 	// specified in this Use Case permit leaving the "failsafe state" data update received
@@ -90,18 +90,18 @@ func (c *EEBus) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spineapi.E
 	//
 	// Use Case LPP, Scenario 2
 	case lpp.DataUpdateFailsafeDurationMinimum:
-		c.dataUpdateFailsafeProductionDurationMinimum()
+		c.updateFailsafeProductionDurationMinimum()
 
 	// Indicates a notify heartbeat event the application should care of.
 	// E.g. going into or out of the Failsafe state
 	//
 	// Use Case LPP, Scenario 3
 	case lpp.DataUpdateHeartbeat:
-		c.dataUpdateProductionHeartbeat()
+		c.updateProductionHeartbeat()
 	}
 }
 
-func (c *EEBus) dataUpdateConsumptionLimit() {
+func (c *EEBus) updateConsumptionLimit() {
 	limit, err := c.cs.CsLPCInterface.ConsumptionLimit()
 	if err != nil {
 		c.log.ERROR.Println("CS LPC ConsumptionLimit:", err)
@@ -115,7 +115,7 @@ func (c *EEBus) dataUpdateConsumptionLimit() {
 	c.consumptionStatusUpdated = time.Now()
 }
 
-func (c *EEBus) dataUpdateProductionLimit() {
+func (c *EEBus) updateProductionLimit() {
 	limit, err := c.cs.CsLPPInterface.ProductionLimit()
 	if err != nil {
 		c.log.ERROR.Println("CS LPP ProductionLimit:", err)
@@ -160,7 +160,7 @@ func (c *EEBus) productionWriteApprovalRequired() {
 	}
 }
 
-func (c *EEBus) dataUpdateFailsafeConsumptionActivePowerLimit() {
+func (c *EEBus) updateFailsafeConsumptionActivePowerLimit() {
 	limit, _, err := c.cs.CsLPCInterface.FailsafeConsumptionActivePowerLimit()
 	if err != nil {
 		c.log.ERROR.Println("CS LPC FailsafeConsumptionActivePowerLimit:", err)
@@ -173,7 +173,7 @@ func (c *EEBus) dataUpdateFailsafeConsumptionActivePowerLimit() {
 	c.failsafeConsumptionLimit = limit
 }
 
-func (c *EEBus) dataUpdateFailsafeProductionActivePowerLimit() {
+func (c *EEBus) updateFailsafeProductionActivePowerLimit() {
 	limit, _, err := c.cs.CsLPPInterface.FailsafeProductionActivePowerLimit()
 	if err != nil {
 		c.log.ERROR.Println("CS LPP FailsafeProductionActivePowerLimit:", err)
@@ -186,7 +186,7 @@ func (c *EEBus) dataUpdateFailsafeProductionActivePowerLimit() {
 	c.failsafeProductionLimit = limit
 }
 
-func (c *EEBus) dataUpdateFailsafeConsumptionDurationMinimum() {
+func (c *EEBus) updateFailsafeConsumptionDurationMinimum() {
 	duration, _, err := c.cs.CsLPCInterface.FailsafeDurationMinimum()
 	if err != nil {
 		c.log.ERROR.Println("CS LPC FailsafeDurationMinimum:", err)
@@ -199,7 +199,7 @@ func (c *EEBus) dataUpdateFailsafeConsumptionDurationMinimum() {
 	c.failsafeConsumptionDuration = duration
 }
 
-func (c *EEBus) dataUpdateFailsafeProductionDurationMinimum() {
+func (c *EEBus) updateFailsafeProductionDurationMinimum() {
 	duration, _, err := c.cs.CsLPPInterface.FailsafeDurationMinimum()
 	if err != nil {
 		c.log.ERROR.Println("CS LPP FailsafeDurationMinimum:", err)
@@ -212,14 +212,14 @@ func (c *EEBus) dataUpdateFailsafeProductionDurationMinimum() {
 	c.failsafeProductionDuration = duration
 }
 
-func (c *EEBus) dataUpdateConsumptionHeartbeat() {
+func (c *EEBus) updateConsumptionHeartbeat() {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
 	c.consumptionHeartbeat.Set(struct{}{})
 }
 
-func (c *EEBus) dataUpdateProductionHeartbeat() {
+func (c *EEBus) updateProductionHeartbeat() {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
