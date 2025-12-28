@@ -17,8 +17,6 @@ func (c *EEBus) handle{{.Uc}}() error {
 	_, heartbeatErr := c.{{.uc}}Heartbeat.Get()
 	if heartbeatErr != nil && c.{{.uc}}Status != StatusFailsafe {
 		// LPC-914/2
-
-		// TODO fix status handling
 		c.log.WARN.Println("missing {{.uc}} heartbeat- entering failsafe mode")
 		c.set{{.Uc}}StatusAndLimit(StatusFailsafe, c.failsafe{{.Uc}}Limit)
 
