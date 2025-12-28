@@ -11,6 +11,7 @@ linters:
     - ineffassign
     - makezero
     - misspell
+    - modernize
     - nolintlint
     - rowserrcheck
     - sqlclosecheck
@@ -21,6 +22,9 @@ linters:
     - wastedassign
     - whitespace
   settings:
+    modernize:
+      disable:
+        - stringsbuilder
     staticcheck:
       checks:
         - -SA1019
