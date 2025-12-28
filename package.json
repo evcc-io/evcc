@@ -14,7 +14,7 @@
     "playwright": "playwright test --ui",
     "simulator": "vite tests/simulator",
     "storybook": "storybook dev -p 6006",
-    "license": "license-compliance --production --report detailed --allow \"MIT;Apache-2.0;ISC;BSD-2-Clause;BSD-3-Clause\""
+    "license": "license-compliance --production --report detailed --allow \"MIT;Apache-2.0;ISC;BSD-2-Clause;BSD-3-Clause;Python-2.0\""
   },
   "type": "module",
   "main": "index.js",
