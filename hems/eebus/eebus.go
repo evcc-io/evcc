@@ -162,24 +162,24 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, lpc, lpp api.Circu
 	}
 
 	// controllable system
-	for t, s := range c.cs.CsLPCInterface.RemoteEntitiesScenarios() {
-		c.log.INFO.Println("CS LPC RemoteEntitiesScenarios:", t, s.Scenarios)
+	for _, s := range c.cs.CsLPCInterface.RemoteEntitiesScenarios() {
+		c.log.INFO.Printf("ski %s CS LPC scenarios: %v", s.Entity.Device().Ski(), s.Scenarios)
 	}
 	for _, s := range c.cs.CsLPPInterface.RemoteEntitiesScenarios() {
-		c.log.DEBUG.Println("CS LPP RemoteEntitiesScenarios:", s.Scenarios)
+		c.log.INFO.Printf("ski %s CS LPP scenarios: %v", s.Entity.Device().Ski(), s.Scenarios)
 	}
 
 	// monitoring appliance
 	for _, s := range c.ma.MaMPCInterface.RemoteEntitiesScenarios() {
-		c.log.DEBUG.Println("MA MPC RemoteEntitiesScenarios:", s.Scenarios)
+		c.log.INFO.Printf("ski %s MA MPC scenarios: %v", s.Entity.Device().Ski(), s.Scenarios)
 	}
 	for _, s := range c.ma.MaMGCPInterface.RemoteEntitiesScenarios() {
-		c.log.DEBUG.Println("MA MGCP RemoteEntitiesScenarios:", s.Scenarios)
+		c.log.INFO.Printf("ski %s MA MGCP scenarios: %v", s.Entity.Device().Ski(), s.Scenarios)
 	}
 
 	// energy guard
 	for _, s := range c.eg.EgLPCInterface.RemoteEntitiesScenarios() {
-		c.log.DEBUG.Println("EG LPC RemoteEntitiesScenarios:", s.Scenarios)
+		c.log.INFO.Printf("ski %s EG LPC scenarios: %v", s.Entity.Device().Ski(), s.Scenarios)
 	}
 
 	// set initial values
