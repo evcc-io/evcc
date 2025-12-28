@@ -20,7 +20,7 @@ func (c *EEBus) handleConsumption() error {
 
 		// TODO fix status handling
 		c.log.WARN.Println("missing consumption heartbeat- entering failsafe mode")
-		c.setConsumptionStatusAndLimit(StatusFailsafe, c.failsafeConsumptionLimit, true)
+		c.setConsumptionStatusAndLimit(StatusFailsafe, c.failsafeConsumptionLimit)
 
 		return nil
 	}
@@ -35,14 +35,14 @@ func (c *EEBus) handleConsumption() error {
 		// LPC-914/1
 		if c.consumptionLimit != nil && c.consumptionLimit.IsActive {
 			c.log.WARN.Println("active consumption limit")
-			c.setConsumptionStatusAndLimit(StatusLimited, c.consumptionLimit.Value, true)
+			c.setConsumptionStatusAndLimit(StatusLimited, c.consumptionLimit.Value)
 		}
 
 	case StatusLimited:
 		// limit updated?
 		if !c.consumptionLimit.IsActive {
 			c.log.WARN.Println("inactive consumption limit")
-			c.setConsumptionStatusAndLimit(StatusUnlimited, 0, false)
+			c.setConsumptionStatusAndLimit(StatusUnlimited, 0)
 			break
 		}
 
@@ -51,16 +51,23 @@ func (c *EEBus) handleConsumption() error {
 			c.consumptionLimit.IsActive = false
 
 			c.log.DEBUG.Println("consumption limit duration exceeded- return to normal")
-			c.setConsumptionLimit(0, false)
+			c.setConsumptionLimit(0)
 		}
 
 	case StatusFailsafe:
 		// LPC-914/2
 		if d := c.failsafeConsumptionDuration; heartbeatErr == nil || time.Since(c.consumptionStatusUpdated) > d {
 			c.log.DEBUG.Println("consumption heartbeat returned and failsafe duration exceeded- return to normal")
-			c.setConsumptionStatusAndLimit(StatusUnlimited, 0, false)
+			c.setConsumptionStatusAndLimit(StatusUnlimited, 0)
 		}
 	}
 
 	return nil
+}
+
+func (c *EEBus) setConsumptionStatusAndLimit(status status, limit float64) {
+	c.consumptionStatus = status
+	c.consumptionStatusUpdated = time.Now()
+
+	c.setConsumptionLimit(limit)
 }

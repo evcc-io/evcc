@@ -231,7 +231,6 @@ func (c *EEBus) Run() {
 	}
 }
 
-// TODO check state machine against spec
 func (c *EEBus) run() error {
 	c.mux.Lock()
 	defer c.mux.Unlock()
@@ -242,27 +241,13 @@ func (c *EEBus) run() error {
 	)
 }
 
-func (c *EEBus) setConsumptionStatusAndLimit(status status, limit float64, dimmed bool) {
-	c.consumptionStatus = status
-	c.consumptionStatusUpdated = time.Now()
-
-	c.setConsumptionLimit(limit, dimmed)
-}
-
-func (c *EEBus) setConsumptionLimit(limit float64, dimmed bool) {
-	c.lpc.Dim(dimmed)
+func (c *EEBus) setConsumptionLimit(limit float64) {
+	c.lpc.Dim(limit > 0)
 	c.lpc.SetMaxPower(limit)
 }
 
-func (c *EEBus) setProductionStatusAndLimit(status status, limit float64, dimmed bool) {
-	c.productionStatus = status
-	c.productionStatusUpdated = time.Now()
-
-	c.setProductionLimit(limit, dimmed)
-}
-
-func (c *EEBus) setProductionLimit(limit float64, dimmed bool) {
+func (c *EEBus) setProductionLimit(limit float64) {
 	// TODO curtail
-	c.lpp.Dim(dimmed)
-	c.lpp.SetMaxPower(limit)
+	// c.lpp.Dim(limit > 0)
+	// c.lpp.SetMaxPower(limit)
 }

@@ -20,7 +20,7 @@ func (c *EEBus) handleProduction() error {
 
 		// TODO fix status handling
 		c.log.WARN.Println("missing production heartbeat- entering failsafe mode")
-		c.setProductionStatusAndLimit(StatusFailsafe, c.failsafeProductionLimit, true)
+		c.setProductionStatusAndLimit(StatusFailsafe, c.failsafeProductionLimit)
 
 		return nil
 	}
@@ -35,14 +35,14 @@ func (c *EEBus) handleProduction() error {
 		// LPC-914/1
 		if c.productionLimit != nil && c.productionLimit.IsActive {
 			c.log.WARN.Println("active production limit")
-			c.setProductionStatusAndLimit(StatusLimited, c.productionLimit.Value, true)
+			c.setProductionStatusAndLimit(StatusLimited, c.productionLimit.Value)
 		}
 
 	case StatusLimited:
 		// limit updated?
 		if !c.productionLimit.IsActive {
 			c.log.WARN.Println("inactive production limit")
-			c.setProductionStatusAndLimit(StatusUnlimited, 0, false)
+			c.setProductionStatusAndLimit(StatusUnlimited, 0)
 			break
 		}
 
@@ -51,16 +51,23 @@ func (c *EEBus) handleProduction() error {
 			c.productionLimit.IsActive = false
 
 			c.log.DEBUG.Println("production limit duration exceeded- return to normal")
-			c.setProductionLimit(0, false)
+			c.setProductionLimit(0)
 		}
 
 	case StatusFailsafe:
 		// LPC-914/2
 		if d := c.failsafeProductionDuration; heartbeatErr == nil || time.Since(c.productionStatusUpdated) > d {
 			c.log.DEBUG.Println("production heartbeat returned and failsafe duration exceeded- return to normal")
-			c.setProductionStatusAndLimit(StatusUnlimited, 0, false)
+			c.setProductionStatusAndLimit(StatusUnlimited, 0)
 		}
 	}
 
 	return nil
+}
+
+func (c *EEBus) setProductionStatusAndLimit(status status, limit float64) {
+	c.productionStatus = status
+	c.productionStatusUpdated = time.Now()
+
+	c.setProductionLimit(limit)
 }
