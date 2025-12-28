@@ -130,6 +130,7 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, lpc, lpp api.Circu
 		Connector: eebus.NewConnector(),
 		interval:  interval,
 
+		consumptionHeartbeat: util.NewValue[struct{}](2 * time.Minute), // LPC-031
 		consumptionLimit: &ucapi.LoadLimit{
 			Value:        limits.ConsumptionLimit,
 			IsChangeable: true,
@@ -138,6 +139,7 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, lpc, lpp api.Circu
 		failsafeConsumptionLimit:    limits.FailsafeConsumptionActivePowerLimit,
 		failsafeConsumptionDuration: limits.FailsafeConsumptionDurationMinimum,
 
+		productionHeartbeat: util.NewValue[struct{}](2 * time.Minute), // LPC-031
 		productionLimit: &ucapi.LoadLimit{
 			Value:        limits.ProductionLimit,
 			IsChangeable: true,
