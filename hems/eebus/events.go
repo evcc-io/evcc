@@ -55,7 +55,7 @@ func (c *EEBus) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spineapi.E
 	//
 	// Use Case LPC, Scenario 3
 	case lpc.DataUpdateHeartbeat:
-		c.dataUpdateHeartbeat()
+		c.dataUpdateConsumptionHeartbeat()
 
 	// Load control obligation limit data update received
 	//
@@ -97,7 +97,7 @@ func (c *EEBus) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spineapi.E
 	//
 	// Use Case LPP, Scenario 3
 	case lpp.DataUpdateHeartbeat:
-		c.dataUpdateHeartbeat()
+		c.dataUpdateProductionHeartbeat()
 	}
 }
 
@@ -212,9 +212,16 @@ func (c *EEBus) dataUpdateFailsafeProductionDurationMinimum() {
 	c.failsafeProductionDuration = duration
 }
 
-func (c *EEBus) dataUpdateHeartbeat() {
+func (c *EEBus) dataUpdateConsumptionHeartbeat() {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	c.heartbeat.Set(struct{}{})
+	c.consumptionHeartbeat.Set(struct{}{})
+}
+
+func (c *EEBus) dataUpdateProductionHeartbeat() {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
+	c.productionHeartbeat.Set(struct{}{})
 }

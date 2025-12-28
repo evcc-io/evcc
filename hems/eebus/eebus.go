@@ -27,20 +27,22 @@ type EEBus struct {
 	lpc api.Circuit
 	lpp api.Circuit
 
-	status                   status
+	consumptionStatus        status
 	consumptionStatusUpdated time.Time
+	productionStatus         status
 	productionStatusUpdated  time.Time
 
+	consumptionHeartbeat        *util.Value[struct{}]
 	consumptionLimit            *ucapi.LoadLimit // LPC-041
 	failsafeConsumptionLimit    float64
 	failsafeConsumptionDuration time.Duration
 
+	productionHeartbeat        *util.Value[struct{}]
 	productionLimit            *ucapi.LoadLimit
 	failsafeProductionLimit    float64
 	failsafeProductionDuration time.Duration
 
-	heartbeat *util.Value[struct{}]
-	interval  time.Duration
+	interval time.Duration
 }
 
 type Limits struct {
@@ -124,7 +126,6 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, lpc, lpp api.Circu
 		ma:        eebus.Instance.MonitoringAppliance(),
 		eg:        eebus.Instance.EnergyGuard(),
 		Connector: eebus.NewConnector(),
-		heartbeat: util.NewValue[struct{}](2 * time.Minute), // LPC-031
 		interval:  interval,
 
 		consumptionLimit: &ucapi.LoadLimit{
@@ -146,7 +147,8 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, lpc, lpp api.Circu
 
 	// simulate a received heartbeat
 	// otherwise a heartbeat timeout is assumed when the state machine is called for the first time
-	c.heartbeat.Set(struct{}{})
+	c.consumptionHeartbeat.Set(struct{}{})
+	c.productionHeartbeat.Set(struct{}{})
 
 	if err := eebus.Instance.RegisterDevice(ski, "", c); err != nil {
 		return nil, err
@@ -232,14 +234,16 @@ func (c *EEBus) run() error {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	c.log.TRACE.Println("status:", c.status)
+	c.log.TRACE.Println("consumption status:", c.consumptionStatus)
+	c.log.TRACE.Println("production status:", c.productionStatus)
+
 	// check heartbeat
-	_, heartbeatErr := c.heartbeat.Get()
-	if heartbeatErr != nil && c.status != StatusFailsafe {
+	_, heartbeatErr := c.consumptionHeartbeat.Get()
+	if heartbeatErr != nil && c.consumptionStatus != StatusFailsafe {
 		// LPC-914/2
 
 		// TODO fix status handling
-		c.log.WARN.Println("missing heartbeat- entering failsafe mode")
+		c.log.WARN.Println("missing consumption heartbeat- entering failsafe mode")
 		c.setLPCStatusAndLimit(StatusFailsafe, c.failsafeConsumptionLimit, true)
 		c.setLPPStatusAndLimit(StatusFailsafe, c.failsafeProductionLimit, true)
 
@@ -251,7 +255,7 @@ func (c *EEBus) run() error {
 	// status Unlimited/controlled
 	// status Unlimited/autonomous
 
-	switch c.status {
+	switch c.consumptionStatus {
 	case StatusUnlimited:
 		// LPC-914/1
 		if c.consumptionLimit != nil && c.consumptionLimit.IsActive {
@@ -329,7 +333,7 @@ func (c *EEBus) run() error {
 }
 
 func (c *EEBus) setLPCStatusAndLimit(status status, limit float64, dimmed bool) {
-	c.status = status
+	c.consumptionStatus = status
 	c.consumptionStatusUpdated = time.Now()
 
 	c.setLPCLimit(limit, dimmed)
@@ -341,7 +345,7 @@ func (c *EEBus) setLPCLimit(limit float64, dimmed bool) {
 }
 
 func (c *EEBus) setLPPStatusAndLimit(status status, limit float64, dimmed bool) {
-	c.status = status
+	c.productionStatus = status
 	c.productionStatusUpdated = time.Now()
 
 	c.setLPPLimit(limit, dimmed)
