@@ -201,8 +201,10 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, lpc, lpp api.Circu
 			c.log.ERROR.Println("CS LPC SetFailsafeConsumptionActivePowerLimit:", err)
 		}
 	}
-	if err := c.cs.CsLPCInterface.SetFailsafeDurationMinimum(c.failsafeConsumptionDuration, true); err != nil {
-		c.log.ERROR.Println("CS LPC SetFailsafeDurationMinimum:", err)
+	if c.failsafeConsumptionDuration > 0 {
+		if err := c.cs.CsLPCInterface.SetFailsafeDurationMinimum(c.failsafeConsumptionDuration, true); err != nil {
+			c.log.ERROR.Println("CS LPC SetFailsafeDurationMinimum:", err)
+		}
 	}
 
 	if err := c.cs.CsLPPInterface.SetProductionNominalMax(limits.ProductionNominalMax); err != nil {
@@ -218,8 +220,10 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, lpc, lpp api.Circu
 			c.log.ERROR.Println("CS LPP SetFailsafeProductionActivePowerLimit:", err)
 		}
 	}
-	if err := c.cs.CsLPPInterface.SetFailsafeDurationMinimum(c.failsafeProductionDuration, true); err != nil {
-		c.log.ERROR.Println("CS LPP SetFailsafeDurationMinimum:", err)
+	if c.failsafeProductionDuration > 0 {
+		if err := c.cs.CsLPPInterface.SetFailsafeDurationMinimum(c.failsafeProductionDuration, true); err != nil {
+			c.log.ERROR.Println("CS LPP SetFailsafeDurationMinimum:", err)
+		}
 	}
 
 	return c, nil
