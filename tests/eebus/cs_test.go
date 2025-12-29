@@ -39,10 +39,7 @@ func TestEEBus(t *testing.T) {
 	server.Instance = srv
 	go srv.Run()
 
-	lpcCircuit, err := circuit.New(util.NewLogger("lpc"), "lpc", 0, 0, nil, time.Minute)
-	require.NoError(t, err)
-
-	lppCircuit, err := circuit.New(util.NewLogger("lpp"), "lpp", 0, 0, nil, time.Minute)
+	gridcontrol, err := circuit.New(util.NewLogger("gridcontrol"), "gridcontrol", 0, 0, nil, time.Minute)
 	require.NoError(t, err)
 
 	box, err := createControlbox(t.Context(), server.Instance.Ski, remotePort)
@@ -51,7 +48,7 @@ func TestEEBus(t *testing.T) {
 	eventC := make(chan api.EventType, 1)
 	box.remoteEventC = eventC
 
-	hems, err := hems.NewEEBus(t.Context(), box.ski, eebus.Limits{}, lpcCircuit, lppCircuit, time.Second)
+	hems, err := hems.NewEEBus(t.Context(), box.ski, eebus.Limits{}, gridcontrol, time.Second)
 	require.NoError(t, err, "hems")
 
 	go hems.Run()
