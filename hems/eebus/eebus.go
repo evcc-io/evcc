@@ -95,7 +95,7 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*E
 	return NewEEBus(ctx, cc.Ski, cc.Limits, gridcontrol, cc.Interval)
 }
 
-// NewEEBus creates EEBus charger
+// NewEEBus creates EEBus HEMS
 func NewEEBus(ctx context.Context, ski string, limits Limits, root api.Circuit, interval time.Duration) (*EEBus, error) {
 	if eebus.Instance == nil {
 		return nil, errors.New("eebus not configured")
