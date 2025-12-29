@@ -73,7 +73,7 @@ var _ site.API = (*Site)(nil)
 
 // Site is the main configuration container. A site can host multiple loadpoints.
 type Site struct {
-	uiChan       chan<- util.Param // client push messages
+	valueChan    chan<- util.Param // client push messages
 	lpUpdateChan chan *Loadpoint
 
 	*Health
@@ -266,6 +266,7 @@ func NewSite() *Site {
 	site := &Site{
 		log:             util.NewLogger("site"),
 		Voltage:         230, // V
+		ResidualPower:   100, // W
 		pvEnergy:        make(map[string]*meterEnergy),
 		fcstEnergy:      &meterEnergy{clock: clock.New()},
 		householdEnergy: &meterEnergy{clock: clock.New()},
@@ -485,11 +486,16 @@ func (site *Site) DumpConfig() {
 // publish sends values to UI and databases
 func (site *Site) publish(key string, val any) {
 	// test helper
-	if site.uiChan == nil {
+	if site.valueChan == nil {
 		return
 	}
 
-	site.uiChan <- util.Param{Key: key, Val: val}
+	site.valueChan <- util.Param{Key: key, Val: val}
+}
+
+// publish sends values to UI and databases
+func (site *Site) Publish(key string, val any) {
+	site.publish(key, val)
 }
 
 func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) []measurement {
@@ -500,15 +506,7 @@ func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) [
 
 		// power
 		var b bytes.Buffer
-		power, err := backoff.RetryWithData(func() (float64, error) {
-			start := time.Now()
-			f, err := meter.CurrentPower()
-			if err != nil {
-				d := time.Since(start)
-				fmt.Fprintf(&b, "%v !! %3dms %v\n", start, d.Milliseconds(), err)
-			}
-			return f, err
-		}, modbus.Backoff())
+		power, err := backoff.RetryWithData(meter.CurrentPower, modbus.Backoff())
 		if err == nil {
 			site.log.DEBUG.Printf("%s %d power: %.0fW", key, i+1, power)
 		} else {
@@ -1043,7 +1041,7 @@ func (site *Site) prepare() {
 }
 
 // Prepare attaches communication channels to site and loadpoints
-func (site *Site) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Event) {
+func (site *Site) Prepare(valueChan chan<- util.Param, pushChan chan<- push.Event) {
 	// https://github.com/evcc-io/evcc/issues/11191 prevent deadlock
 	// https://github.com/evcc-io/evcc/pull/11675 maintain message order
 
@@ -1051,12 +1049,12 @@ func (site *Site) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Event) 
 	ch := chanx.NewUnboundedChan[util.Param](context.Background(), 2)
 
 	// use ch.In for writing
-	site.uiChan = ch.In
+	site.valueChan = ch.In
 
 	// use ch.Out for reading
 	go func() {
 		for p := range ch.Out {
-			uiChan <- p
+			valueChan <- p
 		}
 	}()
 
@@ -1074,7 +1072,7 @@ func (site *Site) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Event) 
 				select {
 				case param := <-lpUIChan:
 					param.Loadpoint = &id
-					site.uiChan <- param
+					site.valueChan <- param
 				case ev := <-lpPushChan:
 					ev.Loadpoint = &id
 					pushChan <- ev
@@ -1101,7 +1099,7 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 	site.Health = NewHealth(time.Minute + interval)
 
 	if max := 30 * time.Second; interval < max {
-		site.log.WARN.Printf("interval <%.0fs can lead to unexpected behavior, see https://docs.evcc.io/docs/reference/configuration/interval", max.Seconds())
+		site.log.INFO.Printf("interval <%.0fs can lead to unexpected behavior, see https://docs.evcc.io/docs/reference/configuration/interval", max.Seconds())
 	}
 
 	loadpointChan := make(chan updater)

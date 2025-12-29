@@ -1,4 +1,24 @@
 {
+  "authProviders": {
+    "authCode": "Autentifikavimo kodas",
+    "authCodeHelp": "Nukopijuokite šį kodą ir panaudokite jį kitame žingsnyje. Galioja {duration}.",
+    "authorizationFailed": "Autorizacija nepavyko",
+    "authorizationRequired": "Reikalingas autorizavimas",
+    "authorizationSuccessful": "Autorizacija Sėkminga",
+    "buttonConnect": "Prisijungti prie {provider}",
+    "buttonDisconnect": "Atsijungti",
+    "confirmLogout": "Ar tikrai norite atjungti {title}?",
+    "connect": "prisijungti",
+    "disconnect": "atjungti",
+    "loggedOut": "Sėkmingai atsijungta",
+    "logoutFailed": "Nepavyko atsijungti",
+    "modalDescriptionLogin": "Užbaikite autorizacijos procesą, kad užmegztumėte ryšį su {provider}.",
+    "modalDescriptionLogout": "Tai atjungs jūsų {provider} paskyrą ir panaikins prieigą prie jos duomenų.",
+    "success": "{title} dabar prijungtas ir paruoštas naudoti.",
+    "successCloseModal": "Dabar galite uždaryti šį dialogo langą.",
+    "successCloseTab": "Dabar galite uždaryti šį skirtuką.",
+    "title": "Autorizacijos būsena"
+  },
   "batterySettings": {
     "batteryLevel": "Kaupiklio įkrova",
     "bufferStart": {
@@ -40,8 +60,16 @@
       "chargers": "Elektromobilių įkrovikliai",
       "generic": "Tipinės integracijos",
       "heatingdevices": "Šildymo prietaisai",
-      "ocppHelp": "Nukopijuokite šį adresą į jūsų įkroviklio nustatymus.",
+      "ocppConfirmContinue": "Jūsų įkroviklis dar neprisijungė prie evcc. Ar tikrai norite tęsti?",
+      "ocppConnected": "Prijungta!",
+      "ocppDescription": "evcc turi integruotą OCPP serverį. Atlikite šiuos veiksmus:",
+      "ocppHelp": "Nukopijuokite šį URL į savo įkroviklio konfigūraciją. Išsamesnės informacijos ieškokite gamintojo vadove. Įkroviklis automatiškai pridės savo unikalų identifikatorių (stoties ID) prie URL. Retais atvejais gali tekti rankiniu būdu nurodyti identifikatorių. Pavyzdys: `{url}`",
       "ocppLabel": "OCPP-Serverio URL",
+      "ocppNextStep": "Kitas žingsnis",
+      "ocppStep1": "Sukonfigūruokite įkroviklį, kad jis naudotų evcc kaip OCPP serverį.",
+      "ocppStep2": "Palaukite, kol įkroviklis prisijungs prie evcc.",
+      "ocppStep3": "Tęskite ir užbaikite konfigūraciją.",
+      "ocppWaiting": "Laukiama ryšio",
       "switchsockets": "Išmanios rozetės",
       "template": "Gamintojas",
       "titleAdd": {
@@ -71,8 +99,8 @@
     },
     "control": {
       "description": "Paprastai numatytosios reikšmės yra pakankamos. Keiskite jas tik jei žinote, ką darote.",
-      "descriptionInterval": "Valdymo ciklų intervalas, sekundėmis. Nurodo, kaip dažnai evcc nuskaito skaitiklių duomenis, koreguoja įkrovimo galią ir atnaujina vartotojo sąsają. Pernelyg trumpi intervalai (< 30 s) gali sukelti svyravimus ir nepageidaujamus rezultatus.",
-      "descriptionResidualPower": "Pakeičia valdymo sistemos reguliavimo tašką. Jei turite namų kaupiklį, rekomenduojame nustatyti 100 W vertę. Tada kaupiklis turės nedidelį prioritetą, palyginus su tinklu.",
+      "descriptionInterval": "Atnaujinimo ciklų intervalas, sekundėmis. Nurodo, kaip dažnai evcc nuskaito skaitiklių duomenis, koreguoja įkrovimo galią. 30 sekundžių yra rekomenduojamas pasirinkimas. Automobiliams, įkrovikliams bei inverteriams reikia laiko reaguoti į valdymo nurodymus. Jei jūsų komponentai reaguoja greitai, galite trumpinti intervalą, tačiau nerekomenduojama naudoti trumpesnio nei 10s. Pernelyg trumpi intervalai gali sukelti galios svyravimus ir nepageidaujamą sistemos veikimą, tokiu atveju pailginkinte intervalą.",
+      "descriptionResidualPower": "Pakeičia įvado galios reguliavimo tašką. Standartinė 100 W vertė (eksportas) suteikia kaupikliui nedidelį prioritetą. Jei neturite kaupiklio, galite nustatyti 0W, taip minimizuodami iš tinklo perkamą energiją įkraunant saulės pertekliumi.",
       "labelInterval": "Atnaujinimo intervalas",
       "labelResidualPower": "Likutinė galia",
       "title": "Valdymo elgesys"
@@ -91,10 +119,12 @@
       "chargedEnergy": "Įkrauta",
       "co2": "Tinklo CO₂",
       "configured": "Sukonfigūruota",
+      "connections": "Sąsajos",
       "controllable": "Valdomas",
       "currency": "Valiuta",
       "current": "Srovė",
       "currentRange": "Srovė",
+      "detected": "Aptikta",
       "dimmed": "Galia sumažinta",
       "enabled": "Aktyvuotas",
       "energy": "Energija",
@@ -145,6 +175,10 @@
       "description": "Konfigūracija, leidžianti evcc susisiekti su EEBus įrenginiais.",
       "title": "EEBus"
     },
+    "experimental": {
+      "description": "Įjungti vartotojo sąsają funkcijoms, kurios vis dar testuojamos ir gali keistis būsimose versijose.",
+      "title": "Eksperimentinis"
+    },
     "ext": {
       "description": "Įrašo nekontroliuojamų įrenginių (pvz., šaldytuvo, skalbimo mašinos ir kt.) energijos vertes statistikos tikslais. Šie skaitikliai taip pat gali būti naudojami apkrovos valdymui (pvz., paskirstymui).",
       "titleAdd": "Pridėti vartojančio įrenginio skaitiklį",
@@ -164,6 +198,8 @@
       "cancel": "Atšaukti",
       "clear": "Išvalyti",
       "close": "Uždaryti",
+      "copied": "Nukopijuota!",
+      "copy": "Kopijuoti",
       "customHelp": "Sukurkite vartotojo apibrėžtą įrenginį naudodami evcc įskiepių sistemą.",
       "customOption": "Vartotojo apibrėžtas įrenginys",
       "delete": "Ištrinti",
@@ -200,8 +236,19 @@
       "titleEdit": "Redaguoti tinklo skaitiklį"
     },
     "hems": {
+      "csv": {
+        "created": "Sukurta",
+        "finished": "Baigta",
+        "gridpower": "Tinklo Galia (kW)",
+        "limitpower": "Limitas (kW)",
+        "type": "Tipas"
+      },
       "description": "Galios ribojimas naudojant išorinę sistemą (pvz. “EnWG 14a” valdiklį). Reikia apkrovos valdymo konfigūracijos.",
-      "title": "HEMS"
+      "downloadCsv": "Atsisiųsti CSV failą",
+      "eventsRecorded": "Užfiksuota {count} tinklo galios apribojimo įvykių.",
+      "lastEvent": "Naujausias {timeAgo}.",
+      "title": "HEMS",
+      "yamlConfigured": "Pastaba: Sukonfigūruota naudojant evcc.yaml. Pašalinkite įrašą iš failo, kad būtų galima redaguoti čia."
     },
     "icon": {
       "change": "pakeisti",
@@ -340,6 +387,8 @@
       "title": "Konfigūracija",
       "unconfigured": "nesukonfigūruota",
       "vehicles": "Mano automobiliai",
+      "welcomeBannerText": "Pradėkite nuo **įkroviklio arba šildytuvo** sukūrimo. Jei dar neturite tikro įkroviklio, pasirinkite **demonstracinį įkroviklį**.",
+      "welcomeBannerTitle": "Sukonfigūruokime jūsų sistemą!",
       "yaml": "Įtaisas iš evcc.yaml , čia konfigūruoti neina."
     },
     "messaging": {
@@ -375,9 +424,9 @@
       "baudrate": "Duomenų perdavimo greitis",
       "comset": "ComSet tipas",
       "connection": "Modbus jungtis",
-      "connectionHintSerial": "Įrenginys prijungtas prie evcc tiesiai per RS485.",
-      "connectionHintTcpip": "evcc pasiekia įrenginį per LAN/Wifi.",
-      "connectionValueSerial": "Serijinis portas / USB",
+      "connectionHintSerial": "Įrenginys prijungtas tiesiogiai per RS485 (arba USB-RS485 adapterį).",
+      "connectionHintTcpip": "Įrenginys pasiekiamas per tinklą (LAN / WiFi).",
+      "connectionValueSerial": "RS485",
       "connectionValueTcpip": "Tinklas",
       "device": "Įrenginio pavadinimas",
       "deviceHint": "Pvz: /dev/ttyUSB0",
@@ -442,6 +491,23 @@
       "labelPort": "Port",
       "labelSchema": "Schema",
       "title": "Tinklas"
+    },
+    "ocpp": {
+      "connectedChargers": "Prijungti įkrovikliai",
+      "connectionStatus": "Esami stotelių ID",
+      "connectionStatusHelp": "Sukonfigūruotų įkroviklių ryšio būsena.",
+      "detectedChargers": "Atpažinti stotelių ID",
+      "detectedHelp": "Šie įkrovikliai bandė prisijungti prie evcc. Norėdami naudoti įkroviklį, sukurkite įkroviklį su jo stotelės ID.",
+      "noChargers": "Neaptikta jokių OCPP įkroviklių.",
+      "noStations": "Nėra prijungtų stotelių",
+      "status": {
+        "configured": "Neprijungta",
+        "connected": "Prijungta",
+        "unknown": "Nežinomas"
+      },
+      "title": "OCPP Serveris",
+      "url": "Serverio URL",
+      "urlHelp": "Nukopijuokite šį URL į savo įkroviklio konfigūraciją. Išsamesnės informacijos ieškokite gamintojo vadove. Įkroviklis turėtų automatiškai pridėti savo unikalų identifikatorių (stotelės ID) prie URL. Retais atvejais gali tekti rankiniu būdu nurodyti identifikatorių. Pavyzdys: `{url}`"
     },
     "options": {
       "boolean": {
@@ -585,6 +651,8 @@
       "maximumCurrentHelp": "Turi būti didesnė nei minimali srovė.",
       "maximumPhases": "Maksimalus fazių skaičius",
       "maximumPhasesHelp": "Kiek fazių įkrovimui gali panaudoti šis automobilis? Naudojama norint apskaičiuoti reikiamą minimalų saulės energijos perteklių ir planuoti trukmę.",
+      "maximumPower": "Didžiausia įkrovimo galia",
+      "maximumPowerHelp": "Maksimali galia, kurią gali paimti automobilis",
       "minimumCurrent": "Minimali srovė",
       "minimumCurrentHelp": "Ne mažiau 6A. Nebent tiksliai žinote, ką darote.",
       "online": "Automobiliai su internetiniu API",
@@ -700,6 +768,7 @@
     "authProviders": {
       "confirmLogout": "Ar tikrai norite atjungti {title}?",
       "loggedOut": "Sėkmingai atsijungta",
+      "success": "Autorizacija su {title} sėkminga. Galite uždaryti šį skirtuką.",
       "title": "Autorizacijos būsena"
     },
     "blog": "Tinklaraštis",
@@ -779,6 +848,8 @@
       "stepTwo": "2 žingsnis: nukopijuoti papildomą informaciją",
       "title": "GitHub pranešimo apie problemą santrauka"
     },
+    "system": "Sistema",
+    "timezone": "Laiko juosta",
     "title": "Pranešti apie problemą",
     "version": "Versija"
   },
@@ -1162,8 +1233,10 @@
       "show": "Rodyti {title}"
     },
     "sponsorToken": {
-      "expires": "Jūsų rėmėjo žetonas baigsis {inXDays}. {getNewToken} ir išsaugokite jį čia.",
-      "getNew": "Gaukite naują",
+      "expires": "Jūsų rėmėjo žetonas baigsis {inXDays}.",
+      "expiresUpdateUi": "{getNewToken} ir išsaugokite jį čia.",
+      "expiresUpdateYaml": "{getNewToken} ir išsaugokite jį savo evcc.yaml faile.",
+      "getNewToken": "Gaukite naują",
       "hint": "Pastaba: ateityje šis procesas bus automatizuotas."
     },
     "telemetry": {

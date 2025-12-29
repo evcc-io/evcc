@@ -11,8 +11,11 @@ import (
 	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/hems/shared"
+	"github.com/evcc-io/evcc/hems/smartgrid"
+	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
+	"github.com/samber/lo"
 )
 
 type EEBus struct {
@@ -22,17 +25,20 @@ type EEBus struct {
 	*eebus.Connector
 	cs *eebus.ControllableSystem
 
-	root api.Circuit
+	root        api.Circuit
+	passthrough func(bool) error
 
 	status        status
 	statusUpdated time.Time
 
 	failsafeDuration time.Duration
 
+	smartgridConsumptionId    uint
 	consumptionLimit          ucapi.LoadLimit // LPC-041
 	consumptionLimitActivated time.Time
 	failsafeConsumptionLimit  float64
 
+	smartgridProductionId    uint
 	productionLimit          ucapi.LoadLimit
 	productionLimitActivated time.Time
 	failsafeProductionLimit  float64
@@ -54,9 +60,10 @@ type Limits struct {
 // NewFromConfig creates an EEBus HEMS from generic config
 func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*EEBus, error) {
 	cc := struct {
-		Ski      string
-		Limits   `mapstructure:",squash"`
-		Interval time.Duration
+		Ski         string
+		Limits      `mapstructure:",squash"`
+		Passthrough *plugin.Config
+		Interval    time.Duration
 	}{
 		Limits: Limits{
 			ContractualConsumptionNominalMax:    24800,
@@ -71,6 +78,11 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*E
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
+	}
+
+	passthroughS, err := cc.Passthrough.BoolSetter(ctx, "dim")
+	if err != nil {
 		return nil, err
 	}
 
@@ -92,22 +104,23 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*E
 	}
 	site.SetCircuit(gridcontrol)
 
-	return NewEEBus(ctx, cc.Ski, cc.Limits, gridcontrol, cc.Interval)
+	return NewEEBus(ctx, cc.Ski, cc.Limits, passthroughS, gridcontrol, cc.Interval)
 }
 
 // NewEEBus creates EEBus HEMS
-func NewEEBus(ctx context.Context, ski string, limits Limits, root api.Circuit, interval time.Duration) (*EEBus, error) {
+func NewEEBus(ctx context.Context, ski string, limits Limits, passthrough func(bool) error, root api.Circuit, interval time.Duration) (*EEBus, error) {
 	if eebus.Instance == nil {
 		return nil, errors.New("eebus not configured")
 	}
 
 	c := &EEBus{
-		log:       util.NewLogger("eebus"),
-		root:      root,
-		cs:        eebus.Instance.ControllableSystem(),
-		Connector: eebus.NewConnector(),
-		heartbeat: util.NewValue[struct{}](2 * time.Minute), // LPC-031
-		interval:  interval,
+		log:         util.NewLogger("eebus"),
+		root:        root,
+		passthrough: passthrough,
+		cs:          eebus.Instance.ControllableSystem(),
+		Connector:   eebus.NewConnector(),
+		heartbeat:   util.NewValue[struct{}](2 * time.Minute), // LPC-031
+		interval:    interval,
 
 		failsafeDuration:         limits.FailsafeDurationMinimum,
 		failsafeConsumptionLimit: limits.FailsafeConsumptionActivePowerLimit,
@@ -164,6 +177,10 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, root api.Circuit, 
 	}
 
 	return c, nil
+}
+
+func (c *EEBus) ConsumptionLimit() float64 {
+	return c.consumptionLimit.Value
 }
 
 func (c *EEBus) Run() {
@@ -248,6 +265,16 @@ func (c *EEBus) setConsumptionLimit(limit float64) {
 
 	c.root.Dim(active)
 	c.root.SetMaxPower(limit)
+
+	if err := c.updateSession(&c.smartgridConsumptionId, smartgrid.Dim, limit); err != nil {
+		c.log.ERROR.Printf("smartgrid dim session: %v", err)
+	}
+
+	if c.passthrough != nil {
+		if err := c.passthrough(limit > 0); err != nil {
+			c.log.ERROR.Printf("passthrough failed: %v", err)
+		}
+	}
 }
 
 func (c *EEBus) setProductionLimit(limit float64) {
@@ -259,7 +286,40 @@ func (c *EEBus) setProductionLimit(limit float64) {
 		c.productionLimitActivated = time.Time{}
 	}
 
-	// TODO curtail
-	// c.lpp.Curtail(active)
-	// c.lpp.SetMaxProduction(limit)
+	c.root.Curtail(active)
+	// TODO make ProductionNominalMax configurable (Site kWp)
+	// c.root.SetMaxProduction(limit)
+
+	if err := c.updateSession(&c.smartgridProductionId, smartgrid.Curtail, limit); err != nil {
+		c.log.ERROR.Printf("smartgrid curtail session: %v", err)
+	}
+}
+
+// TODO keep in sync across HEMS implementations
+func (c *EEBus) updateSession(id *uint, typ smartgrid.Type, limit float64) error {
+	// start session
+	if limit > 0 && *id == 0 {
+		var power *float64
+		if p := c.root.GetChargePower(); p > 0 {
+			power = lo.ToPtr(p)
+		}
+
+		sid, err := smartgrid.StartManage(typ, power, limit)
+		if err != nil {
+			return err
+		}
+
+		*id = sid
+	}
+
+	// stop session
+	if limit == 0 && *id != 0 {
+		if err := smartgrid.StopManage(*id); err != nil {
+			return err
+		}
+
+		*id = 0
+	}
+
+	return nil
 }

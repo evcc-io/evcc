@@ -1,4 +1,22 @@
 {
+  "authProviders": {
+    "authCode": "Autentiseringskod",
+    "authCodeHelp": "Kopiera koden och använd i nästa steg. Giltig i {duration}.",
+    "authorizationRequired": "Auktorisering erfordras",
+    "buttonConnect": "Anslut till {provider}",
+    "buttonDisconnect": "Koppla från",
+    "confirmLogout": "Är du säker på att du vill koppla från {title}?",
+    "connect": "anslut",
+    "disconnect": "koppla från",
+    "loggedOut": "Utloggningen lyckades",
+    "logoutFailed": "Utloggning misslyckades",
+    "modalDescriptionLogin": "Slutför auktoriseringsprocessen för att upprätta anslutning med {provider}.",
+    "modalDescriptionLogout": "Ditt {provider}-konto kommer att kopplas från, och åtkomsten till dess data tas bort.",
+    "success": "{title} är nu ansluten och klar att användas.",
+    "successCloseModal": "Du kan stänga det här fönstret nu.",
+    "successCloseTab": "Du kan nu stänga denna flik.",
+    "title": "Auktoriseringsstatus"
+  },
   "batterySettings": {
     "batteryLevel": "Batterinivå",
     "bufferStart": {
@@ -40,8 +58,16 @@
       "chargers": "Elbilsladdare",
       "generic": "Generisk integration",
       "heatingdevices": "Värmeenheter",
-      "ocppHelp": "Kopiera in denna adress i din laddkonfiguration.",
+      "ocppConfirmContinue": "Laddaren har inte anslutits till evcc än. Är du säker på att du vill fortsätta?",
+      "ocppConnected": "Ansluten!",
+      "ocppDescription": "evcc har en inbyggd OCPP-server. Följ dessa steg:",
+      "ocppHelp": "Kopiera denna URL till din laddares konfiguration. Kontrollera tillverkarens manual för detaljer. Laddaren kommer automatiskt att lägga till sin unika identifierare (stations-ID) till URL:en. I sällsynta fall kan du behöva ange identifieraren manuellt. Exempel: `{url}`",
       "ocppLabel": "OCPP-Server URL",
+      "ocppNextStep": "Nästa steg",
+      "ocppStep1": "Konfigurera din laddare att använda evcc som OCPP-server.",
+      "ocppStep2": "Vänta, din laddare ansluter till evcc.",
+      "ocppStep3": "Fortsätt och slutför konfigurationen.",
+      "ocppWaiting": "Väntar på anslutning",
       "switchsockets": "Byt kontakt",
       "template": "Tillverkare",
       "titleAdd": {
@@ -91,10 +117,12 @@
       "chargedEnergy": "Laddad",
       "co2": "Elnät CO₂",
       "configured": "Konfigurerad",
+      "connections": "Anslutningar",
       "controllable": "Kontrollerbar",
       "currency": "Valuta",
       "current": "Ström",
       "currentRange": "Ström",
+      "detected": "Upptäckt",
       "dimmed": "Nedtonad",
       "enabled": "Aktiverad",
       "energy": "Energi",
@@ -164,6 +192,8 @@
       "cancel": "Avbryt",
       "clear": "Rensa",
       "close": "Stäng",
+      "copied": "Kopierad!",
+      "copy": "Kopiera",
       "customHelp": "Skapa en egen enhet med hjälp av evcc's plugin-system.",
       "customOption": "Egen-definierad enhet",
       "delete": "Radera",
@@ -200,8 +230,19 @@
       "titleEdit": "Ändra elnätsmätare"
     },
     "hems": {
+      "csv": {
+        "created": "Skapad",
+        "finished": "Klar",
+        "gridpower": "Näteffekt (kW)",
+        "limitpower": "Begränsning (kW)",
+        "type": "Typ"
+      },
       "description": "Effektbegränsning mha externt system (tex. §14a EnWG styrbox). Fordrar lasthanteringskonfiguration.",
-      "title": "HEMS"
+      "downloadCsv": "Hämta CSV",
+      "eventsRecorded": "Registrerade {count} händelser med nätbegränsning.",
+      "lastEvent": "Senaste {timeAgo}.",
+      "title": "HEMS",
+      "yamlConfigured": "Obs: Konfigurerad via evcc.yaml. Ta bort posten från filen för att aktivera redigering här."
     },
     "icon": {
       "change": "ändra",
@@ -375,9 +416,9 @@
       "baudrate": "Baudrate",
       "comset": "ComSet",
       "connection": "Modbus förbindelse",
-      "connectionHintSerial": "Enheten är direkt förbunden till evcc via RS485 interface.",
-      "connectionHintTcpip": "Enheten kan adresseras via LAN/Wifi.",
-      "connectionValueSerial": "Seriell / USB",
+      "connectionHintSerial": "Enheten är direkt förbunden via RS485 (eller USB-till-RS485 adapter).",
+      "connectionHintTcpip": "Enheten kan nås via nätverk (LAN/Wifi).",
+      "connectionValueSerial": "RS485",
       "connectionValueTcpip": "Nätverk",
       "device": "Enhetsnamn",
       "deviceHint": "Exempel: /dev/ttyUSB0",
@@ -442,6 +483,23 @@
       "labelPort": "Port",
       "labelSchema": "Schema",
       "title": "Nätverk"
+    },
+    "ocpp": {
+      "connectedChargers": "Anslutna laddare",
+      "connectionStatus": "Konfigurerade IDn",
+      "connectionStatusHelp": "Anslutningsstatus för konfigurerade laddare.",
+      "detectedChargers": "Upptäckta IDn",
+      "detectedHelp": "Dessa laddare har försökt ansluta till evcc. För att använda en laddare, skapa en laddplats med dess ID.",
+      "noChargers": "Inga OCPP-laddare hittades.",
+      "noStations": "Inga laddare är anslutna",
+      "status": {
+        "configured": "Ej ansluten",
+        "connected": "Ansluten",
+        "unknown": "Okänd"
+      },
+      "title": "OCPP-server",
+      "url": "Server URL",
+      "urlHelp": "Kopiera denna URL till laddarens konfiguration. Se tillverkarens manual för mer information. Laddaren ska automatiskt lägga till sin unika identifierare (stations-ID) till URL:en. I sällsynta fall kan du behöva ange identifieraren manuellt. Exempel: `{url}`Kopiera denna URL till laddarens konfiguration. Se tillverkarens manual för mer information. Laddaren ska automatiskt lägga till sin unika identifierare (stations-ID) till URL:en. I sällsynta fall kan du behöva ange identifieraren manuellt. Exempel: `{url}`"
     },
     "options": {
       "boolean": {
@@ -585,6 +643,8 @@
       "maximumCurrentHelp": "Måste vara högre än minimi-ström.",
       "maximumPhases": "Maximalt antal faser",
       "maximumPhasesHelp": "Hur många faser kan fordonet laddas med? Används för att räkna ut minsta solöverskott och tidsåtgång.",
+      "maximumPower": "Maximal laddeffekt",
+      "maximumPowerHelp": "Maximal effekt som fordonet kan ta emot",
       "minimumCurrent": "Minimi ström",
       "minimumCurrentHelp": "Ställ enbart under 6A om du är medveten om konsekvenserna.",
       "online": "Fordon med online API",
@@ -700,6 +760,7 @@
     "authProviders": {
       "confirmLogout": "Är du säker på att du vill bryta anslutningen {title}?",
       "loggedOut": "Du har loggats ut",
+      "success": "Auktorisering av {title} lyckades. Du kan nu stänga denna flik.",
       "title": "Auktoriseringsstatus"
     },
     "blog": "Blogg",
@@ -1162,8 +1223,10 @@
       "show": "Visa {title}"
     },
     "sponsorToken": {
-      "expires": "Din sponsortoken löper ut om {inXDays}. {getNewToken} och uppdatera här.",
-      "getNew": "Hämta en ny",
+      "expires": "Din sponsortoken löper ut om {inXDays}.",
+      "expiresUpdateUi": "{getNewToken} och uppdatera här.",
+      "expiresUpdateYaml": "{getNewToken} och uppdatera i din evcc.yaml.",
+      "getNewToken": "Hämta en ny",
       "hint": "Observera: Vi kommer att automatisera detta i framtiden."
     },
     "telemetry": {

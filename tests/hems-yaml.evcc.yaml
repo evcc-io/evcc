@@ -1,0 +1,11 @@
+interval: 0.1s
+
+hems:
+  type: relay
+  maxPower: 4200
+  limit:
+    source: const
+    value: true
+
+circuits:
+  - name: main

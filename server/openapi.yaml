@@ -702,6 +702,42 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/NullResult"
+  /gridsessions:
+    get:
+      operationId: getGridSessions
+      summary: Grid limitation sessions
+      description: "Returns a list of HEMS grid limitation events."
+      tags:
+        - sessions
+      parameters:
+        - name: format
+          in: query
+          description: Response format (default json)
+          schema:
+            type: string
+            enum:
+              - csv
+        - name: lang
+          in: query
+          description: Language (defaults to accept header)
+          schema:
+            type: string
+            example: de
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    $ref: "#/components/schemas/GridSessions"
+            text/csv:
+              schema:
+                description: Download csv-file
+                type: string
+                format: binary
   /sessions:
     get:
       operationId: getSessions
@@ -1107,6 +1143,30 @@ components:
           chargedEnergy:
             type: number
             description: Charged energy in kWh
+    GridSessions:
+      description: Grid limitation sessions
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            $ref: "#/components/schemas/Id"
+          created:
+            $ref: "#/components/schemas/Timestamp"
+          finished:
+            $ref: "#/components/schemas/Timestamp"
+          type:
+            type: string
+            enum:
+              - consumption
+              - feedin
+            description: Type of grid limitation event
+          gridPower:
+            type: number
+            description: Grid power in watts
+          limitPower:
+            type: number
+            description: Limitation power in watts
           chargeDuration:
             type: number
             description: Duration of active charging

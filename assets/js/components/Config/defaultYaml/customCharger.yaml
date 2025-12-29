@@ -13,6 +13,7 @@ maxcurrent: # set maximum charge current in A
   source: js
   script: console.log(maxcurrent) #
 
+
 ## optional attributes (read-only)
 
 #icon: generic # icon for UI purpose only

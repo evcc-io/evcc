@@ -60,7 +60,6 @@ params:
   - name: capacity
     advanced: true
   - name: maxchargepower
-    default: 4200
   - name: maxdischargepower
   - name: maxacpower
 render: |
@@ -153,6 +152,7 @@ render: |
           body: '{"value": 0}'
       - case: 3 # charge
         set:
+          {{- if .maxchargepower }}
           source: http
           uri: http://{{ .host }}/rest/channel/{{ .battery }}/SetActivePowerLessOrEquals
           auth:
@@ -163,6 +163,10 @@ render: |
           headers:
           - content-type: application/json
           body: '{"value": {{ mul .maxchargepower -1 }}}' # charge power is negative
+          {{- else }}
+          source: error
+          error: ErrNotAvailable
+          {{- end }}
   {{- end }}
   minsoc: {{ .minsoc }} # %
   maxsoc: {{ .maxsoc }} # %

@@ -16,6 +16,7 @@ import (
 // setPlanActive updates plan active flag
 func (lp *Loadpoint) setPlanActive(active bool) {
 	if !active {
+		lp.planOverrunSent = false
 		lp.planSlotEnd = time.Time{}
 	}
 	if lp.planActive != active {
@@ -104,10 +105,12 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		lp.setPlanActive(active)
 	}()
 
+	var plan api.Rates
 	var planStart, planEnd time.Time
 	var planOverrun time.Duration
 
 	defer func() {
+		lp.publish(keys.Plan, plan)
 		lp.publish(keys.PlanProjectedStart, planStart)
 		lp.publish(keys.PlanProjectedEnd, planEnd)
 		lp.publish(keys.PlanOverrun, planOverrun)
@@ -134,8 +137,8 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 	maxPower := lp.EffectiveMaxPower()
 	requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower)
 	if requiredDuration <= 0 {
-		// continue a 100% plan as long as the vehicle is charging
-		if lp.planActive && isSocBased && goal == 100 && lp.charging() {
+		// continue a 100% plan as long as the vehicle is connected
+		if lp.planActive && isSocBased && goal == 100 {
 			return true
 		}
 
@@ -143,7 +146,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		return false
 	}
 
-	plan := lp.GetPlan(planTime, requiredDuration, lp.GetPlanPreCondDuration())
+	plan = lp.GetPlan(planTime, requiredDuration, lp.GetPlanPreCondDuration())
 	if plan == nil {
 		return false
 	}
@@ -152,6 +155,10 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 	if excessDuration := requiredDuration - lp.clock.Until(planTime); excessDuration > 0 {
 		overrun = fmt.Sprintf("overruns by %v, ", excessDuration.Round(time.Second))
 		planOverrun = excessDuration
+		if !lp.planOverrunSent {
+			lp.pushEvent("planoverrun")
+			lp.planOverrunSent = true
+		}
 	}
 
 	planStart = planner.Start(plan)

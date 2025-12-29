@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
 import { startSimulator, stopSimulator, simulatorHost } from "./simulator";
-import { enableExperimental, expectModalVisible, expectModalHidden } from "./utils";
+import { expectModalVisible, expectModalHidden } from "./utils";
 
 test.use({ baseURL: baseUrl() });
 
@@ -52,9 +52,6 @@ test.describe("issue creation", () => {
   test("create issue via ui", async ({ page }) => {
     await start(CONFIG);
     await page.goto("/#/config");
-
-    // Enable experimental features
-    await enableExperimental(page, false);
 
     // Create a Shelly meter with username (to test private data redaction)
     await page.getByRole("button", { name: "Add grid meter" }).click();
