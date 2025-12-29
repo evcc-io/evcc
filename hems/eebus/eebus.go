@@ -15,7 +15,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-//go:generate go run gen/main.go consumption production
 type EEBus struct {
 	mux sync.RWMutex
 	log *util.Logger
