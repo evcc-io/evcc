@@ -192,7 +192,7 @@ func (c *EEBus) run() error {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	c.log.TRACE.Println("status: ", c.status)
+	c.log.TRACE.Println("status:", c.status)
 
 	// check heartbeat
 	_, heartbeatErr := c.heartbeat.Get()
