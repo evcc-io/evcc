@@ -3,7 +3,9 @@ package meter
 import (
 	"context"
 	"errors"
+	"fmt"
 	"slices"
+	"strings"
 	"sync"
 	"time"
 
@@ -299,20 +301,13 @@ func (c *EEBus) Dim(dim bool) error {
 	}
 
 	if !slices.Contains(c.eg.EgLPCInterface.AvailableScenariosForEntity(c.egLpcEntity), 1) {
-		return errors.New("scenario 1 not supported")
+		return errors.New("eg lpc: scenario 1 not supported")
 	}
 
 	_, err := c.eg.EgLPCInterface.WriteConsumptionLimit(c.egLpcEntity, ucapi.LoadLimit{
 		Value:    value,
 		IsActive: dim,
-	}, func(result model.ResultDataType) {
-		if result.ErrorNumber != nil {
-			c.log.ERROR.Println("ErrorNumber", *result.ErrorNumber)
-		}
-		if result.Description != nil {
-			c.log.ERROR.Println("Description", *result.Description)
-		}
-	})
+	}, c.callbackResult("consumption limit"))
 
 	return err
 }
@@ -373,20 +368,32 @@ func (c *EEBus) Curtail(curtail bool) error {
 	}
 
 	if !slices.Contains(c.eg.EgLPPInterface.AvailableScenariosForEntity(c.egLppEntity), 1) {
-		return errors.New("scenario 1 not supported")
+		return errors.New("eg lpp: scenario 1 not supported")
 	}
 
 	_, err := c.eg.EgLPPInterface.WriteProductionLimit(c.egLppEntity, ucapi.LoadLimit{
 		Value:    value,
 		IsActive: curtail,
-	}, func(result model.ResultDataType) {
-		if result.ErrorNumber != nil {
-			c.log.ERROR.Println("ErrorNumber", *result.ErrorNumber)
-		}
-		if result.Description != nil {
-			c.log.ERROR.Println("Description", *result.Description)
-		}
-	})
+	}, c.callbackResult("production limit"))
 
 	return err
+}
+
+func (c *EEBus) callbackResult(typ string) func(result model.ResultDataType) {
+	return func(result model.ResultDataType) {
+		sb := new(strings.Builder)
+
+		if result.ErrorNumber != nil {
+			fmt.Fprint(sb, *result.ErrorNumber)
+		}
+		if result.Description != nil {
+			if sb.Len() > 0 {
+				fmt.Print(sb, ":")
+			}
+			fmt.Print(sb, *result.Description)
+		}
+		if sb.Len() > 0 {
+			c.log.ERROR.Printf("%s: %s", typ, sb.String())
+		}
+	}
 }
