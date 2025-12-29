@@ -24,19 +24,24 @@ type EEBus struct {
 
 	*eebus.Connector
 	cs *eebus.ControllableSystem
-	ma *eebus.MonitoringAppliance
-	eg *eebus.EnergyGuard
 
 	root        api.Circuit
 	passthrough func(bool) error
 
-	smartgridID   uint
 	status        status
 	statusUpdated time.Time
 
-	consumptionLimit *ucapi.LoadLimit // LPC-041
-	failsafeLimit    float64
 	failsafeDuration time.Duration
+
+	smartgridConsumptionId    uint
+	consumptionLimit          ucapi.LoadLimit // LPC-041
+	consumptionLimitActivated time.Time
+	failsafeConsumptionLimit  float64
+
+	smartgridProductionId    uint
+	productionLimit          ucapi.LoadLimit
+	productionLimitActivated time.Time
+	failsafeProductionLimit  float64
 
 	heartbeat *util.Value[struct{}]
 	interval  time.Duration
@@ -44,9 +49,12 @@ type EEBus struct {
 
 type Limits struct {
 	ContractualConsumptionNominalMax    float64
-	ConsumptionLimit                    float64
 	FailsafeConsumptionActivePowerLimit float64
-	FailsafeDurationMinimum             time.Duration
+
+	ProductionNominalMax               float64
+	FailsafeProductionActivePowerLimit float64
+
+	FailsafeDurationMinimum time.Duration
 }
 
 // NewFromConfig creates an EEBus HEMS from generic config
@@ -59,9 +67,12 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*E
 	}{
 		Limits: Limits{
 			ContractualConsumptionNominalMax:    24800,
-			ConsumptionLimit:                    0,
 			FailsafeConsumptionActivePowerLimit: 4200,
-			FailsafeDurationMinimum:             2 * time.Hour,
+
+			ProductionNominalMax:               0,
+			FailsafeProductionActivePowerLimit: 0,
+
+			FailsafeDurationMinimum: 2 * time.Hour,
 		},
 		Interval: 10 * time.Second,
 	}
@@ -82,21 +93,21 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*E
 	}
 
 	// register LPC circuit if not already registered
-	lpc, err := shared.GetOrCreateCircuit("lpc", "eebus")
+	gridcontrol, err := shared.GetOrCreateCircuit("gridcontrol", "eebus")
 	if err != nil {
 		return nil, err
 	}
 
-	// wrap old root with new pc parent
-	if err := root.Wrap(lpc); err != nil {
+	// wrap old root with new grid control parent
+	if err := root.Wrap(gridcontrol); err != nil {
 		return nil, err
 	}
-	site.SetCircuit(lpc)
+	site.SetCircuit(gridcontrol)
 
-	return NewEEBus(ctx, cc.Ski, cc.Limits, passthroughS, lpc, cc.Interval)
+	return NewEEBus(ctx, cc.Ski, cc.Limits, passthroughS, gridcontrol, cc.Interval)
 }
 
-// NewEEBus creates EEBus charger
+// NewEEBus creates EEBus HEMS
 func NewEEBus(ctx context.Context, ski string, limits Limits, passthrough func(bool) error, root api.Circuit, interval time.Duration) (*EEBus, error) {
 	if eebus.Instance == nil {
 		return nil, errors.New("eebus not configured")
@@ -107,19 +118,13 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, passthrough func(b
 		root:        root,
 		passthrough: passthrough,
 		cs:          eebus.Instance.ControllableSystem(),
-		ma:          eebus.Instance.MonitoringAppliance(),
-		eg:          eebus.Instance.EnergyGuard(),
 		Connector:   eebus.NewConnector(),
 		heartbeat:   util.NewValue[struct{}](2 * time.Minute), // LPC-031
 		interval:    interval,
 
-		consumptionLimit: &ucapi.LoadLimit{
-			Value:        limits.ConsumptionLimit,
-			IsChangeable: true,
-		},
-
-		failsafeLimit:    limits.FailsafeConsumptionActivePowerLimit,
-		failsafeDuration: limits.FailsafeDurationMinimum,
+		failsafeDuration:         limits.FailsafeDurationMinimum,
+		failsafeConsumptionLimit: limits.FailsafeConsumptionActivePowerLimit,
+		failsafeProductionLimit:  limits.FailsafeProductionActivePowerLimit,
 	}
 
 	// simulate a received heartbeat
@@ -137,37 +142,38 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, passthrough func(b
 
 	// controllable system
 	for _, s := range c.cs.CsLPCInterface.RemoteEntitiesScenarios() {
-		c.log.DEBUG.Println("CS LPC RemoteEntitiesScenarios:", s.Scenarios)
+		c.log.DEBUG.Printf("ski %s CS LPC scenarios: %v", s.Entity.Device().Ski(), s.Scenarios)
 	}
 	for _, s := range c.cs.CsLPPInterface.RemoteEntitiesScenarios() {
-		c.log.DEBUG.Println("CS LPP RemoteEntitiesScenarios:", s.Scenarios)
-	}
-
-	// monitoring appliance
-	for _, s := range c.ma.MaMPCInterface.RemoteEntitiesScenarios() {
-		c.log.DEBUG.Println("MA MPC RemoteEntitiesScenarios:", s.Scenarios)
-	}
-	for _, s := range c.ma.MaMGCPInterface.RemoteEntitiesScenarios() {
-		c.log.DEBUG.Println("MA MGCP RemoteEntitiesScenarios:", s.Scenarios)
-	}
-
-	// energy guard
-	for _, s := range c.eg.EgLPCInterface.RemoteEntitiesScenarios() {
-		c.log.DEBUG.Println("EG LPC RemoteEntitiesScenarios:", s.Scenarios)
+		c.log.DEBUG.Printf("ski %s CS LPP scenarios: %v", s.Entity.Device().Ski(), s.Scenarios)
 	}
 
 	// set initial values
 	if err := c.cs.CsLPCInterface.SetConsumptionNominalMax(limits.ContractualConsumptionNominalMax); err != nil {
 		c.log.ERROR.Println("CS LPC SetConsumptionNominalMax:", err)
 	}
-	if err := c.cs.CsLPCInterface.SetConsumptionLimit(*c.consumptionLimit); err != nil {
-		c.log.ERROR.Println("CS LPC SetConsumptionLimit:", err)
+	if c.failsafeConsumptionLimit > 0 {
+		if err := c.cs.CsLPCInterface.SetFailsafeConsumptionActivePowerLimit(c.failsafeConsumptionLimit, true); err != nil {
+			c.log.ERROR.Println("CS LPC SetFailsafeConsumptionActivePowerLimit:", err)
+		}
 	}
-	if err := c.cs.CsLPCInterface.SetFailsafeConsumptionActivePowerLimit(c.failsafeLimit, true); err != nil {
-		c.log.ERROR.Println("CS LPC SetFailsafeConsumptionActivePowerLimit:", err)
+
+	if err := c.cs.CsLPPInterface.SetProductionNominalMax(limits.ProductionNominalMax); err != nil {
+		c.log.ERROR.Println("CS LPP SetProductionNominalMax:", err)
 	}
-	if err := c.cs.CsLPCInterface.SetFailsafeDurationMinimum(c.failsafeDuration, true); err != nil {
-		c.log.ERROR.Println("CS LPC SetFailsafeDurationMinimum:", err)
+	if c.failsafeProductionLimit > 0 {
+		if err := c.cs.CsLPPInterface.SetFailsafeProductionActivePowerLimit(c.failsafeProductionLimit, true); err != nil {
+			c.log.ERROR.Println("CS LPP SetFailsafeProductionActivePowerLimit:", err)
+		}
+	}
+
+	if c.failsafeDuration > 0 {
+		if err := c.cs.CsLPCInterface.SetFailsafeDurationMinimum(c.failsafeDuration, true); err != nil {
+			c.log.ERROR.Println("CS LPC SetFailsafeDurationMinimum:", err)
+		}
+		if err := c.cs.CsLPPInterface.SetFailsafeDurationMinimum(c.failsafeDuration, true); err != nil {
+			c.log.ERROR.Println("CS LPP SetFailsafeDurationMinimum:", err)
+		}
 	}
 
 	return c, nil
@@ -185,7 +191,6 @@ func (c *EEBus) Run() {
 	}
 }
 
-// TODO check state machine against spec
 func (c *EEBus) run() error {
 	c.mux.Lock()
 	defer c.mux.Unlock()
@@ -197,100 +202,124 @@ func (c *EEBus) run() error {
 	if heartbeatErr != nil && c.status != StatusFailsafe {
 		// LPC-914/2
 		c.log.WARN.Println("missing heartbeat- entering failsafe mode")
-		c.setStatusAndLimit(StatusFailsafe, c.failsafeLimit)
+		c.setStatusAndLimit(StatusFailsafe, c.failsafeConsumptionLimit, c.failsafeProductionLimit)
 
 		return nil
 	}
 
-	// TODO
-	// status init
-	// status Unlimited/controlled
-	// status Unlimited/autonomous
-
-	switch c.status {
-	case StatusUnlimited:
-		// LPC-914/1
-		if c.consumptionLimit != nil && c.consumptionLimit.IsActive {
-			c.log.WARN.Println("active consumption limit")
-			c.setStatusAndLimit(StatusLimited, c.consumptionLimit.Value)
-		}
-
-	case StatusLimited:
-		// limit updated?
-		if !c.consumptionLimit.IsActive {
-			c.log.WARN.Println("inactive consumption limit")
-			c.setStatusAndLimit(StatusUnlimited, 0)
-			break
-		}
-
-		c.setLimit(c.consumptionLimit.Value)
-
-		// LPC-914/1
-		if d := c.consumptionLimit.Duration; d > 0 && time.Since(c.statusUpdated) > d {
-			c.consumptionLimit = nil
-
-			c.log.DEBUG.Println("limit duration exceeded- return to normal")
-			c.setStatusAndLimit(StatusUnlimited, 0)
-		}
-
-	case StatusFailsafe:
+	if c.status == StatusFailsafe {
 		// LPC-914/2
-		if d := c.failsafeDuration; heartbeatErr == nil || time.Since(c.statusUpdated) > d {
-			c.log.DEBUG.Println("heartbeat returned and failsafe duration exceeded- return to normal")
-			c.setStatusAndLimit(StatusUnlimited, 0)
+		if heartbeatErr != nil || time.Since(c.statusUpdated) <= c.failsafeDuration {
+			return nil
+		}
+
+		c.log.DEBUG.Println("heartbeat returned or failsafe duration exceeded- leaving failsafe mode")
+		c.setStatusAndLimit(StatusNormal, 0, 0)
+	}
+
+	// LPC-914/1
+	if c.consumptionLimitActivated.IsZero() {
+		if c.consumptionLimit.IsActive {
+			c.log.WARN.Println("activating consumption limit")
+			c.setConsumptionLimit(c.consumptionLimit.Value)
+		}
+	} else {
+		if time.Since(c.consumptionLimitActivated) > c.consumptionLimit.Duration {
+			c.log.DEBUG.Println("consumption limit duration exceeded")
+			c.setConsumptionLimit(0)
+		}
+	}
+
+	// LPP
+	if c.productionLimitActivated.IsZero() {
+		if c.productionLimit.IsActive {
+			c.log.WARN.Println("activating production limit")
+			c.setProductionLimit(c.productionLimit.Value)
+		}
+	} else {
+		if time.Since(c.productionLimitActivated) > c.productionLimit.Duration {
+			c.log.DEBUG.Println("production limit duration exceeded")
+			c.setProductionLimit(0)
 		}
 	}
 
 	return nil
 }
 
-func (c *EEBus) setStatusAndLimit(status status, limit float64) {
+func (c *EEBus) setStatusAndLimit(status status, consumption, production float64) {
 	c.status = status
 	c.statusUpdated = time.Now()
 
-	c.setLimit(limit)
-
-	if err := c.updateSession(limit); err != nil {
-		c.log.ERROR.Printf("smartgrid session: %v", err)
-	}
+	c.setConsumptionLimit(consumption)
+	c.setProductionLimit(production)
 }
 
-// TODO keep in sync across HEMS implementations
-func (c *EEBus) updateSession(limit float64) error {
-	// start session
-	if limit > 0 && c.smartgridID == 0 {
-		var power *float64
-		if p := c.root.GetChargePower(); p > 0 {
-			power = lo.ToPtr(p)
-		}
+func (c *EEBus) setConsumptionLimit(limit float64) {
+	active := limit > 0
 
-		sid, err := smartgrid.StartManage(smartgrid.Dim, power, limit)
-		if err != nil {
-			return err
-		}
-
-		c.smartgridID = sid
+	if active {
+		c.consumptionLimitActivated = time.Now()
+	} else {
+		c.consumptionLimitActivated = time.Time{}
 	}
 
-	// stop session
-	if limit == 0 && c.smartgridID != 0 {
-		if err := smartgrid.StopManage(c.smartgridID); err != nil {
-			return err
-		}
-
-		c.smartgridID = 0
-	}
-
-	return nil
-}
-
-func (c *EEBus) setLimit(limit float64) {
-	c.root.Dim(limit > 0)
+	c.root.Dim(active)
 	c.root.SetMaxPower(limit)
+
+	if err := c.updateSession(&c.smartgridConsumptionId, smartgrid.Dim, limit); err != nil {
+		c.log.ERROR.Printf("smartgrid dim session: %v", err)
+	}
 
 	if c.passthrough != nil {
 		if err := c.passthrough(limit > 0); err != nil {
 			c.log.ERROR.Printf("passthrough failed: %v", err)
 		}
 	}
+}
+
+func (c *EEBus) setProductionLimit(limit float64) {
+	active := limit > 0
+
+	if active {
+		c.productionLimitActivated = time.Now()
+	} else {
+		c.productionLimitActivated = time.Time{}
+	}
+
+	c.root.Curtail(active)
+	// TODO make ProductionNominalMax configurable (Site kWp)
+	// c.root.SetMaxProduction(limit)
+
+	if err := c.updateSession(&c.smartgridProductionId, smartgrid.Curtail, limit); err != nil {
+		c.log.ERROR.Printf("smartgrid curtail session: %v", err)
+	}
+}
+
+// TODO keep in sync across HEMS implementations
+func (c *EEBus) updateSession(id *uint, typ smartgrid.Type, limit float64) error {
+	// start session
+	if limit > 0 && *id == 0 {
+		var power *float64
+		if p := c.root.GetChargePower(); p > 0 {
+			power = lo.ToPtr(p)
+		}
+
+		sid, err := smartgrid.StartManage(typ, power, limit)
+		if err != nil {
+			return err
+		}
+
+		*id = sid
+	}
+
+	// stop session
+	if limit == 0 && *id != 0 {
+		if err := smartgrid.StopManage(*id); err != nil {
+			return err
+		}
+
+		*id = 0
+	}
+
+	return nil
 }
