@@ -403,6 +403,7 @@ func (c *Circuit) Dimmed() bool {
 
 	return c.parent.Dimmed()
 }
+
 func (c *Circuit) Curtail(curtail bool) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
