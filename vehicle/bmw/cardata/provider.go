@@ -191,7 +191,7 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 	}
 
 	// evaluate charging.status first since it is usually available through mqtt 
-	// while charging.hvStatus might only be available through rest
+	// while charging.hvStatus might only be available through rest 
 	// (https://github.com/evcc-io/evcc/pull/26235)
 	cs, err := v.String("vehicle.drivetrain.electricEngine.charging.status") 
 	if err != nil || cs == "" {
