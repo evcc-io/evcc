@@ -1,6 +1,8 @@
 <template>
 	<div class="loadpoint d-flex flex-column pt-4 pb-2 px-3 px-sm-4 mx-2 mx-sm-0">
-		<div class="d-block d-sm-flex justify-content-between align-items-center mb-3">
+		<div
+			class="d-block d-sm-flex d-lg-block d-xl-flex justify-content-between align-items-center mb-3"
+		>
 			<div class="d-flex justify-content-between align-items-center mb-3 text-truncate">
 				<h3 class="me-2 mb-0 text-truncate d-flex">
 					<VehicleIcon
@@ -8,17 +10,20 @@
 						:name="chargerIcon"
 						class="me-2 flex-shrink-0"
 					/>
-					<div class="text-truncate">
+					<div class="text-truncate" data-bs-toggle="tooltip">
 						{{ loadpointTitle }}
 					</div>
 				</h3>
-				<LoadpointSettingsButton class="d-block d-sm-none" @click="openSettingsModal" />
+				<LoadpointSettingsButton
+					class="d-block d-sm-none d-lg-block d-xl-none"
+					@click="openSettingsModal"
+				/>
 			</div>
 			<div class="mb-3 d-flex align-items-center">
 				<Mode class="flex-grow-1" v-bind="modeProps" @updated="setTargetMode" />
 				<LoadpointSettingsButton
 					:id="id"
-					class="d-none d-sm-block ms-2"
+					class="d-none d-sm-block d-lg-none d-xl-block ms-2"
 					@click="openSettingsModal"
 				/>
 			</div>
