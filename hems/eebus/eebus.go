@@ -21,8 +21,6 @@ type EEBus struct {
 
 	*eebus.Connector
 	cs *eebus.ControllableSystem
-	ma *eebus.MonitoringAppliance
-	eg *eebus.EnergyGuard
 
 	root api.Circuit
 
