@@ -23,6 +23,7 @@ import (
 	csplc "github.com/enbility/eebus-go/usecases/cs/lpc"
 	cslpp "github.com/enbility/eebus-go/usecases/cs/lpp"
 	eglpc "github.com/enbility/eebus-go/usecases/eg/lpc"
+	eglpp "github.com/enbility/eebus-go/usecases/eg/lpp"
 	"github.com/enbility/eebus-go/usecases/ma/mgcp"
 	"github.com/enbility/eebus-go/usecases/ma/mpc"
 	shipapi "github.com/enbility/ship-go/api"
@@ -64,6 +65,7 @@ type MonitoringAppliance struct {
 // Energy Guard
 type EnergyGuard struct {
 	ucapi.EgLPCInterface
+	ucapi.EgLPPInterface
 }
 
 type EEBus struct {
@@ -189,6 +191,7 @@ func NewServer(other Config) (*EEBus, error) {
 		// energy guard
 		c.eg = EnergyGuard{
 			EgLPCInterface: eglpc.NewLPC(localEntity, c.ucCallback),
+			EgLPPInterface: eglpp.NewLPP(localEntity, c.ucCallback),
 		}
 	}
 
@@ -199,7 +202,7 @@ func NewServer(other Config) (*EEBus, error) {
 		c.cem.OscEV, c.cem.EvSoc,
 		c.cs.CsLPCInterface, c.cs.CsLPPInterface,
 		c.ma.MaMGCPInterface, c.ma.MaMPCInterface,
-		c.eg.EgLPCInterface,
+		c.eg.EgLPCInterface, c.eg.EgLPPInterface,
 	} {
 		c.service.AddUseCase(uc)
 	}
