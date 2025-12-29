@@ -175,16 +175,16 @@ func NewServer(other Config) (*EEBus, error) {
 			CsLPCInterface: csplc.NewLPC(localEntity, c.ucCallback),
 			CsLPPInterface: cslpp.NewLPP(localEntity, c.ucCallback),
 		}
+	}
+
+	{
+		localEntity := c.service.LocalDevice().EntityForType(model.EntityTypeTypeGridGuard)
 
 		// monitoring appliance
 		c.ma = MonitoringAppliance{
 			MaMGCPInterface: mgcp.NewMGCP(localEntity, c.ucCallback),
 			MaMPCInterface:  mpc.NewMPC(localEntity, c.ucCallback),
 		}
-	}
-
-	{
-		localEntity := c.service.LocalDevice().EntityForType(model.EntityTypeTypeGridGuard)
 
 		// energy guard
 		c.eg = EnergyGuard{
