@@ -2,7 +2,6 @@ package snmp
 
 import (
 	"context"
-	"fmt"
 	"testing"
 	"time"
 
@@ -24,31 +23,28 @@ func TestSharedConnection(t *testing.T) {
 	host := "localhost"
 	version := "2c"
 	community := "public"
-	auth := Auth{User: "testuser"}
-	expectedKey := fmt.Sprintf("%s:%d:%s:%s:%s", host, 161, version, community, auth.User)
+	auth := Auth{}
 
-	// We can't easily call NewConnection because it calls g.Connect()
-	// So we manually add it to registry to test sharing
+	key := buildCacheKey(host, 161, version, community, auth)
+
 	conn := &Connection{Handler: &mockHandler{}}
 	mu.Lock()
-	connections[expectedKey] = conn
+	connections[key] = conn
 	mu.Unlock()
+	defer func() {
+		mu.Lock()
+		delete(connections, key)
+		mu.Unlock()
+	}()
 
 	res, err := NewConnection(ctx, host, version, community, auth)
 	assert.NoError(t, err)
 	assert.Equal(t, conn, res)
-
-	// Test unregistration - we need to trigger the goroutine
-	// Since we manually added it, the goroutine was NOT started in NewConnection
-	// because it returned early.
-	// Let's fix the test to verify unregistration of a connection that WAS created by NewConnection.
-	// But Connect() will fail.
-
-	// Alternative: just test the logic in NewConnection by manually starting the goroutine in the test if we are mocking
 }
 
 func TestUnregistration(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
+
 	key := "unregister-test"
 	conn := &Connection{Handler: &mockHandler{}}
 
@@ -70,4 +66,27 @@ func TestUnregistration(t *testing.T) {
 	_, ok := connections[key]
 	mu.Unlock()
 	assert.False(t, ok)
+}
+
+func TestBuildCacheKey(t *testing.T) {
+	host := "1.2.3.4"
+	port := uint16(161)
+
+	// v2c
+	k1 := buildCacheKey(host, port, "2c", "public", Auth{})
+	k2 := buildCacheKey(host, port, "2c", "public", Auth{})
+	assert.Equal(t, k1, k2)
+	assert.Equal(t, "1.2.3.4:161:2c:public", k1)
+
+	// v3
+	auth1 := Auth{User: "user", SecurityLevel: "authPriv", AuthPassword: "password"}
+	auth2 := Auth{User: "user", SecurityLevel: "authPriv", AuthPassword: "password"}
+	auth3 := Auth{User: "user", SecurityLevel: "authPriv", AuthPassword: "different"}
+
+	kv3_1 := buildCacheKey(host, port, "3", "", auth1)
+	kv3_2 := buildCacheKey(host, port, "3", "", auth2)
+	kv3_3 := buildCacheKey(host, port, "3", "", auth3)
+
+	assert.Equal(t, kv3_1, kv3_2)
+	assert.NotEqual(t, kv3_1, kv3_3)
 }

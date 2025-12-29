@@ -2,6 +2,7 @@ package snmp
 
 import (
 	"context"
+	"crypto/sha256"
 	"fmt"
 	"net/url"
 	"strconv"
@@ -27,44 +28,65 @@ func (c *Connection) Get(oids []string) (*gosnmp.SnmpPacket, error) {
 	return c.Handler.Get(oids)
 }
 
+func (c *Connection) Close() error {
+	if cl, ok := c.Handler.(*gosnmp.GoSNMP); ok && cl.Conn != nil {
+		return cl.Conn.Close()
+	}
+	return nil
+}
+
 var (
 	mu          sync.Mutex
 	connections = make(map[string]*Connection)
 )
 
-func NewConnection(ctx context.Context, uri, version, community string, auth Auth) (*Connection, error) {
+func parseTarget(uri string) (host string, port uint16, scheme string, err error) {
 	if !strings.Contains(uri, "://") {
 		uri = "udp://" + uri
 	}
+
 	u, err := url.Parse(uri)
 	if err != nil {
-		return nil, err
+		return "", 0, "", err
 	}
 
-	host := u.Hostname()
+	host = u.Hostname()
 	portStr := u.Port()
 	if portStr == "" {
 		portStr = "161"
 	}
-	port, err := strconv.ParseUint(portStr, 10, 16)
+	p, err := strconv.ParseUint(portStr, 10, 16)
 	if err != nil {
-		return nil, fmt.Errorf("invalid port: %w", err)
+		return "", 0, "", fmt.Errorf("invalid port: %w", err)
 	}
 
-	key := fmt.Sprintf("%s:%d:%s:%s:%s", host, port, version, community, auth.User)
-	mu.Lock()
-	if conn, ok := connections[key]; ok {
-		mu.Unlock()
-		return conn, nil
-	}
-	defer mu.Unlock()
+	return host, uint16(p), u.Scheme, nil
+}
 
+func buildCacheKey(host string, port uint16, version, community string, auth Auth) string {
+	if strings.ToLower(version) != "3" {
+		return fmt.Sprintf("%s:%d:%s:%s", host, port, version, community)
+	}
+
+	// For v3, include all security parameters in the key
+	h := sha256.New()
+	h.Write([]byte(auth.User))
+	h.Write([]byte(auth.SecurityLevel))
+	h.Write([]byte(auth.AuthType))
+	h.Write([]byte(auth.AuthPassword))
+	h.Write([]byte(auth.PrivType))
+	h.Write([]byte(auth.PrivPassword))
+
+	return fmt.Sprintf("%s:%d:%s:%x", host, port, version, h.Sum(nil))
+}
+
+func newGoSNMP(host string, port uint16, scheme, version, community string, auth Auth) (*gosnmp.GoSNMP, error) {
 	g := &gosnmp.GoSNMP{
 		Target:    host,
-		Port:      uint16(port),
-		Transport: u.Scheme,
+		Port:      port,
+		Transport: scheme,
 		Retries:   2,
-		Timeout:   time.Duration(2) * time.Second,
+		Timeout:   2 * time.Second,
 	}
 
 	switch strings.ToLower(version) {
@@ -93,6 +115,28 @@ func NewConnection(ctx context.Context, uri, version, community string, auth Aut
 	if err := g.Connect(); err != nil {
 		return nil, err
 	}
+	return g, nil
+}
+
+func NewConnection(ctx context.Context, uri, version, community string, auth Auth) (*Connection, error) {
+	host, port, scheme, err := parseTarget(uri)
+	if err != nil {
+		return nil, err
+	}
+
+	key := buildCacheKey(host, port, version, community, auth)
+
+	mu.Lock()
+	if conn, ok := connections[key]; ok {
+		mu.Unlock()
+		return conn, nil
+	}
+	defer mu.Unlock()
+
+	g, err := newGoSNMP(host, port, scheme, version, community, auth)
+	if err != nil {
+		return nil, err
+	}
 
 	res := &Connection{Handler: g}
 	connections[key] = res
@@ -103,6 +147,7 @@ func NewConnection(ctx context.Context, uri, version, community string, auth Aut
 			mu.Lock()
 			delete(connections, key)
 			mu.Unlock()
+			_ = res.Close()
 		}()
 	}
 

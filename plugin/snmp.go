@@ -39,6 +39,10 @@ func NewSnmpFromConfig(ctx context.Context, other map[string]any) (Plugin, error
 		return nil, err
 	}
 
+	if cc.URI == "" {
+		return nil, fmt.Errorf("missing uri")
+	}
+
 	conn, err := snmp.NewConnection(ctx, cc.URI, cc.Version, cc.Community, cc.Auth)
 	if err != nil {
 		return nil, err
