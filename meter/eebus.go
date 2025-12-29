@@ -133,8 +133,6 @@ var _ eebus.Device = (*EEBus)(nil)
 
 // UseCaseEvent implements the eebus.Device interface
 func (c *EEBus) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spineapi.EntityRemoteInterface, event eebusapi.EventType) {
-	c.log.TRACE.Printf("recv: %s", event)
-
 	switch event {
 	// Monitoring Appliance
 	case mpc.DataUpdatePower, mgcp.DataUpdatePower:
