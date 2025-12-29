@@ -24,8 +24,7 @@ type EEBus struct {
 	ma *eebus.MonitoringAppliance
 	eg *eebus.EnergyGuard
 
-	lpc api.Circuit
-	lpp api.Circuit
+	root api.Circuit
 
 	status        status
 	statusUpdated time.Time
@@ -84,38 +83,29 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*E
 	}
 
 	// register LPC circuit if not already registered
-	lpc, err := shared.GetOrCreateCircuit("lpc", "eebus")
-	if err != nil {
-		return nil, err
-	}
-	lpp, err := shared.GetOrCreateCircuit("lpp", "eebus")
+	gridcontrol, err := shared.GetOrCreateCircuit("gridcontrol", "eebus")
 	if err != nil {
 		return nil, err
 	}
 
-	// wrap old root with new lpc parent
-	if err := root.Wrap(lpc); err != nil {
+	// wrap old root with new grid control parent
+	if err := root.Wrap(gridcontrol); err != nil {
 		return nil, err
 	}
-	// wrap lpc with lpp parent
-	if err := lpc.Wrap(lpp); err != nil {
-		return nil, err
-	}
-	site.SetCircuit(lpp)
+	site.SetCircuit(gridcontrol)
 
-	return NewEEBus(ctx, cc.Ski, cc.Limits, lpc, lpp, cc.Interval)
+	return NewEEBus(ctx, cc.Ski, cc.Limits, gridcontrol, cc.Interval)
 }
 
 // NewEEBus creates EEBus charger
-func NewEEBus(ctx context.Context, ski string, limits Limits, lpc, lpp api.Circuit, interval time.Duration) (*EEBus, error) {
+func NewEEBus(ctx context.Context, ski string, limits Limits, root api.Circuit, interval time.Duration) (*EEBus, error) {
 	if eebus.Instance == nil {
 		return nil, errors.New("eebus not configured")
 	}
 
 	c := &EEBus{
 		log:       util.NewLogger("eebus"),
-		lpc:       lpc,
-		lpp:       lpp,
+		root:      root,
 		cs:        eebus.Instance.ControllableSystem(),
 		ma:        eebus.Instance.MonitoringAppliance(),
 		eg:        eebus.Instance.EnergyGuard(),
@@ -260,8 +250,8 @@ func (c *EEBus) setConsumptionLimit(limit float64) {
 		c.consumptionLimitActivated = time.Time{}
 	}
 
-	c.lpc.Dim(active)
-	c.lpc.SetMaxPower(limit)
+	c.root.Dim(active)
+	c.root.SetMaxPower(limit)
 }
 
 func (c *EEBus) setProductionLimit(limit float64) {
@@ -274,6 +264,6 @@ func (c *EEBus) setProductionLimit(limit float64) {
 	}
 
 	// TODO curtail
-	// c.lpp.Dim(active)
-	// c.lpp.SetMaxPower(limit)
+	// c.lpp.Curtail(active)
+	// c.lpp.SetMaxProduction(limit)
 }
