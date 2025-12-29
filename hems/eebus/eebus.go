@@ -120,9 +120,9 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, lpc, lpp api.Circu
 		ma:        eebus.Instance.MonitoringAppliance(),
 		eg:        eebus.Instance.EnergyGuard(),
 		Connector: eebus.NewConnector(),
+		heartbeat: util.NewValue[struct{}](2 * time.Minute), // LPC-031
 		interval:  interval,
 
-		heartbeat:                util.NewValue[struct{}](2 * time.Minute), // LPC-031
 		failsafeDuration:         limits.FailsafeDurationMinimum,
 		failsafeConsumptionLimit: limits.FailsafeConsumptionActivePowerLimit,
 		failsafeProductionLimit:  limits.FailsafeProductionActivePowerLimit,
