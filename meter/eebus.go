@@ -38,14 +38,11 @@ type EEBus struct {
 	currents *util.Value[[]float64]
 	voltages *util.Value[[]float64]
 
-	// TODO use util.Value
 	mu               sync.Mutex
 	consumptionLimit ucapi.LoadLimit
 	productionLimit  ucapi.LoadLimit
 	egLpcEntity      spineapi.EntityRemoteInterface
 	egLppEntity      spineapi.EntityRemoteInterface
-	// failsafeLimit    float64
-	// failsafeDuration time.Duration
 }
 
 type measurements interface {
