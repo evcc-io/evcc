@@ -78,3 +78,33 @@ func (site *Site) dimMeters(dim bool) error {
 
 	return errs
 }
+
+func (site *Site) curtailPV(curtail bool) error {
+	var errs error
+
+	for _, dev := range slices.Concat(site.pvMeters) {
+		m, ok := dev.Instance().(api.Curtailer)
+		if !ok {
+			continue
+		}
+
+		if curtailed, err := m.Curtailed(); err == nil {
+			if curtail == curtailed {
+				continue
+			}
+		} else {
+			if !errors.Is(err, api.ErrNotAvailable) {
+				errs = errors.Join(errs, fmt.Errorf("%s curtailed: %w", dev.Config().Name, err))
+			}
+			continue
+		}
+
+		if err := m.Curtail(curtail); err == nil {
+			site.log.DEBUG.Printf("%s curtail: %t", dev.Config().Name, curtail)
+		} else if !errors.Is(err, api.ErrNotAvailable) {
+			errs = errors.Join(errs, fmt.Errorf("%s curtail: %w", dev.Config().Name, err))
+		}
+	}
+
+	return errs
+}
