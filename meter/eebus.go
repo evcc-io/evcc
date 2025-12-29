@@ -333,7 +333,7 @@ func (c *EEBus) egLppUseCaseSupportUpdate(entity spineapi.EntityRemoteInterface)
 func (c *EEBus) egLppDataUpdateLimit(entity spineapi.EntityRemoteInterface) {
 	limit, err := c.eg.EgLPPInterface.ProductionLimit(entity)
 	if err != nil {
-		c.log.ERROR.Println("EG LPP ConsumptionLimit:", err)
+		c.log.ERROR.Println("EG LPP ProductionLimit:", err)
 		return
 	}
 
