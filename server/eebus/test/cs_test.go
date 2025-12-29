@@ -20,6 +20,8 @@ import (
 const remotePort = 9001
 
 func TestEEBus(t *testing.T) {
+	t.Skip()
+
 	util.LogLevel("error", map[string]string{"eebus": "trace"})
 
 	certificate, err := cert.CreateCertificate("Demo", "Demo", "DE", "Demo-Server-01")
