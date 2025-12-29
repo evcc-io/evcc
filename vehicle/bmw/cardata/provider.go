@@ -189,7 +189,7 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 	if port == "CONNECTED" {
 		status = api.StatusB
 	}
-	
+
 	// evaluate status first, since it's usually available through 
 	// mqtt, while hvStatus might only be available through rest 
 	// (https://github.com/evcc-io/evcc/pull/26235)
