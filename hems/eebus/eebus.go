@@ -27,9 +27,9 @@ type EEBus struct {
 	lpc api.Circuit
 	lpp api.Circuit
 
-	heartbeat        *util.Value[struct{}]
-	status           status
-	statusUpdated    time.Time
+	status        status
+	statusUpdated time.Time
+
 	failsafeDuration time.Duration
 
 	consumptionLimit          ucapi.LoadLimit // LPC-041
@@ -40,16 +40,15 @@ type EEBus struct {
 	productionLimitActivated time.Time
 	failsafeProductionLimit  float64
 
-	interval time.Duration
+	heartbeat *util.Value[struct{}]
+	interval  time.Duration
 }
 
 type Limits struct {
-	ContractualConsumptionNominalMax float64
-	// ConsumptionLimit                    float64
+	ContractualConsumptionNominalMax    float64
 	FailsafeConsumptionActivePowerLimit float64
 
-	ProductionNominalMax float64
-	// ProductionLimit                    float64
+	ProductionNominalMax               float64
 	FailsafeProductionActivePowerLimit float64
 
 	FailsafeDurationMinimum time.Duration
@@ -63,12 +62,10 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*E
 		Interval time.Duration
 	}{
 		Limits: Limits{
-			ContractualConsumptionNominalMax: 24800,
-			// ConsumptionLimit:                    0,
+			ContractualConsumptionNominalMax:    24800,
 			FailsafeConsumptionActivePowerLimit: 4200,
 
-			ProductionNominalMax: 0,
-			// ProductionLimit:                    0,
+			ProductionNominalMax:               0,
 			FailsafeProductionActivePowerLimit: 0,
 
 			FailsafeDurationMinimum: 2 * time.Hour,
@@ -109,8 +106,6 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*E
 	return NewEEBus(ctx, cc.Ski, cc.Limits, lpc, lpp, cc.Interval)
 }
 
-//LPP
-
 // NewEEBus creates EEBus charger
 func NewEEBus(ctx context.Context, ski string, limits Limits, lpc, lpp api.Circuit, interval time.Duration) (*EEBus, error) {
 	if eebus.Instance == nil {
@@ -127,20 +122,10 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, lpc, lpp api.Circu
 		Connector: eebus.NewConnector(),
 		interval:  interval,
 
-		heartbeat:        util.NewValue[struct{}](2 * time.Minute), // LPC-031
-		failsafeDuration: limits.FailsafeDurationMinimum,
-
+		heartbeat:                util.NewValue[struct{}](2 * time.Minute), // LPC-031
+		failsafeDuration:         limits.FailsafeDurationMinimum,
 		failsafeConsumptionLimit: limits.FailsafeConsumptionActivePowerLimit,
-		// consumptionLimit: ucapi.LoadLimit{
-		// 	Value:        limits.ConsumptionLimit,
-		// 	IsChangeable: true,
-		// },
-
-		failsafeProductionLimit: limits.FailsafeProductionActivePowerLimit,
-		// productionLimit: ucapi.LoadLimit{
-		// 	Value:        limits.ProductionLimit,
-		// 	IsChangeable: true,
-		// },
+		failsafeProductionLimit:  limits.FailsafeProductionActivePowerLimit,
 	}
 
 	// simulate a received heartbeat
@@ -181,36 +166,25 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, lpc, lpp api.Circu
 	if err := c.cs.CsLPCInterface.SetConsumptionNominalMax(limits.ContractualConsumptionNominalMax); err != nil {
 		c.log.ERROR.Println("CS LPC SetConsumptionNominalMax:", err)
 	}
-	// if c.consumptionLimit.Value > 0 {
-	// 	if err := c.cs.CsLPCInterface.SetConsumptionLimit(*c.consumptionLimit); err != nil {
-	// 		c.log.ERROR.Println("CS LPC SetConsumptionLimit:", err)
-	// 	}
-	// }
 	if c.failsafeConsumptionLimit > 0 {
 		if err := c.cs.CsLPCInterface.SetFailsafeConsumptionActivePowerLimit(c.failsafeConsumptionLimit, true); err != nil {
 			c.log.ERROR.Println("CS LPC SetFailsafeConsumptionActivePowerLimit:", err)
-		}
-	}
-	if c.failsafeDuration > 0 {
-		if err := c.cs.CsLPCInterface.SetFailsafeDurationMinimum(c.failsafeDuration, true); err != nil {
-			c.log.ERROR.Println("CS LPC SetFailsafeDurationMinimum:", err)
 		}
 	}
 
 	if err := c.cs.CsLPPInterface.SetProductionNominalMax(limits.ProductionNominalMax); err != nil {
 		c.log.ERROR.Println("CS LPP SetProductionNominalMax:", err)
 	}
-	// if c.productionLimit.Value > 0 {
-	// 	if err := c.cs.CsLPPInterface.SetProductionLimit(*c.productionLimit); err != nil {
-	// 		c.log.ERROR.Println("CS LPP SetProductionLimit:", err)
-	// 	}
-	// }
 	if c.failsafeProductionLimit > 0 {
 		if err := c.cs.CsLPPInterface.SetFailsafeProductionActivePowerLimit(c.failsafeProductionLimit, true); err != nil {
 			c.log.ERROR.Println("CS LPP SetFailsafeProductionActivePowerLimit:", err)
 		}
 	}
+
 	if c.failsafeDuration > 0 {
+		if err := c.cs.CsLPCInterface.SetFailsafeDurationMinimum(c.failsafeDuration, true); err != nil {
+			c.log.ERROR.Println("CS LPC SetFailsafeDurationMinimum:", err)
+		}
 		if err := c.cs.CsLPPInterface.SetFailsafeDurationMinimum(c.failsafeDuration, true); err != nil {
 			c.log.ERROR.Println("CS LPP SetFailsafeDurationMinimum:", err)
 		}
