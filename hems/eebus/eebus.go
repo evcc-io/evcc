@@ -107,8 +107,6 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, root api.Circuit, 
 		log:       util.NewLogger("eebus"),
 		root:      root,
 		cs:        eebus.Instance.ControllableSystem(),
-		ma:        eebus.Instance.MonitoringAppliance(),
-		eg:        eebus.Instance.EnergyGuard(),
 		Connector: eebus.NewConnector(),
 		heartbeat: util.NewValue[struct{}](2 * time.Minute), // LPC-031
 		interval:  interval,

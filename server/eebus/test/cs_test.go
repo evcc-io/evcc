@@ -65,5 +65,5 @@ func TestEEBus(t *testing.T) {
 	})
 
 	// TODO no error
-	require.Error(t, err, "consumption limit")
+	require.NoError(t, err, "consumption limit")
 }
