@@ -22,6 +22,7 @@ type RCT struct {
 	conn          *rct.Connection // connection with the RCT device
 	usage         string          // grid, pv, battery
 	externalPower bool            // whether to query external power
+	curtailed     bool            // whether RCT is currently curtailed
 }
 
 var (
@@ -33,7 +34,7 @@ func init() {
 	registry.AddCtx("rct", NewRCTFromConfig)
 }
 
-//go:generate go tool decorate -f decorateRCT -b *RCT -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Curtailer,Curtail,func(bool) error" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatterySocLimiter,GetSocLimits,func() (float64, float64)" -t "api.BatteryController,SetBatteryMode,func(api.BatteryMode) error" -t "api.BatteryCapacity,Capacity,func() float64"
+//go:generate go tool decorate -f decorateRCT -b *RCT -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Curtailer,Curtail,func(bool) error" -t "api.Curtailer,Curtailed,func() (bool, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatterySocLimiter,GetSocLimits,func() (float64, float64)" -t "api.BatteryController,SetBatteryMode,func(api.BatteryMode) error" -t "api.BatteryCapacity,Capacity,func() float64"
 
 // NewRCTFromConfig creates an RCT from generic config
 func NewRCTFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
@@ -102,6 +103,7 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 
 	// decorate api.Curtailer
 	var curtail func(bool) error
+	var curtailed func() (bool, error)
 	if usage == "pv" {
 		curtail = func(b bool) error {
 			r := float32(1)
@@ -109,7 +111,16 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 				r = 0
 			}
 
-			return m.conn.Write(rct.BufVControlPowerReduction, m.floatVal(r))
+			if err := m.conn.Write(rct.BufVControlPowerReduction, m.floatVal(r)); err != nil {
+				return err
+			}
+
+			m.curtailed = b
+			return nil
+		}
+
+		curtailed = func() (bool, error) {
+			return m.curtailed, nil
 		}
 	}
 
@@ -204,7 +215,7 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 		}
 	}
 
-	return decorateRCT(m, totalEnergy, curtail, batterySoc, batterySocLimiter, batteryMode, batteryCapacity), nil
+	return decorateRCT(m, totalEnergy, curtail, curtailed, batterySoc, batterySocLimiter, batteryMode, batteryCapacity), nil
 }
 
 func (m *RCT) floatVal(f float32) []byte {
