@@ -1,0 +1,123 @@
+template: snmp
+products:
+  - brand: Generic
+    description:
+      en: SNMP
+      de: SNMP
+group: generic
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery", "aux", "charge"]
+  - name: uri
+    description:
+      de: SNMP URI
+      en: SNMP URI
+    example: 192.168.1.50:161
+    required: true
+  - name: version
+    description:
+      de: SNMP Version (1, 2c, 3)
+      en: SNMP Version (1, 2c, 3)
+    default: 2c
+  - name: community
+    description:
+      de: SNMP Community (v1, v2c)
+      en: SNMP Community (v1, v2c)
+    help:
+      de: Die SNMP-Community ist eine Art Passwort, das in SNMP v1 und v2c zur Authentifizierung verwendet wird. Der Standardwert ist oft "public".
+      en: The SNMP community is a simple password-like string used for authentication in SNMP v1 and v2c. The default is often "public".
+    default: public
+  - name: power
+    description:
+      de: OID für Leistung (W)
+      en: OID for power (W)
+    required: true
+  - name: powerscale
+    description:
+      de: Skalierungsfaktor für Leistung
+      en: Scaling factor for power
+    default: 1.0
+  - name: energy
+    description:
+      de: OID für Energie (kWh)
+      en: OID for energy (kWh)
+  - name: energyscale
+    description:
+      de: Skalierungsfaktor für Energie
+      en: Scaling factor for energy
+    default: 1.0
+  - name: user
+    description:
+      de: SNMP v3 User
+      en: SNMP v3 User
+    advanced: true
+  - name: securityLevel
+    description:
+      de: SNMP v3 Security Level
+      en: SNMP v3 Security Level
+    help:
+      de: SNMP v3 Security Level (noAuthNoPriv, authNoPriv, authPriv)
+      en: SNMP v3 Security Level (noAuthNoPriv, authNoPriv, authPriv)
+    advanced: true
+  - name: authProtocol
+    description:
+      de: SNMP v3 Auth Protocol
+      en: SNMP v3 Auth Protocol
+    help:
+      de: SNMP v3 Auth Protocol (MD5, SHA, SHA224, SHA256, SHA384, SHA512)
+      en: SNMP v3 Auth Protocol (MD5, SHA, SHA224, SHA256, SHA384, SHA512)
+    advanced: true
+  - name: authPassword
+    description:
+      de: SNMP v3 Auth Password
+      en: SNMP v3 Auth Password
+    advanced: true
+  - name: privProtocol
+    description:
+      de: SNMP v3 Priv Protocol
+      en: SNMP v3 Priv Protocol
+    help:
+      de: SNMP v3 Priv Protocol (DES, AES, AES192, AES192C, AES256, AES256C)
+      en: SNMP v3 Priv Protocol (DES, AES, AES192, AES192C, AES256, AES256C)
+    advanced: true
+  - name: privPassword
+    description:
+      de: SNMP v3 Priv Password
+      en: SNMP v3 Priv Password
+    advanced: true
+render: |
+  type: custom
+  power:
+    source: snmp
+    uri: {{ .uri }}
+    version: {{ .version }}
+    community: {{ .community }}
+    oid: {{ .power }}
+    scale: {{ .powerscale }}
+    {{- if .user }}
+    auth:
+      user: {{ .user }}
+      securityLevel: {{ .securityLevel }}
+      auth: {{ .authProtocol }}
+      authPass: {{ .authPassword }}
+      priv: {{ .privProtocol }}
+      privPass: {{ .privPassword }}
+    {{- end }}
+  {{- if .energy }}
+  energy:
+    source: snmp
+    uri: {{ .uri }}
+    version: {{ .version }}
+    community: {{ .community }}
+    oid: {{ .energy }}
+    scale: {{ .energyscale }}
+    {{- if .user }}
+    auth:
+      user: {{ .user }}
+      securityLevel: {{ .securityLevel }}
+      auth: {{ .authProtocol }}
+      authPass: {{ .authPassword }}
+      priv: {{ .privProtocol }}
+      privPass: {{ .privPassword }}
+    {{- end }}
+  {{- end }}
