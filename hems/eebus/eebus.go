@@ -149,19 +149,6 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, lpc, lpp api.Circu
 		c.log.DEBUG.Printf("ski %s CS LPP scenarios: %v", s.Entity.Device().Ski(), s.Scenarios)
 	}
 
-	// monitoring appliance
-	for _, s := range c.ma.MaMPCInterface.RemoteEntitiesScenarios() {
-		c.log.DEBUG.Printf("ski %s MA MPC scenarios: %v", s.Entity.Device().Ski(), s.Scenarios)
-	}
-	for _, s := range c.ma.MaMGCPInterface.RemoteEntitiesScenarios() {
-		c.log.DEBUG.Printf("ski %s MA MGCP scenarios: %v", s.Entity.Device().Ski(), s.Scenarios)
-	}
-
-	// energy guard
-	for _, s := range c.eg.EgLPCInterface.RemoteEntitiesScenarios() {
-		c.log.DEBUG.Printf("ski %s EG LPC scenarios: %v", s.Entity.Device().Ski(), s.Scenarios)
-	}
-
 	// set initial values
 	if err := c.cs.CsLPCInterface.SetConsumptionNominalMax(limits.ContractualConsumptionNominalMax); err != nil {
 		c.log.ERROR.Println("CS LPC SetConsumptionNominalMax:", err)
@@ -194,10 +181,7 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, lpc, lpp api.Circu
 }
 
 func (c *EEBus) Run() {
-	ticker := time.NewTicker(c.interval)
-	defer ticker.Stop()
-
-	for range ticker.C {
+	for range time.Tick(c.interval) {
 		if err := c.run(); err != nil {
 			c.log.ERROR.Println(err)
 		}

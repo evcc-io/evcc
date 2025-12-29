@@ -113,6 +113,19 @@ func NewEEBus(ctx context.Context, ski, ip string, usage *templates.Usage, timeo
 		return nil, err
 	}
 
+	// monitoring appliance
+	for _, s := range c.ma.MaMPCInterface.RemoteEntitiesScenarios() {
+		c.log.DEBUG.Printf("ski %s MA MPC scenarios: %v", s.Entity.Device().Ski(), s.Scenarios)
+	}
+	for _, s := range c.ma.MaMGCPInterface.RemoteEntitiesScenarios() {
+		c.log.DEBUG.Printf("ski %s MA MGCP scenarios: %v", s.Entity.Device().Ski(), s.Scenarios)
+	}
+
+	// energy guard
+	for _, s := range c.eg.EgLPCInterface.RemoteEntitiesScenarios() {
+		c.log.DEBUG.Printf("ski %s EG LPC scenarios: %v", s.Entity.Device().Ski(), s.Scenarios)
+	}
+
 	return c, nil
 }
 
