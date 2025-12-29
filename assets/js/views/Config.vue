@@ -318,6 +318,7 @@
 						{{ $t("help.issueButton") }}
 					</router-link>
 					<button
+						data-testid="backup-restore"
 						class="btn btn-outline-secondary text-truncate"
 						@click="openModal('backupRestoreModal')"
 					>
