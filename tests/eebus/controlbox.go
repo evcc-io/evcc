@@ -84,6 +84,13 @@ func createControlbox(ctx context.Context, remoteSki string, port int) (*control
 	return h, nil
 }
 
+func (h *controlbox) remoteEntity(event api.EventType) []spineapi.EntityRemoteInterface {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	return h.remoteEntities[event]
+}
+
 func (h *controlbox) registerRemoteEntity(entity spineapi.EntityRemoteInterface, event api.EventType) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
@@ -96,11 +103,6 @@ func (h *controlbox) registerRemoteEntity(entity spineapi.EntityRemoteInterface,
 
 	if h.remoteEntities == nil {
 		h.remoteEntities = make(map[api.EventType][]spineapi.EntityRemoteInterface)
-	}
-
-	if h.remoteEntities[event] == nil {
-		h.remoteEntities[event] = []spineapi.EntityRemoteInterface{entity}
-		return
 	}
 
 	h.remoteEntities[event] = append(h.remoteEntities[event], entity)

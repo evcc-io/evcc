@@ -71,7 +71,7 @@ func TestEEBus(t *testing.T) {
 
 	<-eventC
 	t.Log(box.remoteEntities)
-	srvEntity := box.remoteEntities[lpc.UseCaseSupportUpdate][0]
+	srvEntity := box.remoteEntity(lpc.UseCaseSupportUpdate)[0]
 
 	_, err = box.uclpc.WriteConsumptionLimit(srvEntity, ucapi.LoadLimit{
 		IsActive: true,
