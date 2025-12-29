@@ -84,7 +84,7 @@ func (site *Site) dimMeters(dim bool) error {
 func (site *Site) curtailPV(curtail bool) error {
 	var errs error
 
-	for _, dev := range slices.Concat(site.pvMeters) {
+	for _, dev := range site.pvMeters {
 		m, ok := dev.Instance().(api.Curtailer)
 		if !ok {
 			continue
