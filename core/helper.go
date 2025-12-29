@@ -90,7 +90,7 @@ func circuitDimmed(circuit api.Circuit) bool {
 	return circuit.Dimmed()
 }
 
-// circuitCurtailed returns a circuits curtail status
+ // circuitCurtailed returns a circuit's curtail status
 func circuitCurtailed(circuit api.Circuit) bool {
 	if circuit == nil {
 		return false
