@@ -939,9 +939,21 @@ func (site *Site) update(lp updater) {
 
 		site.publishCircuits()
 
-		if err := site.dimMeters(circuitDimmed(site.circuit)); err != nil {
-			site.log.ERROR.Println(err)
-		}
+		var wg sync.WaitGroup
+
+		wg.Go(func() {
+			if err := site.dimMeters(circuitDimmed(site.circuit)); err != nil {
+				site.log.ERROR.Println(err)
+			}
+		})
+
+		wg.Go(func() {
+			if err := site.curtailPV(circuitCurtailed(site.circuit)); err != nil {
+				site.log.ERROR.Println(err)
+			}
+		})
+
+		wg.Wait()
 	}
 
 	// prioritize if possible
