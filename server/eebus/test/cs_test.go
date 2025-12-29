@@ -50,7 +50,7 @@ func TestEEBus(t *testing.T) {
 	gridcontrol, err := circuit.New(util.NewLogger("gridcontrol"), "gridcontrol", 0, 0, nil, time.Minute)
 	require.NoError(t, err)
 
-	hems, err := hems.NewEEBus(t.Context(), box.ski, eebus.Limits{}, gridcontrol, time.Second)
+	hems, err := hems.NewEEBus(t.Context(), box.ski, eebus.Limits{}, nil, gridcontrol, time.Second)
 	require.NoError(t, err, "hems")
 
 	go hems.Run()
