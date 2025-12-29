@@ -20,8 +20,8 @@ import (
 	"github.com/enbility/eebus-go/usecases/cem/evsoc"
 	"github.com/enbility/eebus-go/usecases/cem/opev"
 	"github.com/enbility/eebus-go/usecases/cem/oscev"
-	"github.com/enbility/eebus-go/usecases/cs/lpc"
-	"github.com/enbility/eebus-go/usecases/cs/lpp"
+	csplc "github.com/enbility/eebus-go/usecases/cs/lpc"
+	cslpp "github.com/enbility/eebus-go/usecases/cs/lpp"
 	eglpc "github.com/enbility/eebus-go/usecases/eg/lpc"
 	"github.com/enbility/eebus-go/usecases/ma/mgcp"
 	"github.com/enbility/eebus-go/usecases/ma/mpc"
@@ -172,8 +172,8 @@ func NewServer(other Config) (*EEBus, error) {
 
 		// controllable system
 		c.cs = ControllableSystem{
-			CsLPCInterface: lpc.NewLPC(localEntity, c.ucCallback),
-			CsLPPInterface: lpp.NewLPP(localEntity, c.ucCallback),
+			CsLPCInterface: csplc.NewLPC(localEntity, c.ucCallback),
+			CsLPPInterface: cslpp.NewLPP(localEntity, c.ucCallback),
 		}
 
 		// monitoring appliance
