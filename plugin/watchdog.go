@@ -41,7 +41,7 @@ func NewWatchDogFromConfig(ctx context.Context, other map[string]any) (Plugin, e
 
 	o := &watchdogPlugin{
 		ctx:     ctx,
-		log:     contextLogger(ctx, util.NewLogger("watchdog")),
+		log:     util.ContextLoggerWithDefault(ctx, util.NewLogger("watchdog")),
 		reset:   cc.Reset,
 		initial: cc.Initial,
 		set:     cc.Set,

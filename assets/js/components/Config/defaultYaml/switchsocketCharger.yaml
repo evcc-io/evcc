@@ -14,6 +14,7 @@ standbypower: 20 # in W, below values will be treaded as inactive
 features:
   - integrateddevice # no charging sessions, no connected vehicles
 
+
 ## optional attributes (read-only)
 
 #icon: generic # icon for UI purpose only

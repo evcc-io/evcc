@@ -26,12 +26,12 @@ import (
 	"sort"
 	"time"
 
-	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/zaptec"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
+	"github.com/evcc-io/evcc/util/transport"
 	"golang.org/x/oauth2"
 )
 
@@ -53,18 +53,6 @@ type Zaptec struct {
 
 func init() {
 	registry.AddCtx("zaptec", NewZaptecFromConfig)
-}
-
-// passwordTokenSource implements oauth2.TokenSource for password grant flow
-type passwordTokenSource struct {
-	ctx    context.Context
-	config *oauth2.Config
-	user   string
-	pass   string
-}
-
-func (p passwordTokenSource) Token() (*oauth2.Token, error) {
-	return p.config.PasswordCredentialsToken(p.ctx, p.user, p.pass)
 }
 
 //go:generate go tool decorate -f decorateZaptec -b *Zaptec -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
@@ -107,6 +95,14 @@ func NewZaptec(ctx context.Context, user, password, id string, priority bool, pa
 		passive:  passive,
 	}
 
+	// Add User-Agent header for Zaptec API compliance
+	c.Client.Transport = &transport.Decorator{
+		Decorator: transport.DecorateHeaders(map[string]string{
+			"User-Agent": "evcc/" + util.Version,
+		}),
+		Base: c.Client.Transport,
+	}
+
 	// setup cached values
 	c.statusG = util.ResettableCached(func() (zaptec.StateResponse, error) {
 		var res zaptec.StateResponse
@@ -117,42 +113,17 @@ func NewZaptec(ctx context.Context, user, password, id string, priority bool, pa
 		return res, err
 	}, cache)
 
-	provider, err := oidc.NewProvider(ctx, zaptec.ApiURL+"/")
-	if err != nil {
-		return nil, fmt.Errorf("failed to initialize OIDC provider: %s", err)
-	}
-
-	oc := &oauth2.Config{
-		Endpoint: provider.Endpoint(),
-		Scopes: []string{
-			oidc.ScopeOpenID,
-		},
-	}
-
 	// Create a separate HTTP client for OAuth token requests to avoid circular dependency
 	// (c.Transport will be modified to use oauth2.Transport, which would create a loop)
-	tokenClient := &http.Client{
+	tsCtx := context.WithValue(context.Background(), oauth2.HTTPClient, &http.Client{
 		Transport: c.Transport,
-	}
+	})
 
-	oauthCtx := context.WithValue(
-		ctx,
-		oauth2.HTTPClient,
-		tokenClient,
-	)
-
-	token, err := oc.PasswordCredentialsToken(oauthCtx, user, password)
+	// Get shared token source for this user (per-user uniqueness)
+	ts, err := zaptec.GetTokenSource(tsCtx, user, password)
 	if err != nil {
 		return nil, err
 	}
-
-	// Create custom token source that always uses password grant (no refresh tokens)
-	ts := oauth2.ReuseTokenSource(token, passwordTokenSource{
-		ctx:    oauthCtx,
-		config: oc,
-		user:   user,
-		pass:   password,
-	})
 
 	c.Transport = &oauth2.Transport{
 		Source: ts,

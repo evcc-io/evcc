@@ -1,0 +1,56 @@
+template: ecoflow-powerocean
+products:
+  - brand: EcoFlow
+    description:
+      generic: PowerOcean
+requirements:
+  description:
+    de: |
+      Für die Nutzung des EcoFlow PowerOcean Meters benötigen Sie:
+      - Einen gültigen Access Key von der EcoFlow Developer Console
+      - Den entsprechenden Secret Key
+      - Die Device ID Ihres PowerOcean Systems
+
+      Diese Credentials erhalten Sie über die EcoFlow Developer Console nach der Registrierung Ihrer Anwendung.
+    en: |
+      To use the EcoFlow PowerOcean meter you need:
+      - A valid Access Key from the EcoFlow Developer Console
+      - The corresponding Secret Key
+      - The Device ID of your PowerOcean system
+
+      These credentials can be obtained through the EcoFlow Developer Console after registering your application.
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+    allinone: true
+  - name: accesskey
+    required: true
+    description:
+      generic: Access Key
+    help:
+      en: Access Key from EcoFlow Developer Console
+      de: Access Key aus der EcoFlow Developer Console
+  - name: secretkey
+    required: true
+    description:
+      generic: Secret Key
+    help:
+      en: Secret Key from EcoFlow Developer Console
+      de: Secret Key aus der EcoFlow Developer Console
+  - name: deviceid
+    required: true
+    description:
+      generic: Device ID
+    help:
+      en: Device ID of your EcoFlow PowerOcean system (e.g., HJ31ZD1AZH5G0342)
+      de: Geräte-ID Ihres EcoFlow PowerOcean Systems (z.B. HJ31ZD1AZH5G0342)
+  - name: cache
+    default: 30s
+    advanced: true
+render: |
+  type: ecoflow-powerocean
+  accesskey: {{ .accesskey }}
+  secretkey: {{ .secretkey }}
+  deviceid: {{ .deviceid }}
+  usage: {{ .usage }}
+  cache: {{ .cache }}

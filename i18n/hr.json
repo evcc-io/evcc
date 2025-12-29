@@ -40,7 +40,7 @@
       "chargers": "EV punjači",
       "generic": "Opće integracije",
       "heatingdevices": "Uređaji za grijanje",
-      "ocppHelp": "Unesite ovu adresu u konfiguraciju punjača.",
+      "ocppHelp": "Kopirajte ovaj URL u konfiguraciju svog punjača. Provjerite upute proizvođača za detalje. Punjač će automatski dodati svoj jedinstveni identifikator (ID stanice) na URL. U rijetkim slučajevima možda ćete morati ručno odrediti identifikator. Primjer: `{url}`",
       "ocppLabel": "URL OCPP poslužitelja",
       "switchsockets": "Upravljive utičnice",
       "template": "Proizvođač",
@@ -158,7 +158,11 @@
     },
     "general": {
       "applyAndClose": "Primjeni i zatvori",
+      "authPerform": "Spoji sa {provider}",
+      "authPerformHint": "Otvorit će se u novoj kartici. Vratite se ovdje za nastavak.",
+      "authPrepare": "Pripremi vezu",
       "cancel": "Odustani",
+      "clear": "Očisti",
       "close": "Zatvori",
       "customHelp": "Izradite posebni uređaj koristeći evcc sustav dodataka.",
       "customOption": "Posebni uređaj",
@@ -695,6 +699,7 @@
     "authProviders": {
       "confirmLogout": "Stvarno želiš odspojiti {title}?",
       "loggedOut": "Uspješna odjava",
+      "success": "Autorizacija s {title} je bila uspješna. Sada možete zatvoriti ovu karticu.",
       "title": "Status autorizacije"
     },
     "blog": "Blog",
@@ -1157,8 +1162,10 @@
       "show": "Prikaži {title}"
     },
     "sponsorToken": {
-      "expires": "Vaš sponzorski token isteče {inXDays}. {getNewToken} i obnovi ga ovdje.",
-      "getNew": "Preuzmi novi",
+      "expires": "Vaš sponzorski token isteče {inXDays}.",
+      "expiresUpdateUi": "{getNewToken} i obnovi ga ovdje.",
+      "expiresUpdateYaml": "{getNewToken} i obnovi ga u svojoj evcc.yaml.",
+      "getNewToken": "Preuzmi novi",
       "hint": "Napomena: To ćemo automatizirati u budućnosti."
     },
     "telemetry": {

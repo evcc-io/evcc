@@ -42,6 +42,7 @@ params:
 render: |
   type: homeassistant-switch
   uri: {{ .uri }}
+  home: {{ .home }} # deprecated
   enable: {{ .switch }}
   power: {{ .power }}
   {{ include "switchsocket" . }}

@@ -1,4 +1,24 @@
 {
+  "authProviders": {
+    "authCode": "Autorisierungscode",
+    "authCodeHelp": "Kopiere diesen Code und verwende ihn im nächsten Schritt. Gültig für {duration}.",
+    "authorizationFailed": "Autorisierung fehlgeschlagen",
+    "authorizationRequired": "Autorisierung erforderlich",
+    "authorizationSuccessful": "Autorisierung erfolgreich",
+    "buttonConnect": "Mit {provider} verbinden",
+    "buttonDisconnect": "Trennen",
+    "confirmLogout": "Sicher, dass du {title} trennen möchtest?",
+    "connect": "verbinden",
+    "disconnect": "trennen",
+    "loggedOut": "Erfolgreich abgemeldet",
+    "logoutFailed": "Abmeldung fehlgeschlagen",
+    "modalDescriptionLogin": "Schließe die Autorisierung ab, um eine Verbindung mit {provider} herzustellen.",
+    "modalDescriptionLogout": "Dies trennt dein {provider}-Konto und entfernt den Zugriff auf dessen Daten.",
+    "success": "{title} ist jetzt verbunden und einsatzbereit.",
+    "successCloseModal": "Du kannst diesen Dialog jetzt schließen.",
+    "successCloseTab": "Du kannst diesen Tab jetzt schließen.",
+    "title": "Autorisierungsstatus"
+  },
   "batterySettings": {
     "batteryLevel": "Ladestand der Batterie",
     "bufferStart": {
@@ -40,8 +60,16 @@
       "chargers": "Wallboxen",
       "generic": "Generische Integrationen",
       "heatingdevices": "Wärmeerzeuger",
-      "ocppHelp": "Kopiere diese Adresse in die Konfiguration der Wallbox.",
+      "ocppConfirmContinue": "Deine Wallbox hat sich noch nicht mit evcc verbunden. Möchtest du wirklich fortfahren?",
+      "ocppConnected": "Verbunden!",
+      "ocppDescription": "evcc hat einen eingebauten OCPP-Server. Folge diesen Schritten:",
+      "ocppHelp": "Kopiere diese URL in die Konfiguration deiner Wallbox. Details findest du im Handbuch des Herstellers. Die Wallbox sollte automatisch ihre eindeutige Kennung (Station-ID) an die URL anhängen. In seltenen Fällen musst du die Kennung manuell angeben. Beispiel: `{url}`",
       "ocppLabel": "OCPP-Server URL",
+      "ocppNextStep": "Nächster Schritt",
+      "ocppStep1": "Konfiguriere deine Wallbox, um evcc als OCPP-Server zu verwenden.",
+      "ocppStep2": "Warte darauf, dass deine Wallbox sich mit evcc verbindet.",
+      "ocppStep3": "Fahre fort und schließe die Konfiguration ab.",
+      "ocppWaiting": "Warte auf Verbindung",
       "switchsockets": "Schaltbare Steckdosen",
       "template": "Hersteller",
       "titleAdd": {
@@ -71,8 +99,8 @@
     },
     "control": {
       "description": "Normalerweise sind die Standardwerte in Ordnung. Ändere nur etwas, wenn du weißt, was du tust.",
-      "descriptionInterval": "Regelkreis Aktualisierungszyklus in Sekunden. Definiert, wie oft evcc Messdaten liest, die Ladeleistung anpasst und die Benutzeroberfläche aktualisiert. Kurze Intervalle (< 30s) können zu Oszillationen und unerwünschtem Verhalten führen.",
-      "descriptionResidualPower": "Verschiebt den Betriebspunkt des Regelkreises. Wenn du eine Hausbatterie hast, wird empfohlen, einen Wert von 100 W einzustellen. Auf diese Weise erhält die Batterie eine leichte Priorität gegenüber dem Netzbezug.",
+      "descriptionInterval": "Aktualisierungszyklus in Sekunden. Definiert, wie oft evcc Messdaten liest und die Ladung anpasst. Die Standardeinstellung von 30 Sekunden ist eine sichere Wahl. Geräte wie Fahrzeuge, Wallbox und Wechselrichter brauchen in der Regel mehrere Sekunden um ihr Verhalten anzupassen. Wenn deine Komponenten schnell reagieren kannst du niedrigere Werte verwenden. Wir empfehlen dringend nicht unter 10 Sekunden zu gehen. Wenn du komisches Regelverhalten oder springende Leistungswerte beobachtest wähle ein größeres Intervall.",
+      "descriptionResidualPower": "Verschiebt den Betriebspunkt des Regelkreises. Der Standardwert von 100 W gibt Hausbatterien eine leichte Priorität gegenüber dem Netzbezug. Wenn du keine Batterie hast, kannst du den Wert auf 0 W setzen, um den Netzbezug im PV-Modus zu minimieren.",
       "labelInterval": "Aktualisierungsintervall",
       "labelResidualPower": "Residualleistung",
       "title": "Regelverhalten"
@@ -91,10 +119,12 @@
       "chargedEnergy": "Geladen",
       "co2": "Netz-CO₂",
       "configured": "Konfiguriert",
+      "connections": "Verbindungen",
       "controllable": "Steuerbar",
       "currency": "Währung",
       "current": "Strom",
       "currentRange": "Strom",
+      "detected": "Erkannt",
       "dimmed": "Gedimmt",
       "enabled": "Ladebereit",
       "energy": "Energie",
@@ -145,6 +175,10 @@
       "description": "Grundkonfiguration für die Kommunikation mit anderen EEBus-Geräten.",
       "title": "EEBus"
     },
+    "experimental": {
+      "description": "Aktiviert die Benutzeroberfläche für Funktionen, die sich noch in der Testphase befinden und sich in zukünftigen Versionen ändern können.",
+      "title": "Experimentell"
+    },
     "ext": {
       "description": "Erfasst Energiewerte ungeregelter Verbraucher (bspw. Kühlschrank, Waschmaschine, etc.) für Statistikzwecke. Diese Zähler können auch für Lastmanagement verwendet werden (bspw. Unterverteilung).",
       "titleAdd": "Verbrauchszähler hinzufügen",
@@ -164,6 +198,8 @@
       "cancel": "Abbrechen",
       "clear": "Löschen",
       "close": "Schließen",
+      "copied": "Kopiert!",
+      "copy": "Kopieren",
       "customHelp": "Erstelle ein benutzerdefiniertes Gerät mit evcc's Plugin-System.",
       "customOption": "Benutzerdefiniertes Gerät",
       "delete": "Löschen",
@@ -200,8 +236,19 @@
       "titleEdit": "Netzzähler bearbeiten"
     },
     "hems": {
+      "csv": {
+        "created": "Startzeit",
+        "finished": "Endzeit",
+        "gridpower": "Netzbezug (kW)",
+        "limitpower": "Limit (kW)",
+        "type": "Typ"
+      },
       "description": "Leistungsbegrenzung durch externe Systeme (bspw. Steuerboxen, § 14a EnWG). Setzt Lastmanagementkonfiguration voraus.",
-      "title": "HEMS"
+      "downloadCsv": "CSV herunterladen",
+      "eventsRecorded": "{count} Netzbegrenzungen gespeichert.",
+      "lastEvent": "Zuletzt {timeAgo}.",
+      "title": "HEMS",
+      "yamlConfigured": "Hinweis: Konfiguriert über evcc.yaml. Entferne den Eintrag aus der Datei, um die Bearbeitung hier zu aktivieren."
     },
     "icon": {
       "change": "ändern",
@@ -340,6 +387,8 @@
       "title": "Konfiguration",
       "unconfigured": "nicht konfiguriert",
       "vehicles": "Meine Fahrzeuge",
+      "welcomeBannerText": "Lege zunächst eine **Wallbox oder Heizung** an. Falls du noch keine echte Wallbox hast, wähle eine **Demowallbox**.",
+      "welcomeBannerTitle": "Los geht's mit der Konfiguration!",
       "yaml": "Geräte aus evcc.yaml sind nicht editierbar."
     },
     "messaging": {
@@ -375,9 +424,9 @@
       "baudrate": "Baudrate",
       "comset": "ComSet",
       "connection": "Modbus Verbindung",
-      "connectionHintSerial": "Das Gerät ist direkt an evcc über eine RS485 Schnittstelle angeschlossen.",
-      "connectionHintTcpip": "Das Gerät ist von evcc aus über LAN/Wifi erreichbar.",
-      "connectionValueSerial": "Seriell / USB",
+      "connectionHintSerial": "Das Gerät ist direkt über RS485 (oder USB-zu-RS485 Adapter) angeschlossen.",
+      "connectionHintTcpip": "Das Gerät ist über Netzwerk (LAN/WiFi) erreichbar.",
+      "connectionValueSerial": "RS485",
       "connectionValueTcpip": "Netzwerk",
       "device": "Gerätename",
       "deviceHint": "Beispiel: /dev/ttyUSB0",
@@ -440,6 +489,23 @@
       "labelInternalUrl": "Interne URL",
       "labelPort": "Port",
       "title": "Netzwerk"
+    },
+    "ocpp": {
+      "connectedChargers": "Verbundene Wallboxen",
+      "connectionStatus": "Konfigurierte Station-IDs",
+      "connectionStatusHelp": "Verbindungsstatus der konfigurierten Wallboxen.",
+      "detectedChargers": "Erkannte Station-IDs",
+      "detectedHelp": "Diese Wallboxen haben versucht, sich mit evcc zu verbinden. Um eine Wallbox zu verwenden, erstelle einen Ladepunkt mit ihrer Station-ID.",
+      "noChargers": "Keine OCPP-Wallboxen erkannt.",
+      "noStations": "Keine Stationen verbunden",
+      "status": {
+        "configured": "Nicht verbunden",
+        "connected": "Verbunden",
+        "unknown": "Unbekannt"
+      },
+      "title": "OCPP Server",
+      "url": "Server-URL",
+      "urlHelp": "Kopiere diese URL in die Konfiguration deiner Wallbox. Details findest du im Handbuch des Herstellers. Die Wallbox sollte automatisch ihre eindeutige Kennung (Station-ID) an die URL anhängen. In seltenen Fällen musst du die Kennung manuell angeben. Beispiel: `{url}`"
     },
     "options": {
       "boolean": {
@@ -582,6 +648,8 @@
       "maximumCurrentHelp": "Muss größer als der minimale Strom sein.",
       "maximumPhases": "Maximale Phasen",
       "maximumPhasesHelp": "Mit wie vielen Phasen kann dieses Fahrzeug laden? Wird zur Berechnung der Mindestladeleistung und im Planer verwendet.",
+      "maximumPower": "Maximale Ladeleistung",
+      "maximumPowerHelp": "Maximale Leistung die das Fahrzeug beziehen kann",
       "minimumCurrent": "Minimaler Strom",
       "minimumCurrentHelp": "Nur unter 6A, wenn du weißt, was du tust.",
       "online": "Fahrzeuge mit Schnittstelle",
@@ -694,12 +762,6 @@
   },
   "header": {
     "about": "Über",
-    "authProviders": {
-      "confirmLogout": "Sicher, dass du {title} trennen möchtest?",
-      "loggedOut": "Erfolgreich abgemeldet",
-      "success": "Die Autorisierung mit {title} war erfolgreich. Du kannst diesen Tab jetzt schließen.",
-      "title": "Autorisierungsstatus"
-    },
     "blog": "Blog",
     "docs": "Dokumentation",
     "github": "GitHub",
@@ -776,6 +838,8 @@
       "stepTwo": "Schritt 2: Zusätzliche Informationen kopieren",
       "title": "GitHub Problem-Zusammenfassung"
     },
+    "system": "System",
+    "timezone": "Zeitzone",
     "title": "Problem melden",
     "version": "Version"
   },
@@ -1145,7 +1209,7 @@
     },
     "hiddenFeatures": {
       "label": "Experimentell",
-      "value": "Experimentelle UI-Funktionen zeigen."
+      "value": "Experimentelle Funktionen anzeigen."
     },
     "language": {
       "auto": "Automatisch",
@@ -1158,8 +1222,10 @@
       "show": "{title} anzeigen"
     },
     "sponsorToken": {
-      "expires": "Dein Sponsortoken läuft {inXDays} ab. {getNewToken} und aktualisiere es hier.",
-      "getNew": "Hol dir ein Neues",
+      "expires": "Dein Sponsortoken läuft {inXDays} ab.",
+      "expiresUpdateUi": "{getNewToken} und aktualisiere es hier.",
+      "expiresUpdateYaml": "{getNewToken} und aktualisiere es in deiner evcc.yaml.",
+      "getNewToken": "Hol dir ein Neues",
       "hint": "Hinweis: Wir werden das zukünftig automatisieren."
     },
     "telemetry": {
