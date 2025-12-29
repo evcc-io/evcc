@@ -6,12 +6,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateRCT(base *RCT, meterEnergy func() (float64, error), curtailer func(bool) error, battery func() (float64, error), batterySocLimiter func() (float64, float64), batteryController func(api.BatteryMode) error, batteryCapacity func() float64) api.Meter {
+func decorateRCT(base *RCT, meterEnergy func() (float64, error), battery func() (float64, error), batterySocLimiter func() (float64, float64), batteryController func(api.BatteryMode) error, batteryCapacity func() float64) api.Meter {
 	switch {
-	case battery == nil && curtailer == nil && meterEnergy == nil:
+	case battery == nil && meterEnergy == nil:
 		return base
 
-	case battery == nil && curtailer == nil && meterEnergy != nil:
+	case battery == nil && meterEnergy != nil:
 		return &struct {
 			*RCT
 			api.MeterEnergy
@@ -22,33 +22,7 @@ func decorateRCT(base *RCT, meterEnergy func() (float64, error), curtailer func(
 			},
 		}
 
-	case battery == nil && curtailer != nil && meterEnergy == nil:
-		return &struct {
-			*RCT
-			api.Curtailer
-		}{
-			RCT: base,
-			Curtailer: &decorateRCTCurtailerImpl{
-				curtailer: curtailer,
-			},
-		}
-
-	case battery == nil && curtailer != nil && meterEnergy != nil:
-		return &struct {
-			*RCT
-			api.Curtailer
-			api.MeterEnergy
-		}{
-			RCT: base,
-			Curtailer: &decorateRCTCurtailerImpl{
-				curtailer: curtailer,
-			},
-			MeterEnergy: &decorateRCTMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-		}
-
-	case battery != nil && batteryCapacity == nil && batteryController == nil && batterySocLimiter == nil && curtailer == nil && meterEnergy == nil:
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batterySocLimiter == nil && meterEnergy == nil:
 		return &struct {
 			*RCT
 			api.Battery
@@ -59,7 +33,7 @@ func decorateRCT(base *RCT, meterEnergy func() (float64, error), curtailer func(
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && batteryController == nil && batterySocLimiter == nil && curtailer == nil && meterEnergy != nil:
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batterySocLimiter == nil && meterEnergy != nil:
 		return &struct {
 			*RCT
 			api.Battery
@@ -74,41 +48,7 @@ func decorateRCT(base *RCT, meterEnergy func() (float64, error), curtailer func(
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && batteryController == nil && batterySocLimiter == nil && curtailer != nil && meterEnergy == nil:
-		return &struct {
-			*RCT
-			api.Battery
-			api.Curtailer
-		}{
-			RCT: base,
-			Battery: &decorateRCTBatteryImpl{
-				battery: battery,
-			},
-			Curtailer: &decorateRCTCurtailerImpl{
-				curtailer: curtailer,
-			},
-		}
-
-	case battery != nil && batteryCapacity == nil && batteryController == nil && batterySocLimiter == nil && curtailer != nil && meterEnergy != nil:
-		return &struct {
-			*RCT
-			api.Battery
-			api.Curtailer
-			api.MeterEnergy
-		}{
-			RCT: base,
-			Battery: &decorateRCTBatteryImpl{
-				battery: battery,
-			},
-			Curtailer: &decorateRCTCurtailerImpl{
-				curtailer: curtailer,
-			},
-			MeterEnergy: &decorateRCTMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-		}
-
-	case battery != nil && batteryCapacity == nil && batteryController == nil && batterySocLimiter != nil && curtailer == nil && meterEnergy == nil:
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batterySocLimiter != nil && meterEnergy == nil:
 		return &struct {
 			*RCT
 			api.Battery
@@ -123,7 +63,7 @@ func decorateRCT(base *RCT, meterEnergy func() (float64, error), curtailer func(
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && batteryController == nil && batterySocLimiter != nil && curtailer == nil && meterEnergy != nil:
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batterySocLimiter != nil && meterEnergy != nil:
 		return &struct {
 			*RCT
 			api.Battery
@@ -142,49 +82,7 @@ func decorateRCT(base *RCT, meterEnergy func() (float64, error), curtailer func(
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && batteryController == nil && batterySocLimiter != nil && curtailer != nil && meterEnergy == nil:
-		return &struct {
-			*RCT
-			api.Battery
-			api.BatterySocLimiter
-			api.Curtailer
-		}{
-			RCT: base,
-			Battery: &decorateRCTBatteryImpl{
-				battery: battery,
-			},
-			BatterySocLimiter: &decorateRCTBatterySocLimiterImpl{
-				batterySocLimiter: batterySocLimiter,
-			},
-			Curtailer: &decorateRCTCurtailerImpl{
-				curtailer: curtailer,
-			},
-		}
-
-	case battery != nil && batteryCapacity == nil && batteryController == nil && batterySocLimiter != nil && curtailer != nil && meterEnergy != nil:
-		return &struct {
-			*RCT
-			api.Battery
-			api.BatterySocLimiter
-			api.Curtailer
-			api.MeterEnergy
-		}{
-			RCT: base,
-			Battery: &decorateRCTBatteryImpl{
-				battery: battery,
-			},
-			BatterySocLimiter: &decorateRCTBatterySocLimiterImpl{
-				batterySocLimiter: batterySocLimiter,
-			},
-			Curtailer: &decorateRCTCurtailerImpl{
-				curtailer: curtailer,
-			},
-			MeterEnergy: &decorateRCTMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-		}
-
-	case battery != nil && batteryCapacity == nil && batteryController != nil && batterySocLimiter == nil && curtailer == nil && meterEnergy == nil:
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batterySocLimiter == nil && meterEnergy == nil:
 		return &struct {
 			*RCT
 			api.Battery
@@ -199,7 +97,7 @@ func decorateRCT(base *RCT, meterEnergy func() (float64, error), curtailer func(
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && batteryController != nil && batterySocLimiter == nil && curtailer == nil && meterEnergy != nil:
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batterySocLimiter == nil && meterEnergy != nil:
 		return &struct {
 			*RCT
 			api.Battery
@@ -218,49 +116,7 @@ func decorateRCT(base *RCT, meterEnergy func() (float64, error), curtailer func(
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && batteryController != nil && batterySocLimiter == nil && curtailer != nil && meterEnergy == nil:
-		return &struct {
-			*RCT
-			api.Battery
-			api.BatteryController
-			api.Curtailer
-		}{
-			RCT: base,
-			Battery: &decorateRCTBatteryImpl{
-				battery: battery,
-			},
-			BatteryController: &decorateRCTBatteryControllerImpl{
-				batteryController: batteryController,
-			},
-			Curtailer: &decorateRCTCurtailerImpl{
-				curtailer: curtailer,
-			},
-		}
-
-	case battery != nil && batteryCapacity == nil && batteryController != nil && batterySocLimiter == nil && curtailer != nil && meterEnergy != nil:
-		return &struct {
-			*RCT
-			api.Battery
-			api.BatteryController
-			api.Curtailer
-			api.MeterEnergy
-		}{
-			RCT: base,
-			Battery: &decorateRCTBatteryImpl{
-				battery: battery,
-			},
-			BatteryController: &decorateRCTBatteryControllerImpl{
-				batteryController: batteryController,
-			},
-			Curtailer: &decorateRCTCurtailerImpl{
-				curtailer: curtailer,
-			},
-			MeterEnergy: &decorateRCTMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-		}
-
-	case battery != nil && batteryCapacity == nil && batteryController != nil && batterySocLimiter != nil && curtailer == nil && meterEnergy == nil:
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batterySocLimiter != nil && meterEnergy == nil:
 		return &struct {
 			*RCT
 			api.Battery
@@ -279,7 +135,7 @@ func decorateRCT(base *RCT, meterEnergy func() (float64, error), curtailer func(
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && batteryController != nil && batterySocLimiter != nil && curtailer == nil && meterEnergy != nil:
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batterySocLimiter != nil && meterEnergy != nil:
 		return &struct {
 			*RCT
 			api.Battery
@@ -302,57 +158,7 @@ func decorateRCT(base *RCT, meterEnergy func() (float64, error), curtailer func(
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && batteryController != nil && batterySocLimiter != nil && curtailer != nil && meterEnergy == nil:
-		return &struct {
-			*RCT
-			api.Battery
-			api.BatteryController
-			api.BatterySocLimiter
-			api.Curtailer
-		}{
-			RCT: base,
-			Battery: &decorateRCTBatteryImpl{
-				battery: battery,
-			},
-			BatteryController: &decorateRCTBatteryControllerImpl{
-				batteryController: batteryController,
-			},
-			BatterySocLimiter: &decorateRCTBatterySocLimiterImpl{
-				batterySocLimiter: batterySocLimiter,
-			},
-			Curtailer: &decorateRCTCurtailerImpl{
-				curtailer: curtailer,
-			},
-		}
-
-	case battery != nil && batteryCapacity == nil && batteryController != nil && batterySocLimiter != nil && curtailer != nil && meterEnergy != nil:
-		return &struct {
-			*RCT
-			api.Battery
-			api.BatteryController
-			api.BatterySocLimiter
-			api.Curtailer
-			api.MeterEnergy
-		}{
-			RCT: base,
-			Battery: &decorateRCTBatteryImpl{
-				battery: battery,
-			},
-			BatteryController: &decorateRCTBatteryControllerImpl{
-				batteryController: batteryController,
-			},
-			BatterySocLimiter: &decorateRCTBatterySocLimiterImpl{
-				batterySocLimiter: batterySocLimiter,
-			},
-			Curtailer: &decorateRCTCurtailerImpl{
-				curtailer: curtailer,
-			},
-			MeterEnergy: &decorateRCTMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-		}
-
-	case battery != nil && batteryCapacity != nil && batteryController == nil && batterySocLimiter == nil && curtailer == nil && meterEnergy == nil:
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batterySocLimiter == nil && meterEnergy == nil:
 		return &struct {
 			*RCT
 			api.Battery
@@ -367,7 +173,7 @@ func decorateRCT(base *RCT, meterEnergy func() (float64, error), curtailer func(
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController == nil && batterySocLimiter == nil && curtailer == nil && meterEnergy != nil:
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batterySocLimiter == nil && meterEnergy != nil:
 		return &struct {
 			*RCT
 			api.Battery
@@ -386,49 +192,7 @@ func decorateRCT(base *RCT, meterEnergy func() (float64, error), curtailer func(
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController == nil && batterySocLimiter == nil && curtailer != nil && meterEnergy == nil:
-		return &struct {
-			*RCT
-			api.Battery
-			api.BatteryCapacity
-			api.Curtailer
-		}{
-			RCT: base,
-			Battery: &decorateRCTBatteryImpl{
-				battery: battery,
-			},
-			BatteryCapacity: &decorateRCTBatteryCapacityImpl{
-				batteryCapacity: batteryCapacity,
-			},
-			Curtailer: &decorateRCTCurtailerImpl{
-				curtailer: curtailer,
-			},
-		}
-
-	case battery != nil && batteryCapacity != nil && batteryController == nil && batterySocLimiter == nil && curtailer != nil && meterEnergy != nil:
-		return &struct {
-			*RCT
-			api.Battery
-			api.BatteryCapacity
-			api.Curtailer
-			api.MeterEnergy
-		}{
-			RCT: base,
-			Battery: &decorateRCTBatteryImpl{
-				battery: battery,
-			},
-			BatteryCapacity: &decorateRCTBatteryCapacityImpl{
-				batteryCapacity: batteryCapacity,
-			},
-			Curtailer: &decorateRCTCurtailerImpl{
-				curtailer: curtailer,
-			},
-			MeterEnergy: &decorateRCTMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-		}
-
-	case battery != nil && batteryCapacity != nil && batteryController == nil && batterySocLimiter != nil && curtailer == nil && meterEnergy == nil:
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batterySocLimiter != nil && meterEnergy == nil:
 		return &struct {
 			*RCT
 			api.Battery
@@ -447,7 +211,7 @@ func decorateRCT(base *RCT, meterEnergy func() (float64, error), curtailer func(
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController == nil && batterySocLimiter != nil && curtailer == nil && meterEnergy != nil:
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batterySocLimiter != nil && meterEnergy != nil:
 		return &struct {
 			*RCT
 			api.Battery
@@ -470,57 +234,7 @@ func decorateRCT(base *RCT, meterEnergy func() (float64, error), curtailer func(
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController == nil && batterySocLimiter != nil && curtailer != nil && meterEnergy == nil:
-		return &struct {
-			*RCT
-			api.Battery
-			api.BatteryCapacity
-			api.BatterySocLimiter
-			api.Curtailer
-		}{
-			RCT: base,
-			Battery: &decorateRCTBatteryImpl{
-				battery: battery,
-			},
-			BatteryCapacity: &decorateRCTBatteryCapacityImpl{
-				batteryCapacity: batteryCapacity,
-			},
-			BatterySocLimiter: &decorateRCTBatterySocLimiterImpl{
-				batterySocLimiter: batterySocLimiter,
-			},
-			Curtailer: &decorateRCTCurtailerImpl{
-				curtailer: curtailer,
-			},
-		}
-
-	case battery != nil && batteryCapacity != nil && batteryController == nil && batterySocLimiter != nil && curtailer != nil && meterEnergy != nil:
-		return &struct {
-			*RCT
-			api.Battery
-			api.BatteryCapacity
-			api.BatterySocLimiter
-			api.Curtailer
-			api.MeterEnergy
-		}{
-			RCT: base,
-			Battery: &decorateRCTBatteryImpl{
-				battery: battery,
-			},
-			BatteryCapacity: &decorateRCTBatteryCapacityImpl{
-				batteryCapacity: batteryCapacity,
-			},
-			BatterySocLimiter: &decorateRCTBatterySocLimiterImpl{
-				batterySocLimiter: batterySocLimiter,
-			},
-			Curtailer: &decorateRCTCurtailerImpl{
-				curtailer: curtailer,
-			},
-			MeterEnergy: &decorateRCTMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-		}
-
-	case battery != nil && batteryCapacity != nil && batteryController != nil && batterySocLimiter == nil && curtailer == nil && meterEnergy == nil:
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batterySocLimiter == nil && meterEnergy == nil:
 		return &struct {
 			*RCT
 			api.Battery
@@ -539,7 +253,7 @@ func decorateRCT(base *RCT, meterEnergy func() (float64, error), curtailer func(
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController != nil && batterySocLimiter == nil && curtailer == nil && meterEnergy != nil:
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batterySocLimiter == nil && meterEnergy != nil:
 		return &struct {
 			*RCT
 			api.Battery
@@ -562,57 +276,7 @@ func decorateRCT(base *RCT, meterEnergy func() (float64, error), curtailer func(
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController != nil && batterySocLimiter == nil && curtailer != nil && meterEnergy == nil:
-		return &struct {
-			*RCT
-			api.Battery
-			api.BatteryCapacity
-			api.BatteryController
-			api.Curtailer
-		}{
-			RCT: base,
-			Battery: &decorateRCTBatteryImpl{
-				battery: battery,
-			},
-			BatteryCapacity: &decorateRCTBatteryCapacityImpl{
-				batteryCapacity: batteryCapacity,
-			},
-			BatteryController: &decorateRCTBatteryControllerImpl{
-				batteryController: batteryController,
-			},
-			Curtailer: &decorateRCTCurtailerImpl{
-				curtailer: curtailer,
-			},
-		}
-
-	case battery != nil && batteryCapacity != nil && batteryController != nil && batterySocLimiter == nil && curtailer != nil && meterEnergy != nil:
-		return &struct {
-			*RCT
-			api.Battery
-			api.BatteryCapacity
-			api.BatteryController
-			api.Curtailer
-			api.MeterEnergy
-		}{
-			RCT: base,
-			Battery: &decorateRCTBatteryImpl{
-				battery: battery,
-			},
-			BatteryCapacity: &decorateRCTBatteryCapacityImpl{
-				batteryCapacity: batteryCapacity,
-			},
-			BatteryController: &decorateRCTBatteryControllerImpl{
-				batteryController: batteryController,
-			},
-			Curtailer: &decorateRCTCurtailerImpl{
-				curtailer: curtailer,
-			},
-			MeterEnergy: &decorateRCTMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-		}
-
-	case battery != nil && batteryCapacity != nil && batteryController != nil && batterySocLimiter != nil && curtailer == nil && meterEnergy == nil:
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batterySocLimiter != nil && meterEnergy == nil:
 		return &struct {
 			*RCT
 			api.Battery
@@ -635,7 +299,7 @@ func decorateRCT(base *RCT, meterEnergy func() (float64, error), curtailer func(
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController != nil && batterySocLimiter != nil && curtailer == nil && meterEnergy != nil:
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batterySocLimiter != nil && meterEnergy != nil:
 		return &struct {
 			*RCT
 			api.Battery
@@ -656,64 +320,6 @@ func decorateRCT(base *RCT, meterEnergy func() (float64, error), curtailer func(
 			},
 			BatterySocLimiter: &decorateRCTBatterySocLimiterImpl{
 				batterySocLimiter: batterySocLimiter,
-			},
-			MeterEnergy: &decorateRCTMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-		}
-
-	case battery != nil && batteryCapacity != nil && batteryController != nil && batterySocLimiter != nil && curtailer != nil && meterEnergy == nil:
-		return &struct {
-			*RCT
-			api.Battery
-			api.BatteryCapacity
-			api.BatteryController
-			api.BatterySocLimiter
-			api.Curtailer
-		}{
-			RCT: base,
-			Battery: &decorateRCTBatteryImpl{
-				battery: battery,
-			},
-			BatteryCapacity: &decorateRCTBatteryCapacityImpl{
-				batteryCapacity: batteryCapacity,
-			},
-			BatteryController: &decorateRCTBatteryControllerImpl{
-				batteryController: batteryController,
-			},
-			BatterySocLimiter: &decorateRCTBatterySocLimiterImpl{
-				batterySocLimiter: batterySocLimiter,
-			},
-			Curtailer: &decorateRCTCurtailerImpl{
-				curtailer: curtailer,
-			},
-		}
-
-	case battery != nil && batteryCapacity != nil && batteryController != nil && batterySocLimiter != nil && curtailer != nil && meterEnergy != nil:
-		return &struct {
-			*RCT
-			api.Battery
-			api.BatteryCapacity
-			api.BatteryController
-			api.BatterySocLimiter
-			api.Curtailer
-			api.MeterEnergy
-		}{
-			RCT: base,
-			Battery: &decorateRCTBatteryImpl{
-				battery: battery,
-			},
-			BatteryCapacity: &decorateRCTBatteryCapacityImpl{
-				batteryCapacity: batteryCapacity,
-			},
-			BatteryController: &decorateRCTBatteryControllerImpl{
-				batteryController: batteryController,
-			},
-			BatterySocLimiter: &decorateRCTBatterySocLimiterImpl{
-				batterySocLimiter: batterySocLimiter,
-			},
-			Curtailer: &decorateRCTCurtailerImpl{
-				curtailer: curtailer,
 			},
 			MeterEnergy: &decorateRCTMeterEnergyImpl{
 				meterEnergy: meterEnergy,
@@ -754,14 +360,6 @@ type decorateRCTBatterySocLimiterImpl struct {
 
 func (impl *decorateRCTBatterySocLimiterImpl) GetSocLimits() (float64, float64) {
 	return impl.batterySocLimiter()
-}
-
-type decorateRCTCurtailerImpl struct {
-	curtailer func(bool) error
-}
-
-func (impl *decorateRCTCurtailerImpl) Curtail(p0 bool) error {
-	return impl.curtailer(p0)
 }
 
 type decorateRCTMeterEnergyImpl struct {

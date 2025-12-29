@@ -33,7 +33,7 @@ func init() {
 	registry.AddCtx("rct", NewRCTFromConfig)
 }
 
-//go:generate go tool decorate -f decorateRCT -b *RCT -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Curtailer,Curtail,func(bool) error" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatterySocLimiter,GetSocLimits,func() (float64, float64)" -t "api.BatteryController,SetBatteryMode,func(api.BatteryMode) error" -t "api.BatteryCapacity,Capacity,func() float64"
+//go:generate go tool decorate -f decorateRCT -b *RCT -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatterySocLimiter,GetSocLimits,func() (float64, float64)" -t "api.BatteryController,SetBatteryMode,func(api.BatteryMode) error" -t "api.BatteryCapacity,Capacity,func() float64"
 
 // NewRCTFromConfig creates an RCT from generic config
 func NewRCTFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
@@ -98,19 +98,6 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 	var totalEnergy func() (float64, error)
 	if usage == "grid" {
 		totalEnergy = m.totalEnergy
-	}
-
-	// decorate api.Curtailer
-	var curtail func(bool) error
-	if usage == "pv" {
-		curtail = func(b bool) error {
-			r := float32(1)
-			if b {
-				r = 0
-			}
-
-			return m.conn.Write(rct.BufVControlPowerReduction, m.floatVal(r))
-		}
 	}
 
 	// decorate api.Battery
@@ -204,7 +191,7 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 		}
 	}
 
-	return decorateRCT(m, totalEnergy, curtail, batterySoc, batterySocLimiter, batteryMode, batteryCapacity), nil
+	return decorateRCT(m, totalEnergy, batterySoc, batterySocLimiter, batteryMode, batteryCapacity), nil
 }
 
 func (m *RCT) floatVal(f float32) []byte {
@@ -302,6 +289,20 @@ func (m *RCT) totalEnergy() (float64, error) {
 	default:
 		return 0, fmt.Errorf("invalid usage: %s", m.usage)
 	}
+}
+
+// Curtail implements the api.Curtailer interface
+func (m *RCT) Curtail(b bool) error {
+	if m.usage != "pv" {
+		return api.ErrNotAvailable
+	}
+
+	r := float32(1)
+	if b {
+		r = 0
+	}
+
+	return m.conn.Write(rct.BufVControlPowerReduction, m.floatVal(r))
 }
 
 func queryRCT[T any](id rct.Identifier, fun func(id rct.Identifier) (T, error)) (T, error) {
