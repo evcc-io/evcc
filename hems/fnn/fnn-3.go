@@ -105,7 +105,7 @@ func (c *Fnn3) run() error {
 
 	if w3 {
 		// 0%
-		return c.dim(0.0)
+		return c.curtail(0.0)
 	}
 
 	s2, err := c.s2()
@@ -115,7 +115,7 @@ func (c *Fnn3) run() error {
 
 	if s2 {
 		// 30%
-		return c.dim(0.3)
+		return c.curtail(0.3)
 	}
 
 	s1, err := c.s1()
@@ -125,15 +125,16 @@ func (c *Fnn3) run() error {
 
 	if s1 {
 		// 60%
-		return c.dim(0.6)
+		return c.curtail(0.6)
 	}
 
 	// 100%
-	return c.dim(1.0)
+	return c.curtail(1.0)
 }
 
-func (c *Fnn3) dim(frac float64) error {
-	// c.root.Dim(percent<100)
+func (c *Fnn3) curtail(frac float64) error {
+	c.root.Curtail(frac < 1.0)
+	// TODO make ProductionNominalMax configurable (Site kWp)
 	// c.root.SetMaxPower(c.maxPower*frac)
 	return nil
 }
