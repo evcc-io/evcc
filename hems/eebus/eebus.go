@@ -183,9 +183,6 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, lpc, lpp api.Circu
 	for _, s := range c.eg.EgLPCInterface.RemoteEntitiesScenarios() {
 		c.log.INFO.Printf("ski %s EG LPC scenarios: %v", s.Entity.Device().Ski(), s.Scenarios)
 	}
-	for _, s := range c.eg.EgLPPInterface.RemoteEntitiesScenarios() {
-		c.log.INFO.Printf("ski %s EG LPP scenarios: %v", s.Entity.Device().Ski(), s.Scenarios)
-	}
 
 	// set initial values
 	if err := c.cs.CsLPCInterface.SetConsumptionNominalMax(limits.ContractualConsumptionNominalMax); err != nil {
