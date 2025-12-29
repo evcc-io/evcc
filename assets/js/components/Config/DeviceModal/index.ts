@@ -35,6 +35,7 @@ export type TemplateParam = {
 
 export type ParamService = {
   name: string;
+  service: string;
   dependencies: string[];
   url: (values: Record<string, any>) => string;
 };
@@ -150,13 +151,12 @@ const expandModbus = (service: string, values: Record<string, any>): string => {
 export const createServiceEndpoints = (params: TemplateParam[]): ParamService[] => {
   return params
     .map((param) => {
-      if (!param.Service || typeof param.Service !== "string") {
+      if (!param.Service) {
         return null;
       }
       const stringValues = (values: Record<string, any>): Record<string, string> =>
         Object.entries(values).reduce(
           (acc, [key, val]) => {
-            // Filter out 'modbus' - it's a meta-placeholder expanded by expandModbus
             if (val !== undefined && val !== null && key !== "modbus") acc[key] = String(val);
             return acc;
           },
@@ -165,7 +165,8 @@ export const createServiceEndpoints = (params: TemplateParam[]): ParamService[] 
 
       return {
         name: param.Name,
-        dependencies: extractPlaceholders(param.Service),
+        service: param.Service,
+        dependencies: extractPlaceholders(param.Service).filter((dep) => dep !== "modbus"),
         url: (values: Record<string, any>) =>
           replacePlaceholders(expandModbus(param.Service!, values), stringValues(values)),
       } as ParamService;
@@ -182,20 +183,25 @@ export const fetchServiceValues = async (
 
   await Promise.all(
     endpoints.map(async (endpoint) => {
-      const params: Record<string, any> = {};
-      endpoint.dependencies.forEach((dependency) => {
-        // For {modbus}, check actual connection params instead
-        if (dependency === "modbus") {
-          if (values["host"] || values["device"]) params[dependency] = true;
-        } else if (values[dependency]) {
-          params[dependency] = values[dependency];
-        }
-      });
-      if (Object.keys(params).length !== endpoint.dependencies.length) {
-        // missing dependency values, skip
+      const expandedService = expandModbus(endpoint.service, values);
+
+      // Skip if {modbus} wasn't expanded
+      if (expandedService.includes("{modbus}")) {
         return;
       }
-      const url = endpoint.url(values);
+
+      const actualDeps = extractPlaceholders(expandedService);
+      const params: Record<string, any> = {};
+      actualDeps.forEach((dep) => {
+        if (values[dep] !== undefined) {
+          params[dep] = values[dep];
+        }
+      });
+      if (Object.keys(params).length !== actualDeps.length) {
+        return;
+      }
+
+      const url = endpoint.url(params);
       const data = await loadServiceValues(url);
       if (data) {
         result[endpoint.name] = data;
