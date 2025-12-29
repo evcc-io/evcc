@@ -55,7 +55,7 @@ func (c *EEBus) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spineapi.E
 	//
 	// Use Case LPC, Scenario 3
 	case lpc.DataUpdateHeartbeat:
-		c.updateConsumptionHeartbeat()
+		c.updateHeartbeat()
 
 	// Load control obligation limit data update received
 	//
@@ -97,7 +97,7 @@ func (c *EEBus) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spineapi.E
 	//
 	// Use Case LPP, Scenario 3
 	case lpp.DataUpdateHeartbeat:
-		c.updateProductionHeartbeat()
+		c.updateHeartbeat()
 	}
 }
 
@@ -111,8 +111,8 @@ func (c *EEBus) updateConsumptionLimit() {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	c.consumptionLimit = &limit
-	c.consumptionStatusUpdated = time.Now()
+	c.consumptionLimit = limit
+	c.statusUpdated = time.Now()
 }
 
 func (c *EEBus) updateProductionLimit() {
@@ -125,8 +125,8 @@ func (c *EEBus) updateProductionLimit() {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	c.productionLimit = &limit
-	c.productionStatusUpdated = time.Now()
+	c.productionLimit = limit
+	c.statusUpdated = time.Now()
 }
 
 func (c *EEBus) consumptionWriteApprovalRequired() {
@@ -140,7 +140,7 @@ func (c *EEBus) consumptionWriteApprovalRequired() {
 		c.cs.CsLPCInterface.ApproveOrDenyConsumptionLimit(msg, true, "")
 
 		c.mux.Lock()
-		c.consumptionLimit = &limit
+		c.consumptionLimit = limit
 		c.mux.Unlock()
 	}
 }
@@ -155,7 +155,7 @@ func (c *EEBus) productionWriteApprovalRequired() {
 
 		c.cs.CsLPPInterface.ApproveOrDenyProductionLimit(msg, true, "")
 		c.mux.Lock()
-		c.productionLimit = &limit
+		c.productionLimit = limit
 		c.mux.Unlock()
 	}
 }
@@ -196,7 +196,7 @@ func (c *EEBus) updateFailsafeConsumptionDurationMinimum() {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	c.failsafeConsumptionDuration = duration
+	c.failsafeDuration = duration
 }
 
 func (c *EEBus) updateFailsafeProductionDurationMinimum() {
@@ -209,19 +209,12 @@ func (c *EEBus) updateFailsafeProductionDurationMinimum() {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	c.failsafeProductionDuration = duration
+	c.failsafeDuration = duration
 }
 
-func (c *EEBus) updateConsumptionHeartbeat() {
+func (c *EEBus) updateHeartbeat() {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	c.consumptionHeartbeat.Set(struct{}{})
-}
-
-func (c *EEBus) updateProductionHeartbeat() {
-	c.mux.Lock()
-	defer c.mux.Unlock()
-
-	c.productionHeartbeat.Set(struct{}{})
+	c.heartbeat.Set(struct{}{})
 }
