@@ -20,8 +20,8 @@ import (
 	"github.com/enbility/eebus-go/usecases/cem/evsoc"
 	"github.com/enbility/eebus-go/usecases/cem/opev"
 	"github.com/enbility/eebus-go/usecases/cem/oscev"
-	"github.com/enbility/eebus-go/usecases/cs/lpc"
-	"github.com/enbility/eebus-go/usecases/cs/lpp"
+	csplc "github.com/enbility/eebus-go/usecases/cs/lpc"
+	cslpp "github.com/enbility/eebus-go/usecases/cs/lpp"
 	eglpc "github.com/enbility/eebus-go/usecases/eg/lpc"
 	"github.com/enbility/eebus-go/usecases/ma/mgcp"
 	"github.com/enbility/eebus-go/usecases/ma/mpc"
@@ -121,7 +121,7 @@ func NewServer(other Config) (*EEBus, error) {
 	configuration, err := eebusapi.NewConfiguration(
 		BrandName, BrandName, Model, serial,
 		model.DeviceTypeTypeEnergyManagementSystem,
-		[]model.EntityTypeType{model.EntityTypeTypeCEM},
+		[]model.EntityTypeType{model.EntityTypeTypeCEM, model.EntityTypeTypeControllableSystem, model.EntityTypeTypeGridGuard},
 		port, certificate, time.Second*4,
 	)
 	if err != nil {
@@ -153,33 +153,43 @@ func NewServer(other Config) (*EEBus, error) {
 		return nil, err
 	}
 
-	localEntity := c.service.LocalDevice().EntityForType(model.EntityTypeTypeCEM)
+	{
+		localEntity := c.service.LocalDevice().EntityForType(model.EntityTypeTypeCEM)
 
-	// evse
-	c.cem = CustomerEnergyManagement{
-		EvseCC: evsecc.NewEVSECC(localEntity, c.ucCallback),
-		EvCC:   evcc.NewEVCC(c.service, localEntity, c.ucCallback),
-		EvCem:  evcem.NewEVCEM(c.service, localEntity, c.ucCallback),
-		OpEV:   opev.NewOPEV(localEntity, c.ucCallback),
-		OscEV:  oscev.NewOSCEV(localEntity, c.ucCallback),
-		EvSoc:  evsoc.NewEVSOC(localEntity, c.ucCallback),
+		// evse
+		c.cem = CustomerEnergyManagement{
+			EvseCC: evsecc.NewEVSECC(localEntity, c.ucCallback),
+			EvCC:   evcc.NewEVCC(c.service, localEntity, c.ucCallback),
+			EvCem:  evcem.NewEVCEM(c.service, localEntity, c.ucCallback),
+			OpEV:   opev.NewOPEV(localEntity, c.ucCallback),
+			OscEV:  oscev.NewOSCEV(localEntity, c.ucCallback),
+			EvSoc:  evsoc.NewEVSOC(localEntity, c.ucCallback),
+		}
 	}
 
-	// controllable system
-	c.cs = ControllableSystem{
-		CsLPCInterface: lpc.NewLPC(localEntity, c.ucCallback),
-		CsLPPInterface: lpp.NewLPP(localEntity, c.ucCallback),
+	{
+		localEntity := c.service.LocalDevice().EntityForType(model.EntityTypeTypeControllableSystem)
+
+		// controllable system
+		c.cs = ControllableSystem{
+			CsLPCInterface: csplc.NewLPC(localEntity, c.ucCallback),
+			CsLPPInterface: cslpp.NewLPP(localEntity, c.ucCallback),
+		}
 	}
 
-	// monitoring appliance
-	c.ma = MonitoringAppliance{
-		MaMGCPInterface: mgcp.NewMGCP(localEntity, c.ucCallback),
-		MaMPCInterface:  mpc.NewMPC(localEntity, c.ucCallback),
-	}
+	{
+		localEntity := c.service.LocalDevice().EntityForType(model.EntityTypeTypeGridGuard)
 
-	// energy guard
-	c.eg = EnergyGuard{
-		EgLPCInterface: eglpc.NewLPC(localEntity, c.ucCallback),
+		// monitoring appliance
+		c.ma = MonitoringAppliance{
+			MaMGCPInterface: mgcp.NewMGCP(localEntity, c.ucCallback),
+			MaMPCInterface:  mpc.NewMPC(localEntity, c.ucCallback),
+		}
+
+		// energy guard
+		c.eg = EnergyGuard{
+			EgLPCInterface: eglpc.NewLPC(localEntity, c.ucCallback),
+		}
 	}
 
 	// register use cases
