@@ -32,7 +32,7 @@ params:
       de: OID für Leistung (W)
       en: OID for power (W)
     required: true
-  - name: powerscale
+  - name: powerScale
     description:
       de: Skalierungsfaktor für Leistung
       en: Scaling factor for power
@@ -41,10 +41,28 @@ params:
     description:
       de: OID für Energie (kWh)
       en: OID for energy (kWh)
-  - name: energyscale
+  - name: energyScale
     description:
       de: Skalierungsfaktor für Energie
       en: Scaling factor for energy
+    default: 1.0
+  - name: current
+    description:
+      de: OID für Strom (A)
+      en: OID for current (A)
+  - name: currentScale
+    description:
+      de: Skalierungsfaktor für Strom
+      en: Scaling factor for current
+    default: 1.0
+  - name: voltage
+    description:
+      de: OID für Spannung (V)
+      en: OID for voltage (V)
+  - name: voltageScale
+    description:
+      de: Skalierungsfaktor für Spannung
+      en: Scaling factor for voltage
     default: 1.0
   - name: user
     description:
@@ -93,7 +111,7 @@ render: |
     version: {{ .version }}
     community: {{ .community }}
     oid: {{ .power }}
-    scale: {{ .powerscale }}
+    scale: {{ .powerScale }}
     {{- if .user }}
     auth:
       user: {{ .user }}
@@ -110,7 +128,7 @@ render: |
     version: {{ .version }}
     community: {{ .community }}
     oid: {{ .energy }}
-    scale: {{ .energyscale }}
+    scale: {{ .energyScale }}
     {{- if .user }}
     auth:
       user: {{ .user }}
@@ -120,4 +138,48 @@ render: |
       priv: {{ .privProtocol }}
       privPass: {{ .privPassword }}
     {{- end }}
+  {{- end }}
+  {{- if .current }}
+  currents:
+    - source: snmp
+      uri: {{ .uri }}
+      version: {{ .version }}
+      community: {{ .community }}
+      oid: {{ .current }}
+      scale: {{ .currentScale }}
+      {{- if .user }}
+      auth:
+        user: {{ .user }}
+        securityLevel: {{ .securityLevel }}
+        auth: {{ .authProtocol }}
+        authPass: {{ .authPassword }}
+        priv: {{ .privProtocol }}
+        privPass: {{ .privPassword }}
+      {{- end }}
+    - source: const
+      value: 0
+    - source: const
+      value: 0
+  {{- end }}
+  {{- if .voltage }}
+  voltages:
+    - source: snmp
+      uri: {{ .uri }}
+      version: {{ .version }}
+      community: {{ .community }}
+      oid: {{ .voltage }}
+      scale: {{ .voltageScale }}
+      {{- if .user }}
+      auth:
+        user: {{ .user }}
+        securityLevel: {{ .securityLevel }}
+        auth: {{ .authProtocol }}
+        authPass: {{ .authPassword }}
+        priv: {{ .privProtocol }}
+        privPass: {{ .privPassword }}
+      {{- end }}
+    - source: const
+      value: 0
+    - source: const
+      value: 0
   {{- end }}

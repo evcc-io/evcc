@@ -67,3 +67,16 @@ func TestSnmpOctetString(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 567.8, val)
 }
+
+func TestSnmpEmptyOID(t *testing.T) {
+	p := &Snmp{
+		oid: "",
+	}
+
+	g, err := p.FloatGetter()
+	assert.NoError(t, err)
+
+	val, err := g()
+	assert.NoError(t, err)
+	assert.Equal(t, 0.0, val)
+}

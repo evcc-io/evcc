@@ -1,10 +1,12 @@
 package snmp
 
 import (
+	"context"
 	"fmt"
 	"net/url"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gosnmp/gosnmp"
@@ -15,10 +17,22 @@ type Handler interface {
 }
 
 type Connection struct {
+	sync.Mutex
 	Handler Handler
 }
 
-func NewConnection(uri, version, community string, auth Auth) (*Connection, error) {
+func (c *Connection) Get(oids []string) (*gosnmp.SnmpPacket, error) {
+	c.Lock()
+	defer c.Unlock()
+	return c.Handler.Get(oids)
+}
+
+var (
+	mu          sync.Mutex
+	connections = make(map[string]*Connection)
+)
+
+func NewConnection(ctx context.Context, uri, version, community string, auth Auth) (*Connection, error) {
 	if !strings.Contains(uri, "://") {
 		uri = "udp://" + uri
 	}
@@ -36,6 +50,14 @@ func NewConnection(uri, version, community string, auth Auth) (*Connection, erro
 	if err != nil {
 		return nil, fmt.Errorf("invalid port: %w", err)
 	}
+
+	key := fmt.Sprintf("%s:%d:%s:%s:%s", host, port, version, community, auth.User)
+	mu.Lock()
+	if conn, ok := connections[key]; ok {
+		mu.Unlock()
+		return conn, nil
+	}
+	defer mu.Unlock()
 
 	g := &gosnmp.GoSNMP{
 		Target:    host,
@@ -72,7 +94,19 @@ func NewConnection(uri, version, community string, auth Auth) (*Connection, erro
 		return nil, err
 	}
 
-	return &Connection{Handler: g}, nil
+	res := &Connection{Handler: g}
+	connections[key] = res
+
+	if ctx != nil {
+		go func() {
+			<-ctx.Done()
+			mu.Lock()
+			delete(connections, key)
+			mu.Unlock()
+		}()
+	}
+
+	return res, nil
 }
 
 type Auth struct {

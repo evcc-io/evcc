@@ -39,7 +39,7 @@ func NewSnmpFromConfig(ctx context.Context, other map[string]any) (Plugin, error
 		return nil, err
 	}
 
-	conn, err := snmp.NewConnection(cc.URI, cc.Version, cc.Community, cc.Auth)
+	conn, err := snmp.NewConnection(ctx, cc.URI, cc.Version, cc.Community, cc.Auth)
 	if err != nil {
 		return nil, err
 	}
@@ -53,9 +53,12 @@ func NewSnmpFromConfig(ctx context.Context, other map[string]any) (Plugin, error
 
 func (p *Snmp) StringGetter() (func() (string, error), error) {
 	return func() (string, error) {
-		result, err := p.conn.Handler.Get([]string{p.oid})
+		if p.oid == "" {
+			return "0", nil
+		}
+		result, err := p.conn.Get([]string{p.oid})
 		if err != nil {
-			return "", err
+			return "", fmt.Errorf("snmp get %s: %w", p.oid, err)
 		}
 
 		if len(result.Variables) == 0 {
