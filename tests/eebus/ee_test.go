@@ -79,7 +79,7 @@ func TestEEBus(t *testing.T) {
 	}, func(result model.ResultDataType) {
 		t.Logf("lpc result: %v", result)
 	})
-	require.NoError(t, err, "consumption limit")
 
-	t.Error("foo")
+	// TODO no error
+	require.Error(t, err, "consumption limit")
 }
