@@ -198,10 +198,11 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 		// find cheapest continuous window
 		plan = findContinuousWindow(rates, requiredDuration, targetTime)
 	} else {
-		// find cheapest combination of slots
+		// sort rates by price and time
 		slices.SortStableFunc(rates, sortByCost)
 		plan = t.plan(rates, requiredDuration, targetTime)
 
+		// sort plan by time
 		plan.Sort()
 	}
 
