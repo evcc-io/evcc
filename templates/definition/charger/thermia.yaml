@@ -1,0 +1,82 @@
+template: thermia
+products:
+  - brand: Thermia
+    description:
+      generic: Heat Pump (SG Ready)
+group: heating
+requirements:
+  description:
+    de: |
+      Modbus TCP/IP Verbindung zur Thermia Wärmepumpe.
+      Die Wärmepumpe muss über ein Modbus-fähiges Gateway verfügen.
+      SG Ready Funktion muss in der Wärmepumpe aktiviert sein.
+      
+      Standardmäßig verwendet Thermia Modbus-Adresse 1 und Port 502.
+    en: |
+      Modbus TCP/IP connection to Thermia heat pump.
+      The heat pump must have a Modbus-capable gateway.
+      SG Ready function must be enabled on the heat pump.
+      
+      By default, Thermia uses Modbus address 1 and port 502.
+params:
+  - name: modbus
+    choice: ["tcpip"]
+    id: 1
+  - name: tempsource
+    type: choice
+    choice: ["hotwater", "flowline"]
+    default: hotwater
+    description:
+      de: Temperatursensor
+      en: Temperature sensor
+    help:
+      de: Auswahl zwischen Warmwasser-Temperatur oder Vorlauf-Temperatur
+      en: Choose between hot water temperature or flow line temperature
+render: |
+  type: sgready
+  setmode:
+    source: map
+    values:
+      1: 1 # evcc dim (1) -> Thermia forced off (1)
+      2: 2 # evcc normal (2) -> Thermia normal (2)
+      3: 3 # evcc boost (3) -> Thermia recommended on (3)
+    set:
+      source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 40
+        type: writeholding
+        encoding: uint16
+  getmode:
+    source: map
+    values:
+      0: 2 # Thermia off/normal (0) -> evcc normal (2)
+      1: 1 # Thermia forced off (1) -> evcc dim (1)
+      2: 2 # Thermia normal (2) -> evcc normal (2)
+      3: 3 # Thermia recommended on (3) -> evcc boost (3)
+      4: 3 # Thermia forced on (4) -> evcc boost (3)
+    get:
+      source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 40
+        type: holding
+        encoding: uint16
+  {{- if .tempsource }}
+  temp:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: {{ if eq .tempsource "hotwater" -}} 42 {{ else }} 41 {{- end }}
+      type: input
+      encoding: int16
+    scale: 0.1
+  {{- end }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 50
+      type: input
+      encoding: uint16
+    scale: 100
