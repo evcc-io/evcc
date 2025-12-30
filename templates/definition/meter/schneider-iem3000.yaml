@@ -5,28 +5,37 @@ products:
       generic: iEM3xxx Modbus
 params:
   - name: usage
-    choice: ["grid", "charge"]
+    choice: ["grid", "pv", "charge"]
   - name: modbus
     choice: ["rs485"]
 render: |
   type: mbmd
   {{- include "modbus" . }}
   model: iem3000
+  {{- if ne .usage "pv" }}
   power: Power
   energy: Import
   currents:
     - CurrentL1
     - CurrentL2
     - CurrentL3
-  {{- if eq .usage "grid" }}
   powers:
     - PowerL1
     - PowerL2
     - PowerL3
+  {{- else }}
+  power: -Power
+  energy: Export
+  currents:
+    - -CurrentL1
+    - -CurrentL2
+    - -CurrentL3
+  powers:
+    - -PowerL1
+    - -PowerL2
+    - -PowerL3
   {{- end }}
-  {{- if eq .usage "charge" }}
   voltages:
     - VoltageL1
     - VoltageL2
     - VoltageL3
-  {{- end }}

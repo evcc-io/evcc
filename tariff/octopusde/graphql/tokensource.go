@@ -12,25 +12,27 @@ import (
 	"golang.org/x/oauth2"
 )
 
-type TokenSource struct {
+type tokenSource struct {
 	log             *util.Logger
 	email, password string
 }
 
+var _ oauth2.TokenSource = (*tokenSource)(nil)
+
 // RefreshToken implements oauth.TokenRefresher to obtain a new JWT token.
 // It parses the JWT to extract the actual expiry time from the token claims.
-func (c *TokenSource) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
+func (ts *tokenSource) Token() (*oauth2.Token, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
 
 	// Create a temporary client without authentication for the token request
-	cli := request.NewClient(c.log)
+	cli := request.NewClient(ts.log)
 	tempClient := graphql.NewClient(BaseURI, cli)
 
 	var q krakenTokenAuthentication
 	if err := tempClient.Mutate(ctx, &q, map[string]any{
-		"email":    c.email,
-		"password": c.password,
+		"email":    ts.email,
+		"password": ts.password,
 	}); err != nil {
 		return nil, fmt.Errorf("authentication failed: %w", err)
 	}
