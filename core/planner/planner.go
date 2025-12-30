@@ -158,19 +158,19 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 	// filter rates to planning window early for performance
 	rates = clampRates(rates, now, targetTime)
 
+	// reduce target time by precondition duration
+	targetTime = targetTime.Add(-precondition)
+
 	// separate precond rates, to be appended to plan afterwards
 	var precond api.Rates
 	if precondition > 0 {
-		rates, precond = splitAndAdjustPrecondition(rates, targetTime, precondition)
+		rates, precond = splitPreconditionSlots(rates, targetTime)
 
 		// reduce required duration by precondition, skip planning if required
 		requiredDuration = max(requiredDuration-precondition, 0)
 		if requiredDuration == 0 {
 			return precond
 		}
-
-		targetTime = targetTime.Add(-precondition)
-		// chargingRates filtered by split (End <= preCondStart = new targetTime)
 	}
 
 	// create plan unless only precond slots remaining
@@ -209,9 +209,7 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 	return plan
 }
 
-func splitAndAdjustPrecondition(rates api.Rates, targetTime time.Time, precondition time.Duration) (api.Rates, api.Rates) {
-	preCondStart := targetTime.Add(-precondition)
-
+func splitPreconditionSlots(rates api.Rates, preCondStart time.Time) (api.Rates, api.Rates) {
 	var res, precond api.Rates
 
 	for _, r := range rates {
@@ -219,21 +217,41 @@ func splitAndAdjustPrecondition(rates api.Rates, targetTime time.Time, precondit
 			res = append(res, r)
 			continue
 		}
+
+		// split slot
+		if !r.Start.After(preCondStart) {
+			// keep the first part of the slot
+			res = append(res, api.Rate{
+				Start: r.Start,
+				End:   preCondStart,
+				Value: r.Value,
+			})
+
+			// adjust the second part of the slot
+			r = api.Rate{
+				Start: preCondStart,
+				End:   r.End,
+				Value: r.Value,
+			}
+		}
+
 		precond = append(precond, r)
 	}
 
-	precond = clampRates(precond, preCondStart, targetTime)
+	// TODO if this is required it lacks a test
 
-	var total time.Duration
-	for _, p := range precond {
-		total += p.End.Sub(p.Start)
-	}
+	// precond = clampRates(precond, preCondStart, targetTime)
 
-	if deficit := precondition - total; deficit > 0 {
-		extendStart := preCondStart.Add(-deficit)
-		extension := clampRates(res, extendStart, preCondStart)
-		precond = append(extension, precond...)
-	}
+	// var total time.Duration
+	// for _, p := range precond {
+	// 	total += p.End.Sub(p.Start)
+	// }
+
+	// if deficit := precondition - total; deficit > 0 {
+	// 	extendStart := preCondStart.Add(-deficit)
+	// 	extension := clampRates(res, extendStart, preCondStart)
+	// 	precond = append(extension, precond...)
+	// }
 
 	return res, precond
 }
