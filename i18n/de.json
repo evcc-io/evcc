@@ -100,7 +100,7 @@
     "control": {
       "description": "Normalerweise sind die Standardwerte in Ordnung. Ändere nur etwas, wenn du weißt, was du tust.",
       "descriptionInterval": "Aktualisierungszyklus in Sekunden. Definiert, wie oft evcc Messdaten liest und die Ladung anpasst. Die Standardeinstellung von 30 Sekunden ist eine sichere Wahl. Geräte wie Fahrzeuge, Wallbox und Wechselrichter brauchen in der Regel mehrere Sekunden um ihr Verhalten anzupassen. Wenn deine Komponenten schnell reagieren kannst du niedrigere Werte verwenden. Wir empfehlen dringend nicht unter 10 Sekunden zu gehen. Wenn du komisches Regelverhalten oder springende Leistungswerte beobachtest wähle ein größeres Intervall.",
-      "descriptionResidualPower": "Verschiebt den Betriebspunkt des Regelkreises. Wenn du eine Hausbatterie hast, wird empfohlen, einen Wert von 100 W einzustellen. Auf diese Weise erhält die Batterie eine leichte Priorität gegenüber dem Netzbezug.",
+      "descriptionResidualPower": "Verschiebt den Betriebspunkt des Regelkreises. Der Standardwert von 100 W gibt Hausbatterien eine leichte Priorität gegenüber dem Netzbezug. Wenn du keine Batterie hast, kannst du den Wert auf 0 W setzen, um den Netzbezug im PV-Modus zu minimieren.",
       "labelInterval": "Aktualisierungsintervall",
       "labelResidualPower": "Residualleistung",
       "title": "Regelverhalten"
@@ -649,7 +649,7 @@
       "maximumPhases": "Maximale Phasen",
       "maximumPhasesHelp": "Mit wie vielen Phasen kann dieses Fahrzeug laden? Wird zur Berechnung der Mindestladeleistung und im Planer verwendet.",
       "maximumPower": "Maximale Ladeleistung",
-      "maximumPowerHelp": "Maximale Leistung die das Fahrzeug beziehen kann.",
+      "maximumPowerHelp": "Maximale Leistung die das Fahrzeug beziehen kann",
       "minimumCurrent": "Minimaler Strom",
       "minimumCurrentHelp": "Nur unter 6A, wenn du weißt, was du tust.",
       "online": "Fahrzeuge mit Schnittstelle",
@@ -877,16 +877,23 @@
       "goal": "Ladeziel",
       "modalTitle": "Ladeplanung",
       "none": "keiner",
+      "optimization": {
+        "cheapest": "günstigst",
+        "continuous": "kontinuierlich",
+        "label": "Optimierung"
+      },
       "planNumber": "Plan {number}",
-      "preconditionDescription": "Lade {duration} vor Abfahrt zur Batterie-Vorkonditionierung.",
-      "preconditionLong": "Spätes Laden",
-      "preconditionOptionAll": "alles",
-      "preconditionOptionNo": "nein",
-      "preconditionShort": "Spät",
+      "precondition": {
+        "description": "Lade {duration} vor Abfahrt zur Batterie-Vorkonditionierung.",
+        "label": "Spätes Laden",
+        "optionAll": "alles",
+        "optionNo": "nein"
+      },
       "remove": "Entfernen",
       "repeating": "wiederholend",
       "repeatingPlans": "Wiederholende Pläne",
       "selectAll": "Alle wählen",
+      "strategySettings": "Strategie-Einstellungen",
       "time": "Zeit",
       "title": "Plan",
       "titleMinSoc": "Min. Ladung",

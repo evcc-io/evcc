@@ -266,6 +266,7 @@ func NewSite() *Site {
 	site := &Site{
 		log:             util.NewLogger("site"),
 		Voltage:         230, // V
+		ResidualPower:   100, // W
 		pvEnergy:        make(map[string]*meterEnergy),
 		fcstEnergy:      &meterEnergy{clock: clock.New()},
 		householdEnergy: &meterEnergy{clock: clock.New()},
@@ -505,15 +506,7 @@ func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) [
 
 		// power
 		var b bytes.Buffer
-		power, err := backoff.RetryWithData(func() (float64, error) {
-			start := time.Now()
-			f, err := meter.CurrentPower()
-			if err != nil {
-				d := time.Since(start)
-				fmt.Fprintf(&b, "%v !! %3dms %v\n", start, d.Milliseconds(), err)
-			}
-			return f, err
-		}, modbus.Backoff())
+		power, err := backoff.RetryWithData(meter.CurrentPower, modbus.Backoff())
 		if err == nil {
 			site.log.DEBUG.Printf("%s %d power: %.0fW", key, i+1, power)
 		} else {
@@ -946,9 +939,21 @@ func (site *Site) update(lp updater) {
 
 		site.publishCircuits()
 
-		if err := site.dimMeters(circuitDimmed(site.circuit)); err != nil {
-			site.log.ERROR.Println(err)
-		}
+		var wg sync.WaitGroup
+
+		wg.Go(func() {
+			if err := site.dimMeters(circuitDimmed(site.circuit)); err != nil {
+				site.log.ERROR.Println(err)
+			}
+		})
+
+		wg.Go(func() {
+			if err := site.curtailPV(circuitCurtailed(site.circuit)); err != nil {
+				site.log.ERROR.Println(err)
+			}
+		})
+
+		wg.Wait()
 	}
 
 	// prioritize if possible

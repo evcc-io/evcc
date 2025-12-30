@@ -100,7 +100,7 @@
     "control": {
       "description": "Usually the default values are fine. Only change them if you know what you are doing.",
       "descriptionInterval": "Update cycle in seconds. Defines how often evcc reads meter data and adjusts charging. The default of 30 seconds is a safe choice. Devices like vehicles, wallboxes and inverters typically need several seconds to adjust their behavior. If your components react quickly you can use lower values. We strongly recommend not going below 10 seconds. If you observe erratic control behavior or jumping power values choose a larger interval.",
-      "descriptionResidualPower": "Shifts the operation point of the control loop. If you have a home battery it's recommended to set a value of 100 W. This way the battery will get slight priority over grid use.",
+      "descriptionResidualPower": "Shifts the operation point of the control loop. The default of 100 W gives home batteries slight priority over grid use. If you don't have a battery, you can set this to 0 W to minimize grid consumption in solar mode.",
       "labelInterval": "Update interval",
       "labelResidualPower": "Residual power",
       "title": "Control behavior"
@@ -877,16 +877,23 @@
       "goal": "Charging goal",
       "modalTitle": "Charging Plan",
       "none": "none",
+      "optimization": {
+        "cheapest": "cheapest",
+        "continuous": "continuous",
+        "label": "Optimization"
+      },
       "planNumber": "Plan {number}",
-      "preconditionDescription": "Charge {duration} before departure for battery preconditioning.",
-      "preconditionLong": "Late Charging",
-      "preconditionOptionAll": "everything",
-      "preconditionOptionNo": "no",
-      "preconditionShort": "Late",
+      "precondition": {
+        "description": "Charge {duration} before departure for battery preconditioning.",
+        "label": "Late Charging",
+        "optionAll": "everything",
+        "optionNo": "no"
+      },
       "remove": "Remove",
       "repeating": "repeating",
       "repeatingPlans": "Repeating plans",
       "selectAll": "Select all",
+      "strategySettings": "Strategy settings",
       "time": "Time",
       "title": "Plan",
       "titleMinSoc": "Min charge",

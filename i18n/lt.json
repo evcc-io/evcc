@@ -99,8 +99,8 @@
     },
     "control": {
       "description": "Paprastai numatytosios reikšmės yra pakankamos. Keiskite jas tik jei žinote, ką darote.",
-      "descriptionInterval": "Valdymo ciklų intervalas, sekundėmis. Nurodo, kaip dažnai evcc nuskaito skaitiklių duomenis, koreguoja įkrovimo galią ir atnaujina vartotojo sąsają. Pernelyg trumpi intervalai (< 30 s) gali sukelti svyravimus ir nepageidaujamus rezultatus.",
-      "descriptionResidualPower": "Pakeičia valdymo sistemos reguliavimo tašką. Jei turite namų kaupiklį, rekomenduojame nustatyti 100 W vertę. Tada kaupiklis turės nedidelį prioritetą, palyginus su tinklu.",
+      "descriptionInterval": "Atnaujinimo ciklų intervalas, sekundėmis. Nurodo, kaip dažnai evcc nuskaito skaitiklių duomenis, koreguoja įkrovimo galią. 30 sekundžių yra rekomenduojamas pasirinkimas. Automobiliams, įkrovikliams bei inverteriams reikia laiko reaguoti į valdymo nurodymus. Jei jūsų komponentai reaguoja greitai, galite trumpinti intervalą, tačiau nerekomenduojama naudoti trumpesnio nei 10s. Pernelyg trumpi intervalai gali sukelti galios svyravimus ir nepageidaujamą sistemos veikimą, tokiu atveju pailginkinte intervalą.",
+      "descriptionResidualPower": "Pakeičia įvado galios reguliavimo tašką. Standartinė 100 W vertė (eksportas) suteikia kaupikliui nedidelį prioritetą. Jei neturite kaupiklio, galite nustatyti 0W, taip minimizuodami iš tinklo perkamą energiją įkraunant saulės pertekliumi.",
       "labelInterval": "Atnaujinimo intervalas",
       "labelResidualPower": "Likutinė galia",
       "title": "Valdymo elgesys"
@@ -848,6 +848,8 @@
       "stepTwo": "2 žingsnis: nukopijuoti papildomą informaciją",
       "title": "GitHub pranešimo apie problemą santrauka"
     },
+    "system": "Sistema",
+    "timezone": "Laiko juosta",
     "title": "Pranešti apie problemą",
     "version": "Versija"
   },
@@ -887,11 +889,12 @@
       "modalTitle": "Įkrovimo planas",
       "none": "nėra",
       "planNumber": "Planas {number}",
-      "preconditionDescription": "Įkrovimas {duration} prieš išvykstant, baterijos paruošimui.",
-      "preconditionLong": "Vėlyvas įkrovimas",
-      "preconditionOptionAll": "viskas",
-      "preconditionOptionNo": "ne",
-      "preconditionShort": "Vėlai",
+      "precondition": {
+        "description": "Įkrovimas {duration} prieš išvykstant, baterijos paruošimui.",
+        "label": "Vėlyvas įkrovimas",
+        "optionAll": "viskas",
+        "optionNo": "ne"
+      },
       "remove": "Pašalinti",
       "repeating": "kartojasi",
       "repeatingPlans": "Pasikartojantys planai",

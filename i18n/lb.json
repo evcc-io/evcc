@@ -1,4 +1,24 @@
 {
+  "authProviders": {
+    "authCode": "Autoriséierungscode",
+    "authCodeHelp": "Kopéierem dëse Code a benotz en am nächste Schratt. Gülteg fir {duration}.",
+    "authorizationFailed": "Autoriséierung feelgeschloen",
+    "authorizationRequired": "Autoriséierung néideg",
+    "authorizationSuccessful": "Autoriséierung erfollegräich",
+    "buttonConnect": "Mam {provider} verbannen",
+    "buttonDisconnect": "Trennen",
+    "confirmLogout": "Sécher, datt s du {title} trenne wëlls?",
+    "connect": "verbannen",
+    "disconnect": "trennen",
+    "loggedOut": "Erfollegräich ofgemellt",
+    "logoutFailed": "Ofmeldung feelgeschloen",
+    "modalDescriptionLogin": "Schléiss d'Autoriséierung of, fir eng Verbindung mami {provider} hierzestellen.",
+    "modalDescriptionLogout": "Dëst trennt däin {provider}-Konto a läscht den Zougrëff op déi Daten.",
+    "success": "{title} ass elo verbonnen an asazbereet.",
+    "successCloseModal": "Du kanns dësen Dialog elo zoumaachen.",
+    "successCloseTab": "Du kannst dësen Tab elo zoumaachen.",
+    "title": "Autoriséierungsstatus"
+  },
   "batterySettings": {
     "batteryLevel": "Luedstand vun der Batterie",
     "bufferStart": {
@@ -40,8 +60,16 @@
       "chargers": "Wallboxen",
       "generic": "Generesch Integratiounen",
       "heatingdevices": "Heizungsgerät",
+      "ocppConfirmContinue": "Deng Wallbox huet sech nach ni mam evcc verbonnen. Wëlls du wierklech weiderfueren?",
+      "ocppConnected": "Verbonnen!",
+      "ocppDescription": "evcc huet een agebautenen OCPP-Server. Verfolleg dës Etappen:",
       "ocppHelp": "Kopéier dës URL an d'Konfiguratioun vun dengem Luedapparat. Kuck am Handbuch vum Hiersteller fir Detailer. De Luedapparat setzt automatesch säin eenzegaartegen Identifikator (Statiounen-ID) un d'URL. A seltenen Fäll muss de vläicht den Identifikator manuell uginn. Beispill: `{url}`",
       "ocppLabel": "URL vum OCPP-Server",
+      "ocppNextStep": "Nächst Etapp",
+      "ocppStep1": "Konfiguréier deng Wallbox, fir den evcc als OCPP-Server ze verwennen.",
+      "ocppStep2": "Wäert drop, datt deng Wallbox sech mam evcc verbënnt.",
+      "ocppStep3": "Fuert virun a maacht d'Konfiguratioun fäerdeg.",
+      "ocppWaiting": "Waarden op eng Verbindung",
       "switchsockets": "Schaltbar Steckdousen",
       "template": "Hiersteller",
       "titleAdd": {
@@ -71,8 +99,8 @@
     },
     "control": {
       "description": "Normalerweis sinn d'Standardwäerter gutt. Veränner se nëmmen wann s du weess wat s du mëss.",
-      "descriptionInterval": "Kontrollschläifen-Update-Zyklus a Sekonnen. Definéiert wéi dacks evcc Meter-Daten liest, d'Luedekraaft upasst an d'UI aktualiséiert. Kuerz Intervalle (<30s) kënnen Oszillatiounen an ongewollt Verhale verursaachen.",
-      "descriptionResidualPower": "Verschiibt d'Funktioun vun der Kontrollschläifen. Wann s du eng Hausbatterie hues, ass et recommandéiert ee Wäert vun 100 W ze setzen. Esou kritt d'Batterie eng liicht Prioritéit par Rapport zum Netz.",
+      "descriptionInterval": "Aktualiséierungszyklus a Sekonnen. Definéiert wéi dacks den evcc d'Zielerdaten liest an d'Luedzäit upasst. Déi Standardzäit vun 30 Sekonnen ass eng sécher Wiel. Apparater wéi Gefierer, Wallboxen an Inverter brauchen typescherweis e puer Sekonnen fir hiert Verhalen unzepassen. Wann Är Komponenten séier reagéieren, kënnt Dir méi niddreg Wäerter benotzen. Mir recommandéieren staark, net ënner 10 Sekonnen ze goen. Wann Dir e onreegelméissegt Kontrollverhalen oder schwankend Leeschtungswäerter bemierkt, wielt en méi groussen Intervall.",
+      "descriptionResidualPower": "Verännert de Betribspunkt vun der Kontrollschleif. Déi Standardleeschtung vun 100 W gëtt den Hausbatterien eng kleng Prioritéit iwwer d'Benotzung vum Netz. Wann Dir keng Batterie hutt, kënnt Dir dëst op 0 W astellen, fir de Netzverbrauch am Solarmodus ze minimiséieren.",
       "labelInterval": "Aktualiséierungsintervall",
       "labelResidualPower": "Residuell Leeschtung",
       "title": "Kontrollverhalen"
@@ -91,10 +119,12 @@
       "chargedEnergy": "Opgelueden",
       "co2": "Netz CO₂",
       "configured": "Konfiguréiert",
+      "connections": "Verbindungen",
       "controllable": "Kontrolléierbar",
       "currency": "Wärung",
       "current": "Stroum",
       "currentRange": "Stroum",
+      "detected": "Erkannt",
       "dimmed": "Gedimmt",
       "enabled": "Ageschalt",
       "energy": "Energie",
@@ -145,6 +175,10 @@
       "description": "Konfiguratioun déi et evcc erméiglecht fir mat aneren EEBus-Geräter ze kommunizéieren.",
       "title": "EEBus"
     },
+    "experimental": {
+      "description": "Benotzerinterface fir Funktiounen aktivéieren, déi nach getest ginn a sech a zukünftege Versiounen ännere kënnen.",
+      "title": "Experimentell"
+    },
     "ext": {
       "description": "Dokumentéiert d'Energiewäerter vun onkontrolléierte Verbraucher (z.B. Frigo, Wäschmaschinn, asw.) fir statistesch Zwecker. Dës Zieler kënnen och fir d'Laaschtverwaltung (z.B. Ënnerverdeelung) benotzt ginn.",
       "titleAdd": "Zieler derbäi fügen",
@@ -164,6 +198,8 @@
       "cancel": "Ofbriechen",
       "clear": "Läschen",
       "close": "Zoumaachen",
+      "copied": "Kopéiert!",
+      "copy": "Kopéieren",
       "customHelp": "Erstell ee benotzerdefinéiert Gerät mam evcc-Plugin-System.",
       "customOption": "Benotzerdefinéiert Gerät",
       "delete": "Läschen",
@@ -200,8 +236,19 @@
       "titleEdit": "Netzzieler beaarbechten"
     },
     "hems": {
+      "csv": {
+        "created": "Erstallt",
+        "finished": "Ofgeschloss",
+        "gridpower": "Leeschtung vum Netz (kW)",
+        "limitpower": "Limitt (kW)",
+        "type": "Typ"
+      },
       "description": "Leeschtungsbegrenzung duerch extern Systemer (bspw. Steierboxen, § 14a EnWG). Setzt eng Gestioun vun der Charge viraus.",
-      "title": "HEMS"
+      "downloadCsv": "CSV eroflueden",
+      "eventsRecorded": "{count} gespäichert Limitatiounen vum Netz.",
+      "lastEvent": "Méi rezent {timeAgo}.",
+      "title": "HEMS",
+      "yamlConfigured": "Bemierkung: Konfiguréiert iwwer evcc.yaml. Läscht d'Astellungen aus der Datei fir d'Ännerung hei z'erméiglechen."
     },
     "icon": {
       "change": "änneren",
@@ -340,6 +387,8 @@
       "title": "Konfiguratioun",
       "unconfigured": "net konfiguréiert",
       "vehicles": "Meng Gefierer",
+      "welcomeBannerText": "Fänkt domat un, eng **Wallbox oder eng Heizung** ze erstellen. Wann Dir nach keng richtegt Wallbox hutt, wielt eng **Demo-Wallbox**.",
+      "welcomeBannerTitle": "Loosst eis de System konfiguréieren!",
       "yaml": "Geräter aus der evcc.yaml Datei si net editiérbar."
     },
     "messaging": {
@@ -375,9 +424,9 @@
       "baudrate": "Baudrate",
       "comset": "ComSet",
       "connection": "Modbus Verbindung",
-      "connectionHintSerial": "Den Apparat ass direkt per RS485 mat EVCC verbonnen.",
-      "connectionHintTcpip": "Den Apparat kann direkt per LAN/Wifi duerch evcc konfiguréiert ginn.",
-      "connectionValueSerial": "Seriell / USB",
+      "connectionHintSerial": "Den Apparat ass direkt iwwer RS485 (oder en USB-zu-RS485-Adapter) ugeschloss.",
+      "connectionHintTcpip": "Den Apparat ass iwwer d'Netzwierk (LAN/WiFi) z'erreechen.",
+      "connectionValueSerial": "RS485",
       "connectionValueTcpip": "Netzwierk",
       "device": "Numm vum Apparat",
       "deviceHint": "Beispill: /dev/ttyUSB0",
@@ -442,6 +491,23 @@
       "labelPort": "Port",
       "labelSchema": "Schema",
       "title": "Netzwierk"
+    },
+    "ocpp": {
+      "connectedChargers": "Verbonne Wallboxen",
+      "connectionStatus": "Konfiguréiert Station-IDs",
+      "connectionStatusHelp": "Verbindungsstatus vun de konfiguréierte Wallboxen.",
+      "detectedChargers": "Erkannt Station-IDs",
+      "detectedHelp": "Dës Wallboxen hu probéiert sech mat evcc ze verbannen. Fir eng Wallbox ze benotzen, erstellt eng Wallbox mat senger Statiouns-ID.",
+      "noChargers": "Keng OCPP-Wallbox erkannt.",
+      "noStations": "Keng Statioune verbonnen",
+      "status": {
+        "configured": "Net verbonnen",
+        "connected": "Verbonnen",
+        "unknown": "Onbekannt"
+      },
+      "title": "OCPP Server",
+      "url": "Server-URL",
+      "urlHelp": "Kopéier dës URL fir d'Konfiguratioun vun denger Wallbox. Kuck am Handbuch vum Hiersteller no Detailer. Et gëtt erwaart, datt d'Wallbox automatesch säin eenzegaartegen Identifikator (Statiouns-ID) un d'URL bäifügt. A rare Fäll musst Dir den Identifikator eventuell manuell spezifizéieren. Beispill: `{url}`"
     },
     "options": {
       "boolean": {
@@ -584,6 +650,8 @@
       "maximumCurrentHelp": "Muss méi grouss wéi de minimale Stroum sinn.",
       "maximumPhases": "Maximal Phasen",
       "maximumPhasesHelp": "Mat wéi ville Phase kann dëst Gefier lueden? Gëtt fir d'Berechnung vum minimalen Iwwerschoss a fir d'Planung benotzt.",
+      "maximumPower": "Maximal Luedleeschtung",
+      "maximumPowerHelp": "Maximal Leeschtung déi d'Gefier bezéie kann",
       "minimumCurrent": "Minimale Stroum",
       "minimumCurrentHelp": "Nëmmen ënner 6A goen, wann s du weess, wat s du mëss.",
       "online": "Autoe mat online API",
@@ -778,6 +846,8 @@
       "stepTwo": "Schrëtt 2: Zousätzlech Informatioune kopéieren",
       "title": "Iwwersiicht vum GitHub-Problem"
     },
+    "system": "System",
+    "timezone": "Zäitzone",
     "title": "Problem mellen",
     "version": "Versioun"
   },
@@ -817,11 +887,12 @@
       "modalTitle": "Luedplanifikatioun",
       "none": "keng",
       "planNumber": "Planifkatioun {number}",
-      "preconditionDescription": "Luetzäit {duration} virum Fortfuere fir Batterie-Prekonditionéierung.",
-      "preconditionLong": "Verspéit Lueden",
-      "preconditionOptionAll": "Alles",
-      "preconditionOptionNo": "Nee",
-      "preconditionShort": "Spéit",
+      "precondition": {
+        "description": "Luetzäit {duration} virum Fortfuere fir Batterie-Prekonditionéierung.",
+        "label": "Verspéit Lueden",
+        "optionAll": "Alles",
+        "optionNo": "Nee"
+      },
       "remove": "Ewechhuelen",
       "repeating": "widderhuelend",
       "repeatingPlans": "Widderhuelend Planifikatiounen",
@@ -1148,7 +1219,7 @@
     },
     "hiddenFeatures": {
       "label": "Experimentell",
-      "value": "Experimentell UI-Funktiounen weisen."
+      "value": "Experimentell Funktiounen weisen."
     },
     "language": {
       "auto": "Automatesch",

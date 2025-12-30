@@ -11,6 +11,7 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
+	"github.com/spf13/cast"
 )
 
 // Template describes is a proxy device for use with cli and automated testing
@@ -182,7 +183,7 @@ func (t *Template) GroupTitle(lang string) string {
 
 // Defaults returns a map of default values for the template
 func (t *Template) Defaults(renderMode int) map[string]any {
-	values := make(map[string]any)
+	values := make(map[string]any, len(t.Params))
 	for _, p := range t.Params {
 		values[p.Name] = p.DefaultValue(renderMode)
 	}
@@ -302,6 +303,14 @@ func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, m
 
 	res := make(map[string]any)
 
+	var usage string
+	for k, v := range values {
+		if strings.ToLower(k) == "usage" {
+			usage = strings.ToLower(cast.ToString(v))
+			break
+		}
+	}
+
 	// TODO this is an utterly horrible hack
 	//
 	// When decoding the actual values ("other" parameter) into the
@@ -359,7 +368,10 @@ func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, m
 				// validate required fields from yaml
 				if s == "" && p.IsRequired() && (renderMode == RenderModeUnitTest ||
 					renderMode == RenderModeInstance && !testing.Testing()) {
-					return nil, nil, fmt.Errorf("missing required `%s`", p.Name)
+					// validate required per usage
+					if len(p.Usages) == 0 || slices.Contains(p.Usages, usage) {
+						return nil, nil, fmt.Errorf("missing required `%s`", p.Name)
+					}
 				}
 
 				res[out] = s

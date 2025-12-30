@@ -2,7 +2,9 @@
   "authProviders": {
     "authCode": "Authenticatie code",
     "authCodeHelp": "Kopieer deze code en gebruik het in de volgende stap. Geldig voor {duration}.",
+    "authorizationFailed": "Autorisatie mislukt",
     "authorizationRequired": "Autorisatie vereist",
+    "authorizationSuccessful": "Autorisatie gelukt",
     "buttonConnect": "Verbind met {provider}",
     "buttonDisconnect": "Verbinding verbreken",
     "confirmLogout": "Weet je zeker dat je de verbinding wilt verbreken met {title}?",
@@ -12,7 +14,7 @@
     "logoutFailed": "Uitloggen mislukt",
     "modalDescriptionLogin": "Voltooi het autorisatieproces om verbinding te maken met {provider}.",
     "modalDescriptionLogout": "Hiermee wordt de verbinding met uw {provider} account verbroken en heeft u geen toegang meer tot de gegevens.",
-    "success": "Autorisatie met {title} is gelukt.",
+    "success": "{title} is nu verbonden en klaar om te gebruiken.",
     "successCloseModal": "U kunt dit venster nu sluiten.",
     "successCloseTab": "U kunt dit tabblad nu sluiten.",
     "title": "Autorisatiestatus"
@@ -58,8 +60,16 @@
       "chargers": "EV laders",
       "generic": "Algemene integraties",
       "heatingdevices": "Warmtepompen",
+      "ocppConfirmContinue": "Uw lader is nog niet verbonden met evcc. Wil u zeker verder gaan?",
+      "ocppConnected": "Geconnecteerd!",
+      "ocppDescription": "evcc heeft een ingebouwde OCPP server. Volg de volgende stappen:",
       "ocppHelp": "Kopieer deze URL naar de configuratie van je lader. Raadpleeg de handleiding van de fabrikant voor details. De lader voegt automatisch zijn unieke identificatie (station-ID) toe aan de URL. In zeldzame gevallen moet je de identificatie mogelijk handmatig opgeven. Voorbeeld: `{url}`",
       "ocppLabel": "OCPP-Server URL",
+      "ocppNextStep": "Volgende stap",
+      "ocppStep1": "Configureer uw lader om evcc als OCPP server te gebruiken.",
+      "ocppStep2": "Wacht tot uw lader verbonden is met evcc.",
+      "ocppStep3": "Ga verder en vervolledig de configuratie.",
+      "ocppWaiting": "Wachtend op verbinding",
       "switchsockets": "schakelbare stopcontacten",
       "template": "Fabrikant",
       "titleAdd": {
@@ -89,7 +99,7 @@
     },
     "control": {
       "description": "Normaalgesproken zijn de standaardwaardes in orde. Pas deze alleen aan als je weet wat je doet.",
-      "descriptionInterval": "Updatecyclus van de regeling in seconden. Bepaalt hoe vaak evcc metergegevens uitleest, het laadvermogen aanpast en de gebruikersinterface bijwerkt. Korte intervallen (< 30s) kunnen oscillaties en ongewenst gedrag veroorzaken.",
+      "descriptionInterval": "Updatecyclus in seconden. Bepaalt hoe vaak evcc metergegevens uitleest en het laadproces aanpast. De standaardwaarde van 30 seconden is een veilige keuze. Apparaten zoals voertuigen, autoladers en omvormers hebben doorgaans enkele seconden nodig om hun gedrag aan te passen. Als uw componenten snel reageren, kunt u lagere waarden gebruiken. We raden ten zeerste af om onder de 10 seconden te gaan. Als u onregelmatig regelgedrag of verspringende vermogenswaarden opmerkt, kies dan een groter interval.",
       "descriptionResidualPower": "Verplaatst het werkpunt van de regelkring. Als je een thuisbatterij hebt, wordt aanbevolen om een waarde van 100 W in te stellen. Op deze manier krijgt de batterij een lichte prioriteit boven het gebruik van het net.",
       "labelInterval": "Update interval",
       "labelResidualPower": "Vermogensoverschot",
@@ -109,10 +119,12 @@
       "chargedEnergy": "Geladen",
       "co2": "Net-CO₂",
       "configured": "Geconfigureerd",
+      "connections": "Verbindingen",
       "controllable": "Stuurbaar",
       "currency": "Valuta",
       "current": "Stroomsterkte",
       "currentRange": "Stroomsterkte",
+      "detected": "Gedetecteerd",
       "dimmed": "Gedimd",
       "enabled": "Ingeschakeld",
       "energy": "Energie",
@@ -162,6 +174,10 @@
     "eebus": {
       "description": "Configuratie voor communicatie met andere EEBus apparaten.",
       "title": "EEBus"
+    },
+    "experimental": {
+      "description": "Toon eigenschappen in de gebruikers interface die nog onder test zijn en nog in volgende versies kunnen wijzigen.",
+      "title": "Experimenteel"
     },
     "ext": {
       "description": "Registreert energie van ongestuurde verbruikers (bijv. koelkast, wasmachine, etc) voor statistieken. Deze meters kunnen ook gebruikt worden voor electriciteitsnetwerk beheer (bijv onderverdeling).",
@@ -220,8 +236,19 @@
       "titleEdit": "Bewerk netmeter"
     },
     "hems": {
+      "csv": {
+        "created": "Aangemaakt",
+        "finished": "Voltooid",
+        "gridpower": "Vermogen van de Netaansluiting (kW)",
+        "limitpower": "Limiet (kW)",
+        "type": "Type"
+      },
       "description": "Stroombegrenzing door externe systemen (zoals EnWG 14a controllers). Vereist load management configuratie.",
-      "title": "HEMS"
+      "downloadCsv": "Download CSV",
+      "eventsRecorded": "{count} gebeurtenissen geregistreerd van netstroom begrenzing",
+      "lastEvent": "Meest recent {timeAgo}.",
+      "title": "HEMS",
+      "yamlConfigured": "Opmerking: Geconfigureerd via evcc.yaml. Verwijder de betreffende regels uit het bestand om hier bewerkingen mogelijk te maken."
     },
     "icon": {
       "change": "wijzig",
@@ -360,6 +387,8 @@
       "title": "Configuratie",
       "unconfigured": "Niet geconfigureerd",
       "vehicles": "Mijn voertuigen",
+      "welcomeBannerText": "Begin met het maken van een **oplader of verwarmer**. Als je nog geen echte oplader hebt, kies dan een **demo-oplader**.",
+      "welcomeBannerTitle": "Start met het configureren van uw systeem!",
       "yaml": "Apparaten geconfigureerd in evcc.yaml kunnen hier niet worden bewerkt."
     },
     "messaging": {
@@ -395,9 +424,9 @@
       "baudrate": "Baud rate",
       "comset": "ComSet",
       "connection": "Modbusverbinding",
-      "connectionHintSerial": "Het apparaat is direct verbonden met evcc via een RS485 interface.",
-      "connectionHintTcpip": "Het apparaat is aanspreekbaar vanuit evcc via LAN/WiFi.",
-      "connectionValueSerial": "Serieel / USB",
+      "connectionHintSerial": "Het apparaat is direct verbonden via een RS485 interface (of een USB-naar-RS485 adapter).",
+      "connectionHintTcpip": "Het apparaat is aanspreekbaar via het netwerk (LAN/WiFi).",
+      "connectionValueSerial": "RS485",
       "connectionValueTcpip": "Netwerk",
       "device": "Apparaatnaam",
       "deviceHint": "Voorbeeld: /dev/ttyUSB0",
@@ -462,6 +491,23 @@
       "labelPort": "Poort",
       "labelSchema": "Schema",
       "title": "Netwerk"
+    },
+    "ocpp": {
+      "connectedChargers": "Verbonden laders",
+      "connectionStatus": "Geconfigureerde station ID's",
+      "connectionStatusHelp": "Verbindingsstatus van geconfigureerde laders.",
+      "detectedChargers": "Gedetecteerde station ID's",
+      "detectedHelp": "Deze laders hebben geprobeerd verbinding te maken met evcc. Om een lader te gebruiken, moet u een laadpunt aanmaken met de bijbehorende station ID.",
+      "noChargers": "Geen OCPP-laders gedetecteerd.",
+      "noStations": "Geen stations verbonden",
+      "status": {
+        "configured": "Niet verbonden",
+        "connected": "Verbonden",
+        "unknown": "Onbekend"
+      },
+      "title": "OCPP Server",
+      "url": "Server URL",
+      "urlHelp": "Kopieer deze URL naar de configuratie van uw lader. Raadpleeg de handleiding van de fabrikant voor meer informatie. De lader voegt naar verwachting automatisch zijn unieke identificatiecode (station-ID) toe aan de URL. In zeldzame gevallen moet u de identificatiecode mogelijk handmatig ingeven. Voorbeeld: `{url}`"
     },
     "options": {
       "boolean": {
@@ -604,6 +650,8 @@
       "maximumCurrentHelp": "Moet hoger zijn dan de minimale stroomsterkte.",
       "maximumPhases": "Maximaal aantal fases",
       "maximumPhasesHelp": "Met hoeveel fasen kan dit voertuig laden? Wordt gebruikt om de minimale duur van zonneoverschot en plan te berekenen.",
+      "maximumPower": "Maximaal laadvermogen",
+      "maximumPowerHelp": "Maximaal vermogen dat het voertuig kan verbruiken",
       "minimumCurrent": "Minimale stroomsterkte",
       "minimumCurrentHelp": "Stel alleen lager in dan 6A waneer je weet wat je doet.",
       "online": "Voertuig met online API",
@@ -799,6 +847,8 @@
       "stepTwo": "Stap 2: Kopieer aanvullende informatie",
       "title": "GitHub Probleemoverzicht"
     },
+    "system": "Systeem",
+    "timezone": "Tijdzone",
     "title": "Rapporteer een probleem",
     "version": "Versie"
   },
@@ -838,11 +888,12 @@
       "modalTitle": "Laad Plan",
       "none": "geen",
       "planNumber": "Schema {number}",
-      "preconditionDescription": "Laad {duration} voor vertrek voor accu voorbereiding.",
-      "preconditionLong": "Laat Opladen",
-      "preconditionOptionAll": "alles",
-      "preconditionOptionNo": "nee",
-      "preconditionShort": "Laat",
+      "precondition": {
+        "description": "Laad {duration} voor vertrek voor accu voorbereiding.",
+        "label": "Laat Opladen",
+        "optionAll": "alles",
+        "optionNo": "nee"
+      },
       "remove": "Verwijderen",
       "repeating": "herhalend",
       "repeatingPlans": "Herhalende schema's",
@@ -1169,7 +1220,7 @@
     },
     "hiddenFeatures": {
       "label": "Experimenteel",
-      "value": "Toon experimentele UI functies."
+      "value": "Toon experimentele functies."
     },
     "language": {
       "auto": "Automatisch",

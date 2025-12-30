@@ -12,7 +12,7 @@
     "logoutFailed": "Utloggning misslyckades",
     "modalDescriptionLogin": "Slutför auktoriseringsprocessen för att upprätta anslutning med {provider}.",
     "modalDescriptionLogout": "Ditt {provider}-konto kommer att kopplas från, och åtkomsten till dess data tas bort.",
-    "success": "Auktoriseringen med {title} lyckades.",
+    "success": "{title} är nu ansluten och klar att användas.",
     "successCloseModal": "Du kan stänga det här fönstret nu.",
     "successCloseTab": "Du kan nu stänga denna flik.",
     "title": "Auktoriseringsstatus"
@@ -879,11 +879,12 @@
       "modalTitle": "Laddplan",
       "none": "ingen",
       "planNumber": "Plan {number}",
-      "preconditionDescription": "Ladda {duration} före avfärd för batteriuppvärmning.",
-      "preconditionLong": "Sen laddning",
-      "preconditionOptionAll": "allt",
-      "preconditionOptionNo": "nej",
-      "preconditionShort": "Sen",
+      "precondition": {
+        "description": "Ladda {duration} före avfärd för batteriuppvärmning.",
+        "label": "Sen laddning",
+        "optionAll": "allt",
+        "optionNo": "nej"
+      },
       "remove": "Ta bort",
       "repeating": "återkommande",
       "repeatingPlans": "Återkommande planer",

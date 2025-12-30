@@ -1,4 +1,24 @@
 {
+  "authProviders": {
+    "authCode": "Code d'autorisation",
+    "authCodeHelp": "Copiez ce code et utilisez-le à l'étape suivante. Valable pendant {duration}.",
+    "authorizationFailed": "Échec de l'autorisation",
+    "authorizationRequired": "Autorisation requise",
+    "authorizationSuccessful": "Autorisation réussie",
+    "buttonConnect": "Se connecter à {provider}",
+    "buttonDisconnect": "Déconnecter",
+    "confirmLogout": "Êtes-vous sûr de vouloir déconnecter {title} ?",
+    "connect": "Connecter",
+    "disconnect": "déconnecter",
+    "loggedOut": "Déconnexion réussie",
+    "logoutFailed": "Échec de la déconnexion",
+    "modalDescriptionLogin": "Terminez le processus d'autorisation pour établir la connexion avec {provider}.",
+    "modalDescriptionLogout": "Cela déconnectera votre compte {provider} et supprimera l'accès à ses données.",
+    "success": "{title} est désormais connecté et prêt à l'emploi.",
+    "successCloseModal": "Vous pouvez maintenant fermer cette boîte de dialogue.",
+    "successCloseTab": "Vous pouvez maintenant fermer cet onglet.",
+    "title": "Statut d'autorisation"
+  },
   "batterySettings": {
     "batteryLevel": "Niveau de la batterie",
     "bufferStart": {
@@ -40,8 +60,16 @@
       "chargers": "Chargeurs VE",
       "generic": "Intégrations génériques",
       "heatingdevices": "Dispositif de chauffage",
+      "ocppConfirmContinue": "Votre chargeur n'est pas encore connecté à evcc. Êtes-vous sûr de vouloir continuer ?",
+      "ocppConnected": "Connecté !",
+      "ocppDescription": "evcc dispose d'un serveur OCPP intégré. Suivez ces étapes :",
       "ocppHelp": "Copiez cette URL dans la configuration de votre chargeur. Consultez le manuel du fabricant pour plus de détails. Le chargeur ajoutera automatiquement son identifiant unique (ID de station) à l'URL. Dans de rares cas, vous devrez peut-être spécifier l'identifiant manuellement. Exemple : `{url}`",
       "ocppLabel": "URL du serveur OCPP",
+      "ocppNextStep": "Étape suivante",
+      "ocppStep1": "Configurez votre chargeur pour utiliser evcc comme serveur OCPP.",
+      "ocppStep2": "Attendez que votre chargeur se connecte à evcc.",
+      "ocppStep3": "Poursuivez et terminez la configuration.",
+      "ocppWaiting": "En attente de connexion",
       "switchsockets": "Prises commutables",
       "template": "Fabricant",
       "titleAdd": {
@@ -71,8 +99,8 @@
     },
     "control": {
       "description": "Les valeurs par défaut sont généralement bonnes. Ne faites des changements que si vous savez ce que vous faites.",
-      "descriptionInterval": "Intervalle de mise à jour (en seconde) entre chaque cycle de contrôle. Défini la fréquence à laquelle evcc va lire les valeurs des compteurs, ajuster la puissance de charge et mettre à jour l’affichage. Une intervalle courte (< 30s) peut créer des oscillations et comportements indésirables.",
-      "descriptionResidualPower": "Déplace le point d’opération de la boucle de contrôle. Si vous avez une batterie domestique, il est recommandé de définir une valeur de 100 W. Ainsi, la batterie aura une légère priorité par rapport à l’utilisation du réseau.",
+      "descriptionInterval": "Cycle de mise à jour en secondes. Définit la fréquence à laquelle evcc lit les données du compteur et ajuste la facturation. La valeur par défaut de 30 secondes est un choix sûr. Les appareils tels que les véhicules, les boîtiers muraux et les onduleurs ont généralement besoin de plusieurs secondes pour ajuster leur comportement. Si vos composants réagissent rapidement, vous pouvez utiliser des valeurs plus faibles. Nous vous recommandons vivement de ne pas descendre en dessous de 10 secondes. Si vous observez un comportement de contrôle erratique ou des valeurs de puissance instables, choisissez un intervalle plus long.",
+      "descriptionResidualPower": "Décale le point de fonctionnement de la boucle de contrôle. La valeur par défaut de 100 W donne une légère priorité aux batteries domestiques par rapport à l'utilisation du réseau. Si vous ne disposez pas de batterie, vous pouvez régler cette valeur sur 0 W afin de minimiser la consommation du réseau en mode solaire.",
       "labelInterval": "Intervalle de mise à jour",
       "labelResidualPower": "Puissance résiduelle",
       "title": "Comportement du contrôle"
@@ -91,10 +119,12 @@
       "chargedEnergy": "Chargé",
       "co2": "CO₂ du réseau",
       "configured": "Configuré",
+      "connections": "Connexions",
       "controllable": "Contrôlable",
       "currency": "Devise",
       "current": "Courant",
       "currentRange": "Courant",
+      "detected": "Détecté",
       "dimmed": "Atténué",
       "enabled": "Activé",
       "energy": "Énergie",
@@ -145,6 +175,10 @@
       "description": "Configuration permettant à evcc de communiquer avec d’autres appareils EEBus.",
       "title": "EEBus"
     },
+    "experimental": {
+      "description": "Activer l'interface utilisateur pour les fonctionnalités qui sont encore en cours de test et susceptibles d'être modifiées dans les versions futures.",
+      "title": "Expérimental"
+    },
     "ext": {
       "description": "Enregistre les valeurs de consommateurs non contrôlés (par ex. réfrigérateur, machine à laver, etc) à des fins statistiques. Ces compteurs peuvent aussi être utilisé pour de la gestion de charge (par ex. Sous-distribution).",
       "titleAdd": "Ajouter un compteur de consommateur",
@@ -164,6 +198,8 @@
       "cancel": "Annuler",
       "clear": "Effacer",
       "close": "Fermer",
+      "copied": "Copié !",
+      "copy": "Copier",
       "customHelp": "Créer un appareil sur mesure en utilisant le système de plugins d’evcc.",
       "customOption": "Appareil sur mesure",
       "delete": "Supprimer",
@@ -200,8 +236,19 @@
       "titleEdit": "Modifier le compteur pour réseau"
     },
     "hems": {
+      "csv": {
+        "created": "Créé",
+        "finished": "Terminé",
+        "gridpower": "Puissance du réseau (kW)",
+        "limitpower": "Limite (kW)",
+        "type": "Type"
+      },
       "description": "Limitation de la puissance par un système externe (par exemple contrôleur EnWG 14a). Nécessite de configurer la gestion de charge.",
-      "title": "SGED"
+      "downloadCsv": "Télécharger CSV",
+      "eventsRecorded": "Enregistrement de {count} événements liés à la limitation de la grille.",
+      "lastEvent": "Le plus récent {timeAgo}.",
+      "title": "SGED",
+      "yamlConfigured": "Remarque : configuré via evcc.yaml. Supprimez l'entrée du fichier pour pouvoir effectuer des modifications ici."
     },
     "icon": {
       "change": "changer",
@@ -340,6 +387,8 @@
       "title": "Configuration",
       "unconfigured": "non configuré",
       "vehicles": "Mes véhicules",
+      "welcomeBannerText": "Commencez par créer un **chargeur ou un chauffage**. Si vous ne disposez pas encore d'un véritable chargeur, choisissez un **chargeur de démonstration**.",
+      "welcomeBannerTitle": "Configurons votre système !",
       "yaml": "Un appareil provenant du evcc.yaml n’est pas modifiable."
     },
     "messaging": {
@@ -375,9 +424,9 @@
       "baudrate": "Débit en bauds",
       "comset": "ComSet",
       "connection": "Connections Modbus",
-      "connectionHintSerial": "Cet appareil est directement connecté à evcc via une interface RS485.",
-      "connectionHintTcpip": "Cet appareil est atteignable depuis evcc via LAN/Wifi.",
-      "connectionValueSerial": "Série / USB",
+      "connectionHintSerial": "L'appareil est directement connecté via RS485 (ou adaptateur USB vers RS485).",
+      "connectionHintTcpip": "L'appareil est accessible via le réseau (LAN/WiFi).",
+      "connectionValueSerial": "RS485",
       "connectionValueTcpip": "Réseau",
       "device": "Nom de l’appareil",
       "deviceHint": "Exemple : /dev/ttyUSB0",
@@ -442,6 +491,23 @@
       "labelPort": "Port",
       "labelSchema": "Schéma",
       "title": "Réseau"
+    },
+    "ocpp": {
+      "connectedChargers": "Chargeurs connectés",
+      "connectionStatus": "Identifiants de station configurés",
+      "connectionStatusHelp": "État de connexion des chargeurs configurés.",
+      "detectedChargers": "Identifiants de stations détectés",
+      "detectedHelp": "Ces chargeurs ont tenté de se connecter à evcc. Pour utiliser un chargeur, créez un point de charge avec son identifiant de station.",
+      "noChargers": "Aucun chargeur OCPP détecté.",
+      "noStations": "Aucune station connectée",
+      "status": {
+        "configured": "Non connecté",
+        "connected": "Connecté",
+        "unknown": "Inconnu"
+      },
+      "title": "Serveur OCPP",
+      "url": "URL du Serveur",
+      "urlHelp": "Copiez cette URL dans la configuration de votre chargeur. Consultez le manuel du fabricant pour plus de détails. Le chargeur devrait ajouter automatiquement son identifiant unique (ID de station) à l'URL. Dans de rares cas, vous devrez peut-être spécifier manuellement l'identifiant. Exemple : `{url}`"
     },
     "options": {
       "boolean": {
@@ -584,6 +650,8 @@
       "maximumCurrentHelp": "Doit être supérieur au courant minimum.",
       "maximumPhases": "Maximum de phases",
       "maximumPhasesHelp": "Combien de phases ce véhicule peut-il charger ? Utilisé pour calculer le surplus solaire minimum requis et la durée du plan.",
+      "maximumPower": "Puissance de charge maximale",
+      "maximumPowerHelp": "Puissance maximale que le véhicule peut consommer",
       "minimumCurrent": "Courant minimum",
       "minimumCurrentHelp": "Ne descends en dessous de 6A que si tu sais ce que tu fais.",
       "online": "Véhicules avec API en ligne",
@@ -779,6 +847,8 @@
       "stepTwo": "Étape 2 : copier les informations additionnelles",
       "title": "Résumé du problème GitHub"
     },
+    "system": "Système",
+    "timezone": "Fuseau horaire",
     "title": "Signaler un problème",
     "version": "Version"
   },
@@ -818,11 +888,12 @@
       "modalTitle": "Planification de la charge",
       "none": "aucune",
       "planNumber": "Planning {number}",
-      "preconditionDescription": "Charge {duration} avant le départ pour pré-conditionner la batterie.",
-      "preconditionLong": "Chargement tardif",
-      "preconditionOptionAll": "tous",
-      "preconditionOptionNo": "non",
-      "preconditionShort": "Tardif",
+      "precondition": {
+        "description": "Charge {duration} avant le départ pour pré-conditionner la batterie.",
+        "label": "Chargement tardif",
+        "optionAll": "tous",
+        "optionNo": "non"
+      },
       "remove": "Enlever",
       "repeating": "récurrent",
       "repeatingPlans": "Plannings récurrents",

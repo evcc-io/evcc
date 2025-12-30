@@ -2,7 +2,9 @@
   "authProviders": {
     "authCode": "Godkendelseskode",
     "authCodeHelp": "Kopiér koden og anvend den i næste trin. Den er gyldig i {duration}.",
+    "authorizationFailed": "Godkendelse mislykkedes",
     "authorizationRequired": "Godkendelse krævet",
+    "authorizationSuccessful": "Godkendelse lykkedes",
     "buttonConnect": "Opret forbindelse til {provider}",
     "buttonDisconnect": "Afbryd forbindelse",
     "confirmLogout": "Er du sikker på, at du vil afbryde {title}?",
@@ -12,7 +14,7 @@
     "logoutFailed": "Kunne ikke logge ud",
     "modalDescriptionLogin": "Fuldfør autorisationsprocessen for at etablere forbindelsen med {provider}.",
     "modalDescriptionLogout": "Dette vil afbryde din {provider}-konto og fjerne adgangen til dens data.",
-    "success": "Godkendelse med {title} er gennemført.",
+    "success": "{title} er nu forbundet og klar til brug.",
     "successCloseModal": "Du kan nu lukke dialogboksen.",
     "successCloseTab": "Du kan nu lukke denne fane.",
     "title": "Godkendelsesstatus"
@@ -97,8 +99,8 @@
     },
     "control": {
       "description": "Standardværdierne er normalt fine. Kun hvis du ved, hvad du gør, kan du ændre dem.",
-      "descriptionInterval": "Opdateringscyklus i sekunder. Definerer, hvor ofte evcc læser målerdata, justerer ladeeffekt og opdaterer brugergrænsefladen. Korte intervaller (< 30s) kan forårsage store udsving og fejlagtigt resultat.",
-      "descriptionResidualPower": "Skifter driftspunktet for kontrolsløjfen. Hvis du har et hjemmebatteri, anbefales det at indstille en værdi på 100 W. På denne måde vil batteriet få en lille prioritet frem for netbrug.",
+      "descriptionInterval": "Opdateringsinterval i sekunder. Angiver, hvor ofte evcc aflæser målerdata og justerer opladningen. Standardværdien på 30 sekunder er et sikkert valg. Enheder som køretøjer, ladere og invertere har typisk brug for flere sekunder til at tilpasse deres adfærd. Hvis dine komponenter reagerer hurtigt, kan du anvende lavere værdier. Vi anbefaler kraftigt ikke at gå under 10 sekunder. Hvis du observerer ustabil regulering eller springende effektværdier, bør du vælge et længere interval.",
+      "descriptionResidualPower": "Forskubber reguleringspunktet. Standardværdien på 100 W giver hjemmebatteriet let prioritet over elnettet. Uden batteri kan værdien sættes til 0 W for at minimere netforbrug i soltilstand.",
       "labelInterval": "Opdateringsinterval",
       "labelResidualPower": "Tilbageværende effekt",
       "title": "kontrol adfærd"
@@ -172,6 +174,10 @@
     "eebus": {
       "description": "Indstilling der tillader evcc at kommunikere med andre EEBus enheder.",
       "title": "EEBus"
+    },
+    "experimental": {
+      "description": "Aktivér brugerfladen for funktioner, som stadig testes og kan ændres i kommende versioner.",
+      "title": "Eksperimentel"
     },
     "ext": {
       "description": "Måler energiforbrug fra enheder, der ikke styres (som f.eks. køleskab eller vaskemaskine), til statistik. Måleren kan også bruges til belastningsstyring, f.eks. i en undergruppe.",
@@ -381,6 +387,8 @@
       "title": "Opsætning",
       "unconfigured": "ikke konfigureret",
       "vehicles": "Mine køretøjer",
+      "welcomeBannerText": "Start med at oprette en **lader eller varmer**. Hvis du endnu ikke har en fysisk lader, kan du vælge en **demolader**.",
+      "welcomeBannerTitle": "Lad os konfigurere dit system!",
       "yaml": "Enheder fra evcc.yaml kan ikke ændres her."
     },
     "messaging": {
@@ -840,6 +848,8 @@
       "stepTwo": "Trin 2: Kopiér yderligere oplysninger",
       "title": "GitHub-problemoversigt"
     },
+    "system": "System",
+    "timezone": "Tidszone",
     "title": "Indberet et problem",
     "version": "Version"
   },
@@ -879,11 +889,12 @@
       "modalTitle": "Lade plan",
       "none": "ingen",
       "planNumber": "Plan {number}",
-      "preconditionDescription": "Oplad {duration} før afgang til batterikonditionering.",
-      "preconditionLong": "Sen opladning",
-      "preconditionOptionAll": "alt",
-      "preconditionOptionNo": "nej",
-      "preconditionShort": "Sen",
+      "precondition": {
+        "description": "Oplad {duration} før afgang til batterikonditionering.",
+        "label": "Sen opladning",
+        "optionAll": "alt",
+        "optionNo": "nej"
+      },
       "remove": "Fjern",
       "repeating": "Gentager",
       "repeatingPlans": "Gentager plan",
@@ -1210,7 +1221,7 @@
     },
     "hiddenFeatures": {
       "label": "Experimentalt",
-      "value": "Vis eksperimentelle brugergrænsefladefunktioner."
+      "value": "Vis eksperimentelle funktioner."
     },
     "language": {
       "auto": "Automatisk",
