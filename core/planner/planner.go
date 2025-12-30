@@ -200,6 +200,7 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 	} else {
 		// sort rates by price and time
 		slices.SortStableFunc(rates, sortByCost)
+
 		plan = t.plan(rates, requiredDuration, targetTime)
 
 		// sort plan by time
