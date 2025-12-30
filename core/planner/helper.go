@@ -83,18 +83,3 @@ func IsFirst(r api.Rate, plan api.Rates) bool {
 	}
 	return true
 }
-
-// trimSlot trims excess duration from a slot
-// trimEnd: true = trim end (prefer early start), false = trim start (prefer late start)
-func trimSlot(slot *api.Rate, excess time.Duration, trimEnd bool) {
-	slotDuration := slot.End.Sub(slot.Start)
-	if excess >= slotDuration {
-		panic("trimSlot: excess must be less than slot duration")
-	}
-
-	if trimEnd {
-		slot.End = slot.End.Add(-excess)
-	} else {
-		slot.Start = slot.Start.Add(excess)
-	}
-}

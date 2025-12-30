@@ -47,7 +47,11 @@ func (t *Planner) plan(rates api.Rates, requiredDuration time.Duration, targetTi
 
 		// slot covers more than we need, so shorten it
 		if slotDuration > requiredDuration {
-			trimSlot(&slot, slotDuration-requiredDuration, !(IsFirst(slot, plan) && len(plan) > 0))
+			if IsFirst(slot, plan) && len(plan) > 0 {
+				slot.Start = slot.Start.Add(slotDuration - requiredDuration)
+			} else {
+				slot.End = slot.End.Add(requiredDuration - slotDuration)
+			}
 			requiredDuration = 0
 		} else {
 			requiredDuration -= slotDuration
