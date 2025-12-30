@@ -183,6 +183,7 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 			if start.Before(now) {
 				start = now
 			}
+
 			end := rates[len(rates)-1].End
 			if end.After(targetTime) {
 				end = targetTime
@@ -193,6 +194,7 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 				return continuousPlan(append(rates, precond...), now, targetTime.Add(precondition))
 			}
 		}
+
 		// find cheapest continuous window
 		plan = findContinuousWindow(rates, requiredDuration, targetTime)
 	} else {
@@ -203,7 +205,7 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 		plan.Sort()
 	}
 
-	// re-append adjusted precondition slots
+	// re-append precondition slots
 	plan = append(plan, precond...)
 
 	return plan
