@@ -1,82 +1,50 @@
 package planner
 
 import (
-	"math"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/samber/lo"
 )
 
 // findContinuousWindow finds the cheapest continuous window of slots for the given duration.
 // - rates are filtered to [now, targetTime] window by caller
 // Returns the selected rates.
 func findContinuousWindow(rates api.Rates, effectiveDuration time.Duration, targetTime time.Time) api.Rates {
-	bestCost := math.MaxFloat64
-	bestStartIndex := -1
+	var bestCost *float64
+	var bestIndex *int
 
 	for i := range rates {
 		windowEnd := rates[i].Start.Add(effectiveDuration)
-
 		if windowEnd.After(targetTime) {
 			break
 		}
 
-		// Calculate cost and duration for this window (without building the array)
-		var cost float64
-		var duration time.Duration
+		cost := lo.SumBy(clampRates(rates[i:], rates[i].Start, windowEnd), func(r api.Rate) float64 {
+			return float64(r.End.Sub(r.Start)) * r.Value
+		})
 
-		for j := i; j < len(rates) && duration < effectiveDuration; j++ {
-			slot := rates[j]
+		// TODO falls es das braucht fehlt ein Test
 
-			// slot partially or completely within window?
-			if slot.Start.Before(windowEnd) {
-				// calculate trimmed end if necessary
-				slotEnd := slot.End
-				if slotEnd.After(windowEnd) {
-					slotEnd = windowEnd
-				}
-
-				slotDur := slotEnd.Sub(slot.Start)
-				duration += slotDur
-				cost += float64(slotDur) * slot.Value
-			}
-		}
-
-		// only consider complete windows
-		if duration < effectiveDuration {
-			continue
-		}
+		// // only consider complete windows
+		// if duration < effectiveDuration {
+		// 	continue
+		// }
 
 		// Prefer later start if equal cost
-		if cost <= bestCost {
-			bestCost = cost
-			bestStartIndex = i
+		if bestCost == nil || cost <= *bestCost {
+			bestCost = &cost
+			bestIndex = &i
 		}
 	}
 
 	// No valid window found
-	if bestStartIndex == -1 {
+	if bestIndex == nil {
 		return nil
 	}
 
 	// Build the best window only once
-	windowEnd := rates[bestStartIndex].Start.Add(effectiveDuration)
-	var window api.Rates
-	var duration time.Duration
+	windowEnd := rates[*bestIndex].Start.Add(effectiveDuration)
 
-	for j := bestStartIndex; j < len(rates) && duration < effectiveDuration; j++ {
-		slot := rates[j]
-
-		if slot.Start.Before(windowEnd) {
-			// trim end if necessary
-			if slot.End.After(windowEnd) {
-				slot.End = windowEnd
-			}
-
-			window = append(window, slot)
-			duration += slot.End.Sub(slot.Start)
-		}
-	}
-
-	return window
+	return clampRates(rates[*bestIndex:], rates[*bestIndex].Start, windowEnd)
 }
