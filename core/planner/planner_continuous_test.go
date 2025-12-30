@@ -13,7 +13,7 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-func TestContinuous_SinglePlanWindow(t *testing.T) {
+func TestContinuous_CheapestContiguousSlots(t *testing.T) {
 	now := time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
 	c := clock.NewMock()
 	c.Set(now)
