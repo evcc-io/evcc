@@ -146,7 +146,6 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 		t.log.DEBUG.Printf("planner: target time beyond available slots- reducing plan horizon from %v to %v",
 			requiredDuration.Round(time.Second), durationAfterRates.Round(time.Second))
 
-		// Time after rates will be charged anyway, covers the precondition requirement
 		targetTime = last
 		requiredDuration -= durationAfterRates
 		precondition = max(precondition-durationAfterRates, 0)
