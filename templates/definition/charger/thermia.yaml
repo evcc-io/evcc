@@ -25,13 +25,13 @@ params:
   - name: tempsource
     type: choice
     choice: ["hotwater", "flowline"]
-    default: hotwater
     description:
       de: Temperatursensor
       en: Temperature sensor
     help:
       de: Auswahl zwischen Warmwasser-Temperatur oder Vorlauf-Temperatur
       en: Choose between hot water temperature or flow line temperature
+    advanced: true
 render: |
   type: sgready
   setmode:
@@ -63,7 +63,7 @@ render: |
         type: holding
         encoding: uint16
   {{- if .tempsource }}
-  temp:
+  temp: # temperature sensor: register 42=hot water, 41=flow line
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
