@@ -83,3 +83,43 @@ func IsFirst(r api.Rate, plan api.Rates) bool {
 	}
 	return true
 }
+
+// clampRates filters rates to the given time window and adjusts boundary slots
+func clampRates(rates api.Rates, start, end time.Time) api.Rates {
+	res := make(api.Rates, 0, len(rates)+2)
+
+	for _, r := range rates {
+		// slot before continuous plan
+		if !r.End.After(start) {
+			continue
+		}
+
+		// slot after continuous plan
+		if !r.Start.Before(end) {
+			continue
+		}
+
+		// calculate adjusted bounds
+		adjustedStart := r.Start
+		if adjustedStart.Before(start) {
+			adjustedStart = start
+		}
+
+		adjustedEnd := r.End
+		if adjustedEnd.After(end) {
+			adjustedEnd = end
+		}
+
+		// skip if adjustment would create invalid slot
+		if !adjustedEnd.After(adjustedStart) {
+			continue
+		}
+
+		slot := r
+		slot.Start = adjustedStart
+		slot.End = adjustedEnd
+		res = append(res, slot)
+	}
+
+	return res
+}

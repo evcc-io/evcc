@@ -30,6 +30,17 @@ func rates(prices []float64, start time.Time, slotDuration time.Duration) api.Ra
 	return res
 }
 
+func TestClampRates(t *testing.T) {
+	clock := clock.NewMock()
+	rr := rates([]float64{0, 1}, clock.Now(), time.Hour)
+
+	assert.Equal(t, rr, clampRates(rr, clock.Now(), clock.Now().Add(2*time.Hour)))
+	assert.Equal(t, rates([]float64{0}, clock.Now(), time.Hour), clampRates(rr, clock.Now(), clock.Now().Add(time.Hour)))
+
+	exp := api.Rates{{Start: clock.Now().Add(time.Hour), End: clock.Now().Add(2 * time.Hour), Value: 1}}
+	assert.Equal(t, exp, clampRates(rr, clock.Now().Add(time.Hour), clock.Now().Add(2*time.Hour)))
+}
+
 func TestPlan(t *testing.T) {
 	clock := clock.NewMock()
 	ctrl := gomock.NewController(t)
