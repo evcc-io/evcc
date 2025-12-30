@@ -16,9 +16,6 @@ params:
     description:
       en: "API token (e.g. sk-...)."
       de: "API-Token (z.B. sk-...)."
-    help:
-      en: "Exact Authorization header value, usually WITHOUT 'Bearer'."
-      de: "Exakter Authorization-Header, üblicherweise OHNE 'Bearer'."
 
   - name: plan
     type: choice
