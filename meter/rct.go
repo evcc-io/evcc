@@ -22,7 +22,7 @@ type RCT struct {
 	conn          *rct.Connection // connection with the RCT device
 	usage         string          // grid, pv, battery
 	externalPower bool            // whether to query external power
-	curtailed     bool            // whether RCT is currently curtailed
+	curtailed     bool            // whether pv is currently curtailed
 }
 
 var (
