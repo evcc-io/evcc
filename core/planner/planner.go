@@ -93,7 +93,7 @@ func continuousPlan(rates api.Rates, start, end time.Time) api.Rates {
 	return res
 }
 
-func (t *Planner) Plan(requiredDuration time.Duration, precondition time.Duration, targetTime time.Time, continuous bool) api.Rates {
+func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime time.Time, continuous bool) api.Rates {
 	if t == nil || requiredDuration <= 0 {
 		return nil
 	}
@@ -152,15 +152,15 @@ func (t *Planner) Plan(requiredDuration time.Duration, precondition time.Duratio
 		precondition = max(precondition-durationAfterRates, 0)
 	}
 
+	// don't precondition longer than charging duration
+	precondition = min(precondition, requiredDuration)
+
 	// filter rates to planning window early for performance
 	rates = clampRates(rates, now, targetTime)
 
 	// separate precond rates, to be appended to plan afterwards
 	var precond api.Rates
 	if precondition > 0 {
-		// don't precondition longer than charging duration
-		precondition = min(precondition, requiredDuration)
-
 		rates, precond = splitAndAdjustPrecondition(rates, targetTime, precondition)
 
 		// reduce required duration by precondition, skip planning if required
