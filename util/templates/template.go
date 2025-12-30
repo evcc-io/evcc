@@ -183,7 +183,7 @@ func (t *Template) GroupTitle(lang string) string {
 
 // Defaults returns a map of default values for the template
 func (t *Template) Defaults(renderMode int) map[string]any {
-	values := make(map[string]any)
+	values := make(map[string]any, len(t.Params))
 	for _, p := range t.Params {
 		values[p.Name] = p.DefaultValue(renderMode)
 	}
