@@ -242,20 +242,5 @@ func splitPreconditionSlots(rates api.Rates, preCondStart time.Time) (api.Rates,
 		precond = append(precond, r)
 	}
 
-	// TODO if this is required it lacks a test
-
-	// precond = clampRates(precond, preCondStart, targetTime)
-
-	// var total time.Duration
-	// for _, p := range precond {
-	// 	total += p.End.Sub(p.Start)
-	// }
-
-	// if deficit := precondition - total; deficit > 0 {
-	// 	extendStart := preCondStart.Add(-deficit)
-	// 	extension := clampRates(res, extendStart, preCondStart)
-	// 	precond = append(extension, precond...)
-	// }
-
 	return res, precond
 }
