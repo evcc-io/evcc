@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/evcc-io/evcc/util"
 	"golang.org/x/oauth2"
 )
 
@@ -17,7 +18,7 @@ func NewFromConfig(ctx context.Context, typ string, other map[string]any) (oauth
 
 	v, err := factory(ctx, other)
 	if err != nil {
-		err = fmt.Errorf("cannot create auth type '%s': %w", typ, err)
+		err = fmt.Errorf("cannot create auth type '%s': %w", util.TypeWithTemplateName(typ, other), err)
 	}
 
 	return v, err
