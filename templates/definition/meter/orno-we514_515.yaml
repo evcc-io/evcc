@@ -15,10 +15,5 @@ render: |
   type: mbmd
   {{- include "modbus" . }}
   model: orno1p
-  {{- if ne .usage "pv" }}
-  power: Power
+  power: {{ if eq .usage "pv" }}-{{ end }}Power
   energy: Sum
-  {{- else }}
-  power: -Power
-  energy: Sum
-  {{- end }}
