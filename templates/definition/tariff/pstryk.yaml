@@ -23,8 +23,8 @@ params:
     choice: ["pricing", "prosumer-pricing"]
     required: true
     description:
-      en: "Tariff source."
-      de: "Tarifquelle."
+      en: "Tariff source"
+      de: "Tarifquelle"
 
   - preset: tariff-base
 
