@@ -548,8 +548,7 @@ func TestContinuous_StartBeforeRates(t *testing.T) {
 
 // TestContinuous_StartBeforeRatesInsufficientTime tests that when current time
 // is before the first available rate AND there's not enough time after rates
-// start to complete charging before target, the planner starts charging as soon
-// as rates become available (best effort approach)
+// start to complete charging before target, the planner starts at latestStart
 func TestContinuous_StartBeforeRatesInsufficientTime(t *testing.T) {
 	now := time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
 	c := clock.NewMock()
@@ -581,8 +580,8 @@ func TestContinuous_StartBeforeRatesInsufficientTime(t *testing.T) {
 
 	require.NotEmpty(t, plan, "plan should not be empty")
 
-	// Best effort: start immediately to maximize charging time
-	assert.Equal(t, now, plan[0].Start, "should start immediately")
+	// latestStart = targetTime - requiredDuration = 1:00
+	assert.Equal(t, now.Add(1*time.Hour), plan[0].Start, "should start at latestStart")
 	assert.Equal(t, 0.0, plan[0].Value, "gap-filling slot before rates has no price")
 }
 
@@ -714,4 +713,86 @@ func TestContinuous_ExcessTimeFinishesAtTarget(t *testing.T) {
 	// Plan should use the cheapest slots
 	avgCostMedium := AverageCost(plan)
 	assert.Equal(t, 0.08, avgCostMedium, "plan (medium) should use cheapest slots (0.08)")
+}
+
+// TestContinuous_LateStartCostOptimization tests that shifting late uses cheap slots fully.
+// Principle: use cheap slots fully, expensive slots partially.
+func TestContinuous_LateStartCostOptimization(t *testing.T) {
+	now := time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
+	c := clock.NewMock()
+	c.Set(now)
+
+	ctrl := gomock.NewController(t)
+
+	// Decreasing prices: algorithm must find best slot-aligned window, then check late-shift
+	rates := api.Rates{
+		{Start: now, End: now.Add(1 * time.Hour), Value: 0.20},
+		{Start: now.Add(1 * time.Hour), End: now.Add(2 * time.Hour), Value: 0.15},
+		{Start: now.Add(2 * time.Hour), End: now.Add(3 * time.Hour), Value: 0.12},
+		{Start: now.Add(3 * time.Hour), End: now.Add(4 * time.Hour), Value: 0.08},
+	}
+
+	trf := api.NewMockTariff(ctrl)
+	trf.EXPECT().Rates().AnyTimes().Return(rates, nil)
+
+	p := &Planner{
+		log:    util.NewLogger("foo"),
+		clock:  c,
+		tariff: trf,
+	}
+
+	targetTime := now.Add(4 * time.Hour)
+	requiredDuration := 90 * time.Minute
+
+	plan := p.Plan(requiredDuration, 0, targetTime, true)
+
+	require.NotEmpty(t, plan)
+	require.Len(t, plan, 2)
+
+	// Slot-aligned windows:
+	// [0:00-1:30]: 60×0.20 + 30×0.15 = 16.5
+	// [1:00-2:30]: 60×0.15 + 30×0.12 = 12.6
+	// [2:00-3:30]: 60×0.12 + 30×0.08 = 9.6 ← best slot-aligned
+	//
+	// Late-shift to [2:30-4:00]: 30×0.12 + 60×0.08 = 8.4 ← cheaper!
+	assert.Equal(t, now.Add(150*time.Minute), plan[0].Start, "should shift late to use cheap slot fully")
+	assert.Equal(t, targetTime, plan[len(plan)-1].End, "should end at target")
+	assert.Equal(t, requiredDuration, Duration(plan), "plan duration should match required")
+}
+
+// TestContinuous_LateStartEqualCost tests late shift when all slots have equal cost.
+func TestContinuous_LateStartEqualCost(t *testing.T) {
+	now := time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
+	c := clock.NewMock()
+	c.Set(now)
+
+	ctrl := gomock.NewController(t)
+
+	// All slots have equal price
+	rates := api.Rates{
+		{Start: now, End: now.Add(1 * time.Hour), Value: 0.10},
+		{Start: now.Add(1 * time.Hour), End: now.Add(2 * time.Hour), Value: 0.10},
+		{Start: now.Add(2 * time.Hour), End: now.Add(3 * time.Hour), Value: 0.10},
+	}
+
+	trf := api.NewMockTariff(ctrl)
+	trf.EXPECT().Rates().AnyTimes().Return(rates, nil)
+
+	p := &Planner{
+		log:    util.NewLogger("foo"),
+		clock:  c,
+		tariff: trf,
+	}
+
+	targetTime := now.Add(3 * time.Hour)
+	requiredDuration := 90 * time.Minute
+
+	plan := p.Plan(requiredDuration, 0, targetTime, true)
+
+	require.NotEmpty(t, plan)
+	require.Len(t, plan, 2)
+
+	// With equal costs, should prefer late start (end at target)
+	assert.Equal(t, now.Add(90*time.Minute), plan[0].Start, "should start late when costs are equal")
+	assert.Equal(t, targetTime, plan[len(plan)-1].End, "should end at target")
 }
