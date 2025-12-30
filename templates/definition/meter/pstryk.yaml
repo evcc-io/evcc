@@ -6,20 +6,11 @@ products:
 
 params:
   - name: usage
-    type: choice
     choice: ["grid", "pv", "charge"]
-    description:
-      en: "Usage type"
-      de: "Verwendung"
-    help:
-      en: "grid (house connection), pv (solar), charge (charger)"
-      de: "grid (Hausanschluss), pv (Solar), charge (Ladegerät)"
   - name: host
-    type: string
-    required: true
-    description:
-      en: "Meter IP address or hostname"
-      de: "IP-Adresse oder Hostname des Zählers"
+  - name: cache
+    advanced: true
+    default: 1s
 
 render: |
   type: custom
@@ -28,8 +19,7 @@ render: |
   power:
     source: http
     uri: http://{{ .host }}/state
-    timeout: 5s
-    cache: 2s
+    cache: {{ .cache }}
     jq: |
       .multiSensor.sensors[]
       | select(.id==0 and .type=="activePower")
@@ -39,8 +29,7 @@ render: |
   energy:
     source: http
     uri: http://{{ .host }}/state
-    timeout: 5s
-    cache: 2s
+    cache: {{ .cache }}
     jq: |
       (.multiSensor.sensors[]
         | select(.id==0 and .type=="forwardActiveEnergy")
@@ -51,20 +40,17 @@ render: |
   currents:
   - source: http
     uri: http://{{ .host }}/state
-    timeout: 5s
-    cache: 2s
+    cache: {{ .cache }}
     jq: |
       ( .multiSensor.sensors[] | select(.id==1 and .type=="current") | .value // 0 ) / 1000
   - source: http
     uri: http://{{ .host }}/state
-    timeout: 5s
-    cache: 2s
+    cache: {{ .cache }}
     jq: |
       ( .multiSensor.sensors[] | select(.id==2 and .type=="current") | .value // 0 ) / 1000
   - source: http
     uri: http://{{ .host }}/state
-    timeout: 5s
-    cache: 2s
+    cache: {{ .cache }}
     jq: |
       ( .multiSensor.sensors[] | select(.id==3 and .type=="current") | .value // 0 ) / 1000
 
@@ -72,20 +58,17 @@ render: |
   voltages:
   - source: http
     uri: http://{{ .host }}/state
-    timeout: 5s
-    cache: 2s
+    cache: {{ .cache }}
     jq: |
       ( .multiSensor.sensors[] | select(.id==1 and .type=="voltage") | .value // 0 ) / 10
   - source: http
     uri: http://{{ .host }}/state
-    timeout: 5s
-    cache: 2s
+    cache: {{ .cache }}
     jq: |
       ( .multiSensor.sensors[] | select(.id==2 and .type=="voltage") | .value // 0 ) / 10
   - source: http
     uri: http://{{ .host }}/state
-    timeout: 5s
-    cache: 2s
+    cache: {{ .cache }}
     jq: |
       ( .multiSensor.sensors[] | select(.id==3 and .type=="voltage") | .value // 0 ) / 10
 
@@ -93,19 +76,16 @@ render: |
   powers:
   - source: http
     uri: http://{{ .host }}/state
-    timeout: 5s
-    cache: 2s
+    cache: {{ .cache }}
     jq: |
       ( .multiSensor.sensors[] | select(.id==1 and .type=="activePower") | .value // 0 )
   - source: http
     uri: http://{{ .host }}/state
-    timeout: 5s
-    cache: 2s
+    cache: {{ .cache }}
     jq: |
       ( .multiSensor.sensors[] | select(.id==2 and .type=="activePower") | .value // 0 )
   - source: http
     uri: http://{{ .host }}/state
-    timeout: 5s
-    cache: 2s
+    cache: {{ .cache }}
     jq: |
       ( .multiSensor.sensors[] | select(.id==3 and .type=="activePower") | .value // 0 )

@@ -3,7 +3,6 @@ package pipeline
 import (
 	"bytes"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -202,10 +201,7 @@ func (p *Pipeline) Process(in []byte) ([]byte, error) {
 		if err != nil {
 			return b, backoff.Permanent(err)
 		}
-		b, err = json.Marshal(v)
-		if err != nil {
-			return nil, backoff.Permanent(err)
-		}
+		b = fmt.Appendf(nil, "%v", v)
 	}
 
 	if p.unpack != "" {
