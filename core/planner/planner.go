@@ -152,11 +152,10 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 		precondition = max(precondition-durationAfterRates, 0)
 	}
 
+	rates = clampRates(rates, now, targetTime)
+
 	// don't precondition longer than charging duration
 	precondition = min(precondition, requiredDuration)
-
-	// filter rates to planning window early for performance
-	rates = clampRates(rates, now, targetTime)
 
 	// reduce target time by precondition duration
 	targetTime = targetTime.Add(-precondition)
