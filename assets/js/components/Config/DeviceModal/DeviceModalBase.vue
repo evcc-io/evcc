@@ -367,6 +367,11 @@ export default defineComponent({
 				delete data["icon"];
 			}
 
+			// Remove modbus field if current template doesn't have modbus parameter
+			if (!this.modbus) {
+				delete data["modbus"];
+			}
+
 			// Allow parent to transform API data
 			if (this.transformApiData) {
 				data = this.transformApiData(data, this.values);
