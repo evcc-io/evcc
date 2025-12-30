@@ -109,4 +109,3 @@ render: |
     cache: 2s
     jq: |
       ( .multiSensor.sensors[] | select(.id==3 and .type=="activePower") | .value // 0 )
-
