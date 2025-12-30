@@ -187,9 +187,9 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 				end = targetTime
 			}
 
-			// available window too small for sliding window - charge continuously from now to target
+			// available window too small for sliding window - charge continuously to target
 			if end.Sub(start) < requiredDuration {
-				return continuousPlan(append(rates, precond...), now, targetTime.Add(precondition))
+				return continuousPlan(append(rates, precond...), latestStart, targetTime.Add(precondition))
 			}
 		}
 
