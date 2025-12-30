@@ -3,8 +3,8 @@ products:
   - brand: Pstryk.pl
 requirements:
   description:
-    en: "Get your API token from the Pstryk App. The template uses a 1h5m refresh interval by default to respect API rate limits."
-    de: "Hol dir deinen API-Token aus der Pstryk App. Das Template verwendet standardmäßig ein 1h5m Aktualisierungsintervall, um API-Rate-Limits zu respektieren."
+    en: "Get your API token from the Pstryk App. The template uses a 2h refresh interval by default to respect API rate limits."
+    de: "Hol dir deinen API-Token aus der Pstryk App. Das Template verwendet standardmäßig ein 2h Aktualisierungsintervall, um API-Rate-Limits zu respektieren."
   evcc: ["skiptest"]
 group: price
 countries: ["PL"]
@@ -30,7 +30,7 @@ params:
       de: "Tarifquelle."
 
   - name: interval
-    default: 1h5m
+    default: 2h
     advanced: true
 
   - preset: tariff-base
