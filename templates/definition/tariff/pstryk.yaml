@@ -46,7 +46,6 @@ render: |
     headers:
       Authorization: {{ .token }}
       Accept: application/json
-      User-Agent: evcc-pstryk-template
     jq: |
       [(.frames // [])[]
         | select(.is_cheap != null or .is_expensive != null)
