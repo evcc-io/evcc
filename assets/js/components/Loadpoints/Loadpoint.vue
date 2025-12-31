@@ -10,7 +10,7 @@
 						:name="chargerIcon"
 						class="me-2 flex-shrink-0"
 					/>
-					<div ref="loadpointTitle" class="text-truncate" data-bs-toggle="tooltip">
+					<div class="text-truncate" data-bs-toggle="tooltip">
 						{{ loadpointTitle }}
 					</div>
 				</h3>
@@ -124,7 +124,6 @@ import type {
 	Forecast,
 	SMART_COST_TYPE,
 } from "@/types/evcc";
-import { Tooltip } from "bootstrap";
 
 export default defineComponent({
 	name: "Loadpoint",
@@ -241,7 +240,6 @@ export default defineComponent({
 			pvRemainingInterpolated: this.pvRemaining,
 			chargeDurationInterpolated: this.chargeDuration,
 			chargeRemainingDurationInterpolated: this.chargeRemainingDuration,
-			loadpointTitleTooltip: null as Tooltip | null,
 		};
 	},
 	computed: {
@@ -318,9 +316,6 @@ export default defineComponent({
 		},
 	},
 	watch: {
-		loadpointTitle() {
-			this.updateLoadpointToolTip();
-		},
 		phaseRemaining() {
 			this.phaseRemainingInterpolated = this.phaseRemaining;
 		},
@@ -336,33 +331,13 @@ export default defineComponent({
 	},
 	mounted() {
 		this.tickerHandler = setInterval(this.tick, 1000);
-		window.addEventListener("resize", this.updateLoadpointToolTip, {});
-		window.addEventListener("orientationchange", this.updateLoadpointToolTip);
-		this.updateLoadpointToolTip();
 	},
 	unmounted() {
 		if (this.tickerHandler) {
 			clearInterval(this.tickerHandler);
 		}
-		window.removeEventListener("resize", this.updateLoadpointToolTip);
-		window.removeEventListener("orientationchange", this.updateLoadpointToolTip);
 	},
 	methods: {
-		updateLoadpointToolTip() {
-			const e = this.$refs["loadpointTitle"];
-
-			if (!e || e.scrollWidth <= e.clientWidth) {
-				this.loadpointTitleTooltip?.disable();
-				return;
-			}
-
-			if (!this.loadpointTitleTooltip) {
-				this.loadpointTitleTooltip = new Tooltip(e, { title: " " });
-			}
-
-			this.loadpointTitleTooltip.setContent({ ".tooltip-inner": this.loadpointTitle });
-			this.loadpointTitleTooltip.enable();
-		},
 		tick() {
 			if (this.phaseRemainingInterpolated > 0) {
 				this.phaseRemainingInterpolated--;
