@@ -38,6 +38,18 @@ params:
       de: Muss auf dem Bildschirm des Hauskraftwerks unter 'Personalisieren' > 'Benutzerprofil' angelegt werden.
     mask: true
     required: true
+  - name: maxacpower
+  - name: externalpower
+    type: bool
+    description:
+      de: Externe Quelle einschließen
+      en: Include external power
+    help:
+      de: Bezieht alle angeschlossenen externen Quellen in die PV-Berechnung ein (Standard).
+      en: Includes all connected external sources into the PV calculation (default).
+    advanced: true
+    usages: ["pv"]
+    default: true
   - name: battery
     description:
       generic: Battery
@@ -52,18 +64,6 @@ params:
     type: int
     advanced: true
     usages: ["battery"]
-  - name: maxacpower
-  - name: externalpower
-    type: bool
-    description:
-      de: Externe Quelle einschließen
-      en: Include external power
-    help:
-      de: Bezieht alle angeschlossenen externen Quellen in die PV-Berechnung ein (Standard).
-      en: Includes all connected external sources into the PV calculation (default).
-    advanced: true
-    usages: ["pv"]
-    default: true
   - preset: battery-params
 render: |
   type: e3dc-rscp
