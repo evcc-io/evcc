@@ -124,7 +124,7 @@ import type {
 	Forecast,
 	SMART_COST_TYPE,
 } from "@/types/evcc";
-import Tooltip from "bootstrap/js/dist/tooltip";
+import { Tooltip } from "bootstrap";
 
 export default defineComponent({
 	name: "Loadpoint",
