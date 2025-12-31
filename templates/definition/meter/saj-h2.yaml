@@ -196,5 +196,5 @@ render: |
               address: 13832 # First_charge_power_time 
               type: writeholding
               decode: int16
-  {{- include "battery-params" }}
+  {{- include "battery-params" . }}
   {{- end }}

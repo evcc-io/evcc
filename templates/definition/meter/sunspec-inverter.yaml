@@ -160,5 +160,5 @@ render: |
     value:
       - 124:ChaState
       - 802:SoC
-  {{- include "battery-params" }}
+  {{- include "battery-params" . }}
   {{- end }}

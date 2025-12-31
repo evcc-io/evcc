@@ -213,5 +213,5 @@ render: |
               address: 3049
               type: writemultiple
               decode: uint16 
-  {{- include "battery-params" }}
+  {{- include "battery-params" . }}
   {{- end }}

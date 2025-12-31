@@ -88,5 +88,5 @@ render: |
               address: 43 # 2Bh battery discharging power [W]
               type: writemultiple
               encoding: uint16
-  {{- include "battery-params" }}
+  {{- include "battery-params" . }}
   {{- end }}

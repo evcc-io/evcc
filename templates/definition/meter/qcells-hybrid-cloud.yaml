@@ -76,5 +76,5 @@ render: |
     uri: https://qhome-ess-g3.q-cells.{{ lower .region }}/proxyApp/proxy/api/getRealtimeInfo.do?tokenId={{ urlEncode .tokenid }}&sn={{ urlEncode .serial }}
     jq: .result.soc  # Solax API inverter.DC.battery.energy.SOC
     cache: 2m30s
-  {{- include "battery-params" }}
+  {{- include "battery-params" . }}
   {{- end }}

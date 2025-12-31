@@ -245,5 +245,5 @@ render: |
             uri: {{ .host }}:{{ .port }}
             id: 1
             value: 124:0:OutWRte
-  {{- include "battery-params" }}
+  {{- include "battery-params" . }}
   {{- end }}

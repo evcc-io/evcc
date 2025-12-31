@@ -294,5 +294,5 @@ render: |
                   address: 0x1187
                   type: writemultiple
                   decode: bytes
-  {{- include "battery-params" }}
+  {{- include "battery-params" . }}
   {{- end }}

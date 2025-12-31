@@ -95,5 +95,5 @@ render: |
         type: holding
         decode: uint16
       scale: -1 # Substract PV power to calc battery charge
-  {{- include "battery-params" }}
+  {{- include "battery-params" . }}
   {{- end }}

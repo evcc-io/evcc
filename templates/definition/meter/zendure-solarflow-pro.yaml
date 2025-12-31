@@ -43,5 +43,5 @@ render: |
     uri: http://{{ .host }}/properties/report
     jq: .properties.electricLevel
     cache: {{ .cache }}
-  {{- include "battery-params" }}
+  {{- include "battery-params" . }}
   {{- end }}

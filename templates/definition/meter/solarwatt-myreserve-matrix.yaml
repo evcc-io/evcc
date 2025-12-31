@@ -28,5 +28,5 @@ render: |
     source: http
     uri: http://{{ .host }}:{{ .port }}/
     jq: .SData.SoC
-  {{- include "battery-params" }}
+  {{- include "battery-params" . }}
   {{- end }}
