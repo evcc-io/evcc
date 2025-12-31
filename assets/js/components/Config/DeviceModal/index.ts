@@ -185,12 +185,9 @@ export const fetchServiceValues = async (
     endpoints.map(async (endpoint) => {
       const expanded = expandModbus(endpoint.service, values);
       if (expanded.includes("{modbus}")) {
-        // Connection type not yet selected
         return;
       }
-      const actualDeps = extractPlaceholders(expanded);
-      const allPresent = actualDeps.every((dep) => values[dep]);
-      if (!allPresent) {
+      if (!extractPlaceholders(expanded).every((dep) => values[dep])) {
         return;
       }
       const url = endpoint.url(values);
