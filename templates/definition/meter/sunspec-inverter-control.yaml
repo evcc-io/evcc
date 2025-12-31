@@ -104,5 +104,5 @@ render: |
             source: sunspec
             {{- include "modbus" . | indent 10 }}
             value: 124:0:InOutWRte_RvrtTms
-  {{- include battery-params }}
+  {{- include "battery-params" }}
   {{- end }}

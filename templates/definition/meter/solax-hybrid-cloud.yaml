@@ -69,5 +69,5 @@ render: |
     uri: https://www.solaxcloud.com/proxyApp/proxy/api/getRealtimeInfo.do?tokenId={{ unquote .tokenid }}&sn={{ unquote .serial }}
     jq: .result.soc  # Solax API inverter.DC.battery.energy.SOC
     cache: 2m30s
-  {{- include battery-params }}
+  {{- include "battery-params" }}
   {{- end }}

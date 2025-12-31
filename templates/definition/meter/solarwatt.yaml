@@ -51,5 +51,5 @@ render: |
     source: http
     uri: http://{{ .host }}/rest/kiwigrid/wizard/devices # EnergyManager
     jq: .result.items[] | select(.deviceModel[].deviceClass == "com.kiwigrid.devices.location.Location" ) | (.tagValues.WorkReleased.value // 0) / 1000
-  {{- include battery-params }}
+  {{- include "battery-params" }}
   {{- end }}

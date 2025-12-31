@@ -102,5 +102,5 @@ render: |
       address: 184 # "battery capacity"
       type: holding
       decode: uint16
-  {{- include battery-params }}
+  {{- include "battery-params" }}
   {{- end }}

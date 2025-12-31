@@ -162,5 +162,5 @@ render: |
     {{- end }}
     cache: {{ .cache }}
     jq: '[.[].devices[] | select(.percentFull != null) | .percentFull] | add / length'
-  {{- include battery-params }}
+  {{- include "battery-params" }}
   {{- end }}

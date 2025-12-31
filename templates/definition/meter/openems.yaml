@@ -163,5 +163,5 @@ render: |
           error: ErrNotAvailable
           {{- end }}
   {{- end }}
-  {{- include battery-params }}
+  {{- include "battery-params" }}
   {{- end }}

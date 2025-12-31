@@ -80,6 +80,6 @@ render: |
           uri: http://{{ .host }}:{{ .port }}/api.php?set=command&type=20738&text1=3&text2=1 # Battery Charge AC - ON
         - source: http
           uri: http://{{ .host }}:{{ .port }}/api.php?set=command&type=20738&text1=4&text2=0 # Battery Discharging - OFF
-  {{- include battery-params }}
+  {{- include "battery-params" }}
   {{- end }}
   {{- end }}

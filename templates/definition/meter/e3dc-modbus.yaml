@@ -55,5 +55,5 @@ render: |
       address: 40082 # Batterie-SOC in %
       type: holding
       decode: uint16
-  {{- include battery-params }}
+  {{- include "battery-params" }}
   {{- end }}

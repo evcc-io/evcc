@@ -166,5 +166,5 @@ render: |
         type: writesingle
         decode: uint16
       scale: 10
-  {{- include battery-params }}
+  {{- include "battery-params" }}
   {{- end }}

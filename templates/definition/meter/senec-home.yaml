@@ -77,5 +77,5 @@ render: |
         headers:
         - content-type: application/json
         body: '{"ENERGY":{"SAFE_CHARGE_FORCE":"u8_01"}}'  # force to charge
-  {{- include battery-params }}
+  {{- include "battery-params" }}
   {{- end }}

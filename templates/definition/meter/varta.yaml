@@ -106,5 +106,5 @@ render: |
           set:
             source: error
             error: ErrNotAvailable
-  {{- include battery-params }}
+  {{- include "battery-params" }}
   {{- end }}

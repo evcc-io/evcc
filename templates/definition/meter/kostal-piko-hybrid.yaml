@@ -47,5 +47,5 @@ render: |
     uri: http://{{ .host }}/api/dxs.json?dxsEntries=33556229 # Battery SOC
     #   | ----------------------------- Bat SOC% --------- |
     jq: (.dxsEntries[] | select(.dxsId==33556229) | .value )
-  {{- include battery-params }}
+  {{- include "battery-params" }}
   {{- end }}

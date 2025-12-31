@@ -147,5 +147,5 @@ render: |
               address: 0x3608 # Battery first charging time (power)
               type: writeholding
               decode: uint16
-  {{- include battery-params }}
+  {{- include "battery-params" }}
   {{- end }}

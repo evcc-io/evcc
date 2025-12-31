@@ -375,5 +375,5 @@ render: |
                 address: 40801 # CmpBMS.GridWSpt - Sollwert der Netzaustauschleistung
                 type: writemultiple
                 decode: uint32
-  {{- include battery-params }}
+  {{- include "battery-params" }}
   {{- end }}

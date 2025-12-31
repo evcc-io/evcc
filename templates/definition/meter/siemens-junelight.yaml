@@ -53,5 +53,5 @@ render: |
       address: 8 # "battery soc"
       type: holding
       decode: int32
-  {{- include battery-params }}
+  {{- include "battery-params" }}
   {{- end }}

@@ -70,5 +70,5 @@ render: |
       address: 0x3003 # Battery SOC
       type: holding
       decode: uint16
-  {{- include battery-params }}
+  {{- include "battery-params" }}
   {{- end }}

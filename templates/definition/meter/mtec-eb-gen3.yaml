@@ -84,5 +84,5 @@ render: |
             address: 50000
             type: writesingle
             decode: uint16
-  {{- include battery-params }}
+  {{- include "battery-params" }}
   {{- end }}
