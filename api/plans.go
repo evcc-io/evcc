@@ -31,9 +31,9 @@ func (ps *PlanStrategy) MarshalJSON() ([]byte, error) {
 	})
 }
 
-func (ps *PlanStrategy) UnmarshalJSON(bytes []byte) error {
+func (ps *PlanStrategy) UnmarshalJSON(b []byte) error {
 	var res planStrategy
-	if err := json.Unmarshal(bytes, &res); err != nil {
+	if err := json.Unmarshal(b, &res); err != nil {
 		return err
 	}
 
