@@ -153,7 +153,6 @@ func (v *adapter) SetPlanStrategy(planStrategy api.PlanStrategy) error {
 		return err
 	}
 
-	v.log.DEBUG.Printf("update plan strategy for vehicle %s (precondition: %vs, continuous: %v)", v.name, planStrategy.Continuous, planStrategy.Precondition)
 	v.publish()
 
 	return nil
