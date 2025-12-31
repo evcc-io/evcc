@@ -13,10 +13,9 @@ import (
 )
 
 type planStruct struct {
-	Soc          int       `json:"soc"`
-	Continuous   bool      `json:"continuous"`
-	Precondition int64     `json:"precondition"`
-	Time         time.Time `json:"time"`
+	Soc          int              `json:"soc"`
+	Time         time.Time        `json:"time"`
+	PlanStrategy api.PlanStrategy `json:"planStrategy"`
 }
 
 type vehicleStruct struct {
@@ -32,7 +31,6 @@ type vehicleStruct struct {
 	Features       []string            `json:"features,omitempty"`
 	Plan           *planStruct         `json:"plan,omitempty"`
 	RepeatingPlans []api.RepeatingPlan `json:"repeatingPlans"`
-	PlanStrategy   api.PlanStrategy    `json:"planStrategy"`
 }
 
 // publishVehicles returns a list of vehicle titles
@@ -50,7 +48,11 @@ func (site *Site) publishVehicles() {
 
 		var plan *planStruct
 		if time, soc := v.GetPlanSoc(); !time.IsZero() {
-			plan = &planStruct{Soc: soc, Precondition: int64(strategy.Precondition.Seconds()), Time: time}
+			plan = &planStruct{
+				Soc:          soc,
+				Time:         time,
+				PlanStrategy: v.GetPlanStrategy(),
+			}
 		}
 
 		res[v.Name()] = vehicleStruct{
@@ -66,7 +68,6 @@ func (site *Site) publishVehicles() {
 			Features:       lo.Map(instance.Features(), func(f api.Feature, _ int) string { return f.String() }),
 			Plan:           plan,
 			RepeatingPlans: v.GetRepeatingPlans(),
-			PlanStrategy:   v.GetPlanStrategy(),
 		}
 
 		if lp := site.coordinator.Owner(instance); lp != nil {
