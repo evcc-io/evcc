@@ -9,32 +9,26 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestLoadpointDecodeWithDeprecatedPlanPrecondition(t *testing.T) {
-	// Old config format with planPrecondition (removed in PR #24423)
-	// Without the PlanPrecondition_ compatibility field, this would fail with:
-	// "invalid keys: planPrecondition"
-	config := map[string]any{
-		"planPrecondition": int64(3600),
-	}
-
-	lp := &Loadpoint{}
-	err := util.DecodeOther(config, lp)
-
-	// Should NOT error - field should be accepted into PlanPrecondition_
-	assert.NoError(t, err, "DecodeOther should accept deprecated planPrecondition field")
+// simulatedOldLoadpoint without PlanPrecondition_ field
+type simulatedOldLoadpoint struct {
+	GuardDuration_ float64 `mapstructure:"guardduration"`
 }
 
-func TestLoadpointFromConfigWithUnknownField(t *testing.T) {
-	// Simulate old config with unknown field (like planPrecondition before fix)
-	// This proves: unknown field -> DecodeOther fails -> lp is nil
-	config := map[string]any{
-		"unknownField": "test", // This will cause DecodeOther to fail
-	}
+func TestDecodeOther_FailsOnUnknownField(t *testing.T) {
+	config := map[string]any{"planPrecondition": int64(3600)}
+
+	err := util.DecodeOther(config, &simulatedOldLoadpoint{})
+
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "invalid keys: planPrecondition")
+}
+
+func TestNewLoadpointFromConfig_ToleratesUnknownFields(t *testing.T) {
+	config := map[string]any{"unknownField": "test"}
 
 	lp, err := NewLoadpointFromConfig(util.NewLogger("test"), settings.NewDatabaseSettingsAdapter("test"), config)
 
-	// Unknown fields cause nil loadpoint - this is the root cause of the panic
-	require.Error(t, err)
-	assert.Nil(t, lp, "Loadpoint should be nil when DecodeOther fails")
-	assert.Contains(t, err.Error(), "invalid keys")
+	// unknown fields are logged but tolerated
+	require.NoError(t, err)
+	assert.NotNil(t, lp)
 }
