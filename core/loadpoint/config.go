@@ -27,6 +27,7 @@ type DynamicConfig struct {
 	SmartFeedInPriorityLimit *float64  `json:"smartFeedInPriorityLimit"`
 	PlanEnergy               float64   `json:"planEnergy"`
 	PlanTime                 time.Time `json:"planTime"`
+	PlanPrecondition_        int64     `json:"planPrecondition" mapstructure:"planPrecondition"` // TODO deprecated, keep for compatibility
 	LimitEnergy              float64   `json:"limitEnergy"`
 	LimitSoc                 int       `json:"limitSoc"`
 
