@@ -24,8 +24,8 @@ func (d *Duration) Duration() time.Duration {
 	return time.Duration(*d)
 }
 
-func (d *Duration) UnmarshalJSON(b []byte) error {
-	val, err := iso8601.ParseDuration(string(b))
+func (d *Duration) UnmarshalJSON(data []byte) error {
+	val, err := iso8601.ParseDuration(string(data))
 	if err != nil {
 		return err
 	}
