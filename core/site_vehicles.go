@@ -72,8 +72,10 @@ func (site *Site) publishVehicles() {
 			PlanContinuous:   strategy.Continuous,
 		}
 
-		if lp := site.coordinator.Owner(instance); lp != nil {
-			go lp.PublishEffectiveValues()
+		if site.coordinator != nil {
+			if lp := site.coordinator.Owner(instance); lp != nil {
+				go lp.PublishEffectiveValues()
+			}
 		}
 	}
 
