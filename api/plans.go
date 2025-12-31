@@ -37,8 +37,10 @@ func (ps *PlanStrategy) UnmarshalJSON(b []byte) error {
 		return err
 	}
 
-	ps.Continuous = res.Continuous
-	ps.Precondition = time.Duration(res.Precondition) * time.Second
+	*ps = PlanStrategy{
+		Continuous:   res.Continuous,
+		Precondition: time.Duration(res.Precondition) * time.Second,
+	}
 
 	return nil
 }
