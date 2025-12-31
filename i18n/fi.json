@@ -888,12 +888,11 @@
       "modalTitle": "Lataussuunnitelma",
       "none": "ei mitään",
       "planNumber": "Suunnitelma {number}",
-      "precondition": {
-        "description": "Ladataan {duration} ennen lähtöä akunesilämmitystä varten.",
-        "label": "Viimehetken lataus",
-        "optionAll": "koko latausmäärä",
-        "optionNo": "ei"
-      },
+      "preconditionDescription": "Ladataan {duration} ennen lähtöä akunesilämmitystä varten.",
+      "preconditionLong": "Viimehetken lataus",
+      "preconditionOptionAll": "koko latausmäärä",
+      "preconditionOptionNo": "ei",
+      "preconditionShort": "Viimehetkellinen",
       "remove": "Poista",
       "repeating": "toistetaan",
       "repeatingPlans": "Toistuvat suunnitelmat",

@@ -22,12 +22,17 @@
 					{{ $t("main.chargingPlan.time") }}
 				</label>
 			</div>
-			<div class="col-3">
+			<div :class="showPrecondition ? 'col-3' : 'col-4'">
 				<label :for="formId('goal')">
 					{{ $t("main.chargingPlan.goal") }}
 				</label>
 			</div>
-			<div class="col-2">
+			<div v-if="showPrecondition" class="col-1">
+				<label :for="formId('precondition')">
+					{{ $t("main.chargingPlan.preconditionShort") }}
+				</label>
+			</div>
+			<div class="col-1">
 				<label :for="formId('active')"> {{ $t("main.chargingPlan.active") }} </label>
 			</div>
 		</div>
@@ -78,7 +83,7 @@
 					{{ $t("main.chargingPlan.goal") }}
 				</label>
 			</div>
-			<div class="col-7 col-lg-3 mb-2 mb-lg-0">
+			<div :class="['col-7', showPrecondition ? 'col-lg-3' : 'col-lg-4', 'mb-2', 'mb-lg-0']">
 				<select
 					v-if="socBasedPlanning"
 					:id="formId('goal')"
@@ -104,6 +109,21 @@
 					</option>
 				</select>
 			</div>
+			<div v-if="showPrecondition" class="col-5 d-lg-none col-form-label">
+				<label :for="formId('precondition')">
+					{{ $t("main.chargingPlan.preconditionLong") }}
+				</label>
+			</div>
+			<div
+				v-if="showPrecondition"
+				class="col-7 col-lg-1 mb-2 mb-lg-0 d-flex align-items-center"
+			>
+				<PreconditionSelect
+					:id="formId('precondition')"
+					v-model="selectedPrecondition"
+					testid="static-plan-precondition"
+				/>
+			</div>
 			<div class="col-5 d-lg-none col-form-label">
 				<label :for="formId('active')">
 					{{ $t("main.chargingPlan.active") }}
@@ -125,7 +145,7 @@
 				</div>
 			</div>
 			<div
-				class="col-4 col-lg-2 d-flex align-items-center justify-content-end justify-content-lg-start"
+				class="col-4 col-lg-1 d-flex align-items-center justify-content-end justify-content-lg-start"
 			>
 				<button
 					v-if="dataChanged && !isNew"
@@ -134,11 +154,25 @@
 					data-testid="static-plan-apply"
 					:disabled="timeInThePast"
 					tabindex="0"
+					:aria-label="$t('main.chargingPlan.update')"
 					@click="update"
 				>
-					{{ $t("main.chargingPlan.update") }}
+					<span class="d-lg-none">{{ $t("main.chargingPlan.update") }}</span>
+					<shopicon-regular-checkmark
+						size="s"
+						class="flex-shrink-0 d-none d-lg-block"
+					></shopicon-regular-checkmark>
 				</button>
 			</div>
+		</div>
+		<!-- Large screen precondition description -->
+		<div :class="multiplePlans ? 'plan-id-insert' : ''">
+			<PreconditionSelect
+				:id="formId('precondition')"
+				v-model="selectedPrecondition"
+				testid="static-plan-precondition"
+				description-lg-only
+			/>
 		</div>
 		<p class="mb-0" data-testid="plan-entry-warnings">
 			<span v-if="timeInThePast" class="d-block text-danger my-2">
@@ -149,11 +183,13 @@
 </template>
 
 <script lang="ts">
+import "@h2d2/shopicons/es/regular/checkmark";
 import { distanceUnit } from "@/units";
 
 import formatter from "@/mixins/formatter";
 import { energyOptions } from "@/utils/energyOptions.ts";
 import { defineComponent } from "vue";
+import PreconditionSelect from "./PreconditionSelect.vue";
 
 const LAST_TARGET_TIME_KEY = "last_target_time";
 const LAST_SOC_GOAL_KEY = "last_soc_goal";
@@ -162,6 +198,7 @@ const DEFAULT_TARGET_TIME = "7:00";
 
 export default defineComponent({
 	name: "ChargingPlanStaticSettings",
+	components: { PreconditionSelect },
 	mixins: [formatter],
 	props: {
 		id: [String, Number],
@@ -173,6 +210,8 @@ export default defineComponent({
 		capacity: Number,
 		socBasedPlanning: Boolean,
 		multiplePlans: Boolean,
+		precondition: Number,
+		showPrecondition: Boolean,
 	},
 	emits: ["static-plan-updated", "static-plan-removed", "plan-preview"],
 	data() {
@@ -182,6 +221,7 @@ export default defineComponent({
 			selectedSoc: this.soc,
 			selectedEnergy: this.energy,
 			active: false,
+			selectedPrecondition: this.precondition,
 		};
 	},
 	computed: {
@@ -225,6 +265,7 @@ export default defineComponent({
 				energy: this.energy,
 				day: this.fmtDayString(t),
 				time: this.fmtTimeString(t),
+				precondition: this.precondition,
 			};
 		},
 		dataChanged() {
@@ -234,7 +275,8 @@ export default defineComponent({
 			const goalChanged = this.socBasedPlanning
 				? this.originalData.soc != this.selectedSoc
 				: this.originalData.energy != this.selectedEnergy;
-			return dateChanged || goalChanged;
+			const preconditionChanged = this.originalData.precondition != this.selectedPrecondition;
+			return dateChanged || goalChanged || preconditionChanged;
 		},
 		isNew() {
 			return !this.time && (!this.soc || !this.energy);
@@ -260,6 +302,12 @@ export default defineComponent({
 		},
 		isNew(value) {
 			this.active = !value;
+		},
+		precondition(value) {
+			this.selectedPrecondition = value;
+		},
+		selectedPrecondition() {
+			this.preview();
 		},
 	},
 	mounted() {
@@ -335,6 +383,7 @@ export default defineComponent({
 				time: this.selectedDate,
 				soc: this.selectedSoc,
 				energy: this.selectedEnergy,
+				precondition: this.selectedPrecondition,
 			});
 		},
 		preview(force = false) {
@@ -345,6 +394,7 @@ export default defineComponent({
 				time: this.selectedDate,
 				soc: this.selectedSoc,
 				energy: this.selectedEnergy,
+				precondition: this.selectedPrecondition,
 			});
 		},
 		toggle(e: Event) {

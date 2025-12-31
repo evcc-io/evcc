@@ -1,6 +1,7 @@
 package server
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -251,8 +252,18 @@ func (m *MQTT) listenLoadpointSetters(topic string, site site.API, lp loadpoint.
 		{"smartCostLimit", floatPtrSetter(pass(lp.SetSmartCostLimit))},
 		{"smartFeedInPriorityLimit", floatPtrSetter(pass(lp.SetSmartFeedInPriorityLimit))},
 		{"batteryBoost", boolSetter(lp.SetBatteryBoost)},
-		{"planStrategy", planStrategySetter(lp.SetPlanStrategy)},
-		{"planEnergy", planGoalSetter(lp.SetPlanEnergy)},
+		{"planEnergy", func(payload string) error {
+			var plan struct {
+				Time         time.Time `json:"time"`
+				Precondition int64     `json:"precondition"`
+				Value        float64   `json:"value"`
+			}
+			err := json.Unmarshal([]byte(payload), &plan)
+			if err == nil {
+				err = lp.SetPlanEnergy(plan.Time, time.Duration(plan.Precondition)*time.Second, plan.Value)
+			}
+			return err
+		}},
 		{"vehicle", func(payload string) error {
 			// https://github.com/evcc-io/evcc/issues/11184 empty payload is swallowed by listener
 			if isEmpty(payload) {
@@ -278,8 +289,18 @@ func (m *MQTT) listenVehicleSetters(topic string, v vehicle.API) error {
 	for _, s := range []setter{
 		{"limitSoc", intSetter(pass(v.SetLimitSoc))},
 		{"minSoc", intSetter(pass(v.SetMinSoc))},
-		{"planStrategy", planStrategySetter(v.SetPlanStrategy)},
-		{"planSoc", planGoalSetter(v.SetPlanSoc)},
+		{"planSoc", func(payload string) error {
+			var plan struct {
+				Time         time.Time `json:"time"`
+				Precondition int64     `json:"precondition"`
+				Value        int       `json:"value"`
+			}
+			err := json.Unmarshal([]byte(payload), &plan)
+			if err == nil {
+				err = v.SetPlanSoc(plan.Time, time.Duration(plan.Precondition)*time.Second, plan.Value)
+			}
+			return err
+		}},
 	} {
 		if err := m.Handler.ListenSetter(topic+"/"+s.topic, s.fun); err != nil {
 			return err

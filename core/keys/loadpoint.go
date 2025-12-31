@@ -57,11 +57,7 @@ const (
 	EffectivePlanSoc    = "effectivePlanSoc"    // effective plan soc
 	EffectiveMinCurrent = "effectiveMinCurrent" // effective min current
 	EffectiveMaxCurrent = "effectiveMaxCurrent" // effective max current
-
-	EffectiveLimitSoc         = "effectiveLimitSoc"         // effective limit soc
-	EffectivePlanStrategy     = "effectivePlanStrategy"     // effective plan strategy (deprecated, use individual fields)
-	EffectivePlanPrecondition = "effectivePlanPrecondition" // effective plan precondition duration
-	EffectivePlanContinuous   = "effectivePlanContinuous"   // effective plan continuous planning
+	EffectiveLimitSoc   = "effectiveLimitSoc"   // effective limit soc
 
 	// measurements
 	ChargePower       = "chargePower"       // charge power
@@ -77,17 +73,15 @@ const (
 	ChargeRemainingEnergy   = "chargeRemainingEnergy"   // charge remaining energy
 
 	// plan
-	Plan               = "plan"               // charge plan time slots
 	PlanTime           = "planTime"           // charge plan finish time goal
 	PlanEnergy         = "planEnergy"         // charge plan energy goal
 	PlanSoc            = "planSoc"            // charge plan soc goal
+	PlanPrecondition   = "planPrecondition"   // charge plan precondition duration
 	PlanActive         = "planActive"         // charge plan has determined current slot to be an active slot
 	PlanProjectedStart = "planProjectedStart" // charge plan start time (earliest slot)
 	PlanProjectedEnd   = "planProjectedEnd"   // charge plan ends (end of last slot)
 	PlanOverrun        = "planOverrun"        // charge plan goal not reachable in time
-	PlanStrategy       = "planStrategy"       // charge plan strategy (precondition, continuous)
-	PlanPrecondition   = "planPrecondition"   // charge plan precondition duration
-	PlanContinuous     = "planContinuous"     // charge plan continuous planning
+	Plan               = "plan"               // charge plan time slots
 
 	// repeating plans
 	RepeatingPlans = "repeatingPlans" // key to access all repeating plans in db

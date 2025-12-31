@@ -108,8 +108,6 @@ type API interface {
 	EffectiveMinPower() float64
 	// EffectiveMaxPower returns the max charging power taking active phases into account
 	EffectiveMaxPower() float64
-	// EffectivePlanStrategy returns the effective plan strategy
-	EffectivePlanStrategy() api.PlanStrategy
 	// PublishEffectiveValues publishes effective values for currently attached vehicle
 	PublishEffectiveValues()
 
@@ -118,21 +116,19 @@ type API interface {
 	//
 
 	// GetPlanEnergy returns the charge plan energy
-	GetPlanEnergy() (time.Time, float64)
+	GetPlanEnergy() (time.Time, time.Duration, float64)
 	// SetPlanEnergy sets the charge plan energy
-	SetPlanEnergy(time.Time, float64) error
+	SetPlanEnergy(time.Time, time.Duration, float64) error
 	// GetPlanGoal returns the plan goal and if the goal is soc based
 	GetPlanGoal() (float64, bool)
 	// GetPlanRequiredDuration returns required duration of plan to reach the goal from current state
 	GetPlanRequiredDuration(goal, maxPower float64) time.Duration
-	// GetPlanStrategy returns the plan strategy
-	GetPlanStrategy() api.PlanStrategy
-	// SetPlanStrategy sets the plan strategy
-	SetPlanStrategy(api.PlanStrategy) error
+	// GetPlanPreCondDuration returns the precondition duration
+	GetPlanPreCondDuration() time.Duration
 	// SocBasedPlanning determines if the planner is soc based
 	SocBasedPlanning() bool
 	// GetPlan creates a charging plan
-	GetPlan(targetTime time.Time, requiredDuration, precondition time.Duration, continuous bool) api.Rates
+	GetPlan(targetTime time.Time, requiredDuration, precondition time.Duration) api.Rates
 
 	// GetSocConfig returns the soc poll settings
 	GetSocConfig() SocConfig

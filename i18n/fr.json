@@ -888,12 +888,11 @@
       "modalTitle": "Planification de la charge",
       "none": "aucune",
       "planNumber": "Planning {number}",
-      "precondition": {
-        "description": "Charge {duration} avant le départ pour pré-conditionner la batterie.",
-        "label": "Chargement tardif",
-        "optionAll": "tous",
-        "optionNo": "non"
-      },
+      "preconditionDescription": "Charge {duration} avant le départ pour pré-conditionner la batterie.",
+      "preconditionLong": "Chargement tardif",
+      "preconditionOptionAll": "tous",
+      "preconditionOptionNo": "non",
+      "preconditionShort": "Tardif",
       "remove": "Enlever",
       "repeating": "récurrent",
       "repeatingPlans": "Plannings récurrents",

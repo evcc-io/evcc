@@ -616,12 +616,11 @@
       "modalTitle": "Piano di ricarica",
       "none": "nessuno",
       "planNumber": "Piano {number}",
-      "precondition": {
-        "description": "Carica {duration} prima della partenza per pre-condizionare la batteria.",
-        "label": "Carica ritardata",
-        "optionAll": "tutto",
-        "optionNo": "no"
-      },
+      "preconditionDescription": "Carica {duration} prima della partenza per pre-condizionare la batteria.",
+      "preconditionLong": "Carica ritardata",
+      "preconditionOptionAll": "tutto",
+      "preconditionOptionNo": "no",
+      "preconditionShort": "Ritardata",
       "remove": "Rimuovi",
       "repeating": "ricorrente",
       "repeatingPlans": "Piani ricorrenti",

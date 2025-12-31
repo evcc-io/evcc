@@ -73,6 +73,7 @@ func limitSocHandler(site site.API) http.HandlerFunc {
 func planSocHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
+		query := r.URL.Query()
 
 		v, err := site.Vehicles().ByName(vars["name"])
 		if err != nil {
@@ -92,52 +93,28 @@ func planSocHandler(site site.API) http.HandlerFunc {
 			return
 		}
 
-		if err := v.SetPlanSoc(ts, soc); err != nil {
-			jsonError(w, http.StatusBadRequest, err)
-			return
-		}
-
-		ts, soc = v.GetPlanSoc()
-
-		res := struct {
-			Soc  int       `json:"soc"`
-			Time time.Time `json:"time"`
-		}{
-			Soc:  soc,
-			Time: ts,
-		}
-
-		jsonWrite(w, res)
-	}
-}
-
-func planStrategyHandlerSetter(r *http.Request, set func(api.PlanStrategy) error) error {
-	var planStrategy planStrategyPayload
-	if err := json.NewDecoder(r.Body).Decode(&planStrategy); err != nil {
-		return err
-	}
-	return set(api.PlanStrategy{
-		Continuous:   planStrategy.Continuous,
-		Precondition: time.Duration(planStrategy.Precondition) * time.Second,
-	})
-}
-
-// updatePlanStrategyHandler updates plan strategy
-func updatePlanStrategyHandler(site site.API) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		v, err := site.Vehicles().ByName(vars["name"])
+		precondition, err := parseDuration(query.Get("precondition"))
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
-		if err := planStrategyHandlerSetter(r, v.SetPlanStrategy); err != nil {
+		if err := v.SetPlanSoc(ts, precondition, soc); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
-		res := planStrategyPayloadFromApi(v.GetPlanStrategy())
+		ts, precondition, soc = v.GetPlanSoc()
+
+		res := struct {
+			Soc          int       `json:"soc"`
+			Precondition int64     `json:"precondition"`
+			Time         time.Time `json:"time"`
+		}{
+			Soc:          soc,
+			Precondition: int64(precondition.Seconds()),
+			Time:         ts,
+		}
 
 		jsonWrite(w, res)
 	}
@@ -180,11 +157,12 @@ func planSocRemoveHandler(site site.API) http.HandlerFunc {
 			return
 		}
 
-		if err := v.SetPlanSoc(time.Time{}, 0); err != nil {
+		if err := v.SetPlanSoc(time.Time{}, 0, 0); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
-		jsonWrite(w, struct{}{})
+		res := struct{}{}
+		jsonWrite(w, res)
 	}
 }

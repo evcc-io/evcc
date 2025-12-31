@@ -343,19 +343,19 @@ func (lp *Loadpoint) SetLimitEnergy(energy float64) {
 }
 
 // GetPlanEnergy returns plan target energy
-func (lp *Loadpoint) GetPlanEnergy() (time.Time, float64) {
+func (lp *Loadpoint) GetPlanEnergy() (time.Time, time.Duration, float64) {
 	lp.RLock()
 	defer lp.RUnlock()
 	return lp.getPlanEnergy()
 }
 
 // getPlanEnergy returns plan target energy
-func (lp *Loadpoint) getPlanEnergy() (time.Time, float64) {
-	return lp.planTime, lp.planEnergy
+func (lp *Loadpoint) getPlanEnergy() (time.Time, time.Duration, float64) {
+	return lp.planTime, lp.planPrecondition, lp.planEnergy
 }
 
 // setPlanEnergy sets plan target energy (no mutex)
-func (lp *Loadpoint) setPlanEnergy(finishAt time.Time, energy float64) {
+func (lp *Loadpoint) setPlanEnergy(finishAt time.Time, precondition time.Duration, energy float64) {
 	lp.planEnergy = energy
 	lp.publish(keys.PlanEnergy, energy)
 	lp.settings.SetFloat(keys.PlanEnergy, energy)
@@ -363,12 +363,16 @@ func (lp *Loadpoint) setPlanEnergy(finishAt time.Time, energy float64) {
 	// remove plan
 	if energy == 0 {
 		finishAt = time.Time{}
+		precondition = 0
 	}
 
 	lp.planTime = finishAt
+	lp.planPrecondition = precondition
 	lp.planEnergyOffset = lp.getChargedEnergy() / 1e3
 	lp.publish(keys.PlanTime, finishAt)
+	lp.publish(keys.PlanPrecondition, precondition)
 	lp.settings.SetTime(keys.PlanTime, finishAt)
+	lp.settings.SetInt(keys.PlanPrecondition, int64(precondition.Seconds()))
 
 	if finishAt.IsZero() {
 		lp.setPlanActive(false)
@@ -376,7 +380,7 @@ func (lp *Loadpoint) setPlanEnergy(finishAt time.Time, energy float64) {
 }
 
 // SetPlanEnergy sets plan target energy
-func (lp *Loadpoint) SetPlanEnergy(finishAt time.Time, energy float64) error {
+func (lp *Loadpoint) SetPlanEnergy(finishAt time.Time, precondition time.Duration, energy float64) error {
 	lp.Lock()
 	defer lp.Unlock()
 
@@ -387,49 +391,12 @@ func (lp *Loadpoint) SetPlanEnergy(finishAt time.Time, energy float64) error {
 	lp.log.DEBUG.Printf("set plan energy: %.3gkWh @ %v", energy, finishAt.Round(time.Second).Local())
 
 	// apply immediately
-	if lp.planEnergy != energy || !lp.planTime.Equal(finishAt) {
-		lp.setPlanEnergy(finishAt, energy)
+	if lp.planEnergy != energy || lp.planPrecondition != precondition || !lp.planTime.Equal(finishAt) {
+		lp.setPlanEnergy(finishAt, precondition, energy)
 		lp.requestUpdate()
 	}
 
 	return nil
-}
-
-// setPlanStrategy sets the plan strategy (no mutex)
-func (lp *Loadpoint) setPlanStrategy(strategy api.PlanStrategy) error {
-	if err := lp.settings.SetJson(keys.PlanStrategy, strategy); err != nil {
-		return err
-	}
-
-	lp.planStrategy = strategy
-	lp.publish(keys.PlanPrecondition, int64(strategy.Precondition.Seconds()))
-	lp.publish(keys.PlanContinuous, strategy.Continuous)
-
-	lp.requestUpdate()
-
-	return nil
-}
-
-// SetPlanStrategy sets the plan strategy
-func (lp *Loadpoint) SetPlanStrategy(strategy api.PlanStrategy) error {
-	lp.Lock()
-	defer lp.Unlock()
-
-	lp.log.DEBUG.Printf("set plan strategy: continuous=%v, precondition=%v", strategy.Continuous, strategy.Precondition)
-
-	return lp.setPlanStrategy(strategy)
-}
-
-// getPlanStrategy returns the plan strategy (no mutex)
-func (lp *Loadpoint) getPlanStrategy() api.PlanStrategy {
-	return lp.planStrategy
-}
-
-// GetPlanStrategy returns the plan strategy
-func (lp *Loadpoint) GetPlanStrategy() api.PlanStrategy {
-	lp.RLock()
-	defer lp.RUnlock()
-	return lp.getPlanStrategy()
 }
 
 // GetSoc returns the PV mode threshold settings

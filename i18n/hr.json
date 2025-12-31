@@ -818,12 +818,11 @@
       "modalTitle": "Plan punjenja",
       "none": "nema, dodaj",
       "planNumber": "Plan {number}",
-      "precondition": {
-        "description": "Punjenje {duration} prije polaska kako bi se izvršilo predkondicioniranje baterije.",
-        "label": "Kasnije punjenje",
-        "optionAll": "sve",
-        "optionNo": "ne"
-      },
+      "preconditionDescription": "Punjenje {duration} prije polaska kako bi se izvršilo predkondicioniranje baterije.",
+      "preconditionLong": "Kasnije punjenje",
+      "preconditionOptionAll": "sve",
+      "preconditionOptionNo": "ne",
+      "preconditionShort": "Kasno",
       "remove": "Ukloni",
       "repeating": "ponavljanje",
       "repeatingPlans": "Ponavljajući planovi",

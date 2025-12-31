@@ -509,12 +509,11 @@
       "goal": "Cel ładowania",
       "modalTitle": "Plan ładowania",
       "none": "brak",
-      "precondition": {
-        "description": "Naładuj {duration} przed wyjazdem dla wstępnego kondycjonowania akumulatora.",
-        "label": "Późniejsze ładowanie",
-        "optionAll": "wszystko",
-        "optionNo": "nie"
-      },
+      "preconditionDescription": "Naładuj {duration} przed wyjazdem dla wstępnego kondycjonowania akumulatora.",
+      "preconditionLong": "Późniejsze ładowanie",
+      "preconditionOptionAll": "wszystko",
+      "preconditionOptionNo": "nie",
+      "preconditionShort": "Później",
       "remove": "Wymaż",
       "repeating": "powtórzenie",
       "repeatingPlans": "Powtarzające się plany",
