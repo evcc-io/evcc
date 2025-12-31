@@ -103,10 +103,11 @@ type Loadpoint struct {
 	Priority    int            `mapstructure:"priority"` // Priority
 
 	// from yaml, deprecated
-	GuardDuration_ time.Duration `mapstructure:"guardduration"` // ignored, present for compatibility
-	Phases_        int           `mapstructure:"phases"`        // ignored, present for compatibility
-	MinCurrent_    float64       `mapstructure:"minCurrent"`    // ignored, present for compatibility
-	MaxCurrent_    float64       `mapstructure:"maxCurrent"`    // ignored, present for compatibility
+	GuardDuration_    time.Duration `mapstructure:"guardduration"`    // ignored, present for compatibility
+	Phases_           int           `mapstructure:"phases"`           // ignored, present for compatibility
+	MinCurrent_       float64       `mapstructure:"minCurrent"`       // ignored, present for compatibility
+	MaxCurrent_       float64       `mapstructure:"maxCurrent"`       // ignored, present for compatibility
+	PlanPrecondition_ int64         `mapstructure:"planPrecondition"` // ignored, present for compatibility
 
 	title                    string   // UI title
 	priority                 int      // Priority
