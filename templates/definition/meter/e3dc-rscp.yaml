@@ -72,11 +72,11 @@ render: |
   user: {{ .user }}
   password: {{ .password }}
   key: {{ .key }}
-  {{- if eq .usage "battery" }}
-  dischargelimit: {{ .dischargelimit }}
-  {{- include "battery-params" . }}
-  {{- end }}
   {{- if eq .usage "pv" }}
   maxacpower: {{ .maxacpower }} # W
   externalpower: {{ .externalpower }}
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  dischargelimit: {{ .dischargelimit }}
+  {{- include "battery-params" . }}
   {{- end }}
