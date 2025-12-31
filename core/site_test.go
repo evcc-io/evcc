@@ -192,3 +192,13 @@ func TestUpdateHomeConsumption(t *testing.T) {
 	s.updateHomeConsumption(1e3)
 	require.Equal(t, 0.0, s.householdEnergy.AccumulatedEnergy()) // accumulator reset after 15 minutes
 }
+
+func TestGetTariffWithNilTariffs(t *testing.T) {
+	s := &Site{
+		tariffs: nil,
+	}
+
+	// GetTariff should return nil when tariffs is nil instead of panicking
+	tariff := s.GetTariff(api.TariffUsagePlanner)
+	assert.Nil(t, tariff, "expected nil tariff when site.tariffs is nil")
+}
