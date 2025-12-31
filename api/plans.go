@@ -1,6 +1,9 @@
 package api
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 type RepeatingPlan struct {
 	Weekdays     []int  `json:"weekdays"`     // 0-6 (Sunday-Saturday)
@@ -14,4 +17,28 @@ type RepeatingPlan struct {
 type PlanStrategy struct {
 	Continuous   bool          `json:"continuous"`   // force continuous planning
 	Precondition time.Duration `json:"precondition"` // precondition duration in seconds
+}
+
+type planStrategy struct {
+	Continuous   bool `json:"continuous"`   // force continuous planning
+	Precondition int  `json:"precondition"` // precondition duration in seconds
+}
+
+func (ps *PlanStrategy) MarshalJSON() ([]byte, error) {
+	return json.Marshal(planStrategy{
+		Continuous:   ps.Continuous,
+		Precondition: int(ps.Precondition.Seconds()),
+	})
+}
+
+func (ps *PlanStrategy) UnmarshalJSON(bytes []byte) error {
+	var res planStrategy
+	if err := json.Unmarshal(bytes, &res); err != nil {
+		return err
+	}
+
+	ps.Continuous = res.Continuous
+	ps.Precondition = ps.Precondition * time.Second
+
+	return nil
 }
