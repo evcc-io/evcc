@@ -107,12 +107,12 @@ func planSocHandler(site site.API) http.HandlerFunc {
 		ts, precondition, soc = v.GetPlanSoc()
 
 		res := struct {
-			Soc          int       `json:"soc"`
-			Precondition int64     `json:"precondition"`
-			Time         time.Time `json:"time"`
+			Soc          int           `json:"soc"`
+			Precondition time.Duration `json:"precondition"`
+			Time         time.Time     `json:"time"`
 		}{
 			Soc:          soc,
-			Precondition: int64(precondition.Seconds()),
+			Precondition: precondition,
 			Time:         ts,
 		}
 

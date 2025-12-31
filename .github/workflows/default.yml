@@ -149,6 +149,8 @@ jobs:
 
       - name: Lint
         uses: golangci/golangci-lint-action@v9
+        env:
+          GOEXPERIMENT: jsonv2
         with:
           version: latest
           args: --timeout 5m

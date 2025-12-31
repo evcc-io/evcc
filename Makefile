@@ -46,23 +46,23 @@ ui::
 	npm run build
 
 assets::
-	go generate ./...
+	GOEXPERIMENT=jsonv2 go generate ./...
 
 docs::
-	go generate github.com/evcc-io/evcc/util/templates/...
+	GOEXPERIMENT=jsonv2 go generate github.com/evcc-io/evcc/util/templates/...
 
 lint::
-	golangci-lint run
-	go tool modernize -test -c 0 -stringsbuilder=false -omitzero=false ./...
+	GOEXPERIMENT=jsonv2 golangci-lint run
+	GOEXPERIMENT=jsonv2 go tool modernize -test -c 0 -stringsbuilder=false -omitzero=false ./...
 
 modernize:
-	go tool modernize -test -fix -stringsbuilder=false -omitzero=false ./...
+	GOEXPERIMENT=jsonv2 go tool modernize -test -fix -stringsbuilder=false -omitzero=false ./...
 
 lint-ui::
 	npm run lint
 
 license::
-	go run github.com/google/go-licenses/v2@latest check \
+	GOEXPERIMENT=jsonv2 go run github.com/google/go-licenses/v2@latest check \
 	--ignore github.com/cespare/xxhash \
 	--ignore github.com/coder/websocket \
 	--ignore github.com/cronokirby/saferith \
@@ -80,7 +80,7 @@ test-ui::
 
 test::
 	@echo "Running testsuite"
-	CGO_ENABLED=0 go test $(BUILD_TAGS) ./...
+	GOEXPERIMENT=jsonv2 CGO_ENABLED=0 go test $(BUILD_TAGS) ./...
 
 porcelain::
 	gofmt -w -l $$(find . -name '*.go')
@@ -89,7 +89,7 @@ porcelain::
 
 build::
 	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
-	CGO_ENABLED=0 go build -v $(BUILD_TAGS) $(BUILD_ARGS)
+	GOEXPERIMENT=jsonv2 CGO_ENABLED=0 go build -v $(BUILD_TAGS) $(BUILD_ARGS)
 
 snapshot::
 	goreleaser --snapshot --skip publish --clean

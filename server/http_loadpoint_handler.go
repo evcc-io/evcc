@@ -16,20 +16,11 @@ import (
 )
 
 type PlanResponse struct {
-	PlanId       int       `json:"planId"`
-	PlanTime     time.Time `json:"planTime"`
-	Duration     int64     `json:"duration"`
-	Precondition int64     `json:"precondition"`
-	Plan         api.Rates `json:"plan"`
-	Power        float64   `json:"power"`
-}
-
-type PlanPreviewResponse struct {
-	PlanTime     time.Time `json:"planTime"`
-	Duration     int64     `json:"duration"`
-	Precondition int64     `json:"precondition"`
-	Plan         api.Rates `json:"plan"`
-	Power        float64   `json:"power"`
+	PlanTime     time.Time     `json:"planTime"`
+	Duration     time.Duration `json:"duration"`
+	Precondition time.Duration `json:"precondition"`
+	Plan         api.Rates     `json:"plan"`
+	Power        float64       `json:"power"`
 }
 
 // planHandler returns the current plan
@@ -44,15 +35,19 @@ func planHandler(lp loadpoint.API) http.HandlerFunc {
 		requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower)
 		plan := lp.GetPlan(planTime, requiredDuration, precondition)
 
-		res := PlanResponse{
-			PlanId:       id,
-			PlanTime:     planTime,
-			Duration:     int64(requiredDuration.Seconds()),
-			Precondition: int64(precondition.Seconds()),
-			Plan:         plan,
-			Power:        maxPower,
+		res := struct {
+			PlanId       int `json:"planId"`
+			PlanResponse `json:",inline"`
+		}{
+			PlanId: id,
+			PlanResponse: PlanResponse{
+				PlanTime:     planTime,
+				Duration:     requiredDuration,
+				Precondition: precondition,
+				Plan:         plan,
+				Power:        maxPower,
+			},
 		}
-
 		jsonWrite(w, res)
 	}
 }
@@ -101,10 +96,10 @@ func staticPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 		requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower)
 		plan := lp.GetPlan(planTime, requiredDuration, precondition)
 
-		res := PlanPreviewResponse{
+		res := PlanResponse{
 			PlanTime:     planTime,
-			Duration:     int64(requiredDuration.Seconds()),
-			Precondition: int64(precondition.Seconds()),
+			Duration:     requiredDuration,
+			Precondition: precondition,
 			Plan:         plan,
 			Power:        maxPower,
 		}
@@ -153,10 +148,10 @@ func repeatingPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 		requiredDuration := lp.GetPlanRequiredDuration(soc, maxPower)
 		plan := lp.GetPlan(planTime, requiredDuration, precondition)
 
-		res := PlanPreviewResponse{
+		res := PlanResponse{
 			PlanTime:     planTime,
-			Duration:     int64(requiredDuration.Seconds()),
-			Precondition: int64(precondition.Seconds()),
+			Duration:     requiredDuration,
+			Precondition: precondition,
 			Plan:         plan,
 			Power:        maxPower,
 		}
@@ -197,12 +192,12 @@ func planEnergyHandler(lp loadpoint.API) http.HandlerFunc {
 		ts, precondition, energy := lp.GetPlanEnergy()
 
 		res := struct {
-			Energy       float64   `json:"energy"`
-			Precondition int64     `json:"precondition"`
-			Time         time.Time `json:"time"`
+			Energy       float64       `json:"energy"`
+			Precondition time.Duration `json:"precondition"`
+			Time         time.Time     `json:"time"`
 		}{
 			Energy:       energy,
-			Precondition: int64(precondition.Seconds()),
+			Precondition: precondition,
 			Time:         ts,
 		}
 
