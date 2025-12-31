@@ -28,12 +28,15 @@ params:
 
   - preset: tariff-base
 
+  - name: interval
+    default: 1h
+    advanced: true
+
 render: |
   type: custom
   {{ include "tariff-base" . }}
   forecast:
     source: http
-    cache: 1h
     uri: https://api.pstryk.pl/integrations/{{ .plan }}/?resolution=hour&window_start={{ `{{ now | mustDateModify "-24h" | date "2006-01-02" }}` }}&window_end={{ `{{ now | mustDateModify "+72h" | date "2006-01-02" }}` }}
     headers:
       Authorization: {{ .token }}
@@ -47,3 +50,4 @@ render: |
           value: .price_gross
         }
       ] | tostring
+  interval: {{ .interval }}
