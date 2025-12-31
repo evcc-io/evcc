@@ -1,4 +1,4 @@
-## external control via binary in put
+## external control via digital signal
 
 #type: relay
 #maxPower: 4200 # limit loadpoints to 4.2 kW total

@@ -4,89 +4,93 @@ products:
 group: generic
 requirements:
   description:
-    en: Requires a running Home Assistant instance with suitable vehicle entities and services. All values are Home Assistant entity IDs (e.g. `sensor.*`, `binary_sensor.*`, `number.*`, `script.*`)
-    de: Erfordert eine laufende Home Assistant Instanz mit passenden Fahrzeug-Entities und Services. Alle Werte sind Home Assistant Entity IDs (z.B. `sensor.*`, `binary_sensor.*`, `number.*`, `script.*`)
+    en: Home Assistant instances in your network will be auto-discovered and suitable vehicle entities and services (e.g. `sensor.*`) will be suggested.
+    de: Home Assistant Instanzen in deinem Netzwerk werden automatisch erkannt und passende Entitäten und Services (z.B. `sensor.*`) werden vorgeschlagen.
 auth:
   type: homeassistant
-  params: [home]
+  params: [uri]
 params:
   - preset: vehicle-common
   - name: uri
-    deprecated: true
+    description:
+      de: Home Assistant URI
+      en: Home Assistant URI
+    example: http://homeassistant.local:8123
+    help:
+      en: " " # overwrite default
+      de: " " # overwrite default
+    service: homeassistant/instances
+    required: true
   - name: token
     deprecated: true
   - name: home
-    description:
-      de: Home Assistant Instanz
-      en: Home Assistant Instance
-    service: homeassistant/homes
-    required: true
+    deprecated: true
   - name: soc
     description:
       de: Ladezustand [%]
       en: State of charge [%]
-    service: homeassistant/homes/{home}/entities?domain=sensor
+    service: homeassistant/entities?uri={uri}&domain=sensor
     example: "sensor.vehicle_soc"
     required: true
   - name: range
     description:
       de: Restreichweite [km]
       en: Remaining range [km]
-    service: homeassistant/homes/{home}/entities?domain=sensor
+    service: homeassistant/entities?uri={uri}&domain=sensor
     example: "sensor.vehicle_range"
   - name: status
     description:
       de: Ladestatus
       en: Charging status
-    service: homeassistant/homes/{home}/entities?domain=sensor
+    service: homeassistant/entities?uri={uri}&domain=sensor
     example: "sensor.vehicle_charging"
   - name: limitSoc
     description:
       de: Ziel-Ladezustand [%]
       en: Target state of charge [%]
-    service: homeassistant/homes/{home}/entities?domain=number,input_number
+    service: homeassistant/entities?uri={uri}&domain=number,input_number
     example: "number.vehicle_target_state_of_charge"
   - name: odometer
     description:
       de: Kilometerstand [km]
       en: Odometer [km]
-    service: homeassistant/homes/{home}/entities?domain=sensor
+    service: homeassistant/entities?uri={uri}&domain=sensor
     example: "sensor.vehicle_odometer"
   - name: climater
     description:
       de: Klimatisierung aktiv
       en: Climatisation active
-    service: homeassistant/homes/{home}/entities?domain=binary_sensor
+    service: homeassistant/entities?uri={uri}&domain=binary_sensor
     example: "binary_sensor.vehicle_climater"
   - name: finishTime
     description:
       de: Ladeende (ISO8601 oder Unix)
       en: Finish time (ISO8601 or Unix)
-    service: homeassistant/homes/{home}/entities?domain=sensor
+    service: homeassistant/entities?uri={uri}&domain=sensor
     example: "sensor.vehicle_finish_time"
   - name: start_charging
     description:
       de: Service zum Laden starten
       en: Service to start charging
-    service: homeassistant/homes/{home}/entities?domain=script
+    service: homeassistant/entities?uri={uri}&domain=script
     example: "script.vehicle_start_charge"
   - name: stop_charging
     description:
       de: Service zum Laden stoppen
       en: Service to stop charging
-    service: homeassistant/homes/{home}/entities?domain=script
+    service: homeassistant/entities?uri={uri}&domain=script
     example: "script.vehicle_stop_charge"
   - name: wakeup
     description:
       de: Service zum Aufwecken
       en: Service to wake up vehicle
-    service: homeassistant/homes/{home}/entities?domain=script
+    service: homeassistant/entities?uri={uri}&domain=script
     example: "script.vehicle_wakeup"
   - name: setMaxCurrent
     description:
       de: Ladestromstärke setzen [A]
       en: Set charging current [A]
-    service: homeassistant/homes/{home}/entities?domain=number,input_number
+    service: homeassistant/entities?uri={uri}&domain=number,input_number
     example: "number.vehicle_charging_current"
   - preset: vehicle-features
   - name: streaming
@@ -95,7 +99,8 @@ render: |
   type: homeassistant
   {{ include "vehicle-common" . }}
   {{ include "vehicle-features" . }}
-  home: {{ .home }}
+  uri: {{ .uri }}
+  home: {{ .home }} # deprecated
   sensors:
     soc: {{ .soc }}
     range: {{ .range }}

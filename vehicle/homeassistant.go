@@ -23,11 +23,11 @@ func init() {
 
 // Constructor from YAML config
 func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error) {
-	cc := struct {
+	var cc struct {
 		embed   `mapstructure:",squash"`
-		_URI    string `mapstructure:"uri"`   // TODO deprecated
-		_Token  string `mapstructure:"token"` // TODO deprecated
-		Home    string
+		URI     string
+		Token_  string `mapstructure:"token"` // TODO deprecated
+		Home    string // TODO deprecated
 		Sensors struct {
 			Soc        string // required
 			Range      string // optional
@@ -43,8 +43,6 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 			Wakeup        string // script.* optional
 			SetMaxCurrent string // number.* or input_number.* optional
 		}
-	}{
-		Home: "Home",
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -56,7 +54,8 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 	}
 
 	log := util.NewLogger("ha-vehicle")
-	conn, err := homeassistant.NewConnection(log, cc.Home)
+
+	conn, err := homeassistant.NewConnection(log, cc.URI, cc.Home)
 	if err != nil {
 		return nil, err
 	}

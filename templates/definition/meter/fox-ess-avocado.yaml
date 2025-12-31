@@ -3,6 +3,9 @@ products:
   - brand: FoxESS
     description:
       generic: Avocado
+  - brand: Solakon
+    description:
+      generic: ONE
 capabilities: ["battery-control"]
 params:
   - name: usage

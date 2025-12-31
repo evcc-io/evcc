@@ -121,15 +121,16 @@
 			:id="formId('modbusDevice')"
 			:label="$t('config.modbus.device')"
 			:help="$t('config.modbus.deviceHint')"
+			data-testid="modbus-device"
 		>
 			<PropertyField
 				:id="formId('modbusDevice')"
+				v-model:model-value="deviceModel"
 				property="device"
 				type="String"
 				class="me-2"
 				required
-				:model-value="device"
-				@change="$emit('update:device', $event.target.value)"
+				:service-values="deviceServiceValues"
 			/>
 		</FormRow>
 		<FormRow :id="formId('modbusBaudrate')" :label="$t('config.modbus.baudrate')">
@@ -165,6 +166,7 @@ import FormRow from "../FormRow.vue";
 import PropertyField from "../PropertyField.vue";
 import type { PropType } from "vue";
 import type { ModbusCapability } from "./index";
+import { loadServiceValues } from "./index";
 import {
 	MODBUS_BAUDRATE,
 	MODBUS_COMSET,
@@ -177,6 +179,7 @@ export default defineComponent({
 	name: "Modbus",
 	components: { FormRow, PropertyField },
 	props: {
+		componentId: { type: String, required: true },
 		capabilities: {
 			type: Array as PropType<ModbusCapability[]>,
 			default: () => [],
@@ -209,9 +212,20 @@ export default defineComponent({
 			protocol: MODBUS_PROTOCOL.TCP as MODBUS_PROTOCOL,
 			MODBUS_PROTOCOL,
 			MODBUS_CONNECTION,
+			deviceServiceValues: [] as string[],
+			localDevice: undefined as string | undefined,
 		};
 	},
 	computed: {
+		deviceModel: {
+			get(): string | undefined {
+				return this.localDevice !== undefined ? this.localDevice : this.device;
+			},
+			set(value: string | undefined) {
+				this.localDevice = value;
+				this.$emit("update:device", value);
+			},
+		},
 		selectedModbus(): MODBUS_TYPE {
 			if (this.connection === MODBUS_CONNECTION.SERIAL) {
 				return MODBUS_TYPE.RS485_SERIAL;
@@ -254,10 +268,21 @@ export default defineComponent({
 				this.setConnectionAndProtocolByModbus(newValue);
 			}
 		},
+		connection() {
+			this.applyServiceDefault();
+		},
+		device(newValue: string | undefined) {
+			// Sync prop to local state
+			if (newValue !== this.localDevice) {
+				this.localDevice = newValue;
+			}
+		},
 	},
 	mounted() {
+		this.localDevice = this.device;
 		this.setConnectionAndProtocolByModbus(this.modbus);
 		this.$emit("update:modbus", this.selectedModbus);
+		this.updateServiceValues();
 	},
 	methods: {
 		setProtocolByCapabilities(capabilities: ModbusCapability[]) {
@@ -282,7 +307,21 @@ export default defineComponent({
 			}
 		},
 		formId(name: string): string {
-			return `${name}-${this.id}`;
+			return `${name}-${this.componentId}`;
+		},
+		async updateServiceValues() {
+			this.deviceServiceValues = await loadServiceValues("hardware/serial");
+			this.applyServiceDefault();
+		},
+		applyServiceDefault() {
+			// auto-apply device value if it's needed and exactly one option exists
+			if (
+				this.connection === MODBUS_CONNECTION.SERIAL &&
+				this.deviceServiceValues.length === 1 &&
+				!this.device
+			) {
+				this.deviceModel = this.deviceServiceValues[0];
+			}
 		},
 	},
 });

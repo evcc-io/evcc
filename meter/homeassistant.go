@@ -24,9 +24,9 @@ func init() {
 // NewHomeAssistantFromConfig creates a HomeAssistant meter from generic config
 func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
 	cc := struct {
-		_URI     string `mapstructure:"uri"`   // TODO deprecated
-		_Token   string `mapstructure:"token"` // TODO deprecated
-		Home     string
+		URI      string
+		Token_   string `mapstructure:"token"` // TODO deprecated
+		Home     string // TODO deprecated
 		Power    string
 		Energy   string
 		Currents []string
@@ -41,7 +41,6 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
 		batterySocLimits   `mapstructure:",squash"`
 		batteryPowerLimits `mapstructure:",squash"`
 	}{
-		Home: "Home",
 		batterySocLimits: batterySocLimits{
 			MinSoc: 20,
 			MaxSoc: 95,
@@ -57,7 +56,8 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
 	}
 
 	log := util.NewLogger("ha-meter")
-	conn, err := homeassistant.NewConnection(log, cc.Home)
+
+	conn, err := homeassistant.NewConnection(log, cc.URI, cc.Home)
 	if err != nil {
 		return nil, err
 	}

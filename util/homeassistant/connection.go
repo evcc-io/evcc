@@ -22,10 +22,21 @@ type Connection struct {
 }
 
 // NewConnection creates a new Home Assistant connection
-func NewConnection(log *util.Logger, home string) (*Connection, error) {
+func NewConnection(log *util.Logger, uri, home string) (*Connection, error) {
+	if home != "" {
+		log.WARN.Printf("using deprecated 'home' parameter '%s', please use 'uri' instead", home)
+	}
+
+	if uri == "" && home == "" {
+		return nil, errors.New("missing either uri or home")
+	}
+
 	c := &Connection{
-		Helper:   request.NewHelper(log),
-		instance: &proxyInstance{home: home},
+		Helper: request.NewHelper(log),
+		instance: &proxyInstance{
+			home: home,
+			uri:  uri,
+		},
 	}
 
 	// Set up authentication headers
@@ -134,6 +145,7 @@ var chargeStatusMap = map[string]api.ChargeStatus{
 	"complete":           api.StatusB,
 	"stopped":            api.StatusB,
 	"starting":           api.StatusB,
+	"paused":             api.StatusB,
 
 	// Status A - Disconnected
 	"a":                   api.StatusA,

@@ -17,7 +17,8 @@ func (inst *proxyInstance) URI() string {
 	inst.mu.Lock()
 	defer inst.mu.Unlock()
 
-	if inst.uri == "" {
+	if inst.uri == "" && inst.home != "" {
+		// Try to resolve home name to URI (backward compatibility)
 		inst.uri = instanceUriByName(inst.home)
 
 		if inst.uri == "" {
@@ -31,14 +32,17 @@ func (inst *proxyInstance) URI() string {
 func (inst *proxyInstance) Token() (*oauth2.Token, error) {
 	uri := inst.URI()
 	if uri == "" {
-		return nil, fmt.Errorf("unknown instance: %s", inst.home)
+		if inst.home != "" {
+			return nil, fmt.Errorf("unknown instance: %s", inst.home)
+		}
+		return nil, fmt.Errorf("no URI configured")
 	}
 
 	inst.mu.Lock()
 	defer inst.mu.Unlock()
 
 	if inst.TokenSource == nil {
-		ts, err := NewHomeAssistant(inst.home, uri)
+		ts, err := NewHomeAssistant(uri)
 		if err != nil {
 			return nil, err
 		}

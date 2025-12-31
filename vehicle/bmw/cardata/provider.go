@@ -190,15 +190,18 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 		status = api.StatusB
 	}
 
-	hv, err := v.String("vehicle.drivetrain.electricEngine.charging.hvStatus")
-	if err != nil || hv == "" || hv == "INVALID" {
-		hv, err = v.String("vehicle.drivetrain.electricEngine.charging.status")
+	// evaluate status first, since it's usually available through
+	// mqtt, while hvStatus might only be available through rest
+	// (https://github.com/evcc-io/evcc/pull/26235)
+	cs, err := v.String("vehicle.drivetrain.electricEngine.charging.status")
+	if err != nil || cs == "" {
+		cs, err = v.String("vehicle.drivetrain.electricEngine.charging.hvStatus")
 	}
 
 	if slices.Contains([]string{
-		"CHARGING",       // vehicle.drivetrain.electricEngine.charging.hvStatus
 		"CHARGINGACTIVE", // vehicle.drivetrain.electricEngine.charging.status
-	}, hv) {
+		"CHARGING",       // vehicle.drivetrain.electricEngine.charging.hvStatus
+	}, cs) {
 		return api.StatusC, nil
 	}
 

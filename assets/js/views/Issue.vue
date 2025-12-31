@@ -107,18 +107,44 @@
 									required
 								></textarea>
 							</div>
-							<div class="mb-4">
-								<label for="version" class="form-label">
-									{{ $t("issue.version") }}
-								</label>
-								<input
-									id="version"
-									v-model="versionString"
-									type="text"
-									class="form-control"
-									required
-									readonly
-								/>
+							<div class="row mb-4">
+								<div class="col-12 col-md-4 mb-4 mb-md-0">
+									<label for="version" class="form-label">
+										{{ $t("issue.version") }}
+									</label>
+									<input
+										id="version"
+										v-model="versionString"
+										type="text"
+										class="form-control"
+										required
+										readonly
+									/>
+								</div>
+								<div class="col-12 col-md-4 mb-4 mb-md-0">
+									<label for="system" class="form-label">
+										{{ $t("issue.system") }}
+									</label>
+									<input
+										id="system"
+										v-model="systemString"
+										type="text"
+										class="form-control"
+										readonly
+									/>
+								</div>
+								<div class="col-12 col-md-4">
+									<label for="timezone" class="form-label">
+										{{ $t("issue.timezone") }}
+									</label>
+									<input
+										id="timezone"
+										v-model="timezoneString"
+										type="text"
+										class="form-control"
+										readonly
+									/>
+								</div>
 							</div>
 							<div class="text-end">
 								<small class="text-muted">* required</small>
@@ -299,6 +325,7 @@ import store from "@/store";
 import { LOG_LEVELS, DEFAULT_LOG_LEVEL } from "@/utils/log";
 import { formatJson } from "@/components/Issue/format";
 import type { HelpType, IssueData } from "@/components/Issue/types";
+import type { State } from "@/types/evcc";
 
 // Keys that should be expanded (1-level expansion for arrays and objects)
 const EXPAND_KEYS = [
@@ -361,6 +388,12 @@ export default defineComponent({
 		versionString(): string {
 			return `v${store.state.version || ""}`;
 		},
+		systemString(): string {
+			return store.state.system || "";
+		},
+		timezoneString(): string {
+			return store.state.timezone || "";
+		},
 		configPath(): string | undefined {
 			return store.state.config;
 		},
@@ -368,7 +401,12 @@ export default defineComponent({
 			return store.state.database;
 		},
 		issueData(): IssueData {
-			return { ...this.issue, version: this.versionString };
+			return {
+				...this.issue,
+				version: this.versionString,
+				system: this.systemString,
+				timezone: this.timezoneString,
+			};
 		},
 		logAreaOptions() {
 			return this.logAvailableAreas.map((area) => ({ name: area, value: area }));
@@ -467,7 +505,6 @@ export default defineComponent({
 					"config/eebus",
 					"config/hems",
 					"config/messaging",
-					"config/modbusproxy",
 					"config/tariffs",
 				];
 
@@ -494,6 +531,14 @@ export default defineComponent({
 						console.error(`Failed to fetch ${endpoint}:`, error);
 					}
 				}
+
+				// read essential config data from state
+				["modbusproxy", "mqtt", "influx", "shm", "interval"].forEach((key) => {
+					const value = store.state[key as keyof State];
+					if (value) {
+						configs[key] = value;
+					}
+				});
 
 				this.sections.uiConfig.content = formatJson(configs, EXPAND_KEYS);
 			} catch (error) {

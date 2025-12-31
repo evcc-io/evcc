@@ -108,19 +108,11 @@ func NewOpenWbNative(ctx context.Context, uri, device, comset string, baudrate i
 	if err := rpio.Open(); err != nil {
 		return nil, fmt.Errorf("failed to open GPIO: %w", err)
 	}
+	defer rpio.Close()
 
 	for _, pin := range structs.Fields(native.ChargePoints[connector-1]) {
 		rpio.Pin(pin.Value().(int)).Output()
 	}
-
-	// close GPIO when context is cancelled
-	go func() {
-		<-ctx.Done()
-		log.DEBUG.Println("context canceled, closing GPIO")
-		if err := rpio.Close(); err != nil {
-			log.ERROR.Printf("error closing GPIO: %v", err)
-		}
-	}()
 
 	return decorateOpenWbNative(wb, phases1p3p, identify), nil
 }
@@ -160,6 +152,11 @@ func (wb *OpenWbNative) WakeUp() error {
 
 // runGpioSequence executes a sequence of GPIO operations
 func (wb *OpenWbNative) runGpioSequence(seq []gpioAction) error {
+	if err := rpio.Open(); err != nil {
+		return fmt.Errorf("failed to open GPIO: %w", err)
+	}
+	defer rpio.Close()
+
 	if err := wb.Enable(false); err != nil {
 		return err
 	}

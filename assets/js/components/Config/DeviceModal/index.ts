@@ -1,6 +1,6 @@
 import type { DeviceType, MODBUS_COMSET, MeterTemplateUsage } from "@/types/evcc";
 import { ConfigType } from "@/types/evcc";
-import api, { baseApi } from "@/api";
+import api from "@/api";
 import { extractPlaceholders, replacePlaceholders } from "@/utils/placeholder";
 
 export type Product = {
@@ -78,11 +78,6 @@ export type AuthCheckResponse = {
   authId?: string;
 };
 
-export type ProviderLoginResponse = {
-  loginUri?: string;
-  error?: string;
-};
-
 export function handleError(e: any, msg: string) {
   console.error(e);
   let message = msg;
@@ -90,8 +85,6 @@ export function handleError(e: any, msg: string) {
   if (error) message += `: ${error}`;
   alert(message);
 }
-
-export const timeout = 15000;
 
 export function applyDefaultsFromTemplate(template: Template | null, values: DeviceValues) {
   const params = template?.Params || [];
@@ -116,10 +109,11 @@ export function customChargerName(type: ConfigType, isHeating: boolean) {
 
 export async function loadServiceValues(path: string) {
   try {
-    const response = await api.get(`/config/service/${path}`);
+    const response = await api.get(`/config/service/${path}`, {
+      validateStatus: (status) => status >= 200 && status < 500,
+    });
     return (response.data as string[]) || [];
-  } catch (e) {
-    console.error(e);
+  } catch {
     return [];
   }
 }
@@ -169,7 +163,10 @@ export const fetchServiceValues = async (
         return;
       }
       const url = endpoint.url(params);
-      result[endpoint.name] = await loadServiceValues(url);
+      const data = await loadServiceValues(url);
+      if (data) {
+        result[endpoint.name] = data;
+      }
     })
   );
 
@@ -182,7 +179,7 @@ export function createDeviceUtils(deviceType: DeviceType) {
     if (id !== undefined) {
       url += `/merge/${id}`;
     }
-    return api.post(url, data, { timeout });
+    return api.post(url, data);
   }
 
   function update(id: number, data: any, force = false) {
@@ -247,22 +244,6 @@ export function createDeviceUtils(deviceType: DeviceType) {
     return { success: false, error: "unexpected error" };
   }
 
-  async function getAuthProviderUrl(authId: string): Promise<string> {
-    try {
-      const url = `providerauth/login?id=${encodeURIComponent(authId)}`;
-      const { status, data = {} } = await baseApi.get(url, {
-        validateStatus: (code) => [200, 400].includes(code),
-      });
-      //return "https://test.example.org/auth";
-      if (status === 200) {
-        return data?.loginUri;
-      }
-      throw new Error(data?.error ?? "unknown error");
-    } catch (error) {
-      throw new Error((error as Error).message ?? "unknown error");
-    }
-  }
-
   return {
     test,
     update,
@@ -273,6 +254,5 @@ export function createDeviceUtils(deviceType: DeviceType) {
     loadTemplate,
     loadServiceValues,
     checkAuth,
-    getAuthProviderUrl,
   };
 }
