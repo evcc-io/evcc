@@ -1077,7 +1077,7 @@ CONTINUE:
 		}
 
 		if slices.ContainsFunc(loadpoints, func(lp *core.Loadpoint) bool {
-			return lp.GetCircuit() == instance
+			return lp != nil && lp.GetCircuit() == instance
 		}) {
 			continue CONTINUE
 		}
