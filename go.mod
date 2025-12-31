@@ -44,7 +44,7 @@ require (
 	github.com/go-playground/validator/v10 v10.30.1
 	github.com/go-telegram/bot v1.17.0
 	github.com/go-viper/mapstructure/v2 v2.4.0
-	github.com/godbus/dbus/v5 v5.2.1
+	github.com/godbus/dbus/v5 v5.2.2
 	github.com/gokrazy/updater v0.0.0-20250705135802-db129c40879c
 	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/google/go-github/v32 v32.1.0
@@ -101,7 +101,7 @@ require (
 	github.com/tess1o/go-ecoflow v1.1.1-0.20251003083510-2ccc15a17e29
 	github.com/traefik/yaegi v0.16.1
 	github.com/tv42/httpunix v0.0.0-20191220191345-2ba4b9c3382c
-	github.com/volkszaehler/mbmd v0.0.0-20251228085056-b1bd55f85b18
+	github.com/volkszaehler/mbmd v0.0.0-20251230155010-64e026667a91
 	github.com/writeas/go-strip-markdown/v2 v2.1.1
 	gitlab.com/bboehmke/sunny v0.16.0
 	go.bug.st/serial v1.6.4
@@ -251,7 +251,7 @@ require (
 	modernc.org/libc v1.66.10 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
-	modernc.org/sqlite v1.42.1 // indirect
+	modernc.org/sqlite v1.42.2 // indirect
 )
 
 tool (

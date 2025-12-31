@@ -2,7 +2,9 @@
   "authProviders": {
     "authCode": "Autentiseringskod",
     "authCodeHelp": "Kopiera koden och använd i nästa steg. Giltig i {duration}.",
+    "authorizationFailed": "Auktorisering misslyckades",
     "authorizationRequired": "Auktorisering erfordras",
+    "authorizationSuccessful": "Auktorisering lyckades",
     "buttonConnect": "Anslut till {provider}",
     "buttonDisconnect": "Koppla från",
     "confirmLogout": "Är du säker på att du vill koppla från {title}?",
@@ -97,8 +99,8 @@
     },
     "control": {
       "description": "Standardvärdena är vanligtsvis ok. Ändra bara om du vet vad du gör.",
-      "descriptionInterval": "Uppdateringsintervall i sekunder. Definierar hur ofta evcc läser in data, ändrar laddeffekt och uppdaterar UI. Korta intervall (<30s) kan orsaka självsvängning och andra felaktiga resultat.",
-      "descriptionResidualPower": "Flyttar fokuspunkt på kontrolloopen. Om du har ett hemmabatteri så rekommenderas att ha ett värde på minst 100 W. Då får batteriet lite högre prioritet jämfört med nätanvändning.",
+      "descriptionInterval": "Uppdateringscykel i sekunder. Definierar hur ofta evcc läser mätardata och justerar laddeffekt. Standardvärdet på 30 sekunder är ett tryggt val. Enheter som fordon, laddboxar och växelriktare behöver vanligtvis flera sekunder för att anpassa sitt beteende. Om dina komponenter reagerar snabbt kan du använda lägre värden. Vi rekommenderar starkt att inte gå under 10 sekunder. Om du observerar ostadigt reglerbeteende eller hoppande effektvärden, välj ett större intervall.",
+      "descriptionResidualPower": "Flyttar reglerslingans arbetspunkt. Standardvärdet på 100 W ger hembatterier lite högre prioritet framför nätanvändning. Om du inte har ett batteri kan du ställa in detta till 0 W för att minimera nätförbrukningen i solcellsläget.",
       "labelInterval": "Uppdateringsintervall",
       "labelResidualPower": "Kvarvarande effekt",
       "title": "Kontrollera beteende"
@@ -172,6 +174,10 @@
     "eebus": {
       "description": "Inställning som tillåter evcc att kommunicera med andra EEBus-enheter.",
       "title": "EEBus"
+    },
+    "experimental": {
+      "description": "Aktivera användargränssnittet för funktioner som fortfarande testas och kan komma att ändras i framtida versioner.",
+      "title": "Experimentell"
     },
     "ext": {
       "description": "Registrerar energivärden för brukare som inte hanteras av evcc (t.ex. kylskåp, tvättmaskin etc.) för statistiska ändamål. Mätarna kan också användas för lastreglering (t.ex. underdistribution).",
@@ -381,6 +387,8 @@
       "title": "Inställningar",
       "unconfigured": "ej konfigurerad",
       "vehicles": "Mina fordon",
+      "welcomeBannerText": "Börja med att skapa en **laddare eller värmare**. Om du inte har en riktig laddare ännu, välj en **demoladdare**.",
+      "welcomeBannerTitle": "Låt oss konfigurera ditt system!",
       "yaml": "Konfigurera i evcc.yaml. Kan inte ändras i UI."
     },
     "messaging": {
@@ -840,6 +848,8 @@
       "stepTwo": "Steg 2: Kopiera ytterligare information",
       "title": "GitHub problemöversikt"
     },
+    "system": "System",
+    "timezone": "Tidzon",
     "title": "Rapportera ett problem",
     "version": "Version"
   },
@@ -1210,7 +1220,7 @@
     },
     "hiddenFeatures": {
       "label": "Experimentella funktioner",
-      "value": "Visa experimentella UI-funktioner."
+      "value": "Visa experimentella funktioner."
     },
     "language": {
       "auto": "Automatisk",
