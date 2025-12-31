@@ -166,7 +166,7 @@ export const createServiceEndpoints = (params: TemplateParam[]): ParamService[] 
       return {
         name: param.Name,
         service: param.Service,
-        dependencies: extractPlaceholders(param.Service).filter((dep) => dep !== "modbus"),
+        dependencies: extractPlaceholders(param.Service),
         url: (values: Record<string, any>) =>
           replacePlaceholders(expandModbus(param.Service!, values), stringValues(values)),
       } as ParamService;
@@ -183,25 +183,17 @@ export const fetchServiceValues = async (
 
   await Promise.all(
     endpoints.map(async (endpoint) => {
-      const expandedService = expandModbus(endpoint.service, values);
-
-      // Skip if {modbus} wasn't expanded
-      if (expandedService.includes("{modbus}")) {
+      const expanded = expandModbus(endpoint.service, values);
+      if (expanded.includes("{modbus}")) {
+        // Connection type not yet selected
         return;
       }
-
-      const actualDeps = extractPlaceholders(expandedService);
-      const params: Record<string, any> = {};
-      actualDeps.forEach((dep) => {
-        if (values[dep] !== undefined) {
-          params[dep] = values[dep];
-        }
-      });
-      if (Object.keys(params).length !== actualDeps.length) {
+      const actualDeps = extractPlaceholders(expanded);
+      const allPresent = actualDeps.every((dep) => values[dep]);
+      if (!allPresent) {
         return;
       }
-
-      const url = endpoint.url(params);
+      const url = endpoint.url(values);
       const data = await loadServiceValues(url);
       if (data) {
         result[endpoint.name] = data;
