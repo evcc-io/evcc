@@ -132,20 +132,15 @@ func findContinuousWindow(rates api.Rates, effectiveDuration time.Duration, targ
 	var bestCost *float64
 	var bestIndex *int
 
-	// helper to calculate window cost
-	windowCost := func(slots api.Rates) float64 {
-		return lo.SumBy(slots, func(r api.Rate) float64 {
-			return float64(r.End.Sub(r.Start)) * r.Value
-		})
-	}
-
 	for i := range rates {
 		windowEnd := rates[i].Start.Add(effectiveDuration)
 		if windowEnd.After(targetTime) {
 			break
 		}
 
-		cost := windowCost(clampRates(rates[i:], rates[i].Start, windowEnd))
+		cost := lo.SumBy(clampRates(rates[i:], rates[i].Start, windowEnd), func(r api.Rate) float64 {
+			return float64(r.End.Sub(r.Start)) * r.Value
+		})
 
 		// prefer later start if equal cost
 		if bestCost == nil || cost <= *bestCost {
@@ -161,13 +156,10 @@ func findContinuousWindow(rates api.Rates, effectiveDuration time.Duration, targ
 	windowStart := rates[*bestIndex].Start
 	windowEnd := windowStart.Add(effectiveDuration)
 
-	// shift window late if it results in equal or lower cost
+	// shift late if target slot (-1s to get containing slot) is equal or cheaper
 	if windowEnd.Before(targetTime) {
-		lateStart := targetTime.Add(-effectiveDuration)
-		lateCost := windowCost(clampRates(rates[*bestIndex:], lateStart, targetTime))
-
-		if lateCost <= *bestCost {
-			windowStart = lateStart
+		if SlotAt(targetTime.Add(-time.Second), rates).Value <= SlotAt(windowStart, rates).Value {
+			windowStart = targetTime.Add(-effectiveDuration)
 			windowEnd = targetTime
 		}
 	}
