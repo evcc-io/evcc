@@ -6,86 +6,63 @@ products:
 
 params:
   - name: usage
-    choice: ["grid", "pv", "charge"]
+    choice: ["grid"]
   - name: host
   - name: cache
     advanced: true
     default: 1s
 
 render: |
+  {{- define "uri" -}}
+  http://{{ .host }}/state
+  {{- end }}
   type: custom
-
-  # ------ TOTAL POWER [W] ------
   power:
     source: http
-    uri: http://{{ .host }}/state
+    uri: {{ include "uri" . }}
+    jq: .multiSensor.sensors[] | select(.id==0 and .type=="activePower") | .value
     cache: {{ .cache }}
-    jq: |
-      .multiSensor.sensors[]
-      | select(.id==0 and .type=="activePower")
-      | .value
-
-  # ------ TOTAL ENERGY [kWh] ------
   energy:
     source: http
-    uri: http://{{ .host }}/state
+    uri: {{ include "uri" . }}
+    jq: ((.multiSensor.sensors[] | select(.id==0 and .type=="forwardActiveEnergy") | .value) / 1000)
     cache: {{ .cache }}
-    jq: |
-      (.multiSensor.sensors[]
-        | select(.id==0 and .type=="forwardActiveEnergy")
-        | .value) as $wh
-      | ($wh/1000)
-
-  # ------ PHASE CURRENTS [A] (L1/L2/L3) ------
   currents:
   - source: http
-    uri: http://{{ .host }}/state
+    uri: {{ include "uri" . }}
+    jq: ((.multiSensor.sensors[] | select(.id==1 and .type=="current") | .value // 0) / 1000)
     cache: {{ .cache }}
-    jq: |
-      ( .multiSensor.sensors[] | select(.id==1 and .type=="current") | .value // 0 ) / 1000
   - source: http
-    uri: http://{{ .host }}/state
+    uri: {{ include "uri" . }}
+    jq: ((.multiSensor.sensors[] | select(.id==2 and .type=="current") | .value // 0) / 1000)
     cache: {{ .cache }}
-    jq: |
-      ( .multiSensor.sensors[] | select(.id==2 and .type=="current") | .value // 0 ) / 1000
   - source: http
-    uri: http://{{ .host }}/state
+    uri: {{ include "uri" . }}
+    jq: ((.multiSensor.sensors[] | select(.id==3 and .type=="current") | .value // 0) / 1000)
     cache: {{ .cache }}
-    jq: |
-      ( .multiSensor.sensors[] | select(.id==3 and .type=="current") | .value // 0 ) / 1000
-
-  # ------ PHASE VOLTAGES [V] (L1/L2/L3) ------
   voltages:
   - source: http
-    uri: http://{{ .host }}/state
+    uri: {{ include "uri" . }}
+    jq: ((.multiSensor.sensors[] | select(.id==1 and .type=="voltage") | .value // 0) / 10)
     cache: {{ .cache }}
-    jq: |
-      ( .multiSensor.sensors[] | select(.id==1 and .type=="voltage") | .value // 0 ) / 10
   - source: http
-    uri: http://{{ .host }}/state
+    uri: {{ include "uri" . }}
+    jq: ((.multiSensor.sensors[] | select(.id==2 and .type=="voltage") | .value // 0) / 10)
     cache: {{ .cache }}
-    jq: |
-      ( .multiSensor.sensors[] | select(.id==2 and .type=="voltage") | .value // 0 ) / 10
   - source: http
-    uri: http://{{ .host }}/state
+    uri: {{ include "uri" . }}
+    jq: ((.multiSensor.sensors[] | select(.id==3 and .type=="voltage") | .value // 0) / 10)
     cache: {{ .cache }}
-    jq: |
-      ( .multiSensor.sensors[] | select(.id==3 and .type=="voltage") | .value // 0 ) / 10
-
-  # ------ PHASE POWERS [W] (opcjonalne, ale przydatne) ------
   powers:
   - source: http
-    uri: http://{{ .host }}/state
+    uri: {{ include "uri" . }}
+    jq: (.multiSensor.sensors[] | select(.id==1 and .type=="activePower") | .value // 0)
     cache: {{ .cache }}
-    jq: |
-      ( .multiSensor.sensors[] | select(.id==1 and .type=="activePower") | .value // 0 )
   - source: http
-    uri: http://{{ .host }}/state
+    uri: {{ include "uri" . }}
+    jq: (.multiSensor.sensors[] | select(.id==2 and .type=="activePower") | .value // 0)
     cache: {{ .cache }}
-    jq: |
-      ( .multiSensor.sensors[] | select(.id==2 and .type=="activePower") | .value // 0 )
   - source: http
-    uri: http://{{ .host }}/state
+    uri: {{ include "uri" . }}
+    jq: (.multiSensor.sensors[] | select(.id==3 and .type=="activePower") | .value // 0)
     cache: {{ .cache }}
-    jq: |
-      ( .multiSensor.sensors[] | select(.id==3 and .type=="activePower") | .value // 0 )
