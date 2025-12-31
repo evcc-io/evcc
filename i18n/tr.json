@@ -887,11 +887,12 @@
       "modalTitle": "Doldurma Planı",
       "none": "yok",
       "planNumber": "Plan {number}",
-      "preconditionDescription": "Batarya ön ısıtması için kalkıştan önce {duration} doldur.",
-      "preconditionLong": "Geç doldurma",
-      "preconditionOptionAll": "hepsi",
-      "preconditionOptionNo": "hayır",
-      "preconditionShort": "Geç",
+      "precondition": {
+        "description": "Batarya ön ısıtması için kalkıştan önce {duration} doldur.",
+        "label": "Geç doldurma",
+        "optionAll": "hepsi",
+        "optionNo": "hayır"
+      },
       "remove": "Kaldır",
       "repeating": "“tekrarlanan”",
       "repeatingPlans": "“Tekrarlanan planlar”",

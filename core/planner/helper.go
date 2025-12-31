@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/samber/lo"
 )
 
 // Start returns the earliest slot's start time
@@ -46,6 +47,9 @@ func AverageCost(plan api.Rates) float64 {
 		duration += slotDuration
 		cost += float64(slotDuration) * slot.Value
 	}
+	if duration == 0 {
+		return 0
+	}
 	return cost / float64(duration)
 }
 
@@ -79,4 +83,79 @@ func IsFirst(r api.Rate, plan api.Rates) bool {
 		}
 	}
 	return true
+}
+
+// clampRates filters rates to the given time window and adjusts boundary slots
+func clampRates(rates api.Rates, start, end time.Time) api.Rates {
+	res := make(api.Rates, 0, len(rates)+2)
+
+	for _, r := range rates {
+		// slot before continuous plan
+		if !r.End.After(start) {
+			continue
+		}
+
+		// slot after continuous plan
+		if !r.Start.Before(end) {
+			continue
+		}
+
+		// calculate adjusted bounds
+		adjustedStart := r.Start
+		if adjustedStart.Before(start) {
+			adjustedStart = start
+		}
+
+		adjustedEnd := r.End
+		if adjustedEnd.After(end) {
+			adjustedEnd = end
+		}
+
+		// skip if adjustment would create invalid slot
+		if !adjustedEnd.After(adjustedStart) {
+			continue
+		}
+
+		slot := r
+		slot.Start = adjustedStart
+		slot.End = adjustedEnd
+		res = append(res, slot)
+	}
+
+	return res
+}
+
+// findContinuousWindow finds the cheapest continuous window of slots for the given duration.
+// - rates are filtered to [now, targetTime] window by caller
+// Returns the selected rates.
+func findContinuousWindow(rates api.Rates, effectiveDuration time.Duration, targetTime time.Time) api.Rates {
+	var bestCost *float64
+	var bestIndex *int
+
+	for i := range rates {
+		windowEnd := rates[i].Start.Add(effectiveDuration)
+		if windowEnd.After(targetTime) {
+			break
+		}
+
+		cost := lo.SumBy(clampRates(rates[i:], rates[i].Start, windowEnd), func(r api.Rate) float64 {
+			return float64(r.End.Sub(r.Start)) * r.Value
+		})
+
+		// Prefer later start if equal cost
+		if bestCost == nil || cost <= *bestCost {
+			bestCost = &cost
+			bestIndex = &i
+		}
+	}
+
+	// No valid window found
+	if bestIndex == nil {
+		return nil
+	}
+
+	// Build the best window only once
+	windowEnd := rates[*bestIndex].Start.Add(effectiveDuration)
+
+	return clampRates(rates[*bestIndex:], rates[*bestIndex].Start, windowEnd)
 }
