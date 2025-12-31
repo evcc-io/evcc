@@ -10,7 +10,7 @@
 						:name="chargerIcon"
 						class="me-2 flex-shrink-0"
 					/>
-					<div class="text-truncate" data-bs-toggle="tooltip">
+					<div class="text-truncate">
 						{{ loadpointTitle }}
 					</div>
 				</h3>
