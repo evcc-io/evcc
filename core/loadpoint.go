@@ -6,6 +6,7 @@ import (
 	"math"
 	"reflect"
 	"slices"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -185,7 +186,17 @@ type Loadpoint struct {
 func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, other map[string]any) (*Loadpoint, error) {
 	lp := NewLoadpoint(log, settings)
 	if err := util.DecodeOther(other, lp); err != nil {
-		return nil, err
+		// check if error is due to unknown config keys (e.g. from old database entries)
+		var configErr *util.ConfigError
+		if errors.As(err, &configErr) && strings.Contains(err.Error(), "invalid keys") {
+			log.WARN.Printf("config contains unknown keys, ignoring: %v", err)
+			// retry with lenient decoder to create loadpoint with defaults
+			if err := util.DecodeOtherLenient(other, lp); err != nil {
+				return nil, err
+			}
+		} else {
+			return nil, err
+		}
 	}
 
 	// set vehicle polling mode

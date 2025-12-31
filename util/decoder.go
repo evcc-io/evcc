@@ -11,9 +11,18 @@ var validate = validator.New()
 
 // DecodeOther uses mapstructure to decode into target structure. Unused keys cause errors.
 func DecodeOther(other, cc any) error {
+	return decodeOther(other, cc, true)
+}
+
+// DecodeOtherLenient uses mapstructure to decode into target structure. Unused keys are ignored.
+func DecodeOtherLenient(other, cc any) error {
+	return decodeOther(other, cc, false)
+}
+
+func decodeOther(other, cc any, errorUnused bool) error {
 	decoderConfig := &mapstructure.DecoderConfig{
 		Result:           cc,
-		ErrorUnused:      true,
+		ErrorUnused:      errorUnused,
 		WeaklyTypedInput: true,
 		DecodeHook: mapstructure.ComposeDecodeHookFunc(
 			mapstructure.StringToTimeDurationHookFunc(),
