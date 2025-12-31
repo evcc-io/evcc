@@ -44,7 +44,7 @@ require (
 	github.com/go-playground/validator/v10 v10.30.1
 	github.com/go-telegram/bot v1.17.0
 	github.com/go-viper/mapstructure/v2 v2.4.0
-	github.com/godbus/dbus/v5 v5.2.1
+	github.com/godbus/dbus/v5 v5.2.2
 	github.com/gokrazy/updater v0.0.0-20250705135802-db129c40879c
 	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/google/go-github/v32 v32.1.0
