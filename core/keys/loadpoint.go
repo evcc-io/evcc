@@ -58,10 +58,8 @@ const (
 	EffectiveMinCurrent = "effectiveMinCurrent" // effective min current
 	EffectiveMaxCurrent = "effectiveMaxCurrent" // effective max current
 
-	EffectiveLimitSoc         = "effectiveLimitSoc"         // effective limit soc
-	EffectivePlanStrategy     = "effectivePlanStrategy"     // effective plan strategy (deprecated, use individual fields)
-	EffectivePlanPrecondition = "effectivePlanPrecondition" // effective plan precondition duration
-	EffectivePlanContinuous   = "effectivePlanContinuous"   // effective plan continuous planning
+	EffectiveLimitSoc     = "effectiveLimitSoc"     // effective limit soc
+	EffectivePlanStrategy = "effectivePlanStrategy" // effective plan strategy (deprecated, use individual fields)
 
 	// measurements
 	ChargePower       = "chargePower"       // charge power

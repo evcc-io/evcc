@@ -12,7 +12,6 @@ import (
 
 // PublishEffectiveValues publishes all effective values
 func (lp *Loadpoint) PublishEffectiveValues() {
-	strategy := lp.EffectivePlanStrategy()
 	lp.publish(keys.EffectivePriority, lp.EffectivePriority())
 	lp.publish(keys.EffectivePlanId, lp.EffectivePlanId())
 	lp.publish(keys.EffectivePlanTime, lp.EffectivePlanTime())
@@ -20,8 +19,7 @@ func (lp *Loadpoint) PublishEffectiveValues() {
 	lp.publish(keys.EffectiveMinCurrent, lp.effectiveMinCurrent())
 	lp.publish(keys.EffectiveMaxCurrent, lp.effectiveMaxCurrent())
 	lp.publish(keys.EffectiveLimitSoc, lp.EffectiveLimitSoc())
-	lp.publish(keys.EffectivePlanPrecondition, int64(strategy.Precondition.Seconds()))
-	lp.publish(keys.EffectivePlanContinuous, strategy.Continuous)
+	lp.publish(keys.EffectivePlanStrategy, lp.EffectivePlanStrategy())
 }
 
 // EffectivePriority returns the effective priority
