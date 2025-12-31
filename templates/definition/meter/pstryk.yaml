@@ -20,7 +20,7 @@ render: |
   power:
     source: http
     uri: {{ include "uri" . }}
-    jq: .multiSensor.sensors[] | select(.id==0 and .type=="activePower") | .value
+    jq: .multiSensor.sensors[] | select(.id==0 and .type=="activePower") | .value // 0
     cache: {{ .cache }}
   energy:
     source: http
