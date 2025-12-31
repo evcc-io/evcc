@@ -2,7 +2,7 @@
 	<div class="loadpoint d-flex flex-column pt-4 pb-2 px-3 px-sm-4 mx-2 mx-sm-0">
 		<div
 			class="d-block d-sm-flex justify-content-between align-items-center mb-3"
-			:class="multipleLoadpoints ? 'd-lg-block d-xl-flex' : ''"
+			:class="useTwoRows ? 'd-lg-block d-xl-flex' : ''"
 		>
 			<div class="d-flex justify-content-between align-items-center mb-3 text-truncate">
 				<h3 class="me-2 mb-0 text-truncate d-flex">
@@ -16,7 +16,7 @@
 					</div>
 				</h3>
 				<LoadpointSettingsButton
-					:class="multipleLoadpoints ? 'd-lg-block d-xl-none' : ''"
+					:class="useTwoRows ? 'd-lg-block d-xl-none' : ''"
 					class="d-block d-sm-none"
 					@click="openSettingsModal"
 				/>
@@ -25,7 +25,7 @@
 				<Mode class="flex-grow-1" v-bind="modeProps" @updated="setTargetMode" />
 				<LoadpointSettingsButton
 					:id="id"
-					:class="multipleLoadpoints ? 'd-lg-none d-xl-block' : ''"
+					:class="useTwoRows ? 'd-lg-none d-xl-block' : ''"
 					class="d-none d-sm-block ms-2"
 					@click="openSettingsModal"
 				/>
@@ -229,7 +229,7 @@ export default defineComponent({
 		tariffFeedIn: Number,
 		tariffCo2: Number,
 		currency: String,
-		multipleLoadpoints: Boolean,
+		useTwoRows: Boolean,
 		gridConfigured: Boolean,
 		pvConfigured: Boolean,
 		forecast: Object as PropType<Forecast>,
