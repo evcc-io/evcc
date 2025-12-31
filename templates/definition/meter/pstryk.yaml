@@ -25,7 +25,7 @@ render: |
   energy:
     source: http
     uri: {{ include "uri" . }}
-    jq: ((.multiSensor.sensors[] | select(.id==0 and .type=="forwardActiveEnergy") | .value) / 1000)
+    jq: ((.multiSensor.sensors[] | select(.id==0 and .type=="forwardActiveEnergy") | .value // 0) / 1000)
     cache: {{ .cache }}
   currents:
   - source: http
