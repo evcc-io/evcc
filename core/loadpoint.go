@@ -145,13 +145,13 @@ type Loadpoint struct {
 
 	// charge planning
 	planner          *planner.Planner
-	planTime         time.Time     // time goal
-	planPrecondition time.Duration // precondition duration
-	planEnergy       float64       // Plan charge energy in kWh (dumb vehicles)
-	planEnergyOffset float64       // already charged energy in kWh when plan was set
-	planSlotEnd      time.Time     // current plan slot end time
-	planActive       bool          // charge plan exists and has a currently active slot
-	planOverrunSent  bool          // notification has been sent already
+	planTime         time.Time        // time goal
+	planStrategy     api.PlanStrategy // plan strategy (precondition, continuous)
+	planEnergy       float64          // Plan charge energy in kWh (dumb vehicles)
+	planEnergyOffset float64          // already charged energy in kWh when plan was set
+	planSlotEnd      time.Time        // current plan slot end time
+	planActive       bool             // charge plan exists and has a currently active slot
+	planOverrunSent  bool             // notification has been sent already
 
 	// cached state
 	status         api.ChargeStatus // Charger status
@@ -184,7 +184,7 @@ type Loadpoint struct {
 func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, other map[string]any) (*Loadpoint, error) {
 	lp := NewLoadpoint(log, settings)
 	if err := util.DecodeOther(other, lp); err != nil {
-		return nil, err
+		return lp, err
 	}
 
 	// set vehicle polling mode
@@ -370,9 +370,14 @@ func (lp *Loadpoint) restoreSettings() {
 
 	t, err1 := lp.settings.Time(keys.PlanTime)
 	v, err2 := lp.settings.Float(keys.PlanEnergy)
-	d, _ := lp.settings.Int(keys.PlanPrecondition)
 	if err1 == nil && err2 == nil {
-		lp.setPlanEnergy(t, time.Duration(d)*time.Second, v)
+		lp.setPlanEnergy(t, v)
+	}
+
+	// load plan strategy (continuous mode and precondition duration)
+	var planStrategy api.PlanStrategy
+	if err := lp.settings.Json(keys.PlanStrategy, &planStrategy); err == nil {
+		lp.setPlanStrategy(planStrategy)
 	}
 }
 
@@ -686,7 +691,8 @@ func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan c
 	// restored settings
 	lp.publish(keys.PlanTime, lp.planTime)
 	lp.publish(keys.PlanEnergy, lp.planEnergy)
-	lp.publish(keys.PlanPrecondition, lp.planPrecondition)
+	lp.publish(keys.PlanPrecondition, int64(lp.planStrategy.Precondition.Seconds()))
+	lp.publish(keys.PlanContinuous, lp.planStrategy.Continuous)
 	lp.publish(keys.LimitSoc, lp.limitSoc)
 	lp.publish(keys.LimitEnergy, lp.limitEnergy)
 
@@ -983,7 +989,7 @@ func (lp *Loadpoint) repeatingPlanning() bool {
 	if !lp.socBasedPlanning() {
 		return false
 	}
-	_, _, _, id := lp.NextVehiclePlan()
+	_, _, id := lp.NextVehiclePlan()
 	return id > 1
 }
 

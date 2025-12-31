@@ -398,8 +398,6 @@ paths:
                         properties:
                           planId:
                             $ref: "#/components/schemas/Id"
-                          precondition:
-                            $ref: "#/components/schemas/Precondition"
                       - $ref: "#/components/schemas/PlanRates"
   /loadpoints/{id}/plan/energy:
     delete:
@@ -488,6 +486,33 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/PlanRatesResult"
+  /loadpoints/{id}/plan/strategy:
+    post:
+      operationId: setLoadpointPlanStrategy
+      summary: Set plan strategy
+      description: "Updates the charging plan strategy for the loadpoint."
+      externalDocs:
+        url: https://docs.evcc.io/en/docs/features/plans
+      tags:
+        - loadpoints
+      parameters:
+        - $ref: "#/components/parameters/id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlanStrategy"
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    $ref: "#/components/schemas/PlanStrategy"
   /loadpoints/{id}/priority/{priority}:
     post:
       operationId: setLoadpointPriority
@@ -1080,10 +1105,6 @@ paths:
         - $ref: "#/components/parameters/vehicleName"
         - $ref: "#/components/parameters/soc"
         - $ref: "#/components/parameters/timestamp"
-        - in: query
-          name: precondition
-          schema:
-            $ref: "#/components/schemas/Precondition"
       responses:
         "200":
           description: Success
@@ -1093,7 +1114,39 @@ paths:
                 type: object
                 properties:
                   result:
-                    $ref: "#/components/schemas/StaticSocPlan"
+                    type: object
+                    properties:
+                      soc:
+                        $ref: "#/components/schemas/Soc"
+                      time:
+                        $ref: "#/components/schemas/Timestamp"
+  /vehicles/{name}/plan/strategy:
+    post:
+      operationId: setVehiclePlanStrategy
+      summary: Set plan strategy
+      description: "Updates the charging plan strategy for the vehicle."
+      externalDocs:
+        url: https://docs.evcc.io/en/docs/features/plans
+      tags:
+        - vehicles
+      parameters:
+        - $ref: "#/components/parameters/vehicleName"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlanStrategy"
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    $ref: "#/components/schemas/PlanStrategy"
 components:
   schemas:
     BatteryMode:
@@ -1304,6 +1357,17 @@ components:
       type: array
       items:
         $ref: "#/components/schemas/Rate"
+    PlanStrategy:
+      description: Charging plan strategy configuration
+      type: object
+      properties:
+        continuous:
+          description: "Force continuous planning"
+          type: boolean
+        precondition:
+          description: "Precondition duration in seconds"
+          type: integer
+          minimum: 0
     RepeatingPlan:
       externalDocs:
         url: https://docs.evcc.io/en/docs/features/plans#repeating-plans
@@ -1312,8 +1376,6 @@ components:
         active:
           description: "Set plan active."
           type: boolean
-        precondition:
-          $ref: "#/components/schemas/Precondition"
         soc:
           $ref: "#/components/schemas/Soc"
         time:
@@ -1338,8 +1400,6 @@ components:
       properties:
         energy:
           $ref: "#/components/schemas/Energy"
-        precondition:
-          $ref: "#/components/schemas/Precondition"
         time:
           $ref: "#/components/schemas/Timestamp"
     StaticSocPlan:
@@ -1347,8 +1407,6 @@ components:
         url: https://docs.evcc.io/en/docs/features/plans#create-charging-plan
       type: object
       properties:
-        precondition:
-          $ref: "#/components/schemas/Precondition"
         soc:
           $ref: "#/components/schemas/Soc"
         time:
