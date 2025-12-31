@@ -33,8 +33,7 @@ params:
     help:
       de: https://www.solaxcloud.com/ -> Gerät -> Wechselrichter (neue Website) oder Support (alte Website), Wert von Registrierungsnummer hier eintragen
       en: https://www.solaxcloud.com/ -> Device -> Inverter (new site) or Support (old site), use the registration number
-  - name: capacity
-    advanced: true
+  - preset: battery-params
 render: |
   type: custom
   power:
@@ -70,5 +69,5 @@ render: |
     uri: https://www.solaxcloud.com/proxyApp/proxy/api/getRealtimeInfo.do?tokenId={{ unquote .tokenid }}&sn={{ unquote .serial }}
     jq: .result.soc  # Solax API inverter.DC.battery.energy.SOC
     cache: 2m30s
-  capacity: {{ .capacity }} # kWh
+  {{- include battery-params }}
   {{- end }}
