@@ -1,4 +1,24 @@
 {
+  "authProviders": {
+    "authCode": "Doğrulama Kodu",
+    "authCodeHelp": "Bu kodu kopyala ve bir sonraki adımda kullan. {duration} boyunca geçerlidir.",
+    "authorizationFailed": "Yetkilendirme Başarısız",
+    "authorizationRequired": "Yetkilendirme Gerekli",
+    "authorizationSuccessful": "Yetkilendirme Başarılı",
+    "buttonConnect": "{provider}'a bağlan",
+    "buttonDisconnect": "Bağlantıyı kes",
+    "confirmLogout": "{title} bağlantısını kesmek istediğinden emin misin?",
+    "connect": "bağlan",
+    "disconnect": "bağlantıyı kes",
+    "loggedOut": "Oturum başarıyla kapatıldı",
+    "logoutFailed": "Oturum kapatılamadı",
+    "modalDescriptionLogin": "{provider} ile bağlantı kurmak için yetkilendirme işlemini tamamla.",
+    "modalDescriptionLogout": "Bu, {provider} hesabının bağlantısını kesecek ve verilerine erişimi kaldıracaktır.",
+    "success": "{title} artık bağlı ve kullanıma hazır.",
+    "successCloseModal": "Artık bu iletişimi kapatabilirsin.",
+    "successCloseTab": "Artık bu sekmeyi kapatabilirsin.",
+    "title": "Yetkilendirme Durumu"
+  },
   "batterySettings": {
     "batteryLevel": "Doluluk oranı",
     "bufferStart": {
@@ -40,8 +60,16 @@
       "chargers": "Doldurma cihazları",
       "generic": "Genel entegrasyon",
       "heatingdevices": "Isıtma cihazları",
+      "ocppConfirmContinue": "Doldurma cihazın henüz evcc'ye bağlanmadı. Devam etmek istediğinden emin misin?",
+      "ocppConnected": "Bağlandı!",
+      "ocppDescription": "evcc'de yerleşik bir OCPP sunucusu var. Aşağıdaki adımları izle:",
       "ocppHelp": "Bu URL'yi şarj cihazınızın yapılandırmasına kopyalayın. Ayrıntılar için üreticinin kılavuzuna bakın. Şarj cihazı, benzersiz tanımlayıcısını (istasyon kimliği) URL'ye otomatik olarak ekleyecektir. Nadir durumlarda tanımlayıcıyı manuel olarak belirtmeniz gerekebilir. Örnek: `{url}`",
       "ocppLabel": "OCPP sunucusu URL'si",
+      "ocppNextStep": "Sonraki adım",
+      "ocppStep1": "Doldurma cihazını evcc'yi OCPP sunucusu olarak kullanacak şekilde yapılandır.",
+      "ocppStep2": "Doldurma cihazının evcc'ye bağlanmasını bekle.",
+      "ocppStep3": "Devam et ve yapılandırmayı tamamla.",
+      "ocppWaiting": "Bağlantı bekleniyor",
       "switchsockets": "“Açılıp kapanabilen prizler”",
       "template": "Üretici",
       "titleAdd": {
@@ -71,8 +99,8 @@
     },
     "control": {
       "description": "Genellikle varsayılan değerler iyidir. Bunları yalnızca ne yaptığını biliyorsan değiştir.",
-      "descriptionInterval": "Saniye cinsinden denetim çevrimi güncelleme döngüsü. evcc'nin ölçüm verilerini ne sıklıkla okuyacağını, doldurma gücünü ayarlayacağını ve kullanıcı arayüzünü güncelleyeceğini tanımlar. Kısa aralıklar (<30s) dalgalanmalara ve istenmeyen davranışlara yol açabilir.",
-      "descriptionResidualPower": "Denetim çevriminin çalışma noktasını değiştirir. Eğer bir ev bataryan varsa 100 W değerini ayarlaman önerilir. Bu şekilde batarya, şebeke kullanımına göre hafif bir önceliğe sahip olacaktır.",
+      "descriptionInterval": "Saniye cinsinden güncelleme döngüsü. Evcc'nin sayaç verilerini ne sıklıkla okuyacağını ve doldurmayı ne sıklıkla ayarlayacağını tanımlar. Varsayılan 30 saniye güvenli bir seçimdir. Araçlar, doldurma cihazları ve çeviriciler gibi cihazların davranışlarını ayarlamak için genellikle birkaç saniye gerekir. Bileşenlerin hızlı tepki veriyorsa daha düşük değerler kullanabilirsin. 10 saniyenin altına inmemeni önemle tavsiye ederiz. Düzensiz kontrol davranışı veya sıçrayan güç değerleri gözlemlersen, daha büyük bir aralık seç.",
+      "descriptionResidualPower": "Kontrol döngüsünün çalışma noktasını değiştirir. Varsayılan 100 W değeri, ev bataryalarına şebeke kullanımına göre hafif bir öncelik verir. Bataryan yoksa, güneş enerjisi modunda şebeke tüketimini en aza indirmek için bu değeri 0 W olarak ayarlayabilirsin.",
       "labelInterval": "Güncelleme aralığı",
       "labelResidualPower": "Artık güç",
       "title": "Kontrol davranışı"
@@ -91,10 +119,12 @@
       "chargedEnergy": "Doldu",
       "co2": "Şebeke CO₂",
       "configured": "Yapılandırıldı",
+      "connections": "Bağlantılar",
       "controllable": "Kontrol edilebilir",
       "currency": "Para Birimi",
       "current": "Akım",
       "currentRange": "Akım",
+      "detected": "Algılandı",
       "dimmed": "Karartılmış",
       "enabled": "Etkin",
       "energy": "Enerji",
@@ -145,6 +175,10 @@
       "description": "evcc'nin diğer EEBus cihazlarıyla iletişim kurmasını sağlayan yapılandırma.",
       "title": "EEBus"
     },
+    "experimental": {
+      "description": "Halen test aşamasında olan ve gelecek sürümlerde değişebilecek özellikler için kullanıcı arayüzünü etkinleştir.",
+      "title": "Deneysel"
+    },
     "ext": {
       "description": "Kontrol edilemeyen tüketicilerin (örneğin buzdolabı, çamaşır makinesi vb.) enerji değerlerini istatistiksel amaçlarla kaydeder. Bu sayaçlar yük yönetimi (örneğin alt dağıtım) için de kullanılabilir.",
       "titleAdd": "Tüketici Sayacı Ekle",
@@ -164,6 +198,8 @@
       "cancel": "İptal",
       "clear": "Temizle",
       "close": "Kapat",
+      "copied": "Kopyalandı!",
+      "copy": "Kopyala",
       "customHelp": "evcc'nin eklenti sistemini kullanarak kullanıcı tanımlı bir cihaz oluştur.",
       "customOption": "Kullanıcı tanımlı cihaz",
       "delete": "“Sil”",
@@ -200,8 +236,19 @@
       "titleEdit": "Elektrik Sayacını Düzenle"
     },
     "hems": {
+      "csv": {
+        "created": "Oluşturuldu",
+        "finished": "Bitti",
+        "gridpower": "Şebeke alımı (kW)",
+        "limitpower": "Sınır (kW)",
+        "type": "Tür"
+      },
       "description": "Harici sistemler tarafından güç sınırlaması (ör. EnWG 14a kontrolörleri). Yük yönetimi yapılandırması gerektirir.",
-      "title": "HEMS"
+      "downloadCsv": "CSV'yi indir",
+      "eventsRecorded": "{count} şebeke sınırlama etkinliği kaydedildi.",
+      "lastEvent": "En son {timeAgo}.",
+      "title": "HEMS",
+      "yamlConfigured": "Not: evcc.yaml aracılığıyla yapılandırıldı. Burada düzenlemeyi etkinleştirmek için dosyadan öğeyi kaldır."
     },
     "icon": {
       "change": "değiştir",
@@ -340,6 +387,8 @@
       "title": "Yapılandırma",
       "unconfigured": "yapılandırılmadı",
       "vehicles": "Araçlarım",
+      "welcomeBannerText": "**Doldurma cihazı veya ısıtıcı** oluşturarak başla. Henüz gerçek bir doldurma cihazın yoksa, **gösterim doldurma cihazı** seç.",
+      "welcomeBannerTitle": "Haydi sistemini yapılandıralım!",
       "yaml": "evcc.yaml'daki cihazlar düzenlenemez."
     },
     "messaging": {
@@ -375,9 +424,9 @@
       "baudrate": "Baud hızı",
       "comset": "ComSet",
       "connection": "Modbus bağlantısı",
-      "connectionHintSerial": "Cihaz RS485 arayüzü ile doğrudan evcc'ye bağlanır.",
-      "connectionHintTcpip": "Cihaz LAN/Wifi üzerinden evcc'den adreslenebilir.",
-      "connectionValueSerial": "Seri / USB",
+      "connectionHintSerial": "Cihaz, RS485 (veya USB-RS485 bağdaştırıcısı) aracılığıyla doğrudan bağlı.",
+      "connectionHintTcpip": "Cihaza ağ üzerinden (LAN/WiFi) erişilebilir.",
+      "connectionValueSerial": "RS485",
       "connectionValueTcpip": "Ağ",
       "device": "Cihaz adı",
       "deviceHint": "Örnek: /dev/ttyUSB0",
@@ -442,6 +491,23 @@
       "labelPort": "Port",
       "labelSchema": "Şema",
       "title": "Ağ"
+    },
+    "ocpp": {
+      "connectedChargers": "Bağlı doldurma cihazları",
+      "connectionStatus": "Yapılandırılmış istasyon kimlikleri",
+      "connectionStatusHelp": "Yapılandırılmış doldurma cihazlarının bağlantı durumu.",
+      "detectedChargers": "Algılanan istasyon kimlikleri",
+      "detectedHelp": "Bu doldurma cihazları evcc'ye bağlanmaya çalıştı. Doldurma cihazını kullanmak için, istasyon kimliği ile bir yükleme noktası oluştur.",
+      "noChargers": "OCPP doldurma cihazı algılanamadı.",
+      "noStations": "Bağlı istasyon yok",
+      "status": {
+        "configured": "Bağlı değil",
+        "connected": "Bağlı",
+        "unknown": "Bilinmiyor"
+      },
+      "title": "OCPP Sunucusu",
+      "url": "Sunucu URL'si",
+      "urlHelp": "Bu URL'yi doldrma cihazının yapılandırmasına kopyala. Ayrıntılar için üreticinin kılavuzuna bak. Doldurma cihazının, URL'ye benzersiz tanımlayıcısını (istasyon kimliği) otomatik olarak eklemesi beklenir. Nadir durumlarda, tanımlayıcıyı elle belirtmen gerekebilir. Örnek: `{url}`"
     },
     "options": {
       "boolean": {
@@ -584,6 +650,8 @@
       "maximumCurrentHelp": "Asgari akımdan büyük olmalıdır.",
       "maximumPhases": "“Azami aşamalar”",
       "maximumPhasesHelp": "Bu araç kaç aşama ile doldurulabilir? Gerekli asgari güneş enerjisi fazlasını ve plân süresini hesaplamak için kullanılır.",
+      "maximumPower": "Azami doldurma gücü",
+      "maximumPowerHelp": "Aracın çekebileceği azami güç",
       "minimumCurrent": "“Asgari akım”",
       "minimumCurrentHelp": "Yalnızca ne yaptığını biliyorsan 6A'in altına in.",
       "online": "Çevrimiçi API'ye sahip araçlar",
@@ -778,6 +846,8 @@
       "stepTwo": "Adım 2: Ek bilgileri kopyala",
       "title": "GitHub Sorun Özeti"
     },
+    "system": "Sistem",
+    "timezone": "Zaman dilimi",
     "title": "Sorun bildir",
     "version": "Sürüm"
   },
@@ -817,11 +887,12 @@
       "modalTitle": "Doldurma Planı",
       "none": "yok",
       "planNumber": "Plan {number}",
-      "preconditionDescription": "Batarya ön ısıtması için kalkıştan önce {duration} doldur.",
-      "preconditionLong": "Geç doldurma",
-      "preconditionOptionAll": "hepsi",
-      "preconditionOptionNo": "hayır",
-      "preconditionShort": "Geç",
+      "precondition": {
+        "description": "Batarya ön ısıtması için kalkıştan önce {duration} doldur.",
+        "label": "Geç doldurma",
+        "optionAll": "hepsi",
+        "optionNo": "hayır"
+      },
       "remove": "Kaldır",
       "repeating": "“tekrarlanan”",
       "repeatingPlans": "“Tekrarlanan planlar”",
@@ -1148,7 +1219,7 @@
     },
     "hiddenFeatures": {
       "label": "Deneysel",
-      "value": "Deneysel kullanıcı arayüzü özelliklerini göster."
+      "value": "Deneysel özellikleri göster."
     },
     "language": {
       "auto": "Otomatik",

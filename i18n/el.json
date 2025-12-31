@@ -798,11 +798,12 @@
       "modalTitle": "Πρόγραμμα Φόρτισης",
       "none": "κανένα",
       "planNumber": "Πρόγραμμα {number}",
-      "preconditionDescription": "Φορτίστε {duration} πριν από την αναχώρηση για προετοιμασία μπαταρίας.",
-      "preconditionLong": "Καθυστερημένη φόρτιση",
-      "preconditionOptionAll": "Όλα",
-      "preconditionOptionNo": "Όχι",
-      "preconditionShort": "Αργά",
+      "precondition": {
+        "description": "Φορτίστε {duration} πριν από την αναχώρηση για προετοιμασία μπαταρίας.",
+        "label": "Καθυστερημένη φόρτιση",
+        "optionAll": "Όλα",
+        "optionNo": "Όχι"
+      },
       "remove": "Αφαίρεση",
       "repeating": "επαναλαμβανόμενο",
       "repeatingPlans": "Επαναλαμβανόμενα προγράμματα",

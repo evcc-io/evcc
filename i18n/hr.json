@@ -375,9 +375,9 @@
       "baudrate": "Brzina prijenosa podataka",
       "comset": "ComSet",
       "connection": "Modbus veza",
-      "connectionHintSerial": "Ovaj uređaj je povezan s evcc-om putem RS485 sučelja.",
-      "connectionHintTcpip": "Ovaj uređaj je evcc-u dostupan putem LAN/WiFi mreže.",
-      "connectionValueSerial": "Serijski / USB",
+      "connectionHintSerial": "Ovaj je uređaj direktno povezan putem RS485 (ili USB-u-RS485 adaptera).",
+      "connectionHintTcpip": "Ovaj je uređaj dostupan putem mreže (LAN/WiFi).",
+      "connectionValueSerial": "RS485",
       "connectionValueTcpip": "Mreža",
       "device": "Ime uređaja",
       "deviceHint": "Primjer: /dev/ttyUSB0",
@@ -818,11 +818,12 @@
       "modalTitle": "Plan punjenja",
       "none": "nema, dodaj",
       "planNumber": "Plan {number}",
-      "preconditionDescription": "Punjenje {duration} prije polaska kako bi se izvršilo predkondicioniranje baterije.",
-      "preconditionLong": "Kasnije punjenje",
-      "preconditionOptionAll": "sve",
-      "preconditionOptionNo": "ne",
-      "preconditionShort": "Kasno",
+      "precondition": {
+        "description": "Punjenje {duration} prije polaska kako bi se izvršilo predkondicioniranje baterije.",
+        "label": "Kasnije punjenje",
+        "optionAll": "sve",
+        "optionNo": "ne"
+      },
       "remove": "Ukloni",
       "repeating": "ponavljanje",
       "repeatingPlans": "Ponavljajući planovi",
@@ -1149,7 +1150,7 @@
     },
     "hiddenFeatures": {
       "label": "Eksperimentalno",
-      "value": "Prikaži eksperimentalne funkcije korisničkog sučelja."
+      "value": "Prikaži eksperimentalne funkcije."
     },
     "language": {
       "auto": "Automatski",

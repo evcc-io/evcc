@@ -47,3 +47,49 @@ func TestIsFirst(t *testing.T) {
 	// ensure single slot is always first
 	require.True(t, IsFirst(first, []api.Rate{first}))
 }
+
+func TestDuration(t *testing.T) {
+	now := time.Now()
+	plan := api.Rates{
+		{Start: now, End: now.Add(time.Hour)},
+		{Start: now.Add(time.Hour), End: now.Add(time.Hour)}, // zero - without impact
+		{Start: now.Add(2 * time.Hour), End: now.Add(3 * time.Hour)},
+	}
+	require.Equal(t, 2*time.Hour, Duration(plan))
+	require.Equal(t, time.Duration(0), Duration(api.Rates{}))
+}
+
+func TestAverageCost(t *testing.T) {
+	now := time.Now()
+	plan := api.Rates{
+		{Start: now, End: now.Add(30 * time.Minute), Value: 10.0},                    // 0.5h * 10 = 5
+		{Start: now, End: now, Value: 999.0},                                         // zero - ignored
+		{Start: now.Add(30 * time.Minute), End: now.Add(2 * time.Hour), Value: 20.0}, // 1.5h * 20 = 30
+	}
+	require.Equal(t, 17.5, AverageCost(plan)) // (5 + 30) / 2h = 17.5
+	require.Equal(t, 0.0, AverageCost(api.Rates{}))
+	require.Equal(t, 0.0, AverageCost(api.Rates{{Start: now, End: now, Value: 10}}))
+}
+
+func TestStartEnd(t *testing.T) {
+	now := time.Now()
+	plan := api.Rates{
+		{Start: now.Add(2 * time.Hour), End: now.Add(3 * time.Hour)},
+		{Start: now, End: now.Add(time.Hour)},
+	}
+	require.Equal(t, now, Start(plan))
+	require.Equal(t, now.Add(3*time.Hour), End(plan))
+	require.True(t, Start(api.Rates{}).IsZero())
+	require.True(t, End(api.Rates{}).IsZero())
+}
+
+func TestSlotAt(t *testing.T) {
+	now := time.Now()
+	plan := api.Rates{
+		{Start: now, End: now.Add(time.Hour), Value: 1},
+		{Start: now.Add(time.Hour), End: now.Add(2 * time.Hour), Value: 2},
+	}
+	require.Equal(t, 1.0, SlotAt(now.Add(30*time.Minute), plan).Value)
+	require.Equal(t, 2.0, SlotAt(now.Add(90*time.Minute), plan).Value)
+	require.True(t, SlotAt(now.Add(3*time.Hour), plan).IsZero())
+}
