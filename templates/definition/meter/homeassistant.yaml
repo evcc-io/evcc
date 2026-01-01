@@ -155,7 +155,7 @@ render: |
   maxdischargepower: {{ .maxdischargepower }} # W
   minsoc: {{ .minsoc }} # %
   maxsoc: {{ .maxsoc }} # %
-  {{- if and (eq .usage "battery") .batterymodeswitch }}
+  {{- if and (eq .usage "battery") .setbatterymode }}
   batterymode:
     source: switch
     switch:
@@ -163,18 +163,18 @@ render: |
       set:
         source: homeassistant
         uri: {{ .uri }}
-        entity: {{ .batterymodeswitch }}
+        entity: {{ .setbatterymode }}
         data: "normal"
     - case: 2 # hold
       set:
         source: homeassistant
         uri: {{ .uri }}
-        entity: {{ .batterymodeswitch }}
+        entity: {{ .setbatterymode }}
         data: "hold"
     - case: 3 # charge
       set:
         source: homeassistant
         uri: {{ .uri }}
-        entity: {{ .batterymodeswitch }}
+        entity: {{ .setbatterymode }}
         data: "charge"
   {{- end }}
