@@ -80,6 +80,12 @@ var predefinedTemplateProperties = append(
 	append(ModbusParams, ModbusConnectionTypes...)...,
 )
 
+// Pattern contains regex pattern and examples for input validation
+type Pattern struct {
+	Regex    string   `json:",omitempty"`
+	Examples []string `json:",omitempty"`
+}
+
 // TextLanguage contains language-specific texts
 type TextLanguage struct {
 	Generic string `json:",omitempty"` // language independent
@@ -201,6 +207,7 @@ type Param struct {
 	Type        ParamType    // string representation of the value type, "string" is default
 	Choice      []string     `json:",omitempty"` // defines a set of choices, e.g. "grid", "pv", "battery", "charge" for "usage"
 	Service     string       `json:",omitempty"` // defines a service to provide choices
+	Pattern     Pattern      `json:",omitempty"` // regex pattern and examples for input validation
 	AllInOne    bool         `json:"-"`          // defines if the defined usages can all be present in a single device
 
 	// TODO move somewhere else should not be part of the param definition
