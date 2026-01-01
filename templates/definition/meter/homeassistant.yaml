@@ -116,6 +116,16 @@ params:
     help:
       en: Entity ID for battery state of charge in percent
       de: Entitäts-ID für Batterieladestand in Prozent
+  - name: batterymodeswitch
+    description:
+      de: Battery Mode Switch Entity
+      en: Battery Mode Switch Entity
+    service: homeassistant/entities?uri={uri}&domain=input_select
+    example: "input_select.battery_mode"
+    advanced: true
+    help:
+      en: Entity ID for battery mode control. Must accept values 'normal', 'hold', or 'charge'. Only required for usage 'battery'.
+      de: Entitäts-ID für Batteriemodus-Steuerung. Muss die Werte 'normal', 'hold' oder 'charge' akzeptieren. Nur für usage 'battery' erforderlich.
   - name: capacity
   - name: minsoc
   - name: maxsoc
@@ -143,3 +153,26 @@ render: |
   maxdischargepower: {{ .maxdischargepower }} # W
   minsoc: {{ .minsoc }} # %
   maxsoc: {{ .maxsoc }} # %
+  {{- if and (eq .usage "battery") .batterymodeswitch }}
+  batterymode:
+    source: switch
+    switch:
+    - case: 1 # normal
+      set:
+        source: homeassistant
+        uri: {{ .uri }}
+        entity: {{ .batterymodeswitch }}
+        data: "normal"
+    - case: 2 # hold
+      set:
+        source: homeassistant
+        uri: {{ .uri }}
+        entity: {{ .batterymodeswitch }}
+        data: "hold"
+    - case: 3 # charge
+      set:
+        source: homeassistant
+        uri: {{ .uri }}
+        entity: {{ .batterymodeswitch }}
+        data: "charge"
+  {{- end }}
