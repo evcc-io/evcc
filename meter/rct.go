@@ -140,7 +140,7 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 				}
 
 				// check for normal operating mode
-				if batStatus != 1032 {
+				if batStatus != 0 && batStatus != 1032 {
 					return fmt.Errorf("invalid battery operating mode: %d", batStatus)
 				}
 			}
