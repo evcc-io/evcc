@@ -19,8 +19,8 @@ params:
     type: int
     default: 1
     advanced: true
-  - preset: battery-params
   - name: maxacpower
+  - preset: battery-params
   - name: includegenport
     type: bool
     advanced: true

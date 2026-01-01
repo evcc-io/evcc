@@ -10,8 +10,8 @@ params:
   - name: modbus
     choice: ["rs485", "tcpip"]
     id: 247
-  - preset: battery-params
   - name: maxacpower
+  - preset: battery-params
 render: |
   type: custom
   {{- if eq .usage "grid" }}
