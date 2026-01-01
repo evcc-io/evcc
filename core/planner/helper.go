@@ -134,8 +134,8 @@ func findContinuousWindow(rates api.Rates, effectiveDuration time.Duration, targ
 	var bestIndex *int
 
 	var delta time.Duration
-	if trunc := effectiveDuration.Truncate(tariff.SlotDuration); trunc > 0 {
-		delta = tariff.SlotDuration - trunc
+	if rem := effectiveDuration % tariff.SlotDuration; rem > 0 {
+		delta = tariff.SlotDuration - rem
 	}
 
 	for i := range rates {
