@@ -5,6 +5,8 @@ const (
 	FeatureMeterAllValues = "meter_all_values"
 	FeatureMeterPhases    = "meter_phases"
 	FeatureNfc            = "nfc"
+	FeatureMeters         = "meters"
+	FeaturePhaseSwitch    = "phase_switch"
 )
 
 // https://www.warp-charger.com/api.html#evse_state
@@ -52,6 +54,29 @@ type MeterValues struct {
 type MeterAllValues struct {
 	PhasesActive    []bool `json:"phases_active"`
 	PhasesConnected []bool `json:"phases_connected"`
+}
+
+// Meter value IDs according to Tinkerforge meter_value_id.csv
+const (
+	MetersValueIDVoltageL1N       = 1   // Voltage L1-N
+	MetersValueIDVoltageL2N       = 2   // Voltage L2-N
+	MetersValueIDVoltageL3N       = 3   // Voltage L3-N
+	MetersValueIDCurrentImExSumL1 = 13  // Current L1 Im-Ex Sum
+	MetersValueIDCurrentImExSumL2 = 17  // Current L2 Im-Ex Sum
+	MetersValueIDCurrentImExSumL3 = 21  // Current L3 Im-Ex Sum
+	MetersValueIDPowerImExSum     = 74  // Power Im-Ex Sum L1 L2 L3
+	MetersValueIDEnergyAbsImExSum = 213 // Energy Im+Ex Sum L1 L2 L3
+)
+
+type MetersValues struct {
+	VoltageL1N       float64
+	VoltageL2N       float64
+	VoltageL3N       float64
+	CurrentImExSumL1 float64
+	CurrentImExSumL2 float64
+	CurrentImExSumL3 float64
+	PowerImExSum     float64
+	EnergyAbsImExSum float64
 }
 
 type UsersConfig struct {
