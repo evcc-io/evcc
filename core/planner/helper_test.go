@@ -7,6 +7,8 @@ import (
 
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/tariff"
+	"github.com/samber/lo"
 	"github.com/stretchr/testify/require"
 )
 
@@ -92,4 +94,24 @@ func TestSlotAt(t *testing.T) {
 	require.Equal(t, 1.0, SlotAt(now.Add(30*time.Minute), plan).Value)
 	require.Equal(t, 2.0, SlotAt(now.Add(90*time.Minute), plan).Value)
 	require.True(t, SlotAt(now.Add(3*time.Hour), plan).IsZero())
+}
+
+func BenchmarkFindContinuousWindow(b *testing.B) {
+	rr := rates(lo.RepeatBy(96, func(i int) float64 {
+		return float64(i)
+	}), time.Now(), tariff.SlotDuration)
+
+	for b.Loop() {
+		findContinuousWindow(rr, 4*tariff.SlotDuration, rr[len(rr)-1].End)
+	}
+}
+
+func BenchmarkOptimalPlan(b *testing.B) {
+	rr := rates(lo.RepeatBy(96, func(i int) float64 {
+		return float64(i)
+	}), time.Now(), tariff.SlotDuration)
+
+	for b.Loop() {
+		optimalPlan(rr, 4*tariff.SlotDuration, rr[len(rr)-1].End)
+	}
 }
