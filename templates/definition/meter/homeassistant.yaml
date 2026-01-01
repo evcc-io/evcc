@@ -107,6 +107,7 @@ params:
       en: Entity ID for L3 voltage measurement in volts
       de: Entitäts-ID für L3 Spannungsmessung in Volt
   - name: soc
+    usages: ["battery"]
     description:
       de: Batterieladestand
       en: Battery State of Charge
