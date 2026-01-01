@@ -139,14 +139,14 @@ func findContinuousWindow(rates api.Rates, effectiveDuration time.Duration, targ
 	}
 
 	for i := range rates {
-		windowStart := rates[i].Start.Add(delta)
+		from := rates[i].Start.Add(delta)
 
-		windowEnd := windowStart.Add(effectiveDuration)
-		if windowEnd.After(targetTime) {
+		to := from.Add(effectiveDuration)
+		if to.After(targetTime) {
 			break
 		}
 
-		cost := lo.SumBy(clampRates(rates[i:], windowStart, windowEnd), func(r api.Rate) float64 {
+		cost := lo.SumBy(clampRates(rates[i:], from, to), func(r api.Rate) float64 {
 			return float64(r.End.Sub(r.Start)) * r.Value
 		})
 
@@ -163,7 +163,7 @@ func findContinuousWindow(rates api.Rates, effectiveDuration time.Duration, targ
 	}
 
 	// Build the best window only once
-	windowStart := rates[*bestIndex].Start.Add(delta)
+	from := rates[*bestIndex].Start.Add(delta)
 
-	return clampRates(rates[*bestIndex:], windowStart, windowStart.Add(effectiveDuration))
+	return clampRates(rates[*bestIndex:], from, from.Add(effectiveDuration))
 }
