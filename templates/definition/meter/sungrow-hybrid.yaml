@@ -17,19 +17,12 @@ params:
     choice: ["rs485", "tcpip"]
     baudrate: 9600
   - name: timeout
-  - name: capacity
-  - name: maxacpower
-  - name: minsoc
-    advanced: true
-  - name: maxsoc
-    advanced: true
+  - preset: battery-params
   - name: maxchargepower
     default: 5000
-    advanced: true
     required: true
   - name: maxdischargepower
     default: 5000
-    advanced: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -280,9 +273,5 @@ render: |
               address: 13051 # Battery max forced (dis)charge power
               type: writesingle
               decode: uint16
-  capacity: {{ .capacity }} # kWh
-  maxchargepower: {{ .maxchargepower }} # W
-  maxdischargepower: {{ .maxdischargepower }} # W
-  minsoc: {{ .minsoc }} # %
-  maxsoc: {{ .maxsoc }} # %
+  {{- include "battery-params" . }}
   {{- end }}

@@ -16,12 +16,7 @@ params:
     choice: ["rs485", "tcpip"]
     baudrate: 9600
     id: 1
-  - name: capacity
-    advanced: true
-  - name: minsoc
-    advanced: true
-  - name: maxsoc
-    advanced: true
+  - preset: battery-params
   - name: maxacpower
   - name: maxdischargecurrent
     required: true
@@ -384,7 +379,5 @@ render: |
               address: 109 # Battery Max Discharging Current
               type: writemultiple
               decode: uint16
-  capacity: {{ .capacity }} # kWh
-  minsoc: {{ .minsoc }} # %
-  maxsoc: {{ .maxsoc }} # %
+  {{- include "battery-params" . }}
   {{- end }}
