@@ -116,7 +116,7 @@ params:
     help:
       en: Entity ID for battery state of charge in percent
       de: Entitäts-ID für Batterieladestand in Prozent
-  - name: batterymodeswitch
+  - name: setbatterymode
     description:
       de: Battery Mode Switch Entity
       en: Battery Mode Switch Entity
