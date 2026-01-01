@@ -11,7 +11,7 @@ params:
     choice: ["rs485", "tcpip"]
     baudrate: 115200
     comset: 8N1
-  - name: battery-params
+  - preset: battery-params
   - name: capacity
     help:
       de: Venus-E 5.12 kWh, Venus-C 2.56 kWh
@@ -22,9 +22,6 @@ params:
     default: 100
   - name: maxchargepower
     default: 2500
-    help:
-      en: 2500W is the maximum for Venus.
-      de: 2500W ist das Maximum für Venus.
   - name: work_mode_normal
     default: 1
     advanced: true
