@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	_ "embed"
-	"encoding/json"
 	"fmt"
 	"go/format"
 	"io"
@@ -101,11 +100,13 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 	tmpl, err := template.New("gen").Funcs(sprig.FuncMap()).Funcs(template.FuncMap{
 		// contains checks if slice contains string
 		"contains": slices.Contains[[]string, string],
-		// ordered returns a slice of typeStructs ordered by dynamicType
-		"ordered": func() []typeStruct {
-			ordered := make([]typeStruct, 0)
-			for _, k := range dynamicTypes {
-				ordered = append(ordered, types[k.typ])
+		// ordered returns a slice of funcStruct ordered by dynamicType
+		"ordered": func() []funcStruct {
+			ordered := make([]funcStruct, 0)
+			for _, dt := range dynamicTypes {
+				for _, fs := range types[dt.typ].Functions {
+					ordered = append(ordered, fs)
+				}
 			}
 
 			return ordered
@@ -150,8 +151,13 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 				params = strings.Split(paramsStr, ",")
 			}
 
+			varName := strings.ToLower(lastPart[:1]) + lastPart[1:]
+			if len(dt.functions) > 1 {
+				varName += strconv.Itoa(i)
+			}
+
 			funcs = append(funcs, funcStruct{
-				VarName:     strings.ToLower(lastPart[:1]) + lastPart[1:] + strconv.Itoa(i),
+				VarName:     varName,
 				Signature:   signature,
 				Function:    function,
 				Params:      params,
@@ -222,11 +228,6 @@ COMBO:
 		ReturnType:   returnType,
 		Types:        types,
 		Combinations: validCombos,
-	}
-
-	fmt.Println("--------------")
-	if b, err := json.MarshalIndent(vars, "", "  "); err == nil {
-		fmt.Fprintln(os.Stderr, string(b))
 	}
 
 	return tmpl.Execute(out, vars)
