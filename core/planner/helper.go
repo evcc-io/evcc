@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/tariff"
 	"github.com/samber/lo"
 )
 
@@ -132,13 +133,20 @@ func findContinuousWindow(rates api.Rates, effectiveDuration time.Duration, targ
 	var bestCost *float64
 	var bestIndex *int
 
+	var delta time.Duration
+	if trunc := effectiveDuration.Truncate(tariff.SlotDuration); trunc > 0 {
+		delta = tariff.SlotDuration - trunc
+	}
+
 	for i := range rates {
-		windowEnd := rates[i].Start.Add(effectiveDuration)
+		windowStart := rates[i].Start.Add(delta)
+
+		windowEnd := windowStart.Add(effectiveDuration)
 		if windowEnd.After(targetTime) {
 			break
 		}
 
-		cost := lo.SumBy(clampRates(rates[i:], rates[i].Start, windowEnd), func(r api.Rate) float64 {
+		cost := lo.SumBy(clampRates(rates[i:], windowStart, windowEnd), func(r api.Rate) float64 {
 			return float64(r.End.Sub(r.Start)) * r.Value
 		})
 
@@ -155,7 +163,7 @@ func findContinuousWindow(rates api.Rates, effectiveDuration time.Duration, targ
 	}
 
 	// Build the best window only once
-	windowEnd := rates[*bestIndex].Start.Add(effectiveDuration)
+	windowStart := rates[*bestIndex].Start.Add(delta)
 
-	return clampRates(rates[*bestIndex:], rates[*bestIndex].Start, windowEnd)
+	return clampRates(rates[*bestIndex:], windowStart, windowStart.Add(effectiveDuration))
 }
