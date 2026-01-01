@@ -4,12 +4,14 @@ import (
 	"bufio"
 	"bytes"
 	_ "embed"
+	"encoding/json"
 	"fmt"
 	"go/format"
 	"io"
 	"os"
 	"reflect"
 	"slices"
+	"strconv"
 	"strings"
 	"text/template"
 
@@ -134,7 +136,7 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 
 		var funcs []funcStruct
 
-		for _, fun := range dt.functions {
+		for i, fun := range dt.functions {
 			function := fun.function
 			signature := fun.signature
 
@@ -149,7 +151,7 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 			}
 
 			funcs = append(funcs, funcStruct{
-				VarName:     strings.ToLower(lastPart[:1]) + lastPart[1:],
+				VarName:     strings.ToLower(lastPart[:1]) + lastPart[1:] + strconv.Itoa(i),
 				Signature:   signature,
 				Function:    function,
 				Params:      params,
@@ -222,6 +224,11 @@ COMBO:
 		Combinations: validCombos,
 	}
 
+	fmt.Println("--------------")
+	if b, err := json.MarshalIndent(vars, "", "  "); err == nil {
+		fmt.Fprintln(os.Stderr, string(b))
+	}
+
 	return tmpl.Execute(out, vars)
 }
 
@@ -277,42 +284,38 @@ func parseFile(file string, function, basetype, returntype *string, types *[]str
 	return scanner.Err()
 }
 
-func parseFunctions(iface string) []function {
-	var res []function
+func splitTopLevel(s string) []string {
+	var res []string
+	brackets := 0
+	start := 0
 
-OUTER:
-	for len(strings.TrimSpace(iface)) > 0 {
-		parts := strings.SplitN(iface, ",", 2)
-
-		fmt.Println(parts[0], "::", parts[1])
-		var brackets int
-
-		for i, ch := range parts[1] {
-			switch ch {
-			case '(':
-				brackets++
-			case ')':
-				brackets--
-			case ',':
-				if brackets == 0 {
-					iface = iface[i:]
-					res = append(res, function{
-						function:  parts[0],
-						signature: parts[1][:i],
-					})
-
-					continue OUTER
-				}
+	for i, r := range s {
+		switch r {
+		case '(':
+			brackets++
+		case ')':
+			brackets--
+		case ',':
+			if brackets == 0 {
+				res = append(res, strings.TrimSpace(s[start:i]))
+				start = i + 1
 			}
 		}
-
-		res = append(res, function{
-			function:  parts[0],
-			signature: parts[1],
-		})
-		break
 	}
+	res = append(res, strings.TrimSpace(s[start:]))
+	return res
+}
 
+func parseFunctions(iface string) []function {
+	parts := splitTopLevel(iface)
+
+	var res []function
+	for i := 0; i+1 < len(parts); i += 2 {
+		res = append(res, function{
+			function:  parts[i],
+			signature: parts[i+1],
+		})
+	}
 	return res
 }
 
