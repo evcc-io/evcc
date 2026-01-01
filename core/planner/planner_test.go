@@ -502,9 +502,8 @@ func TestStartBeforeRates(t *testing.T) {
 }
 
 // TestStartBeforeRatesInsufficientTime tests that when current time
-// is before the first available rate AND there's not enough time after rates
-// start to complete charging before target, the planner starts charging as soon
-// as rates become available (best effort approach)
+// is before the first available rate AND there's not enough rate coverage
+// to complete charging, the planner falls back to simplePlan (ignoring rates)
 func TestStartBeforeRatesInsufficientTime(t *testing.T) {
 	now := time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
 	c := clock.NewMock()
@@ -530,13 +529,13 @@ func TestStartBeforeRatesInsufficientTime(t *testing.T) {
 	}
 
 	targetTime := now.Add(4 * time.Hour)
-	requiredDuration := 3 * time.Hour // Need 3h but only 2h available after rates start
+	requiredDuration := 3 * time.Hour // Need 3h but only 2h rate coverage
 
 	plan := planner.Plan(requiredDuration, 0, targetTime, false) // dispersed mode
 
-	require.NotEmpty(t, plan, "plan should not be empty - starts when rates become available")
+	require.NotEmpty(t, plan, "plan should not be empty")
 
-	// Best effort: start as soon as rates are available
-	assert.Equal(t, now.Add(2*time.Hour), plan[0].Start, "should start at first available rate")
-	assert.Equal(t, 0.10, plan[0].Value, "should use first available rate price")
+	// Insufficient rate coverage: fall back to simplePlan starting at latestStart
+	assert.Equal(t, now.Add(1*time.Hour), plan[0].Start, "should start at latestStart (target - required)")
+	assert.Equal(t, 0.0, plan[0].Value, "simplePlan has no price info")
 }

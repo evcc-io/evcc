@@ -153,6 +153,11 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 
 	rates = clampRates(rates, now, targetTime)
 
+	// check if rate coverage is sufficient for planning
+	if len(rates) > 0 && rates[len(rates)-1].End.Sub(rates[0].Start) < requiredDuration {
+		return simplePlan
+	}
+
 	// don't precondition longer than charging duration
 	precondition = min(precondition, requiredDuration)
 
@@ -174,25 +179,6 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 	// create plan unless only precond slots remaining
 	var plan api.Rates
 	if continuous {
-		// check if available tariff slots span is sufficient for sliding window algorithm
-		// verify that actual tariff data covers enough duration (may have gaps or start late)
-		if len(rates) > 0 {
-			start := rates[0].Start
-			if start.Before(now) {
-				start = now
-			}
-
-			end := rates[len(rates)-1].End
-			if end.After(targetTime) {
-				end = targetTime
-			}
-
-			// available window too small for sliding window - charge continuously to target
-			if end.Sub(start) < requiredDuration {
-				return continuousPlan(append(rates, precond...), latestStart, targetTime.Add(precondition))
-			}
-		}
-
 		// find cheapest continuous window
 		plan = findContinuousWindow(rates, requiredDuration, targetTime)
 	} else {
