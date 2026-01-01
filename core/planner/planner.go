@@ -155,7 +155,7 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 	rates = clampRates(rates, now, targetTime)
 
 	// check if rate coverage is sufficient for planning
-	if len(rates) > 0 && rates[len(rates)-1].End.Sub(rates[0].Start) < requiredDuration {
+	if len(rates) == 0 || rates[len(rates)-1].End.Sub(rates[0].Start) < requiredDuration {
 		return simplePlan
 	}
 

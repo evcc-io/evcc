@@ -534,3 +534,22 @@ func TestStartBeforeRatesInsufficientTime(t *testing.T) {
 	assert.Equal(t, now.Add(1*time.Hour), plan[0].Start, "should start at latestStart (target - required)")
 	assert.Equal(t, 0.0, plan[0].Value, "simplePlan has no price info")
 }
+
+// TestEmptyRatesAfterClamping tests fallback to simplePlan when no rates cover [now, targetTime]
+func TestEmptyRatesAfterClamping(t *testing.T) {
+	c := clock.NewMock()
+	ctrl := gomock.NewController(t)
+
+	trf := api.NewMockTariff(ctrl)
+	trf.EXPECT().Rates().AnyTimes().Return(rates([]float64{0.20}, c.Now().Add(3*time.Hour), time.Hour), nil)
+
+	p := &Planner{
+		log:    util.NewLogger("test"),
+		clock:  c,
+		tariff: trf,
+	}
+
+	plan := p.Plan(time.Hour, 0, c.Now().Add(90*time.Minute), false)
+	require.Len(t, plan, 1)
+	assert.Equal(t, c.Now().Add(30*time.Minute), plan[0].Start)
+}
