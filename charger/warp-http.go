@@ -76,6 +76,10 @@ func NewWarpHTTPFromConfig(other map[string]any) (api.Charger, error) {
 		}
 	}
 
+	if err := wb.disablePhaseAutoSwitch(); err != nil {
+		wb.log.INFO.Printf("disabling phase auto switch skipped: %v", err)
+	}
+
 	return decorateWarpHTTP(wb, currentPower, totalEnergy, currents, voltages, identity, phases, getPhases), nil
 }
 
@@ -245,6 +249,19 @@ func (wb *WarpHTTP) identify() (string, error) {
 	uri := fmt.Sprintf("%s/charge_tracker/current_charge", wb.uri)
 	err := wb.GetJSON(uri, &res)
 	return res.AuthorizationInfo.TagId, err
+}
+
+func (wb *WarpHTTP) disablePhaseAutoSwitch() error {
+	uri := fmt.Sprintf("%s/evse/phase_auto_switch", wb.uri)
+	data := map[string]bool{"enabled": false}
+
+	req, err := request.New(http.MethodPut, uri, request.MarshalJSON(data), request.JSONEncoding)
+	if err != nil {
+		return err
+	}
+
+	var res interface{}
+	return wb.DoJSON(req, &res)
 }
 
 func (wb *WarpHTTP) emState() (warp.EmState, error) {
