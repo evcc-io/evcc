@@ -1,0 +1,29 @@
+template: tinkerforge-warp3-http
+products:
+  - brand: TinkerForge
+    description:
+      generic: WARP3 Charger Smart
+  - brand: TinkerForge
+    description:
+      generic: WARP3 Charger Pro
+capabilities: ["mA", "1p3p", "rfid"]
+requirements:
+  evcc: ["skiptest"]
+params:
+  - name: uri
+    required: true
+  - name: user
+  - name: password
+  - name: meterIndex
+    default: 0
+    required: true
+    description:
+      de: Stromzähler Index
+      en: Energy Meter Index
+render: |
+  type: warp-http
+  uri: {{ .uri }}
+  user: {{ .user }}
+  password: {{ .password }}
+  disablePhaseAutoSwitch: true
+  energyMeterIndex: {{ .meterIndex }}
