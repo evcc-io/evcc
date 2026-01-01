@@ -581,8 +581,8 @@ func TestContinuous_StartBeforeRatesInsufficientTime(t *testing.T) {
 
 	require.NotEmpty(t, plan, "plan should not be empty")
 
-	// Best effort: start immediately to maximize charging time
-	assert.Equal(t, now, plan[0].Start, "should start immediately")
+	// Best effort: start at latest possible time to maximize charging time
+	assert.Equal(t, now.Add(1*time.Hour), plan[0].Start, "should start at latest possible time")
 	assert.Equal(t, 0.0, plan[0].Value, "gap-filling slot before rates has no price")
 }
 
