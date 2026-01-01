@@ -548,8 +548,8 @@ func TestContinuous_StartBeforeRates(t *testing.T) {
 
 // TestContinuous_StartBeforeRatesInsufficientTime tests that when current time
 // is before the first available rate AND there's not enough time after rates
-// start to complete charging before target, the planner starts charging as soon
-// as rates become available (best effort approach)
+// start to complete charging before target, the planner starts at the latest
+// possible time to reach target (best effort approach)
 func TestContinuous_StartBeforeRatesInsufficientTime(t *testing.T) {
 	now := time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
 	c := clock.NewMock()
