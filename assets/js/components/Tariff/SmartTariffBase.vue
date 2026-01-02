@@ -92,9 +92,27 @@
 				</div>
 			</div>
 			<div class="text-end">
-				<div class="label">
+				<div class="label d-flex align-items-center justify-content-end gap-2">
 					<span v-if="activeSlot">{{ activeSlotName }}</span>
 					<span v-else>{{ currentPriceLabel }}</span>
+					<div class="btn-group btn-group-sm" role="group" :aria-label="chartScaleLabel">
+						<button
+							type="button"
+							class="btn btn-outline-secondary"
+							:class="{ active: scaleMode === 'zero' }"
+							@click="setScaleMode('zero')"
+						>
+							{{ chartScaleZeroLabel }}
+						</button>
+						<button
+							type="button"
+							class="btn btn-outline-secondary"
+							:class="{ active: scaleMode === 'range' }"
+							@click="setScaleMode('range')"
+						>
+							{{ chartScaleRangeLabel }}
+						</button>
+					</div>
 				</div>
 				<div v-if="activeSlot" class="value text-primary">
 					{{ activeSlotCost }}
