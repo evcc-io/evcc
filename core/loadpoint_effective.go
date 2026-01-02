@@ -232,13 +232,14 @@ func (lp *Loadpoint) EffectiveMaxPower() float64 {
 }
 
 // effectiveMaxPower returns the effective max power taking vehicle capabilities and phase scaling into account
-func (lp *Loadpoint) effectiveMaxPower() float64 {
+func (lp *Loadpoint) effectiveMaxPower() (maxPower float64) {
+	maxPower = Voltage * lp.effectiveMaxCurrent() * float64(lp.maxActivePhases())
 	if lp.vehicle != nil {
-		if maxPower, ok := lp.vehicle.OnIdentified().GetMaxPower(); ok {
-			return maxPower
+		if maxPowerConfigured, ok := lp.vehicle.OnIdentified().GetMaxPower(); ok {
+			return min(maxPower, maxPowerConfigured)
 		}
 	}
-	return Voltage * lp.effectiveMaxCurrent() * float64(lp.maxActivePhases())
+	return
 }
 
 // EffectivePlanStrategy returns the effective plan strategy
