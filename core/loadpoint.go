@@ -1783,11 +1783,11 @@ func (lp *Loadpoint) publishSocAndRange() {
 		return
 	}
 
-	f, _ := socEstimator.Soc(soc, lp.GetChargedEnergy())
-
-	lp.vehicleSoc = f
-	lp.log.DEBUG.Printf("vehicle soc (estimator): %.0f%%", lp.vehicleSoc)
-	lp.publish(keys.VehicleSoc, lp.vehicleSoc)
+	if soc != nil {
+		lp.vehicleSoc, _ = socEstimator.Soc(soc, lp.GetChargedEnergy())
+		lp.log.DEBUG.Printf("vehicle soc (estimator): %.0f%%", lp.vehicleSoc)
+		lp.publish(keys.VehicleSoc, lp.vehicleSoc)
+	}
 
 	// use minimum of vehicle and loadpoint
 	limitSoc := min(apiLimitSoc, lp.EffectiveLimitSoc())
@@ -1811,7 +1811,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 	}
 
 	// trigger message after variables are updated
-	lp.bus.Publish(evVehicleSoc, f)
+	lp.bus.Publish(evVehicleSoc, lp.vehicleSoc)
 }
 
 // addTask adds a single task to the queue
