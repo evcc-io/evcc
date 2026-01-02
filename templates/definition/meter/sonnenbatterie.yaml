@@ -57,8 +57,6 @@ render: |
     source: http
     uri: http://{{ .host }}:{{ .port }}/api/v1/status
     jq: .USOC
-  minsoc: {{ .minsoc }} # %
-  maxsoc: {{ .maxsoc }} # %
   {{- if .token }}
   batterymode:
     source: switch

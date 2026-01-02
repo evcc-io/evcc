@@ -126,8 +126,6 @@ render: |
       address: 0xE184 # Battery 1 State of Energy (SOE)
       type: holding
       decode: float32nans
-  minsoc: {{ .minsoc }} # %
-  maxsoc: {{ .maxsoc }} # %
   batterymode:
     source: watchdog
     timeout: {{ .watchdog }}

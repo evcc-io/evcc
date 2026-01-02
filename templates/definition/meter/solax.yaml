@@ -118,8 +118,6 @@ render: |
   #     type: input
   #     decode: uint32s
   #   scale: 0.1
-  minsoc: {{ .minsoc }} # %
-  maxsoc: {{ .maxsoc }} # %
   batterymode:
     source: switch
     switch:

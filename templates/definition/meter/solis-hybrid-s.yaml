@@ -28,6 +28,7 @@ params:
     choice: ["rs485"]
     baudrate: 9600
     id: 1
+  - name: maxacpower
   - preset: battery-params
 render: |
   type: custom
