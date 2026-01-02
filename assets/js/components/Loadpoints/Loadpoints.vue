@@ -23,6 +23,7 @@
 					:tariffCo2="tariffCo2"
 					:tariffFeedIn="tariffFeedIn"
 					:currency="currency"
+					:multipleLoadpoints="multipleLoadpoints"
 					:useTwoRows="useTwoRows"
 					:gridConfigured="gridConfigured"
 					:pvConfigured="pvConfigured"
@@ -96,8 +97,11 @@ export default defineComponent({
 		selectedIndex() {
 			return this.indexById(this.selectedId);
 		},
+		multipleLoadpoints() {
+			return this.loadpoints.length > 1;
+		},
 		useTwoRows() {
-			return this.loadpoints.length > 1 && window.innerHeight < 1450;
+			return this.multipleLoadpoints && window.innerHeight < 1450;
 		},
 	},
 	watch: {

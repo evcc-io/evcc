@@ -230,6 +230,7 @@ export default defineComponent({
 		tariffFeedIn: Number,
 		tariffCo2: Number,
 		currency: String,
+		multipleLoadpoints: Boolean,
 		useTwoRows: Boolean,
 		gridConfigured: Boolean,
 		pvConfigured: Boolean,
