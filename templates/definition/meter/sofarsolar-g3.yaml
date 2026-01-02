@@ -33,8 +33,6 @@ params:
     type: int
     default: 1
     advanced: true
-  - name: capacity
-    advanced: true
   - name: maxacpower
   - name: defaultmode
     help:
@@ -43,14 +41,6 @@ params:
     default: 0 # self use
     advanced: true
   # battery control
-  - name: minsoc
-    type: int
-    advanced: true
-    deprecated: true
-  - name: maxsoc
-    type: int
-    advanced: true
-    deprecated: true
   - name: externalpower
     type: bool
     description:
@@ -61,6 +51,7 @@ params:
       en: Includes all connected external sources, like the power generation of cascaded inverters, into the PV power calculation.
     advanced: true
     usages: ["pv"]
+  - preset: battery-params
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -303,5 +294,5 @@ render: |
                   address: 0x1187
                   type: writemultiple
                   decode: bytes
-  capacity: {{ .capacity }} # kWh
+  {{- include "battery-params" . }}
   {{- end }}

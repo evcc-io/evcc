@@ -23,8 +23,7 @@ params:
   - name: host
   - name: port
     default: 502
-  - name: capacity
-    advanced: true
+  - preset: battery-params
 render: |
   type: custom
   {{- if eq .usage "grid" }}

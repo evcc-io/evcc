@@ -20,17 +20,10 @@ params:
     choice: ["tcpip", "rs485"]
     id: 1
     port: 1502
-  - name: timeout
-  - name: capacity
-    advanced: true
   - name: maxacpower
-  - name: maxchargepower
+  - preset: battery-params
   - name: maxdischargepower
     default: 5000
-  - name: minsoc
-    advanced: true
-  - name: maxsoc
-    advanced: true
   - name: watchdog
     type: duration
     default: 60s
@@ -41,65 +34,54 @@ render: |
   power:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     subdevice: 1 # Metering device
     value: 203:W
     scale: -1
   energy:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     subdevice: 1 # Metering device
     value: 203:TotWhImp
     scale: 0.001
   currents:
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      timeout: {{ .timeout }}
       subdevice: 1 # Metering device
       value: 203:AphA
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      timeout: {{ .timeout }}
       subdevice: 1 # Metering device
       value: 203:AphB
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      timeout: {{ .timeout }}
       subdevice: 1 # Metering device
       value: 203:AphC
   voltages:
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      timeout: {{ .timeout }}
       subdevice: 1 # Metering device
       value: 203:PhVphA
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      timeout: {{ .timeout }}
       subdevice: 1 # Metering device
       value: 203:PhVphB
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      timeout: {{ .timeout }}
       subdevice: 1 # Metering device
       value: 203:PhVphC
   powers:
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      timeout: {{ .timeout }}
       subdevice: 1 # Metering device
       value:  203:WphA
       scale: -1
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      timeout: {{ .timeout }}
       subdevice: 1 # Metering device
       value: 203:WphB
       scale: -1
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      timeout: {{ .timeout }}
       subdevice: 1 # Metering device
       value: 203:WphC
       scale: -1
@@ -110,13 +92,11 @@ render: |
     add:
       - source: sunspec
         {{- include "modbus" . | indent 6 }}
-        timeout: {{ .timeout }}
         value:
           - 101:DCW
           - 103:DCW
       - source: modbus
         {{- include "modbus" . | indent 6 }}
-        timeout: {{ .timeout }}
         register:
           address: 62836 # Battery 1 Instantaneous Power
           type: holding
@@ -124,7 +104,6 @@ render: |
   energy:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     value:
       - 101:WH
       - 103:WH
@@ -135,7 +114,6 @@ render: |
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     register:
       address: 0xE174 # Battery 1 Instantaneous Power
       type: holding
@@ -144,13 +122,10 @@ render: |
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     register:
       address: 0xE184 # Battery 1 State of Energy (SOE)
       type: holding
       decode: float32nans
-  minsoc: {{ .minsoc }} # %
-  maxsoc: {{ .maxsoc }} # %
   batterymode:
     source: watchdog
     timeout: {{ .watchdog }}
@@ -224,7 +199,5 @@ render: |
                 address: 0xE010 # StorageRemoteCtrl_DischargeLimit
                 type: writemultiple
                 encoding: float32s
-  capacity: {{ .capacity }} # kWh
-  maxchargepower: {{ .maxchargepower }} # W
-  maxdischargepower: {{ .maxdischargepower }} # W
+  {{- include "battery-params" . }}
   {{- end }}
