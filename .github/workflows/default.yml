@@ -26,7 +26,7 @@ jobs:
           cache: false # avoid cache thrashing
         id: go
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: |
             ~/.cache/go-build
@@ -66,7 +66,7 @@ jobs:
           cache: false
         id: go
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: |
             ~/.cache/go-build
@@ -104,7 +104,7 @@ jobs:
           cache: false
         id: go
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: |
             ~/.cache/go-build
@@ -135,7 +135,7 @@ jobs:
           cache: false # avoid cache thrashing
         id: go
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: |
             ~/.cache/go-build
@@ -191,7 +191,7 @@ jobs:
       - name: Cache dist
         # avoid cache thrashing by nightly
         if: github.event_name == 'push' || github.event_name == 'pull_request'
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         id: cache-dist
         with:
           path: dist
@@ -220,7 +220,7 @@ jobs:
           cache: false
         id: go
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: |
             ~/.cache/go-build
@@ -246,7 +246,7 @@ jobs:
         run: echo "PLAYWRIGHT_VERSION=$(node -e "console.log(require('./package-lock.json').packages['node_modules/@playwright/test'].version)")" >> $GITHUB_ENV
 
       - name: Cache Playwright browsers
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
@@ -266,7 +266,7 @@ jobs:
         env:
           TZ: Europe/Berlin
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         if: ${{ !cancelled() }}
         with:
           name: playwright-report
