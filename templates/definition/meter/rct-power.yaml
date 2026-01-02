@@ -6,9 +6,6 @@ products:
 capabilities: ["battery-control"]
 requirements:
   evcc: ["skiptest"]
-  description:
-    de: Es wird mindestens die BMS-Version 5615 benötigt.
-    en: At least BMS version 5615 is needed.
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
