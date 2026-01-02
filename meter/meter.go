@@ -15,6 +15,7 @@ func init() {
 }
 
 //go:generate go tool decorate
+
 //evcc:function decorateMeter
 //evcc:basetype api.Meter
 //evcc:type api.MeterEnergy,TotalEnergy,func() (float64, error)
@@ -23,8 +24,6 @@ func init() {
 //evcc:type api.PhasePowers,Powers,func() (float64, float64, float64, error)
 //evcc:type api.MaxACPowerGetter,MaxACPower,func() float64
 
-//go:generate go tool decorate
-//evcc:file meter_battery
 //evcc:function decorateMeterBattery
 //evcc:basetype api.Meter
 //evcc:type api.MeterEnergy,TotalEnergy,func() (float64, error)
