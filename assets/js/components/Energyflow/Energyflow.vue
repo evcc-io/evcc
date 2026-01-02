@@ -545,8 +545,9 @@ export default defineComponent({
 	},
 	mounted() {
 		window.addEventListener("resize", this.updateHeight);
+
 		// height must be calculated in case of initially open details
-		if (settings.energyflowDetails) {
+		if (settings.energyflowDetails || this.loadpoints.length === 0) {
 			this.toggleDetails();
 		}
 		setTimeout(() => (this.ready = true), 200);
