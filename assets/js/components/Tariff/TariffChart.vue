@@ -85,15 +85,18 @@ export default defineComponent({
 	},
 	computed: {
 		valueInfo() {
-			let max = Number.MIN_VALUE;
-			let min = 0;
-			this.slots
-				.map((s) => s.value)
-				.filter((value) => value !== undefined)
-				.forEach((value) => {
-					max = Math.max(max, value);
-					min = Math.min(min, value);
-				});
+			let max = Number.NEGATIVE_INFINITY;
+			let min = Number.POSITIVE_INFINITY;
+			const values = this.slots.map((s) => s.value).filter((value) => value !== undefined);
+			values.forEach((value) => {
+				max = Math.max(max, value);
+				min = Math.min(min, value);
+			});
+
+			if (!values.length) {
+				return { min: 0, range: 0 };
+			}
+
 			return { min, range: max - min };
 		},
 		targetLeft() {
@@ -148,11 +151,15 @@ export default defineComponent({
 		},
 		valueStyle(value: number | undefined) {
 			const val = value === undefined ? this.avgValue : value;
-			const height =
-				value !== undefined && !isNaN(val)
-					? `${10 + (90 / this.valueInfo.range) * (val - this.valueInfo.min)}%`
-					: "50%";
-			return { height };
+			if (this.valueInfo.range <= 0) {
+				return { height: "50%" };
+			}
+			if (value === undefined || isNaN(val)) {
+				return { height: "50%" };
+			}
+			const normalized = (val - this.valueInfo.min) / this.valueInfo.range;
+			const clamped = Math.min(1, Math.max(0, normalized));
+			return { height: `${clamped * 100}%` };
 		},
 		startLongPress(index: number) {
 			this.longPressTimer = setTimeout(() => {
