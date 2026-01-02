@@ -10,6 +10,7 @@
 		<div class="container">
 			<SmartCostLimit
 				:current-limit="smartCostLimit"
+				:current-limit-percent="smartCostLimitPercent"
 				:last-limit="lastSmartCostLimit"
 				:smart-cost-type="smartCostType"
 				:currency="currency"
@@ -175,6 +176,7 @@ export default defineComponent({
 		minCurrent: { type: Number, default: 0 },
 		title: String,
 		smartCostLimit: { type: Number as PropType<number | null>, default: null },
+		smartCostLimitPercent: { type: Number as PropType<number | null>, default: null },
 		smartCostType: String as PropType<SMART_COST_TYPE>,
 		smartCostAvailable: Boolean,
 		smartFeedInPriorityLimit: { type: Number as PropType<number | null>, default: null },

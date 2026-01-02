@@ -24,6 +24,7 @@ type DynamicConfig struct {
 	MinCurrent               float64   `json:"minCurrent"`
 	MaxCurrent               float64   `json:"maxCurrent"`
 	SmartCostLimit           *float64  `json:"smartCostLimit"`
+	SmartCostLimitPercent    *float64  `json:"smartCostLimitPercent"`
 	SmartFeedInPriorityLimit *float64  `json:"smartFeedInPriorityLimit"`
 	PlanEnergy               float64   `json:"planEnergy"`
 	PlanTime                 time.Time `json:"planTime"`
@@ -59,6 +60,9 @@ func (payload DynamicConfig) Apply(lp API) error {
 	lp.SetTitle(payload.Title)
 	lp.SetPriority(payload.Priority)
 	lp.SetSmartCostLimit(payload.SmartCostLimit)
+	if setter, ok := lp.(interface{ SetSmartCostLimitPercent(*float64) }); ok {
+		setter.SetSmartCostLimitPercent(payload.SmartCostLimitPercent)
+	}
 	lp.SetSmartFeedInPriorityLimit(payload.SmartFeedInPriorityLimit)
 	lp.SetThresholds(payload.Thresholds)
 	lp.SetPlanEnergy(payload.PlanTime, payload.PlanEnergy)

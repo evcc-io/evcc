@@ -116,6 +116,7 @@ type Loadpoint struct {
 	limitSoc                 int      // Session limit for soc
 	limitEnergy              float64  // Session limit for energy
 	smartCostLimit           *float64 // always charge if consumption cost is below this value
+	smartCostLimitPercent    *float64 // smart cost limit as percent of average rate
 	smartFeedInPriorityLimit *float64 // prevent charging if feed-in cost is above this value
 	batteryBoost             int      // battery boost state
 
@@ -353,6 +354,9 @@ func (lp *Loadpoint) restoreSettings() {
 	}
 	if v, err := lp.settings.Float(keys.SmartCostLimit); err == nil {
 		lp.SetSmartCostLimit(&v)
+	}
+	if v, err := lp.settings.Float(keys.SmartCostLimitPercent); err == nil {
+		lp.SetSmartCostLimitPercent(&v)
 	}
 	if v, err := lp.settings.Float(keys.SmartFeedInPriorityLimit); err == nil {
 		lp.SetSmartFeedInPriorityLimit(&v)
@@ -1867,7 +1871,11 @@ func (lp *Loadpoint) phaseSwitchCompleted() bool {
 // Update is the main control function. It reevaluates meters and charger state
 func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64) {
 	// smart cost
-	smartCostActive, smartCostNextStart := lp.checkSmartLimit(lp.GetSmartCostLimit(), consumption, true)
+	smartCostLimit, smartCostDerived := effectiveSmartCostLimit(lp, consumption)
+	if smartCostDerived {
+		lp.publish(keys.SmartCostLimit, smartCostLimit)
+	}
+	smartCostActive, smartCostNextStart := lp.checkSmartLimit(smartCostLimit, consumption, true)
 	lp.publish(keys.SmartCostActive, smartCostActive)
 	lp.publish(keys.SmartCostNextStart, smartCostNextStart)
 

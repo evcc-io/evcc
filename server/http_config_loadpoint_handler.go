@@ -36,6 +36,7 @@ func getLoadpointDynamicConfig(lp loadpoint.API) loadpoint.DynamicConfig {
 		MinCurrent:               lp.GetMinCurrent(),
 		MaxCurrent:               lp.GetMaxCurrent(),
 		SmartCostLimit:           lp.GetSmartCostLimit(),
+		SmartCostLimitPercent:    getSmartCostLimitPercent(lp),
 		SmartFeedInPriorityLimit: lp.GetSmartFeedInPriorityLimit(),
 		Thresholds:               lp.GetThresholds(),
 		Soc:                      lp.GetSocConfig(),
@@ -45,6 +46,13 @@ func getLoadpointDynamicConfig(lp loadpoint.API) loadpoint.DynamicConfig {
 		LimitEnergy:              lp.GetLimitEnergy(),
 		LimitSoc:                 lp.GetLimitSoc(),
 	}
+}
+
+func getSmartCostLimitPercent(lp loadpoint.API) *float64 {
+	if getter, ok := lp.(interface{ GetSmartCostLimitPercent() *float64 }); ok {
+		return getter.GetSmartCostLimitPercent()
+	}
+	return nil
 }
 
 type loadpointFullConfig struct {
