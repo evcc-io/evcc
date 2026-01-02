@@ -1730,7 +1730,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 	// https://github.com/evcc-io/evcc/issues/16180
 	socEstimator := lp.socEstimator
 
-	// capacity not available
+	// capacity and hence not available
 	if socEstimator == nil || !lp.vehicleHasSoc() {
 		if soc, err := lp.chargerSoc(); err == nil {
 			lp.vehicleSoc = soc

@@ -141,33 +141,36 @@ func TestPublishSocAndRangeVehiclesAndChargers(t *testing.T) {
 	}
 
 	for _, tc := range tc {
-		t.Log(tc.name)
-
 		lp := &Loadpoint{
-			log:          log,
-			bus:          evbus.New(),
-			clock:        clck,
-			charger:      tc.charger,
-			vehicle:      tc.vehicle,
-			chargeMeter:  &Null{}, // silence nil panics
-			chargeRater:  &Null{}, // silence nil panics
-			chargeTimer:  &Null{}, // silence nil panics
-			socEstimator: soc.NewEstimator(log, tc.charger, tc.vehicle, false),
-			minCurrent:   minA,
-			maxCurrent:   maxA,
-			phases:       1,
-			status:       api.StatusC,
-			mode:         api.ModeNow,
+			log:         log,
+			bus:         evbus.New(),
+			clock:       clck,
+			charger:     tc.charger,
+			vehicle:     tc.vehicle,
+			chargeMeter: &Null{}, // silence nil panics
+			chargeRater: &Null{}, // silence nil panics
+			chargeTimer: &Null{}, // silence nil panics
+			minCurrent:  minA,
+			maxCurrent:  maxA,
+			phases:      1,
+			status:      api.StatusC,
+			mode:        api.ModeNow,
 		}
 
 		// populate channels
 		x, y, z := createChannels(t)
 		attachChannels(lp, x, y, z)
 
-		assert.True(t, lp.vehicleSocPollAllowed())
-		lp.publishSocAndRange()
+		test := func(t *testing.T) {
+			assert.True(t, lp.vehicleSocPollAllowed())
+			lp.publishSocAndRange()
+			assert.Equal(t, tc.soc, lp.vehicleSoc)
+		}
 
-		assert.Equal(t, tc.soc, lp.vehicleSoc)
+		t.Run(tc.name+" wo/estimator", test)
+
+		lp.socEstimator = soc.NewEstimator(log, tc.charger, tc.vehicle, false)
+		t.Run(tc.name+" w/estimator", test)
 	}
 }
 
