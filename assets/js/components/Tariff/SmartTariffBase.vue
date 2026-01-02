@@ -92,9 +92,27 @@
 				</div>
 			</div>
 			<div class="text-end">
-				<div class="label">
+				<div class="label d-flex align-items-center justify-content-end gap-2">
 					<span v-if="activeSlot">{{ activeSlotName }}</span>
 					<span v-else>{{ currentPriceLabel }}</span>
+					<div class="btn-group btn-group-sm" role="group" :aria-label="chartScaleLabel">
+						<button
+							type="button"
+							class="btn btn-outline-secondary"
+							:class="{ active: scaleMode === 'zero' }"
+							@click="setScaleMode('zero')"
+						>
+							{{ chartScaleZeroLabel }}
+						</button>
+						<button
+							type="button"
+							class="btn btn-outline-secondary"
+							:class="{ active: scaleMode === 'range' }"
+							@click="setScaleMode('range')"
+						>
+							{{ chartScaleRangeLabel }}
+						</button>
+					</div>
 				</div>
 				<div v-if="activeSlot" class="value text-primary">
 					{{ activeSlotCost }}
@@ -110,6 +128,8 @@
 		<TariffChart
 			v-if="rates.length"
 			:slots="slots"
+			:scale-mode="scaleMode"
+			:scale-step="chartScaleStep"
 			@slot-hovered="slotHovered"
 			@slot-selected="slotSelected"
 		/>
@@ -177,6 +197,7 @@ export default defineComponent({
 			active: false,
 			relativeActive: false,
 			relativePercent: null as number | null,
+			scaleMode: "range" as "zero" | "range",
 		};
 	},
 	computed: {
@@ -328,6 +349,18 @@ export default defineComponent({
 					? this.activeSlots.length
 					: this.warningSlots.length;
 			return this.fmtDurationLong(active * 15 * 60, "short");
+		},
+		chartScaleLabel(): string {
+			return this.$t("smartCost.chartScaleLabel");
+		},
+		chartScaleZeroLabel(): string {
+			return this.$t("smartCost.chartScaleZero");
+		},
+		chartScaleRangeLabel(): string {
+			return this.$t("smartCost.chartScaleRange");
+		},
+		chartScaleStep(): number {
+			return this.isCo2 ? 1 : 0.01;
 		},
 		limitOperator() {
 			return this.limitDirection === "below" ? "≤" : "≥";
@@ -503,6 +536,9 @@ export default defineComponent({
 			if (this.applyAll) {
 				this.applyToAllVisible = true;
 			}
+		},
+		setScaleMode(mode: "zero" | "range") {
+			this.scaleMode = mode;
 		},
 		applyToAll() {
 			this.$emit("apply-to-all", this.currentLimit);
