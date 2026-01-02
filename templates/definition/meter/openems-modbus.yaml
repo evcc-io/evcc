@@ -72,6 +72,7 @@ params:
       generic: ProductionActiveEnergy (Wh)
     usages: ["pv"]
     advanced: true
+  - name: maxacpower
   - name: battery_power_register
     type: int
     default: 415
@@ -120,15 +121,7 @@ params:
       en: battery control API timeout
     usages: ["battery"]
     advanced: true
-  - name: minsoc
-    advanced: true
-  - name: maxsoc
-    advanced: true
-  - name: capacity
-    advanced: true
-  - name: maxchargepower
-  - name: maxdischargepower
-  - name: maxacpower
+  - preset: battery-params
 render: |
   type: custom
   {{- if eq .usage "grid" }} 
@@ -226,11 +219,7 @@ render: |
           {{- else }}
           source: error
           error: ErrNotAvailable
-          {{- end }}              
+          {{- end }}
   {{- end }}
-  minsoc: {{ .minsoc }} # %
-  maxsoc: {{ .maxsoc }} # %
-  maxchargepower: {{ .maxchargepower }} # W
-  maxdischargepower: {{ .maxdischargepower }} # W
-  capacity: {{ .capacity }} # kWh
+  {{- include "battery-params" . }}
   {{- end }}

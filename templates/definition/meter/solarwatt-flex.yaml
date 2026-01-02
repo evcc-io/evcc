@@ -15,8 +15,7 @@ params:
     choice: ["grid", "pv", "battery"]
     allinone: true
   - name: host
-  - name: capacity
-    advanced: true
+  - preset: battery-params
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -76,5 +75,5 @@ render: |
     jq: >
       def parseSecondNumber: sub("[^|]*\\|(?<number>[.\\d]*).*"; "\(.number)") | tonumber;
       (.[] | select(.name | test("^kiwigrid_location_standard_.*_harmonized_work_released_total$")).state | parseSecondNumber / 1000) // 0
-  capacity: {{ .capacity }} # kWh
+  {{- include "battery-params" . }}
   {{- end }}

@@ -124,7 +124,12 @@
 				</a>
 			</li>
 			<li v-if="isApp">
-				<button type="button" class="dropdown-item" @click="openNativeSettings">
+				<button
+					type="button"
+					class="dropdown-item"
+					data-testid="topnavigation-app"
+					@click="openNativeSettings"
+				>
 					{{ $t("header.nativeSettings") }}
 				</button>
 			</li>
