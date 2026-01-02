@@ -340,7 +340,7 @@ func main() {
 			os.Exit(4)
 		}
 
-		generated.WriteString(strings.TrimSpace(buf.String()) + "\n\n")
+		fmt.Fprintln(generated, buf.String())
 	}
 
 	formatted, err := format.Source(generated.Bytes())
