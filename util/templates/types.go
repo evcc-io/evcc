@@ -269,12 +269,8 @@ var _ json.Marshaler = (*Param)(nil)
 func (p Param) MarshalJSON() ([]byte, error) {
 	type param Param
 	pp := (param)(p)
-	if p.Deprecated {
-		pp.Required = false
-	}
-	if p.Required {
-		pp.Advanced = false
-	}
+	pp.Required = p.IsRequired()
+	pp.Advanced = p.IsAdvanced()
 	return json.Marshal(pp)
 }
 
