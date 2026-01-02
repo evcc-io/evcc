@@ -88,12 +88,12 @@ render: |
       - source: const
         value: 1
         set:
-         source: modbus
-         {{- include "modbus" . | indent 2 }}
-         register:
-          address: 2741
-          type: input
-          encoding: uint16
+          source: modbus
+          {{- include "modbus" . | indent 2 }}
+          register:
+            address: 2741
+            type: input
+            encoding: uint16
       - source: modbus
         {{- include "modbus" . | indent 2 }}
         register:
