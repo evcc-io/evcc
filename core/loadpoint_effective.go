@@ -236,7 +236,7 @@ func (lp *Loadpoint) effectiveMaxPower() (maxPower float64) {
 	maxPower = Voltage * lp.effectiveMaxCurrent() * float64(lp.maxActivePhases())
 	if lp.vehicle != nil {
 		if maxPowerConfigured, ok := lp.vehicle.OnIdentified().GetMaxPower(); ok {
-			return min(maxPower, maxPowerConfigured)
+			maxPower = min(maxPower, maxPowerConfigured)
 		}
 	}
 	return
