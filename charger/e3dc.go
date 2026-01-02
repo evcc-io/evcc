@@ -165,15 +165,9 @@ func (wb *E3dc) checkConfiguration() error {
 		wb.disableAutoPhaseSwitch()
 	}
 
-	// Start with 1 phase - evcc will switch to 3 phases when needed
-	// This ensures evcc has full control over phase switching from the start
-	wb.log.INFO.Println("setting wallbox to 1 phase for evcc control")
-	if _, err := wb.conn.Send(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
-		*rscp.NewMessage(rscp.WB_INDEX, wb.id),
-		*rscp.NewMessage(rscp.WB_REQ_SET_NUMBER_PHASES, uint8(1)),
-	})); err != nil {
-		wb.log.ERROR.Printf("failed to set 1 phase: %v", err)
-	}
+	// Note: We intentionally do NOT set an initial phase count here.
+	// evcc will control phase switching based on charging mode (PV, Min+PV, Fast, etc.).
+	// Setting 1 phase on startup would interrupt fast charging (3p) during restarts.
 
 	return nil
 }
@@ -197,11 +191,13 @@ func (wb *E3dc) ensureSunModeDisabled() {
 		*rscp.NewMessage(rscp.WB_REQ_SUN_MODE_ACTIVE, nil),
 	}))
 	if err != nil {
+		wb.log.DEBUG.Printf("failed to check sun mode: %v", err)
 		return
 	}
 
 	wbData, err := rscpContainer(*res, 2)
 	if err != nil {
+		wb.log.DEBUG.Printf("failed to parse sun mode response: %v", err)
 		return
 	}
 
@@ -232,11 +228,13 @@ func (wb *E3dc) ensureAutoPhaseDisabled() {
 		*rscp.NewMessage(rscp.WB_REQ_AUTO_PHASE_SWITCH_ENABLED, nil),
 	}))
 	if err != nil {
+		wb.log.DEBUG.Printf("failed to check auto phase switch: %v", err)
 		return
 	}
 
 	wbData, err := rscpContainer(*res, 2)
 	if err != nil {
+		wb.log.DEBUG.Printf("failed to parse auto phase switch response: %v", err)
 		return
 	}
 
