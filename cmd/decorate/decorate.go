@@ -316,7 +316,7 @@ func main() {
 		dst, err := os.Create(name)
 		if err != nil {
 			fmt.Println(err)
-			os.Exit(3)
+			os.Exit(2)
 		}
 
 		defer dst.Close()
@@ -337,7 +337,7 @@ func main() {
 		var buf bytes.Buffer
 		if err := generate(&buf, set.function, set.base, dynamicTypes...); err != nil {
 			fmt.Println(err)
-			os.Exit(4)
+			os.Exit(2)
 		}
 
 		fmt.Fprintln(generated, buf.String())
@@ -351,11 +351,11 @@ func main() {
 	formatted, err = imports.Process(name, formatted, nil)
 	if err != nil {
 		fmt.Println(err)
-		os.Exit(5)
+		os.Exit(3)
 	}
 
 	if _, err := out.Write(formatted); err != nil {
 		fmt.Println(err)
-		os.Exit(6)
+		os.Exit(2)
 	}
 }
