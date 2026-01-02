@@ -154,11 +154,12 @@ export default defineComponent({
 			if (this.valueInfo.range <= 0) {
 				return { height: "50%" };
 			}
-			const height =
-				value !== undefined && !isNaN(val)
-					? `${10 + (90 / this.valueInfo.range) * (val - this.valueInfo.min)}%`
-					: "50%";
-			return { height };
+			if (value === undefined || isNaN(val)) {
+				return { height: "50%" };
+			}
+			const normalized = (val - this.valueInfo.min) / this.valueInfo.range;
+			const clamped = Math.min(1, Math.max(0, normalized));
+			return { height: `${clamped * 100}%` };
 		},
 		startLongPress(index: number) {
 			this.longPressTimer = setTimeout(() => {
