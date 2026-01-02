@@ -10,6 +10,7 @@ import (
 	"os"
 	"reflect"
 	"slices"
+	"strconv"
 	"strings"
 	"text/template"
 
@@ -99,11 +100,13 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 	tmpl, err := template.New("gen").Funcs(sprig.FuncMap()).Funcs(template.FuncMap{
 		// contains checks if slice contains string
 		"contains": slices.Contains[[]string, string],
-		// ordered returns a slice of typeStructs ordered by dynamicType
-		"ordered": func() []typeStruct {
-			ordered := make([]typeStruct, 0)
-			for _, k := range dynamicTypes {
-				ordered = append(ordered, types[k.typ])
+		// ordered returns a slice of funcStruct ordered by dynamicType
+		"ordered": func() []funcStruct {
+			ordered := make([]funcStruct, 0)
+			for _, dt := range dynamicTypes {
+				for _, fs := range types[dt.typ].Functions {
+					ordered = append(ordered, fs)
+				}
 			}
 
 			return ordered
@@ -134,7 +137,7 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 
 		var funcs []funcStruct
 
-		for _, fun := range dt.functions {
+		for i, fun := range dt.functions {
 			function := fun.function
 			signature := fun.signature
 
@@ -148,8 +151,13 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 				params = strings.Split(paramsStr, ",")
 			}
 
+			varName := strings.ToLower(lastPart[:1]) + lastPart[1:]
+			if len(dt.functions) > 1 {
+				varName += strconv.Itoa(i)
+			}
+
 			funcs = append(funcs, funcStruct{
-				VarName:     strings.ToLower(lastPart[:1]) + lastPart[1:],
+				VarName:     varName,
 				Signature:   signature,
 				Function:    function,
 				Params:      params,
@@ -277,42 +285,38 @@ func parseFile(file string, function, basetype, returntype *string, types *[]str
 	return scanner.Err()
 }
 
-func parseFunctions(iface string) []function {
-	var res []function
+func splitTopLevel(s string) []string {
+	var res []string
+	brackets := 0
+	start := 0
 
-OUTER:
-	for len(strings.TrimSpace(iface)) > 0 {
-		parts := strings.SplitN(iface, ",", 2)
-
-		fmt.Println(parts[0], "::", parts[1])
-		var brackets int
-
-		for i, ch := range parts[1] {
-			switch ch {
-			case '(':
-				brackets++
-			case ')':
-				brackets--
-			case ',':
-				if brackets == 0 {
-					iface = iface[i:]
-					res = append(res, function{
-						function:  parts[0],
-						signature: parts[1][:i],
-					})
-
-					continue OUTER
-				}
+	for i, r := range s {
+		switch r {
+		case '(':
+			brackets++
+		case ')':
+			brackets--
+		case ',':
+			if brackets == 0 {
+				res = append(res, strings.TrimSpace(s[start:i]))
+				start = i + 1
 			}
 		}
-
-		res = append(res, function{
-			function:  parts[0],
-			signature: parts[1],
-		})
-		break
 	}
+	res = append(res, strings.TrimSpace(s[start:]))
+	return res
+}
 
+func parseFunctions(iface string) []function {
+	parts := splitTopLevel(iface)
+
+	var res []function
+	for i := 0; i+1 < len(parts); i += 2 {
+		res = append(res, function{
+			function:  parts[i],
+			signature: parts[i+1],
+		})
+	}
 	return res
 }
 
