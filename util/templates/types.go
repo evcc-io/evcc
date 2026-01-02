@@ -232,7 +232,7 @@ func (p *Param) OverwriteProperties(withParam Param) {
 }
 
 func (p *Param) IsAdvanced() bool {
-	return p.Advanced
+	return p.Advanced && !p.Required
 }
 
 func (p *Param) IsMasked() bool {
@@ -244,7 +244,7 @@ func (p *Param) IsPrivate() bool {
 }
 
 func (p *Param) IsRequired() bool {
-	return p.Required
+	return p.Required && !p.Deprecated
 }
 
 func (p *Param) IsDeprecated() bool {
@@ -262,6 +262,20 @@ func (p *Param) yamlQuote(value string) string {
 	}
 
 	return yamlQuote(value)
+}
+
+var _ json.Marshaler = (*Param)(nil)
+
+func (p Param) MarshalJSON() ([]byte, error) {
+	type param Param
+	pp := (param)(p)
+	if p.Deprecated {
+		pp.Required = false
+	}
+	if p.Required {
+		pp.Advanced = false
+	}
+	return json.Marshal(pp)
 }
 
 // Product contains naming information about a product a template supports
