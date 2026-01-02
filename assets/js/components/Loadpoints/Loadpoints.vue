@@ -5,7 +5,7 @@
 		<div
 			ref="carousel"
 			class="carousel d-lg-flex flex-wrap"
-			:class="`carousel--${loadpoints.length}`"
+			:class="[`carousel--${loadpoints.length}`, { 'carousel--fullwidth': fullWidth }]"
 		>
 			<div
 				v-for="loadpoint in loadpoints"
@@ -24,7 +24,7 @@
 					:tariffFeedIn="tariffFeedIn"
 					:currency="currency"
 					:multipleLoadpoints="multipleLoadpoints"
-					:useTwoRows="useTwoRows"
+					:fullWidth="fullWidth"
 					:gridConfigured="gridConfigured"
 					:pvConfigured="pvConfigured"
 					:batteryConfigured="batteryConfigured"
@@ -91,6 +91,8 @@ export default defineComponent({
 			snapTimeout: null as Timeout,
 			scrollTimeout: null as Timeout,
 			highlightedIndex: 0,
+			viewportHeight: 0 as number,
+			isLargeScreen: false as boolean,
 		};
 	},
 	computed: {
@@ -100,8 +102,14 @@ export default defineComponent({
 		multipleLoadpoints() {
 			return this.loadpoints.length > 1;
 		},
-		useTwoRows() {
-			return this.multipleLoadpoints && window.innerHeight < 1450;
+		fullWidth() {
+			if (!this.isLargeScreen) {
+				return false;
+			}
+			return (
+				(this.loadpoints.length === 2 && this.viewportHeight >= 1450) ||
+				(this.loadpoints.length === 3 && this.viewportHeight >= 1900)
+			);
 		},
 	},
 	watch: {
@@ -110,12 +118,16 @@ export default defineComponent({
 		},
 	},
 	mounted() {
+		this.updateViewport();
+		window.addEventListener("resize", this.updateViewport);
+
 		if (this.selectedIndex > 0) {
 			this.$refs["carousel"]?.scrollTo({ top: 0, left: this.left(this.selectedIndex) });
 		}
 		this.$refs["carousel"]?.addEventListener("scroll", this.handleCarouselScroll);
 	},
 	unmounted() {
+		window.removeEventListener("resize", this.updateViewport);
 		this.$refs["carousel"]?.removeEventListener("scroll", this.handleCarouselScroll);
 	},
 	methods: {
@@ -148,6 +160,10 @@ export default defineComponent({
 		},
 		selected(id: string) {
 			return this.highlightedIndex === this.indexById(id);
+		},
+		updateViewport() {
+			this.viewportHeight = window.innerHeight;
+			this.isLargeScreen = window.innerWidth >= 992;
 		},
 		left(index: number) {
 			return (this.$refs["carousel"]?.children[0] as HTMLElement).offsetWidth * index;
@@ -260,19 +276,8 @@ export default defineComponent({
 		grid-gap: 2rem;
 		grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
 	}
-}
-
-/* breakpoint lg, tall screen, 2 loadpoints rows */
-@media (min-width: 992px) and (min-height: 1450px) {
-	.carousel--2 {
-		grid-gap: 4rem;
-		grid-template-columns: 1fr;
-	}
-}
-
-/* breakpoint lg, taller screen, 3 loadpoints rows */
-@media (min-width: 992px) and (min-height: 1900px) {
-	.carousel--3 {
+	/* breakpoint lg, full width override */
+	.carousel--fullwidth {
 		grid-gap: 4rem;
 		grid-template-columns: 1fr;
 	}
