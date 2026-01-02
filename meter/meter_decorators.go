@@ -456,7 +456,7 @@ func (impl *decorateMeterPhaseVoltagesImpl) Voltages() (float64, float64, float6
 	return impl.phaseVoltages()
 }
 
-func decorateMeterBattery(base api.Meter, meterEnergy func() (float64, error), batteryCapacity func() float64, battery func() (float64, error), batterySocLimiter func() (float64, float64), batteryPowerLimiter func() (float64, float64), batteryController func(api.BatteryMode) error) api.Meter {
+func decorateMeterBattery(base api.Meter, meterEnergy func() (float64, error), battery func() (float64, error), batteryCapacity func() float64, batterySocLimiter func() (float64, float64), batteryPowerLimiter func() (float64, float64), batteryController func(api.BatteryMode) error) api.Meter {
 	switch {
 	case battery == nil && meterEnergy == nil:
 		return base
