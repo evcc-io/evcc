@@ -1,11 +1,9 @@
 package soc
 
 import (
-	"errors"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -104,50 +102,11 @@ func (s *Estimator) RemainingChargeEnergy(targetSoc int) float64 {
 }
 
 // Soc replaces the api.Vehicle.Soc interface to take charged energy into account
-func (s *Estimator) Soc(chargedEnergy float64) (float64, error) {
-	var fetchedSoc *float64
-
-	if charger, ok := s.charger.(api.Battery); ok {
-		f, err := Guard(charger.Soc())
-
-		// if the charger does or could provide Soc, we always use it instead of using the vehicle API
-		if err == nil || !errors.Is(err, api.ErrNotAvailable) {
-			if err != nil {
-				// never received a soc value
-				if s.prevSoc == 0 {
-					return 0, err
-				}
-
-				// recover from temporary api errors
-				f = s.prevSoc
-				s.log.WARN.Printf("vehicle soc (charger): %v (ignored by estimator)", err)
-			}
-
-			fetchedSoc = &f
-			s.vehicleSoc = f
-		}
-	}
-
-	if fetchedSoc == nil {
-		f, err := Guard(s.vehicle.Soc())
-		if err != nil {
-			// required for online APIs with refreshkey
-			if loadpoint.AcceptableError(err) {
-				return 0, err
-			}
-
-			// never received a soc value
-			if s.prevSoc == 0 {
-				return 0, err
-			}
-
-			// recover from temporary api errors
-			f = s.prevSoc
-			s.log.WARN.Printf("vehicle soc: %v (ignored by estimator)", err)
-		}
-
-		fetchedSoc = &f
-		s.vehicleSoc = f
+func (s *Estimator) Soc(fetchedSoc *float64, chargedEnergy float64) (float64, error) {
+	if fetchedSoc != nil {
+		s.vehicleSoc = *fetchedSoc
+	} else {
+		s.log.WARN.Printf("missing vehicle soc- ignored by estimator")
 	}
 
 	if s.estimate && s.virtualCapacity > 0 {
