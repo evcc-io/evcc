@@ -27,8 +27,8 @@ func init() {
 //evcc:function decorateMeterBattery
 //evcc:basetype api.Meter
 //evcc:type api.MeterEnergy,TotalEnergy,func() (float64, error)
-//evcc:type api.Battery,Soc,func() (float64, error)
 //evcc:type api.BatteryCapacity,Capacity,func() float64
+//evcc:type api.Battery,Soc,func() (float64, error)
 //evcc:type api.BatterySocLimiter,GetSocLimits,func() (float64, float64)
 //evcc:type api.BatteryPowerLimiter,GetPowerLimits,func() (float64, float64)
 //evcc:type api.BatteryController,SetBatteryMode,func(api.BatteryMode) error
@@ -100,13 +100,19 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 		}
 	}
 
-	res := m.Decorate(
-		energyG, currentsG, voltagesG, powersG,
-		socG, cc.batteryCapacity.Decorator(), cc.batterySocLimits.Decorator(), cc.batteryPowerLimits.Decorator(), batModeS,
-		cc.pvMaxACPower.Decorator(),
-	)
+	if socG != nil {
+		return m.DecorateBattery(
+			energyG,
+			cc.batteryCapacity.Decorator(),
+			socG, cc.batterySocLimits.Decorator(),
+			cc.batteryPowerLimits.Decorator(),
+			batModeS,
+		), nil
+	}
 
-	return res, nil
+	return m.Decorate(
+		energyG, currentsG, voltagesG, powersG, cc.pvMaxACPower.Decorator(),
+	), nil
 }
 
 // NewConfigurable creates a new meter

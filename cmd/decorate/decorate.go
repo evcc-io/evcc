@@ -309,7 +309,6 @@ func main() {
 		sets = all
 	}
 
-	fmt.Println(sets)
 	if *pkg == "" || len(sets) == 0 || sets[0].base == "" || len(sets[0].types) == 0 {
 		Usage()
 		os.Exit(2)
@@ -351,10 +350,8 @@ func main() {
 			os.Exit(4)
 		}
 
-		generated.WriteString(strings.TrimSpace(buf.String()) + "\n")
+		generated.WriteString(strings.TrimSpace(buf.String()) + "\n\n")
 	}
-
-	// formatted := generated.Bytes()
 
 	formatted, err := format.Source(generated.Bytes())
 	if err != nil {
