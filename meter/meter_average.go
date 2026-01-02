@@ -71,7 +71,7 @@ func NewMovingAverageFromConfig(ctx context.Context, other map[string]any) (api.
 	}
 
 	if batterySoc != nil {
-		return meter.DecorateBattery(totalEnergy, cc.Meter.batteryCapacity.Decorator(), batterySoc, nil, nil, nil, nil), nil
+		return meter.DecorateBattery(totalEnergy, cc.Meter.batteryCapacity.Decorator(), batterySoc, nil, nil, nil), nil
 	}
 
 	return meter.Decorate(totalEnergy, currents, voltages, powers, nil), nil
