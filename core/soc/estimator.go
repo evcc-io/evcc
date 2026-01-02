@@ -106,6 +106,7 @@ func (s *Estimator) Soc(fetchedSoc *float64, chargedEnergy float64) (float64, er
 	if fetchedSoc != nil {
 		s.vehicleSoc = *fetchedSoc
 	} else {
+		s.vehicleSoc = s.prevSoc
 		s.log.WARN.Printf("missing vehicle soc- ignored by estimator")
 	}
 
