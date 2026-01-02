@@ -85,15 +85,18 @@ export default defineComponent({
 	},
 	computed: {
 		valueInfo() {
-			let max = Number.MIN_VALUE;
-			let min = 0;
-			this.slots
-				.map((s) => s.value)
-				.filter((value) => value !== undefined)
-				.forEach((value) => {
-					max = Math.max(max, value);
-					min = Math.min(min, value);
-				});
+			let max = Number.NEGATIVE_INFINITY;
+			let min = Number.POSITIVE_INFINITY;
+			const values = this.slots.map((s) => s.value).filter((value) => value !== undefined);
+			values.forEach((value) => {
+				max = Math.max(max, value);
+				min = Math.min(min, value);
+			});
+
+			if (!values.length) {
+				return { min: 0, range: 0 };
+			}
+
 			return { min, range: max - min };
 		},
 		targetLeft() {
@@ -148,6 +151,9 @@ export default defineComponent({
 		},
 		valueStyle(value: number | undefined) {
 			const val = value === undefined ? this.avgValue : value;
+			if (this.valueInfo.range <= 0) {
+				return { height: "50%" };
+			}
 			const height =
 				value !== undefined && !isNaN(val)
 					? `${10 + (90 / this.valueInfo.range) * (val - this.valueInfo.min)}%`
