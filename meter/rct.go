@@ -133,17 +133,19 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 		}
 
 		batteryMode = func(mode api.BatteryMode) error {
-			if mode != api.BatteryNormal {
-				batStatus, err := m.queryInt32(rct.BatteryStatus2)
-				if err != nil {
-					return err
-				}
+			batStatus, err := m.queryInt32(rct.BatteryStatus2)
+			if err != nil {
+				return err
+			}
 
+			if mode != api.BatteryNormal {
 				// check for normal operating mode
 				if batStatus != 0 && batStatus != 1032 && batStatus != 2048 {
 					return fmt.Errorf("invalid battery operating mode: %d", batStatus)
 				}
 			}
+
+			log.TRACE.Printf("battery operating mode: %d", batStatus)
 
 			var eg errgroup.Group
 
