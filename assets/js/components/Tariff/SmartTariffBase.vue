@@ -27,7 +27,7 @@
 						:id="formId"
 						v-model.number="selectedLimit"
 						class="form-select form-select-sm"
-						:disabled="!active"
+						:disabled="!active || relativeActive"
 						:aria-label="limitLabel"
 						@change="changeLimit"
 					>
@@ -45,6 +45,41 @@
 				<button class="ms-1 btn btn-sm btn-link text-muted p-0" @click="applyToAll">
 					{{ $t("smartCost.applyToAll") }}
 				</button>
+			</div>
+		</div>
+		<div v-if="relativeLimitSupported" class="row mb-3 align-items-center">
+			<label :for="formId + 'RelativePercent'" class="col-sm-4 col-form-label pt-0 pt-sm-2">
+				{{ relativeLimitLabel }}
+			</label>
+			<div class="col-sm-8 col-lg-4 pe-0">
+				<div class="input-group input-group-sm">
+					<div class="input-group-text">
+						<div class="form-check form-switch m-0">
+							<input
+								:id="formId + 'RelativeActive'"
+								:checked="relativeActive"
+								class="form-check-input"
+								type="checkbox"
+								role="switch"
+								:aria-label="relativeLimitLabel"
+								@change="toggleRelative"
+							/>
+						</div>
+					</div>
+					<input
+						:id="formId + 'RelativePercent'"
+						v-model.number="relativePercent"
+						class="form-control form-control-sm"
+						type="number"
+						min="0"
+						max="200"
+						step="1"
+						:disabled="!relativeActive"
+						:aria-label="relativeLimitLabel"
+						@change="changeRelative"
+					/>
+					<span class="input-group-text">%</span>
+				</div>
 			</div>
 		</div>
 		<div class="justify-content-between mb-2 d-flex justify-content-between">
@@ -124,18 +159,24 @@ export default defineComponent({
 		resetWarningText: String,
 		limitDirection: { type: String as PropType<LimitDirection>, default: "below" },
 		highlightColor: { type: String as PropType<HighlightColor>, default: "text-primary" },
+		relativeLimitSupported: Boolean,
+		relativeLimitLabel: String,
+		relativeLimitPercent: { type: Number as PropType<number | null>, default: null },
+		relativeLimitValue: { type: Number as PropType<number | null>, default: null },
 		isSlotActive: {
 			type: Function as PropType<(value: number | undefined) => boolean>,
 			required: true,
 		},
 	},
-	emits: ["save-limit", "delete-limit", "apply-to-all"],
+	emits: ["save-limit", "delete-limit", "save-relative-limit", "delete-relative-limit", "apply-to-all"],
 	data() {
 		return {
 			selectedLimit: null as number | null,
 			activeIndex: null as number | null,
 			applyToAllVisible: false,
 			active: false,
+			relativeActive: false,
+			relativePercent: null as number | null,
 		};
 	},
 	computed: {
@@ -296,6 +337,12 @@ export default defineComponent({
 		currentLimit() {
 			this.initLimit();
 		},
+		relativeLimitPercent() {
+			this.initLimit();
+		},
+		relativeLimitValue() {
+			this.initLimit();
+		},
 	},
 	mounted() {
 		this.initLimit();
@@ -305,6 +352,18 @@ export default defineComponent({
 			return limit === null ? null : Math.round(limit * 1000) / 1000;
 		},
 		initLimit() {
+			if (this.relativeLimitSupported && this.relativeLimitPercent !== null) {
+				this.active = true;
+				this.relativeActive = true;
+				this.relativePercent = this.relativeLimitPercent;
+				this.selectedLimit = this.roundLimit(
+					this.relativeLimitValue ?? this.currentLimit ?? this.lastLimit
+				);
+				return;
+			}
+
+			this.relativeActive = false;
+			this.relativePercent = null;
 			if (this.currentLimit === null) {
 				this.active = false;
 				this.selectedLimit = this.lastLimit;
@@ -376,13 +435,44 @@ export default defineComponent({
 		toggleActive($event: Event) {
 			const active = ($event.target as HTMLInputElement).checked;
 			if (active) {
-				this.saveLimit(this.lastLimit);
+				if (this.relativeActive) {
+					const percent = this.relativePercent ?? 90;
+					this.relativePercent = percent;
+					this.saveRelativeLimit(percent);
+				} else {
+					this.saveLimit(this.lastLimit);
+				}
 			} else {
 				this.resetLimit();
 			}
 			this.active = active;
 			if (this.applyAll) {
 				this.applyToAllVisible = true;
+			}
+		},
+		toggleRelative($event: Event) {
+			const active = ($event.target as HTMLInputElement).checked;
+			this.relativeActive = active;
+			if (active) {
+				this.active = true;
+				if (this.relativePercent === null) {
+					this.relativePercent = 90;
+				}
+				this.saveRelativeLimit(this.relativePercent);
+			} else {
+				this.deleteRelativeLimit();
+				this.selectedLimit = this.lastLimit;
+				this.saveLimit(this.lastLimit);
+			}
+		},
+		changeRelative($event: Event) {
+			const value = parseFloat(($event.target as HTMLInputElement).value);
+			if (Number.isNaN(value)) {
+				return;
+			}
+			this.relativePercent = value;
+			if (this.relativeActive) {
+				this.saveRelativeLimit(value);
 			}
 		},
 		saveLimit(limit: number) {
@@ -392,7 +482,24 @@ export default defineComponent({
 			}
 		},
 		resetLimit() {
-			this.$emit("delete-limit");
+			if (this.relativeActive) {
+				this.relativeActive = false;
+				this.$emit("delete-relative-limit");
+			} else {
+				this.$emit("delete-limit");
+			}
+			if (this.applyAll) {
+				this.applyToAllVisible = true;
+			}
+		},
+		saveRelativeLimit(percent: number) {
+			this.$emit("save-relative-limit", percent);
+			if (this.applyAll) {
+				this.applyToAllVisible = true;
+			}
+		},
+		deleteRelativeLimit() {
+			this.$emit("delete-relative-limit");
 			if (this.applyAll) {
 				this.applyToAllVisible = true;
 			}

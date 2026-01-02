@@ -516,12 +516,15 @@ func (site *Site) applyPlanGoal(lp loadpoint.API, bat *evopt.BatteryConfig, minL
 
 // TODO remove once smart cost limit usage becomes obsolete
 func applySmartCostLimit(lp loadpoint.API, demand []float32, grid api.Rates, minLen int) []float32 {
-	costLimit := lp.GetSmartCostLimit()
-	if costLimit == nil {
+	maxLen := min(minLen, len(grid))
+	if maxLen == 0 {
 		return demand
 	}
 
-	maxLen := min(minLen, len(grid))
+	costLimit, _ := effectiveSmartCostLimit(lp, grid[:maxLen])
+	if costLimit == nil {
+		return demand
+	}
 
 	// Check if any slots meet the cost limit
 	if hasAffordableSlots := slices.ContainsFunc(grid[:maxLen], func(r api.Rate) bool {

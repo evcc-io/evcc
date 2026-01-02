@@ -135,6 +135,11 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 	smartCostLimit := func(lp loadpoint.API, limit *float64) {
 		lp.SetSmartCostLimit(limit)
 	}
+	smartCostLimitPercent := func(lp loadpoint.API, limit *float64) {
+		if setter, ok := lp.(interface{ SetSmartCostLimitPercent(*float64) }); ok {
+			setter.SetSmartCostLimitPercent(limit)
+		}
+	}
 	smartFeedInPriorityLimit := func(lp loadpoint.API, limit *float64) {
 		lp.SetSmartFeedInPriorityLimit(limit)
 	}
@@ -152,6 +157,8 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 		"residualpower":           {"POST", "/residualpower/{value:-?[0-9.]+}", floatHandler(site.SetResidualPower, site.GetResidualPower)},
 		"smartcost":               {"POST", "/smartcostlimit/{value:-?[0-9.]+}", updateSmartCostLimit(site, smartCostLimit)},
 		"smartcostdelete":         {"DELETE", "/smartcostlimit", updateSmartCostLimit(site, smartCostLimit)},
+		"smartcostpercent":        {"POST", "/smartcostlimit/relative/{value:[0-9.]+}", updateSmartCostLimit(site, smartCostLimitPercent)},
+		"smartcostpercentdelete":  {"DELETE", "/smartcostlimit/relative", updateSmartCostLimit(site, smartCostLimitPercent)},
 		"smartfeedin":             {"POST", "/smartfeedinprioritylimit/{value:-?[0-9.]+}", updateSmartCostLimit(site, smartFeedInPriorityLimit)},
 		"smartfeedindelete":       {"DELETE", "/smartfeedinprioritylimit", updateSmartCostLimit(site, smartFeedInPriorityLimit)},
 		"tariff":                  {"GET", "/tariff/{tariff:[a-z]+}", tariffHandler(site)},
@@ -191,6 +198,19 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 	for id, lp := range site.Loadpoints() {
 		api := api.PathPrefix(fmt.Sprintf("/loadpoints/%d", id+1)).Subrouter()
 
+		getSmartCostLimitPercent := func() *float64 {
+			if getter, ok := lp.(interface{ GetSmartCostLimitPercent() *float64 }); ok {
+				return getter.GetSmartCostLimitPercent()
+			}
+			return nil
+		}
+		setSmartCostLimitPercent := func(limit *float64) error {
+			if setter, ok := lp.(interface{ SetSmartCostLimitPercent(*float64) }); ok {
+				setter.SetSmartCostLimitPercent(limit)
+			}
+			return nil
+		}
+
 		routes := map[string]route{
 			"mode":                      {"POST", "/mode/{value:[a-z]+}", handler(eapi.ChargeModeString, pass(lp.SetMode), lp.GetMode)},
 			"limitsoc":                  {"POST", "/limitsoc/{value:[0-9]+}", intHandler(pass(lp.SetLimitSoc), lp.GetLimitSoc)},
@@ -212,6 +232,8 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 			"disableDelay":              {"POST", "/disable/delay/{value:[0-9]+}", durationHandler(pass(lp.SetDisableDelay), lp.GetDisableDelay)},
 			"smartCost":                 {"POST", "/smartcostlimit/{value:-?[0-9.]+}", floatPtrHandler(pass(lp.SetSmartCostLimit), lp.GetSmartCostLimit)},
 			"smartCostDelete":           {"DELETE", "/smartcostlimit", floatPtrHandler(pass(lp.SetSmartCostLimit), lp.GetSmartCostLimit)},
+			"smartCostPercent":          {"POST", "/smartcostlimit/relative/{value:[0-9.]+}", floatPtrHandler(setSmartCostLimitPercent, getSmartCostLimitPercent)},
+			"smartCostPercentDelete":    {"DELETE", "/smartcostlimit/relative", floatPtrHandler(setSmartCostLimitPercent, getSmartCostLimitPercent)},
 			"smartFeedInPriority":       {"POST", "/smartfeedinprioritylimit/{value:-?[0-9.]+}", floatPtrHandler(pass(lp.SetSmartFeedInPriorityLimit), lp.GetSmartFeedInPriorityLimit)},
 			"smartFeedInPriorityDelete": {"DELETE", "/smartfeedinprioritylimit", floatPtrHandler(pass(lp.SetSmartFeedInPriorityLimit), lp.GetSmartFeedInPriorityLimit)},
 			"priority":                  {"POST", "/priority/{value:[0-9]+}", intHandler(pass(lp.SetPriority), lp.GetPriority)},

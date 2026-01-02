@@ -280,6 +280,7 @@ export interface Loadpoint {
   sessionSolarPercentage: number;
   smartCostActive: boolean;
   smartCostLimit: number | null;
+  smartCostLimitPercent: number | null;
   smartCostNextStart: string | null;
   smartFeedInPriorityActive: boolean;
   smartFeedInPriorityLimit: number | null;

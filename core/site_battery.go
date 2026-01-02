@@ -191,8 +191,17 @@ func (site *Site) tariffRates(usage api.TariffUsage) (api.Rates, error) {
 }
 
 func (site *Site) smartCostActive(lp loadpoint.API, rate api.Rate) bool {
-	limit := lp.GetSmartCostLimit()
-	return limit != nil && !rate.IsZero() && rate.Value <= *limit
+	if rate.IsZero() {
+		return false
+	}
+
+	rates, err := site.tariffRates(api.TariffUsagePlanner)
+	if err != nil {
+		return false
+	}
+
+	limit, _ := effectiveSmartCostLimit(lp, rates)
+	return limit != nil && rate.Value <= *limit
 }
 
 func (site *Site) batteryGridChargeActive(rate api.Rate) bool {

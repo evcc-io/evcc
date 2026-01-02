@@ -832,8 +832,49 @@ func (lp *Loadpoint) SetSmartCostLimit(val *float64) {
 	if !ptrValueEqual(lp.smartCostLimit, val) {
 		lp.smartCostLimit = val
 
+		if val != nil && lp.smartCostLimitPercent != nil {
+			lp.smartCostLimitPercent = nil
+			lp.settings.SetFloatPtr(keys.SmartCostLimitPercent, nil)
+			lp.publish(keys.SmartCostLimitPercent, nil)
+		}
+
 		lp.settings.SetFloatPtr(keys.SmartCostLimit, val)
 		lp.publish(keys.SmartCostLimit, val)
+	}
+}
+
+// GetSmartCostLimitPercent gets the smart cost limit percent
+func (lp *Loadpoint) GetSmartCostLimitPercent() *float64 {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.smartCostLimitPercent
+}
+
+// SetSmartCostLimitPercent sets the smart cost limit percent
+func (lp *Loadpoint) SetSmartCostLimitPercent(val *float64) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	if val != nil {
+		if *val < 0 || *val > 200 {
+			lp.log.WARN.Printf("invalid smart cost limit percent: %.1f", *val)
+			return
+		}
+	}
+
+	lp.log.DEBUG.Println("set smart cost limit percent:", printPtr("%.1f", val))
+
+	if !ptrValueEqual(lp.smartCostLimitPercent, val) {
+		lp.smartCostLimitPercent = val
+
+		if val != nil && lp.smartCostLimit != nil {
+			lp.smartCostLimit = nil
+			lp.settings.SetFloatPtr(keys.SmartCostLimit, nil)
+			lp.publish(keys.SmartCostLimit, nil)
+		}
+
+		lp.settings.SetFloatPtr(keys.SmartCostLimitPercent, val)
+		lp.publish(keys.SmartCostLimitPercent, val)
 	}
 }
 

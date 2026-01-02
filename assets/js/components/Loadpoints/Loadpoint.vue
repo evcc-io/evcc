@@ -210,6 +210,7 @@ export default defineComponent({
 		pvRemaining: { type: Number, default: 0 },
 		pvAction: String as PropType<PV_ACTION>,
 		smartCostLimit: { type: Number as PropType<number | null>, default: null },
+		smartCostLimitPercent: { type: Number as PropType<number | null>, default: null },
 		smartCostType: String as PropType<SMART_COST_TYPE>,
 		smartCostAvailable: Boolean,
 		smartCostActive: Boolean,
