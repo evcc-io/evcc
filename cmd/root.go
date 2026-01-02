@@ -413,19 +413,14 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// setup site
 	if err == nil {
-		fmt.Println("site:", site)
 		// set channels
 		site.DumpConfig()
-		fmt.Println("site.Prepare")
 		site.Prepare(valueChan, pushChan)
 
-		fmt.Println("httpd.RegisterSiteHandlers")
 		httpd.RegisterSiteHandlers(site, valueChan)
 
 		go func() {
-			fmt.Println("before site.Run")
 			site.Run(stopC, conf.Interval)
-			fmt.Println("after site.Run")
 		}()
 	}
 

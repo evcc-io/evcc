@@ -1121,7 +1121,9 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 	}
 
 	loadpointChan := make(chan updater)
-	go site.loopLoadpoints(loadpointChan)
+	if site.IsConfigured() {
+		go site.loopLoadpoints(loadpointChan)
+	}
 
 	site.update(<-loadpointChan) // start immediately
 
