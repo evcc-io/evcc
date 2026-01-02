@@ -21,6 +21,7 @@ func TestPV(t *testing.T) {
 	// must not have soc/capacity
 	assert.Implements(t, new(api.MaxACPowerGetter), m)
 }
+
 func TestBattery(t *testing.T) {
 	m, err := NewConfigurableFromConfig(t.Context(), map[string]any{
 		"power": map[string]any{

@@ -33,7 +33,7 @@ import (
 var srcTmpl string
 
 //go:embed header.tpl
-var header string
+var headerTmpl string
 
 type dynamicType struct {
 	typ, function, signature string
@@ -324,7 +324,7 @@ func main() {
 	}
 
 	generated := new(bytes.Buffer)
-	fmt.Fprintln(generated, strings.ReplaceAll(header, "{{.Package}}", *pkg))
+	fmt.Fprintln(generated, strings.ReplaceAll(headerTmpl, "{{.Package}}", *pkg))
 
 	for _, set := range sets {
 		var dynamicTypes []dynamicType
