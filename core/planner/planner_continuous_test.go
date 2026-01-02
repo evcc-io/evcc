@@ -715,3 +715,36 @@ func TestContinuous_ExcessTimeFinishesAtTarget(t *testing.T) {
 	avgCostMedium := AverageCost(plan)
 	assert.Equal(t, 0.08, avgCostMedium, "plan (medium) should use cheapest slots (0.08)")
 }
+
+func TestFindContinuousWindowPrefersLateCheapWindow(t *testing.T) {
+	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+
+	rates := api.Rates{
+		// All cheap
+		{Start: base.Add(0 * time.Hour), End: base.Add(1 * time.Hour), Value: 10},
+		{Start: base.Add(1 * time.Hour), End: base.Add(2 * time.Hour), Value: 10},
+		{Start: base.Add(2 * time.Hour), End: base.Add(3 * time.Hour), Value: 10},
+
+		// Expensive
+		{Start: base.Add(3 * time.Hour), End: base.Add(4 * time.Hour), Value: 100},
+		{Start: base.Add(4 * time.Hour), End: base.Add(5 * time.Hour), Value: 100},
+	}
+
+	window := findContinuousWindow(
+		rates,
+		2*time.Hour,           // charging duration
+		base.Add(6*time.Hour), // targetTime
+	)
+
+	require.NotNil(t, window, "expected window, got nil")
+
+	start := Start(window)
+
+	// Should prefer LATEST cheap window (1h-3h over 0h-2h)
+	expected := base.Add(1 * time.Hour)
+	assert.Equal(t, expected, start, "should prefer latest cheap window")
+
+	avg := AverageCost(window)
+	assert.Less(t, avg, 50.0, "expected cheap window")
+	assert.Equal(t, 10.0, avg, "should use cheapest slots")
+}

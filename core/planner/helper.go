@@ -1,8 +1,6 @@
 package planner
 
 import (
-	"iter"
-	"slices"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -86,93 +84,86 @@ func IsFirst(r api.Rate, plan api.Rates) bool {
 	return true
 }
 
+// clampBounds returns the overlap of [rStart,rEnd] with [start,end]
+// ok is true if there is any overlap.
+func clampBounds(rStart, rEnd, start, end time.Time) (time.Time, time.Time, bool) {
+	if rStart.Before(start) {
+		rStart = start
+	}
+	if rEnd.After(end) {
+		rEnd = end
+	}
+	return rStart, rEnd, rEnd.After(rStart)
+}
+
 // clampRates filters rates to the given time window and adjusts boundary slots
 func clampRates(rates api.Rates, start, end time.Time) api.Rates {
 	res := make(api.Rates, 0, len(rates))
-	return slices.AppendSeq(res, clampRatesSeq(rates, start, end))
-}
-
-// clampRatesSeq returns an iterator for filtering rates to the given time window and adjusts boundary slots
-func clampRatesSeq(rates api.Rates, start, end time.Time) iter.Seq[api.Rate] {
-	return func(yield func(api.Rate) bool) {
-		for _, r := range rates {
-			// slot before continuous plan
-			if !r.End.After(start) {
-				continue
-			}
-
-			// slot after continuous plan
-			if !r.Start.Before(end) {
-				continue
-			}
-
-			// calculate adjusted bounds
-			adjustedStart := r.Start
-			if adjustedStart.Before(start) {
-				adjustedStart = start
-			}
-
-			adjustedEnd := r.End
-			if adjustedEnd.After(end) {
-				adjustedEnd = end
-			}
-
-			// skip if adjustment would create invalid slot
-			if !adjustedEnd.After(adjustedStart) {
-				continue
-			}
-
-			if !yield(api.Rate{
-				Start: adjustedStart,
-				End:   adjustedEnd,
-				Value: r.Value,
-			}) {
-				return // Stop early if yield returns false
-			}
+	for _, r := range rates {
+		if s, e, ok := clampBounds(r.Start, r.End, start, end); ok {
+			res = append(res, api.Rate{Start: s, End: e, Value: r.Value})
 		}
 	}
+	return res
 }
 
-// SumBySeq sums over a sequence
-func SumBySeq[T any, R float64](seq iter.Seq[T], iteratee func(item T) R) R {
-	var sum R
-	for t := range seq {
-		sum += iteratee(t)
-	}
-	return sum
-}
-
-// findContinuousWindow finds the cheapest continuous window of slots for the given duration.
-// - rates are filtered to [now, targetTime] window by caller
-// Returns the selected rates.
+// findContinuousWindow finds the cheapest continuous window of the given duration
+// that ends before targetTime. Prefers later windows when costs are equal.
+// Returns nil if no valid window exists.
 func findContinuousWindow(rates api.Rates, effectiveDuration time.Duration, targetTime time.Time) api.Rates {
-	var bestCost *float64
-	var bestIndex *int
+	var (
+		cost, bestCost    float64
+		j, bestStart      int
+		covered           time.Duration
+		wasValid, hasBest bool
+	)
 
 	for i := range rates {
-		windowEnd := rates[i].Start.Add(effectiveDuration)
-		if windowEnd.After(targetTime) {
+		start := rates[i].Start
+		end := start.Add(effectiveDuration)
+		if end.After(targetTime) {
 			break
 		}
 
-		cost := SumBySeq(clampRatesSeq(rates[i:], rates[i].Start, windowEnd), func(r api.Rate) float64 {
-			return float64(r.End.Sub(r.Start)) * r.Value
-		})
+		// reset the sliding window if the left pointer overtakes the right pointer
+		// or the previous window did not cover the full effective duration
+		if j < i || !wasValid {
+			j = i
+			cost = 0
+			covered = 0
+		}
 
-		// Prefer later start if equal cost
-		if bestCost == nil || cost <= *bestCost {
-			bestCost = &cost
-			bestIndex = &i
+		// expand the window to the right until the effective duration is covered
+		for j < len(rates) && covered < effectiveDuration {
+			if s, e, ok := clampBounds(rates[j].Start, rates[j].End, start, end); ok {
+				d := e.Sub(s)
+				cost += float64(d) * rates[j].Value
+				covered += d
+			}
+			j++
+		}
+
+		// only consider windows where the total covered duration equals the desired duration
+		wasValid = covered == effectiveDuration
+		if wasValid {
+			if !hasBest || cost <= bestCost {
+				bestCost = cost
+				bestStart = i
+				hasBest = true
+			}
+
+			// slide window forward by removing the contribution of the current start interval
+			if s, e, ok := clampBounds(rates[i].Start, rates[i].End, start, end); ok {
+				d := e.Sub(s)
+				cost -= float64(d) * rates[i].Value
+				covered -= d
+			}
 		}
 	}
-
-	// No valid window found
-	if bestIndex == nil {
+	if !hasBest {
 		return nil
 	}
-
-	// Build the best window only once
-	windowEnd := rates[*bestIndex].Start.Add(effectiveDuration)
-
-	return clampRates(rates[*bestIndex:], rates[*bestIndex].Start, windowEnd)
+	start := rates[bestStart].Start
+	end := start.Add(effectiveDuration)
+	return clampRates(rates[bestStart:], start, end)
 }
