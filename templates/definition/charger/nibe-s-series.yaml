@@ -89,13 +89,13 @@ render: |
         value: 1
         set:
           source: modbus
-          {{- include "modbus" . | indent 6 }}
+          {{- include "modbus" . | indent 8 }}
           register:
             address: 2741
             type: input
             encoding: uint16
       - source: modbus
-        {{- include "modbus" . | indent 4 }}
+        {{- include "modbus" . | indent 6 }}
         register:
           address: 6007
           type: input
