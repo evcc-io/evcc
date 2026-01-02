@@ -73,6 +73,8 @@ export default defineComponent({
 		slots: { type: Array as PropType<Slot[]>, default: () => [] },
 		targetText: [String, null],
 		targetOffset: { type: Number, default: 0 },
+		scaleMode: { type: String as PropType<"zero" | "range">, default: "zero" },
+		scaleStep: { type: Number, default: 0 },
 	},
 	emits: ["slot-hovered", "slot-selected"],
 	data() {
@@ -85,16 +87,23 @@ export default defineComponent({
 	},
 	computed: {
 		valueInfo() {
-			let max = Number.MIN_VALUE;
-			let min = 0;
-			this.slots
-				.map((s) => s.value)
-				.filter((value) => value !== undefined)
-				.forEach((value) => {
-					max = Math.max(max, value);
-					min = Math.min(min, value);
-				});
-			return { min, range: max - min };
+			const values = this.slots.map((s) => s.value).filter((value) => value !== undefined);
+			if (!values.length) {
+				return { min: 0, range: 0 };
+			}
+
+			const max = values.reduce((acc, value) => Math.max(acc, value), Number.NEGATIVE_INFINITY);
+			const min = values.reduce((acc, value) => Math.min(acc, value), Number.POSITIVE_INFINITY);
+
+			if (this.scaleMode === "zero") {
+				const baseMin = Math.min(0, min);
+				const baseMax = Math.max(0, max);
+				return { min: baseMin, range: baseMax - baseMin };
+			}
+
+			const steppedMin = this.roundDown(min);
+			const steppedMax = this.roundUp(max);
+			return { min: steppedMin, range: steppedMax - steppedMin };
 		},
 		targetLeft() {
 			return `${(this.targetOffset / 0.25) * BAR_WIDTH}px`;
@@ -148,11 +157,27 @@ export default defineComponent({
 		},
 		valueStyle(value: number | undefined) {
 			const val = value === undefined ? this.avgValue : value;
-			const height =
-				value !== undefined && !isNaN(val)
-					? `${10 + (90 / this.valueInfo.range) * (val - this.valueInfo.min)}%`
-					: "50%";
-			return { height };
+			if (this.valueInfo.range <= 0) {
+				return { height: "50%" };
+			}
+			if (value === undefined || isNaN(val)) {
+				return { height: "50%" };
+			}
+			const normalized = (val - this.valueInfo.min) / this.valueInfo.range;
+			const clamped = Math.min(1, Math.max(0, normalized));
+			return { height: `${clamped * 100}%` };
+		},
+		roundDown(value: number) {
+			if (this.scaleStep <= 0) {
+				return value;
+			}
+			return Math.floor(value / this.scaleStep) * this.scaleStep;
+		},
+		roundUp(value: number) {
+			if (this.scaleStep <= 0) {
+				return value;
+			}
+			return Math.ceil(value / this.scaleStep) * this.scaleStep;
 		},
 		startLongPress(index: number) {
 			this.longPressTimer = setTimeout(() => {
