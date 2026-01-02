@@ -243,6 +243,8 @@ func parseFile(file string, function, basetype, returntype *string, types *[]str
 				*basetype = segs[1]
 			case "returntype":
 				*returntype = segs[1]
+			case "file":
+				*target = segs[1]
 			case "type":
 				*types = append(*types, segs[1])
 			default:
@@ -261,8 +263,12 @@ func main() {
 	// read target from go:generate
 	gofile, ok := os.LookupEnv("GOFILE")
 	if *target == "" && ok {
-		gofile := strings.TrimSuffix(gofile, ".go") + "_decorators.go"
+		gofile := strings.TrimSuffix(gofile, ".go")
 		target = &gofile
+	}
+
+	if *target != "" {
+		*target = "_decorators.go"
 	}
 
 	// read target from go:generate
