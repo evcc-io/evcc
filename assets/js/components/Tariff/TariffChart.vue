@@ -73,6 +73,8 @@ export default defineComponent({
 		slots: { type: Array as PropType<Slot[]>, default: () => [] },
 		targetText: [String, null],
 		targetOffset: { type: Number, default: 0 },
+		scaleMode: { type: String as PropType<"zero" | "range">, default: "zero" },
+		scaleStep: { type: Number, default: 0 },
 	},
 	emits: ["slot-hovered", "slot-selected"],
 	data() {
