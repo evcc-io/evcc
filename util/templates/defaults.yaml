@@ -701,6 +701,13 @@ presets:
         de: Akzeptiere keine Daten die älter sind als dieser Wert
         en: Don't accept values older than this value
 
+  battery-params:
+    - name: capacity
+    - name: minsoc
+    - name: maxsoc
+    - name: maxchargepower
+    - name: maxdischargepower
+
 modbus:
   interfaces:
     rs485: ["rs485serial", "rs485tcpip"]

@@ -87,23 +87,19 @@ export default defineComponent({
 	},
 	computed: {
 		valueInfo() {
+			let max = Number.NEGATIVE_INFINITY;
+			let min = Number.POSITIVE_INFINITY;
 			const values = this.slots.map((s) => s.value).filter((value) => value !== undefined);
+			values.forEach((value) => {
+				max = Math.max(max, value);
+				min = Math.min(min, value);
+			});
+
 			if (!values.length) {
 				return { min: 0, range: 0 };
 			}
 
-			const max = values.reduce((acc, value) => Math.max(acc, value), Number.NEGATIVE_INFINITY);
-			const min = values.reduce((acc, value) => Math.min(acc, value), Number.POSITIVE_INFINITY);
-
-			if (this.scaleMode === "zero") {
-				const baseMin = Math.min(0, min);
-				const baseMax = Math.max(0, max);
-				return { min: baseMin, range: baseMax - baseMin };
-			}
-
-			const steppedMin = this.roundDown(min);
-			const steppedMax = this.roundUp(max);
-			return { min: steppedMin, range: steppedMax - steppedMin };
+			return { min, range: max - min };
 		},
 		targetLeft() {
 			return `${(this.targetOffset / 0.25) * BAR_WIDTH}px`;
@@ -166,18 +162,6 @@ export default defineComponent({
 			const normalized = (val - this.valueInfo.min) / this.valueInfo.range;
 			const clamped = Math.min(1, Math.max(0, normalized));
 			return { height: `${clamped * 100}%` };
-		},
-		roundDown(value: number) {
-			if (this.scaleStep <= 0) {
-				return value;
-			}
-			return Math.floor(value / this.scaleStep) * this.scaleStep;
-		},
-		roundUp(value: number) {
-			if (this.scaleStep <= 0) {
-				return value;
-			}
-			return Math.ceil(value / this.scaleStep) * this.scaleStep;
 		},
 		startLongPress(index: number) {
 			this.longPressTimer = setTimeout(() => {

@@ -34,6 +34,7 @@ params:
     mask: true
     default: user
     advanced: true
+  - name: maxacpower
   - name: battery
     example: ess0
     description:
@@ -55,13 +56,7 @@ params:
       en: FEMS/OpenEMS standard 60s
     usages: ["battery"]
     advanced: true
-  - name: minsoc
-  - name: maxsoc
-  - name: capacity
-    advanced: true
-  - name: maxchargepower
-  - name: maxdischargepower
-  - name: maxacpower
+  - preset: battery-params
 render: |
   type: custom
   {{- if eq .usage "grid" }} 
@@ -168,9 +163,5 @@ render: |
           error: ErrNotAvailable
           {{- end }}
   {{- end }}
-  minsoc: {{ .minsoc }} # %
-  maxsoc: {{ .maxsoc }} # %
-  maxchargepower: {{ .maxchargepower }} # W
-  maxdischargepower: {{ .maxdischargepower }} # W
-  capacity: {{ .capacity }} # kWh
+  {{- include "battery-params" . }}
   {{- end }}

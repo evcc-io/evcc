@@ -24,14 +24,13 @@ params:
   - name: host
   - name: port
     default: 502
+  - preset: battery-params
+  - name: maxdischargepower
+    default: 4000
   - name: watchdog
     type: duration
     default: 120s
     usages: ["battery"]
-    advanced: true
-  - name: maxdischargepower
-    default: 4000
-  - name: capacity
     advanced: true
 render: |
   type: custom
@@ -107,5 +106,5 @@ render: |
           set:
             source: error
             error: ErrNotAvailable
-  capacity: {{ .capacity }} # kWh
+  {{- include "battery-params" . }}
   {{- end }}

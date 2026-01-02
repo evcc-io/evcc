@@ -266,7 +266,6 @@ func NewSite() *Site {
 	site := &Site{
 		log:             util.NewLogger("site"),
 		Voltage:         230, // V
-		ResidualPower:   100, // W
 		pvEnergy:        make(map[string]*meterEnergy),
 		fcstEnergy:      &meterEnergy{clock: clock.New()},
 		householdEnergy: &meterEnergy{clock: clock.New()},
