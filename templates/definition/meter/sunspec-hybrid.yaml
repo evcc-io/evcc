@@ -11,9 +11,8 @@ params:
     allinone: true
   - name: modbus
     choice: ["tcpip", "rs485"]
-  - name: capacity
-    advanced: true
   - name: maxacpower
+  - preset: battery-params
 render: |
   type: custom
   # sunspec model 203 (int+sf)/ 213 (float) meter
@@ -125,5 +124,5 @@ render: |
     value:
       - 124:ChaState
       - 802:SoC
-  capacity: {{ .capacity }} # kWh
+  {{- include "battery-params" . }}
   {{- end }}

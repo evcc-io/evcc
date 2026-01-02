@@ -28,13 +28,8 @@ params:
     choice: ["rs485"]
     baudrate: 9600
     id: 1
-  - name: capacity
-    advanced: true
   - name: maxacpower
-  - name: minsoc
-    advanced: true
-  - name: maxsoc
-    advanced: true
+  - preset: battery-params
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -158,7 +153,5 @@ render: |
       address: 43024 # Battery Reserve Mode SOC
       type: writeholding
       encoding: uint16
-  capacity: {{ .capacity }} # kWh
-  minsoc: {{ .minsoc }} # %
-  maxsoc: {{ .maxsoc }} # %
+  {{- include "battery-params" . }}
   {{- end }}

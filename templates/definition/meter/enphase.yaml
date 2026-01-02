@@ -15,11 +15,6 @@ params:
     help:
       en: "Required if Envoy Firmware D7.x.xxx. Token is valid for one year. Instructions for obtaining a token via web UI: https://enphase.com/download/accessing-iq-gateway-local-apis-or-local-ui-token-based-authentication"
       de: "Ab Envoy Firmware D7.x.xxx notwendig. Token ist ein Jahr gültig. Anleitung (Obtaining a token via web UI): https://enphase.com/download/accessing-iq-gateway-local-apis-or-local-ui-token-based-authentication"
-  - name: capacity
-    advanced: true
-  - name: cache
-    advanced: true
-    default: 1s
   - name: battery_type
     description:
       en: "Enphase Battery Type (AC or IQ)"
@@ -30,6 +25,10 @@ params:
     default: ac
     choice: ["ac", "iq"]
     advanced: true
+  - preset: battery-params
+  - name: cache
+    advanced: true
+    default: 1s
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -163,5 +162,5 @@ render: |
     {{- end }}
     cache: {{ .cache }}
     jq: '[.[].devices[] | select(.percentFull != null) | .percentFull] | add / length'
-  capacity: {{ .capacity }} # kWh
+  {{- include "battery-params" . }}
   {{- end }}
