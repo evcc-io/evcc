@@ -80,3 +80,22 @@ render: |
       type: input
       encoding: uint16
     scale: 0.1
+  setmaxpower:
+    source: sequence
+    set:
+      - source: const
+        value: 1
+        set:
+         source: modbus
+         {{- include "modbus" . | indent 2 }}
+         register:
+          address: 2741
+          type: input
+          encoding: uint16
+      - source: modbus
+        {{- include "modbus" . | indent 2 }}
+        register:
+          address: 6007
+          type: input
+          encoding: uint16
+        scale: 0.01
