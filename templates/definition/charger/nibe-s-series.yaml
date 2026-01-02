@@ -92,12 +92,12 @@ render: |
           {{- include "modbus" . | indent 8 }}
           register:
             address: 2741
-            type: input
-            encoding: uint16
+            type: holding
+            encoding: int16
       - source: modbus
         {{- include "modbus" . | indent 6 }}
         register:
           address: 6007
-          type: input
-          encoding: uint16
+          type: holding
+          encoding: int16
         scale: 0.01
