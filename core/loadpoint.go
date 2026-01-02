@@ -1739,8 +1739,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 				socR = &soc
 
 				lp.log.DEBUG.Printf("%s soc: %.0f%%", typ, soc)
-				// https://github.com/evcc-io/evcc/issues/13349
-				lp.publish(keys.VehicleSoc, float64(soc))
+				lp.publish(keys.VehicleSoc, soc)
 
 				if socLimiter, ok := dev.(api.SocLimiter); ok {
 					if limit, err := socLimiter.GetLimitSoc(); err == nil {
@@ -1753,7 +1752,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 						lp.log.ERROR.Printf("%s soc limit: %v", typ, err)
 					}
 				}
-			} else if !errors.Is(err, api.ErrNotAvailable) {
+			} else if !loadpoint.AcceptableError(err) {
 				lp.log.ERROR.Printf("%s soc: %v", typ, err)
 			}
 		}
