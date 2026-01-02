@@ -1735,7 +1735,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 		var limitR *int64
 
 		if battery, ok := dev.(api.Battery); ok {
-			if soc, err := battery.Soc(); err == nil {
+			if soc, err := soc.Guard(battery.Soc()); err == nil {
 				socR = &soc
 
 				lp.log.DEBUG.Printf("%s soc: %.0f%%", typ, soc)
@@ -1766,26 +1766,21 @@ func (lp *Loadpoint) publishSocAndRange() {
 		soc, limit = socAndLimit("vehicle", lp.GetVehicle())
 	}
 
+	if soc != nil {
+		if socEstimator == nil {
+			lp.vehicleSoc = *soc
+		} else {
+			lp.vehicleSoc, _ = socEstimator.Soc(soc, lp.GetChargedEnergy())
+			lp.log.DEBUG.Printf("vehicle soc (estimator): %.0f%%", lp.vehicleSoc)
+		}
+	}
+	lp.publish(keys.VehicleSoc, lp.vehicleSoc)
+
 	apiLimitSoc := 100
 	if limit != nil {
 		apiLimitSoc = int(*limit)
 		// https://github.com/evcc-io/evcc/issues/13349
 		lp.publish(keys.VehicleLimitSoc, float64(*limit))
-	}
-
-	if socEstimator == nil {
-		if soc != nil {
-			lp.vehicleSoc = *soc
-			lp.publish(keys.VehicleSoc, lp.vehicleSoc)
-		}
-
-		return
-	}
-
-	if soc != nil {
-		lp.vehicleSoc, _ = socEstimator.Soc(soc, lp.GetChargedEnergy())
-		lp.log.DEBUG.Printf("vehicle soc (estimator): %.0f%%", lp.vehicleSoc)
-		lp.publish(keys.VehicleSoc, lp.vehicleSoc)
 	}
 
 	// use minimum of vehicle and loadpoint
