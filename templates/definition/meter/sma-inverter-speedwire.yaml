@@ -16,8 +16,7 @@ params:
     help:
       en: Password for user group Standard
       de: Passwort für Benutzergruppe Benutzer
-  - name: capacity
-    advanced: true
+  - preset: battery-params
 render: |
   type: sma
   uri: {{ .host }} # IP address or hostname

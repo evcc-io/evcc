@@ -14,9 +14,7 @@ params:
     allinone: true
   - name: host
   - name: schema
-    default: https
-  - name: capacity
-    advanced: true
+  - preset: battery-params
 render: |
   type: custom
   power:
@@ -78,5 +76,5 @@ render: |
         headers:
         - content-type: application/json
         body: '{"ENERGY":{"SAFE_CHARGE_FORCE":"u8_01"}}'  # force to charge
-  capacity: {{ .capacity }} # kWh
+  {{- include "battery-params" . }}
   {{- end }}

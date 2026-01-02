@@ -18,13 +18,8 @@ params:
     choice: ["rs485", "tcpip"]
     baudrate: 9600
     id: 85
-  - name: capacity
-    advanced: true
-  - name: minsoc
-    advanced: true
-  - name: maxsoc
-    advanced: true
   - name: maxacpower
+  - preset: battery-params
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -204,5 +199,5 @@ render: |
               address: 2133 # 0x855 Charge Cut Soc
               type: writemultiple
               decode: uint16
-  capacity: {{ .capacity }} # kWh
+  {{- include "battery-params" . }}
   {{- end }}

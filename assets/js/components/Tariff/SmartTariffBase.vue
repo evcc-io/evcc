@@ -125,6 +125,26 @@
 				</div>
 			</div>
 		</div>
+		<div class="d-flex justify-content-end mb-2">
+			<div class="btn-group btn-group-sm" role="group" :aria-label="chartScaleLabel">
+				<button
+					type="button"
+					class="btn btn-outline-secondary"
+					:class="{ active: scaleMode === 'zero' }"
+					@click="setScaleMode('zero')"
+				>
+					{{ chartScaleZeroLabel }}
+				</button>
+				<button
+					type="button"
+					class="btn btn-outline-secondary"
+					:class="{ active: scaleMode === 'range' }"
+					@click="setScaleMode('range')"
+				>
+					{{ chartScaleRangeLabel }}
+				</button>
+			</div>
+		</div>
 		<TariffChart
 			v-if="rates.length"
 			:slots="slots"
