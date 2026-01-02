@@ -1783,16 +1783,20 @@ func (lp *Loadpoint) publishSocAndRange() {
 		lp.publish(keys.VehicleLimitSoc, float64(*limit))
 	}
 
-	// use minimum of vehicle and loadpoint
-	limitSoc := min(apiLimitSoc, lp.EffectiveLimitSoc())
+	if socEstimator != nil {
+		// use minimum of vehicle and loadpoint
+		limitSoc := min(apiLimitSoc, lp.EffectiveLimitSoc())
 
-	var d time.Duration
-	if lp.charging() {
-		d = socEstimator.RemainingChargeDuration(limitSoc, lp.chargePower)
+		var d time.Duration
+		if lp.charging() {
+			d = socEstimator.RemainingChargeDuration(limitSoc, lp.chargePower)
+		}
+		lp.SetRemainingDuration(d)
+
+		lp.SetRemainingEnergy(socEstimator.RemainingChargeEnergy(limitSoc))
 	}
-	lp.SetRemainingDuration(d)
 
-	lp.SetRemainingEnergy(socEstimator.RemainingChargeEnergy(limitSoc))
+	// TODO don't rely on vehicle cache
 
 	// range
 	if vs, ok := lp.GetVehicle().(api.VehicleRange); ok {
