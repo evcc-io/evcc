@@ -30,8 +30,6 @@ func TestPublishSocAndRange(t *testing.T) {
 	clck := clock.NewMock()
 
 	charger := api.NewMockCharger(ctrl)
-	charger.EXPECT().MaxCurrent(int64(maxA)).AnyTimes()
-	charger.EXPECT().Enabled().Return(true, nil).AnyTimes()
 
 	vehicle := api.NewMockVehicle(ctrl)
 	expectVehiclePublish(vehicle)
@@ -59,28 +57,117 @@ func TestPublishSocAndRange(t *testing.T) {
 
 	assert.Empty(t, lp.socUpdated)
 
-	tc := []struct {
-		status  api.ChargeStatus
-		allowed bool
-	}{
-		{api.StatusB, false},
-		{api.StatusC, true},
-	}
+	tc := []api.ChargeStatus{api.StatusB, api.StatusC}
 
 	for _, tc := range tc {
-		clck.Add(time.Hour)
-		lp.status = tc.status
+		lp.status = tc
 
 		assert.True(t, lp.vehicleSocPollAllowed())
 		vehicle.EXPECT().Soc().Return(0.0, errors.New("foo"))
 		lp.publishSocAndRange()
 
 		clck.Add(time.Second)
-		assert.Equal(t, tc.allowed, lp.vehicleSocPollAllowed())
-		if tc.allowed {
+
+		allowed := tc == api.StatusC
+		assert.Equal(t, allowed, lp.vehicleSocPollAllowed())
+		if allowed {
 			vehicle.EXPECT().Soc().Return(0.0, errors.New("foo"))
 		}
 		lp.publishSocAndRange()
+	}
+}
+
+func TestPublishSocAndRangeVehiclesAndChargers(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	clck := clock.NewMock()
+
+	socVehicle := 70.0
+	socCharger := 80.0
+
+	vehicle := api.NewMockVehicle(ctrl)
+	vehicle.EXPECT().Soc().Return(socVehicle, nil).AnyTimes()
+	vehicle.EXPECT().Capacity().AnyTimes()
+	vehicle.EXPECT().Features().AnyTimes()
+
+	offlineVehicle := api.NewMockVehicle(ctrl)
+	offlineVehicle.EXPECT().Soc().AnyTimes()
+	offlineVehicle.EXPECT().Capacity().AnyTimes()
+	offlineVehicle.EXPECT().Features().Return([]api.Feature{api.Offline}).AnyTimes()
+
+	charger := api.NewMockCharger(ctrl)
+
+	chargerSoc := api.NewMockBattery(ctrl)
+	chargerSoc.EXPECT().Soc().Return(socCharger, nil).AnyTimes()
+
+	isoCharger := struct {
+		*api.MockCharger
+		*api.MockBattery
+	}{
+		charger, chargerSoc,
+	}
+
+	log := util.NewLogger("foo")
+
+	tc := []struct {
+		name    string
+		charger api.Charger
+		vehicle api.Vehicle
+		soc     float64
+	}{
+		{
+			name:    "offline vehicle",
+			charger: charger,
+			vehicle: offlineVehicle,
+			soc:     0.0,
+		},
+		{
+			name:    "regular vehicle",
+			charger: charger,
+			vehicle: vehicle,
+			soc:     socVehicle,
+		},
+		{
+			name:    "offline vehicle with iso charger",
+			charger: isoCharger,
+			vehicle: offlineVehicle,
+			soc:     socCharger,
+		},
+		{
+			name:    "regular vehicle with iso charger",
+			charger: isoCharger,
+			vehicle: vehicle,
+			soc:     socCharger,
+		},
+	}
+
+	for _, tc := range tc {
+		t.Log(tc.name)
+
+		lp := &Loadpoint{
+			log:          log,
+			bus:          evbus.New(),
+			clock:        clck,
+			charger:      tc.charger,
+			vehicle:      tc.vehicle,
+			chargeMeter:  &Null{}, // silence nil panics
+			chargeRater:  &Null{}, // silence nil panics
+			chargeTimer:  &Null{}, // silence nil panics
+			socEstimator: soc.NewEstimator(log, tc.charger, tc.vehicle, false),
+			minCurrent:   minA,
+			maxCurrent:   maxA,
+			phases:       1,
+			status:       api.StatusC,
+			mode:         api.ModeNow,
+		}
+
+		// populate channels
+		x, y, z := createChannels(t)
+		attachChannels(lp, x, y, z)
+
+		assert.True(t, lp.vehicleSocPollAllowed())
+		lp.publishSocAndRange()
+
+		assert.Equal(t, tc.soc, lp.vehicleSoc)
 	}
 }
 
