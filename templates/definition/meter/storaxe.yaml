@@ -9,8 +9,7 @@ params:
   - name: modbus
     choice: ["tcpip"]
     id: 2
-  - name: capacity
-    advanced: true
+  - preset: battery-params
 render: |
   type: custom
   power:
@@ -79,4 +78,4 @@ render: |
       address: 126 # SXSSOC
       type: input
       decode: int16
-  capacity: {{ .capacity }} # kWh
+  {{- include "battery-params" . }}

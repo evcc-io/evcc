@@ -21,8 +21,7 @@ params:
   - name: maxacpower
   - name: maxchargerate
     advanced: true
-  - name: capacity
-    advanced: true
+  - preset: battery-params
 render: |
   type: custom
   # sunspec model 20x (int+sf)/ 21x (float) meter
@@ -246,5 +245,5 @@ render: |
             uri: {{ .host }}:{{ .port }}
             id: 1
             value: 124:0:OutWRte
-  capacity: {{ .capacity }} # kWh
+  {{- include "battery-params" . }}
   {{- end }}
