@@ -1,3 +1,5 @@
+// CASA 1.1 Smart Meter Gateway
+// implementation is based on [smartmetergateway](https://github.com/gosanman/smartmetergateway)
 package meter
 
 import (
