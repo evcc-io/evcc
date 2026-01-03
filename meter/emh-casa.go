@@ -68,9 +68,9 @@ func NewEMHCasaFromConfig(other map[string]any) (api.Meter, error) {
 		Password string
 		MeterID  string
 		Host     string // REQUIRED for most CASA gateways (example: 192.168.33.2)
-		Cache    time.Duration
+		Refresh  time.Duration
 	}{
-		Cache: 10 * time.Second,
+		Refresh: 10 * time.Second,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -85,11 +85,11 @@ func NewEMHCasaFromConfig(other map[string]any) (api.Meter, error) {
 		return nil, api.ErrMissingCredentials
 	}
 
-	return NewEMHCasa(cc.URI, cc.User, cc.Password, cc.MeterID, cc.Host, cc.Cache)
+	return NewEMHCasa(cc.URI, cc.User, cc.Password, cc.MeterID, cc.Host, cc.Refresh)
 }
 
 // NewEMHCasa creates an EMH CASA meter
-func NewEMHCasa(uri, user, password, meterID, host string, cache time.Duration) (api.Meter, error) {
+func NewEMHCasa(uri, user, password, meterID, host string, refresh time.Duration) (api.Meter, error) {
 	log := util.NewLogger("emh-casa")
 
 	if host == "" {
@@ -148,7 +148,7 @@ func NewEMHCasa(uri, user, password, meterID, host string, cache time.Duration) 
 	}
 	log.DEBUG.Printf("connection validated successfully")
 
-	m.valuesG = util.Cached(m.getMeterValues, cache)
+	m.valuesG = util.Cached(m.getMeterValues, refresh)
 
 	return m, nil
 }
