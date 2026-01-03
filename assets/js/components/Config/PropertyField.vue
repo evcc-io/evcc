@@ -319,36 +319,4 @@ input[type="number"]::-webkit-inner-spin-button {
 .w-min-200 {
 	min-width: min(200px, 100%);
 }
-
-/* Clear button styling */
-.form-control-clear {
-	position: absolute;
-	right: 0.75rem;
-	top: 50%;
-	transform: translateY(-50%);
-	z-index: 5;
-	background: none;
-	border: none;
-	color: #6c757d;
-	font-size: 1.5rem;
-	line-height: 1;
-	cursor: pointer;
-	padding: 0;
-	width: 1.5rem;
-	height: 1.5rem;
-}
-
-/* Adjust input padding when clear button is visible */
-.form-control.has-clear-button {
-	padding-right: 2rem;
-}
-
-/* For form-select with datalist */
-.form-select.has-clear-button {
-	padding-right: 2rem;
-}
-
-.form-select.has-clear-button + .form-control-clear {
-	right: 0.5rem;
-}
 </style>
