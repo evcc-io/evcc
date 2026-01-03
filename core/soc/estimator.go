@@ -59,20 +59,28 @@ func (s *Estimator) Reset() {
 }
 
 // RemainingChargeDuration returns the estimated remaining duration
-func (s *Estimator) RemainingChargeDuration(targetSoc int, chargePower float64) time.Duration {
+func (s *Estimator) RemainingChargeDuration(targetSoc, chargePower float64) time.Duration {
+	return remainingChargeDuration(targetSoc, chargePower, s.vehicleSoc, s.virtualCapacity)
+}
+
+func RemainingChargeDuration(targetSoc, chargePower, vehicleSoc, virtualCapacity float64) time.Duration {
+	return remainingChargeDuration(targetSoc, chargePower, vehicleSoc, virtualCapacity*1e3/ChargeEfficiency)
+}
+
+func remainingChargeDuration(targetSoc, chargePower, vehicleSoc, virtualCapacity float64) time.Duration {
 	// Relativer Reduktionspunkt
 	rrp := (chargePower-minChargePower)/gradient + minChargeSoc
 
 	var t1, t2 float64
 
 	// Zeit von vehicleSoc bis Reduktionspunkt (linear)
-	if s.vehicleSoc < rrp {
-		t1 = (min(float64(targetSoc), rrp) - s.vehicleSoc) / minChargeSoc * s.virtualCapacity / chargePower
+	if vehicleSoc < rrp {
+		t1 = (min(float64(targetSoc), rrp) - vehicleSoc) / minChargeSoc * virtualCapacity / chargePower
 	}
 
 	// Zeit von Reduktionspunkt bis targetSoc (degressiv)
 	if float64(targetSoc) > rrp {
-		t2 = (float64(targetSoc) - max(s.vehicleSoc, rrp)) / minChargeSoc * s.virtualCapacity / ((chargePower-minChargePower)/2 + minChargePower)
+		t2 = (float64(targetSoc) - max(vehicleSoc, rrp)) / minChargeSoc * virtualCapacity / ((chargePower-minChargePower)/2 + minChargePower)
 	}
 
 	return max(0, time.Duration(float64(time.Hour)*(t1+t2))).Round(time.Second)

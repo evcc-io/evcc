@@ -1789,7 +1789,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 
 		var d time.Duration
 		if lp.charging() {
-			d = socEstimator.RemainingChargeDuration(limitSoc, lp.chargePower)
+			d = socEstimator.RemainingChargeDuration(float64(limitSoc), lp.chargePower)
 		}
 		lp.SetRemainingDuration(d)
 

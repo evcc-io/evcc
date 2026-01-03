@@ -86,12 +86,12 @@ func TestPublishSocAndRangeVehiclesAndChargers(t *testing.T) {
 
 	vehicle := api.NewMockVehicle(ctrl)
 	vehicle.EXPECT().Soc().Return(socVehicle, nil).AnyTimes()
-	vehicle.EXPECT().Capacity().Return(50.0).AnyTimes() // enable soc-based planning
+	vehicle.EXPECT().Capacity().Return(8.5).AnyTimes() // enable soc-based planning
 	vehicle.EXPECT().Features().AnyTimes()
 
 	offlineVehicle := api.NewMockVehicle(ctrl)
 	offlineVehicle.EXPECT().Soc().AnyTimes()
-	offlineVehicle.EXPECT().Capacity().Return(50.0).AnyTimes() // enable soc-based planning
+	offlineVehicle.EXPECT().Capacity().Return(8.5).AnyTimes() // enable soc-based planning
 	offlineVehicle.EXPECT().Features().Return([]api.Feature{api.Offline}).AnyTimes()
 
 	charger := api.NewMockCharger(ctrl)
@@ -170,7 +170,15 @@ func TestPublishSocAndRangeVehiclesAndChargers(t *testing.T) {
 			assert.True(t, lp.vehicleSocPollAllowed())
 			lp.publishSocAndRange()
 			assert.Equal(t, tc.soc, lp.vehicleSoc)
+
+			// planner assumptions
 			assert.Equal(t, tc.socBased, lp.socBasedPlanning())
+
+			if tc.soc > 0 {
+				d := time.Duration((1 - tc.soc/100) * float64(time.Hour))
+				t.Log("d", d)
+				assert.True(t, d < lp.GetPlanRequiredDuration(100, 10e3))
+			}
 		}
 
 		t.Run(tc.name+" wo/estimator", test)
