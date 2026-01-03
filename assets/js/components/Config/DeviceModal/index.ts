@@ -36,7 +36,6 @@ export type TemplateParam = {
 export type ParamService = {
   name: string;
   service: string;
-  dependencies: string[];
   url: (values: Record<string, any>) => string;
 };
 
@@ -94,20 +93,6 @@ export function applyDefaultsFromTemplate(template: Template | null, values: Dev
     .forEach((p) => {
       values[p.Name] = p.Default;
     });
-
-  // Apply modbus defaults from template (for service dependency resolution)
-  const modbusParam = params.find((p) => p.Name === "modbus") as ModbusParam | undefined;
-  if (modbusParam) {
-    const modbusDefaults: Record<string, any> = {
-      id: modbusParam.ID,
-      port: modbusParam.Port,
-      comset: modbusParam.Comset,
-      baudrate: modbusParam.Baudrate,
-    };
-    Object.entries(modbusDefaults).forEach(([key, val]) => {
-      if (!values[key] && val) values[key] = val;
-    });
-  }
 }
 
 export function customChargerName(type: ConfigType, isHeating: boolean) {
@@ -136,6 +121,7 @@ export async function loadServiceValues(path: string) {
 // Expand {modbus} to actual connection params based on values
 const expandModbus = (service: string, values: Record<string, any>): string => {
   if (!service.includes("{modbus}")) return service;
+
   if (values["device"]) {
     return service.replace(
       "{modbus}",
@@ -166,7 +152,6 @@ export const createServiceEndpoints = (params: TemplateParam[]): ParamService[] 
       return {
         name: param.Name,
         service: param.Service,
-        dependencies: extractPlaceholders(param.Service),
         url: (values: Record<string, any>) =>
           replacePlaceholders(expandModbus(param.Service!, values), stringValues(values)),
       } as ParamService;
@@ -183,14 +168,11 @@ export const fetchServiceValues = async (
 
   await Promise.all(
     endpoints.map(async (endpoint) => {
-      const expanded = expandModbus(endpoint.service, values);
-      if (expanded.includes("{modbus}")) {
-        return;
-      }
-      if (!extractPlaceholders(expanded).every((dep) => values[dep])) {
-        return;
-      }
       const url = endpoint.url(values);
+      if (extractPlaceholders(url).length > 0) {
+        // missing values, not all placeholders are filled
+        return;
+      }
       const data = await loadServiceValues(url);
       if (data) {
         result[endpoint.name] = data;

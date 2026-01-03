@@ -329,6 +329,15 @@ export default defineComponent({
 		modbusCapabilities() {
 			return (this.modbus?.Choice || []) as ModbusCapability[];
 		},
+		modbusDefaults() {
+			const { ID, Comset, Baudrate, Port } = this.modbus || {};
+			return {
+				id: ID || 1,
+				comset: Comset || "8N1",
+				baudrate: Baudrate || 9600,
+				port: Port || 502,
+			};
+		},
 		description() {
 			return this.template?.Requirements?.Description;
 		},
@@ -733,7 +742,10 @@ export default defineComponent({
 				clearTimeout(this.serviceValuesTimer);
 			}
 			this.serviceValuesTimer = setTimeout(async () => {
-				this.serviceValues = await fetchServiceValues(this.templateParams, this.values);
+				this.serviceValues = await fetchServiceValues(this.templateParams, {
+					...this.modbusDefaults,
+					...this.values,
+				});
 			}, 500);
 		},
 		applyServiceDefault(paramName: string) {

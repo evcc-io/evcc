@@ -46,7 +46,7 @@
 			class="me-2"
 			required
 			:model-value="id || defaultId || 1"
-			@change="$emit('update:id', $event.target.value)"
+			@input="$emit('update:id', $event.target.value)"
 		/>
 	</FormRow>
 	<div v-if="connection === MODBUS_CONNECTION.TCPIP">
@@ -62,7 +62,7 @@
 				class="me-2"
 				required
 				:model-value="host"
-				@change="$emit('update:host', $event.target.value)"
+				@input="$emit('update:host', $event.target.value)"
 			/>
 		</FormRow>
 		<FormRow :id="formId('modbusPort')" :label="$t('config.modbus.port')">
@@ -73,7 +73,7 @@
 				class="me-2 w-50"
 				required
 				:model-value="port || defaultPort || 502"
-				@change="$emit('update:port', $event.target.value)"
+				@input="$emit('update:port', $event.target.value)"
 			/>
 		</FormRow>
 		<FormRow
@@ -142,7 +142,7 @@
 				:choice="baudrateOptions"
 				required
 				:model-value="baudrate || defaultBaudrate"
-				@change="$emit('update:baudrate', parseInt($event.target.value))"
+				@input="$emit('update:baudrate', parseInt($event.target.value))"
 			/>
 		</FormRow>
 		<FormRow :id="formId('modbusComset')" :label="$t('config.modbus.comset')">
@@ -154,7 +154,7 @@
 				:choice="comsetOptions"
 				required
 				:model-value="comset || defaultComset || '8N1'"
-				@change="$emit('update:comset', $event.target.value)"
+				@input="$emit('update:comset', $event.target.value)"
 			/>
 		</FormRow>
 	</div>
