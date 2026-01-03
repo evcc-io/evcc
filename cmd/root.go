@@ -279,7 +279,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// signal devices initialized
 	valueChan <- util.Param{Key: keys.StartupCompleted, Val: true}
 	// show onboarding UI
-	valueChan <- util.Param{Key: keys.SetupRequired, Val: site == nil || len(site.Loadpoints()) == 0}
+	valueChan <- util.Param{Key: keys.SetupRequired, Val: site == nil || !site.IsConfigured()}
 
 	// setup mqtt publisher
 	if err == nil && conf.Mqtt.Broker != "" && conf.Mqtt.Topic != "" {

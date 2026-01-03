@@ -1,7 +1,10 @@
 <template>
 	<div
-		class="energyflow cursor-pointer position-relative"
-		:class="{ 'energyflow--open': detailsOpen }"
+		class="energyflow position-relative"
+		:class="{
+			'energyflow--open': detailsOpen || detailsAlwaysOpen,
+			'cursor-pointer': !detailsAlwaysOpen,
+		}"
 		data-testid="energyflow"
 		@click="toggleDetails"
 	>
@@ -445,7 +448,13 @@ export default defineComponent({
 		outPower() {
 			return this.homePower + this.loadpointsPower + this.pvExport + this.batteryCharge;
 		},
+		detailsAlwaysOpen() {
+			return this.loadpoints.length === 0;
+		},
 		detailsHeight() {
+			if (this.detailsAlwaysOpen) {
+				return "auto";
+			}
 			return this.detailsOpen ? this.detailsCompleteHeight + "px" : 0;
 		},
 		batteryFmt() {
@@ -545,6 +554,7 @@ export default defineComponent({
 	},
 	mounted() {
 		window.addEventListener("resize", this.updateHeight);
+
 		// height must be calculated in case of initially open details
 		if (settings.energyflowDetails) {
 			this.toggleDetails();

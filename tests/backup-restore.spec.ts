@@ -196,9 +196,14 @@ test.describe("backup and restore", async () => {
     await expect(page.getByTestId("offline-indicator")).toHaveAttribute("aria-hidden", "false");
     await restart(undefined, undefined, true);
     await expect(page.getByTestId("offline-indicator")).toHaveAttribute("aria-hidden", "true");
-    await page.getByRole("link", { name: "Let's start configuration" }).click();
 
-    // verify initial state
+    // redirect to main ui with initial title
+    await expect(
+      page.getByTestId("header").getByRole("heading", { name: initialTitle })
+    ).toBeVisible();
+
+    // verify initial state in config ui
+    await page.goto("/#/config");
     await expect(page.getByTestId("grid")).toBeVisible();
     await expect(page.getByTestId("generalconfig-title")).toContainText(initialTitle);
     await stop();

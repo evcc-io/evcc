@@ -137,6 +137,14 @@ func (site *Site) Loadpoints() []loadpoint.API {
 	return lo.Map(site.loadpoints, func(lp *Loadpoint, _ int) loadpoint.API { return lp })
 }
 
+func (site *Site) hasMeters() bool {
+	return site.gridMeter != nil || len(site.pvMeters) > 0 || len(site.batteryMeters) > 0 || len(site.auxMeters) > 0 || len(site.extMeters) > 0
+}
+
+func (site *Site) IsConfigured() bool {
+	return len(site.loadpoints) > 0 || site.hasMeters()
+}
+
 // loadpointsAsCircuitDevices returns the loadpoints as circuit devices
 func (site *Site) loadpointsAsCircuitDevices() []api.CircuitLoad {
 	return lo.Map(site.loadpoints, func(lp *Loadpoint, _ int) api.CircuitLoad { return lp })
