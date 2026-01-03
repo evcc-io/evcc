@@ -22,7 +22,6 @@ type RCT struct {
 	conn          *rct.Connection // connection with the RCT device
 	usage         string          // grid, pv, battery
 	externalPower bool            // whether to query external power
-	curtailed     bool            // whether pv is currently curtailed
 }
 
 var (
@@ -110,17 +109,12 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 			if b {
 				r = 0
 			}
-
-			if err := m.conn.Write(rct.BufVControlPowerReduction, m.floatVal(r)); err != nil {
-				return err
-			}
-
-			m.curtailed = b
-			return nil
+			return m.conn.Write(rct.BufVControlPowerReduction, m.floatVal(r))
 		}
 
 		curtailed = func() (bool, error) {
-			return m.curtailed, nil
+			r, err := m.queryFloat(rct.BufVControlPowerReduction)
+			return r != 1, err
 		}
 	}
 
