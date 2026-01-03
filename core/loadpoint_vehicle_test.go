@@ -86,12 +86,12 @@ func TestPublishSocAndRangeVehiclesAndChargers(t *testing.T) {
 
 	vehicle := api.NewMockVehicle(ctrl)
 	vehicle.EXPECT().Soc().Return(socVehicle, nil).AnyTimes()
-	vehicle.EXPECT().Capacity().AnyTimes()
+	vehicle.EXPECT().Capacity().Return(50.0).AnyTimes() // enable soc-based planning
 	vehicle.EXPECT().Features().AnyTimes()
 
 	offlineVehicle := api.NewMockVehicle(ctrl)
 	offlineVehicle.EXPECT().Soc().AnyTimes()
-	offlineVehicle.EXPECT().Capacity().AnyTimes()
+	offlineVehicle.EXPECT().Capacity().Return(50.0).AnyTimes() // enable soc-based planning
 	offlineVehicle.EXPECT().Features().Return([]api.Feature{api.Offline}).AnyTimes()
 
 	charger := api.NewMockCharger(ctrl)
@@ -109,34 +109,39 @@ func TestPublishSocAndRangeVehiclesAndChargers(t *testing.T) {
 	log := util.NewLogger("foo")
 
 	tc := []struct {
-		name    string
-		charger api.Charger
-		vehicle api.Vehicle
-		soc     float64
+		name     string
+		charger  api.Charger
+		vehicle  api.Vehicle
+		soc      float64
+		socBased bool
 	}{
 		{
-			name:    "offline vehicle",
-			charger: charger,
-			vehicle: offlineVehicle,
-			soc:     0.0,
+			name:     "offline vehicle",
+			charger:  charger,
+			vehicle:  offlineVehicle,
+			soc:      0.0,
+			socBased: false,
 		},
 		{
-			name:    "regular vehicle",
-			charger: charger,
-			vehicle: vehicle,
-			soc:     socVehicle,
+			name:     "regular vehicle",
+			charger:  charger,
+			vehicle:  vehicle,
+			soc:      socVehicle,
+			socBased: true,
 		},
 		{
-			name:    "offline vehicle with iso charger",
-			charger: isoCharger,
-			vehicle: offlineVehicle,
-			soc:     socCharger,
+			name:     "offline vehicle with iso charger",
+			charger:  isoCharger,
+			vehicle:  offlineVehicle,
+			soc:      socCharger,
+			socBased: true,
 		},
 		{
-			name:    "regular vehicle with iso charger",
-			charger: isoCharger,
-			vehicle: vehicle,
-			soc:     socCharger,
+			name:     "regular vehicle with iso charger",
+			charger:  isoCharger,
+			vehicle:  vehicle,
+			soc:      socCharger,
+			socBased: true,
 		},
 	}
 
@@ -165,6 +170,7 @@ func TestPublishSocAndRangeVehiclesAndChargers(t *testing.T) {
 			assert.True(t, lp.vehicleSocPollAllowed())
 			lp.publishSocAndRange()
 			assert.Equal(t, tc.soc, lp.vehicleSoc)
+			assert.Equal(t, tc.socBased, lp.socBasedPlanning())
 		}
 
 		t.Run(tc.name+" wo/estimator", test)
