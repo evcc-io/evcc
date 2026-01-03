@@ -331,11 +331,12 @@ export default defineComponent({
 		},
 		modbusDefaults() {
 			const { ID, Comset, Baudrate, Port } = this.modbus || {};
+			// TODO: we should move these default fallback values to API to remove redundancy
 			return {
-				id: ID,
-				comset: Comset,
-				baudrate: Baudrate,
-				port: Port,
+				id: ID || 1,
+				comset: Comset || "8N1",
+				baudrate: Baudrate || 9600,
+				port: Port || 502,
 			};
 		},
 		description() {
@@ -353,7 +354,6 @@ export default defineComponent({
 		},
 		apiData(): ApiData {
 			let data: ApiData = {
-				...this.modbusDefaults,
 				...this.values,
 			};
 			if (this.values.type === ConfigType.Template && this.templateName) {
@@ -743,7 +743,10 @@ export default defineComponent({
 				clearTimeout(this.serviceValuesTimer);
 			}
 			this.serviceValuesTimer = setTimeout(async () => {
-				this.serviceValues = await fetchServiceValues(this.templateParams, this.values);
+				this.serviceValues = await fetchServiceValues(this.templateParams, {
+					...this.modbusDefaults,
+					...this.values,
+				});
 			}, 500);
 		},
 		applyServiceDefault(paramName: string) {
