@@ -10,6 +10,7 @@
 			:aria-describedby="id + '_unit'"
 			class="form-control"
 			:class="{ 'text-end': endAlign }"
+			:disabled="disabled"
 		/>
 		<span :id="id + '_unit'" class="input-group-text">{{ unitValue }}</span>
 	</div>
@@ -27,6 +28,7 @@
 				:class="selectMode ? 'btn-check' : 'd-none'"
 				:name="property"
 				:value="key"
+				:disabled="disabled"
 				@click="toggleSelectMode"
 			/>
 			<label
@@ -56,18 +58,31 @@
 			{ value: false, name: $t('config.options.boolean.no') },
 			{ value: true, name: $t('config.options.boolean.yes') },
 		]"
+		:disabled="disabled"
 	/>
-	<select v-else-if="select" :id="id" v-model="value" class="form-select" :class="inputClasses">
-		<option v-if="!required" value="">---</option>
+	<select
+		v-else-if="select"
+		:id="id"
+		v-model="value"
+		class="form-select"
+		:class="inputClasses"
+		:disabled="disabled"
+	>
+		<option v-if="!required" value="" :disabled="disabled">---</option>
 		<template v-for="({ key, name }, idx) in selectOptions">
-			<option v-if="key !== null && name !== null" :key="key" :value="key">
+			<option
+				v-if="key !== null && name !== null"
+				:key="key"
+				:value="key"
+				:disabled="disabled"
+			>
 				{{ name }}
 			</option>
 			<option v-else :key="idx" disabled>─────</option>
 		</template>
 	</select>
 	<textarea
-		v-else-if="textarea"
+		v-else-if="rows || textarea"
 		:id="id"
 		v-model="value"
 		class="form-control"
@@ -75,7 +90,8 @@
 		:type="inputType"
 		:placeholder="placeholder"
 		:required="required"
-		rows="4"
+		:rows="getTextAreaRows"
+		:disabled="disabled"
 	/>
 	<div v-else class="position-relative">
 		<input
@@ -88,18 +104,20 @@
 			:placeholder="placeholder"
 			:required="required"
 			:autocomplete="masked || datalistId ? 'off' : null"
+			:disabled="disabled"
 		/>
 		<button
 			v-if="showClearButton"
 			type="button"
 			class="form-control-clear"
 			:aria-label="$t('config.general.clear')"
+			:disabled="disabled"
 			@click="value = ''"
 		>
 			&times;
 		</button>
 		<datalist v-if="showDatalist" :id="datalistId">
-			<option v-for="v in serviceValues" :key="v" :value="v">
+			<option v-for="v in serviceValues" :key="v" :value="v" :disabled="disabled">
 				{{ v }}
 			</option>
 		</datalist>
@@ -129,10 +147,12 @@ export default {
 		scale: Number,
 		required: Boolean,
 		invalid: Boolean,
+		disabled: Boolean,
 		choice: { type: Array, default: () => [] },
 		modelValue: [String, Number, Boolean, Object],
 		label: String,
 		serviceValues: { type: Array, default: () => [] },
+		rows: Boolean,
 	},
 	emits: ["update:modelValue"],
 	data: () => {
@@ -204,7 +224,15 @@ export default {
 			return this.property === "icon";
 		},
 		textarea() {
-			return ["accessToken", "refreshToken", "identifiers"].includes(this.property);
+			return ["accessToken", "refreshToken"].includes(this.property);
+		},
+		getTextAreaRows() {
+			switch (this.property) {
+				case "eventMessage":
+					return 2;
+				default:
+					return 4;
+			}
 		},
 		boolean() {
 			return this.type === "Bool";

@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/url"
 	"os"
 	"regexp"
 	"slices"
@@ -799,11 +800,71 @@ func configureEEBus(conf *eebus.Config) error {
 
 // setup messaging
 func configureMessengers(conf *globalconfig.Messaging, vehicles push.Vehicles, valueChan chan<- util.Param, cache *util.ParamCache) (chan push.Event, error) {
-	// migrate settings
 	if settings.Exists(keys.Messaging) {
-		*conf = globalconfig.Messaging{}
-		if err := settings.Yaml(keys.Messaging, new(map[string]any), &conf); err != nil {
-			return nil, err
+		// TODO: delete migration if not needed any more
+		if !settings.IsJson(keys.Messaging) {
+			var data globalconfig.Messaging
+			if err := settings.Yaml(keys.Messaging, new(globalconfig.Messaging), &data); err != nil {
+				return nil, err
+			}
+			// events already created by the user in yaml should be enabled
+			for k, v := range data.Events {
+				v.Disabled = false
+				data.Events[k] = v
+			}
+			for i := range data.Services {
+				s := &data.Services[i]
+
+				if s.Type == "email" {
+					uri, ok := s.Other["uri"].(string)
+					if !ok {
+						return nil, fmt.Errorf("failed to migrate email service due to missing uri")
+					}
+
+					u, err := url.Parse(uri)
+					if err != nil {
+						return nil, err
+					}
+
+					s.Other["host"] = u.Hostname()
+					s.Other["user"] = u.User.Username()
+					s.Other["port"] = u.Port()
+					s.Other["from"] = u.Query().Get("fromAddress")
+					s.Other["to"] = u.Query()["toAddresses"]
+					if pw, ok := u.User.Password(); ok {
+						s.Other["password"] = pw
+					}
+
+					delete(s.Other, "uri")
+				} else if s.Type == "ntfy" {
+					uri, ok := s.Other["uri"].(string)
+					if !ok {
+						return nil, fmt.Errorf("failed to migrate ntfy service due to missing uri")
+					}
+
+					parsed, err := url.Parse(uri)
+					if err != nil {
+						return nil, err
+					}
+
+					path := strings.TrimPrefix(parsed.Path, "/")
+
+					s.Other["host"] = parsed.Host
+					if path == "" {
+						s.Other["topics"] = []string{}
+					} else {
+						s.Other["topics"] = strings.Split(path, ",")
+					}
+
+					delete(s.Other, "uri")
+				}
+			}
+			// migrate from yaml to json
+			migrateYamlToJsonByData(keys.Messaging, data)
+		}
+
+		if err := settings.Json(keys.Messaging, &conf); err != nil {
+			return nil, fmt.Errorf("failed to read messaging setting: %w", err)
 		}
 	}
 
@@ -964,18 +1025,29 @@ func configureDevices(conf globalconfig.All) error {
 	return joinErrors(errs...)
 }
 
-// migrateYamlToJson converts a settings value from yaml to json if needed
-func migrateYamlToJson[T any](key string) error {
-	var err error
+// migrateYamlToJsonByKey converts a settings value from yaml to json by key if needed
+func migrateYamlToJsonByData(key string, data any) error {
 	if settings.IsJson(key) {
 		// already JSON, nothing to do
 		return nil
 	}
 
+	err := settings.SetJson(key, data)
+	log.INFO.Printf("migrated %s setting to JSON", key)
+	return err
+}
+
+// migrateYamlToJson converts a settings value from yaml to json by key if needed
+func migrateYamlToJson[T any](key string) error {
+	if settings.IsJson(key) {
+		// already JSON, nothing to do
+		return nil
+	}
+
+	var err error
 	var data T
 	if err := settings.Yaml(key, new(T), &data); err == nil {
-		settings.SetJson(key, data)
-		log.INFO.Printf("migrated %s setting to JSON", key)
+		migrateYamlToJsonByData(key, data)
 	}
 
 	return err

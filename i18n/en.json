@@ -393,6 +393,101 @@
     },
     "messaging": {
       "description": "Receive messages about your charging sessions.",
+      "event": {
+        "asleep": {
+          "messageDefault": "Charge release, vehicle {vehicleName} not charging.",
+          "title": "When charging is paused",
+          "titleDefault": "Vehicle asleep"
+        },
+        "connect": {
+          "messageDefault": "Car connected at {pvPower}kW PV",
+          "title": "When a car connects",
+          "titleDefault": "Car connected"
+        },
+        "disconnect": {
+          "messageDefault": "Car disconnected after {connectedDuration}",
+          "title": "When a car disconnects",
+          "titleDefault": "Car disconnected"
+        },
+        "guest": {
+          "messageDefault": "Unknown vehicle, guest connected?",
+          "title": "When an unknown car connects",
+          "titleDefault": "Unknown vehicle"
+        },
+        "planoverrun": {
+          "messageDefault": "{vehicleTitle}: Plan will overrun.",
+          "title": "When plan charging is going to overrun",
+          "titleDefault": "Plan overrun"
+        },
+        "soc": {
+          "messageDefault": "Battery charged to {vehicleSoc}%",
+          "title": "For SoC updates",
+          "titleDefault": "Soc updated"
+        },
+        "start": {
+          "messageDefault": "Started charging in {mode} mode.",
+          "title": "When charging starts",
+          "titleDefault": "Charge started"
+        },
+        "stop": {
+          "messageDefault": "Finished charging {chargedEnergy}kWh in {chargeDuration}.",
+          "title": "When charging stops",
+          "titleDefault": "Charge finished"
+        }
+      },
+      "service": {
+        "custom": {
+          "encoding": "Encoding",
+          "encodingHelp": "The value for {send} is provided in the format {format}.",
+          "formatAndSave": "Format & Save",
+          "send": "Plugin for sending",
+          "sendHelp": "Defines the plugin to be used to send the title and/or message. The plugin must support write mode. For more details, see {url}."
+        },
+        "email": {
+          "from": "From",
+          "fromHelp": "Sender's email address.",
+          "host": "Host",
+          "hostHelp": "Host name or IP address of the email server.",
+          "password": "Password",
+          "passwordHelp": "User password.",
+          "port": "Port",
+          "portHelp": "Port address of the email server.",
+          "to": "To",
+          "toHelp": "Recipient's email address.",
+          "user": "User",
+          "userHelp": "Username for the email server."
+        },
+        "ntfy": {
+          "authtoken": "Access token",
+          "authtokenHelp": "Used for secure access to the private ntfy server.",
+          "host": "Host",
+          "hostHelp": "Host name or IP address of the ntfy server.",
+          "priority": "Priority",
+          "priorityHelp": "Messages have a priority level that determines how urgently your phone notifies you. On Android, you can customize notification sounds and vibration patterns based on these priority levels. For more details, see {url}.",
+          "tags": "Tags & emojis",
+          "tagsHelp": "Messages can be tagged with emojis or strings, which will be shown in the title or message. For more details, see {url}. One entry per line.",
+          "topics": "Topics",
+          "topicsHelp": "One entry per line."
+        },
+        "pushover": {
+          "app": "Token",
+          "appHelp": "API token of the application. Get it from {url}.",
+          "devices": "Device names",
+          "devicesHelp": "One entry per line.",
+          "recipients": "Recipients",
+          "recipientsHelp": "User identifiers and group identifiers can be specified. One entry per line. Groups created in Pushover can be restricted to specific devices."
+        },
+        "shout": {
+          "uri": "Uri",
+          "uriHelp": "Specify the URL format. An overview of the supported services can be found at {url}."
+        },
+        "telegram": {
+          "chats": "Chat IDs",
+          "chatsHelp": "Chat identifiers and group identifiers can be specified. The latter have a minus sign. One entry per line.",
+          "token": "Token",
+          "tokenHelp": "Also called Bot ID."
+        }
+      },
       "title": "Notifications"
     },
     "meter": {

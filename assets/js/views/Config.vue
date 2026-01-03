@@ -426,7 +426,7 @@ import InfluxIcon from "../components/MaterialIcon/Influx.vue";
 import InfluxModal from "../components/Config/InfluxModal.vue";
 import LoadpointModal from "../components/Config/LoadpointModal.vue";
 import LoadpointIcon from "../components/MaterialIcon/Loadpoint.vue";
-import MessagingModal from "../components/Config/MessagingModal.vue";
+import MessagingModal from "../components/Config/Messaging/MessagingModal.vue";
 import MeterModal from "../components/Config/MeterModal.vue";
 import MeterCard from "../components/Config/MeterCard.vue";
 import Modal from "bootstrap/js/dist/modal";
@@ -731,7 +731,11 @@ export default defineComponent({
 			return { configured: { value: false } };
 		},
 		messagingTags(): DeviceTags {
-			return { configured: { value: store.state?.messaging || false } };
+			const config = store.state?.messaging?.services || [];
+			if (config.length > 0) {
+				return { amount: { value: config.length } };
+			}
+			return { configured: { value: false } };
 		},
 		backupRestoreProps() {
 			return {
