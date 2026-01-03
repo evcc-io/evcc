@@ -691,8 +691,7 @@ func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan c
 	// restored settings
 	lp.publish(keys.PlanTime, lp.planTime)
 	lp.publish(keys.PlanEnergy, lp.planEnergy)
-	lp.publish(keys.PlanPrecondition, int64(lp.planStrategy.Precondition.Seconds()))
-	lp.publish(keys.PlanContinuous, lp.planStrategy.Continuous)
+	lp.publish(keys.PlanStrategy, lp.planStrategy)
 	lp.publish(keys.LimitSoc, lp.limitSoc)
 	lp.publish(keys.LimitEnergy, lp.limitEnergy)
 
