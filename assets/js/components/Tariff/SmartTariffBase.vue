@@ -91,11 +91,15 @@
 					{{ activeHoursText }}
 				</div>
 			</div>
-			<div class="text-end">
+		<div class="text-end">
 				<div class="label d-flex align-items-center justify-content-end gap-2">
 					<span v-if="activeSlot">{{ activeSlotName }}</span>
 					<span v-else>{{ currentPriceLabel }}</span>
-					<div class="btn-group btn-group-sm" role="group" :aria-label="chartScaleLabel">
+					<div
+						class="btn-group btn-group-sm chart-scale-toggle"
+						role="group"
+						:aria-label="chartScaleLabel"
+					>
 						<button
 							type="button"
 							class="btn btn-outline-secondary"
@@ -314,10 +318,10 @@ export default defineComponent({
 			return this.totalSlots.filter((s) => s.warning);
 		},
 		fmtTotalCostRange() {
-			return this.fmtCostRange(this.costRange(this.totalSlots));
+			return this.fmtCostRange(this.displayCostRange(this.totalSlots));
 		},
 		fmtActiveCostRange() {
-			return this.fmtCostRange(this.costRange(this.activeSlots));
+			return this.fmtCostRange(this.displayCostRange(this.activeSlots));
 		},
 		activeSlot(): Slot | null {
 			return this.activeIndex !== null ? this.slots[this.activeIndex] || null : null;
@@ -436,11 +440,28 @@ export default defineComponent({
 			});
 			return { min, max };
 		},
+		displayCostRange(slots: Slot[]): { min: number | undefined; max: number | undefined } {
+			const { min, max } = this.costRange(slots);
+			if (this.scaleMode === "zero") {
+				return { min: 0, max };
+			}
+			return { min, max };
+		},
 		fmtCostRange({ min, max }: { min: number | undefined; max: number | undefined }): string {
 			if (min === undefined || max === undefined) return "";
-			const fmtMin = this.formatShortValue(min);
-			const fmtMax = this.formatShortValue(max);
+			const fmtMin = this.formatRangeValue(min, "floor");
+			const fmtMax = this.formatRangeValue(max, "ceil");
 			return `${fmtMin} – ${fmtMax}`;
+		},
+		formatRangeValue(value: number, roundMode: "floor" | "ceil"): string {
+			const rounded = roundMode === "floor" ? Math.floor(value) : Math.ceil(value);
+			if (this.isCo2) {
+				return this.fmtCo2Short(rounded);
+			}
+			const unit = this.pricePerKWhUnit(this.currency, true);
+			const scale = unit === this.currency ? 1 : 100;
+			const scaled = roundMode === "floor" ? Math.floor(value * scale) : Math.ceil(value * scale);
+			return `${this.fmtNumber(scaled, 0)} ${unit}`;
 		},
 		formatShortValue(value: number): string {
 			if (this.isCo2) {
@@ -563,5 +584,10 @@ export default defineComponent({
 .smart-tariff-switch:checked {
 	background-color: var(--evcc-green);
 	border-color: var(--evcc-green);
+}
+.chart-scale-toggle .btn.active {
+	background-color: var(--evcc-green);
+	border-color: var(--evcc-green);
+	color: var(--evcc-white);
 }
 </style>
