@@ -184,7 +184,7 @@ type Loadpoint struct {
 func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, other map[string]any) (*Loadpoint, error) {
 	lp := NewLoadpoint(log, settings)
 	if err := util.DecodeOther(other, lp); err != nil {
-		return nil, err
+		return lp, err
 	}
 
 	// set vehicle polling mode

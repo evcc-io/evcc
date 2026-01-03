@@ -33,6 +33,8 @@ func NewModbusMbmdFromConfig(ctx context.Context, other map[string]any) (api.Met
 	cc := struct {
 		Model              string
 		batteryCapacity    `mapstructure:",squash"`
+		batteryPowerLimits `mapstructure:",squash"`
+		batterySocLimits   `mapstructure:",squash"`
 		modbus.Settings    `mapstructure:",squash"`
 		Power, Energy, Soc string
 		Currents           []string

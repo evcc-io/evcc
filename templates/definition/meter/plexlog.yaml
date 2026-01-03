@@ -16,8 +16,7 @@ params:
     choice: ["tcpip"]
     id: 1
     port: 503
-  - name: capacity
-    advanced: true
+  - preset: battery-params
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -75,5 +74,5 @@ render: |
       type: input
       decode: uint16
     timeout: 30s
-  capacity: {{ .capacity }} # kWh
+  {{- include "battery-params" . }}
   {{- end }}

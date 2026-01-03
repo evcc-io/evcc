@@ -40,8 +40,7 @@ params:
     help:
       de: Registriernummer von https://qhome-ess-g3.q-cells.eu/blue/#/inverter oder https://qhome-ess-g3.q-cells.us/blue/#/inverter hier eintragen.
       en: Go to https://qhome-ess-g3.q-cells.eu/blue/#/inverter or https://qhome-ess-g3.q-cells.us/blue/#/inverter and take the value of registration number.
-  - name: capacity
-    advanced: true
+  - preset: battery-params
 render: |
   type: custom
   power:
@@ -77,5 +76,5 @@ render: |
     uri: https://qhome-ess-g3.q-cells.{{ lower .region }}/proxyApp/proxy/api/getRealtimeInfo.do?tokenId={{ urlEncode .tokenid }}&sn={{ urlEncode .serial }}
     jq: .result.soc  # Solax API inverter.DC.battery.energy.SOC
     cache: 2m30s
-  capacity: {{ .capacity }} # kWh
+  {{- include "battery-params" . }}
   {{- end }}

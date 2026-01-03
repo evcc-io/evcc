@@ -6,6 +6,7 @@ import (
 
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -35,8 +36,8 @@ func New(log *util.Logger, tariff api.Tariff, opt ...func(t *Planner)) *Planner 
 // It MUST already be established that:
 // - rates are sorted in ascending order by cost and descending order by start time (prefer late slots)
 // - rates are filtered to [now, targetTime] window by caller
-func (t *Planner) plan(rates api.Rates, requiredDuration time.Duration, targetTime time.Time) api.Rates {
-	var plan api.Rates
+func optimalPlan(rates api.Rates, requiredDuration time.Duration, targetTime time.Time) api.Rates {
+	plan := make(api.Rates, 0, int64(requiredDuration)/int64(tariff.SlotDuration)+3)
 
 	for _, slot := range rates {
 		slotDuration := slot.End.Sub(slot.Start)
@@ -199,7 +200,7 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 		// sort rates by price and time
 		slices.SortStableFunc(rates, sortByCost)
 
-		plan = t.plan(rates, requiredDuration, targetTime)
+		plan = optimalPlan(rates, requiredDuration, targetTime)
 
 		// sort plan by time
 		plan.Sort()
