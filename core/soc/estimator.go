@@ -7,7 +7,16 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-const ChargeEfficiency = 0.85 // assume 85% charge efficiency
+const (
+	ChargeEfficiency = 0.85 // assume 85% charge efficiency
+
+	minChargePower = 1000.0  // Lowest charge power (just before vehicle stops charging at 100%)
+	maxChargePower = 50000.0 // default 50 kW
+	maxChargeSoc   = 50.0    // default 50%
+	minChargeSoc   = 100.0
+
+	gradient = (minChargePower - maxChargePower) / (minChargeSoc - maxChargeSoc)
+)
 
 // Estimator provides vehicle soc and charge duration
 // Vehicle Soc can be estimated to provide more granularity
@@ -24,9 +33,6 @@ type Estimator struct {
 	prevSoc           float64 // previous vehicle Soc in %
 	prevChargedEnergy float64 // previous charged energy in Wh
 	energyPerSocStep  float64 // Energy per Soc percent in Wh
-	minChargePower    float64 // Lowest charge power (just before vehicle stops charging at 100%)
-	maxChargePower    float64 // Highest charge power the battery can handle on any charger
-	maxChargeSoc      float64 // SoC at/after which maxChargePower is degressive
 }
 
 // NewEstimator creates new estimator
@@ -50,27 +56,13 @@ func (s *Estimator) Reset() {
 	s.capacity = s.vehicle.Capacity() * 1e3           // cache to simplify debugging
 	s.virtualCapacity = s.capacity / ChargeEfficiency // initial capacity taking efficiency into account
 	s.energyPerSocStep = s.virtualCapacity / 100
-	s.minChargePower = 1000  // default 1 kW
-	s.maxChargePower = 50000 // default 50 kW
-	s.maxChargeSoc = 50      // default 50%
+
 }
 
 // RemainingChargeDuration returns the estimated remaining duration
 func (s *Estimator) RemainingChargeDuration(targetSoc int, chargePower float64) time.Duration {
-	const minChargeSoc = 100
-
-	dy := s.minChargePower - s.maxChargePower
-	dx := minChargeSoc - s.maxChargeSoc
-
-	var rrp float64 = 100
-
-	if dy < 0 && dx > 0 {
-		m := dy / dx
-		b := s.minChargePower - m*minChargeSoc
-
-		// Relativer Reduktionspunkt
-		rrp = (chargePower - b) / m
-	}
+	// Relativer Reduktionspunkt
+	rrp := (chargePower-minChargePower)/gradient + minChargeSoc
 
 	var t1, t2 float64
 
@@ -81,7 +73,7 @@ func (s *Estimator) RemainingChargeDuration(targetSoc int, chargePower float64) 
 
 	// Zeit von Reduktionspunkt bis targetSoc (degressiv)
 	if float64(targetSoc) > rrp {
-		t2 = (float64(targetSoc) - max(s.vehicleSoc, rrp)) / minChargeSoc * s.virtualCapacity / ((chargePower-s.minChargePower)/2 + s.minChargePower)
+		t2 = (float64(targetSoc) - max(s.vehicleSoc, rrp)) / minChargeSoc * s.virtualCapacity / ((chargePower-minChargePower)/2 + minChargePower)
 	}
 
 	return max(0, time.Duration(float64(time.Hour)*(t1+t2))).Round(time.Second)
