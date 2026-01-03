@@ -2,7 +2,9 @@
   "authProviders": {
     "authCode": "Varmistuskoodi",
     "authCodeHelp": "Kopioi tämä koodi leikepöydälle ja käytä sitä seuraavassa vaiheessa. Se on voimassa {duration}.",
+    "authorizationFailed": "Valtuuttaminen epäonnistui",
     "authorizationRequired": "Vaaditaan valtuutus",
+    "authorizationSuccessful": "Valtuuttaminen onnistui",
     "buttonConnect": "Yhdistä {provider}:een",
     "buttonDisconnect": "Katkaise yhteys",
     "confirmLogout": "Haluatko varmasti katkaista yhteyden {title}:een?",
@@ -12,7 +14,7 @@
     "logoutFailed": "Uloskirjautuminen epäonnistui",
     "modalDescriptionLogin": "Tee valtuutusprosessi loppuun yhdistääksesi {provider}:een.",
     "modalDescriptionLogout": "Tämä katkaisee yhteyden {provider}-tiliisi ja poistaa pääsyn sen dataan.",
-    "success": "Valtuutus {title}:n kanssa onnistui.",
+    "success": "{title} on nyt yhdistetty ja valmiina käyttöön.",
     "successCloseModal": "Voit sulkea tämän valikon.",
     "successCloseTab": "Voit sulkea tämän välilehden.",
     "title": "Valtuutuksen tila"
@@ -97,8 +99,8 @@
     },
     "control": {
       "description": "Yleensä oletusarvot ovat sopivat. Muuta vain jos tiedät mitä olet tekemässä.",
-      "descriptionInterval": "Ohjaussilmukan päivitysjakso sekunneissa. Määrittää, kuinka usein evcc lukee mittaritietoja, säätää lataustehoa ja päivittää käyttöliittymän. Lyhyet välit alle (30 s) voivat aiheuttaa oskillaatiota ja ei-toivottua toimintaa.",
-      "descriptionResidualPower": "Siirtää ohjaussilmukan toimintapistettä. Jos sinulla on kodissa akku on suositeltavaa asettaa arvo 100 W. Näin akku on hieman etusijalla sähköverkon käyttöön nähden.",
+      "descriptionInterval": "Päivitysjakso sekunneissa. Määrittää, kuinka usein evcc lukee mittaritietoja ja säätää lataustehoa. Oletus 30 s on turvallinen valinta. Ajoneuvot, latauslaitteet ja inverterit tyypillisesti tarvitsevat useita sekunteja toimintansa säätämiseen. Jos laitteesi reagoivat nopeasti, voit määrittää lyhyemmän aikajakson. Suosittelemme painokkaasti, että alle 10 s jaksoa ei määritettäisi. Jos kohtaat virheellistä toimitaa tai hyppiviä tehoarvoja suosittelemme pidemtämään aikaväliä.",
+      "descriptionResidualPower": "Siirtää ohjaussilmukan toimintapistettä. Suositusarvo 100 W määrittää kotiakuille pienen etusijan suhteessa sähköverkon käyttöön. Mikäli sinulla ei ole akkua asennettuna, voit asettaa arvon 0 W minimoidaksesi sähköverkon käytön aurinkosähkötilassa.",
       "labelInterval": "Päivitystiheys",
       "labelResidualPower": "Jäännösteho",
       "title": "Määrittele toimintaa"
@@ -172,6 +174,10 @@
     "eebus": {
       "description": "Konfiguraatio, jonka avulla evcc voi kommunikoida muiden EEBus-laitteiden kanssa.",
       "title": "EEBus"
+    },
+    "experimental": {
+      "description": "Kytke päälle käyttöliittymän toiminnallisuudet, joita vielä testataan ja jotka voivat muuttua tulevissa päivityksissä.",
+      "title": "Kokeellinen"
     },
     "ext": {
       "description": "Tallentaa ei-hallittujen virrankuluttajien (kuten jääkaapin, pesukoneen) käyttämää energiaa tilastointiin. Voidaan käyttää myös kuormanhallintaan (esim. osittaiskuormana).",
@@ -381,6 +387,8 @@
       "title": "Määritykset",
       "unconfigured": "ei määritetty",
       "vehicles": "Minun ajoneuvot",
+      "welcomeBannerText": "Aloita luomalla **latauslaite tai lämmitin**. Jos sinulla ei vielä ole oikeaa latauslaitetta, valitse **demolaturi**.",
+      "welcomeBannerTitle": "Määritetään järjestelmäsi!",
       "yaml": "evcc.yaml-asetuksissa määritettyjä laitteita ei voi muokata."
     },
     "messaging": {
@@ -839,6 +847,8 @@
       "stepTwo": "Vaihe 2: Kopioi lisätiedot",
       "title": "Yhteenveto GitHubiin"
     },
+    "system": "Järjestelmä",
+    "timezone": "Aikavyöhyke",
     "title": "Raportoi ongelmasta",
     "version": "Versio"
   },
@@ -878,11 +888,12 @@
       "modalTitle": "Lataussuunnitelma",
       "none": "ei mitään",
       "planNumber": "Suunnitelma {number}",
-      "preconditionDescription": "Ladataan {duration} ennen lähtöä akunesilämmitystä varten.",
-      "preconditionLong": "Viimehetken lataus",
-      "preconditionOptionAll": "koko latausmäärä",
-      "preconditionOptionNo": "ei",
-      "preconditionShort": "Viimehetkellinen",
+      "precondition": {
+        "description": "Ladataan {duration} ennen lähtöä akunesilämmitystä varten.",
+        "label": "Viimehetken lataus",
+        "optionAll": "koko latausmäärä",
+        "optionNo": "ei"
+      },
       "remove": "Poista",
       "repeating": "toistetaan",
       "repeatingPlans": "Toistuvat suunnitelmat",
@@ -1209,7 +1220,7 @@
     },
     "hiddenFeatures": {
       "label": "Kokeellinen",
-      "value": "Näytä käyttöliittymässä kokeelliset ominaisuudet."
+      "value": "Näytä kokeelliset ominaisuudet."
     },
     "language": {
       "auto": "Automaattinen",

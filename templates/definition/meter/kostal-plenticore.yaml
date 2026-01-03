@@ -34,16 +34,8 @@ params:
     choice: ["little", "big"]
     default: little
     advanced: true
-  - name: capacity
-    advanced: true
   - name: maxacpower
-  # battery control
-  - name: minsoc
-    type: int
-    advanced: true
-  - name: maxsoc
-    type: int
-    advanced: true
+  - preset: battery-params
   - name: watchdog
     type: duration
     default: 60s
@@ -90,7 +82,5 @@ render: |
         address: 1042 # limit soc
         type: writemultiple
         encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
-  capacity: {{ .capacity }} # kWh
-  minsoc: {{ .minsoc }} # %
-  maxsoc: {{ .maxsoc }} # %
+  {{- include "battery-params" . }}
   {{- end }}

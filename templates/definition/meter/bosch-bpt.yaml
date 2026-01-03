@@ -12,8 +12,7 @@ params:
     choice: ["grid", "pv", "battery"]
     allinone: true
   - name: uri
-  - name: capacity
-    advanced: true
+  - preset: battery-params
 render: |
   type: bosch-bpt
   usage: {{ .usage }}

@@ -889,11 +889,12 @@
       "modalTitle": "Įkrovimo planas",
       "none": "nėra",
       "planNumber": "Planas {number}",
-      "preconditionDescription": "Įkrovimas {duration} prieš išvykstant, baterijos paruošimui.",
-      "preconditionLong": "Vėlyvas įkrovimas",
-      "preconditionOptionAll": "viskas",
-      "preconditionOptionNo": "ne",
-      "preconditionShort": "Vėlai",
+      "precondition": {
+        "description": "Įkrovimas {duration} prieš išvykstant, baterijos paruošimui.",
+        "label": "Vėlyvas įkrovimas",
+        "optionAll": "viskas",
+        "optionNo": "ne"
+      },
       "remove": "Pašalinti",
       "repeating": "kartojasi",
       "repeatingPlans": "Pasikartojantys planai",

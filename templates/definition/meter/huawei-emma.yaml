@@ -9,8 +9,7 @@ params:
     allinone: true
   - name: modbus
     choice: ["tcpip"]
-  - name: capacity
-    advanced: true
+  - preset: battery-params
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -104,5 +103,5 @@ render: |
       type: holding
       decode: uint16nan
     scale: 0.01
-  capacity: {{ .capacity }} # kWh
+  {{- include "battery-params" . }}
   {{- end }}

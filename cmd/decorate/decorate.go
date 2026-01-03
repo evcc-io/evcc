@@ -10,6 +10,7 @@ import (
 	"os"
 	"reflect"
 	"slices"
+	"strconv"
 	"strings"
 	"text/template"
 
@@ -21,7 +22,6 @@ import (
 	"golang.org/x/tools/imports"
 )
 
-// go:generate go tool decorate -f decorateTest -b api.Charger -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
 //go:generate go tool decorate
 //evcc:function decorateTest
 //evcc:basetype api.Charger
@@ -32,13 +32,26 @@ import (
 //go:embed decorate.tpl
 var srcTmpl string
 
+//go:embed header.tpl
+var header string
+
+type function struct {
+	function, signature string
+}
+
 type dynamicType struct {
-	typ, function, signature string
+	typ       string
+	functions []function
+}
+
+type funcStruct struct {
+	Signature, Function, VarName, ReturnTypes string
+	Params                                    []string
 }
 
 type typeStruct struct {
-	Type, ShortType, Signature, Function, VarName, ReturnTypes string
-	Params                                                     []string
+	Type, ShortType string
+	Functions       []funcStruct
 }
 
 var a struct {
@@ -58,6 +71,9 @@ var a struct {
 	api.BatteryController
 	api.BatterySocLimiter
 	api.BatteryPowerLimiter
+
+	api.CurrentController
+	api.CurrentGetter
 }
 
 func typ(i any) string {
@@ -65,10 +81,11 @@ func typ(i any) string {
 }
 
 var dependents = map[string][]string{
-	typ(&a.Meter):         {typ(&a.MeterEnergy), typ(&a.PhaseCurrents), typ(&a.PhaseVoltages), typ(&a.MaxACPowerGetter)},
-	typ(&a.PhaseCurrents): {typ(&a.PhasePowers)}, // phase powers are only used to determine currents sign
-	typ(&a.PhaseSwitcher): {typ(&a.PhaseGetter)},
-	typ(&a.Battery):       {typ(&a.BatteryCapacity), typ(&a.SocLimiter), typ(&a.BatteryController), typ(&a.BatterySocLimiter), typ(&a.BatteryPowerLimiter)},
+	typ(&a.Meter):             {typ(&a.MeterEnergy), typ(&a.PhaseCurrents), typ(&a.PhaseVoltages), typ(&a.MaxACPowerGetter)},
+	typ(&a.PhaseCurrents):     {typ(&a.PhasePowers)}, // phase powers are only used to determine currents sign
+	typ(&a.PhaseSwitcher):     {typ(&a.PhaseGetter)},
+	typ(&a.Battery):           {typ(&a.BatteryCapacity), typ(&a.SocLimiter), typ(&a.BatteryController), typ(&a.BatterySocLimiter), typ(&a.BatteryPowerLimiter)},
+	typ(&a.CurrentController): {typ(&a.CurrentGetter)},
 }
 
 // hasIntersection returns if the slices intersect
@@ -81,18 +98,20 @@ func hasIntersection[T comparable](a, b []T) bool {
 	return false
 }
 
-func generate(out io.Writer, packageName, functionName, baseType string, dynamicTypes ...dynamicType) error {
+func generate(out io.Writer, functionName, baseType string, dynamicTypes ...dynamicType) error {
 	types := make(map[string]typeStruct, len(dynamicTypes))
 	combos := make([]string, 0)
 
 	tmpl, err := template.New("gen").Funcs(sprig.FuncMap()).Funcs(template.FuncMap{
 		// contains checks if slice contains string
 		"contains": slices.Contains[[]string, string],
-		// ordered returns a slice of typeStructs ordered by dynamicType
-		"ordered": func() []typeStruct {
-			ordered := make([]typeStruct, 0)
-			for _, k := range dynamicTypes {
-				ordered = append(ordered, types[k.typ])
+		// ordered returns a slice of funcStruct ordered by dynamicType
+		"ordered": func() []funcStruct {
+			ordered := make([]funcStruct, 0)
+			for _, dt := range dynamicTypes {
+				for _, fs := range types[dt.typ].Functions {
+					ordered = append(ordered, fs)
+				}
 			}
 
 			return ordered
@@ -121,23 +140,40 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 		parts := strings.SplitN(dt.typ, ".", 2)
 		lastPart := parts[len(parts)-1]
 
-		openingBrace := strings.Index(dt.signature, "(")
-		closingBrace := strings.Index(dt.signature, ")")
-		paramsStr := dt.signature[openingBrace+1 : closingBrace]
+		var funcs []funcStruct
 
-		var params []string
-		if paramsStr = strings.TrimSpace(paramsStr); len(paramsStr) > 0 {
-			params = strings.Split(paramsStr, ",")
+		for i, fun := range dt.functions {
+			function := fun.function
+			signature := fun.signature
+
+			openingBrace := strings.Index(signature, "(")
+			closingBrace := strings.Index(signature, ")")
+			paramsStr := signature[openingBrace+1 : closingBrace]
+			returns := signature[closingBrace+1:]
+
+			var params []string
+			if paramsStr = strings.TrimSpace(paramsStr); len(paramsStr) > 0 {
+				params = strings.Split(paramsStr, ",")
+			}
+
+			varName := strings.ToLower(lastPart[:1]) + lastPart[1:]
+			if len(dt.functions) > 1 {
+				varName += strconv.Itoa(i)
+			}
+
+			funcs = append(funcs, funcStruct{
+				VarName:     varName,
+				Signature:   signature,
+				Function:    function,
+				Params:      params,
+				ReturnTypes: returns,
+			})
 		}
 
 		types[dt.typ] = typeStruct{
-			Type:        dt.typ,
-			ShortType:   lastPart,
-			VarName:     strings.ToLower(lastPart[:1]) + lastPart[1:],
-			Signature:   dt.signature,
-			Function:    dt.function,
-			Params:      params,
-			ReturnTypes: dt.signature[closingBrace+1:],
+			Type:      dt.typ,
+			ShortType: lastPart,
+			Functions: funcs,
 		}
 
 		combos = append(combos, dt.typ)
@@ -182,15 +218,12 @@ COMBO:
 	}
 
 	vars := struct {
-		API                 string
-		Package, Function   string
+		Function            string
 		BaseType, ShortBase string
 		ReturnType          string
 		Types               map[string]typeStruct
 		Combinations        [][]string
 	}{
-		API:          "github.com/evcc-io/evcc/api",
-		Package:      packageName,
 		Function:     functionName,
 		BaseType:     baseType,
 		ShortBase:    shortBase,
@@ -202,10 +235,15 @@ COMBO:
 	return tmpl.Execute(out, vars)
 }
 
+type decorationSet struct {
+	function, base, ret string
+	types               []string
+}
+
 var (
 	target   = pflag.StringP("out", "o", "", "output file")
 	pkg      = pflag.StringP("package", "p", "", "package name")
-	function = pflag.StringP("function", "f", "", "function name")
+	funcname = pflag.StringP("function", "f", "", "function name")
 	base     = pflag.StringP("base", "b", "", "base type")
 	ret      = pflag.StringP("return", "r", "", "return type")
 	types    = pflag.StringArrayP("type", "t", nil, "comma-separated list of type definitions")
@@ -219,12 +257,16 @@ func Usage() {
 	pflag.PrintDefaults()
 }
 
-func parseFile(file string, function, basetype, returntype *string, types *[]string) error {
+func parseFile(file string) ([]decorationSet, error) {
+	var res []decorationSet
+
 	f, err := os.Open(file)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer f.Close()
+
+	var current decorationSet
 
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
@@ -238,20 +280,64 @@ func parseFile(file string, function, basetype, returntype *string, types *[]str
 
 			switch segs[0] {
 			case "function":
-				*function = segs[1]
+				// must be first
+				if current.function != "" {
+					res = append(res, current)
+					current = decorationSet{}
+				}
+				current.function = segs[1]
 			case "basetype":
-				*basetype = segs[1]
+				current.base = segs[1]
 			case "returntype":
-				*returntype = segs[1]
+				current.ret = segs[1]
 			case "type":
-				*types = append(*types, segs[1])
+				current.types = append(current.types, segs[1])
 			default:
 				panic("invalid directive //evcc:" + segs[0])
 			}
 		}
 	}
 
-	return scanner.Err()
+	if current.function != "" {
+		res = append(res, current)
+	}
+
+	return res, scanner.Err()
+}
+
+func splitTopLevel(s string) []string {
+	var res []string
+	brackets := 0
+	start := 0
+
+	for i, r := range s {
+		switch r {
+		case '(':
+			brackets++
+		case ')':
+			brackets--
+		case ',':
+			if brackets == 0 {
+				res = append(res, strings.TrimSpace(s[start:i]))
+				start = i + 1
+			}
+		}
+	}
+	res = append(res, strings.TrimSpace(s[start:]))
+	return res
+}
+
+func parseFunctions(iface string) []function {
+	parts := splitTopLevel(iface)
+
+	var res []function
+	for i := 0; i+1 < len(parts); i += 2 {
+		res = append(res, function{
+			function:  parts[i],
+			signature: parts[i+1],
+		})
+	}
+	return res
 }
 
 func main() {
@@ -270,31 +356,21 @@ func main() {
 		pkg = &gopkg
 	}
 
-	if *function == "" {
-		if err := parseFile(gofile, function, base, ret, types); err != nil {
+	sets := []decorationSet{{*funcname, *base, *ret, *types}}
+
+	if *funcname == "" {
+		all, err := parseFile(gofile)
+		if err != nil {
 			fmt.Println(err)
 			os.Exit(2)
 		}
+		sets = all
 	}
 
-	if *base == "" || *pkg == "" || len(*types) == 0 {
+	if *pkg == "" || len(sets) == 0 || sets[0].base == "" || len(sets[0].types) == 0 {
 		Usage()
 		os.Exit(2)
 	}
-
-	var dynamicTypes []dynamicType
-	for _, v := range *types {
-		split := strings.SplitN(v, ",", 3)
-		dt := dynamicType{split[0], split[1], split[2]}
-		dynamicTypes = append(dynamicTypes, dt)
-	}
-
-	var buf bytes.Buffer
-	if err := generate(&buf, *pkg, *function, *base, dynamicTypes...); err != nil {
-		fmt.Println(err)
-		os.Exit(2)
-	}
-	generated := strings.TrimSpace(buf.String()) + "\n"
 
 	var out io.Writer = os.Stdout
 
@@ -315,9 +391,29 @@ func main() {
 		out = dst
 	}
 
-	formatted, err := format.Source([]byte(generated))
+	generated := new(bytes.Buffer)
+	fmt.Fprintln(generated, strings.ReplaceAll(header, "{{.Package}}", *pkg))
+
+	for _, set := range sets {
+		var dynamicTypes []dynamicType
+
+		for _, v := range set.types {
+			split := strings.SplitN(v, ",", 2) // iface,...
+			dynamicTypes = append(dynamicTypes, dynamicType{split[0], parseFunctions(split[1])})
+		}
+
+		var buf bytes.Buffer
+		if err := generate(&buf, set.function, set.base, dynamicTypes...); err != nil {
+			fmt.Println(err)
+			os.Exit(2)
+		}
+
+		fmt.Fprintln(generated, buf.String())
+	}
+
+	formatted, err := format.Source(generated.Bytes())
 	if err != nil {
-		formatted = []byte(generated)
+		formatted = generated.Bytes()
 	}
 
 	formatted, err = imports.Process(name, formatted, nil)

@@ -105,7 +105,7 @@ site:
       - battery # list of battery meters
     aux:
       - aux # list of auxiliary meters for adjusting grid operating point
-  residualPower: 100 # additional household usage margin
+  residualPower: 0 # additional household usage margin
 
 # loadpoint describes the charger, charge meter and connected vehicle
 loadpoints:

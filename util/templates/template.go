@@ -183,7 +183,7 @@ func (t *Template) GroupTitle(lang string) string {
 
 // Defaults returns a map of default values for the template
 func (t *Template) Defaults(renderMode int) map[string]any {
-	values := make(map[string]any)
+	values := make(map[string]any, len(t.Params))
 	for _, p := range t.Params {
 		values[p.Name] = p.DefaultValue(renderMode)
 	}
@@ -366,7 +366,7 @@ func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, m
 				}
 
 				// validate required fields from yaml
-				if s == "" && p.IsRequired() && (renderMode == RenderModeUnitTest ||
+				if s == "" && p.IsRequired() && !p.IsDeprecated() && (renderMode == RenderModeUnitTest ||
 					renderMode == RenderModeInstance && !testing.Testing()) {
 					// validate required per usage
 					if len(p.Usages) == 0 || slices.Contains(p.Usages, usage) {
