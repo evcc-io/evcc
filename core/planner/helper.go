@@ -103,7 +103,7 @@ func clampRatesSeq(rates api.Rates, start, end time.Time) iter.Seq[api.Rate] {
 
 			// slot after continuous plan
 			if !r.Start.Before(end) {
-				continue
+				return
 			}
 
 			// calculate adjusted bounds
