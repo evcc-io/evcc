@@ -98,7 +98,10 @@ export default defineComponent({
 			if (!values.length) {
 				return { min: 0, range: 0 };
 			}
-
+			if (this.scaleMode === "zero") {
+				const adjustedMax = Math.max(max, 0);
+				return { min: 0, range: adjustedMax };
+			}
 			return { min, range: max - min };
 		},
 		targetLeft() {
