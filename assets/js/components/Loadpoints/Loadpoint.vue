@@ -24,6 +24,7 @@
 			</div>
 		</div>
 		<LoadpointSettingsModal
+			:id="id"
 			v-bind="settingsModal"
 			@maxcurrent-updated="setMaxCurrent"
 			@mincurrent-updated="setMinCurrent"
@@ -133,7 +134,7 @@ export default defineComponent({
 	},
 	mixins: [formatter, collector],
 	props: {
-		id: String,
+		id: { type: String, required: true },
 		single: Boolean,
 
 		// main
@@ -177,10 +178,11 @@ export default defineComponent({
 		planProjectedEnd: String as PropType<string | null>,
 		planOverrun: { type: Number, default: 0 },
 		planEnergy: Number,
-		planPrecondition: Number,
 		planTime: String as PropType<string | null>,
 		effectivePlanTime: String as PropType<string | null>,
 		effectivePlanSoc: Number,
+		effectivePlanPrecondition: Number,
+		effectivePlanContinuous: Boolean,
 		vehicleProviderLoggedIn: Boolean,
 		vehicleProviderLoginPath: String,
 		vehicleProviderLogoutPath: String,
@@ -224,6 +226,8 @@ export default defineComponent({
 		gridConfigured: Boolean,
 		pvConfigured: Boolean,
 		forecast: Object as PropType<Forecast>,
+		lastSmartCostLimit: Number,
+		lastSmartFeedInPriorityLimit: Number,
 	},
 	data() {
 		return {
@@ -293,7 +297,7 @@ export default defineComponent({
 			return this.pvConfigured || this.gridConfigured;
 		},
 		batteryBoostAvailable() {
-			return this.batteryConfigured && this.$hiddenFeatures();
+			return this.batteryConfigured;
 		},
 		batteryBoostActive() {
 			return (

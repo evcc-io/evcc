@@ -34,7 +34,17 @@ export interface InfluxConfig {
 }
 
 export interface HemsConfig {
-  type: any;
+  type: string;
+}
+
+export interface HemsStatus {
+  maxPower: number;
+}
+
+export interface Hems {
+  status?: HemsStatus;
+  config: HemsConfig;
+  fromYaml: boolean;
 }
 
 export interface ShmConfig {
@@ -50,7 +60,8 @@ export interface FatalError {
 
 export interface State {
   offline: boolean;
-  startup?: boolean;
+  setupRequired?: boolean;
+  startupCompleted?: boolean;
   loadpoints: Loadpoint[];
   forecast: Forecast;
   currency?: CURRENCY;
@@ -58,6 +69,8 @@ export interface State {
   authProviders?: AuthProviders;
   evopt?: EvOpt;
   version?: string;
+  system?: string;
+  timezone?: string;
   battery?: BatteryMeter[];
   pv?: Meter[];
   aux?: Meter[];
@@ -68,11 +81,11 @@ export interface State {
   tariffSolar?: number;
   mqtt?: MqttConfig;
   influx?: InfluxConfig;
-  hems?: HemsConfig;
+  hems?: Hems;
   shm?: ShmConfig;
   sponsor?: Sponsor;
   eebus?: any;
-  modbusproxy?: [];
+  modbusproxy?: ModbusProxy[];
   messaging?: any;
   interval?: number;
   circuits?: Record<string, Circuit>;
@@ -81,6 +94,32 @@ export interface State {
   authDisabled?: boolean;
   config?: string;
   database?: string;
+  ocpp?: Ocpp;
+}
+
+export interface OcppConfig {
+  port: number;
+}
+
+export interface OcppStatus {
+  externalUrl?: string;
+  stations: OcppStationStatus[];
+}
+
+export interface Ocpp {
+  config: OcppConfig;
+  status: OcppStatus;
+}
+
+export interface OcppStationStatus {
+  id: string;
+  status: OCPP_STATION_STATUS;
+}
+
+export enum OCPP_STATION_STATUS {
+  UNKNOWN = "unknown",
+  CONFIGURED = "configured",
+  CONNECTED = "connected",
 }
 
 export interface Config {
@@ -207,6 +246,8 @@ export interface Loadpoint {
   effectivePlanId: number;
   effectivePlanSoc: number;
   effectivePlanTime: string | null;
+  effectivePlanPrecondition: number;
+  effectivePlanContinuous: boolean;
   effectivePriority: number;
   enableDelay: number;
   enableThreshold: number;
@@ -225,6 +266,7 @@ export interface Loadpoint {
   planEnergy: number;
   planOverrun: number;
   planPrecondition: number;
+  planContinuous: boolean;
   planProjectedEnd: string | null;
   planProjectedStart: string | null;
   planTime: string | null;
@@ -261,6 +303,8 @@ export interface UiLoadpoint extends Loadpoint {
   icon: string;
   order: number | null;
   visible: boolean;
+  lastSmartCostLimit: number | undefined;
+  lastSmartFeedInPriorityLimit: number | undefined;
 }
 
 export enum THEME {
@@ -342,12 +386,67 @@ export type SessionInfoKey =
   | "price"
   | "co2";
 
-export interface Sponsor {
-  name: string;
-  expiresAt: string;
-  expiresSoon: boolean;
+export interface SponsorStatus {
+  name?: string;
+  expiresAt?: string;
+  expiresSoon?: boolean;
   token?: string;
+}
+
+export interface Sponsor {
+  status?: SponsorStatus;
   fromYaml: boolean;
+}
+
+export enum MODBUS_BAUDRATE {
+  _1200 = 1200,
+  _9600 = 9600,
+  _19200 = 19200,
+  _38400 = 38400,
+  _57600 = 57600,
+  _115200 = 115200,
+}
+
+export enum MODBUS_TYPE {
+  RS485_SERIAL = "rs485serial",
+  RS485_TCPIP = "rs485tcpip",
+  TCPIP = "tcpip",
+}
+
+export enum MODBUS_COMSET {
+  _8N1 = "8N1",
+  _8E1 = "8E1",
+  _8N2 = "8N2",
+}
+
+export enum MODBUS_PROXY_READONLY {
+  FALSE = "false",
+  TRUE = "true",
+  DENY = "deny",
+}
+
+export enum MODBUS_CONNECTION {
+  TCPIP = "tcpip",
+  SERIAL = "serial",
+}
+
+export enum MODBUS_PROTOCOL {
+  TCP = "tcp",
+  RTU = "rtu",
+}
+
+export type ModbusProxy = {
+  port: number;
+  readonly: MODBUS_PROXY_READONLY;
+  settings: ModbusProxySettings;
+};
+
+export interface ModbusProxySettings {
+  uri?: string;
+  rtu?: boolean;
+  device?: string;
+  baudrate?: MODBUS_BAUDRATE;
+  comset?: MODBUS_COMSET;
 }
 
 export interface Notification {
@@ -377,6 +476,8 @@ export interface Vehicle {
   limitSoc?: number;
   plan?: StaticPlan;
   repeatingPlans: RepeatingPlan[] | null;
+  planPrecondition: number;
+  planContinuous: boolean;
   title: string;
   features?: string[];
   capacity?: number;

@@ -10,13 +10,15 @@ const (
 // used as common name in cert generation
 var DeviceCode = util.Getenv("EEBUS_DEVICE_CODE", "EVCC_HEMS_01")
 
+type Certificate struct {
+	Public, Private string
+}
+
 type Config struct {
 	URI         string
 	ShipID      string
 	Interfaces  []string
-	Certificate struct {
-		Public, Private string
-	}
+	Certificate Certificate
 }
 
 // Configured returns true if the EEbus server is configured

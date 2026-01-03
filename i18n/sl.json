@@ -40,7 +40,7 @@
       "chargers": "polnilnice za EV",
       "generic": "Splošne integracije",
       "heatingdevices": "Ogrevalne naprave",
-      "ocppHelp": "Kopirajte ta naslov v konfiguracijo vaše polnilnice.",
+      "ocppHelp": "Kopirajte ta URL v konfiguracijo vašega polnilnika. Za podrobnosti preverite priročnik proizvajalca. Polnilnik bo samodejno dodal svoj edinstveni identifikator (ID postaje) k URL-ju. V redkih primerih boste morda morali identifikator določiti ročno. Primer: `{url}`",
       "ocppLabel": "URL strežnika OCPP",
       "switchsockets": "Preklopne vtičnice",
       "template": "Proizvajalec",
@@ -485,7 +485,6 @@
         "backup": {
           "action": "Prenesi varnostno kopijo ...",
           "confirmationButton": "Prenesi varnostno kopijo",
-          "confirmationText": "Za prenos datoteke baze podatkov vnesite geslo.",
           "description": "Varnostno kopirajte podatke v datoteko. To datoteko lahko uporabite za obnovitev podatkov v primeru sistemske napake.",
           "title": "Varnostno kopiranje"
         },
@@ -1130,8 +1129,10 @@
       "show": "Prikaži {title}"
     },
     "sponsorToken": {
-      "expires": "Sponzorskemu žetonu poteče veljavnost čez {inXDays}. {getNewToken} in ga posodobite tukaj.",
-      "getNew": "Zgrabi svežega",
+      "expires": "Sponzorskemu žetonu poteče veljavnost čez {inXDays}.",
+      "expiresUpdateUi": "{getNewToken} in ga posodobite tukaj.",
+      "expiresUpdateYaml": "{getNewToken} in ga posodobite v svoji evcc.yaml.",
+      "getNewToken": "Zgrabi svežega",
       "hint": "Opomba: To bomo v prihodnosti avtomatizirali."
     },
     "telemetry": {

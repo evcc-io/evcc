@@ -1,41 +1,48 @@
 template: homeassistant-switch
 products:
   - brand: Home Assistant
-    description:
-      de: Schalter
-      en: Switch
 group: switchsockets
 requirements:
   evcc: ["skiptest"]
+  description:
+    en: Home Assistant instances in your network will be auto-discovered and suitable entities (e.g. `switch.*`, `sensor.*`) will be suggested.
+    de: Home Assistant Instanzen in deinem Netzwerk werden automatisch erkannt und passende Entitäten (z.B. `switch.*`, `sensor.*`) werden vorgeschlagen.
+auth:
+  type: homeassistant
+  params: [uri]
 params:
   - name: uri
-    required: true
-    example: http://homeassistant.local:8123
-  - name: token
-    mask: true
-    required: true
     description:
-      de: Long-Lived Access Token
-      en: Long-Lived Access Token
+      de: Home Assistant URI
+      en: Home Assistant URI
+    example: http://homeassistant.local:8123
     help:
-      de: aus Home Assistant Profil
-      en: from Home Assistant profile
-  - name: switch
+      en: " " # overwrite default
+      de: " " # overwrite default
+    service: homeassistant/instances
     required: true
+  - name: token
+    deprecated: true
+  - name: home
+    deprecated: true
+  - name: switch
     description:
       de: Entity ID des schaltbaren Geräts
       en: Entity ID of the switch device
+    service: homeassistant/entities?uri={uri}&domain=switch
     example: switch.smartsocket
+    required: true
   - name: power
     description:
       de: Entity ID für Leistungsmessung
       en: Entity ID for power measurement
+    service: homeassistant/entities?uri={uri}&domain=sensor
     example: sensor.smartsocket_power
   - preset: switchsocket
 render: |
   type: homeassistant-switch
   uri: {{ .uri }}
-  token: {{ .token }}
+  home: {{ .home }} # deprecated
   enable: {{ .switch }}
   power: {{ .power }}
   {{ include "switchsocket" . }}

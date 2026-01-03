@@ -17,8 +17,10 @@ type Cache struct {
 	Value string `json:"value"`
 }
 
-func Init() error {
-	return db.Instance.AutoMigrate(new(Cache))
+func init() {
+	db.Register(func() error {
+		return db.Instance.AutoMigrate(new(Cache))
+	})
 }
 
 func Put(key string, value any) error {

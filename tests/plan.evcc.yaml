@@ -16,7 +16,9 @@ meters:
 loadpoints:
   - title: Loadpoint
     charger: charger
+    mode: pv
   - title: Loadpoint with SoC
+    mode: pv
     charger: chargerSoc
 
 chargers:

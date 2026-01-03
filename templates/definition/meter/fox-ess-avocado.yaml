@@ -3,6 +3,9 @@ products:
   - brand: FoxESS
     description:
       generic: Avocado
+  - brand: Solakon
+    description:
+      generic: ONE
 capabilities: ["battery-control"]
 params:
   - name: usage
@@ -11,14 +14,15 @@ params:
     choice: ["rs485", "tcpip"]
     baudrate: 9600
     id: 1
+  - name: maxacpower
+    default: 800
+  - preset: battery-params
   - name: capacity
     default: 2.11 # kWh
   - name: minsoc
     default: 10
   - name: maxsoc
     default: 100
-  - name: maxacpower
-    default: 800
   - name: maxchargepower
     default: 1200
 render: |
@@ -185,9 +189,5 @@ render: |
                 address: 46003 # Remote Active Power
                 type: writemultiple
                 encoding: int32
-  capacity: {{ .capacity }} # kWh
-  maxchargepower: {{ .maxchargepower }} # W
-  maxdischargepower: {{ .maxacpower }} # W
-  minsoc: {{ .minsoc }} # %
-  maxsoc: {{ .maxsoc }} # %
+  {{- include "battery-params" . }}
   {{- end }}

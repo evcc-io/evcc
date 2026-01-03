@@ -33,12 +33,14 @@ var (
 	settings []setting
 )
 
-func Init() error {
-	err := db.Instance.AutoMigrate(new(setting))
-	if err == nil {
-		err = db.Instance.Find(&settings).Error
-	}
-	return err
+func init() {
+	db.Register(func() error {
+		if err := db.Instance.AutoMigrate(new(setting)); err != nil {
+			return err
+		}
+
+		return db.Instance.Find(&settings).Error
+	})
 }
 
 func Persist() error {
@@ -240,6 +242,11 @@ func Yaml(key string, other, res any) error {
 	}
 
 	return DecodeOtherSliceOrMap(other, res)
+}
+
+func IsJson(key string) bool {
+	s, err := String(key)
+	return err == nil && json.Unmarshal([]byte(s), &json.RawMessage{}) == nil
 }
 
 // wrapping Settings into a struct for better decoupling

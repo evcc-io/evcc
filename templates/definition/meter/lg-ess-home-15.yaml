@@ -26,15 +26,7 @@ params:
     help:
       en: ID of the LG ESS HOME inverter.
       de: Nummer des LG ESS HOME Wechselrichters.
-  - name: capacity
-    advanced: true
-  # battery control
-  - name: minsoc
-    type: int
-    advanced: true
-  - name: maxsoc
-    type: int
-    advanced: true
+  - preset: battery-params
 render: |
   type: lgess15
   usage: {{ .usage }}
@@ -47,7 +39,5 @@ render: |
   registration: {{ .registration }}
   {{- end }}
   {{- if eq .usage "battery" }}
-  capacity: {{ .capacity }} # kWh
-  minsoc: {{ .minsoc }}
-  maxsoc: {{ .maxsoc }}
+  {{- include "battery-params" . }}
   {{- end }}

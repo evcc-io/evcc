@@ -1,7 +1,6 @@
 package charger
 
 import (
-	"context"
 	"testing"
 
 	"github.com/evcc-io/evcc/api"
@@ -32,15 +31,17 @@ var acceptable = []string{
 	"sponsorship required, see https://docs.evcc.io/docs/sponsorship",
 	"eebus not configured",
 	"context deadline exceeded",
-	"timeout",                              // ocpp
-	"must have uri and password",           // Wattpilot
-	"either identity or uuid are required", // Plugchoice
+	"timeout",                                        // ocpp
+	"must have uri and password",                     // Wattpilot
+	"either identity or uuid are required",           // Plugchoice
+	"unsupported platform",                           // OpenWB Native
+	"missing config values: username, password, key", // E3DC
 }
 
 func TestTemplates(t *testing.T) {
 	templates.TestClass(t, templates.Charger, func(t *testing.T, values map[string]any) {
 		t.Helper()
-		if _, err := NewFromConfig(context.TODO(), "template", values); err != nil && !test.Acceptable(err, acceptable) {
+		if _, err := NewFromConfig(t.Context(), "template", values); err != nil && !test.Acceptable(err, acceptable) {
 			t.Log(values)
 			t.Error(err)
 		}

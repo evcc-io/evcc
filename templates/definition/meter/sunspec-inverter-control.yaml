@@ -12,8 +12,7 @@ params:
     choice: ["tcpip", "rs485"]
   - name: maxchargerate
     advanced: true
-  - name: capacity
-    advanced: true
+  - preset: battery-params
 render: |
   {{- if eq .usage "battery" }}
   type: custom
@@ -105,5 +104,5 @@ render: |
             source: sunspec
             {{- include "modbus" . | indent 10 }}
             value: 124:0:InOutWRte_RvrtTms
-  capacity: {{ .capacity }} # kWh
+  {{- include "battery-params" . }}
   {{- end }}

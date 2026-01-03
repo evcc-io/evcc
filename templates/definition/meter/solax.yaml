@@ -28,9 +28,8 @@ params:
     type: int
     default: 1
     advanced: true
-  - name: capacity
-    advanced: true
   - name: maxacpower
+  - preset: battery-params
   - name: defaultmode
     default: 0 # "SelfUse"
     advanced: true
@@ -177,5 +176,5 @@ render: |
               address: 0x001F # SolarChargeUseMode
               type: writesingle
               decode: uint16
-  capacity: {{ .capacity }} # kWh
+  {{- include "battery-params" . }}
   {{- end }}

@@ -19,6 +19,7 @@ package charger
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 	"time"
 
@@ -250,8 +251,8 @@ func (wb *AlpitronicHYC) Identify() (string, error) {
 		return "", err
 	}
 
-	if vid := bytesAsString(b); vid != "" {
-		return vid, nil
+	if !allZero(b) {
+		return hex.EncodeToString(b), nil
 	}
 
 	b, err = wb.conn.ReadInputRegisters(wb.reg(hycRegIdTag), 10)
@@ -259,7 +260,11 @@ func (wb *AlpitronicHYC) Identify() (string, error) {
 		return "", err
 	}
 
-	return bytesAsString(b), nil
+	if !allZero(b) {
+		return hex.EncodeToString(b), nil
+	}
+
+	return "", nil
 }
 
 var _ api.Battery = (*AlpitronicHYC)(nil)
@@ -271,5 +276,14 @@ func (wb *AlpitronicHYC) Soc() (float64, error) {
 		return 0, err
 	}
 
-	return float64(encoding.Uint16(b)), nil
+	return float64(encoding.Uint16(b)) / 100, nil
+}
+
+func allZero(s []byte) bool {
+	for _, v := range s {
+		if v != 0 {
+			return false
+		}
+	}
+	return true
 }

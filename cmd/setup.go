@@ -17,15 +17,15 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/charger"
+	"github.com/evcc-io/evcc/charger/ocpp"
 	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
-	"github.com/evcc-io/evcc/core/metrics"
-	"github.com/evcc-io/evcc/core/session"
 	coresettings "github.com/evcc-io/evcc/core/settings"
 	"github.com/evcc-io/evcc/hems"
+	hemsapi "github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/hems/shm"
 	"github.com/evcc-io/evcc/meter"
 	"github.com/evcc-io/evcc/plugin/golang"
@@ -34,7 +34,6 @@ import (
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/server/db"
-	"github.com/evcc-io/evcc/server/db/cache"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/server/modbus"
@@ -45,6 +44,7 @@ import (
 	"github.com/evcc-io/evcc/util/locale"
 	"github.com/evcc-io/evcc/util/machine"
 	"github.com/evcc-io/evcc/util/request"
+	_ "github.com/evcc-io/evcc/util/service"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/evcc-io/evcc/vehicle"
@@ -60,12 +60,14 @@ import (
 )
 
 var conf = globalconfig.All{
-	Interval: 10 * time.Second,
+	Interval: 30 * time.Second,
 	Log:      "info",
 	Network: globalconfig.Network{
-		Schema: "http",
-		Host:   "evcc.local",
-		Port:   7070,
+		Host: "",
+		Port: 7070,
+	},
+	Ocpp: ocpp.Config{
+		Port: 8887,
 	},
 	Mqtt: globalconfig.Mqtt{
 		Topic: "evcc",
@@ -77,6 +79,11 @@ var conf = globalconfig.All{
 		Type: "sqlite",
 		Dsn:  "",
 	},
+}
+
+var fromYaml struct {
+	sponsor bool
+	hems    bool
 }
 
 var nameRE = regexp.MustCompile(`^[a-zA-Z0-9_.:-]+$`)
@@ -492,10 +499,9 @@ func configureSponsorship(token string) (err error) {
 		if token, err = settings.String(keys.SponsorToken); err != nil {
 			return err
 		}
-		sponsor.SetFromYaml(false) // from database
+	} else if token != "" {
+		fromYaml.sponsor = true
 	}
-
-	// TODO migrate settings
 
 	return sponsor.ConfigureSponsorship(token)
 }
@@ -545,6 +551,11 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) error {
 		err = wrapErrorWithClass(ClassMqtt, configureMqtt(&conf.Mqtt))
 	}
 
+	// setup OCPP server
+	if err == nil {
+		configureOCPP(&conf.Ocpp, conf.Network.ExternalUrl)
+	}
+
 	// setup EEBus server
 	if err == nil {
 		err = wrapErrorWithClass(ClassEEBus, configureEEBus(&conf.EEBus))
@@ -570,26 +581,6 @@ func configureDatabase(conf globalconfig.DB) error {
 	}
 
 	if err := db.NewInstance(conf.Type, conf.Dsn); err != nil {
-		return err
-	}
-
-	if err := session.Init(); err != nil {
-		return err
-	}
-
-	if err := metrics.Init(); err != nil {
-		return err
-	}
-
-	if err := settings.Init(); err != nil {
-		return err
-	}
-
-	if err := cache.Init(); err != nil {
-		return err
-	}
-
-	if err := config.Init(); err != nil {
 		return err
 	}
 
@@ -676,14 +667,14 @@ func configureMqtt(conf *globalconfig.Mqtt) error {
 }
 
 // setup SHM
-func configureSHM(conf *shm.Config, site *core.Site, httpd *server.HTTPd) error {
+func configureSHM(conf *shm.Config, externalUrl string, site *core.Site, httpd *server.HTTPd) error {
 	if settings.Exists(keys.Shm) {
 		if err := settings.Json(keys.Shm, &conf); err != nil {
 			return err
 		}
 	}
 
-	if err := shm.NewFromConfig(*conf, site, httpd.Addr, httpd.Router()); err != nil {
+	if err := shm.NewFromConfig(*conf, externalUrl, site, httpd.Addr, httpd.Router()); err != nil {
 		return fmt.Errorf("failed configuring shm: %w", err)
 	}
 
@@ -711,32 +702,36 @@ func configureGo(conf []globalconfig.Go) error {
 }
 
 // setup HEMS
-func configureHEMS(conf *globalconfig.Hems, site *core.Site) error {
-	// migrate settings
-	if settings.Exists(keys.Hems) {
-		*conf = globalconfig.Hems{}
-		if err := settings.Yaml(keys.Hems, new(map[string]any), &conf); err != nil {
-			return err
+func configureHEMS(conf *globalconfig.Hems, site *core.Site) (hemsapi.API, error) {
+	// use yaml if configured
+	if conf.Type == "" {
+		if settings.Exists(keys.Hems) {
+			*conf = globalconfig.Hems{}
+			if err := settings.Yaml(keys.Hems, new(map[string]any), &conf); err != nil {
+				return nil, err
+			}
 		}
+	} else {
+		fromYaml.hems = true
 	}
 
 	if conf.Type == "" {
-		return nil
+		return nil, nil
 	}
 
 	props, err := customDevice(conf.Other)
 	if err != nil {
-		return fmt.Errorf("cannot decode custom hems '%s': %w", conf.Type, err)
+		return nil, fmt.Errorf("cannot decode custom hems '%s': %w", conf.Type, err)
 	}
 
 	hems, err := hems.NewFromConfig(context.TODO(), conf.Type, props, site)
 	if err != nil {
-		return fmt.Errorf("failed configuring hems: %w", err)
+		return nil, fmt.Errorf("failed configuring hems: %w", err)
 	}
 
 	go hems.Run()
 
-	return nil
+	return hems, nil
 }
 
 // networkSettings reads/migrates network settings
@@ -751,15 +746,30 @@ func networkSettings(conf *globalconfig.Network) error {
 // setup MDNS
 func configureMDNS(conf globalconfig.Network) error {
 	host := strings.TrimSuffix(conf.Host, ".local")
+	if host == "" {
+		host = "evcc"
+	}
 
-	zc, err := zeroconf.RegisterProxy("evcc", "_http._tcp", "local.", conf.Port, host, nil, []string{"path=/"}, nil)
+	internalURL := conf.InternalURL()
+	text := []string{"path=/", "internal_url=" + internalURL}
+
+	if externalURL := conf.ExternalURL(); externalURL != internalURL {
+		text = append(text, "external_url="+externalURL)
+	}
+
+	zc, err := zeroconf.RegisterProxy("evcc", "_http._tcp", "local.", conf.Port, host, nil, text, nil)
 	if err != nil {
-		return fmt.Errorf("mDNS announcement: %w", err)
+		return err
 	}
 
 	shutdown.Register(zc.Shutdown)
 
 	return nil
+}
+
+// setup OCPP
+func configureOCPP(cfg *ocpp.Config, externalUrl string) {
+	ocpp.Init(*cfg, externalUrl)
 }
 
 // setup EEBus
@@ -910,10 +920,13 @@ func configureTariffs(conf *globalconfig.Tariffs) (*tariff.Tariffs, error) {
 	eg.Go(func() error { return configureTariff(api.TariffUsageFeedIn, conf.FeedIn, &tariffs.FeedIn) })
 	eg.Go(func() error { return configureTariff(api.TariffUsageCo2, conf.Co2, &tariffs.Co2) })
 	eg.Go(func() error { return configureTariff(api.TariffUsagePlanner, conf.Planner, &tariffs.Planner) })
-	if len(conf.Solar) == 1 {
-		eg.Go(func() error { return configureTariff(api.TariffUsageSolar, conf.Solar[0], &tariffs.Solar) })
-	} else {
-		eg.Go(func() error { return configureSolarTariff(conf.Solar, &tariffs.Solar) })
+	if len(conf.Solar) > 0 {
+		eg.Go(func() error {
+			if len(conf.Solar) == 1 {
+				return configureTariff(api.TariffUsageSolar, conf.Solar[0], &tariffs.Solar)
+			}
+			return configureSolarTariff(conf.Solar, &tariffs.Solar)
+		})
 	}
 
 	if err := eg.Wait(); err != nil {
@@ -951,13 +964,38 @@ func configureDevices(conf globalconfig.All) error {
 	return joinErrors(errs...)
 }
 
+// migrateYamlToJson converts a settings value from yaml to json if needed
+func migrateYamlToJson[T any](key string) error {
+	var err error
+	if settings.IsJson(key) {
+		// already JSON, nothing to do
+		return nil
+	}
+
+	var data T
+	if err := settings.Yaml(key, new(T), &data); err == nil {
+		settings.SetJson(key, data)
+		log.INFO.Printf("migrated %s setting to JSON", key)
+	}
+
+	return err
+}
+
 func configureModbusProxy(conf *[]globalconfig.ModbusProxy) error {
-	// migrate settings
 	if settings.Exists(keys.ModbusProxy) {
-		*conf = []globalconfig.ModbusProxy{}
-		if err := settings.Yaml(keys.ModbusProxy, new([]map[string]any), &conf); err != nil {
+		// TODO: delete if not needed any more
+		if err := migrateYamlToJson[[]globalconfig.ModbusProxy](keys.ModbusProxy); err != nil {
 			return err
 		}
+
+		if err := settings.Json(keys.ModbusProxy, &conf); err != nil {
+			return fmt.Errorf("failed to read modbusproxy setting: %w", err)
+		}
+	}
+
+	// prevent panic
+	if conf == nil {
+		return nil
 	}
 
 	for _, cfg := range *conf {

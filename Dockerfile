@@ -7,12 +7,11 @@ WORKDIR /build
 
 # install node tools
 COPY package*.json ./
-RUN npm ci
+RUN --mount=type=cache,target=/root/.npm npm ci
 
 # build ui
 COPY Makefile .
 COPY *.js ./
-COPY .*.ts .*.mts ./
 COPY *.ts *.mts ./
 COPY assets assets
 COPY i18n i18n
@@ -33,22 +32,26 @@ ARG RELEASE=0
 
 WORKDIR /build
 
+# Setup Go cache
+ENV GOCACHE=/root/.cache/go-build
+ENV GOMODCACHE=/root/.cache/go-mod
+
 # download modules
 COPY go.mod .
 COPY go.sum .
-RUN go mod download
+RUN --mount=type=cache,target=${GOMODCACHE} go mod download
 
 # install tools
 COPY Makefile .
 COPY cmd/decorate/ cmd/decorate/
 COPY cmd/openapi/ cmd/openapi/
 COPY api/ api/
-RUN make install
+RUN --mount=type=cache,target=${GOMODCACHE} make install
 
 # prepare
 COPY . .
 RUN make patch-asn1
-RUN make assets
+RUN --mount=type=cache,target=${GOMODCACHE} make assets
 
 # copy ui
 COPY --from=node /build/dist /build/dist
@@ -59,7 +62,8 @@ ARG TARGETARCH
 ARG TARGETVARIANT
 ARG GOARM=${TARGETVARIANT#v}
 
-RUN RELEASE=${RELEASE} GOOS=${TARGETOS} GOARCH=${TARGETARCH} GOARM=${GOARM} make build
+RUN --mount=type=cache,target=${GOCACHE} --mount=type=cache,target=${GOMODCACHE} \
+    RELEASE=${RELEASE} GOOS=${TARGETOS} GOARCH=${TARGETARCH} GOARM=${GOARM} make build
 
 
 # STEP 3 build a small image including module support
@@ -80,6 +84,8 @@ COPY packaging/docker/bin/* /app/
 EXPOSE 5353/udp
 # EEBus
 EXPOSE 4712/tcp
+# mDNS
+EXPOSE 5353/udp
 # UI and /api
 EXPOSE 7070/tcp
 # KEBA charger

@@ -32,13 +32,8 @@ params:
       generic: Integer
     deprecated: true
   - name: maxacpower
+  - preset: battery-params
   - name: maxchargerate
-    advanced: true
-  - name: capacity
-    advanced: true
-  - name: minsoc
-    advanced: true
-  - name: maxsoc
     advanced: true
 render: |
   type: custom
@@ -248,13 +243,11 @@ render: |
             id: 1
             value: 124:0:StorCtl_Mod
         - source: const
-          value: -{{ .maxchargerate }} # %
+          value: {{ if .maxchargerate }}-{{ .maxchargerate }}{{ end }} # %
           set:
             source: sunspec
             uri: {{ .host }}:{{ .port }}
             id: 1
             value: 124:0:OutWRte
-  capacity: {{ .capacity }} # kWh
-  minsoc: {{ .minsoc }} # %
-  maxsoc: {{ .maxsoc }} # %
+  {{- include "battery-params" . }}
   {{- end }}

@@ -10,17 +10,8 @@ params:
   - name: modbus
     choice: ["rs485", "tcpip"]
     id: 247
-  - name: capacity
-    type: float
-    advanced: true
-  # battery control
-  - name: minsoc
-    type: int
-    advanced: true
-  - name: maxsoc
-    type: int
-    advanced: true
   - name: maxacpower
+  - preset: battery-params
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -121,10 +112,8 @@ render: |
       source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
-        address: 46609 # limit soc
+        address: 46611 # Minimum SoC OnGrid
         type: writesingle
         decode: uint16
-  capacity: {{ .capacity }} # kWh
-  minsoc: {{ .minsoc }} # %
-  maxsoc: {{ .maxsoc }} # %
+  {{- include "battery-params" . }}
   {{- end }}

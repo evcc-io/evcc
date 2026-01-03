@@ -398,8 +398,6 @@ paths:
                         properties:
                           planId:
                             $ref: "#/components/schemas/Id"
-                          precondition:
-                            $ref: "#/components/schemas/Precondition"
                       - $ref: "#/components/schemas/PlanRates"
   /loadpoints/{id}/plan/energy:
     delete:
@@ -488,6 +486,33 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/PlanRatesResult"
+  /loadpoints/{id}/plan/strategy:
+    post:
+      operationId: setLoadpointPlanStrategy
+      summary: Set plan strategy
+      description: "Updates the charging plan strategy for the loadpoint."
+      externalDocs:
+        url: https://docs.evcc.io/en/docs/features/plans
+      tags:
+        - loadpoints
+      parameters:
+        - $ref: "#/components/parameters/id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlanStrategy"
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    $ref: "#/components/schemas/PlanStrategy"
   /loadpoints/{id}/priority/{priority}:
     post:
       operationId: setLoadpointPriority
@@ -702,6 +727,42 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/NullResult"
+  /gridsessions:
+    get:
+      operationId: getGridSessions
+      summary: Grid limitation sessions
+      description: "Returns a list of HEMS grid limitation events."
+      tags:
+        - sessions
+      parameters:
+        - name: format
+          in: query
+          description: Response format (default json)
+          schema:
+            type: string
+            enum:
+              - csv
+        - name: lang
+          in: query
+          description: Language (defaults to accept header)
+          schema:
+            type: string
+            example: de
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    $ref: "#/components/schemas/GridSessions"
+            text/csv:
+              schema:
+                description: Download csv-file
+                type: string
+                format: binary
   /sessions:
     get:
       operationId: getSessions
@@ -891,6 +952,20 @@ paths:
                     $ref: "#/components/schemas/LogAreas"
         "401":
           $ref: "#/components/responses/Unauthorized"
+  /system/cache:
+    delete:
+      operationId: clearCache
+      summary: Clear cache
+      description: "Clears all cached data. This resets all cached values from tariffs, vehicle APIs, and other components that use caching."
+      security:
+        - cookieAuth: []
+      tags:
+        - system
+      responses:
+        "200":
+          $ref: "#/components/responses/SuccessResult"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /system/shutdown:
     post:
       operationId: shutdownSystem
@@ -1030,10 +1105,6 @@ paths:
         - $ref: "#/components/parameters/vehicleName"
         - $ref: "#/components/parameters/soc"
         - $ref: "#/components/parameters/timestamp"
-        - in: query
-          name: precondition
-          schema:
-            $ref: "#/components/schemas/Precondition"
       responses:
         "200":
           description: Success
@@ -1043,7 +1114,39 @@ paths:
                 type: object
                 properties:
                   result:
-                    $ref: "#/components/schemas/StaticSocPlan"
+                    type: object
+                    properties:
+                      soc:
+                        $ref: "#/components/schemas/Soc"
+                      time:
+                        $ref: "#/components/schemas/Timestamp"
+  /vehicles/{name}/plan/strategy:
+    post:
+      operationId: setVehiclePlanStrategy
+      summary: Set plan strategy
+      description: "Updates the charging plan strategy for the vehicle."
+      externalDocs:
+        url: https://docs.evcc.io/en/docs/features/plans
+      tags:
+        - vehicles
+      parameters:
+        - $ref: "#/components/parameters/vehicleName"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlanStrategy"
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    $ref: "#/components/schemas/PlanStrategy"
 components:
   schemas:
     BatteryMode:
@@ -1093,6 +1196,30 @@ components:
           chargedEnergy:
             type: number
             description: Charged energy in kWh
+    GridSessions:
+      description: Grid limitation sessions
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            $ref: "#/components/schemas/Id"
+          created:
+            $ref: "#/components/schemas/Timestamp"
+          finished:
+            $ref: "#/components/schemas/Timestamp"
+          type:
+            type: string
+            enum:
+              - consumption
+              - feedin
+            description: Type of grid limitation event
+          gridPower:
+            type: number
+            description: Grid power in watts
+          limitPower:
+            type: number
+            description: Limitation power in watts
           chargeDuration:
             type: number
             description: Duration of active charging
@@ -1230,6 +1357,17 @@ components:
       type: array
       items:
         $ref: "#/components/schemas/Rate"
+    PlanStrategy:
+      description: Charging plan strategy configuration
+      type: object
+      properties:
+        continuous:
+          description: "Force continuous planning"
+          type: boolean
+        precondition:
+          description: "Precondition duration in seconds"
+          type: integer
+          minimum: 0
     RepeatingPlan:
       externalDocs:
         url: https://docs.evcc.io/en/docs/features/plans#repeating-plans
@@ -1238,8 +1376,6 @@ components:
         active:
           description: "Set plan active."
           type: boolean
-        precondition:
-          $ref: "#/components/schemas/Precondition"
         soc:
           $ref: "#/components/schemas/Soc"
         time:
@@ -1264,8 +1400,6 @@ components:
       properties:
         energy:
           $ref: "#/components/schemas/Energy"
-        precondition:
-          $ref: "#/components/schemas/Precondition"
         time:
           $ref: "#/components/schemas/Timestamp"
     StaticSocPlan:
@@ -1273,8 +1407,6 @@ components:
         url: https://docs.evcc.io/en/docs/features/plans#create-charging-plan
       type: object
       properties:
-        precondition:
-          $ref: "#/components/schemas/Precondition"
         soc:
           $ref: "#/components/schemas/Soc"
         time:
@@ -1517,6 +1649,16 @@ components:
                 type: "object"
     BlankResponse:
       description: Success - Blank response
+    SuccessResult:
+      description: Success
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              result:
+                type: string
+                example: "OK"
     EmptyResult:
       description: Success - Empty result
       content:
