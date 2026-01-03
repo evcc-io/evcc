@@ -13,9 +13,7 @@ import (
 
 	{{- range $typ, $def := .Types}}
 		{{- if requiredType $combo $typ}}
-			{{- range $def.Functions}}
-				{{- if $and}} &&{{else}}{{$and = true}}{{end}} {{.VarName}} {{if contains $combo $typ}}!={{else}}=={{end}} nil
-			{{- end}}
+			{{- if $and}} &&{{else}}{{$and = true}}{{end}} {{$def.VarName}} {{if contains $combo $typ}}!={{else}}=={{end}} nil
 		{{- end}}
 	{{- end}}:
 		return &struct {
@@ -30,9 +28,7 @@ import (
 {{- range $typ, $def := .Types}}
 	{{- if contains $combo $typ}}
 			{{$def.ShortType}}: &{{$prefix}}{{$def.ShortType}}Impl{
-				{{- range $def.Functions}}
-				{{.VarName}}: {{.VarName}},
-				{{- end}}
+				{{$def.VarName}}: {{$def.VarName}},
 			},
 	{{- end}}
 {{- end}}
@@ -48,9 +44,7 @@ func {{.Function}}(base {{.BaseType}}{{range ordered}}, {{.VarName}} {{.Signatur
 	switch {
 	case {{- range $typ, $def := .Types}}
 		{{- if requiredType empty $typ}}
-			{{- range $def.Functions}}
-				{{- if $and}} &&{{else}}{{$and = true}}{{end}} {{.VarName}} == nil
-			{{- end}}
+			{{- if $and}} &&{{else}}{{$and = true}}{{end}} {{$def.VarName}} == nil
 		{{- end}}
 	{{- end}}:
 		return base
@@ -61,14 +55,12 @@ func {{.Function}}(base {{.BaseType}}{{range ordered}}, {{.VarName}} {{.Signatur
 	return nil
 }
 
-{{range $element := .Types -}}
-type {{$prefix}}{{$element.ShortType}}Impl struct {
-	{{- range .Functions}}
+{{range .Types -}}
+type {{$prefix}}{{.ShortType}}Impl struct {
 	{{.VarName}} {{.Signature}}
-	{{- end}}
 }
-{{range $element.Functions}}
-func (impl *{{$prefix}}{{$element.ShortType}}Impl) {{.Function}}(
+
+func (impl *{{$prefix}}{{.ShortType}}Impl) {{.Function}}(
 	{{- range $idx, $param := .Params -}}
 		{{- if gt $idx 0}}, {{end -}}
 		p{{$idx}} {{ $param -}} 
@@ -76,6 +68,6 @@ func (impl *{{$prefix}}{{$element.ShortType}}Impl) {{.Function}}(
 	return impl.{{.VarName}}(
 	{{- range $idx, $param := .Params -}}
 		{{- if gt $idx 0}}, {{end}}p{{- $idx -}}{{end}})
-}
-{{end}}
+	}
+
 {{end}}
