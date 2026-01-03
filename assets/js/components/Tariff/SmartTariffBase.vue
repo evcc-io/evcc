@@ -15,7 +15,7 @@
 							<input
 								:id="formId + 'Active'"
 								:checked="active"
-								class="form-check-input"
+								class="form-check-input smart-tariff-switch"
 								type="checkbox"
 								role="switch"
 								:aria-label="$t('smartCost.enable')"
@@ -58,7 +58,7 @@
 							<input
 								:id="formId + 'RelativeActive'"
 								:checked="relativeActive"
-								class="form-check-input"
+								class="form-check-input smart-tariff-switch"
 								type="checkbox"
 								role="switch"
 								:aria-label="relativeLimitLabel"
@@ -123,26 +123,6 @@
 				<div v-else class="value value-inactive">
 					{{ fmtTotalCostRange }}
 				</div>
-			</div>
-		</div>
-		<div class="d-flex justify-content-end mb-2">
-			<div class="btn-group btn-group-sm" role="group" :aria-label="chartScaleLabel">
-				<button
-					type="button"
-					class="btn btn-outline-secondary"
-					:class="{ active: scaleMode === 'zero' }"
-					@click="setScaleMode('zero')"
-				>
-					{{ chartScaleZeroLabel }}
-				</button>
-				<button
-					type="button"
-					class="btn btn-outline-secondary"
-					:class="{ active: scaleMode === 'range' }"
-					@click="setScaleMode('range')"
-				>
-					{{ chartScaleRangeLabel }}
-				</button>
 			</div>
 		</div>
 		<TariffChart
@@ -579,5 +559,9 @@ export default defineComponent({
 }
 .value-inactive {
 	color: var(--evcc-gray);
+}
+.smart-tariff-switch:checked {
+	background-color: var(--evcc-green);
+	border-color: var(--evcc-green);
 }
 </style>
