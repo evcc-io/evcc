@@ -12,10 +12,9 @@ const ChargeEfficiency = 0.85 // assume 85% charge efficiency
 // Estimator provides vehicle soc and charge duration
 // Vehicle Soc can be estimated to provide more granularity
 type Estimator struct {
-	log      *util.Logger
-	charger  api.Charger
-	vehicle  api.Vehicle
-	estimate bool
+	log     *util.Logger
+	charger api.Charger
+	vehicle api.Vehicle
 
 	capacity          float64 // vehicle capacity in Wh cached to simplify testing
 	virtualCapacity   float64 // estimated virtual vehicle capacity in Wh
@@ -31,12 +30,11 @@ type Estimator struct {
 }
 
 // NewEstimator creates new estimator
-func NewEstimator(log *util.Logger, charger api.Charger, vehicle api.Vehicle, estimate bool) *Estimator {
+func NewEstimator(log *util.Logger, charger api.Charger, vehicle api.Vehicle, _ bool) *Estimator {
 	s := &Estimator{
-		log:      log,
-		charger:  charger,
-		vehicle:  vehicle,
-		estimate: estimate,
+		log:     log,
+		charger: charger,
+		vehicle: vehicle,
 	}
 
 	s.Reset()
@@ -106,11 +104,10 @@ func (s *Estimator) Soc(fetchedSoc *float64, chargedEnergy float64) (float64, er
 	if fetchedSoc != nil {
 		s.vehicleSoc = *fetchedSoc
 	} else {
-		s.vehicleSoc = s.prevSoc
 		s.log.WARN.Printf("missing vehicle soc- ignored by estimator")
 	}
 
-	if s.estimate && s.virtualCapacity > 0 {
+	if s.virtualCapacity > 0 {
 		socDelta := s.vehicleSoc - s.prevSoc
 		energyDelta := max(chargedEnergy, 0) - s.prevChargedEnergy
 
