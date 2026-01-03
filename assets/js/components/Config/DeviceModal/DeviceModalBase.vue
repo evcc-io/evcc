@@ -331,6 +331,7 @@ export default defineComponent({
 		},
 		modbusDefaults() {
 			const { ID, Comset, Baudrate, Port } = this.modbus || {};
+			// TODO: we should move these default fallback values to API to remove redundancy
 			return {
 				id: ID || 1,
 				comset: Comset || "8N1",
