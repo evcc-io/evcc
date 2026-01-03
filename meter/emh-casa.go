@@ -255,10 +255,16 @@ func (m *EMHCasa) getMeterValues() (map[string]float64, error) {
 		val := raw * math.Pow(10, float64(item.Scaler))
 
 		switch item.Unit {
-		case 27: // W
+		case 27: // W (Watt)
 			values[obis] = val
-		case 30: // Wh → kWh
+		case 30: // Wh (Watthour) → kWh
 			values[obis] = val / 1000
+		case 33: // A (Ampere)
+			values[obis] = val
+		case 35: // V (Volt)
+			values[obis] = val
+		case 44: // Hz (Hertz)
+			values[obis] = val
 		}
 	}
 
@@ -273,48 +279,83 @@ func (m *EMHCasa) getMeterValues() (map[string]float64, error) {
 
 // CurrentPower implements api.Meter (OBIS 16.7.0)
 func (m *EMHCasa) CurrentPower() (float64, error) {
-	values, err := m.valuesG()
-	if err != nil {
-		return 0, err
-	}
-
-	v, ok := values["16.7.0"]
-	if !ok {
-		return 0, fmt.Errorf("power value (16.7.0) not found")
-	}
-
-	return v, nil
+	return m.getOBISValue("16.7.0")
 }
 
 // TotalEnergy implements api.MeterEnergy (OBIS 1.8.0)
 func (m *EMHCasa) TotalEnergy() (float64, error) {
+	return m.getOBISValue("1.8.0")
+}
+
+// getOBISValue is a DRY helper for OBIS value extraction
+func (m *EMHCasa) getOBISValue(obis string) (float64, error) {
 	values, err := m.valuesG()
 	if err != nil {
 		return 0, err
 	}
 
-	v, ok := values["1.8.0"]
+	v, ok := values[obis]
 	if !ok {
-		return 0, fmt.Errorf("energy value (1.8.0) not found")
+		return 0, fmt.Errorf("OBIS value (%s) not found", obis)
 	}
 
 	return v, nil
 }
 
-// GridProduction returns grid feed-in (OBIS 2.8.0)
-func (m *EMHCasa) GridProduction() (float64, error) {
+// Currents implements api.PhaseCurrents
+func (m *EMHCasa) Currents() (float64, float64, float64, error) {
 	values, err := m.valuesG()
 	if err != nil {
-		return 0, err
+		return 0, 0, 0, err
 	}
 
-	v, ok := values["2.8.0"]
-	if !ok {
-		return 0, fmt.Errorf("production value (2.8.0) not found")
+	// Return 0 for missing phases instead of error (gateway may not provide all)
+	l1 := values["31.7.0"]
+	l2 := values["51.7.0"]
+	l3 := values["71.7.0"]
+
+	return l1, l2, l3, nil
+}
+
+// Voltages implements api.PhaseVoltages
+func (m *EMHCasa) Voltages() (float64, float64, float64, error) {
+	values, err := m.valuesG()
+	if err != nil {
+		return 0, 0, 0, err
 	}
 
-	return v, nil
+	// Return 0 for missing phases instead of error (gateway may not provide all)
+	l1 := values["32.7.0"]
+	l2 := values["52.7.0"]
+	l3 := values["72.7.0"]
+
+	return l1, l2, l3, nil
+}
+
+// Powers implements api.PhasePowers
+func (m *EMHCasa) Powers() (float64, float64, float64, error) {
+	values, err := m.valuesG()
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	// Return 0 for missing phases instead of error (gateway may not provide all)
+	l1 := values["36.7.0"]
+	l2 := values["56.7.0"]
+	l3 := values["76.7.0"]
+
+	return l1, l2, l3, nil
+}
+
+// GridProduction returns grid feed-in energy (OBIS 2.8.0)
+// Note: This is a custom method - not part of evcc's standard API.
+// To expose this in the UI, evcc core would need an api.GridFeedIn interface.
+func (m *EMHCasa) GridProduction() (float64, error) {
+	return m.getOBISValue("2.8.0")
 }
 
 var _ api.Meter = (*EMHCasa)(nil)
 var _ api.MeterEnergy = (*EMHCasa)(nil)
+var _ api.PhaseCurrents = (*EMHCasa)(nil)
+var _ api.PhaseVoltages = (*EMHCasa)(nil)
+var _ api.PhasePowers = (*EMHCasa)(nil)
