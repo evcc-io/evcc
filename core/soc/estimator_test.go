@@ -17,7 +17,7 @@ func TestRemainingChargeDuration(t *testing.T) {
 	// 8.5 kWh userBatCap => 10 kWh virtualBatCap (at 85% efficiency)
 	vehicle.EXPECT().Capacity().Return(float64(8.5))
 
-	ce := NewEstimator(util.NewLogger("foo"), charger, vehicle, false)
+	ce := NewEstimator(util.NewLogger("foo"), charger, vehicle)
 	ce.vehicleSoc = 20.0
 
 	chargePower := 1000.0
@@ -41,7 +41,7 @@ func TestSocEstimation(t *testing.T) {
 	// 8.5 kWh user battery capacity is converted to initial value of 10 kWh virtual capacity (at 85% efficiency)
 	vehicle.EXPECT().Capacity().Return(8.5)
 
-	ce := NewEstimator(util.NewLogger("foo"), charger, vehicle, true)
+	ce := NewEstimator(util.NewLogger("foo"), charger, vehicle)
 
 	tc := []struct {
 		chargedEnergy   float64
@@ -127,7 +127,7 @@ func TestImprovedEstimatorRemainingChargeDuration(t *testing.T) {
 
 		vehicle.EXPECT().Capacity().Return(tc.capacity)
 
-		ce := NewEstimator(util.NewLogger("foo"), charger, vehicle, false)
+		ce := NewEstimator(util.NewLogger("foo"), charger, vehicle)
 		ce.vehicleSoc = tc.soc
 
 		assert.Equal(t, tc.duration, ce.RemainingChargeDuration(tc.targetsoc, tc.chargePower))

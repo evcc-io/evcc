@@ -36,7 +36,7 @@ type Estimator struct {
 }
 
 // NewEstimator creates new estimator
-func NewEstimator(log *util.Logger, charger api.Charger, vehicle api.Vehicle, _ bool) *Estimator {
+func NewEstimator(log *util.Logger, charger api.Charger, vehicle api.Vehicle) *Estimator {
 	s := &Estimator{
 		log:     log,
 		charger: charger,
@@ -56,7 +56,6 @@ func (s *Estimator) Reset() {
 	s.capacity = s.vehicle.Capacity() * 1e3           // cache to simplify debugging
 	s.virtualCapacity = s.capacity / ChargeEfficiency // initial capacity taking efficiency into account
 	s.energyPerSocStep = s.virtualCapacity / 100
-
 }
 
 // RemainingChargeDuration returns the estimated remaining duration
