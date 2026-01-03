@@ -348,8 +348,6 @@ func (m *EMHCasa) Powers() (float64, float64, float64, error) {
 }
 
 // GridProduction returns grid feed-in energy (OBIS 2.8.0)
-// Note: This is a custom method - not part of evcc's standard API.
-// To expose this in the UI, evcc core would need an api.GridFeedIn interface.
 func (m *EMHCasa) GridProduction() (float64, error) {
 	return m.getOBISValue("2.8.0")
 }
