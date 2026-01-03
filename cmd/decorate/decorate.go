@@ -22,14 +22,12 @@ import (
 	"golang.org/x/tools/imports"
 )
 
-//go:generate go tool decorate -f decorateTest -b api.Charger -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
 //go:generate go tool decorate
 //evcc:function decorateTest
 //evcc:basetype api.Charger
 //evcc:type api.MeterEnergy,TotalEnergy,func() (float64, error)
 //evcc:type api.PhaseSwitcher,Phases1p3p,func(int) error
 //evcc:type api.PhaseGetter,GetPhases,func() (int, error)
-// evcc:type api.MultiTester,Multi1,func() (int, error),Multi2,func() (bool, error)
 
 //go:embed decorate.tpl
 var srcTmpl string
