@@ -7,6 +7,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/planner"
+	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/core/vehicle"
 	"github.com/evcc-io/evcc/tariff"
 )
@@ -52,9 +53,9 @@ func (lp *Loadpoint) GetPlanRequiredDuration(goal, maxPower float64) time.Durati
 func (lp *Loadpoint) getPlanRequiredDuration(goal, maxPower float64) time.Duration {
 	if lp.socBasedPlanning() {
 		if lp.socEstimator == nil {
-			return 0
+			return soc.RemainingChargeDuration(goal, maxPower, lp.vehicleSoc, lp.GetVehicle().Capacity())
 		}
-		return lp.socEstimator.RemainingChargeDuration(int(goal), maxPower)
+		return lp.socEstimator.RemainingChargeDuration(goal, maxPower)
 	}
 
 	energy := lp.remainingPlanEnergy(goal)
