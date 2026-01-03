@@ -1,6 +1,7 @@
 <template>
 	<div
 		class="container container--loadpoint px-0 mb-md-2 d-flex flex-column justify-content-center"
+		data-testid="loadpoints"
 	>
 		<div
 			v-if="loadpoints.length > 0"
