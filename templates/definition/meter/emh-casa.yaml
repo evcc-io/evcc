@@ -1,0 +1,79 @@
+template: emh-casa
+products:
+  - brand: EMH
+    description:
+      generic: CASA 1.1 Smart Meter Gateway
+requirements:
+  description:
+    de: |
+      Erfordert direkte Verbindung zur HAN-Schnittstelle des Smart Meter Gateway.
+
+      **BSI-konform**: Die HAN-Schnittstelle muss in einem separaten, vom Internet
+      isolierten Netzwerk betrieben werden (BSI TR-03109).
+
+      **Netzwerk-Setup**: Typischerweise Subnetz ohne Default-Route.
+    en: |
+      Requires direct connection to the Smart Meter Gateway HAN interface.
+
+      **BSI-compliant**: The HAN interface must be operated in a separate network
+      isolated from the internet (BSI TR-03109).
+
+      **Network setup**: Typically subnet without default route.
+params:
+  - name: usage
+    choice: ["grid"]
+  - name: uri
+    example: https://192.168.33.2
+    help:
+      de: HTTPS-URL der HAN-Schnittstelle des Smart Meter Gateway
+      en: HTTPS URL of the Smart Meter Gateway HAN interface
+  - name: host
+    required: true
+    example: 192.168.33.2
+    help:
+      de: |
+        IP-Adresse für HTTP Host-Header (meist identisch mit URI-Host).
+        EMH CASA Gateways benötigen den korrekten Host-Header für Virtual Hosting.
+      en: |
+        IP address for HTTP Host header (usually same as URI host).
+        EMH CASA gateways require the correct Host header for virtual hosting.
+  - name: user
+    required: true
+    help:
+      de: Benutzername für Digest Authentication (siehe Gateway-Dokumentation)
+      en: Username for Digest Authentication (see gateway documentation)
+  - name: password
+    required: true
+    help:
+      de: Passwort für Digest Authentication
+      en: Password for Digest Authentication
+  - name: meterid
+    advanced: true
+    help:
+      de: |
+        Optional: Meter-ID (wird automatisch über TAF-1 Verträge erkannt).
+        Format: "1EMH1234567890.SM"
+      en: |
+        Optional: Meter ID (auto-discovered via TAF-1 contracts).
+        Format: "1EMH1234567890.SM"
+  - name: refresh
+    type: duration
+    default: 15s
+    advanced: true
+    help:
+      de: |
+        Cache-Dauer für Messwerte (Standard: 15s).
+      en: |
+        Cache duration for meter values (default: 15s).
+render: |
+  type: emh-casa
+  uri: {{ .uri }}
+  host: {{ .host }}
+  user: {{ .user }}
+  password: {{ .password }}
+  {{- if .meterid }}
+  meterid: {{ .meterid }}
+  {{- end }}
+  {{- if .refresh }}
+  refresh: {{ .refresh }}
+  {{- end }}

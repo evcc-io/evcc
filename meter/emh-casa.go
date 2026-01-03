@@ -70,7 +70,7 @@ func NewEMHCasaFromConfig(other map[string]any) (api.Meter, error) {
 		Host     string // REQUIRED for most CASA gateways (example: 192.168.33.2)
 		Refresh  time.Duration
 	}{
-		Refresh: 10 * time.Second,
+		Refresh: 15 * time.Second,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
