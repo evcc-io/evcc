@@ -548,8 +548,8 @@ func TestContinuous_StartBeforeRates(t *testing.T) {
 
 // TestContinuous_StartBeforeRatesInsufficientTime tests that when current time
 // is before the first available rate AND there's not enough time after rates
-// start to complete charging before target, the planner starts charging as soon
-// as rates become available (best effort approach)
+// start to complete charging before target, the planner starts at the latest
+// possible time to reach target (best effort approach)
 func TestContinuous_StartBeforeRatesInsufficientTime(t *testing.T) {
 	now := time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
 	c := clock.NewMock()
@@ -581,8 +581,8 @@ func TestContinuous_StartBeforeRatesInsufficientTime(t *testing.T) {
 
 	require.NotEmpty(t, plan, "plan should not be empty")
 
-	// Best effort: start immediately to maximize charging time
-	assert.Equal(t, now, plan[0].Start, "should start immediately")
+	// Best effort: start at latest possible time to maximize charging time
+	assert.Equal(t, now.Add(1*time.Hour), plan[0].Start, "should start at latest possible time")
 	assert.Equal(t, 0.0, plan[0].Value, "gap-filling slot before rates has no price")
 }
 
