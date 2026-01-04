@@ -36,14 +36,6 @@ render: |
       type: holding
       decode: int32
     scale: -1 #
-  energy:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 39149 # Cumulative PV Generation (TOTAL_PV_GENERATION)
-      type: holding
-      decode: uint32
-    scale: 0.01 # Convert to kWh (raw / 100 = kWh)
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
