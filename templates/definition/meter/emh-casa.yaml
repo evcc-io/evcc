@@ -48,6 +48,9 @@ params:
       de: Passwort für Digest Authentication
       en: Password for Digest Authentication
   - name: meterid
+    description:
+      de: Zähler-ID
+      en: Meter ID
     advanced: true
     help:
       de: |
@@ -57,14 +60,15 @@ params:
         Optional: Meter ID (auto-discovered via TAF-1 contracts).
         Format: "1EMH1234567890.SM"
   - name: refresh
+    description:
+      de: Aktualisierungsintervall
+      en: Refresh interval
     type: duration
     default: 15s
     advanced: true
     help:
-      de: |
-        Cache-Dauer für Messwerte (Standard: 15s).
-      en: |
-        Cache duration for meter values (default: 15s).
+      de: "Cache-Dauer für Messwerte (Standard: 15s)"
+      en: "Cache duration for meter values (default: 15s)"
 render: |
   type: emh-casa
   uri: {{ .uri }}
