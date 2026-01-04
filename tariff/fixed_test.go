@@ -137,18 +137,26 @@ func TestFixedMonthsSorting(t *testing.T) {
 		{6, 1, 18, 0.4},
 	}
 
-	for _, tc := range tc {
-		clock := clock.NewMock()
-		at.(*Fixed).clock = clock
+	// Test both UTC and Local timezones to verify clock timezone is respected
+	timezones := []*time.Location{time.UTC, time.Local}
+	for _, tz := range timezones {
+		t.Run(tz.String(), func(t *testing.T) {
+			for _, tc := range tc {
+				clock := clock.NewMock()
+				at.(*Fixed).clock = clock
 
-		clock.Set(time.Date(2025, time.Month(tc.m), tc.d, 0, 0, 0, 0, time.UTC))
+				clock.Set(time.Date(2025, time.Month(tc.m), tc.d, 0, 0, 0, 0, tz))
 
-		rr, err := at.Rates()
-		require.NoError(t, err)
+				rr, err := at.Rates()
+				require.NoError(t, err)
 
-		r, err := rr.At(clock.Now().Add(time.Duration(tc.h) * time.Hour))
-		require.NoError(t, err)
+				r, err := rr.At(clock.Now().Add(time.Duration(tc.h) * time.Hour))
+				require.NoError(t, err)
 
-		assert.Equal(t, tc.rate, r.Value)
+				assert.Equal(t, tc.rate, r.Value,
+					"TZ=%s, %04d-%02d-%02d %02d:00",
+					tz, 2025, tc.m, tc.d, tc.h)
+			}
+		})
 	}
 }

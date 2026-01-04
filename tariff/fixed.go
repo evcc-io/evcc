@@ -91,7 +91,7 @@ func NewFixedFromConfig(other map[string]any) (api.Tariff, error) {
 func (t *Fixed) Rates() (api.Rates, error) {
 	var res api.Rates
 
-	start := now.With(t.clock.Now().Local()).BeginningOfDay()
+	start := now.With(t.clock.Now()).BeginningOfDay()
 	for i := range 7 {
 		dayStart := start.AddDate(0, 0, i)
 		dow := fixed.Day((int(start.Weekday()) + i) % 7)
