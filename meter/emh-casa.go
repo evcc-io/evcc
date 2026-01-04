@@ -1,4 +1,4 @@
-// CASA 1.1 Smart Meter Gateway
+// EMH CASA 1.1 Smart Meter Gateway
 // implementation is based on [smartmetergateway](https://github.com/gosanman/smartmetergateway)
 package meter
 
@@ -155,8 +155,6 @@ func NewEMHCasa(uri, user, password, meterID, host string, refresh time.Duration
 	return m, nil
 }
 
-// ---- API structures ----
-
 type derivedContract struct {
 	TafType       string   `json:"taf_type"`
 	SensorDomains []string `json:"sensor_domains"`
@@ -276,8 +274,6 @@ func (m *EMHCasa) getMeterValues() (map[string]float64, error) {
 
 	return values, nil
 }
-
-// ---- evcc interfaces ----
 
 // CurrentPower implements api.Meter (OBIS 16.7.0)
 func (m *EMHCasa) CurrentPower() (float64, error) {
