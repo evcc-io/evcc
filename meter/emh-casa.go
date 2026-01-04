@@ -92,7 +92,7 @@ func NewEMHCasaFromConfig(other map[string]any) (api.Meter, error) {
 
 // NewEMHCasa creates an EMH CASA meter
 func NewEMHCasa(uri, user, password, meterID, host string, refresh time.Duration) (api.Meter, error) {
-	log := util.NewLogger("emh-casa")
+	log := util.NewLogger("emh-casa").Redact(user, password)
 
 	if host == "" {
 		derived, err := parseURIHost(uri)
@@ -138,9 +138,22 @@ func NewEMHCasa(uri, user, password, meterID, host string, refresh time.Duration
 		if err := m.discoverMeterID(); err != nil {
 			return nil, fmt.Errorf("failed to discover meter ID: %w", err)
 		}
-		log.DEBUG.Printf("discovered meter ID: %s", m.meterID)
+		prefix := m.meterID
+		if len(prefix) > 4 {
+			prefix = prefix[:4] + "..."
+		}
+		log.DEBUG.Printf("discovered meter ID: %s", prefix)
 	} else {
-		log.DEBUG.Printf("using configured meter ID: %s", m.meterID)
+		prefix := m.meterID
+		if len(prefix) > 4 {
+			prefix = prefix[:4] + "..."
+		}
+		log.DEBUG.Printf("using configured meter ID: %s", prefix)
+	}
+
+	// Redact meter ID for any future logs
+	if m.meterID != "" {
+		log.Redact(m.meterID)
 	}
 
 	// Validate connection
@@ -185,7 +198,7 @@ func (m *EMHCasa) discoverMeterID() error {
 	m.log.DEBUG.Printf("found %d contract(s)", len(contracts))
 
 	for _, id := range contracts {
-		m.log.DEBUG.Printf("checking contract: %s", id)
+		m.log.DEBUG.Printf("checking contract")
 
 		var c derivedContract
 		uri := fmt.Sprintf("%s/json/metering/derived/%s", m.uri, id)
@@ -195,7 +208,7 @@ func (m *EMHCasa) discoverMeterID() error {
 			continue
 		}
 
-		m.log.DEBUG.Printf("contract %s: taf_type=%s, sensor_domains=%v", id, c.TafType, c.SensorDomains)
+		m.log.DEBUG.Printf("checking contract with taf_type=%s", c.TafType)
 
 		if c.TafType == "TAF-1" && len(c.SensorDomains) > 0 {
 			m.meterID = c.SensorDomains[0]
