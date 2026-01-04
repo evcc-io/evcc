@@ -46,8 +46,8 @@ func NewEstimator(log *util.Logger, charger api.Charger, vehicle api.Vehicle, es
 
 const (
 	// power thresholds in watts
-	householdOutletMaxPowerW     = 2300 // regular household outlet: 1-p / 10A / 230V
-	singlePhaseWallboxMaxPowerW  = 3680 // wallbox: 1-p / 16A / 230V
+	householdOutletMaxPowerW    = 2300 // regular household outlet: 1-p / 10A / 230V
+	singlePhaseWallboxMaxPowerW = 3680 // wallbox: 1-p / 16A / 230V
 )
 
 // Computes the charge efficiency based on the charging power
@@ -66,8 +66,8 @@ func (s *Estimator) Reset() {
 	s.prevSoc = 0
 	s.prevChargedEnergy = 0
 	s.initialSoc = 0
-	s.capacity = s.vehicle.Capacity() * 1e3              // cache to simplify debugging
-	s.virtualCapacity = s.capacity / ChargeEfficiency(0) // initial capacity taking efficiency into account
+	s.capacity = s.vehicle.Capacity() * 1e3                                     // cache to simplify debugging
+	s.virtualCapacity = s.capacity / ChargeEfficiency(householdOutletMaxPowerW) // initial capacity taking efficiency into account
 	s.energyPerSocStep = s.virtualCapacity / 100
 	s.minChargePower = 1000  // default 1 kW
 	s.maxChargePower = 50000 // default 50 kW
