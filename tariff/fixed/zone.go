@@ -78,5 +78,27 @@ HOURS:
 		res = append(res, HourMin{Hour: hour, Min: 0})
 	}
 
+	// Sort markers by time to ensure correct ordering
+	slices.SortFunc(res, func(a, b HourMin) int {
+		return a.Minutes() - b.Minutes()
+	})
+
 	return res
+}
+
+// MoreSpecific returns true if zone a is more specific than zone b.
+// A zone is more specific if it has constraints on fewer days or months.
+func MoreSpecific(a, b Zone) bool {
+	return specificity(a) > specificity(b)
+}
+
+func specificity(z Zone) int {
+	spec := 0
+	if len(z.Days) > 0 && len(z.Days) < 7 {
+		spec++
+	}
+	if len(z.Months) > 0 && len(z.Months) < 12 {
+		spec++
+	}
+	return spec
 }

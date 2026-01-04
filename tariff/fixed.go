@@ -110,8 +110,9 @@ func (t *Fixed) Rates() (api.Rates, error) {
 			var zone *fixed.Zone
 			for j := len(zones) - 1; j >= 0; j-- {
 				if zones[j].Hours.Contains(m) {
-					zone = &zones[j]
-					break
+					if zone == nil || fixed.MoreSpecific(zones[j], *zone) {
+						zone = &zones[j]
+					}
 				}
 			}
 
