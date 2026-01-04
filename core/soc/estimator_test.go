@@ -21,7 +21,7 @@ func TestRemainingChargeDuration(t *testing.T) {
 	ce.vehicleSoc = 20.0
 
 	chargePower := 1000.0
-	targetSoc := 80
+	targetSoc := 80.0
 
 	if remaining := ce.RemainingChargeDuration(targetSoc, chargePower); remaining != 6*time.Hour {
 		t.Errorf("wrong remaining charge duration: %v", remaining)
@@ -88,7 +88,7 @@ func TestSocEstimation(t *testing.T) {
 
 		// validate duration estimate
 		chargePower := 1e3
-		targetSoc := 100
+		targetSoc := 100.0
 		remainingHours := (float64(targetSoc) - soc) / 100 * tc.virtualCapacity / chargePower
 		remainingDuration := time.Duration(float64(time.Hour) * remainingHours).Round(time.Second)
 
@@ -108,7 +108,7 @@ func TestImprovedEstimatorRemainingChargeDuration(t *testing.T) {
 	tc := []struct {
 		capacity    float64
 		soc         float64
-		targetsoc   int
+		targetsoc   float64
 		chargePower float64
 		duration    time.Duration
 	}{
