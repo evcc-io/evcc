@@ -44,12 +44,18 @@ func NewEstimator(log *util.Logger, charger api.Charger, vehicle api.Vehicle, es
 	return s
 }
 
+const (
+	// power thresholds in watts
+	householdOutletMaxPowerW     = 2300 // regular household outlet: 1-p / 10A / 230V
+	singlePhaseWallboxMaxPowerW  = 3680 // wallbox: 1-p / 16A / 230V
+)
+
 // Computes the charge efficiency based on the charging power
 func ChargeEfficiency(chargePower float64) float64 {
-	if chargePower <= 2300 { // regular household outlet: 1-p / 10A / 230V
+	if chargePower <= householdOutletMaxPowerW {
 		return 0.85
 	}
-	if chargePower <= 3680 { // wallbox: 1-p / 16A / 230V
+	if chargePower <= singlePhaseWallboxMaxPowerW {
 		return 0.88
 	}
 	return 0.9 // wallbox: 1-p / 32A / 230V or 3-p / 16A / 400V or above
