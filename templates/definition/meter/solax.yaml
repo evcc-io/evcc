@@ -132,6 +132,15 @@ render: |
             address: 0x001F # SolarChargeUseMode
             type: writesingle
             decode: uint16
+        - source: const
+          value 1 # Enable
+          set:
+            source: modbus
+            {{???
+            register:
+              adress:0x009A # Extend BMS Setting
+              type: writesingle
+              decode: uint16
     - case: 2 # hold
       set:
         source: sequence
@@ -154,6 +163,15 @@ render: |
               address: 0x001F # SolarChargeUseMode
               type: writesingle
               decode: uint16
+        - source: const
+          value 0 # Disable
+          set:
+            source: modbus
+            {{???
+            register:
+              adress:0x009A # Extend BMS Setting
+              type: writesingle
+              decode: uint16
     - case: 3 # charge
       set:
         source: sequence
@@ -174,6 +192,15 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 0x001F # SolarChargeUseMode
+              type: writesingle
+              decode: uint16
+        - source: const
+          value 1 # Enable
+          set:
+            source: modbus
+            {{???
+            register:
+              adress:0x009A # Extend BMS Setting
               type: writesingle
               decode: uint16
   {{- include "battery-params" . }}
