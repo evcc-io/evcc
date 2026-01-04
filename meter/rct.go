@@ -33,7 +33,7 @@ func init() {
 	registry.AddCtx("rct", NewRCTFromConfig)
 }
 
-//go:generate go tool decorate -f decorateRCT -b *RCT -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatterySocLimiter,GetSocLimits,func() (float64, float64)" -t "api.BatteryPowerLimiter,GetPowerLimits,func() (float64, float64)" -t "api.BatteryController,SetBatteryMode,func(api.BatteryMode) error" -t "api.BatteryCapacity,Capacity,func() float64"
+//go:generate go tool decorate -f decorateRCT -b *RCT -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Curtailer,Curtail,func(bool) error,Curtailed,func() (bool, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatterySocLimiter,GetSocLimits,func() (float64, float64)" -t "api.BatteryPowerLimiter,GetPowerLimits,func() (float64, float64)" -t "api.BatteryController,SetBatteryMode,func(api.BatteryMode) error" -t "api.BatteryCapacity,Capacity,func() float64"
 
 // NewRCTFromConfig creates an RCT from generic config
 func NewRCTFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
@@ -101,6 +101,24 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 	var totalEnergy func() (float64, error)
 	if usage == "grid" {
 		totalEnergy = m.totalEnergy
+	}
+
+	// decorate api.Curtailer
+	var curtail func(bool) error
+	var curtailed func() (bool, error)
+	if usage == "pv" {
+		curtail = func(b bool) error {
+			r := float32(1)
+			if b {
+				r = 0
+			}
+			return m.conn.Write(rct.BufVControlPowerReduction, m.floatVal(r))
+		}
+
+		curtailed = func() (bool, error) {
+			r, err := m.queryFloat(rct.BufVControlPowerReduction)
+			return r != 1, err
+		}
 	}
 
 	// decorate api.Battery
@@ -196,7 +214,7 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 		}
 	}
 
-	return decorateRCT(m, totalEnergy, batterySoc, batterySocLimiter, batteryPowerLimiter, batteryMode, batteryCapacity), nil
+	return decorateRCT(m, totalEnergy, curtail, curtailed, batterySoc, batterySocLimiter, batteryPowerLimiter, batteryMode, batteryCapacity), nil
 }
 
 func (m *RCT) floatVal(f float32) []byte {
