@@ -183,7 +183,6 @@ func findContinuousWindow(rates api.Rates, effectiveDuration time.Duration, targ
 			float64(rp.End.Sub(rp.Start))*rp.Value +
 			float64(rl.End.Sub(rl.Start))*rl.Value
 
-		// Prefer later start if equal cost
 		if cost <= bestCost {
 			bestCost = cost
 			bestIndex = i
