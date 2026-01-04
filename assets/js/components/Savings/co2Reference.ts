@@ -5,6 +5,7 @@ const source = "https://ourworldindata.org/grapher/carbon-intensity-electricity?
 const regions = [
   { name: "Australia", co2: 503 },
   { name: "Austria", co2: 158 },
+  { name: "Belgium", co2: 118 },
   { name: "Canada", co2: 128 },
   { name: "Czech Republic", co2: 415 },
   { name: "Denmark", co2: 181 },
