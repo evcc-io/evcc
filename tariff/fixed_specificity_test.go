@@ -23,7 +23,7 @@ func TestFixedSpecificity(t *testing.T) {
 			// REVERSED: specific first, general second
 			// Without MoreSpecific, this will fail!
 			{0.10, "0-5", "Jan-Mar,Oct-Dec"}, // specific (winter only)
-			{0.20, "0-5", ""},              // general (all year)
+			{0.20, "0-5", ""},                // general (all year)
 		},
 	})
 	require.NoError(t, err)
