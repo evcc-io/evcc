@@ -1042,7 +1042,7 @@ func (lp *Loadpoint) minSocNotReached() bool {
 		return active
 	}
 
-	minEnergy := v.Capacity() * float64(minSoc) / 100 / soc.ChargeEfficiency
+	minEnergy := v.Capacity() * float64(minSoc) / 100 / soc.ChargeEfficiency(lp.chargePower)
 	return minEnergy > 0 && lp.getChargedEnergy() < minEnergy
 }
 
@@ -1796,7 +1796,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 		}
 		lp.SetRemainingDuration(d)
 
-		lp.SetRemainingEnergy(socEstimator.RemainingChargeEnergy(limitSoc))
+		lp.SetRemainingEnergy(socEstimator.RemainingChargeEnergy(limitSoc, lp.chargePower))
 
 		// range
 		if vs, ok := lp.GetVehicle().(api.VehicleRange); ok {

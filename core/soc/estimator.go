@@ -9,8 +9,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-const ChargeEfficiency = 0.85 // assume 85% charge efficiency
-
 // Estimator provides vehicle soc and charge duration
 // Vehicle Soc can be estimated to provide more granularity
 type Estimator struct {
@@ -46,13 +44,24 @@ func NewEstimator(log *util.Logger, charger api.Charger, vehicle api.Vehicle, es
 	return s
 }
 
+// Computes the charge efficiency based on the charging power
+func ChargeEfficiency(chargePower float64) float64 {
+	if chargePower <= 2300 { // regular household outlet: 1-p / 10A / 230V
+		return 0.85
+	}
+	if chargePower <= 3680 { // wallbox: 1-p / 16A / 230V
+		return 0.88
+	}
+	return 0.9 // wallbox: 1-p / 32A / 230V or 3-p / 16A / 400V or above
+}
+
 // Reset resets the estimation process to default values
 func (s *Estimator) Reset() {
 	s.prevSoc = 0
 	s.prevChargedEnergy = 0
 	s.initialSoc = 0
-	s.capacity = s.vehicle.Capacity() * 1e3           // cache to simplify debugging
-	s.virtualCapacity = s.capacity / ChargeEfficiency // initial capacity taking efficiency into account
+	s.capacity = s.vehicle.Capacity() * 1e3              // cache to simplify debugging
+	s.virtualCapacity = s.capacity / ChargeEfficiency(0) // initial capacity taking efficiency into account
 	s.energyPerSocStep = s.virtualCapacity / 100
 	s.minChargePower = 1000  // default 1 kW
 	s.maxChargePower = 50000 // default 50 kW
@@ -62,6 +71,9 @@ func (s *Estimator) Reset() {
 // RemainingChargeDuration returns the estimated remaining duration
 func (s *Estimator) RemainingChargeDuration(targetSoc int, chargePower float64) time.Duration {
 	const minChargeSoc = 100
+
+	//Update virtual capacity based on current chargePower
+	s.virtualCapacity = s.capacity / ChargeEfficiency(chargePower)
 
 	dy := s.minChargePower - s.maxChargePower
 	dx := minChargeSoc - s.maxChargeSoc
@@ -79,7 +91,7 @@ func (s *Estimator) RemainingChargeDuration(targetSoc int, chargePower float64) 
 	var t1, t2 float64
 
 	// Zeit von vehicleSoc bis Reduktionspunkt (linear)
-	if s.vehicleSoc < rrp {
+	if s.vehicleSoc <= rrp {
 		t1 = (min(float64(targetSoc), rrp) - s.vehicleSoc) / minChargeSoc * s.virtualCapacity / chargePower
 	}
 
@@ -92,7 +104,10 @@ func (s *Estimator) RemainingChargeDuration(targetSoc int, chargePower float64) 
 }
 
 // RemainingChargeEnergy returns the remaining charge energy in kWh
-func (s *Estimator) RemainingChargeEnergy(targetSoc int) float64 {
+func (s *Estimator) RemainingChargeEnergy(targetSoc int, chargePower float64) float64 {
+	//Update virtual capacity based on current chargePower
+	s.virtualCapacity = s.capacity / ChargeEfficiency(chargePower)
+
 	percentRemaining := float64(targetSoc) - s.vehicleSoc
 	if percentRemaining <= 0 || s.virtualCapacity <= 0 {
 		return 0
