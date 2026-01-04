@@ -146,33 +146,54 @@ func SumBySeq[T any, R float64](seq iter.Seq[T], iteratee func(item T) R) R {
 // - rates are filtered to [now, targetTime] window by caller
 // Returns the selected rates.
 func findContinuousWindow(rates api.Rates, effectiveDuration time.Duration, targetTime time.Time) api.Rates {
-	var bestCost *float64
-	var bestIndex *int
+	var (
+		length    int
+		bestIndex int
+		bestCost  float64
+	)
 
+	// i: 0  1  2
+	// v: 1 10 20
 	for i := range rates {
 		windowEnd := rates[i].Start.Add(effectiveDuration)
-		if windowEnd.After(targetTime) {
+
+		if i == 0 {
+			if windowEnd.After(targetTime) {
+				break
+			}
+
+			bestCost = SumBySeq(clampRatesSeq(rates[i:], rates[i].Start, windowEnd), func(r api.Rate) float64 {
+				length++
+				return float64(r.End.Sub(r.Start)) * r.Value
+			})
+
+			continue
+		}
+
+		if i+length > len(rates) {
 			break
 		}
 
-		cost := SumBySeq(clampRatesSeq(rates[i:], rates[i].Start, windowEnd), func(r api.Rate) float64 {
-			return float64(r.End.Sub(r.Start)) * r.Value
-		})
+		rp := rates[i-1]
+		rl := rates[i+length-1]
+
+		if rl.End.After(windowEnd) {
+			rl.End = windowEnd
+		}
+
+		cost := bestCost -
+			float64(rp.End.Sub(rp.Start))*rp.Value +
+			float64(rl.End.Sub(rl.Start))*rl.Value
 
 		// Prefer later start if equal cost
-		if bestCost == nil || cost <= *bestCost {
-			bestCost = &cost
-			bestIndex = &i
+		if cost <= bestCost {
+			bestCost = cost
+			bestIndex = i
 		}
 	}
 
-	// No valid window found
-	if bestIndex == nil {
-		return nil
-	}
-
 	// Build the best window only once
-	windowEnd := rates[*bestIndex].Start.Add(effectiveDuration)
+	windowEnd := rates[bestIndex].Start.Add(effectiveDuration)
 
-	return clampRates(rates[*bestIndex:], rates[*bestIndex].Start, windowEnd)
+	return clampRates(rates[bestIndex:], rates[bestIndex].Start, windowEnd)
 }
