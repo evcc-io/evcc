@@ -137,7 +137,7 @@ func (t *TextLanguage) Update(new TextLanguage, always bool) {
 }
 
 // MarshalJSON implements the json.Marshaler interface
-func (t *TextLanguage) MarshalJSON() (out []byte, err error) {
+func (t TextLanguage) MarshalJSON() ([]byte, error) {
 	mu.Lock()
 	s := t.String(encoderLanguage)
 	mu.Unlock()
