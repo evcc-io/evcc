@@ -31,6 +31,7 @@ import (
 	shiputil "github.com/enbility/ship-go/util"
 	spineapi "github.com/enbility/spine-go/api"
 	"github.com/enbility/spine-go/model"
+	"github.com/enbility/spine-go/spine"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/machine"
 )
@@ -123,7 +124,7 @@ func NewServer(other Config) (*EEBus, error) {
 	configuration, err := eebusapi.NewConfiguration(
 		BrandName, BrandName, Model, serial,
 		model.DeviceTypeTypeEnergyManagementSystem,
-		[]model.EntityTypeType{model.EntityTypeTypeCEM, model.EntityTypeTypeControllableSystem, model.EntityTypeTypeGridGuard},
+		[]model.EntityTypeType{model.EntityTypeTypeCEM},
 		port, certificate, time.Second*4,
 	)
 	if err != nil {
@@ -155,10 +156,13 @@ func NewServer(other Config) (*EEBus, error) {
 		return nil, err
 	}
 
-	{
-		localEntity := c.service.LocalDevice().EntityForType(model.EntityTypeTypeCEM)
+	localDevice := c.service.LocalDevice()
 
-		// evse
+	{
+		// CEM entity for for connected EVSE and Meters
+		localEntity := localDevice.Entity([]model.AddressEntityType{1})
+
+		// customer energy management to EVSE
 		c.cem = CustomerEnergyManagement{
 			EvseCC: evsecc.NewEVSECC(localEntity, c.ucCallback),
 			EvCC:   evcc.NewEVCC(c.service, localEntity, c.ucCallback),
@@ -167,10 +171,19 @@ func NewServer(other Config) (*EEBus, error) {
 			OscEV:  oscev.NewOSCEV(localEntity, c.ucCallback),
 			EvSoc:  evsoc.NewEVSOC(localEntity, c.ucCallback),
 		}
+
+		// monitoring appliance to meters
+		c.ma = MonitoringAppliance{
+			MaMGCPInterface: mgcp.NewMGCP(localEntity, c.ucCallback),
+			MaMPCInterface:  mpc.NewMPC(localEntity, c.ucCallback),
+		}
 	}
 
 	{
-		localEntity := c.service.LocalDevice().EntityForType(model.EntityTypeTypeControllableSystem)
+		// CEM entity for connected SMGW
+		// LPC/LPP use a 60s heartbeat timeout, but some EVSE devices have then issues when not set to 4s right now even though they should not connect to this one anyway
+		localEntity := spine.NewEntityLocal(localDevice, model.EntityTypeTypeCEM, []model.AddressEntityType{2}, time.Second*4)
+		localDevice.AddEntity(localEntity)
 
 		// controllable system
 		c.cs = ControllableSystem{
@@ -180,13 +193,10 @@ func NewServer(other Config) (*EEBus, error) {
 	}
 
 	{
-		localEntity := c.service.LocalDevice().EntityForType(model.EntityTypeTypeGridGuard)
-
-		// monitoring appliance
-		c.ma = MonitoringAppliance{
-			MaMGCPInterface: mgcp.NewMGCP(localEntity, c.ucCallback),
-			MaMPCInterface:  mpc.NewMPC(localEntity, c.ucCallback),
-		}
+		// GridGuard entity for connected Controllable Systems
+		// LPC/LPP use a 60s heartbeat timeout, but some EVSE devices have then issues when not set to 4s right now
+		localEntity := spine.NewEntityLocal(localDevice, model.EntityTypeTypeGridGuard, []model.AddressEntityType{3}, time.Second*4)
+		localDevice.AddEntity(localEntity)
 
 		// energy guard
 		c.eg = EnergyGuard{

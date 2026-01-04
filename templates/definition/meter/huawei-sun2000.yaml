@@ -27,15 +27,6 @@ params:
     type: int
     default: 1
     advanced: true
-  - name: minsoc
-    advanced: true
-  - name: maxsoc
-    advanced: true
-  - name: maxchargepower
-    default: 10000
-  - name: maxdischargepower
-  - name: capacity
-    advanced: true
   - name: maxacpower
   - name: forceaccharging
     default: false
@@ -48,6 +39,9 @@ params:
     help:
       en: Keep AC charging active to charge the storage from other inverters via AC. Prevents stand-by.
       de: AC-Laden bleibt aktiv zum Laden des Speichers aus anderen AC Quellen für Wechselrichterkaskaden. Verhindert Stand-by.
+  - preset: battery-params
+  - name: maxchargepower
+    default: 10000
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -281,9 +275,5 @@ render: |
                 address: 47087 # Charge from grid
                 type: writesingle
                 encoding: uint16
-  capacity: {{ .capacity }} # kWh
-  minsoc: {{ .minsoc }} # %
-  maxsoc: {{ .maxsoc }} # %
-  maxchargepower: {{ .maxchargepower }} # W
-  maxdischargepower: {{ .maxdischargepower }} # W
+  {{- include "battery-params" . }}
   {{- end }}

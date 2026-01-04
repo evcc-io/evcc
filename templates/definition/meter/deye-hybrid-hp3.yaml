@@ -19,13 +19,8 @@ params:
     type: int
     default: 1
     advanced: true
-  - name: capacity
-    advanced: true
-  - name: minsoc
-    advanced: true
-  - name: maxsoc
-    advanced: true
   - name: maxacpower
+  - preset: battery-params
   - name: includegenport
     type: bool
     advanced: true
@@ -306,7 +301,5 @@ render: |
               address: 172 
               type: writemultiple
               decode: int32s  
-  capacity: {{ .capacity }} # kWh
-  minsoc: {{ .minsoc }} # %
-  maxsoc: {{ .maxsoc }} # %
+  {{- include "battery-params" . }}
   {{- end }}

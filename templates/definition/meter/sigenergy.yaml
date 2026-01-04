@@ -17,14 +17,7 @@ params:
     default: 502
   - name: id
     default: 1
-  - name: capacity
-    advanced: true
-  - name: minsoc
-    type: int
-    advanced: true
-  - name: maxsoc
-    type: int
-    advanced: true
+  - preset: battery-params
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -121,7 +114,5 @@ render: |
         type: writeholding
         decode: uint16
       scale: 10
-  capacity: {{ .capacity }} # kWh
-  minsoc: {{ .minsoc }} # %
-  maxsoc: {{ .maxsoc }} # %
+  {{- include "battery-params" . }}
   {{- end }}
