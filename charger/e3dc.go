@@ -191,13 +191,11 @@ func (wb *E3dc) ensureSunModeDisabled() {
 		*rscp.NewMessage(rscp.WB_REQ_SUN_MODE_ACTIVE, nil),
 	}))
 	if err != nil {
-		wb.log.DEBUG.Printf("failed to check sun mode: %v", err)
 		return
 	}
 
 	wbData, err := rscpContainer(*res, 2)
 	if err != nil {
-		wb.log.DEBUG.Printf("failed to parse sun mode response: %v", err)
 		return
 	}
 
@@ -228,13 +226,11 @@ func (wb *E3dc) ensureAutoPhaseDisabled() {
 		*rscp.NewMessage(rscp.WB_REQ_AUTO_PHASE_SWITCH_ENABLED, nil),
 	}))
 	if err != nil {
-		wb.log.DEBUG.Printf("failed to check auto phase switch: %v", err)
 		return
 	}
 
 	wbData, err := rscpContainer(*res, 2)
 	if err != nil {
-		wb.log.DEBUG.Printf("failed to parse auto phase switch response: %v", err)
 		return
 	}
 
@@ -335,11 +331,8 @@ func (wb *E3dc) Status() (api.ChargeStatus, error) {
 		return api.StatusC, nil
 	case b[2]&0b00001000 != 0: // Bit 3: vehicle connected → StatusB
 		return api.StatusB, nil
-	case b[2]&0b00101000 == 0: // Neither Bit 5 nor Bit 3: no vehicle → StatusA
+	default: // Neither Bit 5 nor Bit 3: no vehicle → StatusA
 		return api.StatusA, nil
-	default:
-		// Theoretically unreachable, but safety fallback
-		return api.StatusNone, fmt.Errorf("invalid status byte: 0b%08b", b[2])
 	}
 }
 
