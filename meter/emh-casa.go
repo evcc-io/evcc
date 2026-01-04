@@ -161,7 +161,7 @@ func NewEMHCasa(uri, user, password, meterID, host string, refresh time.Duration
 
 	if m.meterID == "" {
 		if err := m.discoverMeterID(); err != nil {
-			return nil, fmt.Errorf("failed to discover meter ID: %w", err)
+			return nil, fmt.Errorf("failed to discover meter ID")
 		}
 		prefix := m.meterID
 		if len(prefix) > 4 {
@@ -214,10 +214,10 @@ func (m *EMHCasa) discoverMeterID() error {
 	var contracts []string
 	uri := fmt.Sprintf("%s/json/metering/derived", m.uri)
 
-	m.log.DEBUG.Printf("discovering meter ID from: %s", uri)
+	m.log.DEBUG.Printf("discovering meter ID")
 
 	if err := m.GetJSON(uri, &contracts); err != nil {
-		return fmt.Errorf("failed to get contracts: %w", err)
+		return fmt.Errorf("failed to get contracts")
 	}
 
 	m.log.DEBUG.Printf("found %d contract(s)", len(contracts))
@@ -229,7 +229,7 @@ func (m *EMHCasa) discoverMeterID() error {
 		uri := fmt.Sprintf("%s/json/metering/derived/%s", m.uri, id)
 
 		if err := m.GetJSON(uri, &c); err != nil {
-			m.log.DEBUG.Printf("failed to get contract details: %v", err)
+			m.log.DEBUG.Printf("failed to get contract details")
 			continue
 		}
 
