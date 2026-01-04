@@ -149,6 +149,6 @@ func TestFixedMonthsSorting(t *testing.T) {
 		r, err := rr.At(clock.Now().Add(time.Duration(tc.h) * time.Hour))
 		require.NoError(t, err)
 
-		require.Equal(t, tc.rate, r.Value)
+		assert.Equal(t, tc.rate, r.Value)
 	}
 }
