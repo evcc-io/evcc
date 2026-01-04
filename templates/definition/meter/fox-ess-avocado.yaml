@@ -32,16 +32,16 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 39168 # [Meter collection] Active power
-      type: input
+      address: 39168 # [Meter collection] Active power (GRID_EXPORT_POWER)
+      type: holding
       decode: int32
     scale: -1 #
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 39617 # Total power taken (grid import)
-      type: input
+      address: 39149 # Cumulative PV Generation (TOTAL_PV_GENERATION)
+      type: holding
       decode: uint32
     scale: 0.01 # Convert to kWh (raw / 100 = kWh)
   {{- end }}
@@ -50,15 +50,15 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 39118 # Total PV Power
-      type: input
+      address: 39118 # Total PV Power (PV_POWER)
+      type: holding
       decode: int32
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 39149 # Cumulative Generation
-      type: input
+      address: 39149 # Cumulative PV Generation (TOTAL_PV_GENERATION)
+      type: holding
       decode: uint32
     scale: 0.01 # Convert to kWh (raw / 100 = kWh)
   maxacpower: {{ .maxacpower }}
@@ -68,16 +68,16 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 39237 # Battery Combined Power
-      type: input
+      address: 39237 # Battery Combined Power (BATTERY_CHARGING_POWER)
+      type: holding
       decode: int32
     scale: -1 #
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 39424 # Battery SOC (%)
-      type: input
+      address: 39424 # Battery SOC % (BATTERY_LEVEL)
+      type: holding
       decode: int16
   limitsoc:
     source: convert
