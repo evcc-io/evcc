@@ -1,6 +1,8 @@
 package core
 
 import (
+	"errors"
+
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/session"
@@ -17,7 +19,9 @@ func (lp *Loadpoint) chargeMeterTotal() float64 {
 
 	f, err := m.TotalEnergy()
 	if err != nil {
-		lp.log.ERROR.Printf("charge total import: %v", err)
+		if !errors.Is(err, api.ErrNotAvailable) {
+			lp.log.ERROR.Printf("charge total import: %v", err)
+		}
 		return 0
 	}
 
