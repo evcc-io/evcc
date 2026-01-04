@@ -1,4 +1,4 @@
-// EMH CASA 1.1 Smart Meter Gateway
+// EMH CASA 1.1 Smart Meter Gateway [emh-metering.com](https://emh-metering.com/produkte/smart-meter-gateway/casa/)
 // implementation is based on [smartmetergateway](https://github.com/gosanman/smartmetergateway)
 
 // github.com/gosanman/smartmetergateway package is subject to the following license:
