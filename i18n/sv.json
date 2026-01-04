@@ -888,6 +888,11 @@
       "goal": "Laddmål",
       "modalTitle": "Laddplan",
       "none": "ingen",
+      "optimization": {
+        "cheapest": "billigaste",
+        "continuous": "kontinuerlig",
+        "label": "Optimering"
+      },
       "planNumber": "Plan {number}",
       "precondition": {
         "description": "Ladda {duration} före avfärd för batteriuppvärmning.",
@@ -899,6 +904,7 @@
       "repeating": "återkommande",
       "repeatingPlans": "Återkommande planer",
       "selectAll": "Välj alla",
+      "strategySettings": "Strategiinställningar",
       "time": "Tid",
       "title": "Plan",
       "titleMinSoc": "Min. laddning",
