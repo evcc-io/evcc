@@ -152,8 +152,6 @@ func findContinuousWindow(rates api.Rates, effectiveDuration time.Duration, targ
 		bestCost  float64
 	)
 
-	// i: 0  1  2
-	// v: 1 10 20
 	for i := range rates {
 		windowEnd := rates[i].Start.Add(effectiveDuration)
 
