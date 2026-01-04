@@ -1738,8 +1738,8 @@ func (lp *Loadpoint) publishSocAndRange() {
 			if soc, err := soc.Guard(battery.Soc()); err == nil {
 				socR = &soc
 
+				// don't publish here in case it needs be updated by the estimator
 				lp.log.DEBUG.Printf("%s soc: %.0f%%", typ, soc)
-				lp.publish(keys.VehicleSoc, soc)
 
 				if socLimiter, ok := dev.(api.SocLimiter); ok {
 					if limit, err := socLimiter.GetLimitSoc(); err == nil {
