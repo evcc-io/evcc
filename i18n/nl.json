@@ -100,7 +100,7 @@
     "control": {
       "description": "Normaalgesproken zijn de standaardwaardes in orde. Pas deze alleen aan als je weet wat je doet.",
       "descriptionInterval": "Updatecyclus in seconden. Bepaalt hoe vaak evcc metergegevens uitleest en het laadproces aanpast. De standaardwaarde van 30 seconden is een veilige keuze. Apparaten zoals voertuigen, autoladers en omvormers hebben doorgaans enkele seconden nodig om hun gedrag aan te passen. Als uw componenten snel reageren, kunt u lagere waarden gebruiken. We raden ten zeerste af om onder de 10 seconden te gaan. Als u onregelmatig regelgedrag of verspringende vermogenswaarden opmerkt, kies dan een groter interval.",
-      "descriptionResidualPower": "Verplaatst het werkpunt van de regelkring. Als je een thuisbatterij hebt, wordt aanbevolen om een waarde van 100 W in te stellen. Op deze manier krijgt de batterij een lichte prioriteit boven het gebruik van het net.",
+      "descriptionResidualPower": "Verschuift het werkingspunt van de regelkring. De standaardinstelling van 100 W geeft thuisbatterijen een lichte voorrang boven het gebruik van het elektriciteitsnet. Als u geen batterij hebt, kunt u dit instellen op 0 W om het elektriciteitsverbruik in de zonne-energiemodus te minimaliseren.",
       "labelInterval": "Update interval",
       "labelResidualPower": "Vermogensoverschot",
       "title": "Regelgedrag"
@@ -245,7 +245,7 @@
       },
       "description": "Stroombegrenzing door externe systemen (zoals EnWG 14a controllers). Vereist load management configuratie.",
       "downloadCsv": "Download CSV",
-      "eventsRecorded": "{count} gebeurtenissen geregistreerd van netstroom begrenzing",
+      "eventsRecorded": "{count} gebeurtenissen met rasterbeperkingen geregistreerd.",
       "lastEvent": "Meest recent {timeAgo}.",
       "title": "HEMS",
       "yamlConfigured": "Opmerking: Geconfigureerd via evcc.yaml. Verwijder de betreffende regels uit het bestand om hier bewerkingen mogelijk te maken."
@@ -887,6 +887,11 @@
       "goal": "Hoeveelheid",
       "modalTitle": "Laad Plan",
       "none": "geen",
+      "optimization": {
+        "cheapest": "goedkoopste",
+        "continuous": "continu",
+        "label": "Optimalisatie"
+      },
       "planNumber": "Schema {number}",
       "precondition": {
         "description": "Laad {duration} voor vertrek voor accu voorbereiding.",
@@ -898,6 +903,7 @@
       "repeating": "herhalend",
       "repeatingPlans": "Herhalende schema's",
       "selectAll": "Alles selectreren",
+      "strategySettings": "Strategie-instellingen",
       "time": "Tijd",
       "title": "Plan",
       "titleMinSoc": "Min lading",

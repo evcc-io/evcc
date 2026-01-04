@@ -887,6 +887,11 @@
       "goal": "Objectif de recharge",
       "modalTitle": "Planification de la charge",
       "none": "aucune",
+      "optimization": {
+        "cheapest": "le moins cher",
+        "continuous": "continu",
+        "label": "Optimisation"
+      },
       "planNumber": "Planning {number}",
       "precondition": {
         "description": "Charge {duration} avant le départ pour pré-conditionner la batterie.",
@@ -898,6 +903,7 @@
       "repeating": "récurrent",
       "repeatingPlans": "Plannings récurrents",
       "selectAll": "Sélect. tous",
+      "strategySettings": "Paramètres stratégiques",
       "time": "Heure",
       "title": "Planification",
       "titleMinSoc": "Charge min",
