@@ -100,7 +100,7 @@
     "control": {
       "description": "Les valeurs par défaut sont généralement bonnes. Ne faites des changements que si vous savez ce que vous faites.",
       "descriptionInterval": "Cycle de mise à jour en secondes. Définit la fréquence à laquelle evcc lit les données du compteur et ajuste la facturation. La valeur par défaut de 30 secondes est un choix sûr. Les appareils tels que les véhicules, les boîtiers muraux et les onduleurs ont généralement besoin de plusieurs secondes pour ajuster leur comportement. Si vos composants réagissent rapidement, vous pouvez utiliser des valeurs plus faibles. Nous vous recommandons vivement de ne pas descendre en dessous de 10 secondes. Si vous observez un comportement de contrôle erratique ou des valeurs de puissance instables, choisissez un intervalle plus long.",
-      "descriptionResidualPower": "Décale le point de fonctionnement de la boucle de contrôle. La valeur par défaut de 100 W donne une légère priorité aux batteries domestiques par rapport à l'utilisation du réseau. Si vous ne disposez pas de batterie, vous pouvez régler cette valeur sur 0 W afin de minimiser la consommation du réseau en mode solaire.",
+      "descriptionResidualPower": "Déplace le point de fonctionnement de la boucle de contrôle. Si vous disposez d'une batterie domestique, il est recommandé de définir une valeur de 100 W. De cette manière, la batterie aura une légère priorité sur l'utilisation du réseau.",
       "labelInterval": "Intervalle de mise à jour",
       "labelResidualPower": "Puissance résiduelle",
       "title": "Comportement du contrôle"
@@ -887,6 +887,11 @@
       "goal": "Objectif de recharge",
       "modalTitle": "Planification de la charge",
       "none": "aucune",
+      "optimization": {
+        "cheapest": "le moins cher",
+        "continuous": "continu",
+        "label": "Optimisation"
+      },
       "planNumber": "Planning {number}",
       "precondition": {
         "description": "Charge {duration} avant le départ pour pré-conditionner la batterie.",
@@ -898,6 +903,7 @@
       "repeating": "récurrent",
       "repeatingPlans": "Plannings récurrents",
       "selectAll": "Sélect. tous",
+      "strategySettings": "Paramètres stratégiques",
       "time": "Heure",
       "title": "Planification",
       "titleMinSoc": "Charge min",

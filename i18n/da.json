@@ -100,7 +100,7 @@
     "control": {
       "description": "Standardværdierne er normalt fine. Kun hvis du ved, hvad du gør, kan du ændre dem.",
       "descriptionInterval": "Opdateringsinterval i sekunder. Angiver, hvor ofte evcc aflæser målerdata og justerer opladningen. Standardværdien på 30 sekunder er et sikkert valg. Enheder som køretøjer, ladere og invertere har typisk brug for flere sekunder til at tilpasse deres adfærd. Hvis dine komponenter reagerer hurtigt, kan du anvende lavere værdier. Vi anbefaler kraftigt ikke at gå under 10 sekunder. Hvis du observerer ustabil regulering eller springende effektværdier, bør du vælge et længere interval.",
-      "descriptionResidualPower": "Forskubber reguleringspunktet. Standardværdien på 100 W giver hjemmebatteriet let prioritet over elnettet. Uden batteri kan værdien sættes til 0 W for at minimere netforbrug i soltilstand.",
+      "descriptionResidualPower": "Forskubber reguleringspunktet. Hvis du har et hjemmebatteri anbefales det at sætte værdien til 100 W. Derved får hjemmebatteriet let prioritet over elnettet.",
       "labelInterval": "Opdateringsinterval",
       "labelResidualPower": "Tilbageværende effekt",
       "title": "kontrol adfærd"
@@ -888,6 +888,11 @@
       "goal": "Opladnings mål",
       "modalTitle": "Lade plan",
       "none": "ingen",
+      "optimization": {
+        "cheapest": "billigst",
+        "continuous": "kontinuerlig",
+        "label": "Optimering"
+      },
       "planNumber": "Plan {number}",
       "precondition": {
         "description": "Oplad {duration} før afgang til batterikonditionering.",
@@ -899,6 +904,7 @@
       "repeating": "Gentager",
       "repeatingPlans": "Gentager plan",
       "selectAll": "Vælg alt",
+      "strategySettings": "Indstillinger for strategi",
       "time": "Tid",
       "title": "Plan",
       "titleMinSoc": "Min. ladning",

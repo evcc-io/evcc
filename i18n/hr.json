@@ -1,4 +1,24 @@
 {
+  "authProviders": {
+    "authCode": "Kod za autentifikaciju",
+    "authCodeHelp": "Kopirajte ovaj kod i upotrijebite ga u sljedećem koraku. Važi {duration}.",
+    "authorizationFailed": "Oautorizacija nije uspjela",
+    "authorizationRequired": "Potrebna autorizacija",
+    "authorizationSuccessful": "Autorizacija uspješna",
+    "buttonConnect": "Poveži se na {provider}",
+    "buttonDisconnect": "Odspojiti",
+    "confirmLogout": "Jeste li sigurni da želite prekinuti {title}?",
+    "connect": "povežite",
+    "disconnect": "odspojiti",
+    "loggedOut": "Uspješno odjavljeno",
+    "logoutFailed": "Neuspjelo odjavljivanje",
+    "modalDescriptionLogin": "Završite postupak autorizacije kako biste uspostavili vezu s {provider}.",
+    "modalDescriptionLogout": "Ovo će prekinuti vezu vašeg računa {provider} i ukloniti pristup njegovim podacima.",
+    "success": "{title} je sada povezan i spreman za upotrebu.",
+    "successCloseModal": "Sada možete zatvoriti ovaj dijalog.",
+    "successCloseTab": "Sada možete zatvoriti ovu karticu.",
+    "title": "Status autorizacije"
+  },
   "batterySettings": {
     "batteryLevel": "Razina baterije",
     "bufferStart": {
@@ -40,8 +60,16 @@
       "chargers": "EV punjači",
       "generic": "Opće integracije",
       "heatingdevices": "Uređaji za grijanje",
+      "ocppConfirmContinue": "Vaš punjač se još nije povezao na EVCC. Jeste li sigurni da želite nastaviti?",
+      "ocppConnected": "Povezano!",
+      "ocppDescription": "evcc ima ugrađeni OCPP poslužitelj. Slijedite ove korake:",
       "ocppHelp": "Kopirajte ovaj URL u konfiguraciju svog punjača. Provjerite upute proizvođača za detalje. Punjač će automatski dodati svoj jedinstveni identifikator (ID stanice) na URL. U rijetkim slučajevima možda ćete morati ručno odrediti identifikator. Primjer: `{url}`",
       "ocppLabel": "URL OCPP poslužitelja",
+      "ocppNextStep": "Sljedeći korak",
+      "ocppStep1": "Konfigurirajte punjač da koristi evcc kao OCPP poslužitelj.",
+      "ocppStep2": "Pričekajte da se vaš punjač poveže na EVCC.",
+      "ocppStep3": "Nastavite i dovršite konfiguraciju.",
+      "ocppWaiting": "Čeka se povezivanje",
       "switchsockets": "Upravljive utičnice",
       "template": "Proizvođač",
       "titleAdd": {
@@ -71,7 +99,7 @@
     },
     "control": {
       "description": "Uobičajene vrijednosti su uglavnom ispravne. Promijenite samo ako znate što radite.",
-      "descriptionInterval": "Učestalost osvježavanja podataka u sekundama. Definira koliko će često evcc čitati podatke s brojila, prilagoditi snagu punjenja i osvježavati sučelje. Prekratki intervali (kraći od 30s) mogu prouzročiti česte oscilacije i prouzročiti neželjene ishode.",
+      "descriptionInterval": "Ažuriranje ciklusa u sekundama. Definira koliko često evcc čita podatke s brojila i prilagođava punjenje. Zadana vrijednost od 30 sekundi siguran je izbor. Uređaji poput vozila, zidnih punjača i invertera obično trebaju nekoliko sekundi da prilagode svoje ponašanje. Ako vaše komponente brzo reagiraju, možete koristiti niže vrijednosti. Toplo preporučujemo da ne idete ispod 10 sekundi. Ako primijetite nepravilno ponašanje kontrole ili skokovite vrijednosti snage, odaberite duži interval.",
       "descriptionResidualPower": "Pomiče operacijsku točku kontrolne petlje. Ukoliko imate kućnu bateriju, savjetuje se vrijednost od 100W. Na taj način će upotreba baterije dobiti prioritet nad energetskom mrežom.",
       "labelInterval": "Interval ažuriranja",
       "labelResidualPower": "Preostala snaga",
@@ -91,10 +119,12 @@
       "chargedEnergy": "Napunjeno",
       "co2": "Mreža CO₂",
       "configured": "Konfigurirano",
+      "connections": "Poveznice",
       "controllable": "Kontrolirano",
       "currency": "Valuta",
       "current": "Struja",
       "currentRange": "Struja",
+      "detected": "Detektirano",
       "dimmed": "Prigušeno",
       "enabled": "Omogućeno",
       "energy": "Energija",
@@ -145,6 +175,10 @@
       "description": "Postavke koje omogućuju evcc-u komunikaciju s drugim EEBus uređajima.",
       "title": "EEBus"
     },
+    "experimental": {
+      "description": "Omogućite korisničko sučelje za značajke koje se još testiraju i mogu se promijeniti u budućim verzijama.",
+      "title": "Eksperimentalni"
+    },
     "ext": {
       "description": "Bilježi energetske vrijednosti nekontroliranih potrošača (npr. hladnjak, perilica rublja itd.) u statističke svrhe. Ova se brojila mogu koristiti i za upravljanje opterećenjem (npr. poddistribucija).",
       "titleAdd": "Dodaj brojilo potrošača",
@@ -164,6 +198,8 @@
       "cancel": "Odustani",
       "clear": "Očisti",
       "close": "Zatvori",
+      "copied": "Kopirano!",
+      "copy": "Kopiraj",
       "customHelp": "Izradite posebni uređaj koristeći evcc sustav dodataka.",
       "customOption": "Posebni uređaj",
       "delete": "Izbriši",
@@ -200,8 +236,19 @@
       "titleEdit": "Uredi brojilo mreže"
     },
     "hems": {
+      "csv": {
+        "created": "Created",
+        "finished": "Završeno",
+        "gridpower": "Mrežna snaga (kW)",
+        "limitpower": "Ograničenje (kW)",
+        "type": "vrsta"
+      },
       "description": "Ograničenje snage od eksternih sustava (npr. EnWG 14a kontroleri). Zahtijeva konfiguraciju za upravljanje opterećenja.",
-      "title": "HEMS"
+      "downloadCsv": "Preuzmi CSV",
+      "eventsRecorded": "Zabilježeno je {count} događaja ograničenja mreže.",
+      "lastEvent": "Najnoviji {timeAgo}",
+      "title": "HEMS",
+      "yamlConfigured": "Napomena: Konfigurirano putem evcc.yaml. Uklonite unos iz datoteke kako biste ovdje omogućili uređivanje."
     },
     "icon": {
       "change": "promjeni",
@@ -340,6 +387,8 @@
       "title": "Postavke",
       "unconfigured": "nije postavljeno",
       "vehicles": "Moja vozila",
+      "welcomeBannerText": "Počnite s izradom **punjača ili grijača**. Ako još nemate pravi punjač, odaberite **demo punjač**.",
+      "welcomeBannerTitle": "Konfigurirajmo vaš sustav!",
       "yaml": "U evcc.yaml datoteci definirani uređaji se ne mogu uređivati."
     },
     "messaging": {
@@ -442,6 +491,23 @@
       "labelPort": "Port",
       "labelSchema": "Shema",
       "title": "Mreža"
+    },
+    "ocpp": {
+      "connectedChargers": "Povezani punjači",
+      "connectionStatus": "Konfigurirani ID-ovi stanica",
+      "connectionStatusHelp": "Status veze konfiguriranih punjača.",
+      "detectedChargers": "Detektirane ID-ove stanica",
+      "detectedHelp": "Ovi punjači su pokušali povezati se s evcc-om. Da biste koristili punjač, stvorite točku opterećenja s ID-om njegove stanice.",
+      "noChargers": "Nisu otkriveni OCPP punjači.",
+      "noStations": "Nema povezanih stanica",
+      "status": {
+        "configured": "Nije povezano",
+        "connected": "Povezani",
+        "unknown": "Neznano"
+      },
+      "title": "OCPP poslužitelj",
+      "url": "URL poslužitelja",
+      "urlHelp": "Kopirajte ovu URL adresu u konfiguraciju svog punjača. Provjerite priručnik proizvođača za detalje. Očekuje se da će punjač automatski dodati svoj jedinstveni identifikator (ID stanice) na URL. U rijetkim slučajevima možda ćete morati ručno navesti identifikator. Primjer: `{url}`"
     },
     "options": {
       "boolean": {
@@ -584,6 +650,8 @@
       "maximumCurrentHelp": "Vrijednost mora biti veća od minimalne struje.",
       "maximumPhases": "Maksimalni broj faza",
       "maximumPhasesHelp": "S koliko faza se ovo vozilo može puniti? Koristi se za izračun potrebnog minimalnog solarnog viška i planiranje trajanja punjenja.",
+      "maximumPower": "Maksimalna snaga punjenja",
+      "maximumPowerHelp": "Maksimalna snaga koju vozilo može potrošiti",
       "minimumCurrent": "Minimalna struja",
       "minimumCurrentHelp": "Ne postavljajte na manje od 6A, osim ako jako dobro znate što radite.",
       "online": "Vozila s mrežnim API-jem",
@@ -779,6 +847,8 @@
       "stepTwo": "Korak 2: Kopirajte dodatne informacije",
       "title": "Sažetak GitHub problema"
     },
+    "system": "Sustav",
+    "timezone": "Vremenska zona",
     "title": "Prijavite problem",
     "version": "Verzija"
   },
@@ -817,6 +887,11 @@
       "goal": "Cilj punjenja",
       "modalTitle": "Plan punjenja",
       "none": "nema, dodaj",
+      "optimization": {
+        "cheapest": "najjeftiniji",
+        "continuous": "neprekidan",
+        "label": "Optimizacija"
+      },
       "planNumber": "Plan {number}",
       "precondition": {
         "description": "Punjenje {duration} prije polaska kako bi se izvršilo predkondicioniranje baterije.",
@@ -828,6 +903,7 @@
       "repeating": "ponavljanje",
       "repeatingPlans": "Ponavljajući planovi",
       "selectAll": "Odaberi sve",
+      "strategySettings": "Postavke strategije",
       "time": "Vrijeme",
       "title": "Plan",
       "titleMinSoc": "Min. punjenje",
