@@ -226,7 +226,7 @@ func TestContinuous_WindowLateChargingPreference(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
 	rates := api.Rates{
-		{Start: now, End: now.Add(1 * time.Hour), Value: 0.10},
+		{Start: now, End: now.Add(1 * time.Hour), Value: 0.15},
 		{Start: now.Add(1 * time.Hour), End: now.Add(2 * time.Hour), Value: 0.10},
 		{Start: now.Add(2 * time.Hour), End: now.Add(3 * time.Hour), Value: 0.10},
 		{Start: now.Add(3 * time.Hour), End: now.Add(4 * time.Hour), Value: 0.10},
@@ -252,12 +252,13 @@ func TestContinuous_WindowLateChargingPreference(t *testing.T) {
 	require.Len(t, plan, 2)
 
 	// Should select the latest window with equal cost (3h-5h)
-	// All windows from 0h-2h, 1h-3h, 2h-4h, and 3h-5h have the same total cost
+	// Windows 0h-2h and 4h-6h are expensive due to 0.15 slots at start and end
 	// But we prefer late charging, so 3h-5h should be selected
 	assert.Equal(t, now.Add(3*time.Hour), plan[0].Start, "should select latest window with equal cost")
 	assert.Equal(t, now.Add(5*time.Hour), plan[len(plan)-1].End, "end should be 2 hours after start")
 	assert.Equal(t, 0.10, plan[0].Value, "first slot should have actual price")
 	assert.Equal(t, 0.10, plan[1].Value, "second slot should have actual price")
+	assert.Equal(t, 0.10, AverageCost(plan), "should use cheapest slots")
 }
 
 func TestContinuous_TargetAfterKnownPrices(t *testing.T) {
@@ -714,37 +715,4 @@ func TestContinuous_ExcessTimeFinishesAtTarget(t *testing.T) {
 	// Plan should use the cheapest slots
 	avgCostMedium := AverageCost(plan)
 	assert.Equal(t, 0.08, avgCostMedium, "plan (medium) should use cheapest slots (0.08)")
-}
-
-func TestFindContinuousWindowPrefersLateCheapWindow(t *testing.T) {
-	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
-
-	rates := api.Rates{
-		// All cheap
-		{Start: base.Add(0 * time.Hour), End: base.Add(1 * time.Hour), Value: 10},
-		{Start: base.Add(1 * time.Hour), End: base.Add(2 * time.Hour), Value: 10},
-		{Start: base.Add(2 * time.Hour), End: base.Add(3 * time.Hour), Value: 10},
-
-		// Expensive
-		{Start: base.Add(3 * time.Hour), End: base.Add(4 * time.Hour), Value: 100},
-		{Start: base.Add(4 * time.Hour), End: base.Add(5 * time.Hour), Value: 100},
-	}
-
-	window := findContinuousWindow(
-		rates,
-		2*time.Hour,           // charging duration
-		base.Add(6*time.Hour), // targetTime
-	)
-
-	require.NotNil(t, window, "expected window, got nil")
-
-	start := Start(window)
-
-	// Should prefer LATEST cheap window (1h-3h over 0h-2h)
-	expected := base.Add(1 * time.Hour)
-	assert.Equal(t, expected, start, "should prefer latest cheap window")
-
-	avg := AverageCost(window)
-	assert.Less(t, avg, 50.0, "expected cheap window")
-	assert.Equal(t, 10.0, avg, "should use cheapest slots")
 }
