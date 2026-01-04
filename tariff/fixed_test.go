@@ -106,7 +106,6 @@ func TestFixedSplitZones(t *testing.T) {
 
 func TestFixedMonthsSorting(t *testing.T) {
 	at, err := NewFixedFromConfig(map[string]any{
-		// "price": 1.0,
 		"zones": []struct {
 			Price  float64
 			Hours  string
@@ -116,6 +115,7 @@ func TestFixedMonthsSorting(t *testing.T) {
 			{0.2, "5-0", ""},      // all year
 			{0.3, "2-4", "Jun"},   // Jun only
 			{0.4, "18-20", "Jun"}, // Jun only
+			// TODO: specific days
 		},
 	})
 	require.NoError(t, err)
