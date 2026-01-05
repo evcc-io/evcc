@@ -335,11 +335,11 @@ func TestContinuous_Precondition(t *testing.T) {
 		},
 	}, plan, "expected two slots")
 
-	plan = p.Plan(time.Duration(1.5*float64(tariff.SlotDuration)), tariff.SlotDuration, clock.Now().Add(4*tariff.SlotDuration), true)
+	plan = p.Plan(3*tariff.SlotDuration/2, tariff.SlotDuration, clock.Now().Add(4*tariff.SlotDuration), true)
 	assert.Equal(t, api.Rates{
 		{
 			Start: clock.Now(),
-			End:   clock.Now().Add(time.Duration(0.5 * float64(tariff.SlotDuration))),
+			End:   clock.Now().Add(tariff.SlotDuration / 2),
 			Value: 1,
 		},
 		{
