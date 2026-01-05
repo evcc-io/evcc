@@ -223,7 +223,7 @@ func TestEvseFirmwareDoesSupportMillampRegulationButNotEnabledByDefault(t *testi
 		}{
 			1: {
 				Holding: map[uint16]uint16{
-					evseRegFirmware: 0x12, // firmware version 16
+					evseRegFirmware: 0x12, // firmware version 18
 					evseRegConfig:   0x12, // milliamps support disabled
 					evseRegCurrent:  0x0,  // current 0A
 					evseRegStatus:   0x3,  // statusC: charging

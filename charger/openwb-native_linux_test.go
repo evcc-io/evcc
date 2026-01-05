@@ -160,15 +160,18 @@ func TestGpios(t *testing.T) {
 		assert.Fail(t, "missing phase switch support")
 	}
 
-	wb.(api.PhaseSwitcher).Phases1p3p(3)
+	ps := wb.(api.PhaseSwitcher)
+	require.NoError(t, ps.Phases1p3p(3))
 	assert.Equal(t, []string{"Setting pin 25 to high", "Setting pin 26 to high", "Setting pin 26 to low", "Setting pin 25 to low"}, gpio.ops, "GPIO pin setting for three phases is incorrect!")
 
-	wb.(api.PhaseSwitcher).Phases1p3p(1)
+	require.NoError(t, ps.Phases1p3p(1))
 	assert.Equal(t, []string{"Setting pin 25 to high", "Setting pin 5 to high", "Setting pin 5 to low", "Setting pin 25 to low"}, gpio.ops, "GPIO pin setting for one phase is incorrect!")
 
 	if _, ok := wb.(api.Resurrector); !ok {
 		assert.Fail(t, "missing resurrector support")
 	}
-	wb.(api.Resurrector).WakeUp()
-	assert.Equal(t, []string{"Setting pin 25 to high", "Setting pin 25 to low"}, gpio.ops, "GPIO pin setting for wakup is incorrect!")
+
+	rs := wb.(api.Resurrector)
+	require.NoError(t, rs.WakeUp())
+	assert.Equal(t, []string{"Setting pin 25 to high", "Setting pin 25 to low"}, gpio.ops, "GPIO pin setting for wakeup is incorrect!")
 }
