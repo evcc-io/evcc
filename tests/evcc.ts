@@ -128,7 +128,7 @@ async function _start(config?: string, flags: string | string[] = []) {
     steamLog.end();
   });
   try {
-    await waitOn({ resources: [baseUrl()], log: LOG_ENABLED, timeout: 50000 });
+    await waitOn({ resources: [baseUrl()], log: LOG_ENABLED, timeout: 90000 });
   } catch (error) {
     instance.kill("SIGKILL");
     console.error(logPrefix(), `evcc startup failed: ${error}`);

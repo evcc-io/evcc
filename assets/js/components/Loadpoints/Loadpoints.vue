@@ -1,8 +1,10 @@
 <template>
 	<div
 		class="container container--loadpoint px-0 mb-md-2 d-flex flex-column justify-content-center"
+		data-testid="loadpoints"
 	>
 		<div
+			v-if="loadpoints.length > 0"
 			ref="carousel"
 			class="carousel d-lg-flex flex-wrap"
 			:class="[`carousel--${loadpoints.length}`, { 'carousel--fullwidth': fullWidth }]"
@@ -186,7 +188,7 @@ export default defineComponent({
 });
 </script>
 <style scoped>
-.container--loadpoint {
+.container--loadpoint:not(:empty) {
 	min-height: 300px;
 }
 
