@@ -77,12 +77,12 @@ func NewFixedFromConfig(other map[string]any) (api.Tariff, error) {
 		}
 	}
 
-	sort.Sort(t.zones)
-
 	// prepend catch-all zone
 	t.zones = append([]fixed.Zone{
 		{Price: cc.Price}, // full week is implicit
 	}, t.zones...)
+
+	sort.Sort(t.zones)
 
 	return t, nil
 }
@@ -108,9 +108,9 @@ func (t *Fixed) Rates() (api.Rates, error) {
 			ts := dayStart.Add(time.Minute * time.Duration(m.Minutes()))
 
 			var zone *fixed.Zone
-			for j := len(zones) - 1; j >= 0; j-- {
-				if zones[j].Hours.Contains(m) {
-					zone = &zones[j]
+			for i := range zones {
+				if zones[i].Hours.Contains(m) {
+					zone = &zones[i]
 					break
 				}
 			}
