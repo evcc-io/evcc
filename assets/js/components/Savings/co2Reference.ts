@@ -1,4 +1,4 @@
-// Data source: gCO2eq/kWh
+// Data source: gCO2eq/kWh, current data is from 2024.
 const source = "https://ourworldindata.org/grapher/carbon-intensity-electricity?tab=table";
 
 // This is a manual selection of countries. If yours is missing, please add it with data from the source above.
