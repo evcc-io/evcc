@@ -122,6 +122,14 @@ render: |
       type: holding
       decode: int32
     scale: -1
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 39609 # Total discharge power
+      type: holding
+      decode: uint32
+    scale: 0.01 # Convert to kWh (raw / 100 = kWh)
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
