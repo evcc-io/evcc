@@ -146,13 +146,8 @@ func SumBySeq[T any, R float64](seq iter.Seq[T], iteratee func(item T) R) R {
 // - rates are filtered to [now, targetTime] window by caller
 // Returns the selected rates.
 func findContinuousWindow(rates api.Rates, effectiveDuration time.Duration, targetTime time.Time) api.Rates {
-	var (
-		length         int
-		bestIndex      int
-		bestCost       float64
-		lastSlotCost   float64
-		prevWindowCost float64
-	)
+	var length, bestIndex int
+	var bestCost, lastSlotCost, prevWindowCost float64
 
 	for i := range rates {
 		windowEnd := rates[i].Start.Add(effectiveDuration)
