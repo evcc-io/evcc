@@ -886,6 +886,11 @@
       "goal": "Carga pretendida",
       "modalTitle": "Plano de carga",
       "none": "nenhum",
+      "optimization": {
+        "cheapest": "mais barato",
+        "continuous": "contínuo",
+        "label": "Otimização"
+      },
       "planNumber": "Plano {number}",
       "precondition": {
         "description": "Carregar {duration} antes da partida para pré-condicionamento da bateria.",
@@ -897,6 +902,7 @@
       "repeating": "recorrente",
       "repeatingPlans": "Repetição de planos",
       "selectAll": "Selecionar tudo",
+      "strategySettings": "Definições da estratégia",
       "time": "Hora",
       "title": "Plano",
       "titleMinSoc": "Carga mínima",
