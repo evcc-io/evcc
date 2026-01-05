@@ -208,7 +208,7 @@ func splitPreconditionSlots(rates api.Rates, preCondStart time.Time) (api.Rates,
 		}
 
 		// split slot
-		if !r.Start.After(preCondStart) {
+		if r.Start.Before(preCondStart) {
 			// keep the first part of the slot
 			res = append(res, api.Rate{
 				Start: r.Start,
