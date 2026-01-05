@@ -59,19 +59,19 @@ func (c *Connection) GetStates() ([]StateResponse, error) {
 }
 
 // GetState retrieves the state of an entity
-func (c *Connection) GetState(entity string) (string, error) {
+func (c *Connection) GetState(entity string) (StateResponse, error) {
 	var res StateResponse
 	uri := fmt.Sprintf("%s/api/states/%s", c.instance.URI(), url.PathEscape(entity))
 
 	if err := c.GetJSON(uri, &res); err != nil {
-		return "", err
+		return res, err
 	}
 
 	if res.State == "unknown" || res.State == "unavailable" {
-		return "", api.ErrNotAvailable
+		return res, api.ErrNotAvailable
 	}
 
-	return res.State, nil
+	return res, nil
 }
 
 // GetIntState retrieves the state of an entity as int64
@@ -81,7 +81,7 @@ func (c *Connection) GetIntState(entity string) (int64, error) {
 		return 0, err
 	}
 
-	value, err := strconv.ParseInt(state, 10, 64)
+	value, err := strconv.ParseInt(state.State, 10, 64)
 	if err != nil {
 		return 0, fmt.Errorf("invalid numeric state '%s' for entity %s: %w", state, entity, err)
 	}
@@ -96,9 +96,27 @@ func (c *Connection) GetFloatState(entity string) (float64, error) {
 		return 0, err
 	}
 
-	value, err := strconv.ParseFloat(state, 64)
+	value, err := strconv.ParseFloat(state.State, 64)
 	if err != nil {
 		return 0, fmt.Errorf("invalid numeric state '%s' for entity %s: %w", state, entity, err)
+	}
+
+	if unit, ok := strings.CutSuffix(state.Attributes.UnitOfMeasurement, "W"); ok {
+		switch unit {
+		case "":
+		case "k":
+			value *= 1e3
+		default:
+			return 0, fmt.Errorf("invalid unit '%s' for entity %s: %w", state.Attributes.UnitOfMeasurement, entity, err)
+		}
+	} else if unit, ok := strings.CutSuffix(state.Attributes.UnitOfMeasurement, "Wh"); ok {
+		switch unit {
+		case "":
+			value /= 1e3
+		case "k":
+		default:
+			return 0, fmt.Errorf("invalid unit '%s' for entity %s: %w", state.Attributes.UnitOfMeasurement, entity, err)
+		}
 	}
 
 	return value, nil
@@ -111,8 +129,8 @@ func (c *Connection) GetBoolState(entity string) (bool, error) {
 		return false, err
 	}
 
-	state = strings.ToLower(state)
-	switch state {
+	res := strings.ToLower(state.State)
+	switch res {
 	case "on", "true", "1", "active", "yes":
 		return true, nil
 	case "off", "false", "0", "inactive", "no":
@@ -166,7 +184,7 @@ func (c *Connection) GetChargeStatus(entity string) (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	if status, ok := chargeStatusMap[strings.ToLower(strings.TrimSpace(state))]; ok {
+	if status, ok := chargeStatusMap[strings.ToLower(strings.TrimSpace(state.State))]; ok {
 		return status, nil
 	}
 
