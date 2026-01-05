@@ -1099,9 +1099,13 @@ func (site *Site) Prepare(valueChan chan<- util.Param, pushChan chan<- push.Even
 
 // loopLoadpoints keeps iterating across loadpoints sending the next to the given channel
 func (site *Site) loopLoadpoints(next chan<- updater) {
+	var logOnce sync.Once
+
 	for {
 		if len(site.loadpoints) == 0 {
-			site.log.INFO.Println("no loadpoints configured")
+			logOnce.Do(func() {
+				site.log.INFO.Println("no loadpoints configured, running in meter-only mode")
+			})
 			next <- nil
 		} else {
 			for _, lp := range site.loadpoints {
