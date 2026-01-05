@@ -100,7 +100,7 @@
     "control": {
       "description": "Normalerweis sinn d'Standardwäerter gutt. Veränner se nëmmen wann s du weess wat s du mëss.",
       "descriptionInterval": "Aktualiséierungszyklus a Sekonnen. Definéiert wéi dacks den evcc d'Zielerdaten liest an d'Luedzäit upasst. Déi Standardzäit vun 30 Sekonnen ass eng sécher Wiel. Apparater wéi Gefierer, Wallboxen an Inverter brauchen typescherweis e puer Sekonnen fir hiert Verhalen unzepassen. Wann Är Komponenten séier reagéieren, kënnt Dir méi niddreg Wäerter benotzen. Mir recommandéieren staark, net ënner 10 Sekonnen ze goen. Wann Dir e onreegelméissegt Kontrollverhalen oder schwankend Leeschtungswäerter bemierkt, wielt en méi groussen Intervall.",
-      "descriptionResidualPower": "Verännert de Betribspunkt vun der Kontrollschleif. Déi Standardleeschtung vun 100 W gëtt den Hausbatterien eng kleng Prioritéit iwwer d'Benotzung vum Netz. Wann Dir keng Batterie hutt, kënnt Dir dëst op 0 W astellen, fir de Netzverbrauch am Solarmodus ze minimiséieren.",
+      "descriptionResidualPower": "Verännert de Betribspunkt vun der Regelungsschläif. Wann Dir eng Heembatterie hutt, gëtt et recommandéiert, e Wäert vun 100 W anzestellen. Op dës Manéier kritt d'Batterie eng liicht Prioritéit géint d'Notzung vum Netz.",
       "labelInterval": "Aktualiséierungsintervall",
       "labelResidualPower": "Residuell Leeschtung",
       "title": "Kontrollverhalen"
@@ -886,6 +886,11 @@
       "goal": "Luedzil",
       "modalTitle": "Luedplanifikatioun",
       "none": "keng",
+      "optimization": {
+        "cheapest": "am bëllegsten",
+        "continuous": "kontinuéierlech",
+        "label": "Optimisatioun"
+      },
       "planNumber": "Planifkatioun {number}",
       "precondition": {
         "description": "Luetzäit {duration} virum Fortfuere fir Batterie-Prekonditionéierung.",
@@ -897,6 +902,7 @@
       "repeating": "widderhuelend",
       "repeatingPlans": "Widderhuelend Planifikatiounen",
       "selectAll": "All auswielen",
+      "strategySettings": "Strategie-Astellungen",
       "time": "Zäit",
       "title": "Planifikatioun",
       "titleMinSoc": "Min. Oplueden",
