@@ -19,6 +19,13 @@ func (r Zones) Len() int {
 }
 
 func (r Zones) Less(i, j int) bool {
+	specI := r[i].Specificity()
+	specJ := r[j].Specificity()
+
+	if specI != specJ {
+		return specI > specJ
+	}
+
 	if r[i].Hours.From.Minutes() == r[j].Hours.From.Minutes() {
 		return r[i].Hours.To.Minutes() > r[j].Hours.To.Minutes()
 	}
@@ -86,19 +93,18 @@ HOURS:
 	return res
 }
 
-// MoreSpecific returns true if zone a is more specific than zone b.
-// A zone is more specific if it has constraints on fewer days or months.
-func MoreSpecific(a, b Zone) bool {
-	return specificity(a) > specificity(b)
-}
-
-func specificity(z Zone) int {
-	spec := 0
-	if len(z.Days) > 0 && len(z.Days) < 7 {
-		spec++
-	}
+// Specificity returns a weighted specificity score.
+// Higher value = more specific.
+func (z Zone) Specificity() int {
+	score := 0
 	if len(z.Months) > 0 && len(z.Months) < 12 {
-		spec++
+		score += 4
 	}
-	return spec
+	if len(z.Days) > 0 && len(z.Days) < 7 {
+		score += 2
+	}
+	if !z.Hours.From.IsNil() || !z.Hours.To.IsNil() {
+		score += 1
+	}
+	return score
 }
