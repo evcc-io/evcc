@@ -15,6 +15,25 @@ import (
 
 const minCpWaitTime time.Duration = 5 * time.Second
 
+// Define an interface for GPIO pin operations, so we can mock it in tests
+type gpioPin interface {
+	High()
+	Low()
+	Output()
+}
+
+type gpioApi interface {
+	Open() error
+	Close()
+	Pin(int) gpioPin
+}
+
+type gpioImpl struct{}
+
+func (gpioImpl) Open() error       { return rpio.Open() }
+func (gpioImpl) Close()            { rpio.Close() }
+func (gpioImpl) Pin(p int) gpioPin { return rpio.Pin(p) }
+
 // OpenWbNative charger implementation
 type OpenWbNative struct {
 	api.Charger
@@ -23,6 +42,7 @@ type OpenWbNative struct {
 	cpWait      time.Duration
 	connector   int
 	chargeState api.ChargeStatus
+	gpio        gpioApi
 }
 
 // gpioAction defines a single GPIO pin operation with timing
@@ -35,7 +55,7 @@ func init() {
 	registry.AddCtx("openwb-native", NewOpenWbNativeFromConfig)
 }
 
-//go:generate go tool decorate -o openwb-native_decorators_linux.go -f decorateOpenWbNative -b *OpenWbNative -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.Identifier,Identify,func() (string, error)"
+//go:generate go tool decorate -o openwb-native_decorators_linux.go -f decorateOpenWbNative -b *OpenWbNative -r api.Charger -t "api.ChargerEx,MaxCurrentMillis,func(float64) error" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.Identifier,Identify,func() (string, error)"
 
 // NewOpenWbNativeFromConfig creates an OpenWbNative charger from generic config
 func NewOpenWbNativeFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
@@ -57,18 +77,18 @@ func NewOpenWbNativeFromConfig(ctx context.Context, other map[string]any) (api.C
 		return nil, err
 	}
 
-	return NewOpenWbNative(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID, cc.Phases1p3p, cc.RfId, cc.CpWait, cc.Connector)
+	if (cc.Connector < 1) || (cc.Connector > 2) {
+		return nil, fmt.Errorf("invalid connector value: %d", cc.Connector)
+	}
+	if cc.CpWait < minCpWaitTime {
+		return nil, fmt.Errorf("invalid cpwait value: %s, needs to be greater %s", cc.CpWait.String(), minCpWaitTime)
+	}
+
+	return NewOpenWbNative(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID, cc.Phases1p3p, cc.RfId, cc.CpWait, cc.Connector, gpioImpl{})
 }
 
 // NewOpenWbNative creates OpenWbNative charger
-func NewOpenWbNative(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8, hasPhases1p3p bool, rfIdVidPid string, cpWait time.Duration, connector int) (api.Charger, error) {
-	if (connector < 1) || (connector > 2) {
-		return nil, fmt.Errorf("invalid connector value: %d", connector)
-	}
-	if cpWait < minCpWaitTime {
-		return nil, fmt.Errorf("invalid cpwait value: %s, needs to be greater %s", cpWait.String(), minCpWaitTime)
-	}
-
+func NewOpenWbNative(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8, hasPhases1p3p bool, rfIdVidPid string, cpWait time.Duration, connector int, gpio gpioApi) (api.Charger, error) {
 	log := util.NewLogger("openwb-native")
 	log.DEBUG.Printf("Creating OpenWB native with 3 phases %t, rfid %s, cpwait %s, connector %d", hasPhases1p3p, rfIdVidPid, cpWait.String(), connector)
 
@@ -83,12 +103,18 @@ func NewOpenWbNative(ctx context.Context, uri, device, comset string, baudrate i
 		cpWait:      cpWait,
 		connector:   connector,
 		chargeState: api.StatusNone,
+		gpio:        gpio,
 	}
 
 	var (
-		phases1p3p func(int) error
-		identify   func() (string, error)
+		phases1p3p       func(int) error
+		identify         func() (string, error)
+		maxCurrentMillis func(float64) error
 	)
+
+	if ex, ok := evse.(api.ChargerEx); ok {
+		maxCurrentMillis = ex.MaxCurrentMillis
+	}
 
 	// configure special external hardware features
 	if hasPhases1p3p {
@@ -105,16 +131,16 @@ func NewOpenWbNative(ctx context.Context, uri, device, comset string, baudrate i
 	}
 
 	// initialize GPIO and set pins to output
-	if err := rpio.Open(); err != nil {
+	if err := gpio.Open(); err != nil {
 		return nil, fmt.Errorf("failed to open GPIO: %w", err)
 	}
-	defer rpio.Close()
+	defer gpio.Close()
 
 	for _, pin := range structs.Fields(native.ChargePoints[connector-1]) {
-		rpio.Pin(pin.Value().(int)).Output()
+		gpio.Pin(pin.Value().(int)).Output()
 	}
 
-	return decorateOpenWbNative(wb, phases1p3p, identify), nil
+	return decorateOpenWbNative(wb, maxCurrentMillis, phases1p3p, identify), nil
 }
 
 // Status implements the api.Charger interface
@@ -142,7 +168,7 @@ var _ api.Resurrector = (*OpenWbNative)(nil)
 
 // WakeUp implements the api.Resurrector interface
 func (wb *OpenWbNative) WakeUp() error {
-	cpPin := rpio.Pin(native.ChargePoints[wb.connector-1].PIN_CP)
+	cpPin := wb.gpio.Pin(native.ChargePoints[wb.connector-1].PIN_CP)
 
 	return wb.runGpioSequence([]gpioAction{
 		{pin: cpPin.High, delay: wb.cpWait},
@@ -152,10 +178,10 @@ func (wb *OpenWbNative) WakeUp() error {
 
 // runGpioSequence executes a sequence of GPIO operations
 func (wb *OpenWbNative) runGpioSequence(seq []gpioAction) error {
-	if err := rpio.Open(); err != nil {
+	if err := wb.gpio.Open(); err != nil {
 		return fmt.Errorf("failed to open GPIO: %w", err)
 	}
-	defer rpio.Close()
+	defer wb.gpio.Close()
 
 	if err := wb.Enable(false); err != nil {
 		return err
@@ -173,10 +199,10 @@ func (wb *OpenWbNative) runGpioSequence(seq []gpioAction) error {
 
 // gpioSwitchPhases toggles the GPIOs to switch between 1-phase and 3-phase charging
 func (wb *OpenWbNative) gpioSwitchPhases(phases int) error {
-	cpPin := rpio.Pin(native.ChargePoints[wb.connector-1].PIN_CP)
-	phPin := rpio.Pin(native.ChargePoints[wb.connector-1].PIN_3P)
+	cpPin := wb.gpio.Pin(native.ChargePoints[wb.connector-1].PIN_CP)
+	phPin := wb.gpio.Pin(native.ChargePoints[wb.connector-1].PIN_3P)
 	if phases == 1 {
-		phPin = rpio.Pin(native.ChargePoints[wb.connector-1].PIN_1P)
+		phPin = wb.gpio.Pin(native.ChargePoints[wb.connector-1].PIN_1P)
 	}
 
 	return wb.runGpioSequence([]gpioAction{
