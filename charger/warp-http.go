@@ -248,7 +248,7 @@ func (wb *WarpHTTP) meterAllValues() ([]float64, error) {
 	return res, err
 }
 
-// currents implements the api.MeterCurrrents interface
+// currents implements the api.MeterCurrents interface
 func (wb *WarpHTTP) meterCurrents() (float64, float64, float64, error) {
 	res, err := wb.meterAllValues()
 	if err != nil {
