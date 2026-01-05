@@ -103,13 +103,10 @@ func (c *Connection) GetFloatState(entity string) (float64, error) {
 
 	scale, err := state.scale()
 	if err != nil {
-		return 0, fmt.Errorf("%w for entity %s: %w", err, entity)
+		return 0, fmt.Errorf("%w for entity %s", err, entity)
 	}
 
 	return scale * value, nil
-}
-
-func scale(entity string) (float64, error) {
 }
 
 // GetBoolState retrieves the state of an entity as boolean
