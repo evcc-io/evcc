@@ -5,7 +5,7 @@
     "authorizationFailed": "Avtorizacija ni uspela",
     "authorizationRequired": "Zahtevana avtorizacija",
     "authorizationSuccessful": "Avtorizacija uspešna",
-    "buttonConnect": "Poveži se z {ponudnikom}",
+    "buttonConnect": "Poveži se z {provider}",
     "buttonDisconnect": "Prekini povezavo",
     "confirmLogout": "Ali ste prepričani, da želite prekiniti povezavo z {title}?",
     "connect": "poveži",

@@ -100,7 +100,7 @@
     "control": {
       "description": "Genellikle varsayılan değerler iyidir. Bunları yalnızca ne yaptığını biliyorsan değiştir.",
       "descriptionInterval": "Saniye cinsinden güncelleme döngüsü. Evcc'nin sayaç verilerini ne sıklıkla okuyacağını ve doldurmayı ne sıklıkla ayarlayacağını tanımlar. Varsayılan 30 saniye güvenli bir seçimdir. Araçlar, doldurma cihazları ve çeviriciler gibi cihazların davranışlarını ayarlamak için genellikle birkaç saniye gerekir. Bileşenlerin hızlı tepki veriyorsa daha düşük değerler kullanabilirsin. 10 saniyenin altına inmemeni önemle tavsiye ederiz. Düzensiz kontrol davranışı veya sıçrayan güç değerleri gözlemlersen, daha büyük bir aralık seç.",
-      "descriptionResidualPower": "Kontrol döngüsünün çalışma noktasını değiştirir. Varsayılan 100 W değeri, ev bataryalarına şebeke kullanımına göre hafif bir öncelik verir. Bataryan yoksa, güneş enerjisi modunda şebeke tüketimini en aza indirmek için bu değeri 0 W olarak ayarlayabilirsin.",
+      "descriptionResidualPower": "Kontrol döngüsünün çalışma noktasını değiştirir. Ev tipi bir bataryanız varsa, 100 W değerini ayarlamanız önerilir. Bu şekilde batarya, şebeke kullanımına göre hafif bir öncelik kazanır.",
       "labelInterval": "Güncelleme aralığı",
       "labelResidualPower": "Artık güç",
       "title": "Kontrol davranışı"
@@ -886,6 +886,11 @@
       "goal": "Doldurma hedefi",
       "modalTitle": "Doldurma Planı",
       "none": "yok",
+      "optimization": {
+        "cheapest": "en ucuz",
+        "continuous": "sürekli",
+        "label": "Optimizasyon"
+      },
       "planNumber": "Plan {number}",
       "precondition": {
         "description": "Batarya ön ısıtması için kalkıştan önce {duration} doldur.",
@@ -897,6 +902,7 @@
       "repeating": "“tekrarlanan”",
       "repeatingPlans": "“Tekrarlanan planlar”",
       "selectAll": "“Tümünü seç”",
+      "strategySettings": "Strateji ayarları",
       "time": "Zaman",
       "title": "Plan",
       "titleMinSoc": "Asgari doldurma",

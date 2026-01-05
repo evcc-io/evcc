@@ -1,13 +1,37 @@
 {
+  "authProviders": {
+    "authCode": "Autentiseringskode",
+    "authCodeHelp": "Kopier denne koden og bruk den i neste trinn. Gyldig i {duration}.",
+    "authorizationFailed": "Autorisasjon mislyktes",
+    "authorizationRequired": "Autorisasjon kreves",
+    "authorizationSuccessful": "Autorisasjon vellykket",
+    "buttonConnect": "Koble til {provider}",
+    "buttonDisconnect": "Koble fra",
+    "confirmLogout": "Er du sikker på at du vil koble fra {title}?",
+    "connect": "koble til",
+    "disconnect": "koble fra",
+    "loggedOut": "Logg ut vellykket",
+    "logoutFailed": "Kunne ikke logge ut",
+    "modalDescriptionLogin": "Fullfør autorisasjonsprosessen for å opprette forbindelse med {provider}.",
+    "modalDescriptionLogout": "Dette vil koble fra {provider} kontoen din og fjerne tilgangen til dataene.",
+    "success": "{title} er nå tilkoblet og klar til bruk.",
+    "successCloseModal": "Du kan nå lukke denne dialogboksen.",
+    "successCloseTab": "Du kan nå lukke denne fanen.",
+    "title": "Autorisasjonsstatus"
+  },
   "batterySettings": {
     "batteryLevel": "Ladenivå",
     "bufferStart": {
+      "above": "når over {soc}.",
       "full": "når det er på {soc}.",
       "never": "bare med nok PV-overskudd"
     },
     "capacity": "{energy} av {total}",
+    "control": "Batterikontroll",
+    "discharge": "Forhindre utladning i hurtigmodus og planlagt lading.",
     "disclaimerHint": "Merk:",
     "disclaimerText": "Kun relevant i PV-modus. Ladeadferden justeres deretter.",
+    "gridChargeTab": "Nettlading",
     "legendBottomName": "Hjemmelading har prioritet",
     "legendBottomSubline": "til det når {soc}.",
     "legendMiddleName": "kjøretøy først",
@@ -15,10 +39,76 @@
     "legendTopAutostart": "starter automatisk",
     "legendTopName": "batteriassistert lading",
     "legendTopSubline": "når hjemmebatteriet er over {soc}.",
-    "modalTitle": "Batteriinnstillinger"
+    "modalTitle": "Batteriinnstillinger",
+    "usageTab": "Batteribruk"
   },
   "config": {
+    "aux": {
+      "description": "Enhet som justerer forbruket basert på tilgjengelig overskudd (som smarte varmtvannsberedere). evcc forventer at denne enheten reduserer strømforbruket ved behov.",
+      "titleAdd": "Legg til selvregulerende forbruker",
+      "titleEdit": "Rediger selvregulerende forbruker"
+    },
+    "battery": {
+      "titleAdd": "Legg til batteri",
+      "titleEdit": "Rediger batteri"
+    },
+    "charge": {
+      "titleAdd": "Legg til ladningsmåler",
+      "titleEdit": "Rediger ladningsmåler"
+    },
+    "charger": {
+      "chargers": "EV-ladere",
+      "generic": "Generiske integrasjoner",
+      "heatingdevices": "Oppvarmingsenheter",
+      "ocppConfirmContinue": "Laderen din er ikke koblet til evcc ennå. Er du sikker på at du vil fortsette?",
+      "ocppConnected": "Koblet til!",
+      "ocppDescription": "evcc har en innebygd OCPP-server. Følg disse trinnene:",
+      "ocppHelp": "Kopier denne URL-adressen til laderen din. Se produsentens bruksanvisning for mer informasjon. Laderen skal automatisk legge til sin unike identifikator (stasjon-ID) til URL-adressen. I sjeldne tilfeller kan det hende du må angi identifikatoren manuelt. Eksempel: `{url}`",
+      "ocppLabel": "OCPP-server-URL",
+      "ocppNextStep": "Neste trinn",
+      "ocppStep1": "Konfigurer laderen din til å bruke evcc som OCPP-server.",
+      "ocppStep2": "Vent til laderen din kobles til evcc.",
+      "ocppStep3": "Fortsett og fullfør konfigurasjonen.",
+      "ocppWaiting": "Venter på tilkobling",
+      "switchsockets": "Omkoblingsbare stikkontakter",
+      "template": "Produsent",
+      "titleAdd": {
+        "charging": "Legg til lader",
+        "heating": "Legg til varmeapparat"
+      },
+      "titleEdit": {
+        "charging": "Rediger lader",
+        "heating": "Rediger varmeapparat"
+      },
+      "type": {
+        "custom": {
+          "charging": "Brukerdefinert lader",
+          "heating": "Brukerdefinert varmeapparat"
+        },
+        "heatpump": "Brukerdefinert varmepumpe",
+        "sgready": "Brukerdefinert varmepumpe (sg-klar via plugins)",
+        "sgready-boost": "Brukerdefinert varmepumpe (sg-ready-boost, utgått)",
+        "sgready-relay": "Brukerdefinert varmepumpe (sg-klar via reléer)",
+        "switchsocket": "Brukerdefinert bryterkontakt"
+      }
+    },
+    "circuits": {
+      "description": "Sikrer at summen av alle lastpunkter som er koblet til en krets, ikke overskrider de konfigurerte effekt- og strømgrensene. Kretser kan nestes for å danne en hierarki.",
+      "title": "Laststyring",
+      "usableMeters": "Brukbare målerreferanser"
+    },
+    "control": {
+      "description": "Vanligvis er standardverdiene fine. Endre dem bare hvis du vet hva du gjør.",
+      "descriptionInterval": "Oppdateringssyklus i sekunder. Definerer hvor ofte evcc leser målerdata og justerer ladingen. Standardverdien på 30 sekunder er et trygt valg. Enheter som kjøretøy, veggbokser og omformere trenger vanligvis flere sekunder på å justere sin atferd. Hvis komponentene dine reagerer raskt, kan du bruke lavere verdier. Vi anbefaler på det sterkeste at du ikke går under 10 sekunder. Hvis du observerer uregelmessig kontrollatferd eller hoppende effektverdier, velg et større intervall.",
+      "descriptionResidualPower": "Flytter driftspunktet for reguleringssløyfen. Hvis du har et hjemmebatteri, anbefales det å angi en verdi på 100 W. På denne måten vil batteriet få litt prioritet fremfor nettbruk.",
+      "labelInterval": "Oppdateringsintervall",
+      "labelResidualPower": "Restkraft",
+      "title": "Kontrollatferd"
+    },
     "deviceValue": {
+      "amount": "Beløp",
+      "broker": "Megler",
+      "bucket": "Bucket",
       "chargeStatus": "Status",
       "phaseCurrents": "Strøm L1, L2, L3",
       "phasePowers": "Effekt L1, L2, L3",
@@ -45,56 +135,410 @@
       "delete": "Slett",
       "docsLink": "Se documentasjonen.",
       "experimental": "Eksperimentell",
+      "off": "av",
       "on": "på",
       "password": "Passord",
+      "readFromFile": "Les fra fil",
+      "remove": "Fjern",
+      "required": "påkrevd",
+      "reset": "Tilbakestill",
+      "save": "Lagre",
+      "saved": "Lagt til.",
+      "saving": "Laster…",
+      "selectFile": "Bla gjennom",
+      "showAdvancedSettings": "Vis avanserte innstillinger",
       "telemetry": "Telemetri",
-      "title": "Tittel"
+      "templateLoading": "Laster...",
+      "title": "Tittel",
+      "typeDeprecated": "Typen «{type}» er utdatert og vil bli fjernet i en fremtidig versjon. Sjekk endringsloggen og opprett denne enheten på nytt.",
+      "validateSave": "Bekreft og lagre"
     },
     "grid": {
-      "title": "Nettmåler"
+      "title": "Nettmåler",
+      "titleAdd": "Legg til nettmåler",
+      "titleEdit": "Rediger nettmåler"
+    },
+    "hems": {
+      "csv": {
+        "created": "Opprettet",
+        "finished": "Ferdig",
+        "gridpower": "Nettstrøm (kW)",
+        "limitpower": "Begrensning (kW)",
+        "type": "Type"
+      },
+      "description": "Effektbegrensning ved hjelp av eksterne systemer (f.eks. EnWG 14a-kontrollere). Krever konfigurering av laststyring.",
+      "downloadCsv": "Last ned CSV",
+      "eventsRecorded": "Registrerte {count} hendelser med rutenettbegrensning.",
+      "lastEvent": "Siste {timeAgo}.",
+      "title": "HEMS",
+      "yamlConfigured": "Merk: Konfigurert via evcc.yaml. Fjern oppføringen fra filen for å aktivere redigering her."
+    },
+    "icon": {
+      "change": "endring",
+      "label": "Ikon"
     },
     "influx": {
+      "description": "Skriver ladningsdata og andre målinger til InfluxDB. Bruk Grafana eller andre verktøy for å visualisere dataene.",
+      "descriptionToken": "Sjekk InfluxDB-dokumentasjonen for å lære hvordan du oppretter en. https://docs.influxdata.com/influxdb/v2/admin/",
+      "labelBucket": "Bøtte",
+      "labelCheckInsecure": "Tillat selvsignerte sertifikater",
+      "labelDatabase": "Database",
+      "labelInsecure": "Sertifikatvalidering",
       "labelOrg": "Organisasjon",
       "labelPassword": "Passord",
-      "labelUser": "Brukernavn"
+      "labelToken": "API-token",
+      "labelUrl": "URL",
+      "labelUser": "Brukernavn",
+      "title": "InfluxDB",
+      "v1Support": "Trenger du støtte for InfluxDB 1.x?",
+      "v2Support": "Tilbake til InfluxDB 2.x"
     },
     "loadpoint": {
+      "addCharger": {
+        "charging": "Legg til lader",
+        "heating": "Legg til varmeapparat"
+      },
+      "addMeter": "Legg til dedikert energimåler",
       "cancel": "Avbryt",
+      "chargerError": {
+        "charging": "Det er nødvendig å konfigurere en lader.",
+        "heating": "Det er nødvendig å konfigurere en varmeovn."
+      },
       "chargerLabel": {
         "charging": "Lader",
         "heating": "Varmeelement"
       },
       "chargerPower11kw": "11 kW",
+      "chargerPower11kwHelp": "Vil bruke et strømområde på 6 til 16 A.",
       "chargerPower22kw": "22 kW",
+      "chargerPower22kwHelp": "Vil bruke et strømområde på 6 til 32 A.",
+      "chargerPowerCustom": "annen",
+      "chargerPowerCustomHelp": "Definer et tilpasset strømområde.",
       "chargerTypeLabel": "Ladertype",
       "chargingTitle": "Oppførsel",
+      "circuitHelp": "Laststyringsoppgave for å sikre at effekt- og strømgrenser ikke overskrides.",
+      "circuitLabel": "Krets",
       "circuitUnassigned": "ikke tildelt",
+      "defaultModeHelp": {
+        "charging": "Lademodus ved tilkobling av kjøretøyet.",
+        "heating": "Blir angitt når systemet starter."
+      },
+      "defaultModeHelpKeep": "Beholder den sist valgte modusen.",
       "defaultModeLabel": "Standartmodus",
       "delete": "Slett",
+      "electricalSubtitle": "Hvis du er i tvil, spør elektrikeren din.",
       "electricalTitle": "Elektrisk",
+      "energyMeterHelp": "Ekstra måler hvis laderen ikke har en integrert måler.",
       "energyMeterLabel": "Energimåler",
+      "estimateLabel": "Interpoler ladningsnivå mellom API-oppdateringer",
+      "maxCurrentHelp": "Må være større enn minimumsstrøm.",
+      "maxCurrentLabel": "Maksimal strøm",
+      "minCurrentHelp": "Gå kun under 6 A hvis du vet hva du gjør.",
+      "minCurrentLabel": "Minimum strøm",
+      "noVehicles": "Ingen kjøretøy er konfigurert.",
       "option": {
         "charging": "Legg til ladepunkt",
         "heating": "Legg til varmeelement"
       },
       "phases1p": "1-fase",
       "phases3p": "3-fase",
+      "phasesAutomatic": "Automatiske faser",
+      "phasesAutomaticHelp": "Laderen din støtter automatisk veksling mellom 1- og 3-fase lading. I hovedskjermen kan du justere faseatferden under lading.",
+      "phasesHelp": "Antall tilkoblede faser.",
       "phasesLabel": "Fase",
+      "pollIntervalDanger": "Regelmessig forespørsel til kjøretøyet kan tømme kjøretøyets batteri. Noen kjøretøyprodusenter kan aktivt forhindre lading i dette tilfellet. Anbefales ikke! Bruk dette kun hvis du er klar over risikoen.",
+      "pollIntervalHelp": "Tid mellom oppdateringer av kjøretøyets API. Korte intervaller kan tømme kjøretøyets batteri.",
       "pollIntervalLabel": "Oppdateringsintervall",
       "pollModeAlways": "alltid",
+      "pollModeAlwaysHelp": "Be alltid om statusoppdateringer med jevne mellomrom.",
       "pollModeCharging": "lading",
+      "pollModeChargingHelp": "Be kun om oppdateringer om kjøretøyets status under lading.",
       "pollModeConnected": "tilkoblet",
+      "pollModeConnectedHelp": "Oppdater kjøretøyets status med jevne mellomrom når du er tilkoblet.",
+      "pollModeLabel": "Oppdater atferd",
+      "priorityHelp": "Høyere prioritet gir fortrinnsrett til overskudd fra solenergi.",
       "priorityLabel": "Prioritet",
       "save": "Lagre",
       "showAllSettings": "Vis alle innstillinger",
+      "solarBehaviorCustomHelp": "Definer dine egne terskler og forsinkelser for aktivering og deaktivering.",
+      "solarBehaviorDefaultHelp": "Start etter {enableDelay} med tilstrekkelig overskudd. Stopp når det ikke er nok overskudd til {disableDelay}.",
       "solarBehaviorLabel": "Solenergi",
-      "solarModeCustom": "tilpasset"
+      "solarModeCustom": "tilpasset",
+      "solarModeMaximum": "maksimal solenergi",
+      "thresholdDisableDelayLabel": "Deaktiver forsinkelse",
+      "thresholdDisableHelpInvalid": "Bruk en positiv verdi.",
+      "thresholdDisableHelpPositive": "Stopp når mer enn {power} brukes fra strømnettet i {delay}.",
+      "thresholdDisableHelpZero": "Stopp når minimumskravet til effekt ikke kan oppfylles i {delay}.",
+      "thresholdDisableLabel": "Deaktiver nettstrøm",
+      "thresholdEnableDelayLabel": "Aktiver forsinkelse",
+      "thresholdEnableHelpInvalid": "Bruk en negativ verdi.",
+      "thresholdEnableHelpNegative": "Start når {surplus} overskudd er tilgjengelig for {delay}.",
+      "thresholdEnableHelpZero": "Start når minimumskravet til effekt kan oppfylles i {delay}.",
+      "thresholdEnableLabel": "Aktiver nettstrøm",
+      "titleAdd": {
+        "charging": "Legg til ladepunkt",
+        "heating": "Legg til varmeenhet",
+        "unknown": "Legg til lader eller varmeapparat"
+      },
+      "titleEdit": {
+        "charging": "Rediger ladepunkt",
+        "heating": "Rediger varmeenhet",
+        "unknown": "Rediger lader eller varmeapparat"
+      },
+      "titleExample": {
+        "charging": "Garasje, carport osv.",
+        "heating": "Varmepumpe, varmeapparat osv."
+      },
+      "titleLabel": "Tittel",
+      "vehicleAutoDetection": "automatisk gjenkjenning",
+      "vehicleHelpAutoDetection": "Velger automatisk det mest sannsynlige kjøretøyet. Manuell overstyring er mulig.",
+      "vehicleHelpDefault": "Gå alltid ut fra at dette kjøretøyet lades her. Automatisk gjenkjenning er deaktivert. Manuell overstyring er mulig.",
+      "vehicleLabel": "Standard kjøretøy",
+      "vehiclesTitle": "Kjøretøy"
     },
     "main": {
+      "addAdditional": "Legg til ekstra måler",
+      "addGrid": "Legg til nettmåler",
+      "addLoadpoint": "Legg til lader eller varmeapparat",
+      "addPvBattery": "Legg til solcellepanel eller batteri",
+      "addTariffs": "Legg til tariffer",
       "addVehicle": "Legg til kjøretøy",
+      "configured": "konfigurert",
       "edit": "rediger",
+      "loadpointRequired": "Minst ett ladepunkt må konfigureres.",
+      "name": "Navn",
       "title": "Oppsett",
-      "vehicles": "Mine kjøretøy"
+      "unconfigured": "ikke konfigurert",
+      "vehicles": "Mine kjøretøy",
+      "welcomeBannerText": "Begynn med å lage en **lader eller varmeapparat**. Hvis du ikke har en ekte lader ennå, velg en **demolader**.",
+      "welcomeBannerTitle": "La oss konfigurere systemet ditt!",
+      "yaml": "Enheter fra evcc.yaml kan ikke redigeres."
+    },
+    "messaging": {
+      "description": "Motta meldinger om ladingsøktene dine.",
+      "title": "Varsler"
+    },
+    "meter": {
+      "cancel": "Avbryt",
+      "delete": "Slett",
+      "generic": "Generiske integrasjoner",
+      "option": {
+        "aux": "Legg til selvregulerende forbruker",
+        "battery": "Legg til batterimåler",
+        "ext": "Legg til vanlig forbruker",
+        "pv": "Legg til solenergimåler"
+      },
+      "save": "Lagre",
+      "specific": "Spesifikke integrasjoner",
+      "template": "Produsent",
+      "titleChoice": "Hva vil du legge til?",
+      "titleLabel": "Tittel",
+      "usage": {
+        "aux": "Selvregulerende forbruker",
+        "battery": "Batteri",
+        "charge": "Forbruker / Lader",
+        "grid": "Rutenett",
+        "label": "Bruk",
+        "pv": "Produksjon"
+      },
+      "validateSave": "Bekreft og lagre"
+    },
+    "modbus": {
+      "baudrate": "Baudhastighet",
+      "comset": "ComSet",
+      "connection": "Modbus-tilkobling",
+      "connectionHintSerial": "Enheten er direkte tilkoblet via RS485 (eller USB-til-RS485-adapter).",
+      "connectionHintTcpip": "Enheten er tilgjengelig via nettverk (LAN/WiFi).",
+      "connectionValueSerial": "RS485",
+      "connectionValueTcpip": "Nettverk",
+      "device": "Enhetsnavn",
+      "deviceHint": "Eksempel: /dev/ttyUSB0",
+      "host": "IP-adresse eller vertsnavn",
+      "hostHint": "Eksempel: 192.0.2.2",
+      "id": "Modbus-ID",
+      "port": "Havn",
+      "protocol": "Modbus-protokoll",
+      "protocolHintRtu": "Tilkobling via en RS485 til Ethernet-adapter uten protokollkonvertering.",
+      "protocolHintTcp": "Enheten har innebygd LAN/Wi-Fi-støtte eller er koblet til via en RS485 til Ethernet-adapter med protokollkonvertering.",
+      "protocolValueRtu": "RTU",
+      "protocolValueTcp": "TCP"
+    },
+    "modbusproxy": {
+      "add": "Legg til proxy-tilkobling",
+      "connection": "Tilkobling #{number}",
+      "description": "Noen Modbus-enheter støtter bare én eller svært få tilkoblinger. evcc kan fungere som en proxy, slik at flere klienter (hjemmeautomatisering, skript osv.) får samtidig tilgang.",
+      "device": "Enhet",
+      "option": {
+        "deny": "feil",
+        "false": "nei",
+        "true": "stille"
+      },
+      "readonly": {
+        "help": {
+          "deny": "Skriveadgang er blokkert med en Modbus-feil.",
+          "false": "Skriveadgang er videresendt.",
+          "true": "Skriveadgang er blokkert uten svar."
+        },
+        "label": "Skrivebeskyttet"
+      },
+      "sourcePortHelp": "Port for innkommende klientforbindelser. Må være tilgjengelig.",
+      "title": "Modbus-proxy"
+    },
+    "mqtt": {
+      "authentication": "Autentisering",
+      "description": "Koble til en MQTT-megler for å utveksle data med andre systemer i nettverket ditt.",
+      "descriptionClientId": "Forfatter av meldingene. Hvis tomt, brukes `evcc-[rand]`.",
+      "descriptionTopic": "La feltet være tomt for å deaktivere publisering.",
+      "labelBroker": "Megler",
+      "labelCaCert": "Server-sertifikat (CA)",
+      "labelCheckInsecure": "Tillat selvsignerte sertifikater",
+      "labelClientCert": "Klientsertifikat",
+      "labelClientId": "Kunde-ID",
+      "labelClientKey": "Klientnøkkel",
+      "labelInsecure": "Sertifikatvalidering",
+      "labelPassword": "Passord",
+      "labelTopic": "Emne",
+      "labelUser": "Brukernavn",
+      "publishing": "Publisering",
+      "title": "MQTT"
+    },
+    "network": {
+      "descriptionExternalUrl": "Adresse for andre enheter som ønsker å koble seg til evcc og for automatisk oppdagelse av evcc-appen.",
+      "descriptionHost": "Brukes til å kunngjøre evcc i ditt lokale nettverk.",
+      "descriptionInternalUrl": "Lokal nettverksadresse for evcc.",
+      "descriptionPort": "Port for webgrensesnittet og API. Du må oppdatere nettleserens URL hvis du endrer dette.",
+      "labelExternalUrl": "Ekstern URL",
+      "labelHost": "mDNS-vertsnavn",
+      "labelInternalUrl": "Intern URL",
+      "labelPort": "Havn",
+      "title": "Nettverk"
+    },
+    "ocpp": {
+      "connectedChargers": "Tilkoblede ladere",
+      "connectionStatus": "Konfigurerte stasjons-ID-er",
+      "connectionStatusHelp": "Tilkoblingsstatus for konfigurerte ladere.",
+      "detectedChargers": "Oppdagede stasjons-ID-er",
+      "detectedHelp": "Disse ladere har forsøkt å koble seg til evcc. For å bruke en lader, opprett et ladepunkt med stasjons-ID-en.",
+      "noChargers": "Ingen OCPP-ladere oppdaget.",
+      "noStations": "Ingen stasjoner tilkoblet",
+      "status": {
+        "configured": "Ikke tilkoblet",
+        "connected": "Tilkoblet",
+        "unknown": "Ukjent"
+      },
+      "title": "OCPP-server",
+      "url": "Server-URL",
+      "urlHelp": "Kopier denne URL-adressen til laderen din. Se produsentens bruksanvisning for mer informasjon. Laderen skal automatisk legge til sin unike identifikator (stasjon-ID) til URL-adressen. I sjeldne tilfeller kan det hende du må angi identifikatoren manuelt. Eksempel: `{url}`"
+    },
+    "options": {
+      "boolean": {
+        "no": "nei",
+        "yes": "ja"
+      },
+      "endianness": {
+        "big": "big-endian",
+        "little": "little-endian"
+      },
+      "operationMode": {
+        "heating": "Oppvarming",
+        "standby": "Standby"
+      },
+      "schema": {
+        "http": "HTTP (ukryptert)",
+        "https": "HTTPS (kryptert)"
+      },
+      "status": {
+        "A": "A (ikke tilkoblet)",
+        "B": "B (tilkoblet)",
+        "C": "C (lading)"
+      }
+    },
+    "pv": {
+      "titleAdd": "Legg til solenergimåler",
+      "titleEdit": "Rediger solenergimåler"
+    },
+    "section": {
+      "additionalMeter": "Ekstra målere",
+      "general": "Generelt",
+      "grid": "Nett",
+      "integrations": "Integrasjoner",
+      "loadpoints": "Lading og oppvarming",
+      "meter": "Solenergi og batteri",
+      "system": "System",
+      "vehicles": "Kjøretøy"
+    },
+    "shm": {
+      "cardTitle": "Sunny Home Manager",
+      "description": "evcc er utstyrt med integrasjon for SMA Sunny Home Manager (SHM) via SEMP-protokollen. Hvis den kjører på samme nettverk, bør du etter å ha logget inn på Sunny Portal-kontoen din automatisk få tilbud om å legge til alle ladere som er konfigurert i evcc som nyoppdagede forbrukere. Alt skal være klart til bruk umiddelbart, uten at det er nødvendig med noen justeringer nedenfor.",
+      "descriptionDeviceId": "12 tegn HEX-streng. Prefiks for alle enheter (ladepunkt, ..).",
+      "descriptionIdPattern": "Identifikasjonsmønster",
+      "descriptionIds": "I Sunny Portal trenger hvert forbrukerapparat en unik identifikator. evcc genererer en unik identifikator basert på maskinvaren din. Hvis du migrerer evcc til annen maskinvare, kan disse identifikatorene endres. Hvis du ønsker å beholde historikken, kan du overstyre de genererte identifikatorene her. Åpne SEMP-URL-en (/semp) for å sjekke dine nåværende identifikatorer.",
+      "descriptionSempUrl": "Alltid URL",
+      "descriptionVendorId": "8 tegn HEX-streng. Generelt prefiks for alle enheter. Som standard vil evcc bruke sin egen interne leverandør-ID.",
+      "labelDeviceId": "Enhets-ID",
+      "labelVendorId": "Leverandør-ID",
+      "title": "SMA Sunny Home Manager"
+    },
+    "sponsor": {
+      "addToken": "Angi token",
+      "changeToken": "Endre token",
+      "description": "Sponsormodellen hjelper oss med å opprettholde prosjektet og utvikle nye og spennende funksjoner på en bærekraftig måte. Som sponsor får du tilgang til alle laderimplementeringer.",
+      "descriptionToken": "Sponsorer finner sin token på {url}. For å komme i gang tilbyr vi en {trialToken}.",
+      "enterYourToken": "Skriv inn tokenet ditt",
+      "error": "Sponsortokenet er ikke gyldig.",
+      "invalid": "ugyldig",
+      "labelToken": "Sponsortoken",
+      "title": "Sponsing",
+      "tokenRequired": "Du må konfigurere en sponsortoken før du kan opprette denne enheten.",
+      "tokenRequiredFeature": "Denne funksjonen krever en sponsortoken.",
+      "tokenRequiredLearnMore": "Lær mer.",
+      "tokenRequiredShort": "Ingen sponsortoken konfigurert.",
+      "trialToken": "prøveversjon",
+      "viaYaml": "via evcc.yaml",
+      "yourToken": "Din token"
+    },
+    "system": {
+      "backupRestore": {
+        "backup": {
+          "action": "Last ned sikkerhetskopi...",
+          "confirmationButton": "Last ned sikkerhetskopi",
+          "confirmationText": "Last ned databasefilen.",
+          "description": "Sikkerhetskopier dataene dine til en fil. Denne filen kan brukes til å gjenopprette dataene dine i tilfelle systemfeil.",
+          "title": "Sikkerhetskopi"
+        },
+        "cancel": "Avbryt",
+        "description": "Sikkerhetskopier, gjenopprett og tilbakestill dataene dine. Nyttig hvis du vil flytte dataene dine til et annet system.",
+        "note": "Merk: Alle ovennevnte handlinger påvirker kun databasedataene dine. Konfigurasjonsfilen evcc.yaml forblir uendret.",
+        "reset": {
+          "action": "Tilbakestill...",
+          "confirmationButton": "Tilbakestill og start på nytt",
+          "confirmationText": "Dette vil slette de valgte dataene permanent. Sørg for at du har lastet ned en sikkerhetskopi først.",
+          "description": "Har du problemer med konfigurasjonen og ønsker å starte på nytt? Slett alle data og start på nytt.",
+          "sessions": "Ladingsøkter",
+          "sessionsDescription": "Sletter historikken for ladingsøktene dine.",
+          "settings": "Konfigurasjon og innstillinger",
+          "settingsDescription": "Sletter alle konfigurerte enheter, tjenester, planer, hurtigbuffer osv.",
+          "title": "Tilbakestill"
+        },
+        "restore": {
+          "action": "Gjenopprett...",
+          "confirmationButton": "Gjenopprett og start på nytt",
+          "confirmationText": "Dette vil overskrive hele databasen din. Sørg for at du har lastet ned en sikkerhetskopi først.",
+          "description": "Gjenopprett dataene dine fra en sikkerhetskopifil. Dette vil overskrive alle dine nåværende data.",
+          "labelFile": "Sikkerhetskopifil",
+          "title": "Gjenopprett"
+        },
+        "title": "Sikkerhetskopiering og gjenoppretting"
+      },
+      "logs": "Loggfiler",
+      "restart": "Start på nytt",
+      "restartRequiredDescription": "Start på nytt for å se effekten.",
+      "restartRequiredMessage": "Konfigurasjonen er endret.",
+      "restartingDescription": "Vennligst vent…",
+      "restartingMessage": "Starter evcc på nytt."
+    },
+    "tariffs": {
+      "description": "Definer energitariffene dine for å beregne kostnadene for ladingen."
     },
     "validation": {
       "failed": "mislykket",

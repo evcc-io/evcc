@@ -1,4 +1,24 @@
 {
+  "authProviders": {
+    "authCode": "验证码",
+    "authCodeHelp": "复制此代码并在下一步中使用。有效期为{duration}。",
+    "authorizationFailed": "授权失败",
+    "authorizationRequired": "需要授权",
+    "authorizationSuccessful": "授权成功",
+    "buttonConnect": "连接到 {provider}",
+    "buttonDisconnect": "断开连接",
+    "confirmLogout": "您确定要断开 {title} 的连接吗？",
+    "connect": "连接",
+    "disconnect": "断开连接",
+    "loggedOut": "已成功注销",
+    "logoutFailed": "注销失败",
+    "modalDescriptionLogin": "完成授权流程以建立与{provider}的连接。",
+    "modalDescriptionLogout": "这将断开您的{provider}账户连接，并取消对其数据的访问权限。",
+    "success": "{title}现已连接完毕，可立即使用。",
+    "successCloseModal": "现在您可以关闭此对话框了。",
+    "successCloseTab": "现在您可以关闭这个标签页了。",
+    "title": "授权状态"
+  },
   "batterySettings": {
     "batteryLevel": "电量",
     "bufferStart": {
@@ -40,12 +60,21 @@
       "chargers": "电动汽车充电桩",
       "generic": "通用集成",
       "heatingdevices": "加热设备",
+      "ocppConfirmContinue": "您的充电器尚未连接到EVCC。确定要继续吗？",
+      "ocppConnected": "连接成功！",
+      "ocppDescription": "evcc内置了OCPP服务器。请按以下步骤操作：",
       "ocppHelp": "将此URL复制到您的充电器配置中。详细信息请查看制造商的手册。充电器将自动将其唯一标识符（站点ID）附加到URL。在极少数情况下，您可能需要手动指定标识符。示例：`{url}`",
       "ocppLabel": "OCPP 服务器 URL",
+      "ocppNextStep": "下一步",
+      "ocppStep1": "将您的充电器配置为使用evcc作为OCPP服务器。",
+      "ocppStep2": "请等待您的充电器连接到EVCC。",
+      "ocppStep3": "继续并完成配置。",
+      "ocppWaiting": "等待连接",
       "switchsockets": "可切换插座",
       "template": "制造商",
       "titleAdd": {
-        "charging": "添加充电桩"
+        "charging": "添加充电桩",
+        "heating": "添加加热器"
       },
       "titleEdit": {
         "charging": "编辑充电桩"
