@@ -114,6 +114,8 @@ func (c *Connection) GetFloatState(entity string) (float64, error) {
 		case "":
 			value /= 1e3
 		case "k":
+		case "M":
+			value *= 1e3
 		default:
 			return 0, fmt.Errorf("invalid unit '%s' for entity %s: %w", state.Attributes.UnitOfMeasurement, entity, err)
 		}
