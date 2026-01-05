@@ -109,24 +109,49 @@
       "amount": "Beløp",
       "broker": "Megler",
       "bucket": "Bucket",
+      "capacity": "Kapasitet",
       "chargeStatus": "Status",
+      "chargeStatusA": "ikke tilkoblet",
+      "chargeStatusB": "tilkoblet",
+      "chargeStatusC": "lading",
+      "chargeStatusE": "ingen strøm",
+      "chargeStatusF": "feil",
+      "chargedEnergy": "Ladet",
+      "co2": "Nett CO₂",
+      "configured": "Konfigurert",
+      "currency": "Valuta",
+      "enabled": "Aktivert",
+      "energy": "Energi",
+      "gridPrice": "Nettpris",
+      "hemsActiveLimit": "Aktiv grense",
+      "hemsType": "Kommunikasjon",
+      "identifier": "RFID-Identifikator",
+      "no": "nei",
+      "org": "Organisasjon",
       "phaseCurrents": "Strøm L1, L2, L3",
       "phasePowers": "Effekt L1, L2, L3",
       "phaseVoltages": "Spenning L1, L2, L3",
       "power": "Effekt",
       "powerRange": "Effekt",
+      "range": "Rekkevidde",
       "singlePhase": "Enfase",
       "soc": "Lade",
       "temp": "Temperatur",
       "yes": "ja"
     },
+    "deviceValueChargeStatus": {
+      "A": "A (ikke tilkoblet)",
+      "B": "B (tilkoblet)"
+    },
     "deviceValueHemsType": {
-      "eebus": "via EEBus"
+      "eebus": "via EEBus",
+      "relay": "via rele"
     },
     "eebus": {
       "title": "EEBus"
     },
     "form": {
+      "danger": "Fare",
       "deprecated": "utdatert",
       "example": "Eksempel",
       "optional": "valgfritt"
