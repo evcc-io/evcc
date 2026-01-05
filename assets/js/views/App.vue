@@ -1,18 +1,22 @@
 <template>
 	<div class="app">
-		<router-view :notifications="notifications" :offline="offline"></router-view>
+		<router-view
+			v-if="showRoutes"
+			:notifications="notifications"
+			:offline="offline"
+		></router-view>
 
 		<GlobalSettingsModal v-bind="globalSettingsProps" />
 		<BatterySettingsModal v-if="batteryModalAvailabe" v-bind="batterySettingsProps" />
 		<ForecastModal v-bind="forecastModalProps" />
 		<HelpModal />
 		<PasswordModal />
-		<LoginModal />
+		<LoginModal v-bind="loginModalProps" />
 		<OfflineIndicator v-bind="offlineIndicatorProps" />
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import store from "../store";
 import GlobalSettingsModal from "../components/GlobalSettings/GlobalSettingsModal.vue";
 import BatterySettingsModal from "../components/Battery/BatterySettingsModal.vue";
@@ -22,18 +26,19 @@ import PasswordModal from "../components/Auth/PasswordModal.vue";
 import LoginModal from "../components/Auth/LoginModal.vue";
 import HelpModal from "../components/HelpModal.vue";
 import collector from "../mixins/collector";
+import { defineComponent } from "vue";
 
 // assume offline if not data received for 5 minutes
 let lastDataReceived = new Date();
 const maxDataAge = 60 * 1000 * 5;
 setInterval(() => {
-	if (new Date() - lastDataReceived > maxDataAge) {
+	if (new Date().getTime() - lastDataReceived.getTime() > maxDataAge) {
 		console.log("no data received, assume we are offline");
 		window.app.setOffline();
 	}
 }, 1000);
 
-export default {
+export default defineComponent({
 	name: "App",
 	components: {
 		GlobalSettingsModal,
@@ -50,7 +55,11 @@ export default {
 		offline: Boolean,
 	},
 	data: () => {
-		return { reconnectTimeout: null, ws: null, authNotConfigured: false };
+		return {
+			reconnectTimeout: null as number | null,
+			ws: null as WebSocket | null,
+			authNotConfigured: false,
+		};
 	},
 	head() {
 		return { title: "...", titleTemplate: "%s | evcc" };
@@ -62,17 +71,27 @@ export default {
 		batteryModalAvailabe() {
 			return store.state.battery?.length;
 		},
+		showRoutes() {
+			return this.state.startupCompleted;
+		},
+		state() {
+			const { state, uiLoadpoints } = store;
+			return { ...state, uiLoadpoints: uiLoadpoints.value };
+		},
 		globalSettingsProps() {
-			return this.collectProps(GlobalSettingsModal, store.state);
+			return this.collectProps(GlobalSettingsModal, this.state);
 		},
 		batterySettingsProps() {
-			return this.collectProps(BatterySettingsModal, store.state);
+			return this.collectProps(BatterySettingsModal, this.state);
 		},
 		offlineIndicatorProps() {
-			return this.collectProps(OfflineIndicator, store.state);
+			return this.collectProps(OfflineIndicator, this.state);
 		},
 		forecastModalProps() {
-			return this.collectProps(ForecastModal, store.state);
+			return this.collectProps(ForecastModal, this.state);
+		},
+		loginModalProps() {
+			return this.collectProps(LoginModal, this.state);
 		},
 	},
 	watch: {
@@ -95,20 +114,25 @@ export default {
 	},
 	unmounted() {
 		this.disconnect();
-		window.clearTimeout(this.reconnectTimeout);
+		this.clearReconnectTimeout();
 		document.removeEventListener("visibilitychange", this.pageVisibilityChanged, false);
 	},
 	methods: {
+		clearReconnectTimeout() {
+			if (this.reconnectTimeout) {
+				window.clearTimeout(this.reconnectTimeout);
+			}
+		},
 		pageVisibilityChanged() {
 			if (document.hidden) {
-				window.clearTimeout(this.reconnectTimeout);
+				this.clearReconnectTimeout();
 				this.disconnect();
 			} else {
 				this.connect();
 			}
 		},
 		reconnect() {
-			window.clearTimeout(this.reconnectTimeout);
+			this.clearReconnectTimeout();
 			this.reconnectTimeout = window.setTimeout(() => {
 				this.disconnect();
 				this.connect();
@@ -152,7 +176,7 @@ export default {
 			this.ws = new WebSocket(uri);
 			this.ws.onerror = () => {
 				console.log({ message: "Websocket error. Trying to reconnect." });
-				this.ws.close();
+				this.ws?.close();
 			};
 			this.ws.onopen = () => {
 				console.log("websocket connected");
@@ -165,14 +189,15 @@ export default {
 			this.ws.onmessage = (evt) => {
 				try {
 					const msg = JSON.parse(evt.data);
-					if (msg.startup) {
+					if (msg.startupCompleted) {
 						store.reset();
 					}
 					store.update(msg);
 					lastDataReceived = new Date();
 				} catch (error) {
+					const e = error as Error;
 					window.app.raise({
-						message: `Failed to parse web socket data: ${error.message} [${evt.data}]`,
+						message: `Failed to parse web socket data: ${e.message} [${evt.data}]`,
 					});
 				}
 			};
@@ -181,7 +206,7 @@ export default {
 			window.location.reload();
 		},
 	},
-};
+});
 </script>
 <style scoped>
 .app {

@@ -19,22 +19,24 @@ params:
     type: bool
     default: false
     description:
-      de: "Der Wechselrichter hat einen dritten PV-Eingang (MPPT3)"
-      en: "The inverter has a third PV input (MPPT3)"
+      de: Dritter PV-Eingang
+      en: Third PV input
+    help:
+      de: Der Wechselrichter hat einen dritten PV-Eingang (MPPT3)
+      en: The inverter has a third PV input (MPPT3)
   - name: storageunit
     type: int
     default: 1
     advanced: true
-  - name: capacity
-    advanced: true
   - name: maxacpower
+  - preset: battery-params
   - name: defaultmode
     default: 0 # "SelfUse"
     advanced: true
 render: |
   type: custom
-  power:
   {{- if eq .usage "grid" }}
+  power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
@@ -52,6 +54,7 @@ render: |
     scale: 0.1
   {{- end }}
   {{- if eq .usage "pv" }}
+  power:
     source: calc
     add:
     - source: modbus
@@ -85,6 +88,7 @@ render: |
   maxacpower: {{ .maxacpower }} # W
   {{- end }}
   {{- if eq .usage "battery" }}
+  power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
@@ -172,5 +176,5 @@ render: |
               address: 0x001F # SolarChargeUseMode
               type: writesingle
               decode: uint16
-  capacity: {{ .capacity }} # kWh
+  {{- include "battery-params" . }}
   {{- end }}

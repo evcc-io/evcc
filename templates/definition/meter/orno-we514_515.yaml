@@ -1,0 +1,19 @@
+template: orno-we514_515
+products:
+  - brand: ORNO
+    description:
+      generic: WE-514
+  - brand: ORNO
+    description:
+      generic: WE-515
+params:
+  - name: usage
+    choice: ["pv", "charge"]
+  - name: modbus
+    choice: ["rs485"]
+render: |
+  type: mbmd
+  {{- include "modbus" . }}
+  model: orno1p
+  power: {{ if eq .usage "pv" }}-{{ end }}Power
+  energy: Sum

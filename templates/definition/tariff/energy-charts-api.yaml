@@ -32,19 +32,24 @@ params:
         "SI",
       ]
     default: DE-LU
+    description:
+      en: Bidding zone
+      de: Gebotszone
     help:
-      de: "Gebotszonen - https://api.energy-charts.info/#/prices/day_ahead_price_price_get"
-      en: "Bidding zones - https://api.energy-charts.info/#/prices/day_ahead_price_price_get"
+      de: "siehe https://api.energy-charts.info/#/prices/day_ahead_price_price_get"
+      en: "see https://api.energy-charts.info/#/prices/day_ahead_price_price_get"
   - preset: tariff-base
+  - preset: tariff-features
 render: |
   type: custom
   {{ include "tariff-base" . }}
+  {{ include "tariff-features" . }}
   forecast:
     source: http
     uri: https://api.energy-charts.info/price?bzn={{ .bzn }}&end={{ `{{ addDate now 0 0 1 | date "2006-01-02" }}` }}
     jq: |
       [.unix_seconds, .price] | transpose | map({
         "start": .[0] | todate,
-        "end":   .[0]+3600 | todate,
+        "end":   .[0]+900 | todate,
         "value": .[1]/1000
       }) | tostring

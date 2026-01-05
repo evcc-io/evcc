@@ -41,7 +41,7 @@
 								class="d-flex justify-content-end mt-3"
 								:title="fmtAbsoluteDate(msg.time)"
 							>
-								{{ fmtTimeAgo(msg.time - new Date()) }}
+								{{ fmtTimeAgo(msg.time.getTime() - new Date().getTime()) }}
 							</small>
 							<p class="d-flex align-items-baseline">
 								<shopicon-regular-exclamationtriangle
@@ -86,16 +86,23 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import "@h2d2/shopicons/es/regular/exclamationtriangle";
 import formatter from "@/mixins/formatter";
+import { defineComponent, type PropType } from "vue";
+import type { Notification, Timeout, UiLoadpoint } from "@/types/evcc";
 
-export default {
+export default defineComponent({
 	name: "Notifications",
 	mixins: [formatter],
 	props: {
-		notifications: Array,
-		loadpointTitles: Array,
+		notifications: { type: Array as PropType<Notification[]>, default: () => [] },
+		loadpoints: { type: Array as PropType<UiLoadpoint[]>, default: () => [] },
+	},
+	data() {
+		return {
+			interval: null as Timeout,
+		};
 	},
 	computed: {
 		iconVisible() {
@@ -113,14 +120,18 @@ export default {
 		}, 10 * 1000);
 	},
 	unmounted() {
-		clearTimeout(this.interval);
+		if (this.interval) {
+			clearTimeout(this.interval);
+		}
 	},
 	methods: {
-		message({ message, lp }) {
+		message({ message, lp }: { message: string | string[]; lp?: number }) {
 			const lines = Array.isArray(message) ? message : [message];
 			if (lp) {
-				// add loadpoint title to first line
-				lines[0] = `${this.loadpointTitles[lp - 1] || lp}: ${lines[0]}`;
+				// Find loadpoint by id (which is the original 1-based index)
+				const loadpoint = this.loadpoints.find((l) => l.id === String(lp));
+				const title = loadpoint?.displayTitle || lp;
+				lines[0] = `${title}: ${lines[0]}`;
 			}
 			return lines;
 		},
@@ -128,5 +139,5 @@ export default {
 			window.app?.clear();
 		},
 	},
-};
+});
 </script>

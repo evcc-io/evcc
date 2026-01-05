@@ -145,7 +145,7 @@ export default defineComponent({
 			// fallback to first available type
 			this.selectedType =
 				Object.values(ForecastType).find((type) => availableTypes[type]) ||
-				Object.values(ForecastType)[0];
+				Object.values(ForecastType)[0]!;
 		},
 		changeAdjusted() {
 			settings.solarAdjusted = !settings.solarAdjusted;

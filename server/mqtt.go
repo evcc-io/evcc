@@ -1,7 +1,6 @@
 package server
 
 import (
-	"encoding/json"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -17,12 +16,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/samber/lo"
 )
-
-// MQTTMarshaler is the interface implemented by types that
-// can marshal themselves into valid an MQTT string representation.
-type MQTTMarshaler interface {
-	MarshalMQTT() ([]byte, error)
-}
 
 // MQTT is the MQTT server. It uses the MQTT client for publishing.
 type MQTT struct {
@@ -59,7 +52,7 @@ func NewMQTT(root string, site site.API) (*MQTT, error) {
 	return m, err
 }
 
-func (m *MQTT) encode(v interface{}) string {
+func (m *MQTT) encode(v any) string {
 	// nil should erase the value
 	if v == nil {
 		return ""
@@ -85,19 +78,29 @@ func (m *MQTT) encode(v interface{}) string {
 	}
 }
 
-func (m *MQTT) publishComplex(topic string, retained bool, payload interface{}) {
+func (m *MQTT) publishComplex(topic string, retained bool, payload any) {
 	if _, ok := payload.(fmt.Stringer); ok || payload == nil {
 		m.publishSingleValue(topic, retained, payload)
 		return
 	}
 
-	if mm, ok := payload.(MQTTMarshaler); ok {
-		if b, err := mm.MarshalMQTT(); err == nil {
+	if mm, ok := payload.(api.BytesMarshaler); ok {
+		if b, err := mm.MarshalBytes(); err == nil {
 			m.publishSingleValue(topic, retained, string(b))
 		} else {
-			m.log.ERROR.Printf("marshal mqtt: %v", err)
+			m.log.ERROR.Printf("marshal bytes: %v", err)
 		}
 		return
+	}
+
+	if mm, ok := payload.(api.StructMarshaler); ok {
+		if d, err := mm.MarshalStruct(); err != nil {
+			m.log.ERROR.Printf("marshal struct: %v", err)
+			return
+		} else {
+			payload = d
+			// fallthrough
+		}
 	}
 
 	switch typ := reflect.TypeOf(payload); typ.Kind() {
@@ -153,11 +156,11 @@ func (m *MQTT) publishString(topic string, retained bool, payload string) {
 	m.Handler.Publish(topic, retained, m.encode(payload))
 }
 
-func (m *MQTT) publishSingleValue(topic string, retained bool, payload interface{}) {
+func (m *MQTT) publishSingleValue(topic string, retained bool, payload any) {
 	m.publisher(topic, retained, m.encode(payload))
 }
 
-func (m *MQTT) publish(topic string, retained bool, payload interface{}) {
+func (m *MQTT) publish(topic string, retained bool, payload any) {
 	// publish phase values
 	if slice, ok := payload.([]float64); ok && len(slice) == 3 {
 		var total float64
@@ -211,13 +214,18 @@ func (m *MQTT) listenSiteSetters(topic string, site site.API) error {
 				lp.SetSmartCostLimit(limit)
 			}
 		}))},
-		{"batteryGridChargeLimit", floatPtrSetter(pass(site.SetBatteryGridChargeLimit))},
-		{"batteryMode", ptrSetter(api.BatteryModeString, pass(func(m *api.BatteryMode) {
+		{"smartFeedInPriorityLimit", floatPtrSetter(pass(func(limit *float64) {
+			for _, lp := range site.Loadpoints() {
+				lp.SetSmartFeedInPriorityLimit(limit)
+			}
+		}))},
+		{"batteryGridChargeLimit", floatPtrSetter(site.SetBatteryGridChargeLimit)},
+		{"batteryMode", ptrSetter(api.BatteryModeString, func(m *api.BatteryMode) error {
 			if m == nil {
 				m = lo.ToPtr(api.BatteryUnknown)
 			}
-			site.SetBatteryModeExternal(*m)
-		}))},
+			return site.SetBatteryModeExternal(*m)
+		})},
 	} {
 		if err := m.Handler.ListenSetter(topic+"/"+s.topic, s.fun); err != nil {
 			return err
@@ -241,19 +249,10 @@ func (m *MQTT) listenLoadpointSetters(topic string, site site.API, lp loadpoint.
 		{"enableDelay", durationSetter(pass(lp.SetEnableDelay))},
 		{"disableDelay", durationSetter(pass(lp.SetDisableDelay))},
 		{"smartCostLimit", floatPtrSetter(pass(lp.SetSmartCostLimit))},
+		{"smartFeedInPriorityLimit", floatPtrSetter(pass(lp.SetSmartFeedInPriorityLimit))},
 		{"batteryBoost", boolSetter(lp.SetBatteryBoost)},
-		{"planEnergy", func(payload string) error {
-			var plan struct {
-				Time         time.Time `json:"time"`
-				Precondition int64     `json:"precondition"`
-				Value        float64   `json:"value"`
-			}
-			err := json.Unmarshal([]byte(payload), &plan)
-			if err == nil {
-				err = lp.SetPlanEnergy(plan.Time, time.Duration(plan.Precondition)*time.Second, plan.Value)
-			}
-			return err
-		}},
+		{"planStrategy", planStrategySetter(lp.SetPlanStrategy)},
+		{"planEnergy", planGoalSetter(lp.SetPlanEnergy)},
 		{"vehicle", func(payload string) error {
 			// https://github.com/evcc-io/evcc/issues/11184 empty payload is swallowed by listener
 			if isEmpty(payload) {
@@ -279,18 +278,8 @@ func (m *MQTT) listenVehicleSetters(topic string, v vehicle.API) error {
 	for _, s := range []setter{
 		{"limitSoc", intSetter(pass(v.SetLimitSoc))},
 		{"minSoc", intSetter(pass(v.SetMinSoc))},
-		{"planSoc", func(payload string) error {
-			var plan struct {
-				Time         time.Time `json:"time"`
-				Precondition int64     `json:"precondition"`
-				Value        int       `json:"value"`
-			}
-			err := json.Unmarshal([]byte(payload), &plan)
-			if err == nil {
-				err = v.SetPlanSoc(plan.Time, time.Duration(plan.Precondition)*time.Second, plan.Value)
-			}
-			return err
-		}},
+		{"planStrategy", planStrategySetter(v.SetPlanStrategy)},
+		{"planSoc", planGoalSetter(v.SetPlanSoc)},
 	} {
 		if err := m.Handler.ListenSetter(topic+"/"+s.topic, s.fun); err != nil {
 			return err

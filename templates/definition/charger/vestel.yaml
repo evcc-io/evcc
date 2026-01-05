@@ -6,7 +6,10 @@ products:
       generic: Unite
   - brand: Vestel
     description:
-      generic: EVC04 Home Smart, Connect Plus
+      generic: EVC04 Home Smart
+  - brand: Vestel
+    description:
+      generic: Connect Plus
   - brand: Webasto
     description:
       generic: Unite

@@ -15,8 +15,7 @@ params:
   - name: modbus
     choice: ["tcpip"]
     id: 2
-  - name: capacity
-    advanced: true
+  - preset: battery-params
 render: |
   type: custom
   {{- if eq .usage "pv" }}
@@ -100,5 +99,5 @@ render: |
       address: 30845 # Battery Soc, %
       type: holding
       decode: uint32nan
-  capacity: {{ .capacity }} # kWh
+  {{- include "battery-params" . }}
   {{- end }}

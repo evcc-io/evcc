@@ -1,6 +1,9 @@
 <template>
 	<div class="loadpoint d-flex flex-column pt-4 pb-2 px-3 px-sm-4 mx-2 mx-sm-0">
-		<div class="d-block d-sm-flex justify-content-between align-items-center mb-3">
+		<div
+			class="d-block d-sm-flex justify-content-between align-items-center mb-3"
+			:class="expandLoadpointHeader ? 'd-lg-block d-xl-flex' : ''"
+		>
 			<div class="d-flex justify-content-between align-items-center mb-3 text-truncate">
 				<h3 class="me-2 mb-0 text-truncate d-flex">
 					<VehicleIcon
@@ -12,18 +15,24 @@
 						{{ loadpointTitle }}
 					</div>
 				</h3>
-				<LoadpointSettingsButton class="d-block d-sm-none" @click="openSettingsModal" />
+				<LoadpointSettingsButton
+					:class="expandLoadpointHeader ? 'd-lg-block d-xl-none' : ''"
+					class="d-block d-sm-none"
+					@click="openSettingsModal"
+				/>
 			</div>
 			<div class="mb-3 d-flex align-items-center">
 				<Mode class="flex-grow-1" v-bind="modeProps" @updated="setTargetMode" />
 				<LoadpointSettingsButton
 					:id="id"
+					:class="expandLoadpointHeader ? 'd-lg-none d-xl-block' : ''"
 					class="d-none d-sm-block ms-2"
 					@click="openSettingsModal"
 				/>
 			</div>
 		</div>
 		<LoadpointSettingsModal
+			:id="id"
 			v-bind="settingsModal"
 			@maxcurrent-updated="setMaxCurrent"
 			@mincurrent-updated="setMinCurrent"
@@ -100,15 +109,24 @@ import VehicleComponent from "../Vehicles/Vehicle.vue";
 import Phases from "./Phases.vue";
 import LabelAndValue from "../Helper/LabelAndValue.vue";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
-import collector from "@/mixins/collector";
+import collector from "@/mixins/collector.js";
 import SettingsButton from "./SettingsButton.vue";
 import SettingsModal from "./SettingsModal.vue";
 import VehicleIcon from "../VehicleIcon";
 import SessionInfo from "./SessionInfo.vue";
-import smartCostAvailable from "@/utils/smartCostAvailable";
 import Modal from "bootstrap/js/dist/modal";
 import { defineComponent, type PropType } from "vue";
-import type { CHARGE_MODE, PHASES, Timeout, Vehicle, Forecast } from "@/types/evcc";
+import type {
+	CHARGE_MODE,
+	PHASES,
+	PHASE_ACTION,
+	PV_ACTION,
+	CHARGER_STATUS_REASON,
+	Timeout,
+	Vehicle,
+	Forecast,
+	SMART_COST_TYPE,
+} from "@/types/evcc";
 
 export default defineComponent({
 	name: "Loadpoint",
@@ -124,12 +142,12 @@ export default defineComponent({
 	},
 	mixins: [formatter, collector],
 	props: {
-		id: Number,
+		id: { type: String, required: true },
 		single: Boolean,
 
 		// main
 		title: String,
-		mode: String,
+		mode: String as PropType<CHARGE_MODE>,
 		effectiveLimitSoc: Number,
 		limitEnergy: Number,
 		remoteDisabled: String,
@@ -141,16 +159,16 @@ export default defineComponent({
 
 		// session
 		sessionEnergy: Number,
-		sessionCo2PerKWh: Number,
-		sessionPricePerKWh: Number,
-		sessionPrice: Number,
+		sessionCo2PerKWh: Number as PropType<number | null>,
+		sessionPricePerKWh: Number as PropType<number | null>,
+		sessionPrice: Number as PropType<number | null>,
 		sessionSolarPercentage: Number,
 
 		// charger
-		chargerStatusReason: String,
+		chargerStatusReason: String as PropType<CHARGER_STATUS_REASON | null>,
 		chargerFeatureIntegratedDevice: Boolean,
 		chargerFeatureHeating: Boolean,
-		chargerIcon: String,
+		chargerIcon: String as PropType<string | null>,
 
 		// vehicle
 		connected: Boolean,
@@ -164,20 +182,21 @@ export default defineComponent({
 		vehicleLimitSoc: Number,
 		vehicles: Array as PropType<Vehicle[]>,
 		planActive: Boolean,
-		planProjectedStart: String,
-		planProjectedEnd: String,
+		planProjectedStart: String as PropType<string | null>,
+		planProjectedEnd: String as PropType<string | null>,
 		planOverrun: { type: Number, default: 0 },
 		planEnergy: Number,
-		planPrecondition: Number,
-		planTime: String,
-		effectivePlanTime: String,
+		planTime: String as PropType<string | null>,
+		effectivePlanTime: String as PropType<string | null>,
 		effectivePlanSoc: Number,
+		effectivePlanPrecondition: Number,
+		effectivePlanContinuous: Boolean,
 		vehicleProviderLoggedIn: Boolean,
 		vehicleProviderLoginPath: String,
 		vehicleProviderLogoutPath: String,
 
 		// details
-		vehicleClimaterActive: Boolean,
+		vehicleClimaterActive: Boolean as PropType<boolean | null>,
 		vehicleWelcomeActive: Boolean,
 		chargePower: { type: Number, default: 0 },
 		chargedEnergy: { type: Number, default: 0 },
@@ -194,21 +213,30 @@ export default defineComponent({
 		connectedDuration: Number,
 		chargeCurrents: Array,
 		chargeRemainingEnergy: Number,
-		phaseAction: String,
+		phaseAction: String as PropType<PHASE_ACTION>,
 		phaseRemaining: { type: Number, default: 0 },
 		pvRemaining: { type: Number, default: 0 },
-		pvAction: String,
-		smartCostLimit: { type: Number, default: null },
-		smartCostType: String,
+		pvAction: String as PropType<PV_ACTION>,
+		smartCostLimit: { type: Number as PropType<number | null>, default: null },
+		smartCostType: String as PropType<SMART_COST_TYPE>,
+		smartCostAvailable: Boolean,
 		smartCostActive: Boolean,
-		smartCostNextStart: String,
+		smartCostNextStart: String as PropType<string | null>,
+		smartFeedInPriorityLimit: { type: Number as PropType<number | null>, default: null },
+		smartFeedInPriorityAvailable: Boolean,
+		smartFeedInPriorityActive: Boolean,
+		smartFeedInPriorityNextStart: String as PropType<string | null>,
 		tariffGrid: Number,
+		tariffFeedIn: Number,
 		tariffCo2: Number,
 		currency: String,
 		multipleLoadpoints: Boolean,
+		fullWidth: Boolean,
 		gridConfigured: Boolean,
 		pvConfigured: Boolean,
 		forecast: Object as PropType<Forecast>,
+		lastSmartCostLimit: Number,
+		lastSmartFeedInPriorityLimit: Number,
 	},
 	data() {
 		return {
@@ -220,6 +248,9 @@ export default defineComponent({
 		};
 	},
 	computed: {
+		expandLoadpointHeader() {
+			return this.multipleLoadpoints && !this.fullWidth;
+		},
 		vehicle() {
 			return this.vehicles?.find((v) => v.name === this.vehicleName);
 		},
@@ -277,11 +308,8 @@ export default defineComponent({
 		pvPossible() {
 			return this.pvConfigured || this.gridConfigured;
 		},
-		hasSmartCost() {
-			return smartCostAvailable(this.smartCostType);
-		},
 		batteryBoostAvailable() {
-			return this.batteryConfigured && this.$hiddenFeatures();
+			return this.batteryConfigured;
 		},
 		batteryBoostActive() {
 			return (

@@ -26,7 +26,7 @@ func init() {
 	registry.Add("ngeso", NewNgesoFromConfig)
 }
 
-func NewNgesoFromConfig(other map[string]interface{}) (api.Tariff, error) {
+func NewNgesoFromConfig(other map[string]any) (api.Tariff, error) {
 	var cc struct {
 		Region   string
 		Postcode string
@@ -47,11 +47,7 @@ func NewNgesoFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		data:           util.NewMonitor[api.Rates](2 * time.Hour),
 	}
 
-	done := make(chan error)
-	go t.run(done)
-	err := <-done
-
-	return t, err
+	return runOrError(t)
 }
 
 func (t *Ngeso) run(done chan error) {

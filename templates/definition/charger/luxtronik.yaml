@@ -2,28 +2,33 @@ template: luxtronik
 products:
   - brand: Buderus
     description:
-      generic: Luxtronik 2.1
+      generic: Logamatic HMC 20
+  - brand: Buderus
+    description:
+      generic: Logamatic HMC 20 Z
   - brand: alpha innotec
+  - brand: CTA All-In-One
     description:
-      generic: Luxtronik 2.1
-  - brand: CTA All-In-One (Aeroplus)
-    description:
-      generic: Luxtronik 2.1
+      generic: Aeroplus
   - brand: Elco
-    description:
-      generic: Luxtronik 2.1
   - brand: Nibe
     description:
-      generic: Luxtronik 2.1
-  - brand: Roth (ThermoAura, ThermoTerra)
+      generic: AP-AW10
+  - brand: Roth
     description:
-      generic: Luxtronik 2.1
+      generic: ThermoAura
+  - brand: Roth
+    description:
+      generic: ThermoTerra
   - brand: Novelan
     description:
-      generic: Luxtronik 2.1
-  - brand: Wolf (BWL/BWS)
+      generic: WPR NET
+  - brand: Wolf
     description:
-      generic: Luxtronik 2.1
+      generic: BWL
+  - brand: Wolf
+    description:
+      generic: BWS
 group: heating
 requirements:
   description:
@@ -36,8 +41,11 @@ params:
   - name: wwoffset
     type: float
     unit: K
+    description:
+      de: Anhebung der Warmwassertemperatur
+      en: Hot water temperature boost
     help:
-      de: Anhebung der Warmwassertemperatur. Erhöht evtl. den Verschleiss des Kompressors.
+      de: Erhöht evtl. den Verschleiss des Kompressors.
       en: Temperature boost offset for hot water. Possibly increases wear on compressor.
     default: 0.0
     example: 8.5
@@ -45,9 +53,9 @@ params:
   - name: heatoffset
     type: float
     unit: K
-    help:
-      de: Anhebung der Heizwassertemperatur.
-      en: Temperature boost offset for heating.
+    description:
+      de: Anhebung der Heizwassertemperatur
+      en: Heating temperature boost
     default: 0.0
     example: 2.0
 render: |
@@ -70,7 +78,7 @@ render: |
         source: modbus
         {{- include "modbus" . | indent 6 }}
         register:
-          address: 10040 # LPC mode
+          address: 10040 # LPC mode [0=No-Limit;1=Soft-Limit;2=Hard-Limit]
           type: holding
           encoding: uint16
     - name: HEAT
@@ -104,7 +112,7 @@ render: |
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
-              address: 10040 # LPC mode
+              address: 10040 # LPC mode [0=No-Limit;1=Soft-Limit;2=Hard-Limit]
               type: writeholding
               encoding: uint16
         {{ if gt $heatint 0 -}}
@@ -139,7 +147,7 @@ render: |
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
-              address: 10040 # LPC mode
+              address: 10040 # LPC mode [0=No-Limit;1=Soft-Limit;2=Hard-Limit]
               type: writeholding
               encoding: uint16
         {{ if gt $heatint 0 -}}
@@ -174,7 +182,7 @@ render: |
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
-              address: 10040 # LPC mode
+              address: 10040 # LPC mode [0=No-Limit;1=Soft-Limit;2=Hard-Limit]
               type: writeholding
               encoding: uint16
         {{ if gt $heatint 0 -}}
@@ -225,14 +233,22 @@ render: |
       type: input
       encoding: uint16
     scale: 0.1
+  limittemp:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: {{ if gt $waterint 0 -}} 10121 {{ else }} 10101 {{- end }} # 10101 = Temp. x10 RL-Soll, 10121 = Temp x10 WW-Soll, 10123 = Temp x10 Tdi_solltemp
+      type: input
+      encoding: int16
+    scale: 0.1
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 10301 # 10301 = kW x10 Power-In elektrisch
+      address: 10301 # 10301 = kW x0.01 Power-In elektrisch
       type: input
       encoding: uint16
-    scale: 0.1
+    scale: 100
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}

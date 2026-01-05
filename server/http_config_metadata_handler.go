@@ -1,12 +1,17 @@
 package server
 
 import (
+	"context"
+	"encoding/json"
 	"net/http"
 	"slices"
 	"strings"
 
+	"github.com/evcc-io/evcc/plugin/auth"
+	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/gorilla/mux"
+	"github.com/samber/lo"
 )
 
 var supportedLanguages = []string{"en", "de"}
@@ -17,6 +22,38 @@ func getLang(r *http.Request) string {
 		lang = supportedLanguages[0]
 	}
 	return lang
+}
+
+// authHandler returns the authorization status
+func authHandler(w http.ResponseWriter, r *http.Request) {
+	var res map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&res); err != nil {
+		jsonError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	var cc struct {
+		Type  string
+		Other map[string]any `mapstructure:",remain"`
+	}
+
+	if err := util.DecodeOther(res, &cc); err != nil {
+		jsonError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	ts, err := auth.NewFromConfig(context.Background(), cc.Type, cc.Other)
+	if err != nil {
+		jsonError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	if _, err := ts.Token(); err != nil {
+		jsonError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // templatesHandler returns the list of templates by class
@@ -32,6 +69,14 @@ func templatesHandler(w http.ResponseWriter, r *http.Request) {
 	lang := getLang(r)
 	templates.EncoderLanguage(lang)
 
+	// filter deprecated properties
+	filterParams := func(t templates.Template) templates.Template {
+		t.Params = lo.Filter(t.Params, func(p templates.Param, _ int) bool {
+			return !p.IsDeprecated()
+		})
+		return t
+	}
+
 	if name := r.URL.Query().Get("name"); name != "" {
 		res, err := templates.ByName(class, name)
 		if err != nil {
@@ -39,24 +84,16 @@ func templatesHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		jsonResult(w, res)
+		jsonWrite(w, filterParams(res))
 		return
 	}
 
-	// filter deprecated properties
-	res := make([]templates.Template, 0)
+	var res []templates.Template
 	for _, t := range templates.ByClass(class) {
-		params := make([]templates.Param, 0, len(t.Params))
-		for _, p := range t.Params {
-			if p.Deprecated == nil || !*p.Deprecated {
-				params = append(params, p)
-			}
-		}
-		t.Params = params
-		res = append(res, t)
+		res = append(res, filterParams(t))
 	}
 
-	jsonResult(w, res)
+	jsonWrite(w, res)
 }
 
 // productsHandler returns the list of products by class
@@ -76,17 +113,7 @@ func productsHandler(w http.ResponseWriter, r *http.Request) {
 	res := make(products, 0)
 	for _, t := range tmpl {
 		// if usage filter is specified, only include templates with matching usage
-		includeUsage := usage == ""
-		if !includeUsage {
-			for _, u := range t.Usages() {
-				if u == usage {
-					includeUsage = true
-					break
-				}
-			}
-		}
-
-		if includeUsage {
+		if usage == "" || slices.Contains(t.Usages(), usage) {
 			for _, p := range t.Products {
 				res = append(res, product{
 					Name:     p.Title(lang),
@@ -101,5 +128,5 @@ func productsHandler(w http.ResponseWriter, r *http.Request) {
 		return strings.Compare(strings.ToLower(a.Name), strings.ToLower(b.Name))
 	})
 
-	jsonResult(w, res)
+	jsonWrite(w, res)
 }

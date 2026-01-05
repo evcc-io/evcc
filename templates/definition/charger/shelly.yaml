@@ -1,6 +1,9 @@
 template: shelly
 products:
-  - brand: Shelly
+  - { brand: Shelly, description: { generic: 1 } }
+  - { brand: Shelly, description: { generic: Plus 1 } }
+  - { brand: Shelly, description: { generic: Pro 1 } }
+  - { brand: Shelly, description: { generic: Plug S } }
 group: switchsockets
 params:
   - name: host

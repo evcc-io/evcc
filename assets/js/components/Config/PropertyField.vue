@@ -33,7 +33,6 @@
 				class="btn btn-outline-secondary"
 				:class="key === value ? 'active' : ''"
 				:for="`icon_${key}`"
-				:aria-label="key"
 			>
 				<VehicleIcon v-if="key" :name="key" />
 				<shopicon-regular-minus v-else></shopicon-regular-minus>
@@ -52,6 +51,7 @@
 		class="w-50"
 		equal-width
 		transparent
+		:aria-label="label"
 		:options="[
 			{ value: false, name: $t('config.options.boolean.no') },
 			{ value: true, name: $t('config.options.boolean.yes') },
@@ -63,7 +63,7 @@
 			<option v-if="key !== null && name !== null" :key="key" :value="key">
 				{{ name }}
 			</option>
-			<hr v-else :key="idx" />
+			<option v-else :key="idx" disabled>─────</option>
 		</template>
 	</select>
 	<textarea
@@ -77,18 +77,33 @@
 		:required="required"
 		rows="4"
 	/>
-	<input
-		v-else
-		:id="id"
-		v-model="value"
-		class="form-control"
-		:class="inputClasses"
-		:type="inputType"
-		:step="step"
-		:placeholder="placeholder"
-		:required="required"
-		:autocomplete="masked ? 'off' : null"
-	/>
+	<div v-else class="position-relative">
+		<input
+			:id="id"
+			v-model="value"
+			:list="datalistId"
+			:class="`${datalistId && serviceValues.length > 0 ? 'form-select' : 'form-control'} ${inputClasses}`"
+			:type="inputType"
+			:step="step"
+			:placeholder="placeholder"
+			:required="required"
+			:autocomplete="masked || datalistId ? 'off' : null"
+		/>
+		<button
+			v-if="showClearButton"
+			type="button"
+			class="form-control-clear"
+			:aria-label="$t('config.general.clear')"
+			@click="value = ''"
+		>
+			&times;
+		</button>
+		<datalist v-if="showDatalist" :id="datalistId">
+			<option v-for="v in serviceValues" :key="v" :value="v">
+				{{ v }}
+			</option>
+		</datalist>
+	</div>
 </template>
 
 <script>
@@ -116,12 +131,29 @@ export default {
 		invalid: Boolean,
 		choice: { type: Array, default: () => [] },
 		modelValue: [String, Number, Boolean, Object],
+		label: String,
+		serviceValues: { type: Array, default: () => [] },
 	},
 	emits: ["update:modelValue"],
 	data: () => {
 		return { selectMode: false };
 	},
 	computed: {
+		datalistId() {
+			return this.serviceValues.length > 0 ? `${this.id}-datalist` : null;
+		},
+		showDatalist() {
+			if (!this.datalistId) return false;
+			const length = this.serviceValues.length;
+			// no values
+			if (length === 0) return false;
+			// value selected, dont offer single same option again
+			if (this.value && this.serviceValues.includes(this.value)) return false;
+			return true;
+		},
+		showClearButton() {
+			return this.datalistId && this.value;
+		},
 		inputType() {
 			if (this.masked) {
 				return "password";
@@ -144,6 +176,9 @@ export default {
 			let result = this.sizeClass;
 			if (this.invalid) {
 				result += " is-invalid";
+			}
+			if (this.showClearButton) {
+				result += " has-clear-button";
 			}
 			return result;
 		},
@@ -198,7 +233,7 @@ export default {
 			// Otherwise, convert them to the correct format
 			return values.map((value) => ({
 				key: value,
-				name: this.$t(`config.options.${this.property}.${value || "none"}`),
+				name: this.getOptionName(value),
 			}));
 		},
 		value: {
@@ -246,6 +281,10 @@ export default {
 		},
 	},
 	methods: {
+		getOptionName(value) {
+			const translationKey = `config.options.${this.property}.${value || "none"}`;
+			return this.$te(translationKey) ? this.$t(translationKey) : value;
+		},
 		toggleSelectMode() {
 			this.$nextTick(() => {
 				this.selectMode = !this.selectMode;

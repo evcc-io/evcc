@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2023 premultiply
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -65,7 +65,7 @@ func init() {
 //go:generate go tool decorate -f decoratePhoenixEVEth -b *PhoenixEVEth -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.ChargerEx,MaxCurrentMillis,func(float64) error" -t "api.Identifier,Identify,func() (string, error)"
 
 // NewPhoenixEVEthFromConfig creates a PhoenixEVEth charger from generic config
-func NewPhoenixEVEthFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewPhoenixEVEthFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: 255,
 	}
@@ -223,12 +223,13 @@ func (wb *PhoenixEVEth) voltages() (float64, float64, float64, error) {
 
 // getPhaseValues returns 3 sequential phase values
 func (wb *PhoenixEVEth) getPhaseValues(reg uint16) (float64, float64, float64, error) {
-	b, err := wb.conn.ReadInputRegisters(reg, 6)
+	const count = 3
+	b, err := wb.conn.ReadInputRegisters(reg, 2*count)
 	if err != nil {
 		return 0, 0, 0, err
 	}
 
-	var res [3]float64
+	var res [count]float64
 	for i := range res {
 		res[i] = float64(encoding.Int32LswFirst(b[4*i:]))
 	}

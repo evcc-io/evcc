@@ -4,7 +4,14 @@
 			class="overflow-x-auto overflow-x-md-hidden chart-container border-1"
 			@mouseleave="onMouseLeave"
 		>
-			<div style="position: relative; height: 220px" class="chart user-select-none">
+			<div
+				:style="{
+					position: 'relative',
+					height: '240px',
+					width: `${chartWidth}px`,
+				}"
+				class="user-select-none"
+			>
 				<!-- @vue-ignore -->
 				<Bar ref="chart" :data="chartData" :options="options" />
 			</div>
@@ -85,7 +92,7 @@ export default defineComponent({
 	computed: {
 		endDate() {
 			const end = new Date(this.startDate);
-			end.setHours(end.getHours() + 48);
+			end.setHours(end.getHours() + 96);
 			return end;
 		},
 		solarEntries() {
@@ -153,7 +160,7 @@ export default defineComponent({
 					backgroundColor: lighterColor(color),
 					borderColor: color,
 					fill: "start",
-					tension: 0.5,
+					tension: 0.05,
 					pointRadius: 0,
 					animation: {
 						y: { duration: this.animations ? 500 : 0 },
@@ -163,7 +170,7 @@ export default defineComponent({
 					order: active ? 0 : 1,
 				});
 			}
-			if (this.gridSlots.length > 0) {
+			if (this.gridSlots && this.gridSlots.length > 0) {
 				const active = this.selected === ForecastType.Price;
 				const color = active ? colors.price : colors.border;
 				datasets.push({
@@ -178,13 +185,13 @@ export default defineComponent({
 								: index === this.maxPriceIndex || index === this.minPriceIndex),
 					})),
 					yAxisID: "yPrice",
-					borderRadius: 8,
+					borderRadius: 2,
 					backgroundColor: color,
 					borderColor: color,
 					order: active ? 0 : 1,
 				});
 			}
-			if (this.co2Slots.length > 0) {
+			if (this.co2Slots && this.co2Slots.length > 0) {
 				const active = this.selected === ForecastType.Co2;
 				const color = active ? colors.co2 : colors.border;
 				datasets.push({
@@ -206,7 +213,7 @@ export default defineComponent({
 					yAxisID: "yCo2",
 					backgroundColor: color,
 					borderColor: color,
-					tension: 0.25,
+					tension: 0.05,
 					pointRadius: 0,
 					pointHoverRadius: active ? 4 : 0,
 					spanGaps: true,
@@ -217,6 +224,26 @@ export default defineComponent({
 			return {
 				datasets,
 			};
+		},
+		chartDataMaxDate() {
+			let result: Date | null = null;
+			for (const dataset of this.chartData.datasets) {
+				for (const data of dataset.data) {
+					if (!result || data.x.getTime() > result.getTime()) result = data.x;
+				}
+			}
+			return result;
+		},
+		chartWidth() {
+			const minWidth = 780;
+			const maxWidth = 1500; // allow diagram to to grow depending on available data
+			const realEndDate = this.chartDataMaxDate;
+			if (!realEndDate) return minWidth;
+			const maxRange = this.endDate.getTime() - this.startDate.getTime();
+			const realRange = realEndDate.getTime() - this.startDate.getTime();
+			if (maxRange <= 0 || realRange <= 0) return minWidth;
+			const scale = realRange / maxRange;
+			return Math.round(Math.min(maxWidth, Math.max(minWidth, scale * maxWidth)));
 		},
 		options() {
 			// eslint-disable-next-line @typescript-eslint/no-this-alias
@@ -257,7 +284,8 @@ export default defineComponent({
 							return context.dataset.borderColor;
 						},
 						align({ chart, dataset, dataIndex }: Context) {
-							const { min, max } = chart.scales["x"];
+							const scale = chart.scales["x"] as any;
+							const { min, max } = scale;
 							// @ts-expect-error no-explicit-any
 							const time = new Date(dataset.data[dataIndex]?.x).getTime();
 
@@ -426,20 +454,19 @@ export default defineComponent({
 			this.startDate = now;
 		},
 		filterSlots(slots: ForecastSlot[] = []) {
+			if (!slots) {
+				return undefined;
+			}
+
 			return slots.filter(
 				(slot) =>
 					new Date(slot.end) >= this.startDate && new Date(slot.start) <= this.endDate
 			);
 		},
 		filterEntries(entries: TimeseriesEntry[] = []) {
-			// include 1 hour before and after
-			const start = new Date(this.startDate);
-			start.setHours(start.getHours() - 1);
-			const end = new Date(this.endDate);
-			end.setHours(end.getHours() + 1);
-
 			return entries.filter(
-				(entry) => new Date(entry.ts) >= start && new Date(entry.ts) <= end
+				(entry) =>
+					new Date(entry.ts) >= this.startDate && new Date(entry.ts) <= this.endDate
 			);
 		},
 		onMouseLeave() {
@@ -466,8 +493,12 @@ export default defineComponent({
 			}
 		},
 		yMax(slots: ForecastSlot[] = []): number | undefined {
-			const value = this.maxValue(slots);
-			return value ? value * 1.15 : undefined;
+			const max = this.maxValue(slots);
+			if (!max) return undefined;
+			const fixedValues = slots.every((slot) => slot.value === max);
+			// add space to the top of the scale; shrink fixed-value datasets, they are not interesting and should not dominate the chart
+			const topSpace = fixedValues ? 3 : 1.15;
+			return max * topSpace;
 		},
 		yMaxEntry(entries: TimeseriesEntry[] = [], scale: number = 1): number | undefined {
 			const maxValue = this.maxEntryValue(entries);
@@ -477,12 +508,12 @@ export default defineComponent({
 		},
 		maxIndex(slots: ForecastSlot[] = []) {
 			return slots.reduce((max, slot, index) => {
-				return slot.value > slots[max].value ? index : max;
+				return slot.value > (slots[max]?.value || 0) ? index : max;
 			}, 0);
 		},
 		minIndex(slots: ForecastSlot[] = []) {
 			return slots.reduce((min, slot, index) => {
-				return slot.value < slots[min].value ? index : min;
+				return slot.value < (slots[min]?.value || 0) ? index : min;
 			}, 0);
 		},
 		maxValue(slots: ForecastSlot[] = []) {
@@ -493,7 +524,7 @@ export default defineComponent({
 		},
 		maxEntryIndex(entries: TimeseriesEntry[] = []) {
 			return entries.reduce((max, entry, index) => {
-				return entry.val > entries[max].val ? index : max;
+				return entry.val > (entries[max]?.val || 0) ? index : max;
 			}, 0);
 		},
 		yScaleOptions(type: ForecastType) {
@@ -516,15 +547,3 @@ export default defineComponent({
 	},
 });
 </script>
-
-<style scoped>
-.chart {
-	width: 780px;
-}
-
-@media (min-width: 992px) {
-	.chart {
-		width: 100%;
-	}
-}
-</style>

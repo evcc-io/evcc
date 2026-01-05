@@ -27,7 +27,7 @@ func init() {
 	registry.Add("awattar", NewAwattarFromConfig)
 }
 
-func NewAwattarFromConfig(other map[string]interface{}) (api.Tariff, error) {
+func NewAwattarFromConfig(other map[string]any) (api.Tariff, error) {
 	cc := struct {
 		embed  `mapstructure:",squash"`
 		Region string
@@ -50,11 +50,7 @@ func NewAwattarFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		data:  util.NewMonitor[api.Rates](2 * time.Hour),
 	}
 
-	done := make(chan error)
-	go t.run(done)
-	err := <-done
-
-	return t, err
+	return runOrError(t)
 }
 
 func (t *Awattar) run(done chan error) {

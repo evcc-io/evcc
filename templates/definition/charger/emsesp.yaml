@@ -28,9 +28,6 @@ params:
   - name: tempsource
     type: choice
     choice: ["warmwater"]
-    description:
-      de: "Temperaturquelle"
-      en: "Temperature source"
 render: |
   type: sgready
   power:

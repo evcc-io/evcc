@@ -39,6 +39,7 @@
 						name: $t(`settings.unit.${value}`),
 					}))
 				"
+				:aria-label="$t('settings.unit.label')"
 				equal-width
 			/>
 		</FormRow>
@@ -54,27 +55,12 @@
 						name: $t(`settings.time.${value}h`),
 					}))
 				"
+				:aria-label="$t('settings.time.label')"
 				equal-width
 			/>
 		</FormRow>
-		<FormRow id="telemetryEnabled" :label="$t('settings.telemetry.label')">
-			<TelemetrySettings :sponsorActive="sponsor && !!sponsor.name" class="mt-1 mb-0" />
-		</FormRow>
-		<FormRow id="hiddenFeaturesEnabled" :label="`${$t('settings.hiddenFeatures.label')} 🧪`">
-			<div class="form-check form-switch my-1">
-				<input
-					id="hiddenFeaturesEnabled"
-					v-model="hiddenFeatures"
-					class="form-check-input"
-					type="checkbox"
-					role="switch"
-				/>
-				<div class="form-check-label">
-					<label for="hiddenFeaturesEnabled">
-						{{ $t("settings.hiddenFeatures.value") }}
-					</label>
-				</div>
-			</div>
+		<FormRow v-if="loadpoints.length" :label="$t('settings.loadpoints.label')">
+			<LoadpointOrderSettings :loadpoints="loadpoints" />
 		</FormRow>
 		<FormRow v-if="fullscreenAvailable" :label="$t('settings.fullscreen.label')">
 			<button
@@ -88,29 +74,36 @@
 				{{ $t("settings.fullscreen.enter") }}
 			</button>
 		</FormRow>
+		<div class="small text-muted mb-3">
+			{{ $t("settings.deviceInfo") }}
+		</div>
 	</div>
 </template>
 
 <script lang="ts">
-import TelemetrySettings from "../TelemetrySettings.vue";
 import FormRow from "../Helper/FormRow.vue";
 import SelectGroup from "../Helper/SelectGroup.vue";
-import { getLocalePreference, setLocalePreference, LOCALES, removeLocalePreference } from "@/i18n";
-import { getThemePreference, setThemePreference, THEMES } from "@/theme";
-import { getUnits, setUnits, UNITS, is12hFormat, set12hFormat } from "@/units";
-import { getHiddenFeatures, setHiddenFeatures } from "@/featureflags";
+import LoadpointOrderSettings from "./LoadpointOrderSettings.vue";
+import {
+	getLocalePreference,
+	setLocalePreference,
+	LOCALES,
+	removeLocalePreference,
+} from "@/i18n.ts";
+import { getThemePreference, setThemePreference } from "@/theme.ts";
+import { getUnits, setUnits, is12hFormat, set12hFormat } from "@/units";
 import { isApp } from "@/utils/native";
 import { defineComponent, type PropType } from "vue";
-import type { Sponsor } from "@/types/evcc";
+import { LENGTH_UNIT, THEME, type UiLoadpoint } from "@/types/evcc";
 
 const TIME_12H = "12";
 const TIME_24H = "24";
 
 export default defineComponent({
 	name: "UserInterfaceSettings",
-	components: { TelemetrySettings, FormRow, SelectGroup },
+	components: { FormRow, SelectGroup, LoadpointOrderSettings },
 	props: {
-		sponsor: Object as PropType<Sponsor>,
+		loadpoints: { type: Array as PropType<UiLoadpoint[]>, default: () => [] },
 	},
 	data() {
 		return {
@@ -118,10 +111,9 @@ export default defineComponent({
 			language: getLocalePreference() || "",
 			unit: getUnits(),
 			timeFormat: is12hFormat() ? TIME_12H : TIME_24H,
-			hiddenFeatures: getHiddenFeatures(),
 			fullscreenActive: false,
-			THEMES,
-			UNITS,
+			THEMES: Object.values(THEME),
+			UNITS: Object.values(LENGTH_UNIT),
 			TIME_FORMATS: [TIME_24H, TIME_12H],
 		};
 	},
@@ -131,7 +123,7 @@ export default defineComponent({
 				return { value: key, name: value[1] };
 			});
 			// sort by name
-			locales.sort((a, b) => (a.name < b.name ? -1 : 1));
+			locales.sort((a, b) => ((a.name || "") < (b.name || "") ? -1 : 1));
 			return locales;
 		},
 		fullscreenAvailable: () => {
@@ -152,12 +144,10 @@ export default defineComponent({
 		theme(value) {
 			setThemePreference(value);
 		},
-		hiddenFeatures(value) {
-			setHiddenFeatures(value);
-		},
 		language(value) {
 			const i18n = this.$root?.$i18n;
-			if (value) {
+			if (!i18n) return;
+			else if (value) {
 				setLocalePreference(i18n, value);
 			} else {
 				removeLocalePreference(i18n);
@@ -171,6 +161,7 @@ export default defineComponent({
 		document.removeEventListener("fullscreenchange", this.fullscreenChange);
 	},
 	methods: {
+		isApp,
 		enterFullscreen() {
 			document.documentElement.requestFullscreen();
 		},

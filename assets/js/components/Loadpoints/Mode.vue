@@ -25,7 +25,7 @@ export default defineComponent({
 	props: {
 		mode: String,
 		pvPossible: Boolean,
-		hasSmartCost: Boolean,
+		smartCostAvailable: Boolean,
 	},
 	emits: ["updated"],
 
@@ -34,7 +34,7 @@ export default defineComponent({
 			if (this.pvPossible) {
 				return [OFF, PV, MINPV, NOW];
 			}
-			if (this.hasSmartCost) {
+			if (this.smartCostAvailable) {
 				return [OFF, PV, NOW];
 			}
 			return [OFF, NOW];
@@ -44,7 +44,7 @@ export default defineComponent({
 		label(mode: CHARGE_MODE) {
 			// rename pv mode to smart for non-pv and dynamic tariffs scenarios
 			// TODO: rollout smart name for everyting later
-			if (mode === PV && !this.pvPossible && this.hasSmartCost) {
+			if (mode === PV && !this.pvPossible && this.smartCostAvailable) {
 				return this.$t("main.mode.smart");
 			}
 			return this.$t(`main.mode.${mode}`);

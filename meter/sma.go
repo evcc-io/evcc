@@ -27,7 +27,7 @@ func init() {
 //go:generate go tool decorate -f decorateSMA -b *SMA -r api.Meter -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64"
 
 // NewSMAFromConfig creates an SMA meter from generic config
-func NewSMAFromConfig(other map[string]interface{}) (api.Meter, error) {
+func NewSMAFromConfig(other map[string]any) (api.Meter, error) {
 	cc := struct {
 		batteryCapacity          `mapstructure:",squash"`
 		URI, Password, Interface string
@@ -109,6 +109,9 @@ var _ api.MeterEnergy = (*SMA)(nil)
 // TotalEnergy implements the api.MeterEnergy interface
 func (sm *SMA) TotalEnergy() (float64, error) {
 	values, err := sm.device.Values()
+	if sm.scale < 0 {
+		return sma.AsFloat(values[sunny.ActiveEnergyMinus]) / 3600000, err
+	}
 	return sma.AsFloat(values[sunny.ActiveEnergyPlus]) / 3600000, err
 }
 
@@ -130,7 +133,7 @@ func (sm *SMA) Currents() (float64, float64, float64, error) {
 		res[i] = util.SignFromPower(sma.AsFloat(values[id]), powers[i])
 	}
 
-	return res[0], res[1], res[2], err
+	return sm.scale * res[0], sm.scale * res[1], sm.scale * res[2], err
 }
 
 var _ api.PhaseVoltages = (*SMA)(nil)
@@ -161,7 +164,7 @@ func (sm *SMA) Powers() (float64, float64, float64, error) {
 		res[i] -= sma.AsFloat(values[id])
 	}
 
-	return res[0], res[1], res[2], err
+	return sm.scale * res[0], sm.scale * res[1], sm.scale * res[2], err
 }
 
 // soc implements the api.Battery interface

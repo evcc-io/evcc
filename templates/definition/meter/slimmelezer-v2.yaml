@@ -11,6 +11,17 @@ params:
   - name: usage
     choice: ["grid"]
   - name: host
+  - name: scale
+    example: 1 | 10 | 100 | 1000
+    default: 1000
+    required: true
+    advanced: true
+    description:
+      de: Skalierungsfaktor
+      en: Scale factor
+    help:
+      de: Verwenden Skala von 1000 für Zuidwijk Slimmelezer. Verwenden Skala 1 für ESPHome DSMR und mhendriks P1 Dongle
+      en: Use scale of 1000 for Zuidwijk Slimmelezer. Use scale 1 for ESPHome DSMR and mhendriks P1 Dongle
 render: |
   type: custom
   power:
@@ -21,13 +32,13 @@ render: |
       headers:
       - content-type: application/json
       jq: .value
-      scale: 1000
+      scale: {{ .scale }}
     - source: http
       uri: http://{{ .host }}/sensor/power_produced
       headers:
       - content-type: application/json
       jq: .value
-      scale: -1000
+      scale: -{{ .scale }}
   energy:
     source: calc
     add:
@@ -51,12 +62,12 @@ render: |
     uri: http://{{ .host }}/sensor/current_phase_2
     headers:
     - content-type: application/json
-    jq: .value
+    jq: (.value // 0)
   - source: http
     uri: http://{{ .host }}/sensor/current_phase_3
     headers:
     - content-type: application/json
-    jq: .value
+    jq: (.value // 0)
   powers:
   - source: calc
     add:
@@ -65,38 +76,38 @@ render: |
       headers:
       - content-type: application/json
       jq: .value
-      scale: -1000
+      scale: -{{ .scale }}
     - source: http
       uri: http://{{ .host }}/sensor/power_consumed_phase_1
       headers:
       - content-type: application/json
       jq: .value
-      scale: 1000
+      scale: {{ .scale }}
   - source: calc
     add:
     - source: http
       uri: http://{{ .host }}/sensor/power_produced_phase_2
       headers:
       - content-type: application/json
-      jq: .value
-      scale: -1000
+      jq: (.value // 0)
+      scale: -{{ .scale }}
     - source: http
       uri: http://{{ .host }}/sensor/power_consumed_phase_2
       headers:
       - content-type: application/json
-      jq: .value
-      scale: 1000
+      jq: (.value // 0)
+      scale: {{ .scale }}
   - source: calc
     add:
     - source: http
       uri: http://{{ .host }}/sensor/power_produced_phase_3
       headers:
       - content-type: application/json
-      jq: .value
-      scale: -1000
+      jq: (.value // 0)
+      scale: -{{ .scale }}
     - source: http
       uri: http://{{ .host }}/sensor/power_consumed_phase_3
       headers:
       - content-type: application/json
-      jq: .value
-      scale: 1000
+      jq: (.value // 0)
+      scale: {{ .scale }}

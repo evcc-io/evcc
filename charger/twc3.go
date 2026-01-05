@@ -54,8 +54,8 @@ type Vitals struct {
 	CurrentAlerts     []any   `json:"current_alerts"`      // []
 }
 
-// NewTwc3FromConfig creates a new vehicle
-func NewTwc3FromConfig(other map[string]interface{}) (api.Charger, error) {
+// NewTwc3FromConfig creates a new charger
+func NewTwc3FromConfig(other map[string]any) (api.Charger, error) {
 	cc := struct {
 		URI   string
 		Cache time.Duration

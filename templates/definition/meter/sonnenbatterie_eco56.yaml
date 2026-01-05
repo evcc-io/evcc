@@ -2,17 +2,23 @@ template: sonnenbatterie-eco56
 products:
   - brand: Sonnen
     description:
-      generic: comfort, eco 5, eco 6, oem 6.5
+      generic: comfort
+  - brand: Sonnen
+    description:
+      generic: eco 5
+  - brand: Sonnen
+    description:
+      generic: eco 6
+  - brand: Sonnen
+    description:
+      generic: oem 6.5
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
   - name: host
   - name: port
     default: 7979
-  - name: capacity
-    advanced: true
-  - name: maxchargepower
-    advanced: true
+  - preset: battery-params
   - name: cache
     advanced: true
     default: 5s
@@ -110,5 +116,5 @@ render: |
                     method: PUT
                     uri: http://{{ .host }}:{{ .port }}/rest/devices/battery/C24
                     body: {{ if .maxchargepower }}{{ .maxchargepower }}{{ else }}99000{{ end }}
-  capacity: {{ .capacity }} # kWh
+  {{- include "battery-params" . }}
   {{- end }}

@@ -161,7 +161,7 @@ import { defineComponent, type PropType } from "vue";
 import CustomSelect from "../Helper/CustomSelect.vue";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import breakpoint from "@/mixins/breakpoint.ts";
-import settings from "@/settings";
+import settings from "@/settings.ts";
 import type { CURRENCY } from "@/types/evcc";
 import type { Session, Column } from "./types";
 
@@ -187,7 +187,7 @@ export default defineComponent({
 	emits: ["show-session"],
 	data() {
 		return {
-			selectedColumns: settings.sessionColumns,
+			selectedColumns: [] as string[],
 		};
 	},
 	computed: {
@@ -417,7 +417,7 @@ export default defineComponent({
 				.filter(this.filterByVehicle)
 				.filter((s) => !loadpoint || s.loadpoint === loadpoint).length;
 		},
-		selectColumnPosition(index: number, value: Column) {
+		selectColumnPosition(index: number, value: string) {
 			this.selectedColumns[index] = value;
 			settings.sessionColumns = [...this.selectedColumns];
 		},

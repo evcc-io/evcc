@@ -6,9 +6,10 @@
 				{{ $t("config.general.docsLink") }}
 			</a>
 		</p>
+		<slot name="afterDescription" />
 		<p v-if="error" class="text-danger" data-testid="error">{{ error }}</p>
 		<form ref="form" class="container mx-0 px-0">
-			<div class="editor-container">
+			<div v-if="!noYamlEditor" class="editor-container">
 				<YamlEditorContainer
 					v-model="yaml"
 					:errorLine="errorLine"
@@ -16,6 +17,7 @@
 					:hidden="!modalVisible"
 				/>
 			</div>
+			<slot name="extra" />
 
 			<div class="mt-4 d-flex justify-content-between">
 				<button
@@ -26,6 +28,7 @@
 					{{ $t("config.general.cancel") }}
 				</button>
 				<button
+					v-if="!disableSave"
 					type="submit"
 					class="btn btn-primary"
 					:disabled="saving || nothingChanged"
@@ -61,8 +64,10 @@ export default {
 		defaultYaml: String,
 		removeKey: String,
 		size: { type: String, default: "xl" },
+		noYamlEditor: Boolean,
+		disableSave: Boolean,
 	},
-	emits: ["changed"],
+	emits: ["changed", "open"],
 	data() {
 		return {
 			saving: false,
@@ -92,6 +97,7 @@ export default {
 		async open() {
 			this.reset();
 			this.modalVisible = true;
+			this.$emit("open");
 			await this.load();
 		},
 		close() {
@@ -100,8 +106,8 @@ export default {
 		async load() {
 			try {
 				const { data } = await api.get(this.endpoint);
-				this.serverYaml = data.result;
-				this.yaml = data.result || this.defaultYaml;
+				this.serverYaml = data;
+				this.yaml = data || this.defaultYaml;
 			} catch (e) {
 				console.error(e);
 			}

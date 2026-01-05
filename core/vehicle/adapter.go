@@ -71,24 +71,20 @@ func (v *adapter) SetLimitSoc(soc int) {
 }
 
 // GetPlanSoc returns the charge plan soc
-func (v *adapter) GetPlanSoc() (time.Time, time.Duration, int) {
+func (v *adapter) GetPlanSoc() (time.Time, int) {
 	var ts time.Time
 	if v, err := settings.Time(v.key() + keys.PlanTime); err == nil {
 		ts = v
-	}
-	var precondition time.Duration
-	if v, err := settings.Int(v.key() + keys.PlanPrecondition); err == nil {
-		precondition = time.Duration(v) * time.Second
 	}
 	var soc int
 	if v, err := settings.Int(v.key() + keys.PlanSoc); err == nil {
 		soc = int(v)
 	}
-	return ts, precondition, soc
+	return ts, soc
 }
 
 // SetPlanSoc sets the charge plan soc
-func (v *adapter) SetPlanSoc(ts time.Time, precondition time.Duration, soc int) error {
+func (v *adapter) SetPlanSoc(ts time.Time, soc int) error {
 	if !ts.IsZero() && ts.Before(time.Now()) {
 		return errors.New("timestamp is in the past")
 	}
@@ -98,11 +94,10 @@ func (v *adapter) SetPlanSoc(ts time.Time, precondition time.Duration, soc int) 
 		ts = time.Time{}
 		v.log.DEBUG.Printf("delete %s plan", v.name)
 	} else {
-		v.log.DEBUG.Printf("set %s plan soc: %d @ %v (precondition: %v)", v.name, soc, ts.Round(time.Second).Local(), precondition)
+		v.log.DEBUG.Printf("set %s plan soc: %d @ %v", v.name, soc, ts.Round(time.Second).Local())
 	}
 
 	settings.SetTime(v.key()+keys.PlanTime, ts)
-	settings.SetInt(v.key()+keys.PlanPrecondition, int64(precondition.Seconds()))
 	settings.SetInt(v.key()+keys.PlanSoc, int64(soc))
 
 	v.publish()
@@ -110,7 +105,7 @@ func (v *adapter) SetPlanSoc(ts time.Time, precondition time.Duration, soc int) 
 	return nil
 }
 
-func (v *adapter) SetRepeatingPlans(plans []api.RepeatingPlanStruct) error {
+func (v *adapter) SetRepeatingPlans(plans []api.RepeatingPlan) error {
 	for _, plan := range plans {
 		for _, day := range plan.Weekdays {
 			if day < 0 || day > 6 {
@@ -125,22 +120,41 @@ func (v *adapter) SetRepeatingPlans(plans []api.RepeatingPlanStruct) error {
 		}
 	}
 
+	if err := settings.SetJson(v.key()+keys.RepeatingPlans, plans); err != nil {
+		return err
+	}
+
 	v.log.DEBUG.Printf("update repeating plans for %s to: %v", v.name, plans)
-
-	settings.SetJson(v.key()+keys.RepeatingPlans, plans)
-
 	v.publish()
 
 	return nil
 }
 
-func (v *adapter) GetRepeatingPlans() []api.RepeatingPlanStruct {
-	var plans []api.RepeatingPlanStruct
+func (v *adapter) GetRepeatingPlans() []api.RepeatingPlan {
+	var plans []api.RepeatingPlan
 
-	err := settings.Json(v.key()+keys.RepeatingPlans, &plans)
-	if err == nil {
-		return plans
+	if err := settings.Json(v.key()+keys.RepeatingPlans, &plans); err != nil {
+		return nil
 	}
 
-	return []api.RepeatingPlanStruct{}
+	return plans
+}
+
+func (v *adapter) GetPlanStrategy() api.PlanStrategy {
+	var strategy api.PlanStrategy
+	if err := settings.Json(v.key()+keys.PlanStrategy, &strategy); err != nil {
+		return api.PlanStrategy{}
+	}
+	return strategy
+}
+
+func (v *adapter) SetPlanStrategy(planStrategy api.PlanStrategy) error {
+	if err := settings.SetJson(v.key()+keys.PlanStrategy, planStrategy); err != nil {
+		return err
+	}
+
+	v.log.DEBUG.Printf("update plan strategy for vehicle %s (precondition: %vs, continuous: %v)", v.name, planStrategy.Continuous, planStrategy.Precondition)
+	v.publish()
+
+	return nil
 }

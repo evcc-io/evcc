@@ -14,12 +14,10 @@ params:
     choice: ["grid", "pv", "battery", "charge"]
   - name: host
   - name: user
-    required: false
     help:
       de: Standard-User ist admin
       en: admin is default
   - name: password
-    required: false
     mask: true
 render: |
   type: tasmota

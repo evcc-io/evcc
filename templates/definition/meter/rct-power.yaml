@@ -4,26 +4,13 @@ products:
     description:
       generic: Power
 capabilities: ["battery-control"]
+requirements:
+  evcc: ["skiptest"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
     allinone: true
   - name: host
-  - name: capacity
-    advanced: true
-  # battery control
-  - name: minsoc
-    type: int
-    default: 7
-    advanced: true
-  - name: maxsoc
-    type: int
-    default: 97
-    advanced: true
-  - name: cache
-    advanced: true
-    default: 30s
-  - name: maxchargepower
   - name: externalpower
     type: bool
     description:
@@ -33,13 +20,28 @@ params:
       de: Externe Leistung aller an S0 angeschlossenen Geräte abfragen
       en: Query external power of all devices connected to S0
     advanced: true
+    usages: ["pv"]
+  - preset: battery-params
+  - name: minsoc
+    default: 7
+  - name: maxsoc
+    default: 97
+  - name: capacity2
+    unit: kWh
+    description:
+      de: Akkukapazität der zweiten Batterie
+      en: Battery capacity of the second battery
+    example: 50
+    type: float
+    usages: ["battery"]
+  - name: cache
+    advanced: true
+    default: 30s
 render: |
   type: rct
   uri: {{ .host }}
   usage: {{ .usage }}
   cache: {{ .cache }}
-  capacity: {{ .capacity }} # kWh
-  minsoc: {{ .minsoc }}
-  maxsoc: {{ .maxsoc }}
-  maxchargepower: {{ .maxchargepower }}
+  {{- include "battery-params" . }}
+  capacity2: {{ .capacity2 }} # kWh
   externalpower: {{ .externalpower }}

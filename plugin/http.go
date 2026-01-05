@@ -7,13 +7,14 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/plugin/pipeline"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
-	"github.com/gregjones/httpcache"
+	"github.com/sandrolain/httpcache"
 )
 
 // HTTP implements HTTP request provider
@@ -24,6 +25,7 @@ type HTTP struct {
 	headers     map[string]string
 	body        string
 	pipeline    *pipeline.Pipeline
+	mu          *sync.Mutex
 }
 
 func init() {
@@ -33,7 +35,7 @@ func init() {
 var mc = httpcache.NewMemoryCache()
 
 // NewHTTPPluginFromConfig creates a HTTP provider
-func NewHTTPPluginFromConfig(ctx context.Context, other map[string]interface{}) (Plugin, error) {
+func NewHTTPPluginFromConfig(ctx context.Context, other map[string]any) (Plugin, error) {
 	cc := struct {
 		URI, Method       string
 		Headers           map[string]string
@@ -59,7 +61,7 @@ func NewHTTPPluginFromConfig(ctx context.Context, other map[string]interface{}) 
 		return nil, errors.New("missing uri")
 	}
 
-	log := contextLogger(ctx, util.NewLogger("http"))
+	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("http"))
 	p := NewHTTP(
 		log,
 		strings.ToUpper(cc.Method),
@@ -99,10 +101,28 @@ func NewHTTP(log *util.Logger, method, uri string, insecure bool, cache time.Dur
 		method: method,
 	}
 
+	// override the transport to accept self-signed certificates
+	if insecure {
+		p.Client.Transport = request.NewTripper(log, transport.Insecure())
+	}
+
+	if cache > 0 {
+		// remove no-cache response headers
+		p.Client.Transport = &transport.Modifier{
+			Modifier: func(resp *http.Response) error {
+				dropNoCache(resp, "Cache-Control")
+				dropNoCache(resp, "Pragma")
+				return nil
+			},
+			Base: p.Client.Transport,
+		}
+	}
+
 	// http cache
 	p.Client.Transport = &httpcache.Transport{
-		Cache:     mc,
-		Transport: p.Client.Transport,
+		Cache:               mc,
+		MarkCachedResponses: true,
+		Transport:           p.Client.Transport,
 	}
 
 	if cache > 0 {
@@ -113,14 +133,32 @@ func NewHTTP(log *util.Logger, method, uri string, insecure bool, cache time.Dur
 			}),
 			Base: p.Client.Transport,
 		}
-	}
 
-	// ignore the self signed certificate
-	if insecure {
-		p.Client.Transport = request.NewTripper(log, transport.Insecure())
+		// for cached requests enforce single inflight GET
+		if method == http.MethodGet {
+			p.mu = muForKey(p.url)
+		}
 	}
 
 	return p
+}
+
+func dropNoCache(resp *http.Response, header string) {
+	if h := resp.Header.Get(header); h != "" {
+		var hh []string
+
+		for h := range strings.SplitSeq(h, ",") {
+			if s := strings.TrimSpace(h); strings.ToLower(s) != "no-cache" {
+				hh = append(hh, s)
+			}
+		}
+
+		if len(hh) == 0 {
+			resp.Header.Del(header)
+		} else {
+			resp.Header.Set(header, strings.Join(hh, ", "))
+		}
+	}
 }
 
 // WithBody adds request body
@@ -170,6 +208,11 @@ var _ Getters = (*HTTP)(nil)
 // StringGetter sends string request
 func (p *HTTP) StringGetter() (func() (string, error), error) {
 	return func() (string, error) {
+		if p.mu != nil {
+			p.mu.Lock()
+			defer p.mu.Unlock()
+		}
+
 		url, err := setFormattedValue(p.url, "", "")
 		if err != nil {
 			return "", err
@@ -185,7 +228,7 @@ func (p *HTTP) StringGetter() (func() (string, error), error) {
 	}, nil
 }
 
-func (p *HTTP) set(param string, val interface{}) error {
+func (p *HTTP) set(param string, val any) error {
 	url, err := setFormattedValue(p.url, param, val)
 	if err != nil {
 		return err

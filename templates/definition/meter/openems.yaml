@@ -1,14 +1,30 @@
 template: openems
 products:
   - brand: OpenEMS
+    description:
+      generic: REST-API
   - brand: FENECON
+    description:
+      generic: REST-API
 capabilities: ["battery-control"]
 requirements:
   description:
     de: |
-      Für FEMS FENECON-Systeme ist eine kommerzielle Lizenz für die aktive Batteriesteuerung erforderlich.
+      ##### Lizenzhinweis:
+      Für FENECON FEMS Systeme ist für die aktive Batteriesteuerung eine kommerzielle Lizenz *FEMS App REST/JSON Schreibzugriff* erforderlich.<br/><br/>
+      ##### FEMS-Dokumentation:
+      - [FEMS App REST/JSON Lesezugriff](https://docs.fenecon.de/de/fems/fems-app/App_REST-JSON_Lesezugriff.html)
+      - [FEMS App REST/JSON Schreibzugriff](https://docs.fenecon.de/de/fems/fems-app/App_REST-JSON_Schreibzugriff.html)
+      ##### OpenEMS-Dokumentation:
+      - [OpenEMS Edge REST-Api Controller](https://openems.github.io/openems.io/openems/latest/edge/controller.html#_rest_api_controller)
     en: |
-      A commercial license is required for FEMS FENECON systems for active battery control.
+      ##### License notice:
+      For active battery control on FENECON FEMS systems, a commercial license (*FEMS App REST/JSON Write Access*) is required.<br/><br/>
+      ##### FEMS documentation:
+      - [FEMS App REST/JSON Read Access](https://docs.fenecon.de/en/fems/fems-app/App_REST-JSON_Lesezugriff.html)
+      - [FEMS App REST/JSON Write Access](https://docs.fenecon.de/en/fems/fems-app/App_REST-JSON_Schreibzugriff.html)
+      ##### OpenEMS documentation:
+      - [OpenEMS Edge REST-Api Controller](https://openems.github.io/openems.io/openems/latest/edge/controller.html#_rest_api_controller)
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -18,46 +34,77 @@ params:
     mask: true
     default: user
     advanced: true
+  - name: maxacpower
   - name: battery
     example: ess0
+    description:
+      de: Steuerbare Batterie Komponente
+      en: Controllable battery component
     help:
-      de: steuerbare Batterie Komponente
-      en: controllable battery component
+      de: aktive Batteriesteuerung (REST/JSON schreibend)
+      en: active battery control (REST/JSON Write Access)
     usages: ["battery"]
     advanced: true
   - name: watchdog
     type: duration
     default: 60s
+    description:
+      de: FEMS/OpenEMS Batteriesteuerung API-Timeout
+      en: FEMS/OpenEMS battery control API timeout
     help:
-      de: abgestimmt auf das API-Timeout
-      en: adjusted to the API timeout
+      de: FEMS/OpenEMS Standard 60s
+      en: FEMS/OpenEMS standard 60s
     usages: ["battery"]
     advanced: true
-  - name: maxacpower
-  - name: capacity
-    advanced: true
+  - preset: battery-params
 render: |
   type: custom
+  {{- if eq .usage "grid" }} 
   power:
     source: http
-    {{- if eq .usage "grid" }}
     uri: http://{{ .host }}/rest/channel/_sum/GridActivePower
-    {{- end }}
-    {{- if eq .usage "pv" }}
-    uri: http://{{ .host }}/rest/channel/_sum/ProductionActivePower
-    {{- end }}
-    {{- if eq .usage "battery" }}
-    uri: http://{{ .host }}/rest/channel/_sum/EssDischargePower
-    {{- end }}
     auth:
       type: basic
       user: x
       password: {{ .password }}
     jq: (.value // 0)
+  energy:
+    source: http
+    uri: http://{{ .host }}/rest/channel/_sum/GridBuyActiveEnergy
+    auth:
+      type: basic
+      user: x
+      password: {{ .password }}
+    jq: (.value / 1000 // 0) # convert Wh to kWh
+  {{- end }}
   {{- if eq .usage "pv" }}
+  power:
+    source: http
+    uri: http://{{ .host }}/rest/channel/_sum/ProductionActivePower
+    auth:
+      type: basic
+      user: x
+      password: {{ .password }}
+    jq: (.value // 0)
+  energy:
+    source: http
+    uri: http://{{ .host }}/rest/channel/_sum/ProductionActiveEnergy
+    auth:
+      type: basic
+      user: x
+      password: {{ .password }}
+    jq: (.value / 1000 // 0) # convert Wh to kWh
   maxacpower: {{ .maxacpower }} # W
   {{- end }}
   {{- if eq .usage "battery" }}
+  power:
+    source: http
+    uri: http://{{ .host }}/rest/channel/_sum/EssDischargePower
+    auth:
+      type: basic
+      user: x
+      password: {{ .password }}
+    jq: (.value // 0)
   soc:
     source: http
     uri: http://{{ .host }}/rest/channel/_sum/EssSoc
@@ -85,7 +132,7 @@ render: |
           method: POST
           headers:
           - content-type: application/json
-          body: '{"value":0}'
+          body: '{"value": 0}'
       - case: 2 # hold
         set:
           source: http
@@ -97,11 +144,24 @@ render: |
           method: POST
           headers:
           - content-type: application/json
-          body: '{"value":0}'
-      - case: 3 # charge (not implemented)
+          body: '{"value": 0}'
+      - case: 3 # charge
         set:
+          {{- if .maxchargepower }}
+          source: http
+          uri: http://{{ .host }}/rest/channel/{{ .battery }}/SetActivePowerLessOrEquals
+          auth:
+            type: basic
+            user: x
+            password: {{ .password }}
+          method: POST
+          headers:
+          - content-type: application/json
+          body: '{"value": {{ mul .maxchargepower -1 }}}' # charge power is negative
+          {{- else }}
           source: error
           error: ErrNotAvailable
+          {{- end }}
   {{- end }}
-  capacity: {{ .capacity }} # kWh
+  {{- include "battery-params" . }}
   {{- end }}

@@ -190,7 +190,10 @@
 							</div>
 							<div v-else class="my-4">
 								<LiveCommunity />
-								<TelemetrySettings :sponsorActive="!!sponsor?.name" />
+								<TelemetrySettings
+									:sponsorActive="sponsorActive"
+									:telemetry="telemetry"
+								/>
 							</div>
 							<Sponsor v-bind="sponsor" />
 						</div>
@@ -209,9 +212,9 @@ import Tile from "./Tile.vue";
 import LiveCommunity from "./LiveCommunity.vue";
 import TelemetrySettings from "../TelemetrySettings.vue";
 import CustomSelect from "../Helper/CustomSelect.vue";
-import settings from "@/settings";
-import api, { allowClientError } from "@/api";
-import { docsPrefix } from "@/i18n";
+import settings from "@/settings.ts";
+import api, { allowClientError } from "@/api.ts";
+import { docsPrefix } from "@/i18n.ts";
 import { defineComponent, type PropType } from "vue";
 import type { CURRENCY, Rate, SelectOption, Sponsor as SponsorType } from "@/types/evcc";
 import type { Period } from "./types";
@@ -226,6 +229,7 @@ export default defineComponent({
 		co2Configured: Boolean,
 		sponsor: Object as PropType<SponsorType>,
 		currency: String as PropType<CURRENCY>,
+		telemetry: Boolean,
 	},
 	data() {
 		return {
@@ -237,6 +241,9 @@ export default defineComponent({
 		};
 	},
 	computed: {
+		sponsorActive(): boolean {
+			return !!this.sponsor?.status?.name;
+		},
 		tariffLink() {
 			return `${docsPrefix()}/docs/reference/configuration/tariffs`;
 		},
@@ -327,7 +334,7 @@ export default defineComponent({
 		async updateReferenceGrid() {
 			try {
 				const res = await api.get(`tariff/grid`, allowClientError);
-				const { rates } = res.data.result as { rates: Rate[] };
+				const { rates } = res.data as { rates: Rate[] };
 				this.referenceGrid =
 					rates.reduce((acc, slot) => {
 						return acc + slot.value;

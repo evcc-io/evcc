@@ -62,13 +62,9 @@
 							<p class="flex-sm-grow-1 opacity-50 me-sm-3">
 								{{ $t("help.issueDescription") }}
 							</p>
-							<a
-								href="https://github.com/evcc-io/evcc/issues"
-								target="_blank"
-								class="btn btn-outline-primary text-nowrap"
-							>
+							<router-link to="/issue" class="btn btn-outline-primary text-nowrap">
 								{{ $t("help.issueButton") }}
-							</a>
+							</router-link>
 						</div>
 
 						<div
@@ -136,13 +132,14 @@
 	</Teleport>
 </template>
 
-<script>
+<script lang="ts">
 import Modal from "bootstrap/js/dist/modal";
 import { docsPrefix } from "../i18n";
 import { performRestart } from "../restart";
 import { isLoggedIn, openLoginModal } from "./Auth/auth";
+import { defineComponent } from "vue";
 
-export default {
+export default defineComponent({
 	name: "HelpModal",
 	props: {},
 	computed: {
@@ -152,11 +149,15 @@ export default {
 	},
 	methods: {
 		openHelpModal() {
-			const modal = Modal.getOrCreateInstance(document.getElementById("helpModal"));
+			const modal = Modal.getOrCreateInstance(
+				document.getElementById("helpModal") as HTMLElement
+			);
 			modal.show();
 		},
 		openConfirmRestartModal() {
-			const modal = Modal.getOrCreateInstance(document.getElementById("confirmRestartModal"));
+			const modal = Modal.getOrCreateInstance(
+				document.getElementById("confirmRestartModal") as HTMLElement
+			);
 			if (!isLoggedIn()) {
 				openLoginModal(null, modal);
 			} else {
@@ -167,5 +168,5 @@ export default {
 			await performRestart();
 		},
 	},
-};
+});
 </script>

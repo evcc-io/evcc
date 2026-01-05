@@ -2,6 +2,7 @@ package tariff
 
 import (
 	"errors"
+	"fmt"
 	"slices"
 	"strings"
 	"sync"
@@ -16,13 +17,14 @@ import (
 )
 
 type Octopus struct {
-	log           *util.Logger
-	region        string
-	productCode   string
-	apikey        string
-	accountnumber string
-	paymentMethod string
-	data          *util.Monitor[api.Rates]
+	log             *util.Logger
+	region          string
+	productCode     string
+	apikey          string
+	accountnumber   string
+	paymentMethod   string
+	tariffDirection octoGql.TariffDirection
+	data            *util.Monitor[api.Rates]
 }
 
 var _ api.Tariff = (*Octopus)(nil)
@@ -31,20 +33,46 @@ func init() {
 	registry.Add("octopusenergy", NewOctopusFromConfig)
 }
 
-func NewOctopusFromConfig(other map[string]interface{}) (api.Tariff, error) {
+// NewOctopusFromConfig creates the tariff provider from the given config map, and runs it.
+func NewOctopusFromConfig(other map[string]any) (api.Tariff, error) {
+	t, err := buildOctopusFromConfig(other)
+	if err != nil {
+		return nil, err
+	}
+
+	return runOrError(t)
+}
+
+// buildOctopusFromConfig creates the Tariff provider from the given config map.
+// Split out to allow for testing.
+func buildOctopusFromConfig(other map[string]any) (*Octopus, error) {
 	var cc struct {
-		Region        string
-		Tariff        string // DEPRECATED: use ProductCode
-		ProductCode   string
-		DirectDebit   bool
-		ApiKey        string
-		AccountNumber string
+		Region          string
+		Tariff          string // DEPRECATED: use ProductCode
+		ProductCode     string
+		DirectDebit     bool
+		ApiKey          string
+		AccountNumber   string
+		TariffDirection octoGql.TariffDirection
 	}
 
 	logger := util.NewLogger("octopus")
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
+	}
+
+	switch cc.TariffDirection {
+	case "", octoGql.TariffDirectionImport:
+		// default to Import if unset
+		if cc.TariffDirection == "" {
+			cc.TariffDirection = octoGql.TariffDirectionImport
+		}
+	case octoGql.TariffDirectionExport:
+		// OK
+	default:
+		// Do not permit invalid TariffDirections.
+		return nil, fmt.Errorf("invalid tariff direction %q", cc.TariffDirection)
 	}
 
 	// Allow ApiKey to be missing only if Region and Tariff are not.
@@ -60,12 +88,17 @@ func NewOctopusFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		if cc.ProductCode == "" {
 			return nil, errors.New("missing product code")
 		}
+		if cc.TariffDirection != octoGql.TariffDirectionImport {
+			// Throw a WARN if it appears the user has set the key when it's not necessary to do so
+			logger.WARN.Println("tariffDirection ignored when using product code")
+		}
 	} else {
 		// ApiKey validators
 		if cc.Region != "" || cc.Tariff != "" {
 			return nil, errors.New("cannot use apikey at same time as product code")
 		}
-		if len(cc.ApiKey) != 32 || !strings.HasPrefix(cc.ApiKey, "sk_live_") {
+		// We permit the specific special apiKey "test" as sk_live_ keys are considered Stripe secrets by Github
+		if cc.ApiKey != "test" && (len(cc.ApiKey) != 32 || !strings.HasPrefix(cc.ApiKey, "sk_live_")) {
 			return nil, errors.New("invalid apikey format")
 		}
 	}
@@ -74,21 +107,19 @@ func NewOctopusFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		// Not using Direct Debit, filter by non-Direct Debit tariff entries
 		paymentMethod = octoRest.RatePaymentMethodNotDirectDebit
 	}
+
 	t := &Octopus{
-		log:           logger,
-		region:        cc.Region,
-		productCode:   cc.ProductCode,
-		apikey:        cc.ApiKey,
-		accountnumber: cc.AccountNumber,
-		paymentMethod: paymentMethod,
-		data:          util.NewMonitor[api.Rates](2 * time.Hour),
+		log:             logger,
+		region:          cc.Region,
+		productCode:     cc.ProductCode,
+		apikey:          cc.ApiKey,
+		accountnumber:   cc.AccountNumber,
+		paymentMethod:   paymentMethod,
+		tariffDirection: cc.TariffDirection,
+		data:            util.NewMonitor[api.Rates](2 * time.Hour),
 	}
 
-	done := make(chan error)
-	go t.run(done)
-	err := <-done
-
-	return t, err
+	return t, nil
 }
 
 func (t *Octopus) run(done chan error) {
@@ -105,7 +136,7 @@ func (t *Octopus) run(done chan error) {
 			t.log.ERROR.Println(err)
 			return
 		}
-		tariffCode, err := gqlCli.TariffCode()
+		tariffCode, err := gqlCli.TariffCode(t.tariffDirection)
 		if err != nil {
 			once.Do(func() { done <- err })
 			t.log.ERROR.Println(err)

@@ -10,9 +10,6 @@ group: co2
 countries: ["BE", "DE", "LU"]
 params:
   - name: apiKey
-    description:
-      en: API Key
-      de: API-Key
     type: string
     required: true
     help:
