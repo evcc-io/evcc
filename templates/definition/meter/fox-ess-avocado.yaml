@@ -47,7 +47,7 @@ render: |
     {{- include "modbus" . | indent 2 }}
     register:
       address: 39625 # Enter total power
-      type: input
+      type: holding
       decode: uint32
     scale: 0.01
   voltages:
