@@ -61,14 +61,21 @@ func ChargeEfficiency(chargePower float64) float64 {
 	return 0.9 // wallbox: 1-p / 32A / 230V or 3-p / 16A / 400V or above
 }
 
+// Initializes or resets virtualCapacity based on current charge power
+func (s *Estimator) initCapacityIfNeeded(chargePower float64) {
+	if !s.estimate || s.prevChargedEnergy == 0 {
+		s.virtualCapacity = s.capacity / ChargeEfficiency(chargePower)
+		s.energyPerSocStep = s.virtualCapacity / 100
+	}
+}
+
 // Reset resets the estimation process to default values
 func (s *Estimator) Reset() {
 	s.prevSoc = 0
 	s.prevChargedEnergy = 0
 	s.initialSoc = 0
-	s.capacity = s.vehicle.Capacity() * 1e3                                     // cache to simplify debugging
-	s.virtualCapacity = s.capacity / ChargeEfficiency(householdOutletMaxPowerW) // initial capacity taking efficiency into account
-	s.energyPerSocStep = s.virtualCapacity / 100
+	s.capacity = s.vehicle.Capacity() * 1e3 // cache to simplify debugging
+	s.initCapacityIfNeeded(householdOutletMaxPowerW)
 	s.minChargePower = 1000  // default 1 kW
 	s.maxChargePower = 50000 // default 50 kW
 	s.maxChargeSoc = 50      // default 50%
@@ -78,10 +85,7 @@ func (s *Estimator) Reset() {
 func (s *Estimator) RemainingChargeDuration(targetSoc int, chargePower float64) time.Duration {
 	const minChargeSoc = 100
 
-	//Set virtual capacity based on current chargePower
-	if !s.estimate || s.prevChargedEnergy == 0 {
-		s.virtualCapacity = s.capacity / ChargeEfficiency(chargePower)
-	}
+	s.initCapacityIfNeeded(chargePower)
 
 	dy := s.minChargePower - s.maxChargePower
 	dx := minChargeSoc - s.maxChargeSoc
@@ -113,10 +117,7 @@ func (s *Estimator) RemainingChargeDuration(targetSoc int, chargePower float64) 
 
 // RemainingChargeEnergy returns the remaining charge energy in kWh
 func (s *Estimator) RemainingChargeEnergy(targetSoc int, chargePower float64) float64 {
-	//Set virtual capacity based on current chargePower
-	if !s.estimate || s.prevChargedEnergy == 0 {
-		s.virtualCapacity = s.capacity / ChargeEfficiency(chargePower)
-	}
+	s.initCapacityIfNeeded(chargePower)
 
 	percentRemaining := float64(targetSoc) - s.vehicleSoc
 	if percentRemaining <= 0 || s.virtualCapacity <= 0 {
@@ -132,12 +133,7 @@ func (s *Estimator) RemainingChargeEnergy(targetSoc int, chargePower float64) fl
 func (s *Estimator) Soc(chargedEnergy float64, chargePower float64) (float64, error) {
 	var fetchedSoc *float64
 
-	//Initialize energyPerSocStep on first call
-	if !s.estimate || s.prevChargedEnergy == 0 {
-		//Set virtual capacity based on current chargePower
-		s.virtualCapacity = s.capacity / ChargeEfficiency(chargePower)
-		s.energyPerSocStep = s.virtualCapacity / 100
-	}
+	s.initCapacityIfNeeded(chargePower)
 
 	if charger, ok := s.charger.(api.Battery); ok {
 		f, err := Guard(charger.Soc())
