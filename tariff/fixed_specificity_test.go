@@ -9,9 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestFixedSpecificity validates that MoreSpecific logic is necessary.
-// Edge case: zones with IDENTICAL hours but different month/day constraints.
-// Without MoreSpecific, the result would depend on undefined sort order.
 func TestFixedSpecificity(t *testing.T) {
 	at, err := NewFixedFromConfig(map[string]any{
 		"price": 0.30,
@@ -57,4 +54,36 @@ func TestFixedSpecificity(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestPartiallyOverlappingMonths(t *testing.T) {
+	at, err := NewFixedFromConfig(map[string]any{
+		"price": 0.0,
+		"zones": []struct {
+			Price  float64
+			Hours  string
+			Months string
+		}{
+			{0.10, "0-5", "Jan"},
+			{0.20, "0-5", "Feb"},
+			{0.30, "0-5", "Jan-Mar"},
+		},
+	})
+	require.NoError(t, err)
+
+	clock := clock.NewMock()
+	tf := at.(*Fixed)
+	tf.clock = clock
+
+	// Test for January → should detect ambiguity (Zone 0 + Zone 2)
+	clock.Set(time.Date(2025, time.January, 10, 1, 0, 0, 0, time.UTC))
+	_, _ = tf.Rates() // triggers warning
+
+	// Test for February → should detect ambiguity (Zone 1 + Zone 2)
+	clock.Set(time.Date(2025, time.February, 10, 1, 0, 0, 0, time.UTC))
+	_, _ = tf.Rates() // triggers warning
+
+	// Test for March → only Zone 2 applies → no warning
+	clock.Set(time.Date(2025, time.March, 10, 1, 0, 0, 0, time.UTC))
+	_, _ = tf.Rates()
 }

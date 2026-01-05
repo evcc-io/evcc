@@ -84,6 +84,20 @@ func NewFixedFromConfig(other map[string]any) (api.Tariff, error) {
 
 	sort.Sort(t.zones)
 
+	for i := 0; i < len(t.zones); i++ {
+		for j := i + 1; j < len(t.zones); j++ {
+			// Only warn if specificity is equal AND months/days/hours overlap
+			if t.zones[i].Specificity() == t.zones[j].Specificity() &&
+				monthsOverlap(t.zones[i], t.zones[j]) &&
+				daysOverlap(t.zones[i], t.zones[j]) &&
+				hoursOverlap(t.zones[i], t.zones[j]) {
+				fmt.Printf(
+					"WARNING: ambiguous zones detected: zone %d (%.2f) and zone %d (%.2f)\n", i, t.zones[i].Price, j, t.zones[j].Price,
+				)
+			}
+		}
+	}
+
 	return t, nil
 }
 
