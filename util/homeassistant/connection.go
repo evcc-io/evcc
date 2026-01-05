@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -125,6 +126,20 @@ func (c *Connection) GetBoolState(entity string) (bool, error) {
 	default:
 		return false, fmt.Errorf("invalid boolean state '%s' for entity %s", state, entity)
 	}
+}
+
+// GetTimeState retrieves the state of an entity as time
+func (c *Connection) GetTimeState(entity string) (time.Time, error) {
+	state, err := c.GetState(entity)
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	if ts, err := strconv.ParseInt(state.State, 10, 64); err == nil {
+		return time.Unix(ts, 0), nil
+	}
+
+	return time.Parse(time.RFC3339, state.State)
 }
 
 // chargeStatusMap maps Home Assistant states to EVCC charge status
