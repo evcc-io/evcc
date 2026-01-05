@@ -24,7 +24,7 @@ func TestContinuous_Simple(t *testing.T) {
 
 	{
 		plan := findContinuousWindow(rr, 3*tariff.SlotDuration/2, rr[len(rr)-1].End)
-		assert.Equal(t, plan, api.Rates{rr[0], api.Rate{
+		assert.Equal(t, plan, api.Rates{rr[0], {
 			Start: rr[1].Start,
 			End:   rr[1].End.Add(-tariff.SlotDuration / 2),
 			Value: rr[1].Value,

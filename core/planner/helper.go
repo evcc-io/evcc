@@ -202,6 +202,11 @@ func findContinuousWindow(rates api.Rates, effectiveDuration time.Duration, targ
 		prevWindowCost = cost
 	}
 
+	// No valid window found
+	if length == 0 {
+		return nil
+	}
+
 	// Build the best window only once
 	windowEnd := rates[bestIndex].Start.Add(effectiveDuration)
 
