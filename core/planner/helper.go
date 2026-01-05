@@ -162,7 +162,6 @@ func findContinuousWindow(rates api.Rates, effectiveDuration time.Duration, targ
 				lastSlotCost = float64(r.End.Sub(r.Start)) * r.Value
 				return lastSlotCost
 			})
-
 			prevWindowCost = bestCost
 
 			continue
@@ -204,6 +203,5 @@ func findContinuousWindow(rates api.Rates, effectiveDuration time.Duration, targ
 
 	// Build the best window only once
 	windowEnd := rates[bestIndex].Start.Add(effectiveDuration)
-
 	return clampRates(rates[bestIndex:], rates[bestIndex].Start, windowEnd)
 }
