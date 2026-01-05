@@ -108,7 +108,6 @@ func (t *Fixed) Rates() (api.Rates, error) {
 			ts := dayStart.Add(time.Minute * time.Duration(m.Minutes()))
 
 			var zone *fixed.Zone
-
 			for i := range zones {
 				if zones[i].Hours.Contains(m) {
 					zone = &zones[i]
