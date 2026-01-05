@@ -147,9 +147,11 @@ func SumBySeq[T any, R float64](seq iter.Seq[T], iteratee func(item T) R) R {
 // Returns the selected rates.
 func findContinuousWindow(rates api.Rates, effectiveDuration time.Duration, targetTime time.Time) api.Rates {
 	var (
-		length    int
-		bestIndex int
-		bestCost  float64
+		length         int
+		bestIndex      int
+		bestCost       float64
+		lastSlotCost   float64
+		prevWindowCost float64
 	)
 
 	for i := range rates {
@@ -162,8 +164,11 @@ func findContinuousWindow(rates api.Rates, effectiveDuration time.Duration, targ
 
 			bestCost = SumBySeq(clampRatesSeq(rates[i:], rates[i].Start, windowEnd), func(r api.Rate) float64 {
 				length++
-				return float64(r.End.Sub(r.Start)) * r.Value
+				lastSlotCost = float64(r.End.Sub(r.Start)) * r.Value
+				return lastSlotCost
 			})
+
+			prevWindowCost = bestCost
 
 			continue
 		}
@@ -172,21 +177,29 @@ func findContinuousWindow(rates api.Rates, effectiveDuration time.Duration, targ
 			break
 		}
 
-		rp := rates[i-1]
-		rl := rates[i+length-1]
-
-		if rl.End.After(windowEnd) {
-			rl.End = windowEnd
+		rnl := rates[i+length-1]
+		if rnl.End.After(windowEnd) {
+			rnl.End = windowEnd
 		}
 
-		cost := bestCost -
-			float64(rp.End.Sub(rp.Start))*rp.Value +
-			float64(rl.End.Sub(rl.Start))*rl.Value
+		cost := prevWindowCost - lastSlotCost
+
+		// for length 1, lastSlotCost, rpf and rpl are identical, subtract only once
+		if length > 1 {
+			rpf := rates[i-1]
+			rpl := rates[i+length-2]
+			cost = cost - float64(rpf.End.Sub(rpf.Start))*rpf.Value + float64(rpl.End.Sub(rpl.Start))*rpl.Value
+		}
+
+		lastSlotCost = float64(rnl.End.Sub(rnl.Start)) * rnl.Value
+		cost += lastSlotCost
 
 		if cost <= bestCost {
 			bestCost = cost
 			bestIndex = i
 		}
+
+		prevWindowCost = cost
 	}
 
 	// Build the best window only once

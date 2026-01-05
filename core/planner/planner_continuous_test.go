@@ -16,8 +16,20 @@ import (
 func TestContinuous_Simple(t *testing.T) {
 	clock := clock.NewMock()
 	rr := rates([]float64{1, 2, 3}, clock.Now(), tariff.SlotDuration)
-	plan := findContinuousWindow(rr, 2*tariff.SlotDuration, rr[len(rr)-1].End)
-	require.Equal(t, plan, rr[0:1])
+
+	{
+		plan := findContinuousWindow(rr, 2*tariff.SlotDuration, rr[len(rr)-1].End)
+		assert.Equal(t, plan, rr[0:2], "full slots only")
+	}
+
+	{
+		plan := findContinuousWindow(rr, 3*tariff.SlotDuration/2, rr[len(rr)-1].End)
+		assert.Equal(t, plan, api.Rates{rr[0], api.Rate{
+			Start: rr[1].Start,
+			End:   rr[1].End.Add(-tariff.SlotDuration / 2),
+			Value: rr[1].Value,
+		}}, "last slot half length")
+	}
 }
 
 func TestContinuous_CheapestContiguousSlots(t *testing.T) {
