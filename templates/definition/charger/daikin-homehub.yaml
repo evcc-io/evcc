@@ -5,6 +5,7 @@ products:
       generic: HomeHub (SG Ready)
 group: heating
 requirements:
+  evcc: ["sponsorship"]
   description:
     de: |
       Funktioniert mit Altherma 3 Versionen 0775, 0793, 0223, 0774, 29C1.

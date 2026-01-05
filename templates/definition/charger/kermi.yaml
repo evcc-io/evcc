@@ -7,8 +7,8 @@ products:
     description:
       generic: x-center pro
 group: heating
-# requirements:
-#   evcc: ["sponsorship"]
+requirements:
+  evcc: ["sponsorship"]
 params:
   - name: host
   - name: tempsource

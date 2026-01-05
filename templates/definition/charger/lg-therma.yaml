@@ -5,6 +5,7 @@ products:
       generic: Therma V R290 Monobloc (SG Ready)
 group: heating
 requirements:
+  evcc: ["sponsorship"]
   description:
     de: |
       Modbus Verbindung zur LG Therma V Wärmepumpe.

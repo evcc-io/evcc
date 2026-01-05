@@ -5,6 +5,7 @@ products:
       generic: Nibe S-Series (SG Ready)
 group: heating
 requirements:
+  evcc: ["sponsorship"]
   description:
     de: |
       Modbus Verbindung zur NIBE S Wärmepumpe. Firmware 4.7.5 oder neuer benötigt.

@@ -25,6 +25,7 @@ import (
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/sponsor"
 )
 
 // Heatpump charger implementation
@@ -71,9 +72,9 @@ func NewHeatpumpFromConfig(ctx context.Context, other map[string]any) (api.Charg
 		return nil, err
 	}
 
-	// if !sponsor.IsAuthorized() {
-	// 	return nil, api.ErrSponsorRequired
-	// }
+	if !sponsor.IsAuthorized() {
+		return nil, api.ErrSponsorRequired
+	}
 
 	res, err := NewHeatpump(ctx, &cc.embed, maxPowerS, maxPowerG)
 	if err != nil {

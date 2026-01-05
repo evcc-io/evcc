@@ -11,10 +11,10 @@ products:
       generic: SG Ready
 group: heating
 requirements:
+  evcc: ["sponsorship"]
   description:
     de: "Eingebunden via [EMSESP](https://emsesp.org/)"
     en: "Integrated via [EMSESP](https://emsesp.org/)"
-#   evcc: ["sponsorship"]
 params:
   - name: host
   - name: token

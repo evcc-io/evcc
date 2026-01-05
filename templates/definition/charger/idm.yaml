@@ -3,7 +3,7 @@ products:
   - brand: IDM
 group: heating
 requirements:
-  # evcc: ["sponsorship"]
+  evcc: ["sponsorship"]
 params:
   - name: modbus
     choice: ["tcpip"]
