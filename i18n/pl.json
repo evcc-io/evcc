@@ -71,10 +71,10 @@
     "control": {
       "description": "Zazwyczaj wartości domyślne są w porządku. Zmień je tylko wtedy, gdy wiesz, co robisz.",
       "descriptionInterval": "Cykl aktualizacji pętli sterowania w sekundach. Określa częstotliwość odczytu danych z licznika przez evcc, regulacji mocy ładowania i aktualizacji interfejsu użytkownika. Krótkie przerwy (<30 s) mogą powodować oscylacje i niepożądane zachowania.",
-      "descriptionResidualPower": "Przesuwa punkt pracy pętli sterowania. Jeśli masz domowy magazyn energii, zaleca się ustawienie wartości 100 W. Dzięki temu magazyn energii będzie miał niewielki priorytet nad zasilaniem z sieci.",
+      "descriptionResidualPower": "Przesuwa punkt pracy pętli sterowania. Domyślna wartość 100 W daje domowym magazynom energii niewielki priorytet nad wykorzystaniem energii z sieci. Jeśli nie masz magazynu energii, możesz ustawić tę wartość na 0 W, aby zminimalizować zużycie energii z sieci w trybie solarnym.",
       "labelInterval": "Interwał aktualizacji",
       "labelResidualPower": "Moc resztkowa",
-      "title": "Sposób postępowania"
+      "title": "Ustawienia postępowania"
     },
     "deviceValue": {
       "amount": "Ilość",
@@ -142,8 +142,8 @@
     },
     "ext": {
       "description": "Można używać do zarządzania obciążeniem lub celów statystycznych.",
-      "titleAdd": "Dodaj licznik zewnętrzny",
-      "titleEdit": "Edytuj licznik zewnętrzny"
+      "titleAdd": "Dodaj licznik konsumencki",
+      "titleEdit": "Edytuj licznik konsumencki"
     },
     "form": {
       "danger": "Niebezpieczeństwo",
@@ -275,7 +275,7 @@
     "main": {
       "addGrid": "Dodaj licznik sieciowy",
       "addLoadpoint": "Dodaj ładowarkę lub podgrzewacz",
-      "addPvBattery": "Dodaj licznik energii słonecznej lub baterii",
+      "addPvBattery": "Dodaj licznik energii słonecznej lub magazynu energii",
       "addTariffs": "Dodaj taryfę",
       "addVehicle": "Dodaj pojazd",
       "configured": "skonfigurowany",
@@ -297,7 +297,7 @@
       "option": {
         "aux": "Dodaj samoregulujące się urządzenie konsumujące",
         "battery": "Dodaj licznik magazynu energii",
-        "ext": "Dodaj zewnętrzny licznik",
+        "ext": "Dodaj zwykłego konsumenta",
         "pv": "Dodaj licznik energii słonecznej"
       },
       "save": "Zapisz",
@@ -754,7 +754,7 @@
     "chargeDuration": "Czas trwania",
     "chartTitle": {
       "avgPriceByGroup": "⌀ Cena {byGroup}",
-      "byGroupLoadpoint": "według punktu ładowania",
+      "byGroupLoadpoint": "według punktu obciążenia",
       "byGroupVehicle": "według pojazdu",
       "energy": "Zużyta energia",
       "energyGrouped": "Energia słoneczna a energia z sieci",
@@ -790,7 +790,7 @@
     "date": "Rozpoczęcie",
     "energy": "Zużycie",
     "filter": {
-      "allLoadpoints": "wszystkie punkty ładowania",
+      "allLoadpoints": "wszystkie punkty obciążenia",
       "allVehicles": "wszystkie pojazdy",
       "filter": "Filtruj"
     },
