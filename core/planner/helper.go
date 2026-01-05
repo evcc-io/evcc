@@ -184,15 +184,15 @@ func findContinuousWindow(rates api.Rates, effectiveDuration time.Duration, targ
 
 		cost := prevWindowCost - lastSlotCost
 
-		// for length 1, lastSlotCost, rpf and rpl are identical, subtract only once
+		lastSlotCost = float64(rnl.End.Sub(rnl.Start)) * rnl.Value
+		cost += lastSlotCost
+
+		// for length 1, lastSlotCost, rpf and rpl costs are identical, subtract only once
 		if length > 1 {
 			rpf := rates[i-1]
 			rpl := rates[i+length-2]
 			cost = cost - float64(rpf.End.Sub(rpf.Start))*rpf.Value + float64(rpl.End.Sub(rpl.Start))*rpl.Value
 		}
-
-		lastSlotCost = float64(rnl.End.Sub(rnl.Start)) * rnl.Value
-		cost += lastSlotCost
 
 		if cost <= bestCost {
 			bestCost = cost
