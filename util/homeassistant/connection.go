@@ -83,7 +83,7 @@ func (c *Connection) GetIntState(entity string) (int64, error) {
 
 	value, err := strconv.ParseInt(state.State, 10, 64)
 	if err != nil {
-		return 0, fmt.Errorf("invalid numeric state '%s' for entity %s: %w", state, entity, err)
+		return 0, fmt.Errorf("invalid numeric state '%s' for entity %s: %w", state.State, entity, err)
 	}
 
 	return value, nil
@@ -98,7 +98,7 @@ func (c *Connection) GetFloatState(entity string) (float64, error) {
 
 	value, err := strconv.ParseFloat(state.State, 64)
 	if err != nil {
-		return 0, fmt.Errorf("invalid numeric state '%s' for entity %s: %w", state, entity, err)
+		return 0, fmt.Errorf("invalid numeric state '%s' for entity %s: %w", state.State, entity, err)
 	}
 
 	scale, err := state.scale()
