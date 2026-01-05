@@ -156,23 +156,20 @@ func (wb *Alfen) Enabled() (bool, error) {
 // Enable implements the api.Charger interface
 func (wb *Alfen) Enable(enable bool) error {
 	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
 	var curr float64
 	if enable {
 		curr = wb.curr
 	}
-	// Set enabled flag BEFORE setCurrent to prevent heartbeat from resetting current to 0
-	wb.enabled = enable
-	wb.mu.Unlock()
 
 	err := wb.setCurrent(curr)
 	if err != nil {
-		// Rollback enabled flag on error
-		wb.mu.Lock()
-		wb.enabled = !enable
-		wb.mu.Unlock()
+		return err
 	}
 
-	return err
+	wb.enabled = enable
+	return nil
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -194,20 +191,16 @@ func (wb *Alfen) setCurrent(current float64) error {
 
 // MaxCurrent implements the api.ChargerEx interface
 func (wb *Alfen) MaxCurrentMillis(current float64) error {
-	// Set curr BEFORE setCurrent to ensure heartbeat uses updated value
 	wb.mu.Lock()
-	wb.curr = current
-	wb.mu.Unlock()
+	defer wb.mu.Unlock()
 
 	err := wb.setCurrent(current)
 	if err != nil {
-		// Rollback curr on error
-		wb.mu.Lock()
-		wb.curr = 0
-		wb.mu.Unlock()
+		return err
 	}
 
-	return err
+	wb.curr = current
+	return nil
 }
 
 var _ api.Meter = (*Alfen)(nil)
