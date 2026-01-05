@@ -407,6 +407,8 @@ github.com/insomniacslk/tapo v1.0.2 h1:o2Bz941/Kp3LEjO5kvBbAE9Z4z9BcQMXRols3QkTn
 github.com/insomniacslk/tapo v1.0.2/go.mod h1:1wuMYu0+alZ4oE4BIzxAwQNveZgbb2tRqiIUwIe7SZE=
 github.com/insomniacslk/xjson v0.0.0-20240821125711-1236daaf6808 h1:BVD0pRpDWgbzkPYACLLPomriAnUGVfFdFoxs7aCLJkY=
 github.com/insomniacslk/xjson v0.0.0-20240821125711-1236daaf6808/go.mod h1:Z4EVr4bVv9LZbbje9xyZEyOLpdCOmCvr5S9BJtrdTfw=
+github.com/iseeberg79/emh-casa-go v0.0.1 h1:fbKsliSLSINYmzTHg7ycuV6hL03EORuRYwktaqu0ctA=
+github.com/iseeberg79/emh-casa-go v0.0.1/go.mod h1:tphuu7mdP1f6OjpVYW0uOlCOamsNpvvMCTmN4fv179A=
 github.com/itchyny/gojq v0.12.18 h1:gFGHyt/MLbG9n6dqnvlliiya2TaMMh6FFaR2b1H6Drc=
 github.com/itchyny/gojq v0.12.18/go.mod h1:4hPoZ/3lN9fDL1D+aK7DY1f39XZpY9+1Xpjz8atrEkg=
 github.com/itchyny/timefmt-go v0.1.7 h1:xyftit9Tbw+Dc/huSSPJaEmX1TVL8lw5vxjJLK4GMMA=
