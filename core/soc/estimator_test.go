@@ -15,17 +15,28 @@ func TestRemainingChargeDuration(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	charger := api.NewMockCharger(ctrl)
 	vehicle := api.NewMockVehicle(ctrl)
-	// 8.5 kWh userBatCap => 10 kWh virtualBatCap (at 85% efficiency)
+	// 8.5 kWh userBatCap => 10 kWh virtualBatCap (at 85% efficiency with 1.0kW charging power)
 	vehicle.EXPECT().Capacity().Return(float64(8.5))
 
 	ce := NewEstimator(util.NewLogger("foo"), charger, vehicle, false)
 	ce.vehicleSoc = 20.0
 
-	chargePower := 1000.0
-	targetSoc := 80
+	tc := []struct {
+		targetSoc       int
+		chargePower     float64
+		targetRemaining time.Duration
+	}{
+		{80, 1e3, 6*time.Hour + 0*time.Minute + 0*time.Second},
+		{80, 11 * 1e3, 0*time.Hour + 30*time.Minute + 55*time.Second},
+		{80, 10.34 * 1e3, 0*time.Hour + 32*time.Minute + 53*time.Second},
+		{80, 2300, 2*time.Hour + 36*time.Minute + 31*time.Second},
+		{80, 4 * 1e3, 1*time.Hour + 25*time.Minute + 0*time.Second},
+	}
 
-	if remaining := ce.RemainingChargeDuration(targetSoc, chargePower); remaining != 6*time.Hour {
-		t.Errorf("wrong remaining charge duration: %v", remaining)
+	for _, tc := range tc {
+		if remaining := ce.RemainingChargeDuration(tc.targetSoc, tc.chargePower); remaining != tc.targetRemaining {
+			t.Errorf("wrong remaining charge duration: %v", remaining)
+		}
 	}
 }
 
@@ -39,7 +50,7 @@ func TestSocEstimation(t *testing.T) {
 	vehicle := api.NewMockVehicle(ctrl)
 	charger := &chargerStruct{api.NewMockCharger(ctrl), api.NewMockBattery(ctrl)}
 
-	// 8.5 kWh user battery capacity is converted to initial value of 10 kWh virtual capacity (at 85% efficiency)
+	// 8.5 kWh user battery capacity is converted to initial value of 10 kWh virtual capacity (at 85% efficiency with 1.0kW charging power)
 	var capacity float64 = 8.5
 	vehicle.EXPECT().Capacity().Return(capacity)
 
@@ -85,7 +96,7 @@ func TestSocEstimation(t *testing.T) {
 				vehicle.EXPECT().Soc().Return(tc.vehicleSoc, nil)
 			}
 
-			soc, err := ce.Soc(tc.chargedEnergy)
+			soc, err := ce.Soc(tc.chargedEnergy, 1e3)
 			if err != nil {
 				t.Error(err)
 			}
@@ -123,7 +134,7 @@ func TestSocFromChargerAndVehicleWithErrors(t *testing.T) {
 	vehicle := api.NewMockVehicle(ctrl)
 	charger := &chargerStruct{api.NewMockCharger(ctrl), api.NewMockBattery(ctrl)}
 
-	// 8.5 kWh user battery capacity is converted to initial value of 10 kWh virtual capacity (at 85% efficiency)
+	// 8.5 kWh user battery capacity is converted to initial value of 10 kWh virtual capacity (at 85% efficiency with 1.0kW charging power)
 	var capacity float64 = 8.5
 	vehicle.EXPECT().Capacity().Return(capacity)
 
@@ -177,7 +188,7 @@ func TestSocFromChargerAndVehicleWithErrors(t *testing.T) {
 			vehicle.EXPECT().Soc().Return(tc.vehicleSoc, tc.vehicleError)
 		}
 
-		soc, err := ce.Soc(tc.chargedEnergy)
+		soc, err := ce.Soc(tc.chargedEnergy, 1e3)
 		if err != nil {
 			if (!tc.expectVehicle && err != tc.chargerError) || (tc.expectVehicle && err != tc.vehicleError) {
 				t.Error(err)
@@ -224,6 +235,8 @@ func TestImprovedEstimatorRemainingChargeDuration(t *testing.T) {
 	}{
 		{0.75, 10, 60, 300, 1*time.Hour + 28*time.Minute + 14*time.Second},
 		{0.75, 50, 100, 300, 1*time.Hour + 28*time.Minute + 14*time.Second},
+		{17, 10, 60, 4 * 1e3, 2*time.Hour + 21*time.Minute + 40*time.Second},
+		{17, 50, 100, 4 * 1e3, 2*time.Hour + 26*time.Minute + 52*time.Second},
 		{17, 10, 60, 7 * 1e3, 1*time.Hour + 20*time.Minute + 57*time.Second},
 		{17, 50, 100, 7 * 1e3, 1*time.Hour + 28*time.Minute + 23*time.Second},
 		{50, 10, 60, 11 * 1e3, 2*time.Hour + 31*time.Minute + 31*time.Second},

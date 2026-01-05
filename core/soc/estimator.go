@@ -46,8 +46,8 @@ func NewEstimator(log *util.Logger, charger api.Charger, vehicle api.Vehicle, es
 
 const (
 	// power thresholds in watts
-	householdOutletMaxPowerW    = 2300 // regular household outlet: 1-p / 10A / 230V
-	singlePhaseWallboxMaxPowerW = 3680 // wallbox: 1-p / 16A / 230V
+	householdOutletMaxPowerW    = 2300.0 // regular household outlet: 1-p / 10A / 230V
+	singlePhaseWallboxMaxPowerW = 3680.0 // wallbox: 1-p / 16A / 230V
 )
 
 // Computes the charge efficiency based on the charging power
@@ -78,8 +78,10 @@ func (s *Estimator) Reset() {
 func (s *Estimator) RemainingChargeDuration(targetSoc int, chargePower float64) time.Duration {
 	const minChargeSoc = 100
 
-	//Update virtual capacity based on current chargePower
-	s.virtualCapacity = s.capacity / ChargeEfficiency(chargePower)
+	//Set virtual capacity based on current chargePower
+	if !s.estimate || s.prevChargedEnergy == 0 {
+		s.virtualCapacity = s.capacity / ChargeEfficiency(chargePower)
+	}
 
 	dy := s.minChargePower - s.maxChargePower
 	dx := minChargeSoc - s.maxChargeSoc
@@ -111,8 +113,10 @@ func (s *Estimator) RemainingChargeDuration(targetSoc int, chargePower float64) 
 
 // RemainingChargeEnergy returns the remaining charge energy in kWh
 func (s *Estimator) RemainingChargeEnergy(targetSoc int, chargePower float64) float64 {
-	//Update virtual capacity based on current chargePower
-	s.virtualCapacity = s.capacity / ChargeEfficiency(chargePower)
+	//Set virtual capacity based on current chargePower
+	if !s.estimate || s.prevChargedEnergy == 0 {
+		s.virtualCapacity = s.capacity / ChargeEfficiency(chargePower)
+	}
 
 	percentRemaining := float64(targetSoc) - s.vehicleSoc
 	if percentRemaining <= 0 || s.virtualCapacity <= 0 {
@@ -125,8 +129,15 @@ func (s *Estimator) RemainingChargeEnergy(targetSoc int, chargePower float64) fl
 }
 
 // Soc replaces the api.Vehicle.Soc interface to take charged energy into account
-func (s *Estimator) Soc(chargedEnergy float64) (float64, error) {
+func (s *Estimator) Soc(chargedEnergy float64, chargePower float64) (float64, error) {
 	var fetchedSoc *float64
+
+	//Initialize energyPerSocStep on first call
+	if !s.estimate || s.prevChargedEnergy == 0 {
+		//Set virtual capacity based on current chargePower
+		s.virtualCapacity = s.capacity / ChargeEfficiency(chargePower)
+		s.energyPerSocStep = s.virtualCapacity / 100
+	}
 
 	if charger, ok := s.charger.(api.Battery); ok {
 		f, err := Guard(charger.Soc())
