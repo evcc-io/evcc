@@ -50,6 +50,50 @@ render: |
       type: input
       decode: uint32
     scale: 0.01 # Convert to kWh (raw / 100 = kWh)
+  voltages:
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 39123 # Grid R Voltage
+      type: holding
+      decode: int16
+    scale: 0.1 # Convert to V (raw / 10 = V)
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 39124 # Grid S Voltage
+      type: holding
+      decode: int16
+    scale: 0.1 # Convert to V (raw / 10 = V)
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 39125 # Grid T Voltage
+      type: holding
+      decode: int16
+    scale: 0.1 # Convert to V (raw / 10 = V)
+  currents:
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 39126 # Inverter R Current
+      type: holding
+      decode: int32
+    scale: 0.001 # Convert to A (raw / 1000 = A)
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 39128 # Inverter S Current
+      type: holding
+      decode: int32
+    scale: 0.001 # Convert to A (raw / 1000 = A)
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 39130 # Inverter T Current
+      type: holding
+      decode: int32
+    scale: 0.001 # Convert to A (raw / 1000 = A)
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
