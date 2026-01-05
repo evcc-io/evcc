@@ -164,12 +164,11 @@ func (wb *Alfen) Enable(enable bool) error {
 	}
 
 	err := wb.setCurrent(curr)
-	if err != nil {
-		return err
+	if err == nil {
+		wb.enabled = enable
 	}
 
-	wb.enabled = enable
-	return nil
+	return err
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -195,12 +194,11 @@ func (wb *Alfen) MaxCurrentMillis(current float64) error {
 	defer wb.mu.Unlock()
 
 	err := wb.setCurrent(current)
-	if err != nil {
-		return err
+	if err == nil {
+		wb.curr = current
 	}
 
-	wb.curr = current
-	return nil
+	return err
 }
 
 var _ api.Meter = (*Alfen)(nil)
