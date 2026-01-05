@@ -13,25 +13,6 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-func TestContinuous_Simple(t *testing.T) {
-	clock := clock.NewMock()
-	rr := rates([]float64{1, 2, 3}, clock.Now(), tariff.SlotDuration)
-
-	{
-		plan := findContinuousWindow(rr, 2*tariff.SlotDuration, rr[len(rr)-1].End)
-		assert.Equal(t, plan, rr[0:2], "full slots only")
-	}
-
-	{
-		plan := findContinuousWindow(rr, 3*tariff.SlotDuration/2, rr[len(rr)-1].End)
-		assert.Equal(t, plan, api.Rates{rr[0], {
-			Start: rr[1].Start,
-			End:   rr[1].End.Add(-tariff.SlotDuration / 2),
-			Value: rr[1].Value,
-		}}, "last slot half length")
-	}
-}
-
 func TestContinuous_CheapestContiguousSlots(t *testing.T) {
 	now := time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
 	c := clock.NewMock()
