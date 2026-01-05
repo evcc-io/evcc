@@ -101,27 +101,15 @@ func (c *Connection) GetFloatState(entity string) (float64, error) {
 		return 0, fmt.Errorf("invalid numeric state '%s' for entity %s: %w", state, entity, err)
 	}
 
-	if unit, ok := strings.CutSuffix(state.Attributes.UnitOfMeasurement, "W"); ok {
-		switch unit {
-		case "":
-		case "k":
-			value *= 1e3
-		default:
-			return 0, fmt.Errorf("invalid unit '%s' for entity %s: %w", state.Attributes.UnitOfMeasurement, entity, err)
-		}
-	} else if unit, ok := strings.CutSuffix(state.Attributes.UnitOfMeasurement, "Wh"); ok {
-		switch unit {
-		case "":
-			value /= 1e3
-		case "k":
-		case "M":
-			value *= 1e3
-		default:
-			return 0, fmt.Errorf("invalid unit '%s' for entity %s: %w", state.Attributes.UnitOfMeasurement, entity, err)
-		}
+	scale, err := state.scale()
+	if err != nil {
+		return 0, fmt.Errorf("%w for entity %s: %w", err, entity)
 	}
 
-	return value, nil
+	return scale * value, nil
+}
+
+func scale(entity string) (float64, error) {
 }
 
 // GetBoolState retrieves the state of an entity as boolean
