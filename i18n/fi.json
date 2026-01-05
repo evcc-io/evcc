@@ -100,7 +100,7 @@
     "control": {
       "description": "Yleensä oletusarvot ovat sopivat. Muuta vain jos tiedät mitä olet tekemässä.",
       "descriptionInterval": "Päivitysjakso sekunneissa. Määrittää, kuinka usein evcc lukee mittaritietoja ja säätää lataustehoa. Oletus 30 s on turvallinen valinta. Ajoneuvot, latauslaitteet ja inverterit tyypillisesti tarvitsevat useita sekunteja toimintansa säätämiseen. Jos laitteesi reagoivat nopeasti, voit määrittää lyhyemmän aikajakson. Suosittelemme painokkaasti, että alle 10 s jaksoa ei määritettäisi. Jos kohtaat virheellistä toimitaa tai hyppiviä tehoarvoja suosittelemme pidemtämään aikaväliä.",
-      "descriptionResidualPower": "Siirtää ohjaussilmukan toimintapistettä. Suositusarvo 100 W määrittää kotiakuille pienen etusijan suhteessa sähköverkon käyttöön. Mikäli sinulla ei ole akkua asennettuna, voit asettaa arvon 0 W minimoidaksesi sähköverkon käytön aurinkosähkötilassa.",
+      "descriptionResidualPower": "Siirtää ohjaussilmukan toimintapistettä. Mikäli sinulla on kotiakku on suositeltavaa asettaa ohjausarvo 100 W:iin. Tämä antaa akulle pienen etusijan suhteessa sähköverkon käyttöön.",
       "labelInterval": "Päivitystiheys",
       "labelResidualPower": "Jäännösteho",
       "title": "Määrittele toimintaa"
@@ -706,9 +706,9 @@
       "becomeSponsor": "Ryhdy sponsoriksi",
       "becomeSponsorExtended": "Tue meitä suoraan saadaksesi tarroja.",
       "confetti": "Valmiina konfetteihin?",
-      "confettiPromise": "Saat tarroja ja myös digitaali konfetteja",
+      "confettiPromise": "Saat tarroja ja myös digikonfetteja",
       "sticker": "… vai evcc tarroja?",
-      "supportUs": "Missiomme on tehdä aurinkoenergialla lataamisesta normi. Auta evcc:tä maksamalla sen verran minkä arvoinen se on sinulle.",
+      "supportUs": "Tavoitteemme on tehdä aurinkoenergialla lataamisesta normi. Auta evcc:tä maksamalla sen verran minkä arvoinen se sinulle on.",
       "thanks": "Kiitos, {sponsor}! Panoksesi auttaa kehittämään evcc:tä myös jatkossa.",
       "titleNoSponsor": "Tue meitä",
       "titleSponsor": "Olet kannattaja",
@@ -887,6 +887,11 @@
       "goal": "Lataus tavoite",
       "modalTitle": "Lataussuunnitelma",
       "none": "ei mitään",
+      "optimization": {
+        "cheapest": "halvin",
+        "continuous": "jatkuva",
+        "label": "Optimointi"
+      },
       "planNumber": "Suunnitelma {number}",
       "precondition": {
         "description": "Ladataan {duration} ennen lähtöä akunesilämmitystä varten.",
@@ -898,6 +903,7 @@
       "repeating": "toistetaan",
       "repeatingPlans": "Toistuvat suunnitelmat",
       "selectAll": "Valitse kaikki",
+      "strategySettings": "Strategia-asetukset",
       "time": "Aika",
       "title": "Suunnitelma",
       "titleMinSoc": "Minimi lataus",
