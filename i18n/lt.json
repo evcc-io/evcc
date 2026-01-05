@@ -100,7 +100,7 @@
     "control": {
       "description": "Paprastai numatytosios reikšmės yra pakankamos. Keiskite jas tik jei žinote, ką darote.",
       "descriptionInterval": "Atnaujinimo ciklų intervalas, sekundėmis. Nurodo, kaip dažnai evcc nuskaito skaitiklių duomenis, koreguoja įkrovimo galią. 30 sekundžių yra rekomenduojamas pasirinkimas. Automobiliams, įkrovikliams bei inverteriams reikia laiko reaguoti į valdymo nurodymus. Jei jūsų komponentai reaguoja greitai, galite trumpinti intervalą, tačiau nerekomenduojama naudoti trumpesnio nei 10s. Pernelyg trumpi intervalai gali sukelti galios svyravimus ir nepageidaujamą sistemos veikimą, tokiu atveju pailginkinte intervalą.",
-      "descriptionResidualPower": "Pakeičia įvado galios reguliavimo tašką. Standartinė 100 W vertė (eksportas) suteikia kaupikliui nedidelį prioritetą. Jei neturite kaupiklio, galite nustatyti 0W, taip minimizuodami iš tinklo perkamą energiją įkraunant saulės pertekliumi.",
+      "descriptionResidualPower": "Pakeičia įvado galios reguliavimo tašką. Jei turite kaupiklį, rekomenduojama nustatyti 100 W vertę (eksportą), kas suteikia kaupikliui nedidelį prioritetą.",
       "labelInterval": "Atnaujinimo intervalas",
       "labelResidualPower": "Likutinė galia",
       "title": "Valdymo elgesys"
@@ -888,6 +888,11 @@
       "goal": "Įkrovimo tikslas",
       "modalTitle": "Įkrovimo planas",
       "none": "nėra",
+      "optimization": {
+        "cheapest": "pigiausias",
+        "continuous": "be pertraukos",
+        "label": "Optimizacija"
+      },
       "planNumber": "Planas {number}",
       "precondition": {
         "description": "Įkrovimas {duration} prieš išvykstant, baterijos paruošimui.",
@@ -899,6 +904,7 @@
       "repeating": "kartojasi",
       "repeatingPlans": "Pasikartojantys planai",
       "selectAll": "Pasirinkti visus",
+      "strategySettings": "Strategijos pasirinkimai",
       "time": "Laikas",
       "title": "Planas",
       "titleMinSoc": "Minimali įkrova",
