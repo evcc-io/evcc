@@ -7,6 +7,7 @@ import (
 
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -52,7 +53,7 @@ func (cr *ChargeRater) StartCharge(continued bool) {
 		if f, err := m.TotalEnergy(); err == nil {
 			cr.startEnergy = f
 			cr.log.DEBUG.Printf("charge start energy: %.3fkWh", f)
-		} else {
+		} else if !loadpoint.AcceptableError(err) {
 			cr.log.ERROR.Printf("charge total import: %v", err)
 		}
 	}
@@ -77,7 +78,7 @@ func (cr *ChargeRater) StopCharge() {
 		if f, err := m.TotalEnergy(); err == nil {
 			cr.chargedEnergy += f - cr.startEnergy
 			cr.log.DEBUG.Printf("charge final energy: %.3fkWh", cr.chargedEnergy)
-		} else {
+		} else if !loadpoint.AcceptableError(err) {
 			cr.log.ERROR.Printf("charge total import: %v", err)
 		}
 	}
@@ -97,7 +98,7 @@ func (cr *ChargeRater) ResetCharge() {
 			cr.log.DEBUG.Printf("charge final energy: %.3fkWh", cr.chargedEnergy)
 
 			cr.startEnergy = f
-		} else {
+		} else if !loadpoint.AcceptableError(err) {
 			cr.log.ERROR.Printf("charge total import: %v", err)
 		}
 	}
