@@ -38,24 +38,32 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 39168 # [Meter collection] Active power (GRID_EXPORT_POWER)
+      address: 39168 # [Meter collection] Active power
       type: holding
       decode: int32
-    scale: -1 #
+    scale: -1 # > 0: Feed power to the grid, < 0: Take power from the grid
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 39625 # Enter total power
+      type: input
+      decode: uint32
+    scale: 0.01 # Convert to kWh (raw / 100 = kWh)
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 39118 # Total PV Power (PV_POWER)
+      address: 39118 # Total PV Power
       type: holding
       decode: int32
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 39149 # Cumulative PV Generation (TOTAL_PV_GENERATION)
+      address: 39149 # Cumulative PV Generation
       type: holding
       decode: uint32
     scale: 0.01 # Convert to kWh (raw / 100 = kWh)
@@ -66,27 +74,17 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 39237 # Battery Combined Power (BATTERY_CHARGING_POWER)
+      address: 39237 # Battery Combined Power
       type: holding
       decode: int32
-    scale: -1 #
+    scale: -1
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 39424 # Battery SOC % (BATTERY_LEVEL)
+      address: 39424 # Battery SOC %
       type: holding
       decode: int16
-  limitsoc:
-    source: convert
-    convert: float2int
-    set:
-      source: modbus
-      {{- include "modbus" . | indent 4 }}
-      register:
-        address: 46609 # Minimum SOC
-        type: writesingle
-        encoding: uint16
   batterymode:
     source: watchdog
     timeout: 30s
@@ -161,7 +159,7 @@ render: |
           source: sequence
           set:
           - source: const
-            value: 15 # INV Charge (AC First)
+            value: 7 # B01 1 1 //target:bat charging
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
