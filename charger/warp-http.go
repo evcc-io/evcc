@@ -390,7 +390,7 @@ func (wb *WarpHTTP) metersTotalEnergy() (float64, error) {
 	return values.EnergyAbsImExSum, err
 }
 
-// currents implements the api.PhaseCurrrents interface
+// currents implements the api.PhaseCurrents interface
 func (wb *WarpHTTP) metersCurrents() (float64, float64, float64, error) {
 	values, err := wb.metersValues()
 	if err != nil {
