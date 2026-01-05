@@ -108,7 +108,7 @@
     "deviceValue": {
       "amount": "Количество",
       "broker": "Брокер",
-      "bucket": "Кофа",
+      "bucket": "Bucket",
       "capacity": "Капацитет",
       "chargeStatus": "Статус",
       "chargeStatusA": "не е свързан",
@@ -257,7 +257,7 @@
     "influx": {
       "description": "Записва данни за зареждане и други метрики в InfluxDB. Използвайте Grafana или други инструменти за визуализиране на данните.",
       "descriptionToken": "Проверете документацията на InfluxDB, за да научите как да създадете такъв. https://docs.influxdata.com/influxdb/v2/admin/",
-      "labelBucket": "Кофа",
+      "labelBucket": "Bucket",
       "labelCheckInsecure": "Разреши самоподписани сертификати",
       "labelDatabase": "База данни",
       "labelInsecure": "„Проверка на сертификат“",

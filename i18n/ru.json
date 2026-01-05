@@ -108,7 +108,7 @@
     "deviceValue": {
       "amount": "Сумма",
       "broker": "Брокер",
-      "bucket": "Ведро",
+      "bucket": "Bucket",
       "capacity": "Вместимость",
       "chargeStatus": "Статус",
       "chargeStatusA": "не подключено",
@@ -257,7 +257,7 @@
     "influx": {
       "description": "Записывает данные о зарядке и другие показатели в InfluxDB. Используйте Grafana или другие инструменты для визуализации данных.",
       "descriptionToken": "Ознакомьтесь с документацией InfluxDB, чтобы узнать, как его создать. https://docs.influxdata.com/influxdb/v2/admin/",
-      "labelBucket": "Ведро",
+      "labelBucket": "Bucket",
       "labelCheckInsecure": "Разрешить самоподписанные сертификаты",
       "labelDatabase": "База данных",
       "labelInsecure": "Проверка сертификата",
