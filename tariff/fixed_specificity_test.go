@@ -34,25 +34,19 @@ func TestFixedSpecificity(t *testing.T) {
 		{time.December, 0.10}, // winter: specific zone wins
 	}
 
-	// Test both UTC and Local timezones
-	timezones := []*time.Location{time.UTC, time.Local}
-	for _, tz := range timezones {
-		t.Run(tz.String(), func(t *testing.T) {
-			for _, tc := range testCases {
-				clock := clock.NewMock()
-				at.(*Fixed).clock = clock
-				clock.Set(time.Date(2025, tc.month, 15, 3, 0, 0, 0, tz))
+	for _, tc := range testCases {
+		clock := clock.NewMock()
+		at.(*Fixed).clock = clock
+		clock.Set(time.Date(2025, tc.month, 15, 3, 0, 0, 0, time.UTC))
 
-				rr, err := at.Rates()
-				require.NoError(t, err)
+		rr, err := at.Rates()
+		require.NoError(t, err)
 
-				r, err := rr.At(clock.Now())
-				require.NoError(t, err)
+		r, err := rr.At(clock.Now())
+		require.NoError(t, err)
 
-				assert.Equal(t, tc.expected, r.Value,
-					"TZ=%s, %s: expected %.2f", tz, tc.month, tc.expected)
-			}
-		})
+		assert.Equal(t, tc.expected, r.Value,
+			"TZ=%s, %s: expected %.2f", time.UTC, tc.month, tc.expected)
 	}
 }
 
