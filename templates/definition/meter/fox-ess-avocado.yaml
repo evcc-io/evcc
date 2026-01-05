@@ -38,7 +38,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 39168 # [Meter collection] Active power
+      address: 39168 # Active power
       type: holding
       decode: int32
     scale: -1 # > 0: Feed power to the grid, < 0: Take power from the grid
@@ -49,51 +49,51 @@ render: |
       address: 39625 # Enter total power
       type: input
       decode: uint32
-    scale: 0.01 # Convert to kWh (raw / 100 = kWh)
+    scale: 0.01
   voltages:
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 39123 # Grid R Voltage
+      address: 39123
       type: holding
       decode: int16
-    scale: 0.1 # Convert to V (raw / 10 = V)
+    scale: 0.1
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 39124 # Grid S Voltage
+      address: 39124
       type: holding
       decode: int16
-    scale: 0.1 # Convert to V (raw / 10 = V)
+    scale: 0.1
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 39125 # Grid T Voltage
+      address: 39125
       type: holding
       decode: int16
-    scale: 0.1 # Convert to V (raw / 10 = V)
+    scale: 0.1
   currents:
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 39126 # Inverter R Current
+      address: 39126
       type: holding
       decode: int32
-    scale: 0.001 # Convert to A (raw / 1000 = A)
+    scale: 0.001
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 39128 # Inverter S Current
+      address: 39128
       type: holding
       decode: int32
-    scale: 0.001 # Convert to A (raw / 1000 = A)
+    scale: 0.001
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 39130 # Inverter T Current
+      address: 39130
       type: holding
       decode: int32
-    scale: 0.001 # Convert to A (raw / 1000 = A)
+    scale: 0.001
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
@@ -110,7 +110,7 @@ render: |
       address: 39149 # Cumulative PV Generation
       type: holding
       decode: uint32
-    scale: 0.01 # Convert to kWh (raw / 100 = kWh)
+    scale: 0.01
   maxacpower: {{ .maxacpower }}
   {{- end }}
   {{- if eq .usage "battery" }}
@@ -129,7 +129,7 @@ render: |
       address: 39609 # Total discharge power
       type: holding
       decode: uint32
-    scale: 0.01 # Convert to kWh (raw / 100 = kWh)
+    scale: 0.01
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
