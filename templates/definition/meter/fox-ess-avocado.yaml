@@ -2,13 +2,13 @@ template: fox-ess-avocado
 products:
   - brand: FoxESS
     description:
+      generic: Avocado
+  - brand: FoxESS
+    description:
       generic: MQ2200
   - brand: Solakon
     description:
       generic: ONE
-  - brand: FoxESS
-    description:
-      generic: Avocado
   - brand: Tepto
     description:
       generic: Avocado Pro
