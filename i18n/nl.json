@@ -892,9 +892,9 @@
         "continuous": "continu",
         "label": "Optimalisatie"
       },
-      "planNumber": "Schema {getal}",
+      "planNumber": "Schema {number}",
       "precondition": {
-        "description": "Laadtijd {duur} voor vertrek voor accu voorconditionering.",
+        "description": "Laadtijd {duration} voor vertrek voor accu voorconditionering.",
         "label": "Laat Opladen",
         "optionAll": "alles",
         "optionNo": "nee"
