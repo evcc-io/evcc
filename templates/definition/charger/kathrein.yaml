@@ -21,8 +21,8 @@ products:
 capabilities: ["1p3p", "mA", "rfid"]
 requirements:
   description:
-    de: Der Modbus-Server (TCP-Port 502) muss über die Weboberfläche der Wallbox aktiviert werden. Getestet mit Firmware-Version v2.7.0
-    en: The Modbus server (TCP port 502) must be activated on the Wallbox using the Web interface. Tested with Firmware version v2.7.0
+    de: Der Modbus-Server (TCP-Port 502) muss über die Weboberfläche der Wallbox aktiviert werden. Zur Nutzung der Funktion 'Authentifizierung per ModBus' mit evcc muss diese Option zusätzlich aktiviert werden. Getestet mit Firmware-Version v2.8.0
+    en: The Modbus server (TCP port 502) must be activated on the wallbox using the web interface. To use the function 'Authentication via ModBus' with evcc, this option must also be enabled. Tested with Firmware version v2.8.0
   evcc: ["sponsorship"]
 params:
   - name: modbus
