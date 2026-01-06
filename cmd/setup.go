@@ -865,7 +865,7 @@ func configureTariff(u api.TariffUsage, conf, fees *config.Typed, t *api.Tariff)
 		return &DeviceError{name, err}
 	}
 
-	if fees != nil && fees.Type == "" {
+	if fees != nil && fees.Type != "" {
 		ft, err := tariffInstance(name, *fees)
 		if err != nil {
 			return &DeviceError{name, err}
