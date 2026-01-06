@@ -57,7 +57,7 @@ const (
 	solaxRegConnectionStrength = 0x0027 // uint16 1%
 	solaxRegPhases             = 0x0028 // uint16
 	solaxRegLockState          = 0x002D // uint16
-	solaxRegBatterySoC         = 0x0A24 // uint16 0.1kWh
+	solaxRegBatterySoC         = 0xA024 // uint16 0.1kWh
 
 	// commands
 	solaxCmdStop  = 3
