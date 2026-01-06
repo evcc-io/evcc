@@ -69,7 +69,7 @@ const (
 	solaxModeECO  = 2
 
 	// minumum firmware version for phase switching support
-	solaxFirmwarePhaseSwitching = 611
+	solaxFirmwarePhaseSwitching = 905
 )
 
 func init() {
