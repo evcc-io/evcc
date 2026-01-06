@@ -3,8 +3,13 @@ package charger
 import (
 	"bytes"
 	"context"
+	"crypto/hmac"
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"math/big"
 	"net/http"
 	"strings"
 	"time"
@@ -18,7 +23,8 @@ import (
 // https://developer-eu.ecoflow.com/us/document/bkw
 
 const (
-	ecoflowStreamBaseURL = "https://api.ecoflow.com"
+	ecoflowStreamBaseURL = "https://api-e.ecoflow.com"
+	ecoflowStreamAPIPath = "/iot-open/sign/device/quota/all"
 )
 
 // EcoflowStream represents an EcoFlow Stream series battery system
@@ -27,7 +33,8 @@ type EcoflowStream struct {
 	log               *util.Logger
 	uri               string
 	sn                string // main device serial number
-	authToken         string // API authentication token
+	accessKey         string // API access key
+	secretKey         string // API secret key for signing
 	cache             time.Duration
 	cacheTTL          time.Duration
 	lastQueryTime     time.Time
@@ -95,10 +102,11 @@ func init() {
 // NewEcoflowStreamFromConfig creates a new EcoFlow Stream device from config
 func NewEcoflowStreamFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		URI   string        `mapstructure:"uri"`
-		SN    string        `mapstructure:"sn"`
-		Token string        `mapstructure:"token"`
-		Cache time.Duration `mapstructure:"cache"`
+		URI       string        `mapstructure:"uri"`
+		SN        string        `mapstructure:"sn"`
+		AccessKey string        `mapstructure:"accessKey"`
+		SecretKey string        `mapstructure:"secretKey"`
+		Cache     time.Duration `mapstructure:"cache"`
 	}{
 		Cache: 30 * time.Second,
 	}
@@ -107,20 +115,21 @@ func NewEcoflowStreamFromConfig(ctx context.Context, other map[string]interface{
 		return nil, err
 	}
 
-	if cc.URI == "" || cc.SN == "" || cc.Token == "" {
-		return nil, fmt.Errorf("ecoflow-stream: missing uri, sn or token")
+	if cc.URI == "" || cc.SN == "" || cc.AccessKey == "" || cc.SecretKey == "" {
+		return nil, fmt.Errorf("ecoflow-stream: missing uri, sn, accessKey or secretKey")
 	}
 
-	return NewEcoflowStream(cc.URI, cc.SN, cc.Token, cc.Cache)
+	return NewEcoflowStream(cc.URI, cc.SN, cc.AccessKey, cc.SecretKey, cc.Cache)
 }
 
 // NewEcoflowStreamRelay1FromConfig creates AC1 relay (relay2) as a controllable device
 func NewEcoflowStreamRelay1FromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		URI   string        `mapstructure:"uri"`
-		SN    string        `mapstructure:"sn"`
-		Token string        `mapstructure:"token"`
-		Cache time.Duration `mapstructure:"cache"`
+		URI       string        `mapstructure:"uri"`
+		SN        string        `mapstructure:"sn"`
+		AccessKey string        `mapstructure:"accessKey"`
+		SecretKey string        `mapstructure:"secretKey"`
+		Cache     time.Duration `mapstructure:"cache"`
 	}{
 		Cache: 30 * time.Second,
 	}
@@ -129,11 +138,11 @@ func NewEcoflowStreamRelay1FromConfig(ctx context.Context, other map[string]inte
 		return nil, err
 	}
 
-	if cc.URI == "" || cc.SN == "" || cc.Token == "" {
-		return nil, fmt.Errorf("ecoflow-stream-relay1: missing uri, sn or token")
+	if cc.URI == "" || cc.SN == "" || cc.AccessKey == "" || cc.SecretKey == "" {
+		return nil, fmt.Errorf("ecoflow-stream-relay1: missing uri, sn, accessKey or secretKey")
 	}
 
-	parent, err := NewEcoflowStream(cc.URI, cc.SN, cc.Token, cc.Cache)
+	parent, err := NewEcoflowStream(cc.URI, cc.SN, cc.AccessKey, cc.SecretKey, cc.Cache)
 	if err != nil {
 		return nil, err
 	}
@@ -144,10 +153,11 @@ func NewEcoflowStreamRelay1FromConfig(ctx context.Context, other map[string]inte
 // NewEcoflowStreamRelay2FromConfig creates AC2 relay (relay3) as a controllable device
 func NewEcoflowStreamRelay2FromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		URI   string        `mapstructure:"uri"`
-		SN    string        `mapstructure:"sn"`
-		Token string        `mapstructure:"token"`
-		Cache time.Duration `mapstructure:"cache"`
+		URI       string        `mapstructure:"uri"`
+		SN        string        `mapstructure:"sn"`
+		AccessKey string        `mapstructure:"accessKey"`
+		SecretKey string        `mapstructure:"secretKey"`
+		Cache     time.Duration `mapstructure:"cache"`
 	}{
 		Cache: 30 * time.Second,
 	}
@@ -156,11 +166,11 @@ func NewEcoflowStreamRelay2FromConfig(ctx context.Context, other map[string]inte
 		return nil, err
 	}
 
-	if cc.URI == "" || cc.SN == "" || cc.Token == "" {
-		return nil, fmt.Errorf("ecoflow-stream-relay2: missing uri, sn or token")
+	if cc.URI == "" || cc.SN == "" || cc.AccessKey == "" || cc.SecretKey == "" {
+		return nil, fmt.Errorf("ecoflow-stream-relay2: missing uri, sn, accessKey or secretKey")
 	}
 
-	parent, err := NewEcoflowStream(cc.URI, cc.SN, cc.Token, cc.Cache)
+	parent, err := NewEcoflowStream(cc.URI, cc.SN, cc.AccessKey, cc.SecretKey, cc.Cache)
 	if err != nil {
 		return nil, err
 	}
@@ -195,26 +205,26 @@ func putJSON(client *http.Client, url string, data interface{}, res interface{})
 }
 
 // NewEcoflowStream creates a new EcoFlow Stream device
-func NewEcoflowStream(uri, sn, authToken string, cache time.Duration) (api.Charger, error) {
-	log := util.NewLogger("ecoflow-stream").Redact(authToken)
+func NewEcoflowStream(uri, sn, accessKey, secretKey string, cache time.Duration) (api.Charger, error) {
+	log := util.NewLogger("ecoflow-stream").Redact(accessKey, secretKey)
 
 	c := &EcoflowStream{
-		Helper:       request.NewHelper(log),
-		log:          log,
-		uri:          strings.TrimSuffix(uri, "/"),
-		sn:           sn,
-		authToken:    authToken,
-		cache:        cache,
-		cacheTTL:     cache,
-		enabled:      true,
-		currentPower: 0,
-		battSoc:      0,
+		Helper:    request.NewHelper(log),
+		log:       log,
+		uri:       strings.TrimSuffix(uri, "/"),
+		sn:        sn,
+		accessKey: accessKey,
+		secretKey: secretKey,
+		cache:     cache,
+		cacheTTL:  cache,
+		enabled:   true,
 	}
 
-	// Set authorization header using custom transport
+	// Set authorization header using custom transport with HMAC-SHA256 signature
 	c.Client.Transport = &authTransport{
 		base:      transport.Default(),
-		authToken: authToken,
+		accessKey: accessKey,
+		secretKey: secretKey,
 	}
 
 	// Create cached quota fetcher
@@ -232,15 +242,61 @@ func NewEcoflowStream(uri, sn, authToken string, cache time.Duration) (api.Charg
 	return c, nil
 }
 
-// authTransport adds bearer token authorization to requests
+// authTransport adds HMAC-SHA256 signed authentication headers to requests
 type authTransport struct {
 	base      http.RoundTripper
-	authToken string
+	accessKey string
+	secretKey string
 }
 
 func (t *authTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", t.authToken))
+	// Generate nonce and timestamp
+	nonce := generateNonce()
+	timestamp := time.Now().UnixMilli()
+
+	// Build query string or body string for signature
+	var signStr string
+	if req.URL.RawQuery != "" {
+		signStr = req.URL.RawQuery
+	} else if req.Body != nil && req.Method != "GET" {
+		// For POST/PUT with JSON, body needs to be part of signature
+		// Extract from the request - this is handled in getQuotaAll
+		if sq := req.Header.Get("X-SignatureData"); sq != "" {
+			signStr = sq
+			req.Header.Del("X-SignatureData")
+		}
+	}
+
+	// Add authentication parameters to signature string
+	if signStr != "" {
+		signStr += "&"
+	}
+	signStr += fmt.Sprintf("accessKey=%s&nonce=%d&timestamp=%d", t.accessKey, nonce, timestamp)
+
+	// Create HMAC-SHA256 signature
+	sign := hmacSHA256(signStr, t.secretKey)
+
+	// Set headers
+	req.Header.Set("accessKey", t.accessKey)
+	req.Header.Set("nonce", fmt.Sprintf("%d", nonce))
+	req.Header.Set("timestamp", fmt.Sprintf("%d", timestamp))
+	req.Header.Set("sign", sign)
+
 	return t.base.RoundTrip(req)
+}
+
+// generateNonce creates a random 6-digit nonce
+func generateNonce() int64 {
+	max := big.NewInt(1000000)
+	n, _ := rand.Int(rand.Reader, max)
+	return 100000 + n.Int64()
+}
+
+// hmacSHA256 creates HMAC-SHA256 signature
+func hmacSHA256(data, secret string) string {
+	h := hmac.New(sha256.New, []byte(secret))
+	h.Write([]byte(data))
+	return hex.EncodeToString(h.Sum(nil))
 }
 
 // getMainDeviceSN fetches the main device serial number
