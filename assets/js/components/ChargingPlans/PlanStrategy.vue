@@ -20,7 +20,6 @@
 								:id="formId('continuous')"
 								v-model="localContinuous"
 								class="form-select"
-								:disabled="disabled"
 								@change="updateStrategy"
 							>
 								<option :value="false">
@@ -51,7 +50,6 @@
 								:id="formId('precondition')"
 								v-model="localPrecondition"
 								class="form-select"
-								:disabled="disabled"
 								@change="updateStrategy"
 							>
 								<option :value="0">
