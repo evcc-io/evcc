@@ -23,10 +23,11 @@ func init() {
 // NewEcoflowStreamPVFromConfig creates EcoFlow Stream PV generation meter
 func NewEcoflowStreamPVFromConfig(ctx context.Context, other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
-		URI   string        `mapstructure:"uri"`
-		SN    string        `mapstructure:"sn"`
-		Token string        `mapstructure:"token"`
-		Cache time.Duration `mapstructure:"cache"`
+		URI       string        `mapstructure:"uri"`
+		SN        string        `mapstructure:"sn"`
+		AccessKey string        `mapstructure:"accessKey"`
+		SecretKey string        `mapstructure:"secretKey"`
+		Cache     time.Duration `mapstructure:"cache"`
 	}{
 		Cache: 30 * time.Second,
 	}
@@ -35,11 +36,11 @@ func NewEcoflowStreamPVFromConfig(ctx context.Context, other map[string]interfac
 		return nil, err
 	}
 
-	if cc.URI == "" || cc.SN == "" || cc.Token == "" {
-		return nil, fmt.Errorf("ecoflow-stream-pv: missing uri, sn or token")
+	if cc.URI == "" || cc.SN == "" || cc.AccessKey == "" || cc.SecretKey == "" {
+		return nil, fmt.Errorf("ecoflow-stream-pv: missing uri, sn, accessKey or secretKey")
 	}
 
-	parent, err := charger.NewEcoflowStream(cc.URI, cc.SN, cc.Token, cc.Cache)
+	parent, err := charger.NewEcoflowStream(cc.URI, cc.SN, cc.AccessKey, cc.SecretKey, cc.Cache)
 	if err != nil {
 		return nil, err
 	}
@@ -50,10 +51,11 @@ func NewEcoflowStreamPVFromConfig(ctx context.Context, other map[string]interfac
 // NewEcoflowStreamGridFromConfig creates EcoFlow Stream grid meter
 func NewEcoflowStreamGridFromConfig(ctx context.Context, other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
-		URI   string        `mapstructure:"uri"`
-		SN    string        `mapstructure:"sn"`
-		Token string        `mapstructure:"token"`
-		Cache time.Duration `mapstructure:"cache"`
+		URI       string        `mapstructure:"uri"`
+		SN        string        `mapstructure:"sn"`
+		AccessKey string        `mapstructure:"accessKey"`
+		SecretKey string        `mapstructure:"secretKey"`
+		Cache     time.Duration `mapstructure:"cache"`
 	}{
 		Cache: 30 * time.Second,
 	}
@@ -62,11 +64,11 @@ func NewEcoflowStreamGridFromConfig(ctx context.Context, other map[string]interf
 		return nil, err
 	}
 
-	if cc.URI == "" || cc.SN == "" || cc.Token == "" {
-		return nil, fmt.Errorf("ecoflow-stream-grid: missing uri, sn or token")
+	if cc.URI == "" || cc.SN == "" || cc.AccessKey == "" || cc.SecretKey == "" {
+		return nil, fmt.Errorf("ecoflow-stream-grid: missing uri, sn, accessKey or secretKey")
 	}
 
-	parent, err := charger.NewEcoflowStream(cc.URI, cc.SN, cc.Token, cc.Cache)
+	parent, err := charger.NewEcoflowStream(cc.URI, cc.SN, cc.AccessKey, cc.SecretKey, cc.Cache)
 	if err != nil {
 		return nil, err
 	}
@@ -77,10 +79,11 @@ func NewEcoflowStreamGridFromConfig(ctx context.Context, other map[string]interf
 // NewEcoflowStreamBatteryFromConfig creates EcoFlow Stream battery meter
 func NewEcoflowStreamBatteryFromConfig(ctx context.Context, other map[string]interface{}) (api.Battery, error) {
 	cc := struct {
-		URI   string        `mapstructure:"uri"`
-		SN    string        `mapstructure:"sn"`
-		Token string        `mapstructure:"token"`
-		Cache time.Duration `mapstructure:"cache"`
+		URI       string        `mapstructure:"uri"`
+		SN        string        `mapstructure:"sn"`
+		AccessKey string        `mapstructure:"accessKey"`
+		SecretKey string        `mapstructure:"secretKey"`
+		Cache     time.Duration `mapstructure:"cache"`
 	}{
 		Cache: 30 * time.Second,
 	}
@@ -89,11 +92,11 @@ func NewEcoflowStreamBatteryFromConfig(ctx context.Context, other map[string]int
 		return nil, err
 	}
 
-	if cc.URI == "" || cc.SN == "" || cc.Token == "" {
-		return nil, fmt.Errorf("ecoflow-stream-battery: missing uri, sn or token")
+	if cc.URI == "" || cc.SN == "" || cc.AccessKey == "" || cc.SecretKey == "" {
+		return nil, fmt.Errorf("ecoflow-stream-battery: missing uri, sn, accessKey or secretKey")
 	}
 
-	parent, err := charger.NewEcoflowStream(cc.URI, cc.SN, cc.Token, cc.Cache)
+	parent, err := charger.NewEcoflowStream(cc.URI, cc.SN, cc.AccessKey, cc.SecretKey, cc.Cache)
 	if err != nil {
 		return nil, err
 	}
