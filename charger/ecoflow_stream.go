@@ -170,7 +170,7 @@ func NewEcoflowStreamRelay2FromConfig(ctx context.Context, other map[string]inte
 		return nil, fmt.Errorf("ecoflow-stream-relay2: missing uri, sn, accessKey or secretKey")
 	}
 
-	parent, err := NewEcoflowStream(cc.URI, cc.SN, accessKey, secretKey, cc.Cache)
+	parent, err := NewEcoflowStream(cc.URI, cc.SN, cc.AccessKey, cc.SecretKey, cc.Cache)
 	if err != nil {
 		return nil, err
 	}
