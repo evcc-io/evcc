@@ -55,7 +55,11 @@ export default defineComponent({
 		currency: String as PropType<CURRENCY>,
 	},
 	data() {
-		return { activeIndex: null as number | null, startTime: new Date() };
+		return {
+			activeIndex: null as number | null,
+			startTime: new Date(),
+			interval: null as ReturnType<typeof setInterval> | null,
+		};
 	},
 	computed: {
 		endTime(): Date | null {
@@ -172,6 +176,17 @@ export default defineComponent({
 		rates(): void {
 			this.startTime = new Date();
 		},
+	},
+	mounted() {
+		this.interval = setInterval(() => {
+			// force time-based computed data to update at least once a minute
+			this.startTime = new Date();
+		}, 1000 * 60);
+	},
+	beforeUnmount() {
+		if (this.interval) {
+			clearInterval(this.interval);
+		}
 	},
 	methods: {
 		convertDates(list: Rate[] | undefined): Rate[] {

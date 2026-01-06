@@ -129,6 +129,7 @@ export default defineComponent({
 	data() {
 		return {
 			interval: null as Timeout,
+			currentTime: new Date(),
 		};
 	},
 	computed: {
@@ -216,6 +217,11 @@ export default defineComponent({
 		statusItems() {
 			const t = (key: string, params?: Record<string, unknown>) =>
 				this.$t(`main.vehicleStatus.${key}`, params ?? {});
+
+			// ensure periodic recomputation even without data change
+			// @ts-expect-error unused
+			// eslint-disable-next-line @typescript-eslint/no-unused-vars
+			const _ = this.currentTime;
 
 			const items = [
 				{
@@ -396,8 +402,8 @@ export default defineComponent({
 	},
 	mounted() {
 		this.interval = setInterval(() => {
-			// Force reactivity update for time-dependent content
-			this.$forceUpdate();
+			// force time-based computed data to update at least once a minute
+			this.currentTime = new Date();
 		}, 1000 * 60);
 	},
 	beforeUnmount() {
