@@ -32,7 +32,6 @@
     "chartjs-plugin-datalabels": "^2.2.0",
     "countup.js": "^2.9.0",
     "dayjs": "^1.11.19",
-    "js-yaml": "^4.1.1",
     "monaco-editor": "0.52.2",
     "smoothscroll-polyfill": "^0.4.4",
     "snarkdown": "^2.0.0",

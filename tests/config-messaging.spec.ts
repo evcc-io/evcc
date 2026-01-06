@@ -68,7 +68,7 @@ async function validateServices(modal: Locator) {
 
   await expect(customEncoding).toHaveValue("title");
   await expect(customPlugin).toHaveText(
-    ["123", 'cmd: /usr/local/bin/evcc "Title={{.send}}"', "source: script"].join("")
+    ["12", 'cmd: /usr/local/bin/evcc "Title={{.send}}"', "source: script"].join("")
   );
 }
 
@@ -231,7 +231,7 @@ test.describe("messaging", async () => {
 
     await customEncoding.selectOption({ label: "title" });
     await expect(customPlugin).toHaveText(
-      ["123", 'cmd: /usr/local/bin/evcc_message "{{.send}}"', "source: script"].join("")
+      ["123", "source: script", 'cmd: /usr/local/bin/evcc_message "{{.send}}"'].join("")
     );
 
     await editorClear(customPlugin);
@@ -240,7 +240,6 @@ test.describe("messaging", async () => {
       page,
       ['cmd: /usr/local/bin/evcc "Title={{.send}}"', "source: script"].join("\n")
     );
-    await customBox.getByRole("button", { name: "Format & Save", exact: true }).click();
 
     // validate connection
     await modal.getByRole("button", { name: "Save", exact: true }).click();

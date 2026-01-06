@@ -277,7 +277,7 @@ export default {
 				default:
 					return {
 						type: MESSAGING_SERVICE_TYPE.CUSTOM,
-						other: { encoding: MESSAGING_SERVICE_CUSTOM_ENCODING.JSON, send: {} },
+						other: { encoding: MESSAGING_SERVICE_CUSTOM_ENCODING.JSON, send: "" },
 					};
 			}
 		},

@@ -27,19 +27,7 @@
 				url: '[docs.evcc.io](https://docs.evcc.io/en/docs/devices/plugins)',
 			}"
 		>
-			<YamlEditorContainer
-				:model-value="getContent"
-				@update:model-value="storeNewContent($event)"
-			/>
-			<button
-				v-if="changed"
-				type="button"
-				class="d-flex btn btn-sm btn-outline-primary border-0 align-items-center gap-2 ms-auto px-0 text-decoration-underline"
-				tabindex="0"
-				@click="formatAndSave"
-			>
-				{{ $t("config.messaging.service.custom.formatAndSave") }}
-			</button>
+			<YamlEditorContainer :model-value="send" @update:model-value="updateSend" />
 		</MessagingFormRow>
 	</div>
 </template>
@@ -50,19 +38,17 @@ import type { PropType } from "vue";
 import PropertyField from "../../PropertyField.vue";
 import YamlEditorContainer from "../../YamlEditorContainer.vue";
 import MessagingFormRow from "./MessagingFormRow.vue";
-import { load, dump } from "js-yaml";
 
-const DEAFULT_SEND_PLUGIN = {
-	cmd: `/usr/local/bin/evcc_message "{{.send}}"`,
-	source: "script",
-};
+const DEAFULT_SEND_PLUGIN = `source: script
+cmd: /usr/local/bin/evcc_message "{{.send}}"
+`;
 
 export default {
 	name: "CustomService",
 	components: { MessagingFormRow, PropertyField, YamlEditorContainer },
 	props: {
 		encoding: String as PropType<MESSAGING_SERVICE_CUSTOM_ENCODING>,
-		send: Object,
+		send: String,
 	},
 	emits: ["update:encoding", "update:send"],
 	data() {
@@ -89,33 +75,15 @@ export default {
 					return "`<MSG>`";
 			}
 		},
-		getContent() {
-			return dump(this.send);
-		},
 	},
 	mounted() {
-		if (!this.send || Object.entries(this.send).length === 0) {
+		if (!this.send) {
 			this.updateSend(DEAFULT_SEND_PLUGIN);
 		}
 	},
 	methods: {
-		updateSend(v: object) {
+		updateSend(v: string) {
 			this.$emit("update:send", v);
-		},
-		storeNewContent(s: string) {
-			try {
-				const o = load(s);
-				if (o && typeof o === "object") {
-					this.newContent = o;
-					this.changed = true;
-				}
-			} catch {
-				// tslint:disable-line:no-empty
-			}
-		},
-		formatAndSave() {
-			this.updateSend(this.newContent);
-			this.changed = false;
 		},
 	},
 };

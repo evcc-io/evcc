@@ -3,6 +3,7 @@ package cmd
 import (
 	"cmp"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/url"
@@ -58,6 +59,7 @@ import (
 	vpr "github.com/spf13/viper"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/text/currency"
+	"gopkg.in/yaml.v3"
 )
 
 var conf = globalconfig.All{
@@ -857,6 +859,28 @@ func configureMessengers(conf *globalconfig.Messaging, vehicles push.Vehicles, v
 					}
 
 					delete(s.Other, "uri")
+				} else if s.Type == "custom" {
+					d, err := json.Marshal(s.Other)
+					if err != nil {
+						return nil, err
+					}
+
+					var other struct {
+						Encoding string `json:"encoding"`
+						Send     any    `json:"send"`
+					}
+
+					if err := json.Unmarshal(d, &other); err != nil {
+						return nil, err
+					}
+
+					yamlSend, err := yaml.Marshal(other.Send)
+					if err != nil {
+						return nil, err
+					}
+
+					s.Other["encoding"] = other.Encoding
+					s.Other["send"] = string(yamlSend)
 				}
 			}
 			// migrate from yaml to json
