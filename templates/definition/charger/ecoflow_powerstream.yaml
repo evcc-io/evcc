@@ -15,8 +15,8 @@ params:
     required: true
   - name: sn
     description:
-      de: Seriennummer des Ecoflow Powerstream Wechselrichters
-      en: Serial number of the Ecoflow Powerstream inverter
+      de: Seriennummer
+      en: Serial number
     required: true
 render: |
   type: ecoflow-powerstream
