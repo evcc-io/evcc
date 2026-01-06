@@ -3,6 +3,7 @@
 		v-if="commit"
 		:href="githubHashUrl"
 		target="_blank"
+		rel="noopener noreferrer"
 		class="btn btn-link px-0 text-decoration-none evcc-default-text text-nowrap d-flex align-items-end text-truncate"
 	>
 		<Logo class="logo me-2 flex-shrink-0" />
@@ -13,7 +14,6 @@
 	</a>
 	<button
 		v-else-if="newVersionAvailable"
-		href="#"
 		class="btn btn-link px-0 text-decoration-none evcc-default-text text-nowrap d-flex align-items-end text-truncate"
 		@click="openModal"
 	>
@@ -27,6 +27,7 @@
 		v-else
 		:href="releaseNotesUrl(installed)"
 		target="_blank"
+		rel="noopener noreferrer"
 		class="btn btn-link evcc-default-text px-0 text-decoration-none text-nowrap d-flex align-items-end text-truncate"
 	>
 		<Logo class="logo me-2 flex-shrink-0" />
