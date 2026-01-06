@@ -143,7 +143,8 @@ export const createServiceEndpoints = (params: TemplateParam[]): ParamService[] 
       const stringValues = (values: Record<string, any>): Record<string, string> =>
         Object.entries(values).reduce(
           (acc, [key, val]) => {
-            if (val !== undefined && val !== null && key !== "modbus") acc[key] = String(val);
+            if (val !== undefined && val !== null && val !== "" && key !== "modbus")
+              acc[key] = String(val);
             return acc;
           },
           {} as Record<string, string>

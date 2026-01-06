@@ -89,4 +89,14 @@ describe("createServiceEndpoints", () => {
       })
     ).toBe("service?device=%2Fdev%2FttyUSB0&baudrate=9600&comset=8N1&id=1");
   });
+
+  it("treats empty strings as missing values", () => {
+    const params = [buildParam("sensor", "homes/{home}/sensors")];
+    const endpoints = createServiceEndpoints(params);
+
+    // Empty string should be treated as missing, leaving placeholder
+    expect(endpoints[0]!.url({ home: "" })).toBe("homes/{home}/sensors");
+    // Non-empty value should replace placeholder
+    expect(endpoints[0]!.url({ home: "main" })).toBe("homes/main/sensors");
+  });
 });
