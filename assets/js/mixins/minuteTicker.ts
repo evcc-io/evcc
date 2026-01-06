@@ -4,19 +4,19 @@ import type { Timeout } from "@/types/evcc";
 export default defineComponent({
   data() {
     return {
-      currentTime: new Date(),
-      minuteTickerInterval: null as Timeout,
+      everyMinute: new Date(),
+      minuteInterval: null as Timeout,
     };
   },
   mounted() {
-    this.minuteTickerInterval = setInterval(() => {
+    this.minuteInterval = setInterval(() => {
       // force time-based computed data to update at least once a minute
-      this.currentTime = new Date();
+      this.everyMinute = new Date();
     }, 1000 * 60);
   },
   beforeUnmount() {
-    if (this.minuteTickerInterval) {
-      clearInterval(this.minuteTickerInterval);
+    if (this.minuteInterval) {
+      clearInterval(this.minuteInterval);
     }
   },
 });

@@ -176,7 +176,7 @@ export default defineComponent({
 		rates(): void {
 			this.startTime = new Date();
 		},
-		currentTime(): void {
+		everyMinute(): void {
 			this.startTime = new Date();
 		},
 	},

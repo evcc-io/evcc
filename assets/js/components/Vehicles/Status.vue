@@ -214,7 +214,7 @@ export default defineComponent({
 				this.$t(`main.vehicleStatus.${key}`, params ?? {});
 
 			// ensure periodic recomputation even without data change
-			void this.currentTime;
+			void this.everyMinute;
 
 			const items = [
 				{
