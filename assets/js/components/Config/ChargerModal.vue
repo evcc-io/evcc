@@ -272,7 +272,6 @@ export default defineComponent({
 			}
 		},
 		applyCustomDefaults(template: Template | null, values: DeviceValues) {
-			console.log("applyCustomDefaults", template, values);
 			// Store template and values for ocppUrl computation
 			this.currentTemplate = template;
 			this.currentValues = values;
