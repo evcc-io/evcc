@@ -854,7 +854,7 @@ func tariffInstance(name string, conf config.Typed) (api.Tariff, error) {
 	return instance, nil
 }
 
-func configureTariff(u api.TariffUsage, conf, fees *config.Typed, t *api.Tariff) error {
+func configureTariff(u api.TariffUsage, conf config.Typed, t *api.Tariff) error {
 	if conf == nil || conf.Type == "" {
 		return nil
 	}
@@ -865,8 +865,20 @@ func configureTariff(u api.TariffUsage, conf, fees *config.Typed, t *api.Tariff)
 		return &DeviceError{name, err}
 	}
 
-	if fees != nil && fees.Type != "" {
-		ft, err := tariffInstance(name, *fees)
+	*t = res
+	return nil
+}
+
+func configureTariffWithFees(u api.TariffUsage, conf config.Typed, fees config.Typed, t *api.Tariff) error {
+	var res api.Tariff
+	if err := configureTariff(u, conf, &res); res == nil || err != nil {
+		return err
+	}
+
+	// fees
+	if fees.Type != "" {
+		name := u.String()
+		ft, err := tariffInstance(name, fees)
 		if err != nil {
 			return &DeviceError{name, err}
 		}
@@ -926,21 +938,17 @@ func configureTariffs(conf *globalconfig.Tariffs) (*tariff.Tariffs, error) {
 
 	var eg errgroup.Group
 	eg.Go(func() error {
-		return configureTariff(api.TariffUsageGrid, &conf.Grid, &conf.GridFees, &tariffs.Grid)
+		return configureTariffWithFees(api.TariffUsageGrid, conf.Grid, conf.GridFees, &tariffs.Grid)
 	})
 	eg.Go(func() error {
-		return configureTariff(api.TariffUsageFeedIn, &conf.FeedIn, &conf.FeedInFees, &tariffs.FeedIn)
+		return configureTariffWithFees(api.TariffUsageFeedIn, conf.FeedIn, conf.FeedInFees, &tariffs.FeedIn)
 	})
-	eg.Go(func() error {
-		return configureTariff(api.TariffUsageCo2, &conf.Co2, nil, &tariffs.Co2)
-	})
-	eg.Go(func() error {
-		return configureTariff(api.TariffUsagePlanner, &conf.Planner, nil, &tariffs.Planner)
-	})
+	eg.Go(func() error { return configureTariff(api.TariffUsageCo2, conf.Co2, &tariffs.Co2) })
+	eg.Go(func() error { return configureTariff(api.TariffUsagePlanner, conf.Planner, &tariffs.Planner) })
 	if len(conf.Solar) > 0 {
 		eg.Go(func() error {
 			if len(conf.Solar) == 1 {
-				return configureTariff(api.TariffUsageSolar, &conf.Solar[0], nil, &tariffs.Solar)
+				return configureTariff(api.TariffUsageSolar, conf.Solar[0], &tariffs.Solar)
 			}
 			return configureSolarTariff(conf.Solar, &tariffs.Solar)
 		})
