@@ -36,11 +36,25 @@ func NewEcoflowStreamPVFromConfig(ctx context.Context, other map[string]interfac
 		return nil, err
 	}
 
-	if cc.URI == "" || cc.SN == "" || cc.AccessKey == "" || cc.SecretKey == "" {
-		return nil, fmt.Errorf("ecoflow-stream-pv: missing uri, sn, accessKey or secretKey")
+	if cc.URI == "" || cc.SN == "" {
+		return nil, fmt.Errorf("ecoflow-stream-pv: missing uri or sn")
 	}
 
-	parent, err := charger.NewEcoflowStream(cc.URI, cc.SN, cc.AccessKey, cc.SecretKey, cc.Cache)
+	// Use stored credentials if not provided
+	accessKey := cc.AccessKey
+	secretKey := cc.SecretKey
+	if accessKey == "" {
+		accessKey = charger.GetEcoflowStreamAccessKey()
+	}
+	if secretKey == "" {
+		secretKey = charger.GetEcoflowStreamSecretKey()
+	}
+
+	if accessKey == "" || secretKey == "" {
+		return nil, fmt.Errorf("ecoflow-stream-pv: missing accessKey or secretKey")
+	}
+
+	parent, err := charger.NewEcoflowStream(cc.URI, cc.SN, accessKey, secretKey, cc.Cache)
 	if err != nil {
 		return nil, err
 	}
@@ -64,11 +78,25 @@ func NewEcoflowStreamGridFromConfig(ctx context.Context, other map[string]interf
 		return nil, err
 	}
 
-	if cc.URI == "" || cc.SN == "" || cc.AccessKey == "" || cc.SecretKey == "" {
-		return nil, fmt.Errorf("ecoflow-stream-grid: missing uri, sn, accessKey or secretKey")
+	if cc.URI == "" || cc.SN == "" {
+		return nil, fmt.Errorf("ecoflow-stream-grid: missing uri or sn")
 	}
 
-	parent, err := charger.NewEcoflowStream(cc.URI, cc.SN, cc.AccessKey, cc.SecretKey, cc.Cache)
+	// Use stored credentials if not provided
+	accessKey := cc.AccessKey
+	secretKey := cc.SecretKey
+	if accessKey == "" {
+		accessKey = charger.GetEcoflowStreamAccessKey()
+	}
+	if secretKey == "" {
+		secretKey = charger.GetEcoflowStreamSecretKey()
+	}
+
+	if accessKey == "" || secretKey == "" {
+		return nil, fmt.Errorf("ecoflow-stream-grid: missing accessKey or secretKey")
+	}
+
+	parent, err := charger.NewEcoflowStream(cc.URI, cc.SN, accessKey, secretKey, cc.Cache)
 	if err != nil {
 		return nil, err
 	}
@@ -92,11 +120,25 @@ func NewEcoflowStreamBatteryFromConfig(ctx context.Context, other map[string]int
 		return nil, err
 	}
 
-	if cc.URI == "" || cc.SN == "" || cc.AccessKey == "" || cc.SecretKey == "" {
-		return nil, fmt.Errorf("ecoflow-stream-battery: missing uri, sn, accessKey or secretKey")
+	if cc.URI == "" || cc.SN == "" {
+		return nil, fmt.Errorf("ecoflow-stream-battery: missing uri or sn")
 	}
 
-	parent, err := charger.NewEcoflowStream(cc.URI, cc.SN, cc.AccessKey, cc.SecretKey, cc.Cache)
+	// Use stored credentials if not provided
+	accessKey := cc.AccessKey
+	secretKey := cc.SecretKey
+	if accessKey == "" {
+		accessKey = charger.GetEcoflowStreamAccessKey()
+	}
+	if secretKey == "" {
+		secretKey = charger.GetEcoflowStreamSecretKey()
+	}
+
+	if accessKey == "" || secretKey == "" {
+		return nil, fmt.Errorf("ecoflow-stream-battery: missing accessKey or secretKey")
+	}
+
+	parent, err := charger.NewEcoflowStream(cc.URI, cc.SN, accessKey, secretKey, cc.Cache)
 	if err != nil {
 		return nil, err
 	}

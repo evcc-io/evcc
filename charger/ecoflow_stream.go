@@ -27,6 +27,22 @@ const (
 	ecoflowStreamAPIPath = "/iot-open/sign/device/quota/all"
 )
 
+// ecoflowStreamCredentials holds shared credentials for EcoFlow Stream devices
+var ecoflowStreamCredentials struct {
+	accessKey string
+	secretKey string
+}
+
+// GetEcoflowStreamAccessKey returns the stored access key
+func GetEcoflowStreamAccessKey() string {
+	return ecoflowStreamCredentials.accessKey
+}
+
+// GetEcoflowStreamSecretKey returns the stored secret key
+func GetEcoflowStreamSecretKey() string {
+	return ecoflowStreamCredentials.secretKey
+}
+
 // EcoflowStream represents an EcoFlow Stream series battery system
 type EcoflowStream struct {
 	*request.Helper
@@ -115,11 +131,31 @@ func NewEcoflowStreamFromConfig(ctx context.Context, other map[string]interface{
 		return nil, err
 	}
 
-	if cc.URI == "" || cc.SN == "" || cc.AccessKey == "" || cc.SecretKey == "" {
-		return nil, fmt.Errorf("ecoflow-stream: missing uri, sn, accessKey or secretKey")
+	// Store credentials for other devices if provided
+	if cc.AccessKey != "" && cc.SecretKey != "" {
+		ecoflowStreamCredentials.accessKey = cc.AccessKey
+		ecoflowStreamCredentials.secretKey = cc.SecretKey
 	}
 
-	return NewEcoflowStream(cc.URI, cc.SN, cc.AccessKey, cc.SecretKey, cc.Cache)
+	if cc.URI == "" || cc.SN == "" {
+		return nil, fmt.Errorf("ecoflow-stream: missing uri or sn")
+	}
+
+	// Use stored credentials if not provided
+	accessKey := cc.AccessKey
+	secretKey := cc.SecretKey
+	if accessKey == "" {
+		accessKey = ecoflowStreamCredentials.accessKey
+	}
+	if secretKey == "" {
+		secretKey = ecoflowStreamCredentials.secretKey
+	}
+
+	if accessKey == "" || secretKey == "" {
+		return nil, fmt.Errorf("ecoflow-stream: missing accessKey or secretKey")
+	}
+
+	return NewEcoflowStream(cc.URI, cc.SN, accessKey, secretKey, cc.Cache)
 }
 
 // NewEcoflowStreamRelay1FromConfig creates AC1 relay (relay2) as a controllable device
@@ -138,11 +174,25 @@ func NewEcoflowStreamRelay1FromConfig(ctx context.Context, other map[string]inte
 		return nil, err
 	}
 
-	if cc.URI == "" || cc.SN == "" || cc.AccessKey == "" || cc.SecretKey == "" {
-		return nil, fmt.Errorf("ecoflow-stream-relay1: missing uri, sn, accessKey or secretKey")
+	if cc.URI == "" || cc.SN == "" {
+		return nil, fmt.Errorf("ecoflow-stream-relay1: missing uri or sn")
 	}
 
-	parent, err := NewEcoflowStream(cc.URI, cc.SN, cc.AccessKey, cc.SecretKey, cc.Cache)
+	// Use stored credentials if not provided
+	accessKey := cc.AccessKey
+	secretKey := cc.SecretKey
+	if accessKey == "" {
+		accessKey = ecoflowStreamCredentials.accessKey
+	}
+	if secretKey == "" {
+		secretKey = ecoflowStreamCredentials.secretKey
+	}
+
+	if accessKey == "" || secretKey == "" {
+		return nil, fmt.Errorf("ecoflow-stream-relay1: missing accessKey or secretKey")
+	}
+
+	parent, err := NewEcoflowStream(cc.URI, cc.SN, accessKey, secretKey, cc.Cache)
 	if err != nil {
 		return nil, err
 	}
@@ -166,11 +216,25 @@ func NewEcoflowStreamRelay2FromConfig(ctx context.Context, other map[string]inte
 		return nil, err
 	}
 
-	if cc.URI == "" || cc.SN == "" || cc.AccessKey == "" || cc.SecretKey == "" {
-		return nil, fmt.Errorf("ecoflow-stream-relay2: missing uri, sn, accessKey or secretKey")
+	if cc.URI == "" || cc.SN == "" {
+		return nil, fmt.Errorf("ecoflow-stream-relay2: missing uri or sn")
 	}
 
-	parent, err := NewEcoflowStream(cc.URI, cc.SN, cc.AccessKey, cc.SecretKey, cc.Cache)
+	// Use stored credentials if not provided
+	accessKey := cc.AccessKey
+	secretKey := cc.SecretKey
+	if accessKey == "" {
+		accessKey = ecoflowStreamCredentials.accessKey
+	}
+	if secretKey == "" {
+		secretKey = ecoflowStreamCredentials.secretKey
+	}
+
+	if accessKey == "" || secretKey == "" {
+		return nil, fmt.Errorf("ecoflow-stream-relay2: missing accessKey or secretKey")
+	}
+
+	parent, err := NewEcoflowStream(cc.URI, cc.SN, accessKey, secretKey, cc.Cache)
 	if err != nil {
 		return nil, err
 	}
