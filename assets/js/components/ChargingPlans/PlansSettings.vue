@@ -174,7 +174,7 @@ export default defineComponent({
 		},
 		strategyDisabled(): boolean {
 			// options only make sense if there are variable prices
-			// TODO: make this logic more robus (api fails, missing data)
+			// TODO: make this logic more robust (api fails, missing data)
 			const slots = this.forecast?.planner || [];
 			const values = new Set(slots.map(({ value }) => value));
 			return values.size <= 1;
