@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -44,6 +43,7 @@ type EEBus struct {
 }
 
 type measurements interface {
+	IsScenarioAvailableAtEntity(entity spineapi.EntityRemoteInterface, scenario uint) bool
 	Power(entity spineapi.EntityRemoteInterface) (float64, error)
 	EnergyConsumed(entity spineapi.EntityRemoteInterface) (float64, error)
 	CurrentPerPhase(entity spineapi.EntityRemoteInterface) ([]float64, error)
@@ -130,7 +130,7 @@ func NewEEBus(ctx context.Context, ski, ip string, usage *templates.Usage, timeo
 	return c, nil
 }
 
-func (c *EEBus) readValue(cache *util.Value[float64], update func(entity spineapi.EntityRemoteInterface) (float64, error)) (float64, error) {
+func (c *EEBus) readValue(scenario uint, cache *util.Value[float64], update func(entity spineapi.EntityRemoteInterface) (float64, error)) (float64, error) {
 	if res, err := cache.Get(); err == nil {
 		return res, nil
 	}
@@ -138,7 +138,7 @@ func (c *EEBus) readValue(cache *util.Value[float64], update func(entity spineap
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	if c.maEntity == nil {
+	if c.maEntity == nil || !c.mm.IsScenarioAvailableAtEntity(c.maEntity, scenario) {
 		return 0, api.ErrNotAvailable
 	}
 
@@ -154,16 +154,16 @@ func (c *EEBus) readValue(cache *util.Value[float64], update func(entity spineap
 var _ api.Meter = (*EEBus)(nil)
 
 func (c *EEBus) CurrentPower() (float64, error) {
-	return c.readValue(c.power, c.mm.Power)
+	return c.readValue(1, c.power, c.mm.Power)
 }
 
 var _ api.MeterEnergy = (*EEBus)(nil)
 
 func (c *EEBus) TotalEnergy() (float64, error) {
-	return c.readValue(c.energy, c.mm.EnergyConsumed)
+	return c.readValue(2, c.energy, c.mm.EnergyConsumed)
 }
 
-func (c *EEBus) readPhases(cache *util.Value[[]float64], update func(entity spineapi.EntityRemoteInterface) ([]float64, error)) (float64, float64, float64, error) {
+func (c *EEBus) readPhases(scenario uint, cache *util.Value[[]float64], update func(entity spineapi.EntityRemoteInterface) ([]float64, error)) (float64, float64, float64, error) {
 	if res, err := cache.Get(); err == nil {
 		return res[0], res[1], res[2], nil
 	}
@@ -171,7 +171,7 @@ func (c *EEBus) readPhases(cache *util.Value[[]float64], update func(entity spin
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	if c.maEntity == nil {
+	if c.maEntity == nil || !c.mm.IsScenarioAvailableAtEntity(c.maEntity, scenario) {
 		return 0, 0, 0, api.ErrNotAvailable
 	}
 
@@ -195,13 +195,13 @@ func (c *EEBus) readPhases(cache *util.Value[[]float64], update func(entity spin
 var _ api.PhaseCurrents = (*EEBus)(nil)
 
 func (c *EEBus) Currents() (float64, float64, float64, error) {
-	return c.readPhases(c.currents, c.mm.CurrentPerPhase)
+	return c.readPhases(3, c.currents, c.mm.CurrentPerPhase)
 }
 
 var _ api.PhaseVoltages = (*EEBus)(nil)
 
 func (c *EEBus) Voltages() (float64, float64, float64, error) {
-	return c.readPhases(c.voltages, c.mm.VoltagePerPhase)
+	return c.readPhases(4, c.voltages, c.mm.VoltagePerPhase)
 }
 
 var _ api.Dimmer = (*EEBus)(nil)
@@ -231,12 +231,8 @@ func (c *EEBus) Dim(dim bool) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	if c.egLpcEntity == nil {
+	if c.egLpcEntity == nil || !c.eg.EgLPCInterface.IsScenarioAvailableAtEntity(c.egLpcEntity, 1) {
 		return api.ErrNotAvailable
-	}
-
-	if !slices.Contains(c.eg.EgLPCInterface.AvailableScenariosForEntity(c.egLpcEntity), 1) {
-		return errors.New("eg lpc: scenario 1 not supported")
 	}
 
 	_, err := c.eg.EgLPCInterface.WriteConsumptionLimit(c.egLpcEntity, ucapi.LoadLimit{
@@ -274,12 +270,8 @@ func (c *EEBus) Curtail(curtail bool) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	if c.egLppEntity == nil {
+	if c.egLppEntity == nil || !c.eg.EgLPPInterface.IsScenarioAvailableAtEntity(c.egLppEntity, 1) {
 		return api.ErrNotAvailable
-	}
-
-	if !slices.Contains(c.eg.EgLPPInterface.AvailableScenariosForEntity(c.egLppEntity), 1) {
-		return errors.New("eg lpp: scenario 1 not supported")
 	}
 
 	_, err := c.eg.EgLPPInterface.WriteProductionLimit(c.egLppEntity, ucapi.LoadLimit{
