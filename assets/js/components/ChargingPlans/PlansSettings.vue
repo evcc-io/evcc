@@ -44,7 +44,6 @@
 				<span v-else-if="alreadyReached">{{ $t("main.targetCharge.goalReached") }}</span>
 				<span v-else>{{ nextPlanTitle }}</span>
 				<button
-					v-if="showStrategy"
 					type="button"
 					class="btn btn-sm"
 					:class="strategyOpen ? 'btn-secondary' : 'evcc-gray'"
@@ -57,7 +56,6 @@
 			</div>
 		</h5>
 		<ChargingPlanStrategy
-			v-if="showStrategy"
 			v-bind="chargingPlanStrategyProps"
 			:show="strategyOpen"
 			@update="updatePlanStrategy"
@@ -172,12 +170,6 @@ export default defineComponent({
 		},
 		nextPlanTitle(): string {
 			return `${this.$t("main.targetCharge.nextPlan")} #${this.nextPlanId}`;
-		},
-		showStrategy(): boolean {
-			// only show option if planner forecast has different values
-			const slots = this.forecast?.planner || [];
-			const values = new Set(slots.map(({ value }) => value));
-			return values.size > 1;
 		},
 	},
 	watch: {
