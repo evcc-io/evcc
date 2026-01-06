@@ -854,15 +854,24 @@ func tariffInstance(name string, conf config.Typed) (api.Tariff, error) {
 	return instance, nil
 }
 
-func configureTariff(u api.TariffUsage, conf config.Typed, t *api.Tariff) error {
-	if conf.Type == "" {
+func configureTariff(u api.TariffUsage, conf, fees *config.Typed, t *api.Tariff) error {
+	if conf == nil || conf.Type == "" {
 		return nil
 	}
 
 	name := u.String()
-	res, err := tariffInstance(name, conf)
+	res, err := tariffInstance(name, *conf)
 	if err != nil {
 		return &DeviceError{name, err}
+	}
+
+	if fees != nil && fees.Type == "" {
+		ft, err := tariffInstance(name, *fees)
+		if err != nil {
+			return &DeviceError{name, err}
+		}
+
+		res = tariff.NewCombined([]api.Tariff{res, ft})
 	}
 
 	*t = res
@@ -916,14 +925,22 @@ func configureTariffs(conf *globalconfig.Tariffs) (*tariff.Tariffs, error) {
 	}
 
 	var eg errgroup.Group
-	eg.Go(func() error { return configureTariff(api.TariffUsageGrid, conf.Grid, &tariffs.Grid) })
-	eg.Go(func() error { return configureTariff(api.TariffUsageFeedIn, conf.FeedIn, &tariffs.FeedIn) })
-	eg.Go(func() error { return configureTariff(api.TariffUsageCo2, conf.Co2, &tariffs.Co2) })
-	eg.Go(func() error { return configureTariff(api.TariffUsagePlanner, conf.Planner, &tariffs.Planner) })
+	eg.Go(func() error {
+		return configureTariff(api.TariffUsageGrid, &conf.Grid, &conf.GridFees, &tariffs.Grid)
+	})
+	eg.Go(func() error {
+		return configureTariff(api.TariffUsageFeedIn, &conf.FeedIn, &conf.FeedInFees, &tariffs.FeedIn)
+	})
+	eg.Go(func() error {
+		return configureTariff(api.TariffUsageCo2, &conf.Co2, nil, &tariffs.Co2)
+	})
+	eg.Go(func() error {
+		return configureTariff(api.TariffUsagePlanner, &conf.Planner, nil, &tariffs.Planner)
+	})
 	if len(conf.Solar) > 0 {
 		eg.Go(func() error {
 			if len(conf.Solar) == 1 {
-				return configureTariff(api.TariffUsageSolar, conf.Solar[0], &tariffs.Solar)
+				return configureTariff(api.TariffUsageSolar, &conf.Solar[0], nil, &tariffs.Solar)
 			}
 			return configureSolarTariff(conf.Solar, &tariffs.Solar)
 		})

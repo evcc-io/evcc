@@ -152,12 +152,14 @@ func (c Messaging) Configured() bool {
 }
 
 type Tariffs struct {
-	Currency string
-	Grid     config.Typed
-	FeedIn   config.Typed
-	Co2      config.Typed
-	Planner  config.Typed
-	Solar    []config.Typed
+	Currency   string
+	Grid       config.Typed
+	GridFees   config.Typed
+	FeedIn     config.Typed
+	FeedInFees config.Typed
+	Co2        config.Typed
+	Planner    config.Typed
+	Solar      []config.Typed
 }
 
 type Network struct {
