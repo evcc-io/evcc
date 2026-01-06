@@ -47,7 +47,7 @@ func (c *EEBus) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spineapi.E
 
 func (c *EEBus) maUseCaseSupportUpdate(entity spineapi.EntityRemoteInterface) {
 	c.mu.Lock()
-	defer c.mu.Lock()
+	defer c.mu.Unlock()
 
 	c.maEntity = entity
 }

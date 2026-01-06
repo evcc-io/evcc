@@ -136,7 +136,7 @@ func (c *EEBus) readValue(cache *util.Value[float64], update func(entity spineap
 	}
 
 	c.mu.Lock()
-	defer c.mu.Lock()
+	defer c.mu.Unlock()
 
 	if c.maEntity == nil {
 		return 0, api.ErrNotAvailable
@@ -169,7 +169,7 @@ func (c *EEBus) readPhases(cache *util.Value[[]float64], update func(entity spin
 	}
 
 	c.mu.Lock()
-	defer c.mu.Lock()
+	defer c.mu.Unlock()
 
 	if c.maEntity == nil {
 		return 0, 0, 0, api.ErrNotAvailable
