@@ -180,12 +180,12 @@ func (c *EEBus) readPhases(scenario uint, cache *util.Value[[]float64], update f
 		return 0, 0, 0, err
 	}
 
-	if len(res) == 1 {
-		res = append(res, 0, 0)
-	} else if len(res) == 2 {
-		res = append(res, 0)
-	} else if len(res) != 3 {
+	if len(res) < 1 || len(res) > 3 {
 		return 0, 0, 0, fmt.Errorf("invalid phases: %v", res)
+	}
+
+	for len(res) < 3 {
+		res = append(res, 0)
 	}
 
 	cache.Set(res)
