@@ -9,12 +9,7 @@ import (
 	"sync"
 	"time"
 
-	eebusapi "github.com/enbility/eebus-go/api"
 	ucapi "github.com/enbility/eebus-go/usecases/api"
-	"github.com/enbility/eebus-go/usecases/eg/lpc"
-	"github.com/enbility/eebus-go/usecases/eg/lpp"
-	"github.com/enbility/eebus-go/usecases/ma/mgcp"
-	"github.com/enbility/eebus-go/usecases/ma/mpc"
 	spineapi "github.com/enbility/spine-go/api"
 	"github.com/enbility/spine-go/model"
 	"github.com/evcc-io/evcc/api"
@@ -43,6 +38,7 @@ type EEBus struct {
 	mu               sync.Mutex
 	consumptionLimit ucapi.LoadLimit
 	productionLimit  ucapi.LoadLimit
+	maEntity         spineapi.EntityRemoteInterface
 	egLpcEntity      spineapi.EntityRemoteInterface
 	egLppEntity      spineapi.EntityRemoteInterface
 }
@@ -134,139 +130,69 @@ func NewEEBus(ctx context.Context, ski, ip string, usage *templates.Usage, timeo
 	return c, nil
 }
 
-var _ eebus.Device = (*EEBus)(nil)
-
-// UseCaseEvent implements the eebus.Device interface
-func (c *EEBus) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spineapi.EntityRemoteInterface, event eebusapi.EventType) {
-	switch event {
-	// Monitoring Appliance
-	case mpc.DataUpdatePower, mgcp.DataUpdatePower:
-		c.maDataUpdatePower(entity)
-	case mpc.DataUpdateEnergyConsumed, mgcp.DataUpdateEnergyConsumed:
-		c.maDataUpdateEnergyConsumed(entity)
-	case mpc.DataUpdateCurrentsPerPhase, mgcp.DataUpdateCurrentPerPhase:
-		c.maDataUpdateCurrentPerPhase(entity)
-	case mpc.DataUpdateVoltagePerPhase, mgcp.DataUpdateVoltagePerPhase:
-		c.maDataUpdateVoltagePerPhase(entity)
-
-	// Energy Guard - LPC
-	case lpc.UseCaseSupportUpdate:
-		c.egLpcUseCaseSupportUpdate(entity)
-	case lpc.DataUpdateLimit:
-		c.egLpcDataUpdateLimit(entity)
-
-	// Energy Guard - LPP
-	case lpp.UseCaseSupportUpdate:
-		c.egLppUseCaseSupportUpdate(entity)
-	case lpp.DataUpdateLimit:
-		c.egLppDataUpdateLimit(entity)
+func (c *EEBus) readValue(cache *util.Value[float64], update func(entity spineapi.EntityRemoteInterface) (float64, error)) (float64, error) {
+	if res, err := cache.Get(); err == nil {
+		return res, nil
 	}
-}
 
-func (c *EEBus) maDataUpdatePower(entity spineapi.EntityRemoteInterface) {
-	data, err := c.mm.Power(entity)
-	if err != nil {
-		c.log.ERROR.Println("Power:", err)
-		return
-	}
-	c.log.TRACE.Printf("Power: %.0fW", data)
-	c.power.Set(data)
-}
+	c.mu.Lock()
+	defer c.mu.Lock()
 
-func (c *EEBus) maDataUpdateEnergyConsumed(entity spineapi.EntityRemoteInterface) {
-	data, err := c.mm.EnergyConsumed(entity)
-	if err != nil {
-		c.log.ERROR.Println("EnergyConsumed:", err)
-		return
+	if c.maEntity == nil {
+		return 0, api.ErrNotAvailable
 	}
-	c.log.TRACE.Printf("EnergyConsumed: %.1fkWh", data/1000)
-	// Convert Wh to kWh
-	c.energy.Set(data / 1000)
-}
 
-func (c *EEBus) maDataUpdateCurrentPerPhase(entity spineapi.EntityRemoteInterface) {
-	data, err := c.mm.CurrentPerPhase(entity)
-	if err != nil {
-		c.log.ERROR.Println("CurrentPerPhase:", err)
-		return
+	res, err := update(c.maEntity)
+	if err == nil {
+		cache.Set(res)
 	}
-	c.currents.Set(data)
-}
 
-func (c *EEBus) maDataUpdateVoltagePerPhase(entity spineapi.EntityRemoteInterface) {
-	data, err := c.mm.VoltagePerPhase(entity)
-	if err != nil {
-		c.log.ERROR.Println("VoltagePerPhase:", err)
-		return
-	}
-	c.voltages.Set(data)
+	return res, err
 }
 
 var _ api.Meter = (*EEBus)(nil)
 
 func (c *EEBus) CurrentPower() (float64, error) {
-	return c.power.Get()
+	return c.readValue(c.power, c.mm.Power)
 }
 
 var _ api.MeterEnergy = (*EEBus)(nil)
 
 func (c *EEBus) TotalEnergy() (float64, error) {
-	res, err := c.energy.Get()
-	if err != nil {
-		return 0, api.ErrNotAvailable
+	return c.readValue(c.energy, c.mm.EnergyConsumed)
+}
+
+func (c *EEBus) readPhases(cache *util.Value[[]float64], update func(entity spineapi.EntityRemoteInterface) ([]float64, error)) (float64, float64, float64, error) {
+	if res, err := cache.Get(); err == nil {
+		return res[0], res[1], res[2], nil
 	}
 
-	return res, nil
+	c.mu.Lock()
+	defer c.mu.Lock()
+
+	if c.maEntity == nil {
+		return 0, 0, 0, api.ErrNotAvailable
+	}
+
+	res, err := update(c.maEntity)
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	cache.Set(res)
+	return res[0], res[1], res[2], nil
 }
 
 var _ api.PhaseCurrents = (*EEBus)(nil)
 
 func (c *EEBus) Currents() (float64, float64, float64, error) {
-	res, err := c.currents.Get()
-	if err != nil {
-		return 0, 0, 0, api.ErrNotAvailable
-	}
-	if len(res) != 3 {
-		return 0, 0, 0, errors.New("invalid phase currents")
-	}
-	return res[0], res[1], res[2], nil
+	return c.readPhases(c.currents, c.mm.CurrentPerPhase)
 }
 
 var _ api.PhaseVoltages = (*EEBus)(nil)
 
 func (c *EEBus) Voltages() (float64, float64, float64, error) {
-	res, err := c.voltages.Get()
-	if err != nil {
-		return 0, 0, 0, api.ErrNotAvailable
-	}
-	if len(res) != 3 {
-		return 0, 0, 0, errors.New("invalid phase voltages")
-	}
-	return res[0], res[1], res[2], nil
-}
-
-//
-// Energy Guard - LPC
-//
-
-func (c *EEBus) egLpcUseCaseSupportUpdate(entity spineapi.EntityRemoteInterface) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	c.egLpcEntity = entity
-}
-
-func (c *EEBus) egLpcDataUpdateLimit(entity spineapi.EntityRemoteInterface) {
-	limit, err := c.eg.EgLPCInterface.ConsumptionLimit(entity)
-	if err != nil {
-		c.log.ERROR.Println("EG LPC ConsumptionLimit:", err)
-		return
-	}
-
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	c.consumptionLimit = limit
+	return c.readPhases(c.voltages, c.mm.VoltagePerPhase)
 }
 
 var _ api.Dimmer = (*EEBus)(nil)
@@ -310,30 +236,6 @@ func (c *EEBus) Dim(dim bool) error {
 	}, c.callbackResult("consumption limit"))
 
 	return err
-}
-
-//
-// Energy Guard - LPP
-//
-
-func (c *EEBus) egLppUseCaseSupportUpdate(entity spineapi.EntityRemoteInterface) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	c.egLppEntity = entity
-}
-
-func (c *EEBus) egLppDataUpdateLimit(entity spineapi.EntityRemoteInterface) {
-	limit, err := c.eg.EgLPPInterface.ProductionLimit(entity)
-	if err != nil {
-		c.log.ERROR.Println("EG LPP ProductionLimit:", err)
-		return
-	}
-
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	c.productionLimit = limit
 }
 
 var _ api.Curtailer = (*EEBus)(nil)
