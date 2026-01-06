@@ -2,7 +2,9 @@
   "authProviders": {
     "authCode": "Autentiseringskod",
     "authCodeHelp": "Kopiera koden och använd i nästa steg. Giltig i {duration}.",
+    "authorizationFailed": "Auktorisering misslyckades",
     "authorizationRequired": "Auktorisering erfordras",
+    "authorizationSuccessful": "Auktorisering lyckades",
     "buttonConnect": "Anslut till {provider}",
     "buttonDisconnect": "Koppla från",
     "confirmLogout": "Är du säker på att du vill koppla från {title}?",
@@ -68,20 +70,20 @@
       "ocppStep2": "Vänta, din laddare ansluter till evcc.",
       "ocppStep3": "Fortsätt och slutför konfigurationen.",
       "ocppWaiting": "Väntar på anslutning",
-      "switchsockets": "Byt kontakt",
+      "switchsockets": "Smarta hem utrustning",
       "template": "Tillverkare",
       "titleAdd": {
         "charging": "Lägg till laddare",
-        "heating": "Lägg till värmare"
+        "heating": "Lägg till värmekälla"
       },
       "titleEdit": {
         "charging": "Ändra laddare",
-        "heating": "Ändra värmare"
+        "heating": "Ändra värmekälla"
       },
       "type": {
         "custom": {
           "charging": "Egendefinierad laddare",
-          "heating": "Egendefinierad värmare"
+          "heating": "Egendefinierad värmekälla"
         },
         "heatpump": "Egendefinierad värmepump",
         "sgready": "Egendefinierad värmepump (sg-ready via plugins)",
@@ -97,8 +99,8 @@
     },
     "control": {
       "description": "Standardvärdena är vanligtsvis ok. Ändra bara om du vet vad du gör.",
-      "descriptionInterval": "Uppdateringsintervall i sekunder. Definierar hur ofta evcc läser in data, ändrar laddeffekt och uppdaterar UI. Korta intervall (<30s) kan orsaka självsvängning och andra felaktiga resultat.",
-      "descriptionResidualPower": "Flyttar fokuspunkt på kontrolloopen. Om du har ett hemmabatteri så rekommenderas att ha ett värde på minst 100 W. Då får batteriet lite högre prioritet jämfört med nätanvändning.",
+      "descriptionInterval": "Uppdateringscykel i sekunder. Definierar hur ofta evcc läser mätardata och justerar laddeffekt. Standardvärdet på 30 sekunder är ett tryggt val. Enheter som fordon, laddboxar och växelriktare behöver vanligtvis flera sekunder för att anpassa sitt beteende. Om dina komponenter reagerar snabbt kan du använda lägre värden. Vi rekommenderar starkt att inte gå under 10 sekunder. Om du observerar ostadigt reglerbeteende eller hoppande effektvärden, välj ett större intervall.",
+      "descriptionResidualPower": "Förskjuter reglerkretsens arbetsläge. Om du har ett hembatteri rekommenderas att du ställer in värdet 100 W. På så sätt får batteriet en viss prioritet framför nätanvändningen.",
       "labelInterval": "Uppdateringsintervall",
       "labelResidualPower": "Kvarvarande effekt",
       "title": "Kontrollera beteende"
@@ -172,6 +174,10 @@
     "eebus": {
       "description": "Inställning som tillåter evcc att kommunicera med andra EEBus-enheter.",
       "title": "EEBus"
+    },
+    "experimental": {
+      "description": "Aktivera användargränssnittet för funktioner som fortfarande testas och kan komma att ändras i framtida versioner.",
+      "title": "Experimentell"
     },
     "ext": {
       "description": "Registrerar energivärden för brukare som inte hanteras av evcc (t.ex. kylskåp, tvättmaskin etc.) för statistiska ändamål. Mätarna kan också användas för lastreglering (t.ex. underdistribution).",
@@ -267,17 +273,17 @@
     "loadpoint": {
       "addCharger": {
         "charging": "Lägg till laddare",
-        "heating": "Lägg till värmare"
+        "heating": "Lägg till värmekälla"
       },
       "addMeter": "Lägg till dedikerad energimätare",
       "cancel": "Avbryt",
       "chargerError": {
         "charging": "Konfigurering av laddare krävs.",
-        "heating": "En värmare måste konfigureras."
+        "heating": "En värmekälla måste konfigureras."
       },
       "chargerLabel": {
         "charging": "Laddare",
-        "heating": "Värmare"
+        "heating": "Värmekälla"
       },
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "Använder mellan 6 och 16 A.",
@@ -349,16 +355,16 @@
       "titleAdd": {
         "charging": "Lägg till laddplats",
         "heating": "Lägg till värmningsenhet",
-        "unknown": "Lägg till laddare eller värmare"
+        "unknown": "Lägg till laddare eller värmekälla"
       },
       "titleEdit": {
         "charging": "Redigera laddare",
-        "heating": "Ändra värmarenhet",
-        "unknown": "Ändra laddare eller värmare"
+        "heating": "Ändra värmekälla",
+        "unknown": "Ändra laddare eller värmekälla"
       },
       "titleExample": {
         "charging": "Garage, Carport, etc.",
-        "heating": "Värmepump, värmare etc."
+        "heating": "Värmepump, värmekälla etc."
       },
       "titleLabel": "Titel",
       "vehicleAutoDetection": "automatisk detektering",
@@ -381,6 +387,8 @@
       "title": "Inställningar",
       "unconfigured": "ej konfigurerad",
       "vehicles": "Mina fordon",
+      "welcomeBannerText": "Börja med att skapa minst en/ett **laddare**, **värmekälla**, **elnät**, **solceller**, **batteri** eller **ytterligare mätare**. Om du vill testa, välj ett **demotillbehör**.",
+      "welcomeBannerTitle": "Låt oss konfigurera ditt system!",
       "yaml": "Konfigurera i evcc.yaml. Kan inte ändras i UI."
     },
     "messaging": {
@@ -840,6 +848,8 @@
       "stepTwo": "Steg 2: Kopiera ytterligare information",
       "title": "GitHub problemöversikt"
     },
+    "system": "System",
+    "timezone": "Tidzon",
     "title": "Rapportera ett problem",
     "version": "Version"
   },
@@ -878,16 +888,23 @@
       "goal": "Laddmål",
       "modalTitle": "Laddplan",
       "none": "ingen",
+      "optimization": {
+        "cheapest": "billigaste",
+        "continuous": "kontinuerlig",
+        "label": "Optimering"
+      },
       "planNumber": "Plan {number}",
-      "preconditionDescription": "Ladda {duration} före avfärd för batteriuppvärmning.",
-      "preconditionLong": "Sen laddning",
-      "preconditionOptionAll": "allt",
-      "preconditionOptionNo": "nej",
-      "preconditionShort": "Sen",
+      "precondition": {
+        "description": "Ladda {duration} före avfärd för batteriuppvärmning.",
+        "label": "Sen laddning",
+        "optionAll": "allt",
+        "optionNo": "nej"
+      },
       "remove": "Ta bort",
       "repeating": "återkommande",
       "repeatingPlans": "Återkommande planer",
       "selectAll": "Välj alla",
+      "strategySettings": "Strategiinställningar",
       "time": "Tid",
       "title": "Plan",
       "titleMinSoc": "Min. laddning",
@@ -919,7 +936,7 @@
       "charging": "Värmer…",
       "connected": "Standby.",
       "vehicleLimit": "Värmarbegränsning",
-      "waitForVehicle": "Redo, väntar på värmare…"
+      "waitForVehicle": "Redo, väntar på värmekälla…"
     },
     "hemsWarning": {
       "description": "Reducerad laddning för att inte överskrida {limit}.",
@@ -1210,7 +1227,7 @@
     },
     "hiddenFeatures": {
       "label": "Experimentella funktioner",
-      "value": "Visa experimentella UI-funktioner."
+      "value": "Visa experimentella funktioner."
     },
     "language": {
       "auto": "Automatisk",

@@ -3,6 +3,7 @@ package sponsor
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -75,7 +76,11 @@ func ConfigureSponsorship(token string) error {
 			Subject = unavailable
 			err = nil
 		} else {
-			err = fmt.Errorf("sponsortoken: %w", err)
+			if strings.Contains(err.Error(), "token is expired") {
+				err = fmt.Errorf("%w - get a fresh one from https://sponsor.evcc.io", err)
+			} else {
+				err = fmt.Errorf("sponsortoken: %w", err)
+			}
 		}
 	}
 

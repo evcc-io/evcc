@@ -28,17 +28,10 @@ params:
     type: int
     default: 1
     advanced: true
-  - name: capacity
-    advanced: true
   - name: maxacpower
+  - preset: battery-params
   - name: defaultmode
     default: 0 # "SelfUse"
-    advanced: true
-  - name: maxchargepower
-  - name: maxdischargepower
-  - name: minsoc
-    advanced: true
-  - name: maxsoc
     advanced: true
 render: |
   type: custom
@@ -125,8 +118,6 @@ render: |
   #     type: input
   #     decode: uint32s
   #   scale: 0.1
-  minsoc: {{ .minsoc }} # %
-  maxsoc: {{ .maxsoc }} # %
   batterymode:
     source: switch
     switch:
@@ -168,6 +159,15 @@ render: |
         source: sequence
         set:
         - source: const
+          value: 1 # Wake battery from standby
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 0x0056 # Bat_Awaken
+              type: writesingle
+              decode: uint16
+        - source: const
           value: 1 # Force charge
           set:
             source: modbus
@@ -185,7 +185,5 @@ render: |
               address: 0x001F # SolarChargeUseMode
               type: writesingle
               decode: uint16
-  capacity: {{ .capacity }} # kWh
-  maxchargepower: {{ .maxchargepower }} # W
-  maxdischargepower: {{ .maxdischargepower }} # W
+  {{- include "battery-params" . }}
   {{- end }}

@@ -1,4 +1,24 @@
 {
+  "authProviders": {
+    "authCode": "Koda za preverjanje pristnosti",
+    "authCodeHelp": "Kopirajte to kodo in jo uporabite v naslednjem koraku. Velja za {duration}.",
+    "authorizationFailed": "Avtorizacija ni uspela",
+    "authorizationRequired": "Zahtevana avtorizacija",
+    "authorizationSuccessful": "Avtorizacija uspešna",
+    "buttonConnect": "Poveži se z {provider}",
+    "buttonDisconnect": "Prekini povezavo",
+    "confirmLogout": "Ali ste prepričani, da želite prekiniti povezavo z {title}?",
+    "connect": "poveži",
+    "disconnect": "odklopi",
+    "loggedOut": "Uspešno odjavljen/a",
+    "logoutFailed": "Odjava ni uspela",
+    "modalDescriptionLogin": "Dokončajte postopek avtorizacije za vzpostavitev povezave z {provider}.",
+    "modalDescriptionLogout": "S tem boste prekinili povezavo z vašim računom {provider} in mu onemogočili dostop do njegovih podatkov.",
+    "success": "{title} je zdaj povezan in pripravljen za uporabo.",
+    "successCloseModal": "Zdaj lahko zaprete to pogovorno okno.",
+    "successCloseTab": "Zdaj lahko zaprete ta zavihek.",
+    "title": "Stanje avtorizacije"
+  },
   "batterySettings": {
     "batteryLevel": "Raven baterije",
     "bufferStart": {
@@ -40,8 +60,16 @@
       "chargers": "polnilnice za EV",
       "generic": "Splošne integracije",
       "heatingdevices": "Ogrevalne naprave",
+      "ocppConfirmContinue": "Vaša polnilna postaja se še ni povezal z evcc. Ali ste prepričani, da želite nadaljevati?",
+      "ocppConnected": "Povezan!",
+      "ocppDescription": "evcc ima vgrajen strežnik OCPP. Sledite tem korakom:",
       "ocppHelp": "Kopirajte ta URL v konfiguracijo vašega polnilnika. Za podrobnosti preverite priročnik proizvajalca. Polnilnik bo samodejno dodal svoj edinstveni identifikator (ID postaje) k URL-ju. V redkih primerih boste morda morali identifikator določiti ročno. Primer: `{url}`",
       "ocppLabel": "URL strežnika OCPP",
+      "ocppNextStep": "Naslednji korak",
+      "ocppStep1": "Konfigurirajte polnilnik tako, da bo uporabljal evcc kot strežnik OCPP.",
+      "ocppStep2": "Počakajte, da se polnilnik poveže z evcc.",
+      "ocppStep3": "Nadaljujte in dokončajte konfiguracijo.",
+      "ocppWaiting": "Čakanje na povezavo",
       "switchsockets": "Preklopne vtičnice",
       "template": "Proizvajalec",
       "titleAdd": {
@@ -59,6 +87,7 @@
         },
         "heatpump": "Uporabniško določena toplotna črpalka",
         "sgready": "Uporabniško določena toplotna črpalka (sg-ready preko vtičnikov)",
+        "sgready-boost": "Uporabniško definirana toplotna črpalka (sg-ready-boost, zastarelo)",
         "sgready-relay": "Uporabniško določena toplotna črpalka (sg-ready preko relejev)",
         "switchsocket": "Uporabniško definirana vtičnica stikala"
       }
@@ -70,8 +99,8 @@
     },
     "control": {
       "description": "Običajno so privzete vrednosti v redu. Spremenite jih le, če veste, kaj počnete.",
-      "descriptionInterval": "Cikel posodabljanja krmilne zanke v sekundah. Določa, kako pogosto evcc bere podatke števca, prilagodi moč polnjenja in posodobi uporabniški vmesnik. Kratki intervali (< 30 s) lahko povzročijo nihanje in neželeno vedenje.",
-      "descriptionResidualPower": "Prestavi točko delovanja krmilne zanke. Če imate domačo baterijo, je priporočljivo, da nastavite vrednost 100 W. Na ta način bo baterija imela rahlo prednost pred uporabo omrežja.",
+      "descriptionInterval": "Cikel posodabljanja v sekundah. Določa, kako pogosto evcc bere podatke števca in prilagaja polnjenje. Privzeta vrednost 30 sekund je varna izbira. Naprave, kot so vozila, stenske polnilne postaje in razsmerniki, običajno potrebujejo nekaj sekund, da prilagodijo svoje delovanje. Če se vaše komponente hitro odzovejo, lahko uporabite nižje vrednosti. Toplo priporočamo, da ne greste pod 10 sekund. Če opazite neenakomerno delovanje krmiljenja ali skakanje vrednosti moči, izberite daljši interval.",
+      "descriptionResidualPower": "Premakne delovno točko krmilne zanke. Privzeta vrednost 100 W daje domačim baterijam rahlo prednost pred uporabo omrežja. Če nimate baterije, lahko to nastavite na 0 W, da zmanjšate porabo omrežja v solarnem načinu.",
       "labelInterval": "Interval posodabljanja",
       "labelResidualPower": "Preostala moč",
       "title": "Nadzor vedenja"
@@ -90,10 +119,13 @@
       "chargedEnergy": "Napolnjeno",
       "co2": "CO₂ iz omrežja",
       "configured": "Konfigurirano",
+      "connections": "Povezave",
       "controllable": "Nadzorljiv",
       "currency": "Valuta",
       "current": "Tok",
       "currentRange": "Tok",
+      "detected": "Zaznano",
+      "dimmed": "Zatemnjeno",
       "enabled": "Omogočeno",
       "energy": "Energija",
       "feedinPrice": "Cena prejete energije iz omrežja",
@@ -143,6 +175,10 @@
       "description": "Konfiguracija, ki evcc omogoča komunikacijo z drugimi napravami EEBus.",
       "title": "EEBus"
     },
+    "experimental": {
+      "description": "Omogočite uporabniški vmesnik za funkcije, ki so še vedno v fazi testiranja in se lahko v prihodnjih različicah spremenijo.",
+      "title": "Eksperimentalno"
+    },
     "ext": {
       "description": "Za statistične namene beleži energijske vrednosti nenadzorovanih porabnikov (npr. hladilnik, pralni stroj itd.). Te števce je mogoče uporabiti tudi za upravljanje obremenitve (npr. poddistribucija).",
       "titleAdd": "Dodaj števec porabe",
@@ -156,8 +192,14 @@
     },
     "general": {
       "applyAndClose": "Uporabi in zapri",
+      "authPerform": "Povežite se z {provider}",
+      "authPerformHint": "Odprlo se bo v novem zavihku. Za nadaljevanje se vrnite sem.",
+      "authPrepare": "Priprava povezave",
       "cancel": "Prekliči",
+      "clear": "Jasno",
       "close": "Zapri",
+      "copied": "Kopirano!",
+      "copy": "Kopirano!",
       "customHelp": "Ustvarite uporabniško definirano napravo z uporabo sistema vtičnikov evcc.",
       "customOption": "Uporabniško definirana naprava",
       "delete": "Izbriši",
@@ -185,6 +227,7 @@
       "telemetry": "Telemetrija",
       "templateLoading": "Nalaganje ...",
       "title": "Ime",
+      "typeDeprecated": "Tip '{type}' je zastarel in bo odstranjen v prihodnji različici. Preverite dnevnik sprememb in ponovno ustvarite to napravo.",
       "validateSave": "Preveri in shrani"
     },
     "grid": {
@@ -193,8 +236,19 @@
       "titleEdit": "Uredi števec električnega omrežja"
     },
     "hems": {
+      "csv": {
+        "created": "Ustvarjeno",
+        "finished": "Končano",
+        "gridpower": "Moč omrežja (kW)",
+        "limitpower": "Omejitev (kW)",
+        "type": "Vrsta"
+      },
       "description": "Omejitev moči z zunanjimi sistemi (npr. krmilniki EnWG 14a). Zahteva konfiguracijo upravljanja obremenitve.",
-      "title": "HEMS"
+      "downloadCsv": "Prenesi CSV",
+      "eventsRecorded": "Zabeleženo {count} dogodkov omejitve omrežja.",
+      "lastEvent": "Najnovejše {timeAgo}.",
+      "title": "HEMS",
+      "yamlConfigured": "Opomba: Konfigurirano prek evcc.yaml. Odstranite vnos iz datoteke, da omogočite urejanje tukaj."
     },
     "icon": {
       "change": "sprememba",
@@ -207,6 +261,7 @@
       "labelCheckInsecure": "Dovoli samopodpisane certifikate",
       "labelDatabase": "Baza podatkov",
       "labelInsecure": "Preverjanje certifikata",
+      "labelOrg": "Organizacija",
       "labelPassword": "Geslo",
       "labelToken": "API Žeton",
       "labelUrl": "URL",
@@ -332,6 +387,8 @@
       "title": "Konfiguracija",
       "unconfigured": "ni konfigurirano",
       "vehicles": "Moja vozila",
+      "welcomeBannerText": "Začnite z izdelavo **polnilnika ali grelnika**. Če še nimate pravega polnilnika, izberite **demo polnilnik**.",
+      "welcomeBannerTitle": "Konfigurirajmo vaš sistem!",
       "yaml": "Naprav iz datoteke evcc.yaml ni mogoče urejati."
     },
     "messaging": {
@@ -367,9 +424,9 @@
       "baudrate": "Hitrost prenosa podatkov (Baud rate)",
       "comset": "ComSet",
       "connection": "Modbus povezava",
-      "connectionHintSerial": "Naprava je neposredno povezana z evcc prek vmesnika RS485.",
-      "connectionHintTcpip": "Napravo je mogoče nasloviti iz evcc prek LAN/Wi-Fi.",
-      "connectionValueSerial": "Serial / USB",
+      "connectionHintSerial": "Naprava je neposredno priključena prek RS485 (ali adapterja USB-RS485).",
+      "connectionHintTcpip": "Naprava je dosegljiva prek omrežja (LAN/WiFi).",
+      "connectionValueSerial": "RS485",
       "connectionValueTcpip": "Mreža",
       "device": "Ime naprave",
       "deviceHint": "Primer: /dev/ttyUSB0",
@@ -384,7 +441,24 @@
       "protocolValueTcp": "TCP"
     },
     "modbusproxy": {
-      "description": "Dovoli več odjemalcem dostop do ene naprave Modbus.",
+      "add": "Dodaj proxy povezavo",
+      "connection": "Povezava #{number}",
+      "description": "Nekatere naprave Modbus podpirajo le eno ali zelo malo povezav. evcc lahko deluje kot posredniški strežnik, kar omogoča hkraten dostop več odjemalcem (domača avtomatizacija, skripti itd.).",
+      "device": "Naprava",
+      "option": {
+        "deny": "napaka",
+        "false": "ne",
+        "true": "tiho"
+      },
+      "readonly": {
+        "help": {
+          "deny": "Dostop za pisanje je blokiran zaradi napake Modbus.",
+          "false": "Dostop za pisanje je posredovan.",
+          "true": "Dostop za pisanje je blokiran brez odgovora."
+        },
+        "label": "Samo za branje"
+      },
+      "sourcePortHelp": "Vrata za dohodne povezave odjemalcev. Morajo biti na voljo.",
       "title": "Modbus Proxy"
     },
     "mqtt": {
@@ -406,13 +480,34 @@
       "title": "MQTT"
     },
     "network": {
-      "descriptionHost": "Uporabite pripono .local, da omogočite mDNS. Pomembno za odkrivanje mobilne aplikacije in nekaterih polnilnikov OCPP.",
+      "descriptionExternalUrl": "Naslov za druge naprave, ki se želijo povezati z evcc in za samodejno odkrivanje aplikacije evcc.",
+      "descriptionHost": "Uporablja se za napovedovanje evcc v vašem lokalnem omrežju.",
+      "descriptionInternalUrl": "Lokalni omrežni naslov evcc.",
       "descriptionPort": "Vrata za spletni vmesnik in API. Če spremenite, boste morali posodobiti URL v brskalniku.",
       "descriptionSchema": "Vpliva samo na to, kako so URL-ji ustvarjeni. Če izberete HTTPS, šifriranje ne bo omogočeno.",
-      "labelHost": "Ime gostitelja",
+      "labelExternalUrl": "Zunanji URL",
+      "labelHost": "Ime gostitelja mDNS",
+      "labelInternalUrl": "Notranji URL",
       "labelPort": "Port",
       "labelSchema": "Shema",
       "title": "Mreža"
+    },
+    "ocpp": {
+      "connectedChargers": "Priključene polnilne postaje",
+      "connectionStatus": "Konfigurirani ID-ji postaj",
+      "connectionStatusHelp": "Stanje povezave konfiguriranih polnilnih postaj.",
+      "detectedChargers": "Zaznani ID-ji polnilnih postaj",
+      "detectedHelp": "Te polnilnice so se poskušale povezati z evcc. Če želite uporabiti polnilnico, ustvarite nakladalno točko z njeno ID postajo.",
+      "noChargers": "Ni zaznanih polnilnikov OCPP.",
+      "noStations": "Ni povezanih polnilnih postaj",
+      "status": {
+        "configured": "Brez povezave",
+        "connected": "Povezan",
+        "unknown": "Neznano"
+      },
+      "title": "Strežnik OCPP",
+      "url": "URL strežnika",
+      "urlHelp": "Kopirajte ta URL v konfiguracijo vašega polnilnika. Za podrobnosti preverite priročnik proizvajalca. Polnilnik bo samodejno dodal svoj edinstveni identifikator (ID postaje) k URL-ju. V redkih primerih boste morda morali identifikator določiti ročno. Primer: `{url}`"
     },
     "options": {
       "boolean": {
@@ -474,6 +569,7 @@
       "labelToken": "Sponzorski žeton",
       "title": "Sponzorstvo",
       "tokenRequired": "Pred ustvarjanjem te naprave morate konfigurirati žeton sponzorja.",
+      "tokenRequiredFeature": "Za to funkcijo je potreben žeton sponzorja.",
       "tokenRequiredLearnMore": "Več o tem.",
       "tokenRequiredShort": "Ni konfiguriran noben sponzorski žeton.",
       "trialToken": "poskusni žeton",
@@ -485,6 +581,7 @@
         "backup": {
           "action": "Prenesi varnostno kopijo ...",
           "confirmationButton": "Prenesi varnostno kopijo",
+          "confirmationText": "Prenesite datoteko baze podatkov.",
           "description": "Varnostno kopirajte podatke v datoteko. To datoteko lahko uporabite za obnovitev podatkov v primeru sistemske napake.",
           "title": "Varnostno kopiranje"
         },
@@ -553,6 +650,8 @@
       "maximumCurrentHelp": "Mora biti večji od minimalnega toka.",
       "maximumPhases": "Največ faz",
       "maximumPhasesHelp": "S koliko fazami se lahko to vozilo polni? Uporablja se za izračun potrebnega minimalnega presežka sončne energije in trajanja načrta.",
+      "maximumPower": "Največja moč polnjenja",
+      "maximumPowerHelp": "Največja moč, ki jo lahko vozilo porabi",
       "minimumCurrent": "Najmanjši tok",
       "minimumCurrentHelp": "Pod 6A se spustite le, če veste, kaj počnete.",
       "online": "Vozila s spletnim API-jem",
@@ -747,6 +846,8 @@
       "stepTwo": "2. korak: Kopirajte dodatne informacije",
       "title": "Povzetek težave GitHub"
     },
+    "system": "Sistem",
+    "timezone": "Časovni pas",
     "title": "Prijavi težavo",
     "version": "Različica"
   },
@@ -785,7 +886,18 @@
       "goal": "Cilj polnjenja",
       "modalTitle": "Načrt polnjenja",
       "none": "brez",
+      "optimization": {
+        "cheapest": "najcenejši",
+        "continuous": "neprekinjeno",
+        "label": "Optimizacija"
+      },
       "planNumber": "Načrt {number}",
+      "precondition": {
+        "description": "Pred odhodom napolnite {duration} za predhodno ogrevanje baterije.",
+        "label": "Pozno polnjenje",
+        "optionAll": "vse",
+        "optionNo": "ne"
+      },
       "preconditionDescription": "Pred odhodom napolnite {duration} za predhodno ogrevanje baterije.",
       "preconditionLong": "Pozno polnjenje",
       "preconditionOptionAll": "vse",
@@ -795,6 +907,7 @@
       "repeating": "ponavljajoči",
       "repeatingPlans": "Ponavljajoči načrti",
       "selectAll": "Izberi vse",
+      "strategySettings": "Nastavitve strategije",
       "time": "Čas",
       "title": "Načrt",
       "titleMinSoc": "Min. polnjenje",
@@ -997,7 +1110,8 @@
     "message": "Ni povezave s strežnikom.",
     "restart": "Ponovni zagon",
     "restartNeeded": "Potrebno za uveljavitev sprememb.",
-    "restarting": "Strežnik bo kmalu nazaj."
+    "restarting": "Strežnik bo kmalu nazaj.",
+    "starting": "Zagon strežnika ..."
   },
   "passwordModal": {
     "description": "Nastavite geslo za zaščito konfiguracijskih nastavitev. Uporaba glavnega vmesnika je še vedno možna brez prijave.",
@@ -1116,7 +1230,7 @@
     },
     "hiddenFeatures": {
       "label": "Eksperimentalno",
-      "value": "Prikaži eksperimentalne funkcije uporabniškega vmesnika."
+      "value": "Prikaži eksperimentalne funkcije."
     },
     "language": {
       "auto": "Samodejno",
@@ -1165,6 +1279,7 @@
     "cleanTitle": "Čisto polnjenje iz omrežja",
     "co2Label": "Emisije CO₂",
     "co2Limit": "Omejitev CO₂",
+    "enable": "Omogoči omejitev",
     "loadpointDescription": "Omogoči začasno hitro polnjenje v solarnem načinu.",
     "modalTitle": "Smart Grid Polnjenje",
     "none": "brez",
@@ -1187,6 +1302,7 @@
     "configuration": "Konfiguracija",
     "description": "Preverite konfiguracijsko datoteko. Če sporočilo o napaki ne pomaga, preverite {0}.",
     "discussions": "GitHub razprave",
+    "editConfiguration": "Urejanje konfiguracije",
     "fixAndRestart": "Prosim, odpravite težavo in znova zaženite strežnik.",
     "hint": "Opomba: Lahko se zgodi, da imate tudi okvarjeno napravo (inverter, števec, ...). Preverite omrežne povezave.",
     "lineError": "Napaka v {0}.",

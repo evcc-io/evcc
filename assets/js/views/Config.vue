@@ -20,8 +20,8 @@
 					@site-changed="siteChanged"
 				/>
 
+				<WelcomeBanner v-if="setupRequired" />
 				<h2 class="my-4">{{ $t("config.section.loadpoints") }}</h2>
-				<WelcomeBanner v-if="loadpointsRequired" class="my-4" />
 				<div class="p-0 config-list">
 					<DeviceCard
 						v-for="loadpoint in loadpoints"
@@ -48,7 +48,6 @@
 					<NewDeviceButton
 						data-testid="add-loadpoint"
 						:title="$t('config.main.addLoadpoint')"
-						:attention="loadpointsRequired"
 						@click="newLoadpoint"
 					/>
 				</div>
@@ -318,6 +317,7 @@
 						{{ $t("help.issueButton") }}
 					</router-link>
 					<button
+						data-testid="backup-restore"
 						class="btn btn-outline-secondary text-truncate"
 						@click="openModal('backupRestoreModal')"
 					>
@@ -570,8 +570,8 @@ export default defineComponent({
 		authProviders() {
 			return store.state?.authProviders;
 		},
-		loadpointsRequired() {
-			return this.loadpoints.length === 0;
+		setupRequired() {
+			return store.state?.setupRequired;
 		},
 		siteTitle() {
 			return this.site?.title;

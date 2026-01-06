@@ -44,7 +44,7 @@ require (
 	github.com/go-playground/validator/v10 v10.30.1
 	github.com/go-telegram/bot v1.17.0
 	github.com/go-viper/mapstructure/v2 v2.4.0
-	github.com/godbus/dbus/v5 v5.2.1
+	github.com/godbus/dbus/v5 v5.2.2
 	github.com/gokrazy/updater v0.0.0-20250705135802-db129c40879c
 	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/google/go-github/v32 v32.1.0
@@ -101,7 +101,7 @@ require (
 	github.com/tess1o/go-ecoflow v1.1.1-0.20251003083510-2ccc15a17e29
 	github.com/traefik/yaegi v0.16.1
 	github.com/tv42/httpunix v0.0.0-20191220191345-2ba4b9c3382c
-	github.com/volkszaehler/mbmd v0.0.0-20251227234833-6b09b16a71c5
+	github.com/volkszaehler/mbmd v0.0.0-20251230155010-64e026667a91
 	github.com/writeas/go-strip-markdown/v2 v2.1.1
 	gitlab.com/bboehmke/sunny v0.16.0
 	go.bug.st/serial v1.6.4
@@ -175,7 +175,7 @@ require (
 	github.com/gokrazy/internal v0.0.0-20250526201501-559979153369 // indirect
 	github.com/gokrazy/tools v0.0.0-20250601065736-ab76ef531d30 // indirect
 	github.com/golanguzb70/lrucache v1.2.0 // indirect
-	github.com/google/go-querystring v1.1.0 // indirect
+	github.com/google/go-querystring v1.2.0 // indirect
 	github.com/google/jsonschema-go v0.3.0 // indirect
 	github.com/google/renameio/v2 v2.0.0 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
@@ -243,6 +243,7 @@ require (
 	golang.org/x/mod v0.31.0 // indirect
 	golang.org/x/sys v0.39.0 // indirect
 	golang.org/x/term v0.38.0 // indirect
+	golang.org/x/tools/gopls v0.21.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20251103181224-f26f9409b101 // indirect
 	gopkg.in/go-playground/validator.v9 v9.31.0 // indirect
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
@@ -250,7 +251,7 @@ require (
 	modernc.org/libc v1.66.10 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
-	modernc.org/sqlite v1.42.1 // indirect
+	modernc.org/sqlite v1.42.2 // indirect
 )
 
 tool (
@@ -260,6 +261,7 @@ tool (
 	github.com/evcc-io/openapi-mcp/cmd/openapi-mcp
 	github.com/gokrazy/tools/cmd/gok
 	go.uber.org/mock/mockgen
+	golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize
 )
 
 replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20250501165638-8b6f1fbdb7ea

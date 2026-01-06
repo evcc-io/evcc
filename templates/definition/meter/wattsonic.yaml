@@ -14,12 +14,7 @@ params:
     choice: ["rs485"]
     port: 502
     id: 247
-  - name: capacity
-    advanced: true
-  - name: minsoc
-    advanced: true
-  - name: maxsoc
-    advanced: true
+  - preset: battery-params
   - name: delay
     default: 100ms
     advanced: true
@@ -121,5 +116,5 @@ render: |
       address: 52503 # min soc
       type: writeholding
       encoding: uint16
-  capacity: {{ .capacity }} # kWh
+  {{- include "battery-params" . }}
   {{- end }}

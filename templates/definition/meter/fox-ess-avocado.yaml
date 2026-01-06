@@ -3,9 +3,15 @@ products:
   - brand: FoxESS
     description:
       generic: Avocado
+  - brand: FoxESS
+    description:
+      generic: MQ2200
   - brand: Solakon
     description:
       generic: ONE
+  - brand: Tepto
+    description:
+      generic: Avocado Pro
 capabilities: ["battery-control"]
 params:
   - name: usage
@@ -14,14 +20,15 @@ params:
     choice: ["rs485", "tcpip"]
     baudrate: 9600
     id: 1
+  - name: maxacpower
+    default: 800
+  - preset: battery-params
   - name: capacity
     default: 2.11 # kWh
   - name: minsoc
     default: 10
   - name: maxsoc
     default: 100
-  - name: maxacpower
-    default: 800
   - name: maxchargepower
     default: 1200
 render: |
@@ -31,18 +38,62 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 39168 # [Meter collection] Active power
-      type: input
+      address: 39168 # Active power
+      type: holding
       decode: int32
-    scale: -1 #
+    scale: -1 # > 0: Feed power to the grid, < 0: Take power from the grid
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 39617 # Total power taken (grid import)
-      type: input
+      address: 39625 # Enter total power
+      type: holding
       decode: uint32
-    scale: 0.01 # Convert to kWh (raw / 100 = kWh)
+    scale: 0.01
+  voltages:
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 39123
+      type: holding
+      decode: int16
+    scale: 0.1
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 39124
+      type: holding
+      decode: int16
+    scale: 0.1
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 39125
+      type: holding
+      decode: int16
+    scale: 0.1
+  currents:
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 39126
+      type: holding
+      decode: int32
+    scale: 0.001
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 39128
+      type: holding
+      decode: int32
+    scale: 0.001
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 39130
+      type: holding
+      decode: int32
+    scale: 0.001
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
@@ -50,16 +101,16 @@ render: |
     {{- include "modbus" . | indent 2 }}
     register:
       address: 39118 # Total PV Power
-      type: input
+      type: holding
       decode: int32
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 39149 # Cumulative Generation
-      type: input
+      address: 39149 # Cumulative PV Generation
+      type: holding
       decode: uint32
-    scale: 0.01 # Convert to kWh (raw / 100 = kWh)
+    scale: 0.01
   maxacpower: {{ .maxacpower }}
   {{- end }}
   {{- if eq .usage "battery" }}
@@ -68,26 +119,24 @@ render: |
     {{- include "modbus" . | indent 2 }}
     register:
       address: 39237 # Battery Combined Power
-      type: input
+      type: holding
       decode: int32
-    scale: -1 #
+    scale: -1
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 39609 # Total discharge power
+      type: holding
+      decode: uint32
+    scale: 0.01
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 39424 # Battery SOC (%)
-      type: input
+      address: 39424 # Battery SOC %
+      type: holding
       decode: int16
-  limitsoc:
-    source: convert
-    convert: float2int
-    set:
-      source: modbus
-      {{- include "modbus" . | indent 4 }}
-      register:
-        address: 46609 # Minimum SOC
-        type: writesingle
-        encoding: uint16
   batterymode:
     source: watchdog
     timeout: 30s
@@ -162,7 +211,7 @@ render: |
           source: sequence
           set:
           - source: const
-            value: 15 # INV Charge (AC First)
+            value: 7 # B01 1 1 //target:bat charging
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
@@ -188,9 +237,5 @@ render: |
                 address: 46003 # Remote Active Power
                 type: writemultiple
                 encoding: int32
-  capacity: {{ .capacity }} # kWh
-  maxchargepower: {{ .maxchargepower }} # W
-  maxdischargepower: {{ .maxacpower }} # W
-  minsoc: {{ .minsoc }} # %
-  maxsoc: {{ .maxsoc }} # %
+  {{- include "battery-params" . }}
   {{- end }}
