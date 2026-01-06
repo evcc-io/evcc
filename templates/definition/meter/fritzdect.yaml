@@ -2,7 +2,19 @@ template: fritzdect
 products:
   - brand: AVM
     description:
-      generic: FritzDECT
+      generic: "FRITZ!DECT 200"
+  - brand: AVM
+    description:
+      generic: "FRITZ!DECT 210"
+  - brand: AVM
+    description:
+      generic: "FRITZ!Powerline 546E"
+  - brand: "FRITZ!"
+    description:
+      generic: "FRITZ!Smart Energy 200"
+  - brand: "FRITZ!"
+    description:
+      generic: "FRITZ!Smart Energy 210"
 group: switchsockets
 params:
   - name: usage

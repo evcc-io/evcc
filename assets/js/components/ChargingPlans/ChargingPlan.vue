@@ -30,80 +30,62 @@
 		</LabelAndValue>
 
 		<Teleport to="body">
-			<div
+			<GenericModal
 				:id="modalId"
 				ref="modal"
-				class="modal fade text-dark modal-xl"
-				data-bs-backdrop="true"
-				tabindex="-1"
-				role="dialog"
-				aria-hidden="true"
+				:title="modalTitle"
+				size="xl"
 				data-testid="charging-plan-modal"
+				@open="modalVisible"
+				@closed="modalInvisible"
 			>
-				<div class="modal-dialog modal-dialog-centered" role="document">
-					<div class="modal-content">
-						<div class="modal-header">
-							<h5 class="modal-title">
-								{{ $t("main.chargingPlan.modalTitle")
-								}}<span v-if="socBasedPlanning && vehicle"
-									>: {{ vehicle.title }}</span
-								>
-							</h5>
-							<button
-								type="button"
-								class="btn-close"
-								data-bs-dismiss="modal"
-								aria-label="Close"
-							></button>
-						</div>
-						<div class="modal-body pt-2">
-							<ul class="nav nav-tabs">
-								<li class="nav-item">
-									<a
-										class="nav-link"
-										:class="{ active: departureTabActive }"
-										href="#"
-										@click.prevent="showDeatureTab"
-									>
-										{{ $t("main.chargingPlan.departureTab") }}
-									</a>
-								</li>
-								<li class="nav-item">
-									<a
-										class="nav-link"
-										:class="{ active: arrivalTabActive }"
-										href="#"
-										@click.prevent="showArrivalTab"
-									>
-										{{ $t("main.chargingPlan.arrivalTab") }}
-									</a>
-								</li>
-							</ul>
-							<div v-if="isModalVisible">
-								<ChargingPlansSettings
-									v-if="departureTabActive"
-									v-bind="chargingPlansSettingsProps"
-									@static-plan-updated="updateStaticPlan"
-									@static-plan-removed="removeStaticPlan"
-									@repeating-plans-updated="updateRepeatingPlans"
-								/>
-								<ChargingPlanArrival
-									v-if="arrivalTabActive"
-									v-bind="chargingPlanArrival"
-									@minsoc-updated="setMinSoc"
-									@limitsoc-updated="setLimitSoc"
-								/>
-							</div>
-						</div>
+				<div class="pt-2">
+					<ul class="nav nav-tabs">
+						<li class="nav-item">
+							<a
+								class="nav-link"
+								:class="{ active: departureTabActive }"
+								href="#"
+								@click.prevent="showDeatureTab"
+							>
+								{{ $t("main.chargingPlan.departureTab") }}
+							</a>
+						</li>
+						<li class="nav-item">
+							<a
+								class="nav-link"
+								:class="{ active: arrivalTabActive }"
+								href="#"
+								@click.prevent="showArrivalTab"
+							>
+								{{ $t("main.chargingPlan.arrivalTab") }}
+							</a>
+						</li>
+					</ul>
+					<div v-if="isModalVisible">
+						<ChargingPlansSettings
+							v-if="departureTabActive"
+							v-bind="chargingPlansSettingsProps"
+							@static-plan-updated="updateStaticPlan"
+							@static-plan-removed="removeStaticPlan"
+							@repeating-plans-updated="updateRepeatingPlans"
+							@plan-strategy-updated="updatePlanStrategy"
+						/>
+						<ChargingPlanArrival
+							v-if="arrivalTabActive"
+							v-bind="chargingPlanArrival"
+							@minsoc-updated="setMinSoc"
+							@limitsoc-updated="setLimitSoc"
+						/>
 					</div>
 				</div>
-			</div>
+			</GenericModal>
 		</Teleport>
 	</div>
 </template>
 
 <script lang="ts">
-import Modal from "bootstrap/js/dist/modal";
+import GenericModal from "../Helper/GenericModal.vue";
 import LabelAndValue from "../Helper/LabelAndValue.vue";
 import PlansSettings from "./PlansSettings.vue";
 import Arrival from "./Arrival.vue";
@@ -111,16 +93,23 @@ import Arrival from "./Arrival.vue";
 import formatter from "@/mixins/formatter";
 import collector from "@/mixins/collector";
 import api from "@/api";
-import { optionStep, fmtEnergy } from "@/utils/energyOptions";
+import { optionStep, fmtEnergy } from "@/utils/energyOptions.ts";
 import { defineComponent, type PropType } from "vue";
 import type { CURRENCY, Timeout, Vehicle } from "@/types/evcc";
-import type { StaticPlan, StaticSocPlan, StaticEnergyPlan, RepeatingPlan } from "./types";
+import type {
+	StaticPlan,
+	StaticSocPlan,
+	StaticEnergyPlan,
+	RepeatingPlan,
+	PlanStrategy,
+} from "./types";
 import type { Forecast } from "@/types/evcc.ts";
 const ONE_MINUTE = 60 * 1000;
 
 export default defineComponent({
 	name: "ChargingPlan",
 	components: {
+		GenericModal,
 		LabelAndValue,
 		ChargingPlansSettings: PlansSettings,
 		ChargingPlanArrival: Arrival,
@@ -132,6 +121,8 @@ export default defineComponent({
 		effectiveLimitSoc: Number,
 		effectivePlanSoc: Number,
 		effectivePlanTime: String,
+		effectivePlanPrecondition: Number,
+		effectivePlanContinuous: Boolean,
 		id: [String, Number],
 		limitEnergy: Number,
 		mode: String,
@@ -139,7 +130,6 @@ export default defineComponent({
 		planEnergy: Number,
 		planTime: String,
 		planTimeUnreachable: Boolean,
-		planPrecondition: { type: Number, default: 0 },
 		planOverrun: Number,
 		rangePerSoc: Number,
 		smartCostType: String,
@@ -150,11 +140,11 @@ export default defineComponent({
 		capacity: Number,
 		vehicleSoc: Number,
 		vehicleLimitSoc: Number,
+		vehicleNotReachable: Boolean,
 		forecast: Object as PropType<Forecast>,
 	},
 	data() {
 		return {
-			modal: null as Modal | null,
 			isModalVisible: false,
 			activeTab: "departure",
 			targetTimeLabel: "",
@@ -184,7 +174,6 @@ export default defineComponent({
 					return {
 						soc: plan.soc,
 						time: new Date(plan.time),
-						precondition: plan.precondition,
 					};
 				}
 				return null;
@@ -193,14 +182,17 @@ export default defineComponent({
 				return {
 					energy: this.planEnergy,
 					time: new Date(this.planTime),
-					precondition: this.planPrecondition,
 				};
 			}
 			return null;
 		},
 		repeatingPlans(): RepeatingPlan[] {
-			if (this.vehicle && this.vehicle.repeatingPlans.length > 0) {
-				return [...this.vehicle.repeatingPlans];
+			if (
+				this.vehicle &&
+				this.vehicle.repeatingPlans &&
+				this.vehicle.repeatingPlans.length > 0
+			) {
+				return [...(this.vehicle.repeatingPlans || [])];
 			}
 			return [];
 		},
@@ -209,6 +201,13 @@ export default defineComponent({
 		},
 		modalId(): string {
 			return `chargingPlanModal_${this.id}`;
+		},
+		modalTitle(): string {
+			const baseTitle = this.$t("main.chargingPlan.modalTitle");
+			if (this.socBasedPlanning && this.vehicle) {
+				return `${baseTitle}: ${this.vehicle.title}`;
+			}
+			return baseTitle;
 		},
 		departureTabActive(): boolean {
 			return this.activeTab === "departure";
@@ -251,38 +250,15 @@ export default defineComponent({
 		},
 	},
 	mounted(): void {
-		const ref = this.$refs["modal"];
-		if (ref) {
-			this.modal = Modal.getOrCreateInstance(ref);
-			ref.addEventListener("show.bs.modal", this.modalVisible);
-			ref.addEventListener("hidden.bs.modal", this.modalInvisible);
-			ref.addEventListener("hide.bs.modal", this.checkUnsavedOnClose);
-		}
 		this.interval = setInterval(this.updateTargetTimeLabel, ONE_MINUTE);
 		this.updateTargetTimeLabel();
 	},
 	unmounted(): void {
-		const ref = this.$refs["modal"];
-		if (ref) {
-			ref.removeEventListener("show.bs.modal", this.modalVisible);
-			ref.removeEventListener("hidden.bs.modal", this.modalInvisible);
-			ref.removeEventListener("hide.bs.modal", this.checkUnsavedOnClose);
-		}
 		if (this.interval) {
 			clearInterval(this.interval);
 		}
 	},
 	methods: {
-		checkUnsavedOnClose(): void {
-			const applyButton = this.$refs["modal"]?.querySelector<HTMLElement>(
-				"[data-testid=plan-apply]"
-			);
-			if (applyButton) {
-				if (confirm(this.$t("main.chargingPlan.unsavedChanges"))) {
-					applyButton.click();
-				}
-			}
-		},
 		modalVisible(): void {
 			this.isModalVisible = true;
 		},
@@ -291,7 +267,8 @@ export default defineComponent({
 		},
 		openModal(): void {
 			this.showDeatureTab();
-			this.modal?.show();
+			const modalRef = this.$refs["modal"] as any;
+			modalRef?.open();
 		},
 		openPlanModal(arrivalTab = false) {
 			if (arrivalTab) {
@@ -299,7 +276,8 @@ export default defineComponent({
 			} else {
 				this.showDeatureTab();
 			}
-			this.modal?.show();
+			const modalRef = this.$refs["modal"] as any;
+			modalRef?.open();
 		},
 		updateTargetTimeLabel(): void {
 			if (!this.effectivePlanTime) return;
@@ -314,15 +292,12 @@ export default defineComponent({
 		},
 		updateStaticPlan(plan: StaticPlan): void {
 			const timeISO = plan.time.toISOString();
-			const params = plan.precondition ? { precondition: plan.precondition } : undefined;
 			if (this.socBasedPlanning) {
 				const p = plan as StaticSocPlan;
-				api.post(`${this.apiVehicle}plan/soc/${p.soc}/${timeISO}`, null, { params });
+				api.post(`${this.apiVehicle}plan/soc/${p.soc}/${timeISO}`, null);
 			} else {
 				const p = plan as StaticEnergyPlan;
-				api.post(`${this.apiLoadpoint}plan/energy/${p.energy}/${timeISO}`, null, {
-					params,
-				});
+				api.post(`${this.apiLoadpoint}plan/energy/${p.energy}/${timeISO}`, null);
 			}
 		},
 		removeStaticPlan(): void {
@@ -333,7 +308,14 @@ export default defineComponent({
 			}
 		},
 		updateRepeatingPlans(plans: RepeatingPlan[]): void {
-			api.post(`${this.apiVehicle}plan/repeating`, { plans });
+			api.post(`${this.apiVehicle}plan/repeating`, plans);
+		},
+		updatePlanStrategy(strategy: PlanStrategy): void {
+			if (this.socBasedPlanning) {
+				api.post(`${this.apiVehicle}plan/strategy`, strategy);
+			} else {
+				api.post(`${this.apiLoadpoint}plan/strategy`, strategy);
+			}
 		},
 		setMinSoc(soc: number): void {
 			api.post(`${this.apiVehicle}minsoc/${soc}`);

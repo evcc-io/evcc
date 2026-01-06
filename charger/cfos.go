@@ -41,7 +41,7 @@ func init() {
 //go:generate go tool decorate -f decorateCfos -b *CfosPowerBrain -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
 
 // NewCfosPowerBrainFromConfig creates a cFos charger from generic config
-func NewCfosPowerBrainFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewCfosPowerBrainFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: 1,
 	}
@@ -75,9 +75,8 @@ func NewCfosPowerBrain(ctx context.Context, uri string, id uint8) (api.Charger, 
 
 	// decorate meter
 	var (
-		power    func() (float64, error)
-		energy   func() (float64, error)
-		currents func() (float64, float64, float64, error)
+		power, energy func() (float64, error)
+		currents      func() (float64, float64, float64, error)
 	)
 	if b, err := wb.conn.ReadHoldingRegisters(cfosRegMeter, 1); err == nil && binary.BigEndian.Uint16(b) != 0 {
 		power = wb.currentPower
@@ -168,7 +167,28 @@ func (wb *CfosPowerBrain) totalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return float64(binary.BigEndian.Uint64(b)) / 1e3, nil
+	res := float64(binary.BigEndian.Uint64(b)) / 1e3
+
+	// cfos wallboxes sometimes return 0 erroneously shortly after startup
+	// to work around this, we retry once more, and if it is still 0, we return ErrMustRetry
+	//
+	// this has the drawback with new wallboxes that actually have 0 total energy
+	// it will return ErrMustRetry until the wallbox has been used
+	//
+	// see https://github.com/evcc-io/evcc/discussions/12886
+	if res == 0 {
+		b, err = wb.conn.ReadHoldingRegisters(cfosRegEnergy, 4)
+		if err != nil {
+			return 0, err
+		}
+
+		res = float64(binary.BigEndian.Uint64(b)) / 1e3
+		if res == 0 {
+			return 0, api.ErrMustRetry
+		}
+	}
+
+	return res, nil
 }
 
 // currents implements the api.PhaseCurrents interface

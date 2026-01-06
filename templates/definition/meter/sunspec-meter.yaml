@@ -9,13 +9,13 @@ products:
       en: Smartmeter (via Inverter)
 params:
   - name: usage
-    choice: ["grid", "pv"]
+    choice: ["grid", "pv", "charge"]
   - name: modbus
     choice: ["tcpip"]
 render: |
   type: custom
   # sunspec model 201 or 203 (int+sf)/ 211 or 213 (float) meter
-  {{- if eq .usage "grid" }}
+  {{- if or (eq .usage "grid") (eq .usage "charge") }}
   power:
     source: sunspec
     uri: {{ .host }}:{{ .port }}
@@ -23,6 +23,8 @@ render: |
     value:
       - 201:W
       - 211:W
+      - 202:W
+      - 212:W
       - 203:W
       - 213:W
   energy:
@@ -32,6 +34,8 @@ render: |
     value:
       - 201:TotWhImp
       - 211:TotWhImp
+      - 202:TotWhImp
+      - 212:TotWhImp
       - 203:TotWhImp
       - 213:TotWhImp
     scale: 0.001
@@ -42,6 +46,8 @@ render: |
       value:
         - 201:AphA
         - 211:AphA
+        - 202:AphA
+        - 212:AphA
         - 203:AphA
         - 213:AphA
     - source: sunspec
@@ -50,6 +56,8 @@ render: |
       value:
         - 201:AphB
         - 211:AphB
+        - 202:AphB
+        - 212:AphB
         - 203:AphB
         - 213:AphB
     - source: sunspec
@@ -58,6 +66,8 @@ render: |
       value:
         - 201:AphC
         - 211:AphC
+        - 202:AphC
+        - 212:AphC
         - 203:AphC
         - 213:AphC
   voltages:
@@ -67,6 +77,8 @@ render: |
       value:
         - 201:PhVphA
         - 211:PhVphA
+        - 202:PhVphA
+        - 212:PhVphA
         - 203:PhVphA
         - 213:PhVphA
     - source: sunspec
@@ -75,6 +87,8 @@ render: |
       value:
         - 201:PhVphB
         - 211:PhVphB
+        - 202:PhVphB
+        - 212:PhVphB
         - 203:PhVphB
         - 213:PhVphB
     - source: sunspec
@@ -83,6 +97,8 @@ render: |
       value:
         - 201:PhVphC
         - 211:PhVphC
+        - 202:PhVphC
+        - 212:PhVphC
         - 203:PhVphC
         - 213:PhVphC
   powers:
@@ -92,6 +108,8 @@ render: |
       value:
         - 201:WphA
         - 211:WphA
+        - 202:WphA
+        - 212:WphA
         - 203:WphA
         - 213:WphA
     - source: sunspec
@@ -100,6 +118,8 @@ render: |
       value:
         - 201:WphB
         - 211:WphB
+        - 202:WphB
+        - 212:WphB
         - 203:WphB
         - 213:WphB
     - source: sunspec
@@ -108,6 +128,8 @@ render: |
       value:
         - 201:WphC
         - 211:WphC
+        - 202:WphC
+        - 212:WphC
         - 203:WphC
         - 213:WphC
   {{- end }}
@@ -119,6 +141,8 @@ render: |
     value:
       - 201:W
       - 211:W
+      - 202:W
+      - 212:W
       - 203:W
       - 213:W
   energy:
@@ -128,6 +152,8 @@ render: |
     value:
       - 201:TotWhExp
       - 211:TotWhExp
+      - 202:TotWhExp
+      - 212:TotWhExp
       - 203:TotWhExp
       - 213:TotWhExp
     scale: 0.001

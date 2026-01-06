@@ -6,12 +6,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateE3dc(base *E3dc, batteryCapacity func() float64, battery func() (float64, error), batteryController func(api.BatteryMode) error) api.Meter {
+func decorateE3dc(base *E3dc, battery func() (float64, error), batteryCapacity func() float64, batteryController func(api.BatteryMode) error, batterySocLimiter func() (float64, float64), batteryPowerLimiter func() (float64, float64), maxACPowerGetter func() float64) api.Meter {
 	switch {
-	case battery == nil:
+	case battery == nil && maxACPowerGetter == nil:
 		return base
 
-	case battery != nil && batteryCapacity == nil && batteryController == nil:
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryPowerLimiter == nil && batterySocLimiter == nil && maxACPowerGetter == nil:
 		return &struct {
 			*E3dc
 			api.Battery
@@ -22,7 +22,7 @@ func decorateE3dc(base *E3dc, batteryCapacity func() float64, battery func() (fl
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController == nil:
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryPowerLimiter == nil && batterySocLimiter == nil && maxACPowerGetter == nil:
 		return &struct {
 			*E3dc
 			api.Battery
@@ -37,7 +37,7 @@ func decorateE3dc(base *E3dc, batteryCapacity func() float64, battery func() (fl
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && batteryController != nil:
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryPowerLimiter == nil && batterySocLimiter == nil && maxACPowerGetter == nil:
 		return &struct {
 			*E3dc
 			api.Battery
@@ -52,7 +52,7 @@ func decorateE3dc(base *E3dc, batteryCapacity func() float64, battery func() (fl
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController != nil:
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryPowerLimiter == nil && batterySocLimiter == nil && maxACPowerGetter == nil:
 		return &struct {
 			*E3dc
 			api.Battery
@@ -68,6 +68,629 @@ func decorateE3dc(base *E3dc, batteryCapacity func() float64, battery func() (fl
 			},
 			BatteryController: &decorateE3dcBatteryControllerImpl{
 				batteryController: batteryController,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryPowerLimiter == nil && batterySocLimiter != nil && maxACPowerGetter == nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatterySocLimiter
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatterySocLimiter: &decorateE3dcBatterySocLimiterImpl{
+				batterySocLimiter: batterySocLimiter,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryPowerLimiter == nil && batterySocLimiter != nil && maxACPowerGetter == nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryCapacity
+			api.BatterySocLimiter
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateE3dcBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatterySocLimiter: &decorateE3dcBatterySocLimiterImpl{
+				batterySocLimiter: batterySocLimiter,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryPowerLimiter == nil && batterySocLimiter != nil && maxACPowerGetter == nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryController
+			api.BatterySocLimiter
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateE3dcBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatterySocLimiter: &decorateE3dcBatterySocLimiterImpl{
+				batterySocLimiter: batterySocLimiter,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryPowerLimiter == nil && batterySocLimiter != nil && maxACPowerGetter == nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.BatterySocLimiter
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateE3dcBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateE3dcBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatterySocLimiter: &decorateE3dcBatterySocLimiterImpl{
+				batterySocLimiter: batterySocLimiter,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryPowerLimiter != nil && batterySocLimiter == nil && maxACPowerGetter == nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryPowerLimiter
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryPowerLimiter: &decorateE3dcBatteryPowerLimiterImpl{
+				batteryPowerLimiter: batteryPowerLimiter,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryPowerLimiter != nil && batterySocLimiter == nil && maxACPowerGetter == nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryPowerLimiter
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateE3dcBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryPowerLimiter: &decorateE3dcBatteryPowerLimiterImpl{
+				batteryPowerLimiter: batteryPowerLimiter,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryPowerLimiter != nil && batterySocLimiter == nil && maxACPowerGetter == nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryController
+			api.BatteryPowerLimiter
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateE3dcBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryPowerLimiter: &decorateE3dcBatteryPowerLimiterImpl{
+				batteryPowerLimiter: batteryPowerLimiter,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryPowerLimiter != nil && batterySocLimiter == nil && maxACPowerGetter == nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.BatteryPowerLimiter
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateE3dcBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateE3dcBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryPowerLimiter: &decorateE3dcBatteryPowerLimiterImpl{
+				batteryPowerLimiter: batteryPowerLimiter,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryPowerLimiter != nil && batterySocLimiter != nil && maxACPowerGetter == nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryPowerLimiter
+			api.BatterySocLimiter
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryPowerLimiter: &decorateE3dcBatteryPowerLimiterImpl{
+				batteryPowerLimiter: batteryPowerLimiter,
+			},
+			BatterySocLimiter: &decorateE3dcBatterySocLimiterImpl{
+				batterySocLimiter: batterySocLimiter,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryPowerLimiter != nil && batterySocLimiter != nil && maxACPowerGetter == nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryPowerLimiter
+			api.BatterySocLimiter
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateE3dcBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryPowerLimiter: &decorateE3dcBatteryPowerLimiterImpl{
+				batteryPowerLimiter: batteryPowerLimiter,
+			},
+			BatterySocLimiter: &decorateE3dcBatterySocLimiterImpl{
+				batterySocLimiter: batterySocLimiter,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryPowerLimiter != nil && batterySocLimiter != nil && maxACPowerGetter == nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryController
+			api.BatteryPowerLimiter
+			api.BatterySocLimiter
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateE3dcBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryPowerLimiter: &decorateE3dcBatteryPowerLimiterImpl{
+				batteryPowerLimiter: batteryPowerLimiter,
+			},
+			BatterySocLimiter: &decorateE3dcBatterySocLimiterImpl{
+				batterySocLimiter: batterySocLimiter,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryPowerLimiter != nil && batterySocLimiter != nil && maxACPowerGetter == nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.BatteryPowerLimiter
+			api.BatterySocLimiter
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateE3dcBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateE3dcBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryPowerLimiter: &decorateE3dcBatteryPowerLimiterImpl{
+				batteryPowerLimiter: batteryPowerLimiter,
+			},
+			BatterySocLimiter: &decorateE3dcBatterySocLimiterImpl{
+				batterySocLimiter: batterySocLimiter,
+			},
+		}
+
+	case battery == nil && maxACPowerGetter != nil:
+		return &struct {
+			*E3dc
+			api.MaxACPowerGetter
+		}{
+			E3dc: base,
+			MaxACPowerGetter: &decorateE3dcMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryPowerLimiter == nil && batterySocLimiter == nil && maxACPowerGetter != nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.MaxACPowerGetter
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			MaxACPowerGetter: &decorateE3dcMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryPowerLimiter == nil && batterySocLimiter == nil && maxACPowerGetter != nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryCapacity
+			api.MaxACPowerGetter
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateE3dcBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			MaxACPowerGetter: &decorateE3dcMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryPowerLimiter == nil && batterySocLimiter == nil && maxACPowerGetter != nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryController
+			api.MaxACPowerGetter
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateE3dcBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			MaxACPowerGetter: &decorateE3dcMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryPowerLimiter == nil && batterySocLimiter == nil && maxACPowerGetter != nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.MaxACPowerGetter
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateE3dcBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateE3dcBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			MaxACPowerGetter: &decorateE3dcMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryPowerLimiter == nil && batterySocLimiter != nil && maxACPowerGetter != nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatterySocLimiter
+			api.MaxACPowerGetter
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatterySocLimiter: &decorateE3dcBatterySocLimiterImpl{
+				batterySocLimiter: batterySocLimiter,
+			},
+			MaxACPowerGetter: &decorateE3dcMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryPowerLimiter == nil && batterySocLimiter != nil && maxACPowerGetter != nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryCapacity
+			api.BatterySocLimiter
+			api.MaxACPowerGetter
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateE3dcBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatterySocLimiter: &decorateE3dcBatterySocLimiterImpl{
+				batterySocLimiter: batterySocLimiter,
+			},
+			MaxACPowerGetter: &decorateE3dcMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryPowerLimiter == nil && batterySocLimiter != nil && maxACPowerGetter != nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryController
+			api.BatterySocLimiter
+			api.MaxACPowerGetter
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateE3dcBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatterySocLimiter: &decorateE3dcBatterySocLimiterImpl{
+				batterySocLimiter: batterySocLimiter,
+			},
+			MaxACPowerGetter: &decorateE3dcMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryPowerLimiter == nil && batterySocLimiter != nil && maxACPowerGetter != nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.BatterySocLimiter
+			api.MaxACPowerGetter
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateE3dcBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateE3dcBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatterySocLimiter: &decorateE3dcBatterySocLimiterImpl{
+				batterySocLimiter: batterySocLimiter,
+			},
+			MaxACPowerGetter: &decorateE3dcMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryPowerLimiter != nil && batterySocLimiter == nil && maxACPowerGetter != nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryPowerLimiter
+			api.MaxACPowerGetter
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryPowerLimiter: &decorateE3dcBatteryPowerLimiterImpl{
+				batteryPowerLimiter: batteryPowerLimiter,
+			},
+			MaxACPowerGetter: &decorateE3dcMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryPowerLimiter != nil && batterySocLimiter == nil && maxACPowerGetter != nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryPowerLimiter
+			api.MaxACPowerGetter
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateE3dcBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryPowerLimiter: &decorateE3dcBatteryPowerLimiterImpl{
+				batteryPowerLimiter: batteryPowerLimiter,
+			},
+			MaxACPowerGetter: &decorateE3dcMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryPowerLimiter != nil && batterySocLimiter == nil && maxACPowerGetter != nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryController
+			api.BatteryPowerLimiter
+			api.MaxACPowerGetter
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateE3dcBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryPowerLimiter: &decorateE3dcBatteryPowerLimiterImpl{
+				batteryPowerLimiter: batteryPowerLimiter,
+			},
+			MaxACPowerGetter: &decorateE3dcMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryPowerLimiter != nil && batterySocLimiter == nil && maxACPowerGetter != nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.BatteryPowerLimiter
+			api.MaxACPowerGetter
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateE3dcBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateE3dcBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryPowerLimiter: &decorateE3dcBatteryPowerLimiterImpl{
+				batteryPowerLimiter: batteryPowerLimiter,
+			},
+			MaxACPowerGetter: &decorateE3dcMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryPowerLimiter != nil && batterySocLimiter != nil && maxACPowerGetter != nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryPowerLimiter
+			api.BatterySocLimiter
+			api.MaxACPowerGetter
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryPowerLimiter: &decorateE3dcBatteryPowerLimiterImpl{
+				batteryPowerLimiter: batteryPowerLimiter,
+			},
+			BatterySocLimiter: &decorateE3dcBatterySocLimiterImpl{
+				batterySocLimiter: batterySocLimiter,
+			},
+			MaxACPowerGetter: &decorateE3dcMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryPowerLimiter != nil && batterySocLimiter != nil && maxACPowerGetter != nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryPowerLimiter
+			api.BatterySocLimiter
+			api.MaxACPowerGetter
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateE3dcBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryPowerLimiter: &decorateE3dcBatteryPowerLimiterImpl{
+				batteryPowerLimiter: batteryPowerLimiter,
+			},
+			BatterySocLimiter: &decorateE3dcBatterySocLimiterImpl{
+				batterySocLimiter: batterySocLimiter,
+			},
+			MaxACPowerGetter: &decorateE3dcMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryPowerLimiter != nil && batterySocLimiter != nil && maxACPowerGetter != nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryController
+			api.BatteryPowerLimiter
+			api.BatterySocLimiter
+			api.MaxACPowerGetter
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decorateE3dcBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryPowerLimiter: &decorateE3dcBatteryPowerLimiterImpl{
+				batteryPowerLimiter: batteryPowerLimiter,
+			},
+			BatterySocLimiter: &decorateE3dcBatterySocLimiterImpl{
+				batterySocLimiter: batterySocLimiter,
+			},
+			MaxACPowerGetter: &decorateE3dcMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryPowerLimiter != nil && batterySocLimiter != nil && maxACPowerGetter != nil:
+		return &struct {
+			*E3dc
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.BatteryPowerLimiter
+			api.BatterySocLimiter
+			api.MaxACPowerGetter
+		}{
+			E3dc: base,
+			Battery: &decorateE3dcBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decorateE3dcBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decorateE3dcBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryPowerLimiter: &decorateE3dcBatteryPowerLimiterImpl{
+				batteryPowerLimiter: batteryPowerLimiter,
+			},
+			BatterySocLimiter: &decorateE3dcBatterySocLimiterImpl{
+				batterySocLimiter: batterySocLimiter,
+			},
+			MaxACPowerGetter: &decorateE3dcMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
 			},
 		}
 	}
@@ -97,4 +720,28 @@ type decorateE3dcBatteryControllerImpl struct {
 
 func (impl *decorateE3dcBatteryControllerImpl) SetBatteryMode(p0 api.BatteryMode) error {
 	return impl.batteryController(p0)
+}
+
+type decorateE3dcBatteryPowerLimiterImpl struct {
+	batteryPowerLimiter func() (float64, float64)
+}
+
+func (impl *decorateE3dcBatteryPowerLimiterImpl) GetPowerLimits() (float64, float64) {
+	return impl.batteryPowerLimiter()
+}
+
+type decorateE3dcBatterySocLimiterImpl struct {
+	batterySocLimiter func() (float64, float64)
+}
+
+func (impl *decorateE3dcBatterySocLimiterImpl) GetSocLimits() (float64, float64) {
+	return impl.batterySocLimiter()
+}
+
+type decorateE3dcMaxACPowerGetterImpl struct {
+	maxACPowerGetter func() float64
+}
+
+func (impl *decorateE3dcMaxACPowerGetterImpl) MaxACPower() float64 {
+	return impl.maxACPowerGetter()
 }

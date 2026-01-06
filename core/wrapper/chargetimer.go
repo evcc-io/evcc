@@ -48,6 +48,16 @@ func (m *ChargeTimer) StopCharge() {
 	m.duration += m.clck.Since(m.start)
 }
 
+var _ ChargeResetter = (*ChargeTimer)(nil)
+
+// ChargeResetter resets the charging session
+func (m *ChargeTimer) ResetCharge() {
+	m.Lock()
+	defer m.Unlock()
+
+	m.duration = 0
+}
+
 // ChargeDuration implements the api.ChargeTimer interface
 func (m *ChargeTimer) ChargeDuration() (time.Duration, error) {
 	m.Lock()

@@ -31,7 +31,7 @@ func init() {
 }
 
 // NewNRGKickConnectFromConfig creates a NRGKickConnect charger from generic config
-func NewNRGKickConnectFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewNRGKickConnectFromConfig(other map[string]any) (api.Charger, error) {
 	cc := struct {
 		URI, Mac, Password string
 		Cache              time.Duration
@@ -84,7 +84,7 @@ func (nrg *NRGKickConnect) apiURL(api string) string {
 	return fmt.Sprintf("%s/api/%s/%s", nrg.uri, api, nrg.mac)
 }
 
-func (nrg *NRGKickConnect) putJSON(url string, data interface{}) error {
+func (nrg *NRGKickConnect) putJSON(url string, data any) error {
 	req, err := request.New(http.MethodPut, url, request.MarshalJSON(data), request.JSONEncoding)
 	if err != nil {
 		return err

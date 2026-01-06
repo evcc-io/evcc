@@ -11,7 +11,7 @@ func init() {
 }
 
 // NewTPLinkFromConfig creates a tapo meter from generic config
-func NewTPLinkFromConfig(other map[string]interface{}) (api.Meter, error) {
+func NewTPLinkFromConfig(other map[string]any) (api.Meter, error) {
 	var cc struct {
 		URI string
 	}

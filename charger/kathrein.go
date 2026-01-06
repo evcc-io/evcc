@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2025 andig
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -18,11 +18,12 @@ package charger
 // SOFTWARE.
 
 import (
+	"bytes"
 	"context"
 	"encoding/binary"
 	"fmt"
 	"math"
-	"time"
+	"strings"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -67,8 +68,7 @@ const (
 	kathreinRegCurrents         = 0x0036 // float32 Line 1 Current (A)
 	kathreinRegPowers           = 0x003C // float32 Line 1 Power (W)
 	kathreinRegTotalActivePower = 0x0054 // float32 Total active power (W)
-	kathreinRegTotalEnergy      = 0x005C // float32 Total Energy (since production) (kWh)
-	kathreinRegFrequencyLine    = 0x005E // float32 Frequency line (Hz)
+	kathreinRegTotalEnergy      = 0x005C // float32 Total Energy (since production) (Wh)
 
 	// EVSE - Charging state (uint16)
 	//   0 : Idle
@@ -116,6 +116,7 @@ const (
 	kathreinRegGrantedPower     = 0x0066 // uint16 Granted charging power [1380 … 22080] @230VAC (W)
 	kathreinRegChargingDuration = 0x0067 // uint32 Duration Charging (s)
 	kathreinRegChargingEnergy   = 0x0069 // uint32 Energy Charging Energy (per charging session) (Wh)
+	kathreinRegRfid             = 0x0070 // String RFID tag Info
 
 	// EMS-Control - Control register (uint16)
 	//   0x8000 : Enable EMS-Control
@@ -171,11 +172,6 @@ func NewKathreinFromConfig(ctx context.Context, other map[string]any) (api.Charg
 		return nil, err
 	}
 
-	// Enable EMS-Control
-	if _, err := wb.conn.WriteSingleRegister(kathreinRegEMSControlRegister, 0x8000); err != nil {
-		return nil, err
-	}
-
 	return wb, nil
 }
 
@@ -199,7 +195,7 @@ func NewKathrein(ctx context.Context, uri string, id uint8) (*Kathrein, error) {
 		curr: 6000,
 	}
 
-	return wb, err
+	return wb, nil
 }
 
 // getPhaseValues returns 3 sequential register values
@@ -251,6 +247,11 @@ func (wb *Kathrein) Enable(enable bool) error {
 	var u uint16
 	if enable {
 		u = wb.curr
+	}
+
+	// EMS-Control must be enabled before sending first WriteReg Command
+	if _, err := wb.conn.WriteSingleRegister(kathreinRegEMSControlRegister, 0x8000); err != nil {
+		return err
 	}
 
 	_, err := wb.conn.WriteSingleRegister(kathreinRegEMSSetpointChargingCurrent, u)
@@ -307,29 +308,11 @@ func (wb *Kathrein) Voltages() (float64, float64, float64, error) {
 	return wb.getPhaseValues(kathreinRegVoltages, 1)
 }
 
-var _ api.ChargeTimer = (*Kathrein)(nil)
+// removed since broken, see https://github.com/evcc-io/evcc/pull/25934
+// var _ api.ChargeTimer = (*Kathrein)(nil)
 
-// ChargeDuration implements the api.ChargeTimer interface
-func (wb *Kathrein) ChargeDuration() (time.Duration, error) {
-	b, err := wb.conn.ReadHoldingRegisters(kathreinRegChargingDuration, 2)
-	if err != nil {
-		return 0, err
-	}
-
-	return time.Duration(binary.BigEndian.Uint16(b)) * time.Second, nil
-}
-
-var _ api.ChargeRater = (*Kathrein)(nil)
-
-// ChargedEnergy implements the api.ChargeRater interface
-func (wb *Kathrein) ChargedEnergy() (float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(kathreinRegChargingEnergy, 2)
-	if err != nil {
-		return 0, err
-	}
-
-	return float64(binary.BigEndian.Uint32(b)) / 1e3, err
-}
+// removed since broken, see https://github.com/evcc-io/evcc/pull/25427
+// var _ api.ChargeRater = (*Kathrein)(nil)
 
 var _ api.MeterEnergy = (*Kathrein)(nil)
 
@@ -340,7 +323,7 @@ func (wb *Kathrein) TotalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return float64(math.Float32frombits(binary.BigEndian.Uint32(b))), err
+	return float64(math.Float32frombits(binary.BigEndian.Uint32(b))) / 1e3, err
 }
 
 var _ api.PhaseSwitcher = (*Kathrein)(nil)
@@ -358,23 +341,26 @@ func (wb *Kathrein) Phases1p3p(phases int) error {
 		return err
 	}
 
-	if enabled {
-		if err = wb.Enable(false); err != nil {
-			return err
-		}
-	}
-
-	// Switch phases
-	if _, err = wb.conn.WriteSingleRegister(kathreinRegEMSSetpointRelais, u); err != nil {
+	// EMS-Control must be enabled before sending first WriteReg Command
+	if _, err := wb.conn.WriteSingleRegister(kathreinRegEMSControlRegister, 0x8000); err != nil {
 		return err
 	}
 
-	// Re-enable charging if it was previously enabled
-	if enabled {
-		err = wb.Enable(true)
+	// Switch phases
+	if _, err := wb.conn.WriteSingleRegister(kathreinRegEMSSetpointRelais, u); err != nil {
+		return err
 	}
 
-	return err
+	// Disable and re-enable charging to apply the new phase setting
+	if err := wb.Enable(false); err != nil {
+		return err
+	}
+
+	if enabled {
+		return wb.Enable(true)
+	}
+
+	return nil
 }
 
 var _ api.PhaseGetter = (*Kathrein)(nil)
@@ -394,6 +380,48 @@ func (wb *Kathrein) GetPhases() (int, error) {
 	default:
 		return 0, nil
 	}
+}
+
+var _ api.StatusReasoner = (*Kathrein)(nil)
+
+// StatusReason implements the api.StatusReasoner interface
+func (wb *Kathrein) StatusReason() (api.Reason, error) {
+	res := api.ReasonUnknown
+
+	b, err := wb.conn.ReadHoldingRegisters(kathreinRegChargingState, 1)
+	if err == nil && binary.BigEndian.Uint16(b) == 2 {
+		res = api.ReasonWaitingForAuthorization
+	}
+
+	return res, err
+}
+
+var _ api.Identifier = (*Kathrein)(nil)
+
+// Identify implements the api.Identifier interface
+func (wb *Kathrein) Identify() (string, error) {
+	s, err := wb.conn.ReadHoldingRegisters(kathreinRegChargingState, 1)
+	if err != nil {
+		return "", err
+	}
+
+	state := binary.BigEndian.Uint16(s)
+	if state < 3 || state > 6 {
+		return "", nil
+	}
+
+	b, err := wb.conn.ReadHoldingRegisters(kathreinRegRfid, 24)
+	if err != nil {
+		return "", err
+	}
+
+	rfid := string(bytes.TrimRight(b, "\x00"))
+
+	if strings.HasPrefix(rfid, "RFID:") {
+		return rfid[5:], nil
+	}
+
+	return rfid, nil
 }
 
 var _ api.Diagnosis = (*Kathrein)(nil)
@@ -420,18 +448,6 @@ func (wb *Kathrein) Diagnose() {
 		fmt.Printf("Device - Serial:\t%s\n", b)
 	}
 
-	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegTotalActivePower, 2); err == nil {
-		fmt.Printf("Meter - P tot (active):\t%f W\n", float64(math.Float32frombits(binary.BigEndian.Uint32(b))))
-	}
-
-	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegTotalEnergy, 2); err == nil {
-		fmt.Printf("Meter - W tot:\t%f kWh\n", float64(math.Float32frombits(binary.BigEndian.Uint32(b))))
-	}
-
-	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegFrequencyLine, 2); err == nil {
-		fmt.Printf("Meter - W tot:\t%f Hz\n", float64(math.Float32frombits(binary.BigEndian.Uint32(b))))
-	}
-
 	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegChargingState, 1); err == nil {
 		fmt.Printf("EVSE - Charging-State:\t%d\n", b[1])
 	}
@@ -449,23 +465,15 @@ func (wb *Kathrein) Diagnose() {
 	}
 
 	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegGrantedCurrent, 1); err == nil {
-		fmt.Printf("EVSE - Granted Current:\t%d mA\n", b[1])
+		fmt.Printf("EVSE - Granted Current:\t%d mA\n", binary.BigEndian.Uint16(b))
 	}
 
 	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegGrantedPower, 1); err == nil {
-		fmt.Printf("EVSE - Granted Power:\t%d W\n", b[1])
-	}
-
-	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegChargingDuration, 2); err == nil {
-		fmt.Printf("Charging - Duration:\t%d s\n", b)
-	}
-
-	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegChargingEnergy, 2); err == nil {
-		fmt.Printf("Charging - Energy:\t%d Wh\n", b)
+		fmt.Printf("EVSE - Granted Power:\t%d W\n", binary.BigEndian.Uint16(b))
 	}
 
 	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegEMSControlRegister, 1); err == nil {
-		fmt.Printf("EMS-Control - Control-Register:\t%d\n", b[1])
+		fmt.Printf("EMS-Control - Control-Register:\t%d\n", b[0])
 	}
 
 	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegEMSSetpointRelais, 1); err == nil {
@@ -473,11 +481,11 @@ func (wb *Kathrein) Diagnose() {
 	}
 
 	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegEMSSetpointChargingCurrent, 1); err == nil {
-		fmt.Printf("EMS-Control - Setpoint Charging Current:\t%d mA\n", b[1])
+		fmt.Printf("EMS-Control - Setpoint Charging Current:\t%d mA\n", binary.BigEndian.Uint16(b))
 	}
 
 	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegEMSTimeoutPeriod, 1); err == nil {
-		fmt.Printf("EMS-Control - Timeout Period:\t%d s\n", b[1])
+		fmt.Printf("EMS-Control - Timeout Period:\t%d s\n", binary.BigEndian.Uint16(b))
 	}
 
 	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegEMSTimeOutFallbackPattern, 1); err == nil {
@@ -485,6 +493,6 @@ func (wb *Kathrein) Diagnose() {
 	}
 
 	if b, err := wb.conn.ReadHoldingRegisters(kathreinRegEMSTimeOutFallbackCurrent, 1); err == nil {
-		fmt.Printf("EMS-Control - Timeout Fallback Pattern:\t%d mA\n", b[1])
+		fmt.Printf("EMS-Control - Timeout Fallback Current:\t%d mA\n", binary.BigEndian.Uint16(b))
 	}
 }

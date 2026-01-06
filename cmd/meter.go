@@ -20,8 +20,11 @@ func init() {
 	rootCmd.AddCommand(meterCmd)
 	meterCmd.Flags().StringP(flagBatteryMode, "b", "", flagBatteryModeDescription)
 	meterCmd.Flags().DurationP(flagBatteryModeWait, "w", 0, flagBatteryModeWaitDescription)
+	meterCmd.Flags().Bool(flagDiagnose, false, flagDiagnoseDescription)
 	meterCmd.Flags().BoolP(flagRepeat, "r", false, flagRepeatDescription)
 	meterCmd.Flags().Duration(flagRepeatInterval, 0, flagRepeatIntervalDescription)
+	meterCmd.Flags().Bool(flagHeartbeat, false, flagHeartbeatDescription)
+	meterCmd.Flags().Duration(flagTimeout, time.Second, flagTimeoutDescription)
 }
 
 func runMeter(cmd *cobra.Command, args []string) {
@@ -69,12 +72,18 @@ func runMeter(cmd *cobra.Command, args []string) {
 	}
 
 	if !flagUsed {
-		d := dumper{len: len(meters)}
+		timeout, _ := cmd.Flags().GetDuration(flagTimeout)
+		d := dumper{len: len(meters), timeout: timeout}
+		flag := cmd.Flag(flagDiagnose).Changed
+
 	REPEAT:
 		for _, dev := range meters {
 			v := dev.Instance()
 
-			d.DumpWithHeader(dev.Config().Name, v)
+			d.DumpWithHeader(deviceHeader(dev), v)
+			if flag {
+				d.DumpDiagnosis(v)
+			}
 		}
 		if ok, _ := cmd.Flags().GetBool(flagRepeat); ok {
 			if d, err := cmd.Flags().GetDuration(flagRepeatInterval); d > 0 && err == nil {
@@ -83,6 +92,9 @@ func runMeter(cmd *cobra.Command, args []string) {
 			}
 			goto REPEAT
 		}
+	} else if ok, _ := cmd.Flags().GetBool(flagHeartbeat); ok {
+		log.INFO.Println("running heartbeat (if any) until interrupted (Ctrl-C to stop)")
+		time.Sleep(time.Hour)
 	}
 
 	// wait for shutdown

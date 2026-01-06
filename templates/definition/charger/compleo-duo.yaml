@@ -1,0 +1,16 @@
+template: compleo-duo
+products:
+  - brand: Compleo
+    description:
+      generic: Duo
+capabilities: ["mA", "rfid", "1p3p"]
+requirements:
+  evcc: ["sponsorship"]
+params:
+  - name: modbus
+    choice: ["tcpip"]
+  - name: connector
+render: |
+  type: compleo
+  {{- include "modbus" . }}
+  connector: {{ .connector }}

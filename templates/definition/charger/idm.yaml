@@ -10,9 +10,6 @@ params:
   - name: tempsource
     type: choice
     choice: ["warmwater_top", "warmwater_bottom", "buffer"]
-    description:
-      de: "Temperaturquelle"
-      en: "Temperature source"
   - name: phases
     deprecated: true
 render: |

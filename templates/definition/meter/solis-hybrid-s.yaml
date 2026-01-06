@@ -3,9 +3,23 @@ products:
   - brand: Ginlong
     description:
       generic: Solis Hybrid Inverter (S Series)
+  - brand: Ginlong
+    description:
+      generic: Solis Storage Inverter (S Series)
   - brand: Axitec
     description:
       generic: AXIhycon 12-15H
+capabilities: ["battery-control"]
+requirements:
+  description:
+    de: |
+      Um die aktive Ladesteuerung zum Netzladen nutzen zu können ist eine einmalige manuelle Einrichtung notwendig.
+      Navigiere zu "System Settings" > "Storage Mode" im Wechselrichter Menü und aktiviere "Allow grid charging".
+      Wenn die aktive Ladesteuerung dann die "Battery Reserve"-Einstellung anpasst, lädt der Wechselrichter die Batterie aus dem Netz bis zum hier konfigurierten Max SOC Wert auf (Standard: 95%).
+    en: |
+      To use active battery control with grid charging, a one-time manual setup is required.
+      Navigate to "System Settings" > "Storage Mode" in the inverter menu and enable "Allow grid charging".
+      When active battery control adjusts the "Battery Reserve" setting, the inverter will charge the battery from the grid up to the Max SOC setting configured here (Default: 95%).
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -14,9 +28,8 @@ params:
     choice: ["rs485"]
     baudrate: 9600
     id: 1
-  - name: capacity
-    advanced: true
   - name: maxacpower
+  - preset: battery-params
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -133,5 +146,12 @@ render: |
       address: 33139 # Battery capacity SOC
       type: input
       decode: uint16
-  capacity: {{ .capacity }} # kWh
+  limitsoc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 43024 # Battery Reserve Mode SOC
+      type: writeholding
+      encoding: uint16
+  {{- include "battery-params" . }}
   {{- end }}

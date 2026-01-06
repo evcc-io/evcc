@@ -12,13 +12,13 @@ func init() {
 }
 
 // NewMovingAverageFromConfig creates api.Meter from config
-func NewMovingAverageFromConfig(ctx context.Context, other map[string]interface{}) (api.Meter, error) {
+func NewMovingAverageFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	cc := struct {
 		Decay float64
 		Meter struct {
-			capacity `mapstructure:",squash"`
-			Type     string
-			Other    map[string]interface{} `mapstructure:",remain"`
+			batteryCapacity `mapstructure:",squash"`
+			Type            string
+			Other           map[string]any `mapstructure:",remain"`
 		}
 	}{
 		Decay: 0.1,
@@ -70,7 +70,11 @@ func NewMovingAverageFromConfig(ctx context.Context, other map[string]interface{
 		powers = m.Powers
 	}
 
-	return meter.Decorate(totalEnergy, currents, voltages, powers, batterySoc, cc.Meter.capacity.Decorator(), nil, nil), nil
+	if batterySoc != nil {
+		return meter.DecorateBattery(totalEnergy, batterySoc, cc.Meter.batteryCapacity.Decorator(), nil, nil, nil), nil
+	}
+
+	return meter.Decorate(totalEnergy, currents, voltages, powers, nil), nil
 }
 
 type MovingAverage struct {

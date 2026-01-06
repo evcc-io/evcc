@@ -3,7 +3,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent, type PropType } from "vue";
 import _1 from "./1.vue";
 import _2 from "./2.vue";
 import _3 from "./3.vue";
@@ -14,6 +14,7 @@ import _7 from "./7.vue";
 import _8 from "./8.vue";
 import _9 from "./9.vue";
 import Plus from "./Plus.vue";
+import { ICON_SIZE } from "@/types/evcc";
 
 const icons = {
 	_1,
@@ -31,7 +32,7 @@ export default defineComponent({
 	name: "MultiIcon",
 	props: {
 		count: { type: Number, default: 1 },
-		size: { type: String, default: "s" },
+		size: { type: String as PropType<ICON_SIZE>, default: ICON_SIZE.S },
 	},
 	computed: {
 		icon() {

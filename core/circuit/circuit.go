@@ -2,6 +2,7 @@ package circuit
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math"
 	"sync"
@@ -33,15 +34,17 @@ type Circuit struct {
 	getMaxCurrent func() (float64, error) // dynamic max allowed current
 	getMaxPower   func() (float64, error) // dynamic max allowed power
 
-	current float64
-	power   float64
+	current   float64
+	power     float64
+	dimmed    bool
+	curtailed bool
 
 	currentUpdated time.Time
 	powerUpdated   time.Time
 }
 
 // NewFromConfig creates a new Circuit
-func NewFromConfig(ctx context.Context, log *util.Logger, other map[string]interface{}) (api.Circuit, error) {
+func NewFromConfig(ctx context.Context, log *util.Logger, other map[string]any) (api.Circuit, error) {
 	cc := struct {
 		Title         string         // title
 		ParentRef     string         `mapstructure:"parent"` // parent circuit reference
@@ -66,6 +69,9 @@ func NewFromConfig(ctx context.Context, log *util.Logger, other map[string]inter
 			return nil, err
 		}
 		meter = dev.Instance()
+		if meter == nil {
+			return nil, errors.New("missing meter instance")
+		}
 	}
 
 	circuit, err := New(log, cc.Title, cc.MaxCurrent, cc.MaxPower, meter, cc.Timeout)
@@ -88,7 +94,11 @@ func NewFromConfig(ctx context.Context, log *util.Logger, other map[string]inter
 		if err != nil {
 			return nil, err
 		}
-		circuit.setParent(dev.Instance())
+		parent := dev.Instance()
+		if parent == nil {
+			return nil, fmt.Errorf("missing parent circuit instance: %s", cc.ParentRef)
+		}
+		circuit.setParent(parent)
 	}
 
 	return circuit, err
@@ -112,7 +122,7 @@ func New(log *util.Logger, title string, maxCurrent, maxPower float64, meter api
 	if maxCurrent == 0 {
 		c.log.DEBUG.Printf("validation of max phase current disabled")
 	} else if _, ok := meter.(api.PhaseCurrents); meter != nil && !ok {
-		return nil, fmt.Errorf("meter does not support phase currents")
+		return nil, errors.New("meter does not support phase currents")
 	}
 
 	return c, nil
@@ -139,10 +149,16 @@ func (c *Circuit) GetParent() api.Circuit {
 
 // setParent set parent circuit
 func (c *Circuit) setParent(parent api.Circuit) error {
+	// prevent cyclical dependency
+	for p := parent.GetParent(); p != nil; p = p.GetParent() {
+		if c == p {
+			return fmt.Errorf("cycle detected: %s and %s cannot be mutual parents", c.GetTitle(), parent.GetTitle())
+		}
+	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if c.parent != nil {
-		return fmt.Errorf("circuit already has a parent")
+		return errors.New("circuit already has a parent")
 	}
 	c.parent = parent
 	if parent != nil {
@@ -153,6 +169,9 @@ func (c *Circuit) setParent(parent api.Circuit) error {
 
 // Wrap wraps circuit with parent, keeping the original meter
 func (c *Circuit) Wrap(parent api.Circuit) error {
+	if parent == c {
+		return nil // wrap circuit with itself
+	}
 	if c.meter != nil {
 		parent.(*Circuit).meter = c.meter
 	}
@@ -362,4 +381,46 @@ func (c *Circuit) ValidateCurrent(old, new float64) float64 {
 	}
 
 	return c.parent.ValidateCurrent(old, new)
+}
+
+func (c *Circuit) Dim(dim bool) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.dimmed = dim
+}
+
+func (c *Circuit) Dimmed() bool {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	if c.dimmed {
+		return true
+	}
+
+	if c.parent == nil {
+		return false
+	}
+
+	return c.parent.Dimmed()
+}
+
+func (c *Circuit) Curtail(curtail bool) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.curtailed = curtail
+}
+
+func (c *Circuit) Curtailed() bool {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	if c.curtailed {
+		return true
+	}
+
+	if c.parent == nil {
+		return false
+	}
+
+	return c.parent.Curtailed()
 }

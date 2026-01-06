@@ -9,7 +9,7 @@
 			data-testid="topnavigation-button"
 		>
 			<span
-				v-if="showBadge"
+				v-if="showRootBadge"
 				class="position-absolute top-0 start-100 translate-middle p-2 rounded-circle"
 				:class="badgeClass"
 			>
@@ -23,7 +23,12 @@
 			data-testid="topnavigation-dropdown"
 		>
 			<li>
-				<router-link class="dropdown-item" to="/sessions" active-class="active">
+				<router-link
+					class="dropdown-item"
+					to="/sessions"
+					active-class="active"
+					data-testid="topnavigation-sessions"
+				>
 					{{ $t("header.sessions") }}
 				</router-link>
 			</li>
@@ -59,9 +64,14 @@
 				</button>
 			</li>
 			<li>
-				<router-link class="dropdown-item" to="/config" active-class="active">
+				<router-link
+					class="dropdown-item"
+					to="/config"
+					active-class="active"
+					data-testid="topnavigation-config"
+				>
 					<span
-						v-if="showBadge"
+						v-if="showConfigBadge"
 						class="d-inline-block p-1 rounded-circle bg-warning rounded-circle"
 						:class="badgeClass"
 					></span>
@@ -73,27 +83,31 @@
 					{{ $t("log.title") }}
 				</router-link>
 			</li>
+
+			<li v-if="optimizeAvailable">
+				<router-link class="dropdown-item" to="/optimize" active-class="active">
+					Optimize 🧪
+				</router-link>
+			</li>
 			<li><hr class="dropdown-divider" /></li>
-			<template v-if="providerLogins.length > 0">
-				<li><hr class="dropdown-divider" /></li>
+			<template v-if="authorizationRequired">
 				<li>
-					<h6 class="dropdown-header">{{ $t("header.login") }}</h6>
+					<h6 class="dropdown-header">{{ $t("authProviders.authorizationRequired") }}</h6>
 				</li>
-				<li v-for="l in providerLogins" :key="l.title">
+				<li v-for="provider in providers" :key="provider.id">
 					<button
 						type="button"
 						class="dropdown-item"
-						@click="handleProviderAuthorization(l)"
+						@click="handleAuthRequired(provider.id)"
 					>
 						<span
-							v-if="!l.loggedIn"
-							class="d-inline-block p-1 rounded-circle border border-light rounded-circle"
-							:class="badgeClass"
+							class="d-inline-block p-1 rounded-circle border border-light"
+							:class="'bg-warning'"
 						></span>
-						{{ l.title }}
-						{{ $t(l.loggedIn ? "main.provider.logout" : "main.provider.login") }}
+						{{ provider.title }}
 					</button>
 				</li>
+				<li><hr class="dropdown-divider" /></li>
 			</template>
 			<li>
 				<button type="button" class="dropdown-item" @click="openHelpModal">
@@ -110,7 +124,12 @@
 				</a>
 			</li>
 			<li v-if="isApp">
-				<button type="button" class="dropdown-item" @click="openNativeSettings">
+				<button
+					type="button"
+					class="dropdown-item"
+					data-testid="topnavigation-app"
+					@click="openNativeSettings"
+				>
 					{{ $t("header.nativeSettings") }}
 				</button>
 			</li>
@@ -123,7 +142,7 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import Modal from "bootstrap/js/dist/modal";
 import Dropdown from "bootstrap/js/dist/dropdown";
 import "@h2d2/shopicons/es/regular/gift";
@@ -132,59 +151,56 @@ import "@h2d2/shopicons/es/regular/menu";
 import "@h2d2/shopicons/es/regular/newtab";
 import collector from "@/mixins/collector";
 import { logout, isLoggedIn, openLoginModal } from "../Auth/auth";
-import baseAPI from "./baseapi";
 import { isApp, sendToApp } from "@/utils/native";
 import { isUserConfigError } from "@/utils/fatal";
+import { defineComponent, type PropType } from "vue";
+import type { FatalError, Sponsor, EvOpt, AuthProviders } from "@/types/evcc";
 
-export default {
+export default defineComponent({
 	name: "TopNavigation",
 	mixins: [collector],
 	props: {
-		vehicleLogins: {
-			type: Object,
-			default: () => {
-				return {};
-			},
-		},
-		sponsor: {
-			type: Object,
-			default: () => {
-				return {};
-			},
-		},
+		authProviders: { type: Object as PropType<AuthProviders>, default: () => ({}) },
+		sponsor: { type: Object as PropType<Sponsor>, default: () => ({}) },
 		forecast: Object,
 		battery: Array,
-		fatal: Object,
+		evopt: { type: Object as PropType<EvOpt>, required: false },
+		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
 	},
+	emits: ["auth-required"],
 	data() {
 		return {
 			isApp: isApp(),
+			dropdown: null as Dropdown | null,
 		};
 	},
 	computed: {
 		batteryConfigured() {
 			return this.battery?.length;
 		},
-		logoutCount() {
-			return this.providerLogins.filter((login) => !login.loggedIn).length;
+		providers() {
+			return Object.entries(this.authProviders)
+				.filter(([, provider]) => !provider.authenticated)
+				.map(([title, { authenticated, id }]) => ({
+					title,
+					authenticated,
+					id,
+				}));
 		},
-		providerLogins() {
-			return Object.entries(this.vehicleLogins).map(([k, v]) => ({
-				title: k,
-				loggedIn: v.authenticated,
-				loginPath: v.uri + "/login",
-				logoutPath: v.uri + "/logout",
-			}));
+		authorizationRequired() {
+			return this.providers.length > 0;
 		},
-		loginRequired() {
-			return this.logoutCount > 0;
+		sponsorExpires(): boolean {
+			return !!this.sponsor?.status?.expiresSoon;
 		},
-		showBadge() {
-			const userConfigError = isUserConfigError(this.fatal);
-			return this.loginRequired || this.sponsor.expiresSoon || userConfigError;
+		showConfigBadge() {
+			return this.sponsorExpires || isUserConfigError(this.fatal);
+		},
+		showRootBadge() {
+			return this.authorizationRequired || this.showConfigBadge;
 		},
 		badgeClass() {
-			if (this.fatal?.error) {
+			if (this.fatal.length > 0) {
 				return "bg-danger";
 			}
 			return "bg-warning";
@@ -196,6 +212,9 @@ export default {
 			const { grid, solar, co2 } = this.forecast || {};
 			return grid || solar || co2;
 		},
+		optimizeAvailable() {
+			return !!this.evopt && this.$hiddenFeatures();
+		},
 		showLogout() {
 			return isLoggedIn();
 		},
@@ -205,37 +224,39 @@ export default {
 		if (!$el) {
 			return;
 		}
-		this.dropdown = new Dropdown(document.getElementById("topNavigatonDropdown"));
+		this.dropdown = new Dropdown(
+			document.getElementById("topNavigatonDropdown") as HTMLElement
+		);
 	},
 	unmounted() {
 		this.dropdown?.dispose();
 	},
 	methods: {
-		async handleProviderAuthorization(provider) {
-			if (!provider.loggedIn) {
-				baseAPI.post(provider.loginPath).then(function (response) {
-					window.location.href = response.data.loginUri;
-				});
-			} else {
-				baseAPI.post(provider.logoutPath);
-			}
+		handleAuthRequired(providerId: string) {
+			this.$emit("auth-required", providerId);
 		},
 		openSettingsModal() {
-			const modal = Modal.getOrCreateInstance(document.getElementById("globalSettingsModal"));
+			const modal = Modal.getOrCreateInstance(
+				document.getElementById("globalSettingsModal") as HTMLElement
+			);
 			modal.show();
 		},
 		openHelpModal() {
-			const modal = Modal.getOrCreateInstance(document.getElementById("helpModal"));
+			const modal = Modal.getOrCreateInstance(
+				document.getElementById("helpModal") as HTMLElement
+			);
 			modal.show();
 		},
 		openBatterySettingsModal() {
 			const modal = Modal.getOrCreateInstance(
-				document.getElementById("batterySettingsModal")
+				document.getElementById("batterySettingsModal") as HTMLElement
 			);
 			modal.show();
 		},
 		openForecastModal() {
-			const modal = Modal.getOrCreateInstance(document.getElementById("forecastModal"));
+			const modal = Modal.getOrCreateInstance(
+				document.getElementById("forecastModal") as HTMLElement
+			);
 			modal.show();
 		},
 		openNativeSettings() {
@@ -249,7 +270,7 @@ export default {
 			this.$router.push({ path: "/" });
 		},
 	},
-};
+});
 </script>
 <style scoped>
 .menu-button {

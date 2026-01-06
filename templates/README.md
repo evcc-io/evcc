@@ -92,14 +92,6 @@ Example Use Case: With SMA Home Manager, there can be a SMA Energy Meter used fo
 
 `description` expects language specific texts via `de`, `en` to provide specific things the user has to do, e.g. minimum firmware versions or specific hardware setup requirements. The content can be multiline and Markdown
 
-### `uri`
-
-`uri` is a link providing more help on the requirements
-
-## `loglevel`
-
-`loglevel` defindes the name that can be used in the `levels` configuration for adjusting the log level of individual devices/components/...
-
 ## `params`
 
 `params` describes the set of parameters the user needs to provide a value for.

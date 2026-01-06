@@ -26,7 +26,7 @@ func init() {
 }
 
 // NewPhoenixEVSerFromConfig creates a Phoenix charger from generic config
-func NewPhoenixEVSerFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewPhoenixEVSerFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := modbus.Settings{
 		ID: 1,
 	}

@@ -1,0 +1,33 @@
+template: energinet-price
+covers: ["energinet"]
+products:
+  - brand: Energinet
+requirements:
+  evcc: ["skiptest"]
+group: price
+countries: ["DK"]
+params:
+  - name: region
+    example: dk1
+    type: choice
+    choice: ["dk1", "dk2"]
+    required: true
+  - preset: tariff-base
+render: |
+  type: custom
+  {{ include "tariff-base" . }}
+  forecast:
+    source: http
+    uri: https://api.energidataservice.dk/dataset/DayAheadPrices?start=now&filter={"PriceArea":["{{ .region }}"]}
+    jq: |
+      [.records[]
+        | {
+          start: .TimeUTC + "Z",
+          end: (.TimeUTC
+                | strptime("%Y-%m-%dT%H:%M:%S")
+                | mktime + 900
+                | strftime("%Y-%m-%dT%H:%M:%SZ")),
+          value: .DayAheadPriceDKK / 1e3
+        }
+      ]
+      | tostring

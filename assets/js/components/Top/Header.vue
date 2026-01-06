@@ -20,34 +20,36 @@
 			<div size="s" class="mx-2 flex-grow-0 flex-shrink-0 fw-normal">/</div>
 			<span class="text-truncate">{{ title }}</span>
 		</h1>
-		<TopNavigation v-bind="topNavigation" />
+		<TopNavigationArea ref="navigationArea" :notifications="notifications" />
 	</header>
 </template>
 
-<script>
+<script lang="ts">
 import "@h2d2/shopicons/es/regular/home";
 import "@h2d2/shopicons/es/regular/settings";
-import Navigation from "./Navigation.vue";
-import collector from "@/mixins/collector";
-import store from "@/store";
+import TopNavigationArea from "./TopNavigationArea.vue";
+import { defineComponent, type PropType } from "vue";
+import type { Notification } from "@/types/evcc";
 
-export default {
+export default defineComponent({
 	name: "TopHeader",
 	components: {
-		TopNavigation: Navigation,
+		TopNavigationArea,
 	},
-	mixins: [collector],
 	props: {
 		showConfig: Boolean,
 		title: String,
+		notifications: { type: Array as PropType<Notification[]>, default: () => [] },
 	},
-	computed: {
-		topNavigation() {
-			const vehicleLogins = store.state.auth ? store.state.auth.vehicles : {};
-			return { vehicleLogins, ...this.collectProps(Navigation, store.state) };
+	methods: {
+		requestAuthProvider(providerId: string) {
+			const navigationArea = this.$refs["navigationArea"] as
+				| InstanceType<typeof TopNavigationArea>
+				| undefined;
+			navigationArea?.requestAuthProvider(providerId);
 		},
 	},
-};
+});
 </script>
 
 <style scoped>

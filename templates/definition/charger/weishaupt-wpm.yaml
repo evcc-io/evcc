@@ -13,9 +13,6 @@ params:
   - name: tempsource
     type: choice
     choice: ["warmwater", "buffer"]
-    description:
-      de: "Temperaturquelle"
-      en: "Temperature source"
 render: |
   type: sgready
   getmode:
@@ -49,7 +46,7 @@ render: |
   setmode:
     source: switch
     switch:
-    - case: 1 # normal
+    - case: 2 # normal
       set:
         source: sequence
         set:
@@ -71,7 +68,7 @@ render: |
               address: 45102 # 4002
               type: writesingle
               encoding: uint16
-    - case: 2 # boost
+    - case: 3 # boost
       set:
         source: sequence
         set:
@@ -93,7 +90,7 @@ render: |
               address: 45102
               type: writesingle
               encoding: uint16
-    - case: 3 # dimm
+    - case: 1 # dimm
       set:
         source: sequence
         set:

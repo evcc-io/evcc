@@ -5,8 +5,9 @@ const (
 	Title            = "title"       // loadpoint title
 	Mode             = "mode"        // charge mode
 	DefaultMode      = "defaultMode" // default charge mode
-	Charger          = "charger"     //  charger ref
-	Meter            = "meter"       //  meter ref
+	Charger          = "charger"     // charger ref
+	Meter            = "meter"       // meter ref
+	Circuit          = "circuit"     // circuit ref
 	DefaultVehicle   = "vehicle"     // default vehicle ref
 	Priority         = "priority"    // priority
 	MinCurrent       = "minCurrent"  // min current
@@ -23,7 +24,7 @@ const (
 	BatteryBoost     = "batteryBoost"
 
 	PhasesConfigured = "phasesConfigured" // desired phase mode (0/1/3, 0 = automatic), user selection
-	PhasesActive     = "phasesActive"     // active phases as used by vehicle (1/2/3)
+	PhasesActive     = "phasesActive"     // expectedly active phases, taking vehicle into account (1/2/3)
 
 	ChargerIcon         = "chargerIcon"         // charger icon for ui
 	ChargerFeature      = "chargerFeature"      // charger feature
@@ -35,14 +36,19 @@ const (
 	Enabled   = "enabled"   // loadpoint enabled
 	Connected = "connected" // connected
 	Charging  = "charging"  // charging
+	Dimmed    = "dimmed"    // dimmed pseudo-status
 
 	// loadpoint setpoint
 	OfferedCurrent = "offeredCurrent" // offered current
 
 	// smart charging
 	SmartCostActive    = "smartCostActive"    // smart cost active
-	SmartCostLimit     = "smartCostLimit"     // smart cost limit
-	SmartCostNextStart = "smartCostNextStart" // smart cost next start
+	SmartCostLimit     = "smartCostLimit"     // smart cost limit, fast charge when costs are below
+	SmartCostNextStart = "smartCostNextStart" // smart cost next start, time of next fast charging
+
+	SmartFeedInPriorityActive    = "smartFeedInPriorityActive"    // smart feed-in priority active
+	SmartFeedInPriorityLimit     = "smartFeedInPriorityLimit"     // smart feed-in priority limit, pause self-consumption when feed-in rates are above
+	SmartFeedInPriorityNextStart = "smartFeedInPriorityNextStart" // smart feed-in priority next start, time of next pause
 
 	// effective values
 	EffectivePriority   = "effectivePriority"   // effective priority
@@ -51,7 +57,11 @@ const (
 	EffectivePlanSoc    = "effectivePlanSoc"    // effective plan soc
 	EffectiveMinCurrent = "effectiveMinCurrent" // effective min current
 	EffectiveMaxCurrent = "effectiveMaxCurrent" // effective max current
-	EffectiveLimitSoc   = "effectiveLimitSoc"   // effective limit soc
+
+	EffectiveLimitSoc         = "effectiveLimitSoc"         // effective limit soc
+	EffectivePlanStrategy     = "effectivePlanStrategy"     // effective plan strategy (deprecated, use individual fields)
+	EffectivePlanPrecondition = "effectivePlanPrecondition" // effective plan precondition duration
+	EffectivePlanContinuous   = "effectivePlanContinuous"   // effective plan continuous planning
 
 	// measurements
 	ChargePower       = "chargePower"       // charge power
@@ -67,14 +77,17 @@ const (
 	ChargeRemainingEnergy   = "chargeRemainingEnergy"   // charge remaining energy
 
 	// plan
+	Plan               = "plan"               // charge plan time slots
 	PlanTime           = "planTime"           // charge plan finish time goal
 	PlanEnergy         = "planEnergy"         // charge plan energy goal
 	PlanSoc            = "planSoc"            // charge plan soc goal
-	PlanPrecondition   = "planPrecondition"   // charge plan precondition duration
 	PlanActive         = "planActive"         // charge plan has determined current slot to be an active slot
 	PlanProjectedStart = "planProjectedStart" // charge plan start time (earliest slot)
 	PlanProjectedEnd   = "planProjectedEnd"   // charge plan ends (end of last slot)
 	PlanOverrun        = "planOverrun"        // charge plan goal not reachable in time
+	PlanStrategy       = "planStrategy"       // charge plan strategy (precondition, continuous)
+	PlanPrecondition   = "planPrecondition"   // charge plan precondition duration
+	PlanContinuous     = "planContinuous"     // charge plan continuous planning
 
 	// repeating plans
 	RepeatingPlans = "repeatingPlans" // key to access all repeating plans in db
@@ -85,6 +98,7 @@ const (
 
 	// vehicle
 	VehicleName            = "vehicleName"            // vehicle name
+	VehicleTitle           = "vehicleTitle"           // vehicle title
 	VehicleIdentity        = "vehicleIdentity"        // vehicle identity
 	VehicleDetectionActive = "vehicleDetectionActive" // vehicle detection active
 	VehicleOdometer        = "vehicleOdometer"        // vehicle odometer

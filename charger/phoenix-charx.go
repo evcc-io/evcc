@@ -2,7 +2,6 @@ package charger
 
 import (
 	"context"
-	"encoding/binary"
 	"fmt"
 	"time"
 
@@ -21,25 +20,27 @@ const (
 	// per-unit registers
 	charxOffset = 1000
 
-	charxRegMeter        = 112
-	charxRegVoltages     = 232 // mV
-	charxRegCurrents     = 238 // mA
-	charxRegPower        = 244 // mW
-	charxRegEnergy       = 250 // Wh
-	charxRegSoc          = 264 // %
-	charxRegEvid         = 265 // 10
-	charxRegRfid         = 275 // 10
-	charxRegChargeTime   = 287 // s
-	charxRegChargeEnergy = 289 // Wh
-	charxRegStatus       = 299 // IEC 61851-1
-	charxRegEnable       = 300
-	charxRegMaxCurrent   = 301 // A
+	charxRegMeter          = 112
+	charxRegVoltages       = 232 // mV
+	charxRegCurrents       = 238 // mA
+	charxRegPower          = 244 // mW
+	charxRegEnergy         = 250 // Wh
+	charxRegSoc            = 264 // %
+	charxRegEvid           = 265 // 10
+	charxRegRfid           = 275 // 10
+	charxRegConnectionTime = 285 // s
+	charxRegChargeTime     = 287 // s
+	charxRegChargeEnergy   = 289 // Wh
+	charxRegStatus         = 299 // IEC 61851-1
+	charxRegEnable         = 300
+	charxRegMaxCurrent     = 301 // A
 )
 
 // PhoenixCharx is an api.Charger implementation for Phoenix CHARX controller
 type PhoenixCharx struct {
 	conn      *modbus.Connection
 	connector uint16
+	current   uint16
 }
 
 func init() {
@@ -49,7 +50,7 @@ func init() {
 //go:generate go tool decorate -f decoratePhoenixCharx -b *PhoenixCharx -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)"
 
 // NewPhoenixCharxFromConfig creates a Phoenix charger from generic config
-func NewPhoenixCharxFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewPhoenixCharxFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		modbus.TcpSettings `mapstructure:",squash"`
 		Connector          uint16
@@ -94,6 +95,7 @@ func NewPhoenixCharx(ctx context.Context, uri string, id uint8, connector uint16
 	wb := &PhoenixCharx{
 		conn:      conn,
 		connector: connector,
+		current:   6, // assume min current
 	}
 
 	controllers, err := wb.controllers()
@@ -105,7 +107,14 @@ func NewPhoenixCharx(ctx context.Context, uri string, id uint8, connector uint16
 		return nil, fmt.Errorf("invalid connector: %d", connector)
 	}
 
-	return wb, err
+	// Initialize current with the actual register value
+	if b, err := wb.conn.ReadHoldingRegisters(wb.register(charxRegMaxCurrent), 1); err == nil {
+		if current := encoding.Uint16(b); current >= wb.current {
+			wb.current = current
+		}
+	}
+
+	return wb, nil
 }
 
 func (wb *PhoenixCharx) controllers() (uint16, error) {
@@ -114,7 +123,7 @@ func (wb *PhoenixCharx) controllers() (uint16, error) {
 		return 0, err
 	}
 
-	return binary.BigEndian.Uint16(b), nil
+	return encoding.Uint16(b), nil
 }
 
 func (wb *PhoenixCharx) register(reg uint16) uint16 {
@@ -145,22 +154,22 @@ func (wb *PhoenixCharx) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *PhoenixCharx) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(wb.register(charxRegEnable), 1)
+	b, err := wb.conn.ReadHoldingRegisters(wb.register(charxRegMaxCurrent), 1)
 	if err != nil {
 		return false, err
 	}
 
-	return encoding.Uint16(b) == 1, nil
+	return encoding.Uint16(b) != 0, nil
 }
 
 // Enable implements the api.Charger interface
 func (wb *PhoenixCharx) Enable(enable bool) error {
 	b := make([]byte, 2)
 	if enable {
-		binary.BigEndian.PutUint16(b, 1)
+		encoding.PutUint16(b, wb.current)
 	}
 
-	_, err := wb.conn.WriteMultipleRegisters(wb.register(charxRegEnable), 1, b)
+	_, err := wb.conn.WriteMultipleRegisters(wb.register(charxRegMaxCurrent), 1, b)
 
 	return err
 }
@@ -172,9 +181,12 @@ func (wb *PhoenixCharx) MaxCurrent(current int64) error {
 	}
 
 	b := make([]byte, 2)
-	binary.BigEndian.PutUint16(b, uint16(current))
+	encoding.PutUint16(b, uint16(current))
 
 	_, err := wb.conn.WriteMultipleRegisters(wb.register(charxRegMaxCurrent), 1, b)
+	if err == nil {
+		wb.current = uint16(current)
+	}
 
 	return err
 }
@@ -188,7 +200,19 @@ func (wb *PhoenixCharx) ChargeDuration() (time.Duration, error) {
 		return 0, err
 	}
 
-	return time.Duration(encoding.Uint16(b)) * time.Second, nil
+	return time.Duration(encoding.Uint32(b)) * time.Second, nil
+}
+
+var _ api.ConnectionTimer = (*PhoenixCharx)(nil)
+
+// ConnectionDuration implements the api.ConnectionTimer interface
+func (wb *PhoenixCharx) ConnectionDuration() (time.Duration, error) {
+	b, err := wb.conn.ReadHoldingRegisters(wb.register(charxRegConnectionTime), 2)
+	if err != nil {
+		return 0, err
+	}
+
+	return time.Duration(encoding.Uint32(b)) * time.Second, nil
 }
 
 // currentPower implements the api.Meter interface

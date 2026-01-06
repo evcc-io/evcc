@@ -13,7 +13,7 @@
 				:style="{ width: `${vehicleSocDisplayWidth}%`, ...transition }"
 			></div>
 			<div
-				v-if="remainingSocWidth > 0 && enabled && connected"
+				v-if="remainingSocWidth !== null && remainingSocWidth > 0 && enabled && connected"
 				class="progress-bar bg-muted"
 				role="progressbar"
 				:class="progressColor"
@@ -34,7 +34,8 @@
 				data-bs-toggle="tooltip"
 				:class="{
 					'energy-limit-marker--active': energyLimitMarkerActive,
-					'energy-limit-marker--visible': energyLimitMarkerPosition < 100,
+					'energy-limit-marker--visible':
+						energyLimitMarkerPosition !== null && energyLimitMarkerPosition < 100,
 				}"
 				:style="{ left: `${energyLimitMarkerPosition}%` }"
 			/>
@@ -69,36 +70,37 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import Tooltip from "bootstrap/js/dist/tooltip";
 import "@h2d2/shopicons/es/regular/clock";
 import formatter from "@/mixins/formatter";
+import { defineComponent } from "vue";
 
-export default {
+export default defineComponent({
 	name: "VehicleSoc",
 	mixins: [formatter],
 	props: {
 		connected: Boolean,
-		vehicleSoc: Number,
-		vehicleLimitSoc: Number,
+		vehicleSoc: { type: Number, default: 0 },
+		vehicleLimitSoc: { type: Number, default: 0 },
 		enabled: Boolean,
 		charging: Boolean,
 		heating: Boolean,
-		minSoc: Number,
-		effectivePlanSoc: Number,
+		minSoc: { type: Number, default: 0 },
+		effectivePlanSoc: { type: Number, default: 0 },
 		effectiveLimitSoc: Number,
-		limitEnergy: Number,
-		planEnergy: Number,
-		chargedEnergy: Number,
+		limitEnergy: { type: Number, default: 0 },
+		planEnergy: { type: Number, default: 0 },
+		chargedEnergy: { type: Number, default: 0 },
 		socBasedCharging: Boolean,
 		socBasedPlanning: Boolean,
 	},
 	emits: ["limit-soc-drag", "limit-soc-updated", "plan-clicked"],
 	data() {
 		return {
-			selectedLimitSoc: null,
+			selectedLimitSoc: undefined as number | undefined,
 			interactionStartScreenY: null,
-			tooltip: null,
+			tooltip: null as Tooltip | null,
 			dragging: false,
 		};
 	},
@@ -131,7 +133,7 @@ export default {
 		vehicleLimitSocActive() {
 			return this.vehicleLimitSoc > 0 && this.vehicleLimitSoc > this.vehicleSoc;
 		},
-		planMarkerPosition() {
+		planMarkerPosition(): number {
 			if (this.socBasedPlanning) {
 				return this.effectivePlanSoc;
 			}
@@ -217,24 +219,24 @@ export default {
 		this.updateTooltip();
 	},
 	methods: {
-		changeLimitSocStart(e) {
+		changeLimitSocStart(e: Event) {
 			this.dragging = true;
 			e.stopPropagation();
 		},
-		changeLimitSocEnd(e) {
+		changeLimitSocEnd(e: Event) {
 			this.dragging = false;
-			const value = parseInt(e.target.value, 10);
+			const value = parseInt((e.target as HTMLInputElement).value, 10);
 			// value changed
 			if (value !== this.effectiveLimitSoc) {
 				this.$emit("limit-soc-updated", value);
 			}
 		},
-		movedLimitSoc(e) {
-			const value = parseInt(e.target.value, 10);
+		movedLimitSoc(e: Event) {
+			const value = parseInt((e.target as HTMLInputElement).value, 10);
 			e.stopPropagation();
 			const minLimit = 20;
 			if (value < minLimit) {
-				e.target.value = minLimit;
+				(e.target as HTMLInputElement).value = minLimit.toString();
 				this.selectedLimitSoc = value;
 				e.preventDefault();
 				return false;
@@ -246,7 +248,7 @@ export default {
 		},
 		updateTooltip() {
 			if (!this.tooltip) {
-				this.tooltip = new Tooltip(this.$refs.vehicleLimitSoc);
+				this.tooltip = new Tooltip(this.$refs["vehicleLimitSoc"] as HTMLElement);
 			}
 			const value = this.heating
 				? this.fmtTemperature(this.vehicleLimitSoc)
@@ -256,7 +258,7 @@ export default {
 			this.tooltip.setContent({ ".tooltip-inner": content });
 		},
 	},
-};
+});
 </script>
 <style scoped>
 .vehicle-soc {

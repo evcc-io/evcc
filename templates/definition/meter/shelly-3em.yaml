@@ -2,7 +2,7 @@ template: shelly-3em
 products:
   - brand: Shelly
     description:
-      generic: 3EM
+      generic: 3EM (Gen.1)
 params:
   - name: usage
     choice: ["grid", "pv", "charge"]

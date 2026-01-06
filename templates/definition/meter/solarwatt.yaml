@@ -6,14 +6,16 @@ products:
       generic: MyReserve
   - brand: Solarwatt
     description:
-      generic: EnergyManager, EnergyManager Pro
+      generic: EnergyManager
+  - brand: Solarwatt
+    description:
+      generic: EnergyManager Pro
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
     allinone: true
   - name: host
-  - name: capacity
-    advanced: true
+  - preset: battery-params
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -49,5 +51,5 @@ render: |
     source: http
     uri: http://{{ .host }}/rest/kiwigrid/wizard/devices # EnergyManager
     jq: .result.items[] | select(.deviceModel[].deviceClass == "com.kiwigrid.devices.location.Location" ) | (.tagValues.WorkReleased.value // 0) / 1000
-  capacity: {{ .capacity }} # kWh
+  {{- include "battery-params" . }}
   {{- end }}

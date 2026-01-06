@@ -10,12 +10,15 @@
 		<PropertyField
 			:id="id"
 			v-model="value"
+			class="me-2"
 			:masked="Mask"
 			:property="Name"
 			:type="Type"
-			class="me-2"
+			:unit="Unit"
 			:required="Required"
 			:choice="Choice"
+			:service-values="serviceValues"
+			:label="label"
 		/>
 	</FormRow>
 </template>
@@ -37,8 +40,10 @@ export default {
 		Help: String,
 		Example: String,
 		Type: String,
+		Unit: String,
 		Mask: Boolean,
 		Choice: Array,
+		serviceValues: Array,
 		modelValue: [String, Number, Boolean, Object],
 	},
 	emits: ["update:modelValue"],

@@ -1,4 +1,24 @@
 {
+  "authProviders": {
+    "authCode": "验证码",
+    "authCodeHelp": "复制此代码并在下一步中使用。有效期为{duration}。",
+    "authorizationFailed": "授权失败",
+    "authorizationRequired": "需要授权",
+    "authorizationSuccessful": "授权成功",
+    "buttonConnect": "连接到 {provider}",
+    "buttonDisconnect": "断开连接",
+    "confirmLogout": "您确定要断开 {title} 的连接吗？",
+    "connect": "连接",
+    "disconnect": "断开连接",
+    "loggedOut": "已成功注销",
+    "logoutFailed": "注销失败",
+    "modalDescriptionLogin": "完成授权流程以建立与{provider}的连接。",
+    "modalDescriptionLogout": "这将断开您的{provider}账户连接，并取消对其数据的访问权限。",
+    "success": "{title}现已连接完毕，可立即使用。",
+    "successCloseModal": "现在您可以关闭此对话框了。",
+    "successCloseTab": "现在您可以关闭这个标签页了。",
+    "title": "授权状态"
+  },
   "batterySettings": {
     "batteryLevel": "电量",
     "bufferStart": {
@@ -40,12 +60,25 @@
       "chargers": "电动汽车充电桩",
       "generic": "通用集成",
       "heatingdevices": "加热设备",
-      "ocppHelp": "将此地址复制到您的充电桩配置中。",
+      "ocppConfirmContinue": "您的充电器尚未连接到EVCC。确定要继续吗？",
+      "ocppConnected": "连接成功！",
+      "ocppDescription": "evcc内置了OCPP服务器。请按以下步骤操作：",
+      "ocppHelp": "将此URL复制到您的充电器配置中。详细信息请查看制造商的手册。充电器将自动将其唯一标识符（站点ID）附加到URL。在极少数情况下，您可能需要手动指定标识符。示例：`{url}`",
       "ocppLabel": "OCPP 服务器 URL",
+      "ocppNextStep": "下一步",
+      "ocppStep1": "将您的充电器配置为使用evcc作为OCPP服务器。",
+      "ocppStep2": "请等待您的充电器连接到EVCC。",
+      "ocppStep3": "继续并完成配置。",
+      "ocppWaiting": "等待连接",
       "switchsockets": "可切换插座",
       "template": "制造商",
-      "titleAdd": "添加充电桩",
-      "titleEdit": "编辑充电桩"
+      "titleAdd": {
+        "charging": "添加充电桩",
+        "heating": "添加加热器"
+      },
+      "titleEdit": {
+        "charging": "编辑充电桩"
+      }
     },
     "circuits": {
       "description": "确保连接到同一电路的所有充电点的总和不超过配置的功率和电流限制。电路可以嵌套以构建层级结构。",
@@ -113,6 +146,9 @@
       "batteryStorage": "储能电池",
       "solarSystem": "太阳能系统"
     },
+    "editor": {
+      "loading": "正在加载 YAML 编辑器…"
+    },
     "eebus": {
       "description": "此配置使 evcc 能够与其他 EEBus 设备通信。",
       "title": "EEBus"
@@ -130,6 +166,8 @@
     },
     "general": {
       "cancel": "取消",
+      "customHelp": "使用 evcc 的插件系统创建用户定义的设备。",
+      "customOption": "用户定义的设备",
       "delete": "删除",
       "docsLink": "查看文档。",
       "experimental": "实验性",
@@ -155,6 +193,9 @@
       "description": "将 evcc 连接到其他住宅能源管理系统。",
       "title": "HEMS"
     },
+    "icon": {
+      "change": "更改"
+    },
     "influx": {
       "description": "将充电数据和其他指标写入 InfluxDB。使用 Grafana 或其他工具可视化数据。",
       "descriptionToken": "查看 InfluxDB 文档以了解如何创建一个。https://docs.influxdata.com/influxdb/v2/admin/",
@@ -172,11 +213,17 @@
       "v2Support": "返回 InfluxDB 2.x"
     },
     "loadpoint": {
-      "addCharger": "添加充电桩",
+      "addCharger": {
+        "charging": "添加充电桩"
+      },
       "addMeter": "添加专用充电桩计量表",
       "cancel": "取消",
-      "chargerError": "必须配置充电桩。",
-      "chargerLabel": "充电桩",
+      "chargerError": {
+        "charging": "必须配置充电桩。"
+      },
+      "chargerLabel": {
+        "charging": "充电桩"
+      },
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "将使用 6 至 16 A 的电流范围。",
       "chargerPower22kw": "22 kW",
@@ -185,9 +232,12 @@
       "chargerPowerCustomHelp": "定义自定义电流范围。",
       "chargerTypeLabel": "充电桩类型",
       "chargingTitle": "充电",
+      "circuitHelp": "负载管理分配，以确保不超过功率和电流限制。",
       "circuitLabel": "电路",
       "circuitUnassigned": "未分配",
-      "defaultModeHelp": "连接车辆时的充电模式。",
+      "defaultModeHelp": {
+        "charging": "连接车辆时的充电模式。"
+      },
       "defaultModeHelpKeep": "保留上次选择的充电模式。",
       "defaultModeLabel": "默认模式",
       "delete": "删除",
@@ -236,9 +286,6 @@
       "thresholdEnableHelpNegative": "当有 {surplus} 剩余电力并持续 {delay} 时，开始充电。",
       "thresholdEnableHelpZero": "当满足最小充电功率的剩余电力持续 {delay} 时开始充电。",
       "thresholdEnableLabel": "启用电网功率阈值",
-      "titleAdd": "添加充电点",
-      "titleEdit": "编辑充电点",
-      "titleExample": "车库、车棚等",
       "titleLabel": "标题",
       "vehicleAutoDetection": "自动检测",
       "vehicleHelpAutoDetection": "自动选择最可能的车辆。可以手动覆盖。",
@@ -269,6 +316,7 @@
     "meter": {
       "cancel": "取消",
       "delete": "删除",
+      "generic": "通用集成",
       "option": {
         "aux": "添加智能耗电设备",
         "battery": "添加电池计量表",
@@ -276,6 +324,7 @@
         "pv": "添加太阳能计量表"
       },
       "save": "保存",
+      "specific": "特定集成",
       "template": "制造商",
       "titleChoice": "您想添加什么？",
       "validateSave": "验证并保存"
@@ -368,7 +417,7 @@
       "addToken": "输入令牌",
       "changeToken": "更改令牌",
       "description": "赞助模式帮助我们维护项目并可持续地构建新的、令人兴奋的功能。作为赞助者，您可以访问所有充电桩的实现。",
-      "descriptionToken": "您可以从 {url} 获取令牌。我们也提供用于测试的试用令牌。",
+      "descriptionToken": "您可以从 {url} 获取令牌。我们也提供用于测试的试用令牌。 {trialToken}.",
       "error": "赞助令牌无效。",
       "labelToken": "赞助令牌",
       "title": "赞助",
@@ -417,6 +466,7 @@
       "minimumCurrent": "最小电流",
       "minimumCurrentHelp": "仅在您清楚操作后果时才设置为低于 6A。",
       "online": "具有在线API的车辆",
+      "primary": "通用集成",
       "priority": "优先级",
       "priorityHelp": "较高优先级意味着此车辆优先使用太阳能余电。",
       "save": "保存",
@@ -589,11 +639,12 @@
       "modalTitle": "充电计划",
       "none": "无",
       "planNumber": "计划 {number}",
-      "preconditionDescription": "出发前充电 {duration} 以进行电池预处理。",
-      "preconditionLong": "延迟充电",
-      "preconditionOptionAll": "全部",
-      "preconditionOptionNo": "否",
-      "preconditionShort": "延迟",
+      "precondition": {
+        "description": "出发前充电 {duration} 以进行电池预处理。",
+        "label": "延迟充电",
+        "optionAll": "全部",
+        "optionNo": "否"
+      },
       "remove": "移除",
       "repeating": "重复",
       "repeatingPlans": "重复计划",
@@ -773,7 +824,7 @@
       "scale1p": "准备切换为单相充电。",
       "scale3p": "准备切换为三相充电。",
       "targetChargeActive": "充电计划已激活。预计在 {duration} 内完成。",
-      "targetChargePlanned": "充电计划将于 {duration} 后开始（{time}）。",
+      "targetChargePlanned": "充电计划将于 {duration} 后开始。",
       "targetChargeWaitForVehicle": "充电计划准备就绪。等待车辆连接…",
       "vehicleLimit": "车辆充电上限",
       "vehicleLimitReached": "已达到车辆充电上限 {soc}。",
@@ -862,10 +913,9 @@
       "solarpercentage": "太阳能 (%)",
       "vehicle": "车辆"
     },
-    "csvMonth": "下载 {month} CSV 文件",
+    "csvPeriod": "下载 {period} CSV 文件",
     "csvTotal": "下载总计 CSV 文件",
     "date": "开始",
-    "downloadCsv": "下载为 CSV 文件",
     "energy": "已充电量",
     "filter": {
       "allLoadpoints": "所有充电点",
@@ -919,8 +969,10 @@
       "label": "语言"
     },
     "sponsorToken": {
-      "expires": "您的赞助令牌将在 {inXDays} 后过期。{getNewToken} 并在此处更新。",
-      "getNew": "获取一个新的",
+      "expires": "您的赞助令牌将在 {inXDays} 后过期。",
+      "expiresUpdateUi": "{getNewToken} 并在此处更新。",
+      "expiresUpdateYaml": "{getNewToken} 并在你的 evcc.yaml 中更新。",
+      "getNewToken": "获取一个新的",
       "hint": "注意：我们将来会自动化此过程。"
     },
     "telemetry": {
@@ -945,7 +997,7 @@
     }
   },
   "smartCost": {
-    "activeHours": "{charging} / {total}",
+    "activeHours": "{active} / {total}",
     "activeHoursLabel": "有效时段",
     "applyToAll": "应用于所有地方？",
     "batteryDescription": "使用电网能源为住宅电池充电。",

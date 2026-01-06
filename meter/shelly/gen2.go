@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"slices"
-	"strconv"
 	"time"
 
 	"github.com/evcc-io/evcc/util"
@@ -14,11 +13,15 @@ import (
 
 // Gen2API endpoint reference: https://shelly-api-docs.shelly.cloud/gen2/
 
-type Gen2RpcPost struct {
+type Gen2RpcRequest struct {
 	Id     int    `json:"id"`
-	On     bool   `json:"on"`
 	Src    string `json:"src"`
 	Method string `json:"method"`
+}
+
+type Gen2SetRpcPost struct {
+	Gen2RpcRequest
+	On bool `json:"on"`
 }
 
 type Gen2Methods struct {
@@ -67,25 +70,31 @@ type Gen2EM1Data struct {
 	TotalActRetEnergy float64 `json:"total_act_ret_energy"`
 }
 
+type Gen2ProAddOnGetPeripherals struct {
+	DigitalOut map[string]any `json:"digital_out"`
+}
+
 var _ Generation = (*gen2)(nil)
+
+const apisrc string = "evcc"
 
 type gen2 struct {
 	*request.Helper
-	uri          string
-	channel      int
-	model        string
-	methods      []string
-	switchstatus util.Cacheable[Gen2SwitchStatus]
-	em1status    func() (Gen2EM1Status, error)
-	em1data      func() (Gen2EM1Data, error)
-	emstatus     func() (Gen2EMStatus, error)
-	emdata       func() (Gen2EMData, error)
+	uri           string
+	switchchannel int
+	model         string
+	methods       []string
+	switchstatus  util.Cacheable[Gen2SwitchStatus]
+	em1status     func() (Gen2EM1Status, error)
+	em1data       func() (Gen2EM1Data, error)
+	emstatus      func() (Gen2EMStatus, error)
+	emdata        func() (Gen2EMData, error)
 }
 
-func apiCall[T any](c *gen2, api string) func() (T, error) {
+func apiCall[T any](c *gen2, id int, method string) func() (T, error) {
 	return func() (T, error) {
 		var res T
-		if err := c.execCmd(fmt.Sprintf("%s?id=%d", api, c.channel), false, &res); err != nil {
+		if err := c.execCmd(id, method, &res); err != nil {
 			return res, err
 		}
 		return res, nil
@@ -97,10 +106,10 @@ func newGen2(helper *request.Helper, uri, model string, channel int, user, passw
 	// Shelly GEN 2+ API
 	// https://shelly-api-docs.shelly.cloud/gen2/
 	c := &gen2{
-		Helper:  helper,
-		uri:     fmt.Sprintf("%s/rpc", util.DefaultScheme(uri, "http")),
-		channel: channel,
-		model:   model,
+		Helper:        helper,
+		uri:           fmt.Sprintf("%s/rpc", util.DefaultScheme(uri, "http")),
+		switchchannel: channel,
+		model:         model,
 	}
 
 	// Shelly gen 2 rfc7616 authentication
@@ -110,32 +119,59 @@ func newGen2(helper *request.Helper, uri, model string, channel int, user, passw
 	}
 
 	var res Gen2Methods
-	if err := c.execCmd("Shelly.ListMethods", false, &res); err != nil {
+	if err := c.execCmd(channel, "Shelly.ListMethods", &res); err != nil {
 		return nil, err
 	}
 
 	c.methods = res.Methods
 
-	if c.hasMethod("PM1.GetStatus") {
-		c.switchstatus = util.ResettableCached(apiCall[Gen2SwitchStatus](c, "PM1.GetStatus"), cache)
-	} else {
-		c.switchstatus = util.ResettableCached(apiCall[Gen2SwitchStatus](c, "Switch.GetStatus"), cache)
+	// Optional change of switchchannel for Pro shellies with peripherals
+	if c.hasMethod("ProOutputAddon.GetPeripherals") {
+		var err error
+		c.switchchannel, err = c.getAddOnSwitchId(channel)
+		if err != nil {
+			return nil, err
+		}
 	}
-	c.em1status = util.Cached(apiCall[Gen2EM1Status](c, "EM1.GetStatus"), cache)
-	c.em1data = util.Cached(apiCall[Gen2EM1Data](c, "EM1Data.GetStatus"), cache)
-	c.emstatus = util.Cached(apiCall[Gen2EMStatus](c, "EM.GetStatus"), cache)
-	c.emdata = util.Cached(apiCall[Gen2EMData](c, "EMData.GetStatus"), cache)
+
+	if c.hasMethod("PM1.GetStatus") {
+		c.switchstatus = util.ResettableCached(apiCall[Gen2SwitchStatus](c, channel, "PM1.GetStatus"), cache)
+	} else {
+		c.switchstatus = util.ResettableCached(apiCall[Gen2SwitchStatus](c, c.switchchannel, "Switch.GetStatus"), cache)
+	}
+	c.em1status = util.Cached(apiCall[Gen2EM1Status](c, channel, "EM1.GetStatus"), cache)
+	c.em1data = util.Cached(apiCall[Gen2EM1Data](c, channel, "EM1Data.GetStatus"), cache)
+	c.emstatus = util.Cached(apiCall[Gen2EMStatus](c, channel, "EM.GetStatus"), cache)
+	c.emdata = util.Cached(apiCall[Gen2EMData](c, channel, "EMData.GetStatus"), cache)
 
 	return c, nil
 }
 
 // execCmd executes a shelly api gen2+ command and provides the response
-func (c *gen2) execCmd(method string, enable bool, res any) error {
-	data := &Gen2RpcPost{
-		Id:     c.channel,
-		On:     enable,
-		Src:    "evcc",
+func (c *gen2) execCmd(id int, method string, res any) error {
+	data := &Gen2RpcRequest{
+		Id:     id,
+		Src:    apisrc,
 		Method: method,
+	}
+
+	req, err := request.New(http.MethodPost, fmt.Sprintf("%s/%s", c.uri, method), request.MarshalJSON(data), request.JSONEncoding)
+	if err != nil {
+		return err
+	}
+
+	return c.DoJSON(req, &res)
+}
+
+// execCmd executes a shelly api gen2+ command and provides the response
+func (c *gen2) execEnableCmd(id int, method string, enable bool, res any) error {
+	data := &Gen2SetRpcPost{
+		Gen2RpcRequest: Gen2RpcRequest{
+			Id:     id,
+			Src:    apisrc,
+			Method: method,
+		},
+		On: enable,
 	}
 
 	req, err := request.New(http.MethodPost, fmt.Sprintf("%s/%s", c.uri, method), request.MarshalJSON(data), request.JSONEncoding)
@@ -180,7 +216,7 @@ func (c *gen2) Enabled() (bool, error) {
 func (c *gen2) Enable(enable bool) error {
 	var res Gen2SwitchStatus
 	c.switchstatus.Reset()
-	return c.execCmd("Switch.Set?id="+strconv.Itoa(c.channel), enable, &res)
+	return c.execEnableCmd(c.switchchannel, "Switch.Set", enable, &res)
 }
 
 // TotalEnergy implements the api.Meter interface
@@ -281,4 +317,22 @@ func (c *gen2) hasEMEndpoint() bool {
 // https://shelly-api-docs.shelly.cloud/gen2/ComponentsAndServices/EM1Data#em1datagetstatus-example
 func (c *gen2) hasMethod(method string) bool {
 	return slices.Contains(c.methods, method)
+}
+
+func (c *gen2) getAddOnSwitchId(channel int) (int, error) {
+	var res Gen2ProAddOnGetPeripherals
+	if err := c.execCmd(channel, "ProOutputAddon.GetPeripherals", &res); err != nil {
+		return channel, err
+	}
+
+	return parseAddOnSwitchID(channel, res), nil
+}
+
+func parseAddOnSwitchID(channel int, res Gen2ProAddOnGetPeripherals) int {
+	if _, ok := res.DigitalOut["switch:100"]; ok {
+		return 100
+	}
+
+	// if no switch ID is found, return the channel as default
+	return channel
 }

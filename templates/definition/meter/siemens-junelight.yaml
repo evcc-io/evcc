@@ -13,10 +13,9 @@ params:
   - name: usage
     choice: ["grid", "pv", "battery"]
     allinone: true
-  - name: capacity
-    advanced: true
   - name: modbus
     choice: ["tcpip"]
+  - preset: battery-params
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -54,5 +53,5 @@ render: |
       address: 8 # "battery soc"
       type: holding
       decode: int32
-  capacity: {{ .capacity }} # kWh
+  {{- include "battery-params" . }}
   {{- end }}

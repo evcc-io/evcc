@@ -6,24 +6,24 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"reflect"
 	"slices"
 	"strconv"
 	"strings"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/util"
-	"gopkg.in/yaml.v3"
+	"github.com/samber/lo"
+	"go.yaml.in/yaml/v4"
 )
 
 var ErrNotFound = errors.New("not found")
 
 // setting is a settings entry
 type setting struct {
+	dirty bool
 	Key   string `json:"key" gorm:"primarykey"`
 	Value string `json:"value"`
 }
@@ -31,24 +31,35 @@ type setting struct {
 var (
 	mu       sync.RWMutex
 	settings []setting
-	dirty    int32
 )
 
-func Init() error {
-	err := db.Instance.AutoMigrate(new(setting))
-	if err == nil {
-		err = db.Instance.Find(&settings).Error
-	}
-	return err
+func init() {
+	db.Register(func() error {
+		if err := db.Instance.AutoMigrate(new(setting)); err != nil {
+			return err
+		}
+
+		return db.Instance.Find(&settings).Error
+	})
 }
 
 func Persist() error {
-	dirty := atomic.CompareAndSwapInt32(&dirty, 1, 0)
-	if !dirty || len(settings) == 0 {
-		// avoid "empty slice found"
-		return nil
+	mu.Lock()
+	defer mu.Unlock()
+
+	if dirty := lo.FilterMap(settings, func(s setting, _ int) (*setting, bool) {
+		return &s, s.dirty
+	}); len(dirty) > 0 {
+		if err := db.Instance.Save(dirty).Error; err != nil {
+			return err
+		}
+
+		for _, s := range dirty {
+			s.dirty = false
+		}
 	}
-	return db.Instance.Save(settings).Error
+
+	return nil
 }
 
 func All() []setting {
@@ -79,7 +90,7 @@ func Delete(key string) error {
 			return err
 		}
 
-		settings = slices.Delete(settings, idx, idx)
+		settings = slices.Delete(settings, idx, idx+1)
 	}
 
 	return nil
@@ -89,14 +100,11 @@ func SetString(key string, val string) {
 	mu.Lock()
 	defer mu.Unlock()
 
-	idx := slices.IndexFunc(settings, equal(key))
-
-	if idx < 0 {
-		settings = append(settings, setting{key, val})
-		atomic.StoreInt32(&dirty, 1)
+	if idx := slices.IndexFunc(settings, equal(key)); idx < 0 {
+		settings = append(settings, setting{true, key, val})
 	} else if settings[idx].Value != val {
+		settings[idx].dirty = true
 		settings[idx].Value = val
-		atomic.StoreInt32(&dirty, 1)
 	}
 }
 
@@ -171,7 +179,7 @@ func Float(key string) (float64, error) {
 func Time(key string) (time.Time, error) {
 	s, err := String(key)
 	if err != nil {
-		return time.Now(), err
+		return time.Time{}, err
 	}
 	return time.Parse(time.RFC3339, s)
 }
@@ -224,15 +232,21 @@ func Yaml(key string, other, res any) error {
 	if err != nil {
 		return err
 	}
+
 	if s == "" {
 		return ErrNotFound
 	}
 
-	if err := yaml.NewDecoder(bytes.NewBuffer([]byte(s))).Decode(&other); err != nil && err != io.EOF {
+	if err := yaml.Unmarshal([]byte(s), &other); err != nil {
 		return err
 	}
 
 	return DecodeOtherSliceOrMap(other, res)
+}
+
+func IsJson(key string) bool {
+	s, err := String(key)
+	return err == nil && json.Unmarshal([]byte(s), &json.RawMessage{}) == nil
 }
 
 // wrapping Settings into a struct for better decoupling

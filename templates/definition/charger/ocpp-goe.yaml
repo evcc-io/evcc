@@ -3,16 +3,16 @@ covers: ["ocpp-fronius-wattpilot"]
 products:
   - brand: go-e
     description:
-      generic: Charger V3
+      generic: Charger V3 (OCPP)
   - brand: go-e
     description:
-      generic: Charger Gemini
+      generic: Charger Gemini (OCPP)
   - brand: go-e
     description:
-      generic: Charger PRO
+      generic: Charger PRO (OCPP)
   - brand: Fronius
     description:
-      generic: Wattpilot
+      generic: Wattpilot (OCPP)
 capabilities: ["rfid", "1p3p"]
 requirements:
   evcc: ["sponsorship", "skiptest"]

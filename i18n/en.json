@@ -1,4 +1,24 @@
 {
+  "authProviders": {
+    "authCode": "Authentication Code",
+    "authCodeHelp": "Copy this code and use it in the next step. Valid for {duration}.",
+    "authorizationFailed": "Authorization Failed",
+    "authorizationRequired": "Authorization Required",
+    "authorizationSuccessful": "Authorization Successful",
+    "buttonConnect": "Connect to {provider}",
+    "buttonDisconnect": "Disconnect",
+    "confirmLogout": "Are you sure you want to disconnect {title}?",
+    "connect": "connect",
+    "disconnect": "disconnect",
+    "loggedOut": "Successfully logged out",
+    "logoutFailed": "Failed to logout",
+    "modalDescriptionLogin": "Complete the authorization process to establish connection with {provider}.",
+    "modalDescriptionLogout": "This will disconnect your {provider} account and remove access to its data.",
+    "success": "{title} is now connected and ready to use.",
+    "successCloseModal": "You can now close this dialog.",
+    "successCloseTab": "You can now close this tab.",
+    "title": "Authorization Status"
+  },
   "batterySettings": {
     "batteryLevel": "Battery level",
     "bufferStart": {
@@ -40,20 +60,46 @@
       "chargers": "EV chargers",
       "generic": "Generic integrations",
       "heatingdevices": "Heating devices",
-      "ocppHelp": "Copy this address into your chargers configuration.",
+      "ocppConfirmContinue": "Your charger has not connected to evcc yet. Are you sure you want to continue?",
+      "ocppConnected": "Connected!",
+      "ocppDescription": "evcc has a built-in OCPP server. Follow these steps:",
+      "ocppHelp": "Copy this URL into your charger's configuration. Check the manufacturer's manual for details. The charger is expected to automatically append its unique identifier (station ID) to the url. In rare cases, you may need to manually specify the identifier. Example: `{url}`",
       "ocppLabel": "OCPP-Server URL",
+      "ocppNextStep": "Next step",
+      "ocppStep1": "Configure your charger to use evcc as OCPP server.",
+      "ocppStep2": "Wait for your charger to connect to evcc.",
+      "ocppStep3": "Proceed and complete the configuration.",
+      "ocppWaiting": "Waiting for connection",
       "switchsockets": "Switchable sockets",
       "template": "Manufacturer",
-      "titleAdd": "Add Charger",
-      "titleEdit": "Edit Charger"
+      "titleAdd": {
+        "charging": "Add Charger",
+        "heating": "Add Heater"
+      },
+      "titleEdit": {
+        "charging": "Edit Charger",
+        "heating": "Edit Heater"
+      },
+      "type": {
+        "custom": {
+          "charging": "User-defined charger",
+          "heating": "User-defined heater"
+        },
+        "heatpump": "User-defined heat pump",
+        "sgready": "User-defined heat pump (sg-ready via plugins)",
+        "sgready-boost": "User-defined heat pump (sg-ready-boost, deprecated)",
+        "sgready-relay": "User-defined heat pump (sg-ready via relays)",
+        "switchsocket": "User-defined switch socket"
+      }
     },
     "circuits": {
       "description": "Ensures, that the sum of all loadpoints connected to a circuit does not exceed the configured power and current limits. Circuits can be nested to build a hierarchy.",
-      "title": "Load Management"
+      "title": "Load Management",
+      "usableMeters": "Usable meter references"
     },
     "control": {
       "description": "Usually the default values are fine. Only change them if you know what you are doing.",
-      "descriptionInterval": "Control loop update cycle in seconds. Defines how often evcc reads meter data, adjusts charging power and updates the UI. Short intervals (< 30s) can cause oscillations and unwanted behavior.",
+      "descriptionInterval": "Update cycle in seconds. Defines how often evcc reads meter data and adjusts charging. The default of 30 seconds is a safe choice. Devices like vehicles, wallboxes and inverters typically need several seconds to adjust their behavior. If your components react quickly you can use lower values. We strongly recommend not going below 10 seconds. If you observe erratic control behavior or jumping power values choose a larger interval.",
       "descriptionResidualPower": "Shifts the operation point of the control loop. If you have a home battery it's recommended to set a value of 100 W. This way the battery will get slight priority over grid use.",
       "labelInterval": "Update interval",
       "labelResidualPower": "Residual power",
@@ -73,16 +119,20 @@
       "chargedEnergy": "Charged",
       "co2": "Grid CO₂",
       "configured": "Configured",
+      "connections": "Connections",
       "controllable": "Controllable",
       "currency": "Currency",
       "current": "Current",
       "currentRange": "Current",
+      "detected": "Detected",
+      "dimmed": "Dimmed",
       "enabled": "Enabled",
       "energy": "Energy",
       "feedinPrice": "Feed-in price",
       "gridPrice": "Grid price",
       "heaterTempLimit": "Heater limit",
-      "hemsType": "System",
+      "hemsActiveLimit": "Active limit",
+      "hemsType": "Communication",
       "identifier": "RFID-Identifier",
       "no": "no",
       "odometer": "Odometer",
@@ -100,7 +150,7 @@
       "temp": "Temperature",
       "topic": "Topic",
       "url": "URL",
-      "vehicleLimitSoc": "Vehicle limit",
+      "vehicleLimitSoc": "Charge limit",
       "yes": "yes"
     },
     "deviceValueChargeStatus": {
@@ -108,19 +158,31 @@
       "B": "B (connected)",
       "C": "C (charging)"
     },
+    "deviceValueHemsType": {
+      "eebus": "via EEBus",
+      "relay": "via Relay"
+    },
     "devices": {
       "auxMeter": "Smart consumer",
       "batteryStorage": "Battery storage",
+      "consumer": "Consumer",
       "solarSystem": "Solar system"
+    },
+    "editor": {
+      "loading": "Loading YAML editor…"
     },
     "eebus": {
       "description": "Configuration that enables evcc to communicate with other EEBus devices.",
       "title": "EEBus"
     },
+    "experimental": {
+      "description": "Enable user interface for features that are still being tested and may change in future versions.",
+      "title": "Experimental"
+    },
     "ext": {
-      "description": "Can be used for load management or statistics purposes.",
-      "titleAdd": "Add External Meter",
-      "titleEdit": "Edit External Meter"
+      "description": "Records energy values of uncontrolled consumers (e.g. refrigerator, washing machine, etc.) for statistical purposes. These meters can also be used for load management (e.g. sub-distribution).",
+      "titleAdd": "Add Consumer Meter",
+      "titleEdit": "Edit Consumer Meter"
     },
     "form": {
       "danger": "Danger",
@@ -129,21 +191,43 @@
       "optional": "optional"
     },
     "general": {
+      "applyAndClose": "Apply & close",
+      "authPerform": "Connect with {provider}",
+      "authPerformHint": "Will open in a new tab. Return here to continue.",
+      "authPrepare": "Prepare connection",
       "cancel": "Cancel",
+      "clear": "Clear",
+      "close": "Close",
+      "copied": "Copied!",
+      "copy": "Copy",
+      "customHelp": "Create a user-defined device using evcc's plugin system.",
+      "customOption": "User-defined device",
       "delete": "Delete",
       "docsLink": "See documentation.",
+      "dragHandle": "Drag handle",
+      "dragItem": "Draggable: {title}",
+      "dragList": "Reorderable list",
       "experimental": "Experimental",
+      "forceSave": "Save anyway",
       "hideAdvancedSettings": "Hide advanced settings",
+      "invalidFileSelected": "Invalid file selected",
+      "noFileSelected": "No file selected.",
       "off": "off",
       "on": "on",
       "password": "Password",
       "readFromFile": "Read from file",
       "remove": "Remove",
+      "required": "required",
+      "reset": "Reset",
       "save": "Save",
+      "saved": "Saved.",
+      "saving": "Saving…",
+      "selectFile": "Browse",
       "showAdvancedSettings": "Show advanced settings",
       "telemetry": "Telemetry",
       "templateLoading": "Loading...",
       "title": "Title",
+      "typeDeprecated": "The type '{type}' is outdated and will be removed in a future version. Please check the changelog and recreate this device.",
       "validateSave": "Validate & save"
     },
     "grid": {
@@ -152,8 +236,23 @@
       "titleEdit": "Edit Grid Meter"
     },
     "hems": {
-      "description": "Connect evcc to another home energy management system.",
-      "title": "HEMS"
+      "csv": {
+        "created": "Created",
+        "finished": "Finished",
+        "gridpower": "Grid Power (kW)",
+        "limitpower": "Limit (kW)",
+        "type": "Type"
+      },
+      "description": "Power limitation by external systems (e.g. EnWG 14a controllers). Requires load management configuration.",
+      "downloadCsv": "Download CSV",
+      "eventsRecorded": "Recorded {count} grid limitation events.",
+      "lastEvent": "Most recent {timeAgo}.",
+      "title": "HEMS",
+      "yamlConfigured": "Note: Configured via evcc.yaml. Remove the entry from the file to enable editing here."
+    },
+    "icon": {
+      "change": "change",
+      "label": "Icon"
     },
     "influx": {
       "description": "Writes charging data and other metrics to InfluxDB. Use Grafana or other tools to visualize the data.",
@@ -172,11 +271,20 @@
       "v2Support": "Back to InfluxDB 2.x"
     },
     "loadpoint": {
-      "addCharger": "Add charger",
-      "addMeter": "Add dedicated charger meter",
+      "addCharger": {
+        "charging": "Add charger",
+        "heating": "Add heater"
+      },
+      "addMeter": "Add dedicated energy meter",
       "cancel": "Cancel",
-      "chargerError": "Configuring a charger is required.",
-      "chargerLabel": "Charger",
+      "chargerError": {
+        "charging": "Configuring a charger is required.",
+        "heating": "Configuring a heater is required."
+      },
+      "chargerLabel": {
+        "charging": "Charger",
+        "heating": "Heater"
+      },
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "Will use a current range of 6 to 16 A.",
       "chargerPower22kw": "22 kW",
@@ -184,11 +292,15 @@
       "chargerPowerCustom": "other",
       "chargerPowerCustomHelp": "Define a custom current range.",
       "chargerTypeLabel": "Charger type",
-      "chargingTitle": "Charging",
+      "chargingTitle": "Behaviour",
+      "circuitHelp": "Load management assignment to ensure power and current limits are not exceeded.",
       "circuitLabel": "Circuit",
       "circuitUnassigned": "unassigned",
-      "defaultModeHelp": "Charging mode when connecting the vehicle.",
-      "defaultModeHelpKeep": "Keeps the last selected charging mode.",
+      "defaultModeHelp": {
+        "charging": "Charging mode when connecting the vehicle.",
+        "heating": "Is set when on system start."
+      },
+      "defaultModeHelpKeep": "Keeps the last selected mode.",
       "defaultModeLabel": "Default mode",
       "delete": "Delete",
       "electricalSubtitle": "When in doubt, ask your electrician.",
@@ -201,11 +313,15 @@
       "minCurrentHelp": "Only go below 6 A if you know what you're doing.",
       "minCurrentLabel": "Minimum current",
       "noVehicles": "No vehicles are configured.",
+      "option": {
+        "charging": "Add charging point",
+        "heating": "Add heating device"
+      },
       "phases1p": "1-phase",
       "phases3p": "3-phase",
       "phasesAutomatic": "Automatic phases",
       "phasesAutomaticHelp": "Your charger supports automatic switching between 1- and 3-phase charging. In the main screen you can adjust phase behaviour while charging.",
-      "phasesHelp": "Number of phases connected to the charger.",
+      "phasesHelp": "Number of phases connected.",
       "phasesLabel": "Phases",
       "pollIntervalDanger": "Regularly querying the vehicle may drain the vehicle battery. Some vehicle manufacturers may actively prevent charging in this case. Not recommended! Only use this if you're aware of the risks.",
       "pollIntervalHelp": "Time between vehicle API updates. Short intervals may drain the vehicle battery.",
@@ -217,28 +333,39 @@
       "pollModeConnected": "connected",
       "pollModeConnectedHelp": "Update vehicle status in regular intervals when connected.",
       "pollModeLabel": "Update behaviour",
-      "priorityHelp": "Higher priority charge points get preferred access to solar surplus.",
+      "priorityHelp": "Higher priority get preferred access to solar surplus.",
       "priorityLabel": "Priority",
       "save": "Save",
       "showAllSettings": "Show all settings",
       "solarBehaviorCustomHelp": "Define your own enable and disable thresholds and delays.",
-      "solarBehaviorDefaultHelp": "Only charge with solar surplus. Start after {enableDelay} of surplus. Stop when there is not enough surplus for {disableDelay}.",
-      "solarBehaviorLabel": "Solar behaviour",
+      "solarBehaviorDefaultHelp": "Start after {enableDelay} of sufficient surplus. Stop when there is not enough surplus for {disableDelay}.",
+      "solarBehaviorLabel": "Solar",
       "solarModeCustom": "custom",
       "solarModeMaximum": "maximum solar",
       "thresholdDisableDelayLabel": "Disable delay",
       "thresholdDisableHelpInvalid": "Please use a positive value.",
-      "thresholdDisableHelpPositive": "Stop charging, when more than {power} is used from the grid for {delay}.",
-      "thresholdDisableHelpZero": "Stop when minimum charge power can't be satisfied for {delay}.",
+      "thresholdDisableHelpPositive": "Stop, when more than {power} is used from the grid for {delay}.",
+      "thresholdDisableHelpZero": "Stop when minimum required power can't be satisfied for {delay}.",
       "thresholdDisableLabel": "Disable grid power",
       "thresholdEnableDelayLabel": "Enable delay",
       "thresholdEnableHelpInvalid": "Please use a negative value.",
-      "thresholdEnableHelpNegative": "Start charging, when {surplus} surplus is available for {delay}.",
-      "thresholdEnableHelpZero": "Start when minimum charge power surplus is available for {delay}.",
+      "thresholdEnableHelpNegative": "Start, when {surplus} surplus is available for {delay}.",
+      "thresholdEnableHelpZero": "Start when minimum required power can be satisfied for {delay}.",
       "thresholdEnableLabel": "Enable grid power",
-      "titleAdd": "Add Charge Point",
-      "titleEdit": "Edit Charge Point",
-      "titleExample": "Garage, Carport, etc.",
+      "titleAdd": {
+        "charging": "Add Charging Point",
+        "heating": "Add Heating Device",
+        "unknown": "Add Charger or Heater"
+      },
+      "titleEdit": {
+        "charging": "Edit Charging Point",
+        "heating": "Edit Heating Device",
+        "unknown": "Edit Charger or Heater"
+      },
+      "titleExample": {
+        "charging": "Garage, Carport, etc.",
+        "heating": "Heatpump, Heater, etc."
+      },
       "titleLabel": "Title",
       "vehicleAutoDetection": "auto detection",
       "vehicleHelpAutoDetection": "Automatically selects the most plausible vehicle. Manual override is possible.",
@@ -249,18 +376,20 @@
     "main": {
       "addAdditional": "Add additional meter",
       "addGrid": "Add grid meter",
-      "addLoadpoint": "Add charge point",
+      "addLoadpoint": "Add charger or heater",
       "addPvBattery": "Add solar or battery",
       "addTariffs": "Add tariffs",
       "addVehicle": "Add vehicle",
       "configured": "configured",
       "edit": "edit",
-      "loadpointRequired": "At least one charge point has to be configured.",
+      "loadpointRequired": "At least one charging point has to be configured.",
       "name": "Name",
       "title": "Configuration",
       "unconfigured": "not configured",
       "vehicles": "My Vehicles",
-      "yaml": "Device from evcc.yaml are not editable."
+      "welcomeBannerText": "Start with creating at least one **charger**, **heater**, **grid**, **solar**, **battery** or **additional meter**. If you just want to test, pick a **demo device**.",
+      "welcomeBannerTitle": "Let's configure your system!",
+      "yaml": "Devices from evcc.yaml are not editable."
     },
     "messaging": {
       "description": "Receive messages about your charging sessions.",
@@ -269,24 +398,35 @@
     "meter": {
       "cancel": "Cancel",
       "delete": "Delete",
+      "generic": "Generic integrations",
       "option": {
         "aux": "Add self-regulating consumer",
         "battery": "Add battery meter",
-        "ext": "Add external meter",
+        "ext": "Add regular consumer",
         "pv": "Add solar meter"
       },
       "save": "Save",
+      "specific": "Specific integrations",
       "template": "Manufacturer",
       "titleChoice": "What Do You Want To Add?",
+      "titleLabel": "Title",
+      "usage": {
+        "aux": "Self-regulating consumer",
+        "battery": "Battery",
+        "charge": "Consumer / Charger",
+        "grid": "Grid",
+        "label": "Usage",
+        "pv": "Production"
+      },
       "validateSave": "Validate & save"
     },
     "modbus": {
       "baudrate": "Baud rate",
       "comset": "ComSet",
       "connection": "Modbus connection",
-      "connectionHintSerial": "The device is directly connected to evcc via a RS485 interface.",
-      "connectionHintTcpip": "The device is addressable from evcc via LAN/Wifi.",
-      "connectionValueSerial": "Serial / USB",
+      "connectionHintSerial": "The device is directly connected via RS485 (or USB-to-RS485 adapter).",
+      "connectionHintTcpip": "The device is reachable via network (LAN/WiFi).",
+      "connectionValueSerial": "RS485",
       "connectionValueTcpip": "Network",
       "device": "Device name",
       "deviceHint": "Example: /dev/ttyUSB0",
@@ -301,7 +441,24 @@
       "protocolValueTcp": "TCP"
     },
     "modbusproxy": {
-      "description": "Allow multiple clients to access a single Modbus device.",
+      "add": "Add proxy connection",
+      "connection": "Connection #{number}",
+      "description": "Some Modbus devices only support a single or very few connections. evcc can act as a proxy, enabling simultaneous access for multiple clients (home automation, scripts, etc.).",
+      "device": "Device",
+      "option": {
+        "deny": "error",
+        "false": "no",
+        "true": "silent"
+      },
+      "readonly": {
+        "help": {
+          "deny": "Write access is blocked with a Modbus error.",
+          "false": "Write access is forwarded.",
+          "true": "Write access is blocked without response."
+        },
+        "label": "Readonly"
+      },
+      "sourcePortHelp": "Port for incoming client connections. Must be available.",
       "title": "Modbus Proxy"
     },
     "mqtt": {
@@ -323,13 +480,32 @@
       "title": "MQTT"
     },
     "network": {
-      "descriptionHost": "Use .local suffix to enable mDNS. Relevant for discovery of the mobile app and some OCPP chargers.",
+      "descriptionExternalUrl": "Address for other devices that want to connect to evcc and for autodiscovery of the evcc app.",
+      "descriptionHost": "Used to announce evcc in your local network.",
+      "descriptionInternalUrl": "Local network address of evcc.",
       "descriptionPort": "Port for the web interface and API. You'll need to update your browser URL if you change this.",
-      "descriptionSchema": "Only affects how URLs are generated. Selecting HTTPS will not enable encryption.",
-      "labelHost": "Hostname",
+      "labelExternalUrl": "External URL",
+      "labelHost": "mDNS Hostname",
+      "labelInternalUrl": "Internal URL",
       "labelPort": "Port",
-      "labelSchema": "Schema",
       "title": "Network"
+    },
+    "ocpp": {
+      "connectedChargers": "Connected chargers",
+      "connectionStatus": "Configured station IDs",
+      "connectionStatusHelp": "Connection status of configured chargers.",
+      "detectedChargers": "Detected station IDs",
+      "detectedHelp": "These chargers have tried to connect to evcc. To use a charger, create a loadpoint with its station ID.",
+      "noChargers": "No OCPP chargers detected.",
+      "noStations": "No stations connected",
+      "status": {
+        "configured": "Not connected",
+        "connected": "Connected",
+        "unknown": "Unknown"
+      },
+      "title": "OCPP Server",
+      "url": "Server URL",
+      "urlHelp": "Copy this URL into your charger's configuration. Check the manufacturer's manual for details. The charger is expected to automatically append its unique identifier (station ID) to the url. In rare cases, you may need to manually specify the identifier. Example: `{url}`"
     },
     "options": {
       "boolean": {
@@ -339,6 +515,10 @@
       "endianness": {
         "big": "big-endian",
         "little": "little-endian"
+      },
+      "operationMode": {
+        "heating": "Heating",
+        "standby": "Standby"
       },
       "schema": {
         "http": "HTTP (unencrypted)",
@@ -359,24 +539,74 @@
       "general": "General",
       "grid": "Grid",
       "integrations": "Integrations",
-      "loadpoints": "Charging points",
+      "loadpoints": "Charging & Heating",
       "meter": "Solar & Battery",
       "system": "System",
       "vehicles": "Vehicles"
+    },
+    "shm": {
+      "cardTitle": "Sunny Home Manager",
+      "description": "evcc is equipped with integration for the SMA Sunny Home Manager (SHM) via SEMP protocol. If it is running on the same network, after logging into your Sunny Portal account, you should automatically be offered to add all chargers configured in evcc as newly discovered consumers. Everything should be ready to use immediately, without any adjustments required below.",
+      "descriptionDeviceId": "12 characters HEX string. Prefix for all devices (charging point, ..).",
+      "descriptionIdPattern": "Identifier pattern",
+      "descriptionIds": "In Sunny Portal every consumer device needs a unique identifier. evcc generates a unique identifier based on your hardware. If you migrate evcc to another hardware these identifiers might change. If you want to maintain history you can override the generated identifiers here. Open the SEMP URL (/semp) to check your current identifiers.",
+      "descriptionSempUrl": "SEMP URL",
+      "descriptionVendorId": "8 characters HEX string. General prefix of all entities. By default evcc will use its own internal vendor ID.",
+      "labelDeviceId": "Device ID",
+      "labelVendorId": "Vendor ID",
+      "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
       "addToken": "Enter token",
       "changeToken": "Change token",
       "description": "The sponsoring model helps us to maintain the project and sustainably build new and exciting features. As a sponsor you get access to all charger implementations.",
-      "descriptionToken": "You get the token from {url}. We also offer a trial token for testing.",
+      "descriptionToken": "Sponsors find their token on {url}. For getting-started, we offer a {trialToken}.",
+      "enterYourToken": "Enter your token",
       "error": "The sponsor token is not valid.",
+      "invalid": "invalid",
       "labelToken": "Sponsor token",
       "title": "Sponsorship",
       "tokenRequired": "You must configure a sponsor token before you can create this device.",
+      "tokenRequiredFeature": "This feature requires a sponsor token.",
       "tokenRequiredLearnMore": "Learn more.",
-      "trialToken": "Trial token"
+      "tokenRequiredShort": "No sponsor token configured.",
+      "trialToken": "trial token",
+      "viaYaml": "via evcc.yaml",
+      "yourToken": "Your token"
     },
     "system": {
+      "backupRestore": {
+        "backup": {
+          "action": "Download backup...",
+          "confirmationButton": "Download backup",
+          "confirmationText": "Download the database file.",
+          "description": "Backup your data to a file. This file can be used to restore your data in case of a system failure.",
+          "title": "Backup"
+        },
+        "cancel": "Cancel",
+        "description": "Backup, restore and reset your data. Useful if you want to move your data to another system.",
+        "note": "Note: All above actions only affect your database data. The evcc.yaml configuration file remains unchanged.",
+        "reset": {
+          "action": "Reset...",
+          "confirmationButton": "Reset & restart",
+          "confirmationText": "This will permanently delete your selected data. Ensure you've downloaded a backup first.",
+          "description": "Having problems with configuration and want to start over? Delete all data and start fresh.",
+          "sessions": "Charging sessions",
+          "sessionsDescription": "Deletes your charging session history.",
+          "settings": "Configuration & settings",
+          "settingsDescription": "Deletes all configured devices, services, plans, caches, etc.",
+          "title": "Reset"
+        },
+        "restore": {
+          "action": "Restore...",
+          "confirmationButton": "Restore & restart",
+          "confirmationText": "This will overwrite your complete database. Ensure you've downloaded a backup first.",
+          "description": "Restore your data from a backup file. This will overwrite all your current data.",
+          "labelFile": "Backup file",
+          "title": "Restore"
+        },
+        "title": "Backup & Restore"
+      },
       "logs": "Logs",
       "restart": "Restart",
       "restartRequiredDescription": "Please restart to see the effect.",
@@ -388,6 +618,10 @@
       "description": "Define your energy tariffs to calculate the costs of your charging sessions.",
       "title": "Tariffs"
     },
+    "telemetry": {
+      "description": "Configure data sharing to help improve evcc. Your privacy is important to us and participation is completely optional.",
+      "title": "Telemetry"
+    },
     "title": {
       "description": "Displayed on main screen and browser tab.",
       "label": "Title",
@@ -396,7 +630,7 @@
     "validation": {
       "failed": "failed",
       "label": "Status",
-      "running": "validating…",
+      "running": "Validating…",
       "success": "successful",
       "unknown": "unknown",
       "validate": "validate"
@@ -409,14 +643,17 @@
       "delete": "Delete",
       "generic": "Other integrations",
       "identifiers": "RFID identifiers",
-      "identifiersHelp": "List of RFID strings to identify the vehicle. One entry per line. The current identifier can be found at the respective charge point on the overview page.",
+      "identifiersHelp": "List of RFID strings to identify the vehicle. One entry per line. The current identifier can be found at the respective charging point on the overview page.",
       "maximumCurrent": "Maximum current",
       "maximumCurrentHelp": "Must be greater than minimum current.",
       "maximumPhases": "Maximum phases",
       "maximumPhasesHelp": "How many phases can this vehicle charge with? Used to calculate required minimum solar surplus and plan duration.",
+      "maximumPower": "Maximum charging power",
+      "maximumPowerHelp": "Maximum power the vehicle can consume",
       "minimumCurrent": "Minimum current",
       "minimumCurrentHelp": "Only go below 6A if you know what you're doing.",
       "online": "Vehicles with online API",
+      "primary": "Generic integrations",
       "priority": "Priority",
       "priorityHelp": "Higher priority means this vehicle gets preferred access to solar surplus.",
       "save": "Save",
@@ -528,7 +765,6 @@
     "blog": "Blog",
     "docs": "Documentation",
     "github": "GitHub",
-    "login": "Vehicle Logins",
     "logout": "Logout",
     "nativeSettings": "Change Server",
     "needHelp": "Need Help?",
@@ -537,7 +773,7 @@
   "help": {
     "discussionsButton": "GitHub discussions",
     "documentationButton": "Documentation",
-    "issueButton": "Report a bug",
+    "issueButton": "Report a problem",
     "issueDescription": "Found a strange or wrong behavior?",
     "logsButton": "View logs",
     "logsDescription": "Check the logs for errors.",
@@ -554,6 +790,59 @@
     "restartDescription": "Tried turning it off and on again?",
     "secondaryActions": "Still not able to solve your problem? Here are some more heavy-handed options."
   },
+  "issue": {
+    "additional": {
+      "description": "Include configuration and logs to help us reproduce the issue quickly. We encourage sharing as much as possible. State is usually not needed.",
+      "include": "include",
+      "lines": "lines",
+      "logs": "Logs",
+      "logsDescription": "Recent log entries that may help identify the issue.",
+      "showDetails": "show details",
+      "source": "Source",
+      "state": "State",
+      "stateDescription": "Complete runtime state including charging point, device, and energy information. Include only if requested.",
+      "title": "Additional Information",
+      "uiConfig": "Configuration (UI)",
+      "uiConfigDescription": "Configuration settings made through the web interface.",
+      "yamlConfig": "Configuration (YAML)",
+      "yamlConfigDescription": "Your complete configuration file."
+    },
+    "additionalContext": "Additional context",
+    "additionalContextPlaceholder": "Any additional information that might be helpful...\n- Configuration details\n- What you tried\n- Environment details",
+    "createButtonDiscussion": "Start GitHub Discussion...",
+    "createButtonIssue": "Create GitHub Issue...",
+    "description": "Your installation is not working as expected? Use this page to get help or report issues. Provide enough detail to help us understand and reproduce the problem, while keeping your description concise, clear and easy to follow.",
+    "helpType": {
+      "discussion": "Need help with my setup",
+      "discussionDescription": "Community discussions provide answers.",
+      "issue": "Found a bug",
+      "issueDescription": "I'm certain something is broken and needs to be fixed.",
+      "title": "What problem are we talking about?"
+    },
+    "issueDescription": "Description",
+    "issueTitle": "Title",
+    "stepsToReproduce": "Steps to reproduce",
+    "subTitleDiscussion": "Describe your problem",
+    "subTitleIssue": "Describe the issue",
+    "summary": {
+      "confirmationButtonDiscussion": "Start GitHub Discussion",
+      "confirmationButtonIssue": "Create GitHub Issue",
+      "copied": "Copied!",
+      "copyButton": "Copy additional information",
+      "instructions": "Due to GitHub's URL size limitations, this is a two-step process:",
+      "singleStepDescription": "Click the button below to open GitHub with a pre-filled form containing your problem details. Sensitive data has been automatically redacted, but please double-check before sharing.",
+      "step1Description": "Click the button below to create a basic GitHub entry with your title, description, and details.",
+      "step2Description": "After creating the entry, return here to copy the additional information below and paste it into your GitHub form. Sensitive data has been redacted, but please double-check before sharing.",
+      "stepOneDiscussion": "Step 1: Create basic discussion",
+      "stepOneIssue": "Step 1: Create basic issue",
+      "stepTwo": "Step 2: Copy additional information",
+      "title": "GitHub Problem Summary"
+    },
+    "system": "System",
+    "timezone": "Timezone",
+    "title": "Report a problem",
+    "version": "Version"
+  },
   "log": {
     "areaLabel": "Filter by area",
     "areas": "All areas",
@@ -569,12 +858,12 @@
   },
   "loginModal": {
     "cancel": "Cancel",
-    "error": "Login failed: ",
+    "demoMode": "Login is not supported in demo mode.",
     "iframeHint": "Open evcc in a new tab.",
     "iframeIssue": "Your password is correct, but your browser seems to have dropped the authentication cookie. This can happen if you run evcc in an iframe via HTTP.",
     "invalid": "Password is invalid.",
     "login": "Login",
-    "password": "Password",
+    "password": "Administrator Password",
     "reset": "Reset password?",
     "title": "Authentication"
   },
@@ -588,16 +877,23 @@
       "goal": "Charging goal",
       "modalTitle": "Charging Plan",
       "none": "none",
+      "optimization": {
+        "cheapest": "cheapest",
+        "continuous": "continuous",
+        "label": "Optimization"
+      },
       "planNumber": "Plan {number}",
-      "preconditionDescription": "Charge {duration} before departure for battery preconditioning.",
-      "preconditionLong": "Late Charging",
-      "preconditionOptionAll": "everything",
-      "preconditionOptionNo": "no",
-      "preconditionShort": "Late",
+      "precondition": {
+        "description": "Charge {duration} before departure for battery preconditioning.",
+        "label": "Late Charging",
+        "optionAll": "everything",
+        "optionNo": "no"
+      },
       "remove": "Remove",
       "repeating": "repeating",
       "repeatingPlans": "Repeating plans",
       "selectAll": "Select all",
+      "strategySettings": "Strategy settings",
       "time": "Time",
       "title": "Plan",
       "titleMinSoc": "Min charge",
@@ -618,6 +914,7 @@
       "gridImport": "Grid use",
       "homePower": "Consumption",
       "loadpoints": "Charger| Charger | {count} chargers",
+      "loadpointsLimit": "{limit} limit",
       "noEnergy": "No meter data",
       "pv": "Solar system",
       "pvExport": "Grid export",
@@ -629,6 +926,10 @@
       "connected": "Standby.",
       "vehicleLimit": "Heater limit",
       "waitForVehicle": "Ready. Waiting for heater…"
+    },
+    "hemsWarning": {
+      "description": "Reduced charging to not exceed {limit}.",
+      "title": "External limit:"
     },
     "loadpoint": {
       "avgPrice": "⌀ Price",
@@ -766,6 +1067,8 @@
       "connected": "Connected.",
       "disconnectRequired": "Session terminated. Please reconnect.",
       "disconnected": "Disconnected.",
+      "feedinPriorityNextStart": "High feed-in rates start in {duration}.",
+      "feedinPriorityPausing": "Solar charging paused to maximize feed-in.",
       "finished": "Finished.",
       "minCharge": "Minimum charging to {soc}.",
       "pvDisable": "Not enough surplus. Pausing soon.",
@@ -793,7 +1096,8 @@
     "message": "Not connected to a server.",
     "restart": "Restart",
     "restartNeeded": "Required to apply changes.",
-    "restarting": "Server will be back in a moment."
+    "restarting": "Server will be back in a moment.",
+    "starting": "Starting server..."
   },
   "passwordModal": {
     "description": "Set a password to protect the configuration settings. Using the main screen is still possible without login.",
@@ -862,10 +1166,9 @@
       "solarpercentage": "Solar (%)",
       "vehicle": "Vehicle"
     },
-    "csvMonth": "Download {month} CSV",
+    "csvPeriod": "Download {period} CSV",
     "csvTotal": "Download total CSV",
     "date": "Start",
-    "downloadCsv": "Download as CSV",
     "energy": "Charged",
     "filter": {
       "allLoadpoints": "all charging points",
@@ -905,6 +1208,7 @@
     "vehicle": "Vehicle"
   },
   "settings": {
+    "deviceInfo": "Settings you make in this dialog only affect this device.",
     "fullscreen": {
       "enter": "Enter fullscreen",
       "exit": "Exit fullscreen",
@@ -912,15 +1216,23 @@
     },
     "hiddenFeatures": {
       "label": "Experimental",
-      "value": "Show experimental UI features."
+      "value": "Show experimental features."
     },
     "language": {
       "auto": "Automatic",
       "label": "Language"
     },
+    "loadpoints": {
+      "help": "Change order and visibility for the UI.",
+      "hide": "Hide {title}",
+      "label": "Charging points",
+      "show": "Show {title}"
+    },
     "sponsorToken": {
-      "expires": "You sponsor token expires {inXDays}. {getNewToken} and update it here.",
-      "getNew": "Grab a fresh one",
+      "expires": "You sponsor token expires {inXDays}.",
+      "expiresUpdateUi": "{getNewToken} and update it here.",
+      "expiresUpdateYaml": "{getNewToken} and update it in your evcc.yaml.",
+      "getNewToken": "Grab a fresh one",
       "hint": "Note: We will automate this in the future."
     },
     "telemetry": {
@@ -945,14 +1257,15 @@
     }
   },
   "smartCost": {
-    "activeHours": "{charging} of {total}",
-    "activeHoursLabel": "Active hours",
+    "activeHours": "{active} of {total}",
+    "activeHoursLabel": "Active time",
     "applyToAll": "Apply everywhere?",
     "batteryDescription": "Charges the home battery with energy from the grid.",
     "cheapTitle": "Cheap Grid Charging",
     "cleanTitle": "Clean Grid Charging",
     "co2Label": "CO₂ emission",
     "co2Limit": "CO₂ limit",
+    "enable": "Enable limit",
     "loadpointDescription": "Enables temporary fast-charging in solar mode.",
     "modalTitle": "Smart Grid Charging",
     "none": "none",
@@ -962,11 +1275,20 @@
     "resetWarning": "There is no dynamic grid price or CO₂-source configured. However, there is still a limit of {limit}. Clean up your configuration?",
     "saved": "Saved."
   },
+  "smartFeedInPriority": {
+    "activeHoursLabel": "Paused time",
+    "description": "Pauses charging during high prices to prioritize profitable grid feed-in.",
+    "priceLabel": "Feed-in rate",
+    "priceLimit": "Feed-in limit",
+    "resetWarning": "There is no dynamic feed-in tariff configured. However, there is still a limit of {limit}. Clean up your configuration?",
+    "title": "Feed-in Priority"
+  },
   "startupError": {
     "configFile": "Configuration file used:",
     "configuration": "Config",
     "description": "Please check your configuration file. If the error message does not help, check out the {0}.",
     "discussions": "GitHub Discussions",
+    "editConfiguration": "Edit configuration",
     "fixAndRestart": "Please fix the problem and restart the server.",
     "hint": "Note: It could also be you have a faulty device (inverter, meter, …). Check your network connections.",
     "lineError": "Error in {0}.",

@@ -1,0 +1,76 @@
+template: daikin-homehub-air2air
+products:
+  - brand: Daikin
+    description:
+      generic: HomeHub air2air (SG Ready)
+group: heating
+requirements:
+  description:
+    de: |
+      Funktioniert mit Air 2-Luft-Wärmepumpen, die WLAN-Adapter der 4. Generation (BRP069C4) mit maximal 5 Einheiten unterstützen.
+
+      Homehub (EKRHH) muss im Modus 4 (Modbus TCP/IP für Air2Air-Wärmepumpen) konfiguriert werden.
+    en: |
+      Works with air 2 air heat pumps that support 4th gen WLAN-adapters (BRP069C4). With a maximum of 5 units.
+
+      Homehub (EKRHH) needs to be configured in mode 4 (Modbus TCP/IP for air2air heat pumps).
+params:
+  - name: modbus
+    choice: ["tcpip"]
+render: |
+  type: sgready
+  getmode:
+    source: map
+    values:
+      0: 2 # Daikin mode "Free" > evcc mode "normal"
+      1: 1 # Daikin mode "Forced off" > evcc mode "dim"
+      2: 3 # Daikin mode "Recommended on" > evcc mode "boost"
+      3: 3 # Daikin mode "Forced on" > evcc mode "boost"
+    get:
+      source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 1000
+        type: holding # read the holding register to get current smart grid mode
+        encoding: int16
+  setmode:
+    source: switch
+    switch:
+    - case: 2 # normal
+      set:
+        source: const
+        value: 0
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 1000
+            type: writeholding
+            encoding: int16
+    - case: 3 # boost
+      set:
+        source: const
+        value: 2
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 1000
+            type: writeholding
+            encoding: int16
+    - case: 1 # dim
+      set:
+        source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 1000
+          type: writeholding
+          encoding: int16
+  setmaxpower:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 1001 # PV surplus
+      type: writeholding
+      decode: int16
+    scale: 0.1

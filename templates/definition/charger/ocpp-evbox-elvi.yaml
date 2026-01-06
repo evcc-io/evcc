@@ -6,6 +6,10 @@ products:
       generic: Elvi
 requirements:
   evcc: ["sponsorship", "skiptest"]
+  description:
+    de: Wird die Wallbox mit Phasenrotation installiert, kann mit der EVBox Connect App diese Phasenrotation in der EVBox Elvi hinterlegt werden, damit die gemessenen Spannungen und Ströme auf der tatsächlichen Phase ausgegeben werden. Dies ist für das EVBox eigene Lastmanagement notwendig, für die Verwendung mit evcc darf die Phasenrotation aber hier nicht eingetragen sein. Insbesondere bei einer gebrauchten Elvi oder einer Elvi die bekanntermaßen im EVBox eigenen Lastmanagement betrieben wurde, sollte deshalb im Installationsmodus der EVBox Connect App sichergestellt werden, dass der String unter "Phasenrotation" mit "RST" endet.
+    en: If the device is installed with phaserotation, this can be configured in the EVBox Elvi with the EVBox Connect App so the voltages and currents are reported on the correct phase. This is necessary for the loadmanagement of EVBox, but for the usage with evcc the phaserotation should not be configured inside the EVBox Elvi. Especially if the Elvi was used in a EVBox loadmanagement, it should be ensured in the Installationmode of the EVBox Connect App that the string under "Phaserotation" ends with "RST".
+
 params:
   - preset: ocpp
   - name: meter

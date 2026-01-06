@@ -1,6 +1,6 @@
 <template>
 	<!-- eslint-disable-next-line vue/no-v-html -->
-	<div v-html="compiledMarkdown"></div>
+	<div class="root" v-html="compiledMarkdown"></div>
 </template>
 
 <script>
@@ -18,3 +18,13 @@ export default {
 	},
 };
 </script>
+<style scoped>
+.root {
+	max-width: 100%;
+}
+.root :deep(pre.code) {
+	overflow-x: auto;
+	margin: 1em 0;
+	hyphens: none;
+}
+</style>

@@ -1,0 +1,30 @@
+site:
+  meters:
+    grid: grid
+
+meters:
+  - name: grid
+    type: template
+    template: demo-meter
+    power: 2070
+    currentL1: 3
+    currentL2: 3
+    currentL3: 3
+
+loadpoints:
+  - title: Carport
+    charger: charger
+    circuit: main
+
+circuits:
+  - name: main
+    meter: grid
+    maxcurrent: 16
+
+chargers:
+  - name: charger
+    type: template
+    template: demo-charger
+    status: C
+    enabled: true
+    power: 1000

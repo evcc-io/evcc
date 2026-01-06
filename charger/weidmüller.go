@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2023-2025 premultiply
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -58,7 +58,7 @@ func init() {
 }
 
 // NewWeidmüllerFromConfig creates a Weidmüller charger from generic config
-func NewWeidmüllerFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewWeidmüllerFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: 255,
 	}

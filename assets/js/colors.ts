@@ -8,79 +8,79 @@ import { reactive } from "vue";
 // const COLORS = [ "#0077B6FF", "#00B4D8FF", "#90E0EFFF", "#40A578FF", "#9DDE8BFF", "#F8961EFF", "#F9C74FFF", "#E6FF94FF"];
 
 const colors: {
-	text: string | null;
-	muted: string | null;
-	border: string | null;
-	self: string | null;
-	grid: string | null;
-	co2PerKWh: string | null;
-	pricePerKWh: string | null;
-	price: string | null;
-	co2: string | null;
-	background: string | null;
-	light: string | null;
-	selfPalette: string[];
-	palette: string[];
+  text: string | null;
+  muted: string | null;
+  border: string | null;
+  self: string | null;
+  grid: string | null;
+  co2PerKWh: string | null;
+  pricePerKWh: string | null;
+  price: string | null;
+  co2: string | null;
+  background: string | null;
+  light: string | null;
+  selfPalette: string[];
+  palette: string[];
 } = reactive({
-	text: null,
-	muted: null,
-	border: null,
-	self: null,
-	grid: null,
-	co2PerKWh: null,
-	pricePerKWh: null,
-	price: null,
-	co2: null,
-	background: null,
-	light: null,
-	selfPalette: ["#0FDE41FF", "#FFBD2FFF", "#FD6158FF", "#03C1EFFF", "#0F662DFF", "#FF922EFF"],
-	palette: [
-		"#03C1EFFF",
-		"#FD6158FF",
-		"#31AB4AFF",
-		"#41517AFF",
-		"#FF922EFF",
-		"#0F662DFF",
-		"#0470D4FF",
-		"#FFBD2FFF",
-		"#77C93EFF",
-		"#4E1D10FF",
-		"#0AAFBFFF",
-		"#813504FF",
-	],
+  text: null,
+  muted: null,
+  border: null,
+  self: null,
+  grid: null,
+  co2PerKWh: null,
+  pricePerKWh: null,
+  price: null,
+  co2: null,
+  background: null,
+  light: null,
+  selfPalette: ["#0FDE41FF", "#FFBD2FFF", "#FD6158FF", "#03C1EFFF", "#0F662DFF", "#FF922EFF"],
+  palette: [
+    "#03C1EFFF",
+    "#FD6158FF",
+    "#31AB4AFF",
+    "#41517AFF",
+    "#FF922EFF",
+    "#0F662DFF",
+    "#0470D4FF",
+    "#FFBD2FFF",
+    "#77C93EFF",
+    "#4E1D10FF",
+    "#0AAFBFFF",
+    "#813504FF",
+  ],
 });
 
 export const dimColor = (color: string | null) => {
-	return color?.toLowerCase().replace(/ff$/, "20");
+  return color?.toLowerCase().replace(/ff$/, "20");
 };
 
 export const lighterColor = (color: string | null) => {
-	return color?.toLowerCase().replace(/ff$/, "aa");
+  return color?.toLowerCase().replace(/ff$/, "aa");
 };
 
 export const fullColor = (color: string | null) => {
-	return color?.toLowerCase().replace(/20$/, "ff");
+  return color?.toLowerCase().replace(/20$/, "ff");
 };
 
 function updateCssColors() {
-	const style = window.getComputedStyle(document.documentElement);
-	colors.text = style.getPropertyValue("--evcc-default-text");
-	colors.muted = style.getPropertyValue("--bs-gray-medium");
-	colors.border = style.getPropertyValue("--bs-border-color-translucent");
-	colors.self = style.getPropertyValue("--evcc-self");
-	colors.grid = style.getPropertyValue("--evcc-grid");
-	colors.price = style.getPropertyValue("--evcc-price");
-	colors.co2 = style.getPropertyValue("--evcc-co2");
-	colors.background = style.getPropertyValue("--evcc-background");
-	colors.pricePerKWh = style.getPropertyValue("--bs-gray-medium");
-	colors.co2PerKWh = style.getPropertyValue("--bs-gray-medium");
-	colors.light = style.getPropertyValue("--bs-gray-light");
+  const style = window.getComputedStyle(document.documentElement);
+  colors.text = style.getPropertyValue("--evcc-default-text");
+  colors.muted = style.getPropertyValue("--bs-gray-medium");
+  colors.border = style.getPropertyValue("--bs-border-color-translucent");
+  colors.self = style.getPropertyValue("--evcc-self");
+  colors.grid = style.getPropertyValue("--evcc-grid");
+  colors.price = style.getPropertyValue("--evcc-price");
+  colors.co2 = style.getPropertyValue("--evcc-co2");
+  colors.background = style.getPropertyValue("--evcc-background");
+  colors.pricePerKWh = style.getPropertyValue("--bs-gray-medium");
+  colors.co2PerKWh = style.getPropertyValue("--bs-gray-medium");
+  colors.light = style.getPropertyValue("--bs-gray-light");
 }
 
 // update colors on theme change
 const darkModeMatcher = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)");
 if (darkModeMatcher && darkModeMatcher.addEventListener) {
-	darkModeMatcher.addEventListener("change", updateCssColors);
+  darkModeMatcher.addEventListener("change", updateCssColors);
 }
 // initialize colors
 updateCssColors();

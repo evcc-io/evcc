@@ -10,12 +10,22 @@ const (
 	Influx             = "influx"
 	EEBus              = "eebus"
 	Hems               = "hems"
+	Shm                = "shm"
 	Messaging          = "messaging"
 	ModbusProxy        = "modbusproxy"
+	Ocpp               = "ocpp"
 	Tariffs            = "tariffs"
 	Version            = "version"
+	Config             = "config"
+	Database           = "database"
+	System             = "system"
+	Timezone           = "timezone"
 	Fatal              = "fatal"
-	Startup            = "startup"
+	StartupCompleted   = "startupCompleted" // false: starting, true: started
+	SetupRequired      = "setupRequired"    // initial setup is required (lp = 0), fresh installation
 	Plant              = "plant"
 	Telemetry          = "telemetry"
+	DemoMode           = "demoMode"
+	AuthDisabled       = "authDisabled"
+	AuthProviders      = "authProviders"
 )

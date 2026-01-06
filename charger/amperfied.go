@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2023 premultiply
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -62,7 +62,7 @@ func init() {
 //go:generate go tool decorate -f decorateAmperfied -b *Amperfied -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
 
 // NewAmperfiedFromConfig creates a Amperfied charger from generic config
-func NewAmperfiedFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewAmperfiedFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		modbus.TcpSettings `mapstructure:",squash"`
 		Phases1p3p         bool
@@ -231,14 +231,14 @@ func (wb *Amperfied) MaxCurrentMillis(current float64) error {
 		return fmt.Errorf("invalid current %.1f", current)
 	}
 
-	cur := uint16(10 * current)
+	curr := uint16(10 * current)
 
 	b := make([]byte, 2)
-	binary.BigEndian.PutUint16(b, cur)
+	binary.BigEndian.PutUint16(b, curr)
 
 	_, err := wb.conn.WriteMultipleRegisters(ampRegAmpsConfig, 1, b)
 	if err == nil {
-		wb.current = cur
+		wb.current = curr
 	}
 
 	return err

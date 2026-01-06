@@ -1,7 +1,7 @@
 <template>
 	<footer class="footer" data-testid="footer">
 		<div class="container py-2">
-			<div class="d-flex justify-content-between">
+			<div class="d-flex justify-content-between gap-2">
 				<Version v-bind="version" />
 				<Savings v-bind="savings" />
 			</div>

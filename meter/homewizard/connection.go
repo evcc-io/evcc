@@ -40,7 +40,7 @@ func NewConnection(uri string, usage string, cache time.Duration) (*Connection, 
 	// check and set API version + product type
 	var res ApiResponse
 	if err := c.GetJSON(c.uri, &res); err != nil {
-		return c, err
+		return nil, err
 	}
 	if res.ApiVersion != "v1" {
 		return nil, errors.New("unsupported api version: " + res.ApiVersion)
@@ -67,7 +67,7 @@ func NewConnection(uri string, usage string, cache time.Duration) (*Connection, 
 // Enable implements the api.Charger interface
 func (c *Connection) Enable(enable bool) error {
 	var res StateResponse
-	data := map[string]interface{}{
+	data := map[string]any{
 		"power_on": enable,
 	}
 

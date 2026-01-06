@@ -18,17 +18,8 @@ params:
     choice: ["rs485", "tcpip"]
     baudrate: 9600
     id: 85
-  - name: capacity
-    advanced: true
-  - name: minsoc
-    default: 20
-    type: int
-    advanced: true
-  - name: maxsoc
-    default: 95
-    type: int
-    advanced: true
   - name: maxacpower
+  - preset: battery-params
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -120,7 +111,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 144 # 0x90 Total energy feed to Grid (PV)
+      address: 16 # 0x10 Total energy feed to Grid (Grid Meter)
       type: holding
       decode: uint32
     scale: 0.01
@@ -208,5 +199,5 @@ render: |
               address: 2133 # 0x855 Charge Cut Soc
               type: writemultiple
               decode: uint16
-  capacity: {{ .capacity }} # kWh
+  {{- include "battery-params" . }}
   {{- end }}
