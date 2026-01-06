@@ -143,11 +143,12 @@ func (c *EEBus) readValue(cache *util.Value[float64], update func(entity spineap
 	}
 
 	res, err := update(c.maEntity)
-	if err == nil {
-		cache.Set(res)
+	if err != nil {
+		return 0, err
 	}
 
-	return res, err
+	cache.Set(res)
+	return res, nil
 }
 
 var _ api.Meter = (*EEBus)(nil)
