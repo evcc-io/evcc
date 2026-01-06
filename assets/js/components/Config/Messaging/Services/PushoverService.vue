@@ -4,7 +4,7 @@
 			:serviceType="serviceType"
 			inputName="app"
 			example="azGDORePK8gMaC0QOYAMyEEuzJnyUi"
-			:helpTranslationParameter="{
+			:helpI18nParams="{
 				url: '[pushover.net](https://pushover.net/apps/build)',
 			}"
 		>
@@ -30,7 +30,7 @@
 				size="w-100"
 				class="me-2"
 				required
-				rows
+				:rows="4"
 				@update:model-value="$emit('update:recipients', $event)"
 			/>
 		</MessagingFormRow>
@@ -42,7 +42,7 @@
 				property="devices"
 				type="List"
 				required
-				rows
+				:rows="4"
 				@update:model-value="$emit('update:devices', $event)"
 			/>
 		</MessagingFormRow>

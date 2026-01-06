@@ -16,30 +16,33 @@
 			<ul class="nav nav-tabs mb-4">
 				<li class="nav-item">
 					<a
-						class="nav-link"
+						class="nav-link tabular"
 						:class="{ active: activeEventsTab }"
 						href="#"
 						@click.prevent="activeEventsTab = true"
 					>
-						Events ({{
-							Object.values(values.events ?? {}).filter((e) => !e.disabled).length
-						}})
+						{{ $t("config.messaging.events") }} ({{ eventCount(values) }})
 					</a>
 				</li>
 				<li class="nav-item">
 					<a
-						class="nav-link"
+						class="nav-link tabular"
 						:class="{ active: !activeEventsTab }"
 						href="#"
 						@click.prevent="activeEventsTab = false"
 					>
-						Services ({{ values.services?.length ?? 0 }})
+						{{ $t("config.messaging.services") }} ({{ servicesCount(values) }})
 					</a>
 				</li>
 			</ul>
-			<div v-if="activeEventsTab">
+			<div v-if="activeEventsTab" class="my-5">
 				<div v-if="values.events">
-					<div v-for="event in Object.values(MESSAGING_EVENTS)" :key="event" class="mb-5">
+					<div
+						v-for="(event, index) in Object.values(MESSAGING_EVENTS)"
+						:key="event"
+						class="mb-5"
+					>
+						<hr v-if="index > 0" class="my-5" />
 						<EventItem
 							v-model:disabled="values.events[event].disabled"
 							v-model:title="values.events[event].title"
@@ -50,12 +53,13 @@
 				</div>
 			</div>
 			<div v-else>
-				<div v-for="(s, index) in values.services" :key="index" class="mb-5">
+				<div v-for="(s, index) in values.services" :key="index" class="my-5">
 					<div class="border rounded px-3 pt-4 pb-3 mb-3">
 						<div class="d-lg-block">
 							<h5 class="box-heading">
 								<div class="inner">
-									Messaging #{{ index + 1 }} - {{ capitalizeFirstLetter(s.type) }}
+									{{ $t("config.messaging.serviceName") }} #{{ index + 1 }} -
+									{{ $t(`config.messaging.service.${s.type}.title`) }}
 								</div>
 							</h5>
 						</div>
@@ -105,12 +109,7 @@
 						class="d-flex btn btn-sm btn-outline-secondary border-0 align-items-center gap-2 evcc-gray ms-auto"
 						:aria-label="$t('config.general.remove')"
 						tabindex="0"
-						@click="
-							values.services?.splice(
-								values.services.findIndex((f) => deepEqual(s, f)),
-								1
-							)
-						"
+						@click="removeService(values, s)"
 					>
 						<shopicon-regular-trash
 							size="s"
@@ -119,20 +118,17 @@
 						{{ $t("config.general.remove") }}
 					</button>
 				</div>
-				<hr v-if="values.services && values.services?.length != 0" class="mb-5" />
+				<hr v-if="servicesCount(values) > 0" class="mb-5" />
 				<DropdownButton
 					:actions="dropDownActions"
-					@click="
-						(t: MESSAGING_SERVICE_TYPE) =>
-							(values.services = [...(values.services ?? []), addMessaging(t)])
-					"
+					@click="(t: MESSAGING_SERVICE_TYPE) => addService(values, t)"
 				>
 					<div class="d-flex align-items-center gap-2">
 						<shopicon-regular-plus
 							size="s"
 							class="flex-shrink-0"
 						></shopicon-regular-plus>
-						Add messaging
+						{{ $t("config.messaging.addService") }}
 					</div>
 				</DropdownButton>
 			</div>
@@ -163,7 +159,6 @@ import ShoutService from "./Services/ShoutService.vue";
 import NtfyService from "./Services/NtfyService.vue";
 import EventItem from "./EventItem.vue";
 import DropdownButton from "@/components/Helper/DropdownButton.vue";
-import formatter from "@/mixins/formatter";
 import CustomService from "./Services/CustomService.vue";
 
 export default {
@@ -179,7 +174,6 @@ export default {
 		EventItem,
 		DropdownButton,
 	},
-	mixins: [formatter],
 	emits: ["changed"],
 	data() {
 		return {
@@ -195,11 +189,26 @@ export default {
 		dropDownActions(): SelectActionOption<string>[] {
 			return Object.values(MESSAGING_SERVICE_TYPE).map((s) => ({
 				value: s,
-				name: s,
+				name: this.$t(`config.messaging.service.${s}.title`),
 			}));
 		},
 	},
 	methods: {
+		eventCount(values: Messaging) {
+			return Object.values(values.events ?? {}).filter((e) => !e.disabled).length;
+		},
+		servicesCount(values: Messaging) {
+			return values.services?.length ?? 0;
+		},
+		removeService(values: Messaging, service: MessagingServices) {
+			const index = values.services?.findIndex((f) => deepEqual(service, f));
+			if (index !== undefined && index !== -1) {
+				values.services?.splice(index, 1);
+			}
+		},
+		addService(values: Messaging, type: MESSAGING_SERVICE_TYPE) {
+			values.services = [...(values.services ?? []), this.createService(type)];
+		},
 		getServiceComponent(type: MESSAGING_SERVICE_TYPE) {
 			switch (type) {
 				case MESSAGING_SERVICE_TYPE.PUSHOVER:
@@ -234,7 +243,7 @@ export default {
 
 			return v;
 		},
-		addMessaging(serviceType: MESSAGING_SERVICE_TYPE): MessagingServices {
+		createService(serviceType: MESSAGING_SERVICE_TYPE): MessagingServices {
 			switch (serviceType) {
 				case MESSAGING_SERVICE_TYPE.PUSHOVER:
 					return {
@@ -294,9 +303,5 @@ h5 .inner {
 	font-weight: normal;
 	color: var(--evcc-gray);
 	text-align: center;
-}
-
-.options .select-service {
-	text-decoration: underline;
 }
 </style>

@@ -4,7 +4,7 @@
 			:serviceType="MESSAGING_SERVICE_TYPE.SHOUT"
 			inputName="uri"
 			example="gotify://gotify.example.com:443/AzyoeNS.D4iJLVa/?priority=1"
-			:helpTranslationParameter="{
+			:helpI18nParams="{
 				url: '[containrrr.dev](https://containrrr.dev/shoutrrr/latest/services/overview/)',
 			}"
 		>

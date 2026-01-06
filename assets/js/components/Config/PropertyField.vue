@@ -82,7 +82,7 @@
 		</template>
 	</select>
 	<textarea
-		v-else-if="rows || textarea"
+		v-else-if="textarea"
 		:id="id"
 		v-model="value"
 		class="form-control"
@@ -90,7 +90,7 @@
 		:type="inputType"
 		:placeholder="placeholder"
 		:required="required"
-		:rows="getTextAreaRows"
+		:rows="rows || 4"
 		:disabled="disabled"
 	/>
 	<div v-else class="position-relative">
@@ -152,7 +152,7 @@ export default {
 		modelValue: [String, Number, Boolean, Object],
 		label: String,
 		serviceValues: { type: Array, default: () => [] },
-		rows: Boolean,
+		rows: { type: Number },
 	},
 	emits: ["update:modelValue"],
 	data: () => {
@@ -224,15 +224,7 @@ export default {
 			return this.property === "icon";
 		},
 		textarea() {
-			return ["accessToken", "refreshToken"].includes(this.property);
-		},
-		getTextAreaRows() {
-			switch (this.property) {
-				case "eventMessage":
-					return 2;
-				default:
-					return 4;
-			}
+			return this.rows || ["accessToken", "refreshToken"].includes(this.property);
 		},
 		boolean() {
 			return this.type === "Bool";

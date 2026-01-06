@@ -13,7 +13,9 @@ export default {
 	},
 	computed: {
 		compiledMarkdown() {
-			return snarkdown(this.markdown);
+			const html = snarkdown(this.markdown);
+			// open all links in new window
+			return html.replace(/<a href=/g, '<a target="_blank" rel="noopener noreferrer" href=');
 		},
 	},
 };

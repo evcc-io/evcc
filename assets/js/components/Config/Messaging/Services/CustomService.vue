@@ -4,7 +4,7 @@
 			:serviceType="serviceType"
 			inputName="encoding"
 			optional
-			:helpTranslationParameter="{
+			:helpI18nParams="{
 				send: '`${send}`',
 				format: getEncodingFormat,
 			}"
@@ -23,7 +23,7 @@
 		<MessagingFormRow
 			:serviceType="serviceType"
 			inputName="send"
-			:helpTranslationParameter="{
+			:helpI18nParams="{
 				url: '[docs.evcc.io](https://docs.evcc.io/en/docs/devices/plugins)',
 			}"
 		>

@@ -23,7 +23,7 @@ export default {
 			type: String,
 			required: true,
 		},
-		helpI18nParameter: {
+		helpI18nParams: {
 			type: Object,
 			default: () => {
 				return {};
@@ -43,7 +43,7 @@ export default {
 			return this.$t(this.i18n);
 		},
 		help() {
-			return this.$t(this.i18n + "Help", this.helpI18nParameter);
+			return this.$t(this.i18n + "Help", this.helpI18nParams);
 		},
 	},
 };

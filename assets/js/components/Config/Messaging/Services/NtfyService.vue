@@ -17,7 +17,7 @@
 				property="topics"
 				type="List"
 				required
-				rows
+				:rows="4"
 				@update:model-value="$emit('update:topics', $event)"
 			/>
 		</MessagingFormRow>
@@ -59,7 +59,7 @@
 				id="messagingServiceNtfyTags"
 				:model-value="tags?.split(',')"
 				property="tags"
-				rows
+				:rows="4"
 				type="List"
 				@update:model-value="$emit('update:tags', $event.join())"
 			/>

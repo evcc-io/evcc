@@ -392,7 +392,114 @@
       "yaml": "Geräte aus evcc.yaml sind nicht editierbar."
     },
     "messaging": {
+      "addService": "Service hinzufügen",
       "description": "Benachrichtigungen über Ladevorgänge und andere Ereignisse erhalten.",
+      "event": {
+        "asleep": {
+          "messageDefault": "Ladefreigabe, Fahrzeug {vehicleName} lädt nicht.",
+          "title": "Wenn das Laden pausiert wird",
+          "titleDefault": "Fahrzeug inaktiv"
+        },
+        "connect": {
+          "messageDefault": "Auto verbunden bei {pvPower}kW PV",
+          "title": "Wenn ein Auto angeschlossen wird",
+          "titleDefault": "Auto verbunden"
+        },
+        "disconnect": {
+          "messageDefault": "Auto getrennt nach {connectedDuration}",
+          "title": "Wenn ein Auto getrennt wird",
+          "titleDefault": "Auto getrennt"
+        },
+        "guest": {
+          "messageDefault": "Unbekanntes Fahrzeug, Gast verbunden?",
+          "title": "Wenn ein unbekanntes Auto angeschlossen wird",
+          "titleDefault": "Unbekanntes Fahrzeug"
+        },
+        "planoverrun": {
+          "messageDefault": "{vehicleTitle}: Plan wird überschritten.",
+          "title": "Wenn geplantes Laden überschritten wird",
+          "titleDefault": "Plan überschritten"
+        },
+        "soc": {
+          "messageDefault": "Batterie geladen auf {vehicleSoc}%",
+          "title": "Bei SoC-Aktualisierungen",
+          "titleDefault": "Ladestand aktualisiert"
+        },
+        "start": {
+          "messageDefault": "Laden gestartet im {mode}-Modus.",
+          "title": "Wenn das Laden startet",
+          "titleDefault": "Laden gestartet"
+        },
+        "stop": {
+          "messageDefault": "Laden beendet {chargedEnergy}kWh in {chargeDuration}.",
+          "title": "Wenn das Laden stoppt",
+          "titleDefault": "Laden beendet"
+        }
+      },
+      "eventMessage": "Nachricht",
+      "eventTitle": "Titel",
+      "events": "Ereignisse",
+      "service": {
+        "custom": {
+          "encoding": "Kodierung",
+          "encodingHelp": "Der Wert für {send} wird im Format {format} bereitgestellt.",
+          "formatAndSave": "Formatieren & Speichern",
+          "send": "Plugin zum Senden",
+          "sendHelp": "Definiert das Plugin, das zum Senden des Titels und/oder der Nachricht verwendet wird. Das Plugin muss den Schreibmodus unterstützen. Weitere Details unter {url}.",
+          "title": "Benutzerdefiniert"
+        },
+        "email": {
+          "from": "Von",
+          "fromHelp": "E-Mail-Adresse des Absenders.",
+          "host": "Host",
+          "hostHelp": "Hostname oder IP-Adresse des E-Mail-Servers.",
+          "password": "Passwort",
+          "passwordHelp": "Benutzerpasswort.",
+          "port": "Port",
+          "portHelp": "Portadresse des E-Mail-Servers.",
+          "title": "E-Mail",
+          "to": "An",
+          "toHelp": "E-Mail-Adresse des Empfängers.",
+          "user": "Benutzer",
+          "userHelp": "Benutzername für den E-Mail-Server."
+        },
+        "ntfy": {
+          "authtoken": "Access token",
+          "authtokenHelp": "Wird für den sicheren Zugriff auf den privaten ntfy-Server verwendet.",
+          "host": "Host",
+          "hostHelp": "Hostname oder IP-Adresse des ntfy-Servers.",
+          "priority": "Priorität",
+          "priorityHelp": "Nachrichten haben eine Prioritätsstufe, die bestimmt, wie dringend dein Telefon dich benachrichtigt. Unter Android kannst du Benachrichtigungstöne und Vibrationsmuster basierend auf diesen Prioritätsstufen anpassen. Weitere Details unter {url}.",
+          "tags": "Tags & Emojis",
+          "tagsHelp": "Nachrichten können mit Emojis oder Zeichenketten markiert werden, die im Titel oder in der Nachricht angezeigt werden. Weitere Details unter {url}. Ein Eintrag pro Zeile.",
+          "title": "Ntfy",
+          "topics": "Themen",
+          "topicsHelp": "Ein Eintrag pro Zeile."
+        },
+        "pushover": {
+          "app": "Token",
+          "appHelp": "API-Token der Anwendung. Erhältlich unter {url}.",
+          "devices": "Gerätenamen",
+          "devicesHelp": "Ein Eintrag pro Zeile.",
+          "recipients": "Empfänger",
+          "recipientsHelp": "Benutzerkennungen und Gruppenkennungen können angegeben werden. Ein Eintrag pro Zeile. In Pushover erstellte Gruppen können auf bestimmte Geräte beschränkt werden.",
+          "title": "Pushover"
+        },
+        "shout": {
+          "title": "Shout",
+          "uri": "Uri",
+          "uriHelp": "URL-Format angeben. Eine Übersicht der unterstützten Dienste findest du unter {url}."
+        },
+        "telegram": {
+          "chats": "Chat-IDs",
+          "chatsHelp": "Chat-Kennungen und Gruppenkennungen können angegeben werden. Letztere haben ein Minuszeichen. Ein Eintrag pro Zeile.",
+          "title": "Telegram",
+          "token": "Token",
+          "tokenHelp": "Auch Bot-ID genannt."
+        }
+      },
+      "serviceName": "Service",
+      "services": "Services",
       "title": "Benachrichtigungen"
     },
     "meter": {

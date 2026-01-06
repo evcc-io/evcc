@@ -21,7 +21,7 @@
 				property="chats"
 				type="List"
 				required
-				rows
+				:rows="4"
 				@update:model-value="
 					$emit(
 						'update:chats',

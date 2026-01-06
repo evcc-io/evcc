@@ -1,25 +1,25 @@
 <template>
 	<div>
-		<div class="d-flex align-items-center mb-3">
-			<div class="form-switch me-2">
-				<input
-					:checked="!disabled"
-					class="form-check-input"
-					type="checkbox"
-					role="switch"
-					:data-testid="`event-${type}-switch`"
-					tabindex="0"
-					@change="updateDisabled(($event.target as HTMLInputElement).checked)"
-				/>
-			</div>
-			<h6 class="my-0">{{ $t(`config.messaging.event.${type}.title`) }}</h6>
+		<div class="form-check form-switch mb-4">
+			<input
+				:id="formId('switch')"
+				:checked="!disabled"
+				class="form-check-input form-check-input"
+				type="checkbox"
+				role="switch"
+				:data-testid="`event-${type}-switch`"
+				tabindex="0"
+				@change="updateDisabled(($event.target as HTMLInputElement).checked)"
+			/>
+			<label :for="formId('switch')" class="form-check-label fw-bold">
+				{{ $t(`config.messaging.event.${type}.title`) }}
+			</label>
 		</div>
-		<div class="container"></div>
-		<div class="row mb-3">
-			<div class="col-2 col-form-label">
-				<label :for="formId('title')"> Title </label>
+		<div class="row mb-3" :class="{ 'opacity-25': disabled }">
+			<div class="col-md-2 col-form-label">
+				<label :for="formId('title')">{{ $t("config.messaging.eventTitle") }}</label>
 			</div>
-			<div class="col-10">
+			<div class="col-md-10">
 				<PropertyField
 					:id="formId('title')"
 					:model-value="title"
@@ -31,11 +31,11 @@
 				/>
 			</div>
 		</div>
-		<div class="row">
-			<div class="col-2 col-form-label">
-				<label :for="formId('message')"> Message </label>
+		<div class="row" :class="{ 'opacity-25': disabled }">
+			<div class="col-md-2 col-form-label">
+				<label :for="formId('message')">{{ $t("config.messaging.eventMessage") }}</label>
 			</div>
-			<div class="col-10">
+			<div class="col-md-10">
 				<PropertyField
 					:id="formId('message')"
 					:model-value="message"
@@ -43,8 +43,8 @@
 					type="String"
 					property="eventMessage"
 					:disabled="disabled"
+					:rows="3"
 					required
-					rows
 					@change="updateMessage($event.target.value)"
 				/>
 			</div>

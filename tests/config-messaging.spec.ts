@@ -154,7 +154,7 @@ test.describe("messaging", async () => {
     await modal.getByRole("link", { name: "Services (0)" }).click();
 
     //  Pushover
-    await modal.getByRole("button", { name: "Add messaging" }).click();
+    await modal.getByRole("button", { name: "Add service" }).click();
     await modal.getByRole("link", { name: "Pushover" }).click();
 
     const pushoverBox = modal.getByTestId("service-box-pushover");
@@ -167,7 +167,7 @@ test.describe("messaging", async () => {
     await pushoverDevices.fill(["device1", "device2", "device3"].join("\n"));
 
     //  Telegram
-    await modal.getByRole("button", { name: "Add messaging" }).click();
+    await modal.getByRole("button", { name: "Add service" }).click();
     await modal.getByRole("link", { name: "Telegram" }).click();
 
     const telegramBox = modal.getByTestId("service-box-telegram");
@@ -178,7 +178,7 @@ test.describe("messaging", async () => {
     await telegramRecipients.fill(["12345", "-54321", "111"].join("\n"));
 
     //  Email
-    await modal.getByRole("button", { name: "Add messaging" }).click();
+    await modal.getByRole("button", { name: "Add service" }).click();
     await modal.getByRole("link", { name: "Email" }).click();
 
     const emailBox = modal.getByTestId("service-box-email");
@@ -197,7 +197,7 @@ test.describe("messaging", async () => {
     await emailTo.fill("recipient@mail.com");
 
     //  Shout
-    await modal.getByRole("button", { name: "Add messaging" }).click();
+    await modal.getByRole("button", { name: "Add service" }).click();
     await modal.getByRole("link", { name: "Shout" }).click();
 
     const shoutBox = modal.getByTestId("service-box-shout");
@@ -205,7 +205,7 @@ test.describe("messaging", async () => {
     await shoutUri.fill("gotify://gotify.example.com:443/AzyoeNS.D4iJLVa/?priority=1");
 
     //  Ntfy
-    await modal.getByRole("button", { name: "Add messaging" }).click();
+    await modal.getByRole("button", { name: "Add service" }).click();
     await modal.getByRole("link", { name: "Ntfy" }).click();
 
     const ntfyBox = modal.getByTestId("service-box-ntfy");
@@ -222,7 +222,7 @@ test.describe("messaging", async () => {
     await ntfyTagsAndEmojis.fill(["+1", "blue_car"].join("\n"));
 
     //  Custom
-    await modal.getByRole("button", { name: "Add messaging" }).click();
+    await modal.getByRole("button", { name: "Add service" }).click();
     await modal.getByRole("link", { name: "Custom" }).click();
 
     const customBox = modal.getByTestId("service-box-custom");
