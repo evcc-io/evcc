@@ -184,6 +184,8 @@ func (c *EEBus) readPhases(cache *util.Value[[]float64], update func(entity spin
 		res = append(res, 0, 0)
 	} else if len(res) == 2 {
 		res = append(res, 0)
+	} else if len(res) != 3 {
+		return 0, 0, 0, fmt.Errorf("invalid phases: %v", res)
 	}
 
 	cache.Set(res)
