@@ -1,0 +1,28 @@
+site:
+  title: Home EV Charging
+  meters:
+    grid: ecoflow_stream_grid
+
+chargers:
+  - name: ecoflow_stream
+    type: ecoflow-stream
+    uri: https://api-e.ecoflow.com
+    sn: "YOUR_DEVICE_SERIAL_NUMBER"
+    accessKey: "YOUR_ACCESS_KEY"
+    secretKey: "YOUR_SECRET_KEY"
+
+meters:
+  - name: ecoflow_stream_pv
+    type: ecoflow-stream-pv
+    uri: https://api-e.ecoflow.com
+    sn: "YOUR_DEVICE_SERIAL_NUMBER"
+
+  - name: ecoflow_stream_grid
+    type: ecoflow-stream-grid
+    uri: https://api-e.ecoflow.com
+    sn: "YOUR_DEVICE_SERIAL_NUMBER"
+
+  - name: ecoflow_stream_battery
+    type: ecoflow-stream-battery
+    uri: https://api-e.ecoflow.com
+    sn: "YOUR_DEVICE_SERIAL_NUMBER"
