@@ -893,6 +893,8 @@
       "repeating": "wiederholend",
       "repeatingPlans": "Wiederholende Pläne",
       "selectAll": "Alle wählen",
+      "strategyDisabledDescription": "Diese Optionen sind nur verfügbar, wenn ein dynamischer Netzpreis oder CO₂-Tarif konfiguriert ist.",
+      "strategyDisabledHint": "Hinweis:",
       "strategySettings": "Strategie-Einstellungen",
       "time": "Zeit",
       "title": "Plan",

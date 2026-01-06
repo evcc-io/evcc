@@ -8,10 +8,19 @@
 							{{ $t("main.chargingPlan.optimization.label") }}
 						</label>
 						<div class="col-7 col-sm-12">
+							<input
+								v-if="disabled"
+								:id="formId('continuous')"
+								class="form-select"
+								disabled
+								value="---"
+							/>
 							<select
+								v-else
 								:id="formId('continuous')"
 								v-model="localContinuous"
 								class="form-select"
+								:disabled="disabled"
 								@change="updateStrategy"
 							>
 								<option :value="false">
@@ -30,10 +39,19 @@
 							{{ $t("main.chargingPlan.precondition.label") }}
 						</label>
 						<div class="col-7 col-sm-12">
+							<input
+								v-if="disabled"
+								:id="formId('precondition')"
+								class="form-select"
+								disabled
+								value="---"
+							/>
 							<select
+								v-else
 								:id="formId('precondition')"
 								v-model="localPrecondition"
 								class="form-select"
+								:disabled="disabled"
 								@change="updateStrategy"
 							>
 								<option :value="0">
@@ -49,6 +67,12 @@
 							</select>
 						</div>
 					</div>
+				</div>
+				<div v-if="disabled" class="small text-muted mb-4 col-sm-12 col-lg-6 offset-lg-3">
+					<strong class="text-primary">
+						{{ $t("main.chargingPlan.strategyDisabledHint") }}
+					</strong>
+					{{ $t("main.chargingPlan.strategyDisabledDescription") }}
 				</div>
 			</div>
 		</div>
@@ -68,6 +92,7 @@ export default defineComponent({
 		show: Boolean,
 		precondition: { type: Number, default: 0 },
 		continuous: { type: Boolean, default: false },
+		disabled: Boolean,
 	},
 	emits: ["update"],
 	data() {

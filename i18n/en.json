@@ -893,6 +893,8 @@
       "repeating": "repeating",
       "repeatingPlans": "Repeating plans",
       "selectAll": "Select all",
+      "strategyDisabledDescription": "These options are only available when a dynamic grid prices or CO₂ tariff is configured.",
+      "strategyDisabledHint": "Note:",
       "strategySettings": "Strategy settings",
       "time": "Time",
       "title": "Plan",
