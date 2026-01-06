@@ -46,9 +46,6 @@ func (m *mockGpio) Close() {
 }
 
 func (m *mockGpio) Pin(p int) gpioPin {
-	if m.pins == nil {
-		m.pins = make(map[int]mockGpioPin)
-	}
 	if _, ok := m.pins[p]; !ok {
 		m.pins[p] = mockGpioPin{pin: p, ops: &m.ops}
 	}
@@ -60,7 +57,7 @@ func TestOpenwbNativeMilliampsRegulation(t *testing.T) {
 	require.NoError(t, err)
 	defer l.Close()
 
-	srv, _ := mbserver.New(&modbus.DevicesSimulatorHandler{
+	srv, err := mbserver.New(&modbus.DevicesSimulatorHandler{
 		Devices: map[uint8]struct {
 			Coils    map[uint16]bool
 			Discrete map[uint16]bool
@@ -77,6 +74,7 @@ func TestOpenwbNativeMilliampsRegulation(t *testing.T) {
 			},
 		},
 	})
+	require.NoError(t, err)
 
 	require.NoError(t, srv.Start(l))
 	defer func() { _ = srv.Stop() }()
@@ -84,9 +82,8 @@ func TestOpenwbNativeMilliampsRegulation(t *testing.T) {
 	wb, err := NewOpenWbNative(t.Context(), l.Addr().String(), "", "", 0, modbusutils.Tcp, 1, true, "", 0, 1, &mockGpio{})
 	require.NoError(t, err)
 
-	if _, ok := wb.(api.ChargerEx); !ok {
-		assert.Fail(t, "missing milliamp support")
-	}
+	_, ok := wb.(api.ChargerEx)
+	assert.True(t, ok, "missing milliamp support")
 }
 
 func TestOpenwbNativeFirmwareDoesNotSupportMillampRegulation(t *testing.T) {
@@ -94,7 +91,7 @@ func TestOpenwbNativeFirmwareDoesNotSupportMillampRegulation(t *testing.T) {
 	require.NoError(t, err)
 	defer l.Close()
 
-	srv, _ := mbserver.New(&modbus.DevicesSimulatorHandler{
+	srv, err := mbserver.New(&modbus.DevicesSimulatorHandler{
 		Devices: map[uint8]struct {
 			Coils    map[uint16]bool
 			Discrete map[uint16]bool
@@ -111,6 +108,7 @@ func TestOpenwbNativeFirmwareDoesNotSupportMillampRegulation(t *testing.T) {
 			},
 		},
 	})
+	require.NoError(t, err)
 
 	require.NoError(t, srv.Start(l))
 	defer func() { _ = srv.Stop() }()
@@ -118,9 +116,8 @@ func TestOpenwbNativeFirmwareDoesNotSupportMillampRegulation(t *testing.T) {
 	wb, err := NewOpenWbNative(t.Context(), l.Addr().String(), "", "", 0, modbusutils.Tcp, 1, true, "", 0, 1, &mockGpio{})
 	require.NoError(t, err)
 
-	if _, ok := wb.(api.ChargerEx); ok {
-		assert.Fail(t, "milliamp support unexpected")
-	}
+	_, ok := wb.(api.ChargerEx)
+	assert.False(t, ok, "milliamp support unexpected")
 }
 
 func TestGpios(t *testing.T) {
@@ -128,7 +125,7 @@ func TestGpios(t *testing.T) {
 	require.NoError(t, err)
 	defer l.Close()
 
-	srv, _ := mbserver.New(&modbus.DevicesSimulatorHandler{
+	srv, err := mbserver.New(&modbus.DevicesSimulatorHandler{
 		Devices: map[uint8]struct {
 			Coils    map[uint16]bool
 			Discrete map[uint16]bool
@@ -145,6 +142,7 @@ func TestGpios(t *testing.T) {
 			},
 		},
 	})
+	require.NoError(t, err)
 
 	require.NoError(t, srv.Start(l))
 	defer func() { _ = srv.Stop() }()
@@ -156,9 +154,8 @@ func TestGpios(t *testing.T) {
 	// Check initialization of GPIO pins to output happened
 	assert.Equal(t, []string{"Setting pin 25 to output", "Setting pin 5 to output", "Setting pin 26 to output"}, gpio.ops, "GPIO setup wrong!")
 
-	if _, ok := wb.(api.PhaseSwitcher); !ok {
-		assert.Fail(t, "missing phase switch support")
-	}
+	_, ok := wb.(api.PhaseSwitcher)
+	assert.True(t, ok, "missing phase switch support")
 
 	ps := wb.(api.PhaseSwitcher)
 	require.NoError(t, ps.Phases1p3p(3))
@@ -167,9 +164,8 @@ func TestGpios(t *testing.T) {
 	require.NoError(t, ps.Phases1p3p(1))
 	assert.Equal(t, []string{"Setting pin 25 to high", "Setting pin 5 to high", "Setting pin 5 to low", "Setting pin 25 to low"}, gpio.ops, "GPIO pin setting for one phase is incorrect!")
 
-	if _, ok := wb.(api.Resurrector); !ok {
-		assert.Fail(t, "missing resurrector support")
-	}
+	_, ok = wb.(api.Resurrector)
+	assert.True(t, ok, "missing resurrector support")
 
 	rs := wb.(api.Resurrector)
 	require.NoError(t, rs.WakeUp())

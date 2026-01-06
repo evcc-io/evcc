@@ -13,84 +13,80 @@ type DevicesSimulatorHandler struct {
 	}
 }
 
-func (th *DevicesSimulatorHandler) HandleCoils(req *mbserver.CoilsRequest) (res []bool, err error) {
+func (th *DevicesSimulatorHandler) HandleCoils(req *mbserver.CoilsRequest) ([]bool, error) {
 	device, ok := th.Devices[req.UnitId]
 	if !ok {
 		// only reply to known unit IDs
-		err = mbserver.ErrIllegalFunction
-		return
+		return nil, mbserver.ErrIllegalFunction
 	}
 
+	var res []bool
 	for i := 0; i < int(req.Quantity); i++ {
 		address := req.Addr + uint16(i)
 		if _, ok := device.Coils[address]; !ok {
-			err = mbserver.ErrIllegalDataAddress
-			return
+			return nil, mbserver.ErrIllegalDataAddress
 		}
 		if req.IsWrite {
 			device.Coils[address] = req.Args[i]
 		}
 		res = append(res, device.Coils[address])
 	}
-	return
+	return res, nil
 }
 
-func (th *DevicesSimulatorHandler) HandleDiscreteInputs(req *mbserver.DiscreteInputsRequest) (res []bool, err error) {
+func (th *DevicesSimulatorHandler) HandleDiscreteInputs(req *mbserver.DiscreteInputsRequest) ([]bool, error) {
 	device, ok := th.Devices[req.UnitId]
 	if !ok {
 		// only reply to known unit IDs
-		err = mbserver.ErrIllegalFunction
-		return
+		return nil, mbserver.ErrIllegalFunction
 	}
 
+	var res []bool
 	for i := 0; i < int(req.Quantity); i++ {
 		address := req.Addr + uint16(i)
 		if _, ok := device.Discrete[address]; !ok {
-			err = mbserver.ErrIllegalDataAddress
-			return
+			return nil, mbserver.ErrIllegalDataAddress
 		}
 		res = append(res, device.Discrete[address])
 	}
-	return
+	return res, nil
 }
 
-func (th *DevicesSimulatorHandler) HandleHoldingRegisters(req *mbserver.HoldingRegistersRequest) (res []uint16, err error) {
+func (th *DevicesSimulatorHandler) HandleHoldingRegisters(req *mbserver.HoldingRegistersRequest) ([]uint16, error) {
 	device, ok := th.Devices[req.UnitId]
 	if !ok {
 		// only reply to known unit IDs
-		err = mbserver.ErrIllegalFunction
-		return
+		return nil, mbserver.ErrIllegalFunction
 	}
 
+	var res []uint16
 	for i := 0; i < int(req.Quantity); i++ {
 		address := req.Addr + uint16(i)
 		if _, ok := device.Holding[address]; !ok {
-			err = mbserver.ErrIllegalDataAddress
-			return
+			return nil, mbserver.ErrIllegalDataAddress
 		}
 		if req.IsWrite {
 			device.Holding[address] = req.Args[i]
 		}
 		res = append(res, device.Holding[address])
 	}
-	return
+	return res, nil
 }
 
-func (th *DevicesSimulatorHandler) HandleInputRegisters(req *mbserver.InputRegistersRequest) (res []uint16, err error) {
+func (th *DevicesSimulatorHandler) HandleInputRegisters(req *mbserver.InputRegistersRequest) ([]uint16, error) {
 	device, ok := th.Devices[req.UnitId]
 	if !ok {
 		// only reply to known unit IDs
-		err = mbserver.ErrIllegalFunction
-		return
+		return nil, mbserver.ErrIllegalFunction
 	}
 
+	var res []uint16
 	for i := 0; i < int(req.Quantity); i++ {
 		address := req.Addr + uint16(i)
 		if _, ok := device.Input[address]; !ok {
-			err = mbserver.ErrIllegalDataAddress
-			return
+			return nil, mbserver.ErrIllegalDataAddress
 		}
 		res = append(res, device.Input[address])
 	}
-	return
+	return res, nil
 }

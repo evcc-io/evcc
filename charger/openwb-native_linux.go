@@ -81,7 +81,7 @@ func NewOpenWbNativeFromConfig(ctx context.Context, other map[string]any) (api.C
 		return nil, fmt.Errorf("invalid connector value: %d", cc.Connector)
 	}
 	if cc.CpWait < minCpWaitTime {
-		return nil, fmt.Errorf("invalid cpwait value: %s, needs to be greater than %s", cc.CpWait.String(), minCpWaitTime)
+		return nil, fmt.Errorf("invalid cpwait value: %v, needs to be greater than %s", cc.CpWait, minCpWaitTime)
 	}
 
 	return NewOpenWbNative(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID, cc.Phases1p3p, cc.RfId, cc.CpWait, cc.Connector, gpioImpl{})
