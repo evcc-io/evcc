@@ -10,19 +10,29 @@ chargers:
     sn: "YOUR_DEVICE_SERIAL_NUMBER"
     accessKey: "YOUR_ACCESS_KEY"
     secretKey: "YOUR_SECRET_KEY"
+    usage: charger
 
 meters:
   - name: ecoflow_stream_pv
-    type: ecoflow-stream-pv
+    type: ecoflow-stream
     uri: https://api-e.ecoflow.com
     sn: "YOUR_DEVICE_SERIAL_NUMBER"
+    accessKey: "YOUR_ACCESS_KEY"
+    secretKey: "YOUR_SECRET_KEY"
+    usage: pv
 
   - name: ecoflow_stream_grid
-    type: ecoflow-stream-grid
+    type: ecoflow-stream
     uri: https://api-e.ecoflow.com
     sn: "YOUR_DEVICE_SERIAL_NUMBER"
+    accessKey: "YOUR_ACCESS_KEY"
+    secretKey: "YOUR_SECRET_KEY"
+    usage: grid
 
   - name: ecoflow_stream_battery
-    type: ecoflow-stream-battery
+    type: ecoflow-stream
     uri: https://api-e.ecoflow.com
     sn: "YOUR_DEVICE_SERIAL_NUMBER"
+    accessKey: "YOUR_ACCESS_KEY"
+    secretKey: "YOUR_SECRET_KEY"
+    usage: battery

@@ -11,24 +11,20 @@ import (
 )
 
 func init() {
-	registry.AddCtx("ecoflow-stream-pv", NewEcoflowStreamPVFromConfig)
-	registry.AddCtx("ecoflow-stream-grid", NewEcoflowStreamGridFromConfig)
-	// Battery implements the Meter interface, so we can register it as a meter
-	registry.AddCtx("ecoflow-stream-battery", func(ctx context.Context, other map[string]interface{}) (api.Meter, error) {
-		bat, err := NewEcoflowStreamBatteryFromConfig(ctx, other)
-		return bat.(api.Meter), err
-	})
+	registry.AddCtx("ecoflow-stream", NewEcoFlowStreamFromConfig)
 }
 
-// NewEcoflowStreamPVFromConfig creates EcoFlow Stream PV generation meter
-func NewEcoflowStreamPVFromConfig(ctx context.Context, other map[string]interface{}) (api.Meter, error) {
+// NewEcoFlowStreamFromConfig creates EcoFlow Stream meter from config
+func NewEcoFlowStreamFromConfig(ctx context.Context, other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
 		URI       string        `mapstructure:"uri"`
 		SN        string        `mapstructure:"sn"`
 		AccessKey string        `mapstructure:"accessKey"`
 		SecretKey string        `mapstructure:"secretKey"`
+		Usage     string        `mapstructure:"usage"`
 		Cache     time.Duration `mapstructure:"cache"`
 	}{
+		Usage: "grid",
 		Cache: 30 * time.Second,
 	}
 
@@ -37,69 +33,28 @@ func NewEcoflowStreamPVFromConfig(ctx context.Context, other map[string]interfac
 	}
 
 	if cc.URI == "" || cc.SN == "" || cc.AccessKey == "" || cc.SecretKey == "" {
-		return nil, fmt.Errorf("ecoflow-stream-pv: missing uri, sn, accessKey or secretKey")
+		return nil, fmt.Errorf("ecoflow-stream: missing uri, sn, accessKey or secretKey")
 	}
 
-	parent, err := charger.NewEcoflowStream(cc.URI, cc.SN, cc.AccessKey, cc.SecretKey, cc.Cache)
+	// Create device with specified usage type
+	device, err := charger.NewEcoFlowStream(cc.URI, cc.SN, cc.AccessKey, cc.SecretKey, cc.Usage, cc.Cache)
 	if err != nil {
 		return nil, err
 	}
 
-	return charger.NewEcoflowStreamPV(parent.(*charger.EcoflowStream), cc.Cache), nil
+	// For battery usage, wrap in battery interface
+	if cc.Usage == "battery" {
+		return &EcoFlowStreamBattery{device}, nil
+	}
+
+	// For other usages (pv, grid), return as meter
+	return device, nil
 }
 
-// NewEcoflowStreamGridFromConfig creates EcoFlow Stream grid meter
-func NewEcoflowStreamGridFromConfig(ctx context.Context, other map[string]interface{}) (api.Meter, error) {
-	cc := struct {
-		URI       string        `mapstructure:"uri"`
-		SN        string        `mapstructure:"sn"`
-		AccessKey string        `mapstructure:"accessKey"`
-		SecretKey string        `mapstructure:"secretKey"`
-		Cache     time.Duration `mapstructure:"cache"`
-	}{
-		Cache: 30 * time.Second,
-	}
-
-	if err := util.DecodeOther(other, &cc); err != nil {
-		return nil, err
-	}
-
-	if cc.URI == "" || cc.SN == "" || cc.AccessKey == "" || cc.SecretKey == "" {
-		return nil, fmt.Errorf("ecoflow-stream-grid: missing uri, sn, accessKey or secretKey")
-	}
-
-	parent, err := charger.NewEcoflowStream(cc.URI, cc.SN, cc.AccessKey, cc.SecretKey, cc.Cache)
-	if err != nil {
-		return nil, err
-	}
-
-	return charger.NewEcoflowStreamGrid(parent.(*charger.EcoflowStream), cc.Cache), nil
+// EcoFlowStreamBattery wraps EcoFlowStream for battery interface
+type EcoFlowStreamBattery struct {
+	*charger.EcoFlowStream
 }
 
-// NewEcoflowStreamBatteryFromConfig creates EcoFlow Stream battery meter
-func NewEcoflowStreamBatteryFromConfig(ctx context.Context, other map[string]interface{}) (api.Battery, error) {
-	cc := struct {
-		URI       string        `mapstructure:"uri"`
-		SN        string        `mapstructure:"sn"`
-		AccessKey string        `mapstructure:"accessKey"`
-		SecretKey string        `mapstructure:"secretKey"`
-		Cache     time.Duration `mapstructure:"cache"`
-	}{
-		Cache: 30 * time.Second,
-	}
-
-	if err := util.DecodeOther(other, &cc); err != nil {
-		return nil, err
-	}
-
-	if cc.URI == "" || cc.SN == "" || cc.AccessKey == "" || cc.SecretKey == "" {
-		return nil, fmt.Errorf("ecoflow-stream-battery: missing uri, sn, accessKey or secretKey")
-	}
-
-	parent, err := charger.NewEcoflowStream(cc.URI, cc.SN, cc.AccessKey, cc.SecretKey, cc.Cache)
-	if err != nil {
-		return nil, err
-	}
-
-	return charger.NewEcoflowStreamBattery(parent.(*charger.EcoflowStream), cc.Cache), nil
-}
+var _ api.Meter = (*EcoFlowStreamBattery)(nil)
+var _ api.Battery = (*EcoFlowStreamBattery)(nil)
