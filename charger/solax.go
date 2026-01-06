@@ -68,7 +68,7 @@ const (
 	solaxModeFast = 1
 	solaxModeECO  = 2
 
-	// firmware threshold for phase switching support
+	// minumum firmware version for phase switching support
 	solaxFirmwarePhaseSwitching = 611
 )
 
@@ -135,7 +135,7 @@ func NewSolax(ctx context.Context, uri, device, comset string, baudrate int, pro
 
 	if b, err := wb.conn.ReadInputRegisters(solaxRegFirmwareVersion, 1); err == nil {
 		v := encoding.Uint16(b)
-		if !wb.isLegacyHw && v > solaxFirmwarePhaseSwitching {
+		if !wb.isLegacyHw && v >= solaxFirmwarePhaseSwitching {
 			phases1p3p = wb.phases1p3p
 			phasesG = wb.getPhases
 			soc = wb.soc
@@ -326,7 +326,7 @@ func (wb *Solax) Diagnose() {
 
 		// Collect all set bits
 		var setBits []string
-		for bitIndex := 0; bitIndex < 32; bitIndex++ {
+		for bitIndex := range 32 {
 			if (code & (1 << bitIndex)) != 0 { // Check if the bit is set
 				setBits = append(setBits, fmt.Sprintf("%d", bitIndex+1)) // Add the 1-based bit number
 			}
