@@ -1,6 +1,8 @@
 package meter
 
 import (
+	"slices"
+
 	eebusapi "github.com/enbility/eebus-go/api"
 	"github.com/enbility/eebus-go/usecases/eg/lpc"
 	"github.com/enbility/eebus-go/usecases/eg/lpp"
@@ -19,13 +21,13 @@ func (c *EEBus) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spineapi.E
 	case mpc.UseCaseSupportUpdate, mgcp.UseCaseSupportUpdate:
 		c.maUseCaseSupportUpdate(entity)
 	case mpc.DataUpdatePower, mgcp.DataUpdatePower:
-		c.maDataUpdatePower(entity)
+		c.maAssertEntity(entity, c.maDataUpdatePower)
 	case mpc.DataUpdateEnergyConsumed, mgcp.DataUpdateEnergyConsumed:
-		c.maDataUpdateEnergyConsumed(entity)
+		c.maAssertEntity(entity, c.maDataUpdateEnergyConsumed)
 	case mpc.DataUpdateCurrentsPerPhase, mgcp.DataUpdateCurrentPerPhase:
-		c.maDataUpdateCurrentPerPhase(entity)
+		c.maAssertEntity(entity, c.maDataUpdateCurrentPerPhase)
 	case mpc.DataUpdateVoltagePerPhase, mgcp.DataUpdateVoltagePerPhase:
-		c.maDataUpdateVoltagePerPhase(entity)
+		c.maAssertEntity(entity, c.maDataUpdateVoltagePerPhase)
 
 	// Energy Guard - LPC
 	case lpc.UseCaseSupportUpdate:
@@ -49,7 +51,18 @@ func (c *EEBus) maUseCaseSupportUpdate(entity spineapi.EntityRemoteInterface) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	c.maEntity = entity
+	// use most specific selector
+	if c.maEntity == nil || len(entity.Address().Entity) < len(c.maEntity.Address().Entity) {
+		c.maEntity = entity
+	}
+}
+
+// maAssertEntity ignores foreign updates
+func (c *EEBus) maAssertEntity(entity spineapi.EntityRemoteInterface, update func(entity spineapi.EntityRemoteInterface)) {
+	if c.maEntity == nil || !slices.Equal(entity.Address().Entity, c.maEntity.Address().Entity) {
+		return
+	}
+	update(entity)
 }
 
 func (c *EEBus) maDataUpdatePower(entity spineapi.EntityRemoteInterface) {
@@ -99,7 +112,10 @@ func (c *EEBus) egLpcUseCaseSupportUpdate(entity spineapi.EntityRemoteInterface)
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	c.egLpcEntity = entity
+	// use most specific selector
+	if c.egLpcEntity == nil || len(entity.Address().Entity) < len(c.egLpcEntity.Address().Entity) {
+		c.egLpcEntity = entity
+	}
 }
 
 func (c *EEBus) egLpcDataUpdateLimit(entity spineapi.EntityRemoteInterface) {
@@ -123,7 +139,10 @@ func (c *EEBus) egLppUseCaseSupportUpdate(entity spineapi.EntityRemoteInterface)
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	c.egLppEntity = entity
+	// use most specific selector
+	if c.egLppEntity == nil || len(entity.Address().Entity) < len(c.egLppEntity.Address().Entity) {
+		c.egLppEntity = entity
+	}
 }
 
 func (c *EEBus) egLppDataUpdateLimit(entity spineapi.EntityRemoteInterface) {
