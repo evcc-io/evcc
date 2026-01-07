@@ -1,162 +1,271 @@
 package charger
 
 import (
-	"bytes"
-	"encoding/json"
+	"context"
 	"fmt"
 	"net/http"
+	"strings"
+	"time"
 
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/transport"
 )
 
-// EcoflowPowerstream represents the Ecoflow Powerstream inverter
-type EcoflowPowerstream struct {
-	uri    string
-	sn     string
-	client *request.Helper
+// https://developer-eu.ecoflow.com/us/document/wn511
+
+// EcoFlowPowerStream represents an EcoFlow PowerStream micro-inverter
+type EcoFlowPowerStream struct {
+	*request.Helper
+	log       *util.Logger
+	uri       string
+	sn        string // device serial number
+	accessKey string // API access key
+	secretKey string // API secret key for signing
+	usage     string // charger, pv, grid, battery
+	cache     time.Duration
+	dataG     util.Cacheable[QuotaAllDataPowerStream]
 }
 
-// NewEcoflowPowerstream creates a new Ecoflow Powerstream charger
-func NewEcoflowPowerstream(uri, sn string) *EcoflowPowerstream {
-	return &EcoflowPowerstream{
-		uri:    uri,
-		sn:     sn,
-		client: request.NewHelper(nil),
-	}
+// QuotaAllDataPowerStream represents the full device status from PowerStream API
+type QuotaAllDataPowerStream struct {
+	// Power values (from heartbeat)
+	Pv1InputWatts  float64 `json:"pv1InputWatts"`  // PV1 input power (W)
+	Pv2InputWatts  float64 `json:"pv2InputWatts"`  // PV2 input power (W)
+	BatInputWatts  float64 `json:"batInputWatts"`  // Battery input/output power (W), positive=discharge, negative=charge
+	BatInputCur    int     `json:"batInputCur"`    // Battery current (0.1A), positive=discharge, negative=charge
+	InvOutputWatts float64 `json:"invOutputWatts"` // Inverter AC output power (W)
+	BatSoc         int     `json:"batSoc"`         // Battery SOC (%)
+	SupplyPriority int     `json:"supplyPriority"` // Power supply priority (0=supply, 1=storage)
+	InvOnOff       int     `json:"invOnOff"`       // Inverter on/off (0=off, 1=on)
+	PermanentWatts int     `json:"permanentWatts"` // Custom load power (W)
+	LowerLimit     int     `json:"lowerLimit"`     // Battery discharge limit (%)
+	UpperLimit     int     `json:"upperLimit"`     // Battery charge limit (%)
+	FeedProtect    int     `json:"feedProtect"`    // Feed-in protection (0=off, 1=on)
 }
 
-// SetSupplyPriority sets the power supply priority
-func (c *EcoflowPowerstream) SetSupplyPriority(priority int) error {
-	data := map[string]interface{}{
-		"sn":      c.sn,
-		"cmdCode": "WN511_SET_SUPPLY_PRIORITY_PACK",
-		"params": map[string]interface{}{
-			"supplyPriority": priority,
-		},
-	}
-	return c.sendCommand(data)
+func init() {
+	registry.AddCtx("ecoflow-powerstream", NewEcoFlowPowerStreamFromConfig)
 }
 
-// GetSupplyPriority gets the power supply priority
-func (c *EcoflowPowerstream) GetSupplyPriority() (int, error) {
-	data := map[string]interface{}{
-		"sn": c.sn,
-		"params": map[string]interface{}{
-			"quotas": []string{"20_1.supplyPriority"},
-		},
+// NewEcoFlowPowerStream creates an EcoFlow PowerStream device
+func NewEcoFlowPowerStream(uri, sn, accessKey, secretKey, usage string, cache time.Duration) (*EcoFlowPowerStream, error) {
+	if uri == "" || sn == "" || accessKey == "" || secretKey == "" {
+		return nil, fmt.Errorf("ecoflow-powerstream: missing uri, sn, accessKey or secretKey")
 	}
-	var res struct {
-		Code    string `json:"code"`
-		Message string `json:"message"`
-		Data    struct {
-			SupplyPriority int `json:"20_1.supplyPriority"`
-		} `json:"data"`
+
+	log := util.NewLogger("ecoflow-powerstream").Redact(accessKey, secretKey)
+
+	device := &EcoFlowPowerStream{
+		Helper:    request.NewHelper(log),
+		log:       log,
+		uri:       strings.TrimSuffix(uri, "/"),
+		sn:        sn,
+		accessKey: accessKey,
+		secretKey: secretKey,
+		usage:     strings.ToLower(usage),
+		cache:     cache,
 	}
-	err := c.getCommand(data, &res)
-	return res.Data.SupplyPriority, err
+
+	// Set authorization header using custom transport with HMAC-SHA256 signature
+	device.Client.Transport = &authTransportPowerStream{
+		base:      transport.Default(),
+		accessKey: accessKey,
+		secretKey: secretKey,
+	}
+
+	// Create cached data fetcher
+	device.dataG = util.ResettableCached(device.getQuotaAll, cache)
+
+	return device, nil
 }
 
-// GetSolarPower gets the current solar power
-func (c *EcoflowPowerstream) GetSolarPower() (float64, error) {
-	data := map[string]interface{}{
-		"sn": c.sn,
-		"params": map[string]interface{}{
-			"quotas": []string{"20_1.solarPower"},
-		},
+// NewEcoFlowPowerStreamFromConfig creates EcoFlow PowerStream device from config
+func NewEcoFlowPowerStreamFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+	cc := struct {
+		URI       string        `mapstructure:"uri"`
+		SN        string        `mapstructure:"sn"`
+		AccessKey string        `mapstructure:"accessKey"`
+		SecretKey string        `mapstructure:"secretKey"`
+		Usage     string        `mapstructure:"usage"`
+		Cache     time.Duration `mapstructure:"cache"`
+	}{
+		Usage: "charger",
+		Cache: 30 * time.Second,
 	}
-	var res struct {
-		Code    string `json:"code"`
-		Message string `json:"message"`
-		Data    struct {
-			SolarPower float64 `json:"20_1.solarPower"`
-		} `json:"data"`
-	}
-	err := c.getCommand(data, &res)
-	return res.Data.SolarPower, err
-}
 
-// GetBatteryStatus gets the current battery status
-func (c *EcoflowPowerstream) GetBatteryStatus() (float64, error) {
-	data := map[string]interface{}{
-		"sn": c.sn,
-		"params": map[string]interface{}{
-			"quotas": []string{"20_1.batteryStatus"},
-		},
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
 	}
-	var res struct {
-		Code    string `json:"code"`
-		Message string `json:"message"`
-		Data    struct {
-			BatteryStatus float64 `json:"20_1.batteryStatus"`
-		} `json:"data"`
-	}
-	err := c.getCommand(data, &res)
-	return res.Data.BatteryStatus, err
-}
 
-// SetBatteryCharge sets the battery charge level
-func (c *EcoflowPowerstream) SetBatteryCharge(chargeLevel int) error {
-	data := map[string]interface{}{
-		"sn":      c.sn,
-		"cmdCode": "WN511_SET_BATTERY_CHARGE",
-		"params": map[string]interface{}{
-			"chargeLevel": chargeLevel,
-		},
+	if cc.URI == "" || cc.SN == "" || cc.AccessKey == "" || cc.SecretKey == "" {
+		return nil, fmt.Errorf("ecoflow-powerstream: missing uri, sn, accessKey or secretKey")
 	}
-	return c.sendCommand(data)
-}
 
-// LockBattery locks the battery
-func (c *EcoflowPowerstream) LockBattery() error {
-	data := map[string]interface{}{
-		"sn":      c.sn,
-		"cmdCode": "WN511_LOCK_BATTERY",
-	}
-	return c.sendCommand(data)
-}
-
-// EnableGridCharging enables grid charging
-func (c *EcoflowPowerstream) EnableGridCharging(enable bool) error {
-	data := map[string]interface{}{
-		"sn":      c.sn,
-		"cmdCode": "WN511_SET_GRID_CHARGING",
-		"params": map[string]interface{}{
-			"enable": enable,
-		},
-	}
-	return c.sendCommand(data)
-}
-
-// sendCommand sends a command to the Ecoflow Powerstream inverter
-func (c *EcoflowPowerstream) sendCommand(data map[string]interface{}) error {
-	body, err := json.Marshal(data)
+	device, err := NewEcoFlowPowerStream(cc.URI, cc.SN, cc.AccessKey, cc.SecretKey, cc.Usage, cc.Cache)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	req, err := http.NewRequest(http.MethodPut, fmt.Sprintf("%s/iot-open/sign/device/quota", c.uri), bytes.NewReader(body))
-	if err != nil {
-		return err
-	}
-	req.Header.Set("Content-Type", "application/json")
-	_, err = c.client.Do(req)
-	return err
+
+	return device, nil
 }
 
-// getCommand sends a GET request to the Ecoflow Powerstream inverter
-func (c *EcoflowPowerstream) getCommand(data map[string]interface{}, res interface{}) error {
-	body, err := json.Marshal(data)
-	if err != nil {
-		return err
+// getQuotaAll fetches device quota data from API
+func (d *EcoFlowPowerStream) getQuotaAll() (QuotaAllDataPowerStream, error) {
+	uri := fmt.Sprintf("%s/iot-open/sign/device/quota/all?sn=%s", d.uri, d.sn)
+
+	type response struct {
+		Code    string                  `json:"code"`
+		Message string                  `json:"message"`
+		Data    QuotaAllDataPowerStream `json:"data"`
 	}
-	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/iot-open/sign/device/quota", c.uri), bytes.NewReader(body))
+
+	var res response
+	err := d.GetJSON(uri, &res)
 	if err != nil {
-		return err
+		return QuotaAllDataPowerStream{}, err
 	}
-	req.Header.Set("Content-Type", "application/json")
-	resp, err := c.client.Do(req)
+
+	if res.Code != "0" {
+		return QuotaAllDataPowerStream{}, fmt.Errorf("API error: %s", res.Message)
+	}
+
+	return res.Data, nil
+}
+
+// Status implements api.Charger
+func (d *EcoFlowPowerStream) Status() (api.ChargeStatus, error) {
+	data, err := d.dataG.Get()
 	if err != nil {
-		return err
+		return api.StatusNone, err
 	}
-	defer resp.Body.Close()
-	return json.NewDecoder(resp.Body).Decode(res)
+
+	if d.usage != "charger" {
+		return api.StatusNone, fmt.Errorf("status not available for usage type %s", d.usage)
+	}
+
+	// Check if inverter is active and supplying power
+	if data.InvOutputWatts > 100 {
+		return api.StatusC, nil // Charging/supplying
+	}
+
+	return api.StatusB, nil
+}
+
+// Enabled implements api.Charger
+func (d *EcoFlowPowerStream) Enabled() (bool, error) {
+	if d.usage != "charger" {
+		return false, fmt.Errorf("enabled not available for usage type %s", d.usage)
+	}
+
+	data, err := d.dataG.Get()
+	if err != nil {
+		return false, err
+	}
+
+	return data.InvOnOff == 1, nil
+}
+
+// Enable implements api.Charger
+func (d *EcoFlowPowerStream) Enable(enable bool) error {
+	if d.usage != "charger" {
+		return fmt.Errorf("enable not available for usage type %s", d.usage)
+	}
+
+	// Inverter control not yet implemented - device is always on
+	if !enable {
+		return fmt.Errorf("inverter disable not supported")
+	}
+	return nil
+}
+
+// MaxCurrent implements api.Charger
+func (d *EcoFlowPowerStream) MaxCurrent(current int64) error {
+	if d.usage != "charger" {
+		return fmt.Errorf("maxcurrent not available for usage type %s", d.usage)
+	}
+
+	// TODO: Set permanent watts (custom load power)
+	return fmt.Errorf("max current control not yet implemented")
+}
+
+// CurrentPower implements api.Meter
+func (d *EcoFlowPowerStream) CurrentPower() (float64, error) {
+	data, err := d.dataG.Get()
+	if err != nil {
+		return 0, err
+	}
+
+	switch d.usage {
+	case "charger":
+		// Charger returns inverter output power (AC side)
+		return data.InvOutputWatts, nil
+	case "pv":
+		// PV power is sum of both strings
+		return data.Pv1InputWatts + data.Pv2InputWatts, nil
+	case "battery":
+		// Battery power: positive=discharge, negative=charge
+		return data.BatInputWatts, nil
+	case "grid":
+		// Grid power would be calculated from AC output
+		return data.InvOutputWatts, nil
+	default:
+		return 0, fmt.Errorf("unknown usage type: %s", d.usage)
+	}
+}
+
+// TotalEnergy implements api.MeterEnergy
+func (d *EcoFlowPowerStream) TotalEnergy() (float64, error) {
+	return 0, api.ErrNotAvailable
+}
+
+// Currents implements api.MeterCurrents
+func (d *EcoFlowPowerStream) Currents() (float64, float64, float64, error) {
+	return 0, 0, 0, api.ErrNotAvailable
+}
+
+// Soc implements api.Battery
+func (d *EcoFlowPowerStream) Soc() (float64, error) {
+	data, err := d.dataG.Get()
+	if err != nil {
+		return 0, err
+	}
+
+	return float64(data.BatSoc), nil
+}
+
+var _ api.Charger = (*EcoFlowPowerStream)(nil)
+var _ api.Meter = (*EcoFlowPowerStream)(nil)
+var _ api.Battery = (*EcoFlowPowerStream)(nil)
+
+// authTransportPowerStream adds HMAC-SHA256 signed authentication headers to requests
+type authTransportPowerStream struct {
+	base      http.RoundTripper
+	accessKey string
+	secretKey string
+}
+
+func (t *authTransportPowerStream) RoundTrip(req *http.Request) (*http.Response, error) {
+	nonce := generateNonce()
+	timestamp := time.Now().UnixMilli()
+
+	var signStr string
+	if req.URL.RawQuery != "" {
+		signStr = req.URL.RawQuery
+	}
+
+	if signStr != "" {
+		signStr += "&"
+	}
+	signStr += fmt.Sprintf("accessKey=%s&nonce=%d&timestamp=%d", t.accessKey, nonce, timestamp)
+
+	sign := hmacSHA256(signStr, t.secretKey)
+
+	req.Header.Set("accessKey", t.accessKey)
+	req.Header.Set("nonce", fmt.Sprintf("%d", nonce))
+	req.Header.Set("timestamp", fmt.Sprintf("%d", timestamp))
+	req.Header.Set("sign", sign)
+
+	return t.base.RoundTrip(req)
 }

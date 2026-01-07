@@ -1,13 +1,11 @@
 package charger
 
 import (
-	"bytes"
 	"context"
 	"crypto/hmac"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"math/big"
 	"net/http"
@@ -183,9 +181,11 @@ func (d *EcoFlowStream) Enable(enable bool) error {
 		return fmt.Errorf("enable not available for usage type %s", d.usage)
 	}
 
-	// Relay control disabled due to signature issues (code 8521)
-	// TODO: Fix relay control signing
-	return fmt.Errorf("relay control disabled: signature error needs fixing")
+	// Charger control not yet implemented - device is always on
+	if !enable {
+		return fmt.Errorf("charger disable not supported")
+	}
+	return nil
 }
 
 // MaxCurrent implements api.Charger

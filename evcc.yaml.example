@@ -2,23 +2,14 @@ site:
   title: Home EV Charging
   meters:
     grid: ecoflow_stream_grid
-    pv: ecoflow_stream_pv
+    pv: ecoflow_powerstream_pv
     battery: ecoflow_stream_battery
 
-chargers:
-  - name: ecoflow_stream
-    type: ecoflow-stream
-    uri: https://api-e.ecoflow.com
-    sn: "YOUR_DEVICE_SERIAL_NUMBER"
-    accessKey: "YOUR_ACCESS_KEY"
-    secretKey: "YOUR_SECRET_KEY"
-    usage: charger
-
 meters:
-  - name: ecoflow_stream_pv
-    type: ecoflow-stream
+  - name: ecoflow_powerstream_pv
+    type: ecoflow-powerstream
     uri: https://api-e.ecoflow.com
-    sn: "YOUR_DEVICE_SERIAL_NUMBER"
+    sn: "YOUR_POWERSTREAM_SERIAL_NUMBER"
     accessKey: "YOUR_ACCESS_KEY"
     secretKey: "YOUR_SECRET_KEY"
     usage: pv
@@ -38,8 +29,3 @@ meters:
     accessKey: "YOUR_ACCESS_KEY"
     secretKey: "YOUR_SECRET_KEY"
     usage: battery
-
-loadpoints:
-  - name: Main Charger
-    charger: ecoflow_stream
-    meter: ecoflow_stream_grid
