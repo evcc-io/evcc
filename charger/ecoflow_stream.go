@@ -206,17 +206,29 @@ func (d *EcoFlowStream) Enable(enable bool) error {
 		return fmt.Errorf("enable not available for usage type %s", d.usage)
 	}
 
-	req := map[string]interface{}{
-		"sn":      d.sn,
-		"cmdId":   17,
-		"cmdFunc": 254,
-		"dirDest": 1,
-		"dirSrc":  1,
-		"dest":    2,
-		"needAck": true,
-		"params": map[string]interface{}{
-			relayField: enable,
-		},
+	// Build request with fixed field order
+	params := map[string]interface{}{
+		relayField: enable,
+	}
+
+	req := struct {
+		SN       string                 `json:"sn"`
+		CmdID    int                    `json:"cmdId"`
+		CmdFunc  int                    `json:"cmdFunc"`
+		DirDest  int                    `json:"dirDest"`
+		DirSrc   int                    `json:"dirSrc"`
+		Dest     int                    `json:"dest"`
+		NeedAck  bool                   `json:"needAck"`
+		Params   map[string]interface{} `json:"params"`
+	}{
+		SN:      d.sn,
+		CmdID:   17,
+		CmdFunc: 254,
+		DirDest: 1,
+		DirSrc:  1,
+		Dest:    2,
+		NeedAck: true,
+		Params:  params,
 	}
 
 	// Manually sign the request for PUT
@@ -228,8 +240,8 @@ func (d *EcoFlowStream) Enable(enable bool) error {
 		return err
 	}
 
-	// Build signature string with body content
-	signStr := fmt.Sprintf("%saccessKey=%s&nonce=%d&timestamp=%d", string(body), d.accessKey, nonce, timestamp)
+	// For PUT requests, signature includes: body + auth params
+	signStr := fmt.Sprintf("%s&accessKey=%s&nonce=%d&timestamp=%d", string(body), d.accessKey, nonce, timestamp)
 	sign := hmacSHA256(signStr, d.secretKey)
 
 	uri := fmt.Sprintf("%s/iot-open/sign/device/quota", d.uri)
