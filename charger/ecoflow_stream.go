@@ -154,22 +154,12 @@ func (d *EcoFlowStream) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	// Determine which relay to check based on usage
-	var relayEnabled bool
-	switch d.usage {
-	case "charger", "relay1":
-		relayEnabled = data.Relay2Onoff
-	case "relay2":
-		relayEnabled = data.Relay3Onoff
-	default:
+	// Only support charger mode
+	if d.usage != "charger" {
 		return api.StatusNone, fmt.Errorf("status not available for usage type %s", d.usage)
 	}
 
-	if !relayEnabled {
-		return api.StatusA, nil
-	}
-
-	// If relay is enabled, check if actively charging (battery power > threshold)
+	// Check if actively charging (battery power > threshold)
 	if data.PowGetBpCms > 100 {
 		return api.StatusC, nil
 	}
@@ -179,104 +169,23 @@ func (d *EcoFlowStream) Status() (api.ChargeStatus, error) {
 
 // Enabled implements api.Charger
 func (d *EcoFlowStream) Enabled() (bool, error) {
-	data, err := d.dataG.Get()
-	if err != nil {
-		return false, err
-	}
-
-	switch d.usage {
-	case "charger", "relay1":
-		return data.Relay2Onoff, nil
-	case "relay2":
-		return data.Relay3Onoff, nil
-	default:
+	if d.usage != "charger" {
 		return false, fmt.Errorf("enabled not available for usage type %s", d.usage)
 	}
+
+	// For now, assume always enabled (relay control disabled)
+	return true, nil
 }
 
 // Enable implements api.Charger
 func (d *EcoFlowStream) Enable(enable bool) error {
-	var relayField string
-	switch d.usage {
-	case "charger", "relay1":
-		relayField = "cfgRelay2Onoff"
-	case "relay2":
-		relayField = "cfgRelay3Onoff"
-	default:
+	if d.usage != "charger" {
 		return fmt.Errorf("enable not available for usage type %s", d.usage)
 	}
 
-	// Build request with fixed field order
-	params := map[string]interface{}{
-		relayField: enable,
-	}
-
-	req := struct {
-		SN      string                 `json:"sn"`
-		CmdID   int                    `json:"cmdId"`
-		CmdFunc int                    `json:"cmdFunc"`
-		DirDest int                    `json:"dirDest"`
-		DirSrc  int                    `json:"dirSrc"`
-		Dest    int                    `json:"dest"`
-		NeedAck bool                   `json:"needAck"`
-		Params  map[string]interface{} `json:"params"`
-	}{
-		SN:      d.sn,
-		CmdID:   17,
-		CmdFunc: 254,
-		DirDest: 1,
-		DirSrc:  1,
-		Dest:    2,
-		NeedAck: true,
-		Params:  params,
-	}
-
-	// Manually sign the request for PUT
-	nonce := generateNonce()
-	timestamp := time.Now().UnixMilli()
-
-	body, err := json.Marshal(req)
-	if err != nil {
-		return err
-	}
-
-	// For PUT requests, signature uses ONLY standard auth params (not body content)
-	signStr := fmt.Sprintf("accessKey=%s&nonce=%d&timestamp=%d", d.accessKey, nonce, timestamp)
-	sign := hmacSHA256(signStr, d.secretKey)
-
-	uri := fmt.Sprintf("%s/iot-open/sign/device/quota", d.uri)
-	httpReq, err := http.NewRequest(http.MethodPut, uri, bytes.NewReader(body))
-	if err != nil {
-		return err
-	}
-
-	httpReq.Header.Set("Content-Type", "application/json")
-	httpReq.Header.Set("accessKey", d.accessKey)
-	httpReq.Header.Set("nonce", fmt.Sprintf("%d", nonce))
-	httpReq.Header.Set("timestamp", fmt.Sprintf("%d", timestamp))
-	httpReq.Header.Set("sign", sign)
-
-	resp, err := d.Client.Do(httpReq)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode > 299 {
-		return fmt.Errorf("HTTP %d", resp.StatusCode)
-	}
-
-	var res map[string]interface{}
-	if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
-		return err
-	}
-
-	if code, ok := res["code"].(string); !ok || code != "0" {
-		return fmt.Errorf("failed to set relay: %v", res)
-	}
-
-	d.dataG.Reset()
-	return nil
+	// Relay control disabled due to signature issues (code 8521)
+	// TODO: Fix relay control signing
+	return fmt.Errorf("relay control disabled: signature error needs fixing")
 }
 
 // MaxCurrent implements api.Charger
