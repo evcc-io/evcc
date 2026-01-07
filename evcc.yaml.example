@@ -12,6 +12,23 @@ chargers:
     secretKey: "YOUR_SECRET_KEY"
     usage: charger
 
+  # AC1 (relay1) and AC2 (relay2) can be controlled as separate chargers
+  - name: ac1_relay
+    type: ecoflow-stream
+    uri: https://api-e.ecoflow.com
+    sn: "YOUR_DEVICE_SERIAL_NUMBER"
+    accessKey: "YOUR_ACCESS_KEY"
+    secretKey: "YOUR_SECRET_KEY"
+    usage: relay1
+
+  - name: ac2_relay
+    type: ecoflow-stream
+    uri: https://api-e.ecoflow.com
+    sn: "YOUR_DEVICE_SERIAL_NUMBER"
+    accessKey: "YOUR_ACCESS_KEY"
+    secretKey: "YOUR_SECRET_KEY"
+    usage: relay2
+
 meters:
   - name: ecoflow_stream_pv
     type: ecoflow-stream
@@ -36,3 +53,19 @@ meters:
     accessKey: "YOUR_ACCESS_KEY"
     secretKey: "YOUR_SECRET_KEY"
     usage: battery
+
+loadpoints:
+  # Main charger example
+  - name: Main Charger
+    charger: ecoflow_stream
+    meter: ecoflow_stream_grid
+
+  # AC1 (relay1) as standalone loadpoint
+  - name: AC1 Loadpoint
+    charger: ac1_relay
+    meter: ecoflow_stream_grid
+
+  # AC2 (relay2) as standalone loadpoint
+  - name: AC2 Loadpoint
+    charger: ac2_relay
+    meter: ecoflow_stream_grid
