@@ -112,20 +112,12 @@ func NewEEBus(ctx context.Context, ski, ip string, usage *templates.Usage, timeo
 	}
 
 	// monitoring appliance
-	for _, s := range c.ma.MaMPCInterface.RemoteEntitiesScenarios() {
-		c.log.DEBUG.Printf("ski %s MA MPC scenarios: %v", s.Entity.Device().Ski(), s.Scenarios)
-	}
-	for _, s := range c.ma.MaMGCPInterface.RemoteEntitiesScenarios() {
-		c.log.DEBUG.Printf("ski %s MA MGCP scenarios: %v", s.Entity.Device().Ski(), s.Scenarios)
-	}
+	eebus.LogEntities(c.log.DEBUG, "MA MPC", c.ma.MaMPCInterface)
+	eebus.LogEntities(c.log.DEBUG, "MA MGCP", c.ma.MaMGCPInterface)
 
 	// energy guard
-	for _, s := range c.eg.EgLPCInterface.RemoteEntitiesScenarios() {
-		c.log.DEBUG.Printf("ski %s EG LPC scenarios: %v", s.Entity.Device().Ski(), s.Scenarios)
-	}
-	for _, s := range c.eg.EgLPPInterface.RemoteEntitiesScenarios() {
-		c.log.DEBUG.Printf("ski %s EG LPP scenarios: %v", s.Entity.Device().Ski(), s.Scenarios)
-	}
+	eebus.LogEntities(c.log.DEBUG, "EG LPC", c.eg.EgLPCInterface)
+	eebus.LogEntities(c.log.DEBUG, "EG LPP", c.eg.EgLPPInterface)
 
 	return c, nil
 }
