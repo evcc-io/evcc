@@ -42,8 +42,8 @@ type EcoFlowStream struct {
 
 // QuotaAllData represents the full device status from API
 type QuotaAllData struct {
-	Relay2Onoff               int             `json:"relay2Onoff"`         // AC1 switch (0=off, 1=on)
-	Relay3Onoff               int             `json:"relay3Onoff"`         // AC2 switch (0=off, 1=on)
+	Relay2Onoff               bool            `json:"relay2Onoff"`         // AC1 switch (false=off, true=on)
+	Relay3Onoff               bool            `json:"relay3Onoff"`         // AC2 switch (false=off, true=on)
 	PowGetPvSum               float64         `json:"powGetPvSum"`         // Real-time PV power (W)
 	FeedGridMode              int             `json:"feedGridMode"`        // Feed-in control (1-off, 2-on)
 	GridConnectionPower       float64         `json:"gridConnectionPower"` // Grid port power (W)
@@ -158,9 +158,9 @@ func (d *EcoFlowStream) Status() (api.ChargeStatus, error) {
 	var relayEnabled bool
 	switch d.usage {
 	case "charger", "relay1":
-		relayEnabled = data.Relay2Onoff == 1
+		relayEnabled = data.Relay2Onoff
 	case "relay2":
-		relayEnabled = data.Relay3Onoff == 1
+		relayEnabled = data.Relay3Onoff
 	default:
 		return api.StatusNone, fmt.Errorf("status not available for usage type %s", d.usage)
 	}
@@ -186,9 +186,9 @@ func (d *EcoFlowStream) Enabled() (bool, error) {
 
 	switch d.usage {
 	case "charger", "relay1":
-		return data.Relay2Onoff == 1, nil
+		return data.Relay2Onoff, nil
 	case "relay2":
-		return data.Relay3Onoff == 1, nil
+		return data.Relay3Onoff, nil
 	default:
 		return false, fmt.Errorf("enabled not available for usage type %s", d.usage)
 	}
