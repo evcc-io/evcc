@@ -54,7 +54,7 @@ func NewEEBusFromConfig(ctx context.Context, other map[string]any) (api.Meter, e
 		Ski      string
 		Ip       string
 		Usage    *templates.Usage
-		Timeout_ time.Duration `mapstructure:"timeout"`
+		Timeout_ time.Duration `mapstructure:"timeout"` // TODO deprecated
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
