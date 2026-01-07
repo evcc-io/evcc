@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	eebusapi "github.com/enbility/eebus-go/api"
 	ucapi "github.com/enbility/eebus-go/usecases/api"
 	spineapi "github.com/enbility/spine-go/api"
 	"github.com/enbility/spine-go/model"
@@ -169,6 +170,10 @@ func (c *EEBus) readPhases(scenario uint, cache *util.Value[[]float64], update f
 
 	res, err := update(c.maEntity)
 	if err != nil {
+		// announced but not provided
+		if errors.Is(err, eebusapi.ErrDataNotAvailable) {
+			err = api.ErrNotAvailable
+		}
 		return 0, 0, 0, err
 	}
 
