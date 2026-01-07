@@ -254,7 +254,7 @@ func (d *EcoFlowStream) CurrentPower() (float64, error) {
 		// Relays don't have individual power measurement, return 0
 		return 0, nil
 	case "battery":
-		return data.PowGetBpCms, nil // Battery power (positive = charging, negative = discharging)
+		return -data.PowGetBpCms, nil // Battery power (positive = discharging, negative = charging)
 	case "pv":
 		return data.PowGetPvSum, nil // PV generation power
 	case "grid":
