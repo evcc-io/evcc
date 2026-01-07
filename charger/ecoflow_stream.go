@@ -196,6 +196,10 @@ func (d *EcoFlowStream) Enabled() (bool, error) {
 
 // Enable implements api.Charger
 func (d *EcoFlowStream) Enable(enable bool) error {
+	// TODO: Fix relay control signing (code 8521 signature error)
+	// For now, relay control is disabled. Reading works, writing doesn't.
+	return fmt.Errorf("relay control disabled: signature error (TODO: fix HMAC for cfgRelay API)")
+
 	var relayField string
 	switch d.usage {
 	case "charger", "relay1":
@@ -212,14 +216,14 @@ func (d *EcoFlowStream) Enable(enable bool) error {
 	}
 
 	req := struct {
-		SN       string                 `json:"sn"`
-		CmdID    int                    `json:"cmdId"`
-		CmdFunc  int                    `json:"cmdFunc"`
-		DirDest  int                    `json:"dirDest"`
-		DirSrc   int                    `json:"dirSrc"`
-		Dest     int                    `json:"dest"`
-		NeedAck  bool                   `json:"needAck"`
-		Params   map[string]interface{} `json:"params"`
+		SN      string                 `json:"sn"`
+		CmdID   int                    `json:"cmdId"`
+		CmdFunc int                    `json:"cmdFunc"`
+		DirDest int                    `json:"dirDest"`
+		DirSrc  int                    `json:"dirSrc"`
+		Dest    int                    `json:"dest"`
+		NeedAck bool                   `json:"needAck"`
+		Params  map[string]interface{} `json:"params"`
 	}{
 		SN:      d.sn,
 		CmdID:   17,
