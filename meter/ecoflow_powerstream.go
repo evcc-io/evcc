@@ -11,25 +11,6 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 )
 
-// https://developer-eu.ecoflow.com/us/document/wn511
-
-// EcoFlowPowerStreamData represents the full device status from PowerStream API
-type EcoFlowPowerStreamData struct {
-	// Power values (from heartbeat)
-	Pv1InputWatts  float64 `json:"pv1InputWatts"`  // PV1 input power (W)
-	Pv2InputWatts  float64 `json:"pv2InputWatts"`  // PV2 input power (W)
-	BatInputWatts  float64 `json:"batInputWatts"`  // Battery input/output power (W), positive=discharge, negative=charge
-	BatInputCur    int     `json:"batInputCur"`    // Battery current (0.1A), positive=discharge, negative=charge
-	InvOutputWatts float64 `json:"invOutputWatts"` // Inverter AC output power (W)
-	BatSoc         int     `json:"batSoc"`         // Battery SOC (%)
-	SupplyPriority int     `json:"supplyPriority"` // Power supply priority (0=supply, 1=storage)
-	InvOnOff       int     `json:"invOnOff"`       // Inverter on/off (0=off, 1=on)
-	PermanentWatts int     `json:"permanentWatts"` // Custom load power (W)
-	LowerLimit     int     `json:"lowerLimit"`     // Battery discharge limit (%)
-	UpperLimit     int     `json:"upperLimit"`     // Battery charge limit (%)
-	FeedProtect    int     `json:"feedProtect"`    // Feed-in protection (0=off, 1=on)
-}
-
 // EcoFlowPowerStream represents an EcoFlow PowerStream Micro-Inverter (Inverter + Battery)
 type EcoFlowPowerStream struct {
 	*request.Helper

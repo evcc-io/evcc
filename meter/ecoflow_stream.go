@@ -11,26 +11,6 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 )
 
-// https://developer-eu.ecoflow.com/us/document/bkw
-
-// EcoFlowStreamData represents the full device status from EcoFlow Stream API
-type EcoFlowStreamData struct {
-	Relay2Onoff               bool            `json:"relay2Onoff"`         // AC1 switch (false=off, true=on)
-	Relay3Onoff               bool            `json:"relay3Onoff"`         // AC2 switch (false=off, true=on)
-	PowGetPvSum               float64         `json:"powGetPvSum"`         // Real-time PV power (W)
-	FeedGridMode              int             `json:"feedGridMode"`        // Feed-in control (1-off, 2-on)
-	GridConnectionPower       float64         `json:"gridConnectionPower"` // Grid port power (W)
-	PowGetSysGrid             float64         `json:"powGetSysGrid"`       // System real-time grid power (W)
-	PowGetSysLoad             float64         `json:"powGetSysLoad"`       // System real-time load power (W)
-	CmsBattSoc                float64         `json:"cmsBattSoc"`          // Battery SOC (%)
-	PowGetBpCms               float64         `json:"powGetBpCms"`         // Real-time battery power (W)
-	BackupReverseSoc          int             `json:"backupReverseSoc"`    // Backup reserve level (%)
-	CmsMaxChgSoc              int             `json:"cmsMaxChgSoc"`        // Charge limit (%)
-	CmsMinDsgSoc              int             `json:"cmsMinDsgSoc"`        // Discharge limit (%)
-	EnergyStrategyOperateMode map[string]bool `json:"energyStrategyOperateMode"`
-	QuotaCloudTs              string          `json:"quota_cloud_ts"`
-}
-
 // EcoFlowStream represents an EcoFlow Stream Energy Management System (Inverter + Battery)
 type EcoFlowStream struct {
 	*request.Helper
