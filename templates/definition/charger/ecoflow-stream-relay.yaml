@@ -25,6 +25,11 @@ params:
   - name: relay
     choice: ["relay1", "relay2"]
     allinone: true
+    description:
+      generic: AC Relay
+    help:
+      en: Select which AC relay to control (AC1 or AC2)
+      de: Wählen Sie welches AC-Relais gesteuert werden soll (AC1 oder AC2)
   - name: uri
     required: true
     default: "https://api-e.ecoflow.com"
