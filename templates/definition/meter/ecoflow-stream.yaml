@@ -2,7 +2,7 @@ template: ecoflow-stream
 products:
   - brand: EcoFlow
     description:
-      generic: Stream Series (SE, SE Pro, SE Plus)
+      generic: STREAM Ultra, STREAM Pro, STREAM AC Pro, STREAM Ultra X, STREAM Ultra (US)
 requirements:
   description:
     de: |
