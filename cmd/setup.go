@@ -877,10 +877,9 @@ func configureTariffWithFees(u api.TariffUsage, conf config.Typed, fees config.T
 
 	// fees
 	if fees.Type != "" {
-		name := u.String()
-		ft, err := tariffInstance(name, fees)
-		if err != nil {
-			return &DeviceError{name, err}
+		var ft api.Tariff
+		if err := configureTariff(u, fees, &ft); ft == nil || err != nil {
+			return err
 		}
 
 		res = tariff.NewCombined([]api.Tariff{res, ft})
