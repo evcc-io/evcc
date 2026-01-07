@@ -2,28 +2,16 @@ package charger
 
 import (
 	"context"
-	"crypto/hmac"
-	"crypto/rand"
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
-	"math/big"
-	"net/http"
 	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/evcc-io/evcc/util/transport"
 )
 
 // https://developer-eu.ecoflow.com/us/document/bkw
-
-const (
-	ecoflowStreamBaseURL = "https://api-e.ecoflow.com"
-	ecoflowStreamAPIPath = "/iot-open/sign/device/quota/all"
-)
 
 // EcoFlowStream represents an EcoFlow Stream series device
 type EcoFlowStream struct {
@@ -80,11 +68,7 @@ func NewEcoFlowStream(uri, sn, accessKey, secretKey, usage string, cache time.Du
 	}
 
 	// Set authorization header using custom transport with HMAC-SHA256 signature
-	device.Client.Transport = &authTransport{
-		base:      transport.Default(),
-		accessKey: accessKey,
-		secretKey: secretKey,
-	}
+	device.Client.Transport = NewEcoFlowAuthTransport(accessKey, secretKey)
 
 	// Create cached data fetcher
 	device.dataG = util.ResettableCached(device.getQuotaAll, cache)
@@ -231,48 +215,3 @@ func (d *EcoFlowStream) Soc() (float64, error) {
 var _ api.Charger = (*EcoFlowStream)(nil)
 var _ api.Meter = (*EcoFlowStream)(nil)
 var _ api.Battery = (*EcoFlowStream)(nil)
-
-// authTransport adds HMAC-SHA256 signed authentication headers to requests
-type authTransport struct {
-	base      http.RoundTripper
-	accessKey string
-	secretKey string
-}
-
-func (t *authTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	nonce := generateNonce()
-	timestamp := time.Now().UnixMilli()
-
-	var signStr string
-	if req.URL.RawQuery != "" {
-		signStr = req.URL.RawQuery
-	}
-
-	if signStr != "" {
-		signStr += "&"
-	}
-	signStr += fmt.Sprintf("accessKey=%s&nonce=%d&timestamp=%d", t.accessKey, nonce, timestamp)
-
-	sign := hmacSHA256(signStr, t.secretKey)
-
-	req.Header.Set("accessKey", t.accessKey)
-	req.Header.Set("nonce", fmt.Sprintf("%d", nonce))
-	req.Header.Set("timestamp", fmt.Sprintf("%d", timestamp))
-	req.Header.Set("sign", sign)
-
-	return t.base.RoundTrip(req)
-}
-
-// generateNonce creates a random 6-digit nonce
-func generateNonce() int64 {
-	max := big.NewInt(1000000)
-	n, _ := rand.Int(rand.Reader, max)
-	return 100000 + n.Int64()
-}
-
-// hmacSHA256 creates HMAC-SHA256 signature
-func hmacSHA256(data, secret string) string {
-	h := hmac.New(sha256.New, []byte(secret))
-	h.Write([]byte(data))
-	return hex.EncodeToString(h.Sum(nil))
-}
