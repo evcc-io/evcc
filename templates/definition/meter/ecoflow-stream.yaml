@@ -10,17 +10,21 @@ requirements:
       - Einen gültigen Access Key von der EcoFlow Developer Console
       - Den entsprechenden Secret Key
       - Die Seriennummer (SN) Ihres Stream Gerätes
-      - Eine beliebige URI (wird für lokale API verwendet)
+      - Die API URI (Standard: https://api-e.ecoflow.com)
 
       Diese Credentials erhalten Sie über die EcoFlow Developer Console nach der Registrierung Ihrer Anwendung.
+
+      **Hinweis für mehrere Stream-Geräte:** In einem Stream Verbund (mehrere Geräte zusammen) konfigurieren Sie nur den Master (STREAM Ultra).
     en: |
       To use the EcoFlow Stream meter you need:
       - A valid Access Key from the EcoFlow Developer Console
       - The corresponding Secret Key
       - The serial number (SN) of your Stream device
-      - Any URI (used for local API access)
+      - The API URI (default: https://api-e.ecoflow.com)
 
       These credentials can be obtained through the EcoFlow Developer Console after registering your application.
+
+      **Note for multiple Stream devices:** In a Stream cluster (multiple devices together), only configure the master (STREAM Ultra).
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
