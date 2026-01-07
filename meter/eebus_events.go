@@ -1,8 +1,6 @@
 package meter
 
 import (
-	"slices"
-
 	eebusapi "github.com/enbility/eebus-go/api"
 	"github.com/enbility/eebus-go/usecases/eg/lpc"
 	"github.com/enbility/eebus-go/usecases/eg/lpp"
@@ -43,14 +41,6 @@ func (c *EEBus) maUseCaseSupportUpdate(entity spineapi.EntityRemoteInterface) {
 	if c.maEntity == nil || len(entity.Address().Entity) < len(c.maEntity.Address().Entity) {
 		c.maEntity = entity
 	}
-}
-
-// maAssertEntity ignores foreign updates
-func (c *EEBus) maAssertEntity(entity spineapi.EntityRemoteInterface, update func(entity spineapi.EntityRemoteInterface)) {
-	if c.maEntity == nil || !slices.Equal(entity.Address().Entity, c.maEntity.Address().Entity) {
-		return
-	}
-	update(entity)
 }
 
 //
