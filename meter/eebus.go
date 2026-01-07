@@ -30,21 +30,14 @@ type EEBus struct {
 	eg *eebus.EnergyGuard
 	mm measurements
 
-	power    *util.Value[float64]
-	energy   *util.Value[float64]
-	currents *util.Value[[]float64]
-	voltages *util.Value[[]float64]
-
-	mu               sync.Mutex
-	consumptionLimit ucapi.LoadLimit
-	productionLimit  ucapi.LoadLimit
-	maEntity         spineapi.EntityRemoteInterface
-	egLpcEntity      spineapi.EntityRemoteInterface
-	egLppEntity      spineapi.EntityRemoteInterface
+	mu          sync.Mutex
+	maEntity    spineapi.EntityRemoteInterface
+	egLpcEntity spineapi.EntityRemoteInterface
+	egLppEntity spineapi.EntityRemoteInterface
 }
 
 type measurements interface {
-	IsScenarioAvailableAtEntity(entity spineapi.EntityRemoteInterface, scenario uint) bool
+	eebusapi.UseCaseBaseInterface
 	Power(entity spineapi.EntityRemoteInterface) (float64, error)
 	EnergyConsumed(entity spineapi.EntityRemoteInterface) (float64, error)
 	CurrentPerPhase(entity spineapi.EntityRemoteInterface) ([]float64, error)
@@ -57,25 +50,23 @@ func init() {
 
 // NewEEBusFromConfig creates an EEBus meter from generic config
 func NewEEBusFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
-	cc := struct {
-		Ski     string
-		Ip      string
-		Usage   *templates.Usage
-		Timeout time.Duration
-	}{
-		Timeout: 10 * time.Second,
+	var cc struct {
+		Ski      string
+		Ip       string
+		Usage    *templates.Usage
+		Timeout_ time.Duration `mapstructure:"timeout"`
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewEEBus(ctx, cc.Ski, cc.Ip, cc.Usage, cc.Timeout)
+	return NewEEBus(ctx, cc.Ski, cc.Ip, cc.Usage)
 }
 
 // NewEEBus creates an EEBus meter
 // Uses MGCP only when usage="grid", otherwise uses MPC (default)
-func NewEEBus(ctx context.Context, ski, ip string, usage *templates.Usage, timeout time.Duration) (api.Meter, error) {
+func NewEEBus(ctx context.Context, ski, ip string, usage *templates.Usage) (api.Meter, error) {
 	if eebus.Instance == nil {
 		return nil, errors.New("eebus not configured")
 	}
@@ -97,10 +88,6 @@ func NewEEBus(ctx context.Context, ski, ip string, usage *templates.Usage, timeo
 		eg:        eebus.Instance.EnergyGuard(),
 		mm:        mm,
 		Connector: eebus.NewConnector(),
-		power:     util.NewValue[float64](timeout),
-		energy:    util.NewValue[float64](timeout),
-		currents:  util.NewValue[[]float64](timeout),
-		voltages:  util.NewValue[[]float64](timeout),
 	}
 
 	if err := eebus.Instance.RegisterDevice(ski, ip, c); err != nil {
@@ -123,52 +110,48 @@ func NewEEBus(ctx context.Context, ski, ip string, usage *templates.Usage, timeo
 	return c, nil
 }
 
-func (c *EEBus) readValue(scenario uint, cache *util.Value[float64], update func(entity spineapi.EntityRemoteInterface) (float64, error)) (float64, error) {
-	if res, err := cache.Get(); err == nil {
-		return res, nil
+func eebusReadValue[T any](scenario uint, uc eebusapi.UseCaseBaseInterface, entity spineapi.EntityRemoteInterface, update func(entity spineapi.EntityRemoteInterface) (T, error)) (T, error) {
+	var zero T
+
+	if entity == nil || !uc.IsScenarioAvailableAtEntity(entity, scenario) {
+		return zero, api.ErrNotAvailable
 	}
 
+	res, err := update(entity)
+	if err != nil {
+		// announced but not provided
+		if errors.Is(err, eebusapi.ErrDataNotAvailable) {
+			err = api.ErrNotAvailable
+		}
+		return zero, err
+	}
+
+	return res, nil
+}
+
+func (c *EEBus) readValue(scenario uint, update func(entity spineapi.EntityRemoteInterface) (float64, error)) (float64, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-
-	if c.maEntity == nil || !c.mm.IsScenarioAvailableAtEntity(c.maEntity, scenario) {
-		return 0, api.ErrNotAvailable
-	}
-
-	res, err := update(c.maEntity)
-	if err != nil {
-		return 0, err
-	}
-
-	cache.Set(res)
-	return res, nil
+	return eebusReadValue(scenario, c.mm, c.maEntity, update)
 }
 
 var _ api.Meter = (*EEBus)(nil)
 
 func (c *EEBus) CurrentPower() (float64, error) {
-	return c.readValue(1, c.power, c.mm.Power)
+	return c.readValue(1, c.mm.Power)
 }
 
 var _ api.MeterEnergy = (*EEBus)(nil)
 
 func (c *EEBus) TotalEnergy() (float64, error) {
-	return c.readValue(2, c.energy, c.mm.EnergyConsumed)
+	return c.readValue(2, c.mm.EnergyConsumed)
 }
 
-func (c *EEBus) readPhases(scenario uint, cache *util.Value[[]float64], update func(entity spineapi.EntityRemoteInterface) ([]float64, error)) (float64, float64, float64, error) {
-	if res, err := cache.Get(); err == nil {
-		return res[0], res[1], res[2], nil
-	}
-
+func (c *EEBus) readPhases(scenario uint, update func(entity spineapi.EntityRemoteInterface) ([]float64, error)) (float64, float64, float64, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	if c.maEntity == nil || !c.mm.IsScenarioAvailableAtEntity(c.maEntity, scenario) {
-		return 0, 0, 0, api.ErrNotAvailable
-	}
-
-	res, err := update(c.maEntity)
+	res, err := eebusReadValue(scenario, c.mm, c.maEntity, update)
 	if err != nil {
 		// announced but not provided
 		if errors.Is(err, eebusapi.ErrDataNotAvailable) {
@@ -185,20 +168,19 @@ func (c *EEBus) readPhases(scenario uint, cache *util.Value[[]float64], update f
 		res = append(res, 0)
 	}
 
-	cache.Set(res)
 	return res[0], res[1], res[2], nil
 }
 
 var _ api.PhaseCurrents = (*EEBus)(nil)
 
 func (c *EEBus) Currents() (float64, float64, float64, error) {
-	return c.readPhases(3, c.currents, c.mm.CurrentPerPhase)
+	return c.readPhases(3, c.mm.CurrentPerPhase)
 }
 
 var _ api.PhaseVoltages = (*EEBus)(nil)
 
 func (c *EEBus) Voltages() (float64, float64, float64, error) {
-	return c.readPhases(4, c.voltages, c.mm.VoltagePerPhase)
+	return c.readPhases(4, c.mm.VoltagePerPhase)
 }
 
 var _ api.Dimmer = (*EEBus)(nil)
@@ -208,8 +190,13 @@ func (c *EEBus) Dimmed() (bool, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
+	limit, err := eebusReadValue(1, c.eg.EgLPCInterface, c.egLpcEntity, c.eg.EgLPCInterface.ConsumptionLimit)
+	if err != nil {
+		return false, err
+	}
+
 	// Check if limit is active and has a valid power value
-	return c.consumptionLimit.IsActive && c.consumptionLimit.Value > 0, nil
+	return limit.IsActive && limit.Value > 0, nil
 }
 
 // Dim implements the api.Dimmer interface
@@ -247,8 +234,13 @@ func (c *EEBus) Curtailed() (bool, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
+	limit, err := eebusReadValue(1, c.eg.EgLPPInterface, c.egLppEntity, c.eg.EgLPPInterface.ProductionLimit)
+	if err != nil {
+		return false, err
+	}
+
 	// Check if limit is active and has a valid power value
-	return c.productionLimit.IsActive && c.productionLimit.Value > 0, nil
+	return limit.IsActive && limit.Value > 0, nil
 }
 
 // Curtail implements the api.Curtailer interface
