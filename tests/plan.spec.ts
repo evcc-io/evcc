@@ -693,7 +693,7 @@ test.describe("plan strategy", async () => {
     await modal.getByRole("button", { name: "Strategy settings" }).click();
     await expect(modal.getByLabel("Optimization")).not.toBeVisible();
     await expect(modal.getByLabel("Late Charging")).not.toBeVisible();
-    await expect(modal).toContainText("just in time for your departure");
+    await expect(modal).toContainText("just in time for departure");
   });
 
   test("visible and functional on mobile", async ({ page }) => {
