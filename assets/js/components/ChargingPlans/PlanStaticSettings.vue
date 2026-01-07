@@ -276,11 +276,11 @@ export default defineComponent({
 		},
 		initInputFields() {
 			if (!this.selectedSoc) {
-				this.selectedSoc = window.localStorage[LAST_SOC_GOAL_KEY] || 100;
+				this.selectedSoc = Number(window.localStorage[LAST_SOC_GOAL_KEY]) || 100;
 			}
 			if (!this.selectedEnergy) {
 				this.selectedEnergy =
-					window.localStorage[LAST_ENERGY_GOAL_KEY] || this.capacity || 10;
+					Number(window.localStorage[LAST_ENERGY_GOAL_KEY]) || this.capacity || 10;
 			}
 
 			let t = this.time;
