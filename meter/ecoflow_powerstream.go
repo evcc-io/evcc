@@ -97,8 +97,7 @@ func (d *EcoFlowPowerStream) getQuotaAll() (EcoFlowPowerStreamData, error) {
 	uri := fmt.Sprintf("%s/iot-open/sign/device/quota/all?sn=%s", d.uri, d.sn)
 
 	var res ecoflowResponse[EcoFlowPowerStreamData]
-	err := d.GetJSON(uri, &res)
-	if err != nil {
+	if err := d.GetJSON(uri, &res); err != nil {
 		return EcoFlowPowerStreamData{}, err
 	}
 
