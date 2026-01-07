@@ -896,7 +896,7 @@
       "repeating": "repeating",
       "repeatingPlans": "Repeating plans",
       "selectAll": "Select all",
-      "strategyDisabledDescription": "The planner will schedule charging to finish just in time for your departure. With dynamic grid prices or a CO₂ tariff, additional optimization options are available here.",
+      "strategyDisabledDescription": "Charging starts as late as possible to finish just in time for departure. With dynamic grid prices or CO₂ tariff, more options are available here.",
       "strategySettings": "Strategy settings",
       "time": "Time",
       "title": "Plan",
