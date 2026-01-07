@@ -168,7 +168,7 @@ func (d *EcoFlowStream) Status() (api.ChargeStatus, error) {
 // Enabled implements api.Charger
 func (d *EcoFlowStream) Enabled() (bool, error) {
 	if d.usage != "charger" {
-		return false, fmt.Errorf("enabled not available for usage type %s", d.usage)
+		return true, nil // Meters are always "enabled"
 	}
 
 	// For now, assume always enabled (relay control disabled)

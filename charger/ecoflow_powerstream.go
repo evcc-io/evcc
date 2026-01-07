@@ -157,7 +157,7 @@ func (d *EcoFlowPowerStream) Status() (api.ChargeStatus, error) {
 // Enabled implements api.Charger
 func (d *EcoFlowPowerStream) Enabled() (bool, error) {
 	if d.usage != "charger" {
-		return false, fmt.Errorf("enabled not available for usage type %s", d.usage)
+		return true, nil // Meters are always "enabled"
 	}
 
 	data, err := d.dataG.Get()
