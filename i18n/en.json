@@ -762,6 +762,9 @@
       "solar": "Solar"
     }
   },
+  "general": {
+    "note": "Note:"
+  },
   "header": {
     "about": "About",
     "blog": "Blog",
@@ -895,6 +898,7 @@
       "repeating": "repeating",
       "repeatingPlans": "Repeating plans",
       "selectAll": "Select all",
+      "strategyDisabledDescription": "Charging starts as late as possible to finish just in time for departure. With dynamic grid prices or CO₂ tariff, more options are available here.",
       "strategySettings": "Strategy settings",
       "time": "Time",
       "title": "Plan",
