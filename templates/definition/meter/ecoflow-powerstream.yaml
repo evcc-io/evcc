@@ -13,6 +13,8 @@ requirements:
       - Die API URI (Standard: https://api-e.ecoflow.com)
 
       Diese Credentials erhalten Sie über die EcoFlow Developer Console nach der Registrierung Ihrer Anwendung.
+      
+      Developer Portal: https://developer-eu.ecoflow.com/us
     en: |
       To use the EcoFlow PowerStream meter you need:
       - A valid Access Key from the EcoFlow Developer Console
@@ -21,6 +23,8 @@ requirements:
       - The API URI (default: https://api-e.ecoflow.com)
 
       These credentials can be obtained through the EcoFlow Developer Console after registering your application.
+      
+      Developer Portal: https://developer-eu.ecoflow.com/us
 params:
   - name: usage
     choice: ["pv", "grid", "battery"]

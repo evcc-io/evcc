@@ -15,6 +15,8 @@ requirements:
       Diese Credentials erhalten Sie über die EcoFlow Developer Console nach der Registrierung Ihrer Anwendung.
 
       **Hinweis für mehrere Stream-Geräte:** In einem Stream Verbund (mehrere Geräte zusammen) konfigurieren Sie nur den Master (STREAM Ultra).
+      
+      Developer Portal: https://developer-eu.ecoflow.com/us
     en: |
       To use the EcoFlow Stream meter you need:
       - A valid Access Key from the EcoFlow Developer Console
@@ -23,6 +25,10 @@ requirements:
       - The API URI (default: https://api-e.ecoflow.com)
 
       These credentials can be obtained through the EcoFlow Developer Console after registering your application.
+
+      **Note for multiple Stream devices:** In a Stream cluster (multiple devices together) only configure the Master (STREAM Ultra).
+      
+      Developer Portal: https://developer-eu.ecoflow.com/us
 
       **Note for multiple Stream devices:** In a Stream cluster (multiple devices together), only configure the master (STREAM Ultra).
 params:
