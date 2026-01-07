@@ -22,14 +22,17 @@ requirements:
 
       These credentials can be obtained through the EcoFlow Developer Console after registering your application.
 params:
+  - name: usage
+    choice: ["pv", "grid", "battery"]
+    allinone: true
   - name: uri
     required: true
     default: "https://api-e.ecoflow.com"
     description:
       generic: API URI
     help:
-      en: EcoFlow API endpoint (default for cloud)
-      de: EcoFlow API Endpunkt (Standard für Cloud)
+      en: EcoFlow API endpoint (cloud or local)
+      de: EcoFlow API Endpunkt (Cloud oder lokal)
   - name: sn
     required: true
     description:
@@ -51,11 +54,6 @@ params:
     help:
       en: Secret Key from EcoFlow Developer Console
       de: Secret Key aus der EcoFlow Developer Console
-  - name: usage
-    required: true
-    default: pv
-    description:
-      generic: Usage Type (pv, grid, battery, charger)
   - name: cache
     default: 30s
     advanced: true

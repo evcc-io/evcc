@@ -192,7 +192,7 @@ func (d *EcoFlowStream) CurrentPower() (float64, error) {
 		// Relays don't have individual power measurement, return 0
 		return 0, nil
 	case "battery":
-		return -data.PowGetBpCms, nil // Battery power inverted (API docs seem inverted)
+		return -data.PowGetBpCms, nil // EcoFlow reports battery power with opposite sign; invert to match evcc convention
 	case "pv":
 		return data.PowGetPvSum, nil // PV generation power
 	case "grid":

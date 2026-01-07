@@ -31,8 +31,8 @@ params:
     description:
       generic: API URI
     help:
-      en: EcoFlow API endpoint (default for cloud)
-      de: EcoFlow API Endpunkt (Standard für Cloud)
+      en: EcoFlow API endpoint (cloud or local)
+      de: EcoFlow API Endpunkt (Cloud oder lokal)
   - name: sn
     required: true
     description:
