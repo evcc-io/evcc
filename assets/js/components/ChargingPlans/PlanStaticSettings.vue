@@ -160,6 +160,10 @@ const LAST_SOC_GOAL_KEY = "last_soc_goal";
 const LAST_ENERGY_GOAL_KEY = "last_energy_goal";
 const DEFAULT_TARGET_TIME = "7:00";
 
+function isNonEmptyString(value: unknown): value is string {
+	return typeof value === "string" && value.length > 0;
+}
+
 export default defineComponent({
 	name: "ChargingPlanStaticSettings",
 	mixins: [formatter],
@@ -276,11 +280,14 @@ export default defineComponent({
 		},
 		initInputFields() {
 			if (!this.selectedSoc) {
-				this.selectedSoc = Number(window.localStorage[LAST_SOC_GOAL_KEY]) || 100;
+				const lastSocGoal = window.localStorage[LAST_SOC_GOAL_KEY];
+				this.selectedSoc = isNonEmptyString(lastSocGoal) ? Number(lastSocGoal) : 100;
 			}
 			if (!this.selectedEnergy) {
-				this.selectedEnergy =
-					Number(window.localStorage[LAST_ENERGY_GOAL_KEY]) || this.capacity || 10;
+				const lastEnergyGoal = window.localStorage[LAST_ENERGY_GOAL_KEY];
+				this.selectedEnergy = isNonEmptyString(lastEnergyGoal)
+					? Number(lastEnergyGoal)
+					: (this.capacity ?? 10);
 			}
 
 			let t = this.time;
