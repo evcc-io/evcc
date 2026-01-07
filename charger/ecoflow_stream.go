@@ -152,9 +152,9 @@ func (d *EcoFlowStream) Status() (api.ChargeStatus, error) {
 		return api.StatusA, err
 	}
 
-	// Only support charger mode
+	// For non-charger usage (meter mode), always return StatusB
 	if d.usage != "charger" {
-		return api.StatusNone, fmt.Errorf("status not available for usage type %s", d.usage)
+		return api.StatusB, nil
 	}
 
 	// Check if actively charging (battery power > threshold)
