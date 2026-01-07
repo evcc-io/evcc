@@ -219,10 +219,43 @@ func (d *EcoFlowStream) Enable(enable bool) error {
 		},
 	}
 
-	uri := fmt.Sprintf("%s/iot-open/sign/device/quota", d.uri)
-	var res map[string]interface{}
-	err := putJSON(d.Client, uri, req, &res)
+	// Manually sign the request for PUT
+	nonce := generateNonce()
+	timestamp := time.Now().UnixMilli()
+
+	body, err := json.Marshal(req)
 	if err != nil {
+		return err
+	}
+
+	// Build signature string with body content
+	signStr := fmt.Sprintf("%saccessKey=%s&nonce=%d&timestamp=%d", string(body), d.accessKey, nonce, timestamp)
+	sign := hmacSHA256(signStr, d.secretKey)
+
+	uri := fmt.Sprintf("%s/iot-open/sign/device/quota", d.uri)
+	httpReq, err := http.NewRequest(http.MethodPut, uri, bytes.NewReader(body))
+	if err != nil {
+		return err
+	}
+
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("accessKey", d.accessKey)
+	httpReq.Header.Set("nonce", fmt.Sprintf("%d", nonce))
+	httpReq.Header.Set("timestamp", fmt.Sprintf("%d", timestamp))
+	httpReq.Header.Set("sign", sign)
+
+	resp, err := d.Client.Do(httpReq)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode > 299 {
+		return fmt.Errorf("HTTP %d", resp.StatusCode)
+	}
+
+	var res map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
 		return err
 	}
 
@@ -331,31 +364,4 @@ func hmacSHA256(data, secret string) string {
 	h := hmac.New(sha256.New, []byte(secret))
 	h.Write([]byte(data))
 	return hex.EncodeToString(h.Sum(nil))
-}
-
-// putJSON sends a PUT request with JSON body and reads JSON response
-func putJSON(client *http.Client, uri string, req interface{}, res interface{}) error {
-	body, err := json.Marshal(req)
-	if err != nil {
-		return err
-	}
-
-	httpReq, err := http.NewRequest(http.MethodPut, uri, bytes.NewReader(body))
-	if err != nil {
-		return err
-	}
-
-	httpReq.Header.Set("Content-Type", "application/json")
-
-	resp, err := client.Do(httpReq)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode > 299 {
-		return fmt.Errorf("HTTP %d", resp.StatusCode)
-	}
-
-	return json.NewDecoder(resp.Body).Decode(res)
 }
