@@ -7,6 +7,7 @@ import (
 	"net"
 	"slices"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -354,12 +355,20 @@ func (c *EEBus) Tracef(format string, args ...any) {
 	c.log.TRACE.Printf(format, args...)
 }
 
+func isRelevant(s string) bool {
+	return strings.Contains(s, "connect") || strings.Contains(s, " event ")
+}
+
 func (c *EEBus) Debug(args ...any) {
-	c.log.DEBUG.Println(args...)
+	if s := fmt.Sprint(args...); isRelevant(s) {
+		c.log.DEBUG.Print(s)
+	}
 }
 
 func (c *EEBus) Debugf(format string, args ...any) {
-	c.log.DEBUG.Printf(format, args...)
+	if s := fmt.Sprintf(format, args...); isRelevant(s) {
+		c.log.DEBUG.Print(s)
+	}
 }
 
 func (c *EEBus) Info(args ...any) {
