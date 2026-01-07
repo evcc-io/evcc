@@ -138,7 +138,7 @@ func (d *EcoFlowPowerStream) getQuotaAll() (QuotaAllDataPowerStream, error) {
 func (d *EcoFlowPowerStream) Status() (api.ChargeStatus, error) {
 	data, err := d.dataG.Get()
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusA, err
 	}
 
 	if d.usage != "charger" {

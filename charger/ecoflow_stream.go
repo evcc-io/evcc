@@ -149,7 +149,7 @@ func (d *EcoFlowStream) getQuotaAll() (QuotaAllData, error) {
 func (d *EcoFlowStream) Status() (api.ChargeStatus, error) {
 	data, err := d.dataG.Get()
 	if err != nil {
-		return api.StatusNone, err
+		return api.StatusA, err
 	}
 
 	// Only support charger mode
