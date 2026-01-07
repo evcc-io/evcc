@@ -1,5 +1,12 @@
 package meter
 
+// ecoflowResponse is a generic response wrapper for EcoFlow API responses
+type ecoflowResponse[T any] struct {
+	Code    string `json:"code"`
+	Message string `json:"message"`
+	Data    T      `json:"data"`
+}
+
 // EcoFlowStreamData represents the full device status from EcoFlow Stream API
 // https://developer-eu.ecoflow.com/us/document/bkw
 type EcoFlowStreamData struct {

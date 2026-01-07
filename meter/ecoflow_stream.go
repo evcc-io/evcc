@@ -96,13 +96,7 @@ func NewEcoFlowStream(uri, sn, accessKey, secretKey, usage string, cache time.Du
 func (d *EcoFlowStream) getQuotaAll() (EcoFlowStreamData, error) {
 	uri := fmt.Sprintf("%s/iot-open/sign/device/quota/all?sn=%s", d.uri, d.sn)
 
-	type response struct {
-		Code    string            `json:"code"`
-		Message string            `json:"message"`
-		Data    EcoFlowStreamData `json:"data"`
-	}
-
-	var res response
+	var res ecoflowResponse[EcoFlowStreamData]
 	err := d.GetJSON(uri, &res)
 	if err != nil {
 		return EcoFlowStreamData{}, err
