@@ -58,7 +58,7 @@ test.describe("statistics values", async () => {
     await expect(page.getByTestId("savings-tile-price")).toContainText("6 Fr. saved");
 
     await expect(page.getByTestId("savings-tile-co2")).toContainText("8g/kWh");
-    await expect(page.getByTestId("savings-tile-co2")).toContainText("19 kg saved");
+    await expect(page.getByTestId("savings-tile-co2")).toContainText("17 kg saved");
   });
 
   test("last 365 days", async ({ page }) => {
@@ -78,7 +78,7 @@ test.describe("statistics values", async () => {
     await expect(page.getByTestId("savings-tile-price")).toContainText("6 Fr. saved");
 
     await expect(page.getByTestId("savings-tile-co2")).toContainText("14g/kWh");
-    await expect(page.getByTestId("savings-tile-co2")).toContainText("37 kg saved");
+    await expect(page.getByTestId("savings-tile-co2")).toContainText("33 kg saved");
   });
 
   test("reference data", async ({ page }) => {
@@ -88,19 +88,19 @@ test.describe("statistics values", async () => {
 
     await expect(page.getByTestId("savings-reference")).toContainText("Reference data:");
     await expect(page.getByTestId("savings-reference")).toContainText("30.0 rp/kWh (grid)");
-    await expect(page.getByTestId("savings-reference")).toContainText("⌀ 385 g/kWh");
+    await expect(page.getByTestId("savings-reference")).toContainText("⌀ 344 g/kWh");
     await expect(page.getByTestId("savings-reference")).toContainText("Germany");
 
-    await expect(page.getByTestId("savings-tile-co2")).toContainText("19 kg saved");
+    await expect(page.getByTestId("savings-tile-co2")).toContainText("17 kg saved");
 
     await page
       .getByTestId("savings-region-select")
       .getByRole("combobox")
       .selectOption("Switzerland");
 
-    await expect(page.getByTestId("savings-reference")).toContainText("⌀ 46 g/kWh");
+    await expect(page.getByTestId("savings-reference")).toContainText("⌀ 37 g/kWh");
     await expect(page.getByTestId("savings-reference")).toContainText("Switzerland");
 
-    await expect(page.getByTestId("savings-tile-co2")).toContainText("2 kg saved");
+    await expect(page.getByTestId("savings-tile-co2")).toContainText("1 kg saved");
   });
 });
