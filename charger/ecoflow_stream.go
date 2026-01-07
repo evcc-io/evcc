@@ -247,7 +247,13 @@ func (d *EcoFlowStream) CurrentPower() (float64, error) {
 	}
 
 	switch d.usage {
-	case "charger", "relay1", "relay2", "battery":
+	case "charger":
+		// Charger uses system load power (not the relay)
+		return data.PowGetSysLoad, nil
+	case "relay1", "relay2":
+		// Relays don't have individual power measurement, return 0
+		return 0, nil
+	case "battery":
 		return data.PowGetBpCms, nil // Battery power (positive = charging, negative = discharging)
 	case "pv":
 		return data.PowGetPvSum, nil // PV generation power
