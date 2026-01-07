@@ -1,4 +1,4 @@
-package meter
+package ecoflow
 
 // ecoflowResponse is a generic response wrapper for EcoFlow API responses
 type ecoflowResponse[T any] struct {

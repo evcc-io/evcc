@@ -1,4 +1,4 @@
-package meter
+package ecoflow
 
 import (
 	"crypto/hmac"

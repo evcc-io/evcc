@@ -1,4 +1,4 @@
-package meter
+package ecoflow
 
 import (
 	"context"
@@ -25,10 +25,6 @@ type EcoFlowPowerStream struct {
 }
 
 var _ api.Meter = (*EcoFlowPowerStream)(nil)
-
-func init() {
-	registry.AddCtx("ecoflow-powerstream", NewEcoFlowPowerStreamFromConfig)
-}
 
 // NewEcoFlowPowerStreamFromConfig creates EcoFlow PowerStream meter from config
 func NewEcoFlowPowerStreamFromConfig(ctx context.Context, other map[string]interface{}) (api.Meter, error) {
