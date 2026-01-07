@@ -24,16 +24,27 @@ type ecoflowAuthTransport struct {
 // RoundTrip implements http.RoundTripper interface
 func (t *ecoflowAuthTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	nonce := ecoflowGenerateNonce()
-	timestamp := strconv.FormatInt(time.Now().UnixMilli(), 10)
+	timestamp := fmt.Sprintf("%d", time.Now().UnixMilli())
+
+	// Build signature string from query parameters
+	var signStr string
+	if req.URL.RawQuery != "" {
+		signStr = req.URL.RawQuery
+	}
+
+	if signStr != "" {
+		signStr += "&"
+	}
+	signStr += fmt.Sprintf("accessKey=%s&nonce=%s&timestamp=%s", t.accessKey, nonce, timestamp)
 
 	// Create signature
-	signature := ecoflowHmacSHA256(t.accessKey, nonce, timestamp, t.secretKey)
+	signature := ecoflowHmacSHA256(signStr, t.secretKey)
 
-	// Set authorization headers
-	req.Header.Set("X-API-KEY", t.accessKey)
-	req.Header.Set("X-SIGNATURE-PARAMS", nonce)
-	req.Header.Set("X-SIGNATURE-TIMESTAMP", timestamp)
-	req.Header.Set("X-SIGNATURE", signature)
+	// Set authorization headers (these go into the request, not URL params)
+	req.Header.Set("accessKey", t.accessKey)
+	req.Header.Set("nonce", nonce)
+	req.Header.Set("timestamp", timestamp)
+	req.Header.Set("sign", signature)
 
 	return t.base.RoundTrip(req)
 }
@@ -51,11 +62,10 @@ func ecoflowGenerateNonce() string {
 	return strconv.FormatInt(randomBig.Int64()+100000, 10)
 }
 
-// ecoflowHmacSHA256 generates HMAC-SHA256 signature
-func ecoflowHmacSHA256(accessKey, nonce, timestamp, secretKey string) string {
-	message := fmt.Sprintf("%s%s%s", accessKey, nonce, timestamp)
+// ecoflowHmacSHA256 generates HMAC-SHA256 signature from the full signature string
+func ecoflowHmacSHA256(signatureString, secretKey string) string {
 	h := hmac.New(sha256.New, []byte(secretKey))
-	h.Write([]byte(message))
+	h.Write([]byte(signatureString))
 	return hex.EncodeToString(h.Sum(nil))
 }
 
