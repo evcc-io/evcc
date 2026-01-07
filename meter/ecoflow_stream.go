@@ -52,6 +52,7 @@ func NewEcoFlowStreamFromConfig(ctx context.Context, other map[string]interface{
 		return nil, fmt.Errorf("ecoflow-stream: missing uri, sn, accessKey or secretKey")
 	}
 
+	cc.Usage = strings.ToLower(cc.Usage)
 	device, err := NewEcoFlowStream(cc.URI, cc.SN, cc.AccessKey, cc.SecretKey, cc.Usage, cc.Cache)
 	if err != nil {
 		return nil, err
@@ -85,8 +86,9 @@ func NewEcoFlowStream(uri, sn, accessKey, secretKey, usage string, cache time.Du
 		cache:     cache,
 	}
 
-	// Set authorization header using custom transport with HMAC-SHA256 signature
-	device.Client.Transport = NewEcoFlowAuthTransport(accessKey, secretKey)
+	// Set authorization header using custom transport with HMAC-SHA256 signature,
+	// wrapping the existing transport to preserve proxy/TLS/custom settings
+	device.Client.Transport = NewEcoFlowAuthTransport(device.Client.Transport, accessKey, secretKey)
 
 	// Create cached data fetcher
 	device.dataG = util.ResettableCached(device.getQuotaAll, cache)

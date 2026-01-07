@@ -52,6 +52,7 @@ func NewEcoFlowPowerStreamFromConfig(ctx context.Context, other map[string]inter
 		return nil, fmt.Errorf("ecoflow-powerstream: missing uri, sn, accessKey or secretKey")
 	}
 
+	cc.Usage = strings.ToLower(cc.Usage)
 	device, err := NewEcoFlowPowerStream(cc.URI, cc.SN, cc.AccessKey, cc.SecretKey, cc.Usage, cc.Cache)
 	if err != nil {
 		return nil, err
@@ -85,8 +86,9 @@ func NewEcoFlowPowerStream(uri, sn, accessKey, secretKey, usage string, cache ti
 		cache:     cache,
 	}
 
-	// Set authorization header using custom transport with HMAC-SHA256 signature
-	device.Client.Transport = NewEcoFlowAuthTransport(accessKey, secretKey)
+	// Set authorization header using custom transport with HMAC-SHA256 signature,
+	// wrapping the existing transport to preserve proxy/TLS/custom settings
+	device.Client.Transport = NewEcoFlowAuthTransport(device.Client.Transport, accessKey, secretKey)
 
 	// Create cached data fetcher
 	device.dataG = util.ResettableCached(device.getQuotaAll, cache)
@@ -122,8 +124,8 @@ func (d *EcoFlowPowerStream) CurrentPower() (float64, error) {
 		// PV power is sum of both strings
 		return data.Pv1InputWatts + data.Pv2InputWatts, nil
 	case "battery":
-		// Battery power: positive=discharge, negative=charge
-		return data.BatInputWatts, nil
+		// Battery power: follow evcc convention (positive=charge, negative=discharge)
+		return -data.BatInputWatts, nil
 	case "grid":
 		// Grid power (calculated from AC output)
 		return data.InvOutputWatts, nil

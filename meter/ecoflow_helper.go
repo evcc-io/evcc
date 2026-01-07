@@ -69,10 +69,16 @@ func ecoflowHmacSHA256(signatureString, secretKey string) string {
 	return hex.EncodeToString(h.Sum(nil))
 }
 
-// NewEcoFlowAuthTransport creates authenticated HTTP transport with HMAC-SHA256 signing
-func NewEcoFlowAuthTransport(accessKey, secretKey string) http.RoundTripper {
+// NewEcoFlowAuthTransport creates authenticated HTTP transport with HMAC-SHA256 signing,
+// wrapping the provided base RoundTripper to preserve existing HTTP settings (proxies, TLS, etc.).
+func NewEcoFlowAuthTransport(base http.RoundTripper, accessKey, secretKey string) http.RoundTripper {
+	// fall back to the default transport if no base has been configured
+	if base == nil {
+		base = transport.Default()
+	}
+
 	return &ecoflowAuthTransport{
-		base:      transport.Default(),
+		base:      base,
 		accessKey: accessKey,
 		secretKey: secretKey,
 	}
