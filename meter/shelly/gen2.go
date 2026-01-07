@@ -12,11 +12,24 @@ import (
 )
 
 // Gen2API endpoint reference: https://shelly-api-docs.shelly.cloud/gen2/
+// TopAC endpoint reference: https://shelly-api-docs.shelly.cloud/gen2/Devices/ShellyX/XT1/TopACPortableEVCharger/
 
 type Gen2RpcRequest struct {
 	Id     int    `json:"id"`
 	Src    string `json:"src"`
 	Method string `json:"method"`
+}
+
+type Gen2TopACRpcRequest struct {
+	Id     int             `json:"id"`
+	Src    string          `json:"src"`
+	Method string          `json:"method"`
+	Params Gen2TopACParams `json:"params,omitempty"`
+}
+
+type Gen2TopACParams struct {
+	Owner string `json:"owner,omitempty"`
+	Role  string `json:"role,omitempty"`
 }
 
 type Gen2SetRpcPost struct {
@@ -74,6 +87,30 @@ type Gen2ProAddOnGetPeripherals struct {
 	DigitalOut map[string]any `json:"digital_out"`
 }
 
+type Gen2EnumStatusWrapper struct {
+	Result struct {
+		Value string `json:"value"`
+	} `json:"result"`
+}
+
+type Gen2ObjectStatusWrapper struct {
+	Result struct {
+		Value struct {
+			TotalPower  float64   `json:"total_power"`
+			TotalEnergy float64   `json:"total_act_energy"`
+			PhaseA      Gen2Phase `json:"phase_a"`
+			PhaseB      Gen2Phase `json:"phase_b"`
+			PhaseC      Gen2Phase `json:"phase_c"`
+		} `json:"value"`
+	} `json:"result"`
+}
+
+type Gen2Phase struct {
+	Voltage float64 `json:"voltage"`
+	Current float64 `json:"current"`
+	Power   float64 `json:"power"`
+}
+
 var _ Generation = (*gen2)(nil)
 
 const apisrc string = "evcc"
@@ -89,6 +126,17 @@ type gen2 struct {
 	em1data       func() (Gen2EM1Data, error)
 	emstatus      func() (Gen2EMStatus, error)
 	emdata        func() (Gen2EMData, error)
+	chargerstatus func() (Gen2EnumStatusWrapper, error)
+	objectstatus  func() (Gen2ObjectStatusWrapper, error)
+}
+
+func (c *gen2) ChargerStatus() (string, error) {
+	if c.hasChargerStatusEndpoint() {
+		res, err := c.chargerstatus()
+		return res.Result.Value, err
+	}
+
+	return "", nil
 }
 
 func apiCall[T any](c *gen2, id int, method string) func() (T, error) {
@@ -134,28 +182,60 @@ func newGen2(helper *request.Helper, uri, model string, channel int, user, passw
 		}
 	}
 
-	if c.hasMethod("PM1.GetStatus") {
+	if c.hasMethod("Object.GetStatus") {
+		//c.switchstatus = true
+	} else if c.hasMethod("PM1.GetStatus") {
 		c.switchstatus = util.ResettableCached(apiCall[Gen2SwitchStatus](c, channel, "PM1.GetStatus"), cache)
 	} else {
 		c.switchstatus = util.ResettableCached(apiCall[Gen2SwitchStatus](c, c.switchchannel, "Switch.GetStatus"), cache)
 	}
+
 	c.em1status = util.Cached(apiCall[Gen2EM1Status](c, channel, "EM1.GetStatus"), cache)
 	c.em1data = util.Cached(apiCall[Gen2EM1Data](c, channel, "EM1Data.GetStatus"), cache)
 	c.emstatus = util.Cached(apiCall[Gen2EMStatus](c, channel, "EM.GetStatus"), cache)
 	c.emdata = util.Cached(apiCall[Gen2EMData](c, channel, "EMData.GetStatus"), cache)
+	c.chargerstatus = util.Cached(apiCall[Gen2EnumStatusWrapper](c, channel, "Enum.GetStatus"), cache)
+	c.objectstatus = util.Cached(apiCall[Gen2ObjectStatusWrapper](c, channel, "Object.GetStatus"), cache)
 
 	return c, nil
 }
 
 // execCmd executes a shelly api gen2+ command and provides the response
 func (c *gen2) execCmd(id int, method string, res any) error {
-	data := &Gen2RpcRequest{
-		Id:     id,
-		Src:    apisrc,
-		Method: method,
+	var data any
+	var uri string = fmt.Sprintf("%s", c.uri)
+
+	switch method {
+	case "Enum.GetStatus":
+		data = &Gen2TopACRpcRequest{
+			Id:     id,
+			Src:    apisrc,
+			Method: method,
+			Params: Gen2TopACParams{
+				Owner: "service:0",
+				Role:  "work_state",
+			},
+		}
+	case "Object.GetStatus":
+		data = &Gen2TopACRpcRequest{
+			Id:     id,
+			Src:    apisrc,
+			Method: method,
+			Params: Gen2TopACParams{
+				Owner: "service:0",
+				Role:  "phase_info",
+			},
+		}
+	default:
+		data = &Gen2RpcRequest{
+			Id:     id,
+			Src:    apisrc,
+			Method: method,
+		}
+		uri = fmt.Sprintf("%s/%s", c.uri, method)
 	}
 
-	req, err := request.New(http.MethodPost, fmt.Sprintf("%s/%s", c.uri, method), request.MarshalJSON(data), request.JSONEncoding)
+	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
 	if err != nil {
 		return err
 	}
@@ -197,6 +277,10 @@ func (c *gen2) CurrentPower() (float64, error) {
 		res, err := c.switchstatus.Get()
 		return res.Apower, err
 
+	case c.hasObjectStatusEndpoint():
+		res, err := c.objectstatus()
+		return res.Result.Value.TotalPower * 1000, err
+
 	default:
 		return 0, fmt.Errorf("unknown shelly model: %s", c.model)
 	}
@@ -209,11 +293,21 @@ func (c *gen2) Enabled() (bool, error) {
 		return res.Output, err
 	}
 
+	if c.hasObjectStatusEndpoint() {
+		// not sure what to do here
+		return true, nil
+	}
+
 	return false, fmt.Errorf("unknown shelly model: %s", c.model)
 }
 
 // Gen2Enable implements the api.Charger interface
 func (c *gen2) Enable(enable bool) error {
+	if !c.hasSwitchEndpoint() {
+		// not sure what to do here
+		return nil
+	}
+
 	var res Gen2SwitchStatus
 	c.switchstatus.Reset()
 	return c.execEnableCmd(c.switchchannel, "Switch.Set", enable, &res)
@@ -233,6 +327,10 @@ func (c *gen2) TotalEnergy() (float64, error) {
 	case c.hasSwitchEndpoint():
 		res, err := c.switchstatus.Get()
 		return res.Aenergy.Total / 1000, err
+
+	case c.hasObjectStatusEndpoint():
+		res, err := c.objectstatus()
+		return res.Result.Value.TotalEnergy, err
 
 	default:
 		return 0, fmt.Errorf("unknown shelly model: %s", c.model)
@@ -254,6 +352,11 @@ func (c *gen2) Currents() (float64, float64, float64, error) {
 		res, err := c.switchstatus.Get()
 		return res.Current, 0, 0, err
 
+	case c.hasObjectStatusEndpoint():
+		res, err := c.objectstatus()
+		value := res.Result.Value
+		return value.PhaseA.Current, value.PhaseB.Current, value.PhaseC.Current, err
+
 	default:
 		return 0, 0, 0, fmt.Errorf("unknown shelly model: %s", c.model)
 	}
@@ -273,6 +376,11 @@ func (c *gen2) Voltages() (float64, float64, float64, error) {
 	case c.hasSwitchEndpoint():
 		res, err := c.switchstatus.Get()
 		return res.Voltage, 0, 0, err
+
+	case c.hasObjectStatusEndpoint():
+		res, err := c.objectstatus()
+		value := res.Result.Value
+		return value.PhaseA.Voltage, value.PhaseB.Voltage, value.PhaseC.Voltage, err
 
 	default:
 		return 0, 0, 0, fmt.Errorf("unknown shelly model: %s", c.model)
@@ -294,6 +402,11 @@ func (c *gen2) Powers() (float64, float64, float64, error) {
 		res, err := c.switchstatus.Get()
 		return res.Apower, 0, 0, err
 
+	case c.hasObjectStatusEndpoint():
+		res, err := c.objectstatus()
+		value := res.Result.Value
+		return value.PhaseA.Power * 1000, value.PhaseB.Power * 1000, value.PhaseC.Power * 1000, err
+
 	default:
 		return 0, 0, 0, fmt.Errorf("unknown shelly model: %s", c.model)
 	}
@@ -310,6 +423,14 @@ func (c *gen2) hasEM1Endpoint() bool {
 
 func (c *gen2) hasEMEndpoint() bool {
 	return c.hasMethod("EM.GetStatus")
+}
+
+func (c *gen2) hasObjectStatusEndpoint() bool {
+	return c.hasMethod("Object.GetStatus")
+}
+
+func (c *gen2) hasChargerStatusEndpoint() bool {
+	return c.hasMethod("Enum.GetStatus")
 }
 
 // Gen2+ models using EM1.GetStatus endpoint for power and EM1Data.GetStatus for energy

@@ -45,6 +45,11 @@ type gen1 struct {
 	status  util.Cacheable[Gen1Status]
 }
 
+// not supported in gen1
+func (c *gen1) ChargerStatus() (string, error) {
+	return "", nil
+}
+
 // newGen1 initializes the connection to the shelly gen1 api and sets up the cached gen1Status
 func newGen1(client *request.Helper, uri, model string, channel int, user, password string, cache time.Duration) *gen1 {
 	if user != "" {

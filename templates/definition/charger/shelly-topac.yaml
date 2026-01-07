@@ -1,0 +1,17 @@
+template: shelly-topac
+products:
+  - { brand: Shelly, description: { generic: TopAC } }
+params:
+  - name: host
+  - name: user
+  - name: password
+    mask: true
+render: |
+  type: shelly
+  uri: http://{{ .host }}
+  {{- if .user }}
+  user: {{ .user }}
+  {{- end }}
+  {{- if .password }}
+  password: {{ .password }}
+  {{- end }}

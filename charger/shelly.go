@@ -99,3 +99,31 @@ var _ api.MeterEnergy = (*Shelly)(nil)
 func (c *Shelly) TotalEnergy() (float64, error) {
 	return c.conn.TotalEnergy()
 }
+
+var _ api.ChargeState = (*Shelly)(nil)
+
+// Status implements the api.ChargeState interface
+func (c *Shelly) Status() (api.ChargeStatus, error) {
+	status := api.StatusNone
+
+	res, err := c.conn.ChargerStatus()
+	if err != nil {
+		return status, err
+	}
+
+	switch res {
+	case "charger_free":
+		status = api.StatusA
+
+	case "charger_wait":
+		status = api.StatusB
+
+	case "charger_charging":
+		status = api.StatusC
+
+	default:
+		err = fmt.Errorf("invalid status: %d", res)
+	}
+
+	return status, err
+}

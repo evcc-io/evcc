@@ -16,6 +16,7 @@ type Generation interface {
 	Enabled() (bool, error)
 	Enable(bool) error
 	TotalEnergy() (float64, error)
+	ChargerStatus() (string, error)
 }
 
 type Phases interface {
