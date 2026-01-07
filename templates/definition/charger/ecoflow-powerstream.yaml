@@ -32,6 +32,7 @@ params:
       de: EcoFlow API Endpunkt (Cloud)
   - name: sn
     required: true
+    default: "DEMO"
     description:
       generic: Serial Number
     help:
@@ -39,6 +40,7 @@ params:
       de: Seriennummer Ihres EcoFlow PowerStream Gerätes
   - name: accessKey
     required: true
+    default: "demo-access-key"
     description:
       generic: Access Key
     help:
@@ -46,6 +48,7 @@ params:
       de: Access Key aus der EcoFlow Developer Console
   - name: secretKey
     required: true
+    default: "demo-secret-key"
     description:
       generic: Secret Key
     help:
