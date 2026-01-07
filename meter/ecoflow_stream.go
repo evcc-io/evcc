@@ -3,12 +3,47 @@ package meter
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 )
+
+// https://developer-eu.ecoflow.com/us/document/bkw
+
+// EcoFlowStreamData represents the full device status from EcoFlow Stream API
+type EcoFlowStreamData struct {
+	Relay2Onoff               bool            `json:"relay2Onoff"`         // AC1 switch (false=off, true=on)
+	Relay3Onoff               bool            `json:"relay3Onoff"`         // AC2 switch (false=off, true=on)
+	PowGetPvSum               float64         `json:"powGetPvSum"`         // Real-time PV power (W)
+	FeedGridMode              int             `json:"feedGridMode"`        // Feed-in control (1-off, 2-on)
+	GridConnectionPower       float64         `json:"gridConnectionPower"` // Grid port power (W)
+	PowGetSysGrid             float64         `json:"powGetSysGrid"`       // System real-time grid power (W)
+	PowGetSysLoad             float64         `json:"powGetSysLoad"`       // System real-time load power (W)
+	CmsBattSoc                float64         `json:"cmsBattSoc"`          // Battery SOC (%)
+	PowGetBpCms               float64         `json:"powGetBpCms"`         // Real-time battery power (W)
+	BackupReverseSoc          int             `json:"backupReverseSoc"`    // Backup reserve level (%)
+	CmsMaxChgSoc              int             `json:"cmsMaxChgSoc"`        // Charge limit (%)
+	CmsMinDsgSoc              int             `json:"cmsMinDsgSoc"`        // Discharge limit (%)
+	EnergyStrategyOperateMode map[string]bool `json:"energyStrategyOperateMode"`
+	QuotaCloudTs              string          `json:"quota_cloud_ts"`
+}
+
+// EcoFlowStream represents an EcoFlow Stream Energy Management System (Inverter + Battery)
+type EcoFlowStream struct {
+	*request.Helper
+	log       *util.Logger
+	uri       string
+	sn        string // device serial number
+	accessKey string // API access key
+	secretKey string // API secret key for signing
+	usage     string // pv, grid, battery
+	cache     time.Duration
+	dataG     util.Cacheable[EcoFlowStreamData]
+}
 
 func init() {
 	registry.AddCtx("ecoflow-stream", NewEcoFlowStreamFromConfig)
@@ -36,8 +71,7 @@ func NewEcoFlowStreamFromConfig(ctx context.Context, other map[string]interface{
 		return nil, fmt.Errorf("ecoflow-stream: missing uri, sn, accessKey or secretKey")
 	}
 
-	// Create device with specified usage type
-	device, err := charger.NewEcoFlowStream(cc.URI, cc.SN, cc.AccessKey, cc.SecretKey, cc.Usage, cc.Cache)
+	device, err := NewEcoFlowStream(cc.URI, cc.SN, cc.AccessKey, cc.SecretKey, cc.Usage, cc.Cache)
 	if err != nil {
 		return nil, err
 	}
@@ -51,10 +85,94 @@ func NewEcoFlowStreamFromConfig(ctx context.Context, other map[string]interface{
 	return device, nil
 }
 
-// EcoFlowStreamBattery wraps EcoFlowStream for battery interface
-type EcoFlowStreamBattery struct {
-	*charger.EcoFlowStream
+// NewEcoFlowStream creates an EcoFlow Stream device for use as a meter
+func NewEcoFlowStream(uri, sn, accessKey, secretKey, usage string, cache time.Duration) (*EcoFlowStream, error) {
+	if uri == "" || sn == "" || accessKey == "" || secretKey == "" {
+		return nil, fmt.Errorf("ecoflow-stream: missing uri, sn, accessKey or secretKey")
+	}
+
+	log := util.NewLogger("ecoflow-stream").Redact(accessKey, secretKey)
+
+	device := &EcoFlowStream{
+		Helper:    request.NewHelper(log),
+		log:       log,
+		uri:       strings.TrimSuffix(uri, "/"),
+		sn:        sn,
+		accessKey: accessKey,
+		secretKey: secretKey,
+		usage:     strings.ToLower(usage),
+		cache:     cache,
+	}
+
+	// Set authorization header using custom transport with HMAC-SHA256 signature
+	device.Client.Transport = charger.NewEcoFlowAuthTransport(accessKey, secretKey)
+
+	// Create cached data fetcher
+	device.dataG = util.ResettableCached(device.getQuotaAll, cache)
+
+	return device, nil
 }
 
+// getQuotaAll fetches device quota data from API
+func (d *EcoFlowStream) getQuotaAll() (EcoFlowStreamData, error) {
+	uri := fmt.Sprintf("%s/iot-open/sign/device/quota/all?sn=%s", d.uri, d.sn)
+
+	type response struct {
+		Code    string            `json:"code"`
+		Message string            `json:"message"`
+		Data    EcoFlowStreamData `json:"data"`
+	}
+
+	var res response
+	err := d.GetJSON(uri, &res)
+	if err != nil {
+		return EcoFlowStreamData{}, err
+	}
+
+	if res.Code != "0" {
+		return EcoFlowStreamData{}, fmt.Errorf("API error: %s", res.Message)
+	}
+
+	return res.Data, nil
+}
+
+// CurrentPower implements api.Meter
+func (d *EcoFlowStream) CurrentPower() (float64, error) {
+	data, err := d.dataG.Get()
+	if err != nil {
+		return 0, err
+	}
+
+	switch d.usage {
+	case "battery":
+		// Battery: negative = charging, positive = discharging
+		// EcoFlow convention: PowGetBpCms positive when discharging, negative when charging
+		// evcc convention: negative when discharging, positive when charging
+		return -data.PowGetBpCms, nil
+	case "pv":
+		return data.PowGetPvSum, nil
+	case "grid":
+		return data.PowGetSysGrid, nil
+	default:
+		return 0, fmt.Errorf("unknown usage type: %s", d.usage)
+	}
+}
+
+// EcoFlowStreamBattery wraps EcoFlowStream for battery interface
+type EcoFlowStreamBattery struct {
+	*EcoFlowStream
+}
+
+// Soc implements api.Battery
+func (d *EcoFlowStreamBattery) Soc() (float64, error) {
+	data, err := d.dataG.Get()
+	if err != nil {
+		return 0, err
+	}
+
+	return data.CmsBattSoc, nil
+}
+
+var _ api.Meter = (*EcoFlowStream)(nil)
 var _ api.Meter = (*EcoFlowStreamBattery)(nil)
 var _ api.Battery = (*EcoFlowStreamBattery)(nil)
