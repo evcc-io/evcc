@@ -218,16 +218,6 @@ func (d *EcoFlowStream) CurrentPower() (float64, error) {
 	}
 }
 
-// TotalEnergy implements api.MeterEnergy (not supported by this API)
-func (d *EcoFlowStream) TotalEnergy() (float64, error) {
-	return 0, api.ErrNotAvailable
-}
-
-// Currents implements api.MeterCurrents (not supported by this API)
-func (d *EcoFlowStream) Currents() (float64, float64, float64, error) {
-	return 0, 0, 0, api.ErrNotAvailable
-}
-
 // Soc implements api.Battery
 func (d *EcoFlowStream) Soc() (float64, error) {
 	data, err := d.dataG.Get()
