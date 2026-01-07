@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/charger"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 )
@@ -104,7 +103,7 @@ func NewEcoFlowPowerStream(uri, sn, accessKey, secretKey, usage string, cache ti
 	}
 
 	// Set authorization header using custom transport with HMAC-SHA256 signature
-	device.Client.Transport = charger.NewEcoFlowAuthTransport(accessKey, secretKey)
+	device.Client.Transport = NewEcoFlowAuthTransport(accessKey, secretKey)
 
 	// Create cached data fetcher
 	device.dataG = util.ResettableCached(device.getQuotaAll, cache)

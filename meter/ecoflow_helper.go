@@ -1,4 +1,4 @@
-package charger
+package meter
 
 import (
 	"crypto/hmac"
