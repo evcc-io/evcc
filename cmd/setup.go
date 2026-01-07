@@ -855,12 +855,12 @@ func tariffInstance(name string, conf config.Typed) (api.Tariff, error) {
 }
 
 func configureTariff(u api.TariffUsage, conf config.Typed, t *api.Tariff) error {
-	if conf == nil || conf.Type == "" {
+	if conf.Type == "" {
 		return nil
 	}
 
 	name := u.String()
-	res, err := tariffInstance(name, *conf)
+	res, err := tariffInstance(name, conf)
 	if err != nil {
 		return &DeviceError{name, err}
 	}
