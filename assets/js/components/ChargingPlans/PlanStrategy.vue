@@ -1,22 +1,20 @@
 <template>
 	<div class="strategy-wrapper" :class="{ open: show }">
 		<div class="strategy-content">
-			<div class="row">
+			<div v-if="disabled" class="row mb-4">
+				<div class="small text-muted">
+					<strong class="text-primary">{{ $t("general.note") }}</strong>
+					{{ $t("main.chargingPlan.strategyDisabledDescription") }}
+				</div>
+			</div>
+			<div v-else class="row">
 				<div class="col-12 col-sm-6 col-lg-3 offset-lg-3 mb-3">
 					<div class="row">
 						<label :for="formId('continuous')" class="col-form-label col-5 col-sm-12">
 							{{ $t("main.chargingPlan.optimization.label") }}
 						</label>
 						<div class="col-7 col-sm-12">
-							<input
-								v-if="disabled"
-								:id="formId('continuous')"
-								class="form-select"
-								disabled
-								value="---"
-							/>
 							<select
-								v-else
 								:id="formId('continuous')"
 								v-model="localContinuous"
 								class="form-select"
@@ -38,15 +36,7 @@
 							{{ $t("main.chargingPlan.precondition.label") }}
 						</label>
 						<div class="col-7 col-sm-12">
-							<input
-								v-if="disabled"
-								:id="formId('precondition')"
-								class="form-select"
-								disabled
-								value="---"
-							/>
 							<select
-								v-else
 								:id="formId('precondition')"
 								v-model="localPrecondition"
 								class="form-select"
@@ -65,12 +55,6 @@
 							</select>
 						</div>
 					</div>
-				</div>
-				<div v-if="disabled" class="small text-muted mb-4 col-sm-12 col-lg-6 offset-lg-3">
-					<strong class="text-primary">
-						{{ $t("main.chargingPlan.strategyDisabledHint") }}
-					</strong>
-					{{ $t("main.chargingPlan.strategyDisabledDescription") }}
 				</div>
 			</div>
 		</div>

@@ -688,16 +688,12 @@ test.describe("plan strategy", async () => {
     const modal = page.getByTestId("charging-plan-modal");
     await expect(modal.getByTestId("static-plan-active")).toBeVisible();
 
+    // Strategy toggle should be visible but expand to show informational note only
     await expect(modal.getByRole("button", { name: "Strategy settings" })).toBeVisible();
     await modal.getByRole("button", { name: "Strategy settings" }).click();
-
-    await expect(modal.getByLabel("Optimization")).toBeDisabled();
-    await expect(modal.getByLabel("Late Charging")).toBeDisabled();
-    await expect(
-      modal.getByText(
-        "These options are only available when a dynamic grid prices or CO₂ tariff is configured."
-      )
-    ).toBeVisible();
+    await expect(modal.getByLabel("Optimization")).not.toBeVisible();
+    await expect(modal.getByLabel("Late Charging")).not.toBeVisible();
+    await expect(modal).toContainText("just in time for your departure");
   });
 
   test("visible and functional on mobile", async ({ page }) => {

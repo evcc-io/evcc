@@ -760,6 +760,9 @@
       "solar": "Solar"
     }
   },
+  "general": {
+    "note": "Note:"
+  },
   "header": {
     "about": "About",
     "blog": "Blog",
@@ -893,8 +896,7 @@
       "repeating": "repeating",
       "repeatingPlans": "Repeating plans",
       "selectAll": "Select all",
-      "strategyDisabledDescription": "These options are only available when a dynamic grid prices or CO₂ tariff is configured.",
-      "strategyDisabledHint": "Note:",
+      "strategyDisabledDescription": "The planner will schedule charging to finish just in time for your departure. With dynamic grid prices or a CO₂ tariff, additional optimization options are available here.",
       "strategySettings": "Strategy settings",
       "time": "Time",
       "title": "Plan",
