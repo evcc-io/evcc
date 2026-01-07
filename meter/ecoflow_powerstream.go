@@ -24,6 +24,8 @@ type EcoFlowPowerStream struct {
 	dataG     util.Cacheable[EcoFlowPowerStreamData]
 }
 
+var _ api.Meter = (*EcoFlowPowerStream)(nil)
+
 func init() {
 	registry.AddCtx("ecoflow-powerstream", NewEcoFlowPowerStreamFromConfig)
 }
@@ -135,6 +137,11 @@ type EcoFlowPowerStreamBattery struct {
 	*EcoFlowPowerStream
 }
 
+var (
+	_ api.Meter   = (*EcoFlowPowerStreamBattery)(nil)
+	_ api.Battery = (*EcoFlowPowerStreamBattery)(nil)
+)
+
 // Soc implements api.Battery
 func (d *EcoFlowPowerStreamBattery) Soc() (float64, error) {
 	data, err := d.dataG.Get()
@@ -144,7 +151,3 @@ func (d *EcoFlowPowerStreamBattery) Soc() (float64, error) {
 
 	return float64(data.BatSoc), nil
 }
-
-var _ api.Meter = (*EcoFlowPowerStream)(nil)
-var _ api.Meter = (*EcoFlowPowerStreamBattery)(nil)
-var _ api.Battery = (*EcoFlowPowerStreamBattery)(nil)
