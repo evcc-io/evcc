@@ -18,6 +18,7 @@ package charger
 // SOFTWARE.
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strings"
@@ -31,15 +32,19 @@ import (
 	"github.com/jpfielding/go-http-digest/pkg/digest"
 )
 
+const (
+	requestTimeout = 10 * time.Second
+)
+
 // ShellyTopAC charger implementation for Shelly Top AC Portable EV Charger
 // API Reference: https://shelly-api-docs.shelly.cloud/gen2/Devices/ShellyX/XT1/TopACPortableEVCharger/
 type ShellyTopAC struct {
 	*request.Helper
 	uri     string
 	current int64
+	enabled bool
 	statusG util.Cacheable[topACStatus]
 	phaseG  util.Cacheable[topACPhaseInfo]
-	energyG util.Cacheable[topACEnergy]
 }
 
 type topACRpcRequest struct {
@@ -94,10 +99,6 @@ type topACPhaseInfo struct {
 	info topACPhaseInfoValue
 }
 
-type topACEnergy struct {
-	sessionEnergy float64
-}
-
 type topACServiceConfigRequest struct {
 	Id     int                   `json:"id"`
 	Src    string                `json:"src"`
@@ -111,11 +112,11 @@ type topACServiceConfigSet struct {
 }
 
 func init() {
-	registry.Add("shelly-topac", NewShellyTopACFromConfig)
+	registry.AddCtx("shelly-topac", NewShellyTopACFromConfig)
 }
 
 // NewShellyTopACFromConfig creates a Shelly Top AC charger from generic config
-func NewShellyTopACFromConfig(other map[string]any) (api.Charger, error) {
+func NewShellyTopACFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		URI      string
 		User     string
@@ -162,7 +163,6 @@ func NewShellyTopAC(uri, user, password string, cache time.Duration) (api.Charge
 	// Setup cached status getters
 	c.statusG = util.ResettableCached(c.getWorkState, cache)
 	c.phaseG = util.ResettableCached(c.getPhaseInfo, cache)
-	c.energyG = util.ResettableCached(c.getSessionEnergy, cache)
 
 	// Enable auto_charge configuration
 	if err := c.setAutoCharge(true); err != nil {
@@ -183,11 +183,15 @@ func (c *ShellyTopAC) execRpc(method, owner, role string, value any, res any) er
 	data.Params.Role = role
 	data.Params.Value = value
 
+	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
+	defer cancel()
+
 	req, err := request.New(http.MethodPost, fmt.Sprintf("%s/%s", c.uri, method), request.MarshalJSON(data), request.JSONEncoding)
 	if err != nil {
 		return err
 	}
 
+	req = req.WithContext(ctx)
 	return c.DoJSON(req, &res)
 }
 
@@ -222,14 +226,6 @@ func (c *ShellyTopAC) getPhaseInfo() (topACPhaseInfo, error) {
 	return topACPhaseInfo{info: res.Value}, err
 }
 
-// getSessionEnergy retrieves the session energy consumption
-func (c *ShellyTopAC) getSessionEnergy() (topACEnergy, error) {
-	var res topACNumberResponse
-	err := c.execRpc("Number.GetStatus", "service:0", "energy_charge", nil, &res)
-
-	return topACEnergy{sessionEnergy: res.Value}, err
-}
-
 // setAutoCharge enables or disables auto charge configuration
 func (c *ShellyTopAC) setAutoCharge(enable bool) error {
 	data := topACServiceConfigRequest{
@@ -242,11 +238,15 @@ func (c *ShellyTopAC) setAutoCharge(enable bool) error {
 		},
 	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
+	defer cancel()
+
 	req, err := request.New(http.MethodPost, fmt.Sprintf("%s/Service.SetConfig", c.uri), request.MarshalJSON(data), request.JSONEncoding)
 	if err != nil {
 		return err
 	}
 
+	req = req.WithContext(ctx)
 	var res any
 	return c.DoJSON(req, &res)
 }
@@ -292,9 +292,15 @@ func (c *ShellyTopAC) Enable(enable bool) error {
 		current = c.current
 	}
 
-	c.statusG.Reset()
+	if err := c.setCurrentLimit(float64(current)); err != nil {
+		return err
+	}
 
-	return c.setCurrentLimit(float64(current))
+	c.enabled = enable
+	c.statusG.Reset()
+	c.phaseG.Reset()
+
+	return nil
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -305,13 +311,7 @@ func (c *ShellyTopAC) MaxCurrent(current int64) error {
 
 	c.current = current
 
-	// Only set if charger is enabled
-	enabled, err := c.Enabled()
-	if err != nil {
-		return err
-	}
-
-	if enabled {
+	if c.enabled {
 		return c.setCurrentLimit(float64(current))
 	}
 
