@@ -352,7 +352,8 @@ export default defineComponent({
 		},
 		defaultTime() {
 			const lastTargetTime = (settings.lastTargetTime || DEFAULT_TARGET_TIME).split(":");
-			const [hours, minutes] = [Number(lastTargetTime[0]), Number(lastTargetTime[1])];
+			const hours = Number(lastTargetTime[0]);
+			const minutes = Number(lastTargetTime[1]);
 
 			const target = new Date();
 			target.setSeconds(0);
