@@ -351,7 +351,9 @@ export default defineComponent({
 			this.active = checked;
 		},
 		defaultTime() {
-			const [hours, minutes] = (settings.lastTargetTime || DEFAULT_TARGET_TIME).split(":");
+			const [hours, minutes] = (settings.lastTargetTime || DEFAULT_TARGET_TIME)
+				.split(":")
+				.map(Number);
 
 			const target = new Date();
 			target.setSeconds(0);
