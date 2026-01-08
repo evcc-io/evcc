@@ -110,7 +110,7 @@ render: |
       - case: 3 # charge
         set:
           source: const
-          value: {{ if .maxchargerate }}-{{ .maxchargerate }}{{ end }} # %
+          value: {{ if .maxchargepower }}-{{ .maxchargepower }}{{ end }} # W
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
