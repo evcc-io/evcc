@@ -55,6 +55,18 @@ func (mr *MockAPIMockRecorder) ActivePhases() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ActivePhases", reflect.TypeOf((*MockAPI)(nil).ActivePhases))
 }
 
+// ClearPlanLock mocks base method.
+func (m *MockAPI) ClearPlanLock() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "ClearPlanLock")
+}
+
+// ClearPlanLock indicates an expected call of ClearPlanLock.
+func (mr *MockAPIMockRecorder) ClearPlanLock() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClearPlanLock", reflect.TypeOf((*MockAPI)(nil).ClearPlanLock))
+}
+
 // EffectiveLimitSoc mocks base method.
 func (m *MockAPI) EffectiveLimitSoc() int {
 	m.ctrl.T.Helper()
