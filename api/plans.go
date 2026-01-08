@@ -20,14 +20,14 @@ type PlanStrategy struct {
 }
 
 type planStrategy struct {
-	Continuous   bool `json:"continuous"`   // force continuous planning
-	Precondition int  `json:"precondition"` // precondition duration in seconds
+	Continuous   bool  `json:"continuous"`   // force continuous planning
+	Precondition int64 `json:"precondition"` // precondition duration in seconds
 }
 
-func (ps *PlanStrategy) MarshalJSON() ([]byte, error) {
+func (ps PlanStrategy) MarshalJSON() ([]byte, error) {
 	return json.Marshal(planStrategy{
 		Continuous:   ps.Continuous,
-		Precondition: int(ps.Precondition.Seconds()),
+		Precondition: int64(ps.Precondition.Seconds()),
 	})
 }
 
