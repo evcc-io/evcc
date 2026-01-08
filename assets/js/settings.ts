@@ -64,12 +64,6 @@ function saveNumber(key: string) {
   };
 }
 
-function saveString(key: string) {
-  return (value: string | undefined) => {
-    save(key)(value ?? null);
-  };
-}
-
 function readArray(key: string) {
   const value = read(key);
   return value ? value.split(",") : [];
@@ -129,7 +123,7 @@ export interface Settings {
   solarAdjusted: boolean;
   loadpoints: Record<string, LoadpointSettings>;
   lastBatterySmartCostLimit: number | undefined;
-  lastTargetTime: string | undefined;
+  lastTargetTime: string | null;
   lastSocGoal: number | undefined;
   lastEnergyGoal: number | undefined;
 }
@@ -178,7 +172,7 @@ watch(() => settings.sessionsType, save(SESSIONS_TYPE));
 watch(() => settings.solarAdjusted, saveBool(SETTINGS_SOLAR_ADJUSTED));
 watch(() => settings.loadpoints, saveJSON(LOADPOINTS), { deep: true });
 watch(() => settings.lastBatterySmartCostLimit, saveNumber(LAST_BATTERY_SMART_COST_LIMIT));
-watch(() => settings.lastTargetTime, saveString(LAST_TARGET_TIME));
+watch(() => settings.lastTargetTime, save(LAST_TARGET_TIME));
 watch(() => settings.lastSocGoal, saveNumber(LAST_SOC_GOAL));
 watch(() => settings.lastEnergyGoal, saveNumber(LAST_ENERGY_GOAL));
 
