@@ -269,9 +269,11 @@ func (wb *Solax) Voltages() (float64, float64, float64, error) {
 	return wb.getPhaseValues(solaxRegVoltages)
 }
 
+// phases1p3p implements the api.PhaseSwitcher interface
 func (wb *Solax) phases1p3p(phases int) error {
 	var u uint16
 
+	// 1=single-phase, 2=three-phase
 	if phases == 3 {
 		u = 2
 	}
