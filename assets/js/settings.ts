@@ -25,7 +25,7 @@ const LAST_TARGET_TIME = "last_target_time";
 const LAST_SOC_GOAL = "last_soc_goal";
 const LAST_ENERGY_GOAL = "last_energy_goal";
 
-function read(key: string) {
+function read(key: string): string | null {
   return window.localStorage[key];
 }
 
@@ -54,7 +54,8 @@ function saveBool(key: string) {
 }
 
 function readNumber(key: string) {
-  return read(key) ? parseFloat(read(key)) : undefined;
+  const value = read(key);
+  return value ? parseFloat(value) : undefined;
 }
 
 function saveNumber(key: string) {
