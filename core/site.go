@@ -500,7 +500,7 @@ func (site *Site) Publish(key string, val any) {
 // clearPlanLocks clears locked plan goals for all loadpoints
 func (site *Site) clearPlanLocks() {
 	for _, lp := range site.Loadpoints() {
-		lp.ClearPlanLocks()
+		lp.ClearPlanLock()
 	}
 }
 

@@ -13,18 +13,18 @@ import (
 
 // TODO planActive is not guarded by mutex
 
-// clearPlanLocks clears the locked plan goal (internal)
-func (lp *Loadpoint) clearPlanLocks() {
+// clearPlanLock clears the locked plan goal
+func (lp *Loadpoint) clearPlanLock() {
 	lp.planLockedTime = time.Time{}
 	lp.planLockedSoc = 0
 	lp.planLockedId = 0
 }
 
-// ClearPlanLocks clears the locked plan goal (public API)
-func (lp *Loadpoint) ClearPlanLocks() {
+// ClearPlanLock clears the locked plan goal
+func (lp *Loadpoint) ClearPlanLock() {
 	lp.Lock()
 	defer lp.Unlock()
-	lp.clearPlanLocks()
+	lp.clearPlanLock()
 }
 
 // lockPlanGoal locks the current plan goal to handle overruns (soc-based plans)
@@ -39,7 +39,7 @@ func (lp *Loadpoint) setPlanActive(active bool) {
 	if !active {
 		lp.planOverrunSent = false
 		lp.planSlotEnd = time.Time{}
-		lp.clearPlanLocks()
+		lp.clearPlanLock()
 	}
 	if lp.planActive != active {
 		lp.planActive = active

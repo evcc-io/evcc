@@ -537,7 +537,7 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 	lp.clearSession()
 
 	// clear locked plan goal on disconnect
-	lp.clearPlanLocks()
+	lp.clearPlanLock()
 
 	// phases are unknown when vehicle disconnects
 	lp.ResetMeasuredPhases()
