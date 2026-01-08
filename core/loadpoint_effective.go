@@ -101,6 +101,14 @@ func (lp *Loadpoint) nextVehiclePlan() (time.Time, int, int) {
 	return time.Time{}, 0, 0
 }
 
+// EffectivePlanSoc returns the soc target for the current plan
+func (lp *Loadpoint) EffectivePlanSoc() int {
+	lp.RLock()
+	defer lp.RUnlock()
+	_, soc, _ := lp.nextVehiclePlan()
+	return soc
+}
+
 // getPlanId returns the plan id of the current/next plan
 func (lp *Loadpoint) getPlanId() int {
 	if lp.socBasedPlanning() {
@@ -111,14 +119,6 @@ func (lp *Loadpoint) getPlanId() int {
 		return 1
 	}
 	return 0
-}
-
-// EffectivePlanSoc returns the soc target for the current plan
-func (lp *Loadpoint) EffectivePlanSoc() int {
-	lp.RLock()
-	defer lp.RUnlock()
-	_, soc, _ := lp.nextVehiclePlan()
-	return soc
 }
 
 // EffectivePlanId returns the id for the current plan
