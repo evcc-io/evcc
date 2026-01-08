@@ -25,7 +25,7 @@ const LAST_TARGET_TIME = "last_target_time";
 const LAST_SOC_GOAL = "last_soc_goal";
 const LAST_ENERGY_GOAL = "last_energy_goal";
 
-function read(key: string): string | null {
+function read(key: string) {
   return window.localStorage[key];
 }
 
