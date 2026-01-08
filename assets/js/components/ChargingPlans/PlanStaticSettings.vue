@@ -277,7 +277,7 @@ export default defineComponent({
 				this.selectedSoc = settings.lastSocGoal ?? 100;
 			}
 			if (!this.selectedEnergy) {
-				this.selectedEnergy = settings.lastEnergyGoal ?? this.capacity ?? 10;
+				this.selectedEnergy = settings.lastEnergyGoal ?? (this.capacity || 10);
 			}
 
 			let t = this.time;
