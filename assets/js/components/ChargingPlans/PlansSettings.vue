@@ -108,8 +108,7 @@ export default defineComponent({
 		effectiveLimitSoc: Number,
 		effectivePlanTime: String,
 		effectivePlanSoc: Number,
-		effectivePlanPrecondition: Number,
-		effectivePlanContinuous: Boolean,
+		effectivePlanStrategy: Object as PropType<PlanStrategy>,
 		planEnergy: Number,
 		limitEnergy: Number,
 		socBasedPlanning: Boolean,
@@ -163,8 +162,8 @@ export default defineComponent({
 		chargingPlanStrategyProps(): any {
 			return {
 				id: this.id,
-				precondition: this.effectivePlanPrecondition,
-				continuous: this.effectivePlanContinuous,
+				precondition: this.effectivePlanStrategy?.precondition,
+				continuous: this.effectivePlanStrategy?.continuous,
 			};
 		},
 		alreadyReached(): boolean {
@@ -186,11 +185,11 @@ export default defineComponent({
 				this.updatePlanDebounced();
 			}
 		},
-		effectivePlanPrecondition() {
-			this.updatePlanDebounced();
-		},
-		effectivePlanContinuous() {
-			this.updatePlanDebounced();
+		effectivePlanStrategy: {
+			deep: true,
+			handler() {
+				this.updatePlanDebounced();
+			},
 		},
 		staticPlan: {
 			deep: true,
