@@ -109,7 +109,7 @@ func (v *adapter) SetPlanSoc(ts time.Time, soc int) error {
 	settings.SetTime(v.key()+keys.PlanTime, ts)
 	settings.SetInt(v.key()+keys.PlanSoc, int64(soc))
 
-	// note: could be optimized my only clearing plan lock of the relevent loadpoint
+	// note: could be optimized by only clearing plan lock of the relevant loadpoint
 	v.clearPlanLocks()
 
 	v.publish()
@@ -138,7 +138,7 @@ func (v *adapter) SetRepeatingPlans(plans []api.RepeatingPlan) error {
 
 	v.log.DEBUG.Printf("update repeating plans for %s to: %v", v.name, plans)
 
-	// note: could be optimized my only clearing plan lock of the relevent loadpoint
+	// note: could be optimized by only clearing plan lock of the relevant loadpoint
 	v.clearPlanLocks()
 
 	v.publish()

@@ -126,3 +126,38 @@ func TestNextPlan(t *testing.T) {
 		assert.Equal(t, tc.planId, res.Id)
 	}
 }
+
+func TestPlanLocking(t *testing.T) {
+	clk := clock.NewMock()
+	now := clk.Now()
+
+	lp := NewLoadpoint(util.NewLogger("foo"), nil)
+	lp.clock = clk
+
+	planTime := now.Add(2 * time.Hour)
+
+	t.Run("lock and unlock", func(t *testing.T) {
+		lp.lockPlanGoal(planTime, 80, 2)
+
+		// locked values returned before plan target
+		ts, soc, id := lp.nextVehiclePlan()
+		assert.Equal(t, planTime, ts)
+		assert.Equal(t, 80, soc)
+		assert.Equal(t, 2, id)
+
+		clk.Add(3 * time.Hour) // advance past plan target
+
+		// locked values persist during overrun
+		ts, soc, id = lp.nextVehiclePlan()
+		assert.Equal(t, planTime, ts)
+		assert.Equal(t, 80, soc)
+		assert.Equal(t, 2, id)
+
+		// after clearing, lock is not returned
+		lp.clearPlanLock()
+		ts, soc, id = lp.nextVehiclePlan()
+		assert.True(t, ts.IsZero())
+		assert.Equal(t, 0, soc)
+		assert.Equal(t, 0, id)
+	})
+}
