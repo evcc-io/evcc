@@ -13,11 +13,33 @@ import (
 
 // TODO planActive is not guarded by mutex
 
+// clearPlanLocks clears the locked plan goal (internal)
+func (lp *Loadpoint) clearPlanLocks() {
+	lp.planLockedTime = time.Time{}
+	lp.planLockedSoc = 0
+	lp.planLockedId = 0
+}
+
+// ClearPlanLocks clears the locked plan goal (public API)
+func (lp *Loadpoint) ClearPlanLocks() {
+	lp.Lock()
+	defer lp.Unlock()
+	lp.clearPlanLocks()
+}
+
+// lockPlanGoal locks the current plan goal to handle overruns (soc-based plans)
+func (lp *Loadpoint) lockPlanGoal(planTime time.Time, soc int, id int) {
+	lp.planLockedTime = planTime
+	lp.planLockedSoc = soc
+	lp.planLockedId = id
+}
+
 // setPlanActive updates plan active flag
 func (lp *Loadpoint) setPlanActive(active bool) {
 	if !active {
 		lp.planOverrunSent = false
 		lp.planSlotEnd = time.Time{}
+		lp.clearPlanLocks()
 	}
 	if lp.planActive != active {
 		lp.planActive = active
@@ -171,6 +193,11 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		if slotRemaining := lp.clock.Until(activeSlot.End); !lp.planActive && slotRemaining < tariff.SlotDuration && !planner.SlotHasSuccessor(activeSlot, plan) {
 			lp.log.DEBUG.Printf("plan: slot too short- ignoring remaining %v", slotRemaining.Round(time.Second))
 			return false
+		}
+
+		// lock the goal when soc-based plan becomes active for the first time
+		if lp.planLockedId == 0 && isSocBased {
+			lp.lockPlanGoal(planTime, int(goal), lp.getPlanId())
 		}
 
 		// remember last active plan's slot end time

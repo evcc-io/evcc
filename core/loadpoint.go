@@ -152,6 +152,9 @@ type Loadpoint struct {
 	planSlotEnd      time.Time        // current plan slot end time
 	planActive       bool             // charge plan exists and has a currently active slot
 	planOverrunSent  bool             // notification has been sent already
+	planLockedTime   time.Time        // locked plan target time (committed goal, persists during overrun)
+	planLockedSoc    int              // locked plan target soc (0 if not soc-based)
+	planLockedId     int              // locked plan id (0=none, 1=static, 2+=repeating), needed to highlight the plan in ui
 
 	// cached state
 	status         api.ChargeStatus // Charger status
@@ -532,6 +535,9 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 
 	// session is persisted during evChargeStopHandler which runs before
 	lp.clearSession()
+
+	// clear locked plan goal on disconnect
+	lp.clearPlanLocks()
 
 	// phases are unknown when vehicle disconnects
 	lp.ResetMeasuredPhases()
@@ -989,8 +995,7 @@ func (lp *Loadpoint) repeatingPlanning() bool {
 	if !lp.socBasedPlanning() {
 		return false
 	}
-	_, _, id := lp.NextVehiclePlan()
-	return id > 1
+	return lp.getPlanId() > 1
 }
 
 // vehicleHasSoc returns true if active vehicle supports returning soc, i.e. it is not an offline vehicle

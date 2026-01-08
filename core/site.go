@@ -497,6 +497,13 @@ func (site *Site) Publish(key string, val any) {
 	site.publish(key, val)
 }
 
+// clearPlanLocks clears locked plan goals for all loadpoints
+func (site *Site) clearPlanLocks() {
+	for _, lp := range site.Loadpoints() {
+		lp.ClearPlanLocks()
+	}
+}
+
 func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) []measurement {
 	mm := make([]measurement, len(meters))
 
@@ -1051,6 +1058,7 @@ func (site *Site) prepare() {
 	site.publishVehicles()
 	site.publishTariffs(0, 0)
 	vehicle.Publish = site.publishVehicles
+	vehicle.ClearPlanLocks = site.clearPlanLocks
 }
 
 // Prepare attaches communication channels to site and loadpoints
