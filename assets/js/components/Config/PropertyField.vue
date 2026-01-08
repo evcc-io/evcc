@@ -7,6 +7,8 @@
 			:step="step"
 			:placeholder="placeholder"
 			:required="required"
+			:pattern="patternRegex"
+			:title="patternTitle"
 			:aria-describedby="id + '_unit'"
 			class="form-control"
 			:class="{ 'text-end': endAlign }"
@@ -87,6 +89,8 @@
 			:step="step"
 			:placeholder="placeholder"
 			:required="required"
+			:pattern="patternRegex"
+			:title="patternTitle"
 			:autocomplete="masked || datalistId ? 'off' : null"
 		/>
 		<button
@@ -129,6 +133,7 @@ export default {
 		scale: Number,
 		required: Boolean,
 		invalid: Boolean,
+		pattern: { type: Object, default: () => ({}) },
 		choice: { type: Array, default: () => [] },
 		modelValue: [String, Number, Boolean, Object],
 		label: String,
@@ -139,6 +144,14 @@ export default {
 		return { selectMode: false };
 	},
 	computed: {
+		patternRegex() {
+			return this.pattern.Regex || null;
+		},
+		patternTitle() {
+			const examples = this.pattern.Examples || [];
+			if (!examples.length) return null;
+			return examples.join(", ");
+		},
 		datalistId() {
 			return this.serviceValues.length > 0 ? `${this.id}-datalist` : null;
 		},
