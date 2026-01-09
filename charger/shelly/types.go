@@ -8,6 +8,14 @@ type RpcRequest struct {
 	Params any    `json:"params"`
 }
 
+// RpcResponseWrapper wraps the full RPC response including result
+type RpcResponseWrapper[T any] struct {
+	Id     int            `json:"id"`
+	Src    string         `json:"src"`
+	Dst    string         `json:"dst"`
+	Result RpcResponse[T] `json:"result"`
+}
+
 // RpcResponse represents an rpc response
 type RpcResponse[T any] struct {
 	Value        T      `json:"value"`

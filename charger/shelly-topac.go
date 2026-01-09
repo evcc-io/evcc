@@ -120,23 +120,23 @@ func (c *ShellyTopAC) setCurrentLimit(current float64) error {
 
 // getPhaseInfo retrieves phase information
 func (c *ShellyTopAC) getPhaseInfo() (shelly.Measurements, error) {
-	var res shelly.RpcResponse[shelly.Measurements]
+	var res shelly.RpcResponseWrapper[shelly.Measurements]
 	params := shelly.RoleParams{Owner: "service:0", Role: "phase_info"}
 	err := c.execRpc("Object.GetStatus", params, &res)
 
-	return res.Value, err
+	return res.Result.Value, err
 }
 
 // Status implements the api.Charger interface
 func (c *ShellyTopAC) Status() (api.ChargeStatus, error) {
-	var res shelly.RpcResponse[string]
+	var res shelly.RpcResponseWrapper[string]
 	params := shelly.RoleParams{Owner: "service:0", Role: "work_state"}
 	if err := c.execRpc("Enum.GetStatus", params, &res); err != nil {
 		return api.StatusNone, err
 	}
 
 	// Possible states: charger_free, charger_wait, charger_pause, charger_charging, charger_complete, charger_error
-	switch res.Value {
+	switch res.Result.Value {
 	case "charger_free":
 		return api.StatusA, nil
 	case "charger_wait", "charger_pause", "charger_complete":
@@ -144,17 +144,17 @@ func (c *ShellyTopAC) Status() (api.ChargeStatus, error) {
 	case "charger_charging":
 		return api.StatusC, nil
 	default:
-		return api.StatusNone, fmt.Errorf("unknown work state: %s", res.Value)
+		return api.StatusNone, fmt.Errorf("unknown work state: %s", res.Result.Value)
 	}
 }
 
 // Enabled implements the api.Charger interface
 func (c *ShellyTopAC) Enabled() (bool, error) {
-	var res shelly.RpcResponse[float64]
+	var res shelly.RpcResponseWrapper[float64]
 	params := shelly.RoleParams{Owner: "service:0", Role: "current_limit"}
 	err := c.execRpc("Number.GetStatus", params, &res)
 
-	return res.Value > 0, err
+	return res.Result.Value > 0, err
 }
 
 // Enable implements the api.Charger interface
