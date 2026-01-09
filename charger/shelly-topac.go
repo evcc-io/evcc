@@ -203,7 +203,7 @@ func (c *ShellyTopAC) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-	return phase.TotalPower * 1000, nil
+	return phase.TotalPower * 1e3, nil
 }
 
 var _ api.MeterEnergy = (*ShellyTopAC)(nil)
