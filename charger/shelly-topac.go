@@ -136,10 +136,10 @@ func (c *ShellyTopAC) setCurrentLimit(current float64) error {
 
 // getPhaseInfo retrieves phase information
 func (c *ShellyTopAC) getPhaseInfo() (shelly.PhaseInfo, error) {
-	var res shelly.RpcResponse[shelly.PhaseInfoValue]
+	var res shelly.RpcResponse[shelly.PhaseInfo]
 	err := c.execRpc("Object.GetStatus", "service:0", "phase_info", nil, &res)
 
-	return shelly.PhaseInfo{Info: res.Value}, err
+	return res.Value, err
 }
 
 // setAutoCharge enables or disables auto charge configuration
@@ -227,41 +227,41 @@ func (c *ShellyTopAC) CurrentPower() (float64, error) {
 	}
 
 	// TotalPower is in kW, convert to W
-	return phase.Info.TotalPower * 1000, nil
+	return phase.TotalPower * 1000, nil
 }
 
 var _ api.MeterEnergy = (*ShellyTopAC)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (c *ShellyTopAC) TotalEnergy() (float64, error) {
-	phase, err := c.phaseG.Get()
+	res, err := c.phaseG.Get()
 	if err != nil {
 		return 0, err
 	}
 
-	return phase.Info.TotalActEnergy, nil
+	return res.TotalActEnergy, nil
 }
 
 var _ api.PhaseCurrents = (*ShellyTopAC)(nil)
 
 // Currents implements the api.PhaseCurrents interface
 func (c *ShellyTopAC) Currents() (float64, float64, float64, error) {
-	phase, err := c.phaseG.Get()
+	res, err := c.phaseG.Get()
 	if err != nil {
 		return 0, 0, 0, err
 	}
 
-	return phase.Info.PhaseA.Current, phase.Info.PhaseB.Current, phase.Info.PhaseC.Current, nil
+	return res.PhaseA.Current, res.PhaseB.Current, res.PhaseC.Current, nil
 }
 
 var _ api.PhaseVoltages = (*ShellyTopAC)(nil)
 
 // Voltages implements the api.PhaseVoltages interface
 func (c *ShellyTopAC) Voltages() (float64, float64, float64, error) {
-	phase, err := c.phaseG.Get()
+	res, err := c.phaseG.Get()
 	if err != nil {
 		return 0, 0, 0, err
 	}
 
-	return phase.Info.PhaseA.Voltage, phase.Info.PhaseB.Voltage, phase.Info.PhaseC.Voltage, nil
+	return res.PhaseA.Voltage, res.PhaseB.Voltage, res.PhaseC.Voltage, nil
 }

@@ -29,19 +29,14 @@ type PhaseData struct {
 	Power   float64
 }
 
-// PhaseInfoValue contains aggregated phase information
-type PhaseInfoValue struct {
+// PhaseInfo contains aggregated phase information
+type PhaseInfo struct {
 	TotalCurrent   float64
 	TotalPower     float64
 	TotalActEnergy float64
 	PhaseA         PhaseData
 	PhaseB         PhaseData
 	PhaseC         PhaseData
-}
-
-// PhaseInfo wraps phase information
-type PhaseInfo struct {
-	Info PhaseInfoValue
 }
 
 // ServiceConfigSet contains service configuration parameters
