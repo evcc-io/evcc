@@ -140,7 +140,7 @@ func NewOpenWBFromConfig(other map[string]any) (api.Meter, error) {
 	}
 
 	if strings.ToLower(cc.Usage) == "battery" {
-		return m.DecorateBattery(nil, soc, capacity, nil, nil, nil), nil
+		return m.DecorateBattery(nil, nil, nil, nil, soc, capacity, nil, nil, nil), nil
 	}
 
 	return m.Decorate(nil, currents, nil, nil, nil), nil

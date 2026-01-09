@@ -27,6 +27,9 @@ func init() {
 //evcc:function decorateMeterBattery
 //evcc:basetype api.Meter
 //evcc:type api.MeterEnergy,TotalEnergy,func() (float64, error)
+//evcc:type api.PhaseCurrents,Currents,func() (float64, float64, float64, error)
+//evcc:type api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)
+//evcc:type api.PhasePowers,Powers,func() (float64, float64, float64, error)
 //evcc:type api.Battery,Soc,func() (float64, error)
 //evcc:type api.BatteryCapacity,Capacity,func() float64
 //evcc:type api.BatterySocLimiter,GetSocLimits,func() (float64, float64)
@@ -103,6 +106,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 	if socG != nil {
 		return m.DecorateBattery(
 			energyG,
+			currentsG, voltagesG, powersG,
 			socG, cc.batteryCapacity.Decorator(),
 			cc.batterySocLimits.Decorator(), cc.batteryPowerLimits.Decorator(),
 			batModeS,
@@ -141,12 +145,14 @@ func (m *Meter) Decorate(
 
 func (m *Meter) DecorateBattery(
 	totalEnergy func() (float64, error),
+	currents, voltages, powers func() (float64, float64, float64, error),
 	soc func() (float64, error), capacity func() float64,
 	socLimits, powerLimits func() (float64, float64),
 	setMode func(api.BatteryMode) error,
 ) api.Meter {
 	return decorateMeterBattery(m,
 		totalEnergy,
+		currents, voltages, powers,
 		soc, capacity,
 		socLimits, powerLimits,
 		setMode,
