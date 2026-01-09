@@ -99,7 +99,7 @@
     },
     "control": {
       "description": "Normalerweise sind die Standardwerte in Ordnung. Ändere nur etwas, wenn du weißt, was du tust.",
-      "descriptionInterval": "Regelkreis Aktualisierungszyklus in Sekunden. Definiert, wie oft evcc Messdaten liest, die Ladeleistung anpasst und die Benutzeroberfläche aktualisiert. Kurze Intervalle (< 30s) können zu Oszillationen und unerwünschtem Verhalten führen.",
+      "descriptionInterval": "Aktualisierungszyklus in Sekunden. Definiert, wie oft evcc Messdaten liest und die Ladung anpasst. Die Standardeinstellung von 30 Sekunden ist eine sichere Wahl. Geräte wie Fahrzeuge, Wallbox und Wechselrichter brauchen in der Regel mehrere Sekunden um ihr Verhalten anzupassen. Wenn deine Komponenten schnell reagieren kannst du niedrigere Werte verwenden. Wir empfehlen dringend nicht unter 10 Sekunden zu gehen. Wenn du komisches Regelverhalten oder springende Leistungswerte beobachtest wähle ein größeres Intervall.",
       "descriptionResidualPower": "Verschiebt den Betriebspunkt des Regelkreises. Wenn du eine Hausbatterie hast, wird empfohlen, einen Wert von 100 W einzustellen. Auf diese Weise erhält die Batterie eine leichte Priorität gegenüber dem Netzbezug.",
       "labelInterval": "Aktualisierungsintervall",
       "labelResidualPower": "Residualleistung",
@@ -387,7 +387,7 @@
       "title": "Konfiguration",
       "unconfigured": "nicht konfiguriert",
       "vehicles": "Meine Fahrzeuge",
-      "welcomeBannerText": "Lege zunächst eine **Wallbox oder Heizung** an. Falls du noch keine echte Wallbox hast, wähle eine **Demowallbox**.",
+      "welcomeBannerText": "Lege zunächst eine **Wallbox**, **Heizung**, **Netzzähler**, **Solar**, **Batterie** oder **zusätzlichen Zähler** an. Falls du nur testen möchtest, wähle ein **Demogerät**.",
       "welcomeBannerTitle": "Los geht's mit der Konfiguration!",
       "yaml": "Geräte aus evcc.yaml sind nicht editierbar."
     },
@@ -649,7 +649,7 @@
       "maximumPhases": "Maximale Phasen",
       "maximumPhasesHelp": "Mit wie vielen Phasen kann dieses Fahrzeug laden? Wird zur Berechnung der Mindestladeleistung und im Planer verwendet.",
       "maximumPower": "Maximale Ladeleistung",
-      "maximumPowerHelp": "Maximale Leistung die das Fahrzeug beziehen kann.",
+      "maximumPowerHelp": "Maximale Leistung die das Fahrzeug beziehen kann",
       "minimumCurrent": "Minimaler Strom",
       "minimumCurrentHelp": "Nur unter 6A, wenn du weißt, was du tust.",
       "online": "Fahrzeuge mit Schnittstelle",
@@ -759,6 +759,9 @@
       "price": "Preis",
       "solar": "Solar"
     }
+  },
+  "general": {
+    "note": "Hinweis:"
   },
   "header": {
     "about": "Über",
@@ -877,16 +880,24 @@
       "goal": "Ladeziel",
       "modalTitle": "Ladeplanung",
       "none": "keiner",
+      "optimization": {
+        "cheapest": "günstigst",
+        "continuous": "kontinuierlich",
+        "label": "Optimierung"
+      },
       "planNumber": "Plan {number}",
-      "preconditionDescription": "Lade {duration} vor Abfahrt zur Batterie-Vorkonditionierung.",
-      "preconditionLong": "Spätes Laden",
-      "preconditionOptionAll": "alles",
-      "preconditionOptionNo": "nein",
-      "preconditionShort": "Spät",
+      "precondition": {
+        "description": "Lade {duration} vor Abfahrt zur Batterie-Vorkonditionierung.",
+        "label": "Spätes Laden",
+        "optionAll": "alles",
+        "optionNo": "nein"
+      },
       "remove": "Entfernen",
       "repeating": "wiederholend",
       "repeatingPlans": "Wiederholende Pläne",
       "selectAll": "Alle wählen",
+      "strategyDisabledDescription": "Das Laden startet so spät wie möglich und wird rechtzeitig zur Abfahrt abgeschlossen. Mit dynamischen Netzpreisen oder einem CO₂-Tarif stehen hier weitere Optionen zur Verfügung.",
+      "strategySettings": "Strategie-Einstellungen",
       "time": "Zeit",
       "title": "Plan",
       "titleMinSoc": "Min. Ladung",

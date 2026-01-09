@@ -33,25 +33,28 @@ func init() {
 	registry.AddCtx("rct", NewRCTFromConfig)
 }
 
-//go:generate go tool decorate -f decorateRCT -b *RCT -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatterySocLimiter,GetSocLimits,func() (float64, float64)" -t "api.BatteryController,SetBatteryMode,func(api.BatteryMode) error" -t "api.BatteryCapacity,Capacity,func() float64"
+//go:generate go tool decorate -f decorateRCT -b *RCT -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Curtailer,Curtail,func(bool) error,Curtailed,func() (bool, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatterySocLimiter,GetSocLimits,func() (float64, float64)" -t "api.BatteryPowerLimiter,GetPowerLimits,func() (float64, float64)" -t "api.BatteryController,SetBatteryMode,func(api.BatteryMode) error" -t "api.BatteryCapacity,Capacity,func() float64"
 
 // NewRCTFromConfig creates an RCT from generic config
 func NewRCTFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	cc := struct {
-		batterySocLimits `mapstructure:",squash"`
-		Uri, Usage       string
-		MaxChargePower   int
-		Capacity         float64
-		Capacity2        float64
-		ExternalPower    bool
-		Cache            time.Duration
+		batterySocLimits   `mapstructure:",squash"`
+		batteryPowerLimits `mapstructure:",squash"`
+		Uri, Usage         string
+		Capacity           float64
+		Capacity2          float64
+		ExternalPower      bool
+		Cache              time.Duration
 	}{
 		batterySocLimits: batterySocLimits{
 			MinSoc: 20,
 			MaxSoc: 95,
 		},
-		MaxChargePower: 10000,
-		Cache:          30 * time.Second,
+		batteryPowerLimits: batteryPowerLimits{
+			MaxChargePower:    10000,
+			MaxDischargePower: 10000,
+		},
+		Cache: 30 * time.Second,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -62,11 +65,11 @@ func NewRCTFromConfig(ctx context.Context, other map[string]any) (api.Meter, err
 		return nil, errors.New("missing usage")
 	}
 
-	return NewRCT(ctx, cc.Uri, cc.Usage, cc.batterySocLimits, cc.MaxChargePower, cc.Cache, cc.ExternalPower, cc.Capacity, cc.Capacity2)
+	return NewRCT(ctx, cc.Uri, cc.Usage, cc.batterySocLimits, cc.batteryPowerLimits, cc.Cache, cc.ExternalPower, cc.Capacity, cc.Capacity2)
 }
 
 // NewRCT creates an RCT meter
-func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocLimits, maxchargepower int, cache time.Duration, externalPower bool, capacity float64, capacity2 float64) (api.Meter, error) {
+func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocLimits, batteryPowerLimits batteryPowerLimits, cache time.Duration, externalPower bool, capacity float64, capacity2 float64) (api.Meter, error) {
 	log := util.NewLogger("rct")
 
 	// re-use connections
@@ -100,9 +103,28 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 		totalEnergy = m.totalEnergy
 	}
 
+	// decorate api.Curtailer
+	var curtail func(bool) error
+	var curtailed func() (bool, error)
+	if usage == "pv" {
+		curtail = func(b bool) error {
+			r := float32(1)
+			if b {
+				r = 0
+			}
+			return m.conn.Write(rct.BufVControlPowerReduction, m.floatVal(r))
+		}
+
+		curtailed = func() (bool, error) {
+			r, err := m.queryFloat(rct.BufVControlPowerReduction)
+			return r != 1, err
+		}
+	}
+
 	// decorate api.Battery
 	var batterySoc func() (float64, error)
 	var batterySocLimiter func() (float64, float64)
+	var batteryPowerLimiter func() (float64, float64)
 	var batteryCapacity func() float64
 	var batteryMode func(api.BatteryMode) error
 
@@ -127,6 +149,7 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 		}
 
 		batterySocLimiter = batterySocLimits.Decorator()
+		batteryPowerLimiter = batteryPowerLimits.Decorator()
 
 		if capacity != 0 {
 			batteryCapacity = func() float64 { return capacity + capacity2 }
@@ -140,7 +163,7 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 				}
 
 				// check for normal operating mode
-				if batStatus != 1032 {
+				if batStatus != 0 && batStatus != 1032 && batStatus != 2048 {
 					return fmt.Errorf("invalid battery operating mode: %d", batStatus)
 				}
 			}
@@ -176,7 +199,7 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 				})
 
 				eg.Go(func() error {
-					return m.conn.Write(rct.PowerMngBatteryPowerExternW, m.floatVal(float32(-maxchargepower)))
+					return m.conn.Write(rct.PowerMngBatteryPowerExternW, m.floatVal(float32(-batteryPowerLimits.MaxChargePower)))
 				})
 
 				eg.Go(func() error {
@@ -191,7 +214,7 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 		}
 	}
 
-	return decorateRCT(m, totalEnergy, batterySoc, batterySocLimiter, batteryMode, batteryCapacity), nil
+	return decorateRCT(m, totalEnergy, curtail, curtailed, batterySoc, batterySocLimiter, batteryPowerLimiter, batteryMode, batteryCapacity), nil
 }
 
 func (m *RCT) floatVal(f float32) []byte {

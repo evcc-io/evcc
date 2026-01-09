@@ -53,7 +53,8 @@ func NewCardataFromConfig(ctx context.Context, other map[string]any) (api.Vehicl
 
 	log := util.NewLogger("cardata").Redact(cc.ClientID, cc.VIN)
 
-	ts, err := cardata.NewOAuth(cc.ClientID, cc.embed.GetTitle())
+	authCtx := util.WithLogger(context.Background(), log)
+	ts, err := cardata.NewOAuth(authCtx, cc.ClientID, cc.embed.GetTitle())
 	if err != nil {
 		return nil, err
 	}

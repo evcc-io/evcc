@@ -1,8 +1,26 @@
 package sponsor
 
+// LICENSE
+
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
+
+// This module is NOT covered by the MIT license. All rights reserved.
+
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -75,7 +93,11 @@ func ConfigureSponsorship(token string) error {
 			Subject = unavailable
 			err = nil
 		} else {
-			err = fmt.Errorf("sponsortoken: %w", err)
+			if strings.Contains(err.Error(), "token is expired") {
+				err = fmt.Errorf("%w - get a fresh one from https://sponsor.evcc.io", err)
+			} else {
+				err = fmt.Errorf("sponsortoken: %w", err)
+			}
 		}
 	}
 

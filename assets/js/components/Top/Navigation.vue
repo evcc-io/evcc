@@ -23,7 +23,12 @@
 			data-testid="topnavigation-dropdown"
 		>
 			<li>
-				<router-link class="dropdown-item" to="/sessions" active-class="active">
+				<router-link
+					class="dropdown-item"
+					to="/sessions"
+					active-class="active"
+					data-testid="topnavigation-sessions"
+				>
 					{{ $t("header.sessions") }}
 				</router-link>
 			</li>
@@ -59,7 +64,12 @@
 				</button>
 			</li>
 			<li>
-				<router-link class="dropdown-item" to="/config" active-class="active">
+				<router-link
+					class="dropdown-item"
+					to="/config"
+					active-class="active"
+					data-testid="topnavigation-config"
+				>
 					<span
 						v-if="showConfigBadge"
 						class="d-inline-block p-1 rounded-circle bg-warning rounded-circle"
@@ -114,7 +124,12 @@
 				</a>
 			</li>
 			<li v-if="isApp">
-				<button type="button" class="dropdown-item" @click="openNativeSettings">
+				<button
+					type="button"
+					class="dropdown-item"
+					data-testid="topnavigation-app"
+					@click="openNativeSettings"
+				>
 					{{ $t("header.nativeSettings") }}
 				</button>
 			</li>
@@ -176,7 +191,7 @@ export default defineComponent({
 			return this.providers.length > 0;
 		},
 		sponsorExpires(): boolean {
-			return !!this.sponsor?.status.expiresSoon;
+			return !!this.sponsor?.status?.expiresSoon;
 		},
 		showConfigBadge() {
 			return this.sponsorExpires || isUserConfigError(this.fatal);

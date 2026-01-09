@@ -1,0 +1,16 @@
+template: orno-we504
+products:
+  - brand: ORNO
+    description:
+      generic: WE-504
+params:
+  - name: usage
+    choice: ["pv", "charge"]
+  - name: modbus
+    choice: ["rs485"]
+render: |
+  type: mbmd
+  {{- include "modbus" . }}
+  model: orno1p504
+  power: {{ if eq .usage "pv" }}-{{ end }}Power
+  energy: Sum

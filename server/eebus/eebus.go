@@ -7,6 +7,7 @@ import (
 	"net"
 	"slices"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -20,9 +21,10 @@ import (
 	"github.com/enbility/eebus-go/usecases/cem/evsoc"
 	"github.com/enbility/eebus-go/usecases/cem/opev"
 	"github.com/enbility/eebus-go/usecases/cem/oscev"
-	"github.com/enbility/eebus-go/usecases/cs/lpc"
-	"github.com/enbility/eebus-go/usecases/cs/lpp"
+	csplc "github.com/enbility/eebus-go/usecases/cs/lpc"
+	cslpp "github.com/enbility/eebus-go/usecases/cs/lpp"
 	eglpc "github.com/enbility/eebus-go/usecases/eg/lpc"
+	eglpp "github.com/enbility/eebus-go/usecases/eg/lpp"
 	"github.com/enbility/eebus-go/usecases/ma/mgcp"
 	"github.com/enbility/eebus-go/usecases/ma/mpc"
 	shipapi "github.com/enbility/ship-go/api"
@@ -30,6 +32,7 @@ import (
 	shiputil "github.com/enbility/ship-go/util"
 	spineapi "github.com/enbility/spine-go/api"
 	"github.com/enbility/spine-go/model"
+	"github.com/enbility/spine-go/spine"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/machine"
 )
@@ -64,6 +67,7 @@ type MonitoringAppliance struct {
 // Energy Guard
 type EnergyGuard struct {
 	ucapi.EgLPCInterface
+	ucapi.EgLPPInterface
 }
 
 type EEBus struct {
@@ -77,7 +81,7 @@ type EEBus struct {
 	mux sync.Mutex
 	log *util.Logger
 
-	ski string
+	Ski string
 
 	clients map[string][]Device
 }
@@ -143,7 +147,7 @@ func NewServer(other Config) (*EEBus, error) {
 
 	c := &EEBus{
 		log:     log,
-		ski:     ski,
+		Ski:     ski,
 		clients: make(map[string][]Device),
 	}
 
@@ -153,33 +157,53 @@ func NewServer(other Config) (*EEBus, error) {
 		return nil, err
 	}
 
-	localEntity := c.service.LocalDevice().EntityForType(model.EntityTypeTypeCEM)
+	localDevice := c.service.LocalDevice()
 
-	// evse
-	c.cem = CustomerEnergyManagement{
-		EvseCC: evsecc.NewEVSECC(localEntity, c.ucCallback),
-		EvCC:   evcc.NewEVCC(c.service, localEntity, c.ucCallback),
-		EvCem:  evcem.NewEVCEM(c.service, localEntity, c.ucCallback),
-		OpEV:   opev.NewOPEV(localEntity, c.ucCallback),
-		OscEV:  oscev.NewOSCEV(localEntity, c.ucCallback),
-		EvSoc:  evsoc.NewEVSOC(localEntity, c.ucCallback),
+	{
+		// CEM entity for for connected EVSE and Meters
+		localEntity := localDevice.Entity([]model.AddressEntityType{1})
+
+		// customer energy management to EVSE
+		c.cem = CustomerEnergyManagement{
+			EvseCC: evsecc.NewEVSECC(localEntity, c.ucCallback),
+			EvCC:   evcc.NewEVCC(c.service, localEntity, c.ucCallback),
+			EvCem:  evcem.NewEVCEM(c.service, localEntity, c.ucCallback),
+			OpEV:   opev.NewOPEV(localEntity, c.ucCallback),
+			OscEV:  oscev.NewOSCEV(localEntity, c.ucCallback),
+			EvSoc:  evsoc.NewEVSOC(localEntity, c.ucCallback),
+		}
+
+		// monitoring appliance to meters
+		c.ma = MonitoringAppliance{
+			MaMGCPInterface: mgcp.NewMGCP(localEntity, c.ucCallback),
+			MaMPCInterface:  mpc.NewMPC(localEntity, c.ucCallback),
+		}
 	}
 
-	// controllable system
-	c.cs = ControllableSystem{
-		CsLPCInterface: lpc.NewLPC(localEntity, c.ucCallback),
-		CsLPPInterface: lpp.NewLPP(localEntity, c.ucCallback),
+	{
+		// CEM entity for connected SMGW
+		// LPC/LPP use a 60s heartbeat timeout, but some EVSE devices have then issues when not set to 4s right now even though they should not connect to this one anyway
+		localEntity := spine.NewEntityLocal(localDevice, model.EntityTypeTypeCEM, []model.AddressEntityType{2}, time.Second*4)
+		localDevice.AddEntity(localEntity)
+
+		// controllable system
+		c.cs = ControllableSystem{
+			CsLPCInterface: csplc.NewLPC(localEntity, c.ucCallback),
+			CsLPPInterface: cslpp.NewLPP(localEntity, c.ucCallback),
+		}
 	}
 
-	// monitoring appliance
-	c.ma = MonitoringAppliance{
-		MaMGCPInterface: mgcp.NewMGCP(localEntity, c.ucCallback),
-		MaMPCInterface:  mpc.NewMPC(localEntity, c.ucCallback),
-	}
+	{
+		// GridGuard entity for connected Controllable Systems
+		// LPC/LPP use a 60s heartbeat timeout, but some EVSE devices have then issues when not set to 4s right now
+		localEntity := spine.NewEntityLocal(localDevice, model.EntityTypeTypeGridGuard, []model.AddressEntityType{3}, time.Second*4)
+		localDevice.AddEntity(localEntity)
 
-	// energy guard
-	c.eg = EnergyGuard{
-		EgLPCInterface: eglpc.NewLPC(localEntity, c.ucCallback),
+		// energy guard
+		c.eg = EnergyGuard{
+			EgLPCInterface: eglpc.NewLPC(localEntity, c.ucCallback),
+			EgLPPInterface: eglpp.NewLPP(localEntity, c.ucCallback),
+		}
 	}
 
 	// register use cases
@@ -189,7 +213,7 @@ func NewServer(other Config) (*EEBus, error) {
 		c.cem.OscEV, c.cem.EvSoc,
 		c.cs.CsLPCInterface, c.cs.CsLPPInterface,
 		c.ma.MaMGCPInterface, c.ma.MaMPCInterface,
-		c.eg.EgLPCInterface,
+		c.eg.EgLPCInterface, c.eg.EgLPPInterface,
 	} {
 		c.service.AddUseCase(uc)
 	}
@@ -201,7 +225,7 @@ func (c *EEBus) RegisterDevice(ski, ip string, device Device) error {
 	ski = shiputil.NormalizeSKI(ski)
 	c.log.TRACE.Printf("registering ski: %s", ski)
 
-	if ski == c.ski {
+	if ski == c.Ski {
 		return errors.New("device ski can not be identical to host ski")
 	}
 
@@ -331,12 +355,20 @@ func (c *EEBus) Tracef(format string, args ...any) {
 	c.log.TRACE.Printf(format, args...)
 }
 
+func isRelevant(s string) bool {
+	return strings.Contains(s, "connect") || strings.Contains(s, " event ")
+}
+
 func (c *EEBus) Debug(args ...any) {
-	c.log.DEBUG.Println(args...)
+	if s := fmt.Sprint(args...); isRelevant(s) {
+		c.log.DEBUG.Print(s)
+	}
 }
 
 func (c *EEBus) Debugf(format string, args ...any) {
-	c.log.DEBUG.Printf(format, args...)
+	if s := fmt.Sprintf(format, args...); isRelevant(s) {
+		c.log.DEBUG.Print(s)
+	}
 }
 
 func (c *EEBus) Info(args ...any) {

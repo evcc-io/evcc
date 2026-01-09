@@ -41,10 +41,10 @@ require (
 	github.com/getkin/kin-openapi v0.133.0
 	github.com/glebarez/sqlite v1.11.0
 	github.com/go-http-utils/etag v0.0.0-20161124023236-513ea8f21eb1
-	github.com/go-playground/validator/v10 v10.29.0
+	github.com/go-playground/validator/v10 v10.30.1
 	github.com/go-telegram/bot v1.17.0
 	github.com/go-viper/mapstructure/v2 v2.4.0
-	github.com/godbus/dbus/v5 v5.2.0
+	github.com/godbus/dbus/v5 v5.2.2
 	github.com/gokrazy/updater v0.0.0-20250705135802-db129c40879c
 	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/google/go-github/v32 v32.1.0
@@ -74,7 +74,7 @@ require (
 	github.com/lunixbochs/struc v0.0.0-20241101090106-8d528fa2c543
 	github.com/mabunixda/wattpilot v1.8.5
 	github.com/mitchellh/go-homedir v1.1.0
-	github.com/modelcontextprotocol/go-sdk v1.1.0
+	github.com/modelcontextprotocol/go-sdk v1.2.0
 	github.com/muka/go-bluetooth v0.0.0-20240701044517-04c4f09c514e
 	github.com/mxschmitt/golang-combinations v1.2.0
 	github.com/nicksnyder/go-i18n/v2 v2.6.0
@@ -98,9 +98,10 @@ require (
 	github.com/stianeikeland/go-rpio/v4 v4.6.0
 	github.com/stretchr/testify v1.11.1
 	github.com/teslamotors/vehicle-command v0.4.0
+	github.com/tess1o/go-ecoflow v1.1.1-0.20251003083510-2ccc15a17e29
 	github.com/traefik/yaegi v0.16.1
 	github.com/tv42/httpunix v0.0.0-20191220191345-2ba4b9c3382c
-	github.com/volkszaehler/mbmd v0.0.0-20250808161051-499ae856f44e
+	github.com/volkszaehler/mbmd v0.0.0-20251230155010-64e026667a91
 	github.com/writeas/go-strip-markdown/v2 v2.1.1
 	gitlab.com/bboehmke/sunny v0.16.0
 	go.bug.st/serial v1.6.4
@@ -108,13 +109,13 @@ require (
 	go.yaml.in/yaml/v4 v4.0.0-rc.3
 	golang.org/x/crypto v0.46.0
 	golang.org/x/crypto/x509roots/fallback v0.0.0-20251210140736-7dacc380ba00
-	golang.org/x/exp v0.0.0-20251209150349-8475f28825e9
+	golang.org/x/exp v0.0.0-20251219203646-944ab1f22d93
 	golang.org/x/net v0.48.0
 	golang.org/x/oauth2 v0.34.0
 	golang.org/x/sync v0.19.0
 	golang.org/x/text v0.32.0
 	golang.org/x/tools v0.40.0
-	google.golang.org/grpc v1.77.0
+	google.golang.org/grpc v1.78.0
 	google.golang.org/protobuf v1.36.11
 	gorm.io/gorm v1.31.1
 )
@@ -146,12 +147,12 @@ require (
 	github.com/clipperhouse/displaywidth v0.6.0 // indirect
 	github.com/clipperhouse/stringish v0.1.1 // indirect
 	github.com/clipperhouse/uax29/v2 v2.3.0 // indirect
-	github.com/cpuguy83/go-md2man/v2 v2.0.6 // indirect
+	github.com/cpuguy83/go-md2man/v2 v2.0.7 // indirect
 	github.com/creack/goselect v0.1.2 // indirect
 	github.com/cronokirby/saferith v0.33.0 // indirect
 	github.com/cstockton/go-conv v1.0.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
-	github.com/dmarkham/enumer v1.5.10 // indirect
+	github.com/dmarkham/enumer v1.6.1 // indirect
 	github.com/donovanhide/eventsource v0.0.0-20210830082556-c59027999da0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/enbility/go-avahi v0.0.0-20240909195612-d5de6b280d7a // indirect
@@ -159,7 +160,7 @@ require (
 	github.com/fatih/color v1.17.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
-	github.com/gabriel-vasile/mimetype v1.4.11 // indirect
+	github.com/gabriel-vasile/mimetype v1.4.12 // indirect
 	github.com/glebarez/go-sqlite v1.22.0 // indirect
 	github.com/go-http-utils/fresh v0.0.0-20161124030543-7231e26a4b27 // indirect
 	github.com/go-http-utils/headers v0.0.0-20181008091004-fed159eddc2a // indirect
@@ -174,7 +175,7 @@ require (
 	github.com/gokrazy/internal v0.0.0-20250526201501-559979153369 // indirect
 	github.com/gokrazy/tools v0.0.0-20250601065736-ab76ef531d30 // indirect
 	github.com/golanguzb70/lrucache v1.2.0 // indirect
-	github.com/google/go-querystring v1.1.0 // indirect
+	github.com/google/go-querystring v1.2.0 // indirect
 	github.com/google/jsonschema-go v0.3.0 // indirect
 	github.com/google/renameio/v2 v2.0.0 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
@@ -203,7 +204,7 @@ require (
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/ncruces/go-strftime v0.1.9 // indirect
-	github.com/oapi-codegen/runtime v1.1.1 // indirect
+	github.com/oapi-codegen/runtime v1.1.2 // indirect
 	github.com/oasdiff/yaml v0.0.0-20250309154309-f31be36b4037 // indirect
 	github.com/oasdiff/yaml3 v0.0.0-20250309153720-d2182401db90 // indirect
 	github.com/olekukonko/cat v0.0.0-20250911104152-50322a0618f6 // indirect
@@ -225,9 +226,8 @@ require (
 	github.com/rickb777/date v1.21.1 // indirect
 	github.com/rickb777/plural v1.4.2 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
-	github.com/sagikazarmark/locafero v0.11.0 // indirect
+	github.com/sagikazarmark/locafero v0.12.0 // indirect
 	github.com/shopspring/decimal v1.4.0 // indirect
-	github.com/sourcegraph/conc v0.3.1-0.20240121214520-5f936abd7ae8 // indirect
 	github.com/spali/go-slicereader v0.0.0-20201122145524-8e262e1a5127 // indirect
 	github.com/spf13/afero v1.15.0 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
@@ -243,6 +243,7 @@ require (
 	golang.org/x/mod v0.31.0 // indirect
 	golang.org/x/sys v0.39.0 // indirect
 	golang.org/x/term v0.38.0 // indirect
+	golang.org/x/tools/gopls v0.21.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20251103181224-f26f9409b101 // indirect
 	gopkg.in/go-playground/validator.v9 v9.31.0 // indirect
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
@@ -250,7 +251,7 @@ require (
 	modernc.org/libc v1.66.10 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
-	modernc.org/sqlite v1.41.0 // indirect
+	modernc.org/sqlite v1.42.2 // indirect
 )
 
 tool (
@@ -260,6 +261,7 @@ tool (
 	github.com/evcc-io/openapi-mcp/cmd/openapi-mcp
 	github.com/gokrazy/tools/cmd/gok
 	go.uber.org/mock/mockgen
+	golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize
 )
 
 replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20250501165638-8b6f1fbdb7ea
