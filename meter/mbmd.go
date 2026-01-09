@@ -26,7 +26,24 @@ func init() {
 	registry.AddCtx("mbmd", NewModbusMbmdFromConfig)
 }
 
-//go:generate go tool decorate -f decorateModbusMbmd -b api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.PhasePowers,Powers,func() (float64, float64, float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64"
+//go:generate go tool decorate
+
+//evcc:function decorateMbmd
+//evcc:basetype api.Meter
+//evcc:type api.MeterEnergy,TotalEnergy,func() (float64, error)
+//evcc:type api.PhaseCurrents,Currents,func() (float64, float64, float64, error)
+//evcc:type api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)
+//evcc:type api.PhasePowers,Powers,func() (float64, float64, float64, error)
+// evcc:type api.MaxACPowerGetter,MaxACPower,func() float64
+
+//evcc:function decorateMbmdBattery
+//evcc:basetype api.Meter
+//evcc:type api.MeterEnergy,TotalEnergy,func() (float64, error)
+//evcc:type api.Battery,Soc,func() (float64, error)
+//evcc:type api.BatteryCapacity,Capacity,func() float64
+//evcc:type api.BatterySocLimiter,GetSocLimits,func() (float64, float64)
+//evcc:type api.BatteryPowerLimiter,GetPowerLimits,func() (float64, float64)
+// evcc:type api.BatteryController,SetBatteryMode,func(api.BatteryMode) error
 
 // NewModbusMbmdFromConfig creates api.Meter from config
 func NewModbusMbmdFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
@@ -135,7 +152,11 @@ func NewModbusMbmdFromConfig(ctx context.Context, other map[string]any) (api.Met
 		soc = g
 	}
 
-	return decorateModbusMbmd(m, totalEnergy, currentsG, voltagesG, powersG, soc, cc.batteryCapacity.Decorator()), nil
+	if soc != nil {
+		return decorateMbmdBattery(m, totalEnergy, soc, cc.batteryCapacity.Decorator(), cc.batterySocLimits.Decorator(), cc.batteryPowerLimits.Decorator()), nil
+	}
+
+	return decorateMbmd(m, totalEnergy, currentsG, voltagesG, powersG), nil
 }
 
 // deviceOp checks is RS485 device supports operation
