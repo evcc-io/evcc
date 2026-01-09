@@ -22,12 +22,7 @@
 				type="List"
 				required
 				:rows="4"
-				@update:model-value="
-					$emit(
-						'update:chats',
-						$event.map((v: string) => Number(v))
-					)
-				"
+				@update:model-value="$emit('update:chats', $event)"
 			/>
 		</MessagingFormRow>
 	</div>

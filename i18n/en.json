@@ -492,7 +492,7 @@
         },
         "telegram": {
           "chats": "Chat IDs",
-          "chatsHelp": "Chat identifiers and group identifiers can be specified. The latter have a minus sign. One entry per line.",
+          "chatsHelp": "Chat identifiers and group identifiers can be specified. The latter have a minus sign. One entry per line. Tip: Log in to Telegram in your browser and open the chats to see the identifiers in the URL.",
           "title": "Telegram",
           "token": "Token",
           "tokenHelp": "Also called Bot ID."
