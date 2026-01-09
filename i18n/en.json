@@ -294,6 +294,7 @@
       "chargerTypeLabel": "Charger type",
       "chargingTitle": "Behaviour",
       "circuitHelp": "Load management assignment to ensure power and current limits are not exceeded.",
+      "circuitInvalid": "Circuit does not exist",
       "circuitLabel": "Circuit",
       "circuitUnassigned": "unassigned",
       "defaultModeHelp": {
@@ -370,6 +371,7 @@
       "vehicleAutoDetection": "auto detection",
       "vehicleHelpAutoDetection": "Automatically selects the most plausible vehicle. Manual override is possible.",
       "vehicleHelpDefault": "Always assume this vehicle is charging here. Auto-detection disabled. Manual override is possible.",
+      "vehicleInvalid": "Vehicle does not exist",
       "vehicleLabel": "Default vehicle",
       "vehiclesTitle": "Vehicles"
     },
@@ -867,6 +869,9 @@
       "solar": "Solar"
     }
   },
+  "general": {
+    "note": "Note:"
+  },
   "header": {
     "about": "About",
     "blog": "Blog",
@@ -1000,6 +1005,7 @@
       "repeating": "repeating",
       "repeatingPlans": "Repeating plans",
       "selectAll": "Select all",
+      "strategyDisabledDescription": "Charging starts as late as possible to finish just in time for departure. With dynamic grid prices or CO₂ tariff, more options are available here.",
       "strategySettings": "Strategy settings",
       "time": "Time",
       "title": "Plan",

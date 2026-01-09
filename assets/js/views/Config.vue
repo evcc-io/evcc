@@ -454,6 +454,7 @@ import type {
 	ConfigMeter,
 	LoadpointType,
 	Timeout,
+	VehicleOption,
 	MeterType,
 	SiteConfig,
 	DeviceType,
@@ -652,7 +653,7 @@ export default defineComponent({
 			if (org) result.org = { value: org };
 			return result;
 		},
-		vehicleOptions() {
+		vehicleOptions(): VehicleOption[] {
 			return this.vehicles.map((v) => ({ key: v.name, name: v.config?.title || v.name }));
 		},
 		shmTags(): DeviceTags {

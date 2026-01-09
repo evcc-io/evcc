@@ -294,6 +294,7 @@
       "chargerTypeLabel": "Oplader type",
       "chargingTitle": "Tilstand",
       "circuitHelp": "Belastningsstyring som sikrer, at effekt- og strømgrænser ikke overskrides.",
+      "circuitInvalid": "Kredsløbet findes ikke",
       "circuitLabel": "Kredsløb",
       "circuitUnassigned": "ikke tildelt",
       "defaultModeHelp": {
@@ -370,6 +371,7 @@
       "vehicleAutoDetection": "Automatisk registrering",
       "vehicleHelpAutoDetection": "Vælg automatisk det mest sandsynlige køretøj. Det er muligt selv at vælge.",
       "vehicleHelpDefault": "Antag altid, at dette køretøj oplader her. Automatisk registrering deaktiveret. Manuel tilsidesættelse er mulig.",
+      "vehicleInvalid": "Køretøjet findes ikke",
       "vehicleLabel": "Standard køretøj",
       "vehiclesTitle": "Køretøjer"
     },
@@ -387,7 +389,7 @@
       "title": "Opsætning",
       "unconfigured": "ikke konfigureret",
       "vehicles": "Mine køretøjer",
-      "welcomeBannerText": "Start med at oprette en **lader eller varmer**. Hvis du endnu ikke har en fysisk lader, kan du vælge en **demolader**.",
+      "welcomeBannerText": "Start med at oprette mindst én **lader**, **varmer**, **elnet**, **sol**, **batteri** eller **ekstra måler**. Hvis du blot vil teste, kan du vælge en **demoenhed**.",
       "welcomeBannerTitle": "Lad os konfigurere dit system!",
       "yaml": "Enheder fra evcc.yaml kan ikke ændres her."
     },
@@ -763,6 +765,9 @@
       "solar": "Sol"
     }
   },
+  "general": {
+    "note": "Note:"
+  },
   "header": {
     "about": "Om",
     "authProviders": {
@@ -904,6 +909,7 @@
       "repeating": "Gentager",
       "repeatingPlans": "Gentager plan",
       "selectAll": "Vælg alt",
+      "strategyDisabledDescription": "Opladningen påbegyndes så sent som muligt og afsluttes præcis ved afgang. Med dynamiske elpriser eller CO₂-tariffer er der flere valgmuligheder.",
       "strategySettings": "Indstillinger for strategi",
       "time": "Tid",
       "title": "Plan",

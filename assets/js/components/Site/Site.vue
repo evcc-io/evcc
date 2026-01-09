@@ -51,6 +51,7 @@
 			</div>
 			<Loadpoints
 				v-else
+				:key="`loadpoints-${orderedVisibleLoadpoints.length}`"
 				class="mt-1 mt-sm-2 flex-grow-1"
 				:loadpoints="orderedVisibleLoadpoints"
 				:vehicles="vehicleList"

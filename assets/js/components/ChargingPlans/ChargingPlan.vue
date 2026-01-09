@@ -92,10 +92,11 @@ import Arrival from "./Arrival.vue";
 
 import formatter from "@/mixins/formatter";
 import collector from "@/mixins/collector";
+import minuteTicker from "@/mixins/minuteTicker";
 import api from "@/api";
 import { optionStep, fmtEnergy } from "@/utils/energyOptions.ts";
 import { defineComponent, type PropType } from "vue";
-import type { CURRENCY, Timeout, Vehicle } from "@/types/evcc";
+import type { CURRENCY, Vehicle } from "@/types/evcc";
 import type {
 	StaticPlan,
 	StaticSocPlan,
@@ -104,7 +105,6 @@ import type {
 	PlanStrategy,
 } from "./types";
 import type { Forecast } from "@/types/evcc.ts";
-const ONE_MINUTE = 60 * 1000;
 
 export default defineComponent({
 	name: "ChargingPlan",
@@ -114,7 +114,7 @@ export default defineComponent({
 		ChargingPlansSettings: PlansSettings,
 		ChargingPlanArrival: Arrival,
 	},
-	mixins: [formatter, collector],
+	mixins: [formatter, collector, minuteTicker],
 	props: {
 		currency: String as PropType<CURRENCY>,
 		disabled: Boolean,
@@ -148,7 +148,6 @@ export default defineComponent({
 			isModalVisible: false,
 			activeTab: "departure",
 			targetTimeLabel: "",
-			interval: null as Timeout,
 		};
 	},
 	computed: {
@@ -243,6 +242,9 @@ export default defineComponent({
 		effectivePlanTime(): void {
 			this.updateTargetTimeLabel();
 		},
+		everyMinute(): void {
+			this.updateTargetTimeLabel();
+		},
 		"$i18n.locale": {
 			handler(): void {
 				this.updateTargetTimeLabel();
@@ -250,13 +252,7 @@ export default defineComponent({
 		},
 	},
 	mounted(): void {
-		this.interval = setInterval(this.updateTargetTimeLabel, ONE_MINUTE);
 		this.updateTargetTimeLabel();
-	},
-	unmounted(): void {
-		if (this.interval) {
-			clearInterval(this.interval);
-		}
 	},
 	methods: {
 		modalVisible(): void {

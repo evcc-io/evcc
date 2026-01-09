@@ -23,6 +23,8 @@ params:
     required: true
   - name: maxdischargepower
     default: 5000
+  - name: timeout
+    deprecated: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}

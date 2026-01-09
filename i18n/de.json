@@ -867,6 +867,9 @@
       "solar": "Solar"
     }
   },
+  "general": {
+    "note": "Hinweis:"
+  },
   "header": {
     "about": "Über",
     "blog": "Blog",
@@ -1000,6 +1003,7 @@
       "repeating": "wiederholend",
       "repeatingPlans": "Wiederholende Pläne",
       "selectAll": "Alle wählen",
+      "strategyDisabledDescription": "Das Laden startet so spät wie möglich und wird rechtzeitig zur Abfahrt abgeschlossen. Mit dynamischen Netzpreisen oder einem CO₂-Tarif stehen hier weitere Optionen zur Verfügung.",
       "strategySettings": "Strategie-Einstellungen",
       "time": "Zeit",
       "title": "Plan",

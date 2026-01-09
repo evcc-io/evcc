@@ -398,6 +398,11 @@ export interface Sponsor {
   fromYaml: boolean;
 }
 
+export type VehicleOption = {
+  key?: string | null;
+  name: string | null;
+};
+
 export enum MODBUS_BAUDRATE {
   _1200 = 1200,
   _9600 = 9600,

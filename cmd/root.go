@@ -184,9 +184,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 			Status: ocpp.GetStatus(),
 		}}
 	})
-	log.INFO.Printf("OCPP local:    ws://127.0.0.1:%d/<stationId>", conf.Ocpp.Port)
+	log.INFO.Printf("OCPP local url:    ws://127.0.0.1:%d/<stationId>", conf.Ocpp.Port)
 	if ocpp.ExternalUrl() != "" {
-		log.INFO.Printf("OCPP external: %s/<stationId>", ocpp.ExternalUrl())
+		log.INFO.Printf("OCPP external url: %s/<stationId>", ocpp.ExternalUrl())
 	}
 
 	// value cache
@@ -204,9 +204,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 			os.Exit(1)
 		}
 	}()
-	log.INFO.Printf("UI local:      http://127.0.0.1:%d", conf.Network.Port)
+	log.INFO.Printf("UI local url:      http://127.0.0.1:%d", conf.Network.Port)
 	if conf.Network.ExternalUrl != "" {
-		log.INFO.Printf("UI external:   %s", conf.Network.ExternalURL())
+		log.INFO.Printf("UI external url:   %s", conf.Network.ExternalURL())
 	}
 
 	// publish to UI
