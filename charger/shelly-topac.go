@@ -202,7 +202,6 @@ func (c *ShellyTopAC) Enabled() (bool, error) {
 		return false, err
 	}
 
-	// Charger is enabled if current limit > 0
 	return current > 0, nil
 }
 
@@ -239,7 +238,8 @@ func (c *ShellyTopAC) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-	return phase.Info.TotalPower, nil
+	// TotalPower is in kW, convert to W
+	return phase.Info.TotalPower * 1000, nil
 }
 
 var _ api.MeterEnergy = (*ShellyTopAC)(nil)
@@ -251,8 +251,7 @@ func (c *ShellyTopAC) TotalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	// TotalActEnergy is in Wh, convert to kWh
-	return phase.Info.TotalActEnergy / 1e3, nil
+	return phase.Info.TotalActEnergy, nil
 }
 
 var _ api.PhaseCurrents = (*ShellyTopAC)(nil)
