@@ -53,6 +53,7 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/libp2p/zeroconf/v2"
+	"github.com/mohae/deepcopy"
 	"github.com/samber/lo"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
@@ -900,9 +901,23 @@ func configureMessengers(conf *globalconfig.Messaging, vehicles push.Vehicles, v
 	}
 
 	for _, conf := range conf.Services {
-		props, err := customDevice(conf.Other)
+		// deepcopy is necessary so that conf is not changed when converting the key send below
+		props, err := customDevice(deepcopy.Copy(conf.Other).(map[string]any))
 		if err != nil {
 			return nil, fmt.Errorf("cannot decode push service '%s': %w", conf.Type, err)
+		}
+
+		// the key send is stored as string in database for frontend purposes
+		// but backend needs it as yaml map
+		if conf.Type == "custom" {
+			sendStr := props["send"].(string)
+
+			var send map[string]any
+			if err := yaml.Unmarshal([]byte(sendStr), &send); err != nil {
+				return nil, fmt.Errorf("cannot parse YAML: %w", err)
+			}
+
+			props["send"] = send
 		}
 
 		impl, err := push.NewFromConfig(context.TODO(), conf.Type, props)
