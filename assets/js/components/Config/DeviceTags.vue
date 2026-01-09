@@ -13,7 +13,7 @@
 				{{ fmtDeviceValue(entry) }}
 			</div>
 		</span>
-		<table v-if="hasPhaseEntries" class="table table-borderless table-sm mt-1 mb-0">
+		<table v-if="hasPhaseEntries" class="table table-borderless table-sm my-0">
 			<thead>
 				<tr>
 					<th></th>
