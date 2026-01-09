@@ -35,7 +35,7 @@ services:
     - -54321
     - 111
 - type: email
-  uri: smtp://john.doe:secret123@emailserver.example.com:587/?fromAddress=john.doe@mail.com&toAddresses=recipient@mail.com
+  uri: smtp://john.doe:secret123@emailserver.example.com:587/?fromAddress=john.doe@mail.com&toAddresses=recipient1@mail.com,recipient2@mail.com
 - type: shout
   uri: gotify://gotify.example.com:443/AzyoeNS.D4iJLVa/?priority=1
 - type: ntfy

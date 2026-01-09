@@ -843,6 +843,10 @@ func configureMessengers(conf *globalconfig.Messaging, vehicles push.Vehicles, v
 						}
 					}
 					s.Other["to"] = toAddresses
+					if pw, ok := u.User.Password(); ok {
+						s.Other["password"] = pw
+					}
+
 					delete(s.Other, "uri")
 				} else if s.Type == "ntfy" {
 					uri, ok := s.Other["uri"].(string)

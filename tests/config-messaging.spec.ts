@@ -39,7 +39,7 @@ async function validateServices(modal: Locator) {
   await expect(emailUser).toHaveValue("john.doe");
   await expect(emailPassword).toHaveValue("***");
   await expect(emailFrom).toHaveValue("john.doe@mail.com");
-  await expect(emailTo).toHaveValue("recipient@mail.com");
+  await expect(emailTo).toHaveValue(["recipient1@mail.com", "recipient2@mail.com"].join("\n"));
 
   // Validate Shout
   const shoutBox = modal.getByTestId("service-box-shout");
@@ -194,7 +194,7 @@ test.describe("messaging", async () => {
     await emailUser.fill("john.doe");
     await emailPassword.fill("secret123");
     await emailFrom.fill("john.doe@mail.com");
-    await emailTo.fill("recipient@mail.com");
+    await emailTo.fill(["recipient1@mail.com", "recipient2@mail.com"].join("\n"));
 
     //  Shout
     await modal.getByRole("button", { name: "Add service" }).click();
