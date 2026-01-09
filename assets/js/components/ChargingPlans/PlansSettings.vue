@@ -57,7 +57,8 @@
 		</h5>
 		<ChargingPlanStrategy
 			:id="id"
-			:effectivePlanStrategy="effectivePlanStrategy"
+			:precondition="effectivePlanStrategy?.precondition"
+			:continuous="effectivePlanStrategy?.continuous"
 			:disabled="strategyDisabled"
 			:show="strategyOpen"
 			@update="updatePlanStrategy"
