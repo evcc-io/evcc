@@ -328,7 +328,6 @@ func (c *Zaptec) Currents() (float64, float64, float64, error) {
 // phases1p3p implements the api.PhaseSwitcher interface
 func (c *Zaptec) phases1p3p(phases int) error {
 	err := c.switchPhases(phases)
-	//if err != nil || !c.priority {
 	if err != nil {
 		return err
 	}
@@ -342,6 +341,7 @@ func (c *Zaptec) phases1p3p(phases int) error {
 		return err
 	}
 
+	// adjust the current by +/- 0.1A; otherwise, the phase change will not happen
 	newCurrent := oldCurrent - 0.1
 	if oldCurrent <= 6 {
 		newCurrent = oldCurrent + 0.1
@@ -360,11 +360,6 @@ func (c *Zaptec) phases1p3p(phases int) error {
 	// priority configured
 	data := zaptec.SessionPriority{
 		PrioritizedPhases: &phases,
-	}
-
-	res, err = c.statusG.Get()
-	if err != nil {
-		return err
 	}
 
 	if session := res.ObservationByID(zaptec.SessionIdentifier); session != nil {
