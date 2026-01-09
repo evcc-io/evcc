@@ -5,7 +5,7 @@ type RpcRequest struct {
 	Id     int
 	Src    string
 	Method string
-	Params RpcParams
+	Params any
 }
 
 // RpcParams contains RPC request parameters
@@ -15,16 +15,9 @@ type RpcParams struct {
 	Value any `json:",omitempty"`
 }
 
-// EnumResponse represents an enum value response
-type EnumResponse struct {
-	Value        string
-	Source       string
-	LastUpdateTs int64
-}
-
-// NumberResponse represents a number value response
-type NumberResponse struct {
-	Value        float64
+// RpcResponse represents an rpc response
+type RpcResponse[T any] struct {
+	Value        T
 	Source       string
 	LastUpdateTs int64
 }
@@ -46,13 +39,6 @@ type PhaseInfoValue struct {
 	PhaseC         PhaseData
 }
 
-// ObjectResponse represents an object value response with phase info
-type ObjectResponse struct {
-	Value        PhaseInfoValue
-	Source       string
-	LastUpdateTs int64
-}
-
 // Status represents the charger work state
 type Status struct {
 	WorkState string
@@ -61,14 +47,6 @@ type Status struct {
 // PhaseInfo wraps phase information
 type PhaseInfo struct {
 	Info PhaseInfoValue
-}
-
-// ServiceConfigRequest represents a service configuration request
-type ServiceConfigRequest struct {
-	Id     int
-	Src    string
-	Method string
-	Params ServiceConfigSet
 }
 
 // ServiceConfigSet contains service configuration parameters

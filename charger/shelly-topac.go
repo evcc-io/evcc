@@ -124,7 +124,7 @@ func (c *ShellyTopAC) execRpc(method, owner, role string, value any, res any) er
 
 // getWorkState retrieves the charger's work state
 func (c *ShellyTopAC) getWorkState() (shelly.Status, error) {
-	var res shelly.EnumResponse
+	var res shelly.RpcResponse[string]
 	err := c.execRpc("Enum.GetStatus", "service:0", "work_state", nil, &res)
 
 	return shelly.Status{WorkState: res.Value}, err
@@ -132,7 +132,7 @@ func (c *ShellyTopAC) getWorkState() (shelly.Status, error) {
 
 // getCurrentLimit retrieves the current charging limit
 func (c *ShellyTopAC) getCurrentLimit() (float64, error) {
-	var res shelly.NumberResponse
+	var res shelly.RpcResponse[float64]
 	err := c.execRpc("Number.GetStatus", "service:0", "current_limit", nil, &res)
 
 	return res.Value, err
@@ -147,7 +147,7 @@ func (c *ShellyTopAC) setCurrentLimit(current float64) error {
 
 // getPhaseInfo retrieves phase information
 func (c *ShellyTopAC) getPhaseInfo() (shelly.PhaseInfo, error) {
-	var res shelly.ObjectResponse
+	var res shelly.RpcResponse[shelly.PhaseInfoValue]
 	err := c.execRpc("Object.GetStatus", "service:0", "phase_info", nil, &res)
 
 	return shelly.PhaseInfo{Info: res.Value}, err
@@ -155,7 +155,7 @@ func (c *ShellyTopAC) getPhaseInfo() (shelly.PhaseInfo, error) {
 
 // setAutoCharge enables or disables auto charge configuration
 func (c *ShellyTopAC) setAutoCharge(enable bool) error {
-	data := shelly.ServiceConfigRequest{
+	data := shelly.RpcRequest{
 		Id:     0,
 		Src:    "evcc",
 		Method: "Service.SetConfig",
