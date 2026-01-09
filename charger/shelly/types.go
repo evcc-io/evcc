@@ -15,19 +15,38 @@ type RpcResponse[T any] struct {
 	LastUpdateTs int64  `json:"last_update_ts"`
 }
 
-// PhaseData contains voltage, current and power data for a single phase
-type PhaseData struct {
+// PhaseMeasurements contains voltage, current and power data for a single phase
+type PhaseMeasurements struct {
 	Voltage float64 `json:"voltage"`
 	Current float64 `json:"current"`
 	Power   float64 `json:"power"`
 }
 
-// PhaseInfo contains aggregated phase information
-type PhaseInfo struct {
-	TotalCurrent   float64   `json:"total_current"`
-	TotalPower     float64   `json:"total_power"`
-	TotalActEnergy float64   `json:"total_act_energy"`
-	PhaseA         PhaseData `json:"phase_a"`
-	PhaseB         PhaseData `json:"phase_b"`
-	PhaseC         PhaseData `json:"phase_c"`
+// Measurements contains aggregated phase information
+type Measurements struct {
+	TotalCurrent   float64           `json:"total_current"`
+	TotalPower     float64           `json:"total_power"`
+	TotalActEnergy float64           `json:"total_act_energy"`
+	PhaseA         PhaseMeasurements `json:"phase_a"`
+	PhaseB         PhaseMeasurements `json:"phase_b"`
+	PhaseC         PhaseMeasurements `json:"phase_c"`
+}
+
+// RoleParams contains parameters for RPC calls with owner and role
+type RoleParams struct {
+	Owner string `json:"owner"`
+	Role  string `json:"role"`
+}
+
+// SetValueParams contains parameters for setting a value with owner and role
+type SetValueParams struct {
+	Owner string  `json:"owner"`
+	Role  string  `json:"role"`
+	Value float64 `json:"value"`
+}
+
+// ServiceConfigParams contains parameters for service configuration
+type ServiceConfigParams struct {
+	Id         int  `json:"id"`
+	AutoCharge bool `json:"auto_charge"`
 }
