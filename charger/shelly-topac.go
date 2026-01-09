@@ -25,15 +25,12 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/charger/shelly"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/transport"
 	"github.com/jpfielding/go-http-digest/pkg/digest"
-)
-
-const (
-	requestTimeout = 10 * time.Second
 )
 
 // ShellyTopAC charger implementation for Shelly Top AC Portable EV Charger
@@ -42,73 +39,8 @@ type ShellyTopAC struct {
 	*request.Helper
 	uri     string
 	current int64
-	enabled bool
-	statusG util.Cacheable[topACStatus]
-	phaseG  util.Cacheable[topACPhaseInfo]
-}
-
-type topACRpcRequest struct {
-	Id     int    `json:"id"`
-	Src    string `json:"src"`
-	Method string `json:"method"`
-	Params struct {
-		Owner string `json:"owner"`
-		Role  string `json:"role"`
-		Value any    `json:"value,omitempty"`
-	} `json:"params"`
-}
-
-type topACEnumResponse struct {
-	Value        string `json:"value"`
-	Source       string `json:"source"`
-	LastUpdateTs int64  `json:"last_update_ts"`
-}
-
-type topACNumberResponse struct {
-	Value        float64 `json:"value"`
-	Source       string  `json:"source"`
-	LastUpdateTs int64   `json:"last_update_ts"`
-}
-
-type topACPhaseData struct {
-	Voltage float64 `json:"voltage"`
-	Current float64 `json:"current"`
-	Power   float64 `json:"power"`
-}
-
-type topACPhaseInfoValue struct {
-	TotalCurrent   float64        `json:"total_current"`
-	TotalPower     float64        `json:"total_power"`
-	TotalActEnergy float64        `json:"total_act_energy"`
-	PhaseA         topACPhaseData `json:"phase_a"`
-	PhaseB         topACPhaseData `json:"phase_b"`
-	PhaseC         topACPhaseData `json:"phase_c"`
-}
-
-type topACObjectResponse struct {
-	Value        topACPhaseInfoValue `json:"value"`
-	Source       string              `json:"source"`
-	LastUpdateTs int64               `json:"last_update_ts"`
-}
-
-type topACStatus struct {
-	workState string
-}
-
-type topACPhaseInfo struct {
-	info topACPhaseInfoValue
-}
-
-type topACServiceConfigRequest struct {
-	Id     int                   `json:"id"`
-	Src    string                `json:"src"`
-	Method string                `json:"method"`
-	Params topACServiceConfigSet `json:"params"`
-}
-
-type topACServiceConfigSet struct {
-	Id         int  `json:"id"`
-	AutoCharge bool `json:"auto_charge"`
+	statusG util.Cacheable[shelly.Status]
+	phaseG  util.Cacheable[shelly.PhaseInfo]
 }
 
 func init() {
@@ -121,20 +53,17 @@ func NewShellyTopACFromConfig(ctx context.Context, other map[string]any) (api.Ch
 		URI      string
 		User     string
 		Password string
-		Cache    time.Duration
-	}{
-		Cache: time.Second,
-	}
+	}{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewShellyTopAC(cc.URI, cc.User, cc.Password, cc.Cache)
+	return NewShellyTopAC(cc.URI, cc.User, cc.Password)
 }
 
 // NewShellyTopAC creates Shelly Top AC charger
-func NewShellyTopAC(uri, user, password string, cache time.Duration) (api.Charger, error) {
+func NewShellyTopAC(uri, user, password string) (api.Charger, error) {
 	if !sponsor.IsAuthorized() {
 		return nil, api.ErrSponsorRequired
 	}
@@ -161,12 +90,12 @@ func NewShellyTopAC(uri, user, password string, cache time.Duration) (api.Charge
 	}
 
 	// Setup cached status getters
-	c.statusG = util.ResettableCached(c.getWorkState, cache)
-	c.phaseG = util.ResettableCached(c.getPhaseInfo, cache)
+	c.statusG = util.ResettableCached(c.getWorkState, time.Second)
+	c.phaseG = util.ResettableCached(c.getPhaseInfo, time.Second)
 
 	// Enable auto_charge configuration
 	if err := c.setAutoCharge(true); err != nil {
-		log.WARN.Printf("failed to enable auto_charge: %v", err)
+		return nil, err
 	}
 
 	return c, nil
@@ -174,38 +103,36 @@ func NewShellyTopAC(uri, user, password string, cache time.Duration) (api.Charge
 
 // execRpc executes a Shelly Gen2 RPC call
 func (c *ShellyTopAC) execRpc(method, owner, role string, value any, res any) error {
-	data := topACRpcRequest{
+	data := shelly.RpcRequest{
 		Id:     0,
 		Src:    "evcc",
 		Method: method,
+		Params: shelly.RpcParams{
+			Owner: owner,
+			Role:  role,
+			Value: value,
+		},
 	}
-	data.Params.Owner = owner
-	data.Params.Role = role
-	data.Params.Value = value
-
-	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
-	defer cancel()
 
 	req, err := request.New(http.MethodPost, fmt.Sprintf("%s/%s", c.uri, method), request.MarshalJSON(data), request.JSONEncoding)
 	if err != nil {
 		return err
 	}
 
-	req = req.WithContext(ctx)
 	return c.DoJSON(req, &res)
 }
 
 // getWorkState retrieves the charger's work state
-func (c *ShellyTopAC) getWorkState() (topACStatus, error) {
-	var res topACEnumResponse
+func (c *ShellyTopAC) getWorkState() (shelly.Status, error) {
+	var res shelly.EnumResponse
 	err := c.execRpc("Enum.GetStatus", "service:0", "work_state", nil, &res)
 
-	return topACStatus{workState: res.Value}, err
+	return shelly.Status{WorkState: res.Value}, err
 }
 
 // getCurrentLimit retrieves the current charging limit
 func (c *ShellyTopAC) getCurrentLimit() (float64, error) {
-	var res topACNumberResponse
+	var res shelly.NumberResponse
 	err := c.execRpc("Number.GetStatus", "service:0", "current_limit", nil, &res)
 
 	return res.Value, err
@@ -219,34 +146,30 @@ func (c *ShellyTopAC) setCurrentLimit(current float64) error {
 }
 
 // getPhaseInfo retrieves phase information
-func (c *ShellyTopAC) getPhaseInfo() (topACPhaseInfo, error) {
-	var res topACObjectResponse
+func (c *ShellyTopAC) getPhaseInfo() (shelly.PhaseInfo, error) {
+	var res shelly.ObjectResponse
 	err := c.execRpc("Object.GetStatus", "service:0", "phase_info", nil, &res)
 
-	return topACPhaseInfo{info: res.Value}, err
+	return shelly.PhaseInfo{Info: res.Value}, err
 }
 
 // setAutoCharge enables or disables auto charge configuration
 func (c *ShellyTopAC) setAutoCharge(enable bool) error {
-	data := topACServiceConfigRequest{
+	data := shelly.ServiceConfigRequest{
 		Id:     0,
 		Src:    "evcc",
 		Method: "Service.SetConfig",
-		Params: topACServiceConfigSet{
+		Params: shelly.ServiceConfigSet{
 			Id:         0,
 			AutoCharge: enable,
 		},
 	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
-	defer cancel()
 
 	req, err := request.New(http.MethodPost, fmt.Sprintf("%s/Service.SetConfig", c.uri), request.MarshalJSON(data), request.JSONEncoding)
 	if err != nil {
 		return err
 	}
 
-	req = req.WithContext(ctx)
 	var res any
 	return c.DoJSON(req, &res)
 }
@@ -260,17 +183,15 @@ func (c *ShellyTopAC) Status() (api.ChargeStatus, error) {
 
 	// Map Shelly work states to evcc charge status
 	// Possible states: charger_free, charger_wait, charger_pause, charger_charging, charger_complete, charger_error
-	switch status.workState {
+	switch status.WorkState {
 	case "charger_free":
 		return api.StatusA, nil
 	case "charger_wait", "charger_pause", "charger_complete":
 		return api.StatusB, nil
 	case "charger_charging":
 		return api.StatusC, nil
-	case "charger_error":
-		return api.StatusE, fmt.Errorf("charger error")
 	default:
-		return api.StatusNone, fmt.Errorf("unknown work state: %s", status.workState)
+		return api.StatusNone, fmt.Errorf("unknown work state: %s", status.WorkState)
 	}
 }
 
@@ -292,15 +213,7 @@ func (c *ShellyTopAC) Enable(enable bool) error {
 		current = c.current
 	}
 
-	if err := c.setCurrentLimit(float64(current)); err != nil {
-		return err
-	}
-
-	c.enabled = enable
-	c.statusG.Reset()
-	c.phaseG.Reset()
-
-	return nil
+	return c.setCurrentLimit(float64(current))
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -309,13 +222,12 @@ func (c *ShellyTopAC) MaxCurrent(current int64) error {
 		return fmt.Errorf("invalid current %d", current)
 	}
 
-	c.current = current
-
-	if c.enabled {
-		return c.setCurrentLimit(float64(current))
+	err := c.setCurrentLimit(float64(current))
+	if err == nil {
+		c.current = current
 	}
 
-	return nil
+	return err
 }
 
 var _ api.Meter = (*ShellyTopAC)(nil)
@@ -327,7 +239,7 @@ func (c *ShellyTopAC) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-	return phase.info.TotalPower, nil
+	return phase.Info.TotalPower, nil
 }
 
 var _ api.MeterEnergy = (*ShellyTopAC)(nil)
@@ -339,7 +251,8 @@ func (c *ShellyTopAC) TotalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return phase.info.TotalActEnergy, nil
+	// TotalActEnergy is in Wh, convert to kWh
+	return phase.Info.TotalActEnergy / 1e3, nil
 }
 
 var _ api.PhaseCurrents = (*ShellyTopAC)(nil)
@@ -351,7 +264,7 @@ func (c *ShellyTopAC) Currents() (float64, float64, float64, error) {
 		return 0, 0, 0, err
 	}
 
-	return phase.info.PhaseA.Current, phase.info.PhaseB.Current, phase.info.PhaseC.Current, nil
+	return phase.Info.PhaseA.Current, phase.Info.PhaseB.Current, phase.Info.PhaseC.Current, nil
 }
 
 var _ api.PhaseVoltages = (*ShellyTopAC)(nil)
@@ -363,5 +276,5 @@ func (c *ShellyTopAC) Voltages() (float64, float64, float64, error) {
 		return 0, 0, 0, err
 	}
 
-	return phase.info.PhaseA.Voltage, phase.info.PhaseB.Voltage, phase.info.PhaseC.Voltage, nil
+	return phase.Info.PhaseA.Voltage, phase.Info.PhaseB.Voltage, phase.Info.PhaseC.Voltage, nil
 }

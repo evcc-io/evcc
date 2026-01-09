@@ -14,9 +14,5 @@ params:
 render: |
   type: shelly-topac
   uri: http://{{ .host }}
-  {{- if .user }}
   user: {{ .user }}
-  {{- end }}
-  {{- if .password }}
   password: {{ .password }}
-  {{- end }}
