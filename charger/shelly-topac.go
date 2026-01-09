@@ -44,11 +44,11 @@ type ShellyTopAC struct {
 }
 
 func init() {
-	registry.AddCtx("shelly-topac", NewShellyTopACFromConfig)
+	registry.Add("shelly-topac", NewShellyTopACFromConfig)
 }
 
 // NewShellyTopACFromConfig creates a Shelly Top AC charger from generic config
-func NewShellyTopACFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
+func NewShellyTopACFromConfig(other map[string]any) (api.Charger, error) {
 	cc := struct {
 		URI      string
 		User     string
