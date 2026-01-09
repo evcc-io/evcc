@@ -203,6 +203,9 @@ func (wb *Peblar) CurrentPower() (float64, error) {
 	return float64(binary.BigEndian.Uint32(b)), err
 }
 
+// removed since broken, see https://github.com/evcc-io/evcc/pull/25956
+// var _ api.ChargeRater = (*Peblar)(nil)
+
 // TotalEnergy implements the api.MeterEnergy interface
 func (wb *Peblar) TotalEnergy() (float64, error) {
 	b, err := wb.conn.ReadInputRegisters(peblarRegEnergyTotal, 4)
