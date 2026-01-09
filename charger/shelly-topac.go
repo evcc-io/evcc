@@ -99,7 +99,7 @@ func NewShellyTopAC(uri, user, password string) (api.Charger, error) {
 }
 
 // execRpc executes a Shelly Gen2 RPC call
-func (c *ShellyTopAC) execRpc(method, owner, role string, value any, res any) error {
+func (c *ShellyTopAC) execRpc(method, owner, role string, value, res any) error {
 	data := shelly.RpcRequest{
 		Id:     0,
 		Src:    "evcc",
@@ -111,7 +111,7 @@ func (c *ShellyTopAC) execRpc(method, owner, role string, value any, res any) er
 		},
 	}
 
-	req, err := request.New(http.MethodPost, fmt.Sprintf("%s/%s", c.uri, method), request.MarshalJSON(data), request.JSONEncoding)
+	req, err := request.New(http.MethodPost, c.uri, request.MarshalJSON(data), request.JSONEncoding)
 	if err != nil {
 		return err
 	}
@@ -144,7 +144,7 @@ func (c *ShellyTopAC) getPhaseInfo() (shelly.PhaseInfo, error) {
 
 // setAutoCharge enables or disables auto charge configuration
 func (c *ShellyTopAC) setAutoCharge(enable bool) error {
-	data := shelly.RpcRequest{
+	data := shelly.ServiceConfigRequest{
 		Id:     0,
 		Src:    "evcc",
 		Method: "Service.SetConfig",
@@ -226,7 +226,6 @@ func (c *ShellyTopAC) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-	// TotalPower is in kW, convert to W
 	return phase.TotalPower * 1000, nil
 }
 
