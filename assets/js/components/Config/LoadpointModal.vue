@@ -413,26 +413,40 @@
 					</FormRow>
 				</template>
 
-				<FormRow
-					v-if="showCircuit"
-					id="loadpointParamCircuit"
-					:label="$t('config.loadpoint.circuitLabel')"
-					:help="$t('config.loadpoint.circuitHelp')"
-				>
-					<PropertyField
+				<div v-if="showCircuit">
+					<FormRow
 						id="loadpointParamCircuit"
-						v-model="values.circuit"
-						type="Choice"
-						class="me-2"
-						:choice="circuitOptions"
-						required
-					/>
-				</FormRow>
+						:label="$t('config.loadpoint.circuitLabel')"
+						:help="$t('config.loadpoint.circuitHelp')"
+					>
+						<InvalidReferenceAlert
+							v-if="invalidCircuit"
+							:message="$t('config.loadpoint.circuitInvalid')"
+							:value="values.circuit"
+							@remove="values.circuit = ''"
+						/>
+						<PropertyField
+							v-else
+							id="loadpointParamCircuit"
+							v-model="values.circuit"
+							type="Choice"
+							class="me-2"
+							:choice="circuitOptions"
+							required
+						/>
+					</FormRow>
+				</div>
 
 				<div v-if="!chargerIsIntegratedDevice">
 					<h6>{{ $t("config.loadpoint.vehiclesTitle") }}</h6>
 
-					<div v-if="vehicleOptions.length">
+					<InvalidReferenceAlert
+						v-if="invalidVehicle"
+						:message="$t('config.loadpoint.vehicleInvalid')"
+						:value="values.vehicle"
+						@remove="values.vehicle = ''"
+					/>
+					<div v-else-if="vehicleOptions.length">
 						<FormRow
 							id="loadpointParamVehicle"
 							:label="$t('config.loadpoint.vehicleLabel')"
@@ -568,6 +582,7 @@ import deepEqual from "@/utils/deepEqual";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import EditIcon from "../MaterialIcon/Edit.vue";
 import NewDeviceButton from "./NewDeviceButton.vue";
+import InvalidReferenceAlert from "./InvalidReferenceAlert.vue";
 import { handleError, customChargerName } from "./DeviceModal";
 import {
 	LOADPOINT_TYPE,
@@ -575,6 +590,7 @@ import {
 	type LoadpointType,
 	type ConfigCharger,
 	type ConfigMeter,
+	type VehicleOption,
 	type ConfigCircuit,
 	type ConfigLoadpoint,
 } from "@/types/evcc";
@@ -610,12 +626,20 @@ const defaultThresholds = {
 
 export default {
 	name: "LoadpointModal",
-	components: { FormRow, PropertyField, GenericModal, SelectGroup, EditIcon, NewDeviceButton },
+	components: {
+		FormRow,
+		PropertyField,
+		GenericModal,
+		SelectGroup,
+		EditIcon,
+		NewDeviceButton,
+		InvalidReferenceAlert,
+	},
 	mixins: [formatter],
 	props: {
 		id: Number,
 		name: String,
-		vehicleOptions: { type: Array, default: () => [] },
+		vehicleOptions: { type: Array as PropType<VehicleOption[]>, default: () => [] },
 		loadpointCount: { type: Number, default: 0 },
 		fade: String as PropType<ModalFade>,
 		chargers: { type: Array as PropType<ConfigCharger[]>, default: () => [] },
@@ -718,7 +742,11 @@ export default {
 			];
 		},
 		showCircuit() {
-			return this.circuits.length > 0;
+			return this.circuits.length > 0 || this.values.circuit !== "";
+		},
+		invalidCircuit() {
+			const { circuit } = this.values;
+			return circuit && !this.circuitOptions.some((c) => c.key === circuit);
 		},
 		circuitOptions() {
 			const options = this.circuits.map((c) => ({
@@ -726,6 +754,10 @@ export default {
 				name: `${c.config?.title || ""} [${c.name}]`.trim(),
 			}));
 			return [{ key: "", name: "unassigned" }, ...options];
+		},
+		invalidVehicle() {
+			const { vehicle } = this.values;
+			return vehicle && !this.vehicleOptions.some(({ key }) => key === vehicle);
 		},
 		allVehicleOptions() {
 			return [

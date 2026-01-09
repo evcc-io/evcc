@@ -169,11 +169,11 @@ params:
   - name: maxpower
     unit: W
     description:
-      de: Maximale Ladeleistung des Fahrzeugs
-      en: Maximum vehicle charging power
+      de: Ladeleistungs-Hinweis
+      en: Maximum charging power hint
     help:
-      de: Definiert die maximale Ladeleistung des Fahrzeugs. Hilft, die Ladeplanung zu verbessern, wenn das Fahrzeug üblicherweise weniger Strom nutzt als angeboten oder höhere Ströme bei einphasigem Laden erlaubt als bei dreiphasigem. Der bereitgestellte Strom des Ladepunktes wird nicht beeinflusst.
-      en: Defines the maximum charging power of the vehicle. Helps improve charge plan accuracy when the vehicle typically uses less than the offered current or supports higher single-phase current compared to three-phase. The offered current of the loadpoint is not affected.
+      de: Definiert die maximale Ladeleistung des Fahrzeugs. Hilft, die Ladeplanung zu verbessern, wenn das Fahrzeug üblicherweise weniger Strom nutzt als angeboten oder höhere Ströme bei einphasigem Laden erlaubt als bei dreiphasigem. _Der bereitgestellte Strom des Ladepunktes wird nicht beeinflusst._
+      en: Defines the maximum charging power of the vehicle. Helps improve charge plan accuracy when the vehicle typically uses less than the offered current or supports higher single-phase current compared to three-phase. _The offered current of the loadpoint is not affected._
     type: int
   - name: identifiers
     description:
@@ -474,11 +474,11 @@ presets:
       advanced: true
     - name: mode
       advanced: true
-    - name: minCurrent
+    - name: mincurrent
       advanced: true
-    - name: maxCurrent
+    - name: maxcurrent
       advanced: true
-    - name: maxPower
+    - name: maxpower
       advanced: true
     - name: identifiers
       advanced: true
@@ -497,11 +497,11 @@ presets:
       advanced: true
     - name: mode
       advanced: true
-    - name: minCurrent
+    - name: mincurrent
       advanced: true
-    - name: maxCurrent
+    - name: maxcurrent
       advanced: true
-    - name: maxPower
+    - name: maxpower
       advanced: true
     - name: identifiers
       advanced: true
@@ -700,6 +700,13 @@ presets:
       help:
         de: Akzeptiere keine Daten die älter sind als dieser Wert
         en: Don't accept values older than this value
+
+  battery-params:
+    - name: capacity
+    - name: minsoc
+    - name: maxsoc
+    - name: maxchargepower
+    - name: maxdischargepower
 
 modbus:
   interfaces:

@@ -14,18 +14,16 @@ params:
     advanced: true
   - name: modbus
     choice: ["tcpip"]
-  - name: timeout
-    default: 15s
-  - name: capacity
-    advanced: true
   - name: maxacpower
+  - preset: battery-params
+  - name: timeout
+    deprecated: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     connectdelay: 1s
     register:
       address: 32278 # Active power
@@ -35,7 +33,6 @@ render: |
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     register:
       address: 32349 # Negative active electricity
       type: holding
@@ -44,7 +41,6 @@ render: |
   currents:
   - source: modbus
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     register:
       address: 32272 # Huawei phase A grid current
       type: holding
@@ -52,7 +48,6 @@ render: |
     scale: 0.1
   - source: modbus
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     register:
       address: 32274 # Huawei phase B grid current
       type: holding
@@ -60,7 +55,6 @@ render: |
     scale: 0.1
   - source: modbus
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     register:
       address: 32276 # Huawei phase C grid current
       type: holding
@@ -91,7 +85,6 @@ render: |
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     connectdelay: 1s
     register:
       {{- if eq .storageunit "1" }}
@@ -106,7 +99,6 @@ render: |
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     register:
       {{- if eq .storageunit "1" }}
       address: 37068 # [Energy storage unit 1] Total discharge
@@ -120,7 +112,6 @@ render: |
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     register:
       {{- if eq .storageunit "1" }}
       address: 37004
@@ -238,5 +229,5 @@ render: |
                 address: 47087 # Charge from grid
                 type: writesingle
                 encoding: uint16
-  capacity: {{ .capacity }} # kWh
+  {{- include "battery-params" . }}
   {{- end }}

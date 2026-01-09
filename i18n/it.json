@@ -2,17 +2,22 @@
   "authProviders": {
     "authCode": "Codice di autenticazione",
     "authCodeHelp": "Copia questo codice e utilizzalo nel passaggio successivo. Valido per {duration}.",
+    "authorizationFailed": "Autorizzazione non riuscita",
     "authorizationRequired": "Autorizzazione richiesta",
+    "authorizationSuccessful": "Autorizzazione riuscita",
     "buttonConnect": "Connettiti a {provider}",
     "buttonDisconnect": "Disconnetti",
     "confirmLogout": "Sei sicuro di voler disconnettere {title}?",
     "connect": "connetti",
     "disconnect": "disconnetti",
+    "loggedOut": "Disconnessione riuscita",
+    "logoutFailed": "Impossibile effettuare il logout",
     "modalDescriptionLogin": "Completa la procedura di autorizzazione per stabilire la connessione con {provider}.",
     "modalDescriptionLogout": "Questo disconnetterà il tuo account {provider} e rimuoverà l'accesso ai suoi dati.",
-    "success": "L'autorizzazione con {title} è stata completata con successo.",
+    "success": "{title} è ora connesso e pronto all'uso.",
     "successCloseModal": "Puoi ora chiudere questa finestra di dialogo.",
-    "successCloseTab": "Puoi ora chiudere questa scheda."
+    "successCloseTab": "Puoi ora chiudere questa scheda.",
+    "title": "Stato dell'autorizzazione"
   },
   "batterySettings": {
     "batteryLevel": "Livello batteria",
@@ -55,27 +60,46 @@
       "chargers": "Caricatori EV",
       "generic": "Integrazioni generiche",
       "heatingdevices": "Dispositivi di riscaldamento",
+      "ocppConfirmContinue": "Il caricabatterie non è ancora collegato all'evcc. Sei sicuro di voler continuare?",
+      "ocppConnected": "Connesso!",
+      "ocppDescription": "evcc dispone di un server OCPP integrato. Procedere come segue:",
       "ocppHelp": "Copia questo URL nella configurazione del tuo caricatore. Consulta il manuale del produttore per i dettagli. Il caricatore aggiungerà automaticamente il suo identificatore univoco (ID stazione) all'URL. In rari casi, potrebbe essere necessario specificare manualmente l'identificatore. Esempio: `{url}`",
       "ocppLabel": "URL Server OCPP",
+      "ocppNextStep": "Passo successivo",
+      "ocppStep1": "Configura il caricabatterie per utilizzare evcc come server OCPP.",
+      "ocppStep2": "Attendi che il caricabatterie si colleghi all'evcc.",
+      "ocppStep3": "Procedere e completare la configurazione.",
+      "ocppWaiting": "In attesa di connessione",
       "switchsockets": "Prese commutabili",
       "template": "Produttore",
       "titleAdd": {
-        "charging": "Aggiungi Caricabatterie"
+        "charging": "Aggiungi Caricabatterie",
+        "heating": "Aggiungi riscaldatore"
       },
       "titleEdit": {
-        "charging": "Modifica caricabatterie"
+        "charging": "Modifica caricabatterie",
+        "heating": "Modifica riscaldatore"
       },
       "type": {
-        "heatpump": "Pompa di calore definita dall'utente"
+        "custom": {
+          "charging": "Caricabatterie definito dall'utente",
+          "heating": "Riscaldatore definito dall'utente"
+        },
+        "heatpump": "Pompa di calore definita dall'utente",
+        "sgready": "Pompa di calore definita dall'utente (sg-ready tramite plugin)",
+        "sgready-boost": "Pompa di calore definita dall'utente (sg-ready-boost, obsoleta)",
+        "sgready-relay": "Pompa di calore definita dall'utente (sg-ready tramite relè)",
+        "switchsocket": "Presa con interruttore definito dall'utente"
       }
     },
     "circuits": {
       "description": "Garantisce che la somma dei carichi connessi ad un circuito non superi i limiti di corrente configurati. I circuiti possono essere annidati in una struttura gerarchica.",
-      "title": "Gestione del carico"
+      "title": "Gestione del carico",
+      "usableMeters": "Riferimenti dei contatori utilizzabili"
     },
     "control": {
       "description": "Normalmente le impostazioni di default sono adeguate. Modificale solo se sai cosa stai facendo.",
-      "descriptionInterval": "Intervallo ciclo di aggiornamento in secondi. Definisce quanto spesso evcc rileva i dati, modifica la potenza di carica e aggiorna l'interfaccia utente. Intervalli ridotti (<30s) possono causare oscillazioni e comportamenti indesiderati.",
+      "descriptionInterval": "Ciclo di aggiornamento in secondi. Definisce la frequenza con cui evcc legge i dati del contatore e regola la ricarica. L'impostazione predefinita di 30 secondi è una scelta sicura. Dispositivi come veicoli, wallbox e inverter richiedono in genere diversi secondi per regolare il loro comportamento. Se i componenti reagiscono rapidamente, è possibile utilizzare valori inferiori. Si consiglia vivamente di non scendere al di sotto dei 10 secondi. Se si osserva un comportamento di controllo irregolare o valori di potenza instabili, scegliere un intervallo maggiore.",
       "descriptionResidualPower": "Modifica la soglia di corrente per il ciclo di controllo. Se hai una batteria è consigliabile impostare un valore minimo di 100W: in questo modo la batteria riceverà una priorità rispetto all'uso della rete elettrica.",
       "labelInterval": "Intervallo di aggiornamento",
       "labelResidualPower": "Potenza residua",
@@ -95,15 +119,19 @@
       "chargedEnergy": "Carico",
       "co2": "CO₂ rete elettrica",
       "configured": "Configurato",
+      "connections": "Connessioni",
       "controllable": "Controllabile",
       "currency": "Valuta",
       "current": "Corrente",
       "currentRange": "Corrente",
+      "detected": "Rilevato",
+      "dimmed": "Attutito",
       "enabled": "Abilitato",
       "energy": "Energia",
       "feedinPrice": "Prezzo di vendita",
       "gridPrice": "Prezzo d'acquisto",
       "heaterTempLimit": "Limite del dispositivo di riscaldamento",
+      "hemsActiveLimit": "Limite attivo",
       "hemsType": "Comunicazione",
       "identifier": "Identificatore RFID",
       "no": "no",
@@ -130,19 +158,31 @@
       "B": "B (collegato)",
       "C": "C (in carica)"
     },
+    "deviceValueHemsType": {
+      "eebus": "tramite EEBus",
+      "relay": "tramite Relay"
+    },
     "devices": {
       "auxMeter": "Dispositivo smart",
       "batteryStorage": "Batteria di accumulo",
+      "consumer": "Consumatore",
       "solarSystem": "Sistema fotovoltaico"
+    },
+    "editor": {
+      "loading": "Caricamento dell'editor YAML…"
     },
     "eebus": {
       "description": "Configurazione che permette a evcc di comunicare con altri dispositivi EEBus.",
       "title": "EEBus"
     },
+    "experimental": {
+      "description": "Abilita l'interfaccia utente per le funzionalità ancora in fase di test e soggette a modifiche nelle versioni future.",
+      "title": "Sperimentale"
+    },
     "ext": {
       "description": "Registra i valori energetici dei consumatori non controllati (ad es. frigorifero, lavatrice, ecc.) a fini statistici. Questi contatori possono essere utilizzati anche per la gestione del carico (ad es. subdistribuzione).",
-      "titleAdd": "Aggiungi contatore esterno",
-      "titleEdit": "Modifica contatore esterno"
+      "titleAdd": "Aggiungi contatore di consumo",
+      "titleEdit": "Modifica contatore consumatore"
     },
     "form": {
       "danger": "Pericolo",
@@ -151,21 +191,43 @@
       "optional": "facoltativo"
     },
     "general": {
+      "applyAndClose": "Applica e chiudi",
+      "authPerform": "Connettiti con {provider}",
+      "authPerformHint": "Si aprirà in una nuova scheda. Torna qui per continuare.",
+      "authPrepare": "Preparare la connessione",
       "cancel": "Annulla",
+      "clear": "Chiaro",
+      "close": "Chiudi",
+      "copied": "Copiato!",
+      "copy": "Copia",
+      "customHelp": "Crea un dispositivo definito dall'utente utilizzando il sistema di plugin di evcc.",
+      "customOption": "Dispositivo definito dall'utente",
       "delete": "Cancella",
       "docsLink": "Vedi la documentazione.",
+      "dragHandle": "Maniglia di trascinamento",
+      "dragItem": "Trascinabile: {title}",
+      "dragList": "Elenco riordinabile",
       "experimental": "Sperimentale",
+      "forceSave": "Salva comunque",
       "hideAdvancedSettings": "Nascondi impostazioni avanzate",
+      "invalidFileSelected": "File non valido selezionato",
+      "noFileSelected": "Nessun file selezionato.",
       "off": "off",
       "on": "on",
       "password": "Password",
       "readFromFile": "Importa da file",
       "remove": "Rimuovi",
+      "required": "richiesto",
+      "reset": "Reimposta",
       "save": "Salva",
+      "saved": "Salvato.",
+      "saving": "Salvataggio…",
+      "selectFile": "Sfoglia",
       "showAdvancedSettings": "Mostra impostazioni avanzate",
       "telemetry": "Telemetria",
       "templateLoading": "Caricamento...",
       "title": "Titolo",
+      "typeDeprecated": "Il tipo \"{type}\" è obsoleto e verrà rimosso in una versione futura. Controlla il log delle modifiche e ricrea questo dispositivo.",
       "validateSave": "Conferma e salva"
     },
     "grid": {
@@ -174,8 +236,23 @@
       "titleEdit": "Modifica contatore di rete"
     },
     "hems": {
+      "csv": {
+        "created": "Creato",
+        "finished": "Finito",
+        "gridpower": "Potenza di rete (kW)",
+        "limitpower": "Limite (kW)",
+        "type": "Tipo"
+      },
       "description": "Limitazione di potenza da parte di sistemi esterni (ad es. controllori EnWG 14a). Richiede la configurazione della gestione del carico.",
-      "title": "HEMS"
+      "downloadCsv": "Scarica CSV",
+      "eventsRecorded": "Registrati {count} eventi di limitazione della griglia.",
+      "lastEvent": "Più recente {timeAgo}.",
+      "title": "HEMS",
+      "yamlConfigured": "Nota: configurato tramite evcc.yaml. Rimuovere la voce dal file per abilitare la modifica qui."
+    },
+    "icon": {
+      "change": "cambiamento",
+      "label": "Icona"
     },
     "influx": {
       "description": "Scrive i dati di ricarica e le altre metriche su InfluxDB. Usa Grafana o altri strumenti per visualizzare i dati.",
@@ -195,15 +272,18 @@
     },
     "loadpoint": {
       "addCharger": {
-        "charging": "Aggiungi caricabatterie"
+        "charging": "Aggiungi caricabatterie",
+        "heating": "Aggiungi riscaldatore"
       },
       "addMeter": "Aggiungi contatore energetico dedicato",
       "cancel": "Annulla",
       "chargerError": {
-        "charging": "È necessario configurare un caricatore."
+        "charging": "È necessario configurare un caricatore.",
+        "heating": "È necessario configurare un riscaldatore."
       },
       "chargerLabel": {
-        "charging": "Caricabatterie"
+        "charging": "Caricabatterie",
+        "heating": "Riscaldatore"
       },
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "Utilizzerà un intervallo di corrente tra 6 e 16 A.",
@@ -213,10 +293,12 @@
       "chargerPowerCustomHelp": "Definire un intervallo di corrente personalizzato.",
       "chargerTypeLabel": "Tipo di caricabatterie",
       "chargingTitle": "Comportamento",
+      "circuitHelp": "Assegnazione della gestione del carico per garantire che i limiti di potenza e corrente non vengano superati.",
       "circuitLabel": "Circuito",
       "circuitUnassigned": "non assegnato",
       "defaultModeHelp": {
-        "charging": "Modalità di ricarica quando si collega il veicolo."
+        "charging": "Modalità di ricarica quando si collega il veicolo.",
+        "heating": "Viene impostato all'avvio del sistema."
       },
       "defaultModeHelpKeep": "Mantiene l'ultima modalità selezionata.",
       "defaultModeLabel": "Modalità predefinita",
@@ -231,6 +313,10 @@
       "minCurrentHelp": "Scendere al di sotto dei 6A solo se si sa quello che si sta facendo.",
       "minCurrentLabel": "Corrente minima",
       "noVehicles": "Nessun veicolo configurato.",
+      "option": {
+        "charging": "Aggiungi punto di ricarica",
+        "heating": "Aggiungi dispositivo di riscaldamento"
+      },
       "phases1p": "Monofase",
       "phases3p": "Trifase",
       "phasesAutomatic": "Fasi automatiche",
@@ -259,13 +345,27 @@
       "thresholdDisableDelayLabel": "Ritardo di disattivazione",
       "thresholdDisableHelpInvalid": "Inserisci un valore positivo.",
       "thresholdDisableHelpPositive": "Interrompi in caso di prelievo dalla rete superiore a {power} per più di {delay}.",
-      "thresholdDisableHelpZero": "Interrompi quando la potenza minima di ricarica non può essere sostenuta per {delay}.",
+      "thresholdDisableHelpZero": "Interrompere quando la potenza minima richiesta non può essere soddisfatta per {delay}.",
       "thresholdDisableLabel": "Soglia di disattivazione (W)",
       "thresholdEnableDelayLabel": "Ritardo di attivazione",
       "thresholdEnableHelpInvalid": "Inserisci un valore negativo.",
-      "thresholdEnableHelpNegative": "Inizia la ricarica quando un surplus di {surplus} è disponibile per {delay}.",
-      "thresholdEnableHelpZero": "Inizia la ricarica quando la potenza di ricarica minima è disponibile per {delay}.",
+      "thresholdEnableHelpNegative": "Inizia quando {surplus} surplus è disponibile per {delay}.",
+      "thresholdEnableHelpZero": "Avviare quando è possibile soddisfare la potenza minima richiesta per {delay}.",
       "thresholdEnableLabel": "Soglia di attivazione (W)",
+      "titleAdd": {
+        "charging": "Aggiungi punto di ricarica",
+        "heating": "Aggiungi dispositivo di riscaldamento",
+        "unknown": "Aggiungi caricatore o riscaldatore"
+      },
+      "titleEdit": {
+        "charging": "Modifica punto di ricarica",
+        "heating": "Modifica dispositivo di riscaldamento",
+        "unknown": "Modifica caricatore o riscaldatore"
+      },
+      "titleExample": {
+        "charging": "Garage, posto auto coperto, ecc.",
+        "heating": "Pompa di calore, riscaldatore, ecc."
+      },
       "titleLabel": "Titolo",
       "vehicleAutoDetection": "identificazione automatica",
       "vehicleHelpAutoDetection": "Seleziona automaticamente il veicolo più plausibile. E' comunque possibile la modifica manuale.",
@@ -276,7 +376,7 @@
     "main": {
       "addAdditional": "Aggiungi un contatore aggiuntivo",
       "addGrid": "Aggiungi contatore di rete",
-      "addLoadpoint": "Aggiungi punto di ricarica",
+      "addLoadpoint": "Aggiungi caricatore o riscaldatore",
       "addPvBattery": "Aggiungi fotovoltaico o batteria",
       "addTariffs": "Aggiungi tariffe",
       "addVehicle": "Aggiungi veicolo",
@@ -287,7 +387,9 @@
       "title": "Configurazione",
       "unconfigured": "non configurato",
       "vehicles": "I miei veicoli",
-      "yaml": "I dispositivi configurati in evcc.yaml non sono modificabili tramite UI."
+      "welcomeBannerText": "Inizia creando un **caricabatterie o un riscaldatore**. Se non hai ancora un caricabatterie vero e proprio, scegli un **caricabatterie demo**.",
+      "welcomeBannerTitle": "Configuriamo il tuo sistema!",
+      "yaml": "I dispositivi di evcc.yaml non sono modificabili."
     },
     "messaging": {
       "description": "Ricevi messaggi sulle sessioni di ricarica.",
@@ -296,24 +398,35 @@
     "meter": {
       "cancel": "Annulla",
       "delete": "Elimina",
+      "generic": "Integrazioni generiche",
       "option": {
         "aux": "Aggiungi un consumatore autoregolato",
         "battery": "Aggiungi contatore batteria",
-        "ext": "Aggiungi contatore esterno",
+        "ext": "Aggiungi consumatore abituale",
         "pv": "Aggiungi contatore fotovoltaico"
       },
       "save": "Salva",
+      "specific": "Integrazioni specifiche",
       "template": "Produttore",
       "titleChoice": "Cosa vuoi aggiungere?",
+      "titleLabel": "Titolo",
+      "usage": {
+        "aux": "Consumatore autoregolante",
+        "battery": "Batteria",
+        "charge": "Consumatore / Caricatore",
+        "grid": "Griglia",
+        "label": "Utilizzo",
+        "pv": "Produzione"
+      },
       "validateSave": "Conferma e salva"
     },
     "modbus": {
       "baudrate": "Baud rate",
       "comset": "ComSet",
       "connection": "Connessione Modbus",
-      "connectionHintSerial": "Il dispositivo è collegato direttamente a evcc tramite un'interfaccia RS485.",
-      "connectionHintTcpip": "Il dispositivo è controllabile da evcc via LAN/Wifi.",
-      "connectionValueSerial": "Seriale / USB",
+      "connectionHintSerial": "Il dispositivo è collegato direttamente tramite RS485 (o adattatore da USB a RS485).",
+      "connectionHintTcpip": "Il dispositivo è raggiungibile tramite rete (LAN/WiFi).",
+      "connectionValueSerial": "RS485",
       "connectionValueTcpip": "Rete",
       "device": "Nome del dispositivo",
       "deviceHint": "Esempio: /dev/ttyUSB0",
@@ -328,7 +441,24 @@
       "protocolValueTcp": "TCP"
     },
     "modbusproxy": {
+      "add": "Aggiungi connessione proxy",
+      "connection": "Connessione #{number}",
       "description": "Alcuni dispositivi Modbus supportano solo una o pochissime connessioni. evcc può fungere da proxy, consentendo l'accesso simultaneo a più client (domotica, script, ecc.).",
+      "device": "Dispositivo",
+      "option": {
+        "deny": "errore",
+        "false": "no",
+        "true": "silenzioso"
+      },
+      "readonly": {
+        "help": {
+          "deny": "L'accesso in scrittura è bloccato con un errore Modbus.",
+          "false": "L'accesso in scrittura viene inoltrato.",
+          "true": "L'accesso in scrittura è bloccato senza risposta."
+        },
+        "label": "Sola lettura"
+      },
+      "sourcePortHelp": "Porta per le connessioni client in entrata. Deve essere disponibile.",
       "title": "Proxy Modbus"
     },
     "mqtt": {
@@ -350,13 +480,34 @@
       "title": "MQTT"
     },
     "network": {
-      "descriptionHost": "Usa il suffisso .local per abilitare mDNS. Utilizzato nell'app mobile e in alcune stazioni OCPP.",
+      "descriptionExternalUrl": "Indirizzo per altri dispositivi che desiderano connettersi a evcc e per il rilevamento automatico dell'app evcc.",
+      "descriptionHost": "Utilizzato per annunciare evcc nella rete locale.",
+      "descriptionInternalUrl": "Indirizzo di rete locale di evcc.",
       "descriptionPort": "Porta per l'interfaccia web e l'API. Dovrai modificare l'URL se modifichi questo.",
       "descriptionSchema": "Modifica solo come vengono generati gli URL. Selezionare HTTPS non abiliterà la crittografia.",
-      "labelHost": "Hostname",
+      "labelExternalUrl": "URL esterno",
+      "labelHost": "Nome host mDNS",
+      "labelInternalUrl": "URL interno",
       "labelPort": "Porta",
       "labelSchema": "Tipo",
       "title": "Rete"
+    },
+    "ocpp": {
+      "connectedChargers": "Caricabatterie collegati",
+      "connectionStatus": "ID stazione configurati",
+      "connectionStatusHelp": "Stato di connessione dei caricabatterie configurati.",
+      "detectedChargers": "ID stazioni rilevate",
+      "detectedHelp": "Questi caricatori hanno tentato di connettersi a evcc. Per utilizzare un caricatore, creare un punto di carico con il relativo ID stazione.",
+      "noChargers": "Nessun caricatore OCPP rilevato.",
+      "noStations": "Nessuna stazione collegata",
+      "status": {
+        "configured": "Non connesso",
+        "connected": "Connesso",
+        "unknown": "Sconosciuto"
+      },
+      "title": "Server OCPP",
+      "url": "URL del server",
+      "urlHelp": "Copia questo URL nella configurazione del caricabatterie. Per ulteriori dettagli, consulta il manuale del produttore. Il caricabatterie dovrebbe aggiungere automaticamente il proprio identificativo univoco (ID stazione) all'URL. In rari casi, potrebbe essere necessario specificare manualmente l'identificativo. Esempio: `{url}`"
     },
     "options": {
       "boolean": {
@@ -366,6 +517,10 @@
       "endianness": {
         "big": "big-endian",
         "little": "little-endian"
+      },
+      "operationMode": {
+        "heating": "Riscaldamento",
+        "standby": "Standby"
       },
       "schema": {
         "http": "HTTP (non crittografato)",
@@ -386,24 +541,74 @@
       "general": "Generali",
       "grid": "Rete Elettrica",
       "integrations": "Integrazioni",
-      "loadpoints": "Stazioni di ricarica",
+      "loadpoints": "Ricarica e riscaldamento",
       "meter": "Fotovoltaico e Batterie",
       "system": "Sistema",
       "vehicles": "Veicoli"
+    },
+    "shm": {
+      "cardTitle": "Sunny Home Manager",
+      "description": "evcc è dotato di integrazione per SMA Sunny Home Manager (SHM) tramite protocollo SEMP. Se è in esecuzione sulla stessa rete, dopo aver effettuato l'accesso al proprio account Sunny Portal, dovrebbe essere automaticamente proposto di aggiungere tutti i caricatori configurati in evcc come nuovi consumatori rilevati. Tutto dovrebbe essere immediatamente pronto all'uso, senza necessità di ulteriori regolazioni.",
+      "descriptionDeviceId": "Stringa HEX di 12 caratteri. Prefisso per tutti i dispositivi (punto di ricarica, ecc.).",
+      "descriptionIdPattern": "Modello identificativo",
+      "descriptionIds": "In Sunny Portal ogni dispositivo di consumo necessita di un identificativo univoco. evcc genera un identificativo univoco basato sul vostro hardware. Se migrate evcc su un altro hardware, questi identificativi potrebbero cambiare. Se desiderate mantenere la cronologia, potete sovrascrivere gli identificativi generati qui. Aprite l'URL SEMP (/semp) per controllare i vostri identificativi attuali.",
+      "descriptionSempUrl": "URL SEMP",
+      "descriptionVendorId": "Stringa HEX di 8 caratteri. Prefisso generale di tutte le entità. Per impostazione predefinita, evcc utilizzerà il proprio ID fornitore interno.",
+      "labelDeviceId": "ID dispositivo",
+      "labelVendorId": "ID fornitore",
+      "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
       "addToken": "Inserisci il token",
       "changeToken": "Modifica il token",
       "description": "Il modello di sponsorizzazione ci aiuta a mantenere il progetto e a introdurre in modo sostenibile nuove ed entusiasmanti funzionalità. Come sponsor hai accesso a tutte le implementazioni del caricabatterie.",
       "descriptionToken": "Ricevi il token da {url}. Offriamo anche un token di prova per i test {trialToken}.",
+      "enterYourToken": "Inserisci il tuo token",
       "error": "Il token sponsor non è valido.",
+      "invalid": "non valido",
       "labelToken": "Token sponsor",
       "title": "Sponsorizzazione",
       "tokenRequired": "Devi configurare un token sponsor prima di poter creare questo dispositivo.",
+      "tokenRequiredFeature": "Questa funzione richiede un token sponsor.",
       "tokenRequiredLearnMore": "Maggiori informazioni.",
-      "trialToken": "Token di prova"
+      "tokenRequiredShort": "Nessun token sponsor configurato.",
+      "trialToken": "token di prova",
+      "viaYaml": "tramite evcc.yaml",
+      "yourToken": "Il tuo gettone"
     },
     "system": {
+      "backupRestore": {
+        "backup": {
+          "action": "Scarica il backup...",
+          "confirmationButton": "Scarica il backup",
+          "confirmationText": "Scarica il file del database.",
+          "description": "Eseguire il backup dei dati in un file. Questo file può essere utilizzato per ripristinare i dati in caso di guasto del sistema.",
+          "title": "Backup"
+        },
+        "cancel": "Annulla",
+        "description": "Esegui il backup, il ripristino e il reset dei tuoi dati. Utile se desideri trasferire i tuoi dati su un altro sistema.",
+        "note": "Nota: tutte le azioni sopra indicate hanno effetto solo sui dati del database. Il file di configurazione evcc.yaml rimane invariato.",
+        "reset": {
+          "action": "Reimposta...",
+          "confirmationButton": "Ripristina e riavvia",
+          "confirmationText": "Questa operazione cancellerà definitivamente i dati selezionati. Assicurati di aver prima scaricato un backup.",
+          "description": "Hai problemi con la configurazione e vuoi ricominciare da capo? Elimina tutti i dati e ricomincia da zero.",
+          "sessions": "Sessioni di ricarica",
+          "sessionsDescription": "Elimina la cronologia delle sessioni di ricarica.",
+          "settings": "Configurazione e impostazioni",
+          "settingsDescription": "Elimina tutti i dispositivi, servizi, piani, cache ecc. configurati.",
+          "title": "Reimposta"
+        },
+        "restore": {
+          "action": "Ripristina...",
+          "confirmationButton": "Ripristina e riavvia",
+          "confirmationText": "Questo sovrascriverà l'intero database. Assicurati di aver prima scaricato un backup.",
+          "description": "Ripristina i tuoi dati da un file di backup. Questa operazione sovrascriverà tutti i tuoi dati attuali.",
+          "labelFile": "File di backup",
+          "title": "Ripristina"
+        },
+        "title": "Backup e ripristino"
+      },
       "logs": "Logs",
       "restart": "Riavvia",
       "restartRequiredDescription": "Riavvia per vedere l'effetto.",
@@ -414,6 +619,10 @@
     "tariffs": {
       "description": "Definisci le tue tariffe energetiche per calcolare i costi delle tue sessioni di ricarica.",
       "title": "Tariffe"
+    },
+    "telemetry": {
+      "description": "Configura la condivisione dei dati per contribuire a migliorare evcc. La tua privacy è importante per noi e la partecipazione è completamente facoltativa.",
+      "title": "Telemetria"
     },
     "title": {
       "description": "Visualizzato nella schermata principale e nella scheda del browser.",
@@ -436,14 +645,17 @@
       "delete": "Cancella",
       "generic": "Altre integrazioni",
       "identifiers": "Identificatori RFID",
-      "identifiersHelp": "Lista di stringhe RFID per l'identificazione del veicolo. Una stringa per riga. L'identificativo corrente è indicato nella pagina riassuntiva del punto di carica.",
+      "identifiersHelp": "Elenco delle stringhe RFID per identificare il veicolo. Una voce per riga. L'identificatore attuale è riportato nella pagina panoramica relativa al rispettivo punto di ricarica.",
       "maximumCurrent": "Corrente massima",
       "maximumCurrentHelp": "Deve essere maggiore della corrente minima.",
       "maximumPhases": "Fasi massime",
       "maximumPhasesHelp": "Con quante fasi può essere caricato questo veicolo? Questo dato è usato per calcolare il surplus minimo e la durata della pianificazione.",
+      "maximumPower": "Potenza massima di ricarica",
+      "maximumPowerHelp": "Potenza massima che il veicolo può consumare",
       "minimumCurrent": "Corrente minima",
       "minimumCurrentHelp": "Scendi al di sotto di 6A solo se sai cosa stai facendo.",
       "online": "Veicoli con API online",
+      "primary": "Integrazioni generiche",
       "priority": "Priorità",
       "priorityHelp": "Con una priorità maggiore il veicolo ha un accesso prioritario al surplus solare.",
       "save": "Salva",
@@ -564,7 +776,7 @@
   "help": {
     "discussionsButton": "Discussioni su GitHub",
     "documentationButton": "Documentazione",
-    "issueButton": "Segnala un bug",
+    "issueButton": "Segnala un problema",
     "issueDescription": "Hai trovato un comportamento strano o sbagliato?",
     "logsButton": "Vedi i logs",
     "logsDescription": "Controlla la presenza di errori nei log.",
@@ -581,6 +793,59 @@
     "restartDescription": "Hai provato a spegnerlo e riaccenderlo?",
     "secondaryActions": "Non sei ancora in grado di risolvere il tuo problema? Ecco alcune opzioni più complesse."
   },
+  "issue": {
+    "additional": {
+      "description": "Includi la configurazione e i log per aiutarci a riprodurre rapidamente il problema. Ti invitiamo a condividere il maggior numero possibile di informazioni. Lo stato di solito non è necessario.",
+      "include": "includere",
+      "lines": "linee",
+      "logs": "Registri",
+      "logsDescription": "Voci di registro recenti che potrebbero aiutare a identificare il problema.",
+      "showDetails": "mostra dettagli",
+      "source": "Fonte",
+      "state": "Stato",
+      "stateDescription": "Stato completo di funzionamento, comprese informazioni sul punto di ricarica, sul dispositivo e sull'energia. Includere solo se richiesto.",
+      "title": "Informazioni aggiuntive",
+      "uiConfig": "Configurazione (interfaccia utente)",
+      "uiConfigDescription": "Impostazioni di configurazione effettuate tramite l'interfaccia web.",
+      "yamlConfig": "Configurazione (YAML)",
+      "yamlConfigDescription": "Il tuo file di configurazione completo."
+    },
+    "additionalContext": "Contesto aggiuntivo",
+    "additionalContextPlaceholder": "Qualsiasi informazione aggiuntiva che potrebbe essere utile...\n- Dettagli di configurazione\n- Cosa hai provato\n- Dettagli sull'ambiente",
+    "createButtonDiscussion": "Avvia discussione su GitHub...",
+    "createButtonIssue": "Crea problema GitHub...",
+    "description": "La tua installazione non funziona come previsto? Utilizza questa pagina per ottenere assistenza o segnalare problemi. Fornisci dettagli sufficienti per aiutarci a comprendere e riprodurre il problema, mantenendo la tua descrizione concisa, chiara e facile da seguire.",
+    "helpType": {
+      "discussion": "Ho bisogno di aiuto con la configurazione",
+      "discussionDescription": "Le discussioni della community forniscono risposte.",
+      "issue": "Ho trovato un bug",
+      "issueDescription": "Sono certo che qualcosa sia rotto e debba essere riparato.",
+      "title": "Di quale problema stiamo parlando?"
+    },
+    "issueDescription": "Descrizione",
+    "issueTitle": "Titolo",
+    "stepsToReproduce": "Passaggi per riprodurre il problema",
+    "subTitleDiscussion": "Descrivi il tuo problema",
+    "subTitleIssue": "Descrivi il problema",
+    "summary": {
+      "confirmationButtonDiscussion": "Avvia discussione su GitHub",
+      "confirmationButtonIssue": "Crea un problema GitHub",
+      "copied": "Copiato!",
+      "copyButton": "Copia informazioni aggiuntive",
+      "instructions": "A causa delle limitazioni relative alla lunghezza degli URL di GitHub, questa operazione richiede due passaggi:",
+      "singleStepDescription": "Clicca sul pulsante sottostante per aprire GitHub con un modulo precompilato contenente i dettagli del tuo problema. I dati sensibili sono stati automaticamente oscurati, ma ti preghiamo di ricontrollare prima di condividere.",
+      "step1Description": "Clicca sul pulsante qui sotto per creare una voce GitHub di base con titolo, descrizione e dettagli.",
+      "step2Description": "Dopo aver creato la voce, torna qui per copiare le informazioni aggiuntive riportate di seguito e incollarle nel modulo GitHub. I dati sensibili sono stati oscurati, ma ti preghiamo di ricontrollare prima di condividerli.",
+      "stepOneDiscussion": "Passaggio 1: Creare una discussione di base",
+      "stepOneIssue": "Passaggio 1: Creare un problema di base",
+      "stepTwo": "Passaggio 2: Copiare le informazioni aggiuntive",
+      "title": "Riepilogo dei problemi su GitHub"
+    },
+    "system": "Sistema",
+    "timezone": "Fuso orario",
+    "title": "Segnala un problema",
+    "version": "Versione"
+  },
   "log": {
     "areaLabel": "Filtrato per area",
     "areas": "Tutte le aree",
@@ -596,12 +861,13 @@
   },
   "loginModal": {
     "cancel": "Annulla",
+    "demoMode": "Il login non è supportato in modalità demo.",
     "error": "Login fallito: ",
     "iframeHint": "Apri evcc in una nuova scheda.",
     "iframeIssue": "La tua password è corretta, ma sembra che il cookie di autenticazione sia stato eliminato. Questo può succedere quando usi evcc su un iframe su HTTP.",
     "invalid": "Password errata.",
     "login": "Login",
-    "password": "Password",
+    "password": "Password amministratore",
     "reset": "Reimpostare la password?",
     "title": "Autenticazione"
   },
@@ -615,6 +881,11 @@
       "goal": "Obiettivo di ricarica",
       "modalTitle": "Piano di ricarica",
       "none": "nessuno",
+      "optimization": {
+        "cheapest": "più economico",
+        "continuous": "continuo",
+        "label": "Ottimizzazione"
+      },
       "planNumber": "Piano {number}",
       "precondition": {
         "description": "Carica {duration} prima della partenza per pre-condizionare la batteria.",
@@ -626,6 +897,7 @@
       "repeating": "ricorrente",
       "repeatingPlans": "Piani ricorrenti",
       "selectAll": "Seleziona tutti",
+      "strategySettings": "Impostazioni strategia",
       "time": "Ora",
       "title": "Piano",
       "titleMinSoc": "Carica minima",
@@ -646,6 +918,7 @@
       "gridImport": "Uso della rete",
       "homePower": "Consumo",
       "loadpoints": "Caricabatterie| Caricabatterie | {count} caricabatterie",
+      "loadpointsLimit": "{limit} limite",
       "noEnergy": "Nessun valore",
       "pv": "Fotovoltaico",
       "pvExport": "Immissione in rete",
@@ -657,6 +930,10 @@
       "connected": "In attesa.",
       "vehicleLimit": "Limite riscaldamento",
       "waitForVehicle": "Pronto. In attesa del calorifero…"
+    },
+    "hemsWarning": {
+      "description": "Riduzione della ricarica fino a un massimo di {limit}.",
+      "title": "Limite esterno:"
     },
     "loadpoint": {
       "avgPrice": "⌀ Prezzo",
@@ -794,6 +1071,8 @@
       "connected": "Collegato.",
       "disconnectRequired": "Sessione terminata. Per favore riconnettersi.",
       "disconnected": "Disconnesso.",
+      "feedinPriorityNextStart": "Le tariffe elevate di immissione in rete iniziano in {duration}.",
+      "feedinPriorityPausing": "Ricarica solare sospesa per massimizzare l'immissione in rete.",
       "finished": "Finito.",
       "minCharge": "Ricarica minima a {soc}.",
       "pvDisable": "Surplus insufficiente. Pausa a breve.",
@@ -821,7 +1100,8 @@
     "message": "Non connesso a un server.",
     "restart": "Riavvia",
     "restartNeeded": "Necessario per applicare le modifiche.",
-    "restarting": "I server ritorneranno presto."
+    "restarting": "I server ritorneranno presto.",
+    "starting": "Avvio del server..."
   },
   "passwordModal": {
     "description": "Imposta una password per proteggere le impostazioni di configurazione. È comunque possibile utilizzare la schermata principale senza effettuare il login.",
@@ -932,6 +1212,7 @@
     "vehicle": "Veicolo"
   },
   "settings": {
+    "deviceInfo": "Le impostazioni configurate in questa finestra di dialogo riguardano solo questo dispositivo.",
     "fullscreen": {
       "enter": "Entra in schermo intero",
       "exit": "Uscire dallo schermo intero",
@@ -939,11 +1220,17 @@
     },
     "hiddenFeatures": {
       "label": "Sperimentale",
-      "value": "Mostra caratteristiche sperimentali della UI."
+      "value": "Mostra le funzionalità sperimentali."
     },
     "language": {
       "auto": "Automatico",
       "label": "Lingua"
+    },
+    "loadpoints": {
+      "help": "Modifica ordine e visibilità dell'interfaccia utente.",
+      "hide": "Nascondi {title}",
+      "label": "Punti di ricarica",
+      "show": "Mostra {title}"
     },
     "sponsorToken": {
       "expires": "Il tuo token sponsor scadrà in {inXDays}.",
@@ -975,13 +1262,14 @@
   },
   "smartCost": {
     "activeHours": "{active} di {total}",
-    "activeHoursLabel": "Ore attive",
+    "activeHoursLabel": "Tempo attivo",
     "applyToAll": "Applicare su tutti?",
     "batteryDescription": "Ricarica la batteria domestica con l'energia proveniente dalla rete elettrica.",
     "cheapTitle": "Ricarica economica con la rete",
     "cleanTitle": "Ricarica pulita con la rete",
     "co2Label": "Emissioni di CO₂",
     "co2Limit": "limite CO₂",
+    "enable": "Abilita limite",
     "loadpointDescription": "Attiva temporaneamente la ricarica rapida in modalità fotovoltaico.",
     "modalTitle": "Ricarica intelligente con la rete",
     "none": "nessuno",
@@ -991,11 +1279,20 @@
     "resetWarning": "Tariffa dinamica o sorgente di CO₂ non configurate. Tuttavia, c'è ancora un limite di {limit}. Annullare la configurazione?",
     "saved": "Salvato."
   },
+  "smartFeedInPriority": {
+    "activeHoursLabel": "Tempo sospeso",
+    "description": "Interrompe la ricarica durante i periodi di prezzi elevati per dare priorità all'immissione in rete redditizia.",
+    "priceLabel": "Tariffa di immissione",
+    "priceLimit": "Limite di immissione",
+    "resetWarning": "Non è stata configurata alcuna tariffa di immissione dinamica. Tuttavia, esiste ancora un limite di {limit}. Vuoi ripulire la tua configurazione?",
+    "title": "Priorità di immissione"
+  },
   "startupError": {
     "configFile": "File di configurazione utilizzato:",
     "configuration": "Configura",
     "description": "Controlla il tuo file di configurazione. Se il messaggio di errore non aiuta, controlla {0}.",
     "discussions": "GitHub Discussioni",
+    "editConfiguration": "Modifica configurazione",
     "fixAndRestart": "Risolvere il problema e riavviare il server.",
     "hint": "Nota: potrebbe anche trattarsi di un dispositivo difettoso (inverter, contatore, ...). Controllare le connessioni di rete.",
     "lineError": "Errore in {0}.",

@@ -278,7 +278,7 @@ var _ api.ChargeTimer = (*Compleo)(nil)
 
 // ChargeDuration implements the api.ChargeTimer interface
 func (wb *Compleo) ChargeDuration() (time.Duration, error) {
-	b, err := wb.conn.ReadHoldingRegisters(wb.reg(compleoRegChargeDuration), 2)
+	b, err := wb.conn.ReadInputRegisters(wb.reg(compleoRegChargeDuration), 2)
 	if err != nil {
 		return 0, err
 	}

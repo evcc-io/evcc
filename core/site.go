@@ -266,7 +266,6 @@ func NewSite() *Site {
 	site := &Site{
 		log:             util.NewLogger("site"),
 		Voltage:         230, // V
-		ResidualPower:   100, // W
 		pvEnergy:        make(map[string]*meterEnergy),
 		fcstEnergy:      &meterEnergy{clock: clock.New()},
 		householdEnergy: &meterEnergy{clock: clock.New()},
@@ -958,7 +957,7 @@ func (site *Site) update(lp updater) {
 
 	// prioritize if possible
 	var flexiblePower float64
-	if lp.GetMode() == api.ModePV {
+	if lp != nil && lp.GetMode() == api.ModePV {
 		flexiblePower = site.prioritizer.GetChargePowerFlexibility(lp)
 	}
 
@@ -979,10 +978,12 @@ func (site *Site) update(lp updater) {
 		greenShareLoadpoints := site.greenShare(nonChargePower, nonChargePower+totalChargePower)
 
 		// TODO
-		lp.Update(
-			sitePower, max(0, site.batteryPower), consumption, feedin, batteryBuffered, batteryStart,
-			greenShareLoadpoints, site.effectivePrice(greenShareLoadpoints), site.effectiveCo2(greenShareLoadpoints),
-		)
+		if lp != nil {
+			lp.Update(
+				sitePower, max(0, site.batteryPower), consumption, feedin, batteryBuffered, batteryStart,
+				greenShareLoadpoints, site.effectivePrice(greenShareLoadpoints), site.effectiveCo2(greenShareLoadpoints),
+			)
+		}
 
 		site.Health.Update()
 
@@ -1098,9 +1099,18 @@ func (site *Site) Prepare(valueChan chan<- util.Param, pushChan chan<- push.Even
 
 // loopLoadpoints keeps iterating across loadpoints sending the next to the given channel
 func (site *Site) loopLoadpoints(next chan<- updater) {
+	var logOnce sync.Once
+
 	for {
-		for _, lp := range site.loadpoints {
-			next <- lp
+		if len(site.loadpoints) == 0 {
+			logOnce.Do(func() {
+				site.log.INFO.Println("no loadpoints configured, running in meter-only mode")
+			})
+			next <- nil
+		} else {
+			for _, lp := range site.loadpoints {
+				next <- lp
+			}
 		}
 	}
 }
@@ -1115,7 +1125,7 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 	}
 
 	loadpointChan := make(chan updater)
-	if len(site.loadpoints) > 0 {
+	if site.IsConfigured() {
 		go site.loopLoadpoints(loadpointChan)
 	}
 

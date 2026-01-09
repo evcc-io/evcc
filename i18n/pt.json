@@ -100,7 +100,7 @@
     "control": {
       "description": "Normalmente funciona com os valores padrão. Mude-os apenas se sabe o que está a fazer.",
       "descriptionInterval": "Ciclo de atualização em segundos. Define a frequência com que o evcc lê os dados do medidor e ajusta a cobrança. O padrão de 30 segundos é uma escolha segura. Dispositivos como veículos, wallboxes e inversores normalmente precisam de vários segundos para ajustar o seu comportamento. Se os seus componentes reagem rapidamente, pode usar valores mais baixos. Recomendamos fortemente não ir abaixo de 10 segundos. Se observar um comportamento de controlo irregular ou valores de potência instáveis, escolha um intervalo maior.",
-      "descriptionResidualPower": "Desloca o ponto de operação do circuito de controlo. O valor padrão de 100 W dá às baterias domésticas uma ligeira prioridade sobre o uso da rede. Se não tiver uma bateria, pode definir este valor para 0 W para minimizar o consumo da rede no modo solar.",
+      "descriptionResidualPower": "Altera o ponto de operação do circuito de controlo. Se tiver uma bateria doméstica, recomenda-se definir um valor de 100 W. Desta forma, a bateria terá uma ligeira prioridade sobre a utilização da rede.",
       "labelInterval": "Intervalo das actualizações",
       "labelResidualPower": "Potência residual",
       "title": "Comportamento de controlo"
@@ -886,6 +886,11 @@
       "goal": "Carga pretendida",
       "modalTitle": "Plano de carga",
       "none": "nenhum",
+      "optimization": {
+        "cheapest": "mais barato",
+        "continuous": "contínuo",
+        "label": "Otimização"
+      },
       "planNumber": "Plano {number}",
       "precondition": {
         "description": "Carregar {duration} antes da partida para pré-condicionamento da bateria.",
@@ -897,6 +902,7 @@
       "repeating": "recorrente",
       "repeatingPlans": "Repetição de planos",
       "selectAll": "Selecionar tudo",
+      "strategySettings": "Definições da estratégia",
       "time": "Hora",
       "title": "Plano",
       "titleMinSoc": "Carga mínima",

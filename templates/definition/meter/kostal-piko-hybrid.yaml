@@ -9,8 +9,7 @@ params:
     choice: ["grid", "pv", "battery"]
     allinone: true
   - name: host
-  - name: capacity
-    advanced: true
+  - preset: battery-params
 render: |
   {{- if eq .usage "grid" }}
   type: custom
@@ -48,5 +47,5 @@ render: |
     uri: http://{{ .host }}/api/dxs.json?dxsEntries=33556229 # Battery SOC
     #   | ----------------------------- Bat SOC% --------- |
     jq: (.dxsEntries[] | select(.dxsId==33556229) | .value )
-  capacity: {{ .capacity }} # kWh
+  {{- include "battery-params" . }}
   {{- end }}

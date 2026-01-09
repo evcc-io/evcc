@@ -20,8 +20,8 @@
 					@site-changed="siteChanged"
 				/>
 
+				<WelcomeBanner v-if="setupRequired" />
 				<h2 class="my-4">{{ $t("config.section.loadpoints") }}</h2>
-				<WelcomeBanner v-if="loadpointsRequired" class="my-4" />
 				<div class="p-0 config-list">
 					<DeviceCard
 						v-for="loadpoint in loadpoints"
@@ -48,7 +48,6 @@
 					<NewDeviceButton
 						data-testid="add-loadpoint"
 						:title="$t('config.main.addLoadpoint')"
-						:attention="loadpointsRequired"
 						@click="newLoadpoint"
 					/>
 				</div>
@@ -455,6 +454,7 @@ import type {
 	ConfigMeter,
 	LoadpointType,
 	Timeout,
+	VehicleOption,
 	MeterType,
 	SiteConfig,
 	DeviceType,
@@ -571,8 +571,8 @@ export default defineComponent({
 		authProviders() {
 			return store.state?.authProviders;
 		},
-		loadpointsRequired() {
-			return this.loadpoints.length === 0;
+		setupRequired() {
+			return store.state?.setupRequired;
 		},
 		siteTitle() {
 			return this.site?.title;
@@ -653,7 +653,7 @@ export default defineComponent({
 			if (org) result.org = { value: org };
 			return result;
 		},
-		vehicleOptions() {
+		vehicleOptions(): VehicleOption[] {
 			return this.vehicles.map((v) => ({ key: v.name, name: v.config?.title || v.name }));
 		},
 		shmTags(): DeviceTags {

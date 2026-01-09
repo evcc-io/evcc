@@ -1,16 +1,37 @@
 {
+  "authProviders": {
+    "authCode": "Cod de autentificare",
+    "authCodeHelp": "Copiați acest cod și utilizați-l în pasul următor. Valabil pentru {duration}.",
+    "authorizationFailed": "Autorizarea a eșuat",
+    "authorizationRequired": "Autorizare necesară",
+    "authorizationSuccessful": "Autorizare reușită",
+    "buttonConnect": "Conectați-vă la {provider}",
+    "buttonDisconnect": "Deconectare",
+    "confirmLogout": "Sunteți sigur că doriți să deconectați {title}?",
+    "connect": "conecta",
+    "disconnect": "deconectare",
+    "loggedOut": "V-ați deconectat cu succes",
+    "logoutFailed": "Nu s-a reușit deconectarea",
+    "modalDescriptionLogin": "Finalizați procesul de autorizare pentru a stabili conexiunea cu {provider}.",
+    "modalDescriptionLogout": "Aceasta va deconecta contul dvs. {provider} și va elimina accesul la datele sale.",
+    "success": "{title} este acum conectat și gata de utilizare.",
+    "successCloseModal": "Acum puteți închide această fereastră de dialog.",
+    "successCloseTab": "Acum puteți închide această filă.",
+    "title": "Starea autorizației"
+  },
   "batterySettings": {
     "batteryLevel": "Nivelul bateriei",
     "bufferStart": {
-      "above": "cand e peste {soc}",
+      "above": "când deasupra {soc}.",
       "full": "când atinge {soc}.",
-      "never": "numai cand exista surplus suficient"
+      "never": "numai cu un surplus suficient."
     },
     "capacity": "{energy} din {total}",
     "control": "Controlul bateriei",
-    "discharge": "“Preveniți descărcarea în modul rapid și încărcarea planificată.”",
+    "discharge": "Preveniți descărcarea în modul rapid și încărcarea planificată.",
     "disclaimerHint": "Nota:",
-    "disclaimerText": "Aceste setari afecteaza doar modul solar. Procesul de incarcare este ajustat corespunzator",
+    "disclaimerText": "Aceste setări afectează numai modul solar. Comportamentul de încărcare este ajustat în consecință.",
+    "gridChargeTab": "Încărcare la rețea",
     "legendBottomName": "prioritate casa",
     "legendBottomSubline": "până când atinge {soc}.",
     "legendMiddleName": "in primul rand vehiculul",
@@ -18,71 +39,623 @@
     "legendTopAutostart": "porneste automat",
     "legendTopName": "Incarcare ajutata de baterie",
     "legendTopSubline": "când bateria casei e peste {soc}.",
-    "modalTitle": "Setari bateriei"
+    "modalTitle": "Setari bateriei",
+    "usageTab": "Utilizarea bateriei"
   },
   "config": {
+    "aux": {
+      "description": "Dispozitiv care își ajustează consumul în funcție de surplusul disponibil (cum ar fi încălzitoarele inteligente de apă). evcc se așteaptă ca acest dispozitiv să își reducă consumul de energie dacă este necesar.",
+      "titleAdd": "Adăugați consumator cu autoreglare",
+      "titleEdit": "Editați Consumator autoreglabil"
+    },
     "battery": {
       "titleAdd": "adăugați contorul de baterie",
-      "titleEdit": "Editați contorul de baterie."
+      "titleEdit": "Editați bateria"
+    },
+    "charge": {
+      "titleAdd": "Adăugați contor de încărcare",
+      "titleEdit": "Editați contorul de încărcare"
+    },
+    "charger": {
+      "chargers": "Încărcătoare pentru vehicule electrice",
+      "generic": "Integrări generice",
+      "heatingdevices": "Dispozitive de încălzire",
+      "ocppConfirmContinue": "Încărcătorul dvs. nu s-a conectat încă la evcc. Sunteți sigur că doriți să continuați?",
+      "ocppConnected": "Conectat!",
+      "ocppDescription": "evcc are un server OCPP încorporat. Urmați acești pași:",
+      "ocppHelp": "Copiați această adresă URL în configurația încărcătorului. Consultați manualul producătorului pentru detalii. Încărcătorul ar trebui să adauge automat identificatorul său unic (ID stație) la adresa URL. În cazuri rare, poate fi necesar să specificați manual identificatorul. Exemplu: `{url}`",
+      "ocppLabel": "URL server OCPP",
+      "ocppNextStep": "Pasul următor",
+      "ocppStep1": "Configurați încărcătorul pentru a utiliza evcc ca server OCPP.",
+      "ocppStep2": "Așteptați ca încărcătorul să se conecteze la evcc.",
+      "ocppStep3": "Continuați și finalizați configurarea.",
+      "ocppWaiting": "Așteptare conexiune",
+      "switchsockets": "Priză comutabilă",
+      "template": "Producător",
+      "titleAdd": {
+        "charging": "Adăugați încărcător",
+        "heating": "Adăugați încălzitor"
+      },
+      "titleEdit": {
+        "charging": "Editare încărcător",
+        "heating": "Editare încălzitor"
+      },
+      "type": {
+        "custom": {
+          "charging": "Încărcător definit de utilizator",
+          "heating": "Încălzitor definit de utilizator"
+        },
+        "heatpump": "Pompă de căldură definită de utilizator",
+        "sgready": "Pompă de căldură definită de utilizator (sg-ready prin pluginuri)",
+        "sgready-boost": "Pompă de căldură definită de utilizator (sg-ready-boost, învechită)",
+        "sgready-relay": "Pompă de căldură definită de utilizator (sg-ready prin relee)",
+        "switchsocket": "Priză comutator definită de utilizator"
+      }
+    },
+    "circuits": {
+      "description": "Asigură că suma tuturor punctelor de încărcare conectate la un circuit nu depășește limitele de putere și curent configurate. Circuitele pot fi imbricate pentru a forma o ierarhie.",
+      "title": "Gestionarea încărcării",
+      "usableMeters": "Referințe utile privind contoarele"
+    },
+    "control": {
+      "description": "De obicei, valorile implicite sunt adecvate. Modificați-le numai dacă știți ce faceți.",
+      "descriptionInterval": "Ciclul de actualizare în secunde. Definește frecvența cu care evcc citește datele contorului și ajustează încărcarea. Valoarea implicită de 30 de secunde este o alegere sigură. Dispozitivele precum vehiculele, cutiile de perete și invertoarele au nevoie de obicei de câteva secunde pentru a-și ajusta comportamentul. Dacă componentele dvs. reacționează rapid, puteți utiliza valori mai mici. Vă recomandăm insistent să nu coborâți sub 10 secunde. Dacă observați un comportament de control neregulat sau valori de putere fluctuante, alegeți un interval mai mare.",
+      "descriptionResidualPower": "Modifică punctul de funcționare al buclei de control. Dacă aveți o baterie pentru uz casnic, se recomandă setarea unei valori de 100 W. În acest fel, bateria va avea o ușoară prioritate față de utilizarea rețelei.",
+      "labelInterval": "Interval de actualizare",
+      "labelResidualPower": "Putere reziduală",
+      "title": "Comportament de control"
     },
     "deviceValue": {
+      "amount": "Suma",
+      "broker": "Broker",
+      "bucket": "Bucket",
       "capacity": "Capacitatea",
       "chargeStatus": "Stare",
+      "chargeStatusA": "neconectat",
+      "chargeStatusB": "conectat",
+      "chargeStatusC": "încărcare",
+      "chargeStatusE": "fără energie electrică",
+      "chargeStatusF": "eroare",
       "chargedEnergy": "Încărcat",
+      "co2": "Rețea CO₂",
+      "configured": "Configurat",
+      "connections": "Conexiuni",
+      "controllable": "Controlabil",
+      "currency": "Moneda",
       "current": "Curent",
+      "currentRange": "Actual",
+      "detected": "Detectat",
+      "dimmed": "Estompat",
       "enabled": "Activat",
       "energy": "Energie",
+      "feedinPrice": "Prețul de alimentare",
+      "gridPrice": "Prețul rețelei",
+      "heaterTempLimit": "Limită încălzitor",
+      "hemsActiveLimit": "Limită activă",
+      "hemsType": "Comunicare",
+      "identifier": "Identificator RFID",
+      "no": "nu",
       "odometer": "Kilometraj",
+      "org": "Organizație",
       "phaseCurrents": "Curent L1, L2, L3",
       "phasePowers": "Putere L1, L2, L3",
       "phaseVoltages": "Voltaj L1, L2, L3",
+      "phases1p3p": "Comutator de fază",
       "power": "Putere",
+      "powerRange": "Putere",
       "range": "Autonomie",
-      "soc": "Stare de încărcare"
+      "singlePhase": "Monofazat",
+      "soc": "Stare de încărcare",
+      "solarForecast": "Prognoza solară",
+      "temp": "Temperatura",
+      "topic": "Subiect",
+      "url": "URL",
+      "vehicleLimitSoc": "Limită de încărcare",
+      "yes": "da"
+    },
+    "deviceValueChargeStatus": {
+      "A": "A (neconectat)",
+      "B": "B (conectat)",
+      "C": "C (încărcare)"
+    },
+    "deviceValueHemsType": {
+      "eebus": "prin EEBus",
+      "relay": "prin releu"
+    },
+    "devices": {
+      "auxMeter": "Consumator inteligent",
+      "batteryStorage": "Stocarea bateriei",
+      "consumer": "Consumator",
+      "solarSystem": "Sistemul solar"
+    },
+    "editor": {
+      "loading": "Se încarcă editorul YAML…"
+    },
+    "eebus": {
+      "description": "Configurație care permite evcc să comunice cu alte dispozitive EEBus.",
+      "title": "EEBus"
+    },
+    "experimental": {
+      "description": "Activați interfața utilizatorului pentru funcții care sunt încă în curs de testare și care pot suferi modificări în versiunile viitoare.",
+      "title": "Experimental"
+    },
+    "ext": {
+      "description": "Înregistrează valorile energetice ale consumatorilor necontrolați (de exemplu, frigider, mașină de spălat etc.) în scopuri statistice. Aceste contoare pot fi utilizate și pentru gestionarea sarcinii (de exemplu, subdistribuție).",
+      "titleAdd": "Adăugați contorul de consum",
+      "titleEdit": "Editați contorul consumatorului"
     },
     "form": {
+      "danger": "Pericol",
+      "deprecated": "învechit",
       "example": "Exemplu",
-      "optional": "optional"
+      "optional": "opțional"
+    },
+    "general": {
+      "applyAndClose": "Aplicați și închideți",
+      "authPerform": "Conectați-vă cu {provider}",
+      "authPerformHint": "Se va deschide într-o filă nouă. Reveniți aici pentru a continua.",
+      "authPrepare": "Pregătiți conexiunea",
+      "cancel": "Anulează",
+      "clear": "Clar",
+      "close": "Închide",
+      "copied": "Copiată!",
+      "copy": "Copiere",
+      "customHelp": "Creați un dispozitiv definit de utilizator folosind sistemul de pluginuri evcc.",
+      "customOption": "Dispozitiv definit de utilizator",
+      "delete": "Șterge",
+      "docsLink": "Consultați documentația.",
+      "dragHandle": "Mâner de tragere",
+      "dragItem": "Draggable: {title}",
+      "dragList": "Listă reordonabilă",
+      "experimental": "Experimental",
+      "forceSave": "Salvați oricum",
+      "hideAdvancedSettings": "Ascunde setările avansate",
+      "invalidFileSelected": "Fișier invalid selectat",
+      "noFileSelected": "Nu a fost selectat niciun fișier.",
+      "off": "oprit",
+      "on": "pe",
+      "password": "Parolă",
+      "readFromFile": "Citește din fișier",
+      "remove": "Eliminare",
+      "required": "necesar",
+      "reset": "Resetare",
+      "save": "Salvați",
+      "saved": "Salvat.",
+      "saving": "Salvare…",
+      "selectFile": "Răsfoiți",
+      "showAdvancedSettings": "Afișează setările avansate",
+      "telemetry": "Telemetrie",
+      "templateLoading": "Se încarcă...",
+      "title": "Titlu",
+      "typeDeprecated": "Tipul „{type}” este învechit și va fi eliminat într-o versiune viitoare. Vă rugăm să verificați jurnalul de modificări și să recreați acest dispozitiv.",
+      "validateSave": "Validează și salvează"
     },
     "grid": {
+      "title": "Contor de rețea",
       "titleAdd": "Adăugați Contorul de Grilă",
       "titleEdit": "Editați Contorul de bransament"
     },
+    "hems": {
+      "csv": {
+        "created": "Creat",
+        "finished": "Terminat",
+        "gridpower": "Puterea rețelei (kW)",
+        "limitpower": "Limită (kW)",
+        "type": "Tip"
+      },
+      "description": "Limitarea puterii prin sisteme externe (de exemplu, controlere EnWG 14a). Necesită configurarea gestionării sarcinii.",
+      "downloadCsv": "Descărcați CSV",
+      "eventsRecorded": "Au fost înregistrate {count} evenimente de limitare a grilei.",
+      "lastEvent": "Cel mai recent {timeAgo}.",
+      "title": "HEMS",
+      "yamlConfigured": "Notă: Configurat prin evcc.yaml. Ștergeți intrarea din fișier pentru a activa editarea aici."
+    },
+    "icon": {
+      "change": "schimbare",
+      "label": "Pictogramă"
+    },
+    "influx": {
+      "description": "Scrie datele de încărcare și alte metrici în InfluxDB. Utilizați Grafana sau alte instrumente pentru a vizualiza datele.",
+      "descriptionToken": "Consultați documentația InfluxDB pentru a afla cum se creează unul. https://docs.influxdata.com/influxdb/v2/admin/",
+      "labelBucket": "Bucket",
+      "labelCheckInsecure": "Permiteți certificatele autosemnate",
+      "labelDatabase": "Baza de date",
+      "labelInsecure": "Validarea certificatului",
+      "labelOrg": "Organizație",
+      "labelPassword": "Parolă",
+      "labelToken": "Token API",
+      "labelUrl": "URL",
+      "labelUser": "Nume de utilizator",
+      "title": "InfluxDB",
+      "v1Support": "Aveți nevoie de asistență pentru InfluxDB 1.x?",
+      "v2Support": "Înapoi la InfluxDB 2.x"
+    },
+    "loadpoint": {
+      "addCharger": {
+        "charging": "Adăugați încărcător",
+        "heating": "Adăugați încălzitor"
+      },
+      "addMeter": "Adăugați un contor de energie dedicat",
+      "cancel": "Anulează",
+      "chargerError": {
+        "charging": "Este necesară configurarea unui încărcător.",
+        "heating": "Este necesară configurarea unui încălzitor."
+      },
+      "chargerLabel": {
+        "charging": "Încărcător",
+        "heating": "Încălzitor"
+      },
+      "chargerPower11kw": "11 kW",
+      "chargerPower11kwHelp": "Va utiliza un interval de curent de la 6 la 16 A.",
+      "chargerPower22kw": "22 kW",
+      "chargerPower22kwHelp": "Va utiliza un interval de curent de la 6 la 32 A.",
+      "chargerPowerCustom": "altul",
+      "chargerPowerCustomHelp": "Definiți un interval curent personalizat.",
+      "chargerTypeLabel": "Tipul încărcătorului",
+      "chargingTitle": "Comportament",
+      "circuitHelp": "Atribuirea gestionării sarcinii pentru a se asigura că limitele de putere și curent nu sunt depășite.",
+      "circuitLabel": "Circuit",
+      "circuitUnassigned": "neatribuit",
+      "defaultModeHelp": {
+        "charging": "Modul de încărcare la conectarea vehiculului.",
+        "heating": "Se setează la pornirea sistemului."
+      },
+      "defaultModeHelpKeep": "Păstrează ultimul mod selectat.",
+      "defaultModeLabel": "Mod implicit",
+      "delete": "Șterge",
+      "electricalSubtitle": "Dacă aveți dubii, adresați-vă electricianului dumneavoastră.",
+      "electricalTitle": "Electric",
+      "energyMeterHelp": "Contor suplimentar dacă încărcătorul nu are unul integrat.",
+      "energyMeterLabel": "Contor de energie",
+      "estimateLabel": "Interpolează nivelul de încărcare între actualizările API",
+      "maxCurrentHelp": "Trebuie să fie mai mare decât curentul minim.",
+      "maxCurrentLabel": "Curent maxim",
+      "minCurrentHelp": "Nu coborâți sub 6 A decât dacă știți ce faceți.",
+      "minCurrentLabel": "Curent minim",
+      "noVehicles": "Nu sunt configurate vehicule.",
+      "option": {
+        "charging": "Adăugați punct de încărcare",
+        "heating": "Adăugați dispozitiv de încălzire"
+      },
+      "phases1p": "monofazat",
+      "phases3p": "trifazic",
+      "phasesAutomatic": "Faze automate",
+      "phasesAutomaticHelp": "Încărcătorul dvs. acceptă comutarea automată între încărcarea monofazată și trifazată. În ecranul principal puteți regla comportamentul fazelor în timpul încărcării.",
+      "phasesHelp": "Numărul de faze conectate.",
+      "phasesLabel": "Faze",
+      "pollIntervalDanger": "Interogarea regulată a vehiculului poate descărca bateria acestuia. Unii producători de vehicule pot împiedica în mod activ încărcarea în acest caz. Nu este recomandat! Utilizați această opțiune numai dacă sunteți conștient de riscuri.",
+      "pollIntervalHelp": "Intervalul de timp între actualizările API ale vehiculului. Intervalele scurte pot descărca bateria vehiculului.",
+      "pollIntervalLabel": "Interval de actualizare",
+      "pollModeAlways": "întotdeauna",
+      "pollModeAlwaysHelp": "Solicitați întotdeauna actualizări de stare la intervale regulate.",
+      "pollModeCharging": "încărcare",
+      "pollModeChargingHelp": "Solicitați actualizări privind starea vehiculului numai în timpul încărcării.",
+      "pollModeConnected": "conectat",
+      "pollModeConnectedHelp": "Actualizați starea vehiculului la intervale regulate atunci când este conectat.",
+      "pollModeLabel": "Comportament de actualizare",
+      "priorityHelp": "Prioritatea mai mare beneficiază de acces preferențial la surplusul de energie solară.",
+      "priorityLabel": "Prioritate",
+      "save": "Salvați",
+      "showAllSettings": "Afișează toate setările",
+      "solarBehaviorCustomHelp": "Definiți propriile praguri și întârzieri de activare și dezactivare.",
+      "solarBehaviorDefaultHelp": "Pornește după {enableDelay} de surplus suficient. Oprește-te când nu mai este suficient surplus pentru {disableDelay}.",
+      "solarBehaviorLabel": "Solar",
+      "solarModeCustom": "personalizat",
+      "solarModeMaximum": "solar maxim",
+      "thresholdDisableDelayLabel": "Dezactivează întârzierea",
+      "thresholdDisableHelpInvalid": "Vă rugăm să utilizați o valoare pozitivă.",
+      "thresholdDisableHelpPositive": "Opriți, când se utilizează mai mult de {power} din rețea pentru {delay}.",
+      "thresholdDisableHelpZero": "Opriți când puterea minimă necesară nu poate fi satisfăcută pentru {delay}.",
+      "thresholdDisableLabel": "Dezactivează alimentarea de la rețea",
+      "thresholdEnableDelayLabel": "Activați întârzierea",
+      "thresholdEnableHelpInvalid": "Vă rugăm să utilizați o valoare negativă.",
+      "thresholdEnableHelpNegative": "Începeți când {surplus} surplusul este disponibil pentru {delay}.",
+      "thresholdEnableHelpZero": "Porniți când puterea minimă necesară poate fi satisfăcută pentru {delay}.",
+      "thresholdEnableLabel": "Activați alimentarea de la rețea",
+      "titleAdd": {
+        "charging": "Adăugați punct de încărcare",
+        "heating": "Adăugați dispozitiv de încălzire",
+        "unknown": "Adăugați încărcător sau încălzitor"
+      },
+      "titleEdit": {
+        "charging": "Editați punctul de încărcare",
+        "heating": "Editați dispozitivul de încălzire",
+        "unknown": "Editați încărcătorul sau încălzitorul"
+      },
+      "titleExample": {
+        "charging": "Garaj, garaj acoperit etc.",
+        "heating": "Pompă de căldură, încălzitor etc."
+      },
+      "titleLabel": "Titlu",
+      "vehicleAutoDetection": "detectare automată",
+      "vehicleHelpAutoDetection": "Selectează automat vehiculul cel mai plauzibil. Este posibilă suprascrierea manuală.",
+      "vehicleHelpDefault": "Presupuneți întotdeauna că acest vehicul se încarcă aici. Detectarea automată este dezactivată. Este posibilă comanda manuală.",
+      "vehicleLabel": "Vehicul implicit",
+      "vehiclesTitle": "Vehicule"
+    },
     "main": {
-      "addLoadpoint": "Adăugați punct de încărcare",
+      "addAdditional": "Adăugați un contor suplimentar",
+      "addGrid": "Adăugați contor cu grilă",
+      "addLoadpoint": "Adăugați încărcător sau încălzitor",
       "addPvBattery": "Adăugați solar sau baterie",
+      "addTariffs": "Adăugați tarife",
       "addVehicle": "Adauga masina",
+      "configured": "configurat",
       "edit": "Editeaza",
+      "loadpointRequired": "Trebuie configurat cel puțin un punct de încărcare.",
+      "name": "Nume",
       "title": "Configuratie",
       "unconfigured": "neconfigurat",
       "vehicles": "Masinile mele",
-      "yaml": "Configurat în evcc.yaml. Nu poate fi editat în interfața"
+      "welcomeBannerText": "Începeți prin a crea un **încărcător sau un încălzitor**. Dacă nu aveți încă un încărcător real, alegeți un **încărcător demo**.",
+      "welcomeBannerTitle": "Să configurăm sistemul tău!",
+      "yaml": "Dispozitivele din evcc.yaml nu pot fi editate."
+    },
+    "messaging": {
+      "description": "Primiți mesaje despre sesiunile dvs. de încărcare.",
+      "title": "Notificări"
     },
     "meter": {
       "cancel": "Anulare",
       "delete": "șterge",
+      "generic": "Integrări generice",
+      "option": {
+        "aux": "Adăugați consumator cu autoreglare",
+        "battery": "Adăugați indicatorul bateriei",
+        "ext": "Adăugați consumator obișnuit",
+        "pv": "Adăugați contorul solar"
+      },
       "save": "Salveaza",
+      "specific": "Integrări specifice",
       "template": "Producător",
       "titleChoice": "Ce vrei să adaugi?",
+      "titleLabel": "Titlu",
+      "usage": {
+        "aux": "Consumator autoreglabil",
+        "battery": "Baterie",
+        "charge": "Consumator / Încărcător",
+        "grid": "Rețea",
+        "label": "Utilizare",
+        "pv": "Producție"
+      },
       "validateSave": "Valideaza si salveaza"
+    },
+    "modbus": {
+      "baudrate": "Viteza de transfer",
+      "comset": "ComSet",
+      "connection": "Conexiune Modbus",
+      "connectionHintSerial": "Dispozitivul este conectat direct prin RS485 (sau adaptor USB-RS485).",
+      "connectionHintTcpip": "Dispozitivul este accesibil prin rețea (LAN/WiFi).",
+      "connectionValueSerial": "RS485",
+      "connectionValueTcpip": "Rețea",
+      "device": "Numele dispozitivului",
+      "deviceHint": "Exemplu: /dev/ttyUSB0",
+      "host": "Adresă IP sau nume de gazdă",
+      "hostHint": "Exemplu: 192.0.2.2",
+      "id": "ID Modbus",
+      "port": "Port",
+      "protocol": "Protocolul Modbus",
+      "protocolHintRtu": "Conexiune prin adaptor RS485 la Ethernet fără conversie de protocol.",
+      "protocolHintTcp": "Dispozitivul are suport LAN/Wifi nativ sau este conectat printr-un adaptor RS485 la Ethernet cu traducere de protocol.",
+      "protocolValueRtu": "RTU",
+      "protocolValueTcp": "TCP"
+    },
+    "modbusproxy": {
+      "add": "Adăugați conexiune proxy",
+      "connection": "Conexiune #{number}",
+      "description": "Unele dispozitive Modbus acceptă doar o singură conexiune sau foarte puține conexiuni. evcc poate acționa ca un proxy, permițând accesul simultan pentru mai mulți clienți (automatizare casnică, scripturi etc.).",
+      "device": "Dispozitiv",
+      "option": {
+        "deny": "eroare",
+        "false": "nu",
+        "true": "tăcut"
+      },
+      "readonly": {
+        "help": {
+          "deny": "Accesul la scriere este blocat cu o eroare Modbus.",
+          "false": "Accesul la scriere este redirecționat.",
+          "true": "Accesul la scriere este blocat fără răspuns."
+        },
+        "label": "Numai citire"
+      },
+      "sourcePortHelp": "Port pentru conexiunile clientilor primite. Trebuie să fie disponibil.",
+      "title": "Proxy Modbus"
+    },
+    "mqtt": {
+      "authentication": "Autentificare",
+      "description": "Conectați-vă la un broker MQTT pentru a schimba date cu alte sisteme din rețeaua dvs.",
+      "descriptionClientId": "Autorul mesajelor. Dacă este gol, se utilizează `evcc-[rand]`.",
+      "descriptionTopic": "Lăsați câmpul gol pentru a dezactiva publicarea.",
+      "labelBroker": "Broker",
+      "labelCaCert": "Certificat server (CA)",
+      "labelCheckInsecure": "Permiteți certificatele autosemnate",
+      "labelClientCert": "Certificat client",
+      "labelClientId": "ID client",
+      "labelClientKey": "Cheia clientului",
+      "labelInsecure": "Validarea certificatului",
+      "labelPassword": "Parolă",
+      "labelTopic": "Subiect",
+      "labelUser": "Nume de utilizator",
+      "publishing": "Publicare",
+      "title": "MQTT"
+    },
+    "network": {
+      "descriptionExternalUrl": "Adresa pentru alte dispozitive care doresc să se conecteze la evcc și pentru detectarea automată a aplicației evcc.",
+      "descriptionHost": "Utilizat pentru a anunța evcc în rețeaua locală.",
+      "descriptionInternalUrl": "Adresa rețelei locale a evcc.",
+      "descriptionPort": "Port pentru interfața web și API. Dacă modificați această setare, va trebui să actualizați adresa URL a browserului.",
+      "labelExternalUrl": "URL extern",
+      "labelHost": "Nume de gazdă mDNS",
+      "labelInternalUrl": "URL intern",
+      "labelPort": "Port",
+      "title": "Rețea"
+    },
+    "ocpp": {
+      "connectedChargers": "Încărcătoare conectate",
+      "connectionStatus": "ID-uri stații configurate",
+      "connectionStatusHelp": "Starea conexiunii încărcătoarelor configurate.",
+      "detectedChargers": "ID-uri stații detectate",
+      "detectedHelp": "Aceste încărcătoare au încercat să se conecteze la evcc. Pentru a utiliza un încărcător, creați un punct de încărcare cu ID-ul stației sale.",
+      "noChargers": "Nu s-au detectat încărcătoare OCPP.",
+      "noStations": "Nu sunt stații conectate",
+      "status": {
+        "configured": "Nu este conectat",
+        "connected": "Conectat",
+        "unknown": "Necunoscut"
+      },
+      "title": "Server OCPP",
+      "url": "URL-ul serveruluiului",
+      "urlHelp": "Copiați această adresă URL în configurația încărcătorului. Consultați manualul producătorului pentru detalii. Încărcătorul ar trebui să adauge automat identificatorul său unic (ID stație) la adresa URL. În cazuri rare, poate fi necesar să specificați manual identificatorul. Exemplu: `{url}`"
+    },
+    "options": {
+      "boolean": {
+        "no": "nu",
+        "yes": "da"
+      },
+      "endianness": {
+        "big": "big-endian—",
+        "little": "little-endian"
+      },
+      "operationMode": {
+        "heating": "Încălzire",
+        "standby": "Așteptare"
+      },
+      "schema": {
+        "http": "HTTP (necriptat)",
+        "https": "HTTPS (criptat)"
+      },
+      "status": {
+        "A": "A (neconectat)",
+        "B": "B (conectat)",
+        "C": "C (încărcare)"
+      }
     },
     "pv": {
       "titleAdd": "Adauga SmartMeter",
       "titleEdit": "Editeaza SmartMeter"
     },
+    "section": {
+      "additionalMeter": "Contoare suplimentare",
+      "general": "General",
+      "grid": "Rețea",
+      "integrations": "Integrări",
+      "loadpoints": "Încărcare și încălzire",
+      "meter": "Energie solară și baterii",
+      "system": "Sistem",
+      "vehicles": "Vehicule"
+    },
+    "shm": {
+      "cardTitle": "Sunny Home Manager",
+      "description": "evcc este echipat cu integrare pentru SMA Sunny Home Manager (SHM) prin protocolul SEMP. Dacă rulează în aceeași rețea, după ce vă conectați la contul Sunny Portal, vi se va oferi automat posibilitatea de a adăuga toate încărcătoarele configurate în evcc ca consumatori nou descoperiți. Totul ar trebui să fie gata de utilizare imediat, fără a fi necesare ajustări suplimentare.",
+      "descriptionDeviceId": "Șir HEX de 12 caractere. Prefix pentru toate dispozitivele (punct de încărcare, ..).",
+      "descriptionIdPattern": "Model de identificare",
+      "descriptionIds": "În Sunny Portal, fiecare dispozitiv de consum are nevoie de un identificator unic. evcc generează un identificator unic pe baza hardware-ului dvs. Dacă migrați evcc pe un alt hardware, aceste identificatoare se pot modifica. Dacă doriți să păstrați istoricul, puteți suprascrie identificatoarele generate aici. Deschideți adresa URL SEMP (/semp) pentru a verifica identificatoarele actuale.",
+      "descriptionSempUrl": "URL SEMP",
+      "descriptionVendorId": "Șir HEX de 8 caractere. Prefix general pentru toate entitățile. În mod implicit, evcc va utiliza propriul ID intern de furnizor.",
+      "labelDeviceId": "ID dispozitiv",
+      "labelVendorId": "ID furnizor",
+      "title": "SMA Sunny Home Manager"
+    },
+    "sponsor": {
+      "addToken": "Introduceți tokenul",
+      "changeToken": "Schimbă tokenul",
+      "description": "Modelul de sponsorizare ne ajută să menținem proiectul și să dezvoltăm în mod durabil funcții noi și interesante. În calitate de sponsor, veți avea acces la toate implementările încărcătorului.",
+      "descriptionToken": "Sponsorii își găsesc tokenul pe {url}. Pentru a începe, oferim un {trialToken}.",
+      "enterYourToken": "Introduceți tokenul dvs",
+      "error": "Tokenul sponsorului nu este valid.",
+      "invalid": "invalid",
+      "labelToken": "Jeton sponsor",
+      "title": "Sponsorizare",
+      "tokenRequired": "Trebuie să configurați un token sponsor înainte de a putea crea acest dispozitiv.",
+      "tokenRequiredFeature": "Această funcție necesită un token sponsor.",
+      "tokenRequiredLearnMore": "Aflați mai multe.",
+      "tokenRequiredShort": "Nu este configurat niciun token sponsor.",
+      "trialToken": "jeton de încercare",
+      "viaYaml": "prin evcc.yaml",
+      "yourToken": "Jetonul tău"
+    },
+    "system": {
+      "backupRestore": {
+        "backup": {
+          "action": "Descărcare copie de rezervă...",
+          "confirmationButton": "Descărcați copia de rezervă",
+          "confirmationText": "Descărcați fișierul bazei de date.",
+          "description": "Faceți o copie de rezervă a datelor într-un fișier. Acest fișier poate fi utilizat pentru a restaura datele în cazul unei defecțiuni a sistemului.",
+          "title": "Copie de rezervă"
+        },
+        "cancel": "Anulează",
+        "description": "Copiați, restaurați și resetați datele. Util dacă doriți să mutați datele pe un alt sistem.",
+        "note": "Notă: Toate acțiunile de mai sus afectează numai datele din baza de date. Fișierul de configurare evcc.yaml rămâne neschimbat.",
+        "reset": {
+          "action": "Resetare...",
+          "confirmationButton": "Resetare și repornire",
+          "confirmationText": "Aceasta va șterge definitiv datele selectate. Asigurați-vă că ați descărcat mai întâi o copie de rezervă.",
+          "description": "Aveți probleme cu configurarea și doriți să o luați de la capăt? Ștergeți toate datele și începeți de la zero.",
+          "sessions": "Sesiuni de încărcare",
+          "sessionsDescription": "Șterge istoricul sesiunilor de încărcare.",
+          "settings": "Configurație și setări",
+          "settingsDescription": "Șterge toate dispozitivele, serviciile, planurile, cache-urile etc. configurate.",
+          "title": "Resetare"
+        },
+        "restore": {
+          "action": "Restabiliți...",
+          "confirmationButton": "Restaurare și repornire",
+          "confirmationText": "Aceasta va suprascrie întreaga bază de date. Asigurați-vă că ați descărcat mai întâi o copie de rezervă.",
+          "description": "Restaurați datele dintr-un fișier de rezervă. Aceasta va suprascrie toate datele actuale.",
+          "labelFile": "Fișier de rezervă",
+          "title": "Restaurare"
+        },
+        "title": "Copiere de rezervă și restaurare"
+      },
+      "logs": "Jurnale",
+      "restart": "Repornire",
+      "restartRequiredDescription": "Vă rugăm să reporniți pentru a vedea efectul.",
+      "restartRequiredMessage": "Configurația a fost modificată.",
+      "restartingDescription": "Vă rugăm să așteptați…",
+      "restartingMessage": "Repornirea evcc."
+    },
+    "tariffs": {
+      "description": "Definiți tarifele energetice pentru a calcula costurile sesiunilor de încărcare.",
+      "title": "Tarife"
+    },
+    "telemetry": {
+      "description": "Configurați partajarea datelor pentru a contribui la îmbunătățirea evcc. Confidențialitatea dvs. este importantă pentru noi, iar participarea este complet opțională.",
+      "title": "Telemetrie"
+    },
+    "title": {
+      "description": "Afișat pe ecranul principal și în fila browserului.",
+      "label": "Titlu",
+      "title": "Editați titlul"
+    },
     "validation": {
       "failed": "esuat",
       "label": "Stare",
-      "running": "validez...",
+      "running": "Validare…",
       "success": "reuşit",
       "unknown": "necunoscut",
       "validate": "valideaza"
     },
     "vehicle": {
       "cancel": "Anulare",
+      "chargingSettings": "Setări de încărcare",
+      "defaultMode": "Mod implicit",
+      "defaultModeHelp": "Modul de încărcare la conectarea vehiculului.",
       "delete": "Sterge",
       "generic": "Alte integrari",
+      "identifiers": "Identificatori RFID",
+      "identifiersHelp": "Lista șirurilor RFID pentru identificarea vehiculului. O intrare pe linie. Identificatorul actual poate fi găsit la punctul de încărcare respectiv pe pagina de prezentare generală.",
+      "maximumCurrent": "Curent maxim",
+      "maximumCurrentHelp": "Trebuie să fie mai mare decât curentul minim.",
+      "maximumPhases": "Faze maxime",
+      "maximumPhasesHelp": "Cu câte faze se poate încărca acest vehicul? Se utilizează pentru a calcula surplusul solar minim necesar și durata planului.",
+      "maximumPower": "Putere maximă de încărcare",
+      "maximumPowerHelp": "Puterea maximă pe care o poate consuma vehiculul",
+      "minimumCurrent": "Curent minim",
+      "minimumCurrentHelp": "Nu coborâți sub 6A decât dacă știți ce faceți.",
       "online": "Masini cu API oline",
+      "primary": "Integrări generice",
+      "priority": "Prioritate",
+      "priorityHelp": "Prioritate mai mare înseamnă că acest vehicul beneficiază de acces preferențial la surplusul de energie solară.",
       "save": "Salveaza",
       "scooter": "Scuter",
       "template": "Producator",
@@ -105,36 +678,42 @@
       "tabTitle": "Comunitate live"
     },
     "savings": {
-      "co2Saved": "{value} salvat",
+      "co2Saved": "{value} salvată",
       "co2Title": "Emisii CO₂",
-      "configurePriceCo2": "Invata cum sa configurezi pretul si datele despre CO₂",
+      "configurePriceCo2": "Aflați cum să configurați datele privind prețurile și emisiile de CO₂.",
       "footerLong": "{percent} energie solară",
       "footerShort": "{percent} solar",
       "modalTitle": "Sumar energie încărcare",
       "moneySaved": "{value} salvat",
       "percentGrid": "{grid} kWh rețea",
-      "percentSelf": "{self} kWh solar",
+      "percentSelf": "{self} kWh solară",
       "percentTitle": "Energie solară",
       "period": {
         "30d": "ultimele 30 de zile",
         "365d": "ultimul an",
+        "thisYear": "anul acesta",
         "total": "de la inceput"
       },
       "periodLabel": "Perioada:",
       "priceTitle": "Preț Energie",
       "referenceGrid": "bransament",
-      "referenceLabel": "Date de referinta",
+      "referenceLabel": "Date de referință:",
       "tabTitle": "Datele mele"
     },
     "sponsor": {
       "becomeSponsor": "Sponsorizează-ne",
+      "becomeSponsorExtended": "Susțineți-ne direct pentru a obține autocolante.",
       "confetti": "Ești pregătit să sărbătorești?",
       "confettiPromise": "Primești abțibilduri si confetti digital",
       "sticker": "… sau abțibilduri evcc?",
       "supportUs": "Țelul nostru este ca energia solara să devina standard. Ajută și tu la dezvoltarea EVCC plătind atât cât valorează pt tine.",
       "thanks": "Multumim, {sponsor}! Contribuția ta ajuta la dezvoltarea evcc.",
       "titleNoSponsor": "Sponsorizeaza-ne",
-      "titleSponsor": "Ești sponsor"
+      "titleSponsor": "Ești sponsor",
+      "titleTrial": "Modul de încercare",
+      "titleVictron": "Sponsorizat de Victron Energy",
+      "trial": "Vă aflați în modul de încercare și puteți utiliza toate funcțiile. Vă rugăm să luați în considerare susținerea proiectului.",
+      "victron": "Utilizați evcc pe hardware-ul Victron Energy și aveți acces la toate funcțiile."
     },
     "telemetry": {
       "optIn": "Vreau să trimit datele mele.",
@@ -151,8 +730,34 @@
       "modalTitle": "Versiune nouă disponibilă",
       "modalUpdate": "Instalează",
       "modalUpdateNow": "Instalează acum",
-      "modalUpdateStarted": "Pornesc noua versiune evcc...",
+      "modalUpdateStarted": "Pornirea noii versiuni a evcc…",
       "modalUpdateStatusStart": "Instalare pornita:"
+    }
+  },
+  "forecast": {
+    "co2": {
+      "average": "Media",
+      "lowestHour": "Ora cea mai curată",
+      "range": "Gama"
+    },
+    "modalTitle": "Prognoză",
+    "price": {
+      "average": "Media",
+      "lowestHour": "Cea mai ieftină oră",
+      "range": "Gama"
+    },
+    "solar": {
+      "dayAfterTomorrow": "Poimâine",
+      "partly": "parțial",
+      "remaining": "rămas",
+      "today": "Astăzi",
+      "tomorrow": "Mâine"
+    },
+    "solarAdjust": "Ajustați prognoza solară pe baza datelor reale de producție{percent}.",
+    "type": {
+      "co2": "CO₂",
+      "price": "Preț",
+      "solar": "Solar"
     }
   },
   "header": {
@@ -161,14 +766,18 @@
     "docs": "Documentație",
     "github": "GitHub",
     "login": "Login Masina",
+    "logout": "Deconectare",
+    "nativeSettings": "Schimbare server",
     "needHelp": "Ai nevoie de Ajutor ?",
     "sessions": "Sesiuni de Incărcare"
   },
   "help": {
     "discussionsButton": "Discutii GitHub",
     "documentationButton": "Documentatie",
-    "issueButton": "Raporteaza un Bug",
+    "issueButton": "Raportați o problemă",
     "issueDescription": "Functionare bizara sau gresita ?",
+    "logsButton": "Vizualizați jurnalele",
+    "logsDescription": "Verificați jurnalele pentru erori.",
     "modalTitle": "Ai nevoie de ajutor ?",
     "primaryActions": "Ceva nu functioneaza cum ar trebui? Aici este locul potrivit sa primesti ajutor.",
     "restart": {
@@ -179,42 +788,149 @@
       "modalTitle": "Esti sigur ca vrei sa dai restart?"
     },
     "restartButton": "Restart",
-    "restartDescription": "Ai incercat sa inchizi si sa deschizi din nou?",
-    "secondaryActions": "Inca nu ati rezolvat problema? Iata niste alte optiuni"
+    "restartDescription": "Ați încercat să îl opriți și să îl porniți din nou?",
+    "secondaryActions": "Încă nu puteți rezolva problema? Iată câteva opțiuni mai drastice."
+  },
+  "issue": {
+    "additional": {
+      "description": "Includeți configurația și jurnalele pentru a ne ajuta să reproducem rapid problema. Vă încurajăm să ne furnizați cât mai multe informații posibil. De obicei, starea nu este necesară.",
+      "include": "include",
+      "lines": "linii",
+      "logs": "Jurnale",
+      "logsDescription": "Intrări recente în jurnal care pot ajuta la identificarea problemei.",
+      "showDetails": "afișează detalii",
+      "source": "Sursă",
+      "state": "Stat",
+      "stateDescription": "Starea completă a duratei de funcționare, inclusiv informații despre punctul de încărcare, dispozitiv și energie. Includeți numai dacă vi se solicită.",
+      "title": "Informații suplimentare",
+      "uiConfig": "Configurație (UI)",
+      "uiConfigDescription": "Setările de configurare efectuate prin interfața web.",
+      "yamlConfig": "Configurație (YAML)",
+      "yamlConfigDescription": "Fișierul dvs. de configurare complet."
+    },
+    "additionalContext": "Context suplimentar",
+    "additionalContextPlaceholder": "Orice informații suplimentare care ar putea fi utile...\n- Detalii despre configurație\n- Ce ați încercat\n- Detalii despre mediu",
+    "createButtonDiscussion": "Începeți discuția pe GitHub...",
+    "createButtonIssue": "Creați o problemă GitHub...",
+    "description": "Instalarea dvs. nu funcționează așa cum vă așteptați? Utilizați această pagină pentru a obține ajutor sau pentru a raporta probleme. Furnizați suficiente detalii pentru a ne ajuta să înțelegem și să reproducem problema, păstrând în același timp descrierea concisă, clară și ușor de urmărit.",
+    "helpType": {
+      "discussion": "Am nevoie de ajutor cu configurarea mea",
+      "discussionDescription": "Discuțiile comunității oferă răspunsuri.",
+      "issue": "Am găsit o eroare",
+      "issueDescription": "Sunt sigur că ceva este defect și trebuie reparat.",
+      "title": "Despre ce problemă vorbim?"
+    },
+    "issueDescription": "Descriere",
+    "issueTitle": "Titlu",
+    "stepsToReproduce": "Pași pentru reproducere",
+    "subTitleDiscussion": "Descrieți problema dumneavoastră",
+    "subTitleIssue": "Descrieți problema",
+    "summary": {
+      "confirmationButtonDiscussion": "Începeți discuția pe GitHub",
+      "confirmationButtonIssue": "Creați o problemă GitHub",
+      "copied": "Copiată!",
+      "copyButton": "Copiați informații suplimentare",
+      "instructions": "Datorită limitărilor de dimensiune ale adreselor URL ale GitHub, acest proces se desfășoară în două etape:",
+      "singleStepDescription": "Faceți clic pe butonul de mai jos pentru a deschide GitHub cu un formular precompletat care conține detaliile problemei dvs. Datele sensibile au fost redactate automat, dar vă rugăm să verificați din nou înainte de a le partaja.",
+      "step1Description": "Faceți clic pe butonul de mai jos pentru a crea o intrare GitHub de bază cu titlul, descrierea și detaliile dvs.",
+      "step2Description": "După crearea intrării, reveniți aici pentru a copia informațiile suplimentare de mai jos și a le lipi în formularul GitHub. Datele sensibile au fost redactate, dar vă rugăm să verificați din nou înainte de a le partaja.",
+      "stepOneDiscussion": "Pasul 1: Creați o discuție de bază",
+      "stepOneIssue": "Pasul 1: Creați problema de bază",
+      "stepTwo": "Pasul 2: Copiați informațiile suplimentare",
+      "title": "Rezumatul problemelor GitHub"
+    },
+    "system": "Sistem",
+    "timezone": "Fus orar",
+    "title": "Raportați o problemă",
+    "version": "Versiune"
+  },
+  "log": {
+    "areaLabel": "Filtrare după zonă",
+    "areas": "Toate zonele",
+    "download": "Descărcați jurnalul complet",
+    "levelLabel": "Filtrare după nivelul jurnalului",
+    "nAreas": "{count} zone",
+    "noResults": "Nu există intrări corespunzătoare în jurnal.",
+    "search": "Căutare",
+    "selectAll": "selectează tot",
+    "showAll": "Afișează toate intrările",
+    "title": "Jurnale",
+    "update": "Actualizare automată"
+  },
+  "loginModal": {
+    "cancel": "Anulează",
+    "demoMode": "Autentificarea nu este acceptată în modul demo.",
+    "iframeHint": "Deschideți evcc într-o filă nouă.",
+    "iframeIssue": "Parola dvs. este corectă, dar browserul dvs. pare să fi pierdut cookie-ul de autentificare. Acest lucru se poate întâmpla dacă rulați evcc într-un iframe prin HTTP.",
+    "invalid": "Parola este invalidă.",
+    "login": "Autentificare",
+    "password": "Parola administratorului",
+    "reset": "Resetați parola?",
+    "title": "Autentificare"
   },
   "main": {
     "chargingPlan": {
       "active": "Activ",
+      "addRepeatingPlan": "Adăugați plan repetitiv",
       "arrivalTab": "Ajungere",
       "day": "Zi",
       "departureTab": "Plecare",
       "goal": "Scopul incarcarii",
       "modalTitle": "Plan de incarcare",
       "none": "nimic",
+      "optimization": {
+        "cheapest": "cel mai ieftin",
+        "continuous": "continuu",
+        "label": "Optimizare"
+      },
+      "planNumber": "Planul {number}",
+      "precondition": {
+        "description": "Încărcați {duration} înainte de plecare pentru precondiționarea bateriei.",
+        "label": "Încărcare întârziată",
+        "optionAll": "totul",
+        "optionNo": "nu"
+      },
       "remove": "Elimina",
+      "repeating": "repetând",
+      "repeatingPlans": "Planuri repetitive",
+      "selectAll": "Selectați tot",
+      "strategySettings": "Setări strategie",
       "time": "Timp",
       "title": "Plan",
       "titleMinSoc": "Incarcare minima",
       "titleTargetCharge": "Plecare",
-      "update": "Aplica"
+      "unsavedChanges": "Există modificări nesalvate. Doriți să le aplicați acum?",
+      "update": "Aplica",
+      "weekdays": "Zile"
     },
     "energyflow": {
       "battery": "Baterie",
       "batteryCharge": "Incarca bateria",
       "batteryDischarge": "Descărcare baterie",
+      "batteryGridChargeActive": "încărcare rețea activă",
+      "batteryGridChargeLimit": "încărcare la rețea când",
       "batteryHold": "Baterie (inchisa)",
       "batteryTooltip": "{energy} din {total} ({soc})",
+      "forecastTooltip": "prognoză: producția solară rămasă astăzi",
       "gridImport": "Folosirea rețelei",
       "homePower": "Consum",
       "loadpoints": "Încarcator| Încarcator | {count} încarcatoare",
+      "loadpointsLimit": "{limit} limită",
       "noEnergy": "Lipsă date contor",
+      "pv": "Sistemul solar",
       "pvExport": "Export in rețea",
       "pvProduction": "Producție",
       "selfConsumption": "Consum propriu"
     },
     "heatingStatus": {
-      "charging": "Incalzeste...",
+      "charging": "Încălzire…",
+      "connected": "Așteptați.",
+      "vehicleLimit": "Limită încălzitor",
       "waitForVehicle": "Pregatit. Astept dupa incalzitor…"
+    },
+    "hemsWarning": {
+      "description": "Încărcare redusă pentru a nu depăși {limit}.",
+      "title": "Limită externă:"
     },
     "loadpoint": {
       "avgPrice": "⌀ Pret",
@@ -222,14 +938,22 @@
       "co2": "⌀ CO₂",
       "duration": "Durata",
       "fallbackName": "Punct de încărcare",
+      "finished": "Ora de finalizare",
       "power": "Putere",
       "price": "Σ Pret",
       "remaining": "Ramas",
-      "remoteDisabledHard": "{source}: inchis",
+      "remoteDisabledHard": "{source}: dezactivat",
       "remoteDisabledSoft": "{source}: incarcarea solar-adaptiva e oprita",
       "solar": "Solar"
     },
     "loadpointSettings": {
+      "batteryBoost": {
+        "description": "Încărcare rapidă de la bateria de acasă.",
+        "label": "Îmbunătățirea bateriei",
+        "mode": "Disponibil numai în modul solar și min+solar.",
+        "once": "Boost activ pentru această sesiune de încărcare."
+      },
+      "batteryUsage": "Baterie pentru uz casnic",
       "currents": "Curent încărcare",
       "default": "default",
       "disclaimerHint": "Nota:",
@@ -257,6 +981,8 @@
         "phases_3": "3 faze",
         "phases_3_hint": "({min} la {max})"
       },
+      "smartCostCheap": "Încărcare ieftină la rețea",
+      "smartCostClean": "Încărcare Clean Grid",
       "title": "Setări {0}",
       "vehicle": "Vehicul"
     },
@@ -264,12 +990,14 @@
       "minpv": "Min+Solar",
       "now": "Rapid",
       "off": "Oprit",
-      "pv": "Solar"
+      "pv": "Solar",
+      "smart": "Inteligent"
     },
     "provider": {
       "login": "autentificare",
       "logout": "deconectează"
     },
+    "startConfiguration": "Să începem configurarea",
     "targetCharge": {
       "activate": "Activează",
       "co2Limit": "limita CO₂ de {co2}",
@@ -277,8 +1005,10 @@
       "currentPlan": "Plan activ",
       "descriptionEnergy": "Pâna când ar trebui ca {targetEnergy} să fie încărcată in vehicul?",
       "descriptionSoc": "Când ar trebui vehiculul să fie încărcat la {targetSoc}?",
+      "goalReached": "Obiectivul a fost deja atins",
       "inactiveLabel": "Timp dorit",
-      "notReachableInTime": "Telul nu a fost atins la timp. Estimare: {overrun}.",
+      "nextPlan": "Planul următor",
+      "notReachableInTime": "Obiectivul va fi atins {overrun} mai târziu.",
       "onlyInPvMode": "Planul de incarcare merge doar in mod Solar.",
       "planDuration": "Timp de încărcare",
       "planPeriodLabel": "Perioada",
@@ -289,7 +1019,7 @@
       "remove": "Elimina",
       "setTargetTime": "nimic",
       "targetIsAboveLimit": "Limita configurata - {limit}, va fi ignorata in timpul incarcarii.",
-      "targetIsAboveVehicleLimit": "Mareste limita de incarcare masina ({limit}) pentru a atinge incarcarea dorita",
+      "targetIsAboveVehicleLimit": "Limita vehiculului este sub obiectivul de încărcare.",
       "targetIsInThePast": "Alege o dată in viitor, DORELE.",
       "targetIsTooFarInTheFuture": "Vom ajusta planul de îndată ce vom avea mai multe informații despre viitor.",
       "title": "Timp dorit",
@@ -317,6 +1047,7 @@
       "fallbackName": "vehicul",
       "moreActions": "Mai multe acțiuni",
       "none": "Lipsă Vehicul",
+      "notReachable": "Vehiculul nu a putut fi accesat. Încercați să reporniți evcc.",
       "targetSoc": "Limită",
       "temp": "Temp.",
       "tempLimit": "Temp. limit",
@@ -324,31 +1055,63 @@
       "vehicleSoc": "Încărcare"
     },
     "vehicleStatus": {
+      "awaitingAuthorization": "În așteptarea autorizării.",
+      "batteryBoost": "Bateria activă.",
       "charging": "Încarcă…",
-      "cheapEnergyCharging": "Energie ieftina disponibila. {price} (limit {limit})",
-      "cleanEnergyCharging": "Energie curata disponibila. {co2} (limit {limit})",
+      "cheapEnergyCharging": "Energie ieftină disponibilă.",
+      "cheapEnergyNextStart": "Energie ieftină în {duration}.",
+      "cheapEnergySet": "Limită de preț stabilită.",
+      "cleanEnergyCharging": "Energie curată disponibilă.",
+      "cleanEnergyNextStart": "Energie curată în {duration}.",
+      "cleanEnergySet": "Limită CO₂ stabilită.",
       "climating": "Preconditionare detectata.",
       "connected": "Conectat.",
+      "disconnectRequired": "Sesiune încheiată. Vă rugăm să vă reconectați.",
       "disconnected": "Deconectat.",
-      "minCharge": "Incarcare minima {soc}.",
-      "pvDisable": "Surplus insuficient FV. Pauza in {remaining}…",
-      "pvEnable": "Surplus FV disponibil. Pornesc în {remaining}…",
-      "scale1p": "Reduc încărcarea la faza 1 în {remaining}…",
-      "scale3p": "Schimbam încărcarea la 3 faze în {remaining}…",
-      "targetChargeActive": "Încărcare țintă activă. Terminare estimată în {duration}.",
+      "feedinPriorityNextStart": "Tarifele ridicate de alimentare încep în {duration}.",
+      "feedinPriorityPausing": "Încărcarea solară a fost întreruptă pentru a maximiza alimentarea.",
+      "finished": "Gata.",
+      "minCharge": "Încărcare minimă la {soc}.",
+      "pvDisable": "Surplus insuficient. Se va întrerupe în curând.",
+      "pvEnable": "Surplus disponibil. În curând.",
+      "scale1p": "Reducerea la încărcare monofazată în curând.",
+      "scale3p": "În curând se va trece la încărcarea trifazată.",
+      "targetChargeActive": "Planul de încărcare este activ. Estimare finalizare în {duration}.",
       "targetChargePlanned": "Încărcarea pornește la {duration}.",
       "targetChargeWaitForVehicle": "Încărcare terminată. Aștept după vehicul…",
-      "vehicleLimitReached": "Limita {soc} a fost atinsă.",
-      "waitForVehicle": "Pregătit. Aștept după vehicul…"
+      "vehicleLimit": "Limita vehiculului",
+      "vehicleLimitReached": "Limita de vehicule atinsă.",
+      "waitForVehicle": "Pregătit. Aștept după vehicul…",
+      "welcome": "Încărcare inițială scurtă pentru confirmarea conexiunii."
     },
-    "vehicles": "Parcare"
+    "vehicles": "Parcare",
+    "welcome": "Bună ziua la bord!"
   },
   "notifications": {
     "dismissAll": "Închide tot",
+    "logs": "Vizualizați jurnalele complete",
     "modalTitle": "Notificări"
   },
   "offline": {
-    "message": "Nu se poate conecta la server."
+    "configurationError": "Eroare la pornire. Verificați configurația și reporniți.",
+    "message": "Nu se poate conecta la server.",
+    "restart": "Repornire",
+    "restartNeeded": "Necesar pentru aplicarea modificărilor.",
+    "restarting": "Serverul va reveni în scurt timp.",
+    "starting": "Pornirea serverului..."
+  },
+  "passwordModal": {
+    "description": "Setați o parolă pentru a proteja setările de configurare. Utilizarea ecranului principal este în continuare posibilă fără autentificare.",
+    "empty": "Parola nu trebuie să fie goală",
+    "error": "Eroare: ",
+    "labelCurrent": "Parola actuală",
+    "labelNew": "Parolă nouă",
+    "labelRepeat": "Repetați parola",
+    "newPassword": "Creați o parolă",
+    "noMatch": "Parolele nu se potrivesc",
+    "titleNew": "Setați parola administratorului",
+    "titleUpdate": "Actualizare parolă administrator",
+    "updatePassword": "Actualizare parolă"
   },
   "session": {
     "cancel": "Anulează",
@@ -368,9 +1131,30 @@
     "avgPower": "⌀ Putere",
     "avgPrice": "⌀ Pret",
     "chargeDuration": "Durata",
+    "chartTitle": {
+      "avgCo2ByGroup": "⌀ CO₂ {byGroup}",
+      "avgPriceByGroup": "⌀ Preț {byGroup}",
+      "byGroupLoadpoint": "de către punctul de încărcare",
+      "byGroupVehicle": "pe vehicul",
+      "energy": "Energie încărcată",
+      "energyGrouped": "Energia solară vs. energia din rețea",
+      "energyGroupedByGroup": "Energie {byGroup}",
+      "energySubSolar": "{value} solar",
+      "energySubTotal": "{value} total",
+      "groupedCo2ByGroup": "Cantitate CO₂ {byGroup}",
+      "groupedPriceByGroup": "Cost total {byGroup}",
+      "historyCo2": "Emisii de CO₂",
+      "historyCo2Sub": "{value} total",
+      "historyPrice": "Costuri de încărcare",
+      "historyPriceSub": "{value} total",
+      "solar": "Cota energiei solare pe parcursul anului",
+      "solarByGroup": "Cota solară {byGroup}"
+    },
     "co2": "⌀ CO₂",
     "csv": {
       "chargedenergy": "Energie (kWh)",
+      "chargeduration": "Durata",
+      "co2perkwh": "CO₂/kWh",
       "created": "Creat",
       "finished": "Terminat",
       "identifier": "Identificator",
@@ -378,6 +1162,9 @@
       "meterstart": "Start contor (kWh)",
       "meterstop": "Stop contor (kWh)",
       "odometer": "Kilometraj (km)",
+      "price": "Preț",
+      "priceperkwh": "Preț/kWh",
+      "solarpercentage": "Solar (%)",
       "vehicle": "Vehicul"
     },
     "csvPeriod": "Descarca {period} CSV",
@@ -389,28 +1176,63 @@
       "allVehicles": "toate masinile",
       "filter": "Filtru"
     },
+    "group": {
+      "co2": "Emisii",
+      "grid": "Rețea",
+      "price": "Preț",
+      "self": "Solar"
+    },
+    "groupBy": {
+      "loadpoint": "Punct de încărcare",
+      "none": "Total",
+      "vehicle": "Vehicul"
+    },
     "loadpoint": "Punct încărcare",
     "noData": "Nu exista sesiuni de incarcare luna aceasta.",
+    "overview": "Prezentare generală",
+    "period": {
+      "month": "Luna",
+      "total": "Total",
+      "year": "An"
+    },
     "price": "Σ Pret",
     "reallyDelete": "Esti sigur că dorești să ștergi această sesiune?",
+    "showIndividualEntries": "Afișează sesiunile individuale",
     "solar": "Solar",
     "title": "Sesiuni încărcare",
     "total": "Total",
+    "type": {
+      "co2": "CO₂",
+      "price": "Preț",
+      "solar": "Solar"
+    },
     "vehicle": "Vehicul"
   },
   "settings": {
+    "deviceInfo": "Setările pe care le efectuați în această fereastră de dialog afectează numai acest dispozitiv.",
+    "fullscreen": {
+      "enter": "Introduceți ecran complet",
+      "exit": "Intrați în modul ecran complet",
+      "label": "Ecran complet"
+    },
     "hiddenFeatures": {
       "label": "Experimentală",
-      "value": "Arată caracteristice experimentale."
+      "value": "Afișează caracteristici experimentale."
     },
     "language": {
       "auto": "Automat",
       "label": "Limba"
     },
+    "loadpoints": {
+      "help": "Modificați ordinea și vizibilitatea pentru interfața utilizatorului.",
+      "hide": "Ascunde {title}",
+      "label": "Puncte de încărcare",
+      "show": "Afișează {title}"
+    },
     "sponsorToken": {
       "expires": "Tokenul de sponsorizare expira {inXDays}.",
-      "expiresUpdateUi": "{getNewToken} si adauga-l in fisierul de configurare.",
-      "expiresUpdateYaml": "{getNewToken} si adauga-l în fișierul evcc.yaml.",
+      "expiresUpdateUi": "{getNewToken} și actualizați-l aici.",
+      "expiresUpdateYaml": "{getNewToken} și actualizați-l în fișierul evcc.yaml.",
       "getNewToken": "Descarcati unul nou",
       "hint": "Nota: Vom automatiza acest proces in viitor."
     },
@@ -423,6 +1245,11 @@
       "label": "Design",
       "light": "deschis"
     },
+    "time": {
+      "12h": "12h",
+      "24h": "24h",
+      "label": "Format ora"
+    },
     "title": "Configuratie",
     "unit": {
       "km": "km",
@@ -432,20 +1259,37 @@
   },
   "smartCost": {
     "activeHours": "{active} din {total}",
-    "activeHoursLabel": "Ore de functionare",
+    "activeHoursLabel": "Timp activ",
+    "applyToAll": "Se aplică peste tot?",
+    "batteryDescription": "Încarcă bateria casei cu energie din rețea.",
+    "cheapTitle": "Încărcare ieftină la rețea",
+    "cleanTitle": "Încărcare Clean Grid",
     "co2Label": "emisii CO₂",
     "co2Limit": "limita CO₂",
+    "enable": "Activați limita",
     "loadpointDescription": "Activeaza temporar Incarcarea Rapida in mod Solar.",
     "modalTitle": "Incarcare Smart Grid",
     "none": "nimic",
     "priceLabel": "Pretul energiei",
-    "priceLimit": "Limita de pret"
+    "priceLimit": "Limita de pret",
+    "resetAction": "Eliminare limită",
+    "resetWarning": "Nu este configurat niciun preț dinamic al rețelei sau sursă de CO₂. Cu toate acestea, există încă o limită de {limit}. Doriți să curățați configurația?",
+    "saved": "Salvat."
+  },
+  "smartFeedInPriority": {
+    "activeHoursLabel": "Timpul întrerupt",
+    "description": "Întrerupe încărcarea în perioadele cu prețuri ridicate pentru a prioritiza alimentarea profitabilă a rețelei.",
+    "priceLabel": "Tariful de alimentare",
+    "priceLimit": "Limită de alimentare",
+    "resetWarning": "Nu este configurată nicio tarifare dinamică pentru alimentarea cu energie electrică. Cu toate acestea, există încă o limită de {limit}. Doriți să curățați configurația?",
+    "title": "Prioritate de alimentare"
   },
   "startupError": {
     "configFile": "Fișier configurare folosit:",
     "configuration": "Configurare",
     "description": "Verifică fișierul de configurație. Dacă mesajul de eroare nu te ajută, verifică {0}.",
     "discussions": "Discută pe GitHub",
+    "editConfiguration": "Editați configurația",
     "fixAndRestart": "Repară eroarea și restartează serverul.",
     "hint": "Nota: E posibil să ai un dispozitiv defect (invertor, contor etc). Verifică conexiunile la rețea.",
     "lineError": "Eroare la {0}.",

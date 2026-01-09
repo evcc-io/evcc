@@ -11,9 +11,8 @@ params:
   - name: host
   - name: port
     default: 80
-  - name: capacity
-    advanced: true
   - name: externalpv
+    type: bool
     description:
       de: |
         Benötigt bei ein weiterer Solarwechselrichter.
@@ -28,7 +27,7 @@ params:
         This parameter is needed when the BatterX station is connected to another solar inverter.
         The total produced solar power can so be reported through one system.
         Further auxilary solar inverters do not need to be connected to evcc.
-    default: "false"
+  - preset: battery-params
 render: |
   type: custom
   power:
@@ -81,6 +80,6 @@ render: |
           uri: http://{{ .host }}:{{ .port }}/api.php?set=command&type=20738&text1=3&text2=1 # Battery Charge AC - ON
         - source: http
           uri: http://{{ .host }}:{{ .port }}/api.php?set=command&type=20738&text1=4&text2=0 # Battery Discharging - OFF
-  capacity: {{ .capacity }} # kWh
+  {{- include "battery-params" . }}
   {{- end }}
   {{- end }}

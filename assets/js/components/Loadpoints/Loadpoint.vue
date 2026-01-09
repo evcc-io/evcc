@@ -1,6 +1,9 @@
 <template>
 	<div class="loadpoint d-flex flex-column pt-4 pb-2 px-3 px-sm-4 mx-2 mx-sm-0">
-		<div class="d-block d-sm-flex justify-content-between align-items-center mb-3">
+		<div
+			class="d-block d-sm-flex justify-content-between align-items-center mb-3"
+			:class="expandLoadpointHeader ? 'd-lg-block d-xl-flex' : ''"
+		>
 			<div class="d-flex justify-content-between align-items-center mb-3 text-truncate">
 				<h3 class="me-2 mb-0 text-truncate d-flex">
 					<VehicleIcon
@@ -12,12 +15,17 @@
 						{{ loadpointTitle }}
 					</div>
 				</h3>
-				<LoadpointSettingsButton class="d-block d-sm-none" @click="openSettingsModal" />
+				<LoadpointSettingsButton
+					:class="expandLoadpointHeader ? 'd-lg-block d-xl-none' : ''"
+					class="d-block d-sm-none"
+					@click="openSettingsModal"
+				/>
 			</div>
 			<div class="mb-3 d-flex align-items-center">
 				<Mode class="flex-grow-1" v-bind="modeProps" @updated="setTargetMode" />
 				<LoadpointSettingsButton
 					:id="id"
+					:class="expandLoadpointHeader ? 'd-lg-none d-xl-block' : ''"
 					class="d-none d-sm-block ms-2"
 					@click="openSettingsModal"
 				/>
@@ -223,6 +231,7 @@ export default defineComponent({
 		tariffCo2: Number,
 		currency: String,
 		multipleLoadpoints: Boolean,
+		fullWidth: Boolean,
 		gridConfigured: Boolean,
 		pvConfigured: Boolean,
 		forecast: Object as PropType<Forecast>,
@@ -239,6 +248,9 @@ export default defineComponent({
 		};
 	},
 	computed: {
+		expandLoadpointHeader() {
+			return this.multipleLoadpoints && !this.fullWidth;
+		},
 		vehicle() {
 			return this.vehicles?.find((v) => v.name === this.vehicleName);
 		},

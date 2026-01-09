@@ -7,8 +7,19 @@ import (
 
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/tariff"
+	"github.com/samber/lo"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func TestSplitPrecondition(t *testing.T) {
+	clock := clock.NewMock()
+	rr := rates([]float64{1, 2, 3, 4}, clock.Now(), tariff.SlotDuration)
+	rates, precond := splitPreconditionSlots(rr, clock.Now().Add(3*tariff.SlotDuration))
+	assert.Equal(t, rr[0:3], rates, "rates")
+	assert.Equal(t, rr[3:], precond, "precond")
+}
 
 func TestSlotHasSuccessor(t *testing.T) {
 	plan := rates([]float64{20, 60, 10, 80, 40, 90}, time.Now(), time.Hour)
@@ -92,4 +103,24 @@ func TestSlotAt(t *testing.T) {
 	require.Equal(t, 1.0, SlotAt(now.Add(30*time.Minute), plan).Value)
 	require.Equal(t, 2.0, SlotAt(now.Add(90*time.Minute), plan).Value)
 	require.True(t, SlotAt(now.Add(3*time.Hour), plan).IsZero())
+}
+
+func BenchmarkFindContinuousWindow(b *testing.B) {
+	rr := rates(lo.RepeatBy(96, func(i int) float64 {
+		return float64(i)
+	}), time.Now(), tariff.SlotDuration)
+
+	for b.Loop() {
+		findContinuousWindow(rr, 4*tariff.SlotDuration, rr[len(rr)-1].End)
+	}
+}
+
+func BenchmarkOptimalPlan(b *testing.B) {
+	rr := rates(lo.RepeatBy(96, func(i int) float64 {
+		return float64(i)
+	}), time.Now(), tariff.SlotDuration)
+
+	for b.Loop() {
+		optimalPlan(rr, 4*tariff.SlotDuration, rr[len(rr)-1].End)
+	}
 }

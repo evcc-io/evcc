@@ -82,7 +82,7 @@ jobs:
         run: make patch-asn1-sudo
 
       - name: Get dist from cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         id: cache-dist
         with:
           path: dist

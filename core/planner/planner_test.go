@@ -48,11 +48,6 @@ func TestPlan(t *testing.T) {
 	trf := api.NewMockTariff(ctrl)
 	trf.EXPECT().Rates().AnyTimes().Return(rates([]float64{20, 60, 10, 80, 40, 90}, clock.Now(), time.Hour), nil)
 
-	p := &Planner{
-		log:   util.NewLogger("foo"),
-		clock: clock,
-	}
-
 	rates, err := trf.Rates()
 	require.NoError(t, err)
 
@@ -60,7 +55,7 @@ func TestPlan(t *testing.T) {
 
 	{
 		// filter rates to [now, now] window - should return empty
-		plan := p.plan(clampRates(rates, clock.Now(), clock.Now()), time.Hour, clock.Now())
+		plan := optimalPlan(clampRates(rates, clock.Now(), clock.Now()), time.Hour, clock.Now())
 		assert.Empty(t, plan)
 	}
 
@@ -129,7 +124,7 @@ func TestPlan(t *testing.T) {
 		t.Log(tc.desc)
 		clock.Set(tc.now)
 		// filter rates to [now, target] window as caller would do
-		plan := p.plan(clampRates(rates, tc.now, tc.target), tc.duration, tc.target)
+		plan := optimalPlan(clampRates(rates, tc.now, tc.target), tc.duration, tc.target)
 
 		assert.Equalf(t, tc.planStart.UTC(), Start(plan).UTC(), "case %d start", i)
 		assert.Equalf(t, tc.duration, Duration(plan), "case %d duration", i)
@@ -502,9 +497,8 @@ func TestStartBeforeRates(t *testing.T) {
 }
 
 // TestStartBeforeRatesInsufficientTime tests that when current time
-// is before the first available rate AND there's not enough time after rates
-// start to complete charging before target, the planner starts charging as soon
-// as rates become available (best effort approach)
+// is before the first available rate AND there's not enough rate coverage
+// to complete charging, the planner falls back to simplePlan (ignoring rates)
 func TestStartBeforeRatesInsufficientTime(t *testing.T) {
 	now := time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
 	c := clock.NewMock()
@@ -530,13 +524,32 @@ func TestStartBeforeRatesInsufficientTime(t *testing.T) {
 	}
 
 	targetTime := now.Add(4 * time.Hour)
-	requiredDuration := 3 * time.Hour // Need 3h but only 2h available after rates start
+	requiredDuration := 3 * time.Hour // Need 3h but only 2h rate coverage
 
 	plan := planner.Plan(requiredDuration, 0, targetTime, false) // dispersed mode
 
-	require.NotEmpty(t, plan, "plan should not be empty - starts when rates become available")
+	require.NotEmpty(t, plan, "plan should not be empty")
 
-	// Best effort: start as soon as rates are available
-	assert.Equal(t, now.Add(2*time.Hour), plan[0].Start, "should start at first available rate")
-	assert.Equal(t, 0.10, plan[0].Value, "should use first available rate price")
+	// Insufficient rate coverage: fall back to simplePlan starting at latestStart
+	assert.Equal(t, now.Add(1*time.Hour), plan[0].Start, "should start at latestStart (target - required)")
+	assert.Equal(t, 0.0, plan[0].Value, "simplePlan has no price info")
+}
+
+// TestEmptyRatesAfterClamping tests fallback to simplePlan when no rates cover [now, targetTime]
+func TestEmptyRatesAfterClamping(t *testing.T) {
+	c := clock.NewMock()
+	ctrl := gomock.NewController(t)
+
+	trf := api.NewMockTariff(ctrl)
+	trf.EXPECT().Rates().AnyTimes().Return(rates([]float64{0.20}, c.Now().Add(3*time.Hour), time.Hour), nil)
+
+	p := &Planner{
+		log:    util.NewLogger("test"),
+		clock:  c,
+		tariff: trf,
+	}
+
+	plan := p.Plan(time.Hour, 0, c.Now().Add(90*time.Minute), false)
+	require.Len(t, plan, 1)
+	assert.Equal(t, c.Now().Add(30*time.Minute), plan[0].Start)
 }

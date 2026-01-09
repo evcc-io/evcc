@@ -16,7 +16,7 @@
 		:apply-custom-defaults="applyCustomDefaults"
 		:custom-fields="customFields"
 		:get-product-name="getProductName"
-		:hide-template-fields="hideTemplateFields"
+		:hide-template-fields="showOcppOnboarding"
 		@added="$emit('added', $event)"
 		@updated="$emit('updated')"
 		@removed="$emit('removed')"
@@ -48,7 +48,7 @@
 			</FormRow>
 
 			<div
-				v-if="!ocppNextStepConfirmed && !values.stationid"
+				v-if="showOcppOnboarding"
 				class="my-4 d-flex justify-content-end gap-2 align-items-center"
 			>
 				<span v-if="ocppStationIdDetected">{{ $t("config.charger.ocppConnected") }}</span>
@@ -175,8 +175,11 @@ export default defineComponent({
 			const stations = this.ocpp.status.stations;
 			return stations.find((station) => station.status === "unknown")?.id;
 		},
-		hideTemplateFields(): boolean {
-			return this.isOcpp && !this.ocppNextStepConfirmed;
+		showOcppOnboarding(): boolean {
+			if (!this.isOcpp) return false;
+			if (this.ocppNextStepConfirmed) return false;
+			if (this.currentValues.stationid) return false;
+			return true;
 		},
 	},
 	methods: {

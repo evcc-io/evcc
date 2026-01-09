@@ -1,4 +1,24 @@
 {
+  "authProviders": {
+    "authCode": "Ověřovací kód",
+    "authCodeHelp": "Zkopírujte tento kód a použijte jej v dalším kroku. Platný po dobu {duration}.",
+    "authorizationFailed": "Autorizace se nezdařila",
+    "authorizationRequired": "Vyžaduje se autorizace",
+    "authorizationSuccessful": "Autorizace úspěšná",
+    "buttonConnect": "Připojit se k {provider}",
+    "buttonDisconnect": "Odpojit",
+    "confirmLogout": "Opravdu chcete odpojit {title}?",
+    "connect": "připojit",
+    "disconnect": "odpojit",
+    "loggedOut": "Úspěšně odhlášen",
+    "logoutFailed": "Odhlášení se nezdařilo",
+    "modalDescriptionLogin": "Dokončete proces autorizace pro navázání spojení s {provider}.",
+    "modalDescriptionLogout": "Tím se odpojí váš účet {provider} a odebere se přístup k jeho datům.",
+    "success": "{title} je nyní připojen a připraven k použití.",
+    "successCloseModal": "Nyní můžete toto dialogové okno zavřít.",
+    "successCloseTab": "Nyní můžete tuto kartu zavřít.",
+    "title": "Stav autorizace"
+  },
   "batterySettings": {
     "batteryLevel": "Nabití baterie",
     "bufferStart": {
@@ -40,8 +60,16 @@
       "chargers": "EV nabíječky",
       "generic": "Obecné integrace",
       "heatingdevices": "Zařízení pro vytápění",
+      "ocppConfirmContinue": "Vaše nabíječka ještě není připojena k evcc. Opravdu chcete pokračovat?",
+      "ocppConnected": "Připojeno!",
+      "ocppDescription": "evcc má vestavěný server OCPP. Postupujte podle těchto kroků:",
       "ocppHelp": "Zkopírujte tuto URL adresu do konfigurace vaší nabíječky. Podrobnosti naleznete v manuálu výrobce. Nabíječka automaticky připojí svůj unikátní identifikátor (ID stanice) k URL. Ve vzácných případech může být nutné identifikátor zadat ručně. Příklad: `{url}`",
       "ocppLabel": "OCPP-Server URL",
+      "ocppNextStep": "Další krok",
+      "ocppStep1": "Nakonfigurujte nabíječku tak, aby používala evcc jako server OCPP.",
+      "ocppStep2": "Počkejte, až se vaše nabíječka připojí k evcc.",
+      "ocppStep3": "Pokračujte a dokončete konfiguraci.",
+      "ocppWaiting": "Čekání na připojení",
       "switchsockets": "Přepínatelné zásuvky",
       "template": "Výrobce",
       "titleAdd": {
@@ -71,7 +99,7 @@
     },
     "control": {
       "description": "Obvykle jsou výchozí hodnoty správné. Měňte je jen pokud víte, co děláte.",
-      "descriptionInterval": "Aktualizační cyklus regulační smyčky v sekundách. Určuje, jak často evcc čte data z měřičů, upravuje nabíjecí výkon a aktualizuje uživatelské rozhraní. Krátké intervaly (< 30s) mohou způsobit oscilace a nežádoucí chování.",
+      "descriptionInterval": "Aktualizační cyklus v sekundách. Určuje, jak často evcc čte data z měřiče a upravuje nabíjení. Výchozí hodnota 30 sekund je bezpečná volba. Zařízení jako vozidla, nástěnné skříňky a střídače obvykle potřebují několik sekund, aby upravila své chování. Pokud vaše komponenty reagují rychle, můžete použít nižší hodnoty. Důrazně doporučujeme nepřekračovat hodnotu 10 sekund. Pokud pozorujete nepravidelné chování ovládání nebo skokové hodnoty výkonu, zvolte větší interval.",
       "descriptionResidualPower": "Posouvá pracovní bod regulační smyčky. Pokud máte domácí baterii, doporučuje se nastavit hodnotu 100 W. Tím získá baterie mírnou prioritu před spotřebou ze sítě.",
       "labelInterval": "Interval aktualizace",
       "labelResidualPower": "Zbytkový výkon",
@@ -91,10 +119,12 @@
       "chargedEnergy": "Nabito",
       "co2": "CO₂ ze sítě",
       "configured": "Nastaveno",
+      "connections": "Spojení",
       "controllable": "Ovládatelné",
       "currency": "Měna",
       "current": "Proud",
       "currentRange": "Proud",
+      "detected": "Detekováno",
       "dimmed": "Ztlumeno",
       "enabled": "Zapnuto",
       "energy": "Energie",
@@ -145,6 +175,10 @@
       "description": "Nastavení, které umožňuje evcc komunikovat s dalšími EEBus zařízeními.",
       "title": "EEBus"
     },
+    "experimental": {
+      "description": "Povolit uživatelské rozhraní pro funkce, které jsou stále testovány a mohou se v budoucích verzích změnit.",
+      "title": "Experimentální"
+    },
     "ext": {
       "description": "Zaznamenávat hodnoty energie neřízených spotřebičů (např. mrazák, myčka nádobí, atd.) pro statistické účely. Tyto měřáky je možné použít pro správu příkonu (např. dílčí distribuci).",
       "titleAdd": "Přidat měřič spotřebiče",
@@ -162,11 +196,16 @@
       "authPerformHint": "Bude otevřeno v novém okně. Pro pokračování se vraťte na tuto stránku.",
       "authPrepare": "Připravit propojení",
       "cancel": "Zrušit",
+      "clear": "Jasné",
       "close": "Zavřít",
+      "copied": "Zkopírováno!",
+      "copy": "Kopírovat",
       "customHelp": "Vytvořit zařízení definované uživatelem s použitím EVCC plugin rozhraní.",
       "customOption": "Zařízení nastavené uživatelem",
       "delete": "Smazat",
       "docsLink": "Další informace jsou uvedeny v dokumentaci.",
+      "dragHandle": "Tažná rukojeť",
+      "dragItem": "Přetahovatelné: {title}",
       "dragList": "Seznam umožňující úpravy pořadí",
       "experimental": "Experimentální nastavení",
       "forceSave": "Vynutit uložení",
@@ -197,8 +236,19 @@
       "titleEdit": "Editovat měřič spotřeby ze sítě"
     },
     "hems": {
+      "csv": {
+        "created": "Vytvořeno",
+        "finished": "Hotovo",
+        "gridpower": "Síťový výkon (kW)",
+        "limitpower": "Limit (kW)",
+        "type": "Typ"
+      },
       "description": "Limitace výkonu externími systémy (např. EnWG 14a kontroléry). Vyžaduje konfiguraci systému řízení zátěže.",
-      "title": "HEMS"
+      "downloadCsv": "Stáhnout CSV",
+      "eventsRecorded": "Zaznamenáno {count} událostí omezení mřížky.",
+      "lastEvent": "Nejnovější {timeAgo}.",
+      "title": "HEMS",
+      "yamlConfigured": "Poznámka: Konfigurace se provádí prostřednictvím souboru evcc.yaml. Chcete-li zde povolit úpravy, odstraňte záznam ze souboru."
     },
     "icon": {
       "change": "Změnit",
@@ -337,6 +387,8 @@
       "title": "Konfigurace",
       "unconfigured": "není konfigurováno",
       "vehicles": "Má vozidla",
+      "welcomeBannerText": "Začněte vytvořením **nabíječky nebo ohřívače**. Pokud ještě nemáte skutečnou nabíječku, vyberte si **demo nabíječku**.",
+      "welcomeBannerTitle": "Pojďme nakonfigurovat váš systém!",
       "yaml": "Zařízení z evcc.yaml nelze upravovat."
     },
     "messaging": {
@@ -372,9 +424,9 @@
       "baudrate": "Rychlost",
       "comset": "KomSet",
       "connection": "Modbus připojení",
-      "connectionHintSerial": "Zařízení je přímo připojeno k evcc přes rozhraní RS485.",
-      "connectionHintTcpip": "Zařízení je adresovatelné z evcc přes LAN/Wifi.",
-      "connectionValueSerial": "Sériový / KABELA",
+      "connectionHintSerial": "Zařízení je připojeno přímo přes RS485 (nebo adaptér USB-RS485).",
+      "connectionHintTcpip": "Zařízení je dostupné přes síť (LAN/WiFi).",
+      "connectionValueSerial": "RS485",
       "connectionValueTcpip": "Síť",
       "device": "Název zařízení",
       "deviceHint": "Příklad: / dev / ttyUSB0",
@@ -439,6 +491,23 @@
       "labelPort": "Port",
       "labelSchema": "Schéma",
       "title": "Síť"
+    },
+    "ocpp": {
+      "connectedChargers": "Připojené nabíječky",
+      "connectionStatus": "Nakonfigurované ID stanic",
+      "connectionStatusHelp": "Stav připojení nakonfigurovaných nabíječek.",
+      "detectedChargers": "Zjištěné identifikátory stanic",
+      "detectedHelp": "Tyto nabíječky se pokusily připojit k evcc. Chcete-li nabíječku použít, vytvořte loadpoint s jejím identifikačním číslem stanice.",
+      "noChargers": "Nebyly nalezeny žádné nabíječky OCPP.",
+      "noStations": "Žádné stanice připojeny",
+      "status": {
+        "configured": "Není připojeno",
+        "connected": "Připojeno",
+        "unknown": "Neznámý"
+      },
+      "title": "Server OCPP",
+      "url": "Adresa URL serveru",
+      "urlHelp": "Zkopírujte tuto adresu URL do konfigurace nabíječky. Podrobnosti najdete v příručce výrobce. Nabíječka by měla automaticky připojit svůj jedinečný identifikátor (ID stanice) k adrese URL. Ve výjimečných případech může být nutné identifikátor zadat ručně. Příklad: `{url}`"
     },
     "options": {
       "boolean": {
@@ -581,6 +650,8 @@
       "maximumCurrentHelp": "Musí být větší než minimální proud.",
       "maximumPhases": "Maximální počet fází",
       "maximumPhasesHelp": "Kolik fází může toto vozidlo využít pro nabíjení? Používá se k výpočtu požadovaného minimálního solárního přebytku a doby plánování.",
+      "maximumPower": "Maximální nabíjecí výkon",
+      "maximumPowerHelp": "Maximální výkon, který může vozidlo spotřebovat",
       "minimumCurrent": "Minimální proud",
       "minimumCurrentHelp": "Pod 6 A jděte pouze tehdy, pokud víte, co děláte.",
       "online": "Vozidlo s online API",
@@ -775,6 +846,8 @@
       "stepTwo": "Krok 2: Zkopírujte dodatečné informace",
       "title": "Shrnutí hlášení o chybě na GitHub"
     },
+    "system": "Systém",
+    "timezone": "Časové pásmo",
     "title": "Nahlásit problém",
     "version": "Verze EVCC"
   },
@@ -813,6 +886,11 @@
       "goal": "Cílový stav nabíjení",
       "modalTitle": "Plán nabíjení",
       "none": "Žádný",
+      "optimization": {
+        "cheapest": "nejlevnější",
+        "continuous": "kontinuální",
+        "label": "Optimalizace"
+      },
       "planNumber": "Plán {number}",
       "precondition": {
         "description": "Nabíjení bude dokončeno {duration} před časem odjezdu. Vhodné v zimě pro zahřátí baterie či její šetření při vyšším stavu nabití.",
@@ -824,6 +902,7 @@
       "repeating": "opakující se",
       "repeatingPlans": "Opakující se plány",
       "selectAll": "Vybrat vše",
+      "strategySettings": "Nastavení strategie",
       "time": "Čas",
       "title": "Plán",
       "titleMinSoc": "Min. nabíjení",
@@ -1146,7 +1225,7 @@
     },
     "hiddenFeatures": {
       "label": "Experimentální nastavení",
-      "value": "Zobrazit experimentální nastavení."
+      "value": "Zobrazit experimentální funkce."
     },
     "language": {
       "auto": "Automaticky",

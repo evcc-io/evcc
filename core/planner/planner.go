@@ -6,6 +6,7 @@ import (
 
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -35,8 +36,8 @@ func New(log *util.Logger, tariff api.Tariff, opt ...func(t *Planner)) *Planner 
 // It MUST already be established that:
 // - rates are sorted in ascending order by cost and descending order by start time (prefer late slots)
 // - rates are filtered to [now, targetTime] window by caller
-func (t *Planner) plan(rates api.Rates, requiredDuration time.Duration, targetTime time.Time) api.Rates {
-	var plan api.Rates
+func optimalPlan(rates api.Rates, requiredDuration time.Duration, targetTime time.Time) api.Rates {
+	plan := make(api.Rates, 0, int64(requiredDuration)/int64(tariff.SlotDuration)+3)
 
 	for _, slot := range rates {
 		slotDuration := slot.End.Sub(slot.Start)
@@ -153,6 +154,11 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 
 	rates = clampRates(rates, now, targetTime)
 
+	// check if rate coverage is sufficient for planning
+	if len(rates) == 0 || rates[len(rates)-1].End.Sub(rates[0].Start) < requiredDuration {
+		return simplePlan
+	}
+
 	// don't precondition longer than charging duration
 	precondition = min(precondition, requiredDuration)
 
@@ -174,32 +180,13 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 	// create plan unless only precond slots remaining
 	var plan api.Rates
 	if continuous {
-		// check if available tariff slots span is sufficient for sliding window algorithm
-		// verify that actual tariff data covers enough duration (may have gaps or start late)
-		if len(rates) > 0 {
-			start := rates[0].Start
-			if start.Before(now) {
-				start = now
-			}
-
-			end := rates[len(rates)-1].End
-			if end.After(targetTime) {
-				end = targetTime
-			}
-
-			// available window too small for sliding window - charge continuously from now to target
-			if end.Sub(start) < requiredDuration {
-				return continuousPlan(append(rates, precond...), now, targetTime.Add(precondition))
-			}
-		}
-
 		// find cheapest continuous window
 		plan = findContinuousWindow(rates, requiredDuration, targetTime)
 	} else {
 		// sort rates by price and time
 		slices.SortStableFunc(rates, sortByCost)
 
-		plan = t.plan(rates, requiredDuration, targetTime)
+		plan = optimalPlan(rates, requiredDuration, targetTime)
 
 		// sort plan by time
 		plan.Sort()
@@ -221,7 +208,7 @@ func splitPreconditionSlots(rates api.Rates, preCondStart time.Time) (api.Rates,
 		}
 
 		// split slot
-		if !r.Start.After(preCondStart) {
+		if r.Start.Before(preCondStart) {
 			// keep the first part of the slot
 			res = append(res, api.Rate{
 				Start: r.Start,

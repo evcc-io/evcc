@@ -28,11 +28,11 @@
     },
     "capacity": "{energy} van {total}",
     "control": "Batterijsturing",
-    "discharge": "Voorkom het ontladen van de thuisbatterij bij gebruik van de snelle modus of bij gepland laden.",
+    "discharge": "Voorkom ontladen bij gebruik van de snelle modus of bij gepland laden.",
     "disclaimerHint": "Opgelet:",
     "disclaimerText": "Deze instellingen beïnvloeden enkel de zonnemodus. Oplaadgedrag wordt overeenkomstig aangepast.",
     "gridChargeTab": "Netladen",
-    "legendBottomName": "Thuisbatterij heeft prioriteit",
+    "legendBottomName": "Opladen thuisbatterij heeft prioriteit",
     "legendBottomSubline": "tot {soc} bereikt is.",
     "legendMiddleName": "Voertuig laden heeft prioriteit",
     "legendMiddleSubline": "als de thuisbatterij {soc} bereikt heeft.",
@@ -100,8 +100,8 @@
     "control": {
       "description": "Normaalgesproken zijn de standaardwaardes in orde. Pas deze alleen aan als je weet wat je doet.",
       "descriptionInterval": "Updatecyclus in seconden. Bepaalt hoe vaak evcc metergegevens uitleest en het laadproces aanpast. De standaardwaarde van 30 seconden is een veilige keuze. Apparaten zoals voertuigen, autoladers en omvormers hebben doorgaans enkele seconden nodig om hun gedrag aan te passen. Als uw componenten snel reageren, kunt u lagere waarden gebruiken. We raden ten zeerste af om onder de 10 seconden te gaan. Als u onregelmatig regelgedrag of verspringende vermogenswaarden opmerkt, kies dan een groter interval.",
-      "descriptionResidualPower": "Verplaatst het werkpunt van de regelkring. Als je een thuisbatterij hebt, wordt aanbevolen om een waarde van 100 W in te stellen. Op deze manier krijgt de batterij een lichte prioriteit boven het gebruik van het net.",
-      "labelInterval": "Update interval",
+      "descriptionResidualPower": "Verschuift het werkingspunt van de regelkring. Als u een thuisbatterij hebt, wordt aanbevolen om een waarde van 100 W in te stellen. Op die manier krijgt de batterij een lichte voorrang op het gebruik van netstroom.",
+      "labelInterval": "Update-interval",
       "labelResidualPower": "Vermogensoverschot",
       "title": "Regelgedrag"
     },
@@ -117,7 +117,7 @@
       "chargeStatusE": "geen vermogen",
       "chargeStatusF": "error",
       "chargedEnergy": "Geladen",
-      "co2": "Net-CO₂",
+      "co2": "Stroomnet-CO₂",
       "configured": "Geconfigureerd",
       "connections": "Verbindingen",
       "controllable": "Stuurbaar",
@@ -166,7 +166,7 @@
       "auxMeter": "Slimme verbruiker",
       "batteryStorage": "Batterijopslag",
       "consumer": "Verbruiker",
-      "solarSystem": "PV systeem"
+      "solarSystem": "Zonnepanelen systeem"
     },
     "editor": {
       "loading": "YAML editor laden…"
@@ -245,7 +245,7 @@
       },
       "description": "Stroombegrenzing door externe systemen (zoals EnWG 14a controllers). Vereist load management configuratie.",
       "downloadCsv": "Download CSV",
-      "eventsRecorded": "{count} gebeurtenissen geregistreerd van netstroom begrenzing",
+      "eventsRecorded": "{count} gebeurtenissen met rasterbeperkingen geregistreerd.",
       "lastEvent": "Meest recent {timeAgo}.",
       "title": "HEMS",
       "yamlConfigured": "Opmerking: Geconfigureerd via evcc.yaml. Verwijder de betreffende regels uit het bestand om hier bewerkingen mogelijk te maken."
@@ -294,6 +294,7 @@
       "chargerTypeLabel": "Type laadpunt",
       "chargingTitle": "Gedrag",
       "circuitHelp": "Toewijzing van een circuit van je electriciteitsnetwerk om te voorkomen dat de vermogens- en stroomlimieten niet worden overschreden.",
+      "circuitInvalid": "Het circuit bestaat niet",
       "circuitLabel": "Groep",
       "circuitUnassigned": "niet toegewezen",
       "defaultModeHelp": {
@@ -323,7 +324,7 @@
       "phasesAutomaticHelp": "Uw laadstation ondersteunt automatisch wisselen tussen laden op 1 of 3-fasen. U kunt dit aanpassen van op het startscherm tijdens de laadsessie.",
       "phasesHelp": "Aantal aangesloten fasen.",
       "phasesLabel": "“Fasen”",
-      "pollIntervalDanger": "Het voertuig vaak bevragen kan de 12V accu sneller ontladen. Sommige autofabrikanten kunnen mogelijk actief het laden voorkomen in dit geval. Niet aangeraden! Gebruik dit alleen wanneer je je bewust bent van de risico's.",
+      "pollIntervalDanger": "Het regelmatig opvragen van gegevens van het voertuig kan de accu van het voertuig leegtrekken. Sommige autofabrikanten kunnen in dit geval actief voorkomen dat de accu wordt opgeladen. Niet aanbevolen! Gebruik deze functie alleen als u zich bewust bent van de risico's.",
       "pollIntervalHelp": "Tijd tussen API-updates van voertuigen. Korte intervallen kunnen de 12V accu van het voertuig leeg trekken.",
       "pollIntervalLabel": "Update-interval",
       "pollModeAlways": "altijd",
@@ -340,7 +341,7 @@
       "solarBehaviorCustomHelp": "Definieer uw eigen in- en uitschakeldrempels en vertragingen.",
       "solarBehaviorDefaultHelp": "Begin na {enableDelay} van overschot. Stop als er niet genoeg overschot is voor {disableDelay}.",
       "solarBehaviorLabel": "Zonne-energie",
-      "solarModeCustom": "Aangepast",
+      "solarModeCustom": "aangepast",
       "solarModeMaximum": "Maximale zonne-energie",
       "thresholdDisableDelayLabel": "Vertraging uitschakelen",
       "thresholdDisableHelpInvalid": "Gebruik alstublieft een positieve waarde.",
@@ -370,6 +371,7 @@
       "vehicleAutoDetection": "automatische detectie",
       "vehicleHelpAutoDetection": "Selecteert automatisch het meest aannemelijke voertuig. Handmatige aanpassen is mogelijk.",
       "vehicleHelpDefault": "Ga er altijd vanuit dat dit voertuig hier laadt. Automatische detectie uitgeschakeld. Handmatig aanpassen is mogelijk.",
+      "vehicleInvalid": "Het voertuig bestaat niet",
       "vehicleLabel": "Standaard voertuig",
       "vehiclesTitle": "Voertuigen"
     },
@@ -387,7 +389,7 @@
       "title": "Configuratie",
       "unconfigured": "Niet geconfigureerd",
       "vehicles": "Mijn voertuigen",
-      "welcomeBannerText": "Begin met het maken van een **oplader of verwarmer**. Als je nog geen echte oplader hebt, kies dan een **demo-oplader**.",
+      "welcomeBannerText": "Begin met het aanmaken van minstens één **oplader**, **verwarmer**, **netstroom**, **zonnepanelen**, **thuisbatterij** of **extra meter**. Als je gewoon wilt testen, kies dan een **demo-apparaat**.",
       "welcomeBannerTitle": "Start met het configureren van uw systeem!",
       "yaml": "Apparaten geconfigureerd in evcc.yaml kunnen hier niet worden bewerkt."
     },
@@ -486,7 +488,7 @@
       "descriptionPort": "Poort voor de web interface en API. Update de browser url wanneer je dit aanpast.",
       "descriptionSchema": "Beïnvloedt enkel hoe URLs gegenereerd worden. HTTPS selecteren activeert geen encryptie.",
       "labelExternalUrl": "Externe URL",
-      "labelHost": "mDNS Hostname",
+      "labelHost": "mDNS-hostnaam",
       "labelInternalUrl": "Interne URL",
       "labelPort": "Poort",
       "labelSchema": "Schema",
@@ -586,7 +588,7 @@
           "title": "Backup"
         },
         "cancel": "Annuleer",
-        "description": "Backup, herstel en reset je data. Nuttig als je je data naar een ander systeem wilt migreren.",
+        "description": "Maak een back-up van uw gegevens, herstel ze en reset ze. Handig als u uw gegevens naar een ander systeem wilt verplaatsen.",
         "note": "Notabene: alle bovenstaande acties hebben alleen impact op je databasedata. Het evcc.yaml configuratiebestand blijft onveranderd.",
         "reset": {
           "action": "Reset...",
@@ -762,6 +764,9 @@
       "solar": "Zonne-energie"
     }
   },
+  "general": {
+    "note": "Let op:"
+  },
   "header": {
     "about": "Over",
     "authProviders": {
@@ -848,7 +853,7 @@
       "title": "GitHub Probleemoverzicht"
     },
     "system": "Systeem",
-    "timezone": "Tijdzone",
+    "timezone": "tijdszone",
     "title": "Rapporteer een probleem",
     "version": "Versie"
   },
@@ -887,9 +892,14 @@
       "goal": "Hoeveelheid",
       "modalTitle": "Laad Plan",
       "none": "geen",
+      "optimization": {
+        "cheapest": "goedkoopste",
+        "continuous": "continu",
+        "label": "Optimalisatie"
+      },
       "planNumber": "Schema {number}",
       "precondition": {
-        "description": "Laad {duration} voor vertrek voor accu voorbereiding.",
+        "description": "Laadtijd {duration} voor vertrek voor accu voorconditionering.",
         "label": "Laat Opladen",
         "optionAll": "alles",
         "optionNo": "nee"
@@ -898,6 +908,8 @@
       "repeating": "herhalend",
       "repeatingPlans": "Herhalende schema's",
       "selectAll": "Alles selectreren",
+      "strategyDisabledDescription": "Het opladen begint zo laat mogelijk, zodat het precies op tijd voor vertrek klaar is. Met dynamische netprijzen of een CO₂-tarief zijn er meer mogelijkheden.",
+      "strategySettings": "Strategie-instellingen",
       "time": "Tijd",
       "title": "Plan",
       "titleMinSoc": "Min lading",
@@ -920,7 +932,7 @@
       "loadpoints": "Lader| Lader | {count} laders",
       "loadpointsLimit": "{limit} limiet",
       "noEnergy": "Geen meter data",
-      "pv": "PV-systeem",
+      "pv": "Zonnepanelen systeem",
       "pvExport": "Netinjectie",
       "pvProduction": "Productie",
       "selfConsumption": "Zelfverbruik"
@@ -946,7 +958,7 @@
       "price": "Kosten",
       "remaining": "Resterend",
       "remoteDisabledHard": "{source}: uitgeschakeld",
-      "remoteDisabledSoft": "{source}: adaptief PV-laden uitgeschakeld",
+      "remoteDisabledSoft": "{source}: adaptief laden van zonnepanelen uitgeschakeld",
       "solar": "Zon"
     },
     "loadpointSettings": {
@@ -1284,7 +1296,7 @@
     "description": "Pauzeert het opladen tijdens hoge prijzen om prioriteit te geven aan terugleveren.",
     "priceLabel": "Teruglevertarief",
     "priceLimit": "Terugleverprijs limiet",
-    "resetWarning": "Er is geen dynamisch teruglevertarief ingesteld. Er is echter nog steeds een limiet van {limit}. Wil je je configuratie opschonen?",
+    "resetWarning": "Er is geen dynamisch teruglevertarief ingesteld. Er is echter nog steeds een limiet van {limit}. Wil je de configuratie opschonen?",
     "title": "Terugleveren prioritiseren"
   },
   "startupError": {
