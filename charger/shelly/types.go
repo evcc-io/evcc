@@ -2,17 +2,10 @@ package shelly
 
 // RpcRequest represents a Shelly Gen2 RPC request
 type RpcRequest struct {
-	Id     int       `json:"id"`
-	Src    string    `json:"src"`
-	Method string    `json:"method"`
-	Params RpcParams `json:"params"`
-}
-
-// RpcParams contains RPC request parameters
-type RpcParams struct {
-	Owner string `json:"owner"`
-	Role  string `json:"role"`
-	Value any    `json:"value,omitempty"`
+	Id     int    `json:"id"`
+	Src    string `json:"src"`
+	Method string `json:"method"`
+	Params any    `json:"params"`
 }
 
 // RpcResponse represents an rpc response
@@ -37,23 +30,4 @@ type PhaseInfo struct {
 	PhaseA         PhaseData `json:"phase_a"`
 	PhaseB         PhaseData `json:"phase_b"`
 	PhaseC         PhaseData `json:"phase_c"`
-}
-
-// Status represents the charger work state
-type Status struct {
-	WorkState string `json:"work_state"`
-}
-
-// ServiceConfigRequest represents a service configuration request
-type ServiceConfigRequest struct {
-	Id     int              `json:"id"`
-	Src    string           `json:"src"`
-	Method string           `json:"method"`
-	Params ServiceConfigSet `json:"params"`
-}
-
-// ServiceConfigSet contains service configuration parameters
-type ServiceConfigSet struct {
-	Id         int  `json:"id"`
-	AutoCharge bool `json:"auto_charge"`
 }

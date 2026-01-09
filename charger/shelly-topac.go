@@ -99,16 +99,12 @@ func NewShellyTopAC(uri, user, password string) (api.Charger, error) {
 }
 
 // execRpc executes a Shelly Gen2 RPC call
-func (c *ShellyTopAC) execRpc(method, owner, role string, value, res any) error {
+func (c *ShellyTopAC) execRpc(method string, params, res any) error {
 	data := shelly.RpcRequest{
 		Id:     0,
 		Src:    "evcc",
 		Method: method,
-		Params: shelly.RpcParams{
-			Owner: owner,
-			Role:  role,
-			Value: value,
-		},
+		Params: params,
 	}
 
 	req, err := request.New(http.MethodPost, c.uri, request.MarshalJSON(data), request.JSONEncoding)
@@ -122,7 +118,7 @@ func (c *ShellyTopAC) execRpc(method, owner, role string, value, res any) error 
 // getCurrentLimit retrieves the current charging limit
 func (c *ShellyTopAC) getCurrentLimit() (float64, error) {
 	var res shelly.RpcResponse[float64]
-	err := c.execRpc("Number.GetStatus", "service:0", "current_limit", nil, &res)
+	err := c.execRpc("Number.GetStatus", map[string]any{"owner": "service:0", "role": "current_limit"}, &res)
 
 	return res.Value, err
 }
@@ -131,42 +127,27 @@ func (c *ShellyTopAC) getCurrentLimit() (float64, error) {
 func (c *ShellyTopAC) setCurrentLimit(current float64) error {
 	var res any
 
-	return c.execRpc("Number.Set", "service:0", "current_limit", current, &res)
+	return c.execRpc("Number.Set", map[string]any{"owner": "service:0", "role": "current_limit", "value": current}, &res)
 }
 
 // getPhaseInfo retrieves phase information
 func (c *ShellyTopAC) getPhaseInfo() (shelly.PhaseInfo, error) {
 	var res shelly.RpcResponse[shelly.PhaseInfo]
-	err := c.execRpc("Object.GetStatus", "service:0", "phase_info", nil, &res)
+	err := c.execRpc("Object.GetStatus", map[string]any{"owner": "service:0", "role": "phase_info"}, &res)
 
 	return res.Value, err
 }
 
 // setAutoCharge enables or disables auto charge configuration
 func (c *ShellyTopAC) setAutoCharge(enable bool) error {
-	data := shelly.ServiceConfigRequest{
-		Id:     0,
-		Src:    "evcc",
-		Method: "Service.SetConfig",
-		Params: shelly.ServiceConfigSet{
-			Id:         0,
-			AutoCharge: enable,
-		},
-	}
-
-	req, err := request.New(http.MethodPost, c.uri, request.MarshalJSON(data), request.JSONEncoding)
-	if err != nil {
-		return err
-	}
-
 	var res any
-	return c.DoJSON(req, &res)
+	return c.execRpc("Service.SetConfig", map[string]any{"id": 0, "auto_charge": enable}, &res)
 }
 
 // Status implements the api.Charger interface
 func (c *ShellyTopAC) Status() (api.ChargeStatus, error) {
 	var res shelly.RpcResponse[string]
-	if err := c.execRpc("Enum.GetStatus", "service:0", "work_state", nil, &res); err != nil {
+	if err := c.execRpc("Enum.GetStatus", map[string]any{"owner": "service:0", "role": "work_state"}, &res); err != nil {
 		return api.StatusNone, err
 	}
 
