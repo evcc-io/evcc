@@ -57,7 +57,6 @@ const (
 	solaxRegConnectionStrength = 0x0027 // uint16 1%
 	solaxRegPhases             = 0x0028 // uint16
 	solaxRegLockState          = 0x002D // uint16
-	solaxRegBatterySoC         = 0xA024 // uint16 0.1kWh
 
 	// commands
 	solaxCmdStop  = 3
@@ -77,7 +76,7 @@ func init() {
 	registry.AddCtx("solax-g2", NewSolaxG2FromConfig)
 }
 
-//go:generate go tool decorate -f decorateSolax -b *Solax -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)" -t "api.Battery,Soc,func() (float64, error)"
+//go:generate go tool decorate -f decorateSolax -b *Solax -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
 
 func NewSolaxG1FromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	return NewSolaxFromConfig(ctx, other, true)
@@ -131,18 +130,16 @@ func NewSolax(ctx context.Context, uri, device, comset string, baudrate int, pro
 
 	var phases1p3p func(int) error
 	var phasesG func() (int, error)
-	var soc func() (float64, error)
 
 	if b, err := wb.conn.ReadInputRegisters(solaxRegFirmwareVersion, 1); err == nil {
 		v := encoding.Uint16(b)
 		if !wb.isLegacyHw && v >= solaxFirmwarePhaseSwitching {
 			phases1p3p = wb.phases1p3p
 			phasesG = wb.getPhases
-			soc = wb.soc
 		}
 	}
 
-	return decorateSolax(wb, phases1p3p, phasesG, soc), nil
+	return decorateSolax(wb, phases1p3p, phasesG), nil
 }
 
 // getPhaseValues returns 3 sequential register values
@@ -296,16 +293,6 @@ func (wb *Solax) getPhases() (int, error) {
 	}
 
 	return 1, nil
-}
-
-// soc implements the api.Battery interface
-func (wb *Solax) soc() (float64, error) {
-	soc, err := wb.conn.ReadInputRegisters(solaxRegBatterySoC, 1)
-	if err != nil {
-		return 0, err
-	}
-
-	return float64(binary.BigEndian.Uint16(soc)) / 10, nil
 }
 
 var _ api.Diagnosis = (*Delta)(nil)
