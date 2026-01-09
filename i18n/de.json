@@ -482,7 +482,7 @@
           "devices": "Gerätenamen",
           "devicesHelp": "Ein Eintrag pro Zeile.",
           "recipients": "Empfänger",
-          "recipientsHelp": "Benutzerkennungen und Gruppenkennungen können angegeben werden. Ein Eintrag pro Zeile. In Pushover erstellte Gruppen können auf bestimmte Geräte beschränkt werden.",
+          "recipientsHelp": "Benutzerkennungen und Gruppenkennungen können angegeben werden. Ein Eintrag pro Zeile. Gruppen müssen zuerst unter {url} erstellt werden.",
           "title": "Pushover"
         },
         "shout": {
