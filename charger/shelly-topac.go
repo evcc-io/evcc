@@ -90,11 +90,6 @@ func NewShellyTopAC(uri, user, password string) (api.Charger, error) {
 	// Setup cached status getters
 	c.phaseG = util.ResettableCached(c.getPhaseInfo, time.Second)
 
-	// Enable auto_charge configuration
-	if err := c.setAutoCharge(true); err != nil {
-		return nil, err
-	}
-
 	return c, nil
 }
 
@@ -130,14 +125,6 @@ func (c *ShellyTopAC) getPhaseInfo() (shelly.Measurements, error) {
 	err := c.execRpc("Object.GetStatus", params, &res)
 
 	return res.Value, err
-}
-
-// setAutoCharge enables or disables auto charge configuration
-func (c *ShellyTopAC) setAutoCharge(enable bool) error {
-	var res any
-	params := shelly.ServiceConfigParams{Id: 0, AutoCharge: enable}
-
-	return c.execRpc("Service.SetConfig", params, &res)
 }
 
 // Status implements the api.Charger interface

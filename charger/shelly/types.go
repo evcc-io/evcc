@@ -44,9 +44,3 @@ type SetValueParams struct {
 	Role  string  `json:"role"`
 	Value float64 `json:"value"`
 }
-
-// ServiceConfigParams contains parameters for service configuration
-type ServiceConfigParams struct {
-	Id         int  `json:"id"`
-	AutoCharge bool `json:"auto_charge"`
-}
