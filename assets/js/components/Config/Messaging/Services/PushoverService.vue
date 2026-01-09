@@ -21,6 +21,9 @@
 			:serviceType="serviceType"
 			inputName="recipients"
 			example="uQiRzpo4DXghDmr9QzzfQu27cmVRsG"
+			:helpI18nParams="{
+				url: '[pushover.net](https://pushover.net/groups/build)',
+			}"
 		>
 			<PropertyField
 				id="messagingServicePushoverRecipients"
@@ -29,19 +32,17 @@
 				type="List"
 				size="w-100"
 				class="me-2"
-				required
 				:rows="4"
 				@update:model-value="$emit('update:recipients', $event)"
 			/>
 		</MessagingFormRow>
 
-		<MessagingFormRow :serviceType="serviceType" inputName="devices" example="droid2">
+		<MessagingFormRow :serviceType="serviceType" inputName="devices" example="droid2" optional>
 			<PropertyField
 				id="messagingServicePushoverDevices"
 				:model-value="devices"
 				property="devices"
 				type="List"
-				required
 				:rows="4"
 				@update:model-value="$emit('update:devices', $event)"
 			/>

@@ -478,11 +478,11 @@
         },
         "pushover": {
           "app": "Token",
-          "appHelp": "API token of the application. Get it from {url}.",
+          "appHelp": "API token of the application. Get it from {url} after creating an application.",
           "devices": "Device names",
-          "devicesHelp": "One entry per line.",
+          "devicesHelp": "Restrict notifications to specific devices. Leave blank to send to all. One entry per line.",
           "recipients": "Recipients",
-          "recipientsHelp": "User identifiers and group identifiers can be specified. One entry per line. Groups created in Pushover can be restricted to specific devices.",
+          "recipientsHelp": "User keys and group identifiers can be specified. One entry per line. Groups must first be created at {url}.",
           "title": "Pushover"
         },
         "shout": {
