@@ -18,7 +18,6 @@ package charger
 // SOFTWARE.
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"strings"
@@ -39,7 +38,6 @@ type ShellyTopAC struct {
 	*request.Helper
 	uri     string
 	current int64
-	statusG util.Cacheable[shelly.Status]
 	phaseG  util.Cacheable[shelly.PhaseInfo]
 }
 
@@ -90,7 +88,6 @@ func NewShellyTopAC(uri, user, password string) (api.Charger, error) {
 	}
 
 	// Setup cached status getters
-	c.statusG = util.ResettableCached(c.getWorkState, time.Second)
 	c.phaseG = util.ResettableCached(c.getPhaseInfo, time.Second)
 
 	// Enable auto_charge configuration
@@ -120,14 +117,6 @@ func (c *ShellyTopAC) execRpc(method, owner, role string, value any, res any) er
 	}
 
 	return c.DoJSON(req, &res)
-}
-
-// getWorkState retrieves the charger's work state
-func (c *ShellyTopAC) getWorkState() (shelly.Status, error) {
-	var res shelly.RpcResponse[string]
-	err := c.execRpc("Enum.GetStatus", "service:0", "work_state", nil, &res)
-
-	return shelly.Status{WorkState: res.Value}, err
 }
 
 // getCurrentLimit retrieves the current charging limit
@@ -176,14 +165,13 @@ func (c *ShellyTopAC) setAutoCharge(enable bool) error {
 
 // Status implements the api.Charger interface
 func (c *ShellyTopAC) Status() (api.ChargeStatus, error) {
-	status, err := c.statusG.Get()
-	if err != nil {
+	var res shelly.RpcResponse[string]
+	if err := c.execRpc("Enum.GetStatus", "service:0", "work_state", nil, &res); err != nil {
 		return api.StatusNone, err
 	}
 
-	// Map Shelly work states to evcc charge status
 	// Possible states: charger_free, charger_wait, charger_pause, charger_charging, charger_complete, charger_error
-	switch status.WorkState {
+	switch res.Value {
 	case "charger_free":
 		return api.StatusA, nil
 	case "charger_wait", "charger_pause", "charger_complete":
@@ -191,7 +179,7 @@ func (c *ShellyTopAC) Status() (api.ChargeStatus, error) {
 	case "charger_charging":
 		return api.StatusC, nil
 	default:
-		return api.StatusNone, fmt.Errorf("unknown work state: %s", status.WorkState)
+		return api.StatusNone, fmt.Errorf("unknown work state: %s", res.Value)
 	}
 }
 

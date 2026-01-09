@@ -39,11 +39,6 @@ type PhaseInfoValue struct {
 	PhaseC         PhaseData
 }
 
-// Status represents the charger work state
-type Status struct {
-	WorkState string
-}
-
 // PhaseInfo wraps phase information
 type PhaseInfo struct {
 	Info PhaseInfoValue
