@@ -5,12 +5,14 @@ import (
 	"net/http"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/warp"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/jpfielding/go-http-digest/pkg/digest"
+	"github.com/samber/lo"
 )
 
 // WarpHTTP is the Warp charger HTTP implementation
@@ -24,6 +26,10 @@ type WarpHTTP struct {
 	current         int64
 	meterIndex      uint
 	metersValuesMap map[int]int
+	cache           time.Duration
+	meterValuesG    util.Cacheable[warp.MeterValues]
+	meterAllValuesG util.Cacheable[[]float64]
+	metersValuesG   util.Cacheable[warp.MetersValues]
 }
 
 func init() {
@@ -34,7 +40,7 @@ func init() {
 
 // NewWarpHTTPFromConfig creates a new configurable charger
 func NewWarpHTTPFromConfig(other map[string]any) (api.Charger, error) {
-	cc := struct {
+	var cc = struct {
 		URI                    string
 		User                   string
 		Password               string
@@ -43,20 +49,23 @@ func NewWarpHTTPFromConfig(other map[string]any) (api.Charger, error) {
 		EnergyManagerPassword  string
 		DisablePhaseAutoSwitch bool
 		EnergyMeterIndex       uint
-	}{}
+		Cache                  time.Duration
+	}{
+		Cache: 5 * time.Second,
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	wb, err := NewWarpHTTP(cc.URI, cc.User, cc.Password)
+	wb, err := NewWarpHTTP(cc.URI, cc.User, cc.Password, cc.Cache)
 	if err != nil {
 		return nil, err
 	}
 
 	var currentPower, totalEnergy func() (float64, error)
 	var currents, voltages func() (float64, float64, float64, error)
-	if wb.hasFeature(wb.uri, warp.FeatureMeters) {
+	if wb.hasFeature(warp.FeatureMeters) {
 		wb.meterIndex = cc.EnergyMeterIndex
 		indices, err := wb.metersValueIds()
 		if err != nil {
@@ -68,24 +77,22 @@ func NewWarpHTTPFromConfig(other map[string]any) (api.Charger, error) {
 		totalEnergy = wb.metersTotalEnergy
 		currents = wb.metersCurrents
 		voltages = wb.metersVoltages
-	}
-
-	// fallback to meter api
-	if (currentPower == nil || totalEnergy == nil) && wb.hasFeature(wb.uri, warp.FeatureMeter) {
+	} else if wb.hasFeature(warp.FeatureMeter) {
+		// fallback to meter api
 		currentPower = wb.meterCurrentPower
 		totalEnergy = wb.meterTotalEnergy
-		if (currents == nil || voltages == nil) && wb.hasFeature(wb.uri, warp.FeatureMeterPhases) {
+		if wb.hasFeature(warp.FeatureMeterPhases) {
 			currents = wb.meterCurrents
 			voltages = wb.meterVoltages
 		}
 	}
 
 	var identity func() (string, error)
-	if wb.hasFeature(wb.uri, warp.FeatureNfc) {
+	if wb.hasFeature(warp.FeatureNfc) {
 		identity = wb.identify
 	}
 
-	if wb.hasFeature(wb.uri, warp.FeaturePhaseSwitch) {
+	if wb.hasFeature(warp.FeaturePhaseSwitch) {
 		wb.emURI = wb.uri
 		wb.emHelper = wb.Helper
 	} else if cc.EnergyManagerURI != "" { // fallback to Energy Manager
@@ -100,7 +107,7 @@ func NewWarpHTTPFromConfig(other map[string]any) (api.Charger, error) {
 	var phases func(int) error
 	var getPhases func() (int, error)
 	if wb.emHelper != nil {
-		if res, err := wb.emState(); err == nil && res.ExternalControl != 1 {
+		if res, err := wb.emState(); err == nil && res.ExternalControl != warp.ExternalControlDeactivated {
 			phases = wb.phases1p3p
 			getPhases = wb.getPhases
 		}
@@ -117,7 +124,7 @@ func NewWarpHTTPFromConfig(other map[string]any) (api.Charger, error) {
 }
 
 // NewWarpHTTP creates a new configurable charger
-func NewWarpHTTP(uri, user, password string) (*WarpHTTP, error) {
+func NewWarpHTTP(uri, user, password string, cache time.Duration) (*WarpHTTP, error) {
 	log := util.NewLogger("warp-http")
 
 	client := request.NewHelper(log)
@@ -131,15 +138,20 @@ func NewWarpHTTP(uri, user, password string) (*WarpHTTP, error) {
 		log:     log,
 		uri:     util.DefaultScheme(strings.TrimRight(uri, "/"), "http"),
 		current: 6000, // mA
+		cache:   cache,
 	}
+
+	wb.meterValuesG = util.ResettableCached(wb._meterValues, wb.cache)
+	wb.meterAllValuesG = util.ResettableCached(wb._meterAllValues, wb.cache)
+	wb.metersValuesG = util.ResettableCached(wb._metersValues, wb.cache)
 
 	return wb, nil
 }
 
-func (wb *WarpHTTP) hasFeature(root, feature string) bool {
+func (wb *WarpHTTP) hasFeature(feature string) bool {
 	if wb.features == nil {
 		var features []string
-		uri := fmt.Sprintf("%s/info/features", root)
+		uri := fmt.Sprintf("%s/info/features", wb.uri)
 
 		if err := wb.GetJSON(uri, &features); err == nil {
 			wb.features = features
@@ -171,8 +183,7 @@ func (wb *WarpHTTP) Status() (api.ChargeStatus, error) {
 
 	var status warp.EvseState
 	uri := fmt.Sprintf("%s/evse/state", wb.uri)
-	err := wb.GetJSON(uri, &status)
-	if err != nil {
+	if err := wb.GetJSON(uri, &status); err != nil {
 		return res, err
 	}
 
@@ -184,10 +195,10 @@ func (wb *WarpHTTP) Status() (api.ChargeStatus, error) {
 	case 2:
 		res = api.StatusC
 	default:
-		err = fmt.Errorf("invalid status: %d", status.Iec61851State)
+		return res, fmt.Errorf("invalid status: %d", status.Iec61851State)
 	}
 
-	return res, err
+	return res, nil
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -222,21 +233,32 @@ func (wb *WarpHTTP) setMaxCurrent(current int64) error {
 
 // CurrentPower implements the api.Meter interface
 func (wb *WarpHTTP) meterCurrentPower() (float64, error) {
-	var res warp.MeterValues
-	uri := fmt.Sprintf("%s/meter/values", wb.uri)
-	err := wb.GetJSON(uri, &res)
+	res, err := wb.meterValues()
 	return res.Power, err
 }
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (wb *WarpHTTP) meterTotalEnergy() (float64, error) {
-	var res warp.MeterValues
-	uri := fmt.Sprintf("%s/meter/values", wb.uri)
-	err := wb.GetJSON(uri, &res)
+	res, err := wb.meterValues()
 	return res.EnergyAbs, err
 }
 
+func (wb *WarpHTTP) meterValues() (warp.MeterValues, error) {
+	return wb.meterValuesG.Get()
+}
+
+func (wb *WarpHTTP) _meterValues() (warp.MeterValues, error) {
+	var res warp.MeterValues
+	uri := fmt.Sprintf("%s/meter/values", wb.uri)
+	err := wb.GetJSON(uri, &res)
+	return res, err
+}
+
 func (wb *WarpHTTP) meterAllValues() ([]float64, error) {
+	return wb.meterAllValuesG.Get()
+}
+
+func (wb *WarpHTTP) _meterAllValues() ([]float64, error) {
 	var res []float64
 	uri := fmt.Sprintf("%s/meter/all_values", wb.uri)
 	err := wb.GetJSON(uri, &res)
@@ -268,8 +290,9 @@ func (wb *WarpHTTP) meterVoltages() (float64, float64, float64, error) {
 	return res[0], res[1], res[2], nil
 }
 
-// metersValueIds returns an array of 6 indices mapping meter value IDs to their positions
-// in the values array: [VoltageL1N, VoltageL2N, VoltageL3N, CurrentImExSumL1, CurrentImExSumL2, CurrentImExSumL3]
+// metersValueIds returns a map from meter value IDs to their positions in the values array.
+// It covers the following IDs: VoltageL1N, VoltageL2N, VoltageL3N, CurrentImExSumL1, CurrentImExSumL2,
+// CurrentImExSumL3, PowerImExSum, and EnergyAbsImSum.
 func (wb *WarpHTTP) metersValueIds() (map[int]int, error) {
 	var res []int
 	uri := fmt.Sprintf("%s/meters/%d/value_ids", wb.uri, wb.meterIndex)
@@ -277,29 +300,28 @@ func (wb *WarpHTTP) metersValueIds() (map[int]int, error) {
 		return nil, err
 	}
 
-	var foundIDs = map[int]bool{
-		warp.MetersValueIDVoltageL1N:       false,
-		warp.MetersValueIDVoltageL2N:       false,
-		warp.MetersValueIDVoltageL3N:       false,
-		warp.MetersValueIDCurrentImExSumL1: false,
-		warp.MetersValueIDCurrentImExSumL2: false,
-		warp.MetersValueIDCurrentImExSumL3: false,
-		warp.MetersValueIDPowerImExSum:     false,
-		warp.MetersValueIDEnergyAbsImExSum: false,
+	requiredIDs := []int{
+		warp.MetersValueIDVoltageL1N,
+		warp.MetersValueIDVoltageL2N,
+		warp.MetersValueIDVoltageL3N,
+		warp.MetersValueIDCurrentImExSumL1,
+		warp.MetersValueIDCurrentImExSumL2,
+		warp.MetersValueIDCurrentImExSumL3,
+		warp.MetersValueIDPowerImExSum,
+		warp.MetersValueIDEnergyAbsImSum,
 	}
 
+	// Check if all required IDs are present
+	missing, _ := lo.Difference(requiredIDs, res)
+	if len(missing) > 0 {
+		return nil, fmt.Errorf("missing required meter value IDs: %v", missing)
+	}
+
+	// Build indices map
 	var indices = make(map[int]int)
 	for i, valueIdx := range res {
-		if _, exists := foundIDs[valueIdx]; exists {
-			foundIDs[valueIdx] = true
+		if lo.Contains(requiredIDs, valueIdx) {
 			indices[valueIdx] = i
-		}
-	}
-
-	// Check if all required IDs were found
-	for id, found := range foundIDs {
-		if !found {
-			return nil, fmt.Errorf("missing required meter value ID: %d", id)
 		}
 	}
 
@@ -307,73 +329,46 @@ func (wb *WarpHTTP) metersValueIds() (map[int]int, error) {
 }
 
 func (wb *WarpHTTP) metersValues() (warp.MetersValues, error) {
+	return wb.metersValuesG.Get()
+}
+
+func (wb *WarpHTTP) _metersValues() (warp.MetersValues, error) {
 	var res []float64
-	metersValues := warp.MetersValues{}
 	uri := fmt.Sprintf("%s/meters/%d/values", wb.uri, wb.meterIndex)
 	err := wb.GetJSON(uri, &res)
-
 	if err != nil {
-		return metersValues, err
+		return warp.MetersValues{}, err
 	}
 
-	if idx, ok := wb.metersValuesMap[warp.MetersValueIDVoltageL1N]; !ok {
-		return metersValues, fmt.Errorf("voltage L1N value ID not found")
-	} else if idx >= len(res) {
-		return metersValues, fmt.Errorf("voltage L1N index out of range: idx=%d, len(values)=%d", idx, len(res))
-	} else {
-		metersValues.VoltageL1N = res[idx]
-	}
-	if idx, ok := wb.metersValuesMap[warp.MetersValueIDVoltageL2N]; !ok {
-		return metersValues, fmt.Errorf("voltage L2N value ID not found")
-	} else if idx >= len(res) {
-		return metersValues, fmt.Errorf("voltage L2N index out of range: idx=%d, len(values)=%d", idx, len(res))
-	} else {
-		metersValues.VoltageL2N = res[idx]
-	}
-	if idx, ok := wb.metersValuesMap[warp.MetersValueIDVoltageL3N]; !ok {
-		return metersValues, fmt.Errorf("voltage L3N value ID not found")
-	} else if idx >= len(res) {
-		return metersValues, fmt.Errorf("voltage L3N index out of range: idx=%d, len(values)=%d", idx, len(res))
-	} else {
-		metersValues.VoltageL3N = res[idx]
-	}
-	if idx, ok := wb.metersValuesMap[warp.MetersValueIDCurrentImExSumL1]; !ok {
-		return metersValues, fmt.Errorf("current L1 value ID not found")
-	} else if idx >= len(res) {
-		return metersValues, fmt.Errorf("current L1 index out of range: idx=%d, len(values)=%d", idx, len(res))
-	} else {
-		metersValues.CurrentImExSumL1 = res[idx]
-	}
-	if idx, ok := wb.metersValuesMap[warp.MetersValueIDCurrentImExSumL2]; !ok {
-		return metersValues, fmt.Errorf("current L2 value ID not found")
-	} else if idx >= len(res) {
-		return metersValues, fmt.Errorf("current L2 index out of range: idx=%d, len(values)=%d", idx, len(res))
-	} else {
-		metersValues.CurrentImExSumL2 = res[idx]
-	}
-	if idx, ok := wb.metersValuesMap[warp.MetersValueIDCurrentImExSumL3]; !ok {
-		return metersValues, fmt.Errorf("current L3 value ID not found")
-	} else if idx >= len(res) {
-		return metersValues, fmt.Errorf("current L3 index out of range: idx=%d, len(values)=%d", idx, len(res))
-	} else {
-		metersValues.CurrentImExSumL3 = res[idx]
-	}
-	if idx, ok := wb.metersValuesMap[warp.MetersValueIDPowerImExSum]; !ok {
-		return metersValues, fmt.Errorf("power value ID not found")
-	} else if idx >= len(res) {
-		return metersValues, fmt.Errorf("power index out of range: idx=%d, len(values)=%d", idx, len(res))
-	} else {
-		metersValues.PowerImExSum = res[idx]
-	}
-	if idx, ok := wb.metersValuesMap[warp.MetersValueIDEnergyAbsImExSum]; !ok {
-		return metersValues, fmt.Errorf("energy value ID not found")
-	} else if idx >= len(res) {
-		return metersValues, fmt.Errorf("energy index out of range: idx=%d, len(values)=%d", idx, len(res))
-	} else {
-		metersValues.EnergyAbsImExSum = res[idx]
+	var result warp.MetersValues
+
+	get := func(id int, name string) float64 {
+		if err != nil {
+			return 0
+		}
+
+		idx, ok := wb.metersValuesMap[id]
+		if !ok {
+			err = fmt.Errorf("%s value ID not found", name)
+			return 0
+		}
+		if idx >= len(res) {
+			err = fmt.Errorf("%s index out of range: idx=%d, len(values)=%d", name, idx, len(res))
+			return 0
+		}
+		return res[idx]
 	}
 
-	return metersValues, nil
+	result.VoltageL1N = get(warp.MetersValueIDVoltageL1N, "voltage L1N")
+	result.VoltageL2N = get(warp.MetersValueIDVoltageL2N, "voltage L2N")
+	result.VoltageL3N = get(warp.MetersValueIDVoltageL3N, "voltage L3N")
+	result.CurrentImExSumL1 = get(warp.MetersValueIDCurrentImExSumL1, "current L1")
+	result.CurrentImExSumL2 = get(warp.MetersValueIDCurrentImExSumL2, "current L2")
+	result.CurrentImExSumL3 = get(warp.MetersValueIDCurrentImExSumL3, "current L3")
+	result.PowerImExSum = get(warp.MetersValueIDPowerImExSum, "power")
+	result.EnergyAbsImSum = get(warp.MetersValueIDEnergyAbsImSum, "energy")
+
+	return result, err
 }
 
 // CurrentPower implements the api.Meter interface
@@ -387,7 +382,7 @@ func (wb *WarpHTTP) metersCurrentPower() (float64, error) {
 func (wb *WarpHTTP) metersTotalEnergy() (float64, error) {
 	values, err := wb.metersValues()
 
-	return values.EnergyAbsImExSum, err
+	return values.EnergyAbsImSum, err
 }
 
 // currents implements the api.PhaseCurrents interface
@@ -453,7 +448,7 @@ func (wb *WarpHTTP) phases1p3p(phases int) error {
 		return err
 	}
 
-	if res.ExternalControl > 0 {
+	if res.ExternalControl > warp.ExternalControlAvailable {
 		return fmt.Errorf("external control not available: %s", res.ExternalControl.String())
 	}
 

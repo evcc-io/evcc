@@ -14,16 +14,10 @@ params:
     required: true
   - name: user
   - name: password
-  - name: meterIndex
-    default: 0
-    required: true
-    description:
-      de: Stromzähler Index
-      en: Energy Meter Index
 render: |
   type: warp-http
   uri: {{ .uri }}
   user: {{ .user }}
   password: {{ .password }}
   disablePhaseAutoSwitch: true
-  energyMeterIndex: {{ .meterIndex }}
+  energyMeterIndex: 0

@@ -37,12 +37,6 @@ params:
     help:
       de: Bei führenden Nullen bitte in einfache Hochkommata setzen
       en: Use single quotes in case of leading zeros
-  - name: meterIndex
-    default: 0
-    required: true
-    description:
-      de: Stromzähler Index
-      en: Energy Meter Index
 render: |
   type: warp-http
   uri: {{ .uri }}
@@ -52,4 +46,4 @@ render: |
   energyManagerUser: {{ .energyManagerUser }}
   energyManagerPassword: {{ .energyManagerPassword }}
   disablePhaseAutoSwitch: false
-  energyMeterIndex: {{ .meterIndex }}
+  energyMeterIndex: 0

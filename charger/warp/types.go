@@ -65,7 +65,7 @@ const (
 	MetersValueIDCurrentImExSumL2 = 17  // Current L2 Im-Ex Sum
 	MetersValueIDCurrentImExSumL3 = 21  // Current L3 Im-Ex Sum
 	MetersValueIDPowerImExSum     = 74  // Power Im-Ex Sum L1 L2 L3
-	MetersValueIDEnergyAbsImExSum = 213 // Energy Im+Ex Sum L1 L2 L3
+	MetersValueIDEnergyAbsImSum   = 209 // Energy Im Sum L1 L2 L3
 )
 
 type MetersValues struct {
@@ -76,7 +76,7 @@ type MetersValues struct {
 	CurrentImExSumL2 float64
 	CurrentImExSumL3 float64
 	PowerImExSum     float64
-	EnergyAbsImExSum float64
+	EnergyAbsImSum   float64
 }
 
 type UsersConfig struct {
