@@ -31,17 +31,17 @@ type PhaseData struct {
 
 // PhaseInfo contains aggregated phase information
 type PhaseInfo struct {
-	TotalCurrent   float64
-	TotalPower     float64
-	TotalActEnergy float64
-	PhaseA         PhaseData
-	PhaseB         PhaseData
-	PhaseC         PhaseData
+	TotalCurrent   float64   `json:"total_current"`
+	TotalPower     float64   `json:"total_power"`
+	TotalActEnergy float64   `json:"total_act_energy"`
+	PhaseA         PhaseData `json:"phase_a"`
+	PhaseB         PhaseData `json:"phase_b"`
+	PhaseC         PhaseData `json:"phase_c"`
 }
 
 // Status represents the charger work state
 type Status struct {
-	WorkState string
+	WorkState string `json:"work_state"`
 }
 
 // ServiceConfigRequest represents a service configuration request
