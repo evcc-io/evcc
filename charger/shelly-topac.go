@@ -154,7 +154,7 @@ func (c *ShellyTopAC) setAutoCharge(enable bool) error {
 		},
 	}
 
-	req, err := request.New(http.MethodPost, fmt.Sprintf("%s/Service.SetConfig", c.uri), request.MarshalJSON(data), request.JSONEncoding)
+	req, err := request.New(http.MethodPost, c.uri, request.MarshalJSON(data), request.JSONEncoding)
 	if err != nil {
 		return err
 	}
