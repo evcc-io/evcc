@@ -32,7 +32,6 @@
 				id="messagingServiceNtfyAuthtoken"
 				:model-value="authtoken"
 				type="String"
-				required
 				@update:model-value="$emit('update:authtoken', $event)"
 			/>
 		</MessagingFormRow>
