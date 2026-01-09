@@ -43,10 +43,13 @@
 		<PropertyField
 			id="messagingServiceEmailTo"
 			:model-value="to"
-			type="String"
+			property="topics"
+			type="List"
 			required
+			:rows="4"
 			@update:model-value="$emit('update:to', $event)"
-	/></MessagingFormRow>
+		/>
+	</MessagingFormRow>
 </template>
 
 <script lang="ts">
@@ -54,6 +57,7 @@ import { MESSAGING_SERVICE_TYPE } from "@/types/evcc";
 import PropertyField from "../../PropertyField.vue";
 import MessagingFormRow from "./MessagingFormRow.vue";
 import formatter from "@/mixins/formatter";
+import type { PropType } from "vue";
 
 export default {
 	name: "EmailService",
@@ -81,7 +85,7 @@ export default {
 			required: true,
 		},
 		to: {
-			type: String,
+			type: Array as PropType<string[]>,
 			required: true,
 		},
 	},

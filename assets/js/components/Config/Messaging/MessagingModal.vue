@@ -259,7 +259,7 @@ export default {
 				case MESSAGING_SERVICE_TYPE.EMAIL:
 					return {
 						type: MESSAGING_SERVICE_TYPE.EMAIL,
-						other: { host: "", port: 465, user: "", password: "", from: "", to: "" },
+						other: { host: "", port: 465, user: "", password: "", from: "", to: [] },
 					};
 
 				case MESSAGING_SERVICE_TYPE.SHOUT:

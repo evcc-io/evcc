@@ -833,11 +833,16 @@ func configureMessengers(conf *globalconfig.Messaging, vehicles push.Vehicles, v
 					s.Other["user"] = u.User.Username()
 					s.Other["port"] = u.Port()
 					s.Other["from"] = u.Query().Get("fromAddress")
-					s.Other["to"] = u.Query()["toAddresses"]
-					if pw, ok := u.User.Password(); ok {
-						s.Other["password"] = pw
+					addresses := u.Query()["toAddresses"]
+					toAddresses := make([]string, 0, len(addresses))
+					for _, v := range addresses {
+						for a := range strings.SplitSeq(v, ",") {
+							if a != "" {
+								toAddresses = append(toAddresses, a)
+							}
+						}
 					}
-
+					s.Other["to"] = toAddresses
 					delete(s.Other, "uri")
 				} else if s.Type == "ntfy" {
 					uri, ok := s.Other["uri"].(string)

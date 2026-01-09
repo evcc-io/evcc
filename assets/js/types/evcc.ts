@@ -516,7 +516,7 @@ export interface MessagingServiceEmail {
     user: string;
     password: string;
     from: string;
-    to: string;
+    to: string[];
   };
 }
 export interface MessagingServiceShout {
