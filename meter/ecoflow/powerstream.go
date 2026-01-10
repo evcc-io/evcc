@@ -39,7 +39,7 @@ func NewPowerStreamFromConfig(ctx context.Context, other map[string]interface{})
 	}
 
 	// For battery usage, wrap in battery interface
-	if cc.Usage == "battery" {
+	if cc.Usage == UsageBattery {
 		return &PowerStreamBattery{device}, nil
 	}
 
@@ -100,15 +100,15 @@ func (d *PowerStream) CurrentPower() (float64, error) {
 	}
 
 	switch d.usage {
-	case "pv":
+	case UsagePV:
 		// PV power is sum of both strings
 		return data.Pv1InputWatts + data.Pv2InputWatts, nil
-	case "battery":
+	case UsageBattery:
 		// Battery: negative = charging, positive = discharging
 		// EcoFlow convention: BatInputWatts positive=discharge, negative=charge
 		// evcc convention: negative=discharge, positive=charge
 		return -data.BatInputWatts, nil
-	case "grid":
+	case UsageGrid:
 		// Grid power (calculated from AC output)
 		return data.InvOutputWatts, nil
 	default:

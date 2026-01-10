@@ -8,6 +8,13 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
+// Usage types for energy management
+const (
+	UsagePV      = "pv"      // Solar/PV input
+	UsageGrid    = "grid"    // Grid connection
+	UsageBattery = "battery" // Battery storage
+)
+
 // Config is the shared configuration for Stream and PowerStream devices
 type Config struct {
 	URI       string        `mapstructure:"uri"`

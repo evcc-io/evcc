@@ -39,7 +39,7 @@ func NewStreamFromConfig(ctx context.Context, other map[string]interface{}) (api
 	}
 
 	// For battery usage, wrap in battery interface
-	if cc.Usage == "battery" {
+	if cc.Usage == UsageBattery {
 		return &StreamBattery{device}, nil
 	}
 
@@ -100,14 +100,14 @@ func (d *Stream) CurrentPower() (float64, error) {
 	}
 
 	switch d.usage {
-	case "battery":
+	case UsageBattery:
 		// Battery: negative = charging, positive = discharging
 		// EcoFlow convention: PowGetBpCms positive when discharging, negative when charging
 		// evcc convention: negative when discharging, positive when charging
 		return -data.PowGetBpCms, nil
-	case "pv":
+	case UsagePV:
 		return data.PowGetPvSum, nil
-	case "grid":
+	case UsageGrid:
 		return data.PowGetSysGrid, nil
 	default:
 		return 0, fmt.Errorf("unknown usage type: %s", d.usage)

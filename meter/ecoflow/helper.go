@@ -7,6 +7,8 @@ import (
 	"encoding/hex"
 	"fmt"
 	"net/http"
+	"net/url"
+	"sort"
 	"strconv"
 	"time"
 
@@ -25,10 +27,20 @@ func (t *ecoflowAuthTransport) RoundTrip(req *http.Request) (*http.Response, err
 	nonce := ecoflowGenerateNonce()
 	timestamp := fmt.Sprintf("%d", time.Now().UnixMilli())
 
-	// Build signature string from query parameters
+	// Build signature string from query parameters with deterministic ordering
+	params := req.URL.Query()
+	var keys []string
+	for k := range params {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
 	var signStr string
-	if req.URL.RawQuery != "" {
-		signStr = req.URL.RawQuery
+	for _, k := range keys {
+		if signStr != "" {
+			signStr += "&"
+		}
+		signStr += k + "=" + url.QueryEscape(params.Get(k))
 	}
 
 	if signStr != "" {
