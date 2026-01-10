@@ -119,10 +119,7 @@ type StreamBattery struct {
 	*Stream
 }
 
-var (
-	_ api.Meter   = (*StreamBattery)(nil)
-	_ api.Battery = (*StreamBattery)(nil)
-)
+var _ api.Battery = (*StreamBattery)(nil)
 
 // Soc implements the api.Battery interface
 func (d *StreamBattery) Soc() (float64, error) {
