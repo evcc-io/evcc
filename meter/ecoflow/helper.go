@@ -6,7 +6,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"math/big"
 	"net/http"
 	"strconv"
 	"time"
@@ -51,15 +50,15 @@ func (t *ecoflowAuthTransport) RoundTrip(req *http.Request) (*http.Response, err
 
 // ecoflowGenerateNonce generates a random 6-digit nonce (100000-999999)
 func ecoflowGenerateNonce() string {
-	// Generate random number in range [100000, 999999]
-	// Using big.NewInt(900000) ensures max value is 900000-1, then add 100000
-	max := big.NewInt(900000)
-	randomBig, err := rand.Int(rand.Reader, max)
-	if err != nil {
-		// Fallback: use nanosecond-based nonce
-		return strconv.FormatInt((time.Now().UnixNano()%900000)+100000, 10)
-	}
-	return strconv.FormatInt(randomBig.Int64()+100000, 10)
+	// Generate 3 random bytes and convert to 6-digit number
+	buf := make([]byte, 3)
+	rand.Read(buf) // Never returns error per crypto/rand docs
+	
+	// Convert 3 bytes to value in range [0, 16777215]
+	// Map to [100000, 999999] range (900000 possible values)
+	val := uint32(buf[0])<<16 | uint32(buf[1])<<8 | uint32(buf[2])
+	nonce := (val % 900000) + 100000
+	return strconv.FormatUint(uint64(nonce), 10)
 }
 
 // ecoflowHmacSHA256 generates HMAC-SHA256 signature from the full signature string

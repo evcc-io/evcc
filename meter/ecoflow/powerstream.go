@@ -104,7 +104,9 @@ func (d *PowerStream) CurrentPower() (float64, error) {
 		// PV power is sum of both strings
 		return data.Pv1InputWatts + data.Pv2InputWatts, nil
 	case "battery":
-		// Battery power: follow evcc convention (positive=charge, negative=discharge)
+		// Battery: negative = charging, positive = discharging
+		// EcoFlow convention: BatInputWatts positive=discharge, negative=charge
+		// evcc convention: negative=discharge, positive=charge
 		return -data.BatInputWatts, nil
 	case "grid":
 		// Grid power (calculated from AC output)
