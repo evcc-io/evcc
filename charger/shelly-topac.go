@@ -94,12 +94,15 @@ func NewShellyTopAC(uri, user, password string) (api.Charger, error) {
 }
 
 // execRpc executes a Shelly Gen2 RPC call
-func (c *ShellyTopAC) execRpc(method string, params, res any) error {
+func (c *ShellyTopAC) execRpc(method, owner, role string, value, res any) error {
 	data := shelly.RpcRequest{
 		Id:     0,
 		Src:    "evcc",
 		Method: method,
-		Params: params,
+		Params: shelly.RpcRequestParams{
+			Owner: owner,
+			Role:  role,
+		},
 	}
 
 	req, err := request.New(http.MethodPost, c.uri, request.MarshalJSON(data), request.JSONEncoding)
@@ -113,25 +116,21 @@ func (c *ShellyTopAC) execRpc(method string, params, res any) error {
 // setCurrentLimit sets the charging current limit
 func (c *ShellyTopAC) setCurrentLimit(current float64) error {
 	var res any
-	params := shelly.SetValueParams{Owner: "service:0", Role: "current_limit", Value: current}
-
-	return c.execRpc("Number.Set", params, &res)
+	return c.execRpc("Number.Set", "service:0", "current_limit", current, &res)
 }
 
 // getPhaseInfo retrieves phase information
 func (c *ShellyTopAC) getPhaseInfo() (shelly.Measurements, error) {
-	var res shelly.RpcResponseWrapper[shelly.Measurements]
-	params := shelly.RoleParams{Owner: "service:0", Role: "phase_info"}
-	err := c.execRpc("Object.GetStatus", params, &res)
+	var res shelly.RpcResponse[shelly.Measurements]
+	err := c.execRpc("Object.GetStatus", "service:0", "phase_info", nil, &res)
 
 	return res.Result.Value, err
 }
 
 // Status implements the api.Charger interface
 func (c *ShellyTopAC) Status() (api.ChargeStatus, error) {
-	var res shelly.RpcResponseWrapper[string]
-	params := shelly.RoleParams{Owner: "service:0", Role: "work_state"}
-	if err := c.execRpc("Enum.GetStatus", params, &res); err != nil {
+	var res shelly.RpcResponse[string]
+	if err := c.execRpc("Enum.GetStatus", "service:0", "work_state", nil, &res); err != nil {
 		return api.StatusNone, err
 	}
 
@@ -150,9 +149,8 @@ func (c *ShellyTopAC) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (c *ShellyTopAC) Enabled() (bool, error) {
-	var res shelly.RpcResponseWrapper[float64]
-	params := shelly.RoleParams{Owner: "service:0", Role: "current_limit"}
-	err := c.execRpc("Number.GetStatus", params, &res)
+	var res shelly.RpcResponse[float64]
+	err := c.execRpc("Number.GetStatus", "service:0", "current_limit", nil, &res)
 
 	return res.Result.Value > 0, err
 }

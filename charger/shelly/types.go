@@ -2,25 +2,28 @@ package shelly
 
 // RpcRequest represents a Shelly Gen2 RPC request
 type RpcRequest struct {
+	Id     int              `json:"id"`
+	Src    string           `json:"src"`
+	Method string           `json:"method"`
+	Params RpcRequestParams `json:"params"`
+}
+
+type RpcRequestParams struct {
+	Owner string `json:"owner"`
+	Role  string `json:"role"`
+	Value any    `json:"value,omitempty"`
+}
+
+// RpcResponse represents an RPC response
+type RpcResponse[T any] struct {
 	Id     int    `json:"id"`
 	Src    string `json:"src"`
-	Method string `json:"method"`
-	Params any    `json:"params"`
-}
-
-// RpcResponseWrapper wraps the full RPC response including result
-type RpcResponseWrapper[T any] struct {
-	Id     int            `json:"id"`
-	Src    string         `json:"src"`
-	Dst    string         `json:"dst"`
-	Result RpcResponse[T] `json:"result"`
-}
-
-// RpcResponse represents an rpc response
-type RpcResponse[T any] struct {
-	Value        T      `json:"value"`
-	Source       string `json:"source"`
-	LastUpdateTs int64  `json:"last_update_ts"`
+	Dst    string `json:"dst"`
+	Result struct {
+		Value        T      `json:"value"`
+		Source       string `json:"source"`
+		LastUpdateTs int64  `json:"last_update_ts"`
+	} `json:"result"`
 }
 
 // PhaseMeasurements contains voltage, current and power data for a single phase
@@ -38,17 +41,4 @@ type Measurements struct {
 	PhaseA         PhaseMeasurements `json:"phase_a"`
 	PhaseB         PhaseMeasurements `json:"phase_b"`
 	PhaseC         PhaseMeasurements `json:"phase_c"`
-}
-
-// RoleParams contains parameters for RPC calls with owner and role
-type RoleParams struct {
-	Owner string `json:"owner"`
-	Role  string `json:"role"`
-}
-
-// SetValueParams contains parameters for setting a value with owner and role
-type SetValueParams struct {
-	Owner string  `json:"owner"`
-	Role  string  `json:"role"`
-	Value float64 `json:"value"`
 }
