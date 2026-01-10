@@ -17,9 +17,9 @@
 			<thead>
 				<tr>
 					<th></th>
-					<th class="small evcc-gray text-end pe-2">L1</th>
-					<th class="small evcc-gray text-end pe-2">L2</th>
-					<th class="small evcc-gray text-end pe-1">L3</th>
+					<th class="small evcc-gray text-end ps-2">L1</th>
+					<th class="small evcc-gray text-end ps-2">L2</th>
+					<th class="small evcc-gray text-end ps-2">L3</th>
 					<th></th>
 				</tr>
 			</thead>
@@ -29,18 +29,18 @@
 					:key="index"
 					:data-testid="`device-tag-${entry.name}`"
 				>
-					<td class="text-truncate pe-2">
+					<td class="text-truncate">
 						{{ $t(`config.deviceValue.${entry.name}`) }}
 					</td>
 					<td
 						v-for="(val, idx) in entry.value"
 						:key="idx"
-						class="value text-end tabular"
-						:class="[valueClasses(entry), idx === 2 ? 'pe-1' : 'pe-2']"
+						class="value text-end tabular ps-2"
+						:class="valueClasses(entry)"
 					>
 						{{ fmtPhaseValue(entry.name, val) }}
 					</td>
-					<td class="value unit-col" :class="valueClasses(entry)">
+					<td class="value unit-col ps-1" :class="valueClasses(entry)">
 						{{ getPhaseUnit(entry.name) }}
 					</td>
 				</tr>
@@ -193,9 +193,9 @@ export default {
 table th,
 table td {
 	padding: 0 0 0.5rem 0;
+	white-space: nowrap;
 }
 .unit-col {
-	width: 1%;
-	white-space: nowrap;
+	width: 0.1%;
 }
 </style>
