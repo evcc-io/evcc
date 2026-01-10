@@ -1930,14 +1930,6 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 
 	lp.resetHeatingSession()
 
-	if sr, ok := lp.charger.(api.StatusReasoner); ok && lp.GetStatus() == api.StatusB {
-		if r, err := sr.StatusReason(); err == nil {
-			lp.publish(keys.ChargerStatusReason, r)
-		} else {
-			lp.log.ERROR.Printf("charger status reason: %v", err)
-		}
-	}
-
 	// identify connected vehicle
 	if lp.connected() && !lp.chargerHasFeature(api.IntegratedDevice) {
 		// read identity and run associated action
@@ -1946,6 +1938,19 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 		// find vehicle by status for a couple of minutes after connecting
 		if lp.vehicleUnidentified() {
 			lp.identifyVehicleByStatus()
+		}
+	}
+
+	// publish charger status reason
+	// authorize by vehicle id if waiting for authorization
+	if sr, ok := lp.charger.(api.StatusReasoner); ok && lp.GetStatus() == api.StatusB {
+		if r, err := sr.StatusReason(); err == nil {
+			lp.publish(keys.ChargerStatusReason, r)
+			if r == api.ReasonWaitingForAuthorization {
+				lp.authorizeVehicle()
+			}
+		} else {
+			lp.log.ERROR.Printf("charger status reason: %v", err)
 		}
 	}
 
