@@ -121,7 +121,7 @@ func updateSessionHandler(w http.ResponseWriter, r *http.Request) {
 
 	var data map[string]any
 	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
-		jsonError(w, http.StatusBadRequest, errors.New("invalid JSON"))
+		jsonError(w, http.StatusBadRequest, err)
 		return
 	}
 
