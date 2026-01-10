@@ -793,21 +793,22 @@ export default defineComponent({
 				restart.restartNeeded = true;
 			}
 		},
+		async loadConfig(path: string) {
+			const validateStatus = (code: number) => [200, 404].includes(code);
+			const response = await api.get(`/config/${path}`, { validateStatus });
+			return response.status === 200 ? response.data : undefined;
+		},
 		async loadVehicles() {
-			const response = await api.get("/config/devices/vehicle");
-			this.vehicles = response.data || [];
+			this.vehicles = (await this.loadConfig("devices/vehicle")) || [];
 		},
 		async loadChargers() {
-			const response = await api.get("/config/devices/charger");
-			this.chargers = response.data || [];
+			this.chargers = (await this.loadConfig("devices/charger")) || [];
 		},
 		async loadMeters() {
-			const response = await api.get("/config/devices/meter");
-			this.meters = response.data || [];
+			this.meters = (await this.loadConfig("devices/meter")) || [];
 		},
 		async loadCircuits() {
-			const response = await api.get("/config/devices/circuit");
-			const circuits = response.data || [];
+			const circuits = (await this.loadConfig("devices/circuit")) || [];
 			// set lpc default title
 			circuits.forEach((c: ConfigCircuit) => {
 				if (c.name === "lpc" && !c.config?.title) {
@@ -818,16 +819,13 @@ export default defineComponent({
 			this.circuits = circuits;
 		},
 		async loadSite() {
-			const response = await api.get("/config/site", {
-				validateStatus: (status: number) => status < 500,
-			});
-			if (response.status === 200) {
-				this.site = response.data;
+			const data = await this.loadConfig("site");
+			if (data) {
+				this.site = data;
 			}
 		},
 		async loadLoadpoints() {
-			const response = await api.get("/config/loadpoints");
-			this.loadpoints = response.data || [];
+			this.loadpoints = (await this.loadConfig("loadpoints")) || [];
 		},
 		getMetersByNames(names: string[] | null): ConfigMeter[] {
 			if (!names || !this.meters) {

@@ -290,7 +290,7 @@ var _ api.Identifier = (*Compleo)(nil)
 
 // Identify implements the api.Identifier interface
 func (wb *Compleo) Identify() (string, error) {
-	b, err := wb.conn.ReadInputRegisters(compleoRegIdTag+wb.offset, 0x10)
+	b, err := wb.conn.ReadInputRegisters(compleoRegIdTag+wb.offset, 10)
 	if err != nil {
 		return "", err
 	}

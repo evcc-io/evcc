@@ -137,9 +137,9 @@
       "no": "no",
       "odometer": "Odometer",
       "org": "Organization",
-      "phaseCurrents": "Current L1, L2, L3",
-      "phasePowers": "Power L1, L2, L3",
-      "phaseVoltages": "Voltage L1, L2, L3",
+      "phaseCurrents": "Current",
+      "phasePowers": "Power",
+      "phaseVoltages": "Voltage",
       "phases1p3p": "Phase switch",
       "power": "Power",
       "powerRange": "Power",
@@ -243,11 +243,11 @@
         "limitpower": "Limit (kW)",
         "type": "Type"
       },
-      "description": "Power limitation by external systems (e.g. EnWG 14a controllers). Requires load management configuration.",
+      "description": "Power limitation by external systems (e.g. §14a EnWG, §9 EEG interface or higher-level energy management system). Works together with the load management feature.",
       "downloadCsv": "Download CSV",
       "eventsRecorded": "Recorded {count} grid limitation events.",
       "lastEvent": "Most recent {timeAgo}.",
-      "title": "HEMS",
+      "title": "External Limit",
       "yamlConfigured": "Note: Configured via evcc.yaml. Remove the entry from the file to enable editing here."
     },
     "icon": {

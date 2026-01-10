@@ -137,9 +137,9 @@
       "no": "ne",
       "odometer": "Odometras",
       "org": "Organizacija",
-      "phaseCurrents": "Srovė L1, L2, L3",
-      "phasePowers": "Galia L1, L2, L3",
-      "phaseVoltages": "Įtampa L1, L2, L3",
+      "phaseCurrents": "Srovė",
+      "phasePowers": "Galia",
+      "phaseVoltages": "Įtampa",
       "phases1p3p": "Fazių perjungimas",
       "power": "Galia",
       "powerRange": "Galia",
@@ -294,6 +294,7 @@
       "chargerTypeLabel": "Įkroviklio tipas",
       "chargingTitle": "Elgesys",
       "circuitHelp": "Apkrovos valdymo priskyrimas, siekiant užtikrinti, kad nebūtų viršytos galios ir srovės ribos.",
+      "circuitInvalid": "Tokios grandinės nėra",
       "circuitLabel": "Grandinė",
       "circuitUnassigned": "nepriskirtas",
       "defaultModeHelp": {
@@ -370,6 +371,7 @@
       "vehicleAutoDetection": "automatinis automobilio aptikimas",
       "vehicleHelpAutoDetection": "Automatiškai parenka labiausiai tikėtiną automobilį. Galimas rankinis koregavimas.",
       "vehicleHelpDefault": "Visada manyti, kad čia įkraunamas šis automobilis. Automatinis aptikimas išjungtas. Galimas rankinis koregavimas.",
+      "vehicleInvalid": "Tokio automobilio nėra",
       "vehicleLabel": "Numatytasis automobilis",
       "vehiclesTitle": "Automobiliai"
     },
@@ -387,7 +389,7 @@
       "title": "Konfigūracija",
       "unconfigured": "nesukonfigūruota",
       "vehicles": "Mano automobiliai",
-      "welcomeBannerText": "Pradėkite nuo **įkroviklio arba šildytuvo** sukūrimo. Jei dar neturite tikro įkroviklio, pasirinkite **demonstracinį įkroviklį**.",
+      "welcomeBannerText": "Pradžiai sukonfigūruokite bent vieną **įkroviklį**, **šildytuvą**, **tinklo skaitiklį**, **saulės jėgainę** ar **papildomą skaitiklį**. Jei norite tik pasibandyti, pasirinkite **demonstracinį įrenginį**.",
       "welcomeBannerTitle": "Sukonfigūruokime jūsų sistemą!",
       "yaml": "Įtaisas iš evcc.yaml , čia konfigūruoti neina."
     },
@@ -763,6 +765,9 @@
       "solar": "Saulės"
     }
   },
+  "general": {
+    "note": "Pastaba:"
+  },
   "header": {
     "about": "Apie",
     "authProviders": {
@@ -904,6 +909,7 @@
       "repeating": "kartojasi",
       "repeatingPlans": "Pasikartojantys planai",
       "selectAll": "Pasirinkti visus",
+      "strategyDisabledDescription": "Įkrovimas pradedamas kuo vėliau, kad būtų baigtas prieš pat išvykimą. Jei naudojate 15 minučių biržos planą (arba CO₂ tarifą), čia galite rinktis iš daugiau variantų.",
       "strategySettings": "Strategijos pasirinkimai",
       "time": "Laikas",
       "title": "Planas",
