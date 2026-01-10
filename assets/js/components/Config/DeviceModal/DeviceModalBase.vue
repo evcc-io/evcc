@@ -330,12 +330,11 @@ export default defineComponent({
 			return (this.modbus?.Choice || []) as ModbusCapability[];
 		},
 		modbusDefaults() {
-			const { ID, Comset, Baudrate, Port } = this.modbus || {};
 			return {
-				id: ID,
-				comset: Comset,
-				baudrate: Baudrate,
-				port: Port,
+				id: this.modbus?.ID,
+				comset: this.modbus?.Comset,
+				baudrate: this.modbus?.Baudrate,
+				port: this.modbus?.Port,
 			};
 		},
 		description() {
@@ -353,7 +352,6 @@ export default defineComponent({
 		},
 		apiData(): ApiData {
 			let data: ApiData = {
-				...this.modbusDefaults,
 				...this.values,
 			};
 			if (this.values.type === ConfigType.Template && this.templateName) {
@@ -743,7 +741,10 @@ export default defineComponent({
 				clearTimeout(this.serviceValuesTimer);
 			}
 			this.serviceValuesTimer = setTimeout(async () => {
-				this.serviceValues = await fetchServiceValues(this.templateParams, this.values);
+				this.serviceValues = await fetchServiceValues(this.templateParams, {
+					...this.modbusDefaults,
+					...this.values,
+				});
 			}, 500);
 		},
 		applyServiceDefault(paramName: string) {

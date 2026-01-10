@@ -45,8 +45,8 @@
 			type="Int"
 			class="me-2"
 			required
-			:model-value="id || defaultId || 1"
-			@change="$emit('update:id', $event.target.value)"
+			:model-value="id || defaultId"
+			@input="$emit('update:id', $event.target.value)"
 		/>
 	</FormRow>
 	<div v-if="connection === MODBUS_CONNECTION.TCPIP">
@@ -62,7 +62,7 @@
 				class="me-2"
 				required
 				:model-value="host"
-				@change="$emit('update:host', $event.target.value)"
+				@input="$emit('update:host', $event.target.value)"
 			/>
 		</FormRow>
 		<FormRow :id="formId('modbusPort')" :label="$t('config.modbus.port')">
@@ -72,8 +72,8 @@
 				type="Int"
 				class="me-2 w-50"
 				required
-				:model-value="port || defaultPort || 502"
-				@change="$emit('update:port', $event.target.value)"
+				:model-value="port || defaultPort"
+				@input="$emit('update:port', $event.target.value)"
 			/>
 		</FormRow>
 		<FormRow
@@ -142,7 +142,7 @@
 				:choice="baudrateOptions"
 				required
 				:model-value="baudrate || defaultBaudrate"
-				@change="$emit('update:baudrate', parseInt($event.target.value))"
+				@input="$emit('update:baudrate', parseInt($event.target.value))"
 			/>
 		</FormRow>
 		<FormRow :id="formId('modbusComset')" :label="$t('config.modbus.comset')">
@@ -153,8 +153,8 @@
 				class="me-2 w-50"
 				:choice="comsetOptions"
 				required
-				:model-value="comset || defaultComset || '8N1'"
-				@change="$emit('update:comset', $event.target.value)"
+				:model-value="comset || defaultComset"
+				@input="$emit('update:comset', $event.target.value)"
 			/>
 		</FormRow>
 	</div>
@@ -268,7 +268,15 @@ export default defineComponent({
 				this.setConnectionAndProtocolByModbus(newValue);
 			}
 		},
-		connection() {
+		connection(newValue: MODBUS_CONNECTION, oldValue: MODBUS_CONNECTION) {
+			if (newValue !== oldValue) {
+				// Clear connection-specific parameters to ensure correct dependency group is used
+				if (newValue === MODBUS_CONNECTION.TCPIP) {
+					this.$emit("update:device", undefined);
+				} else if (newValue === MODBUS_CONNECTION.SERIAL) {
+					this.$emit("update:host", undefined);
+				}
+			}
 			this.applyServiceDefault();
 		},
 		device(newValue: string | undefined) {

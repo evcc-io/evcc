@@ -10,7 +10,6 @@
 		<PropertyField
 			:id="id"
 			v-model="value"
-			class="me-2"
 			:masked="Mask"
 			:property="Name"
 			:type="Type"
