@@ -1,1 +1,25 @@
-{}
+{
+  "authProviders": {
+    "authCode": "Kod za autentifikaciju",
+    "authCodeHelp": "Kopirajte ovaj kod i upotrijebite ga u sljedećem koraku. Važi {duration}.",
+    "authorizationFailed": "Autorizacija nije uspjela",
+    "authorizationRequired": "Potrebna autorizacija",
+    "authorizationSuccessful": "Autorizacija uspješna",
+    "loggedOut": "Uspješno odjavljeno",
+    "logoutFailed": "Nije uspjelo odjavljivanje",
+    "modalDescriptionLogin": "Završite proces autorizacije kako biste uspostavili vezu sa {provider}.",
+    "modalDescriptionLogout": "Ovo će prekinuti vezu vašeg računa kod {provider} i ukloniti pristup njegovim podacima.",
+    "success": "{title} je sada povezan i spreman za upotrebu.",
+    "successCloseModal": "Sada možete zatvoriti ovaj dijalog.",
+    "successCloseTab": "Sada možete zatvoriti ovu karticu.",
+    "title": "Status autorizacije"
+  },
+  "batterySettings": {
+    "batteryLevel": "Nivo baterije",
+    "bufferStart": {
+      "above": "kad je iznad {soc}.",
+      "full": "kad na {soc}.",
+      "never": "samo uz dovoljno viška."
+    }
+  }
+}
