@@ -330,13 +330,11 @@ export default defineComponent({
 			return (this.modbus?.Choice || []) as ModbusCapability[];
 		},
 		modbusDefaults() {
-			const { ID, Comset, Baudrate, Port } = this.modbus || {};
-			// TODO: we should move these default fallback values to API to remove redundancy
 			return {
-				id: ID || 1,
-				comset: Comset || "8N1",
-				baudrate: Baudrate || 9600,
-				port: Port || 502,
+				id: this.modbus?.ID,
+				comset: this.modbus?.Comset,
+				baudrate: this.modbus?.Baudrate,
+				port: this.modbus?.Port,
 			};
 		},
 		description() {

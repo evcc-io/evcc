@@ -45,7 +45,7 @@
 			type="Int"
 			class="me-2"
 			required
-			:model-value="id || defaultId || 1"
+			:model-value="id || defaultId"
 			@input="$emit('update:id', $event.target.value)"
 		/>
 	</FormRow>
@@ -72,7 +72,7 @@
 				type="Int"
 				class="me-2 w-50"
 				required
-				:model-value="port || defaultPort || 502"
+				:model-value="port || defaultPort"
 				@input="$emit('update:port', $event.target.value)"
 			/>
 		</FormRow>
@@ -153,7 +153,7 @@
 				class="me-2 w-50"
 				:choice="comsetOptions"
 				required
-				:model-value="comset || defaultComset || '8N1'"
+				:model-value="comset || defaultComset"
 				@input="$emit('update:comset', $event.target.value)"
 			/>
 		</FormRow>
