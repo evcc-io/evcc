@@ -360,7 +360,7 @@ test.describe("session details", async () => {
     page.reload();
     await page.getByTestId("sessions-entry").nth(0).click();
     await expectModalVisible(modal);
-    await expect(modal.getByLabel("Vehicle")).toHaveValue("Guest vehicle");
+    await expect(modal.getByLabel("Vehicle")).toHaveValue("");
 
     // edit carport and select known vehicle
     await modal.getByLabel("Charging point").selectOption("Carport");
