@@ -36,7 +36,14 @@
 			/>
 		</MessagingFormRow>
 
-		<MessagingFormRow :serviceType="serviceType" inputName="priority" optional>
+		<MessagingFormRow
+			:serviceType="serviceType"
+			inputName="priority"
+			optional
+			:helpI18nParams="{
+				url: '[docs.ntfy.sh](https://docs.ntfy.sh/publish#message-priority)',
+			}"
+		>
 			<PropertyField
 				id="messagingServiceNtfyPriority"
 				:model-value="priority"
@@ -53,6 +60,9 @@
 			inputName="tags"
 			example="electric_plug,blue_car"
 			optional
+			:helpI18nParams="{
+				url: '[docs.ntfy.sh](https://docs.ntfy.sh/publish#tags-emojis)',
+			}"
 		>
 			<PropertyField
 				id="messagingServiceNtfyTags"
