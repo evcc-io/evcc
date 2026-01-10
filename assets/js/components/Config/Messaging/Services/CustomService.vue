@@ -5,7 +5,7 @@
 			inputName="encoding"
 			optional
 			:helpI18nParams="{
-				send: '`${send}`',
+				send: '`{{.send}}`',
 				format: getEncodingFormat,
 			}"
 		>
