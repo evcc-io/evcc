@@ -7,7 +7,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/evcc-io/evcc/vehicle/audi/etron"
+	"github.com/evcc-io/evcc/vehicle/audi"
 	"github.com/evcc-io/evcc/vehicle/vag/idkproxy"
 	"github.com/evcc-io/evcc/vehicle/vag/service"
 	"github.com/evcc-io/evcc/vehicle/vag/vwidentity"
@@ -54,28 +54,28 @@ func NewAudiFromConfig(other map[string]any) (api.Vehicle, error) {
 	log := util.NewLogger("audi").Redact(cc.User, cc.Password, cc.VIN)
 
 	// get initial VW identity id_token
-	q, err := vwidentity.Login(log, etron.AuthParams, cc.User, cc.Password)
+	q, err := vwidentity.Login(log, audi.AuthParams, cc.User, cc.Password)
 	if err != nil {
 		return nil, err
 	}
 
 	// exchange initial VW identity id_token for Audi AAZS token
-	idk := idkproxy.New(log, etron.IDKParams)
-	ats, its, err := service.AAZSTokenSource(log, idk, etron.AZSConfig, q)
+	idk := idkproxy.New(log, audi.IDKParams)
+	ats, its, err := service.AAZSTokenSource(log, idk, audi.AZSConfig, q)
 	if err != nil {
 		return nil, err
 	}
 
 	// use the etron API for list of vehicles
-	api := etron.NewAPI(log, ats)
+	api := audi.NewAPI(log, ats)
 
 	vehicle, err := ensureVehicleEx(
-		cc.VIN, func() ([]etron.Vehicle, error) {
+		cc.VIN, func() ([]audi.Vehicle, error) {
 			ctx, cancel := context.WithTimeout(context.Background(), cc.Timeout)
 			defer cancel()
 			return api.Vehicles(ctx)
 		},
-		func(v etron.Vehicle) (string, error) {
+		func(v audi.Vehicle) (string, error) {
 			return v.VIN, nil
 		},
 	)
