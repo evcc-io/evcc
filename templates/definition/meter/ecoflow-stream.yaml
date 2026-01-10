@@ -52,7 +52,7 @@ params:
       en: Serial number of your EcoFlow Stream device (e.g., HJ31ZD1AZH5G0342)
       de: Seriennummer Ihres EcoFlow Stream Gerätes (z.B. HJ31ZD1AZH5G0342)
   - name: accessKey
-    required: false
+    required: true
     default: "demo-access-key"
     description:
       generic: Access Key
@@ -60,7 +60,7 @@ params:
       en: Access Key from EcoFlow Developer Console
       de: Access Key aus der EcoFlow Developer Console
   - name: secretKey
-    required: false
+    required: true
     default: "demo-secret-key"
     description:
       generic: Secret Key
