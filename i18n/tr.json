@@ -387,7 +387,7 @@
       "title": "Yapılandırma",
       "unconfigured": "yapılandırılmadı",
       "vehicles": "Araçlarım",
-      "welcomeBannerText": "**Doldurma cihazı veya ısıtıcı** oluşturarak başla. Henüz gerçek bir doldurma cihazın yoksa, **gösterim doldurma cihazı** seç.",
+      "welcomeBannerText": "Önce bir **doldurma cihazı**, **ısıtıcı**, **elektrik sayacı**, **güneş enerjisi**, **batarya** veya **ek sayaç** oluştur. Sadece denemek istiyorsan, bir **demo cihazı** seç.",
       "welcomeBannerTitle": "Haydi sistemini yapılandıralım!",
       "yaml": "evcc.yaml'daki cihazlar düzenlenemez."
     },
