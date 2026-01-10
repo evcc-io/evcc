@@ -243,11 +243,11 @@
         "limitpower": "Sınır (kW)",
         "type": "Tür"
       },
-      "description": "Harici sistemler tarafından güç sınırlaması (ör. EnWG 14a kontrolörleri). Yük yönetimi yapılandırması gerektirir.",
+      "description": "Harici sistemler tarafından güç sınırlaması (ör. §14a EnWG, §9 EEG arayüzü veya üst düzey enerji yönetim sistemi). Yük yönetimi özelliği ile birlikte çalışır.",
       "downloadCsv": "CSV'yi indir",
       "eventsRecorded": "{count} şebeke sınırlama etkinliği kaydedildi.",
       "lastEvent": "En son {timeAgo}.",
-      "title": "HEMS",
+      "title": "Dış Limit",
       "yamlConfigured": "Not: evcc.yaml aracılığıyla yapılandırıldı. Burada düzenlemeyi etkinleştirmek için dosyadan öğeyi kaldır."
     },
     "icon": {
@@ -294,6 +294,7 @@
       "chargerTypeLabel": "“Doldurma gücü”",
       "chargingTitle": "Davranış",
       "circuitHelp": "Güç ve akım limitlerinin aşılmaması için yük yönetim ataması.",
+      "circuitInvalid": "Devre mevcut değil",
       "circuitLabel": "“Devre”",
       "circuitUnassigned": "“atanmamış”",
       "defaultModeHelp": {
@@ -370,6 +371,7 @@
       "vehicleAutoDetection": "“otomatik algılama”",
       "vehicleHelpAutoDetection": "Otomatik olarak en makul aracı seçer. Elden değiştirme mümkündür.",
       "vehicleHelpDefault": "Her zaman bu aracın burada doldurduğunu varsayar. Otomatik algılama devre dışı. Elden değiştirme mümkün.",
+      "vehicleInvalid": "Araç mevcut değil",
       "vehicleLabel": "“Varsayılan araç”",
       "vehiclesTitle": "“Araçlar”"
     },
@@ -762,6 +764,9 @@
       "solar": "“Güneş”"
     }
   },
+  "general": {
+    "note": "Not:"
+  },
   "header": {
     "about": "evcc hakkında",
     "authProviders": {
@@ -902,6 +907,7 @@
       "repeating": "“tekrarlanan”",
       "repeatingPlans": "“Tekrarlanan planlar”",
       "selectAll": "“Tümünü seç”",
+      "strategyDisabledDescription": "Şarj işlemi, kalkış saatine tam zamanında bitmek üzere mümkün olduğunca geç başlar. Dinamik şebeke fiyatları veya CO₂ tarifesi ile burada daha fazla seçenek mevcuttur.",
       "strategySettings": "Strateji ayarları",
       "time": "Zaman",
       "title": "Plan",
