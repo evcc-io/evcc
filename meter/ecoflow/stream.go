@@ -3,12 +3,10 @@ package ecoflow
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/request"
 )
 
 // Stream represents an EcoFlow Stream Energy Management System (Inverter + Battery)
@@ -41,7 +39,7 @@ func NewStreamFromConfig(ctx context.Context, other map[string]interface{}) (api
 }
 
 // NewStream creates an EcoFlow Stream device for use as a meter
-func NewStream(uri, sn, accessKey, secretKey, usage string, cache time.Duration) (*Stream, error) {
+func NewStream(uri, sn, accessKey, secretKey string, usage Usage, cache time.Duration) (*Stream, error) {
 	device, err := NewDevice("ecoflow-stream", uri, sn, accessKey, secretKey, usage, cache)
 	if err != nil {
 		return nil, err

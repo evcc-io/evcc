@@ -18,12 +18,12 @@ type Device struct {
 	sn        string
 	accessKey string
 	secretKey string
-	usage     string
+	usage     Usage
 	cache     time.Duration
 }
 
 // NewDevice creates a new EcoFlow device with shared configuration
-func NewDevice(deviceName, uri, sn, accessKey, secretKey, usage string, cache time.Duration) (*Device, error) {
+func NewDevice(deviceName, uri, sn, accessKey, secretKey string, usage Usage, cache time.Duration) (*Device, error) {
 	if uri == "" || sn == "" || accessKey == "" || secretKey == "" {
 		return nil, fmt.Errorf("%s: missing uri, sn, accessKey or secretKey", deviceName)
 	}
@@ -37,7 +37,7 @@ func NewDevice(deviceName, uri, sn, accessKey, secretKey, usage string, cache ti
 		sn:        sn,
 		accessKey: accessKey,
 		secretKey: secretKey,
-		usage:     strings.ToLower(usage),
+		usage:     usage,
 		cache:     cache,
 	}
 
@@ -58,7 +58,7 @@ func (d *Device) GetSN() string {
 }
 
 // GetUsage returns the device usage type
-func (d *Device) GetUsage() string {
+func (d *Device) GetUsage() Usage {
 	return d.usage
 }
 

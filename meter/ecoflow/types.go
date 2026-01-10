@@ -51,7 +51,8 @@ type Config struct {
 	SN        string        `mapstructure:"sn"`
 	AccessKey string        `mapstructure:"accessKey"`
 	SecretKey string        `mapstructure:"secretKey"`
-	Usage     string        `mapstructure:"usage"`
+	UsageStr  string        `mapstructure:"usage"`
+	Usage     Usage         `mapstructure:"-"`
 	Cache     time.Duration `mapstructure:"cache"`
 }
 
@@ -67,7 +68,13 @@ func (c *Config) Decode(other map[string]interface{}, deviceName string) error {
 		return fmt.Errorf("%s: missing uri, sn, accessKey or secretKey", deviceName)
 	}
 
-	c.Usage = strings.ToLower(c.Usage)
+	// Parse and validate usage type
+	usage, err := ParseUsage(c.UsageStr)
+	if err != nil {
+		return fmt.Errorf("%s: %w", deviceName, err)
+	}
+	c.Usage = usage
+
 	return nil
 }
 

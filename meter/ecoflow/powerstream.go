@@ -3,12 +3,10 @@ package ecoflow
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/request"
 )
 
 // PowerStream represents an EcoFlow PowerStream Micro-Inverter (Inverter + Battery)
@@ -41,7 +39,7 @@ func NewPowerStreamFromConfig(ctx context.Context, other map[string]interface{})
 }
 
 // NewPowerStream creates an EcoFlow PowerStream device for use as a meter
-func NewPowerStream(uri, sn, accessKey, secretKey, usage string, cache time.Duration) (*PowerStream, error) {
+func NewPowerStream(uri, sn, accessKey, secretKey string, usage Usage, cache time.Duration) (*PowerStream, error) {
 	device, err := NewDevice("ecoflow-powerstream", uri, sn, accessKey, secretKey, usage, cache)
 	if err != nil {
 		return nil, err
