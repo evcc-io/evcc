@@ -102,6 +102,7 @@ func (c *ShellyTopAC) execRpc(method, owner, role string, value, res any) error 
 		Params: shelly.RpcRequestParams{
 			Owner: owner,
 			Role:  role,
+			Value: value,
 		},
 	}
 
