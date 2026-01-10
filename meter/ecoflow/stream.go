@@ -13,15 +13,8 @@ import (
 
 // Stream represents an EcoFlow Stream Energy Management System (Inverter + Battery)
 type Stream struct {
-	*request.Helper
-	log       *util.Logger
-	uri       string
-	sn        string // device serial number
-	accessKey string // API access key
-	secretKey string // API secret key for signing
-	usage     string // pv, grid, battery
-	cache     time.Duration
-	dataG     util.Cacheable[StreamData]
+	*Device
+	dataG util.Cacheable[StreamData]
 }
 
 var _ api.Meter = (*Stream)(nil)
@@ -49,36 +42,24 @@ func NewStreamFromConfig(ctx context.Context, other map[string]interface{}) (api
 
 // NewStream creates an EcoFlow Stream device for use as a meter
 func NewStream(uri, sn, accessKey, secretKey, usage string, cache time.Duration) (*Stream, error) {
-	if uri == "" || sn == "" || accessKey == "" || secretKey == "" {
-		return nil, fmt.Errorf("ecoflow-stream: missing uri, sn, accessKey or secretKey")
+	device, err := NewDevice("ecoflow-stream", uri, sn, accessKey, secretKey, usage, cache)
+	if err != nil {
+		return nil, err
 	}
 
-	log := util.NewLogger("ecoflow-stream").Redact(accessKey, secretKey)
-
-	device := &Stream{
-		Helper:    request.NewHelper(log),
-		log:       log,
-		uri:       strings.TrimSuffix(uri, "/"),
-		sn:        sn,
-		accessKey: accessKey,
-		secretKey: secretKey,
-		usage:     usage,
-		cache:     cache,
+	s := &Stream{
+		Device: device,
 	}
-
-	// Set authorization header using custom transport with HMAC-SHA256 signature,
-	// wrapping the existing transport to preserve proxy/TLS/custom settings
-	device.Client.Transport = NewEcoFlowAuthTransport(device.Client.Transport, accessKey, secretKey)
 
 	// Create cached data fetcher
-	device.dataG = util.ResettableCached(device.getQuotaAll, cache)
+	s.dataG = util.ResettableCached(s.getQuotaAll, cache)
 
-	return device, nil
+	return s, nil
 }
 
 // getQuotaAll fetches device quota data from API
 func (d *Stream) getQuotaAll() (StreamData, error) {
-	uri := fmt.Sprintf("%s/iot-open/sign/device/quota/all?sn=%s", d.uri, d.sn)
+	uri := fmt.Sprintf("%s/iot-open/sign/device/quota/all?sn=%s", d.GetURI(), d.GetSN())
 
 	var res ecoflowResponse[StreamData]
 	if err := d.GetJSON(uri, &res); err != nil {
@@ -99,7 +80,7 @@ func (d *Stream) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-	switch d.usage {
+	switch d.GetUsage() {
 	case UsagePV:
 		return data.PowGetPvSum, nil
 	case UsageGrid:
@@ -110,7 +91,7 @@ func (d *Stream) CurrentPower() (float64, error) {
 		// evcc convention: negative when discharging, positive when charging
 		return -data.PowGetBpCms, nil
 	default:
-		return 0, fmt.Errorf("unknown usage type: %s", d.usage)
+		return 0, fmt.Errorf("unknown usage type: %s", d.GetUsage())
 	}
 }
 

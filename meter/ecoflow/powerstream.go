@@ -13,15 +13,8 @@ import (
 
 // PowerStream represents an EcoFlow PowerStream Micro-Inverter (Inverter + Battery)
 type PowerStream struct {
-	*request.Helper
-	log       *util.Logger
-	uri       string
-	sn        string // device serial number
-	accessKey string // API access key
-	secretKey string // API secret key for signing
-	usage     string // pv, grid, battery
-	cache     time.Duration
-	dataG     util.Cacheable[PowerStreamData]
+	*Device
+	dataG util.Cacheable[PowerStreamData]
 }
 
 var _ api.Meter = (*PowerStream)(nil)
@@ -49,36 +42,24 @@ func NewPowerStreamFromConfig(ctx context.Context, other map[string]interface{})
 
 // NewPowerStream creates an EcoFlow PowerStream device for use as a meter
 func NewPowerStream(uri, sn, accessKey, secretKey, usage string, cache time.Duration) (*PowerStream, error) {
-	if uri == "" || sn == "" || accessKey == "" || secretKey == "" {
-		return nil, fmt.Errorf("ecoflow-powerstream: missing uri, sn, accessKey or secretKey")
+	device, err := NewDevice("ecoflow-powerstream", uri, sn, accessKey, secretKey, usage, cache)
+	if err != nil {
+		return nil, err
 	}
 
-	log := util.NewLogger("ecoflow-powerstream").Redact(accessKey, secretKey)
-
-	device := &PowerStream{
-		Helper:    request.NewHelper(log),
-		log:       log,
-		uri:       strings.TrimSuffix(uri, "/"),
-		sn:        sn,
-		accessKey: accessKey,
-		secretKey: secretKey,
-		usage:     usage,
-		cache:     cache,
+	ps := &PowerStream{
+		Device: device,
 	}
-
-	// Set authorization header using custom transport with HMAC-SHA256 signature,
-	// wrapping the existing transport to preserve proxy/TLS/custom settings
-	device.Client.Transport = NewEcoFlowAuthTransport(device.Client.Transport, accessKey, secretKey)
 
 	// Create cached data fetcher
-	device.dataG = util.ResettableCached(device.getQuotaAll, cache)
+	ps.dataG = util.ResettableCached(ps.getQuotaAll, cache)
 
-	return device, nil
+	return ps, nil
 }
 
 // getQuotaAll fetches device quota data from API
 func (d *PowerStream) getQuotaAll() (PowerStreamData, error) {
-	uri := fmt.Sprintf("%s/iot-open/sign/device/quota/all?sn=%s", d.uri, d.sn)
+	uri := fmt.Sprintf("%s/iot-open/sign/device/quota/all?sn=%s", d.GetURI(), d.GetSN())
 
 	var res ecoflowResponse[PowerStreamData]
 	if err := d.GetJSON(uri, &res); err != nil {
@@ -99,7 +80,7 @@ func (d *PowerStream) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-	switch d.usage {
+	switch d.GetUsage() {
 	case UsagePV:
 		// PV power is sum of both strings
 		return data.Pv1InputWatts + data.Pv2InputWatts, nil
@@ -112,7 +93,7 @@ func (d *PowerStream) CurrentPower() (float64, error) {
 		// evcc convention: negative=discharge, positive=charge
 		return -data.BatWatts, nil
 	default:
-		return 0, fmt.Errorf("unknown usage type: %s", d.usage)
+		return 0, fmt.Errorf("unknown usage type: %s", d.GetUsage())
 	}
 }
 

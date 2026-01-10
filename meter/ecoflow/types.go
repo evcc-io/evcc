@@ -8,12 +8,42 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-// Usage types for energy management
+// Usage represents the energy flow direction for a device
+type Usage int
+
 const (
-	UsagePV      = "pv"      // Solar/PV input
-	UsageGrid    = "grid"    // Grid connection
-	UsageBattery = "battery" // Battery storage
+	UsagePV Usage = iota
+	UsageGrid
+	UsageBattery
 )
+
+// String returns the string representation of Usage
+func (u Usage) String() string {
+	switch u {
+	case UsagePV:
+		return "pv"
+	case UsageGrid:
+		return "grid"
+	case UsageBattery:
+		return "battery"
+	default:
+		return "unknown"
+	}
+}
+
+// ParseUsage converts a string to a typed Usage, returns error if invalid
+func ParseUsage(s string) (Usage, error) {
+	switch strings.ToLower(s) {
+	case "pv":
+		return UsagePV, nil
+	case "grid":
+		return UsageGrid, nil
+	case "battery":
+		return UsageBattery, nil
+	default:
+		return 0, fmt.Errorf("invalid usage type: %s (must be pv, grid, or battery)", s)
+	}
+}
 
 // Config is the shared configuration for Stream and PowerStream devices
 type Config struct {
