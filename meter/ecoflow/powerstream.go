@@ -92,7 +92,7 @@ func (d *PowerStream) getQuotaAll() (PowerStreamData, error) {
 	return res.Data, nil
 }
 
-// CurrentPower implements api.Meter
+// CurrentPower implements the api.Meter interface
 func (d *PowerStream) CurrentPower() (float64, error) {
 	data, err := d.dataG.Get()
 	if err != nil {
