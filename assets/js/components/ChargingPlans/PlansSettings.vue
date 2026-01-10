@@ -56,7 +56,9 @@
 			</div>
 		</h5>
 		<ChargingPlanStrategy
-			v-bind="chargingPlanStrategyProps"
+			:id="id"
+			:precondition="effectivePlanStrategy?.precondition"
+			:continuous="effectivePlanStrategy?.continuous"
 			:disabled="strategyDisabled"
 			:show="strategyOpen"
 			@update="updatePlanStrategy"
@@ -107,8 +109,7 @@ export default defineComponent({
 		effectiveLimitSoc: Number,
 		effectivePlanTime: String,
 		effectivePlanSoc: Number,
-		effectivePlanPrecondition: Number,
-		effectivePlanContinuous: Boolean,
+		effectivePlanStrategy: Object as PropType<PlanStrategy>,
 		planEnergy: Number,
 		limitEnergy: Number,
 		socBasedPlanning: Boolean,
@@ -159,13 +160,6 @@ export default defineComponent({
 				? { duration, plan, power, rates, targetTime, currency, smartCostType }
 				: null;
 		},
-		chargingPlanStrategyProps(): any {
-			return {
-				id: this.id,
-				precondition: this.effectivePlanPrecondition,
-				continuous: this.effectivePlanContinuous,
-			};
-		},
 		alreadyReached(): boolean {
 			return this.plan.duration === 0;
 		},
@@ -186,11 +180,11 @@ export default defineComponent({
 				this.updatePlanDebounced();
 			}
 		},
-		effectivePlanPrecondition() {
-			this.updatePlanDebounced();
-		},
-		effectivePlanContinuous() {
-			this.updatePlanDebounced();
+		effectivePlanStrategy: {
+			deep: true,
+			handler() {
+				this.updatePlanDebounced();
+			},
 		},
 		staticPlan: {
 			deep: true,
