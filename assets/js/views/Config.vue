@@ -459,6 +459,7 @@ import type {
 	SiteConfig,
 	DeviceType,
 	Notification,
+	MessagingEvent,
 } from "@/types/evcc";
 
 type DeviceValuesMap = Record<DeviceType, Record<string, any>>;
@@ -731,9 +732,15 @@ export default defineComponent({
 			return { configured: { value: false } };
 		},
 		messagingTags(): DeviceTags {
-			const config = store.state?.messaging?.services || [];
-			if (config.length > 0) {
-				return { amount: { value: config.length } };
+			const services = store.state?.messaging?.services || [];
+			const events = store.state.messaging?.events || {};
+			const enabledEvents = Object.values<MessagingEvent>(events).filter((e) => !e.disabled);
+
+			if (services.length > 0 || enabledEvents.length > 0) {
+				return {
+					events: { value: enabledEvents.length },
+					services: { value: services.length },
+				};
 			}
 			return { configured: { value: false } };
 		},

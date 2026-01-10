@@ -120,7 +120,7 @@ test.describe("messaging", async () => {
     // validate connection
     await modal.getByRole("button", { name: "Save", exact: true }).click();
     await expectModalHidden(modal);
-    await expect(messagingCard).toContainText(["Configured", "no"].join(""));
+    await expect(messagingCard).toContainText(["Events", "1", "Services", "0"].join(""));
 
     // restart button appears
     const restartButton = await page
@@ -244,7 +244,7 @@ test.describe("messaging", async () => {
     // validate connection
     await modal.getByRole("button", { name: "Save", exact: true }).click();
     await expectModalHidden(modal);
-    await expect(messagingCard).toContainText(["Amount", "6"].join(""));
+    await expect(messagingCard).toContainText(["Events", "0", "Services", "6"].join(""));
 
     // restart button appears
     const restartButton = await page
@@ -267,7 +267,7 @@ test.describe("messaging", async () => {
     await page.goto("/#/config");
 
     const messagingCard = page.getByTestId("messaging");
-    await expect(messagingCard).toContainText(["Amount", "6"].join(""));
+    await expect(messagingCard).toContainText(["Events", "3", "Services", "6"].join(""));
 
     await messagingCard.getByRole("button", { name: "edit" }).click();
     const modal = page.getByTestId("messaging-modal");
