@@ -75,7 +75,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 126 # SXSSOC
+      address: 119 # SoCestim
       type: input
       decode: int16
   {{- include "battery-params" . }}

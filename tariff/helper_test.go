@@ -29,8 +29,7 @@ func TestMergeRatesAfter(t *testing.T) {
 	new := api.Rates{rate(2, 2), rate(3, 3)}
 	combined := api.Rates{rate(1, 1), rate(2, 2), rate(3, 3)}
 
-	data := util.NewMonitor[api.Rates](time.Hour)
-	data.WithClock(clock)
+	data := util.NewMonitor[api.Rates](time.Hour).WithClock(clock)
 
 	data.Set(old)
 	res, err := data.Get()

@@ -35,7 +35,7 @@ func settingsDeleteHandler(key string) http.HandlerFunc {
 	}
 }
 
-func settingsSetDurationHandler(key string) http.HandlerFunc {
+func settingsSetDurationHandler(key string, pub publisher) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
@@ -47,6 +47,8 @@ func settingsSetDurationHandler(key string) http.HandlerFunc {
 
 		settings.SetInt(key, int64(time.Second*time.Duration(val)))
 		setConfigDirty()
+
+		pub(key, val)
 
 		jsonWrite(w, val)
 	}

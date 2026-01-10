@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestSlitPrecondition(t *testing.T) {
+func TestSplitPrecondition(t *testing.T) {
 	clock := clock.NewMock()
 	rr := rates([]float64{1, 2, 3, 4}, clock.Now(), tariff.SlotDuration)
 	rates, precond := splitPreconditionSlots(rr, clock.Now().Add(3*tariff.SlotDuration))
