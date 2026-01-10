@@ -285,4 +285,54 @@ test.describe("messaging", async () => {
     await modal.getByRole("link", { name: "Services (6)" }).click();
     await validateServices(modal);
   });
+
+  test("add and remove service", async ({ page }) => {
+    await start();
+    await page.goto("/#/config");
+
+    const messagingCard = page.getByTestId("messaging");
+    await messagingCard.getByRole("button", { name: "edit" }).click();
+
+    const modal = page.getByTestId("messaging-modal");
+    await expectModalVisible(modal);
+    await modal.getByRole("link", { name: "Services (0)" }).click();
+
+    // add custom
+    await modal.getByRole("button", { name: "Add service" }).click();
+    await modal.getByRole("link", { name: "Custom" }).click();
+
+    // validate connection
+    await modal.getByRole("button", { name: "Save", exact: true }).click();
+    await expectModalHidden(modal);
+
+    // restart button appears
+    const restartButton = await page
+      .getByTestId("bottom-banner")
+      .getByRole("button", { name: "Restart" });
+    await expect(restartButton).toBeVisible();
+
+    await restart();
+    await page.reload();
+
+    await messagingCard.getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(modal);
+
+    await modal.getByRole("link", { name: "Services (1)" }).click();
+    await modal.getByRole("button", { name: "Remove" }).click();
+
+    // validate connection
+    await modal.getByRole("button", { name: "Save", exact: true }).click();
+    await expectModalHidden(modal);
+
+    // restart button appears
+    await expect(restartButton).toBeVisible();
+    await restart();
+    await page.reload();
+
+    await messagingCard.getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(modal);
+
+    // ensure no messaging service exists
+    await expect(modal.getByRole("link", { name: "Services (0)" })).toBeVisible();
+  });
 });
