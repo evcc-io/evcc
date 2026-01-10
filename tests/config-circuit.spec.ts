@@ -22,7 +22,7 @@ test.describe("circuit", async () => {
     await expect(page.getByTestId("grid")).toHaveCount(1);
     await expect(page.getByTestId("grid")).toContainText(["Power", "2.1 kW"].join(""));
     await expect(page.getByTestId("grid")).toContainText(
-      ["L1", "L2", "L3", "Current", "3.0", "3.0", "3.0", "A"].join("")
+      ["L1", "L2", "L3", "Current", "3.0", "3.0", "3.0 A"].join("")
     );
 
     await expect(page.getByTestId("circuits")).toHaveCount(1);
@@ -126,7 +126,7 @@ test.describe("circuit", async () => {
     await expect(page.getByTestId("grid")).toHaveCount(1);
     await expect(page.getByTestId("grid")).toContainText(["Power", "2.1 kW"].join(""));
     await expect(page.getByTestId("grid")).toContainText(
-      ["L1", "L2", "L3", "Current", "3.0", "3.0", "3.0", "A"].join("")
+      ["L1", "L2", "L3", "Current", "3.0", "3.0", "3.0 A"].join("")
     );
 
     await expect(page.getByTestId("circuits")).toHaveCount(1);

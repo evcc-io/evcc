@@ -20,7 +20,6 @@
 					<th class="small evcc-gray text-end pe-2">L1</th>
 					<th class="small evcc-gray text-end pe-2">L2</th>
 					<th class="small evcc-gray text-end pe-1">L3</th>
-					<th></th>
 				</tr>
 			</thead>
 			<tbody>
@@ -38,10 +37,7 @@
 						class="value text-end tabular"
 						:class="[valueClasses(entry), idx === 2 ? 'pe-1' : 'pe-2']"
 					>
-						{{ fmtPhaseValue(entry.name, val) }}
-					</td>
-					<td class="value unit-col" :class="valueClasses(entry)">
-						{{ getPhaseUnit(entry.name) }}
+						{{ fmtPhaseValue(entry.name, val, idx === 2) }}
 					</td>
 				</tr>
 			</tbody>
@@ -136,30 +132,24 @@ export default {
 			}
 			return value;
 		},
-		fmtPhaseValue(name, value) {
+		fmtPhaseValue(name, value, includeUnit = false) {
 			if (value === null || value === undefined) {
 				return "–";
 			}
 			switch (name) {
-				case "phaseCurrents":
-					return this.fmtNumber(value, 1);
-				case "phaseVoltages":
-					return this.fmtNumber(value, 0);
+				case "phaseCurrents": {
+					const formatted = this.fmtNumber(value, 1);
+					return includeUnit ? `${formatted} A` : formatted;
+				}
+				case "phaseVoltages": {
+					const formatted = this.fmtNumber(value, 0);
+					return includeUnit ? `${formatted} V` : formatted;
+				}
 				case "phasePowers":
-					return this.fmtW(value, POWER_UNIT.KW, false);
+					return this.fmtW(value, POWER_UNIT.KW, includeUnit);
+				default:
+					return value;
 			}
-			return value;
-		},
-		getPhaseUnit(name) {
-			switch (name) {
-				case "phaseCurrents":
-					return "A";
-				case "phaseVoltages":
-					return "V";
-				case "phasePowers":
-					return "kW";
-			}
-			return "";
 		},
 	},
 };
@@ -194,8 +184,13 @@ table th,
 table td {
 	padding: 0 0 0.5rem 0;
 }
-.unit-col {
-	width: 1%;
+table th:nth-child(2),
+table th:nth-child(3),
+table th:nth-child(4),
+table td:nth-child(2),
+table td:nth-child(3),
+table td:nth-child(4) {
+	width: 33.33%;
 	white-space: nowrap;
 }
 </style>
