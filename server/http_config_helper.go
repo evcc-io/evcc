@@ -370,6 +370,15 @@ func (maskedTransformer) Transformer(typ reflect.Type) func(dst, src reflect.Val
 		}
 	}
 
+	// Preserve slices/arrays: don't merge them into dst
+	if typ.Kind() == reflect.Slice || typ.Kind() == reflect.Array {
+		return func(dst, src reflect.Value) error {
+			// Keep dst value, don't merge
+			return nil
+		}
+	}
+
+	// Only provide transformer for strings
 	if typ.Kind() != reflect.String {
 		return nil
 	}
