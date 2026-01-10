@@ -14,7 +14,7 @@
     "playwright": "playwright test --ui",
     "simulator": "vite tests/simulator",
     "storybook": "storybook dev -p 6006",
-    "license": "license-compliance --production --report detailed --allow \"MIT;Apache-2.0;ISC;BSD-2-Clause;BSD-3-Clause\""
+    "license": "license-compliance --production --report detailed --allow \"MIT;Apache-2.0;ISC;BSD-2-Clause;BSD-3-Clause;Python-2.0\""
   },
   "type": "module",
   "main": "index.js",
@@ -60,6 +60,7 @@
     "@types/body-parser": "^1.19.6",
     "@types/bootstrap": "^5.2.10",
     "@types/canvas-confetti": "^1.9.0",
+    "@types/js-yaml": "^4.0.9",
     "@types/kill-port": "^2.0.3",
     "@types/smoothscroll-polyfill": "^0.3.4",
     "@types/wait-on": "^5.3.4",

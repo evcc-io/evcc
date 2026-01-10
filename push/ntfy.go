@@ -28,6 +28,8 @@ type Ntfy struct {
 func NewNtfyFromConfig(other map[string]any) (Messenger, error) {
 	var cc struct {
 		URI       string
+		Host      string
+		Topics    []string
 		Priority  string
 		Tags      string
 		AuthToken string
@@ -38,7 +40,14 @@ func NewNtfyFromConfig(other map[string]any) (Messenger, error) {
 	}
 
 	if cc.URI == "" {
-		return nil, errors.New("missing uri")
+		if cc.Host == "" || len(cc.Topics) == 0 {
+			return nil, errors.New("missing uri")
+		}
+
+		cc.URI = cc.Host + "/" + strings.Join(cc.Topics, ",")
+		if !strings.HasPrefix(cc.URI, "https://") {
+			cc.URI = "https://" + cc.URI
+		}
 	}
 
 	u, err := url.Parse(cc.URI)

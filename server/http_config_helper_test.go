@@ -8,6 +8,7 @@ import (
 	"github.com/evcc-io/evcc/plugin/mqtt"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/templates"
+	"github.com/mohae/deepcopy"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -134,6 +135,24 @@ func TestSquashedMergeMaskedAny(t *testing.T) {
 		require.NoError(t, mergeMaskedAny(old, &new))
 		assert.Equal(t, "new", new.User)
 	}
+}
+
+func TestEmptySliceMergeMaskedAny(t *testing.T) {
+	old := globalconfig.Messaging{
+		Services: []config.Typed{
+			{
+				Type:  "testType",
+				Other: map[string]any{},
+			},
+		},
+	}
+	new := globalconfig.Messaging{
+		Services: []config.Typed{},
+	}
+	expected := deepcopy.Copy(new)
+
+	require.NoError(t, mergeMaskedAny(old, &new))
+	assert.Equal(t, expected, new)
 }
 
 func TestMergeMaskedFiltersBehavior(t *testing.T) {

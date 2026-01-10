@@ -3,8 +3,10 @@ package cmd
 import (
 	"cmp"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"net/url"
 	"os"
 	"regexp"
 	"slices"
@@ -51,12 +53,14 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/libp2p/zeroconf/v2"
+	"github.com/mohae/deepcopy"
 	"github.com/samber/lo"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	vpr "github.com/spf13/viper"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/text/currency"
+	"gopkg.in/yaml.v3"
 )
 
 var conf = globalconfig.All{
@@ -799,11 +803,102 @@ func configureEEBus(conf *eebus.Config) error {
 
 // setup messaging
 func configureMessengers(conf *globalconfig.Messaging, vehicles push.Vehicles, valueChan chan<- util.Param, cache *util.ParamCache) (chan push.Event, error) {
-	// migrate settings
 	if settings.Exists(keys.Messaging) {
-		*conf = globalconfig.Messaging{}
-		if err := settings.Yaml(keys.Messaging, new(map[string]any), &conf); err != nil {
-			return nil, err
+		// TODO: delete migration if not needed any more
+		if !settings.IsJson(keys.Messaging) {
+			var data globalconfig.Messaging
+			if err := settings.Yaml(keys.Messaging, new(globalconfig.Messaging), &data); err != nil {
+				return nil, err
+			}
+			// events already created by the user in yaml should be enabled
+			for k, v := range data.Events {
+				v.Disabled = false
+				data.Events[k] = v
+			}
+			for i := range data.Services {
+				s := &data.Services[i]
+
+				if s.Type == "email" {
+					uri, ok := s.Other["uri"].(string)
+					if !ok {
+						return nil, fmt.Errorf("failed to migrate email service due to missing uri")
+					}
+
+					u, err := url.Parse(uri)
+					if err != nil {
+						return nil, err
+					}
+
+					s.Other["host"] = u.Hostname()
+					s.Other["user"] = u.User.Username()
+					s.Other["port"] = u.Port()
+					s.Other["from"] = u.Query().Get("fromAddress")
+					addresses := u.Query()["toAddresses"]
+					toAddresses := make([]string, 0, len(addresses))
+					for _, v := range addresses {
+						for a := range strings.SplitSeq(v, ",") {
+							if a != "" {
+								toAddresses = append(toAddresses, a)
+							}
+						}
+					}
+					s.Other["to"] = toAddresses
+					if pw, ok := u.User.Password(); ok {
+						s.Other["password"] = pw
+					}
+
+					delete(s.Other, "uri")
+				} else if s.Type == "ntfy" {
+					uri, ok := s.Other["uri"].(string)
+					if !ok {
+						return nil, fmt.Errorf("failed to migrate ntfy service due to missing uri")
+					}
+
+					parsed, err := url.Parse(uri)
+					if err != nil {
+						return nil, err
+					}
+
+					path := strings.TrimPrefix(parsed.Path, "/")
+
+					s.Other["host"] = parsed.Host
+					if path == "" {
+						s.Other["topics"] = []string{}
+					} else {
+						s.Other["topics"] = strings.Split(path, ",")
+					}
+
+					delete(s.Other, "uri")
+				} else if s.Type == "custom" {
+					d, err := json.Marshal(s.Other)
+					if err != nil {
+						return nil, err
+					}
+
+					var other struct {
+						Encoding string `json:"encoding"`
+						Send     any    `json:"send"`
+					}
+
+					if err := json.Unmarshal(d, &other); err != nil {
+						return nil, err
+					}
+
+					yamlSend, err := yaml.Marshal(other.Send)
+					if err != nil {
+						return nil, err
+					}
+
+					s.Other["encoding"] = other.Encoding
+					s.Other["send"] = string(yamlSend)
+				}
+			}
+			// migrate from yaml to json
+			migrateYamlToJsonByData(keys.Messaging, data)
+		}
+
+		if err := settings.Json(keys.Messaging, &conf); err != nil {
+			return nil, fmt.Errorf("failed to read messaging setting: %w", err)
 		}
 	}
 
@@ -815,9 +910,23 @@ func configureMessengers(conf *globalconfig.Messaging, vehicles push.Vehicles, v
 	}
 
 	for _, conf := range conf.Services {
-		props, err := customDevice(conf.Other)
+		// deepcopy is necessary so that conf is not changed when converting the key send below
+		props, err := customDevice(deepcopy.Copy(conf.Other).(map[string]any))
 		if err != nil {
 			return nil, fmt.Errorf("cannot decode push service '%s': %w", conf.Type, err)
+		}
+
+		// the key send is stored as string in database for frontend purposes
+		// but backend needs it as yaml map
+		if conf.Type == "custom" {
+			sendStr := props["send"].(string)
+
+			var send map[string]any
+			if err := yaml.Unmarshal([]byte(sendStr), &send); err != nil {
+				return nil, fmt.Errorf("cannot parse YAML: %w", err)
+			}
+
+			props["send"] = send
 		}
 
 		impl, err := push.NewFromConfig(context.TODO(), conf.Type, props)
@@ -964,18 +1073,29 @@ func configureDevices(conf globalconfig.All) error {
 	return joinErrors(errs...)
 }
 
-// migrateYamlToJson converts a settings value from yaml to json if needed
-func migrateYamlToJson[T any](key string) error {
-	var err error
+// migrateYamlToJsonByKey converts a settings value from yaml to json by key if needed
+func migrateYamlToJsonByData(key string, data any) error {
 	if settings.IsJson(key) {
 		// already JSON, nothing to do
 		return nil
 	}
 
+	err := settings.SetJson(key, data)
+	log.INFO.Printf("migrated %s setting to JSON", key)
+	return err
+}
+
+// migrateYamlToJson converts a settings value from yaml to json by key if needed
+func migrateYamlToJson[T any](key string) error {
+	if settings.IsJson(key) {
+		// already JSON, nothing to do
+		return nil
+	}
+
+	var err error
 	var data T
 	if err := settings.Yaml(key, new(T), &data); err == nil {
-		settings.SetJson(key, data)
-		log.INFO.Printf("migrated %s setting to JSON", key)
+		migrateYamlToJsonByData(key, data)
 	}
 
 	return err
