@@ -111,7 +111,7 @@ func (c *ShellyTopAC) execRpc(method, owner, role string, value, res any) error 
 		return err
 	}
 
-	return c.DoJSON(req, &res)
+	return c.DoJSON(req, res)
 }
 
 // setCurrentLimit sets the charging current limit
