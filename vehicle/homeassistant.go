@@ -2,7 +2,6 @@ package vehicle
 
 import (
 	"errors"
-	"strconv"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -66,7 +65,7 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 		soc:   cc.Sensors.Soc,
 	}
 
-	// prepare optional feature functions with concise names
+	// optional features
 	var (
 		limitSoc   func() (int64, error)
 		status     func() (api.ChargeStatus, error)
@@ -101,7 +100,7 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 		climater = func() (bool, error) { return conn.GetBoolState(cc.Sensors.Climater) }
 	}
 	if cc.Sensors.FinishTime != "" {
-		finish = func() (time.Time, error) { return res.finishTime(cc.Sensors.FinishTime) }
+		finish = func() (time.Time, error) { return conn.GetTimeState(cc.Sensors.FinishTime) }
 	}
 	if cc.Services.Start != "" && cc.Services.Stop != "" {
 		enable = func(enable bool) error { return res.enable(cc.Services.Start, cc.Services.Stop, enable) }
@@ -131,19 +130,6 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 
 func (v *HomeAssistant) Soc() (float64, error) {
 	return v.conn.GetFloatState(v.soc)
-}
-
-func (v *HomeAssistant) finishTime(entity string) (time.Time, error) {
-	s, err := v.conn.GetState(entity)
-	if err != nil {
-		return time.Time{}, err
-	}
-
-	if ts, err := strconv.ParseInt(s, 10, 64); err == nil {
-		return time.Unix(ts, 0), nil
-	}
-
-	return time.Parse(time.RFC3339, s)
 }
 
 func (v *HomeAssistant) enable(on, off string, enable bool) error {

@@ -159,6 +159,15 @@ render: |
         source: sequence
         set:
         - source: const
+          value: 1 # Wake battery from standby
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 0x0056 # Bat_Awaken
+              type: writesingle
+              decode: uint16
+        - source: const
           value: 1 # Force charge
           set:
             source: modbus
