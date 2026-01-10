@@ -42,7 +42,6 @@
 								connected
 								:selected="session.vehicle"
 								@change-vehicle="changeVehicle"
-								@remove-vehicle="removeVehicle"
 							>
 								<span class="flex-grow-1 text-truncate vehicle-name">
 									{{
@@ -227,9 +226,6 @@ export default defineComponent({
 		},
 		async changeVehicle(title: string) {
 			await this.updateSession({ vehicle: title });
-		},
-		async removeVehicle() {
-			await this.updateSession({ vehicle: null });
 		},
 		async changeLoadpoint(title: string) {
 			await this.updateSession({ loadpoint: title });
