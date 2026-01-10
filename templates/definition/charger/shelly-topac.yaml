@@ -1,0 +1,18 @@
+template: shelly-topac
+products:
+  - brand: Shelly
+    description:
+      generic: Top AC Portable EV Charger
+requirements:
+  evcc: ["sponsorship"]
+params:
+  - name: host
+    required: true
+  - name: user
+  - name: password
+    mask: true
+render: |
+  type: shelly-topac
+  uri: http://{{ .host }}
+  user: {{ .user }}
+  password: {{ .password }}
