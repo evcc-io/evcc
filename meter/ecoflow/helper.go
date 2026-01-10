@@ -65,7 +65,7 @@ func ecoflowGenerateNonce() string {
 	// Generate 3 random bytes and convert to 6-digit number
 	buf := make([]byte, 3)
 	rand.Read(buf) // Never returns error per crypto/rand docs
-	
+
 	// Convert 3 bytes to value in range [0, 16777215]
 	// Map to [100000, 999999] range (900000 possible values)
 	val := uint32(buf[0])<<16 | uint32(buf[1])<<8 | uint32(buf[2])
