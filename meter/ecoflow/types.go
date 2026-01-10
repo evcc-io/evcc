@@ -1,5 +1,39 @@
 package ecoflow
 
+import (
+	"fmt"
+	"strings"
+	"time"
+
+	"github.com/evcc-io/evcc/util"
+)
+
+// Config is the shared configuration for Stream and PowerStream devices
+type Config struct {
+	URI       string        `mapstructure:"uri"`
+	SN        string        `mapstructure:"sn"`
+	AccessKey string        `mapstructure:"accessKey"`
+	SecretKey string        `mapstructure:"secretKey"`
+	Usage     string        `mapstructure:"usage"`
+	Cache     time.Duration `mapstructure:"cache"`
+}
+
+// Decode decodes the config from other map, applying defaults and validation
+func (c *Config) Decode(other map[string]interface{}, deviceName string) error {
+	c.Cache = 30 * time.Second
+
+	if err := util.DecodeOther(other, c); err != nil {
+		return err
+	}
+
+	if c.URI == "" || c.SN == "" || c.AccessKey == "" || c.SecretKey == "" {
+		return fmt.Errorf("%s: missing uri, sn, accessKey or secretKey", deviceName)
+	}
+
+	c.Usage = strings.ToLower(c.Usage)
+	return nil
+}
+
 // ecoflowResponse is a generic response wrapper for EcoFlow API responses
 type ecoflowResponse[T any] struct {
 	Code    string `json:"code"`

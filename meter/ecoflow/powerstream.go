@@ -28,27 +28,11 @@ var _ api.Meter = (*PowerStream)(nil)
 
 // NewPowerStreamFromConfig creates EcoFlow PowerStream meter from config
 func NewPowerStreamFromConfig(ctx context.Context, other map[string]interface{}) (api.Meter, error) {
-	cc := struct {
-		URI       string        `mapstructure:"uri"`
-		SN        string        `mapstructure:"sn"`
-		AccessKey string        `mapstructure:"accessKey"`
-		SecretKey string        `mapstructure:"secretKey"`
-		Usage     string        `mapstructure:"usage"`
-		Cache     time.Duration `mapstructure:"cache"`
-	}{
-		Usage: "grid",
-		Cache: 30 * time.Second,
-	}
-
-	if err := util.DecodeOther(other, &cc); err != nil {
+	cc := &Config{}
+	if err := cc.Decode(other, "ecoflow-powerstream"); err != nil {
 		return nil, err
 	}
 
-	if cc.URI == "" || cc.SN == "" || cc.AccessKey == "" || cc.SecretKey == "" {
-		return nil, fmt.Errorf("ecoflow-powerstream: missing uri, sn, accessKey or secretKey")
-	}
-
-	cc.Usage = strings.ToLower(cc.Usage)
 	device, err := NewPowerStream(cc.URI, cc.SN, cc.AccessKey, cc.SecretKey, cc.Usage, cc.Cache)
 	if err != nil {
 		return nil, err
@@ -78,7 +62,7 @@ func NewPowerStream(uri, sn, accessKey, secretKey, usage string, cache time.Dura
 		sn:        sn,
 		accessKey: accessKey,
 		secretKey: secretKey,
-		usage:     strings.ToLower(usage),
+		usage:     usage,
 		cache:     cache,
 	}
 
