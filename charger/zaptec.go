@@ -22,6 +22,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
+	"math/rand/v2"
 	"net/http"
 	"sort"
 	"time"
@@ -44,7 +46,7 @@ type Zaptec struct {
 	log        *util.Logger
 	statusG    util.Cacheable[zaptec.StateResponse]
 	instance   zaptec.Charger
-	maxCurrent int
+	maxCurrent float64
 	version    int
 	enabled    bool
 	priority   bool
@@ -266,9 +268,18 @@ func (c *Zaptec) sessionPriority(session string, data zaptec.SessionPriority) er
 
 // MaxCurrent implements the api.Charger interface
 func (c *Zaptec) MaxCurrent(current int64) error {
-	curr := int(current)
+	return c.MaxCurrentMillis(float64(current))
+}
+
+var _ api.ChargerEx = (*Zaptec)(nil)
+
+// MaxCurrentMillis implements the api.ChargerEx interface
+func (c *Zaptec) MaxCurrentMillis(current float64) error {
+	if current < 6 || current > 32 {
+		return fmt.Errorf("invalid current %.3f", current)
+	}
 	data := zaptec.Update{
-		MaxChargeCurrent: &curr,
+		MaxChargeCurrent: &current,
 	}
 
 	return c.chargerUpdate(data)
@@ -320,7 +331,19 @@ func (c *Zaptec) Currents() (float64, float64, float64, error) {
 // phases1p3p implements the api.PhaseSwitcher interface
 func (c *Zaptec) phases1p3p(phases int) error {
 	err := c.switchPhases(phases)
-	if err != nil || !c.priority {
+	if err != nil {
+		return err
+	}
+
+	// trigger phase switch instantly with random current update
+	randomCurrent := 6.0 + rand.Float64()*0.5
+	randomCurrent = math.Round(randomCurrent*100) / 100
+	err = c.MaxCurrentMillis(randomCurrent)
+	if err != nil {
+		return err
+	}
+
+	if !c.priority {
 		return err
 	}
 
@@ -346,10 +369,11 @@ func (c *Zaptec) switchPhases(phases int) error {
 		data := zaptec.Update{
 			MaxChargePhases: &phases,
 		}
+
 		return c.chargerUpdate(data)
 	}
 
-	var zero int
+	var zero float64
 	data := zaptec.UpdateInstallation{
 		AvailableCurrentPhase1: &c.maxCurrent,
 		AvailableCurrentPhase2: &zero,
@@ -382,7 +406,7 @@ func (c *Zaptec) Identify() (string, error) {
 	return "", nil
 }
 
-func (c *Zaptec) getInstallationMaxCurrent() (int, error) {
+func (c *Zaptec) getInstallationMaxCurrent() (float64, error) {
 	var res zaptec.Installation
 
 	uri := fmt.Sprintf("%s/api/installation/%s", zaptec.ApiURL, c.instance.InstallationId)
@@ -390,7 +414,7 @@ func (c *Zaptec) getInstallationMaxCurrent() (int, error) {
 		return 0, err
 	}
 
-	return int(res.MaxCurrent), nil
+	return res.MaxCurrent, nil
 }
 
 func (c *Zaptec) installationUpdate(data zaptec.UpdateInstallation) error {
