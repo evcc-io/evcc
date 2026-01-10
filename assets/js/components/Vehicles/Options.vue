@@ -15,8 +15,8 @@
 				{{ value }}
 			</option>
 			<option disabled>─────</option>
-			<option :value="otherVehicle" :selected="!selected">
-				{{ otherVehicle }}
+			<option value="" :selected="!selected">
+				{{ $t(`main.vehicle.${connected ? "unknown" : "none"}`) }}
 			</option>
 		</select>
 		<slot></slot>
@@ -39,9 +39,6 @@ export default defineComponent({
 	computed: {
 		dropdownId() {
 			return `vehicleOptionsDropdown${this.id}`;
-		},
-		otherVehicle() {
-			return this.$t(`main.vehicle.${this.connected ? "unknown" : "none"}`);
 		},
 	},
 	methods: {
