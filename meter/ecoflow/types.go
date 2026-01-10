@@ -73,8 +73,8 @@ type PowerStreamData struct {
 	// Power values (from heartbeat)
 	Pv1InputWatts  float64 `json:"pv1InputWatts"`  // PV1 input power (W)
 	Pv2InputWatts  float64 `json:"pv2InputWatts"`  // PV2 input power (W)
-	BatInputWatts  float64 `json:"batInputWatts"`  // Battery input/output power (W), positive=discharge, negative=charge
-	BatInputCur    int     `json:"batInputCur"`    // Battery current (0.1A), positive=discharge, negative=charge
+	BatWatts       float64 `json:"batInputWatts"`  // Battery input/output power (W), positive=discharge, negative=charge
+	BatCur         int     `json:"batInputCur"`    // Battery current (0.1A), positive=discharge, negative=charge
 	InvOutputWatts float64 `json:"invOutputWatts"` // Inverter AC output power (W)
 	BatSoc         int     `json:"batSoc"`         // Battery SOC (%)
 	SupplyPriority int     `json:"supplyPriority"` // Power supply priority (0=supply, 1=storage)

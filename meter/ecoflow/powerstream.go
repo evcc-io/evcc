@@ -108,9 +108,9 @@ func (d *PowerStream) CurrentPower() (float64, error) {
 		return data.InvOutputWatts, nil
 	case UsageBattery:
 		// Battery: negative = charging, positive = discharging
-		// EcoFlow convention: BatInputWatts positive=discharge, negative=charge
+		// EcoFlow convention: BatWatts positive=discharge, negative=charge
 		// evcc convention: negative=discharge, positive=charge
-		return -data.BatInputWatts, nil
+		return -data.BatWatts, nil
 	default:
 		return 0, fmt.Errorf("unknown usage type: %s", d.usage)
 	}
