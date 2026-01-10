@@ -139,7 +139,7 @@ func (c *ShellyTopAC) Status() (api.ChargeStatus, error) {
 	switch res.Result.Value {
 	case "charger_free":
 		return api.StatusA, nil
-	case "charger_wait", "charger_pause", "charger_complete":
+	case "charger_wait", "charger_pause", "charger_complete", "charger_end":
 		return api.StatusB, nil
 	case "charger_charging":
 		return api.StatusC, nil
