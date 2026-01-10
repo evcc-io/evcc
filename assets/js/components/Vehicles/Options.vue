@@ -35,7 +35,7 @@ export default defineComponent({
 		vehicleOptions: Array as PropType<SelectOption<string>[]>,
 		selected: String,
 	},
-	emits: ["change-vehicle"],
+	emits: ["change-vehicle", "remove-vehicle"],
 	computed: {
 		dropdownId() {
 			return `vehicleOptionsDropdown${this.id}`;
@@ -43,7 +43,12 @@ export default defineComponent({
 	},
 	methods: {
 		change(event: Event) {
-			this.$emit("change-vehicle", (event.target as HTMLSelectElement).value);
+			const name = (event.target as HTMLSelectElement).value;
+			if (name) {
+				this.$emit("change-vehicle", name);
+			} else {
+				this.$emit("remove-vehicle");
+			}
 		},
 	},
 });
