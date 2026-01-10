@@ -154,10 +154,8 @@ import { distanceUnit } from "@/units";
 import formatter from "@/mixins/formatter";
 import { energyOptions } from "@/utils/energyOptions.ts";
 import { defineComponent } from "vue";
+import settings from "@/settings";
 
-const LAST_TARGET_TIME_KEY = "last_target_time";
-const LAST_SOC_GOAL_KEY = "last_soc_goal";
-const LAST_ENERGY_GOAL_KEY = "last_energy_goal";
 const DEFAULT_TARGET_TIME = "7:00";
 
 export default defineComponent({
@@ -276,11 +274,10 @@ export default defineComponent({
 		},
 		initInputFields() {
 			if (!this.selectedSoc) {
-				this.selectedSoc = window.localStorage[LAST_SOC_GOAL_KEY] || 100;
+				this.selectedSoc = settings.lastSocGoal ?? 100;
 			}
 			if (!this.selectedEnergy) {
-				this.selectedEnergy =
-					window.localStorage[LAST_ENERGY_GOAL_KEY] || this.capacity || 10;
+				this.selectedEnergy = settings.lastEnergyGoal ?? (this.capacity || 10);
 			}
 
 			let t = this.time;
@@ -321,13 +318,9 @@ export default defineComponent({
 			try {
 				const hours = this.selectedDate.getHours();
 				const minutes = this.selectedDate.getMinutes();
-				window.localStorage[LAST_TARGET_TIME_KEY] = `${hours}:${minutes}`;
-				if (this.selectedSoc) {
-					window.localStorage[LAST_SOC_GOAL_KEY] = this.selectedSoc;
-				}
-				if (this.selectedEnergy) {
-					window.localStorage[LAST_ENERGY_GOAL_KEY] = this.selectedEnergy;
-				}
+				settings.lastTargetTime = `${hours}:${minutes}`;
+				settings.lastSocGoal = this.selectedSoc;
+				settings.lastEnergyGoal = this.selectedEnergy;
 			} catch (e) {
 				console.warn(e);
 			}
@@ -358,9 +351,9 @@ export default defineComponent({
 			this.active = checked;
 		},
 		defaultTime() {
-			const [hours, minutes] = (
-				window.localStorage[LAST_TARGET_TIME_KEY] || DEFAULT_TARGET_TIME
-			).split(":");
+			const lastTargetTime = (settings.lastTargetTime || DEFAULT_TARGET_TIME).split(":");
+			const hours = Number(lastTargetTime[0]);
+			const minutes = Number(lastTargetTime[1]);
 
 			const target = new Date();
 			target.setSeconds(0);
