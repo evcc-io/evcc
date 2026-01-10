@@ -86,7 +86,7 @@ func (d *Stream) getQuotaAll() (StreamData, error) {
 	}
 
 	if res.Code != "0" {
-		return StreamData{}, fmt.Errorf("API error: %s", res.Message)
+		return StreamData{}, fmt.Errorf("API error: %s: %s", res.Code, res.Message)
 	}
 
 	return res.Data, nil
@@ -100,15 +100,15 @@ func (d *Stream) CurrentPower() (float64, error) {
 	}
 
 	switch d.usage {
+	case UsagePV:
+		return data.PowGetPvSum, nil
+	case UsageGrid:
+		return data.PowGetSysGrid, nil
 	case UsageBattery:
 		// Battery: negative = charging, positive = discharging
 		// EcoFlow convention: PowGetBpCms positive when discharging, negative when charging
 		// evcc convention: negative when discharging, positive when charging
 		return -data.PowGetBpCms, nil
-	case UsagePV:
-		return data.PowGetPvSum, nil
-	case UsageGrid:
-		return data.PowGetSysGrid, nil
 	default:
 		return 0, fmt.Errorf("unknown usage type: %s", d.usage)
 	}

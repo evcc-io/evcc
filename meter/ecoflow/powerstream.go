@@ -103,14 +103,14 @@ func (d *PowerStream) CurrentPower() (float64, error) {
 	case UsagePV:
 		// PV power is sum of both strings
 		return data.Pv1InputWatts + data.Pv2InputWatts, nil
+	case UsageGrid:
+		// Grid power (calculated from AC output)
+		return data.InvOutputWatts, nil
 	case UsageBattery:
 		// Battery: negative = charging, positive = discharging
 		// EcoFlow convention: BatInputWatts positive=discharge, negative=charge
 		// evcc convention: negative=discharge, positive=charge
 		return -data.BatInputWatts, nil
-	case UsageGrid:
-		// Grid power (calculated from AC output)
-		return data.InvOutputWatts, nil
 	default:
 		return 0, fmt.Errorf("unknown usage type: %s", d.usage)
 	}
