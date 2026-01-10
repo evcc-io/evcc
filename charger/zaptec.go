@@ -330,7 +330,7 @@ func (c *Zaptec) Currents() (float64, float64, float64, error) {
 // phases1p3p implements the api.PhaseSwitcher interface
 func (c *Zaptec) phases1p3p(phases int) error {
 	err := c.switchPhases(phases)
-	if err != nil || !c.priority {
+	if err != nil {
 		return err
 	}
 
@@ -338,6 +338,10 @@ func (c *Zaptec) phases1p3p(phases int) error {
 	randomCurrent := 6.0 + rand.Float64()
 	err = c.MaxCurrentMillis(randomCurrent)
 	if err != nil {
+		return err
+	}
+
+	if !c.priority {
 		return err
 	}
 
