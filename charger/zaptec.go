@@ -22,7 +22,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math"
+	"math/rand/v2"
 	"net/http"
 	"sort"
 	"time"
@@ -45,7 +45,7 @@ type Zaptec struct {
 	log        *util.Logger
 	statusG    util.Cacheable[zaptec.StateResponse]
 	instance   zaptec.Charger
-	maxCurrent int
+	maxCurrent float64
 	version    int
 	enabled    bool
 	priority   bool
@@ -274,12 +274,11 @@ var _ api.ChargerEx = (*Zaptec)(nil)
 
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (c *Zaptec) MaxCurrentMillis(current float64) error {
-	curr := math.Round(current*10) / 10 // round to 1 digit to avoid strange numbers
-	if curr < 0 || curr > 32 {
-		return fmt.Errorf("invalid current %.1f", curr)
+	if current < 6 || current > 32 {
+		return fmt.Errorf("invalid current %.3f", current)
 	}
 	data := zaptec.Update{
-		MaxChargeCurrent: &curr,
+		MaxChargeCurrent: &current,
 	}
 
 	return c.chargerUpdate(data)
@@ -331,38 +330,25 @@ func (c *Zaptec) Currents() (float64, float64, float64, error) {
 // phases1p3p implements the api.PhaseSwitcher interface
 func (c *Zaptec) phases1p3p(phases int) error {
 	err := c.switchPhases(phases)
-	if err != nil {
+	if err != nil || !c.priority {
 		return err
 	}
 
-	res, err := c.statusG.Get()
+	// trigger phase switch instantly with random current update
+	randomCurrent := 6.0 + rand.Float64()
+	err = c.MaxCurrentMillis(randomCurrent)
 	if err != nil {
-		return err
-	}
-	oldCurrent, err := res.ObservationByID(zaptec.ChargerMaxCurrent).Float64()
-	if err != nil {
-		return err
-	}
-
-	// adjust the current by +/- 0.1A; otherwise, the phase change will not happen
-	newCurrent := oldCurrent - 0.1
-	if oldCurrent <= 6 {
-		newCurrent = oldCurrent + 0.1
-	}
-
-	c.log.DEBUG.Printf("updating current to trigger phase switch: %.1fA -> %.1fA\n", oldCurrent, newCurrent)
-	err = c.MaxCurrentMillis(newCurrent)
-	if err != nil {
-		return err
-	}
-
-	if !c.priority {
 		return err
 	}
 
 	// priority configured
 	data := zaptec.SessionPriority{
 		PrioritizedPhases: &phases,
+	}
+
+	res, err := c.statusG.Get()
+	if err != nil {
+		return err
 	}
 
 	if session := res.ObservationByID(zaptec.SessionIdentifier); session != nil {
@@ -374,14 +360,14 @@ func (c *Zaptec) phases1p3p(phases int) error {
 
 func (c *Zaptec) switchPhases(phases int) error {
 	if c.version != zaptec.ZaptecGo2 {
-		c.log.DEBUG.Printf("switching to %dp\n", phases)
 		data := zaptec.Update{
 			MaxChargePhases: &phases,
 		}
+
 		return c.chargerUpdate(data)
 	}
 
-	var zero int
+	var zero float64
 	data := zaptec.UpdateInstallation{
 		AvailableCurrentPhase1: &c.maxCurrent,
 		AvailableCurrentPhase2: &zero,
@@ -414,7 +400,7 @@ func (c *Zaptec) Identify() (string, error) {
 	return "", nil
 }
 
-func (c *Zaptec) getInstallationMaxCurrent() (int, error) {
+func (c *Zaptec) getInstallationMaxCurrent() (float64, error) {
 	var res zaptec.Installation
 
 	uri := fmt.Sprintf("%s/api/installation/%s", zaptec.ApiURL, c.instance.InstallationId)
@@ -422,7 +408,7 @@ func (c *Zaptec) getInstallationMaxCurrent() (int, error) {
 		return 0, err
 	}
 
-	return int(res.MaxCurrent), nil
+	return res.MaxCurrent, nil
 }
 
 func (c *Zaptec) installationUpdate(data zaptec.UpdateInstallation) error {
