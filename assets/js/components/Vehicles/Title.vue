@@ -26,7 +26,6 @@
 				class="options"
 				:selected="vehicleName"
 				@change-vehicle="changeVehicle"
-				@remove-vehicle="removeVehicle"
 			>
 				<span class="flex-grow-1 text-truncate vehicle-name" data-testid="vehicle-name">
 					{{ name }}
@@ -129,10 +128,11 @@ export default defineComponent({
 	},
 	methods: {
 		changeVehicle(name: string) {
-			this.$emit("change-vehicle", name);
-		},
-		removeVehicle() {
-			this.$emit("remove-vehicle");
+			if (name) {
+				this.$emit("change-vehicle", name);
+			} else {
+				this.$emit("remove-vehicle");
+			}
 		},
 		initTooltip() {
 			this.$nextTick(() => {
