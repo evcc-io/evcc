@@ -11,8 +11,8 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 )
 
-// EcoFlowStream represents an EcoFlow Stream Energy Management System (Inverter + Battery)
-type EcoFlowStream struct {
+// Stream represents an EcoFlow Stream Energy Management System (Inverter + Battery)
+type Stream struct {
 	*request.Helper
 	log       *util.Logger
 	uri       string
@@ -21,13 +21,13 @@ type EcoFlowStream struct {
 	secretKey string // API secret key for signing
 	usage     string // pv, grid, battery
 	cache     time.Duration
-	dataG     util.Cacheable[EcoFlowStreamData]
+	dataG     util.Cacheable[StreamData]
 }
 
-var _ api.Meter = (*EcoFlowStream)(nil)
+var _ api.Meter = (*Stream)(nil)
 
-// NewEcoFlowStreamFromConfig creates EcoFlow Stream meter from config
-func NewEcoFlowStreamFromConfig(ctx context.Context, other map[string]interface{}) (api.Meter, error) {
+// NewStreamFromConfig creates EcoFlow Stream meter from config
+func NewStreamFromConfig(ctx context.Context, other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
 		URI       string        `mapstructure:"uri"`
 		SN        string        `mapstructure:"sn"`
@@ -36,7 +36,6 @@ func NewEcoFlowStreamFromConfig(ctx context.Context, other map[string]interface{
 		Usage     string        `mapstructure:"usage"`
 		Cache     time.Duration `mapstructure:"cache"`
 	}{
-		Usage: "grid",
 		Cache: 30 * time.Second,
 	}
 
@@ -49,29 +48,29 @@ func NewEcoFlowStreamFromConfig(ctx context.Context, other map[string]interface{
 	}
 
 	cc.Usage = strings.ToLower(cc.Usage)
-	device, err := NewEcoFlowStream(cc.URI, cc.SN, cc.AccessKey, cc.SecretKey, cc.Usage, cc.Cache)
+	device, err := NewStream(cc.URI, cc.SN, cc.AccessKey, cc.SecretKey, cc.Usage, cc.Cache)
 	if err != nil {
 		return nil, err
 	}
 
 	// For battery usage, wrap in battery interface
 	if cc.Usage == "battery" {
-		return &EcoFlowStreamBattery{device}, nil
+		return &StreamBattery{device}, nil
 	}
 
 	// For other usages (pv, grid), return as meter
 	return device, nil
 }
 
-// NewEcoFlowStream creates an EcoFlow Stream device for use as a meter
-func NewEcoFlowStream(uri, sn, accessKey, secretKey, usage string, cache time.Duration) (*EcoFlowStream, error) {
+// NewStream creates an EcoFlow Stream device for use as a meter
+func NewStream(uri, sn, accessKey, secretKey, usage string, cache time.Duration) (*Stream, error) {
 	if uri == "" || sn == "" || accessKey == "" || secretKey == "" {
 		return nil, fmt.Errorf("ecoflow-stream: missing uri, sn, accessKey or secretKey")
 	}
 
 	log := util.NewLogger("ecoflow-stream").Redact(accessKey, secretKey)
 
-	device := &EcoFlowStream{
+	device := &Stream{
 		Helper:    request.NewHelper(log),
 		log:       log,
 		uri:       strings.TrimSuffix(uri, "/"),
@@ -93,23 +92,23 @@ func NewEcoFlowStream(uri, sn, accessKey, secretKey, usage string, cache time.Du
 }
 
 // getQuotaAll fetches device quota data from API
-func (d *EcoFlowStream) getQuotaAll() (EcoFlowStreamData, error) {
+func (d *Stream) getQuotaAll() (StreamData, error) {
 	uri := fmt.Sprintf("%s/iot-open/sign/device/quota/all?sn=%s", d.uri, d.sn)
 
-	var res ecoflowResponse[EcoFlowStreamData]
+	var res ecoflowResponse[StreamData]
 	if err := d.GetJSON(uri, &res); err != nil {
-		return EcoFlowStreamData{}, err
+		return StreamData{}, err
 	}
 
 	if res.Code != "0" {
-		return EcoFlowStreamData{}, fmt.Errorf("API error: %s", res.Message)
+		return StreamData{}, fmt.Errorf("API error: %s", res.Message)
 	}
 
 	return res.Data, nil
 }
 
 // CurrentPower implements api.Meter
-func (d *EcoFlowStream) CurrentPower() (float64, error) {
+func (d *Stream) CurrentPower() (float64, error) {
 	data, err := d.dataG.Get()
 	if err != nil {
 		return 0, err
@@ -130,18 +129,18 @@ func (d *EcoFlowStream) CurrentPower() (float64, error) {
 	}
 }
 
-// EcoFlowStreamBattery wraps EcoFlowStream for battery interface
-type EcoFlowStreamBattery struct {
-	*EcoFlowStream
+// StreamBattery wraps Stream for battery interface
+type StreamBattery struct {
+	*Stream
 }
 
 var (
-	_ api.Meter   = (*EcoFlowStreamBattery)(nil)
-	_ api.Battery = (*EcoFlowStreamBattery)(nil)
+	_ api.Meter   = (*StreamBattery)(nil)
+	_ api.Battery = (*StreamBattery)(nil)
 )
 
-// Soc implements api.Battery
-func (d *EcoFlowStreamBattery) Soc() (float64, error) {
+// Soc implements the api.Battery interface
+func (d *StreamBattery) Soc() (float64, error) {
 	data, err := d.dataG.Get()
 	if err != nil {
 		return 0, err

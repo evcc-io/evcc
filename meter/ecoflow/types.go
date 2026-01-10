@@ -7,9 +7,9 @@ type ecoflowResponse[T any] struct {
 	Data    T      `json:"data"`
 }
 
-// EcoFlowStreamData represents the full device status from EcoFlow Stream API
+// StreamData represents the full device status from EcoFlow Stream API
 // https://developer-eu.ecoflow.com/us/document/bkw
-type EcoFlowStreamData struct {
+type StreamData struct {
 	Relay2Onoff               bool            `json:"relay2Onoff"`         // AC1 switch (false=off, true=on)
 	Relay3Onoff               bool            `json:"relay3Onoff"`         // AC2 switch (false=off, true=on)
 	PowGetPvSum               float64         `json:"powGetPvSum"`         // Real-time PV power (W)
@@ -26,9 +26,9 @@ type EcoFlowStreamData struct {
 	QuotaCloudTs              string          `json:"quota_cloud_ts"`
 }
 
-// EcoFlowPowerStreamData represents the full device status from PowerStream API
+// PowerStreamData represents the full device status from PowerStream API
 // https://developer-eu.ecoflow.com/us/document/wn511
-type EcoFlowPowerStreamData struct {
+type PowerStreamData struct {
 	// Power values (from heartbeat)
 	Pv1InputWatts  float64 `json:"pv1InputWatts"`  // PV1 input power (W)
 	Pv2InputWatts  float64 `json:"pv2InputWatts"`  // PV2 input power (W)
