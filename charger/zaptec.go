@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"math/rand/v2"
 	"net/http"
 	"sort"
@@ -335,7 +336,8 @@ func (c *Zaptec) phases1p3p(phases int) error {
 	}
 
 	// trigger phase switch instantly with random current update
-	randomCurrent := 6.0 + rand.Float64()
+	randomCurrent := 6.0 + rand.Float64()*0.5
+	randomCurrent = math.Round(randomCurrent*100) / 100
 	err = c.MaxCurrentMillis(randomCurrent)
 	if err != nil {
 		return err
