@@ -19,6 +19,13 @@ func (r Zones) Len() int {
 }
 
 func (r Zones) Less(i, j int) bool {
+	specI := r[i].Specificity()
+	specJ := r[j].Specificity()
+
+	if specI != specJ {
+		return specI > specJ
+	}
+
 	if r[i].Hours.From.Minutes() == r[j].Hours.From.Minutes() {
 		return r[i].Hours.To.Minutes() > r[j].Hours.To.Minutes()
 	}
@@ -78,5 +85,26 @@ HOURS:
 		res = append(res, HourMin{Hour: hour, Min: 0})
 	}
 
+	// Sort markers by time to ensure correct ordering
+	slices.SortFunc(res, func(a, b HourMin) int {
+		return a.Minutes() - b.Minutes()
+	})
+
 	return res
+}
+
+// Specificity returns a weighted specificity score.
+// Higher value = more specific.
+func (z Zone) Specificity() int {
+	score := 0
+	if len(z.Months) > 0 && len(z.Months) < 12 {
+		score += 4
+	}
+	if len(z.Days) > 0 && len(z.Days) < 7 {
+		score += 2
+	}
+	if !z.Hours.From.IsNil() || !z.Hours.To.IsNil() {
+		score += 1
+	}
+	return score
 }

@@ -103,3 +103,60 @@ func TestFixedSplitZones(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, expect, rates)
 }
+
+func TestFixedMonthsSorting(t *testing.T) {
+	at, err := NewFixedFromConfig(map[string]any{
+		"zones": []struct {
+			Price  float64
+			Hours  string
+			Months string
+		}{
+			{0.1, "0-5", ""},      // all year
+			{0.2, "5-0", ""},      // all year
+			{0.3, "2-4", "Jun"},   // Jun only
+			{0.4, "18-20", "Jun"}, // Jun only
+			// TODO: specific days
+		},
+	})
+	require.NoError(t, err)
+
+	tc := []struct {
+		m, d, h int
+		rate    float64
+	}{
+		// all year
+		{1, 1, 0, 0.1},
+		{1, 1, 2, 0.1},
+		{1, 1, 5, 0.2},
+		{1, 1, 18, 0.2},
+
+		// Jun only
+		{6, 1, 0, 0.1},
+		{6, 1, 2, 0.3},
+		{6, 1, 5, 0.2},
+		{6, 1, 18, 0.4},
+	}
+
+	// Test both UTC and Local timezones to verify clock timezone is respected
+	timezones := []*time.Location{time.UTC, time.Local}
+	for _, tz := range timezones {
+		t.Run(tz.String(), func(t *testing.T) {
+			for _, tc := range tc {
+				clock := clock.NewMock()
+				at.(*Fixed).clock = clock
+
+				clock.Set(time.Date(2025, time.Month(tc.m), tc.d, 0, 0, 0, 0, tz))
+
+				rr, err := at.Rates()
+				require.NoError(t, err)
+
+				r, err := rr.At(clock.Now().Add(time.Duration(tc.h) * time.Hour))
+				require.NoError(t, err)
+
+				assert.Equal(t, tc.rate, r.Value,
+					"TZ=%s, %04d-%02d-%02d %02d:00",
+					tz, 2025, tc.m, tc.d, tc.h)
+			}
+		})
+	}
+}

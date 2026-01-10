@@ -95,3 +95,21 @@ func ParseTimeRanges(s string) ([]TimeRange, error) {
 
 	return res, nil
 }
+
+// Overlaps returns true if two time ranges intersect (handles midnight wrap)
+func (tr TimeRange) Overlaps(other TimeRange) bool {
+	startA := tr.From.Hour*60 + tr.From.Min
+	endA := tr.To.Hour*60 + tr.To.Min
+	startB := other.From.Hour*60 + other.From.Min
+	endB := other.To.Hour*60 + other.To.Min
+
+	// wrap over midnight
+	if endA <= startA {
+		endA += 24 * 60
+	}
+	if endB <= startB {
+		endB += 24 * 60
+	}
+
+	return startA < endB && startB < endA
+}
