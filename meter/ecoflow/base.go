@@ -1,7 +1,6 @@
 package ecoflow
 
 import (
-	"fmt"
 	"strings"
 	"time"
 
