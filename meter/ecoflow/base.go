@@ -24,8 +24,8 @@ type Device struct {
 
 // NewDevice creates a new EcoFlow device with shared configuration
 func NewDevice(deviceName, uri, sn, accessKey, secretKey string, usage Usage, cache time.Duration) (*Device, error) {
-	if uri == "" || sn == "" || accessKey == "" || secretKey == "" {
-		return nil, fmt.Errorf("%s: missing uri, sn, accessKey or secretKey", deviceName)
+	if err := ValidateConfig(uri, sn, accessKey, secretKey, deviceName); err != nil {
+		return nil, err
 	}
 
 	log := util.NewLogger(deviceName).Redact(accessKey, secretKey)

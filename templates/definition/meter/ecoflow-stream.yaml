@@ -29,8 +29,6 @@ requirements:
       **Note for multiple Stream devices:** In a Stream cluster (multiple devices together) only configure the Master (STREAM Ultra).
 
       Developer Portal: https://developer-eu.ecoflow.com/us
-
-      **Note for multiple Stream devices:** In a Stream cluster (multiple devices together), only configure the master (STREAM Ultra).
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
