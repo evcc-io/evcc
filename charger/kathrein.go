@@ -153,6 +153,11 @@ const (
 	//   0, 6000 … 32000 mA
 	//   Default = 6000  mA
 	kathreinRegEMSTimeOutFallbackCurrent = 0x00A5
+
+	// Authentication via ModBus
+	kathreinRegAuthenticationTagID     = 0x00B0 // string RFID tag (16 registers)
+	kathreinRegAuthenticationTagType   = 0x00C0 // uint16 Tag-Type (0x0000: RFID)
+	kathreinRegAuthenticationTagAction = 0x00C1 // uint16 Tag-Action (0x0001: Start charging)
 )
 
 func init() {
@@ -422,6 +427,28 @@ func (wb *Kathrein) Identify() (string, error) {
 	}
 
 	return rfid, nil
+}
+
+var _ api.Authorizer = (*Kathrein)(nil)
+
+// Authorize implements the api.Authorizer interface
+func (wb *Kathrein) Authorize(rfid string) error {
+	tag := make([]byte, 32)
+	copy(tag, []byte(rfid))
+
+	if _, err := wb.conn.WriteMultipleRegisters(kathreinRegAuthenticationTagID, 16, tag); err != nil {
+		return err
+	}
+
+	if _, err := wb.conn.WriteSingleRegister(kathreinRegAuthenticationTagType, 0x0000); err != nil {
+		return err
+	}
+
+	if _, err := wb.conn.WriteSingleRegister(kathreinRegAuthenticationTagAction, 0x0001); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 var _ api.Diagnosis = (*Kathrein)(nil)

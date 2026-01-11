@@ -74,6 +74,26 @@ func (lp *Loadpoint) identifyVehicle() {
 	}
 }
 
+// authorizeVehicle authorizes vehicle for charging by vehicle id
+func (lp *Loadpoint) authorizeVehicle() {
+	authorizer, ok := lp.charger.(api.Authorizer)
+	if !ok || lp.vehicle == nil {
+		return
+	}
+
+	rfid := lp.vehicle.Identifiers()
+	if len(rfid) == 0 {
+		return
+	}
+
+	// authorize by first rfid entry, ignoring further entries
+	if err := authorizer.Authorize(rfid[0]); err != nil {
+		lp.log.ERROR.Println("charger vehicle authorization:", err)
+	} else {
+		lp.log.DEBUG.Println("authorized by vehicle id:", rfid[0])
+	}
+}
+
 // selectVehicleByID selects the vehicle with the given ID
 func (lp *Loadpoint) selectVehicleByID(id string) api.Vehicle {
 	vehicles := lp.coordinatedVehicles()
