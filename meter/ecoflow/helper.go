@@ -61,10 +61,17 @@ func (t *ecoflowAuthTransport) RoundTrip(req *http.Request) (*http.Response, err
 }
 
 // ecoflowGenerateNonce generates a random 6-digit nonce (100000-999999)
+// Falls back to time-based nonce if random source fails
 func ecoflowGenerateNonce() string {
 	// Generate 3 random bytes and convert to 6-digit number
 	buf := make([]byte, 3)
-	rand.Read(buf) // Never returns error per crypto/rand docs
+	if _, err := rand.Read(buf); err != nil {
+		// Fallback: use time-based nonce if random source fails
+		// This ensures we can still operate even if system RNG is unavailable
+		val := uint32(time.Now().UnixNano() % 16777215)
+		nonce := (val % 900000) + 100000
+		return strconv.FormatUint(uint64(nonce), 10)
+	}
 
 	// Convert 3 bytes to value in range [0, 16777215]
 	// Map to [100000, 999999] range (900000 possible values)

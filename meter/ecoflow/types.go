@@ -45,6 +45,14 @@ func ParseUsage(s string) (Usage, error) {
 	}
 }
 
+// ValidateConfig checks that all required configuration fields are set
+func ValidateConfig(uri, sn, accessKey, secretKey string, deviceName string) error {
+	if uri == "" || sn == "" || accessKey == "" || secretKey == "" {
+		return fmt.Errorf("%s: missing uri, sn, accessKey or secretKey", deviceName)
+	}
+	return nil
+}
+
 // Config is the shared configuration for Stream and PowerStream devices
 type Config struct {
 	URI       string        `mapstructure:"uri"`
@@ -64,8 +72,8 @@ func (c *Config) Decode(other map[string]interface{}, deviceName string) error {
 		return err
 	}
 
-	if c.URI == "" || c.SN == "" || c.AccessKey == "" || c.SecretKey == "" {
-		return fmt.Errorf("%s: missing uri, sn, accessKey or secretKey", deviceName)
+	if err := ValidateConfig(c.URI, c.SN, c.AccessKey, c.SecretKey, deviceName); err != nil {
+		return err
 	}
 
 	// Parse and validate usage type
