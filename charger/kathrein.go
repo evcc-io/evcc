@@ -433,18 +433,10 @@ var _ api.Authorizer = (*Kathrein)(nil)
 
 // Authorize implements the api.Authorizer interface
 func (wb *Kathrein) Authorize(rfid string) error {
-	tag := []byte(rfid)
-	l := len(tag)
-	if l == 0 {
-		return nil
-	}
+	tag := make([]byte, 32)
+	copy(tag, []byte(rfid))
 
-	for l < 32 {
-		tag = append(tag, 0)
-		l++
-	}
-
-	if _, err := wb.conn.WriteMultipleRegisters(kathreinRegAuthenticationTagID, 16, tag[:32]); err != nil {
+	if _, err := wb.conn.WriteMultipleRegisters(kathreinRegAuthenticationTagID, 16, tag); err != nil {
 		return err
 	}
 
