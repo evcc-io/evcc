@@ -818,7 +818,8 @@ func configureMessengers(conf *globalconfig.Messaging, vehicles push.Vehicles, v
 			for i := range data.Services {
 				s := &data.Services[i]
 
-				if s.Type == "email" {
+				switch s.Type {
+				case "email":
 					uri, ok := s.Other["uri"].(string)
 					if !ok {
 						return nil, fmt.Errorf("failed to migrate email service due to missing uri")
@@ -848,7 +849,7 @@ func configureMessengers(conf *globalconfig.Messaging, vehicles push.Vehicles, v
 					}
 
 					delete(s.Other, "uri")
-				} else if s.Type == "ntfy" {
+				case "ntfy":
 					uri, ok := s.Other["uri"].(string)
 					if !ok {
 						return nil, fmt.Errorf("failed to migrate ntfy service due to missing uri")
@@ -869,7 +870,7 @@ func configureMessengers(conf *globalconfig.Messaging, vehicles push.Vehicles, v
 					}
 
 					delete(s.Other, "uri")
-				} else if s.Type == "custom" {
+				case "custom":
 					d, err := json.Marshal(s.Other)
 					if err != nil {
 						return nil, err
@@ -919,7 +920,10 @@ func configureMessengers(conf *globalconfig.Messaging, vehicles push.Vehicles, v
 		// the key send is stored as string in database for frontend purposes
 		// but backend needs it as yaml map
 		if conf.Type == "custom" {
-			sendStr := props["send"].(string)
+			sendStr, ok := props["send"].(string)
+			if !ok {
+				return nil, fmt.Errorf("custom service 'send' must be a string, got %T", props["send"])
+			}
 
 			var send map[string]any
 			if err := yaml.Unmarshal([]byte(sendStr), &send); err != nil {
