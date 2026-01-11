@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/samber/lo/it"
 )
 
 // Start returns the earliest slot's start time
@@ -133,15 +134,6 @@ func clampRatesSeq(rates api.Rates, start, end time.Time) iter.Seq[api.Rate] {
 	}
 }
 
-// SumBySeq sums over a sequence
-func SumBySeq[T any, R float64](seq iter.Seq[T], iteratee func(item T) R) R {
-	var sum R
-	for t := range seq {
-		sum += iteratee(t)
-	}
-	return sum
-}
-
 // findContinuousWindow finds the cheapest continuous window of slots for the given duration.
 // - rates are filtered to [now, targetTime] window by caller
 // Returns the selected rates.
@@ -155,7 +147,7 @@ func findContinuousWindow(rates api.Rates, effectiveDuration time.Duration, targ
 			break
 		}
 
-		cost := SumBySeq(clampRatesSeq(rates[i:], rates[i].Start, windowEnd), func(r api.Rate) float64 {
+		cost := it.SumBy(clampRatesSeq(rates[i:], rates[i].Start, windowEnd), func(r api.Rate) float64 {
 			return float64(r.End.Sub(r.Start)) * r.Value
 		})
 

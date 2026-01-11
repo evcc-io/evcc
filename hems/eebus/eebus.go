@@ -141,12 +141,8 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, passthrough func(b
 	}
 
 	// controllable system
-	for _, s := range c.cs.CsLPCInterface.RemoteEntitiesScenarios() {
-		c.log.DEBUG.Printf("ski %s CS LPC scenarios: %v", s.Entity.Device().Ski(), s.Scenarios)
-	}
-	for _, s := range c.cs.CsLPPInterface.RemoteEntitiesScenarios() {
-		c.log.DEBUG.Printf("ski %s CS LPP scenarios: %v", s.Entity.Device().Ski(), s.Scenarios)
-	}
+	eebus.LogEntities(c.log.DEBUG, "CS LPC", c.cs.CsLPCInterface)
+	eebus.LogEntities(c.log.DEBUG, "CS LPP", c.cs.CsLPPInterface)
 
 	// set initial values
 	if err := c.cs.CsLPCInterface.SetConsumptionNominalMax(limits.ContractualConsumptionNominalMax); err != nil {
