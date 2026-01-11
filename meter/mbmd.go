@@ -15,21 +15,18 @@ import (
 	"github.com/volkszaehler/mbmd/meters/rs485"
 )
 
-// ModbusMbmd is an api.Meter implementation with configurable getters and setters.
-type ModbusMbmd struct {
+// Mbmd is an api.Meter implementation with configurable getters and setters.
+type Mbmd struct {
 	conn   *modbus.Connection
 	device *rs485.RS485
-	powerG func() (float64, error)
 }
 
 func init() {
-	registry.AddCtx("mbmd", NewModbusMbmdFromConfig)
+	registry.AddCtx("mbmd", NewMbmdFromConfig)
 }
 
-//go:generate go tool decorate -f decorateModbusMbmd -b api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.PhasePowers,Powers,func() (float64, float64, float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64"
-
-// NewModbusMbmdFromConfig creates api.Meter from config
-func NewModbusMbmdFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
+// NewMbmdFromConfig creates api.Meter from config
+func NewMbmdFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	cc := struct {
 		Model              string
 		batteryCapacity    `mapstructure:",squash"`
@@ -83,14 +80,14 @@ func NewModbusMbmdFromConfig(ctx context.Context, other map[string]any) (api.Met
 		return nil, err
 	}
 
-	m := &ModbusMbmd{
+	mbmd := &Mbmd{
 		conn:   conn,
 		device: device,
 	}
 
 	ops := device.Producer().Produce()
 
-	m.powerG, err = m.deviceOp(ops, cc.Power)
+	powerG, err := mbmd.deviceOp(ops, cc.Power)
 	if err != nil {
 		return nil, fmt.Errorf("invalid measurement for power: %s", cc.Power)
 	}
@@ -98,7 +95,7 @@ func NewModbusMbmdFromConfig(ctx context.Context, other map[string]any) (api.Met
 	// decorate energy
 	var totalEnergy func() (float64, error)
 	if cc.Energy != "" {
-		g, err := m.deviceOp(ops, cc.Energy)
+		g, err := mbmd.deviceOp(ops, cc.Energy)
 		if err != nil {
 			return nil, fmt.Errorf("invalid measurement for energy: %s", cc.Energy)
 		}
@@ -107,19 +104,19 @@ func NewModbusMbmdFromConfig(ctx context.Context, other map[string]any) (api.Met
 	}
 
 	// decorate currents
-	currentsG, err := m.buildPhaseProviders(ops, cc.Currents)
+	currentsG, err := mbmd.buildPhaseProviders(ops, cc.Currents)
 	if err != nil {
 		return nil, fmt.Errorf("currents: %w", err)
 	}
 
 	// decorate voltages
-	voltagesG, err := m.buildPhaseProviders(ops, cc.Voltages)
+	voltagesG, err := mbmd.buildPhaseProviders(ops, cc.Voltages)
 	if err != nil {
 		return nil, fmt.Errorf("voltages: %w", err)
 	}
 
 	// decorate powers
-	powersG, err := m.buildPhaseProviders(ops, cc.Powers)
+	powersG, err := mbmd.buildPhaseProviders(ops, cc.Powers)
 	if err != nil {
 		return nil, fmt.Errorf("powers: %w", err)
 	}
@@ -127,7 +124,7 @@ func NewModbusMbmdFromConfig(ctx context.Context, other map[string]any) (api.Met
 	// decorate soc
 	var soc func() (float64, error)
 	if cc.Soc != "" {
-		g, err := m.deviceOp(ops, cc.Soc)
+		g, err := mbmd.deviceOp(ops, cc.Soc)
 		if err != nil {
 			return nil, fmt.Errorf("invalid measurement for soc: %s", cc.Soc)
 		}
@@ -135,11 +132,17 @@ func NewModbusMbmdFromConfig(ctx context.Context, other map[string]any) (api.Met
 		soc = g
 	}
 
-	return decorateModbusMbmd(m, totalEnergy, currentsG, voltagesG, powersG, soc, cc.batteryCapacity.Decorator()), nil
+	m, _ := NewConfigurable(powerG)
+
+	if soc != nil {
+		return m.DecorateBattery(totalEnergy, soc, cc.batteryCapacity.Decorator(), cc.batterySocLimits.Decorator(), cc.batteryPowerLimits.Decorator(), nil), nil
+	}
+
+	return m.Decorate(totalEnergy, currentsG, voltagesG, powersG, nil), nil
 }
 
 // deviceOp checks is RS485 device supports operation
-func (m *ModbusMbmd) deviceOp(ops []rs485.Operation, name string) (func() (float64, error), error) {
+func (m *Mbmd) deviceOp(ops []rs485.Operation, name string) (func() (float64, error), error) {
 	// leading minus sign?
 	name, invert := strings.CutPrefix(name, "-")
 
@@ -171,7 +174,7 @@ func (m *ModbusMbmd) deviceOp(ops []rs485.Operation, name string) (func() (float
 	return nil, fmt.Errorf("unsupported measurement: %s", measurement.String())
 }
 
-func (m *ModbusMbmd) buildPhaseProviders(ops []rs485.Operation, readings []string) (func() (float64, float64, float64, error), error) {
+func (m *Mbmd) buildPhaseProviders(ops []rs485.Operation, readings []string) (func() (float64, float64, float64, error), error) {
 	if len(readings) == 0 {
 		return nil, nil
 	}
@@ -191,9 +194,4 @@ func (m *ModbusMbmd) buildPhaseProviders(ops []rs485.Operation, readings []strin
 	}
 
 	return measurement.CombinePhases(phases), nil
-}
-
-// CurrentPower implements the api.Meter interface
-func (m *ModbusMbmd) CurrentPower() (float64, error) {
-	return m.powerG()
 }

@@ -5,7 +5,7 @@ products:
 requirements:
   evcc: ["skiptest"]
   description:
-    en: "Spain PVPC tariff extracted from https://api.esios.ree.es. It is possible to create grid and feed-in tariffs. You need a token in order to be able to use the api"
+    generic: "Spain PVPC tariff extracted from [api.esios.ree.es](https://api.esios.ree.es). It is possible to create grid and feed-in tariffs. You need a token in order to be able to use the API"
 group: price
 countries: ["ES"]
 params:

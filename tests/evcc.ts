@@ -12,6 +12,10 @@ const BINARY = "./evcc";
 const IS_CI = !!process.env["GITHUB_ACTIONS"];
 const LOG_ENABLED = !IS_CI;
 
+console.log(
+  "REMINDER: Playwright tests run against the ./evcc binary. Rebuild with 'make ui build' after application changes."
+);
+
 // sometimes evcc startup fails due to infra issues in runner ususally fixed by retry. allowing some fails to avoid github annotations clutter
 let allowedStartupFails = IS_CI ? 2 : 0;
 
@@ -105,6 +109,7 @@ async function _start(config?: string, flags: string | string[] = []) {
   const configArgs = config ? ["--config", config.includes("/") ? config : `tests/${config}`] : [];
   const port = workerPort();
   const ocpp = ocppPort();
+
   log(`wait until port ${port} is available`);
   // wait for port to be available
   await waitOn({ resources: [`tcp:${port}`], reverse: true, log: LOG_ENABLED });
@@ -128,7 +133,7 @@ async function _start(config?: string, flags: string | string[] = []) {
     steamLog.end();
   });
   try {
-    await waitOn({ resources: [baseUrl()], log: LOG_ENABLED, timeout: 50000 });
+    await waitOn({ resources: [baseUrl()], log: LOG_ENABLED, timeout: 90000 });
   } catch (error) {
     instance.kill("SIGKILL");
     console.error(logPrefix(), `evcc startup failed: ${error}`);

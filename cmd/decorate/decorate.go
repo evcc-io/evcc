@@ -10,6 +10,7 @@ import (
 	"os"
 	"reflect"
 	"slices"
+	"strconv"
 	"strings"
 	"text/template"
 
@@ -21,7 +22,6 @@ import (
 	"golang.org/x/tools/imports"
 )
 
-// go:generate go tool decorate -f decorateTest -b api.Charger -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
 //go:generate go tool decorate
 //evcc:function decorateTest
 //evcc:basetype api.Charger
@@ -35,13 +35,23 @@ var srcTmpl string
 //go:embed header.tpl
 var header string
 
+type function struct {
+	function, signature string
+}
+
 type dynamicType struct {
-	typ, function, signature string
+	typ       string
+	functions []function
+}
+
+type funcStruct struct {
+	Signature, Function, VarName, ReturnTypes string
+	Params                                    []string
 }
 
 type typeStruct struct {
-	Type, ShortType, Signature, Function, VarName, ReturnTypes string
-	Params                                                     []string
+	Type, ShortType string
+	Functions       []funcStruct
 }
 
 var a struct {
@@ -95,11 +105,13 @@ func generate(out io.Writer, functionName, baseType string, dynamicTypes ...dyna
 	tmpl, err := template.New("gen").Funcs(sprig.FuncMap()).Funcs(template.FuncMap{
 		// contains checks if slice contains string
 		"contains": slices.Contains[[]string, string],
-		// ordered returns a slice of typeStructs ordered by dynamicType
-		"ordered": func() []typeStruct {
-			ordered := make([]typeStruct, 0)
-			for _, k := range dynamicTypes {
-				ordered = append(ordered, types[k.typ])
+		// ordered returns a slice of funcStruct ordered by dynamicType
+		"ordered": func() []funcStruct {
+			ordered := make([]funcStruct, 0)
+			for _, dt := range dynamicTypes {
+				for _, fs := range types[dt.typ].Functions {
+					ordered = append(ordered, fs)
+				}
 			}
 
 			return ordered
@@ -128,23 +140,40 @@ func generate(out io.Writer, functionName, baseType string, dynamicTypes ...dyna
 		parts := strings.SplitN(dt.typ, ".", 2)
 		lastPart := parts[len(parts)-1]
 
-		openingBrace := strings.Index(dt.signature, "(")
-		closingBrace := strings.Index(dt.signature, ")")
-		paramsStr := dt.signature[openingBrace+1 : closingBrace]
+		var funcs []funcStruct
 
-		var params []string
-		if paramsStr = strings.TrimSpace(paramsStr); len(paramsStr) > 0 {
-			params = strings.Split(paramsStr, ",")
+		for i, fun := range dt.functions {
+			function := fun.function
+			signature := fun.signature
+
+			openingBrace := strings.Index(signature, "(")
+			closingBrace := strings.Index(signature, ")")
+			paramsStr := signature[openingBrace+1 : closingBrace]
+			returns := signature[closingBrace+1:]
+
+			var params []string
+			if paramsStr = strings.TrimSpace(paramsStr); len(paramsStr) > 0 {
+				params = strings.Split(paramsStr, ",")
+			}
+
+			varName := strings.ToLower(lastPart[:1]) + lastPart[1:]
+			if len(dt.functions) > 1 {
+				varName += strconv.Itoa(i)
+			}
+
+			funcs = append(funcs, funcStruct{
+				VarName:     varName,
+				Signature:   signature,
+				Function:    function,
+				Params:      params,
+				ReturnTypes: returns,
+			})
 		}
 
 		types[dt.typ] = typeStruct{
-			Type:        dt.typ,
-			ShortType:   lastPart,
-			VarName:     strings.ToLower(lastPart[:1]) + lastPart[1:],
-			Signature:   dt.signature,
-			Function:    dt.function,
-			Params:      params,
-			ReturnTypes: dt.signature[closingBrace+1:],
+			Type:      dt.typ,
+			ShortType: lastPart,
+			Functions: funcs,
 		}
 
 		combos = append(combos, dt.typ)
@@ -214,7 +243,7 @@ type decorationSet struct {
 var (
 	target   = pflag.StringP("out", "o", "", "output file")
 	pkg      = pflag.StringP("package", "p", "", "package name")
-	function = pflag.StringP("function", "f", "", "function name")
+	funcname = pflag.StringP("function", "f", "", "function name")
 	base     = pflag.StringP("base", "b", "", "base type")
 	ret      = pflag.StringP("return", "r", "", "return type")
 	types    = pflag.StringArrayP("type", "t", nil, "comma-separated list of type definitions")
@@ -276,6 +305,41 @@ func parseFile(file string) ([]decorationSet, error) {
 	return res, scanner.Err()
 }
 
+func splitTopLevel(s string) []string {
+	var res []string
+	brackets := 0
+	start := 0
+
+	for i, r := range s {
+		switch r {
+		case '(':
+			brackets++
+		case ')':
+			brackets--
+		case ',':
+			if brackets == 0 {
+				res = append(res, strings.TrimSpace(s[start:i]))
+				start = i + 1
+			}
+		}
+	}
+	res = append(res, strings.TrimSpace(s[start:]))
+	return res
+}
+
+func parseFunctions(iface string) []function {
+	parts := splitTopLevel(iface)
+
+	var res []function
+	for i := 0; i+1 < len(parts); i += 2 {
+		res = append(res, function{
+			function:  parts[i],
+			signature: parts[i+1],
+		})
+	}
+	return res
+}
+
 func main() {
 	pflag.Usage = Usage
 	pflag.Parse()
@@ -292,9 +356,9 @@ func main() {
 		pkg = &gopkg
 	}
 
-	sets := []decorationSet{{*function, *base, *ret, *types}}
+	sets := []decorationSet{{*funcname, *base, *ret, *types}}
 
-	if *function == "" {
+	if *funcname == "" {
 		all, err := parseFile(gofile)
 		if err != nil {
 			fmt.Println(err)
@@ -332,10 +396,10 @@ func main() {
 
 	for _, set := range sets {
 		var dynamicTypes []dynamicType
+
 		for _, v := range set.types {
-			split := strings.SplitN(v, ",", 3)
-			dt := dynamicType{split[0], split[1], split[2]}
-			dynamicTypes = append(dynamicTypes, dt)
+			split := strings.SplitN(v, ",", 2) // iface,...
+			dynamicTypes = append(dynamicTypes, dynamicType{split[0], parseFunctions(split[1])})
 		}
 
 		var buf bytes.Buffer
