@@ -73,7 +73,7 @@ var conf = globalconfig.All{
 		Topic: "evcc",
 	},
 	EEBus: eebus.Config{
-		URI: ":4712",
+		Port: 4712,
 	},
 	Database: globalconfig.DB{
 		Type: "sqlite",
