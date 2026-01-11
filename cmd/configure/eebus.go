@@ -11,7 +11,7 @@ import (
 // configureEEBus setup EEBus
 func (c *CmdConfigure) configureEEBus(other map[string]any) error {
 	conf := eebus.Config{
-		URI: ":4712",
+		Port: 4712,
 	}
 
 	if err := util.DecodeOther(other, &conf); err != nil {
