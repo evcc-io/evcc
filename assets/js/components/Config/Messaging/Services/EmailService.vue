@@ -26,6 +26,7 @@
 	<MessagingFormRow :serviceType="serviceType" inputName="password" example="secret123">
 		<PropertyField
 			id="messagingServiceEmailPassword"
+			masked
 			:model-value="password"
 			type="String"
 			required

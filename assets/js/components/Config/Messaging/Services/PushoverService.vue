@@ -10,6 +10,7 @@
 		>
 			<PropertyField
 				id="messagingServicePushoverApp"
+				masked
 				:model-value="app"
 				type="String"
 				required

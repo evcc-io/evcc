@@ -7,6 +7,7 @@
 		>
 			<PropertyField
 				id="messagingServiceTelegramToken"
+				masked
 				:model-value="token"
 				type="String"
 				required

@@ -30,6 +30,7 @@
 		>
 			<PropertyField
 				id="messagingServiceNtfyAuthtoken"
+				masked
 				:model-value="authtoken"
 				type="String"
 				@update:model-value="$emit('update:authtoken', $event)"

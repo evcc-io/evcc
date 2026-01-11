@@ -155,6 +155,44 @@ func TestEmptySliceMergeMaskedAny(t *testing.T) {
 	assert.Equal(t, expected, new)
 }
 
+func TestRedactionMergeMaskedAny(t *testing.T) {
+	mqttold := globalconfig.Mqtt{
+		Config: mqtt.Config{Password: "1234"},
+	}
+	mqttNew := globalconfig.Mqtt{
+		Config: mqtt.Config{Password: "***"},
+	}
+	mqttExpected := deepcopy.Copy(mqttold)
+
+	require.NoError(t, mergeMaskedAny(mqttold, &mqttNew))
+	assert.Equal(t, mqttExpected, mqttNew)
+
+	messagingOld := globalconfig.Messaging{
+		Services: []config.Typed{
+			{
+				Type: "testType",
+				Other: map[string]any{
+					"Password": "1234",
+				},
+			},
+		},
+	}
+	messagingNew := globalconfig.Messaging{
+		Services: []config.Typed{
+			{
+				Type: "testType",
+				Other: map[string]any{
+					"password": "***",
+				},
+			},
+		},
+	}
+	messagingExpected := deepcopy.Copy(messagingOld)
+
+	require.NoError(t, mergeMaskedAny(messagingOld, &messagingNew))
+	assert.Equal(t, messagingExpected, messagingNew)
+}
+
 func TestMergeMaskedFiltersBehavior(t *testing.T) {
 	conf := map[string]any{
 		"template": "demo-meter",

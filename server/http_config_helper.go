@@ -370,10 +370,80 @@ func (maskedTransformer) Transformer(typ reflect.Type) func(dst, src reflect.Val
 		}
 	}
 
-	// Preserve slices/arrays: don't merge them into dst
+	// Preserve slices/arrays: in general don't merge them into dst, but try to merge elements when both slices are non-empty
 	if typ.Kind() == reflect.Slice || typ.Kind() == reflect.Array {
+		// If the slice elements are structs, attempt element-wise merge for non-empty slices
+		if typ.Elem().Kind() == reflect.Struct {
+			return func(dst, src reflect.Value) error {
+				if !dst.IsValid() || dst.IsNil() || !src.IsValid() || src.IsNil() {
+					return nil
+				}
+
+				if dst.Len() == 0 || src.Len() == 0 {
+					// Keep dst value, don't merge
+					return nil
+				}
+
+				// Merge element-wise up to the shorter length
+				n := min(src.Len(), dst.Len())
+
+				for i := range n {
+					de := dst.Index(i)
+					se := src.Index(i)
+					// If addressable, merge using mergo to apply transformers
+					if de.CanAddr() {
+						if err := mergo.Merge(de.Addr().Interface(), se.Interface(), mergo.WithTransformers(&maskedTransformer{})); err != nil {
+							return err
+						}
+					}
+				}
+
+				return nil
+			}
+		}
+
 		return func(dst, src reflect.Value) error {
 			// Keep dst value, don't merge
+			return nil
+		}
+	}
+
+	// Provide transformer for maps[string]any to detect masked values and restore them
+	if typ.Kind() == reflect.Map && typ.Key().Kind() == reflect.String {
+		return func(dst, src reflect.Value) error {
+			if !dst.IsValid() || dst.IsNil() || !src.IsValid() || src.IsNil() {
+				return nil
+			}
+
+			// Build lowercase lookup for src keys
+			srcKeys := make(map[string]reflect.Value)
+			for _, k := range src.MapKeys() {
+				srcKeys[strings.ToLower(k.String())] = k
+			}
+
+			// Iterate dst keys and replace masked entries with src values using case-insensitive match
+			for _, k := range dst.MapKeys() {
+				dk := k.String()
+				dv := dst.MapIndex(k)
+
+				// Unwrap interface values
+				if dv.Kind() == reflect.Interface && dv.IsValid() && !dv.IsNil() {
+					dv = dv.Elem()
+				}
+
+				if dv.IsValid() && dv.Kind() == reflect.String && dv.String() == masked {
+					if sk, ok := srcKeys[strings.ToLower(dk)]; ok {
+						// Remove the masked dst key
+						dst.SetMapIndex(k, reflect.Value{})
+						// Set dst[srcKey] = src[srcKey]
+						sv := src.MapIndex(sk)
+						if sv.IsValid() {
+							dst.SetMapIndex(sk, sv)
+						}
+					}
+				}
+			}
+
 			return nil
 		}
 	}
