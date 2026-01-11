@@ -95,13 +95,11 @@ func NewServer(other Config) (*EEBus, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("eebus")
+	serial := cc.ShipID
 
-	protectedID := machine.ProtectedID("evcc-eebus")
-	serial := fmt.Sprintf("%s-%0x", "EVCC", protectedID[:8])
-
-	if len(cc.ShipID) != 0 {
-		serial = cc.ShipID
+	if serial == "" {
+		protectedID := machine.ProtectedID("evcc-eebus")
+		serial = fmt.Sprintf("%s-%0x", "EVCC", protectedID[:8])
 	}
 
 	certificate, err := tls.X509KeyPair([]byte(cc.Certificate.Public), []byte(cc.Certificate.Private))
@@ -133,7 +131,7 @@ func NewServer(other Config) (*EEBus, error) {
 	}
 
 	c := &EEBus{
-		log:     log,
+		log:     util.NewLogger("eebus"),
 		Ski:     ski,
 		clients: make(map[string][]Device),
 	}
