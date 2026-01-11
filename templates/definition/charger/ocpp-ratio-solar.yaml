@@ -1,0 +1,24 @@
+template: ocpp-ratio-solar
+products:
+  - brand: Ratio
+    description:
+      generic: Solar
+capabilities: ["mA"]
+requirements:
+  description:
+    en: |
+      This charger only supports OCPP over secure websockets (wss://) with a signed certificate. To integrate it into evcc you'll need to setup a proxy that is capable of proxying websockets using SSL (such as nginx). Setting up OCPP is done in the Ratio app:
+
+      * Go to "Charger settings" -> "Advanced settings" -> "OCPP settings"
+      * Go to "Charge Point Operator" and select "Custom"
+      * Url: wss://[proxy-domain]
+      * Save and turn on OCPP, the CPID can be used as station id
+  evcc: ["sponsorship", "skiptest"]
+params:
+  - preset: ocpp
+  - name: metervalues
+    default: -SoC,Current.Offered,Power.Offered,Voltage,Current.Import
+render: |
+  {{ include "ocpp" . }}
+  remotestart: true
+  stacklevelzero: true
