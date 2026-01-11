@@ -27,7 +27,7 @@
 					type="String"
 					:disabled="disabled"
 					required
-					@update:model-value="updateTitle($event.target.value)"
+					@update:model-value="updateTitle"
 				/>
 			</div>
 		</div>
