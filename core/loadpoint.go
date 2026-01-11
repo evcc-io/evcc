@@ -130,6 +130,7 @@ type Loadpoint struct {
 	phasesSwitched      time.Time // Phase switch timestamp
 	vehicleDetectTicker *clock.Ticker
 	vehicleIdentifier   string
+	checkedIdentifier   string // Identifier of last authorization attempt
 
 	charger          api.Charger
 	chargeTimer      api.ChargeTimer
@@ -1952,6 +1953,11 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 		} else {
 			lp.log.ERROR.Printf("charger status reason: %v", err)
 		}
+	}
+
+	// reset identifier of last authorization attempt
+	if len(lp.checkedIdentifier) > 0 && lp.GetStatus() != api.StatusB {
+		lp.checkedIdentifier = ""
 	}
 
 	// publish soc after updating charger status to make sure

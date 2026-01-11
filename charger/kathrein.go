@@ -433,6 +433,10 @@ var _ api.Authorizer = (*Kathrein)(nil)
 
 // Authorize implements the api.Authorizer interface
 func (wb *Kathrein) Authorize(rfid string) error {
+	if rfid == "VOID" || len(rfid) == 0 {
+		return nil
+	}
+
 	tag := make([]byte, 32)
 	copy(tag, []byte(rfid))
 
