@@ -90,7 +90,7 @@ Example Use Case: With SMA Home Manager, there can be a SMA Energy Meter used fo
 
 ### `description`
 
-`description` expects language specific texts via `de`, `en` to provide specific things the user has to do, e.g. minimum firmware versions or specific hardware setup requirements.
+`description` expects language-specific texts via `de`, `en` to provide specific things the user has to do, e.g. minimum firmware versions or specific hardware setup requirements.
 
 **Markdown formatting**:
 
