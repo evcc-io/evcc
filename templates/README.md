@@ -50,7 +50,7 @@ Allows to define a list of meter devices that are typically installed with this 
 **Possible values**:
 
 - `grid`: for grid meters
-- `pv`:  for pv inverter/meter
+- `pv`: for pv inverter/meter
 - `battery`: for battery inverter/meter
 
 #### `multiple`
@@ -85,12 +85,29 @@ Example Use Case: With SMA Home Manager, there can be a SMA Energy Meter used fo
 **Possible Values**:
 
 - `sponsorship`: If the device requires a sponsorship token
-- `eebus`: If the device is accessed via the eebus protocol and thus requires the corresponding setup
+- `eebus`: If the device is accessed via the EEBus protocol and thus requires the corresponding setup
 - `mqtt`: If the device a MQTT setup
 
 ### `description`
 
-`description` expects language specific texts via `de`, `en` to provide specific things the user has to do, e.g. minimum firmware versions or specific hardware setup requirements. The content can be multiline and Markdown
+`description` expects language specific texts via `de`, `en` to provide specific things the user has to do, e.g. minimum firmware versions or specific hardware setup requirements.
+
+**Markdown formatting**:
+
+- The content can be multiline
+- The content supports Markdown formatting
+- External URLs should always use Markdown link format with the hostname as display text: `[docs.example.com](https://docs.example.com/path/to/page)`. This provides clear context while keeping the text readable.
+- Use code formatting `` `text` `` for technical identifiers, tokens, configuration values, and entity patterns
+- Use bold formatting `**text**` sparingly and only for important warnings or critical information
+
+Example:
+
+```
+en: |
+  Requires `hcaptcha` token from [developer.example.com](https://developer.example.com/tokens).
+
+  **Attention**: Token is only valid for 2 minutes.
+```
 
 ## `params`
 
