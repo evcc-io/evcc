@@ -4,7 +4,9 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"net"
 	"slices"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -88,7 +90,7 @@ var Instance *EEBus
 
 func NewServer(other Config) (*EEBus, error) {
 	cc := Config{
-		Port: 4712,
+		URI: ":4712",
 	}
 
 	if err := mergo.Merge(&cc, other, mergo.WithOverride); err != nil {
@@ -109,11 +111,22 @@ func NewServer(other Config) (*EEBus, error) {
 		return nil, err
 	}
 
+	_, portValue, err := net.SplitHostPort(cc.URI)
+	if err != nil {
+		return nil, err
+	}
+
+	port, err := strconv.Atoi(portValue)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO: get the voltage from the site
 	configuration, err := eebusapi.NewConfiguration(
 		BrandName, BrandName, Model, serial,
 		model.DeviceTypeTypeEnergyManagementSystem,
 		[]model.EntityTypeType{model.EntityTypeTypeCEM},
-		cc.Port, certificate, time.Second*4,
+		port, certificate, time.Second*4,
 	)
 	if err != nil {
 		return nil, err
