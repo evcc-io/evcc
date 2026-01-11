@@ -45,5 +45,3 @@ render: |
   energyManagerUri: {{ .energyManagerUri }}
   energyManagerUser: {{ .energyManagerUser }}
   energyManagerPassword: {{ .energyManagerPassword }}
-  disablePhaseAutoSwitch: false
-  energyMeterIndex: 0

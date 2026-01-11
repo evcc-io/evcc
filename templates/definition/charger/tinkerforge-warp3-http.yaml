@@ -20,4 +20,3 @@ render: |
   user: {{ .user }}
   password: {{ .password }}
   disablePhaseAutoSwitch: true
-  energyMeterIndex: 0

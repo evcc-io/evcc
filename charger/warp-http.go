@@ -40,7 +40,7 @@ func init() {
 
 // NewWarpHTTPFromConfig creates a new configurable charger
 func NewWarpHTTPFromConfig(other map[string]any) (api.Charger, error) {
-	var cc = struct {
+	cc := struct {
 		URI                    string
 		User                   string
 		Password               string
@@ -98,7 +98,6 @@ func NewWarpHTTPFromConfig(other map[string]any) (api.Charger, error) {
 	} else if cc.EnergyManagerURI != "" { // fallback to Energy Manager
 		wb.emURI = util.DefaultScheme(strings.TrimRight(cc.EnergyManagerURI, "/"), "http")
 		wb.emHelper = request.NewHelper(wb.log)
-		wb.emHelper.Client.Timeout = warp.Timeout
 		if cc.EnergyManagerUser != "" {
 			wb.emHelper.Client.Transport = digest.NewTransport(cc.EnergyManagerUser, cc.EnergyManagerPassword, wb.emHelper.Client.Transport)
 		}
@@ -113,6 +112,8 @@ func NewWarpHTTPFromConfig(other map[string]any) (api.Charger, error) {
 		}
 	}
 
+	// Phase Auto Switching needs to be disabled for WARP3
+	// Necessary if charging 1p only vehicles
 	if cc.DisablePhaseAutoSwitch {
 		// unfortunately no feature to check for, instead this is set in template
 		if err := wb.disablePhaseAutoSwitch(); err != nil {
@@ -125,10 +126,9 @@ func NewWarpHTTPFromConfig(other map[string]any) (api.Charger, error) {
 
 // NewWarpHTTP creates a new configurable charger
 func NewWarpHTTP(uri, user, password string, cache time.Duration) (*WarpHTTP, error) {
-	log := util.NewLogger("warp-http")
+	log := util.NewLogger("warp")
 
 	client := request.NewHelper(log)
-	client.Client.Timeout = warp.Timeout
 	if user != "" {
 		client.Client.Transport = digest.NewTransport(user, password, client.Client.Transport)
 	}
@@ -141,9 +141,9 @@ func NewWarpHTTP(uri, user, password string, cache time.Duration) (*WarpHTTP, er
 		cache:   cache,
 	}
 
-	wb.meterValuesG = util.ResettableCached(wb._meterValues, wb.cache)
-	wb.meterAllValuesG = util.ResettableCached(wb._meterAllValues, wb.cache)
-	wb.metersValuesG = util.ResettableCached(wb._metersValues, wb.cache)
+	wb.meterValuesG = util.ResettableCached(wb.meterValues, wb.cache)
+	wb.meterAllValuesG = util.ResettableCached(wb.meterAllValues, wb.cache)
+	wb.metersValuesG = util.ResettableCached(wb.metersValues, wb.cache)
 
 	return wb, nil
 }
@@ -222,32 +222,25 @@ func (wb *WarpHTTP) setMaxCurrent(current int64) error {
 	uri := fmt.Sprintf("%s/evse/external_current", wb.uri)
 	data := map[string]int64{"current": current}
 
-	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
-	if err != nil {
-		return err
-	}
+	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
 
-	_, err = wb.Do(req)
+	_, err := wb.Do(req)
 	return err
 }
 
 // CurrentPower implements the api.Meter interface
 func (wb *WarpHTTP) meterCurrentPower() (float64, error) {
-	res, err := wb.meterValues()
+	res, err := wb.meterValuesG.Get()
 	return res.Power, err
 }
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (wb *WarpHTTP) meterTotalEnergy() (float64, error) {
-	res, err := wb.meterValues()
+	res, err := wb.meterValuesG.Get()
 	return res.EnergyAbs, err
 }
 
 func (wb *WarpHTTP) meterValues() (warp.MeterValues, error) {
-	return wb.meterValuesG.Get()
-}
-
-func (wb *WarpHTTP) _meterValues() (warp.MeterValues, error) {
 	var res warp.MeterValues
 	uri := fmt.Sprintf("%s/meter/values", wb.uri)
 	err := wb.GetJSON(uri, &res)
@@ -255,10 +248,6 @@ func (wb *WarpHTTP) _meterValues() (warp.MeterValues, error) {
 }
 
 func (wb *WarpHTTP) meterAllValues() ([]float64, error) {
-	return wb.meterAllValuesG.Get()
-}
-
-func (wb *WarpHTTP) _meterAllValues() ([]float64, error) {
 	var res []float64
 	uri := fmt.Sprintf("%s/meter/all_values", wb.uri)
 	err := wb.GetJSON(uri, &res)
@@ -272,7 +261,7 @@ func (wb *WarpHTTP) _meterAllValues() ([]float64, error) {
 
 // currents implements the api.MeterCurrents interface
 func (wb *WarpHTTP) meterCurrents() (float64, float64, float64, error) {
-	res, err := wb.meterAllValues()
+	res, err := wb.meterAllValuesG.Get()
 	if err != nil {
 		return 0, 0, 0, err
 	}
@@ -282,7 +271,7 @@ func (wb *WarpHTTP) meterCurrents() (float64, float64, float64, error) {
 
 // voltages implements the api.PhaseVoltages interface
 func (wb *WarpHTTP) meterVoltages() (float64, float64, float64, error) {
-	res, err := wb.meterAllValues()
+	res, err := wb.meterAllValuesG.Get()
 	if err != nil {
 		return 0, 0, 0, err
 	}
@@ -293,6 +282,7 @@ func (wb *WarpHTTP) meterVoltages() (float64, float64, float64, error) {
 // metersValueIds returns a map from meter value IDs to their positions in the values array.
 // It covers the following IDs: VoltageL1N, VoltageL2N, VoltageL3N, CurrentImExSumL1, CurrentImExSumL2,
 // CurrentImExSumL3, PowerImExSum, and EnergyAbsImSum.
+// Together with the metersValues Endpoint, this allows decoding the returned value array.
 func (wb *WarpHTTP) metersValueIds() (map[int]int, error) {
 	var res []int
 	uri := fmt.Sprintf("%s/meters/%d/value_ids", wb.uri, wb.meterIndex)
@@ -312,12 +302,11 @@ func (wb *WarpHTTP) metersValueIds() (map[int]int, error) {
 	}
 
 	// Check if all required IDs are present
-	missing, _ := lo.Difference(requiredIDs, res)
-	if len(missing) > 0 {
+	if missing, _ := lo.Difference(requiredIDs, res); len(missing) > 0 {
 		return nil, fmt.Errorf("missing required meter value IDs: %v", missing)
 	}
 
-	// Build indices map
+	// Build map from Value ID (e.g. MetersValueIDVoltageL1N) -> Index
 	var indices = make(map[int]int)
 	for i, valueIdx := range res {
 		if lo.Contains(requiredIDs, valueIdx) {
@@ -329,18 +318,14 @@ func (wb *WarpHTTP) metersValueIds() (map[int]int, error) {
 }
 
 func (wb *WarpHTTP) metersValues() (warp.MetersValues, error) {
-	return wb.metersValuesG.Get()
-}
-
-func (wb *WarpHTTP) _metersValues() (warp.MetersValues, error) {
 	var res []float64
 	uri := fmt.Sprintf("%s/meters/%d/values", wb.uri, wb.meterIndex)
-	err := wb.GetJSON(uri, &res)
-	if err != nil {
+	if err := wb.GetJSON(uri, &res); err != nil {
 		return warp.MetersValues{}, err
 	}
 
 	var result warp.MetersValues
+	var err error
 
 	get := func(id int, name string) float64 {
 		if err != nil {
@@ -373,21 +358,21 @@ func (wb *WarpHTTP) _metersValues() (warp.MetersValues, error) {
 
 // CurrentPower implements the api.Meter interface
 func (wb *WarpHTTP) metersCurrentPower() (float64, error) {
-	values, err := wb.metersValues()
+	values, err := wb.metersValuesG.Get()
 
 	return values.PowerImExSum, err
 }
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (wb *WarpHTTP) metersTotalEnergy() (float64, error) {
-	values, err := wb.metersValues()
+	values, err := wb.metersValuesG.Get()
 
 	return values.EnergyAbsImSum, err
 }
 
 // currents implements the api.PhaseCurrents interface
 func (wb *WarpHTTP) metersCurrents() (float64, float64, float64, error) {
-	values, err := wb.metersValues()
+	values, err := wb.metersValuesG.Get()
 	if err != nil {
 		return 0, 0, 0, err
 	}
@@ -397,7 +382,7 @@ func (wb *WarpHTTP) metersCurrents() (float64, float64, float64, error) {
 
 // voltages implements the api.PhaseVoltages interface
 func (wb *WarpHTTP) metersVoltages() (float64, float64, float64, error) {
-	values, err := wb.metersValues()
+	values, err := wb.metersValuesG.Get()
 	if err != nil {
 		return 0, 0, 0, err
 	}
@@ -455,10 +440,7 @@ func (wb *WarpHTTP) phases1p3p(phases int) error {
 	uri := fmt.Sprintf("%s/power_manager/external_control", wb.emURI)
 	data := map[string]int{"phases_wanted": phases}
 
-	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
-	if err != nil {
-		return err
-	}
+	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
 
 	_, err = wb.emHelper.Do(req)
 	return err
