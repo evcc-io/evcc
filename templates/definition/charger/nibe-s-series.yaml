@@ -102,7 +102,7 @@ render: |
             address: 6007
             type: holding
             encoding: int16
-          scale: 100
+          scale: 0.01
     switch:
       - case: 0 # disable limitation
         set:
