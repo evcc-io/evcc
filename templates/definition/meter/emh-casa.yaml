@@ -24,7 +24,6 @@ params:
     choice: ["grid"]
   - name: uri
     example: https://smgw.local
-    advanced: true
     help:
       de: |
         HTTPS-URL der HAN-Schnittstelle (leer für mDNS Auto-Discovery).
