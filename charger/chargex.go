@@ -28,6 +28,8 @@ import (
 	"github.com/evcc-io/evcc/util/sponsor"
 )
 
+// https://blog.chargex.de/hubfs/Customer%20Support/ChargeX%20Modbus%20TCP%20documentation.pdf
+
 // ChargeX charger implementation
 type ChargeX struct {
 	log       *util.Logger
