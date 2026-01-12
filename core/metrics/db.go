@@ -87,12 +87,12 @@ func SetupSchema() error {
 }
 
 // persist stores 15min consumption in Wh
-func persist(entity entity, ts time.Time, imprt, export float64) error {
+func persist(entity entity, ts time.Time, imp, exp float64) error {
 	return db.Instance.Create(&meter{
 		Entity:    entity,
 		Timestamp: ts.Truncate(15 * time.Minute),
-		Import:    imprt,
-		Export:    export,
+		Import:    imp,
+		Export:    exp,
 	}).Error
 }
 
