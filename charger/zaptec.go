@@ -23,7 +23,6 @@ import (
 	"errors"
 	"fmt"
 	"math"
-	"math/rand/v2"
 	"net/http"
 	"sort"
 	"time"
@@ -275,8 +274,8 @@ var _ api.ChargerEx = (*Zaptec)(nil)
 
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (c *Zaptec) MaxCurrentMillis(current float64) error {
-	if current < 6 || current > 32 {
-		return fmt.Errorf("invalid current %.3f", current)
+	if current < 0 || current > 32 {
+		return fmt.Errorf("invalid current %.1f", current)
 	}
 	data := zaptec.Update{
 		MaxChargeCurrent: &current,
@@ -335,10 +334,24 @@ func (c *Zaptec) phases1p3p(phases int) error {
 		return err
 	}
 
-	// trigger phase switch instantly with random current update
-	randomCurrent := 6.0 + rand.Float64()*0.5
-	randomCurrent = math.Round(randomCurrent*100) / 100
-	err = c.MaxCurrentMillis(randomCurrent)
+	res, err := c.statusG.Get()
+	if err != nil {
+		return err
+	}
+	oldCurrent, err := res.ObservationByID(zaptec.ChargerMaxCurrent).Float64()
+	if err != nil {
+		return err
+	}
+
+	// adjust the current by +/- 0.1A; otherwise, the phase change will not happen
+	newCurrent := oldCurrent - 0.1
+	if oldCurrent <= 6 {
+		newCurrent = oldCurrent + 0.1
+	}
+	newCurrent = math.Round(newCurrent*10) / 10 // round to 1 digit to avoid strange numbers
+
+	c.log.DEBUG.Printf("updating current to trigger phase switch: %.1fA -> %.1fA\n", oldCurrent, newCurrent)
+	err = c.MaxCurrentMillis(newCurrent)
 	if err != nil {
 		return err
 	}
@@ -350,11 +363,6 @@ func (c *Zaptec) phases1p3p(phases int) error {
 	// priority configured
 	data := zaptec.SessionPriority{
 		PrioritizedPhases: &phases,
-	}
-
-	res, err := c.statusG.Get()
-	if err != nil {
-		return err
 	}
 
 	if session := res.ObservationByID(zaptec.SessionIdentifier); session != nil {
