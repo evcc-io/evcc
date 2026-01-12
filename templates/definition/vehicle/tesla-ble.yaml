@@ -5,8 +5,8 @@ products:
 group: generic
 requirements:
   description:
-    de: Open Source Tesla BLE HTTP Proxy https://github.com/wimaha/TeslaBleHttpProxy
-    en: Open Source Tesla BLE HTTP Proxy https://github.com/wimaha/TeslaBleHttpProxy
+    de: Open Source Tesla BLE HTTP Proxy [github.com/wimaha/TeslaBleHttpProxy](https://github.com/wimaha/TeslaBleHttpProxy)
+    en: Open Source Tesla BLE HTTP Proxy [github.com/wimaha/TeslaBleHttpProxy](https://github.com/wimaha/TeslaBleHttpProxy)
 params:
   - preset: vehicle-common
   - name: vin

@@ -137,7 +137,7 @@ func (t *TextLanguage) Update(new TextLanguage, always bool) {
 }
 
 // MarshalJSON implements the json.Marshaler interface
-func (t *TextLanguage) MarshalJSON() (out []byte, err error) {
+func (t TextLanguage) MarshalJSON() ([]byte, error) {
 	mu.Lock()
 	s := t.String(encoderLanguage)
 	mu.Unlock()
@@ -161,14 +161,6 @@ func (r Requirements) MarshalJSON() ([]byte, error) {
 type Requirements struct {
 	EVCC        []string     // EVCC requirements, e.g. sponsorship
 	Description TextLanguage // Description of requirements, e.g. how the device needs to be prepared
-}
-
-// Linked Template
-type LinkedTemplate struct {
-	Template        string
-	Usage           string // usage: "grid", "pv", "battery"
-	Multiple        bool   // if true, multiple instances of this template can be added
-	ExcludeTemplate string // only consider this if no device of the named linked template was added
 }
 
 // Param is a proxy template parameter
@@ -201,7 +193,6 @@ type Param struct {
 	Type        ParamType    // string representation of the value type, "string" is default
 	Choice      []string     `json:",omitempty"` // defines a set of choices, e.g. "grid", "pv", "battery", "charge" for "usage"
 	Service     string       `json:",omitempty"` // defines a service to provide choices
-	AllInOne    bool         `json:"-"`          // defines if the defined usages can all be present in a single device
 
 	// TODO move somewhere else should not be part of the param definition
 	Baudrate int    `json:",omitempty"` // device specific default for modbus RS485 baudrate
@@ -232,7 +223,7 @@ func (p *Param) OverwriteProperties(withParam Param) {
 }
 
 func (p *Param) IsAdvanced() bool {
-	return p.Advanced
+	return p.Advanced && !p.Required
 }
 
 func (p *Param) IsMasked() bool {
@@ -244,15 +235,11 @@ func (p *Param) IsPrivate() bool {
 }
 
 func (p *Param) IsRequired() bool {
-	return p.Required
+	return p.Required && !p.Deprecated
 }
 
 func (p *Param) IsDeprecated() bool {
 	return p.Deprecated
-}
-
-func (p *Param) IsAllInOne() bool {
-	return p.AllInOne
 }
 
 // yamlQuote quotes strings for yaml if they would otherwise by modified by the unmarshaler
@@ -262,6 +249,16 @@ func (p *Param) yamlQuote(value string) string {
 	}
 
 	return yamlQuote(value)
+}
+
+var _ json.Marshaler = (*Param)(nil)
+
+func (p Param) MarshalJSON() ([]byte, error) {
+	type param Param
+	pp := (param)(p)
+	pp.Required = p.IsRequired()
+	pp.Advanced = p.IsAdvanced()
+	return json.Marshal(pp)
 }
 
 // Product contains naming information about a product a template supports
@@ -291,15 +288,14 @@ func (c CountryCode) IsValid() bool {
 // TemplateDefinition contains properties of a device template
 type TemplateDefinition struct {
 	Template     string
-	Deprecated   bool             `json:"-"`
-	Auth         map[string]any   `json:",omitempty"` // OAuth parameters (if required)
-	Group        string           `json:",omitempty"` // the group this template belongs to, references groupList entries
-	Covers       []string         `json:",omitempty"` // list of covered outdated template names
-	Products     []Product        `json:",omitempty"` // list of products this template is compatible with
-	Capabilities []string         `json:",omitempty"`
-	Countries    []CountryCode    `json:",omitempty"` // list of countries supported by this template
-	Requirements Requirements     `json:",omitempty"`
-	Linked       []LinkedTemplate `json:",omitempty"` // list of templates that should be processed as part of the guided setup
-	Params       []Param          `json:",omitempty"`
-	Render       string           `json:"-"` // rendering template
+	Deprecated   bool           `json:"-"`
+	Auth         map[string]any `json:",omitempty"` // OAuth parameters (if required)
+	Group        string         `json:",omitempty"` // the group this template belongs to, references groupList entries
+	Covers       []string       `json:",omitempty"` // list of covered outdated template names
+	Products     []Product      `json:",omitempty"` // list of products this template is compatible with
+	Capabilities []string       `json:",omitempty"`
+	Countries    []CountryCode  `json:",omitempty"` // list of countries supported by this template
+	Requirements Requirements   `json:",omitempty"`
+	Params       []Param        `json:",omitempty"`
+	Render       string         `json:"-"` // rendering template
 }

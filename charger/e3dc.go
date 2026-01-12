@@ -1,19 +1,20 @@
 package charger
 
-// E3DC Multi Connect II Wallbox Charger
+// E3DC Wallbox Charger (RSCP Protocol)
 //
-// REQUIREMENTS - Configure the following in the E3DC portal for evcc control:
-//   - Sun Mode (Sonnenmodus): OFF - will be disabled automatically at startup
-//   - Auto Phase Switching: OFF - required if evcc should control 1p/3p switching
-//   - Charge Authorization: OFF or configure RFID - evcc needs to control charging
+// REQUIREMENTS - Configure in E3DC portal for evcc control:
+//   - Sun Mode (Sonnenmodus): OFF
+//   - Auto Phase Switching: OFF
+//   - Charge Authorization: OFF or configure RFID
 //
-// Sun mode is automatically disabled at startup. Auto phase switching generates
-// a warning but is not changed automatically (user may want to keep it).
+// evcc will automatically disable Sun Mode and Auto Phase Switching at startup
+// if still enabled, but the user should configure this in the E3DC portal.
 //
-// DEVELOPMENT STATUS:
-// - Tested with E3DC Multi Connect II Wallbox (FW 7.0.6.0/1.0.3.0)
-// - Phase switching (1p3p): E3DC handles ramping internally (tested)
-// - Requires testing with additional E3DC systems before production use
+// TESTED WITH:
+//   - E3DC Multi Connect II Wallbox (FW 7.0.6.0/1.0.3.0)
+//
+// SHOULD WORK WITH (needs hardware testing):
+//   - E3DC Multi Connect I Wallbox
 
 import (
 	"context"
@@ -156,12 +157,17 @@ func (wb *E3dc) checkConfiguration() error {
 		wb.disableSunMode()
 	}
 
-	// Warn about auto phase switching - user may want to keep it for non-evcc use
-	// Note: We only warn here; the actual check happens in Phases1p3p() because
-	// the user could change this setting in the E3DC portal at any time
+	// Check and disable auto phase switching - evcc needs to control phase switching
+	// Note: Auto phase switch is also checked in ensureAutoPhaseDisabled() on phase switch commands
+	// because the user could re-enable it in the E3DC portal at any time
 	if autoPhase, err := rscpBool(wbData[2]); err == nil && autoPhase {
-		wb.log.WARN.Println("wallbox auto phase switching is enabled - disable in E3DC portal if you want evcc to control 1p/3p switching")
+		wb.log.WARN.Println("wallbox auto phase switching is enabled - disabling for evcc control")
+		wb.disableAutoPhaseSwitch()
 	}
+
+	// Note: We intentionally do NOT set an initial phase count here.
+	// evcc will control phase switching based on charging mode (PV, Min+PV, Fast, etc.).
+	// Setting 1 phase on startup would interrupt fast charging (3p) during restarts.
 
 	return nil
 }
@@ -196,6 +202,41 @@ func (wb *E3dc) ensureSunModeDisabled() {
 	if sunMode, err := rscpBool(wbData[1]); err == nil && sunMode {
 		wb.log.WARN.Println("sun mode was re-enabled - disabling for evcc control")
 		wb.disableSunMode()
+	}
+}
+
+// disableAutoPhaseSwitch sends the command to disable automatic phase switching
+func (wb *E3dc) disableAutoPhaseSwitch() {
+	// Note: WB_REQ_SET_AUTO_PHASE_SWITCH_ENABLED has wrong DataType in go-rscp (None instead of Bool)
+	// We must create the message with explicit DataType
+	if _, err := wb.conn.Send(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
+		*rscp.NewMessage(rscp.WB_INDEX, wb.id),
+		{Tag: rscp.WB_REQ_SET_AUTO_PHASE_SWITCH_ENABLED, DataType: rscp.Bool, Value: false},
+	})); err != nil {
+		wb.log.ERROR.Printf("failed to disable auto phase switch: %v", err)
+	}
+}
+
+// ensureAutoPhaseDisabled checks if auto phase switching is active and disables it.
+// Called before phase switch commands because the user could re-enable it
+// in the E3DC portal at any time without restarting evcc.
+func (wb *E3dc) ensureAutoPhaseDisabled() {
+	res, err := wb.conn.Send(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
+		*rscp.NewMessage(rscp.WB_INDEX, wb.id),
+		*rscp.NewMessage(rscp.WB_REQ_AUTO_PHASE_SWITCH_ENABLED, nil),
+	}))
+	if err != nil {
+		return
+	}
+
+	wbData, err := rscpContainer(*res, 2)
+	if err != nil {
+		return
+	}
+
+	if autoPhase, err := rscpBool(wbData[1]); err == nil && autoPhase {
+		wb.log.WARN.Println("auto phase switch was re-enabled - disabling for evcc control")
+		wb.disableAutoPhaseSwitch()
 	}
 }
 
@@ -275,26 +316,23 @@ func (wb *E3dc) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	// WB_EXTERN_DATA_ALG Byte 2 status bits:
-	//   Bit 5 (0b00100000): Charging active
-	//   Bit 3 (0b00001000): Vehicle connected
-	//   Bit 2 (0b00000100): Ready, no vehicle
+	// WB_EXTERN_DATA_ALG Byte 2 status bits (IEC 61851):
+	//   Bit 5 (0b00100000): Charging active  → StatusC
+	//   Bit 3 (0b00001000): Vehicle connected → StatusB
+	//   Both 0:                               → StatusA
 	//
-	// IMPORTANT: Check order is C→B→A (not A→B→C) because bits are not mutually exclusive!
-	// When charging (StatusC), both Bit 5 AND Bit 3 are set (e.g., 0b00101000).
-	// We must check Bit 5 first, otherwise 0b00101000 would incorrectly match StatusB.
+	// Other bits (0,1,2,4,6,7) are additional info (Solar, Abort, etc.)
+	// and do not affect the charging state.
 	//
-	// Explicitly checking Bit 2 for StatusA allows us to detect error states
-	// like 0b00000000 (no bits set) or 0b01000000 (only disabled flag).
+	// NOTE: Bit 2 (0b00000100) behavior varies between wallbox models
+	// and is NOT used for status detection to ensure compatibility.
 	switch {
 	case b[2]&0b00100000 != 0: // Bit 5: charging active → StatusC
 		return api.StatusC, nil
 	case b[2]&0b00001000 != 0: // Bit 3: vehicle connected → StatusB
 		return api.StatusB, nil
-	case b[2]&0b00000100 != 0: // Bit 2: ready, no vehicle → StatusA
+	default: // Neither Bit 5 nor Bit 3: no vehicle → StatusA
 		return api.StatusA, nil
-	default:
-		return api.StatusNone, fmt.Errorf("unknown wallbox status: 0x%02x", b[2])
 	}
 }
 
@@ -633,42 +671,16 @@ var _ api.PhaseSwitcher = (*E3dc)(nil)
 // Phases1p3p implements the api.PhaseSwitcher interface
 // Switches between 1-phase and 3-phase charging
 // The wallbox handles the safe switching sequence internally (reduce current, switch, ramp up)
-// Requirements: WB_AUTO_PHASE_SWITCH_ENABLED must be disabled in the E3DC dashboard
 func (wb *E3dc) Phases1p3p(phases int) error {
 	if phases != 1 && phases != 3 {
 		return fmt.Errorf("invalid phases: %d (must be 1 or 3)", phases)
 	}
 
 	wb.ensureSunModeDisabled()
-
-	// Check if automatic phase switching is disabled (required for manual control)
-	// Note: We query this on every call rather than caching because the user can
-	// change this setting in the E3DC portal at any time without restarting evcc.
-	// A startup warning is also issued in checkConfiguration().
-	res, err := wb.conn.Send(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
-		*rscp.NewMessage(rscp.WB_INDEX, wb.id),
-		*rscp.NewMessage(rscp.WB_REQ_AUTO_PHASE_SWITCH_ENABLED, nil),
-	}))
-	if err != nil {
-		return err
-	}
-
-	wbData, err := rscpContainer(*res, 2)
-	if err != nil {
-		return err
-	}
-
-	autoPhaseSwitch, err := rscpBool(wbData[1])
-	if err != nil {
-		return err
-	}
-
-	if autoPhaseSwitch {
-		return errors.New("automatic phase switching is enabled - please disable it in the E3DC dashboard to allow manual phase control")
-	}
+	wb.ensureAutoPhaseDisabled()
 
 	// Perform phase switch
-	_, err = wb.conn.Send(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
+	_, err := wb.conn.Send(*rscp.NewMessage(rscp.WB_REQ_DATA, []rscp.Message{
 		*rscp.NewMessage(rscp.WB_INDEX, wb.id),
 		*rscp.NewMessage(rscp.WB_REQ_SET_NUMBER_PHASES, uint8(phases)),
 	}))

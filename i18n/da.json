@@ -100,7 +100,7 @@
     "control": {
       "description": "Standardværdierne er normalt fine. Kun hvis du ved, hvad du gør, kan du ændre dem.",
       "descriptionInterval": "Opdateringsinterval i sekunder. Angiver, hvor ofte evcc aflæser målerdata og justerer opladningen. Standardværdien på 30 sekunder er et sikkert valg. Enheder som køretøjer, ladere og invertere har typisk brug for flere sekunder til at tilpasse deres adfærd. Hvis dine komponenter reagerer hurtigt, kan du anvende lavere værdier. Vi anbefaler kraftigt ikke at gå under 10 sekunder. Hvis du observerer ustabil regulering eller springende effektværdier, bør du vælge et længere interval.",
-      "descriptionResidualPower": "Forskubber reguleringspunktet. Standardværdien på 100 W giver hjemmebatteriet let prioritet over elnettet. Uden batteri kan værdien sættes til 0 W for at minimere netforbrug i soltilstand.",
+      "descriptionResidualPower": "Forskubber reguleringspunktet. Hvis du har et hjemmebatteri anbefales det at sætte værdien til 100 W. Derved får hjemmebatteriet let prioritet over elnettet.",
       "labelInterval": "Opdateringsinterval",
       "labelResidualPower": "Tilbageværende effekt",
       "title": "kontrol adfærd"
@@ -137,9 +137,9 @@
       "no": "nej",
       "odometer": "Kilometertæller",
       "org": "Organisation",
-      "phaseCurrents": "Strømstyrke L1, L2, L3",
-      "phasePowers": "Effekt L1, L2, L3",
-      "phaseVoltages": "Spænding L1, L2, L3",
+      "phaseCurrents": "Strømstyrke",
+      "phasePowers": "Effekt",
+      "phaseVoltages": "Spænding",
       "phases1p3p": "Fase-skift",
       "power": "Effekt",
       "powerRange": "Effekt",
@@ -294,6 +294,7 @@
       "chargerTypeLabel": "Oplader type",
       "chargingTitle": "Tilstand",
       "circuitHelp": "Belastningsstyring som sikrer, at effekt- og strømgrænser ikke overskrides.",
+      "circuitInvalid": "Kredsløbet findes ikke",
       "circuitLabel": "Kredsløb",
       "circuitUnassigned": "ikke tildelt",
       "defaultModeHelp": {
@@ -370,6 +371,7 @@
       "vehicleAutoDetection": "Automatisk registrering",
       "vehicleHelpAutoDetection": "Vælg automatisk det mest sandsynlige køretøj. Det er muligt selv at vælge.",
       "vehicleHelpDefault": "Antag altid, at dette køretøj oplader her. Automatisk registrering deaktiveret. Manuel tilsidesættelse er mulig.",
+      "vehicleInvalid": "Køretøjet findes ikke",
       "vehicleLabel": "Standard køretøj",
       "vehiclesTitle": "Køretøjer"
     },
@@ -387,7 +389,7 @@
       "title": "Opsætning",
       "unconfigured": "ikke konfigureret",
       "vehicles": "Mine køretøjer",
-      "welcomeBannerText": "Start med at oprette en **lader eller varmer**. Hvis du endnu ikke har en fysisk lader, kan du vælge en **demolader**.",
+      "welcomeBannerText": "Start med at oprette mindst én **lader**, **varmer**, **elnet**, **sol**, **batteri** eller **ekstra måler**. Hvis du blot vil teste, kan du vælge en **demoenhed**.",
       "welcomeBannerTitle": "Lad os konfigurere dit system!",
       "yaml": "Enheder fra evcc.yaml kan ikke ændres her."
     },
@@ -763,6 +765,9 @@
       "solar": "Sol"
     }
   },
+  "general": {
+    "note": "Note:"
+  },
   "header": {
     "about": "Om",
     "authProviders": {
@@ -888,6 +893,11 @@
       "goal": "Opladnings mål",
       "modalTitle": "Lade plan",
       "none": "ingen",
+      "optimization": {
+        "cheapest": "billigst",
+        "continuous": "kontinuerlig",
+        "label": "Optimering"
+      },
       "planNumber": "Plan {number}",
       "precondition": {
         "description": "Oplad {duration} før afgang til batterikonditionering.",
@@ -899,6 +909,8 @@
       "repeating": "Gentager",
       "repeatingPlans": "Gentager plan",
       "selectAll": "Vælg alt",
+      "strategyDisabledDescription": "Opladningen påbegyndes så sent som muligt og afsluttes præcis ved afgang. Med dynamiske elpriser eller CO₂-tariffer er der flere valgmuligheder.",
+      "strategySettings": "Indstillinger for strategi",
       "time": "Tid",
       "title": "Plan",
       "titleMinSoc": "Min. ladning",

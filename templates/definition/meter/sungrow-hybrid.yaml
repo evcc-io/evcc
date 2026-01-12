@@ -12,7 +12,6 @@ requirements:
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
-    allinone: true
   - name: modbus
     choice: ["rs485", "tcpip"]
     baudrate: 9600
@@ -23,6 +22,8 @@ params:
     required: true
   - name: maxdischargepower
     default: 5000
+  - name: timeout
+    deprecated: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}

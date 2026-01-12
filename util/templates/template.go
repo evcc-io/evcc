@@ -22,12 +22,6 @@ type Template struct {
 	titles []string
 }
 
-// GuidedSetupEnabled returns true if there are linked templates or >1 usage
-func (t *Template) GuidedSetupEnabled() bool {
-	_, p := t.ParamByName(ParamUsage)
-	return len(t.Linked) > 0 || (len(p.Choice) > 1 && p.IsAllInOne())
-}
-
 // UpdateParamWithDefaults adds default values to specific param name entries
 func (t *Template) UpdateParamsWithDefaults() error {
 	for i, p := range t.Params {
@@ -366,8 +360,7 @@ func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, m
 				}
 
 				// validate required fields from yaml
-				if s == "" && p.IsRequired() && !p.IsDeprecated() && (renderMode == RenderModeUnitTest ||
-					renderMode == RenderModeInstance && !testing.Testing()) {
+				if s == "" && p.IsRequired() && (renderMode == RenderModeUnitTest || renderMode == RenderModeInstance && !testing.Testing()) {
 					// validate required per usage
 					if len(p.Usages) == 0 || slices.Contains(p.Usages, usage) {
 						return nil, nil, fmt.Errorf("missing required `%s`", p.Name)
