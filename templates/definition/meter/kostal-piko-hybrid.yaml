@@ -7,7 +7,6 @@ products:
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
-    allinone: true
   - name: host
   - preset: battery-params
 render: |
