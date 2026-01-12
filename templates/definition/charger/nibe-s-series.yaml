@@ -83,10 +83,10 @@ render: |
       encoding: uint16
     scale: 0.1
   setmaxpower:
-    source: sequence
-    set:
-      - source: const
-        value: 1
+    source: switch
+    default: 1
+    switch:
+      - case: 0 # disable limitation
         set:
           source: modbus
           {{- include "modbus" . | indent 8 }}
@@ -94,10 +94,27 @@ render: |
             address: 2741
             type: holding
             encoding: int16
-      - source: modbus
-        {{- include "modbus" . | indent 6 }}
-        register:
-          address: 6007
-          type: holding
-          encoding: int16
-        scale: 0.01
+      - case: 1 # limit
+        set: 
+          source: sequence
+          set: 
+            - source: const
+              value: 1
+              set: 
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 2741
+                  type: holding
+                  encoding: int16
+            - source: calc
+              min: 
+              - source: const
+                value: 1100
+              - source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 6007
+                  type: holding
+                  encoding: int16
+                scale: 100
