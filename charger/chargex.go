@@ -37,16 +37,6 @@ type ChargeX struct {
 }
 
 const (
-	// Input registers (Overall System) - according to official documentation
-	chargexRegPowerSum       = 36 // 0x0024 PAC_SUM - Summary AC Power (W) - U32
-	chargexRegMinimumPower   = 38 // 0x0026 PAC_Minimum - Required AC Power (W) - U32
-	chargexRegCurrentPhase1  = 40 // 0x0028 IAC_SUM_1 - Current Phase 1 (mA) - U32
-	chargexRegCurrentPhase2  = 42 // 0x002A IAC_SUM_2 - Current Phase 2 (mA) - U32
-	chargexRegCurrentPhase3  = 44 // 0x002C IAC_SUM_3 - Current Phase 3 (mA) - U32
-	chargexRegConnectedCars  = 46 // 0x002E Connected_Cars - U32
-	chargexRegActiveSessions = 48 // 0x0030 Active_Sessions - U32
-	chargexRegNumModules     = 50 // 0x0032 N_Modules - U32
-
 	// Module specific base address (module X: 100 + module_index*12)
 	chargexRegModuleBase     = 100 // 0x0064 Base address for module 0
 	chargexRegModulePower    = 0   // PAC_X offset (U32, 2 registers)
@@ -54,13 +44,10 @@ const (
 	chargexRegModuleCurrent2 = 4   // IAC_SUM_2_X offset (U32, 2 registers)
 	chargexRegModuleCurrent3 = 6   // IAC_SUM_3_X offset (U32, 2 registers)
 	chargexRegModuleState    = 8   // States_CP_X offset (B16, 1 register!)
-	chargexRegModuleIssue    = 10  // Errors_CP_X offset (B16, 1 register!)
 
 	// Holding registers (read/write)
-	chargexRegTargetTimeout = 500 // 0x01F4 PAC_Target_Timeout (s) - U32
-	chargexRegDefaultPower  = 502 // 0x01F6 PAC_Default_Power (W) - U32
-	chargexRegTargetPower   = 504 // 0x01F8 PAC_Target_Power (W) - U32
-	chargexRegChargingMode  = 506 // 0x01FA Charging_Mode (0=Full, 1=Min, 2=NoRed) - U32
+	chargexRegTargetPower  = 504 // 0x01F8 PAC_Target_Power (W) - U32
+	chargexRegChargingMode = 506 // 0x01FA Charging_Mode (0=Full, 1=Min, 2=NoRed) - U32
 )
 
 func init() {
