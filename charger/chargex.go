@@ -23,7 +23,6 @@ import (
 	"fmt"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -33,7 +32,6 @@ import (
 type ChargeX struct {
 	log       *util.Logger
 	conn      *modbus.Connection
-	lp        loadpoint.API
 	connector uint16
 	curr      float64
 }
@@ -218,6 +216,8 @@ func (wb *ChargeX) MaxCurrent(current int64) error {
 	return wb.MaxCurrentMillis(float64(current))
 }
 
+var _ api.ChargerEx = (*ChargeX)(nil)
+
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (wb *ChargeX) MaxCurrentMillis(current float64) error {
 	if current < 6 {
@@ -232,6 +232,8 @@ func (wb *ChargeX) MaxCurrentMillis(current float64) error {
 	return err
 }
 
+var _ api.Meter = (*ChargeX)(nil)
+
 // CurrentPower implements the api.Meter interface
 func (wb *ChargeX) CurrentPower() (float64, error) {
 	b, err := wb.conn.ReadInputRegisters(wb.moduleReg(chargexRegModulePower), 2)
@@ -241,6 +243,8 @@ func (wb *ChargeX) CurrentPower() (float64, error) {
 
 	return float64(binary.BigEndian.Uint32(b)), nil
 }
+
+var _ api.PhaseCurrents = (*ChargeX)(nil)
 
 // Currents implements the api.PhaseCurrents interface
 func (wb *ChargeX) Currents() (float64, float64, float64, error) {
@@ -255,9 +259,4 @@ func (wb *ChargeX) Currents() (float64, float64, float64, error) {
 	l3 := float64(binary.BigEndian.Uint32(b[8:12])) / 1e3
 
 	return l1, l2, l3, nil
-}
-
-// LoadpointControl implements loadpoint.Controller interface
-func (wb *ChargeX) LoadpointControl(lp loadpoint.API) {
-	wb.lp = lp
 }
