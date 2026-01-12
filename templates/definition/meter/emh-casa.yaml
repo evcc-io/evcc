@@ -23,20 +23,15 @@ params:
   - name: usage
     choice: ["grid"]
   - name: uri
-    example: https://192.168.33.2
-    help:
-      de: HTTPS-URL der HAN-Schnittstelle des Smart Meter Gateway
-      en: HTTPS URL of the Smart Meter Gateway HAN interface
-  - name: host
-    required: true
-    example: 192.168.33.2
+    example: https://smgw.local
+    advanced: true
     help:
       de: |
-        IP-Adresse für HTTP Host-Header (meist identisch mit URI-Host).
-        EMH CASA Gateways benötigen den korrekten Host-Header für Virtual Hosting.
+        HTTPS-URL der HAN-Schnittstelle (leer für mDNS Auto-Discovery).
+        Auto-Discovery sucht nach "smgw.local" im lokalen Netzwerk.
       en: |
-        IP address for HTTP Host header (usually same as URI host).
-        EMH CASA gateways require the correct Host header for virtual hosting.
+        HTTPS URL of the HAN interface (empty for mDNS auto-discovery).
+        Auto-discovery searches for "smgw.local" on the local network.
   - name: user
     required: true
     help:
@@ -54,11 +49,11 @@ params:
     advanced: true
     help:
       de: |
-        Optional: Meter-ID (wird automatisch über TAF-1 Verträge erkannt).
-        Format: "1EMH1234567890.SM"
+        Optional: Meter-ID (wird automatisch über Verträge erkannt).
+        Format: "1XYZ1234567890"
       en: |
-        Optional: Meter ID (auto-discovered via TAF-1 contracts).
-        Format: "1EMH1234567890.SM"
+        Optional: Meter ID (auto-discovered via contracts).
+        Format: "1XYZ1234567890"
   - name: refresh
     description:
       de: Aktualisierungsintervall
@@ -69,15 +64,25 @@ params:
     help:
       de: "Cache-Dauer für Messwerte (Standard: 15s)"
       en: "Cache duration for meter values (default: 15s)"
+  - name: header
+    description:
+      de: Host-Header
+      en: host-header
+    example: smgw.local
+    advanced: true
+    help:
+      de: |
+        IP-Adresse für HTTP Host-Header (meist identisch mit URI-Host).
+        EMH CASA Gateways benötigen den korrekten Host-Header für Virtual Hosting.
+      en: |
+        IP address for HTTP Host header (usually same as URI host).
+        EMH CASA gateways require the correct Host header for virtual hosting.
 render: |
   type: emh-casa
   uri: {{ .uri }}
-  host: {{ .host }}
   user: {{ .user }}
   password: {{ .password }}
-  {{- if .meterid }}
   meterid: {{ .meterid }}
-  {{- end }}
-  {{- if .refresh }}
+  header: {{ .header }}
   refresh: {{ .refresh }}
-  {{- end }}
+

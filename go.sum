@@ -407,8 +407,8 @@ github.com/insomniacslk/tapo v1.0.2 h1:o2Bz941/Kp3LEjO5kvBbAE9Z4z9BcQMXRols3QkTn
 github.com/insomniacslk/tapo v1.0.2/go.mod h1:1wuMYu0+alZ4oE4BIzxAwQNveZgbb2tRqiIUwIe7SZE=
 github.com/insomniacslk/xjson v0.0.0-20240821125711-1236daaf6808 h1:BVD0pRpDWgbzkPYACLLPomriAnUGVfFdFoxs7aCLJkY=
 github.com/insomniacslk/xjson v0.0.0-20240821125711-1236daaf6808/go.mod h1:Z4EVr4bVv9LZbbje9xyZEyOLpdCOmCvr5S9BJtrdTfw=
-github.com/iseeberg79/emh-casa-go v0.0.2 h1:atrc4l6lG43xfF4G+ZrWtpxw7+atu1zvitlySa6av1o=
-github.com/iseeberg79/emh-casa-go v0.0.2/go.mod h1:tphuu7mdP1f6OjpVYW0uOlCOamsNpvvMCTmN4fv179A=
+github.com/iseeberg79/emh-casa-go v0.1.0 h1:bClzQGguWeBUD9Dmlrr8MkoL0B9/uRuzuc8D16+wfLw=
+github.com/iseeberg79/emh-casa-go v0.1.0/go.mod h1:IjoC7HyI/7nT48E48jmGncrVCxof9XvdA11vvxkRkPs=
 github.com/itchyny/gojq v0.12.18 h1:gFGHyt/MLbG9n6dqnvlliiya2TaMMh6FFaR2b1H6Drc=
 github.com/itchyny/gojq v0.12.18/go.mod h1:4hPoZ/3lN9fDL1D+aK7DY1f39XZpY9+1Xpjz8atrEkg=
 github.com/itchyny/timefmt-go v0.1.7 h1:xyftit9Tbw+Dc/huSSPJaEmX1TVL8lw5vxjJLK4GMMA=
@@ -604,6 +604,12 @@ github.com/philippseith/signalr v0.8.0 h1:CvylMNn7TkJi4adUlk75K08OwljdmBqo6jd12P
 github.com/philippseith/signalr v0.8.0/go.mod h1:ZIAyv2b3xIsh+8j++0Omtp0Xe4CwDnwfyyZBEh5Z9uk=
 github.com/pierrec/lz4 v1.0.2-0.20190131084431-473cd7ce01a1/go.mod h1:3/3N9NVKO0jef7pBehbT1qWhCMrIgbYNnFAZCqQ5LRc=
 github.com/pierrec/lz4 v2.0.5+incompatible/go.mod h1:pdkljMzZIN41W+lC3N2tnIh5sFi+IEE17M5jbnwPHcY=
+github.com/pion/logging v0.2.4 h1:tTew+7cmQ+Mc1pTBLKH2puKsOvhm32dROumOZ655zB8=
+github.com/pion/logging v0.2.4/go.mod h1:DffhXTKYdNZU+KtJ5pyQDjvOAh/GsNSyv1lbkFbe3so=
+github.com/pion/mdns/v2 v2.1.0 h1:3IJ9+Xio6tWYjhN6WwuY142P/1jA0D5ERaIqawg/fOY=
+github.com/pion/mdns/v2 v2.1.0/go.mod h1:pcez23GdynwcfRU1977qKU0mDxSeucttSHbCSfFOd9A=
+github.com/pion/transport/v3 v3.1.1 h1:Tr684+fnnKlhPceU+ICdrw6KKkTms+5qHMgw6bIkYOM=
+github.com/pion/transport/v3 v3.1.1/go.mod h1:+c2eewC5WJQHiAA46fkMMzoYZSuGzA/7E2FPrOYHctQ=
 github.com/pkg/errors v0.8.0/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
@@ -754,6 +760,8 @@ github.com/teslamotors/vehicle-command v0.4.0/go.mod h1:aL0IRpLu+l205NxejRkuxpqA
 github.com/tess1o/go-ecoflow v1.1.1-0.20251003083510-2ccc15a17e29 h1:whgDCnunp97KCC7TF94E3l1hGo080ICSRs6ei8jCnzs=
 github.com/tess1o/go-ecoflow v1.1.1-0.20251003083510-2ccc15a17e29/go.mod h1:kqrfk4Y14pHCPKIwp6o7ZbgpohUzQHh7EMX+RUA4JCU=
 github.com/tmc/grpc-websocket-proxy v0.0.0-20170815181823-89b8d40f7ca8/go.mod h1:ncp9v5uamzpCO7NfCPTXjqaC+bZgJeR0sMTm6dMHP7U=
+github.com/tobima/smgw-discover-go v0.0.1 h1:62c5+oD+nZZzuNklM5B4t/qUK40/jo93ExKXkn6Kx9Y=
+github.com/tobima/smgw-discover-go v0.0.1/go.mod h1:JEOGQfIQMZnJS5K7JXuaU4XfO7tXsVIX3IPUi9wY0rs=
 github.com/traefik/yaegi v0.16.1 h1:f1De3DVJqIDKmnasUF6MwmWv1dSEEat0wcpXhD2On3E=
 github.com/traefik/yaegi v0.16.1/go.mod h1:4eVhbPb3LnD2VigQjhYbEJ69vDRFdT2HQNrXx8eEwUY=
 github.com/tv42/httpunix v0.0.0-20191220191345-2ba4b9c3382c h1:u6SKchux2yDvFQnDHS3lPnIRmfVJ5Sxy3ao2SIdysLQ=

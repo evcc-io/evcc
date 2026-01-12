@@ -30,7 +30,7 @@ func NewEMHCasaFromConfig(other map[string]any) (api.Meter, error) {
 		User     string
 		Password string
 		MeterID  string
-		Host     string // REQUIRED for most CASA gateways (example: 192.168.33.2)
+		Header   string // REQUIRED for SSH tunnels
 		Refresh  time.Duration
 	}{
 		Refresh: 15 * time.Second,
@@ -40,28 +40,34 @@ func NewEMHCasaFromConfig(other map[string]any) (api.Meter, error) {
 		return nil, err
 	}
 
-	if cc.URI == "" {
-		return nil, fmt.Errorf("missing uri")
-	}
-
 	if cc.User == "" || cc.Password == "" {
 		return nil, api.ErrMissingCredentials
 	}
 
-	return NewEMHCasa(cc.URI, cc.User, cc.Password, cc.MeterID, cc.Host, cc.Refresh)
+	return NewEMHCasa(cc.URI, cc.User, cc.Password, cc.MeterID, cc.Header, cc.Refresh)
 }
 
 // NewEMHCasa creates an EMH CASA meter wrapper
-func NewEMHCasa(uri, user, password, meterID, host string, refresh time.Duration) (api.Meter, error) {
+func NewEMHCasa(uri, user, password, meterID, header string, refresh time.Duration) (api.Meter, error) {
 	log := util.NewLogger("emh-casa").Redact(user, password)
 
-	client, err := emhcasa.NewClient(uri, user, password, meterID, host)
+	client, err := emhcasa.NewClient(uri, user, password, meterID)
 	if err != nil {
 		return nil, err
 	}
 
+	// Set custom host header for SSH tunnels (optional)
+	if header != "" {
+		log.DEBUG.Printf("setting host header: %s", header)
+		client.SetHostHeader(header)
+	}
+
 	// Log discovered meter ID
-	discoveredID := client.MeterID()
+	discoveredID, err := client.MeterID()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get meter ID: %w", err)
+	}
+
 	prefix := discoveredID
 	if len(prefix) > 4 {
 		prefix = prefix[:4] + "..."
@@ -105,7 +111,7 @@ func (m *EMHCasa) TotalEnergy() (float64, error) {
 	return m.getOBISValue("1.8.0")
 }
 
-// getOBISValue is a DRY helper for OBIS value extraction
+// getOBISValue is a helper for OBIS value extraction
 func (m *EMHCasa) getOBISValue(obis string) (float64, error) {
 	values, err := m.valuesG()
 	if err != nil {
