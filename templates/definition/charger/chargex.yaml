@@ -18,12 +18,6 @@ params:
     id: 10
     port: 1502
   - name: connector
-    description:
-      de: Konnektor (1-N)
-      en: Connector (1-N)
-    type: number
-    default: 1
-    advanced: true
 render: |
   type: chargex
   {{- include "modbus" . }}
