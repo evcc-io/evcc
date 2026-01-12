@@ -85,4 +85,3 @@ render: |
   meterid: {{ .meterid }}
   header: {{ .header }}
   refresh: {{ .refresh }}
-
