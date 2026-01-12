@@ -784,7 +784,7 @@ func (lp *Loadpoint) syncCharger() error {
 					lp.offeredCurrent = current
 					lp.bus.Publish(evChargeCurrent, lp.offeredCurrent)
 				}
-			} else if !errors.Is(err, api.ErrNotAvailable) {
+			} else if !loadpoint.AcceptableError(err) {
 				return fmt.Errorf("charger get max current: %w", err)
 			}
 		}
@@ -1753,7 +1753,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 					}
 				}
 			} else if !loadpoint.AcceptableError(err) {
-				lp.log.ERROR.Printf("%s soc: %v", typ, err)
+				lp.log.ERROR.Printf("charger soc: %v", err)
 			}
 		}
 

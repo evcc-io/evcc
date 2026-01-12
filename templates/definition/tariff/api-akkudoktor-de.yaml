@@ -75,8 +75,8 @@ params:
       en: Simulate terrain shadows
       de: Simuliert Verschattung durch Umgebung
     help:
-      en: Each number representing the horizon height in degrees. see https://api.akkudoktor.net/#/pv%20generation%20calculation/getForecast and  https://doc.forecast.solar/horizon
-      de: Jede Zahl steht für die Horizonthöhe in Grad. Siehe https://api.akkudoktor.net/#/pv%20generation%20calculation/getForecast und https://doc.forecast.solar/horizon
+      en: Each number representing the horizon height in degrees. See [api.akkudoktor.net](https://api.akkudoktor.net/#/pv%20generation%20calculation/getForecast) and [doc.forecast.solar](https://doc.forecast.solar/horizon)
+      de: Jede Zahl steht für die Horizonthöhe in Grad. Siehe [api.akkudoktor.net](https://api.akkudoktor.net/#/pv%20generation%20calculation/getForecast) und [doc.forecast.solar](https://doc.forecast.solar/horizon)
     type: string
     example: "10,0,10,15"
     advanced: true
