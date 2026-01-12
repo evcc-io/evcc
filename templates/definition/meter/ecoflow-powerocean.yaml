@@ -22,7 +22,6 @@ requirements:
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
-    allinone: true
   - name: accesskey
     required: true
     description:

@@ -6,12 +6,6 @@ products:
   - brand: Steca
     description:
       generic: coolcept fleX
-linked:
-  - template: kostal-ksem-inverter
-    usage: grid
-  - template: kostal-ksem
-    usage: grid
-    excludetemplate: kostal-ksem-inverter
 params:
   - name: usage
     choice: ["pv"]
