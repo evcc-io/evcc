@@ -50,6 +50,10 @@ func TestSqliteTimestamp(t *testing.T) {
 func TestUpdateProfile(t *testing.T) {
 	clock := clock.NewMock()
 
+	// adjust for 00:00 in local timezone
+	_, o := clock.Now().Zone()
+	clock.Add(-time.Duration(o) * time.Second)
+
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 	require.NoError(t, SetupSchema())
 
