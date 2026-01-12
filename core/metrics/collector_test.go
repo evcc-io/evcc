@@ -13,7 +13,7 @@ func TestCollectorAddPower(t *testing.T) {
 	clock := clock.NewMock()
 
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
-	Init()
+	require.NoError(t, SetupSchema())
 
 	col, err := NewCollector("foo", "foo", WithClock(clock))
 	require.NoError(t, err)

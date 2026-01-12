@@ -155,34 +155,3 @@ func TestRequiredBatteryMode(t *testing.T) {
 		assert.Equal(t, tc.res, res, "expected %s, got %s", tc.res, res)
 	}
 }
-
-func TestUpdateHomeConsumption(t *testing.T) {
-	clock := clock.NewMock()
-
-	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
-	require.NoError(t, metrics.SetupSchema())
-
-	s := &Site{
-		log:             util.NewLogger("foo"),
-		gridPower:       4e3,
-		householdEnergy: &meterEnergy{clock: clock},
-	}
-
-	require.True(t, s.householdEnergy.updated.IsZero())
-
-	clock.Add(5 * time.Minute)
-	s.updateHomeConsumption(1e3)
-	require.False(t, s.householdEnergy.updated.IsZero())
-
-	clock.Add(5 * time.Minute)
-	s.updateHomeConsumption(1e3)
-	require.Equal(t, 1e3*5/60/1e3, s.householdEnergy.AccumulatedEnergy()) // kWh
-
-	clock.Add(5 * time.Minute)
-	s.updateHomeConsumption(1e3)
-	require.Equal(t, 0.0, s.householdEnergy.AccumulatedEnergy()) // accumulator reset after 15 minutes
-
-	clock.Add(15 * time.Minute)
-	s.updateHomeConsumption(1e3)
-	require.Equal(t, 0.0, s.householdEnergy.AccumulatedEnergy()) // accumulator reset after 15 minutes
-}

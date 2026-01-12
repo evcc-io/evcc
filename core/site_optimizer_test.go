@@ -2,13 +2,17 @@ package core
 
 import (
 	"testing"
+	"time"
 
+	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/core/metrics"
+	"github.com/evcc-io/evcc/server/db"
+	"github.com/jinzhu/now"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
-
 
 func TestSqliteTimestamp(t *testing.T) {
 	clock := clock.NewMock()
@@ -94,8 +98,6 @@ func TestUpdateHouseholdProfile(t *testing.T) {
 		require.Equal(t, expected, *prof, "full profile: expected %v, got %v", expected, *prof)
 	}
 }
-
-
 
 func TestLoadpointProfile(t *testing.T) {
 	ctrl := gomock.NewController(t)
