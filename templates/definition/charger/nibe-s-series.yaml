@@ -86,10 +86,10 @@ render: |
     source: switch
     default: 
       source: sequence
-      set: 
+      set:
         - source: const
           value: 1
-          set: 
+          set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
