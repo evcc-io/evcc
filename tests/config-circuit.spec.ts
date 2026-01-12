@@ -1,12 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
-import {
-  enableExperimental,
-  expectModalVisible,
-  expectModalHidden,
-  editorClear,
-  editorPaste,
-} from "./utils";
+import { expectModalVisible, expectModalHidden, editorClear, editorPaste } from "./utils";
 
 const CONFIG_YAML = "config-circuit.evcc.yaml";
 
@@ -21,7 +15,6 @@ test.describe("circuit", async () => {
     await start(CONFIG_YAML);
 
     await page.goto("/#/config");
-    await enableExperimental(page, false);
 
     await expect(page.getByTestId("loadpoint")).toHaveCount(1);
     await expect(page.getByTestId("loadpoint")).toContainText(["Power", "1.0 kW"].join(""));
@@ -29,7 +22,7 @@ test.describe("circuit", async () => {
     await expect(page.getByTestId("grid")).toHaveCount(1);
     await expect(page.getByTestId("grid")).toContainText(["Power", "2.1 kW"].join(""));
     await expect(page.getByTestId("grid")).toContainText(
-      ["Current L1, L2, L3", "3.0 · 3.0 · 3.0 A"].join("")
+      ["L1", "L2", "L3", "Current", "3.0", "3.0", "3.0", "A"].join("")
     );
 
     await expect(page.getByTestId("circuits")).toHaveCount(1);
@@ -43,7 +36,6 @@ test.describe("circuit", async () => {
     await start();
 
     await page.goto("/#/config");
-    await enableExperimental(page);
 
     // add grid meter
     await page.getByRole("button", { name: "Add grid meter" }).click();
@@ -134,7 +126,7 @@ test.describe("circuit", async () => {
     await expect(page.getByTestId("grid")).toHaveCount(1);
     await expect(page.getByTestId("grid")).toContainText(["Power", "2.1 kW"].join(""));
     await expect(page.getByTestId("grid")).toContainText(
-      ["Current L1, L2, L3", "3.0 · 3.0 · 3.0 A"].join("")
+      ["L1", "L2", "L3", "Current", "3.0", "3.0", "3.0", "A"].join("")
     );
 
     await expect(page.getByTestId("circuits")).toHaveCount(1);

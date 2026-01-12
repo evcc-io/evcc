@@ -61,11 +61,18 @@ type measurement struct {
 	Controllable  *bool     `json:"controllable,omitempty"`
 }
 
+var _ api.TitleDescriber = (*measurement)(nil)
+
+// GetTitle implements api.TitleDescriber interface for InfluxDB tagging
+func (m measurement) GetTitle() string {
+	return m.Title
+}
+
 var _ site.API = (*Site)(nil)
 
 // Site is the main configuration container. A site can host multiple loadpoints.
 type Site struct {
-	uiChan       chan<- util.Param // client push messages
+	valueChan    chan<- util.Param // client push messages
 	lpUpdateChan chan *Loadpoint
 
 	*Health
@@ -127,7 +134,7 @@ type MetersConfig struct {
 }
 
 // NewSiteFromConfig creates a new site
-func NewSiteFromConfig(other map[string]interface{}) (*Site, error) {
+func NewSiteFromConfig(other map[string]any) (*Site, error) {
 	site := NewSite()
 
 	// TODO remove
@@ -334,7 +341,9 @@ func (site *Site) restoreSettings() error {
 		}
 	}
 	if v, err := settings.Float(keys.BatteryGridChargeLimit); err == nil {
-		site.SetBatteryGridChargeLimit(&v)
+		if err := site.SetBatteryGridChargeLimit(&v); err != nil {
+			return err
+		}
 	}
 
 	// restore accumulated energy
@@ -484,13 +493,18 @@ func (site *Site) DumpConfig() {
 }
 
 // publish sends values to UI and databases
-func (site *Site) publish(key string, val interface{}) {
+func (site *Site) publish(key string, val any) {
 	// test helper
-	if site.uiChan == nil {
+	if site.valueChan == nil {
 		return
 	}
 
-	site.uiChan <- util.Param{Key: key, Val: val}
+	site.valueChan <- util.Param{Key: key, Val: val}
+}
+
+// publish sends values to UI and databases
+func (site *Site) Publish(key string, val any) {
+	site.publish(key, val)
 }
 
 func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) []measurement {
@@ -501,15 +515,7 @@ func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) [
 
 		// power
 		var b bytes.Buffer
-		power, err := backoff.RetryWithData(func() (float64, error) {
-			start := time.Now()
-			f, err := meter.CurrentPower()
-			if err != nil {
-				d := time.Since(start)
-				fmt.Fprintf(&b, "%v !! %3dms %v\n", start, d.Milliseconds(), err)
-			}
-			return f, err
-		}, modbus.Backoff())
+		power, err := backoff.RetryWithData(meter.CurrentPower, modbus.Backoff())
 		if err == nil {
 			site.log.DEBUG.Printf("%s %d power: %.0fW", key, i+1, power)
 		} else {
@@ -917,30 +923,29 @@ func (site *Site) update(lp updater) {
 		}
 
 		site.publishCircuits()
+
+		var wg sync.WaitGroup
+
+		wg.Go(func() {
+			if err := site.dimMeters(circuitDimmed(site.circuit)); err != nil {
+				site.log.ERROR.Println(err)
+			}
+		})
+
+		wg.Go(func() {
+			if err := site.curtailPV(circuitCurtailed(site.circuit)); err != nil {
+				site.log.ERROR.Println(err)
+			}
+		})
+
+		wg.Wait()
 	}
 
 	// prioritize if possible
 	var flexiblePower float64
-	if lp.GetMode() == api.ModePV {
+	if lp != nil && lp.GetMode() == api.ModePV {
 		flexiblePower = site.prioritizer.GetChargePowerFlexibility(lp)
 	}
-
-	rate, err := consumption.At(time.Now())
-	if consumption != nil && err != nil {
-		msg := fmt.Sprintf("no matching rate for: %s", time.Now().Format(time.RFC3339))
-		if len(consumption) > 0 {
-			msg += fmt.Sprintf(", %d consumption rates (%s to %s)", len(consumption),
-				consumption[0].Start.Local().Format(time.RFC3339),
-				consumption[len(consumption)-1].End.Local().Format(time.RFC3339),
-			)
-		}
-
-		site.log.WARN.Println("planner:", msg)
-	}
-
-	batteryGridChargeActive := site.batteryGridChargeActive(rate)
-	site.publish(keys.BatteryGridChargeActive, batteryGridChargeActive)
-	site.updateBatteryMode(batteryGridChargeActive, rate)
 
 	if sitePower, batteryBuffered, batteryStart, err := site.sitePower(totalChargePower, flexiblePower); err == nil {
 		// ignore negative pvPower values as that means it is not an energy source but consumption
@@ -961,10 +966,12 @@ func (site *Site) update(lp updater) {
 		greenShareLoadpoints := site.greenShare(nonChargePower, nonChargePower+totalChargePower)
 
 		// TODO
-		lp.Update(
-			sitePower, max(0, site.batteryPower), consumption, feedin, batteryBuffered, batteryStart,
-			greenShareLoadpoints, site.effectivePrice(greenShareLoadpoints), site.effectiveCo2(greenShareLoadpoints),
-		)
+		if lp != nil {
+			lp.Update(
+				sitePower, max(0, site.batteryPower), consumption, feedin, batteryBuffered, batteryStart,
+				greenShareLoadpoints, site.effectivePrice(greenShareLoadpoints), site.effectiveCo2(greenShareLoadpoints),
+			)
+		}
 
 		site.Health.Update()
 
@@ -976,6 +983,25 @@ func (site *Site) update(lp updater) {
 	} else {
 		site.log.ERROR.Println(err)
 	}
+
+	// smart grid charging
+	rate, err := consumption.At(time.Now())
+	if consumption != nil && err != nil {
+		msg := fmt.Sprintf("no matching rate for: %s", time.Now().Format(time.RFC3339))
+		if len(consumption) > 0 {
+			msg += fmt.Sprintf(", %d consumption rates (%s to %s)", len(consumption),
+				consumption[0].Start.Local().Format(time.RFC3339),
+				consumption[len(consumption)-1].End.Local().Format(time.RFC3339),
+			)
+		}
+
+		site.log.WARN.Println("planner:", msg)
+	}
+
+	// update battery after reading meters to ensure that (modbus) connection is open
+	batteryGridChargeActive := site.batteryGridChargeActive(rate)
+	site.publish(keys.BatteryGridChargeActive, batteryGridChargeActive)
+	site.updateBatteryMode(batteryGridChargeActive, rate)
 
 	site.stats.Update(site)
 }
@@ -1016,7 +1042,7 @@ func (site *Site) prepare() {
 }
 
 // Prepare attaches communication channels to site and loadpoints
-func (site *Site) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Event) {
+func (site *Site) Prepare(valueChan chan<- util.Param, pushChan chan<- push.Event) {
 	// https://github.com/evcc-io/evcc/issues/11191 prevent deadlock
 	// https://github.com/evcc-io/evcc/pull/11675 maintain message order
 
@@ -1024,12 +1050,12 @@ func (site *Site) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Event) 
 	ch := chanx.NewUnboundedChan[util.Param](context.Background(), 2)
 
 	// use ch.In for writing
-	site.uiChan = ch.In
+	site.valueChan = ch.In
 
 	// use ch.Out for reading
 	go func() {
 		for p := range ch.Out {
-			uiChan <- p
+			valueChan <- p
 		}
 	}()
 
@@ -1047,7 +1073,7 @@ func (site *Site) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Event) 
 				select {
 				case param := <-lpUIChan:
 					param.Loadpoint = &id
-					site.uiChan <- param
+					site.valueChan <- param
 				case ev := <-lpPushChan:
 					ev.Loadpoint = &id
 					pushChan <- ev
@@ -1061,9 +1087,18 @@ func (site *Site) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Event) 
 
 // loopLoadpoints keeps iterating across loadpoints sending the next to the given channel
 func (site *Site) loopLoadpoints(next chan<- updater) {
+	var logOnce sync.Once
+
 	for {
-		for _, lp := range site.loadpoints {
-			next <- lp
+		if len(site.loadpoints) == 0 {
+			logOnce.Do(func() {
+				site.log.INFO.Println("no loadpoints configured, running in meter-only mode")
+			})
+			next <- nil
+		} else {
+			for _, lp := range site.loadpoints {
+				next <- lp
+			}
 		}
 	}
 }
@@ -1074,11 +1109,11 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 	site.Health = NewHealth(time.Minute + interval)
 
 	if max := 30 * time.Second; interval < max {
-		site.log.WARN.Printf("interval <%.0fs can lead to unexpected behavior, see https://docs.evcc.io/docs/reference/configuration/interval", max.Seconds())
+		site.log.INFO.Printf("interval <%.0fs can lead to unexpected behavior, see https://docs.evcc.io/docs/reference/configuration/interval", max.Seconds())
 	}
 
 	loadpointChan := make(chan updater)
-	if len(site.loadpoints) > 0 {
+	if site.IsConfigured() {
 		go site.loopLoadpoints(loadpointChan)
 	}
 

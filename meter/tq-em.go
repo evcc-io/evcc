@@ -57,7 +57,7 @@ type TqEm struct {
 //go:generate go tool decorate -f decorateTqEm -b api.Meter -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)"
 
 // NewTqEmFromConfig creates a new configurable meter
-func NewTqEmFromConfig(other map[string]interface{}) (api.Meter, error) {
+func NewTqEmFromConfig(other map[string]any) (api.Meter, error) {
 	cc := struct {
 		URI      string
 		Password string

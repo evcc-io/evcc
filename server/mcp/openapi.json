@@ -321,6 +321,22 @@
         },
         "description": "Success - Soc result"
       },
+      "SuccessResult": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "properties": {
+                "result": {
+                  "example": "OK",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "description": "Success"
+      },
       "Unauthorized": {
         "content": {
           "text/plain": {
@@ -362,16 +378,8 @@
         "description": "Charging sessions",
         "items": {
           "properties": {
-            "chargeDuration": {
-              "description": "Duration of active charging",
-              "type": "number"
-            },
             "chargedEnergy": {
               "description": "Charged energy in kWh",
-              "type": "number"
-            },
-            "co2PerKWh": {
-              "description": "Average CO₂ emissions per kWh",
               "type": "number"
             },
             "created": {
@@ -401,18 +409,6 @@
               "nullable": true,
               "type": "number"
             },
-            "price": {
-              "description": "Total price of the session",
-              "type": "number"
-            },
-            "pricePerKWh": {
-              "description": "Average price per kWh",
-              "type": "number"
-            },
-            "solarPercentage": {
-              "description": "Solar percentage of the session",
-              "type": "number"
-            },
             "vehicle": {
               "$ref": "#/components/schemas/VehicleName"
             }
@@ -437,6 +433,60 @@
         "example": 25.5,
         "minimum": 0,
         "type": "number"
+      },
+      "GridSessions": {
+        "description": "Grid limitation sessions",
+        "items": {
+          "properties": {
+            "chargeDuration": {
+              "description": "Duration of active charging",
+              "type": "number"
+            },
+            "co2PerKWh": {
+              "description": "Average CO₂ emissions per kWh",
+              "type": "number"
+            },
+            "created": {
+              "$ref": "#/components/schemas/Timestamp"
+            },
+            "finished": {
+              "$ref": "#/components/schemas/Timestamp"
+            },
+            "gridPower": {
+              "description": "Grid power in watts",
+              "type": "number"
+            },
+            "id": {
+              "$ref": "#/components/schemas/Id"
+            },
+            "limitPower": {
+              "description": "Limitation power in watts",
+              "type": "number"
+            },
+            "price": {
+              "description": "Total price of the session",
+              "type": "number"
+            },
+            "pricePerKWh": {
+              "description": "Average price per kWh",
+              "type": "number"
+            },
+            "solarPercentage": {
+              "description": "Solar percentage of the session",
+              "type": "number"
+            },
+            "type": {
+              "description": "Type of grid limitation event",
+              "enum": [
+                "consumption",
+                "feedin"
+              ],
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "type": "array"
       },
       "HourMinuteTime": {
         "description": "Time in `HH:MM` format",
@@ -544,6 +594,21 @@
         },
         "type": "object"
       },
+      "PlanStrategy": {
+        "description": "Charging plan strategy configuration",
+        "properties": {
+          "continuous": {
+            "description": "Force continuous planning",
+            "type": "boolean"
+          },
+          "precondition": {
+            "description": "Precondition duration in seconds",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
       "Power": {
         "description": "Power in W",
         "example": 2500,
@@ -588,9 +653,6 @@
             "description": "Set plan active.",
             "type": "boolean"
           },
-          "precondition": {
-            "$ref": "#/components/schemas/Precondition"
-          },
           "soc": {
             "$ref": "#/components/schemas/Soc"
           },
@@ -602,17 +664,6 @@
           },
           "weekdays": {
             "$ref": "#/components/schemas/Weekdays"
-          }
-        },
-        "type": "object"
-      },
-      "RepeatingPlans": {
-        "properties": {
-          "plans": {
-            "items": {
-              "$ref": "#/components/schemas/RepeatingPlan"
-            },
-            "type": "array"
           }
         },
         "type": "object"
@@ -636,9 +687,6 @@
           "energy": {
             "$ref": "#/components/schemas/Energy"
           },
-          "precondition": {
-            "$ref": "#/components/schemas/Precondition"
-          },
           "time": {
             "$ref": "#/components/schemas/Timestamp"
           }
@@ -650,9 +698,6 @@
           "url": "https://docs.evcc.io/en/docs/features/plans#create-charging-plan"
         },
         "properties": {
-          "precondition": {
-            "$ref": "#/components/schemas/Precondition"
-          },
           "soc": {
             "$ref": "#/components/schemas/Soc"
           },
@@ -983,6 +1028,62 @@
         "summary": "Set battery buffer start SoC",
         "tags": [
           "battery"
+        ]
+      }
+    },
+    "/gridsessions": {
+      "get": {
+        "description": "Returns a list of HEMS grid limitation events.",
+        "operationId": "getGridSessions",
+        "parameters": [
+          {
+            "description": "Response format (default json)",
+            "in": "query",
+            "name": "format",
+            "schema": {
+              "enum": [
+                "csv"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Language (defaults to accept header)",
+            "in": "query",
+            "name": "lang",
+            "schema": {
+              "example": "de",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "result": {
+                      "$ref": "#/components/schemas/GridSessions"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "text/csv": {
+                "schema": {
+                  "description": "Download csv-file",
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Success"
+          }
+        },
+        "summary": "Grid limitation sessions",
+        "tags": [
+          "sessions"
         ]
       }
     },
@@ -1328,9 +1429,6 @@
                           "properties": {
                             "planId": {
                               "$ref": "#/components/schemas/Id"
-                            },
-                            "precondition": {
-                              "$ref": "#/components/schemas/Precondition"
                             }
                           },
                           "type": "object"
@@ -1511,6 +1609,51 @@
         ]
       }
     },
+    "/loadpoints/{id}/plan/strategy": {
+      "post": {
+        "description": "Updates the charging plan strategy for the loadpoint.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/plans"
+        },
+        "operationId": "setLoadpointPlanStrategy",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlanStrategy"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "result": {
+                      "$ref": "#/components/schemas/PlanStrategy"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Success"
+          }
+        },
+        "summary": "Set plan strategy",
+        "tags": [
+          "loadpoints"
+        ]
+      }
+    },
     "/loadpoints/{id}/priority/{priority}": {
       "post": {
         "description": "Set loadpoint priority.",
@@ -1589,6 +1732,49 @@
           }
         },
         "summary": "Set smart charging cost limit",
+        "tags": [
+          "loadpoints"
+        ]
+      }
+    },
+    "/loadpoints/{id}/smartfeedinprioritylimit": {
+      "delete": {
+        "description": "Delete limit for feed-in priority optimization.",
+        "operationId": "deleteLoadpointSmartFeedInPriorityLimit",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NullResult"
+          }
+        },
+        "summary": "Delete smart feed-in priority limit",
+        "tags": [
+          "loadpoints"
+        ]
+      }
+    },
+    "/loadpoints/{id}/smartfeedinprioritylimit/{cost}": {
+      "post": {
+        "description": "Set limit for feed-in priority optimization.",
+        "operationId": "setLoadpointSmartFeedInPriorityLimit",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "$ref": "#/components/parameters/costLimit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NumberResult"
+          }
+        },
+        "summary": "Set smart feed-in priority limit",
         "tags": [
           "loadpoints"
         ]
@@ -1863,24 +2049,6 @@
         ]
       }
     },
-    "/settings/telemetry": {
-      "get": {
-        "description": "Returns the current telemetry status.",
-        "externalDocs": {
-          "url": "https://docs.evcc.io/en/docs/reference/configuration/telemetry"
-        },
-        "operationId": "getTelemetryStatus",
-        "responses": {
-          "200": {
-            "$ref": "#/components/responses/BooleanResult"
-          }
-        },
-        "summary": "Telemetry status",
-        "tags": [
-          "system"
-        ]
-      }
-    },
     "/settings/telemetry/{enable}": {
       "post": {
         "description": "Enable or disable telemetry. Note: Telemetry requires sponsorship.",
@@ -1942,6 +2110,41 @@
         ]
       }
     },
+    "/smartfeedinprioritylimit": {
+      "delete": {
+        "description": "Convenience method to remove limit for all loadpoints at once. Value is applied to each individual loadpoint.",
+        "operationId": "removeGlobalSmartFeedInPriorityLimit",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NullResult"
+          }
+        },
+        "summary": "Remove smart feed-in priority limit for all loadpoints.",
+        "tags": [
+          "general"
+        ]
+      }
+    },
+    "/smartfeedinprioritylimit/{cost}": {
+      "post": {
+        "description": "Convenience method to set smart feed-in priority limit for all loadpoints at once. Value is applied to each individual loadpoint.",
+        "operationId": "setGlobalSmartFeedInPriorityLimit",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/costLimit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NumberResult"
+          }
+        },
+        "summary": "Set smart feed-in priority limit for all loadpoints",
+        "tags": [
+          "general"
+        ]
+      }
+    },
     "/state": {
       "get": {
         "description": "Returns the complete state of the system. This structure is used by the UI. It can be filtered by JQ to only return a subset of the data.",
@@ -1989,6 +2192,29 @@
         "summary": "System state",
         "tags": [
           "general"
+        ]
+      }
+    },
+    "/system/cache": {
+      "delete": {
+        "description": "Clears all cached data. This resets all cached values from tariffs, vehicle APIs, and other components that use caching.",
+        "operationId": "clearCache",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/SuccessResult"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "summary": "Clear cache",
+        "tags": [
+          "system"
         ]
       }
     },
@@ -2250,7 +2476,10 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/RepeatingPlans"
+                "items": {
+                  "$ref": "#/components/schemas/RepeatingPlan"
+                },
+                "type": "array"
               }
             }
           },
@@ -2263,7 +2492,10 @@
                 "schema": {
                   "properties": {
                     "result": {
-                      "$ref": "#/components/schemas/RepeatingPlans"
+                      "items": {
+                        "$ref": "#/components/schemas/RepeatingPlan"
+                      },
+                      "type": "array"
                     }
                   },
                   "type": "object"
@@ -2318,13 +2550,6 @@
           },
           {
             "$ref": "#/components/parameters/timestamp"
-          },
-          {
-            "in": "query",
-            "name": "precondition",
-            "schema": {
-              "$ref": "#/components/schemas/Precondition"
-            }
           }
         ],
         "responses": {
@@ -2334,7 +2559,15 @@
                 "schema": {
                   "properties": {
                     "result": {
-                      "$ref": "#/components/schemas/StaticSocPlan"
+                      "properties": {
+                        "soc": {
+                          "$ref": "#/components/schemas/Soc"
+                        },
+                        "time": {
+                          "$ref": "#/components/schemas/Timestamp"
+                        }
+                      },
+                      "type": "object"
                     }
                   },
                   "type": "object"
@@ -2345,6 +2578,51 @@
           }
         },
         "summary": "Set a SoC-based charging plan",
+        "tags": [
+          "vehicles"
+        ]
+      }
+    },
+    "/vehicles/{name}/plan/strategy": {
+      "post": {
+        "description": "Updates the charging plan strategy for the vehicle.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/plans"
+        },
+        "operationId": "setVehiclePlanStrategy",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/vehicleName"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlanStrategy"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "result": {
+                      "$ref": "#/components/schemas/PlanStrategy"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Success"
+          }
+        },
+        "summary": "Set plan strategy",
         "tags": [
           "vehicles"
         ]

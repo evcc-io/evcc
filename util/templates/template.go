@@ -7,9 +7,11 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"testing"
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
+	"github.com/spf13/cast"
 )
 
 // Template describes is a proxy device for use with cli and automated testing
@@ -18,12 +20,6 @@ type Template struct {
 
 	title  string
 	titles []string
-}
-
-// GuidedSetupEnabled returns true if there are linked templates or >1 usage
-func (t *Template) GuidedSetupEnabled() bool {
-	_, p := t.ParamByName(ParamUsage)
-	return len(t.Linked) > 0 || (len(p.Choice) > 1 && p.IsAllInOne())
 }
 
 // UpdateParamWithDefaults adds default values to specific param name entries
@@ -41,19 +37,19 @@ func (t *Template) UpdateParamsWithDefaults() error {
 func (t *Template) Validate() error {
 	for _, c := range t.Capabilities {
 		if !slices.Contains(ValidCapabilities, c) {
-			return fmt.Errorf("invalid capability '%s' in template %s", c, t.Template)
+			return fmt.Errorf("invalid capability: '%s'", c)
 		}
 	}
 
 	for _, c := range t.Countries {
 		if !c.IsValid() {
-			return fmt.Errorf("invalid country code '%s' in template %s", c, t.Template)
+			return fmt.Errorf("invalid country code: '%s'", c)
 		}
 	}
 
 	for _, r := range t.Requirements.EVCC {
 		if !slices.Contains(ValidRequirements, r) {
-			return fmt.Errorf("invalid requirement '%s' in template %s", r, t.Template)
+			return fmt.Errorf("invalid requirement: '%s'", r)
 		}
 	}
 
@@ -62,27 +58,32 @@ func (t *Template) Validate() error {
 			continue
 		}
 
+		// Validate that a param cannot be both masked and private
+		if p.Mask && p.Private {
+			return fmt.Errorf("param %s: 'mask' and 'private' cannot be used together. Use 'mask' for sensitive data like passwords/tokens that should be hidden in UI. Use 'private' for personal data like emails/locations that should only be redacted from bug reports", p.Name)
+		}
+
 		if p.Description.String("en") == "" || p.Description.String("de") == "" {
-			return fmt.Errorf("description for param %s cant be empty in template %s", p.Name, t.Template)
+			return fmt.Errorf("param %s: description can't be empty", p.Name)
 		}
 
 		maxLength := 50
 		actualLength := max(len(p.Description.String("en")), len(p.Description.String("de")))
 		if actualLength > maxLength {
-			return fmt.Errorf("description for param %s is too long in template %s. allowed: %d. actual length: %d. use help field for details instead.", p.Name, t.Template, maxLength, actualLength)
+			return fmt.Errorf("param %s: description too long (%d/%d allowed)- use help instead", p.Name, actualLength, maxLength)
 		}
 
 		switch p.Name {
 		case ParamUsage:
 			for _, c := range p.Choice {
 				if !slices.Contains(UsageStrings(), c) {
-					return fmt.Errorf("invalid usage choice '%s' in template %s", c, t.Template)
+					return fmt.Errorf("invalid usage: '%s'", c)
 				}
 			}
 		case ParamModbus:
 			for _, c := range p.Choice {
 				if !slices.Contains(ValidModbusChoices, c) {
-					return fmt.Errorf("invalid modbus choice '%s' in template %s", c, t.Template)
+					return fmt.Errorf("invalid modbus type: '%s'", c)
 				}
 			}
 		}
@@ -133,12 +134,12 @@ func (t *Template) ResolvePresets() error {
 	t.Params = []Param{}
 	for _, p := range currentParams {
 		if p.Preset != "" {
-			base, ok := ConfigDefaults.Presets[p.Preset]
+			preset, ok := ConfigDefaults.Presets[p.Preset]
 			if !ok {
 				return fmt.Errorf("could not find preset definition: %s", p.Preset)
 			}
 
-			t.Params = append(t.Params, base.Params...)
+			t.Params = append(t.Params, preset...)
 			continue
 		}
 
@@ -175,8 +176,8 @@ func (t *Template) GroupTitle(lang string) string {
 }
 
 // Defaults returns a map of default values for the template
-func (t *Template) Defaults(renderMode int) map[string]interface{} {
-	values := make(map[string]interface{})
+func (t *Template) Defaults(renderMode int) map[string]any {
+	values := make(map[string]any, len(t.Params))
 	for _, p := range t.Params {
 		values[p.Name] = p.DefaultValue(renderMode)
 	}
@@ -226,7 +227,7 @@ func (t *Template) ModbusChoices() []string {
 var proxyTmpl string
 
 // RenderProxyWithValues renders the proxy template
-func (t *Template) RenderProxyWithValues(values map[string]interface{}, lang string) ([]byte, error) {
+func (t *Template) RenderProxyWithValues(values map[string]any, lang string) ([]byte, error) {
 	tmpl, err := template.New("yaml").Funcs(sprig.FuncMap()).Parse(proxyTmpl)
 	if err != nil {
 		panic(err)
@@ -276,7 +277,7 @@ func (t *Template) RenderProxyWithValues(values map[string]interface{}, lang str
 	t.Params = newParams
 
 	out := new(bytes.Buffer)
-	data := map[string]interface{}{
+	data := map[string]any{
 		"Template": t.Template,
 		"Params":   t.Params,
 	}
@@ -294,7 +295,15 @@ func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, m
 
 	t.ModbusValues(renderMode, values)
 
-	res := make(map[string]interface{})
+	res := make(map[string]any)
+
+	var usage string
+	for k, v := range values {
+		if strings.ToLower(k) == "usage" {
+			usage = strings.ToLower(cast.ToString(v))
+			break
+		}
+	}
 
 	// TODO this is an utterly horrible hack
 	//
@@ -306,7 +315,8 @@ func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, m
 	// The actual key name is taken from the parameter to make it unique.
 	// Since predefined properties are not matched by actual parameters using
 	// ParamByName(), the lower case key name is used instead.
-	// All keys *must* be assigned or rendering will create "<no value>" artifacts.
+	// All keys *must* be assigned or rendering will create "<no value>" artifacts. For this reason,
+	// deprecated parameters (that may still be rendered) must be evaluated, too.
 
 	for key, val := range values {
 		out := strings.ToLower(key)
@@ -316,8 +326,6 @@ func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, m
 			if !slices.Contains(predefinedTemplateProperties, out) {
 				return nil, values, fmt.Errorf("invalid key: %s", key)
 			}
-		} else if p.IsDeprecated() {
-			continue
 		} else {
 			out = p.Name
 		}
@@ -325,12 +333,12 @@ func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, m
 		// TODO move yamlQuote to explicit quoting in templates, see https://github.com/evcc-io/evcc/issues/10742
 
 		switch typed := val.(type) {
-		case []interface{}:
+		case []any:
 			var list []string
 			for _, v := range typed {
 				list = append(list, p.yamlQuote(fmt.Sprintf("%v", v)))
 			}
-			if res[out] == nil || len(res[out].([]interface{})) == 0 {
+			if res[out] == nil || len(res[out].([]any)) == 0 {
 				res[out] = list
 			}
 
@@ -350,15 +358,21 @@ func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, m
 				if val != nil {
 					s = p.yamlQuote(fmt.Sprintf("%v", val))
 				}
+
+				// validate required fields from yaml
+				if s == "" && p.IsRequired() && (renderMode == RenderModeUnitTest || renderMode == RenderModeInstance && !testing.Testing()) {
+					// validate required per usage
+					if len(p.Usages) == 0 || slices.Contains(p.Usages, usage) {
+						return nil, nil, fmt.Errorf("missing required `%s`", p.Name)
+					}
+				}
+
 				res[out] = s
 			}
 		}
 	}
 
-	tmpl, err := baseTmpl.Clone()
-	if err == nil {
-		tmpl, err = FuncMap(tmpl).Parse(t.Render)
-	}
+	tmpl, err := FuncMap(template.Must(baseTmpl.Clone())).Parse(t.Render)
 	if err != nil {
 		return nil, res, err
 	}

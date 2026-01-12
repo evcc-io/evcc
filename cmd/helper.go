@@ -21,7 +21,7 @@ func parseLogLevels() {
 	}
 
 	var level string
-	for _, kv := range strings.Split(viper.GetString("log"), ",") {
+	for kv := range strings.SplitSeq(viper.GetString("log"), ",") {
 		areaLevel := strings.SplitN(kv, ":", 2)
 		if len(areaLevel) == 1 {
 			level = areaLevel[0]
@@ -47,14 +47,6 @@ func unwrap(err error) (res []string) {
 		err = inner
 	}
 	return
-}
-
-func redact(src string) string {
-	return util.RedactConfigString(src)
-}
-
-func redactMap(src map[string]any) map[string]any {
-	return util.RedactConfigMap(src)
 }
 
 // fatal logs a fatal error and runs shutdown functions before terminating

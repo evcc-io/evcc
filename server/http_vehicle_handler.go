@@ -73,7 +73,6 @@ func limitSocHandler(site site.API) http.HandlerFunc {
 func planSocHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		query := r.URL.Query()
 
 		v, err := site.Vehicles().ByName(vars["name"])
 		if err != nil {
@@ -93,28 +92,52 @@ func planSocHandler(site site.API) http.HandlerFunc {
 			return
 		}
 
-		precondition, err := parseDuration(query.Get("precondition"))
+		if err := v.SetPlanSoc(ts, soc); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		ts, soc = v.GetPlanSoc()
+
+		res := struct {
+			Soc  int       `json:"soc"`
+			Time time.Time `json:"time"`
+		}{
+			Soc:  soc,
+			Time: ts,
+		}
+
+		jsonWrite(w, res)
+	}
+}
+
+func planStrategyHandlerSetter(r *http.Request, set func(api.PlanStrategy) error) error {
+	var planStrategy planStrategyPayload
+	if err := json.NewDecoder(r.Body).Decode(&planStrategy); err != nil {
+		return err
+	}
+	return set(api.PlanStrategy{
+		Continuous:   planStrategy.Continuous,
+		Precondition: time.Duration(planStrategy.Precondition) * time.Second,
+	})
+}
+
+// updatePlanStrategyHandler updates plan strategy
+func updatePlanStrategyHandler(site site.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		v, err := site.Vehicles().ByName(vars["name"])
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
-		if err := v.SetPlanSoc(ts, precondition, soc); err != nil {
+		if err := planStrategyHandlerSetter(r, v.SetPlanStrategy); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
-		ts, precondition, soc = v.GetPlanSoc()
-
-		res := struct {
-			Soc          int       `json:"soc"`
-			Precondition int64     `json:"precondition"`
-			Time         time.Time `json:"time"`
-		}{
-			Soc:          soc,
-			Precondition: int64(precondition.Seconds()),
-			Time:         ts,
-		}
+		res := planStrategyPayloadFromApi(v.GetPlanStrategy())
 
 		jsonWrite(w, res)
 	}
@@ -131,22 +154,18 @@ func addRepeatingPlansHandler(site site.API) http.HandlerFunc {
 			return
 		}
 
-		var plansWrapper struct {
-			RepeatingPlans []api.RepeatingPlanStruct `json:"plans"`
-		}
-
-		err = json.NewDecoder(r.Body).Decode(&plansWrapper)
-		if err != nil {
+		var res []api.RepeatingPlan
+		if err := json.NewDecoder(r.Body).Decode(&res); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
-		if err := v.SetRepeatingPlans(plansWrapper.RepeatingPlans); err != nil {
+		if err := v.SetRepeatingPlans(res); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
-		jsonWrite(w, plansWrapper)
+		jsonWrite(w, res)
 	}
 }
 
@@ -161,12 +180,11 @@ func planSocRemoveHandler(site site.API) http.HandlerFunc {
 			return
 		}
 
-		if err := v.SetPlanSoc(time.Time{}, 0, 0); err != nil {
+		if err := v.SetPlanSoc(time.Time{}, 0); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
-		res := struct{}{}
-		jsonWrite(w, res)
+		jsonWrite(w, struct{}{})
 	}
 }

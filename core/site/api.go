@@ -5,8 +5,15 @@ import (
 	"github.com/evcc-io/evcc/core/loadpoint"
 )
 
+// publisher gives access to the site's publish function
+type Publisher interface {
+	Publish(key string, val any)
+}
+
 // API is the external site API
 type API interface {
+	Publisher
+
 	Healthy() bool
 	Loadpoints() []loadpoint.API
 	Vehicles() Vehicles
@@ -45,7 +52,7 @@ type API interface {
 	// GetBatteryGridChargeLimit get the grid charge limit
 	GetBatteryGridChargeLimit() *float64
 	// SetBatteryGridChargeLimit sets the grid charge limit
-	SetBatteryGridChargeLimit(limit *float64)
+	SetBatteryGridChargeLimit(limit *float64) error
 
 	//
 	// power and energy
@@ -75,5 +82,5 @@ type API interface {
 	// GetBatteryModeExternal returns the external battery mode
 	GetBatteryModeExternal() api.BatteryMode
 	// SetBatteryModeExternal sets the external battery mode
-	SetBatteryModeExternal(api.BatteryMode)
+	SetBatteryModeExternal(api.BatteryMode) error
 }

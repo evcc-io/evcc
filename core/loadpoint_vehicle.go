@@ -133,11 +133,9 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 		lp.socUpdated = time.Time{}
 
 		// resolve optional config
-		var estimate bool
-		if lp.Soc.Estimate == nil || *lp.Soc.Estimate {
-			estimate = true
+		if v.Capacity() > 0 && (lp.Soc.Estimate == nil || *lp.Soc.Estimate) {
+			lp.socEstimator = soc.NewEstimator(lp.log, lp.charger, v)
 		}
-		lp.socEstimator = soc.NewEstimator(lp.log, lp.charger, v, estimate)
 
 		lp.publish(keys.VehicleName, vehicle.Settings(lp.log, v).Name())
 		lp.publish(keys.VehicleTitle, v.GetTitle())
@@ -319,20 +317,17 @@ func (lp *Loadpoint) vehicleOdometer() {
 
 // vehicleClimatePollAllowed determines if polling depending on mode and connection status
 func (lp *Loadpoint) vehicleClimatePollAllowed() bool {
-	switch {
-	case lp.Soc.Poll.Mode == loadpoint.PollCharging && lp.charging():
+	if lp.charging() || lp.vehicleHasFeature(api.Streaming) {
 		return true
-	case (lp.Soc.Poll.Mode == loadpoint.PollConnected || lp.Soc.Poll.Mode == loadpoint.PollAlways) && lp.connected():
-		return true
-	default:
-		return false
 	}
+
+	return (lp.Soc.Poll.Mode == loadpoint.PollConnected || lp.Soc.Poll.Mode == loadpoint.PollAlways) && lp.connected()
 }
 
 // vehicleSocPollAllowed validates charging state against polling mode
 func (lp *Loadpoint) vehicleSocPollAllowed() bool {
 	// always update soc when charging
-	if lp.charging() {
+	if lp.charging() || lp.vehicleHasFeature(api.Streaming) {
 		return true
 	}
 

@@ -3,9 +3,7 @@
 		class="d-flex justify-content-between flex-wrap align-items-center gap-2"
 		:data-testid="testId"
 	>
-		<strong class="text-truncate d-flex align-items-center"
-			>{{ label }}{{ experimental ? " 🧪" : "" }}</strong
-		>
+		<strong class="text-truncate d-flex align-items-center">{{ label }}</strong>
 		<div class="d-flex align-items-center text-truncate">
 			<div
 				class="text-truncate align-items-center flex-grow-1 flex-shrink-1 text-end"
@@ -41,7 +39,6 @@ export default {
 		text: { type: String, default: "---" },
 		textClass: { type: String, default: "" },
 		modalId: { type: String, required: true },
-		experimental: { type: Boolean, default: false },
 	},
 	emits: ["edit-clicked"],
 	methods: {

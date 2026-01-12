@@ -17,7 +17,7 @@ jobs:
     outputs:
       should_run: ${{ steps.should_run.outputs.should_run }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           persist-credentials: false
       - name: print latest_commit
@@ -52,14 +52,14 @@ jobs:
       actions: read
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           ref: refs/heads/master # force master
           fetch-depth: 0
           persist-credentials: false
 
       - name: Get dist from cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         id: cache-dist
         with:
           path: dist
@@ -112,7 +112,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: evcc-io/hassio-addon
           token: ${{ secrets.HASSIO_DEPLOY_TOKEN }}
@@ -144,7 +144,7 @@ jobs:
       actions: read
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
           persist-credentials: false
@@ -158,7 +158,7 @@ jobs:
         run: make patch-asn1-sudo
 
       - name: Get dist from cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         id: cache-dist
         with:
           path: dist

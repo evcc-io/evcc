@@ -1,0 +1,24 @@
+template: orno-we525_526
+products:
+  - brand: ORNO
+    description:
+      generic: WE-525
+  - brand: ORNO
+    description:
+      generic: WE-526
+params:
+  - name: usage
+    choice: ["pv", "charge"]
+  - name: modbus
+    choice: ["rs485"]
+render: |
+  type: mbmd
+  {{- include "modbus" . }}
+  model: orno1p525
+  {{- if ne .usage "pv" }}
+  power: Power
+  energy: Import
+  {{- else }}
+  power: -Power
+  energy: Export
+  {{- end }}

@@ -12,7 +12,7 @@ func init() {
 }
 
 // NewTapoFromConfig creates a tapo meter from generic config
-func NewTapoFromConfig(other map[string]interface{}) (api.Meter, error) {
+func NewTapoFromConfig(other map[string]any) (api.Meter, error) {
 	var cc struct {
 		URI      string
 		User     string

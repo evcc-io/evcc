@@ -19,12 +19,10 @@ requirements:
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
-    allinone: true
   - name: host
   - name: port
     default: 502
-  - name: capacity
-    advanced: true
+  - preset: battery-params
 render: |
   type: custom
   {{- if eq .usage "grid" }}

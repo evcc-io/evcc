@@ -1,4 +1,24 @@
 {
+  "authProviders": {
+    "authCode": "Ověřovací kód",
+    "authCodeHelp": "Zkopírujte tento kód a použijte jej v dalším kroku. Platný po dobu {duration}.",
+    "authorizationFailed": "Autorizace se nezdařila",
+    "authorizationRequired": "Vyžaduje se autorizace",
+    "authorizationSuccessful": "Autorizace úspěšná",
+    "buttonConnect": "Připojit se k {provider}",
+    "buttonDisconnect": "Odpojit",
+    "confirmLogout": "Opravdu chcete odpojit {title}?",
+    "connect": "připojit",
+    "disconnect": "odpojit",
+    "loggedOut": "Úspěšně odhlášen",
+    "logoutFailed": "Odhlášení se nezdařilo",
+    "modalDescriptionLogin": "Dokončete proces autorizace pro navázání spojení s {provider}.",
+    "modalDescriptionLogout": "Tím se odpojí váš účet {provider} a odebere se přístup k jeho datům.",
+    "success": "{title} je nyní připojen a připraven k použití.",
+    "successCloseModal": "Nyní můžete toto dialogové okno zavřít.",
+    "successCloseTab": "Nyní můžete tuto kartu zavřít.",
+    "title": "Stav autorizace"
+  },
   "batterySettings": {
     "batteryLevel": "Nabití baterie",
     "bufferStart": {
@@ -40,8 +60,16 @@
       "chargers": "EV nabíječky",
       "generic": "Obecné integrace",
       "heatingdevices": "Zařízení pro vytápění",
-      "ocppHelp": "Zkopíruj tuto adresu do konfiguračního nástroje nabíječky.",
+      "ocppConfirmContinue": "Vaše nabíječka ještě není připojena k evcc. Opravdu chcete pokračovat?",
+      "ocppConnected": "Připojeno!",
+      "ocppDescription": "evcc má vestavěný server OCPP. Postupujte podle těchto kroků:",
+      "ocppHelp": "Zkopírujte tuto URL adresu do konfigurace vaší nabíječky. Podrobnosti naleznete v manuálu výrobce. Nabíječka automaticky připojí svůj unikátní identifikátor (ID stanice) k URL. Ve vzácných případech může být nutné identifikátor zadat ručně. Příklad: `{url}`",
       "ocppLabel": "OCPP-Server URL",
+      "ocppNextStep": "Další krok",
+      "ocppStep1": "Nakonfigurujte nabíječku tak, aby používala evcc jako server OCPP.",
+      "ocppStep2": "Počkejte, až se vaše nabíječka připojí k evcc.",
+      "ocppStep3": "Pokračujte a dokončete konfiguraci.",
+      "ocppWaiting": "Čekání na připojení",
       "switchsockets": "Přepínatelné zásuvky",
       "template": "Výrobce",
       "titleAdd": {
@@ -58,8 +86,9 @@
           "heating": "Vlastní konfigurace kotle (topení)"
         },
         "heatpump": "Vlastní konfigurace tepelného čerpadla",
-        "sgready": "Vlastní konfigurace tepelného čerpadla (SG Ready, All)",
-        "sgready-boost": "Vlastní konfigurace tepelného čerpadla (SGReady, Boost)",
+        "sgready": "Vlastní konfigurace tepelného čerpadla (sg-ready přes plugins)",
+        "sgready-boost": "Uživatelsky definované tepelné čerpadlo (sg-ready-boost, zastaralé)",
+        "sgready-relay": "Vlastní konfigurace tepelného čerpadla (sg-ready přes relé)",
         "switchsocket": "Vlastní konfigurace chytré zásuvky"
       }
     },
@@ -70,7 +99,7 @@
     },
     "control": {
       "description": "Obvykle jsou výchozí hodnoty správné. Měňte je jen pokud víte, co děláte.",
-      "descriptionInterval": "Aktualizační cyklus regulační smyčky v sekundách. Určuje, jak často evcc čte data z měřičů, upravuje nabíjecí výkon a aktualizuje uživatelské rozhraní. Krátké intervaly (< 30s) mohou způsobit oscilace a nežádoucí chování.",
+      "descriptionInterval": "Aktualizační cyklus v sekundách. Určuje, jak často evcc čte data z měřiče a upravuje nabíjení. Výchozí hodnota 30 sekund je bezpečná volba. Zařízení jako vozidla, nástěnné skříňky a střídače obvykle potřebují několik sekund, aby upravila své chování. Pokud vaše komponenty reagují rychle, můžete použít nižší hodnoty. Důrazně doporučujeme nepřekračovat hodnotu 10 sekund. Pokud pozorujete nepravidelné chování ovládání nebo skokové hodnoty výkonu, zvolte větší interval.",
       "descriptionResidualPower": "Posouvá pracovní bod regulační smyčky. Pokud máte domácí baterii, doporučuje se nastavit hodnotu 100 W. Tím získá baterie mírnou prioritu před spotřebou ze sítě.",
       "labelInterval": "Interval aktualizace",
       "labelResidualPower": "Zbytkový výkon",
@@ -90,10 +119,13 @@
       "chargedEnergy": "Nabito",
       "co2": "CO₂ ze sítě",
       "configured": "Nastaveno",
+      "connections": "Spojení",
       "controllable": "Ovládatelné",
       "currency": "Měna",
       "current": "Proud",
       "currentRange": "Proud",
+      "detected": "Detekováno",
+      "dimmed": "Ztlumeno",
       "enabled": "Zapnuto",
       "energy": "Energie",
       "feedinPrice": "Cena za výkup energie",
@@ -105,9 +137,9 @@
       "no": "ne",
       "odometer": "Ujetých km",
       "org": "Organizace",
-      "phaseCurrents": "Proud L1, L2, L3",
-      "phasePowers": "Výkon L1, L2, L3",
-      "phaseVoltages": "Napětí L1, L2, L3",
+      "phaseCurrents": "Proud",
+      "phasePowers": "Výkon",
+      "phaseVoltages": "Napětí",
       "phases1p3p": "Přepínač fází",
       "power": "Výkon",
       "powerRange": "Výkon",
@@ -118,7 +150,7 @@
       "temp": "Teplota",
       "topic": "Téma",
       "url": "URL",
-      "vehicleLimitSoc": "Limit vozidla",
+      "vehicleLimitSoc": "Limit nabíjení",
       "yes": "ano"
     },
     "deviceValueChargeStatus": {
@@ -133,6 +165,7 @@
     "devices": {
       "auxMeter": "Chytrý spotřebič",
       "batteryStorage": "Bateriové úložiště",
+      "consumer": "Spotřebič",
       "solarSystem": "Fotovoltaický systém"
     },
     "editor": {
@@ -142,10 +175,14 @@
       "description": "Nastavení, které umožňuje evcc komunikovat s dalšími EEBus zařízeními.",
       "title": "EEBus"
     },
+    "experimental": {
+      "description": "Povolit uživatelské rozhraní pro funkce, které jsou stále testovány a mohou se v budoucích verzích změnit.",
+      "title": "Experimentální"
+    },
     "ext": {
-      "description": "Lze použít pro správu zatížení nebo pro statistické účely.",
-      "titleAdd": "Přidat externí měřič",
-      "titleEdit": "Upravit externí měřič"
+      "description": "Zaznamenávat hodnoty energie neřízených spotřebičů (např. mrazák, myčka nádobí, atd.) pro statistické účely. Tyto měřáky je možné použít pro správu příkonu (např. dílčí distribuci).",
+      "titleAdd": "Přidat měřič spotřebiče",
+      "titleEdit": "Upravit měřič spotřebiče"
     },
     "form": {
       "danger": "Nebezpečí",
@@ -154,12 +191,24 @@
       "optional": "volitelné"
     },
     "general": {
+      "applyAndClose": "Použít a zavřít",
+      "authPerform": "Propojit s {provider}",
+      "authPerformHint": "Bude otevřeno v novém okně. Pro pokračování se vraťte na tuto stránku.",
+      "authPrepare": "Připravit propojení",
       "cancel": "Zrušit",
+      "clear": "Jasné",
+      "close": "Zavřít",
+      "copied": "Zkopírováno!",
+      "copy": "Kopírovat",
       "customHelp": "Vytvořit zařízení definované uživatelem s použitím EVCC plugin rozhraní.",
       "customOption": "Zařízení nastavené uživatelem",
       "delete": "Smazat",
       "docsLink": "Další informace jsou uvedeny v dokumentaci.",
+      "dragHandle": "Tažná rukojeť",
+      "dragItem": "Přetahovatelné: {title}",
+      "dragList": "Seznam umožňující úpravy pořadí",
       "experimental": "Experimentální nastavení",
+      "forceSave": "Vynutit uložení",
       "hideAdvancedSettings": "Skrýt pokročilá nastavení",
       "invalidFileSelected": "Zvolen neplatný soubor",
       "noFileSelected": "Nebyl zvolen žádný soubor.",
@@ -168,12 +217,17 @@
       "password": "Heslo",
       "readFromFile": "Načíst ze souboru",
       "remove": "Odebrat",
+      "required": "požadováno",
+      "reset": "Reset",
       "save": "Uložit",
+      "saved": "Uloženo.",
+      "saving": "Ukládání…",
       "selectFile": "Vybrat soubor",
       "showAdvancedSettings": "Zobrazit pokročilá nastavení",
       "telemetry": "Telemetrie",
       "templateLoading": "Načítání...",
       "title": "Název",
+      "typeDeprecated": "Typ '{type}' je zastaralý a bude v budoucích verzích programu odstraněn. Zkontrolujte poznámky k vydání a vytvořte zařízení znovu.",
       "validateSave": "Ověřit a uložit"
     },
     "grid": {
@@ -182,11 +236,23 @@
       "titleEdit": "Editovat měřič spotřeby ze sítě"
     },
     "hems": {
+      "csv": {
+        "created": "Vytvořeno",
+        "finished": "Hotovo",
+        "gridpower": "Síťový výkon (kW)",
+        "limitpower": "Limit (kW)",
+        "type": "Typ"
+      },
       "description": "Limitace výkonu externími systémy (např. EnWG 14a kontroléry). Vyžaduje konfiguraci systému řízení zátěže.",
-      "title": "HEMS"
+      "downloadCsv": "Stáhnout CSV",
+      "eventsRecorded": "Zaznamenáno {count} událostí omezení mřížky.",
+      "lastEvent": "Nejnovější {timeAgo}.",
+      "title": "HEMS",
+      "yamlConfigured": "Poznámka: Konfigurace se provádí prostřednictvím souboru evcc.yaml. Chcete-li zde povolit úpravy, odstraňte záznam ze souboru."
     },
     "icon": {
-      "change": "Změnit"
+      "change": "Změnit",
+      "label": "Ikona"
     },
     "influx": {
       "description": "Zapisuje údaje o nabíjení a další metriky do InfluxDB. K vizualizaci dat použijte Grafanu nebo jiné nástroje.",
@@ -321,6 +387,8 @@
       "title": "Konfigurace",
       "unconfigured": "není konfigurováno",
       "vehicles": "Má vozidla",
+      "welcomeBannerText": "Začněte vytvořením **nabíječky nebo ohřívače**. Pokud ještě nemáte skutečnou nabíječku, vyberte si **demo nabíječku**.",
+      "welcomeBannerTitle": "Pojďme nakonfigurovat váš systém!",
       "yaml": "Zařízení z evcc.yaml nelze upravovat."
     },
     "messaging": {
@@ -334,22 +402,31 @@
       "option": {
         "aux": "Přidat samoregulační spotřebič",
         "battery": "Přidat měřič baterie",
-        "ext": "Přidat externí měřič",
+        "ext": "Přidat běžný spotřebič",
         "pv": "Přidat měřič solární energie"
       },
       "save": "Uložit",
       "specific": "Specifické integrace",
       "template": "Výrobce",
       "titleChoice": "Co chcete přidat?",
+      "titleLabel": "Název",
+      "usage": {
+        "aux": "Samoregulační spotřebič",
+        "battery": "Baterie",
+        "charge": "Spotřebič/ Nabíjecí stanice",
+        "grid": "Distribuční síť",
+        "label": "Využití",
+        "pv": "Produkce"
+      },
       "validateSave": "Zkontrolovat a uložit"
     },
     "modbus": {
       "baudrate": "Rychlost",
       "comset": "KomSet",
       "connection": "Modbus připojení",
-      "connectionHintSerial": "Zařízení je přímo připojeno k evcc přes rozhraní RS485.",
-      "connectionHintTcpip": "Zařízení je adresovatelné z evcc přes LAN/Wifi.",
-      "connectionValueSerial": "Sériový / KABELA",
+      "connectionHintSerial": "Zařízení je připojeno přímo přes RS485 (nebo adaptér USB-RS485).",
+      "connectionHintTcpip": "Zařízení je dostupné přes síť (LAN/WiFi).",
+      "connectionValueSerial": "RS485",
       "connectionValueTcpip": "Síť",
       "device": "Název zařízení",
       "deviceHint": "Příklad: / dev / ttyUSB0",
@@ -364,7 +441,24 @@
       "protocolValueTcp": "TCP"
     },
     "modbusproxy": {
-      "description": "Povolit více klientům přístup k jednomu Modbus zařízení.",
+      "add": "Přidat připojení proxy (můstek)",
+      "connection": "Připojení č.{number}",
+      "description": "Některá Modbus zařízení podporuji jedno či velmi málo připojených klientů. EVCC může fungovat jako proxy - můstek, který umožňuje přístup více klientům zároveň (např. EVCC a HomeAssistant zároveň).",
+      "device": "Zařízení",
+      "option": {
+        "deny": "chyba",
+        "false": "ne",
+        "true": "tlumený"
+      },
+      "readonly": {
+        "help": {
+          "deny": "Zápis je blokován z důvodu chyby Modbus.",
+          "false": "Příkaz pro zápis bude přesměrován.",
+          "true": "Příkazy pro zápis jsou blokovány bez odpovědi zařízení."
+        },
+        "label": "Pouze pro čtení"
+      },
+      "sourcePortHelp": "Port pro příchozí připojení klientů. Musí být volný - k dispozici.",
       "title": "Modbus Proxy"
     },
     "mqtt": {
@@ -386,13 +480,34 @@
       "title": "MQTT"
     },
     "network": {
-      "descriptionHost": "Použijte příponu .local pro povolení mDNS. Relevance pro detekci mobilní aplikace a některých OCPP nabíječek.",
+      "descriptionExternalUrl": "Adresa pro ostatní zařízení, která se chtějí připojit k EVCC a pro automatickou detekci aplikace EVCC.",
+      "descriptionHost": "Použito k označení EVCC ve Vaší LAN (lokální síti).",
+      "descriptionInternalUrl": "Lokální adresa EVCC.",
       "descriptionPort": "Port pro webové rozhraní a API. Pokud tuto hodnotu změníte, budete muset aktualizovat URL ve vašem prohlížeči.",
       "descriptionSchema": "Ovlivňuje pouze způsob generování URL adres. Výběr HTTPS nezajistí šifrování.",
-      "labelHost": "Název hostitele",
+      "labelExternalUrl": "Externí URL adresa",
+      "labelHost": "mDNS název hostitele",
+      "labelInternalUrl": "Interní URL adresa",
       "labelPort": "Port",
       "labelSchema": "Schéma",
       "title": "Síť"
+    },
+    "ocpp": {
+      "connectedChargers": "Připojené nabíječky",
+      "connectionStatus": "Nakonfigurované ID stanic",
+      "connectionStatusHelp": "Stav připojení nakonfigurovaných nabíječek.",
+      "detectedChargers": "Zjištěné identifikátory stanic",
+      "detectedHelp": "Tyto nabíječky se pokusily připojit k evcc. Chcete-li nabíječku použít, vytvořte loadpoint s jejím identifikačním číslem stanice.",
+      "noChargers": "Nebyly nalezeny žádné nabíječky OCPP.",
+      "noStations": "Žádné stanice připojeny",
+      "status": {
+        "configured": "Není připojeno",
+        "connected": "Připojeno",
+        "unknown": "Neznámý"
+      },
+      "title": "Server OCPP",
+      "url": "Adresa URL serveru",
+      "urlHelp": "Zkopírujte tuto adresu URL do konfigurace nabíječky. Podrobnosti najdete v příručce výrobce. Nabíječka by měla automaticky připojit svůj jedinečný identifikátor (ID stanice) k adrese URL. Ve výjimečných případech může být nutné identifikátor zadat ručně. Příklad: `{url}`"
     },
     "options": {
       "boolean": {
@@ -454,6 +569,7 @@
       "labelToken": "Sponzorský token",
       "title": "Sponzorství",
       "tokenRequired": "Před vytvořením tohoto zařízení musíte nakonfigurovat sponzorský token.",
+      "tokenRequiredFeature": "Tato funkce vyžaduje sponzorský token.",
       "tokenRequiredLearnMore": "Zjistit více.",
       "tokenRequiredShort": "Nebyl přidán sponzorský token.",
       "trialToken": "zkušební token",
@@ -465,7 +581,7 @@
         "backup": {
           "action": "Stáhnout zálohu...",
           "confirmationButton": "Stáhnout zálohu",
-          "confirmationText": "Prosím, zadejte své heslo pro stažení databázového souboru.",
+          "confirmationText": "Stáhnout soubor databáze.",
           "description": "Zálohuje vaši konfiguraci do souboru. Tento soubor může být později použit pro obnovu, např. v případě selhání systému.",
           "title": "Záloha"
         },
@@ -504,6 +620,10 @@
       "description": "Definujte své energetické tarify pro výpočet nákladů na nabíjecí relace.",
       "title": "Tarify"
     },
+    "telemetry": {
+      "description": "Data konfigurace umožňují vylepšovat EVCC. Vaše soukromí je důležité a účast je zcela dobrovolná.",
+      "title": "Telemetrie"
+    },
     "title": {
       "description": "Zobrazeno na hlavní obrazovce a kartě prohlížeče.",
       "label": "Název",
@@ -512,7 +632,7 @@
     "validation": {
       "failed": "selhalo",
       "label": "Stav",
-      "running": "Ověřování…",
+      "running": "Ověřování správnosti…",
       "success": "úspěch",
       "unknown": "neznámý",
       "validate": "ověřit"
@@ -530,6 +650,8 @@
       "maximumCurrentHelp": "Musí být větší než minimální proud.",
       "maximumPhases": "Maximální počet fází",
       "maximumPhasesHelp": "Kolik fází může toto vozidlo využít pro nabíjení? Používá se k výpočtu požadovaného minimálního solárního přebytku a doby plánování.",
+      "maximumPower": "Maximální nabíjecí výkon",
+      "maximumPowerHelp": "Maximální výkon, který může vozidlo spotřebovat",
       "minimumCurrent": "Minimální proud",
       "minimumCurrentHelp": "Pod 6 A jděte pouze tehdy, pokud víte, co děláte.",
       "online": "Vozidlo s online API",
@@ -644,6 +766,7 @@
     "about": "O",
     "authProviders": {
       "confirmLogout": "Opravdu chcete odpojit {title}?",
+      "loggedOut": "Odhlášení proběhlo úspěšně",
       "title": "Stav autorizace"
     },
     "blog": "Blog",
@@ -658,7 +781,7 @@
   "help": {
     "discussionsButton": "GitHub diskuse",
     "documentationButton": "Dokumentace",
-    "issueButton": "Nahlásit bug",
+    "issueButton": "Nahlásit problém",
     "issueDescription": "Našli jste podivné nebo nesprávné chování?",
     "logsButton": "Zobrazit protokoly",
     "logsDescription": "Zkontrolujte protokoly na chyby.",
@@ -674,6 +797,59 @@
     "restartButton": "Restartovat",
     "restartDescription": "Zkusili jste to restartovat?",
     "secondaryActions": "Stále se vám nedaří vyřešit váš problém? Zde jsou některé další možnosti."
+  },
+  "issue": {
+    "additional": {
+      "description": "Vložte detaily konfigurace a protokoly jež pomohou reprodukovat problém. Žádáme o co největší sdílnost.",
+      "include": "zahrnout",
+      "lines": "řádky",
+      "logs": "Protokoly",
+      "logsDescription": "Nedávné protokoly jež mohou pomoci identifikovat problém.",
+      "showDetails": "zobrazit detaily",
+      "source": "Zdroj",
+      "state": "Stav",
+      "stateDescription": "Celkový stav vč. nabíjecí stanice, zařízení ad. Zahrňte, jen pokud je vyžadováno.",
+      "title": "Dodatečné informace",
+      "uiConfig": "Konfigurace (uživatelské prostředí)",
+      "uiConfigDescription": "Konfigurační nastavení z webového rozhraní.",
+      "yamlConfig": "Konfigurace (YAML)",
+      "yamlConfigDescription": "Celý soubor Vaší konfigurace."
+    },
+    "additionalContext": "Dodatečný kontext",
+    "additionalContextPlaceholder": "Jakékoliv další informace, které by mohly pomoci...\n- Detaily konfigurace\n- Co jste již vyzkoušeli\n- Bližší popis okolností v kterých EVCC používáte",
+    "createButtonDiscussion": "Zahájit vlákno na GitHub...",
+    "createButtonIssue": "Vytvořit GitHub tiket o chybě...",
+    "description": "Nefunguje vše dle očekávání? Prostřednictvím této stránky můžete požádat o pomoc či nahlásit chyby. Poskytněte dostatečný popis problémů, aby se Vám dostalo pomoci a problém mohl být replikován. Popisujte věci konzistentně a jasně.",
+    "helpType": {
+      "discussion": "Potřebuji pomoci s nastavením",
+      "discussionDescription": "Členové naší komunity Vám mohou pomoci.",
+      "issue": "Nalezl jsem chybu",
+      "issueDescription": "Jsem si jistý, že něco nefunguje správně a mělo by být opraveno.",
+      "title": "Jak byste chybu krátce popsali?"
+    },
+    "issueDescription": "Popis chyby",
+    "issueTitle": "Název hlášené chyby",
+    "stepsToReproduce": "Kroky k navození chyby",
+    "subTitleDiscussion": "Popište zjištěný problém",
+    "subTitleIssue": "Popište chybu",
+    "summary": {
+      "confirmationButtonDiscussion": "Zahájit vlákno na GitHub",
+      "confirmationButtonIssue": "Vytvořit GitHub tiket o chybě",
+      "copied": "Zkopírováno!",
+      "copyButton": "Zkopírovat dodatečné informace",
+      "instructions": "Z důvodu omezení velikosti adresního řádku GitHub se bude jednat o proces obsahující dva nutné kroky:",
+      "singleStepDescription": "Klikněte na tlačítko níže jímž otevřete GitHub s předvyplněným formulářem obsahujícím poskytnuté detaily. Ačkoliv byla citlivá data automaticky anonymizována, raději proveďte před odesláním manuální kontrolu.",
+      "step1Description": "Tlačítko níže vytvořit základní GitHub příspěvek s vaším názvem, popisem a poskytnutými detaily chyby.",
+      "step2Description": "Po otevření GitHub hlášení se vraťte na tuto stránku a dokončete 2. krok zkopírováním dodatečných informací a vložením na jejich určené místo ve formuláři GitHub hlášení. Ačkoliv byla citlivá data anonymizována raději správnost skrytí zkontrolujte před odesláním.",
+      "stepOneDiscussion": "Krok 1: Otevřete základní vlákno",
+      "stepOneIssue": "Krok 1: Nahlašte chybu",
+      "stepTwo": "Krok 2: Zkopírujte dodatečné informace",
+      "title": "Shrnutí hlášení o chybě na GitHub"
+    },
+    "system": "Systém",
+    "timezone": "Časové pásmo",
+    "title": "Nahlásit problém",
+    "version": "Verze EVCC"
   },
   "log": {
     "areaLabel": "Filtruj podle oblasti",
@@ -710,16 +886,23 @@
       "goal": "Cílový stav nabíjení",
       "modalTitle": "Plán nabíjení",
       "none": "Žádný",
+      "optimization": {
+        "cheapest": "nejlevnější",
+        "continuous": "kontinuální",
+        "label": "Optimalizace"
+      },
       "planNumber": "Plán {number}",
-      "preconditionDescription": "Nabíjení bude dokončeno {duration} před časem odjezdu. Vhodné v zimě pro zahřátí baterie či její šetření při vyšším stavu nabití.",
-      "preconditionLong": "Odložené nabíjení",
-      "preconditionOptionAll": "všechen",
-      "preconditionOptionNo": "ne",
-      "preconditionShort": "Odložené nabíjení",
+      "precondition": {
+        "description": "Nabíjení bude dokončeno {duration} před časem odjezdu. Vhodné v zimě pro zahřátí baterie či její šetření při vyšším stavu nabití.",
+        "label": "Odložené nabíjení",
+        "optionAll": "všechen",
+        "optionNo": "ne"
+      },
       "remove": "Odebrat",
       "repeating": "opakující se",
       "repeatingPlans": "Opakující se plány",
       "selectAll": "Vybrat vše",
+      "strategySettings": "Nastavení strategie",
       "time": "Čas",
       "title": "Plán",
       "titleMinSoc": "Min. nabíjení",
@@ -922,7 +1105,8 @@
     "message": "Nepřipojeno na server.",
     "restart": "Restart",
     "restartNeeded": "Požadováno pro aplikaci změn.",
-    "restarting": "Server bude brzy opět k dispozici."
+    "restarting": "Server bude brzy opět k dispozici.",
+    "starting": "Spouštění serveru..."
   },
   "passwordModal": {
     "description": "Nastavte heslo pro zabezpečení konfiguračního menu. Obrazovka přehledu bude stále dostupná i bez ověření heslem.",
@@ -1033,6 +1217,7 @@
     "vehicle": "Vozidlo"
   },
   "settings": {
+    "deviceInfo": "Nastavení, která změníte v tomto okně ovlivní pouze toto zařízení.",
     "fullscreen": {
       "enter": "Přepnout do režimu celé obrazovky",
       "exit": "Ukončit režim celé obrazovky",
@@ -1040,15 +1225,23 @@
     },
     "hiddenFeatures": {
       "label": "Experimentální nastavení",
-      "value": "Zobrazit experimentální nastavení."
+      "value": "Zobrazit experimentální funkce."
     },
     "language": {
       "auto": "Automaticky",
       "label": "Jazyk"
     },
+    "loadpoints": {
+      "help": "Můžete změnit pořadí a vzhled uživatelského rozhraní.",
+      "hide": "Skrýt {title}",
+      "label": "Nabíjecí stanice",
+      "show": "Zobrazit {title}"
+    },
     "sponsorToken": {
-      "expires": "Váš sponzorský token vyprší za {inXDays}. {getNewToken} a aktualizujte ho zde.",
-      "getNew": "Vezmi čerstvý",
+      "expires": "Váš sponzorský token vyprší za {inXDays}.",
+      "expiresUpdateUi": "{getNewToken} a aktualizujte ho zde.",
+      "expiresUpdateYaml": "{getNewToken} a aktualizujte ho ve vašem evcc.yaml.",
+      "getNewToken": "Vezmi čerstvý",
       "hint": "Poznámka: Toto v budoucnu zautomatizujeme."
     },
     "telemetry": {
@@ -1074,13 +1267,14 @@
   },
   "smartCost": {
     "activeHours": "{active} z {total}",
-    "activeHoursLabel": "Aktivních hodin",
+    "activeHoursLabel": "Aktivní čas",
     "applyToAll": "Aplikovat všude?",
     "batteryDescription": "Nabíjí baterii FVE ze distribuční sítě.",
     "cheapTitle": "Levné nabíjení ze sítě",
     "cleanTitle": "Čisté nabíjení ze sítě",
     "co2Label": "CO₂ emise",
     "co2Limit": "Limit CO₂",
+    "enable": "Povolit limit",
     "loadpointDescription": "Umožňuje dočasné okamžité nabíjení i v solárním režimu.",
     "modalTitle": "Smart Grid Nabíjení",
     "none": "žádné",
@@ -1091,7 +1285,7 @@
     "saved": "Uloženo."
   },
   "smartFeedInPriority": {
-    "activeHoursLabel": "Pozastaveno",
+    "activeHoursLabel": "Doba pozastavení",
     "description": "Pozastaví nabíjení pro maximalizaci výdělečné dodávky do distribuční sítě.",
     "priceLabel": "Cena výkupu energie",
     "priceLimit": "Cenový strop pro výkup energie",
@@ -1103,6 +1297,7 @@
     "configuration": "Konfigurace",
     "description": "Zkontrolujte prosím konfigurační soubor. Pokud chybová hláška nepomáhá, zkontroluj {0}.",
     "discussions": "GitHub diskuze",
+    "editConfiguration": "Upravit konfiguraci",
     "fixAndRestart": "Opravte prosím problém a restartujte server.",
     "hint": "Poznámka: Může to být také způsobeno vadným zařízením (invertor, měřič, ...). Zkontrolujte síťové připojení.",
     "lineError": "Chyba v {0}.",

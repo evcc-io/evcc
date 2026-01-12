@@ -34,16 +34,17 @@ type Circuit struct {
 	getMaxCurrent func() (float64, error) // dynamic max allowed current
 	getMaxPower   func() (float64, error) // dynamic max allowed power
 
-	current float64
-	power   float64
-	dimmed  bool
+	current   float64
+	power     float64
+	dimmed    bool
+	curtailed bool
 
 	currentUpdated time.Time
 	powerUpdated   time.Time
 }
 
 // NewFromConfig creates a new Circuit
-func NewFromConfig(ctx context.Context, log *util.Logger, other map[string]interface{}) (api.Circuit, error) {
+func NewFromConfig(ctx context.Context, log *util.Logger, other map[string]any) (api.Circuit, error) {
 	cc := struct {
 		Title         string         // title
 		ParentRef     string         `mapstructure:"parent"` // parent circuit reference
@@ -148,6 +149,12 @@ func (c *Circuit) GetParent() api.Circuit {
 
 // setParent set parent circuit
 func (c *Circuit) setParent(parent api.Circuit) error {
+	// prevent cyclical dependency
+	for p := parent.GetParent(); p != nil; p = p.GetParent() {
+		if c == p {
+			return fmt.Errorf("cycle detected: %s and %s cannot be mutual parents", c.GetTitle(), parent.GetTitle())
+		}
+	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if c.parent != nil {
@@ -395,4 +402,25 @@ func (c *Circuit) Dimmed() bool {
 	}
 
 	return c.parent.Dimmed()
+}
+
+func (c *Circuit) Curtail(curtail bool) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.curtailed = curtail
+}
+
+func (c *Circuit) Curtailed() bool {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	if c.curtailed {
+		return true
+	}
+
+	if c.parent == nil {
+		return false
+	}
+
+	return c.parent.Curtailed()
 }

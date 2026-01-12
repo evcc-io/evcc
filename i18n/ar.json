@@ -15,9 +15,15 @@
     "modalTitle": "إعدادات البطارية"
   },
   "config": {
+    "deviceValue": {
+      "bucket": "Bucket"
+    },
     "form": {
       "example": "مثال",
       "optional": "اختياري"
+    },
+    "influx": {
+      "labelBucket": "Bucket"
     },
     "main": {
       "addVehicle": "اضف عربة",

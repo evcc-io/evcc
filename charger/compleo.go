@@ -61,7 +61,7 @@ func init() {
 }
 
 // NewCompleoFromConfig creates a Compleo charger from generic config
-func NewCompleoFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewCompleoFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		Connector          uint16
 		modbus.TcpSettings `mapstructure:",squash"`
@@ -278,7 +278,7 @@ var _ api.ChargeTimer = (*Compleo)(nil)
 
 // ChargeDuration implements the api.ChargeTimer interface
 func (wb *Compleo) ChargeDuration() (time.Duration, error) {
-	b, err := wb.conn.ReadHoldingRegisters(wb.reg(compleoRegChargeDuration), 2)
+	b, err := wb.conn.ReadInputRegisters(wb.reg(compleoRegChargeDuration), 2)
 	if err != nil {
 		return 0, err
 	}
@@ -290,7 +290,7 @@ var _ api.Identifier = (*Compleo)(nil)
 
 // Identify implements the api.Identifier interface
 func (wb *Compleo) Identify() (string, error) {
-	b, err := wb.conn.ReadInputRegisters(compleoRegIdTag+wb.offset, 0x10)
+	b, err := wb.conn.ReadInputRegisters(compleoRegIdTag+wb.offset, 10)
 	if err != nil {
 		return "", err
 	}

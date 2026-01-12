@@ -31,7 +31,7 @@ Featured in [PV Magazine](https://www.pv-magazine.de/2022/01/14/mit-open-source-
   - **sunspec**-compatible inverter or home battery devices
   - **mbmd**-compatible devices, see [volkszaehler/mbmd](https://github.com/volkszaehler/mbmd#supported-devices) for a complete list
 - [vehicle](https://docs.evcc.io/en/docs/devices/vehicles) integrations (state of charge, remote charge, battery and preconditioning status):
-  - Aiways, Audi, BMW, Citroën, Dacia, DS, Fiat, Ford, Hyundai, Jeep, Kia, Mercedes-Benz, MG, Mini, Nissan, NIU, Opel, Peugeot, Polestar, Renault, Seat, Skoda, Smart, Tesla, Toyota, Volkswagen, Volvo, Zero Motorcycles. [Read more.](https://docs.evcc.io/en/docs/devices/vehicles)
+  - Aiways, Audi, BMW, Citroën, Dacia, DS, Fiat, Ford, Hyundai, Jeep, Kia, Mercedes-Benz, MG, Mini, Nissan, NIU, Opel, Peugeot, Polestar, Renault, Seat, Skoda, Smart, Subaru, Tesla, Toyota, Volkswagen, Volvo, Zero Motorcycles. [Read more.](https://docs.evcc.io/en/docs/devices/vehicles)
   - **services:** OVMS, Tronity, evNotify, ioBroker.bmw, mg2mqtt, mz2mqtt, TeslaLogger, TeslaMate, Tessi, volvo2mqtt
 - [plugins](https://docs.evcc.io/en/docs/devices/plugins) for integrating with any charger, smartswitch, heatpump, electric heater, meter, solar- / battery-inverter or vehicle:
   - Modbus, HTTP, MQTT, JavaScript, WebSocket, Go and shell scripts

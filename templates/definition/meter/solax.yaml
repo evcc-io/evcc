@@ -11,7 +11,6 @@ capabilities: ["battery-control"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
-    allinone: true
   - name: modbus
     choice: ["rs485", "tcpip"]
     baudrate: 19200
@@ -28,9 +27,8 @@ params:
     type: int
     default: 1
     advanced: true
-  - name: capacity
-    advanced: true
   - name: maxacpower
+  - preset: battery-params
   - name: defaultmode
     default: 0 # "SelfUse"
     advanced: true
@@ -160,6 +158,15 @@ render: |
         source: sequence
         set:
         - source: const
+          value: 1 # Wake battery from standby
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 0x0056 # Bat_Awaken
+              type: writesingle
+              decode: uint16
+        - source: const
           value: 1 # Force charge
           set:
             source: modbus
@@ -177,5 +184,5 @@ render: |
               address: 0x001F # SolarChargeUseMode
               type: writesingle
               decode: uint16
-  capacity: {{ .capacity }} # kWh
+  {{- include "battery-params" . }}
   {{- end }}

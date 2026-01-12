@@ -1,6 +1,6 @@
 <template>
 	<div class="container px-4 safe-area-inset">
-		<TopHeader :title="$t('sessions.title')" />
+		<TopHeader :title="$t('sessions.title')" :notifications="notifications" />
 		<div class="row">
 			<main class="col-12">
 				<div class="header-outer sticky-top">
@@ -153,7 +153,13 @@
 					@show-session="showDetails"
 				/>
 				<div class="d-flex gap-2 mt-1 mb-5">
-					<a class="btn btn-outline-secondary" tabindex="0" :href="csvLink" download>
+					<a
+						class="btn btn-outline-secondary"
+						tabindex="0"
+						:href="csvLink"
+						download
+						data-testid="sessions-download"
+					>
 						{{ csvLinkLabel }}
 					</a>
 					<button
@@ -207,7 +213,7 @@ import DynamicPriceIcon from "../components/MaterialIcon/DynamicPrice.vue";
 import TotalIcon from "../components/MaterialIcon/Total.vue";
 import { TYPES, GROUPS, PERIODS, type Session } from "../components/Sessions/types";
 import { defineComponent, type PropType } from "vue";
-import { CURRENCY } from "@/types/evcc";
+import { CURRENCY, type Notification } from "@/types/evcc";
 
 export default defineComponent({
 	name: "Sessions",

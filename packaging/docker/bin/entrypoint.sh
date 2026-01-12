@@ -5,12 +5,21 @@ set -e
 HASSIO_OPTIONSFILE=/data/options.json
 
 if [ -f ${HASSIO_OPTIONSFILE} ]; then
-	CONFIG=$(grep -o '"config_file": "[^"]*' ${HASSIO_OPTIONSFILE} | grep -o '[^"]*$')
-	SQLITE_FILE=$(grep -o '"sqlite_file": "[^"]*' ${HASSIO_OPTIONSFILE} | grep -o '[^"]*$')
+	CONFIG=$(grep -o '"config_file": "[^"]*' ${HASSIO_OPTIONSFILE} | grep -o '[^"]*$' || true)
+	SQLITE_FILE=$(grep -o '"sqlite_file": "[^"]*' ${HASSIO_OPTIONSFILE} | grep -o '[^"]*$' || true)
+
+	# Resolve database path: prefer configured path, otherwise use default if present
+	DEFAULT_DB="/data/evcc.db"
+	DB_PATH=""
+	if [ -n "${SQLITE_FILE}" ]; then
+		DB_PATH="${SQLITE_FILE}"
+	elif [ -f "${DEFAULT_DB}" ]; then
+		DB_PATH="${DEFAULT_DB}"
+	fi
 
 	# Config File Migration
 	# If there is no config file found in '/config' we copy it from '/homeassistant' and rename the old config file to .migrated
-	if [ ! -f "${CONFIG}" ]; then
+	if [ -n "${CONFIG}" ] && [ ! -f "${CONFIG}" ]; then
 		CONFIG_OLD=$(echo "${CONFIG}" | sed 's#^/config#/homeassistant#')
 		if [ -f "${CONFIG_OLD}" ]; then
 			mkdir -p "$(dirname "${CONFIG}")" && cp "${CONFIG_OLD}" "${CONFIG}"
@@ -30,18 +39,44 @@ if [ -f ${HASSIO_OPTIONSFILE} ]; then
 		fi
 	fi
 
-	echo "Using config file: ${CONFIG}"
-	if [ ! -f "${CONFIG}" ]; then
-		echo "Config not found. Please create a config under ${CONFIG}."
-		echo "For details see evcc documentation at https://github.com/evcc-io/evcc#readme."
-	else
-		if [ "${SQLITE_FILE}" ]; then
-			echo "starting evcc: 'EVCC_DATABASE_DSN=${SQLITE_FILE} evcc --config ${CONFIG}'"
-			exec env EVCC_DATABASE_DSN="${SQLITE_FILE}" evcc --config "${CONFIG}"
+	# Status overview (decoupled)
+	if [ -n "${CONFIG}" ]; then
+		if [ -f "${CONFIG}" ]; then
+			echo "Config: configured (${CONFIG}), exists"
 		else
-			echo "starting evcc: 'evcc --config ${CONFIG}'"
+			echo "Config: configured (${CONFIG}), missing"
+		fi
+	else
+		echo "Config: not configured"
+	fi
+
+	if [ -n "${SQLITE_FILE}" ]; then
+		if [ -f "${SQLITE_FILE}" ]; then
+			echo "Database: configured (${SQLITE_FILE}), exists"
+		else
+			echo "Database: configured (${SQLITE_FILE}), missing"
+		fi
+	else
+		if [ -f "${DEFAULT_DB}" ]; then
+			echo "Database: not configured; using default database: ${DEFAULT_DB} (add-on persistent storage)"
+		else
+			echo "Database: not configured; no default present"
+		fi
+	fi
+
+	if [ -n "${CONFIG}" ] && [ -f "${CONFIG}" ]; then
+		# Config file exists and is configured
+		if [ -n "${DB_PATH}" ]; then
+			exec env EVCC_DATABASE_DSN="${DB_PATH}" evcc --config "${CONFIG}"
+		else
 			exec evcc --config "${CONFIG}"
 		fi
+	elif [ -n "${CONFIG}" ]; then
+		# Config file configured but doesn't exist
+		exec env EVCC_DATABASE_DSN="${DB_PATH}" evcc
+	elif [ -n "${DB_PATH}" ]; then
+		# No config file configured, using database
+		exec env EVCC_DATABASE_DSN="${DB_PATH}" evcc
 	fi
 else
 	if [ "$1" = 'evcc' ]; then
