@@ -23,7 +23,6 @@ type entity struct {
 
 var ErrIncomplete = errors.New("meter profile incomplete")
 
-
 // SetupSchema is used for testing
 func SetupSchema() error {
 	m := db.Instance.Migrator()
@@ -83,6 +82,8 @@ func SetupSchema() error {
 			return err
 		}
 	}
+
+	return db.Instance.AutoMigrate(new(meter))
 }
 
 // persist stores 15min consumption in Wh

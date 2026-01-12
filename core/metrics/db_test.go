@@ -14,7 +14,7 @@ func TestSqliteTimestamp(t *testing.T) {
 	clock.Add(time.Hour)
 
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
-	require.NoError(t, Init())
+	require.NoError(t, SetupSchema())
 
 	entity := entity{Name: "foo"}
 	require.NoError(t, db.Instance.FirstOrCreate(&entity).Error)
@@ -51,7 +51,7 @@ func TestUpdateProfile(t *testing.T) {
 	clock := clock.NewMock()
 
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
-	require.NoError(t, Init())
+	require.NoError(t, SetupSchema())
 
 	entity := entity{Name: "foo"}
 	require.NoError(t, db.Instance.FirstOrCreate(&entity).Error)
