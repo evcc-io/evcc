@@ -22,7 +22,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math"
 	"net/http"
 	"sort"
 	"time"
@@ -329,8 +328,7 @@ func (c *Zaptec) Currents() (float64, float64, float64, error) {
 
 // phases1p3p implements the api.PhaseSwitcher interface
 func (c *Zaptec) phases1p3p(phases int) error {
-	err := c.switchPhases(phases)
-	if err != nil {
+	if err := c.switchPhases(phases); err != nil {
 		return err
 	}
 
@@ -338,26 +336,24 @@ func (c *Zaptec) phases1p3p(phases int) error {
 	if err != nil {
 		return err
 	}
-	oldCurrent, err := res.ObservationByID(zaptec.ChargerMaxCurrent).Float64()
+
+	// adjust the current by +/- 0.1A; otherwise, the phase change will not happen
+	current, err := res.ObservationByID(zaptec.ChargerMaxCurrent).Float64()
 	if err != nil {
 		return err
 	}
 
-	// adjust the current by +/- 0.1A; otherwise, the phase change will not happen
-	newCurrent := oldCurrent - 0.1
-	if oldCurrent <= 6 {
-		newCurrent = oldCurrent + 0.1
+	current -= 0.1
+	if current < 6 {
+		current += 0.2
 	}
-	newCurrent = math.Round(newCurrent*10) / 10 // round to 1 digit to avoid strange numbers
 
-	c.log.DEBUG.Printf("updating current to trigger phase switch: %.1fA -> %.1fA\n", oldCurrent, newCurrent)
-	err = c.MaxCurrentMillis(newCurrent)
-	if err != nil {
+	if err := c.MaxCurrentMillis(current); err != nil {
 		return err
 	}
 
 	if !c.priority {
-		return err
+		return nil
 	}
 
 	// priority configured
