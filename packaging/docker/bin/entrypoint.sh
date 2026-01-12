@@ -58,7 +58,7 @@ if [ -f ${HASSIO_OPTIONSFILE} ]; then
 		fi
 	else
 		if [ -f "${DEFAULT_DB}" ]; then
-				echo "Database: not configured; using default database: ${DEFAULT_DB} (add-on persistent storage)"
+			echo "Database: not configured; using default database: ${DEFAULT_DB} (add-on persistent storage)"
 		else
 			echo "Database: not configured; no default present"
 		fi
