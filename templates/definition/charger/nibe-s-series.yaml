@@ -96,17 +96,13 @@ render: |
               address: 2741
               type: holding
               encoding: int16
-        - source: calc
-          min: 
-          - source: const
-            value: 1100
-          - source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 6007
-              type: holding
-              encoding: int16
-            scale: 100
+        - source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 6007
+            type: holding
+            encoding: int16
+          scale: 100
     switch:
       - case: 0 # disable limitation
         set:
