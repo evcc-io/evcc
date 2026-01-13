@@ -36,9 +36,8 @@ import (
 // API Reference: https://shelly-api-docs.shelly.cloud/gen2/Devices/ShellyX/XT1/TopACPortableEVCharger/
 type ShellyTopAC struct {
 	*request.Helper
-	uri     string
-	current int64
-	phaseG  util.Cacheable[shelly.Measurements]
+	uri    string
+	phaseG util.Cacheable[shelly.Measurements]
 }
 
 func init() {
@@ -77,9 +76,8 @@ func NewShellyTopAC(uri, user, password string) (api.Charger, error) {
 	helper.Transport = request.NewTripper(log, transport.Insecure())
 
 	c := &ShellyTopAC{
-		Helper:  helper,
-		uri:     fmt.Sprintf("%s/rpc", uri),
-		current: 6, // default minimum current
+		Helper: helper,
+		uri:    fmt.Sprintf("%s/rpc", uri),
 	}
 
 	// Setup digest authentication for Shelly Gen2
@@ -158,17 +156,19 @@ func (c *ShellyTopAC) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (c *ShellyTopAC) MaxCurrent(current int64) error {
+	return c.MaxCurrentMillis(float64(current))
+}
+
+var _ api.ChargerEx = (*ShellyTopAC)(nil)
+
+// MaxCurrentMillis implements the api.ChargerEx interface
+func (c *ShellyTopAC) MaxCurrentMillis(current float64) error {
 	if current < 6 {
-		return fmt.Errorf("invalid current %d", current)
+		return fmt.Errorf("invalid current %.1f", current)
 	}
 
 	var res any
-	err := c.execRpc("Number.Set", "service:0", "current_limit", current, &res)
-	if err == nil {
-		c.current = current
-	}
-
-	return err
+	return c.execRpc("Number.Set", "service:0", "current_limit", current, &res)
 }
 
 var _ api.Meter = (*ShellyTopAC)(nil)
