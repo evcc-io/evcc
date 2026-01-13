@@ -1083,6 +1083,7 @@
       "minCharge": "Minimum charging to {soc}.",
       "pvDisable": "Not enough surplus. Pausing soon.",
       "pvEnable": "Surplus available. Starting soon.",
+      "resumeThreshold": "Resume threshold",
       "scale1p": "Reducing to 1-phase charging soon.",
       "scale3p": "Increasing to 3-phase charging soon.",
       "targetChargeActive": "Charging plan active. Estimated finish in {duration}.",

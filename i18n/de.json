@@ -1081,6 +1081,7 @@
       "minCharge": "Mindestladung bis {soc}.",
       "pvDisable": "Zu wenig Überschuss. Ladung wird gleich pausiert.",
       "pvEnable": "Überschuss verfügbar. Ladung wird gleich fortgesetzt.",
+      "resumeThreshold": "Wiederaufnahme-Schwellwert",
       "scale1p": "Reduziere gleich auf 1-phasiges Laden.",
       "scale3p": "Erhöhe gleich auf 3-phasiges Laden.",
       "targetChargeActive": "Ladeplan aktiv. Geschätztes Ende in {duration}.",

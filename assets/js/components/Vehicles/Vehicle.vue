@@ -172,6 +172,12 @@ export default defineComponent({
 		minSoc() {
 			return this.vehicle?.minSoc || 0;
 		},
+		resumeThreshold() {
+			return this.vehicle?.resumeThreshold || 0;
+		},
+		vehicleSocMode() {
+			return this.mode;
+		},
 		vehicleSocProps() {
 			return this.collectProps(Soc);
 		},

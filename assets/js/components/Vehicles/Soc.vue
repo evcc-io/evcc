@@ -29,6 +29,15 @@
 				:style="{ left: `${vehicleLimitSoc}%` }"
 			/>
 			<div
+				v-show="resumeThresholdPosition !== null"
+				ref="resumeThreshold"
+				class="resume-threshold-marker"
+				data-bs-toggle="tooltip"
+				title=" "
+				:class="{ 'resume-threshold-marker--visible': resumeThresholdActive }"
+				:style="{ left: `${resumeThresholdPosition}%` }"
+			/>
+			<div
 				v-show="energyLimitMarkerPosition"
 				class="energy-limit-marker"
 				data-bs-toggle="tooltip"
@@ -83,6 +92,8 @@ export default defineComponent({
 		connected: Boolean,
 		vehicleSoc: { type: Number, default: 0 },
 		vehicleLimitSoc: { type: Number, default: 0 },
+		resumeThreshold: { type: Number, default: 0 },
+		mode: String,
 		enabled: Boolean,
 		charging: Boolean,
 		heating: Boolean,
@@ -101,6 +112,7 @@ export default defineComponent({
 			selectedLimitSoc: undefined as number | undefined,
 			interactionStartScreenY: null,
 			tooltip: null as Tooltip | null,
+			resumeThresholdTooltip: null as Tooltip | null,
 			dragging: false,
 		};
 	},
@@ -132,6 +144,10 @@ export default defineComponent({
 		},
 		vehicleLimitSocActive() {
 			return this.vehicleLimitSoc > 0 && this.vehicleLimitSoc > this.vehicleSoc;
+		},
+		resumeThresholdActive() {
+			const isRelevantMode = this.mode === "minpv" || this.mode === "now";
+			return this.resumeThreshold > 0 && this.resumeThresholdPosition !== null && isRelevantMode;
 		},
 		planMarkerPosition(): number {
 			if (this.socBasedPlanning) {
@@ -206,6 +222,12 @@ export default defineComponent({
 		visibleLimitSoc() {
 			return Number(this.selectedLimitSoc || this.effectiveLimitSoc);
 		},
+		resumeThresholdPosition() {
+			if (this.resumeThreshold > 0 && this.effectiveLimitSoc) {
+				return Math.max(0, this.effectiveLimitSoc - this.resumeThreshold);
+			}
+			return null;
+		},
 	},
 	watch: {
 		effectiveLimitSoc() {
@@ -214,9 +236,16 @@ export default defineComponent({
 		vehicleLimitSoc() {
 			this.updateTooltip();
 		},
+		resumeThreshold() {
+			this.updateResumeThresholdTooltip();
+		},
+		resumeThresholdPosition() {
+			this.updateResumeThresholdTooltip();
+		},
 	},
 	mounted() {
 		this.updateTooltip();
+		this.updateResumeThresholdTooltip();
 	},
 	methods: {
 		changeLimitSocStart(e: Event) {
@@ -256,6 +285,21 @@ export default defineComponent({
 			const key = this.heating ? "heatingStatus" : "vehicleStatus";
 			const content = `${this.$t(`main.${key}.vehicleLimit`)}: ${value}`;
 			this.tooltip.setContent({ ".tooltip-inner": content });
+		},
+		updateResumeThresholdTooltip() {
+			if (this.resumeThresholdPosition === null) {
+				if (this.resumeThresholdTooltip) {
+					this.resumeThresholdTooltip.dispose();
+					this.resumeThresholdTooltip = null;
+				}
+				return;
+			}
+			if (!this.resumeThresholdTooltip) {
+				this.resumeThresholdTooltip = new Tooltip(this.$refs["resumeThreshold"] as HTMLElement);
+			}
+			const value = this.fmtPercentage(this.resumeThresholdPosition);
+			const content = `${this.$t(`main.vehicleStatus.resumeThreshold`)}: ${value}`;
+			this.resumeThresholdTooltip.setContent({ ".tooltip-inner": content });
 		},
 	},
 });
@@ -360,6 +404,24 @@ export default defineComponent({
 	transition-duration: var(--evcc-transition-fast);
 }
 .vehicle-limit-soc--active {
+	background-color: var(--evcc-box);
+}
+.resume-threshold-marker {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	width: 20px;
+	transform: translateX(-8px);
+	background-color: transparent;
+	background-clip: padding-box;
+	border-width: 0 8px;
+	border-style: solid;
+	border-color: transparent;
+	transition-property: background-color, left;
+	transition-timing-function: linear;
+	transition-duration: var(--evcc-transition-fast);
+}
+.resume-threshold-marker--visible {
 	background-color: var(--evcc-box);
 }
 .plan-marker {
