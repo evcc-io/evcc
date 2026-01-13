@@ -777,11 +777,7 @@ func configureEEBus(conf *eebus.Config) error {
 	// migrate settings
 	if settings.Exists(keys.EEBus) {
 		// TODO delete if not needed any more
-		if err := migrateYamlToJson[eebus.Config](keys.EEBus); err != nil {
-			return err
-		}
-
-		if err := settings.Json(keys.EEBus, &conf); err != nil {
+		if err := migrateYamlToJson(keys.EEBus, conf); err != nil {
 			return err
 		}
 	}
@@ -977,30 +973,26 @@ func configureDevices(conf globalconfig.All) error {
 }
 
 // migrateYamlToJson converts a settings value from yaml to json if needed
-func migrateYamlToJson[T any](key string) error {
-	var err error
+func migrateYamlToJson[T any](key string, res *T) error {
 	if settings.IsJson(key) {
 		// already JSON, nothing to do
 		return nil
 	}
 
-	var data T
-	if err := settings.Yaml(key, new(T), &data); err == nil {
-		settings.SetJson(key, data)
-		log.INFO.Printf("migrated %s setting to JSON", key)
+	if err := settings.Yaml(key, new(T), res); err != nil {
+		return err
 	}
 
-	return err
+	settings.SetJson(key, res)
+	log.INFO.Printf("migrated %s setting to JSON", key)
+
+	return nil
 }
 
 func configureModbusProxy(conf *[]globalconfig.ModbusProxy) error {
 	if settings.Exists(keys.ModbusProxy) {
 		// TODO delete if not needed any more
-		if err := migrateYamlToJson[[]globalconfig.ModbusProxy](keys.ModbusProxy); err != nil {
-			return err
-		}
-
-		if err := settings.Json(keys.ModbusProxy, &conf); err != nil {
+		if err := migrateYamlToJson(keys.ModbusProxy, conf); err != nil {
 			return err
 		}
 	}
