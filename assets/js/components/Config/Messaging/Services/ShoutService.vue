@@ -1,7 +1,8 @@
 <template>
 	<div>
 		<MessagingFormRow
-			:serviceType="MESSAGING_SERVICE_TYPE.SHOUT"
+			:id="formId('uri')"
+			:serviceType="serviceType"
 			inputName="uri"
 			example="gotify://gotify.example.com:443/AzyoeNS.D4iJLVa/?priority=1"
 			:helpI18nParams="{
@@ -9,7 +10,7 @@
 			}"
 		>
 			<PropertyField
-				id="messagingServiceShoutUri"
+				:id="formId('uri')"
 				:model-value="uri"
 				type="String"
 				required
@@ -23,21 +24,24 @@
 import { MESSAGING_SERVICE_TYPE } from "@/types/evcc";
 import PropertyField from "../../PropertyField.vue";
 import MessagingFormRow from "./MessagingFormRow.vue";
+import { formId } from "../utils";
 
 export default {
 	name: "ShoutService",
 	components: { MessagingFormRow, PropertyField },
 	props: {
-		uri: {
-			type: String,
-			required: true,
-		},
+		uri: { type: String, required: true },
 	},
 	emits: ["update:uri"],
-	data() {
-		return {
-			MESSAGING_SERVICE_TYPE,
-		};
+	computed: {
+		serviceType() {
+			return MESSAGING_SERVICE_TYPE.SHOUT;
+		},
+	},
+	methods: {
+		formId(name: string) {
+			return formId(this.serviceType, name);
+		},
 	},
 };
 </script>

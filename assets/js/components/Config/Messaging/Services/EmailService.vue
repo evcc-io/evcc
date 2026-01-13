@@ -1,13 +1,14 @@
 <template>
 	<MessagingFormRow
 		v-for="field in fieldsWithValues"
+		:id="field.id"
 		:key="field.name"
 		:serviceType="serviceType"
 		:inputName="field.name"
 		:example="field.example"
 	>
 		<PropertyField
-			:id="`messagingServiceEmail${field.name}`"
+			:id="field.id"
 			:model-value="field.value"
 			:type="field.type || 'String'"
 			:masked="field.masked"
@@ -24,6 +25,7 @@ import { MESSAGING_SERVICE_TYPE } from "@/types/evcc";
 import PropertyField from "../../PropertyField.vue";
 import MessagingFormRow from "./MessagingFormRow.vue";
 import type { PropType } from "vue";
+import { formId } from "../utils";
 
 const FIELDS = [
 	{ name: "host", example: "smtp.example.com" },
@@ -55,6 +57,7 @@ export default {
 		fieldsWithValues() {
 			return FIELDS.map((field) => ({
 				...field,
+				id: formId(this.serviceType, field.name),
 				value: (this as any)[field.name],
 			}));
 		},

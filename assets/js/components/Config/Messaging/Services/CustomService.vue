@@ -1,6 +1,7 @@
 <template>
 	<div>
 		<MessagingFormRow
+			:id="formId('encoding')"
 			:serviceType="serviceType"
 			inputName="encoding"
 			optional
@@ -10,7 +11,7 @@
 			}"
 		>
 			<PropertyField
-				id="messagingServiceCustomEncoding"
+				:id="formId('encoding')"
 				property="encoding"
 				type="Choice"
 				class="me-2 w-25"
@@ -21,6 +22,7 @@
 		</MessagingFormRow>
 
 		<MessagingFormRow
+			:id="formId('send')"
 			:serviceType="serviceType"
 			inputName="send"
 			:helpI18nParams="{
@@ -38,6 +40,7 @@ import type { PropType } from "vue";
 import PropertyField from "../../PropertyField.vue";
 import YamlEditorContainer from "../../YamlEditorContainer.vue";
 import MessagingFormRow from "./MessagingFormRow.vue";
+import { formId } from "../utils";
 
 const DEAFULT_SEND_PLUGIN = `source: script
 cmd: /usr/local/bin/evcc_message "{{.send}}"
@@ -60,7 +63,6 @@ export default {
 	emits: ["update:encoding", "update:send"],
 	data() {
 		return {
-			serviceType: MESSAGING_SERVICE_TYPE.CUSTOM,
 			newContent: {},
 			changed: false,
 		};
@@ -72,6 +74,9 @@ export default {
 		encodingFormat() {
 			return this.encoding ? FORMATS[this.encoding] : "`<MSG>`";
 		},
+		serviceType() {
+			return MESSAGING_SERVICE_TYPE.CUSTOM;
+		},
 	},
 	mounted() {
 		if (!this.send) {
@@ -79,6 +84,9 @@ export default {
 		}
 	},
 	methods: {
+		formId(name: string) {
+			return formId(this.serviceType, name);
+		},
 		updateSend(v: string) {
 			this.$emit("update:send", v);
 		},

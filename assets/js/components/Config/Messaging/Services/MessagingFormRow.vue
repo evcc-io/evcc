@@ -8,34 +8,19 @@
 import { MESSAGING_SERVICE_TYPE } from "@/types/evcc";
 import type { PropType } from "vue";
 import FormRow from "../../FormRow.vue";
-import formatter from "@/mixins/formatter";
 
 export default {
 	name: "MessagingFormRow",
 	components: { FormRow },
-	mixins: [formatter],
 	props: {
-		serviceType: {
-			type: String as PropType<MESSAGING_SERVICE_TYPE>,
-			required: true,
-		},
-		inputName: {
-			type: String,
-			required: true,
-		},
-		helpI18nParams: {
-			type: Object,
-			default: () => {
-				return {};
-			},
-		},
+		id: { type: String, required: true },
+		serviceType: { type: String as PropType<MESSAGING_SERVICE_TYPE>, required: true },
+		inputName: { type: String, required: true },
+		helpI18nParams: { type: Object, default: () => ({}) },
 		example: String,
 		optional: Boolean,
 	},
 	computed: {
-		id() {
-			return `messagingService${this.capitalizeFirstLetter(this.serviceType)}${this.capitalizeFirstLetter(this.inputName)}`;
-		},
 		i18n() {
 			return `config.messaging.service.${this.serviceType}.${this.inputName}`;
 		},
