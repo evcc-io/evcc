@@ -84,14 +84,11 @@ func maskedMap(m map[string]any, r []string) map[string]any {
 	redacted := make(map[string]any, len(m))
 
 	for key, value := range m {
+		redacted[key] = value
 		if slices.Contains(r, key) {
 			if s, ok := value.(string); ok {
 				redacted[key] = masked(s)
-			} else {
-				redacted[key] = value
 			}
-		} else {
-			redacted[key] = value
 		}
 	}
 
@@ -174,30 +171,16 @@ func (c Messaging) Configured() bool {
 
 // Redacted implements the redactor interface used by the tee publisher
 func (m Messaging) Redacted() any {
+	redactKeys := []string{"app", "token", "authtoken", "password"}
+
 	r := Messaging{
 		Events: m.Events,
 	}
 
 	for _, s := range m.Services {
-		var keysToRedact []string
-
-		switch s.Type {
-		case "pushover":
-			keysToRedact = []string{"app"}
-
-		case "telegram":
-			keysToRedact = []string{"token"}
-
-		case "ntfy":
-			keysToRedact = []string{"authtoken"}
-
-		case "email":
-			keysToRedact = []string{"password"}
-		}
-
 		r.Services = append(r.Services, config.Typed{
 			Type:  s.Type,
-			Other: maskedMap(s.Other, keysToRedact),
+			Other: maskedMap(s.Other, redactKeys),
 		})
 	}
 
