@@ -55,8 +55,8 @@ const (
 	solaxRegFaultCode          = 0x001E // 2x uint32
 	solaxRegFirmwareVersion    = 0x0025 // uint16 Vx.xx
 	solaxRegConnectionStrength = 0x0027 // uint16 1%
-	solaxRegPhases             = 0x0028 // uint16
 	solaxRegLockState          = 0x002D // uint16
+	solaxRegPhases             = 0xA02A // uint16
 
 	// commands
 	solaxCmdStop  = 3
@@ -269,8 +269,10 @@ func (wb *Solax) Voltages() (float64, float64, float64, error) {
 // phases1p3p implements the api.PhaseSwitcher interface
 func (wb *Solax) phases1p3p(phases int) error {
 	var u uint16
+	if phases == 1 {
+		u = 1
+	}
 
-	// 1=single-phase, 2=three-phase
 	if phases == 3 {
 		u = 2
 	}
@@ -287,12 +289,15 @@ func (wb *Solax) getPhases() (int, error) {
 		return 0, err
 	}
 
-	// 0=three-phase, 1/2/3=single-phase
-	if binary.BigEndian.Uint16(b) == 0 {
-		return 0, nil
+	if binary.BigEndian.Uint16(b) == 2 {
+		return 3, nil
 	}
 
-	return 1, nil
+	if binary.BigEndian.Uint16(b) == 1 {
+		return 1, nil
+	}
+
+	return 0, nil
 }
 
 var _ api.Diagnosis = (*Delta)(nil)
