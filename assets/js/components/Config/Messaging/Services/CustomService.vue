@@ -6,7 +6,7 @@
 			optional
 			:helpI18nParams="{
 				send: '`{{.send}}`',
-				format: getEncodingFormat,
+				format: encodingFormat,
 			}"
 		>
 			<PropertyField
@@ -14,7 +14,7 @@
 				property="encoding"
 				type="Choice"
 				class="me-2 w-25"
-				:choice="Object.values(MESSAGING_SERVICE_CUSTOM_ENCODING)"
+				:choice="encodingChoices"
 				:model-value="encoding"
 				@update:model-value="$emit('update:encoding', $event)"
 			/>
@@ -43,6 +43,13 @@ const DEAFULT_SEND_PLUGIN = `source: script
 cmd: /usr/local/bin/evcc_message "{{.send}}"
 `;
 
+const FORMATS: Record<MESSAGING_SERVICE_CUSTOM_ENCODING, string> = {
+	json: '`{ "msg": <MSG>, "title": <TITLE> }`',
+	csv: "`<TITLE>,<MSG>`",
+	title: "`<TITLE>`",
+	tsv: "`<TITLE><TAB><MSG>`",
+};
+
 export default {
 	name: "CustomService",
 	components: { MessagingFormRow, PropertyField, YamlEditorContainer },
@@ -56,24 +63,14 @@ export default {
 			serviceType: MESSAGING_SERVICE_TYPE.CUSTOM,
 			newContent: {},
 			changed: false,
-			MESSAGING_SERVICE_CUSTOM_ENCODING,
-			DEAFULT_SEND_PLUGIN,
 		};
 	},
 	computed: {
-		getEncodingFormat() {
-			switch (this.encoding) {
-				case MESSAGING_SERVICE_CUSTOM_ENCODING.JSON:
-					return '`{ "msg": <MSG>, "title": <TITLE> }`';
-				case MESSAGING_SERVICE_CUSTOM_ENCODING.CSV:
-					return "`<TITLE>,<MSG>`";
-				case MESSAGING_SERVICE_CUSTOM_ENCODING.TITLE:
-					return "`<TITLE>`";
-				case MESSAGING_SERVICE_CUSTOM_ENCODING.TSV:
-					return "`<TITLE><TAB><MSG>`";
-				default:
-					return "`<MSG>`";
-			}
+		encodingChoices() {
+			return Object.values(MESSAGING_SERVICE_CUSTOM_ENCODING);
+		},
+		encodingFormat() {
+			return this.encoding ? FORMATS[this.encoding] : "`<MSG>`";
 		},
 	},
 	mounted() {
