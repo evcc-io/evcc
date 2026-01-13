@@ -37,11 +37,7 @@
 			</ul>
 			<div v-if="activeEventsTab" class="my-5">
 				<div v-if="values.events">
-					<div
-						v-for="(event, index) in Object.values(MESSAGING_EVENTS)"
-						:key="event"
-						class="mb-5"
-					>
+					<div v-for="(event, index) in events" :key="event" class="mb-5">
 						<hr v-if="index > 0" class="my-5" />
 						<EventItem
 							v-model:disabled="values.events[event].disabled"
@@ -63,14 +59,9 @@
 								</div>
 							</h5>
 						</div>
-						<div :data-testid="`service-box-${s.type.toLowerCase()}`">
-							<CustomService
-								v-if="s.type === MESSAGING_SERVICE_TYPE.CUSTOM"
-								v-model:encoding="s.other.encoding"
-								v-model:send="s.other.send"
-							/>
+						<div :data-testid="`service-box-${s.type}`">
 							<EmailService
-								v-else-if="s.type === MESSAGING_SERVICE_TYPE.EMAIL"
+								v-if="s.type === 'email'"
 								v-model:host="s.other.host"
 								v-model:port="s.other.port"
 								v-model:user="s.other.user"
@@ -79,7 +70,7 @@
 								v-model:to="s.other.to"
 							/>
 							<NtfyService
-								v-else-if="s.type === MESSAGING_SERVICE_TYPE.NTFY"
+								v-else-if="s.type === 'ntfy'"
 								v-model:host="s.other.host"
 								v-model:topics="s.other.topics"
 								v-model:priority="s.other.priority"
@@ -87,19 +78,24 @@
 								v-model:authtoken="s.other.authtoken"
 							/>
 							<PushoverService
-								v-else-if="s.type === MESSAGING_SERVICE_TYPE.PUSHOVER"
+								v-else-if="s.type === 'pushover'"
 								v-model:app="s.other.app"
 								v-model:recipients="s.other.recipients"
 								v-model:devices="s.other.devices"
 							/>
 							<ShoutService
-								v-else-if="s.type === MESSAGING_SERVICE_TYPE.SHOUT"
+								v-else-if="s.type === 'shout'"
 								v-model:uri="s.other.uri"
 							/>
 							<TelegramService
-								v-else
+								v-else-if="s.type === 'telegram'"
 								v-model:token="s.other.token"
 								v-model:chats="s.other.chats"
+							/>
+							<CustomService
+								v-else
+								v-model:encoding="s.other.encoding"
+								v-model:send="s.other.send"
 							/>
 						</div>
 					</div>
@@ -140,7 +136,6 @@
 import {
 	MESSAGING_EVENTS,
 	MESSAGING_SERVICE_TYPE,
-	MESSAGING_SERVICE_NTFY_PRIORITY,
 	type Messaging,
 	type MessagingServices,
 	MESSAGING_SERVICE_CUSTOM_ENCODING,
@@ -161,6 +156,15 @@ import EventItem from "./EventItem.vue";
 import DropdownButton from "@/components/Helper/DropdownButton.vue";
 import CustomService from "./Services/CustomService.vue";
 
+const SERVICE_DEFAULTS: Record<MESSAGING_SERVICE_TYPE, MessagingServices["other"]> = {
+	pushover: { app: "", devices: [], recipients: [] },
+	telegram: { chats: [], token: "" },
+	email: { host: "", port: 465, user: "", password: "", from: "", to: [] },
+	shout: { uri: "" },
+	ntfy: { host: "ntfy.sh", topics: [] },
+	custom: { encoding: MESSAGING_SERVICE_CUSTOM_ENCODING.JSON, send: "" },
+};
+
 export default {
 	name: "MessagingModal",
 	components: {
@@ -178,19 +182,23 @@ export default {
 	data() {
 		return {
 			defaultYaml: defaultYaml.trim(),
-			MESSAGING_EVENTS,
 			MESSAGING_SERVICE_TYPE,
-			MESSAGING_SERVICE_NTFY_PRIORITY,
 			activeEventsTab: true,
 			deepEqual,
 		};
 	},
 	computed: {
 		dropDownActions(): SelectActionOption<string>[] {
-			return Object.values(MESSAGING_SERVICE_TYPE).map((s) => ({
+			return this.serviceTypes.map((s) => ({
 				value: s,
 				name: this.$t(`config.messaging.service.${s}.title`),
 			}));
+		},
+		events() {
+			return Object.values(MESSAGING_EVENTS);
+		},
+		serviceTypes() {
+			return Object.values(MESSAGING_SERVICE_TYPE);
 		},
 	},
 	methods: {
@@ -209,22 +217,6 @@ export default {
 		addService(values: Messaging, type: MESSAGING_SERVICE_TYPE) {
 			values.services = [...(values.services ?? []), this.createService(type)];
 		},
-		getServiceComponent(type: MESSAGING_SERVICE_TYPE) {
-			switch (type) {
-				case MESSAGING_SERVICE_TYPE.PUSHOVER:
-					return "PushoverService";
-				case MESSAGING_SERVICE_TYPE.TELEGRAM:
-					return "TelegramService";
-				case MESSAGING_SERVICE_TYPE.EMAIL:
-					return "EmailService";
-				case MESSAGING_SERVICE_TYPE.SHOUT:
-					return "ShoutService";
-				case MESSAGING_SERVICE_TYPE.NTFY:
-					return "NtfyService";
-				default:
-					return "CustomService";
-			}
-		},
 		transformReadValues(values: Messaging) {
 			const v = values ?? {};
 
@@ -232,7 +224,7 @@ export default {
 				v.events = {} as Messaging["events"];
 			}
 
-			Object.values(MESSAGING_EVENTS).forEach((evt) => {
+			this.events.forEach((evt) => {
 				const e = v.events![evt];
 				v.events![evt] = {
 					disabled: e?.disabled ?? true,
@@ -244,42 +236,12 @@ export default {
 			return v;
 		},
 		createService(serviceType: MESSAGING_SERVICE_TYPE): MessagingServices {
-			switch (serviceType) {
-				case MESSAGING_SERVICE_TYPE.PUSHOVER:
-					return {
-						type: MESSAGING_SERVICE_TYPE.PUSHOVER,
-						other: { app: "", devices: [], recipients: [] },
-					};
-				case MESSAGING_SERVICE_TYPE.TELEGRAM:
-					return {
-						type: MESSAGING_SERVICE_TYPE.TELEGRAM,
-						other: { chats: [], token: "" },
-					};
-
-				case MESSAGING_SERVICE_TYPE.EMAIL:
-					return {
-						type: MESSAGING_SERVICE_TYPE.EMAIL,
-						other: { host: "", port: 465, user: "", password: "", from: "", to: [] },
-					};
-
-				case MESSAGING_SERVICE_TYPE.SHOUT:
-					return {
-						type: MESSAGING_SERVICE_TYPE.SHOUT,
-						other: { uri: "" },
-					};
-
-				case MESSAGING_SERVICE_TYPE.NTFY:
-					return {
-						type: MESSAGING_SERVICE_TYPE.NTFY,
-						other: { host: "ntfy.sh", topics: [] },
-					};
-
-				default:
-					return {
-						type: MESSAGING_SERVICE_TYPE.CUSTOM,
-						other: { encoding: MESSAGING_SERVICE_CUSTOM_ENCODING.JSON, send: "" },
-					};
-			}
+			return {
+				type: serviceType,
+				other:
+					SERVICE_DEFAULTS[serviceType] ||
+					SERVICE_DEFAULTS[MESSAGING_SERVICE_TYPE.CUSTOM],
+			} as MessagingServices;
 		},
 	},
 };
