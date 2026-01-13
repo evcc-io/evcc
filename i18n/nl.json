@@ -243,11 +243,11 @@
         "limitpower": "Limiet (kW)",
         "type": "Type"
       },
-      "description": "Stroombegrenzing door externe systemen (zoals EnWG 14a controllers). Vereist load management configuratie.",
+      "description": "Vermogensbeperking door externe systemen (bijv. §14a EnWG, §9 EEG-interface of hoger niveau energiebeheersysteem). Werkt samen met de functie voor belastingsbeheer.",
       "downloadCsv": "Download CSV",
       "eventsRecorded": "{count} gebeurtenissen met rasterbeperkingen geregistreerd.",
       "lastEvent": "Meest recent {timeAgo}.",
-      "title": "HEMS",
+      "title": "Externe limiet",
       "yamlConfigured": "Opmerking: Geconfigureerd via evcc.yaml. Verwijder de betreffende regels uit het bestand om hier bewerkingen mogelijk te maken."
     },
     "icon": {
