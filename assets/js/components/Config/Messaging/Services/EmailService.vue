@@ -1,54 +1,20 @@
 <template>
-	<MessagingFormRow :serviceType="serviceType" inputName="host" example="emailserver.example.com">
+	<MessagingFormRow
+		v-for="field in fieldsWithValues"
+		:key="field.name"
+		:serviceType="serviceType"
+		:inputName="field.name"
+		:example="field.example"
+	>
 		<PropertyField
-			id="messagingServiceEmailHost"
-			:model-value="host"
-			type="String"
+			:id="`messagingServiceEmail${field.name}`"
+			:model-value="field.value"
+			:type="field.type || 'String'"
+			:masked="field.masked"
+			:property="field.property"
+			:rows="field.rows"
 			required
-			@update:model-value="$emit('update:host', $event)"
-	/></MessagingFormRow>
-	<MessagingFormRow :serviceType="serviceType" inputName="port" example="465">
-		<PropertyField
-			id="messagingServiceEmailPort"
-			:model-value="port"
-			type="String"
-			required
-			@update:model-value="$emit('update:port', $event)"
-	/></MessagingFormRow>
-	<MessagingFormRow :serviceType="serviceType" inputName="user" example="john.doe">
-		<PropertyField
-			id="messagingServiceEmailUser"
-			:model-value="user"
-			type="String"
-			required
-			@update:model-value="$emit('update:user', $event)"
-	/></MessagingFormRow>
-	<MessagingFormRow :serviceType="serviceType" inputName="password" example="secret123">
-		<PropertyField
-			id="messagingServiceEmailPassword"
-			masked
-			:model-value="password"
-			type="String"
-			required
-			@update:model-value="$emit('update:password', $event)"
-	/></MessagingFormRow>
-	<MessagingFormRow :serviceType="serviceType" inputName="from" example="john.doe@mail.com">
-		<PropertyField
-			id="messagingServiceEmailFrom"
-			:model-value="from"
-			type="String"
-			required
-			@update:model-value="$emit('update:from', $event)"
-	/></MessagingFormRow>
-	<MessagingFormRow :serviceType="serviceType" inputName="to" example="recipient@mail.com">
-		<PropertyField
-			id="messagingServiceEmailTo"
-			:model-value="to"
-			property="topics"
-			type="List"
-			required
-			:rows="4"
-			@update:model-value="$emit('update:to', $event)"
+			@update:model-value="$emit(`update:${field.name}`, $event)"
 		/>
 	</MessagingFormRow>
 </template>
@@ -57,51 +23,41 @@
 import { MESSAGING_SERVICE_TYPE } from "@/types/evcc";
 import PropertyField from "../../PropertyField.vue";
 import MessagingFormRow from "./MessagingFormRow.vue";
-import formatter from "@/mixins/formatter";
 import type { PropType } from "vue";
+
+const FIELDS = [
+	{ name: "host", example: "smtp.example.com" },
+	{ name: "port", example: "465" },
+	{ name: "user", example: "john.doe" },
+	{ name: "password", masked: true },
+	{ name: "from", example: "john.doe@example.com" },
+	{ name: "to", example: "recipient@example.com", type: "List", property: "topics", rows: 4 },
+];
 
 export default {
 	name: "EmailService",
 	components: { MessagingFormRow, PropertyField },
-	mixins: [formatter],
 	props: {
-		host: {
-			type: String,
-			required: true,
-		},
-		port: {
-			type: Number,
-			required: true,
-		},
-		user: {
-			type: String,
-			required: true,
-		},
-		password: {
-			type: String,
-			required: true,
-		},
-		from: {
-			type: String,
-			required: true,
-		},
-		to: {
-			type: Array as PropType<string[]>,
-			required: true,
-		},
+		host: { type: String, required: true },
+		port: { type: Number, required: true },
+		user: { type: String, required: true },
+		password: { type: String, required: true },
+		from: { type: String, required: true },
+		to: { type: Array as PropType<string[]>, required: true },
 	},
-	emits: [
-		"update:host",
-		"update:port",
-		"update:user",
-		"update:password",
-		"update:from",
-		"update:to",
-	],
+	emits: FIELDS.map((f) => `update:${f.name}`),
 	data() {
 		return {
 			serviceType: MESSAGING_SERVICE_TYPE.EMAIL,
 		};
+	},
+	computed: {
+		fieldsWithValues() {
+			return FIELDS.map((field) => ({
+				...field,
+				value: (this as any)[field.name],
+			}));
+		},
 	},
 };
 </script>
