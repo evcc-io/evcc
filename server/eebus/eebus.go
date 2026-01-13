@@ -32,7 +32,6 @@ import (
 	"github.com/enbility/spine-go/model"
 	"github.com/enbility/spine-go/spine"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/machine"
 )
 
 type Device interface {
@@ -96,10 +95,8 @@ func NewServer(other Config) (*EEBus, error) {
 	}
 
 	serial := cc.ShipID
-
 	if serial == "" {
-		protectedID := machine.ProtectedID("evcc-eebus")
-		serial = fmt.Sprintf("%s-%0x", "EVCC", protectedID[:8])
+		serial = createShipID()
 	}
 
 	certificate, err := tls.X509KeyPair([]byte(cc.Certificate.Public), []byte(cc.Certificate.Private))
@@ -107,7 +104,6 @@ func NewServer(other Config) (*EEBus, error) {
 		return nil, err
 	}
 
-	// TODO: get the voltage from the site
 	configuration, err := eebusapi.NewConfiguration(
 		BrandName, BrandName, Model, serial,
 		model.DeviceTypeTypeEnergyManagementSystem,

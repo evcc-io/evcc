@@ -782,8 +782,23 @@ func configureEEBus(conf *eebus.Config) error {
 		}
 	}
 
+	if !conf.IsConfigured() && settings.Exists(keys.EEBusJSON) {
+		*conf = eebus.Config{}
+		if err := settings.Json(keys.EEBusJSON, &conf); err != nil {
+			return err
+		}
+	}
+
 	if !conf.IsConfigured() {
-		return nil
+		cc, err := eebus.DefaultConfig()
+		if err != nil {
+			return err
+		}
+
+		*conf = *cc
+		if err := settings.SetJson(keys.EEBusJSON, conf); err != nil {
+			return err
+		}
 	}
 
 	var err error

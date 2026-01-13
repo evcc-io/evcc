@@ -9,6 +9,7 @@ const (
 	Mqtt               = "mqtt"
 	Influx             = "influx"
 	EEBus              = "eebus"
+	EEBusJSON          = "eebus_json" // TODO this is ugly
 	Hems               = "hems"
 	Shm                = "shm"
 	Messaging          = "messaging"

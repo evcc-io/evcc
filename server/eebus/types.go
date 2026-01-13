@@ -1,6 +1,11 @@
 package eebus
 
-import "github.com/evcc-io/evcc/util"
+import (
+	"fmt"
+
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/machine"
+)
 
 const (
 	BrandName string = "EVCC"
@@ -25,4 +30,32 @@ type Config struct {
 // IsConfigured returns true if the EEbus server is configured
 func (c Config) IsConfigured() bool {
 	return len(c.Certificate.Public) > 0 && len(c.Certificate.Private) > 0
+}
+
+func createShipID() string {
+	protectedID := machine.ProtectedID("evcc-eebus")
+	return fmt.Sprintf("%s-%0x", "EVCC", protectedID[:8])
+}
+
+func DefaultConfig() (*Config, error) {
+	cert, err := CreateCertificate()
+	if err != nil {
+		return nil, err
+	}
+
+	public, private, err := GetX509KeyPair(cert)
+	if err != nil {
+		return nil, err
+	}
+
+	res := Config{
+		Port:   4712,
+		ShipID: createShipID(),
+		Certificate: Certificate{
+			Public:  public,
+			Private: private,
+		},
+	}
+
+	return &res, nil
 }
