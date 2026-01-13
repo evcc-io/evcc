@@ -10,12 +10,13 @@ import (
 )
 
 type testTariff struct {
+	err   error
 	rates api.Rates
 	typ   api.TariffType
 }
 
 func (t *testTariff) Rates() (api.Rates, error) {
-	return t.rates, nil
+	return t.rates, t.err
 }
 func (t *testTariff) Type() api.TariffType {
 	return t.typ
