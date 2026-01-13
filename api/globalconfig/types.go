@@ -147,7 +147,7 @@ type MessagingEventTemplate struct {
 	Title, Msg string
 }
 
-func (c Messaging) Configured() bool {
+func (c Messaging) IsConfigured() bool {
 	return len(c.Services) > 0 || len(c.Events) > 0
 }
 

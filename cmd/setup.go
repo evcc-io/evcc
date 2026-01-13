@@ -782,7 +782,7 @@ func configureEEBus(conf *eebus.Config) error {
 		}
 	}
 
-	if !conf.Configured() {
+	if !conf.IsConfigured() {
 		return nil
 	}
 

@@ -15,13 +15,14 @@ type Certificate struct {
 }
 
 type Config struct {
-	URI         string
+	URI_        string `mapstructure:"uri"` // TODO deprecated
+	Port        int
 	ShipID      string
 	Interfaces  []string
 	Certificate Certificate
 }
 
-// Configured returns true if the EEbus server is configured
-func (c Config) Configured() bool {
+// IsConfigured returns true if the EEbus server is configured
+func (c Config) IsConfigured() bool {
 	return len(c.Certificate.Public) > 0 && len(c.Certificate.Private) > 0
 }
