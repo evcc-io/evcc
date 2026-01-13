@@ -164,7 +164,7 @@ func configureCircuits(conf *[]config.Named) error {
 
 	children := slices.Clone(*conf)
 
-	// TODO: check for circular references
+	// TODO check for circular references
 NEXT:
 	for i, cc := range children {
 		if cc.Name == "" {
@@ -776,15 +776,12 @@ func configureOCPP(cfg *ocpp.Config, externalUrl string) {
 func configureEEBus(conf *eebus.Config) error {
 	// migrate settings
 	if settings.Exists(keys.EEBus) {
-		*conf = eebus.Config{}
-		if err := settings.Yaml(keys.EEBus, new(map[string]any), &conf); err != nil {
+		// TODO delete if not needed any more
+		if err := migrateYamlToJson[eebus.Config](keys.EEBus); err != nil {
 			return err
 		}
-	}
 
-	if !conf.IsConfigured() && settings.Exists(keys.EEBusJSON) {
-		*conf = eebus.Config{}
-		if err := settings.Json(keys.EEBusJSON, &conf); err != nil {
+		if err := settings.Json(keys.EEBus, &conf); err != nil {
 			return err
 		}
 	}
@@ -796,7 +793,7 @@ func configureEEBus(conf *eebus.Config) error {
 		}
 
 		*conf = *cc
-		if err := settings.SetJson(keys.EEBusJSON, conf); err != nil {
+		if err := settings.SetJson(keys.EEBus, conf); err != nil {
 			return err
 		}
 	}
@@ -998,13 +995,13 @@ func migrateYamlToJson[T any](key string) error {
 
 func configureModbusProxy(conf *[]globalconfig.ModbusProxy) error {
 	if settings.Exists(keys.ModbusProxy) {
-		// TODO: delete if not needed any more
+		// TODO delete if not needed any more
 		if err := migrateYamlToJson[[]globalconfig.ModbusProxy](keys.ModbusProxy); err != nil {
 			return err
 		}
 
 		if err := settings.Json(keys.ModbusProxy, &conf); err != nil {
-			return fmt.Errorf("failed to read modbusproxy setting: %w", err)
+			return err
 		}
 	}
 
