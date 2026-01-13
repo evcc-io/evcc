@@ -229,7 +229,7 @@ export default defineComponent({
 			await this.updateSession({ vehicle: title });
 		},
 		async removeVehicle() {
-			await this.updateSession({ vehicle: null });
+			await this.updateSession({ vehicle: "" });
 		},
 		async changeLoadpoint(title: string) {
 			await this.updateSession({ loadpoint: title });

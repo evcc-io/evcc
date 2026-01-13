@@ -11,12 +11,16 @@ async function validateServices(modal: Locator) {
   await expect(pushoverBox.getByLabel("Recipients")).toHaveValue(
     ["recipient1", "recipient2", "recipient3"].join("\n")
   );
-  await expect(pushoverBox.getByLabel("Device names")).toHaveValue(["device1", "device2", "device3"].join("\n"));
+  await expect(pushoverBox.getByLabel("Device names")).toHaveValue(
+    ["device1", "device2", "device3"].join("\n")
+  );
 
   // Validate Telegram
   const telegramBox = modal.getByTestId("service-box-telegram");
   await expect(telegramBox.getByLabel("Token")).toHaveValue("***");
-  await expect(telegramBox.getByLabel("Chat IDs")).toHaveValue(["12345", "-54321", "111"].join("\n"));
+  await expect(telegramBox.getByLabel("Chat IDs")).toHaveValue(
+    ["12345", "-54321", "111"].join("\n")
+  );
 
   // Validate Email
   const emailBox = modal.getByTestId("service-box-email");
@@ -25,15 +29,21 @@ async function validateServices(modal: Locator) {
   await expect(emailBox.getByLabel("User")).toHaveValue("john.doe");
   await expect(emailBox.getByLabel("Password")).toHaveValue("***");
   await expect(emailBox.getByLabel("From")).toHaveValue("john.doe@mail.com");
-  await expect(emailBox.getByLabel("To")).toHaveValue(["recipient1@mail.com", "recipient2@mail.com"].join("\n"));
+  await expect(emailBox.getByLabel("To")).toHaveValue(
+    ["recipient1@mail.com", "recipient2@mail.com"].join("\n")
+  );
 
   // Validate Shout
-  await expect(modal.getByTestId("service-box-shout").getByLabel("Uri")).toHaveValue("gotify://gotify.example.com:443/AzyoeNS.D4iJLVa/?priority=1");
+  await expect(modal.getByTestId("service-box-shout").getByLabel("Uri")).toHaveValue(
+    "gotify://gotify.example.com:443/AzyoeNS.D4iJLVa/?priority=1"
+  );
 
   // Validate Ntfy
   const ntfyBox = modal.getByTestId("service-box-ntfy");
   await expect(ntfyBox.getByLabel("Host")).toHaveValue("ntfy.sh");
-  await expect(ntfyBox.getByLabel("Topics")).toHaveValue(["evcc_alert", "evcc_pushmessage"].join("\n"));
+  await expect(ntfyBox.getByLabel("Topics")).toHaveValue(
+    ["evcc_alert", "evcc_pushmessage"].join("\n")
+  );
   await expect(ntfyBox.getByLabel("Access token")).toHaveValue("***");
   await expect(ntfyBox.getByLabel("Priority")).toHaveValue("low");
   await expect(ntfyBox.getByLabel("Tags & emojis")).toHaveValue(["+1", "blue_car"].join("\n"));
@@ -133,7 +143,9 @@ test.describe("messaging", async () => {
 
     const pushoverBox = modal.getByTestId("service-box-pushover");
     await pushoverBox.getByLabel("Token").fill("pushoverToken");
-    await pushoverBox.getByLabel("Recipients").fill(["recipient1", "recipient2", "recipient3"].join("\n"));
+    await pushoverBox
+      .getByLabel("Recipients")
+      .fill(["recipient1", "recipient2", "recipient3"].join("\n"));
     await pushoverBox.getByLabel("Device names").fill(["device1", "device2", "device3"].join("\n"));
 
     //  Telegram
@@ -160,7 +172,10 @@ test.describe("messaging", async () => {
     await modal.getByRole("button", { name: "Add service" }).click();
     await modal.getByRole("link", { name: "Shout" }).click();
 
-    await modal.getByTestId("service-box-shout").getByLabel("Uri").fill("gotify://gotify.example.com:443/AzyoeNS.D4iJLVa/?priority=1");
+    await modal
+      .getByTestId("service-box-shout")
+      .getByLabel("Uri")
+      .fill("gotify://gotify.example.com:443/AzyoeNS.D4iJLVa/?priority=1");
 
     //  Ntfy
     await modal.getByRole("button", { name: "Add service" }).click();
@@ -216,7 +231,9 @@ test.describe("messaging", async () => {
     await start(undefined, CONFIG_MESSAGING_MIGRATE);
     await page.goto("/#/config");
 
-    await expect(page.getByTestId("fatal-error")).toContainText("cannot create messenger type 'telegram': invalid bot token");
+    await expect(page.getByTestId("fatal-error")).toContainText(
+      "cannot create messenger type 'telegram': invalid bot token"
+    );
 
     const messagingCard = page.getByTestId("messaging");
     await expect(messagingCard).toHaveClass(/round-box--error/);

@@ -163,14 +163,6 @@ type Requirements struct {
 	Description TextLanguage // Description of requirements, e.g. how the device needs to be prepared
 }
 
-// Linked Template
-type LinkedTemplate struct {
-	Template        string
-	Usage           string // usage: "grid", "pv", "battery"
-	Multiple        bool   // if true, multiple instances of this template can be added
-	ExcludeTemplate string // only consider this if no device of the named linked template was added
-}
-
 // Param is a proxy template parameter
 // Params can be defined:
 // 1. in the template: uses entries in 4. for default properties and values, can be overwritten here
@@ -201,7 +193,6 @@ type Param struct {
 	Type        ParamType    // string representation of the value type, "string" is default
 	Choice      []string     `json:",omitempty"` // defines a set of choices, e.g. "grid", "pv", "battery", "charge" for "usage"
 	Service     string       `json:",omitempty"` // defines a service to provide choices
-	AllInOne    bool         `json:"-"`          // defines if the defined usages can all be present in a single device
 
 	// TODO move somewhere else should not be part of the param definition
 	Baudrate int    `json:",omitempty"` // device specific default for modbus RS485 baudrate
@@ -251,10 +242,6 @@ func (p *Param) IsDeprecated() bool {
 	return p.Deprecated
 }
 
-func (p *Param) IsAllInOne() bool {
-	return p.AllInOne
-}
-
 // yamlQuote quotes strings for yaml if they would otherwise by modified by the unmarshaler
 func (p *Param) yamlQuote(value string) string {
 	if p.Type != TypeString {
@@ -301,15 +288,14 @@ func (c CountryCode) IsValid() bool {
 // TemplateDefinition contains properties of a device template
 type TemplateDefinition struct {
 	Template     string
-	Deprecated   bool             `json:"-"`
-	Auth         map[string]any   `json:",omitempty"` // OAuth parameters (if required)
-	Group        string           `json:",omitempty"` // the group this template belongs to, references groupList entries
-	Covers       []string         `json:",omitempty"` // list of covered outdated template names
-	Products     []Product        `json:",omitempty"` // list of products this template is compatible with
-	Capabilities []string         `json:",omitempty"`
-	Countries    []CountryCode    `json:",omitempty"` // list of countries supported by this template
-	Requirements Requirements     `json:",omitempty"`
-	Linked       []LinkedTemplate `json:",omitempty"` // list of templates that should be processed as part of the guided setup
-	Params       []Param          `json:",omitempty"`
-	Render       string           `json:"-"` // rendering template
+	Deprecated   bool           `json:"-"`
+	Auth         map[string]any `json:",omitempty"` // OAuth parameters (if required)
+	Group        string         `json:",omitempty"` // the group this template belongs to, references groupList entries
+	Covers       []string       `json:",omitempty"` // list of covered outdated template names
+	Products     []Product      `json:",omitempty"` // list of products this template is compatible with
+	Capabilities []string       `json:",omitempty"`
+	Countries    []CountryCode  `json:",omitempty"` // list of countries supported by this template
+	Requirements Requirements   `json:",omitempty"`
+	Params       []Param        `json:",omitempty"`
+	Render       string         `json:"-"` // rendering template
 }
