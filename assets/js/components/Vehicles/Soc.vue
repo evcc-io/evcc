@@ -29,6 +29,11 @@
 				:style="{ left: `${vehicleLimitSoc}%` }"
 			/>
 			<div
+				v-show="resumeThresholdPauseZoneVisible"
+				class="resume-threshold-pause-zone progress-bar progress-bar-striped"
+				:style="{ left: `${resumeThresholdPosition}%`, width: `${resumeThresholdPauseZoneWidth}%` }"
+			/>
+			<div
 				v-show="resumeThresholdPosition !== null"
 				ref="resumeThreshold"
 				class="resume-threshold-marker"
@@ -228,6 +233,17 @@ export default defineComponent({
 			}
 			return null;
 		},
+		resumeThresholdPauseZoneVisible() {
+			return this.resumeThresholdPosition !== null && 
+			       this.vehicleSoc > this.resumeThresholdPosition &&
+			       this.resumeThresholdActive;
+		},
+		resumeThresholdPauseZoneWidth() {
+			if (this.resumeThresholdPosition !== null && this.vehicleSoc > this.resumeThresholdPosition) {
+				return this.vehicleSoc - this.resumeThresholdPosition;
+			}
+			return 0;
+		},
 	},
 	watch: {
 		effectiveLimitSoc() {
@@ -423,6 +439,18 @@ export default defineComponent({
 }
 .resume-threshold-marker--visible {
 	background-color: var(--evcc-box);
+}
+.resume-threshold-pause-zone {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	background-color: var(--evcc-gray);
+	opacity: 0.3;
+	pointer-events: none;
+	transition-property: left, width;
+	transition-timing-function: linear;
+	transition-duration: var(--evcc-transition-fast);
+	z-index: 1;
 }
 .plan-marker {
 	position: absolute;
