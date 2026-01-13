@@ -73,12 +73,8 @@ func init() {
 
 // NewEtekFromConfig creates an ETEK EKEPC2 charger from generic config
 func NewEtekFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
-	cc := struct {
-		modbus.Settings `mapstructure:",squash"`
-	}{
-		Settings: modbus.Settings{
-			ID: 255,
-		},
+	cc := modbus.Settings {
+		ID: 255,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
