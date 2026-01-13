@@ -5,6 +5,9 @@ products:
       generic: Top AC Portable EV Charger
 requirements:
   evcc: ["sponsorship"]
+  description:
+      de: "'auto_charge' muss auf false gesetzt werden."
+      en: "'auto_charge' must be set to false."  
 params:
   - name: host
     required: true
