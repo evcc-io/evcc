@@ -975,8 +975,7 @@ func configureDevices(conf globalconfig.All) error {
 // migrateYamlToJson converts a settings value from yaml to json if needed
 func migrateYamlToJson[T any](key string, res *T) error {
 	if settings.IsJson(key) {
-		// already JSON, nothing to do
-		return nil
+		return settings.Json(key, res)
 	}
 
 	if err := settings.Yaml(key, new(T), res); err != nil {
