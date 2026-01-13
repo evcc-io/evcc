@@ -6,12 +6,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateEtek(base *Etek, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error)) api.Charger {
+func decorateEtek(base *Etek, meter func() (float64, error), meterEnergy func() (float64, error), phaseVoltages func() (float64, float64, float64, error)) api.Charger {
 	switch {
 	case meter == nil:
 		return base
 
-	case meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
+	case meter != nil && meterEnergy == nil && phaseVoltages == nil:
 		return &struct {
 			*Etek
 			api.Meter
@@ -22,7 +22,7 @@ func decorateEtek(base *Etek, meter func() (float64, error), meterEnergy func() 
 			},
 		}
 
-	case meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
+	case meter != nil && meterEnergy != nil && phaseVoltages == nil:
 		return &struct {
 			*Etek
 			api.Meter
@@ -37,41 +37,7 @@ func decorateEtek(base *Etek, meter func() (float64, error), meterEnergy func() 
 			},
 		}
 
-	case meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages == nil:
-		return &struct {
-			*Etek
-			api.Meter
-			api.PhaseCurrents
-		}{
-			Etek: base,
-			Meter: &decorateEtekMeterImpl{
-				meter: meter,
-			},
-			PhaseCurrents: &decorateEtekPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-		}
-
-	case meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages == nil:
-		return &struct {
-			*Etek
-			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
-		}{
-			Etek: base,
-			Meter: &decorateEtekMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateEtekMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateEtekPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-		}
-
-	case meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
+	case meter != nil && meterEnergy == nil && phaseVoltages != nil:
 		return &struct {
 			*Etek
 			api.Meter
@@ -86,7 +52,7 @@ func decorateEtek(base *Etek, meter func() (float64, error), meterEnergy func() 
 			},
 		}
 
-	case meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
+	case meter != nil && meterEnergy != nil && phaseVoltages != nil:
 		return &struct {
 			*Etek
 			api.Meter
@@ -99,48 +65,6 @@ func decorateEtek(base *Etek, meter func() (float64, error), meterEnergy func() 
 			},
 			MeterEnergy: &decorateEtekMeterEnergyImpl{
 				meterEnergy: meterEnergy,
-			},
-			PhaseVoltages: &decorateEtekPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages != nil:
-		return &struct {
-			*Etek
-			api.Meter
-			api.PhaseCurrents
-			api.PhaseVoltages
-		}{
-			Etek: base,
-			Meter: &decorateEtekMeterImpl{
-				meter: meter,
-			},
-			PhaseCurrents: &decorateEtekPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseVoltages: &decorateEtekPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages != nil:
-		return &struct {
-			*Etek
-			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.PhaseVoltages
-		}{
-			Etek: base,
-			Meter: &decorateEtekMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateEtekMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateEtekPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
 			},
 			PhaseVoltages: &decorateEtekPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
@@ -165,14 +89,6 @@ type decorateEtekMeterEnergyImpl struct {
 
 func (impl *decorateEtekMeterEnergyImpl) TotalEnergy() (float64, error) {
 	return impl.meterEnergy()
-}
-
-type decorateEtekPhaseCurrentsImpl struct {
-	phaseCurrents func() (float64, float64, float64, error)
-}
-
-func (impl *decorateEtekPhaseCurrentsImpl) Currents() (float64, float64, float64, error) {
-	return impl.phaseCurrents()
 }
 
 type decorateEtekPhaseVoltagesImpl struct {

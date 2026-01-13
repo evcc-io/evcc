@@ -40,12 +40,14 @@ const (
 	etekRegInvalidMeterAddr = 0xffff // Indicates no external meter configured
 
 	// Meter configuration registers
-	etekRegMeterVoltageAAddr = 90 // 1# Meter A-phase voltage address
-	etekRegMeterVoltageBAddr = 91 // 1# Meter B-phase voltage address
-	etekRegMeterVoltageCAddr = 92 // 1# Meter C-phase voltage address
-	etekRegMeterCurrentAddr  = 93 // 1# Total current address
-	etekRegMeterPowerAddr    = 94 // 1# Total power address
-	etekRegMeterEnergyAddr   = 95 // 1# Total energy address
+	etekRegMeterVoltagesAddr = 90 // Meter voltages address
+	etekRegMeterCurrentAddr  = 93 // Meter total current address
+	etekRegMeterPowerAddr    = 94 // Meter total power address
+	etekRegMeterEnergyAddr   = 95 // Meter total energy address
+
+	// Write registers
+	etekRegRemoteControl = 89  // Remote start/stop (0=invalid, 1=start, 2=stop)
+	etekRegMaxCurrent    = 109 // Max Output Current PWM Duty cycle (*100)
 
 	// Read registers
 	etekRegStatus    = 141 // Current working status (0-19)
@@ -53,23 +55,17 @@ const (
 	etekRegPWMDuty   = 152 // Current output PWM duty cycle
 
 	// Metering registers
-	etekRegVoltageA = 159 // 1# meter A phase voltage
-	etekRegVoltageB = 160 // 1# meter B phase voltage
-	etekRegVoltageC = 161 // 1# meter C phase voltage
-	etekRegCurrent  = 162 // 1# meter current
-	etekRegPower    = 163 // 1# total power of the meter (W)
-	etekRegEnergy   = 164 // 1# total energy (2 registers, 32-bit, Wh)
-
-	// Write registers
-	etekRegRemoteControl = 89  // Remote start/stop (0=invalid, 1=start, 2=stop)
-	etekRegMaxCurrent    = 109 // Max Output Current PWM Duty cycle (*100)
+	etekRegVoltages = 159 // Meter voltages
+	etekRegCurrent  = 162 // Meter average phase current
+	etekRegPower    = 163 // Total power of the meter (W)
+	etekRegEnergy   = 164 // Total energy (2 registers, 32-bit, Wh)
 )
 
 func init() {
 	registry.AddCtx("etek", NewEtekFromConfig)
 }
 
-//go:generate go tool decorate -f decorateEtek -b *Etek -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)"
+//go:generate go tool decorate -f decorateEtek -b *Etek -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)"
 
 // NewEtekFromConfig creates an ETEK EKEPC2 charger from generic config
 func NewEtekFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
@@ -91,7 +87,6 @@ func NewEtekFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 	var (
 		currentPower func() (float64, error)
 		totalEnergy  func() (float64, error)
-		currents     func() (float64, float64, float64, error)
 		voltages     func() (float64, float64, float64, error)
 	)
 
@@ -109,15 +104,8 @@ func NewEtekFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 		}
 	}
 
-	/* 	// Check current register (93)
-	   	if b, err := wb.conn.ReadHoldingRegisters(etekRegMeterCurrentAddr, 1); err == nil {
-	   		if binary.BigEndian.Uint16(b) != etekRegInvalidMeterAddr {
-	   			currents = wb.currents
-	   		}
-	   	} */
-
 	// Check voltage registers (90, 91, 92) - if any is configured, enable voltages
-	if b, err := wb.conn.ReadHoldingRegisters(etekRegMeterVoltageAAddr, 3); err == nil {
+	if b, err := wb.conn.ReadHoldingRegisters(etekRegMeterVoltagesAddr, 3); err == nil {
 		l1 := binary.BigEndian.Uint16(b[0:2])
 		l2 := binary.BigEndian.Uint16(b[2:4])
 		l3 := binary.BigEndian.Uint16(b[4:6])
@@ -126,7 +114,7 @@ func NewEtekFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 		}
 	}
 
-	return decorateEtek(wb, currentPower, totalEnergy, currents, voltages), nil
+	return decorateEtek(wb, currentPower, totalEnergy, voltages), nil
 }
 
 // NewEtek creates an ETEK EKEPC2 charger
@@ -244,8 +232,6 @@ var _ api.ChargerEx = (*Etek)(nil)
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (wb *Etek) MaxCurrentMillis(current float64) error {
 	// The PWM value is calculated as: current (A) * 167
-	// According to the documentation and user feedback,
-	// the value should be scaled by 167 to get the correct PWM duty cycle
 	if current < 6 {
 		return fmt.Errorf("current %.1fA is below minimum of 6A", current)
 	}
@@ -274,24 +260,9 @@ func (wb *Etek) totalEnergy() (float64, error) {
 	return float64(binary.BigEndian.Uint32(b)) / 1e3, nil // Convert to kWh
 }
 
-/* // currents implements the api.PhaseCurrents interface
-func (wb *Etek) currents() (float64, float64, float64, error) {
-	// Note: EKEPC2 only provides total current, not per-phase
-	b, err := wb.conn.ReadHoldingRegisters(etekRegCurrent, 1)
-	if err != nil {
-		return 0, 0, 0, err
-	}
-
-	current := float64(binary.BigEndian.Uint16(b)) / 10.0 // Assuming 0.1A resolution
-
-	// For single-phase charging, return current on L1 only
-	// For 3-phase, distribute evenly (this is an average, actual per-phase currents are not available)
-	return current, 0, 0, nil
-} */
-
 // voltages implements the api.PhaseVoltages interface
 func (wb *Etek) voltages() (float64, float64, float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(etekRegVoltageA, 3)
+	b, err := wb.conn.ReadHoldingRegisters(etekRegVoltages, 3)
 	if err != nil {
 		return 0, 0, 0, err
 	}
