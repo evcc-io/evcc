@@ -73,7 +73,7 @@ func init() {
 
 // NewEtekFromConfig creates an ETEK EKEPC2 charger from generic config
 func NewEtekFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
-	cc := modbus.Settings {
+	cc := modbus.Settings{
 		ID: 255,
 	}
 
@@ -118,10 +118,10 @@ func NewEtekFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 
 	// Check voltage registers (90, 91, 92) - if any is configured, enable voltages
 	if b, err := wb.conn.ReadHoldingRegisters(etekRegMeterVoltageAAddr, 3); err == nil {
-		va := binary.BigEndian.Uint16(b[0:2])
-		vb := binary.BigEndian.Uint16(b[2:4])
-		vc := binary.BigEndian.Uint16(b[4:6])
-		if va != etekRegInvalidMeterAddr || vb != etekRegInvalidMeterAddr || vc != etekRegInvalidMeterAddr {
+		l1 := binary.BigEndian.Uint16(b[0:2])
+		l2 := binary.BigEndian.Uint16(b[2:4])
+		l3 := binary.BigEndian.Uint16(b[4:6])
+		if l1 != etekRegInvalidMeterAddr && l2 != etekRegInvalidMeterAddr && l3 != etekRegInvalidMeterAddr {
 			voltages = wb.voltages
 		}
 	}
@@ -225,11 +225,9 @@ func (wb *Etek) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (wb *Etek) Enable(enable bool) error {
-	var value uint16
+	value := uint16(2) // Stop charging
 	if enable {
 		value = 1 // Start charging
-	} else {
-		value = 2 // Stop charging
 	}
 
 	_, err := wb.conn.WriteSingleRegister(etekRegRemoteControl, value)
@@ -248,15 +246,11 @@ func (wb *Etek) MaxCurrentMillis(current float64) error {
 	// The PWM value is calculated as: current (A) * 167
 	// According to the documentation and user feedback,
 	// the value should be scaled by 167 to get the correct PWM duty cycle
-
 	if current < 6 {
 		return fmt.Errorf("current %.1fA is below minimum of 6A", current)
 	}
 
-	// Scale current to PWM duty cycle value
-	pwmValue := uint16(current * 167)
-
-	_, err := wb.conn.WriteSingleRegister(etekRegMaxCurrent, pwmValue)
+	_, err := wb.conn.WriteSingleRegister(etekRegMaxCurrent, uint16(current*167))
 	return err
 }
 
@@ -302,9 +296,9 @@ func (wb *Etek) voltages() (float64, float64, float64, error) {
 		return 0, 0, 0, err
 	}
 
-	vA := float64(binary.BigEndian.Uint16(b[0:2]))
-	vB := float64(binary.BigEndian.Uint16(b[2:4]))
-	vC := float64(binary.BigEndian.Uint16(b[4:6]))
+	l1 := float64(binary.BigEndian.Uint16(b[0:2]))
+	l2 := float64(binary.BigEndian.Uint16(b[2:4]))
+	l3 := float64(binary.BigEndian.Uint16(b[4:6]))
 
-	return vA, vB, vC, nil
+	return l1, l2, l3, nil
 }
