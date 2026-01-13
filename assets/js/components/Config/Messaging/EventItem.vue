@@ -57,6 +57,17 @@ import type { PropType } from "vue";
 import { MESSAGING_EVENTS } from "@/types/evcc";
 import PropertyField from "../PropertyField.vue";
 
+const EVENT_PARAMS: Record<MESSAGING_EVENTS, Record<string, string>> = {
+	asleep: { vehicleName: "{{ if .vehicleTitle }}{{ .vehicleTitle }} {{ end }}" },
+	connect: { pvPower: "${pvPower:%.1fk}" },
+	disconnect: { connectedDuration: "${connectedDuration}" },
+	soc: { vehicleSoc: "${vehicleSoc:%.0f}" },
+	start: { mode: "${mode}" },
+	stop: { chargedEnergy: "${chargedEnergy:%.1fk}", chargeDuration: "${chargeDuration}" },
+	planoverrun: { vehicleTitle: "{{ if .vehicleTitle }} {{ .vehicleTitle }} {{end}}" },
+	guest: {},
+};
+
 export default {
 	name: "EventItem",
 	components: { PropertyField },
@@ -73,37 +84,7 @@ export default {
 		}
 
 		if (!this.message || this.message === "") {
-			let p = {};
-
-			switch (this.type) {
-				case MESSAGING_EVENTS.ASLEEP:
-					p = { vehicleName: "{{ if .vehicleTitle }}{{ .vehicleTitle }} {{ end }}" };
-					break;
-				case MESSAGING_EVENTS.CONNECT:
-					p = { pvPower: "${pvPower:%.1fk}" };
-					break;
-				case MESSAGING_EVENTS.DISCONNECT:
-					p = { connectedDuration: "${connectedDuration}" };
-					break;
-				case MESSAGING_EVENTS.SOC:
-					p = { vehicleSoc: "${vehicleSoc:%.0f}" };
-					break;
-				case MESSAGING_EVENTS.START:
-					p = { mode: "${mode}" };
-					break;
-				case MESSAGING_EVENTS.STOP:
-					p = {
-						chargedEnergy: "${chargedEnergy:%.1fk}",
-						chargeDuration: "${chargeDuration}",
-					};
-					break;
-				case MESSAGING_EVENTS.PLANOVERRUN:
-					p = {
-						vehicleTitle: "{{ if .vehicleTitle }} {{ .vehicleTitle }} {{end}}",
-					};
-					break;
-			}
-
+			const p = EVENT_PARAMS[this.type] || {};
 			this.updateMessage(this.$t(`config.messaging.event.${this.type}.messageDefault`, p));
 		}
 	},

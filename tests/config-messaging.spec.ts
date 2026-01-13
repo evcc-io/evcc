@@ -7,67 +7,41 @@ const CONFIG_MESSAGING_MIGRATE = "config-messaging-migrate.sql";
 async function validateServices(modal: Locator) {
   // Validate Pushover
   const pushoverBox = modal.getByTestId("service-box-pushover");
-  const pushoverToken = pushoverBox.getByLabel("Token");
-  const pushoverRecipients = pushoverBox.getByLabel("Recipients");
-  const pushoverDevices = pushoverBox.getByLabel("Device names");
-
-  await expect(pushoverToken).toHaveValue("***");
-  await expect(pushoverRecipients).toHaveValue(
+  await expect(pushoverBox.getByLabel("Token")).toHaveValue("***");
+  await expect(pushoverBox.getByLabel("Recipients")).toHaveValue(
     ["recipient1", "recipient2", "recipient3"].join("\n")
   );
-  await expect(pushoverDevices).toHaveValue(["device1", "device2", "device3"].join("\n"));
+  await expect(pushoverBox.getByLabel("Device names")).toHaveValue(["device1", "device2", "device3"].join("\n"));
 
   // Validate Telegram
   const telegramBox = modal.getByTestId("service-box-telegram");
-  const telegramToken = telegramBox.getByLabel("Token");
-  const telegramRecipients = telegramBox.getByLabel("Chat IDs");
-
-  await expect(telegramToken).toHaveValue("***");
-  await expect(telegramRecipients).toHaveValue(["12345", "-54321", "111"].join("\n"));
+  await expect(telegramBox.getByLabel("Token")).toHaveValue("***");
+  await expect(telegramBox.getByLabel("Chat IDs")).toHaveValue(["12345", "-54321", "111"].join("\n"));
 
   // Validate Email
   const emailBox = modal.getByTestId("service-box-email");
-  const emailHost = emailBox.getByLabel("Host");
-  const emailPort = emailBox.getByLabel("Port");
-  const emailUser = emailBox.getByLabel("User");
-  const emailPassword = emailBox.getByLabel("Password");
-  const emailFrom = emailBox.getByLabel("From");
-  const emailTo = emailBox.getByLabel("To");
-
-  await expect(emailHost).toHaveValue("emailserver.example.com");
-  await expect(emailPort).toHaveValue("587");
-  await expect(emailUser).toHaveValue("john.doe");
-  await expect(emailPassword).toHaveValue("***");
-  await expect(emailFrom).toHaveValue("john.doe@mail.com");
-  await expect(emailTo).toHaveValue(["recipient1@mail.com", "recipient2@mail.com"].join("\n"));
+  await expect(emailBox.getByLabel("Host")).toHaveValue("emailserver.example.com");
+  await expect(emailBox.getByLabel("Port")).toHaveValue("587");
+  await expect(emailBox.getByLabel("User")).toHaveValue("john.doe");
+  await expect(emailBox.getByLabel("Password")).toHaveValue("***");
+  await expect(emailBox.getByLabel("From")).toHaveValue("john.doe@mail.com");
+  await expect(emailBox.getByLabel("To")).toHaveValue(["recipient1@mail.com", "recipient2@mail.com"].join("\n"));
 
   // Validate Shout
-  const shoutBox = modal.getByTestId("service-box-shout");
-  const shoutUri = shoutBox.getByLabel("Uri");
-
-  await expect(shoutUri).toHaveValue("gotify://gotify.example.com:443/AzyoeNS.D4iJLVa/?priority=1");
+  await expect(modal.getByTestId("service-box-shout").getByLabel("Uri")).toHaveValue("gotify://gotify.example.com:443/AzyoeNS.D4iJLVa/?priority=1");
 
   // Validate Ntfy
   const ntfyBox = modal.getByTestId("service-box-ntfy");
-  const ntfyHost = ntfyBox.getByLabel("Host");
-  const ntfyTopics = ntfyBox.getByLabel("Topics");
-  const ntfyAccesstoken = ntfyBox.getByLabel("Access token");
-  const ntfyPriority = ntfyBox.getByLabel("Priority");
-  const ntfyTagsAndEmojis = ntfyBox.getByLabel("Tags & emojis");
-
-  await expect(ntfyHost).toHaveValue("ntfy.sh");
-  await expect(ntfyTopics).toHaveValue(["evcc_alert", "evcc_pushmessage"].join("\n"));
-  await expect(ntfyAccesstoken).toHaveValue("***");
-  await expect(ntfyPriority).toHaveValue("low");
-  await expect(ntfyTagsAndEmojis).toHaveValue(["+1", "blue_car"].join("\n"));
+  await expect(ntfyBox.getByLabel("Host")).toHaveValue("ntfy.sh");
+  await expect(ntfyBox.getByLabel("Topics")).toHaveValue(["evcc_alert", "evcc_pushmessage"].join("\n"));
+  await expect(ntfyBox.getByLabel("Access token")).toHaveValue("***");
+  await expect(ntfyBox.getByLabel("Priority")).toHaveValue("low");
+  await expect(ntfyBox.getByLabel("Tags & emojis")).toHaveValue(["+1", "blue_car"].join("\n"));
 
   // Validate Custom
   const customBox = modal.getByTestId("service-box-custom");
-  const customEncoding = customBox.getByLabel("Encoding");
-  const customPlugin = customBox.getByTestId("yaml-editor");
-
-  await expect(customEncoding).toHaveValue("title");
-  await expect(customPlugin).toHaveText(
+  await expect(customBox.getByLabel("Encoding")).toHaveValue("title");
+  await expect(customBox.getByTestId("yaml-editor")).toHaveText(
     ["123", 'cmd: /usr/local/bin/evcc "Title={{.send}}"', "source: script"].join("")
   );
 }
@@ -158,78 +132,54 @@ test.describe("messaging", async () => {
     await modal.getByRole("link", { name: "Pushover" }).click();
 
     const pushoverBox = modal.getByTestId("service-box-pushover");
-    const pushoverToken = pushoverBox.getByLabel("Token");
-    const pushoverRecipients = pushoverBox.getByLabel("Recipients");
-    const pushoverDevices = pushoverBox.getByLabel("Device names");
-
-    await pushoverToken.fill("pushoverToken");
-    await pushoverRecipients.fill(["recipient1", "recipient2", "recipient3"].join("\n"));
-    await pushoverDevices.fill(["device1", "device2", "device3"].join("\n"));
+    await pushoverBox.getByLabel("Token").fill("pushoverToken");
+    await pushoverBox.getByLabel("Recipients").fill(["recipient1", "recipient2", "recipient3"].join("\n"));
+    await pushoverBox.getByLabel("Device names").fill(["device1", "device2", "device3"].join("\n"));
 
     //  Telegram
     await modal.getByRole("button", { name: "Add service" }).click();
     await modal.getByRole("link", { name: "Telegram" }).click();
 
     const telegramBox = modal.getByTestId("service-box-telegram");
-    const telegramToken = telegramBox.getByLabel("Token");
-    const telegramRecipients = telegramBox.getByLabel("Chat IDs");
-
-    await telegramToken.fill("telegramToken");
-    await telegramRecipients.fill(["12345", "-54321", "111"].join("\n"));
+    await telegramBox.getByLabel("Token").fill("telegramToken");
+    await telegramBox.getByLabel("Chat IDs").fill(["12345", "-54321", "111"].join("\n"));
 
     //  Email
     await modal.getByRole("button", { name: "Add service" }).click();
     await modal.getByRole("link", { name: "Email" }).click();
 
     const emailBox = modal.getByTestId("service-box-email");
-    const emailHost = emailBox.getByLabel("Host");
-    const emailPort = emailBox.getByLabel("Port");
-    const emailUser = emailBox.getByLabel("User");
-    const emailPassword = emailBox.getByLabel("Password");
-    const emailFrom = emailBox.getByLabel("From");
-    const emailTo = emailBox.getByLabel("To");
-
-    await emailHost.fill("emailserver.example.com");
-    await emailPort.fill("587");
-    await emailUser.fill("john.doe");
-    await emailPassword.fill("secret123");
-    await emailFrom.fill("john.doe@mail.com");
-    await emailTo.fill(["recipient1@mail.com", "recipient2@mail.com"].join("\n"));
+    await emailBox.getByLabel("Host").fill("emailserver.example.com");
+    await emailBox.getByLabel("Port").fill("587");
+    await emailBox.getByLabel("User").fill("john.doe");
+    await emailBox.getByLabel("Password").fill("secret123");
+    await emailBox.getByLabel("From").fill("john.doe@mail.com");
+    await emailBox.getByLabel("To").fill(["recipient1@mail.com", "recipient2@mail.com"].join("\n"));
 
     //  Shout
     await modal.getByRole("button", { name: "Add service" }).click();
     await modal.getByRole("link", { name: "Shout" }).click();
 
-    const shoutBox = modal.getByTestId("service-box-shout");
-    const shoutUri = shoutBox.getByLabel("Uri");
-    await shoutUri.fill("gotify://gotify.example.com:443/AzyoeNS.D4iJLVa/?priority=1");
+    await modal.getByTestId("service-box-shout").getByLabel("Uri").fill("gotify://gotify.example.com:443/AzyoeNS.D4iJLVa/?priority=1");
 
     //  Ntfy
     await modal.getByRole("button", { name: "Add service" }).click();
     await modal.getByRole("link", { name: "Ntfy" }).click();
 
     const ntfyBox = modal.getByTestId("service-box-ntfy");
-    const ntfyHost = ntfyBox.getByLabel("Host");
-    const ntfyTopics = ntfyBox.getByLabel("Topics");
-    const ntfyAccesstoken = ntfyBox.getByLabel("Access token");
-    const ntfyPriority = ntfyBox.getByLabel("Priority");
-    const ntfyTagsAndEmojis = ntfyBox.getByLabel("Tags & emojis");
-
-    await ntfyHost.fill("ntfy.sh");
-    await ntfyTopics.fill(["evcc_alert", "evcc_pushmessage"].join("\n"));
-    await ntfyAccesstoken.fill("accessToken");
-    await ntfyPriority.selectOption({ label: "low" });
-    await ntfyTagsAndEmojis.fill(["+1", "blue_car"].join("\n"));
+    await ntfyBox.getByLabel("Host").fill("ntfy.sh");
+    await ntfyBox.getByLabel("Topics").fill(["evcc_alert", "evcc_pushmessage"].join("\n"));
+    await ntfyBox.getByLabel("Access token").fill("accessToken");
+    await ntfyBox.getByLabel("Priority").selectOption({ label: "low" });
+    await ntfyBox.getByLabel("Tags & emojis").fill(["+1", "blue_car"].join("\n"));
 
     //  Custom
     await modal.getByRole("button", { name: "Add service" }).click();
     await modal.getByRole("link", { name: "Custom" }).click();
 
     const customBox = modal.getByTestId("service-box-custom");
-    const customEncoding = customBox.getByLabel("Encoding");
+    await customBox.getByLabel("Encoding").selectOption({ label: "title" });
     const customPlugin = customBox.getByTestId("yaml-editor");
-
-    await customEncoding.selectOption({ label: "title" });
     await expect(customPlugin).toHaveText(
       ["123", "source: script", 'cmd: /usr/local/bin/evcc_message "{{.send}}"'].join("")
     );
@@ -266,7 +216,10 @@ test.describe("messaging", async () => {
     await start(undefined, CONFIG_MESSAGING_MIGRATE);
     await page.goto("/#/config");
 
+    await expect(page.getByTestId("fatal-error")).toContainText("cannot create messenger type 'telegram': invalid bot token");
+
     const messagingCard = page.getByTestId("messaging");
+    await expect(messagingCard).toHaveClass(/round-box--error/);
     await expect(messagingCard).toContainText(["Events", "3", "Services", "6"].join(""));
 
     await messagingCard.getByRole("button", { name: "edit" }).click();
