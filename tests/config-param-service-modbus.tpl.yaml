@@ -1,0 +1,26 @@
+template: service-modbus
+group: generic
+products:
+  - description:
+      generic: Service Modbus Test Meter
+params:
+  - name: usage
+    choice: ["grid"]
+  - name: modbus
+    choice: ["rs485", "tcpip"]
+    id: 2
+  - name: address
+    description:
+      generic: Register address
+    type: int
+    required: true
+  - name: value
+    description:
+      generic: Test value
+    type: string
+    unit: "TXT"
+    service: demo/modbus?address={address}&{modbus}
+    required: true
+
+render: |
+  type: custom
