@@ -32,7 +32,6 @@ import (
 
 // ETEK EKEPC2 charger implementation
 type Etek struct {
-	*embed
 	log  *util.Logger
 	conn *modbus.Connection
 }
@@ -296,8 +295,7 @@ func (wb *Etek) currents() (float64, float64, float64, error) {
 	current := float64(binary.BigEndian.Uint16(b)) / 10.0 // Assuming 0.1A resolution
 
 	// For single-phase charging, return current on L1 only
-	// For 3-phase, distribute evenly (this is an approximation)
-	// The actual implementation depends on the pole selection in register 127
+	// For 3-phase, distribute evenly (this is an avarage, actual per-phase currents are not available)
 	return current, 0, 0, nil
 } */
 
