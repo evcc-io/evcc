@@ -37,6 +37,10 @@ type API interface {
 	GetLimitSoc() int
 	// SetLimitSoc sets the limit soc
 	SetLimitSoc(soc int)
+	// GetResumeThreshold returns the resume threshold
+	GetResumeThreshold() int
+	// SetResumeThreshold sets the resume threshold
+	SetResumeThreshold(threshold int)
 
 	// GetPlanSoc returns the charge plan soc
 	GetPlanSoc() (time.Time, int)

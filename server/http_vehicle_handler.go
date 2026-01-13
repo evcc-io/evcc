@@ -69,6 +69,47 @@ func limitSocHandler(site site.API) http.HandlerFunc {
 	}
 }
 
+// resumeThresholdHandler updates resume threshold
+func resumeThresholdHandler(site site.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+
+		v, err := site.Vehicles().ByName(vars["name"])
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		threshold, err := strconv.Atoi(vars["value"])
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		// Validation: threshold must be 0-20
+		if threshold < 0 || threshold > 20 {
+			http.Error(w, "resume threshold must be between 0-20%", http.StatusBadRequest)
+			return
+		}
+
+		// Validation: threshold must be less than vehicle's limitSoc (if configured)
+		if limitSoc := v.GetLimitSoc(); limitSoc > 0 && threshold >= limitSoc {
+			http.Error(w, "resume threshold must be less than limit SoC", http.StatusBadRequest)
+			return
+		}
+
+		v.SetResumeThreshold(threshold)
+
+		res := struct {
+			Threshold int `json:"threshold"`
+		}{
+			Threshold: v.GetResumeThreshold(),
+		}
+
+		jsonWrite(w, res)
+	}
+}
+
 // planSocHandler updates plan soc and time
 func planSocHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

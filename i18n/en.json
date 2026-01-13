@@ -966,6 +966,10 @@
         "description": "Charging limit that is used when this vehicle is connected.",
         "label": "Default limit"
       },
+      "resumeThreshold": {
+        "description": "Prevent micro-charging by starting only when SoC drops this many percent below the limit. Active in Min+PV and Fast mode only.",
+        "label": "Resume threshold"
+      },
       "maxCurrent": {
         "label": "Max. Current"
       },

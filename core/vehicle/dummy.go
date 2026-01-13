@@ -38,6 +38,15 @@ func (v *dummy) GetLimitSoc() int {
 func (v *dummy) SetLimitSoc(soc int) {
 }
 
+// GetResumeThreshold returns the resume threshold
+func (v *dummy) GetResumeThreshold() int {
+	return 0
+}
+
+// SetResumeThreshold sets the resume threshold
+func (v *dummy) SetResumeThreshold(threshold int) {
+}
+
 // GetPlanSoc returns the charge plan soc
 func (v *dummy) GetPlanSoc() (time.Time, int) {
 	return time.Time{}, 0

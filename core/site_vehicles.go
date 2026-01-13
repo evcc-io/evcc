@@ -26,6 +26,7 @@ type vehicleStruct struct {
 	Phases           int                 `json:"phases,omitempty"`
 	MinSoc           int                 `json:"minSoc,omitempty"`
 	LimitSoc         int                 `json:"limitSoc,omitempty"`
+	ResumeThreshold  int                 `json:"resumeThreshold,omitempty"`
 	MinCurrent       float64             `json:"minCurrent,omitempty"`
 	MaxCurrent       float64             `json:"maxCurrent,omitempty"`
 	Priority         int                 `json:"priority,omitempty"`
@@ -62,6 +63,7 @@ func (site *Site) publishVehicles() {
 			Phases:           instance.Phases(),
 			MinSoc:           v.GetMinSoc(),
 			LimitSoc:         v.GetLimitSoc(),
+			ResumeThreshold:  v.GetResumeThreshold(),
 			MinCurrent:       ac.MinCurrent,
 			MaxCurrent:       ac.MaxCurrent,
 			Priority:         ac.Priority,

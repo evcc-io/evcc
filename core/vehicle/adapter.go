@@ -70,6 +70,21 @@ func (v *adapter) SetLimitSoc(soc int) {
 	v.publish()
 }
 
+// GetResumeThreshold returns the resume threshold
+func (v *adapter) GetResumeThreshold() int {
+	if val, err := settings.Int(v.key() + keys.ResumeThreshold); err == nil {
+		return int(val)
+	}
+	return 0
+}
+
+// SetResumeThreshold sets the resume threshold
+func (v *adapter) SetResumeThreshold(threshold int) {
+	v.log.DEBUG.Printf("set %s resume threshold: %d", v.name, threshold)
+	settings.SetInt(v.key()+keys.ResumeThreshold, int64(threshold))
+	v.publish()
+}
+
 // GetPlanSoc returns the charge plan soc
 func (v *adapter) GetPlanSoc() (time.Time, int) {
 	var ts time.Time

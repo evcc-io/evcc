@@ -1046,6 +1046,45 @@ func (lp *Loadpoint) minSocNotReached() bool {
 	return minEnergy > 0 && lp.getChargedEnergy() < minEnergy
 }
 
+// withinResumeThreshold checks if the vehicle SoC is within the resume threshold range.
+// Returns true if charging should be prevented due to resume threshold.
+// Only applies in MinPV and Now modes, not in PV mode or when planner is active.
+func (lp *Loadpoint) withinResumeThreshold() bool {
+	mode := lp.GetMode()
+
+	// Only apply in MinPV and Now modes
+	if mode != api.ModeMinPV && mode != api.ModeNow {
+		return false
+	}
+
+	v := lp.GetVehicle()
+	if v == nil {
+		return false
+	}
+
+	threshold := vehicle.Settings(lp.log, v).GetResumeThreshold()
+	if threshold == 0 {
+		return false // Feature disabled
+	}
+
+	limit := lp.effectiveLimitSoc()
+	if limit == 0 || limit >= 100 {
+		return false // No limit configured
+	}
+
+	// Check if SoC is within the threshold range
+	// Charging should resume when SoC <= (limit - threshold)
+	startThreshold := limit - threshold
+	withinThreshold := lp.vehicleSoc > float64(startThreshold) && lp.vehicleSoc < float64(limit)
+
+	if withinThreshold {
+		lp.log.DEBUG.Printf("within resume threshold: soc %.1f%% > %.0f%% (limit %d%% - %d%%), waiting to resume charging",
+			lp.vehicleSoc, float64(startThreshold), limit, threshold)
+	}
+
+	return withinThreshold
+}
+
 // disableUnlessClimater disables the charger unless climate is active
 func (lp *Loadpoint) disableUnlessClimater() error {
 	var current float64 // zero disables
@@ -1986,6 +2025,11 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 		err = lp.fastCharging()
 		lp.resetPhaseTimer()
 		lp.elapsePVTimer() // let PV mode disable immediately afterwards
+
+	// resume threshold - prevent charging if within threshold range
+	case lp.withinResumeThreshold():
+		lp.log.DEBUG.Println("within resume threshold, disabling charger")
+		err = lp.disableUnlessClimater()
 
 	case lp.LimitEnergyReached():
 		lp.log.DEBUG.Printf("limitEnergy reached: %.0fkWh > %0.1fkWh", lp.GetChargedEnergy()/1e3, lp.limitEnergy)

@@ -278,6 +278,7 @@ func (m *MQTT) listenVehicleSetters(topic string, v vehicle.API) error {
 	for _, s := range []setter{
 		{"limitSoc", intSetter(pass(v.SetLimitSoc))},
 		{"minSoc", intSetter(pass(v.SetMinSoc))},
+		{"resumeThreshold", intSetter(pass(v.SetResumeThreshold))},
 		{"planStrategy", planStrategySetter(v.SetPlanStrategy)},
 		{"planSoc", planGoalSetter(v.SetPlanSoc)},
 	} {

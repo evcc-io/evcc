@@ -479,6 +479,7 @@ export interface Vehicle {
   name: string;
   minSoc?: number;
   limitSoc?: number;
+  resumeThreshold?: number;
   plan?: StaticPlan;
   repeatingPlans: RepeatingPlan[] | null;
   planPrecondition: number;

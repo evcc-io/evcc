@@ -50,6 +50,29 @@
 				{{ $t("main.loadpointSettings.limitSoc.description") }}
 			</small>
 		</div>
+		<div class="row">
+			<div class="col-6 col-lg-3 col-form-label">
+				<label :for="formId('resumethreshold')">
+					{{ $t("main.loadpointSettings.resumeThreshold.label") }}
+				</label>
+			</div>
+			<div class="col-6 col-lg-3">
+				<select
+					:id="formId('resumethreshold')"
+					v-model.number="selectedResumeThreshold"
+					class="form-select mb-2"
+					:disabled="arrivalDisabled"
+					@change="changeResumeThreshold"
+				>
+					<option v-for="threshold in resumeThresholdOptions" :key="threshold" :value="threshold">
+						{{ threshold === 0 ? "---" : threshold + "%" }}
+					</option>
+				</select>
+			</div>
+			<small class="col-12 col-lg-6 ps-lg-4 col-form-label mb-4">
+				{{ $t("main.loadpointSettings.resumeThreshold.description") }}
+			</small>
+		</div>
 	</div>
 	<div v-if="arrivalDisabled" class="mx-2 small text-muted">
 		<strong class="text-evcc">
@@ -72,14 +95,19 @@ export default defineComponent({
 		id: [String, Number],
 		minSoc: { type: Number, default: 0 },
 		limitSoc: { type: Number, default: 0 },
+		resumeThreshold: { type: Number, default: 0 },
 		vehicleName: String,
 		vehicleNotReachable: Boolean,
 		socBasedCharging: Boolean,
 		rangePerSoc: Number,
 	},
-	emits: ["minsoc-updated", "limitsoc-updated"],
+	emits: ["minsoc-updated", "limitsoc-updated", "resumethreshold-updated"],
 	data() {
-		return { selectedMinSoc: this.minSoc, selectedLimitSoc: this.limitSoc };
+		return { 
+			selectedMinSoc: this.minSoc, 
+			selectedLimitSoc: this.limitSoc,
+			selectedResumeThreshold: this.resumeThreshold,
+		};
 	},
 	computed: {
 		minSocOptions(): SelectOption<number>[] {
@@ -94,6 +122,10 @@ export default defineComponent({
 				.map((i) => i * 5)
 				.map(this.socOption);
 		},
+		resumeThresholdOptions(): number[] {
+			// a list of entries from 0 to 20
+			return Array.from(Array(21).keys());
+		},
 		arrivalDisabled(): boolean {
 			return !(this.socBasedCharging || this.vehicleNotReachable);
 		},
@@ -104,6 +136,9 @@ export default defineComponent({
 		},
 		limitSoc(value: number): void {
 			this.selectedLimitSoc = value;
+		},
+		resumeThreshold(value: number): void {
+			this.selectedResumeThreshold = value;
 		},
 	},
 	methods: {
@@ -121,6 +156,9 @@ export default defineComponent({
 		},
 		changeLimitSoc(): void {
 			this.$emit("limitsoc-updated", this.selectedLimitSoc);
+		},
+		changeResumeThreshold(): void {
+			this.$emit("resumethreshold-updated", this.selectedResumeThreshold);
 		},
 	},
 });

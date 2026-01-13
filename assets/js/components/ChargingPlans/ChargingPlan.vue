@@ -76,6 +76,7 @@
 							v-bind="chargingPlanArrival"
 							@minsoc-updated="setMinSoc"
 							@limitsoc-updated="setLimitSoc"
+							@resumethreshold-updated="setResumeThreshold"
 						/>
 					</div>
 				</div>
@@ -165,6 +166,9 @@ export default defineComponent({
 		},
 		limitSoc(): number | undefined {
 			return this.vehicle?.limitSoc;
+		},
+		resumeThreshold(): number | undefined {
+			return this.vehicle?.resumeThreshold;
 		},
 		staticPlan(): StaticPlan | null {
 			if (this.socBasedPlanning) {
@@ -318,6 +322,9 @@ export default defineComponent({
 		},
 		setLimitSoc(soc: number): void {
 			api.post(`${this.apiVehicle}limitsoc/${soc}`);
+		},
+		setResumeThreshold(threshold: number): void {
+			api.post(`${this.apiVehicle}resumethreshold/${threshold}`);
 		},
 	},
 });
