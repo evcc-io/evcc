@@ -5,12 +5,6 @@ products:
       de: Plenticore Hybrid, inkl. Netzladung der Hausbatterie
       en: Plenticore Hybrid, incl. grid charging of the house battery
 capabilities: ["battery-control"]
-linked:
-  - template: kostal-ksem-inverter
-    usage: grid
-  - template: kostal-ksem
-    usage: grid
-    excludetemplate: kostal-ksem-inverter
 covers: ["kostal-plenticore-hw0200"]
 requirements:
   description:
@@ -25,7 +19,6 @@ requirements:
 params:
   - name: usage
     choice: ["pv", "battery"]
-    allinone: true
   - name: modbus
     choice: ["tcpip"]
     id: 71
@@ -110,7 +103,7 @@ render: |
       - case: 3 # charge
         set:
           source: const
-          value: {{ if .maxchargerate }}-{{ .maxchargerate }}{{ end }} # %
+          value: {{ if .maxchargepower }}-{{ .maxchargepower }}{{ end }} # W
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}

@@ -22,12 +22,6 @@ type Template struct {
 	titles []string
 }
 
-// GuidedSetupEnabled returns true if there are linked templates or >1 usage
-func (t *Template) GuidedSetupEnabled() bool {
-	_, p := t.ParamByName(ParamUsage)
-	return len(t.Linked) > 0 || (len(p.Choice) > 1 && p.IsAllInOne())
-}
-
 // UpdateParamWithDefaults adds default values to specific param name entries
 func (t *Template) UpdateParamsWithDefaults() error {
 	for i, p := range t.Params {
@@ -36,6 +30,31 @@ func (t *Template) UpdateParamsWithDefaults() error {
 		}
 	}
 
+	return nil
+}
+
+// UpdateModbusParamsWithDefaults populates modbus param fields with global defaults
+// when device-specific values are not set (zero/empty).
+func (t *Template) UpdateModbusParamsWithDefaults() error {
+	idx, modbusParam := t.ParamByName(ParamModbus)
+	if idx == -1 || len(modbusParam.Choice) == 0 {
+		return nil
+	}
+
+	if modbusParam.ID == 0 {
+		modbusParam.ID = cast.ToInt(ConfigDefaults.ModbusDefault(ModbusParamId))
+	}
+	if modbusParam.Baudrate == 0 {
+		modbusParam.Baudrate = cast.ToInt(ConfigDefaults.ModbusDefault(ModbusParamBaudrate))
+	}
+	if modbusParam.Comset == "" {
+		modbusParam.Comset = cast.ToString(ConfigDefaults.ModbusDefault(ModbusParamComset))
+	}
+	if modbusParam.Port == 0 {
+		modbusParam.Port = cast.ToInt(ConfigDefaults.ModbusDefault(ModbusParamPort))
+	}
+
+	t.Params[idx] = modbusParam
 	return nil
 }
 

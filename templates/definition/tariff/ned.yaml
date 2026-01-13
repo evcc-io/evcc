@@ -13,8 +13,8 @@ params:
     type: string
     required: true
     help:
-      de: "Erstelle eine App in https://ned.nl/nl/user/register und kopiere den Key"
-      en: "Create an app in https://ned.nl/nl/user/register and copy the key"
+      de: "Erstelle eine App in [ned.nl](https://ned.nl/nl/user/register) und kopiere den Key"
+      en: "Create an app in [ned.nl](https://ned.nl/nl/user/register) and copy the key"
 render: |
   type: custom
   tariff: co2

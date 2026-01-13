@@ -474,11 +474,11 @@ presets:
       advanced: true
     - name: mode
       advanced: true
-    - name: mincurrent
+    - name: minCurrent
       advanced: true
-    - name: maxcurrent
+    - name: maxCurrent
       advanced: true
-    - name: maxpower
+    - name: maxPower
       advanced: true
     - name: identifiers
       advanced: true
@@ -497,11 +497,11 @@ presets:
       advanced: true
     - name: mode
       advanced: true
-    - name: mincurrent
+    - name: minCurrent
       advanced: true
-    - name: maxcurrent
+    - name: maxCurrent
       advanced: true
-    - name: maxpower
+    - name: maxPower
       advanced: true
     - name: identifiers
       advanced: true
@@ -745,6 +745,12 @@ modbus:
         de: Kommunikationsparameter des Adapters
         en: Communication parameter for the adapter
       default: 8N1
+    - name: port
+      description:
+        de: Port
+        en: Port
+      default: 502
+      type: int
   types:
     rs485serial:
       description:

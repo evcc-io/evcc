@@ -137,9 +137,9 @@
       "no": "nej",
       "odometer": "Mätarställning",
       "org": "Organisation",
-      "phaseCurrents": "Ström L1, L2, L3",
-      "phasePowers": "Effekt L1, L2, L3",
-      "phaseVoltages": "Spänning L1, L2, L3",
+      "phaseCurrents": "Ström",
+      "phasePowers": "Effekt",
+      "phaseVoltages": "Spänning",
       "phases1p3p": "Fasväxlare",
       "power": "Effekt",
       "powerRange": "Kraft",
@@ -294,6 +294,7 @@
       "chargerTypeLabel": "Typ av laddare",
       "chargingTitle": "Tillstånd",
       "circuitHelp": "Belastningsstyrning som säkrar att effekt och strömgränser ej överskrids.",
+      "circuitInvalid": "Kretsen saknas",
       "circuitLabel": "Krets",
       "circuitUnassigned": "ej vald",
       "defaultModeHelp": {
@@ -370,6 +371,7 @@
       "vehicleAutoDetection": "automatisk detektering",
       "vehicleHelpAutoDetection": "Väljer automatiskt det mest troliga fordonet. Manuell inställning är möjlig.",
       "vehicleHelpDefault": "Anta att detta fordon alltid laddar här. Automatisk detektering är avstängt. Manuell inställning är möjlig.",
+      "vehicleInvalid": "Fordon saknas",
       "vehicleLabel": "Standard fordon",
       "vehiclesTitle": "Fordon"
     },
@@ -763,6 +765,9 @@
       "solar": "Sol"
     }
   },
+  "general": {
+    "note": "Anmärkning:"
+  },
   "header": {
     "about": "Om",
     "authProviders": {
@@ -904,6 +909,7 @@
       "repeating": "återkommande",
       "repeatingPlans": "Återkommande planer",
       "selectAll": "Välj alla",
+      "strategyDisabledDescription": "Laddningen startar så sent som möjligt för att avslutas precis i tid före avfärd. Med dynamiska elpriser eller CO₂-avgifter finns fler möjligheter här.",
       "strategySettings": "Strategiinställningar",
       "time": "Tid",
       "title": "Plan",
