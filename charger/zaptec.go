@@ -273,9 +273,6 @@ var _ api.ChargerEx = (*Zaptec)(nil)
 
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (c *Zaptec) MaxCurrentMillis(current float64) error {
-	if current < 6 || current > 32 {
-		return fmt.Errorf("invalid current %.1f", current)
-	}
 	data := zaptec.Update{
 		MaxChargeCurrent: &current,
 	}
