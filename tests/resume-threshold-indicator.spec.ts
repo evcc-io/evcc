@@ -129,4 +129,16 @@ test.describe("resumeThreshold marker", async () => {
     // Marker should not be visible when a plan is active
     await expectMarkerNotVisible(page);
   });
+
+
+  test("not visible when resumeThreshold is set to ---", async ({ page }) => {
+    // Set to Fast mode
+    await page.getByTestId("mode").first().getByRole("button", { name: "Fast" }).click();
+
+    // Set resume threshold to "---" (disabled)
+    await setResumeThreshold(page, "---");
+
+    // Marker should not be visible when resume threshold is set to ---
+    await expectMarkerNotVisible(page);
+  });
 });
