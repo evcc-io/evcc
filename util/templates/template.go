@@ -3,9 +3,7 @@ package templates
 import (
 	"bytes"
 	_ "embed"
-	"errors"
 	"fmt"
-	"regexp"
 	"slices"
 	"strconv"
 	"strings"
@@ -33,27 +31,6 @@ func (t *Template) UpdateParamsWithDefaults() error {
 	}
 
 	return nil
-}
-
-// validatePattern checks if a value matches a pattern and returns a descriptive error if not
-func validatePattern(regex, value string, examples []string) error {
-	if regex == "" {
-		return nil
-	}
-
-	matched, err := regexp.MatchString(regex, value)
-	if err != nil {
-		return fmt.Errorf("invalid regex pattern: %w", err)
-	}
-	if matched {
-		return nil
-	}
-
-	errMsg := fmt.Sprintf("value %q does not match required pattern", value)
-	if len(examples) > 0 {
-		errMsg += fmt.Sprintf(". Valid examples: %s", strings.Join(examples, ", "))
-	}
-	return errors.New(errMsg)
 }
 
 // UpdateModbusParamsWithDefaults populates modbus param fields with global defaults
@@ -139,7 +116,7 @@ func (t *Template) Validate() error {
 		// validate pattern examples against pattern
 		if p.Pattern != nil && p.Pattern.Regex != "" && len(p.Pattern.Examples) > 0 {
 			for _, example := range p.Pattern.Examples {
-				if err := validatePattern(p.Pattern.Regex, example, nil); err != nil {
+				if err := p.Pattern.Validate(example); err != nil {
 					return fmt.Errorf("param %s: pattern example %q is invalid: pattern=%q", p.Name, example, p.Pattern.Regex)
 				}
 			}
@@ -426,7 +403,7 @@ func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, m
 
 				// validate pattern if defined
 				if s != "" && p.Pattern != nil && p.Pattern.Regex != "" {
-					if err := validatePattern(p.Pattern.Regex, s, p.Pattern.Examples); err != nil {
+					if err := p.Pattern.Validate(s); err != nil {
 						return nil, nil, fmt.Errorf("%s: %w", p.Name, err)
 					}
 				}

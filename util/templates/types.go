@@ -3,6 +3,7 @@ package templates
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -84,6 +85,27 @@ var predefinedTemplateProperties = append(
 type Pattern struct {
 	Regex    string   `json:",omitempty"`
 	Examples []string `json:",omitempty"`
+}
+
+// Validate checks if a value matches the pattern and returns a descriptive error if not
+func (p *Pattern) Validate(value string) error {
+	if p.Regex == "" {
+		return nil
+	}
+
+	matched, err := regexp.MatchString(p.Regex, value)
+	if err != nil {
+		return fmt.Errorf("invalid regex pattern: %w", err)
+	}
+	if matched {
+		return nil
+	}
+
+	errMsg := fmt.Sprintf("value %q does not match required pattern", value)
+	if len(p.Examples) > 0 {
+		errMsg += fmt.Sprintf(". Valid examples: %s", strings.Join(p.Examples, ", "))
+	}
+	return errors.New(errMsg)
 }
 
 // TextLanguage contains language-specific texts
