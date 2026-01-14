@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/server/db"
+	"gorm.io/gorm"
 )
 
 type meter struct {
@@ -16,14 +17,9 @@ type meter struct {
 var ErrIncomplete = errors.New("meter profile incomplete")
 
 func init() {
-	db.Register(func() error {
-		return SetupSchema()
+	db.Register(func(db *gorm.DB) error {
+		return db.AutoMigrate(new(meter))
 	})
-}
-
-// SetupSchema is used for testing
-func SetupSchema() error {
-	return db.Instance.AutoMigrate(new(meter))
 }
 
 // Persist stores 15min consumption in Wh

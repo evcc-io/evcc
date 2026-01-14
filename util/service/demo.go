@@ -12,6 +12,7 @@ func init() {
 	mux.HandleFunc("GET /single", getSingle)
 	mux.HandleFunc("GET /country", getCountry)
 	mux.HandleFunc("GET /{country}/city", getCity)
+	mux.HandleFunc("GET /modbus", getModbus)
 
 	service.Register("demo", mux)
 }
@@ -36,4 +37,31 @@ func getCity(w http.ResponseWriter, req *http.Request) {
 		cities = []string{"madrid", "barcelona", "valencia"}
 	}
 	json.NewEncoder(w).Encode(cities)
+}
+
+func getModbus(w http.ResponseWriter, req *http.Request) {
+	// Verify that either uri or device is provided (mimics modbus connection params)
+	uri := req.URL.Query().Get("uri")
+	device := req.URL.Query().Get("device")
+	address := req.URL.Query().Get("address")
+	id := req.URL.Query().Get("id")
+
+	if uri == "" && device == "" {
+		http.Error(w, "either uri or device parameter required", http.StatusBadRequest)
+		return
+	}
+
+	if address == "" {
+		http.Error(w, "address parameter required", http.StatusBadRequest)
+		return
+	}
+
+	// Return different values based on connection type and id
+	// Format: address,id:id,type (e.g., "100,id:2,tcp")
+	connType := "tcp"
+	if device != "" {
+		connType = "serial"
+	}
+	result := address + ",id:" + id + "," + connType
+	json.NewEncoder(w).Encode([]string{result})
 }
