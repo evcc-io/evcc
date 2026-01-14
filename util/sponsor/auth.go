@@ -1,27 +1,14 @@
 package sponsor
 
 import (
-	"context"
-	"fmt"
-	"strings"
 	"sync"
 	"time"
-
-	"github.com/evcc-io/evcc/api/proto/pb"
-	"github.com/evcc-io/evcc/util/cloud"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 var (
 	mu             sync.RWMutex
 	Subject, Token string
 	ExpiresAt      time.Time
-)
-
-const (
-	unavailable = "sponsorship unavailable"
-	victron     = "victron"
 )
 
 func IsAuthorized() bool {
