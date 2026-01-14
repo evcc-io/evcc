@@ -80,6 +80,13 @@ func (v *adapter) GetResumeThreshold() int {
 
 // SetResumeThreshold sets the resume threshold
 func (v *adapter) SetResumeThreshold(threshold int) {
+	// Clamp threshold to valid range 0-20%
+	if threshold < 0 {
+		threshold = 0
+	} else if threshold > 20 {
+		threshold = 20
+	}
+
 	v.log.DEBUG.Printf("set %s resume threshold: %d", v.name, threshold)
 	settings.SetInt(v.key()+keys.ResumeThreshold, int64(threshold))
 	v.publish()

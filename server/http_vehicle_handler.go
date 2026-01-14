@@ -86,18 +86,7 @@ func resumeThresholdHandler(site site.API) http.HandlerFunc {
 			return
 		}
 
-		// Validation: threshold must be 0-20
-		if threshold < 0 || threshold > 20 {
-			http.Error(w, "resume threshold must be between 0-20%", http.StatusBadRequest)
-			return
-		}
-
-		// Validation: threshold must be less than vehicle's limitSoc (if configured)
-		if limitSoc := v.GetLimitSoc(); limitSoc > 0 && threshold >= limitSoc {
-			http.Error(w, "resume threshold must be less than limit SoC", http.StatusBadRequest)
-			return
-		}
-
+		// SetResumeThreshold handles validation
 		v.SetResumeThreshold(threshold)
 
 		res := struct {
