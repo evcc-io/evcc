@@ -112,6 +112,20 @@ func (mr *MockAPIMockRecorder) GetRepeatingPlans() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRepeatingPlans", reflect.TypeOf((*MockAPI)(nil).GetRepeatingPlans))
 }
 
+// GetResumeThreshold mocks base method.
+func (m *MockAPI) GetResumeThreshold() int {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetResumeThreshold")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// GetResumeThreshold indicates an expected call of GetResumeThreshold.
+func (mr *MockAPIMockRecorder) GetResumeThreshold() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetResumeThreshold", reflect.TypeOf((*MockAPI)(nil).GetResumeThreshold))
+}
+
 // Instance mocks base method.
 func (m *MockAPI) Instance() api.Vehicle {
 	m.ctrl.T.Helper()
@@ -204,4 +218,16 @@ func (m *MockAPI) SetRepeatingPlans(arg0 []api.RepeatingPlan) error {
 func (mr *MockAPIMockRecorder) SetRepeatingPlans(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetRepeatingPlans", reflect.TypeOf((*MockAPI)(nil).SetRepeatingPlans), arg0)
+}
+
+// SetResumeThreshold mocks base method.
+func (m *MockAPI) SetResumeThreshold(threshold int) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetResumeThreshold", threshold)
+}
+
+// SetResumeThreshold indicates an expected call of SetResumeThreshold.
+func (mr *MockAPIMockRecorder) SetResumeThreshold(threshold any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetResumeThreshold", reflect.TypeOf((*MockAPI)(nil).SetResumeThreshold), threshold)
 }

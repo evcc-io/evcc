@@ -17,6 +17,130 @@ func TestEffectiveLimitSoc(t *testing.T) {
 	assert.Equal(t, 100, lp.effectiveLimitSoc())
 }
 
+func TestEffectiveResumeThreshold(t *testing.T) {
+	tc := []struct {
+		name              string
+		mode              api.ChargeMode
+		planActive        bool
+		status            api.ChargeStatus
+		limitSoc          int
+		hasVehicle        bool
+		expectedThreshold int
+	}{
+		{
+			name:              "returns 0 when mode is PV",
+			mode:              api.ModePV,
+			planActive:        false,
+			status:            api.StatusB,
+			limitSoc:          80,
+			hasVehicle:        true,
+			expectedThreshold: 0,
+		},
+		{
+			name:              "returns 0 when mode is Off",
+			mode:              api.ModeOff,
+			planActive:        false,
+			status:            api.StatusB,
+			limitSoc:          80,
+			hasVehicle:        true,
+			expectedThreshold: 0,
+		},
+		{
+			name:              "returns 0 when plan is active (MinPV)",
+			mode:              api.ModeMinPV,
+			planActive:        true,
+			status:            api.StatusB,
+			limitSoc:          80,
+			hasVehicle:        true,
+			expectedThreshold: 0,
+		},
+		{
+			name:              "returns 0 when plan is active (Now)",
+			mode:              api.ModeNow,
+			planActive:        true,
+			status:            api.StatusB,
+			limitSoc:          80,
+			hasVehicle:        true,
+			expectedThreshold: 0,
+		},
+		{
+			name:              "returns 0 when currently charging",
+			mode:              api.ModeMinPV,
+			planActive:        false,
+			status:            api.StatusC,
+			limitSoc:          80,
+			hasVehicle:        true,
+			expectedThreshold: 0,
+		},
+		{
+			name:              "returns 0 when limitSoc is 100",
+			mode:              api.ModeMinPV,
+			planActive:        false,
+			status:            api.StatusB,
+			limitSoc:          100,
+			hasVehicle:        true,
+			expectedThreshold: 0,
+		},
+		{
+			name:              "returns 0 when limitSoc is 0 (falls back to 100)",
+			mode:              api.ModeMinPV,
+			planActive:        false,
+			status:            api.StatusB,
+			limitSoc:          0,
+			hasVehicle:        true,
+			expectedThreshold: 0,
+		},
+		{
+			name:              "returns 0 when no vehicle",
+			mode:              api.ModeMinPV,
+			planActive:        false,
+			status:            api.StatusB,
+			limitSoc:          80,
+			hasVehicle:        false,
+			expectedThreshold: 0,
+		},
+		{
+			name:              "allows threshold with valid conditions (MinPV mode)",
+			mode:              api.ModeMinPV,
+			planActive:        false,
+			status:            api.StatusB,
+			limitSoc:          80,
+			hasVehicle:        true,
+			expectedThreshold: 0, // will be 0 because vehicle.Settings returns 0 with no threshold
+		},
+		{
+			name:              "allows threshold with valid conditions (Now mode)",
+			mode:              api.ModeNow,
+			planActive:        false,
+			status:            api.StatusB,
+			limitSoc:          80,
+			hasVehicle:        true,
+			expectedThreshold: 0, // will be 0 because vehicle.Settings returns 0 with no threshold
+		},
+	}
+
+	for _, tc := range tc {
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+
+			lp := NewLoadpoint(util.NewLogger("foo"), nil)
+			lp.mode = tc.mode
+			lp.planActive = tc.planActive
+			lp.status = tc.status
+			lp.limitSoc = tc.limitSoc
+
+			if tc.hasVehicle {
+				vehicle := api.NewMockVehicle(ctrl)
+				vehicle.EXPECT().OnIdentified().Return(api.ActionConfig{}).AnyTimes()
+				lp.vehicle = vehicle
+			}
+
+			result := lp.effectiveResumeThreshold()
+			assert.Equal(t, tc.expectedThreshold, result)
+		})
+	}
+}
+
 func TestEffectiveMinMaxCurrent(t *testing.T) {
 	tc := []struct {
 		chargerMin, chargerMax     float64

@@ -173,9 +173,6 @@ export default defineComponent({
 		minSoc() {
 			return this.vehicle?.minSoc || 0;
 		},
-		vehicleSocMode() {
-			return this.mode;
-		},
 		vehicleSocProps() {
 			return this.collectProps(Soc);
 		},

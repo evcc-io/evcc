@@ -106,7 +106,7 @@ export default defineComponent({
 		minSoc: { type: Number, default: 0 },
 		effectivePlanSoc: { type: Number, default: 0 },
 		effectiveLimitSoc: Number,
-		effectiveResumeThreshold: Number,
+		effectiveResumeThreshold: { type: Number, default: 0 },
 		limitEnergy: { type: Number, default: 0 },
 		planEnergy: { type: Number, default: 0 },
 		chargedEnergy: { type: Number, default: 0 },
@@ -154,7 +154,7 @@ export default defineComponent({
 		},
 		resumeThresholdActive() {
 			return (
-				(this.effectiveResumeThreshold ?? 0) > 0 && this.resumeThresholdPosition !== null
+				this.effectiveResumeThreshold > 0 && this.resumeThresholdPosition !== null
 			);
 		},
 		planMarkerPosition(): number {
@@ -231,10 +231,9 @@ export default defineComponent({
 			return Number(this.selectedLimitSoc || this.effectiveLimitSoc);
 		},
 		resumeThresholdPosition() {
-			const threshold = this.effectiveResumeThreshold ?? 0;
 			const limit = this.effectiveLimitSoc ?? 0;
-			if (threshold > 0 && limit > 0) {
-				return Math.max(0, limit - threshold);
+			if (this.effectiveResumeThreshold > 0 && limit > 0) {
+				return Math.max(0, limit - this.effectiveResumeThreshold);
 			}
 			return null;
 		},
