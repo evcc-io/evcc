@@ -25,6 +25,10 @@ test.beforeEach(async ({ page }) => {
   await page.getByTestId("vehicle0").getByLabel("SoC").fill("80");
   await page.getByTestId("loadpoint0").getByText("B (connected)").click();
   await simulatorApply(page);
+
+  await page.goto("/");
+  await setResumeThreshold(page, "5%");
+  await setLimitSoc(page, "50%");
 });
 
 test.afterEach(async () => {
@@ -57,23 +61,13 @@ const expectMarkerNotVisible = async (page: any) => {
 
 test.describe("resumeThreshold marker", async () => {
   test("visible when resumeThreshold is set", async ({ page }) => {
-    await page.goto("/");
-
     // Set to Fast mode so resumeThreshold marker is visible
     await page.getByTestId("mode").first().getByRole("button", { name: "Fast" }).click();
-
-    await setResumeThreshold(page, "5%");
-    await setLimitSoc(page, "50%");
 
     await expectMarkerVisible(page);
   });
 
   test("not visible in Off mode", async ({ page }) => {
-    await page.goto("/");
-
-    await setResumeThreshold(page, "5%");
-    await setLimitSoc(page, "50%");
-
     // Set to Off mode
     await page.getByTestId("mode").first().getByRole("button", { name: "Off" }).click();
 
@@ -81,11 +75,6 @@ test.describe("resumeThreshold marker", async () => {
   });
 
   test("not visible in Solar mode", async ({ page }) => {
-    await page.goto("/");
-
-    await setResumeThreshold(page, "5%");
-    await setLimitSoc(page, "50%");
-
     // Set to Solar mode
     await page.getByTestId("mode").first().getByRole("button", { name: "Solar", exact: true }).click();
 
@@ -93,24 +82,17 @@ test.describe("resumeThreshold marker", async () => {
   });
 
   test("visible in Min+Solar mode", async ({ page }) => {
-    await page.goto("/");
-
     // Set to Min+Solar mode
     await page.getByTestId("mode").first().getByRole("button", { name: "Min+Solar" }).click();
-
-    await setResumeThreshold(page, "5%");
-    await setLimitSoc(page, "50%");
 
     await expectMarkerVisible(page);
   });
 
   test("not visible when charging and limit > vehicle soc", async ({ page }) => {
-    await page.goto("/");
-
     // Set to Fast mode
     await page.getByTestId("mode").first().getByRole("button", { name: "Fast" }).click();
 
-    await setResumeThreshold(page, "5%");
+    // Override limit to 90% (higher than vehicle soc of 80%)
     await setLimitSoc(page, "90%");
 
     // Set status to charging (C) in simulator
@@ -119,6 +101,32 @@ test.describe("resumeThreshold marker", async () => {
     await simulatorApply(page);
 
     await page.goto("/");
+    await expectMarkerNotVisible(page);
+  });
+
+  test("not visible when active plan is set", async ({ page }) => {
+    // Set to Fast mode
+    await page.getByTestId("mode").first().getByRole("button", { name: "Fast" }).click();
+
+    // Create and activate a plan with target time in 5 minutes
+    await page.getByTestId("charging-plan").getByRole("button").click();
+    const modal = page.getByTestId("charging-plan-modal");
+    
+    // Set date to today
+    await modal.getByTestId("static-plan-day").selectOption({ index: 0 });
+    
+    // Set target time to now + 5 minutes
+    const now = new Date();
+    now.setMinutes(now.getMinutes() + 5);
+    const hours = now.getHours().toString().padStart(2, "0");
+    const minutes = now.getMinutes().toString().padStart(2, "0");
+    await modal.getByTestId("static-plan-time").fill(`${hours}:${minutes}`);
+    
+    // Activate the plan
+    await modal.getByTestId("static-plan-active").click();
+    await modal.getByRole("button", { name: "Close" }).click();
+
+    // Marker should not be visible when a plan is active
     await expectMarkerNotVisible(page);
   });
 });
