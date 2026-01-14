@@ -8,43 +8,104 @@ import (
 )
 
 type meter struct {
-	Meter     int       `json:"meter" gorm:"column:meter;uniqueIndex:meter_ts"`
-	Timestamp time.Time `json:"ts" gorm:"column:ts;uniqueIndex:meter_ts"`
-	Value     float64   `json:"val" gorm:"column:val"`
+	Meter     int       `json:"meter" gorm:"column:meter;uniqueIndex:meters_meter_ts"`
+	Timestamp time.Time `json:"ts" gorm:"column:ts;uniqueIndex:meters_meter_ts"`
+	Entity    entity    `json:"-" gorm:"foreignkey:Meter;references:Id"`
+	Import    float64   `json:"import" gorm:"column:import"`
+	Export    float64   `json:"export" gorm:"column:export"`
+}
+
+type entity struct {
+	Id    int    `gorm:"column:id;primarykey"`
+	Group string `gorm:"column:group;uniqueIndex:entities_group_name"`
+	Name  string `gorm:"column:name;uniqueIndex:entities_group_name"`
 }
 
 var ErrIncomplete = errors.New("meter profile incomplete")
 
-func init() {
-	db.Register(func() error {
-		return SetupSchema()
-	})
-}
-
 // SetupSchema is used for testing
 func SetupSchema() error {
+	m := db.Instance.Migrator()
+
+	// entites: create entity first to make sure foreign keys for existing data work
+	hasTable := m.HasTable(new(entity))
+	if err := db.Instance.AutoMigrate(new(entity)); err != nil {
+		return err
+	}
+
+	// entites: add entity id 1
+	if hasTable {
+		var res entity
+		if err := db.Instance.Where(&entity{Id: 1, Name: Home}).FirstOrCreate(&res).Error; err != nil {
+			return err
+		}
+
+		if res.Group == "" {
+			res.Group = Virtual
+			if err := db.Instance.Save(&res).Error; err != nil {
+				return err
+			}
+		}
+	}
+
+	// drop obsolete indexes
+	for _, idx := range []struct {
+		name string
+		obj  any
+	}{
+		{"name_idx", new(entity)},
+		{"group_name", new(entity)},
+		{"meter_ts", new(meter)},
+	} {
+		if m.HasIndex(idx.obj, idx.name) {
+			if err := m.DropIndex(idx.obj, idx.name); err != nil {
+				return err
+			}
+		}
+	}
+
+	// meter: split energy direction
+	if old := "val"; m.HasColumn(new(meter), old) {
+		if err := m.RenameColumn(new(meter), old, "import"); err != nil {
+			return err
+		}
+	}
+
+	// meter: split energy direction #2
+	if old := "pos"; m.HasColumn(new(meter), old) {
+		if err := m.RenameColumn(new(meter), old, "import"); err != nil {
+			return err
+		}
+	}
+	if old := "neg"; m.HasColumn(new(meter), old) {
+		if err := m.RenameColumn(new(meter), old, "export"); err != nil {
+			return err
+		}
+	}
+
 	return db.Instance.AutoMigrate(new(meter))
 }
 
-// Persist stores 15min consumption in Wh
-func Persist(ts time.Time, value float64) error {
-	return db.Instance.Create(meter{
-		Meter:     1,
+// persist stores 15min consumption in Wh
+func persist(entity entity, ts time.Time, imp, exp float64) error {
+	return db.Instance.Create(&meter{
+		Entity:    entity,
 		Timestamp: ts.Truncate(15 * time.Minute),
-		Value:     value,
+		Import:    imp,
+		Export:    exp,
 	}).Error
 }
 
-// Profile returns a 15min average meter profile in Wh.
-// Profile is sorted by timestamp starting at 00:00. It is guaranteed to contain 96 15min values.
-func Profile(from time.Time) (*[96]float64, error) {
+// importProfile returns a 15min average meter profile in Wh. The profile
+// is sorted by timestamp starting at 00:00. It is guaranteed to contain 96 15min values.
+func importProfile(entity entity, from time.Time) (*[96]float64, error) {
 	db, err := db.Instance.DB()
 	if err != nil {
 		return nil, err
 	}
 
 	// Use 'localtime' in strftime to fix https://github.com/evcc-io/evcc/discussions/23759
-	rows, err := db.Query(`SELECT min(ts) AS ts, avg(val) AS val
+	rows, err := db.Query(`SELECT min(ts) AS ts, avg(import) AS import
 		FROM meters
 		WHERE meter = ? AND ts >= ?
 		GROUP BY strftime("%H:%M", ts, 'localtime')
