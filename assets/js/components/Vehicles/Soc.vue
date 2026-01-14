@@ -153,9 +153,7 @@ export default defineComponent({
 			return this.vehicleLimitSoc > 0 && this.vehicleLimitSoc > this.vehicleSoc;
 		},
 		resumeThresholdActive() {
-			return (
-				this.effectiveResumeThreshold > 0 && this.resumeThresholdPosition !== null
-			);
+			return this.effectiveResumeThreshold > 0 && this.resumeThresholdPosition !== null;
 		},
 		planMarkerPosition(): number {
 			if (this.socBasedPlanning) {

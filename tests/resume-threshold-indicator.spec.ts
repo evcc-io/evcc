@@ -76,7 +76,11 @@ test.describe("resumeThreshold marker", async () => {
 
   test("not visible in Solar mode", async ({ page }) => {
     // Set to Solar mode
-    await page.getByTestId("mode").first().getByRole("button", { name: "Solar", exact: true }).click();
+    await page
+      .getByTestId("mode")
+      .first()
+      .getByRole("button", { name: "Solar", exact: true })
+      .click();
 
     await expectMarkerNotVisible(page);
   });
@@ -111,17 +115,17 @@ test.describe("resumeThreshold marker", async () => {
     // Create and activate a plan with target time in 5 minutes
     await page.getByTestId("charging-plan").getByRole("button").click();
     const modal = page.getByTestId("charging-plan-modal");
-    
+
     // Set date to today
     await modal.getByTestId("static-plan-day").selectOption({ index: 0 });
-    
+
     // Set target time to now + 5 minutes
     const now = new Date();
     now.setMinutes(now.getMinutes() + 5);
     const hours = now.getHours().toString().padStart(2, "0");
     const minutes = now.getMinutes().toString().padStart(2, "0");
     await modal.getByTestId("static-plan-time").fill(`${hours}:${minutes}`);
-    
+
     // Activate the plan
     await modal.getByTestId("static-plan-active").click();
     await modal.getByRole("button", { name: "Close" }).click();
@@ -129,7 +133,6 @@ test.describe("resumeThreshold marker", async () => {
     // Marker should not be visible when a plan is active
     await expectMarkerNotVisible(page);
   });
-
 
   test("not visible when resumeThreshold is set to ---", async ({ page }) => {
     // Set to Fast mode
