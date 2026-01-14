@@ -103,7 +103,30 @@ test.describe("limitSoc", async () => {
   });
 });
 
-test.describe("minSoc and limitSoc", async () => {
+test.describe("resumeThreshold", async () => {
+  test("apply and restart", async ({ page }) => {
+    await page.goto("/");
+
+    await page.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
+    const modal = page.getByTestId("charging-plan-modal");
+    await expectModalVisible(modal);
+    await modal.getByRole("link", { name: "Arrival" }).click();
+
+    await modal.getByRole("combobox", { name: "Resume threshold" }).selectOption("10%");
+    await modal.getByRole("button", { name: "Close" }).click();
+    await expectModalHidden(modal);
+    await page.waitForLoadState("networkidle");
+
+    await restart(simulatorConfig());
+    await page.reload();
+
+    await page.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
+    await page.getByRole("link", { name: "Arrival" }).click();
+    await expect(page.getByRole("combobox", { name: "Resume threshold" })).toHaveValue("10");
+  });
+});
+
+test.describe("minSoc and limitSoc and resumeThreshold", async () => {
   test("disabled for offline vehicles", async ({ page }) => {
     await page.goto("/");
 
@@ -114,6 +137,7 @@ test.describe("minSoc and limitSoc", async () => {
     await page.getByRole("link", { name: "Arrival" }).click();
     await expect(page.getByRole("combobox", { name: "Min. charge %" })).toBeDisabled();
     await expect(page.getByRole("combobox", { name: "Default limit" })).toBeDisabled();
+    await expect(page.getByRole("combobox", { name: "Resume threshold" })).toBeDisabled();
   });
 
   test("disabled for guest vehicles", async ({ page }) => {
@@ -126,5 +150,6 @@ test.describe("minSoc and limitSoc", async () => {
     await page.getByRole("link", { name: "Arrival" }).click();
     await expect(page.getByRole("combobox", { name: "Min. charge %" })).toBeDisabled();
     await expect(page.getByRole("combobox", { name: "Default limit" })).toBeDisabled();
+    await expect(page.getByRole("combobox", { name: "Resume threshold" })).toBeDisabled();
   });
 });
