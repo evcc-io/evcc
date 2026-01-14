@@ -448,7 +448,6 @@ export default defineComponent({
 	transition-property: left, width;
 	transition-timing-function: linear;
 	transition-duration: var(--evcc-transition-fast);
-	z-index: 1;
 }
 .plan-marker {
 	position: absolute;

@@ -226,6 +226,11 @@ func (lp *Loadpoint) effectiveResumeThreshold() int {
 		return 0
 	}
 
+	// Don't apply when currently charging
+	if lp.charging() {
+		return 0
+	}
+
 	// Check if limit is configured
 	limit := lp.effectiveLimitSoc()
 	if limit == 0 || limit >= 100 {
