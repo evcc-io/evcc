@@ -233,7 +233,7 @@ func (lp *Loadpoint) effectiveResumeThreshold() int {
 
 	// Check if limit is configured
 	limit := lp.effectiveLimitSoc()
-	if limit == 0 || limit >= 100 {
+	if limit == 0 {
 		return 0
 	}
 
