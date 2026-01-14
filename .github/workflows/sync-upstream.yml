@@ -1,0 +1,94 @@
+name: Sync Upstream
+
+on:
+  schedule:
+    - cron: "0 4 * * *" # Daily at 4 AM UTC
+  workflow_dispatch:
+
+jobs:
+  sync:
+    name: Sync from upstream
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Add upstream remote
+        run: git remote add upstream https://github.com/evcc-io/evcc.git
+
+      - name: Fetch upstream
+        run: git fetch upstream master
+
+      - name: Check for new commits
+        id: check
+        run: |
+          UPSTREAM_COMMITS=$(git rev-list HEAD..upstream/master --count)
+          echo "commits=$UPSTREAM_COMMITS" >> $GITHUB_OUTPUT
+          echo "Found $UPSTREAM_COMMITS new commits in upstream"
+
+      - name: Attempt merge
+        id: merge
+        if: steps.check.outputs.commits != '0'
+        run: |
+          if git merge upstream/master --no-edit; then
+            echo "status=success" >> $GITHUB_OUTPUT
+          else
+            echo "status=conflict" >> $GITHUB_OUTPUT
+            git merge --abort
+          fi
+
+      - name: Push changes
+        if: steps.merge.outputs.status == 'success'
+        run: git push origin master
+
+      - name: Create issue on conflict
+        if: steps.merge.outputs.status == 'conflict'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = '⚠️ Upstream merge conflict';
+            const body = `Automatic merge from upstream failed due to conflicts.
+
+            **Manual resolution required:**
+            \`\`\`sh
+            git fetch origin
+            git checkout master
+            git remote add upstream https://github.com/evcc-io/evcc.git || true
+            git fetch upstream master
+            git merge upstream/master
+            # Resolve conflicts (likely in util/sponsor/auth.go)
+            git add -A
+            git commit
+            git push
+            \`\`\`
+
+            [Compare changes](https://github.com/evcc-io/evcc/compare/${{ github.sha }}...master)`;
+
+            // Check if issue already exists
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'upstream-conflict'
+            });
+
+            if (issues.data.length === 0) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: title,
+                body: body,
+                labels: ['upstream-conflict']
+              });
+            }
