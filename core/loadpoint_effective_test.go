@@ -150,6 +150,26 @@ func TestEffectiveResumeThreshold(t *testing.T) {
 			vehicleResumeThreshold: 20,
 			expectedThreshold:      20,
 		},
+		{
+			name:                   "clamps threshold when equal to limit",
+			mode:                   api.ModeMinPV,
+			planActive:             false,
+			status:                 api.StatusB,
+			limitSoc:               10,
+			hasVehicle:             true,
+			vehicleResumeThreshold: 10,
+			expectedThreshold:      9, // clamped to limit - 1
+		},
+		{
+			name:                   "clamps threshold when greater than limit",
+			mode:                   api.ModeMinPV,
+			planActive:             false,
+			status:                 api.StatusB,
+			limitSoc:               10,
+			hasVehicle:             true,
+			vehicleResumeThreshold: 20,
+			expectedThreshold:      9, // clamped to limit - 1
+		},
 	}
 
 	for i, tc := range tc {

@@ -1,121 +1,155 @@
 package core
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/config"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
 
 func TestWithinResumeThreshold(t *testing.T) {
 	tests := []struct {
-		name           string
-		mode           api.ChargeMode
-		status         api.ChargeStatus
-		limitSoc       int
-		vehicleSoc     float64
-		hasVehicle     bool
-		expectedWithin bool
-		note           string
+		name                   string
+		vehicleResumeThreshold int
+		limitSoc               int
+		vehicleSoc             float64
+		expectedWithin         bool
 	}{
 		{
-			name:           "no vehicle - returns false",
-			mode:           api.ModeMinPV,
-			status:         api.StatusB,
-			limitSoc:       80,
-			vehicleSoc:     75,
-			hasVehicle:     false,
-			expectedWithin: false,
-			note:           "effectiveResumeThreshold returns 0 when no vehicle",
+			name:                   "threshold 0 - always returns false",
+			vehicleResumeThreshold: 0,
+			limitSoc:               80,
+			vehicleSoc:             75,
+			expectedWithin:         false,
 		},
 		{
-			name:           "mode PV - returns false",
-			mode:           api.ModePV,
-			status:         api.StatusB,
-			limitSoc:       80,
-			vehicleSoc:     76,
-			hasVehicle:     true,
-			expectedWithin: false,
-			note:           "effectiveResumeThreshold returns 0 for PV mode",
+			name:                   "below threshold range (at resume point)",
+			vehicleResumeThreshold: 10,
+			limitSoc:               80,
+			vehicleSoc:             70, // 80 - 10 = 70
+			expectedWithin:         false,
 		},
 		{
-			name:           "mode Off - returns false",
-			mode:           api.ModeOff,
-			status:         api.StatusB,
-			limitSoc:       80,
-			vehicleSoc:     76,
-			hasVehicle:     true,
-			expectedWithin: false,
-			note:           "effectiveResumeThreshold returns 0 for Off mode",
+			name:                   "just below threshold range",
+			vehicleResumeThreshold: 10,
+			limitSoc:               80,
+			vehicleSoc:             69.9,
+			expectedWithin:         false,
 		},
 		{
-			name:           "currently charging - returns false",
-			mode:           api.ModeMinPV,
-			status:         api.StatusC,
-			limitSoc:       80,
-			vehicleSoc:     76,
-			hasVehicle:     true,
-			expectedWithin: false,
-			note:           "effectiveResumeThreshold returns 0 when charging",
+			name:                   "just in threshold range",
+			vehicleResumeThreshold: 10,
+			limitSoc:               80,
+			vehicleSoc:             70.1, // > (80-10), < 80
+			expectedWithin:         true,
 		},
 		{
-			name:           "limit is 100 - returns false",
-			mode:           api.ModeMinPV,
-			status:         api.StatusB,
-			limitSoc:       100,
-			vehicleSoc:     95,
-			hasVehicle:     true,
-			expectedWithin: false,
-			note:           "effectiveResumeThreshold returns 0 when limit is 100",
+			name:                   "middle in threshold range",
+			vehicleResumeThreshold: 10,
+			limitSoc:               80,
+			vehicleSoc:             75, // > (80-10), < 80
+			expectedWithin:         true,
 		},
 		{
-			name:           "limit is 0 (default) - returns false",
-			mode:           api.ModeMinPV,
-			status:         api.StatusB,
-			limitSoc:       0,
-			vehicleSoc:     75,
-			hasVehicle:     true,
-			expectedWithin: false,
-			note:           "effectiveResumeThreshold returns 0 when limit is 0 (defaults to 100)",
+			name:                   "just below limit",
+			vehicleResumeThreshold: 10,
+			limitSoc:               80,
+			vehicleSoc:             79.9, // > (80-10), < 80
+			expectedWithin:         true,
 		},
 		{
-			name:           "threshold 0 (no settings) - returns false",
-			mode:           api.ModeMinPV,
-			status:         api.StatusB,
-			limitSoc:       80,
-			vehicleSoc:     75,
-			hasVehicle:     true,
-			expectedWithin: false,
-			note:           "effectiveResumeThreshold returns 0 when vehicle has no threshold configured",
+			name:                   "at limit - returns false",
+			vehicleResumeThreshold: 10,
+			limitSoc:               80,
+			vehicleSoc:             80,
+			expectedWithin:         false,
+		},
+		{
+			name:                   "above limit - returns false",
+			vehicleResumeThreshold: 10,
+			limitSoc:               80,
+			vehicleSoc:             85,
+			expectedWithin:         false,
+		},
+		{
+			name:                   "high limit (90%), in range",
+			vehicleResumeThreshold: 10,
+			limitSoc:               90,
+			vehicleSoc:             85, // > (90-10), < 90
+			expectedWithin:         true,
+		},
+		{
+			name:                   "high limit (90%), below threshold",
+			vehicleResumeThreshold: 10,
+			limitSoc:               90,
+			vehicleSoc:             80, // 90 - 10 = 80
+			expectedWithin:         false,
+		},
+		{
+			name:                   "low limit (60%), in threshold",
+			vehicleResumeThreshold: 10,
+			limitSoc:               60,
+			vehicleSoc:             55, // > (60-10), < 60
+			expectedWithin:         true,
+		},
+		{
+			name:                   "low limit (60%), below threshold",
+			vehicleResumeThreshold: 10,
+			limitSoc:               60,
+			vehicleSoc:             50, // 60 - 10 = 50
+			expectedWithin:         false,
+		},
+		{
+			name:                   "fractional soc values",
+			vehicleResumeThreshold: 10,
+			limitSoc:               85,
+			vehicleSoc:             82.7, // > (85-10), < 85
+			expectedWithin:         true,
+		},
+		{
+			name:                   "zero soc - outside threshold",
+			vehicleResumeThreshold: 10,
+			limitSoc:               80,
+			vehicleSoc:             0,
+			expectedWithin:         false,
 		},
 	}
 
-	for _, tc := range tests {
+	for i, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
 
-			// Create loadpoint
 			lp := NewLoadpoint(util.NewLogger("test"), nil)
-			lp.mode = tc.mode
-			lp.status = tc.status
+			lp.mode = api.ModeMinPV
+			lp.status = api.StatusB
 			lp.vehicleSoc = tc.vehicleSoc
 			lp.limitSoc = tc.limitSoc
 
-			// Set up mock vehicle - it will be wrapped by vehicle.Settings()
-			// Note: Mock vehicle without database-backed settings will return 0 for threshold
-			if tc.hasVehicle {
-				mockVehicle := api.NewMockVehicle(ctrl)
-				mockVehicle.EXPECT().OnIdentified().Return(api.ActionConfig{}).AnyTimes()
-				lp.vehicle = mockVehicle
+			mockVehicle := api.NewMockVehicle(ctrl)
+			mockVehicle.EXPECT().OnIdentified().Return(api.ActionConfig{}).AnyTimes()
+
+			// Register vehicle in config
+			vehicleName := fmt.Sprintf("testvehicle_%d", i)
+			var vehicle api.Vehicle = mockVehicle
+			dev := config.NewStaticDevice(config.Named{Name: vehicleName}, vehicle)
+			require.NoError(t, config.Vehicles().Add(dev))
+			defer config.Vehicles().Delete(vehicleName)
+
+			if tc.vehicleResumeThreshold > 0 {
+				settings.SetInt(fmt.Sprintf("vehicle.%s.resumeThreshold", vehicleName), int64(tc.vehicleResumeThreshold))
+				defer settings.SetInt(fmt.Sprintf("vehicle.%s.resumeThreshold", vehicleName), 0)
 			}
 
-			// Call the actual method
-			result := lp.withinResumeThreshold()
+			lp.vehicle = mockVehicle
 
-			assert.Equal(t, tc.expectedWithin, result, tc.note)
+			result := lp.withinResumeThreshold()
+			assert.Equal(t, tc.expectedWithin, result)
 		})
 	}
 }
