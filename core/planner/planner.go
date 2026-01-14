@@ -102,6 +102,7 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 	now := t.clock.Now().Truncate(time.Second)
 
 	latestStart := targetTime.Add(-requiredDuration)
+	originalTargetTime := targetTime
 	if latestStart.Before(now) {
 		latestStart = now
 		targetTime = latestStart.Add(requiredDuration)
@@ -127,8 +128,8 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 		return simplePlan
 	}
 
-	// consume remaining time
-	if t.clock.Until(targetTime) <= requiredDuration {
+	// consume remaining time until original plan finish time
+	if t.clock.Until(originalTargetTime) <= requiredDuration {
 		return continuousPlan(rates, latestStart, targetTime)
 	}
 
