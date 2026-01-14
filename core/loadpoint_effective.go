@@ -221,6 +221,11 @@ func (lp *Loadpoint) effectiveResumeThreshold() int {
 		return 0
 	}
 
+	// Don't apply when plan is active
+	if lp.planActive {
+		return 0
+	}
+
 	// Check if limit is configured
 	limit := lp.effectiveLimitSoc()
 	if limit == 0 || limit >= 100 {

@@ -967,7 +967,7 @@
         "label": "Default limit"
       },
       "resumeThreshold": {
-        "description": "Prevent micro-charging by starting only when SoC drops this many percent below the limit. Active in Min+PV and Fast mode only.",
+        "description": "Prevent micro-charging by starting only when SoC drops this many percent below the limit. Active in min+solar and fast mode only.",
         "label": "Resume threshold"
       },
       "maxCurrent": {
