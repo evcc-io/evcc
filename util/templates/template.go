@@ -137,7 +137,7 @@ func (t *Template) Validate() error {
 		}
 
 		// validate pattern examples against pattern
-		if p.Pattern.Regex != "" && len(p.Pattern.Examples) > 0 {
+		if p.Pattern != nil && p.Pattern.Regex != "" && len(p.Pattern.Examples) > 0 {
 			for _, example := range p.Pattern.Examples {
 				if err := validatePattern(p.Pattern.Regex, example, nil); err != nil {
 					return fmt.Errorf("param %s: pattern example %q is invalid: pattern=%q", p.Name, example, p.Pattern.Regex)
@@ -425,7 +425,7 @@ func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, m
 				}
 
 				// validate pattern if defined
-				if s != "" && p.Pattern.Regex != "" {
+				if s != "" && p.Pattern != nil && p.Pattern.Regex != "" {
 					if err := validatePattern(p.Pattern.Regex, s, p.Pattern.Examples); err != nil {
 						return nil, nil, fmt.Errorf("%s: %w", p.Name, err)
 					}

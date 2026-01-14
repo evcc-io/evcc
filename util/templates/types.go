@@ -199,7 +199,7 @@ type Param struct {
 	Type        ParamType    // string representation of the value type, "string" is default
 	Choice      []string     `json:",omitempty"` // defines a set of choices, e.g. "grid", "pv", "battery", "charge" for "usage"
 	Service     string       `json:",omitempty"` // defines a service to provide choices
-	Pattern     Pattern      `json:",omitempty"` // regex pattern and examples for input validation
+	Pattern     *Pattern     `json:",omitempty"` // regex pattern and examples for input validation
 
 	// TODO move somewhere else should not be part of the param definition
 	Baudrate int    `json:",omitempty"` // device specific default for modbus RS485 baudrate

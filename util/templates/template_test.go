@@ -145,7 +145,7 @@ func TestRequiredPerUsage(t *testing.T) {
 func TestValidatePattern(t *testing.T) {
 	tmpl := &Template{
 		TemplateDefinition: TemplateDefinition{
-			Params: []Param{{Name: "host", Pattern: Pattern{Regex: `^[^\\/\s]+(:[0-9]{1,5})?$`}}},
+			Params: []Param{{Name: "host", Pattern: &Pattern{Regex: `^[^\\/\s]+(:[0-9]{1,5})?$`}}},
 		},
 	}
 
