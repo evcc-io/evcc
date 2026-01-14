@@ -4,7 +4,7 @@
     "bufferStart": {
       "above": "ak je nad {soc}.",
       "full": "ak je {soc}.",
-      "never": "iba s dostatočným prebytkom"
+      "never": "len s dostatočným prebytkom."
     },
     "capacity": "{energy} z {total}",
     "control": "Ovládanie batérie",
@@ -25,8 +25,8 @@
   "config": {
     "aux": {
       "description": "Zariadenie ktoré upravuje svoju spotrebu na základe dostupných prebytkov (ako smart bojler). evcc očakáva, že toto zariadenie zníži svoju spotrebu ak to je potrebné.",
-      "titleAdd": "Pridať samoregulujúce ...",
-      "titleEdit": "Upraviť samoregulujúce ..."
+      "titleAdd": "Pridať samoregulačný spotrebiteľ",
+      "titleEdit": "Upraviť samoregulačný spotrebiteľ"
     },
     "battery": {
       "titleAdd": "Pridať batériu",

@@ -294,6 +294,7 @@
       "chargerTypeLabel": "Ladetyp",
       "chargingTitle": "Verhalten",
       "circuitHelp": "Lastmanagement-Zuordnung, um die Leistungs- und Stromgrenzen nicht zu überschreiten.",
+      "circuitInvalid": "Stromkreis existiert nicht",
       "circuitLabel": "Stromkreis",
       "circuitUnassigned": "nicht zugewiesen",
       "defaultModeHelp": {
@@ -370,6 +371,7 @@
       "vehicleAutoDetection": "automatische Erkennung",
       "vehicleHelpAutoDetection": "Wählt automatisch das plausibelste Fahrzeug aus. Manuelle Übersteuerung möglich.",
       "vehicleHelpDefault": "Nimmt immer an, dass dieses Fahrzeug hier lädt. Auto-Erkennung deaktiviert. Manuelle Übersteuerung möglich.",
+      "vehicleInvalid": "Fahrzeug existiert nicht",
       "vehicleLabel": "Standard-Fahrzeug",
       "vehiclesTitle": "Fahrzeuge"
     },

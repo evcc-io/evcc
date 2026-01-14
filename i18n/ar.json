@@ -1,4 +1,16 @@
 {
+  "authProviders": {
+    "authCode": "رمز المصادقة",
+    "authCodeHelp": "انسخ هذا الكود واستخدمه في الخطوة التالية. صالح لمدة {duration}.",
+    "authorizationFailed": "فشل التفويض",
+    "authorizationRequired": "التفويض مطلوب",
+    "authorizationSuccessful": "تم الترخيص بنجاح",
+    "buttonConnect": "إتصل بـ {provider}",
+    "buttonDisconnect": "فصل الاتصال",
+    "confirmLogout": "هل أنت متأكد أنك تريد فصل الاتصال بـ {title}؟",
+    "connect": "اتصال",
+    "disconnect": "قطع الاتصال"
+  },
   "batterySettings": {
     "batteryLevel": "مستوى البطارية",
     "bufferStart": {
