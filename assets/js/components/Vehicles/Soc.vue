@@ -31,7 +31,10 @@
 			<div
 				v-show="resumeThresholdPauseZoneVisible"
 				class="resume-threshold-pause-zone progressColor bg-muted progress-bar progress-bar-striped"
-				:style="{ left: `${resumeThresholdPosition}%`, width: `${resumeThresholdPauseZoneWidth}%` }"
+				:style="{
+					left: `${resumeThresholdPosition}%`,
+					width: `${resumeThresholdPauseZoneWidth}%`,
+				}"
 			/>
 			<div
 				v-show="resumeThresholdPosition !== null"
@@ -150,7 +153,9 @@ export default defineComponent({
 			return this.vehicleLimitSoc > 0 && this.vehicleLimitSoc > this.vehicleSoc;
 		},
 		resumeThresholdActive() {
-			return this.effectiveResumeThreshold > 0 && this.resumeThresholdPosition !== null;
+			return (
+				(this.effectiveResumeThreshold ?? 0) > 0 && this.resumeThresholdPosition !== null
+			);
 		},
 		planMarkerPosition(): number {
 			if (this.socBasedPlanning) {
@@ -226,18 +231,25 @@ export default defineComponent({
 			return Number(this.selectedLimitSoc || this.effectiveLimitSoc);
 		},
 		resumeThresholdPosition() {
-			if (this.effectiveResumeThreshold > 0 && this.effectiveLimitSoc) {
-				return Math.max(0, this.effectiveLimitSoc - this.effectiveResumeThreshold);
+			const threshold = this.effectiveResumeThreshold ?? 0;
+			const limit = this.effectiveLimitSoc ?? 0;
+			if (threshold > 0 && limit > 0) {
+				return Math.max(0, limit - threshold);
 			}
 			return null;
 		},
 		resumeThresholdPauseZoneVisible() {
-			return this.resumeThresholdPosition !== null && 
-			       this.vehicleSoc > this.resumeThresholdPosition &&
-			       this.resumeThresholdActive;
+			return (
+				this.resumeThresholdPosition !== null &&
+				this.vehicleSoc > this.resumeThresholdPosition &&
+				this.resumeThresholdActive
+			);
 		},
 		resumeThresholdPauseZoneWidth() {
-			if (this.resumeThresholdPosition !== null && this.vehicleSoc > this.resumeThresholdPosition) {
+			if (
+				this.resumeThresholdPosition !== null &&
+				this.vehicleSoc > this.resumeThresholdPosition
+			) {
 				return this.vehicleSoc - this.resumeThresholdPosition;
 			}
 			return 0;
@@ -309,7 +321,9 @@ export default defineComponent({
 				return;
 			}
 			if (!this.resumeThresholdTooltip) {
-				this.resumeThresholdTooltip = new Tooltip(this.$refs["resumeThreshold"] as HTMLElement);
+				this.resumeThresholdTooltip = new Tooltip(
+					this.$refs["resumeThreshold"] as HTMLElement
+				);
 			}
 			const value = this.fmtPercentage(this.resumeThresholdPosition);
 			const content = `${this.$t(`main.vehicleStatus.resumeThreshold`)}: ${value}`;

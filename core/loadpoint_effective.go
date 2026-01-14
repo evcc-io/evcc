@@ -217,7 +217,7 @@ func (lp *Loadpoint) EffectiveResumeThreshold() int {
 // effectiveResumeThreshold returns the effective resume threshold
 func (lp *Loadpoint) effectiveResumeThreshold() int {
 	// Only return threshold for minpv and now modes
-	if lp.GetMode() != api.ModeMinPV && lp.GetMode() != api.ModeNow {
+	if lp.mode != api.ModeMinPV && lp.mode != api.ModeNow {
 		return 0
 	}
 
@@ -227,7 +227,7 @@ func (lp *Loadpoint) effectiveResumeThreshold() int {
 	}
 
 	// Don't apply when currently charging
-	if lp.charging() {
+	if lp.status == api.StatusC {
 		return 0
 	}
 

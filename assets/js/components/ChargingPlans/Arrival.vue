@@ -64,7 +64,11 @@
 					:disabled="arrivalDisabled"
 					@change="changeResumeThreshold"
 				>
-					<option v-for="threshold in resumeThresholdOptions" :key="threshold" :value="threshold">
+					<option
+						v-for="threshold in resumeThresholdOptions"
+						:key="threshold"
+						:value="threshold"
+					>
 						{{ threshold === 0 ? "---" : threshold + "%" }}
 					</option>
 				</select>
@@ -103,8 +107,8 @@ export default defineComponent({
 	},
 	emits: ["minsoc-updated", "limitsoc-updated", "resumethreshold-updated"],
 	data() {
-		return { 
-			selectedMinSoc: this.minSoc, 
+		return {
+			selectedMinSoc: this.minSoc,
 			selectedLimitSoc: this.limitSoc,
 			selectedResumeThreshold: this.resumeThreshold,
 		};

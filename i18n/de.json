@@ -966,10 +966,6 @@
         "description": "Dieses Ladelimit wird verwendet, wenn das Fahrzeug angeschlossen wird.",
         "label": "Standard Ladelimit"
       },
-      "resumeThreshold": {
-        "description": "Verhindert Mikro-Ladungen, indem erst bei Erreichen dieser Differenz zum Limit erneut geladen wird. Nur aktiv im Min+PV und Schnell Modus.",
-        "label": "Ladewiederaufnahme-Schwelle"
-      },
       "maxCurrent": {
         "label": "Max. Ladestrom"
       },
@@ -989,6 +985,10 @@
         "phases_1_hint": "({min} bis {max})",
         "phases_3": "3-phasig",
         "phases_3_hint": "({min} bis {max})"
+      },
+      "resumeThreshold": {
+        "description": "Verhindert Mikro-Ladungen, indem erst bei Erreichen dieser Differenz zum Limit erneut geladen wird. Nur aktiv im Min+PV und Schnell Modus.",
+        "label": "Ladewiederaufnahme-Schwelle"
       },
       "smartCostCheap": "günstige Netzladung",
       "smartCostClean": "Grünes Netzladen",

@@ -966,10 +966,6 @@
         "description": "Charging limit that is used when this vehicle is connected.",
         "label": "Default limit"
       },
-      "resumeThreshold": {
-        "description": "Prevent micro-charging by starting only when SoC drops this many percent below the limit. Active in min+solar and fast mode only.",
-        "label": "Resume threshold"
-      },
       "maxCurrent": {
         "label": "Max. Current"
       },
@@ -989,6 +985,10 @@
         "phases_1_hint": "({min} to {max})",
         "phases_3": "3 phase",
         "phases_3_hint": "({min} to {max})"
+      },
+      "resumeThreshold": {
+        "description": "Prevent micro-charging by starting only when SoC drops this many percent below the limit. Active in min+solar and fast mode only.",
+        "label": "Resume threshold"
       },
       "smartCostCheap": "Cheap Grid Charging",
       "smartCostClean": "Clean Grid Charging",
