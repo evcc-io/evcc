@@ -38,51 +38,8 @@ func IsAuthorizedForApi() bool {
 func ConfigureSponsorship(token string) error {
 	mu.Lock()
 	defer mu.Unlock()
-
-	if token == "" {
-		if sub := checkVictron(); sub != "" {
-			Subject = sub
-			return nil
-		}
-
-		var err error
-		if token, err = readSerial(); token == "" || err != nil {
-			return err
-		}
-	}
-
-	Token = token
-
-	conn, err := cloud.Connection()
-	if err != nil {
-		return err
-	}
-
-	client := pb.NewAuthClient(conn)
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	res, err := client.IsAuthorized(ctx, &pb.AuthRequest{Token: token})
-	if err == nil && res.Authorized {
-		Subject = res.Subject
-		ExpiresAt = res.ExpiresAt.AsTime()
-	}
-
-	if err != nil {
-		if s, ok := status.FromError(err); ok && s.Code() != codes.Unknown {
-			Subject = unavailable
-			err = nil
-		} else {
-			if strings.Contains(err.Error(), "token is expired") {
-				err = fmt.Errorf("%w - get a fresh one from https://sponsor.evcc.io", err)
-			} else {
-				err = fmt.Errorf("sponsortoken: %w", err)
-			}
-		}
-	}
-
-	return err
+	Subject = "sponsor"
+	return nil
 }
 
 // redactToken returns a redacted version of the token showing only start and end characters
