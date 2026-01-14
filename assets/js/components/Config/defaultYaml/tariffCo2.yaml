@@ -1,0 +1,28 @@
+## CO₂ intensity forecast
+
+forecast: # hourly CO₂ intensity forecast (g/kWh)
+  source: js
+  script: |
+    var rates = [];
+    var now = new Date();
+    for (var i = 0; i < 48; i++) {
+      var start = new Date(now.getTime() + i * 3600000);
+      rates.push({
+        start: start.toISOString(),
+        end: new Date(start.getTime() + 3600000).toISOString(),
+        value: 350 // g/kWh
+      });
+    }
+    JSON.stringify(rates);
+
+## HTTP example (uncomment to use)
+
+#forecast: # hourly CO₂ intensity forecast (g/kWh)
+#  source: http
+#  uri: https://example.com/api/co2
+#  jq: |
+#    map({
+#      "start": .start,
+#      "end": .end,
+#      "value": .co2_intensity
+#    }) | tostring

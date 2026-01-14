@@ -113,11 +113,17 @@ export default {
 					return `${this.fmtNumber(value, 0)} km`;
 				case "chargeStatus":
 					return value ? this.$t(`config.deviceValue.chargeStatus${value}`) : "-";
+				case "price":
 				case "gridPrice":
 				case "feedinPrice":
 					return this.fmtPricePerKWh(value, options.currency, true);
 				case "co2":
 					return this.fmtCo2Short(value);
+				case "forecastUntil":
+					return this.fmtDurationLong(
+						(new Date(value).getTime() - Date.now()) / 1000,
+						"short"
+					);
 				case "powerRange":
 					return `${this.fmtW(value[0])} / ${this.fmtW(value[1])}`;
 				case "currentRange":

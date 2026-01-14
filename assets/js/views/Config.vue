@@ -96,7 +96,7 @@
 						@click="newMeter('grid')"
 					/>
 					<DeviceCard
-						:title="$t('config.tariffs.title')"
+						:title="$t('config.tariff.title')"
 						editable
 						:unconfigured="isUnconfigured(tariffTags)"
 						:error="hasClassError('tariff')"
@@ -160,6 +160,61 @@
 					<NewDeviceButton
 						:title="$t('config.main.addAdditional')"
 						@click="newAdditionalMeter"
+					/>
+				</div>
+
+				<h2 class="my-4 mt-5">{{ $t("config.tariff.title") }}</h2>
+				<div class="p-0 config-list">
+					<TariffCard
+						v-if="gridTariff"
+						:tariff="gridTariff"
+						tariff-type="grid"
+						:has-error="hasDeviceError('tariff', gridTariff.name)"
+						:tags="deviceTags('tariff', gridTariff.name)"
+						@edit="editTariff('grid', gridTariff.id)"
+					/>
+					<TariffCard
+						v-if="feedinTariff"
+						:tariff="feedinTariff"
+						tariff-type="feedin"
+						:has-error="hasDeviceError('tariff', feedinTariff.name)"
+						:tags="deviceTags('tariff', feedinTariff.name)"
+						@edit="editTariff('feedin', feedinTariff.id)"
+					/>
+					<TariffCard
+						v-if="co2Tariff"
+						:tariff="co2Tariff"
+						tariff-type="co2"
+						:has-error="hasDeviceError('tariff', co2Tariff.name)"
+						:tags="deviceTags('tariff', co2Tariff.name)"
+						@edit="editTariff('co2', co2Tariff.id)"
+					/>
+					<TariffCard
+						v-if="plannerTariff"
+						:tariff="plannerTariff"
+						tariff-type="planner"
+						:has-error="hasDeviceError('tariff', plannerTariff.name)"
+						:tags="deviceTags('tariff', plannerTariff.name)"
+						@edit="editTariff('planner', plannerTariff.id)"
+					/>
+					<TariffCard
+						v-for="tariff in solarTariffs"
+						:key="tariff.name"
+						:tariff="tariff"
+						tariff-type="solar"
+						:has-error="hasDeviceError('tariff', tariff.name)"
+						:tags="deviceTags('tariff', tariff.name)"
+						@edit="editTariff('solar', tariff.id)"
+					/>
+					<NewDeviceButton
+						v-if="!gridTariff || !feedinTariff"
+						:title="$t('config.tariff.addTariff')"
+						@click="newTariff(null, ['grid', 'feedin'])"
+					/>
+					<NewDeviceButton
+						v-if="!co2Tariff || !plannerTariff || solarTariffs.length === 0"
+						:title="$t('config.tariff.addForecast')"
+						@click="newTariff(null, ['co2', 'solar', 'planner'])"
 					/>
 				</div>
 
@@ -379,6 +434,14 @@
 				<ShmModal @changed="loadDirty" />
 				<MessagingModal @changed="yamlChanged" />
 				<TariffsModal @changed="yamlChanged" />
+				<TariffModal
+					:id="selectedTariffId"
+					:type="selectedTariffType"
+					:type-choices="selectedTariffTypeChoices"
+					@added="tariffAdded"
+					@updated="tariffChanged"
+					@removed="tariffRemoved"
+				/>
 				<TelemetryModal :sponsor="sponsor" :telemetry="telemetry" />
 				<ExperimentalModal />
 				<ModbusProxyModal :is-sponsor="isSponsor" @changed="loadDirty" />
@@ -439,6 +502,8 @@ import restart, { performRestart } from "../restart";
 import SponsorModal from "../components/Config/SponsorModal.vue";
 import store from "../store";
 import TariffsModal from "../components/Config/TariffsModal.vue";
+import TariffCard from "../components/Config/TariffCard.vue";
+import TariffModal from "../components/Config/TariffModal.vue";
 import TelemetryModal from "../components/Config/TelemetryModal.vue";
 import ExperimentalModal from "../components/Config/ExperimentalModal.vue";
 import Header from "../components/Top/Header.vue";
@@ -456,6 +521,7 @@ import type {
 	Timeout,
 	VehicleOption,
 	MeterType,
+	TariffType,
 	SiteConfig,
 	DeviceType,
 	Notification,
@@ -509,6 +575,8 @@ export default defineComponent({
 		NotificationIcon,
 		SponsorModal,
 		TariffsModal,
+		TariffCard,
+		TariffModal,
 		TelemetryModal,
 		ExperimentalModal,
 		TopHeader: Header,
@@ -531,6 +599,17 @@ export default defineComponent({
 			loadpoints: [] as ConfigLoadpoint[],
 			chargers: [] as ConfigCharger[],
 			circuits: [] as ConfigCircuit[],
+			tariffs: [] as any[], // ConfigTariff[] - tariff device entities
+			tariffRefs: {
+				currency: "EUR",
+				grid: "",
+				feedin: "",
+				co2: "",
+				planner: "",
+				solar: [] as string[],
+			},
+			selectedTariffType: null as TariffType | null,
+			selectedTariffTypeChoices: [] as TariffType[],
 			selectedVehicleId: undefined as number | undefined,
 			selectedMeterId: undefined as number | undefined,
 			selectedMeterType: undefined as MeterType | undefined,
@@ -538,6 +617,7 @@ export default defineComponent({
 			selectedChargerId: undefined as number | undefined,
 			selectedLoadpointId: undefined as number | undefined,
 			selectedLoadpointType: undefined as LoadpointType | undefined,
+			selectedTariffId: undefined as number | undefined,
 			loadpointSubModalOpen: false,
 			site: {
 				grid: "",
@@ -599,6 +679,26 @@ export default defineComponent({
 		},
 		selectedMeterName() {
 			return this.getMeterById(this.selectedMeterId)?.name;
+		},
+		gridTariff() {
+			const name = this.tariffRefs?.grid;
+			return name ? this.tariffs.find((t) => t.name === name) : null;
+		},
+		feedinTariff() {
+			const name = this.tariffRefs?.feedin;
+			return name ? this.tariffs.find((t) => t.name === name) : null;
+		},
+		co2Tariff() {
+			const name = this.tariffRefs?.co2;
+			return name ? this.tariffs.find((t) => t.name === name) : null;
+		},
+		plannerTariff() {
+			const name = this.tariffRefs?.planner;
+			return name ? this.tariffs.find((t) => t.name === name) : null;
+		},
+		solarTariffs() {
+			const names = this.tariffRefs?.solar || [];
+			return names.map((name) => this.tariffs.find((t) => t.name === name)).filter(Boolean);
 		},
 		selectedChargerName() {
 			return this.getChargerById(this.selectedChargerId)?.name;
@@ -784,6 +884,8 @@ export default defineComponent({
 			await this.loadChargers();
 			await this.loadLoadpoints();
 			await this.loadCircuits();
+			await this.loadTariffs();
+			await this.loadTariffRefs();
 			await this.loadDirty();
 			this.updateValues();
 		},
@@ -817,6 +919,17 @@ export default defineComponent({
 				}
 			});
 			this.circuits = circuits;
+		},
+		async loadTariffs() {
+			this.tariffs = (await this.loadConfig("devices/tariff")) || [];
+		},
+		async loadTariffRefs() {
+			const response = await api.get("/config/tariffs", {
+				validateStatus: (code: number) => [200, 404].includes(code),
+			});
+			if (response.status === 200) {
+				this.tariffRefs = response.data;
+			}
 		},
 		async loadSite() {
 			const data = await this.loadConfig("site");
@@ -954,6 +1067,75 @@ export default defineComponent({
 			this.vehicleModal().hide();
 			this.loadVehicles();
 			this.loadDirty();
+		},
+		editTariff(tariffType: TariffType, id: number) {
+			this.selectedTariffId = id;
+			this.selectedTariffType = tariffType;
+			this.$nextTick(() => this.tariffModal().show());
+		},
+		newTariff(type: TariffType | null, typeChoices: TariffType[] = []) {
+			this.selectedTariffId = undefined;
+			this.selectedTariffType = type;
+			this.selectedTariffTypeChoices = typeChoices;
+			this.$nextTick(() => this.tariffModal().show());
+		},
+		async tariffAdded(usage: TariffType, name: string) {
+			// Auto-assign tariff based on usage type
+			if (usage === "grid") {
+				this.tariffRefs.grid = name;
+			} else if (usage === "feedin") {
+				this.tariffRefs.feedin = name;
+			} else if (usage === "co2") {
+				this.tariffRefs.co2 = name;
+			} else if (usage === "planner") {
+				this.tariffRefs.planner = name;
+			} else if (usage === "solar") {
+				if (!this.tariffRefs.solar) this.tariffRefs.solar = [];
+				this.tariffRefs.solar.push(name);
+			}
+			await this.saveTariffRefs(usage);
+			this.tariffChanged();
+		},
+		async tariffRemoved(usage: TariffType) {
+			// Clear assignment when tariff device is removed
+			if (usage === "grid") {
+				this.tariffRefs.grid = "";
+				await this.saveTariffRefs("grid");
+			} else if (usage === "feedin") {
+				this.tariffRefs.feedin = "";
+				await this.saveTariffRefs("feedin");
+			} else if (usage === "co2") {
+				this.tariffRefs.co2 = "";
+				await this.saveTariffRefs("co2");
+			} else if (usage === "planner") {
+				this.tariffRefs.planner = "";
+				await this.saveTariffRefs("planner");
+			} else if (usage === "solar") {
+				// For solar, reload assignments to get updated list
+				await this.loadTariffRefs();
+			}
+			this.tariffChanged();
+		},
+		async tariffChanged() {
+			this.selectedTariffId = undefined;
+			this.selectedTariffType = null;
+			this.tariffModal().hide();
+			await this.loadTariffs();
+			await this.loadTariffRefs();
+			this.loadDirty();
+		},
+		async saveTariffRefs(key: TariffType) {
+			const body = key
+				? { [key]: this.tariffRefs[key as keyof typeof this.tariffRefs] }
+				: this.tariffRefs;
+			await api.put("/config/tariffs", body);
+			await this.loadTariffRefs();
+			await this.loadDirty();
+		},
+		tariffModal(): Modal {
+			const elem = document.getElementById("tariffModal");
+			if (!elem) throw new Error("tariffModal element not found");
+			return Modal.getOrCreateInstance(elem);
 		},
 		siteChanged() {
 			this.loadDirty();

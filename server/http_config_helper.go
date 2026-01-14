@@ -351,6 +351,34 @@ func testInstance(instance any) map[string]testResult {
 		makeResult("identifier", val, err)
 	}
 
+	if dev, ok := instance.(api.Tariff); ok {
+		rates, err := dev.Rates()
+
+		// Determine field name based on tariff type
+		valueKey := "price"
+		switch dev.Type() {
+		case api.TariffTypeCo2:
+			valueKey = "co2"
+		case api.TariffTypeSolar:
+			valueKey = "power"
+		}
+
+		if err == nil && len(rates) > 0 {
+			// Get current rate value
+			now := time.Now()
+			if rate, err := rates.At(now); err == nil {
+				makeResult(valueKey, rate.Value, nil)
+			}
+
+			// Get forecast end time
+			rates.Sort()
+			lastRate := rates[len(rates)-1]
+			makeResult("forecastUntil", lastRate.End, nil)
+		} else {
+			makeResult(valueKey, nil, err)
+		}
+	}
+
 	return res
 }
 

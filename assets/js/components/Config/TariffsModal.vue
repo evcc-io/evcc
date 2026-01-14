@@ -1,8 +1,8 @@
 <template>
 	<YamlModal
 		id="tariffsModal"
-		:title="$t('config.tariffs.title')"
-		:description="$t('config.tariffs.description')"
+		:title="$t('config.tariff.title')"
+		:description="$t('config.tariff.description')"
 		docs="/docs/tariffs"
 		:defaultYaml="defaultYaml"
 		removeKey="tariffs"

@@ -129,6 +129,7 @@
       "enabled": "Enabled",
       "energy": "Energy",
       "feedinPrice": "Feed-in price",
+      "forecastUntil": "Forecast available",
       "gridPrice": "Grid price",
       "heaterTempLimit": "Heater limit",
       "hemsActiveLimit": "Active limit",
@@ -143,6 +144,7 @@
       "phases1p3p": "Phase switch",
       "power": "Power",
       "powerRange": "Power",
+      "price": "Price",
       "range": "Range",
       "singlePhase": "Single phase",
       "soc": "Charge",
@@ -616,9 +618,52 @@
       "restartingDescription": "Please wait…",
       "restartingMessage": "Restarting evcc."
     },
-    "tariffs": {
-      "description": "Define your energy tariffs to calculate the costs of your charging sessions.",
-      "title": "Tariffs"
+    "tariff": {
+      "addForecast": "Add forecast",
+      "addTariff": "Add tariff",
+      "co2": {
+        "titleAdd": "Add CO₂ Forecast",
+        "titleEdit": "Edit CO₂ Forecast"
+      },
+      "co2Services": "CO₂ Services",
+      "customForecast": "User defined forecast",
+      "customTariff": "User defined tariff",
+      "description": "Configure your energy tariffs and forecasts. Use device-based configuration for dynamic management or YAML for static settings.",
+      "feedin": {
+        "titleAdd": "Add Grid Export Tariff",
+        "titleEdit": "Edit Grid Export Tariff"
+      },
+      "generic": "Generic integrations",
+      "grid": {
+        "titleAdd": "Add Grid Import Tariff",
+        "titleEdit": "Edit Grid Import Tariff"
+      },
+      "option": {
+        "co2": "Add CO₂ forecast",
+        "feedin": "Add grid export tariff",
+        "grid": "Add grid import tariff",
+        "planner": "Add planner forecast",
+        "solar": "Add solar forecast"
+      },
+      "planner": {
+        "titleAdd": "Add Planner Forecast",
+        "titleEdit": "Edit Planner Forecast"
+      },
+      "services": "Services",
+      "solar": {
+        "titleAdd": "Add Solar Forecast",
+        "titleEdit": "Edit Solar Forecast"
+      },
+      "template": "Provider",
+      "title": "Tariffs & Forecasts",
+      "titleChoice": "What Do You Want To Add?",
+      "type": {
+        "co2": "CO₂",
+        "feedin": "Feed-in",
+        "grid": "Grid",
+        "planner": "Planner",
+        "solar": "Solar"
+      }
     },
     "telemetry": {
       "description": "Configure data sharing to help improve evcc. Your privacy is important to us and participation is completely optional.",

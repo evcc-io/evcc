@@ -529,9 +529,10 @@ export interface SelectOption<T> {
   disabled?: boolean;
 }
 
-export type DeviceType = "charger" | "meter" | "vehicle" | "loadpoint";
+export type DeviceType = "charger" | "meter" | "vehicle" | "loadpoint" | "tariff";
 export type MeterType = "grid" | "pv" | "battery" | "charge" | "aux" | "ext";
 export type MeterTemplateUsage = "grid" | "pv" | "battery" | "charge" | "aux";
+export type TariffType = "grid" | "feedin" | "co2" | "planner" | "solar";
 
 // see https://stackoverflow.com/a/54178819
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;

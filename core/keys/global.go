@@ -15,6 +15,7 @@ const (
 	ModbusProxy        = "modbusproxy"
 	Ocpp               = "ocpp"
 	Tariffs            = "tariffs"
+	TariffRefs         = "tariffRefs"
 	Version            = "version"
 	Config             = "config"
 	Database           = "database"

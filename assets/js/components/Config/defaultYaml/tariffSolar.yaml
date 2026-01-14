@@ -1,0 +1,28 @@
+## PV production forecast
+
+forecast: # hourly solar production forecast (W)
+  source: js
+  script: |
+    var rates = [];
+    var now = new Date();
+    for (var i = 0; i < 48; i++) {
+      var start = new Date(now.getTime() + i * 3600000);
+      rates.push({
+        start: start.toISOString(),
+        end: new Date(start.getTime() + 3600000).toISOString(),
+        value: 2000 // W
+      });
+    }
+    JSON.stringify(rates);
+
+## HTTP example (uncomment to use)
+
+#forecast: # hourly solar production forecast (W)
+#  source: http
+#  uri: https://example.com/api/solar
+#  jq: |
+#    map({
+#      "start": .start,
+#      "end": .end,
+#      "value": .power
+#    }) | tostring
