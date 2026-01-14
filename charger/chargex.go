@@ -115,7 +115,7 @@ func (wb *ChargeX) moduleReg(offset uint16) uint16 {
 // setCurrent writes the current limit in Amperes
 func (wb *ChargeX) setCurrent(current float64) error {
 	// Read module state to determine charging mode (1p or 3p)
-	b, err := wb.conn.ReadInputRegisters(wb.moduleReg(chargexRegModuleState), 1)
+	b, err := wb.conn.ReadHoldingRegisters(wb.moduleReg(chargexRegModuleState), 1)
 	if err != nil {
 		return err
 	}
@@ -136,7 +136,7 @@ func (wb *ChargeX) setCurrent(current float64) error {
 
 // Status implements the api.Charger interface
 func (wb *ChargeX) Status() (api.ChargeStatus, error) {
-	b, err := wb.conn.ReadInputRegisters(wb.moduleReg(chargexRegModuleState), 1)
+	b, err := wb.conn.ReadHoldingRegisters(wb.moduleReg(chargexRegModuleState), 1)
 	if err != nil {
 		return api.StatusNone, err
 	}
@@ -167,7 +167,7 @@ var _ api.StatusReasoner = (*ChargeX)(nil)
 
 // StatusReason implements the api.StatusReasoner interface
 func (wb *ChargeX) StatusReason() (api.Reason, error) {
-	b, err := wb.conn.ReadInputRegisters(wb.moduleReg(chargexRegModuleState), 1)
+	b, err := wb.conn.ReadHoldingRegisters(wb.moduleReg(chargexRegModuleState), 1)
 	if err != nil {
 		return api.ReasonUnknown, err
 	}
@@ -225,7 +225,7 @@ var _ api.Meter = (*ChargeX)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (wb *ChargeX) CurrentPower() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(wb.moduleReg(chargexRegModulePower), 2)
+	b, err := wb.conn.ReadHoldingRegisters(wb.moduleReg(chargexRegModulePower), 2)
 	if err != nil {
 		return 0, err
 	}
@@ -237,7 +237,7 @@ var _ api.PhaseCurrents = (*ChargeX)(nil)
 
 // Currents implements the api.PhaseCurrents interface
 func (wb *ChargeX) Currents() (float64, float64, float64, error) {
-	b, err := wb.conn.ReadInputRegisters(wb.moduleReg(chargexRegModuleCurrent1), 6)
+	b, err := wb.conn.ReadHoldingRegisters(wb.moduleReg(chargexRegModuleCurrent1), 6)
 	if err != nil {
 		return 0, 0, 0, err
 	}
