@@ -1,12 +1,15 @@
 package core
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -19,76 +22,84 @@ func TestEffectiveLimitSoc(t *testing.T) {
 
 func TestEffectiveResumeThreshold(t *testing.T) {
 	tc := []struct {
-		name              string
-		mode              api.ChargeMode
-		planActive        bool
-		status            api.ChargeStatus
-		limitSoc          int
-		hasVehicle        bool
-		expectedThreshold int
+		name                   string
+		mode                   api.ChargeMode
+		planActive             bool
+		status                 api.ChargeStatus
+		limitSoc               int
+		hasVehicle             bool
+		vehicleResumeThreshold int
+		expectedThreshold      int
 	}{
 		{
-			name:              "returns 0 when mode is PV",
-			mode:              api.ModePV,
-			planActive:        false,
-			status:            api.StatusB,
-			limitSoc:          80,
-			hasVehicle:        true,
-			expectedThreshold: 0,
+			name:                   "returns 0 when mode is PV",
+			mode:                   api.ModePV,
+			planActive:             false,
+			status:                 api.StatusB,
+			limitSoc:               80,
+			hasVehicle:             true,
+			vehicleResumeThreshold: 10,
+			expectedThreshold:      0,
 		},
 		{
-			name:              "returns 0 when mode is Off",
-			mode:              api.ModeOff,
-			planActive:        false,
-			status:            api.StatusB,
-			limitSoc:          80,
-			hasVehicle:        true,
-			expectedThreshold: 0,
+			name:                   "returns 0 when mode is Off",
+			mode:                   api.ModeOff,
+			planActive:             false,
+			status:                 api.StatusB,
+			limitSoc:               80,
+			hasVehicle:             true,
+			vehicleResumeThreshold: 10,
+			expectedThreshold:      0,
 		},
 		{
-			name:              "returns 0 when plan is active (MinPV)",
-			mode:              api.ModeMinPV,
-			planActive:        true,
-			status:            api.StatusB,
-			limitSoc:          80,
-			hasVehicle:        true,
-			expectedThreshold: 0,
+			name:                   "returns 0 when plan is active (MinPV)",
+			mode:                   api.ModeMinPV,
+			planActive:             true,
+			status:                 api.StatusB,
+			limitSoc:               80,
+			hasVehicle:             true,
+			vehicleResumeThreshold: 10,
+			expectedThreshold:      0,
 		},
 		{
-			name:              "returns 0 when plan is active (Now)",
-			mode:              api.ModeNow,
-			planActive:        true,
-			status:            api.StatusB,
-			limitSoc:          80,
-			hasVehicle:        true,
-			expectedThreshold: 0,
+			name:                   "returns 0 when plan is active (Now)",
+			mode:                   api.ModeNow,
+			planActive:             true,
+			status:                 api.StatusB,
+			limitSoc:               80,
+			hasVehicle:             true,
+			vehicleResumeThreshold: 10,
+			expectedThreshold:      0,
 		},
 		{
-			name:              "returns 0 when currently charging",
-			mode:              api.ModeMinPV,
-			planActive:        false,
-			status:            api.StatusC,
-			limitSoc:          80,
-			hasVehicle:        true,
-			expectedThreshold: 0,
+			name:                   "returns 0 when currently charging",
+			mode:                   api.ModeMinPV,
+			planActive:             false,
+			status:                 api.StatusC,
+			limitSoc:               80,
+			hasVehicle:             true,
+			vehicleResumeThreshold: 10,
+			expectedThreshold:      0,
 		},
 		{
-			name:              "returns 0 when limitSoc is 100",
-			mode:              api.ModeMinPV,
-			planActive:        false,
-			status:            api.StatusB,
-			limitSoc:          100,
-			hasVehicle:        true,
-			expectedThreshold: 0,
+			name:                   "returns 0 when limitSoc is 100",
+			mode:                   api.ModeMinPV,
+			planActive:             false,
+			status:                 api.StatusB,
+			limitSoc:               100,
+			hasVehicle:             true,
+			vehicleResumeThreshold: 10,
+			expectedThreshold:      0,
 		},
 		{
-			name:              "returns 0 when limitSoc is 0 (falls back to 100)",
-			mode:              api.ModeMinPV,
-			planActive:        false,
-			status:            api.StatusB,
-			limitSoc:          0,
-			hasVehicle:        true,
-			expectedThreshold: 0,
+			name:                   "returns 0 when limitSoc is 0 (falls back to 100)",
+			mode:                   api.ModeMinPV,
+			planActive:             false,
+			status:                 api.StatusB,
+			limitSoc:               0,
+			hasVehicle:             true,
+			vehicleResumeThreshold: 10,
+			expectedThreshold:      0,
 		},
 		{
 			name:              "returns 0 when no vehicle",
@@ -100,26 +111,48 @@ func TestEffectiveResumeThreshold(t *testing.T) {
 			expectedThreshold: 0,
 		},
 		{
-			name:              "allows threshold with valid conditions (MinPV mode)",
-			mode:              api.ModeMinPV,
-			planActive:        false,
-			status:            api.StatusB,
-			limitSoc:          80,
-			hasVehicle:        true,
-			expectedThreshold: 0, // will be 0 because vehicle.Settings returns 0 with no threshold
+			name:                   "returns 0 when vehicle has no threshold configured",
+			mode:                   api.ModeMinPV,
+			planActive:             false,
+			status:                 api.StatusB,
+			limitSoc:               80,
+			hasVehicle:             true,
+			vehicleResumeThreshold: 0,
+			expectedThreshold:      0,
 		},
 		{
-			name:              "allows threshold with valid conditions (Now mode)",
-			mode:              api.ModeNow,
-			planActive:        false,
-			status:            api.StatusB,
-			limitSoc:          80,
-			hasVehicle:        true,
-			expectedThreshold: 0, // will be 0 because vehicle.Settings returns 0 with no threshold
+			name:                   "returns threshold with valid conditions (MinPV mode)",
+			mode:                   api.ModeMinPV,
+			planActive:             false,
+			status:                 api.StatusB,
+			limitSoc:               80,
+			hasVehicle:             true,
+			vehicleResumeThreshold: 10,
+			expectedThreshold:      10,
+		},
+		{
+			name:                   "returns threshold with valid conditions (Now mode)",
+			mode:                   api.ModeNow,
+			planActive:             false,
+			status:                 api.StatusB,
+			limitSoc:               80,
+			hasVehicle:             true,
+			vehicleResumeThreshold: 15,
+			expectedThreshold:      15,
+		},
+		{
+			name:                   "returns large threshold with valid conditions",
+			mode:                   api.ModeMinPV,
+			planActive:             false,
+			status:                 api.StatusB,
+			limitSoc:               90,
+			hasVehicle:             true,
+			vehicleResumeThreshold: 20,
+			expectedThreshold:      20,
 		},
 	}
 
-	for _, tc := range tc {
+	for i, tc := range tc {
 		t.Run(tc.name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
 
@@ -130,9 +163,22 @@ func TestEffectiveResumeThreshold(t *testing.T) {
 			lp.limitSoc = tc.limitSoc
 
 			if tc.hasVehicle {
-				vehicle := api.NewMockVehicle(ctrl)
-				vehicle.EXPECT().OnIdentified().Return(api.ActionConfig{}).AnyTimes()
-				lp.vehicle = vehicle
+				mockVehicle := api.NewMockVehicle(ctrl)
+				mockVehicle.EXPECT().OnIdentified().Return(api.ActionConfig{}).AnyTimes()
+
+				// Register vehicle in config
+				vehicleName := fmt.Sprintf("testvehicle_%d", i)
+				var vehicle api.Vehicle = mockVehicle
+				dev := config.NewStaticDevice(config.Named{Name: vehicleName}, vehicle)
+				require.NoError(t, config.Vehicles().Add(dev))
+				defer config.Vehicles().Delete(vehicleName)
+
+				if tc.vehicleResumeThreshold > 0 {
+					settings.SetInt(fmt.Sprintf("vehicle.%s.resumeThreshold", vehicleName), int64(tc.vehicleResumeThreshold))
+					defer settings.SetInt(fmt.Sprintf("vehicle.%s.resumeThreshold", vehicleName), 0)
+				}
+
+				lp.vehicle = mockVehicle
 			}
 
 			result := lp.effectiveResumeThreshold()
