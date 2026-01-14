@@ -43,8 +43,8 @@ render: |
   token: {{ .token }}
   interval: {{ .interval }}
   {{- if .from }}
-    from: {{ .from }}
+  from: {{ .from }}
   {{- end }}
   {{- if .to }}
-    to: {{ .to }}
+  to: {{ .to }}
   {{- end }}
