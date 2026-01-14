@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -79,6 +80,21 @@ func (c Hems) Redacted() any {
 
 var _ api.Redactor = (*Mqtt)(nil)
 
+func maskedMap(m map[string]any, r []string) map[string]any {
+	redacted := make(map[string]any, len(m))
+
+	for key, value := range m {
+		redacted[key] = value
+		if slices.Contains(r, key) {
+			if s, ok := value.(string); ok {
+				redacted[key] = masked(s)
+			}
+		}
+	}
+
+	return redacted
+}
+
 func masked(s any) string {
 	if s != "" {
 		return "***"
@@ -138,17 +154,37 @@ type DB struct {
 }
 
 type Messaging struct {
-	Events   map[string]MessagingEventTemplate
-	Services []config.Typed
+	Events   map[string]MessagingEventTemplate `json:"events"`
+	Services []config.Typed                    `json:"services"`
 }
 
 // MessagingEventTemplate is the push message configuration for an event
 type MessagingEventTemplate struct {
-	Title, Msg string
+	Title    string `json:"title"`
+	Msg      string `json:"msg"`
+	Disabled bool   `json:"disabled"`
 }
 
 func (c Messaging) Configured() bool {
 	return len(c.Services) > 0 || len(c.Events) > 0
+}
+
+// Redacted implements the redactor interface used by the tee publisher
+func (m Messaging) Redacted() any {
+	redactKeys := []string{"app", "token", "authtoken", "password"}
+
+	r := Messaging{
+		Events: m.Events,
+	}
+
+	for _, s := range m.Services {
+		r.Services = append(r.Services, config.Typed{
+			Type:  s.Type,
+			Other: maskedMap(s.Other, redactKeys),
+		})
+	}
+
+	return r
 }
 
 type Tariffs struct {

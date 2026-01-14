@@ -10,7 +10,7 @@
 			:aria-label="optionLabel(option)"
 			class="btn btn-sm flex-grow-1 flex-shrink-1"
 			:class="{ active: optionSelected(option), 'btn--equal': equalWidth }"
-			:disabled="option.disabled"
+			:disabled="option.disabled || disabled"
 			:data-testid="`${id}-${option.value}`"
 			tabindex="0"
 			@click="$emit('update:modelValue', option.value)"
@@ -33,6 +33,7 @@ export default defineComponent({
 		equalWidth: Boolean,
 		large: Boolean,
 		transparent: Boolean,
+		disabled: Boolean,
 		ariaLabel: String,
 	},
 	emits: ["update:modelValue"],

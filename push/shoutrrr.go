@@ -1,6 +1,9 @@
 package push
 
 import (
+	"errors"
+	"strings"
+
 	"github.com/containrrr/shoutrrr"
 	"github.com/containrrr/shoutrrr/pkg/router"
 	"github.com/containrrr/shoutrrr/pkg/types"
@@ -8,7 +11,7 @@ import (
 )
 
 func init() {
-	registry.Add("email", NewShoutrrrFromConfig)
+	registry.Add("email", NewEmailFromConfig)
 	registry.Add("shout", NewShoutrrrFromConfig)
 }
 
@@ -16,6 +19,34 @@ func init() {
 type Shoutrrr struct {
 	log *util.Logger
 	app *router.ServiceRouter
+}
+
+// NewEmailFromConfig creates new email messenger based on Shoutrrr messenger
+func NewEmailFromConfig(other map[string]any) (Messenger, error) {
+	var cc struct {
+		URI      string
+		Host     string
+		Port     string
+		User     string
+		Password string
+		From     string
+		To       []string
+	}
+
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
+	}
+
+	if cc.URI == "" {
+		if cc.Host == "" || cc.Port == "" || cc.User == "" || cc.Password == "" || cc.From == "" || len(cc.To) == 0 {
+			return nil, errors.New("missing uri")
+		}
+		cc.URI = "smtp://" + cc.User + ":" + cc.Password + "@" + cc.Host + ":" + cc.Port + "/?fromAddress=" + cc.From + "&to=" + strings.Join(cc.To, ",")
+	}
+
+	return NewShoutrrrFromConfig(map[string]any{
+		"uri": cc.URI,
+	})
 }
 
 // NewShoutrrrFromConfig creates new Shoutrrr messenger
