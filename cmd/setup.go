@@ -776,7 +776,6 @@ func configureOCPP(cfg *ocpp.Config, externalUrl string) {
 func configureEEBus(conf *eebus.Config) error {
 	// migrate settings
 	if settings.Exists(keys.EEBus) {
-		// TODO delete if not needed any more
 		if err := migrateYamlToJson(keys.EEBus, conf); err != nil {
 			return err
 		}
@@ -972,25 +971,8 @@ func configureDevices(conf globalconfig.All) error {
 	return joinErrors(errs...)
 }
 
-// migrateYamlToJson converts a settings value from yaml to json if needed
-func migrateYamlToJson[T any](key string, res *T) error {
-	if settings.IsJson(key) {
-		return settings.Json(key, res)
-	}
-
-	if err := settings.Yaml(key, new(T), res); err != nil {
-		return err
-	}
-
-	settings.SetJson(key, res)
-	log.INFO.Printf("migrated %s setting to JSON", key)
-
-	return nil
-}
-
 func configureModbusProxy(conf *[]globalconfig.ModbusProxy) error {
 	if settings.Exists(keys.ModbusProxy) {
-		// TODO delete if not needed any more
 		if err := migrateYamlToJson(keys.ModbusProxy, conf); err != nil {
 			return err
 		}
