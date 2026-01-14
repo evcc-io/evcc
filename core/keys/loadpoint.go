@@ -60,6 +60,7 @@ const (
 	EffectiveMaxCurrent = "effectiveMaxCurrent" // effective max current
 
 	EffectiveLimitSoc         = "effectiveLimitSoc"         // effective limit soc
+	EffectiveResumeThreshold  = "effectiveResumeThreshold"  // effective resume threshold
 	EffectivePlanStrategy     = "effectivePlanStrategy"     // effective plan strategy (deprecated, use individual fields)
 	EffectivePlanPrecondition = "effectivePlanPrecondition" // effective plan precondition duration
 	EffectivePlanContinuous   = "effectivePlanContinuous"   // effective plan continuous planning

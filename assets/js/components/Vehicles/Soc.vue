@@ -30,7 +30,7 @@
 			/>
 			<div
 				v-show="resumeThresholdPauseZoneVisible"
-				class="resume-threshold-pause-zone progress-bar progress-bar-striped"
+				class="resume-threshold-pause-zone progressColor bg-muted progress-bar progress-bar-striped"
 				:style="{ left: `${resumeThresholdPosition}%`, width: `${resumeThresholdPauseZoneWidth}%` }"
 			/>
 			<div
@@ -97,14 +97,13 @@ export default defineComponent({
 		connected: Boolean,
 		vehicleSoc: { type: Number, default: 0 },
 		vehicleLimitSoc: { type: Number, default: 0 },
-		resumeThreshold: { type: Number, default: 0 },
-		mode: String,
 		enabled: Boolean,
 		charging: Boolean,
 		heating: Boolean,
 		minSoc: { type: Number, default: 0 },
 		effectivePlanSoc: { type: Number, default: 0 },
 		effectiveLimitSoc: Number,
+		effectiveResumeThreshold: Number,
 		limitEnergy: { type: Number, default: 0 },
 		planEnergy: { type: Number, default: 0 },
 		chargedEnergy: { type: Number, default: 0 },
@@ -151,8 +150,7 @@ export default defineComponent({
 			return this.vehicleLimitSoc > 0 && this.vehicleLimitSoc > this.vehicleSoc;
 		},
 		resumeThresholdActive() {
-			const isRelevantMode = this.mode === "minpv" || this.mode === "now";
-			return this.resumeThreshold > 0 && this.resumeThresholdPosition !== null && isRelevantMode;
+			return this.effectiveResumeThreshold > 0 && this.resumeThresholdPosition !== null;
 		},
 		planMarkerPosition(): number {
 			if (this.socBasedPlanning) {
@@ -228,8 +226,8 @@ export default defineComponent({
 			return Number(this.selectedLimitSoc || this.effectiveLimitSoc);
 		},
 		resumeThresholdPosition() {
-			if (this.resumeThreshold > 0 && this.effectiveLimitSoc) {
-				return Math.max(0, this.effectiveLimitSoc - this.resumeThreshold);
+			if (this.effectiveResumeThreshold > 0 && this.effectiveLimitSoc) {
+				return Math.max(0, this.effectiveLimitSoc - this.effectiveResumeThreshold);
 			}
 			return null;
 		},
@@ -252,7 +250,7 @@ export default defineComponent({
 		vehicleLimitSoc() {
 			this.updateTooltip();
 		},
-		resumeThreshold() {
+		effectiveResumeThreshold() {
 			this.updateResumeThresholdTooltip();
 		},
 		resumeThresholdPosition() {

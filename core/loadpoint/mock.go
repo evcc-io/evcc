@@ -153,6 +153,20 @@ func (mr *MockAPIMockRecorder) EffectivePriority() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EffectivePriority", reflect.TypeOf((*MockAPI)(nil).EffectivePriority))
 }
 
+// EffectiveResumeThreshold mocks base method.
+func (m *MockAPI) EffectiveResumeThreshold() int {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "EffectiveResumeThreshold")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// EffectiveResumeThreshold indicates an expected call of EffectiveResumeThreshold.
+func (mr *MockAPIMockRecorder) EffectiveResumeThreshold() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EffectiveResumeThreshold", reflect.TypeOf((*MockAPI)(nil).EffectiveResumeThreshold))
+}
+
 // GetBatteryBoost mocks base method.
 func (m *MockAPI) GetBatteryBoost() int {
 	m.ctrl.T.Helper()

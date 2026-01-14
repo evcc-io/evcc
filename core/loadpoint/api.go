@@ -100,6 +100,8 @@ type API interface {
 	EffectivePriority() int
 	// EffectiveLimitSoc returns the effective session limit soc
 	EffectiveLimitSoc() int
+	// EffectiveResumeThreshold returns the effective resume threshold
+	EffectiveResumeThreshold() int
 	// EffectivePlanId returns the effective plan id
 	EffectivePlanId() int
 	// EffectivePlanTime returns the effective plan time

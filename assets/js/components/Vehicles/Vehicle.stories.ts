@@ -35,6 +35,7 @@ export default {
     connected: { control: "boolean" },
     currency: { control: "text" },
     effectiveLimitSoc: { control: "number" },
+    effectiveResumeThreshold: { control: "number" },
     effectivePlanSoc: { control: "number" },
     effectivePlanTime: { control: "text" },
     batteryBoostActive: { control: "boolean" },

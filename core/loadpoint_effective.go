@@ -20,6 +20,7 @@ func (lp *Loadpoint) PublishEffectiveValues() {
 	lp.publish(keys.EffectiveMinCurrent, lp.effectiveMinCurrent())
 	lp.publish(keys.EffectiveMaxCurrent, lp.effectiveMaxCurrent())
 	lp.publish(keys.EffectiveLimitSoc, lp.EffectiveLimitSoc())
+	lp.publish(keys.EffectiveResumeThreshold, lp.EffectiveResumeThreshold())
 	lp.publish(keys.EffectivePlanPrecondition, int64(strategy.Precondition.Seconds()))
 	lp.publish(keys.EffectivePlanContinuous, strategy.Continuous)
 }
@@ -204,6 +205,29 @@ func (lp *Loadpoint) effectiveLimitSoc() int {
 
 	// MUST return 100 here as UI looks at effectiveLimitSoc and not limitSoc (VehicleSoc.vue)
 	return 100
+}
+
+// EffectiveResumeThreshold returns the effective resume threshold
+func (lp *Loadpoint) EffectiveResumeThreshold() int {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.effectiveResumeThreshold()
+}
+
+// effectiveResumeThreshold returns the effective resume threshold
+func (lp *Loadpoint) effectiveResumeThreshold() int {
+	// Only return threshold for minpv and now modes
+	if lp.GetMode() != api.ModeMinPV && lp.GetMode() != api.ModeNow {
+		return 0
+	}
+
+	if v := lp.GetVehicle(); v != nil {
+		if threshold := vehicle.Settings(lp.log, v).GetResumeThreshold(); threshold > 0 {
+			return threshold
+		}
+	}
+
+	return 0
 }
 
 // EffectiveStepPower returns the effective step power for the currently active phases
