@@ -39,6 +39,7 @@ func ConfigureSponsorship(token string) error {
 	mu.Lock()
 	defer mu.Unlock()
 	Subject = "sponsor"
+	ExpiresAt = time.Now().AddDate(0, 0, 30)
 	return nil
 }
 
