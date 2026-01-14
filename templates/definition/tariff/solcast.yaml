@@ -42,3 +42,9 @@ render: |
   site: {{ .site }}
   token: {{ .token }}
   interval: {{ .interval }}
+  {{- if .from }}
+    from: {{ .from }}
+  {{- end }}
+  {{- if .to }}
+    to: {{ .to }}
+  {{- end }}
