@@ -11,6 +11,11 @@ var (
 	ExpiresAt      time.Time
 )
 
+const (
+	unavailable = "sponsorship unavailable"
+	victron     = "victron"
+)
+
 func IsAuthorized() bool {
 	return true
 }
