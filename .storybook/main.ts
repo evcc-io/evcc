@@ -7,4 +7,7 @@ export default {
     name: "@storybook/vue3-vite",
     options: {},
   },
+  core: {
+    disableTelemetry: true,
+  },
 } satisfies StorybookConfig;

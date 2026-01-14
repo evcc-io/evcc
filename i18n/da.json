@@ -2,7 +2,9 @@
   "authProviders": {
     "authCode": "Godkendelseskode",
     "authCodeHelp": "Kopiér koden og anvend den i næste trin. Den er gyldig i {duration}.",
+    "authorizationFailed": "Godkendelse mislykkedes",
     "authorizationRequired": "Godkendelse krævet",
+    "authorizationSuccessful": "Godkendelse lykkedes",
     "buttonConnect": "Opret forbindelse til {provider}",
     "buttonDisconnect": "Afbryd forbindelse",
     "confirmLogout": "Er du sikker på, at du vil afbryde {title}?",
@@ -12,7 +14,7 @@
     "logoutFailed": "Kunne ikke logge ud",
     "modalDescriptionLogin": "Fuldfør autorisationsprocessen for at etablere forbindelsen med {provider}.",
     "modalDescriptionLogout": "Dette vil afbryde din {provider}-konto og fjerne adgangen til dens data.",
-    "success": "Godkendelse med {title} er gennemført.",
+    "success": "{title} er nu forbundet og klar til brug.",
     "successCloseModal": "Du kan nu lukke dialogboksen.",
     "successCloseTab": "Du kan nu lukke denne fane.",
     "title": "Godkendelsesstatus"
@@ -97,8 +99,8 @@
     },
     "control": {
       "description": "Standardværdierne er normalt fine. Kun hvis du ved, hvad du gør, kan du ændre dem.",
-      "descriptionInterval": "Opdateringscyklus i sekunder. Definerer, hvor ofte evcc læser målerdata, justerer ladeeffekt og opdaterer brugergrænsefladen. Korte intervaller (< 30s) kan forårsage store udsving og fejlagtigt resultat.",
-      "descriptionResidualPower": "Skifter driftspunktet for kontrolsløjfen. Hvis du har et hjemmebatteri, anbefales det at indstille en værdi på 100 W. På denne måde vil batteriet få en lille prioritet frem for netbrug.",
+      "descriptionInterval": "Opdateringsinterval i sekunder. Angiver, hvor ofte evcc aflæser målerdata og justerer opladningen. Standardværdien på 30 sekunder er et sikkert valg. Enheder som køretøjer, ladere og invertere har typisk brug for flere sekunder til at tilpasse deres adfærd. Hvis dine komponenter reagerer hurtigt, kan du anvende lavere værdier. Vi anbefaler kraftigt ikke at gå under 10 sekunder. Hvis du observerer ustabil regulering eller springende effektværdier, bør du vælge et længere interval.",
+      "descriptionResidualPower": "Forskubber reguleringspunktet. Hvis du har et hjemmebatteri anbefales det at sætte værdien til 100 W. Derved får hjemmebatteriet let prioritet over elnettet.",
       "labelInterval": "Opdateringsinterval",
       "labelResidualPower": "Tilbageværende effekt",
       "title": "kontrol adfærd"
@@ -135,9 +137,9 @@
       "no": "nej",
       "odometer": "Kilometertæller",
       "org": "Organisation",
-      "phaseCurrents": "Strømstyrke L1, L2, L3",
-      "phasePowers": "Effekt L1, L2, L3",
-      "phaseVoltages": "Spænding L1, L2, L3",
+      "phaseCurrents": "Strømstyrke",
+      "phasePowers": "Effekt",
+      "phaseVoltages": "Spænding",
       "phases1p3p": "Fase-skift",
       "power": "Effekt",
       "powerRange": "Effekt",
@@ -172,6 +174,10 @@
     "eebus": {
       "description": "Indstilling der tillader evcc at kommunikere med andre EEBus enheder.",
       "title": "EEBus"
+    },
+    "experimental": {
+      "description": "Aktivér brugerfladen for funktioner, som stadig testes og kan ændres i kommende versioner.",
+      "title": "Eksperimentel"
     },
     "ext": {
       "description": "Måler energiforbrug fra enheder, der ikke styres (som f.eks. køleskab eller vaskemaskine), til statistik. Måleren kan også bruges til belastningsstyring, f.eks. i en undergruppe.",
@@ -237,11 +243,11 @@
         "limitpower": "Grænse (kW)",
         "type": "Type"
       },
-      "description": "Effektbegrænsning fra eksterne systemer (fx EnWG 14a-styringer). Kræver konfiguration af belastningsstyring.",
+      "description": "Effektbegrænsning via eksterne systemer (f.eks. §14a EnWG, §9 EEG-grænseflade eller overordnet energistyringssystem). Fungerer sammen med belastningsstyringsfunktionen.",
       "downloadCsv": "Download CSV",
       "eventsRecorded": "Registrerede {count} netbegrænsningshændelser.",
       "lastEvent": "Sidst {timeAgo}.",
-      "title": "HEMS",
+      "title": "Ekstern grænse",
       "yamlConfigured": "Bemærk: Er konfigureret via evcc.yaml. Fjern indtastningen fra filen for at aktivere redigering her."
     },
     "icon": {
@@ -288,6 +294,7 @@
       "chargerTypeLabel": "Oplader type",
       "chargingTitle": "Tilstand",
       "circuitHelp": "Belastningsstyring som sikrer, at effekt- og strømgrænser ikke overskrides.",
+      "circuitInvalid": "Kredsløbet findes ikke",
       "circuitLabel": "Kredsløb",
       "circuitUnassigned": "ikke tildelt",
       "defaultModeHelp": {
@@ -364,6 +371,7 @@
       "vehicleAutoDetection": "Automatisk registrering",
       "vehicleHelpAutoDetection": "Vælg automatisk det mest sandsynlige køretøj. Det er muligt selv at vælge.",
       "vehicleHelpDefault": "Antag altid, at dette køretøj oplader her. Automatisk registrering deaktiveret. Manuel tilsidesættelse er mulig.",
+      "vehicleInvalid": "Køretøjet findes ikke",
       "vehicleLabel": "Standard køretøj",
       "vehiclesTitle": "Køretøjer"
     },
@@ -381,6 +389,8 @@
       "title": "Opsætning",
       "unconfigured": "ikke konfigureret",
       "vehicles": "Mine køretøjer",
+      "welcomeBannerText": "Start med at oprette mindst én **lader**, **varmer**, **elnet**, **sol**, **batteri** eller **ekstra måler**. Hvis du blot vil teste, kan du vælge en **demoenhed**.",
+      "welcomeBannerTitle": "Lad os konfigurere dit system!",
       "yaml": "Enheder fra evcc.yaml kan ikke ændres her."
     },
     "messaging": {
@@ -755,6 +765,9 @@
       "solar": "Sol"
     }
   },
+  "general": {
+    "note": "Note:"
+  },
   "header": {
     "about": "Om",
     "authProviders": {
@@ -840,6 +853,8 @@
       "stepTwo": "Trin 2: Kopiér yderligere oplysninger",
       "title": "GitHub-problemoversigt"
     },
+    "system": "System",
+    "timezone": "Tidszone",
     "title": "Indberet et problem",
     "version": "Version"
   },
@@ -878,16 +893,24 @@
       "goal": "Opladnings mål",
       "modalTitle": "Lade plan",
       "none": "ingen",
+      "optimization": {
+        "cheapest": "billigst",
+        "continuous": "kontinuerlig",
+        "label": "Optimering"
+      },
       "planNumber": "Plan {number}",
-      "preconditionDescription": "Oplad {duration} før afgang til batterikonditionering.",
-      "preconditionLong": "Sen opladning",
-      "preconditionOptionAll": "alt",
-      "preconditionOptionNo": "nej",
-      "preconditionShort": "Sen",
+      "precondition": {
+        "description": "Oplad {duration} før afgang til batterikonditionering.",
+        "label": "Sen opladning",
+        "optionAll": "alt",
+        "optionNo": "nej"
+      },
       "remove": "Fjern",
       "repeating": "Gentager",
       "repeatingPlans": "Gentager plan",
       "selectAll": "Vælg alt",
+      "strategyDisabledDescription": "Opladningen påbegyndes så sent som muligt og afsluttes præcis ved afgang. Med dynamiske elpriser eller CO₂-tariffer er der flere valgmuligheder.",
+      "strategySettings": "Indstillinger for strategi",
       "time": "Tid",
       "title": "Plan",
       "titleMinSoc": "Min. ladning",
@@ -1210,7 +1233,7 @@
     },
     "hiddenFeatures": {
       "label": "Experimentalt",
-      "value": "Vis eksperimentelle brugergrænsefladefunktioner."
+      "value": "Vis eksperimentelle funktioner."
     },
     "language": {
       "auto": "Automatisk",

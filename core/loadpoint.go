@@ -145,13 +145,13 @@ type Loadpoint struct {
 
 	// charge planning
 	planner          *planner.Planner
-	planTime         time.Time     // time goal
-	planPrecondition time.Duration // precondition duration
-	planEnergy       float64       // Plan charge energy in kWh (dumb vehicles)
-	planEnergyOffset float64       // already charged energy in kWh when plan was set
-	planSlotEnd      time.Time     // current plan slot end time
-	planActive       bool          // charge plan exists and has a currently active slot
-	planOverrunSent  bool          // notification has been sent already
+	planTime         time.Time        // time goal
+	planStrategy     api.PlanStrategy // plan strategy (precondition, continuous)
+	planEnergy       float64          // Plan charge energy in kWh (dumb vehicles)
+	planEnergyOffset float64          // already charged energy in kWh when plan was set
+	planSlotEnd      time.Time        // current plan slot end time
+	planActive       bool             // charge plan exists and has a currently active slot
+	planOverrunSent  bool             // notification has been sent already
 
 	// cached state
 	status         api.ChargeStatus // Charger status
@@ -184,7 +184,7 @@ type Loadpoint struct {
 func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, other map[string]any) (*Loadpoint, error) {
 	lp := NewLoadpoint(log, settings)
 	if err := util.DecodeOther(other, lp); err != nil {
-		return nil, err
+		return lp, err
 	}
 
 	// set vehicle polling mode
@@ -370,9 +370,14 @@ func (lp *Loadpoint) restoreSettings() {
 
 	t, err1 := lp.settings.Time(keys.PlanTime)
 	v, err2 := lp.settings.Float(keys.PlanEnergy)
-	d, _ := lp.settings.Int(keys.PlanPrecondition)
 	if err1 == nil && err2 == nil {
-		lp.setPlanEnergy(t, time.Duration(d)*time.Second, v)
+		lp.setPlanEnergy(t, v)
+	}
+
+	// load plan strategy (continuous mode and precondition duration)
+	var planStrategy api.PlanStrategy
+	if err := lp.settings.Json(keys.PlanStrategy, &planStrategy); err == nil {
+		lp.setPlanStrategy(planStrategy)
 	}
 }
 
@@ -686,7 +691,8 @@ func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan c
 	// restored settings
 	lp.publish(keys.PlanTime, lp.planTime)
 	lp.publish(keys.PlanEnergy, lp.planEnergy)
-	lp.publish(keys.PlanPrecondition, lp.planPrecondition)
+	lp.publish(keys.PlanPrecondition, int64(lp.planStrategy.Precondition.Seconds()))
+	lp.publish(keys.PlanContinuous, lp.planStrategy.Continuous)
 	lp.publish(keys.LimitSoc, lp.limitSoc)
 	lp.publish(keys.LimitEnergy, lp.limitEnergy)
 
@@ -778,7 +784,7 @@ func (lp *Loadpoint) syncCharger() error {
 					lp.offeredCurrent = current
 					lp.bus.Publish(evChargeCurrent, lp.offeredCurrent)
 				}
-			} else if !errors.Is(err, api.ErrNotAvailable) {
+			} else if !loadpoint.AcceptableError(err) {
 				return fmt.Errorf("charger get max current: %w", err)
 			}
 		}
@@ -983,7 +989,7 @@ func (lp *Loadpoint) repeatingPlanning() bool {
 	if !lp.socBasedPlanning() {
 		return false
 	}
-	_, _, _, id := lp.NextVehiclePlan()
+	_, _, id := lp.NextVehiclePlan()
 	return id > 1
 }
 
@@ -1724,87 +1730,86 @@ func (lp *Loadpoint) publishSocAndRange() {
 	// https://github.com/evcc-io/evcc/issues/16180
 	socEstimator := lp.socEstimator
 
-	// capacity not available
-	if socEstimator == nil || !lp.vehicleHasSoc() {
-		if soc, err := lp.chargerSoc(); err == nil {
-			lp.vehicleSoc = soc
-			lp.publish(keys.VehicleSoc, lp.vehicleSoc)
+	socAndLimit := func(typ string, dev any) (*float64, *int64) {
+		var socR *float64
+		var limitR *int64
 
-			if vs, ok := lp.charger.(api.SocLimiter); ok {
-				if limit, err := vs.GetLimitSoc(); err == nil {
-					lp.log.DEBUG.Printf("charger soc limit: %d%%", limit)
-					// https://github.com/evcc-io/evcc/issues/13349
-					lp.publish(keys.VehicleLimitSoc, float64(limit))
-				} else if !errors.Is(err, api.ErrNotAvailable) {
-					lp.log.ERROR.Printf("charger soc limit: %v", err)
+		if battery, ok := dev.(api.Battery); ok {
+			if soc, err := soc.Guard(battery.Soc()); err == nil {
+				socR = &soc
+
+				// don't publish here in case it needs be updated by the estimator
+				lp.log.DEBUG.Printf("%s soc: %.0f%%", typ, soc)
+
+				if socLimiter, ok := dev.(api.SocLimiter); ok {
+					if limit, err := socLimiter.GetLimitSoc(); err == nil {
+						limitR = &limit
+
+						lp.log.DEBUG.Printf("%s soc limit: %d%%", typ, limit)
+						// https://github.com/evcc-io/evcc/issues/13349
+						lp.publish(keys.VehicleLimitSoc, float64(limit))
+					} else if !loadpoint.AcceptableError(err) {
+						lp.log.ERROR.Printf("%s soc limit: %v", typ, err)
+					}
 				}
+			} else if !loadpoint.AcceptableError(err) {
+				lp.log.ERROR.Printf("charger soc: %v", err)
 			}
-		} else if !errors.Is(err, api.ErrNotAvailable) {
-			lp.log.ERROR.Printf("charger soc: %v", err)
 		}
 
-		return
+		return socR, limitR
 	}
 
-	// integrated device can bypass the update interval if vehicle is separately configured (legacy)
-	if lp.chargerHasFeature(api.IntegratedDevice) || lp.vehicleSocPollAllowed() {
+	soc, limit := socAndLimit("charger", lp.charger)
+	if soc == nil && (lp.chargerHasFeature(api.IntegratedDevice) || lp.vehicleSocPollAllowed()) {
 		lp.socUpdated = lp.clock.Now()
+		soc, limit = socAndLimit("vehicle", lp.GetVehicle())
+	}
 
-		f, err := socEstimator.Soc(lp.GetChargedEnergy())
-		if err != nil {
-			if loadpoint.AcceptableError(err) {
-				lp.socUpdated = time.Time{}
-			} else {
-				lp.log.ERROR.Printf("vehicle soc: %v", err)
-			}
-
-			return
+	if soc != nil {
+		if socEstimator == nil {
+			lp.vehicleSoc = *soc
+		} else {
+			lp.vehicleSoc, _ = socEstimator.Soc(soc, lp.GetChargedEnergy())
+			lp.log.DEBUG.Printf("vehicle soc (estimator): %.0f%%", lp.vehicleSoc)
 		}
+	}
+	lp.publish(keys.VehicleSoc, lp.vehicleSoc)
 
-		lp.vehicleSoc = f
-		lp.log.DEBUG.Printf("vehicle soc: %.0f%%", lp.vehicleSoc)
-		lp.publish(keys.VehicleSoc, lp.vehicleSoc)
+	apiLimitSoc := 100
+	if limit != nil {
+		apiLimitSoc = int(*limit)
+		// https://github.com/evcc-io/evcc/issues/13349
+		lp.publish(keys.VehicleLimitSoc, float64(*limit))
+	}
 
-		// vehicle target soc
-		// TODO take vehicle api limits into account
-		apiLimitSoc := 100
-
-		// vehicle limit
-		if vs, ok := lp.GetVehicle().(api.SocLimiter); ok {
-			if limit, err := vs.GetLimitSoc(); err == nil {
-				apiLimitSoc = int(limit)
-				lp.log.DEBUG.Printf("vehicle soc limit: %d%%", limit)
-				// https://github.com/evcc-io/evcc/issues/13349
-				lp.publish(keys.VehicleLimitSoc, float64(limit))
-			} else if !loadpoint.AcceptableError(err) {
-				lp.log.ERROR.Printf("vehicle soc limit: %v", err)
-			}
-		}
-
+	if socEstimator != nil {
 		// use minimum of vehicle and loadpoint
 		limitSoc := min(apiLimitSoc, lp.EffectiveLimitSoc())
 
 		var d time.Duration
 		if lp.charging() {
-			d = socEstimator.RemainingChargeDuration(limitSoc, lp.chargePower)
+			d = socEstimator.RemainingChargeDuration(float64(limitSoc), lp.chargePower)
 		}
 		lp.SetRemainingDuration(d)
 
 		lp.SetRemainingEnergy(socEstimator.RemainingChargeEnergy(limitSoc))
-
-		// range
-		if vs, ok := lp.GetVehicle().(api.VehicleRange); ok {
-			if rng, err := vs.Range(); err == nil {
-				lp.log.DEBUG.Printf("vehicle range: %dkm", rng)
-				lp.publish(keys.VehicleRange, rng)
-			} else if !loadpoint.AcceptableError(err) {
-				lp.log.ERROR.Printf("vehicle range: %v", err)
-			}
-		}
-
-		// trigger message after variables are updated
-		lp.bus.Publish(evVehicleSoc, f)
 	}
+
+	// TODO don't rely on vehicle cache
+
+	// range
+	if vs, ok := lp.GetVehicle().(api.VehicleRange); ok {
+		if rng, err := vs.Range(); err == nil {
+			lp.log.DEBUG.Printf("vehicle range: %dkm", rng)
+			lp.publish(keys.VehicleRange, rng)
+		} else if !loadpoint.AcceptableError(err) {
+			lp.log.ERROR.Printf("vehicle range: %v", err)
+		}
+	}
+
+	// trigger message after variables are updated
+	lp.bus.Publish(evVehicleSoc, lp.vehicleSoc)
 }
 
 // addTask adds a single task to the queue

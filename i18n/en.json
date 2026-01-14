@@ -137,9 +137,9 @@
       "no": "no",
       "odometer": "Odometer",
       "org": "Organization",
-      "phaseCurrents": "Current L1, L2, L3",
-      "phasePowers": "Power L1, L2, L3",
-      "phaseVoltages": "Voltage L1, L2, L3",
+      "phaseCurrents": "Current",
+      "phasePowers": "Power",
+      "phaseVoltages": "Voltage",
       "phases1p3p": "Phase switch",
       "power": "Power",
       "powerRange": "Power",
@@ -243,11 +243,11 @@
         "limitpower": "Limit (kW)",
         "type": "Type"
       },
-      "description": "Power limitation by external systems (e.g. EnWG 14a controllers). Requires load management configuration.",
+      "description": "Power limitation by external systems (e.g. §14a EnWG, §9 EEG interface or higher-level energy management system). Works together with the load management feature.",
       "downloadCsv": "Download CSV",
       "eventsRecorded": "Recorded {count} grid limitation events.",
       "lastEvent": "Most recent {timeAgo}.",
-      "title": "HEMS",
+      "title": "External Limit",
       "yamlConfigured": "Note: Configured via evcc.yaml. Remove the entry from the file to enable editing here."
     },
     "icon": {
@@ -294,6 +294,7 @@
       "chargerTypeLabel": "Charger type",
       "chargingTitle": "Behaviour",
       "circuitHelp": "Load management assignment to ensure power and current limits are not exceeded.",
+      "circuitInvalid": "Circuit does not exist",
       "circuitLabel": "Circuit",
       "circuitUnassigned": "unassigned",
       "defaultModeHelp": {
@@ -370,6 +371,7 @@
       "vehicleAutoDetection": "auto detection",
       "vehicleHelpAutoDetection": "Automatically selects the most plausible vehicle. Manual override is possible.",
       "vehicleHelpDefault": "Always assume this vehicle is charging here. Auto-detection disabled. Manual override is possible.",
+      "vehicleInvalid": "Vehicle does not exist",
       "vehicleLabel": "Default vehicle",
       "vehiclesTitle": "Vehicles"
     },
@@ -387,7 +389,7 @@
       "title": "Configuration",
       "unconfigured": "not configured",
       "vehicles": "My Vehicles",
-      "welcomeBannerText": "Start with creating a **charger or heater**. If you don't have a real charger yet, choose a **demo charger**.",
+      "welcomeBannerText": "Start with creating at least one **charger**, **heater**, **grid**, **solar**, **battery** or **additional meter**. If you just want to test, pick a **demo device**.",
       "welcomeBannerTitle": "Let's configure your system!",
       "yaml": "Devices from evcc.yaml are not editable."
     },
@@ -760,6 +762,9 @@
       "solar": "Solar"
     }
   },
+  "general": {
+    "note": "Note:"
+  },
   "header": {
     "about": "About",
     "blog": "Blog",
@@ -877,16 +882,24 @@
       "goal": "Charging goal",
       "modalTitle": "Charging Plan",
       "none": "none",
+      "optimization": {
+        "cheapest": "cheapest",
+        "continuous": "continuous",
+        "label": "Optimization"
+      },
       "planNumber": "Plan {number}",
-      "preconditionDescription": "Charge {duration} before departure for battery preconditioning.",
-      "preconditionLong": "Late Charging",
-      "preconditionOptionAll": "everything",
-      "preconditionOptionNo": "no",
-      "preconditionShort": "Late",
+      "precondition": {
+        "description": "Charge {duration} before departure for battery preconditioning.",
+        "label": "Late Charging",
+        "optionAll": "everything",
+        "optionNo": "no"
+      },
       "remove": "Remove",
       "repeating": "repeating",
       "repeatingPlans": "Repeating plans",
       "selectAll": "Select all",
+      "strategyDisabledDescription": "Charging starts as late as possible to finish just in time for departure. With dynamic grid prices or CO₂ tariff, more options are available here.",
+      "strategySettings": "Strategy settings",
       "time": "Time",
       "title": "Plan",
       "titleMinSoc": "Min charge",

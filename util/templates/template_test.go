@@ -49,20 +49,95 @@ func TestRequired(t *testing.T) {
 	_, _, err := tmpl.RenderResult(RenderModeUnitTest, map[string]any{
 		"Param": "foo",
 	})
-	require.NoError(t, err)
+	assert.NoError(t, err, "test: required present")
 
 	_, _, err = tmpl.RenderResult(RenderModeUnitTest, map[string]any{
 		"Param": "",
 	})
-	require.Error(t, err)
+	assert.Error(t, err, "test: required present but empty")
 
 	_, _, err = tmpl.RenderResult(RenderModeUnitTest, map[string]any{
 		"Param": nil,
 	})
-	require.Error(t, err)
+	assert.Error(t, err, "test: required present but nil")
 
 	_, _, err = tmpl.RenderResult(RenderModeDocs, map[string]any{
 		"Param": nil,
+	})
+	assert.NoError(t, err, "docs: required present but nil")
+}
+
+func TestRequiredDeprecated(t *testing.T) {
+	tmpl := &Template{
+		TemplateDefinition: TemplateDefinition{
+			Params: []Param{
+				{
+					Name:       "param",
+					Required:   true,
+					Deprecated: true,
+				},
+			},
+		},
+	}
+
+	_, _, err := tmpl.RenderResult(RenderModeUnitTest, map[string]any{
+		"Param": "foo",
+	})
+	assert.NoError(t, err, "test: required present")
+
+	_, _, err = tmpl.RenderResult(RenderModeUnitTest, map[string]any{
+		"Param": "",
+	})
+	assert.NoError(t, err, "test: required present but empty")
+
+	_, _, err = tmpl.RenderResult(RenderModeUnitTest, map[string]any{
+		"Param": nil,
+	})
+	assert.NoError(t, err, "test: required present but nil")
+
+	_, _, err = tmpl.RenderResult(RenderModeDocs, map[string]any{
+		"Param": nil,
+	})
+	assert.NoError(t, err, "docs: required present but nil")
+}
+
+func TestRequiredPerUsage(t *testing.T) {
+	tmpl := &Template{
+		TemplateDefinition: TemplateDefinition{
+			Params: []Param{
+				{
+					Name: "usage",
+				},
+				{
+					Name:     "param",
+					Required: true,
+					Usages:   []string{"battery"},
+				},
+			},
+		},
+	}
+
+	_, _, err := tmpl.RenderResult(RenderModeUnitTest, map[string]any{
+		"Param": nil,
+		"Usage": nil,
+	})
+	require.NoError(t, err)
+
+	_, _, err = tmpl.RenderResult(RenderModeUnitTest, map[string]any{
+		"Param": nil,
+		"Usage": "pv",
+	})
+	require.NoError(t, err)
+
+	_, _, err = tmpl.RenderResult(RenderModeUnitTest, map[string]any{
+		"Param": nil,
+		"Usage": "battery",
+	})
+	require.Error(t, err)
+
+	_, _, err = tmpl.RenderResult(RenderModeUnitTest, map[string]any{
+		"Param": "foo",
+		"Usage": "battery",
 	})
 	require.NoError(t, err)
 }

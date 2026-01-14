@@ -1,0 +1,16 @@
+template: ddm-18sd
+products:
+  - brand: DDM
+    description:
+      generic: DDM18SD
+params:
+  - name: usage
+    choice: ["pv", "charge"]
+  - name: modbus
+    choice: ["rs485"]
+render: |
+  type: mbmd
+  {{- include "modbus" . }}
+  model: ddm
+  power: {{ if eq .usage "pv" }}-{{ end }}Power
+  energy: Sum

@@ -1,4 +1,5 @@
 template: green-grid-compass
+deprecated: true
 products:
   - brand: Green Grid Compass
 requirements:
@@ -13,8 +14,8 @@ params:
     type: string
     required: true
     help:
-      de: "Erstelle eine App in https://api-portal.eco2grid.com und kopiere den Key"
-      en: "Create an app in https://api-portal.eco2grid.com and copy the key"
+      de: "Erstelle eine App in [api-portal.eco2grid.com](https://api-portal.eco2grid.com) und kopiere den Key"
+      en: "Create an app in [api-portal.eco2grid.com](https://api-portal.eco2grid.com) and copy the key"
   - name: zone
     description:
       de: Zonencode

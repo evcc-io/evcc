@@ -18,8 +18,8 @@ params:
   - name: token
     required: true
     help:
-      de: API Token (https://developer.volttime.com/api-reference/authentication#personal-access-tokens)
-      en: API Token (https://developer.volttime.com/api-reference/authentication#personal-access-tokens)
+      de: API Token ([developer.volttime.com](https://developer.volttime.com/api-reference/authentication#personal-access-tokens))
+      en: API Token ([developer.volttime.com](https://developer.volttime.com/api-reference/authentication#personal-access-tokens))
   - name: serial_number
     required: true
     help:

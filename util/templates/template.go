@@ -13,6 +13,7 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
+	"github.com/spf13/cast"
 )
 
 // Template describes is a proxy device for use with cli and automated testing
@@ -21,12 +22,6 @@ type Template struct {
 
 	title  string
 	titles []string
-}
-
-// GuidedSetupEnabled returns true if there are linked templates or >1 usage
-func (t *Template) GuidedSetupEnabled() bool {
-	_, p := t.ParamByName(ParamUsage)
-	return len(t.Linked) > 0 || (len(p.Choice) > 1 && p.IsAllInOne())
 }
 
 // UpdateParamWithDefaults adds default values to specific param name entries
@@ -59,6 +54,31 @@ func validatePattern(regex, value string, examples []string) error {
 		errMsg += fmt.Sprintf(". Valid examples: %s", strings.Join(examples, ", "))
 	}
 	return errors.New(errMsg)
+}
+
+// UpdateModbusParamsWithDefaults populates modbus param fields with global defaults
+// when device-specific values are not set (zero/empty).
+func (t *Template) UpdateModbusParamsWithDefaults() error {
+	idx, modbusParam := t.ParamByName(ParamModbus)
+	if idx == -1 || len(modbusParam.Choice) == 0 {
+		return nil
+	}
+
+	if modbusParam.ID == 0 {
+		modbusParam.ID = cast.ToInt(ConfigDefaults.ModbusDefault(ModbusParamId))
+	}
+	if modbusParam.Baudrate == 0 {
+		modbusParam.Baudrate = cast.ToInt(ConfigDefaults.ModbusDefault(ModbusParamBaudrate))
+	}
+	if modbusParam.Comset == "" {
+		modbusParam.Comset = cast.ToString(ConfigDefaults.ModbusDefault(ModbusParamComset))
+	}
+	if modbusParam.Port == 0 {
+		modbusParam.Port = cast.ToInt(ConfigDefaults.ModbusDefault(ModbusParamPort))
+	}
+
+	t.Params[idx] = modbusParam
+	return nil
 }
 
 // validate the template (only rudimentary for now)
@@ -214,7 +234,7 @@ func (t *Template) GroupTitle(lang string) string {
 
 // Defaults returns a map of default values for the template
 func (t *Template) Defaults(renderMode int) map[string]any {
-	values := make(map[string]any)
+	values := make(map[string]any, len(t.Params))
 	for _, p := range t.Params {
 		values[p.Name] = p.DefaultValue(renderMode)
 	}
@@ -334,6 +354,14 @@ func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, m
 
 	res := make(map[string]any)
 
+	var usage string
+	for k, v := range values {
+		if strings.ToLower(k) == "usage" {
+			usage = strings.ToLower(cast.ToString(v))
+			break
+		}
+	}
+
 	// TODO this is an utterly horrible hack
 	//
 	// When decoding the actual values ("other" parameter) into the
@@ -389,9 +417,11 @@ func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, m
 				}
 
 				// validate required fields from yaml
-				if s == "" && p.IsRequired() && (renderMode == RenderModeUnitTest ||
-					renderMode == RenderModeInstance && !testing.Testing()) {
-					return nil, nil, fmt.Errorf("missing required `%s`", p.Name)
+				if s == "" && p.IsRequired() && (renderMode == RenderModeUnitTest || renderMode == RenderModeInstance && !testing.Testing()) {
+					// validate required per usage
+					if len(p.Usages) == 0 || slices.Contains(p.Usages, usage) {
+						return nil, nil, fmt.Errorf("missing required `%s`", p.Name)
+					}
 				}
 
 				// validate pattern if defined

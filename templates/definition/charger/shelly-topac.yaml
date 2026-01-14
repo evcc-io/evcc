@@ -1,0 +1,22 @@
+template: shelly-topac
+products:
+  - brand: Shelly
+    description:
+      generic: Top AC Portable EV Charger
+capabilities: ["mA"]
+requirements:
+  description:
+    de: "'auto_charge' muss auf false gesetzt werden."
+    en: "'auto_charge' must be set to false."
+  evcc: ["sponsorship"]
+params:
+  - name: host
+    required: true
+  - name: user
+  - name: password
+    mask: true
+render: |
+  type: shelly-topac
+  uri: http://{{ .host }}
+  user: {{ .user }}
+  password: {{ .password }}

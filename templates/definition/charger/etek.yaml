@@ -1,0 +1,15 @@
+template: etek
+products:
+  - brand: ETEK
+    description:
+      generic: EKEPC2-C/S EV Charge Controller
+capabilities: ["mA"]
+params:
+  - name: modbus
+    choice: ["rs485", "tcpip"]
+    baudrate: 9600
+    comset: "8N1"
+    id: 255
+render: |
+  type: etek
+  {{- include "modbus" . }}

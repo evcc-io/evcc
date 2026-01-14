@@ -11,18 +11,12 @@ capabilities: ["battery-control"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
-    allinone: true
   - name: modbus
     choice: ["rs485", "tcpip"]
     baudrate: 9600
     id: 1
-  - name: capacity
-    advanced: true
-  - name: minsoc
-    advanced: true
-  - name: maxsoc
-    advanced: true
   - name: maxacpower
+  - preset: battery-params
   - name: maxdischargecurrent
     required: true
     default: 100
@@ -384,7 +378,5 @@ render: |
               address: 109 # Battery Max Discharging Current
               type: writemultiple
               decode: uint16
-  capacity: {{ .capacity }} # kWh
-  minsoc: {{ .minsoc }} # %
-  maxsoc: {{ .maxsoc }} # %
+  {{- include "battery-params" . }}
   {{- end }}

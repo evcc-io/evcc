@@ -20,8 +20,8 @@
 					@site-changed="siteChanged"
 				/>
 
+				<WelcomeBanner v-if="setupRequired" />
 				<h2 class="my-4">{{ $t("config.section.loadpoints") }}</h2>
-				<WelcomeBanner v-if="loadpointsRequired" class="my-4" />
 				<div class="p-0 config-list">
 					<DeviceCard
 						v-for="loadpoint in loadpoints"
@@ -48,7 +48,6 @@
 					<NewDeviceButton
 						data-testid="add-loadpoint"
 						:title="$t('config.main.addLoadpoint')"
-						:attention="loadpointsRequired"
 						@click="newLoadpoint"
 					/>
 				</div>
@@ -318,6 +317,7 @@
 						{{ $t("help.issueButton") }}
 					</router-link>
 					<button
+						data-testid="backup-restore"
 						class="btn btn-outline-secondary text-truncate"
 						@click="openModal('backupRestoreModal')"
 					>
@@ -454,6 +454,7 @@ import type {
 	ConfigMeter,
 	LoadpointType,
 	Timeout,
+	VehicleOption,
 	MeterType,
 	SiteConfig,
 	DeviceType,
@@ -570,8 +571,8 @@ export default defineComponent({
 		authProviders() {
 			return store.state?.authProviders;
 		},
-		loadpointsRequired() {
-			return this.loadpoints.length === 0;
+		setupRequired() {
+			return store.state?.setupRequired;
 		},
 		siteTitle() {
 			return this.site?.title;
@@ -652,7 +653,7 @@ export default defineComponent({
 			if (org) result.org = { value: org };
 			return result;
 		},
-		vehicleOptions() {
+		vehicleOptions(): VehicleOption[] {
 			return this.vehicles.map((v) => ({ key: v.name, name: v.config?.title || v.name }));
 		},
 		shmTags(): DeviceTags {
@@ -792,21 +793,22 @@ export default defineComponent({
 				restart.restartNeeded = true;
 			}
 		},
+		async loadConfig(path: string) {
+			const validateStatus = (code: number) => [200, 404].includes(code);
+			const response = await api.get(`/config/${path}`, { validateStatus });
+			return response.status === 200 ? response.data : undefined;
+		},
 		async loadVehicles() {
-			const response = await api.get("/config/devices/vehicle");
-			this.vehicles = response.data || [];
+			this.vehicles = (await this.loadConfig("devices/vehicle")) || [];
 		},
 		async loadChargers() {
-			const response = await api.get("/config/devices/charger");
-			this.chargers = response.data || [];
+			this.chargers = (await this.loadConfig("devices/charger")) || [];
 		},
 		async loadMeters() {
-			const response = await api.get("/config/devices/meter");
-			this.meters = response.data || [];
+			this.meters = (await this.loadConfig("devices/meter")) || [];
 		},
 		async loadCircuits() {
-			const response = await api.get("/config/devices/circuit");
-			const circuits = response.data || [];
+			const circuits = (await this.loadConfig("devices/circuit")) || [];
 			// set lpc default title
 			circuits.forEach((c: ConfigCircuit) => {
 				if (c.name === "lpc" && !c.config?.title) {
@@ -817,16 +819,13 @@ export default defineComponent({
 			this.circuits = circuits;
 		},
 		async loadSite() {
-			const response = await api.get("/config/site", {
-				validateStatus: (status: number) => status < 500,
-			});
-			if (response.status === 200) {
-				this.site = response.data;
+			const data = await this.loadConfig("site");
+			if (data) {
+				this.site = data;
 			}
 		},
 		async loadLoadpoints() {
-			const response = await api.get("/config/loadpoints");
-			this.loadpoints = response.data || [];
+			this.loadpoints = (await this.loadConfig("loadpoints")) || [];
 		},
 		getMetersByNames(names: string[] | null): ConfigMeter[] {
 			if (!names || !this.meters) {
