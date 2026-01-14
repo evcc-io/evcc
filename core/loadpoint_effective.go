@@ -221,6 +221,12 @@ func (lp *Loadpoint) effectiveResumeThreshold() int {
 		return 0
 	}
 
+	// Check if limit is configured
+	limit := lp.effectiveLimitSoc()
+	if limit == 0 || limit >= 100 {
+		return 0
+	}
+
 	if v := lp.GetVehicle(); v != nil {
 		if threshold := vehicle.Settings(lp.log, v).GetResumeThreshold(); threshold > 0 {
 			return threshold

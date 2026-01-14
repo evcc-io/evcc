@@ -1050,27 +1050,12 @@ func (lp *Loadpoint) minSocNotReached() bool {
 // Returns true if charging should be prevented due to resume threshold.
 // Only applies in MinPV and Now modes, not in PV mode or when planner is active.
 func (lp *Loadpoint) withinResumeThreshold() bool {
-	mode := lp.GetMode()
-
-	// Only apply in MinPV and Now modes
-	if mode != api.ModeMinPV && mode != api.ModeNow {
-		return false
-	}
-
-	v := lp.GetVehicle()
-	if v == nil {
-		return false
-	}
-
-	threshold := vehicle.Settings(lp.log, v).GetResumeThreshold()
+	threshold := lp.effectiveResumeThreshold()
 	if threshold == 0 {
-		return false // Feature disabled
+		return false // Feature disabled or not applicable in current mode
 	}
 
 	limit := lp.effectiveLimitSoc()
-	if limit == 0 || limit >= 100 {
-		return false // No limit configured
-	}
 
 	// Check if SoC is within the threshold range
 	// Charging should resume when SoC <= (limit - threshold)
