@@ -76,7 +76,7 @@ render: |
     register:
       address: {{ if eq .tempsource "warmwater" -}} 42 {{ else }} 49 {{- end }}
       type: input
-      encoding: int16
+      encoding: int16nan
     scale: 0.01
   {{- end }}
   power:
