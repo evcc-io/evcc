@@ -11,6 +11,14 @@ import (
 	"github.com/gosimple/slug"
 )
 
+// Zone defines a time-based price zone
+type Zone struct {
+	Price  float64 `mapstructure:"price"`
+	Days   string  `mapstructure:"days,omitempty"`
+	Hours  string  `mapstructure:"hours,omitempty"`
+	Months string  `mapstructure:"months,omitempty"`
+}
+
 const (
 	ParamUsage  = "usage"
 	ParamModbus = "modbus"

@@ -303,14 +303,10 @@ export default defineComponent({
       return CURRENCY_SYMBOLS[currency] || currency;
     },
     fmtPricePerKWh(amout = 0, currency = CURRENCY.EUR, short = false, withUnit = true) {
-      let value = amout;
-      let minimumFractionDigits = 1;
-      let maximumFractionDigits = 3;
-      if (ENERGY_PRICE_IN_SUBUNIT[currency]) {
-        value *= 100;
-        minimumFractionDigits = 1;
-        maximumFractionDigits = 1;
-      }
+      const factor = this.pricePerKWhDisplayFactor(currency);
+      const value = amout * factor;
+      const minimumFractionDigits = 1;
+      const maximumFractionDigits = ENERGY_PRICE_IN_SUBUNIT[currency] ? 1 : 3;
       const price = new Intl.NumberFormat(this.$i18n?.locale, {
         style: "decimal",
         minimumFractionDigits,
@@ -327,6 +323,9 @@ export default defineComponent({
     pricePerKWhUnit(currency = CURRENCY.EUR, short = false) {
       const unit = ENERGY_PRICE_IN_SUBUNIT[currency] || currency;
       return `${unit}${short ? "" : "/kWh"}`;
+    },
+    pricePerKWhDisplayFactor(currency = CURRENCY.EUR) {
+      return ENERGY_PRICE_IN_SUBUNIT[currency] ? 100 : 1;
     },
     fmtTimeAgo(elapsed: number) {
       const units = {

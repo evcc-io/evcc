@@ -11,7 +11,7 @@ requirements:
 group: price
 params:
   - name: min
-    type: float
+    type: pricePerKWh
     default: 0.10
     description:
       en: Minimum price
@@ -20,7 +20,7 @@ params:
       en: Lowest price, typically at noon (can be negative)
       de: Niedrigster Preis, typisch zur Mittagszeit (kann negativ sein)
   - name: max
-    type: float
+    type: pricePerKWh
     default: 0.39
     description:
       en: Maximum price

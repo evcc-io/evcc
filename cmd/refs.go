@@ -15,12 +15,17 @@ import (
 )
 
 var references struct {
-	meter, charger, vehicle, circuit []string
+	meter, charger, vehicle, circuit, tariff []string
 }
 
 func collectRefs(conf globalconfig.All) error {
 	// site
 	if err := collectSiteRefs(conf); err != nil {
+		return err
+	}
+
+	// tariffs
+	if err := collectTariffRefs(); err != nil {
 		return err
 	}
 
@@ -69,6 +74,27 @@ func collectSiteRefs(conf globalconfig.All) error {
 		if v, err := settings.String(key); err == nil && v != "" {
 			references.meter = append(references.meter, strings.Split(v, ",")...)
 		}
+	}
+
+	return nil
+}
+
+func collectTariffRefs() error {
+	// append tariff devices from settings
+	if v, err := settings.String(keys.GridTariff); err == nil && v != "" {
+		references.tariff = append(references.tariff, v)
+	}
+	if v, err := settings.String(keys.FeedinTariff); err == nil && v != "" {
+		references.tariff = append(references.tariff, v)
+	}
+	if v, err := settings.String(keys.Co2Tariff); err == nil && v != "" {
+		references.tariff = append(references.tariff, v)
+	}
+	if v, err := settings.String(keys.PlannerTariff); err == nil && v != "" {
+		references.tariff = append(references.tariff, v)
+	}
+	if v, err := settings.String(keys.SolarTariffs); err == nil && v != "" {
+		references.tariff = append(references.tariff, strings.Split(v, ",")...)
 	}
 
 	return nil

@@ -18,6 +18,7 @@
 
 <script lang="ts">
 import "@h2d2/shopicons/es/regular/invoice";
+import "@h2d2/shopicons/es/regular/receivepayment";
 import "@h2d2/shopicons/es/regular/eco1";
 import "@h2d2/shopicons/es/regular/clock";
 import "@h2d2/shopicons/es/regular/sun";
@@ -29,6 +30,7 @@ import type { TariffType } from "@/types/evcc";
 type ConfigTariff = {
 	id: number;
 	name: string;
+	deviceTitle?: string;
 	config?: {
 		template?: string;
 	};
@@ -53,18 +55,15 @@ export default defineComponent({
 			if (this.title) {
 				return this.title;
 			}
-			if (this.tariff.config?.template) {
-				return this.tariff.config.template;
+			if (this.tariff.deviceTitle) {
+				return this.tariff.deviceTitle;
 			}
-			return this.fallbackTitle;
-		},
-		fallbackTitle(): string {
 			return this.$t(`config.tariff.type.${this.tariffType}`);
 		},
 		iconComponent(): string {
 			const iconMap: Record<TariffType, string> = {
 				grid: "shopicon-regular-invoice",
-				feedin: "shopicon-regular-invoice",
+				feedin: "shopicon-regular-receivepayment",
 				co2: "shopicon-regular-eco1",
 				planner: "shopicon-regular-clock",
 				solar: "shopicon-regular-sun",

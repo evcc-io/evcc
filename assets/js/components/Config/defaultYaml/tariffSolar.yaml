@@ -1,5 +1,5 @@
 ## PV production forecast
-
+tariff: solar
 forecast: # hourly solar production forecast (W)
   source: js
   script: |

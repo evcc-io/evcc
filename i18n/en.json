@@ -129,12 +129,13 @@
       "enabled": "Enabled",
       "energy": "Energy",
       "feedinPrice": "Feed-in price",
-      "forecastUntil": "Forecast available",
+      "forecast": "Forecast",
       "gridPrice": "Grid price",
       "heaterTempLimit": "Heater limit",
       "hemsActiveLimit": "Active limit",
       "hemsType": "Communication",
       "identifier": "RFID-Identifier",
+      "max": "max",
       "no": "no",
       "odometer": "Odometer",
       "org": "Organization",
@@ -658,11 +659,23 @@
       "title": "Tariffs & Forecasts",
       "titleChoice": "What Do You Want To Add?",
       "type": {
-        "co2": "CO₂",
-        "feedin": "Feed-in",
-        "grid": "Grid",
+        "co2": "CO₂ Intensity",
+        "feedin": "Feed-In Price",
+        "grid": "Grid Consumption Price",
         "planner": "Planner",
         "solar": "Solar"
+      },
+      "zones": {
+        "add": "Add zone",
+        "days": "Days (optional)",
+        "daysPlaceholder": "mon-fri",
+        "hours": "Hours (optional)",
+        "hoursPlaceholder": "0-6, 20-0",
+        "months": "Months (optional)",
+        "monthsPlaceholder": "nov-feb",
+        "price": "Price",
+        "pricePlaceholder": "0.20",
+        "remove": "Remove zone"
       }
     },
     "telemetry": {

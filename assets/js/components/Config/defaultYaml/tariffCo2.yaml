@@ -1,5 +1,5 @@
 ## CO₂ intensity forecast
-
+tariff: co2
 forecast: # hourly CO₂ intensity forecast (g/kWh)
   source: js
   script: |

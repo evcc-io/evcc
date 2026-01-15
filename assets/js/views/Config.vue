@@ -181,6 +181,11 @@
 						:tags="deviceTags('tariff', feedinTariff.name)"
 						@edit="editTariff('feedin', feedinTariff.id)"
 					/>
+					<NewDeviceButton
+						v-if="possibleTariffTypes.length"
+						:title="$t('config.tariff.addTariff')"
+						@click="newTariff(null, possibleTariffTypes)"
+					/>
 					<TariffCard
 						v-if="co2Tariff"
 						:tariff="co2Tariff"
@@ -188,14 +193,6 @@
 						:has-error="hasDeviceError('tariff', co2Tariff.name)"
 						:tags="deviceTags('tariff', co2Tariff.name)"
 						@edit="editTariff('co2', co2Tariff.id)"
-					/>
-					<TariffCard
-						v-if="plannerTariff"
-						:tariff="plannerTariff"
-						tariff-type="planner"
-						:has-error="hasDeviceError('tariff', plannerTariff.name)"
-						:tags="deviceTags('tariff', plannerTariff.name)"
-						@edit="editTariff('planner', plannerTariff.id)"
 					/>
 					<TariffCard
 						v-for="tariff in solarTariffs"
@@ -206,15 +203,18 @@
 						:tags="deviceTags('tariff', tariff.name)"
 						@edit="editTariff('solar', tariff.id)"
 					/>
-					<NewDeviceButton
-						v-if="!gridTariff || !feedinTariff"
-						:title="$t('config.tariff.addTariff')"
-						@click="newTariff(null, ['grid', 'feedin'])"
+					<TariffCard
+						v-if="plannerTariff"
+						:tariff="plannerTariff"
+						tariff-type="planner"
+						:has-error="hasDeviceError('tariff', plannerTariff.name)"
+						:tags="deviceTags('tariff', plannerTariff.name)"
+						@edit="editTariff('planner', plannerTariff.id)"
 					/>
 					<NewDeviceButton
-						v-if="!co2Tariff || !plannerTariff || solarTariffs.length === 0"
+						v-if="possibleForecastTypes.length"
 						:title="$t('config.tariff.addForecast')"
-						@click="newTariff(null, ['co2', 'solar', 'planner'])"
+						@click="newTariff(null, possibleForecastTypes)"
 					/>
 				</div>
 
@@ -438,6 +438,7 @@
 					:id="selectedTariffId"
 					:type="selectedTariffType"
 					:type-choices="selectedTariffTypeChoices"
+					:currency="currency"
 					@added="tariffAdded"
 					@updated="tariffChanged"
 					@removed="tariffRemoved"
@@ -633,6 +634,7 @@ export default defineComponent({
 				vehicle: {},
 				charger: {},
 				loadpoint: {},
+				tariff: {},
 			} as DeviceValuesMap,
 			isComponentMounted: true,
 			isPageVisible: true,
@@ -653,6 +655,9 @@ export default defineComponent({
 		},
 		setupRequired() {
 			return store.state?.setupRequired;
+		},
+		currency() {
+			return store.state?.currency || "EUR";
 		},
 		siteTitle() {
 			return this.site?.title;
@@ -699,6 +704,19 @@ export default defineComponent({
 		solarTariffs() {
 			const names = this.tariffRefs?.solar || [];
 			return names.map((name) => this.tariffs.find((t) => t.name === name)).filter(Boolean);
+		},
+		possibleTariffTypes(): TariffType[] {
+			const types: TariffType[] = [];
+			if (!this.gridTariff) types.push("grid");
+			if (!this.feedinTariff) types.push("feedin");
+			return types;
+		},
+		possibleForecastTypes(): TariffType[] {
+			const types: TariffType[] = [];
+			if (!this.co2Tariff) types.push("co2");
+			types.push("solar"); // Solar can have multiple
+			if (!this.plannerTariff) types.push("planner");
+			return types;
 		},
 		selectedChargerName() {
 			return this.getChargerById(this.selectedChargerId)?.name;
@@ -924,7 +942,7 @@ export default defineComponent({
 			this.tariffs = (await this.loadConfig("devices/tariff")) || [];
 		},
 		async loadTariffRefs() {
-			const response = await api.get("/config/tariffs", {
+			const response = await api.get("/config/tariff", {
 				validateStatus: (code: number) => [200, 404].includes(code),
 			});
 			if (response.status === 200) {
@@ -1080,40 +1098,18 @@ export default defineComponent({
 			this.$nextTick(() => this.tariffModal().show());
 		},
 		async tariffAdded(usage: TariffType, name: string) {
-			// Auto-assign tariff based on usage type
-			if (usage === "grid") {
-				this.tariffRefs.grid = name;
-			} else if (usage === "feedin") {
-				this.tariffRefs.feedin = name;
-			} else if (usage === "co2") {
-				this.tariffRefs.co2 = name;
-			} else if (usage === "planner") {
-				this.tariffRefs.planner = name;
-			} else if (usage === "solar") {
-				if (!this.tariffRefs.solar) this.tariffRefs.solar = [];
-				this.tariffRefs.solar.push(name);
-			}
-			await this.saveTariffRefs(usage);
-			this.tariffChanged();
-		},
-		async tariffRemoved(usage: TariffType) {
-			// Clear assignment when tariff device is removed
-			if (usage === "grid") {
-				this.tariffRefs.grid = "";
-				await this.saveTariffRefs("grid");
-			} else if (usage === "feedin") {
-				this.tariffRefs.feedin = "";
-				await this.saveTariffRefs("feedin");
-			} else if (usage === "co2") {
-				this.tariffRefs.co2 = "";
-				await this.saveTariffRefs("co2");
-			} else if (usage === "planner") {
-				this.tariffRefs.planner = "";
-				await this.saveTariffRefs("planner");
-			} else if (usage === "solar") {
-				// For solar, reload assignments to get updated list
+			try {
+				await api.put(`/config/tariff/${usage}`, name);
 				await this.loadTariffRefs();
+				await this.loadDirty();
+				this.tariffChanged();
+			} catch (error) {
+				console.error("tariffAdded error:", error);
+				throw error;
 			}
+		},
+		async tariffRemoved() {
+			await this.loadTariffRefs();
 			this.tariffChanged();
 		},
 		async tariffChanged() {
@@ -1123,14 +1119,7 @@ export default defineComponent({
 			await this.loadTariffs();
 			await this.loadTariffRefs();
 			this.loadDirty();
-		},
-		async saveTariffRefs(key: TariffType) {
-			const body = key
-				? { [key]: this.tariffRefs[key as keyof typeof this.tariffRefs] }
-				: this.tariffRefs;
-			await api.put("/config/tariffs", body);
-			await this.loadTariffRefs();
-			await this.loadDirty();
+			this.updateValues();
 		},
 		tariffModal(): Modal {
 			const elem = document.getElementById("tariffModal");
@@ -1243,6 +1232,7 @@ export default defineComponent({
 					meter: this.meters,
 					vehicle: this.vehicles,
 					charger: this.chargers,
+					tariff: this.tariffs,
 				} as Record<DeviceType, any[]>;
 				for (const type in devices) {
 					for (const device of devices[type as DeviceType]) {

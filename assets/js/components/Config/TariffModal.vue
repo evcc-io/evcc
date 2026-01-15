@@ -8,6 +8,8 @@
 		:initial-values="initialValues"
 		:show-main-content="!!tariffType"
 		:on-template-change="handleTemplateChange"
+		:currency="currency"
+		:preserve-on-template-change="preserveFields"
 		@added="handleAdded"
 		@updated="$emit('updated')"
 		@removed="handleRemoved"
@@ -24,6 +26,22 @@
 				/>
 			</div>
 		</template>
+		<template #before-template="{ values }">
+			<FormRow
+				v-if="hasDeviceTitle"
+				id="tariffParamDeviceTitle"
+				:label="$t('config.general.title')"
+			>
+				<PropertyField
+					id="tariffParamDeviceTitle"
+					v-model.trim="values.deviceTitle"
+					type="String"
+					size="w-100"
+					class="me-2"
+					required
+				/>
+			</FormRow>
+		</template>
 	</DeviceModalBase>
 </template>
 
@@ -31,6 +49,8 @@
 import { defineComponent, type PropType } from "vue";
 import DeviceModalBase from "./DeviceModal/DeviceModalBase.vue";
 import NewDeviceButton from "./NewDeviceButton.vue";
+import FormRow from "./FormRow.vue";
+import PropertyField from "./PropertyField.vue";
 import { ConfigType, type TariffType } from "@/types/evcc";
 import { customTemplateOption, type TemplateGroup } from "./DeviceModal/TemplateSelector.vue";
 import type { Product, DeviceValues } from "./DeviceModal";
@@ -40,6 +60,7 @@ import tariffSolarYaml from "./defaultYaml/tariffSolar.yaml?raw";
 
 const initialValues = {
 	type: ConfigType.Template,
+	deviceTitle: "",
 	deviceProduct: undefined,
 	yaml: undefined,
 	template: null,
@@ -50,17 +71,21 @@ export default defineComponent({
 	components: {
 		DeviceModalBase,
 		NewDeviceButton,
+		FormRow,
+		PropertyField,
 	},
 	props: {
 		id: Number,
-		type: { type: String as PropType<TariffType>, default: null },
+		type: { type: String as PropType<TariffType | null>, default: null },
 		typeChoices: { type: Array as () => TariffType[], default: () => [] },
+		currency: { type: String, default: "EUR" },
 	},
 	emits: ["added", "updated", "removed", "close"],
 	data() {
 		return {
 			initialValues,
 			selectedType: null as TariffType | null,
+			preserveFields: ["deviceTitle"],
 		};
 	},
 	computed: {
@@ -80,6 +105,9 @@ export default defineComponent({
 			}
 			return this.$t(`config.tariff.${this.tariffType}.titleEdit`);
 		},
+		hasDeviceTitle(): boolean {
+			return this.tariffType === "solar";
+		},
 	},
 	methods: {
 		provideTemplateOptions(products: Product[]): TemplateGroup[] {
@@ -91,25 +119,35 @@ export default defineComponent({
 
 			// Separate demo/generic templates from real services
 			const genericTemplates = [
+				"fixed",
+				"fixed-zones",
 				"demo-co2-forecast",
 				"demo-dynamic-grid",
 				"demo-solar-forecast",
 				"energy-charts-api",
 			];
 
-			// Filter products by group upfront
-			const filterByGroup = (group: string, onlyGeneric: boolean = false) =>
+			// Filter products by group
+			const filterByGroup = (group: string) =>
 				products.filter((p: Product) => {
 					const isGeneric = genericTemplates.includes(p.template);
-					return p.group === group && (onlyGeneric ? isGeneric : !isGeneric);
+					return p.group === group && !isGeneric;
 				});
+
+			// Extract generic templates in order from genericTemplates array
+			const extractGeneric = (group: string) =>
+				genericTemplates
+					.map((template) =>
+						products.find((p: Product) => p.template === template && p.group === group)
+					)
+					.filter((p): p is Product => p !== undefined);
 
 			const priceProducts = filterByGroup("price");
 			const co2Products = filterByGroup("co2");
 			const solarProducts = filterByGroup("solar");
-			const priceGeneric = filterByGroup("price", true);
-			const co2Generic = filterByGroup("co2", true);
-			const solarGeneric = filterByGroup("solar", true);
+			const priceGeneric = extractGeneric("price");
+			const co2Generic = extractGeneric("co2");
+			const solarGeneric = extractGeneric("solar");
 
 			// Special handling for planner: show price + co2 services
 			if (this.tariffType === "planner") {

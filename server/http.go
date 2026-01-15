@@ -339,8 +339,9 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 
 		// tariffs
 		for _, r := range map[string]route{
-			"tariffs":       {"GET", "/tariffs", tariffsHandler},
-			"updatetariffs": {"PUT", "/tariffs", updateTariffsHandler},
+			"tariff":         {"GET", "/tariff", tariffsHandler},
+			"updatetariff":   {"PUT", "/tariff/{type}", updateTariffHandler},
+			"updatecurrency": {"PUT", "/currency", updateCurrencyHandler},
 		} {
 			api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
 		}

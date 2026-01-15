@@ -129,11 +129,13 @@
       "enabled": "Ladebereit",
       "energy": "Energie",
       "feedinPrice": "Einspeisevergütung",
+      "forecast": "Vorhersage",
       "gridPrice": "Netzpreis",
       "heaterTempLimit": "Heizungslimit",
       "hemsActiveLimit": "Aktives Limit",
       "hemsType": "Kommunikation",
       "identifier": "RFID-Kennung",
+      "max": "max",
       "no": "Nein",
       "odometer": "Kilometerstand",
       "org": "Organisation",
@@ -615,6 +617,27 @@
       "restartRequiredMessage": "Konfiguration geändert.",
       "restartingDescription": "Bitte warten …",
       "restartingMessage": "evcc wird neu gestartet."
+    },
+    "tariff": {
+      "type": {
+        "co2": "CO₂ Vorhersage",
+        "feedin": "Einspeisevergütung",
+        "grid": "Netzbezugspreis",
+        "planner": "Planer",
+        "solar": "Solar"
+      },
+      "zones": {
+        "add": "Zone hinzufügen",
+        "days": "Tage (optional)",
+        "daysPlaceholder": "mon-fri",
+        "hours": "Stunden (optional)",
+        "hoursPlaceholder": "0-6, 20-0",
+        "months": "Monate (optional)",
+        "monthsPlaceholder": "nov-feb",
+        "price": "Preis",
+        "pricePlaceholder": "0.20",
+        "remove": "Zone entfernen"
+      }
     },
     "tariffs": {
       "description": "Hinterlege deine Stromtarife, um die Kosten zu berechnen.",

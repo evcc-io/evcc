@@ -55,6 +55,7 @@
 							v-bind="param"
 							v-model="values[param.Name]"
 							:service-values="serviceValues[param.Name]"
+							:currency="currency"
 						/>
 
 						<div v-if="auth.code">
@@ -126,6 +127,7 @@
 								v-bind="param"
 								v-model="values[param.Name]"
 								:service-values="serviceValues[param.Name]"
+								:currency="currency"
 							/>
 
 							<PropertyCollapsible>
@@ -137,6 +139,7 @@
 										v-bind="param"
 										v-model="values[param.Name]"
 										:service-values="serviceValues[param.Name]"
+										:currency="currency"
 									/>
 								</template>
 								<template v-if="$slots['collapsible-more']" #more>
@@ -228,6 +231,7 @@ export default defineComponent({
 		showMainContent: { type: Boolean, default: true },
 		// Optional: usage parameter for loadProducts (e.g., meter type: "pv", "battery", "aux", "ext")
 		usage: String,
+		currency: { type: String, default: "EUR" },
 		// Optional: custom product name computation
 		getProductName: Function as PropType<
 			(values: DeviceValues, templateName: string | null) => string
@@ -494,7 +498,6 @@ export default defineComponent({
 		},
 		values: {
 			handler() {
-				this.test = initialTestState();
 				this.updateServiceValues();
 			},
 			deep: true,

@@ -354,13 +354,22 @@ func testInstance(instance any) map[string]testResult {
 	if dev, ok := instance.(api.Tariff); ok {
 		rates, err := dev.Rates()
 
-		// Determine field name based on tariff type
-		valueKey := "price"
+		// Determine field names based on tariff type
+		var valueKey, ratesKey string
 		switch dev.Type() {
+		case api.TariffTypePriceDynamic:
+		case api.TariffTypePriceForecast:
+			valueKey = "price"
+			ratesKey = "priceRates"
 		case api.TariffTypeCo2:
 			valueKey = "co2"
+			ratesKey = "co2Rates"
 		case api.TariffTypeSolar:
 			valueKey = "power"
+			ratesKey = "solarRates"
+		default:
+			valueKey = "price"
+			ratesKey = ""
 		}
 
 		if err == nil && len(rates) > 0 {
@@ -370,12 +379,9 @@ func testInstance(instance any) map[string]testResult {
 				makeResult(valueKey, rate.Value, nil)
 			}
 
-			// Get forecast end time
-			rates.Sort()
-			lastRate := rates[len(rates)-1]
-			makeResult("forecastUntil", lastRate.End, nil)
-		} else {
-			makeResult(valueKey, nil, err)
+			if ratesKey != "" {
+				makeResult(ratesKey, rates, nil)
+			}
 		}
 	}
 

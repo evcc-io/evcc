@@ -1,122 +1,116 @@
 package server
 
 import (
-	"encoding/json"
+	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/gorilla/mux"
 )
-
-// TariffRefs holds the tariff to usage type mapping
-type TariffRefs struct {
-	Currency string   `json:"currency"`
-	Grid     string   `json:"grid"`
-	FeedIn   string   `json:"feedin"`
-	Co2      string   `json:"co2"`
-	Planner  string   `json:"planner"`
-	Solar    []string `json:"solar"`
-}
 
 // tariffsHandler returns current tariff assignments
 func tariffsHandler(w http.ResponseWriter, r *http.Request) {
-	var res TariffRefs
-	if err := settings.Json(keys.TariffRefs, &res); err != nil {
-		// return defaults if not configured
-		res = TariffRefs{Currency: "EUR", Solar: []string{}}
+	res := struct {
+		Currency string   `json:"currency"`
+		Grid     string   `json:"grid"`
+		FeedIn   string   `json:"feedin"`
+		Co2      string   `json:"co2"`
+		Planner  string   `json:"planner"`
+		Solar    []string `json:"solar"`
+	}{
+		Currency: "EUR",
+		Solar:    []string{},
 	}
-	if res.Solar == nil {
+
+	// Read individual keys
+	if currency, _ := settings.String(keys.Currency); currency != "" {
+		res.Currency = currency
+	}
+	res.Grid, _ = settings.String(keys.GridTariff)
+	res.FeedIn, _ = settings.String(keys.FeedinTariff)
+	res.Co2, _ = settings.String(keys.Co2Tariff)
+	res.Planner, _ = settings.String(keys.PlannerTariff)
+
+	if v, err := settings.String(keys.SolarTariffs); err == nil && v != "" {
+		res.Solar = strings.Split(v, ",")
+	} else {
 		res.Solar = []string{}
 	}
+
 	jsonWrite(w, res)
 }
 
-// updateTariffsHandler updates tariff assignments
-func updateTariffsHandler(w http.ResponseWriter, r *http.Request) {
-	var payload struct {
-		Currency *string
-		Grid     *string
-		FeedIn   *string
-		Co2      *string
-		Planner  *string
-		Solar    *[]string
+func validateTariffRef(w http.ResponseWriter, ref string) bool {
+	if ref != "" {
+		if _, err := config.Tariffs().ByName(ref); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return false
+		}
 	}
+	return true
+}
 
-	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+// updateTariffHandler updates a specific tariff assignment by type
+func updateTariffHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	tariffType := vars["type"]
+
+	var ref string
+	if err := jsonDecoder(r.Body).Decode(&ref); err != nil {
 		jsonError(w, http.StatusBadRequest, err)
 		return
 	}
 
-	// Load current assignments
-	var assignments TariffRefs
-	if err := settings.Json(keys.TariffRefs, &assignments); err != nil {
-		assignments = TariffRefs{Currency: "EUR", Solar: []string{}}
+	if !validateTariffRef(w, ref) {
+		return
 	}
 
-	// Update fields if provided
-	if payload.Currency != nil {
-		assignments.Currency = *payload.Currency
-	}
+	switch tariffType {
+	case "grid":
+		settings.SetString(keys.GridTariff, ref)
+		setConfigDirty()
 
-	// Validate and update tariff references
-	if payload.Grid != nil {
-		if *payload.Grid != "" {
-			if _, err := config.Tariffs().ByName(*payload.Grid); err != nil {
-				jsonError(w, http.StatusBadRequest, err)
-				return
-			}
+	case "feedin":
+		settings.SetString(keys.FeedinTariff, ref)
+		setConfigDirty()
+
+	case "co2":
+		settings.SetString(keys.Co2Tariff, ref)
+		setConfigDirty()
+
+	case "planner":
+		settings.SetString(keys.PlannerTariff, ref)
+		setConfigDirty()
+
+	case "solar":
+		var existing []string
+		if v, err := settings.String(keys.SolarTariffs); err == nil && v != "" {
+			existing = strings.Split(v, ",")
 		}
-		assignments.Grid = *payload.Grid
-	}
+		settings.SetString(keys.SolarTariffs, strings.Join(append(existing, ref), ","))
+		setConfigDirty()
 
-	if payload.FeedIn != nil {
-		if *payload.FeedIn != "" {
-			if _, err := config.Tariffs().ByName(*payload.FeedIn); err != nil {
-				jsonError(w, http.StatusBadRequest, err)
-				return
-			}
-		}
-		assignments.FeedIn = *payload.FeedIn
+	default:
+		jsonError(w, http.StatusBadRequest, fmt.Errorf("invalid tariff type: %s", tariffType))
+		return
 	}
-
-	if payload.Co2 != nil {
-		if *payload.Co2 != "" {
-			if _, err := config.Tariffs().ByName(*payload.Co2); err != nil {
-				jsonError(w, http.StatusBadRequest, err)
-				return
-			}
-		}
-		assignments.Co2 = *payload.Co2
-	}
-
-	if payload.Planner != nil {
-		if *payload.Planner != "" {
-			if _, err := config.Tariffs().ByName(*payload.Planner); err != nil {
-				jsonError(w, http.StatusBadRequest, err)
-				return
-			}
-		}
-		assignments.Planner = *payload.Planner
-	}
-
-	if payload.Solar != nil {
-		// Validate all solar tariff references
-		for _, name := range *payload.Solar {
-			if name != "" {
-				if _, err := config.Tariffs().ByName(name); err != nil {
-					jsonError(w, http.StatusBadRequest, err)
-					return
-				}
-			}
-		}
-		assignments.Solar = *payload.Solar
-	}
-
-	// Save updated assignments
-	settings.SetJson(keys.TariffRefs, assignments)
-	setConfigDirty()
 
 	status := map[bool]int{false: http.StatusOK, true: http.StatusAccepted}
 	w.WriteHeader(status[ConfigDirty()])
+}
+
+// updateCurrencyHandler updates the currency setting
+func updateCurrencyHandler(w http.ResponseWriter, r *http.Request) {
+	var currency string
+	if err := jsonDecoder(r.Body).Decode(&currency); err != nil {
+		jsonError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	settings.SetString(keys.Currency, currency)
+
+	w.WriteHeader(http.StatusOK)
 }

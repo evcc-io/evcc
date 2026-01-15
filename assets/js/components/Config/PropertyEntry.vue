@@ -18,6 +18,7 @@
 			:choice="Choice"
 			:service-values="serviceValues"
 			:label="label"
+			:currency="currency"
 		/>
 	</FormRow>
 </template>
@@ -44,6 +45,7 @@ export default {
 		Choice: Array,
 		serviceValues: Array,
 		modelValue: [String, Number, Boolean, Object],
+		currency: { type: String, default: "EUR" },
 	},
 	emits: ["update:modelValue"],
 	computed: {
