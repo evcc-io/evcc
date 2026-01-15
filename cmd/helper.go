@@ -133,7 +133,6 @@ func migrateYamlToJson[T any](key string, res *T) error {
 	}
 
 	settings.SetJson(key, res)
-	log.INFO.Printf("migrated %s setting to JSON", key)
 
 	return nil
 }
