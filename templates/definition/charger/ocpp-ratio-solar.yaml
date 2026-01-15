@@ -16,8 +16,6 @@ requirements:
   evcc: ["sponsorship", "skiptest"]
 params:
   - preset: ocpp
-  - name: metervalues
-    default: -SoC,Current.Offered,Power.Offered,Voltage,Current.Import
 render: |
   {{ include "ocpp" . }}
   remotestart: true
