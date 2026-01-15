@@ -56,7 +56,7 @@ func GetStatus() Status {
 	defer mu.RUnlock()
 
 	var expiresSoon bool
-	if d := time.Until(ExpiresAt); d < 30*24*time.Hour && d > 0 {
+	if d := time.Until(ExpiresAt); d < 90*24*time.Hour && d > 0 {
 		expiresSoon = true
 	}
 
