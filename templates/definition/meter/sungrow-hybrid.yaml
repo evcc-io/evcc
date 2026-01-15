@@ -18,10 +18,10 @@ params:
   - name: maxacpower
   - preset: battery-params
   - name: maxchargepower
-    service: demo/modbus?address=33046&{modbus}
+    service: modbus/read?address=33046&scale=10&{modbus}
     required: true
   - name: maxdischargepower
-    service: demo/modbus?address=33047&{modbus}
+    service: modbus/read?address=33047&scale=10&{modbus}
     required: true
   - name: timeout
     deprecated: true
