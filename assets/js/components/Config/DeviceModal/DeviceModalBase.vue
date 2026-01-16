@@ -352,7 +352,6 @@ export default defineComponent({
 		},
 		apiData(): ApiData {
 			let data: ApiData = {
-				...this.modbusDefaults,
 				...this.values,
 			};
 			if (this.values.type === ConfigType.Template && this.templateName) {
