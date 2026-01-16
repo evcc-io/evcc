@@ -588,9 +588,13 @@ input[type="time"]::-webkit-calendar-picker-indicator {
 	display: none;
 }
 
+/* Safari: hide the datalist dropdown button */
 input[list]::-webkit-list-button {
 	display: none !important;
 	appearance: none !important;
+	opacity: 0 !important;
+	width: 0 !important;
+	pointer-events: none !important;
 }
 
 .form-control-clear {
@@ -621,13 +625,6 @@ input[list]::-webkit-list-button {
 /* hide dropdown arrow if clear is visible */
 .form-select.has-clear-button {
 	background-image: none;
-}
-
-/* Safari: hide the datalist dropdown button */
-input[list]::-webkit-list-button {
-	opacity: 0 !important;
-	width: 0 !important;
-	pointer-events: none !important;
 }
 
 .table {
