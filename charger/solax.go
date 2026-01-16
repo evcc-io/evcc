@@ -272,12 +272,13 @@ func (wb *Solax) Voltages() (float64, float64, float64, error) {
 // phases1p3p implements the api.PhaseSwitcher interface
 func (wb *Solax) phases1p3p(phases int) error {
 	var u uint16
-	if phases == 1 {
+	switch phases {
+	case 1:
 		u = 1
-	}
-
-	if phases == 3 {
+	case 3:
 		u = 2
+	default:
+		u = 3 // let the charger decide - should never happen
 	}
 
 	_, err := wb.conn.WriteSingleRegister(solaxRegPhaseSwitch, u)
@@ -292,15 +293,14 @@ func (wb *Solax) getPhases() (int, error) {
 		return 0, err
 	}
 
-	if binary.BigEndian.Uint16(b) == 2 {
-		return 3, nil
-	}
-
-	if binary.BigEndian.Uint16(b) == 1 {
+	switch binary.BigEndian.Uint16(b) {
+	case 1:
 		return 1, nil
+	case 2:
+		return 3, nil
+	default:
+		return 0, nil
 	}
-
-	return 0, nil
 }
 
 var _ api.Diagnosis = (*Solax)(nil)
