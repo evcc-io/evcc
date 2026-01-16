@@ -1,0 +1,55 @@
+template: ada-p1-meter
+products:
+  - brand: ADA
+    description: P1 Meter
+params:
+  - name: host
+    default: okosvillanyora.local:8989
+render: |
+  type: custom
+  power:
+    source: http
+    uri: http://{{ .host }}/json
+    method: GET
+    timeout: 5s
+    # Power (Watt): Calculated from Import - Export * 1000
+    jq: (.instantaneous_power_import | tonumber * 1000) - (.instantaneous_power_export | tonumber * 1000)
+  energy:
+    source: http
+    uri: http://{{ .host }}/json
+    method: GET
+    timeout: 5s
+    # Total Import Energy (kWh)
+    jq: .active_import_energy_total | tonumber
+  currents:
+    - source: http
+      uri: http://{{ .host }}/json
+      method: GET
+      timeout: 5s
+      jq: .current_phase_Bl1 | tonumber
+    - source: http
+      uri: http://{{ .host }}/json
+      method: GET
+      timeout: 5s
+      jq: .current_phase_Bl2 | tonumber
+    - source: http
+      uri: http://{{ .host }}/json
+      method: GET
+      timeout: 5s
+      jq: .current_phase_Bl3 | tonumber
+  voltages:
+    - source: http
+      uri: http://{{ .host }}/json
+      method: GET
+      timeout: 5s
+      jq: .voltage_phase_l1 | tonumber
+    - source: http
+      uri: http://{{ .host }}/json
+      method: GET
+      timeout: 5s
+      jq: .voltage_phase_l2 | tonumber
+    - source: http
+      uri: http://{{ .host }}/json
+      method: GET
+      timeout: 5s
+      jq: .voltage_phase_l3 | tonumber
