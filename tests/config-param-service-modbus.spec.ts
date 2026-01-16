@@ -64,4 +64,26 @@ test.describe("modbus service expansion", async () => {
     await meterModal.getByLabel("IP address or hostname").fill("192.168.1.1");
     await expect(meterModal.getByLabel("Test value")).toHaveValue("100,id:2,tcp");
   });
+
+  test("template defaults are included in validation request", async ({ page }) => {
+    const meterModal = await openMeterModal(page);
+
+    // Fill required fields
+    await meterModal.getByLabel("Register address").fill("100");
+    await meterModal.getByLabel("IP address or hostname").fill("192.168.1.1");
+    await meterModal.getByLabel("Test value").fill("test");
+
+    // Intercept validation POST request
+    const requestPromise = page.waitForRequest((req) =>
+      req.url().includes("/api/config/test/meter") && req.method() === "POST"
+    );
+
+    await meterModal.getByRole("button", { name: "Save" }).click();
+
+    const request = await requestPromise;
+    const body = request.postDataJSON();
+
+    // Template has id: 2 - verify it's included even though user didn't set it
+    expect(body.id).toBe(2);
+  });
 });
