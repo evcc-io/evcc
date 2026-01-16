@@ -67,7 +67,7 @@ const (
 	solaxModeFast = 1
 	solaxModeECO  = 2
 
-	// minumum firmware version for phase switching support
+	// minimum firmware version for phase switching support
 	solaxFirmwarePhaseSwitching = 905
 )
 
