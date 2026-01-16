@@ -74,8 +74,8 @@ test.describe("modbus service expansion", async () => {
     await meterModal.getByLabel("Test value").fill("test");
 
     // Intercept validation POST request
-    const requestPromise = page.waitForRequest((req) =>
-      req.url().includes("/api/config/test/meter") && req.method() === "POST"
+    const requestPromise = page.waitForRequest(
+      (req) => req.url().includes("/api/config/test/meter") && req.method() === "POST"
     );
 
     await meterModal.getByRole("button", { name: "Save" }).click();
