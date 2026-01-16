@@ -619,6 +619,49 @@
       "restartingMessage": "evcc wird neu gestartet."
     },
     "tariff": {
+      "addForecast": "Vorhersage hinzufügen",
+      "addTariff": "Tarif hinzufügen",
+      "co2": {
+        "description": "CO₂-Intensitätsprognose für Netzstrom. Für CO₂-optimiertes Laden und Berechnung von Emissionseinsparungen.",
+        "titleAdd": "CO₂-Vorhersage hinzufügen",
+        "titleEdit": "CO₂-Vorhersage bearbeiten"
+      },
+      "co2Services": "CO₂-Dienste",
+      "customForecast": "Benutzerdefinierte Vorhersage",
+      "customTariff": "Benutzerdefinierter Tarif",
+      "description": "Konfiguriere deine Energietarife und Vorhersagen. Nutze gerätebasierte Konfiguration für dynamisches Management oder YAML für statische Einstellungen.",
+      "feedin": {
+        "description": "Vergütung für ins Netz eingespeisten Strom. Zur Berechnung der realen Ladekosten.",
+        "titleAdd": "Einspeisevergütung hinzufügen",
+        "titleEdit": "Einspeisevergütung bearbeiten"
+      },
+      "generic": "Generische Integrationen",
+      "grid": {
+        "description": "Strompreis für den Netzbezug. Für die Berechnung von realen Ladekosten und preisoptimiertes Laden von Fahrzeugen, Steuern von Wärmeerzeugern oder Netzladen der Hausbatterie.",
+        "titleAdd": "Netzbezugstarif hinzufügen",
+        "titleEdit": "Netzbezugstarif bearbeiten"
+      },
+      "option": {
+        "co2": "CO₂-Vorhersage hinzufügen",
+        "feedin": "Einspeisevergütung hinzufügen",
+        "grid": "Netzbezugstarif hinzufügen",
+        "planner": "Planer-Vorhersage hinzufügen",
+        "solar": "Solar-Vorhersage hinzufügen"
+      },
+      "planner": {
+        "description": "Erweiterte Einstellung. Normalerweise nicht nötig, da dynamische Stromtarife oder CO₂-Vorhersagen automatisch verwendet werden. Ermöglicht eine zusätzliche Datenquelle, die nur für die Ladeplanung verwendet wird und nicht für Statistiken und Preisberechnungen.",
+        "titleAdd": "Planer-Vorhersage hinzufügen",
+        "titleEdit": "Planer-Vorhersage bearbeiten"
+      },
+      "services": "Dienste",
+      "solar": {
+        "description": "Solarproduktionsprognose für deine PV-Anlage. Wird in der Oberfläche angezeigt und zukünftig für Optimierungsalgorithmen verwendet.",
+        "titleAdd": "Solar-Vorhersage hinzufügen",
+        "titleEdit": "Solar-Vorhersage bearbeiten"
+      },
+      "template": "Anbieter",
+      "title": "Tarife & Vorhersagen",
+      "titleChoice": "Was möchtest du hinzufügen?",
       "type": {
         "co2": "CO₂ Vorhersage",
         "feedin": "Einspeisevergütung",
@@ -638,10 +681,6 @@
         "pricePlaceholder": "0.20",
         "remove": "Zone entfernen"
       }
-    },
-    "tariffs": {
-      "description": "Hinterlege deine Stromtarife, um die Kosten zu berechnen.",
-      "title": "Tarife"
     },
     "telemetry": {
       "description": "Konfiguriere die Datenfreigabe, um evcc zu verbessern. Deine Privatsphäre ist uns wichtig und die Teilnahme ist völlig freiwillig.",

@@ -26,6 +26,13 @@
 				/>
 			</div>
 		</template>
+
+		<template #description>
+			<p v-if="hasDescription" class="mt-0 mb-4">
+				{{ $t(`config.tariff.${tariffType}.description`) }}
+			</p>
+		</template>
+
 		<template #before-template="{ values }">
 			<FormRow
 				v-if="hasDeviceTitle"
@@ -107,6 +114,9 @@ export default defineComponent({
 		},
 		hasDeviceTitle(): boolean {
 			return this.tariffType === "solar";
+		},
+		hasDescription(): boolean {
+			return ["grid", "feedin", "co2", "planner", "solar"].includes(this.tariffType || "");
 		},
 	},
 	methods: {
