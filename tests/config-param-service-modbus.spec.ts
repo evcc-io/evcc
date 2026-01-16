@@ -77,11 +77,8 @@ test.describe("modbus service expansion", async () => {
     const requestPromise = page.waitForRequest(
       (req) => req.url().includes("/api/config/test/meter") && req.method() === "POST"
     );
-
     await meterModal.getByRole("button", { name: "Save" }).click();
-
-    const request = await requestPromise;
-    const body = request.postDataJSON();
+    const body = (await requestPromise).postDataJSON();
 
     // Template has id: 2 - verify it's included even though user didn't set it
     expect(body.id).toBe(2);
