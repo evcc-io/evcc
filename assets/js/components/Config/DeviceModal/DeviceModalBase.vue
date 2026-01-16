@@ -351,7 +351,12 @@ export default defineComponent({
 			return requirements?.EVCC?.includes("sponsorship") && !this.isSponsor;
 		},
 		apiData(): ApiData {
+			// Filter out undefined values from modbusDefaults
+			const filteredModbusDefaults = Object.fromEntries(
+				Object.entries(this.modbusDefaults).filter(([, value]) => value !== undefined)
+			);
 			let data: ApiData = {
+				...filteredModbusDefaults,
 				...this.values,
 			};
 			if (this.values.type === ConfigType.Template && this.templateName) {
