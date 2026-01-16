@@ -15,12 +15,10 @@ import (
 )
 
 func TestSqliteTimestamp(t *testing.T) {
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+
 	clock := clock.NewMock()
 	clock.Add(time.Hour)
-
-	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
-	require.NoError(t, metrics.SetupSchema())
-
 	metrics.Persist(clock.Now(), 0)
 
 	db, err := db.Instance.DB()
@@ -50,13 +48,11 @@ func TestSqliteTimestamp(t *testing.T) {
 }
 
 func TestUpdateHouseholdProfile(t *testing.T) {
-	clock := clock.NewMock()
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 
 	// make sure test data added starting 00:00 local time
+	clock := clock.NewMock()
 	clock.Set(now.With(clock.Now()).BeginningOfDay())
-
-	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
-	require.NoError(t, metrics.SetupSchema())
 
 	// 2 days of data
 	// day 1:   0 ...  95

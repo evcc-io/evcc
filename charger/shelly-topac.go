@@ -36,9 +36,8 @@ import (
 // API Reference: https://shelly-api-docs.shelly.cloud/gen2/Devices/ShellyX/XT1/TopACPortableEVCharger/
 type ShellyTopAC struct {
 	*request.Helper
-	uri     string
-	current int64
-	phaseG  util.Cacheable[shelly.Measurements]
+	uri    string
+	phaseG util.Cacheable[shelly.Measurements]
 }
 
 func init() {
@@ -77,9 +76,8 @@ func NewShellyTopAC(uri, user, password string) (api.Charger, error) {
 	helper.Transport = request.NewTripper(log, transport.Insecure())
 
 	c := &ShellyTopAC{
-		Helper:  helper,
-		uri:     fmt.Sprintf("%s/rpc", uri),
-		current: 6, // default minimum current
+		Helper: helper,
+		uri:    fmt.Sprintf("%s/rpc", uri),
 	}
 
 	// Setup digest authentication for Shelly Gen2
@@ -114,12 +112,6 @@ func (c *ShellyTopAC) execRpc(method, owner, role string, value, res any) error 
 	return c.DoJSON(req, res)
 }
 
-// setCurrentLimit sets the charging current limit
-func (c *ShellyTopAC) setCurrentLimit(current float64) error {
-	var res any
-	return c.execRpc("Number.Set", "service:0", "current_limit", current, &res)
-}
-
 // getPhaseInfo retrieves phase information
 func (c *ShellyTopAC) getPhaseInfo() (shelly.Measurements, error) {
 	var res shelly.RpcResponse[shelly.Measurements]
@@ -150,34 +142,33 @@ func (c *ShellyTopAC) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (c *ShellyTopAC) Enabled() (bool, error) {
-	var res shelly.RpcResponse[float64]
-	err := c.execRpc("Number.GetStatus", "service:0", "current_limit", nil, &res)
+	var res shelly.RpcResponse[bool]
+	err := c.execRpc("Boolean.GetStatus", "service:0", "start_charging", nil, &res)
 
-	return res.Result.Value > 0, err
+	return res.Result.Value, err
 }
 
 // Enable implements the api.Charger interface
 func (c *ShellyTopAC) Enable(enable bool) error {
-	var current int64
-	if enable {
-		current = c.current
-	}
-
-	return c.setCurrentLimit(float64(current))
+	var res any
+	return c.execRpc("Boolean.Set", "service:0", "start_charging", enable, &res)
 }
 
 // MaxCurrent implements the api.Charger interface
 func (c *ShellyTopAC) MaxCurrent(current int64) error {
+	return c.MaxCurrentMillis(float64(current))
+}
+
+var _ api.ChargerEx = (*ShellyTopAC)(nil)
+
+// MaxCurrentMillis implements the api.ChargerEx interface
+func (c *ShellyTopAC) MaxCurrentMillis(current float64) error {
 	if current < 6 {
-		return fmt.Errorf("invalid current %d", current)
+		return fmt.Errorf("invalid current %.1f", current)
 	}
 
-	err := c.setCurrentLimit(float64(current))
-	if err == nil {
-		c.current = current
-	}
-
-	return err
+	var res any
+	return c.execRpc("Number.Set", "service:0", "current_limit", current, &res)
 }
 
 var _ api.Meter = (*ShellyTopAC)(nil)
