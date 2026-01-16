@@ -15,14 +15,14 @@ params:
   - name: modbus
     choice: ["rs485", "tcpip"]
     baudrate: 9600
-  - name: maxacpower
-  - preset: battery-params
   - name: maxchargepower
-    service: modbus/read?address=33046&scale=10&{modbus}
+    service: modbus/read?address=33046&type=holding&encoding=uint16&scale=10&{modbus}
     required: true
   - name: maxdischargepower
-    service: modbus/read?address=33047&scale=10&{modbus}
+    service: modbus/read?address=33047&type=holding&encoding=uint16&scale=10&{modbus}
     required: true
+  - name: maxacpower
+  - preset: battery-params
   - name: timeout
     deprecated: true
 render: |
