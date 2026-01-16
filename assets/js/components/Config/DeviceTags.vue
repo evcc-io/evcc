@@ -69,6 +69,7 @@
 <script>
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import TariffChart from "../Tariff/TariffChart.vue";
+import { generateRateSlots, calculateCostRange } from "@/utils/tariffSlots";
 
 const HIDDEN_TAGS = ["icon", "heating", "integratedDevice"];
 
@@ -130,37 +131,16 @@ export default {
 
 			return null;
 		},
-		ratesSlots() {
+		rates() {
 			if (!this.ratesEntry?.value?.length) return [];
-
-			const rates = this.ratesEntry.value.map((rate) => ({
+			return this.ratesEntry.value.map((rate) => ({
 				start: new Date(rate.start),
 				end: new Date(rate.end),
 				value: rate.value,
 			}));
-
-			const quarterHour = 15 * 60 * 1000;
-			const base = new Date();
-			base.setSeconds(0, 0);
-			base.setMinutes(base.getMinutes() - (base.getMinutes() % 15));
-
-			// Create slots for the duration of the rates
-			const lastRate = rates[rates.length - 1];
-			const duration = Math.ceil((lastRate.end.getTime() - base.getTime()) / quarterHour);
-
-			return Array.from({ length: Math.min(duration, 96 * 4) }, (_, i) => {
-				const start = new Date(base.getTime() + quarterHour * i);
-				const end = new Date(start.getTime() + quarterHour);
-				const value = this.findRateInRange(start, end, rates)?.value;
-
-				return {
-					day: this.weekdayShort(start),
-					value,
-					start,
-					end,
-					charging: false,
-				};
-			});
+		},
+		ratesSlots() {
+			return generateRateSlots(this.rates, this.weekdayShort);
 		},
 		activeSlot() {
 			return this.activeIndex !== null ? this.ratesSlots[this.activeIndex] || null : null;
@@ -176,13 +156,7 @@ export default {
 			const slots = this.ratesSlots.filter((s) => s.value !== undefined);
 			if (slots.length === 0) return "";
 
-			let min = undefined;
-			let max = undefined;
-			slots.forEach((slot) => {
-				if (slot.value === undefined) return;
-				min = min === undefined ? slot.value : Math.min(min, slot.value);
-				max = max === undefined ? slot.value : Math.max(max, slot.value);
-			});
+			const { min, max } = calculateCostRange(slots);
 
 			if (min === undefined || max === undefined) return "";
 			const fmtMax = this.formatRateValue(max, true);
@@ -278,14 +252,6 @@ export default {
 					return "kW";
 			}
 			return "";
-		},
-		findRateInRange(start, end, rates) {
-			return rates.find((r) => {
-				if (r.start.getTime() < start.getTime()) {
-					return r.end.getTime() > start.getTime();
-				}
-				return r.start.getTime() < end.getTime();
-			});
 		},
 		formatRateValue(value, short = false) {
 			const type = this.ratesEntry?.type;

@@ -668,7 +668,6 @@ export default defineComponent({
 			return this.device.test(this.id, this.apiData);
 		},
 		async update(force = false) {
-			console.log("update called", { force, isUnknown: this.test.isUnknown, id: this.id });
 			if (this.test.isUnknown && !force) {
 				const success = await performTest(
 					this.test,
@@ -682,7 +681,6 @@ export default defineComponent({
 			}
 			this.saving = true;
 			try {
-				console.log("calling device.update", this.apiData);
 				await this.device.update(this.id!, this.apiData, force);
 				console.log("update succeeded, closing modal");
 				this.saving = false;

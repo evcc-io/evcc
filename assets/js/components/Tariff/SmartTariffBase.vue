@@ -94,6 +94,7 @@ import formatter from "@/mixins/formatter";
 import TariffChart from "./TariffChart.vue";
 import { defineComponent, type PropType } from "vue";
 import { type CURRENCY, type Rate, type SelectOption, type Slot } from "@/types/evcc";
+import { generateRateSlots, calculateCostRange } from "@/utils/tariffSlots";
 
 type LimitDirection = "above" | "below";
 type HighlightColor = "text-primary" | "text-warning";
@@ -205,42 +206,20 @@ export default defineComponent({
 			return { min, max };
 		},
 		slots(): Slot[] {
-			if (!this.rates?.length) {
-				return [];
-			}
-
-			const rates = this.rates;
-			const quarterHour = 15 * 60 * 1000;
-
-			const base = new Date();
-			base.setSeconds(0, 0);
-			base.setMinutes(base.getMinutes() - (base.getMinutes() % 15));
-
-			return Array.from({ length: 96 * 4 }, (_, i) => {
-				const start = new Date(base.getTime() + quarterHour * i);
-				const end = new Date(start.getTime() + quarterHour);
-				const value = this.findRateInRange(start, end, rates)?.value;
-				const active =
+			return generateRateSlots(
+				this.rates,
+				this.weekdayShort,
+				(value) =>
 					this.limitDirection === "below" &&
 					this.currentLimit !== null &&
 					value !== undefined &&
-					value <= this.currentLimit;
-				const warning =
+					value <= this.currentLimit,
+				(value) =>
 					this.limitDirection === "above" &&
 					this.currentLimit !== null &&
 					value !== undefined &&
-					value >= this.currentLimit;
-
-				return {
-					day: this.weekdayShort(start),
-					value,
-					start,
-					end,
-					charging: active,
-					selectable: value !== undefined,
-					warning,
-				};
-			});
+					value >= this.currentLimit
+			);
 		},
 		totalSlots() {
 			return this.slots.filter((s) => s.value !== undefined);
@@ -326,23 +305,8 @@ export default defineComponent({
 			return this.fmtPricePerKWh(value, this.currency);
 		},
 
-		findRateInRange(start: Date, end: Date, rates: Rate[]) {
-			return rates.find((r) => {
-				if (r.start.getTime() < start.getTime()) {
-					return r.end.getTime() > start.getTime();
-				}
-				return r.start.getTime() < end.getTime();
-			});
-		},
 		costRange(slots: Slot[]): { min: number | undefined; max: number | undefined } {
-			let min = undefined as number | undefined;
-			let max = undefined as number | undefined;
-			slots.forEach((slot) => {
-				if (slot.value === undefined) return;
-				min = min === undefined ? slot.value : Math.min(min, slot.value);
-				max = max === undefined ? slot.value : Math.max(max, slot.value);
-			});
-			return { min, max };
+			return calculateCostRange(slots);
 		},
 		fmtCostRange({ min, max }: { min: number | undefined; max: number | undefined }): string {
 			if (min === undefined || max === undefined) return "";
