@@ -300,7 +300,7 @@ func (wb *Solax) getPhases() (int, error) {
 	return 0, nil
 }
 
-var _ api.Diagnosis = (*Delta)(nil)
+var _ api.Diagnosis = (*Solax)(nil)
 
 // Diagnose implements the api.Diagnosis interface
 func (wb *Solax) Diagnose() {
