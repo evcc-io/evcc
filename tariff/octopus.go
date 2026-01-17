@@ -98,7 +98,8 @@ func buildOctopusFromConfig(other map[string]any) (*Octopus, error) {
 			return nil, errors.New("cannot use apikey at same time as product code")
 		}
 		// We permit the specific special apiKey "test" as sk_live_ keys are considered Stripe secrets by Github
-		if cc.ApiKey != "test" && (len(cc.ApiKey) != 32 || !strings.HasPrefix(cc.ApiKey, "sk_live_")) {
+		// Keys can be either 32 or 40 characters long
+		if cc.ApiKey != "test" && ((len(cc.ApiKey) != 32 && len(cc.ApiKey) != 40) || !strings.HasPrefix(cc.ApiKey, "sk_live_")) {
 			return nil, errors.New("invalid apikey format")
 		}
 	}
