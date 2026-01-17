@@ -1,7 +1,8 @@
 template: ada-p1-meter
 products:
   - brand: ADA
-    description: P1
+    description:
+      generic: P1
 params:
   - name: host
     default: okosvillanyora.local:8989
