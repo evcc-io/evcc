@@ -86,9 +86,7 @@
 				class="form-control-clear"
 				:aria-label="$t('config.general.clear')"
 				@click="value = ''"
-			>
-				&times;
-			</button>
+			></button>
 			<datalist v-if="showDatalist" :id="datalistId">
 				<option v-for="v in serviceValues" :key="v" :value="v">
 					{{ v }}
