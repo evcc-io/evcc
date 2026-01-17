@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"net/http"
 	"sort"
 	"time"
@@ -273,6 +274,7 @@ var _ api.ChargerEx = (*Zaptec)(nil)
 
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (c *Zaptec) MaxCurrentMillis(current float64) error {
+	current = math.Round(current*10) / 10
 	data := zaptec.Update{
 		MaxChargeCurrent: &current,
 	}
