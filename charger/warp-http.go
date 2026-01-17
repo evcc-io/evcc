@@ -25,7 +25,7 @@ type WarpHTTP struct {
 	features        []string
 	current         int64
 	meterIndex      uint
-	metersValuesMap map[int]int
+	metersValuesMap warp.MetersValuesIndices
 	cache           time.Duration
 	meterValuesG    util.Cacheable[warp.MeterValues]
 	meterAllValuesG util.Cacheable[[]float64]
@@ -279,15 +279,15 @@ func (wb *WarpHTTP) meterVoltages() (float64, float64, float64, error) {
 	return res[0], res[1], res[2], nil
 }
 
-// metersValueIds returns a map from meter value IDs to their positions in the values array.
+// metersValueIds returns warp.MetersValuesMap which contains the index positions for the values array.
 // It covers the following IDs: VoltageL1N, VoltageL2N, VoltageL3N, CurrentImExSumL1, CurrentImExSumL2,
 // CurrentImExSumL3, PowerImExSum, and EnergyAbsImSum.
 // Together with the metersValues Endpoint, this allows decoding the returned value array.
-func (wb *WarpHTTP) metersValueIds() (map[int]int, error) {
+func (wb *WarpHTTP) metersValueIds() (warp.MetersValuesIndices, error) {
 	var res []int
 	uri := fmt.Sprintf("%s/meters/%d/value_ids", wb.uri, wb.meterIndex)
 	if err := wb.GetJSON(uri, &res); err != nil {
-		return nil, err
+		return warp.MetersValuesIndices{}, err
 	}
 
 	requiredIDs := []int{
@@ -303,14 +303,29 @@ func (wb *WarpHTTP) metersValueIds() (map[int]int, error) {
 
 	// Check if all required IDs are present
 	if missing, _ := lo.Difference(requiredIDs, res); len(missing) > 0 {
-		return nil, fmt.Errorf("missing required meter value IDs: %v", missing)
+		return warp.MetersValuesIndices{}, fmt.Errorf("missing required meter value IDs: %v", missing)
 	}
 
-	// Build map from Value ID (e.g. MetersValueIDVoltageL1N) -> Index
-	var indices = make(map[int]int)
-	for i, valueIdx := range res {
-		if lo.Contains(requiredIDs, valueIdx) {
-			indices[valueIdx] = i
+	// Build struct mapping meter value IDs to their indices in the returned values array
+	var indices warp.MetersValuesIndices
+	for i, valueID := range res {
+		switch valueID {
+		case warp.MetersValueIDVoltageL1N:
+			indices.VoltageL1NIndex = i
+		case warp.MetersValueIDVoltageL2N:
+			indices.VoltageL2NIndex = i
+		case warp.MetersValueIDVoltageL3N:
+			indices.VoltageL3NIndex = i
+		case warp.MetersValueIDCurrentImExSumL1:
+			indices.CurrentImExSumL1Index = i
+		case warp.MetersValueIDCurrentImExSumL2:
+			indices.CurrentImExSumL2Index = i
+		case warp.MetersValueIDCurrentImExSumL3:
+			indices.CurrentImExSumL3Index = i
+		case warp.MetersValueIDPowerImExSum:
+			indices.PowerImExSumIndex = i
+		case warp.MetersValueIDEnergyAbsImSum:
+			indices.EnergyAbsImSumIndex = i
 		}
 	}
 
@@ -327,16 +342,11 @@ func (wb *WarpHTTP) metersValues() (warp.MetersValues, error) {
 	var result warp.MetersValues
 	var err error
 
-	get := func(id int, name string) float64 {
+	get := func(idx int, name string) float64 {
 		if err != nil {
 			return 0
 		}
 
-		idx, ok := wb.metersValuesMap[id]
-		if !ok {
-			err = fmt.Errorf("%s value ID not found", name)
-			return 0
-		}
 		if idx >= len(res) {
 			err = fmt.Errorf("%s index out of range: idx=%d, len(values)=%d", name, idx, len(res))
 			return 0
@@ -344,14 +354,14 @@ func (wb *WarpHTTP) metersValues() (warp.MetersValues, error) {
 		return res[idx]
 	}
 
-	result.VoltageL1N = get(warp.MetersValueIDVoltageL1N, "voltage L1N")
-	result.VoltageL2N = get(warp.MetersValueIDVoltageL2N, "voltage L2N")
-	result.VoltageL3N = get(warp.MetersValueIDVoltageL3N, "voltage L3N")
-	result.CurrentImExSumL1 = get(warp.MetersValueIDCurrentImExSumL1, "current L1")
-	result.CurrentImExSumL2 = get(warp.MetersValueIDCurrentImExSumL2, "current L2")
-	result.CurrentImExSumL3 = get(warp.MetersValueIDCurrentImExSumL3, "current L3")
-	result.PowerImExSum = get(warp.MetersValueIDPowerImExSum, "power")
-	result.EnergyAbsImSum = get(warp.MetersValueIDEnergyAbsImSum, "energy")
+	result.VoltageL1N = get(wb.metersValuesMap.VoltageL1NIndex, "voltage L1N")
+	result.VoltageL2N = get(wb.metersValuesMap.VoltageL2NIndex, "voltage L2N")
+	result.VoltageL3N = get(wb.metersValuesMap.VoltageL3NIndex, "voltage L3N")
+	result.CurrentImExSumL1 = get(wb.metersValuesMap.CurrentImExSumL1Index, "current L1")
+	result.CurrentImExSumL2 = get(wb.metersValuesMap.CurrentImExSumL2Index, "current L2")
+	result.CurrentImExSumL3 = get(wb.metersValuesMap.CurrentImExSumL3Index, "current L3")
+	result.PowerImExSum = get(wb.metersValuesMap.PowerImExSumIndex, "power")
+	result.EnergyAbsImSum = get(wb.metersValuesMap.EnergyAbsImSumIndex, "energy")
 
 	return result, err
 }

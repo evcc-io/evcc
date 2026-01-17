@@ -79,6 +79,17 @@ type MetersValues struct {
 	EnergyAbsImSum   float64
 }
 
+type MetersValuesIndices struct {
+	VoltageL1NIndex       int
+	VoltageL2NIndex       int
+	VoltageL3NIndex       int
+	CurrentImExSumL1Index int
+	CurrentImExSumL2Index int
+	CurrentImExSumL3Index int
+	PowerImExSumIndex     int
+	EnergyAbsImSumIndex   int
+}
+
 type UsersConfig struct {
 	Users []User `json:"users"`
 }
