@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/sync/errgroup"
@@ -16,6 +17,7 @@ func TestWatchdogSetterConcurrency(t *testing.T) {
 	p := &watchdogPlugin{
 		log:     util.NewLogger("foo"),
 		timeout: 10 * time.Nanosecond,
+		clock:   clock.New(),
 	}
 
 	var u atomic.Uint32
@@ -32,7 +34,7 @@ func TestWatchdogSetterConcurrency(t *testing.T) {
 		}
 
 		return nil
-	}, nil)
+	}, nil, 5*time.Second)
 
 	var eg errgroup.Group
 
@@ -56,16 +58,20 @@ func TestWatchdogDelayTransition(t *testing.T) {
 		log:        util.NewLogger("test"),
 		timeout:    timeout,
 		transition: true,
+		clock:      clock.New(),
 	}
+
+	c := clock.NewMock()
+	p.clock = c
 
 	var calls []int
 	var timestamps []time.Time
 
 	set := setter(p, func(i int) error {
 		calls = append(calls, i)
-		timestamps = append(timestamps, time.Now())
+		timestamps = append(timestamps, p.clock.Now())
 		return nil
-	}, []int{1}) // 1 is reset mode
+	}, []int{1}, 5*time.Second) // 1 is reset mode
 
 	// Mode 1 (reset) → should write immediately
 	require.NoError(t, set(1))
@@ -76,8 +82,8 @@ func TestWatchdogDelayTransition(t *testing.T) {
 	require.Equal(t, []int{1}, calls, "Mode 3 should not be written yet")
 
 	// Wait for delay + small buffer
-	expectedDelay := timeout + 5*time.Second
-	time.Sleep(expectedDelay + 20*time.Millisecond)
+	expectedDelay := p.timeout + p.buffer
+	c.Add(expectedDelay + 20*time.Millisecond)
 
 	// Now mode 3 should be written
 	require.Equal(t, []int{1, 3}, calls)
@@ -87,7 +93,7 @@ func TestWatchdogDelayTransition(t *testing.T) {
 	require.Equal(t, []int{1, 3}, calls, "Mode 2 should not be written yet")
 
 	// Wait for delay + small buffer
-	time.Sleep(expectedDelay + 20*time.Millisecond)
+	c.Add(expectedDelay + 20*time.Millisecond)
 
 	// Now mode 2 should be written (exactly once)
 	require.Equal(t, []int{1, 3, 2}, calls)
@@ -109,13 +115,17 @@ func TestWatchdogCancelPendingTransition(t *testing.T) {
 		log:        util.NewLogger("test"),
 		timeout:    timeout,
 		transition: true,
+		clock:      clock.New(),
 	}
+
+	c := clock.NewMock()
+	p.clock = c
 
 	var calls []int
 	set := setter(p, func(i int) error {
 		calls = append(calls, i)
 		return nil
-	}, []int{1}) // 1 is reset mode
+	}, []int{1}, 5*time.Second) // 1 is reset mode
 
 	// Mode 3 (non-reset)
 	require.NoError(t, set(3))
@@ -126,14 +136,14 @@ func TestWatchdogCancelPendingTransition(t *testing.T) {
 	require.Equal(t, []int{3}, calls, "Mode 2 should not be written yet")
 
 	// Wait a bit but not the full delay
-	time.Sleep(50 * time.Millisecond)
+	c.Add(50 * time.Millisecond)
 
 	// Mode 1 (reset) → should cancel pending transition and write immediately
 	require.NoError(t, set(1))
 	require.Equal(t, []int{3, 1}, calls, "Mode 1 should be written, Mode 2 should be cancelled")
 
 	// Wait for what would have been the original delay
-	time.Sleep(timeout + 5*time.Second + 100*time.Millisecond)
+	c.Add(timeout + 5*time.Second + 100*time.Millisecond)
 
 	// Mode 2 should still not have been written
 	require.Equal(t, []int{3, 1}, calls, "Mode 2 should remain cancelled")
@@ -147,13 +157,14 @@ func TestWatchdogDelayBackwardCompatibility(t *testing.T) {
 		log:        util.NewLogger("test"),
 		timeout:    100 * time.Millisecond,
 		transition: false, // explicitly false
+		clock:      clock.New(),
 	}
 
 	var calls []int
 	set := setter(p, func(i int) error {
 		calls = append(calls, i)
 		return nil
-	}, []int{1}) // 1 is reset mode
+	}, []int{1}, 5*time.Second) // 1 is reset mode
 
 	// All transitions should be immediate
 	require.NoError(t, set(1))

@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -19,8 +20,10 @@ type watchdogPlugin struct {
 	initial    *string
 	set        Config
 	timeout    time.Duration
-	transition bool // delay writes during mode transitions
+	transition bool
+	buffer     time.Duration
 	cancel     func()
+	clock      clock.Clock
 }
 
 func init() {
@@ -35,10 +38,17 @@ func NewWatchDogFromConfig(ctx context.Context, other map[string]any) (Plugin, e
 		Set        Config
 		Timeout    time.Duration
 		Transition bool
+		Buffer     *time.Duration
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
+	}
+
+	// set default buffer
+	buffer := 3 * time.Second
+	if cc.Buffer != nil {
+		buffer = *cc.Buffer
 	}
 
 	o := &watchdogPlugin{
@@ -49,6 +59,8 @@ func NewWatchDogFromConfig(ctx context.Context, other map[string]any) (Plugin, e
 		set:        cc.Set,
 		timeout:    cc.Timeout,
 		transition: cc.Transition,
+		buffer:     buffer,
+		clock:      clock.New(),
 	}
 
 	return o, nil
@@ -70,13 +82,13 @@ func (o *watchdogPlugin) wdt(ctx context.Context, set func() error) {
 type transitionState[T comparable] struct {
 	currentMode     *T
 	pendingMode     *T
-	transitionTimer *time.Timer
+	transitionTimer *clock.Timer
 	lastWrite       time.Time
 }
 
 // setter is the generic setter function for watchdogPlugin
 // it is currently not possible to write this as a method
-func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(T) error {
+func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T, buffer time.Duration) func(T) error {
 	var state transitionState[T]
 
 	return func(val T) error {
@@ -91,8 +103,8 @@ func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(
 		}
 
 		// calculate delay from last write
-		requiredDelay := o.timeout + 5*time.Second
-		timeSinceLastWrite := time.Since(state.lastWrite)
+		requiredDelay := o.timeout + o.buffer
+		timeSinceLastWrite := o.clock.Since(state.lastWrite)
 		actualDelay := max(0, requiredDelay-timeSinceLastWrite)
 
 		// delay transition to non-reset state by transitionDelay
@@ -109,7 +121,7 @@ func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(
 			o.log.DEBUG.Printf("delayed transition scheduled: requiredDelay=%v, timeSinceLastWrite=%v, actualDelay=%v, from=%v, to=%v",
 				requiredDelay, timeSinceLastWrite, actualDelay, state.currentMode, val)
 
-			state.transitionTimer = time.AfterFunc(actualDelay, func() {
+			state.transitionTimer = o.clock.AfterFunc(actualDelay, func() {
 				o.mu.Lock()
 				defer o.mu.Unlock()
 
@@ -127,7 +139,7 @@ func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(
 					return
 				}
 
-				state.lastWrite = time.Now()
+				state.lastWrite = o.clock.Now()
 				state.currentMode = &targetVal
 				o.log.DEBUG.Printf("delayed transition completed: currentMode=%v", targetVal)
 
@@ -140,7 +152,7 @@ func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(
 						if err := set(targetVal); err != nil {
 							return err
 						}
-						state.lastWrite = time.Now()
+						state.lastWrite = o.clock.Now()
 						return nil
 					})
 				}
@@ -165,7 +177,7 @@ func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(
 				if err := set(val); err != nil {
 					return err
 				}
-				state.lastWrite = time.Now()
+				state.lastWrite = o.clock.Now()
 				return nil
 			})
 		}
@@ -174,7 +186,7 @@ func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(
 			return err
 		}
 
-		state.lastWrite = time.Now()
+		state.lastWrite = o.clock.Now()
 		valCopy := val
 		state.currentMode = &valCopy
 
@@ -201,7 +213,7 @@ func (o *watchdogPlugin) IntSetter(param string) (func(int64) error, error) {
 		}
 	}
 
-	res := setter(o, set, reset)
+	res := setter(o, set, reset, o.buffer)
 	if o.initial != nil {
 		val, err := strconv.ParseInt(*o.initial, 10, 64)
 		if err != nil {
@@ -235,7 +247,7 @@ func (o *watchdogPlugin) FloatSetter(param string) (func(float64) error, error) 
 		}
 	}
 
-	res := setter(o, set, reset)
+	res := setter(o, set, reset, o.buffer)
 	if o.initial != nil {
 		val, err := strconv.ParseFloat(*o.initial, 64)
 		if err != nil {
@@ -269,7 +281,7 @@ func (o *watchdogPlugin) BoolSetter(param string) (func(bool) error, error) {
 		reset = append(reset, val)
 	}
 
-	res := setter(o, set, reset)
+	res := setter(o, set, reset, o.buffer)
 	if o.initial != nil {
 		val, err := strconv.ParseBool(*o.initial)
 		if err != nil {
