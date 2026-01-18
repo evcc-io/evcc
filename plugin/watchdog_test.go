@@ -168,5 +168,3 @@ func TestWatchdogDelayBackwardCompatibility(t *testing.T) {
 	require.NoError(t, set(4))
 	require.Equal(t, []int{1, 3, 2, 4}, calls, "Mode 4 should be written immediately (no delay)")
 }
-
-

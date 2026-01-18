@@ -97,7 +97,6 @@ func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(
 
 		// Check if delay needed: transition to non-reset mode with transition enabled or delay required
 		if o.transition && state.currentMode != nil && !slices.Contains(reset, val) && actualDelay > 0 {
-
 			// Stop running wdt
 			if o.cancel != nil {
 				o.cancel()
