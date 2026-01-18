@@ -16,12 +16,10 @@ func TestPresets(t *testing.T) {
 	}
 
 	tmpl := &Template{
-		TemplateDefinition: TemplateDefinition{
-			Params: []Param{
-				{Name: "first"},
-				{Preset: "preset"},
-				{Name: "last"},
-			},
+		Params: []Param{
+			{Name: "first"},
+			{Preset: "preset"},
+			{Name: "last"},
 		},
 	}
 
@@ -36,12 +34,10 @@ func TestPresets(t *testing.T) {
 
 func TestRequired(t *testing.T) {
 	tmpl := &Template{
-		TemplateDefinition: TemplateDefinition{
-			Params: []Param{
-				{
-					Name:     "param",
-					Required: true,
-				},
+		Params: []Param{
+			{
+				Name:     "param",
+				Required: true,
 			},
 		},
 	}
@@ -69,13 +65,11 @@ func TestRequired(t *testing.T) {
 
 func TestRequiredDeprecated(t *testing.T) {
 	tmpl := &Template{
-		TemplateDefinition: TemplateDefinition{
-			Params: []Param{
-				{
-					Name:       "param",
-					Required:   true,
-					Deprecated: true,
-				},
+		Params: []Param{
+			{
+				Name:       "param",
+				Required:   true,
+				Deprecated: true,
 			},
 		},
 	}
@@ -103,16 +97,14 @@ func TestRequiredDeprecated(t *testing.T) {
 
 func TestRequiredPerUsage(t *testing.T) {
 	tmpl := &Template{
-		TemplateDefinition: TemplateDefinition{
-			Params: []Param{
-				{
-					Name: "usage",
-				},
-				{
-					Name:     "param",
-					Required: true,
-					Usages:   []string{"battery"},
-				},
+		Params: []Param{
+			{
+				Name: "usage",
+			},
+			{
+				Name:     "param",
+				Required: true,
+				Usages:   []string{"battery"},
 			},
 		},
 	}

@@ -284,18 +284,3 @@ func (c CountryCode) IsValid() bool {
 	validCode := regexp.MustCompile(`^[A-Z]{2}$`)
 	return validCode.MatchString(string(c))
 }
-
-// TemplateDefinition contains properties of a device template
-type TemplateDefinition struct {
-	Template     string
-	Deprecated   bool           `json:"-"`
-	Auth         map[string]any `json:",omitempty"` // OAuth parameters (if required)
-	Group        string         `json:",omitempty"` // the group this template belongs to, references groupList entries
-	Covers       []string       `json:",omitempty"` // list of covered outdated template names
-	Products     []Product      `json:",omitempty"` // list of products this template is compatible with
-	Capabilities []string       `json:",omitempty"`
-	Countries    []CountryCode  `json:",omitempty"` // list of countries supported by this template
-	Requirements Requirements   `json:",omitempty"`
-	Params       []Param        `json:",omitempty"`
-	Render       string         `json:"-"` // rendering template
-}
