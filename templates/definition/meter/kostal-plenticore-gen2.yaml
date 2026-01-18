@@ -112,7 +112,7 @@ render: |
                 address: 1042 # Minimum SOC [%]
                 type: writemultiple
                 encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
-          # Reset max-soc too 100% to allow full-charge via PV
+          # Reset max-soc to 100% to allow full-charge via PV
           - source: const
             value: 100 
             set:
@@ -139,6 +139,8 @@ render: |
           # Limiting discharge power via register 1040 is not always reliable 
           # and has side-effects when switching modes. Register 1034 to limit 
           # via charge power prevents surplus to be charged in hold mode.
+          # Therefore use a 100% min-soc limit to stop discharging and ensure
+          # charging surplus is possible.
           # Therefor use 100% min-soc limit to stop discharging and ensure 
           # charging surplus is possible.
           - source: const
