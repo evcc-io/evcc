@@ -123,7 +123,7 @@ render: |
               register:
                 address: 1044 # Maximum SOC [%]
                 type: writemultiple
-                encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }
+                encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
 
       - case: 2 # hold
         set:
