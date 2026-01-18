@@ -7,17 +7,11 @@ capabilities: ["battery-control"]
 requirements:
   description:
     de: |
-      Nur ein System kann und darf auf den Wechselrichter zugreifen! Für die aktive Batteriesteuerung muss die Funktion externe Batteriesteuerung über Modbus mit dem Handwerkerzugang aktiviert sein.
-
-      **Einschränkung:** Das Netzladen der Batterie steht nicht zur Verfügung!
-
-      Weitere Informationen: [github.com/evcc-io/evcc/wiki/Kostal-Plenticore](https://github.com/evcc-io/evcc/wiki/Kostal-Plenticore)
+      Nur ein System kann und darf auf den Wechselrichter zugreifen! Für die aktive Batteriesteuerung muss die Funktion externe Batteriesteuerung über Modbus mit dem Handwerkerzugang aktiviert sein. 
+      **Das Netzladen der Batterie steht nicht zur Verfügung!** _siehe auch https://github.com/evcc-io/evcc/wiki/Kostal-Plenticore_
     en: |
       Only a single system may access the inverter! For active battery control the function external battery control via Modbus must be activated using installer access.
-
-      **Limitation:** Grid charging is not available!
-
-      Further information: [github.com/evcc-io/evcc/wiki/Kostal-Plenticore](https://github.com/evcc-io/evcc/wiki/Kostal-Plenticore)
+      **Grid charging is not available!** _see also https://github.com/evcc-io/evcc/wiki/Kostal-Plenticore_
 params:
   - name: usage
     choice: ["pv", "battery"]
