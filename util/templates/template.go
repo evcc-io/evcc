@@ -11,6 +11,7 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
+	"github.com/samber/lo"
 	"github.com/spf13/cast"
 )
 
@@ -56,6 +57,32 @@ func (t *Template) UpdateModbusParamsWithDefaults() error {
 
 	t.Params[idx] = modbusParam
 	return nil
+}
+
+func (t *Template) SortRequiredParamsFirst() error {
+	if t.Template != "sungrow-hybrid" {
+		return nil
+	}
+
+	fmt.Println(lo.Map(t.Params, func(p Param, _ int) string {
+		return p.Name
+	}))
+
+	slices.SortStableFunc(t.Params, func(a, b Param) int {
+		if a.Required && !b.Required {
+			return -1
+		}
+		if b.Required && !a.Required {
+			return +1
+		}
+		return 0
+	})
+
+	fmt.Println(lo.Map(t.Params, func(p Param, _ int) string {
+		return p.Name
+	}))
+
+	panic(1)
 }
 
 // validate the template (only rudimentary for now)
