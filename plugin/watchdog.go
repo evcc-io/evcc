@@ -12,14 +12,15 @@ import (
 )
 
 type watchdogPlugin struct {
-	mu      sync.Mutex
-	ctx     context.Context
-	log     *util.Logger
-	reset   []string
-	initial *string
-	set     Config
-	timeout time.Duration
-	cancel  func()
+	mu         sync.Mutex
+	ctx        context.Context
+	log        *util.Logger
+	reset      []string
+	initial    *string
+	set        Config
+	timeout    time.Duration
+	transition bool // delay writes during mode transitions
+	cancel     func()
 }
 
 func init() {
@@ -29,10 +30,11 @@ func init() {
 // NewWatchDogFromConfig creates watchDog provider
 func NewWatchDogFromConfig(ctx context.Context, other map[string]any) (Plugin, error) {
 	var cc struct {
-		Reset   []string
-		Initial *string
-		Set     Config
-		Timeout time.Duration
+		Reset      []string
+		Initial    *string
+		Set        Config
+		Timeout    time.Duration
+		Transition bool
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -40,12 +42,13 @@ func NewWatchDogFromConfig(ctx context.Context, other map[string]any) (Plugin, e
 	}
 
 	o := &watchdogPlugin{
-		ctx:     ctx,
-		log:     util.ContextLoggerWithDefault(ctx, util.NewLogger("watchdog")),
-		reset:   cc.Reset,
-		initial: cc.Initial,
-		set:     cc.Set,
-		timeout: cc.Timeout,
+		ctx:        ctx,
+		log:        util.ContextLoggerWithDefault(ctx, util.NewLogger("watchdog")),
+		reset:      cc.Reset,
+		initial:    cc.Initial,
+		set:        cc.Set,
+		timeout:    cc.Timeout,
+		transition: cc.Transition,
 	}
 
 	return o, nil
@@ -64,14 +67,91 @@ func (o *watchdogPlugin) wdt(ctx context.Context, set func() error) {
 	}
 }
 
+type transitionState[T comparable] struct {
+	currentMode     *T
+	pendingMode     *T
+	transitionTimer *time.Timer
+	lastWrite       time.Time
+}
+
 // setter is the generic setter function for watchdogPlugin
 // it is currently not possible to write this as a method
 func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(T) error {
+	var state transitionState[T]
+
 	return func(val T) error {
 		o.mu.Lock()
 		defer o.mu.Unlock()
 
-		// stop wdt on new write
+		// Cancel pending transition
+		if state.transitionTimer != nil {
+			state.transitionTimer.Stop()
+			state.transitionTimer = nil
+			state.pendingMode = nil
+		}
+
+		// Calculate delay from last write
+		requiredDelay := o.timeout + 5*time.Second
+		timeSinceLastWrite := time.Since(state.lastWrite)
+		actualDelay := max(0, requiredDelay-timeSinceLastWrite)
+
+		// Check if delay needed: transition to non-reset mode with transition enabled or delay required
+		if o.transition && state.currentMode != nil && !slices.Contains(reset, val) && actualDelay > 0 {
+
+			// Stop running wdt
+			if o.cancel != nil {
+				o.cancel()
+				o.cancel = nil
+			}
+
+			// Store pending mode
+			valCopy := val
+			state.pendingMode = &valCopy
+
+			o.log.DEBUG.Printf("delayed transition scheduled: requiredDelay=%v, timeSinceLastWrite=%v, actualDelay=%v, from=%v, to=%v",
+				requiredDelay, timeSinceLastWrite, actualDelay, state.currentMode, val)
+
+			state.transitionTimer = time.AfterFunc(actualDelay, func() {
+				o.mu.Lock()
+				defer o.mu.Unlock()
+
+				if state.pendingMode == nil {
+					return
+				}
+
+				targetVal := *state.pendingMode
+				state.pendingMode = nil
+				state.transitionTimer = nil
+
+				o.log.DEBUG.Printf("delayed transition executing: to=%v", targetVal)
+				if err := set(targetVal); err != nil {
+					o.log.ERROR.Printf("delayed transition failed: %v", err)
+					return
+				}
+
+				state.lastWrite = time.Now()
+				state.currentMode = &targetVal
+				o.log.DEBUG.Printf("delayed transition completed: currentMode=%v", targetVal)
+
+				if !slices.Contains(reset, targetVal) {
+					var ctx context.Context
+					ctx, o.cancel = context.WithCancel(context.Background())
+					go o.wdt(ctx, func() error {
+						o.mu.Lock()
+						defer o.mu.Unlock()
+						if err := set(targetVal); err != nil {
+							return err
+						}
+						state.lastWrite = time.Now()
+						return nil
+					})
+				}
+			})
+
+			return nil
+		}
+
+		// stop wdt on reset value
 		if o.cancel != nil {
 			o.cancel()
 			o.cancel = nil
@@ -81,16 +161,26 @@ func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(
 		if !slices.Contains(reset, val) {
 			var ctx context.Context
 			ctx, o.cancel = context.WithCancel(context.Background())
-
 			go o.wdt(ctx, func() error {
 				o.mu.Lock()
 				defer o.mu.Unlock()
-
-				return set(val)
+				if err := set(val); err != nil {
+					return err
+				}
+				state.lastWrite = time.Now()
+				return nil
 			})
 		}
 
-		return set(val)
+		if err := set(val); err != nil {
+			return err
+		}
+
+		state.lastWrite = time.Now()
+		valCopy := val
+		state.currentMode = &valCopy
+
+		return nil
 	}
 }
 
