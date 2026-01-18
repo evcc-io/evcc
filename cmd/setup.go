@@ -230,6 +230,48 @@ NEXT:
 	return nil
 }
 
+type newFromConfFunc[T any] func(context.Context, string, map[string]any) (T, error)
+
+func staticInstance[T any](typ string, cc config.Named, newFromConf newFromConfFunc[T], h config.Handler[T]) error {
+	ctx := util.WithLogger(context.TODO(), util.NewLogger(cc.Name))
+
+	instance, err := newFromConf(ctx, cc.Type, cc.Other)
+	if err != nil {
+		return &DeviceError{cc.Name, fmt.Errorf("cannot create %s '%s': %w", typ, cc.Name, err)}
+	}
+
+	if err := h.Add(config.NewStaticDevice(cc, instance)); err != nil {
+		return &DeviceError{cc.Name, err}
+	}
+
+	return nil
+}
+
+func configurableInstance[T any](typ string, conf *config.Config, newFromConf newFromConfFunc[T], h config.Handler[T]) error {
+	cc := conf.Named()
+
+	ctx := util.WithLogger(context.TODO(), util.NewLogger(cc.Name))
+
+	props, err := customDevice(cc.Other)
+	if err != nil {
+		err = &DeviceError{cc.Name, fmt.Errorf("cannot decode custom %s '%s': %w", typ, cc.Name, err)}
+	}
+
+	var instance T
+	if err == nil {
+		instance, err = newFromConf(ctx, cc.Type, props)
+		if err != nil {
+			err = &DeviceError{cc.Name, fmt.Errorf("cannot create %s '%s': %w", typ, cc.Name, err)}
+		}
+	}
+
+	if e := h.Add(config.NewConfigurableDevice(conf, instance)); e != nil && err == nil {
+		err = &DeviceError{cc.Name, e}
+	}
+
+	return err
+}
+
 func configureMeters(static []config.Named, names ...string) error {
 	var eg errgroup.Group
 
@@ -247,18 +289,7 @@ func configureMeters(static []config.Named, names ...string) error {
 		}
 
 		eg.Go(func() error {
-			ctx := util.WithLogger(context.TODO(), util.NewLogger(cc.Name))
-
-			instance, err := meter.NewFromConfig(ctx, cc.Type, cc.Other)
-			if err != nil {
-				return &DeviceError{cc.Name, fmt.Errorf("cannot create meter '%s': %w", cc.Name, err)}
-			}
-
-			if err := config.Meters().Add(config.NewStaticDevice(cc, instance)); err != nil {
-				return &DeviceError{cc.Name, err}
-			}
-
-			return nil
+			return staticInstance("meter", cc, meter.NewFromConfig, config.Meters())
 		})
 	}
 
@@ -276,26 +307,7 @@ func configureMeters(static []config.Named, names ...string) error {
 				return nil
 			}
 
-			ctx := util.WithLogger(context.TODO(), util.NewLogger(cc.Name))
-
-			props, err := customDevice(cc.Other)
-			if err != nil {
-				err = &DeviceError{cc.Name, fmt.Errorf("cannot decode custom meter '%s': %w", cc.Name, err)}
-			}
-
-			var instance api.Meter
-			if err == nil {
-				instance, err = meter.NewFromConfig(ctx, cc.Type, props)
-				if err != nil {
-					err = &DeviceError{cc.Name, fmt.Errorf("cannot create meter '%s': %w", cc.Name, err)}
-				}
-			}
-
-			if e := config.Meters().Add(config.NewConfigurableDevice(&conf, instance)); e != nil && err == nil {
-				err = &DeviceError{cc.Name, e}
-			}
-
-			return err
+			return configurableInstance("meter", &conf, meter.NewFromConfig, config.Meters())
 		})
 	}
 
@@ -319,18 +331,7 @@ func configureChargers(static []config.Named, names ...string) error {
 		}
 
 		eg.Go(func() error {
-			ctx := util.WithLogger(context.TODO(), util.NewLogger(cc.Name))
-
-			instance, err := charger.NewFromConfig(ctx, cc.Type, cc.Other)
-			if err != nil {
-				return &DeviceError{cc.Name, fmt.Errorf("cannot create charger '%s': %w", cc.Name, err)}
-			}
-
-			if err := config.Chargers().Add(config.NewStaticDevice(cc, instance)); err != nil {
-				return &DeviceError{cc.Name, err}
-			}
-
-			return nil
+			return staticInstance("charger", cc, charger.NewFromConfig, config.Chargers())
 		})
 	}
 
@@ -348,26 +349,7 @@ func configureChargers(static []config.Named, names ...string) error {
 				return nil
 			}
 
-			ctx := util.WithLogger(context.TODO(), util.NewLogger(cc.Name))
-
-			props, err := customDevice(cc.Other)
-			if err != nil {
-				err = &DeviceError{cc.Name, fmt.Errorf("cannot decode custom charger '%s': %w", cc.Name, err)}
-			}
-
-			var instance api.Charger
-			if err == nil {
-				instance, err = charger.NewFromConfig(ctx, cc.Type, props)
-				if err != nil {
-					err = &DeviceError{cc.Name, fmt.Errorf("cannot create charger '%s': %w", cc.Name, err)}
-				}
-			}
-
-			if e := config.Chargers().Add(config.NewConfigurableDevice(&conf, instance)); e != nil && err == nil {
-				err = &DeviceError{cc.Name, e}
-			}
-
-			return err
+			return configurableInstance("charger", &conf, charger.NewFromConfig, config.Chargers())
 		})
 	}
 
