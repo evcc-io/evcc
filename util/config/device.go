@@ -41,11 +41,11 @@ var _ ConfigurableDevice[any] = (*configurableDevice[any])(nil)
 
 type configurableDevice[T any] struct {
 	mu       sync.Mutex
-	config   *Config
+	config   Config
 	instance T
 }
 
-func NewConfigurableDevice[T any](config *Config, instance T) ConfigurableDevice[T] {
+func NewConfigurableDevice[T any](config Config, instance T) ConfigurableDevice[T] {
 	return &configurableDevice[T]{
 		config:   config,
 		instance: instance,

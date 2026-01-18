@@ -291,7 +291,7 @@ func configureMeters(static []config.Named, names ...string) error {
 				}
 			}
 
-			if e := config.Meters().Add(config.NewConfigurableDevice(&conf, instance)); e != nil && err == nil {
+			if e := config.Meters().Add(config.NewConfigurableDevice(conf, instance)); e != nil && err == nil {
 				err = &DeviceError{cc.Name, e}
 			}
 
@@ -363,7 +363,7 @@ func configureChargers(static []config.Named, names ...string) error {
 				}
 			}
 
-			if e := config.Chargers().Add(config.NewConfigurableDevice(&conf, instance)); e != nil && err == nil {
+			if e := config.Chargers().Add(config.NewConfigurableDevice(conf, instance)); e != nil && err == nil {
 				err = &DeviceError{cc.Name, e}
 			}
 
@@ -461,7 +461,7 @@ func configureVehicles(static []config.Named, names ...string) error {
 
 			mu.Lock()
 			defer mu.Unlock()
-			devs2 = append(devs2, config.NewConfigurableDevice(&conf, instance))
+			devs2 = append(devs2, config.NewConfigurableDevice(conf, instance))
 
 			return nil
 		})
@@ -1149,7 +1149,7 @@ func configureLoadpoints(conf globalconfig.All) error {
 			err = &DeviceError{cc.Name, err}
 		}
 
-		dev := config.NewConfigurableDevice[loadpoint.API](&conf, instance)
+		dev := config.NewConfigurableDevice[loadpoint.API](conf, instance)
 		if e := config.Loadpoints().Add(dev); e != nil && err == nil {
 			err = &DeviceError{cc.Name, e}
 		}

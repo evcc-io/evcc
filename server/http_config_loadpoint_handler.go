@@ -171,7 +171,7 @@ func newLoadpointHandler() http.HandlerFunc {
 			return
 		}
 
-		dev := config.NewConfigurableDevice[loadpoint.API](&conf, instance)
+		dev := config.NewConfigurableDevice[loadpoint.API](conf, instance)
 		if err := dynamic.Apply(instance); err != nil {
 			conf.Delete()
 			jsonError(w, http.StatusBadRequest, err)

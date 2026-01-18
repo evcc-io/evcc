@@ -268,7 +268,7 @@ func newDevice[T any](ctx context.Context, class templates.Class, req configReq,
 		return nil, err
 	}
 
-	return &conf, h.Add(config.NewConfigurableDevice(&conf, instance))
+	return &conf, h.Add(config.NewConfigurableDevice(conf, instance))
 }
 
 // newDeviceHandler creates a new device by class
