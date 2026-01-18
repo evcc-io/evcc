@@ -4,6 +4,7 @@ import (
 	"github.com/containrrr/shoutrrr"
 	"github.com/containrrr/shoutrrr/pkg/router"
 	"github.com/containrrr/shoutrrr/pkg/types"
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -19,7 +20,7 @@ type Shoutrrr struct {
 }
 
 // NewShoutrrrFromConfig creates new Shoutrrr messenger
-func NewShoutrrrFromConfig(other map[string]any) (Messenger, error) {
+func NewShoutrrrFromConfig(other map[string]any) (api.Messenger, error) {
 	var cc struct {
 		URI string
 	}

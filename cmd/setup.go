@@ -814,17 +814,91 @@ func configureMessengers(conf *globalconfig.Messaging, vehicles push.Vehicles, v
 		return messageChan, fmt.Errorf("failed configuring push services: %w", err)
 	}
 
-	for _, conf := range conf.Services {
-		props, err := customDevice(conf.Other)
-		if err != nil {
-			return nil, fmt.Errorf("cannot decode push service '%s': %w", conf.Type, err)
+	// for _, conf := range conf.Services {
+	// 	props, err := customDevice(conf.Other)
+	// 	if err != nil {
+	// 		return nil, fmt.Errorf("cannot decode push service '%s': %w", conf.Type, err)
+	// 	}
+
+	// 	impl, err := push.NewFromConfig(context.TODO(), conf.Type, props)
+	// 	if err != nil {
+	// 		return messageChan, fmt.Errorf("failed configuring push service %s: %w", conf.Type, err)
+	// 	}
+	// 	messageHub.Add(impl)
+	// }
+
+	var eg errgroup.Group
+
+	for i, cc := range conf.Services {
+		// if cc.Name == "" {
+		// 	return fmt.Errorf("cannot create meter %d: missing name", i+1)
+		// }
+
+		// if len(names) > 0 && !slices.Contains(names, cc.Name) {
+		// 	continue
+		// }
+
+		// if err := nameValid(cc.Name); err != nil {
+		// 	log.WARN.Printf("create meter %d: %v", i+1, err)
+		// }
+
+		cc := config.Named{
+			Name:  fmt.Sprintf("push-%d", i+1),
+			Type:  cc.Type,
+			Other: cc.Other,
 		}
 
-		impl, err := push.NewFromConfig(context.TODO(), conf.Type, props)
-		if err != nil {
-			return messageChan, fmt.Errorf("failed configuring push service %s: %w", conf.Type, err)
-		}
-		messageHub.Add(impl)
+		eg.Go(func() error {
+			// ctx := util.WithLogger(context.TODO(), util.NewLogger(cc.Name))
+
+			instance, err := push.NewFromConfig(context.TODO(), cc.Type, cc.Other)
+			if err != nil {
+				return &DeviceError{cc.Name, fmt.Errorf("cannot create messenger '%s': %w", cc.Name, err)}
+			}
+
+			if err := config.Messengers().Add(config.NewStaticDevice(cc, instance)); err != nil {
+				return &DeviceError{cc.Name, err}
+			}
+
+			return nil
+		})
+	}
+
+	// append devices from database
+	configurable, err := config.ConfigurationsByClass(templates.Messenger)
+	if err != nil {
+		return messageChan, err
+	}
+
+	for _, conf := range configurable {
+		eg.Go(func() error {
+			cc := conf.Named()
+
+			// if len(names) > 0 && !slices.Contains(names, cc.Name) {
+			// 	return nil
+			// }
+
+			ctx := util.WithLogger(context.TODO(), util.NewLogger(cc.Name))
+
+			props, err := customDevice(cc.Other)
+			if err != nil {
+				err = &DeviceError{cc.Name, fmt.Errorf("cannot decode custom messenger '%s': %w", cc.Name, err)}
+			}
+
+			var instance api.Messenger
+			if err == nil {
+				instance, err = push.NewFromConfig(ctx, cc.Type, props)
+				if err != nil {
+					err = &DeviceError{cc.Name, fmt.Errorf("cannot create messenger '%s': %w", cc.Name, err)}
+				}
+			}
+
+			if e := config.Messengers().Add(config.NewConfigurableDevice(&conf, instance)); e != nil && err == nil {
+				err = &DeviceError{cc.Name, e}
+			}
+
+			return err
+		})
 	}
 
 	go messageHub.Run(messageChan, valueChan)

@@ -7,6 +7,7 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/core/vehicle"
 	"github.com/evcc-io/evcc/util"
@@ -26,7 +27,7 @@ type Vehicles interface {
 // Hub subscribes to event notifications and sends them to client devices
 type Hub struct {
 	definitions map[string]globalconfig.MessagingEventTemplate
-	sender      []Messenger
+	sender      []api.Messenger
 	cache       *util.ParamCache
 	vehicles    Vehicles
 }
@@ -53,7 +54,7 @@ func NewHub(cc map[string]globalconfig.MessagingEventTemplate, vv Vehicles, cach
 }
 
 // Add adds a sender to the list of senders
-func (h *Hub) Add(sender Messenger) {
+func (h *Hub) Add(sender api.Messenger) {
 	h.sender = append(h.sender, sender)
 }
 

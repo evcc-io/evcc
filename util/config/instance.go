@@ -13,6 +13,7 @@ var instance struct {
 	chargers   *handler[api.Charger]
 	vehicles   *handler[api.Vehicle]
 	circuits   *handler[api.Circuit]
+	messengers *handler[api.Messenger]
 	loadpoints *handler[loadpoint.API]
 }
 
@@ -46,6 +47,10 @@ func Chargers() Handler[api.Charger] {
 
 func Vehicles() Handler[api.Vehicle] {
 	return instance.vehicles
+}
+
+func Messengers() Handler[api.Messenger] {
+	return instance.messengers
 }
 
 func Circuits() Handler[api.Circuit] {
