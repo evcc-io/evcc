@@ -3,8 +3,8 @@ products:
   - brand: AAE Naturstrom
 requirements:
   description:
-    de: "Day-ahead Energiepreise (je kWh) an der Börse. Kann ohne vorherige Anmeldung auf [api.energy-charts.info](https://api.energy-charts.info/) abgerufen werden. Nutzbar u.a. für dynamische Stromtarife, wo der Anbieter bis dato auf der Kundenschnittstelle noch kein Preis-Vorhersagen anbietet."
-    en: "Day-ahead forecast of energy prices (per kWh) on the exchange. No prior registration for [api.energy-charts.info](https://api.energy-charts.info/) necessary. Can be used for dynamic electricity tariffs, for example, where the supplier does not yet offer a price forecast on the customer interface."
+    de: "Abbildung des dynamischen Stromtarifs AAE Naturstrom Spot Stunde II (AT). Der Arbeitspreis je kWh berechnet sich auf Basis des österreichischen Day-Ahead-Börsenpreises (EPEX Spot) nach folgender Formel:  Strompreis = (Börsenpreis + 0,013 €/kWh) × 1,20. Der Aufschlag von 0,013 €/kWh entspricht den tariflichen Kosten des Anbieters, zusätzlich werden 20 % Umsatzsteuer verrechnet."
+    en: "Representation of the dynamic electricity tariff AAE Naturstrom Spot Stunde II (AT). The energy price per kWh is calculated based on Austrian day-ahead prices (EPEX Spot) using the following formula: Electricity price = (exchange price + €0.013/kWh) × 1.20.  The €0.013/kWh markup represents the supplier's tariff surcharge; 20% VAT is applied on top."
   evcc: ["skiptest"]
 group: price
 countries: ["AT"]
