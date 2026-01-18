@@ -7,11 +7,11 @@ params:
   - name: usage
     choice: ["pv", "battery", "grid"]
   - name: host
-  - name: capacity
-    default: 1.92 # kWh
   - name: maxacpower
     default: 800 # W
   - preset: battery-params
+  - name: capacity
+    default: 1.92 # kWh
   - name: cache
     advanced: true
     default: 1s

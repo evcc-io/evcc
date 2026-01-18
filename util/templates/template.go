@@ -157,11 +157,18 @@ func (t *Template) ResolvePresets() error {
 	currentParams := make([]Param, len(t.Params))
 	copy(currentParams, t.Params)
 	t.Params = []Param{}
+
 	for _, p := range currentParams {
 		if p.Preset != "" {
 			preset, ok := ConfigDefaults.Presets[p.Preset]
 			if !ok {
 				return fmt.Errorf("could not find preset definition: %s", p.Preset)
+			}
+
+			for _, pp := range preset {
+				if i, _ := t.ParamByName(pp.Name); i > -1 {
+					return fmt.Errorf("parameter %s must not be defined before containing preset %s", pp.Name, p.Preset)
+				}
 			}
 
 			t.Params = append(t.Params, preset...)
