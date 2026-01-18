@@ -820,7 +820,7 @@ func configureMessengers(conf *globalconfig.Messaging, vehicles push.Vehicles, v
 		}
 
 		if cc.Name == "" {
-			return messageChan, fmt.Errorf("cannot create messager %d: missing name", i+1)
+			return messageChan, fmt.Errorf("cannot create messenger %d: missing name", i+1)
 		}
 
 		// TODO use for cli support
