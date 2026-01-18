@@ -83,29 +83,28 @@ func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(
 		o.mu.Lock()
 		defer o.mu.Unlock()
 
-		// Cancel pending transition
+		// cancel pending transition
 		if state.transitionTimer != nil {
 			state.transitionTimer.Stop()
 			state.transitionTimer = nil
 			state.pendingMode = nil
 		}
 
-		// Calculate delay from last write
+		// calculate delay from last write
 		requiredDelay := o.timeout + 5*time.Second
 		timeSinceLastWrite := time.Since(state.lastWrite)
 		actualDelay := max(0, requiredDelay-timeSinceLastWrite)
 
-		// Check if delay needed: transition to non-reset mode with transition enabled or delay required
+		// delay transition to non-reset state by transitionDelay
 		if o.transition && state.currentMode != nil && !slices.Contains(reset, val) && actualDelay > 0 {
-			// Stop running wdt
+			// stop running wdt
 			if o.cancel != nil {
 				o.cancel()
 				o.cancel = nil
 			}
 
-			// Store pending mode
-			valCopy := val
-			state.pendingMode = &valCopy
+			// store pending mode
+			state.pendingMode = &val
 
 			o.log.DEBUG.Printf("delayed transition scheduled: requiredDelay=%v, timeSinceLastWrite=%v, actualDelay=%v, from=%v, to=%v",
 				requiredDelay, timeSinceLastWrite, actualDelay, state.currentMode, val)
