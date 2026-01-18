@@ -26,7 +26,7 @@ import (
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/core/vehicle"
-	"github.com/evcc-io/evcc/push"
+	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/tariff"
@@ -1056,7 +1056,7 @@ func (site *Site) prepare() {
 }
 
 // Prepare attaches communication channels to site and loadpoints
-func (site *Site) Prepare(valueChan chan<- util.Param, pushChan chan<- push.Event) {
+func (site *Site) Prepare(valueChan chan<- util.Param, pushChan chan<- messenger.Event) {
 	// https://github.com/evcc-io/evcc/issues/11191 prevent deadlock
 	// https://github.com/evcc-io/evcc/pull/11675 maintain message order
 
@@ -1079,7 +1079,7 @@ func (site *Site) Prepare(valueChan chan<- util.Param, pushChan chan<- push.Even
 
 	for id, lp := range site.loadpoints {
 		lpUIChan := make(chan util.Param)
-		lpPushChan := make(chan push.Event)
+		lpPushChan := make(chan messenger.Event)
 
 		// pipe messages through go func to add id
 		go func(id int) {

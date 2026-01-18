@@ -14,8 +14,8 @@ import (
 	"github.com/evcc-io/evcc/charger"
 	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/meter"
-	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/templates"
@@ -318,7 +318,7 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		}, config.Circuits(), force)
 
 	case templates.Messenger:
-		conf, err = newDevice(ctx, class, req, push.NewFromConfig, config.Messengers(), force)
+		conf, err = newDevice(ctx, class, req, messenger.NewFromConfig, config.Messengers(), force)
 	}
 
 	if err != nil {
@@ -402,7 +402,7 @@ func updateDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		}, config.Circuits(), force)
 
 	case templates.Messenger:
-		err = updateDevice(ctx, id, class, req, push.NewFromConfig, config.Messengers(), force)
+		err = updateDevice(ctx, id, class, req, messenger.NewFromConfig, config.Messengers(), force)
 	}
 
 	setConfigDirty()
@@ -621,7 +621,7 @@ func testConfigHandler(w http.ResponseWriter, r *http.Request) {
 		err = api.ErrNotAvailable
 
 	case templates.Messenger:
-		instance, err = testConfig(ctx, id, class, req, push.NewFromConfig, config.Messengers())
+		instance, err = testConfig(ctx, id, class, req, messenger.NewFromConfig, config.Messengers())
 	}
 
 	if err != nil {

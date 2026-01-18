@@ -27,11 +27,11 @@ import (
 	"github.com/evcc-io/evcc/hems"
 	hemsapi "github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/hems/shm"
+	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/meter"
 	"github.com/evcc-io/evcc/plugin/golang"
 	"github.com/evcc-io/evcc/plugin/javascript"
 	"github.com/evcc-io/evcc/plugin/mqtt"
-	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/server/db/settings"
@@ -271,7 +271,7 @@ func configurableInstance[T any](typ string, conf *config.Config, newFromConf ne
 	return err
 }
 
-func configureMessengers(conf *globalconfig.Messaging, vehicles push.Vehicles, valueChan chan<- util.Param, cache *util.ParamCache) (chan push.Event, error) {
+func configureMessengers(conf *globalconfig.Messaging, vehicles messenger.Vehicles, valueChan chan<- util.Param, cache *util.ParamCache) (chan messenger.Event, error) {
 	// migrate settings
 	if settings.Exists(keys.Messaging) {
 		*conf = globalconfig.Messaging{}
@@ -280,7 +280,7 @@ func configureMessengers(conf *globalconfig.Messaging, vehicles push.Vehicles, v
 		}
 	}
 
-	messageChan := make(chan push.Event, 1)
+	messageChan := make(chan messenger.Event, 1)
 
 	var eg errgroup.Group
 
@@ -293,7 +293,7 @@ func configureMessengers(conf *globalconfig.Messaging, vehicles push.Vehicles, v
 		}
 
 		eg.Go(func() error {
-			return staticInstance("messenger", cc, push.NewFromConfig, config.Messengers())
+			return staticInstance("messenger", cc, messenger.NewFromConfig, config.Messengers())
 		})
 	}
 
@@ -305,7 +305,7 @@ func configureMessengers(conf *globalconfig.Messaging, vehicles push.Vehicles, v
 
 	for _, conf := range configurable {
 		eg.Go(func() error {
-			return configurableInstance("messenger", &conf, push.NewFromConfig, config.Messengers())
+			return configurableInstance("messenger", &conf, messenger.NewFromConfig, config.Messengers())
 		})
 	}
 
@@ -313,7 +313,7 @@ func configureMessengers(conf *globalconfig.Messaging, vehicles push.Vehicles, v
 		return messageChan, &ClassError{ClassMessenger, err}
 	}
 
-	messageHub, err := push.NewHub(conf.Events, vehicles, cache)
+	messageHub, err := messenger.NewHub(conf.Events, vehicles, cache)
 	if err != nil {
 		return messageChan, fmt.Errorf("failed configuring push services: %w", err)
 	}

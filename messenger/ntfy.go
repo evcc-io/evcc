@@ -1,4 +1,4 @@
-package push
+package messenger
 
 import (
 	"encoding/base64"

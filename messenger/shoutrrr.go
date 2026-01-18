@@ -1,4 +1,4 @@
-package push
+package messenger
 
 import (
 	"github.com/containrrr/shoutrrr"
