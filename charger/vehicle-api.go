@@ -167,7 +167,7 @@ func (c *VehicleApi) MaxCurrent(current int64) error {
 	return v.MaxCurrent(current)
 }
 
-var _ api.Resurrector = (*Provider)(nil)
+var _ api.Resurrector = (*VehicleApi)(nil)
 
 // WakeUp implements the api.Resurrector interface
 func (c *VehicleApi) WakeUp() error {
