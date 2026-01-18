@@ -117,7 +117,7 @@ func productsHandler(w http.ResponseWriter, r *http.Request) {
 			for _, p := range t.Products {
 				res = append(res, product{
 					Name:     p.Title(lang),
-					Template: t.TemplateDefinition.Template,
+					Template: t.Template,
 					Group:    t.Group,
 				})
 			}
