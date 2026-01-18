@@ -104,7 +104,7 @@ render: |
                 encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
           # Limit min-soc in normal mode to prevent discharge below
           - source: const
-            value: {{ .minsoc }} 
+            value: {{ .minsoc }}
             set:
               source: modbus
               {{- include "modbus" . | indent 10 }}
@@ -114,7 +114,7 @@ render: |
                 encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
           # Reset max-soc to 100% to allow full-charge via PV
           - source: const
-            value: 100 
+            value: 100
             set:
               source: modbus
               {{- include "modbus" . | indent 10 }}
@@ -125,7 +125,7 @@ render: |
 
       - case: 2 # hold
         set:
-          # Immediately stop grid-charging if the mode is switched from 
+          # Immediately stop grid-charging if the mode is switched from
           # "charge" to "hold"
           - source: const
             value: 0
@@ -136,12 +136,12 @@ render: |
                 address: 1034 # Battery charge power (DC) setpoint, absolute [W]
                 type: writemultiple
                 encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
-          # Limiting discharge power via register 1040 is not always reliable 
-          # and has side-effects when switching modes. Register 1034 to limit 
+          # Limiting discharge power via register 1040 is not always reliable
+          # and has side-effects when switching modes. Register 1034 to limit
           # via charge power prevents surplus to be charged in hold mode.
           # Therefore use a 100% min-soc limit to stop discharging and ensure
           # charging surplus is possible.
-          # Therefor use 100% min-soc limit to stop discharging and ensure 
+          # Therefor use 100% min-soc limit to stop discharging and ensure
           # charging surplus is possible.
           - source: const
             value: 100
@@ -154,7 +154,7 @@ render: |
                 encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
           # Reset max-soc too 100% to allow full-charge via PV
           - source: const
-            value: 100 
+            value: 100
             set:
               source: modbus
               {{- include "modbus" . | indent 10 }}
@@ -177,14 +177,14 @@ render: |
                 encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
           # Limit grid-charging by configured max soc-limit
           - source: const
-            value: {{ .maxsoc }} 
+            value: {{ .maxsoc }}
             set:
               source: modbus
               {{- include "modbus" . | indent 10 }}
               register:
                 address: 1044 # Maximum SOC [%]
                 type: writemultiple
-                encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }} 
+                encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
 
   {{- include "battery-params" . }}
   {{- end }}
