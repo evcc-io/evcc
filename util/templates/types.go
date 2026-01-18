@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"regexp"
+	"slices"
 	"strings"
 
 	"dario.cat/mergo"
@@ -60,11 +61,10 @@ const (
 	CapabilityMilliAmps      = "mA"              // Granular current control support
 	CapabilityRFID           = "rfid"            // RFID support
 	Capability1p3p           = "1p3p"            // 1P/3P phase switching support
-	CapabilitySMAHems        = "smahems"         // SMA HEMS support
 	CapabilityBatteryControl = "battery-control" // Battery control support
 )
 
-var ValidCapabilities = []string{CapabilityISO151182, CapabilityMilliAmps, CapabilityRFID, Capability1p3p, CapabilitySMAHems, CapabilityBatteryControl}
+var ValidCapabilities = []string{CapabilityISO151182, CapabilityMilliAmps, CapabilityRFID, Capability1p3p, CapabilityBatteryControl}
 
 const (
 	RequirementEEBUS       = "eebus"       // EEBUS Setup is required
@@ -75,9 +75,8 @@ const (
 
 var ValidRequirements = []string{RequirementEEBUS, RequirementMQTT, RequirementSponsorship, RequirementSkipTest}
 
-var predefinedTemplateProperties = append(
-	[]string{"type", "template", "name"},
-	append(ModbusParams, ModbusConnectionTypes...)...,
+var predefinedTemplateProperties = slices.Concat(
+	[]string{"type", "template", "name"}, ModbusParams, ModbusConnectionTypes,
 )
 
 // TextLanguage contains language-specific texts
@@ -139,9 +138,8 @@ func (t *TextLanguage) Update(new TextLanguage, always bool) {
 // MarshalJSON implements the json.Marshaler interface
 func (t TextLanguage) MarshalJSON() ([]byte, error) {
 	mu.Lock()
-	s := t.String(encoderLanguage)
-	mu.Unlock()
-	return json.Marshal(s)
+	defer mu.Unlock()
+	return json.Marshal(t.String(encoderLanguage))
 }
 
 func (r Requirements) MarshalJSON() ([]byte, error) {
