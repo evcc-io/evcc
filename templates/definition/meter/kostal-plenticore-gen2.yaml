@@ -91,36 +91,98 @@ render: |
       switch:
       - case: 1 # normal
         set:
-          source: const
-          value: 0 # W (set once to reset from forced charge)
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 1034 # Battery charge power (DC) setpoint, absolute [W]
-              type: writemultiple
-              encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
+          # Immediately stop grid-charging if the mode is switched from
+          # "charge" to "normal"
+          - source: const
+            value: 0
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 10 }}
+              register:
+                address: 1034 # Battery charge power (DC) setpoint, absolute [W]
+                type: writemultiple
+                encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
+          # Limit min-soc in normal mode to prevent discharge below
+          - source: const
+            value: {{ .minsoc }} 
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 10 }}
+              register:
+                address: 1042 # Minimum SOC [%]
+                type: writemultiple
+                encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
+          # Reset max-soc too 100% to allow full-charge via PV
+          - source: const
+            value: 100 
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 10 }}
+              register:
+                address: 1044 # Maximum SOC [%]
+                type: writemultiple
+                encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
+
       - case: 2 # hold
         set:
-          source: const
-          value: 0 # W
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 1040 # Battery max. discharge power limit, absolute [W]
-              type: writemultiple
-              encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
+          # Immediately stop grid-charging if the mode is switched from 
+          # "charge" to "hold"
+          - source: const
+            value: 0
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 10 }}
+              register:
+                address: 1034 # Battery charge power (DC) setpoint, absolute [W]
+                type: writemultiple
+                encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
+          # Limiting discharge power via register 1040 is not always reliable 
+          # and has side-effects when switching modes. Register 1034 to limit 
+          # via charge power prevents surplus to be charged in hold mode.
+          # Therefor use 100% min-soc limit to stop discharging and ensure 
+          # charging surplus is possible.
+          - source: const
+            value: 100
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 10 }}
+              register:
+                address: 1042 # Minimum SOC [%]
+                type: writemultiple
+                encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
+          # Reset max-soc too 100% to allow full-charge via PV
+          - source: const
+            value: 100 
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 10 }}
+              register:
+                address: 1044 # Maximum SOC [%]
+                type: writemultiple
+                encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
+
       - case: 3 # charge
         set:
-          source: const
-          value: {{ if .maxchargepower }}-{{ .maxchargepower }}{{ end }} # W
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 1034 # Battery charge power (DC) setpoint, absolute [W]
-              type: writemultiple
-              encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
+          # Start grid-charging with configured power
+          - source: const
+            value: {{ if .maxchargepower }}-{{ .maxchargepower }}{{ end }} # W
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 10 }}
+              register:
+                address: 1034 # Battery charge power (DC) setpoint, absolute [W]
+                type: writemultiple
+                encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
+          # Limit grid-charging by configured max soc-limit
+          - source: const
+            value: {{ .maxsoc }} 
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 10 }}
+              register:
+                address: 1044 # Maximum SOC [%]
+                type: writemultiple
+                encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }} 
+
   {{- include "battery-params" . }}
   {{- end }}
