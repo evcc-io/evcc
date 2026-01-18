@@ -272,7 +272,6 @@ func configurableInstance[T any](typ string, conf *config.Config, newFromConf ne
 	return err
 }
 
-// setup messaging
 func configureMessengers(conf *globalconfig.Messaging, vehicles push.Vehicles, valueChan chan<- util.Param, cache *util.ParamCache) (chan push.Event, error) {
 	// migrate settings
 	if settings.Exists(keys.Messaging) {
