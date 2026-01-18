@@ -26,6 +26,7 @@ func Reset() {
 	instance.chargers = &handler[api.Charger]{topic: "charger"}
 	instance.vehicles = &handler[api.Vehicle]{topic: "vehicle"}
 	instance.circuits = &handler[api.Circuit]{topic: "circuit"}
+	instance.messengers = &handler[api.Messenger]{topic: "messenger"}
 	instance.loadpoints = &handler[loadpoint.API]{topic: "loadpoint"}
 }
 

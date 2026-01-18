@@ -809,49 +809,33 @@ func configureMessengers(conf *globalconfig.Messaging, vehicles push.Vehicles, v
 
 	messageChan := make(chan push.Event, 1)
 
-	messageHub, err := push.NewHub(conf.Events, vehicles, cache)
-	if err != nil {
-		return messageChan, fmt.Errorf("failed configuring push services: %w", err)
-	}
-
-	// for _, conf := range conf.Services {
-	// 	props, err := customDevice(conf.Other)
-	// 	if err != nil {
-	// 		return nil, fmt.Errorf("cannot decode push service '%s': %w", conf.Type, err)
-	// 	}
-
-	// 	impl, err := push.NewFromConfig(context.TODO(), conf.Type, props)
-	// 	if err != nil {
-	// 		return messageChan, fmt.Errorf("failed configuring push service %s: %w", conf.Type, err)
-	// 	}
-	// 	messageHub.Add(impl)
-	// }
-
 	var eg errgroup.Group
 
 	for i, cc := range conf.Services {
-		// if cc.Name == "" {
-		// 	return fmt.Errorf("cannot create meter %d: missing name", i+1)
-		// }
-
-		// if len(names) > 0 && !slices.Contains(names, cc.Name) {
-		// 	continue
-		// }
-
-		// if err := nameValid(cc.Name); err != nil {
-		// 	log.WARN.Printf("create meter %d: %v", i+1, err)
-		// }
-
+		// add name
 		cc := config.Named{
 			Name:  fmt.Sprintf("push-%d", i+1),
 			Type:  cc.Type,
 			Other: cc.Other,
 		}
 
-		eg.Go(func() error {
-			// ctx := util.WithLogger(context.TODO(), util.NewLogger(cc.Name))
+		if cc.Name == "" {
+			return messageChan, fmt.Errorf("cannot create messager %d: missing name", i+1)
+		}
 
-			instance, err := push.NewFromConfig(context.TODO(), cc.Type, cc.Other)
+		// TODO use for cli support
+		// if len(names) > 0 && !slices.Contains(names, cc.Name) {
+		// 	continue
+		// }
+
+		if err := nameValid(cc.Name); err != nil {
+			log.WARN.Printf("create meter %d: %v", i+1, err)
+		}
+
+		eg.Go(func() error {
+			ctx := util.WithLogger(context.TODO(), util.NewLogger(cc.Name))
+
+			instance, err := push.NewFromConfig(ctx, cc.Type, cc.Other)
 			if err != nil {
 				return &DeviceError{cc.Name, fmt.Errorf("cannot create messenger '%s': %w", cc.Name, err)}
 			}
@@ -874,6 +858,7 @@ func configureMessengers(conf *globalconfig.Messaging, vehicles push.Vehicles, v
 		eg.Go(func() error {
 			cc := conf.Named()
 
+			// TODO use for cli support
 			// if len(names) > 0 && !slices.Contains(names, cc.Name) {
 			// 	return nil
 			// }
@@ -899,6 +884,21 @@ func configureMessengers(conf *globalconfig.Messaging, vehicles push.Vehicles, v
 
 			return err
 		})
+	}
+
+	if err := eg.Wait(); err != nil {
+		return messageChan, &ClassError{ClassMessenger, err}
+	}
+
+	messageHub, err := push.NewHub(conf.Events, vehicles, cache)
+	if err != nil {
+		return messageChan, fmt.Errorf("failed configuring push services: %w", err)
+	}
+
+	for _, dev := range config.Messengers().Devices() {
+		if inst := dev.Instance(); inst != nil {
+			messageHub.Add(inst)
+		}
 	}
 
 	go messageHub.Run(messageChan, valueChan)
