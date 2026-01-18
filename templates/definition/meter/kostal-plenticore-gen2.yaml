@@ -99,7 +99,7 @@ render: |
               value: 0
               set:
                 source: modbus
-                {{- include "modbus" . | indent 10 }}
+                {{- include "modbus" . | indent 14 }}
                 register:
                   address: 1034 # Battery charge power (DC) setpoint, absolute [W]
                   type: writemultiple
@@ -109,7 +109,7 @@ render: |
               value: {{ .minsoc }}
               set:
                 source: modbus
-                {{- include "modbus" . | indent 10 }}
+                {{- include "modbus" . | indent 14 }}
                 register:
                   address: 1042 # Minimum SOC [%]
                   type: writemultiple
@@ -119,12 +119,12 @@ render: |
               value: 100
               set:
                 source: modbus
-                {{- include "modbus" . | indent 10 }}
+                {{- include "modbus" . | indent 14 }}
                 register:
                   address: 1044 # Maximum SOC [%]
                   type: writemultiple
                   encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }
-
+         
       - case: 2 # hold
         set:
           source: sequence
@@ -135,7 +135,7 @@ render: |
               value: 0
               set:
                 source: modbus
-                {{- include "modbus" . | indent 10 }}
+                {{- include "modbus" . | indent 14 }}
                 register:
                   address: 1034 # Battery charge power (DC) setpoint, absolute [W]
                   type: writemultiple
@@ -151,7 +151,7 @@ render: |
               value: 100
               set:
                 source: modbus
-                {{- include "modbus" . | indent 10 }}
+                {{- include "modbus" . | indent 14 }}
                 register:
                   address: 1042 # Minimum SOC [%]
                   type: writemultiple
@@ -161,7 +161,7 @@ render: |
               value: 100
               set:
                 source: modbus
-                {{- include "modbus" . | indent 10 }}
+                {{- include "modbus" . | indent 14 }}
                 register:
                   address: 1044 # Maximum SOC [%]
                   type: writemultiple
@@ -176,7 +176,7 @@ render: |
               value: {{ if .maxchargepower }}-{{ .maxchargepower }}{{ end }} # W
               set:
                 source: modbus
-                {{- include "modbus" . | indent 10 }}
+                {{- include "modbus" . | indent 14 }}
                 register:
                   address: 1034 # Battery charge power (DC) setpoint, absolute [W]
                   type: writemultiple
@@ -186,7 +186,7 @@ render: |
               value: {{ .maxsoc }}
               set:
                 source: modbus
-                {{- include "modbus" . | indent 10 }}
+                {{- include "modbus" . | indent 14 }}
                 register:
                   address: 1044 # Maximum SOC [%]
                   type: writemultiple
