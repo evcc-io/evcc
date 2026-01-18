@@ -15,6 +15,9 @@ params:
   - name: modbus
     choice: ["rs485", "tcpip"]
     baudrate: 9600
+  - name: maxacpower
+    service: modbus/read?address=5000&type=input&encoding=uint16&scale=100&{modbus}
+  - preset: battery-params
   - name: maxchargepower
     service: modbus/read?address=13051&type=holding&encoding=uint16&scale=1&{modbus}
     required: true
@@ -23,10 +26,6 @@ params:
     required: true
   - name: capacity
     service: modbus/read?address=5638&type=input&encoding=uint16&scale=0.01&resulttype=float&{modbus}
-  - name: maxacpower
-    service: modbus/read?address=5000&type=input&encoding=uint16&scale=100&{modbus}
-  - name: minsoc
-  - name: maxsoc
 render: |
   type: custom
   {{- if eq .usage "grid" }}
