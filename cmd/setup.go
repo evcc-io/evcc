@@ -247,7 +247,9 @@ func staticInstance[T any](typ string, cc config.Named, newFromConf newFromConfF
 	return nil
 }
 
-func configurableInstance[T any](typ string, cc config.Named, newFromConf newFromConfFunc[T], h config.Handler[T]) error {
+func configurableInstance[T any](typ string, conf *config.Config, newFromConf newFromConfFunc[T], h config.Handler[T]) error {
+	cc := conf.Named()
+
 	ctx := util.WithLogger(context.TODO(), util.NewLogger(cc.Name))
 
 	props, err := customDevice(cc.Other)
@@ -263,7 +265,7 @@ func configurableInstance[T any](typ string, cc config.Named, newFromConf newFro
 		}
 	}
 
-	if e := h.Add(config.NewConfigurableDevice(&conf, instance)); e != nil && err == nil {
+	if e := h.Add(config.NewConfigurableDevice(conf, instance)); e != nil && err == nil {
 		err = &DeviceError{cc.Name, e}
 	}
 
@@ -305,7 +307,7 @@ func configureMeters(static []config.Named, names ...string) error {
 				return nil
 			}
 
-			return configurableInstance("meter", cc, meter.NewFromConfig, config.Meters())
+			return configurableInstance("meter", &conf, meter.NewFromConfig, config.Meters())
 		})
 	}
 
@@ -347,7 +349,7 @@ func configureChargers(static []config.Named, names ...string) error {
 				return nil
 			}
 
-			return configurableInstance("charger", cc, charger.NewFromConfig, config.Chargers())
+			return configurableInstance("charger", &conf, charger.NewFromConfig, config.Chargers())
 		})
 	}
 
