@@ -439,6 +439,7 @@ params:
   - name: apikey
     description:
       generic: API Key
+    mask: true
   - name: tempsource
     description:
       de: Temperaturquelle
@@ -745,6 +746,12 @@ modbus:
         de: Kommunikationsparameter des Adapters
         en: Communication parameter for the adapter
       default: 8N1
+    - name: port
+      description:
+        de: Port
+        en: Port
+      default: 502
+      type: int
   types:
     rs485serial:
       description:

@@ -11,24 +11,25 @@ requirements:
   description:
     de: |
       ##### Lizenzhinweis:
-      Für FENECON FEMS Systeme ist für die aktive Batteriesteuerung eine kommerzielle Lizenz *FEMS App Modbus/TCP Schreibzugriff* erforderlich.<br/><br/>
+      Für FENECON FEMS Systeme ist für die aktive Batteriesteuerung eine kommerzielle Lizenz *FEMS App Modbus/TCP Schreibzugriff* erforderlich.
+
       ##### FEMS-Dokumentation:
-      - [FEMS App Modbus/TCP — Lesezugriff](https://docs.fenecon.de/de/fems/fems-app/App_ModbusTCP_Lesezugriff.html)
-      - [FEMS App Modbus/TCP — Schreibzugriff](https://docs.fenecon.de/de/fems/fems-app/App_ModbusTCP_Schreibzugriff.html)
+      - FEMS App Modbus/TCP Lesezugriff: [docs.fenecon.de](https://docs.fenecon.de/de/fems/fems-app/App_ModbusTCP_Lesezugriff.html)
+      - FEMS App Modbus/TCP Schreibzugriff: [docs.fenecon.de](https://docs.fenecon.de/de/fems/fems-app/App_ModbusTCP_Schreibzugriff.html)
       ##### OpenEMS-Dokumentation:
-      - [OpenEMS Edge Api Modbus Controller](https://openems.github.io/openems.io/openems/latest/edge/controller.html#_api_modbus)
+      - OpenEMS Edge Api Modbus Controller: [openems.github.io](https://openems.github.io/openems.io/openems/latest/edge/controller.html#_api_modbus)
     en: |
       ##### License notice:
-      For active battery control on FENECON FEMS systems, a commercial license (*FEMS App Modbus/TCP Write Access*) is required.<br/><br/>
+      For active battery control on FENECON FEMS systems, a commercial license (*FEMS App Modbus/TCP Write Access*) is required.
+
       ##### FEMS documentation:
-      - [FEMS App Modbus/TCP — Read Access](https://docs.fenecon.de/en/fems/fems-app/App_ModbusTCP_Lesezugriff.html)
-      - [FEMS App Modbus/TCP — Write Access](https://docs.fenecon.de/en/fems/fems-app/App_ModbusTCP_Schreibzugriff.html)
+      - FEMS App Modbus/TCP Read Access: [docs.fenecon.de](https://docs.fenecon.de/en/fems/fems-app/App_ModbusTCP_Lesezugriff.html)
+      - FEMS App Modbus/TCP Write Access: [docs.fenecon.de](https://docs.fenecon.de/en/fems/fems-app/App_ModbusTCP_Schreibzugriff.html)
       ##### OpenEMS documentation:
-      - [OpenEMS Edge Api Modbus Controller](https://openems.github.io/openems.io/openems/latest/edge/controller.html#_api_modbus)
+      - OpenEMS Edge Api Modbus Controller: [openems.github.io](https://openems.github.io/openems.io/openems/latest/edge/controller.html#_api_modbus)
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
-    allinone: true
   - name: modbus
     choice: ["tcpip"]
     default: "tcpip"

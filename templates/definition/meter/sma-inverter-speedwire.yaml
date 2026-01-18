@@ -20,7 +20,7 @@ params:
 render: |
   type: sma
   uri: {{ .host }} # IP address or hostname
-  {{- if .password }}
   password: {{ .password }} # optional
+  {{- if eq .usage "battery" }}
+  {{- include "battery-params" . }}
   {{- end }}
-  capacity: {{ .capacity }} # kWh

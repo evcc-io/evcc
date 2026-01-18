@@ -1,0 +1,26 @@
+template: chargex
+products:
+  - brand: ChargeX
+    description:
+      generic: Aqueduct
+  - brand: ChargeX
+    description:
+      generic: Connect
+capabilities: ["mA"]
+requirements:
+  evcc: ["sponsorship"]
+  description:
+    de: ChargeX Wallboxen mit Modbus TCP Unterstützung (Firmware 1.0+). Modbus TCP muss über das ChargeX Support-Team freigeschaltet werden. Die Wallbox wird über Leistung (Watt) statt Strom (Ampere) gesteuert.
+    en: ChargeX wallboxes with Modbus TCP support (firmware 1.0+). Modbus TCP must be enabled by ChargeX support team. The wallbox is controlled via power (watts) instead of current (amperes).
+params:
+  - name: modbus
+    choice: ["tcpip"]
+    id: 10
+    port: 1502
+  - name: connector
+render: |
+  type: chargex
+  {{- include "modbus" . }}
+  {{- if ne .connector "1" }}
+  connector: {{ .connector }}
+  {{- end }}

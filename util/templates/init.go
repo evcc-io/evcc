@@ -68,16 +68,12 @@ func fromBytes(b []byte) (Template, error) {
 	dec := yaml.NewDecoder(bytes.NewReader(b))
 	dec.KnownFields(true)
 
-	var definition TemplateDefinition
-	if err := dec.Decode(&definition); err != nil {
+	var tmpl Template
+	if err := dec.Decode(&tmpl); err != nil {
 		return Template{}, err
 	}
 
-	tmpl := Template{
-		TemplateDefinition: definition,
-	}
-
-	for _, f := range []func() error{tmpl.ResolvePresets, tmpl.ResolveGroup, tmpl.UpdateParamsWithDefaults, tmpl.Validate} {
+	for _, f := range []func() error{tmpl.ResolvePresets, tmpl.ResolveGroup, tmpl.UpdateParamsWithDefaults, tmpl.UpdateModbusParamsWithDefaults, tmpl.Validate} {
 		if err := f(); err != nil {
 			return tmpl, fmt.Errorf("template '%s': %w", tmpl.Template, err)
 		}
