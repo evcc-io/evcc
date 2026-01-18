@@ -18,7 +18,7 @@ import (
 
 // Simple cache for service responses
 type cacheEntry struct {
-	value     any
+	value     string
 	timestamp time.Time
 }
 
@@ -88,20 +88,18 @@ func modbusRead(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	// Apply optional cast
-	if query.ResultType != "" {
-		value = applyCast(value, query.ResultType)
-	}
+	// Convert to string
+	res := toString(value, query.ResultType)
 
 	// Store in cache
 	mu.Lock()
 	cache[cacheKey] = cacheEntry{
-		value:     value,
+		value:     res,
 		timestamp: time.Now(),
 	}
 	mu.Unlock()
 
-	jsonWrite(w, []string{cast.ToString(value)})
+	jsonWrite(w, []string{res})
 }
 
 // readRegisterValue reads a modbus register value by reusing the modbus plugin

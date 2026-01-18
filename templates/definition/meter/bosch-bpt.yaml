@@ -16,4 +16,6 @@ render: |
   type: bosch-bpt
   usage: {{ .usage }}
   uri: {{ .uri }}
-  capacity: {{ .capacity }} # kWh
+  {{- if eq .usage "battery" }}
+  {{- include "battery-params" . }}
+  {{- end }}
