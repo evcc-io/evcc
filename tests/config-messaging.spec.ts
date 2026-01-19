@@ -18,7 +18,7 @@ test.describe("messaging", async () => {
     await expect(messagingCard).toBeVisible();
     await expect(messagingCard).toContainText(["Configured", "no"].join(""));
   });
-  test("configured", async ({ page }) => {
+  test("configured: ui", async ({ page }) => {
     await start();
     await page.goto("/#/config");
 
@@ -55,5 +55,14 @@ test.describe("messaging", async () => {
     await messagingCard.getByRole("button", { name: "edit" }).click();
     await expectModalVisible(modal);
     await expect(modal).toContainText(editorContent);
+  });
+  test("configured: evcc.yaml", async ({ page }) => {
+    await start("config-messaging.evcc.yaml");
+    await page.goto("/#/config");
+
+    const messagingCard = page.getByTestId("messaging");
+
+    await expect(messagingCard).toBeVisible();
+    await expect(messagingCard).toContainText(["Configured", "yes"].join(""));
   });
 });
