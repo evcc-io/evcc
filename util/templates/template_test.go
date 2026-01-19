@@ -16,12 +16,10 @@ func TestPresets(t *testing.T) {
 	}
 
 	tmpl := &Template{
-		TemplateDefinition: TemplateDefinition{
-			Params: []Param{
-				{Name: "first"},
-				{Preset: "preset"},
-				{Name: "last"},
-			},
+		Params: []Param{
+			{Name: "first"},
+			{Preset: "preset"},
+			{Name: "last"},
 		},
 	}
 
@@ -36,12 +34,10 @@ func TestPresets(t *testing.T) {
 
 func TestRequired(t *testing.T) {
 	tmpl := &Template{
-		TemplateDefinition: TemplateDefinition{
-			Params: []Param{
-				{
-					Name:     "param",
-					Required: true,
-				},
+		Params: []Param{
+			{
+				Name:     "param",
+				Required: true,
 			},
 		},
 	}
@@ -69,13 +65,11 @@ func TestRequired(t *testing.T) {
 
 func TestRequiredDeprecated(t *testing.T) {
 	tmpl := &Template{
-		TemplateDefinition: TemplateDefinition{
-			Params: []Param{
-				{
-					Name:       "param",
-					Required:   true,
-					Deprecated: true,
-				},
+		Params: []Param{
+			{
+				Name:       "param",
+				Required:   true,
+				Deprecated: true,
 			},
 		},
 	}
@@ -103,16 +97,14 @@ func TestRequiredDeprecated(t *testing.T) {
 
 func TestRequiredPerUsage(t *testing.T) {
 	tmpl := &Template{
-		TemplateDefinition: TemplateDefinition{
-			Params: []Param{
-				{
-					Name: "usage",
-				},
-				{
-					Name:     "param",
-					Required: true,
-					Usages:   []string{"battery"},
-				},
+		Params: []Param{
+			{
+				Name: "usage",
+			},
+			{
+				Name:     "param",
+				Required: true,
+				Usages:   []string{"battery"},
 			},
 		},
 	}
@@ -140,4 +132,34 @@ func TestRequiredPerUsage(t *testing.T) {
 		"Usage": "battery",
 	})
 	require.NoError(t, err)
+}
+
+func TestValidatePattern(t *testing.T) {
+	tmpl := &Template{
+		Params: []Param{{Name: "host", Pattern: &Pattern{Regex: `^[^\\/\s]+(:[0-9]{1,5})?$`}}},
+	}
+
+	tests := []struct {
+		host  string
+		valid bool
+	}{
+		{"192.168.1.100", true},
+		{"192.168.1.100:8080", true},
+		{"example.com", true},
+		{"http://192.168.1.100", false},
+		{"192.168.1.100/admin", false},
+		{"192.168.1.100 ", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.host, func(t *testing.T) {
+			_, _, err := tmpl.RenderResult(RenderModeInstance, map[string]any{"host": tt.host})
+			if tt.valid {
+				require.NoError(t, err)
+			} else {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), "does not match required pattern")
+			}
+		})
+	}
 }

@@ -94,7 +94,7 @@ func TestClass(t *testing.T, class Class, instantiate func(t *testing.T, values 
 		values["host"] = "localhost"
 
 		// test auth configuration
-		if err := testAuth(tmpl.TemplateDefinition.Auth); err != nil {
+		if err := testAuth(tmpl.Auth); err != nil {
 			t.Error("authorization:", err)
 		}
 
