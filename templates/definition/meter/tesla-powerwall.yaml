@@ -36,14 +36,9 @@ params:
     help:
       en: optional product identifier of the energy site, use to override autodectction
       de: optionale Product ID dieser Energy Site, zum Übersteuern der automatischen Erkennung
-  - name: minsoc
-    type: int
-    advanced: true
-  - name: maxsoc
-    type: int
-    advanced: true
-  - name: maxchargepower
-  - name: maxdischargepower
+  - preset: battery-params
+  - name: capacity
+    deprecated: true
 render: |
   type: powerwall
   uri: {{ .host }}
@@ -52,7 +47,6 @@ render: |
   password: {{ .password }} # for user 'customer'
   refreshToken: {{ .refreshToken }}
   siteId: {{ .siteId }}
-  minsoc: {{ .minsoc }}
-  maxsoc: {{ .maxsoc }}
-  maxchargepower: {{ .maxchargepower }}
-  maxdischargepower: {{ .maxdischargepower }}
+  {{- if eq .usage "battery" }}
+  {{- include "battery-params" . }}
+  {{- end }}
