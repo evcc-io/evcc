@@ -260,7 +260,7 @@ describe("12h/24h time format", () => {
   });
 });
 
-  describe("fmtTimeRange", () => {
+describe("fmtTimeRange", () => {
   test("should format time ranges in 24h format", () => {
     is12hSpy.mockReturnValue(false);
     expect(fmt.fmtTimeRange("09:00-17:00")).toBe("9:00 – 17:00");
