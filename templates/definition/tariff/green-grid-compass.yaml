@@ -17,23 +17,16 @@ params:
       de: "Erstelle eine App in [api-portal.eco2grid.com](https://api-portal.eco2grid.com) und kopiere den Key"
       en: "Create an app in [api-portal.eco2grid.com](https://api-portal.eco2grid.com) and copy the key"
     deprecated: true
-  - name: clientId
-    description:
-      de: Client ID
-      en: Client ID
+  - name: clientid
     help:
       de: "Erstelle App nach der Anleitung auf [traxes.io](https://www.traxes.io/service/green-grid-compass/1.0.0/technical-documentation) und kopiere die Client ID"
       en: "Create app according to the instructions on [traxes.io](https://www.traxes.io/service/green-grid-compass/1.0.0/technical-documentation) and copy the Client ID"
     type: string
     required: true
-  - name: clientSecret
-    description:
-      de: Client Secret
-      en: Client Secret
+  - name: clientsecret
     help:
       de: "Erstelle App nach der Anleitung auf [traxes.io](https://www.traxes.io/service/green-grid-compass/1.0.0/technical-documentation) und kopiere die Client Secret"
       en: "Create app according to the instructions on [traxes.io](https://www.traxes.io/service/green-grid-compass/1.0.0/technical-documentation) and copy the Client Secret"
-    type: string
     required: true
   - name: zone
     description:
@@ -54,7 +47,7 @@ render: |
         source: http
         uri: https://signin.energy/am/oauth2/realms/root/realms/difesp/access_token
         method: POST
-        body: grant_type=client_credentials&client_id={{ .clientId }}&client_secret={{ .clientSecret }}&scope=esp  
+        body: grant_type=client_credentials&client_id={{ .clientid }}&client_secret={{ .clientsecret }}&scope=esp  
         headers:
           Content-Type: application/x-www-form-urlencoded
         jq: .access_token
