@@ -10,7 +10,6 @@ params:
     description:
       de: Verwendung
       en: Usage
-    required: true
   - name: modbus
     description:
       en: Modbus Type

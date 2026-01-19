@@ -10,7 +10,6 @@ requirements:
     de: Zu Demonstrationszwecken. Zähler mit festen Werten.
 params:
   - name: usage
-    default: grid
     choice: ["grid", "pv", "aux", "charge"]
   - name: power
     description:
