@@ -17,8 +17,9 @@ import (
 type Auth struct {
 	Type, User, Password, Token string
 
-	Source string
-	Other  map[string]any `mapstructure:",remain"`
+	Source      string
+	TokenSource *Config
+	Other       map[string]any `mapstructure:",remain"`
 }
 
 func (p *Auth) Transport(ctx context.Context, log *util.Logger, base http.RoundTripper) (http.RoundTripper, error) {
@@ -35,6 +36,21 @@ func (p *Auth) Transport(ctx context.Context, log *util.Logger, base http.RoundT
 			log.WARN.Println("using password for bearer auth is deprecated, use token instead")
 		}
 		return transport.BearerAuth(p.Token, base), nil
+
+	case "tokensource":
+		if p.TokenSource == nil {
+			return nil, fmt.Errorf("token source config required for tokensource auth")
+		}
+
+		tokenFunc, err := p.TokenSource.StringGetter(ctx)
+		if err != nil {
+			return nil, err
+		}
+		token, err := tokenFunc()
+		if err != nil {
+			return nil, err
+		}
+		return transport.BearerAuth(token, base), nil
 
 	default:
 		if p.Source == "" {
