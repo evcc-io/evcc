@@ -7,10 +7,10 @@ requirements:
   description:
     de: |
       Zur Erfassung der PV-Produktion wird ein extern angebundenener S0-Erzeugungszähler benötigt.
-      Für die Nutzung im Grid-Modus (Erfassung von Strömen und Leistungen pro Phase) wird mindestens Firmware-Version 1.5.0 benötigt.
+      Erfordert mindestens Firmware-Version 1.5.0.
     en: |
       An externally connected S0 generation meter is required to record the solar production.
-      For grid mode usage (measuring currents and powers per phase), firmware version 1.5.0 or higher is required.
+      Firmware version 1.5.0 or higher is required.
 params:
   - name: usage
     choice: ["grid", "pv"]
