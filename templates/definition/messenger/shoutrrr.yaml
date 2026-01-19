@@ -1,15 +1,13 @@
 template: shout
 products:
-  - brand: Generic
-    description:
-      generic: Shoutrrr (Multi-Service)
+  - brand: Shoutrrr
 params:
   - name: uri
     required: true
-    example: discord://token@id
+    example: smtp://username:password@smtp.example.com:587/?fromAddress=from@example.com&toAddresses=to@example.com
     help:
-      de: Shoutrrr Service URI (siehe https://containrrr.dev/shoutrrr/v0.8/services/overview/)
-      en: Shoutrrr service URI (see https://containrrr.dev/shoutrrr/v0.8/services/overview/)
+      de: Shoutrrr Service URI (siehe [containrrr.dev](https://containrrr.dev/shoutrrr/v0.8/services/overview/))
+      en: Shoutrrr service URI (see [containrrr.dev](https://containrrr.dev/shoutrrr/v0.8/services/overview/))
 render: |
   type: shout
   uri: {{ .uri }}
