@@ -1,0 +1,15 @@
+template: shout
+products:
+  - brand: Generic
+    description:
+      generic: Shoutrrr (Multi-Service)
+params:
+  - name: uri
+    required: true
+    example: discord://token@id
+    help:
+      de: Shoutrrr Service URI (siehe https://containrrr.dev/shoutrrr/v0.8/services/overview/)
+      en: Shoutrrr service URI (see https://containrrr.dev/shoutrrr/v0.8/services/overview/)
+render: |
+  type: shout
+  uri: {{ .uri }}

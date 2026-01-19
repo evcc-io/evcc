@@ -1,0 +1,36 @@
+template: pushover
+products:
+  - brand: Pushover
+params:
+  - name: app
+    required: true
+    mask: true
+    help:
+      de: Pushover Application API Token
+      en: Pushover Application API Token
+  - name: recipients
+    type: stringlist
+    required: true
+    help:
+      de: Liste der Empfänger (User Keys oder Group Keys)
+      en: List of recipients (User Keys or Group Keys)
+  - name: devices
+    type: stringlist
+    help:
+      de: Liste der Geräte, an die Nachrichten gesendet werden sollen
+      en: List of devices to send messages to
+render: |
+  type: pushover
+  app: {{ .app }}
+  {{- if .recipients }}
+  recipients:
+  {{- range .recipients }}
+  - {{ . }}
+  {{- end }}
+  {{- end }}
+  {{- if .devices }}
+  devices:
+  {{- range .devices }}
+  - {{ . }}
+  {{- end }}
+  {{- end }}

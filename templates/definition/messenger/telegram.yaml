@@ -1,0 +1,24 @@
+template: telegram
+products:
+  - brand: Telegram
+params:
+  - name: token
+    required: true
+    mask: true
+    help:
+      de: Bot Token von BotFather
+      en: Bot Token from BotFather
+  - name: chats
+    type: stringlist
+    help:
+      de: Liste der Chat IDs (können auch zur Laufzeit automatisch ermittelt werden)
+      en: List of chat IDs (can also be automatically detected at runtime)
+render: |
+  type: telegram
+  token: {{ .token }}
+  {{- if .chats }}
+  chats:
+  {{- range .chats }}
+  - {{ . }}
+  {{- end }}
+  {{- end }}
