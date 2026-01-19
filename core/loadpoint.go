@@ -1761,9 +1761,12 @@ func (lp *Loadpoint) publishSocAndRange() {
 	}
 
 	pollAllowed := lp.vehicleSocPollAllowed()
+	if pollAllowed {
+		lp.socUpdated = lp.clock.Now()
+	}
+
 	soc, limit := socAndLimit("charger", lp.charger)
 	if soc == nil && (pollAllowed || lp.chargerHasFeature(api.IntegratedDevice)) {
-		lp.socUpdated = lp.clock.Now()
 		soc, limit = socAndLimit("vehicle", lp.GetVehicle())
 	}
 
