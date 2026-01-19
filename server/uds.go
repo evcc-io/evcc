@@ -8,7 +8,6 @@ import (
 	"os"
 
 	"github.com/evcc-io/evcc/cmd/shutdown"
-	"github.com/evcc-io/evcc/core/site"
 )
 
 // SocketPath is the unix domain socket path
@@ -24,7 +23,7 @@ func removeIfExists(file string) {
 }
 
 // HealthListener attaches listener to unix domain socket and runs listener
-func HealthListener(site site.API) {
+func HealthListener() {
 	removeIfExists(SocketPath)
 
 	l, err := net.Listen("unix", SocketPath)
