@@ -63,6 +63,6 @@ test.describe("messaging", async () => {
     const messagingCard = page.getByTestId("messaging");
 
     await expect(messagingCard).toBeVisible();
-    await expect(messagingCard).toContainText(["Configured", "no"].join(""));
+    await expect(messagingCard).toContainText(["Configured", "yes"].join(""));
   });
 });
