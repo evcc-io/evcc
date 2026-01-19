@@ -1760,8 +1760,9 @@ func (lp *Loadpoint) publishSocAndRange() {
 		return socR, limitR
 	}
 
+	pollAllowed := lp.vehicleSocPollAllowed()
 	soc, limit := socAndLimit("charger", lp.charger)
-	if soc == nil && (lp.chargerHasFeature(api.IntegratedDevice) || lp.vehicleSocPollAllowed()) {
+	if soc == nil && (pollAllowed || lp.chargerHasFeature(api.IntegratedDevice)) {
 		lp.socUpdated = lp.clock.Now()
 		soc, limit = socAndLimit("vehicle", lp.GetVehicle())
 	}
@@ -1796,10 +1797,8 @@ func (lp *Loadpoint) publishSocAndRange() {
 		lp.SetRemainingEnergy(socEstimator.RemainingChargeEnergy(limitSoc))
 	}
 
-	// TODO don't rely on vehicle cache
-
 	// range
-	if vs, ok := lp.GetVehicle().(api.VehicleRange); ok {
+	if vs, ok := lp.GetVehicle().(api.VehicleRange); ok && pollAllowed {
 		if rng, err := vs.Range(); err == nil {
 			lp.log.DEBUG.Printf("vehicle range: %dkm", rng)
 			lp.publish(keys.VehicleRange, rng)
