@@ -166,12 +166,10 @@ func TestFilterValidTemplateParams(t *testing.T) {
 	}
 
 	result := filterValidTemplateParams(&templates.Template{
-		TemplateDefinition: templates.TemplateDefinition{
-			Params: []templates.Param{
-				{Name: "usage"},
-				{Name: "power"},
-				{Name: "capacity"},
-			},
+		Params: []templates.Param{
+			{Name: "usage"},
+			{Name: "power"},
+			{Name: "capacity"},
 		},
 	}, conf)
 
