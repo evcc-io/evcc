@@ -40,11 +40,25 @@ jobs:
         id: auth_check
         if: steps.check.outputs.commits != '0'
         run: |
-          if git diff HEAD..upstream/master --name-only | grep -q "util/sponsor/auth.go"; then
+          # Get current upstream auth.go hash
+          UPSTREAM_HASH=$(git show upstream/master:util/sponsor/auth.go | sha256sum | cut -d' ' -f1)
+
+          # Get stored hash from last sync (if exists)
+          STORED_HASH=""
+          if [ -f .github/upstream-auth-hash ]; then
+            STORED_HASH=$(cat .github/upstream-auth-hash)
+          fi
+
+          echo "Upstream hash: $UPSTREAM_HASH"
+          echo "Stored hash: $STORED_HASH"
+
+          if [ "$UPSTREAM_HASH" != "$STORED_HASH" ] && [ -n "$STORED_HASH" ]; then
             echo "modified=true" >> $GITHUB_OUTPUT
-            echo "⚠️ auth.go was modified in upstream!"
+            echo "⚠️ auth.go was modified in upstream since last sync!"
           else
             echo "modified=false" >> $GITHUB_OUTPUT
+            # Save current upstream hash for next comparison
+            echo "$UPSTREAM_HASH" > .github/upstream-auth-hash
           fi
 
       - name: Attempt merge
@@ -58,9 +72,15 @@ jobs:
             git merge --abort
           fi
 
-      - name: Push changes
+      - name: Commit hash file and push
         if: steps.merge.outputs.status == 'success'
-        run: git push origin master
+        run: |
+          # Add hash file if it was updated
+          if [ -f .github/upstream-auth-hash ]; then
+            git add .github/upstream-auth-hash
+            git diff --cached --quiet || git commit --amend --no-edit
+          fi
+          git push origin master
 
       - name: Fail on auth.go change
         if: steps.auth_check.outputs.modified == 'true'
