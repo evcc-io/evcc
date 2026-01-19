@@ -10,10 +10,12 @@ params:
     description:
       de: Verwendung
       en: Usage
+    required: true
   - name: modbus
     description:
       en: Modbus Type
       de: Modbus Typ
+    required: true
   - name: host
     required: true
     description:
