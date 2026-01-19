@@ -16,6 +16,19 @@ params:
     help:
       de: "Erstelle eine App in [api-portal.eco2grid.com](https://api-portal.eco2grid.com) und kopiere den Key"
       en: "Create an app in [api-portal.eco2grid.com](https://api-portal.eco2grid.com) and copy the key"
+    deprecated: true
+  - name: clientId
+    description:
+      de: "Erstelle App nach der Anleitung auf [traxes.io](https://www.traxes.io/service/green-grid-compass/1.0.0/technical-documentation) und kopiere die Client ID"
+      en: "Create app according to the instructions on [traxes.io](https://www.traxes.io/service/green-grid-compass/1.0.0/technical-documentation) and copy the Client ID"
+    type: string
+    required: true
+  - name: clientSecret
+    description:
+      de: "Erstelle App nach der Anleitung auf [traxes.io](https://www.traxes.io/service/green-grid-compass/1.0.0/technical-documentation) und kopiere die Client Secret"
+      en: "Create app according to the instructions on [traxes.io](https://www.traxes.io/service/green-grid-compass/1.0.0/technical-documentation) and copy the Client Secret"
+    type: string
+    required: true
   - name: zone
     description:
       de: Zonencode
@@ -29,11 +42,21 @@ render: |
   tariff: co2
   forecast:
     source: http
-    uri: https://eco2grid.com/green-grid-compass/v2/forecast/hourly?zone_code={{ .zone }}&start={{ `{{ now | date "2006-01-02T15" }}` }}:00:00&end={{ `{{ addDate now 0 0 2 | date "2006-01-02T15" }}` }}:00:00&apikey={{ .apiKey }}
+    auth:
+      type: tokensource
+      tokensource:
+        source: http
+        uri: https://signin.energy/am/oauth2/realms/root/realms/difesp/access_token
+        method: POST
+        body: grant_type=client_credentials&client_id={{ .clientId }}&client_secret={{ .clientSecret }}&scope=esp  
+        headers:
+          Content-Type: application/x-www-form-urlencoded
+        jq: .access_token
+    uri: https://explore.traxes.io/greengrid-compass/v1/co2-intensity-forecast?zone={{ .zone }}&start={{ `{{ now | date "2006-01-02T15" }}` }}:00:00Z&end={{ `{{ addDate now 0 0 2 | date "2006-01-02T15" }}` }}:00:00Z&time-resolution=hourly&calculation-type=consumption&emission-type=operational&forecast-type=actual
     jq: |
-      .zone_data | map({ 
-        "start": (.interval + "+02:00"),
-        "end": (.interval + "+02:00" | strptime("%Y-%m-%dT%H:%M:%S%z") | mktime + 3600 | strftime("%FT%TZ")),
-        "value": .consumption_co2_intensity 
+      .measurements[0].measurementValues |  map({ 
+        "start": (.timestamp ),
+        "end": (.timestamp | strptime("%Y-%m-%dT%H:%M:%SZ") | mktime + 3600 | strftime("%FT%TZ")),
+        "value": .value
       }) | tostring
     cache: 1h
