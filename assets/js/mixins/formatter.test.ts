@@ -161,6 +161,31 @@ describe("getWeekdaysList", () => {
   });
 });
 
+describe("getMonthsList", () => {
+  test("should return the correct month-order", () => {
+    expect(fmt.getMonthsList("long")).toEqual([
+      { name: "Januar", value: 0 },
+      { name: "Februar", value: 1 },
+      { name: "März", value: 2 },
+      { name: "April", value: 3 },
+      { name: "Mai", value: 4 },
+      { name: "Juni", value: 5 },
+      { name: "Juli", value: 6 },
+      { name: "August", value: 7 },
+      { name: "September", value: 8 },
+      { name: "Oktober", value: 9 },
+      { name: "November", value: 10 },
+      { name: "Dezember", value: 11 },
+    ]);
+  });
+  test("should return short month names", () => {
+    const shortMonths = fmt.getMonthsList("short");
+    expect(shortMonths).toHaveLength(12);
+    expect(shortMonths[0]).toEqual({ name: "Jan", value: 0 });
+    expect(shortMonths[11]).toEqual({ name: "Dez", value: 11 });
+  });
+});
+
 describe("getShortenedWeekdaysLabel", () => {
   test("should format single days", () => {
     expect(fmt.getShortenedWeekdaysLabel([0])).eq("So");
@@ -176,6 +201,28 @@ describe("getShortenedWeekdaysLabel", () => {
   test("should format single days and ranges", () => {
     expect(fmt.getShortenedWeekdaysLabel([0, 1, 3, 5, 6])).eq("Mo, Mi, Fr – So");
     expect(fmt.getShortenedWeekdaysLabel([0, 2, 3, 5, 6])).eq("Di, Mi, Fr – So");
+  });
+});
+
+describe("getShortenedMonthsLabel", () => {
+  test("should format single months", () => {
+    expect(fmt.getShortenedMonthsLabel([0])).eq("Jan");
+    expect(fmt.getShortenedMonthsLabel([0, 3, 6, 9])).eq("Jan, Apr, Jul, Okt");
+    expect(fmt.getShortenedMonthsLabel([11])).eq("Dez");
+    expect(fmt.getShortenedMonthsLabel([2, 8])).eq("Mär, Sep");
+  });
+  test("should format ranges", () => {
+    expect(fmt.getShortenedMonthsLabel([0, 1])).eq("Jan, Feb");
+    expect(fmt.getShortenedMonthsLabel([0, 1, 2])).eq("Jan – Mär");
+    expect(fmt.getShortenedMonthsLabel([9, 10, 11])).eq("Okt – Dez");
+    expect(fmt.getShortenedMonthsLabel([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11])).eq("Jan – Dez");
+  });
+  test("should format single months and ranges", () => {
+    expect(fmt.getShortenedMonthsLabel([0, 1, 2, 5, 9, 10, 11])).eq("Jan – Mär, Jun, Okt – Dez");
+    expect(fmt.getShortenedMonthsLabel([0, 3, 4, 5, 8])).eq("Jan, Apr – Jun, Sep");
+  });
+  test("should handle empty array", () => {
+    expect(fmt.getShortenedMonthsLabel([])).eq("–");
   });
 });
 

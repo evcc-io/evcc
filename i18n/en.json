@@ -672,15 +672,29 @@
       },
       "zones": {
         "add": "Add zone",
-        "days": "Days (optional)",
+        "allDays": "All days",
+        "allMonths": "All months",
+        "allTimes": "All times",
+        "cancel": "Cancel",
+        "days": "Days",
         "daysPlaceholder": "mon-fri",
-        "hours": "Hours (optional)",
+        "edit": "Edit",
+        "hours": "Hours",
+        "hoursHelp": "Optional: Restrict to specific time range",
         "hoursPlaceholder": "0-6, 20-0",
-        "months": "Months (optional)",
+        "months": "Months",
         "monthsPlaceholder": "nov-feb",
         "price": "Price",
         "pricePlaceholder": "0.20",
-        "remove": "Remove zone"
+        "priceRequired": "Price is required",
+        "remove": "Remove zone",
+        "save": "Save",
+        "selectAll": "All days",
+        "timeFrom": "From",
+        "timeRangeError": "Start time must be before end time. To span midnight, create two separate zones.",
+        "timeTo": "To",
+        "weekdays": "Weekdays",
+        "weekdaysHelp": "Optional: Leave empty for all days"
       }
     },
     "telemetry": {

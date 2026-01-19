@@ -639,3 +639,11 @@ export interface OptimizationDetails {
 export interface Error {
   message: string; // Error description
 }
+
+// Tariff zone configuration
+export interface Zone {
+  price: number | null;
+  days: string;
+  months: string;
+  hours: string;
+}

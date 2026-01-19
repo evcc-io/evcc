@@ -388,6 +388,19 @@ export default defineComponent({
       const sunday = { name: format(new Date(Date.UTC(2021, 5, 6))), value: 0 };
       return [...mondayToSaturday, sunday];
     },
+    getMonthsList(
+      monthFormat: Intl.DateTimeFormatOptions["month"]
+    ): { name: string; value: number }[] {
+      const { format } = new Intl.DateTimeFormat(this.$i18n?.locale, {
+        month: monthFormat,
+      });
+      return [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((monthIndex) => {
+        return {
+          name: format(new Date(Date.UTC(2021, monthIndex, 1))),
+          value: monthIndex,
+        };
+      });
+    },
     getShortenedWeekdaysLabel(selectedWeekdays: number[]): string {
       if (0 === selectedWeekdays.length) {
         return "–";
@@ -436,6 +449,57 @@ export default defineComponent({
           }
         }
       }
+      return label;
+    },
+    getShortenedMonthsLabel(selectedMonths: number[]): string {
+      if (!selectedMonths || selectedMonths.length === 0) {
+        return "–";
+      }
+
+      const { format } = new Intl.DateTimeFormat(this.$i18n?.locale, {
+        month: "short",
+      });
+
+      function getMonthName(monthIndex: number) {
+        return format(new Date(Date.UTC(2021, monthIndex, 1)));
+      }
+
+      // Sort the months
+      const sortedMonths = [...selectedMonths].sort((a, b) => a - b);
+      let label = "";
+      const maxMonth = Math.max(...sortedMonths);
+
+      for (let i = 0; i < sortedMonths.length; i++) {
+        const monthRangeStart = sortedMonths[i];
+        if (monthRangeStart === undefined) continue;
+
+        label += getMonthName(monthRangeStart);
+
+        let monthRangeEnd = monthRangeStart;
+        let j = i;
+
+        // Find consecutive months
+        while (j + 1 < sortedMonths.length && sortedMonths[j + 1] === monthRangeEnd + 1) {
+          monthRangeEnd++;
+          j++;
+        }
+
+        if (monthRangeEnd - monthRangeStart > 1) {
+          // more than 2 consecutive months selected
+          label += " – " + getMonthName(monthRangeEnd);
+          i = j;
+        } else if (monthRangeEnd > monthRangeStart) {
+          // 2 consecutive months selected
+          label += ", " + getMonthName(monthRangeEnd);
+          i = j;
+        }
+
+        const currentMonth = sortedMonths[i];
+        if (currentMonth !== undefined && currentMonth < maxMonth) {
+          label += ", ";
+        }
+      }
+
       return label;
     },
   },
