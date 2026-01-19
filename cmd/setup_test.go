@@ -32,3 +32,23 @@ func TestYamlOff(t *testing.T) {
 		t.Errorf("expected `off`, got %s", lp.DefaultMode)
 	}
 }
+
+func TestYamlModbusProxyReadonlyTrue(t *testing.T) {
+	var conf globalconfig.All
+	viper.SetConfigType("yaml")
+	if err := viper.ReadConfig(strings.NewReader(`modbusproxy:
+- readonly: true
+`)); err != nil {
+		t.Error(err)
+	}
+
+	if err := viper.UnmarshalExact(&conf); err != nil {
+		t.Error(err)
+	}
+
+	readonly := conf.ModbusProxy[0].ReadOnly
+
+	if readonly != "true" {
+		t.Errorf("expected `true`, got %s", readonly)
+	}
+}
