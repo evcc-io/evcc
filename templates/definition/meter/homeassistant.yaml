@@ -11,7 +11,7 @@ auth:
   params: [uri]
 params:
   - name: usage
-    deprecated: true
+    choice: ["grid", "pv", "battery", "aux", "charge"]
   - name: uri
     description:
       de: Home Assistant URI
@@ -116,12 +116,8 @@ params:
     help:
       en: Entity ID for battery state of charge in percent
       de: Entitäts-ID für Batterieladestand in Prozent
-  - name: capacity
-  - name: minsoc
-  - name: maxsoc
-  - name: maxchargepower
-  - name: maxdischargepower
   - name: maxacpower
+  - preset: battery-params
 render: |
   type: homeassistant
   uri: {{ .uri }}
@@ -137,9 +133,4 @@ render: |
     - {{ .voltageL2 }}
     - {{ .voltageL3 }}
   maxacpower: {{ .maxacpower }} # W
-  soc: {{ .soc }}
-  capacity: {{ .capacity }} # kWh
-  maxchargepower: {{ .maxchargepower }} # W
-  maxdischargepower: {{ .maxdischargepower }} # W
-  minsoc: {{ .minsoc }} # %
-  maxsoc: {{ .maxsoc }} # %
+  {{- include "battery-params" . }}
