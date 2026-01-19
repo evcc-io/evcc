@@ -19,12 +19,18 @@ params:
     deprecated: true
   - name: clientId
     description:
+      de: Client ID
+      en: Client ID
+    help:
       de: "Erstelle App nach der Anleitung auf [traxes.io](https://www.traxes.io/service/green-grid-compass/1.0.0/technical-documentation) und kopiere die Client ID"
       en: "Create app according to the instructions on [traxes.io](https://www.traxes.io/service/green-grid-compass/1.0.0/technical-documentation) and copy the Client ID"
     type: string
     required: true
   - name: clientSecret
     description:
+      de: Client Secret
+      en: Client Secret
+    help:
       de: "Erstelle App nach der Anleitung auf [traxes.io](https://www.traxes.io/service/green-grid-compass/1.0.0/technical-documentation) und kopiere die Client Secret"
       en: "Create app according to the instructions on [traxes.io](https://www.traxes.io/service/green-grid-compass/1.0.0/technical-documentation) and copy the Client Secret"
     type: string
