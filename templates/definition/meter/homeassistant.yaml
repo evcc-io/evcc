@@ -11,7 +11,7 @@ auth:
   params: [uri]
 params:
   - name: usage
-    choice: ["grid", "pv", "battery", "aux", "charge"]
+    deprecated: true
   - name: uri
     description:
       de: Home Assistant URI
