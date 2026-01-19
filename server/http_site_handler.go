@@ -236,7 +236,7 @@ func stateHandler(cache *util.ParamCache) http.HandlerFunc {
 	}
 }
 
-// healthHandler returns OK if the process is running.
+// healthHandler returns OK if the process is running
 func healthHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain")
