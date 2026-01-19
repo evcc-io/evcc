@@ -998,7 +998,12 @@ func configureModbusProxy(conf *[]globalconfig.ModbusProxy) error {
 		return nil
 	}
 
-	for _, cfg := range *conf {
+	for i, cfg := range *conf {
+		// `readonly: true` gets unmarshaled to "1"
+		if cfg.ReadOnly == "1" {
+			(*conf)[i].ReadOnly = "true"
+		}
+
 		var mode modbus.ReadOnlyMode
 		mode, err := modbus.ReadOnlyModeString(cfg.ReadOnly)
 		if err != nil {
