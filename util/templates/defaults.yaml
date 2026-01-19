@@ -439,6 +439,7 @@ params:
   - name: apikey
     description:
       generic: API Key
+    mask: true
   - name: tempsource
     description:
       de: Temperaturquelle

@@ -104,7 +104,7 @@ func (c *Twc3) Enabled() (bool, error) {
 // Enable implements the api.Charger interface
 func (c *Twc3) Enable(enable bool) error {
 	if c.lp == nil {
-		return errors.New("loadpoint not initialized")
+		return ErrLoadpointNotInitialized
 	}
 
 	// ignore disabling when vehicle is already disconnected
@@ -134,7 +134,7 @@ func (c *Twc3) Enable(enable bool) error {
 // MaxCurrent implements the api.Charger interface
 func (c *Twc3) MaxCurrent(current int64) error {
 	if c.lp == nil {
-		return errors.New("loadpoint not initialized")
+		return ErrLoadpointNotInitialized
 	}
 
 	v, ok := c.lp.GetVehicle().(api.CurrentController)
