@@ -17,6 +17,7 @@ func TestWatchdogSetterConcurrency(t *testing.T) {
 	p := &watchdogPlugin{
 		log:     util.NewLogger("foo"),
 		timeout: 10 * time.Nanosecond,
+		buffer:  5 * time.Second,
 		clock:   clock.New(),
 	}
 
@@ -34,7 +35,7 @@ func TestWatchdogSetterConcurrency(t *testing.T) {
 		}
 
 		return nil
-	}, nil, 5*time.Second)
+	}, nil)
 
 	var eg errgroup.Group
 
@@ -58,6 +59,7 @@ func TestWatchdogDelayTransition(t *testing.T) {
 		log:        util.NewLogger("test"),
 		timeout:    timeout,
 		transition: true,
+		buffer:     5 * time.Second,
 		clock:      clock.New(),
 	}
 
@@ -71,7 +73,7 @@ func TestWatchdogDelayTransition(t *testing.T) {
 		calls = append(calls, i)
 		timestamps = append(timestamps, p.clock.Now())
 		return nil
-	}, []int{1}, 5*time.Second) // 1 is reset mode
+	}, []int{1}) // 1 is reset mode
 
 	// Mode 1 (reset) → should write immediately
 	require.NoError(t, set(1))
@@ -115,6 +117,7 @@ func TestWatchdogCancelPendingTransition(t *testing.T) {
 		log:        util.NewLogger("test"),
 		timeout:    timeout,
 		transition: true,
+		buffer:     5 * time.Second,
 		clock:      clock.New(),
 	}
 
@@ -125,7 +128,7 @@ func TestWatchdogCancelPendingTransition(t *testing.T) {
 	set := setter(p, func(i int) error {
 		calls = append(calls, i)
 		return nil
-	}, []int{1}, 5*time.Second) // 1 is reset mode
+	}, []int{1}) // 1 is reset mode
 
 	// Mode 3 (non-reset)
 	require.NoError(t, set(3))
@@ -157,6 +160,7 @@ func TestWatchdogDelayBackwardCompatibility(t *testing.T) {
 		log:        util.NewLogger("test"),
 		timeout:    100 * time.Millisecond,
 		transition: false, // explicitly false
+		buffer:     5 * time.Second,
 		clock:      clock.New(),
 	}
 
@@ -164,7 +168,7 @@ func TestWatchdogDelayBackwardCompatibility(t *testing.T) {
 	set := setter(p, func(i int) error {
 		calls = append(calls, i)
 		return nil
-	}, []int{1}, 5*time.Second) // 1 is reset mode
+	}, []int{1}) // 1 is reset mode
 
 	// All transitions should be immediate
 	require.NoError(t, set(1))
