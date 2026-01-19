@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
-import { start, stop, baseUrl } from "./evcc";
-import { expectModalHidden, expectModalVisible } from "./utils";
+import { start, stop, baseUrl, restart } from "./evcc";
+import { editorClear, editorPaste, expectModalHidden, expectModalVisible } from "./utils";
 
 test.use({ baseURL: baseUrl() });
 
@@ -8,30 +8,52 @@ test.afterEach(async () => {
   await stop();
 });
 
-const SELECT_ALL = "ControlOrMeta+KeyA";
-
 test.describe("messaging", async () => {
-  test("save a comment", async ({ page }) => {
+  test("not configured", async ({ page }) => {
     await start();
     await page.goto("/#/config");
 
-    await page.getByTestId("messaging").getByRole("button", { name: "edit" }).click();
-    const modal = await page.getByTestId("messaging-modal");
+    const messagingCard = page.getByTestId("messaging");
+
+    await expect(messagingCard).toBeVisible();
+    await expect(messagingCard).toContainText(["Configured", "no"].join(""));
+  });
+  test("configured", async ({ page }) => {
+    await start();
+    await page.goto("/#/config");
+
+    const messagingCard = page.getByTestId("messaging");
+    const modal = page.getByTestId("messaging-modal");
+
+    await messagingCard.getByRole("button", { name: "edit" }).click();
     await expectModalVisible(modal);
 
-    await modal.locator(".monaco-editor .view-line").nth(0).click();
-    for (let i = 0; i < 4; i++) {
-      await page.keyboard.press(SELECT_ALL, { delay: 10 });
-      await page.keyboard.press("Backspace", { delay: 10 });
-    }
-    await page.keyboard.type("# hello world");
+    const editor = modal.getByTestId("yaml-editor");
+    const editorContent = [
+      "events:",
+      "  start:",
+      "    title: Charge started",
+      "    msg: Started charging",
+    ].join("\n");
+
+    await editorClear(editor);
+    await editorPaste(editor, page, editorContent);
+
     await page.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(modal);
 
-    page.reload();
+    // restart button appears
+    const restartButton = await page
+      .getByTestId("bottom-banner")
+      .getByRole("button", { name: "Restart" });
+    await expect(restartButton).toBeVisible();
 
-    await page.getByTestId("messaging").getByRole("button", { name: "edit" }).click();
+    await restart();
+    await page.reload();
+
+    await expect(messagingCard).toContainText(["Configured", "yes"].join(""));
+    await messagingCard.getByRole("button", { name: "edit" }).click();
     await expectModalVisible(modal);
-    await expect(modal).toContainText("# hello world");
+    await expect(modal).toContainText(editorContent);
   });
 });
