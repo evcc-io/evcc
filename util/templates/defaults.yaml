@@ -462,9 +462,6 @@ params:
     description:
       en: Price zones
       de: Preiszonen
-    help:
-      en: Time-based price overwrites. Each zone can override the base price for specific days, hours, and months.
-      de: Zeitbasierte Preisüberschreibungen. Jede Zone kann den Basispreis für bestimmte Tage, Stunden und Monate überschreiben.
 
 presets:
   vehicle-base:

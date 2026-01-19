@@ -677,15 +677,10 @@
         "allTimes": "All times",
         "cancel": "Cancel",
         "days": "Days",
-        "daysPlaceholder": "mon-fri",
         "edit": "Edit",
         "hours": "Hours",
-        "hoursHelp": "Optional: Restrict to specific time range",
-        "hoursPlaceholder": "0-6, 20-0",
         "months": "Months",
-        "monthsPlaceholder": "nov-feb",
         "price": "Price",
-        "pricePlaceholder": "0.20",
         "priceRequired": "Price is required",
         "remove": "Remove zone",
         "save": "Save",
@@ -693,8 +688,7 @@
         "timeFrom": "From",
         "timeRangeError": "Start time must be before end time. To span midnight, create two separate zones.",
         "timeTo": "To",
-        "weekdays": "Weekdays",
-        "weekdaysHelp": "Optional: Leave empty for all days"
+        "weekdays": "Weekdays"
       }
     },
     "telemetry": {

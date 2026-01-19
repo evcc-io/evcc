@@ -259,3 +259,27 @@ describe("12h/24h time format", () => {
     expect(fmt.fmtAbsoluteDate(testDate)).toBe("So 15:30");
   });
 });
+
+  describe("fmtTimeRange", () => {
+  test("should format time ranges in 24h format", () => {
+    is12hSpy.mockReturnValue(false);
+    expect(fmt.fmtTimeRange("09:00-17:00")).toBe("9:00 – 17:00");
+    expect(fmt.fmtTimeRange("06:00-12:00")).toBe("6:00 – 12:00");
+  });
+
+  test("should format time ranges in 12h format", () => {
+    is12hSpy.mockReturnValue(true);
+    expect(fmt.fmtTimeRange("09:00-17:00")).toBe("9:00 AM – 5:00 PM");
+    expect(fmt.fmtTimeRange("00:00-23:59")).toBe("12:00 AM – 11:59 PM");
+  });
+
+  test("should always include minutes", () => {
+    is12hSpy.mockReturnValue(false);
+    expect(fmt.fmtTimeRange("09:00-17:00")).toBe("9:00 – 17:00");
+    expect(fmt.fmtTimeRange("09:15-17:45")).toBe("9:15 – 17:45");
+  });
+
+  test("should handle empty input", () => {
+    expect(fmt.fmtTimeRange("")).toBe("");
+  });
+});

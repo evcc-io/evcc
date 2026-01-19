@@ -676,15 +676,10 @@
         "allTimes": "Alle Zeiten",
         "cancel": "Abbrechen",
         "days": "Tage",
-        "daysPlaceholder": "mon-fri",
         "edit": "Bearbeiten",
         "hours": "Stunden",
-        "hoursHelp": "Optional: Auf bestimmte Zeitspanne beschränken",
-        "hoursPlaceholder": "0-6, 20-0",
         "months": "Monate",
-        "monthsPlaceholder": "nov-feb",
         "price": "Preis",
-        "pricePlaceholder": "0.20",
         "priceRequired": "Preis ist erforderlich",
         "remove": "Zone entfernen",
         "save": "Speichern",
@@ -692,8 +687,7 @@
         "timeFrom": "Von",
         "timeRangeError": "Startzeit muss vor Endzeit liegen. Um Mitternacht zu überspannen, erstelle zwei separate Zonen.",
         "timeTo": "Bis",
-        "weekdays": "Wochentage",
-        "weekdaysHelp": "Optional: Leer lassen für alle Tage"
+        "weekdays": "Wochentage"
       }
     },
     "telemetry": {

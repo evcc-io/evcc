@@ -11,7 +11,6 @@
 					class="form-control text-end"
 					:class="{ 'is-invalid': isPriceInvalid }"
 					style="border-top-right-radius: 0; border-bottom-right-radius: 0"
-					:placeholder="$t('config.tariff.zones.pricePlaceholder')"
 				/>
 				<span
 					class="input-group-text"
@@ -97,10 +96,9 @@
 
 <script lang="ts">
 import { type PropType } from "vue";
-import formatter from "@/mixins/formatter";
+import zoneUtils from "@/mixins/zoneUtils";
 import MultiSelect from "../Helper/MultiSelect.vue";
 import { CURRENCY, type Zone } from "@/types/evcc";
-import { ZONE_MONTH_CODES, ZONE_DAY_CODES } from "@/utils/zoneConstants";
 
 type UiZone = {
 	price: number | null;
@@ -113,7 +111,7 @@ type UiZone = {
 export default {
 	name: "PropertyZoneForm",
 	components: { MultiSelect },
-	mixins: [formatter],
+	mixins: [zoneUtils],
 	props: {
 		zone: { type: Object as PropType<Zone>, required: true },
 		currency: { type: String as PropType<CURRENCY>, required: true },
@@ -174,7 +172,7 @@ export default {
 		convertToUiZone(zone: Zone) {
 			const [timeFrom, timeTo] = zone.hours.split("-");
 			return {
-				price: zone.price,
+				price: zone.price != null ? zone.price * this.displayFactor : null,
 				weekdays: this.parseWeekdaysString(zone.days),
 				months: this.parseMonthsString(zone.months),
 				timeFrom: timeFrom || "00:00",
@@ -189,46 +187,6 @@ export default {
 				months: this.formatMonthsToString(uiZone.months),
 				hours: isAllDay ? "" : `${uiZone.timeFrom}-${uiZone.timeTo}`,
 			};
-		},
-		parseWeekdaysString(daysStr: string) {
-			const weekdays = [];
-			for (const part of daysStr.split(",")) {
-				const index = ZONE_DAY_CODES.indexOf(part);
-				if (index !== -1) {
-					weekdays.push(index);
-				}
-			}
-			return weekdays;
-		},
-		parseMonthsString(monthsStr: string) {
-			const months = [];
-			for (const part of monthsStr.split(",")) {
-				const index = ZONE_MONTH_CODES.indexOf(part);
-				if (index !== -1) {
-					months.push(index);
-				}
-			}
-			return months;
-		},
-		formatWeekdaysToString(weekdays: number[]) {
-			if (!weekdays || weekdays.length === 0) return "";
-			return weekdays.map((d) => ZONE_DAY_CODES[d]).join(",");
-		},
-		formatMonthsToString(months: number[]) {
-			if (!months || months.length === 0) return "";
-			return months.map((m) => ZONE_MONTH_CODES[m]).join(",");
-		},
-		weekdaysLabel(weekdays: number[]) {
-			if (!weekdays || weekdays.length === 0 || weekdays.length === 7) {
-				return this.$t("config.tariff.zones.allDays");
-			}
-			return this.getShortenedWeekdaysLabel(weekdays);
-		},
-		monthsLabel(months: number[]) {
-			if (!months || months.length === 0 || months.length === 12) {
-				return this.$t("config.tariff.zones.allMonths");
-			}
-			return this.getShortenedMonthsLabel(months);
 		},
 		handleSave() {
 			this.saveAttempted = true;

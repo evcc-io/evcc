@@ -502,5 +502,23 @@ export default defineComponent({
 
       return label;
     },
+    // format a HH:MM to proper formatted time
+    fmtTimeStr(timeStr: string): string {
+      const [hour, minute] = timeStr.split(":").map((s) => parseInt(s, 10));
+      const date = new Date(2021, 0, 1);
+      date.setHours(hour!, minute!);
+      return new Intl.DateTimeFormat(this.$i18n?.locale, {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: is12hFormat(),
+      }).format(date);
+    },
+    // format a HH:MM-HH:MM to proper formatted range
+    fmtTimeRange(timeRange: string): string {
+      if (!timeRange) return "";
+      const parts = timeRange.split("-");
+      if (parts.length !== 2) return timeRange;
+      return `${this.fmtTimeStr(parts[0]!)} – ${this.fmtTimeStr(parts[1]!)}`;
+    },
   },
 });
