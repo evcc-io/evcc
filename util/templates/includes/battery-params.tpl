@@ -1,5 +1,5 @@
 {{ define "battery-params" }}
-{{- if .capacity }}
+{{- if gt .capacity 0 }}
 capacity: {{ .capacity }} # kWh
 {{- end }}
 minsoc: {{ .minsoc }} # %
