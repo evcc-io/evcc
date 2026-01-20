@@ -97,7 +97,7 @@ func NewHeidelbergEC(ctx context.Context, uri, device, comset string, baudrate i
 	conn.Delay(100 * time.Millisecond)
 
 	// disable standby to prevent comm loss
-	if err := wb.set(hecRegStandbyConfig, hecStandbyDisabled); err != nil {
+	if _, err := wb.conn.WriteSingleRegister(hecRegStandbyConfig, hecStandbyDisabled); err != nil {
 		return nil, err
 	}
 
@@ -125,12 +125,6 @@ func (wb *HeidelbergEC) heartbeat(ctx context.Context, timeout time.Duration) {
 			wb.log.ERROR.Println("heartbeat:", err)
 		}
 	}
-}
-
-func (wb *HeidelbergEC) set(reg, val uint16) error {
-	_, err := wb.conn.WriteSingleRegister(reg, val)
-
-	return err
 }
 
 // Status implements the api.Charger interface
@@ -162,7 +156,7 @@ func (wb *HeidelbergEC) Status() (api.ChargeStatus, error) {
 
 		// unlock
 		if binary.BigEndian.Uint16(b) != 1 {
-			if err := wb.set(hecRegRemoteLock, 1); err != nil {
+			if _, err := wb.conn.WriteSingleRegister(hecRegRemoteLock, 1); err != nil {
 				return api.StatusNone, err
 			}
 		}
@@ -202,7 +196,9 @@ func (wb *HeidelbergEC) Enable(enable bool) error {
 		cur = wb.current
 	}
 
-	return wb.set(hecRegAmpsConfig, cur)
+	_, err := wb.conn.WriteSingleRegister(hecRegAmpsConfig, cur)
+
+	return err
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -220,7 +216,7 @@ func (wb *HeidelbergEC) MaxCurrentMillis(current float64) error {
 
 	curr := uint16(10 * current)
 
-	err := wb.set(hecRegAmpsConfig, curr)
+	_, err := wb.conn.WriteSingleRegister(hecRegAmpsConfig, curr)
 	if err == nil {
 		wb.current = curr
 	}
@@ -307,12 +303,14 @@ var _ api.Resurrector = (*HeidelbergEC)(nil)
 // WakeUp implements the api.Resurrector interface
 func (wb *HeidelbergEC) WakeUp() error {
 	// force status F by locking
-	if err := wb.set(hecRegRemoteLock, 0); err == nil {
+	if _, err := wb.conn.WriteSingleRegister(hecRegRemoteLock, 0); err == nil {
 		// Takes at least ~10 sec to return to normal operation
 		// after locking even if unlocking immediately.
 		wb.wakeup = true
 	}
 
 	// return to normal operation by unlocking after ~10 sec
-	return wb.set(hecRegRemoteLock, 1)
+	_, err := wb.conn.WriteSingleRegister(hecRegRemoteLock, 1)
+
+	return err
 }
