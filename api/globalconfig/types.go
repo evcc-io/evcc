@@ -13,7 +13,7 @@ import (
 	"github.com/evcc-io/evcc/hems/shm"
 	"github.com/evcc-io/evcc/plugin/mqtt"
 	"github.com/evcc-io/evcc/server/eebus"
-	modbusserver "github.com/evcc-io/evcc/server/modbus"
+	proxy "github.com/evcc-io/evcc/server/modbus"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/modbus"
@@ -61,8 +61,8 @@ type Go struct {
 }
 
 type ModbusProxy struct {
-	Port            int                       `json:"port"`
-	ReadOnly        modbusserver.ReadOnlyMode `yaml:",omitempty" json:"readonly,omitempty"`
+	Port            int                `json:"port"`
+	ReadOnly        proxy.ReadOnlyMode `yaml:",omitempty" json:"readonly,omitempty"`
 	modbus.Settings `mapstructure:",squash" yaml:",inline,omitempty" json:"settings,omitempty"`
 }
 
