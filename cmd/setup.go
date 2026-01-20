@@ -999,13 +999,7 @@ func configureModbusProxy(conf *[]globalconfig.ModbusProxy) error {
 	}
 
 	for _, cfg := range *conf {
-		var mode modbus.ReadOnlyMode
-		mode, err := modbus.ReadOnlyModeString(cfg.ReadOnly)
-		if err != nil {
-			return err
-		}
-
-		if err = modbus.StartProxy(cfg.Port, cfg.Settings, mode); err != nil {
+		if err := modbus.StartProxy(cfg.Port, cfg.Settings, cfg.ReadOnly); err != nil {
 			return err
 		}
 	}

@@ -7,6 +7,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/core"
+	"github.com/evcc-io/evcc/server/modbus"
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/require"
 )
@@ -28,5 +29,5 @@ func TestYamlModbusProxyReadonlyTrue(t *testing.T) {
 
 	require.NoError(t, viper.ReadConfig(strings.NewReader("modbusproxy:\n- readonly: true")))
 	require.NoError(t, viper.UnmarshalExact(&conf))
-	require.Equal(t, "true", conf.ModbusProxy[0].ReadOnly)
+	require.Equal(t, modbus.ReadOnlyTrue, conf.ModbusProxy[0].ReadOnly)
 }
