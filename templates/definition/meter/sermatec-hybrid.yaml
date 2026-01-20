@@ -29,6 +29,28 @@ render: |
       type: holding
       decode: int16
     scale: -1
+  voltages:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 0x4008 # Grid Phase A Voltage
+        type: holding
+        decode: int16
+      scale: -0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 0x400D # Grid Phase B Voltage
+        type: holding
+        decode: int16
+      scale: -0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 0x4012 # Grid Phase C Voltage
+        type: holding
+        decode: int16
+      scale: -0.1
   currents:
     - source: modbus
       {{- include "modbus" . | indent 4 }}
