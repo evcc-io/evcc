@@ -217,6 +217,25 @@ func (wb *Voltie) Currents() (float64, float64, float64, error) {
 	return res[0], res[1], res[2], nil
 }
 
+var _ api.PhaseVoltages = (*Voltie)(nil)
+
+// Voltages implements the api.PhaseVoltages interface
+func (wb *Voltie) Voltages() (float64, float64, float64, error) {
+	var res [3]float64
+	regs := []uint16{voltieRegVoltageL1, voltieRegVoltageL2, voltieRegVoltageL3}
+
+	for i, reg := range regs {
+		b, err := wb.conn.ReadHoldingRegisters(reg, 2)
+		if err != nil {
+			return 0, 0, 0, err
+		}
+
+		res[i] = float64(binary.BigEndian.Uint32(b)) / 1e3 // mV to V
+	}
+
+	return res[0], res[1], res[2], nil
+}
+
 var _ api.Diagnosis = (*Voltie)(nil)
 
 // Diagnose implements the api.Diagnosis interface
