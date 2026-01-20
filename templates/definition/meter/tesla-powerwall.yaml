@@ -38,7 +38,7 @@ params:
       de: optionale Product ID dieser Energy Site, zum Übersteuern der automatischen Erkennung
   - preset: battery-params
   - name: capacity
-    default: 0
+    default: 0.0
     deprecated: true
 render: |
   type: powerwall
