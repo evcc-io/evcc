@@ -43,12 +43,8 @@ const (
 	voltieRegStopReason      = 0x0012 // R, INT16, Charge stop reason
 	voltieRegCurrentLimit    = 0x0014 // R/W, INT16, Software current limit [mA]
 
-	voltieRegVoltageL1      = 0x2000 // R, INT32, Phase L1 voltage [mV]
-	voltieRegVoltageL2      = 0x2002 // R, INT32, Phase L2 voltage [mV]
-	voltieRegVoltageL3      = 0x2004 // R, INT32, Phase L3 voltage [mV]
-	voltieRegCurrentL1      = 0x2006 // R, INT32, Phase L1 charging current [mA]
-	voltieRegCurrentL2      = 0x2008 // R, INT32, Phase L2 charging current [mA]
-	voltieRegCurrentL3      = 0x200A // R, INT32, Phase L3 charging current [mA]
+	voltieRegVoltages       = 0x2000 // R, INT32, Phase L1 voltage [mV]
+	voltieRegCurrents       = 0x2006 // R, INT32, Phase L1 charging current [mA]
 	voltieRegChargeDuration = 0x200C // R, INT32, Charge duration [s]
 	voltieRegChargedEnergy  = 0x200E // R, INT32, Charged energy in current session [Ws]
 	voltieRegChargingPower  = 0x2010 // R, INT32, Charging power [W]
@@ -202,16 +198,15 @@ var _ api.PhaseCurrents = (*Voltie)(nil)
 
 // Currents implements the api.PhaseCurrents interface
 func (wb *Voltie) Currents() (float64, float64, float64, error) {
+	b, err := wb.conn.ReadHoldingRegisters(voltieRegCurrents, 6)
+
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
 	var res [3]float64
-	regs := []uint16{voltieRegCurrentL1, voltieRegCurrentL2, voltieRegCurrentL3}
-
-	for i, reg := range regs {
-		b, err := wb.conn.ReadHoldingRegisters(reg, 2)
-		if err != nil {
-			return 0, 0, 0, err
-		}
-
-		res[i] = float64(binary.BigEndian.Uint32(b)) / 1e3 // mA to A
+	for i := range res {
+		res[i] = float64(binary.BigEndian.Uint32(b[4*i:])) / 1e3 // mA to A
 	}
 
 	return res[0], res[1], res[2], nil
@@ -221,16 +216,15 @@ var _ api.PhaseVoltages = (*Voltie)(nil)
 
 // Voltages implements the api.PhaseVoltages interface
 func (wb *Voltie) Voltages() (float64, float64, float64, error) {
+	b, err := wb.conn.ReadHoldingRegisters(voltieRegVoltages, 6)
+
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
 	var res [3]float64
-	regs := []uint16{voltieRegVoltageL1, voltieRegVoltageL2, voltieRegVoltageL3}
-
-	for i, reg := range regs {
-		b, err := wb.conn.ReadHoldingRegisters(reg, 2)
-		if err != nil {
-			return 0, 0, 0, err
-		}
-
-		res[i] = float64(binary.BigEndian.Uint32(b)) / 1e3 // mV to V
+	for i := range res {
+		res[i] = float64(binary.BigEndian.Uint32(b[4*i:])) / 1e3 // mV to V
 	}
 
 	return res[0], res[1], res[2], nil
