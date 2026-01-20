@@ -6,12 +6,15 @@ products:
   - brand: Sermatec
     description:
       generic: SMT-10K-TL-LV Hybrid Inverter
+  - brand: Hycube
+    description:
+      generic: HY-5K-TL-LV Hybrid Inverter
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
   - name: modbus
     choice: ["rs485"]
-    baudrate: 9600
+    baudrate: 38400
     id: 1
   - name: maxacpower
   - preset: battery-params
@@ -26,6 +29,28 @@ render: |
       type: holding
       decode: int16
     scale: -1
+  currents:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 0x400A # Grid Phase A Current
+        type: holding
+        decode: int16
+      scale: -0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 0x400F # Grid Phase B Current
+        type: holding
+        decode: int16
+      scale: -0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 0x4014 # Grid Phase C Current
+        type: holding
+        decode: int16
+      scale: -0.1
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
@@ -36,13 +61,13 @@ render: |
       register:
         address: 0x4002 # PV1 power
         type: holding
-        decode: int16
+        decode: uint16
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
         address: 0x4005 # PV2 power
         type: holding
-        decode: int16
+        decode: uint16
   maxacpower: {{ .maxacpower }}
   {{- end }}
   {{- if eq .usage "battery" }}
@@ -52,14 +77,14 @@ render: |
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
-        address: 0x3000 # Battery voltage
+        address: 0x401B # Battery voltage (Inverter)
         type: holding
         decode: uint16
       scale: 0.1
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
-        address: 0x3001 # Battery current
+        address: 0x401A # Battery current (Inverter)
         type: holding
         decode: int16
       scale: 0.1
@@ -70,5 +95,45 @@ render: |
       address: 0x3003 # Battery SOC
       type: holding
       decode: uint16
+  batterymode:
+    source: watchdog
+    timeout: 15
+    reset: 1 # reset watchdog on normal
+    set:
+      source: switch
+      switch:
+      - case: 1 # normal
+        set:
+          source: const
+          value: 0 # W (set once to reset from forced charge)
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 0x405A # Battery power [W]
+              type: writemultiple
+              encoding: int16
+      - case: 2 # hold
+        set:
+          source: const
+          value: 0 # W
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 0x405A # Battery power [W]
+              type: writemultiple
+              encoding: int16
+      - case: 3 # charge
+        set:
+          source: const
+          value: {{ .maxchargepower }} # W
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 0x405A # Battery power [W]
+              type: writemultiple
+              encoding: int16
   {{- include "battery-params" . }}
   {{- end }}
