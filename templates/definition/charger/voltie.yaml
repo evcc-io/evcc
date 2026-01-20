@@ -5,9 +5,6 @@ products:
       generic: Charger
 capabilities: ["mA"]
 requirements:
-  description:
-    en: The Voltie charger must be configured to operate in Modbus slave mode. This is done either via the mobile application or by the backend server upon user's request.
-    de: Der Voltie-Ladegerät muss so konfiguriert werden, dass es im Modbus-Slave-Modus arbeitet. Dies geschieht entweder über die mobile Anwendung oder durch den Backend-Server auf Anfrage des Benutzers.
   evcc: ["sponsorship"]
 params:
   - name: modbus
