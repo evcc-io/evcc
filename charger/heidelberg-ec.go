@@ -220,12 +220,12 @@ func (wb *HeidelbergEC) MaxCurrentMillis(current float64) error {
 
 	curr := uint16(10 * current)
 
-	if err := wb.set(hecRegAmpsConfig, curr); err != nil {
-		return err
+	err := wb.set(hecRegAmpsConfig, curr)
+	if err == nil {
+		wb.current = curr
 	}
 
-	wb.current = curr
-	return nil
+	return err
 }
 
 var _ api.Meter = (*HeidelbergEC)(nil)
