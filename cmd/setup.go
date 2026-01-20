@@ -993,14 +993,11 @@ func configureModbusProxy(conf *[]globalconfig.ModbusProxy) error {
 		}
 	}
 
-	// prevent panic
-	if conf == nil {
-		return nil
-	}
-
-	for _, cfg := range *conf {
-		if err := modbus.StartProxy(cfg.Port, cfg.Settings, cfg.ReadOnly); err != nil {
-			return err
+	if conf != nil {
+		for _, cfg := range *conf {
+			if err := modbus.StartProxy(cfg.Port, cfg.Settings, cfg.ReadOnly); err != nil {
+				return err
+			}
 		}
 	}
 
