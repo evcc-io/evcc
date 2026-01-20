@@ -84,7 +84,7 @@ func NewHeidelbergEC(ctx context.Context, uri, device, comset string, baudrate i
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("heidel")
+	log := util.NewLogger("heidelberg")
 	conn.Logger(log.TRACE)
 
 	wb := &HeidelbergEC{
@@ -128,10 +128,7 @@ func (wb *HeidelbergEC) heartbeat(ctx context.Context, timeout time.Duration) {
 }
 
 func (wb *HeidelbergEC) set(reg, val uint16) error {
-	b := make([]byte, 2)
-	binary.BigEndian.PutUint16(b, val)
-
-	_, err := wb.conn.WriteMultipleRegisters(reg, 1, b)
+	_, err := wb.conn.WriteSingleRegister(reg, val)
 
 	return err
 }
@@ -205,12 +202,7 @@ func (wb *HeidelbergEC) Enable(enable bool) error {
 		cur = wb.current
 	}
 
-	b := make([]byte, 2)
-	binary.BigEndian.PutUint16(b, cur)
-
-	_, err := wb.conn.WriteMultipleRegisters(hecRegAmpsConfig, 1, b)
-
-	return err
+	return wb.set(hecRegAmpsConfig, cur)
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -228,15 +220,12 @@ func (wb *HeidelbergEC) MaxCurrentMillis(current float64) error {
 
 	curr := uint16(10 * current)
 
-	b := make([]byte, 2)
-	binary.BigEndian.PutUint16(b, curr)
-
-	_, err := wb.conn.WriteMultipleRegisters(hecRegAmpsConfig, 1, b)
-	if err == nil {
-		wb.current = curr
+	if err := wb.set(hecRegAmpsConfig, curr); err != nil {
+		return err
 	}
 
-	return err
+	wb.current = curr
+	return nil
 }
 
 var _ api.Meter = (*HeidelbergEC)(nil)
