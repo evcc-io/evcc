@@ -1,5 +1,22 @@
 package charger
 
+// LICENSE
+
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
+
+// This module is NOT covered by the MIT license. All rights reserved.
+
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
 import (
 	"context"
 	"encoding/binary"
@@ -8,6 +25,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
+	"github.com/evcc-io/evcc/util/sponsor"
 )
 
 // Voltie charger implementation
@@ -45,15 +63,10 @@ func init() {
 	registry.AddCtx("voltie", NewVoltieFromConfig)
 }
 
-//go:generate go tool decorate -f decorateVoltie -b *Voltie -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)"
-
 // NewVoltieFromConfig creates a Voltie charger from generic config
 func NewVoltieFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		modbus.TcpSettings `mapstructure:",squash"`
-		Meter              struct {
-			Power, Energy, Currents bool
-		}
 	}{
 		TcpSettings: modbus.TcpSettings{
 			ID: 1,
@@ -64,30 +77,7 @@ func NewVoltieFromConfig(ctx context.Context, other map[string]any) (api.Charger
 		return nil, err
 	}
 
-	wb, err := NewVoltie(ctx, cc.URI, cc.ID)
-	if err != nil {
-		return nil, err
-	}
-
-	// decorate meter
-	var (
-		power, energy func() (float64, error)
-		currents      func() (float64, float64, float64, error)
-	)
-
-	if cc.Meter.Power {
-		power = wb.currentPower
-	}
-
-	if cc.Meter.Energy {
-		energy = wb.totalEnergy
-	}
-
-	if cc.Meter.Currents {
-		currents = wb.currents
-	}
-
-	return decorateVoltie(wb, power, energy, currents), nil
+	return NewVoltie(ctx, cc.URI, cc.ID)
 }
 
 // NewVoltie creates a Voltie charger
@@ -95,6 +85,10 @@ func NewVoltie(ctx context.Context, uri string, slaveID uint8) (*Voltie, error) 
 	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
 	if err != nil {
 		return nil, err
+	}
+
+	if !sponsor.IsAuthorized() {
+		return nil, api.ErrSponsorRequired
 	}
 
 	log := util.NewLogger("voltie")
@@ -133,9 +127,7 @@ func (wb *Voltie) Status() (api.ChargeStatus, error) {
 	case 0x03, 0x04:
 		return api.StatusC, nil
 	default:
-		// 0x0D: vehicle in state E – vehicle error
-		// 0x05-0x0C, 0x0E-0x11: internal error states
-		return api.StatusE, nil
+		return api.StatusNone, fmt.Errorf("invalid status: %0x", status)
 	}
 }
 
@@ -162,8 +154,15 @@ func (wb *Voltie) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (wb *Voltie) MaxCurrent(current int64) error {
+	return wb.MaxCurrentMillis(float64(current))
+}
+
+var _ api.ChargerEx = (*Voltie)(nil)
+
+// MaxCurrentMillis implements the api.ChargerEx interface
+func (wb *Voltie) MaxCurrentMillis(current float64) error {
 	if current < 6 {
-		return fmt.Errorf("invalid current %d", current)
+		return fmt.Errorf("invalid current %.1f", current)
 	}
 
 	// Convert A to mA
@@ -173,8 +172,10 @@ func (wb *Voltie) MaxCurrent(current int64) error {
 	return err
 }
 
-// currentPower implements the api.Meter interface
-func (wb *Voltie) currentPower() (float64, error) {
+var _ api.Meter = (*Voltie)(nil)
+
+// CurrentPower implements the api.Meter interface
+func (wb *Voltie) CurrentPower() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(voltieRegChargingPower, 2)
 	if err != nil {
 		return 0, err
@@ -185,8 +186,10 @@ func (wb *Voltie) currentPower() (float64, error) {
 	return float64(power), nil
 }
 
-// totalEnergy implements the api.MeterEnergy interface
-func (wb *Voltie) totalEnergy() (float64, error) {
+var _ api.ChargeRater = (*Voltie)(nil)
+
+// ChargedEnergy implements the api.ChargeRater interface
+func (wb *Voltie) ChargedEnergy() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(voltieRegChargedEnergy, 2)
 	if err != nil {
 		return 0, err
@@ -197,8 +200,10 @@ func (wb *Voltie) totalEnergy() (float64, error) {
 	return float64(energy) / 3600000, nil
 }
 
-// currents implements the api.PhaseCurrents interface
-func (wb *Voltie) currents() (float64, float64, float64, error) {
+var _ api.PhaseCurrents = (*Voltie)(nil)
+
+// Currents implements the api.PhaseCurrents interface
+func (wb *Voltie) Currents() (float64, float64, float64, error) {
 	var res [3]float64
 	regs := []uint16{voltieRegCurrentL1, voltieRegCurrentL2, voltieRegCurrentL3}
 

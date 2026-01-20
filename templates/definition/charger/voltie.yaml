@@ -16,9 +16,4 @@ params:
 render: |
   type: voltie
   {{- include "modbus" . }}
-  {{- if .meter }}
-  meter:
-    power: true
-    energy: true
-    currents: true
-  {{- end }}
+
