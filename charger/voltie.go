@@ -98,6 +98,11 @@ func NewVoltie(ctx context.Context, uri string, slaveID uint8) (*Voltie, error) 
 		conn: conn,
 	}
 
+	// Disable auto start
+	if _, err := wb.conn.WriteSingleRegister(voltieRegAutoStart, 0); err != nil {
+		return nil, err
+	}
+
 	return wb, nil
 }
 
@@ -120,7 +125,7 @@ func (wb *Voltie) Status() (api.ChargeStatus, error) {
 	// 0xFF: charger disabled, not functioning
 
 	switch status {
-	case 0x01, 0xFF:
+	case 0x01:
 		return api.StatusA, nil
 	case 0x02:
 		return api.StatusB, nil
@@ -138,7 +143,7 @@ func (wb *Voltie) Enabled() (bool, error) {
 		return false, err
 	}
 
-	return binary.BigEndian.Uint16(b) == 1, nil
+	return binary.BigEndian.Uint16(b) != 0, nil
 }
 
 // Enable implements the api.Charger interface
@@ -165,10 +170,7 @@ func (wb *Voltie) MaxCurrentMillis(current float64) error {
 		return fmt.Errorf("invalid current %.1f", current)
 	}
 
-	// Convert A to mA
-	u := uint16(current * 1000)
-	_, err := wb.conn.WriteSingleRegister(voltieRegCurrentLimit, u)
-
+	_, err := wb.conn.WriteSingleRegister(voltieRegCurrentLimit, uint16(current*1000))
 	return err
 }
 
@@ -181,9 +183,7 @@ func (wb *Voltie) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-	// Power in W
-	power := int32(binary.BigEndian.Uint32(b))
-	return float64(power), nil
+	return float64(binary.BigEndian.Uint32(b)), nil
 }
 
 var _ api.ChargeRater = (*Voltie)(nil)
@@ -195,9 +195,7 @@ func (wb *Voltie) ChargedEnergy() (float64, error) {
 		return 0, err
 	}
 
-	// Energy in Ws, convert to kWh
-	energy := int32(binary.BigEndian.Uint32(b))
-	return float64(energy) / 3600000, nil
+	return float64(binary.BigEndian.Uint32(b)) / 3.6e6, nil // Ws to kWh
 }
 
 var _ api.PhaseCurrents = (*Voltie)(nil)
@@ -213,9 +211,7 @@ func (wb *Voltie) Currents() (float64, float64, float64, error) {
 			return 0, 0, 0, err
 		}
 
-		// Current in mA, convert to A
-		current := int32(binary.BigEndian.Uint32(b))
-		res[i] = float64(current) / 1000
+		res[i] = float64(binary.BigEndian.Uint32(b)) / 1e3 // mA to A
 	}
 
 	return res[0], res[1], res[2], nil
