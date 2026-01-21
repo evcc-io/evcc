@@ -376,131 +376,90 @@ export default defineComponent({
       // TODO: handle fahrenheit
       return this.fmtNumber(value, 1, "celsius");
     },
+    fmtWeekdayByIndex(index: number, format: Intl.DateTimeFormatOptions["weekday"]) {
+      // June 7, 2021 is Monday (index 1), June 6 is Sunday (index 0)
+      const day = index === 0 ? 6 : 6 + index;
+      return new Intl.DateTimeFormat(this.$i18n?.locale, {
+        weekday: format,
+      }).format(new Date(Date.UTC(2021, 5, day)));
+    },
+    fmtMonthByIndex(index: number, format: Intl.DateTimeFormatOptions["month"]) {
+      return new Intl.DateTimeFormat(this.$i18n?.locale, {
+        month: format,
+      }).format(new Date(Date.UTC(2021, index, 1)));
+    },
     getWeekdaysList(
-      weekdayFormat: Intl.DateTimeFormatOptions["weekday"]
+      format: Intl.DateTimeFormatOptions["weekday"]
     ): { name: string; value: number }[] {
-      const { format } = new Intl.DateTimeFormat(this.$i18n?.locale, {
-        weekday: weekdayFormat,
-      });
-      const mondayToSaturday = [7, 8, 9, 10, 11, 12].map((day, index) => {
-        return { name: format(new Date(Date.UTC(2021, 5, day))), value: index + 1 };
-      });
-      const sunday = { name: format(new Date(Date.UTC(2021, 5, 6))), value: 0 };
-      return [...mondayToSaturday, sunday];
-    },
-    getMonthsList(
-      monthFormat: Intl.DateTimeFormatOptions["month"]
-    ): { name: string; value: number }[] {
-      const { format } = new Intl.DateTimeFormat(this.$i18n?.locale, {
-        month: monthFormat,
-      });
-      return [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((monthIndex) => {
-        return {
-          name: format(new Date(Date.UTC(2021, monthIndex, 1))),
-          value: monthIndex,
-        };
+      return Array.from({ length: 7 }, (_, i) => {
+        const value = (i + 1) % 7; // Mon=1, Tue=2, ..., Sat=6, Sun=0
+        return { name: this.fmtWeekdayByIndex(value, format), value };
       });
     },
-    getShortenedWeekdaysLabel(selectedWeekdays: number[]): string {
-      if (0 === selectedWeekdays.length) {
+    getMonthsList(format: Intl.DateTimeFormatOptions["month"]): { name: string; value: number }[] {
+      return Array.from({ length: 12 }, (_, i) => ({
+        name: this.fmtMonthByIndex(i, format),
+        value: i,
+      }));
+    },
+    fmtConsecutiveRange(
+      selectedIndices: number[],
+      getNameFn: (transformedIndex: number) => string | undefined,
+      transformFn?: (index: number) => number
+    ): string {
+      if (!selectedIndices || selectedIndices.length === 0) {
         return "–";
       }
 
-      const weekdays = this.getWeekdaysList("short");
+      // Transform indices if needed (e.g., Sunday 0 -> 7 for weekdays)
+      const workingIndices = transformFn ? selectedIndices.map(transformFn) : selectedIndices;
+
+      // Sort the indices
+      const sorted = [...workingIndices].sort((a, b) => a - b);
       let label = "";
+      const max = Math.max(...sorted);
 
-      // the week in the input-parameter starts with 0 for sunday and ends with 6 for saturday
-      // this algorithms works only if the week starts with 1 for monday and ends with 7 for sunday because
-      // then we are able to count from 1 to 7 by incrementing the number
-      // so we have to transform the input accordingly
-      const selectedWeekdaysTransformed = selectedWeekdays.map(function (dayIndex) {
-        return 0 === dayIndex ? 7 : dayIndex;
-      });
-      function getWeekdayName(dayIndex: number) {
-        return weekdays.find((day) => day.value === (7 === dayIndex ? 0 : dayIndex))?.name;
-      }
+      for (let i = 0; i < sorted.length; i++) {
+        const rangeStart = sorted[i];
+        if (rangeStart === undefined) continue;
 
-      const maxWeekday = Math.max(...selectedWeekdaysTransformed);
+        label += getNameFn(rangeStart);
 
-      for (let weekdayRangeStart = 1; weekdayRangeStart < 8; weekdayRangeStart++) {
-        if (selectedWeekdaysTransformed.includes(weekdayRangeStart)) {
-          label += getWeekdayName(weekdayRangeStart);
-
-          let weekdayRangeEnd = weekdayRangeStart;
-          while (selectedWeekdaysTransformed.includes(weekdayRangeEnd + 1)) {
-            weekdayRangeEnd++;
-          }
-
-          if (weekdayRangeEnd - weekdayRangeStart > 1) {
-            // more than 2 consecutive weekdays selected
-            label += " – " + getWeekdayName(weekdayRangeEnd);
-            weekdayRangeStart = weekdayRangeEnd;
-            if (maxWeekday !== weekdayRangeEnd) {
-              label += ", ";
-            }
-          } else if (weekdayRangeStart !== weekdayRangeEnd) {
-            // exactly 2 consecutive weekdays selected
-            label += ", ";
-          } else {
-            // exactly 1 single day selected
-            if (maxWeekday !== weekdayRangeEnd) {
-              label += ", ";
-            }
-          }
-        }
-      }
-      return label;
-    },
-    getShortenedMonthsLabel(selectedMonths: number[]): string {
-      if (!selectedMonths || selectedMonths.length === 0) {
-        return "–";
-      }
-
-      const { format } = new Intl.DateTimeFormat(this.$i18n?.locale, {
-        month: "short",
-      });
-
-      function getMonthName(monthIndex: number) {
-        return format(new Date(Date.UTC(2021, monthIndex, 1)));
-      }
-
-      // Sort the months
-      const sortedMonths = [...selectedMonths].sort((a, b) => a - b);
-      let label = "";
-      const maxMonth = Math.max(...sortedMonths);
-
-      for (let i = 0; i < sortedMonths.length; i++) {
-        const monthRangeStart = sortedMonths[i];
-        if (monthRangeStart === undefined) continue;
-
-        label += getMonthName(monthRangeStart);
-
-        let monthRangeEnd = monthRangeStart;
+        let rangeEnd = rangeStart;
         let j = i;
 
-        // Find consecutive months
-        while (j + 1 < sortedMonths.length && sortedMonths[j + 1] === monthRangeEnd + 1) {
-          monthRangeEnd++;
+        // Find consecutive indices
+        while (j + 1 < sorted.length && sorted[j + 1] === rangeEnd + 1) {
+          rangeEnd++;
           j++;
         }
 
-        if (monthRangeEnd - monthRangeStart > 1) {
-          // more than 2 consecutive months selected
-          label += " – " + getMonthName(monthRangeEnd);
+        if (rangeEnd - rangeStart > 1) {
+          // more than 2 consecutive items selected
+          label += " – " + getNameFn(rangeEnd);
           i = j;
-        } else if (monthRangeEnd > monthRangeStart) {
-          // 2 consecutive months selected
-          label += ", " + getMonthName(monthRangeEnd);
+        } else if (rangeEnd > rangeStart) {
+          // 2 consecutive items selected
+          label += ", " + getNameFn(rangeEnd);
           i = j;
         }
 
-        const currentMonth = sortedMonths[i];
-        if (currentMonth !== undefined && currentMonth < maxMonth) {
+        const current = sorted[i];
+        if (current !== undefined && current < max) {
           label += ", ";
         }
       }
 
       return label;
+    },
+    fmtWeekdaysRange(selectedWeekdays: number[]): string {
+      const getName = (i: number) => this.fmtWeekdayByIndex(i % 7, "short");
+      const transform = (i: number) => i || 7;
+      return this.fmtConsecutiveRange(selectedWeekdays, getName, transform);
+    },
+    fmtMonthsRange(selectedMonths: number[]): string {
+      const getName = (i: number) => this.fmtMonthByIndex(i, "short");
+      return this.fmtConsecutiveRange(selectedMonths, getName);
     },
     // format a HH:MM to proper formatted time
     fmtTimeStr(timeStr: string): string {

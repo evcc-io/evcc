@@ -186,43 +186,43 @@ describe("getMonthsList", () => {
   });
 });
 
-describe("getShortenedWeekdaysLabel", () => {
+describe("fmtWeekdaysRange", () => {
   test("should format single days", () => {
-    expect(fmt.getShortenedWeekdaysLabel([0])).eq("So");
-    expect(fmt.getShortenedWeekdaysLabel([0, 2, 4, 6])).eq("Di, Do, Sa, So");
-    expect(fmt.getShortenedWeekdaysLabel([6])).eq("Sa");
-    expect(fmt.getShortenedWeekdaysLabel([3, 6])).eq("Mi, Sa");
+    expect(fmt.fmtWeekdaysRange([0])).eq("So");
+    expect(fmt.fmtWeekdaysRange([0, 2, 4, 6])).eq("Di, Do, Sa, So");
+    expect(fmt.fmtWeekdaysRange([6])).eq("Sa");
+    expect(fmt.fmtWeekdaysRange([3, 6])).eq("Mi, Sa");
   });
   test("should format ranges", () => {
-    expect(fmt.getShortenedWeekdaysLabel([1, 2])).eq("Mo, Di");
-    expect(fmt.getShortenedWeekdaysLabel([0, 1, 2, 3, 4, 5, 6])).eq("Mo – So");
-    expect(fmt.getShortenedWeekdaysLabel([0, 1, 3, 4, 5])).eq("Mo, Mi – Fr, So");
+    expect(fmt.fmtWeekdaysRange([1, 2])).eq("Mo, Di");
+    expect(fmt.fmtWeekdaysRange([0, 1, 2, 3, 4, 5, 6])).eq("Mo – So");
+    expect(fmt.fmtWeekdaysRange([0, 1, 3, 4, 5])).eq("Mo, Mi – Fr, So");
   });
   test("should format single days and ranges", () => {
-    expect(fmt.getShortenedWeekdaysLabel([0, 1, 3, 5, 6])).eq("Mo, Mi, Fr – So");
-    expect(fmt.getShortenedWeekdaysLabel([0, 2, 3, 5, 6])).eq("Di, Mi, Fr – So");
+    expect(fmt.fmtWeekdaysRange([0, 1, 3, 5, 6])).eq("Mo, Mi, Fr – So");
+    expect(fmt.fmtWeekdaysRange([0, 2, 3, 5, 6])).eq("Di, Mi, Fr – So");
   });
 });
 
-describe("getShortenedMonthsLabel", () => {
+describe("fmtMonthsRange", () => {
   test("should format single months", () => {
-    expect(fmt.getShortenedMonthsLabel([0])).eq("Jan");
-    expect(fmt.getShortenedMonthsLabel([0, 3, 6, 9])).eq("Jan, Apr, Jul, Okt");
-    expect(fmt.getShortenedMonthsLabel([11])).eq("Dez");
-    expect(fmt.getShortenedMonthsLabel([2, 8])).eq("Mär, Sep");
+    expect(fmt.fmtMonthsRange([0])).eq("Jan");
+    expect(fmt.fmtMonthsRange([0, 3, 6, 9])).eq("Jan, Apr, Jul, Okt");
+    expect(fmt.fmtMonthsRange([11])).eq("Dez");
+    expect(fmt.fmtMonthsRange([2, 8])).eq("Mär, Sep");
   });
   test("should format ranges", () => {
-    expect(fmt.getShortenedMonthsLabel([0, 1])).eq("Jan, Feb");
-    expect(fmt.getShortenedMonthsLabel([0, 1, 2])).eq("Jan – Mär");
-    expect(fmt.getShortenedMonthsLabel([9, 10, 11])).eq("Okt – Dez");
-    expect(fmt.getShortenedMonthsLabel([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11])).eq("Jan – Dez");
+    expect(fmt.fmtMonthsRange([0, 1])).eq("Jan, Feb");
+    expect(fmt.fmtMonthsRange([0, 1, 2])).eq("Jan – Mär");
+    expect(fmt.fmtMonthsRange([9, 10, 11])).eq("Okt – Dez");
+    expect(fmt.fmtMonthsRange([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11])).eq("Jan – Dez");
   });
   test("should format single months and ranges", () => {
-    expect(fmt.getShortenedMonthsLabel([0, 1, 2, 5, 9, 10, 11])).eq("Jan – Mär, Jun, Okt – Dez");
-    expect(fmt.getShortenedMonthsLabel([0, 3, 4, 5, 8])).eq("Jan, Apr – Jun, Sep");
+    expect(fmt.fmtMonthsRange([0, 1, 2, 5, 9, 10, 11])).eq("Jan – Mär, Jun, Okt – Dez");
+    expect(fmt.fmtMonthsRange([0, 3, 4, 5, 8])).eq("Jan, Apr – Jun, Sep");
   });
   test("should handle empty array", () => {
-    expect(fmt.getShortenedMonthsLabel([])).eq("–");
+    expect(fmt.fmtMonthsRange([])).eq("–");
   });
 });
 

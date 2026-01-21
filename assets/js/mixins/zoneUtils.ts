@@ -52,13 +52,13 @@ export default defineComponent({
       if (!weekdays || weekdays.length === 0 || weekdays.length === 7) {
         return this.$t("config.tariff.zones.allDays");
       }
-      return this.getShortenedWeekdaysLabel(weekdays);
+      return this.fmtWeekdaysRange(weekdays);
     },
     monthsLabel(months: number[]): string {
       if (!months || months.length === 0 || months.length === 12) {
         return this.$t("config.tariff.zones.allMonths");
       }
-      return this.getShortenedMonthsLabel(months);
+      return this.fmtMonthsRange(months);
     },
   },
 });
