@@ -14,6 +14,7 @@ params:
     description:
       en: Modbus Type
       de: Modbus Typ
+    required: true
   - name: host
     required: true
     description:
