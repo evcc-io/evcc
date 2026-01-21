@@ -199,6 +199,7 @@ func generate(out io.Writer, functionName, baseType string, dynamicTypes ...dyna
 
 COMBO:
 	for _, c := range combinations.All(combos) {
+		// order the cases for generation
 		for _, master := range sortedDependents {
 			details := dependents[master]
 			// prune combinations where ...
@@ -240,8 +241,7 @@ COMBO:
 		Combinations: validCombos,
 	}
 
-	fmt.Fprintf(out, "// types %v\n\n", types)
-	fmt.Fprintf(out, "// combo %v\n\n", validCombos)
+	// fmt.Fprintf(out, "// combo %v\n\n", validCombos)
 
 	return tmpl.Execute(out, vars)
 }

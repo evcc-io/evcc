@@ -6,10 +6,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-// types map[api.Battery:{api.Battery Battery [{func() (float64, error) Soc battery  (float64, error) []}]} api.BatteryCapacity:{api.BatteryCapacity BatteryCapacity [{func() float64 Capacity batteryCapacity  float64 []}]}]
-
-// combo [[api.Battery] [api.Battery api.BatteryCapacity]]
-
 func decorateSMA(base *SMA, battery func() (float64, error), batteryCapacity func() float64) api.Meter {
 	switch {
 	case battery == nil:

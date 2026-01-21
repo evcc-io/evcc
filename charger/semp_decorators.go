@@ -6,10 +6,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-// types map[api.ChargeRater:{api.ChargeRater ChargeRater [{func() (float64, error) ChargedEnergy chargeRater  (float64, error) []}]} api.PhaseGetter:{api.PhaseGetter PhaseGetter [{func() (int, error) GetPhases phaseGetter  (int, error) []}]} api.PhaseSwitcher:{api.PhaseSwitcher PhaseSwitcher [{func(int) error Phases1p3p phaseSwitcher  error [int]}]}]
-
-// combo [[api.PhaseSwitcher] [api.PhaseSwitcher api.PhaseGetter] [api.ChargeRater] [api.PhaseSwitcher api.ChargeRater] [api.PhaseSwitcher api.PhaseGetter api.ChargeRater]]
-
 func decorateSEMP(base *SEMP, phaseSwitcher func(int) error, phaseGetter func() (int, error), chargeRater func() (float64, error)) api.Charger {
 	switch {
 	case chargeRater == nil && phaseSwitcher == nil:

@@ -6,10 +6,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-// types map[api.PhaseSwitcher:{api.PhaseSwitcher PhaseSwitcher [{func(int) error Phases1p3p phaseSwitcher  error [int]}]}]
-
-// combo [[api.PhaseSwitcher]]
-
 func decorateMennekesCompact(base *MennekesCompact, phaseSwitcher func(int) error) api.Charger {
 	switch {
 	case phaseSwitcher == nil:

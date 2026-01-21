@@ -6,10 +6,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-// types map[api.ChargeController:{api.ChargeController ChargeController [{func(bool) error ChargeEnable chargeController  error [bool]}]} api.ChargeState:{api.ChargeState ChargeState [{func() (api.ChargeStatus, error) Status chargeState  (api.ChargeStatus, error) []}]} api.VehicleOdometer:{api.VehicleOdometer VehicleOdometer [{func() (float64, error) Odometer vehicleOdometer  (float64, error) []}]}]
-
-// combo [[api.ChargeState] [api.VehicleOdometer] [api.ChargeState api.VehicleOdometer] [api.ChargeState api.ChargeController] [api.ChargeState api.VehicleOdometer api.ChargeController]]
-
 func decorateTronity(base *Tronity, chargeState func() (api.ChargeStatus, error), vehicleOdometer func() (float64, error), chargeController func(bool) error) api.Vehicle {
 	switch {
 	case chargeState == nil && vehicleOdometer == nil:

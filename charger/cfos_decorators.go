@@ -6,10 +6,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-// types map[api.Meter:{api.Meter Meter [{func() (float64, error) CurrentPower meter  (float64, error) []}]} api.MeterEnergy:{api.MeterEnergy MeterEnergy [{func() (float64, error) TotalEnergy meterEnergy  (float64, error) []}]} api.PhaseCurrents:{api.PhaseCurrents PhaseCurrents [{func() (float64, float64, float64, error) Currents phaseCurrents  (float64, float64, float64, error) []}]} api.PhaseSwitcher:{api.PhaseSwitcher PhaseSwitcher [{func(int) error Phases1p3p phaseSwitcher  error [int]}]}]
-
-// combo [[api.Meter] [api.Meter api.MeterEnergy] [api.Meter api.PhaseCurrents] [api.Meter api.MeterEnergy api.PhaseCurrents] [api.PhaseSwitcher] [api.Meter api.PhaseSwitcher] [api.Meter api.MeterEnergy api.PhaseSwitcher] [api.Meter api.PhaseCurrents api.PhaseSwitcher] [api.Meter api.MeterEnergy api.PhaseCurrents api.PhaseSwitcher]]
-
 func decorateCfos(base *CfosPowerBrain, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseSwitcher func(int) error) api.Charger {
 	switch {
 	case meter == nil && phaseSwitcher == nil:

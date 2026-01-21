@@ -6,10 +6,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-// types map[api.MeterEnergy:{api.MeterEnergy MeterEnergy [{func() (float64, error) TotalEnergy meterEnergy  (float64, error) []}]}]
-
-// combo [[api.MeterEnergy]]
-
 func decorateWeidmüller(base *Weidmüller, meterEnergy func() (float64, error)) api.Charger {
 	switch {
 	case meterEnergy == nil:

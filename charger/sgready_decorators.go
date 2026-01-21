@@ -6,10 +6,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-// types map[api.Battery:{api.Battery Battery [{func() (float64, error) Soc battery  (float64, error) []}]} api.Meter:{api.Meter Meter [{func() (float64, error) CurrentPower meter  (float64, error) []}]} api.MeterEnergy:{api.MeterEnergy MeterEnergy [{func() (float64, error) TotalEnergy meterEnergy  (float64, error) []}]} api.SocLimiter:{api.SocLimiter SocLimiter [{func() (int64, error) GetLimitSoc socLimiter  (int64, error) []}]}]
-
-// combo [[api.Meter] [api.Meter api.MeterEnergy] [api.Battery] [api.Meter api.Battery] [api.Meter api.MeterEnergy api.Battery] [api.Battery api.SocLimiter] [api.Meter api.Battery api.SocLimiter] [api.Meter api.MeterEnergy api.Battery api.SocLimiter]]
-
 func decorateSgReady(base *SgReady, meter func() (float64, error), meterEnergy func() (float64, error), battery func() (float64, error), socLimiter func() (int64, error)) api.Charger {
 	switch {
 	case battery == nil && meter == nil:

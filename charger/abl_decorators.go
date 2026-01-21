@@ -6,10 +6,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-// types map[api.Meter:{api.Meter Meter [{func() (float64, error) CurrentPower meter  (float64, error) []}]} api.PhaseCurrents:{api.PhaseCurrents PhaseCurrents [{func() (float64, float64, float64, error) Currents phaseCurrents  (float64, float64, float64, error) []}]}]
-
-// combo [[api.Meter] [api.Meter api.PhaseCurrents]]
-
 func decorateABLeMH(base *ABLeMH, meter func() (float64, error), phaseCurrents func() (float64, float64, float64, error)) api.Charger {
 	switch {
 	case meter == nil:

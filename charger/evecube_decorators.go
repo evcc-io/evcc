@@ -6,10 +6,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-// types map[api.Identifier:{api.Identifier Identifier [{func() (string, error) Identify identifier  (string, error) []}]} api.PhaseSwitcher:{api.PhaseSwitcher PhaseSwitcher [{func(int) error Phases1p3p phaseSwitcher  error [int]}]}]
-
-// combo [[api.PhaseSwitcher] [api.Identifier] [api.PhaseSwitcher api.Identifier]]
-
 func decorateEVECUBE(base *EVECUBE, phaseSwitcher func(int) error, identifier func() (string, error)) api.Charger {
 	switch {
 	case identifier == nil && phaseSwitcher == nil:

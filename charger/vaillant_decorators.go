@@ -6,10 +6,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-// types map[api.Battery:{api.Battery Battery [{func() (float64, error) Soc battery  (float64, error) []}]} api.Meter:{api.Meter Meter [{func() (float64, error) CurrentPower meter  (float64, error) []}]}]
-
-// combo [[api.Meter] [api.Battery] [api.Meter api.Battery]]
-
 func decorateVaillant(base *Vaillant, meter func() (float64, error), battery func() (float64, error)) api.Charger {
 	switch {
 	case battery == nil && meter == nil:
