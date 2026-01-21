@@ -6,7 +6,9 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-// map[api.MeterEnergy:{api.MeterEnergy MeterEnergy [{func() (float64, error) TotalEnergy meterEnergy  (float64, error) []}]} api.PhaseCurrents:{api.PhaseCurrents PhaseCurrents [{func() (float64, float64, float64, error) Currents phaseCurrents  (float64, float64, float64, error) []}]}]
+// types map[api.MeterEnergy:{api.MeterEnergy MeterEnergy [{func() (float64, error) TotalEnergy meterEnergy  (float64, error) []}]} api.PhaseCurrents:{api.PhaseCurrents PhaseCurrents [{func() (float64, float64, float64, error) Currents phaseCurrents  (float64, float64, float64, error) []}]}]
+
+// combo [[api.MeterEnergy] [api.PhaseCurrents] [api.MeterEnergy api.PhaseCurrents]]
 
 func decorateDsmr(base api.Meter, meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error)) api.Meter {
 	switch {

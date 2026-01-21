@@ -6,7 +6,9 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-// map[api.ChargeRater:{api.ChargeRater ChargeRater [{func() (float64, error) ChargedEnergy chargeRater  (float64, error) []}]} api.PhaseSwitcher:{api.PhaseSwitcher PhaseSwitcher [{func(int) error Phases1p3p phaseSwitcher  error [int]}]}]
+// types map[api.ChargeRater:{api.ChargeRater ChargeRater [{func() (float64, error) ChargedEnergy chargeRater  (float64, error) []}]} api.PhaseSwitcher:{api.PhaseSwitcher PhaseSwitcher [{func(int) error Phases1p3p phaseSwitcher  error [int]}]}]
+
+// combo [[api.ChargeRater] [api.PhaseSwitcher] [api.ChargeRater api.PhaseSwitcher]]
 
 func decorateGoE(base *GoE, chargeRater func() (float64, error), phaseSwitcher func(int) error) api.Charger {
 	switch {

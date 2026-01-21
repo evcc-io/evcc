@@ -6,7 +6,9 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-// map[api.Battery:{api.Battery Battery [{func() (float64, error) Soc battery  (float64, error) []}]} api.PhaseSwitcher:{api.PhaseSwitcher PhaseSwitcher [{func(int) error Phases1p3p phaseSwitcher  error [int]}]}]
+// types map[api.Battery:{api.Battery Battery [{func() (float64, error) Soc battery  (float64, error) []}]} api.PhaseSwitcher:{api.PhaseSwitcher PhaseSwitcher [{func(int) error Phases1p3p phaseSwitcher  error [int]}]}]
+
+// combo [[api.PhaseSwitcher] [api.Battery] [api.PhaseSwitcher api.Battery]]
 
 func decorateOpenWB(base *OpenWB, phaseSwitcher func(int) error, battery func() (float64, error)) api.Charger {
 	switch {

@@ -6,7 +6,9 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-// map[api.Meter:{api.Meter Meter [{func() (float64, error) CurrentPower meter  (float64, error) []}]} api.MeterEnergy:{api.MeterEnergy MeterEnergy [{func() (float64, error) TotalEnergy meterEnergy  (float64, error) []}]} api.PhaseCurrents:{api.PhaseCurrents PhaseCurrents [{func() (float64, float64, float64, error) Currents phaseCurrents  (float64, float64, float64, error) []}]} api.PhaseVoltages:{api.PhaseVoltages PhaseVoltages [{func() (float64, float64, float64, error) Voltages phaseVoltages  (float64, float64, float64, error) []}]}]
+// types map[api.Meter:{api.Meter Meter [{func() (float64, error) CurrentPower meter  (float64, error) []}]} api.MeterEnergy:{api.MeterEnergy MeterEnergy [{func() (float64, error) TotalEnergy meterEnergy  (float64, error) []}]} api.PhaseCurrents:{api.PhaseCurrents PhaseCurrents [{func() (float64, float64, float64, error) Currents phaseCurrents  (float64, float64, float64, error) []}]} api.PhaseVoltages:{api.PhaseVoltages PhaseVoltages [{func() (float64, float64, float64, error) Voltages phaseVoltages  (float64, float64, float64, error) []}]}]
+
+// combo [[api.Meter] [api.Meter api.MeterEnergy] [api.Meter api.PhaseCurrents] [api.Meter api.MeterEnergy api.PhaseCurrents] [api.Meter api.PhaseVoltages] [api.Meter api.MeterEnergy api.PhaseVoltages] [api.Meter api.PhaseCurrents api.PhaseVoltages] [api.Meter api.MeterEnergy api.PhaseCurrents api.PhaseVoltages]]
 
 func decorateHomeAssistant(base *HomeAssistant, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error)) api.Charger {
 	switch {

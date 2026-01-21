@@ -8,7 +8,9 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-// map[api.ChargeController:{api.ChargeController ChargeController [{func(bool) error ChargeEnable chargeController  error [bool]}]} api.ChargeState:{api.ChargeState ChargeState [{func() (api.ChargeStatus, error) Status chargeState  (api.ChargeStatus, error) []}]} api.CurrentController:{api.CurrentController CurrentController [{func(int64) error MaxCurrent currentController  error [int64]}]} api.CurrentGetter:{api.CurrentGetter CurrentGetter [{func() (float64, error) GetMaxCurrent currentGetter  (float64, error) []}]} api.Resurrector:{api.Resurrector Resurrector [{func() error WakeUp resurrector  error []}]} api.SocLimiter:{api.SocLimiter SocLimiter [{func() (int64, error) GetLimitSoc socLimiter  (int64, error) []}]} api.VehicleClimater:{api.VehicleClimater VehicleClimater [{func() (bool, error) Climater vehicleClimater  (bool, error) []}]} api.VehicleFinishTimer:{api.VehicleFinishTimer VehicleFinishTimer [{func() (time.Time, error) FinishTime vehicleFinishTimer  (time.Time, error) []}]} api.VehicleOdometer:{api.VehicleOdometer VehicleOdometer [{func() (float64, error) Odometer vehicleOdometer  (float64, error) []}]} api.VehicleRange:{api.VehicleRange VehicleRange [{func() (int64, error) Range vehicleRange  (int64, error) []}]}]
+// types map[api.ChargeController:{api.ChargeController ChargeController [{func(bool) error ChargeEnable chargeController  error [bool]}]} api.ChargeState:{api.ChargeState ChargeState [{func() (api.ChargeStatus, error) Status chargeState  (api.ChargeStatus, error) []}]} api.CurrentController:{api.CurrentController CurrentController [{func(int64) error MaxCurrent currentController  error [int64]}]} api.CurrentGetter:{api.CurrentGetter CurrentGetter [{func() (float64, error) GetMaxCurrent currentGetter  (float64, error) []}]} api.Resurrector:{api.Resurrector Resurrector [{func() error WakeUp resurrector  error []}]} api.SocLimiter:{api.SocLimiter SocLimiter [{func() (int64, error) GetLimitSoc socLimiter  (int64, error) []}]} api.VehicleClimater:{api.VehicleClimater VehicleClimater [{func() (bool, error) Climater vehicleClimater  (bool, error) []}]} api.VehicleFinishTimer:{api.VehicleFinishTimer VehicleFinishTimer [{func() (time.Time, error) FinishTime vehicleFinishTimer  (time.Time, error) []}]} api.VehicleOdometer:{api.VehicleOdometer VehicleOdometer [{func() (float64, error) Odometer vehicleOdometer  (float64, error) []}]} api.VehicleRange:{api.VehicleRange VehicleRange [{func() (int64, error) Range vehicleRange  (int64, error) []}]}]
+
+// combo [[api.SocLimiter] [api.ChargeState] [api.SocLimiter api.ChargeState] [api.VehicleRange] [api.SocLimiter api.VehicleRange] [api.ChargeState api.VehicleRange] [api.SocLimiter api.ChargeState api.VehicleRange] [api.VehicleOdometer] [api.SocLimiter api.VehicleOdometer] [api.ChargeState api.VehicleOdometer] [api.SocLimiter api.ChargeState api.VehicleOdometer] [api.VehicleRange api.VehicleOdometer] [api.SocLimiter api.VehicleRange api.VehicleOdometer] [api.ChargeState api.VehicleRange api.VehicleOdometer] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleOdometer] [api.VehicleClimater] [api.SocLimiter api.VehicleClimater] [api.ChargeState api.VehicleClimater] [api.SocLimiter api.ChargeState api.VehicleClimater] [api.VehicleRange api.VehicleClimater] [api.SocLimiter api.VehicleRange api.VehicleClimater] [api.ChargeState api.VehicleRange api.VehicleClimater] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleClimater] [api.VehicleOdometer api.VehicleClimater] [api.SocLimiter api.VehicleOdometer api.VehicleClimater] [api.ChargeState api.VehicleOdometer api.VehicleClimater] [api.SocLimiter api.ChargeState api.VehicleOdometer api.VehicleClimater] [api.VehicleRange api.VehicleOdometer api.VehicleClimater] [api.SocLimiter api.VehicleRange api.VehicleOdometer api.VehicleClimater] [api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleClimater] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleClimater] [api.ChargeState api.CurrentController] [api.SocLimiter api.ChargeState api.CurrentController] [api.ChargeState api.VehicleRange api.CurrentController] [api.SocLimiter api.ChargeState api.VehicleRange api.CurrentController] [api.ChargeState api.VehicleOdometer api.CurrentController] [api.SocLimiter api.ChargeState api.VehicleOdometer api.CurrentController] [api.ChargeState api.VehicleRange api.VehicleOdometer api.CurrentController] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleOdometer api.CurrentController] [api.ChargeState api.VehicleClimater api.CurrentController] [api.SocLimiter api.ChargeState api.VehicleClimater api.CurrentController] [api.ChargeState api.VehicleRange api.VehicleClimater api.CurrentController] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleClimater api.CurrentController] [api.ChargeState api.VehicleOdometer api.VehicleClimater api.CurrentController] [api.SocLimiter api.ChargeState api.VehicleOdometer api.VehicleClimater api.CurrentController] [api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleClimater api.CurrentController] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleClimater api.CurrentController] [api.ChargeState api.CurrentController api.CurrentGetter] [api.SocLimiter api.ChargeState api.CurrentController api.CurrentGetter] [api.SocLimiter api.VehicleRange api.CurrentGetter] [api.ChargeState api.VehicleRange api.CurrentController api.CurrentGetter] [api.SocLimiter api.ChargeState api.VehicleRange api.CurrentController api.CurrentGetter] [api.ChargeState api.VehicleOdometer api.CurrentController api.CurrentGetter] [api.SocLimiter api.ChargeState api.VehicleOdometer api.CurrentController api.CurrentGetter] [api.ChargeState api.VehicleRange api.VehicleOdometer api.CurrentController api.CurrentGetter] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleOdometer api.CurrentController api.CurrentGetter] [api.ChargeState api.VehicleClimater api.CurrentController api.CurrentGetter] [api.SocLimiter api.ChargeState api.VehicleClimater api.CurrentController api.CurrentGetter] [api.ChargeState api.VehicleRange api.VehicleClimater api.CurrentController api.CurrentGetter] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleClimater api.CurrentController api.CurrentGetter] [api.ChargeState api.VehicleOdometer api.VehicleClimater api.CurrentController api.CurrentGetter] [api.SocLimiter api.ChargeState api.VehicleOdometer api.VehicleClimater api.CurrentController api.CurrentGetter] [api.VehicleRange api.VehicleOdometer api.VehicleClimater api.CurrentGetter] [api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleClimater api.CurrentController api.CurrentGetter] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleClimater api.CurrentController api.CurrentGetter] [api.VehicleFinishTimer] [api.SocLimiter api.VehicleFinishTimer] [api.ChargeState api.VehicleFinishTimer] [api.SocLimiter api.ChargeState api.VehicleFinishTimer] [api.VehicleRange api.VehicleFinishTimer] [api.SocLimiter api.VehicleRange api.VehicleFinishTimer] [api.ChargeState api.VehicleRange api.VehicleFinishTimer] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleFinishTimer] [api.VehicleOdometer api.VehicleFinishTimer] [api.SocLimiter api.VehicleOdometer api.VehicleFinishTimer] [api.ChargeState api.VehicleOdometer api.VehicleFinishTimer] [api.SocLimiter api.ChargeState api.VehicleOdometer api.VehicleFinishTimer] [api.VehicleRange api.VehicleOdometer api.VehicleFinishTimer] [api.SocLimiter api.VehicleRange api.VehicleOdometer api.VehicleFinishTimer] [api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleFinishTimer] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleFinishTimer] [api.VehicleClimater api.VehicleFinishTimer] [api.SocLimiter api.VehicleClimater api.VehicleFinishTimer] [api.ChargeState api.VehicleClimater api.VehicleFinishTimer] [api.SocLimiter api.ChargeState api.VehicleClimater api.VehicleFinishTimer] [api.VehicleRange api.VehicleClimater api.VehicleFinishTimer] [api.SocLimiter api.VehicleRange api.VehicleClimater api.VehicleFinishTimer] [api.ChargeState api.VehicleRange api.VehicleClimater api.VehicleFinishTimer] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleClimater api.VehicleFinishTimer] [api.VehicleOdometer api.VehicleClimater api.VehicleFinishTimer] [api.SocLimiter api.VehicleOdometer api.VehicleClimater api.VehicleFinishTimer] [api.ChargeState api.VehicleOdometer api.VehicleClimater api.VehicleFinishTimer] [api.SocLimiter api.ChargeState api.VehicleOdometer api.VehicleClimater api.VehicleFinishTimer] [api.VehicleRange api.VehicleOdometer api.VehicleClimater api.VehicleFinishTimer] [api.SocLimiter api.VehicleRange api.VehicleOdometer api.VehicleClimater api.VehicleFinishTimer] [api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleClimater api.VehicleFinishTimer] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleClimater api.VehicleFinishTimer] [api.ChargeState api.CurrentController api.VehicleFinishTimer] [api.SocLimiter api.ChargeState api.CurrentController api.VehicleFinishTimer] [api.ChargeState api.VehicleRange api.CurrentController api.VehicleFinishTimer] [api.SocLimiter api.ChargeState api.VehicleRange api.CurrentController api.VehicleFinishTimer] [api.ChargeState api.VehicleOdometer api.CurrentController api.VehicleFinishTimer] [api.SocLimiter api.ChargeState api.VehicleOdometer api.CurrentController api.VehicleFinishTimer] [api.ChargeState api.VehicleRange api.VehicleOdometer api.CurrentController api.VehicleFinishTimer] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleOdometer api.CurrentController api.VehicleFinishTimer] [api.ChargeState api.VehicleClimater api.CurrentController api.VehicleFinishTimer] [api.SocLimiter api.ChargeState api.VehicleClimater api.CurrentController api.VehicleFinishTimer] [api.ChargeState api.VehicleRange api.VehicleClimater api.CurrentController api.VehicleFinishTimer] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleClimater api.CurrentController api.VehicleFinishTimer] [api.ChargeState api.VehicleOdometer api.VehicleClimater api.CurrentController api.VehicleFinishTimer] [api.SocLimiter api.ChargeState api.VehicleOdometer api.VehicleClimater api.CurrentController api.VehicleFinishTimer] [api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleClimater api.CurrentController api.VehicleFinishTimer] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleClimater api.CurrentController api.VehicleFinishTimer] [api.ChargeState api.CurrentController api.CurrentGetter api.VehicleFinishTimer] [api.SocLimiter api.ChargeState api.CurrentController api.CurrentGetter api.VehicleFinishTimer] [api.ChargeState api.VehicleRange api.CurrentController api.CurrentGetter api.VehicleFinishTimer] [api.SocLimiter api.ChargeState api.VehicleRange api.CurrentController api.CurrentGetter api.VehicleFinishTimer] [api.ChargeState api.VehicleOdometer api.CurrentController api.CurrentGetter api.VehicleFinishTimer] [api.SocLimiter api.ChargeState api.VehicleOdometer api.CurrentController api.CurrentGetter api.VehicleFinishTimer] [api.SocLimiter api.VehicleRange api.VehicleOdometer api.CurrentGetter api.VehicleFinishTimer] [api.ChargeState api.VehicleRange api.VehicleOdometer api.CurrentController api.CurrentGetter api.VehicleFinishTimer] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleOdometer api.CurrentController api.CurrentGetter api.VehicleFinishTimer] [api.ChargeState api.VehicleClimater api.CurrentController api.CurrentGetter api.VehicleFinishTimer] [api.SocLimiter api.ChargeState api.VehicleClimater api.CurrentController api.CurrentGetter api.VehicleFinishTimer] [api.VehicleRange api.VehicleClimater api.CurrentGetter api.VehicleFinishTimer] [api.ChargeState api.VehicleRange api.VehicleClimater api.CurrentController api.CurrentGetter api.VehicleFinishTimer] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleClimater api.CurrentController api.CurrentGetter api.VehicleFinishTimer] [api.ChargeState api.VehicleOdometer api.VehicleClimater api.CurrentController api.CurrentGetter api.VehicleFinishTimer] [api.SocLimiter api.ChargeState api.VehicleOdometer api.VehicleClimater api.CurrentController api.CurrentGetter api.VehicleFinishTimer] [api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleClimater api.CurrentController api.CurrentGetter api.VehicleFinishTimer] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleClimater api.CurrentController api.CurrentGetter api.VehicleFinishTimer] [api.Resurrector] [api.SocLimiter api.Resurrector] [api.ChargeState api.Resurrector] [api.SocLimiter api.ChargeState api.Resurrector] [api.VehicleRange api.Resurrector] [api.SocLimiter api.VehicleRange api.Resurrector] [api.ChargeState api.VehicleRange api.Resurrector] [api.SocLimiter api.ChargeState api.VehicleRange api.Resurrector] [api.VehicleOdometer api.Resurrector] [api.SocLimiter api.VehicleOdometer api.Resurrector] [api.ChargeState api.VehicleOdometer api.Resurrector] [api.SocLimiter api.ChargeState api.VehicleOdometer api.Resurrector] [api.VehicleRange api.VehicleOdometer api.Resurrector] [api.SocLimiter api.VehicleRange api.VehicleOdometer api.Resurrector] [api.ChargeState api.VehicleRange api.VehicleOdometer api.Resurrector] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleOdometer api.Resurrector] [api.VehicleClimater api.Resurrector] [api.SocLimiter api.VehicleClimater api.Resurrector] [api.ChargeState api.VehicleClimater api.Resurrector] [api.SocLimiter api.ChargeState api.VehicleClimater api.Resurrector] [api.VehicleRange api.VehicleClimater api.Resurrector] [api.SocLimiter api.VehicleRange api.VehicleClimater api.Resurrector] [api.ChargeState api.VehicleRange api.VehicleClimater api.Resurrector] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleClimater api.Resurrector] [api.VehicleOdometer api.VehicleClimater api.Resurrector] [api.SocLimiter api.VehicleOdometer api.VehicleClimater api.Resurrector] [api.ChargeState api.VehicleOdometer api.VehicleClimater api.Resurrector] [api.SocLimiter api.ChargeState api.VehicleOdometer api.VehicleClimater api.Resurrector] [api.VehicleRange api.VehicleOdometer api.VehicleClimater api.Resurrector] [api.SocLimiter api.VehicleRange api.VehicleOdometer api.VehicleClimater api.Resurrector] [api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleClimater api.Resurrector] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleClimater api.Resurrector] [api.ChargeState api.CurrentController api.Resurrector] [api.SocLimiter api.ChargeState api.CurrentController api.Resurrector] [api.ChargeState api.VehicleRange api.CurrentController api.Resurrector] [api.SocLimiter api.ChargeState api.VehicleRange api.CurrentController api.Resurrector] [api.ChargeState api.VehicleOdometer api.CurrentController api.Resurrector] [api.SocLimiter api.ChargeState api.VehicleOdometer api.CurrentController api.Resurrector] [api.ChargeState api.VehicleRange api.VehicleOdometer api.CurrentController api.Resurrector] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleOdometer api.CurrentController api.Resurrector] [api.ChargeState api.VehicleClimater api.CurrentController api.Resurrector] [api.SocLimiter api.ChargeState api.VehicleClimater api.CurrentController api.Resurrector] [api.ChargeState api.VehicleRange api.VehicleClimater api.CurrentController api.Resurrector] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleClimater api.CurrentController api.Resurrector] [api.ChargeState api.VehicleOdometer api.VehicleClimater api.CurrentController api.Resurrector] [api.SocLimiter api.ChargeState api.VehicleOdometer api.VehicleClimater api.CurrentController api.Resurrector] [api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleClimater api.CurrentController api.Resurrector] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleClimater api.CurrentController api.Resurrector] [api.ChargeState api.CurrentController api.CurrentGetter api.Resurrector] [api.SocLimiter api.ChargeState api.CurrentController api.CurrentGetter api.Resurrector] [api.ChargeState api.VehicleRange api.CurrentController api.CurrentGetter api.Resurrector] [api.SocLimiter api.ChargeState api.VehicleRange api.CurrentController api.CurrentGetter api.Resurrector] [api.ChargeState api.VehicleOdometer api.CurrentController api.CurrentGetter api.Resurrector] [api.SocLimiter api.ChargeState api.VehicleOdometer api.CurrentController api.CurrentGetter api.Resurrector] [api.VehicleRange api.VehicleOdometer api.CurrentGetter api.Resurrector] [api.ChargeState api.VehicleRange api.VehicleOdometer api.CurrentController api.CurrentGetter api.Resurrector] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleOdometer api.CurrentController api.CurrentGetter api.Resurrector] [api.ChargeState api.VehicleClimater api.CurrentController api.CurrentGetter api.Resurrector] [api.SocLimiter api.ChargeState api.VehicleClimater api.CurrentController api.CurrentGetter api.Resurrector] [api.SocLimiter api.VehicleRange api.VehicleClimater api.CurrentGetter api.Resurrector] [api.ChargeState api.VehicleRange api.VehicleClimater api.CurrentController api.CurrentGetter api.Resurrector] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleClimater api.CurrentController api.CurrentGetter api.Resurrector] [api.ChargeState api.VehicleOdometer api.VehicleClimater api.CurrentController api.CurrentGetter api.Resurrector] [api.SocLimiter api.ChargeState api.VehicleOdometer api.VehicleClimater api.CurrentController api.CurrentGetter api.Resurrector] [api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleClimater api.CurrentController api.CurrentGetter api.Resurrector] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleClimater api.CurrentController api.CurrentGetter api.Resurrector] [api.VehicleFinishTimer api.Resurrector] [api.SocLimiter api.VehicleFinishTimer api.Resurrector] [api.ChargeState api.VehicleFinishTimer api.Resurrector] [api.SocLimiter api.ChargeState api.VehicleFinishTimer api.Resurrector] [api.VehicleRange api.VehicleFinishTimer api.Resurrector] [api.SocLimiter api.VehicleRange api.VehicleFinishTimer api.Resurrector] [api.ChargeState api.VehicleRange api.VehicleFinishTimer api.Resurrector] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleFinishTimer api.Resurrector] [api.VehicleOdometer api.VehicleFinishTimer api.Resurrector] [api.SocLimiter api.VehicleOdometer api.VehicleFinishTimer api.Resurrector] [api.ChargeState api.VehicleOdometer api.VehicleFinishTimer api.Resurrector] [api.SocLimiter api.ChargeState api.VehicleOdometer api.VehicleFinishTimer api.Resurrector] [api.VehicleRange api.VehicleOdometer api.VehicleFinishTimer api.Resurrector] [api.SocLimiter api.VehicleRange api.VehicleOdometer api.VehicleFinishTimer api.Resurrector] [api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleFinishTimer api.Resurrector] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleFinishTimer api.Resurrector] [api.VehicleClimater api.VehicleFinishTimer api.Resurrector] [api.SocLimiter api.VehicleClimater api.VehicleFinishTimer api.Resurrector] [api.ChargeState api.VehicleClimater api.VehicleFinishTimer api.Resurrector] [api.SocLimiter api.ChargeState api.VehicleClimater api.VehicleFinishTimer api.Resurrector] [api.VehicleRange api.VehicleClimater api.VehicleFinishTimer api.Resurrector] [api.SocLimiter api.VehicleRange api.VehicleClimater api.VehicleFinishTimer api.Resurrector] [api.ChargeState api.VehicleRange api.VehicleClimater api.VehicleFinishTimer api.Resurrector] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleClimater api.VehicleFinishTimer api.Resurrector] [api.VehicleOdometer api.VehicleClimater api.VehicleFinishTimer api.Resurrector] [api.SocLimiter api.VehicleOdometer api.VehicleClimater api.VehicleFinishTimer api.Resurrector] [api.ChargeState api.VehicleOdometer api.VehicleClimater api.VehicleFinishTimer api.Resurrector] [api.SocLimiter api.ChargeState api.VehicleOdometer api.VehicleClimater api.VehicleFinishTimer api.Resurrector] [api.VehicleRange api.VehicleOdometer api.VehicleClimater api.VehicleFinishTimer api.Resurrector] [api.SocLimiter api.VehicleRange api.VehicleOdometer api.VehicleClimater api.VehicleFinishTimer api.Resurrector] [api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleClimater api.VehicleFinishTimer api.Resurrector] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleClimater api.VehicleFinishTimer api.Resurrector] [api.ChargeState api.CurrentController api.VehicleFinishTimer api.Resurrector] [api.SocLimiter api.ChargeState api.CurrentController api.VehicleFinishTimer api.Resurrector] [api.ChargeState api.VehicleRange api.CurrentController api.VehicleFinishTimer api.Resurrector] [api.SocLimiter api.ChargeState api.VehicleRange api.CurrentController api.VehicleFinishTimer api.Resurrector] [api.ChargeState api.VehicleOdometer api.CurrentController api.VehicleFinishTimer api.Resurrector] [api.SocLimiter api.ChargeState api.VehicleOdometer api.CurrentController api.VehicleFinishTimer api.Resurrector] [api.ChargeState api.VehicleRange api.VehicleOdometer api.CurrentController api.VehicleFinishTimer api.Resurrector] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleOdometer api.CurrentController api.VehicleFinishTimer api.Resurrector] [api.ChargeState api.VehicleClimater api.CurrentController api.VehicleFinishTimer api.Resurrector] [api.SocLimiter api.ChargeState api.VehicleClimater api.CurrentController api.VehicleFinishTimer api.Resurrector] [api.ChargeState api.VehicleRange api.VehicleClimater api.CurrentController api.VehicleFinishTimer api.Resurrector] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleClimater api.CurrentController api.VehicleFinishTimer api.Resurrector] [api.ChargeState api.VehicleOdometer api.VehicleClimater api.CurrentController api.VehicleFinishTimer api.Resurrector] [api.SocLimiter api.ChargeState api.VehicleOdometer api.VehicleClimater api.CurrentController api.VehicleFinishTimer api.Resurrector] [api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleClimater api.CurrentController api.VehicleFinishTimer api.Resurrector] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleClimater api.CurrentController api.VehicleFinishTimer api.Resurrector] [api.ChargeState api.CurrentController api.CurrentGetter api.VehicleFinishTimer api.Resurrector] [api.SocLimiter api.ChargeState api.CurrentController api.CurrentGetter api.VehicleFinishTimer api.Resurrector] [api.ChargeState api.VehicleRange api.CurrentController api.CurrentGetter api.VehicleFinishTimer api.Resurrector] [api.SocLimiter api.ChargeState api.VehicleRange api.CurrentController api.CurrentGetter api.VehicleFinishTimer api.Resurrector] [api.SocLimiter api.VehicleOdometer api.CurrentGetter api.VehicleFinishTimer api.Resurrector] [api.ChargeState api.VehicleOdometer api.CurrentController api.CurrentGetter api.VehicleFinishTimer api.Resurrector] [api.SocLimiter api.ChargeState api.VehicleOdometer api.CurrentController api.CurrentGetter api.VehicleFinishTimer api.Resurrector] [api.ChargeState api.VehicleRange api.VehicleOdometer api.CurrentController api.CurrentGetter api.VehicleFinishTimer api.Resurrector] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleOdometer api.CurrentController api.CurrentGetter api.VehicleFinishTimer api.Resurrector] [api.SocLimiter api.VehicleClimater api.CurrentGetter api.VehicleFinishTimer api.Resurrector] [api.ChargeState api.VehicleClimater api.CurrentController api.CurrentGetter api.VehicleFinishTimer api.Resurrector] [api.SocLimiter api.ChargeState api.VehicleClimater api.CurrentController api.CurrentGetter api.VehicleFinishTimer api.Resurrector] [api.SocLimiter api.VehicleRange api.VehicleClimater api.CurrentGetter api.VehicleFinishTimer api.Resurrector] [api.ChargeState api.VehicleRange api.VehicleClimater api.CurrentController api.CurrentGetter api.VehicleFinishTimer api.Resurrector] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleClimater api.CurrentController api.CurrentGetter api.VehicleFinishTimer api.Resurrector] [api.ChargeState api.VehicleOdometer api.VehicleClimater api.CurrentController api.CurrentGetter api.VehicleFinishTimer api.Resurrector] [api.SocLimiter api.ChargeState api.VehicleOdometer api.VehicleClimater api.CurrentController api.CurrentGetter api.VehicleFinishTimer api.Resurrector] [api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleClimater api.CurrentController api.CurrentGetter api.VehicleFinishTimer api.Resurrector] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleClimater api.CurrentController api.CurrentGetter api.VehicleFinishTimer api.Resurrector] [api.ChargeState api.ChargeController] [api.SocLimiter api.ChargeState api.ChargeController] [api.ChargeState api.VehicleRange api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleRange api.ChargeController] [api.ChargeState api.VehicleOdometer api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleOdometer api.ChargeController] [api.ChargeState api.VehicleRange api.VehicleOdometer api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleOdometer api.ChargeController] [api.ChargeState api.VehicleClimater api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleClimater api.ChargeController] [api.ChargeState api.VehicleRange api.VehicleClimater api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleClimater api.ChargeController] [api.ChargeState api.VehicleOdometer api.VehicleClimater api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleOdometer api.VehicleClimater api.ChargeController] [api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleClimater api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleClimater api.ChargeController] [api.ChargeState api.CurrentController api.ChargeController] [api.SocLimiter api.ChargeState api.CurrentController api.ChargeController] [api.ChargeState api.VehicleRange api.CurrentController api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleRange api.CurrentController api.ChargeController] [api.ChargeState api.VehicleOdometer api.CurrentController api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleOdometer api.CurrentController api.ChargeController] [api.ChargeState api.VehicleRange api.VehicleOdometer api.CurrentController api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleOdometer api.CurrentController api.ChargeController] [api.ChargeState api.VehicleClimater api.CurrentController api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleClimater api.CurrentController api.ChargeController] [api.ChargeState api.VehicleRange api.VehicleClimater api.CurrentController api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleClimater api.CurrentController api.ChargeController] [api.ChargeState api.VehicleOdometer api.VehicleClimater api.CurrentController api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleOdometer api.VehicleClimater api.CurrentController api.ChargeController] [api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleClimater api.CurrentController api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleClimater api.CurrentController api.ChargeController] [api.ChargeState api.CurrentController api.CurrentGetter api.ChargeController] [api.SocLimiter api.ChargeState api.CurrentController api.CurrentGetter api.ChargeController] [api.ChargeState api.VehicleRange api.CurrentController api.CurrentGetter api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleRange api.CurrentController api.CurrentGetter api.ChargeController] [api.ChargeState api.VehicleOdometer api.CurrentController api.CurrentGetter api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleOdometer api.CurrentController api.CurrentGetter api.ChargeController] [api.VehicleRange api.VehicleOdometer api.CurrentGetter] [api.ChargeState api.VehicleRange api.VehicleOdometer api.CurrentController api.CurrentGetter api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleOdometer api.CurrentController api.CurrentGetter api.ChargeController] [api.ChargeState api.VehicleClimater api.CurrentController api.CurrentGetter api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleClimater api.CurrentController api.CurrentGetter api.ChargeController] [api.ChargeState api.VehicleRange api.VehicleClimater api.CurrentController api.CurrentGetter api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleClimater api.CurrentController api.CurrentGetter api.ChargeController] [api.ChargeState api.VehicleOdometer api.VehicleClimater api.CurrentController api.CurrentGetter api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleOdometer api.VehicleClimater api.CurrentController api.CurrentGetter api.ChargeController] [api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleClimater api.CurrentController api.CurrentGetter api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleClimater api.CurrentController api.CurrentGetter api.ChargeController] [api.ChargeState api.VehicleFinishTimer api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleFinishTimer api.ChargeController] [api.ChargeState api.VehicleRange api.VehicleFinishTimer api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleFinishTimer api.ChargeController] [api.ChargeState api.VehicleOdometer api.VehicleFinishTimer api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleOdometer api.VehicleFinishTimer api.ChargeController] [api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleFinishTimer api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleFinishTimer api.ChargeController] [api.ChargeState api.VehicleClimater api.VehicleFinishTimer api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleClimater api.VehicleFinishTimer api.ChargeController] [api.ChargeState api.VehicleRange api.VehicleClimater api.VehicleFinishTimer api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleClimater api.VehicleFinishTimer api.ChargeController] [api.ChargeState api.VehicleOdometer api.VehicleClimater api.VehicleFinishTimer api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleOdometer api.VehicleClimater api.VehicleFinishTimer api.ChargeController] [api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleClimater api.VehicleFinishTimer api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleClimater api.VehicleFinishTimer api.ChargeController] [api.ChargeState api.CurrentController api.VehicleFinishTimer api.ChargeController] [api.SocLimiter api.ChargeState api.CurrentController api.VehicleFinishTimer api.ChargeController] [api.ChargeState api.VehicleRange api.CurrentController api.VehicleFinishTimer api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleRange api.CurrentController api.VehicleFinishTimer api.ChargeController] [api.ChargeState api.VehicleOdometer api.CurrentController api.VehicleFinishTimer api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleOdometer api.CurrentController api.VehicleFinishTimer api.ChargeController] [api.ChargeState api.VehicleRange api.VehicleOdometer api.CurrentController api.VehicleFinishTimer api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleOdometer api.CurrentController api.VehicleFinishTimer api.ChargeController] [api.ChargeState api.VehicleClimater api.CurrentController api.VehicleFinishTimer api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleClimater api.CurrentController api.VehicleFinishTimer api.ChargeController] [api.ChargeState api.VehicleRange api.VehicleClimater api.CurrentController api.VehicleFinishTimer api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleClimater api.CurrentController api.VehicleFinishTimer api.ChargeController] [api.ChargeState api.VehicleOdometer api.VehicleClimater api.CurrentController api.VehicleFinishTimer api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleOdometer api.VehicleClimater api.CurrentController api.VehicleFinishTimer api.ChargeController] [api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleClimater api.CurrentController api.VehicleFinishTimer api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleClimater api.CurrentController api.VehicleFinishTimer api.ChargeController] [api.ChargeState api.CurrentController api.CurrentGetter api.VehicleFinishTimer api.ChargeController] [api.SocLimiter api.ChargeState api.CurrentController api.CurrentGetter api.VehicleFinishTimer api.ChargeController] [api.SocLimiter api.VehicleRange api.CurrentGetter api.VehicleFinishTimer] [api.ChargeState api.VehicleRange api.CurrentController api.CurrentGetter api.VehicleFinishTimer api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleRange api.CurrentController api.CurrentGetter api.VehicleFinishTimer api.ChargeController] [api.ChargeState api.VehicleOdometer api.CurrentController api.CurrentGetter api.VehicleFinishTimer api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleOdometer api.CurrentController api.CurrentGetter api.VehicleFinishTimer api.ChargeController] [api.ChargeState api.VehicleRange api.VehicleOdometer api.CurrentController api.CurrentGetter api.VehicleFinishTimer api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleOdometer api.CurrentController api.CurrentGetter api.VehicleFinishTimer api.ChargeController] [api.ChargeState api.VehicleClimater api.CurrentController api.CurrentGetter api.VehicleFinishTimer api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleClimater api.CurrentController api.CurrentGetter api.VehicleFinishTimer api.ChargeController] [api.ChargeState api.VehicleRange api.VehicleClimater api.CurrentController api.CurrentGetter api.VehicleFinishTimer api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleClimater api.CurrentController api.CurrentGetter api.VehicleFinishTimer api.ChargeController] [api.VehicleOdometer api.VehicleClimater api.CurrentGetter api.VehicleFinishTimer] [api.ChargeState api.VehicleOdometer api.VehicleClimater api.CurrentController api.CurrentGetter api.VehicleFinishTimer api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleOdometer api.VehicleClimater api.CurrentController api.CurrentGetter api.VehicleFinishTimer api.ChargeController] [api.VehicleRange api.VehicleOdometer api.VehicleClimater api.CurrentGetter api.VehicleFinishTimer] [api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleClimater api.CurrentController api.CurrentGetter api.VehicleFinishTimer api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleClimater api.CurrentController api.CurrentGetter api.VehicleFinishTimer api.ChargeController] [api.ChargeState api.Resurrector api.ChargeController] [api.SocLimiter api.ChargeState api.Resurrector api.ChargeController] [api.ChargeState api.VehicleRange api.Resurrector api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleRange api.Resurrector api.ChargeController] [api.ChargeState api.VehicleOdometer api.Resurrector api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleOdometer api.Resurrector api.ChargeController] [api.ChargeState api.VehicleRange api.VehicleOdometer api.Resurrector api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleOdometer api.Resurrector api.ChargeController] [api.ChargeState api.VehicleClimater api.Resurrector api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleClimater api.Resurrector api.ChargeController] [api.ChargeState api.VehicleRange api.VehicleClimater api.Resurrector api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleClimater api.Resurrector api.ChargeController] [api.ChargeState api.VehicleOdometer api.VehicleClimater api.Resurrector api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleOdometer api.VehicleClimater api.Resurrector api.ChargeController] [api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleClimater api.Resurrector api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleClimater api.Resurrector api.ChargeController] [api.ChargeState api.CurrentController api.Resurrector api.ChargeController] [api.SocLimiter api.ChargeState api.CurrentController api.Resurrector api.ChargeController] [api.ChargeState api.VehicleRange api.CurrentController api.Resurrector api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleRange api.CurrentController api.Resurrector api.ChargeController] [api.ChargeState api.VehicleOdometer api.CurrentController api.Resurrector api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleOdometer api.CurrentController api.Resurrector api.ChargeController] [api.ChargeState api.VehicleRange api.VehicleOdometer api.CurrentController api.Resurrector api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleOdometer api.CurrentController api.Resurrector api.ChargeController] [api.ChargeState api.VehicleClimater api.CurrentController api.Resurrector api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleClimater api.CurrentController api.Resurrector api.ChargeController] [api.ChargeState api.VehicleRange api.VehicleClimater api.CurrentController api.Resurrector api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleClimater api.CurrentController api.Resurrector api.ChargeController] [api.ChargeState api.VehicleOdometer api.VehicleClimater api.CurrentController api.Resurrector api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleOdometer api.VehicleClimater api.CurrentController api.Resurrector api.ChargeController] [api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleClimater api.CurrentController api.Resurrector api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleClimater api.CurrentController api.Resurrector api.ChargeController] [api.ChargeState api.CurrentController api.CurrentGetter api.Resurrector api.ChargeController] [api.SocLimiter api.ChargeState api.CurrentController api.CurrentGetter api.Resurrector api.ChargeController] [api.ChargeState api.VehicleRange api.CurrentController api.CurrentGetter api.Resurrector api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleRange api.CurrentController api.CurrentGetter api.Resurrector api.ChargeController] [api.ChargeState api.VehicleOdometer api.CurrentController api.CurrentGetter api.Resurrector api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleOdometer api.CurrentController api.CurrentGetter api.Resurrector api.ChargeController] [api.ChargeState api.VehicleRange api.VehicleOdometer api.CurrentController api.CurrentGetter api.Resurrector api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleOdometer api.CurrentController api.CurrentGetter api.Resurrector api.ChargeController] [api.ChargeState api.VehicleClimater api.CurrentController api.CurrentGetter api.Resurrector api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleClimater api.CurrentController api.CurrentGetter api.Resurrector api.ChargeController] [api.VehicleRange api.VehicleClimater api.CurrentGetter api.Resurrector] [api.ChargeState api.VehicleRange api.VehicleClimater api.CurrentController api.CurrentGetter api.Resurrector api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleClimater api.CurrentController api.CurrentGetter api.Resurrector api.ChargeController] [api.ChargeState api.VehicleOdometer api.VehicleClimater api.CurrentController api.CurrentGetter api.Resurrector api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleOdometer api.VehicleClimater api.CurrentController api.CurrentGetter api.Resurrector api.ChargeController] [api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleClimater api.CurrentController api.CurrentGetter api.Resurrector api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleClimater api.CurrentController api.CurrentGetter api.Resurrector api.ChargeController] [api.ChargeState api.VehicleFinishTimer api.Resurrector api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleFinishTimer api.Resurrector api.ChargeController] [api.ChargeState api.VehicleRange api.VehicleFinishTimer api.Resurrector api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleFinishTimer api.Resurrector api.ChargeController] [api.ChargeState api.VehicleOdometer api.VehicleFinishTimer api.Resurrector api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleOdometer api.VehicleFinishTimer api.Resurrector api.ChargeController] [api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleFinishTimer api.Resurrector api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleFinishTimer api.Resurrector api.ChargeController] [api.ChargeState api.VehicleClimater api.VehicleFinishTimer api.Resurrector api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleClimater api.VehicleFinishTimer api.Resurrector api.ChargeController] [api.ChargeState api.VehicleRange api.VehicleClimater api.VehicleFinishTimer api.Resurrector api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleClimater api.VehicleFinishTimer api.Resurrector api.ChargeController] [api.ChargeState api.VehicleOdometer api.VehicleClimater api.VehicleFinishTimer api.Resurrector api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleOdometer api.VehicleClimater api.VehicleFinishTimer api.Resurrector api.ChargeController] [api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleClimater api.VehicleFinishTimer api.Resurrector api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleClimater api.VehicleFinishTimer api.Resurrector api.ChargeController] [api.ChargeState api.CurrentController api.VehicleFinishTimer api.Resurrector api.ChargeController] [api.SocLimiter api.ChargeState api.CurrentController api.VehicleFinishTimer api.Resurrector api.ChargeController] [api.ChargeState api.VehicleRange api.CurrentController api.VehicleFinishTimer api.Resurrector api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleRange api.CurrentController api.VehicleFinishTimer api.Resurrector api.ChargeController] [api.ChargeState api.VehicleOdometer api.CurrentController api.VehicleFinishTimer api.Resurrector api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleOdometer api.CurrentController api.VehicleFinishTimer api.Resurrector api.ChargeController] [api.ChargeState api.VehicleRange api.VehicleOdometer api.CurrentController api.VehicleFinishTimer api.Resurrector api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleOdometer api.CurrentController api.VehicleFinishTimer api.Resurrector api.ChargeController] [api.ChargeState api.VehicleClimater api.CurrentController api.VehicleFinishTimer api.Resurrector api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleClimater api.CurrentController api.VehicleFinishTimer api.Resurrector api.ChargeController] [api.ChargeState api.VehicleRange api.VehicleClimater api.CurrentController api.VehicleFinishTimer api.Resurrector api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleClimater api.CurrentController api.VehicleFinishTimer api.Resurrector api.ChargeController] [api.ChargeState api.VehicleOdometer api.VehicleClimater api.CurrentController api.VehicleFinishTimer api.Resurrector api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleOdometer api.VehicleClimater api.CurrentController api.VehicleFinishTimer api.Resurrector api.ChargeController] [api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleClimater api.CurrentController api.VehicleFinishTimer api.Resurrector api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleClimater api.CurrentController api.VehicleFinishTimer api.Resurrector api.ChargeController] [api.SocLimiter api.CurrentGetter api.VehicleFinishTimer api.Resurrector] [api.ChargeState api.CurrentController api.CurrentGetter api.VehicleFinishTimer api.Resurrector api.ChargeController] [api.SocLimiter api.ChargeState api.CurrentController api.CurrentGetter api.VehicleFinishTimer api.Resurrector api.ChargeController] [api.ChargeState api.VehicleRange api.CurrentController api.CurrentGetter api.VehicleFinishTimer api.Resurrector api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleRange api.CurrentController api.CurrentGetter api.VehicleFinishTimer api.Resurrector api.ChargeController] [api.ChargeState api.VehicleOdometer api.CurrentController api.CurrentGetter api.VehicleFinishTimer api.Resurrector api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleOdometer api.CurrentController api.CurrentGetter api.VehicleFinishTimer api.Resurrector api.ChargeController] [api.ChargeState api.VehicleRange api.VehicleOdometer api.CurrentController api.CurrentGetter api.VehicleFinishTimer api.Resurrector api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleOdometer api.CurrentController api.CurrentGetter api.VehicleFinishTimer api.Resurrector api.ChargeController] [api.ChargeState api.VehicleClimater api.CurrentController api.CurrentGetter api.VehicleFinishTimer api.Resurrector api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleClimater api.CurrentController api.CurrentGetter api.VehicleFinishTimer api.Resurrector api.ChargeController] [api.ChargeState api.VehicleRange api.VehicleClimater api.CurrentController api.CurrentGetter api.VehicleFinishTimer api.Resurrector api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleClimater api.CurrentController api.CurrentGetter api.VehicleFinishTimer api.Resurrector api.ChargeController] [api.ChargeState api.VehicleOdometer api.VehicleClimater api.CurrentController api.CurrentGetter api.VehicleFinishTimer api.Resurrector api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleOdometer api.VehicleClimater api.CurrentController api.CurrentGetter api.VehicleFinishTimer api.Resurrector api.ChargeController] [api.SocLimiter api.VehicleRange api.VehicleOdometer api.VehicleClimater api.CurrentGetter api.VehicleFinishTimer api.Resurrector] [api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleClimater api.CurrentController api.CurrentGetter api.VehicleFinishTimer api.Resurrector api.ChargeController] [api.SocLimiter api.ChargeState api.VehicleRange api.VehicleOdometer api.VehicleClimater api.CurrentController api.CurrentGetter api.VehicleFinishTimer api.Resurrector api.ChargeController]]
 
 func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeState func() (api.ChargeStatus, error), vehicleRange func() (int64, error), vehicleOdometer func() (float64, error), vehicleClimater func() (bool, error), currentController func(int64) error, currentGetter func() (float64, error), vehicleFinishTimer func() (time.Time, error), resurrector func() error, chargeController func(bool) error) api.Vehicle {
 	switch {
@@ -962,6 +964,25 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
+	case chargeState == nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
+		return &struct {
+			api.Vehicle
+			api.CurrentGetter
+			api.SocLimiter
+			api.VehicleRange
+		}{
+			Vehicle: base,
+			CurrentGetter: &decorateVehicleCurrentGetterImpl{
+				currentGetter: currentGetter,
+			},
+			SocLimiter: &decorateVehicleSocLimiterImpl{
+				socLimiter: socLimiter,
+			},
+			VehicleRange: &decorateVehicleVehicleRangeImpl{
+				vehicleRange: vehicleRange,
+			},
+		}
+
 	case chargeController == nil && chargeState != nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
@@ -1170,29 +1191,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeState == nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentGetter
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
 	case chargeController == nil && chargeState != nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
@@ -1306,6 +1304,29 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
 				vehicleOdometer: vehicleOdometer,
+			},
+		}
+
+	case chargeState == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
+		return &struct {
+			api.Vehicle
+			api.CurrentGetter
+			api.VehicleClimater
+			api.VehicleOdometer
+			api.VehicleRange
+		}{
+			Vehicle: base,
+			CurrentGetter: &decorateVehicleCurrentGetterImpl{
+				currentGetter: currentGetter,
+			},
+			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
+				vehicleClimater: vehicleClimater,
+			},
+			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
+				vehicleOdometer: vehicleOdometer,
+			},
+			VehicleRange: &decorateVehicleVehicleRangeImpl{
+				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -2529,29 +2550,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeState == nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentGetter
-			api.SocLimiter
-			api.VehicleFinishTimer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
 	case chargeController == nil && chargeState != nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
@@ -2761,29 +2759,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeState == nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentGetter
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleFinishTimer
-		}{
-			Vehicle: base,
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
 	case chargeController == nil && chargeState != nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -2839,6 +2814,29 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
 				vehicleFinishTimer: vehicleFinishTimer,
+			},
+		}
+
+	case chargeState == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
+		return &struct {
+			api.Vehicle
+			api.CurrentGetter
+			api.VehicleClimater
+			api.VehicleFinishTimer
+			api.VehicleRange
+		}{
+			Vehicle: base,
+			CurrentGetter: &decorateVehicleCurrentGetterImpl{
+				currentGetter: currentGetter,
+			},
+			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
+				vehicleClimater: vehicleClimater,
+			},
+			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
+				vehicleFinishTimer: vehicleFinishTimer,
+			},
+			VehicleRange: &decorateVehicleVehicleRangeImpl{
+				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -4260,29 +4258,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeState == nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentGetter
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
 	case chargeController == nil && chargeState != nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -4485,6 +4460,33 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
 				vehicleClimater: vehicleClimater,
+			},
+		}
+
+	case chargeState == nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
+		return &struct {
+			api.Vehicle
+			api.CurrentGetter
+			api.Resurrector
+			api.SocLimiter
+			api.VehicleClimater
+			api.VehicleRange
+		}{
+			Vehicle: base,
+			CurrentGetter: &decorateVehicleCurrentGetterImpl{
+				currentGetter: currentGetter,
+			},
+			Resurrector: &decorateVehicleResurrectorImpl{
+				resurrector: resurrector,
+			},
+			SocLimiter: &decorateVehicleSocLimiterImpl{
+				socLimiter: socLimiter,
+			},
+			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
+				vehicleClimater: vehicleClimater,
+			},
+			VehicleRange: &decorateVehicleVehicleRangeImpl{
+				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -5990,29 +5992,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeState == nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentGetter
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleFinishTimer
-		}{
-			Vehicle: base,
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
 	case chargeController == nil && chargeState != nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -6068,33 +6047,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
 				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
-	case chargeState == nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentGetter
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleFinishTimer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -6161,6 +6113,33 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleRange: &decorateVehicleVehicleRangeImpl{
 				vehicleRange: vehicleRange,
+			},
+		}
+
+	case chargeState == nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
+		return &struct {
+			api.Vehicle
+			api.CurrentGetter
+			api.Resurrector
+			api.SocLimiter
+			api.VehicleFinishTimer
+			api.VehicleOdometer
+		}{
+			Vehicle: base,
+			CurrentGetter: &decorateVehicleCurrentGetterImpl{
+				currentGetter: currentGetter,
+			},
+			Resurrector: &decorateVehicleResurrectorImpl{
+				resurrector: resurrector,
+			},
+			SocLimiter: &decorateVehicleSocLimiterImpl{
+				socLimiter: socLimiter,
+			},
+			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
+				vehicleFinishTimer: vehicleFinishTimer,
+			},
+			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
+				vehicleOdometer: vehicleOdometer,
 			},
 		}
 
@@ -6304,6 +6283,33 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
+	case chargeState == nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
+		return &struct {
+			api.Vehicle
+			api.CurrentGetter
+			api.Resurrector
+			api.SocLimiter
+			api.VehicleClimater
+			api.VehicleFinishTimer
+		}{
+			Vehicle: base,
+			CurrentGetter: &decorateVehicleCurrentGetterImpl{
+				currentGetter: currentGetter,
+			},
+			Resurrector: &decorateVehicleResurrectorImpl{
+				resurrector: resurrector,
+			},
+			SocLimiter: &decorateVehicleSocLimiterImpl{
+				socLimiter: socLimiter,
+			},
+			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
+				vehicleClimater: vehicleClimater,
+			},
+			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
+				vehicleFinishTimer: vehicleFinishTimer,
+			},
+		}
+
 	case chargeController == nil && chargeState != nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -6367,6 +6373,37 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
 				vehicleFinishTimer: vehicleFinishTimer,
+			},
+		}
+
+	case chargeState == nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
+		return &struct {
+			api.Vehicle
+			api.CurrentGetter
+			api.Resurrector
+			api.SocLimiter
+			api.VehicleClimater
+			api.VehicleFinishTimer
+			api.VehicleRange
+		}{
+			Vehicle: base,
+			CurrentGetter: &decorateVehicleCurrentGetterImpl{
+				currentGetter: currentGetter,
+			},
+			Resurrector: &decorateVehicleResurrectorImpl{
+				resurrector: resurrector,
+			},
+			SocLimiter: &decorateVehicleSocLimiterImpl{
+				socLimiter: socLimiter,
+			},
+			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
+				vehicleClimater: vehicleClimater,
+			},
+			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
+				vehicleFinishTimer: vehicleFinishTimer,
+			},
+			VehicleRange: &decorateVehicleVehicleRangeImpl{
+				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -7566,6 +7603,25 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
+	case chargeState == nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
+		return &struct {
+			api.Vehicle
+			api.CurrentGetter
+			api.VehicleOdometer
+			api.VehicleRange
+		}{
+			Vehicle: base,
+			CurrentGetter: &decorateVehicleCurrentGetterImpl{
+				currentGetter: currentGetter,
+			},
+			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
+				vehicleOdometer: vehicleOdometer,
+			},
+			VehicleRange: &decorateVehicleVehicleRangeImpl{
+				vehicleRange: vehicleRange,
+			},
+		}
+
 	case chargeController != nil && chargeState != nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
@@ -7629,25 +7685,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleRange: &decorateVehicleVehicleRangeImpl{
 				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeState == nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentGetter
-			api.SocLimiter
-			api.VehicleClimater
-		}{
-			Vehicle: base,
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
 			},
 		}
 
@@ -7772,29 +7809,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleRange: &decorateVehicleVehicleRangeImpl{
 				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeState == nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentGetter
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
 			},
 		}
 
@@ -8866,25 +8880,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeState == nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentGetter
-			api.SocLimiter
-			api.VehicleFinishTimer
-		}{
-			Vehicle: base,
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
 	case chargeController != nil && chargeState != nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -8940,6 +8935,29 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
 				vehicleFinishTimer: vehicleFinishTimer,
+			},
+		}
+
+	case chargeState == nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
+		return &struct {
+			api.Vehicle
+			api.CurrentGetter
+			api.SocLimiter
+			api.VehicleFinishTimer
+			api.VehicleRange
+		}{
+			Vehicle: base,
+			CurrentGetter: &decorateVehicleCurrentGetterImpl{
+				currentGetter: currentGetter,
+			},
+			SocLimiter: &decorateVehicleSocLimiterImpl{
+				socLimiter: socLimiter,
+			},
+			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
+				vehicleFinishTimer: vehicleFinishTimer,
+			},
+			VehicleRange: &decorateVehicleVehicleRangeImpl{
+				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -9289,6 +9307,29 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
+	case chargeState == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
+		return &struct {
+			api.Vehicle
+			api.CurrentGetter
+			api.VehicleClimater
+			api.VehicleFinishTimer
+			api.VehicleOdometer
+		}{
+			Vehicle: base,
+			CurrentGetter: &decorateVehicleCurrentGetterImpl{
+				currentGetter: currentGetter,
+			},
+			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
+				vehicleClimater: vehicleClimater,
+			},
+			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
+				vehicleFinishTimer: vehicleFinishTimer,
+			},
+			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
+				vehicleOdometer: vehicleOdometer,
+			},
+		}
+
 	case chargeController != nil && chargeState != nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -9360,6 +9401,33 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
 				vehicleOdometer: vehicleOdometer,
+			},
+		}
+
+	case chargeState == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
+		return &struct {
+			api.Vehicle
+			api.CurrentGetter
+			api.VehicleClimater
+			api.VehicleFinishTimer
+			api.VehicleOdometer
+			api.VehicleRange
+		}{
+			Vehicle: base,
+			CurrentGetter: &decorateVehicleCurrentGetterImpl{
+				currentGetter: currentGetter,
+			},
+			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
+				vehicleClimater: vehicleClimater,
+			},
+			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
+				vehicleFinishTimer: vehicleFinishTimer,
+			},
+			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
+				vehicleOdometer: vehicleOdometer,
+			},
+			VehicleRange: &decorateVehicleVehicleRangeImpl{
+				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -10703,6 +10771,29 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
+	case chargeState == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
+		return &struct {
+			api.Vehicle
+			api.CurrentGetter
+			api.Resurrector
+			api.VehicleClimater
+			api.VehicleRange
+		}{
+			Vehicle: base,
+			CurrentGetter: &decorateVehicleCurrentGetterImpl{
+				currentGetter: currentGetter,
+			},
+			Resurrector: &decorateVehicleResurrectorImpl{
+				resurrector: resurrector,
+			},
+			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
+				vehicleClimater: vehicleClimater,
+			},
+			VehicleRange: &decorateVehicleVehicleRangeImpl{
+				vehicleRange: vehicleRange,
+			},
+		}
+
 	case chargeController != nil && chargeState != nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
@@ -10774,33 +10865,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleRange: &decorateVehicleVehicleRangeImpl{
 				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeState == nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentGetter
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
 			},
 		}
 
@@ -12016,6 +12080,29 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
+	case chargeState == nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
+		return &struct {
+			api.Vehicle
+			api.CurrentGetter
+			api.Resurrector
+			api.SocLimiter
+			api.VehicleFinishTimer
+		}{
+			Vehicle: base,
+			CurrentGetter: &decorateVehicleCurrentGetterImpl{
+				currentGetter: currentGetter,
+			},
+			Resurrector: &decorateVehicleResurrectorImpl{
+				resurrector: resurrector,
+			},
+			SocLimiter: &decorateVehicleSocLimiterImpl{
+				socLimiter: socLimiter,
+			},
+			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
+				vehicleFinishTimer: vehicleFinishTimer,
+			},
+		}
+
 	case chargeController != nil && chargeState != nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -12312,29 +12399,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeState == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentGetter
-			api.Resurrector
-			api.VehicleClimater
-			api.VehicleFinishTimer
-		}{
-			Vehicle: base,
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
 	case chargeController != nil && chargeState != nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -12406,33 +12470,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
 				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
-	case chargeState == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentGetter
-			api.Resurrector
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -12515,37 +12552,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleRange: &decorateVehicleVehicleRangeImpl{
 				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeState == nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentGetter
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
 			},
 		}
 

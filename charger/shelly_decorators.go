@@ -6,7 +6,9 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-// map[api.PhaseCurrents:{api.PhaseCurrents PhaseCurrents [{func() (float64, float64, float64, error) Currents phaseCurrents  (float64, float64, float64, error) []}]} api.PhasePowers:{api.PhasePowers PhasePowers [{func() (float64, float64, float64, error) Powers phasePowers  (float64, float64, float64, error) []}]} api.PhaseVoltages:{api.PhaseVoltages PhaseVoltages [{func() (float64, float64, float64, error) Voltages phaseVoltages  (float64, float64, float64, error) []}]}]
+// types map[api.PhaseCurrents:{api.PhaseCurrents PhaseCurrents [{func() (float64, float64, float64, error) Currents phaseCurrents  (float64, float64, float64, error) []}]} api.PhasePowers:{api.PhasePowers PhasePowers [{func() (float64, float64, float64, error) Powers phasePowers  (float64, float64, float64, error) []}]} api.PhaseVoltages:{api.PhaseVoltages PhaseVoltages [{func() (float64, float64, float64, error) Voltages phaseVoltages  (float64, float64, float64, error) []}]}]
+
+// combo [[api.PhaseVoltages] [api.PhaseCurrents] [api.PhaseVoltages api.PhaseCurrents] [api.PhaseCurrents api.PhasePowers] [api.PhaseVoltages api.PhaseCurrents api.PhasePowers]]
 
 func decorateShelly(base *Shelly, phaseVoltages func() (float64, float64, float64, error), phaseCurrents func() (float64, float64, float64, error), phasePowers func() (float64, float64, float64, error)) api.Charger {
 	switch {

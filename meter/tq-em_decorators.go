@@ -6,7 +6,9 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-// map[api.PhaseCurrents:{api.PhaseCurrents PhaseCurrents [{func() (float64, float64, float64, error) Currents phaseCurrents  (float64, float64, float64, error) []}]}]
+// types map[api.PhaseCurrents:{api.PhaseCurrents PhaseCurrents [{func() (float64, float64, float64, error) Currents phaseCurrents  (float64, float64, float64, error) []}]}]
+
+// combo [[api.PhaseCurrents]]
 
 func decorateTqEm(base api.Meter, phaseCurrents func() (float64, float64, float64, error)) api.Meter {
 	switch {

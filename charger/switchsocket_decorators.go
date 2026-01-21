@@ -6,7 +6,9 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-// map[api.Battery:{api.Battery Battery [{func() (float64, error) Soc battery  (float64, error) []}]} api.MeterEnergy:{api.MeterEnergy MeterEnergy [{func() (float64, error) TotalEnergy meterEnergy  (float64, error) []}]}]
+// types map[api.Battery:{api.Battery Battery [{func() (float64, error) Soc battery  (float64, error) []}]} api.MeterEnergy:{api.MeterEnergy MeterEnergy [{func() (float64, error) TotalEnergy meterEnergy  (float64, error) []}]}]
+
+// combo [[api.MeterEnergy] [api.Battery] [api.MeterEnergy api.Battery]]
 
 func decorateSwitchSocket(base *SwitchSocket, meterEnergy func() (float64, error), battery func() (float64, error)) api.Charger {
 	switch {

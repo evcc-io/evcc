@@ -236,7 +236,8 @@ COMBO:
 		Combinations: validCombos,
 	}
 
-	fmt.Fprintf(out, "// %v\n\n", types)
+	fmt.Fprintf(out, "// types %v\n\n", types)
+	fmt.Fprintf(out, "// combo %v\n\n", validCombos)
 
 	return tmpl.Execute(out, vars)
 }

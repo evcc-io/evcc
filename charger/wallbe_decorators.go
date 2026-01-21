@@ -6,7 +6,9 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-// map[api.ChargerEx:{api.ChargerEx ChargerEx [{func(float64) error MaxCurrentMillis chargerEx  error [float64]}]} api.Meter:{api.Meter Meter [{func() (float64, error) CurrentPower meter  (float64, error) []}]} api.MeterEnergy:{api.MeterEnergy MeterEnergy [{func() (float64, error) TotalEnergy meterEnergy  (float64, error) []}]} api.PhaseCurrents:{api.PhaseCurrents PhaseCurrents [{func() (float64, float64, float64, error) Currents phaseCurrents  (float64, float64, float64, error) []}]}]
+// types map[api.ChargerEx:{api.ChargerEx ChargerEx [{func(float64) error MaxCurrentMillis chargerEx  error [float64]}]} api.Meter:{api.Meter Meter [{func() (float64, error) CurrentPower meter  (float64, error) []}]} api.MeterEnergy:{api.MeterEnergy MeterEnergy [{func() (float64, error) TotalEnergy meterEnergy  (float64, error) []}]} api.PhaseCurrents:{api.PhaseCurrents PhaseCurrents [{func() (float64, float64, float64, error) Currents phaseCurrents  (float64, float64, float64, error) []}]}]
+
+// combo [[api.Meter] [api.Meter api.MeterEnergy] [api.Meter api.PhaseCurrents] [api.Meter api.MeterEnergy api.PhaseCurrents] [api.ChargerEx] [api.Meter api.ChargerEx] [api.Meter api.MeterEnergy api.ChargerEx] [api.Meter api.PhaseCurrents api.ChargerEx] [api.Meter api.MeterEnergy api.PhaseCurrents api.ChargerEx]]
 
 func decorateWallbe(base *Wallbe, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), chargerEx func(float64) error) api.Charger {
 	switch {
