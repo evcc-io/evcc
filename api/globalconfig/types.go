@@ -79,13 +79,6 @@ func (c Hems) Redacted() any {
 
 var _ api.Redactor = (*Mqtt)(nil)
 
-func masked(s any) string {
-	if s != "" {
-		return "***"
-	}
-	return ""
-}
-
 type Mqtt struct {
 	mqtt.Config `mapstructure:",squash"`
 	Topic       string `json:"topic"`
@@ -97,12 +90,12 @@ func (m Mqtt) Redacted() any {
 		Config: mqtt.Config{
 			Broker:     m.Broker,
 			User:       m.User,
-			Password:   masked(m.Password),
+			Password:   util.Masked(m.Password),
 			ClientID:   m.ClientID,
 			Insecure:   m.Insecure,
-			CaCert:     masked(m.CaCert),
-			ClientCert: masked(m.ClientCert),
-			ClientKey:  masked(m.ClientKey),
+			CaCert:     util.Masked(m.CaCert),
+			ClientCert: util.Masked(m.ClientCert),
+			ClientKey:  util.Masked(m.ClientKey),
 		},
 		Topic: m.Topic,
 	}
@@ -124,10 +117,10 @@ func (c Influx) Redacted() any {
 	return Influx{
 		URL:      c.URL,
 		Database: c.Database,
-		Token:    masked(c.Token),
+		Token:    util.Masked(c.Token),
 		Org:      c.Org,
 		User:     c.User,
-		Password: masked(c.Password),
+		Password: util.Masked(c.Password),
 		Insecure: c.Insecure,
 	}
 }

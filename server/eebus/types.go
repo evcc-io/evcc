@@ -33,6 +33,20 @@ func (c Config) IsConfigured() bool {
 	return len(c.Certificate.Public) > 0 && len(c.Certificate.Private) > 0
 }
 
+// Redacted implements the redactor interface used by the tee publisher
+func (c Config) Redacted() any {
+	return Config{
+		URI_:       c.URI_,
+		Port:       c.Port,
+		ShipID:     c.ShipID,
+		Interfaces: c.Interfaces,
+		Certificate: Certificate{
+			Public:  c.Certificate.Public,
+			Private: util.Masked(c.Certificate.Private),
+		},
+	}
+}
+
 func createShipID() string {
 	protectedID := machine.ProtectedID("evcc-eebus")
 	return fmt.Sprintf("%s-%0x", "EVCC", protectedID[:8])
