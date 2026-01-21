@@ -61,7 +61,7 @@ type Go struct {
 
 type ModbusProxy struct {
 	Port            int    `json:"port"`
-	ReadOnly        string `yaml:",omitempty" json:"readonly,omitempty"`
+	ReadOnly        string `yaml:",omitempty" json:",omitempty"`
 	modbus.Settings `mapstructure:",squash" yaml:",inline,omitempty" json:"settings,omitempty"`
 }
 
