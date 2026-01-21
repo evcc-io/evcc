@@ -10,10 +10,10 @@ import (
 
 func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeState func() (api.ChargeStatus, error), vehicleRange func() (int64, error), vehicleOdometer func() (float64, error), vehicleClimater func() (bool, error), currentController func(int64) error, currentGetter func() (float64, error), vehicleFinishTimer func() (time.Time, error), resurrector func() error, chargeController func(bool) error) api.Vehicle {
 	switch {
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
+	case chargeState == nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
 		return base
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
+	case chargeState == nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
 			api.SocLimiter
@@ -50,7 +50,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
+	case chargeState == nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
 			api.VehicleRange
@@ -61,7 +61,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
+	case chargeState == nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
 			api.SocLimiter
@@ -110,7 +110,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
+	case chargeState == nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
 			api.VehicleOdometer
@@ -121,7 +121,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
+	case chargeState == nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
 			api.SocLimiter
@@ -170,7 +170,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
+	case chargeState == nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
 			api.VehicleOdometer
@@ -185,7 +185,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
+	case chargeState == nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
 			api.SocLimiter
@@ -246,7 +246,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
+	case chargeState == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
 			api.VehicleClimater
@@ -257,7 +257,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
+	case chargeState == nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
 			api.SocLimiter
@@ -306,7 +306,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
+	case chargeState == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
 			api.VehicleClimater
@@ -321,7 +321,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
+	case chargeState == nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
 			api.SocLimiter
@@ -382,7 +382,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
+	case chargeState == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
 			api.VehicleClimater
@@ -397,7 +397,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
+	case chargeState == nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
 			api.SocLimiter
@@ -458,7 +458,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
+	case chargeState == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
 			api.VehicleClimater
@@ -477,7 +477,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
+	case chargeState == nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
 			api.SocLimiter
@@ -550,32 +550,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.SocLimiter
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
 	case chargeController == nil && chargeState != nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -607,40 +581,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			SocLimiter: &decorateVehicleSocLimiterImpl{
 				socLimiter: socLimiter,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.SocLimiter
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -686,40 +626,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.SocLimiter
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
 	case chargeController == nil && chargeState != nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -759,48 +665,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
 				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.SocLimiter
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -854,40 +718,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.VehicleClimater
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.SocLimiter
-			api.VehicleClimater
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-		}
-
 	case chargeController == nil && chargeState != nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -927,48 +757,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
 				vehicleClimater: vehicleClimater,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.VehicleClimater
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -1022,48 +810,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.VehicleClimater
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
 	case chargeController == nil && chargeState != nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -1111,56 +857,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
 				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.VehicleClimater
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -1222,40 +918,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.CurrentGetter
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.CurrentGetter
-			api.SocLimiter
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
 	case chargeController == nil && chargeState != nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -1295,48 +957,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			SocLimiter: &decorateVehicleSocLimiterImpl{
 				socLimiter: socLimiter,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.CurrentGetter
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.CurrentGetter
-			api.SocLimiter
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -1390,48 +1010,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.CurrentGetter
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.CurrentGetter
-			api.SocLimiter
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
 	case chargeController == nil && chargeState != nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -1479,56 +1057,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
 				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.CurrentGetter
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.CurrentGetter
-			api.SocLimiter
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -1590,48 +1118,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.CurrentGetter
-			api.VehicleClimater
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.CurrentGetter
-			api.SocLimiter
-			api.VehicleClimater
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-		}
-
 	case chargeController == nil && chargeState != nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -1679,56 +1165,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
 				vehicleClimater: vehicleClimater,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.CurrentGetter
-			api.VehicleClimater
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.CurrentGetter
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -1790,56 +1226,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.CurrentGetter
-			api.VehicleClimater
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.CurrentGetter
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
 	case chargeController == nil && chargeState != nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -1895,64 +1281,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
 				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.CurrentGetter
-			api.VehicleClimater
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.CurrentGetter
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -2022,7 +1350,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
+	case chargeState == nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
 			api.VehicleFinishTimer
@@ -2033,7 +1361,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
+	case chargeState == nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
 			api.SocLimiter
@@ -2082,7 +1410,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
+	case chargeState == nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
 			api.VehicleFinishTimer
@@ -2097,7 +1425,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
+	case chargeState == nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
 			api.SocLimiter
@@ -2158,7 +1486,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
+	case chargeState == nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
 			api.VehicleFinishTimer
@@ -2173,7 +1501,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
+	case chargeState == nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
 			api.SocLimiter
@@ -2234,7 +1562,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
+	case chargeState == nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
 			api.VehicleFinishTimer
@@ -2253,7 +1581,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
+	case chargeState == nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
 			api.SocLimiter
@@ -2326,7 +1654,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
+	case chargeState == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
 			api.VehicleClimater
@@ -2341,7 +1669,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
+	case chargeState == nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
 			api.SocLimiter
@@ -2402,7 +1730,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
+	case chargeState == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
 			api.VehicleClimater
@@ -2421,7 +1749,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
+	case chargeState == nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
 			api.SocLimiter
@@ -2494,7 +1822,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
+	case chargeState == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
 			api.VehicleClimater
@@ -2513,7 +1841,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
+	case chargeState == nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
 			api.SocLimiter
@@ -2586,7 +1914,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
+	case chargeState == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
 			api.VehicleClimater
@@ -2609,7 +1937,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
+	case chargeState == nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
 			api.SocLimiter
@@ -2694,40 +2022,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.VehicleFinishTimer
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.SocLimiter
-			api.VehicleFinishTimer
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
 	case chargeController == nil && chargeState != nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -2767,48 +2061,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
 				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.VehicleFinishTimer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.SocLimiter
-			api.VehicleFinishTimer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -2862,48 +2114,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.SocLimiter
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
 	case chargeController == nil && chargeState != nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -2951,56 +2161,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
 				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.SocLimiter
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -3062,48 +2222,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.VehicleClimater
-			api.VehicleFinishTimer
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleFinishTimer
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
 	case chargeController == nil && chargeState != nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -3151,56 +2269,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
 				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -3262,56 +2330,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
 	case chargeController == nil && chargeState != nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -3367,64 +2385,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
 				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -3494,48 +2454,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.CurrentGetter
-			api.VehicleFinishTimer
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.CurrentGetter
-			api.SocLimiter
-			api.VehicleFinishTimer
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
 	case chargeController == nil && chargeState != nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -3586,47 +2504,16 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
+	case chargeState == nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
-			api.CurrentController
 			api.CurrentGetter
 			api.VehicleFinishTimer
 			api.VehicleRange
 		}{
 			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
 			CurrentGetter: &decorateVehicleCurrentGetterImpl{
 				currentGetter: currentGetter,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.CurrentGetter
-			api.SocLimiter
-			api.VehicleFinishTimer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
 			},
 			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
 				vehicleFinishTimer: vehicleFinishTimer,
@@ -3694,56 +2581,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.CurrentGetter
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.CurrentGetter
-			api.SocLimiter
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
 	case chargeController == nil && chargeState != nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -3799,64 +2636,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
 				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.CurrentGetter
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.CurrentGetter
-			api.SocLimiter
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -3926,47 +2705,16 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
+	case chargeState == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
-			api.CurrentController
 			api.CurrentGetter
 			api.VehicleClimater
 			api.VehicleFinishTimer
 		}{
 			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
 			CurrentGetter: &decorateVehicleCurrentGetterImpl{
 				currentGetter: currentGetter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.CurrentGetter
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleFinishTimer
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
 			},
 			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
 				vehicleClimater: vehicleClimater,
@@ -4031,64 +2779,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
 				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.CurrentGetter
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.CurrentGetter
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -4158,64 +2848,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.CurrentGetter
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.CurrentGetter
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
 	case chargeController == nil && chargeState != nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -4279,72 +2911,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
 				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.CurrentGetter
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.CurrentGetter
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -4422,7 +2988,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
+	case chargeState == nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
 			api.Resurrector
@@ -4433,7 +2999,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
+	case chargeState == nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
 			api.Resurrector
@@ -4482,7 +3048,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
+	case chargeState == nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
 			api.Resurrector
@@ -4497,7 +3063,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
+	case chargeState == nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
 			api.Resurrector
@@ -4558,7 +3124,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
+	case chargeState == nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
 			api.Resurrector
@@ -4573,7 +3139,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
+	case chargeState == nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
 			api.Resurrector
@@ -4634,7 +3200,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
+	case chargeState == nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
 			api.Resurrector
@@ -4653,7 +3219,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
+	case chargeState == nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
 			api.Resurrector
@@ -4726,7 +3292,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
+	case chargeState == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
 			api.Resurrector
@@ -4741,7 +3307,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
+	case chargeState == nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
 			api.Resurrector
@@ -4802,7 +3368,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
+	case chargeState == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
 			api.Resurrector
@@ -4821,7 +3387,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
+	case chargeState == nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
 			api.Resurrector
@@ -4894,7 +3460,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
+	case chargeState == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
 			api.Resurrector
@@ -4913,7 +3479,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
+	case chargeState == nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
 			api.Resurrector
@@ -4986,7 +3552,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
+	case chargeState == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
 			api.Resurrector
@@ -5009,7 +3575,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
+	case chargeState == nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
 			api.Resurrector
@@ -5094,40 +3660,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.Resurrector
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
 	case chargeController == nil && chargeState != nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -5167,48 +3699,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			SocLimiter: &decorateVehicleSocLimiterImpl{
 				socLimiter: socLimiter,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.Resurrector
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -5262,48 +3752,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.Resurrector
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
 	case chargeController == nil && chargeState != nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -5351,56 +3799,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
 				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.Resurrector
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -5462,48 +3860,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.Resurrector
-			api.VehicleClimater
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleClimater
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-		}
-
 	case chargeController == nil && chargeState != nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -5551,56 +3907,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
 				vehicleClimater: vehicleClimater,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.Resurrector
-			api.VehicleClimater
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -5662,56 +3968,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.Resurrector
-			api.VehicleClimater
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
 	case chargeController == nil && chargeState != nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -5767,64 +4023,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
 				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.Resurrector
-			api.VehicleClimater
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -5894,48 +4092,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.CurrentGetter
-			api.Resurrector
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.CurrentGetter
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
 	case chargeController == nil && chargeState != nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -5986,42 +4142,15 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
+	case chargeState == nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
-			api.CurrentController
-			api.CurrentGetter
-			api.Resurrector
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
 			api.CurrentGetter
 			api.Resurrector
 			api.SocLimiter
 			api.VehicleRange
 		}{
 			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
 			CurrentGetter: &decorateVehicleCurrentGetterImpl{
 				currentGetter: currentGetter,
 			},
@@ -6094,18 +4223,14 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
+	case chargeState == nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
-			api.CurrentController
 			api.CurrentGetter
 			api.Resurrector
 			api.VehicleOdometer
 		}{
 			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
 			CurrentGetter: &decorateVehicleCurrentGetterImpl{
 				currentGetter: currentGetter,
 			},
@@ -6117,19 +4242,15 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
+	case chargeState == nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
-			api.CurrentController
 			api.CurrentGetter
 			api.Resurrector
 			api.SocLimiter
 			api.VehicleOdometer
 		}{
 			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
 			CurrentGetter: &decorateVehicleCurrentGetterImpl{
 				currentGetter: currentGetter,
 			},
@@ -6202,64 +4323,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.CurrentGetter
-			api.Resurrector
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.CurrentGetter
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
 	case chargeController == nil && chargeState != nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
@@ -6326,50 +4389,19 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
+	case chargeState == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
-			api.CurrentController
 			api.CurrentGetter
 			api.Resurrector
 			api.VehicleClimater
 		}{
 			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
 			CurrentGetter: &decorateVehicleCurrentGetterImpl{
 				currentGetter: currentGetter,
 			},
 			Resurrector: &decorateVehicleResurrectorImpl{
 				resurrector: resurrector,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.CurrentGetter
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleClimater
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
 			},
 			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
 				vehicleClimater: vehicleClimater,
@@ -6431,64 +4463,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
 				vehicleClimater: vehicleClimater,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.CurrentGetter
-			api.Resurrector
-			api.VehicleClimater
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.CurrentGetter
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -6558,55 +4532,20 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
+	case chargeState == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
-			api.CurrentController
 			api.CurrentGetter
 			api.Resurrector
 			api.VehicleClimater
 			api.VehicleOdometer
 		}{
 			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
 			CurrentGetter: &decorateVehicleCurrentGetterImpl{
 				currentGetter: currentGetter,
 			},
 			Resurrector: &decorateVehicleResurrectorImpl{
 				resurrector: resurrector,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.CurrentGetter
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
 			},
 			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
 				vehicleClimater: vehicleClimater,
@@ -6679,72 +4618,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
 				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.CurrentGetter
-			api.Resurrector
-			api.VehicleClimater
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.CurrentGetter
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -6822,7 +4695,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
+	case chargeState == nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
 			api.Resurrector
@@ -6837,7 +4710,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
+	case chargeState == nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
 			api.Resurrector
@@ -6898,7 +4771,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
+	case chargeState == nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
 			api.Resurrector
@@ -6917,7 +4790,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
+	case chargeState == nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
 			api.Resurrector
@@ -6990,7 +4863,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
+	case chargeState == nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
 			api.Resurrector
@@ -7009,7 +4882,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
+	case chargeState == nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
 			api.Resurrector
@@ -7082,7 +4955,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
+	case chargeState == nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
 			api.Resurrector
@@ -7105,7 +4978,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
+	case chargeState == nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
 			api.Resurrector
@@ -7190,7 +5063,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
+	case chargeState == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
 			api.Resurrector
@@ -7209,7 +5082,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
+	case chargeState == nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
 			api.Resurrector
@@ -7282,7 +5155,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
+	case chargeState == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
 			api.Resurrector
@@ -7305,7 +5178,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
+	case chargeState == nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
 			api.Resurrector
@@ -7390,7 +5263,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
+	case chargeState == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
 			api.Resurrector
@@ -7413,7 +5286,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
+	case chargeState == nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
 			api.Resurrector
@@ -7498,7 +5371,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
+	case chargeState == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
 			api.Resurrector
@@ -7525,7 +5398,7 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
+	case chargeState == nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
 			api.Resurrector
@@ -7622,48 +5495,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.Resurrector
-			api.VehicleFinishTimer
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleFinishTimer
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
 	case chargeController == nil && chargeState != nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -7711,56 +5542,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
 				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.Resurrector
-			api.VehicleFinishTimer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleFinishTimer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -7822,56 +5603,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.Resurrector
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
 	case chargeController == nil && chargeState != nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -7927,64 +5658,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
 				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.Resurrector
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -8054,56 +5727,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.Resurrector
-			api.VehicleClimater
-			api.VehicleFinishTimer
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleFinishTimer
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
 	case chargeController == nil && chargeState != nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -8159,64 +5782,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
 				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.Resurrector
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -8286,64 +5851,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.Resurrector
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
 	case chargeController == nil && chargeState != nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -8407,72 +5914,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
 				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.Resurrector
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -8550,56 +5991,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.CurrentGetter
-			api.Resurrector
-			api.VehicleFinishTimer
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.CurrentGetter
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleFinishTimer
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
 	case chargeController == nil && chargeState != nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -8655,64 +6046,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
 				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.CurrentGetter
-			api.Resurrector
-			api.VehicleFinishTimer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.CurrentGetter
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleFinishTimer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -8782,64 +6115,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.CurrentGetter
-			api.Resurrector
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.CurrentGetter
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
 	case chargeController == nil && chargeState != nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -8903,72 +6178,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
 				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.CurrentGetter
-			api.Resurrector
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.CurrentGetter
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -9046,64 +6255,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.CurrentGetter
-			api.Resurrector
-			api.VehicleClimater
-			api.VehicleFinishTimer
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.CurrentGetter
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleFinishTimer
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
 	case chargeController == nil && chargeState != nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -9170,10 +6321,9 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
+	case chargeState == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
-			api.CurrentController
 			api.CurrentGetter
 			api.Resurrector
 			api.VehicleClimater
@@ -9181,49 +6331,11 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			api.VehicleRange
 		}{
 			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
 			CurrentGetter: &decorateVehicleCurrentGetterImpl{
 				currentGetter: currentGetter,
 			},
 			Resurrector: &decorateVehicleResurrectorImpl{
 				resurrector: resurrector,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.CurrentGetter
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
 			},
 			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
 				vehicleClimater: vehicleClimater,
@@ -9310,72 +6422,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.CurrentGetter
-			api.Resurrector
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.CurrentGetter
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
 	case chargeController == nil && chargeState != nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -9450,10 +6496,9 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
+	case chargeState == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
-			api.CurrentController
 			api.CurrentGetter
 			api.Resurrector
 			api.VehicleClimater
@@ -9462,53 +6507,11 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			api.VehicleRange
 		}{
 			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
 			CurrentGetter: &decorateVehicleCurrentGetterImpl{
 				currentGetter: currentGetter,
 			},
 			Resurrector: &decorateVehicleResurrectorImpl{
 				resurrector: resurrector,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController == nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.CurrentController
-			api.CurrentGetter
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
 			},
 			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
 				vehicleClimater: vehicleClimater,
@@ -9606,32 +6609,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.SocLimiter
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
 	case chargeController != nil && chargeState != nil && currentController == nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -9663,40 +6640,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			SocLimiter: &decorateVehicleSocLimiterImpl{
 				socLimiter: socLimiter,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.SocLimiter
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -9742,40 +6685,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.SocLimiter
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
 	case chargeController != nil && chargeState != nil && currentController == nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -9815,48 +6724,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
 				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.SocLimiter
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -9910,40 +6777,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.VehicleClimater
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.SocLimiter
-			api.VehicleClimater
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-		}
-
 	case chargeController != nil && chargeState != nil && currentController == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -9983,48 +6816,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
 				vehicleClimater: vehicleClimater,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.VehicleClimater
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -10078,48 +6869,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.VehicleClimater
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
 	case chargeController != nil && chargeState != nil && currentController == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -10167,56 +6916,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
 				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.VehicleClimater
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -10278,40 +6977,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.SocLimiter
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
 	case chargeController != nil && chargeState != nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -10351,48 +7016,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			SocLimiter: &decorateVehicleSocLimiterImpl{
 				socLimiter: socLimiter,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.SocLimiter
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -10446,48 +7069,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.SocLimiter
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
 	case chargeController != nil && chargeState != nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -10535,56 +7116,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
 				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.SocLimiter
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -10646,48 +7177,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.VehicleClimater
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.SocLimiter
-			api.VehicleClimater
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-		}
-
 	case chargeController != nil && chargeState != nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -10735,56 +7224,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
 				vehicleClimater: vehicleClimater,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.VehicleClimater
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -10846,56 +7285,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.VehicleClimater
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
 	case chargeController != nil && chargeState != nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -10951,64 +7340,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
 				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.VehicleClimater
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -11078,48 +7409,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-			api.SocLimiter
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
 	case chargeController != nil && chargeState != nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -11167,56 +7456,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			SocLimiter: &decorateVehicleSocLimiterImpl{
 				socLimiter: socLimiter,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-			api.SocLimiter
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -11278,45 +7517,14 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
+	case chargeState == nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
 			api.CurrentGetter
 			api.SocLimiter
 			api.VehicleOdometer
 		}{
 			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
 			CurrentGetter: &decorateVehicleCurrentGetterImpl{
 				currentGetter: currentGetter,
 			},
@@ -11386,64 +7594,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-			api.SocLimiter
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
 	case chargeController != nil && chargeState != nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
@@ -11510,50 +7660,15 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
+	case chargeState == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
-			api.ChargeController
-			api.CurrentController
 			api.CurrentGetter
 			api.VehicleClimater
 		}{
 			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
 			CurrentGetter: &decorateVehicleCurrentGetterImpl{
 				currentGetter: currentGetter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-			api.SocLimiter
-			api.VehicleClimater
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
 			},
 			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
 				vehicleClimater: vehicleClimater,
@@ -11615,64 +7730,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
 				vehicleClimater: vehicleClimater,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-			api.VehicleClimater
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -11742,64 +7799,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-			api.VehicleClimater
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
 	case chargeController != nil && chargeState != nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -11863,72 +7862,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
 				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-			api.VehicleClimater
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -12006,40 +7939,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.VehicleFinishTimer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.SocLimiter
-			api.VehicleFinishTimer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
 	case chargeController != nil && chargeState != nil && currentController == nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -12079,48 +7978,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
 				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.VehicleFinishTimer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.SocLimiter
-			api.VehicleFinishTimer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -12174,48 +8031,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.SocLimiter
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
 	case chargeController != nil && chargeState != nil && currentController == nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -12263,56 +8078,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
 				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.SocLimiter
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -12374,48 +8139,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.VehicleClimater
-			api.VehicleFinishTimer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleFinishTimer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
 	case chargeController != nil && chargeState != nil && currentController == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -12463,56 +8186,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
 				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -12574,56 +8247,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
 	case chargeController != nil && chargeState != nil && currentController == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -12679,64 +8302,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
 				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -12806,48 +8371,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.VehicleFinishTimer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.SocLimiter
-			api.VehicleFinishTimer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
 	case chargeController != nil && chargeState != nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -12895,56 +8418,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
 				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.VehicleFinishTimer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.SocLimiter
-			api.VehicleFinishTimer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -13006,56 +8479,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.SocLimiter
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
 	case chargeController != nil && chargeState != nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -13111,64 +8534,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
 				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.SocLimiter
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -13238,56 +8603,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.VehicleClimater
-			api.VehicleFinishTimer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleFinishTimer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
 	case chargeController != nil && chargeState != nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -13343,64 +8658,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
 				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -13470,64 +8727,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
 	case chargeController != nil && chargeState != nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -13591,72 +8790,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
 				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -13734,45 +8867,14 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
+	case chargeState == nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-			api.VehicleFinishTimer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
 			api.CurrentGetter
 			api.SocLimiter
 			api.VehicleFinishTimer
 		}{
 			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
 			CurrentGetter: &decorateVehicleCurrentGetterImpl{
 				currentGetter: currentGetter,
 			},
@@ -13842,64 +8944,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-			api.VehicleFinishTimer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-			api.SocLimiter
-			api.VehicleFinishTimer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
 	case chargeController != nil && chargeState != nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
@@ -13963,64 +9007,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleRange: &decorateVehicleVehicleRangeImpl{
 				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-			api.SocLimiter
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
 			},
 		}
 
@@ -14090,60 +9076,17 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
+	case chargeState == nil && resurrector == nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
-			api.ChargeController
-			api.CurrentController
 			api.CurrentGetter
 			api.VehicleFinishTimer
 			api.VehicleOdometer
 			api.VehicleRange
 		}{
 			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
 			CurrentGetter: &decorateVehicleCurrentGetterImpl{
 				currentGetter: currentGetter,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-			api.SocLimiter
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
 			},
 			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
 				vehicleFinishTimer: vehicleFinishTimer,
@@ -14230,64 +9173,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-			api.VehicleClimater
-			api.VehicleFinishTimer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleFinishTimer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
 	case chargeController != nil && chargeState != nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -14351,72 +9236,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
 				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -14494,72 +9313,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
 	case chargeController != nil && chargeState != nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -14634,11 +9387,9 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
+	case chargeState == nil && resurrector == nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
-			api.ChargeController
-			api.CurrentController
 			api.CurrentGetter
 			api.VehicleClimater
 			api.VehicleFinishTimer
@@ -14646,53 +9397,8 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			api.VehicleRange
 		}{
 			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
 			CurrentGetter: &decorateVehicleCurrentGetterImpl{
 				currentGetter: currentGetter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector == nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
 			},
 			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
 				vehicleClimater: vehicleClimater,
@@ -14790,40 +9496,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.Resurrector
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
 	case chargeController != nil && chargeState != nil && currentController == nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -14863,48 +9535,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			SocLimiter: &decorateVehicleSocLimiterImpl{
 				socLimiter: socLimiter,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.Resurrector
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -14958,48 +9588,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.Resurrector
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
 	case chargeController != nil && chargeState != nil && currentController == nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -15047,56 +9635,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
 				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.Resurrector
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -15158,48 +9696,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.Resurrector
-			api.VehicleClimater
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleClimater
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-		}
-
 	case chargeController != nil && chargeState != nil && currentController == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -15247,56 +9743,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
 				vehicleClimater: vehicleClimater,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.Resurrector
-			api.VehicleClimater
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -15358,56 +9804,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.Resurrector
-			api.VehicleClimater
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
 	case chargeController != nil && chargeState != nil && currentController == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -15463,64 +9859,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
 				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.Resurrector
-			api.VehicleClimater
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -15590,48 +9928,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.Resurrector
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
 	case chargeController != nil && chargeState != nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -15679,56 +9975,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			SocLimiter: &decorateVehicleSocLimiterImpl{
 				socLimiter: socLimiter,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.Resurrector
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -15790,56 +10036,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.Resurrector
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
 	case chargeController != nil && chargeState != nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -15895,64 +10091,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
 				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.Resurrector
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -16022,56 +10160,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.Resurrector
-			api.VehicleClimater
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleClimater
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-		}
-
 	case chargeController != nil && chargeState != nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -16127,64 +10215,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
 				vehicleClimater: vehicleClimater,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.Resurrector
-			api.VehicleClimater
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -16254,64 +10284,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.Resurrector
-			api.VehicleClimater
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
 	case chargeController != nil && chargeState != nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -16375,72 +10347,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
 				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.Resurrector
-			api.VehicleClimater
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -16518,56 +10424,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-			api.Resurrector
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-			api.Resurrector
-			api.SocLimiter
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-		}
-
 	case chargeController != nil && chargeState != nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -16623,64 +10479,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			SocLimiter: &decorateVehicleSocLimiterImpl{
 				socLimiter: socLimiter,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-			api.Resurrector
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -16750,64 +10548,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-			api.Resurrector
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
 	case chargeController != nil && chargeState != nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -16871,72 +10611,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
 				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-			api.Resurrector
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -17014,64 +10688,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-			api.Resurrector
-			api.VehicleClimater
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleClimater
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-		}
-
 	case chargeController != nil && chargeState != nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -17135,72 +10751,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
 				vehicleClimater: vehicleClimater,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-			api.Resurrector
-			api.VehicleClimater
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -17278,72 +10828,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-			api.Resurrector
-			api.VehicleClimater
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
 	case chargeController != nil && chargeState != nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -17418,46 +10902,9 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
+	case chargeState == nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-			api.Resurrector
-			api.VehicleClimater
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer == nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
 			api.CurrentGetter
 			api.Resurrector
 			api.SocLimiter
@@ -17466,12 +10913,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			api.VehicleRange
 		}{
 			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
 			CurrentGetter: &decorateVehicleCurrentGetterImpl{
 				currentGetter: currentGetter,
 			},
@@ -17574,48 +11015,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.Resurrector
-			api.VehicleFinishTimer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleFinishTimer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
 	case chargeController != nil && chargeState != nil && currentController == nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -17663,56 +11062,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
 				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.Resurrector
-			api.VehicleFinishTimer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleFinishTimer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -17774,56 +11123,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.Resurrector
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
 	case chargeController != nil && chargeState != nil && currentController == nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -17879,64 +11178,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
 				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.Resurrector
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -18006,56 +11247,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.Resurrector
-			api.VehicleClimater
-			api.VehicleFinishTimer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleFinishTimer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
 	case chargeController != nil && chargeState != nil && currentController == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -18111,64 +11302,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
 				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.Resurrector
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -18238,64 +11371,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.Resurrector
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
 	case chargeController != nil && chargeState != nil && currentController == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -18359,72 +11434,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
 				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.Resurrector
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController == nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -18502,56 +11511,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.Resurrector
-			api.VehicleFinishTimer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleFinishTimer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
 	case chargeController != nil && chargeState != nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -18607,64 +11566,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
 				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.Resurrector
-			api.VehicleFinishTimer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleFinishTimer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -18734,64 +11635,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.Resurrector
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
 	case chargeController != nil && chargeState != nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -18855,72 +11698,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
 				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.Resurrector
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -18998,64 +11775,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.Resurrector
-			api.VehicleClimater
-			api.VehicleFinishTimer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleFinishTimer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
 	case chargeController != nil && chargeState != nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -19119,72 +11838,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
 				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.Resurrector
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -19262,72 +11915,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.Resurrector
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
 	case chargeController != nil && chargeState != nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -19399,80 +11986,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
 				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.Resurrector
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter == nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -19558,64 +12071,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-			api.Resurrector
-			api.VehicleFinishTimer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleFinishTimer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
 	case chargeController != nil && chargeState != nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -19679,72 +12134,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
 				vehicleFinishTimer: vehicleFinishTimer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-			api.Resurrector
-			api.VehicleFinishTimer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleFinishTimer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -19822,72 +12211,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-			api.Resurrector
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
 	case chargeController != nil && chargeState != nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -19959,80 +12282,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
 				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter == nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-			api.Resurrector
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter != nil && vehicleClimater == nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
@@ -20118,23 +12367,15 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
+	case chargeState == nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
-			api.ChargeController
-			api.CurrentController
 			api.CurrentGetter
 			api.Resurrector
 			api.VehicleClimater
 			api.VehicleFinishTimer
 		}{
 			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
 			CurrentGetter: &decorateVehicleCurrentGetterImpl{
 				currentGetter: currentGetter,
 			},
@@ -20149,11 +12390,9 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
+	case chargeState == nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
-			api.ChargeController
-			api.CurrentController
 			api.CurrentGetter
 			api.Resurrector
 			api.SocLimiter
@@ -20161,12 +12400,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			api.VehicleFinishTimer
 		}{
 			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
 			CurrentGetter: &decorateVehicleCurrentGetterImpl{
 				currentGetter: currentGetter,
 			},
@@ -20258,80 +12491,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-			api.Resurrector
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
 	case chargeController != nil && chargeState != nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer == nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
@@ -20414,80 +12573,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 		}
 
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-			api.Resurrector
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
 	case chargeController != nil && chargeState != nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
@@ -20567,88 +12652,6 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 			},
 			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
 				vehicleOdometer: vehicleOdometer,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter == nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-			api.Resurrector
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && currentController != nil && currentGetter != nil && resurrector != nil && socLimiter != nil && vehicleClimater != nil && vehicleFinishTimer != nil && vehicleOdometer != nil && vehicleRange != nil:
-		return &struct {
-			api.Vehicle
-			api.ChargeController
-			api.CurrentController
-			api.CurrentGetter
-			api.Resurrector
-			api.SocLimiter
-			api.VehicleClimater
-			api.VehicleFinishTimer
-			api.VehicleOdometer
-			api.VehicleRange
-		}{
-			Vehicle: base,
-			ChargeController: &decorateVehicleChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			CurrentController: &decorateVehicleCurrentControllerImpl{
-				currentController: currentController,
-			},
-			CurrentGetter: &decorateVehicleCurrentGetterImpl{
-				currentGetter: currentGetter,
-			},
-			Resurrector: &decorateVehicleResurrectorImpl{
-				resurrector: resurrector,
-			},
-			SocLimiter: &decorateVehicleSocLimiterImpl{
-				socLimiter: socLimiter,
-			},
-			VehicleClimater: &decorateVehicleVehicleClimaterImpl{
-				vehicleClimater: vehicleClimater,
-			},
-			VehicleFinishTimer: &decorateVehicleVehicleFinishTimerImpl{
-				vehicleFinishTimer: vehicleFinishTimer,
-			},
-			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
-			},
-			VehicleRange: &decorateVehicleVehicleRangeImpl{
-				vehicleRange: vehicleRange,
 			},
 		}
 
