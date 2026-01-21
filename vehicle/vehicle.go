@@ -147,7 +147,6 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.V
 		return nil, errors.New("cannot have current control without status")
 	case status == nil && chargeEnable != nil:
 		return nil, errors.New("cannot have charge control without status")
-
 	}
 
 	return decorateVehicle(v, limitSoc, status, rng, odo, climater, maxCurrent, getMaxCurrent, finishTime, wakeup, chargeEnable), nil
