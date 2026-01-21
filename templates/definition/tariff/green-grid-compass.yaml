@@ -42,15 +42,11 @@ render: |
   forecast:
     source: http
     auth:
-      type: tokensource
-      tokensource:
-        source: http
-        uri: https://signin.energy/am/oauth2/realms/root/realms/difesp/access_token
-        method: POST
-        body: grant_type=client_credentials&client_id={{ .clientid }}&client_secret={{ .clientsecret }}&scope=esp  
-        headers:
-          Content-Type: application/x-www-form-urlencoded
-        jq: .access_token
+      source: clientcredentials
+      clientid: {{ .clientid }}
+      clientsecret: {{ .clientsecret }}
+      TokenURL: https://signin.energy/am/oauth2/realms/root/realms/difesp/access_token
+      scopes: [esp]
     uri: https://explore.traxes.io/greengrid-compass/v1/co2-intensity-forecast?zone={{ .zone }}&start={{ `{{ now | date "2006-01-02T15" }}` }}:00:00Z&end={{ `{{ addDate now 0 0 2 | date "2006-01-02T15" }}` }}:00:00Z&time-resolution=hourly&calculation-type=consumption&emission-type=operational&forecast-type=actual
     jq: |
       .measurements[0].measurementValues |  map({ 
