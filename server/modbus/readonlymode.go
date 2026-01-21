@@ -1,6 +1,6 @@
 package modbus
 
-// go:generate go tool enumer -type ReadOnlyMode -trimprefix ReadOnly -transform=lower -text
+// go:generate go tool enumer -type ReadOnlyMode -trimprefix ReadOnly -transform=lower
 
 type ReadOnlyMode int
 
