@@ -13,24 +13,11 @@ func init() {
 }
 
 func NewClientcredentialsFromConfig(ctx context.Context, other map[string]any) (oauth2.TokenSource, error) {
-	var cc struct {
-		ClientID     string
-		ClientSecret string
-		TokenURL     string
-		Scopes       []string
-	}
+	var conf clientcredentials.Config
 
-	if err := util.DecodeOther(other, &cc); err != nil {
+	if err := util.DecodeOther(other, &conf); err != nil {
 		return nil, err
 	}
-
-	conf := &clientcredentials.Config{
-		ClientID:     cc.ClientID,
-		ClientSecret: cc.ClientSecret,
-		TokenURL:     cc.TokenURL,
-		Scopes:       cc.Scopes,
-	}
-
 	ts := conf.TokenSource(ctx)
 
 	return ts, nil
