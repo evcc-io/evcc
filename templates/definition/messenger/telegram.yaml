@@ -9,7 +9,7 @@ params:
       de: Bot Token von BotFather
       en: Bot Token from BotFather
   - name: chats
-    type: stringlist
+    type: list
     help:
       de: Liste der Chat IDs (können auch zur Laufzeit automatisch ermittelt werden)
       en: List of chat IDs (can also be automatically detected at runtime)
