@@ -12,11 +12,7 @@ params:
 render: |
   type: shelly
   uri: http://{{ .host }}  # shelly device ip address (local)
-  {{- if .user }}
   user: {{ .user }}
-  {{- end }}
-  {{- if .password }}
   password: {{ .password }}
-  {{- end }}
   usage: {{ .usage }}
   channel: 0  # shelly device relay channel

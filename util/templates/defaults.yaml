@@ -377,6 +377,7 @@ params:
     description:
       en: Channel
       de: Kanal
+    type: int
   - name: clientid
     description:
       generic: Client ID

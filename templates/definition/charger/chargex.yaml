@@ -21,6 +21,4 @@ params:
 render: |
   type: chargex
   {{- include "modbus" . }}
-  {{- if ne .connector "1" }}
   connector: {{ .connector }}
-  {{- end }}
