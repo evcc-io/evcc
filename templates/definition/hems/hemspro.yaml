@@ -2,12 +2,7 @@ template: hemspro
 products:
   - brand: HEMS Pro
     description:
-      generic: EnWG §14a
-# capabilities: ["mA", "1p3p"]
-# params:
-#   - name: modbus
-#     choice: ["rs485", "tcpip"]
-#     id: 248
+      generic: EnWG §14a, EEG §9
 render: |
   type: relay
   limit:

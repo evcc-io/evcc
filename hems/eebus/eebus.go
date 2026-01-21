@@ -66,7 +66,7 @@ type Limits struct {
 // NewFromConfig creates an EEBus HEMS from generic config
 func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (hems.API, error) {
 	cc := struct {
-		Ski         string
+		Ski, Ip     string
 		Limits      `mapstructure:",squash"`
 		Passthrough *plugin.Config
 		Interval    time.Duration
@@ -110,11 +110,11 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (he
 	}
 	site.SetCircuit(gridcontrol)
 
-	return NewEEBus(ctx, cc.Ski, cc.Limits, passthroughS, gridcontrol, cc.Interval)
+	return NewEEBus(ctx, cc.Ski, cc.Ip, cc.Limits, passthroughS, gridcontrol, cc.Interval)
 }
 
 // NewEEBus creates EEBus HEMS
-func NewEEBus(ctx context.Context, ski string, limits Limits, passthrough func(bool) error, root api.Circuit, interval time.Duration) (*EEBus, error) {
+func NewEEBus(ctx context.Context, ski, ip string, limits Limits, passthrough func(bool) error, root api.Circuit, interval time.Duration) (*EEBus, error) {
 	if eebus.Instance == nil {
 		return nil, errors.New("eebus not configured")
 	}
@@ -137,7 +137,7 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, passthrough func(b
 	// otherwise a heartbeat timeout is assumed when the state machine is called for the first time
 	c.heartbeat.Set(struct{}{})
 
-	if err := eebus.Instance.RegisterDevice(ski, "", c); err != nil {
+	if err := eebus.Instance.RegisterDevice(ski, ip, c); err != nil {
 		return nil, err
 	}
 
