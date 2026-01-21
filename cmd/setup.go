@@ -995,7 +995,12 @@ func configureModbusProxy(conf *[]globalconfig.ModbusProxy) error {
 
 	if conf != nil {
 		for _, cfg := range *conf {
-			if err := modbus.StartProxy(cfg.Port, cfg.Settings, cfg.ReadOnly); err != nil {
+			mode, err := modbus.ReadOnlyModeString(cfg.ReadOnly)
+			if err != nil {
+				return err
+			}
+
+			if err := modbus.StartProxy(cfg.Port, cfg.Settings, mode); err != nil {
 				return err
 			}
 		}
