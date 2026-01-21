@@ -17,6 +17,9 @@ params:
     choice: ["rs485", "tcpip"]
     baudrate: 9600
     id: 1
+  - name: maxacpower
+    advanced: true
+  - preset: battery-params
   - name: capacity
     advanced: false
     service: modbus/read?address=60031&type=holding&encoding=uint32&scale=0.001&resulttype=int&{modbus}
@@ -26,8 +29,6 @@ params:
   - name: maxsoc
     advanced: true
     default: 100
-  - name: maxacpower
-    advanced: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -192,5 +193,5 @@ render: |
               address: 60310 # Energy Storage Forced Charging/Discharging (0 = Forced charging, 1 = Forced discharging, 2 = Exit forced charging/discharging, 99 = Pause)
               type: writemultiple
               decode: uint16
-  capacity: {{ .capacity }} # kWh
+  {{- include "battery-params" . }}
   {{- end }}
