@@ -6,6 +6,8 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
+// map[api.ChargerEx:{api.ChargerEx ChargerEx [{func(float64) error MaxCurrentMillis chargerEx  error [float64]}]} api.PhaseGetter:{api.PhaseGetter PhaseGetter [{func() (int, error) GetPhases phaseGetter  (int, error) []}]} api.PhaseSwitcher:{api.PhaseSwitcher PhaseSwitcher [{func(int) error Phases1p3p phaseSwitcher  error [int]}]}]
+
 func decorateEm2Go(base *Em2Go, chargerEx func(float64) error, phaseSwitcher func(int) error, phaseGetter func() (int, error)) api.Charger {
 	switch {
 	case chargerEx == nil && phaseSwitcher == nil:

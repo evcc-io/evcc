@@ -6,6 +6,8 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
+// map[api.PhaseCurrents:{api.PhaseCurrents PhaseCurrents [{func() (float64, float64, float64, error) Currents phaseCurrents  (float64, float64, float64, error) []}]} api.PhaseVoltages:{api.PhaseVoltages PhaseVoltages [{func() (float64, float64, float64, error) Voltages phaseVoltages  (float64, float64, float64, error) []}]}]
+
 func decorateTasmota(base *Tasmota, phaseVoltages func() (float64, float64, float64, error), phaseCurrents func() (float64, float64, float64, error)) api.Charger {
 	switch {
 	case phaseCurrents == nil && phaseVoltages == nil:

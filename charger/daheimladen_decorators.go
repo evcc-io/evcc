@@ -6,6 +6,8 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
+// map[api.PhaseGetter:{api.PhaseGetter PhaseGetter [{func() (int, error) GetPhases phaseGetter  (int, error) []}]} api.PhaseSwitcher:{api.PhaseSwitcher PhaseSwitcher [{func(int) error Phases1p3p phaseSwitcher  error [int]}]}]
+
 func decorateDaheimLaden(base *DaheimLaden, phaseSwitcher func(int) error, phaseGetter func() (int, error)) api.Charger {
 	switch {
 	case phaseSwitcher == nil:

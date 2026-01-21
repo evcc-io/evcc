@@ -6,6 +6,8 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
+// map[api.Resurrector:{api.Resurrector Resurrector [{func() error WakeUp resurrector  error []}]}]
+
 func decorateOpenWBPro(base *OpenWBPro, resurrector func() error) api.Charger {
 	switch {
 	case resurrector == nil:

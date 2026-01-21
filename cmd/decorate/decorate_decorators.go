@@ -6,6 +6,8 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
+// map[api.MeterEnergy:{api.MeterEnergy MeterEnergy [{func() (float64, error) TotalEnergy meterEnergy  (float64, error) []}]} api.PhaseGetter:{api.PhaseGetter PhaseGetter [{func() (int, error) GetPhases phaseGetter  (int, error) []}]} api.PhaseSwitcher:{api.PhaseSwitcher PhaseSwitcher [{func(int) error Phases1p3p phaseSwitcher  error [int]}]}]
+
 func decorateTest(base api.Charger, meterEnergy func() (float64, error), phaseSwitcher func(int) error, phaseGetter func() (int, error)) api.Charger {
 	switch {
 	case meterEnergy == nil && phaseSwitcher == nil:

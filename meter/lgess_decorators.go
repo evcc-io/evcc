@@ -6,6 +6,8 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
+// map[api.Battery:{api.Battery Battery [{func() (float64, error) Soc battery  (float64, error) []}]} api.BatteryCapacity:{api.BatteryCapacity BatteryCapacity [{func() float64 Capacity batteryCapacity  float64 []}]} api.BatteryController:{api.BatteryController BatteryController [{func(api.BatteryMode) error SetBatteryMode batteryController  error [api.BatteryMode]}]} api.BatteryPowerLimiter:{api.BatteryPowerLimiter BatteryPowerLimiter [{func() (float64, float64) GetPowerLimits batteryPowerLimiter  (float64, float64) []}]} api.BatterySocLimiter:{api.BatterySocLimiter BatterySocLimiter [{func() (float64, float64) GetSocLimits batterySocLimiter  (float64, float64) []}]} api.MeterEnergy:{api.MeterEnergy MeterEnergy [{func() (float64, error) TotalEnergy meterEnergy  (float64, error) []}]}]
+
 func decorateLgEss(base *LgEss, meterEnergy func() (float64, error), batteryCapacity func() float64, battery func() (float64, error), batterySocLimiter func() (float64, float64), batteryPowerLimiter func() (float64, float64), batteryController func(api.BatteryMode) error) api.Meter {
 	switch {
 	case battery == nil && meterEnergy == nil:

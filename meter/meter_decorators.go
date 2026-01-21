@@ -6,6 +6,8 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
+// map[api.MaxACPowerGetter:{api.MaxACPowerGetter MaxACPowerGetter [{func() float64 MaxACPower maxACPowerGetter  float64 []}]} api.MeterEnergy:{api.MeterEnergy MeterEnergy [{func() (float64, error) TotalEnergy meterEnergy  (float64, error) []}]} api.PhaseCurrents:{api.PhaseCurrents PhaseCurrents [{func() (float64, float64, float64, error) Currents phaseCurrents  (float64, float64, float64, error) []}]} api.PhasePowers:{api.PhasePowers PhasePowers [{func() (float64, float64, float64, error) Powers phasePowers  (float64, float64, float64, error) []}]} api.PhaseVoltages:{api.PhaseVoltages PhaseVoltages [{func() (float64, float64, float64, error) Voltages phaseVoltages  (float64, float64, float64, error) []}]}]
+
 func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error), phasePowers func() (float64, float64, float64, error), maxACPowerGetter func() float64) api.Meter {
 	switch {
 	case maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
@@ -455,6 +457,8 @@ type decorateMeterPhaseVoltagesImpl struct {
 func (impl *decorateMeterPhaseVoltagesImpl) Voltages() (float64, float64, float64, error) {
 	return impl.phaseVoltages()
 }
+
+// map[api.Battery:{api.Battery Battery [{func() (float64, error) Soc battery  (float64, error) []}]} api.BatteryCapacity:{api.BatteryCapacity BatteryCapacity [{func() float64 Capacity batteryCapacity  float64 []}]} api.BatteryController:{api.BatteryController BatteryController [{func(api.BatteryMode) error SetBatteryMode batteryController  error [api.BatteryMode]}]} api.BatteryPowerLimiter:{api.BatteryPowerLimiter BatteryPowerLimiter [{func() (float64, float64) GetPowerLimits batteryPowerLimiter  (float64, float64) []}]} api.BatterySocLimiter:{api.BatterySocLimiter BatterySocLimiter [{func() (float64, float64) GetSocLimits batterySocLimiter  (float64, float64) []}]} api.MeterEnergy:{api.MeterEnergy MeterEnergy [{func() (float64, error) TotalEnergy meterEnergy  (float64, error) []}]}]
 
 func decorateMeterBattery(base api.Meter, meterEnergy func() (float64, error), battery func() (float64, error), batteryCapacity func() float64, batterySocLimiter func() (float64, float64), batteryPowerLimiter func() (float64, float64), batteryController func(api.BatteryMode) error) api.Meter {
 	switch {

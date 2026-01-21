@@ -6,6 +6,8 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
+// map[api.Identifier:{api.Identifier Identifier [{func() (string, error) Identify identifier  (string, error) []}]} api.PhaseSwitcher:{api.PhaseSwitcher PhaseSwitcher [{func(int) error Phases1p3p phaseSwitcher  error [int]}]}]
+
 func decorateOpenWB20(base *OpenWB20, phaseSwitcher func(int) error, identifier func() (string, error)) api.Charger {
 	switch {
 	case identifier == nil && phaseSwitcher == nil:

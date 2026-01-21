@@ -6,6 +6,8 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
+// map[api.ChargerEx:{api.ChargerEx ChargerEx [{func(float64) error MaxCurrentMillis chargerEx  error [float64]}]}]
+
 func decorateEvseDIN(base *EvseDIN, chargerEx func(float64) error) api.Charger {
 	switch {
 	case chargerEx == nil:

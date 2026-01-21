@@ -6,6 +6,8 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
+// map[api.PhaseSwitcher:{api.PhaseSwitcher PhaseSwitcher [{func(int) error Phases1p3p phaseSwitcher  error [int]}]}]
+
 func decoratePulsares(base *Pulsares, phaseSwitcher func(int) error) api.Charger {
 	switch {
 	case phaseSwitcher == nil:

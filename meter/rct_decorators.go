@@ -6,6 +6,8 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
+// map[api.Battery:{api.Battery Battery [{func() (float64, error) Soc battery  (float64, error) []}]} api.BatteryCapacity:{api.BatteryCapacity BatteryCapacity [{func() float64 Capacity batteryCapacity  float64 []}]} api.BatteryController:{api.BatteryController BatteryController [{func(api.BatteryMode) error SetBatteryMode batteryController  error [api.BatteryMode]}]} api.BatteryPowerLimiter:{api.BatteryPowerLimiter BatteryPowerLimiter [{func() (float64, float64) GetPowerLimits batteryPowerLimiter  (float64, float64) []}]} api.BatterySocLimiter:{api.BatterySocLimiter BatterySocLimiter [{func() (float64, float64) GetSocLimits batterySocLimiter  (float64, float64) []}]} api.Curtailer:{api.Curtailer Curtailer [{func(bool) error Curtail curtailer0  error [bool]} {func() (bool, error) Curtailed curtailer1  (bool, error) []}]} api.MeterEnergy:{api.MeterEnergy MeterEnergy [{func() (float64, error) TotalEnergy meterEnergy  (float64, error) []}]}]
+
 func decorateRCT(base *RCT, meterEnergy func() (float64, error), curtailer0 func(bool) error, curtailer1 func() (bool, error), battery func() (float64, error), batterySocLimiter func() (float64, float64), batteryPowerLimiter func() (float64, float64), batteryController func(api.BatteryMode) error, batteryCapacity func() float64) api.Meter {
 	switch {
 	case battery == nil && curtailer0 == nil && curtailer1 == nil && meterEnergy == nil:
