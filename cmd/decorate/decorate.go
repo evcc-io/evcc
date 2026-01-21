@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"go/format"
 	"io"
+	"maps"
 	"os"
 	"reflect"
 	"slices"
@@ -194,9 +195,12 @@ func generate(out io.Writer, functionName, baseType string, dynamicTypes ...dyna
 	}
 
 	validCombos := make([][]string, 0)
+	sortedDependents := slices.Sorted(maps.Keys(dependents))
+
 COMBO:
 	for _, c := range combinations.All(combos) {
-		for master, details := range dependents {
+		for _, master := range sortedDependents {
+			details := dependents[master]
 			// prune combinations where ...
 			// - master is part of the decorators
 			// - master is not part of the currently evaluated combination
