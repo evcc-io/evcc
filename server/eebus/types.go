@@ -16,15 +16,16 @@ const (
 var DeviceCode = util.Getenv("EEBUS_DEVICE_CODE", "EVCC_HEMS_01")
 
 type Certificate struct {
-	Public, Private string
+	Public  string `json:"public"`
+	Private string `json:"private"`
 }
 
 type Config struct {
-	URI_        string `mapstructure:"uri"` // TODO deprecated
-	Port        int
-	ShipID      string
-	Interfaces  []string
-	Certificate Certificate
+	URI_        string      `mapstructure:"uri" json:"uri"` // TODO deprecated
+	Port        int         `json:"port"`
+	ShipID      string      `json:"shipid"`
+	Interfaces  []string    `json:"interfaces,omitempty"`
+	Certificate Certificate `json:"certificate"`
 }
 
 // IsConfigured returns true if the EEbus server is configured
