@@ -204,7 +204,9 @@ export default {
 			return this.property === "icon";
 		},
 		textarea() {
-			return ["accessToken", "refreshToken", "identifiers"].includes(this.property);
+			return ["accessToken", "refreshToken", "identifiers", "interfaces"].includes(
+				this.property
+			);
 		},
 		boolean() {
 			return this.type === "Bool";
