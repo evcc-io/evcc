@@ -30,6 +30,8 @@ func init() {
 func NewSMAFromConfig(other map[string]any) (api.Meter, error) {
 	cc := struct {
 		batteryCapacity          `mapstructure:",squash"`
+		batteryPowerLimits       `mapstructure:",squash"`
+		batterySocLimits         `mapstructure:",squash"`
 		URI, Password, Interface string
 		Serial                   uint32
 		Scale                    float64 // power only
