@@ -177,7 +177,7 @@
         "public": "Public certificate"
       },
       "description": "Configuration that enables evcc to communicate with other EEBus devices.",
-      "https": "HTTPS connection",
+      "https": "Certificats",
       "interfaces": "Interfaces",
       "interfacesHelp": "Limit the network interfaces that EEBus should use to avoid communication problems. Leave the field blank to use all interfaces. One entry per line.",
       "port": "Port",
