@@ -70,7 +70,8 @@
 </template>
 
 <script lang="ts">
-import { type Eebus } from "@/types/evcc";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import type { Eebus } from "@/types/evcc";
 import JsonModal from "./JsonModal.vue";
 import FormRow from "./FormRow.vue";
 import PropertyField from "./PropertyField.vue";
