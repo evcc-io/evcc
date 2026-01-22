@@ -185,8 +185,8 @@ func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(
 		if err := set(val); err != nil {
 			return err
 		}
-
 		state.lastWrite = o.clock.Now()
+
 		valCopy := val
 		state.currentMode = &valCopy
 
