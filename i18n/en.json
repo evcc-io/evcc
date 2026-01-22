@@ -183,7 +183,7 @@
       "port": "Port",
       "portHelp": "The port to be used.",
       "shipid": "SHIP-ID",
-      "shipidHelp": "From evcc predefined shipid. It's tied to the HTTPS certificates below - if either changes, pairing with devices must be redone.",
+      "shipidHelp": "This ship ID is linked to the certificates below. If you change either one, you'll need to pair your devices again.",
       "title": "EEBus"
     },
     "experimental": {
