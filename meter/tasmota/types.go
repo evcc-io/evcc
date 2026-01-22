@@ -85,9 +85,18 @@ type StatusSNSResponse struct {
 
 		// SML sensor readings
 		SML struct {
-			TotalIn   float64 `json:"total_in"`
-			TotalOut  float64 `json:"total_out"`
-			PowerCurr int     `json:"power_curr"`
+			TotalIn    float64 `json:"total_in"`
+			TotalOut   float64 `json:"total_out"`
+			PowerCurr  int     `json:"power_curr"`
+			Power_L1   int     `json:"power_l1"`
+			Power_L2   int     `json:"power_l2"`
+			Power_L3   int     `json:"power_l3"`
+			Voltage_L1 float64 `json:"voltage_l1"`
+			Voltage_L2 float64 `json:"voltage_l2"`
+			Voltage_L3 float64 `json:"voltage_l3"`
+			Current_L1 float64 `json:"current_l1"`
+			Current_L2 float64 `json:"current_l2"`
+			Current_L3 float64 `json:"current_l3"`
 		}
 	}
 }
