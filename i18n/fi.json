@@ -137,9 +137,9 @@
       "no": "ei",
       "odometer": "Matkamittari",
       "org": "Organisaatio",
-      "phaseCurrents": "Virta L1, L2, L3",
-      "phasePowers": "Teho L1, L2, L3",
-      "phaseVoltages": "Jännite L1, L2, L3",
+      "phaseCurrents": "Virta",
+      "phasePowers": "Teho",
+      "phaseVoltages": "Jännite",
       "phases1p3p": "Vaihekytkin",
       "power": "Teho",
       "powerRange": "Teho",
@@ -243,11 +243,11 @@
         "limitpower": "Raja (kW)",
         "type": "Tyyppi"
       },
-      "description": "Ulkoisen järjestelmän (kuten EnWG kontrolleri) asettama tehon rajoitus. Vaatii kuormanhallinnan määrittämistä.",
+      "description": "Ulkoisten järjestelmien (esim. §14a EnWG, §9 EEG-rajapinta tai ylemmän tason energianhallintajärjestelmä) suorittama tehonrajoitus. Toimii yhdessä kuormituksenhallintaominaisuuden kanssa.",
       "downloadCsv": "Lataa CSV-taulukko",
       "eventsRecorded": "Tallennettu {count} verkon rajoitustapahtumaa.",
       "lastEvent": "Viimeisin {timeAgo}.",
-      "title": "HEMS",
+      "title": "Ulkoinen raja",
       "yamlConfigured": "Huomio: Asetus on evcc.yaml-tiedostosta. Poista asetus tiedostosta, jotta voisit muokata sitä täällä."
     },
     "icon": {
@@ -294,6 +294,7 @@
       "chargerTypeLabel": "Laturin tyyppi",
       "chargingTitle": "Toiminta",
       "circuitHelp": "Kuormanhallinnan määritys varmistaa, että teho ja virtarajoitteita ei ylitetä.",
+      "circuitInvalid": "Piiriä ei ole olemassa",
       "circuitLabel": "Piiri",
       "circuitUnassigned": "määräämätön",
       "defaultModeHelp": {
@@ -370,6 +371,7 @@
       "vehicleAutoDetection": "automaattinen tunnistus",
       "vehicleHelpAutoDetection": "Valitsee automaattisesti todennäköisimmän ajoneuvon. Manuaalinen ohitus on mahdollista.",
       "vehicleHelpDefault": "Olettaa aina, että tämä ajoneuvo latautuu täällä. Automaattinen tunnistus poistettu käytöstä. Manuaalinen ohitus on mahdollista.",
+      "vehicleInvalid": "Ajoneuvoa ei ole olemassa",
       "vehicleLabel": "Oletusajoneuvo",
       "vehiclesTitle": "Ajoneuvot"
     },
@@ -387,7 +389,7 @@
       "title": "Määritykset",
       "unconfigured": "ei määritetty",
       "vehicles": "Minun ajoneuvot",
-      "welcomeBannerText": "Aloita luomalla **latauslaite tai lämmitin**. Jos sinulla ei vielä ole oikeaa latauslaitetta, valitse **demolaturi**.",
+      "welcomeBannerText": "Aloita luomalla vähintään yksi **laturi**, **lämmitin**, **verkko**, **aurinkopaneeli**, **akku** tai **lisämittari**. Jos haluat vain testata, valitse **esittelylaite**.",
       "welcomeBannerTitle": "Määritetään järjestelmäsi!",
       "yaml": "evcc.yaml-asetuksissa määritettyjä laitteita ei voi muokata."
     },
@@ -762,6 +764,9 @@
       "solar": "Aurinko"
     }
   },
+  "general": {
+    "note": "Huomautus:"
+  },
   "header": {
     "about": "Tietoa",
     "authProviders": {
@@ -903,6 +908,7 @@
       "repeating": "toistetaan",
       "repeatingPlans": "Toistuvat suunnitelmat",
       "selectAll": "Valitse kaikki",
+      "strategyDisabledDescription": "Lataus aloitetaan mahdollisimman myöhään, jotta se valmistuu juuri ennen lähtöä. Dynaamisten verkkohintojen tai CO₂-tariffin ansiosta tässä on enemmän vaihtoehtoja.",
       "strategySettings": "Strategia-asetukset",
       "time": "Aika",
       "title": "Suunnitelma",

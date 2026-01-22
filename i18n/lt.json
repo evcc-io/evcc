@@ -137,9 +137,9 @@
       "no": "ne",
       "odometer": "Odometras",
       "org": "Organizacija",
-      "phaseCurrents": "Srovė L1, L2, L3",
-      "phasePowers": "Galia L1, L2, L3",
-      "phaseVoltages": "Įtampa L1, L2, L3",
+      "phaseCurrents": "Srovė",
+      "phasePowers": "Galia",
+      "phaseVoltages": "Įtampa",
       "phases1p3p": "Fazių perjungimas",
       "power": "Galia",
       "powerRange": "Galia",
@@ -243,11 +243,11 @@
         "limitpower": "Limitas (kW)",
         "type": "Tipas"
       },
-      "description": "Galios ribojimas naudojant išorinę sistemą (pvz. “EnWG 14a” valdiklį). Reikia apkrovos valdymo konfigūracijos.",
+      "description": "Galios ribojimas išorinėmis sistemomis (pvz., §14a EnWG, §9 EEG sąsaja arba aukštesnio lygio energijos valdymo sistema). Veikia kartu su apkrovos valdymo funkcija.",
       "downloadCsv": "Atsisiųsti CSV failą",
       "eventsRecorded": "Užfiksuota {count} tinklo galios apribojimo įvykių.",
       "lastEvent": "Naujausias {timeAgo}.",
-      "title": "HEMS",
+      "title": "Išorinė riba",
       "yamlConfigured": "Pastaba: Sukonfigūruota naudojant evcc.yaml. Pašalinkite įrašą iš failo, kad būtų galima redaguoti čia."
     },
     "icon": {

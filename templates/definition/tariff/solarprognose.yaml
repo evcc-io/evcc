@@ -20,8 +20,8 @@ params:
       en: Item type to be queried.
       de: Elementtyp, der abgefragt werden soll.
     help:
-      en: Item and id/token are only required if more than one location is configured or if a specific item is to be queried. Otherwise, the API returns the data for the first location. See also https://www.solarprognose.de/web/en-en/solarprediction/page/api
-      de: Item und id/token werden nur benötigt, wenn mehr als ein Standort konfiguriert ist oder ein bestimmtes Element abgefragt werden soll. Ansonsten gibt die API die Daten für den ersten Standort zurück. Siehe auch https://www.solarprognose.de/web/de-de/solarprediction/page/api
+      en: Item and id/token are only required if more than one location is configured or if a specific item is to be queried. Otherwise, the API returns the data for the first location. See also [solarprognose.de](https://www.solarprognose.de/web/en-en/solarprediction/page/api)
+      de: Item und id/token werden nur benötigt, wenn mehr als ein Standort konfiguriert ist oder ein bestimmtes Element abgefragt werden soll. Ansonsten gibt die API die Daten für den ersten Standort zurück. Siehe auch [solarprognose.de](https://www.solarprognose.de/web/de-de/solarprediction/page/api)
     advanced: true
   - name: id
     description:

@@ -21,9 +21,7 @@ describe("createServiceEndpoints", () => {
     const endpoints = createServiceEndpoints(params);
     const homeEndpoint = endpoints.find(({ name }) => name === "home")!;
     const powerEndpoint = endpoints.find(({ name }) => name === "power")!;
-    expect(homeEndpoint.dependencies).toEqual([]);
     expect(homeEndpoint.url({})).toBe("homes");
-    expect(powerEndpoint.dependencies).toEqual(["home"]);
     expect(powerEndpoint.url({ home: "main" })).toBe("homes/main/sensors");
     expect(powerEndpoint.url({ home: "with space" })).toBe("homes/with%20space/sensors");
     expect(powerEndpoint.url({} as Record<string, string>)).toBe("homes/{home}/sensors");
@@ -36,7 +34,6 @@ describe("createServiceEndpoints", () => {
     ];
     const endpoints = createServiceEndpoints(params);
     const sensorEndpoint = endpoints.find(({ name }) => name === "sensor")!;
-    expect(sensorEndpoint.dependencies).toEqual(["home", "sensor"]);
     expect(sensorEndpoint.url({ home: "hq", sensor: "battery" })).toBe("homes/hq/sensors/battery");
   });
 
@@ -50,5 +47,56 @@ describe("createServiceEndpoints", () => {
     expect(tokenEndpoint.url({} as Record<string, string>)).toBe(
       "homes/{home}/sensors/{sensor}?token={token}"
     );
+  });
+
+  it("expands {modbus} for TCP/IP", () => {
+    const params = [buildParam("param", "service?address=100&{modbus}")];
+    const endpoints = createServiceEndpoints(params);
+
+    expect(endpoints[0]!.url({ host: "192.168.1.1", port: "502", id: "1" })).toBe(
+      "service?address=100&uri=192.168.1.1:502&id=1"
+    );
+  });
+
+  it("expands {modbus} for serial", () => {
+    const params = [buildParam("param", "service?address=100&{modbus}")];
+    const endpoints = createServiceEndpoints(params);
+
+    expect(
+      endpoints[0]!.url({ device: "/dev/ttyUSB0", baudrate: "9600", comset: "8N1", id: "1" })
+    ).toBe("service?address=100&device=%2Fdev%2FttyUSB0&baudrate=9600&comset=8N1&id=1");
+  });
+
+  it("leaves {modbus} unexpanded when connection missing", () => {
+    const params = [buildParam("param", "service?address=100&{modbus}")];
+    const endpoints = createServiceEndpoints(params);
+
+    expect(endpoints[0]!.url({})).toBe("service?address=100&{modbus}");
+  });
+
+  it("prefers device over host when both present", () => {
+    const params = [buildParam("param", "service?{modbus}")];
+    const endpoints = createServiceEndpoints(params);
+
+    expect(
+      endpoints[0]!.url({
+        device: "/dev/ttyUSB0",
+        baudrate: "9600",
+        comset: "8N1",
+        host: "192.168.1.1",
+        port: "502",
+        id: "1",
+      })
+    ).toBe("service?device=%2Fdev%2FttyUSB0&baudrate=9600&comset=8N1&id=1");
+  });
+
+  it("treats empty strings as missing values", () => {
+    const params = [buildParam("sensor", "homes/{home}/sensors")];
+    const endpoints = createServiceEndpoints(params);
+
+    // Empty string should be treated as missing, leaving placeholder
+    expect(endpoints[0]!.url({ home: "" })).toBe("homes/{home}/sensors");
+    // Non-empty value should replace placeholder
+    expect(endpoints[0]!.url({ home: "main" })).toBe("homes/main/sensors");
   });
 });

@@ -137,9 +137,9 @@
       "no": "no",
       "odometer": "Chilometraggio",
       "org": "Organizzazione",
-      "phaseCurrents": "Corrente L1, L2, L3",
-      "phasePowers": "Potenza L1, L2, L3",
-      "phaseVoltages": "Voltaggio L1, L2, L3",
+      "phaseCurrents": "Corrente",
+      "phasePowers": "Potenza",
+      "phaseVoltages": "Voltaggio",
       "phases1p3p": "Commutazione di fase",
       "power": "Potenza",
       "powerRange": "Potenza",
@@ -243,11 +243,11 @@
         "limitpower": "Limite (kW)",
         "type": "Tipo"
       },
-      "description": "Limitazione di potenza da parte di sistemi esterni (ad es. controllori EnWG 14a). Richiede la configurazione della gestione del carico.",
+      "description": "Limitazione della potenza da parte di sistemi esterni (ad es. §14a EnWG, interfaccia §9 EEG o sistema di gestione dell'energia di livello superiore). Funziona in combinazione con la funzione di gestione del carico.",
       "downloadCsv": "Scarica CSV",
       "eventsRecorded": "Registrati {count} eventi di limitazione della griglia.",
       "lastEvent": "Più recente {timeAgo}.",
-      "title": "HEMS",
+      "title": "HEMSLimite esterno",
       "yamlConfigured": "Nota: configurato tramite evcc.yaml. Rimuovere la voce dal file per abilitare la modifica qui."
     },
     "icon": {
@@ -294,6 +294,7 @@
       "chargerTypeLabel": "Tipo di caricabatterie",
       "chargingTitle": "Comportamento",
       "circuitHelp": "Assegnazione della gestione del carico per garantire che i limiti di potenza e corrente non vengano superati.",
+      "circuitInvalid": "Il circuito non esiste",
       "circuitLabel": "Circuito",
       "circuitUnassigned": "non assegnato",
       "defaultModeHelp": {
@@ -370,6 +371,7 @@
       "vehicleAutoDetection": "identificazione automatica",
       "vehicleHelpAutoDetection": "Seleziona automaticamente il veicolo più plausibile. E' comunque possibile la modifica manuale.",
       "vehicleHelpDefault": "Seleziona sempre questo veicolo in questo punto di ricarica. Identificazione automatica disabilitata. E' comunque possibile la modifica manuale.",
+      "vehicleInvalid": "Il veicolo non esiste",
       "vehicleLabel": "Veicolo predefinito",
       "vehiclesTitle": "Veicoli"
     },
@@ -387,7 +389,7 @@
       "title": "Configurazione",
       "unconfigured": "non configurato",
       "vehicles": "I miei veicoli",
-      "welcomeBannerText": "Inizia creando un **caricabatterie o un riscaldatore**. Se non hai ancora un caricabatterie vero e proprio, scegli un **caricabatterie demo**.",
+      "welcomeBannerText": "Inizia creando almeno un **caricabatterie**, un **riscaldatore**, una **rete**, un **impianto solare**, una **batteria** o un **contatore aggiuntivo**. Se desideri solo effettuare un test, scegli un **dispositivo demo**.",
       "welcomeBannerTitle": "Configuriamo il tuo sistema!",
       "yaml": "I dispositivi di evcc.yaml non sono modificabili."
     },
@@ -762,6 +764,9 @@
       "solar": "Solare"
     }
   },
+  "general": {
+    "note": "Nota:"
+  },
   "header": {
     "about": "Riguardo",
     "blog": "Blog",
@@ -897,6 +902,7 @@
       "repeating": "ricorrente",
       "repeatingPlans": "Piani ricorrenti",
       "selectAll": "Seleziona tutti",
+      "strategyDisabledDescription": "La ricarica inizia il più tardi possibile per terminare appena in tempo per la partenza. Con i prezzi dinamici della rete elettrica o la tariffa CO₂, sono disponibili ulteriori opzioni.",
       "strategySettings": "Impostazioni strategia",
       "time": "Ora",
       "title": "Piano",
@@ -1181,7 +1187,7 @@
     },
     "group": {
       "co2": "Emissioni",
-      "grid": "Rete",
+      "grid": "Griglia",
       "price": "Prezzo",
       "self": "Solare"
     },

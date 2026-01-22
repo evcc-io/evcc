@@ -137,9 +137,9 @@
       "no": "nem",
       "odometer": "Óraállás",
       "org": "Szervezet",
-      "phaseCurrents": "Áram L1, L2, L3",
-      "phasePowers": "Teljesítmény L1, L2, L3",
-      "phaseVoltages": "Feszültség L1, L2, L3",
+      "phaseCurrents": "Áram",
+      "phasePowers": "Teljesítmény",
+      "phaseVoltages": "Feszültség",
       "phases1p3p": "Fázis váltás",
       "power": "Teljesítmény",
       "powerRange": "Teljesítmény",
@@ -243,11 +243,11 @@
         "limitpower": "Határérték (kW)",
         "type": "Típus"
       },
-      "description": "Külső rendszerek (pl. EnWG 14a vezérlők) általi teljesítménykorlátozás. Terheléskezelési konfigurációt igényel.",
+      "description": "Teljesítménykorlátozás külső rendszerekkel (pl. §14a EnWG, §9 EEG interfész vagy magasabb szintű energiagazdálkodási rendszer). A terheléskezelési funkcióval együtt működik.",
       "downloadCsv": "CSV letöltése",
       "eventsRecorded": "{count} rácskorlátozási esemény rögzítve.",
       "lastEvent": "Legutóbbi {timeAgo}.",
-      "title": "HEMS",
+      "title": "Külső határ",
       "yamlConfigured": "Megjegyzés: Az evcc.yaml fájlban konfigurálható. A szerkesztés engedélyezéséhez távolítsa el a bejegyzést a fájlból."
     },
     "icon": {
@@ -294,6 +294,7 @@
       "chargerTypeLabel": "Töltő típusa",
       "chargingTitle": "Viselkedés",
       "circuitHelp": "Terheléskezelési hozzárendelés a teljesítmény- és áramkorlátok túllépésének biztosítására.",
+      "circuitInvalid": "Az áramkör nem létezik",
       "circuitLabel": "Áramkör",
       "circuitUnassigned": "nincs hozzárendelve",
       "defaultModeHelp": {
@@ -370,6 +371,7 @@
       "vehicleAutoDetection": "auto felismerés",
       "vehicleHelpAutoDetection": "Automatikusan kiválasztja a legvalószínűbb járművet. Kézi felülírás lehetséges.",
       "vehicleHelpDefault": "Mindig feltételezze, hogy ez a jármű itt töltődik. Az automatikus felismerés letiltva. Kézi felülírás lehetséges.",
+      "vehicleInvalid": "A jármű nem létezik",
       "vehicleLabel": "Alapértelmezett jármű",
       "vehiclesTitle": "Járművek"
     },
@@ -387,7 +389,7 @@
       "title": "Konfiguráció",
       "unconfigured": "nincs konfigurálva",
       "vehicles": "Járműveim",
-      "welcomeBannerText": "Kezdje egy **töltő vagy fűtő** létrehozásával. Ha még nincs valódi töltője, válasszon egy **demo töltőt**.",
+      "welcomeBannerText": "Kezdje azzal, hogy létrehoz legalább egy **töltőt**, **fűtőt**, **hálózatot**, **napelemet**, **akkumulátort** vagy **kiegészítő mérőt**. Ha csak tesztelni szeretne, válasszon egy **demo eszközt**.",
       "welcomeBannerTitle": "Konfiguráljuk a rendszerét!",
       "yaml": "Az evcc.yaml fájlban szereplő eszközök nem szerkeszthetők."
     },
@@ -762,6 +764,9 @@
       "solar": "Szolár"
     }
   },
+  "general": {
+    "note": "Megjegyzés:"
+  },
   "header": {
     "about": "Névjegy",
     "authProviders": {
@@ -902,6 +907,7 @@
       "repeating": "ismétlődő",
       "repeatingPlans": "Ismétlődő tervek",
       "selectAll": "Összes kiválasztása",
+      "strategyDisabledDescription": "A töltés a lehető legkésőbb kezdődik, hogy pontosan az indulás előtt befejeződjön. Dinamikus hálózati árak vagy CO₂-tarifa esetén itt több lehetőség áll rendelkezésre.",
       "strategySettings": "Stratégiai beállítások",
       "time": "Idő",
       "title": "Terv",

@@ -137,9 +137,9 @@
       "no": "nie",
       "odometer": "Drogomierz",
       "org": "Organizacja",
-      "phaseCurrents": "Prąd L1, L2, L3",
-      "phasePowers": "Moc L1, L2, L3",
-      "phaseVoltages": "Napięcie L1, L2, L3",
+      "phaseCurrents": "Prąd",
+      "phasePowers": "Moc",
+      "phaseVoltages": "Napięcie",
       "phases1p3p": "Przełącznik fazowy",
       "power": "Moc",
       "powerRange": "Zasilanie",
@@ -243,11 +243,11 @@
         "limitpower": "Limit (kW)",
         "type": "Typ"
       },
-      "description": "Ograniczenie mocy przez systemy zewnętrzne (np. kontrolery EnWG 14a). Wymaga konfiguracji zarządzania obciążeniem.",
+      "description": "Ograniczenie mocy przez systemy zewnętrzne (np. §14a EnWG, interfejs §9 EEG lub wyższy poziom systemu zarządzania energią). Współpracuje z funkcją zarządzania obciążeniem.",
       "downloadCsv": "Pobierz CSV",
       "eventsRecorded": "Zarejestrowano {count} zdarzeń związanych z ograniczeniami sieci.",
       "lastEvent": "Najnowsze {timeAgo}.",
-      "title": "HEMS",
+      "title": "Limit zewnętrzny",
       "yamlConfigured": "Uwaga: Konfiguracja odbywa się za pomocą pliku evcc.yaml. Aby umożliwić edycję w tym miejscu, usuń wpis z pliku."
     },
     "icon": {
@@ -294,6 +294,7 @@
       "chargerTypeLabel": "Typ ładowarki",
       "chargingTitle": "Postępowanie",
       "circuitHelp": "Przypisanie zarządzania obciążeniem w celu zapewnienia, że nie zostaną przekroczone limity mocy i prądu.",
+      "circuitInvalid": "Obwód nie istnieje",
       "circuitLabel": "Obwód",
       "circuitUnassigned": "nieprzypisany",
       "defaultModeHelp": {
@@ -370,6 +371,7 @@
       "vehicleAutoDetection": "automatyczne wykrywanie",
       "vehicleHelpAutoDetection": "Automatycznie wybiera najbardziej prawdopodobny pojazd. Możliwe jest ręczne przejęcie kontroli.",
       "vehicleHelpDefault": "Zawsze zakładaj, że ten pojazd jest tutaj ładowany. Automatyczne wykrywanie jest wyłączone. Możliwe jest ręczne przełączenie.",
+      "vehicleInvalid": "Pojazd nie istnieje",
       "vehicleLabel": "Pojazd domyślny",
       "vehiclesTitle": "Pojazdy"
     },
@@ -387,7 +389,7 @@
       "title": "Konfiguracja",
       "unconfigured": "nie skonfigurowane",
       "vehicles": "Moje pojazdy",
-      "welcomeBannerText": "Zacznij od stworzenia **ładowarki lub grzałki**. Jeśli nie masz jeszcze prawdziwej ładowarki, wybierz **ładowarkę demonstracyjną**.",
+      "welcomeBannerText": "Zacznij od utworzenia co najmniej jednej **ładowarki**, **grzejnika**, **sieci**, **panelu słonecznego**, **baterii** lub **dodatkowego licznika**. Jeśli chcesz tylko przetestować, wybierz **urządzenie demonstracyjne**.",
       "welcomeBannerTitle": "Skonfigurujmy Twój system!",
       "yaml": "Urządzenia z pliku evcc.yaml nie mogą być edytowane."
     },
@@ -761,6 +763,9 @@
       "solar": "Słońce"
     }
   },
+  "general": {
+    "note": "Uwaga:"
+  },
   "header": {
     "about": "O evcc",
     "blog": "Blog",
@@ -895,6 +900,7 @@
       "repeating": "powtórzenie",
       "repeatingPlans": "Powtarzające się plany",
       "selectAll": "Wybierz wszystko",
+      "strategyDisabledDescription": "Ładowanie rozpoczyna się jak najpóźniej, aby zakończyć się tuż przed wyjazdem. Dzięki dynamicznym cenom energii elektrycznej lub taryfie CO₂ dostępnych jest więcej opcji.",
       "strategySettings": "Ustawienia strategii",
       "time": "Czas",
       "title": "Plan",

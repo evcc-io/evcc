@@ -137,9 +137,9 @@
       "no": "nee",
       "odometer": "Kilometerzäler",
       "org": "Organisatioun",
-      "phaseCurrents": "Stroum L1, L2, L3",
-      "phasePowers": "Leeschtung L1, L2, L3",
-      "phaseVoltages": "Spannung L1, L2, L3",
+      "phaseCurrents": "Stroum",
+      "phasePowers": "Leeschtung",
+      "phaseVoltages": "Spannung",
       "phases1p3p": "Phasenëmschaltung",
       "power": "Leeschtung",
       "powerRange": "Leeschtung",
@@ -243,11 +243,11 @@
         "limitpower": "Limitt (kW)",
         "type": "Typ"
       },
-      "description": "Leeschtungsbegrenzung duerch extern Systemer (bspw. Steierboxen, § 14a EnWG). Setzt eng Gestioun vun der Charge viraus.",
+      "description": "Kraaftbegrenzung duerch extern Systemer (z. B. §14a EnWG, §9 EEG-Schnittstell oder e méi héichgestallt Energiemanagementsystem). Aarbecht zesumme mat der Lastmanagement-Funktioun.",
       "downloadCsv": "CSV eroflueden",
       "eventsRecorded": "{count} gespäichert Limitatiounen vum Netz.",
       "lastEvent": "Méi rezent {timeAgo}.",
-      "title": "HEMS",
+      "title": "Äusserlech Grenz",
       "yamlConfigured": "Bemierkung: Konfiguréiert iwwer evcc.yaml. Läscht d'Astellungen aus der Datei fir d'Ännerung hei z'erméiglechen."
     },
     "icon": {
@@ -294,6 +294,7 @@
       "chargerTypeLabel": "Luedleeschtung",
       "chargingTitle": "Verhalen",
       "circuitHelp": "Laaschtmanagement-Zouweisung, fir sécher ze goen, dass d'Leeschtung a Stroumlimitten net iwwerschratt ginn.",
+      "circuitInvalid": "De Circuit existéiert net",
       "circuitLabel": "Stroumkrees",
       "circuitUnassigned": "net zougewisen",
       "defaultModeHelp": {
@@ -370,6 +371,7 @@
       "vehicleAutoDetection": "automatesch Erkennung",
       "vehicleHelpAutoDetection": "Automatesch dat plausibelst Gefier auswielen. Manuell Iwwersteierung méiglech.",
       "vehicleHelpDefault": "Ëmmer unhuelen, daRF dëst Gefier hei luet. Auto-Erkennung deaktivéiert. Manuell Iwwersteierung méiglech.",
+      "vehicleInvalid": "Dat Gefier existéiert net",
       "vehicleLabel": "Standard-Gefier",
       "vehiclesTitle": "Gefierer"
     },
@@ -387,7 +389,7 @@
       "title": "Konfiguratioun",
       "unconfigured": "net konfiguréiert",
       "vehicles": "Meng Gefierer",
-      "welcomeBannerText": "Fänkt domat un, eng **Wallbox oder eng Heizung** ze erstellen. Wann Dir nach keng richtegt Wallbox hutt, wielt eng **Demo-Wallbox**.",
+      "welcomeBannerText": "Fänkt un mat der Erstelle vun op d'mannst engem **Ladegerät**, **Heizer**, **Netz**, **Solarpanel**, **Batterie** oder **zousätzlechen Zähler**. Wann Dir just testen wëllt, wielt e **Demonstratiounsapparat**.",
       "welcomeBannerTitle": "Loosst eis de System konfiguréieren!",
       "yaml": "Geräter aus der evcc.yaml Datei si net editiérbar."
     },
@@ -762,6 +764,9 @@
       "solar": "Solar"
     }
   },
+  "general": {
+    "note": "Bemierkung:"
+  },
   "header": {
     "about": "Iwwer",
     "authProviders": {
@@ -902,6 +907,7 @@
       "repeating": "widderhuelend",
       "repeatingPlans": "Widderhuelend Planifikatiounen",
       "selectAll": "All auswielen",
+      "strategyDisabledDescription": "D'Laden fänkt sou spéit wéi méiglech un, fir grad rechtzäiteg virum Depart ofzeschléissen. Mat dynamesche Netzpräisser oder engem CO₂-Tarif stinn hei nach méi Optiounen zur Verfügung.",
       "strategySettings": "Strategie-Astellungen",
       "time": "Zäit",
       "title": "Planifikatioun",

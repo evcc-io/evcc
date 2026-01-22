@@ -108,11 +108,11 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 	var curtailed func() (bool, error)
 	if usage == "pv" {
 		curtail = func(b bool) error {
-			r := float32(1)
-			if b {
-				r = 0
+			var r float64
+			if !b {
+				r = 1.0
 			}
-			return m.conn.Write(rct.BufVControlPowerReduction, m.floatVal(r))
+			return m.conn.Write(rct.BufVControlPowerReduction, floatVal(r))
 		}
 
 		curtailed = func() (bool, error) {
@@ -177,11 +177,11 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 				})
 
 				eg.Go(func() error {
-					return m.conn.Write(rct.BatterySoCTargetMin, m.floatVal(float32(batterySocLimits.MinSoc)/100))
+					return m.conn.Write(rct.BatterySoCTargetMin, floatVal(batterySocLimits.MinSoc/100))
 				})
 
 				eg.Go(func() error {
-					return m.conn.Write(rct.PowerMngBatteryPowerExternW, m.floatVal(float32(0)))
+					return m.conn.Write(rct.PowerMngBatteryPowerExternW, floatVal(0))
 				})
 
 			case api.BatteryHold:
@@ -190,7 +190,7 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 				})
 
 				eg.Go(func() error {
-					return m.conn.Write(rct.BatterySoCTargetMin, m.floatVal(float32(batterySocLimits.MaxSoc)/100))
+					return m.conn.Write(rct.BatterySoCTargetMin, floatVal(batterySocLimits.MaxSoc/100))
 				})
 
 			case api.BatteryCharge:
@@ -199,7 +199,7 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 				})
 
 				eg.Go(func() error {
-					return m.conn.Write(rct.PowerMngBatteryPowerExternW, m.floatVal(float32(-batteryPowerLimits.MaxChargePower)))
+					return m.conn.Write(rct.PowerMngBatteryPowerExternW, floatVal(-batteryPowerLimits.MaxChargePower))
 				})
 
 				eg.Go(func() error {
@@ -215,12 +215,6 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 	}
 
 	return decorateRCT(m, totalEnergy, curtail, curtailed, batterySoc, batterySocLimiter, batteryPowerLimiter, batteryMode, batteryCapacity), nil
-}
-
-func (m *RCT) floatVal(f float32) []byte {
-	data := make([]byte, 4)
-	binary.BigEndian.PutUint32(data, math.Float32bits(f))
-	return data
 }
 
 // CurrentPower implements the api.Meter interface
@@ -312,6 +306,12 @@ func (m *RCT) totalEnergy() (float64, error) {
 	default:
 		return 0, fmt.Errorf("invalid usage: %s", m.usage)
 	}
+}
+
+func floatVal(f float64) []byte {
+	data := make([]byte, 4)
+	binary.BigEndian.PutUint32(data, math.Float32bits(float32(f)))
+	return data
 }
 
 func queryRCT[T any](id rct.Identifier, fun func(id rct.Identifier) (T, error)) (T, error) {

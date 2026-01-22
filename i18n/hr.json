@@ -137,9 +137,9 @@
       "no": "ne",
       "odometer": "Brojilo kilometara",
       "org": "Organizacija",
-      "phaseCurrents": "Struja L1, L2, L3",
-      "phasePowers": "Snaga L1, L2, L3",
-      "phaseVoltages": "Napon L1, L2, L3",
+      "phaseCurrents": "Struja",
+      "phasePowers": "Snaga",
+      "phaseVoltages": "Napon",
       "phases1p3p": "Promjena faza",
       "power": "Snaga",
       "powerRange": "Snaga",
@@ -243,11 +243,11 @@
         "limitpower": "Ograničenje (kW)",
         "type": "vrsta"
       },
-      "description": "Ograničenje snage od eksternih sustava (npr. EnWG 14a kontroleri). Zahtijeva konfiguraciju za upravljanje opterećenja.",
+      "description": "Ograničenje snage od strane vanjskih sustava (npr. §14a EnWG, sučelje §9 EEG ili viši sustav upravljanja energijom). Radi zajedno s funkcijom upravljanja opterećenjem.",
       "downloadCsv": "Preuzmi CSV",
       "eventsRecorded": "Zabilježeno je {count} događaja ograničenja mreže.",
       "lastEvent": "Najnoviji {timeAgo}",
-      "title": "HEMS",
+      "title": "Vanjski limit",
       "yamlConfigured": "Napomena: Konfigurirano putem evcc.yaml. Uklonite unos iz datoteke kako biste ovdje omogućili uređivanje."
     },
     "icon": {
@@ -294,6 +294,7 @@
       "chargerTypeLabel": "Tip punjača",
       "chargingTitle": "Način rada",
       "circuitHelp": "Dodjela upravljanja opterećenjem kako bi se osiguralo da se ne prekorače ograničenja snage i struje.",
+      "circuitInvalid": "Kružni tok ne postoji",
       "circuitLabel": "Strujni krug",
       "circuitUnassigned": "nedodijeljen",
       "defaultModeHelp": {
@@ -370,6 +371,7 @@
       "vehicleAutoDetection": "autodetekcija",
       "vehicleHelpAutoDetection": "Automatski odabire najvjerojatnije vozilo. Moguće je i ručno odabrati vozilo.",
       "vehicleHelpDefault": "Uvijek pretpostavi da se ovo vozilo ovdje puni. Autodetekcija je onemogućena, ali je moguće ručno izmijeniti.",
+      "vehicleInvalid": "Vozilo ne postoji",
       "vehicleLabel": "Zadano vozilo",
       "vehiclesTitle": "Vozila"
     },
@@ -387,7 +389,7 @@
       "title": "Postavke",
       "unconfigured": "nije postavljeno",
       "vehicles": "Moja vozila",
-      "welcomeBannerText": "Počnite s izradom **punjača ili grijača**. Ako još nemate pravi punjač, odaberite **demo punjač**.",
+      "welcomeBannerText": "Počnite s izradom barem jednog **punjača**, **grijača**, **mreže**, **solarne ploče**, **baterije** ili **dodatnog brojila**. Ako samo želite testirati, odaberite **demo uređaj**.",
       "welcomeBannerTitle": "Konfigurirajmo vaš sustav!",
       "yaml": "U evcc.yaml datoteci definirani uređaji se ne mogu uređivati."
     },
@@ -762,6 +764,9 @@
       "solar": "Solarno"
     }
   },
+  "general": {
+    "note": "Napomena:"
+  },
   "header": {
     "about": "Informacije",
     "authProviders": {
@@ -903,6 +908,7 @@
       "repeating": "ponavljanje",
       "repeatingPlans": "Ponavljajući planovi",
       "selectAll": "Odaberi sve",
+      "strategyDisabledDescription": "Punjenje počinje što kasnije kako bi se završilo upravo na vrijeme za polazak. Uz dinamične cijene mreže ili CO₂ tarifu ovdje su dostupne dodatne opcije.",
       "strategySettings": "Postavke strategije",
       "time": "Vrijeme",
       "title": "Plan",

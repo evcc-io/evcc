@@ -137,9 +137,9 @@
       "no": "ne",
       "odometer": "Ujetých km",
       "org": "Organizace",
-      "phaseCurrents": "Proud L1, L2, L3",
-      "phasePowers": "Výkon L1, L2, L3",
-      "phaseVoltages": "Napětí L1, L2, L3",
+      "phaseCurrents": "Proud",
+      "phasePowers": "Výkon",
+      "phaseVoltages": "Napětí",
       "phases1p3p": "Přepínač fází",
       "power": "Výkon",
       "powerRange": "Výkon",
@@ -243,11 +243,11 @@
         "limitpower": "Limit (kW)",
         "type": "Typ"
       },
-      "description": "Limitace výkonu externími systémy (např. EnWG 14a kontroléry). Vyžaduje konfiguraci systému řízení zátěže.",
+      "description": "Omezení výkonu externími systémy (např. §14a EnWG, §9 EEG rozhraní nebo nadřazený systém řízení energie). Spolupracuje s funkcí řízení zátěže.",
       "downloadCsv": "Stáhnout CSV",
       "eventsRecorded": "Zaznamenáno {count} událostí omezení mřížky.",
       "lastEvent": "Nejnovější {timeAgo}.",
-      "title": "HEMS",
+      "title": "Vnější limit",
       "yamlConfigured": "Poznámka: Konfigurace se provádí prostřednictvím souboru evcc.yaml. Chcete-li zde povolit úpravy, odstraňte záznam ze souboru."
     },
     "icon": {
@@ -294,6 +294,7 @@
       "chargerTypeLabel": "Typ nabíječky",
       "chargingTitle": "Chování",
       "circuitHelp": "Řízení zátěže zajišťující nepřekročení limitů proudu a výkonu.",
+      "circuitInvalid": "Obvod neexistuje",
       "circuitLabel": "Elektrický okruh",
       "circuitUnassigned": "nepřiřazeno",
       "defaultModeHelp": {
@@ -370,6 +371,7 @@
       "vehicleAutoDetection": "automatická detekce",
       "vehicleHelpAutoDetection": "Automaticky vybere nejpravděpodobnější vozidlo. Ruční přepsání je možné.",
       "vehicleHelpDefault": "Vždy se předpokládá, že se na tomto místě nabíjí toto vozidlo. Automatická detekce je vypnuta. Vozidlo lze ručně změnit.",
+      "vehicleInvalid": "Vozidlo neexistuje",
       "vehicleLabel": "Výchozí vozidlo",
       "vehiclesTitle": "Vozidla"
     },
@@ -387,7 +389,7 @@
       "title": "Konfigurace",
       "unconfigured": "není konfigurováno",
       "vehicles": "Má vozidla",
-      "welcomeBannerText": "Začněte vytvořením **nabíječky nebo ohřívače**. Pokud ještě nemáte skutečnou nabíječku, vyberte si **demo nabíječku**.",
+      "welcomeBannerText": "Začněte vytvořením alespoň jednoho **nabíječe**, **ohřívače**, **sítě**, **solárního panelu**, **baterie** nebo **dalšího měřiče**. Pokud chcete pouze otestovat, vyberte **demo zařízení**.",
       "welcomeBannerTitle": "Pojďme nakonfigurovat váš systém!",
       "yaml": "Zařízení z evcc.yaml nelze upravovat."
     },
@@ -762,6 +764,9 @@
       "solar": "Solár"
     }
   },
+  "general": {
+    "note": "Poznámka:"
+  },
   "header": {
     "about": "O",
     "authProviders": {
@@ -902,6 +907,7 @@
       "repeating": "opakující se",
       "repeatingPlans": "Opakující se plány",
       "selectAll": "Vybrat vše",
+      "strategyDisabledDescription": "Nabíjení začíná co nejpozději, aby bylo dokončeno právě včas před odjezdem. S dynamickými cenami elektřiny nebo tarifem CO₂ je zde k dispozici více možností.",
       "strategySettings": "Nastavení strategie",
       "time": "Čas",
       "title": "Plán",

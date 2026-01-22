@@ -100,14 +100,14 @@
     "control": {
       "description": "Običajno so privzete vrednosti v redu. Spremenite jih le, če veste, kaj počnete.",
       "descriptionInterval": "Cikel posodabljanja v sekundah. Določa, kako pogosto evcc bere podatke števca in prilagaja polnjenje. Privzeta vrednost 30 sekund je varna izbira. Naprave, kot so vozila, stenske polnilne postaje in razsmerniki, običajno potrebujejo nekaj sekund, da prilagodijo svoje delovanje. Če se vaše komponente hitro odzovejo, lahko uporabite nižje vrednosti. Toplo priporočamo, da ne greste pod 10 sekund. Če opazite neenakomerno delovanje krmiljenja ali skakanje vrednosti moči, izberite daljši interval.",
-      "descriptionResidualPower": "Premakne delovno točko krmilne zanke. Privzeta vrednost 100 W daje domačim baterijam rahlo prednost pred uporabo omrežja. Če nimate baterije, lahko to nastavite na 0 W, da zmanjšate porabo omrežja v solarnem načinu.",
+      "descriptionResidualPower": "Premika delovno točko krmilne zanke. Če imate domačo baterijo, priporočamo, da nastavite vrednost 100 W. Na ta način bo baterija imela rahlo prednost pred uporabo omrežja.",
       "labelInterval": "Interval posodabljanja",
       "labelResidualPower": "Preostala moč",
       "title": "Nadzor vedenja"
     },
     "deviceValue": {
       "amount": "Znesek",
-      "broker": "Broker",
+      "broker": "Posrednik",
       "bucket": "Bucket",
       "capacity": "Kapaciteta",
       "chargeStatus": "Status",
@@ -137,9 +137,9 @@
       "no": "ne",
       "odometer": "Število kilometrov",
       "org": "Organizacija",
-      "phaseCurrents": "Tok L1, L2, L3",
-      "phasePowers": "Moč L1, L2, L3",
-      "phaseVoltages": "Napetost L1, L2, L3",
+      "phaseCurrents": "Tok",
+      "phasePowers": "Moč",
+      "phaseVoltages": "Napetost",
       "phases1p3p": "Fazno stikalo",
       "power": "Moč",
       "powerRange": "Moč",
@@ -243,11 +243,11 @@
         "limitpower": "Omejitev (kW)",
         "type": "Vrsta"
       },
-      "description": "Omejitev moči z zunanjimi sistemi (npr. krmilniki EnWG 14a). Zahteva konfiguracijo upravljanja obremenitve.",
+      "description": "Omejitev moči z zunanjimi sistemi (npr. §14a EnWG, §9 EEG vmesnik ali višji sistem za upravljanje z energijo). Deluje skupaj s funkcijo upravljanja obremenitve.",
       "downloadCsv": "Prenesi CSV",
       "eventsRecorded": "Zabeleženo {count} dogodkov omejitve omrežja.",
       "lastEvent": "Najnovejše {timeAgo}.",
-      "title": "HEMS",
+      "title": "Zunanja meja",
       "yamlConfigured": "Opomba: Konfigurirano prek evcc.yaml. Odstranite vnos iz datoteke, da omogočite urejanje tukaj."
     },
     "icon": {
@@ -294,6 +294,7 @@
       "chargerTypeLabel": "Vrsta polnilnice",
       "chargingTitle": "Vedenje",
       "circuitHelp": "Dodelitev upravljanja obremenitve, da se zagotovi, da omejitve moči in toka niso presežene.",
+      "circuitInvalid": "Vezje ne obstaja",
       "circuitLabel": "Krog",
       "circuitUnassigned": "nedodeljeno",
       "defaultModeHelp": {
@@ -370,6 +371,7 @@
       "vehicleAutoDetection": "samodejno zaznavanje",
       "vehicleHelpAutoDetection": "Samodejno izbere najbolj verjetno vozilo. Možen je ročni popravek.",
       "vehicleHelpDefault": "Vedno domnevaj, da se to vozilo polni tukaj. Samodejno zaznavanje je onemogočeno. Možen je ročni popravek.",
+      "vehicleInvalid": "Vozilo ne obstaja",
       "vehicleLabel": "Privzeto vozilo",
       "vehiclesTitle": "Vozila"
     },
@@ -387,7 +389,7 @@
       "title": "Konfiguracija",
       "unconfigured": "ni konfigurirano",
       "vehicles": "Moja vozila",
-      "welcomeBannerText": "Začnite z izdelavo **polnilnika ali grelnika**. Če še nimate pravega polnilnika, izberite **demo polnilnik**.",
+      "welcomeBannerText": "Začnite z ustvarjanjem vsaj enega **polnilnika**, **grelca**, **omrežja**, **sončne energije**, **baterije** ali **dodatnega merilnika**. Če želite samo preizkusiti, izberite **demo napravo**.",
       "welcomeBannerTitle": "Konfigurirajmo vaš sistem!",
       "yaml": "Naprav iz datoteke evcc.yaml ni mogoče urejati."
     },
@@ -474,7 +476,7 @@
       "labelClientKey": "Ključ stranke",
       "labelInsecure": "Preverjanje certifikata",
       "labelPassword": "Geslo",
-      "labelTopic": "Topic",
+      "labelTopic": "Tema",
       "labelUser": "Uporabniško ime",
       "publishing": "Objavljanje",
       "title": "MQTT"
@@ -613,7 +615,7 @@
       "restart": "Ponovni zagon",
       "restartRequiredDescription": "Prosimo, ponovno zaženite, da vidite učinek.",
       "restartRequiredMessage": "Konfiguracija je bila spremenjena.",
-      "restartingDescription": "Prosim počakajte...",
+      "restartingDescription": "Prosimo, počakajte…",
       "restartingMessage": "Ponovni zagon evcc."
     },
     "tariffs": {
@@ -762,6 +764,9 @@
       "solar": "Sončna energija"
     }
   },
+  "general": {
+    "note": "Opomba:"
+  },
   "header": {
     "about": "Informacije",
     "authProviders": {
@@ -907,6 +912,7 @@
       "repeating": "ponavljajoči",
       "repeatingPlans": "Ponavljajoči načrti",
       "selectAll": "Izberi vse",
+      "strategyDisabledDescription": "Polnjenje se začne čim pozneje, da se konča ravno pravočasno za odhod. Z dinamičnimi cenami omrežja ali tarifo CO₂ je na voljo več možnosti.",
       "strategySettings": "Nastavitve strategije",
       "time": "Čas",
       "title": "Načrt",
@@ -1056,7 +1062,7 @@
     "vehicle": {
       "addVehicle": "Dodaj vozilo",
       "changeVehicle": "Zamenjaj vozilo",
-      "detectionActive": "Zaznavanje vozila...",
+      "detectionActive": "Zaznavanje vozila…",
       "fallbackName": "Vozilo",
       "moreActions": "Več dejanj",
       "none": "Ni vozila",
@@ -1069,7 +1075,7 @@
     },
     "vehicleStatus": {
       "awaitingAuthorization": "Čakanje na avtorizacijo.",
-      "batteryBoost": "Pospeševanje z baterijo aktivno",
+      "batteryBoost": "Aktiviran zagon akumulatorja.",
       "charging": "Polnjenje…",
       "cheapEnergyCharging": "Poceni energija je na voljo.",
       "cheapEnergyNextStart": "Poceni energija čez {duration}.",
@@ -1091,10 +1097,10 @@
       "scale3p": "Povečanje na 3-fazno napajanje kmalu...",
       "targetChargeActive": "Ciljno polnjenje je aktivno, predviden konec {duration}.",
       "targetChargePlanned": "Ciljno polnjenje se začne čez {duration}.",
-      "targetChargeWaitForVehicle": "Ciljno polnjenje je pripravljeno. Čakam na vozilo ...",
+      "targetChargeWaitForVehicle": "Načrt polnjenja je pripravljen. Čakam na vozilo…",
       "vehicleLimit": "Omejitev vozila",
       "vehicleLimitReached": "Omejitev vozila dosežena.",
-      "waitForVehicle": "Pripravljen. Čakam na vozilo...",
+      "waitForVehicle": "Pripravljen. Čakam na vozilo…",
       "welcome": "Kratko začetno polnjenje za potrditev povezave."
     },
     "vehicles": "Parkiranje",
@@ -1291,7 +1297,7 @@
   },
   "smartFeedInPriority": {
     "activeHoursLabel": "Čas premora",
-    "description": "Začasno ustavi polnjenje med visokimi cenami, da da prednost dobičkonosnemu dovajanju energije iz omrežja.",
+    "description": "Prekine polnjenje med visokimi cenami, da daje prednost donosnemu dovajanju v omrežje.",
     "priceLabel": "Cena uvoza energije",
     "priceLimit": "Omejitev uvoza energije",
     "resetWarning": "Dinamična odkupna tarifa ni konfigurirana. Vendar pa še vedno obstaja omejitev {limit}. Želite počistiti konfiguracijo?",

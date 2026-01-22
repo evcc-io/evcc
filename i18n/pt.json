@@ -137,9 +137,9 @@
       "no": "não",
       "odometer": "Totalizador Km",
       "org": "Organização",
-      "phaseCurrents": "Corrente L1, L2, L3",
-      "phasePowers": "Energia L1, L2, L3",
-      "phaseVoltages": "Voltagem L1, L2, L3",
+      "phaseCurrents": "Corrente",
+      "phasePowers": "Energia",
+      "phaseVoltages": "Voltagem",
       "phases1p3p": "Comutador de fases",
       "power": "Energia em tempo real",
       "powerRange": "Potência",
@@ -243,11 +243,11 @@
         "limitpower": "Limite (kW)",
         "type": "Tipo"
       },
-      "description": "Limitação da potência por sistemas externos (por exemplo, controladores EnWG 14a). Requer configuração de gestão de carga.",
+      "description": "Limitação de potência por sistemas externos (por exemplo, §14a EnWG, §9 EEG interface ou sistema de gestão de energia de nível superior). Funciona em conjunto com a funcionalidade de gestão de carga.",
       "downloadCsv": "Descarregar CSV",
       "eventsRecorded": "Registou {count} eventos de limitação da rede.",
       "lastEvent": "Mais recente {timeAgo}.",
-      "title": "HEMS",
+      "title": "Limite externo",
       "yamlConfigured": "Nota: Configurado através do evcc.yaml. Remova a entrada do ficheiro para permitir a edição aqui."
     },
     "icon": {
@@ -294,6 +294,7 @@
       "chargerTypeLabel": "Tipo de Carregador",
       "chargingTitle": "Comportamento",
       "circuitHelp": "Atribuição de gestão de carga para garantir que os limites de potência e corrente não são excedidos.",
+      "circuitInvalid": "O circuito não existe",
       "circuitLabel": "Circuito",
       "circuitUnassigned": "não atribuído",
       "defaultModeHelp": {
@@ -370,6 +371,7 @@
       "vehicleAutoDetection": "detecção automática",
       "vehicleHelpAutoDetection": "Seleciona automaticamente o veículo mais provável. É possível cancelar manualmente.",
       "vehicleHelpDefault": "Presumir sempre que este veículo está a carregar aqui. Detecção automática desativada. É possível a desativação manual.",
+      "vehicleInvalid": "O veículo não existe",
       "vehicleLabel": "Veículo predefinido",
       "vehiclesTitle": "Veículos"
     },
@@ -387,7 +389,7 @@
       "title": "Configuração",
       "unconfigured": "não configurado",
       "vehicles": "Os meus Veículos",
-      "welcomeBannerText": "Comece criando um **carregador ou aquecedor**. Se ainda não tiver um carregador real, escolha um **carregador de demonstração**.",
+      "welcomeBannerText": "Comece por criar pelo menos um **carregador**, **aquecedor**, **rede**, **solar**, **bateria** ou **medidor adicional**. Se quiser apenas testar, escolha um **dispositivo de demonstração**.",
       "welcomeBannerTitle": "Configuremos agora o seu sistema!",
       "yaml": "Os dispositivos de evcc.yaml não são editáveis."
     },
@@ -762,6 +764,9 @@
       "solar": "Solar"
     }
   },
+  "general": {
+    "note": "Nota:"
+  },
   "header": {
     "about": "Sobre",
     "authProviders": {
@@ -902,6 +907,7 @@
       "repeating": "recorrente",
       "repeatingPlans": "Repetição de planos",
       "selectAll": "Selecionar tudo",
+      "strategyDisabledDescription": "O carregamento começa o mais tarde possível para terminar a tempo da partida. Com preços dinâmicos da rede ou tarifa de CO₂, há mais opções disponíveis aqui.",
       "strategySettings": "Definições da estratégia",
       "time": "Hora",
       "title": "Plano",

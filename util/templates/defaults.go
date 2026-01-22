@@ -62,3 +62,13 @@ func (c *configDefaults) ParamByName(name string) (int, Param) {
 	}
 	return -1, Param{}
 }
+
+// ModbusDefault returns the default value for a modbus parameter
+func (c *configDefaults) ModbusDefault(name string) any {
+	for _, p := range c.Modbus.Definitions {
+		if p.Name == name {
+			return p.Default
+		}
+	}
+	return nil
+}

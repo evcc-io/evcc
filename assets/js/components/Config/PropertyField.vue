@@ -1,19 +1,5 @@
 <template>
-	<div v-if="unitValue" class="input-group" :class="inputClasses">
-		<input
-			:id="id"
-			v-model="value"
-			:type="inputType"
-			:step="step"
-			:placeholder="placeholder"
-			:required="required"
-			:aria-describedby="id + '_unit'"
-			class="form-control"
-			:class="{ 'text-end': endAlign }"
-		/>
-		<span :id="id + '_unit'" class="input-group-text">{{ unitValue }}</span>
-	</div>
-	<div v-else-if="icons" class="d-flex flex-wrap">
+	<div v-if="icons" class="d-flex flex-wrap">
 		<div
 			v-for="{ key } in selectOptions"
 			v-show="key === value || selectMode"
@@ -77,32 +63,45 @@
 		:required="required"
 		rows="4"
 	/>
-	<div v-else class="position-relative">
-		<input
-			:id="id"
-			v-model="value"
-			:list="datalistId"
-			:class="`${datalistId && serviceValues.length > 0 ? 'form-select' : 'form-control'} ${inputClasses}`"
-			:type="inputType"
-			:step="step"
-			:placeholder="placeholder"
-			:required="required"
-			:autocomplete="masked || datalistId ? 'off' : null"
-		/>
-		<button
-			v-if="showClearButton"
-			type="button"
-			class="form-control-clear"
-			:aria-label="$t('config.general.clear')"
-			@click="value = ''"
+	<div v-else class="d-flex" :class="sizeClass">
+		<div class="position-relative flex-grow-1">
+			<input
+				:id="id"
+				v-model="value"
+				:list="datalistId"
+				:type="inputType"
+				:step="step"
+				:placeholder="placeholder"
+				:required="required"
+				:pattern="patternRegex"
+				:title="patternTitle"
+				:aria-describedby="unitValue ? id + '_unit' : null"
+				:class="`${datalistId && serviceValues.length > 0 ? 'form-select' : 'form-control'} ${showClearButton ? 'has-clear-button' : ''} ${invalid ? 'is-invalid' : ''} ${endAlign ? 'text-end' : ''}`"
+				:style="
+					unitValue ? 'border-top-right-radius: 0; border-bottom-right-radius: 0' : null
+				"
+				:autocomplete="masked || datalistId ? 'off' : null"
+			/>
+			<button
+				v-if="showClearButton"
+				type="button"
+				class="form-control-clear"
+				:aria-label="$t('config.general.clear')"
+				@click="value = ''"
+			></button>
+			<datalist v-if="showDatalist" :id="datalistId">
+				<option v-for="v in serviceValues" :key="v" :value="v">
+					{{ v }}
+				</option>
+			</datalist>
+		</div>
+		<span
+			v-if="unitValue"
+			:id="id + '_unit'"
+			class="input-group-text"
+			style="border-top-left-radius: 0; border-bottom-left-radius: 0"
+			>{{ unitValue }}</span
 		>
-			&times;
-		</button>
-		<datalist v-if="showDatalist" :id="datalistId">
-			<option v-for="v in serviceValues" :key="v" :value="v">
-				{{ v }}
-			</option>
-		</datalist>
 	</div>
 </template>
 
@@ -129,6 +128,7 @@ export default {
 		scale: Number,
 		required: Boolean,
 		invalid: Boolean,
+		pattern: { type: Object, default: () => ({}) },
 		choice: { type: Array, default: () => [] },
 		modelValue: [String, Number, Boolean, Object],
 		label: String,
@@ -139,6 +139,14 @@ export default {
 		return { selectMode: false };
 	},
 	computed: {
+		patternRegex() {
+			return this.pattern.Regex || null;
+		},
+		patternTitle() {
+			const examples = this.pattern.Examples || [];
+			if (!examples.length) return null;
+			return examples.join(", ");
+		},
 		datalistId() {
 			return this.serviceValues.length > 0 ? `${this.id}-datalist` : null;
 		},
@@ -148,7 +156,15 @@ export default {
 			// no values
 			if (length === 0) return false;
 			// value selected, dont offer single same option again
-			if (this.value && this.serviceValues.includes(this.value)) return false;
+			// Convert both to strings for comparison to handle number/string type mismatches
+			const valueStr = String(this.value ?? "");
+			if (
+				this.value != null &&
+				valueStr !== "" &&
+				this.serviceValues.some((v) => String(v) === valueStr)
+			) {
+				return false;
+			}
 			return true;
 		},
 		showClearButton() {
@@ -294,7 +310,7 @@ export default {
 };
 </script>
 
-<style>
+<style scoped>
 input[type="number"] {
 	appearance: textfield;
 }

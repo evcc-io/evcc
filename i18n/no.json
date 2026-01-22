@@ -137,9 +137,9 @@
       "no": "nei",
       "odometer": "Kilometer teller",
       "org": "Organisasjon",
-      "phaseCurrents": "Strøm L1, L2, L3",
-      "phasePowers": "Effekt L1, L2, L3",
-      "phaseVoltages": "Spenning L1, L2, L3",
+      "phaseCurrents": "Strøm",
+      "phasePowers": "Effekt",
+      "phaseVoltages": "Spenning",
       "phases1p3p": "Faseomkobler",
       "power": "Effekt",
       "powerRange": "Effekt",
@@ -243,11 +243,11 @@
         "limitpower": "Begrensning (kW)",
         "type": "Type"
       },
-      "description": "Effektbegrensning ved hjelp av eksterne systemer (f.eks. EnWG 14a-kontrollere). Krever konfigurering av laststyring.",
+      "description": "Effektbegrensning ved hjelp av eksterne systemer (f.eks. §14a EnWG, §9 EEG-grensesnitt eller overordnet energistyringssystem). Fungerer sammen med funksjonen for laststyring.",
       "downloadCsv": "Last ned CSV",
       "eventsRecorded": "Registrerte {count} hendelser med rutenettbegrensning.",
       "lastEvent": "Siste {timeAgo}.",
-      "title": "HEMS",
+      "title": "Ekstern grense",
       "yamlConfigured": "Merk: Konfigurert via evcc.yaml. Fjern oppføringen fra filen for å aktivere redigering her."
     },
     "icon": {
@@ -294,6 +294,7 @@
       "chargerTypeLabel": "Ladertype",
       "chargingTitle": "Oppførsel",
       "circuitHelp": "Laststyringsoppgave for å sikre at effekt- og strømgrenser ikke overskrides.",
+      "circuitInvalid": "Kretsen eksisterer ikke",
       "circuitLabel": "Krets",
       "circuitUnassigned": "ikke tildelt",
       "defaultModeHelp": {
@@ -370,6 +371,7 @@
       "vehicleAutoDetection": "automatisk gjenkjenning",
       "vehicleHelpAutoDetection": "Velger automatisk det mest sannsynlige kjøretøyet. Manuell overstyring er mulig.",
       "vehicleHelpDefault": "Gå alltid ut fra at dette kjøretøyet lades her. Automatisk gjenkjenning er deaktivert. Manuell overstyring er mulig.",
+      "vehicleInvalid": "Kjøretøyet eksisterer ikke",
       "vehicleLabel": "Standard kjøretøy",
       "vehiclesTitle": "Kjøretøy"
     },
@@ -387,7 +389,7 @@
       "title": "Oppsett",
       "unconfigured": "ikke konfigurert",
       "vehicles": "Mine kjøretøy",
-      "welcomeBannerText": "Begynn med å lage en **lader eller varmeapparat**. Hvis du ikke har en ekte lader ennå, velg en **demolader**.",
+      "welcomeBannerText": "Begynn med å opprette minst én **lader**, **varmeapparat**, **nett**, **solcelle**, **batteri** eller **ekstra måler**. Hvis du bare vil teste, velger du en **demoenhet**.",
       "welcomeBannerTitle": "La oss konfigurere systemet ditt!",
       "yaml": "Enheter fra evcc.yaml kan ikke redigeres."
     },
@@ -760,6 +762,9 @@
       "solar": "Solenergi"
     }
   },
+  "general": {
+    "note": "Merk:"
+  },
   "header": {
     "about": "Om",
     "blog": "Blogg",
@@ -894,6 +899,7 @@
       "repeating": "gjentagende",
       "repeatingPlans": "Gjentatte planer",
       "selectAll": "Velg alt",
+      "strategyDisabledDescription": "Ladingen starter så sent som mulig for å være ferdig akkurat i tide til avreise. Med dynamiske nettpriser eller CO₂-tariff er det flere alternativer tilgjengelig her.",
       "strategySettings": "Strategiinnstillinger",
       "time": "Tid",
       "title": "Plan",

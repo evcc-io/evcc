@@ -10,11 +10,12 @@ requirements:
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
-    allinone: true
   - name: uri
   - preset: battery-params
 render: |
   type: bosch-bpt
   usage: {{ .usage }}
   uri: {{ .uri }}
-  capacity: {{ .capacity }} # kWh
+  {{- if eq .usage "battery" }}
+  {{- include "battery-params" . }}
+  {{- end }}

@@ -137,9 +137,9 @@
       "no": "nu",
       "odometer": "Kilometraj",
       "org": "Organizație",
-      "phaseCurrents": "Curent L1, L2, L3",
-      "phasePowers": "Putere L1, L2, L3",
-      "phaseVoltages": "Voltaj L1, L2, L3",
+      "phaseCurrents": "Curent",
+      "phasePowers": "Putere",
+      "phaseVoltages": "Voltaj",
       "phases1p3p": "Comutator de fază",
       "power": "Putere",
       "powerRange": "Putere",
@@ -243,11 +243,11 @@
         "limitpower": "Limită (kW)",
         "type": "Tip"
       },
-      "description": "Limitarea puterii prin sisteme externe (de exemplu, controlere EnWG 14a). Necesită configurarea gestionării sarcinii.",
+      "description": "Limitarea puterii prin sisteme externe (de exemplu, §14a EnWG, interfața §9 EEG sau sistem de gestionare a energiei de nivel superior). Funcționează împreună cu funcția de gestionare a sarcinii.",
       "downloadCsv": "Descărcați CSV",
       "eventsRecorded": "Au fost înregistrate {count} evenimente de limitare a grilei.",
       "lastEvent": "Cel mai recent {timeAgo}.",
-      "title": "HEMS",
+      "title": "Limită externă",
       "yamlConfigured": "Notă: Configurat prin evcc.yaml. Ștergeți intrarea din fișier pentru a activa editarea aici."
     },
     "icon": {
@@ -294,6 +294,7 @@
       "chargerTypeLabel": "Tipul încărcătorului",
       "chargingTitle": "Comportament",
       "circuitHelp": "Atribuirea gestionării sarcinii pentru a se asigura că limitele de putere și curent nu sunt depășite.",
+      "circuitInvalid": "Circuitul nu există",
       "circuitLabel": "Circuit",
       "circuitUnassigned": "neatribuit",
       "defaultModeHelp": {
@@ -370,6 +371,7 @@
       "vehicleAutoDetection": "detectare automată",
       "vehicleHelpAutoDetection": "Selectează automat vehiculul cel mai plauzibil. Este posibilă suprascrierea manuală.",
       "vehicleHelpDefault": "Presupuneți întotdeauna că acest vehicul se încarcă aici. Detectarea automată este dezactivată. Este posibilă comanda manuală.",
+      "vehicleInvalid": "Vehiculul nu există",
       "vehicleLabel": "Vehicul implicit",
       "vehiclesTitle": "Vehicule"
     },
@@ -387,7 +389,7 @@
       "title": "Configuratie",
       "unconfigured": "neconfigurat",
       "vehicles": "Masinile mele",
-      "welcomeBannerText": "Începeți prin a crea un **încărcător sau un încălzitor**. Dacă nu aveți încă un încărcător real, alegeți un **încărcător demo**.",
+      "welcomeBannerText": "Începeți prin a crea cel puțin un **încărcător**, **încălzitor**, **rețea**, **sistem solar**, **baterie** sau **contor suplimentar**. Dacă doriți doar să testați, alegeți un **dispozitiv demo**.",
       "welcomeBannerTitle": "Să configurăm sistemul tău!",
       "yaml": "Dispozitivele din evcc.yaml nu pot fi editate."
     },
@@ -760,6 +762,9 @@
       "solar": "Solar"
     }
   },
+  "general": {
+    "note": "Notă:"
+  },
   "header": {
     "about": "Despre",
     "blog": "Blog",
@@ -894,6 +899,7 @@
       "repeating": "repetând",
       "repeatingPlans": "Planuri repetitive",
       "selectAll": "Selectați tot",
+      "strategyDisabledDescription": "Încărcarea începe cât mai târziu posibil, pentru a se termina chiar înainte de plecare. Cu prețuri dinamice la rețea sau tariful CO₂, aici sunt disponibile mai multe opțiuni.",
       "strategySettings": "Setări strategie",
       "time": "Timp",
       "title": "Plan",

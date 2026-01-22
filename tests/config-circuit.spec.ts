@@ -22,7 +22,7 @@ test.describe("circuit", async () => {
     await expect(page.getByTestId("grid")).toHaveCount(1);
     await expect(page.getByTestId("grid")).toContainText(["Power", "2.1 kW"].join(""));
     await expect(page.getByTestId("grid")).toContainText(
-      ["Current L1, L2, L3", "3.0 · 3.0 · 3.0 A"].join("")
+      ["L1", "L2", "L3", "Current", "3.0", "3.0", "3.0", "A"].join("")
     );
 
     await expect(page.getByTestId("circuits")).toHaveCount(1);
@@ -68,6 +68,9 @@ test.describe("circuit", async () => {
     await chargerModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(chargerModal);
     await expectModalVisible(lpModal);
+
+    // no load management, no circuits
+    await expect(lpModal.getByLabel("Circuit")).not.toBeVisible();
 
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(lpModal);
@@ -126,7 +129,7 @@ test.describe("circuit", async () => {
     await expect(page.getByTestId("grid")).toHaveCount(1);
     await expect(page.getByTestId("grid")).toContainText(["Power", "2.1 kW"].join(""));
     await expect(page.getByTestId("grid")).toContainText(
-      ["Current L1, L2, L3", "3.0 · 3.0 · 3.0 A"].join("")
+      ["L1", "L2", "L3", "Current", "3.0", "3.0", "3.0", "A"].join("")
     );
 
     await expect(page.getByTestId("circuits")).toHaveCount(1);
