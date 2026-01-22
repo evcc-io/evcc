@@ -230,12 +230,6 @@ call getState {
 }
 ```
 
-## healthCheck
-
-Returns 200 if the evcc loop runs as expected.
-
-**Tags:** general
-
 ## removeGlobalSmartCostLimit
 
 Convenience method to remove limit for all loadpoints at once. Value is applied to each individual loadpoint.

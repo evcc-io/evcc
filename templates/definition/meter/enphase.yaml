@@ -9,7 +9,7 @@ params:
     choice: ["grid", "pv", "battery"]
   - name: host
   - name: schema
-    default: http
+    default: https
     advanced: true
   - name: token
     help:

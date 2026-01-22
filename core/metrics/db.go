@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/server/db"
+	"github.com/evcc-io/evcc/tariff"
+	"gorm.io/gorm"
 )
 
 type meter struct {
@@ -16,14 +18,9 @@ type meter struct {
 var ErrIncomplete = errors.New("meter profile incomplete")
 
 func init() {
-	db.Register(func() error {
-		return SetupSchema()
+	db.Register(func(db *gorm.DB) error {
+		return db.AutoMigrate(new(meter))
 	})
-}
-
-// SetupSchema is used for testing
-func SetupSchema() error {
-	return db.Instance.AutoMigrate(new(meter))
 }
 
 // Persist stores 15min consumption in Wh
@@ -55,6 +52,7 @@ func Profile(from time.Time) (*[96]float64, error) {
 	}
 	defer rows.Close()
 
+	var prev time.Time
 	res := make([]float64, 0, 96)
 
 	for rows.Next() {
@@ -64,6 +62,12 @@ func Profile(from time.Time) (*[96]float64, error) {
 		if err := rows.Scan(&ts, &val); err != nil {
 			return nil, err
 		}
+
+		// interpolate single missing value, maybe due to regular restarts?
+		if time.Time(ts).Sub(prev) == 2*tariff.SlotDuration {
+			res = append(res, (val+res[len(res)-1])/2)
+		}
+		prev = time.Time(ts)
 
 		res = append(res, val)
 	}
@@ -77,9 +81,4 @@ func Profile(from time.Time) (*[96]float64, error) {
 	}
 
 	return (*[96]float64)(res), nil
-}
-
-func SlotNum(ts time.Time) int {
-	ts = ts.Local()
-	return ts.Hour()*4 + ts.Minute()/15
 }
