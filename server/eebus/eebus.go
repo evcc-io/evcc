@@ -85,6 +85,14 @@ type EEBus struct {
 
 var Instance *EEBus
 
+func GetStatus() any {
+	return struct {
+		Ski string `json:"ski"`
+	}{
+		Ski: Ski(),
+	}
+}
+
 func NewServer(other Config) (*EEBus, error) {
 	cc := Config{
 		Port: 4712,

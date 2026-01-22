@@ -328,12 +328,8 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// publish initial settings
 	valueChan <- util.Param{Key: keys.EEBus, Val: globalconfig.Info{
-		Config: conf.EEBus,
-		Status: struct {
-			Ski string `json:"ski"`
-		}{
-			Ski: eebus.Ski(),
-		},
+		Config:   conf.EEBus,
+		Status:   eebus.GetStatus(),
 		FromYaml: fromYaml.eebus,
 	}}
 	valueChan <- util.Param{Key: keys.Shm, Val: conf.SHM}
