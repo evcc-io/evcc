@@ -31,7 +31,7 @@ params:
     default: 1s
   - name: timeout
     advanced: true
-    default: 20s
+    default: 10s
 render: |
   type: custom
   {{- if eq .usage "grid" }}
