@@ -2,6 +2,14 @@ package meter
 
 import "github.com/evcc-io/evcc/api"
 
+type battery interface {
+	api.Meter
+	api.Battery
+	api.BatteryCapacity
+	api.BatteryPowerLimiter
+	api.BatterySocLimiter
+}
+
 type batteryCapacity struct {
 	Capacity float64
 }
@@ -38,6 +46,8 @@ func (m *batteryPowerLimits) Decorator() func() (float64, float64) {
 type batterySocLimits struct {
 	MinSoc, MaxSoc float64
 }
+
+// var _ api.BatterySocLimiter = (*batterySocLimits)(nil)
 
 // Decorator returns an api.BatterySocLimiter decorator
 func (m *batterySocLimits) Decorator() func() (float64, float64) {
