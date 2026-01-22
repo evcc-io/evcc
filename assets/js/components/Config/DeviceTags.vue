@@ -83,6 +83,7 @@ export default {
 	mixins: [formatter],
 	props: {
 		tags: Object,
+		currency: String,
 	},
 	data() {
 		return {
@@ -98,15 +99,15 @@ export default {
 						!PHASE_TAGS.includes(name) &&
 						!FORECAST_TAGS.includes(name)
 				)
-				.map(([name, { value, error, warning, muted, options }]) => {
-					return { name, value, error, warning, muted, options };
+				.map(([name, { value, error, warning, muted }]) => {
+					return { name, value, error, warning, muted };
 				});
 		},
 		phaseEntries() {
 			return Object.entries(this.tags)
 				.filter(([name]) => PHASE_TAGS.includes(name))
-				.map(([name, { value, error, warning, muted, options }]) => {
-					return { name, value, error, warning, muted, options };
+				.map(([name, { value, error, warning, muted }]) => {
+					return { name, value, error, warning, muted };
 				});
 		},
 		hasPhaseEntries() {
@@ -124,8 +125,8 @@ export default {
 			// Find which forecast tag is present
 			for (const tagName of FORECAST_TAGS) {
 				if (this.tags[tagName]) {
-					const { value, error, options } = this.tags[tagName];
-					return { name: tagName, type: typeMap[tagName], value, error, options };
+					const { value, error } = this.tags[tagName];
+					return { name: tagName, type: typeMap[tagName], value, error };
 				}
 			}
 
@@ -180,7 +181,7 @@ export default {
 			};
 		},
 		fmtDeviceValue(entry) {
-			const { name, value, options = {} } = entry;
+			const { name, value } = entry;
 			if (value === null || value === undefined) {
 				return "";
 			}
@@ -207,7 +208,7 @@ export default {
 				case "price":
 				case "gridPrice":
 				case "feedinPrice":
-					return this.fmtPricePerKWh(value, options.currency, true);
+					return this.fmtPricePerKWh(value, this.currency, true);
 				case "co2":
 					return this.fmtCo2Short(value);
 				case "powerRange":
@@ -257,7 +258,7 @@ export default {
 			const type = this.ratesEntry?.type;
 			switch (type) {
 				case "price":
-					return this.fmtPricePerKWh(value, this.ratesEntry?.options?.currency, short);
+					return this.fmtPricePerKWh(value, this.currency, short);
 				case "co2":
 					return short ? this.fmtCo2Short(value) : this.fmtCo2Medium(value);
 				case "solar":

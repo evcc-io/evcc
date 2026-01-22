@@ -105,6 +105,12 @@
       "labelResidualPower": "Residualleistung",
       "title": "Regelverhalten"
     },
+    "currency": {
+      "description": "Wird für die Erfassung und Formatierung von Energiepreisen, Kosten und Einsparungen verwendet.",
+      "example": "Dein Ladepreis betrug {price}. Du hast {amount} gespart.",
+      "label": "Währung",
+      "title": "Währung"
+    },
     "deviceValue": {
       "amount": "Anzahl",
       "broker": "Broker",

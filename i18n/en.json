@@ -105,6 +105,12 @@
       "labelResidualPower": "Residual power",
       "title": "Control behavior"
     },
+    "currency": {
+      "description": "Used to format energy prices, costs and savings based on your tariff.",
+      "example": "Your charging price was {price}. You saved {amount}.",
+      "label": "Currency",
+      "title": "Currency"
+    },
     "deviceValue": {
       "amount": "Amount",
       "broker": "Broker",

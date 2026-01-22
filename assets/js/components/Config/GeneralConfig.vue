@@ -58,12 +58,21 @@
 			:text="controlStatus"
 			modal-id="controlModal"
 		/>
+
+		<GeneralConfigEntry
+			test-id="generalconfig-currency"
+			:label="$t('config.currency.title')"
+			:text="currency"
+			modal-id="currencyModal"
+		/>
 		<TitleModal ref="titleModal" @changed="load" />
+		<CurrencyModal @changed="load" />
 	</div>
 </template>
 
 <script>
 import TitleModal from "./TitleModal.vue";
+import CurrencyModal from "./CurrencyModal.vue";
 import GeneralConfigEntry from "./GeneralConfigEntry.vue";
 import api from "@/api";
 import settings from "@/settings";
@@ -72,7 +81,7 @@ import formatter from "@/mixins/formatter";
 
 export default {
 	name: "GeneralConfig",
-	components: { TitleModal, GeneralConfigEntry },
+	components: { TitleModal, CurrencyModal, GeneralConfigEntry },
 	mixins: [formatter],
 	props: {
 		sponsorError: Boolean,
@@ -96,6 +105,9 @@ export default {
 		controlStatus() {
 			const sec = store.state?.interval;
 			return sec ? this.fmtDuration(sec) : "";
+		},
+		currency() {
+			return store.state?.currency || "EUR";
 		},
 		sponsorStatus() {
 			const sponsor = store.state?.sponsor || {};

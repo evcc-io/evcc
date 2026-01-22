@@ -11,7 +11,7 @@
 			<component :is="iconComponent" />
 		</template>
 		<template #tags>
-			<DeviceTags :tags="tags" />
+			<DeviceTags :tags="tags" :currency="currency" />
 		</template>
 	</DeviceCard>
 </template>
@@ -22,10 +22,10 @@ import "@h2d2/shopicons/es/regular/receivepayment";
 import "@h2d2/shopicons/es/regular/eco1";
 import "@h2d2/shopicons/es/regular/clock";
 import "@h2d2/shopicons/es/regular/sun";
-import { defineComponent, type PropType } from "vue";
+import { type PropType } from "vue";
+import type { TariffType, CURRENCY } from "@/types/evcc";
 import DeviceCard from "./DeviceCard.vue";
 import DeviceTags from "./DeviceTags.vue";
-import type { TariffType } from "@/types/evcc";
 
 type ConfigTariff = {
 	id: number;
@@ -36,7 +36,7 @@ type ConfigTariff = {
 	};
 };
 
-export default defineComponent({
+export default {
 	name: "TariffCard",
 	components: {
 		DeviceCard,
@@ -48,6 +48,7 @@ export default defineComponent({
 		hasError: { type: Boolean, default: false },
 		title: String,
 		tags: { type: Object, default: () => ({}) },
+		currency: { type: String as PropType<CURRENCY>, required: true },
 	},
 	emits: ["edit"],
 	computed: {
@@ -71,5 +72,5 @@ export default defineComponent({
 			return iconMap[this.tariffType];
 		},
 	},
-});
+};
 </script>

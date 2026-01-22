@@ -58,7 +58,7 @@ import DeviceModalBase from "./DeviceModal/DeviceModalBase.vue";
 import NewDeviceButton from "./NewDeviceButton.vue";
 import FormRow from "./FormRow.vue";
 import PropertyField from "./PropertyField.vue";
-import { ConfigType, type TariffType } from "@/types/evcc";
+import { ConfigType, CURRENCY, type TariffType } from "@/types/evcc";
 import { customTemplateOption, type TemplateGroup } from "./DeviceModal/TemplateSelector.vue";
 import type { Product, DeviceValues } from "./DeviceModal";
 import tariffPriceYaml from "./defaultYaml/tariffPrice.yaml?raw";
@@ -85,7 +85,7 @@ export default defineComponent({
 		id: Number,
 		type: { type: String as PropType<TariffType | null>, default: null },
 		typeChoices: { type: Array as () => TariffType[], default: () => [] },
-		currency: { type: String, default: "EUR" },
+		currency: { type: String as PropType<CURRENCY>, default: CURRENCY.EUR },
 	},
 	emits: ["added", "updated", "removed", "close"],
 	data() {

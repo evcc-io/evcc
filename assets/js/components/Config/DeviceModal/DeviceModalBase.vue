@@ -158,6 +158,7 @@
 					:is-succeeded="succeeded"
 					:is-new="isNew"
 					:sponsor-token-required="sponsorTokenRequired"
+					:currency="currency"
 					@save="handleSave"
 					@remove="handleRemove"
 					@test="testManually"
@@ -185,6 +186,7 @@ import { initialAuthState, prepareAuthLogin } from "../utils/authProvider";
 import sleep from "@/utils/sleep";
 import { ConfigType } from "@/types/evcc";
 import type { DeviceType, Timeout } from "@/types/evcc";
+import { CURRENCY } from "@/types/evcc";
 import {
 	handleError,
 	type DeviceValues,
@@ -231,7 +233,7 @@ export default defineComponent({
 		showMainContent: { type: Boolean, default: true },
 		// Optional: usage parameter for loadProducts (e.g., meter type: "pv", "battery", "aux", "ext")
 		usage: String,
-		currency: { type: String, default: "EUR" },
+		currency: { type: String as PropType<CURRENCY>, default: CURRENCY.EUR },
 		// Optional: custom product name computation
 		getProductName: Function as PropType<
 			(values: DeviceValues, templateName: string | null) => string

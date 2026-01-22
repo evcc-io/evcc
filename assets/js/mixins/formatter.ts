@@ -9,18 +9,23 @@ const CURRENCY_SYMBOLS: Record<CURRENCY, string> = {
   CAD: "$",
   CHF: "Fr.",
   CNY: "¥",
+  CZK: "Kč",
   EUR: "€",
   GBP: "£",
+  HUF: "Ft",
   ILS: "₪",
+  JPY: "¥",
   NZD: "$",
+  NOK: "kr",
   PLN: "zł",
+  RON: "lei",
   USD: "$",
   DKK: "kr",
   SEK: "kr",
 };
 
 // list of currencies where energy price should be displayed in subunits (factor 100)
-const ENERGY_PRICE_IN_SUBUNIT: Record<CURRENCY, string> = {
+const ENERGY_PRICE_IN_SUBUNIT: Partial<Record<CURRENCY, string>> = {
   AUD: "c", // Australian cent
   BGN: "st", // Bulgarian stotinka
   BRL: "¢", // Brazilian centavo
@@ -31,6 +36,7 @@ const ENERGY_PRICE_IN_SUBUNIT: Record<CURRENCY, string> = {
   GBP: "p", // GB pence
   ILS: "ag", // Israeli agora
   NZD: "c", // New Zealand cent
+  NOK: "øre", // Norwegian øre
   PLN: "gr", // Polish grosz
   USD: "¢", // US cent
   DKK: "øre", // Danish øre
@@ -301,6 +307,11 @@ export default defineComponent({
     },
     fmtCurrencySymbol(currency = CURRENCY.EUR) {
       return CURRENCY_SYMBOLS[currency] || currency;
+    },
+    fmtCurrencyName(currency: CURRENCY) {
+      return (
+        new Intl.DisplayNames(this.$i18n?.locale, { type: "currency" }).of(currency) || currency
+      );
     },
     fmtPricePerKWh(amout = 0, currency = CURRENCY.EUR, short = false, withUnit = true) {
       const factor = this.pricePerKWhDisplayFactor(currency);

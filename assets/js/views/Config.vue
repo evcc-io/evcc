@@ -101,13 +101,14 @@
 						:unconfigured="isUnconfigured(tariffTags)"
 						:error="hasClassError('tariff')"
 						data-testid="tariffs"
+						:currency="currency"
 						@edit="openModal('tariffsModal')"
 					>
 						<template #icon>
 							<shopicon-regular-receivepayment></shopicon-regular-receivepayment>
 						</template>
 						<template #tags>
-							<DeviceTags :tags="tariffTags" />
+							<DeviceTags :tags="tariffTags" :currency="currency" />
 						</template>
 					</DeviceCard>
 				</div>
@@ -171,6 +172,7 @@
 						tariff-type="grid"
 						:has-error="hasDeviceError('tariff', gridTariff.name)"
 						:tags="deviceTags('tariff', gridTariff.name)"
+						:currency="currency"
 						@edit="editTariff('grid', gridTariff.id)"
 					/>
 					<TariffCard
@@ -179,6 +181,7 @@
 						tariff-type="feedin"
 						:has-error="hasDeviceError('tariff', feedinTariff.name)"
 						:tags="deviceTags('tariff', feedinTariff.name)"
+						:currency="currency"
 						@edit="editTariff('feedin', feedinTariff.id)"
 					/>
 					<NewDeviceButton
@@ -192,6 +195,7 @@
 						tariff-type="co2"
 						:has-error="hasDeviceError('tariff', co2Tariff.name)"
 						:tags="deviceTags('tariff', co2Tariff.name)"
+						:currency="currency"
 						@edit="editTariff('co2', co2Tariff.id)"
 					/>
 					<TariffCard
@@ -201,6 +205,7 @@
 						tariff-type="solar"
 						:has-error="hasDeviceError('tariff', tariff.name)"
 						:tags="deviceTags('tariff', tariff.name)"
+						:currency="currency"
 						@edit="editTariff('solar', tariff.id)"
 					/>
 					<TariffCard
@@ -209,6 +214,7 @@
 						tariff-type="planner"
 						:has-error="hasDeviceError('tariff', plannerTariff.name)"
 						:tags="deviceTags('tariff', plannerTariff.name)"
+						:currency="currency"
 						@edit="editTariff('planner', plannerTariff.id)"
 					/>
 					<NewDeviceButton
@@ -527,6 +533,7 @@ import type {
 	DeviceType,
 	Notification,
 } from "@/types/evcc";
+import { CURRENCY } from "@/types/evcc";
 
 type DeviceValuesMap = Record<DeviceType, Record<string, any>>;
 
@@ -602,7 +609,6 @@ export default defineComponent({
 			circuits: [] as ConfigCircuit[],
 			tariffs: [] as any[], // ConfigTariff[] - tariff device entities
 			tariffRefs: {
-				currency: "EUR",
 				grid: "",
 				feedin: "",
 				co2: "",
@@ -656,8 +662,8 @@ export default defineComponent({
 		setupRequired() {
 			return store.state?.setupRequired;
 		},
-		currency() {
-			return store.state?.currency || "EUR";
+		currency(): CURRENCY {
+			return store.state?.currency ?? CURRENCY.EUR;
 		},
 		siteTitle() {
 			return this.site?.title;
@@ -722,7 +728,7 @@ export default defineComponent({
 			return this.getChargerById(this.selectedChargerId)?.name;
 		},
 		tariffTags(): DeviceTags {
-			const { currency, tariffGrid, tariffFeedIn, tariffCo2, tariffSolar } = store.state;
+			const { tariffGrid, tariffFeedIn, tariffCo2, tariffSolar } = store.state;
 			if (
 				tariffGrid === undefined &&
 				tariffFeedIn === undefined &&
@@ -732,20 +738,16 @@ export default defineComponent({
 				return { configured: { value: false } };
 			}
 			const tags = {
-				currency: {},
 				gridPrice: {},
 				feedinPrice: {},
 				co2: {},
 				solarForecast: {},
 			};
-			if (currency) {
-				tags.currency = { value: currency };
-			}
 			if (tariffGrid) {
-				tags.gridPrice = { value: tariffGrid, options: { currency } };
+				tags.gridPrice = { value: tariffGrid };
 			}
 			if (tariffFeedIn) {
-				tags.feedinPrice = { value: tariffFeedIn * -1, options: { currency } };
+				tags.feedinPrice = { value: tariffFeedIn * -1 };
 			}
 			if (tariffCo2) {
 				tags.co2 = { value: tariffCo2 };

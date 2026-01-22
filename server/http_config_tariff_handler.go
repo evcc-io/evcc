@@ -9,6 +9,7 @@ import (
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/gorilla/mux"
+	"golang.org/x/text/currency"
 )
 
 // tariffsHandler returns current tariff assignments
@@ -103,14 +104,23 @@ func updateTariffHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // updateCurrencyHandler updates the currency setting
-func updateCurrencyHandler(w http.ResponseWriter, r *http.Request) {
-	var currency string
-	if err := jsonDecoder(r.Body).Decode(&currency); err != nil {
-		jsonError(w, http.StatusBadRequest, err)
-		return
+func updateCurrencyHandler(pub publisher) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var val string
+		if err := jsonDecoder(r.Body).Decode(&val); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		_, err := currency.ParseISO(val)
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, fmt.Errorf("invalid currency code: %w", err))
+			return
+		}
+
+		settings.SetString(keys.Currency, val)
+		pub(keys.Currency, val)
+
+		w.WriteHeader(http.StatusOK)
 	}
-
-	settings.SetString(keys.Currency, currency)
-
-	w.WriteHeader(http.StatusOK)
 }
