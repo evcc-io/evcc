@@ -180,18 +180,6 @@ func (sm *SMA) Powers() (float64, float64, float64, error) {
 	return sm.scale * res[0], sm.scale * res[1], sm.scale * res[2], err
 }
 
-// func (sm *SMABattery) Capacity() float64 {
-// 	return sm.Capacity()
-// }
-
-// func (sm *SMABattery) GetSocLimits() (float64, float64) {
-// 	return sm.socLimits()
-// }
-
-// func (sm *SMABattery) GetPowerLimits() (float64, float64) {
-// 	return sm.powerLimits()
-// }
-
 // soc implements the api.Battery interface
 func (sm *SMA) soc() (float64, error) {
 	values, err := sm.device.Values()
