@@ -84,6 +84,7 @@ var conf = globalconfig.All{
 var fromYaml struct {
 	sponsor bool
 	hems    bool
+	eebus   bool
 }
 
 var nameRE = regexp.MustCompile(`^[a-zA-Z0-9_.:-]+$`)
@@ -779,6 +780,8 @@ func configureEEBus(conf *eebus.Config) error {
 		if err := migrateYamlToJson(keys.EEBus, conf); err != nil {
 			return err
 		}
+	} else if conf.IsConfigured() {
+		fromYaml.eebus = true
 	}
 
 	if !conf.IsConfigured() {

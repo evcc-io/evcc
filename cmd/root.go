@@ -177,10 +177,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	ocppCS := ocpp.Instance()
 	ocppCS.SetUpdated(func() {
 		// republish when OCPP state updates
-		valueChan <- util.Param{Key: keys.Ocpp, Val: struct {
-			Config ocpp.Config `json:"config"`
-			Status ocpp.Status `json:"status"`
-		}{
+		valueChan <- util.Param{Key: keys.Ocpp, Val: globalconfig.Info{
 			Config: conf.Ocpp,
 			Status: ocpp.GetStatus(),
 		}}
@@ -330,12 +327,14 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}
 
 	// publish initial settings
-	valueChan <- util.Param{Key: keys.EEBus, Val: struct {
-		Config eebus.Config `json:"config"`
-		Ski    string       `json:"ski"`
-	}{
+	valueChan <- util.Param{Key: keys.EEBus, Val: globalconfig.Info{
 		Config: conf.EEBus,
-		Ski:    eebus.Ski(),
+		Status: struct {
+			Ski string `json:"ski"`
+		}{
+			Ski: eebus.Ski(),
+		},
+		FromYaml: fromYaml.eebus,
 	}}
 	valueChan <- util.Param{Key: keys.Shm, Val: conf.SHM}
 	valueChan <- util.Param{Key: keys.Influx, Val: conf.Influx}
@@ -344,26 +343,16 @@ func runRoot(cmd *cobra.Command, args []string) {
 	valueChan <- util.Param{Key: keys.ModbusProxy, Val: conf.ModbusProxy}
 	valueChan <- util.Param{Key: keys.Mqtt, Val: conf.Mqtt}
 	valueChan <- util.Param{Key: keys.Network, Val: conf.Network}
-	valueChan <- util.Param{Key: keys.Ocpp, Val: struct {
-		Config ocpp.Config `json:"config"`
-		Status ocpp.Status `json:"status"`
-	}{
+	valueChan <- util.Param{Key: keys.Ocpp, Val: globalconfig.Info{
 		Config: conf.Ocpp,
 		Status: ocpp.GetStatus(),
 	}}
-	valueChan <- util.Param{Key: keys.Sponsor, Val: struct {
-		Status   sponsor.Status `json:"status"`
-		FromYaml bool           `json:"fromYaml"`
-	}{
+	valueChan <- util.Param{Key: keys.Sponsor, Val: globalconfig.Info{
 		Status:   sponsor.GetStatus(),
 		FromYaml: fromYaml.sponsor,
 	}}
 
-	valueChan <- util.Param{Key: keys.Hems, Val: struct {
-		Config   globalconfig.Hems `json:"config"`
-		Status   *hemsapi.Status   `json:"status,omitempty"`
-		FromYaml bool              `json:"fromYaml"`
-	}{
+	valueChan <- util.Param{Key: keys.Hems, Val: globalconfig.Info{
 		Config:   conf.HEMS,
 		Status:   hemsapi.GetStatus(hems),
 		FromYaml: fromYaml.hems,
