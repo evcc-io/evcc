@@ -23,7 +23,6 @@ params:
       en: "Create an app in [api-portal.eco2grid.com](https://api-portal.eco2grid.com) and copy the key"
     deprecated: true
   - name: clientid
-    type: string
     required: true
   - name: clientsecret
     required: true
