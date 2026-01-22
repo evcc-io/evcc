@@ -145,6 +145,7 @@ func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(
 				if !slices.Contains(reset, targetVal) {
 					var ctx context.Context
 					ctx, o.cancel = context.WithCancel(context.Background())
+
 					go o.wdt(ctx, func() error {
 						o.mu.Lock()
 						defer o.mu.Unlock()
