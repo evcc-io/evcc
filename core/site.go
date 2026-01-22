@@ -76,8 +76,6 @@ type Site struct {
 	valueChan    chan<- util.Param // client push messages
 	lpUpdateChan chan *Loadpoint
 
-	*Health
-
 	sync.RWMutex
 	log *util.Logger
 
@@ -987,8 +985,6 @@ func (site *Site) update(lp updater) {
 			)
 		}
 
-		site.Health.Update()
-
 		site.publishTariffs(greenShareHome, greenShareLoadpoints)
 
 		if telemetry.Enabled() && totalChargePower > standbyPower {
@@ -1120,8 +1116,6 @@ func (site *Site) loopLoadpoints(next chan<- updater) {
 // Run is the main control loop. It reacts to trigger events by
 // updating measurements and executing control logic.
 func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
-	site.Health = NewHealth(time.Minute + interval)
-
 	if max := 30 * time.Second; interval < max {
 		site.log.INFO.Printf("interval <%.0fs can lead to unexpected behavior, see https://docs.evcc.io/docs/reference/configuration/interval", max.Seconds())
 	}
