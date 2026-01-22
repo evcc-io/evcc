@@ -27,7 +27,7 @@ render: |
       id: {{ .id }}
       register:
         address: 2201 # SUR Überschussleistung Auflösung 1 W
-        type: writeholding
+        type: writesingle
         decode: int16
   power:
     source: modbus
