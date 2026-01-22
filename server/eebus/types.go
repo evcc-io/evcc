@@ -74,3 +74,11 @@ func DefaultConfig() (*Config, error) {
 
 	return &res, nil
 }
+
+// Ski returns true if the EEbus server is configured
+func Ski() string {
+	if Instance == nil {
+		return ""
+	}
+	return Instance.ski
+}

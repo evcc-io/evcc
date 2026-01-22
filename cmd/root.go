@@ -20,6 +20,7 @@ import (
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/server/db"
+	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/server/mcp"
 	"github.com/evcc-io/evcc/server/network"
 	"github.com/evcc-io/evcc/server/updater"
@@ -329,7 +330,13 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}
 
 	// publish initial settings
-	valueChan <- util.Param{Key: keys.EEBus, Val: conf.EEBus}
+	valueChan <- util.Param{Key: keys.EEBus, Val: struct {
+		Config eebus.Config `json:"config"`
+		Ski    string       `json:"ski"`
+	}{
+		Config: conf.EEBus,
+		Ski:    eebus.Ski(),
+	}}
 	valueChan <- util.Param{Key: keys.Shm, Val: conf.SHM}
 	valueChan <- util.Param{Key: keys.Influx, Val: conf.Influx}
 	valueChan <- util.Param{Key: keys.Interval, Val: conf.Interval}
