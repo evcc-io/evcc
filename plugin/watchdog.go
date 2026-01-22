@@ -138,7 +138,6 @@ func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(
 					o.log.ERROR.Printf("delayed transition failed: %v", err)
 					return
 				}
-
 				state.lastWrite = o.clock.Now()
 				state.currentMode = &targetVal
 				o.log.DEBUG.Printf("delayed transition completed: currentMode=%v", targetVal)
