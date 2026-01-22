@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"go/format"
 	"io"
+	"maps"
 	"os"
 	"reflect"
 	"slices"
@@ -72,6 +73,9 @@ var a struct {
 	api.BatterySocLimiter
 	api.BatteryPowerLimiter
 
+	// vehicle
+	api.ChargeState
+	api.ChargeController
 	api.CurrentController
 	api.CurrentGetter
 }
@@ -85,6 +89,7 @@ var dependents = map[string][]string{
 	typ(&a.PhaseCurrents):     {typ(&a.PhasePowers)}, // phase powers are only used to determine currents sign
 	typ(&a.PhaseSwitcher):     {typ(&a.PhaseGetter)},
 	typ(&a.Battery):           {typ(&a.BatteryCapacity), typ(&a.SocLimiter), typ(&a.BatteryController), typ(&a.BatterySocLimiter), typ(&a.BatteryPowerLimiter)},
+	typ(&a.ChargeState):       {typ(&a.ChargeController), typ(&a.CurrentController)},
 	typ(&a.CurrentController): {typ(&a.CurrentGetter)},
 }
 
@@ -190,9 +195,13 @@ func generate(out io.Writer, functionName, baseType string, dynamicTypes ...dyna
 	}
 
 	validCombos := make([][]string, 0)
+	sortedDependents := slices.Sorted(maps.Keys(dependents))
+
 COMBO:
 	for _, c := range combinations.All(combos) {
-		for master, details := range dependents {
+		// order the cases for generation
+		for _, master := range sortedDependents {
+			details := dependents[master]
 			// prune combinations where ...
 			// - master is part of the decorators
 			// - master is not part of the currently evaluated combination
@@ -231,6 +240,8 @@ COMBO:
 		Types:        types,
 		Combinations: validCombos,
 	}
+
+	// fmt.Fprintf(out, "// combo %v\n\n", validCombos)
 
 	return tmpl.Execute(out, vars)
 }

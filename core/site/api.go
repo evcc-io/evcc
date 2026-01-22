@@ -14,7 +14,6 @@ type Publisher interface {
 type API interface {
 	Publisher
 
-	Healthy() bool
 	Loadpoints() []loadpoint.API
 	Vehicles() Vehicles
 
