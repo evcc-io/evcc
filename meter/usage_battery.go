@@ -2,14 +2,6 @@ package meter
 
 import "github.com/evcc-io/evcc/api"
 
-type battery interface {
-	api.Meter
-	api.Battery
-	api.BatteryCapacity
-	api.BatteryPowerLimiter
-	api.BatterySocLimiter
-}
-
 type batteryCapacity struct {
 	Capacity float64
 }
