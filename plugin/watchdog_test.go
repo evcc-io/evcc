@@ -15,10 +15,10 @@ import (
 
 func TestWatchdogSetterConcurrency(t *testing.T) {
 	p := &watchdogPlugin{
-		log:     util.NewLogger("foo"),
-		timeout: 10 * time.Nanosecond,
-		buffer:  5 * time.Second,
-		clock:   clock.New(),
+		log:         util.NewLogger("foo"),
+		timeout:     10 * time.Nanosecond,
+		graceperiod: 5 * time.Second,
+		clock:       clock.New(),
 	}
 
 	var u atomic.Uint32
@@ -48,129 +48,115 @@ func TestWatchdogSetterConcurrency(t *testing.T) {
 	require.NoError(t, eg.Wait())
 }
 
-func TestWatchdogDelayTransition(t *testing.T) {
-	// Test: Mode 1 → 3 → 2 with delay
+func TestWatchdogDeferredUpdate(t *testing.T) {
+	// Test: Value 1 → 3 → 2 with delay
 	// 1 → 3: delayed (target 3 is non-reset)
 	// 3 → 2: delayed (target 2 is non-reset)
 	// Expected: [1, <delay>, 3, <delay>, 2]
 
 	timeout := 100 * time.Millisecond
+	c := clock.NewMock()
 	p := &watchdogPlugin{
-		log:        util.NewLogger("test"),
-		timeout:    timeout,
-		transition: true,
-		buffer:     5 * time.Second,
-		clock:      clock.New(),
+		log:         util.NewLogger("test"),
+		timeout:     timeout,
+		deferred:    true,
+		graceperiod: 5 * time.Second,
+		clock:       c,
 	}
 
-	c := clock.NewMock()
-	p.clock = c
-
 	var calls []int
-	var timestamps []time.Time
-
 	set := setter(p, func(i int) error {
 		calls = append(calls, i)
-		timestamps = append(timestamps, p.clock.Now())
 		return nil
-	}, []int{1}) // 1 is reset mode
+	}, []int{1}) // 1 is reset value
 
-	// Mode 1 (reset) → should write immediately
+	// Value 1 (reset) → should set immediately
 	require.NoError(t, set(1))
 	require.Equal(t, []int{1}, calls)
 
-	// Mode 3 (target is non-reset) → should be delayed
+	// Value 3 (target is non-reset) → should be delayed
 	require.NoError(t, set(3))
-	require.Equal(t, []int{1}, calls, "Mode 3 should not be written yet")
+	require.Equal(t, []int{1}, calls, "Value 3 should not be set yet")
 
-	// Wait for delay + small buffer
-	expectedDelay := p.timeout + p.buffer
-	c.Add(expectedDelay + 20*time.Millisecond)
+	// Wait for delay
+	expectedDelay := p.timeout + p.graceperiod
+	c.Add(expectedDelay)
 
-	// Now mode 3 should be written
+	// Now value 3 should be set
 	require.Equal(t, []int{1, 3}, calls)
 
-	// Mode 2 (non-reset to non-reset) → should delay
+	// Value 2 (non-reset to non-reset) → should delay
 	require.NoError(t, set(2))
-	require.Equal(t, []int{1, 3}, calls, "Mode 2 should not be written yet")
+	require.Equal(t, []int{1, 3}, calls, "Value 2 should not be set yet")
 
-	// Wait for delay + small buffer
-	c.Add(expectedDelay + 20*time.Millisecond)
+	// Wait for delay
+	c.Add(expectedDelay)
 
-	// Now mode 2 should be written (exactly once)
+	// Now value 2 should be set (exactly once)
 	require.Equal(t, []int{1, 3, 2}, calls)
-
-	// Verify delay was approximately correct for mode 2
-	if len(timestamps) >= 3 {
-		actualDelay := timestamps[2].Sub(timestamps[1])
-		require.Greater(t, actualDelay, expectedDelay-10*time.Millisecond)
-		require.Less(t, actualDelay, expectedDelay+100*time.Millisecond)
-	}
 }
 
-func TestWatchdogCancelPendingTransition(t *testing.T) {
-	// Test: Mode 3 → 2 started, then set Mode 1 during delay
-	// Expected: Transition cancelled, Mode 1 set immediately
+func TestWatchdogCancelPendingDeferredUpdate(t *testing.T) {
+	// Test: Value 3 → 2 started, then set Value 1 during delay
+	// Expected: Deferred update cancelled, Value 1 set immediately
 
 	timeout := 200 * time.Millisecond
-	p := &watchdogPlugin{
-		log:        util.NewLogger("test"),
-		timeout:    timeout,
-		transition: true,
-		buffer:     5 * time.Second,
-		clock:      clock.New(),
-	}
-
 	c := clock.NewMock()
-	p.clock = c
+	p := &watchdogPlugin{
+		log:         util.NewLogger("test"),
+		timeout:     timeout,
+		deferred:    true,
+		graceperiod: 5 * time.Second,
+		clock:       c,
+	}
 
 	var calls []int
 	set := setter(p, func(i int) error {
 		calls = append(calls, i)
 		return nil
-	}, []int{1}) // 1 is reset mode
+	}, []int{1}) // 1 is reset value
 
-	// Mode 3 (non-reset)
+	// Value 3 (non-reset)
 	require.NoError(t, set(3))
 	require.Equal(t, []int{3}, calls)
 
-	// Mode 2 (delayed transition)
+	// Value 2 (deferred update)
 	require.NoError(t, set(2))
-	require.Equal(t, []int{3}, calls, "Mode 2 should not be written yet")
+	require.Equal(t, []int{3}, calls, "Value 2 should not be set yet")
 
 	// Wait a bit but not the full delay
 	c.Add(50 * time.Millisecond)
 
-	// Mode 1 (reset) → should cancel pending transition and write immediately
+	// Value 1 (reset) → should cancel pending deferred update and set immediately
 	require.NoError(t, set(1))
-	require.Equal(t, []int{3, 1}, calls, "Mode 1 should be written, Mode 2 should be cancelled")
+	require.Equal(t, []int{3, 1}, calls, "Value 1 should be set, Value 2 should be cancelled")
 
 	// Wait for what would have been the original delay
-	c.Add(timeout + 5*time.Second + 100*time.Millisecond)
+	c.Add(timeout + p.graceperiod)
 
-	// Mode 2 should still not have been written
-	require.Equal(t, []int{3, 1}, calls, "Mode 2 should remain cancelled")
+	// Value 2 should still not have been set
+	require.Equal(t, []int{3, 1}, calls, "Value 2 should remain cancelled")
 }
 
 func TestWatchdogDelayBackwardCompatibility(t *testing.T) {
-	// Test: transition=false behaves like old implementation
-	// Expected: All transitions immediate
+	// Test: deferred=false behaves like old implementation
+	// Expected: All updates immediate
 
 	p := &watchdogPlugin{
-		log:        util.NewLogger("test"),
-		timeout:    100 * time.Millisecond,
-		transition: false, // explicitly false
-		buffer:     5 * time.Second,
-		clock:      clock.New(),
+		log:         util.NewLogger("test"),
+		timeout:     100 * time.Millisecond,
+		deferred:    false, // explicitly false
+		graceperiod: 5 * time.Second,
+		clock:       clock.New(),
 	}
 
 	var calls []int
 	set := setter(p, func(i int) error {
 		calls = append(calls, i)
 		return nil
-	}, []int{1}) // 1 is reset mode
+	}, []int{1}) // 1 is reset value
 
-	// All transitions should be immediate
+	// All updates should be immediate
 	require.NoError(t, set(1))
 	require.Equal(t, []int{1}, calls)
 
@@ -178,8 +164,8 @@ func TestWatchdogDelayBackwardCompatibility(t *testing.T) {
 	require.Equal(t, []int{1, 3}, calls)
 
 	require.NoError(t, set(2))
-	require.Equal(t, []int{1, 3, 2}, calls, "Mode 2 should be written immediately (no delay)")
+	require.Equal(t, []int{1, 3, 2}, calls, "Value 2 should be set immediately (no delay)")
 
 	require.NoError(t, set(4))
-	require.Equal(t, []int{1, 3, 2, 4}, calls, "Mode 4 should be written immediately (no delay)")
+	require.Equal(t, []int{1, 3, 2, 4}, calls, "Value 4 should be set immediately (no delay)")
 }

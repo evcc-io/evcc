@@ -13,17 +13,17 @@ import (
 )
 
 type watchdogPlugin struct {
-	mu         sync.Mutex
-	ctx        context.Context
-	log        *util.Logger
-	reset      []string
-	initial    *string
-	set        Config
-	timeout    time.Duration
-	transition bool
-	buffer     time.Duration
-	cancel     func()
-	clock      clock.Clock
+	mu          sync.Mutex
+	ctx         context.Context
+	log         *util.Logger
+	reset       []string
+	initial     *string
+	set         Config
+	timeout     time.Duration
+	deferred    bool
+	graceperiod time.Duration
+	cancel      func()
+	clock       clock.Clock
 }
 
 func init() {
@@ -33,34 +33,34 @@ func init() {
 // NewWatchDogFromConfig creates watchDog provider
 func NewWatchDogFromConfig(ctx context.Context, other map[string]any) (Plugin, error) {
 	var cc struct {
-		Reset      []string
-		Initial    *string
-		Set        Config
-		Timeout    time.Duration
-		Transition bool
-		Buffer     *time.Duration
+		Reset       []string
+		Initial     *string
+		Set         Config
+		Timeout     time.Duration
+		Deferred    bool `mapstructure:"defer"`
+		Graceperiod *time.Duration
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	// set default buffer
-	buffer := 3 * time.Second
-	if cc.Buffer != nil {
-		buffer = *cc.Buffer
+	// set default graceperiod
+	graceperiod := 3 * time.Second
+	if cc.Graceperiod != nil {
+		graceperiod = *cc.Graceperiod
 	}
 
 	o := &watchdogPlugin{
-		ctx:        ctx,
-		log:        util.ContextLoggerWithDefault(ctx, util.NewLogger("watchdog")),
-		reset:      cc.Reset,
-		initial:    cc.Initial,
-		set:        cc.Set,
-		timeout:    cc.Timeout,
-		transition: cc.Transition,
-		buffer:     buffer,
-		clock:      clock.New(),
+		ctx:         ctx,
+		log:         util.ContextLoggerWithDefault(ctx, util.NewLogger("watchdog")),
+		reset:       cc.Reset,
+		initial:     cc.Initial,
+		set:         cc.Set,
+		timeout:     cc.Timeout,
+		deferred:    cc.Deferred,
+		graceperiod: graceperiod,
+		clock:       clock.New(),
 	}
 
 	return o, nil
@@ -79,68 +79,66 @@ func (o *watchdogPlugin) wdt(ctx context.Context, set func() error) {
 	}
 }
 
-type transitionState[T comparable] struct {
-	currentMode     *T
-	pendingMode     *T
-	transitionTimer *clock.Timer
-	lastWrite       time.Time
+type deferredState[T comparable] struct {
+	pendingValue  *T
+	deferredTimer *clock.Timer
+	lastUpdated   time.Time
 }
 
 // setter is the generic setter function for watchdogPlugin
 // it is currently not possible to write this as a method
 func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(T) error {
-	var state transitionState[T]
+	var state deferredState[T]
 
 	return func(val T) error {
 		o.mu.Lock()
 		defer o.mu.Unlock()
 
-		// cancel pending transition
-		if state.transitionTimer != nil {
-			state.transitionTimer.Stop()
-			state.transitionTimer = nil
-			state.pendingMode = nil
+		// cancel pending deferred update
+		if state.deferredTimer != nil {
+			state.deferredTimer.Stop()
+			state.deferredTimer = nil
+			state.pendingValue = nil
 		}
 
-		// calculate delay from last write
-		requiredDelay := o.timeout + o.buffer
-		timeSinceLastWrite := o.clock.Since(state.lastWrite)
-		actualDelay := max(0, requiredDelay-timeSinceLastWrite)
+		// calculate delay from last update
+		requiredDelay := o.timeout + o.graceperiod
+		timeSinceLastUpdated := o.clock.Since(state.lastUpdated)
+		actualDelay := max(0, requiredDelay-timeSinceLastUpdated)
 
-		// delay transition to non-reset state by transitionDelay
-		if o.transition && state.currentMode != nil && !slices.Contains(reset, val) && actualDelay > 0 {
+		// defer update to non-reset value
+		if o.deferred && !state.lastUpdated.IsZero() && !slices.Contains(reset, val) && actualDelay > 0 {
 			// stop running wdt
 			if o.cancel != nil {
 				o.cancel()
 				o.cancel = nil
 			}
 
-			// store pending mode
-			state.pendingMode = &val
+			// store pending value
+			state.pendingValue = &val
 
-			o.log.DEBUG.Printf("delayed transition scheduled: requiredDelay=%v, timeSinceLastWrite=%v, actualDelay=%v, from=%v, to=%v",
-				requiredDelay, timeSinceLastWrite, actualDelay, state.currentMode, val)
+			o.log.DEBUG.Printf("deferred update scheduled: requiredDelay=%v, timeSinceLastUpdated=%v, actualDelay=%v, to=%v",
+				requiredDelay, timeSinceLastUpdated, actualDelay, val)
 
-			state.transitionTimer = o.clock.AfterFunc(actualDelay, func() {
+			state.deferredTimer = o.clock.AfterFunc(actualDelay, func() {
 				o.mu.Lock()
 				defer o.mu.Unlock()
 
-				if state.pendingMode == nil {
+				if state.pendingValue == nil {
 					return
 				}
 
-				targetVal := *state.pendingMode
-				state.pendingMode = nil
-				state.transitionTimer = nil
+				targetVal := *state.pendingValue
+				state.pendingValue = nil
+				state.deferredTimer = nil
 
-				o.log.DEBUG.Printf("delayed transition executing: to=%v", targetVal)
+				o.log.DEBUG.Printf("deferred update executing: to=%v", targetVal)
 				if err := set(targetVal); err != nil {
-					o.log.ERROR.Printf("delayed transition failed: %v", err)
+					o.log.ERROR.Printf("deferred update failed: %v", err)
 					return
 				}
-				state.lastWrite = o.clock.Now()
-				state.currentMode = &targetVal
-				o.log.DEBUG.Printf("delayed transition completed: currentMode=%v", targetVal)
+				state.lastUpdated = o.clock.Now()
+				o.log.DEBUG.Printf("deferred update completed: value=%v", targetVal)
 
 				if !slices.Contains(reset, targetVal) {
 					var ctx context.Context
@@ -152,7 +150,7 @@ func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(
 						if err := set(targetVal); err != nil {
 							return err
 						}
-						state.lastWrite = o.clock.Now()
+						state.lastUpdated = o.clock.Now()
 						return nil
 					})
 				}
@@ -177,7 +175,7 @@ func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(
 				if err := set(val); err != nil {
 					return err
 				}
-				state.lastWrite = o.clock.Now()
+				state.lastUpdated = o.clock.Now()
 				return nil
 			})
 		}
@@ -185,10 +183,7 @@ func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(
 		if err := set(val); err != nil {
 			return err
 		}
-		state.lastWrite = o.clock.Now()
-
-		valCopy := val
-		state.currentMode = &valCopy
+		state.lastUpdated = o.clock.Now()
 
 		return nil
 	}
