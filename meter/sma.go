@@ -20,15 +20,6 @@ type SMA struct {
 	device *sma.Device
 }
 
-var _ battery = (*SMABattery)(nil)
-
-type SMABattery struct {
-	*SMA
-	capacity    float64
-	socLimits   func() (float64, float64)
-	powerLimits func() (float64, float64)
-}
-
 func init() {
 	registry.Add("sma", NewSMAFromConfig)
 }
@@ -52,21 +43,32 @@ func NewSMAFromConfig(other map[string]any) (api.Meter, error) {
 		return nil, err
 	}
 
-	m, err := NewSMA(cc.URI, cc.Password, cc.Interface, cc.Serial, cc.Scale, cc.batteryCapacity.Decorator())
+	sm, err := NewSMA(cc.URI, cc.Password, cc.Interface, cc.Serial, cc.Scale, cc.batteryCapacity.Decorator())
 	if err != nil {
 		return nil, err
 	}
 
 	if cc.Usage == "battery" {
-		return &SMABattery{
-			capacity:    cc.batteryCapacity.Capacity,
-			SMA:         m,
-			socLimits:   cc.batterySocLimits.Decorator(),
-			powerLimits: cc.batteryPowerLimits.Decorator(),
-		}, nil
+		var soc func() (float64, error)
+		if !sm.device.IsEnergyMeter() {
+			vals, err := sm.device.Values()
+			if err != nil {
+				return nil, err
+			}
+
+			if _, ok := vals[sunny.BatteryCharge]; ok {
+				soc = sm.soc
+			}
+		}
+
+		return decorateMeterBattery(
+			sm, sm.TotalEnergy,
+			soc, cc.batteryCapacity.Decorator(),
+			cc.batterySocLimits.Decorator(), cc.batteryPowerLimits.Decorator(), nil,
+		), nil
 	}
 
-	return m, nil
+	return sm, nil
 }
 
 // NewSMA creates an SMA meter
@@ -178,31 +180,22 @@ func (sm *SMA) Powers() (float64, float64, float64, error) {
 	return sm.scale * res[0], sm.scale * res[1], sm.scale * res[2], err
 }
 
-func (sm *SMABattery) Capacity() float64 {
-	return sm.Capacity()
-}
+// func (sm *SMABattery) Capacity() float64 {
+// 	return sm.Capacity()
+// }
 
-func (sm *SMABattery) GetSocLimits() (float64, float64) {
-	return sm.socLimits()
-}
+// func (sm *SMABattery) GetSocLimits() (float64, float64) {
+// 	return sm.socLimits()
+// }
 
-func (sm *SMABattery) GetPowerLimits() (float64, float64) {
-	return sm.powerLimits()
-}
+// func (sm *SMABattery) GetPowerLimits() (float64, float64) {
+// 	return sm.powerLimits()
+// }
 
-// Soc implements the api.Battery interface
-func (sm *SMABattery) Soc() (float64, error) {
+// soc implements the api.Battery interface
+func (sm *SMA) soc() (float64, error) {
 	values, err := sm.device.Values()
-	if err != nil {
-		return 0, err
-	}
-
-	soc, ok := values[sunny.BatteryCharge]
-	if !ok {
-		return 0, api.ErrNotAvailable
-	}
-
-	return sma.AsFloat(soc), nil
+	return sma.AsFloat(values[sunny.BatteryCharge]), err
 }
 
 var _ api.Diagnosis = (*SMA)(nil)
