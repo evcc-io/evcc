@@ -188,21 +188,6 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/NumberResult"
-  /health:
-    get:
-      operationId: healthCheck
-      summary: Health check
-      description: Returns 200 if the evcc loop runs as expected.
-      tags:
-        - general
-      responses:
-        "200":
-          description: Success
-          content:
-            text/plain:
-              schema:
-                type: string
-                example: OK
   /loadpoints/{id}/batteryboost/{enable}:
     post:
       operationId: setLoadpointBatteryBoost

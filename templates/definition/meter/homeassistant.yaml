@@ -107,6 +107,7 @@ params:
       en: Entity ID for L3 voltage measurement in volts
       de: Entitäts-ID für L3 Spannungsmessung in Volt
   - name: soc
+    usages: ["battery"]
     description:
       de: Batterieladestand
       en: Battery State of Charge
@@ -116,12 +117,8 @@ params:
     help:
       en: Entity ID for battery state of charge in percent
       de: Entitäts-ID für Batterieladestand in Prozent
-  - name: capacity
-  - name: minsoc
-  - name: maxsoc
-  - name: maxchargepower
-  - name: maxdischargepower
   - name: maxacpower
+  - preset: battery-params
 render: |
   type: homeassistant
   uri: {{ .uri }}
@@ -137,9 +134,7 @@ render: |
     - {{ .voltageL2 }}
     - {{ .voltageL3 }}
   maxacpower: {{ .maxacpower }} # W
-  soc: {{ .soc }}
-  capacity: {{ .capacity }} # kWh
-  maxchargepower: {{ .maxchargepower }} # W
-  maxdischargepower: {{ .maxdischargepower }} # W
-  minsoc: {{ .minsoc }} # %
-  maxsoc: {{ .maxsoc }} # %
+  {{- if eq .usage "battery" }}
+  soc: {{ .soc }} # W
+  {{- include "battery-params" . }}
+  {{- end }}

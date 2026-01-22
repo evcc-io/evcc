@@ -71,7 +71,8 @@ type EnergyGuard struct {
 }
 
 type EEBus struct {
-	service eebusapi.ServiceInterface
+	service        eebusapi.ServiceInterface
+	remoteServices []shipapi.RemoteService
 
 	cem CustomerEnergyManagement
 	cs  ControllableSystem
@@ -271,6 +272,12 @@ func (c *EEBus) EnergyGuard() *EnergyGuard {
 	return &c.eg
 }
 
+func (c *EEBus) RemoteServices() []shipapi.RemoteService {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+	return c.remoteServices
+}
+
 func (c *EEBus) Run() {
 	c.service.Start()
 }
@@ -321,6 +328,9 @@ func (c *EEBus) RemoteSKIDisconnected(service eebusapi.ServiceInterface, ski str
 // this is needed to provide an UI for pairing with other devices
 // if not all incoming pairing requests should be accepted
 func (c *EEBus) VisibleRemoteServicesUpdated(service eebusapi.ServiceInterface, entries []shipapi.RemoteService) {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+	c.remoteServices = slices.Clone(entries)
 }
 
 // Provides the SHIP ID the remote service reported during the handshake process

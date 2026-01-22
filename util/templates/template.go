@@ -65,6 +65,20 @@ func (t *Template) UpdateModbusParamsWithDefaults() error {
 	return nil
 }
 
+func (t *Template) SortRequiredParamsFirst() error {
+	slices.SortStableFunc(t.Params, func(a, b Param) int {
+		if a.Required && !b.Required {
+			return -1
+		}
+		if b.Required && !a.Required {
+			return +1
+		}
+		return 0
+	})
+
+	return nil
+}
+
 // validate the template (only rudimentary for now)
 func (t *Template) Validate() error {
 	for _, c := range t.Capabilities {

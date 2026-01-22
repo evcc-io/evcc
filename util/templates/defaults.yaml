@@ -14,6 +14,7 @@ params:
     description:
       en: Modbus Type
       de: Modbus Typ
+    required: true
   - name: host
     required: true
     description:
@@ -268,6 +269,7 @@ params:
     help:
       en: Usually found on the web interface of the wallbox
       de: Üblicherweise im Web Interface der Wallbox zu finden
+    service: eebus/services
   - name: uri
     private: true
     description:
@@ -376,6 +378,7 @@ params:
     description:
       en: Channel
       de: Kanal
+    type: int
   - name: clientid
     description:
       generic: Client ID
