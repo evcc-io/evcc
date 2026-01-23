@@ -2,26 +2,40 @@
 timeout-minutes: 5
 strict: true
 on:
-  schedule: "0 14 * * 1-5"
-  workflow_dispatch:
+  issues:
+    types: [opened, edited, reopened]
+  pull_request:
+    types: [opened, edited, reopened]
 permissions:
   issues: read
+  pull-requests: read
 tools:
   github:
-    toolsets: [issues, labels]
+    toolsets: [issues, pull_requests, labels]
 safe-outputs:
   add-labels:
-    allowed: [bug, feature, enhancement, documentation, question, help-wanted, good-first-issue]
+    allowed: [bug, enhancement, documentation, question, device, tariff, vehicle]
   add-comment: {}
 source: githubnext/gh-aw/.github/workflows/issue-triage-agent.md@87fe98fa15e2bb50f41225a356bbc07318b54fcf
 ---
 
-# Issue Triage Agent
+# Issue/Pull request Triage Agent
 
-List open issues in ${{ github.repository }} that have no labels. For each unlabeled issue, analyze the title and body, then add one of the allowed labels: `bug`, `feature`, `enhancement`, `documentation`, `question`, `help-wanted`, or `good-first-issue`. 
+## Label the Issue/Pull Request
 
-Skip issues that:
-- Already have any of these labels
-- Have been assigned to any user (especially non-bot users)
+Look at the issue/pull request. Analyze title and body, then add one of the allowed labels: `bug`, `enhancement`, `documentation`, `question`, `device`, `tariff`, `vehicle`.
 
-After adding the label to an issue, mention the issue author in a comment explaining why the label was added.
+Skip updateing the issue/pull request if it already has a label attached.
+
+If you add the `bug` label, also set the issue type to `bug`.
+
+## Identify Supporters
+
+If an issue is a `bug`, try to identify potential causes by looking at recent pull requests not older than 3 months.
+
+If you find pull requests that may have introduced the bug, try identifying potential supporters for the issue. Supporters may be:
+
+- authors or commentators of the pull request
+- code owners for the code modified in the pull request (see CODEOWNERS file)
+
+If you can identify a pull request that may have introduced the bug, mention the pull request in the issue. If identified, mention the supported, explaining why he was mentioned.

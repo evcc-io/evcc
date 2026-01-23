@@ -22,21 +22,32 @@
 #
 # Source: githubnext/gh-aw/.github/workflows/issue-triage-agent.md@87fe98fa15e2bb50f41225a356bbc07318b54fcf
 
-name: "Issue Triage Agent"
+name: "Issue/Pull request Triage Agent"
 "on":
-  schedule:
-  - cron: "0 14 * * 1-5"
-  workflow_dispatch:
+  issues:
+    types:
+    - opened
+    - edited
+    - reopened
+  pull_request:
+    types:
+    - opened
+    - edited
+    - reopened
 
 permissions: {}
 
 concurrency:
-  group: "gh-aw-${{ github.workflow }}"
+  group: "gh-aw-${{ github.workflow }}-${{ github.event.issue.number || github.event.pull_request.number }}"
+  cancel-in-progress: true
 
-run-name: "Issue Triage Agent"
+run-name: "Issue/Pull request Triage Agent"
 
 jobs:
   activation:
+    needs: pre_activation
+    if: >
+      (needs.pre_activation.outputs.activated == 'true') && ((github.event_name != 'pull_request') || (github.event.pull_request.head.repo.id == github.repository_id))
     runs-on: ubuntu-slim
     permissions:
       contents: read
@@ -64,8 +75,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       issues: read
-    concurrency:
-      group: "gh-aw-copilot-${{ github.workflow }}"
+      pull-requests: read
     env:
       DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
       GH_AW_ASSETS_ALLOWED_EXTS: ""
@@ -126,7 +136,7 @@ jobs:
           mkdir -p /tmp/gh-aw/safeoutputs
           mkdir -p /tmp/gh-aw/mcp-logs/safeoutputs
           cat > /opt/gh-aw/safeoutputs/config.json << 'EOF'
-          {"add_comment":{"max":1},"add_labels":{"allowed":["bug","feature","enhancement","documentation","question","help-wanted","good-first-issue"],"max":3},"missing_data":{},"missing_tool":{},"noop":{"max":1}}
+          {"add_comment":{"max":1},"add_labels":{"allowed":["bug","enhancement","documentation","question","device","tariff","vehicle"],"max":3},"missing_data":{},"missing_tool":{},"noop":{"max":1}}
           EOF
           cat > /opt/gh-aw/safeoutputs/tools.json << 'EOF'
           [
@@ -152,7 +162,7 @@ jobs:
               "name": "add_comment"
             },
             {
-              "description": "Add labels to an existing GitHub issue or pull request for categorization and filtering. Labels must already exist in the repository. For creating new issues with labels, use create_issue with the labels property instead. CONSTRAINTS: Only these labels are allowed: [bug feature enhancement documentation question help-wanted good-first-issue].",
+              "description": "Add labels to an existing GitHub issue or pull request for categorization and filtering. Labels must already exist in the repository. For creating new issues with labels, use create_issue with the labels property instead. CONSTRAINTS: Only these labels are allowed: [bug enhancement documentation question device tariff vehicle].",
               "inputSchema": {
                 "additionalProperties": false,
                 "properties": {
@@ -381,7 +391,7 @@ jobs:
                   "GITHUB_LOCKDOWN_MODE": "$GITHUB_MCP_LOCKDOWN",
                   "GITHUB_PERSONAL_ACCESS_TOKEN": "\${GITHUB_MCP_SERVER_TOKEN}",
                   "GITHUB_READ_ONLY": "1",
-                  "GITHUB_TOOLSETS": "issues,labels"
+                  "GITHUB_TOOLSETS": "issues,pull_requests,labels"
                 }
               },
               "safeoutputs": {
@@ -413,7 +423,7 @@ jobs:
               version: "",
               agent_version: "0.0.389",
               cli_version: "v0.37.13",
-              workflow_name: "Issue Triage Agent",
+              workflow_name: "Issue/Pull request Triage Agent",
               experimental: false,
               supports_tools_allowlist: true,
               supports_http_transport: true,
@@ -517,15 +527,26 @@ jobs:
           </system>
           PROMPT_EOF
           cat << 'PROMPT_EOF' >> "$GH_AW_PROMPT"
-          # Issue Triage Agent
+          # Issue/Pull request Triage Agent
           
-          List open issues in __GH_AW_GITHUB_REPOSITORY__ that have no labels. For each unlabeled issue, analyze the title and body, then add one of the allowed labels: `bug`, `feature`, `enhancement`, `documentation`, `question`, `help-wanted`, or `good-first-issue`. 
+          ## Label the Issue/Pull Request
           
-          Skip issues that:
-          - Already have any of these labels
-          - Have been assigned to any user (especially non-bot users)
+          Look at the issue/pull request. Analyze title and body, then add one of the allowed labels: `bug`, `enhancement`, `documentation`, `question`, `device`, `tariff`, `vehicle`.
           
-          After adding the label to an issue, mention the issue author in a comment explaining why the label was added.
+          Skip updateing the issue/pull request if it already has a label attached.
+          
+          If you add the `bug` label, also set the issue type to `bug`.
+          
+          ## Identify Supporters
+          
+          If an issue is a `bug`, try to identify potential causes by looking at recent pull requests not older than 3 months.
+          
+          If you find pull requests that may have introduced the bug, try identifying potential supporters for the issue. Supporters may be:
+          
+          - authors or commentators of the pull request
+          - code owners for the code modified in the pull request (see CODEOWNERS file)
+          
+          If you can identify a pull request that may have introduced the bug, mention the pull request in the issue. If identified, mention the supported, explaining why he was mentioned.
           
           PROMPT_EOF
       - name: Substitute placeholders
@@ -562,7 +583,6 @@ jobs:
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         env:
           GH_AW_PROMPT: /tmp/gh-aw/aw-prompts/prompt.txt
-          GH_AW_GITHUB_REPOSITORY: ${{ github.repository }}
         with:
           script: |
             const { setupGlobals } = require('/opt/gh-aw/actions/setup_globals.cjs');
@@ -769,7 +789,7 @@ jobs:
         env:
           GH_AW_AGENT_OUTPUT: ${{ env.GH_AW_AGENT_OUTPUT }}
           GH_AW_NOOP_MAX: 1
-          GH_AW_WORKFLOW_NAME: "Issue Triage Agent"
+          GH_AW_WORKFLOW_NAME: "Issue/Pull request Triage Agent"
           GH_AW_WORKFLOW_SOURCE: "githubnext/gh-aw/.github/workflows/issue-triage-agent.md@87fe98fa15e2bb50f41225a356bbc07318b54fcf"
           GH_AW_WORKFLOW_SOURCE_URL: "${{ github.server_url }}/githubnext/gh-aw/tree/87fe98fa15e2bb50f41225a356bbc07318b54fcf/.github/workflows/issue-triage-agent.md"
         with:
@@ -784,7 +804,7 @@ jobs:
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         env:
           GH_AW_AGENT_OUTPUT: ${{ env.GH_AW_AGENT_OUTPUT }}
-          GH_AW_WORKFLOW_NAME: "Issue Triage Agent"
+          GH_AW_WORKFLOW_NAME: "Issue/Pull request Triage Agent"
           GH_AW_WORKFLOW_SOURCE: "githubnext/gh-aw/.github/workflows/issue-triage-agent.md@87fe98fa15e2bb50f41225a356bbc07318b54fcf"
           GH_AW_WORKFLOW_SOURCE_URL: "${{ github.server_url }}/githubnext/gh-aw/tree/87fe98fa15e2bb50f41225a356bbc07318b54fcf/.github/workflows/issue-triage-agent.md"
         with:
@@ -799,7 +819,7 @@ jobs:
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         env:
           GH_AW_AGENT_OUTPUT: ${{ env.GH_AW_AGENT_OUTPUT }}
-          GH_AW_WORKFLOW_NAME: "Issue Triage Agent"
+          GH_AW_WORKFLOW_NAME: "Issue/Pull request Triage Agent"
           GH_AW_WORKFLOW_SOURCE: "githubnext/gh-aw/.github/workflows/issue-triage-agent.md@87fe98fa15e2bb50f41225a356bbc07318b54fcf"
           GH_AW_WORKFLOW_SOURCE_URL: "${{ github.server_url }}/githubnext/gh-aw/tree/87fe98fa15e2bb50f41225a356bbc07318b54fcf/.github/workflows/issue-triage-agent.md"
           GH_AW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
@@ -820,7 +840,7 @@ jobs:
           GH_AW_COMMENT_ID: ${{ needs.activation.outputs.comment_id }}
           GH_AW_COMMENT_REPO: ${{ needs.activation.outputs.comment_repo }}
           GH_AW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          GH_AW_WORKFLOW_NAME: "Issue Triage Agent"
+          GH_AW_WORKFLOW_NAME: "Issue/Pull request Triage Agent"
           GH_AW_AGENT_CONCLUSION: ${{ needs.agent.result }}
           GH_AW_DETECTION_CONCLUSION: ${{ needs.detection.result }}
         with:
@@ -836,8 +856,6 @@ jobs:
     if: needs.agent.outputs.output_types != '' || needs.agent.outputs.has_patch == 'true'
     runs-on: ubuntu-latest
     permissions: {}
-    concurrency:
-      group: "gh-aw-copilot-${{ github.workflow }}"
     timeout-minutes: 10
     outputs:
       success: ${{ steps.parse_results.outputs.success }}
@@ -866,7 +884,7 @@ jobs:
       - name: Setup threat detection
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         env:
-          WORKFLOW_NAME: "Issue Triage Agent"
+          WORKFLOW_NAME: "Issue/Pull request Triage Agent"
           WORKFLOW_DESCRIPTION: "No description provided"
           HAS_PATCH: ${{ needs.agent.outputs.has_patch }}
         with:
@@ -974,6 +992,29 @@ jobs:
           path: /tmp/gh-aw/threat-detection/detection.log
           if-no-files-found: ignore
 
+  pre_activation:
+    if: (github.event_name != 'pull_request') || (github.event.pull_request.head.repo.id == github.repository_id)
+    runs-on: ubuntu-slim
+    outputs:
+      activated: ${{ steps.check_membership.outputs.is_team_member == 'true' }}
+    steps:
+      - name: Setup Scripts
+        uses: githubnext/gh-aw/actions/setup@87fe98fa15e2bb50f41225a356bbc07318b54fcf # v0.37.13
+        with:
+          destination: /opt/gh-aw/actions
+      - name: Check team membership for workflow
+        id: check_membership
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        env:
+          GH_AW_REQUIRED_ROLES: admin,maintainer,write
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { setupGlobals } = require('/opt/gh-aw/actions/setup_globals.cjs');
+            setupGlobals(core, github, context, exec, io);
+            const { main } = require('/opt/gh-aw/actions/check_membership.cjs');
+            await main();
+
   safe_outputs:
     needs:
       - agent
@@ -989,7 +1030,7 @@ jobs:
     env:
       GH_AW_ENGINE_ID: "copilot"
       GH_AW_WORKFLOW_ID: "issue-triage-agent"
-      GH_AW_WORKFLOW_NAME: "Issue Triage Agent"
+      GH_AW_WORKFLOW_NAME: "Issue/Pull request Triage Agent"
       GH_AW_WORKFLOW_SOURCE: "githubnext/gh-aw/.github/workflows/issue-triage-agent.md@87fe98fa15e2bb50f41225a356bbc07318b54fcf"
       GH_AW_WORKFLOW_SOURCE_URL: "${{ github.server_url }}/githubnext/gh-aw/tree/87fe98fa15e2bb50f41225a356bbc07318b54fcf/.github/workflows/issue-triage-agent.md"
     outputs:
@@ -1016,7 +1057,7 @@ jobs:
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         env:
           GH_AW_AGENT_OUTPUT: ${{ env.GH_AW_AGENT_OUTPUT }}
-          GH_AW_SAFE_OUTPUTS_HANDLER_CONFIG: "{\"add_comment\":{\"max\":1},\"add_labels\":{\"allowed\":[\"bug\",\"feature\",\"enhancement\",\"documentation\",\"question\",\"help-wanted\",\"good-first-issue\"]},\"missing_data\":{},\"missing_tool\":{}}"
+          GH_AW_SAFE_OUTPUTS_HANDLER_CONFIG: "{\"add_comment\":{\"max\":1},\"add_labels\":{\"allowed\":[\"bug\",\"enhancement\",\"documentation\",\"question\",\"device\",\"tariff\",\"vehicle\"]},\"missing_data\":{},\"missing_tool\":{}}"
         with:
           github-token: ${{ secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
           script: |
