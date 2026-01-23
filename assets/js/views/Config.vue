@@ -163,6 +163,33 @@
 					/>
 				</div>
 
+				<h2 class="my-4">{{ $t("config.section.messenger") }}</h2>
+				<div class="p-0 config-list">
+					<DeviceCard
+						v-for="messenger in messengers"
+						:key="messenger.name"
+						:title="messenger.config?.title || messenger.name"
+						:name="messenger.name"
+						:editable="messenger.id >= 0"
+						:error="hasDeviceError('vehicle', messenger.name)"
+						data-testid="vehicle"
+						@edit="editVehicle(messenger.id)"
+					>
+						<!-- TODO: add icons and tags -->
+						<!-- <template #icon>
+							<VehicleIcon :name="messenger.config?.icon" />
+						</template>
+						<template #tags>
+							<DeviceTags :tags="deviceTags('vehicle', messenger.name)" />
+						</template> -->
+					</DeviceCard>
+					<NewDeviceButton
+						data-testid="add-messenger"
+						:title="$t('config.main.addMessenger')"
+						@click="newMessenger"
+					/>
+				</div>
+
 				<h2 class="my-4 mt-5">{{ $t("config.section.integrations") }}</h2>
 
 				<div class="p-0 config-list">
@@ -182,19 +209,6 @@
 						<template #icon><MqttIcon /></template>
 						<template #tags>
 							<DeviceTags :tags="mqttTags" />
-						</template>
-					</DeviceCard>
-					<DeviceCard
-						:title="$t('config.messaging.title')"
-						editable
-						:error="hasClassError('messenger')"
-						:unconfigured="isUnconfigured(messagingTags)"
-						data-testid="messaging"
-						@edit="openModal('messagingModal')"
-					>
-						<template #icon><NotificationIcon /></template>
-						<template #tags>
-							<DeviceTags :tags="messagingTags" />
 						</template>
 					</DeviceCard>
 					<DeviceCard
@@ -371,13 +385,14 @@
 					@removed="chargerRemoved"
 					@close="chargerModalClosed"
 				/>
+				<MessengerModal :id="selectedMessengerId" />
 				<InfluxModal @changed="loadDirty" />
 				<MqttModal @changed="loadDirty" />
 				<NetworkModal @changed="loadDirty" />
 				<ControlModal @changed="loadDirty" />
 				<HemsModal :fromYaml="hems?.fromYaml" @changed="yamlChanged" />
 				<ShmModal @changed="loadDirty" />
-				<MessagingModal @changed="yamlChanged" />
+				<MessengerModal @changed="yamlChanged" />
 				<TariffsModal @changed="yamlChanged" />
 				<TelemetryModal :sponsor="sponsor" :telemetry="telemetry" />
 				<ExperimentalModal />
@@ -425,7 +440,6 @@ import InfluxIcon from "../components/MaterialIcon/Influx.vue";
 import InfluxModal from "../components/Config/InfluxModal.vue";
 import LoadpointModal from "../components/Config/LoadpointModal.vue";
 import LoadpointIcon from "../components/MaterialIcon/Loadpoint.vue";
-import MessagingModal from "../components/Config/MessagingModal.vue";
 import MeterModal from "../components/Config/MeterModal.vue";
 import MeterCard from "../components/Config/MeterCard.vue";
 import Modal from "bootstrap/js/dist/modal";
@@ -459,6 +473,7 @@ import type {
 	SiteConfig,
 	DeviceType,
 	Notification,
+	ConfigMessenger,
 } from "@/types/evcc";
 
 type DeviceValuesMap = Record<DeviceType, Record<string, any>>;
@@ -473,6 +488,7 @@ import WelcomeBanner from "../components/Config/WelcomeBanner.vue";
 import AuthSuccessBanner from "../components/Config/AuthSuccessBanner.vue";
 import PasswordModal from "../components/Auth/PasswordModal.vue";
 import AuthProvidersCard from "../components/Config/AuthProvidersCard.vue";
+import MessengerModal from "@/components/Config/MessengerModal.vue";
 
 export default defineComponent({
 	name: "Config",
@@ -496,7 +512,6 @@ export default defineComponent({
 		ShmIcon,
 		InfluxIcon,
 		InfluxModal,
-		MessagingModal,
 		MeterModal,
 		MeterCard,
 		LoadpointModal,
@@ -518,6 +533,7 @@ export default defineComponent({
 		AuthSuccessBanner,
 		PasswordModal,
 		AuthProvidersCard,
+		MessengerModal,
 	},
 	mixins: [formatter, collector],
 	props: {
@@ -528,12 +544,14 @@ export default defineComponent({
 		return {
 			vehicles: [] as ConfigVehicle[],
 			meters: [] as ConfigMeter[],
+			messengers: [] as ConfigMessenger[],
 			loadpoints: [] as ConfigLoadpoint[],
 			chargers: [] as ConfigCharger[],
 			circuits: [] as ConfigCircuit[],
 			selectedVehicleId: undefined as number | undefined,
 			selectedMeterId: undefined as number | undefined,
 			selectedMeterType: undefined as MeterType | undefined,
+			selectedMessengerId: undefined as number | undefined,
 			selectedMeterTypeChoices: [] as MeterType[],
 			selectedChargerId: undefined as number | undefined,
 			selectedLoadpointId: undefined as number | undefined,
@@ -730,9 +748,6 @@ export default defineComponent({
 			}
 			return { configured: { value: false } };
 		},
-		messagingTags(): DeviceTags {
-			return { configured: { value: store.state?.messaging || false } };
-		},
 		backupRestoreProps() {
 			return {
 				authDisabled: store.state?.authDisabled || false,
@@ -807,6 +822,9 @@ export default defineComponent({
 		async loadMeters() {
 			this.meters = (await this.loadConfig("devices/meter")) || [];
 		},
+		async loadMessengers() {
+			this.messengers = (await this.loadConfig("devices/messenger")) || [];
+		},
 		async loadCircuits() {
 			const circuits = (await this.loadConfig("devices/circuit")) || [];
 			// set lpc default title
@@ -854,6 +872,11 @@ export default defineComponent({
 		},
 		meterModal() {
 			return Modal.getOrCreateInstance(document.getElementById("meterModal") as HTMLElement);
+		},
+		messengerModal() {
+			return Modal.getOrCreateInstance(
+				document.getElementById("messengerModal") as HTMLElement
+			);
 		},
 		loadpointModal() {
 			return Modal.getOrCreateInstance(
@@ -948,6 +971,10 @@ export default defineComponent({
 		newVehicle() {
 			this.selectedVehicleId = undefined;
 			this.$nextTick(() => this.vehicleModal().show());
+		},
+		newMessenger() {
+			this.selectedMessengerId = undefined;
+			this.$nextTick(() => this.messengerModal().show());
 		},
 		vehicleChanged() {
 			this.selectedVehicleId = undefined;
