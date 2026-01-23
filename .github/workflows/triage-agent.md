@@ -14,16 +14,16 @@ tools:
     toolsets: [issues, pull_requests, labels]
 safe-outputs:
   add-labels:
-    allowed: [bug, enhancement, documentation, question, device, tariff, vehicle]
+    allowed: [bug, enhancement, documentation, question, device, tariff, vehicle, heating]
   add-comment: {}
 source: githubnext/gh-aw/.github/workflows/issue-triage-agent.md@87fe98fa15e2bb50f41225a356bbc07318b54fcf
 ---
 
-# Issue/Pull request Triage Agent
+# Triage Agent
 
 ## Label the Issue/Pull Request
 
-Look at the issue/pull request. Analyze title and body, then add one of the allowed labels: `bug`, `enhancement`, `documentation`, `question`, `device`, `tariff`, `vehicle`.
+Look at the issue/pull request. Analyze title and body, then add one of the allowed labels: `bug`, `enhancement`, `documentation`, `question`, `device`, `tariff`, `vehicle`, `heating`.
 
 Skip updating the issue/pull request if it already has a label attached.
 
