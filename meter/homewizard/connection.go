@@ -119,6 +119,16 @@ func (c *Connection) TotalEnergy() (float64, error) {
 // Currents implements the api.PhaseCurrents interface
 func (c *Connection) Currents() (float64, float64, float64, error) {
 	res, err := c.dataG.Get()
+
+	// Single-phase meters only have one current reading
+	if c.ProductType == "HWE-KWH1" || c.ProductType == "SDM230-wifi" {
+		if c.usage == "pv" {
+			return -res.ActiveCurrentA, 0, 0, err
+		}
+		return res.ActiveCurrentA, 0, 0, err
+	}
+
+	// Three-phase meters have separate current readings per phase
 	if c.usage == "pv" {
 		return -res.ActiveCurrentL1A, -res.ActiveCurrentL2A, -res.ActiveCurrentL3A, err
 	}
@@ -128,5 +138,12 @@ func (c *Connection) Currents() (float64, float64, float64, error) {
 // Voltages implements the api.PhaseVoltages interface
 func (c *Connection) Voltages() (float64, float64, float64, error) {
 	res, err := c.dataG.Get()
+
+	// Single-phase meters only have one voltage reading
+	if c.ProductType == "HWE-KWH1" || c.ProductType == "SDM230-wifi" {
+		return res.ActiveVoltageV, 0, 0, err
+	}
+
+	// Three-phase meters have separate voltage readings per phase
 	return res.ActiveVoltageL1V, res.ActiveVoltageL2V, res.ActiveVoltageL3V, err
 }
