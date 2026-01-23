@@ -25,7 +25,7 @@ source: githubnext/gh-aw/.github/workflows/issue-triage-agent.md@87fe98fa15e2bb5
 
 Look at the issue/pull request. Analyze title and body, then add one of the allowed labels: `bug`, `enhancement`, `documentation`, `question`, `device`, `tariff`, `vehicle`.
 
-Skip updateing the issue/pull request if it already has a label attached.
+Skip updating the issue/pull request if it already has a label attached.
 
 If you add the `bug` label, also set the issue type to `bug`.
 
