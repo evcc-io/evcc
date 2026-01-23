@@ -101,7 +101,7 @@ func (c *Connection) Enabled() (bool, error) {
 // CurrentPower implements the api.Meter interface
 func (c *Connection) CurrentPower() (float64, error) {
 	res, err := c.dataG.Get()
-	if c.usage == "pv" {
+	if c.usage == "pv" || c.usage == "battery" {
 		return -res.ActivePowerW, err
 	}
 	return res.ActivePowerW, err
@@ -110,7 +110,7 @@ func (c *Connection) CurrentPower() (float64, error) {
 // TotalEnergy implements the api.MeterEnergy interface
 func (c *Connection) TotalEnergy() (float64, error) {
 	res, err := c.dataG.Get()
-	if c.usage == "pv" {
+	if c.usage == "pv" || c.usage == "battery" {
 		return res.TotalPowerExportkWh, err
 	}
 	return res.TotalPowerImportkWh, err
@@ -122,14 +122,14 @@ func (c *Connection) Currents() (float64, float64, float64, error) {
 
 	// Single-phase meters only have one current reading
 	if c.ProductType == "HWE-KWH1" || c.ProductType == "SDM230-wifi" {
-		if c.usage == "pv" {
+		if c.usage == "pv" || c.usage == "battery" {
 			return -res.ActiveCurrentA, 0, 0, err
 		}
 		return res.ActiveCurrentA, 0, 0, err
 	}
 
 	// Three-phase meters have separate current readings per phase
-	if c.usage == "pv" {
+	if c.usage == "pv" || c.usage == "battery" {
 		return -res.ActiveCurrentL1A, -res.ActiveCurrentL2A, -res.ActiveCurrentL3A, err
 	}
 	return res.ActiveCurrentL1A, res.ActiveCurrentL2A, res.ActiveCurrentL3A, err
