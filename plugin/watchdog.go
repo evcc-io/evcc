@@ -86,7 +86,7 @@ func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(
 		o.mu.Lock()
 		defer o.mu.Unlock()
 
-		// cancel pending deferred update
+		// cancel deferred update
 		if state.timer != nil {
 			state.timer.Stop()
 			state = deferredState[T]{}
@@ -97,7 +97,7 @@ func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(
 		timeSinceLastUpdated := o.clock.Since(lastUpdated)
 		actualDelay := max(0, requiredDelay-timeSinceLastUpdated)
 
-		// defer update to non-reset value if different from wdt active value
+		// defer update to non-reset value if different from active value
 		if o.deferred && !lastUpdated.IsZero() && *last != val && !slices.Contains(reset, val) && actualDelay > 0 {
 			// stop running wdt
 			if o.cancel != nil {
@@ -105,7 +105,7 @@ func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(
 				o.cancel = nil
 			}
 
-			// store pending value
+			// store deferred value
 			state.val = &val
 
 			o.log.DEBUG.Printf("deferred update scheduled: requiredDelay=%v, timeSinceLastUpdated=%v, actualDelay=%v, to=%v",
@@ -170,6 +170,8 @@ func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(
 		if err := set(val); err != nil {
 			return err
 		}
+
+		// store last updated value to avoid cancel deferred timer on same value
 		lastUpdated = o.clock.Now()
 		last = &val
 
