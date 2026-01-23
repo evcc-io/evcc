@@ -40,11 +40,7 @@ params:
       en: Price interval
       de: Preisintervall
     type: choice
-    choice:
-      [
-        "hourly",
-        "quarterly",
-      ]
+    choice: ["hourly", "quarterly"]
     default: quarterly
     required: true
   - preset: tariff-base
