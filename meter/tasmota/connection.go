@@ -257,7 +257,7 @@ func (c *Connection) Currents() (float64, float64, float64, error) {
 	}
 	if s.StatusSNS.SML.TotalIn != 0 {
 		// SML currents available
-		return s.StatusSNS.SML.Voltage_L1, s.StatusSNS.SML.Voltage_L2, s.StatusSNS.SML.Voltage_L3, nil
+		return s.StatusSNS.SML.Current_L1, s.StatusSNS.SML.Current_L2, s.StatusSNS.SML.Current_L3, nil
 	} else {
 		return c.getPhaseValues(func(s StatusSNSResponse) Channels {
 			return s.StatusSNS.Energy.Current
