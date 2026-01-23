@@ -58,7 +58,7 @@ func (w *influxSuite) TestNil() {
 }
 
 func (w *influxSuite) TestPointer() {
-	w.WriteParam(util.Param{Key: "foo", Val: 1})
+	w.WriteParam(util.Param{Key: "foo", Val: new(1)})
 	w.Equal([]*write.Point{inf2.NewPoint("foo", nil, map[string]any{"value": 1}, w.clock.Now())}, w.p)
 }
 
