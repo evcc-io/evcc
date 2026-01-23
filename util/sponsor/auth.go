@@ -26,6 +26,7 @@ import (
 
 	"github.com/evcc-io/evcc/api/proto/pb"
 	"github.com/evcc-io/evcc/util/cloud"
+	"github.com/evcc-io/evcc/util/machine"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -53,8 +54,37 @@ func IsAuthorizedForApi() bool {
 	return IsAuthorized() && Subject != unavailable && Token != ""
 }
 
+// ActivateSponsorship activates a license key with email and returns the instance ID
+func ActivateSponsorship(licenseKey, email string) (string, error) {
+	conn, err := cloud.Connection()
+	if err != nil {
+		return "", fmt.Errorf("connection failed: %w", err)
+	}
+
+	client := pb.NewAuthClient(conn)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	res, err := client.Activate(ctx, &pb.ActivateRequest{
+		LicenseKey: licenseKey,
+		Email:      email,
+		MachineId:  machine.ProtectedID("evcc-sponsor"),
+	})
+
+	if err != nil {
+		return "", fmt.Errorf("activation failed: %w", err)
+	}
+
+	if res.Error != "" {
+		return "", fmt.Errorf("%s", res.Error)
+	}
+
+	return res.InstanceId, nil
+}
+
 // check and set sponsorship token
-func ConfigureSponsorship(token string) error {
+func ConfigureSponsorship(token string, instanceID string) error {
 	mu.Lock()
 	defer mu.Unlock()
 
@@ -82,7 +112,7 @@ func ConfigureSponsorship(token string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	res, err := client.IsAuthorized(ctx, &pb.AuthRequest{Token: token})
+	res, err := client.IsAuthorized(ctx, &pb.AuthRequest{Token: token, InstanceId: instanceID})
 	if err == nil && res.Authorized {
 		Subject = res.Subject
 		ExpiresAt = res.ExpiresAt.AsTime()

@@ -38,14 +38,27 @@
 				</div>
 				<textarea
 					id="sponsorToken"
-					v-model="values.token"
+					v-model.trim="values.token"
 					class="form-control mb-1"
 					required
-					rows="5"
+					:rows="isLicenseKey(values.token) ? 1 : 5"
 					spellcheck="false"
 					@paste="(event) => handlePaste(event, values)"
 				/>
-				<i18n-t tag="small" keypath="config.sponsor.descriptionToken" scope="global">
+				<div v-if="isLicenseKey(values.token)" class="mt-2">
+					<label for="sponsorEmail" class="fw-bold my-2">{{
+						$t("config.sponsor.email")
+					}}</label>
+					<input
+						id="sponsorEmail"
+						v-model.trim="values.email"
+						type="email"
+						class="form-control mb-1"
+						required
+					/>
+					<small>{{ $t("config.sponsor.emailHint") }}</small>
+				</div>
+				<i18n-t v-else tag="small" keypath="config.sponsor.descriptionToken" scope="global">
 					<template #url>
 						<a href="https://sponsor.evcc.io" target="_blank">sponsor.evcc.io</a>
 					</template>
@@ -133,13 +146,18 @@ export default {
 	},
 	methods: {
 		transformReadValues() {
-			return { token: "" };
+			return { token: "", email: "" };
 		},
 		handlePaste(event, values) {
 			event.preventDefault();
 			const text = event.clipboardData.getData("text");
 			const cleaned = cleanYaml(text, "sponsortoken");
 			values.token = cleaned;
+		},
+		isLicenseKey(token) {
+			// Match pattern XXXXX-XXXXX-XXXXX-XXXXX-XXXXX (case-insensitive alphanumeric)
+			const pattern = /^[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}$/i;
+			return pattern.test(token || "");
 		},
 	},
 };

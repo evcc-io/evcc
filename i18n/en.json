@@ -563,6 +563,8 @@
       "changeToken": "Change token",
       "description": "The sponsoring model helps us to maintain the project and sustainably build new and exciting features. As a sponsor you get access to all charger implementations.",
       "descriptionToken": "Sponsors find their token on {url}. For getting-started, we offer a {trialToken}.",
+      "email": "Email",
+      "emailHint": "Enter email address you used for sponsoring",
       "enterYourToken": "Enter your token",
       "error": "The sponsor token is not valid.",
       "invalid": "invalid",
