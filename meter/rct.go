@@ -22,6 +22,7 @@ type RCT struct {
 	conn          *rct.Connection // connection with the RCT device
 	usage         string          // grid, pv, battery
 	externalPower bool            // whether to query external power
+	socStrategy   *uint8          // remembers overwritten soc strategy value
 }
 
 var (
@@ -166,6 +167,15 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 				if batStatus != 0 && batStatus != 1032 && batStatus != 2048 {
 					return fmt.Errorf("invalid battery operating mode: %d", batStatus)
 				}
+
+				// read soc strategy to reset afterwards
+				if m.socStrategy == nil {
+					strategy, err := m.queryUint8(rct.PowerMngSocStrategy)
+					if err != nil {
+						return err
+					}
+					m.socStrategy = &strategy
+				}
 			}
 
 			var eg errgroup.Group
@@ -173,7 +183,9 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 			switch mode {
 			case api.BatteryNormal:
 				eg.Go(func() error {
-					return m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetInternal})
+					err := m.conn.Write(rct.PowerMngSocStrategy, []byte{*m.socStrategy})
+					m.socStrategy = nil
+					return err
 				})
 
 				eg.Go(func() error {
@@ -334,4 +346,9 @@ func (m *RCT) queryFloat(id rct.Identifier) (float64, error) {
 // queryInt32 adds retry logic of recoverable errors to QueryInt32
 func (m *RCT) queryInt32(id rct.Identifier) (int32, error) {
 	return queryRCT(id, m.conn.QueryInt32)
+}
+
+// queryUint8 adds retry logic of recoverable errors to QueryUint8
+func (m *RCT) queryUint8(id rct.Identifier) (uint8, error) {
+	return queryRCT(id, m.conn.QueryUint8)
 }
