@@ -80,6 +80,7 @@ type deferredState[T comparable] struct {
 func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(T) error {
 	var state deferredState[T]
 	var lastUpdated time.Time
+	var last *T
 
 	return func(val T) error {
 		o.mu.Lock()
@@ -96,8 +97,8 @@ func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(
 		timeSinceLastUpdated := o.clock.Since(lastUpdated)
 		actualDelay := max(0, requiredDelay-timeSinceLastUpdated)
 
-		// defer update to non-reset value
-		if o.deferred && !lastUpdated.IsZero() && !slices.Contains(reset, val) && actualDelay > 0 {
+		// defer update to non-reset value if different from wdt active value
+		if o.deferred && !lastUpdated.IsZero() && *last != val && !slices.Contains(reset, val) && actualDelay > 0 {
 			// stop running wdt
 			if o.cancel != nil {
 				o.cancel()
@@ -123,6 +124,7 @@ func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(
 					return
 				}
 				lastUpdated = o.clock.Now()
+				last = &targetVal
 				o.log.DEBUG.Printf("deferred update completed: value=%v", targetVal)
 
 				if !slices.Contains(reset, targetVal) {
@@ -169,6 +171,7 @@ func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(
 			return err
 		}
 		lastUpdated = o.clock.Now()
+		last = &val
 
 		return nil
 	}
