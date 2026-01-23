@@ -177,13 +177,14 @@
         "public": "Public certificate"
       },
       "description": "Configuration that enables evcc to communicate with other EEBus devices.",
+      "descriptionAdvanced": "No changes required. Only change if you really know what you're doing.",
       "https": "Certificats",
       "interfaces": "Interfaces",
       "interfacesHelp": "Limit the network interfaces that EEBus should use to avoid communication problems. Leave the field blank to use all interfaces. One entry per line.",
       "port": "Port",
       "portHelp": "The port to be used.",
-      "shipid": "SHIP-ID",
-      "shipidHelp": "This ship ID is linked to the certificates below. If you change either one, you'll need to pair your devices again.",
+      "shipid": "Ship-ID",
+      "shipidHelp": "This Ship-ID is linked to the certificates below. If you change either one, you'll need to pair your devices again.",
       "title": "EEBus"
     },
     "experimental": {
