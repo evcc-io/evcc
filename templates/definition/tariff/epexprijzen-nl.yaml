@@ -66,3 +66,4 @@ render: |
       }) | tostring
     cache: 1h
   interval: {{ .interval }}
+  
