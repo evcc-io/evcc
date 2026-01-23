@@ -71,34 +71,33 @@ func (o *watchdogPlugin) wdt(ctx context.Context, set func() error) {
 }
 
 type deferredState[T comparable] struct {
-	val           *T
-	deferredTimer *clock.Timer
-	lastUpdated   time.Time
+	val   *T
+	timer *clock.Timer
 }
 
 // setter is the generic setter function for watchdogPlugin
 // it is currently not possible to write this as a method
 func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(T) error {
 	var state deferredState[T]
+	var lastUpdated time.Time
 
 	return func(val T) error {
 		o.mu.Lock()
 		defer o.mu.Unlock()
 
 		// cancel pending deferred update
-		if state.deferredTimer != nil {
-			state.deferredTimer.Stop()
-			state.deferredTimer = nil
-			state.val = nil
+		if state.timer != nil {
+			state.timer.Stop()
+			state = deferredState[T]{}
 		}
 
 		// calculate delay from last update
 		requiredDelay := o.timeout + time.Second
-		timeSinceLastUpdated := o.clock.Since(state.lastUpdated)
+		timeSinceLastUpdated := o.clock.Since(lastUpdated)
 		actualDelay := max(0, requiredDelay-timeSinceLastUpdated)
 
 		// defer update to non-reset value
-		if o.deferred && !state.lastUpdated.IsZero() && !slices.Contains(reset, val) && actualDelay > 0 {
+		if o.deferred && !lastUpdated.IsZero() && !slices.Contains(reset, val) && actualDelay > 0 {
 			// stop running wdt
 			if o.cancel != nil {
 				o.cancel()
@@ -111,20 +110,19 @@ func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(
 			o.log.DEBUG.Printf("deferred update scheduled: requiredDelay=%v, timeSinceLastUpdated=%v, actualDelay=%v, to=%v",
 				requiredDelay, timeSinceLastUpdated, actualDelay, val)
 
-			state.deferredTimer = o.clock.AfterFunc(actualDelay, func() {
+			state.timer = o.clock.AfterFunc(actualDelay, func() {
 				o.mu.Lock()
 				defer o.mu.Unlock()
 
 				targetVal := *state.val
-				state.val = nil
-				state.deferredTimer = nil
+				state = deferredState[T]{}
 
 				o.log.DEBUG.Printf("deferred update executing: to=%v", targetVal)
 				if err := set(targetVal); err != nil {
 					o.log.ERROR.Printf("deferred update failed: %v", err)
 					return
 				}
-				state.lastUpdated = o.clock.Now()
+				lastUpdated = o.clock.Now()
 				o.log.DEBUG.Printf("deferred update completed: value=%v", targetVal)
 
 				if !slices.Contains(reset, targetVal) {
@@ -137,7 +135,7 @@ func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(
 						if err := set(targetVal); err != nil {
 							return err
 						}
-						state.lastUpdated = o.clock.Now()
+						lastUpdated = o.clock.Now()
 						return nil
 					})
 				}
@@ -162,7 +160,7 @@ func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(
 				if err := set(val); err != nil {
 					return err
 				}
-				state.lastUpdated = o.clock.Now()
+				lastUpdated = o.clock.Now()
 				return nil
 			})
 		}
@@ -170,7 +168,7 @@ func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(
 		if err := set(val); err != nil {
 			return err
 		}
-		state.lastUpdated = o.clock.Now()
+		lastUpdated = o.clock.Now()
 
 		return nil
 	}
