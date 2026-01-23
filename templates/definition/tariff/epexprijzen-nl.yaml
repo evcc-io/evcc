@@ -58,7 +58,7 @@ render: |
     source: http
     uri: https://epexprijzen.nl/api/v1/prices/{{ .provider }}/{{ index . "price-interval" }}
     jq: |
-      .today + .tomorrow | 
+      (.today // []) + (.tomorrow // []) | 
       map({
         "start": (.t | strptime("%Y-%m-%dT%H:%M:%S%z") | strftime("%Y-%m-%dT%H:%M:%SZ")),
         "end": (.t | strptime("%Y-%m-%dT%H:%M:%S%z") | mktime + {{ if eq (index . "price-interval") "hourly" }}3600{{ else }}900{{ end }} | strftime("%Y-%m-%dT%H:%M:%SZ")),
