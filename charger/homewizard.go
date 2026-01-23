@@ -43,7 +43,7 @@ func NewHomeWizardFromConfig(other map[string]any) (api.Charger, error) {
 
 // NewHomeWizard creates HomeWizard charger
 func NewHomeWizard(embed embed, uri string, usage string, standbypower float64, cache time.Duration) (*HomeWizard, error) {
-	conn, err := homewizard.NewConnection(uri, usage, cache)
+	conn, err := homewizard.NewConnection(uri, usage, 1, cache)
 	if err != nil {
 		return nil, err
 	}

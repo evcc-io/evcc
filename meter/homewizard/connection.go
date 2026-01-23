@@ -17,15 +17,20 @@ type Connection struct {
 	*request.Helper
 	uri         string
 	usage       string
+	phase       int
 	ProductType string
 	dataG       util.Cacheable[DataResponse]
 	stateG      util.Cacheable[StateResponse]
 }
 
 // NewConnection creates a homewizard connection
-func NewConnection(uri string, usage string, cache time.Duration) (*Connection, error) {
+func NewConnection(uri string, usage string, phase int, cache time.Duration) (*Connection, error) {
 	if uri == "" {
 		return nil, errors.New("missing uri")
+	}
+
+	if phase < 1 || phase > 3 {
+		return nil, errors.New("phase must be between 1 and 3")
 	}
 
 	log := util.NewLogger("homewizard")
@@ -33,6 +38,7 @@ func NewConnection(uri string, usage string, cache time.Duration) (*Connection, 
 		Helper: request.NewHelper(log),
 		uri:    fmt.Sprintf("%s/api", util.DefaultScheme(strings.TrimRight(uri, "/"), "http")),
 		usage:  usage,
+		phase:  phase,
 	}
 
 	c.Client.Transport = request.NewTripper(log, transport.Insecure())
@@ -122,10 +128,20 @@ func (c *Connection) Currents() (float64, float64, float64, error) {
 
 	// Single-phase meters only have one current reading
 	if c.ProductType == "HWE-KWH1" || c.ProductType == "SDM230-wifi" {
+		current := res.ActiveCurrentA
 		if c.usage == "pv" || c.usage == "battery" {
-			return -res.ActiveCurrentA, 0, 0, err
+			current = -current
 		}
-		return res.ActiveCurrentA, 0, 0, err
+
+		// Return current on configured phase
+		switch c.phase {
+		case 1:
+			return current, 0, 0, err
+		case 2:
+			return 0, current, 0, err
+		case 3:
+			return 0, 0, current, err
+		}
 	}
 
 	// Three-phase meters have separate current readings per phase
@@ -141,7 +157,17 @@ func (c *Connection) Voltages() (float64, float64, float64, error) {
 
 	// Single-phase meters only have one voltage reading
 	if c.ProductType == "HWE-KWH1" || c.ProductType == "SDM230-wifi" {
-		return res.ActiveVoltageV, 0, 0, err
+		voltage := res.ActiveVoltageV
+
+		// Return voltage on configured phase
+		switch c.phase {
+		case 1:
+			return voltage, 0, 0, err
+		case 2:
+			return 0, voltage, 0, err
+		case 3:
+			return 0, 0, voltage, err
+		}
 	}
 
 	// Three-phase meters have separate voltage readings per phase

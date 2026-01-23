@@ -23,8 +23,10 @@ func NewHomeWizardFromConfig(other map[string]any) (api.Meter, error) {
 	cc := struct {
 		URI   string
 		Usage string
+		Phase int
 		Cache time.Duration
 	}{
+		Phase: 1,
 		Cache: time.Second,
 	}
 
@@ -32,12 +34,12 @@ func NewHomeWizardFromConfig(other map[string]any) (api.Meter, error) {
 		return nil, err
 	}
 
-	return NewHomeWizard(cc.URI, cc.Usage, cc.Cache)
+	return NewHomeWizard(cc.URI, cc.Usage, cc.Phase, cc.Cache)
 }
 
 // NewHomeWizard creates HomeWizard meter
-func NewHomeWizard(uri string, usage string, cache time.Duration) (*HomeWizard, error) {
-	conn, err := homewizard.NewConnection(uri, usage, cache)
+func NewHomeWizard(uri string, usage string, phase int, cache time.Duration) (*HomeWizard, error) {
+	conn, err := homewizard.NewConnection(uri, usage, phase, cache)
 	if err != nil {
 		return nil, err
 	}

@@ -3,11 +3,24 @@ products:
   - brand: HomeWizard
     description:
       generic: kWh Meter
+      en: kWh Meter (HWE-KWH1, HWE-KWH3, SDM230-wifi, SDM630-wifi)
+      de: kWh-Zähler (HWE-KWH1, HWE-KWH3, SDM230-wifi, SDM630-wifi)
 params:
   - name: usage
     choice: ["pv", "charge", "battery"]
   - name: host
+  - name: phase
+    default: 1
+    choice: [1, 2, 3]
+    advanced: true
+    description:
+      en: Installation phase
+      de: Installationsphase
+    help:
+      en: Phase on which the single-phase meter is installed (L1=1, L2=2, L3=3). Only relevant for HWE-KWH1 and SDM230-wifi.
+      de: Phase an der der einphasige Zähler installiert ist (L1=1, L2=2, L3=3). Nur relevant für HWE-KWH1 und SDM230-wifi.
 render: |
   type: homewizard
   uri: http://{{ .host }}
   usage: {{ .usage }}
+  phase: {{ .phase }}

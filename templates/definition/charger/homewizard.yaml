@@ -1,6 +1,9 @@
 template: homewizard
 products:
   - brand: HomeWizard
+    description:
+      en: Smart Socket (HWE-SKT)
+      de: Smart-Steckdose (HWE-SKT)
 group: switchsockets
 params:
   - name: host
