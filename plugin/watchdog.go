@@ -13,17 +13,16 @@ import (
 )
 
 type watchdogPlugin struct {
-	mu          sync.Mutex
-	ctx         context.Context
-	log         *util.Logger
-	reset       []string
-	initial     *string
-	set         Config
-	timeout     time.Duration
-	deferred    bool
-	graceperiod time.Duration
-	cancel      func()
-	clock       clock.Clock
+	mu       sync.Mutex
+	ctx      context.Context
+	log      *util.Logger
+	reset    []string
+	initial  *string
+	set      Config
+	timeout  time.Duration
+	deferred bool
+	cancel   func()
+	clock    clock.Clock
 }
 
 func init() {
@@ -33,34 +32,26 @@ func init() {
 // NewWatchDogFromConfig creates watchDog provider
 func NewWatchDogFromConfig(ctx context.Context, other map[string]any) (Plugin, error) {
 	var cc struct {
-		Reset       []string
-		Initial     *string
-		Set         Config
-		Timeout     time.Duration
-		Deferred    bool `mapstructure:"defer"`
-		Graceperiod *time.Duration
+		Reset   []string
+		Initial *string
+		Set     Config
+		Timeout time.Duration
+		Defer   bool `mapstructure:"defer"`
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	// set default graceperiod
-	graceperiod := 3 * time.Second
-	if cc.Graceperiod != nil {
-		graceperiod = *cc.Graceperiod
-	}
-
 	o := &watchdogPlugin{
-		ctx:         ctx,
-		log:         util.ContextLoggerWithDefault(ctx, util.NewLogger("watchdog")),
-		reset:       cc.Reset,
-		initial:     cc.Initial,
-		set:         cc.Set,
-		timeout:     cc.Timeout,
-		deferred:    cc.Deferred,
-		graceperiod: graceperiod,
-		clock:       clock.New(),
+		ctx:      ctx,
+		log:      util.ContextLoggerWithDefault(ctx, util.NewLogger("watchdog")),
+		reset:    cc.Reset,
+		initial:  cc.Initial,
+		set:      cc.Set,
+		timeout:  cc.Timeout,
+		deferred: cc.Defer,
+		clock:    clock.New(),
 	}
 
 	return o, nil
@@ -102,7 +93,7 @@ func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(
 		}
 
 		// calculate delay from last update
-		requiredDelay := o.timeout + o.graceperiod
+		requiredDelay := o.timeout + time.Second
 		timeSinceLastUpdated := o.clock.Since(state.lastUpdated)
 		actualDelay := max(0, requiredDelay-timeSinceLastUpdated)
 
