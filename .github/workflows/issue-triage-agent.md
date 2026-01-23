@@ -38,4 +38,4 @@ If you find pull requests that may have introduced the bug, try identifying pote
 - authors or commentators of the pull request
 - code owners for the code modified in the pull request (see CODEOWNERS file)
 
-If you can identify a pull request that may have introduced the bug, mention the pull request in the issue. If identified, mention the supported, explaining why he was mentioned.
+If you can identify a pull request that may have introduced the bug, mention the pull request in the issue. If identified, mention the supporter, explaining why he was mentioned.
