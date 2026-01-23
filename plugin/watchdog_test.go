@@ -15,10 +15,9 @@ import (
 
 func TestWatchdogSetterConcurrency(t *testing.T) {
 	p := &watchdogPlugin{
-		log:         util.NewLogger("foo"),
-		timeout:     10 * time.Nanosecond,
-		graceperiod: 5 * time.Second,
-		clock:       clock.New(),
+		log:     util.NewLogger("foo"),
+		timeout: 10 * time.Nanosecond,
+		clock:   clock.New(),
 	}
 
 	var u atomic.Uint32
@@ -57,11 +56,10 @@ func TestWatchdogDeferredUpdate(t *testing.T) {
 	timeout := 100 * time.Millisecond
 	c := clock.NewMock()
 	p := &watchdogPlugin{
-		log:         util.NewLogger("test"),
-		timeout:     timeout,
-		deferred:    true,
-		graceperiod: 5 * time.Second,
-		clock:       c,
+		log:      util.NewLogger("test"),
+		timeout:  timeout,
+		deferred: true,
+		clock:    c,
 	}
 
 	var calls []int
@@ -79,7 +77,7 @@ func TestWatchdogDeferredUpdate(t *testing.T) {
 	require.Equal(t, []int{1}, calls, "Value 3 should not be set yet")
 
 	// Wait for delay
-	expectedDelay := p.timeout + p.graceperiod
+	expectedDelay := p.timeout + time.Second
 	c.Add(expectedDelay)
 
 	// Now value 3 should be set
@@ -103,11 +101,10 @@ func TestWatchdogCancelPendingDeferredUpdate(t *testing.T) {
 	timeout := 200 * time.Millisecond
 	c := clock.NewMock()
 	p := &watchdogPlugin{
-		log:         util.NewLogger("test"),
-		timeout:     timeout,
-		deferred:    true,
-		graceperiod: 5 * time.Second,
-		clock:       c,
+		log:      util.NewLogger("test"),
+		timeout:  timeout,
+		deferred: true,
+		clock:    c,
 	}
 
 	var calls []int
@@ -132,7 +129,7 @@ func TestWatchdogCancelPendingDeferredUpdate(t *testing.T) {
 	require.Equal(t, []int{3, 1}, calls, "Value 1 should be set, Value 2 should be cancelled")
 
 	// Wait for what would have been the original delay
-	c.Add(timeout + p.graceperiod)
+	c.Add(timeout + time.Second)
 
 	// Value 2 should still not have been set
 	require.Equal(t, []int{3, 1}, calls, "Value 2 should remain cancelled")
@@ -143,11 +140,10 @@ func TestWatchdogDelayBackwardCompatibility(t *testing.T) {
 	// Expected: All updates immediate
 
 	p := &watchdogPlugin{
-		log:         util.NewLogger("test"),
-		timeout:     100 * time.Millisecond,
-		deferred:    false, // explicitly false
-		graceperiod: 5 * time.Second,
-		clock:       clock.New(),
+		log:      util.NewLogger("test"),
+		timeout:  100 * time.Millisecond,
+		deferred: false, // explicitly false
+		clock:    clock.New(),
 	}
 
 	var calls []int

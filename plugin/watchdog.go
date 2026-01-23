@@ -71,7 +71,7 @@ func (o *watchdogPlugin) wdt(ctx context.Context, set func() error) {
 }
 
 type deferredState[T comparable] struct {
-	pendingValue  *T
+	val           *T
 	deferredTimer *clock.Timer
 	lastUpdated   time.Time
 }
@@ -89,7 +89,7 @@ func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(
 		if state.deferredTimer != nil {
 			state.deferredTimer.Stop()
 			state.deferredTimer = nil
-			state.pendingValue = nil
+			state.val = nil
 		}
 
 		// calculate delay from last update
@@ -106,7 +106,7 @@ func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(
 			}
 
 			// store pending value
-			state.pendingValue = &val
+			state.val = &val
 
 			o.log.DEBUG.Printf("deferred update scheduled: requiredDelay=%v, timeSinceLastUpdated=%v, actualDelay=%v, to=%v",
 				requiredDelay, timeSinceLastUpdated, actualDelay, val)
@@ -115,12 +115,8 @@ func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(
 				o.mu.Lock()
 				defer o.mu.Unlock()
 
-				if state.pendingValue == nil {
-					return
-				}
-
-				targetVal := *state.pendingValue
-				state.pendingValue = nil
+				targetVal := *state.val
+				state.val = nil
 				state.deferredTimer = nil
 
 				o.log.DEBUG.Printf("deferred update executing: to=%v", targetVal)
