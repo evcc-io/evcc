@@ -99,12 +99,12 @@ func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(
 		}
 
 		// calculate delay from last update
-		requiredDelay := o.timeout + time.Second
-		timeSinceLastUpdated := o.clock.Since(lastUpdated)
-		actualDelay := max(0, requiredDelay-timeSinceLastUpdated)
+		requiredDelay := o.timeout + 5*time.Second
+		sinceLastUpdated := o.clock.Since(lastUpdated)
+		delay := max(0, requiredDelay-sinceLastUpdated)
 
 		// defer update to non-reset value
-		if o.deferred && !lastUpdated.IsZero() && !slices.Contains(reset, val) && actualDelay > 0 {
+		if o.deferred && !lastUpdated.IsZero() && !slices.Contains(reset, val) && delay > 0 {
 			// stop running wdt
 			if o.cancel != nil {
 				o.cancel()
@@ -114,10 +114,10 @@ func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(
 			// store deferred value
 			state.val = &val
 
-			o.log.DEBUG.Printf("deferred update scheduled: requiredDelay=%v, timeSinceLastUpdated=%v, actualDelay=%v, to=%v",
-				requiredDelay, timeSinceLastUpdated, actualDelay, val)
+			o.log.DEBUG.Printf("deferred update scheduled: requiredDelay=%v, sinceLastUpdated=%v, delay=%v, to=%v",
+				requiredDelay, sinceLastUpdated, delay, val)
 
-			state.timer = o.clock.AfterFunc(actualDelay, func() {
+			state.timer = o.clock.AfterFunc(delay, func() {
 				o.mu.Lock()
 				defer o.mu.Unlock()
 
