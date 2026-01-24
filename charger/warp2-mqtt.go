@@ -241,14 +241,14 @@ func (wb *Warp2) MaxCurrentMillis(current float64) error {
 
 // CurrentPower implements the api.Meter interface
 func (wb *Warp2) currentPower() (float64, error) {
-	var res warp.LegacyMeterValues
+	var res warp.MeterValues
 	err := wb.meterG(&res)
 	return res.Power, err
 }
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (wb *Warp2) totalEnergy() (float64, error) {
-	var res warp.LegacyMeterValues
+	var res warp.MeterValues
 	err := wb.meterG(&res)
 	return res.EnergyAbs, err
 }

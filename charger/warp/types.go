@@ -24,36 +24,18 @@ type EvseExternalCurrent struct {
 	Current int `json:"current"`
 }
 
-// https://www.warp-charger.com/api.html#evse_low_level_state
-type LowLevelState struct {
-	TimeSinceStateChange int64 `json:"time_since_state_change"`
-	Uptime               int64 `json:"uptime"`
-	LedState             int   `json:"led_state"`
-	CpPwmDutyCycle       int   `json:"cp_pwm_duty_cycle"`
-	AdcValues            []int `json:"adc_values"`
-	Voltages             []int
-	Resistances          []int
-	Gpio                 []bool
-}
-
 // https://www.warp-charger.com/api.html#meter_state
 type MeterState struct {
 	State int `json:"state"` // Warp 1 only
 }
 
 // https://www.warp-charger.com/api.html#meter_values
-type LegacyMeterValues struct {
+type MeterValues struct {
 	Power           float64 `json:"power"`
 	EnergyRel       float64 `json:"energy_rel"`
 	EnergyAbs       float64 `json:"energy_abs"`
 	PhasesActive    []bool  `json:"phases_active"`
 	PhasesConnected []bool  `json:"phases_connected"`
-}
-
-// https://www.warp-charger.com/api.html#meter_all_values
-type LegacyMeterAllValues struct {
-	PhasesActive    []bool `json:"phases_active"`
-	PhasesConnected []bool `json:"phases_connected"`
 }
 
 // Meter value IDs according to Tinkerforge meter_value_id.csv
@@ -68,17 +50,6 @@ const (
 	ValueIDEnergyAbsImSum   = 209 // Energy Im Sum L1 L2 L3
 )
 
-type MeterValues struct {
-	VoltageL1N       float64
-	VoltageL2N       float64
-	VoltageL3N       float64
-	CurrentImExSumL1 float64
-	CurrentImExSumL2 float64
-	CurrentImExSumL3 float64
-	PowerImExSum     float64
-	EnergyAbsImSum   float64
-}
-
 type MeterValuesIndices struct {
 	VoltageL1NIndex       int
 	VoltageL2NIndex       int
@@ -88,10 +59,6 @@ type MeterValuesIndices struct {
 	CurrentImExSumL3Index int
 	PowerImExSumIndex     int
 	EnergyAbsImSumIndex   int
-}
-
-type UsersConfig struct {
-	Users []User `json:"users"`
 }
 
 type ChargeTrackerCurrentCharge struct {
@@ -104,23 +71,15 @@ type ChargeTrackerCurrentCharge struct {
 	} `json:"authorization_info"`
 }
 
-type User struct {
-	ID          int    `json:"id"`
-	Roles       int    `json:"roles"`
-	Current     int    `json:"current"`
-	DisplayName string `json:"display_name"`
-	UserName    string `json:"username"`
-}
-
 type LastNfcTag struct {
-	UserID int    `json:"user_id"`
+	UserID int    `json:"user_id,omitempty"`
 	Type   int    `json:"tag_type"`
 	ID     string `json:"tag_id"`
 }
 
-type EmConfig struct {
-	ContactorInstalled bool `json:"contactor_installed"`
-	PhaseSwitchingMode int  `json:"phase_switching_mode"`
+type NfcConfig struct {
+	AuthorizedTags    []LastNfcTag `json:"authorized_tags"`
+	DeadTimePostStart int          `json:"deadtime_post_start"`
 }
 
 //go:generate go tool enumer -type ExternalControl -trimprefix ExternalControl -transform whitespace
