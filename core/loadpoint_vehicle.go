@@ -326,6 +326,10 @@ func (lp *Loadpoint) vehicleClimatePollAllowed() bool {
 
 // vehicleSocPollAllowed validates charging state against polling mode
 func (lp *Loadpoint) vehicleSocPollAllowed() bool {
+	if lp.vehicleHasFeature(api.Offline) {
+		return false
+	}
+
 	// always update soc when charging
 	if lp.charging() || lp.vehicleHasFeature(api.Streaming) {
 		return true
