@@ -6,6 +6,7 @@
 		:modal-title="$t(`config.messenger.${isNew ? 'titleAdd' : 'titleEdit'}`)"
 		:provide-template-options="provideTemplateOptions"
 		:initial-values="initialValues"
+		:on-template-change="handleTemplateChange"
 		default-template="email"
 		@added="$emit('messenger-changed', $event)"
 		@updated="$emit('messenger-changed')"
@@ -15,9 +16,10 @@
 
 <script lang="ts">
 import DeviceModalBase from "./DeviceModal/DeviceModalBase.vue";
-import type { Product } from "./DeviceModal";
-import type { TemplateGroup } from "./DeviceModal/TemplateSelector.vue";
+import type { DeviceValues, Product } from "./DeviceModal";
+import { customTemplateOption, type TemplateGroup } from "./DeviceModal/TemplateSelector.vue";
 import { ConfigType } from "@/types/evcc";
+import defaultMessengerYaml from "./defaultYaml/messenger.yaml?raw";
 
 const initialValues = {
 	type: ConfigType.Template,
@@ -43,8 +45,23 @@ export default {
 	},
 	methods: {
 		provideTemplateOptions(products: Product[]): TemplateGroup[] {
-			console.log(products);
-			return [];
+			return [
+				{
+					label: "generic",
+					options: [customTemplateOption(this.$t("config.general.customOption"))],
+				},
+				{
+					label: "primary",
+					options: [...products.filter((p: Product) => p.template !== "offline")],
+				},
+			];
+		},
+		handleTemplateChange(e: Event, values: DeviceValues) {
+			const value = (e.target as HTMLSelectElement).value;
+			if (value === ConfigType.Custom) {
+				values.type = ConfigType.Custom;
+				values.yaml = defaultMessengerYaml;
+			}
 		},
 	},
 };

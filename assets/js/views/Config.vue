@@ -171,17 +171,17 @@
 						:title="messenger.config?.title || messenger.name"
 						:name="messenger.name"
 						:editable="messenger.id >= 0"
-						:error="hasDeviceError('vehicle', messenger.name)"
-						data-testid="vehicle"
-						@edit="editVehicle(messenger.id)"
+						:error="hasDeviceError('messenger', messenger.name)"
+						data-testid="messenger"
+						@edit="editMessenger(messenger.id)"
 					>
 						<!-- TODO: add icons and tags -->
-						<!-- <template #icon>
+						<template #icon>
 							<VehicleIcon :name="messenger.config?.icon" />
 						</template>
 						<template #tags>
-							<DeviceTags :tags="deviceTags('vehicle', messenger.name)" />
-						</template> -->
+							<DeviceTags :tags="deviceTags('messenger', messenger.name)" />
+						</template>
 					</DeviceCard>
 					<NewDeviceButton
 						data-testid="add-messenger"
@@ -385,7 +385,7 @@
 					@removed="chargerRemoved"
 					@close="chargerModalClosed"
 				/>
-				<MessengerModal :id="selectedMessengerId" />
+				<MessengerModal :id="selectedMessengerId" @messenger-changed="messengerChanged" />
 				<InfluxModal @changed="loadDirty" />
 				<MqttModal @changed="loadDirty" />
 				<NetworkModal @changed="loadDirty" />
@@ -569,6 +569,7 @@ export default defineComponent({
 			deviceValues: {
 				meter: {},
 				vehicle: {},
+				messenger: {},
 				charger: {},
 				loadpoint: {},
 			} as DeviceValuesMap,
@@ -794,6 +795,7 @@ export default defineComponent({
 		},
 		async loadAll() {
 			await this.loadVehicles();
+			await this.loadMessengers();
 			await this.loadMeters();
 			await this.loadSite();
 			await this.loadChargers();
@@ -968,6 +970,10 @@ export default defineComponent({
 			this.selectedVehicleId = id;
 			this.$nextTick(() => this.vehicleModal().show());
 		},
+		editMessenger(id: number) {
+			this.selectedMessengerId = id;
+			this.$nextTick(() => this.messengerModal().show());
+		},
 		newVehicle() {
 			this.selectedVehicleId = undefined;
 			this.$nextTick(() => this.vehicleModal().show());
@@ -980,6 +986,12 @@ export default defineComponent({
 			this.selectedVehicleId = undefined;
 			this.vehicleModal().hide();
 			this.loadVehicles();
+			this.loadDirty();
+		},
+		messengerChanged() {
+			this.selectedMessengerId = undefined;
+			this.messengerModal().hide();
+			this.loadMessengers();
 			this.loadDirty();
 		},
 		siteChanged() {
@@ -1093,6 +1105,7 @@ export default defineComponent({
 					meter: this.meters,
 					vehicle: this.vehicles,
 					charger: this.chargers,
+					messenger: this.messengers,
 				} as Record<DeviceType, any[]>;
 				for (const type in devices) {
 					for (const device of devices[type as DeviceType]) {
