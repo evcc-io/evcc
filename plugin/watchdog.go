@@ -154,7 +154,7 @@ func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(
 			return nil
 		}
 
-		// stop wdt on reset value
+		// stop wdt on new write
 		if o.cancel != nil {
 			o.cancel()
 			o.cancel = nil

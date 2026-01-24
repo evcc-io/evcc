@@ -53,7 +53,7 @@ func TestWatchdogDeferredUpdate(t *testing.T) {
 	// 3 → 2: delayed (target 2 is non-reset)
 	// Expected: [1, <delay>, 3, <delay>, 2]
 
-	timeout := 100 * time.Millisecond
+	timeout := 60 * time.Second
 	c := clock.NewMock()
 	p := &watchdogPlugin{
 		log:      util.NewLogger("test"),
@@ -77,7 +77,7 @@ func TestWatchdogDeferredUpdate(t *testing.T) {
 	require.Equal(t, []int{1}, calls, "Value 3 should not be set yet")
 
 	// Wait for delay
-	expectedDelay := p.timeout + time.Second
+	expectedDelay := p.timeout + 5*time.Second
 	c.Add(expectedDelay)
 
 	// Now value 3 should be set
@@ -98,7 +98,7 @@ func TestWatchdogCancelPendingDeferredUpdate(t *testing.T) {
 	// Test: Value 3 → 2 started, then set Value 1 during delay
 	// Expected: Deferred update cancelled, Value 1 set immediately
 
-	timeout := 200 * time.Millisecond
+	timeout := 60 * time.Second
 	c := clock.NewMock()
 	p := &watchdogPlugin{
 		log:      util.NewLogger("test"),
@@ -122,14 +122,14 @@ func TestWatchdogCancelPendingDeferredUpdate(t *testing.T) {
 	require.Equal(t, []int{3}, calls, "Value 2 should not be set yet")
 
 	// Wait a bit but not the full delay
-	c.Add(50 * time.Millisecond)
+	c.Add(30 * time.Second)
 
 	// Value 1 (reset) → should cancel pending deferred update and set immediately
 	require.NoError(t, set(1))
 	require.Equal(t, []int{3, 1}, calls, "Value 1 should be set, Value 2 should be cancelled")
 
 	// Wait for what would have been the original delay
-	c.Add(timeout + time.Second)
+	c.Add(timeout + 5*time.Second)
 
 	// Value 2 should still not have been set
 	require.Equal(t, []int{3, 1}, calls, "Value 2 should remain cancelled")
@@ -141,7 +141,7 @@ func TestWatchdogDelayBackwardCompatibility(t *testing.T) {
 
 	p := &watchdogPlugin{
 		log:      util.NewLogger("test"),
-		timeout:  100 * time.Millisecond,
+		timeout:  60 * time.Second,
 		deferred: false, // explicitly false
 		clock:    clock.New(),
 	}
