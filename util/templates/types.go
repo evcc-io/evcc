@@ -271,10 +271,6 @@ func (p *Param) IsDeprecated() bool {
 }
 
 func (p *Param) IsZero(s string) bool {
-	if s == "" {
-		return true
-	}
-
 	switch p.Type {
 	case TypeBool:
 		return !cast.ToBool(s)
@@ -282,6 +278,8 @@ func (p *Param) IsZero(s string) bool {
 		return cast.ToInt64(s) == 0
 	case TypeFloat:
 		return cast.ToFloat64(s) == 0
+	case TypeDuration:
+		return cast.ToDuration(s) == 0
 	default:
 		return false
 	}
