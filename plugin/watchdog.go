@@ -82,8 +82,23 @@ func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(
 	var lastUpdated time.Time
 	var last *T
 
-	// start wdt for non-reset value
-	startWdt := func(val T) {
+	// stop running wdt
+	stopWdt := func() {
+		if o.cancel != nil {
+			o.cancel()
+			o.cancel = nil
+		}
+	}
+
+	// set value and start wdt
+	setAndStartWdt := func(val T) error {
+		if err := set(val); err != nil {
+			return err
+		}
+		lastUpdated = o.clock.Now()
+		last = &val
+
+		// start wdt for non-reset value
 		if !slices.Contains(reset, val) {
 			var ctx context.Context
 			ctx, o.cancel = context.WithCancel(context.Background())
@@ -100,14 +115,8 @@ func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(
 				return nil
 			})
 		}
-	}
 
-	// stop running wdt
-	stopWdt := func() {
-		if o.cancel != nil {
-			o.cancel()
-			o.cancel = nil
-		}
+		return nil
 	}
 
 	return func(val T) error {
@@ -145,34 +154,19 @@ func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(
 				state = nil
 
 				o.log.TRACE.Printf("deferred update executing: to=%v", val)
-				if err := set(val); err != nil {
+				if err := setAndStartWdt(val); err != nil {
 					o.log.ERROR.Printf("deferred update failed: %v", err)
 					return
 				}
-				lastUpdated = o.clock.Now()
-
-				// store last updated value to avoid defer loops
-				last = &val
 				o.log.TRACE.Printf("deferred update completed: value=%v", val)
-
-				startWdt(val)
 			})
 
 			return nil
 		}
 
+		// immediate update
 		stopWdt()
-		startWdt(val)
-
-		if err := set(val); err != nil {
-			return err
-		}
-		lastUpdated = o.clock.Now()
-
-		// store last updated value to avoid defer loops
-		last = &val
-
-		return nil
+		return setAndStartWdt(val)
 	}
 }
 
