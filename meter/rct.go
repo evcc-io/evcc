@@ -22,7 +22,7 @@ type RCT struct {
 	conn          *rct.Connection // connection with the RCT device
 	usage         string          // grid, pv, battery
 	externalPower bool            // whether to query external power
-	socStrategy   *uint8          // remembers overwritten soc strategy value
+	rSocStrategy  *uint8          // remembers overwritten soc strategy value
 }
 
 var (
@@ -169,12 +169,12 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 				}
 
 				// read soc strategy to reset afterwards
-				if m.socStrategy == nil {
+				if m.rSocStrategy == nil {
 					strategy, err := m.queryUint8(rct.PowerMngSocStrategy)
 					if err != nil {
 						return err
 					}
-					m.socStrategy = &strategy
+					m.rSocStrategy = &strategy
 				}
 			}
 
@@ -183,8 +183,8 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 			switch mode {
 			case api.BatteryNormal:
 				eg.Go(func() error {
-					err := m.conn.Write(rct.PowerMngSocStrategy, []byte{*m.socStrategy})
-					m.socStrategy = nil
+					err := m.conn.Write(rct.PowerMngSocStrategy, []byte{*m.rSocStrategy})
+					m.rSocStrategy = nil
 					return err
 				})
 
