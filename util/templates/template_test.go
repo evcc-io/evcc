@@ -32,7 +32,7 @@ func TestPresets(t *testing.T) {
 	}, tmpl.Params)
 }
 
-func TestRequired(t *testing.T) {
+func TestRequiredString(t *testing.T) {
 	tmpl := &Template{
 		Params: []Param{
 			{
@@ -51,6 +51,43 @@ func TestRequired(t *testing.T) {
 		"Param": "",
 	})
 	assert.Error(t, err, "test: required present but empty")
+
+	_, _, err = tmpl.RenderResult(RenderModeUnitTest, map[string]any{
+		"Param": nil,
+	})
+	assert.Error(t, err, "test: required present but nil")
+
+	_, _, err = tmpl.RenderResult(RenderModeDocs, map[string]any{
+		"Param": nil,
+	})
+	assert.NoError(t, err, "docs: required present but nil")
+}
+
+func TestRequiredNumber(t *testing.T) {
+	tmpl := &Template{
+		Params: []Param{
+			{
+				Name:     "param",
+				Type:     TypeInt,
+				Required: true,
+			},
+		},
+	}
+
+	_, _, err := tmpl.RenderResult(RenderModeUnitTest, map[string]any{
+		"Param": "1",
+	})
+	assert.NoError(t, err, "test: required present")
+
+	_, _, err = tmpl.RenderResult(RenderModeUnitTest, map[string]any{
+		"Param": "",
+	})
+	assert.Error(t, err, "test: required present but empty")
+
+	_, _, err = tmpl.RenderResult(RenderModeUnitTest, map[string]any{
+		"Param": "0",
+	})
+	assert.Error(t, err, "test: required present but zero value")
 
 	_, _, err = tmpl.RenderResult(RenderModeUnitTest, map[string]any{
 		"Param": nil,
