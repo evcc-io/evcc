@@ -4,10 +4,13 @@ products:
 params:
   - name: uri
     required: true
-    example: smtp://username:password@smtp.example.com:587/?fromAddress=from@example.com&toAddresses=to@example.com
+    example: gotify://gotify.example.com:443/AzyoeNS.D4iJLVa/?priority=1
+    description:
+      de: Uri
+      en: Uri
     help:
-      de: Shoutrrr Service URI (siehe [containrrr.dev](https://containrrr.dev/shoutrrr/v0.8/services/overview/))
-      en: Shoutrrr service URI (see [containrrr.dev](https://containrrr.dev/shoutrrr/v0.8/services/overview/))
+      de: URL-Format angeben. Eine Übersicht der unterstützten Dienste ist unter [containrrr.dev](https://containrrr.dev/shoutrrr/latest/services/overview/) zu finden.
+      en: Specify the URL format. An overview of the supported services can be found at [containrrr.dev](https://containrrr.dev/shoutrrr/latest/services/overview/).
 render: |
   type: shout
   uri: {{ .uri }}

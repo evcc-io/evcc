@@ -5,20 +5,36 @@ params:
   - name: app
     required: true
     mask: true
+    example: azGDORePK8gMaC0QOYAMyEEuzJnyUi
+    description:
+      de: API Token
+      en: API token
     help:
-      de: Pushover Application API Token
-      en: Pushover Application API Token
+      de: API-Token der Anwendung. Erhältlich unter [pushover.net](https://pushover.net/apps/build) nach dem Erstellen einer Applikation.
+      en: API token of the application. Get it from [pushover.net](https://pushover.net/apps/build) after creating an application.
   - name: recipients
-    type: list
     required: true
-    help:
-      de: Liste der Empfänger (User Keys oder Group Keys)
-      en: List of recipients (User Keys or Group Keys)
-  - name: devices
+    example: uQiRzpo4DXghDmr9QzzfQu27cmVRsG
     type: list
+    description:
+      de: Empfänger
+      en: Recipients
     help:
-      de: Liste der Geräte, an die Nachrichten gesendet werden sollen
-      en: List of devices to send messages to
+      de: >
+        Benutzerkennungen und Gruppenkennungen können angegeben werden. Ein Eintrag pro Zeile.
+        Gruppen müssen zuerst unter [pushover.net](https://pushover.net/groups/build) erstellt werden.
+      en: >
+        User keys and group identifiers can be specified. One entry per line.
+        Groups must first be created at [pushover.net](https://pushover.net/groups/build).
+  - name: devices
+    example: droid2
+    type: list
+    description:
+      de: Gerätenamen
+      en: Device names
+    help:
+      de: Beschränken der Benachrichtigungen auf bestimmte Geräte. Leer lassen, um an alle zu senden. Ein Eintrag pro Zeile.
+      en: Restrict notifications to specific devices. Leave blank to send to all. One entry per line.
 render: |
   type: pushover
   app: {{ .app }}
