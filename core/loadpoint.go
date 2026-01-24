@@ -1775,7 +1775,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 		if socEstimator == nil {
 			lp.vehicleSoc = *soc
 		} else {
-			lp.vehicleSoc, _ = socEstimator.Soc(soc, lp.GetChargedEnergy())
+			lp.vehicleSoc = socEstimator.Soc(soc, lp.GetChargedEnergy())
 			lp.log.DEBUG.Printf("vehicle soc (estimator): %.0f%%", lp.vehicleSoc)
 		}
 	}
