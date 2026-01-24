@@ -11,6 +11,7 @@ import (
 
 	"dario.cat/mergo"
 	"github.com/gosimple/slug"
+	"github.com/spf13/cast"
 )
 
 const (
@@ -267,6 +268,19 @@ func (p *Param) IsRequired() bool {
 
 func (p *Param) IsDeprecated() bool {
 	return p.Deprecated
+}
+
+func (p *Param) IsZero(s string) bool {
+	switch p.Type {
+	case TypeInt:
+		return cast.ToInt64(s) == 0
+	case TypeFloat:
+		return cast.ToFloat64(s) == 0
+	case TypeDuration:
+		return cast.ToDuration(s) == 0
+	default:
+		return len(s) == 0
+	}
 }
 
 // yamlQuote quotes strings for yaml if they would otherwise by modified by the unmarshaler
