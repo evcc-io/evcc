@@ -82,6 +82,34 @@ func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(
 	var lastUpdated time.Time
 	var last *T
 
+	// start wdt for non-reset value
+	startWdt := func(val T) {
+		if !slices.Contains(reset, val) {
+			var ctx context.Context
+			ctx, o.cancel = context.WithCancel(context.Background())
+
+			go o.wdt(ctx, func() error {
+				o.mu.Lock()
+				defer o.mu.Unlock()
+
+				if err := set(val); err != nil {
+					return err
+				}
+				lastUpdated = o.clock.Now()
+
+				return nil
+			})
+		}
+	}
+
+	// stop running wdt
+	stopWdt := func() {
+		if o.cancel != nil {
+			o.cancel()
+			o.cancel = nil
+		}
+	}
+
 	return func(val T) error {
 		o.mu.Lock()
 		defer o.mu.Unlock()
@@ -103,11 +131,7 @@ func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(
 
 		// defer update to non-reset value
 		if o.deferred && !lastUpdated.IsZero() && !slices.Contains(reset, val) && delay > 0 {
-			// stop running wdt
-			if o.cancel != nil {
-				o.cancel()
-				o.cancel = nil
-			}
+			stopWdt()
 
 			// store deferred value
 			state = &deferredState[T]{
@@ -120,7 +144,7 @@ func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(
 
 				state = nil
 
-				o.log.DEBUG.Printf("deferred update executing: to=%v", val)
+				o.log.TRACE.Printf("deferred update executing: to=%v", val)
 				if err := set(val); err != nil {
 					o.log.ERROR.Printf("deferred update failed: %v", err)
 					return
@@ -129,52 +153,16 @@ func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(
 
 				// store last updated value to avoid defer loops
 				last = &val
-				o.log.DEBUG.Printf("deferred update completed: value=%v", val)
+				o.log.TRACE.Printf("deferred update completed: value=%v", val)
 
-				if !slices.Contains(reset, val) {
-					var ctx context.Context
-					ctx, o.cancel = context.WithCancel(context.Background())
-
-					go o.wdt(ctx, func() error {
-						o.mu.Lock()
-						defer o.mu.Unlock()
-
-						if err := set(val); err != nil {
-							return err
-						}
-						lastUpdated = o.clock.Now()
-
-						return nil
-					})
-				}
+				startWdt(val)
 			})
 
 			return nil
 		}
 
-		// stop wdt on new write
-		if o.cancel != nil {
-			o.cancel()
-			o.cancel = nil
-		}
-
-		// start wdt on non-reset value
-		if !slices.Contains(reset, val) {
-			var ctx context.Context
-			ctx, o.cancel = context.WithCancel(context.Background())
-
-			go o.wdt(ctx, func() error {
-				o.mu.Lock()
-				defer o.mu.Unlock()
-
-				if err := set(val); err != nil {
-					return err
-				}
-				lastUpdated = o.clock.Now()
-
-				return nil
-			})
-		}
+		stopWdt()
+		startWdt(val)
 
 		if err := set(val); err != nil {
 			return err
