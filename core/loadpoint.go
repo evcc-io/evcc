@@ -506,11 +506,6 @@ func (lp *Loadpoint) evVehicleConnectHandler() {
 	// soc update reset
 	lp.socUpdated = time.Time{}
 
-	// soc update reset on car change
-	if lp.socEstimator != nil {
-		lp.socEstimator.Reset()
-	}
-
 	// set default or start detection
 	if !lp.chargerHasFeature(api.IntegratedDevice) {
 		lp.vehicleDefaultOrDetect()
