@@ -92,13 +92,19 @@ func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(
 			state = deferredState[T]{}
 		}
 
+		// if value unchanged, let wdt continue running
+		// TODO refactor using last when batterymode is set only once, currently required to avoid defer loops
+		if last != nil && *last == val && o.cancel != nil {
+			return nil
+		}
+
 		// calculate delay from last update
 		requiredDelay := o.timeout + time.Second
 		timeSinceLastUpdated := o.clock.Since(lastUpdated)
 		actualDelay := max(0, requiredDelay-timeSinceLastUpdated)
 
-		// defer update to non-reset value if different from active value
-		if o.deferred && !lastUpdated.IsZero() && *last != val && !slices.Contains(reset, val) && actualDelay > 0 {
+		// defer update to non-reset value
+		if o.deferred && !lastUpdated.IsZero() && !slices.Contains(reset, val) && actualDelay > 0 {
 			// stop running wdt
 			if o.cancel != nil {
 				o.cancel()
@@ -123,6 +129,8 @@ func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(
 					o.log.ERROR.Printf("deferred update failed: %v", err)
 					return
 				}
+
+				// store last updated value to avoid defer loops
 				lastUpdated = o.clock.Now()
 				last = &targetVal
 				o.log.DEBUG.Printf("deferred update completed: value=%v", targetVal)
@@ -171,7 +179,7 @@ func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(
 			return err
 		}
 
-		// store last updated value to avoid cancel deferred timer on same value
+		// store last updated value to avoid defer loops
 		lastUpdated = o.clock.Now()
 		last = &val
 
