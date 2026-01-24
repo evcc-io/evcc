@@ -110,7 +110,7 @@ func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(
 			}
 
 			// store deferred value
-			state := &deferredState[T]{
+			state = &deferredState[T]{
 				val: val,
 			}
 
