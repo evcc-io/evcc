@@ -279,7 +279,7 @@ func (p *Param) IsZero(s string) bool {
 	case TypeDuration:
 		return cast.ToDuration(s) == 0
 	default:
-		return s != ""
+		return len(s) == 0
 	}
 }
 
