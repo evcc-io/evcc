@@ -83,9 +83,7 @@ func TestSocEstimation(t *testing.T) {
 		remainingHours := (float64(targetSoc) - soc) / 100 * tc.virtualCapacity / chargePower
 		remainingDuration := time.Duration(float64(time.Hour) * remainingHours).Round(time.Second)
 
-		if rm := ce.RemainingChargeDuration(targetSoc, chargePower); rm != remainingDuration {
-			t.Errorf("expected estimated duration: %v, got: %v", remainingDuration, rm)
-		}
+		assert.Equal(t, remainingDuration, ce.RemainingChargeDuration(targetSoc, chargePower), "remaining duration")
 	}
 }
 

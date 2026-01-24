@@ -96,16 +96,15 @@ func (s *Estimator) Soc(fetchedSoc *float64, chargedEnergy float64) float64 {
 		s.log.WARN.Printf("missing vehicle soc- ignored by estimator")
 	}
 
-	if s.initialSoc == 0 {
-		s.initialSoc = s.vehicleSoc
-		s.initialEnergy = chargedEnergy
-		return s.vehicleSoc
-	}
-
 	socDelta := s.vehicleSoc - s.prevSoc
 	energyDelta := max(chargedEnergy, 0) - s.prevChargedEnergy
 
 	if socDelta != 0 || energyDelta < 0 { // soc value change or unexpected energy reset
+		if s.initialSoc == 0 {
+			s.initialSoc = s.vehicleSoc
+			s.initialEnergy = chargedEnergy
+		}
+
 		socDiff := s.vehicleSoc - s.initialSoc
 		energyDiff := chargedEnergy - s.initialEnergy
 
