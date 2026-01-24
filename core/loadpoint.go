@@ -1760,14 +1760,20 @@ func (lp *Loadpoint) publishSocAndRange() {
 		return socR, limitR
 	}
 
-	pollAllowed := lp.vehicleSocPollAllowed()
-	if pollAllowed {
-		lp.socUpdated = lp.clock.Now()
-	}
-
 	soc, limit := socAndLimit("charger", lp.charger)
-	if soc == nil && (pollAllowed || lp.chargerHasFeature(api.IntegratedDevice)) {
+	if soc == nil && (lp.vehicleSocPollAllowed() || lp.chargerHasFeature(api.IntegratedDevice)) {
+		lp.socUpdated = lp.clock.Now()
 		soc, limit = socAndLimit("vehicle", lp.GetVehicle())
+
+		// range
+		if vs, ok := lp.GetVehicle().(api.VehicleRange); ok {
+			if rng, err := vs.Range(); err == nil {
+				lp.log.DEBUG.Printf("vehicle range: %dkm", rng)
+				lp.publish(keys.VehicleRange, rng)
+			} else if !loadpoint.AcceptableError(err) {
+				lp.log.ERROR.Printf("vehicle range: %v", err)
+			}
+		}
 	}
 
 	if soc != nil {
@@ -1798,16 +1804,6 @@ func (lp *Loadpoint) publishSocAndRange() {
 		lp.SetRemainingDuration(d)
 
 		lp.SetRemainingEnergy(socEstimator.RemainingChargeEnergy(limitSoc))
-	}
-
-	// range
-	if vs, ok := lp.GetVehicle().(api.VehicleRange); ok && pollAllowed {
-		if rng, err := vs.Range(); err == nil {
-			lp.log.DEBUG.Printf("vehicle range: %dkm", rng)
-			lp.publish(keys.VehicleRange, rng)
-		} else if !loadpoint.AcceptableError(err) {
-			lp.log.ERROR.Printf("vehicle range: %v", err)
-		}
 	}
 
 	// trigger message after variables are updated
