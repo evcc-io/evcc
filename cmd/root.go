@@ -184,9 +184,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 			Status: ocpp.GetStatus(),
 		}}
 	})
-	log.INFO.Printf("OCPP local:    ws://127.0.0.1:%d/<stationId>", conf.Ocpp.Port)
+	log.INFO.Printf("OCPP local url:    ws://127.0.0.1:%d/<stationId>", conf.Ocpp.Port)
 	if ocpp.ExternalUrl() != "" {
-		log.INFO.Printf("OCPP external: %s/<stationId>", ocpp.ExternalUrl())
+		log.INFO.Printf("OCPP external url: %s/<stationId>", ocpp.ExternalUrl())
 	}
 
 	// value cache
@@ -204,9 +204,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 			os.Exit(1)
 		}
 	}()
-	log.INFO.Printf("UI local:      http://127.0.0.1:%d", conf.Network.Port)
+	log.INFO.Printf("UI local url:      http://127.0.0.1:%d", conf.Network.Port)
 	if conf.Network.ExternalUrl != "" {
-		log.INFO.Printf("UI external:   %s", conf.Network.ExternalURL())
+		log.INFO.Printf("UI external url:   %s", conf.Network.ExternalURL())
 	}
 
 	// publish to UI
@@ -279,7 +279,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// signal devices initialized
 	valueChan <- util.Param{Key: keys.StartupCompleted, Val: true}
 	// show onboarding UI
-	valueChan <- util.Param{Key: keys.SetupRequired, Val: site == nil || len(site.Loadpoints()) == 0}
+	valueChan <- util.Param{Key: keys.SetupRequired, Val: site == nil || !site.IsConfigured()}
 
 	// setup mqtt publisher
 	if err == nil && conf.Mqtt.Broker != "" && conf.Mqtt.Topic != "" {
@@ -366,6 +366,8 @@ func runRoot(cmd *cobra.Command, args []string) {
 	valueChan <- util.Param{Key: keys.Version, Val: util.FormattedVersion()}
 	valueChan <- util.Param{Key: keys.Config, Val: viper.ConfigFileUsed()}
 	valueChan <- util.Param{Key: keys.Database, Val: db.FilePath}
+	valueChan <- util.Param{Key: keys.System, Val: util.System()}
+	valueChan <- util.Param{Key: keys.Timezone, Val: time.Now().Format("MST -07:00")}
 
 	// run shutdown functions on stop
 	var once sync.Once
@@ -438,9 +440,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 			once.Do(func() { close(stopC) }) // signal loop to end
 		}()
 	}
-
-	// uds health check listener
-	go server.HealthListener(site)
 
 	// wait for shutdown
 	<-stopC

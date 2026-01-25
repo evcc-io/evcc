@@ -21,9 +21,10 @@ func init() {
 			return nil, err
 		}
 
+		log := util.NewLogger("ford").Redact(cc.ClientID)
 		oc := OAuth2Config(cc.ClientID, cc.ClientSecret, cc.RedirectURI)
 
-		return NewOAuth(oc, "")
+		return NewOAuth(util.WithLogger(context.Background(), log), oc, "")
 	})
 }
 
@@ -45,6 +46,6 @@ func OAuth2Config(id, secret, redirectUri string) *oauth2.Config {
 }
 
 // NewOAuth creates FordConnect token source
-func NewOAuth(oc *oauth2.Config, title string) (oauth2.TokenSource, error) {
-	return auth.NewOAuth(context.Background(), "Ford Connect", title, oc)
+func NewOAuth(ctx context.Context, oc *oauth2.Config, title string) (oauth2.TokenSource, error) {
+	return auth.NewOAuth(ctx, "Ford Connect", title, oc)
 }

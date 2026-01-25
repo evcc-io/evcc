@@ -13,11 +13,9 @@ import (
 )
 
 type OctopusDe struct {
-	log           *util.Logger
-	email         string
-	password      string
-	accountNumber string
-	data          *util.Monitor[api.Rates]
+	log       *util.Logger
+	gqlClient *octoDeGql.OctopusDeGraphQLClient
+	data      *util.Monitor[api.Rates]
 }
 
 var _ api.Tariff = (*OctopusDe)(nil)
@@ -45,8 +43,6 @@ func buildOctopusDeFromConfig(other map[string]any) (*OctopusDe, error) {
 		AccountNumber string
 	}
 
-	logger := util.NewLogger("octopus-de")
-
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
@@ -63,12 +59,18 @@ func buildOctopusDeFromConfig(other map[string]any) (*OctopusDe, error) {
 		return nil, errors.New("missing account number")
 	}
 
+	log := util.NewLogger("octopus-de")
+
+	// Create GraphQL client
+	gqlClient, err := octoDeGql.NewClient(log, cc.Email, cc.Password, cc.AccountNumber)
+	if err != nil {
+		return nil, err
+	}
+
 	t := &OctopusDe{
-		log:           logger,
-		email:         cc.Email,
-		password:      cc.Password,
-		accountNumber: cc.AccountNumber,
-		data:          util.NewMonitor[api.Rates](2 * time.Hour),
+		log:       log,
+		gqlClient: gqlClient,
+		data:      util.NewMonitor[api.Rates](2 * time.Hour),
 	}
 
 	return t, nil
@@ -77,20 +79,12 @@ func buildOctopusDeFromConfig(other map[string]any) (*OctopusDe, error) {
 func (t *OctopusDe) run(done chan error) {
 	var once sync.Once
 
-	// Create GraphQL client
-	gqlClient, err := octoDeGql.NewClient(t.log, t.email, t.password, t.accountNumber)
-	if err != nil {
-		once.Do(func() { done <- err })
-		t.log.ERROR.Println(err)
-		return
-	}
-
 	for tick := time.Tick(time.Hour); ; <-tick {
 		var rates []octoDeGql.RatePeriod
 
 		if err := backoff.Retry(func() error {
 			var err error
-			rates, err = gqlClient.UnitRateForecast()
+			rates, err = t.gqlClient.UnitRateForecast()
 			return backoffPermanentError(err)
 		}, bo()); err != nil {
 			once.Do(func() { done <- err })

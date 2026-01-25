@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -35,7 +36,7 @@ func NewConnection(log *util.Logger, uri, home string) (*Connection, error) {
 		Helper: request.NewHelper(log),
 		instance: &proxyInstance{
 			home: home,
-			uri:  uri,
+			uri:  util.DefaultScheme(strings.TrimSuffix(uri, "/"), "http"),
 		},
 	}
 
@@ -59,19 +60,19 @@ func (c *Connection) GetStates() ([]StateResponse, error) {
 }
 
 // GetState retrieves the state of an entity
-func (c *Connection) GetState(entity string) (string, error) {
+func (c *Connection) GetState(entity string) (StateResponse, error) {
 	var res StateResponse
 	uri := fmt.Sprintf("%s/api/states/%s", c.instance.URI(), url.PathEscape(entity))
 
 	if err := c.GetJSON(uri, &res); err != nil {
-		return "", err
+		return res, err
 	}
 
 	if res.State == "unknown" || res.State == "unavailable" {
-		return "", api.ErrNotAvailable
+		return res, api.ErrNotAvailable
 	}
 
-	return res.State, nil
+	return res, nil
 }
 
 // GetIntState retrieves the state of an entity as int64
@@ -81,9 +82,9 @@ func (c *Connection) GetIntState(entity string) (int64, error) {
 		return 0, err
 	}
 
-	value, err := strconv.ParseInt(state, 10, 64)
+	value, err := strconv.ParseInt(state.State, 10, 64)
 	if err != nil {
-		return 0, fmt.Errorf("invalid numeric state '%s' for entity %s: %w", state, entity, err)
+		return 0, fmt.Errorf("invalid numeric state '%s' for entity %s: %w", state.State, entity, err)
 	}
 
 	return value, nil
@@ -96,12 +97,17 @@ func (c *Connection) GetFloatState(entity string) (float64, error) {
 		return 0, err
 	}
 
-	value, err := strconv.ParseFloat(state, 64)
+	value, err := strconv.ParseFloat(state.State, 64)
 	if err != nil {
-		return 0, fmt.Errorf("invalid numeric state '%s' for entity %s: %w", state, entity, err)
+		return 0, fmt.Errorf("invalid numeric state '%s' for entity %s: %w", state.State, entity, err)
 	}
 
-	return value, nil
+	scale, err := state.scale()
+	if err != nil {
+		return 0, fmt.Errorf("%w for entity %s", err, entity)
+	}
+
+	return scale * value, nil
 }
 
 // GetBoolState retrieves the state of an entity as boolean
@@ -111,8 +117,8 @@ func (c *Connection) GetBoolState(entity string) (bool, error) {
 		return false, err
 	}
 
-	state = strings.ToLower(state)
-	switch state {
+	res := strings.ToLower(state.State)
+	switch res {
 	case "on", "true", "1", "active", "yes":
 		return true, nil
 	case "off", "false", "0", "inactive", "no":
@@ -120,6 +126,20 @@ func (c *Connection) GetBoolState(entity string) (bool, error) {
 	default:
 		return false, fmt.Errorf("invalid boolean state '%s' for entity %s", state, entity)
 	}
+}
+
+// GetTimeState retrieves the state of an entity as time
+func (c *Connection) GetTimeState(entity string) (time.Time, error) {
+	state, err := c.GetState(entity)
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	if ts, err := strconv.ParseInt(state.State, 10, 64); err == nil {
+		return time.Unix(ts, 0), nil
+	}
+
+	return time.Parse(time.RFC3339, state.State)
 }
 
 // chargeStatusMap maps Home Assistant states to EVCC charge status
@@ -166,7 +186,7 @@ func (c *Connection) GetChargeStatus(entity string) (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	if status, ok := chargeStatusMap[strings.ToLower(strings.TrimSpace(state))]; ok {
+	if status, ok := chargeStatusMap[strings.ToLower(strings.TrimSpace(state.State))]; ok {
 		return status, nil
 	}
 

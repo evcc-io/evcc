@@ -52,7 +52,7 @@ func NewVolvoConnectedFromConfig(ctx context.Context, other map[string]any) (api
 	log := util.NewLogger("volvo-connected").Redact(cc.VIN, cc.Credentials.ID, cc.Credentials.Secret, cc.VccApiKey)
 
 	oc := connected.OAuthConfig(cc.Credentials.ID, cc.Credentials.Secret, cc.RedirectUri)
-	ts, err := connected.NewOAuth(oc, cc.embed.GetTitle())
+	ts, err := connected.NewOAuth(util.WithLogger(context.Background(), log), oc, cc.embed.GetTitle())
 	if err != nil {
 		return nil, err
 	}

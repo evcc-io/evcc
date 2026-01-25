@@ -83,7 +83,7 @@ test.describe("fatal config handling", async () => {
     // verify loadpoint still visible with error
     await expect(page.getByTestId("fatal-error")).toBeVisible();
     await expect(page.getByTestId("fatal-error")).toContainText(
-      /meter: .+? cannot create meter .+?: cannot create meter type 'template': cannot create meter type 'shelly'/
+      /meter: .+? cannot create meter .+?: cannot create meter type 'template:shelly-1pm': cannot create meter type 'shelly'/
     );
     await expect(page.getByTestId("fatal-error")).toContainText(
       /loadpoint: .+? missing charge meter instance/

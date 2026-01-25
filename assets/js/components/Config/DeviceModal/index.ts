@@ -35,7 +35,7 @@ export type TemplateParam = {
 
 export type ParamService = {
   name: string;
-  dependencies: string[];
+  service: string;
   url: (values: Record<string, any>) => string;
 };
 
@@ -118,6 +118,22 @@ export async function loadServiceValues(path: string) {
   }
 }
 
+// Expand {modbus} to actual connection params based on values
+const expandModbus = (service: string, values: Record<string, any>): string => {
+  if (!service.includes("{modbus}")) return service;
+
+  if (values["device"]) {
+    return service.replace(
+      "{modbus}",
+      "device={device}&baudrate={baudrate}&comset={comset}&id={id}"
+    );
+  }
+  if (values["host"]) {
+    return service.replace("{modbus}", "uri={host}:{port}&id={id}");
+  }
+  return service;
+};
+
 export const createServiceEndpoints = (params: TemplateParam[]): ParamService[] => {
   return params
     .map((param) => {
@@ -127,7 +143,8 @@ export const createServiceEndpoints = (params: TemplateParam[]): ParamService[] 
       const stringValues = (values: Record<string, any>): Record<string, string> =>
         Object.entries(values).reduce(
           (acc, [key, val]) => {
-            if (val !== undefined && val !== null) acc[key] = String(val);
+            if (val !== undefined && val !== null && val !== "" && key !== "modbus")
+              acc[key] = String(val);
             return acc;
           },
           {} as Record<string, string>
@@ -135,9 +152,9 @@ export const createServiceEndpoints = (params: TemplateParam[]): ParamService[] 
 
       return {
         name: param.Name,
-        dependencies: extractPlaceholders(param.Service),
+        service: param.Service,
         url: (values: Record<string, any>) =>
-          replacePlaceholders(param.Service!, stringValues(values)),
+          replacePlaceholders(expandModbus(param.Service!, values), stringValues(values)),
       } as ParamService;
     })
     .filter((endpoint): endpoint is ParamService => endpoint !== null);
@@ -152,17 +169,11 @@ export const fetchServiceValues = async (
 
   await Promise.all(
     endpoints.map(async (endpoint) => {
-      const params: Record<string, any> = {};
-      endpoint.dependencies.forEach((dependency) => {
-        if (values[dependency]) {
-          params[dependency] = values[dependency];
-        }
-      });
-      if (Object.keys(params).length !== endpoint.dependencies.length) {
-        // missing dependency values, skip
+      const url = endpoint.url(values);
+      if (extractPlaceholders(url).length > 0) {
+        // missing values, not all placeholders are filled
         return;
       }
-      const url = endpoint.url(params);
       const data = await loadServiceValues(url);
       if (data) {
         result[endpoint.name] = data;

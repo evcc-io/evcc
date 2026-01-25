@@ -76,8 +76,6 @@ type Site struct {
 	valueChan    chan<- util.Param // client push messages
 	lpUpdateChan chan *Loadpoint
 
-	*Health
-
 	sync.RWMutex
 	log *util.Logger
 
@@ -505,15 +503,7 @@ func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) [
 
 		// power
 		var b bytes.Buffer
-		power, err := backoff.RetryWithData(func() (float64, error) {
-			start := time.Now()
-			f, err := meter.CurrentPower()
-			if err != nil {
-				d := time.Since(start)
-				fmt.Fprintf(&b, "%v !! %3dms %v\n", start, d.Milliseconds(), err)
-			}
-			return f, err
-		}, modbus.Backoff())
+		power, err := backoff.RetryWithData(meter.CurrentPower, modbus.Backoff())
 		if err == nil {
 			site.log.DEBUG.Printf("%s %d power: %.0fW", key, i+1, power)
 		} else {
@@ -637,14 +627,13 @@ func (site *Site) updateBatteryMeters() []measurement {
 		meter := dev.Instance()
 
 		// battery soc and capacity
-		var batSoc, capacity float64
-		var err error
-
 		if m, ok := meter.(api.Battery); ok {
-			batSoc, err = soc.Guard(m.Soc())
+			batSoc, err := soc.Guard(m.Soc())
 			if err == nil {
+				mm[i].Soc = lo.ToPtr(batSoc)
+
 				if m, ok := m.(api.BatteryCapacity); ok {
-					capacity = m.Capacity()
+					mm[i].Capacity = lo.ToPtr(m.Capacity())
 				}
 
 				site.log.DEBUG.Printf("battery %d soc: %.0f%%", i+1, batSoc)
@@ -654,20 +643,23 @@ func (site *Site) updateBatteryMeters() []measurement {
 		}
 
 		_, controllable := meter.(api.BatteryController)
-
-		mm[i].Soc = lo.ToPtr(batSoc)
-		mm[i].Capacity = lo.ToPtr(capacity)
 		mm[i].Controllable = lo.ToPtr(controllable)
 	}
 
 	batterySocAcc := lo.SumBy(mm, func(m measurement) float64 {
+		if m.Soc == nil {
+			return 0
+		}
 		// weigh soc by capacity
-		if *m.Capacity > 0 {
+		if m.Capacity != nil && *m.Capacity > 0 {
 			return *m.Soc * *m.Capacity
 		}
 		return *m.Soc
 	})
 	totalCapacity := lo.SumBy(mm, func(m measurement) float64 {
+		if m.Capacity == nil {
+			return 0
+		}
 		return *m.Capacity
 	})
 
@@ -946,14 +938,26 @@ func (site *Site) update(lp updater) {
 
 		site.publishCircuits()
 
-		if err := site.dimMeters(circuitDimmed(site.circuit)); err != nil {
-			site.log.ERROR.Println(err)
-		}
+		var wg sync.WaitGroup
+
+		wg.Go(func() {
+			if err := site.dimMeters(circuitDimmed(site.circuit)); err != nil {
+				site.log.ERROR.Println(err)
+			}
+		})
+
+		wg.Go(func() {
+			if err := site.curtailPV(circuitCurtailed(site.circuit)); err != nil {
+				site.log.ERROR.Println(err)
+			}
+		})
+
+		wg.Wait()
 	}
 
 	// prioritize if possible
 	var flexiblePower float64
-	if lp.GetMode() == api.ModePV {
+	if lp != nil && lp.GetMode() == api.ModePV {
 		flexiblePower = site.prioritizer.GetChargePowerFlexibility(lp)
 	}
 
@@ -974,12 +978,12 @@ func (site *Site) update(lp updater) {
 		greenShareLoadpoints := site.greenShare(nonChargePower, nonChargePower+totalChargePower)
 
 		// TODO
-		lp.Update(
-			sitePower, max(0, site.batteryPower), consumption, feedin, batteryBuffered, batteryStart,
-			greenShareLoadpoints, site.effectivePrice(greenShareLoadpoints), site.effectiveCo2(greenShareLoadpoints),
-		)
-
-		site.Health.Update()
+		if lp != nil {
+			lp.Update(
+				sitePower, max(0, site.batteryPower), consumption, feedin, batteryBuffered, batteryStart,
+				greenShareLoadpoints, site.effectivePrice(greenShareLoadpoints), site.effectiveCo2(greenShareLoadpoints),
+			)
+		}
 
 		site.publishTariffs(greenShareHome, greenShareLoadpoints)
 
@@ -1093,9 +1097,18 @@ func (site *Site) Prepare(valueChan chan<- util.Param, pushChan chan<- push.Even
 
 // loopLoadpoints keeps iterating across loadpoints sending the next to the given channel
 func (site *Site) loopLoadpoints(next chan<- updater) {
+	var logOnce sync.Once
+
 	for {
-		for _, lp := range site.loadpoints {
-			next <- lp
+		if len(site.loadpoints) == 0 {
+			logOnce.Do(func() {
+				site.log.INFO.Println("no loadpoints configured, running in meter-only mode")
+			})
+			next <- nil
+		} else {
+			for _, lp := range site.loadpoints {
+				next <- lp
+			}
 		}
 	}
 }
@@ -1103,14 +1116,12 @@ func (site *Site) loopLoadpoints(next chan<- updater) {
 // Run is the main control loop. It reacts to trigger events by
 // updating measurements and executing control logic.
 func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
-	site.Health = NewHealth(time.Minute + interval)
-
 	if max := 30 * time.Second; interval < max {
-		site.log.WARN.Printf("interval <%.0fs can lead to unexpected behavior, see https://docs.evcc.io/docs/reference/configuration/interval", max.Seconds())
+		site.log.INFO.Printf("interval <%.0fs can lead to unexpected behavior, see https://docs.evcc.io/docs/reference/configuration/interval", max.Seconds())
 	}
 
 	loadpointChan := make(chan updater)
-	if len(site.loadpoints) > 0 {
+	if site.IsConfigured() {
 		go site.loopLoadpoints(loadpointChan)
 	}
 

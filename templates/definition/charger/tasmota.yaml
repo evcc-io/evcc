@@ -26,11 +26,7 @@ params:
 render: |
   type: tasmota
   uri: http://{{ .host }}
-  {{- if .user }}
   user: {{ .user }}
-  {{- end }}
-  {{- if .password }}
   password: {{ .password }}
-  {{- end }}
   channel: [{{ .channel }}]  # list of relay channels [1,2,....,8]
   {{ include "switchsocket" . }}

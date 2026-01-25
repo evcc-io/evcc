@@ -236,20 +236,6 @@ func stateHandler(cache *util.ParamCache) http.HandlerFunc {
 	}
 }
 
-// healthHandler returns current charge mode
-func healthHandler(site site.API) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if site == nil || !site.Healthy() {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-
-		w.Header().Set("Content-Type", "text/plain")
-		w.WriteHeader(http.StatusOK)
-		fmt.Fprintln(w, "OK")
-	}
-}
-
 // tariffHandler returns the configured tariff
 func tariffHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

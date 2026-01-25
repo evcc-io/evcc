@@ -4,11 +4,12 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/server/db"
+	"gorm.io/gorm"
 )
 
 func init() {
-	db.Register(func() error {
-		return db.Instance.AutoMigrate(new(GridSession))
+	db.Register(func(db *gorm.DB) error {
+		return db.AutoMigrate(new(GridSession))
 	})
 }
 

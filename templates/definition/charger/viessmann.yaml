@@ -28,7 +28,7 @@ params:
       generic: Redirect URI
     help:
       en: "Redirect URI of the evcc instance. Must match the redirect URI set in the Viessmann developer portal."
-      de: "Redirect-URI der evcc-Instanz. Muss mit der Redirect URI übereinstimmen, die Viessmann Developer Portal konfiguriert ist."
+      de: "Redirect-URI der evcc-Instanz. Muss mit der Redirect URI übereinstimmen, die im Viessmann Developer Portal konfiguriert ist."
     service: auth/redirecturi
     example: "https://evcc.example.org/providerauth/callback"
   - name: gateway_serial

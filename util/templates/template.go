@@ -7,23 +7,26 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"testing"
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
+	"github.com/spf13/cast"
 )
 
 // Template describes is a proxy device for use with cli and automated testing
 type Template struct {
-	TemplateDefinition
-
-	title  string
-	titles []string
-}
-
-// GuidedSetupEnabled returns true if there are linked templates or >1 usage
-func (t *Template) GuidedSetupEnabled() bool {
-	_, p := t.ParamByName(ParamUsage)
-	return len(t.Linked) > 0 || (len(p.Choice) > 1 && p.IsAllInOne())
+	Template     string
+	Deprecated   bool           `json:"-"`
+	Auth         map[string]any `json:",omitempty"` // OAuth parameters (if required)
+	Group        string         `json:",omitempty"` // the group this template belongs to, references groupList entries
+	Covers       []string       `json:",omitempty"` // list of covered outdated template names
+	Products     []Product      `json:",omitempty"` // list of products this template is compatible with
+	Capabilities []string       `json:",omitempty"`
+	Countries    []CountryCode  `json:",omitempty"` // list of countries supported by this template
+	Requirements Requirements   `json:",omitempty"`
+	Params       []Param        `json:",omitempty"`
+	Render       string         `json:"-"` // rendering template
 }
 
 // UpdateParamWithDefaults adds default values to specific param name entries
@@ -33,6 +36,45 @@ func (t *Template) UpdateParamsWithDefaults() error {
 			t.Params[i].OverwriteProperties(resultMapItem)
 		}
 	}
+
+	return nil
+}
+
+// UpdateModbusParamsWithDefaults populates modbus param fields with global defaults
+// when device-specific values are not set (zero/empty).
+func (t *Template) UpdateModbusParamsWithDefaults() error {
+	idx, modbusParam := t.ParamByName(ParamModbus)
+	if idx == -1 || len(modbusParam.Choice) == 0 {
+		return nil
+	}
+
+	if modbusParam.ID == 0 {
+		modbusParam.ID = cast.ToInt(ConfigDefaults.ModbusDefault(ModbusParamId))
+	}
+	if modbusParam.Baudrate == 0 {
+		modbusParam.Baudrate = cast.ToInt(ConfigDefaults.ModbusDefault(ModbusParamBaudrate))
+	}
+	if modbusParam.Comset == "" {
+		modbusParam.Comset = cast.ToString(ConfigDefaults.ModbusDefault(ModbusParamComset))
+	}
+	if modbusParam.Port == 0 {
+		modbusParam.Port = cast.ToInt(ConfigDefaults.ModbusDefault(ModbusParamPort))
+	}
+
+	t.Params[idx] = modbusParam
+	return nil
+}
+
+func (t *Template) SortRequiredParamsFirst() error {
+	slices.SortStableFunc(t.Params, func(a, b Param) int {
+		if a.Required && !b.Required {
+			return -1
+		}
+		if b.Required && !a.Required {
+			return +1
+		}
+		return 0
+	})
 
 	return nil
 }
@@ -91,44 +133,18 @@ func (t *Template) Validate() error {
 				}
 			}
 		}
+
+		// validate pattern examples against pattern
+		if p.Pattern != nil && p.Pattern.Regex != "" && len(p.Pattern.Examples) > 0 {
+			for _, example := range p.Pattern.Examples {
+				if err := p.Pattern.Validate(example); err != nil {
+					return fmt.Errorf("param %s: pattern example %q is invalid: pattern=%q", p.Name, example, p.Pattern.Regex)
+				}
+			}
+		}
 	}
 
 	return nil
-}
-
-// set the language title by combining all product titles
-func (t *Template) SetCombinedTitle(lang string) {
-	if len(t.titles) == 0 {
-		t.resolveTitles(lang)
-	}
-
-	t.title = strings.Join(t.titles, "/")
-}
-
-// set the title for this templates
-func (t *Template) SetTitle(title string) {
-	t.title = title
-}
-
-// return the title for this template
-func (t *Template) Title() string {
-	return t.title
-}
-
-// return the language specific product titles
-func (t *Template) Titles(lang string) []string {
-	if len(t.titles) == 0 {
-		t.resolveTitles(lang)
-	}
-
-	return t.titles
-}
-
-// set the language specific product titles
-func (t *Template) resolveTitles(lang string) {
-	for _, p := range t.Products {
-		t.titles = append(t.titles, p.Title(lang))
-	}
 }
 
 // add the referenced base Params and overwrite existing ones
@@ -136,11 +152,18 @@ func (t *Template) ResolvePresets() error {
 	currentParams := make([]Param, len(t.Params))
 	copy(currentParams, t.Params)
 	t.Params = []Param{}
+
 	for _, p := range currentParams {
 		if p.Preset != "" {
 			preset, ok := ConfigDefaults.Presets[p.Preset]
 			if !ok {
 				return fmt.Errorf("could not find preset definition: %s", p.Preset)
+			}
+
+			for _, pp := range preset {
+				if i, _ := t.ParamByName(pp.Name); i > -1 {
+					return fmt.Errorf("parameter %s must not be defined before containing preset %s", pp.Name, p.Preset)
+				}
 			}
 
 			t.Params = append(t.Params, preset...)
@@ -181,7 +204,7 @@ func (t *Template) GroupTitle(lang string) string {
 
 // Defaults returns a map of default values for the template
 func (t *Template) Defaults(renderMode int) map[string]any {
-	values := make(map[string]any)
+	values := make(map[string]any, len(t.Params))
 	for _, p := range t.Params {
 		values[p.Name] = p.DefaultValue(renderMode)
 	}
@@ -301,6 +324,14 @@ func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, m
 
 	res := make(map[string]any)
 
+	var usage string
+	for k, v := range values {
+		if strings.ToLower(k) == "usage" {
+			usage = strings.ToLower(cast.ToString(v))
+			break
+		}
+	}
+
 	// TODO this is an utterly horrible hack
 	//
 	// When decoding the actual values ("other" parameter) into the
@@ -354,15 +385,28 @@ func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, m
 				if val != nil {
 					s = p.yamlQuote(fmt.Sprintf("%v", val))
 				}
+
+				// validate required fields from yaml
+				if p.IsRequired() && p.IsZero(s) && (renderMode == RenderModeUnitTest || renderMode == RenderModeInstance && !testing.Testing()) {
+					// validate required per usage
+					if len(p.Usages) == 0 || slices.Contains(p.Usages, usage) {
+						return nil, nil, fmt.Errorf("missing required `%s`", p.Name)
+					}
+				}
+
+				// validate pattern if defined
+				if s != "" && p.Pattern != nil && p.Pattern.Regex != "" {
+					if err := p.Pattern.Validate(s); err != nil {
+						return nil, nil, fmt.Errorf("%s: %w", p.Name, err)
+					}
+				}
+
 				res[out] = s
 			}
 		}
 	}
 
-	tmpl, err := baseTmpl.Clone()
-	if err == nil {
-		tmpl, err = FuncMap(tmpl).Parse(t.Render)
-	}
+	tmpl, err := FuncMap(template.Must(baseTmpl.Clone())).Parse(t.Render)
 	if err != nil {
 		return nil, res, err
 	}

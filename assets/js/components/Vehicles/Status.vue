@@ -55,8 +55,9 @@ import "@h2d2/shopicons/es/regular/angledoublerightsmall";
 import "@h2d2/shopicons/es/regular/clock";
 import { DEFAULT_LOCALE } from "@/i18n.ts";
 import formatter from "@/mixins/formatter";
+import minuteTicker from "@/mixins/minuteTicker";
 import { defineComponent, type PropType } from "vue";
-import { SMART_COST_TYPE, type CURRENCY, type Timeout } from "@/types/evcc";
+import { SMART_COST_TYPE, type CURRENCY } from "@/types/evcc";
 
 import ClimaterIcon from "../MaterialIcon/Climater.vue";
 import DynamicPriceIcon from "../MaterialIcon/DynamicPrice.vue";
@@ -85,7 +86,7 @@ export default defineComponent({
 	components: {
 		StatusItem,
 	},
-	mixins: [formatter],
+	mixins: [formatter, minuteTicker],
 	props: {
 		vehicleSoc: { type: Number, default: 0 },
 		batteryBoostActive: Boolean,
@@ -126,11 +127,6 @@ export default defineComponent({
 		vehicleLimitSoc: { type: Number, default: 0 },
 	},
 	emits: ["open-loadpoint-settings", "open-minsoc-settings", "open-plan-modal"],
-	data() {
-		return {
-			interval: null as Timeout,
-		};
-	},
 	computed: {
 		pvTimerActive() {
 			return (
@@ -216,6 +212,9 @@ export default defineComponent({
 		statusItems() {
 			const t = (key: string, params?: Record<string, unknown>) =>
 				this.$t(`main.vehicleStatus.${key}`, params ?? {});
+
+			// ensure periodic recomputation even without data change
+			void this.everyMinute;
 
 			const items = [
 				{
@@ -393,17 +392,6 @@ export default defineComponent({
 
 			return items.filter((item) => item.visible);
 		},
-	},
-	mounted() {
-		this.interval = setInterval(() => {
-			// Force reactivity update for time-dependent content
-			this.$forceUpdate();
-		}, 1000 * 60);
-	},
-	beforeUnmount() {
-		if (this.interval) {
-			clearInterval(this.interval);
-		}
 	},
 	methods: {
 		openLoadpointSettings() {

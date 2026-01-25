@@ -56,7 +56,7 @@ func TokenSource(log *util.Logger, user, password string) (oauth2.TokenSource, e
 			return nil, err
 		}
 
-		return oauth.RefreshTokenSource(token.AsOAuth2Token(), c), nil
+		return oauth.RefreshTokenSource(token.AsOAuth2Token(), c.refreshToken), nil
 	})
 }
 
@@ -81,7 +81,7 @@ func (c *tokenSource) authenticate() (*Token, error) {
 	return &token, err
 }
 
-func (c *tokenSource) RefreshToken(oauthToken *oauth2.Token) (*oauth2.Token, error) {
+func (c *tokenSource) refreshToken(oauthToken *oauth2.Token) (*oauth2.Token, error) {
 	data := struct {
 		AccessToken  string `json:"accessToken"`
 		RefreshToken string `json:"refreshToken"`

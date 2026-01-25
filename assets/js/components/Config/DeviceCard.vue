@@ -111,6 +111,7 @@ export default {
 	background: none;
 	border: 1px solid var(--evcc-gray-50);
 	transition: border-color var(--evcc-transition-fast) linear;
+	order: 1; /* unconfigured tiles at the end of the list */
 }
 .root--unconfigured:hover {
 	border-color: var(--evcc-default-text);

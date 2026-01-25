@@ -19,7 +19,8 @@ func init() {
 			return nil, err
 		}
 
-		return NewOAuth(cc.ClientID, "")
+		ctx := util.WithLogger(context.Background(), util.NewLogger("cardata").Redact(cc.ClientID))
+		return NewOAuth(ctx, cc.ClientID, "")
 	})
 }
 
@@ -40,10 +41,10 @@ func OAuthConfig(clientId string) *oauth2.Config {
 	}
 }
 
-func NewOAuth(clientId, title string) (oauth2.TokenSource, error) {
+func NewOAuth(ctx context.Context, clientId, title string) (oauth2.TokenSource, error) {
 	oc := OAuthConfig(clientId)
 
-	return auth.NewOAuth(context.Background(), "BMW/Mini", title, oc,
+	return auth.NewOAuth(ctx, "BMW/Mini", title, oc,
 		auth.WithOauthDeviceFlowOption(),
 		auth.WithTokenRetrieverOption(func(data string, res *oauth2.Token) error {
 			var token Token

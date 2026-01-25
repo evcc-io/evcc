@@ -192,10 +192,16 @@ type SocLimiter interface {
 	GetLimitSoc() (int64, error)
 }
 
-// Dimmer provides §14a dimming
+// Dimmer provides EnWG §14a dimming
 type Dimmer interface {
 	Dimmed() (bool, error)
 	Dim(bool) error
+}
+
+// Curtailer provides EEG §9 curtailment
+type Curtailer interface {
+	Curtailed() (bool, error)
+	Curtail(bool) error
 }
 
 // ChargeController allows to start/stop the charging session on the vehicle side
@@ -272,9 +278,13 @@ type Circuit interface {
 	ValidateCurrent(old, new float64) float64
 	ValidatePower(old, new float64) float64
 
-	// §14a
+	// EnWG §14a - reduce demand/consumption
 	Dim(bool)
 	Dimmed() bool
+
+	// EEG §9 - reduce feed-in to the grid
+	Curtail(bool)
+	Curtailed() bool
 }
 
 // Redactor is an interface to redact sensitive data

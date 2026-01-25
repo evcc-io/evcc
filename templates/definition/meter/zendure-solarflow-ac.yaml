@@ -9,8 +9,7 @@ params:
     choice: ["battery"]
   - name: host
     required: true
-  - name: capacity
-    required: true
+  - preset: battery-params
   - name: cache
     advanced: true
     default: 1s
@@ -26,4 +25,4 @@ render: |
     uri: http://{{ .host }}/properties/report
     jq: .properties.electricLevel
     cache: {{ .cache }}
-  capacity: {{ .capacity }}
+  {{- include "battery-params" . }}

@@ -25,7 +25,7 @@ export default defineComponent({
 	},
 	computed: {
 		sponsorActive(): boolean {
-			return !!this.sponsor?.status.name;
+			return !!this.sponsor?.status?.name;
 		},
 	},
 });

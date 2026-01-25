@@ -20,7 +20,7 @@ export async function updateAuthStatus() {
 
   try {
     const res = await api.get("/auth/status", {
-      validateStatus: (code) => [200, 403, 501, 500].includes(code),
+      validateStatus: (code) => [200, 403, 404, 501, 500].includes(code),
     });
     if (res.status === 501) {
       auth.configured = false;
@@ -33,9 +33,12 @@ export async function updateAuthStatus() {
       auth.configured = true;
       auth.loggedIn = false;
     }
+    if (res.status === 404) {
+      console.log("unable to fetch auth status, server not ready yet", res);
+    }
     if (res.status === 500) {
       auth.loggedIn = null;
-      console.log("unable to fetch auth status", res);
+      console.log("unable to fetch auth status, internal server error", res);
     }
   } catch (e) {
     console.log("unable to fetch auth status", e);

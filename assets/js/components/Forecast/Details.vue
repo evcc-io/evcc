@@ -65,8 +65,9 @@
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
+import minuteTicker from "@/mixins/minuteTicker";
 import AnimatedNumber from "../Helper/AnimatedNumber.vue";
-import type { CURRENCY, Timeout } from "@/types/evcc";
+import type { CURRENCY } from "@/types/evcc";
 import { ForecastType, findLowestSumSlotIndex } from "@/utils/forecast";
 import type { ForecastSlot, SolarDetails } from "./types";
 const LOCALES_WITHOUT_DAY_AFTER_TOMORROW = ["en", "tr"];
@@ -90,7 +91,7 @@ export default defineComponent({
 	components: {
 		AnimatedNumber,
 	},
-	mixins: [formatter],
+	mixins: [formatter, minuteTicker],
 	props: {
 		type: { type: String as () => ForecastType, required: true },
 		grid: { type: Array as PropType<ForecastSlot[]> },
@@ -101,7 +102,6 @@ export default defineComponent({
 	data() {
 		return {
 			now: new Date(),
-			interval: null as Timeout,
 		};
 	},
 	computed: {
@@ -155,16 +155,13 @@ export default defineComponent({
 			}
 		},
 	},
+	watch: {
+		everyMinute(): void {
+			this.now = new Date();
+		},
+	},
 	mounted() {
 		this.now = new Date();
-		this.interval = setInterval(() => {
-			this.now = new Date();
-		}, 1000 * 60);
-	},
-	beforeUnmount() {
-		if (this.interval) {
-			clearInterval(this.interval);
-		}
 	},
 	methods: {
 		label(key: string) {

@@ -11,29 +11,31 @@ requirements:
   description:
     de: |
       ##### Lizenzhinweis:
-      Für FENECON FEMS Systeme ist für die aktive Batteriesteuerung eine kommerzielle Lizenz *FEMS App REST/JSON Schreibzugriff* erforderlich.<br/><br/>
+      Für FENECON FEMS Systeme ist für die aktive Batteriesteuerung eine kommerzielle Lizenz *FEMS App REST/JSON Schreibzugriff* erforderlich.
+
       ##### FEMS-Dokumentation:
-      - [FEMS App REST/JSON Lesezugriff](https://docs.fenecon.de/de/fems/fems-app/App_REST-JSON_Lesezugriff.html)
-      - [FEMS App REST/JSON Schreibzugriff](https://docs.fenecon.de/de/fems/fems-app/App_REST-JSON_Schreibzugriff.html)
+      - FEMS App REST/JSON Lesezugriff: [docs.fenecon.de](https://docs.fenecon.de/de/fems/fems-app/App_REST-JSON_Lesezugriff.html)
+      - FEMS App REST/JSON Schreibzugriff: [docs.fenecon.de](https://docs.fenecon.de/de/fems/fems-app/App_REST-JSON_Schreibzugriff.html)
       ##### OpenEMS-Dokumentation:
-      - [OpenEMS Edge REST-Api Controller](https://openems.github.io/openems.io/openems/latest/edge/controller.html#_rest_api_controller)
+      - OpenEMS Edge REST-Api Controller: [openems.github.io](https://openems.github.io/openems.io/openems/latest/edge/controller.html#_rest_api_controller)
     en: |
       ##### License notice:
-      For active battery control on FENECON FEMS systems, a commercial license (*FEMS App REST/JSON Write Access*) is required.<br/><br/>
+      For active battery control on FENECON FEMS systems, a commercial license (*FEMS App REST/JSON Write Access*) is required.
+
       ##### FEMS documentation:
-      - [FEMS App REST/JSON Read Access](https://docs.fenecon.de/en/fems/fems-app/App_REST-JSON_Lesezugriff.html)
-      - [FEMS App REST/JSON Write Access](https://docs.fenecon.de/en/fems/fems-app/App_REST-JSON_Schreibzugriff.html)
+      - FEMS App REST/JSON Read Access: [docs.fenecon.de](https://docs.fenecon.de/en/fems/fems-app/App_REST-JSON_Lesezugriff.html)
+      - FEMS App REST/JSON Write Access: [docs.fenecon.de](https://docs.fenecon.de/en/fems/fems-app/App_REST-JSON_Schreibzugriff.html)
       ##### OpenEMS documentation:
-      - [OpenEMS Edge REST-Api Controller](https://openems.github.io/openems.io/openems/latest/edge/controller.html#_rest_api_controller)
+      - OpenEMS Edge REST-Api Controller: [openems.github.io](https://openems.github.io/openems.io/openems/latest/edge/controller.html#_rest_api_controller)
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
-    allinone: true
   - name: host
   - name: password
     mask: true
     default: user
     advanced: true
+  - name: maxacpower
   - name: battery
     example: ess0
     description:
@@ -55,14 +57,7 @@ params:
       en: FEMS/OpenEMS standard 60s
     usages: ["battery"]
     advanced: true
-  - name: minsoc
-  - name: maxsoc
-  - name: capacity
-    advanced: true
-  - name: maxchargepower
-    default: 4200
-  - name: maxdischargepower
-  - name: maxacpower
+  - preset: battery-params
 render: |
   type: custom
   {{- if eq .usage "grid" }} 
@@ -153,6 +148,7 @@ render: |
           body: '{"value": 0}'
       - case: 3 # charge
         set:
+          {{- if .maxchargepower }}
           source: http
           uri: http://{{ .host }}/rest/channel/{{ .battery }}/SetActivePowerLessOrEquals
           auth:
@@ -163,10 +159,10 @@ render: |
           headers:
           - content-type: application/json
           body: '{"value": {{ mul .maxchargepower -1 }}}' # charge power is negative
+          {{- else }}
+          source: error
+          error: ErrNotAvailable
+          {{- end }}
   {{- end }}
-  minsoc: {{ .minsoc }} # %
-  maxsoc: {{ .maxsoc }} # %
-  maxchargepower: {{ .maxchargepower }} # W
-  maxdischargepower: {{ .maxdischargepower }} # W
-  capacity: {{ .capacity }} # kWh
+  {{- include "battery-params" . }}
   {{- end }}

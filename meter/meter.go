@@ -14,7 +14,24 @@ func init() {
 	registry.AddCtx(api.Custom, NewConfigurableFromConfig)
 }
 
-//go:generate go tool decorate -f decorateMeter -b api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.PhasePowers,Powers,func() (float64, float64, float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64" -t "api.BatterySocLimiter,GetSocLimits,func() (float64, float64)" -t "api.BatteryPowerLimiter,GetPowerLimits,func() (float64, float64)" -t "api.BatteryController,SetBatteryMode,func(api.BatteryMode) error" -t "api.MaxACPowerGetter,MaxACPower,func() float64"
+//go:generate go tool decorate
+
+//evcc:function decorateMeter
+//evcc:basetype api.Meter
+//evcc:type api.MeterEnergy,TotalEnergy,func() (float64, error)
+//evcc:type api.PhaseCurrents,Currents,func() (float64, float64, float64, error)
+//evcc:type api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)
+//evcc:type api.PhasePowers,Powers,func() (float64, float64, float64, error)
+//evcc:type api.MaxACPowerGetter,MaxACPower,func() float64
+
+//evcc:function decorateMeterBattery
+//evcc:basetype api.Meter
+//evcc:type api.MeterEnergy,TotalEnergy,func() (float64, error)
+//evcc:type api.Battery,Soc,func() (float64, error)
+//evcc:type api.BatteryCapacity,Capacity,func() float64
+//evcc:type api.BatterySocLimiter,GetSocLimits,func() (float64, float64)
+//evcc:type api.BatteryPowerLimiter,GetPowerLimits,func() (float64, float64)
+//evcc:type api.BatteryController,SetBatteryMode,func(api.BatteryMode) error
 
 // NewConfigurableFromConfig creates api.Meter from config
 func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
@@ -83,13 +100,18 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 		}
 	}
 
-	res := m.Decorate(
-		energyG, currentsG, voltagesG, powersG,
-		socG, cc.batteryCapacity.Decorator(), cc.batterySocLimits.Decorator(), cc.batteryPowerLimits.Decorator(), batModeS,
-		cc.pvMaxACPower.Decorator(),
-	)
+	if socG != nil {
+		return m.DecorateBattery(
+			energyG,
+			socG, cc.batteryCapacity.Decorator(),
+			cc.batterySocLimits.Decorator(), cc.batteryPowerLimits.Decorator(),
+			batModeS,
+		), nil
+	}
 
-	return res, nil
+	return m.Decorate(
+		energyG, currentsG, voltagesG, powersG, cc.pvMaxACPower.Decorator(),
+	), nil
 }
 
 // NewConfigurable creates a new meter
@@ -109,16 +131,25 @@ type Meter struct {
 func (m *Meter) Decorate(
 	totalEnergy func() (float64, error),
 	currents, voltages, powers func() (float64, float64, float64, error),
-	batterySoc func() (float64, error),
-	batteryCapacity func() float64,
-	batterySocLimits, batteryPowerLimits func() (float64, float64),
-	setBatteryMode func(api.BatteryMode) error,
 	maxACPower func() float64,
 ) api.Meter {
 	return decorateMeter(m,
 		totalEnergy, currents, voltages, powers,
-		batterySoc, batteryCapacity, batterySocLimits, batteryPowerLimits, setBatteryMode,
 		maxACPower,
+	)
+}
+
+func (m *Meter) DecorateBattery(
+	totalEnergy func() (float64, error),
+	soc func() (float64, error), capacity func() float64,
+	socLimits, powerLimits func() (float64, float64),
+	setMode func(api.BatteryMode) error,
+) api.Meter {
+	return decorateMeterBattery(m,
+		totalEnergy,
+		soc, capacity,
+		socLimits, powerLimits,
+		setMode,
 	)
 }
 

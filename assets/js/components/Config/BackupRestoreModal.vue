@@ -19,6 +19,7 @@
 					{{ $t("config.system.backupRestore.backup.description") }}
 				</p>
 				<button
+					data-testid="backup-restore-open-confirm-modal"
 					class="btn btn-outline-secondary"
 					@click="openBackupRestoreConfirmModal('backup')"
 				>
@@ -144,6 +145,7 @@
 					</button>
 
 					<button
+						data-testid="backup-restore-download"
 						type="submit"
 						class="btn text-truncate"
 						:class="confirmType === 'backup' ? 'btn-primary' : 'btn-danger'"

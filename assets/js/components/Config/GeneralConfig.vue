@@ -99,8 +99,8 @@ export default {
 		},
 		sponsorStatus() {
 			const sponsor = store.state?.sponsor || {};
-			const name = sponsor.status.name;
-			const expiresSoon = sponsor.status.expiresSoon;
+			const name = sponsor.status?.name;
+			const expiresSoon = sponsor.status?.expiresSoon;
 			let textClass = "";
 			let badgeClass = "";
 			let title = name;

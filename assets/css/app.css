@@ -588,29 +588,38 @@ input[type="time"]::-webkit-calendar-picker-indicator {
 	display: none;
 }
 
+/* Safari: hide the datalist dropdown button */
 input[list]::-webkit-list-button {
 	display: none !important;
 	appearance: none !important;
+	opacity: 0 !important;
+	width: 0 !important;
+	pointer-events: none !important;
 }
 
 .form-control-clear {
 	position: absolute;
-	right: 0.75rem;
+	right: 0;
 	top: 0;
 	bottom: 0;
 	justify-content: center;
 	display: flex;
 	align-items: center;
 	justify-self: center;
-	width: 1.1rem;
-	font-size: 1.5rem;
-	font-weight: normal;
-	color: var(--evcc-default-text);
+	width: 36px;
+	height: 100%;
 	border: none;
 	background-color: transparent;
+	background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-1 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M 2,3 L 12,13 M 12,3 L 2,13'/%3e%3c/svg%3e");
+	background-repeat: no-repeat;
+	background-position: calc(50% - 3px) center;
+	background-size: 0.75rem;
 	padding: 0;
-	margin: 0;
 	cursor: pointer;
+}
+
+.dark .form-control-clear {
+	background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-1 0 16 16'%3e%3cpath fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M 2,3 L 12,13 M 12,3 L 2,13'/%3e%3c/svg%3e");
 }
 
 /* hide dropdown arrow if clear is visible */

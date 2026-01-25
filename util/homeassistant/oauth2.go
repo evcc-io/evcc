@@ -10,7 +10,6 @@ import (
 	"github.com/evcc-io/evcc/plugin/auth"
 	"github.com/evcc-io/evcc/server/network"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/oauth2"
 )
 
@@ -48,9 +47,6 @@ func NewHomeAssistant(uri string) (oauth2.TokenSource, error) {
 	extUrl := network.Config().ExternalURL()
 	redirectUri := extUrl + network.CallbackPath
 
-	log := util.NewLogger("homeassistant")
-	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewClient(log))
-
 	oc := oauth2.Config{
 		ClientID:    extUrl,
 		RedirectURL: redirectUri,
@@ -76,6 +72,9 @@ func NewHomeAssistant(uri string) (oauth2.TokenSource, error) {
 	if name := instanceNameByUri(uri); name != "" {
 		host = name
 	}
+
+	log := util.NewLogger("homeassistant")
+	ctx := util.WithLogger(context.Background(), log)
 
 	return auth.NewOAuth(ctx, "HomeAssistant", host, &oc)
 }

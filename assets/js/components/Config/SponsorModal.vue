@@ -110,13 +110,13 @@ export default {
 			return store?.state?.sponsor;
 		},
 		token() {
-			return this.sponsor?.status.token;
+			return this.sponsor?.status?.token;
 		},
 		fromYaml() {
 			return this.sponsor?.fromYaml;
 		},
 		name() {
-			return this.sponsor?.status.name || "";
+			return this.sponsor?.status?.name || "";
 		},
 		showTokenForm() {
 			return this.editMode || !this.token;

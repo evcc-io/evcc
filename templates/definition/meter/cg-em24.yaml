@@ -14,13 +14,14 @@ requirements:
       EM24 with RS-485 connection. Use the EM24_E1 if you have an EM24_E1 with Ethernet connection, the definitions are not compatible.
 params:
   - name: usage
-    choice: ["grid", "charge"]
+    choice: ["grid", "pv", "charge"]
   - name: modbus
     choice: ["rs485"]
 render: |
   type: mbmd
   {{- include "modbus" . }}
   model: cgem24
+  {{- if ne .usage "pv" }}
   power: Power
   energy: Import
   currents:
@@ -31,6 +32,18 @@ render: |
     - PowerL1
     - PowerL2
     - PowerL3
+  {{- else }}
+  power: -Power
+  energy: Export
+  currents:
+    - -CurrentL1
+    - -CurrentL2
+    - -CurrentL3
+  powers:
+    - -PowerL1
+    - -PowerL2
+    - -PowerL3
+  {{- end }}
   voltages:
     - VoltageL1
     - VoltageL2

@@ -58,6 +58,9 @@ test.describe("onboarding", async () => {
     await expectModalVisible(lpModal);
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(lpModal);
+
+    await restart();
+
     await expect(page.getByTestId("welcome-banner")).not.toBeVisible();
 
     // create grid meter

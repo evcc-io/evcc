@@ -157,7 +157,7 @@ func (wb *PCElectric) Enable(enable bool) error {
 		return nil // Slave wird immer mit dem Master geschaltet!
 	}
 
-	// Master Only !!
+	// Master Only
 	mode := "ALWAYS_OFF"
 	if enable {
 		mode = "ALWAYS_ON"
