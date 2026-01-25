@@ -52,13 +52,9 @@ render: |
     topic: saic/{{ .user }}/vehicles/{{ .vin }}/drivetrain/mileage
     timeout: {{ .timeout }}
   wakeup:
-    source: go
-    script: |
-      "force"
-    out:
-      - name: wakeUp
-        type: string
-        config:
-          source: mqtt
-          topic: saic/{{ .user }}/vehicles/{{ .vin }}/refresh/mode/set
-          timeout: {{ .timeout }}
+    source: const
+    value: "force"
+    set:
+      source: mqtt
+      topic: saic/{{ .user }}/vehicles/{{ .vin }}/refresh/mode/set
+      timeout: {{ .timeout }}
