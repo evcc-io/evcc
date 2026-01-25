@@ -128,7 +128,7 @@ func (c *Relay) updateSession(limit float64) error {
 	if limit > 0 && c.smartgridID == 0 {
 		var power *float64
 		if p := c.root.GetChargePower(); p > 0 {
-			power = &p
+			power = new(p)
 		}
 
 		sid, err := smartgrid.StartManage(smartgrid.Dim, power, limit)
