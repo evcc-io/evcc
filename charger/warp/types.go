@@ -79,7 +79,7 @@ type NfcTag struct {
 
 type NfcConfig struct {
 	AuthorizedTags    []NfcTag `json:"authorized_tags"`
-	DeadTimePostStart int          `json:"deadtime_post_start"`
+	DeadTimePostStart int      `json:"deadtime_post_start"`
 }
 
 //go:generate go tool enumer -type ExternalControl -trimprefix ExternalControl -transform whitespace
