@@ -6,6 +6,7 @@ export interface RepeatingPlan {
   tz: string; // timezone like "Europe/Berlin"
   soc: number;
   active: boolean;
+  planStrategy: PlanStrategy;
 }
 
 export interface PlanWrapper {
@@ -26,7 +27,7 @@ export type StaticPlan = StaticSocPlan | StaticEnergyPlan;
 export interface StaticSocPlan {
   soc: number;
   time: Date;
-  planStrategy?: PlanStrategy;
+  planStrategy: PlanStrategy;
 }
 
 export interface StaticEnergyPlan {
