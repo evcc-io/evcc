@@ -3,6 +3,7 @@ package templates
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"regexp"
 	"slices"
@@ -10,6 +11,7 @@ import (
 
 	"dario.cat/mergo"
 	"github.com/gosimple/slug"
+	"github.com/spf13/cast"
 )
 
 const (
@@ -78,6 +80,33 @@ var ValidRequirements = []string{RequirementEEBUS, RequirementMQTT, RequirementS
 var predefinedTemplateProperties = slices.Concat(
 	[]string{"type", "template", "name"}, ModbusParams, ModbusConnectionTypes,
 )
+
+// Pattern contains regex pattern and examples for input validation
+type Pattern struct {
+	Regex    string   `json:",omitempty"`
+	Examples []string `json:",omitempty"`
+}
+
+// Validate checks if a value matches the pattern and returns a descriptive error if not
+func (p *Pattern) Validate(value string) error {
+	if p.Regex == "" {
+		return nil
+	}
+
+	matched, err := regexp.MatchString(p.Regex, value)
+	if err != nil {
+		return fmt.Errorf("invalid regex pattern: %w", err)
+	}
+	if matched {
+		return nil
+	}
+
+	errMsg := fmt.Sprintf("value %q does not match required pattern", value)
+	if len(p.Examples) > 0 {
+		errMsg += fmt.Sprintf(". Valid examples: %s", strings.Join(p.Examples, ", "))
+	}
+	return errors.New(errMsg)
+}
 
 // TextLanguage contains language-specific texts
 type TextLanguage struct {
@@ -191,6 +220,7 @@ type Param struct {
 	Type        ParamType    // string representation of the value type, "string" is default
 	Choice      []string     `json:",omitempty"` // defines a set of choices, e.g. "grid", "pv", "battery", "charge" for "usage"
 	Service     string       `json:",omitempty"` // defines a service to provide choices
+	Pattern     *Pattern     `json:",omitempty"` // regex pattern and examples for input validation
 
 	// TODO move somewhere else should not be part of the param definition
 	Baudrate int    `json:",omitempty"` // device specific default for modbus RS485 baudrate
@@ -238,6 +268,19 @@ func (p *Param) IsRequired() bool {
 
 func (p *Param) IsDeprecated() bool {
 	return p.Deprecated
+}
+
+func (p *Param) IsZero(s string) bool {
+	switch p.Type {
+	case TypeInt:
+		return cast.ToInt64(s) == 0
+	case TypeFloat:
+		return cast.ToFloat64(s) == 0
+	case TypeDuration:
+		return cast.ToDuration(s) == 0
+	default:
+		return len(s) == 0
+	}
 }
 
 // yamlQuote quotes strings for yaml if they would otherwise by modified by the unmarshaler

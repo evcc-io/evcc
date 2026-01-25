@@ -32,7 +32,7 @@ func TestPresets(t *testing.T) {
 	}, tmpl.Params)
 }
 
-func TestRequired(t *testing.T) {
+func TestRequiredString(t *testing.T) {
 	tmpl := &Template{
 		Params: []Param{
 			{
@@ -51,6 +51,43 @@ func TestRequired(t *testing.T) {
 		"Param": "",
 	})
 	assert.Error(t, err, "test: required present but empty")
+
+	_, _, err = tmpl.RenderResult(RenderModeUnitTest, map[string]any{
+		"Param": nil,
+	})
+	assert.Error(t, err, "test: required present but nil")
+
+	_, _, err = tmpl.RenderResult(RenderModeDocs, map[string]any{
+		"Param": nil,
+	})
+	assert.NoError(t, err, "docs: required present but nil")
+}
+
+func TestRequiredNumber(t *testing.T) {
+	tmpl := &Template{
+		Params: []Param{
+			{
+				Name:     "param",
+				Type:     TypeInt,
+				Required: true,
+			},
+		},
+	}
+
+	_, _, err := tmpl.RenderResult(RenderModeUnitTest, map[string]any{
+		"Param": "1",
+	})
+	assert.NoError(t, err, "test: required present")
+
+	_, _, err = tmpl.RenderResult(RenderModeUnitTest, map[string]any{
+		"Param": "",
+	})
+	assert.Error(t, err, "test: required present but empty")
+
+	_, _, err = tmpl.RenderResult(RenderModeUnitTest, map[string]any{
+		"Param": "0",
+	})
+	assert.Error(t, err, "test: required present but zero value")
 
 	_, _, err = tmpl.RenderResult(RenderModeUnitTest, map[string]any{
 		"Param": nil,
@@ -132,4 +169,34 @@ func TestRequiredPerUsage(t *testing.T) {
 		"Usage": "battery",
 	})
 	require.NoError(t, err)
+}
+
+func TestValidatePattern(t *testing.T) {
+	tmpl := &Template{
+		Params: []Param{{Name: "host", Pattern: &Pattern{Regex: `^[^\\/\s]+(:[0-9]{1,5})?$`}}},
+	}
+
+	tests := []struct {
+		host  string
+		valid bool
+	}{
+		{"192.168.1.100", true},
+		{"192.168.1.100:8080", true},
+		{"example.com", true},
+		{"http://192.168.1.100", false},
+		{"192.168.1.100/admin", false},
+		{"192.168.1.100 ", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.host, func(t *testing.T) {
+			_, _, err := tmpl.RenderResult(RenderModeInstance, map[string]any{"host": tt.host})
+			if tt.valid {
+				require.NoError(t, err)
+			} else {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), "does not match required pattern")
+			}
+		})
+	}
 }

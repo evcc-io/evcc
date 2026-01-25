@@ -65,6 +65,20 @@ func (t *Template) UpdateModbusParamsWithDefaults() error {
 	return nil
 }
 
+func (t *Template) SortRequiredParamsFirst() error {
+	slices.SortStableFunc(t.Params, func(a, b Param) int {
+		if a.Required && !b.Required {
+			return -1
+		}
+		if b.Required && !a.Required {
+			return +1
+		}
+		return 0
+	})
+
+	return nil
+}
+
 // validate the template (only rudimentary for now)
 func (t *Template) Validate() error {
 	for _, c := range t.Capabilities {
@@ -116,6 +130,15 @@ func (t *Template) Validate() error {
 			for _, c := range p.Choice {
 				if !slices.Contains(ValidModbusChoices, c) {
 					return fmt.Errorf("invalid modbus type: '%s'", c)
+				}
+			}
+		}
+
+		// validate pattern examples against pattern
+		if p.Pattern != nil && p.Pattern.Regex != "" && len(p.Pattern.Examples) > 0 {
+			for _, example := range p.Pattern.Examples {
+				if err := p.Pattern.Validate(example); err != nil {
+					return fmt.Errorf("param %s: pattern example %q is invalid: pattern=%q", p.Name, example, p.Pattern.Regex)
 				}
 			}
 		}
@@ -364,10 +387,17 @@ func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, m
 				}
 
 				// validate required fields from yaml
-				if s == "" && p.IsRequired() && (renderMode == RenderModeUnitTest || renderMode == RenderModeInstance && !testing.Testing()) {
+				if p.IsRequired() && p.IsZero(s) && (renderMode == RenderModeUnitTest || renderMode == RenderModeInstance && !testing.Testing()) {
 					// validate required per usage
 					if len(p.Usages) == 0 || slices.Contains(p.Usages, usage) {
 						return nil, nil, fmt.Errorf("missing required `%s`", p.Name)
+					}
+				}
+
+				// validate pattern if defined
+				if s != "" && p.Pattern != nil && p.Pattern.Regex != "" {
+					if err := p.Pattern.Validate(s); err != nil {
+						return nil, nil, fmt.Errorf("%s: %w", p.Name, err)
 					}
 				}
 

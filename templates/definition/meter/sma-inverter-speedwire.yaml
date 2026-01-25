@@ -19,6 +19,7 @@ params:
   - preset: battery-params
 render: |
   type: sma
+  usage: {{ .usage }}
   uri: {{ .host }} # IP address or hostname
   password: {{ .password }} # optional
   {{- if eq .usage "battery" }}

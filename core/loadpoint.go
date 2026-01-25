@@ -507,11 +507,6 @@ func (lp *Loadpoint) evVehicleConnectHandler() {
 	// soc update reset
 	lp.socUpdated = time.Time{}
 
-	// soc update reset on car change
-	if lp.socEstimator != nil {
-		lp.socEstimator.Reset()
-	}
-
 	// set default or start detection
 	if !lp.chargerHasFeature(api.IntegratedDevice) {
 		lp.vehicleDefaultOrDetect()
@@ -1762,16 +1757,26 @@ func (lp *Loadpoint) publishSocAndRange() {
 	}
 
 	soc, limit := socAndLimit("charger", lp.charger)
-	if soc == nil && (lp.chargerHasFeature(api.IntegratedDevice) || lp.vehicleSocPollAllowed()) {
+	if soc == nil && (lp.vehicleSocPollAllowed() || lp.chargerHasFeature(api.IntegratedDevice)) {
 		lp.socUpdated = lp.clock.Now()
 		soc, limit = socAndLimit("vehicle", lp.GetVehicle())
+
+		// range
+		if vs, ok := lp.GetVehicle().(api.VehicleRange); ok {
+			if rng, err := vs.Range(); err == nil {
+				lp.log.DEBUG.Printf("vehicle range: %dkm", rng)
+				lp.publish(keys.VehicleRange, rng)
+			} else if !loadpoint.AcceptableError(err) {
+				lp.log.ERROR.Printf("vehicle range: %v", err)
+			}
+		}
 	}
 
 	if soc != nil {
 		if socEstimator == nil {
 			lp.vehicleSoc = *soc
 		} else {
-			lp.vehicleSoc, _ = socEstimator.Soc(soc, lp.GetChargedEnergy())
+			lp.vehicleSoc = socEstimator.Soc(soc, lp.GetChargedEnergy())
 			lp.log.DEBUG.Printf("vehicle soc (estimator): %.0f%%", lp.vehicleSoc)
 		}
 	}
@@ -1795,18 +1800,6 @@ func (lp *Loadpoint) publishSocAndRange() {
 		lp.SetRemainingDuration(d)
 
 		lp.SetRemainingEnergy(socEstimator.RemainingChargeEnergy(limitSoc))
-	}
-
-	// TODO don't rely on vehicle cache
-
-	// range
-	if vs, ok := lp.GetVehicle().(api.VehicleRange); ok {
-		if rng, err := vs.Range(); err == nil {
-			lp.log.DEBUG.Printf("vehicle range: %dkm", rng)
-			lp.publish(keys.VehicleRange, rng)
-		} else if !loadpoint.AcceptableError(err) {
-			lp.log.ERROR.Printf("vehicle range: %v", err)
-		}
 	}
 
 	// trigger message after variables are updated

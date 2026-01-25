@@ -14,12 +14,16 @@ params:
     description:
       en: Modbus Type
       de: Modbus Typ
+    required: true
   - name: host
     required: true
     description:
       de: IP-Adresse oder Hostname
       en: IP address or hostname
     example: 192.0.2.2
+    pattern:
+      regex: "^[^\\/\\s]+(:[0-9]{1,5})?$" # any char except slash/space, optional :port
+      examples: ["192.168.1.100", "example.com", "server.local:8080"]
   - name: ip
     description:
       de: IP-Adresse
@@ -265,6 +269,7 @@ params:
     help:
       en: Usually found on the web interface of the wallbox
       de: Üblicherweise im Web Interface der Wallbox zu finden
+    service: eebus/services
   - name: uri
     private: true
     description:
@@ -373,6 +378,7 @@ params:
     description:
       en: Channel
       de: Kanal
+    type: int
   - name: clientid
     description:
       generic: Client ID
