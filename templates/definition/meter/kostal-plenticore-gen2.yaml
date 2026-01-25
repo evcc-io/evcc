@@ -85,6 +85,7 @@ render: |
   batterymode:
     source: watchdog
     timeout: {{ .watchdog }} # re-write at timeout/2
+    defer: true # make sure timeouts are followed on update
     reset: 1 # reset watchdog on normal
     set:
       source: switch
