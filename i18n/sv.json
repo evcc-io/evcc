@@ -243,7 +243,7 @@
         "limitpower": "Begränsning (kW)",
         "type": "Typ"
       },
-      "description": "Effektbegränsning genom externa system (t.ex. §14a EnWG, §9 EEG-gränssnitt eller överordnat energihanteringssystem). Fungerar tillsammans med belastningshanteringsfunktionen.",
+      "description": "Effektbegränsning genom externa system (t.ex. §14a EnWG, §9 (EEG-gränssnitt eller överordnat energihanteringssystem). Fungerar tillsammans med lasthanteringsfunktionen.",
       "downloadCsv": "Hämta CSV",
       "eventsRecorded": "Registrerade {count} händelser med nätbegränsning.",
       "lastEvent": "Senaste {timeAgo}.",
