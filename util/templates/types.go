@@ -273,9 +273,9 @@ func (p *Param) IsDeprecated() bool {
 func (p *Param) IsZero(s string) bool {
 	switch p.Type {
 	case TypeInt:
-		return cast.ToInt64(s) == 0
+		return cast.ToInt64(s) == 0 && p.Name != "az"
 	case TypeFloat:
-		return cast.ToFloat64(s) == 0
+		return cast.ToFloat64(s) == 0 && p.Name != "az"
 	case TypeDuration:
 		return cast.ToDuration(s) == 0
 	default:
