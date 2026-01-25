@@ -506,11 +506,6 @@ func (lp *Loadpoint) evVehicleConnectHandler() {
 	// soc update reset
 	lp.socUpdated = time.Time{}
 
-	// soc update reset on car change
-	if lp.socEstimator != nil {
-		lp.socEstimator.Reset()
-	}
-
 	// set default or start detection
 	if !lp.chargerHasFeature(api.IntegratedDevice) {
 		lp.vehicleDefaultOrDetect()
@@ -1780,7 +1775,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 		if socEstimator == nil {
 			lp.vehicleSoc = *soc
 		} else {
-			lp.vehicleSoc, _ = socEstimator.Soc(soc, lp.GetChargedEnergy())
+			lp.vehicleSoc = socEstimator.Soc(soc, lp.GetChargedEnergy())
 			lp.log.DEBUG.Printf("vehicle soc (estimator): %.0f%%", lp.vehicleSoc)
 		}
 	}

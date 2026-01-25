@@ -71,20 +71,11 @@ func TestSocEstimation(t *testing.T) {
 	for _, tc := range tc {
 		t.Logf("%+v", tc)
 
-		soc, err := ce.Soc(&tc.vehicleSoc, tc.chargedEnergy)
-		if err != nil {
-			t.Error(err)
-		}
+		soc := ce.Soc(&tc.vehicleSoc, tc.chargedEnergy)
 
-		// validate soc estimate
-		if tc.estimatedSoc != soc {
-			t.Errorf("expected estimated soc: %g, got: %g", tc.estimatedSoc, soc)
-		}
-
-		// validate capacity estimate
-		if tc.virtualCapacity != ce.virtualCapacity {
-			t.Errorf("expected virtual capacity: %v, got: %v", tc.virtualCapacity, ce.virtualCapacity)
-		}
+		// validate soc/capacity estimate
+		assert.Equal(t, tc.estimatedSoc, soc, "estimated soc")
+		assert.Equal(t, tc.virtualCapacity, ce.virtualCapacity, "virtual capacity")
 
 		// validate duration estimate
 		chargePower := 1e3
@@ -92,9 +83,7 @@ func TestSocEstimation(t *testing.T) {
 		remainingHours := (float64(targetSoc) - soc) / 100 * tc.virtualCapacity / chargePower
 		remainingDuration := time.Duration(float64(time.Hour) * remainingHours).Round(time.Second)
 
-		if rm := ce.RemainingChargeDuration(targetSoc, chargePower); rm != remainingDuration {
-			t.Errorf("expected estimated duration: %v, got: %v", remainingDuration, rm)
-		}
+		assert.Equal(t, remainingDuration, ce.RemainingChargeDuration(targetSoc, chargePower), "remaining duration")
 	}
 }
 
