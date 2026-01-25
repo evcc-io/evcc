@@ -687,6 +687,10 @@ presets:
       help:
         de: IP Adresse oder der Hostname des MQTT Brokers
         en: IP address or hostname of the MQTT broker
+      pattern:
+        regex: "^(tls://)?[^\\/\\s]+(:[0-9]{1,5})?$" # optional tls:// prefix, any char except slash/space, optional :port
+        examples:
+          ["192.168.1.100", "example.com", "server.local:8080", "tls://mqtt.example.com:8883"]
     - name: port
       default: 1883
       help:
