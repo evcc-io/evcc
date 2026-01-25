@@ -71,14 +71,14 @@ type ChargeTrackerCurrentCharge struct {
 	} `json:"authorization_info"`
 }
 
-type LastNfcTag struct {
-	UserID int    `json:"user_id,omitempty"`
+type NfcTag struct {
+	UserID int    `json:"user_id"`
 	Type   int    `json:"tag_type"`
 	ID     string `json:"tag_id"`
 }
 
 type NfcConfig struct {
-	AuthorizedTags    []LastNfcTag `json:"authorized_tags"`
+	AuthorizedTags    []NfcTag `json:"authorized_tags"`
 	DeadTimePostStart int          `json:"deadtime_post_start"`
 }
 

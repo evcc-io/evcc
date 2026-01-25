@@ -12,19 +12,19 @@ import (
 	"sync"
 	"time"
 
+	"github.com/coder/websocket"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/warp"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/gorilla/websocket"
 	"github.com/jpfielding/go-http-digest/pkg/digest"
 )
 
 type WarpWS struct {
 	*request.Helper
-	log       *util.Logger
-	uri       string
-	valuesMap warp.MeterValuesIndices
+	log        *util.Logger
+	uri        string
+	valuesMap  warp.MeterValuesIndices
 	skipLegacy bool
 
 	mu sync.RWMutex
@@ -34,22 +34,23 @@ type WarpWS struct {
 	maxCurrent int64
 
 	// meter
-	power  float64
-	energy float64
-	currL  [3]float64
-	voltL  [3]float64
+	power      float64
+	energy     float64
+	currL      [3]float64
+	voltL      [3]float64
 	meterIndex uint
+	meter      warp.MeterMapper
 
 	// rfid
 	tagId     string
 	nfcConfig warp.NfcConfig
 
 	// energy manager
-	emStateG    warp.EmState         // analog zu emStateG
-	emLowLevel  warp.EmLowLevelState // analog zu emLowLevelG
-	is3Phase    bool
-	emURI       string
-	emHelper    *request.Helper
+	emState    warp.EmState         // analog zu emStateG
+	emLowLevel warp.EmLowLevelState // analog zu emLowLevelG
+	is3Phase   bool
+	emURI      string
+	emHelper   *request.Helper
 
 	// config
 	current int64
@@ -68,8 +69,8 @@ func init() {
 //go:generate go tool decorate -f decorateWarpWS -b *WarpWS -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.Identifier,Identify,func() (string, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
 
 func NewWarpWSFromConfig(other map[string]any) (api.Charger, error) {
-    cc := struct {
-        URI                    string
+	cc := struct {
+		URI                    string
 		User                   string
 		Password               string
 		EnergyManagerURI       string
@@ -77,31 +78,31 @@ func NewWarpWSFromConfig(other map[string]any) (api.Charger, error) {
 		EnergyManagerPassword  string
 		DisablePhaseAutoSwitch bool
 		EnergyMeterIndex       uint
-    }{}
+	}{}
 
-    if err := util.DecodeOther(other, &cc); err != nil {
-        return nil, err
-    }
-
-    wb, err := NewWarpWS(cc.URI, cc.User, cc.Password)
-    if err != nil {
-        return nil, err
-    }
-
-    // Feature: Meter
-    var currentPower, totalEnergy func() (float64, error)
-	if wb.hasFeature(warp.FeatureMeter) {
-		currentPower = wb.currentPower
-        totalEnergy = wb.totalEnergy
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
 	}
 
-    // Feature: Phasen
-    var currents, voltages func() (float64, float64, float64, error)
-	
-    if wb.hasFeature(warp.FeatureMeterPhases) {
-        currents = wb.currents
-        voltages = wb.voltages
-    }
+	wb, err := NewWarpWS(cc.URI, cc.User, cc.Password, cc.EnergyMeterIndex)
+	if err != nil {
+		return nil, err
+	}
+
+	// Feature: Meter
+	var currentPower, totalEnergy func() (float64, error)
+	if wb.hasFeature(warp.FeatureMeter) {
+		currentPower = wb.CurrentPower
+		totalEnergy = wb.totalEnergy
+	}
+
+	// Feature: Phasen
+	var currents, voltages func() (float64, float64, float64, error)
+
+	if wb.hasFeature(warp.FeatureMeterPhases) {
+		currents = wb.currents
+		voltages = wb.voltages
+	}
 
 	if wb.hasFeature(warp.FeaturePhaseSwitch) {
 		currents = wb.currents
@@ -114,19 +115,19 @@ func NewWarpWSFromConfig(other map[string]any) (api.Charger, error) {
 		}
 	}
 
-    // Feature: NFC
-    var identity func() (string, error)
-    if wb.hasFeature(warp.FeatureNfc) {
-        identity = wb.identify
-    }
+	// Feature: NFC
+	var identity func() (string, error)
+	if wb.hasFeature(warp.FeatureNfc) {
+		identity = wb.identify
+	}
 
-    // Feature: EM
-    var phases func(int) error
-    var getPhases func() (int, error)
-    if wb.emStateG.ExternalControl != 1 {
-        phases = wb.phases1p3p
-        getPhases = wb.getPhases
-    }
+	// Feature: EM
+	var phases func(int) error
+	var getPhases func() (int, error)
+	if wb.emState.ExternalControl != 1 {
+		phases = wb.phases1p3p
+		getPhases = wb.getPhases
+	}
 
 	// Phase Auto Switching needs to be disabled for WARP3
 	// Necessary if charging 1p only vehicles
@@ -137,20 +138,19 @@ func NewWarpWSFromConfig(other map[string]any) (api.Charger, error) {
 		}
 	}
 
-    return decorateWarpWS(
-        wb,
-        currentPower,
-        totalEnergy,
-        currents,
-        voltages,
-        identity,
-        phases,
-        getPhases,
-    ), nil
+	return decorateWarpWS(
+		wb,
+		currentPower,
+		totalEnergy,
+		currents,
+		voltages,
+		identity,
+		phases,
+		getPhases,
+	), nil
 }
 
-
-func NewWarpWS(uri, user, password string) (*WarpWS, error) {
+func NewWarpWS(uri, user, password string, meterIndex uint) (*WarpWS, error) {
 	log := util.NewLogger("warp-ws")
 
 	client := request.NewHelper(log)
@@ -166,38 +166,42 @@ func NewWarpWS(uri, user, password string) (*WarpWS, error) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	w.cancel = cancel
-	go w.runWS(ctx)
+	go w.run(ctx)
 
 	return w, nil
 }
 
-func (w *WarpWS) runWS(ctx context.Context) {
+func (w *WarpWS) run(ctx context.Context) {
 	wsURL := strings.Replace(w.uri, "http://", "ws://", 1) + "/ws"
-	for {
-		err := w.connectWS(ctx, wsURL)
-		if err != nil {
-			w.log.ERROR.Printf("ws error: %v", err)
-		}
-		time.Sleep(3 * time.Second)
-	}
-}
 
-func (w *WarpWS) connectWS(ctx context.Context, url string) error {
-	dialer := websocket.Dialer{
-		HandshakeTimeout: 10 * time.Second,
-	}
-	conn, _, err := dialer.DialContext(ctx, url, nil)
-	if err != nil {
-		return err
-	}
-	defer conn.Close()
-	w.log.INFO.Printf("connected to WARP websocket")
 	for {
-		_, data, err := conn.ReadMessage()
+		// Connect
+		conn, _, err := websocket.Dial(ctx, wsURL, nil)
+		conn.SetReadLimit(-1)
 		if err != nil {
-			return err
+			w.log.ERROR.Printf("ws dial error: %v", err)
+		} else {
+			// Read-Loop
+			for {
+				typ, data, err := conn.Read(ctx)
+				if err != nil {
+					w.log.ERROR.Printf("ws read error: %v", err)
+					_ = conn.Close(websocket.StatusInternalError, "read error")
+					break
+				}
+				if typ == websocket.MessageBinary || typ == websocket.MessageText {
+					w.handleFrame(data)
+				}
+			}
 		}
-		w.handleFrame(data)
+
+		// Reconnect handling
+		select {
+		case <-ctx.Done():
+			w.log.INFO.Println("ws: stopping reconnect loop")
+			return
+		case <-time.After(3 * time.Second):
+		}
 	}
 }
 
@@ -239,7 +243,8 @@ func (w *WarpWS) handleEvent(data []byte) {
 		w.log.ERROR.Printf("ws decode: %v", err)
 		return
 	}
-	w.log.TRACE.Printf("Received WARP event with topic: %s and payload: %v", evt.Topic, string(evt.Payload))
+
+	w.log.TRACE.Printf("Received WARP event with topic: %s", evt.Topic)
 
 	w.mu.Lock()
 	defer w.mu.Unlock()
@@ -247,125 +252,147 @@ func (w *WarpWS) handleEvent(data []byte) {
 	switch evt.Topic {
 
 	case "charge_tracker/current_charge":
-		var c warp.ChargeTrackerCurrentCharge
-		if err := json.Unmarshal(evt.Payload, &c); err != nil {
-			w.log.ERROR.Printf("charge_tracker decode: %v", err)
-			return
-		}
-		w.tagId = c.AuthorizationInfo.TagId
+		w.handleChargeTracker(evt.Payload)
 
 	case "evse/state":
-		var s warp.EvseState
-		if err := json.Unmarshal(evt.Payload, &s); err != nil {
-			w.log.ERROR.Printf("evse/state decode: %v", err)
-			return
-		}
-		switch s.Iec61851State {
-		case 0:
-			w.status = api.StatusA
-		case 1:
-			w.status = api.StatusB
-		case 2:
-			w.status = api.StatusC
-		}
+		w.handleEvseState(evt.Payload)
 
 	case "evse/external_current":
-		var c struct {
-			Current int64 `json:"current"`
-		}
-		if err := json.Unmarshal(evt.Payload, &c); err == nil {
-			w.maxCurrent = c.Current
-		}
+		w.handleExternalCurrent(evt.Payload)
 
 	case "meter/values":
-		if w.skipLegacy {
-			return
-		}
-		var m warp.MeterValues
-		if err := json.Unmarshal(evt.Payload, &m); err != nil {
-			w.log.ERROR.Printf("meter/values decode: %v", err)
-			return
-		}
-		w.power = m.Power
-		w.energy = m.EnergyAbs
+		w.handleMeterValues(evt.Payload)
 
 	case "meter/all_values":
-		if w.skipLegacy {
-			return
-		}
-		var vals []float64
-		if err := json.Unmarshal(evt.Payload, &vals); err != nil {
-			w.log.ERROR.Printf("meter/all_values decode: %v", err)
-			return
-		}
-		
-		if len(vals) >= 6 {
-			w.voltL[0], w.voltL[1], w.voltL[2] = vals[0], vals[1], vals[2]
-			w.currL[0], w.currL[1], w.currL[2] = vals[3], vals[4], vals[5]
-		}
+		w.handleMeterAllValues(evt.Payload)
 
 	case fmt.Sprintf("meters/%d/value_ids", w.meterIndex):
-		if !w.skipLegacy {
-			w.skipLegacy = true
-		}
-		var ids []int
-		if err := json.Unmarshal(evt.Payload, &ids); err != nil {
-			w.log.ERROR.Printf("value_ids decode: %v", err)
-		    return
-		}
-		w.updateMeterValueIds(ids)
+		w.handleValueIDs(evt.Payload)
 
 	case fmt.Sprintf("meters/%d/values", w.meterIndex):
-    	var vals []float64
-    	if err := json.Unmarshal(evt.Payload, &vals); err != nil {
-        	w.log.ERROR.Printf("values decode: %v", err)
-        	return
-    	}
-    	w.updateMeterValues(vals)
+		w.handleMetersValues(evt.Payload)
 
 	case "nfc/config":
-		var s warp.NfcConfig
-		if err := json.Unmarshal(evt.Payload, &s); err != nil {
-			w.log.ERROR.Printf("values decode: %v", err)
-			return
-		}
-		w.nfcConfig = s
+		w.handleNfcConfig(evt.Payload)
 
 	case "power_manager/state":
-		var s warp.EmState
-		if err := json.Unmarshal(evt.Payload, &s); err != nil {
-			w.log.ERROR.Printf("em state decode: %v", err)
-			return
-		}
-		w.emStateG = s
+		w.handleEmState(evt.Payload)
 
 	case "power_manager/low_level_state":
-		var s warp.EmLowLevelState
-		if err := json.Unmarshal(evt.Payload, &s); err != nil {
-			w.log.ERROR.Printf("em low_level decode: %v", err)
-			return
-		}
-		w.emLowLevel = s
-		w.is3Phase = s.Is3phase
+		w.handleEmLowLevel(evt.Payload)
 	}
 }
 
-func (w *WarpWS) hasFeature(f string) bool {
-    w.mu.RLock()
-    defer w.mu.RUnlock()
-
-    switch f {
-    case warp.FeatureMeter:
-        return w.power != 0 || w.energy != 0
-    case warp.FeatureMeterPhases:
-        return w.currL[0] != 0 || w.voltL[0] != 0
-    case warp.FeatureNfc:
-        return w.tagId != ""
-    default:
-        return false
-    }
+func (w *WarpWS) decode(payload json.RawMessage, v any, msg string) bool {
+	if err := json.Unmarshal(payload, v); err != nil {
+		w.log.ERROR.Printf("%s decode: %v", msg, err)
+		return false
+	}
+	return true
 }
 
+func (w *WarpWS) handleChargeTracker(payload json.RawMessage) {
+	var c warp.ChargeTrackerCurrentCharge
+	if !w.decode(payload, &c, "charge_tracker") {
+		return
+	}
+	w.tagId = c.AuthorizationInfo.TagId
+}
+
+func (w *WarpWS) handleEvseState(payload json.RawMessage) {
+	var s warp.EvseState
+	if !w.decode(payload, &s, "evse/state") {
+		return
+	}
+
+	switch s.Iec61851State {
+	case 0:
+		w.status = api.StatusA
+	case 1:
+		w.status = api.StatusB
+	case 2:
+		w.status = api.StatusC
+	}
+}
+
+func (w *WarpWS) handleExternalCurrent(payload json.RawMessage) {
+	var c warp.EvseExternalCurrent
+	if w.decode(payload, &c, "evse/external_current") {
+		w.maxCurrent = int64(c.Current)
+	}
+}
+
+func (w *WarpWS) handleMeterValues(payload json.RawMessage) {
+	var m warp.MeterValues
+	if !w.decode(payload, &m, "meter/values") {
+		return
+	}
+	w.power = m.Power
+	w.energy = m.EnergyAbs
+}
+
+func (w *WarpWS) handleMeterAllValues(payload json.RawMessage) {
+	var vals []float64
+	if !w.decode(payload, &vals, "meter/all_values") {
+		return
+	}
+	w.meter.HandleLegacyValues(vals, &w.power, &w.energy, &w.voltL, &w.currL)
+}
+
+func (w *WarpWS) handleValueIDs(payload json.RawMessage) {
+	var ids []int
+	if !w.decode(payload, &ids, "value_ids") {
+		return
+	}
+	w.meter.UpdateValueIDs(ids)
+}
+
+func (w *WarpWS) handleMetersValues(payload json.RawMessage) {
+	var vals []float64
+	if !w.decode(payload, &vals, "values") {
+		return
+	}
+	w.meter.UpdateValues(vals, &w.power, &w.energy, &w.voltL, &w.currL)
+}
+
+func (w *WarpWS) handleNfcConfig(payload json.RawMessage) {
+	var s warp.NfcConfig
+	if w.decode(payload, &s, "nfc/config") {
+		w.nfcConfig = s
+	}
+}
+
+func (w *WarpWS) handleEmState(payload json.RawMessage) {
+	var s warp.EmState
+	if w.decode(payload, &s, "power_manager/state") {
+		w.emState = s
+	}
+}
+
+func (w *WarpWS) handleEmLowLevel(payload json.RawMessage) {
+	var s warp.EmLowLevelState
+	if !w.decode(payload, &s, "power_manager/low_level_state") {
+		return
+	}
+	w.emLowLevel = s
+	w.is3Phase = s.Is3phase
+}
+
+func (w *WarpWS) hasFeature(f string) bool {
+	w.mu.RLock()
+	defer w.mu.RUnlock()
+
+	switch f {
+	case warp.FeatureMeter:
+		return w.power != 0 || w.energy != 0
+	case warp.FeatureMeterPhases:
+		return w.currL[0] != 0 || w.voltL[0] != 0
+	case warp.FeatureNfc:
+		return w.tagId != ""
+	default:
+		return false
+	}
+}
 
 func (w *WarpWS) Status() (api.ChargeStatus, error) {
 	w.mu.RLock()
@@ -417,9 +444,21 @@ func (w *WarpWS) Enabled() (bool, error) {
 	return w.status != api.StatusA, nil
 }
 
+// MaxCurrent implements the api.Charger interface
 func (w *WarpWS) MaxCurrent(current int64) error {
-	w.maxCurrent = current
-	return w.setCurrent(current)
+	return w.MaxCurrentMillis(float64(current))
+}
+
+var _ api.ChargerEx = (*Warp2)(nil)
+
+// MaxCurrentMillis implements the api.ChargerEx interface
+func (w *WarpWS) MaxCurrentMillis(current float64) error {
+	curr := int64(current * 1e3)
+	err := w.setCurrent(curr)
+	if err == nil {
+		w.maxCurrent = curr
+	}
+	return err
 }
 
 func (w *WarpWS) setCurrent(curr int64) error {
@@ -435,22 +474,17 @@ func (w *WarpWS) disablePhaseAutoSwitch() error {
 	uri := fmt.Sprintf("%s/evse/phase_auto_switch", w.uri)
 	data := map[string]bool{"enabled": false}
 
-	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
-	if err != nil {
-		return fmt.Errorf("disabling phase auto switch failed: %v", err)
-	}
+	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
 
-	if _, err := w.Do(req); err != nil {
-		return fmt.Errorf("disabling phase auto switch failed: %v", err)
-	}
-	return nil
+	_, err := w.Do(req)
+	return err
 }
 
 // phases1p3p implements the api.PhaseSwitcher interface
 func (w *WarpWS) phases1p3p(phases int) error {
 
-	if w.emStateG.ExternalControl > warp.ExternalControlAvailable {
-		return fmt.Errorf("external control not available: %s", w.emStateG.ExternalControl.String())
+	if w.emState.ExternalControl > warp.ExternalControlAvailable {
+		return fmt.Errorf("external control not available: %s", w.emState.ExternalControl.String())
 	}
 
 	uri := fmt.Sprintf("%s/power_manager/external_control", w.uri)
@@ -472,92 +506,7 @@ func (w *WarpWS) getPhases() (int, error) {
 	return 1, nil
 }
 
-func (w *WarpWS) currentPower() (float64, error) { return w.CurrentPower() }
-func (w *WarpWS) totalEnergy() (float64, error) { return w.TotalEnergy() }
+func (w *WarpWS) totalEnergy() (float64, error)                { return w.TotalEnergy() }
 func (w *WarpWS) currents() (float64, float64, float64, error) { return w.Currents() }
 func (w *WarpWS) voltages() (float64, float64, float64, error) { return w.Voltages() }
-func (w *WarpWS) identify() (string, error) { return w.Identify() }
-func (w *WarpWS) updateMeterValueIds(res []int) {
-    required := []int{
-        warp.ValueIDVoltageL1N,
-        warp.ValueIDVoltageL2N,
-        warp.ValueIDVoltageL3N,
-        warp.ValueIDCurrentImExSumL1,
-        warp.ValueIDCurrentImExSumL2,
-        warp.ValueIDCurrentImExSumL3,
-        warp.ValueIDPowerImExSum,
-        warp.ValueIDEnergyAbsImSum,
-    }
-
-    // prüfen ob alle IDs vorhanden sind
-    missing := []int{}
-    for _, req := range required {
-        found := false
-        for _, id := range res {
-            if id == req {
-                found = true
-                break
-            }
-        }
-        if !found {
-            missing = append(missing, req)
-        }
-    }
-
-    if len(missing) > 0 {
-        w.log.ERROR.Printf("missing required meter value IDs: %v", missing)
-        return
-    }
-
-    // Mapping erzeugen
-    var idx warp.MeterValuesIndices
-    for i, valueID := range res {
-        switch valueID {
-        case warp.ValueIDVoltageL1N:
-            idx.VoltageL1NIndex = i
-        case warp.ValueIDVoltageL2N:
-            idx.VoltageL2NIndex = i
-        case warp.ValueIDVoltageL3N:
-            idx.VoltageL3NIndex = i
-        case warp.ValueIDCurrentImExSumL1:
-            idx.CurrentImExSumL1Index = i
-        case warp.ValueIDCurrentImExSumL2:
-            idx.CurrentImExSumL2Index = i
-        case warp.ValueIDCurrentImExSumL3:
-            idx.CurrentImExSumL3Index = i
-        case warp.ValueIDPowerImExSum:
-            idx.PowerImExSumIndex = i
-        case warp.ValueIDEnergyAbsImSum:
-            idx.EnergyAbsImSumIndex = i
-        }
-    }
-
-    w.valuesMap = idx
-    w.log.INFO.Printf("meter value_ids mapped: %+v", idx)
-}
-
-func (w *WarpWS) updateMeterValues(res []float64) {
-	highestIndex := max(w.valuesMap.CurrentImExSumL1Index, w.valuesMap.VoltageL2NIndex, w.valuesMap.VoltageL3NIndex,
-	w.valuesMap.CurrentImExSumL1Index, w.valuesMap.CurrentImExSumL2Index, w.valuesMap.CurrentImExSumL3Index,
-	w.valuesMap.PowerImExSumIndex, w.valuesMap.EnergyAbsImSumIndex)
-
-	if len(res) < highestIndex + 1 {
-		return
-	}
-
-    w.voltL[0] = res[w.valuesMap.VoltageL1NIndex]
-	w.voltL[1] = res[w.valuesMap.VoltageL2NIndex]
-	w.voltL[2] = res[w.valuesMap.VoltageL3NIndex]
-	w.currL[0] = res[w.valuesMap.CurrentImExSumL1Index]
-	w.currL[1] = res[w.valuesMap.CurrentImExSumL2Index]
-	w.currL[2] = res[w.valuesMap.CurrentImExSumL3Index]
-	w.power = res[w.valuesMap.PowerImExSumIndex]
-	w.energy = res[w.valuesMap.EnergyAbsImSumIndex]
-}
-
-func (w *WarpWS) emState() (warp.EmState, error) {
-    w.mu.RLock()
-    defer w.mu.RUnlock()
-    return w.emStateG, nil
-}
-
+func (w *WarpWS) identify() (string, error)                    { return w.Identify() }
