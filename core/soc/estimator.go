@@ -111,7 +111,7 @@ func (s *Estimator) Soc(fetchedSoc *float64, chargedEnergy float64) float64 {
 		// recalculate gradient, wh per soc %
 		if socDiff > 10 && energyDiff > 0 {
 			s.energyPerSocStep = energyDiff / socDiff
-			s.virtualCapacity = s.energyPerSocStep * 100
+			s.virtualCapacity = max(s.vehicle.Capacity()*1e3, s.energyPerSocStep*100)
 			s.log.DEBUG.Printf("soc gradient updated: soc: %.1f%%, socDiff: %.1f%%, energyDiff: %.0fWh, energyPerSocStep: %.1fWh, virtualCapacity: %.0fWh", s.vehicleSoc, socDiff, energyDiff, s.energyPerSocStep, s.virtualCapacity)
 		}
 
