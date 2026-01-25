@@ -13,9 +13,8 @@ import (
 )
 
 type planStruct struct {
-	Soc          int              `json:"soc"`
-	Time         time.Time        `json:"time"`
-	PlanStrategy api.PlanStrategy `json:"planStrategy"`
+	Soc  int       `json:"soc"`
+	Time time.Time `json:"time"`
 }
 
 type vehicleStruct struct {
@@ -49,9 +48,8 @@ func (site *Site) publishVehicles() {
 		var plan *planStruct
 		if time, soc := v.GetPlanSoc(); !time.IsZero() {
 			plan = &planStruct{
-				Soc:          soc,
-				Time:         time,
-				PlanStrategy: v.GetPlanStrategy(),
+				Soc:  soc,
+				Time: time,
 			}
 		}
 
@@ -70,8 +68,9 @@ func (site *Site) publishVehicles() {
 			RepeatingPlans: v.GetRepeatingPlans(),
 		}
 
+		// publish effective plan strategy immediately for soc-based planning
 		if lp := site.coordinator.Owner(instance); lp != nil {
-			go lp.PublishEffectiveValues()
+			lp.PublishEffectivePlanStrategy()
 		}
 	}
 

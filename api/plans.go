@@ -6,12 +6,11 @@ import (
 )
 
 type RepeatingPlan struct {
-	Weekdays     []int        `json:"weekdays"`     // 0-6 (Sunday-Saturday)
-	Time         string       `json:"time"`         // HH:MM
-	Tz           string       `json:"tz"`           // timezone in IANA format
-	Soc          int          `json:"soc"`          // target soc
-	Active       bool         `json:"active"`       // active flag
-	PlanStrategy PlanStrategy `json:"planStrategy"` // plan strategy
+	Weekdays []int  `json:"weekdays"` // 0-6 (Sunday-Saturday)
+	Time     string `json:"time"`     // HH:MM
+	Tz       string `json:"tz"`       // timezone in IANA format
+	Soc      int    `json:"soc"`      // target soc
+	Active   bool   `json:"active"`   // active flag
 }
 
 type PlanStrategy struct {

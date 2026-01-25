@@ -416,7 +416,14 @@ func (lp *Loadpoint) SetPlanStrategy(strategy api.PlanStrategy) error {
 
 	lp.log.DEBUG.Printf("set plan strategy: continuous=%v, precondition=%v", strategy.Continuous, strategy.Precondition)
 
-	return lp.setPlanStrategy(strategy)
+	if err := lp.setPlanStrategy(strategy); err != nil {
+		return err
+	}
+
+	// publish effective plan strategy immediately (we're already holding Lock)
+	lp.publish(keys.EffectivePlanStrategy, lp.getEffectivePlanStrategy())
+
+	return nil
 }
 
 // getPlanStrategy returns the plan strategy (no mutex)
