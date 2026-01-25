@@ -7,6 +7,7 @@ import (
 
 	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/tariff/fixed"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/request"
@@ -89,4 +90,39 @@ func runOrError[T any, I runnable[T]](t I) (*T, error) {
 	}
 
 	return t, nil
+}
+
+func monthsOverlap(a, b fixed.Zone) bool {
+	if len(a.Months) == 0 || len(b.Months) == 0 {
+		return true // all year overlaps
+	}
+	for _, m1 := range a.Months {
+		for _, m2 := range b.Months {
+			if m1 == m2 {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func daysOverlap(a, b fixed.Zone) bool {
+	if len(a.Days) == 0 || len(b.Days) == 0 {
+		return true
+	}
+	for _, d1 := range a.Days {
+		for _, d2 := range b.Days {
+			if d1 == d2 {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func hoursOverlap(a, b fixed.Zone) bool {
+	if a.Hours.IsNil() || b.Hours.IsNil() {
+		return true
+	}
+	return a.Hours.Overlaps(b.Hours)
 }

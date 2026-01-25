@@ -77,12 +77,26 @@ func NewFixedFromConfig(other map[string]any) (api.Tariff, error) {
 		}
 	}
 
-	sort.Sort(t.zones)
-
 	// prepend catch-all zone
 	t.zones = append([]fixed.Zone{
 		{Price: cc.Price}, // full week is implicit
 	}, t.zones...)
+
+	sort.Sort(t.zones)
+
+	for i := 0; i < len(t.zones); i++ {
+		for j := i + 1; j < len(t.zones); j++ {
+			// Only warn if specificity is equal AND months/days/hours overlap
+			if t.zones[i].Specificity() == t.zones[j].Specificity() &&
+				monthsOverlap(t.zones[i], t.zones[j]) &&
+				daysOverlap(t.zones[i], t.zones[j]) &&
+				hoursOverlap(t.zones[i], t.zones[j]) {
+				fmt.Printf(
+					"WARNING: ambiguous zones detected: zone %d (%.2f) and zone %d (%.2f)\n", i, t.zones[i].Price, j, t.zones[j].Price,
+				)
+			}
+		}
+	}
 
 	return t, nil
 }
@@ -91,7 +105,7 @@ func NewFixedFromConfig(other map[string]any) (api.Tariff, error) {
 func (t *Fixed) Rates() (api.Rates, error) {
 	var res api.Rates
 
-	start := now.With(t.clock.Now().Local()).BeginningOfDay()
+	start := now.With(t.clock.Now()).BeginningOfDay()
 	for i := range 7 {
 		dayStart := start.AddDate(0, 0, i)
 		dow := fixed.Day((int(start.Weekday()) + i) % 7)
@@ -108,9 +122,9 @@ func (t *Fixed) Rates() (api.Rates, error) {
 			ts := dayStart.Add(time.Minute * time.Duration(m.Minutes()))
 
 			var zone *fixed.Zone
-			for j := len(zones) - 1; j >= 0; j-- {
-				if zones[j].Hours.Contains(m) {
-					zone = &zones[j]
+			for i := range zones {
+				if zones[i].Hours.Contains(m) {
+					zone = &zones[i]
 					break
 				}
 			}
