@@ -7,6 +7,7 @@ on:
   pull_request:
     types: [opened, edited, reopened]
 permissions:
+  contents: read
   issues: read
   pull-requests: read
 tools:
@@ -20,6 +21,10 @@ source: githubnext/gh-aw/.github/workflows/issue-triage-agent.md@87fe98fa15e2bb5
 ---
 
 # Triage Agent
+
+## Context
+
+- **Repository**: ${{ github.repository }}
 
 ## Label the Issue/Pull Request
 
