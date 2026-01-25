@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/cache"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/oauth2"
@@ -39,7 +40,7 @@ type tokenSource struct {
 }
 
 // tokenSourceCache stores per-user token sources
-var tokenSourceCache = oauth.NewTokenSourceCache()
+var tokenSourceCache = cache.New[oauth2.TokenSource]()
 
 // TokenSource returns a shared oauth2.TokenSource for the given user.
 func TokenSource(log *util.Logger, user, password string) (oauth2.TokenSource, error) {

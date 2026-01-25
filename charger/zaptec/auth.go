@@ -6,7 +6,7 @@ import (
 	"sync"
 
 	"github.com/coreos/go-oidc/v3/oidc"
-	"github.com/evcc-io/evcc/util/oauth"
+	"github.com/evcc-io/evcc/util/cache"
 	"golang.org/x/oauth2"
 )
 
@@ -26,7 +26,7 @@ func (p *passwordTokenSource) Token() (*oauth2.Token, error) {
 
 var (
 	// TokenSourceCache stores per-user token sources
-	tokenSourceCache = oauth.NewTokenSourceCache()
+	tokenSourceCache = cache.New[oauth2.TokenSource]()
 
 	oidcProvider     *oidc.Provider
 	oidcProviderOnce sync.Once
