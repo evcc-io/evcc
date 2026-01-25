@@ -21,7 +21,6 @@ params:
       de: Benutzername für Admin-API
     example: admin
   - name: password
-    mask: true
     help:
       en: Password for admin API
       de: Passwort für Admin-API
