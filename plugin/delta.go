@@ -11,6 +11,7 @@ type deltaPlugin struct {
 	ctx   context.Context
 	total float64
 	set   Config
+	get   *Config
 }
 
 func init() {
@@ -22,6 +23,7 @@ func NewDeltaFromConfig(ctx context.Context, other map[string]any) (Plugin, erro
 	var cc struct {
 		pipeline.Settings `mapstructure:",squash"`
 		Set               Config
+		Get               *Config
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -31,6 +33,7 @@ func NewDeltaFromConfig(ctx context.Context, other map[string]any) (Plugin, erro
 	p := &deltaPlugin{
 		ctx: ctx,
 		set: cc.Set,
+		get: cc.Get,
 	}
 
 	return p, nil
@@ -44,7 +47,20 @@ func (p *deltaPlugin) IntSetter(param string) (func(int64) error, error) {
 		return nil, err
 	}
 
+	get, err := p.get.IntGetter(p.ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	return func(val int64) error {
+		if get != nil {
+			total, err := get()
+			if err != nil {
+				return err
+			}
+			p.total = float64(total)
+		}
+
 		delta := float64(val) - p.total
 		err := set(int64(delta))
 		if err == nil {
@@ -62,7 +78,20 @@ func (p *deltaPlugin) FloatSetter(param string) (func(float64) error, error) {
 		return nil, err
 	}
 
+	get, err := p.get.FloatGetter(p.ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	return func(val float64) error {
+		if get != nil {
+			total, err := get()
+			if err != nil {
+				return err
+			}
+			p.total = total
+		}
+
 		delta := val - p.total
 		err := set(delta)
 		if err == nil {
