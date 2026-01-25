@@ -19,7 +19,7 @@ params:
     default: 1
     required: true
     description:
-      de: Messkanals (1-8)
+      de: Messkanal (1-8)
       en: Meter channel (1-8)
 render: |
   type: tasmota
