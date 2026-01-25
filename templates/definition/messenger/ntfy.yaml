@@ -61,7 +61,7 @@ params:
         For more details, see [docs.ntfy.sh](https://docs.ntfy.sh/publish#tags-emojis). One entry per line.
 render: |
   type: ntfy
-  uri: https://{{ .host }}/{{ .topics }}
+  uri: https://{{ .host }}/{{ .topics | join "," }}
   priority: {{ .priority }}
   tags: {{ .tags }}
   authtoken: {{ .authtoken }}
