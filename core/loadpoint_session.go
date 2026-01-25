@@ -8,7 +8,6 @@ import (
 	"github.com/evcc-io/evcc/core/session"
 	"github.com/evcc-io/evcc/core/wrapper"
 	"github.com/jinzhu/now"
-	"github.com/samber/lo"
 )
 
 func (lp *Loadpoint) chargeMeterTotal() float64 {
@@ -77,12 +76,12 @@ func (lp *Loadpoint) stopSession() {
 		s.MeterStop = &meterStop
 	}
 
-	s.SolarPercentage = lo.ToPtr(lp.energyMetrics.SolarPercentage())
+	s.SolarPercentage = new(lp.energyMetrics.SolarPercentage())
 	s.Price = lp.energyMetrics.Price()
 	s.PricePerKWh = lp.energyMetrics.PricePerKWh()
 	s.Co2PerKWh = lp.energyMetrics.Co2PerKWh()
 	s.ChargedEnergy = lp.energyMetrics.TotalWh() / 1e3
-	s.ChargeDuration = lo.ToPtr(lp.chargeDuration.Abs())
+	s.ChargeDuration = new(lp.chargeDuration.Abs())
 
 	lp.db.Persist(s)
 }
