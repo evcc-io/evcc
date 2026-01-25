@@ -13,14 +13,12 @@ params:
       en: admin is default
   - name: password
   - name: channel
+    type: int
     default: 1
     required: true
     description:
-      de: Schaltkanal Nummer
-      en: Relaychannel number
-    help:
       de: Schaltkanal (1-8)
-      en: Relaychannel number (1-8)
+      en: Relay channel (1-8)
   - preset: switchsocket
 render: |
   type: tasmota

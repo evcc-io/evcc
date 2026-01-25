@@ -14,14 +14,12 @@ params:
       en: admin is default
   - name: password
   - name: channel
+    type: int
     default: 1
     required: true
     description:
-      de: Kanal Nummer
-      en: Channel number
-    help:
-      de: Meterkanal (1-8)
-      en: Meterchannel number (1-8)
+      de: Messkanal (1-8)
+      en: Meter channel (1-8)
 render: |
   type: tasmota
   uri: http://{{ .host }}
