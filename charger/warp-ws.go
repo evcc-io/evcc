@@ -24,8 +24,6 @@ type WarpWS struct {
 	*request.Helper
 	log        *util.Logger
 	uri        string
-	valuesMap  warp.MeterValuesIndices
-	skipLegacy bool
 
 	mu sync.RWMutex
 
@@ -250,7 +248,6 @@ func (w *WarpWS) handleEvent(data []byte) {
 	defer w.mu.Unlock()
 
 	switch evt.Topic {
-
 	case "charge_tracker/current_charge":
 		w.handleChargeTracker(evt.Payload)
 
@@ -441,7 +438,7 @@ func (w *WarpWS) Enable(enable bool) error {
 func (w *WarpWS) Enabled() (bool, error) {
 	w.mu.RLock()
 	defer w.mu.RUnlock()
-	return w.status != api.StatusA, nil
+	return w.status == api.StatusC, nil
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -482,7 +479,6 @@ func (w *WarpWS) disablePhaseAutoSwitch() error {
 
 // phases1p3p implements the api.PhaseSwitcher interface
 func (w *WarpWS) phases1p3p(phases int) error {
-
 	if w.emState.ExternalControl > warp.ExternalControlAvailable {
 		return fmt.Errorf("external control not available: %s", w.emState.ExternalControl.String())
 	}
@@ -498,7 +494,6 @@ func (w *WarpWS) phases1p3p(phases int) error {
 
 // getPhases implements the api.PhaseGetter interface
 func (w *WarpWS) getPhases() (int, error) {
-
 	if w.emLowLevel.Is3phase {
 		return 3, nil
 	}

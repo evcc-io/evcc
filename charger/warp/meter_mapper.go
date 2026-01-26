@@ -4,17 +4,13 @@ import "github.com/evcc-io/evcc/util"
 
 type MeterMapper struct {
 	indices    MeterValuesIndices
-	skipLegacy bool
 	log        *util.Logger
 }
 
 func (m *MeterMapper) HandleLegacyValues(vals []float64, power *float64, energy *float64, voltL, currL *[3]float64) {
-	if m.skipLegacy {
-		return
-	}
 	if len(vals) >= 6 {
-		(*voltL)[0], (*voltL)[1], (*voltL)[2] = vals[0], vals[1], vals[2]
-		(*currL)[0], (*currL)[1], (*currL)[2] = vals[3], vals[4], vals[5]
+		copy((*voltL)[:], vals[:3])
+		copy((*currL)[:], vals[3:6])
 	}
 }
 
@@ -30,7 +26,7 @@ func (m *MeterMapper) UpdateValueIDs(ids []int) {
 		ValueIDEnergyAbsImSum,
 	}
 
-	// prüfen ob alle IDs vorhanden sind
+	// check that all IDs are present
 	missing := []int{}
 	for _, req := range required {
 		found := false
@@ -50,7 +46,7 @@ func (m *MeterMapper) UpdateValueIDs(ids []int) {
 		return
 	}
 
-	// Mapping erzeugen
+	// Create mapping
 	var idx MeterValuesIndices
 	for i, valueID := range ids {
 		switch valueID {
@@ -74,7 +70,6 @@ func (m *MeterMapper) UpdateValueIDs(ids []int) {
 	}
 
 	m.indices = idx
-	//m.log.INFO.Printf("meter value_ids mapped: %+v", idx)
 }
 
 func (m *MeterMapper) UpdateValues(vals []float64, power *float64, energy *float64, voltL, currL *[3]float64) {
@@ -86,12 +81,8 @@ func (m *MeterMapper) UpdateValues(vals []float64, power *float64, energy *float
 		return
 	}
 
-	voltL[0] = vals[m.indices.VoltageL1NIndex]
-	voltL[1] = vals[m.indices.VoltageL2NIndex]
-	voltL[2] = vals[m.indices.VoltageL3NIndex]
-	currL[0] = vals[m.indices.CurrentImExSumL1Index]
-	currL[1] = vals[m.indices.CurrentImExSumL2Index]
-	currL[2] = vals[m.indices.CurrentImExSumL3Index]
-	power = &vals[m.indices.PowerImExSumIndex]
-	energy = &vals[m.indices.EnergyAbsImSumIndex]
+	*voltL = [3]float64{ vals[m.indices.VoltageL1NIndex], vals[m.indices.VoltageL2NIndex], vals[m.indices.VoltageL3NIndex], }
+	*currL = [3]float64{ vals[m.indices.CurrentImExSumL1Index], vals[m.indices.CurrentImExSumL2Index], vals[m.indices.CurrentImExSumL3Index], }
+	*power = vals[m.indices.PowerImExSumIndex]
+	*energy = vals[m.indices.EnergyAbsImSumIndex]
 }
