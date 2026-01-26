@@ -29,6 +29,7 @@ params:
   - name: mppt3
     type: bool
     default: false
+    usages: ["pv"]
     description:
       de: Dritter PV-Eingang
       en: Third PV input
@@ -36,6 +37,7 @@ params:
       de: Der Wechselrichter hat einen dritten PV-Eingang (MPPT3)
       en: The inverter has a third PV input (MPPT3)
   - name: maxacpower
+    usages: ["pv"]
 render: |
   type: custom
   {{- if eq .usage "grid" }}
