@@ -1,0 +1,115 @@
+template: solax-x3-mic-pro-g2
+products:
+  - brand: Solax
+    description:
+      generic: X3 MIC G2
+  - brand: Solax
+    description:
+      generic: X3 PRO G2
+requirements:
+  description:
+    de: |
+      Erfordert den Solax Pocket WiFi/LAN Dongle (V3.0) für Modbus TCP Zugriff.
+      
+      Die Modbus TCP Kommunikation muss am Dongle aktiviert sein.
+    en: |
+      Requires the Solax Pocket WiFi/LAN Dongle (V3.0) for Modbus TCP access.
+      
+      Modbus TCP communication must be enabled on the dongle.
+params:
+  - name: usage
+    choice: ["grid", "pv"]
+  - name: modbus
+    choice: ["tcpip"]
+    id: 1
+  - name: maxacpower
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 70 # 0x0046 Grid Power (W)
+      type: input
+      decode: int32s
+    scale: -1
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 74 # 0x004A Total Consumption Energy (kWh)
+      type: input
+      decode: uint32s
+    scale: 0.1
+  currents:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 206 # 0x00CE Grid Current Phase A (A)
+        type: input
+        decode: int16
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 207 # 0x00CF Grid Current Phase B (A)
+        type: input
+        decode: int16
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 208 # 0x00D0 Grid Current Phase C (A)
+        type: input
+        decode: int16
+      scale: 0.1
+  voltages:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 202 # 0x00CA Grid Voltage Phase A (V)
+        type: input
+        decode: uint16
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 203 # 0x00CB Grid Voltage Phase B (V)
+        type: input
+        decode: uint16
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 204 # 0x00CC Grid Voltage Phase C (V)
+        type: input
+        decode: uint16
+      scale: 0.1
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: calc
+    add:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 10 # 0x000A DC Power MPPT1 (W)
+        type: input
+        decode: uint16
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 11 # 0x000B DC Power MPPT2 (W)
+        type: input
+        decode: uint16
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 148 # 0x0094 Total PV Energy (kWh)
+      type: input
+      decode: uint32s
+    scale: 0.1
+  maxacpower: {{ .maxacpower }} # W
+  {{- end }}
