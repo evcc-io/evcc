@@ -288,12 +288,6 @@ func (w *WarpWS) decode(payload json.RawMessage, v any, msg string) bool {
 	return true
 }
 
-func (w *WarpWS) isMetersApiTopic(topic string) bool {
-    return topic == fmt.Sprintf("meters/%d/value_ids", w.meterIndex) ||
-        topic == fmt.Sprintf("meters/%d/values", w.meterIndex)
-}
-
-
 func (w *WarpWS) handleChargeTracker(payload json.RawMessage) {
 	var c warp.ChargeTrackerCurrentCharge
 	if !w.decode(payload, &c, "charge_tracker") {
