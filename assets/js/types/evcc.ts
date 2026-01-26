@@ -479,7 +479,7 @@ export interface Vehicle {
   limitSoc?: number;
   plan?: StaticPlan;
   repeatingPlans: RepeatingPlan[] | null;
-  planStrategy?: PlanStrategy;
+  planStrategy: PlanStrategy;
   title: string;
   features?: string[];
   capacity?: number;
