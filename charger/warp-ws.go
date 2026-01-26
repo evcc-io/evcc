@@ -27,6 +27,12 @@ type WarpWS struct {
 
 	mu sync.RWMutex
 
+	// capabilities
+	hasMeter          bool
+	hasMeterPhases    bool
+	hasNfc            bool
+	hasPhaseSwitching bool
+
 	// evse
 	status     api.ChargeStatus
 	maxCurrent int64
@@ -37,7 +43,7 @@ type WarpWS struct {
 	currL      [3]float64
 	voltL      [3]float64
 	meterIndex uint
-	meter      warp.MeterMapper
+	meter      *warp.MeterMapper
 
 	// rfid
 	tagId     string
@@ -53,7 +59,18 @@ type WarpWS struct {
 	// config
 	current int64
 	cancel  context.CancelFunc
+
+	// decorator hooks
+	fnCurrentPower func() (float64, error)
+	fnTotalEnergy  func() (float64, error)
+	fnCurrents     func() (float64, float64, float64, error)
+	fnVoltages     func() (float64, float64, float64, error)
+	fnIdentify     func() (string, error)
+	fnPhases       func(int) error
+	fnGetPhases    func() (int, error)
 }
+
+var _ api.ChargerEx = (*WarpWS)(nil)
 
 type warpEvent struct {
 	Topic   string          `json:"topic"`
@@ -88,23 +105,22 @@ func NewWarpWSFromConfig(other map[string]any) (api.Charger, error) {
 	}
 
 	// Feature: Meter
-	var currentPower, totalEnergy func() (float64, error)
 	if wb.hasFeature(warp.FeatureMeter) {
-		currentPower = wb.CurrentPower
-		totalEnergy = wb.totalEnergy
+		wb.fnCurrentPower = func() (float64, error) { return wb.power, nil }
+		wb.fnTotalEnergy = func() (float64, error) { return wb.energy, nil }
+		wb.hasMeter = true
 	}
 
-	// Feature: Phasen
-	var currents, voltages func() (float64, float64, float64, error)
-
+	// Feature: Phases
 	if wb.hasFeature(warp.FeatureMeterPhases) {
-		currents = wb.currents
-		voltages = wb.voltages
+		wb.fnCurrents = func() (float64, float64, float64, error) { return wb.currL[0], wb.currL[1], wb.currL[2], nil }
+		wb.fnVoltages = func() (float64, float64, float64, error) { return wb.voltL[0], wb.voltL[1], wb.voltL[2], nil }
+		wb.hasMeterPhases = true
 	}
 
 	if wb.hasFeature(warp.FeaturePhaseSwitch) {
-		currents = wb.currents
-		voltages = wb.voltages
+		wb.fnCurrents = func() (float64, float64, float64, error) { return wb.currL[0], wb.currL[1], wb.currL[2], nil }
+		wb.fnVoltages = func() (float64, float64, float64, error) { return wb.voltL[0], wb.voltL[1], wb.voltL[2], nil }
 	} else if cc.EnergyManagerURI != "" { // fallback to Energy Manager
 		wb.emURI = util.DefaultScheme(strings.TrimRight(cc.EnergyManagerURI, "/"), "http")
 		wb.emHelper = request.NewHelper(wb.log)
@@ -114,17 +130,16 @@ func NewWarpWSFromConfig(other map[string]any) (api.Charger, error) {
 	}
 
 	// Feature: NFC
-	var identity func() (string, error)
 	if wb.hasFeature(warp.FeatureNfc) {
-		identity = wb.identify
+		wb.fnIdentify = func() (string, error) { return wb.tagId, nil }
+		wb.hasNfc = true
 	}
 
 	// Feature: EM
-	var phases func(int) error
-	var getPhases func() (int, error)
 	if wb.emState.ExternalControl != 1 {
-		phases = wb.phases1p3p
-		getPhases = wb.getPhases
+		wb.fnPhases = wb.phases1p3p
+		wb.fnGetPhases = wb.getPhases
+		wb.hasPhaseSwitching = true
 	}
 
 	// Phase Auto Switching needs to be disabled for WARP3
@@ -139,13 +154,13 @@ func NewWarpWSFromConfig(other map[string]any) (api.Charger, error) {
 
 	return decorateWarpWS(
 		wb,
-		currentPower,
-		totalEnergy,
-		currents,
-		voltages,
-		identity,
-		phases,
-		getPhases,
+		wb.fnCurrentPower,
+		wb.fnTotalEnergy,
+		wb.fnCurrents,
+		wb.fnVoltages,
+		wb.fnIdentify,
+		wb.fnPhases,
+		wb.fnGetPhases,
 	), nil
 }
 
@@ -162,6 +177,7 @@ func NewWarpWS(uri, user, password string, meterIndex uint) (*WarpWS, error) {
 		uri:        util.DefaultScheme(uri, "http"),
 		current:    6000,
 		meterIndex: meterIndex,
+		meter:      &warp.MeterMapper{Log: log},
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -263,11 +279,8 @@ func (w *WarpWS) handleEvent(data []byte) {
 	case "evse/external_current":
 		w.handleExternalCurrent(evt.Payload)
 
-	case "meter/values", "meter/all_values":
-		w.handleLegacyMeterEvent(evt)
-
-	case fmt.Sprintf("meters/%d/value_ids", w.meterIndex), fmt.Sprintf("meters/%d/values", w.meterIndex):
-		w.handleMetersEvent(evt)
+	case "meter/values", "meter/all_values", fmt.Sprintf("meters/%d/value_ids", w.meterIndex), fmt.Sprintf("meters/%d/values", w.meterIndex):
+		w.handleMeter(evt)
 
 	case "nfc/config":
 		w.handleNfcConfig(evt.Payload)
@@ -295,6 +308,7 @@ func (w *WarpWS) handleChargeTracker(payload json.RawMessage) {
 	}
 	w.log.TRACE.Printf("nfc: tag detected: %s", c.AuthorizationInfo.TagId)
 	w.tagId = c.AuthorizationInfo.TagId
+	w.hasNfc = true
 }
 
 func (w *WarpWS) handleEvseState(payload json.RawMessage) {
@@ -321,6 +335,14 @@ func (w *WarpWS) handleExternalCurrent(payload json.RawMessage) {
 	}
 }
 
+func (w *WarpWS) handleMeter(evt warpEvent) {
+	if strings.HasPrefix(evt.Topic, fmt.Sprintf("meters/%d/", w.meterIndex)) {
+		w.handleMetersEvent(evt)
+		return
+	}
+	w.handleLegacyMeterEvent(evt)
+}
+
 func (w *WarpWS) handleLegacyMeterEvent(evt warpEvent) {
 	switch evt.Topic {
 	case "meter/values":
@@ -330,6 +352,8 @@ func (w *WarpWS) handleLegacyMeterEvent(evt warpEvent) {
 		}
 		w.power = m.Power
 		w.energy = m.EnergyAbs
+		w.hasMeter = true
+
 	case "meter/all_values":
 		var vals []float64
 		if !w.decode(evt.Payload, &vals, "meter/all_values") {
@@ -337,6 +361,7 @@ func (w *WarpWS) handleLegacyMeterEvent(evt warpEvent) {
 		}
 		copy((w.voltL)[:], vals[:3])
 		copy((w.currL)[:], vals[3:6])
+		w.hasMeterPhases = true
 	}
 }
 
@@ -355,6 +380,8 @@ func (w *WarpWS) handleMetersEvent(evt warpEvent) {
 			return
 		}
 		w.meter.UpdateValues(vals, &w.power, &w.energy, &w.voltL, &w.currL)
+		w.hasMeter = true
+		w.hasMeterPhases = true
 	}
 }
 
@@ -389,13 +416,14 @@ func (w *WarpWS) hasFeature(f string) bool {
 
 	switch f {
 	case warp.FeatureMeter:
-		return w.power != 0 || w.energy != 0
+		return w.hasMeter
 	case warp.FeatureMeterPhases:
-		return w.currL[0] != 0 || w.voltL[0] != 0
+		return w.hasMeterPhases
 	case warp.FeatureNfc:
-		return w.tagId != ""
+		return w.hasNfc
+	case warp.FeaturePhaseSwitch:
+		return w.hasPhaseSwitching
 	default:
-		w.log.TRACE.Printf("feature missing: %s", f)
 		return false
 	}
 }
@@ -439,7 +467,7 @@ func (w *WarpWS) Identify() (string, error) {
 func (w *WarpWS) Enable(enable bool) error {
 	var curr int64
 	if enable {
-		curr = w.current
+		curr = w.maxCurrent
 	}
 	return w.setCurrent(curr)
 }
@@ -454,8 +482,6 @@ func (w *WarpWS) Enabled() (bool, error) {
 func (w *WarpWS) MaxCurrent(current int64) error {
 	return w.MaxCurrentMillis(float64(current))
 }
-
-var _ api.ChargerEx = (*Warp2)(nil)
 
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (w *WarpWS) MaxCurrentMillis(current float64) error {
@@ -515,8 +541,3 @@ func (w *WarpWS) getPhases() (int, error) {
 
 	return 1, nil
 }
-
-func (w *WarpWS) totalEnergy() (float64, error)                { return w.TotalEnergy() }
-func (w *WarpWS) currents() (float64, float64, float64, error) { return w.Currents() }
-func (w *WarpWS) voltages() (float64, float64, float64, error) { return w.Voltages() }
-func (w *WarpWS) identify() (string, error)                    { return w.Identify() }

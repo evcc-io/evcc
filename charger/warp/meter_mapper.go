@@ -4,7 +4,7 @@ import "github.com/evcc-io/evcc/util"
 
 type MeterMapper struct {
 	indices MeterValuesIndices
-	log     *util.Logger
+	Log     *util.Logger
 }
 
 func (m *MeterMapper) UpdateValueIDs(ids []int) {
@@ -35,7 +35,7 @@ func (m *MeterMapper) UpdateValueIDs(ids []int) {
 	}
 
 	if len(missing) > 0 {
-		m.log.ERROR.Printf("missing required meter value IDs: %v", missing)
+		m.Log.ERROR.Printf("missing required meter value IDs: %v", missing)
 		return
 	}
 
