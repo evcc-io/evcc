@@ -299,7 +299,6 @@ export default defineComponent({
       return withSymbol ? result : result.replace(currency, "").trim();
     },
     fmtCurrencySymbol(currency = CURRENCY.EUR) {
-      console.log("CURRENCY_SYMBOLS", CURRENCY_SYMBOLS);
       return CURRENCY_SYMBOLS[currency] || currency;
     },
     fmtPricePerKWh(amout = 0, currency = CURRENCY.EUR, short = false, withUnit = true) {
