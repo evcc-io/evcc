@@ -6,6 +6,7 @@ on:
     types: [opened, edited, reopened]
   pull_request:
     types: [opened, edited, reopened]
+if: "false"
 permissions:
   contents: read
   issues: read
