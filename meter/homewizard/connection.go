@@ -70,6 +70,20 @@ func NewConnection(uri string, usage string, phase int, cache time.Duration) (*C
 	return c, nil
 }
 
+// mapValueToPhase maps a single-phase value to the specified phase (L1, L2, or L3)
+func mapValueToPhase(value float64, phase int) (float64, float64, float64) {
+	switch phase {
+	case 1:
+		return value, 0, 0
+	case 2:
+		return 0, value, 0
+	case 3:
+		return 0, 0, value
+	default:
+		return value, 0, 0 // fallback to L1
+	}
+}
+
 // Enable implements the api.Charger interface
 func (c *Connection) Enable(enable bool) error {
 	var res StateResponse
@@ -133,15 +147,8 @@ func (c *Connection) Currents() (float64, float64, float64, error) {
 			current = -current
 		}
 
-		// Return current on configured phase
-		switch c.phase {
-		case 1:
-			return current, 0, 0, err
-		case 2:
-			return 0, current, 0, err
-		case 3:
-			return 0, 0, current, err
-		}
+		l1, l2, l3 := mapValueToPhase(current, c.phase)
+		return l1, l2, l3, err
 	}
 
 	// Three-phase meters have separate current readings per phase
@@ -157,17 +164,8 @@ func (c *Connection) Voltages() (float64, float64, float64, error) {
 
 	// Single-phase meters only have one voltage reading
 	if c.ProductType == "HWE-KWH1" || c.ProductType == "SDM230-wifi" {
-		voltage := res.ActiveVoltageV
-
-		// Return voltage on configured phase
-		switch c.phase {
-		case 1:
-			return voltage, 0, 0, err
-		case 2:
-			return 0, voltage, 0, err
-		case 3:
-			return 0, 0, voltage, err
-		}
+		l1, l2, l3 := mapValueToPhase(res.ActiveVoltageV, c.phase)
+		return l1, l2, l3, err
 	}
 
 	// Three-phase meters have separate voltage readings per phase
