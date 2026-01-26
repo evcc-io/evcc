@@ -26,7 +26,7 @@ func updateSponsortokenHandler(pub publisher) func(w http.ResponseWriter, r *htt
 			return
 		}
 
-		var instanceID string
+		var token string
 
 		// License key activation flow
 		if req.Email != "" {
@@ -36,22 +36,20 @@ func updateSponsortokenHandler(pub publisher) func(w http.ResponseWriter, r *htt
 				return
 			}
 
-			// Activate license key
+			// Activate license key and receive JWT token
 			var err error
-			instanceID, err = sponsor.ActivateSponsorship(req.Token, req.Email)
+			token, err = sponsor.ActivateSponsorship(req.Token, req.Email)
 			if err != nil {
 				jsonError(w, http.StatusBadRequest, err)
 				return
 			}
-
-			settings.SetString(keys.SponsorInstanceId, instanceID)
 		} else {
-			// Load existing instance_id for JWT flow
-			instanceID, _ = settings.String(keys.SponsorInstanceId)
+			// Use provided JWT token directly
+			token = req.Token
 		}
 
-		if req.Token != "" {
-			if err := sponsor.ConfigureSponsorship(req.Token, instanceID); err != nil {
+		if token != "" {
+			if err := sponsor.ConfigureSponsorship(token); err != nil {
 				jsonError(w, http.StatusBadRequest, err)
 				return
 			}
@@ -66,7 +64,7 @@ func updateSponsortokenHandler(pub publisher) func(w http.ResponseWriter, r *htt
 		}
 
 		// TODO find better place
-		settings.SetString(keys.SponsorToken, req.Token)
+		settings.SetString(keys.SponsorToken, token)
 		setConfigDirty()
 
 		jsonWrite(w, sponsor.GetStatus())
@@ -76,7 +74,6 @@ func updateSponsortokenHandler(pub publisher) func(w http.ResponseWriter, r *htt
 func deleteSponsorTokenHandler(pub publisher) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		settings.SetString(keys.SponsorToken, "")
-		settings.SetString(keys.SponsorInstanceId, "")
 
 		pub(keys.Sponsor, struct {
 			Status   sponsor.Status `json:"status"`

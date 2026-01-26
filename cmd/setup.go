@@ -507,8 +507,7 @@ func configureSponsorship(token string) (err error) {
 		fromYaml.sponsor = true
 	}
 
-	instanceID, _ := settings.String(keys.SponsorInstanceId)
-	return sponsor.ConfigureSponsorship(token, instanceID)
+	return sponsor.ConfigureSponsorship(token)
 }
 
 func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) error {

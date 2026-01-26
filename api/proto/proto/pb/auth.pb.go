@@ -25,7 +25,6 @@ const (
 type AuthRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Token         string                 `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
-	InstanceId    string                 `protobuf:"bytes,2,opt,name=instance_id,json=instanceId,proto3" json:"instance_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -63,13 +62,6 @@ func (*AuthRequest) Descriptor() ([]byte, []int) {
 func (x *AuthRequest) GetToken() string {
 	if x != nil {
 		return x.Token
-	}
-	return ""
-}
-
-func (x *AuthRequest) GetInstanceId() string {
-	if x != nil {
-		return x.InstanceId
 	}
 	return ""
 }
@@ -196,7 +188,7 @@ func (x *ActivateRequest) GetMachineId() string {
 
 type ActivateReply struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	InstanceId    string                 `protobuf:"bytes,1,opt,name=instance_id,json=instanceId,proto3" json:"instance_id,omitempty"`
+	Token         string                 `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
 	Error         string                 `protobuf:"bytes,2,opt,name=error,proto3" json:"error,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -232,9 +224,9 @@ func (*ActivateReply) Descriptor() ([]byte, []int) {
 	return file_auth_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *ActivateReply) GetInstanceId() string {
+func (x *ActivateReply) GetToken() string {
 	if x != nil {
-		return x.InstanceId
+		return x.Token
 	}
 	return ""
 }
@@ -251,11 +243,9 @@ var File_auth_proto protoreflect.FileDescriptor
 const file_auth_proto_rawDesc = "" +
 	"\n" +
 	"\n" +
-	"auth.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"D\n" +
+	"auth.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"#\n" +
 	"\vAuthRequest\x12\x14\n" +
-	"\x05token\x18\x01 \x01(\tR\x05token\x12\x1f\n" +
-	"\vinstance_id\x18\x02 \x01(\tR\n" +
-	"instanceId\"\x80\x01\n" +
+	"\x05token\x18\x01 \x01(\tR\x05token\"\x80\x01\n" +
 	"\tAuthReply\x12\x1e\n" +
 	"\n" +
 	"authorized\x18\x01 \x01(\bR\n" +
@@ -268,10 +258,9 @@ const file_auth_proto_rawDesc = "" +
 	"licenseKey\x12\x14\n" +
 	"\x05email\x18\x02 \x01(\tR\x05email\x12\x1d\n" +
 	"\n" +
-	"machine_id\x18\x03 \x01(\tR\tmachineId\"F\n" +
-	"\rActivateReply\x12\x1f\n" +
-	"\vinstance_id\x18\x01 \x01(\tR\n" +
-	"instanceId\x12\x14\n" +
+	"machine_id\x18\x03 \x01(\tR\tmachineId\";\n" +
+	"\rActivateReply\x12\x14\n" +
+	"\x05token\x18\x01 \x01(\tR\x05token\x12\x14\n" +
 	"\x05error\x18\x02 \x01(\tR\x05error2b\n" +
 	"\x04Auth\x12*\n" +
 	"\fIsAuthorized\x12\f.AuthRequest\x1a\n" +

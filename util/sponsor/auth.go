@@ -54,7 +54,7 @@ func IsAuthorizedForApi() bool {
 	return IsAuthorized() && Subject != unavailable && Token != ""
 }
 
-// ActivateSponsorship activates a license key with email and returns the instance ID
+// ActivateSponsorship activates a license key with email and returns the JWT token
 func ActivateSponsorship(licenseKey, email string) (string, error) {
 	conn, err := cloud.Connection()
 	if err != nil {
@@ -80,11 +80,11 @@ func ActivateSponsorship(licenseKey, email string) (string, error) {
 		return "", fmt.Errorf("%s", res.Error)
 	}
 
-	return res.InstanceId, nil
+	return res.Token, nil
 }
 
 // check and set sponsorship token
-func ConfigureSponsorship(token string, instanceID string) error {
+func ConfigureSponsorship(token string) error {
 	mu.Lock()
 	defer mu.Unlock()
 
@@ -112,7 +112,7 @@ func ConfigureSponsorship(token string, instanceID string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	res, err := client.IsAuthorized(ctx, &pb.AuthRequest{Token: token, InstanceId: instanceID})
+	res, err := client.IsAuthorized(ctx, &pb.AuthRequest{Token: token})
 	if err == nil && res.Authorized {
 		Subject = res.Subject
 		ExpiresAt = res.ExpiresAt.AsTime()

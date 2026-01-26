@@ -13,7 +13,6 @@ service Auth {
 
 message AuthRequest {
 	string token = 1;
-	string instance_id = 2;
 }
 
 message AuthReply {
@@ -29,6 +28,6 @@ message ActivateRequest {
 }
 
 message ActivateReply {
-	string instance_id = 1;
+	string token = 1;
 	string error = 2;
 }
