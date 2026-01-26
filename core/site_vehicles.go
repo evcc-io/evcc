@@ -70,7 +70,7 @@ func (site *Site) publishVehicles() {
 
 		// publish effective plan strategy immediately for soc-based planning
 		if lp := site.coordinator.Owner(instance); lp != nil {
-			lp.PublishEffectivePlanStrategy()
+			lp.PublishEffectiveValues()
 		}
 	}
 

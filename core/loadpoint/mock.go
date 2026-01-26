@@ -701,18 +701,6 @@ func (mr *MockAPIMockRecorder) IsFastChargingActive() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsFastChargingActive", reflect.TypeOf((*MockAPI)(nil).IsFastChargingActive))
 }
 
-// PublishEffectivePlanStrategy mocks base method.
-func (m *MockAPI) PublishEffectivePlanStrategy() {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "PublishEffectivePlanStrategy")
-}
-
-// PublishEffectivePlanStrategy indicates an expected call of PublishEffectivePlanStrategy.
-func (mr *MockAPIMockRecorder) PublishEffectivePlanStrategy() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PublishEffectivePlanStrategy", reflect.TypeOf((*MockAPI)(nil).PublishEffectivePlanStrategy))
-}
-
 // PublishEffectiveValues mocks base method.
 func (m *MockAPI) PublishEffectiveValues() {
 	m.ctrl.T.Helper()

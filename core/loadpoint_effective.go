@@ -22,11 +22,6 @@ func (lp *Loadpoint) PublishEffectiveValues() {
 	lp.publish(keys.EffectiveLimitSoc, lp.EffectiveLimitSoc())
 }
 
-// PublishEffectivePlanStrategy publishes effective plan strategy immediately
-func (lp *Loadpoint) PublishEffectivePlanStrategy() {
-	lp.publish(keys.EffectivePlanStrategy, lp.EffectivePlanStrategy())
-}
-
 // EffectivePriority returns the effective priority
 func (lp *Loadpoint) EffectivePriority() int {
 	if v := lp.GetVehicle(); v != nil {

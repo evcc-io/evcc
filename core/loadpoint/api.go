@@ -112,8 +112,6 @@ type API interface {
 	EffectivePlanStrategy() api.PlanStrategy
 	// PublishEffectiveValues publishes effective values for currently attached vehicle
 	PublishEffectiveValues()
-	// PublishEffectivePlanStrategy publishes effective plan strategy immediately
-	PublishEffectivePlanStrategy()
 
 	//
 	// plan
