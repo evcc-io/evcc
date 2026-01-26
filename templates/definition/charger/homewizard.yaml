@@ -7,7 +7,18 @@ products:
 group: switchsockets
 params:
   - name: host
+  - name: phase
+    description:
+      en: Installation phase
+      de: Installationsphase
+    default: 1
+    choice: [1, 2, 3]
+    advanced: true
+    help:
+      en: Phase on which socket is installed (L1=1, L2=2, L3=3)
+      de: Phase an der die Steckdose installiert ist (L1=1, L2=2, L3=3)
   - preset: switchsocket
 render: |
   type: homewizard
   uri: http://{{ .host }}
+  phase: {{ .phase }}

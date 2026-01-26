@@ -28,9 +28,11 @@ func NewHomeWizardFromConfig(other map[string]any) (api.Charger, error) {
 		embed        `mapstructure:",squash"`
 		URI          string
 		Usage        string
+		Phase        int
 		StandbyPower float64
 		Cache        time.Duration
 	}{
+		Phase: 1,
 		Cache: time.Second,
 	}
 
@@ -38,12 +40,12 @@ func NewHomeWizardFromConfig(other map[string]any) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewHomeWizard(cc.embed, cc.URI, cc.Usage, cc.StandbyPower, cc.Cache)
+	return NewHomeWizard(cc.embed, cc.URI, cc.Usage, cc.Phase, cc.StandbyPower, cc.Cache)
 }
 
 // NewHomeWizard creates HomeWizard charger
-func NewHomeWizard(embed embed, uri string, usage string, standbypower float64, cache time.Duration) (*HomeWizard, error) {
-	conn, err := homewizard.NewConnection(uri, usage, 1, cache)
+func NewHomeWizard(embed embed, uri string, usage string, phase int, standbypower float64, cache time.Duration) (*HomeWizard, error) {
+	conn, err := homewizard.NewConnection(uri, usage, phase, cache)
 	if err != nil {
 		return nil, err
 	}
