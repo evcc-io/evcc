@@ -20,13 +20,12 @@ const CURRENCY_SYMBOLS: Record<CURRENCY, string> = {
 };
 
 // list of currencies where energy price should be displayed in subunits (factor 100)
-const ENERGY_PRICE_IN_SUBUNIT: Record<CURRENCY, string> = {
+const ENERGY_PRICE_IN_SUBUNIT: Partial<Record<CURRENCY, string>> = {
   AUD: "c", // Australian cent
   BGN: "st", // Bulgarian stotinka
   BRL: "¢", // Brazilian centavo
   CAD: "¢", // Canadian cent
   CHF: "rp", // Swiss Rappen
-  CNY: "f", // Chinese fen
   EUR: "ct", // Euro cent
   GBP: "p", // GB pence
   ILS: "ag", // Israeli agora
@@ -325,7 +324,7 @@ export default defineComponent({
       return Intl?.DateTimeFormat?.().resolvedOptions?.().timeZone || "UTC";
     },
     pricePerKWhUnit(currency = CURRENCY.EUR, short = false) {
-      const unit = ENERGY_PRICE_IN_SUBUNIT[currency] || currency;
+      const unit = ENERGY_PRICE_IN_SUBUNIT[currency] || CURRENCY_SYMBOLS[currency] || currency;
       return `${unit}${short ? "" : "/kWh"}`;
     },
     fmtTimeAgo(elapsed: number) {
