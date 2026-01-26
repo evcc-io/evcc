@@ -9,16 +9,6 @@ requirements:
 group: solar
 params:
   - preset: forecast-base
-  - name: az
-    description:
-      en: Azimuth
-      de: Azimut
-    help:
-      en: -180 = north, -90 = east, 0 = south, 90 = west, 180 = north
-      de: -180 = Norden, -90 = Osten, 0 = Süden, 90 = Westen, 180 = Norden
-    type: int
-    example: 0
-    required: true
   - name: ac
     description:
       en: AC Power [kW]
