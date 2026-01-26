@@ -271,11 +271,18 @@ func (p *Param) IsDeprecated() bool {
 }
 
 func (p *Param) IsZero(s string) bool {
+	isAzDec := p.Name == "az" || p.Name == "dec"
 	switch p.Type {
 	case TypeInt:
-		return cast.ToInt64(s) == 0 && p.Name != "az"
+		if isAzDec {
+			return len(s) == 0
+		}
+		return cast.ToInt64(s) == 0
 	case TypeFloat:
-		return cast.ToFloat64(s) == 0 && p.Name != "az"
+		if isAzDec {
+			return len(s) == 0
+		}
+		return cast.ToFloat64(s) == 0
 	case TypeDuration:
 		return cast.ToDuration(s) == 0
 	default:
