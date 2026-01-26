@@ -22,4 +22,3 @@ render: |
   type: homewizard
   uri: http://{{ .host }}
   phase: {{ .phase }}
-  
