@@ -73,10 +73,12 @@ func (m *MeterMapper) UpdateValueIDs(ids []int) {
 }
 
 func (m *MeterMapper) UpdateValues(vals []float64, power *float64, energy *float64, voltL, currL *[3]float64) {
+	// get the highest possible index
 	highestIndex := max(m.indices.VoltageL1NIndex, m.indices.VoltageL2NIndex, m.indices.VoltageL3NIndex,
 		m.indices.CurrentImExSumL1Index, m.indices.CurrentImExSumL2Index, m.indices.CurrentImExSumL3Index,
 		m.indices.PowerImExSumIndex, m.indices.EnergyAbsImSumIndex)
 
+	// check boundaries
 	if len(vals) < highestIndex+1 {
 		return
 	}

@@ -22,8 +22,8 @@ import (
 
 type WarpWS struct {
 	*request.Helper
-	log        *util.Logger
-	uri        string
+	log *util.Logger
+	uri string
 
 	mu sync.RWMutex
 
@@ -44,8 +44,8 @@ type WarpWS struct {
 	nfcConfig warp.NfcConfig
 
 	// energy manager
-	emState    warp.EmState         // analog zu emStateG
-	emLowLevel warp.EmLowLevelState // analog zu emLowLevelG
+	emState    warp.EmState
+	emLowLevel warp.EmLowLevelState
 	is3Phase   bool
 	emURI      string
 	emHelper   *request.Helper
@@ -134,6 +134,7 @@ func NewWarpWSFromConfig(other map[string]any) (api.Charger, error) {
 		if err := wb.disablePhaseAutoSwitch(); err != nil {
 			return nil, err
 		}
+		wb.log.TRACE.Println("disabled phase auto switching")
 	}
 
 	return decorateWarpWS(
@@ -157,7 +158,7 @@ func NewWarpWS(uri, user, password string, meterIndex uint) (*WarpWS, error) {
 	}
 
 	w := &WarpWS{
-		Helper:     client, log: log,
+		Helper: client, log: log,
 		uri:        util.DefaultScheme(uri, "http"),
 		current:    6000,
 		meterIndex: meterIndex,
@@ -172,6 +173,7 @@ func NewWarpWS(uri, user, password string, meterIndex uint) (*WarpWS, error) {
 
 func (w *WarpWS) run(ctx context.Context) {
 	wsURL := strings.Replace(w.uri, "http://", "ws://", 1) + "/ws"
+	w.log.TRACE.Printf("ws: connecting to %s …", wsURL)
 
 	for {
 		// Connect
@@ -180,11 +182,12 @@ func (w *WarpWS) run(ctx context.Context) {
 		if err != nil {
 			w.log.ERROR.Printf("ws dial error: %v", err)
 		} else {
+			w.log.DEBUG.Println("ws: connection established")
 			// Read-Loop
 			for {
 				typ, data, err := conn.Read(ctx)
 				if err != nil {
-					w.log.ERROR.Printf("ws read error: %v", err)
+					w.log.DEBUG.Printf("ws read error: %v", err)
 					_ = conn.Close(websocket.StatusInternalError, "read error")
 					break
 				}
@@ -194,10 +197,11 @@ func (w *WarpWS) run(ctx context.Context) {
 			}
 		}
 
+		w.log.TRACE.Println("ws: reconnecting in 3s …")
 		// Reconnect handling
 		select {
 		case <-ctx.Done():
-			w.log.INFO.Println("ws: stopping reconnect loop")
+			w.log.DEBUG.Println("ws: stopping reconnect loop")
 			return
 		case <-time.After(3 * time.Second):
 		}
@@ -226,8 +230,9 @@ func splitJSONObjects(data []byte) ([][]byte, error) {
 
 func (w *WarpWS) handleFrame(frame []byte) {
 	objs, err := splitJSONObjects(frame)
+	w.log.TRACE.Printf("ws: frame size=%d bytes, objects=%d", len(frame), len(objs))
 	if err != nil {
-		w.log.ERROR.Printf("ws split error: %v", err)
+		w.log.DEBUG.Printf("ws split error: %v", err)
 		return
 	}
 
@@ -239,7 +244,7 @@ func (w *WarpWS) handleFrame(frame []byte) {
 func (w *WarpWS) handleEvent(data []byte) {
 	var evt warpEvent
 	if err := json.Unmarshal(data, &evt); err != nil {
-		w.log.ERROR.Printf("ws decode: %v", err)
+		w.log.DEBUG.Printf("ws decode: %v", err)
 		return
 	}
 
@@ -283,7 +288,7 @@ func (w *WarpWS) handleEvent(data []byte) {
 
 func (w *WarpWS) decode(payload json.RawMessage, v any, msg string) bool {
 	if err := json.Unmarshal(payload, v); err != nil {
-		w.log.ERROR.Printf("%s decode: %v", msg, err)
+		w.log.DEBUG.Printf("%s decode: %v", msg, err)
 		return false
 	}
 	return true
@@ -294,6 +299,7 @@ func (w *WarpWS) handleChargeTracker(payload json.RawMessage) {
 	if !w.decode(payload, &c, "charge_tracker") {
 		return
 	}
+	w.log.TRACE.Printf("nfc: tag detected: %s", c.AuthorizationInfo.TagId)
 	w.tagId = c.AuthorizationInfo.TagId
 }
 
@@ -316,6 +322,7 @@ func (w *WarpWS) handleEvseState(payload json.RawMessage) {
 func (w *WarpWS) handleExternalCurrent(payload json.RawMessage) {
 	var c warp.EvseExternalCurrent
 	if w.decode(payload, &c, "evse/external_current") {
+		w.log.TRACE.Printf("em: state updated (current=%d)", int64(c.Current))
 		w.maxCurrent = int64(c.Current)
 	}
 }
@@ -356,6 +363,7 @@ func (w *WarpWS) handleMetersValues(payload json.RawMessage) {
 func (w *WarpWS) handleNfcConfig(payload json.RawMessage) {
 	var s warp.NfcConfig
 	if w.decode(payload, &s, "nfc/config") {
+		w.log.DEBUG.Printf("nfc: config updated (config=%v)", s)
 		w.nfcConfig = s
 	}
 }
@@ -372,6 +380,7 @@ func (w *WarpWS) handleEmLowLevel(payload json.RawMessage) {
 	if !w.decode(payload, &s, "power_manager/low_level_state") {
 		return
 	}
+	w.log.TRACE.Printf("em: low-level updated (s=%v) (is3phase=%v)", s, s.Is3phase)
 	w.emLowLevel = s
 	w.is3Phase = s.Is3phase
 }
@@ -388,6 +397,7 @@ func (w *WarpWS) hasFeature(f string) bool {
 	case warp.FeatureNfc:
 		return w.tagId != ""
 	default:
+		w.log.TRACE.Printf("feature missing: %s", f)
 		return false
 	}
 }
@@ -452,9 +462,13 @@ var _ api.ChargerEx = (*Warp2)(nil)
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (w *WarpWS) MaxCurrentMillis(current float64) error {
 	curr := int64(current * 1e3)
+	w.log.TRACE.Printf("evse: setting current=%dmA", curr)
 	err := w.setCurrent(curr)
 	if err == nil {
+		w.log.TRACE.Printf("evse: current set acknowledged (requested=%dmA)", curr)
 		w.maxCurrent = curr
+	} else {
+		w.log.DEBUG.Printf("evse: set current failed: %v", err)
 	}
 	return err
 }
@@ -481,11 +495,13 @@ func (w *WarpWS) disablePhaseAutoSwitch() error {
 // phases1p3p implements the api.PhaseSwitcher interface
 func (w *WarpWS) phases1p3p(phases int) error {
 	if w.emState.ExternalControl > warp.ExternalControlAvailable {
+		w.log.DEBUG.Printf("em: external control unavailable (%s)", w.emState.ExternalControl.String())
 		return fmt.Errorf("external control not available: %s", w.emState.ExternalControl.String())
 	}
 
 	uri := fmt.Sprintf("%s/power_manager/external_control", w.uri)
 	data := map[string]int{"phases_wanted": phases}
+	w.log.TRACE.Printf("em: switching phases to %dp", phases)
 
 	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
 
