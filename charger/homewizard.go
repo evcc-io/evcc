@@ -53,7 +53,7 @@ func NewHomeWizard(embed embed, uri string, usage string, standbypower float64, 
 	}
 
 	// Check compatible product type
-	if c.conn.ProductType != "HWE-SKT" {
+	if c.conn.ProductType != homewizard.ProductTypeSocket {
 		return nil, errors.New("unsupported product type: " + c.conn.ProductType)
 	}
 

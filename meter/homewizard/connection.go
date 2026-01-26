@@ -12,6 +12,16 @@ import (
 	"github.com/evcc-io/evcc/util/transport"
 )
 
+// Product type constants
+const (
+	ProductTypeKWH1   = "HWE-KWH1"    // Single-phase kWh meter
+	ProductTypeKWH3   = "HWE-KWH3"    // Three-phase kWh meter
+	ProductTypeSDM230 = "SDM230-wifi" // Single-phase kWh meter
+	ProductTypeSDM630 = "SDM630-wifi" // Three-phase kWh meter
+	ProductTypeSocket = "HWE-SKT"     // Smart socket
+	ProductTypeP1     = "HWE-P1"      // P1 meter
+)
+
 // Connection is the homewizard connection
 type Connection struct {
 	*request.Helper
@@ -68,6 +78,16 @@ func NewConnection(uri string, usage string, phase int, cache time.Duration) (*C
 	}, cache)
 
 	return c, nil
+}
+
+// isSinglePhase returns true if the product type is a single-phase meter
+func isSinglePhase(productType string) bool {
+	switch productType {
+	case ProductTypeKWH1, ProductTypeSDM230:
+		return true
+	default:
+		return false
+	}
 }
 
 // mapValueToPhase maps a single-phase value to the specified phase (L1, L2, or L3)
@@ -141,7 +161,7 @@ func (c *Connection) Currents() (float64, float64, float64, error) {
 	res, err := c.dataG.Get()
 
 	// Single-phase meters only have one current reading
-	if c.ProductType == "HWE-KWH1" || c.ProductType == "SDM230-wifi" {
+	if isSinglePhase(c.ProductType) {
 		current := res.ActiveCurrentA
 		if c.usage == "pv" || c.usage == "battery" {
 			current = -current
@@ -163,7 +183,7 @@ func (c *Connection) Voltages() (float64, float64, float64, error) {
 	res, err := c.dataG.Get()
 
 	// Single-phase meters only have one voltage reading
-	if c.ProductType == "HWE-KWH1" || c.ProductType == "SDM230-wifi" {
+	if isSinglePhase(c.ProductType) {
 		l1, l2, l3 := mapValueToPhase(res.ActiveVoltageV, c.phase)
 		return l1, l2, l3, err
 	}
