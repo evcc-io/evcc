@@ -564,6 +564,16 @@ presets:
       required: true
     - name: lon
       required: true
+    - name: az
+      description:
+        en: Azimuth
+        de: Azimut
+      help:
+        en: Orientation of PV modules in degree. -180 = north, -90 = east, 0 = south, 90 = west, 180 = north
+        de: Ausrichtung der PV-Module in Grad. -180 = Norden, -90 = Osten, 0 = Süden, 90 = Westen, 180 = Norden
+      type: int
+      example: 0
+      required: true
     - name: dec
       description:
         en: Decline
