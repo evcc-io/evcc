@@ -3,8 +3,8 @@ package warp
 import "github.com/evcc-io/evcc/util"
 
 type MeterMapper struct {
-	indices    MeterValuesIndices
-	log        *util.Logger
+	indices MeterValuesIndices
+	log     *util.Logger
 }
 
 func (m *MeterMapper) HandleLegacyValues(vals []float64, power *float64, energy *float64, voltL, currL *[3]float64) {
@@ -81,8 +81,8 @@ func (m *MeterMapper) UpdateValues(vals []float64, power *float64, energy *float
 		return
 	}
 
-	*voltL = [3]float64{ vals[m.indices.VoltageL1NIndex], vals[m.indices.VoltageL2NIndex], vals[m.indices.VoltageL3NIndex], }
-	*currL = [3]float64{ vals[m.indices.CurrentImExSumL1Index], vals[m.indices.CurrentImExSumL2Index], vals[m.indices.CurrentImExSumL3Index], }
+	*voltL = [3]float64{ vals[m.indices.VoltageL1NIndex], vals[m.indices.VoltageL2NIndex], vals[m.indices.VoltageL3NIndex]}
+	*currL = [3]float64{ vals[m.indices.CurrentImExSumL1Index], vals[m.indices.CurrentImExSumL2Index], vals[m.indices.CurrentImExSumL3Index]}
 	*power = vals[m.indices.PowerImExSumIndex]
 	*energy = vals[m.indices.EnergyAbsImSumIndex]
 }

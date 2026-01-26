@@ -160,6 +160,7 @@ func NewWarpWS(uri, user, password string, meterIndex uint) (*WarpWS, error) {
 		Helper: client, log: log,
 		uri:     util.DefaultScheme(uri, "http"),
 		current: 6000,
+		meterIndex: meterIndex,
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
