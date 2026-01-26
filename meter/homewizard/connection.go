@@ -147,6 +147,27 @@ func (c *Connection) CurrentPower() (float64, error) {
 	return res.ActivePowerW, err
 }
 
+// Powers implements the PhasePowers interface
+func (c *Connection) Powers() (float64, float64, float64, error) {
+	res, err := c.dataG.Get()
+
+	if isSinglePhase(c.ProductType) {
+		power := res.ActivePowerW
+		if c.usage == "pv" || c.usage == "battery" {
+			power = -power
+		}
+
+		l1, l2, l3 := mapValueToPhase(power, c.phase)
+		return l1, l2, l3, err
+	}
+
+	if c.usage == "pv" || c.usage == "battery" {
+		return -res.ActivePowerL1W, -res.ActivePowerL2W, -res.ActivePowerL3W, err
+	}
+
+	return res.ActivePowerL1W, res.ActivePowerL2W, res.ActivePowerL3W, err
+}
+
 // TotalEnergy implements the api.MeterEnergy interface
 func (c *Connection) TotalEnergy() (float64, error) {
 	res, err := c.dataG.Get()

@@ -17,6 +17,9 @@ type StateResponse struct {
 // https://homewizard-energy-api.readthedocs.io/endpoints.html#state-api-v1-state
 type DataResponse struct {
 	ActivePowerW        float64 `json:"active_power_w"`
+	ActivePowerL1W      float64 `json:"active_power_l1_w"`
+	ActivePowerL2W      float64 `json:"active_power_l2_w"`
+	ActivePowerL3W      float64 `json:"active_power_l3_w"`
 	TotalPowerImportkWh float64 `json:"total_power_import_kwh"`
 	TotalPowerExportkWh float64 `json:"total_power_export_kwh"`
 	ActiveCurrentA      float64 `json:"active_current_a"`
