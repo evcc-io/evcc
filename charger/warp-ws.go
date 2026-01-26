@@ -263,17 +263,11 @@ func (w *WarpWS) handleEvent(data []byte) {
 	case "evse/external_current":
 		w.handleExternalCurrent(evt.Payload)
 
-	case "meter/values":
-		w.handleMeterValues(evt.Payload)
+	case "meter/values", "meter/all_values":
+		w.handleLegacyMeterEvent(evt)
 
-	case "meter/all_values":
-		w.handleMeterAllValues(evt.Payload)
-
-	case fmt.Sprintf("meters/%d/value_ids", w.meterIndex):
-		w.handleValueIDs(evt.Payload)
-
-	case fmt.Sprintf("meters/%d/values", w.meterIndex):
-		w.handleMetersValues(evt.Payload)
+	case fmt.Sprintf("meters/%d/value_ids", w.meterIndex), fmt.Sprintf("meters/%d/values", w.meterIndex):
+		w.handleMetersEvent(evt)
 
 	case "nfc/config":
 		w.handleNfcConfig(evt.Payload)
@@ -293,6 +287,12 @@ func (w *WarpWS) decode(payload json.RawMessage, v any, msg string) bool {
 	}
 	return true
 }
+
+func (w *WarpWS) isMetersApiTopic(topic string) bool {
+    return topic == fmt.Sprintf("meters/%d/value_ids", w.meterIndex) ||
+        topic == fmt.Sprintf("meters/%d/values", w.meterIndex)
+}
+
 
 func (w *WarpWS) handleChargeTracker(payload json.RawMessage) {
 	var c warp.ChargeTrackerCurrentCharge
@@ -327,37 +327,41 @@ func (w *WarpWS) handleExternalCurrent(payload json.RawMessage) {
 	}
 }
 
-func (w *WarpWS) handleMeterValues(payload json.RawMessage) {
-	var m warp.MeterValues
-	if !w.decode(payload, &m, "meter/values") {
-		return
+func (w *WarpWS) handleLegacyMeterEvent(evt warpEvent) {
+	switch evt.Topic {
+	case "meter/values":
+		var m warp.MeterValues
+		if !w.decode(evt.Payload, &m, "meter/values") {
+			return
+		}
+		w.power = m.Power
+		w.energy = m.EnergyAbs
+	case "meter/all_values":
+		var vals []float64
+		if !w.decode(evt.Payload, &vals, "meter/all_values") {
+			return
+		}
+		copy((w.voltL)[:], vals[:3])
+		copy((w.currL)[:], vals[3:6])
 	}
-	w.power = m.Power
-	w.energy = m.EnergyAbs
 }
 
-func (w *WarpWS) handleMeterAllValues(payload json.RawMessage) {
-	var vals []float64
-	if !w.decode(payload, &vals, "meter/all_values") {
-		return
-	}
-	w.meter.HandleLegacyValues(vals, &w.power, &w.energy, &w.voltL, &w.currL)
-}
+func (w *WarpWS) handleMetersEvent(evt warpEvent) {
+	switch evt.Topic {
+	case fmt.Sprintf("meters/%d/value_ids", w.meterIndex):
+		var ids []int
+		if !w.decode(evt.Payload, &ids, "value_ids") {
+			return
+		}
+		w.meter.UpdateValueIDs(ids)
 
-func (w *WarpWS) handleValueIDs(payload json.RawMessage) {
-	var ids []int
-	if !w.decode(payload, &ids, "value_ids") {
-		return
+	case fmt.Sprintf("meters/%d/values", w.meterIndex):
+		var vals []float64
+		if !w.decode(evt.Payload, &vals, "values") {
+			return
+		}
+		w.meter.UpdateValues(vals, &w.power, &w.energy, &w.voltL, &w.currL)
 	}
-	w.meter.UpdateValueIDs(ids)
-}
-
-func (w *WarpWS) handleMetersValues(payload json.RawMessage) {
-	var vals []float64
-	if !w.decode(payload, &vals, "values") {
-		return
-	}
-	w.meter.UpdateValues(vals, &w.power, &w.energy, &w.voltL, &w.currL)
 }
 
 func (w *WarpWS) handleNfcConfig(payload json.RawMessage) {

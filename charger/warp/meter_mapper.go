@@ -7,13 +7,6 @@ type MeterMapper struct {
 	log     *util.Logger
 }
 
-func (m *MeterMapper) HandleLegacyValues(vals []float64, power *float64, energy *float64, voltL, currL *[3]float64) {
-	if len(vals) >= 6 {
-		copy((*voltL)[:], vals[:3])
-		copy((*currL)[:], vals[3:6])
-	}
-}
-
 func (m *MeterMapper) UpdateValueIDs(ids []int) {
 	required := []int{
 		ValueIDVoltageL1N,
