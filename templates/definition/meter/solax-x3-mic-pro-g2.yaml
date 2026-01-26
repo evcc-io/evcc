@@ -12,16 +12,29 @@ requirements:
       Erfordert den Solax Pocket WiFi/LAN Dongle (V3.0) für Modbus TCP Zugriff.
       
       Die Modbus TCP Kommunikation muss am Dongle aktiviert sein.
+      
+      Diese Vorlage basiert auf dem Modbus-Protokoll V1.9 für die X3 MIC G2 und X3 PRO G2 Wechselrichter.
     en: |
       Requires the Solax Pocket WiFi/LAN Dongle (V3.0) for Modbus TCP access.
       
       Modbus TCP communication must be enabled on the dongle.
+      
+      This template is based on Modbus protocol V1.9 for X3 MIC G2 and X3 PRO G2 inverters.
 params:
   - name: usage
     choice: ["grid", "pv"]
   - name: modbus
     choice: ["tcpip"]
     id: 1
+  - name: mppt3
+    type: bool
+    default: false
+    description:
+      de: Dritter PV-Eingang
+      en: Third PV input
+    help:
+      de: Der Wechselrichter hat einen dritten PV-Eingang (MPPT3)
+      en: The inverter has a third PV input (MPPT3)
   - name: maxacpower
 render: |
   type: custom
@@ -103,6 +116,14 @@ render: |
         address: 11 # 0x000B DC Power MPPT2 (W)
         type: input
         decode: uint16
+  {{- if eq .mppt3 "true" }}
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 292 # 0x0124 DC Power MPPT3 (W)
+        type: input
+        decode: uint16
+  {{- end }}
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
