@@ -8,27 +8,19 @@ import (
 	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/util"
+	vpr "github.com/spf13/viper"
+	"github.com/stretchr/testify/require"
 )
 
 func TestYamlOff(t *testing.T) {
 	var conf globalconfig.All
+	viper := vpr.NewWithOptions(vpr.ExperimentalBindStruct())
 	viper.SetConfigType("yaml")
-	if err := viper.ReadConfig(strings.NewReader(`loadpoints:
-- mode: off
-`)); err != nil {
-		t.Error(err)
-	}
 
-	if err := viper.UnmarshalExact(&conf); err != nil {
-		t.Error(err)
-	}
+	require.NoError(t, viper.ReadConfig(strings.NewReader("loadpoints:\n- mode: off")))
+	require.NoError(t, viper.UnmarshalExact(&conf))
 
 	var lp core.Loadpoint
-	if err := util.DecodeOther(conf.Loadpoints[0].Other, &lp); err != nil {
-		t.Error(err)
-	}
-
-	if lp.DefaultMode != api.ModeOff {
-		t.Errorf("expected `off`, got %s", lp.DefaultMode)
-	}
+	require.NoError(t, util.DecodeOther(conf.Loadpoints[0].Other, &lp))
+	require.Equal(t, api.ModeOff, lp.DefaultMode)
 }

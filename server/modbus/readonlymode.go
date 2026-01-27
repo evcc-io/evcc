@@ -6,6 +6,6 @@ type ReadOnlyMode int
 
 const (
 	ReadOnlyFalse ReadOnlyMode = iota
-	ReadOnlyDeny               // return modbus error
 	ReadOnlyTrue               // silently ignore writes
+	ReadOnlyDeny               // return modbus error
 )
