@@ -902,6 +902,39 @@ func configureSolarTariff(conf []config.Typed, t *api.Tariff) error {
 	return nil
 }
 
+func configureTariffDevices(names ...string) error {
+	// load tariff devices from database
+	configurable, err := config.ConfigurationsByClass(templates.Tariff)
+	if err != nil {
+		return err
+	}
+
+	var eg errgroup.Group
+
+	for _, conf := range configurable {
+		eg.Go(func() error {
+			cc := conf.Named()
+
+			if len(names) > 0 && !slices.Contains(names, cc.Name) {
+				return nil
+			}
+
+			instance, err := tariffInstance(cc.Name, config.Typed{Type: cc.Type, Other: cc.Other})
+			if err != nil {
+				return err
+			}
+
+			if e := config.Tariffs().Add(config.NewConfigurableDevice(&conf, instance)); e != nil {
+				return &DeviceError{cc.Name, e}
+			}
+
+			return nil
+		})
+	}
+
+	return eg.Wait()
+}
+
 func configureTariffs(conf *globalconfig.Tariffs) (*tariff.Tariffs, error) {
 	tariffs := tariff.Tariffs{
 		Currency: currency.EUR,
@@ -919,7 +952,43 @@ func configureTariffs(conf *globalconfig.Tariffs) (*tariff.Tariffs, error) {
 		tariffs.Currency = currency.MustParseISO(conf.Currency)
 	}
 
+	// Load device-based assignments from individual keys
+	var deviceGrid, deviceFeedIn, deviceCo2, devicePlanner string
+	var deviceSolar []string
+
+	deviceGrid, _ = settings.String(keys.GridTariff)
+	deviceFeedIn, _ = settings.String(keys.FeedinTariff)
+	deviceCo2, _ = settings.String(keys.Co2Tariff)
+	devicePlanner, _ = settings.String(keys.PlannerTariff)
+	if v, err := settings.String(keys.SolarTariffs); err == nil && v != "" {
+		deviceSolar = strings.Split(v, ",")
+	}
+
+	// Override currency if set
+	if cur, _ := settings.String(keys.Currency); cur != "" {
+		tariffs.Currency = currency.MustParseISO(cur)
+	}
+
+	// Validate: fail if both YAML and device config exist for same type
+	if deviceGrid != "" && conf.Grid.Type != "" {
+		return &tariffs, fmt.Errorf("grid tariff configured both in YAML and as device")
+	}
+	if deviceFeedIn != "" && conf.FeedIn.Type != "" {
+		return &tariffs, fmt.Errorf("feedin tariff configured both in YAML and as device")
+	}
+	if deviceCo2 != "" && conf.Co2.Type != "" {
+		return &tariffs, fmt.Errorf("co2 tariff configured both in YAML and as device")
+	}
+	if devicePlanner != "" && conf.Planner.Type != "" {
+		return &tariffs, fmt.Errorf("planner tariff configured both in YAML and as device")
+	}
+	if len(deviceSolar) > 0 && len(conf.Solar) > 0 {
+		return &tariffs, fmt.Errorf("solar tariff configured both in YAML and as device")
+	}
+
 	var eg errgroup.Group
+
+	// Load YAML configured tariffs
 	eg.Go(func() error { return configureTariff(api.TariffUsageGrid, conf.Grid, &tariffs.Grid) })
 	eg.Go(func() error { return configureTariff(api.TariffUsageFeedIn, conf.FeedIn, &tariffs.FeedIn) })
 	eg.Go(func() error { return configureTariff(api.TariffUsageCo2, conf.Co2, &tariffs.Co2) })
@@ -930,6 +999,71 @@ func configureTariffs(conf *globalconfig.Tariffs) (*tariff.Tariffs, error) {
 				return configureTariff(api.TariffUsageSolar, conf.Solar[0], &tariffs.Solar)
 			}
 			return configureSolarTariff(conf.Solar, &tariffs.Solar)
+		})
+	}
+
+	// Load device-based tariffs
+	if deviceGrid != "" {
+		eg.Go(func() error {
+			dev, err := config.Tariffs().ByName(deviceGrid)
+			if err != nil {
+				return fmt.Errorf("grid tariff device not found: %w", err)
+			}
+			tariffs.Grid = dev.Instance()
+			return nil
+		})
+	}
+	if deviceFeedIn != "" {
+		eg.Go(func() error {
+			dev, err := config.Tariffs().ByName(deviceFeedIn)
+			if err != nil {
+				return fmt.Errorf("feedin tariff device not found: %w", err)
+			}
+			tariffs.FeedIn = dev.Instance()
+			return nil
+		})
+	}
+	if deviceCo2 != "" {
+		eg.Go(func() error {
+			dev, err := config.Tariffs().ByName(deviceCo2)
+			if err != nil {
+				return fmt.Errorf("co2 tariff device not found: %w", err)
+			}
+			tariffs.Co2 = dev.Instance()
+			return nil
+		})
+	}
+	if devicePlanner != "" {
+		eg.Go(func() error {
+			dev, err := config.Tariffs().ByName(devicePlanner)
+			if err != nil {
+				return fmt.Errorf("planner tariff device not found: %w", err)
+			}
+			tariffs.Planner = dev.Instance()
+			return nil
+		})
+	}
+	if len(deviceSolar) > 0 {
+		eg.Go(func() error {
+			if len(deviceSolar) == 1 {
+				dev, err := config.Tariffs().ByName(deviceSolar[0])
+				if err != nil {
+					return fmt.Errorf("solar tariff device not found: %w", err)
+				}
+				tariffs.Solar = dev.Instance()
+				return nil
+			}
+			// Multiple solar tariffs
+			tt := make([]api.Tariff, len(deviceSolar))
+			for i, name := range deviceSolar {
+				dev, err := config.Tariffs().ByName(name)
+				if err != nil {
+					return fmt.Errorf("solar tariff device %s not found: %w", name, err)
+				}
+				tt[i] = dev.Instance()
+			}
+			tariffs.Solar = tariff.NewCombined(tt)
+			return nil
 		})
 	}
 
@@ -951,6 +1085,10 @@ func configureDevices(conf globalconfig.All) error {
 
 	if err := configureMeters(conf.Meters, references.meter...); err != nil {
 		errs = append(errs, &ClassError{ClassMeter, err})
+	}
+
+	if err := configureTariffDevices(references.tariff...); err != nil {
+		errs = append(errs, &ClassError{ClassTariff, err})
 	}
 
 	if err := configureChargers(conf.Chargers, references.charger...); err != nil {

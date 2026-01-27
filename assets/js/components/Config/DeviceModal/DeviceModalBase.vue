@@ -55,6 +55,7 @@
 							v-bind="param"
 							v-model="values[param.Name]"
 							:service-values="serviceValues[param.Name]"
+							:currency="currency"
 						/>
 
 						<div v-if="auth.code">
@@ -126,6 +127,7 @@
 								v-bind="param"
 								v-model="values[param.Name]"
 								:service-values="serviceValues[param.Name]"
+								:currency="currency"
 							/>
 
 							<PropertyCollapsible>
@@ -137,6 +139,7 @@
 										v-bind="param"
 										v-model="values[param.Name]"
 										:service-values="serviceValues[param.Name]"
+										:currency="currency"
 									/>
 								</template>
 								<template v-if="$slots['collapsible-more']" #more>
@@ -155,6 +158,7 @@
 					:is-succeeded="succeeded"
 					:is-new="isNew"
 					:sponsor-token-required="sponsorTokenRequired"
+					:currency="currency"
 					@save="handleSave"
 					@remove="handleRemove"
 					@test="testManually"
@@ -182,6 +186,7 @@ import { initialAuthState, prepareAuthLogin } from "../utils/authProvider";
 import sleep from "@/utils/sleep";
 import { ConfigType } from "@/types/evcc";
 import type { DeviceType, Timeout } from "@/types/evcc";
+import { CURRENCY } from "@/types/evcc";
 import {
 	handleError,
 	type DeviceValues,
@@ -228,6 +233,7 @@ export default defineComponent({
 		showMainContent: { type: Boolean, default: true },
 		// Optional: usage parameter for loadProducts (e.g., meter type: "pv", "battery", "aux", "ext")
 		usage: String,
+		currency: { type: String as PropType<CURRENCY>, default: CURRENCY.EUR },
 		// Optional: custom product name computation
 		getProductName: Function as PropType<
 			(values: DeviceValues, templateName: string | null) => string
@@ -495,7 +501,6 @@ export default defineComponent({
 		},
 		values: {
 			handler() {
-				this.test = initialTestState();
 				this.updateServiceValues();
 			},
 			deep: true,
@@ -666,7 +671,6 @@ export default defineComponent({
 			return this.device.test(this.id, this.apiData);
 		},
 		async update(force = false) {
-			console.log("update called", { force, isUnknown: this.test.isUnknown, id: this.id });
 			if (this.test.isUnknown && !force) {
 				const success = await performTest(
 					this.test,
@@ -680,7 +684,6 @@ export default defineComponent({
 			}
 			this.saving = true;
 			try {
-				console.log("calling device.update", this.apiData);
 				await this.device.update(this.id!, this.apiData, force);
 				console.log("update succeeded, closing modal");
 				this.saving = false;

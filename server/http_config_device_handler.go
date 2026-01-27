@@ -8,13 +8,17 @@ import (
 	"net/http"
 	"reflect"
 	"strconv"
+	"strings"
 
 	"dario.cat/mergo"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger"
 	"github.com/evcc-io/evcc/core/circuit"
+	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/meter"
+	"github.com/evcc-io/evcc/server/db/settings"
+	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/templates"
@@ -71,6 +75,9 @@ func devicesConfigHandler(w http.ResponseWriter, r *http.Request) {
 
 	case templates.Circuit:
 		res, err = devicesConfig(class, config.Circuits(), hidePrivate)
+
+	case templates.Tariff:
+		res, err = devicesConfig(class, config.Tariffs(), hidePrivate)
 	}
 
 	if err != nil {
@@ -191,6 +198,9 @@ func deviceConfigHandler(w http.ResponseWriter, r *http.Request) {
 
 	case templates.Circuit:
 		res, err = deviceConfig(class, id, config.Circuits(), hidePrivate)
+
+	case templates.Tariff:
+		res, err = deviceConfig(class, id, config.Tariffs(), hidePrivate)
 	}
 
 	if err != nil {
@@ -247,6 +257,9 @@ func deviceStatusHandler(w http.ResponseWriter, r *http.Request) {
 
 	case templates.Circuit:
 		instance, err = deviceStatus(name, config.Circuits())
+
+	case templates.Tariff:
+		instance, err = deviceStatus(name, config.Tariffs())
 	}
 
 	if err != nil {
@@ -306,6 +319,9 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		conf, err = newDevice(ctx, class, req, func(ctx context.Context, _ string, other map[string]any) (api.Circuit, error) {
 			return circuit.NewFromConfig(ctx, util.NewLogger("circuit"), other)
 		}, config.Circuits(), force)
+
+	case templates.Tariff:
+		conf, err = newDevice(ctx, class, req, tariff.NewFromConfig, config.Tariffs(), force)
 	}
 
 	if err != nil {
@@ -387,6 +403,9 @@ func updateDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		err = updateDevice(ctx, id, class, req, func(ctx context.Context, _ string, other map[string]any) (api.Circuit, error) {
 			return circuit.NewFromConfig(ctx, util.NewLogger("circuit"), other)
 		}, config.Circuits(), force)
+
+	case templates.Tariff:
+		err = updateDevice(ctx, id, class, req, tariff.NewFromConfig, config.Tariffs(), force)
 	}
 
 	setConfigDirty()
@@ -449,6 +468,37 @@ func cleanupSiteMeterRef(name string, get func() []string, set func([]string)) {
 	}
 	if len(refs) != len(res) {
 		set(res)
+	}
+}
+
+// cleanupTariffRef removes a tariff reference from settings
+func cleanupTariffRef(name string) {
+	// Clean up single-value tariff references
+	if v, _ := settings.String(keys.GridTariff); v == name {
+		settings.SetString(keys.GridTariff, "")
+	}
+	if v, _ := settings.String(keys.FeedinTariff); v == name {
+		settings.SetString(keys.FeedinTariff, "")
+	}
+	if v, _ := settings.String(keys.Co2Tariff); v == name {
+		settings.SetString(keys.Co2Tariff, "")
+	}
+	if v, _ := settings.String(keys.PlannerTariff); v == name {
+		settings.SetString(keys.PlannerTariff, "")
+	}
+
+	// Clean up solar tariffs
+	if v, err := settings.String(keys.SolarTariffs); err == nil && v != "" {
+		tariffs := strings.Split(v, ",")
+		var filtered []string
+		for _, ref := range tariffs {
+			if ref != name {
+				filtered = append(filtered, ref)
+			}
+		}
+		if len(filtered) != len(tariffs) {
+			settings.SetString(keys.SolarTariffs, strings.Join(filtered, ","))
+		}
 	}
 }
 
@@ -533,6 +583,14 @@ func deleteDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Requ
 					lp.SetCircuitRef("")
 				}
 			}
+
+		case templates.Tariff:
+			err = deleteDevice(id, config.Tariffs())
+
+			// cleanup references
+			if err == nil {
+				cleanupTariffRef(config.NameForID(id))
+			}
 		}
 
 		setConfigDirty()
@@ -603,6 +661,9 @@ func testConfigHandler(w http.ResponseWriter, r *http.Request) {
 
 	case templates.Circuit:
 		err = api.ErrNotAvailable
+
+	case templates.Tariff:
+		instance, err = testConfig(ctx, id, class, req, tariff.NewFromConfig, config.Tariffs())
 	}
 
 	if err != nil {
