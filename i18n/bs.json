@@ -148,6 +148,7 @@
       "soc": "serija",
       "solarForecast": "Solarna prognoza",
       "temp": "Temperatura",
+      "topic": "Tema",
       "url": "URL",
       "vehicleLimitSoc": "Ograničenje naplate",
       "yes": "da"
@@ -170,8 +171,29 @@
     "editor": {
       "loading": "Učitavanje YAML uređivača…"
     },
+    "eebus": {
+      "description": "Konfiguracija koja omogućava EVCC-u da komunicira s drugim EEBus uređajima.",
+      "title": "EEBus"
+    },
+    "experimental": {
+      "description": "Omogućite korisnički interfejs za funkcije koje se još uvijek testiraju i mogu se promijeniti u budućim verzijama.",
+      "title": "Eksperimentalni"
+    },
+    "ext": {
+      "description": "Bilježi energetske vrijednosti nekontroliranih potrošača (npr. hladnjak, perilica rublja itd.) u statističke svrhe. Ovi brojila se također mogu koristiti za upravljanje opterećenjem (npr. podrazdioba).",
+      "titleAdd": "Dodaj potrošački brojilac",
+      "titleEdit": "Uredi potrošački brojilac"
+    },
+    "form": {
+      "danger": "Opasnost",
+      "deprecated": "zastarjelo",
+      "example": "Primjer",
+      "optional": "neobavezno"
+    },
     "general": {
+      "applyAndClose": "Primijeni i zatvori",
       "authPerform": "Poveži se sa {provider}",
+      "authPerformHint": "Otvorit će se u novoj kartici. Vratite se ovdje da nastavite.",
       "authPrepare": "Pripremite vezu",
       "cancel": "Otkaži",
       "clear": "Jasno",
@@ -314,10 +336,16 @@
       "pollModeLabel": "Ažurirajte ponašanje",
       "priorityHelp": "Oni s višim prioritetom dobivaju prednost pri pristupu višku solarne energije.",
       "priorityLabel": "Prioritet",
+      "save": "Sačuvaj",
+      "showAllSettings": "Prikaži sve postavke",
+      "solarBehaviorCustomHelp": "Definirajte vlastite pragove i odgode za omogućavanje i onemogućavanje.",
       "solarBehaviorDefaultHelp": "Počnite nakon {enableDelay} kada je višak dovoljan. Zaustavite kada viška nije dovoljno za {disableDelay}.",
       "thresholdDisableHelpPositive": "Zaustavi kada se iz mreže potroši više od {power} za {delay}.",
       "thresholdDisableHelpZero": "Zaustavite kada se za {delay} ne može zadovoljiti minimalna potrebna snaga.",
       "thresholdEnableHelpZero": "­ Počnite kada se minimalna potrebna snaga može zadovoljiti za {delay}."
+    },
+    "meter": {
+      "save": "Sačuvaj"
     },
     "modbusproxy": {
       "connection": "Povezanje #{number}"
