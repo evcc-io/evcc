@@ -18,6 +18,17 @@ func TestMqttNaNInf(t *testing.T) {
 	assert.Equal(t, "+Inf", m.encode(math.Inf(0)), "Inf not encoded as string")
 }
 
+func TestMqttEncodeFloat(t *testing.T) {
+	m := &MQTT{}
+	assert.Equal(t, "12345.678", m.encode(12345.678), "large energy value with 3 decimals")
+	assert.Equal(t, "12345.6", m.encode(12345.6), "large energy value with 1 decimal")
+	assert.Equal(t, "12345", m.encode(12345.0), "large energy value without decimals")
+	assert.Equal(t, "0.123", m.encode(0.123456), "small value truncated to 3 decimals")
+	assert.Equal(t, "1.2", m.encode(1.2), "value with 1 decimal")
+	assert.Equal(t, "0", m.encode(0.0), "zero")
+	assert.Equal(t, "2500", m.encode(2500.0), "power value without decimals")
+}
+
 type measurement struct {
 	Power        float64   `json:"power"`
 	Energy       float64   `json:"energy,omitempty"`
