@@ -22,8 +22,9 @@ import (
 
 type WarpWS struct {
 	*request.Helper
-	log *util.Logger
-	uri string
+	log        *util.Logger
+	uri        string
+	inBulkDump bool
 
 	mu sync.RWMutex
 
@@ -34,8 +35,12 @@ type WarpWS struct {
 	hasPhaseSwitching bool
 
 	// evse
-	status     api.ChargeStatus
-	maxCurrent int64
+	status          api.ChargeStatus
+	maxCurrent      int64
+    externalCurrent int64
+	userEnabled     bool
+	userCurrent     int64
+	chargeMode      int64
 
 	// meter
 	power      float64
@@ -178,6 +183,7 @@ func NewWarpWS(uri, user, password string, meterIndex uint) (*WarpWS, error) {
 		current:    6000,
 		meterIndex: meterIndex,
 		meter:      &warp.MeterMapper{Log: log},
+		inBulkDump: true,
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -188,6 +194,7 @@ func NewWarpWS(uri, user, password string, meterIndex uint) (*WarpWS, error) {
 }
 
 func (w *WarpWS) run(ctx context.Context) {
+	// WSS not possible since device does not support it
 	wsURL := strings.Replace(w.uri, "http://", "ws://", 1) + "/ws"
 	w.log.TRACE.Printf("ws: connecting to %s …", wsURL)
 
@@ -245,16 +252,38 @@ func splitJSONObjects(data []byte) ([][]byte, error) {
 }
 
 func (w *WarpWS) handleFrame(frame []byte) {
-	objs, err := splitJSONObjects(frame)
-	w.log.TRACE.Printf("ws: frame size=%d bytes, objects=%d", len(frame), len(objs))
-	if err != nil {
-		w.log.DEBUG.Printf("ws split error: %v", err)
+	trim := bytes.TrimSpace(frame)
+
+	// Initial bulk dump
+	if w.inBulkDump {
+		objs, err := splitJSONObjects(trim)
+		if err != nil {
+			w.log.DEBUG.Printf("ws split error: %v", err)
+			return
+		}
+
+		// if only 1 object detect -> switch to delta mode
+		if len(objs) == 1 {
+			w.inBulkDump = false
+		}
+
+		for _, obj := range objs {
+			w.handleEvent(obj)
+		}
 		return
 	}
 
-	for _, obj := range objs {
-		w.handleEvent(obj)
+	// delta mode
+	// expecting exactly one item
+	if len(trim) > 0 && trim[0] == '{' {
+		w.handleEvent(trim)
+		return
 	}
+
+	// FALLBACK: unexpected multi-frame in delta mode → back to bulk dump mode
+	w.log.DEBUG.Println("ws: unexpected multi-object frame in delta mode, re-enabling splitter")
+	w.inBulkDump = true
+	w.handleFrame(trim)
 }
 
 func (w *WarpWS) handleEvent(data []byte) {
@@ -266,30 +295,27 @@ func (w *WarpWS) handleEvent(data []byte) {
 
 	w.log.TRACE.Printf("Received WARP event with topic: %s", evt.Topic)
 
-	w.mu.Lock()
-	defer w.mu.Unlock()
+	// event handler
+	var handlers = map[string]func(json.RawMessage){
+		"charge_tracker/current_charge": w.handleChargeTracker,
+		"evse/state":                    w.handleEvseState,
+		"evse/external_current":         w.handleExternalCurrent,
+        "evse/user_enabled":             w.handleUserEnabled,
+        "evse/user_current":             w.handleUserCurrent,
+		"nfc/config":                    w.handleNfcConfig,
+		"power_manager/state":           w.handlePowerManagerState,
+		"power_manager/low_level_state": w.handlePowerManagerLowLevel,
+	}
 
-	switch evt.Topic {
-	case "charge_tracker/current_charge":
-		w.handleChargeTracker(evt.Payload)
-
-	case "evse/state":
-		w.handleEvseState(evt.Payload)
-
-	case "evse/external_current":
-		w.handleExternalCurrent(evt.Payload)
-
-	case "meter/values", "meter/all_values", fmt.Sprintf("meters/%d/value_ids", w.meterIndex), fmt.Sprintf("meters/%d/values", w.meterIndex):
-		w.handleMeter(evt)
-
-	case "nfc/config":
-		w.handleNfcConfig(evt.Payload)
-
-	case "power_manager/state":
-		w.handleEmState(evt.Payload)
-
-	case "power_manager/low_level_state":
-		w.handleEmLowLevel(evt.Payload)
+	// meter event
+	if strings.HasPrefix(evt.Topic, "meter") {
+		w.handleMeterEvent(evt)
+		return
+	}
+	// other events
+	if h, ok := handlers[evt.Topic]; ok {
+		h(evt.Payload)
+		return
 	}
 }
 
@@ -302,13 +328,15 @@ func (w *WarpWS) decode(payload json.RawMessage, v any, msg string) bool {
 }
 
 func (w *WarpWS) handleChargeTracker(payload json.RawMessage) {
-	var c warp.ChargeTrackerCurrentCharge
-	if !w.decode(payload, &c, "charge_tracker") {
+	var s warp.ChargeTrackerCurrentCharge
+	if !w.decode(payload, &s, "charge_tracker") {
 		return
 	}
-	w.log.TRACE.Printf("nfc: tag detected: %s", c.AuthorizationInfo.TagId)
-	w.tagId = c.AuthorizationInfo.TagId
+	w.log.TRACE.Printf("nfc: tag detected: %s", s.AuthorizationInfo.TagId)
+    w.mu.Lock()
+	w.tagId = s.AuthorizationInfo.TagId
 	w.hasNfc = true
+    w.mu.Unlock()
 }
 
 func (w *WarpWS) handleEvseState(payload json.RawMessage) {
@@ -317,6 +345,7 @@ func (w *WarpWS) handleEvseState(payload json.RawMessage) {
 		return
 	}
 
+    w.mu.Lock()
 	switch s.Iec61851State {
 	case 0:
 		w.status = api.StatusA
@@ -325,17 +354,40 @@ func (w *WarpWS) handleEvseState(payload json.RawMessage) {
 	case 2:
 		w.status = api.StatusC
 	}
+    w.mu.Unlock()
 }
 
 func (w *WarpWS) handleExternalCurrent(payload json.RawMessage) {
-	var c warp.EvseExternalCurrent
-	if w.decode(payload, &c, "evse/external_current") {
-		w.log.TRACE.Printf("em: state updated (current=%d)", int64(c.Current))
-		w.maxCurrent = int64(c.Current)
+	var s warp.EvseExternalCurrent
+	if w.decode(payload, &s, "evse/external_current") {
+		w.log.TRACE.Printf("em: state updated (current=%d)", int64(s.Current))
+        w.mu.Lock()
+		w.externalCurrent = int64(s.Current)
+        w.mu.Unlock()
 	}
 }
 
-func (w *WarpWS) handleMeter(evt warpEvent) {
+func (w *WarpWS) handleUserEnabled(payload json.RawMessage) {
+	var b struct {
+		Enabled bool `json:"enabled"`
+	}
+	if w.decode(payload, &b, "evse/user_enabled") {
+        w.mu.Lock()
+		w.userEnabled = b.Enabled
+        w.mu.Unlock()
+	}
+}
+
+func (w *WarpWS) handleUserCurrent(payload json.RawMessage) {
+	var s warp.EvseExternalCurrent
+	if w.decode(payload, &s, "evse/user_current") {
+        w.mu.Lock()
+		w.userCurrent = int64(s.Current)
+        w.mu.Unlock()
+	}
+}
+
+func (w *WarpWS) handleMeterEvent(evt warpEvent) {
 	if strings.HasPrefix(evt.Topic, fmt.Sprintf("meters/%d/", w.meterIndex)) {
 		w.handleMetersEvent(evt)
 		return
@@ -350,18 +402,22 @@ func (w *WarpWS) handleLegacyMeterEvent(evt warpEvent) {
 		if !w.decode(evt.Payload, &m, "meter/values") {
 			return
 		}
+        w.mu.Lock()
 		w.power = m.Power
 		w.energy = m.EnergyAbs
 		w.hasMeter = true
+        w.mu.Unlock()
 
 	case "meter/all_values":
 		var vals []float64
 		if !w.decode(evt.Payload, &vals, "meter/all_values") {
 			return
 		}
+        w.mu.Lock()
 		copy((w.voltL)[:], vals[:3])
 		copy((w.currL)[:], vals[3:6])
 		w.hasMeterPhases = true
+        w.mu.Unlock()
 	}
 }
 
@@ -379,9 +435,11 @@ func (w *WarpWS) handleMetersEvent(evt warpEvent) {
 		if !w.decode(evt.Payload, &vals, "values") {
 			return
 		}
+        w.mu.Lock()
 		w.meter.UpdateValues(vals, &w.power, &w.energy, &w.voltL, &w.currL)
 		w.hasMeter = true
 		w.hasMeterPhases = true
+        w.mu.Unlock()
 	}
 }
 
@@ -389,25 +447,31 @@ func (w *WarpWS) handleNfcConfig(payload json.RawMessage) {
 	var s warp.NfcConfig
 	if w.decode(payload, &s, "nfc/config") {
 		w.log.DEBUG.Printf("nfc: config updated (config=%v)", s)
+        w.mu.Lock()
 		w.nfcConfig = s
+        w.mu.Unlock()
 	}
 }
 
-func (w *WarpWS) handleEmState(payload json.RawMessage) {
-	var s warp.EmState
-	if w.decode(payload, &s, "power_manager/state") {
-		w.emState = s
-	}
-}
-
-func (w *WarpWS) handleEmLowLevel(payload json.RawMessage) {
+func (w *WarpWS) handlePowerManagerLowLevel(payload json.RawMessage) {
 	var s warp.EmLowLevelState
 	if !w.decode(payload, &s, "power_manager/low_level_state") {
 		return
 	}
 	w.log.TRACE.Printf("em: low-level updated (s=%v) (is3phase=%v)", s, s.Is3phase)
+    w.mu.Lock()
 	w.emLowLevel = s
 	w.is3Phase = s.Is3phase
+    w.mu.Unlock()
+}
+
+func (w *WarpWS) handlePowerManagerState(payload json.RawMessage) {
+	var s warp.EmState
+	if w.decode(payload, &s, "power_manager/state") {
+        w.mu.Lock()
+		w.emState = s
+        w.mu.Unlock()
+	}
 }
 
 func (w *WarpWS) hasFeature(f string) bool {
@@ -432,6 +496,16 @@ func (w *WarpWS) Status() (api.ChargeStatus, error) {
 	w.mu.RLock()
 	defer w.mu.RUnlock()
 	return w.status, nil
+}
+
+func (w *WarpWS) StatusReason() (api.Reason, error) {
+    res := api.ReasonUnknown
+	w.mu.RLock()
+	defer w.mu.RUnlock()
+	if w.status == api.StatusB && w.userEnabled && w.userCurrent == 0 {
+		res = api.ReasonWaitingForAuthorization
+	}
+	return res, nil
 }
 
 func (w *WarpWS) CurrentPower() (float64, error) {
@@ -467,6 +541,8 @@ func (w *WarpWS) Identify() (string, error) {
 func (w *WarpWS) Enable(enable bool) error {
 	var curr int64
 	if enable {
+        w.mu.RLock()
+        defer w.mu.RUnlock()
 		curr = w.maxCurrent
 	}
 	return w.setCurrent(curr)
@@ -475,7 +551,7 @@ func (w *WarpWS) Enable(enable bool) error {
 func (w *WarpWS) Enabled() (bool, error) {
 	w.mu.RLock()
 	defer w.mu.RUnlock()
-	return w.status == api.StatusC, nil
+	return w.externalCurrent > 0, nil
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -490,7 +566,9 @@ func (w *WarpWS) MaxCurrentMillis(current float64) error {
 	err := w.setCurrent(curr)
 	if err == nil {
 		w.log.TRACE.Printf("evse: current set acknowledged (requested=%dmA)", curr)
+        w.mu.Lock()
 		w.maxCurrent = curr
+        w.mu.Unlock()
 	} else {
 		w.log.DEBUG.Printf("evse: set current failed: %v", err)
 	}
