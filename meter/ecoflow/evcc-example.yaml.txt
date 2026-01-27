@@ -1,0 +1,59 @@
+# evcc Beispiel-Konfiguration für EcoFlow Stream
+#
+# Diese Konfiguration zeigt die Integration eines EcoFlow Stream Ultra
+# als Batterie-Speicher mit evcc.
+#
+# Ersetze die Platzhalter:
+# - DEINE_SERIENNUMMER: z.B. BK61ZE1B2H6H0912
+# - DEIN_ACCESS_KEY: aus EcoFlow Developer Portal
+# - DEIN_SECRET_KEY: aus EcoFlow Developer Portal
+
+network:
+  schema: http
+  host: evcc.local
+  port: 7070
+
+log: info
+
+meters:
+  # EcoFlow Stream - PV Ertrag
+  - name: ecoflow_pv
+    type: template
+    template: ecoflow-stream
+    usage: pv
+    sn: DEINE_SERIENNUMMER
+    accesskey: DEIN_ACCESS_KEY
+    secretkey: DEIN_SECRET_KEY
+
+  # EcoFlow Stream - Batterie
+  - name: ecoflow_battery
+    type: template
+    template: ecoflow-stream
+    usage: battery
+    sn: DEINE_SERIENNUMMER
+    accesskey: DEIN_ACCESS_KEY
+    secretkey: DEIN_SECRET_KEY
+
+# Optional: Charger für Relay-Steuerung
+# chargers:
+#   - name: ecoflow_charger
+#     type: template
+#     template: ecoflow-stream
+#     sn: DEINE_SERIENNUMMER
+#     accesskey: DEIN_ACCESS_KEY
+#     secretkey: DEIN_SECRET_KEY
+#     relay: 1
+
+site:
+  title: Mein Zuhause
+  meters:
+    pv:
+      - ecoflow_pv
+    battery:
+      - ecoflow_battery
+
+# Optional: Loadpoint für Speicher-Steuerung
+# loadpoints:
+#   - title: EcoFlow Speicher
+#     charger: ecoflow_charger
+#     mode: pv
