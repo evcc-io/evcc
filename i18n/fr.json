@@ -525,8 +525,8 @@
         "standby": "Standby"
       },
       "schema": {
-        "http": "HTTP (non crypté)",
-        "https": "HTTP (crypté)"
+        "http": "HTTP (non chiffré)",
+        "https": "HTTPS (chiffré)"
       },
       "status": {
         "A": "A (non connecté)",
