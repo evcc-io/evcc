@@ -10,8 +10,8 @@ import (
 	"net/http"
 	"strings"
 	"sync"
-	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/coder/websocket"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/warp"
@@ -40,7 +40,6 @@ type WarpWS struct {
 	externalCurrent int64
 	userEnabled     bool
 	userCurrent     int64
-	chargeMode      int64
 
 	// meter
 	power      float64
@@ -89,7 +88,7 @@ func init() {
 //go:generate go tool decorate -f decorateWarpWS -b *WarpWS -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.Identifier,Identify,func() (string, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
 
 func NewWarpWSFromConfig(other map[string]any) (api.Charger, error) {
-	cc := struct {
+	var cc = struct {
 		URI                    string
 		User                   string
 		Password               string
@@ -194,41 +193,41 @@ func NewWarpWS(uri, user, password string, meterIndex uint) (*WarpWS, error) {
 }
 
 func (w *WarpWS) run(ctx context.Context) {
-	// WSS not possible since device does not support it
 	wsURL := strings.Replace(w.uri, "http://", "ws://", 1) + "/ws"
 	w.log.TRACE.Printf("ws: connecting to %s …", wsURL)
 
-	for {
-		// Connect
+	bo := backoff.NewExponentialBackOff()
+	bo.MaxElapsedTime = 0 // never stop retrying
+
+	operation := func() error {
 		conn, _, err := websocket.Dial(ctx, wsURL, nil)
-		conn.SetReadLimit(-1)
 		if err != nil {
 			w.log.ERROR.Printf("ws dial error: %v", err)
-		} else {
-			w.log.DEBUG.Println("ws: connection established")
-			// Read-Loop
-			for {
-				typ, data, err := conn.Read(ctx)
-				if err != nil {
-					w.log.DEBUG.Printf("ws read error: %v", err)
-					_ = conn.Close(websocket.StatusInternalError, "read error")
-					break
-				}
-				if typ == websocket.MessageBinary || typ == websocket.MessageText {
-					w.handleFrame(data)
-				}
-			}
+			return err
 		}
 
-		w.log.TRACE.Println("ws: reconnecting in 3s …")
-		// Reconnect handling
-		select {
-		case <-ctx.Done():
-			w.log.DEBUG.Println("ws: stopping reconnect loop")
-			return
-		case <-time.After(3 * time.Second):
+		w.log.DEBUG.Println("ws: connection established")
+		conn.SetReadLimit(-1)
+
+		// Read loop
+		for {
+			typ, data, err := conn.Read(ctx)
+			if err != nil {
+				w.log.DEBUG.Printf("ws read error: %v", err)
+				_ = conn.Close(websocket.StatusInternalError, "read error")
+				return err
+			}
+
+			if typ == websocket.MessageBinary || typ == websocket.MessageText {
+				w.handleFrame(data)
+			}
 		}
 	}
+
+	// Retry forever until ctx is done
+	_ = backoff.Retry(operation, backoff.WithContext(bo, ctx))
+
+	w.log.DEBUG.Println("ws: stopping reconnect loop")
 }
 
 func splitJSONObjects(data []byte) ([][]byte, error) {
@@ -289,7 +288,7 @@ func (w *WarpWS) handleFrame(frame []byte) {
 func (w *WarpWS) handleEvent(data []byte) {
 	var evt warpEvent
 	if err := json.Unmarshal(data, &evt); err != nil {
-		w.log.DEBUG.Printf("ws decode: %v", err)
+		w.log.DEBUG.Printf("error unmarshalling: %v", err)
 		return
 	}
 
@@ -307,6 +306,9 @@ func (w *WarpWS) handleEvent(data []byte) {
 		"power_manager/low_level_state": w.handlePowerManagerLowLevel,
 	}
 
+	w.mu.Lock()
+	defer w.mu.Unlock()
+
 	// meter event
 	if strings.HasPrefix(evt.Topic, "meter") {
 		w.handleMeterEvent(evt)
@@ -319,33 +321,24 @@ func (w *WarpWS) handleEvent(data []byte) {
 	}
 }
 
-func (w *WarpWS) decode(payload json.RawMessage, v any, msg string) bool {
-	if err := json.Unmarshal(payload, v); err != nil {
-		w.log.DEBUG.Printf("%s decode: %v", msg, err)
-		return false
-	}
-	return true
-}
-
 func (w *WarpWS) handleChargeTracker(payload json.RawMessage) {
 	var s warp.ChargeTrackerCurrentCharge
-	if !w.decode(payload, &s, "charge_tracker") {
+	if err := json.Unmarshal(payload, &s); err != nil {
+		w.log.DEBUG.Printf("error unmarshalling: %v", err)
 		return
 	}
 	w.log.TRACE.Printf("nfc: tag detected: %s", s.AuthorizationInfo.TagId)
-	w.mu.Lock()
 	w.tagId = s.AuthorizationInfo.TagId
 	w.hasNfc = true
-	w.mu.Unlock()
 }
 
 func (w *WarpWS) handleEvseState(payload json.RawMessage) {
 	var s warp.EvseState
-	if !w.decode(payload, &s, "evse/state") {
+	if err := json.Unmarshal(payload, &s); err != nil {
+		w.log.DEBUG.Printf("error unmarshalling: %v", err)
 		return
 	}
 
-	w.mu.Lock()
 	switch s.Iec61851State {
 	case 0:
 		w.status = api.StatusA
@@ -354,37 +347,36 @@ func (w *WarpWS) handleEvseState(payload json.RawMessage) {
 	case 2:
 		w.status = api.StatusC
 	}
-	w.mu.Unlock()
 }
 
 func (w *WarpWS) handleExternalCurrent(payload json.RawMessage) {
 	var s warp.EvseExternalCurrent
-	if w.decode(payload, &s, "evse/external_current") {
-		w.log.TRACE.Printf("em: state updated (current=%d)", int64(s.Current))
-		w.mu.Lock()
-		w.externalCurrent = int64(s.Current)
-		w.mu.Unlock()
+	if err := json.Unmarshal(payload, &s); err != nil {
+		w.log.DEBUG.Printf("error unmarshalling: %v", err)
+		return
 	}
+	w.log.TRACE.Printf("em: state updated (current=%d)", int64(s.Current))
+	w.externalCurrent = int64(s.Current)
 }
 
 func (w *WarpWS) handleUserEnabled(payload json.RawMessage) {
 	var b struct {
 		Enabled bool `json:"enabled"`
 	}
-	if w.decode(payload, &b, "evse/user_enabled") {
-		w.mu.Lock()
-		w.userEnabled = b.Enabled
-		w.mu.Unlock()
+	if err := json.Unmarshal(payload, &b); err != nil {
+		w.log.DEBUG.Printf("error unmarshalling: %v", err)
+		return
 	}
+	w.userEnabled = b.Enabled
 }
 
 func (w *WarpWS) handleUserCurrent(payload json.RawMessage) {
 	var s warp.EvseExternalCurrent
-	if w.decode(payload, &s, "evse/user_current") {
-		w.mu.Lock()
-		w.userCurrent = int64(s.Current)
-		w.mu.Unlock()
+	if err := json.Unmarshal(payload, &s); err != nil {
+		w.log.DEBUG.Printf("error unmarshalling: %v", err)
+		return
 	}
+	w.userCurrent = int64(s.Current)
 }
 
 func (w *WarpWS) handleMeterEvent(evt warpEvent) {
@@ -399,25 +391,23 @@ func (w *WarpWS) handleLegacyMeterEvent(evt warpEvent) {
 	switch evt.Topic {
 	case "meter/values":
 		var m warp.MeterValues
-		if !w.decode(evt.Payload, &m, "meter/values") {
+		if err := json.Unmarshal(evt.Payload, &m); err != nil {
+			w.log.DEBUG.Printf("error unmarshalling: %v", err)
 			return
 		}
-		w.mu.Lock()
 		w.power = m.Power
 		w.energy = m.EnergyAbs
 		w.hasMeter = true
-		w.mu.Unlock()
 
 	case "meter/all_values":
 		var vals []float64
-		if !w.decode(evt.Payload, &vals, "meter/all_values") {
+		if err := json.Unmarshal(evt.Payload, &vals); err != nil {
+			w.log.DEBUG.Printf("error unmarshalling: %v", err)
 			return
 		}
-		w.mu.Lock()
 		copy((w.voltL)[:], vals[:3])
 		copy((w.currL)[:], vals[3:6])
 		w.hasMeterPhases = true
-		w.mu.Unlock()
 	}
 }
 
@@ -425,53 +415,52 @@ func (w *WarpWS) handleMetersEvent(evt warpEvent) {
 	switch evt.Topic {
 	case fmt.Sprintf("meters/%d/value_ids", w.meterIndex):
 		var ids []int
-		if !w.decode(evt.Payload, &ids, "value_ids") {
+		if err := json.Unmarshal(evt.Payload, &ids); err != nil {
+			w.log.DEBUG.Printf("error unmarshalling: %v", err)
 			return
 		}
 		w.meter.UpdateValueIDs(ids)
 
 	case fmt.Sprintf("meters/%d/values", w.meterIndex):
 		var vals []float64
-		if !w.decode(evt.Payload, &vals, "values") {
+		if err := json.Unmarshal(evt.Payload, &vals); err != nil {
+			w.log.DEBUG.Printf("error unmarshalling: %v", err)
 			return
 		}
-		w.mu.Lock()
 		w.meter.UpdateValues(vals, &w.power, &w.energy, &w.voltL, &w.currL)
 		w.hasMeter = true
 		w.hasMeterPhases = true
-		w.mu.Unlock()
 	}
 }
 
 func (w *WarpWS) handleNfcConfig(payload json.RawMessage) {
 	var s warp.NfcConfig
-	if w.decode(payload, &s, "nfc/config") {
-		w.log.DEBUG.Printf("nfc: config updated (config=%v)", s)
-		w.mu.Lock()
-		w.nfcConfig = s
-		w.mu.Unlock()
+	if err := json.Unmarshal(payload, &s); err != nil {
+		w.log.DEBUG.Printf("error unmarshalling: %v", err)
+		return
 	}
+	w.log.DEBUG.Printf("nfc: config updated (config=%v)", s)
+	w.nfcConfig = s
 }
 
 func (w *WarpWS) handlePowerManagerLowLevel(payload json.RawMessage) {
 	var s warp.EmLowLevelState
-	if !w.decode(payload, &s, "power_manager/low_level_state") {
+	if err := json.Unmarshal(payload, &s); err != nil {
+		w.log.DEBUG.Printf("error unmarshalling: %v", err)
 		return
 	}
 	w.log.TRACE.Printf("em: low-level updated (s=%v) (is3phase=%v)", s, s.Is3phase)
-	w.mu.Lock()
 	w.emLowLevel = s
 	w.is3Phase = s.Is3phase
-	w.mu.Unlock()
 }
 
 func (w *WarpWS) handlePowerManagerState(payload json.RawMessage) {
 	var s warp.EmState
-	if w.decode(payload, &s, "power_manager/state") {
-		w.mu.Lock()
-		w.emState = s
-		w.mu.Unlock()
+	if err := json.Unmarshal(payload, &s); err != nil {
+		w.log.DEBUG.Printf("error unmarshalling: %v", err)
+		return
 	}
+	w.emState = s
 }
 
 func (w *WarpWS) hasFeature(f string) bool {
@@ -616,6 +605,5 @@ func (w *WarpWS) getPhases() (int, error) {
 	if w.emLowLevel.Is3phase {
 		return 3, nil
 	}
-
 	return 1, nil
 }

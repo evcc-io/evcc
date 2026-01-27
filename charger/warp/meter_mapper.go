@@ -1,6 +1,9 @@
 package warp
 
-import "github.com/evcc-io/evcc/util"
+import (
+	"github.com/evcc-io/evcc/util"
+	"github.com/samber/lo"
+)
 
 type MeterMapper struct {
 	indices MeterValuesIndices
@@ -19,20 +22,7 @@ func (m *MeterMapper) UpdateValueIDs(ids []int) {
 		ValueIDEnergyAbsImSum,
 	}
 
-	// check that all IDs are present
-	missing := []int{}
-	for _, req := range required {
-		found := false
-		for _, id := range ids {
-			if id == req {
-				found = true
-				break
-			}
-		}
-		if !found {
-			missing = append(missing, req)
-		}
-	}
+	missing, _ := lo.Difference(required, ids)
 
 	if len(missing) > 0 {
 		m.Log.ERROR.Printf("missing required meter value IDs: %v", missing)
