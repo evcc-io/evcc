@@ -275,7 +275,7 @@ func (c *Connection) Currents() (float64, float64, float64, error) {
 
 // getPhaseValues returns 3 sequential phase values
 func (c *Connection) getPhaseValues(fun func(StatusSNSResponse) Channels) (float64, float64, float64, error) {
-	if len(c.channels) == 3 {
+	if len(c.channels) >= 1 && len(c.channels) <= 3 {
 		s, err := c.statusSnsG.Get()
 		if err != nil {
 			return 0, 0, 0, err
