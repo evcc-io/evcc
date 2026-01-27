@@ -275,23 +275,24 @@ func (c *Connection) Currents() (float64, float64, float64, error) {
 
 // getPhaseValues returns 3 sequential phase values
 func (c *Connection) getPhaseValues(fun func(StatusSNSResponse) Channels) (float64, float64, float64, error) {
-	if len(c.channels) >= 1 && len(c.channels) <= 3 {
-		s, err := c.statusSnsG.Get()
+	if len(c.channels) < 1 || len(c.channels) > 3 {
+		return 0, 0, 0, nil
+	}
+
+	s, err := c.statusSnsG.Get()
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	all := fun(s)
+	var res [3]float64 = [3]float64{0, 0, 0}
+
+	for i := 0; i < len(c.channels); i++ {
+		res[i], err = all.Channel(c.channels[i])
 		if err != nil {
 			return 0, 0, 0, err
 		}
-
-		all := fun(s)
-
-		var res [3]float64 = [3]float64{0, 0, 0}
-		for i := range c.channels {
-			res[i], err = all.Channel(c.channels[i])
-			if err != nil {
-				return 0, 0, 0, err
-			}
-		}
-
-		return res[0], res[1], res[2], nil
 	}
-	return 0, 0, 0, nil
+
+	return res[0], res[1], res[2], nil
 }
