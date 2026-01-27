@@ -17,12 +17,14 @@ type Report struct {
 
 type Connection struct {
 	*request.Helper
-	uri string
+	uri   string
+	token string
 }
 
-func NewConnection(uri string) *Connection {
+func NewConnection(uri, token string) *Connection {
 	return &Connection{
 		uri:    util.DefaultScheme(strings.TrimSuffix(uri, "/"), "http"),
+		token:  token,
 		Helper: request.NewHelper(util.NewLogger("mystrom")),
 	}
 }
@@ -31,6 +33,9 @@ func (c *Connection) Request(path string) error {
 	uri := fmt.Sprintf("%s/%s", c.uri, path)
 	req, err := request.New(http.MethodGet, uri, nil, nil)
 	if err == nil {
+		if c.token != "" {
+			req.Header.Set("Token", c.token)
+		}
 		_, err = c.DoBody(req)
 	}
 	return err
@@ -39,7 +44,14 @@ func (c *Connection) Request(path string) error {
 func (c *Connection) Report() (Report, error) {
 	var res Report
 	uri := fmt.Sprintf("%s/report", c.uri)
-	err := c.GetJSON(uri, &res)
+	req, err := request.New(http.MethodGet, uri, nil, request.AcceptJSON)
+	if err != nil {
+		return res, err
+	}
+	if c.token != "" {
+		req.Header.Set("Token", c.token)
+	}
+	err = c.DoJSON(req, &res)
 	return res, err
 }
 
