@@ -68,7 +68,7 @@ grid:
     await expect(restartButton).not.toBeVisible();
 
     await expect(page.getByTestId("tariffs")).toContainText(
-      ["Currency", "CHF", "Grid price", "12.3 rp"].join("")
+      ["Currency", "CHF", "Grid price", "12.3 ct."].join("")
     );
   });
 

@@ -115,6 +115,20 @@ describe("pricePerKWhUnit", () => {
   });
 });
 
+describe("energyPriceSubunit", () => {
+  test("should return subunit or undefined", () => {
+    expect(fmt.energyPriceSubunit(CURRENCY.EUR)).eq("ct");
+    expect(fmt.energyPriceSubunit(CURRENCY.CNY)).eq(undefined);
+  });
+  test("should handle CHF locale-specific logic", () => {
+    config.global.mocks["$i18n"].locale = "de";
+    expect(fmt.energyPriceSubunit(CURRENCY.CHF)).eq("Rp.");
+    config.global.mocks["$i18n"].locale = "fr";
+    expect(fmt.energyPriceSubunit(CURRENCY.CHF)).eq("ct.");
+    config.global.mocks["$i18n"].locale = "de-DE";
+  });
+});
+
 describe("fmtDuration", () => {
   test("should format zero duration", () => {
     expect(fmt.fmtDuration(0)).eq("—");
