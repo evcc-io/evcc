@@ -32,9 +32,9 @@ import (
 )
 
 var (
-	mu             sync.RWMutex
-	Subject, Token string
-	ExpiresAt      time.Time
+	mu                            sync.RWMutex
+	Subject, Token, ActivationKey string
+	ExpiresAt                     time.Time
 )
 
 const (
@@ -67,9 +67,9 @@ func ActivateSponsorship(licenseKey, email string) (string, error) {
 	defer cancel()
 
 	res, err := client.Activate(ctx, &pb.ActivateRequest{
-		LicenseKey: licenseKey,
-		Email:      email,
-		MachineId:  machine.ProtectedID("evcc-sponsor"),
+		Key:       licenseKey,
+		Email:     email,
+		MachineId: machine.ProtectedID("evcc-sponsor"),
 	})
 
 	if err != nil {
@@ -115,6 +115,7 @@ func ConfigureSponsorship(token string) error {
 	res, err := client.IsAuthorized(ctx, &pb.AuthRequest{Token: token})
 	if err == nil && res.Authorized {
 		Subject = res.Subject
+		ActivationKey = res.ActivationKey
 		ExpiresAt = res.ExpiresAt.AsTime()
 	}
 
@@ -142,11 +143,20 @@ func redactToken(token string) string {
 	return token[:6] + "......." + token[len(token)-6:]
 }
 
+// redactKey returns a redacted version of the activation key showing only the first segment
+func redactKey(key string) string {
+	if idx := strings.Index(key, "-"); idx > 0 {
+		return key[:idx] + "-XXXXX-XXXXX-XXXXX-XXXXX"
+	}
+	return ""
+}
+
 type Status struct {
-	Name        string    `json:"name"`
-	ExpiresAt   time.Time `json:"expiresAt,omitempty"`
-	ExpiresSoon bool      `json:"expiresSoon,omitempty"`
-	Token       string    `json:"token,omitempty"`
+	Name          string    `json:"name"`
+	ExpiresAt     time.Time `json:"expiresAt,omitempty"`
+	ExpiresSoon   bool      `json:"expiresSoon,omitempty"`
+	Token         string    `json:"token,omitempty"`
+	ActivationKey string    `json:"activationKey,omitempty"`
 }
 
 // GetStatus returns the sponsorship status
@@ -160,9 +170,10 @@ func GetStatus() Status {
 	}
 
 	return Status{
-		Name:        Subject,
-		ExpiresAt:   ExpiresAt,
-		ExpiresSoon: expiresSoon,
-		Token:       redactToken(Token),
+		Name:          Subject,
+		ExpiresAt:     ExpiresAt,
+		ExpiresSoon:   expiresSoon,
+		Token:         redactToken(Token),
+		ActivationKey: redactKey(ActivationKey),
 	}
 }

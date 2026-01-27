@@ -19,10 +19,11 @@ message AuthReply {
 	bool authorized = 1;
 	string subject = 2;
 	google.protobuf.Timestamp expires_at = 3;
+	string activation_key = 4;
 }
 
 message ActivateRequest {
-	string license_key = 1;
+	string key = 1;
 	string email = 2;
 	string machine_id = 3;
 }

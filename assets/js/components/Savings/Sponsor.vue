@@ -93,7 +93,7 @@ export default defineComponent({
 			return this.name && !this.isTrial && !this.isVictronDevice;
 		},
 		sponsorLink() {
-			return `${docsPrefix()}/docs/sponsorship`;
+			return "https://sponsor.evcc.io";
 		},
 	},
 	methods: {

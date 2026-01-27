@@ -196,6 +196,7 @@
       "authPerformHint": "Öffnet ein neues Tab. Anschließend hier weiter machen.",
       "authPrepare": "Verbindung vorbereiten",
       "cancel": "Abbrechen",
+      "change": "Ändern",
       "clear": "Löschen",
       "close": "Schließen",
       "copied": "Kopiert!",
@@ -559,16 +560,20 @@
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
+      "activationKey": "Lizenzschlüssel",
+      "activationKeyHint": "Per E-Mail zugesandt. Kann im {url} gefunden werden.",
       "addToken": "Token eingeben",
       "changeToken": "Token ändern",
       "description": "Das Sponsoring-Modell hilft uns, das Projekt zu pflegen und nachhaltig neue und spannende Funktionen zu entwickeln. Als Sponsor erhältst du Zugriff auf alle Wallbox-Implementierungen.",
-      "descriptionToken": "Als Sponsor erhältst du dein Token auf {url}. Zum Ausprobieren gibts ein {trialToken}.",
+      "descriptionToken": "Als GitHub-Sponsor findest du dein Token auf {url}. Zum Ausprobieren gibt's ein {trialToken}.",
       "email": "E-Mail",
-      "emailHint": "Geben Sie die E-Mail-Adresse ein, die Sie für das Sponsoring verwendet haben",
-      "enterYourToken": "Token eingeben",
+      "emailHint": "E-Mail-Adresse, die du für {url} verwendet hast",
+      "enterYourToken": "Dein Sponsor Token",
       "error": "Das Sponsortoken ist ungültig.",
       "invalid": "ungültig",
       "labelToken": "Sponsortoken",
+      "tabCreem": "Creem Key",
+      "tabGitHub": "Sponsor Token",
       "title": "Sponsoring",
       "tokenRequired": "Du musst ein Sponsortoken konfigurieren, bevor du dieses Gerät anlegen kannst.",
       "tokenRequiredFeature": "Diese Funktion erfordert ein Sponsortoken.",
@@ -576,7 +581,7 @@
       "tokenRequiredShort": "Kein Sponsortoken konfiguriert.",
       "trialToken": "Testtoken",
       "viaYaml": "über evcc.yaml",
-      "yourToken": "Dein Token"
+      "yourToken": "Sponsor Token"
     },
     "system": {
       "backupRestore": {

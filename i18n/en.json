@@ -196,6 +196,7 @@
       "authPerformHint": "Will open in a new tab. Return here to continue.",
       "authPrepare": "Prepare connection",
       "cancel": "Cancel",
+      "change": "Change",
       "clear": "Clear",
       "close": "Close",
       "copied": "Copied!",
@@ -559,16 +560,20 @@
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
+      "activationKey": "License Key",
+      "activationKeyHint": "Sent to you via email. Can be found in the {url}.",
       "addToken": "Enter token",
       "changeToken": "Change token",
       "description": "The sponsoring model helps us to maintain the project and sustainably build new and exciting features. As a sponsor you get access to all charger implementations.",
-      "descriptionToken": "Sponsors find their token on {url}. For getting-started, we offer a {trialToken}.",
+      "descriptionToken": "As GitHub Sponsor you find your token on {url}. For getting-started, we offer a {trialToken}.",
       "email": "Email",
-      "emailHint": "Enter email address you used for sponsoring",
-      "enterYourToken": "Enter your token",
+      "emailHint": "Email address you used for {url}",
+      "enterYourToken": "Your Sponsor Token",
       "error": "The sponsor token is not valid.",
       "invalid": "invalid",
       "labelToken": "Sponsor token",
+      "tabCreem": "Creem Key",
+      "tabGitHub": "Sponsor Token",
       "title": "Sponsorship",
       "tokenRequired": "You must configure a sponsor token before you can create this device.",
       "tokenRequiredFeature": "This feature requires a sponsor token.",
@@ -576,7 +581,7 @@
       "tokenRequiredShort": "No sponsor token configured.",
       "trialToken": "trial token",
       "viaYaml": "via evcc.yaml",
-      "yourToken": "Your token"
+      "yourToken": "Sponsor Token"
     },
     "system": {
       "backupRestore": {
