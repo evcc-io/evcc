@@ -1,100 +1,34 @@
 package ecoflow
 
 import (
-	"fmt"
-	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/util"
 )
 
-// Usage represents the energy flow direction for a device
-type Usage int
-
-const (
-	UsagePV Usage = iota
-	UsageGrid
-	UsageBattery
-)
-
-// String returns the string representation of Usage
-func (u Usage) String() string {
-	switch u {
-	case UsagePV:
-		return "pv"
-	case UsageGrid:
-		return "grid"
-	case UsageBattery:
-		return "battery"
-	default:
-		return "unknown"
-	}
+// config for Stream and PowerStream devices
+type config struct {
+	URI       string
+	SN        string
+	AccessKey string
+	SecretKey string
+	Usage     string
+	Cache     time.Duration
 }
 
-// ParseUsage converts a string to a typed Usage, returns error if invalid
-func ParseUsage(s string) (Usage, error) {
-	switch strings.ToLower(s) {
-	case "pv":
-		return UsagePV, nil
-	case "grid":
-		return UsageGrid, nil
-	case "battery":
-		return UsageBattery, nil
-	default:
-		return 0, fmt.Errorf("invalid usage type: %s (must be pv, grid, or battery)", s)
-	}
+func (c *config) decode(other map[string]any) error {
+	c.Cache = 10 * time.Second
+	return util.DecodeOther(other, c)
 }
 
-// ValidateConfig checks that all required configuration fields are set
-func ValidateConfig(uri, sn, accessKey, secretKey string, deviceName string) error {
-	if uri == "" || sn == "" || accessKey == "" || secretKey == "" {
-		return fmt.Errorf("%s: missing uri, sn, accessKey or secretKey", deviceName)
-	}
-	return nil
-}
-
-// Config is the shared configuration for Stream and PowerStream devices
-type Config struct {
-	URI       string        `mapstructure:"uri"`
-	SN        string        `mapstructure:"sn"`
-	AccessKey string        `mapstructure:"accessKey"`
-	SecretKey string        `mapstructure:"secretKey"`
-	UsageStr  string        `mapstructure:"usage"`
-	Usage     Usage         `mapstructure:"-"`
-	Cache     time.Duration `mapstructure:"cache"`
-}
-
-// Decode decodes the config from other map, applying defaults and validation
-func (c *Config) Decode(other map[string]interface{}, deviceName string) error {
-	c.Cache = 30 * time.Second
-
-	if err := util.DecodeOther(other, c); err != nil {
-		return err
-	}
-
-	if err := ValidateConfig(c.URI, c.SN, c.AccessKey, c.SecretKey, deviceName); err != nil {
-		return err
-	}
-
-	// Parse and validate usage type
-	usage, err := ParseUsage(c.UsageStr)
-	if err != nil {
-		return fmt.Errorf("%s: %w", deviceName, err)
-	}
-	c.Usage = usage
-
-	return nil
-}
-
-// ecoflowResponse is a generic response wrapper for EcoFlow API responses
-type ecoflowResponse[T any] struct {
+// response wrapper for EcoFlow API
+type response[T any] struct {
 	Code    string `json:"code"`
 	Message string `json:"message"`
 	Data    T      `json:"data"`
 }
 
-// StreamData represents the full device status from EcoFlow Stream API
-// https://developer-eu.ecoflow.com/us/document/bkw
+// StreamData - API response data
 type StreamData struct {
 	Relay2Onoff               bool            `json:"relay2Onoff"`         // AC1 switch (false=off, true=on)
 	Relay3Onoff               bool            `json:"relay3Onoff"`         // AC2 switch (false=off, true=on)
@@ -112,8 +46,7 @@ type StreamData struct {
 	QuotaCloudTs              string          `json:"quota_cloud_ts"`
 }
 
-// PowerStreamData represents the full device status from PowerStream API
-// https://developer-eu.ecoflow.com/us/document/wn511
+// PowerStreamData - API response data
 type PowerStreamData struct {
 	// Power values (from heartbeat)
 	Pv1InputWatts  float64 `json:"pv1InputWatts"`  // PV1 input power (W)

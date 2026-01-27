@@ -6,67 +6,36 @@ products:
 requirements:
   description:
     de: |
-      Für die Nutzung des EcoFlow PowerStream als Strommesser benötigen Sie:
-      - Einen gültigen Access Key von der EcoFlow Developer Console
-      - Den entsprechenden Secret Key
-      - Die Seriennummer (SN) Ihres PowerStream Gerätes
-      - Die API URI (Standard: https://api-e.ecoflow.com)
-
-      Diese Credentials erhalten Sie über die EcoFlow Developer Console nach der Registrierung Ihrer Anwendung.
+      Access Key und Secret Key von der EcoFlow Developer Console.
       Developer Portal: https://developer-eu.ecoflow.com/us
     en: |
-      To use the EcoFlow PowerStream meter you need:
-      - A valid Access Key from the EcoFlow Developer Console
-      - The corresponding Secret Key
-      - The serial number (SN) of your PowerStream device
-      - The API URI (default: https://api-e.ecoflow.com)
-
-      These credentials can be obtained through the EcoFlow Developer Console after registering your application.
+      Access Key and Secret Key from EcoFlow Developer Console.
       Developer Portal: https://developer-eu.ecoflow.com/us
 params:
   - name: usage
     choice: ["pv", "grid", "battery"]
     allinone: true
-  - name: uri
-    required: true
-    default: "https://api-e.ecoflow.com"
-    description:
-      generic: API URI
-    help:
-      en: EcoFlow API endpoint (cloud)
-      de: EcoFlow API Endpunkt (Cloud)
   - name: sn
     required: true
-    default: "DEMO"
     description:
       generic: Serial Number
-    help:
-      en: Serial number of your EcoFlow PowerStream device
-      de: Seriennummer Ihres EcoFlow PowerStream Gerätes
-  - name: accessKey
+  - name: accesskey
     required: true
-    default: "demo-access-key"
     description:
       generic: Access Key
-    help:
-      en: Access Key from EcoFlow Developer Console
-      de: Access Key aus der EcoFlow Developer Console
-  - name: secretKey
+  - name: secretkey
     required: true
-    default: "demo-secret-key"
     description:
       generic: Secret Key
-    help:
-      en: Secret Key from EcoFlow Developer Console
-      de: Secret Key aus der EcoFlow Developer Console
   - name: cache
-    default: 30s
+    default: 10s
     advanced: true
 render: |
   type: ecoflow-powerstream
-  uri: {{ .uri }}
   sn: {{ .sn }}
-  accessKey: {{ .accessKey }}
-  secretKey: {{ .secretKey }}
+  accesskey: {{ .accesskey }}
+  secretkey: {{ .secretkey }}
   usage: {{ .usage }}
+  {{- if ne .cache "10s" }}
   cache: {{ .cache }}
+  {{- end }}
