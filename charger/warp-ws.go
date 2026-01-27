@@ -37,7 +37,7 @@ type WarpWS struct {
 	// evse
 	status          api.ChargeStatus
 	maxCurrent      int64
-    externalCurrent int64
+	externalCurrent int64
 	userEnabled     bool
 	userCurrent     int64
 	chargeMode      int64
@@ -300,8 +300,8 @@ func (w *WarpWS) handleEvent(data []byte) {
 		"charge_tracker/current_charge": w.handleChargeTracker,
 		"evse/state":                    w.handleEvseState,
 		"evse/external_current":         w.handleExternalCurrent,
-        "evse/user_enabled":             w.handleUserEnabled,
-        "evse/user_current":             w.handleUserCurrent,
+		"evse/user_enabled":             w.handleUserEnabled,
+		"evse/user_current":             w.handleUserCurrent,
 		"nfc/config":                    w.handleNfcConfig,
 		"power_manager/state":           w.handlePowerManagerState,
 		"power_manager/low_level_state": w.handlePowerManagerLowLevel,
@@ -333,10 +333,10 @@ func (w *WarpWS) handleChargeTracker(payload json.RawMessage) {
 		return
 	}
 	w.log.TRACE.Printf("nfc: tag detected: %s", s.AuthorizationInfo.TagId)
-    w.mu.Lock()
+	w.mu.Lock()
 	w.tagId = s.AuthorizationInfo.TagId
 	w.hasNfc = true
-    w.mu.Unlock()
+	w.mu.Unlock()
 }
 
 func (w *WarpWS) handleEvseState(payload json.RawMessage) {
@@ -345,7 +345,7 @@ func (w *WarpWS) handleEvseState(payload json.RawMessage) {
 		return
 	}
 
-    w.mu.Lock()
+	w.mu.Lock()
 	switch s.Iec61851State {
 	case 0:
 		w.status = api.StatusA
@@ -354,16 +354,16 @@ func (w *WarpWS) handleEvseState(payload json.RawMessage) {
 	case 2:
 		w.status = api.StatusC
 	}
-    w.mu.Unlock()
+	w.mu.Unlock()
 }
 
 func (w *WarpWS) handleExternalCurrent(payload json.RawMessage) {
 	var s warp.EvseExternalCurrent
 	if w.decode(payload, &s, "evse/external_current") {
 		w.log.TRACE.Printf("em: state updated (current=%d)", int64(s.Current))
-        w.mu.Lock()
+		w.mu.Lock()
 		w.externalCurrent = int64(s.Current)
-        w.mu.Unlock()
+		w.mu.Unlock()
 	}
 }
 
@@ -372,18 +372,18 @@ func (w *WarpWS) handleUserEnabled(payload json.RawMessage) {
 		Enabled bool `json:"enabled"`
 	}
 	if w.decode(payload, &b, "evse/user_enabled") {
-        w.mu.Lock()
+		w.mu.Lock()
 		w.userEnabled = b.Enabled
-        w.mu.Unlock()
+		w.mu.Unlock()
 	}
 }
 
 func (w *WarpWS) handleUserCurrent(payload json.RawMessage) {
 	var s warp.EvseExternalCurrent
 	if w.decode(payload, &s, "evse/user_current") {
-        w.mu.Lock()
+		w.mu.Lock()
 		w.userCurrent = int64(s.Current)
-        w.mu.Unlock()
+		w.mu.Unlock()
 	}
 }
 
@@ -402,22 +402,22 @@ func (w *WarpWS) handleLegacyMeterEvent(evt warpEvent) {
 		if !w.decode(evt.Payload, &m, "meter/values") {
 			return
 		}
-        w.mu.Lock()
+		w.mu.Lock()
 		w.power = m.Power
 		w.energy = m.EnergyAbs
 		w.hasMeter = true
-        w.mu.Unlock()
+		w.mu.Unlock()
 
 	case "meter/all_values":
 		var vals []float64
 		if !w.decode(evt.Payload, &vals, "meter/all_values") {
 			return
 		}
-        w.mu.Lock()
+		w.mu.Lock()
 		copy((w.voltL)[:], vals[:3])
 		copy((w.currL)[:], vals[3:6])
 		w.hasMeterPhases = true
-        w.mu.Unlock()
+		w.mu.Unlock()
 	}
 }
 
@@ -435,11 +435,11 @@ func (w *WarpWS) handleMetersEvent(evt warpEvent) {
 		if !w.decode(evt.Payload, &vals, "values") {
 			return
 		}
-        w.mu.Lock()
+		w.mu.Lock()
 		w.meter.UpdateValues(vals, &w.power, &w.energy, &w.voltL, &w.currL)
 		w.hasMeter = true
 		w.hasMeterPhases = true
-        w.mu.Unlock()
+		w.mu.Unlock()
 	}
 }
 
@@ -447,9 +447,9 @@ func (w *WarpWS) handleNfcConfig(payload json.RawMessage) {
 	var s warp.NfcConfig
 	if w.decode(payload, &s, "nfc/config") {
 		w.log.DEBUG.Printf("nfc: config updated (config=%v)", s)
-        w.mu.Lock()
+		w.mu.Lock()
 		w.nfcConfig = s
-        w.mu.Unlock()
+		w.mu.Unlock()
 	}
 }
 
@@ -459,18 +459,18 @@ func (w *WarpWS) handlePowerManagerLowLevel(payload json.RawMessage) {
 		return
 	}
 	w.log.TRACE.Printf("em: low-level updated (s=%v) (is3phase=%v)", s, s.Is3phase)
-    w.mu.Lock()
+	w.mu.Lock()
 	w.emLowLevel = s
 	w.is3Phase = s.Is3phase
-    w.mu.Unlock()
+	w.mu.Unlock()
 }
 
 func (w *WarpWS) handlePowerManagerState(payload json.RawMessage) {
 	var s warp.EmState
 	if w.decode(payload, &s, "power_manager/state") {
-        w.mu.Lock()
+		w.mu.Lock()
 		w.emState = s
-        w.mu.Unlock()
+		w.mu.Unlock()
 	}
 }
 
@@ -499,7 +499,7 @@ func (w *WarpWS) Status() (api.ChargeStatus, error) {
 }
 
 func (w *WarpWS) StatusReason() (api.Reason, error) {
-    res := api.ReasonUnknown
+	res := api.ReasonUnknown
 	w.mu.RLock()
 	defer w.mu.RUnlock()
 	if w.status == api.StatusB && w.userEnabled && w.userCurrent == 0 {
@@ -541,8 +541,8 @@ func (w *WarpWS) Identify() (string, error) {
 func (w *WarpWS) Enable(enable bool) error {
 	var curr int64
 	if enable {
-        w.mu.RLock()
-        defer w.mu.RUnlock()
+		w.mu.RLock()
+		defer w.mu.RUnlock()
 		curr = w.maxCurrent
 	}
 	return w.setCurrent(curr)
@@ -566,9 +566,9 @@ func (w *WarpWS) MaxCurrentMillis(current float64) error {
 	err := w.setCurrent(curr)
 	if err == nil {
 		w.log.TRACE.Printf("evse: current set acknowledged (requested=%dmA)", curr)
-        w.mu.Lock()
+		w.mu.Lock()
 		w.maxCurrent = curr
-        w.mu.Unlock()
+		w.mu.Unlock()
 	} else {
 		w.log.DEBUG.Printf("evse: set current failed: %v", err)
 	}
