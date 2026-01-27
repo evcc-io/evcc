@@ -26,12 +26,12 @@ func NewDevice(other map[string]any, deviceType string) (*Device, error) {
 	if err := cc.decode(other); err != nil {
 		return nil, err
 	}
-	
+
 	// Validation
 	if cc.SN == "" || cc.AccessKey == "" || cc.SecretKey == "" {
 		return nil, fmt.Errorf("%s: missing sn, accessKey or secretKey", deviceType)
 	}
-	
+
 	uri := cc.URI
 	if uri == "" {
 		uri = defaultURI

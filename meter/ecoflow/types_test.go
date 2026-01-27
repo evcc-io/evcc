@@ -14,7 +14,7 @@ func TestConfigDecode(t *testing.T) {
 			"uri": "http://test",
 			"sn":  "123",
 		}
-		
+
 		err := c.decode(input)
 		assert.NoError(t, err)
 		assert.Equal(t, 10*time.Second, c.Cache)
@@ -26,7 +26,7 @@ func TestConfigDecode(t *testing.T) {
 		input := map[string]any{
 			"cache": "1m",
 		}
-		
+
 		err := c.decode(input)
 		assert.NoError(t, err)
 		assert.Equal(t, time.Minute, c.Cache)

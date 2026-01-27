@@ -47,7 +47,7 @@ func TestHmacSHA256(t *testing.T) {
 	secret := "testSecret"
 	// echo -n "testData" | openssl dgst -sha256 -hmac "testSecret"
 	expected := "cf12e86d709b0a720cf2f129b914369fd14d979f5d44ec4eb04019189df57f01"
-	
+
 	result := hmacSHA256(data, secret)
 	assert.Equal(t, expected, result)
 }

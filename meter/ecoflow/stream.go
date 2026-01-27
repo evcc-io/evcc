@@ -23,7 +23,7 @@ func NewStreamFromConfig(ctx context.Context, other map[string]any) (api.Meter, 
 
 	s := &Stream{
 		Device: device,
-		dataG:  util.ResettableCached(func() (StreamData, error) {
+		dataG: util.ResettableCached(func() (StreamData, error) {
 			var res response[StreamData]
 			if err := device.GetJSON(device.quotaURL(), &res); err != nil {
 				return StreamData{}, err

@@ -44,7 +44,7 @@ func TestPowerStream(t *testing.T) {
 		conf["usage"] = "pv"
 		m, err := NewPowerStreamFromConfig(ctx, conf)
 		assert.NoError(t, err)
-		
+
 		val, err := m.CurrentPower()
 		assert.NoError(t, err)
 		assert.Equal(t, 150.0, val) // 100 + 50
@@ -70,7 +70,7 @@ func TestPowerStream(t *testing.T) {
 		// Test Soc
 		b, ok := m.(api.Battery)
 		assert.True(t, ok)
-		
+
 		soc, err := b.Soc()
 		assert.NoError(t, err)
 		assert.Equal(t, 90.0, soc)

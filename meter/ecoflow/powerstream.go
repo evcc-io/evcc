@@ -23,7 +23,7 @@ func NewPowerStreamFromConfig(ctx context.Context, other map[string]any) (api.Me
 
 	ps := &PowerStream{
 		Device: device,
-		dataG:  util.ResettableCached(func() (PowerStreamData, error) {
+		dataG: util.ResettableCached(func() (PowerStreamData, error) {
 			var res response[PowerStreamData]
 			if err := device.GetJSON(device.quotaURL(), &res); err != nil {
 				return PowerStreamData{}, err

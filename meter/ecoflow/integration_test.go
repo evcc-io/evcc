@@ -62,7 +62,7 @@ type testDevice struct {
 
 func newTestDevice(t *testing.T) *testDevice {
 	config := getTestConfig()
-	
+
 	uri := config["uri"].(string)
 	sn := config["sn"].(string)
 	accessKey := config["accessKey"].(string)
