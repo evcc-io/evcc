@@ -446,16 +446,20 @@ export type Certificate = {
 };
 
 export type Eebus = {
-  config: {
-    uri: string;
-    port: number;
-    shipid: string;
-    interfaces?: string[];
-    certificate?: Certificate;
-  };
-  status: {
-    ski: string;
-  };
+  config: EebusConfig;
+  status: EebusStatus;
+};
+
+export type EebusConfig = {
+  uri: string;
+  port: number;
+  shipid: string;
+  interfaces?: string[];
+  certificate?: Certificate;
+};
+
+export type EebusStatus = {
+  ski: string;
 };
 
 export type ModbusProxy = {

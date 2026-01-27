@@ -5,14 +5,41 @@
 		:description="$t('config.eebus.description')"
 		docs="/docs/reference/configuration/eebus"
 		endpoint="/config/eebus"
-		state-key="eebus"
+		state-key="eebus.config"
 		data-testid="eebus-modal"
+		:confirm-remove="$t('config.eebus.removeConfirm')"
 		@changed="$emit('changed')"
 	>
-		<template #default="{ values }: { values: Eebus }">
+		<template #default="{ values }: { values: EebusConfig }">
+			<FormRow
+				v-if="values.shipid"
+				:id="formId('shipid-display')"
+				:label="$t('config.eebus.shipid')"
+				:help="$t('config.eebus.shipidExplain')"
+			>
+				<input
+					:id="formId('shipid-display')"
+					:value="values.shipid"
+					readonly
+					class="form-control text-muted"
+				/>
+			</FormRow>
+			<FormRow
+				v-if="status.ski"
+				:id="formId('ski-display')"
+				:label="$t('config.eebus.ski')"
+				:help="$t('config.eebus.skiExplain')"
+			>
+				<input
+					:id="formId('ski-display')"
+					:value="status.ski"
+					readonly
+					class="form-control text-muted"
+				/>
+			</FormRow>
 			<PropertyCollapsible>
 				<template #advanced>
-					<div class="alert alert-warning">
+					<div class="alert alert-danger">
 						{{ $t("config.eebus.descriptionAdvanced") }}
 					</div>
 					<FormRow
@@ -23,7 +50,7 @@
 					>
 						<PropertyField
 							:id="formId('shipid')"
-							v-model="values.config.shipid"
+							v-model="values.shipid"
 							type="String"
 						/>
 					</FormRow>
@@ -35,7 +62,7 @@
 					>
 						<PropertyField
 							:id="formId('port')"
-							v-model="values.config.port"
+							v-model="values.port"
 							property="port"
 							type="Int"
 						/>
@@ -49,18 +76,18 @@
 					>
 						<PropertyField
 							:id="formId('interfaces')"
-							v-model="values.config.interfaces"
+							v-model="values.interfaces"
 							type="List"
 						/>
 					</FormRow>
-					<h6>{{ $t("config.eebus.https") }}</h6>
+					<h6>{{ $t("config.eebus.certificate.title") }}</h6>
 					<FormRow
 						:id="formId('certificate-public')"
 						:label="$t('config.eebus.certificate.public')"
 					>
 						<PropertyCertField
 							:id="formId('certificate-public')"
-							:model-value="values.config.certificate?.public"
+							:model-value="values.certificate?.public"
 						/>
 					</FormRow>
 					<FormRow
@@ -69,7 +96,7 @@
 					>
 						<PropertyCertField
 							:id="formId('certificate-private')"
-							:model-value="values.config.certificate?.private"
+							:model-value="values.certificate?.private"
 						/>
 					</FormRow>
 				</template>
@@ -79,8 +106,9 @@
 </template>
 
 <script lang="ts">
+import type { PropType } from "vue";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import type { Eebus } from "@/types/evcc";
+import type { EebusConfig, EebusStatus } from "@/types/evcc";
 import JsonModal from "./JsonModal.vue";
 import FormRow from "./FormRow.vue";
 import PropertyField from "./PropertyField.vue";
@@ -95,6 +123,12 @@ export default {
 		PropertyField,
 		PropertyCertField,
 		PropertyCollapsible,
+	},
+	props: {
+		status: {
+			type: Object as PropType<EebusStatus>,
+			default: () => ({}),
+		},
 	},
 	emits: ["changed"],
 	methods: {

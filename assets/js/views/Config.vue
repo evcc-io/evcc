@@ -387,7 +387,7 @@
 					:extMeters="extMeters"
 					@changed="yamlChanged"
 				/>
-				<EebusModal @changed="yamlChanged" />
+				<EebusModal :status="eebus?.status" @changed="yamlChanged" />
 				<OcppModal :ocpp="ocpp" />
 				<BackupRestoreModal v-bind="backupRestoreProps" />
 				<PasswordModal update-mode />
@@ -698,8 +698,11 @@ export default defineComponent({
 			// @ts-expect-error: telemetry property exists but not in TypeScript definitions
 			return store.state?.telemetry === true;
 		},
+		eebus() {
+			return store.state?.eebus;
+		},
 		eebusTags(): DeviceTags {
-			return { configured: { value: store.state?.eebus || false } };
+			return { configured: { value: !!this.eebus?.config } };
 		},
 		ocppTags(): DeviceTags {
 			const ocpp = store.state?.ocpp;
