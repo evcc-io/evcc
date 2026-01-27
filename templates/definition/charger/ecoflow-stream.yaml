@@ -1,0 +1,53 @@
+template: ecoflow-stream
+products:
+  - brand: EcoFlow
+    description:
+      generic: STREAM Ultra, STREAM Pro (as Charger/Loadpoint)
+requirements:
+  description:
+    de: |
+      Steuert EcoFlow Stream Geräte via MQTT Relay-Kontrolle.
+      Access Key und Secret Key von der EcoFlow Developer Console erforderlich.
+      MQTT Credentials werden automatisch von der API geholt.
+      Developer Portal: https://developer-eu.ecoflow.com/us
+    en: |
+      Controls EcoFlow Stream devices via MQTT relay control.
+      Access Key and Secret Key from EcoFlow Developer Console required.
+      MQTT credentials are fetched automatically from the API.
+      Developer Portal: https://developer-eu.ecoflow.com/us
+params:
+  - name: sn
+    required: true
+    description:
+      generic: Serial Number
+    help:
+      en: Serial number of your EcoFlow Stream device
+      de: Seriennummer Ihres EcoFlow Stream Gerätes
+  - name: accesskey
+    required: true
+    description:
+      generic: Access Key
+    help:
+      en: Access Key from EcoFlow Developer Console
+      de: Access Key aus der EcoFlow Developer Console
+  - name: secretkey
+    required: true
+    description:
+      generic: Secret Key
+    help:
+      en: Secret Key from EcoFlow Developer Console
+      de: Secret Key aus der EcoFlow Developer Console
+  - name: relay
+    default: 1
+    advanced: true
+    description:
+      generic: Relay (1=AC1, 2=AC2)
+    help:
+      en: Which relay to control (1=AC1, 2=AC2)
+      de: Welches Relay gesteuert wird (1=AC1, 2=AC2)
+render: |
+  type: ecoflow-stream-charger
+  sn: {{ .sn }}
+  accesskey: {{ .accesskey }}
+  secretkey: {{ .secretkey }}
+  relay: {{ .relay }}
