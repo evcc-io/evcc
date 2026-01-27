@@ -58,10 +58,8 @@ const (
 	EffectiveMinCurrent = "effectiveMinCurrent" // effective min current
 	EffectiveMaxCurrent = "effectiveMaxCurrent" // effective max current
 
-	EffectiveLimitSoc         = "effectiveLimitSoc"         // effective limit soc
-	EffectivePlanStrategy     = "effectivePlanStrategy"     // effective plan strategy (deprecated, use individual fields)
-	EffectivePlanPrecondition = "effectivePlanPrecondition" // effective plan precondition duration
-	EffectivePlanContinuous   = "effectivePlanContinuous"   // effective plan continuous planning
+	EffectiveLimitSoc     = "effectiveLimitSoc"     // effective limit soc
+	EffectivePlanStrategy = "effectivePlanStrategy" // effective plan strategy
 
 	// measurements
 	ChargePower       = "chargePower"       // charge power
@@ -86,8 +84,6 @@ const (
 	PlanProjectedEnd   = "planProjectedEnd"   // charge plan ends (end of last slot)
 	PlanOverrun        = "planOverrun"        // charge plan goal not reachable in time
 	PlanStrategy       = "planStrategy"       // charge plan strategy (precondition, continuous)
-	PlanPrecondition   = "planPrecondition"   // charge plan precondition duration
-	PlanContinuous     = "planContinuous"     // charge plan continuous planning
 
 	// repeating plans
 	RepeatingPlans = "repeatingPlans" // key to access all repeating plans in db
