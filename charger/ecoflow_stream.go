@@ -23,14 +23,17 @@ func init() {
 // Controls charging/discharging via relay switches over MQTT
 type EcoFlowStreamCharger struct {
 	log     *util.Logger
-	dataG   func() (ecoflow.StreamData, error)
 	client  *mqtt.Client
 	account string
 	sn      string
 	relay   int // 1 = AC1 (relay2), 2 = AC2 (relay3)
 
-	mu      sync.Mutex
-	enabled bool
+	mu   sync.RWMutex
+	data ecoflow.StreamData // live data from MQTT subscription
+
+	// Fallback REST API getter (used if MQTT data is stale)
+	restDataG func() (ecoflow.StreamData, error)
+	lastMqtt  time.Time
 }
 
 // NewEcoFlowStreamChargerFromConfig creates EcoFlow Stream charger from config
@@ -75,11 +78,13 @@ func NewEcoFlowStreamChargerFromConfig(ctx context.Context, other map[string]any
 
 	log.DEBUG.Printf("MQTT credentials: account=%s, broker=%s", mqttCreds.Account, mqttCreds.BrokerURL())
 
-	// Setup MQTT client
+	// Setup MQTT client with unique client ID
+	clientID := fmt.Sprintf("evcc_%s_%d", cc.SN, time.Now().UnixNano()%100000)
 	mqttConfig := mqtt.Config{
 		Broker:   mqttCreds.BrokerURL(),
 		User:     mqttCreds.Account,
 		Password: mqttCreds.Password,
+		ClientID: clientID,
 	}
 
 	client, err := mqtt.RegisteredClientOrDefault(log, mqttConfig)
@@ -87,12 +92,12 @@ func NewEcoFlowStreamChargerFromConfig(ctx context.Context, other map[string]any
 		return nil, fmt.Errorf("mqtt: %w", err)
 	}
 
-	// Create cached data getter for status reads
+	// Create REST API fallback getter
 	quotaURL := fmt.Sprintf("%s/iot-open/sign/device/quota/all?sn=%s", uri, cc.SN)
-	dataG := util.Cached(func() (ecoflow.StreamData, error) {
+	restDataG := util.Cached(func() (ecoflow.StreamData, error) {
 		var res struct {
-			Code    string            `json:"code"`
-			Message string            `json:"message"`
+			Code    string             `json:"code"`
+			Message string             `json:"message"`
 			Data    ecoflow.StreamData `json:"data"`
 		}
 		if err := helper.GetJSON(quotaURL, &res); err != nil {
@@ -104,23 +109,130 @@ func NewEcoFlowStreamChargerFromConfig(ctx context.Context, other map[string]any
 		return res.Data, nil
 	}, cc.Cache)
 
-	// Read initial state
-	data, err := dataG()
-	if err != nil {
+	c := &EcoFlowStreamCharger{
+		log:       log,
+		client:    client,
+		account:   mqttCreds.Account,
+		sn:        cc.SN,
+		relay:     cc.Relay,
+		restDataG: restDataG,
+	}
+
+	// Subscribe to MQTT topics for live updates
+	if err := c.subscribe(); err != nil {
+		log.WARN.Printf("MQTT subscribe failed: %v (falling back to REST API)", err)
+	}
+
+	// Read initial state via REST API
+	if data, err := restDataG(); err == nil {
+		c.mu.Lock()
+		c.data = data
+		c.mu.Unlock()
+	} else {
 		log.WARN.Printf("failed to read initial state: %v", err)
 	}
 
-	c := &EcoFlowStreamCharger{
-		log:     log,
-		dataG:   dataG,
-		client:  client,
-		account: mqttCreds.Account,
-		sn:      cc.SN,
-		relay:   cc.Relay,
-		enabled: relayState(data, cc.Relay),
+	return c, nil
+}
+
+// subscribe sets up MQTT subscriptions for live data
+func (c *EcoFlowStreamCharger) subscribe() error {
+	// Subscribe to quota topic for live data updates
+	quotaTopic := fmt.Sprintf("/open/%s/%s/quota", c.account, c.sn)
+	if err := c.client.Listen(quotaTopic, c.handleQuotaMessage); err != nil {
+		return fmt.Errorf("subscribe quota: %w", err)
+	}
+	c.log.DEBUG.Printf("subscribed to %s", quotaTopic)
+
+	// Subscribe to status topic for online/offline notifications
+	statusTopic := fmt.Sprintf("/open/%s/%s/status", c.account, c.sn)
+	if err := c.client.Listen(statusTopic, c.handleStatusMessage); err != nil {
+		c.log.WARN.Printf("subscribe status failed: %v", err)
+		// Non-fatal, quota topic is more important
+	} else {
+		c.log.DEBUG.Printf("subscribed to %s", statusTopic)
 	}
 
-	return c, nil
+	return nil
+}
+
+// mqttMessage wraps incoming MQTT data
+type mqttMessage struct {
+	Params ecoflow.StreamData `json:"params"`
+}
+
+// handleQuotaMessage processes incoming quota messages from MQTT
+func (c *EcoFlowStreamCharger) handleQuotaMessage(payload string) {
+	var msg mqttMessage
+	if err := json.Unmarshal([]byte(payload), &msg); err != nil {
+		c.log.TRACE.Printf("quota parse error: %v", err)
+		return
+	}
+
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	// Merge incoming data (MQTT sends partial updates)
+	c.mergeData(&msg.Params)
+	c.lastMqtt = time.Now()
+
+	c.log.TRACE.Printf("MQTT update: SOC=%.1f%%, Power=%.1fW, Relay1=%v, Relay2=%v",
+		c.data.CmsBattSoc, c.data.PowGetBpCms, c.data.Relay2Onoff, c.data.Relay3Onoff)
+}
+
+// mergeData merges partial MQTT updates into current data
+func (c *EcoFlowStreamCharger) mergeData(update *ecoflow.StreamData) {
+	// Only update non-zero values (MQTT sends partial updates)
+	if update.CmsBattSoc != 0 {
+		c.data.CmsBattSoc = update.CmsBattSoc
+	}
+	if update.PowGetBpCms != 0 {
+		c.data.PowGetBpCms = update.PowGetBpCms
+	}
+	if update.PowGetPvSum != 0 {
+		c.data.PowGetPvSum = update.PowGetPvSum
+	}
+	if update.PowGetSysGrid != 0 {
+		c.data.PowGetSysGrid = update.PowGetSysGrid
+	}
+	if update.PowGetSysLoad != 0 {
+		c.data.PowGetSysLoad = update.PowGetSysLoad
+	}
+	// Relay states are boolean, always update
+	c.data.Relay2Onoff = update.Relay2Onoff
+	c.data.Relay3Onoff = update.Relay3Onoff
+}
+
+// handleStatusMessage processes incoming status messages
+func (c *EcoFlowStreamCharger) handleStatusMessage(payload string) {
+	c.log.DEBUG.Printf("status message: %s", payload)
+}
+
+// getData returns current device data, preferring MQTT but falling back to REST
+func (c *EcoFlowStreamCharger) getData() (ecoflow.StreamData, error) {
+	c.mu.RLock()
+	lastMqtt := c.lastMqtt
+	data := c.data
+	c.mu.RUnlock()
+
+	// Use MQTT data if recent (within 60 seconds)
+	if time.Since(lastMqtt) < 60*time.Second {
+		return data, nil
+	}
+
+	// Fallback to REST API
+	restData, err := c.restDataG()
+	if err != nil {
+		// Return cached data even if stale
+		return data, nil
+	}
+
+	// Update cache with REST data
+	c.mu.Lock()
+	c.data = restData
+	c.mu.Unlock()
+
+	return restData, nil
 }
 
 // relayState returns the relay state from data
@@ -146,17 +258,12 @@ func (c *EcoFlowStreamCharger) relayKey() string {
 
 // Status implements api.Charger
 func (c *EcoFlowStreamCharger) Status() (api.ChargeStatus, error) {
-	data, err := c.dataG()
+	data, err := c.getData()
 	if err != nil {
 		return api.StatusNone, err
 	}
 
 	enabled := relayState(data, c.relay)
-
-	// Update cached state
-	c.mu.Lock()
-	c.enabled = enabled
-	c.mu.Unlock()
 
 	if !enabled {
 		return api.StatusA, nil // Relay off = not connected
@@ -173,21 +280,11 @@ func (c *EcoFlowStreamCharger) Status() (api.ChargeStatus, error) {
 
 // Enabled implements api.Charger
 func (c *EcoFlowStreamCharger) Enabled() (bool, error) {
-	data, err := c.dataG()
+	data, err := c.getData()
 	if err != nil {
-		// Fall back to cached state
-		c.mu.Lock()
-		defer c.mu.Unlock()
-		return c.enabled, nil
+		return false, err
 	}
-
-	enabled := relayState(data, c.relay)
-
-	c.mu.Lock()
-	c.enabled = enabled
-	c.mu.Unlock()
-
-	return enabled, nil
+	return relayState(data, c.relay), nil
 }
 
 // Enable implements api.Charger - controls relay via MQTT
@@ -207,8 +304,13 @@ func (c *EcoFlowStreamCharger) Enable(enable bool) error {
 
 	c.client.Publish(c.setTopic(), false, data)
 
+	// Optimistically update local state
 	c.mu.Lock()
-	c.enabled = enable
+	if c.relay == 2 {
+		c.data.Relay3Onoff = enable
+	} else {
+		c.data.Relay2Onoff = enable
+	}
 	c.mu.Unlock()
 
 	return nil
@@ -222,7 +324,7 @@ func (c *EcoFlowStreamCharger) MaxCurrent(current int64) error {
 
 // CurrentPower implements api.Meter
 func (c *EcoFlowStreamCharger) CurrentPower() (float64, error) {
-	data, err := c.dataG()
+	data, err := c.getData()
 	if err != nil {
 		return 0, err
 	}
@@ -232,7 +334,7 @@ func (c *EcoFlowStreamCharger) CurrentPower() (float64, error) {
 
 // Soc implements api.Battery
 func (c *EcoFlowStreamCharger) Soc() (float64, error) {
-	data, err := c.dataG()
+	data, err := c.getData()
 	if err != nil {
 		return 0, err
 	}
