@@ -247,8 +247,7 @@
       "downloadCsv": "CSV eroflueden",
       "eventsRecorded": "{count} gespäichert Limitatiounen vum Netz.",
       "lastEvent": "Méi rezent {timeAgo}.",
-      "title": "Äusserlech Grenz",
-      "yamlConfigured": "Bemierkung: Konfiguréiert iwwer evcc.yaml. Läscht d'Astellungen aus der Datei fir d'Ännerung hei z'erméiglechen."
+      "title": "Äusserlech Grenz"
     },
     "icon": {
       "change": "änneren",
@@ -391,7 +390,7 @@
       "vehicles": "Meng Gefierer",
       "welcomeBannerText": "Fänkt un mat der Erstelle vun op d'mannst engem **Ladegerät**, **Heizer**, **Netz**, **Solarpanel**, **Batterie** oder **zousätzlechen Zähler**. Wann Dir just testen wëllt, wielt e **Demonstratiounsapparat**.",
       "welcomeBannerTitle": "Loosst eis de System konfiguréieren!",
-      "yaml": "Geräter aus der evcc.yaml Datei si net editiérbar."
+      "yaml": "Bemierkung: Konfiguréiert iwwer evcc.yaml. Läscht d'Astellungen aus der Datei fir d'Ännerung hei z'erméiglechen."
     },
     "messaging": {
       "description": "Notifikatiounen iwwer Är Opluedsessioune kréien.",

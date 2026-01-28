@@ -247,8 +247,7 @@
       "downloadCsv": "Stáhnout CSV",
       "eventsRecorded": "Zaznamenáno {count} událostí omezení mřížky.",
       "lastEvent": "Nejnovější {timeAgo}.",
-      "title": "Vnější limit",
-      "yamlConfigured": "Poznámka: Konfigurace se provádí prostřednictvím souboru evcc.yaml. Chcete-li zde povolit úpravy, odstraňte záznam ze souboru."
+      "title": "Vnější limit"
     },
     "icon": {
       "change": "Změnit",
@@ -391,7 +390,7 @@
       "vehicles": "Má vozidla",
       "welcomeBannerText": "Začněte vytvořením alespoň jednoho **nabíječe**, **ohřívače**, **sítě**, **solárního panelu**, **baterie** nebo **dalšího měřiče**. Pokud chcete pouze otestovat, vyberte **demo zařízení**.",
       "welcomeBannerTitle": "Pojďme nakonfigurovat váš systém!",
-      "yaml": "Zařízení z evcc.yaml nelze upravovat."
+      "yaml": "Poznámka: Konfigurace se provádí prostřednictvím souboru evcc.yaml. Chcete-li zde povolit úpravy, odstraňte záznam ze souboru."
     },
     "messaging": {
       "description": "Dostávejte notifikace o průběhu nabíjení.",

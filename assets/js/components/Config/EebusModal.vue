@@ -7,10 +7,15 @@
 		endpoint="/config/eebus"
 		state-key="eebus.config"
 		data-testid="eebus-modal"
+		:disable-remove="fromYaml"
+		:disable-save="fromYaml"
 		:confirm-remove="$t('config.eebus.removeConfirm')"
 		@changed="$emit('changed')"
 	>
 		<template #default="{ values }: { values: EebusConfig }">
+			<p v-if="fromYaml" class="text-muted">
+				{{ $t("config.main.yaml") }}
+			</p>
 			<FormRow
 				v-if="values.shipid"
 				:id="formId('shipid-display')"
@@ -37,7 +42,7 @@
 					class="form-control text-muted"
 				/>
 			</FormRow>
-			<PropertyCollapsible>
+			<PropertyCollapsible v-if="!fromYaml">
 				<template #advanced>
 					<div class="alert alert-danger">
 						{{ $t("config.eebus.descriptionAdvanced") }}
@@ -135,6 +140,7 @@ export default {
 			type: Object as PropType<EebusStatus>,
 			default: () => ({}),
 		},
+		fromYaml: Boolean,
 	},
 	emits: ["changed"],
 	methods: {

@@ -247,8 +247,7 @@
       "downloadCsv": "CSV'yi indir",
       "eventsRecorded": "{count} şebeke sınırlama etkinliği kaydedildi.",
       "lastEvent": "En son {timeAgo}.",
-      "title": "Dış Limit",
-      "yamlConfigured": "Not: evcc.yaml aracılığıyla yapılandırıldı. Burada düzenlemeyi etkinleştirmek için dosyadan öğeyi kaldır."
+      "title": "Dış Limit"
     },
     "icon": {
       "change": "değiştir",
@@ -391,7 +390,7 @@
       "vehicles": "Araçlarım",
       "welcomeBannerText": "Önce bir **doldurma cihazı**, **ısıtıcı**, **elektrik sayacı**, **güneş enerjisi**, **batarya** veya **ek sayaç** oluştur. Sadece denemek istiyorsan, bir **demo cihazı** seç.",
       "welcomeBannerTitle": "Haydi sistemini yapılandıralım!",
-      "yaml": "evcc.yaml'daki cihazlar düzenlenemez."
+      "yaml": "Not: evcc.yaml aracılığıyla yapılandırıldı. Burada düzenlemeyi etkinleştirmek için dosyadan öğeyi kaldır."
     },
     "messaging": {
       "description": "Dolum oturumları hakkında bildirimler al.",

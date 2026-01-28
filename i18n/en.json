@@ -263,8 +263,7 @@
       "downloadCsv": "Download CSV",
       "eventsRecorded": "Recorded {count} grid limitation events.",
       "lastEvent": "Most recent {timeAgo}.",
-      "title": "External Limit",
-      "yamlConfigured": "Note: Configured via evcc.yaml. Remove the entry from the file to enable editing here."
+      "title": "External Limit"
     },
     "icon": {
       "change": "change",
@@ -407,7 +406,7 @@
       "vehicles": "My Vehicles",
       "welcomeBannerText": "Start with creating at least one **charger**, **heater**, **grid**, **solar**, **battery** or **additional meter**. If you just want to test, pick a **demo device**.",
       "welcomeBannerTitle": "Let's configure your system!",
-      "yaml": "Devices from evcc.yaml are not editable."
+      "yaml": "Note: Configured via evcc.yaml. Remove the entry from the file to enable editing here."
     },
     "messaging": {
       "description": "Receive messages about your charging sessions.",

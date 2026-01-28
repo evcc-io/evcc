@@ -448,6 +448,7 @@ export type Certificate = {
 export type Eebus = {
   config: EebusConfig;
   status: EebusStatus;
+  fromYaml?: boolean;
 };
 
 export type EebusConfig = {

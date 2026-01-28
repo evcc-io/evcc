@@ -263,8 +263,7 @@
       "downloadCsv": "CSV herunterladen",
       "eventsRecorded": "{count} Netzbegrenzungen gespeichert.",
       "lastEvent": "Zuletzt {timeAgo}.",
-      "title": "Externe Begrenzung",
-      "yamlConfigured": "Hinweis: Konfiguriert über evcc.yaml. Entferne den Eintrag aus der Datei, um die Bearbeitung hier zu aktivieren."
+      "title": "Externe Begrenzung"
     },
     "icon": {
       "change": "ändern",
@@ -407,7 +406,7 @@
       "vehicles": "Meine Fahrzeuge",
       "welcomeBannerText": "Lege zunächst eine **Wallbox**, **Heizung**, **Netzzähler**, **Solar**, **Batterie** oder **zusätzlichen Zähler** an. Falls du nur testen möchtest, wähle ein **Demogerät**.",
       "welcomeBannerTitle": "Los geht's mit der Konfiguration!",
-      "yaml": "Geräte aus evcc.yaml sind nicht editierbar."
+      "yaml": "Hinweis: Konfiguriert über evcc.yaml. Entferne den Eintrag aus der Datei, um die Bearbeitung hier zu aktivieren."
     },
     "messaging": {
       "description": "Benachrichtigungen über Ladevorgänge und andere Ereignisse erhalten.",

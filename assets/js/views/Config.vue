@@ -387,7 +387,11 @@
 					:extMeters="extMeters"
 					@changed="yamlChanged"
 				/>
-				<EebusModal :status="eebus?.status" @changed="yamlChanged" />
+				<EebusModal
+					:status="eebus?.status"
+					:from-yaml="eebus?.fromYaml"
+					@changed="yamlChanged"
+				/>
 				<OcppModal :ocpp="ocpp" />
 				<BackupRestoreModal v-bind="backupRestoreProps" />
 				<PasswordModal update-mode />

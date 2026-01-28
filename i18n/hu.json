@@ -247,8 +247,7 @@
       "downloadCsv": "CSV letöltése",
       "eventsRecorded": "{count} rácskorlátozási esemény rögzítve.",
       "lastEvent": "Legutóbbi {timeAgo}.",
-      "title": "Külső határ",
-      "yamlConfigured": "Megjegyzés: Az evcc.yaml fájlban konfigurálható. A szerkesztés engedélyezéséhez távolítsa el a bejegyzést a fájlból."
+      "title": "Külső határ"
     },
     "icon": {
       "change": "változtatás",
@@ -391,7 +390,7 @@
       "vehicles": "Járműveim",
       "welcomeBannerText": "Kezdje azzal, hogy létrehoz legalább egy **töltőt**, **fűtőt**, **hálózatot**, **napelemet**, **akkumulátort** vagy **kiegészítő mérőt**. Ha csak tesztelni szeretne, válasszon egy **demo eszközt**.",
       "welcomeBannerTitle": "Konfiguráljuk a rendszerét!",
-      "yaml": "Az evcc.yaml fájlban szereplő eszközök nem szerkeszthetők."
+      "yaml": "Megjegyzés: Az evcc.yaml fájlban konfigurálható. A szerkesztés engedélyezéséhez távolítsa el a bejegyzést a fájlból."
     },
     "messaging": {
       "description": "Értesítési üzenetek beállítása a töltési folyamatokról.",

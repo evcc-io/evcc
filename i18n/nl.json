@@ -247,8 +247,7 @@
       "downloadCsv": "Download CSV",
       "eventsRecorded": "{count} gebeurtenissen met rasterbeperkingen geregistreerd.",
       "lastEvent": "Meest recent {timeAgo}.",
-      "title": "Externe limiet",
-      "yamlConfigured": "Opmerking: Geconfigureerd via evcc.yaml. Verwijder de betreffende regels uit het bestand om hier bewerkingen mogelijk te maken."
+      "title": "Externe limiet"
     },
     "icon": {
       "change": "wijzig",
@@ -391,7 +390,7 @@
       "vehicles": "Mijn voertuigen",
       "welcomeBannerText": "Begin met het aanmaken van minstens één **oplader**, **verwarmer**, **netstroom**, **zonnepanelen**, **thuisbatterij** of **extra meter**. Als je gewoon wilt testen, kies dan een **demo-apparaat**.",
       "welcomeBannerTitle": "Start met het configureren van uw systeem!",
-      "yaml": "Apparaten geconfigureerd in evcc.yaml kunnen hier niet worden bewerkt."
+      "yaml": "Opmerking: Geconfigureerd via evcc.yaml. Verwijder de betreffende regels uit het bestand om hier bewerkingen mogelijk te maken."
     },
     "messaging": {
       "description": "Ontvang berichten over je oplaadsessies.",

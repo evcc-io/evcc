@@ -247,8 +247,7 @@
       "downloadCsv": "Scarica CSV",
       "eventsRecorded": "Registrati {count} eventi di limitazione della griglia.",
       "lastEvent": "Più recente {timeAgo}.",
-      "title": "HEMSLimite esterno",
-      "yamlConfigured": "Nota: configurato tramite evcc.yaml. Rimuovere la voce dal file per abilitare la modifica qui."
+      "title": "HEMSLimite esterno"
     },
     "icon": {
       "change": "cambiamento",
@@ -391,7 +390,7 @@
       "vehicles": "I miei veicoli",
       "welcomeBannerText": "Inizia creando almeno un **caricabatterie**, un **riscaldatore**, una **rete**, un **impianto solare**, una **batteria** o un **contatore aggiuntivo**. Se desideri solo effettuare un test, scegli un **dispositivo demo**.",
       "welcomeBannerTitle": "Configuriamo il tuo sistema!",
-      "yaml": "I dispositivi di evcc.yaml non sono modificabili."
+      "yaml": "Nota: configurato tramite evcc.yaml. Rimuovere la voce dal file per abilitare la modifica qui."
     },
     "messaging": {
       "description": "Ricevi messaggi sulle sessioni di ricarica.",
