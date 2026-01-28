@@ -291,3 +291,8 @@ type Circuit interface {
 type Redactor interface {
 	Redacted() any
 }
+
+// Messenger implements message sending
+type Messenger interface {
+	Send(title, msg string)
+}

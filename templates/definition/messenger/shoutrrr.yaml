@@ -1,0 +1,16 @@
+template: shout
+products:
+  - brand: Shoutrrr
+params:
+  - name: uri
+    required: true
+    example: gotify://gotify.example.com:443/AzyoeNS.D4iJLVa/?priority=1
+    description:
+      de: Uri
+      en: Uri
+    help:
+      de: URL-Format angeben. Eine Übersicht der unterstützten Dienste ist unter [containrrr.dev](https://containrrr.dev/shoutrrr/latest/services/overview/) zu finden.
+      en: Specify the URL format. An overview of the supported services can be found at [containrrr.dev](https://containrrr.dev/shoutrrr/latest/services/overview/).
+render: |
+  type: shout
+  uri: {{ .uri }}

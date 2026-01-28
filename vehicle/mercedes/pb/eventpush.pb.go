@@ -2,15 +2,16 @@
 // versions:
 // 	protoc-gen-go v1.32.0
 // 	protoc        v3.21.12
-// source: eventpush.proto
+// source: eventmessenger.proto
 
 package protos
 
 import (
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
-	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
+
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 )
 
 const (
