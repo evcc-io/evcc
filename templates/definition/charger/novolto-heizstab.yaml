@@ -1,3 +1,4 @@
+---
 template: novolto-heizstab
 products:
   - brand: Novolto
@@ -10,11 +11,13 @@ group: heating
 requirements:
   description:
     de: |
-      Der Heizstab kommuniziert über MQTT. Die MQTT-Broker-Einstellungen müssen konfiguriert werden.
-      Das MQTT-Topic für den Status muss evcc-Statuscodes zurückgeben: "A" (aus), "B" (bereit), "C" (heizt).
+      Der Heizstab kommuniziert über MQTT. Die MQTT-Broker-Einstellungen
+      müssen konfiguriert werden. Das MQTT-Topic für den Status muss
+      evcc-Statuscodes zurückgeben: "A" (aus), "B" (bereit), "C" (heizt).
     en: |
-      The heating rod communicates via MQTT. MQTT broker settings need to be configured.
-      The MQTT status topic must return evcc status codes: "A" (off), "B" (standby/ready), "C" (heating).
+      The heating rod communicates via MQTT. MQTT broker settings need to
+      be configured. The MQTT status topic must return evcc status codes:
+      "A" (off), "B" (standby/ready), "C" (heating).
 params:
   - preset: mqtt
   - name: topic
