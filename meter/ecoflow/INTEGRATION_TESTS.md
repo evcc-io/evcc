@@ -35,7 +35,7 @@ export ECOFLOW_ALLOW_CONTROL='true'   # Für Steuerungs-Tests
 ### Schnellstart: Status prüfen
 
 ```bash
-cd /Users/ingmar/repos/evcc-dev/meter/ecoflow
+cd /path/to/evcc/meter/ecoflow
 
 # Status-Report (read-only, sicher)
 ./run_integration_test.sh --status
@@ -57,7 +57,7 @@ export ECOFLOW_ALLOW_CONTROL='true'
 ### Direkt mit Go
 
 ```bash
-cd /Users/ingmar/repos/evcc-dev
+cd /path/to/evcc
 
 # Alle Integration-Tests
 go test -tags=integration -v ./meter/ecoflow/...
