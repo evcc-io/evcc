@@ -61,13 +61,13 @@ case "${1:-all}" in
 		;;
 	--control)
 		if [[ "$ECOFLOW_ALLOW_CONTROL" != "true" ]]; then
-		    echo -e "${RED}Control tests require ECOFLOW_ALLOW_CONTROL=true${NC}"
-		    exit 1
+			echo -e "${RED}Control tests require ECOFLOW_ALLOW_CONTROL=true${NC}"
+			exit 1
 		fi
 		echo -e "${YELLOW}Running control tests...${NC}"
 		go test -tags=integration -v -run "TestIntegration_Control" ./...
 		;;
-	--all|*)
+	--all | *)
 		echo -e "${YELLOW}Running all tests...${NC}"
 		go test -tags=integration -v ./...
 		;;
