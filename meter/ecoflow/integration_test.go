@@ -469,6 +469,53 @@ func TestIntegration_ControlDischarging(t *testing.T) {
 // SUMMARY TEST
 // =============================================================================
 
+// TestIntegration_BatteryController tests the BatteryController interface
+func TestIntegration_BatteryController(t *testing.T) {
+	skipIfNoCredentials(t)
+
+	if !isStreamDevice() {
+		t.Skip("BatteryController only available for Stream devices")
+	}
+
+	config := getTestConfig()
+	config["usage"] = "battery"
+
+	meter, err := NewStreamFromConfig(context.Background(), config)
+	if err != nil {
+		t.Fatalf("Failed to create meter: %v", err)
+	}
+
+	// Check if BatteryController is implemented
+	bc, ok := meter.(api.BatteryController)
+	if !ok {
+		t.Fatal("Battery meter does not implement BatteryController")
+	}
+
+	t.Log("✅ BatteryController interface implemented")
+
+	// Only test actual control if allowed
+	if os.Getenv("ECOFLOW_ALLOW_CONTROL") != "true" {
+		t.Log("Skipping control test: set ECOFLOW_ALLOW_CONTROL=true to enable")
+		return
+	}
+
+	// Test BatteryHold (discharge lock)
+	t.Log("Setting BatteryHold mode...")
+	if err := bc.SetBatteryMode(api.BatteryHold); err != nil {
+		t.Fatalf("SetBatteryMode(Hold) failed: %v", err)
+	}
+	t.Log("✅ BatteryHold set (relays disabled)")
+
+	time.Sleep(2 * time.Second)
+
+	// Restore to normal
+	t.Log("Restoring BatteryNormal mode...")
+	if err := bc.SetBatteryMode(api.BatteryNormal); err != nil {
+		t.Fatalf("SetBatteryMode(Normal) failed: %v", err)
+	}
+	t.Log("✅ BatteryNormal restored")
+}
+
 // TestIntegration_FullStatus prints a complete status report
 func TestIntegration_FullStatus(t *testing.T) {
 	skipIfNoCredentials(t)

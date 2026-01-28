@@ -1,7 +1,7 @@
 # evcc Beispiel-Konfiguration für EcoFlow Stream
 #
-# Diese Konfiguration zeigt die Integration eines EcoFlow Stream Ultra
-# als Batterie-Speicher mit evcc.
+# Die Batterie wird als Meter mit BatteryController konfiguriert.
+# evcc steuert die Batterie automatisch (Entlade-Sperre, Priorität, etc.)
 #
 # Ersetze die Platzhalter:
 # - DEINE_SERIENNUMMER: z.B. BK61ZE1B2H6H0912
@@ -16,6 +16,12 @@ network:
 log: info
 
 meters:
+  # Haupt-Netzmessung (ersetzen mit deinem Grid-Meter)
+  - name: netz
+    type: template
+    template: shelly-3em
+    host: 192.168.1.100
+
   # EcoFlow Stream - PV Ertrag
   - name: ecoflow_pv
     type: template
@@ -25,7 +31,7 @@ meters:
     accesskey: DEIN_ACCESS_KEY
     secretkey: DEIN_SECRET_KEY
 
-  # EcoFlow Stream - Batterie
+  # EcoFlow Stream - Batterie (mit automatischer Steuerung!)
   - name: ecoflow_battery
     type: template
     template: ecoflow-stream
@@ -34,26 +40,30 @@ meters:
     accesskey: DEIN_ACCESS_KEY
     secretkey: DEIN_SECRET_KEY
 
-# Optional: Charger für Relay-Steuerung
-# chargers:
-#   - name: ecoflow_charger
-#     type: template
-#     template: ecoflow-stream
-#     sn: DEINE_SERIENNUMMER
-#     accesskey: DEIN_ACCESS_KEY
-#     secretkey: DEIN_SECRET_KEY
-#     relay: 1
-
 site:
   title: Mein Zuhause
   meters:
+    grid: netz
     pv:
       - ecoflow_pv
     battery:
       - ecoflow_battery
 
-# Optional: Loadpoint für Speicher-Steuerung
-# loadpoints:
-#   - title: EcoFlow Speicher
-#     charger: ecoflow_charger
-#     mode: pv
+  # Batterie-Priorität
+  prioritySoc: 50     # Batterie bis 50% mit Priorität laden
+  bufferSoc: 80       # Ab 80% für Fahrzeug-Laden freigeben
+  bufferStartSoc: 90  # Batterie-Boost aktivieren ab 90%
+
+# Wallbox (optional - ersetzen mit deiner Wallbox)
+chargers:
+  - name: wallbox
+    type: template
+    template: go-e
+    host: 192.168.1.101
+
+loadpoints:
+  - title: Garage
+    charger: wallbox
+    mode: pv
+    mincurrent: 6
+    maxcurrent: 16

@@ -16,12 +16,11 @@ Diese Dokumentation beschreibt die Integration von EcoFlow Stream und PowerStrea
 
 ## Konfiguration
 
-### Als Meter (nur Anzeige)
-
-Für Anzeige von PV-Ertrag, Grid-Bezug oder Batterie-Status:
+### Als Meter (PV, Grid, Batterie)
 
 ```yaml
 meters:
+  # PV-Ertrag
   - name: ecoflow_pv
     type: template
     template: ecoflow-stream
@@ -30,6 +29,7 @@ meters:
     accesskey: DEIN_ACCESS_KEY
     secretkey: DEIN_SECRET_KEY
 
+  # Grid-Bezug/Einspeisung
   - name: ecoflow_grid
     type: template
     template: ecoflow-stream
@@ -38,6 +38,7 @@ meters:
     accesskey: DEIN_ACCESS_KEY
     secretkey: DEIN_SECRET_KEY
 
+  # Batterie (mit automatischer Steuerung!)
   - name: ecoflow_battery
     type: template
     template: ecoflow-stream
@@ -47,49 +48,38 @@ meters:
     secretkey: DEIN_SECRET_KEY
 ```
 
-### Als Site Battery
-
-Für die Anzeige der Batterie im evcc Dashboard:
+### Site-Konfiguration
 
 ```yaml
 site:
   title: Mein Zuhause
   meters:
-    grid: netz
+    grid: netz          # Haupt-Netzmessung
     pv:
       - ecoflow_pv
     battery:
-      - ecoflow_battery
+      - ecoflow_battery  # Mit BatteryController-Support!
 ```
 
-### Als Charger (mit Steuerung)
+## Automatische Batterie-Steuerung
 
-Für aktive Steuerung der Ladung/Entladung über Relays:
+Bei `usage: battery` wird automatisch:
 
-```yaml
-chargers:
-  - name: ecoflow_charger
-    type: template
-    template: ecoflow-stream
-    sn: DEINE_SERIENNUMMER
-    accesskey: DEIN_ACCESS_KEY
-    secretkey: DEIN_SECRET_KEY
-    relay: 1  # 1=AC1, 2=AC2
-```
+1. **MQTT-Verbindung** für Live-Updates und Steuerung aufgebaut
+2. **`api.BatteryController`** implementiert für evcc's Batterie-Features:
 
-### Als Loadpoint
+| evcc Feature | EcoFlow Aktion |
+|--------------|----------------|
+| **BatteryHold** (Entlade-Sperre) | Relays aus → Batterie entlädt nicht |
+| **BatteryNormal** | Relays an → Normalbetrieb |
+| **BatteryCharge** | Relays an (Grid-Laden nicht direkt unterstützt) |
 
-Kombination von Charger mit Fahrzeug-Ladung:
+### Unterstützte evcc-Features
 
-```yaml
-loadpoints:
-  - title: EcoFlow Speicher
-    charger: ecoflow_charger
-    mode: pv
-    phases: 1
-    mincurrent: 6
-    maxcurrent: 16
-```
+- ✅ **Prioritäts-SOC**: Batterie zuerst laden bis X%
+- ✅ **Batterie-unterstütztes Laden**: Batterie für Fahrzeug freigeben
+- ✅ **Entlade-Sperre**: Bei Schnellladen/Planer Batterie schonen
+- ⚠️ **Netzladen**: Nicht direkt unterstützt (EcoFlow-Limitation)
 
 ## Vollständiges Beispiel
 
@@ -105,33 +95,23 @@ meters:
     type: shelly
     uri: 192.168.1.100
 
-  # EcoFlow Stream als PV-Meter
+  # EcoFlow Stream - PV
   - name: ecoflow_pv
     type: template
     template: ecoflow-stream
     usage: pv
     sn: BK61ZE1B2H6H0912
-    accesskey: Ms0Nefw3xBOHZMA36l8fD7IzXteWLvLL
-    secretkey: uzDj9L9F5v5DFGObypJH5vlAcHkNPYn8
+    accesskey: DEIN_ACCESS_KEY
+    secretkey: DEIN_SECRET_KEY
 
-  # EcoFlow Stream als Batterie-Meter
+  # EcoFlow Stream - Batterie (mit Steuerung)
   - name: ecoflow_battery
     type: template
     template: ecoflow-stream
     usage: battery
     sn: BK61ZE1B2H6H0912
-    accesskey: Ms0Nefw3xBOHZMA36l8fD7IzXteWLvLL
-    secretkey: uzDj9L9F5v5DFGObypJH5vlAcHkNPYn8
-
-chargers:
-  # EcoFlow Stream als steuerbarer Charger
-  - name: ecoflow_charger
-    type: template
-    template: ecoflow-stream
-    sn: BK61ZE1B2H6H0912
-    accesskey: Ms0Nefw3xBOHZMA36l8fD7IzXteWLvLL
-    secretkey: uzDj9L9F5v5DFGObypJH5vlAcHkNPYn8
-    relay: 1
+    accesskey: DEIN_ACCESS_KEY
+    secretkey: DEIN_SECRET_KEY
 
 site:
   title: Mein Zuhause
@@ -142,55 +122,64 @@ site:
     battery:
       - ecoflow_battery
 
+  # Batterie-Priorität konfigurieren
+  prioritySoc: 50        # Batterie bis 50% mit Priorität laden
+  bufferSoc: 80          # Ab 80% für Fahrzeug freigeben
+  bufferStartSoc: 90     # Batterie-Boost ab 90%
+
+# Wallbox für EV
+chargers:
+  - name: wallbox
+    type: template
+    template: go-e
+    host: 192.168.1.101
+
 loadpoints:
-  - title: EcoFlow Speicher
-    charger: ecoflow_charger
+  - title: Garage
+    charger: wallbox
     mode: pv
 ```
 
-## Funktionen
+## Technische Details
 
-### Stream Geräte
+### MQTT-Kommunikation
 
-| Funktion | Unterstützt | Beschreibung |
-|----------|-------------|--------------|
-| PV-Leistung | ✅ | Echtzeit PV-Ertrag |
-| Grid-Leistung | ✅ | Netzeinspeisung/-bezug |
-| Batterie-Leistung | ✅ | Lade-/Entladeleistung |
-| Batterie-SOC | ✅ | Ladestand in % |
-| Relay-Steuerung | ✅ | AC1/AC2 ein/aus |
-| Ladegeschwindigkeit | ❌ | Abhängig von PV/Grid |
+Die Batterie-Integration nutzt EcoFlow's offizielle MQTT-API:
 
-### PowerStream Geräte
+| Topic | Richtung | Beschreibung |
+|-------|----------|--------------|
+| `/open/{account}/{sn}/quota` | Subscribe | Live-Daten (1-2s Latenz) |
+| `/open/{account}/{sn}/set` | Publish | Relay-Steuerung |
 
-| Funktion | Unterstützt | Beschreibung |
-|----------|-------------|--------------|
-| PV-Leistung | ✅ | PV1 + PV2 Summe |
-| Grid-Leistung | ✅ | Inverter-Ausgang |
-| Batterie-Leistung | ✅ | Lade-/Entladeleistung |
-| Batterie-SOC | ✅ | Ladestand in % |
-| Entladeleistung | ✅ | permanentWatts (0-600W) |
+### Relay-Mapping
+
+| Relay | EcoFlow Name | Funktion |
+|-------|--------------|----------|
+| AC1 | `relay2Onoff` | Haupt-AC-Ausgang |
+| AC2 | `relay3Onoff` | Sekundär-AC-Ausgang |
+
+### Daten-Quellen
+
+1. **MQTT** (bevorzugt): Live-Updates alle 1-2 Sekunden
+2. **REST API** (Fallback): Polling alle 10 Sekunden
 
 ## Troubleshooting
 
-### "missing sn, accessKey or secretKey"
-- Prüfe ob alle drei Parameter in der Config gesetzt sind
-- Keys aus dem Developer Portal kopieren
+### "mqtt not available for battery control"
+- MQTT-Verbindung fehlgeschlagen
+- Prüfe Netzwerk zu `mqtt-e.ecoflow.com:8883`
+- API-Keys korrekt?
 
-### "mqtt certification failed"
-- API-Zugang prüfen
-- Keys eventuell neu generieren
-
-### "device offline"
-- Gerät mit WLAN verbunden?
-- EcoFlow Cloud erreichbar?
+### Batterie-Steuerung reagiert nicht
+- Prüfe ob `usage: battery` gesetzt ist
+- Nur Battery-Meter bekommen MQTT-Steuerung
 
 ### Verzögerte Werte
-- MQTT liefert Live-Daten (1-2s Latenz)
-- Bei MQTT-Problemen: REST API Fallback (10s Cache)
+- MQTT nicht verbunden → REST-Fallback aktiv
+- Prüfe evcc-Logs auf MQTT-Fehler
 
 ## API-Dokumentation
 
 - [EcoFlow Developer Portal](https://developer-eu.ecoflow.com/us)
 - [Stream API Docs](https://developer-eu.ecoflow.com/us/document/bkw)
-- [PowerStream API Docs](https://developer-eu.ecoflow.com/us/document/wn511)
+- [evcc Battery Features](https://docs.evcc.io/en/docs/features/battery)
