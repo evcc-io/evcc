@@ -12,12 +12,17 @@ requirements:
   description:
     de: |
       Der Heizstab kommuniziert über MQTT. Die MQTT-Broker-Einstellungen
-      müssen konfiguriert werden. Das MQTT-Topic für den Status muss
-      evcc-Statuscodes zurückgeben: "A" (aus), "B" (bereit), "C" (heizt).
+      müssen konfiguriert werden. Erforderliche MQTT-Topics (mit Basis-Topic
+      als Präfix): /maxpower/set (Sollleistung in W setzen), /maxpower
+      (aktuelle Sollleistung in W), /power (Ist-Leistung in W),
+      /temperature (aktuelle Temperatur in °C), /temperature_target
+      (Zieltemperatur in °C).
     en: |
       The heating rod communicates via MQTT. MQTT broker settings need to
-      be configured. The MQTT status topic must return evcc status codes:
-      "A" (off), "B" (standby/ready), "C" (heating).
+      be configured. Required MQTT topics (with base topic as prefix):
+      /maxpower/set (set target power in W), /maxpower (current target
+      power in W), /power (actual power in W), /temperature (current
+      temperature in °C), /temperature_target (target temperature in °C).
 params:
   - preset: mqtt
   - name: topic
@@ -30,36 +35,24 @@ params:
       de: Basis-Topic für die MQTT-Kommunikation mit dem Heizstab
       en: Base topic for MQTT communication with the heating rod
 render: |
-  type: custom
+  type: heatpump
+  setmaxpower:
+    source: mqtt
+    {{- include "mqtt" . | indent 2 }}
+    topic: {{ .topic }}/maxpower/set
+  getmaxpower:
+    source: mqtt
+    {{- include "mqtt" . | indent 2 }}
+    topic: {{ .topic }}/maxpower
   power:
     source: mqtt
     {{- include "mqtt" . | indent 2 }}
     topic: {{ .topic }}/power
-  enabled:
-    source: mqtt
-    {{- include "mqtt" . | indent 2 }}
-    topic: {{ .topic }}/enabled
-  enable:
-    source: mqtt
-    {{- include "mqtt" . | indent 2 }}
-    topic: {{ .topic }}/enable/set
-  status:
-    source: mqtt
-    {{- include "mqtt" . | indent 2 }}
-    topic: {{ .topic }}/status
-  maxcurrent:
-    source: mqtt
-    {{- include "mqtt" . | indent 2 }}
-    topic: {{ .topic }}/current_max/set
-  soc:
+  temp:
     source: mqtt
     {{- include "mqtt" . | indent 2 }}
     topic: {{ .topic }}/temperature
-  limitSoc:
+  limittemp:
     source: mqtt
     {{- include "mqtt" . | indent 2 }}
     topic: {{ .topic }}/temperature_target
-  features:
-    - heating
-    - integrateddevice
-  icon: heatpump
