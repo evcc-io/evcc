@@ -1,0 +1,32 @@
+template: ntfy
+products:
+  - brand: Ntfy
+params:
+  - name: uri
+    required: true
+    example: https://ntfy.sh/mytopic
+    help:
+      de: Die vollständige URL zum ntfy Topic (z.B. https://ntfy.sh/mein-topic)
+      en: The full URL to the ntfy topic (e.g., https://ntfy.sh/my-topic)
+  - name: priority
+    type: choice
+    choice: ["min", "low", "default", "high", "max"]
+    help:
+      de: Priorität der Nachricht
+      en: Message priority
+  - name: tags
+    example: blue_car
+    help:
+      de: Kommaseparierte Liste von Tags/Emojis
+      en: Comma-separated list of tags/emojis
+  - name: authtoken
+    mask: true
+    help:
+      de: Authentifizierungs-Token für geschützte Topics
+      en: Authentication token for protected topics
+render: |
+  type: ntfy
+  uri: {{ .uri }}
+  priority: {{ .priority }}
+  tags: {{ .tags }}
+  authtoken: {{ .authtoken }}
