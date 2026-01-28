@@ -9,11 +9,13 @@ requirements:
     de: |
       Modbus Verbindung zur NIBE S Wärmepumpe. Firmware 4.7.5 oder neuer benötigt.
       In der Inneneinheit muss im Menü 7.5.9 Modbus aktiviert sein.
+      Zur Verwendung der Leistungssteuerung muss im Menü 7.4 unter dem Punkt AUX von Modbus ext. Leistungsbegrenzung ausgewählt sein.
       Es muss einmalig im Holding Register 3032 der Wert „1“ (uint8) geschrieben werden.
     en: |
       Modbus connection to the NIBE S heat pump.
       Firmware version 4.7.5 or newer is required.
       In the indoor unit, Modbus must be enabled in menu 7.5.9
+      To use the power control function, external power limitation must be selected under Menu 7.4, item AUX from modbus.
       The value “1” (uint8) must be written once to holding register 3032.
 params:
   - name: modbus
@@ -27,6 +29,13 @@ params:
     description:
       de: Temperatursensor
       en: Temperature sensor
+  - name: powercontrol
+    required: true
+    type: bool
+    default: true
+    description:
+      de: Leistungssteuerung
+      en: power limitation
 render: |
   type: sgready
   setmode:
@@ -80,3 +89,35 @@ render: |
       type: input
       encoding: uint16
     scale: 0.1
+  {{- if eq .powercontrol "true" }}
+  setmaxpower:
+    source: switch
+    default: 
+      source: sequence
+      set:
+        - source: const
+          value: 1
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 2741
+              type: holding
+              encoding: int16
+        - source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 6007
+            type: holding
+            encoding: int16
+          scale: 0.01
+    switch:
+      - case: 0 # disable limitation
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 2741
+            type: holding
+            encoding: int16
+  {{- end }}

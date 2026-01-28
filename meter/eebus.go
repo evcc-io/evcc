@@ -160,7 +160,11 @@ func (c *EEBus) readPhases(scenario uint, update func(entity spineapi.EntityRemo
 		return 0, 0, 0, err
 	}
 
-	if len(res) < 1 || len(res) > 3 {
+	if len(res) == 0 {
+		return 0, 0, 0, api.ErrNotAvailable
+	}
+
+	if len(res) > 3 {
 		return 0, 0, 0, fmt.Errorf("invalid phases: %v", res)
 	}
 

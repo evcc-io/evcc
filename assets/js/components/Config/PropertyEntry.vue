@@ -10,12 +10,12 @@
 		<PropertyField
 			:id="id"
 			v-model="value"
-			class="me-2"
 			:masked="Mask"
 			:property="Name"
 			:type="Type"
 			:unit="Unit"
 			:required="Required"
+			:pattern="Pattern"
 			:choice="Choice"
 			:service-values="serviceValues"
 			:label="label"
@@ -42,6 +42,7 @@ export default {
 		Type: String,
 		Unit: String,
 		Mask: Boolean,
+		Pattern: { type: Object, default: () => ({}) },
 		Choice: Array,
 		serviceValues: Array,
 		modelValue: [String, Number, Boolean, Object],

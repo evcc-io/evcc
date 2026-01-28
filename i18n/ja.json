@@ -1,0 +1,252 @@
+{
+  "authProviders": {
+    "authCode": "認証コード",
+    "authCodeHelp": "このコードをコピーして次のステップで使用してください。有効期間は{duration}です。",
+    "authorizationFailed": "認証失敗",
+    "authorizationRequired": "認証が必要",
+    "authorizationSuccessful": "認証成功",
+    "buttonConnect": "{provider}に接続",
+    "buttonDisconnect": "切断",
+    "confirmLogout": "{title}を切断してもよろしいですか?",
+    "connect": "接続",
+    "disconnect": "切断",
+    "loggedOut": "ログアウト成功",
+    "logoutFailed": "ログアウト失敗",
+    "successCloseModal": "このダイアログを閉じることができます。",
+    "successCloseTab": "このタブを閉じることができます。",
+    "title": "認証ステータス"
+  },
+  "batterySettings": {
+    "batteryLevel": "バッテリー残量",
+    "bufferStart": {
+      "never": "十分な余剰がある場合のみ。"
+    },
+    "control": "バッテリーコントロール",
+    "disclaimerHint": "注意：",
+    "gridChargeTab": "グリッド充電",
+    "legendTopAutostart": "自動的に開始",
+    "modalTitle": "ホームバッテリー",
+    "usageTab": "バッテリー使用量"
+  },
+  "config": {
+    "battery": {
+      "titleAdd": "バッテリーを追加",
+      "titleEdit": "バッテリーを編集"
+    },
+    "charger": {
+      "chargers": "EV充電器",
+      "ocppConnected": "接続しました！",
+      "ocppLabel": "OCPPサーバーURL",
+      "ocppNextStep": "次のステップ",
+      "titleAdd": {
+        "charging": "充電器を追加",
+        "heating": "ヒーターを追加"
+      },
+      "titleEdit": {
+        "charging": "充電器を編集",
+        "heating": "ヒーターを編集"
+      }
+    },
+    "deviceValue": {
+      "chargeStatus": "ステータス",
+      "chargeStatusA": "未接続",
+      "chargeStatusB": "接続",
+      "chargeStatusF": "エラー",
+      "detected": "検出",
+      "gridPrice": "グリッド価格",
+      "url": "URL",
+      "yes": "はい"
+    },
+    "deviceValueChargeStatus": {
+      "A": "A（未接続）",
+      "B": "B（接続済み）",
+      "C": "C（充電中）"
+    },
+    "devices": {
+      "solarSystem": "ソーラーシステム"
+    },
+    "experimental": {
+      "title": "実験的"
+    },
+    "form": {
+      "danger": "危険",
+      "deprecated": "非推奨",
+      "example": "例"
+    },
+    "general": {
+      "cancel": "キャンセル",
+      "clear": "クリア",
+      "close": "閉じる",
+      "copied": "コピーしました！",
+      "copy": "コピー",
+      "delete": "削除",
+      "hideAdvancedSettings": "詳細設定を隠す",
+      "noFileSelected": "ファイルが選択されていません。",
+      "off": "オフ",
+      "on": "オン",
+      "password": "パスワード",
+      "reset": "リセット",
+      "save": "保存",
+      "saved": "保存しました。",
+      "saving": "保存中…",
+      "selectFile": "ブラウズ",
+      "showAdvancedSettings": "詳細設定を見る",
+      "telemetry": "テレメトリ",
+      "templateLoading": "ロード中...",
+      "title": "タイトル"
+    },
+    "grid": {
+      "title": "グリッドメーター",
+      "titleAdd": "グリッドメーターを追加",
+      "titleEdit": "グリッドメーターを編集"
+    },
+    "hems": {
+      "csv": {
+        "created": "作成済み",
+        "type": "タイプ"
+      },
+      "downloadCsv": "CSVをダウンロード"
+    },
+    "icon": {
+      "label": "アイコン"
+    },
+    "influx": {
+      "labelDatabase": "データベース",
+      "labelPassword": "パスワード",
+      "labelToken": "APIトークン",
+      "labelUrl": "URL",
+      "labelUser": "ユーザー名",
+      "title": "InfluxDB"
+    },
+    "loadpoint": {
+      "cancel": "キャンセル",
+      "chargerLabel": {
+        "charging": "充電器",
+        "heating": "ヒーター"
+      },
+      "defaultModeLabel": "デフォルトモード",
+      "delete": "削除",
+      "pollModeConnected": "接続済み",
+      "priorityLabel": "優先度",
+      "save": "保存",
+      "showAllSettings": "すべての設定を見る",
+      "solarBehaviorLabel": "ソーラー",
+      "solarModeCustom": "カスタム",
+      "thresholdEnableLabel": "グリッドパワーを有効化する",
+      "titleAdd": {
+        "charging": "充電ポイントを追加"
+      },
+      "titleLabel": "タイトル",
+      "vehiclesTitle": "車両"
+    },
+    "main": {
+      "addVehicle": "車両を追加",
+      "edit": "編集",
+      "name": "名前"
+    },
+    "messaging": {
+      "title": "通知"
+    },
+    "meter": {
+      "cancel": "キャンセル",
+      "delete": "削除",
+      "option": {
+        "pv": "ソーラーメーターを追加"
+      },
+      "save": "保存",
+      "titleLabel": "タイトル",
+      "usage": {
+        "battery": "バッテリー",
+        "grid": "グリッド",
+        "label": "使用量"
+      }
+    },
+    "modbus": {
+      "connectionValueTcpip": "ネットワーク",
+      "device": "デバイス名",
+      "deviceHint": "例： /dev/ttyUSB0",
+      "host": "IPアドレスもしくはホスト名",
+      "hostHint": "例： 192.0.2.2",
+      "port": "ポート"
+    },
+    "modbusproxy": {
+      "add": "プロキシー接続を追加",
+      "device": "デバイス",
+      "option": {
+        "deny": "エラー",
+        "false": "いいえ"
+      },
+      "readonly": {
+        "label": "読み取り専用"
+      }
+    },
+    "mqtt": {
+      "labelClientId": "クライアントID",
+      "labelClientKey": "クライアントキー",
+      "labelPassword": "パスワード",
+      "labelTopic": "トピック",
+      "labelUser": "ユーザー名"
+    },
+    "network": {
+      "labelExternalUrl": "外部URL",
+      "labelHost": "mDNSホスト名",
+      "labelInternalUrl": "内部URL",
+      "labelPort": "ポート",
+      "title": "ネットワーク"
+    },
+    "ocpp": {
+      "status": {
+        "configured": "未接続",
+        "connected": "接続済み",
+        "unknown": "不明"
+      },
+      "title": "OCPPサーバー",
+      "url": "サーバーURL"
+    },
+    "options": {
+      "boolean": {
+        "no": "いいえ",
+        "yes": "はい"
+      }
+    },
+    "pv": {
+      "titleAdd": "ソーラーメーターを追加",
+      "titleEdit": "ソーラーメーターを編集"
+    },
+    "section": {
+      "grid": "グリッド",
+      "system": "システム",
+      "vehicles": "車両"
+    },
+    "shm": {
+      "labelDeviceId": "デバイスID",
+      "labelVendorId": "ベンダーID"
+    },
+    "system": {
+      "backupRestore": {
+        "backup": {
+          "title": "バックアップ"
+        },
+        "cancel": "キャンセル",
+        "reset": {
+          "title": "リセット"
+        },
+        "restore": {
+          "title": "復元"
+        }
+      },
+      "logs": "ログ",
+      "restart": "再起動",
+      "restartingDescription": "お待ちください…"
+    },
+    "title": {
+      "label": "タイトル",
+      "title": "タイトルを編集"
+    },
+    "validation": {
+      "failed": "失敗",
+      "label": "ステータス",
+      "success": "成功"
+    }
+  }
+}

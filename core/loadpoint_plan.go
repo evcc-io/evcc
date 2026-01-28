@@ -113,6 +113,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 
 	planTime := lp.EffectivePlanTime()
 	if planTime.IsZero() {
+		lp.log.DEBUG.Println("!! plan: plan time zero")
 		return false
 	}
 
@@ -131,6 +132,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		if lp.planActive && isSocBased && goal == 100 {
 			return true
 		}
+		lp.log.DEBUG.Println("!! plan: required duration 0")
 
 		lp.finishPlan()
 		return false
@@ -140,6 +142,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 
 	plan = lp.GetPlan(planTime, requiredDuration, strategy.Precondition, strategy.Continuous)
 	if plan == nil {
+		lp.log.DEBUG.Println("!! plan: plan nil")
 		return false
 	}
 
@@ -169,7 +172,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 
 	if active {
 		// ignore short plans if not already active
-		if slotRemaining := lp.clock.Until(activeSlot.End); !lp.planActive && slotRemaining < tariff.SlotDuration && !planner.SlotHasSuccessor(activeSlot, plan) {
+		if slotRemaining := lp.clock.Until(activeSlot.End); !lp.planActive && slotRemaining < tariff.SlotDuration-time.Minute && !planner.SlotHasSuccessor(activeSlot, plan) {
 			lp.log.DEBUG.Printf("plan: slot too short- ignoring remaining %v", slotRemaining.Round(time.Second))
 			return false
 		}

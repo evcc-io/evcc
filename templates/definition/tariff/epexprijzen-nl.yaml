@@ -1,0 +1,64 @@
+template: epexprijzen-nl
+products:
+  - brand: epexprijzen.nl
+    description:
+      en: Current energy prices in the Netherlands, including surcharges and taxes
+      de: Aktuelle Energiepreise in den Niederlanden, einschließlich Zuschlägen und Steuern
+requirements:
+  evcc: ["skiptest"]
+group: price
+countries: ["NL"]
+params:
+  - name: provider
+    description:
+      en: Energy provider
+      de: Energieversorger
+    type: choice
+    choice:
+      [
+        "anwb-energie",
+        "atoom-alliantie",
+        "budget-energie",
+        "coolblue-energie",
+        "easyenergy",
+        "eneco",
+        "energie-vanons",
+        "energyzero",
+        "frank-energie",
+        "frank-energie-slim",
+        "hegg",
+        "innova",
+        "nextenergy",
+        "samsam",
+        "tibber",
+        "vandebron",
+        "zonneplan",
+      ]
+    required: true
+  - name: price-interval
+    description:
+      en: Price interval
+      de: Preisintervall
+    type: choice
+    choice: ["hourly", "quarterly"]
+    default: quarterly
+    required: true
+  - preset: tariff-base
+  - name: interval
+    default: 1h
+    advanced: true
+render: |
+  type: custom
+  {{ include "tariff-base" . }}
+  forecast:
+    source: http
+    uri: https://epexprijzen.nl/api/v1/prices/{{ .provider }}/{{ index . "price-interval" }}
+    jq: |
+      (.today // []) + (.tomorrow // []) | 
+      map({
+        "start": (.t | strptime("%Y-%m-%dT%H:%M:%S%z") | strftime("%Y-%m-%dT%H:%M:%SZ")),
+        "end": (.t | strptime("%Y-%m-%dT%H:%M:%S%z") | mktime + {{ if eq (index . "price-interval") "hourly" }}3600{{ else }}900{{ end }} | strftime("%Y-%m-%dT%H:%M:%SZ")),
+        "value": .price
+      }) | tostring
+    cache: 1h
+  interval: {{ .interval }}

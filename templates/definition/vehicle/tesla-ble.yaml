@@ -27,6 +27,8 @@ params:
     help:
       de: Port des Tesla BLE HTTP Proxy
       en: Port of the Tesla BLE HTTP Proxy
+  - name: timeout
+    default: 30s
 render: |
   type: custom
   {{- include "vehicle-common" . }}
@@ -47,23 +49,27 @@ render: |
     source: http
     uri: {{ .url }}:{{ .port }}/api/1/vehicles/{{ .vin }}/vehicle_data?endpoints=charge_state
     jq: .response.response.charge_state.battery_level
-    timeout: 30s
+    timeout: {{ .timeout }}
+    cache: 1s
   getmaxcurrent:
     source: http
     uri: {{ .url }}:{{ .port }}/api/1/vehicles/{{ .vin }}/vehicle_data?endpoints=charge_state
     jq: .response.response.charge_state.charge_amps
-    timeout: 30s
+    timeout: {{ .timeout }}
+    cache: 1s
   limitsoc:
     source: http
     uri: {{ .url }}:{{ .port }}/api/1/vehicles/{{ .vin }}/vehicle_data?endpoints=charge_state
     jq: .response.response.charge_state.charge_limit_soc
-    timeout: 30s
+    timeout: {{ .timeout }}
+    cache: 1s
   range:
     source: http
     uri: {{ .url }}:{{ .port }}/api/1/vehicles/{{ .vin }}/vehicle_data?endpoints=charge_state
     jq: .response.response.charge_state.battery_range
     scale: 1.60934
-    timeout: 30s
+    timeout: {{ .timeout }}
+    cache: 1s
   status:
     source: http
     uri: {{ .url }}:{{ .port }}/api/1/vehicles/{{ .vin }}/vehicle_data?endpoints=charge_state
@@ -73,4 +79,5 @@ render: |
       elif (.response.response.charge_state.charging_state == "NoPower") then "B"
       elif (.response.response.charge_state.charging_state == "Complete") then "B" 
       else "A" end)
-    timeout: 30s
+    timeout: {{ .timeout }}
+    cache: 1s

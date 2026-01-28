@@ -8,7 +8,7 @@ import (
 
 func decorateTronity(base *Tronity, chargeState func() (api.ChargeStatus, error), vehicleOdometer func() (float64, error), chargeController func(bool) error) api.Vehicle {
 	switch {
-	case chargeController == nil && chargeState == nil && vehicleOdometer == nil:
+	case chargeState == nil && vehicleOdometer == nil:
 		return base
 
 	case chargeController == nil && chargeState != nil && vehicleOdometer == nil:
@@ -22,7 +22,7 @@ func decorateTronity(base *Tronity, chargeState func() (api.ChargeStatus, error)
 			},
 		}
 
-	case chargeController == nil && chargeState == nil && vehicleOdometer != nil:
+	case chargeState == nil && vehicleOdometer != nil:
 		return &struct {
 			*Tronity
 			api.VehicleOdometer
@@ -48,17 +48,6 @@ func decorateTronity(base *Tronity, chargeState func() (api.ChargeStatus, error)
 			},
 		}
 
-	case chargeController != nil && chargeState == nil && vehicleOdometer == nil:
-		return &struct {
-			*Tronity
-			api.ChargeController
-		}{
-			Tronity: base,
-			ChargeController: &decorateTronityChargeControllerImpl{
-				chargeController: chargeController,
-			},
-		}
-
 	case chargeController != nil && chargeState != nil && vehicleOdometer == nil:
 		return &struct {
 			*Tronity
@@ -71,21 +60,6 @@ func decorateTronity(base *Tronity, chargeState func() (api.ChargeStatus, error)
 			},
 			ChargeState: &decorateTronityChargeStateImpl{
 				chargeState: chargeState,
-			},
-		}
-
-	case chargeController != nil && chargeState == nil && vehicleOdometer != nil:
-		return &struct {
-			*Tronity
-			api.ChargeController
-			api.VehicleOdometer
-		}{
-			Tronity: base,
-			ChargeController: &decorateTronityChargeControllerImpl{
-				chargeController: chargeController,
-			},
-			VehicleOdometer: &decorateTronityVehicleOdometerImpl{
-				vehicleOdometer: vehicleOdometer,
 			},
 		}
 
