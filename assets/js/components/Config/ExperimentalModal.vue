@@ -8,10 +8,11 @@
 		<div class="form-check form-switch my-3">
 			<input
 				id="experimentalEnabled"
-				v-model="hiddenFeatures"
+				:checked="experimental"
 				class="form-check-input"
 				type="checkbox"
 				role="switch"
+				@change="change"
 			/>
 			<div class="form-check-label">
 				<label for="experimentalEnabled">
@@ -19,29 +20,47 @@
 				</label>
 			</div>
 		</div>
-		<div class="small text-muted">
-			{{ $t("settings.deviceInfo") }}
-		</div>
+		<div v-if="error" class="errorMessage my-1 text-danger" v-html="error" />
 	</GenericModal>
 </template>
 
 <script lang="ts">
 import { defineComponent } from "vue";
 import GenericModal from "../Helper/GenericModal.vue";
-import { getHiddenFeatures, setHiddenFeatures } from "@/featureflags.ts";
+import api from "@/api";
+import type { AxiosError } from "axios";
+import formatter from "@/mixins/formatter";
 
 export default defineComponent({
 	name: "ExperimentalModal",
 	components: { GenericModal },
+	mixins: [formatter],
+	props: {
+		experimental: Boolean,
+	},
 	data() {
 		return {
-			hiddenFeatures: getHiddenFeatures(),
+			error: null as string | null,
 		};
 	},
-	watch: {
-		hiddenFeatures(value) {
-			setHiddenFeatures(value);
+	methods: {
+		async change(e: Event) {
+			try {
+				this.error = null;
+				await api.post(`settings/experimental/${(e.target as HTMLInputElement).checked}`);
+			} catch (err) {
+				const e = err as AxiosError<{ error: string }>;
+				if (e.response) {
+					this.error = this.parseMarkdown("**Error:** " + e.response.data.error);
+				}
+			}
 		},
 	},
 });
 </script>
+<style>
+.errorMessage :deep(pre) {
+	text-overflow: ellipsis;
+	font-size: 1em;
+}
+</style>

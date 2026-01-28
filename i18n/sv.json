@@ -1225,7 +1225,6 @@
     "vehicle": "Fordon"
   },
   "settings": {
-    "deviceInfo": "Inställningar du gör här påverkar endast denna enhet.",
     "fullscreen": {
       "enter": "Till helskärmsläge",
       "exit": "Lämna helskärmsläge",

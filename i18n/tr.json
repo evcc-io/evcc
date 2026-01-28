@@ -1223,7 +1223,6 @@
     "vehicle": "Araç"
   },
   "settings": {
-    "deviceInfo": "Bu iletişim kutusunda yaptığın ayarlar yalnızca bu cihazı etkiler.",
     "fullscreen": {
       "enter": "Tam ekrana geç",
       "exit": "Tam ekrandan çık",

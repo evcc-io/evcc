@@ -443,5 +443,12 @@ export default defineComponent({
       }
       return label;
     },
+    parseMarkdown(markdownText: string) {
+      const htmlText = markdownText
+        .replace(/\*\*(.*)\*\*/gim, "<b>$1</b>")
+        .replace(/\*(.*)\*/gim, "<i>$1</i>")
+        .replace(/`(.*)`/gim, "<pre>$1</pre>");
+      return htmlText.trim();
+    },
   },
 });

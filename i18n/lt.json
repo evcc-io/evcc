@@ -1225,7 +1225,6 @@
     "vehicle": "Automobilis"
   },
   "settings": {
-    "deviceInfo": "Šiame dialoge atlikti nustatymai taikomi tik šiam įrenginiui.",
     "fullscreen": {
       "enter": "Įjungti visą ekraną",
       "exit": "Išjungti visą ekraną",

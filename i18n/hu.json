@@ -1223,7 +1223,6 @@
     "vehicle": "Jármű"
   },
   "settings": {
-    "deviceInfo": "Az ezen a párbeszédpanelen végzett beállítások csak erre az eszközre vonatkoznak.",
     "fullscreen": {
       "enter": "Teljes képernyő",
       "exit": "Kilépés a teljes képernyőből",

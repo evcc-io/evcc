@@ -1224,7 +1224,6 @@
     "vehicle": "Vozilo"
   },
   "settings": {
-    "deviceInfo": "Postavke koje ovdje promijenite primjenjuju se samo na ovaj uređaj.",
     "fullscreen": {
       "enter": "Otvori cjeloekranski prikaz",
       "exit": "Izlaz iz punog zaslona",

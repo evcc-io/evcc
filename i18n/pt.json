@@ -1223,7 +1223,6 @@
     "vehicle": "Veículo"
   },
   "settings": {
-    "deviceInfo": "As definições efetuadas nesta caixa de diálogo afetam apenas este dispositivo.",
     "fullscreen": {
       "enter": "Entrar em tela cheia",
       "exit": "Sair da tela cheia",

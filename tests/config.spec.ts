@@ -62,6 +62,27 @@ test.describe("general", async () => {
     await page.getByTestId("home-link").click();
     await expect(page.getByRole("heading", { name: "Ahoy World" })).toBeVisible();
   });
+  test("enable experimental", async ({ page }) => {
+    await page.goto("/#/config");
+
+    const experimentalEntry = page.getByTestId("generalconfig-experimental");
+
+    await expect(experimentalEntry).toContainText("off");
+    await experimentalEntry.getByRole("button", { name: "edit" }).click();
+
+    const modal = page.getByTestId("experimental-modal");
+    await expectModalVisible(modal);
+
+    const experimentalInput = modal.getByLabel("Show experimental features. 🧪");
+    await expect(experimentalInput).not.toBeChecked();
+    await experimentalInput.check();
+
+    await modal.getByRole("button", { name: "Close" }).click();
+    await expectModalHidden(modal);
+
+    await experimentalEntry.getByRole("button", { name: "edit" }).click();
+    await expect(experimentalEntry).toContainText("on");
+  });
 });
 
 test.describe("network modal", async () => {

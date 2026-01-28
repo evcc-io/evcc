@@ -35,17 +35,11 @@ import { defineComponent } from "vue";
 import api from "../api";
 import { docsPrefix } from "../i18n";
 import type { AxiosError } from "axios";
-
-function parseMarkdown(markdownText: string) {
-	const htmlText = markdownText
-		.replace(/\*\*(.*)\*\*/gim, "<b>$1</b>")
-		.replace(/\*(.*)\*/gim, "<i>$1</i>")
-		.replace(/`(.*)`/gim, "<pre>$1</pre>");
-	return htmlText.trim();
-}
+import formatter from "@/mixins/formatter";
 
 export default defineComponent({
 	name: "TelemetrySettings",
+	mixins: [formatter],
 	props: { sponsorActive: Boolean, telemetry: Boolean },
 	data() {
 		return {
@@ -65,7 +59,7 @@ export default defineComponent({
 			} catch (err) {
 				const e = err as AxiosError<{ error: string }>;
 				if (e.response) {
-					this.error = parseMarkdown("**Error:** " + e.response.data.error);
+					this.error = this.parseMarkdown("**Error:** " + e.response.data.error);
 				}
 			}
 		},

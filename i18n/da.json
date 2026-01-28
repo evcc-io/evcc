@@ -1225,7 +1225,6 @@
     "vehicle": "Køretøj"
   },
   "settings": {
-    "deviceInfo": "De indstillinger, du laver her, gælder kun for denne enhed.",
     "fullscreen": {
       "enter": "Gå til fuldskærmsvisning",
       "exit": "Afslut fuldskærm",
