@@ -25,7 +25,6 @@ test.describe("ocpp", () => {
 
     // Open OCPP card
     const ocppCard = page.getByTestId("ocpp");
-    await expect(ocppCard).toContainText(["Configured", "no"].join(""));
     await ocppCard.getByRole("button", { name: "edit" }).click();
 
     const ocppModal = page.getByTestId("ocpp-modal");

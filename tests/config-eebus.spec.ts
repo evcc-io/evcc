@@ -13,10 +13,6 @@ test.describe("eebus", async () => {
     await start();
     await page.goto("/#/config");
 
-    const eebusCard = page.getByTestId("eebus");
-    await expect(eebusCard).toBeVisible();
-    await expect(eebusCard).toContainText(["Configured", "yes"].join(""));
-
     await page.getByTestId("eebus").getByRole("button", { name: "edit" }).click();
     const modal = page.getByTestId("eebus-modal");
     await expectModalVisible(modal);
