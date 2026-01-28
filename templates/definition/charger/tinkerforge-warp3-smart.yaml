@@ -1,4 +1,5 @@
 template: tinkerforge-warp3-smart
+deprecated: true
 products:
   - brand: TinkerForge
     description:

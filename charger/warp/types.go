@@ -5,6 +5,8 @@ const (
 	FeatureMeterAllValues = "meter_all_values"
 	FeatureMeterPhases    = "meter_phases"
 	FeatureNfc            = "nfc"
+	FeatureMeters         = "meters"
+	FeaturePhaseSwitch    = "phase_switch"
 )
 
 // https://www.warp-charger.com/api.html#evse_state
@@ -40,7 +42,7 @@ type MeterState struct {
 }
 
 // https://www.warp-charger.com/api.html#meter_values
-type MeterValues struct {
+type LegacyMeterValues struct {
 	Power           float64 `json:"power"`
 	EnergyRel       float64 `json:"energy_rel"`
 	EnergyAbs       float64 `json:"energy_abs"`
@@ -49,9 +51,43 @@ type MeterValues struct {
 }
 
 // https://www.warp-charger.com/api.html#meter_all_values
-type MeterAllValues struct {
+type LegacyMeterAllValues struct {
 	PhasesActive    []bool `json:"phases_active"`
 	PhasesConnected []bool `json:"phases_connected"`
+}
+
+// Meter value IDs according to Tinkerforge meter_value_id.csv
+const (
+	ValueIDVoltageL1N       = 1   // Voltage L1-N
+	ValueIDVoltageL2N       = 2   // Voltage L2-N
+	ValueIDVoltageL3N       = 3   // Voltage L3-N
+	ValueIDCurrentImExSumL1 = 13  // Current L1 Im-Ex Sum
+	ValueIDCurrentImExSumL2 = 17  // Current L2 Im-Ex Sum
+	ValueIDCurrentImExSumL3 = 21  // Current L3 Im-Ex Sum
+	ValueIDPowerImExSum     = 74  // Power Im-Ex Sum L1 L2 L3
+	ValueIDEnergyAbsImSum   = 209 // Energy Im Sum L1 L2 L3
+)
+
+type MeterValues struct {
+	VoltageL1N       float64
+	VoltageL2N       float64
+	VoltageL3N       float64
+	CurrentImExSumL1 float64
+	CurrentImExSumL2 float64
+	CurrentImExSumL3 float64
+	PowerImExSum     float64
+	EnergyAbsImSum   float64
+}
+
+type MeterValuesIndices struct {
+	VoltageL1NIndex       int
+	VoltageL2NIndex       int
+	VoltageL3NIndex       int
+	CurrentImExSumL1Index int
+	CurrentImExSumL2Index int
+	CurrentImExSumL3Index int
+	PowerImExSumIndex     int
+	EnergyAbsImSumIndex   int
 }
 
 type UsersConfig struct {
