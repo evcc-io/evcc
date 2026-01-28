@@ -66,7 +66,6 @@
 import TitleModal from "./TitleModal.vue";
 import GeneralConfigEntry from "./GeneralConfigEntry.vue";
 import api from "@/api";
-import settings from "@/settings";
 import store from "@/store";
 import formatter from "@/mixins/formatter";
 
