@@ -88,6 +88,9 @@
 						<PropertyCertField
 							:id="formId('certificate-public')"
 							:model-value="values.certificate?.public"
+							@update:model-value="
+								values.certificate ? (values.certificate.public = $event) : ''
+							"
 						/>
 					</FormRow>
 					<FormRow
@@ -97,6 +100,9 @@
 						<PropertyCertField
 							:id="formId('certificate-private')"
 							:model-value="values.certificate?.private"
+							@update:model-value="
+								values.certificate ? (values.certificate.private = $event) : ''
+							"
 						/>
 					</FormRow>
 				</template>
