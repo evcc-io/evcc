@@ -57,14 +57,7 @@ func NewStreamFromConfig(ctx context.Context, other map[string]any) (api.Meter, 
 		capacity:    cc.Capacity,
 		batteryMode: api.BatteryNormal,
 		dataG: util.ResettableCached(func() (StreamData, error) {
-			var res response[StreamData]
-			if err := device.GetJSON(device.quotaURL(), &res); err != nil {
-				return StreamData{}, err
-			}
-			if res.Code != "0" {
-				return StreamData{}, fmt.Errorf("api error: %s: %s", res.Code, res.Message)
-			}
-			return res.Data, nil
+			return FetchQuota[StreamData](device)
 		}, device.cache),
 	}
 

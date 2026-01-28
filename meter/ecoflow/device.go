@@ -56,3 +56,16 @@ func NewDevice(other map[string]any, deviceType string) (*Device, error) {
 func (d *Device) quotaURL() string {
 	return fmt.Sprintf("%s/iot-open/sign/device/quota/all?sn=%s", d.uri, d.sn)
 }
+
+// FetchQuota fetches device quota data from API with proper error handling
+func FetchQuota[T any](d *Device) (T, error) {
+	var res response[T]
+	var zero T
+	if err := d.GetJSON(d.quotaURL(), &res); err != nil {
+		return zero, err
+	}
+	if res.Code != "0" {
+		return zero, fmt.Errorf("api error %s: %s", res.Code, res.Message)
+	}
+	return res.Data, nil
+}
