@@ -422,8 +422,8 @@ func (w *WarpWS) Status() (api.ChargeStatus, error) {
 }
 
 func (w *WarpWS) StatusReason() (api.Reason, error) {
-    w.mu.RLock()
-    defer w.mu.RUnlock()
+	w.mu.RLock()
+	defer w.mu.RUnlock()
 	if w.status == api.StatusB && w.userEnabled && w.userCurrent == 0 {
 		return api.ReasonWaitingForAuthorization, nil
 	}
