@@ -14,7 +14,6 @@ requirements:
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
-    allinone: true
   - name: sn
     required: true
     description:
