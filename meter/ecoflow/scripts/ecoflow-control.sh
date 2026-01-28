@@ -14,11 +14,11 @@ set -e
 
 # Check required environment variables
 if [ -z "$ECOFLOW_SN" ] || [ -z "$ECOFLOW_ACCESS_KEY" ] || [ -z "$ECOFLOW_SECRET_KEY" ]; then
-    echo "❌ Missing required environment variables:"
-    echo "   export ECOFLOW_SN='your-serial-number'"
-    echo "   export ECOFLOW_ACCESS_KEY='your-access-key'"
-    echo "   export ECOFLOW_SECRET_KEY='your-secret-key'"
-    exit 1
+	echo "❌ Missing required environment variables:"
+	echo "   export ECOFLOW_SN='your-serial-number'"
+	echo "   export ECOFLOW_ACCESS_KEY='your-access-key'"
+	echo "   export ECOFLOW_SECRET_KEY='your-secret-key'"
+	exit 1
 fi
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
