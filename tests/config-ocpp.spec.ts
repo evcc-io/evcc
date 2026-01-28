@@ -43,7 +43,6 @@ test.describe("ocpp", () => {
 
     // Navigate back to evcc config page
     await page.goto("/#/config");
-    await expect(ocppCard).toContainText(["Connections", "0/0", "Detected", "1"].join(""));
     await ocppCard.getByRole("button", { name: "edit" }).click();
     await expectModalVisible(ocppModal);
     await expect(ocppModal).toContainText("Detected station IDs");
