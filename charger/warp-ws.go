@@ -178,7 +178,7 @@ func NewWarpWS(uri, user, password string, meterIndex uint) (*WarpWS, error) {
 	w := &WarpWS{
 		Helper: client, log: log,
 		uri:        util.DefaultScheme(uri, "http"),
-		current:    6000,
+		current:    0,
 		meterIndex: meterIndex,
 		meter:      &warp.MeterMapper{Log: log},
 		inBulkDump: true,
@@ -465,11 +465,11 @@ func (w *WarpWS) Identify() (string, error) {
 }
 
 func (w *WarpWS) Enable(enable bool) error {
+	curr := int64(0)
 	if enable {
-		curr := getField(w, func(w *WarpWS) int64 { return w.maxCurrent })
-		return w.setCurrent(curr)
+		curr = getField(w, func(w *WarpWS) int64 { return w.maxCurrent })
 	}
-	return nil
+	return w.setCurrent(curr)
 }
 
 func (w *WarpWS) Enabled() (bool, error) {
@@ -514,9 +514,10 @@ func (w *WarpWS) disablePhaseAutoSwitch() error {
 
 // phases1p3p implements the api.PhaseSwitcher interface
 func (w *WarpWS) phases1p3p(phases int) error {
-	if w.emState.ExternalControl > warp.ExternalControlAvailable {
-		w.log.DEBUG.Printf("em: external control unavailable (%s)", w.emState.ExternalControl.String())
-		return fmt.Errorf("external control not available: %s", w.emState.ExternalControl.String())
+	externalControl := getField(w, func(ww *WarpWS) warp.ExternalControl { return w.emState.ExternalControl })
+	if externalControl > warp.ExternalControlAvailable {
+		w.log.DEBUG.Printf("em: external control unavailable (%s)", externalControl.String())
+		return fmt.Errorf("external control not available: %s", externalControl.String())
 	}
 
 	uri := fmt.Sprintf("%s/power_manager/external_control", w.uri)
