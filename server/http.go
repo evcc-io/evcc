@@ -14,7 +14,6 @@ import (
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/hems/shm"
 	"github.com/evcc-io/evcc/server/assets"
-	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/server/service"
 	"github.com/evcc-io/evcc/util"
@@ -160,14 +159,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, pub publisher, valueChan cha
 		"deletesession":           {"DELETE", "/session/{id:[0-9]+}", deleteSessionHandler},
 		"gridsessions":            {"GET", "/gridsessions", gridSessionsHandler},
 		"telemetry2":              {"POST", "/settings/telemetry/{value:[01truefalse]+}", boolHandler(telemetry.Enable, telemetry.Enabled)},
-		"experimental": {"POST", "/settings/experimental/{value:[01truefalse]+}", boolHandler(func(b bool) error {
-			settings.SetBool(keys.Experimental, b)
-			pub(keys.Experimental, b)
-			return nil
-		}, func() bool {
-			b, err := settings.Bool(keys.Experimental)
-			return b && err == nil
-		})},
+		"experimental":            {"POST", "/settings/experimental/{value:[01truefalse]+}", updateExperimental(pub)},
 	}
 
 	for _, r := range routes {
