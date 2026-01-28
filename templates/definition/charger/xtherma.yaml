@@ -1,0 +1,45 @@
+template: xtherma
+products:
+  - brand: Xtherma
+    description:
+      generic: experimental
+group: heating
+# requirements:
+#   evcc: ["sponsorship"]
+params:
+  - name: modbus
+    choice: ["tcpip"]
+  - name: tempsource
+    type: choice
+    choice: ["warmwater", "buffer"]
+render: |
+  type: heatpump
+  setmaxpower:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 71
+      type: holding
+      encoding: uint32
+  getmaxpower:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 71
+      type: holding
+      encoding: uint32
+  temp:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 123
+      type: input
+      encoding: int32
+    scale: 10
+  limittemp:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 501
+      type: input
+      encoding: int32
