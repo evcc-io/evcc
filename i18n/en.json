@@ -558,6 +558,7 @@
       "integrations": "Integrations",
       "loadpoints": "Charging & Heating",
       "meter": "Solar & Battery",
+      "services": "Services",
       "system": "System",
       "vehicles": "Vehicles"
     },

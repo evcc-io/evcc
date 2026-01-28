@@ -211,33 +211,6 @@
 						</template>
 					</DeviceCard>
 					<DeviceCard
-						:title="$t('config.eebus.title')"
-						editable
-						:error="hasClassError('eebus')"
-						:unconfigured="isUnconfigured(eebusTags)"
-						data-testid="eebus"
-						@edit="openModal('eebusModal')"
-					>
-						<template #icon><EebusIcon /></template>
-						<template #tags>
-							<DeviceTags :tags="eebusTags" />
-						</template>
-					</DeviceCard>
-					<DeviceCard
-						:title="$t('config.ocpp.title')"
-						editable
-						:error="hasClassError('ocpp')"
-						:unconfigured="isUnconfigured(ocppTags)"
-						data-testid="ocpp"
-						@edit="openModal('ocppModal')"
-					>
-						<template #icon><OcppIcon /></template>
-						<template #tags>
-							<DeviceTags :tags="ocppTags" />
-						</template>
-					</DeviceCard>
-
-					<DeviceCard
 						:title="`${$t('config.circuits.title')}`"
 						editable
 						:error="hasClassError('circuit')"
@@ -279,19 +252,6 @@
 						</template>
 					</DeviceCard>
 					<DeviceCard
-						:title="$t('config.shm.cardTitle')"
-						editable
-						:error="hasClassError('shm')"
-						:unconfigured="isUnconfigured(shmTags)"
-						data-testid="shm"
-						@edit="openModal('shmModal')"
-					>
-						<template #icon><ShmIcon /></template>
-						<template #tags>
-							<DeviceTags :tags="shmTags" />
-						</template>
-					</DeviceCard>
-					<DeviceCard
 						:title="$t('config.hems.title')"
 						editable
 						:error="hasClassError('hems')"
@@ -303,6 +263,40 @@
 						<template #tags>
 							<DeviceTags :tags="hemsTags" />
 						</template>
+					</DeviceCard>
+				</div>
+
+				<h2 class="my-4 mt-5">{{ $t("config.section.services") }}</h2>
+				<div class="p-0 config-list">
+					<DeviceCard
+						:title="$t('config.ocpp.title')"
+						editable
+						:error="hasClassError('ocpp')"
+						data-testid="ocpp"
+						hide-tags
+						@edit="openModal('ocppModal')"
+					>
+						<template #icon><OcppIcon /></template>
+					</DeviceCard>
+					<DeviceCard
+						:title="$t('config.shm.cardTitle')"
+						editable
+						:error="hasClassError('shm')"
+						data-testid="shm"
+						hide-tags
+						@edit="openModal('shmModal')"
+					>
+						<template #icon><ShmIcon /></template>
+					</DeviceCard>
+					<DeviceCard
+						:title="$t('config.eebus.title')"
+						editable
+						:error="hasClassError('eebus')"
+						data-testid="eebus"
+						hide-tags
+						@edit="openModal('eebusModal')"
+					>
+						<template #icon><EebusIcon /></template>
 					</DeviceCard>
 				</div>
 
@@ -660,12 +654,6 @@ export default defineComponent({
 		vehicleOptions(): VehicleOption[] {
 			return this.vehicles.map((v) => ({ key: v.name, name: v.config?.title || v.name }));
 		},
-		shmTags(): DeviceTags {
-			const { vendorId, deviceId } = store.state?.shm || {};
-			// TODO: use incoming SEMP connections to determin configured/active status
-			const value = !!vendorId || !!deviceId;
-			return { configured: { value } };
-		},
 		hems() {
 			return store.state?.hems;
 		},
@@ -704,31 +692,6 @@ export default defineComponent({
 		},
 		eebus() {
 			return store.state?.eebus;
-		},
-		eebusTags(): DeviceTags {
-			return { configured: { value: !!this.eebus?.config } };
-		},
-		ocppTags(): DeviceTags {
-			const ocpp = store.state?.ocpp;
-			const stations = ocpp?.status?.stations || [];
-			if (stations.length === 0) {
-				return { configured: { value: false } };
-			}
-
-			const connected = stations.filter((s) => s.status === "connected").length;
-			const configured = stations.filter((s) => s.status === "configured").length;
-			const detected = stations.filter((s) => s.status === "unknown").length;
-			const total = connected + configured;
-
-			const tags: Record<string, any> = {
-				connections: { value: `${connected}/${total}` },
-			};
-
-			if (detected > 0) {
-				tags["detected"] = { value: detected };
-			}
-
-			return tags;
 		},
 		modbusproxyTags(): DeviceTags {
 			const config = store.state?.modbusproxy || [];
