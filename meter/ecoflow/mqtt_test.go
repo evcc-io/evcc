@@ -34,7 +34,7 @@ func TestIntegration_MQTTCredentials(t *testing.T) {
 
 	t.Logf("✅ MQTT Credentials:")
 	t.Logf("   Account:  %s", creds.Account)
-	t.Logf("   Password: %s...", creds.Password[:8])
+	t.Logf("   Password: %.8s...", creds.Password)
 	t.Logf("   Broker:   %s", creds.BrokerURL())
 
 	if creds.Account == "" || creds.Password == "" {

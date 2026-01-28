@@ -1,6 +1,6 @@
 # EcoFlow Integration für evcc
 
-Diese Dokumentation beschreibt die Integration von EcoFlow Stream und PowerStream Geräten in evcc.
+Diese Dokumentation beschreibt die Integration von EcoFlow Stream- und PowerStream-Geräten in evcc.
 
 ## Voraussetzungen
 
@@ -144,7 +144,7 @@ loadpoints:
 
 ### MQTT-Kommunikation
 
-Die Batterie-Integration nutzt EcoFlow's offizielle MQTT-API:
+Die Batterie-Integration nutzt EcoFlows offizielle MQTT-API:
 
 | Topic | Richtung | Beschreibung |
 |-------|----------|--------------|

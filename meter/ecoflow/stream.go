@@ -123,21 +123,9 @@ func (s *Stream) handleQuotaMessage(payload string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	// Merge partial updates
-	if msg.Params.CmsBattSoc != 0 {
-		s.mqttData.CmsBattSoc = msg.Params.CmsBattSoc
-	}
-	if msg.Params.PowGetBpCms != 0 {
-		s.mqttData.PowGetBpCms = msg.Params.PowGetBpCms
-	}
-	if msg.Params.PowGetPvSum != 0 {
-		s.mqttData.PowGetPvSum = msg.Params.PowGetPvSum
-	}
-	if msg.Params.PowGetSysGrid != 0 {
-		s.mqttData.PowGetSysGrid = msg.Params.PowGetSysGrid
-	}
-	s.mqttData.Relay2Onoff = msg.Params.Relay2Onoff
-	s.mqttData.Relay3Onoff = msg.Params.Relay3Onoff
+	// EcoFlow MQTT sends complete data snapshots, not partial updates.
+	// Replace mqttData wholesale to correctly handle zero values (e.g., 0 W PV at night).
+	s.mqttData = msg.Params
 	s.lastMqtt = time.Now()
 }
 
