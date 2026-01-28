@@ -1224,6 +1224,7 @@
     "vehicle": "Véhicule"
   },
   "settings": {
+    "deviceInfo": "Les réglages effectués dans cette fenêtre n’affectent que cet appareil.",
     "fullscreen": {
       "enter": "Passer en plein écran",
       "exit": "Quitter le plein écran",

@@ -1215,6 +1215,7 @@
     "vehicle": "Vehicul"
   },
   "settings": {
+    "deviceInfo": "Setările pe care le efectuați în această fereastră de dialog afectează numai acest dispozitiv.",
     "fullscreen": {
       "enter": "Introduceți ecran complet",
       "exit": "Intrați în modul ecran complet",

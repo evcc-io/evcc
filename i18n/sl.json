@@ -1228,6 +1228,7 @@
     "vehicle": "Vozilo"
   },
   "settings": {
+    "deviceInfo": "Nastavitve, ki jih naredite v tem pogovornem oknu, vplivajo samo na to napravo.",
     "fullscreen": {
       "enter": "Vstopi v celozaslonski način",
       "exit": "Izhod iz celozaslonskega načina",

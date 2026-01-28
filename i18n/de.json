@@ -1214,6 +1214,7 @@
     "vehicle": "Fahrzeug"
   },
   "settings": {
+    "deviceInfo": "Einstellungen, die du in diesem Dialog vornimmst, gelten nur für dieses Gerät.",
     "fullscreen": {
       "enter": "Vollbild starten",
       "exit": "Vollbild beenden",

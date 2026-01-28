@@ -1223,6 +1223,7 @@
     "vehicle": "Vozidlo"
   },
   "settings": {
+    "deviceInfo": "Nastavení, která změníte v tomto okně ovlivní pouze toto zařízení.",
     "fullscreen": {
       "enter": "Přepnout do režimu celé obrazovky",
       "exit": "Ukončit režim celé obrazovky",

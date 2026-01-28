@@ -1215,6 +1215,7 @@
     "vehicle": "Kjøretøy"
   },
   "settings": {
+    "deviceInfo": "Innstillingene du gjør i denne dialogboksen påvirker bare denne enheten.",
     "fullscreen": {
       "enter": "Gå til fullskjerm",
       "exit": "Avslutt fullskjerm",

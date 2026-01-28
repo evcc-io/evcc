@@ -1216,6 +1216,7 @@
     "vehicle": "Pojazd"
   },
   "settings": {
+    "deviceInfo": "Ustawienia wprowadzone w tym oknie dialogowym dotyczą tylko tego urządzenia.",
     "fullscreen": {
       "enter": "Wejdź w tryb pełnoekranowy",
       "exit": "Wyjdź z trybu pełnoekranowego",

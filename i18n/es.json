@@ -1218,6 +1218,7 @@
     "vehicle": "Vehículo"
   },
   "settings": {
+    "deviceInfo": "Los ajustes que realice en este cuadro de diálogo solo afectarán a este dispositivo.",
     "fullscreen": {
       "enter": "Iniciar a pantalla completa",
       "exit": "Salir de la pantalla completa",

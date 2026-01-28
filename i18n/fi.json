@@ -1224,6 +1224,7 @@
     "vehicle": "Ajoneuvo"
   },
   "settings": {
+    "deviceInfo": "Tämän valikon asetukset vaikuttavat vain tähän laitteeseen.",
     "fullscreen": {
       "enter": "Mene kokonäyttötilaan",
       "exit": "Poistu kokonäyttötilasta",

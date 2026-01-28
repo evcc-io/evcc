@@ -1218,6 +1218,7 @@
     "vehicle": "Veicolo"
   },
   "settings": {
+    "deviceInfo": "Le impostazioni configurate in questa finestra di dialogo riguardano solo questo dispositivo.",
     "fullscreen": {
       "enter": "Entra in schermo intero",
       "exit": "Uscire dallo schermo intero",

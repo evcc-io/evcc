@@ -1224,6 +1224,7 @@
     "vehicle": "Voertuig"
   },
   "settings": {
+    "deviceInfo": "Instellingen die je in dit scherm maakt, gelden alleen voor dit apparaat.",
     "fullscreen": {
       "enter": "Open volledig scherm",
       "exit": "Volledig scherm afsluiten",
