@@ -4,6 +4,7 @@ products:
     description:
       generic: STREAM Ultra, STREAM Pro, STREAM AC Pro
 requirements:
+  evcc: ["skiptest"]
   description:
     de: |
       Access Key und Secret Key von der EcoFlow Developer Console.
@@ -16,14 +17,17 @@ params:
     choice: ["grid", "pv", "battery"]
   - name: sn
     required: true
+    example: HJ31ZCxxxx
     description:
       generic: Serial Number
   - name: accesskey
     required: true
+    example: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
     description:
       generic: Access Key
   - name: secretkey
     required: true
+    example: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
     description:
       generic: Secret Key
   - name: capacity

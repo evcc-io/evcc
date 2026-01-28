@@ -12,7 +12,7 @@
 #
 # Environment variables (required):
 #   ECOFLOW_SN          Device serial number
-#   ECOFLOW_ACCESS_KEY  API access key  
+#   ECOFLOW_ACCESS_KEY  API access key
 #   ECOFLOW_SECRET_KEY  API secret key
 #
 # Optional:
@@ -52,25 +52,25 @@ echo ""
 
 case "${1:-all}" in
 	--status)
-	    echo -e "${YELLOW}Running status report...${NC}"
-	    go test -tags=integration -v -run TestIntegration_FullStatus ./...
-	    ;;
+		echo -e "${YELLOW}Running status report...${NC}"
+		go test -tags=integration -v -run TestIntegration_FullStatus ./...
+		;;
 	--read)
-	    echo -e "${YELLOW}Running read tests...${NC}"
-	    go test -tags=integration -v -run "TestIntegration_Read" ./...
-	    ;;
+		echo -e "${YELLOW}Running read tests...${NC}"
+		go test -tags=integration -v -run "TestIntegration_Read" ./...
+		;;
 	--control)
-	    if [[ "$ECOFLOW_ALLOW_CONTROL" != "true" ]]; then
-	        echo -e "${RED}Control tests require ECOFLOW_ALLOW_CONTROL=true${NC}"
-	        exit 1
-	    fi
-	    echo -e "${YELLOW}Running control tests...${NC}"
-	    go test -tags=integration -v -run "TestIntegration_Control" ./...
-	    ;;
+		if [[ "$ECOFLOW_ALLOW_CONTROL" != "true" ]]; then
+		    echo -e "${RED}Control tests require ECOFLOW_ALLOW_CONTROL=true${NC}"
+		    exit 1
+		fi
+		echo -e "${YELLOW}Running control tests...${NC}"
+		go test -tags=integration -v -run "TestIntegration_Control" ./...
+		;;
 	--all|*)
-	    echo -e "${YELLOW}Running all tests...${NC}"
-	    go test -tags=integration -v ./...
-	    ;;
+		echo -e "${YELLOW}Running all tests...${NC}"
+		go test -tags=integration -v ./...
+		;;
 esac
 
 echo ""

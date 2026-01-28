@@ -4,6 +4,7 @@ products:
     description:
       generic: PowerStream Series (WN511, WN512)
 requirements:
+  evcc: ["skiptest"]
   description:
     de: |
       Access Key und Secret Key von der EcoFlow Developer Console.
@@ -16,14 +17,17 @@ params:
     choice: ["pv", "grid", "battery"]
   - name: sn
     required: true
+    example: HW51ZCxxxx
     description:
       generic: Serial Number
   - name: accesskey
     required: true
+    example: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
     description:
       generic: Access Key
   - name: secretkey
     required: true
+    example: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
     description:
       generic: Secret Key
   - name: cache
