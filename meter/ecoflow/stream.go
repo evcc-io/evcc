@@ -3,6 +3,7 @@ package ecoflow
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -175,7 +176,7 @@ func (s *Stream) setTopic() string {
 // setRelay controls the AC relay via MQTT
 func (s *Stream) setRelay(relay int, state bool) error {
 	if s.client == nil {
-		return fmt.Errorf("mqtt not available")
+		return errors.New("mqtt not available")
 	}
 
 	key := "relay2Onoff" // AC1
@@ -221,7 +222,7 @@ func (s *StreamBattery) Soc() (float64, error) {
 // Controls battery discharge via relay
 func (s *StreamBattery) SetBatteryMode(mode api.BatteryMode) error {
 	if s.client == nil {
-		return fmt.Errorf("mqtt not available for battery control")
+		return errors.New("mqtt not available for battery control")
 	}
 
 	s.mu.Lock()
