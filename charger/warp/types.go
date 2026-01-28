@@ -24,9 +24,18 @@ type EvseExternalCurrent struct {
 	Current int `json:"current"`
 }
 
-// https://www.warp-charger.com/api.html#meter_state
-type MeterState struct {
-	State int `json:"state"` // Warp 1 only
+type Evse struct {
+	State           EvseState
+	ExternalCurrent int64
+	UserCurrent     int64
+	UserEnabled     bool
+}
+
+type MeterVals struct {
+	Power    float64
+	Energy   float64
+	Currents [3]float64
+	Voltages [3]float64
 }
 
 // https://www.warp-charger.com/api.html#meter_values
@@ -92,7 +101,7 @@ const (
 	ExternalControlCurrentlySwitching
 )
 
-type EmState struct {
+type PmState struct {
 	ExternalControl ExternalControl `json:"external_control"`
 	PhasesSwitched  int             `json:"phases_switched"`
 	Input3State     bool            `json:"input3_state"`
@@ -101,6 +110,6 @@ type EmState struct {
 	ErrorFlags      int             `json:"error_flags"`
 }
 
-type EmLowLevelState struct {
+type PmLowLevelState struct {
 	Is3phase bool `json:"is_3phase"`
 }
