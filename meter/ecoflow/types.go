@@ -28,37 +28,26 @@ type response[T any] struct {
 	Data    T      `json:"data"`
 }
 
-// StreamData - API response data
+// StreamData - API response data for Stream devices
 type StreamData struct {
-	Relay2Onoff               bool            `json:"relay2Onoff"`         // AC1 switch (false=off, true=on)
-	Relay3Onoff               bool            `json:"relay3Onoff"`         // AC2 switch (false=off, true=on)
-	PowGetPvSum               float64         `json:"powGetPvSum"`         // Real-time PV power (W)
-	FeedGridMode              int             `json:"feedGridMode"`        // Feed-in control (1-off, 2-on)
-	GridConnectionPower       float64         `json:"gridConnectionPower"` // Grid port power (W)
-	PowGetSysGrid             float64         `json:"powGetSysGrid"`       // System real-time grid power (W)
-	PowGetSysLoad             float64         `json:"powGetSysLoad"`       // System real-time load power (W)
-	CmsBattSoc                float64         `json:"cmsBattSoc"`          // Battery SOC (%)
-	PowGetBpCms               float64         `json:"powGetBpCms"`         // Real-time battery power (W)
-	BackupReverseSoc          int             `json:"backupReverseSoc"`    // Backup reserve level (%)
-	CmsMaxChgSoc              int             `json:"cmsMaxChgSoc"`        // Charge limit (%)
-	CmsMinDsgSoc              int             `json:"cmsMinDsgSoc"`        // Discharge limit (%)
-	EnergyStrategyOperateMode map[string]bool `json:"energyStrategyOperateMode"`
-	QuotaCloudTs              string          `json:"quota_cloud_ts"`
+	Relay2Onoff   bool    `json:"relay2Onoff"`   // AC1 switch
+	Relay3Onoff   bool    `json:"relay3Onoff"`   // AC2 switch
+	PowGetPvSum   float64 `json:"powGetPvSum"`   // PV power (W)
+	PowGetSysGrid float64 `json:"powGetSysGrid"` // Grid power (W)
+	PowGetSysLoad float64 `json:"powGetSysLoad"` // Load power (W)
+	CmsBattSoc    float64 `json:"cmsBattSoc"`    // Battery SOC (%)
+	PowGetBpCms   float64 `json:"powGetBpCms"`   // Battery power (W)
 }
 
-// PowerStreamData - API response data
+// PowerStreamData - API response data for PowerStream devices
 type PowerStreamData struct {
-	// Power values (from heartbeat)
-	Pv1InputWatts  float64 `json:"pv1InputWatts"`  // PV1 input power (W)
-	Pv2InputWatts  float64 `json:"pv2InputWatts"`  // PV2 input power (W)
-	BatWatts       float64 `json:"batInputWatts"`  // Battery input/output power (W), positive=discharge, negative=charge
-	BatCur         int     `json:"batInputCur"`    // Battery current (0.1A), positive=discharge, negative=charge
-	InvOutputWatts float64 `json:"invOutputWatts"` // Inverter AC output power (W)
+	Pv1InputWatts  float64 `json:"pv1InputWatts"`  // PV1 power (W)
+	Pv2InputWatts  float64 `json:"pv2InputWatts"`  // PV2 power (W)
+	BatWatts       float64 `json:"batInputWatts"`  // Battery power (W)
+	InvOutputWatts float64 `json:"invOutputWatts"` // Inverter output (W)
 	BatSoc         int     `json:"batSoc"`         // Battery SOC (%)
-	SupplyPriority int     `json:"supplyPriority"` // Power supply priority (0=supply, 1=storage)
-	InvOnOff       int     `json:"invOnOff"`       // Inverter on/off (0=off, 1=on)
-	PermanentWatts int     `json:"permanentWatts"` // Custom load power (W)
-	LowerLimit     int     `json:"lowerLimit"`     // Battery discharge limit (%)
-	UpperLimit     int     `json:"upperLimit"`     // Battery charge limit (%)
-	FeedProtect    int     `json:"feedProtect"`    // Feed-in protection (0=off, 1=on)
+	InvOnOff       int     `json:"invOnOff"`       // Inverter state
+	PermanentWatts int     `json:"permanentWatts"` // Custom load (W)
+	LowerLimit     int     `json:"lowerLimit"`     // Discharge limit (%)
+	UpperLimit     int     `json:"upperLimit"`     // Charge limit (%)
 }
