@@ -84,7 +84,7 @@ export interface State {
   hems?: Hems;
   shm?: ShmConfig;
   sponsor?: Sponsor;
-  eebus?: any;
+  eebus?: Eebus;
   modbusproxy?: ModbusProxy[];
   messaging?: any;
   interval?: number;
@@ -439,6 +439,19 @@ export enum MODBUS_PROTOCOL {
   TCP = "tcp",
   RTU = "rtu",
 }
+
+export type Certificate = {
+  public: string;
+  private: string;
+};
+
+export type Eebus = {
+  uri: string;
+  port: number;
+  shipid: string;
+  interfaces?: string[];
+  certificate?: Certificate;
+};
 
 export type ModbusProxy = {
   port: number;
