@@ -16,12 +16,13 @@ func init() {
 // NewMyStromFromConfig creates a myStrom meter from generic config
 func NewMyStromFromConfig(other map[string]any) (api.Meter, error) {
 	var cc struct {
-		URI string
+		URI   string
+		Token string
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return mystrom.NewConnection(cc.URI), nil
+	return mystrom.NewConnection(cc.URI, cc.Token), nil
 }
