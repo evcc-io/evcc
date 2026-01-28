@@ -2,6 +2,9 @@
 # EcoFlow BatteryController Test Script
 #
 # Usage:
+#   export ECOFLOW_SN="your-serial-number"
+#   export ECOFLOW_ACCESS_KEY="your-access-key"
+#   export ECOFLOW_SECRET_KEY="your-secret-key"
 #   ./ecoflow-control.sh status
 #   ./ecoflow-control.sh normal
 #   ./ecoflow-control.sh hold
@@ -9,10 +12,14 @@
 
 set -e
 
-# Default credentials (override with env vars)
-export ECOFLOW_SN="${ECOFLOW_SN:-BK61ZE1B2H6H0912}"
-export ECOFLOW_ACCESS_KEY="${ECOFLOW_ACCESS_KEY:-Ms0Nefw3xBOHZMA36l8fD7IzXteWLvLL}"
-export ECOFLOW_SECRET_KEY="${ECOFLOW_SECRET_KEY:-uzDj9L9F5v5DFGObypJH5vlAcHkNPYn8}"
+# Check required environment variables
+if [ -z "$ECOFLOW_SN" ] || [ -z "$ECOFLOW_ACCESS_KEY" ] || [ -z "$ECOFLOW_SECRET_KEY" ]; then
+    echo "❌ Missing required environment variables:"
+    echo "   export ECOFLOW_SN='your-serial-number'"
+    echo "   export ECOFLOW_ACCESS_KEY='your-access-key'"
+    echo "   export ECOFLOW_SECRET_KEY='your-secret-key'"
+    exit 1
+fi
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_DIR="$(cd "$SCRIPT_DIR/../../.." && pwd)"
