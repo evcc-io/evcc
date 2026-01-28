@@ -247,8 +247,7 @@
       "downloadCsv": "Prenesi CSV",
       "eventsRecorded": "Zabeleženo {count} dogodkov omejitve omrežja.",
       "lastEvent": "Najnovejše {timeAgo}.",
-      "title": "Zunanja meja",
-      "yamlConfigured": "Opomba: Konfigurirano prek evcc.yaml. Odstranite vnos iz datoteke, da omogočite urejanje tukaj."
+      "title": "Zunanja meja"
     },
     "icon": {
       "change": "sprememba",
@@ -391,7 +390,7 @@
       "vehicles": "Moja vozila",
       "welcomeBannerText": "Začnite z ustvarjanjem vsaj enega **polnilnika**, **grelca**, **omrežja**, **sončne energije**, **baterije** ali **dodatnega merilnika**. Če želite samo preizkusiti, izberite **demo napravo**.",
       "welcomeBannerTitle": "Konfigurirajmo vaš sistem!",
-      "yaml": "Naprav iz datoteke evcc.yaml ni mogoče urejati."
+      "yaml": "Opomba: Konfigurirano prek evcc.yaml. Odstranite vnos iz datoteke, da omogočite urejanje tukaj."
     },
     "messaging": {
       "description": "Prejemanje sporočil o vaših sejah polnjenja.",

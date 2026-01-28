@@ -247,8 +247,7 @@
       "downloadCsv": "Atsisiųsti CSV failą",
       "eventsRecorded": "Užfiksuota {count} tinklo galios apribojimo įvykių.",
       "lastEvent": "Naujausias {timeAgo}.",
-      "title": "Išorinė riba",
-      "yamlConfigured": "Pastaba: Sukonfigūruota naudojant evcc.yaml. Pašalinkite įrašą iš failo, kad būtų galima redaguoti čia."
+      "title": "Išorinė riba"
     },
     "icon": {
       "change": "pakeisti",
@@ -391,7 +390,7 @@
       "vehicles": "Mano automobiliai",
       "welcomeBannerText": "Pradžiai sukonfigūruokite bent vieną **įkroviklį**, **šildytuvą**, **tinklo skaitiklį**, **saulės jėgainę** ar **papildomą skaitiklį**. Jei norite tik pasibandyti, pasirinkite **demonstracinį įrenginį**.",
       "welcomeBannerTitle": "Sukonfigūruokime jūsų sistemą!",
-      "yaml": "Įtaisas iš evcc.yaml , čia konfigūruoti neina."
+      "yaml": "Pastaba: Sukonfigūruota naudojant evcc.yaml. Pašalinkite įrašą iš failo, kad būtų galima redaguoti čia."
     },
     "messaging": {
       "description": "Gaukite pranešimus apie įkrovimo sesijas.",

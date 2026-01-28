@@ -247,8 +247,7 @@
       "downloadCsv": "Télécharger CSV",
       "eventsRecorded": "Enregistrement de {count} événements liés à la limitation de la grille.",
       "lastEvent": "Le plus récent {timeAgo}.",
-      "title": "Limite externe",
-      "yamlConfigured": "Remarque : configuré via evcc.yaml. Supprimez l'entrée du fichier pour pouvoir effectuer des modifications ici."
+      "title": "Limite externe"
     },
     "icon": {
       "change": "changer",
@@ -391,7 +390,7 @@
       "vehicles": "Mes véhicules",
       "welcomeBannerText": "Commencez par créer au moins un **chargeur**, un **chauffage**, un **réseau**, un **système solaire**, une **batterie** ou un **compteur supplémentaire**. Si vous souhaitez simplement tester, choisissez un **appareil de démonstration**.",
       "welcomeBannerTitle": "Configurons votre système !",
-      "yaml": "Un appareil provenant du evcc.yaml n’est pas modifiable."
+      "yaml": "Remarque : configuré via evcc.yaml. Supprimez l'entrée du fichier pour pouvoir effectuer des modifications ici."
     },
     "messaging": {
       "description": "Recevoir des messages à propos de vos sessions de charge.",

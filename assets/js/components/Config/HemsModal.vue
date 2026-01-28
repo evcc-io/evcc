@@ -31,7 +31,7 @@
 				</a>
 			</div>
 			<p v-if="fromYaml" class="text-muted">
-				{{ $t("config.hems.yamlConfigured") }}
+				{{ $t("config.main.yaml") }}
 			</p>
 		</template>
 	</YamlModal>

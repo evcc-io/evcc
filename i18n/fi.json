@@ -247,8 +247,7 @@
       "downloadCsv": "Lataa CSV-taulukko",
       "eventsRecorded": "Tallennettu {count} verkon rajoitustapahtumaa.",
       "lastEvent": "Viimeisin {timeAgo}.",
-      "title": "Ulkoinen raja",
-      "yamlConfigured": "Huomio: Asetus on evcc.yaml-tiedostosta. Poista asetus tiedostosta, jotta voisit muokata sitä täällä."
+      "title": "Ulkoinen raja"
     },
     "icon": {
       "change": "vaihda",
@@ -391,7 +390,7 @@
       "vehicles": "Minun ajoneuvot",
       "welcomeBannerText": "Aloita luomalla vähintään yksi **laturi**, **lämmitin**, **sähköverkko**, **aurinkopaneeli**, **akku** tai **lisämittari**. Jos haluat vain testata, valitse **esittelylaite**.",
       "welcomeBannerTitle": "Määritetään järjestelmäsi!",
-      "yaml": "evcc.yaml-asetuksissa määritettyjä laitteita ei voi muokata."
+      "yaml": "Huomio: Asetus on evcc.yaml-tiedostosta. Poista asetus tiedostosta, jotta voisit muokata sitä täällä."
     },
     "messaging": {
       "description": "Vastaanota viestejä koskien lataustapahtumiasi.",

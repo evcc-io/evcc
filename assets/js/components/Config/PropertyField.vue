@@ -220,7 +220,9 @@ export default {
 			return this.property === "icon";
 		},
 		textarea() {
-			return ["accessToken", "refreshToken", "identifiers"].includes(this.property);
+			return (
+				this.array || ["accessToken", "refreshToken", "identifiers"].includes(this.property)
+			);
 		},
 		boolean() {
 			return this.type === "Bool";

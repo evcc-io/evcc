@@ -247,8 +247,7 @@
       "downloadCsv": "Descarregar CSV",
       "eventsRecorded": "Registou {count} eventos de limitação da rede.",
       "lastEvent": "Mais recente {timeAgo}.",
-      "title": "Limite externo",
-      "yamlConfigured": "Nota: Configurado através do evcc.yaml. Remova a entrada do ficheiro para permitir a edição aqui."
+      "title": "Limite externo"
     },
     "icon": {
       "change": "alterar",
@@ -391,7 +390,7 @@
       "vehicles": "Os meus Veículos",
       "welcomeBannerText": "Comece por criar pelo menos um **carregador**, **aquecedor**, **rede**, **solar**, **bateria** ou **medidor adicional**. Se quiser apenas testar, escolha um **dispositivo de demonstração**.",
       "welcomeBannerTitle": "Configuremos agora o seu sistema!",
-      "yaml": "Os dispositivos de evcc.yaml não são editáveis."
+      "yaml": "Nota: Configurado através do evcc.yaml. Remova a entrada do ficheiro para permitir a edição aqui."
     },
     "messaging": {
       "description": "Receber mensagens sobre as sessões de carregamento.",

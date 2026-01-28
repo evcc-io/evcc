@@ -247,8 +247,7 @@
       "downloadCsv": "Preuzmi CSV",
       "eventsRecorded": "Zabilježeno je {count} događaja ograničenja mreže.",
       "lastEvent": "Najnoviji prije {timeAgo}.",
-      "title": "Vanjski limit",
-      "yamlConfigured": "Napomena: Konfigurisano putem evcc.yaml. Uklonite unos iz datoteke da biste ovdje omogućili uređivanje."
+      "title": "Vanjski limit"
     },
     "icon": {
       "change": "promjena",
@@ -343,6 +342,9 @@
       "thresholdDisableHelpPositive": "Zaustavi kada se iz mreže potroši više od {power} za {delay}.",
       "thresholdDisableHelpZero": "Zaustavite kada se za {delay} ne može zadovoljiti minimalna potrebna snaga.",
       "thresholdEnableHelpZero": "­ Počnite kada se minimalna potrebna snaga može zadovoljiti za {delay}."
+    },
+    "main": {
+      "yaml": "Napomena: Konfigurisano putem evcc.yaml. Uklonite unos iz datoteke da biste ovdje omogućili uređivanje."
     },
     "meter": {
       "save": "Sačuvaj"

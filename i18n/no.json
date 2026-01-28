@@ -247,8 +247,7 @@
       "downloadCsv": "Last ned CSV",
       "eventsRecorded": "Registrerte {count} hendelser med rutenettbegrensning.",
       "lastEvent": "Siste {timeAgo}.",
-      "title": "Ekstern grense",
-      "yamlConfigured": "Merk: Konfigurert via evcc.yaml. Fjern oppføringen fra filen for å aktivere redigering her."
+      "title": "Ekstern grense"
     },
     "icon": {
       "change": "endring",
@@ -391,7 +390,7 @@
       "vehicles": "Mine kjøretøy",
       "welcomeBannerText": "Begynn med å opprette minst én **lader**, **varmeapparat**, **nett**, **solcelle**, **batteri** eller **ekstra måler**. Hvis du bare vil teste, velger du en **demoenhet**.",
       "welcomeBannerTitle": "La oss konfigurere systemet ditt!",
-      "yaml": "Enheter fra evcc.yaml kan ikke redigeres."
+      "yaml": "Merk: Konfigurert via evcc.yaml. Fjern oppføringen fra filen for å aktivere redigering her."
     },
     "messaging": {
       "description": "Motta meldinger om ladingsøktene dine.",

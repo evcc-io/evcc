@@ -247,8 +247,7 @@
       "downloadCsv": "Descărcați CSV",
       "eventsRecorded": "Au fost înregistrate {count} evenimente de limitare a grilei.",
       "lastEvent": "Cel mai recent {timeAgo}.",
-      "title": "Limită externă",
-      "yamlConfigured": "Notă: Configurat prin evcc.yaml. Ștergeți intrarea din fișier pentru a activa editarea aici."
+      "title": "Limită externă"
     },
     "icon": {
       "change": "schimbare",
@@ -391,7 +390,7 @@
       "vehicles": "Masinile mele",
       "welcomeBannerText": "Începeți prin a crea cel puțin un **încărcător**, **încălzitor**, **rețea**, **sistem solar**, **baterie** sau **contor suplimentar**. Dacă doriți doar să testați, alegeți un **dispozitiv demo**.",
       "welcomeBannerTitle": "Să configurăm sistemul tău!",
-      "yaml": "Dispozitivele din evcc.yaml nu pot fi editate."
+      "yaml": "Notă: Configurat prin evcc.yaml. Ștergeți intrarea din fișier pentru a activa editarea aici."
     },
     "messaging": {
       "description": "Primiți mesaje despre sesiunile dvs. de încărcare.",
