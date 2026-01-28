@@ -22,6 +22,11 @@ type Stream struct {
 	client  *mqtt.Client
 	account string
 
+	// Battery limits (configurable)
+	minSoc   float64
+	maxSoc   float64
+	capacity float64
+
 	mu          sync.RWMutex
 	mqttData    StreamData
 	lastMqtt    time.Time
@@ -38,9 +43,18 @@ func NewStreamFromConfig(ctx context.Context, other map[string]any) (api.Meter, 
 
 	log := util.NewLogger("ecoflow-stream")
 
+	// Get config values for battery limits
+	var cc config
+	if err := cc.decode(other); err != nil {
+		return nil, err
+	}
+
 	s := &Stream{
 		Device:      device,
 		log:         log,
+		minSoc:      cc.MinSoc,
+		maxSoc:      cc.MaxSoc,
+		capacity:    cc.Capacity,
 		batteryMode: api.BatteryNormal,
 		dataG: util.ResettableCached(func() (StreamData, error) {
 			var res response[StreamData]
@@ -207,6 +221,7 @@ type StreamBattery struct{ *Stream }
 var (
 	_ api.Battery           = (*StreamBattery)(nil)
 	_ api.BatteryController = (*StreamBattery)(nil)
+	_ api.BatterySocLimiter = (*StreamBattery)(nil)
 )
 
 // Soc implements api.Battery
@@ -216,6 +231,35 @@ func (s *StreamBattery) Soc() (float64, error) {
 		return 0, err
 	}
 	return data.CmsBattSoc, nil
+}
+
+// GetSocLimits implements api.BatterySocLimiter
+func (s *StreamBattery) GetSocLimits() (float64, float64) {
+	minSoc := s.minSoc
+	maxSoc := s.maxSoc
+
+	// Use configured values, or try to get from API
+	if minSoc == 0 && maxSoc == 0 {
+		if data, err := s.getData(); err == nil {
+			minSoc = float64(data.CmsMinDsgSoc)
+			maxSoc = float64(data.CmsMaxChgSoc)
+		}
+	}
+
+	// Default fallbacks
+	if minSoc == 0 {
+		minSoc = 10
+	}
+	if maxSoc == 0 {
+		maxSoc = 100
+	}
+
+	return minSoc, maxSoc
+}
+
+// Capacity implements api.BatteryCapacity (if configured)
+func (s *StreamBattery) Capacity() float64 {
+	return s.capacity
 }
 
 // SetBatteryMode implements api.BatteryController

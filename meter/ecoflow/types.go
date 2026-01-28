@@ -14,6 +14,10 @@ type config struct {
 	SecretKey string
 	Usage     string
 	Cache     time.Duration
+	// Battery limits (optional, for BatterySocLimiter)
+	MinSoc   float64
+	MaxSoc   float64
+	Capacity float64 // kWh
 }
 
 func (c *config) decode(other map[string]any) error {
@@ -37,6 +41,9 @@ type StreamData struct {
 	PowGetSysLoad float64 `json:"powGetSysLoad"` // Load power (W)
 	CmsBattSoc    float64 `json:"cmsBattSoc"`    // Battery SOC (%)
 	PowGetBpCms   float64 `json:"powGetBpCms"`   // Battery power (W)
+	// Limits from API
+	CmsMaxChgSoc int `json:"cmsMaxChgSoc"` // Charge limit (%)
+	CmsMinDsgSoc int `json:"cmsMinDsgSoc"` // Discharge limit (%)
 }
 
 // PowerStreamData - API response data for PowerStream devices

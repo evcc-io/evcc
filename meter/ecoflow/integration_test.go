@@ -469,6 +469,38 @@ func TestIntegration_ControlDischarging(t *testing.T) {
 // SUMMARY TEST
 // =============================================================================
 
+// TestIntegration_BatterySocLimiter tests the BatterySocLimiter interface
+func TestIntegration_BatterySocLimiter(t *testing.T) {
+	skipIfNoCredentials(t)
+
+	if !isStreamDevice() {
+		t.Skip("BatterySocLimiter only available for Stream devices")
+	}
+
+	config := getTestConfig()
+	config["usage"] = "battery"
+
+	meter, err := NewStreamFromConfig(context.Background(), config)
+	if err != nil {
+		t.Fatalf("Failed to create meter: %v", err)
+	}
+
+	limiter, ok := meter.(api.BatterySocLimiter)
+	if !ok {
+		t.Fatal("Battery meter does not implement BatterySocLimiter")
+	}
+
+	minSoc, maxSoc := limiter.GetSocLimits()
+	t.Logf("✅ BatterySocLimiter: min=%.0f%%, max=%.0f%%", minSoc, maxSoc)
+
+	if minSoc < 0 || minSoc > 100 {
+		t.Errorf("Invalid minSoc: %.0f", minSoc)
+	}
+	if maxSoc < 0 || maxSoc > 100 {
+		t.Errorf("Invalid maxSoc: %.0f", maxSoc)
+	}
+}
+
 // TestIntegration_BatteryController tests the BatteryController interface
 func TestIntegration_BatteryController(t *testing.T) {
 	skipIfNoCredentials(t)

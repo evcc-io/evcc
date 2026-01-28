@@ -27,6 +27,21 @@ params:
     required: true
     description:
       generic: Secret Key
+  - name: capacity
+    advanced: true
+    description:
+      de: Batteriekapazität (kWh)
+      en: Battery capacity (kWh)
+  - name: minsoc
+    advanced: true
+    description:
+      de: Minimaler Ladestand (%)
+      en: Minimum SOC (%)
+  - name: maxsoc
+    advanced: true
+    description:
+      de: Maximaler Ladestand (%)
+      en: Maximum SOC (%)
   - name: cache
     default: 10s
     advanced: true
@@ -36,6 +51,15 @@ render: |
   accesskey: {{ .accesskey }}
   secretkey: {{ .secretkey }}
   usage: {{ .usage }}
+  {{- if .capacity }}
+  capacity: {{ .capacity }}
+  {{- end }}
+  {{- if .minsoc }}
+  minsoc: {{ .minsoc }}
+  {{- end }}
+  {{- if .maxsoc }}
+  maxsoc: {{ .maxsoc }}
+  {{- end }}
   {{- if ne .cache "10s" }}
   cache: {{ .cache }}
   {{- end }}
