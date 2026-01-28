@@ -3,11 +3,30 @@ package server
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util/sponsor"
+	"github.com/gorilla/mux"
 )
+
+func updateExperimental(pub publisher) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+
+		b, err := strconv.ParseBool(vars["value"])
+
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		settings.SetBool(keys.Experimental, b)
+		pub(keys.Experimental, b)
+		jsonWrite(w, b)
+	}
+}
 
 func updateSponsortokenHandler(pub publisher) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {

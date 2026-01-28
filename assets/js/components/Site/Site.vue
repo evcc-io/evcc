@@ -165,6 +165,7 @@ export default defineComponent({
 		forecast: Object as PropType<Forecast>,
 		circuits: Object as PropType<Record<string, Circuit>>,
 		telemetry: Boolean,
+		experimental: Boolean,
 		evopt: { type: Object as PropType<EvOpt> },
 	},
 	computed: {

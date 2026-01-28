@@ -25,7 +25,7 @@
 		<GeneralConfigEntry
 			test-id="generalconfig-experimental"
 			:label="$t('config.general.experimental')"
-			:text="$t(`config.general.${hiddenFeatures ? 'on' : 'off'}`)"
+			:text="$t(`config.general.${experimental ? 'on' : 'off'}`)"
 			modal-id="experimentalModal"
 		/>
 
@@ -66,7 +66,6 @@
 import TitleModal from "./TitleModal.vue";
 import GeneralConfigEntry from "./GeneralConfigEntry.vue";
 import api from "@/api";
-import settings from "@/settings";
 import store from "@/store";
 import formatter from "@/mixins/formatter";
 
@@ -76,6 +75,7 @@ export default {
 	mixins: [formatter],
 	props: {
 		sponsorError: Boolean,
+		experimental: Boolean,
 	},
 	emits: ["site-changed"],
 	data() {
@@ -86,9 +86,6 @@ export default {
 	computed: {
 		telemetryEnabled() {
 			return store.state?.telemetry === true;
-		},
-		hiddenFeatures() {
-			return settings.hiddenFeatures === true;
 		},
 		networkStatus() {
 			return `${store.state?.network?.port ?? ""}`;

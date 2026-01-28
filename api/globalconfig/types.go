@@ -30,6 +30,7 @@ type All struct {
 	Profile      bool
 	Levels       map[string]string
 	Interval     time.Duration
+	Experimental bool
 	Database     DB
 	Mqtt         Mqtt
 	ModbusProxy  []ModbusProxy
