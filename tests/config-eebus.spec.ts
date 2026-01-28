@@ -1,4 +1,4 @@
-import { test, expect, type Page, type Locator } from "@playwright/test";
+import { test, expect } from "@playwright/test";
 import { start, stop, baseUrl, restart } from "./evcc";
 import { expectModalHidden, expectModalVisible } from "./utils";
 
