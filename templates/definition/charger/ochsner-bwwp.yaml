@@ -19,41 +19,52 @@ params:
 render: |
   type: heatpump
   setmaxpower:
-    source: const
-    value: 0
-    set:
-      source: modbus
-      uri: {{ .host }}:{{ .port }}
-      id: {{ .id }}
-      register:
-        address: 2201 # SUR Überschussleistung Auflösung 1 W
-        type: writesingle
-        decode: int16
-  power:
-    source: modbus
-    uri: {{ .host }}:{{ .port }}
-    id: {{ .id }}
-    register:
-      address: 2010 # aktuelle Leistungsaufnahme
-      type: holding
-      decode: int16
+    source: watchdog
+    timeout: 480s
+    set:  
+      source: delta
+      get:
+        source: modbus
+        uri: {{ .host }}:{{ .port }}
+        id: {{ .id }}
+        register:
+         address: 2012 # Totale Überschussleistung Auflösung 1 W
+         type: input
+         decode: uint16
+      set:
+        source: modbus
+        uri: {{ .host }}:{{ .port }}
+        id: {{ .id }}
+        register:
+         address: 2201 # SUR Überschussleistung Auflösung 1 W
+         type: writeholding
+         decode: uint16
+        
+ # power:
+ #   source: modbus
+ #   uri: {{ .host }}:{{ .port }}
+ #   id: {{ .id }}
+ #   register:
+ #     address: 2010 # aktuelle Leistungsaufnahme
+ #     type: holding
+ #     decode: int16
   # {{- if .tempsource }}
-  # temp:
-  #   source: modbus
-  #   uri: {{ .host }}:{{ .port }}
-  #   id: {{ .id }}
-  #   register:
-  #     address: 2200 # C1 Solltemperatur Auflösung 0,1°C
-  #     type: holding
-  #     decode: int16
-  #   scale: 0.1
-  limittemp:
-    source: modbus
-    uri: {{ .host }}:{{ .port }}
-    id: {{ .id }}
-    register:
-      address: 2200 # C1 Solltemperatur Auflösung 0,1°C
-      type: holding
-      decode: int16
-    scale: 0.1
+#   temp:
+#     source: modbus
+#     uri: {{ .host }}:{{ .port }}
+#     id: {{ .id }}
+#     register:
+#       address: 2200 # C1 Solltemperatur Auflösung 0,1°C
+#       type: holding
+#       decode: int16
+#       scale: 0.1
+#  limittemp:
+#    source: modbus
+#    uri: {{ .host }}:{{ .port }}
+#    id: {{ .id }}
+#    register:
+#      address: 2200 # C1 Solltemperatur Auflösung 0,1°C
+#      type: writeholding
+#      decode: uint16
+#      scale: 0.1
   # {{- end }}
