@@ -31,27 +31,22 @@ func NewConnection(uri, token string) *Connection {
 
 func (c *Connection) Request(path string) error {
 	uri := fmt.Sprintf("%s/%s", c.uri, path)
-	req, err := request.New(http.MethodGet, uri, nil, nil)
-	if err == nil {
-		if c.token != "" {
-			req.Header.Set("Token", c.token)
-		}
-		_, err = c.DoBody(req)
+	req, _ := request.New(http.MethodGet, uri, nil, nil)
+	if c.token != "" {
+		req.Header.Set("Token", c.token)
 	}
+	_, err := c.DoBody(req)
 	return err
 }
 
 func (c *Connection) Report() (Report, error) {
 	var res Report
 	uri := fmt.Sprintf("%s/report", c.uri)
-	req, err := request.New(http.MethodGet, uri, nil, request.AcceptJSON)
-	if err != nil {
-		return res, err
-	}
+	req, _ := request.New(http.MethodGet, uri, nil, request.AcceptJSON)
 	if c.token != "" {
 		req.Header.Set("Token", c.token)
 	}
-	err = c.DoJSON(req, &res)
+	err := c.DoJSON(req, &res)
 	return res, err
 }
 

@@ -8,13 +8,11 @@ params:
   - name: host
   - name: token
     help:
-      en: API token (optional), only needed if token is set on device (Advanced -> Enable REST API -> Token)
-      de: API-Token (optional), nur erforderlich wenn ein Token auf Gerät gesetzt ist (Experte -> REST API aktivieren -> Token)
+      en: API token, only needed if token is set on device (Advanced -> Enable REST API -> Token)
+      de: API-Token, nur erforderlich wenn ein Token auf Gerät dem gesetzt ist (Experte -> REST API aktivieren -> Token)
   - preset: switchsocket
 render: |
   type: mystrom
   uri: http://{{ .host }}
-  {{- if .token }}
   token: {{ .token }}
-  {{- end }}
   {{ include "switchsocket" . }}
