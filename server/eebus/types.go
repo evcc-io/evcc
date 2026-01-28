@@ -52,7 +52,7 @@ func createShipID() string {
 	return fmt.Sprintf("%s-%0x", "EVCC", protectedID[:8])
 }
 
-func DefaultConfig() (*Config, error) {
+func DefaultConfig(conf *Config) (*Config, error) {
 	cert, err := CreateCertificate()
 	if err != nil {
 		return nil, err
@@ -70,6 +70,16 @@ func DefaultConfig() (*Config, error) {
 			Public:  public,
 			Private: private,
 		},
+	}
+
+	// preserve values when present
+	if conf != nil {
+		if conf.Port > 0 {
+			res.Port = conf.Port
+		}
+		if len(conf.Interfaces) > 0 {
+			res.Interfaces = conf.Interfaces
+		}
 	}
 
 	return &res, nil

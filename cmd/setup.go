@@ -785,7 +785,7 @@ func configureEEBus(conf *eebus.Config) error {
 	}
 
 	if !conf.IsConfigured() {
-		cc, err := eebus.DefaultConfig()
+		cc, err := eebus.DefaultConfig(conf)
 		if err != nil {
 			return err
 		}

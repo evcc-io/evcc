@@ -41,11 +41,8 @@ test.describe("eebus", async () => {
     const modal = page.getByTestId("eebus-modal");
     await expectModalVisible(modal);
 
-    // remember ski
-    const ski = modal.getByLabel("SKI");
-    const skiValue = await ski.inputValue();
-
     const shipidReadonly = modal.getByRole("textbox", { name: "SHIP-ID", exact: true });
+    const ski = modal.getByLabel("SKI");
     const shipidEditable = modal.getByRole("textbox", { name: "SHIP-ID optional" });
     const port = modal.getByLabel("Port");
     const interfaces = modal.getByLabel("Interfaces");
@@ -56,8 +53,8 @@ test.describe("eebus", async () => {
     await shipidEditable.fill("EVCC-1234");
     await port.fill("4321");
     await interfaces.fill("eth0");
-    await publicCertificate.fill("public certificate");
-    await privateKey.fill("private key");
+    await publicCertificate.fill("");
+    await privateKey.fill("");
 
     // validate connection
     await modal.getByRole("button", { name: "Save" }).click();
@@ -75,12 +72,12 @@ test.describe("eebus", async () => {
     await eebusCard.getByRole("button", { name: "edit" }).click();
 
     await page.getByRole("button", { name: "Show advanced settings" }).click();
-    await expect(shipidReadonly).toHaveValue("EVCC-1234");
-    await expect(ski).toHaveValue(skiValue);
-    await expect(shipidEditable).toHaveValue("EVCC-1234");
+    await expect(shipidReadonly).not.toHaveValue("EVCC-1234");
+    await expect(ski).not.toBeEmpty();
+    await expect(shipidEditable).not.toHaveValue("EVCC-1234");
     await expect(port).toHaveValue("4321");
     await expect(interfaces).toHaveValue("eth0");
-    await expect(publicCertificate).toHaveValue("public certificate");
+    await expect(publicCertificate).not.toBeEmpty();
     await expect(privateKey).toHaveValue("***");
   });
   test("delete: ski changes", async ({ page }) => {
