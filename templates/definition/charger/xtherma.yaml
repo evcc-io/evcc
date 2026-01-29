@@ -15,7 +15,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 71
+      address: 72
       type: holding
       encoding: uint32
   getmaxpower:
