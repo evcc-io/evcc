@@ -25,18 +25,6 @@ type Info struct {
 	FromYaml bool `json:"fromYaml,omitempty"`
 }
 
-func (i Info) Redacted() any {
-	r, ok := i.Config.(api.Redactor)
-	if !ok {
-		return i
-	}
-	return Info{
-		Config:   r.Redacted(),
-		Status:   i.Status,
-		FromYaml: i.FromYaml,
-	}
-}
-
 type All struct {
 	Network      Network
 	Ocpp         ocpp.Config

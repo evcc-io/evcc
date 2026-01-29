@@ -119,8 +119,8 @@ type Status struct {
 	Token       string    `json:"token,omitempty"`
 }
 
-// GetStatus returns the sponsorship status
-func GetStatus() Status {
+// RedactedStatus returns the sponsorship status
+func RedactedStatus() Status {
 	mu.RLock()
 	defer mu.RUnlock()
 

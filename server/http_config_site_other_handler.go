@@ -28,7 +28,7 @@ func updateSponsortokenHandler(pub publisher) func(w http.ResponseWriter, r *htt
 			}
 
 			pub(keys.Sponsor, globalconfig.Info{
-				Status:   sponsor.GetStatus(),
+				Status:   sponsor.RedactedStatus(),
 				FromYaml: false,
 			})
 		}
@@ -37,7 +37,7 @@ func updateSponsortokenHandler(pub publisher) func(w http.ResponseWriter, r *htt
 		settings.SetString(keys.SponsorToken, req.Token)
 		setConfigDirty()
 
-		jsonWrite(w, sponsor.GetStatus())
+		jsonWrite(w, sponsor.RedactedStatus())
 	}
 }
 
