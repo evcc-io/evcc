@@ -414,9 +414,10 @@ func (w *WarpWS) Status() (api.ChargeStatus, error) {
 }
 
 func (w *WarpWS) StatusReason() (api.Reason, error) {
+	status := w.statusFromEvseStatus()
 	w.mu.RLock()
 	defer w.mu.RUnlock()
-	if w.statusFromEvseStatus() == api.StatusB && w.evse.UserEnabled && w.evse.UserCurrent == 0 {
+	if status == api.StatusB && w.evse.UserEnabled && w.evse.UserCurrent == 0 {
 		return api.ReasonWaitingForAuthorization, nil
 	}
 	return api.ReasonUnknown, nil
