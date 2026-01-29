@@ -38,16 +38,16 @@ render: |
     uri: {{ .host }}:{{ .port }}
     id: {{ .id }}
     register:
-     address: 2000 # angezeigte Temperatur Auflösung 0,1°C
-     type: input
-     decode: uint16
-    scale: 0.1
+       address: 2000 # angezeigte Temperatur Auflösung 0,1°C
+       type: input
+       decode: uint16
+      scale: 0.1
   limittemp:
     source: modbus
     uri: {{ .host }}:{{ .port }}
     id: {{ .id }}
     register:
-     address: 2203 # Legionellen/Überschuss Solltemperatur Auflösung 0,1°C
-     type: holding
-     decode: uint16
-    scale: 0.1         
+       address: 2203 # Legionellen/Überschuss Solltemperatur Auflösung 0,1°C
+       type: holding
+       decode: uint16
+      scale: 0.1
