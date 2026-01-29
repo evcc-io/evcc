@@ -37,6 +37,6 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 501
+      address: 51
       type: input
       encoding: int32
