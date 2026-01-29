@@ -24,7 +24,7 @@ render: |
         register:
           address: 2012 # totale von der WP berechnete Überschussleistung Auflösung 1 W
           type: input
-          decode: uint16
+          decode: int16
       set:
         source: modbus
         uri: {{ .host }}:{{ .port }}
@@ -32,7 +32,7 @@ render: |
         register:
           address: 2201 # SUR Überschussleistung Auflösung 1 W
           type: writeholding
-          decode: uint16
+          decode: int16
   temp:
     source: modbus
     uri: {{ .host }}:{{ .port }}
@@ -40,7 +40,7 @@ render: |
     register:
       address: 2000 # angezeigte Temperatur Auflösung 0,1°C
       type: input
-      decode: uint16
+      decode: int16
     scale: 0.1
   limittemp:
     source: modbus
@@ -49,5 +49,5 @@ render: |
     register:
       address: 2203 # Legionellen/Überschuss Solltemperatur Auflösung 0,1°C
       type: holding
-      decode: uint16
+      decode: int16
     scale: 0.1
