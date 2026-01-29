@@ -111,6 +111,8 @@
 						class="form-control mb-1 font-monospace"
 						required
 						spellcheck="false"
+						pattern="[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}"
+						title="XXXXX-XXXXX-XXXXX-XXXXX-XXXXX"
 					/>
 					<i18n-t tag="small" keypath="config.sponsor.activationKeyHint" scope="global">
 						<template #url>
