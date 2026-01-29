@@ -9,9 +9,6 @@ group: heating
 params:
   - name: modbus
     choice: ["tcpip"]
-  - name: tempsource
-    type: choice
-    choice: ["warmwater", "buffer"]
 render: |
   type: heatpump
   setmaxpower:
