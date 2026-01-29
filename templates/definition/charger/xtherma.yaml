@@ -29,7 +29,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 123
+      address: 124
       type: input
       encoding: int32
     scale: 10
