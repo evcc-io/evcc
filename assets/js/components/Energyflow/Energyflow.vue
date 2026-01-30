@@ -239,7 +239,6 @@
 								:power="batteryCharge"
 								:powerUnit="powerUnit"
 								:iconProps="{
-									hold: batteryHold,
 									soc: batterySoc,
 									gridCharge: batteryGridChargeActive,
 								}"
@@ -247,6 +246,7 @@
 								:detailsFmt="batteryFmt"
 								:expanded="batteryExpanded"
 								detailsClickable
+								data-testid="energyflow-entry-batterycharge"
 								@details-clicked="openBatterySettingsModal"
 								@toggle="toggleBattery"
 							>
@@ -395,7 +395,7 @@ export default defineComponent({
 			return this.chargePower(this.batteryPower);
 		},
 		batteryChargeLabel() {
-			return this.$t(`main.energyflow.battery${this.batteryHold ? "Hold" : "Charge"}`);
+			return this.$t("main.energyflow.batteryCharge");
 		},
 		batteryDischargeLabel() {
 			return this.$t(`main.energyflow.battery${this.batteryHold ? "Hold" : "Discharge"}`);
