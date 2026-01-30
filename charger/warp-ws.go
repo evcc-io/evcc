@@ -23,10 +23,9 @@ import (
 
 type WarpWS struct {
 	*request.Helper
-	log           *util.Logger
-	uri           string
-	inBulkDump    bool
-	eventHandlers map[string]handlerFn
+	log        *util.Logger
+	uri        string
+	inBulkDump bool
 
 	mu sync.RWMutex
 
@@ -38,30 +37,27 @@ type WarpWS struct {
 	maxCurrent int64 // input from evcc
 
 	// meter
-	meter       warp.MeterVals
-	meterIndex  uint
-	meterMapper *warp.MeterMapper
+	meter    warp.MeterValues
+	meterMap map[int]int
 
 	// nfc
-	tagId     string
-	nfcConfig warp.NfcConfig
+	chargeTracker warp.ChargeTrackerCurrentCharge
 
 	// power manager
 	pmState         warp.PmState
 	pmLowLevelState warp.PmLowLevelState
-	pmURI           string
-	pmHelper        *request.Helper
 
 	// config
-	current int64
+	current    int64
+	emURI      string
+	emHelper   *request.Helper
+	meterIndex uint
 }
 
 type warpEvent struct {
 	Topic   string          `json:"topic"`
 	Payload json.RawMessage `json:"payload"`
 }
-
-type handlerFn func(*WarpWS, json.RawMessage)
 
 var _ api.ChargerEx = (*WarpWS)(nil)
 
@@ -87,7 +83,7 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 		return nil, err
 	}
 
-	wb, err := NewWarpWS(cc.URI, cc.User, cc.Password, cc.EnergyMeterIndex)
+	wb, err := NewWarpWS(ctx, cc.URI, cc.User, cc.Password, cc.EnergyMeterIndex)
 	if err != nil {
 		return nil, err
 	}
@@ -106,14 +102,14 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 		voltages = wb.voltages
 	}
 
-	if wb.hasFeature(warp.FeaturePhaseSwitch) && wb.pmURI == "" {
-		wb.pmURI = wb.uri
-		wb.pmHelper = wb.Helper
+	if wb.hasFeature(warp.FeaturePhaseSwitch) && wb.emURI == "" {
+		wb.emURI = wb.uri
+		wb.emHelper = wb.Helper
 	} else if cc.EnergyManagerURI != "" { // fallback to Energy Manager
-		wb.pmURI = util.DefaultScheme(strings.TrimRight(cc.EnergyManagerURI, "/"), "http")
-		wb.pmHelper = request.NewHelper(wb.log)
+		wb.emURI = util.DefaultScheme(strings.TrimRight(cc.EnergyManagerURI, "/"), "http")
+		wb.emHelper = request.NewHelper(wb.log)
 		if cc.EnergyManagerUser != "" {
-			wb.pmHelper.Client.Transport = digest.NewTransport(cc.EnergyManagerUser, cc.EnergyManagerPassword, wb.pmHelper.Client.Transport)
+			wb.emHelper.Client.Transport = digest.NewTransport(cc.EnergyManagerUser, cc.EnergyManagerPassword, wb.emHelper.Client.Transport)
 		}
 	}
 
@@ -141,16 +137,7 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 		wb.log.TRACE.Println("disabled phase auto switching")
 	}
 
-	return decorateWarpWS(
-		wb,
-		currentPower,
-		totalEnergy,
-		currents,
-		voltages,
-		identify,
-		phases,
-		getPhases,
-	), nil
+	return decorateWarpWS(wb, currentPower, totalEnergy, currents, voltages, identify, phases, getPhases), nil
 }
 
 func NewWarpWS(ctx context.Context, uri, user, password string, meterIndex uint) (*WarpWS, error) {
@@ -163,11 +150,11 @@ func NewWarpWS(ctx context.Context, uri, user, password string, meterIndex uint)
 
 	w := &WarpWS{
 		Helper: client, log: log,
-		uri:         util.DefaultScheme(uri, "http"),
-		current:     0,
-		meterIndex:  meterIndex,
-		meterMapper: &warp.MeterMapper{Log: log},
-		inBulkDump:  true,
+		uri:        util.DefaultScheme(uri, "http"),
+		current:    0,
+		meterIndex: meterIndex,
+		meterMap:   map[int]int{},
+		inBulkDump: true,
 	}
 
 	go w.run(ctx)
@@ -180,37 +167,40 @@ func (w *WarpWS) run(ctx context.Context) {
 	w.log.TRACE.Printf("ws: connecting to %s …", uri)
 
 	bo := backoff.NewExponentialBackOff()
-	bo.MaxElapsedTime = 0 // never stop retrying
+	bo.MaxElapsedTime = 0
 
-	operation := func() error {
-		conn, _, err := websocket.Dial(ctx, uri, nil)
-		if err != nil {
-			w.log.ERROR.Printf("ws dial error: %v", err)
-			return err
-		}
-
-		w.log.DEBUG.Println("ws: connection established")
-		conn.SetReadLimit(-1)
-
-		// Read loop
-		for {
-			typ, data, err := conn.Read(ctx)
+	for {
+		err := backoff.Retry(func() error {
+			conn, _, err := websocket.Dial(ctx, uri, nil)
 			if err != nil {
-				w.log.DEBUG.Printf("ws read error: %v", err)
-				_ = conn.Close(websocket.StatusInternalError, "read error")
+				w.log.ERROR.Printf("ws dial error: %v", err)
 				return err
 			}
 
-			if typ == websocket.MessageBinary || typ == websocket.MessageText {
-				w.handleFrame(data)
+			w.log.DEBUG.Println("ws: connection established")
+			conn.SetReadLimit(-1)
+			// read loop
+			for {
+				typ, data, err := conn.Read(ctx)
+				if err != nil {
+					w.log.DEBUG.Printf("ws read error: %v", err)
+					_ = conn.Close(websocket.StatusInternalError, "read error")
+					return err
+				}
+
+				if typ == websocket.MessageBinary || typ == websocket.MessageText {
+					w.handleFrame(data)
+				}
 			}
+		}, backoff.WithContext(bo, ctx))
+
+		if err != nil {
+			w.log.DEBUG.Println("ws: stopping reconnect loop")
+			return
 		}
+
+		bo.Reset()
 	}
-
-	// Retry forever until ctx is done
-	_ = backoff.Retry(operation, backoff.WithContext(bo, ctx))
-
-	w.log.DEBUG.Println("ws: stopping reconnect loop")
 }
 
 func splitJSONObjects(data []byte) ([][]byte, error) {
@@ -231,117 +221,100 @@ func splitJSONObjects(data []byte) ([][]byte, error) {
 }
 
 func (w *WarpWS) handleFrame(frame []byte) {
-	trim := bytes.TrimSpace(frame)
+	if len(frame) == 0 {
+		return
+	}
+	var event warpEvent
 
-	// Initial bulk dump
+	// initial bulk dump (first 2)
 	if w.inBulkDump {
-		objs, err := splitJSONObjects(trim)
+		objs, err := splitJSONObjects(frame)
 		if err != nil {
-			w.log.DEBUG.Printf("ws split error: %v", err)
 			return
 		}
-
 		// if only 1 object detected -> switch to delta mode
 		if len(objs) == 1 {
 			w.inBulkDump = false
 		}
-
 		for _, obj := range objs {
-			w.handleEvent(obj)
+			if err := json.Unmarshal(obj, &event); err != nil {
+				continue
+			}
+			w.handleEvent(event.Topic, event.Payload)
 		}
 		return
 	}
 
 	// delta mode
-	// expecting exactly one item
-	if len(trim) > 0 && trim[0] == '{' {
-		w.handleEvent(trim)
+	if len(frame) > 0 && frame[0] == '{' {
+		if err := json.Unmarshal(frame, &event); err != nil {
+			return
+		}
+		w.handleEvent(event.Topic, event.Payload)
 		return
 	}
 
-	// FALLBACK: unexpected multi-frame in delta mode → back to bulk dump mode
-	w.log.DEBUG.Println("ws: unexpected multi-object frame in delta mode, re-enabling splitter")
+	// unexpected -> back to bulk dump
 	w.inBulkDump = true
-	w.handleFrame(trim)
+	w.handleFrame(frame)
 }
 
-func decode[T any](payload json.RawMessage, log *util.Logger, topic string) (T, bool) {
-	var v T
-	if err := json.Unmarshal(payload, &v); err != nil {
-		log.DEBUG.Printf("%s decode: %v", topic, err)
-		return v, false
-	}
-	return v, true
-}
-
-func withWrite(w *WarpWS, fn func(*WarpWS)) {
+func (w *WarpWS) handleEvent(topic string, payload json.RawMessage) error {
+	var err error
 	w.mu.Lock()
 	defer w.mu.Unlock()
-	fn(w)
-}
 
-func handle[T any](w *WarpWS, payload json.RawMessage, topic string, apply func(*WarpWS, T)) {
-	v, ok := decode[T](payload, w.log, topic)
-	if !ok {
-		return
-	}
-	withWrite(w, func(w *WarpWS) { apply(w, v) })
-}
-
-func handlerBuilder[T any](topic string, apply func(*WarpWS, T)) handlerFn {
-	return func(w *WarpWS, p json.RawMessage) {
-		handle(w, p, topic, apply)
-	}
-}
-
-func (w *WarpWS) buildHandlerMap() map[string]handlerFn {
-	h := map[string]handlerFn{
-		"evse/state":                    handlerBuilder("evse/state", func(w *WarpWS, s warp.EvseState) { w.evse.State = s }),
-		"evse/user_enabled":             handlerBuilder("evse/user_enabled", func(w *WarpWS, b struct{ Enabled bool }) { w.evse.UserEnabled = b.Enabled }),
-		"evse/user_current":             handlerBuilder("evse/user_current", func(w *WarpWS, s warp.EvseExternalCurrent) { w.evse.UserCurrent = int64(s.Current) }),
-		"evse/external_current":         handlerBuilder("evse/external_current", func(w *WarpWS, s warp.EvseExternalCurrent) { w.evse.ExternalCurrent = int64(s.Current) }),
-		"charge_tracker/current_charge": handlerBuilder("charge_tracker/current_charge", func(w *WarpWS, s warp.ChargeTrackerCurrentCharge) { w.tagId = s.AuthorizationInfo.TagId }),
-		"nfc/config":                    handlerBuilder("nfc/config", func(w *WarpWS, s warp.NfcConfig) { w.nfcConfig = s }),
-	}
-	if w.hasFeature(warp.FeatureMeters) {
-		addMetersHandlers(h, w)
-	} else {
-		addOldMeterHandlers(h)
-	}
-	if w.pmURI == "" {
-		h["power_manager/state"] = handlerBuilder("power_manager/state", func(w *WarpWS, s warp.PmState) { w.pmState = s })
-		h["power_manager/low_level_state"] = handlerBuilder("power_manager/low_level_state", func(w *WarpWS, s warp.PmLowLevelState) { w.pmLowLevelState = s })
-	}
-	return h
-}
-
-func addOldMeterHandlers(h map[string]handlerFn) {
-	h["meter/values"] = handlerBuilder("meter/values", func(w *WarpWS, m warp.MeterValues) { w.meter.Power = m.Power; w.meter.Energy = m.EnergyAbs })
-	h["meter/all_values"] = handlerBuilder("meter/all_values", func(w *WarpWS, vals []float64) {
+	switch topic {
+	case "evse/state":
+		err = json.Unmarshal(payload, &w.evse.State)
+	case "evse/user_enabled":
+		err = json.Unmarshal(payload, &w.evse.UserEnabled)
+	case "evse/user_current":
+		err = json.Unmarshal(payload, &w.evse.UserCurrent)
+	case "evse/external_current":
+		err = json.Unmarshal(payload, &w.evse.ExternalCurrent)
+	case "charge_tracker/current_charge":
+		err = json.Unmarshal(payload, &w.chargeTracker)
+	case "meter/values":
+		err = json.Unmarshal(payload, &w.meter)
+	case "meter/all_values":
+		var vals []float64
+		err = json.Unmarshal(payload, &vals)
 		copy(w.meter.Voltages[:], vals[:3])
 		copy(w.meter.Currents[:], vals[3:6])
-	})
-}
-
-func addMetersHandlers(h map[string]handlerFn, w *WarpWS) {
-	// NEW meters API
-	h[fmt.Sprintf("meters/%d/value_ids", w.meterIndex)] = handlerBuilder("meters/value_ids", func(w *WarpWS, ids []int) { w.meterMapper.UpdateValueIDs(ids) })
-	h[fmt.Sprintf("meters/%d/values", w.meterIndex)] = handlerBuilder("meters/values", func(w *WarpWS, vals []float64) {
-		w.meterMapper.UpdateValues(vals, &w.meter.Power, &w.meter.Energy, &w.meter.Voltages, &w.meter.Currents)
-	})
-}
-
-func (w *WarpWS) handleEvent(data []byte) {
-	if w.eventHandlers == nil {
-		w.eventHandlers = w.buildHandlerMap()
+	case fmt.Sprintf("meters/%d/value_ids", w.meterIndex):
+		var ids []int
+		if json.Unmarshal(payload, &ids) == nil {
+			for i, id := range ids {
+				w.meterMap[id] = i
+			}
+		}
+	case fmt.Sprintf("meters/%d/values", w.meterIndex):
+		var vals []float64
+		if json.Unmarshal(payload, &vals) == nil {
+			if idx, ok := w.meterMap[warp.ValueIDPowerImExSum]; ok && idx < len(vals) {
+				w.meter.Power = vals[idx]
+			}
+			if idx, ok := w.meterMap[warp.ValueIDEnergyAbsImSum]; ok && idx < len(vals) {
+				w.meter.EnergyAbs = vals[idx]
+			}
+			for phase := 0; phase < 3; phase++ {
+				if idx, ok := w.meterMap[warp.ValueIDCurrentImExSumL1+phase]; ok && idx < len(vals) {
+					w.meter.Currents[phase] = vals[idx]
+				}
+			}
+			for phase := 0; phase < 3; phase++ {
+				if idx, ok := w.meterMap[warp.ValueIDVoltageL1N+phase]; ok && idx < len(vals) {
+					w.meter.Voltages[phase] = vals[idx]
+				}
+			}
+		}
+	case "power_manager/state":
+		err = json.Unmarshal(payload, &w.pmState)
+	case "power_manager/low_level_state":
+		err = json.Unmarshal(payload, &w.pmLowLevelState)
 	}
-	evt, ok := decode[warpEvent](data, w.log, "warp event")
-	if !ok {
-		return
-	}
-	if h, ok := w.eventHandlers[evt.Topic]; ok {
-		h(w, evt.Payload)
-	}
+	return err
 }
 
 func (w *WarpWS) hasFeature(feature string) bool {
@@ -361,22 +334,20 @@ func (w *WarpWS) hasFeature(feature string) bool {
 	return false
 }
 
-func getField[T any](w *WarpWS, f func(*WarpWS) T) T {
-	w.mu.RLock()
-	defer w.mu.RUnlock()
-	return f(w)
-}
-
 func (w *WarpWS) Enable(enable bool) error {
 	curr := int64(0)
 	if enable {
-		curr = getField(w, func(w *WarpWS) int64 { return w.maxCurrent })
+		w.mu.RLock()
+		defer w.mu.RUnlock()
+		curr = w.maxCurrent
 	}
 	return w.setCurrent(curr)
 }
 
 func (w *WarpWS) Enabled() (bool, error) {
-	return getField(w, func(w *WarpWS) int64 { return w.evse.ExternalCurrent }) > 0, nil
+	w.mu.RLock()
+	defer w.mu.RUnlock()
+	return w.evse.ExternalCurrent.Current > 0, nil
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -389,66 +360,100 @@ func (w *WarpWS) MaxCurrentMillis(current float64) error {
 	curr := int64(current * 1e3)
 	err := w.setCurrent(curr)
 	if err == nil {
-		withWrite(w, func(ww *WarpWS) { w.maxCurrent = curr })
-	} else {
-		w.log.DEBUG.Printf("evse: set current failed: %v", err)
+		w.mu.Lock()
+		w.maxCurrent = curr
+		w.mu.Unlock()
 	}
 	return err
 }
 
-func (w *WarpWS) statusFromEvseStatus() api.ChargeStatus {
-	// TODO only A-C are supported
-	evseStatus := []api.ChargeStatus{api.StatusA, api.StatusB, api.StatusC, api.StatusNone, api.StatusE}
-	status := getField(w, func(w *WarpWS) warp.EvseState { return w.evse.State })
-	if status.Iec61851State < len(evseStatus) {
-		return evseStatus[status.Iec61851State]
+func (w *WarpWS) statusFromEvseStatus() (api.ChargeStatus, error) {
+	evseStatus := []api.ChargeStatus{api.StatusA, api.StatusB, api.StatusC}
+	w.mu.RLock()
+	defer w.mu.RUnlock()
+	if w.evse.State.Iec61851State < len(evseStatus) {
+		return evseStatus[w.evse.State.Iec61851State], nil
 	}
-	// TODO no status MUST be an error
-	return api.StatusNone
+	return api.StatusNone, fmt.Errorf("unknown evse status: %d", w.evse.State.Iec61851State)
 }
 
 func (w *WarpWS) Status() (api.ChargeStatus, error) {
-	return w.statusFromEvseStatus(), nil
+	return w.statusFromEvseStatus()
 }
 
 func (w *WarpWS) StatusReason() (api.Reason, error) {
-	status := w.statusFromEvseStatus()
-	w.mu.RLock()
-	defer w.mu.RUnlock()
-	if status == api.StatusB && w.evse.UserEnabled && w.evse.UserCurrent == 0 {
-		return api.ReasonWaitingForAuthorization, nil
+	if status, err := w.statusFromEvseStatus(); err != nil {
+		return api.ReasonUnknown, err
+	} else {
+		w.mu.RLock()
+		defer w.mu.RUnlock()
+		if status == api.StatusB && w.evse.UserEnabled.Enabled && w.evse.UserCurrent.Current == 0 {
+			return api.ReasonWaitingForAuthorization, nil
+		}
+		return api.ReasonUnknown, nil
 	}
-	return api.ReasonUnknown, nil
 }
 
 func (w *WarpWS) currentPower() (float64, error) {
-	return getField(w, func(w *WarpWS) float64 { return w.meter.Power }), nil
+	w.mu.RLock()
+	defer w.mu.RUnlock()
+	return w.meter.Power, nil
 }
 
 func (w *WarpWS) totalEnergy() (float64, error) {
-	return getField(w, func(w *WarpWS) float64 { return w.meter.Energy }), nil
+	w.mu.RLock()
+	defer w.mu.RUnlock()
+	return w.meter.EnergyAbs, nil
 }
 
 func (w *WarpWS) currents() (float64, float64, float64, error) {
-	vals := getField(w, func(w *WarpWS) [3]float64 { return w.meter.Currents })
-	return vals[0], vals[1], vals[2], nil
+	w.mu.RLock()
+	defer w.mu.RUnlock()
+	return w.meter.Currents[0], w.meter.Currents[1], w.meter.Currents[2], nil
 }
 
 func (w *WarpWS) voltages() (float64, float64, float64, error) {
-	vals := getField(w, func(w *WarpWS) [3]float64 { return w.meter.Voltages })
-	return vals[0], vals[1], vals[2], nil
+	w.mu.RLock()
+	defer w.mu.RUnlock()
+	return w.meter.Voltages[0], w.meter.Voltages[1], w.meter.Voltages[2], nil
 }
 
 func (w *WarpWS) identify() (string, error) {
-	return getField(w, func(w *WarpWS) string { return w.tagId }), nil
+	w.mu.RLock()
+	defer w.mu.RUnlock()
+	return w.chargeTracker.AuthorizationInfo.TagId, nil
 }
 
-func (w *WarpWS) post(path string, body any) error {
-	uri := fmt.Sprintf("%s/%s", w.uri, path)
-	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(body), request.JSONEncoding)
+func (w *WarpWS) setCurrent(curr int64) error {
+	uri := fmt.Sprintf("%s/evse/external_current", w.uri)
+	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(map[string]int64{"current": curr}), request.JSONEncoding)
+	_, err := w.Do(req)
+	return err
+}
 
-	if w.pmHelper != nil && strings.HasPrefix(path, "power_manager/") {
-		_, err := w.pmHelper.Do(req)
+func (w *WarpWS) disablePhaseAutoSwitch() error {
+	uri := fmt.Sprintf("%s/evse/phase_auto_switch", w.uri)
+	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(map[string]bool{"enabled": false}), request.JSONEncoding)
+	_, err := w.Do(req)
+	return err
+}
+
+// phases1p3p implements the api.PhaseSwitcher interface
+func (w *WarpWS) phases1p3p(phases int) error {
+	w.ensurePmState()
+	w.mu.RLock()
+	defer w.mu.RUnlock()
+
+	ec := w.pmState.ExternalControl
+	if ec > warp.ExternalControlAvailable {
+		return fmt.Errorf("external control not available: %s", ec)
+	}
+
+	uri := fmt.Sprintf("%s/power_manager/external_control", w.emURI)
+	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(map[string]int{"phases_wanted": phases}), request.JSONEncoding)
+
+	if w.emHelper != nil {
+		_, err := w.emHelper.Do(req)
 		return err
 	}
 
@@ -456,48 +461,37 @@ func (w *WarpWS) post(path string, body any) error {
 	return err
 }
 
-func (w *WarpWS) setCurrent(curr int64) error {
-	return w.post("evse/external_current", map[string]int64{"current": curr})
-}
-
-func (w *WarpWS) disablePhaseAutoSwitch() error {
-	return w.post("evse/phase_auto_switch", map[string]bool{"enabled": false})
-}
-
-// phases1p3p implements the api.PhaseSwitcher interface
-func (w *WarpWS) phases1p3p(phases int) error {
-	w.ensurePmState()
-	ec := getField(w, func(w *WarpWS) warp.ExternalControl { return w.pmState.ExternalControl })
-	if ec > warp.ExternalControlAvailable {
-		return fmt.Errorf("external control not available: %s", ec.String())
-	}
-
-	return w.post("power_manager/external_control", map[string]int{"phases_wanted": phases})
-}
-
 // getPhases implements the api.PhaseGetter interface
 func (w *WarpWS) getPhases() (int, error) {
 	w.ensurePmLowLevelState()
-	if getField(w, func(w *WarpWS) bool { return w.pmLowLevelState.Is3phase }) {
+	w.mu.RLock()
+	defer w.mu.RUnlock()
+	if w.pmLowLevelState.Is3phase {
 		return 3, nil
 	}
 	return 1, nil
 }
 
-func ensure[T any](cond bool, uri string, target *T, w *WarpWS) {
-	if w.pmHelper == nil || cond {
+func (w *WarpWS) ensurePmState() {
+	if w.emHelper == nil || w.pmState.ExternalControl != 0 {
 		return
 	}
-	var tmp T
-	if err := w.pmHelper.GetJSON(uri, &tmp); err == nil {
-		withWrite(w, func(w *WarpWS) { *target = tmp })
+	var s warp.PmState
+	if w.emHelper.GetJSON(fmt.Sprintf("%s/power_manager/state", w.emURI), &s) == nil {
+		w.mu.Lock()
+		w.pmState = s
+		w.mu.Unlock()
 	}
-}
-
-func (w *WarpWS) ensurePmState() {
-	ensure(w.pmState.ExternalControl != 0, fmt.Sprintf("%s/power_manager/state", w.pmURI), &w.pmState, w)
 }
 
 func (w *WarpWS) ensurePmLowLevelState() {
-	ensure(w.pmLowLevelState.Is3phase, fmt.Sprintf("%s/power_manager/low_level_state", w.pmURI), &w.pmLowLevelState, w)
+	if w.emHelper == nil {
+		return
+	}
+	var s warp.PmLowLevelState
+	if w.emHelper.GetJSON(fmt.Sprintf("%s/power_manager/low_level_state", w.emURI), &s) == nil {
+		w.mu.Lock()
+		w.pmLowLevelState = s
+		w.mu.Unlock()
+	}
 }

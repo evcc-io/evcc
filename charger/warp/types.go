@@ -11,40 +11,30 @@ const (
 
 // https://www.warp-charger.com/api.html#evse_state
 type EvseState struct {
-	Iec61851State          int   `json:"iec61851_state"`
-	ChargerState           int   `json:"charger_state"`
-	ContactorState         int   `json:"contactor_state"`
-	ContactorError         int   `json:"contactor_error"`
-	AllowedChargingCurrent int64 `json:"allowed_charging_current"`
-	ErrorState             int   `json:"error_state"`
-	LockState              int   `json:"lock_state"`
+	Iec61851State int `json:"iec61851_state"`
 }
 
 type EvseExternalCurrent struct {
 	Current int `json:"current"`
 }
 
+type EvseUserEnabled struct {
+	Enabled bool `json:"enabled"`
+}
+
 type Evse struct {
 	State           EvseState
-	ExternalCurrent int64
-	UserCurrent     int64
-	UserEnabled     bool
+	ExternalCurrent EvseExternalCurrent
+	UserCurrent     EvseExternalCurrent
+	UserEnabled     EvseUserEnabled
 }
 
-type MeterVals struct {
-	Power    float64
-	Energy   float64
-	Currents [3]float64
-	Voltages [3]float64
-}
-
-// https://www.warp-charger.com/api.html#meter_values
 type MeterValues struct {
-	Power           float64 `json:"power"`
-	EnergyRel       float64 `json:"energy_rel"`
-	EnergyAbs       float64 `json:"energy_abs"`
-	PhasesActive    []bool  `json:"phases_active"`
-	PhasesConnected []bool  `json:"phases_connected"`
+	Power     float64 `json:"power"`
+	EnergyRel float64 `json:"energy_rel"`
+	EnergyAbs float64 `json:"energy_abs"`
+	Currents  [3]float64
+	Voltages  [3]float64
 }
 
 // Meter value IDs according to Tinkerforge meter_value_id.csv
@@ -59,36 +49,11 @@ const (
 	ValueIDEnergyAbsImSum   = 209 // Energy Im Sum L1 L2 L3
 )
 
-type MeterValuesIndices struct {
-	VoltageL1NIndex       int
-	VoltageL2NIndex       int
-	VoltageL3NIndex       int
-	CurrentImExSumL1Index int
-	CurrentImExSumL2Index int
-	CurrentImExSumL3Index int
-	PowerImExSumIndex     int
-	EnergyAbsImSumIndex   int
-}
-
 type ChargeTrackerCurrentCharge struct {
-	UserID            int     `json:"user_id"`
-	MeterStart        float64 `json:"meter_start"`
-	AuthorizationType int     `json:"authorization_type"`
 	AuthorizationInfo struct {
 		TagType int    `json:"tag_type"`
 		TagId   string `json:"tag_id"`
 	} `json:"authorization_info"`
-}
-
-type NfcTag struct {
-	UserID int    `json:"user_id"`
-	Type   int    `json:"tag_type"`
-	ID     string `json:"tag_id"`
-}
-
-type NfcConfig struct {
-	AuthorizedTags    []NfcTag `json:"authorized_tags"`
-	DeadTimePostStart int      `json:"deadtime_post_start"`
 }
 
 //go:generate go tool enumer -type ExternalControl -trimprefix ExternalControl -transform whitespace
@@ -103,11 +68,6 @@ const (
 
 type PmState struct {
 	ExternalControl ExternalControl `json:"external_control"`
-	PhasesSwitched  int             `json:"phases_switched"`
-	Input3State     bool            `json:"input3_state"`
-	Input4State     bool            `json:"input4_state"`
-	RelayState      bool            `json:"relay_state"`
-	ErrorFlags      int             `json:"error_flags"`
 }
 
 type PmLowLevelState struct {
