@@ -178,7 +178,7 @@
         "title": "Certificates"
       },
       "description": "Configuration that enables evcc to communicate with EEBus compatible devices like chargers or a control unit of your grid operator. All relevant initialization and certificate generation is done automatically on first start.",
-      "descriptionAdvanced": "No changes required. Only perform changes if you really know what you're doing.",
+      "descriptionAdvanced": "No changes required. Only perform changes if you really know what you're doing. If you change either the SHIP-id or the certificates, you'll need to pair your devices again.",
       "interfaces": "Interfaces",
       "interfacesHelp": "Limit the network interfaces that EEBus should use to avoid communication problems. Leave the field blank to use all interfaces. One entry per line.",
       "port": "Port",
@@ -186,7 +186,7 @@
       "removeConfirm": "All EEBus configuration will be removed. New certificates and identifiers will be generated on next start. Are you sure?",
       "shipid": "SHIP-ID",
       "shipidExplain": "Permanent device identifier for identification in the EEBus network.",
-      "shipidHelp": "This SHIP-ID is linked to the certificates below. If you change either one, you'll need to pair your devices again.",
+      "shipidHelp": "This SHIP-ID is linked to the certificates below.",
       "ski": "SKI",
       "skiExplain": "Unique security identifier for pairing EEBus devices.",
       "title": "EEBus"

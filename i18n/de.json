@@ -178,7 +178,7 @@
         "title": "Zertifikate"
       },
       "description": "Konfiguration zur Kommunikation mit EEBus-kompatiblen Geräten wie Wallboxen oder dem Steuergerät des Netzbetreibers. Alle notwendigen Initialisierungen und die Zertifikatsgenerierung erfolgen automatisch beim ersten Start.",
-      "descriptionAdvanced": "Keine Änderungen erforderlich. Nur anpassen, wenn du wirklich weißt, was du tust.",
+      "descriptionAdvanced": "Keine Änderungen erforderlich. Nur anpassen, wenn du wirklich weißt, was du tust. Wenn du entweder die SHIP-ID oder die Zertifikate änderst, musst du deine Geräte erneut koppeln.",
       "interfaces": "Schnittstellen",
       "interfacesHelp": "Begrenze die Netzwerkschnittstellen, die EEBus nutzen soll, um Kommunikationsprobleme zu vermeiden. Feld leer lassen, um alle Schnittstellen zu verwenden. Ein Eintrag pro Zeile.",
       "port": "Port",
@@ -186,7 +186,7 @@
       "removeConfirm": "Die gesamte EEBus-Konfiguration wird entfernt. Neue Zertifikate und Kennungen werden beim nächsten Start generiert. Bist du sicher?",
       "shipid": "SHIP-ID",
       "shipidExplain": "Permanente Gerätekennung zur Identifikation im EEBus-Netzwerk.",
-      "shipidHelp": "Diese SHIP-ID ist mit den unten stehenden Zertifikaten verknüpft. Wenn du eines davon änderst, musst du deine Geräte erneut koppeln.",
+      "shipidHelp": "Diese SHIP-ID ist mit den unten stehenden Zertifikaten verknüpft.",
       "ski": "SKI",
       "skiExplain": "Eindeutige Sicherheitskennung zum Koppeln von EEBus-Geräten.",
       "title": "EEBus"
