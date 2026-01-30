@@ -5,6 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/spf13/cast"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -139,8 +140,8 @@ func TestApplyCast(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := applyCast(tt.value, tt.castType)
-			assert.Equal(t, tt.expected, result)
+			result := toString(tt.value, tt.castType)
+			assert.Equal(t, cast.ToString(tt.expected), result)
 		})
 	}
 }

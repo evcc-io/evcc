@@ -30,8 +30,6 @@ const ENERGY_PRICE_IN_SUBUNIT: Partial<Record<CURRENCY, string>> = {
   BGN: "st", // Bulgarian stotinka
   BRL: "¢", // Brazilian centavo
   CAD: "¢", // Canadian cent
-  CHF: "rp", // Swiss Rappen
-  CNY: "f", // Chinese fen
   EUR: "ct", // Euro cent
   GBP: "p", // GB pence
   ILS: "ag", // Israeli agora
@@ -59,6 +57,12 @@ export default defineComponent({
     };
   },
   methods: {
+    energyPriceSubunit(currency: CURRENCY): string | undefined {
+      if (currency === CURRENCY.CHF) {
+        return this.$i18n?.locale === "de" ? "Rp." : "ct.";
+      }
+      return ENERGY_PRICE_IN_SUBUNIT[currency];
+    },
     round(num: number, precision: number) {
       const base = 10 ** precision;
       return (Math.round(num * base) / base).toFixed(precision);
@@ -317,7 +321,7 @@ export default defineComponent({
       const factor = this.pricePerKWhDisplayFactor(currency);
       const value = amout * factor;
       const minimumFractionDigits = 1;
-      const maximumFractionDigits = ENERGY_PRICE_IN_SUBUNIT[currency] ? 1 : 3;
+      const maximumFractionDigits = this.energyPriceSubunit(currency) ? 1 : 3;
       const price = new Intl.NumberFormat(this.$i18n?.locale, {
         style: "decimal",
         minimumFractionDigits,
@@ -332,7 +336,7 @@ export default defineComponent({
       return Intl?.DateTimeFormat?.().resolvedOptions?.().timeZone || "UTC";
     },
     pricePerKWhUnit(currency = CURRENCY.EUR, short = false) {
-      const unit = ENERGY_PRICE_IN_SUBUNIT[currency] || currency;
+      const unit = this.energyPriceSubunit(currency) || CURRENCY_SYMBOLS[currency] || currency;
       return `${unit}${short ? "" : "/kWh"}`;
     },
     pricePerKWhDisplayFactor(currency = CURRENCY.EUR) {

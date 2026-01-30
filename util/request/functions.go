@@ -51,7 +51,8 @@ func NewStatusError(resp *http.Response) *StatusError {
 }
 
 func (e *StatusError) Error() string {
-	return fmt.Sprintf("unexpected status: %d (%s)", e.resp.StatusCode, http.StatusText(e.resp.StatusCode))
+	req := e.resp.Request
+	return fmt.Sprintf("unexpected status: %d (%s) %s %s", e.resp.StatusCode, http.StatusText(e.resp.StatusCode), req.Method, req.URL)
 }
 
 // Response returns the response with the unexpected error

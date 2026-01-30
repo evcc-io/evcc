@@ -3,26 +3,25 @@ package service
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/spf13/cast"
 )
 
-// applyCast applies optional type casting
-func applyCast(value any, castType string) any {
+// toString converts to canonical string representation
+func toString(value any, castType string) string {
+	res := value
 	switch strings.ToLower(castType) {
 	case "int":
-		return cast.ToInt64(value)
-	case "float":
-		return cast.ToFloat64(value)
+		res = cast.ToInt64(value)
 	case "bool":
-		return cast.ToBool(value)
-	case "string":
-		return cast.ToString(value)
-	default:
-		return value
+		res = cast.ToBool(value)
+	case "float":
+		return strconv.FormatFloat(cast.ToFloat64(value), 'g', 3, 64)
 	}
+	return cast.ToString(res)
 }
 
 // jsonWrite writes a JSON response

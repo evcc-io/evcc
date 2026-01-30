@@ -7,7 +7,7 @@ import { CURRENCY } from "@/types/evcc";
 
 const is12hSpy = vi.spyOn(units, "is12hFormat").mockReturnValue(false);
 
-config.global.mocks["$i18n"] = { locale: "de-DE" };
+config.global.mocks["$i18n"] = { locale: "de" };
 config.global.mocks["$t"] = (a: string) => a;
 
 const fmt = mount(
@@ -100,7 +100,7 @@ describe("fmtPricePerKWh", () => {
     expect(fmt.fmtPricePerKWh(0.234, CURRENCY.USD)).eq("23,4 ¢/kWh");
     expect(fmt.fmtPricePerKWh(1234, CURRENCY.SEK)).eq("123.400,0 öre/kWh");
     expect(fmt.fmtPricePerKWh(0.2, CURRENCY.EUR, false, false)).eq("20,0");
-    expect(fmt.fmtPricePerKWh(0.123, CURRENCY.CHF)).eq("12,3 rp/kWh");
+    expect(fmt.fmtPricePerKWh(0.123, CURRENCY.CHF)).eq("12,3 Rp./kWh");
   });
 });
 
@@ -111,7 +111,21 @@ describe("pricePerKWhUnit", () => {
     expect(fmt.pricePerKWhUnit(CURRENCY.USD)).eq("¢/kWh");
     expect(fmt.pricePerKWhUnit(CURRENCY.SEK)).eq("öre/kWh");
     expect(fmt.pricePerKWhUnit(CURRENCY.SEK, true)).eq("öre");
-    expect(fmt.pricePerKWhUnit(CURRENCY.CHF)).eq("rp/kWh");
+    expect(fmt.pricePerKWhUnit(CURRENCY.CHF)).eq("Rp./kWh");
+  });
+});
+
+describe("energyPriceSubunit", () => {
+  test("should return subunit or undefined", () => {
+    expect(fmt.energyPriceSubunit(CURRENCY.EUR)).eq("ct");
+    expect(fmt.energyPriceSubunit(CURRENCY.CNY)).eq(undefined);
+  });
+  test("should handle CHF locale-specific logic", () => {
+    config.global.mocks["$i18n"].locale = "de";
+    expect(fmt.energyPriceSubunit(CURRENCY.CHF)).eq("Rp.");
+    config.global.mocks["$i18n"].locale = "fr";
+    expect(fmt.energyPriceSubunit(CURRENCY.CHF)).eq("ct.");
+    config.global.mocks["$i18n"].locale = "de";
   });
 });
 

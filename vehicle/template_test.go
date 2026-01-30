@@ -26,6 +26,7 @@ var acceptable = []string{
 	"discussions/17501",                            // Tesla
 	"login failed: code not found",                 // Polestar
 	"empty instance type- check for missing usage", // Mercedes
+	"connect: connection refused",                  // MQTT
 }
 
 func TestTemplates(t *testing.T) {

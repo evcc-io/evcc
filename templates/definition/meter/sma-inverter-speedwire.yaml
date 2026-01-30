@@ -12,15 +12,15 @@ params:
     choice: ["pv", "battery"]
   - name: host
   - name: password
-    mask: true
     help:
       en: Password for user group Standard
       de: Passwort für Benutzergruppe Benutzer
   - preset: battery-params
 render: |
   type: sma
+  usage: {{ .usage }}
   uri: {{ .host }} # IP address or hostname
-  {{- if .password }}
   password: {{ .password }} # optional
+  {{- if eq .usage "battery" }}
+  {{- include "battery-params" . }}
   {{- end }}
-  capacity: {{ .capacity }} # kWh

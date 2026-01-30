@@ -742,7 +742,7 @@ export default {
 			];
 		},
 		showCircuit() {
-			return this.circuits.length > 0 || this.values.circuit !== "";
+			return this.circuits.length > 0 || !!this.values.circuit;
 		},
 		invalidCircuit() {
 			const { circuit } = this.values;

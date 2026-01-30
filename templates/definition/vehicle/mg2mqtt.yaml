@@ -8,6 +8,7 @@ requirements:
     en: Required MQTT broker configuration and a SAIC/MQTT Gateway (https://github.com/SAIC-iSmart-API/saic-python-mqtt-gateway or https://github.com/SAIC-iSmart-API/saic-java-client)
     de: Voraussetzung ist ein konfigurierter MQTT Broker und ein SAIC/MQTT Gateway (https://github.com/SAIC-iSmart-API/saic-python-mqtt-gateway oder https://github.com/SAIC-iSmart-API/saic-java-client)
 params:
+  - preset: mqtt
   - name: user
     required: true
   - name: vin
@@ -20,22 +21,22 @@ render: |
   {{- include "vehicle-common" . }}
   soc: # battery soc (%)
     source: mqtt
+    {{- include "mqtt" . | indent 2 }}
     topic: saic/{{ .user }}/vehicles/{{ .vin }}/drivetrain/soc
-    timeout: {{ .timeout }}
   status:
     source: combined
     plugged:
       source: mqtt
+      {{- include "mqtt" . | indent 4 }}
       topic: saic/{{ .user }}/vehicles/{{ .vin }}/drivetrain/chargerConnected
-      timeout: {{ .timeout }}
     charging:
       source: mqtt
+      {{- include "mqtt" . | indent 4 }}
       topic: saic/{{ .user }}/vehicles/{{ .vin }}/drivetrain/charging
-      timeout: {{ .timeout }}
   range:
     source: mqtt
+    {{- include "mqtt" . | indent 2 }}
     topic: saic/{{ .user }}/vehicles/{{ .vin }}/drivetrain/range
-    timeout: {{ .timeout }}
   climater:
     source: go
     script: |
@@ -45,12 +46,12 @@ render: |
         type: string
         config:
           source: mqtt
+          {{- include "mqtt" . | indent 8 }}
           topic: saic/{{ .user }}/vehicles/{{ .vin }}/climate/remoteClimateState
-          timeout: {{ .timeout }}
   odometer:
     source: mqtt
+    {{- include "mqtt" . | indent 2 }}
     topic: saic/{{ .user }}/vehicles/{{ .vin }}/drivetrain/mileage
-    timeout: {{ .timeout }}
   wakeup:
     source: go
     script: |
@@ -60,5 +61,5 @@ render: |
         type: string
         config:
           source: mqtt
+          {{- include "mqtt" . | indent 8 }}
           topic: saic/{{ .user }}/vehicles/{{ .vin }}/refresh/mode/set
-          timeout: {{ .timeout }}

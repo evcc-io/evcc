@@ -31,7 +31,7 @@ func getInstances(w http.ResponseWriter, req *http.Request) {
 }
 
 func getEntities(w http.ResponseWriter, req *http.Request) {
-	uri := req.URL.Query().Get("uri")
+	uri := util.DefaultScheme(strings.TrimSuffix(req.URL.Query().Get("uri"), "/"), "http")
 	if uri == "" {
 		jsonError(w, http.StatusBadRequest, errors.New("missing uri"))
 		return
