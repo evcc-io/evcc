@@ -4,8 +4,8 @@ products:
   - { brand: DaheimLaden, description: { generic: Business } }
 requirements:
   description:
-    de: Firmware-Anforderungen: Smart/Touch PRO ab "M3W_3.11STP", Business ab "M3W_3.09PTB". Während der Phasen-Umschaltung pausiert die Ladung für zwei Minuten.
-    en: Firmware requirements: Smart/Touch PRO from "M3W_3.11STP", Business from "M3W_3.09PTB". Charging pauses for two minutes during phase switching.
+    de: Firmware-Anforderungen= Smart/Touch Pro ab "M3W_3.11STP", Business ab "M3W_3.09PTB". Während der Phasen-Umschaltung pausiert die Ladung für zwei Minuten.
+    en: Firmware requirements= Smart/Touch Pro from "M3W_3.11STP", Business from "M3W_3.09PTB". Charging pauses for two minutes during phase switching.
 capabilities: ["1p3p", "mA"]
 params:
   - name: host
