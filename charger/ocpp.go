@@ -295,6 +295,24 @@ func (c *OCPP) Enable(enable bool) error {
 		current = c.current
 	}
 
+	// stop active transaction before making the connector inoperative
+	if !enable {
+		if txn, err := c.conn.TransactionID(); err == nil && txn > 0 {
+			if err := c.conn.RemoteStopTransactionRequest(txn); err != nil {
+				c.log.WARN.Printf("remote stop transaction %d: %v", txn, err)
+			}
+		}
+	}
+
+	availability := core.AvailabilityTypeInoperative
+	if enable {
+		availability = core.AvailabilityTypeOperative
+	}
+
+	if err := c.conn.ChangeAvailabilityRequest(availability); err != nil {
+		return fmt.Errorf("change availability: %w", err)
+	}
+
 	err := c.setCurrent(current)
 	if err == nil {
 		// cache enabled state as last fallback option
@@ -317,15 +335,19 @@ func (c *OCPP) setCurrent(current float64) error {
 // createTxDefaultChargingProfile returns a TxDefaultChargingProfile with given current
 func (c *OCPP) createTxDefaultChargingProfile(current float64) *types.ChargingProfile {
 	phases := c.phases
+	if phases == 0 {
+		phases = 3 // OCPP default when unspecified
+	}
+
 	period := types.NewChargingSchedulePeriod(0, current)
 
 	if c.cp.ChargingRateUnit == types.ChargingRateUnitWatts {
 		period = types.NewChargingSchedulePeriod(0, math.Trunc(230.0*current*float64(phases)))
 	} else {
 		// OCPP assumes phases == 3 if not set
-		if phases != 0 {
+		if c.phases != 0 {
 			// set explicit phase configuration
-			period.NumberPhases = &phases
+			period.NumberPhases = &c.phases
 		}
 	}
 
@@ -345,9 +367,7 @@ func (c *OCPP) createTxDefaultChargingProfile(current float64) *types.ChargingPr
 		res.ChargingSchedule.StartSchedule = types.NewDateTime(time.Now().Add(-time.Minute))
 	}
 
-	if !c.stackLevelZero {
-		res.StackLevel = c.cp.StackLevel
-	}
+	// TxDefault must remain stack level 0 per OCPP 1.6; do not set a higher level
 
 	return res
 }

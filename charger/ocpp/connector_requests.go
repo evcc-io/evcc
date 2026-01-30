@@ -19,6 +19,10 @@ func (conn *Connector) RemoteStartTransactionRequest(idTag string) error {
 	return conn.cp.RemoteStartTransactionRequest(conn.id, idTag)
 }
 
+func (conn *Connector) RemoteStopTransactionRequest(transactionId int) error {
+	return conn.cp.RemoteStopTransactionRequest(transactionId)
+}
+
 func (conn *Connector) SetChargingProfileRequest(profile *types.ChargingProfile) error {
 	return conn.cp.SetChargingProfileRequest(conn.id, profile)
 }

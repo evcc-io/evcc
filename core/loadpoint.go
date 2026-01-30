@@ -776,11 +776,16 @@ func (lp *Loadpoint) syncCharger() error {
 			if current, err = cg.GetMaxCurrent(); err == nil {
 				// smallest adjustment most PWM-Controllers can do is: 100%÷256×0,6A = 0.234A
 				if delta := math.Abs(lp.offeredCurrent - current); delta > 0.23 {
-					if shouldBeConsistent && delta >= 1 {
-						lp.log.WARN.Printf("charger logic error: current mismatch (got %.3gA, expected %.3gA) - make sure your interval is at least 30s", current, lp.offeredCurrent)
+					if shouldBeConsistent && delta >= 1 && lp.charging() {
+						if err := lp.setLimit(lp.offeredCurrent); err != nil {
+							lp.log.WARN.Printf("charger logic error: current mismatch (got %.3gA, expected %.3gA) - make sure your interval is at least 30s (correction failed: %v)", current, lp.offeredCurrent, err)
+							lp.offeredCurrent = current
+							lp.bus.Publish(evChargeCurrent, lp.offeredCurrent)
+						}
+					} else {
+						lp.offeredCurrent = current
+						lp.bus.Publish(evChargeCurrent, lp.offeredCurrent)
 					}
-					lp.offeredCurrent = current
-					lp.bus.Publish(evChargeCurrent, lp.offeredCurrent)
 				}
 			} else if !loadpoint.AcceptableError(err) {
 				return fmt.Errorf("charger get max current: %w", err)
@@ -791,11 +796,16 @@ func (lp *Loadpoint) syncCharger() error {
 		if !isCg || errors.Is(err, api.ErrNotAvailable) {
 			// validate if current too high by more than 1A (https://github.com/evcc-io/evcc/issues/14731)
 			if current := lp.GetMaxPhaseCurrent(); current > lp.offeredCurrent+1.0 {
-				if shouldBeConsistent && !lp.chargerHasFeature(api.Heating) {
-					lp.log.WARN.Printf("charger logic error: current mismatch (got %.3gA measured, expected %.3gA) - make sure your interval is at least 30s", current, lp.offeredCurrent)
+				if shouldBeConsistent && !lp.chargerHasFeature(api.Heating) && lp.charging() {
+					if err := lp.setLimit(lp.offeredCurrent); err != nil {
+						lp.log.WARN.Printf("charger logic error: current mismatch (got %.3gA measured, expected %.3gA) - make sure your interval is at least 30s (correction failed: %v)", current, lp.offeredCurrent, err)
+						lp.offeredCurrent = current
+						lp.bus.Publish(evChargeCurrent, lp.offeredCurrent)
+					}
+				} else {
+					lp.offeredCurrent = current
+					lp.bus.Publish(evChargeCurrent, lp.offeredCurrent)
 				}
-				lp.offeredCurrent = current
-				lp.bus.Publish(evChargeCurrent, lp.offeredCurrent)
 			}
 		}
 
@@ -843,6 +853,12 @@ func (lp *Loadpoint) syncCharger() error {
 		}
 
 	case shouldBeConsistent && (enabled || lp.connected()):
+		// ignore enabled state mismatch when unplugged/idle to avoid noise
+		if enabled && !lp.connected() && lp.GetStatus() == api.StatusA && !lp.enabled {
+			lp.log.DEBUG.Printf("charger out of sync: enabled while unplugged, ignoring")
+			break
+		}
+
 		// ignore disabled state if vehicle was disconnected (!lp.enabled && !lp.connected)
 		lp.log.WARN.Printf("charger out of sync: expected %vd, got %vd", status[lp.enabled], status[enabled])
 	}
@@ -1244,7 +1260,7 @@ func (lp *Loadpoint) scalePhasesIfAvailable(phases int) error {
 }
 
 // scalePhases adjusts the number of active phases and returns the appropriate charging current.
-// Returns api.ErrNotAvailable if api.PhaseSwitcher is not available.
+// Returns api.Err.NotAvailable if api.PhaseSwitcher is not available.
 func (lp *Loadpoint) scalePhases(phases int) error {
 	cp, ok := lp.charger.(api.PhaseSwitcher)
 	if !ok {
