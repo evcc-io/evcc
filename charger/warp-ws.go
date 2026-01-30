@@ -54,7 +54,6 @@ type WarpWS struct {
 
 	// config
 	current int64
-	cancel  context.CancelFunc
 }
 
 type warpEvent struct {
@@ -66,16 +65,14 @@ type handlerFn func(*WarpWS, json.RawMessage)
 
 var _ api.ChargerEx = (*WarpWS)(nil)
 
-var evseStatus = [...]api.ChargeStatus{api.StatusA, api.StatusB, api.StatusC, api.StatusNone, api.StatusE}
-
 func init() {
-	registry.Add("warp-ws", NewWarpWSFromConfig)
+	registry.AddCtx("warp-ws", NewWarpWSFromConfig)
 }
 
 //go:generate go tool decorate -f decorateWarpWS -b *WarpWS -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.Identifier,Identify,func() (string, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
 
-func NewWarpWSFromConfig(other map[string]any) (api.Charger, error) {
-	var cc = struct {
+func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
+	var cc struct {
 		URI                    string
 		User                   string
 		Password               string
@@ -84,7 +81,7 @@ func NewWarpWSFromConfig(other map[string]any) (api.Charger, error) {
 		EnergyManagerPassword  string
 		DisablePhaseAutoSwitch bool
 		EnergyMeterIndex       uint
-	}{}
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
@@ -156,7 +153,7 @@ func NewWarpWSFromConfig(other map[string]any) (api.Charger, error) {
 	), nil
 }
 
-func NewWarpWS(uri, user, password string, meterIndex uint) (*WarpWS, error) {
+func NewWarpWS(ctx context.Context, uri, user, password string, meterIndex uint) (*WarpWS, error) {
 	log := util.NewLogger("warp-ws")
 
 	client := request.NewHelper(log)
@@ -173,22 +170,20 @@ func NewWarpWS(uri, user, password string, meterIndex uint) (*WarpWS, error) {
 		inBulkDump:  true,
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	w.cancel = cancel
 	go w.run(ctx)
 
 	return w, nil
 }
 
 func (w *WarpWS) run(ctx context.Context) {
-	wsURL := strings.Replace(w.uri, "http://", "ws://", 1) + "/ws"
-	w.log.TRACE.Printf("ws: connecting to %s …", wsURL)
+	uri := strings.Replace(w.uri, "http://", "ws://", 1) + "/ws"
+	w.log.TRACE.Printf("ws: connecting to %s …", uri)
 
 	bo := backoff.NewExponentialBackOff()
 	bo.MaxElapsedTime = 0 // never stop retrying
 
 	operation := func() error {
-		conn, _, err := websocket.Dial(ctx, wsURL, nil)
+		conn, _, err := websocket.Dial(ctx, uri, nil)
 		if err != nil {
 			w.log.ERROR.Printf("ws dial error: %v", err)
 			return err
@@ -402,10 +397,13 @@ func (w *WarpWS) MaxCurrentMillis(current float64) error {
 }
 
 func (w *WarpWS) statusFromEvseStatus() api.ChargeStatus {
+	// TODO only A-C are supported
+	evseStatus := []api.ChargeStatus{api.StatusA, api.StatusB, api.StatusC, api.StatusNone, api.StatusE}
 	status := getField(w, func(w *WarpWS) warp.EvseState { return w.evse.State })
 	if status.Iec61851State < len(evseStatus) {
 		return evseStatus[status.Iec61851State]
 	}
+	// TODO no status MUST be an error
 	return api.StatusNone
 }
 
