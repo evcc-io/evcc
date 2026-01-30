@@ -209,6 +209,7 @@
       "dragList": "Seznam, ki ga je mogoče prerazporediti",
       "experimental": "Eksperimentalno",
       "forceSave": "Vseeno shrani",
+      "fromYamlHint": "Opomba: Konfigurirano prek evcc.yaml. Odstranite vnos iz datoteke, da omogočite urejanje tukaj.",
       "hideAdvancedSettings": "Skrij napredne nastavitve",
       "invalidFileSelected": "Izbrana neveljavna datoteka",
       "noFileSelected": "Izbrana ni nobena datoteka.",
@@ -389,8 +390,7 @@
       "unconfigured": "ni konfigurirano",
       "vehicles": "Moja vozila",
       "welcomeBannerText": "Začnite z ustvarjanjem vsaj enega **polnilnika**, **grelca**, **omrežja**, **sončne energije**, **baterije** ali **dodatnega merilnika**. Če želite samo preizkusiti, izberite **demo napravo**.",
-      "welcomeBannerTitle": "Konfigurirajmo vaš sistem!",
-      "yaml": "Opomba: Konfigurirano prek evcc.yaml. Odstranite vnos iz datoteke, da omogočite urejanje tukaj."
+      "welcomeBannerTitle": "Konfigurirajmo vaš sistem!"
     },
     "messaging": {
       "description": "Prejemanje sporočil o vaših sejah polnjenja.",

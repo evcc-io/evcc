@@ -46,7 +46,6 @@
 				</div>
 
 				<button
-					v-if="!disableSave"
 					type="submit"
 					class="btn btn-primary order-1 order-sm-2 flex-grow-1 flex-sm-grow-0 px-4"
 					:disabled="saving || nothingChanged"
@@ -82,7 +81,6 @@ export default {
 		endpoint: String,
 		disableCancel: Boolean,
 		disableRemove: Boolean,
-		disableSave: Boolean,
 		noButtons: Boolean,
 		transformReadValues: Function,
 		transformWriteValues: Function,

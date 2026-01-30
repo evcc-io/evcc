@@ -225,6 +225,7 @@
       "dragList": "Sortierbare Liste",
       "experimental": "Experimentell",
       "forceSave": "Trotzdem speichern",
+      "fromYamlHint": "Hinweis: Konfiguriert über evcc.yaml. Entferne den Eintrag aus der Datei, um die Bearbeitung hier zu aktivieren.",
       "hideAdvancedSettings": "Erweiterte Einstellungen ausblenden",
       "invalidFileSelected": "Ungültige Datei ausgewählt",
       "noFileSelected": "Keine Datei ausgewählt.",
@@ -405,8 +406,7 @@
       "unconfigured": "nicht konfiguriert",
       "vehicles": "Meine Fahrzeuge",
       "welcomeBannerText": "Lege zunächst eine **Wallbox**, **Heizung**, **Netzzähler**, **Solar**, **Batterie** oder **zusätzlichen Zähler** an. Falls du nur testen möchtest, wähle ein **Demogerät**.",
-      "welcomeBannerTitle": "Los geht's mit der Konfiguration!",
-      "yaml": "Hinweis: Konfiguriert über evcc.yaml. Entferne den Eintrag aus der Datei, um die Bearbeitung hier zu aktivieren."
+      "welcomeBannerTitle": "Los geht's mit der Konfiguration!"
     },
     "messaging": {
       "description": "Benachrichtigungen über Ladevorgänge und andere Ereignisse erhalten.",

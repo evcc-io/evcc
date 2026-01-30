@@ -209,6 +209,7 @@
       "dragList": "Listă reordonabilă",
       "experimental": "Experimental",
       "forceSave": "Salvați oricum",
+      "fromYamlHint": "Notă: Configurat prin evcc.yaml. Ștergeți intrarea din fișier pentru a activa editarea aici.",
       "hideAdvancedSettings": "Ascunde setările avansate",
       "invalidFileSelected": "Fișier invalid selectat",
       "noFileSelected": "Nu a fost selectat niciun fișier.",
@@ -389,8 +390,7 @@
       "unconfigured": "neconfigurat",
       "vehicles": "Masinile mele",
       "welcomeBannerText": "Începeți prin a crea cel puțin un **încărcător**, **încălzitor**, **rețea**, **sistem solar**, **baterie** sau **contor suplimentar**. Dacă doriți doar să testați, alegeți un **dispozitiv demo**.",
-      "welcomeBannerTitle": "Să configurăm sistemul tău!",
-      "yaml": "Notă: Configurat prin evcc.yaml. Ștergeți intrarea din fișier pentru a activa editarea aici."
+      "welcomeBannerTitle": "Să configurăm sistemul tău!"
     },
     "messaging": {
       "description": "Primiți mesaje despre sesiunile dvs. de încărcare.",

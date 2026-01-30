@@ -209,6 +209,7 @@
       "dragList": "Átrendezhető lista",
       "experimental": "Kísérleti",
       "forceSave": "Mentés mindenképpen",
+      "fromYamlHint": "Megjegyzés: Az evcc.yaml fájlban konfigurálható. A szerkesztés engedélyezéséhez távolítsa el a bejegyzést a fájlból.",
       "hideAdvancedSettings": "Speciális beállítások elrejtése",
       "invalidFileSelected": "Érvénytelen fájl kiválasztva",
       "noFileSelected": "Nincs fájl kiválasztva.",
@@ -389,8 +390,7 @@
       "unconfigured": "nincs konfigurálva",
       "vehicles": "Járműveim",
       "welcomeBannerText": "Kezdje azzal, hogy létrehoz legalább egy **töltőt**, **fűtőt**, **hálózatot**, **napelemet**, **akkumulátort** vagy **kiegészítő mérőt**. Ha csak tesztelni szeretne, válasszon egy **demo eszközt**.",
-      "welcomeBannerTitle": "Konfiguráljuk a rendszerét!",
-      "yaml": "Megjegyzés: Az evcc.yaml fájlban konfigurálható. A szerkesztés engedélyezéséhez távolítsa el a bejegyzést a fájlból."
+      "welcomeBannerTitle": "Konfiguráljuk a rendszerét!"
     },
     "messaging": {
       "description": "Értesítési üzenetek beállítása a töltési folyamatokról.",

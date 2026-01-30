@@ -209,6 +209,7 @@
       "dragList": "Ponovo naručiva lista",
       "experimental": "Eksperimentalni",
       "forceSave": "Sačuvaj svejedno",
+      "fromYamlHint": "Napomena: Konfigurisano putem evcc.yaml. Uklonite unos iz datoteke da biste ovdje omogućili uređivanje.",
       "hideAdvancedSettings": "Sakrij napredne postavke",
       "invalidFileSelected": "Odabrana neispravna datoteka",
       "noFileSelected": "Nije odabrana nijedna datoteka.",
@@ -343,9 +344,7 @@
       "thresholdDisableHelpZero": "Zaustavite kada se za {delay} ne može zadovoljiti minimalna potrebna snaga.",
       "thresholdEnableHelpZero": "­ Počnite kada se minimalna potrebna snaga može zadovoljiti za {delay}."
     },
-    "main": {
-      "yaml": "Napomena: Konfigurisano putem evcc.yaml. Uklonite unos iz datoteke da biste ovdje omogućili uređivanje."
-    },
+    "main": {},
     "meter": {
       "save": "Sačuvaj"
     },

@@ -209,6 +209,7 @@
       "dragList": "Omordningsbar liste",
       "experimental": "Eksperimentell",
       "forceSave": "Lagre likevel",
+      "fromYamlHint": "Merk: Konfigurert via evcc.yaml. Fjern oppføringen fra filen for å aktivere redigering her.",
       "hideAdvancedSettings": "Skjul avanserte innstillinger",
       "invalidFileSelected": "Ugyldig fil valgt",
       "noFileSelected": "Ingen fil valgt.",
@@ -389,8 +390,7 @@
       "unconfigured": "ikke konfigurert",
       "vehicles": "Mine kjøretøy",
       "welcomeBannerText": "Begynn med å opprette minst én **lader**, **varmeapparat**, **nett**, **solcelle**, **batteri** eller **ekstra måler**. Hvis du bare vil teste, velger du en **demoenhet**.",
-      "welcomeBannerTitle": "La oss konfigurere systemet ditt!",
-      "yaml": "Merk: Konfigurert via evcc.yaml. Fjern oppføringen fra filen for å aktivere redigering her."
+      "welcomeBannerTitle": "La oss konfigurere systemet ditt!"
     },
     "messaging": {
       "description": "Motta meldinger om ladingsøktene dine.",

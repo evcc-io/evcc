@@ -209,6 +209,7 @@
       "dragList": "Lista do ponownego zamówienia",
       "experimental": "Eksperymentalny",
       "forceSave": "Zapisz mimo to",
+      "fromYamlHint": "Uwaga: Konfiguracja odbywa się za pomocą pliku evcc.yaml. Aby umożliwić edycję w tym miejscu, usuń wpis z pliku.",
       "hideAdvancedSettings": "Ukryj ustawienia zaawansowane",
       "invalidFileSelected": "Wybrano nieprawidłowy plik",
       "noFileSelected": "Nie wybrano pliku.",
@@ -389,8 +390,7 @@
       "unconfigured": "nie skonfigurowane",
       "vehicles": "Moje pojazdy",
       "welcomeBannerText": "Zacznij od utworzenia co najmniej jednej **ładowarki**, **grzejnika**, **sieci**, **panelu słonecznego**, **baterii** lub **dodatkowego licznika**. Jeśli chcesz tylko przetestować, wybierz **urządzenie demonstracyjne**.",
-      "welcomeBannerTitle": "Skonfigurujmy Twój system!",
-      "yaml": "Uwaga: Konfiguracja odbywa się za pomocą pliku evcc.yaml. Aby umożliwić edycję w tym miejscu, usuń wpis z pliku."
+      "welcomeBannerTitle": "Skonfigurujmy Twój system!"
     },
     "messaging": {
       "description": "Otrzymuj wiadomości o sesjach ładowania.",

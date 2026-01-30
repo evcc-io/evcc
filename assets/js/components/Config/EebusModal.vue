@@ -7,14 +7,13 @@
 		endpoint="/config/eebus"
 		state-key="eebus.config"
 		data-testid="eebus-modal"
-		:disable-remove="fromYaml"
-		:disable-save="fromYaml"
+		:no-buttons="fromYaml"
 		:confirm-remove="$t('config.eebus.removeConfirm')"
 		@changed="$emit('changed')"
 	>
 		<template #default="{ values }: { values: EebusConfig }">
 			<p v-if="fromYaml" class="text-muted">
-				{{ $t("config.main.yaml") }}
+				{{ $t("config.general.fromYamlHint") }}
 			</p>
 			<FormRow
 				v-if="values.shipid"

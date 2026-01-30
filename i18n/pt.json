@@ -209,6 +209,7 @@
       "dragList": "Lista reordenável",
       "experimental": "Experimental",
       "forceSave": "Guardar na mesma",
+      "fromYamlHint": "Nota: Configurado através do evcc.yaml. Remova a entrada do ficheiro para permitir a edição aqui.",
       "hideAdvancedSettings": "Ocultar definições avançadas",
       "invalidFileSelected": "Ficheiro selecionado inválido",
       "noFileSelected": "Nenhum ficheiro selecionado.",
@@ -389,8 +390,7 @@
       "unconfigured": "não configurado",
       "vehicles": "Os meus Veículos",
       "welcomeBannerText": "Comece por criar pelo menos um **carregador**, **aquecedor**, **rede**, **solar**, **bateria** ou **medidor adicional**. Se quiser apenas testar, escolha um **dispositivo de demonstração**.",
-      "welcomeBannerTitle": "Configuremos agora o seu sistema!",
-      "yaml": "Nota: Configurado através do evcc.yaml. Remova a entrada do ficheiro para permitir a edição aqui."
+      "welcomeBannerTitle": "Configuremos agora o seu sistema!"
     },
     "messaging": {
       "description": "Receber mensagens sobre as sessões de carregamento.",

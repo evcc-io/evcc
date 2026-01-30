@@ -209,6 +209,7 @@
       "dragList": "Sorterbar lista",
       "experimental": "Experimentella funktioner",
       "forceSave": "Spara ändå",
+      "fromYamlHint": "Obs: Konfigurerad via evcc.yaml. Ta bort posten från filen för att aktivera redigering här.",
       "hideAdvancedSettings": "Dölj avancerade inställningar",
       "invalidFileSelected": "Ogiltig fil vald",
       "noFileSelected": "Ingen fil vald.",
@@ -389,8 +390,7 @@
       "unconfigured": "ej konfigurerad",
       "vehicles": "Mina fordon",
       "welcomeBannerText": "Börja med att skapa minst en **laddare**, **värmare**, **nät**, **solcell**, **batteri** eller **extra mätare**. Om du bara vill testa, välj en **demoenhet**.",
-      "welcomeBannerTitle": "Låt oss konfigurera ditt system!",
-      "yaml": "Obs: Konfigurerad via evcc.yaml. Ta bort posten från filen för att aktivera redigering här."
+      "welcomeBannerTitle": "Låt oss konfigurera ditt system!"
     },
     "messaging": {
       "description": "Få notiser om dina laddningar.",

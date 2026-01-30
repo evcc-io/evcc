@@ -225,6 +225,7 @@
       "dragList": "Reorderable list",
       "experimental": "Experimental",
       "forceSave": "Save anyway",
+      "fromYamlHint": "Note: Configured via evcc.yaml. Remove the entry from the file to enable editing here.",
       "hideAdvancedSettings": "Hide advanced settings",
       "invalidFileSelected": "Invalid file selected",
       "noFileSelected": "No file selected.",
@@ -405,8 +406,7 @@
       "unconfigured": "not configured",
       "vehicles": "My Vehicles",
       "welcomeBannerText": "Start with creating at least one **charger**, **heater**, **grid**, **solar**, **battery** or **additional meter**. If you just want to test, pick a **demo device**.",
-      "welcomeBannerTitle": "Let's configure your system!",
-      "yaml": "Note: Configured via evcc.yaml. Remove the entry from the file to enable editing here."
+      "welcomeBannerTitle": "Let's configure your system!"
     },
     "messaging": {
       "description": "Receive messages about your charging sessions.",

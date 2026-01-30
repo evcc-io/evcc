@@ -209,6 +209,7 @@
       "dragList": "Sortéirbar Lëscht",
       "experimental": "Experimentell",
       "forceSave": "Trotzdem späicheren",
+      "fromYamlHint": "Bemierkung: Konfiguréiert iwwer evcc.yaml. Läscht d'Astellungen aus der Datei fir d'Ännerung hei z'erméiglechen.",
       "hideAdvancedSettings": "Fortgeschratten Astellunge verstoppen",
       "invalidFileSelected": "Ongülteg Datei ausgewielt",
       "noFileSelected": "Keng Datei ausgewielt.",
@@ -389,8 +390,7 @@
       "unconfigured": "net konfiguréiert",
       "vehicles": "Meng Gefierer",
       "welcomeBannerText": "Fänkt un mat der Erstelle vun op d'mannst engem **Ladegerät**, **Heizer**, **Netz**, **Solarpanel**, **Batterie** oder **zousätzlechen Zähler**. Wann Dir just testen wëllt, wielt e **Demonstratiounsapparat**.",
-      "welcomeBannerTitle": "Loosst eis de System konfiguréieren!",
-      "yaml": "Bemierkung: Konfiguréiert iwwer evcc.yaml. Läscht d'Astellungen aus der Datei fir d'Ännerung hei z'erméiglechen."
+      "welcomeBannerTitle": "Loosst eis de System konfiguréieren!"
     },
     "messaging": {
       "description": "Notifikatiounen iwwer Är Opluedsessioune kréien.",

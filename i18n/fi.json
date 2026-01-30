@@ -209,6 +209,7 @@
       "dragList": "Järjestettävä lista",
       "experimental": "Kokeellinen",
       "forceSave": "Tallenna joka tapauksessa",
+      "fromYamlHint": "Huomio: Asetus on evcc.yaml-tiedostosta. Poista asetus tiedostosta, jotta voisit muokata sitä täällä.",
       "hideAdvancedSettings": "Piilota edistyneet asetukset",
       "invalidFileSelected": "Valittu virheellinen tiedosto",
       "noFileSelected": "Ei valittua tiedostoa.",
@@ -389,8 +390,7 @@
       "unconfigured": "ei määritetty",
       "vehicles": "Minun ajoneuvot",
       "welcomeBannerText": "Aloita luomalla vähintään yksi **laturi**, **lämmitin**, **sähköverkko**, **aurinkopaneeli**, **akku** tai **lisämittari**. Jos haluat vain testata, valitse **esittelylaite**.",
-      "welcomeBannerTitle": "Määritetään järjestelmäsi!",
-      "yaml": "Huomio: Asetus on evcc.yaml-tiedostosta. Poista asetus tiedostosta, jotta voisit muokata sitä täällä."
+      "welcomeBannerTitle": "Määritetään järjestelmäsi!"
     },
     "messaging": {
       "description": "Vastaanota viestejä koskien lataustapahtumiasi.",
