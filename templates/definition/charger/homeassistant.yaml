@@ -151,15 +151,15 @@ render: |
   maxcurrent: {{ .setMaxCurrent }}
   power: {{ .power }}
   energy: {{ .energy }}
-{{- if and .currentL1 .currentL2 .currentL3 }}
+  {{- if and .currentL1 .currentL2 .currentL3 }}
   currents:
     - {{ .currentL1 }}
     - {{ .currentL2 }}
     - {{ .currentL3 }}
-{{- end }}
-{{- if and .voltageL1 .voltageL2 .voltageL3 }}
+  {{- end }}
+  {{- if and .voltageL1 .voltageL2 .voltageL3 }}
   voltages:
     - {{ .voltageL1 }}
     - {{ .voltageL2 }}
     - {{ .voltageL3 }}
-{{- end }}
+  {{- end }}
