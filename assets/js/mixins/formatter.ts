@@ -340,7 +340,7 @@ export default defineComponent({
       return `${unit}${short ? "" : "/kWh"}`;
     },
     pricePerKWhDisplayFactor(currency = CURRENCY.EUR) {
-      return ENERGY_PRICE_IN_SUBUNIT[currency] ? 100 : 1;
+      return this.energyPriceSubunit(currency) ? 100 : 1;
     },
     fmtTimeAgo(elapsed: number) {
       const units = {
