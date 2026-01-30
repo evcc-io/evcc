@@ -208,7 +208,7 @@ func (cs *CS) NewChargePoint(chargePoint ocpp16.ChargePointConnection) {
 
 	// register unknown charge point
 	cs.regs[chargePoint.ID()] = newRegistration()
-	cs.log.WARN.Printf("unknown charge point connected: %s", chargePoint.ID())
+	cs.log.INFO.Printf("unknown charge point connected: %s", chargePoint.ID())
 
 	cs.mu.Unlock()
 	cs.publish()
