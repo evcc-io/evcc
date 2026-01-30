@@ -177,7 +177,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	ocppCS := ocpp.Instance()
 	ocppCS.SetUpdated(func() {
 		// republish when OCPP state updates
-		valueChan <- util.Param{Key: keys.Ocpp, Val: globalconfig.Info{
+		valueChan <- util.Param{Key: keys.Ocpp, Val: globalconfig.ConfigStatus{
 			Config: conf.Ocpp,
 			Status: ocpp.GetStatus(),
 		}}
@@ -327,7 +327,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}
 
 	// publish initial settings
-	valueChan <- util.Param{Key: keys.EEBus, Val: globalconfig.Info{
+	valueChan <- util.Param{Key: keys.EEBus, Val: globalconfig.ConfigStatus{
 		Config:   conf.EEBus.Redacted(),
 		Status:   eebus.GetStatus(),
 		FromYaml: fromYaml.eebus,
@@ -339,16 +339,16 @@ func runRoot(cmd *cobra.Command, args []string) {
 	valueChan <- util.Param{Key: keys.ModbusProxy, Val: conf.ModbusProxy}
 	valueChan <- util.Param{Key: keys.Mqtt, Val: conf.Mqtt}
 	valueChan <- util.Param{Key: keys.Network, Val: conf.Network}
-	valueChan <- util.Param{Key: keys.Ocpp, Val: globalconfig.Info{
+	valueChan <- util.Param{Key: keys.Ocpp, Val: globalconfig.ConfigStatus{
 		Config: conf.Ocpp,
 		Status: ocpp.GetStatus(),
 	}}
-	valueChan <- util.Param{Key: keys.Sponsor, Val: globalconfig.Info{
+	valueChan <- util.Param{Key: keys.Sponsor, Val: globalconfig.ConfigStatus{
 		Status:   sponsor.RedactedStatus(),
 		FromYaml: fromYaml.sponsor,
 	}}
 
-	valueChan <- util.Param{Key: keys.Hems, Val: globalconfig.Info{
+	valueChan <- util.Param{Key: keys.Hems, Val: globalconfig.ConfigStatus{
 		Config:   conf.HEMS.Redacted(),
 		Status:   hemsapi.GetStatus(hems),
 		FromYaml: fromYaml.hems,

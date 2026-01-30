@@ -18,8 +18,8 @@ import (
 	"github.com/evcc-io/evcc/util/modbus"
 )
 
-// Info for publishing config, status and source to UI and external systems
-type Info struct {
+// ConfigStatus for publishing config, status and source to UI and external systems
+type ConfigStatus struct {
 	Config   any  `json:"config,omitempty"`
 	Status   any  `json:"status,omitempty"`
 	FromYaml bool `json:"fromYaml,omitempty"`
