@@ -9,7 +9,7 @@ test.afterEach(async () => {
 });
 
 test.describe("eebus", async () => {
-  test("not configured: prefilled", async ({ page }) => {
+  test("first start, auto-configured", async ({ page }) => {
     await start();
     await page.goto("/#/config");
 
@@ -105,5 +105,33 @@ test.describe("eebus", async () => {
     await eebusCard.getByRole("button", { name: "edit" }).click();
 
     await expect(ski).not.toHaveValue(skiValue);
+  });
+
+  test("configured in yaml", async ({ page }) => {
+    await start("config-eebus.evcc.yaml");
+    await page.goto("/#/config");
+
+    await page.getByTestId("eebus").getByRole("button", { name: "edit" }).click();
+    const modal = page.getByTestId("eebus-modal");
+    await expectModalVisible(modal);
+
+    // yaml configuration note is visible
+    await expect(modal.getByText("Configured via evcc.yaml", { exact: false })).toBeVisible();
+
+    // SHIP-ID readonly field is visible with configured value
+    await expect(modal.getByLabel("SHIP-ID")).toBeVisible();
+    await expect(modal.getByLabel("SHIP-ID")).toHaveValue("EVCC_HEMS_01");
+    await expect(modal.getByLabel("SHIP-ID")).toHaveAttribute("readonly");
+
+    // SKI readonly field is visible
+    await expect(modal.getByLabel("SKI")).toBeVisible();
+    await expect(modal.getByLabel("SKI")).toHaveAttribute("readonly");
+
+    // no advanced settings button
+    await expect(modal.getByRole("button", { name: "Show advanced settings" })).not.toBeVisible();
+
+    // no action buttons
+    await expect(modal.getByRole("button", { name: "Save" })).not.toBeVisible();
+    await expect(modal.getByRole("button", { name: "Remove" })).not.toBeVisible();
   });
 });
