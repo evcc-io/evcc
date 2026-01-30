@@ -10,50 +10,44 @@ params:
     default: 502
   - name: id
     default: 1
-  # - name: tempsource
-  #   type: choice
-  #   choice: ["warmwater", "buffer"]
-  #   description:
-  #     de: Temperaturquelle (Warmwasser oder Pufferspeicher)
-  #     en: Temperature source (warm water or buffer)
 render: |
   type: heatpump
   setmaxpower:
-    source: const
-    value: 0
-    set:
-      source: modbus
-      uri: {{ .host }}:{{ .port }}
-      id: {{ .id }}
-      register:
-        address: 2201 # SUR Überschussleistung Auflösung 1 W
-        type: writesingle
-        decode: int16
-  power:
+    source: watchdog
+    timeout: 600s  # da WP nach 10 min ohne Meldung abschaltet
+    set:  
+      source: delta  # nur Differenz zu letztem Wert
+      get:
+        source: modbus
+        uri: {{ .host }}:{{ .port }}
+        id: {{ .id }}
+        register:
+          address: 2012 # totale von der WP berechnete Überschussleistung Auflösung 1 W
+          type: input
+          decode: int16
+      set:
+        source: modbus
+        uri: {{ .host }}:{{ .port }}
+        id: {{ .id }}
+        register:
+          address: 2201 # SUR Überschussleistung Auflösung 1 W
+          type: writeholding
+          decode: int16
+  temp:
     source: modbus
     uri: {{ .host }}:{{ .port }}
     id: {{ .id }}
     register:
-      address: 2010 # aktuelle Leistungsaufnahme
-      type: holding
+      address: 2000 # angezeigte Temperatur Auflösung 0,1°C
+      type: input
       decode: int16
-  # {{- if .tempsource }}
-  # temp:
-  #   source: modbus
-  #   uri: {{ .host }}:{{ .port }}
-  #   id: {{ .id }}
-  #   register:
-  #     address: 2200 # C1 Solltemperatur Auflösung 0,1°C
-  #     type: holding
-  #     decode: int16
-  #   scale: 0.1
+    scale: 0.1
   limittemp:
     source: modbus
     uri: {{ .host }}:{{ .port }}
     id: {{ .id }}
     register:
-      address: 2200 # C1 Solltemperatur Auflösung 0,1°C
+      address: 2203 # Legionellen/Überschuss Solltemperatur Auflösung 0,1°C
       type: holding
       decode: int16
     scale: 0.1
-  # {{- end }}
