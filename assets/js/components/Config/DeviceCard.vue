@@ -6,10 +6,10 @@
 			'round-box--error': error,
 			'round-box--warning': warning,
 			'root--unconfigured': unconfigured,
-			'root--with-tags': !hideTags,
+			'root--with-tags': $slots.tags,
 		}"
 	>
-		<div class="d-flex align-items-center" :class="{ 'mb-2': !hideTags }">
+		<div class="d-flex align-items-center" :class="{ 'mb-2': $slots.tags }">
 			<div class="icon me-2">
 				<slot name="icon" />
 			</div>
@@ -34,7 +34,7 @@
 				<shopicon-regular-adjust size="s"></shopicon-regular-adjust>
 			</button>
 		</div>
-		<div v-if="!hideTags">
+		<div v-if="$slots.tags">
 			<hr class="my-3 divide" />
 			<slot name="tags" />
 		</div>
@@ -56,7 +56,6 @@ export default {
 		unconfigured: Boolean,
 		warning: Boolean,
 		noEditButton: Boolean,
-		hideTags: Boolean,
 	},
 	emits: ["edit"],
 	data() {

@@ -273,7 +273,6 @@
 						editable
 						:error="hasClassError('ocpp')"
 						data-testid="ocpp"
-						hide-tags
 						@edit="openModal('ocppModal')"
 					>
 						<template #icon><OcppIcon /></template>
@@ -283,7 +282,6 @@
 						editable
 						:error="hasClassError('shm')"
 						data-testid="shm"
-						hide-tags
 						@edit="openModal('shmModal')"
 					>
 						<template #icon><ShmIcon /></template>
@@ -293,7 +291,6 @@
 						editable
 						:error="hasClassError('eebus')"
 						data-testid="eebus"
-						hide-tags
 						@edit="openModal('eebusModal')"
 					>
 						<template #icon><EebusIcon /></template>
