@@ -1,6 +1,8 @@
 template: telegram
 products:
   - brand: Telegram
+requirements:
+  evcc: ["skiptest"]
 params:
   - name: token
     required: true
