@@ -185,7 +185,7 @@ func (w *WarpWS) handleConnection(ctx context.Context, conn *websocket.Conn) {
 			return // reconnect
 		}
 		if msgType != websocket.MessageText {
-			continue
+			continue // next frame
 		}
 
 		dec := json.NewDecoder(r)
@@ -199,10 +199,8 @@ func (w *WarpWS) handleConnection(ctx context.Context, conn *websocket.Conn) {
 				return // reconnect
 			}
 
-			w.log.TRACE.Printf("ws: topic=%s payload=%s", event.Topic, string(event.Payload))
-
 			if err := w.handleEvent(event.Topic, event.Payload); err != nil {
-				return // reconnect
+				w.log.ERROR.Printf("bad payload for topic %s: %v", event.Topic, err)
 			}
 		}
 	}
@@ -269,11 +267,12 @@ func (w *WarpWS) handleEvent(topic string, payload json.RawMessage) error {
 }
 
 func (w *WarpWS) hasFeature(feature string) bool {
-	w.mu.Lock()
-	defer w.mu.Unlock()
+	w.mu.RLock()
 	if w.features != nil {
+	    w.mu.RUnlock()
 		return slices.Contains(w.features, feature)
 	}
+	w.mu.RUnlock()
 
 	uri := fmt.Sprintf("%s/info/features", w.uri)
 	var features []string
