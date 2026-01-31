@@ -67,21 +67,19 @@ grid:
     // restart done
     await expect(restartButton).not.toBeVisible();
 
-    await expect(page.getByTestId("tariffs")).toContainText(
-      ["Currency", "CHF", "Grid price", "12.3 ct."].join("")
-    );
+    await expect(page.getByTestId("generalconfig-currency")).toContainText("Currency CHF");
+    await expect(page.getByTestId("tariffs")).toContainText(["Grid price", "12.3 ct."].join(""));
   });
 
   test("tariffs from evcc.yaml", async ({ page }) => {
     await start(CONFIG_WITH_TARIFFS);
     await page.goto("/#/config");
 
+    await expect(page.getByTestId("generalconfig-currency")).toContainText("Currency SEK");
     await expect(page.getByTestId("tariffs")).toBeVisible();
     await expect(page.getByTestId("tariffs")).toContainText(
       [
-        "Tariffs",
-        "Currency",
-        "SEK",
+        "Tariffs & Forecasts",
         "Grid price",
         "30.0 öre",
         "Feed-in price",
