@@ -11,6 +11,7 @@ import (
 	"slices"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/cenkalti/backoff/v4"
 	"github.com/coder/websocket"
@@ -169,45 +170,40 @@ func (w *WarpWS) run(ctx context.Context) {
 	bo := backoff.NewExponentialBackOff()
 	bo.MaxElapsedTime = 0
 
-	for {
-		err := backoff.Retry(func() error {
-			conn, _, err := websocket.Dial(ctx, uri, nil)
+	loop := func() error {
+		conn, _, err := websocket.Dial(ctx, uri, nil)
+		if err != nil {
+			return err
+		}
+		conn.SetReadLimit(-1)
+
+		// read loop
+		for {
+			_, data, err := conn.Read(ctx)
 			if err != nil {
-				w.log.ERROR.Printf("ws dial error: %v", err)
+				_ = conn.Close(websocket.StatusInternalError, "read error")
 				return err
 			}
 
-			w.log.DEBUG.Println("ws: connection established")
-			conn.SetReadLimit(-1)
-			// read loop
-			for {
-				typ, data, err := conn.Read(ctx)
-				if err != nil {
-					w.log.DEBUG.Printf("ws read error: %v", err)
-					_ = conn.Close(websocket.StatusInternalError, "read error")
-					return err
-				}
-
-				if typ == websocket.MessageBinary || typ == websocket.MessageText {
-					w.handleFrame(data)
-				}
-			}
-		}, backoff.WithContext(bo, ctx))
-
-		if err != nil {
-			w.log.DEBUG.Println("ws: stopping reconnect loop")
-			return
+			w.handleFrame(data)
 		}
+	}
 
-		bo.Reset()
+	for ctx.Err() == nil {
+		if err := loop(); err != nil && ctx.Err() == nil {
+			w.log.ERROR.Println(err)
+			time.Sleep(bo.NextBackOff())
+		} else {
+			bo.Reset()
+		}
 	}
 }
 
-func splitJSONObjects(data []byte) ([][]byte, error) {
+func splitJSONObjects(data []byte) ([]json.RawMessage, error) {
 	dec := json.NewDecoder(bytes.NewReader(data))
-	dec.UseNumber()
+	dec.UseNumber() // TODO why?
 
-	var objs [][]byte
+	var objs []json.RawMessage
 	for {
 		var raw json.RawMessage
 		if err := dec.Decode(&raw); err != nil {
