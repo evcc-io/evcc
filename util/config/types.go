@@ -6,7 +6,7 @@ import (
 
 type Typed struct {
 	Type  string         `json:"type"`
-	Other map[string]any `mapstructure:",remain" yaml:",inline"` // TODO JSON serialization
+	Other map[string]any `mapstructure:",remain" yaml:",inline" json:"other"` // TODO JSON serialization
 }
 
 type Named struct {

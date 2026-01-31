@@ -6,6 +6,7 @@
 			class="editor"
 			:errorLine="errorLine"
 			:removeKey="removeKey"
+			:required="required"
 		/>
 	</div>
 </template>
@@ -21,6 +22,7 @@ export default {
 		errorLine: { type: [Number, null], default: null },
 		removeKey: String,
 		hidden: Boolean,
+		required: Boolean,
 	},
 	emits: ["update:modelValue"],
 	data() {
