@@ -428,7 +428,7 @@ func (w *WarpWS) getPhases() (int, error) {
 	return 1, nil
 }
 
-func (w *WarpWS) ensurePmState() error{
+func (w *WarpWS) ensurePmState() error {
 	if w.emHelper == nil || w.pmState.ExternalControl != 0 {
 		return nil
 	}
