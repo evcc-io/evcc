@@ -127,8 +127,8 @@ func (v *API) DoRequest(req *http.Request, result *requests.Answer) (string, err
 	event_id := resp.Header.Get("event-id")
 
 	if result != nil {
-		body, err := requests.DecodeResponse(resp)
-		if err != nil {
+		body, err2 := requests.DecodeResponse(resp)
+		if err2 != nil {
 			return event_id, fmt.Errorf("decrypt: %w", err)
 		}
 
