@@ -35,6 +35,7 @@ type MeterValues struct {
 	EnergyAbs float64 `json:"energy_abs"`
 	Currents  [3]float64
 	Voltages  [3]float64
+	Values    []float64
 }
 
 // Meter value IDs according to Tinkerforge meter_value_id.csv

@@ -3,7 +3,9 @@ package charger
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"slices"
 	"strings"
@@ -167,13 +169,14 @@ func (w *WarpWS) run(ctx context.Context) {
 	bo := backoff.NewExponentialBackOff()
 	bo.MaxElapsedTime = 0
 
-	loop := func() error {
-		conn, _, err := websocket.Dial(ctx, uri, nil)
-		if err != nil {
-			return err
-		}
-		conn.SetReadLimit(-1)
+	conn, _, err := websocket.Dial(ctx, uri, nil)
+	if err != nil {
+		return
+	}
+	defer conn.Close(websocket.StatusNormalClosure, "bye")
+	conn.SetReadLimit(-1)
 
+	loop := func() error {
 		defer func() {
 			if err != nil {
 				_ = conn.Close(websocket.StatusInternalError, "error")
@@ -189,9 +192,12 @@ func (w *WarpWS) run(ctx context.Context) {
 		for {
 			var event warpEvent
 			if err := dec.Decode(&event); err != nil {
+				if errors.Is(err, io.EOF) {
+					return nil
+				}
 				return err
 			}
-
+			w.log.TRACE.Printf("ws: topic=%s payload=%s", event.Topic, string(event.Payload))
 			if err := w.handle(event.Topic, event.Payload); err != nil {
 				return err
 			}
@@ -230,8 +236,10 @@ func (w *WarpWS) handle(topic string, payload json.RawMessage) error {
 	case "meter/all_values":
 		var vals []float64
 		err = json.Unmarshal(payload, &vals)
-		copy(w.meter.Voltages[:], vals[:3])
-		copy(w.meter.Currents[:], vals[3:6])
+		if len(vals) >= 6 {
+			copy(w.meter.Voltages[:], vals[:3])
+			copy(w.meter.Currents[:], vals[3:6])
+		}
 	case fmt.Sprintf("meters/%d/value_ids", w.meterIndex):
 		var ids []int
 		if json.Unmarshal(payload, &ids) == nil {
@@ -240,22 +248,21 @@ func (w *WarpWS) handle(topic string, payload json.RawMessage) error {
 			}
 		}
 	case fmt.Sprintf("meters/%d/values", w.meterIndex):
-		var vals []float64
-		if json.Unmarshal(payload, &vals) == nil {
-			if idx, ok := w.meterMap[warp.ValueIDPowerImExSum]; ok && idx < len(vals) {
-				w.meter.Power = vals[idx]
+		if json.Unmarshal(payload, &w.meter.Values) == nil {
+			if idx, ok := w.meterMap[warp.ValueIDPowerImExSum]; ok && idx < len(w.meter.Values) {
+				w.meter.Power = w.meter.Values[idx]
 			}
-			if idx, ok := w.meterMap[warp.ValueIDEnergyAbsImSum]; ok && idx < len(vals) {
-				w.meter.EnergyAbs = vals[idx]
+			if idx, ok := w.meterMap[warp.ValueIDEnergyAbsImSum]; ok && idx < len(w.meter.Values) {
+				w.meter.EnergyAbs = w.meter.Values[idx]
 			}
-			for phase := 0; phase < 3; phase++ {
-				if idx, ok := w.meterMap[warp.ValueIDCurrentImExSumL1+phase]; ok && idx < len(vals) {
-					w.meter.Currents[phase] = vals[idx]
+			for phase := range 3 {
+				if idx, ok := w.meterMap[warp.ValueIDCurrentImExSumL1+phase]; ok && idx < len(w.meter.Values) {
+					w.meter.Currents[phase] = w.meter.Values[idx]
 				}
 			}
-			for phase := 0; phase < 3; phase++ {
-				if idx, ok := w.meterMap[warp.ValueIDVoltageL1N+phase]; ok && idx < len(vals) {
-					w.meter.Voltages[phase] = vals[idx]
+			for phase := range 3 {
+				if idx, ok := w.meterMap[warp.ValueIDVoltageL1N+phase]; ok && idx < len(w.meter.Values) {
+					w.meter.Voltages[phase] = w.meter.Values[idx]
 				}
 			}
 		}
@@ -285,7 +292,7 @@ func (w *WarpWS) hasFeature(feature string) bool {
 }
 
 func (w *WarpWS) Enable(enable bool) error {
-	curr := int64(0)
+	var curr int64
 	if enable {
 		w.mu.RLock()
 		defer w.mu.RUnlock()
@@ -394,8 +401,7 @@ func (w *WarpWS) phases1p3p(phases int) error {
 	w.mu.RLock()
 	defer w.mu.RUnlock()
 
-	ec := w.pmState.ExternalControl
-	if ec > warp.ExternalControlAvailable {
+	if ec := w.pmState.ExternalControl; ec > warp.ExternalControlAvailable {
 		return fmt.Errorf("external control not available: %s", ec)
 	}
 
@@ -422,16 +428,18 @@ func (w *WarpWS) getPhases() (int, error) {
 	return 1, nil
 }
 
-func (w *WarpWS) ensurePmState() {
+func (w *WarpWS) ensurePmState() error{
 	if w.emHelper == nil || w.pmState.ExternalControl != 0 {
-		return
+		return nil
 	}
 	var s warp.PmState
-	if w.emHelper.GetJSON(fmt.Sprintf("%s/power_manager/state", w.emURI), &s) == nil {
-		w.mu.Lock()
-		w.pmState = s
-		w.mu.Unlock()
+	if err := w.emHelper.GetJSON(fmt.Sprintf("%s/power_manager/state", w.emURI), &s); err != nil {
+		return err
 	}
+	w.mu.Lock()
+	w.pmState = s
+	w.mu.Unlock()
+	return nil
 }
 
 func (w *WarpWS) ensurePmLowLevelState() {
