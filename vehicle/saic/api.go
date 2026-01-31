@@ -129,7 +129,7 @@ func (v *API) DoRequest(req *http.Request, result *requests.Answer) (string, err
 	if result != nil {
 		body, err2 := requests.DecodeResponse(resp)
 		if err2 != nil {
-			return event_id, fmt.Errorf("decrypt: %w", err)
+			return event_id, fmt.Errorf("decrypt: %w", err2)
 		}
 
 		if err2 := json.Unmarshal(body, result); err2 == nil && result.Code != 0 {
