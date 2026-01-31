@@ -228,7 +228,6 @@ func (v *API) Status(vin string) (requests.ChargeStatus, error) {
 
 	event_id, err = v.DoRequest(req, &answer)
 	if err != nil {
-		v.log.TRACE.Printf("Getting event id failed")
 		return res, err
 	}
 
@@ -246,7 +245,6 @@ func (v *API) Status(vin string) (requests.ChargeStatus, error) {
 		token.AccessToken,
 		event_id)
 	if err != nil {
-		v.log.TRACE.Printf("Could not create request %s", err.Error())
 		return res, err
 	}
 
@@ -257,8 +255,6 @@ func (v *API) Status(vin string) (requests.ChargeStatus, error) {
 		v.request.Status = StatRunning
 		v.log.TRACE.Printf(" No answer yet. Continue status query in background")
 		go v.repeatRequest(path, event_id)
-	} else if err != nil {
-		v.log.TRACE.Printf("doRequest failed with %s", err.Error())
 	}
 
 	return res, err
