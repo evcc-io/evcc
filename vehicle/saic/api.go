@@ -11,7 +11,6 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
 	"github.com/evcc-io/evcc/vehicle/saic/requests"
-	"golang.org/x/oauth2"
 )
 
 const (
@@ -92,11 +91,10 @@ func (v *API) doRepeatedRequest(path string, event_id string) error {
 
 // This is running concurrently
 func (v *API) repeatRequest(path string, event_id string) {
-	var err error
 	var count int
 
 	v.request.Status = StatRunning
-	for err = api.ErrMustRetry; err == api.ErrMustRetry && count < 20; {
+	for err := api.ErrMustRetry; err == api.ErrMustRetry && count < 20; {
 		time.Sleep(2 * time.Second)
 		v.log.TRACE.Printf("Starting repeated query. Count: %d", count)
 		err = v.doRepeatedRequest(path, event_id)
@@ -108,7 +106,6 @@ func (v *API) repeatRequest(path string, event_id string) {
 	if v.request.Status == StatRunning {
 		v.request.Status = StatInvalid
 	}
-	v.log.TRACE.Printf("Exiting repeated query. Count: %d", count)
 }
 
 func (v *API) DoRequest(req *http.Request, result *requests.Answer) (string, error) {
@@ -116,8 +113,8 @@ func (v *API) DoRequest(req *http.Request, result *requests.Answer) (string, err
 	if err != nil {
 		return "", err
 	}
-
 	defer resp.Body.Close()
+
 	if resp.StatusCode == http.StatusUnauthorized {
 		v.log.TRACE.Printf("DoRequest: %s", resp.Status)
 		v.identity.Login()
@@ -154,17 +151,13 @@ func (v *API) Vehicles() ([]Vehicle, error) {
 */
 
 func (v *API) Wakeup(vin string) error {
-	var req *http.Request
-	var err error
-	var token *oauth2.Token
-
-	token, err = v.identity.Token()
+	token, err := v.identity.Token()
 	if err != nil {
 		return err
 	}
 
 	path := "vehicle/status?vin=" + requests.Sha256(vin)
-	req, err = requests.CreateRequest(
+	req, err := requests.CreateRequest(
 		v.identity.baseUrl,
 		path,
 		http.MethodGet,
@@ -183,14 +176,7 @@ func (v *API) Wakeup(vin string) error {
 
 // Status implements the /user/vehicles/<vin>/status api
 func (v *API) Status(vin string) (requests.ChargeStatus, error) {
-	var req *http.Request
 	var res requests.ChargeStatus
-	var event_id string
-	var err error
-	var token *oauth2.Token
-	answer := requests.Answer{
-		Data: &res,
-	}
 
 	// Check if we are already running in the background
 	if v.request.Status == StatValid {
@@ -205,14 +191,14 @@ func (v *API) Status(vin string) (requests.ChargeStatus, error) {
 	}
 	v.log.TRACE.Printf("StatInvalid. Starting query")
 
-	token, err = v.identity.Token()
+	token, err := v.identity.Token()
 	if err != nil {
 		return res, err
 	}
 
 	path := "vehicle/charging/mgmtData?vin=" + requests.Sha256(vin)
 	// get charging status of vehicle
-	req, err = requests.CreateRequest(
+	req, err := requests.CreateRequest(
 		v.identity.baseUrl,
 		path,
 		http.MethodGet,
@@ -224,7 +210,8 @@ func (v *API) Status(vin string) (requests.ChargeStatus, error) {
 		return res, err
 	}
 
-	event_id, err = v.DoRequest(req, &answer)
+	var answer requests.Answer
+	event_id, err := v.DoRequest(req, &answer)
 	if err != nil {
 		return res, err
 	}
