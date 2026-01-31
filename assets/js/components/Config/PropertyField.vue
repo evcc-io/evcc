@@ -68,7 +68,7 @@
 		<div class="position-relative flex-grow-1">
 			<input
 				:id="id"
-				:value="value"
+				v-model="value"
 				:list="datalistId"
 				:type="inputType"
 				:step="step"
@@ -82,8 +82,6 @@
 					unitValue ? 'border-top-right-radius: 0; border-bottom-right-radius: 0' : null
 				"
 				:autocomplete="masked || datalistId ? 'off' : null"
-				@input="useLazyBinding ? null : (value = $event.target.value)"
-				@change="useLazyBinding ? (value = $event.target.value) : null"
 			/>
 			<button
 				v-if="showClearButton"
