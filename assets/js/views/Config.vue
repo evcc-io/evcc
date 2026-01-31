@@ -377,7 +377,18 @@
 				<ControlModal @changed="loadDirty" />
 				<HemsModal :fromYaml="hems?.fromYaml" @changed="yamlChanged" />
 				<ShmModal @changed="loadDirty" />
-				<MessagingModal @changed="yamlChanged" />
+				<MessagingModal
+					:messaging-configured="messagingConfigured"
+					:messengers="messengers"
+					:selected-messenger-id="selectedMessengerId"
+					@yaml-changed="yamlChanged"
+					@events-changed="messagingEventsChanged"
+					@open-messenger-modal="openMessengerModal"
+				/>
+				<MessengerModal
+					@messenger-changed="messengerModalChanged"
+					@messenger-closed="messengerModalClosed"
+				/>
 				<TariffsModal @changed="yamlChanged" />
 				<TelemetryModal :sponsor="sponsor" :telemetry="telemetry" />
 				<ExperimentalModal />
@@ -425,7 +436,7 @@ import InfluxIcon from "../components/MaterialIcon/Influx.vue";
 import InfluxModal from "../components/Config/InfluxModal.vue";
 import LoadpointModal from "../components/Config/LoadpointModal.vue";
 import LoadpointIcon from "../components/MaterialIcon/Loadpoint.vue";
-import MessagingModal from "../components/Config/MessagingModal.vue";
+import MessagingModal from "../components/Config/Messaging/MessagingModal.vue";
 import MeterModal from "../components/Config/MeterModal.vue";
 import MeterCard from "../components/Config/MeterCard.vue";
 import Modal from "bootstrap/js/dist/modal";
@@ -459,6 +470,7 @@ import type {
 	SiteConfig,
 	DeviceType,
 	Notification,
+	ConfigMessenger,
 } from "@/types/evcc";
 
 type DeviceValuesMap = Record<DeviceType, Record<string, any>>;
@@ -473,6 +485,7 @@ import WelcomeBanner from "../components/Config/WelcomeBanner.vue";
 import AuthSuccessBanner from "../components/Config/AuthSuccessBanner.vue";
 import PasswordModal from "../components/Auth/PasswordModal.vue";
 import AuthProvidersCard from "../components/Config/AuthProvidersCard.vue";
+import MessengerModal from "@/components/Config/Messaging/MessengerModal.vue";
 
 export default defineComponent({
 	name: "Config",
@@ -497,6 +510,7 @@ export default defineComponent({
 		InfluxIcon,
 		InfluxModal,
 		MessagingModal,
+		MessengerModal,
 		MeterModal,
 		MeterCard,
 		LoadpointModal,
@@ -526,11 +540,13 @@ export default defineComponent({
 	},
 	data() {
 		return {
+			messengers: [] as ConfigMessenger[],
 			vehicles: [] as ConfigVehicle[],
 			meters: [] as ConfigMeter[],
 			loadpoints: [] as ConfigLoadpoint[],
 			chargers: [] as ConfigCharger[],
 			circuits: [] as ConfigCircuit[],
+			selectedMessengerId: undefined as number | undefined,
 			selectedVehicleId: undefined as number | undefined,
 			selectedMeterId: undefined as number | undefined,
 			selectedMeterType: undefined as MeterType | undefined,
@@ -562,6 +578,9 @@ export default defineComponent({
 		return { title: this.$t("config.main.title") };
 	},
 	computed: {
+		messagingConfigured() {
+			return store.state.messaging;
+		},
 		callbackCompleted() {
 			return this.$route.query["callbackCompleted"] as string | undefined;
 		},
@@ -778,6 +797,7 @@ export default defineComponent({
 			}
 		},
 		async loadAll() {
+			await this.loadMessengers();
 			await this.loadVehicles();
 			await this.loadMeters();
 			await this.loadSite();
@@ -797,6 +817,9 @@ export default defineComponent({
 			const validateStatus = (code: number) => [200, 404].includes(code);
 			const response = await api.get(`/config/${path}`, { validateStatus });
 			return response.status === 200 ? response.data : undefined;
+		},
+		async loadMessengers() {
+			this.messengers = (await this.loadConfig("devices/messenger")) || [];
 		},
 		async loadVehicles() {
 			this.vehicles = (await this.loadConfig("devices/vehicle")) || [];
@@ -850,6 +873,16 @@ export default defineComponent({
 		vehicleModal() {
 			return Modal.getOrCreateInstance(
 				document.getElementById("vehicleModal") as HTMLElement
+			);
+		},
+		messagingModal() {
+			return Modal.getOrCreateInstance(
+				document.getElementById("messagingModal") as HTMLElement
+			);
+		},
+		messengerModal() {
+			return Modal.getOrCreateInstance(
+				document.getElementById("messengerModal") as HTMLElement
 			);
 		},
 		meterModal() {
@@ -954,6 +987,29 @@ export default defineComponent({
 			this.vehicleModal().hide();
 			this.loadVehicles();
 			this.loadDirty();
+		},
+		messagingEventsChanged() {
+			this.selectedMessengerId = undefined;
+			this.messagingModal().hide();
+			this.loadMessengers();
+			this.loadDirty();
+		},
+		openMessengerModal(id?: number) {
+			this.messengerModal().show();
+			this.$nextTick(() =>
+				(
+					this.$refs["messengerModal"] as InstanceType<typeof MessengerModal> | undefined
+				)?.setId(id)
+			);
+			this.messagingModal().hide();
+		},
+		async messengerModalChanged() {
+			this.messengerModal().hide();
+			this.messagingModal().show();
+			await this.loadMessengers();
+		},
+		messengerModalClosed() {
+			this.messagingModal().show();
 		},
 		siteChanged() {
 			this.loadDirty();
@@ -1064,6 +1120,7 @@ export default defineComponent({
 			if (!this.offline) {
 				const devices = {
 					meter: this.meters,
+					messenger: this.messengers,
 					vehicle: this.vehicles,
 					charger: this.chargers,
 				} as Record<DeviceType, any[]>;

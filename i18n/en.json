@@ -128,6 +128,7 @@
       "dimmed": "Dimmed",
       "enabled": "Enabled",
       "energy": "Energy",
+      "events": "Events",
       "feedinPrice": "Feed-in price",
       "gridPrice": "Grid price",
       "heaterTempLimit": "Heater limit",
@@ -144,6 +145,7 @@
       "power": "Power",
       "powerRange": "Power",
       "range": "Range",
+      "services": "Services",
       "singlePhase": "Single phase",
       "soc": "Charge",
       "solarForecast": "Solar forecast",
@@ -392,6 +394,57 @@
       "welcomeBannerText": "Start with creating at least one **charger**, **heater**, **grid**, **solar**, **battery** or **additional meter**. If you just want to test, pick a **demo device**.",
       "welcomeBannerTitle": "Let's configure your system!",
       "yaml": "Devices from evcc.yaml are not editable."
+    },
+    "messaging": {
+      "addMessenger": "Add messenger",
+      "description": "Receive messages about your charging sessions.",
+      "event": {
+        "asleep": {
+          "messageDefault": "Charge release, vehicle {vehicleName} not charging.",
+          "title": "When charging is paused",
+          "titleDefault": "Vehicle asleep"
+        },
+        "connect": {
+          "messageDefault": "Car connected at {pvPower}kW PV",
+          "title": "When a car connects",
+          "titleDefault": "Car connected"
+        },
+        "disconnect": {
+          "messageDefault": "Car disconnected after {connectedDuration}",
+          "title": "When a car disconnects",
+          "titleDefault": "Car disconnected"
+        },
+        "guest": {
+          "messageDefault": "Unknown vehicle, guest connected?",
+          "title": "When an unknown car connects",
+          "titleDefault": "Unknown vehicle"
+        },
+        "planoverrun": {
+          "messageDefault": "{vehicleTitle}: Plan will overrun.",
+          "title": "When plan charging is going to overrun",
+          "titleDefault": "Plan overrun"
+        },
+        "soc": {
+          "messageDefault": "Battery charged to {vehicleSoc}%",
+          "title": "For SoC updates",
+          "titleDefault": "Soc updated"
+        },
+        "start": {
+          "messageDefault": "Started charging in {mode} mode.",
+          "title": "When charging starts",
+          "titleDefault": "Charge started"
+        },
+        "stop": {
+          "messageDefault": "Finished charging {chargedEnergy}kWh in {chargeDuration}.",
+          "title": "When charging stops",
+          "titleDefault": "Charge finished"
+        }
+      },
+      "eventMessage": "Message",
+      "eventTitle": "Title",
+      "events": "Events",
+      "messengers": "Messengers",
+      "title": "Notifications"
     },
     "meter": {
       "cancel": "Cancel",

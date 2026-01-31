@@ -19,34 +19,35 @@ import (
 )
 
 type All struct {
-	Network      Network
-	Ocpp         ocpp.Config
-	Log          string
-	SponsorToken string
-	Plant        string // telemetry plant id
-	Telemetry    bool
-	Mcp          bool
-	Metrics      bool
-	Profile      bool
-	Levels       map[string]string
-	Interval     time.Duration
-	Database     DB
-	Mqtt         Mqtt
-	ModbusProxy  []ModbusProxy
-	Javascript   []Javascript
-	Go           []Go
-	Influx       Influx
-	EEBus        eebus.Config
-	HEMS         Hems
-	SHM          shm.Config
-	Messaging    Messaging
-	Meters       []config.Named
-	Chargers     []config.Named
-	Vehicles     []config.Named
-	Tariffs      Tariffs
-	Site         map[string]any
-	Loadpoints   []config.Named
-	Circuits     []config.Named
+	Network         Network
+	Ocpp            ocpp.Config
+	Log             string
+	SponsorToken    string
+	Plant           string // telemetry plant id
+	Telemetry       bool
+	Mcp             bool
+	Metrics         bool
+	Profile         bool
+	Levels          map[string]string
+	Interval        time.Duration
+	Database        DB
+	Mqtt            Mqtt
+	ModbusProxy     []ModbusProxy
+	Javascript      []Javascript
+	Go              []Go
+	Influx          Influx
+	EEBus           eebus.Config
+	HEMS            Hems
+	SHM             shm.Config
+	Messaging       Messaging
+	MessagingEvents MessagingEvents
+	Meters          []config.Named
+	Chargers        []config.Named
+	Vehicles        []config.Named
+	Tariffs         Tariffs
+	Site            map[string]any
+	Loadpoints      []config.Named
+	Circuits        []config.Named
 }
 
 type Javascript struct {
@@ -138,13 +139,17 @@ type DB struct {
 }
 
 type Messaging struct {
-	Events   map[string]MessagingEventTemplate
+	Events   MessagingEvents
 	Services []config.Typed
 }
 
+type MessagingEvents = map[string]MessagingEventTemplate
+
 // MessagingEventTemplate is the push message configuration for an event
 type MessagingEventTemplate struct {
-	Title, Msg string
+	Title    string `json:"title"`
+	Msg      string `json:"msg"`
+	Disabled bool   `json:"disabled"`
 }
 
 func (c Messaging) Configured() bool {
