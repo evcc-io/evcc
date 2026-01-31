@@ -25,7 +25,6 @@ type WarpWS struct {
 	*request.Helper
 	log        *util.Logger
 	uri        string
-	inBulkDump bool
 
 	mu sync.RWMutex
 
@@ -153,7 +152,6 @@ func NewWarpWS(ctx context.Context, uri, user, password string, meterIndex uint)
 		uri:        util.DefaultScheme(uri, "http"),
 		meterIndex: meterIndex,
 		meterMap:   map[int]int{},
-		inBulkDump: true,
 	}
 
 	go w.run(ctx)
@@ -161,6 +159,7 @@ func NewWarpWS(ctx context.Context, uri, user, password string, meterIndex uint)
 	return w, nil
 }
 
+/*
 func (w *WarpWS) run(ctx context.Context) {
 	uri := strings.Replace(w.uri, "http://", "ws://", 1) + "/ws"
 	w.log.TRACE.Printf("ws: connecting to %s …", uri)
@@ -209,9 +208,59 @@ func (w *WarpWS) run(ctx context.Context) {
 			}
 		}
 	}
+} */
+
+func (w *WarpWS) run(ctx context.Context) {
+    uri := strings.Replace(w.uri, "http://", "ws://", 1) + "/ws"
+    w.log.TRACE.Printf("ws: connecting to %s …", uri)
+
+    bo := backoff.NewExponentialBackOff()
+    bo.MaxElapsedTime = 0
+
+    for ctx.Err() == nil {
+        conn, _, err := websocket.Dial(ctx, uri, nil)
+        if err != nil {
+            time.Sleep(bo.NextBackOff())
+            continue
+        }
+
+        bo.Reset()
+        w.handleConnection(ctx, conn)
+    }
 }
 
-func (w *WarpWS) handle(topic string, payload json.RawMessage) error {
+func (w *WarpWS) handleConnection(ctx context.Context, conn *websocket.Conn) {
+    defer conn.Close(websocket.StatusInternalError, "reconnect")
+    for {
+		msgType, r, err := conn.Reader(ctx)
+		if err != nil {
+			return // reconnect
+		}
+        if msgType != websocket.MessageText {
+            continue
+        }
+
+        dec := json.NewDecoder(r)
+
+        for {
+            var event warpEvent
+            if err := dec.Decode(&event); err != nil {
+                if errors.Is(err, io.EOF) {
+                    break //next frame
+                }
+                return // reconnect
+            }
+
+            w.log.TRACE.Printf("ws: topic=%s payload=%s", event.Topic, string(event.Payload))
+
+            if err := w.handleEvent(event.Topic, event.Payload); err != nil {
+                return // reconnect
+            }
+        }
+    }
+}
+
+func (w *WarpWS) handleEvent(topic string, payload json.RawMessage) error {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
