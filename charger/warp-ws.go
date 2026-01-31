@@ -23,8 +23,8 @@ import (
 
 type WarpWS struct {
 	*request.Helper
-	log        *util.Logger
-	uri        string
+	log *util.Logger
+	uri string
 
 	mu sync.RWMutex
 
@@ -47,7 +47,6 @@ type WarpWS struct {
 	pmLowLevelState warp.PmLowLevelState
 
 	// config
-	current    int64
 	emURI      string
 	emHelper   *request.Helper
 	meterIndex uint
@@ -159,7 +158,6 @@ func NewWarpWS(ctx context.Context, uri, user, password string, meterIndex uint)
 	return w, nil
 }
 
-/*
 func (w *WarpWS) run(ctx context.Context) {
 	uri := strings.Replace(w.uri, "http://", "ws://", 1) + "/ws"
 	w.log.TRACE.Printf("ws: connecting to %s …", uri)
@@ -167,97 +165,47 @@ func (w *WarpWS) run(ctx context.Context) {
 	bo := backoff.NewExponentialBackOff()
 	bo.MaxElapsedTime = 0
 
-	loop := func(dec *json.Decoder) error {
-		for {
-			var event warpEvent
-			if err := dec.Decode(&event); err != nil {
-				if errors.Is(err, io.EOF) {
-					return nil
-				}
-				return err
-			}
-			w.log.TRACE.Printf("ws: topic=%s payload=%s", event.Topic, string(event.Payload))
-			if err := w.handle(event.Topic, event.Payload); err != nil {
-				return err
-			}
-		}
-	}
-
 	for ctx.Err() == nil {
 		conn, _, err := websocket.Dial(ctx, uri, nil)
 		if err != nil {
 			time.Sleep(bo.NextBackOff())
 			continue
 		}
-		defer conn.Close(websocket.StatusInternalError, "reconnect")
+
 		bo.Reset()
-
-		for {
-			_, r, err := conn.Reader(ctx)
-			if err != nil {
-				break
-			}
-
-			dec := json.NewDecoder(r)
-			if err = loop(dec); err != nil && ctx.Err() == nil {
-				if errors.Is(err, io.EOF) {
-					continue
-				} else {
-					break
-				}
-			}
-		}
+		w.handleConnection(ctx, conn)
 	}
-} */
-
-func (w *WarpWS) run(ctx context.Context) {
-    uri := strings.Replace(w.uri, "http://", "ws://", 1) + "/ws"
-    w.log.TRACE.Printf("ws: connecting to %s …", uri)
-
-    bo := backoff.NewExponentialBackOff()
-    bo.MaxElapsedTime = 0
-
-    for ctx.Err() == nil {
-        conn, _, err := websocket.Dial(ctx, uri, nil)
-        if err != nil {
-            time.Sleep(bo.NextBackOff())
-            continue
-        }
-
-        bo.Reset()
-        w.handleConnection(ctx, conn)
-    }
 }
 
 func (w *WarpWS) handleConnection(ctx context.Context, conn *websocket.Conn) {
-    defer conn.Close(websocket.StatusInternalError, "reconnect")
-    for {
+	defer conn.Close(websocket.StatusInternalError, "reconnect")
+	for {
 		msgType, r, err := conn.Reader(ctx)
 		if err != nil {
 			return // reconnect
 		}
-        if msgType != websocket.MessageText {
-            continue
-        }
+		if msgType != websocket.MessageText {
+			continue
+		}
 
-        dec := json.NewDecoder(r)
+		dec := json.NewDecoder(r)
 
-        for {
-            var event warpEvent
-            if err := dec.Decode(&event); err != nil {
-                if errors.Is(err, io.EOF) {
-                    break //next frame
-                }
-                return // reconnect
-            }
+		for {
+			var event warpEvent
+			if err := dec.Decode(&event); err != nil {
+				if errors.Is(err, io.EOF) {
+					break //next frame
+				}
+				return // reconnect
+			}
 
-            w.log.TRACE.Printf("ws: topic=%s payload=%s", event.Topic, string(event.Payload))
+			w.log.TRACE.Printf("ws: topic=%s payload=%s", event.Topic, string(event.Payload))
 
-            if err := w.handleEvent(event.Topic, event.Payload); err != nil {
-                return // reconnect
-            }
-        }
-    }
+			if err := w.handleEvent(event.Topic, event.Payload); err != nil {
+				return // reconnect
+			}
+		}
+	}
 }
 
 func (w *WarpWS) handleEvent(topic string, payload json.RawMessage) error {
@@ -385,16 +333,16 @@ func (w *WarpWS) Status() (api.ChargeStatus, error) {
 }
 
 func (w *WarpWS) StatusReason() (api.Reason, error) {
-	if status, err := w.statusFromEvseStatus(); err != nil {
+	status, err := w.statusFromEvseStatus()
+	if err != nil {
 		return api.ReasonUnknown, err
-	} else {
-		w.mu.RLock()
-		defer w.mu.RUnlock()
-		if status == api.StatusB && w.evse.UserEnabled.Enabled && w.evse.UserCurrent.Current == 0 {
-			return api.ReasonWaitingForAuthorization, nil
-		}
-		return api.ReasonUnknown, nil
 	}
+	w.mu.RLock()
+	defer w.mu.RUnlock()
+	if status == api.StatusB && w.evse.UserEnabled.Enabled && w.evse.UserCurrent.Current == 0 {
+		return api.ReasonWaitingForAuthorization, nil
+	}
+	return api.ReasonUnknown, nil
 }
 
 func (w *WarpWS) currentPower() (float64, error) {
@@ -443,7 +391,9 @@ func (w *WarpWS) disablePhaseAutoSwitch() error {
 
 // phases1p3p implements the api.PhaseSwitcher interface
 func (w *WarpWS) phases1p3p(phases int) error {
-	w.ensurePmState()
+	if err := w.ensurePmState(); err != nil {
+		return err
+	}
 	w.mu.RLock()
 	defer w.mu.RUnlock()
 
@@ -465,7 +415,9 @@ func (w *WarpWS) phases1p3p(phases int) error {
 
 // getPhases implements the api.PhaseGetter interface
 func (w *WarpWS) getPhases() (int, error) {
-	w.ensurePmLowLevelState()
+	if err := w.ensurePmLowLevelState(); err != nil {
+		return 0, err
+	}
 	w.mu.RLock()
 	defer w.mu.RUnlock()
 	if w.pmLowLevelState.Is3phase {
@@ -475,9 +427,14 @@ func (w *WarpWS) getPhases() (int, error) {
 }
 
 func (w *WarpWS) ensurePmState() error {
-	if w.emHelper == nil || w.pmState.ExternalControl != 0 {
+	if w.emHelper == nil {
 		return nil
 	}
+	w.mu.RLock()
+	if w.pmState.ExternalControl != 0 {
+		return nil
+	}
+	w.mu.RUnlock()
 	var s warp.PmState
 	if err := w.emHelper.GetJSON(fmt.Sprintf("%s/power_manager/state", w.emURI), &s); err != nil {
 		return err
@@ -488,14 +445,16 @@ func (w *WarpWS) ensurePmState() error {
 	return nil
 }
 
-func (w *WarpWS) ensurePmLowLevelState() {
+func (w *WarpWS) ensurePmLowLevelState() error {
 	if w.emHelper == nil {
-		return
+		return nil
 	}
 	var s warp.PmLowLevelState
-	if w.emHelper.GetJSON(fmt.Sprintf("%s/power_manager/low_level_state", w.emURI), &s) == nil {
-		w.mu.Lock()
-		w.pmLowLevelState = s
-		w.mu.Unlock()
+	if err := w.emHelper.GetJSON(fmt.Sprintf("%s/power_manager/low_level_state", w.emURI), &s); err != nil {
+		return err
 	}
+	w.mu.Lock()
+	w.pmLowLevelState = s
+	w.mu.Unlock()
+	return nil
 }
