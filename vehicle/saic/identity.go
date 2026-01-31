@@ -93,7 +93,7 @@ func (v *Identity) retrieveToken(data url.Values) (*oauth2.Token, error) {
 	}
 
 	var body []byte
-	body, err = requests.DecryptAnswer(resp)
+	body, err = requests.DecodeResponse(resp)
 	if err == nil && len(body) != 0 {
 		err = json.Unmarshal(body, &answer)
 		if err == nil && answer.Code != 0 {
