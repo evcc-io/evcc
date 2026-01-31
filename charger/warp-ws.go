@@ -391,15 +391,11 @@ func (w *WarpWS) disablePhaseAutoSwitch() error {
 
 // phases1p3p implements the api.PhaseSwitcher interface
 func (w *WarpWS) phases1p3p(phases int) error {
-	if err := w.ensurePmState(); err != nil {
-		return err
+	if ec, err := w.ensurePmState(); err != nil && ec.ExternalControl > warp.ExternalControlAvailable {
+		return fmt.Errorf("external control not available: %s", ec)
 	}
 	w.mu.RLock()
 	defer w.mu.RUnlock()
-
-	if ec := w.pmState.ExternalControl; ec > warp.ExternalControlAvailable {
-		return fmt.Errorf("external control not available: %s", ec)
-	}
 
 	uri := fmt.Sprintf("%s/power_manager/external_control", w.emURI)
 	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(map[string]int{"phases_wanted": phases}), request.JSONEncoding)
@@ -415,46 +411,56 @@ func (w *WarpWS) phases1p3p(phases int) error {
 
 // getPhases implements the api.PhaseGetter interface
 func (w *WarpWS) getPhases() (int, error) {
-	if err := w.ensurePmLowLevelState(); err != nil {
+	s, err := w.ensurePmLowLevelState()
+	if err != nil {
 		return 0, err
 	}
-	w.mu.RLock()
-	defer w.mu.RUnlock()
-	if w.pmLowLevelState.Is3phase {
+
+	if s.Is3phase {
 		return 3, nil
 	}
 	return 1, nil
 }
 
-func (w *WarpWS) ensurePmState() error {
-	if w.emHelper == nil {
-		return nil
-	}
+func (w *WarpWS) ensurePmLowLevelState() (warp.PmLowLevelState, error) {
 	w.mu.RLock()
-	if w.pmState.ExternalControl != 0 {
-		return nil
-	}
+	s := w.pmLowLevelState
+	em := w.emHelper
 	w.mu.RUnlock()
-	var s warp.PmState
-	if err := w.emHelper.GetJSON(fmt.Sprintf("%s/power_manager/state", w.emURI), &s); err != nil {
-		return err
+	if em == nil {
+		return s, nil
 	}
+
+	var ns warp.PmLowLevelState
+	if err := w.emHelper.GetJSON(fmt.Sprintf("%s/power_manager/low_level_state", w.emURI), &ns); err != nil {
+		return warp.PmLowLevelState{}, err
+	}
+
 	w.mu.Lock()
-	w.pmState = s
+	w.pmLowLevelState = ns
 	w.mu.Unlock()
-	return nil
+
+	return ns, nil
 }
 
-func (w *WarpWS) ensurePmLowLevelState() error {
-	if w.emHelper == nil {
-		return nil
+func (w *WarpWS) ensurePmState() (warp.PmState, error) {
+	w.mu.RLock()
+	s := w.pmState
+	em := w.emHelper
+	w.mu.RUnlock()
+
+	if em == nil || s.ExternalControl != 0 {
+		return s, nil
 	}
-	var s warp.PmLowLevelState
-	if err := w.emHelper.GetJSON(fmt.Sprintf("%s/power_manager/low_level_state", w.emURI), &s); err != nil {
-		return err
+
+	var ns warp.PmState
+	if err := w.emHelper.GetJSON(fmt.Sprintf("%s/power_manager/state", w.emURI), &ns); err != nil {
+		return warp.PmState{}, err
 	}
+
 	w.mu.Lock()
-	w.pmLowLevelState = s
+	w.pmState = ns
 	w.mu.Unlock()
-	return nil
+
+	return ns, nil
 }
