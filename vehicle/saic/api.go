@@ -112,8 +112,6 @@ func (v *API) repeatRequest(path string, event_id string) {
 }
 
 func (v *API) DoRequest(req *http.Request, result *requests.Answer) (string, error) {
-	var body []byte
-
 	resp, err := v.Do(req)
 	if err != nil {
 		return "", err
@@ -129,17 +127,17 @@ func (v *API) DoRequest(req *http.Request, result *requests.Answer) (string, err
 	event_id := resp.Header.Get("event-id")
 
 	if result != nil {
-		body, err = requests.DecodeResponse(resp)
-		if err == nil {
-			if err2 := json.Unmarshal(body, result); err2 == nil && result.Code != 0 {
-				if result.Code == 4 {
-					err = api.ErrMustRetry
-				} else {
-					err = fmt.Errorf("%d: %s", result.Code, result.Message)
-				}
+		body, err := requests.DecodeResponse(resp)
+		if err != nil {
+			return event_id, fmt.Errorf("decrypt: %w", err)
+		}
+
+		if err2 := json.Unmarshal(body, result); err2 == nil && result.Code != 0 {
+			if result.Code == 4 {
+				err = api.ErrMustRetry
+			} else {
+				err = fmt.Errorf("%d: %s", result.Code, result.Message)
 			}
-		} else {
-			err = fmt.Errorf("decrypt: %w", err)
 		}
 	}
 
