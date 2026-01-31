@@ -1,12 +1,9 @@
 package charger
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"slices"
 	"strings"
@@ -177,15 +174,25 @@ func (w *WarpWS) run(ctx context.Context) {
 		}
 		conn.SetReadLimit(-1)
 
-		// read loop
-		for {
-			_, data, err := conn.Read(ctx)
+		defer func() {
 			if err != nil {
-				_ = conn.Close(websocket.StatusInternalError, "read error")
+				_ = conn.Close(websocket.StatusInternalError, "error")
+			}
+		}()
+
+		_, r, err := conn.Reader(ctx)
+		if err != nil {
+			return err
+		}
+
+		dec := json.NewDecoder(r)
+		for {
+			var event warpEvent
+			if err := dec.Decode(&event); err != nil {
 				return err
 			}
 
-			w.handleFrame(data)
+			w.handle(event.Topic, event.Payload)
 		}
 	}
 
@@ -199,66 +206,11 @@ func (w *WarpWS) run(ctx context.Context) {
 	}
 }
 
-func splitJSONObjects(data []byte) ([]json.RawMessage, error) {
-	dec := json.NewDecoder(bytes.NewReader(data))
-	dec.UseNumber() // TODO why?
-
-	var objs []json.RawMessage
-	for {
-		var raw json.RawMessage
-		if err := dec.Decode(&raw); err != nil {
-			if errors.Is(err, io.EOF) {
-				return objs, nil
-			}
-			return nil, err
-		}
-		objs = append(objs, raw)
-	}
-}
-
-func (w *WarpWS) handleFrame(frame []byte) {
-	if len(frame) == 0 {
-		return
-	}
-	var event warpEvent
-
-	// initial bulk dump (first 2)
-	if w.inBulkDump {
-		objs, err := splitJSONObjects(frame)
-		if err != nil {
-			return
-		}
-		// if only 1 object detected -> switch to delta mode
-		if len(objs) == 1 {
-			w.inBulkDump = false
-		}
-		for _, obj := range objs {
-			if err := json.Unmarshal(obj, &event); err != nil {
-				continue
-			}
-			w.handleEvent(event.Topic, event.Payload)
-		}
-		return
-	}
-
-	// delta mode
-	if len(frame) > 0 && frame[0] == '{' {
-		if err := json.Unmarshal(frame, &event); err != nil {
-			return
-		}
-		w.handleEvent(event.Topic, event.Payload)
-		return
-	}
-
-	// unexpected -> back to bulk dump
-	w.inBulkDump = true
-	w.handleFrame(frame)
-}
-
-func (w *WarpWS) handleEvent(topic string, payload json.RawMessage) error {
-	var err error
+func (w *WarpWS) handle(topic string, payload json.RawMessage) error {
 	w.mu.Lock()
 	defer w.mu.Unlock()
+
+	var err error
 
 	switch topic {
 	case "evse/state":
