@@ -109,17 +109,17 @@ func (suite *mqttSuite) TestGrid() {
 
 	suite.publish("test", false, measurement{})
 	suite.Equal(topics, suite.topics, "topics")
-	suite.Equal([]string{"0.000", "", "", "", ""}, suite.payloads, "payloads")
+	suite.Equal([]string{"0", "", "", "", ""}, suite.payloads, "payloads")
 
 	suite.publish("test", false, measurement{Energy: 1})
 	suite.Equal(topics, suite.topics, "topics")
-	suite.Equal([]string{"0.000", "1.000", "", "", ""}, suite.payloads, "payloads")
+	suite.Equal([]string{"0", "1", "", "", ""}, suite.payloads, "payloads")
 
 	suite.publish("test", false, measurement{Controllable: lo.ToPtr(false)})
 	suite.Equal(topics, suite.topics, "topics")
-	suite.Equal([]string{"0.000", "", "", "", "false"}, suite.payloads, "payloads")
+	suite.Equal([]string{"0", "", "", "", "false"}, suite.payloads, "payloads")
 
 	suite.publish("test", false, measurement{Currents: []float64{1, 2, 3}})
 	suite.Equal(append(topics, "test/currents/1", "test/currents/2", "test/currents/3"), suite.topics, "topics")
-	suite.Equal([]string{"0.000", "", "3", "", "", "1.000", "2.000", "3.000"}, suite.payloads, "payloads")
+	suite.Equal([]string{"0", "", "3", "", "", "1", "2", "3"}, suite.payloads, "payloads")
 }
