@@ -7,6 +7,7 @@ import (
 	"maps"
 	"net/http"
 	"reflect"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -14,7 +15,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger"
 	"github.com/evcc-io/evcc/core/circuit"
-	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/meter"
 	"github.com/evcc-io/evcc/server/db/settings"
@@ -473,31 +473,20 @@ func cleanupSiteMeterRef(name string, get func() []string, set func([]string)) {
 
 // cleanupTariffRef removes a tariff reference from settings
 func cleanupTariffRef(name string) {
-	// Clean up single-value tariff references
-	if v, _ := settings.String(keys.GridTariff); v == name {
-		settings.SetString(keys.GridTariff, "")
-	}
-	if v, _ := settings.String(keys.FeedinTariff); v == name {
-		settings.SetString(keys.FeedinTariff, "")
-	}
-	if v, _ := settings.String(keys.Co2Tariff); v == name {
-		settings.SetString(keys.Co2Tariff, "")
-	}
-	if v, _ := settings.String(keys.PlannerTariff); v == name {
-		settings.SetString(keys.PlannerTariff, "")
-	}
+	for _, usage := range api.TariffUsageValues() {
+		key := usage.Key()
+		value, _ := settings.String(key)
 
-	// Clean up solar tariffs
-	if v, err := settings.String(keys.SolarTariffs); err == nil && v != "" {
-		tariffs := strings.Split(v, ",")
-		var filtered []string
-		for _, ref := range tariffs {
-			if ref != name {
-				filtered = append(filtered, ref)
+		if usage == api.TariffUsageSolar {
+			// Remove from comma-separated list
+			if value != "" {
+				tariffs := strings.Split(value, ",")
+				filtered := slices.DeleteFunc(tariffs, func(ref string) bool { return ref == name })
+				settings.SetString(key, strings.Join(filtered, ","))
 			}
-		}
-		if len(filtered) != len(tariffs) {
-			settings.SetString(keys.SolarTariffs, strings.Join(filtered, ","))
+		} else if value == name {
+			// Clear single-value tariff if it matches
+			settings.SetString(key, "")
 		}
 	}
 }
