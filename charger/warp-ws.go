@@ -151,7 +151,6 @@ func NewWarpWS(ctx context.Context, uri, user, password string, meterIndex uint)
 	w := &WarpWS{
 		Helper: client, log: log,
 		uri:        util.DefaultScheme(uri, "http"),
-		current:    0,
 		meterIndex: meterIndex,
 		meterMap:   map[int]int{},
 		inBulkDump: true,
@@ -169,26 +168,7 @@ func (w *WarpWS) run(ctx context.Context) {
 	bo := backoff.NewExponentialBackOff()
 	bo.MaxElapsedTime = 0
 
-	conn, _, err := websocket.Dial(ctx, uri, nil)
-	if err != nil {
-		return
-	}
-	defer conn.Close(websocket.StatusNormalClosure, "bye")
-	conn.SetReadLimit(-1)
-
-	loop := func() error {
-		defer func() {
-			if err != nil {
-				_ = conn.Close(websocket.StatusInternalError, "error")
-			}
-		}()
-
-		_, r, err := conn.Reader(ctx)
-		if err != nil {
-			return err
-		}
-
-		dec := json.NewDecoder(r)
+	loop := func(dec *json.Decoder) error {
 		for {
 			var event warpEvent
 			if err := dec.Decode(&event); err != nil {
@@ -205,11 +185,28 @@ func (w *WarpWS) run(ctx context.Context) {
 	}
 
 	for ctx.Err() == nil {
-		if err := loop(); err != nil && ctx.Err() == nil {
-			w.log.ERROR.Println(err)
+		conn, _, err := websocket.Dial(ctx, uri, nil)
+		if err != nil {
 			time.Sleep(bo.NextBackOff())
-		} else {
-			bo.Reset()
+			continue
+		}
+		defer conn.Close(websocket.StatusInternalError, "reconnect")
+		bo.Reset()
+
+		for {
+			_, r, err := conn.Reader(ctx)
+			if err != nil {
+				break
+			}
+
+			dec := json.NewDecoder(r)
+			if err = loop(dec); err != nil && ctx.Err() == nil {
+				if errors.Is(err, io.EOF) {
+					continue
+				} else {
+					break
+				}
+			}
 		}
 	}
 }
