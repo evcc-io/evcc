@@ -192,7 +192,9 @@ func (w *WarpWS) run(ctx context.Context) {
 				return err
 			}
 
-			w.handle(event.Topic, event.Payload)
+			if err := w.handle(event.Topic, event.Payload); err != nil {
+				return err
+			}
 		}
 	}
 
