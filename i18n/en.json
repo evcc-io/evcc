@@ -379,7 +379,6 @@
       "addAdditional": "Add additional meter",
       "addGrid": "Add grid meter",
       "addLoadpoint": "Add charger or heater",
-      "addMessenger": "Add messenger",
       "addPvBattery": "Add solar or battery",
       "addTariffs": "Add tariffs",
       "addVehicle": "Add vehicle",
@@ -393,13 +392,6 @@
       "welcomeBannerText": "Start with creating at least one **charger**, **heater**, **grid**, **solar**, **battery** or **additional meter**. If you just want to test, pick a **demo device**.",
       "welcomeBannerTitle": "Let's configure your system!",
       "yaml": "Devices from evcc.yaml are not editable."
-    },
-    "messenger": {
-      "generic": "Generic messenger",
-      "primary": "Specific messenger",
-      "template": "Messenger",
-      "titleAdd": "Add Messenger",
-      "titleEdit": "Edit Messenger"
     },
     "meter": {
       "cancel": "Cancel",
@@ -546,7 +538,6 @@
       "grid": "Grid",
       "integrations": "Integrations",
       "loadpoints": "Charging & Heating",
-      "messenger": "Messaging",
       "meter": "Solar & Battery",
       "system": "System",
       "vehicles": "Vehicles"
