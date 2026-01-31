@@ -169,8 +169,6 @@ export interface ConfigMeter extends Entity {
   deviceIcon?: string;
 }
 
-export interface ConfigMessenger extends Entity {}
-
 export type ConfigCircuit = Entity;
 
 export interface LoadpointThreshold {
