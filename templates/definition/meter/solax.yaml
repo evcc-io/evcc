@@ -51,6 +51,50 @@ render: |
       type: input
       decode: uint32s
     scale: 0.1
+  currents:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 206 # 0x00CE GridCurrent_R_Meter
+        type: input
+        decode: int16
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 207 # 0x00CF GridCurrent_S_Meter
+        type: input
+        decode: int16
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 208 # 0x00D0 GridCurrent_T_Meter
+        type: input
+        decode: int16
+      scale: 0.1
+  voltages:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 202 # 0x00CA GridVoltage_R_Meter
+        type: input
+        decode: uint16
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 203 # 0x00CB GridVoltage_S_Meter
+        type: input
+        decode: uint16
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 204 # 0x00CC GridVoltage_T_Meter
+        type: input
+        decode: uint16
+      scale: 0.1
   {{- end }}
   {{- if eq .usage "pv" }}
   power:

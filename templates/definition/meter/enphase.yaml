@@ -29,6 +29,9 @@ params:
   - name: cache
     advanced: true
     default: 1s
+  - name: timeout
+    advanced: true
+    default: 10s
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -42,6 +45,7 @@ render: |
     insecure: true
     {{- end }}
     cache: {{ .cache }}
+    timeout: {{ .timeout }}
     jq: .consumption[] | select(.measurementType == "net-consumption").wNow
   currents:
     - source: http
@@ -53,6 +57,7 @@ render: |
       insecure: true
       {{- end }}
       cache: {{ .cache }}
+      timeout: {{ .timeout }}
       jq: if (( .consumption[] | select(.measurementType == "net-consumption").activeCount >= 1 ) and ( .consumption[] | select(.measurementType == "net-consumption").lines | length >= 1 )) then .consumption[] | select(.measurementType == "net-consumption").lines[0].rmsCurrent else 0 end
     - source: http
       uri: {{ .schema }}://{{ .host }}/production.json?details=1
@@ -63,6 +68,7 @@ render: |
       insecure: true
       {{- end }}
       cache: {{ .cache }}
+      timeout: {{ .timeout }}
       jq: if (( .consumption[] | select(.measurementType == "net-consumption").activeCount >= 1 ) and ( .consumption[] | select(.measurementType == "net-consumption").lines | length >= 2 )) then .consumption[] | select(.measurementType == "net-consumption").lines[1].rmsCurrent else 0 end
     - source: http
       uri: {{ .schema }}://{{ .host }}/production.json?details=1
@@ -73,6 +79,7 @@ render: |
       insecure: true
       {{- end }}
       cache: {{ .cache }}
+      timeout: {{ .timeout }}
       jq: if (( .consumption[] | select(.measurementType == "net-consumption").activeCount >= 1 ) and ( .consumption[] | select(.measurementType == "net-consumption").lines | length >= 3 )) then .consumption[] | select(.measurementType == "net-consumption").lines[2].rmsCurrent else 0 end
   {{- end }}
   {{- if eq .usage "pv" }}
@@ -86,6 +93,7 @@ render: |
     insecure: true
     {{- end }}
     cache: {{ .cache }}
+    timeout: {{ .timeout }}
     jq: if (.production | length) > 1 and (.production[] | select(.measurementType == "production").activeCount >= 1) then .production[] | select(.measurementType == "production").wNow else .production[] | select(.type == "inverters").wNow end
   energy:
     source: http
@@ -97,6 +105,7 @@ render: |
     insecure: true
     {{- end }}
     cache: {{ .cache }}
+    timeout: {{ .timeout }}
     jq: if (.production | length) > 1 and (.production[] | select(.measurementType == "production").activeCount >= 1) then .production[] | select(.measurementType == "production").whLifetime else .production[] | select(.type == "inverters").whLifetime end
     scale: 0.001
   currents:
@@ -109,6 +118,7 @@ render: |
       insecure: true
       {{- end }}
       cache: {{ .cache }}
+      timeout: {{ .timeout }}
       jq: if (( .production[] | select(.measurementType == "production").activeCount >= 1 ) and ( .production[] | select(.measurementType == "production").lines | length >= 1 )) then .production[] | select(.measurementType == "production").lines[0].rmsCurrent else 0 end
     - source: http
       uri: {{ .schema }}://{{ .host }}/production.json?details=1
@@ -119,6 +129,7 @@ render: |
       insecure: true
       {{- end }}
       cache: {{ .cache }}
+      timeout: {{ .timeout }}
       jq: if (( .production[] | select(.measurementType == "production").activeCount >= 1 ) and ( .production[] | select(.measurementType == "production").lines | length >= 2 )) then .production[] | select(.measurementType == "production").lines[1].rmsCurrent else 0 end
     - source: http
       uri: {{ .schema }}://{{ .host }}/production.json?details=1
@@ -129,6 +140,7 @@ render: |
       insecure: true
       {{- end }}
       cache: {{ .cache }}
+      timeout: {{ .timeout }}
       jq: if (( .production[] | select(.measurementType == "production").activeCount >= 1 ) and ( .production[] | select(.measurementType == "production").lines | length >= 3 )) then .production[] | select(.measurementType == "production").lines[2].rmsCurrent else 0 end
   {{- end }}
   {{- if eq .usage "battery" }}
@@ -146,6 +158,7 @@ render: |
     insecure: true
     {{- end }}
     cache: {{ .cache }}
+    timeout: {{ .timeout }}
     {{- if eq .battery_type "iq" }}
     jq: ((.meters.storage.agg_p_mw // 0) / 1000 | round)
     {{- else }}
@@ -161,6 +174,7 @@ render: |
     insecure: true
     {{- end }}
     cache: {{ .cache }}
+    timeout: {{ .timeout }}
     jq: '[.[].devices[] | select(.percentFull != null) | .percentFull] | add / length'
   {{- include "battery-params" . }}
   {{- end }}

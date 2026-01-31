@@ -441,9 +441,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 		}()
 	}
 
-	// uds health check listener
-	go server.HealthListener(site)
-
 	// wait for shutdown
 	<-stopC
 
