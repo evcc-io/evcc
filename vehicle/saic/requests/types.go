@@ -98,8 +98,8 @@ type LoginData struct {
 	Jti        string
 }
 
-type Answer struct {
+type Answer[T any] struct {
 	Code    int    `json:"code"`
-	Data    any    `json:"data,omitempty"`
 	Message string `json:"message"`
+	Data    T      `json:"data,omitempty"`
 }
