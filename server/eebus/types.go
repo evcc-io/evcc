@@ -72,16 +72,6 @@ func DefaultConfig(conf *Config) (*Config, error) {
 		},
 	}
 
-	// preserve values when present
-	if conf != nil {
-		if conf.Port > 0 {
-			res.Port = conf.Port
-		}
-		if len(conf.Interfaces) > 0 {
-			res.Interfaces = conf.Interfaces
-		}
-	}
-
 	return &res, nil
 }
 
