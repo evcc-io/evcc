@@ -27,6 +27,8 @@ params:
     type: duration
     default: 60s
     advanced: true
+  - name: timeout
+    deprecated: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}

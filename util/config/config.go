@@ -77,14 +77,9 @@ func (d *Config) Delete() error {
 }
 
 func init() {
-	db.Register(func() error {
-		return SetupSchema()
+	db.Register(func(db *gorm.DB) error {
+		return db.AutoMigrate(new(Config))
 	})
-}
-
-// SetupSchema is used for testing
-func SetupSchema() error {
-	return db.Instance.AutoMigrate(new(Config))
 }
 
 // NameForID returns a unique config name for the given id

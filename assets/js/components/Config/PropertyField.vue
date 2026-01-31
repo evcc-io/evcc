@@ -88,6 +88,8 @@
 				:step="step"
 				:placeholder="placeholder"
 				:required="required"
+				:pattern="patternRegex"
+				:title="patternTitle"
 				:aria-describedby="unitValue ? id + '_unit' : null"
 				:class="`${datalistId && serviceValues.length > 0 ? 'form-select' : 'form-control'} ${showClearButton ? 'has-clear-button' : ''} ${invalid ? 'is-invalid' : ''} ${endAlign ? 'text-end' : ''}`"
 				:style="
@@ -103,9 +105,7 @@
 				:aria-label="$t('config.general.clear')"
 				:disabled="disabled"
 				@click="value = ''"
-			>
-				&times;
-			</button>
+			></button>
 			<datalist v-if="showDatalist" :id="datalistId">
 				<option v-for="v in serviceValues" :key="v" :value="v">
 					{{ v }}
@@ -146,6 +146,7 @@ export default {
 		required: Boolean,
 		invalid: Boolean,
 		disabled: Boolean,
+		pattern: { type: Object, default: () => ({}) },
 		choice: { type: Array, default: () => [] },
 		modelValue: [String, Number, Boolean, Object],
 		label: String,
@@ -157,6 +158,14 @@ export default {
 		return { selectMode: false };
 	},
 	computed: {
+		patternRegex() {
+			return this.pattern.Regex || null;
+		},
+		patternTitle() {
+			const examples = this.pattern.Examples || [];
+			if (!examples.length) return null;
+			return examples.join(", ");
+		},
 		datalistId() {
 			return this.serviceValues.length > 0 ? `${this.id}-datalist` : null;
 		},

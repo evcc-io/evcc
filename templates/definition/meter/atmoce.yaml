@@ -1,0 +1,197 @@
+template: atmoce
+products:
+  - brand: Atmoce
+    description:
+      generic: MG100 M-gateway
+capabilities: ["battery-control"]
+requirements:
+  description:
+    de: |
+      Unterstützung für Atmoce MG100 (im Lieferumfang von MC100 und MC100-T enthalten). Erfordert, dass der Installateur Modbus TCP in der Konfiguration aktiviert; verfügbar ab Firmware-Version 01.01.00.18.10.
+    en: |
+      Support for Atmoce MG100 (included with MC100 and MC100-T). Requires installer to enable Modbus TCP in configuration; available in firmware 01.01.00.18.10 or later.
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: modbus
+    choice: ["rs485", "tcpip"]
+    baudrate: 9600
+    id: 1
+  - name: maxacpower
+    advanced: true
+  - preset: battery-params
+  - name: capacity
+    advanced: false
+    service: modbus/read?address=60031&type=holding&encoding=uint32&scale=0.001&resulttype=int&{modbus}
+  - name: minsoc
+    advanced: true
+    default: 10
+  - name: maxsoc
+    advanced: true
+    default: 100
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 60073 # Grid Active Power (kW * 1000)
+      type: holding
+      decode: int32
+    scale: 1
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 60184 # Cumulative Electricity Purchase Volume (kWh * 100)
+      type: holding
+      decode: uint64
+    scale: 0.01
+  currents:
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 60090 # Phase A Grid Current (A * 100)
+      type: holding
+      decode: int16
+    scale: 0.01
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 60092 # Phase B Grid Current (A * 100)
+      type: holding
+      decode: int16
+    scale: 0.01
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 60094 # Phase C Grid Current (A * 100)
+      type: holding
+      decode: int16
+    scale: 0.01
+  voltages:
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 60089 # Phase A Grid Voltage (V * 10)
+      type: holding
+      decode: uint16
+    scale: 0.1
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 60091 # Phase B Grid Voltage (V * 10)
+      type: holding
+      decode: uint16
+    scale: 0.1
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 60093 # Phase C Grid Voltage (V * 10)
+      type: holding
+      decode: uint16
+    scale: 0.1
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 60069 # Photovoltaic Power Output (kW * 1000)
+      type: holding
+      decode: uint32
+    scale: 1
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 60160 # Cumulative Photovoltaic Power Generation (kWh * 100)
+      type: holding
+      decode: uint64
+    scale: 0.01
+  maxacpower: {{ .maxacpower }}
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 60071 # Energy Storage Charging/Discharging Power (kW * 1000)
+      type: holding
+      decode: int32
+    scale: 1
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 60166 # Cumulative Energy Storage Charging Capacity (kWh * 100)
+      type: holding
+      decode: uint64
+    scale: 0.01
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 60095 # Energy Storage SOC (%)
+      type: holding
+      decode: uint16
+    scale: 1
+  batterymode:
+    source: switch
+    switch:
+    - case: 1 # normal 
+      set:
+        source: const
+        value: 2
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 60310 # Energy Storage Forced Charging/Discharging (0 = Forced charging, 1 = Forced discharging, 2 = Exit forced charging/discharging, 99 = Pause)
+            type: writemultiple
+            decode: uint16
+    - case: 2 # hold -> Pause charge/discharge
+      set:
+        source: const
+        value: 99
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 60310 # Energy Storage Forced Charging/Discharging (0 = Forced charging, 1 = Forced discharging, 2 = Exit forced charging/discharging, 99 = Pause)
+            type: writemultiple
+            decode: uint16
+    - case: 3 # charge -> Enable grid charging with maximum target soc (will be stopped by evcc)
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: {{ .maxsoc }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 60312 # Energy Storage Forced Charging/Discharging Target SOC
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: 0
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 60311 # Energy Storage Forced Charging/Discharging Mode (0 = Target SOC, 1 = Charging/discharging duration)
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: 0
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 60310 # Energy Storage Forced Charging/Discharging (0 = Forced charging, 1 = Forced discharging, 2 = Exit forced charging/discharging, 99 = Pause)
+              type: writemultiple
+              decode: uint16
+  {{- include "battery-params" . }}
+  {{- end }}

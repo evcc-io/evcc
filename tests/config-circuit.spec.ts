@@ -69,6 +69,9 @@ test.describe("circuit", async () => {
     await expectModalHidden(chargerModal);
     await expectModalVisible(lpModal);
 
+    // no load management, no circuits
+    await expect(lpModal.getByLabel("Circuit")).not.toBeVisible();
+
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(lpModal);
 

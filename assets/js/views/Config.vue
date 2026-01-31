@@ -799,8 +799,8 @@ export default defineComponent({
 			this.updateValues();
 		},
 		async loadDirty() {
-			const response = await api.get("/config/dirty");
-			if (response.data) {
+			const data = await this.loadConfig("dirty");
+			if (data) {
 				restart.restartNeeded = true;
 			}
 		},
@@ -1056,9 +1056,14 @@ export default defineComponent({
 		},
 		async updateDeviceValue(type: DeviceType, name: string) {
 			try {
-				const response = await api.get(`/config/devices/${type}/${name}/status`);
-				if (!this.deviceValues[type]) this.deviceValues[type] = {};
-				this.deviceValues[type][name] = response.data;
+				const validateStatus = (status: number) => [200, 404].includes(status);
+				const response = await api.get(`/config/devices/${type}/${name}/status`, {
+					validateStatus,
+				});
+				if (response.status === 200) {
+					if (!this.deviceValues[type]) this.deviceValues[type] = {};
+					this.deviceValues[type][name] = response.data;
+				}
 			} catch (error) {
 				console.error("Error fetching device values for", type, name, error);
 			}
