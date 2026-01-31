@@ -50,12 +50,12 @@
 						:id="formId('shipid')"
 						:label="$t('config.eebus.shipid')"
 						:help="$t('config.eebus.shipidHelp')"
-						optional
 					>
 						<PropertyField
 							:id="formId('shipid')"
 							v-model="values.shipid"
 							type="String"
+							required
 						/>
 					</FormRow>
 					<FormRow
@@ -92,6 +92,7 @@
 						<PropertyCertField
 							:id="formId('certificate-public')"
 							:model-value="values.certificate?.public"
+							required
 							@update:model-value="
 								values.certificate ? (values.certificate.public = $event) : ''
 							"
@@ -104,6 +105,7 @@
 						<PropertyCertField
 							:id="formId('certificate-private')"
 							:model-value="values.certificate?.private"
+							required
 							@update:model-value="
 								values.certificate ? (values.certificate.private = $event) : ''
 							"
