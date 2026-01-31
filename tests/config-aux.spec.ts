@@ -223,7 +223,6 @@ energy:
   source: const
   value: 300 # kWh`
     );
-    await expect(restResult).toContainText("Status: unknown");
     await restResult.getByRole("link", { name: "validate" }).click();
     await expect(restResult).toContainText("Status: failed");
     await expect(restResult).toContainText("power: missing plugin source");

@@ -68,7 +68,7 @@
 		<div class="position-relative flex-grow-1">
 			<input
 				:id="id"
-				v-model.lazy="value"
+				:value="value"
 				:list="datalistId"
 				:type="inputType"
 				:step="step"
@@ -82,6 +82,8 @@
 					unitValue ? 'border-top-right-radius: 0; border-bottom-right-radius: 0' : null
 				"
 				:autocomplete="masked || datalistId ? 'off' : null"
+				@input="useLazyBinding ? null : (value = $event.target.value)"
+				@change="useLazyBinding ? (value = $event.target.value) : null"
 			/>
 			<button
 				v-if="showClearButton"
@@ -221,6 +223,10 @@ export default {
 				return this.unit;
 			}
 			return null;
+		},
+		useLazyBinding() {
+			// avoid conversion loop issues
+			return this.pricePerKWh;
 		},
 		icons() {
 			return this.property === "icon";
