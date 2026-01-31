@@ -51,9 +51,6 @@ export default defineComponent({
     };
   },
   methods: {
-    capitalizeFirstLetter(s: string) {
-      return s.charAt(0).toUpperCase() + s.slice(1);
-    },
     energyPriceSubunit(currency: CURRENCY): string | undefined {
       if (currency === CURRENCY.CHF) {
         return this.$i18n?.locale === "de" ? "Rp." : "ct.";
