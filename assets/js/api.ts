@@ -24,7 +24,6 @@ const api = axios.create({
   baseURL: base + "api/",
   headers: {
     Accept: "application/json",
-    "Content-Type": "application/json",
   },
   paramsSerializer: customParamsSerializer,
 });
