@@ -33,9 +33,9 @@ func TestMergedRates(t *testing.T) {
 	}
 
 	secondaryRates := api.Rates{
-		{Start: now.Add(time.Hour), End: now.Add(2 * time.Hour), Value: 0.20},       // overlaps with primary
-		{Start: now.Add(2 * time.Hour), End: now.Add(3 * time.Hour), Value: 0.22},   // after primary
-		{Start: now.Add(3 * time.Hour), End: now.Add(4 * time.Hour), Value: 0.24},   // after primary
+		{Start: now.Add(time.Hour), End: now.Add(2 * time.Hour), Value: 0.20},     // overlaps with primary
+		{Start: now.Add(2 * time.Hour), End: now.Add(3 * time.Hour), Value: 0.22}, // after primary
+		{Start: now.Add(3 * time.Hour), End: now.Add(4 * time.Hour), Value: 0.24}, // after primary
 	}
 
 	ext := &Merged{
