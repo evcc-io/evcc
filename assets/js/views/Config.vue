@@ -717,7 +717,7 @@ export default defineComponent({
 			return { configured: { value: false } };
 		},
 		messagingTags(): DeviceTags {
-			return { configured: { value: store.state?.messaging || false } };
+			return { configured: { value: store.state?.messaging || this.messengers.length > 0 } };
 		},
 		backupRestoreProps() {
 			return {

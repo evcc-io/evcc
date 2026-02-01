@@ -32,6 +32,7 @@ params:
       de: Wird für den sicheren Zugriff auf den privaten ntfy-Server verwendet.
       en: Used for secure access to the private ntfy server.
   - name: priority
+    required: true
     type: choice
     choice: ["max", "high", "default", "low", "min"]
     default: default
@@ -48,7 +49,8 @@ params:
         On Android, you can customize notification sounds and vibration patterns based on these priority levels.
         For more details, see [docs.ntfy.sh](https://docs.ntfy.sh/publish#message-priority).
   - name: tags
-    example: electric_plug,blue_car
+    type: list
+    example: electric_plug
     description:
       de: Tags & Emojis
       en: Tags & emojis
@@ -63,5 +65,5 @@ render: |
   type: ntfy
   uri: https://{{ .host }}/{{ .topics | join "," }}
   priority: {{ .priority }}
-  tags: {{ .tags }}
+  tags: {{ .tags | join "," }}
   authtoken: {{ .authtoken }}

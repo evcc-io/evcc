@@ -68,7 +68,7 @@
 				<div v-else>
 					<div v-for="(m, index) in messengers" :key="index" class="my-4">
 						<div
-							class="d-flex align-items-center justify-content-between py-2 ps-3 pe-2 border rounded"
+							class="d-flex align-items-center justify-content-between py-2 px-4 border rounded"
 						>
 							<div class="flex-grow-1">
 								<small class="text-muted">#{{ index + 1 }}</small>
