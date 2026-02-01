@@ -24,7 +24,7 @@ func (m *mockTariff) Type() api.TariffType {
 	return m.typ
 }
 
-func TestExtendedRates(t *testing.T) {
+func TestMergedRates(t *testing.T) {
 	now := time.Now().Truncate(time.Hour)
 
 	primaryRates := api.Rates{
@@ -38,8 +38,8 @@ func TestExtendedRates(t *testing.T) {
 		{Start: now.Add(3 * time.Hour), End: now.Add(4 * time.Hour), Value: 0.24},   // after primary
 	}
 
-	ext := &Extended{
-		log:       util.NewLogger("extended"),
+	ext := &Merged{
+		log:       util.NewLogger("merged"),
 		primary:   &mockTariff{rates: primaryRates, typ: api.TariffTypePriceForecast},
 		secondary: &mockTariff{rates: secondaryRates, typ: api.TariffTypePriceForecast},
 	}
@@ -58,7 +58,7 @@ func TestExtendedRates(t *testing.T) {
 	assert.Equal(t, expected, rates)
 }
 
-func TestExtendedPrimaryFailure(t *testing.T) {
+func TestMergedPrimaryFailure(t *testing.T) {
 	now := time.Now().Truncate(time.Hour)
 
 	secondaryRates := api.Rates{
@@ -66,8 +66,8 @@ func TestExtendedPrimaryFailure(t *testing.T) {
 		{Start: now.Add(time.Hour), End: now.Add(2 * time.Hour), Value: 0.22},
 	}
 
-	ext := &Extended{
-		log:       util.NewLogger("extended"),
+	ext := &Merged{
+		log:       util.NewLogger("merged"),
 		primary:   &mockTariff{err: assert.AnError, typ: api.TariffTypePriceForecast},
 		secondary: &mockTariff{rates: secondaryRates, typ: api.TariffTypePriceForecast},
 	}
@@ -77,7 +77,7 @@ func TestExtendedPrimaryFailure(t *testing.T) {
 	assert.Equal(t, secondaryRates, rates)
 }
 
-func TestExtendedSecondaryFailure(t *testing.T) {
+func TestMergedSecondaryFailure(t *testing.T) {
 	now := time.Now().Truncate(time.Hour)
 
 	primaryRates := api.Rates{
@@ -85,8 +85,8 @@ func TestExtendedSecondaryFailure(t *testing.T) {
 		{Start: now.Add(time.Hour), End: now.Add(2 * time.Hour), Value: 0.12},
 	}
 
-	ext := &Extended{
-		log:       util.NewLogger("extended"),
+	ext := &Merged{
+		log:       util.NewLogger("merged"),
 		primary:   &mockTariff{rates: primaryRates, typ: api.TariffTypePriceForecast},
 		secondary: &mockTariff{err: assert.AnError, typ: api.TariffTypePriceForecast},
 	}
@@ -96,7 +96,7 @@ func TestExtendedSecondaryFailure(t *testing.T) {
 	assert.Equal(t, primaryRates, rates)
 }
 
-func TestExtendedEmptyPrimary(t *testing.T) {
+func TestMergedEmptyPrimary(t *testing.T) {
 	now := time.Now().Truncate(time.Hour)
 
 	secondaryRates := api.Rates{
@@ -104,8 +104,8 @@ func TestExtendedEmptyPrimary(t *testing.T) {
 		{Start: now.Add(time.Hour), End: now.Add(2 * time.Hour), Value: 0.22},
 	}
 
-	ext := &Extended{
-		log:       util.NewLogger("extended"),
+	ext := &Merged{
+		log:       util.NewLogger("merged"),
 		primary:   &mockTariff{rates: api.Rates{}, typ: api.TariffTypePriceForecast},
 		secondary: &mockTariff{rates: secondaryRates, typ: api.TariffTypePriceForecast},
 	}
@@ -117,9 +117,9 @@ func TestExtendedEmptyPrimary(t *testing.T) {
 	assert.Equal(t, secondaryRates, rates)
 }
 
-func TestExtendedType(t *testing.T) {
-	ext := &Extended{
-		log:       util.NewLogger("extended"),
+func TestMergedType(t *testing.T) {
+	ext := &Merged{
+		log:       util.NewLogger("merged"),
 		primary:   &mockTariff{typ: api.TariffTypePriceForecast},
 		secondary: &mockTariff{typ: api.TariffTypePriceForecast},
 	}
