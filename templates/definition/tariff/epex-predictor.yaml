@@ -22,31 +22,12 @@ params:
     type: choice
     choice: ["DE", "AT", "NL", "BE", "SE_1", "SE_2", "SE_3", "SE_4", "DK_1", "DK_2"]
     required: true
-  - name: charges
-    example: 0.1315
-    type: float
-    required: true
-    description:
-      en: Surcharge in EUR/kWh
-      de: Aufschlag in EUR/kWh
-    help:
-      en: e.g., 0.1315 for 13.15 ct/kWh
-      de: z.B. 0.1315 für 13,15 ct/kWh
-  - name: tax
-    example: 0.19
-    type: float
-    required: true
-    description:
-      en: Tax rate
-      de: Steuersatz
-    help:
-      en: e.g., 0.19 for 19%
-      de: z.B. 0.19 für 19%
+  - preset: tariff-base
 render: |
   type: custom
   forecast:
     source: http
-    uri: {{ .uri }}/prices?region={{ .region }}&surcharge={{ mul .charges 100 }}&taxPercent={{ mul .tax 100 }}&unit=EUR_PER_KWH&timezone=UTC
+    uri: {{ .uri }}/prices?region={{ .region }}&surcharge={{ mulf .charges 100 }}&taxPercent={{ mulf .tax 100 }}&unit=EUR_PER_KWH&timezone=UTC
     jq: |
       [.prices[] | {
         "start": .startsAt,
