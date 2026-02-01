@@ -11,6 +11,12 @@ requirements:
 group: price
 countries: ["DE", "AT", "NL", "BE", "SE", "DK"]
 params:
+  - name: uri
+    default: https://epexpredictor.batzill.com
+    description:
+      en: API endpoint (for self-hosted instances)
+      de: API-Endpunkt (für selbst gehostete Instanzen)
+    advanced: true
   - name: region
     example: DE
     type: choice
@@ -34,7 +40,7 @@ render: |
   type: custom
   forecast:
     source: http
-    uri: https://epexpredictor.batzill.com/prices?region={{ .region }}&surcharge={{ .surcharge }}&taxPercent={{ .taxPercent }}&unit=EUR_PER_KWH&timezone=UTC
+    uri: {{ .uri }}/prices?region={{ .region }}&surcharge={{ .surcharge }}&taxPercent={{ .taxPercent }}&unit=EUR_PER_KWH&timezone=UTC
     jq: |
       [.prices[] | {
         "start": .startsAt,
