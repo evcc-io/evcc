@@ -26,16 +26,16 @@ type Vehicles interface {
 
 // Hub subscribes to event notifications and sends them to client devices
 type Hub struct {
-	definitions map[string]globalconfig.MessagingEventTemplate
+	definitions globalconfig.MessagingEvents
 	sender      []api.Messenger
 	cache       *util.ParamCache
 	vehicles    Vehicles
 }
 
 // NewHub creates push hub with definitions and receiver
-func NewHub(cc map[string]globalconfig.MessagingEventTemplate, vv Vehicles, cache *util.ParamCache) (*Hub, error) {
+func NewHub(cc globalconfig.MessagingEvents, vv Vehicles, cache *util.ParamCache) (*Hub, error) {
 	// keep only enabled events
-	filtered := make(map[string]globalconfig.MessagingEventTemplate, len(cc))
+	filtered := make(globalconfig.MessagingEvents, len(cc))
 
 	for k, v := range cc {
 		if !v.Disabled {
