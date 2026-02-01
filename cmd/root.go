@@ -62,6 +62,8 @@ var rootCmd = &cobra.Command{
 	Short:   "evcc - open source solar charging",
 	Version: util.FormattedVersion(),
 	Run:     runRoot,
+	// always allow Ctrl-C in child commands
+	PersistentPreRun: allowCtrlC,
 }
 
 func init() {
@@ -130,6 +132,20 @@ func Execute() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+}
+
+func allowCtrlC(cmd *cobra.Command, args []string) {
+	if cmd.Name() == "root" {
+		return
+	}
+
+	go func() {
+		signalC := make(chan os.Signal, 1)
+		signal.Notify(signalC, os.Interrupt, syscall.SIGTERM)
+
+		<-signalC // wait for signal
+		os.Exit(1)
+	}()
 }
 
 func runRoot(cmd *cobra.Command, args []string) {
