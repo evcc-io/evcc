@@ -62,7 +62,8 @@ func (m *MQTT) encode(v any) string {
 	case string:
 		return val
 	case float64:
-		return fmt.Sprintf("%.5g", val)
+		// trim trailing zeros
+		return strings.TrimRight(strings.TrimRight(fmt.Sprintf("%.3f", val), "0"), ".")
 	case time.Time:
 		if val.IsZero() {
 			return ""

@@ -1,0 +1,479 @@
+{
+  "authProviders": {
+    "authCode": "認証コード",
+    "authCodeHelp": "このコードをコピーして次のステップで使用してください。有効期間は{duration}です。",
+    "authorizationFailed": "認証失敗",
+    "authorizationRequired": "認証が必要",
+    "authorizationSuccessful": "認証成功",
+    "buttonConnect": "{provider}に接続",
+    "buttonDisconnect": "切断",
+    "confirmLogout": "{title}を切断してもよろしいですか?",
+    "connect": "接続",
+    "disconnect": "切断",
+    "loggedOut": "ログアウト成功",
+    "logoutFailed": "ログアウト失敗",
+    "successCloseModal": "このダイアログを閉じることができます。",
+    "successCloseTab": "このタブを閉じることができます。",
+    "title": "認証ステータス"
+  },
+  "batterySettings": {
+    "batteryLevel": "バッテリー残量",
+    "bufferStart": {
+      "never": "十分な余剰がある場合のみ。"
+    },
+    "control": "バッテリーコントロール",
+    "disclaimerHint": "注意：",
+    "gridChargeTab": "グリッド充電",
+    "legendTopAutostart": "自動的に開始",
+    "modalTitle": "ホームバッテリー",
+    "usageTab": "バッテリー使用量"
+  },
+  "config": {
+    "battery": {
+      "titleAdd": "バッテリーを追加",
+      "titleEdit": "バッテリーを編集"
+    },
+    "charger": {
+      "chargers": "EV充電器",
+      "ocppConnected": "接続しました！",
+      "ocppLabel": "OCPPサーバーURL",
+      "ocppNextStep": "次のステップ",
+      "titleAdd": {
+        "charging": "充電器を追加",
+        "heating": "ヒーターを追加"
+      },
+      "titleEdit": {
+        "charging": "充電器を編集",
+        "heating": "ヒーターを編集"
+      }
+    },
+    "deviceValue": {
+      "chargeStatus": "ステータス",
+      "chargeStatusA": "未接続",
+      "chargeStatusB": "接続",
+      "chargeStatusF": "エラー",
+      "detected": "検出",
+      "gridPrice": "グリッド価格",
+      "url": "URL",
+      "yes": "はい"
+    },
+    "deviceValueChargeStatus": {
+      "A": "A（未接続）",
+      "B": "B（接続済み）",
+      "C": "C（充電中）"
+    },
+    "devices": {
+      "solarSystem": "ソーラーシステム"
+    },
+    "experimental": {
+      "title": "実験的"
+    },
+    "form": {
+      "danger": "危険",
+      "deprecated": "非推奨",
+      "example": "例"
+    },
+    "general": {
+      "cancel": "キャンセル",
+      "clear": "クリア",
+      "close": "閉じる",
+      "copied": "コピーしました！",
+      "copy": "コピー",
+      "delete": "削除",
+      "hideAdvancedSettings": "詳細設定を隠す",
+      "noFileSelected": "ファイルが選択されていません。",
+      "off": "オフ",
+      "on": "オン",
+      "password": "パスワード",
+      "reset": "リセット",
+      "save": "保存",
+      "saved": "保存しました。",
+      "saving": "保存中…",
+      "selectFile": "ブラウズ",
+      "showAdvancedSettings": "詳細設定を見る",
+      "telemetry": "テレメトリ",
+      "templateLoading": "ロード中...",
+      "title": "タイトル"
+    },
+    "grid": {
+      "title": "グリッドメーター",
+      "titleAdd": "グリッドメーターを追加",
+      "titleEdit": "グリッドメーターを編集"
+    },
+    "hems": {
+      "csv": {
+        "created": "作成済み",
+        "type": "タイプ"
+      },
+      "downloadCsv": "CSVをダウンロード"
+    },
+    "icon": {
+      "label": "アイコン"
+    },
+    "influx": {
+      "labelDatabase": "データベース",
+      "labelPassword": "パスワード",
+      "labelToken": "APIトークン",
+      "labelUrl": "URL",
+      "labelUser": "ユーザー名",
+      "title": "InfluxDB"
+    },
+    "loadpoint": {
+      "addCharger": {
+        "charging": "充電器を追加",
+        "heating": "ヒーターを追加"
+      },
+      "cancel": "キャンセル",
+      "chargerLabel": {
+        "charging": "充電器",
+        "heating": "ヒーター"
+      },
+      "defaultModeLabel": "デフォルトモード",
+      "delete": "削除",
+      "pollModeConnected": "接続済み",
+      "priorityLabel": "優先度",
+      "save": "保存",
+      "showAllSettings": "すべての設定を見る",
+      "solarBehaviorLabel": "ソーラー",
+      "solarModeCustom": "カスタム",
+      "thresholdEnableLabel": "グリッドパワーを有効化する",
+      "titleAdd": {
+        "charging": "充電ポイントを追加"
+      },
+      "titleEdit": {
+        "charging": "充電ポイントを編集"
+      },
+      "titleLabel": "タイトル",
+      "vehicleAutoDetection": "自動認識",
+      "vehicleInvalid": "車両が存在しません",
+      "vehicleLabel": "デフォルトの車両",
+      "vehiclesTitle": "車両"
+    },
+    "main": {
+      "addGrid": "グリッドメーターを追加",
+      "addLoadpoint": "充電器もしくはヒーターを追加",
+      "addPvBattery": "ソーラーもしくはバッテリーを追加",
+      "addVehicle": "車両を追加",
+      "edit": "編集",
+      "name": "名前",
+      "welcomeBannerTitle": "システムを構成しましょう！"
+    },
+    "messaging": {
+      "title": "通知"
+    },
+    "meter": {
+      "cancel": "キャンセル",
+      "delete": "削除",
+      "option": {
+        "pv": "ソーラーメーターを追加"
+      },
+      "save": "保存",
+      "titleLabel": "タイトル",
+      "usage": {
+        "battery": "バッテリー",
+        "grid": "グリッド",
+        "label": "使用量"
+      }
+    },
+    "modbus": {
+      "baudrate": "ボーレート",
+      "connectionValueTcpip": "ネットワーク",
+      "device": "デバイス名",
+      "deviceHint": "例： /dev/ttyUSB0",
+      "host": "IPアドレスもしくはホスト名",
+      "hostHint": "例： 192.0.2.2",
+      "port": "ポート"
+    },
+    "modbusproxy": {
+      "add": "プロキシー接続を追加",
+      "device": "デバイス",
+      "option": {
+        "deny": "エラー",
+        "false": "いいえ"
+      },
+      "readonly": {
+        "label": "読み取り専用"
+      }
+    },
+    "mqtt": {
+      "authentication": "認証",
+      "labelClientId": "クライアントID",
+      "labelClientKey": "クライアントキー",
+      "labelPassword": "パスワード",
+      "labelTopic": "トピック",
+      "labelUser": "ユーザー名"
+    },
+    "network": {
+      "labelExternalUrl": "外部URL",
+      "labelHost": "mDNSホスト名",
+      "labelInternalUrl": "内部URL",
+      "labelPort": "ポート",
+      "title": "ネットワーク"
+    },
+    "ocpp": {
+      "connectedChargers": "接続済み充電器",
+      "status": {
+        "configured": "未接続",
+        "connected": "接続済み",
+        "unknown": "不明"
+      },
+      "title": "OCPPサーバー",
+      "url": "サーバーURL"
+    },
+    "options": {
+      "boolean": {
+        "no": "いいえ",
+        "yes": "はい"
+      },
+      "endianness": {
+        "big": "ビッグエンディアン",
+        "little": "リトルエンディアン"
+      },
+      "operationMode": {
+        "standby": "スタンバイ"
+      },
+      "schema": {
+        "http": "HTTP（非暗号化）",
+        "https": "HTTPS（暗号化）"
+      },
+      "status": {
+        "A": "A（未接続）",
+        "B": "B（接続済み）",
+        "C": "C（充電中）"
+      }
+    },
+    "pv": {
+      "titleAdd": "ソーラーメーターを追加",
+      "titleEdit": "ソーラーメーターを編集"
+    },
+    "section": {
+      "grid": "グリッド",
+      "system": "システム",
+      "vehicles": "車両"
+    },
+    "shm": {
+      "labelDeviceId": "デバイスID",
+      "labelVendorId": "ベンダーID"
+    },
+    "sponsor": {
+      "addToken": "トークンを入力",
+      "changeToken": "トークンを変更",
+      "error": "スポンサートークンが無効です。",
+      "invalid": "無効",
+      "labelToken": "スポンサートークン"
+    },
+    "system": {
+      "backupRestore": {
+        "backup": {
+          "title": "バックアップ"
+        },
+        "cancel": "キャンセル",
+        "reset": {
+          "action": "リセット...",
+          "confirmationButton": "リセット＆再起動",
+          "title": "リセット"
+        },
+        "restore": {
+          "title": "復元"
+        },
+        "title": "バックアップ＆復元"
+      },
+      "logs": "ログ",
+      "restart": "再起動",
+      "restartingDescription": "お待ちください…"
+    },
+    "title": {
+      "label": "タイトル",
+      "title": "タイトルを編集"
+    },
+    "validation": {
+      "failed": "失敗",
+      "label": "ステータス",
+      "success": "成功",
+      "unknown": "不明",
+      "validate": "検証"
+    },
+    "vehicle": {
+      "cancel": "キャンセル",
+      "chargingSettings": "充電設定",
+      "defaultMode": "デフォルトモード",
+      "delete": "削除",
+      "priority": "優先度",
+      "save": "保存",
+      "scooter": "スクーター",
+      "titleAdd": "車両を追加",
+      "titleEdit": "車両を編集",
+      "validateSave": "検証＆保存"
+    }
+  },
+  "footer": {
+    "community": {
+      "greenEnergy": "ソーラー",
+      "greenShare": "ソーラーシェア"
+    },
+    "savings": {
+      "co2Title": "CO₂排出量",
+      "period": {
+        "thisYear": "今年"
+      }
+    },
+    "sponsor": {
+      "becomeSponsor": "スポンサーになる",
+      "titleTrial": "トライアルモード"
+    },
+    "telemetry": {
+      "optInMoreDetailsLink": "こちら"
+    },
+    "version": {
+      "availableLong": "新バージョンが利用可能",
+      "modalCancel": "キャンセル",
+      "modalDownload": "ダウンロード",
+      "modalInstalledVersion": "インストール済みのバージョン",
+      "modalTitle": "新バージョンが利用可能",
+      "modalUpdate": "インストール",
+      "modalUpdateNow": "今すぐインストール",
+      "modalUpdateStatusStart": "インストール開始："
+    }
+  },
+  "forecast": {
+    "co2": {
+      "average": "平均"
+    },
+    "price": {
+      "range": "範囲"
+    },
+    "type": {
+      "price": "価格",
+      "solar": "ソーラー"
+    }
+  },
+  "header": {
+    "blog": "ブログ",
+    "docs": "ドキュメント",
+    "logout": "ログアウト"
+  },
+  "help": {
+    "documentationButton": "ドキュメント",
+    "issueButton": "問題を報告",
+    "logsButton": "ログを確認",
+    "restart": {
+      "cancel": "キャンセル"
+    },
+    "restartButton": "再起動"
+  },
+  "issue": {
+    "additional": {
+      "logs": "ログ",
+      "showDetails": "詳細を確認",
+      "source": "ソース",
+      "state": "状態",
+      "title": "追加情報"
+    },
+    "createButtonIssue": "GitHub Issueを作成...",
+    "issueTitle": "タイトル",
+    "summary": {
+      "copied": "コピーしました！",
+      "copyButton": "追加情報をコピー"
+    },
+    "system": "システム",
+    "timezone": "タイムゾーン",
+    "title": "問題を報告",
+    "version": "バージョン"
+  },
+  "log": {
+    "search": "検索",
+    "selectAll": "全てを選択"
+  },
+  "loginModal": {
+    "invalid": "パスワードが無効です。",
+    "login": "ログイン",
+    "reset": "パスワードをリセットしますか？",
+    "title": "認証"
+  },
+  "main": {
+    "chargingPlan": {
+      "active": "アクティブ"
+    },
+    "energyflow": {
+      "battery": "バッテリー",
+      "pv": "ソーラーシステム"
+    },
+    "loadpoint": {
+      "fallbackName": "充電ポイント",
+      "price": "コスト",
+      "solar": "ソーラー"
+    },
+    "loadpointSettings": {
+      "batteryBoost": {
+        "label": "バッテリーブースト"
+      },
+      "default": "デフォルト",
+      "disclaimerHint": "注：",
+      "vehicle": "車両"
+    },
+    "mode": {
+      "off": "オフ",
+      "pv": "ソーラー",
+      "smart": "スマート"
+    },
+    "provider": {
+      "login": "ログイン",
+      "logout": "ログアウト"
+    },
+    "targetCharge": {
+      "activate": "アクティベート",
+      "currentPlan": "アクティブな計画",
+      "nextPlan": "次の計画",
+      "planPeriodLabel": "期間",
+      "remove": "削除",
+      "today": "今日",
+      "tomorrow": "明日",
+      "update": "アップデート"
+    },
+    "vehicle": {
+      "fallbackName": "車両",
+      "none": "車両無し",
+      "vehicleSoc": "充電"
+    },
+    "vehicleStatus": {
+      "charging": "充電中…",
+      "connected": "接続済み。",
+      "disconnected": "切断済み。"
+    },
+    "vehicles": "駐車場"
+  },
+  "notifications": {
+    "modalTitle": "通知"
+  },
+  "offline": {
+    "message": "サーバーに接続されていません。",
+    "restart": "再起動",
+    "starting": "サーバーを開始中..."
+  },
+  "passwordModal": {
+    "labelCurrent": "現在のパスワード",
+    "labelNew": "新しいパスワード",
+    "noMatch": "パスワードが一致しません"
+  },
+  "session": {
+    "cancel": "キャンセル",
+    "delete": "削除",
+    "meter": "メーター",
+    "meterstart": "メーター開始",
+    "meterstop": "メーター停止",
+    "price": "価格",
+    "started": "開始",
+    "title": "充電セッション"
+  },
+  "sessions": {
+    "csv": {
+      "price": "価格",
+      "vehicle": "車両"
+    },
+    "filter": {
+      "allLoadpoints": "全ての充電ポイント",
+      "allVehicles": "全ての車両",
+      "filter": "フィルター"
+    }
+  }
+}

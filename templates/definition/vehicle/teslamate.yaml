@@ -14,34 +14,36 @@ params:
       de: Fahrzeug-ID
       en: Vehicle ID
     default: 1
+  - name: timeout
+    default: 720h # 30d
 render: |
   type: custom
   {{- include "vehicle-common" . }}
   soc:
     source: mqtt
     topic: teslamate/cars/{{ .id }}/battery_level
-    timeout: 720h # 30d
+    timeout: {{ .timeout }}
   status:
     source: combined
     plugged:
       source: mqtt
       topic: teslamate/cars/{{ .id }}/plugged_in
-      timeout: 720h # 30d
+      timeout: {{ .timeout }}
     charging:
       source: mqtt
       topic: teslamate/cars/{{ .id }}/charger_actual_current
-      timeout: 720h # 30d
+      timeout: {{ .timeout }}
       jq: . > 0
   range:
     source: mqtt
     topic: teslamate/cars/{{ .id }}/rated_battery_range_km
-    timeout: 720h # 30d
+    timeout: {{ .timeout }}
   odometer:
     source: mqtt
     topic: teslamate/cars/{{ .id }}/odometer
-    timeout: 720h # 30d
+    timeout: {{ .timeout }}
   limitsoc:
     source: mqtt
     topic: teslamate/cars/{{ .id }}/charge_limit_soc
-    timeout: 720h
+    timeout: {{ .timeout }}
   features: ["coarsecurrent"]

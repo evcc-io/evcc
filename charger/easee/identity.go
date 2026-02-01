@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/cache"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/oauth2"
@@ -38,17 +39,25 @@ type tokenSource struct {
 	user, password string
 }
 
-// TokenSource creates an Easee token source
+// tokenSourceCache stores per-user token sources
+var tokenSourceCache = cache.New[oauth2.TokenSource]()
+
+// TokenSource returns a shared oauth2.TokenSource for the given user.
 func TokenSource(log *util.Logger, user, password string) (oauth2.TokenSource, error) {
-	c := &tokenSource{
-		Helper:   request.NewHelper(log),
-		user:     user,
-		password: password,
-	}
+	return tokenSourceCache.GetOrCreate(user, func() (oauth2.TokenSource, error) {
+		c := &tokenSource{
+			Helper:   request.NewHelper(log),
+			user:     user,
+			password: password,
+		}
 
-	token, err := c.authenticate()
+		token, err := c.authenticate()
+		if err != nil {
+			return nil, err
+		}
 
-	return oauth.RefreshTokenSource(token.AsOAuth2Token(), c.refreshToken), err
+		return oauth.RefreshTokenSource(token.AsOAuth2Token(), c.refreshToken), nil
+	})
 }
 
 func (c *tokenSource) authenticate() (*Token, error) {
