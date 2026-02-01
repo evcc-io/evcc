@@ -565,9 +565,9 @@ func apiError(resp *evopt.PostOptimizeChargeScheduleResponse) error {
 		return fmt.Errorf("invalid status: %d", resp.StatusCode())
 	}
 
-	if len(errObj.Errors) > 0 {
+	if len(errObj.Details) > 0 {
 		var details []string
-		for field, msg := range errObj.Errors {
+		for field, msg := range errObj.Details {
 			details = append(details, fmt.Sprintf("%s: %s", field, msg))
 		}
 		slices.Sort(details)
