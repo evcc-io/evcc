@@ -8,7 +8,6 @@ requirements:
     en: Open source Tesla data logger [github.com/adriankumpf/teslamate](https://github.com/adriankumpf/teslamate). MQTT broker required.
     de: Open Source Tesla Datenlogger [github.com/adriankumpf/teslamate](https://github.com/adriankumpf/teslamate). Voraussetzung ist konfigurierter MQTT Broker.
 params:
-  - preset: mqtt
   - preset: vehicle-common
   - name: id
     description:
@@ -22,29 +21,29 @@ render: |
   {{- include "vehicle-common" . }}
   soc:
     source: mqtt
-    {{- include "mqtt" . | indent 2 }}
     topic: teslamate/cars/{{ .id }}/battery_level
+    timeout: {{ .timeout }}
   status:
     source: combined
     plugged:
       source: mqtt
-      {{- include "mqtt" . | indent 4 }}
       topic: teslamate/cars/{{ .id }}/plugged_in
+      timeout: {{ .timeout }}
     charging:
       source: mqtt
-      {{- include "mqtt" . | indent 4 }}
       topic: teslamate/cars/{{ .id }}/charger_actual_current
+      timeout: {{ .timeout }}
       jq: . > 0
   range:
     source: mqtt
-    {{- include "mqtt" . | indent 2 }}
     topic: teslamate/cars/{{ .id }}/rated_battery_range_km
+    timeout: {{ .timeout }}
   odometer:
     source: mqtt
-    {{- include "mqtt" . | indent 2 }}
     topic: teslamate/cars/{{ .id }}/odometer
+    timeout: {{ .timeout }}
   limitsoc:
     source: mqtt
-    {{- include "mqtt" . | indent 2 }}
     topic: teslamate/cars/{{ .id }}/charge_limit_soc
+    timeout: {{ .timeout }}
   features: ["coarsecurrent"]

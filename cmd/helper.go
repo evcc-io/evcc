@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/evcc-io/evcc/cmd/shutdown"
+	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"go.yaml.in/yaml/v4"
@@ -119,4 +120,17 @@ func deviceHeader[T any](dev config.Device[T]) string {
 	}
 
 	return name
+}
+
+// migrateYamlToJson converts a settings value from yaml to json if needed
+func migrateYamlToJson[T any](key string, res *T) error {
+	if settings.IsJson(key) {
+		return settings.Json(key, res)
+	}
+
+	if err := settings.Yaml(key, new(T), res); err != nil {
+		return err
+	}
+
+	return settings.SetJson(key, res)
 }

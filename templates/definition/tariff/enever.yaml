@@ -76,7 +76,7 @@ render: |
           uri: https://enever.nl/apiv3/stroomprijs_morgen.php?token={{ .token }}
           jq: |
             [ .data.[] |
-             {
+              {
                 "start": .datum,
                 "end": (
                   (.datum[0:19]) as $dt |

@@ -240,7 +240,7 @@ export default defineComponent({
 					id: "tempLimit",
 					visible: this.heating && this.vehicleLimitSoc > 0,
 					content: this.fmtTemperature(this.vehicleLimitSoc),
-					tooltipContent: t("vehicleLimit"),
+					tooltipContent: this.$t("main.heatingStatus.vehicleLimit"),
 					iconComponent: TempLimitIcon,
 					testId: "vehicle-status-limit",
 				},

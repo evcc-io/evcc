@@ -209,6 +209,7 @@
       "dragList": "Sorterbar lista",
       "experimental": "Experimentella funktioner",
       "forceSave": "Spara ändå",
+      "fromYamlHint": "Obs: Konfigurerad via evcc.yaml. Ta bort posten från filen för att aktivera redigering här.",
       "hideAdvancedSettings": "Dölj avancerade inställningar",
       "invalidFileSelected": "Ogiltig fil vald",
       "noFileSelected": "Ingen fil vald.",
@@ -247,8 +248,7 @@
       "downloadCsv": "Hämta CSV",
       "eventsRecorded": "Registrerade {count} händelser med nätbegränsning.",
       "lastEvent": "Senaste {timeAgo}.",
-      "title": "Extern gräns",
-      "yamlConfigured": "Obs: Konfigurerad via evcc.yaml. Ta bort posten från filen för att aktivera redigering här."
+      "title": "Extern gräns"
     },
     "icon": {
       "change": "ändra",
@@ -390,8 +390,7 @@
       "unconfigured": "ej konfigurerad",
       "vehicles": "Mina fordon",
       "welcomeBannerText": "Börja med att skapa minst en **laddare**, **värmare**, **nät**, **solcell**, **batteri** eller **extra mätare**. Om du bara vill testa, välj en **demoenhet**.",
-      "welcomeBannerTitle": "Låt oss konfigurera ditt system!",
-      "yaml": "Konfigurera i evcc.yaml. Kan inte ändras i UI."
+      "welcomeBannerTitle": "Låt oss konfigurera ditt system!"
     },
     "messaging": {
       "description": "Få notiser om dina laddningar.",
