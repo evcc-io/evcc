@@ -152,9 +152,7 @@ type Loadpoint struct {
 	planSlotEnd      time.Time        // current plan slot end time
 	planActive       bool             // charge plan exists and has a currently active slot
 	planOverrunSent  bool             // notification has been sent already
-	planLockedTime   time.Time        // locked plan target time (committed goal, persists during overrun)
-	planLockedSoc    int              // locked plan target soc
-	planLockedId     int              // locked plan id (0=none, 1=static, 2+=repeating), needed to highlight the plan in ui
+	planLocked       PlanLock         // locked plan
 
 	// cached state
 	status         api.ChargeStatus // Charger status

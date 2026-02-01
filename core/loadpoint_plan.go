@@ -13,11 +13,16 @@ import (
 
 // TODO planActive is not guarded by mutex
 
+// PlanLock contains information about a locked plan
+type PlanLock struct {
+	Time time.Time // target time (committed goal, persists during overrun)
+	Soc  int       // target soc
+	Id   int       // id (0=none, 1=static, 2+=repeating), needed to highlight the plan in ui
+}
+
 // clearPlanLock clears the locked plan goal
 func (lp *Loadpoint) clearPlanLock() {
-	lp.planLockedTime = time.Time{}
-	lp.planLockedSoc = 0
-	lp.planLockedId = 0
+	lp.planLocked = PlanLock{}
 }
 
 // ClearPlanLock clears the locked plan goal
@@ -29,9 +34,11 @@ func (lp *Loadpoint) ClearPlanLock() {
 
 // lockPlanGoal locks the current plan goal to handle overruns (soc-based plans)
 func (lp *Loadpoint) lockPlanGoal(planTime time.Time, soc int, id int) {
-	lp.planLockedTime = planTime
-	lp.planLockedSoc = soc
-	lp.planLockedId = id
+	lp.planLocked = PlanLock{
+		Time: planTime,
+		Soc:  soc,
+		Id:   id,
+	}
 }
 
 // setPlanActive updates plan active flag
@@ -196,7 +203,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		}
 
 		// lock the goal when soc-based plan becomes active for the first time
-		if lp.planLockedId == 0 && isSocBased {
+		if lp.planLocked.Id == 0 && isSocBased {
 			lp.lockPlanGoal(planTime, int(goal), lp.getPlanId())
 		}
 
