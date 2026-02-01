@@ -324,13 +324,8 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// setup messaging
 	var pushChan chan messenger.Event
 	if err == nil {
-		// old ui
-		pushChan, err = configureMessengers(&conf.Messaging, site.Vehicles(), valueChan, cache)
+		pushChan, err = configureMessengers(&conf.Messaging, &conf.MessagingEvents, site.Vehicles(), valueChan, cache)
 		err = wrapErrorWithClass(ClassMessenger, err)
-
-		// new ui
-		err = configureMessengerEvents(&conf.MessagingEvents)
-		err = wrapErrorWithClass(ClassMessengerEvents, err)
 	}
 
 	// publish initial settings

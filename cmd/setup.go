@@ -271,21 +271,17 @@ func configurableInstance[T any](typ string, conf *config.Config, newFromConf ne
 	return err
 }
 
-func configureMessengerEvents(conf *globalconfig.MessagingEvents) error {
-	if settings.Exists(keys.MessagingEvents) {
-		*conf = globalconfig.MessagingEvents{}
-		if err := settings.Json(keys.MessagingEvents, &conf); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func configureMessengers(conf *globalconfig.Messaging, vehicles messenger.Vehicles, valueChan chan<- util.Param, cache *util.ParamCache) (chan messenger.Event, error) {
+func configureMessengers(confMessaging *globalconfig.Messaging, confEvents *globalconfig.MessagingEvents, vehicles messenger.Vehicles, valueChan chan<- util.Param, cache *util.ParamCache) (chan messenger.Event, error) {
 	// migrate settings
 	if settings.Exists(keys.Messaging) {
-		*conf = globalconfig.Messaging{}
-		if err := settings.Yaml(keys.Messaging, new(map[string]any), &conf); err != nil {
+		*confMessaging = globalconfig.Messaging{}
+		if err := settings.Yaml(keys.Messaging, new(map[string]any), &confMessaging); err != nil {
+			return nil, err
+		}
+	}
+	if settings.Exists(keys.MessagingEvents) {
+		*confEvents = globalconfig.MessagingEvents{}
+		if err := settings.Json(keys.MessagingEvents, &confEvents); err != nil {
 			return nil, err
 		}
 	}
@@ -294,7 +290,7 @@ func configureMessengers(conf *globalconfig.Messaging, vehicles messenger.Vehicl
 
 	var eg errgroup.Group
 
-	for i, cc := range conf.Services {
+	for i, cc := range confMessaging.Services {
 		// add name for meter/charger parity
 		cc := config.Named{
 			Name:  fmt.Sprintf("push-%d", i+1),
@@ -323,7 +319,16 @@ func configureMessengers(conf *globalconfig.Messaging, vehicles messenger.Vehicl
 		return messageChan, &ClassError{ClassMessenger, err}
 	}
 
-	messageHub, err := messenger.NewHub(conf.Events, vehicles, cache)
+	var events globalconfig.MessagingEvents
+
+	if len(*confEvents) > 0 {
+		events = conf.MessagingEvents
+	} else {
+		events = confMessaging.Events
+	}
+
+	messageHub, err := messenger.NewHub(events, vehicles, cache)
+
 	if err != nil {
 		return messageChan, fmt.Errorf("failed configuring push services: %w", err)
 	}

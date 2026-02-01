@@ -549,6 +549,9 @@ func deleteDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Requ
 					lp.SetCircuitRef("")
 				}
 			}
+
+		case templates.Messenger:
+			err = deleteDevice(id, config.Messengers())
 		}
 
 		setConfigDirty()

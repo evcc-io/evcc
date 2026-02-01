@@ -21,10 +21,12 @@
 			docs="/docs/reference/configuration/messaging"
 			endpoint="/config/messagingEvents"
 			state-key="messagingEvents"
-			disable-remove
 			data-testid="messaging-modal"
 			:size="activeEventsTab ? 'xl' : 'm'"
 			:transform-read-values="transformReadValues"
+			:disable-save="!activeEventsTab"
+			:disable-cancel="!activeEventsTab"
+			disable-remove
 			@changed="$emit('events-changed')"
 		>
 			<template #default="{ values }: { values: MessagingEvents }">
