@@ -197,7 +197,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		case lp.clock.Until(planStart) < tariff.SlotDuration:
 			lp.log.DEBUG.Printf("plan: avoid re-start within %v, continuing for remaining %v", tariff.SlotDuration, lp.clock.Until(planStart).Round(time.Second))
 			return true
-		case strategy.Continuous && planStart.After(lp.clock.Now()) && planStart.Before(planTime.Add(-requiredDuration-strategy.Precondition)) && lp.clock.Until(planTime) > strategy.Precondition:
+		case strategy.Continuous && planStart.After(lp.clock.Now()) && planStart.Before(planTime.Add(-requiredDuration-strategy.Precondition)):
 			lp.log.DEBUG.Printf("plan: continuing- later plan start %s would interrupt continuous charging", planStart.Round(time.Second).Local())
 			return true
 		}
