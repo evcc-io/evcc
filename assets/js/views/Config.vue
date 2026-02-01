@@ -451,21 +451,22 @@ import Header from "../components/Top/Header.vue";
 import VehicleIcon from "../components/VehicleIcon";
 import VehicleModal from "../components/Config/VehicleModal.vue";
 import { defineComponent, type PropType } from "vue";
-import type {
-	Circuit,
-	ConfigCharger,
-	ConfigVehicle,
-	ConfigCircuit,
-	ConfigLoadpoint,
-	ConfigMeter,
-	LoadpointType,
-	Timeout,
-	VehicleOption,
-	MeterType,
-	SiteConfig,
-	DeviceType,
-	Notification,
-	ConfigMessenger,
+import {
+	type Circuit,
+	type ConfigCharger,
+	type ConfigVehicle,
+	type ConfigCircuit,
+	type ConfigLoadpoint,
+	type ConfigMeter,
+	type LoadpointType,
+	type Timeout,
+	type VehicleOption,
+	type MeterType,
+	type SiteConfig,
+	type DeviceType,
+	type Notification,
+	type ConfigMessenger,
+	MESSAGING_EVENTS,
 } from "@/types/evcc";
 
 type DeviceValuesMap = Record<DeviceType, Record<string, any>>;
@@ -717,7 +718,18 @@ export default defineComponent({
 			return { configured: { value: false } };
 		},
 		messagingTags(): DeviceTags {
-			return { configured: { value: store.state?.messaging || this.messengers.length > 0 } };
+			if (this.messengers.length > 0) {
+				const allEvents = Object.keys(MESSAGING_EVENTS).length;
+				const events = store.state?.messagingEvents || [];
+				const enabledEvents = Object.values(events).filter((e) => !e.disabled).length;
+
+				return {
+					events: { value: `${enabledEvents}/${allEvents}` },
+					messengers: { value: this.messengers.length },
+				};
+			}
+
+			return { configured: { value: store.state?.messaging } };
 		},
 		backupRestoreProps() {
 			return {
