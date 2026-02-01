@@ -489,7 +489,7 @@
       "labelClientCert": "Clientzertifikat",
       "labelClientId": "Client ID",
       "labelClientKey": "Client-Key",
-      "labelInsecure": "Zertifikatüberprüfung",
+      "labelInsecure": "Zertifikatsüberprüfung",
       "labelPassword": "Passwort",
       "labelTopic": "Thema",
       "labelUser": "Benutzer",
