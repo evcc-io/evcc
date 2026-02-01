@@ -19,26 +19,23 @@ func Decorate(req *http.Request) error {
 	return nil
 }
 
-func encryptRequest(path string, time int64, tenant, token, body, contentType string) string {
-	sendDate := strconv.FormatInt(time, 10)
+func encryptRequest(resourcePath string, sendDate int64, tenant, token, body, contentType string) string {
+	if len(body) == 0 {
+		return ""
+	}
+
+	dateString := strconv.FormatInt(sendDate, 10)
+
 	// tenant
-	resourcePath := ""
-	if len(path) != 0 {
-		resourcePath = "/" + path
+	if len(resourcePath) != 0 {
+		resourcePath = "/" + resourcePath
 	}
 
-	encryptedBody := ""
+	sb3 := Md5(resourcePath+tenant+token+USER_TYPE) + dateString + CONTENT_ENCRYPTED + contentType
+	a2 := Md5(sb3)
+	a3 := Md5(dateString)
 
-	if len(body) != 0 {
-		sb3 := Md5(resourcePath+tenant+token+USER_TYPE) + sendDate + CONTENT_ENCRYPTED + contentType
-		a2 := Md5(sb3)
-		a3 := Md5(sendDate)
-		if len(body) != 0 && len(a2) != 0 && len(a3) != 0 {
-			encryptedBody = Encrypt(body, a2, a3)
-		}
-	}
-
-	return encryptedBody
+	return Encrypt(body, a2, a3)
 }
 
 func calculateRequestVerification(
@@ -55,21 +52,18 @@ func calculateRequestVerification(
 
 	a5 := Md5(a3 + dateString)
 
-	if len(a5) != 0 && len(str11) != 0 {
-		return HmacSha256(a5, str11)
-	}
-	return ""
+	return HmacSha256(a5, str11)
 }
 
 func CreateRequest(baseUrl, path, httpMethod, request, contentType, token, eventId string) (*http.Request, error) {
-	appSendDate := time.Now().UnixMilli()
+	sendDate := time.Now().UnixMilli()
 
 	endpoint := baseUrl + path
 
 	if len(request) != 0 {
 		request = encryptRequest(
 			path,
-			appSendDate,
+			sendDate,
 			TENANT_ID,
 			token,
 			request,
@@ -82,7 +76,7 @@ func CreateRequest(baseUrl, path, httpMethod, request, contentType, token, event
 	}
 
 	Decorate(req)
-	req.Header.Set("app-send-date", strconv.FormatInt(appSendDate, 10))
+	req.Header.Set("app-send-date", strconv.FormatInt(sendDate, 10))
 	req.Header.Set("original-content-type", contentType)
 
 	if len(token) != 0 {
@@ -97,7 +91,7 @@ func CreateRequest(baseUrl, path, httpMethod, request, contentType, token, event
 	req.Header.Set("app-verification-string",
 		calculateRequestVerification(
 			replace,
-			appSendDate,
+			sendDate,
 			TENANT_ID,
 			contentType,
 			request,
@@ -107,14 +101,15 @@ func CreateRequest(baseUrl, path, httpMethod, request, contentType, token, event
 }
 
 func decryptResponse(timeStamp, contentType, cipherText string) string {
+	if len(cipherText) == 0 {
+		return ""
+	}
+
 	str4 := timeStamp + CONTENT_ENCRYPTED + contentType
 	a2 := Md5(str4)
 	hashedTimeStamp := Md5(timeStamp)
 
-	if len(cipherText) != 0 {
-		return Decrypt(cipherText, a2, hashedTimeStamp)
-	}
-	return ""
+	return Decrypt(cipherText, a2, hashedTimeStamp)
 }
 
 func DecodeResponse(resp *http.Response) ([]byte, error) {
