@@ -42,6 +42,11 @@ export default defineComponent({
 			initialValues,
 		};
 	},
+	computed: {
+		isNew(): boolean {
+			return this.selectedMessengerId === undefined;
+		},
+	},
 	methods: {
 		provideTemplateOptions(products: Product[]): TemplateGroup[] {
 			return [
@@ -61,11 +66,6 @@ export default defineComponent({
 				values.type = ConfigType.Custom;
 				values.yaml = defaultMessengerYaml;
 			}
-		},
-	},
-	computed: {
-		isNew(): boolean {
-			return this.selectedMessengerId === undefined;
 		},
 	},
 });

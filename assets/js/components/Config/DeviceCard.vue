@@ -38,6 +38,7 @@ import DeviceCardEditIcon from "./DeviceCardEditIcon.vue";
 
 export default {
 	name: "DeviceCard",
+	components: { DeviceCardEditIcon },
 	props: {
 		name: String,
 		title: String,
@@ -48,7 +49,6 @@ export default {
 		noEditButton: Boolean,
 	},
 	emits: ["edit"],
-	components: { DeviceCardEditIcon },
 };
 </script>
 
