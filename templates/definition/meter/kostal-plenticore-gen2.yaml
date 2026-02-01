@@ -114,8 +114,9 @@ render: |
               encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
       - case: 3 # charge
         set:
+          {{- if .maxchargepower }}
           source: const
-          value: {{ if .maxchargepower }}-{{ .maxchargepower }}{{ end }} # W
+          value: -{{ .maxchargepower }} # W
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
@@ -123,5 +124,9 @@ render: |
               address: 1034 # Battery charge power (DC) setpoint, absolute [W]
               type: writemultiple
               encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
+          {{- else }}
+          source: error
+          error: ErrNotAvailable
+          {{- end }}
   {{- include "battery-params" . }}
   {{- end }}
