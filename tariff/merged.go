@@ -72,10 +72,9 @@ func (t *Merged) Rates() (api.Rates, error) {
 		return primaryRates, nil
 	}
 
-	// Find where primary data ends
+	// Find where primary data ends (rates are sorted)
 	var primaryEnd time.Time
 	if len(primaryRates) > 0 {
-		primaryRates.Sort()
 		primaryEnd = primaryRates[len(primaryRates)-1].End
 	}
 
@@ -86,7 +85,6 @@ func (t *Merged) Rates() (api.Rates, error) {
 			res = append(res, r)
 		}
 	}
-	res.Sort()
 
 	return res, nil
 }
