@@ -1,6 +1,6 @@
 package util
 
-func Masked(s any) string {
+func Masked(s string) string {
 	if s != "" {
 		return "***"
 	}
