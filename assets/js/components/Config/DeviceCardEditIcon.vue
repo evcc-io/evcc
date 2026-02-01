@@ -39,7 +39,7 @@ export default {
 			}
 			let title = `${this.$t("config.main.name")}: <span class='font-monospace'>${this.name}</span>`;
 			if (!this.editable) {
-				title += `<div class="mt-1">${this.$t("config.main.yaml")}</div>`;
+				title += `<div class="mt-1">${this.$t("config.general.fromYamlHint")}</div>`;
 			}
 			return `<div class="text-start">${title}</div>`;
 		},
