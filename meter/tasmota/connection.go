@@ -200,10 +200,12 @@ func (c *Connection) CurrentPower() (float64, error) {
 	if err != nil {
 		return 0, err
 	}
+
+	// SML power available
 	if s.StatusSNS.SML.PowerCurr != nil {
-		// SML power available
 		return *s.StatusSNS.SML.PowerCurr, nil
 	}
+
 	var res float64
 	for _, channel := range c.channels {
 		power, err := s.StatusSNS.Energy.Power.Channel(channel)
@@ -212,6 +214,7 @@ func (c *Connection) CurrentPower() (float64, error) {
 		}
 		res += power
 	}
+
 	return res, nil
 }
 
@@ -221,10 +224,12 @@ func (c *Connection) TotalEnergy() (float64, error) {
 	if err != nil {
 		return 0, err
 	}
+
+	// SML total energy available
 	if res.StatusSNS.SML.TotalIn != nil {
-		// SML total energy available
 		return *res.StatusSNS.SML.TotalIn, err
 	}
+
 	return res.StatusSNS.Energy.Total, err
 }
 
@@ -234,10 +239,12 @@ func (c *Connection) Powers() (float64, float64, float64, error) {
 	if err != nil {
 		return 0, 0, 0, err
 	}
-	if s.StatusSNS.SML.PowerL1 != nil && s.StatusSNS.SML.PowerL2 != nil && s.StatusSNS.SML.PowerL3 != nil {
-		// SML powers available
-		return *s.StatusSNS.SML.PowerL1, *s.StatusSNS.SML.PowerL2, *s.StatusSNS.SML.PowerL3, nil
+
+	// SML powers available
+	if sml := s.StatusSNS.SML; sml.PowerL1 != nil && sml.PowerL2 != nil && sml.PowerL3 != nil {
+		return *sml.PowerL1, *sml.PowerL2, *sml.PowerL3, nil
 	}
+
 	return c.getPhaseValues(func(s StatusSNSResponse) Channels {
 		return s.StatusSNS.Energy.Power
 	})
@@ -249,10 +256,12 @@ func (c *Connection) Voltages() (float64, float64, float64, error) {
 	if err != nil {
 		return 0, 0, 0, err
 	}
-	if s.StatusSNS.SML.VoltageL1 != nil && s.StatusSNS.SML.VoltageL2 != nil && s.StatusSNS.SML.VoltageL3 != nil {
-		// SML voltages available
-		return *s.StatusSNS.SML.VoltageL1, *s.StatusSNS.SML.VoltageL2, *s.StatusSNS.SML.VoltageL3, nil
+
+	// SML voltages available
+	if sml := s.StatusSNS.SML; sml.VoltageL1 != nil && sml.VoltageL2 != nil && sml.VoltageL3 != nil {
+		return *sml.VoltageL1, *sml.VoltageL2, *sml.VoltageL3, nil
 	}
+
 	return c.getPhaseValues(func(s StatusSNSResponse) Channels {
 		return s.StatusSNS.Energy.Voltage
 	})
@@ -264,10 +273,12 @@ func (c *Connection) Currents() (float64, float64, float64, error) {
 	if err != nil {
 		return 0, 0, 0, err
 	}
-	if s.StatusSNS.SML.CurrentL1 != nil && s.StatusSNS.SML.CurrentL2 != nil && s.StatusSNS.SML.CurrentL3 != nil {
-		// SML currents available
-		return *s.StatusSNS.SML.CurrentL1, *s.StatusSNS.SML.CurrentL2, *s.StatusSNS.SML.CurrentL3, nil
+
+	// SML currents available
+	if sml := s.StatusSNS.SML; sml.CurrentL1 != nil && sml.CurrentL2 != nil && sml.CurrentL3 != nil {
+		return *sml.CurrentL1, *sml.CurrentL2, *sml.CurrentL3, nil
 	}
+
 	return c.getPhaseValues(func(s StatusSNSResponse) Channels {
 		return s.StatusSNS.Energy.Current
 	})
@@ -287,8 +298,8 @@ func (c *Connection) getPhaseValues(fun func(StatusSNSResponse) Channels) (float
 	all := fun(s)
 	var res [3]float64 = [3]float64{0, 0, 0}
 
-	for i := 0; i < len(c.channels); i++ {
-		res[i], err = all.Channel(c.channels[i])
+	for i, cc := range c.channels {
+		res[i], err = all.Channel(cc)
 		if err != nil {
 			return 0, 0, 0, err
 		}
