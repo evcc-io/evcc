@@ -198,7 +198,7 @@ func planStrategyHandler(lp loadpoint.API) http.HandlerFunc {
 			return
 		}
 
-		res := planStrategyPayloadFromApi(lp.GetPlanStrategy())
+		res := lp.GetPlanStrategy()
 
 		jsonWrite(w, res)
 	}
