@@ -296,7 +296,7 @@ func (c *Connection) getPhaseValues(fun func(StatusSNSResponse) Channels) (float
 	}
 
 	all := fun(s)
-	var res [3]float64 = [3]float64{0, 0, 0}
+	res := make([]float64, 3)
 
 	for i, cc := range c.channels {
 		res[i], err = all.Channel(cc)
