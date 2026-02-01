@@ -269,7 +269,7 @@ func (w *WarpWS) handleEvent(topic string, payload json.RawMessage) error {
 func (w *WarpWS) hasFeature(feature string) bool {
 	w.mu.RLock()
 	if w.features != nil {
-	    w.mu.RUnlock()
+		w.mu.RUnlock()
 		return slices.Contains(w.features, feature)
 	}
 	w.mu.RUnlock()
