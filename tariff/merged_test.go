@@ -24,8 +24,11 @@ func (m *mockTariff) Type() api.TariffType {
 	return m.typ
 }
 
+// Fixed reference time for deterministic tests
+var refTime = time.Date(2025, 1, 1, 12, 0, 0, 0, time.UTC)
+
 func TestMergedRates(t *testing.T) {
-	now := time.Now().Truncate(time.Hour)
+	now := refTime
 
 	primaryRates := api.Rates{
 		{Start: now, End: now.Add(time.Hour), Value: 0.10},
@@ -59,7 +62,7 @@ func TestMergedRates(t *testing.T) {
 }
 
 func TestMergedPrimaryFailure(t *testing.T) {
-	now := time.Now().Truncate(time.Hour)
+	now := refTime
 
 	secondaryRates := api.Rates{
 		{Start: now, End: now.Add(time.Hour), Value: 0.20},
@@ -78,7 +81,7 @@ func TestMergedPrimaryFailure(t *testing.T) {
 }
 
 func TestMergedSecondaryFailure(t *testing.T) {
-	now := time.Now().Truncate(time.Hour)
+	now := refTime
 
 	primaryRates := api.Rates{
 		{Start: now, End: now.Add(time.Hour), Value: 0.10},
@@ -97,7 +100,7 @@ func TestMergedSecondaryFailure(t *testing.T) {
 }
 
 func TestMergedEmptyPrimary(t *testing.T) {
-	now := time.Now().Truncate(time.Hour)
+	now := refTime
 
 	secondaryRates := api.Rates{
 		{Start: now, End: now.Add(time.Hour), Value: 0.20},
