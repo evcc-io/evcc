@@ -209,6 +209,7 @@
       "dragList": "Preurediv popis",
       "experimental": "Eksperimentalno",
       "forceSave": "Svejedno spremi",
+      "fromYamlHint": "Napomena: Konfigurirano putem evcc.yaml. Uklonite unos iz datoteke kako biste ovdje omogućili uređivanje.",
       "hideAdvancedSettings": "Sakrij napredne postavke",
       "invalidFileSelected": "Neispravna datoteka",
       "noFileSelected": "Datoteka nije odabrana.",
@@ -247,8 +248,7 @@
       "downloadCsv": "Preuzmi CSV",
       "eventsRecorded": "Zabilježeno je {count} događaja ograničenja mreže.",
       "lastEvent": "Najnoviji {timeAgo}",
-      "title": "Vanjski limit",
-      "yamlConfigured": "Napomena: Konfigurirano putem evcc.yaml. Uklonite unos iz datoteke kako biste ovdje omogućili uređivanje."
+      "title": "Vanjski limit"
     },
     "icon": {
       "change": "promjeni",
@@ -390,8 +390,7 @@
       "unconfigured": "nije postavljeno",
       "vehicles": "Moja vozila",
       "welcomeBannerText": "Počnite s izradom barem jednog **punjača**, **grijača**, **mreže**, **solarne ploče**, **baterije** ili **dodatnog brojila**. Ako samo želite testirati, odaberite **demo uređaj**.",
-      "welcomeBannerTitle": "Konfigurirajmo vaš sustav!",
-      "yaml": "U evcc.yaml datoteci definirani uređaji se ne mogu uređivati."
+      "welcomeBannerTitle": "Konfigurirajmo vaš sustav!"
     },
     "messaging": {
       "description": "Primajte poruke o svojim sesijama punjenja.",

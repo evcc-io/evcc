@@ -38,12 +38,13 @@ func TestEEBus(t *testing.T) {
 	})
 
 	require.NoError(t, err, "server")
-	require.NotEmpty(t, srv.Ski, "server ski")
 
 	server.Instance = srv
 	go srv.Run()
 
-	box, err := createControlbox(t.Context(), server.Instance.Ski, remotePort)
+	require.NotEmpty(t, server.Ski(), "server ski")
+
+	box, err := createControlbox(t.Context(), server.Ski(), remotePort)
 	require.NoError(t, err, "controlbox")
 
 	eventC := make(chan api.EventType, 1)

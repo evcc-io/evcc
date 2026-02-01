@@ -297,7 +297,6 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 
 		// yaml handlers
 		for key, fun := range map[string]func() (any, any){
-			keys.EEBus:     func() (any, any) { return map[string]any{}, eebus.Config{} },
 			keys.Hems:      func() (any, any) { return map[string]any{}, config.Typed{} },
 			keys.Tariffs:   func() (any, any) { return map[string]any{}, globalconfig.Tariffs{} },
 			keys.Messaging: func() (any, any) { return map[string]any{}, globalconfig.Messaging{} }, // has default
@@ -316,6 +315,7 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 			keys.ModbusProxy:     func() any { return new([]globalconfig.ModbusProxy) }, // slice
 			keys.Shm:             func() any { return new(shm.Config) },
 			keys.Influx:          func() any { return new(globalconfig.Influx) },
+			keys.EEBus:           func() any { return new(eebus.Config) },
 			keys.MessagingEvents: func() any { return new(globalconfig.MessagingEvents) },
 		} {
 			routes["update"+key] = route{Method: "POST", Pattern: "/" + key, HandlerFunc: settingsSetJsonHandler(key, pub, fun)}

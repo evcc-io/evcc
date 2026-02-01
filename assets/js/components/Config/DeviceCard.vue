@@ -6,9 +6,10 @@
 			'round-box--error': error,
 			'round-box--warning': warning,
 			'root--unconfigured': unconfigured,
+			'root--with-tags': $slots.tags,
 		}"
 	>
-		<div class="d-flex align-items-center mb-2">
+		<div class="d-flex align-items-center" :class="{ 'mb-2': $slots.tags }">
 			<div class="icon me-2">
 				<slot name="icon" />
 			</div>
@@ -25,8 +26,10 @@
 				@edit="$emit('edit')"
 			/>
 		</div>
-		<hr class="my-3 divide" />
-		<slot name="tags" />
+		<div v-if="$slots.tags">
+			<hr class="my-3 divide" />
+			<slot name="tags" />
+		</div>
 	</div>
 </template>
 
@@ -55,6 +58,8 @@ export default {
 	list-style-type: none;
 	border-radius: 1rem;
 	padding: 1rem 1.5rem;
+}
+.root--with-tags {
 	min-height: 8rem;
 }
 .root--unconfigured {

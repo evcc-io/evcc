@@ -90,6 +90,7 @@ export default {
 		saveMethod: { type: String, default: "post" },
 		storeValuesInArray: Boolean,
 		size: { type: String },
+		confirmRemove: String,
 	},
 	emits: ["changed", "open"],
 	data() {
@@ -123,7 +124,13 @@ export default {
 			await this.load();
 		},
 		async load() {
-			this.serverValues = this.stateKey ? store.state[this.stateKey] : store.state;
+			if (this.stateKey) {
+				// Support nested keys like "eebus.config"
+				const keys = this.stateKey.split(".");
+				this.serverValues = keys.reduce((obj, key) => obj?.[key], store.state);
+			} else {
+				this.serverValues = store.state;
+			}
 			if (this.transformReadValues) {
 				this.serverValues = this.transformReadValues(this.serverValues);
 			}
@@ -157,6 +164,9 @@ export default {
 			this.saving = false;
 		},
 		async remove() {
+			if (this.confirmRemove && !window.confirm(this.confirmRemove)) {
+				return;
+			}
 			this.removing = true;
 			this.error = "";
 			try {

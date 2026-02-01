@@ -240,7 +240,9 @@ export default {
 		},
 		textarea() {
 			return (
-				this.rows || this.array || ["accessToken", "refreshToken"].includes(this.property)
+				this.rows ||
+				this.array ||
+				["accessToken", "refreshToken", "identifiers"].includes(this.property)
 			);
 		},
 		boolean() {
