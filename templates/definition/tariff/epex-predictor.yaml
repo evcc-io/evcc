@@ -25,9 +25,10 @@ params:
   - preset: tariff-base
 render: |
   type: custom
+  {{ include "tariff-base" . }}
   forecast:
     source: http
-    uri: {{ .uri }}/prices?region={{ .region }}&surcharge={{ mulf .charges 100 }}&taxPercent={{ mulf .tax 100 }}&unit=EUR_PER_KWH&timezone=UTC
+    uri: {{ .uri }}/prices?region={{ .region }}&unit=EUR_PER_KWH&timezone=UTC
     jq: |
       [.prices[] | {
         "start": .startsAt,
