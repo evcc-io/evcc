@@ -70,7 +70,7 @@
 						>
 							<div class="flex-grow-1">
 								<small class="text-muted">#{{ index + 1 }}</small>
-								<span class="fw-semibold mx-3">{{ m.type }}</span>
+								<span class="fw-semibold mx-3">{{ messengerType(m) }}</span>
 							</div>
 							<DeviceCardEditIcon
 								:name="m.name"
@@ -105,8 +105,9 @@ import "@h2d2/shopicons/es/regular/plus";
 import JsonModal from "../JsonModal.vue";
 import EventItem from "./EventItem.vue";
 import YamlModal from "../YamlModal.vue";
-import type { PropType } from "vue";
+import { type PropType } from "vue";
 import DeviceCardEditIcon from "../DeviceCardEditIcon.vue";
+import { capitalize } from "./utils";
 
 export default {
 	name: "MessagingModal",
@@ -151,6 +152,11 @@ export default {
 		},
 		openMessenger(id?: number) {
 			this.$emit("open-messenger-modal", id);
+		},
+		messengerType(m: ConfigMessenger) {
+			const type =
+				m.type === "custom" ? this.$t("config.general.customOption") : m.config.template;
+			return capitalize(type ?? "");
 		},
 	},
 };
