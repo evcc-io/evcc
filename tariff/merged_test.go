@@ -126,3 +126,15 @@ func TestMergedType(t *testing.T) {
 
 	assert.Equal(t, api.TariffTypePriceForecast, ext.Type())
 }
+
+func TestMergedBothFail(t *testing.T) {
+	ext := &Merged{
+		log:       util.NewLogger("merged"),
+		primary:   &mockTariff{err: assert.AnError, typ: api.TariffTypePriceForecast},
+		secondary: &mockTariff{err: assert.AnError, typ: api.TariffTypePriceForecast},
+	}
+
+	rates, err := ext.Rates()
+	require.Error(t, err)
+	assert.Nil(t, rates)
+}
