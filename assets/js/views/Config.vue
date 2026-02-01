@@ -380,12 +380,12 @@
 				<MessagingModal
 					:messaging-configured="messagingConfigured"
 					:messengers="messengers"
-					:selected-messenger-id="selectedMessengerId"
 					@yaml-changed="yamlChanged"
 					@events-changed="messagingEventsChanged"
 					@open-messenger-modal="openMessengerModal"
 				/>
 				<MessengerModal
+					:selected-messenger-id="selectedMessengerId"
 					@messenger-changed="messengerModalChanged"
 					@messenger-closed="messengerModalClosed"
 				/>
@@ -995,18 +995,15 @@ export default defineComponent({
 			this.loadDirty();
 		},
 		openMessengerModal(id?: number) {
+			this.selectedMessengerId = id;
 			this.messengerModal().show();
-			this.$nextTick(() =>
-				(
-					this.$refs["messengerModal"] as InstanceType<typeof MessengerModal> | undefined
-				)?.setId(id)
-			);
 			this.messagingModal().hide();
 		},
-		async messengerModalChanged() {
+		messengerModalChanged() {
 			this.messengerModal().hide();
 			this.messagingModal().show();
-			await this.loadMessengers();
+			this.loadMessengers();
+			this.loadDirty();
 		},
 		messengerModalClosed() {
 			this.messagingModal().show();

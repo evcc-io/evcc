@@ -1,6 +1,6 @@
 <template>
 	<DeviceModalBase
-		:id="messengerId"
+		:id="selectedMessengerId"
 		fade="right"
 		modal-id="messengerModal"
 		device-type="messenger"
@@ -24,9 +24,10 @@ import { type TemplateGroup, customTemplateOption } from "../DeviceModal/Templat
 import { ConfigType } from "@/types/evcc";
 import defaultMessengerYaml from "../defaultYaml/messenger.yaml?raw";
 
-const initialValues = {
-	type: ConfigType.Template,
+const initialValues: DeviceValues = {
+	type: ConfigType.Custom,
 	template: null,
+	yaml: defaultMessengerYaml,
 };
 
 export default defineComponent({
@@ -35,13 +36,12 @@ export default defineComponent({
 		DeviceModalBase,
 	},
 	props: {
-		id: Number,
+		selectedMessengerId: Number,
 	},
 	emits: ["messenger-changed", "messenger-closed"],
 	data() {
 		return {
 			initialValues,
-			messengerId: this.id,
 		};
 	},
 	methods: {
@@ -64,14 +64,10 @@ export default defineComponent({
 				values.yaml = defaultMessengerYaml;
 			}
 		},
-		// called externally
-		setId(id?: number) {
-			this.messengerId = id;
-		},
 	},
 	computed: {
 		isNew(): boolean {
-			return this.messengerId === undefined;
+			return this.selectedMessengerId === undefined;
 		},
 	},
 });

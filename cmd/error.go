@@ -27,6 +27,7 @@ const (
 	ClassSHM
 	ClassInflux
 	ClassMessenger
+	ClassMessengerEvents
 	ClassSponsorship
 	ClassLoadpoint
 )

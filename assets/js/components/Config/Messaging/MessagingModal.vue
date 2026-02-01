@@ -69,22 +69,15 @@
 							class="d-flex align-items-center justify-content-between py-2 ps-3 pe-2 border rounded"
 						>
 							<div class="flex-grow-1">
-								<small class="text-muted">{{ m.name }}</small>
-								<span class="fw-semibold ms-3">{{ m.type }}</span>
+								<small class="text-muted">#{{ index + 1 }}</small>
+								<span class="fw-semibold mx-3">{{ m.type }}</span>
 							</div>
-							<div class="d-flex">
-								<button
-									type="button"
-									class="btn btn-sm btn-outline-secondary border-0"
-									:aria-label="$t('config.messaging.messenger.edit')"
-									@click="openMessenger(m.id)"
-								>
-									<shopicon-regular-edit
-										size="s"
-										class="flex-shrink-0"
-									></shopicon-regular-edit>
-								</button>
-							</div>
+							<DeviceCardEditIcon
+								:name="m.name"
+								:editable="true"
+								:no-edit-button="false"
+								@edit="openMessenger(m.id)"
+							/>
 						</div>
 					</div>
 					<button
@@ -109,12 +102,11 @@
 <script lang="ts">
 import { MESSAGING_EVENTS, type ConfigMessenger, type MessagingEvents } from "@/types/evcc";
 import "@h2d2/shopicons/es/regular/plus";
-import "@h2d2/shopicons/es/regular/edit";
-import "@h2d2/shopicons/es/regular/arrowright";
 import JsonModal from "../JsonModal.vue";
 import EventItem from "./EventItem.vue";
 import YamlModal from "../YamlModal.vue";
 import type { PropType } from "vue";
+import DeviceCardEditIcon from "../DeviceCardEditIcon.vue";
 
 export default {
 	name: "MessagingModal",
@@ -122,11 +114,11 @@ export default {
 		YamlModal,
 		JsonModal,
 		EventItem,
+		DeviceCardEditIcon,
 	},
 	props: {
 		messagingConfigured: Boolean,
 		messengers: { type: Array as PropType<ConfigMessenger[]>, required: true },
-		selectedMessengerId: Number,
 	},
 	emits: ["yaml-changed", "events-changed", "open-messenger-modal"],
 	data() {

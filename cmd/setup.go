@@ -271,6 +271,16 @@ func configurableInstance[T any](typ string, conf *config.Config, newFromConf ne
 	return err
 }
 
+func configureMessengerEvents(conf *globalconfig.MessagingEvents) error {
+	if settings.Exists(keys.MessagingEvents) {
+		*conf = globalconfig.MessagingEvents{}
+		if err := settings.Json(keys.MessagingEvents, &conf); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func configureMessengers(conf *globalconfig.Messaging, vehicles messenger.Vehicles, valueChan chan<- util.Param, cache *util.ParamCache) (chan messenger.Event, error) {
 	// migrate settings
 	if settings.Exists(keys.Messaging) {
