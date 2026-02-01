@@ -25,6 +25,7 @@ import (
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/sponsor"
 )
 
 // SgReady charger implementation
@@ -114,6 +115,10 @@ func NewSgReady(ctx context.Context, embed *embed, modeS func(int64) error, mode
 		modeS:     modeS,
 		modeG:     modeG,
 		maxPowerS: maxPowerS,
+	}
+
+	if !sponsor.IsAuthorized() {
+		return nil, api.ErrSponsorRequired
 	}
 
 	return res, nil

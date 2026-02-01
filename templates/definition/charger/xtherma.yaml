@@ -4,8 +4,8 @@ products:
     description:
       generic: experimental
 group: heating
-# requirements:
-#   evcc: ["sponsorship"]
+requirements:
+  evcc: ["sponsorship"]
 params:
   - name: modbus
     choice: ["tcpip"]

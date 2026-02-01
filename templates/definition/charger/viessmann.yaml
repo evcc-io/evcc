@@ -5,8 +5,7 @@ products:
       generic: Heatpump (API)
 group: heating
 requirements:
-  # evcc: ["sponsorship"]
-  evcc: ["skiptest"]
+  evcc: ["sponsorship", "skiptest"]
   description:
     de: |
       Einmalige Warmwasserbereitung. Das Gerät entscheidet eigenständig, ob die Wärmepumpe oder die elektrische Zusatzheizung (falls vorhanden) genutzt wird.

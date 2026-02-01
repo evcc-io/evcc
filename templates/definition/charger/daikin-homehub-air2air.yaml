@@ -5,6 +5,7 @@ products:
       generic: HomeHub air2air (SG Ready)
 group: heating
 requirements:
+  evcc: ["sponsorship"]
   description:
     de: |
       Funktioniert mit Air 2-Luft-Wärmepumpen, die WLAN-Adapter der 4. Generation (BRP069C4) mit maximal 5 Einheiten unterstützen.

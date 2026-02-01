@@ -4,6 +4,8 @@ products:
     description:
       generic: BWWP Genius 333
 group: heating
+requirements:
+  evcc: ["sponsorship"]
 params:
   - name: host
   - name: port
