@@ -2,7 +2,7 @@ package tariff
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"slices"
 	"time"
 
@@ -46,7 +46,7 @@ func NewMergedFromConfig(ctx context.Context, other map[string]any) (api.Tariff,
 
 	pType, sType := primary.Type(), secondary.Type()
 	if pType != sType {
-		return nil, errors.New("primary and secondary tariff types are not compatible")
+		return nil, fmt.Errorf("primary and secondary tariff types are not compatible: %v vs %v", pType, sType)
 	}
 
 	t := &Merged{
