@@ -141,3 +141,31 @@ func TestMergedBothFail(t *testing.T) {
 	require.Error(t, err)
 	assert.Nil(t, rates)
 }
+
+func TestMergedGapBetweenPrimaryAndSecondary(t *testing.T) {
+	now := refTime
+
+	// Primary ends at hour 2
+	primaryRates := api.Rates{
+		{Start: now, End: now.Add(time.Hour), Value: 0.10},
+		{Start: now.Add(time.Hour), End: now.Add(2 * time.Hour), Value: 0.12},
+	}
+
+	// Secondary starts at hour 4, leaving a gap from hour 2 to hour 4
+	secondaryRates := api.Rates{
+		{Start: now.Add(4 * time.Hour), End: now.Add(5 * time.Hour), Value: 0.22},
+		{Start: now.Add(5 * time.Hour), End: now.Add(6 * time.Hour), Value: 0.24},
+	}
+
+	ext := &Merged{
+		log:       util.NewLogger("merged"),
+		primary:   &mockTariff{rates: primaryRates, typ: api.TariffTypePriceForecast},
+		secondary: &mockTariff{rates: secondaryRates, typ: api.TariffTypePriceForecast},
+	}
+
+	rates, err := ext.Rates()
+	require.NoError(t, err)
+
+	// Secondary should be ignored since it would create a gap
+	assert.Equal(t, primaryRates, rates)
+}

@@ -54,6 +54,19 @@ func NewMergedFromConfig(ctx context.Context, other map[string]any) (api.Tariff,
 	return t, nil
 }
 
+// firstIndexAt returns the index of the first rate starting at the given time, or -1 if not found.
+func firstIndexAt(rates api.Rates, start time.Time) int {
+	for i, r := range rates {
+		if r.Start.Equal(start) {
+			return i
+		}
+		if r.Start.After(start) {
+			break
+		}
+	}
+	return -1
+}
+
 // Rates implements the api.Tariff interface
 func (t *Merged) Rates() (api.Rates, error) {
 	result, err := t.primary.Rates()
@@ -68,19 +81,20 @@ func (t *Merged) Rates() (api.Rates, error) {
 		return result, nil
 	}
 
-	// Find where primary data ends (rates are sorted)
-	var primaryEnd time.Time
-	if len(result) > 0 {
-		primaryEnd = result[len(result)-1].End
+	// If primary is empty, use all secondary rates
+	if len(result) == 0 {
+		return secondaryRates, nil
 	}
 
-	// Add secondary rates that start at or after primary ends
-	for _, r := range secondaryRates {
-		if !r.Start.Before(primaryEnd) {
-			result = append(result, r)
-		}
+	// Find where primary data ends
+	primaryEnd := result[len(result)-1].End
+
+	// Append secondary rates starting where primary ends
+	if idx := firstIndexAt(secondaryRates, primaryEnd); idx >= 0 {
+		return append(result, secondaryRates[idx:]...), nil
 	}
 
+	t.log.WARN.Printf("secondary tariff does not align gapless with primary, ignoring secondary")
 	return result, nil
 }
 
