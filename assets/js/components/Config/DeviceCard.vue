@@ -6,9 +6,10 @@
 			'round-box--error': error,
 			'round-box--warning': warning,
 			'root--unconfigured': unconfigured,
+			'root--with-tags': $slots.tags,
 		}"
 	>
-		<div class="d-flex align-items-center mb-2">
+		<div class="d-flex align-items-center" :class="{ 'mb-2': $slots.tags }">
 			<div class="icon me-2">
 				<slot name="icon" />
 			</div>
@@ -33,8 +34,10 @@
 				<shopicon-regular-adjust size="s"></shopicon-regular-adjust>
 			</button>
 		</div>
-		<hr class="my-3 divide" />
-		<slot name="tags" />
+		<div v-if="$slots.tags">
+			<hr class="my-3 divide" />
+			<slot name="tags" />
+		</div>
 	</div>
 </template>
 
@@ -67,7 +70,7 @@ export default {
 			}
 			let title = `${this.$t("config.main.name")}: <span class='font-monospace'>${this.name}</span>`;
 			if (!this.editable) {
-				title += `<div class="mt-1">${this.$t("config.main.yaml")}</div>`;
+				title += `<div class="mt-1">${this.$t("config.general.fromYamlHint")}</div>`;
 			}
 			return `<div class="text-start">${title}</div>`;
 		},
@@ -105,6 +108,8 @@ export default {
 	list-style-type: none;
 	border-radius: 1rem;
 	padding: 1rem 1.5rem;
+}
+.root--with-tags {
 	min-height: 8rem;
 }
 .root--unconfigured {
