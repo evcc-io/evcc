@@ -17,8 +17,6 @@ type Merged struct {
 	secondary api.Tariff
 }
 
-var _ api.Tariff = (*Merged)(nil)
-
 func init() {
 	registry.AddCtx("merged", NewMergedFromConfig)
 }
@@ -43,8 +41,7 @@ func NewMergedFromConfig(ctx context.Context, other map[string]any) (api.Tariff,
 		return nil, err
 	}
 
-	pType, sType := primary.Type(), secondary.Type()
-	if pType != sType {
+	if pType, sType := primary.Type(), secondary.Type(); pType != sType {
 		return nil, fmt.Errorf("primary and secondary tariff types are not compatible: %v vs %v", pType, sType)
 	}
 
