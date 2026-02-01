@@ -2,6 +2,7 @@ package tariff
 
 import (
 	"context"
+	"errors"
 	"slices"
 	"time"
 
@@ -25,22 +26,27 @@ func init() {
 
 func NewExtendedFromConfig(ctx context.Context, other map[string]any) (api.Tariff, error) {
 	cc := struct {
-		Primary   map[string]any
-		Secondary map[string]any
+		Primary   Typed
+		Secondary Typed
 	}{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	primary, err := NewFromConfig(ctx, cc.Primary["type"].(string), cc.Primary)
+	primary, err := NewFromConfig(ctx, cc.Primary.Type, cc.Primary.Other)
 	if err != nil {
 		return nil, err
 	}
 
-	secondary, err := NewFromConfig(ctx, cc.Secondary["type"].(string), cc.Secondary)
+	secondary, err := NewFromConfig(ctx, cc.Secondary.Type, cc.Secondary.Other)
 	if err != nil {
 		return nil, err
+	}
+
+	pType, sType := primary.Type(), secondary.Type()
+	if pType != sType {
+		return nil, errors.New("primary and secondary tariff types are not compatible")
 	}
 
 	t := &Extended{
@@ -87,5 +93,5 @@ func (t *Extended) Rates() (api.Rates, error) {
 
 // Type implements the api.Tariff interface
 func (t *Extended) Type() api.TariffType {
-	return api.TariffTypePriceForecast
+	return t.primary.Type()
 }
