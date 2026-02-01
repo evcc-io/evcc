@@ -3,7 +3,6 @@ package tariff
 import (
 	"context"
 	"fmt"
-	"slices"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -60,7 +59,7 @@ func NewMergedFromConfig(ctx context.Context, other map[string]any) (api.Tariff,
 
 // Rates implements the api.Tariff interface
 func (t *Merged) Rates() (api.Rates, error) {
-	primaryRates, err := t.primary.Rates()
+	result, err := t.primary.Rates()
 	if err != nil {
 		t.log.DEBUG.Printf("primary tariff failed, falling back to secondary: %v", err)
 		return t.secondary.Rates()
@@ -69,24 +68,23 @@ func (t *Merged) Rates() (api.Rates, error) {
 	secondaryRates, err := t.secondary.Rates()
 	if err != nil {
 		t.log.DEBUG.Printf("secondary tariff failed, using primary only: %v", err)
-		return primaryRates, nil
+		return result, nil
 	}
 
 	// Find where primary data ends (rates are sorted)
 	var primaryEnd time.Time
-	if len(primaryRates) > 0 {
-		primaryEnd = primaryRates[len(primaryRates)-1].End
+	if len(result) > 0 {
+		primaryEnd = result[len(result)-1].End
 	}
 
 	// Add secondary rates that start at or after primary ends
-	res := slices.Clone(primaryRates)
 	for _, r := range secondaryRates {
 		if !r.Start.Before(primaryEnd) {
-			res = append(res, r)
+			result = append(result, r)
 		}
 	}
 
-	return res, nil
+	return result, nil
 }
 
 // Type implements the api.Tariff interface
