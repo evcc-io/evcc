@@ -4,11 +4,10 @@
 		fade="right"
 		modal-id="messengerModal"
 		device-type="messenger"
-		:modal-title="$t(`config.messaging.messenger.${isNew ? 'titleAdd' : 'titleEdit'}`)"
+		:modal-title="$t(`config.messenger.${isNew ? 'titleAdd' : 'titleEdit'}`)"
 		:provide-template-options="provideTemplateOptions"
 		:initial-values="initialValues"
 		:on-template-change="handleTemplateChange"
-		default-template="custom"
 		@added="$emit('messenger-changed', $event)"
 		@updated="$emit('messenger-changed')"
 		@removed="$emit('messenger-changed')"
@@ -24,10 +23,9 @@ import { type TemplateGroup, customTemplateOption } from "../DeviceModal/Templat
 import { ConfigType } from "@/types/evcc";
 import defaultMessengerYaml from "../defaultYaml/messenger.yaml?raw";
 
-const initialValues: DeviceValues = {
-	type: ConfigType.Custom,
+const initialValues = {
+	type: ConfigType.Template,
 	template: null,
-	yaml: defaultMessengerYaml,
 };
 
 export default defineComponent({

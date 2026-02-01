@@ -446,6 +446,13 @@
       "messengers": "Messengers",
       "title": "Notifications"
     },
+    "messenger": {
+      "generic": "Generic messenger",
+      "primary": "Specific messenger",
+      "template": "Messenger",
+      "titleAdd": "Add Messenger",
+      "titleEdit": "Edit Messenger"
+    },
     "meter": {
       "cancel": "Cancel",
       "delete": "Delete",

@@ -239,7 +239,9 @@ export default {
 			return this.property === "icon";
 		},
 		textarea() {
-			return this.rows || ["accessToken", "refreshToken"].includes(this.property);
+			return (
+				this.rows || this.array || ["accessToken", "refreshToken"].includes(this.property)
+			);
 		},
 		boolean() {
 			return this.type === "Bool";

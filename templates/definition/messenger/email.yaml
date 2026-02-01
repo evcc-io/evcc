@@ -58,8 +58,8 @@ params:
       de: An
       en: To
     help:
-      de: E-Mail-Adressen der Empfänger.
-      en: Email addresses of recipients.
+      de: E-Mail-Adressen der Empfänger. One entry per line.
+      en: Email addresses of recipients. Ein Eintrag pro Zeile.
 render: |
   type: shout
   uri: smtp://{{ .user }}:{{ .password }}@{{ .host }}:{{ .port }}/?fromAddress={{ .from }}&to={{ .to | join "," }}
