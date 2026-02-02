@@ -237,6 +237,7 @@
       "fromYamlHint": "Note: Configured via evcc.yaml. Remove the entry from the file to enable editing here.",
       "hideAdvancedSettings": "Hide advanced settings",
       "invalidFileSelected": "Invalid file selected",
+      "legacy": "legacy",
       "noFileSelected": "No file selected.",
       "off": "off",
       "on": "on",
@@ -664,6 +665,7 @@
         "titleAdd": "Add Grid Import Tariff",
         "titleEdit": "Edit Grid Import Tariff"
       },
+      "legacyWarning": "New tariff configuration available! Remove and save your tariffs here to use the new guided process.",
       "option": {
         "co2": "Add CO₂ forecast",
         "feedin": "Add grid export tariff",

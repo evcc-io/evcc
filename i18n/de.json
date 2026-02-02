@@ -236,6 +236,7 @@
       "fromYamlHint": "Hinweis: Konfiguriert über evcc.yaml. Entferne den Eintrag aus der Datei, um die Bearbeitung hier zu aktivieren.",
       "hideAdvancedSettings": "Erweiterte Einstellungen ausblenden",
       "invalidFileSelected": "Ungültige Datei ausgewählt",
+      "legacy": "veraltet",
       "noFileSelected": "Keine Datei ausgewählt.",
       "off": "aus",
       "on": "an",
@@ -663,6 +664,7 @@
         "titleAdd": "Netzbezugstarif hinzufügen",
         "titleEdit": "Netzbezugstarif bearbeiten"
       },
+      "legacyWarning": "Neue Tarifkonfiguration verfügbar! Entferne die Konfiguration hier und speichere, um den neuen geführten Prozess zu nutzen.",
       "option": {
         "co2": "CO₂-Vorhersage hinzufügen",
         "feedin": "Einspeisevergütung hinzufügen",

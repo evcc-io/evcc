@@ -41,12 +41,6 @@ export interface HemsStatus {
   maxPower: number;
 }
 
-export interface Hems {
-  status?: HemsStatus;
-  config: HemsConfig;
-  fromYaml: boolean;
-}
-
 export interface ShmConfig {
   vendorId: string;
   deviceId: string;
@@ -75,16 +69,17 @@ export interface State {
   pv?: Meter[];
   aux?: Meter[];
   ext?: Meter[];
+  tariffs?: ConfigStatus<unknown, unknown>;
   tariffGrid?: number;
   tariffFeedIn?: number;
   tariffCo2?: number;
   tariffSolar?: number;
   mqtt?: MqttConfig;
   influx?: InfluxConfig;
-  hems?: Hems;
+  hems?: ConfigStatus<HemsConfig, HemsStatus>;
   shm?: ShmConfig;
-  sponsor?: Sponsor;
-  eebus?: Eebus;
+  sponsor?: ConfigStatus<unknown, SponsorStatus>;
+  eebus?: ConfigStatus<EebusConfig, EebusStatus>;
   modbusproxy?: ModbusProxy[];
   messaging?: any;
   interval?: number;
@@ -96,6 +91,15 @@ export interface State {
   database?: string;
   ocpp?: Ocpp;
 }
+
+export interface ConfigStatus<T, S> {
+  config?: T;
+  status?: S;
+  fromYaml?: boolean;
+  yamlSource?: YamlSource;
+}
+
+export type YamlSource = "fs" | "db" | "";
 
 export interface OcppConfig {
   port: number;
@@ -396,10 +400,7 @@ export interface SponsorStatus {
   token?: string;
 }
 
-export interface Sponsor {
-  status?: SponsorStatus;
-  fromYaml: boolean;
-}
+export type Sponsor = ConfigStatus<unknown, SponsorStatus>;
 
 export type VehicleOption = {
   key?: string | null;
@@ -446,12 +447,6 @@ export enum MODBUS_PROTOCOL {
 export type Certificate = {
   public: string;
   private: string;
-};
-
-export type Eebus = {
-  config: EebusConfig;
-  status: EebusStatus;
-  fromYaml?: boolean;
 };
 
 export type EebusConfig = {

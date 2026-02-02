@@ -96,11 +96,13 @@
 						@click="newMeter('grid')"
 					/>
 					<DeviceCard
+						v-if="!!tariffsYamlSource"
 						:title="$t('config.tariff.title')"
-						editable
+						:editable="tariffsYamlSource === 'db'"
 						:unconfigured="isUnconfigured(tariffTags)"
 						:error="hasClassError('tariff')"
-						data-testid="tariffs"
+						:badge="tariffsYamlSource === 'db'"
+						data-testid="tariffs-legacy"
 						:currency="currency"
 						@edit="openModal('tariffsModal')"
 					>
@@ -164,8 +166,10 @@
 					/>
 				</div>
 
-				<h2 class="my-4 mt-5">{{ $t("config.tariff.title") }}</h2>
-				<div class="p-0 config-list">
+				<h2 v-if="!tariffsYamlSource" class="my-4 mt-5">
+					{{ $t("config.tariff.title") }}
+				</h2>
+				<div v-if="!tariffsYamlSource" class="p-0 config-list">
 					<TariffCard
 						v-if="gridTariff"
 						:tariff="gridTariff"
@@ -430,7 +434,7 @@
 				<HemsModal :fromYaml="hems?.fromYaml" @changed="yamlChanged" />
 				<ShmModal @changed="loadDirty" />
 				<MessagingModal @changed="yamlChanged" />
-				<TariffsModal @changed="yamlChanged" />
+				<TariffsLegacyModal @changed="yamlChanged" />
 				<TariffModal
 					:id="selectedTariffId"
 					:type="selectedTariffType"
@@ -503,7 +507,7 @@ import NotificationIcon from "../components/MaterialIcon/Notification.vue";
 import restart, { performRestart } from "../restart";
 import SponsorModal from "../components/Config/SponsorModal.vue";
 import store from "../store";
-import TariffsModal from "../components/Config/TariffsModal.vue";
+import TariffsLegacyModal from "../components/Config/TariffsLegacyModal.vue";
 import TariffCard from "../components/Config/TariffCard.vue";
 import TariffModal from "../components/Config/TariffModal.vue";
 import TelemetryModal from "../components/Config/TelemetryModal.vue";
@@ -577,7 +581,7 @@ export default defineComponent({
 		NetworkModal,
 		NotificationIcon,
 		SponsorModal,
-		TariffsModal,
+		TariffsLegacyModal,
 		TariffCard,
 		TariffModal,
 		TelemetryModal,
@@ -830,6 +834,18 @@ export default defineComponent({
 			return [...this.circuits].sort(
 				(a, b) => sortedNames.indexOf(a.name) - sortedNames.indexOf(b.name)
 			);
+		},
+		tariffsYamlSource() {
+			return store.state?.tariffs?.yamlSource;
+		},
+		tariffsUiVisible() {
+			return this.tariffsYamlSource === "";
+		},
+		tariffsYamlVisible() {
+			return !this.tariffsUiVisible;
+		},
+		tariffsYamlDisabled() {
+			return this.tariffsYamlSource === "fs";
 		},
 	},
 	watch: {

@@ -71,6 +71,9 @@
 
 	--bs-warning: var(--evcc-orange);
 	--bs-warning-rgb: var(--evcc-orange-rgb);
+	--bs-warning-bg-subtle: color-mix(in srgb, var(--evcc-orange) 10%, transparent);
+	--bs-warning-border-subtle: color-mix(in srgb, var(--evcc-orange) 30%, transparent);
+	--bs-warning-text-emphasis: var(--evcc-orange);
 	--bs-danger-50: #dc354580;
 
 	--bs-danger: var(--evcc-red);
