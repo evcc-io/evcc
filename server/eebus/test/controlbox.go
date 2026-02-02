@@ -50,7 +50,7 @@ func createControlbox(ctx context.Context, remoteSki string, port int) (*control
 
 	configuration, err := api.NewConfiguration(
 		"Demo", "Demo", "ControlBox", "123456789",
-		// []shipapi.DeviceCategoryType{shipapi.DeviceCategoryTypeGridConnectionHub},
+		[]shipapi.DeviceCategoryType{shipapi.DeviceCategoryTypeGridConnectionHub},
 		model.DeviceTypeTypeElectricitySupplySystem,
 		[]model.EntityTypeType{model.EntityTypeTypeGridGuard},
 		port, certificate, time.Second*60)
@@ -73,7 +73,8 @@ func createControlbox(ctx context.Context, remoteSki string, port int) (*control
 	h.uclpp = lpp.NewLPP(localEntity, h.OnLPPEvent)
 	h.myService.AddUseCase(h.uclpp)
 
-	h.myService.RegisterRemoteSKI(remoteSki)
+	// TODO add SHIP-ID
+	h.myService.RegisterRemoteSKI(remoteSki, "")
 	h.myService.Start()
 
 	go func() {
