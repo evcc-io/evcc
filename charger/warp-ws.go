@@ -236,8 +236,10 @@ func (w *WarpWS) handleEvent(topic string, payload json.RawMessage) error {
 			return nil
 		}
 		err = json.Unmarshal(payload, &w.meter.TmpValues)
-		copy(w.meter.Voltages[:], w.meter.TmpValues[:3])
-		copy(w.meter.Currents[:], w.meter.TmpValues[3:6])
+		if len(w.meter.TmpValues) > 6 {
+			copy(w.meter.Voltages[:], w.meter.TmpValues[:3])
+			copy(w.meter.Currents[:], w.meter.TmpValues[3:6])
+		}
 	case "meter/values":
 		if !slices.Contains(w.features, warp.FeatureMeters) {
 			return nil
@@ -285,11 +287,13 @@ func (w *WarpWS) hasFeature(feature string) bool {
 	}
 	w.mu.RUnlock()
 
-	w.mu.Lock()
-	defer w.mu.Unlock()
+	var f []string
 	uri := fmt.Sprintf("%s/info/features", w.uri)
-	if err := w.GetJSON(uri, &w.features); err == nil {
-		return slices.Contains(w.features, feature)
+	if err := w.GetJSON(uri, &f); err == nil {
+		w.mu.Lock()
+		w.features = f
+		w.mu.Unlock()
+		return slices.Contains(f, feature)
 	}
 
 	return false
