@@ -31,7 +31,7 @@
 				<small class="evcc-gray">{{ $t("config.form.optional") }}</small>
 			</label>
 			<MultiSelect
-				:id="`zone-months-${index}`"
+				:id="formId('months')"
 				v-model="uiZone.months"
 				:options="monthOptions"
 				:selectAllLabel="$t('main.chargingPlan.selectAll')"
@@ -47,7 +47,7 @@
 				<small class="evcc-gray">{{ $t("config.form.optional") }}</small>
 			</label>
 			<MultiSelect
-				:id="`zone-weekdays-${index}`"
+				:id="formId('weekdays')"
 				v-model="uiZone.weekdays"
 				:options="dayOptions"
 				:selectAllLabel="$t('main.chargingPlan.selectAll')"
@@ -173,6 +173,9 @@ export default {
 		},
 	},
 	methods: {
+		formId(field: string) {
+			return `zone-${field}-${this.index}`;
+		},
 		convertToUiZone(zone: Zone) {
 			const [timeFrom, timeTo] = zone.hours.split("-");
 			return {
