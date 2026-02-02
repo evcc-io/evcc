@@ -33,8 +33,8 @@ github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751/go.mod h1:LOuy
 github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf/go.mod h1:ybxpYRFXyAe+OPACYpWeL0wqObRcbAqCMya13uyzqw0=
 github.com/alecthomas/units v0.0.0-20190717042225-c3de453c63f4/go.mod h1:ybxpYRFXyAe+OPACYpWeL0wqObRcbAqCMya13uyzqw0=
 github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d/go.mod h1:rBZYJk541a8SKzHPHnH3zbiI+7dagKZ0cgpgrD7Fyho=
-github.com/andig/evopt v0.0.0-20260119220201-238830f9254a h1:p5/javLeDBFTxKonJe4/2fpuYUoWymp+C3zfAtphO7Q=
-github.com/andig/evopt v0.0.0-20260119220201-238830f9254a/go.mod h1:C05cTe1ffvaip2xNNHMJSy/OtGT/NH1sXQgmV/7be8k=
+github.com/andig/evopt v0.0.0-20260202080401-5c7f3dae3896 h1:veq0GvT15cv7124nu4XvhsyFIrYcTw6E2/FUVs+AXRY=
+github.com/andig/evopt v0.0.0-20260202080401-5c7f3dae3896/go.mod h1:C05cTe1ffvaip2xNNHMJSy/OtGT/NH1sXQgmV/7be8k=
 github.com/andig/go-powerwall v0.2.1-0.20230808194509-dd70cdb6e140 h1:C93T8vg7CN4Q4BBDbBMOvBoTYBA+CaBEvlY2SZF8aa0=
 github.com/andig/go-powerwall v0.2.1-0.20230808194509-dd70cdb6e140/go.mod h1:Xk09mD+7RTCuuHMX5RxlqgEUeh9oZdIX0rL0qiY6l/4=
 github.com/andig/gosunspec v0.0.0-20240918203654-860ce51d602b h1:81UMfM949I7StrRay7YDUZazY8M1u/JHkzwcFEjiilQ=
@@ -765,8 +765,8 @@ github.com/vmihailenco/msgpack/v5 v5.4.1 h1:cQriyiUvjTwOHg8QZaPihLWeRAAVoCpE00IU
 github.com/vmihailenco/msgpack/v5 v5.4.1/go.mod h1:GaZTsDaehaPpQVyxrf5mtQlH+pc21PIudVV/E3rRQok=
 github.com/vmihailenco/tagparser/v2 v2.0.0 h1:y09buUbR+b5aycVFQs/g70pqKVZNBmxwAhO7/IwNM9g=
 github.com/vmihailenco/tagparser/v2 v2.0.0/go.mod h1:Wri+At7QHww0WTrCBeu4J6bNtoV6mEfg5OIWRZA9qds=
-github.com/volkszaehler/mbmd v0.0.0-20260107074546-6cbf4285cea8 h1:3Zg3R/flwTNKYiuKpdOfWXTPoKRZF83TvRslWGpYdyU=
-github.com/volkszaehler/mbmd v0.0.0-20260107074546-6cbf4285cea8/go.mod h1:ZkD3hHsxHxdD2KbqQrMXQd1veeFfggok+breXT+TqWQ=
+github.com/volkszaehler/mbmd v0.0.0-20260131091050-86c2d25b6103 h1:I91QVys5UwYJ8G7VVQDeXN2/BPZqEeqCp7NY65BmGTU=
+github.com/volkszaehler/mbmd v0.0.0-20260131091050-86c2d25b6103/go.mod h1:ZkD3hHsxHxdD2KbqQrMXQd1veeFfggok+breXT+TqWQ=
 github.com/woodsbury/decimal128 v1.4.0 h1:xJATj7lLu4f2oObouMt2tgGiElE5gO6mSWUjQsBgUlc=
 github.com/woodsbury/decimal128 v1.4.0/go.mod h1:BP46FUrVjVhdTbKT+XuQh2xfQaGki9LMIRJSFuh6THU=
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=
