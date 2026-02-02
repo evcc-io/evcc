@@ -20,10 +20,19 @@ import (
 
 // ConfigStatus for publishing config, status and source to UI and external systems
 type ConfigStatus struct {
-	Config   any  `json:"config,omitempty"`
-	Status   any  `json:"status,omitempty"`
-	FromYaml bool `json:"fromYaml,omitempty"`
+	Config     any        `json:"config,omitempty"`
+	Status     any        `json:"status,omitempty"`
+	FromYaml   bool       `json:"fromYaml,omitempty"`
+	YamlSource YamlSource `json:"yamlSource,omitempty"`
 }
+
+type YamlSource string
+
+const (
+	YamlSourceFs   YamlSource = "fs"
+	YamlSourceDb   YamlSource = "db"
+	YamlSourceNone YamlSource = ""
+)
 
 type All struct {
 	Network      Network
@@ -158,6 +167,14 @@ type Tariffs struct {
 	Co2      config.Typed
 	Planner  config.Typed
 	Solar    []config.Typed
+}
+
+type TariffRefs struct {
+	Grid    string   `json:"grid"`
+	FeedIn  string   `json:"feedIn"`
+	Co2     string   `json:"co2"`
+	Planner string   `json:"planner"`
+	Solar   []string `json:"solar"`
 }
 
 type Network struct {

@@ -24,13 +24,3 @@ const (
 	TariffUsagePlanner
 	TariffUsageSolar
 )
-
-// Key returns the settings storage key for this tariff usage type
-func (u TariffUsage) Key() string {
-	switch u {
-	case TariffUsageSolar:
-		return "solarTariffs" // plural
-	default:
-		return u.String() + "Tariff"
-	}
-}

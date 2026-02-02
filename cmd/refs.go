@@ -5,7 +5,6 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/core/keys"
@@ -81,17 +80,30 @@ func collectSiteRefs(conf globalconfig.All) error {
 }
 
 func collectTariffRefs() error {
-	// Append tariff devices from settings
-	for _, usage := range api.TariffUsageValues() {
-		if v, err := settings.String(usage.Key()); err == nil && v != "" {
-			// Solar is comma-separated, others are single values
-			if usage == api.TariffUsageSolar {
-				references.tariff = append(references.tariff, strings.Split(v, ",")...)
-			} else {
-				references.tariff = append(references.tariff, v)
-			}
-		}
+	// Load tariff device references from settings
+	if !settings.Exists(keys.TariffRefs) {
+		return nil
 	}
+
+	var refs globalconfig.TariffRefs
+	if err := settings.Json(keys.TariffRefs, &refs); err != nil {
+		return err
+	}
+
+	// Collect all non-empty refs
+	if refs.Grid != "" {
+		references.tariff = append(references.tariff, refs.Grid)
+	}
+	if refs.FeedIn != "" {
+		references.tariff = append(references.tariff, refs.FeedIn)
+	}
+	if refs.Co2 != "" {
+		references.tariff = append(references.tariff, refs.Co2)
+	}
+	if refs.Planner != "" {
+		references.tariff = append(references.tariff, refs.Planner)
+	}
+	references.tariff = append(references.tariff, refs.Solar...)
 
 	return nil
 }

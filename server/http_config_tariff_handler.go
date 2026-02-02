@@ -3,37 +3,25 @@ package server
 import (
 	"fmt"
 	"net/http"
-	"strings"
 
-	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util/config"
-	"github.com/gorilla/mux"
 	"golang.org/x/text/currency"
 )
 
 // tariffsHandler returns assignment of tariff devices
 func tariffsHandler(w http.ResponseWriter, r *http.Request) {
-	res := make(map[string]any)
-
-	for _, usage := range api.TariffUsageValues() {
-		value, _ := settings.String(usage.Key())
-
-		if value == "" {
-			continue
-		}
-
-		key := usage.String()
-
-		if usage == api.TariffUsageSolar {
-			res[key] = strings.Split(value, ",")
-		} else {
-			res[key] = value
+	var refs globalconfig.TariffRefs
+	if settings.Exists(keys.TariffRefs) {
+		if err := settings.Json(keys.TariffRefs, &refs); err != nil {
+			jsonError(w, http.StatusInternalServerError, err)
+			return
 		}
 	}
 
-	jsonWrite(w, res)
+	jsonWrite(w, refs)
 }
 
 func validateTariffRef(w http.ResponseWriter, ref string) bool {
@@ -46,37 +34,37 @@ func validateTariffRef(w http.ResponseWriter, ref string) bool {
 	return true
 }
 
-// updateTariffHandler updates a specific tariff assignment by type
+// updateTariffHandler updates tariff assignments
 func updateTariffHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	tariffType := vars["type"]
-
-	var ref string
-	if err := jsonDecoder(r.Body).Decode(&ref); err != nil {
+	var refs globalconfig.TariffRefs
+	if err := jsonDecoder(r.Body).Decode(&refs); err != nil {
 		jsonError(w, http.StatusBadRequest, err)
 		return
 	}
 
-	if !validateTariffRef(w, ref) {
+	// Validate all refs
+	if !validateTariffRef(w, refs.Grid) {
 		return
 	}
-
-	// Parse tariff type string to TariffUsage enum
-	usage, err := api.TariffUsageString(tariffType)
-	if err != nil {
-		jsonError(w, http.StatusBadRequest, fmt.Errorf("invalid tariff type: %s", tariffType))
+	if !validateTariffRef(w, refs.FeedIn) {
 		return
 	}
-
-	// Handle solar (array) separately
-	if usage == api.TariffUsageSolar {
-		var existing []string
-		if v, err := settings.String(usage.Key()); err == nil && v != "" {
-			existing = strings.Split(v, ",")
+	if !validateTariffRef(w, refs.Co2) {
+		return
+	}
+	if !validateTariffRef(w, refs.Planner) {
+		return
+	}
+	for _, ref := range refs.Solar {
+		if !validateTariffRef(w, ref) {
+			return
 		}
-		settings.SetString(usage.Key(), strings.Join(append(existing, ref), ","))
-	} else {
-		settings.SetString(usage.Key(), ref)
+	}
+
+	// Save to settings
+	if err := settings.SetJson(keys.TariffRefs, refs); err != nil {
+		jsonError(w, http.StatusInternalServerError, err)
+		return
 	}
 
 	setConfigDirty()

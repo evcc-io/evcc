@@ -1068,7 +1068,15 @@ export default defineComponent({
 		},
 		async tariffAdded(usage: TariffType, name: string) {
 			try {
-				await api.put(`/config/tariff/${usage}`, name);
+				// Update local tariffRefs
+				if (usage === "solar") {
+					this.tariffRefs.solar.push(name);
+				} else {
+					this.tariffRefs[usage] = name;
+				}
+
+				// Send entire struct
+				await api.put("/config/tariff", this.tariffRefs);
 				await this.loadTariffRefs();
 				await this.loadDirty();
 				this.tariffChanged();

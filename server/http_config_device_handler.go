@@ -9,12 +9,13 @@ import (
 	"reflect"
 	"slices"
 	"strconv"
-	"strings"
 
 	"dario.cat/mergo"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/charger"
 	"github.com/evcc-io/evcc/core/circuit"
+	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/meter"
 	"github.com/evcc-io/evcc/server/db/settings"
@@ -473,22 +474,31 @@ func cleanupSiteMeterRef(name string, get func() []string, set func([]string)) {
 
 // cleanupTariffRef removes a tariff reference from settings
 func cleanupTariffRef(name string) {
-	for _, usage := range api.TariffUsageValues() {
-		key := usage.Key()
-		value, _ := settings.String(key)
-
-		if usage == api.TariffUsageSolar {
-			// Remove from comma-separated list
-			if value != "" {
-				tariffs := strings.Split(value, ",")
-				filtered := slices.DeleteFunc(tariffs, func(ref string) bool { return ref == name })
-				settings.SetString(key, strings.Join(filtered, ","))
-			}
-		} else if value == name {
-			// Clear single-value tariff if it matches
-			settings.SetString(key, "")
-		}
+	if !settings.Exists(keys.TariffRefs) {
+		return
 	}
+
+	var refs globalconfig.TariffRefs
+	if err := settings.Json(keys.TariffRefs, &refs); err != nil {
+		return
+	}
+
+	// Remove from all fields
+	if refs.Grid == name {
+		refs.Grid = ""
+	}
+	if refs.FeedIn == name {
+		refs.FeedIn = ""
+	}
+	if refs.Co2 == name {
+		refs.Co2 = ""
+	}
+	if refs.Planner == name {
+		refs.Planner = ""
+	}
+	refs.Solar = slices.DeleteFunc(refs.Solar, func(ref string) bool { return ref == name })
+
+	settings.SetJson(keys.TariffRefs, refs)
 }
 
 // deleteDeviceHandler deletes a device from database by class
