@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/assert"
@@ -24,11 +25,8 @@ func (m *mockTariff) Type() api.TariffType {
 	return m.typ
 }
 
-// Fixed reference time for deterministic tests
-var refTime = time.Date(2025, 1, 1, 12, 0, 0, 0, time.UTC)
-
 func TestMergedRates(t *testing.T) {
-	now := refTime
+	now := clock.NewMock().Now()
 
 	primaryRates := api.Rates{
 		{Start: now, End: now.Add(time.Hour), Value: 0.10},
@@ -62,7 +60,7 @@ func TestMergedRates(t *testing.T) {
 }
 
 func TestMergedPrimaryFailure(t *testing.T) {
-	now := refTime
+	now := clock.NewMock().Now()
 
 	secondaryRates := api.Rates{
 		{Start: now, End: now.Add(time.Hour), Value: 0.20},
@@ -81,7 +79,7 @@ func TestMergedPrimaryFailure(t *testing.T) {
 }
 
 func TestMergedSecondaryFailure(t *testing.T) {
-	now := refTime
+	now := clock.NewMock().Now()
 
 	primaryRates := api.Rates{
 		{Start: now, End: now.Add(time.Hour), Value: 0.10},
@@ -100,7 +98,7 @@ func TestMergedSecondaryFailure(t *testing.T) {
 }
 
 func TestMergedEmptyPrimary(t *testing.T) {
-	now := refTime
+	now := clock.NewMock().Now()
 
 	secondaryRates := api.Rates{
 		{Start: now, End: now.Add(time.Hour), Value: 0.20},
@@ -143,7 +141,7 @@ func TestMergedBothFail(t *testing.T) {
 }
 
 func TestMergedGapBetweenPrimaryAndSecondary(t *testing.T) {
-	now := refTime
+	now := clock.NewMock().Now()
 
 	// Primary ends at hour 2
 	primaryRates := api.Rates{
