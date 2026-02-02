@@ -13,7 +13,8 @@ func sum(hash hash.Hash, value string) string {
 	if len(value) == 0 {
 		return ""
 	}
-	return hex.EncodeToString(hash.Sum([]byte(value)))
+	hash.Write([]byte(value))
+	return hex.EncodeToString(hash.Sum(nil))
 }
 
 func Md5(value string) string {
