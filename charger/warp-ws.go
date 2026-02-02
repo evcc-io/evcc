@@ -47,9 +47,11 @@ type WarpWS struct {
 	pmLowLevelState warp.PmLowLevelState
 
 	// config
-	emURI      string
-	emHelper   *request.Helper
-	meterIndex uint
+	emURI               string
+	emHelper            *request.Helper
+	meterIndex          uint
+	metersValueIDsTopic string
+	metersValuesTopic   string
 }
 
 type warpEvent struct {
@@ -148,9 +150,11 @@ func NewWarpWS(ctx context.Context, uri, user, password string, meterIndex uint)
 
 	w := &WarpWS{
 		Helper: client, log: log,
-		uri:        util.DefaultScheme(uri, "http"),
-		meterIndex: meterIndex,
-		meterMap:   map[int]int{},
+		uri:                 util.DefaultScheme(uri, "http"),
+		meterIndex:          meterIndex,
+		meterMap:            map[int]int{},
+		metersValueIDsTopic: fmt.Sprintf("meters/%d/value_ids", meterIndex),
+		metersValuesTopic:   fmt.Sprintf("meters/%d/values", meterIndex),
 	}
 
 	go w.run(ctx)
@@ -162,27 +166,31 @@ func (w *WarpWS) run(ctx context.Context) {
 	uri := strings.Replace(w.uri, "http://", "ws://", 1) + "/ws"
 	w.log.TRACE.Printf("ws: connecting to %s …", uri)
 
-	bo := backoff.NewExponentialBackOff()
-	bo.MaxElapsedTime = 0
+	bo := backoff.NewExponentialBackOff(backoff.WithMaxElapsedTime(0))
 
 	for ctx.Err() == nil {
 		conn, _, err := websocket.Dial(ctx, uri, nil)
 		if err != nil {
+			if ctx.Err() != nil {
+				return
+			}
 			time.Sleep(bo.NextBackOff())
 			continue
 		}
 
 		bo.Reset()
-		w.handleConnection(ctx, conn)
+		if err := w.handleConnection(ctx, conn); err != nil {
+			w.log.ERROR.Println(err)
+		}
 	}
 }
 
-func (w *WarpWS) handleConnection(ctx context.Context, conn *websocket.Conn) {
+func (w *WarpWS) handleConnection(ctx context.Context, conn *websocket.Conn) error {
 	defer conn.Close(websocket.StatusInternalError, "reconnect")
 	for {
 		msgType, r, err := conn.Reader(ctx)
 		if err != nil {
-			return // reconnect
+			return err
 		}
 		if msgType != websocket.MessageText {
 			continue // next frame
@@ -196,7 +204,7 @@ func (w *WarpWS) handleConnection(ctx context.Context, conn *websocket.Conn) {
 				if errors.Is(err, io.EOF) {
 					break //next frame
 				}
-				return // reconnect
+				return err
 			}
 
 			if err := w.handleEvent(event.Topic, event.Payload); err != nil {
@@ -213,48 +221,51 @@ func (w *WarpWS) handleEvent(topic string, payload json.RawMessage) error {
 	var err error
 
 	switch topic {
-	case "evse/state":
-		err = json.Unmarshal(payload, &w.evse.State)
-	case "evse/user_enabled":
-		err = json.Unmarshal(payload, &w.evse.UserEnabled)
-	case "evse/user_current":
-		err = json.Unmarshal(payload, &w.evse.UserCurrent)
-	case "evse/external_current":
-		err = json.Unmarshal(payload, &w.evse.ExternalCurrent)
 	case "charge_tracker/current_charge":
 		err = json.Unmarshal(payload, &w.chargeTracker)
-	case "meter/values":
-		err = json.Unmarshal(payload, &w.meter)
+	case "evse/external_current":
+		err = json.Unmarshal(payload, &w.evse.ExternalCurrent)
+	case "evse/user_current":
+		err = json.Unmarshal(payload, &w.evse.UserCurrent)
+	case "evse/user_enabled":
+		err = json.Unmarshal(payload, &w.evse.UserEnabled)
+	case "evse/state":
+		err = json.Unmarshal(payload, &w.evse.State)
 	case "meter/all_values":
-		var vals []float64
-		err = json.Unmarshal(payload, &vals)
-		if len(vals) >= 6 {
-			copy(w.meter.Voltages[:], vals[:3])
-			copy(w.meter.Currents[:], vals[3:6])
+		if !slices.Contains(w.features, warp.FeatureMeters) {
+			return nil
 		}
-	case fmt.Sprintf("meters/%d/value_ids", w.meterIndex):
+		err = json.Unmarshal(payload, &w.meter.TmpValues)
+		copy(w.meter.Voltages[:], w.meter.TmpValues[:3])
+		copy(w.meter.Currents[:], w.meter.TmpValues[3:6])
+	case "meter/values":
+		if !slices.Contains(w.features, warp.FeatureMeters) {
+			return nil
+		}
+		err = json.Unmarshal(payload, &w.meter)
+	case w.metersValueIDsTopic:
 		var ids []int
-		if json.Unmarshal(payload, &ids) == nil {
+		if err = json.Unmarshal(payload, &ids); err == nil {
 			for i, id := range ids {
 				w.meterMap[id] = i
 			}
 		}
-	case fmt.Sprintf("meters/%d/values", w.meterIndex):
-		if json.Unmarshal(payload, &w.meter.Values) == nil {
-			if idx, ok := w.meterMap[warp.ValueIDPowerImExSum]; ok && idx < len(w.meter.Values) {
-				w.meter.Power = w.meter.Values[idx]
+	case w.metersValuesTopic:
+		if err = json.Unmarshal(payload, &w.meter.TmpValues); err == nil {
+			if idx, ok := w.meterMap[warp.ValueIDPowerImExSum]; ok && idx < len(w.meter.TmpValues) {
+				w.meter.Power = w.meter.TmpValues[idx]
 			}
-			if idx, ok := w.meterMap[warp.ValueIDEnergyAbsImSum]; ok && idx < len(w.meter.Values) {
-				w.meter.EnergyAbs = w.meter.Values[idx]
+			if idx, ok := w.meterMap[warp.ValueIDEnergyAbsImSum]; ok && idx < len(w.meter.TmpValues) {
+				w.meter.EnergyAbs = w.meter.TmpValues[idx]
 			}
 			for phase := range 3 {
-				if idx, ok := w.meterMap[warp.ValueIDCurrentImExSumL1+phase]; ok && idx < len(w.meter.Values) {
-					w.meter.Currents[phase] = w.meter.Values[idx]
+				if idx, ok := w.meterMap[warp.ValueIDCurrentImExSumL1+phase]; ok && idx < len(w.meter.TmpValues) {
+					w.meter.Currents[phase] = w.meter.TmpValues[idx]
 				}
 			}
 			for phase := range 3 {
-				if idx, ok := w.meterMap[warp.ValueIDVoltageL1N+phase]; ok && idx < len(w.meter.Values) {
-					w.meter.Voltages[phase] = w.meter.Values[idx]
+				if idx, ok := w.meterMap[warp.ValueIDVoltageL1N+phase]; ok && idx < len(w.meter.TmpValues) {
+					w.meter.Voltages[phase] = w.meter.TmpValues[idx]
 				}
 			}
 		}
@@ -274,10 +285,10 @@ func (w *WarpWS) hasFeature(feature string) bool {
 	}
 	w.mu.RUnlock()
 
+	w.mu.Lock()
+	defer w.mu.Unlock()
 	uri := fmt.Sprintf("%s/info/features", w.uri)
-	var features []string
-	if err := w.GetJSON(uri, &features); err == nil {
-		w.features = features
+	if err := w.GetJSON(uri, &w.features); err == nil {
 		return slices.Contains(w.features, feature)
 	}
 
@@ -317,28 +328,25 @@ func (w *WarpWS) MaxCurrentMillis(current float64) error {
 	return err
 }
 
-func (w *WarpWS) statusFromEvseStatus() (api.ChargeStatus, error) {
-	evseStatus := []api.ChargeStatus{api.StatusA, api.StatusB, api.StatusC}
+func (w *WarpWS) statusFromEvseStatus(state int) (api.ChargeStatus, error) {
 	w.mu.RLock()
 	defer w.mu.RUnlock()
-	if w.evse.State.Iec61851State < len(evseStatus) {
-		return evseStatus[w.evse.State.Iec61851State], nil
+	if state < 3 {
+		return []api.ChargeStatus{api.StatusA, api.StatusB, api.StatusC}[state], nil
 	}
-	return api.StatusNone, fmt.Errorf("unknown evse status: %d", w.evse.State.Iec61851State)
+	return api.StatusNone, fmt.Errorf("unknown evse status: %d", state)
 }
 
 func (w *WarpWS) Status() (api.ChargeStatus, error) {
-	return w.statusFromEvseStatus()
+	return w.statusFromEvseStatus(w.evse.State.Iec61851State)
 }
 
 func (w *WarpWS) StatusReason() (api.Reason, error) {
-	status, err := w.statusFromEvseStatus()
-	if err != nil {
-		return api.ReasonUnknown, err
-	}
 	w.mu.RLock()
 	defer w.mu.RUnlock()
-	if status == api.StatusB && w.evse.UserEnabled.Enabled && w.evse.UserCurrent.Current == 0 {
+	if status, err := w.statusFromEvseStatus(w.evse.State.Iec61851State); err != nil {
+		return api.ReasonUnknown, err
+	} else if status == api.StatusB && w.evse.UserEnabled.Enabled && w.evse.UserCurrent.Current == 0 {
 		return api.ReasonWaitingForAuthorization, nil
 	}
 	return api.ReasonUnknown, nil
@@ -390,7 +398,7 @@ func (w *WarpWS) disablePhaseAutoSwitch() error {
 
 // phases1p3p implements the api.PhaseSwitcher interface
 func (w *WarpWS) phases1p3p(phases int) error {
-	if ec, err := w.ensurePmState(); err != nil && ec.ExternalControl > warp.ExternalControlAvailable {
+	if ec, err := w.ensurePmState(); err != nil || ec.ExternalControl > warp.ExternalControlAvailable {
 		return fmt.Errorf("external control not available: %s", ec)
 	}
 	w.mu.RLock()
