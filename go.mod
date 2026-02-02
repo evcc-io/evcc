@@ -8,7 +8,7 @@ require (
 	github.com/Masterminds/sprig/v3 v3.3.0
 	github.com/PuerkitoBio/goquery v1.11.0
 	github.com/WulfgarW/sensonet v0.0.7
-	github.com/andig/evopt v0.0.0-20260119220201-238830f9254a
+	github.com/andig/evopt v0.0.0-20260202080401-5c7f3dae3896
 	github.com/andig/go-powerwall v0.2.1-0.20230808194509-dd70cdb6e140
 	github.com/andig/gosunspec v0.0.0-20240918203654-860ce51d602b
 	github.com/andig/mbserver v0.0.0-20230310211055-1d29cbb5820e
@@ -99,7 +99,7 @@ require (
 	github.com/teslamotors/vehicle-command v0.4.0
 	github.com/tess1o/go-ecoflow v1.1.1-0.20251003083510-2ccc15a17e29
 	github.com/traefik/yaegi v0.16.1
-	github.com/volkszaehler/mbmd v0.0.0-20260107074546-6cbf4285cea8
+	github.com/volkszaehler/mbmd v0.0.0-20260131091050-86c2d25b6103
 	gitlab.com/bboehmke/sunny v0.16.0
 	go.bug.st/serial v1.6.4
 	go.uber.org/mock v0.6.0
