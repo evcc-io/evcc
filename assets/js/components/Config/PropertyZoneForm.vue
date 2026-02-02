@@ -5,7 +5,7 @@
 			<label class="form-label">{{ $t("config.tariff.zones.price") }}</label>
 			<div class="d-flex w-50 w-min-200">
 				<input
-					v-model="uiZone.price"
+					v-model.number.lazy="uiZone.price"
 					type="number"
 					step="any"
 					class="form-control text-end"

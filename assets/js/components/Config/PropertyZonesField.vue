@@ -67,7 +67,7 @@ export default {
 	methods: {
 		addZone() {
 			const currentZones = this.modelValue || [];
-			const newZones = [...currentZones, { price: null, hours: "", days: "", months: "" }];
+			const newZones = [...currentZones, { price: 0, hours: "", days: "", months: "" }];
 			this.$emit("update:modelValue", newZones);
 			// Automatically start editing the new zone
 			this.$nextTick(() => {
