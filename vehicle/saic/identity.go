@@ -88,23 +88,26 @@ func (v *Identity) retrieveToken(data url.Values) (*oauth2.Token, error) {
 	}
 
 	body, err := requests.DecodeResponse(resp)
-	if err == nil && len(body) != 0 {
-		var res requests.Answer[requests.LoginData]
-		if err := json.Unmarshal(body, &res); err == nil && res.Code != 0 {
-			return nil, fmt.Errorf("%d: %s", res.Code, res.Message)
-		}
-
-		tok := oauth2.Token{
-			AccessToken:  res.Data.Access_token,
-			RefreshToken: res.Data.Refresh_token,
-			TokenType:    res.Data.Token_type,
-			Expiry:       time.Now().Add(time.Second * time.Duration(res.Data.Expires_in)),
-		}
-
-		return &tok, nil
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, err
+	var res requests.Answer[requests.LoginData]
+	if err := json.Unmarshal(body, &res); err != nil {
+		return nil, err
+	}
+	if res.Code != 0 {
+		return nil, fmt.Errorf("%d: %s", res.Code, res.Message)
+	}
+
+	tok := oauth2.Token{
+		AccessToken:  res.Data.Access_token,
+		RefreshToken: res.Data.Refresh_token,
+		TokenType:    res.Data.Token_type,
+		Expiry:       time.Now().Add(time.Second * time.Duration(res.Data.Expires_in)),
+	}
+
+	return &tok, nil
 }
 
 func (v *Identity) refreshToken(token *oauth2.Token) (*oauth2.Token, error) {
