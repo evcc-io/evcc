@@ -3,6 +3,7 @@ package tariff
 import (
 	"context"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -54,19 +55,6 @@ func NewMergedFromConfig(ctx context.Context, other map[string]any) (api.Tariff,
 	return t, nil
 }
 
-// firstIndexAt returns the index of the first rate starting at the given time, or -1 if not found.
-func firstIndexAt(rates api.Rates, start time.Time) int {
-	for i, r := range rates {
-		if r.Start.Equal(start) {
-			return i
-		}
-		if r.Start.After(start) {
-			break
-		}
-	}
-	return -1
-}
-
 // Rates implements the api.Tariff interface
 func (t *Merged) Rates() (api.Rates, error) {
 	result, err := t.primary.Rates()
@@ -86,11 +74,11 @@ func (t *Merged) Rates() (api.Rates, error) {
 		return secondaryRates, nil
 	}
 
-	// Find where primary data ends
+	// Find where primary data ends and append secondary rates starting there
 	primaryEnd := result[len(result)-1].End
-
-	// Append secondary rates starting where primary ends
-	if idx := firstIndexAt(secondaryRates, primaryEnd); idx >= 0 {
+	if idx, found := slices.BinarySearchFunc(secondaryRates, primaryEnd, func(r api.Rate, t time.Time) int {
+		return r.Start.Compare(t)
+	}); found {
 		return append(result, secondaryRates[idx:]...), nil
 	}
 
