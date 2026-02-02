@@ -180,7 +180,23 @@
       "loading": "Lade YAML-Editor …"
     },
     "eebus": {
-      "description": "Grundkonfiguration für die Kommunikation mit anderen EEBus-Geräten.",
+      "certificate": {
+        "private": "Privater Schlüssel",
+        "public": "Öffentliches Zertifikat",
+        "title": "Zertifikate"
+      },
+      "description": "Konfiguration zur Kommunikation mit EEBus-kompatiblen Geräten wie Wallboxen oder dem Steuergerät des Netzbetreibers. Alle notwendigen Initialisierungen und die Zertifikatsgenerierung erfolgen automatisch beim ersten Start.",
+      "descriptionAdvanced": "Keine Änderungen erforderlich. Bei Änderung ist Neukoppelung aller Geräte erforderlich.",
+      "interfaces": "Schnittstellen",
+      "interfacesHelp": "Begrenzt die Netzwerkschnittstellen, die EEBus nutzen soll, um Kommunikationsprobleme zu vermeiden. Feld leer lassen, um alle Schnittstellen zu verwenden. Ein Eintrag pro Zeile.",
+      "port": "Port",
+      "portHelp": "Der zu verwendende Port.",
+      "removeConfirm": "Die gesamte EEBus-Konfiguration wird entfernt. Neue Zertifikate und Kennungen werden beim nächsten Start generiert. Bist du sicher?",
+      "shipid": "SHIP-ID",
+      "shipidExplain": "Permanente Gerätekennung zur Identifikation im EEBus-Netzwerk.",
+      "shipidHelp": "Diese SHIP-ID ist mit den unten stehenden Zertifikaten verknüpft.",
+      "ski": "SKI",
+      "skiExplain": "Eindeutige Sicherheitskennung zum Koppeln von EEBus-Geräten.",
       "title": "EEBus"
     },
     "experimental": {
@@ -217,6 +233,7 @@
       "dragList": "Sortierbare Liste",
       "experimental": "Experimentell",
       "forceSave": "Trotzdem speichern",
+      "fromYamlHint": "Hinweis: Konfiguriert über evcc.yaml. Entferne den Eintrag aus der Datei, um die Bearbeitung hier zu aktivieren.",
       "hideAdvancedSettings": "Erweiterte Einstellungen ausblenden",
       "invalidFileSelected": "Ungültige Datei ausgewählt",
       "noFileSelected": "Keine Datei ausgewählt.",
@@ -255,8 +272,7 @@
       "downloadCsv": "CSV herunterladen",
       "eventsRecorded": "{count} Netzbegrenzungen gespeichert.",
       "lastEvent": "Zuletzt {timeAgo}.",
-      "title": "Externe Begrenzung",
-      "yamlConfigured": "Hinweis: Konfiguriert über evcc.yaml. Entferne den Eintrag aus der Datei, um die Bearbeitung hier zu aktivieren."
+      "title": "Externe Begrenzung"
     },
     "icon": {
       "change": "ändern",
@@ -398,8 +414,7 @@
       "unconfigured": "nicht konfiguriert",
       "vehicles": "Meine Fahrzeuge",
       "welcomeBannerText": "Lege zunächst eine **Wallbox**, **Heizung**, **Netzzähler**, **Solar**, **Batterie** oder **zusätzlichen Zähler** an. Falls du nur testen möchtest, wähle ein **Demogerät**.",
-      "welcomeBannerTitle": "Los geht's mit der Konfiguration!",
-      "yaml": "Geräte aus evcc.yaml sind nicht editierbar."
+      "welcomeBannerTitle": "Los geht's mit der Konfiguration!"
     },
     "messaging": {
       "description": "Benachrichtigungen über Ladevorgänge und andere Ereignisse erhalten.",
@@ -482,7 +497,7 @@
       "labelClientCert": "Clientzertifikat",
       "labelClientId": "Client ID",
       "labelClientKey": "Client-Key",
-      "labelInsecure": "Zertifikatüberprüfung",
+      "labelInsecure": "Zertifikatsüberprüfung",
       "labelPassword": "Passwort",
       "labelTopic": "Thema",
       "labelUser": "Benutzer",
@@ -551,6 +566,7 @@
       "integrations": "Integrationen",
       "loadpoints": "Laden & Heizen",
       "meter": "PV & Batterie",
+      "services": "Dienste",
       "system": "System",
       "vehicles": "Fahrzeuge"
     },

@@ -12,16 +12,14 @@ import (
 
 // PublishEffectiveValues publishes all effective values
 func (lp *Loadpoint) PublishEffectiveValues() {
-	strategy := lp.EffectivePlanStrategy()
 	lp.publish(keys.EffectivePriority, lp.EffectivePriority())
 	lp.publish(keys.EffectivePlanId, lp.EffectivePlanId())
 	lp.publish(keys.EffectivePlanTime, lp.EffectivePlanTime())
 	lp.publish(keys.EffectivePlanSoc, lp.EffectivePlanSoc())
+	lp.publish(keys.EffectivePlanStrategy, lp.EffectivePlanStrategy())
 	lp.publish(keys.EffectiveMinCurrent, lp.effectiveMinCurrent())
 	lp.publish(keys.EffectiveMaxCurrent, lp.effectiveMaxCurrent())
 	lp.publish(keys.EffectiveLimitSoc, lp.EffectiveLimitSoc())
-	lp.publish(keys.EffectivePlanPrecondition, int64(strategy.Precondition.Seconds()))
-	lp.publish(keys.EffectivePlanContinuous, strategy.Continuous)
 }
 
 // EffectivePriority returns the effective priority
@@ -61,15 +59,15 @@ func (lp *Loadpoint) nextActivePlan(maxPower float64, plans []plan) *plan {
 	return nil
 }
 
-// NextVehiclePlan returns the next vehicle plan time, soc and id
-func (lp *Loadpoint) NextVehiclePlan() (time.Time, int, int) {
-	lp.RLock()
-	defer lp.RUnlock()
-	return lp.nextVehiclePlan()
-}
-
 // nextVehiclePlan returns the next vehicle plan time, soc, id
+// Returns locked plan if available, otherwise calculates fresh
 func (lp *Loadpoint) nextVehiclePlan() (time.Time, int, int) {
+	// return locked plan if available
+	if p := lp.planLocked; p.Id > 0 {
+		return p.Time, p.Soc, p.Id
+	}
+
+	// calculate fresh plan
 	if v := lp.GetVehicle(); v != nil {
 		var plans []plan
 
@@ -103,31 +101,41 @@ func (lp *Loadpoint) nextVehiclePlan() (time.Time, int, int) {
 
 // EffectivePlanSoc returns the soc target for the current plan
 func (lp *Loadpoint) EffectivePlanSoc() int {
-	_, soc, _ := lp.NextVehiclePlan()
+	lp.RLock()
+	defer lp.RUnlock()
+	_, soc, _ := lp.nextVehiclePlan()
 	return soc
 }
 
-// EffectivePlanId returns the id for the current plan
-func (lp *Loadpoint) EffectivePlanId() int {
+// getPlanId returns the plan id of the current/next plan
+func (lp *Loadpoint) getPlanId() int {
 	if lp.socBasedPlanning() {
-		_, _, id := lp.NextVehiclePlan()
+		_, _, id := lp.nextVehiclePlan()
 		return id
 	}
 	if lp.planEnergy > 0 {
 		return 1
 	}
-	// no plan
 	return 0
+}
+
+// EffectivePlanId returns the id for the current plan
+func (lp *Loadpoint) EffectivePlanId() int {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.getPlanId()
 }
 
 // EffectivePlanTime returns the effective plan time
 func (lp *Loadpoint) EffectivePlanTime() time.Time {
+	lp.RLock()
+	defer lp.RUnlock()
 	if lp.socBasedPlanning() {
-		ts, _, _ := lp.NextVehiclePlan()
+		ts, _, _ := lp.nextVehiclePlan()
 		return ts
 	}
 
-	ts, _ := lp.GetPlanEnergy()
+	ts, _ := lp.getPlanEnergy()
 	return ts
 }
 

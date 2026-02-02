@@ -62,7 +62,6 @@ export default defineComponent({
 				weekdays: DEFAULT_WEEKDAYS,
 				time: DEFAULT_TARGET_TIME,
 				soc: DEFAULT_TARGET_SOC,
-				precondition: 0,
 				active: false,
 				tz: this.timezone(),
 			};

@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util/redact"
 	"github.com/gorilla/mux"
@@ -80,6 +81,12 @@ func settingsSetYamlHandler(key string, other, struc any) http.HandlerFunc {
 	}
 }
 
+func allowPub(key string) bool {
+	// don't publish on update - would overwrite globalconfig.Info struct with config
+	// TODO come up with a general solution once all endpoinds use Info
+	return key != keys.EEBus
+}
+
 func settingsSetJsonHandler(key string, pub publisher, newStruc func() any) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		struc := newStruc()
@@ -104,7 +111,9 @@ func settingsSetJsonHandler(key string, pub publisher, newStruc func() any) http
 		settings.SetJson(key, struc)
 		setConfigDirty()
 
-		pub(key, struc)
+		if allowPub(key) {
+			pub(key, struc)
+		}
 
 		jsonWrite(w, true)
 	}
@@ -115,7 +124,9 @@ func settingsDeleteJsonHandler(key string, pub publisher, struc any) http.Handle
 		settings.SetString(key, "")
 		setConfigDirty()
 
-		pub(key, struc)
+		if allowPub(key) {
+			pub(key, struc)
+		}
 
 		jsonWrite(w, true)
 	}

@@ -20,6 +20,7 @@ import (
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/server/db"
+	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/server/mcp"
 	"github.com/evcc-io/evcc/server/network"
 	"github.com/evcc-io/evcc/server/updater"
@@ -61,6 +62,8 @@ var rootCmd = &cobra.Command{
 	Short:   "evcc - open source solar charging",
 	Version: util.FormattedVersion(),
 	Run:     runRoot,
+	// always allow Ctrl-C in child commands
+	PersistentPreRun: allowCtrlC,
 }
 
 func init() {
@@ -131,6 +134,20 @@ func Execute() {
 	}
 }
 
+func allowCtrlC(cmd *cobra.Command, args []string) {
+	if cmd.Name() == "root" {
+		return
+	}
+
+	go func() {
+		signalC := make(chan os.Signal, 1)
+		signal.Notify(signalC, os.Interrupt, syscall.SIGTERM)
+
+		<-signalC // wait for signal
+		os.Exit(1)
+	}()
+}
+
 func runRoot(cmd *cobra.Command, args []string) {
 	runAsService = true
 
@@ -176,10 +193,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	ocppCS := ocpp.Instance()
 	ocppCS.SetUpdated(func() {
 		// republish when OCPP state updates
-		valueChan <- util.Param{Key: keys.Ocpp, Val: struct {
-			Config ocpp.Config `json:"config"`
-			Status ocpp.Status `json:"status"`
-		}{
+		valueChan <- util.Param{Key: keys.Ocpp, Val: globalconfig.ConfigStatus{
 			Config: conf.Ocpp,
 			Status: ocpp.GetStatus(),
 		}}
@@ -329,35 +343,29 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}
 
 	// publish initial settings
-	valueChan <- util.Param{Key: keys.EEBus, Val: conf.EEBus.Configured()}
+	valueChan <- util.Param{Key: keys.EEBus, Val: globalconfig.ConfigStatus{
+		Config:   conf.EEBus.Redacted(),
+		Status:   eebus.GetStatus(),
+		FromYaml: fromYaml.eebus,
+	}}
 	valueChan <- util.Param{Key: keys.Shm, Val: conf.SHM}
 	valueChan <- util.Param{Key: keys.Influx, Val: conf.Influx}
 	valueChan <- util.Param{Key: keys.Interval, Val: conf.Interval}
-	valueChan <- util.Param{Key: keys.Messaging, Val: conf.Messaging.Configured()}
+	valueChan <- util.Param{Key: keys.Messaging, Val: conf.Messaging.IsConfigured()}
 	valueChan <- util.Param{Key: keys.ModbusProxy, Val: conf.ModbusProxy}
 	valueChan <- util.Param{Key: keys.Mqtt, Val: conf.Mqtt}
 	valueChan <- util.Param{Key: keys.Network, Val: conf.Network}
-	valueChan <- util.Param{Key: keys.Ocpp, Val: struct {
-		Config ocpp.Config `json:"config"`
-		Status ocpp.Status `json:"status"`
-	}{
+	valueChan <- util.Param{Key: keys.Ocpp, Val: globalconfig.ConfigStatus{
 		Config: conf.Ocpp,
 		Status: ocpp.GetStatus(),
 	}}
-	valueChan <- util.Param{Key: keys.Sponsor, Val: struct {
-		Status   sponsor.Status `json:"status"`
-		FromYaml bool           `json:"fromYaml"`
-	}{
-		Status:   sponsor.GetStatus(),
+	valueChan <- util.Param{Key: keys.Sponsor, Val: globalconfig.ConfigStatus{
+		Status:   sponsor.RedactedStatus(),
 		FromYaml: fromYaml.sponsor,
 	}}
 
-	valueChan <- util.Param{Key: keys.Hems, Val: struct {
-		Config   globalconfig.Hems `json:"config"`
-		Status   *hemsapi.Status   `json:"status,omitempty"`
-		FromYaml bool              `json:"fromYaml"`
-	}{
-		Config:   conf.HEMS,
+	valueChan <- util.Param{Key: keys.Hems, Val: globalconfig.ConfigStatus{
+		Config:   conf.HEMS.Redacted(),
 		Status:   hemsapi.GetStatus(hems),
 		FromYaml: fromYaml.hems,
 	}}
