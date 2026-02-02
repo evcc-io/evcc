@@ -101,7 +101,7 @@ func (v *Identity) retrieveToken(data url.Values) (*oauth2.Token, error) {
 			Expiry:       time.Now().Add(time.Second * time.Duration(res.Data.Expires_in)),
 		}
 
-		return &tok, err
+		return &tok, nil
 	}
 
 	return nil, err
