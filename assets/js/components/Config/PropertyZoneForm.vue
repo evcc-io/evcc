@@ -143,9 +143,13 @@ export default {
 		},
 		validateTimeRange() {
 			const { timeFrom, timeTo } = this.uiZone;
+			// All-day is valid
+			if (!timeFrom && !timeTo) return false;
 			if (timeFrom === "00:00" && timeTo === "00:00") return false;
-			if (!timeFrom || !timeTo) return false;
-			if (timeTo === "00:00" && timeFrom !== "00:00") return false;
+			// Require both or neither
+			if (!timeFrom || !timeTo) return true;
+			// Invalid range
+			if (timeTo === "00:00" && timeFrom !== "00:00") return true;
 			return timeFrom >= timeTo;
 		},
 		isTimeRangeInvalid() {
@@ -180,12 +184,14 @@ export default {
 			};
 		},
 		convertFromUiZone(uiZone: UiZone) {
-			const isAllDay = uiZone.timeFrom === "00:00" && uiZone.timeTo === "00:00";
+			const { timeFrom, timeTo } = uiZone;
+			// Treat empty or "00:00-00:00" as all day (no constraint)
+			const isAllDay = (!timeFrom && !timeTo) || (timeFrom === "00:00" && timeTo === "00:00");
 			return {
 				price: uiZone.price != null ? uiZone.price / this.displayFactor : null,
 				days: this.formatWeekdaysToString(uiZone.weekdays),
 				months: this.formatMonthsToString(uiZone.months),
-				hours: isAllDay ? "" : `${uiZone.timeFrom}-${uiZone.timeTo}`,
+				hours: isAllDay ? "" : `${timeFrom}-${timeTo}`,
 			};
 		},
 		handleSave() {
