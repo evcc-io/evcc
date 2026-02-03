@@ -159,7 +159,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, pub publisher, valueChan cha
 		"deletesession":           {"DELETE", "/session/{id:[0-9]+}", deleteSessionHandler},
 		"gridsessions":            {"GET", "/gridsessions", gridSessionsHandler},
 		"telemetry2":              {"POST", "/settings/telemetry/{value:[01truefalse]+}", boolHandler(telemetry.Enable, telemetry.Enabled)},
-		"experimental":            {"POST", "/settings/experimental/{value:[01truefalse]+}", updateExperimental(pub)},
+		"experimental":            {"POST", "/settings/experimental/{value:[01truefalse]+}", boolHandler(setExperimental(pub), getExperimental)},
 	}
 
 	for _, r := range routes {
