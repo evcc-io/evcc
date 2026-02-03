@@ -73,7 +73,7 @@ test.describe("general", async () => {
     const modal = page.getByTestId("experimental-modal");
     await expectModalVisible(modal);
 
-    const experimentalInput = modal.getByLabel("Show experimental features. 🧪");
+    const experimentalInput = modal.getByLabel("Enable experimental features.");
     await expect(experimentalInput).not.toBeChecked();
     await experimentalInput.check();
 

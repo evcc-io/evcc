@@ -1108,7 +1108,6 @@
   "passwordModal": {
     "description": "Setați o parolă pentru a proteja setările de configurare. Utilizarea ecranului principal este în continuare posibilă fără autentificare.",
     "empty": "Parola nu trebuie să fie goală",
-    "error": "Eroare: ",
     "labelCurrent": "Parola actuală",
     "labelNew": "Parolă nouă",
     "labelRepeat": "Repetați parola",

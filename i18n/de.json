@@ -192,7 +192,7 @@
       "title": "EEBus"
     },
     "experimental": {
-      "description": "Aktiviert die Benutzeroberfläche für Funktionen, die sich noch in der Testphase befinden und sich in zukünftigen Versionen ändern können.",
+      "description": "Bietet frühzeitigen Zugriff auf Funktionen, die sich noch in der Testphase befinden. Diese können instabil sein und in zukünftigen Versionen geändert oder entfernt werden.",
       "title": "Experimentell"
     },
     "ext": {
@@ -223,6 +223,7 @@
       "dragHandle": "Verschieben",
       "dragItem": "Verschiebbar: {title}",
       "dragList": "Sortierbare Liste",
+      "error": "Fehler",
       "experimental": "Experimentell",
       "forceSave": "Trotzdem speichern",
       "fromYamlHint": "Hinweis: Konfiguriert über evcc.yaml. Entferne den Eintrag aus der Datei, um die Bearbeitung hier zu aktivieren.",
@@ -1124,7 +1125,6 @@
   "passwordModal": {
     "description": "Setze ein Passwort, um die Konfiguration zu schützen. Die Hauptansicht bleibt ohne Login zugänglich.",
     "empty": "Passwort darf nicht leer sein",
-    "error": "Fehler: ",
     "labelCurrent": "Aktuelles Passwort",
     "labelNew": "Neues Passwort",
     "labelRepeat": "Neues Passwort wiederholen",
@@ -1238,7 +1238,7 @@
     },
     "hiddenFeatures": {
       "label": "Experimentell",
-      "value": "Experimentelle Funktionen anzeigen."
+      "value": "Experimentelle Funktionen aktivieren."
     },
     "language": {
       "auto": "Automatisch",

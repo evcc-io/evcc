@@ -1117,7 +1117,6 @@
   "passwordModal": {
     "description": "Stel een wachtwoord in voor het afschermen van de instellingen. Het hoofdscherm blijft beschikbaar zonder wachtwoord.",
     "empty": "Wachtwoord mag niet leeg zijn",
-    "error": "Fout: ",
     "labelCurrent": "Huidig wachtwoord",
     "labelNew": "Nieuw wachtwoord",
     "labelRepeat": "Wachtwoord herhalen",
