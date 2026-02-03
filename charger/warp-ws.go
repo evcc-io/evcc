@@ -25,8 +25,13 @@ import (
 
 type WarpWS struct {
 	*request.Helper
-	log *util.Logger
-	uri string
+
+	// config
+	emHelper   *request.Helper
+	log        *util.Logger
+	uri        string
+	emURI      string
+	meterIndex uint
 
 	mu sync.RWMutex
 
@@ -38,8 +43,10 @@ type WarpWS struct {
 	maxCurrent int64 // input from evcc
 
 	// meter
-	meter    warp.MeterValues
-	meterMap map[int]int
+	meter               warp.MeterValues
+	meterMap            map[int]int
+	metersValueIDsTopic string
+	metersValuesTopic   string
 
 	// nfc
 	chargeTracker warp.ChargeTrackerCurrentCharge
@@ -47,13 +54,6 @@ type WarpWS struct {
 	// power manager
 	pmState         warp.PmState
 	pmLowLevelState warp.PmLowLevelState
-
-	// config
-	emURI               string
-	emHelper            *request.Helper
-	meterIndex          uint
-	metersValueIDsTopic string
-	metersValuesTopic   string
 }
 
 type warpEvent struct {
@@ -180,7 +180,6 @@ func (w *WarpWS) run(ctx context.Context) {
 	w.log.TRACE.Printf("connecting to %s …", uri)
 
 	bo := backoff.NewExponentialBackOff(backoff.WithMaxElapsedTime(0))
-
 	for ctx.Err() == nil {
 		conn, _, err := websocket.Dial(ctx, uri, nil)
 		if err != nil {
@@ -226,7 +225,6 @@ func (w *WarpWS) handleConnection(ctx context.Context, conn *websocket.Conn) err
 		}
 
 		dec := json.NewDecoder(r)
-
 		for {
 			var event warpEvent
 			if err := dec.Decode(&event); err != nil {
@@ -248,7 +246,6 @@ func (w *WarpWS) handleEvent(topic string, payload json.RawMessage) error {
 	defer w.mu.Unlock()
 
 	var err error
-
 	switch topic {
 	case "charge_tracker/current_charge":
 		err = json.Unmarshal(payload, &w.chargeTracker)
