@@ -120,7 +120,7 @@ func (wb *ChargeX) setCurrent(current float64) error {
 		return err
 	}
 
-	state := binary.BigEndian.Uint16(b)
+	state := binary.BigEndian.Uint32(b)
 	// Bit 1: ChMode - 0=single phase, 1=3 phase
 	phases := 3
 	if (state & (1 << 1)) == 0 {
