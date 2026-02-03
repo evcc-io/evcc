@@ -1,18 +1,15 @@
 import { expect, type Page, type Locator } from "@playwright/test";
 
-export async function enableExperimental(page: Page, inline = true): Promise<void> {
-  if (inline) {
-    await page.getByRole("button", { name: "Enable Experimental Features" }).click();
-  } else {
-    await openTopNavigation(page);
-    await page.getByTestId("topnavigation-settings").click();
-    const modal = page.getByTestId("global-settings-modal");
-    await expectModalVisible(modal);
-    await modal.getByLabel("Experimental 🧪").click();
-    await modal.getByRole("button", { name: "Close" }).click();
-    await expectModalHidden(modal);
-    await expect(page.locator(".modal-backdrop")).not.toBeVisible();
-  }
+export async function enableExperimental(page: Page): Promise<void> {
+  await page.goto("/#/config");
+
+  await page.getByTestId("generalconfig-experimental").click();
+  const modal = page.getByTestId("experimental-modal");
+  await expectModalVisible(modal);
+  await modal.getByLabel("Show experimental UI features.").click();
+  await modal.getByRole("button", { name: "Close" }).click();
+  await expectModalHidden(modal);
+  await expect(page.locator(".modal-backdrop")).not.toBeVisible();
 }
 
 export async function openTopNavigation(page: Page): Promise<void> {
@@ -145,4 +142,13 @@ export async function dragElement(
     await page.mouse.move(endX, endY, { steps: 10 });
     await page.mouse.up();
   }
+}
+
+export async function getDatalistOptions(input: Locator): Promise<string[]> {
+  return input.evaluate((element: HTMLInputElement) => {
+    const datalistId = element.getAttribute("list");
+    if (!datalistId) return [];
+    const datalist = document.getElementById(datalistId);
+    return Array.from(datalist?.querySelectorAll("option") || []).map((opt) => opt.value);
+  });
 }

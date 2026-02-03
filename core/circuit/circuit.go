@@ -34,9 +34,10 @@ type Circuit struct {
 	getMaxCurrent func() (float64, error) // dynamic max allowed current
 	getMaxPower   func() (float64, error) // dynamic max allowed power
 
-	current float64
-	power   float64
-	dimmed  bool
+	current   float64
+	power     float64
+	dimmed    bool
+	curtailed bool
 
 	currentUpdated time.Time
 	powerUpdated   time.Time
@@ -401,4 +402,25 @@ func (c *Circuit) Dimmed() bool {
 	}
 
 	return c.parent.Dimmed()
+}
+
+func (c *Circuit) Curtail(curtail bool) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.curtailed = curtail
+}
+
+func (c *Circuit) Curtailed() bool {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	if c.curtailed {
+		return true
+	}
+
+	if c.parent == nil {
+		return false
+	}
+
+	return c.parent.Curtailed()
 }

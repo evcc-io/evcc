@@ -1,14 +1,13 @@
 package plugin
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestConst(t *testing.T) {
-	p, err := NewConstFromConfig(context.TODO(), map[string]any{"value": nil})
+	p, err := NewConstFromConfig(t.Context(), map[string]any{"value": nil})
 	assert.NoError(t, err)
 
 	{

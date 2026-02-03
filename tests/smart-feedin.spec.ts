@@ -31,7 +31,7 @@ test.describe("smart feed-in priority", async () => {
     await expectModalVisible(modal);
     await modal.getByLabel("Enable limit").check();
     await modal.getByLabel("Feed-in limit").selectOption("≥ 10.0 ct/kWh");
-    await expect(modal.getByTestId("active-hours")).toHaveText(["Paused time", "48 hr"].join(""));
+    await expect(modal.getByTestId("active-hours")).toHaveText(["Paused time", "96 hr"].join(""));
     await modal.getByLabel("Close").click();
     await expectModalHidden(modal);
 
@@ -59,7 +59,7 @@ test.describe("smart feed-in priority", async () => {
     await expectModalVisible(modal1);
     await modal1.getByLabel("Enable limit").check();
     await modal1.getByLabel("Feed-in limit").selectOption("≥ 10.0 ct/kWh");
-    await expect(modal1.getByTestId("active-hours")).toHaveText(["Paused time", "48 hr"].join(""));
+    await expect(modal1.getByTestId("active-hours")).toHaveText(["Paused time", "96 hr"].join(""));
     await modal1.getByRole("button", { name: "Apply everywhere?" }).click();
     await modal1.getByLabel("Close").click();
     await expectModalHidden(modal1);

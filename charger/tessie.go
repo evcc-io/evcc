@@ -25,12 +25,12 @@ func init() {
 }
 
 func NewTessieFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
-	cc := struct {
+	var cc struct {
 		Vin        string
 		Token      string
 		Location   string
 		Maxcurrent int64
-	}{}
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err

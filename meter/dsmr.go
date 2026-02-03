@@ -139,7 +139,7 @@ func NewDsmr(uri, energy string, timeout time.Duration) (api.Meter, error) {
 // based on https://github.com/basvdlei/gotsmart/blob/master/gotsmart.go
 func (m *Dsmr) run(conn net.Conn, done chan struct{}) {
 	log := util.NewLogger("dsmr")
-	bo := backoff.NewExponentialBackOff(backoff.WithMaxInterval(5 * time.Minute))
+	bo := backoff.NewExponentialBackOff(backoff.WithMaxInterval(5*time.Minute), backoff.WithMaxElapsedTime(0))
 
 	handle := func(op string, err error) {
 		log.ERROR.Printf("%s: %v", op, err)

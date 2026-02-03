@@ -12,12 +12,17 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/evcc-io/evcc/api/globalconfig"
+	"github.com/evcc-io/evcc/charger/ocpp"
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/core/keys"
+	hemsapi "github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/server/db"
+	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/server/mcp"
+	"github.com/evcc-io/evcc/server/network"
 	"github.com/evcc-io/evcc/server/updater"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/auth"
@@ -57,6 +62,8 @@ var rootCmd = &cobra.Command{
 	Short:   "evcc - open source solar charging",
 	Version: util.FormattedVersion(),
 	Run:     runRoot,
+	// always allow Ctrl-C in child commands
+	PersistentPreRun: allowCtrlC,
 }
 
 func init() {
@@ -127,6 +134,20 @@ func Execute() {
 	}
 }
 
+func allowCtrlC(cmd *cobra.Command, args []string) {
+	if cmd.Name() == "root" {
+		return
+	}
+
+	go func() {
+		signalC := make(chan os.Signal, 1)
+		signal.Notify(signalC, os.Interrupt, syscall.SIGTERM)
+
+		<-signalC // wait for signal
+		os.Exit(1)
+	}()
+}
+
 func runRoot(cmd *cobra.Command, args []string) {
 	runAsService = true
 
@@ -157,10 +178,30 @@ func runRoot(cmd *cobra.Command, args []string) {
 		err = networkSettings(&conf.Network)
 	}
 
+	// configure plugin external url
+	if err == nil {
+		// network configuration complete, start dependent services like HomeAssistant discovery
+		network.Start(conf.Network)
+	}
+
 	// start broadcasting values
 	tee := new(util.Tee)
 	valueChan := make(chan util.Param, 64)
 	go tee.Run(valueChan)
+
+	// start OCPP server
+	ocppCS := ocpp.Instance()
+	ocppCS.SetUpdated(func() {
+		// republish when OCPP state updates
+		valueChan <- util.Param{Key: keys.Ocpp, Val: globalconfig.ConfigStatus{
+			Config: conf.Ocpp,
+			Status: ocpp.GetStatus(),
+		}}
+	})
+	log.INFO.Printf("OCPP local url:    ws://127.0.0.1:%d/<stationId>", conf.Ocpp.Port)
+	if ocpp.ExternalUrl() != "" {
+		log.INFO.Printf("OCPP external url: %s/<stationId>", ocpp.ExternalUrl())
+	}
 
 	// value cache
 	cache := util.NewParamCache()
@@ -177,7 +218,10 @@ func runRoot(cmd *cobra.Command, args []string) {
 			os.Exit(1)
 		}
 	}()
-	log.INFO.Printf("UI listening at :%d", conf.Network.Port)
+	log.INFO.Printf("UI local url:      http://127.0.0.1:%d", conf.Network.Port)
+	if conf.Network.ExternalUrl != "" {
+		log.INFO.Printf("UI external url:   %s", conf.Network.ExternalURL())
+	}
 
 	// publish to UI
 	go socketHub.Run(pipe.NewDropper(ignoreEmpty).Pipe(tee.Attach()), cache)
@@ -249,7 +293,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// signal devices initialized
 	valueChan <- util.Param{Key: keys.StartupCompleted, Val: true}
 	// show onboarding UI
-	valueChan <- util.Param{Key: keys.SetupRequired, Val: site == nil || len(site.Loadpoints()) == 0}
+	valueChan <- util.Param{Key: keys.SetupRequired, Val: site == nil || !site.IsConfigured()}
 
 	// setup mqtt publisher
 	if err == nil && conf.Mqtt.Broker != "" && conf.Mqtt.Topic != "" {
@@ -262,7 +306,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// announce on mDNS
 	if err == nil {
-		err = configureMDNS(conf.Network)
+		if err := configureMDNS(conf.Network); err != nil {
+			log.WARN.Println("mDNS:", err)
+		}
 	}
 
 	// start SHM server
@@ -271,8 +317,12 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}
 
 	// start HEMS server
+	var hems hemsapi.API
 	if err == nil {
-		err = wrapErrorWithClass(ClassHEMS, configureHEMS(&conf.HEMS, site))
+		hems, err = configureHEMS(&conf.HEMS, site)
+		if err != nil {
+			err = wrapErrorWithClass(ClassHEMS, err)
+		}
 	}
 
 	// setup MCP
@@ -293,21 +343,39 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}
 
 	// publish initial settings
-	valueChan <- util.Param{Key: keys.EEBus, Val: conf.EEBus.Configured()}
-	valueChan <- util.Param{Key: keys.Hems, Val: conf.HEMS}
+	valueChan <- util.Param{Key: keys.EEBus, Val: globalconfig.ConfigStatus{
+		Config:   conf.EEBus.Redacted(),
+		Status:   eebus.GetStatus(),
+		FromYaml: fromYaml.eebus,
+	}}
 	valueChan <- util.Param{Key: keys.Shm, Val: conf.SHM}
 	valueChan <- util.Param{Key: keys.Influx, Val: conf.Influx}
 	valueChan <- util.Param{Key: keys.Interval, Val: conf.Interval}
-	valueChan <- util.Param{Key: keys.Messaging, Val: conf.Messaging.Configured()}
+	valueChan <- util.Param{Key: keys.Messaging, Val: conf.Messaging.IsConfigured()}
 	valueChan <- util.Param{Key: keys.ModbusProxy, Val: conf.ModbusProxy}
 	valueChan <- util.Param{Key: keys.Mqtt, Val: conf.Mqtt}
 	valueChan <- util.Param{Key: keys.Network, Val: conf.Network}
-	valueChan <- util.Param{Key: keys.Sponsor, Val: sponsor.Status()}
+	valueChan <- util.Param{Key: keys.Ocpp, Val: globalconfig.ConfigStatus{
+		Config: conf.Ocpp,
+		Status: ocpp.GetStatus(),
+	}}
+	valueChan <- util.Param{Key: keys.Sponsor, Val: globalconfig.ConfigStatus{
+		Status:   sponsor.RedactedStatus(),
+		FromYaml: fromYaml.sponsor,
+	}}
+
+	valueChan <- util.Param{Key: keys.Hems, Val: globalconfig.ConfigStatus{
+		Config:   conf.HEMS.Redacted(),
+		Status:   hemsapi.GetStatus(hems),
+		FromYaml: fromYaml.hems,
+	}}
 
 	// publish system infos
 	valueChan <- util.Param{Key: keys.Version, Val: util.FormattedVersion()}
 	valueChan <- util.Param{Key: keys.Config, Val: viper.ConfigFileUsed()}
 	valueChan <- util.Param{Key: keys.Database, Val: db.FilePath}
+	valueChan <- util.Param{Key: keys.System, Val: util.System()}
+	valueChan <- util.Param{Key: keys.Timezone, Val: time.Now().Format("MST -07:00")}
 
 	// run shutdown functions on stop
 	var once sync.Once
@@ -338,7 +406,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 		valueChan <- util.Param{Key: keys.DemoMode, Val: true}
 	}
 
-	httpd.RegisterSystemHandler(site, valueChan, cache, authObject, func() {
+	httpd.RegisterSystemHandler(site, func(k string, v any) {
+		valueChan <- util.Param{Key: k, Val: v}
+	}, cache, authObject, func() {
 		log.INFO.Println("evcc was stopped by user. OS should restart the service. Or restart manually.")
 		err = errors.New("restart required") // https://gokrazy.org/development/process-interface/
 		once.Do(func() { close(stopC) })     // signal loop to end
@@ -378,9 +448,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 			once.Do(func() { close(stopC) }) // signal loop to end
 		}()
 	}
-
-	// uds health check listener
-	go server.HealthListener(site)
 
 	// wait for shutdown
 	<-stopC

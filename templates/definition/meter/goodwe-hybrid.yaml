@@ -11,6 +11,7 @@ params:
     choice: ["rs485", "tcpip", "udp"]
     baudrate: 9600
     id: 247
+  - name: maxacpower
   - name: battery
     default: 1
     type: choice
@@ -19,9 +20,7 @@ params:
       de: Batteriespeichernummer
     choice: [1, 2]
     usages: ["battery"]
-  - name: capacity
-    advanced: true
-  - name: maxacpower
+  - preset: battery-params
   - name: maxchargepower
     default: 10000
   - name: maxdischargepower
@@ -230,9 +229,5 @@ render: |
                 address: 47512 # EMSPowerSet [0-10000]
                 type: writemultiple
                 encoding: uint16
-  capacity: {{ .capacity }} # kWh
-  maxchargepower: {{ .maxchargepower }} # W
-  maxdischargepower: {{ .maxdischargepower }} # W
-  minsoc: {{ .minsoc }} # %
-  maxsoc: {{ .maxsoc }} # %
+  {{- include "battery-params" . }}
   {{- end }}

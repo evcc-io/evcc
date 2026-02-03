@@ -22,7 +22,7 @@ func init() {
 	registry.Add("lgess15", NewLgEss15FromConfig)
 }
 
-//go:generate go tool decorate -f decorateLgEss -b *LgEss -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatterySocLimiter,GetSocLimits,func() (float64, float64)" -t "api.BatteryController,SetBatteryMode,func(api.BatteryMode) error"
+//go:generate go tool decorate -f decorateLgEss -b *LgEss -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatterySocLimiter,GetSocLimits,func() (float64, float64)" -t "api.BatteryPowerLimiter,GetPowerLimits,func() (float64, float64)" -t "api.BatteryController,SetBatteryMode,func(api.BatteryMode) error"
 
 func NewLgEss8FromConfig(other map[string]any) (api.Meter, error) {
 	return NewLgEssFromConfig(other, lgpcs.LgEss8)
@@ -37,6 +37,7 @@ func NewLgEssFromConfig(other map[string]any, essType lgpcs.Model) (api.Meter, e
 	cc := struct {
 		batteryCapacity        `mapstructure:",squash"`
 		batterySocLimits       `mapstructure:",squash"`
+		batteryPowerLimits     `mapstructure:",squash"`
 		URI, Usage             string
 		Registration, Password string
 		Cache                  time.Duration
@@ -56,11 +57,11 @@ func NewLgEssFromConfig(other map[string]any, essType lgpcs.Model) (api.Meter, e
 		return nil, errors.New("missing usage")
 	}
 
-	return NewLgEss(cc.URI, cc.Usage, cc.Registration, cc.Password, cc.Cache, cc.batteryCapacity.Decorator(), cc.batterySocLimits, essType)
+	return NewLgEss(cc.URI, cc.Usage, cc.Registration, cc.Password, cc.Cache, cc.batteryCapacity.Decorator(), cc.batterySocLimits, cc.batteryPowerLimits, essType)
 }
 
 // NewLgEss creates an LgEss Meter
-func NewLgEss(uri, usage, registration, password string, cache time.Duration, capacity func() float64, batterySocLimits batterySocLimits, essType lgpcs.Model) (api.Meter, error) {
+func NewLgEss(uri, usage, registration, password string, cache time.Duration, capacity func() float64, batterySocLimits batterySocLimits, batteryPowerLimits batteryPowerLimits, essType lgpcs.Model) (api.Meter, error) {
 	conn, err := lgpcs.GetInstance(uri, registration, password, cache, essType)
 	if err != nil {
 		return nil, err
@@ -90,7 +91,7 @@ func NewLgEss(uri, usage, registration, password string, cache time.Duration, ca
 		}
 	}
 
-	return decorateLgEss(m, totalEnergy, capacity, batterySoc, batterySocLimiter, setBatteryMode), nil
+	return decorateLgEss(m, totalEnergy, capacity, batterySoc, batterySocLimiter, batteryPowerLimits.Decorator(), setBatteryMode), nil
 }
 
 // CurrentPower implements the api.Meter interface

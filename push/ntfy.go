@@ -1,8 +1,11 @@
 package push
 
 import (
+	"encoding/base64"
 	"errors"
+	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/evcc-io/evcc/util"
@@ -24,9 +27,10 @@ type Ntfy struct {
 // NewNtfyFromConfig creates new Ntfy messenger
 func NewNtfyFromConfig(other map[string]any) (Messenger, error) {
 	var cc struct {
-		URI      string
-		Priority string
-		Tags     string
+		URI       string
+		Priority  string
+		Tags      string
+		AuthToken string
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -37,8 +41,31 @@ func NewNtfyFromConfig(other map[string]any) (Messenger, error) {
 		return nil, errors.New("missing uri")
 	}
 
+	u, err := url.Parse(cc.URI)
+	if err != nil {
+		return nil, err
+	}
+
 	log := util.NewLogger("ntfy")
-	if token, ok := strings.CutPrefix(cc.URI, "https://ntfy.sh/"); ok {
+
+	if cc.AuthToken != "" {
+		bearer := "Bearer " + cc.AuthToken
+		encoded := base64.RawStdEncoding.EncodeToString([]byte(bearer))
+
+		q := u.Query()
+		if q.Has("auth") {
+			return nil, fmt.Errorf("uri already contains auth parameter")
+		}
+
+		q.Set("auth", encoded)
+		u.RawQuery = q.Encode()
+
+		cc.URI = u.String()
+
+		log = log.Redact(cc.AuthToken, bearer, encoded)
+	}
+
+	if token, ok := strings.CutPrefix(u.String(), "https://ntfy.sh/"); ok {
 		log = log.Redact(token)
 	}
 

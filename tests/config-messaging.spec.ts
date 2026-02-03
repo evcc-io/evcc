@@ -1,6 +1,6 @@
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
-import { enableExperimental, expectModalHidden, expectModalVisible } from "./utils";
+import { expectModalHidden, expectModalVisible } from "./utils";
 
 test.use({ baseURL: baseUrl() });
 
@@ -10,15 +10,10 @@ test.afterEach(async () => {
 
 const SELECT_ALL = "ControlOrMeta+KeyA";
 
-async function goToConfig(page: Page) {
-  await page.goto("/#/config");
-  await enableExperimental(page);
-}
-
 test.describe("messaging", async () => {
   test("save a comment", async ({ page }) => {
     await start();
-    await goToConfig(page);
+    await page.goto("/#/config");
 
     await page.getByTestId("messaging").getByRole("button", { name: "edit" }).click();
     const modal = await page.getByTestId("messaging-modal");

@@ -1,0 +1,41 @@
+template: solaredge-se-mtr-3y
+products:
+  - brand: SolarEdge
+    description:
+      generic: SE-MTR-3Y
+params:
+  - name: usage
+    choice: ["grid", "pv", "charge"]
+  - name: modbus
+    choice: ["rs485"]
+render: |
+  type: mbmd
+  {{- include "modbus" . }}
+  model: semtr
+  {{- if ne .usage "pv" }}
+  power: Power
+  energy: Import
+  currents:
+    - CurrentL1
+    - CurrentL2
+    - CurrentL3
+  powers:
+    - PowerL1
+    - PowerL2
+    - PowerL3
+  {{- else }}
+  power: -Power
+  energy: Export
+  currents:
+    - -CurrentL1
+    - -CurrentL2
+    - -CurrentL3
+  powers:
+    - -PowerL1
+    - -PowerL2
+    - -PowerL3
+  {{- end }}
+  voltages:
+    - VoltageL1
+    - VoltageL2
+    - VoltageL3

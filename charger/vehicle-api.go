@@ -55,12 +55,12 @@ func (c *VehicleApi) isVehicleAtHome(vehicle api.Vehicle) (bool, error) {
 		return true, nil // Assume at charger if geofencing is disabled
 	}
 
-	positioner, ok := vehicle.(api.VehiclePosition)
+	v, ok := vehicle.(api.VehiclePosition)
 	if !ok {
 		return false, errors.New("vehicle must support position tracking if geofence is enabled")
 	}
 
-	lat, lon, err := positioner.Position()
+	lat, lon, err := v.Position()
 	if err != nil {
 		return false, err
 	}
@@ -97,12 +97,12 @@ func (c *VehicleApi) Status() (api.ChargeStatus, error) {
 		}
 	}
 
-	chargeState, ok := vehicle.(api.ChargeState)
+	v, ok := vehicle.(api.ChargeState)
 	if !ok {
 		return api.StatusA, errors.New("vehicle not capable of reporting charging status")
 	}
 
-	status, err := chargeState.Status()
+	status, err := v.Status()
 	if err != nil {
 		return api.StatusNone, err
 	}
@@ -122,7 +122,7 @@ func (c *VehicleApi) Enabled() (bool, error) {
 // Enable implements the api.Charger interface
 func (c *VehicleApi) Enable(enable bool) error {
 	if c.lp == nil {
-		return errors.New("loadpoint not initialized")
+		return ErrLoadpointNotInitialized
 	}
 
 	status, err := c.Status()
@@ -136,12 +136,12 @@ func (c *VehicleApi) Enable(enable bool) error {
 		return nil
 	}
 
-	chargeController, ok := c.lp.GetVehicle().(api.ChargeController)
+	v, ok := c.lp.GetVehicle().(api.ChargeController)
 	if !ok {
 		return errors.New("vehicle not capable of start/stop")
 	}
 
-	if err := chargeController.ChargeEnable(enable); err != nil {
+	if err := v.ChargeEnable(enable); err != nil {
 		return err
 	}
 
@@ -155,16 +155,32 @@ func (c *VehicleApi) Enable(enable bool) error {
 // MaxCurrent implements the api.Charger interface
 func (c *VehicleApi) MaxCurrent(current int64) error {
 	if c.lp == nil {
-		return errors.New("loadpoint not initialized")
+		return ErrLoadpointNotInitialized
 	}
 
-	currentController, ok := c.lp.GetVehicle().(api.CurrentController)
+	v, ok := c.lp.GetVehicle().(api.CurrentController)
 	if !ok {
 		// If we cannot control the current, we just pretend that we do
 		return nil
 	}
 
-	return currentController.MaxCurrent(current)
+	return v.MaxCurrent(current)
+}
+
+var _ api.Resurrector = (*VehicleApi)(nil)
+
+// WakeUp implements the api.Resurrector interface
+func (c *VehicleApi) WakeUp() error {
+	if c.lp == nil {
+		return ErrLoadpointNotInitialized
+	}
+
+	v, ok := c.lp.GetVehicle().(api.Resurrector)
+	if !ok {
+		return nil
+	}
+
+	return v.WakeUp()
 }
 
 var _ loadpoint.Controller = (*VehicleApi)(nil)

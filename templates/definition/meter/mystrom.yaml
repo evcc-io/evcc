@@ -8,6 +8,11 @@ params:
   - name: usage
     choice: ["pv", "charge"]
   - name: host
+  - name: token
+    help:
+      en: API token, only needed if token is set on device (Advanced -> Enable REST API -> Token)
+      de: API-Token, nur erforderlich wenn ein Token auf Gerät dem gesetzt ist (Experte -> REST API aktivieren -> Token)
 render: |
   type: mystrom
   uri: http://{{ .host }}
+  token: {{ .token }}

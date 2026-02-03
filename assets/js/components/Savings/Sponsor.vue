@@ -67,7 +67,8 @@ import "@h2d2/shopicons/es/regular/heart";
 import "@h2d2/shopicons/es/regular/stars";
 import "@h2d2/shopicons/es/regular/clock";
 import { docsPrefix } from "@/i18n";
-import { defineComponent } from "vue";
+import { defineComponent, type PropType } from "vue";
+import type { SponsorStatus } from "@/types/evcc";
 
 export const TRIAL = "trial";
 export const VICTRON_DEVICE = "victron";
@@ -75,13 +76,13 @@ export const VICTRON_DEVICE = "victron";
 export default defineComponent({
 	name: "Sponsor",
 	props: {
-		name: String,
-		expiresAt: String,
-		expiresSoon: Boolean,
+		status: Object as PropType<SponsorStatus>,
 		fromYaml: Boolean,
-		token: String,
 	},
 	computed: {
+		name() {
+			return this.status?.name;
+		},
 		isTrial() {
 			return this.name === TRIAL;
 		},

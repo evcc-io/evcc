@@ -1,93 +1,97 @@
 template: homeassistant
 products:
   - brand: Home Assistant
-    description:
-      de: Fahrzeug
-      en: Vehicle
 group: generic
 requirements:
   description:
-    en: Requires a running Home Assistant instance with suitable vehicle entities and services. All values are Home Assistant entity IDs (e.g. sensor.*, binary_sensor.*, number.*, script.*)
-    de: Erfordert eine laufende Home Assistant Instanz mit passenden Fahrzeug-Entities und Services. Alle Werte sind Home Assistant Entity IDs (z.B. sensor.*, binary_sensor.*, number.*, script.*)
+    en: Home Assistant instances in your network will be auto-discovered and suitable vehicle entities and services (e.g. `sensor.*`) will be suggested.
+    de: Home Assistant Instanzen in deinem Netzwerk werden automatisch erkannt und passende Entitäten und Services (z.B. `sensor.*`) werden vorgeschlagen.
+auth:
+  type: homeassistant
+  params: [uri]
 params:
   - preset: vehicle-common
   - name: uri
-    required: true
-    example: http://homeassistant.local:8123
-  - name: token
     description:
-      de: Home Assistant Long-Lived Access Token
-      en: Home Assistant Long-Lived Access Token
-    example: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+      de: Home Assistant URI
+      en: Home Assistant URI
+    example: http://homeassistant.local:8123
+    help:
+      en: " " # overwrite default
+      de: " " # overwrite default
+    service: homeassistant/instances
     required: true
-    mask: true
+  - name: token
+    deprecated: true
+  - name: home
+    deprecated: true
   - name: soc
     description:
       de: Ladezustand [%]
       en: State of charge [%]
+    service: homeassistant/entities?uri={uri}&domain=sensor
     example: "sensor.vehicle_soc"
-    type: string
     required: true
   - name: range
     description:
       de: Restreichweite [km]
       en: Remaining range [km]
+    service: homeassistant/entities?uri={uri}&domain=sensor
     example: "sensor.vehicle_range"
-    type: string
   - name: status
     description:
       de: Ladestatus
       en: Charging status
+    service: homeassistant/entities?uri={uri}&domain=sensor
     example: "sensor.vehicle_charging"
-    type: string
   - name: limitSoc
     description:
       de: Ziel-Ladezustand [%]
       en: Target state of charge [%]
+    service: homeassistant/entities?uri={uri}&domain=number,input_number
     example: "number.vehicle_target_state_of_charge"
-    type: string
   - name: odometer
     description:
       de: Kilometerstand [km]
       en: Odometer [km]
+    service: homeassistant/entities?uri={uri}&domain=sensor
     example: "sensor.vehicle_odometer"
-    type: string
   - name: climater
     description:
       de: Klimatisierung aktiv
       en: Climatisation active
+    service: homeassistant/entities?uri={uri}&domain=binary_sensor
     example: "binary_sensor.vehicle_climater"
-    type: string
   - name: finishTime
     description:
       de: Ladeende (ISO8601 oder Unix)
       en: Finish time (ISO8601 or Unix)
+    service: homeassistant/entities?uri={uri}&domain=sensor
     example: "sensor.vehicle_finish_time"
-    type: string
   - name: start_charging
     description:
       de: Service zum Laden starten
       en: Service to start charging
+    service: homeassistant/entities?uri={uri}&domain=script
     example: "script.vehicle_start_charge"
-    type: string
   - name: stop_charging
     description:
       de: Service zum Laden stoppen
       en: Service to stop charging
+    service: homeassistant/entities?uri={uri}&domain=script
     example: "script.vehicle_stop_charge"
-    type: string
   - name: wakeup
     description:
       de: Service zum Aufwecken
       en: Service to wake up vehicle
+    service: homeassistant/entities?uri={uri}&domain=script
     example: "script.vehicle_wakeup"
-    type: string
   - name: setMaxCurrent
     description:
       de: Ladestromstärke setzen [A]
       en: Set charging current [A]
+    service: homeassistant/entities?uri={uri}&domain=number,input_number
     example: "number.vehicle_charging_current"
-    type: string
   - preset: vehicle-features
   - name: streaming
     default: true
@@ -96,7 +100,7 @@ render: |
   {{ include "vehicle-common" . }}
   {{ include "vehicle-features" . }}
   uri: {{ .uri }}
-  token: {{ .token }}
+  home: {{ .home }} # deprecated
   sensors:
     soc: {{ .soc }}
     range: {{ .range }}

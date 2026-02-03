@@ -98,6 +98,21 @@
 			</div>
 
 			<FormRow
+				id="vehicleParamMaxPower"
+				:label="$t('config.vehicle.maximumPower')"
+				:help="$t('config.vehicle.maximumPowerHelp')"
+			>
+				<PropertyField
+					id="vehicleParamMaxPower"
+					v-model="values.maxPower"
+					type="Float"
+					unit="W"
+					size="w-25 w-min-200"
+					class="me-2"
+				/>
+			</FormRow>
+
+			<FormRow
 				id="vehicleParamPriority"
 				:label="$t('config.vehicle.priority')"
 				:help="$t('config.vehicle.priorityHelp')"
@@ -149,7 +164,15 @@ const initialValues = {
 	yaml: undefined,
 	template: null,
 };
-const CUSTOM_FIELDS = ["minCurrent", "maxCurrent", "priority", "identifiers", "phases", "mode"];
+const CUSTOM_FIELDS = [
+	"minCurrent",
+	"maxCurrent",
+	"maxPower",
+	"priority",
+	"identifiers",
+	"phases",
+	"mode",
+];
 
 export default defineComponent({
 	name: "VehicleModal",

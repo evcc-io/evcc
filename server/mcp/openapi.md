@@ -230,12 +230,6 @@ call getState {
 }
 ```
 
-## healthCheck
-
-Returns 200 if the evcc loop runs as expected.
-
-**Tags:** general
-
 ## removeGlobalSmartCostLimit
 
 Convenience method to remove limit for all loadpoints at once. Value is applied to each individual loadpoint.
@@ -730,6 +724,28 @@ call setLoadpointPhases {
 }
 ```
 
+## setLoadpointPlanStrategy
+
+Updates the charging plan strategy for the loadpoint.
+
+**Tags:** loadpoints
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| id | integer | Loadpoint index starting at 1 |
+| requestBody | object | The JSON request body. |
+
+**Example call:**
+
+```json
+call setLoadpointPlanStrategy {
+  "id": 123,
+  "requestBody": "..."
+}
+```
+
 ## setLoadpointPriority
 
 Set loadpoint priority.
@@ -855,6 +871,28 @@ Delete charging session.
 ```json
 call deleteSession {
   "id": 123
+}
+```
+
+## getGridSessions
+
+Returns a list of HEMS grid limitation events.
+
+**Tags:** sessions
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| format | string | Response format (default json) |
+| lang | string | Language (defaults to accept header) |
+
+**Example call:**
+
+```json
+call getGridSessions {
+  "format": "example",
+  "lang": "example"
 }
 ```
 
@@ -1032,6 +1070,28 @@ call setVehicleMinSoc {
 }
 ```
 
+## setVehiclePlanStrategy
+
+Updates the charging plan strategy for the vehicle.
+
+**Tags:** vehicles
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| name | string | Vehicle name |
+| requestBody | object | The JSON request body. |
+
+**Example call:**
+
+```json
+call setVehiclePlanStrategy {
+  "name": "example",
+  "requestBody": "..."
+}
+```
+
 ## setVehicleSocLimit
 
 Charging will stop when this SoC is reached.
@@ -1065,7 +1125,6 @@ Create charging plan with fixed time and SoC target.
 | Name | Type | Description |
 |------|------|-------------|
 | name | string | Vehicle name |
-| precondition | integer | Late charging duration in seconds. |
 | soc | number | SOC in % |
 | timestamp | string | Timestamp in RFC3339 format |
 
@@ -1074,7 +1133,6 @@ Create charging plan with fixed time and SoC target.
 ```json
 call setVehicleSocPlan {
   "name": "example",
-  "precondition": 123,
   "soc": 123.45,
   "timestamp": "example"
 }

@@ -13,8 +13,7 @@ params:
     choice: ["rs485", "tcpip"]
     baudrate: 9600
     id: 1
-  - name: capacity
-    advanced: true
+  - preset: battery-params
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -103,5 +102,5 @@ render: |
       address: 184 # "battery capacity"
       type: holding
       decode: uint16
-  capacity: {{ .capacity }} # kWh
+  {{- include "battery-params" . }}
   {{- end }}

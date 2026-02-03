@@ -30,7 +30,7 @@
 				<span class="text-end text-nowrap ps-1 fw-bold d-flex align-items-center">
 					<div
 						ref="details"
-						class="fw-normal d-flex align-items-center"
+						class="fw-normal d-flex align-items-center user-select-none"
 						:class="{
 							'text-decoration-underline': detailsClickable,
 							'evcc-gray': detailsInactive,

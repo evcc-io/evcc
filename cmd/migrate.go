@@ -11,7 +11,7 @@ import (
 // migrateCmd represents the migrate command
 var migrateCmd = &cobra.Command{
 	Use:   "migrate",
-	Short: "Migrate yaml to database (overwrites db settings)",
+	Short: "Migrate yaml to database (deprecated), reset only",
 	Args:  cobra.ExactArgs(0),
 	Run:   runMigrate,
 }
@@ -34,97 +34,52 @@ func runMigrate(cmd *cobra.Command, args []string) {
 
 	reset := cmd.Flag(flagReset).Changed
 
-	// TODO remove yaml file
-	if reset {
-		log.INFO.Println("resetting:")
-	} else {
-		log.INFO.Println("migrating:")
+	if !reset {
+		log.FATAL.Fatal("migrating is not supported anymore. Use the web UI to create or `evcc migrate --reset` to reset the configuration.")
 	}
 
+	log.INFO.Println("resetting:")
 	log.INFO.Println("- global settings")
-	if reset {
-		settings.Delete(keys.Interval)
-		settings.Delete(keys.SponsorToken)
-		settings.Delete(keys.Title)
-	} else {
-		settings.SetInt(keys.Interval, int64(conf.Interval))
-		settings.SetString(keys.SponsorToken, conf.SponsorToken)
-	}
+	settings.Delete(keys.Interval)
+	settings.Delete(keys.SponsorToken)
+	settings.Delete(keys.Title)
 
 	log.INFO.Println("- network")
-	if reset {
-		settings.Delete(keys.Network)
-	} else {
-		_ = settings.SetJson(keys.Network, conf.Network)
-	}
+	settings.Delete(keys.Network)
 
 	log.INFO.Println("- mqtt")
-	if reset {
-		settings.Delete(keys.Mqtt)
-	} else {
-		_ = settings.SetJson(keys.Mqtt, conf.Mqtt)
-	}
+	settings.Delete(keys.Mqtt)
 
 	log.INFO.Println("- influx")
-	if reset {
-		settings.Delete(keys.Influx)
-	} else {
-		_ = settings.SetJson(keys.Influx, conf.Influx)
-	}
+	settings.Delete(keys.Influx)
 
 	log.INFO.Println("- hems")
-	if reset {
-		settings.Delete(keys.Hems)
-	} else if conf.HEMS.Type != "" {
-		_ = settings.SetYaml(keys.Hems, conf.HEMS)
-	}
+	settings.Delete(keys.Hems)
 
 	log.INFO.Println("- eebus")
-	if reset {
-		settings.Delete(keys.EEBus)
-	} else if conf.EEBus.Configured() {
-		_ = settings.SetYaml(keys.EEBus, conf.EEBus)
-	}
+	settings.Delete(keys.EEBus)
 
 	log.INFO.Println("- modbusproxy")
-	if reset {
-		settings.Delete(keys.ModbusProxy)
-	} else if len(conf.ModbusProxy) > 0 {
-		_ = settings.SetYaml(keys.ModbusProxy, conf.ModbusProxy)
-	}
+	settings.Delete(keys.ModbusProxy)
 
 	log.INFO.Println("- messaging")
-	if reset {
-		settings.Delete(keys.Messaging)
-	} else if len(conf.Messaging.Services) > 0 {
-		_ = settings.SetYaml(keys.Messaging, conf.Messaging)
-	}
+	settings.Delete(keys.Messaging)
 
 	log.INFO.Println("- tariffs")
-	if reset {
-		settings.Delete(keys.Tariffs)
-	} else if conf.Tariffs.Grid.Type != "" || conf.Tariffs.FeedIn.Type != "" || conf.Tariffs.Co2.Type != "" || conf.Tariffs.Planner.Type != "" {
-		_ = settings.SetYaml(keys.Tariffs, conf.Tariffs)
-	}
+	settings.Delete(keys.Tariffs)
 
 	log.INFO.Println("- circuits")
-	if reset {
-		settings.Delete(keys.Circuits)
-	} else if len(conf.Circuits) > 0 {
-		_ = settings.SetYaml(keys.Circuits, conf.Circuits)
-	}
+	settings.Delete(keys.Circuits)
 
 	log.INFO.Println("- device configs")
-	if reset {
-		// site keys
-		settings.Delete(keys.GridMeter)
-		settings.Delete(keys.PvMeters)
-		settings.Delete(keys.AuxMeters)
-		settings.Delete(keys.BatteryMeters)
-		// clear config table
-		result := db.Instance.Delete(&config.Config{}, "true")
-		log.INFO.Printf("  %d entries deleted", result.RowsAffected)
-	}
+	settings.Delete(keys.GridMeter)
+	settings.Delete(keys.PvMeters)
+	settings.Delete(keys.AuxMeters)
+	settings.Delete(keys.ExtMeters)
+	settings.Delete(keys.BatteryMeters)
+	// clear config table
+	result := db.Instance.Delete(&config.Config{}, "true")
+	log.INFO.Printf("  %d entries deleted", result.RowsAffected)
 	// wait for shutdown
 	<-shutdownDoneC()
 }

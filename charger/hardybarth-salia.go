@@ -163,7 +163,8 @@ func NewSalia(ctx context.Context, uri, user, password string, cache time.Durati
 func (wb *Salia) heartbeat(ctx context.Context) {
 	bo := backoff.NewExponentialBackOff(
 		backoff.WithInitialInterval(5*time.Second),
-		backoff.WithMaxInterval(time.Minute))
+		backoff.WithMaxInterval(time.Minute),
+		backoff.WithMaxElapsedTime(0))
 
 	for tick := time.Tick(30 * time.Second); ; {
 		select {

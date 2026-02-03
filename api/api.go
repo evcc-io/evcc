@@ -5,6 +5,8 @@ import (
 	"io"
 	"net/url"
 	"time"
+
+	"golang.org/x/oauth2"
 )
 
 //go:generate go tool mockgen -package api -destination mock.go github.com/evcc-io/evcc/api Charger,ChargeState,CurrentLimiter,CurrentGetter,PhaseSwitcher,PhaseGetter,FeatureDescriber,Identifier,Meter,MeterEnergy,PhaseCurrents,Vehicle,ConnectionTimer,ChargeRater,Battery,BatteryController,BatterySocLimiter,Circuit,Dimmer,Tariff
@@ -190,10 +192,16 @@ type SocLimiter interface {
 	GetLimitSoc() (int64, error)
 }
 
-// Dimmer provides §14a dimming
+// Dimmer provides EnWG §14a dimming
 type Dimmer interface {
 	Dimmed() (bool, error)
 	Dim(bool) error
+}
+
+// Curtailer provides EEG §9 curtailment
+type Curtailer interface {
+	Curtailed() (bool, error)
+	Curtail(bool) error
 }
 
 // ChargeController allows to start/stop the charging session on the vehicle side
@@ -214,7 +222,7 @@ type Tariff interface {
 
 // AuthProvider is the ability to provide OAuth authentication through the ui
 type AuthProvider interface {
-	Login(state string) (string, error)
+	Login(state string) (string, *oauth2.DeviceAuthResponse, error)
 	Logout() error
 	HandleCallback(params url.Values) error
 	Authenticated() bool
@@ -270,9 +278,13 @@ type Circuit interface {
 	ValidateCurrent(old, new float64) float64
 	ValidatePower(old, new float64) float64
 
-	// §14a
+	// EnWG §14a - reduce demand/consumption
 	Dim(bool)
 	Dimmed() bool
+
+	// EEG §9 - reduce feed-in to the grid
+	Curtail(bool)
+	Curtailed() bool
 }
 
 // Redactor is an interface to redact sensitive data

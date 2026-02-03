@@ -6,7 +6,6 @@ import (
 
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/core/metrics"
 	"github.com/evcc-io/evcc/core/types"
 	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/util"
@@ -166,10 +165,9 @@ func TestRequiredBatteryMode(t *testing.T) {
 }
 
 func TestUpdateHomeConsumption(t *testing.T) {
-	clock := clock.NewMock()
-
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
-	metrics.Init()
+
+	clock := clock.NewMock()
 
 	s := &Site{
 		log:             util.NewLogger("foo"),

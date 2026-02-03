@@ -55,9 +55,11 @@ PendingOAuthStatus.args = {
 export const TokenExpires = Template.bind({});
 TokenExpires.args = {
   sponsor: {
-    name: "Sponsor",
-    expiresAt: new Date().toISOString(),
-    expiresSoon: true,
+    status: {
+      name: "Sponsor",
+      expiresAt: new Date().toISOString(),
+      expiresSoon: true,
+    },
     fromYaml: false,
   },
 };

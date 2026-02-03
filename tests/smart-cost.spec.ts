@@ -42,7 +42,7 @@ test.describe("smart cost limit", async () => {
     await expect(modal).toBeVisible();
     await modal.getByLabel("Enable limit").check();
     await modal.getByLabel("Price limit").selectOption("≤ 40.0 ct/kWh");
-    await expect(modal.getByTestId("active-hours")).toHaveText(["Active time", "48 hr"].join(""));
+    await expect(modal.getByTestId("active-hours")).toHaveText(["Active time", "96 hr"].join(""));
     await modal.getByLabel("Close").click();
     await expect(modal).not.toBeVisible();
     await expect(page.getByTestId("vehicle-status-charger")).toHaveText("Charging…");
