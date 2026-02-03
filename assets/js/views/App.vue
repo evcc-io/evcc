@@ -7,11 +7,7 @@
 		></router-view>
 
 		<GlobalSettingsModal v-bind="globalSettingsProps" />
-		<BatterySettingsModal
-			v-if="batteryModalAvailabe"
-			v-bind="batterySettingsProps"
-			:battery="state.battery"
-		/>
+		<BatterySettingsModal v-if="batteryModalAvailabe" v-bind="batterySettingsProps" />
 		<ForecastModal v-bind="forecastModalProps" />
 		<HelpModal />
 		<PasswordModal />
