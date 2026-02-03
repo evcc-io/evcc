@@ -56,9 +56,11 @@ var (
 	runAsService bool
 )
 
+const rootName = "evcc"
+
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:     "evcc",
+	Use:     rootName,
 	Short:   "evcc - open source solar charging",
 	Version: util.FormattedVersion(),
 	Run:     runRoot,
@@ -135,7 +137,7 @@ func Execute() {
 }
 
 func allowCtrlC(cmd *cobra.Command, args []string) {
-	if cmd.Name() == "root" {
+	if cmd.Name() == rootName {
 		return
 	}
 
