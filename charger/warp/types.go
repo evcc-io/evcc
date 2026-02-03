@@ -2,10 +2,10 @@ package warp
 
 const (
 	FeatureMeter          = "meter"
+	FeatureMeters         = "meters"
 	FeatureMeterAllValues = "meter_all_values"
 	FeatureMeterPhases    = "meter_phases"
 	FeatureNfc            = "nfc"
-	FeatureMeters         = "meters"
 	FeaturePhaseSwitch    = "phase_switch"
 )
 

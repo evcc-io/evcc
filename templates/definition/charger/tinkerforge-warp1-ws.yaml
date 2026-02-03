@@ -1,7 +1,7 @@
-template: tinkerforge-warp3-ws
+template: tinkerforge-warp-ws
 products:
-  - { brand: TinkerForge, description: { generic: WARP3 Smart } }
-  - { brand: TinkerForge, description: { generic: WARP3 Pro } }
+  - { brand: TinkerForge, description: { generic: WARP1 Smart } }
+  - { brand: TinkerForge, description: { generic: WARP1 Pro } }
 capabilities: ["mA", "1p3p", "rfid"]
 requirements:
   description:
@@ -26,5 +26,4 @@ render: |
   uri: {{ .uri }}
   user: {{ .user }}
   password: {{ .password }}
-  energyMeterIndex: {{ .energyMeterIndex }}  
-  disablePhaseAutoSwitch: true
+  energyMeterIndex: {{ .energyMeterIndex }}
