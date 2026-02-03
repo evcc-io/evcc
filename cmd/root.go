@@ -335,14 +335,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	// setup experimental
-	experimental := false
-	if err == nil {
-		if val, err := configureExperimental(); err == nil {
-			experimental = val
-		}
-	}
-
 	// setup messaging
 	var pushChan chan push.Event
 	if err == nil {
@@ -359,7 +351,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 	valueChan <- util.Param{Key: keys.Shm, Val: conf.SHM}
 	valueChan <- util.Param{Key: keys.Influx, Val: conf.Influx}
 	valueChan <- util.Param{Key: keys.Interval, Val: conf.Interval}
-	valueChan <- util.Param{Key: keys.Experimental, Val: experimental}
 	valueChan <- util.Param{Key: keys.Messaging, Val: conf.Messaging.IsConfigured()}
 	valueChan <- util.Param{Key: keys.ModbusProxy, Val: conf.ModbusProxy}
 	valueChan <- util.Param{Key: keys.Mqtt, Val: conf.Mqtt}
@@ -385,6 +376,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	valueChan <- util.Param{Key: keys.Database, Val: db.FilePath}
 	valueChan <- util.Param{Key: keys.System, Val: util.System()}
 	valueChan <- util.Param{Key: keys.Timezone, Val: time.Now().Format("MST -07:00")}
+	valueChan <- util.Param{Key: keys.Experimental, Val: isExperimental()}
 
 	// run shutdown functions on stop
 	var once sync.Once

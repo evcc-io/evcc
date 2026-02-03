@@ -1176,7 +1176,8 @@ func configureAuth(router *mux.Router, paramC chan<- util.Param) {
 	providerauth.Setup(auth, paramC)
 }
 
-// configureExperimental sets the experimental flag
-func configureExperimental() (bool, error) {
-	return settings.Bool(keys.Experimental)
+// isExperimental returns if experimental features are enabled
+func isExperimental() bool {
+	b, _ := settings.Bool(keys.Experimental)
+	return b
 }
