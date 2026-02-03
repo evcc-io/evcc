@@ -141,7 +141,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.V
 	}
 
 	switch {
-	case getMaxCurrent == nil && maxCurrent != nil:
+	case maxCurrent == nil && getMaxCurrent != nil:
 		return nil, errors.New("cannot have current without current control")
 	case status == nil && maxCurrent != nil:
 		return nil, errors.New("cannot have current control without status")

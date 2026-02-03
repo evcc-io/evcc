@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -45,11 +46,8 @@ func updateSponsortokenHandler(pub publisher) func(w http.ResponseWriter, r *htt
 				return
 			}
 
-			pub(keys.Sponsor, struct {
-				Status   sponsor.Status `json:"status"`
-				FromYaml bool           `json:"fromYaml"`
-			}{
-				Status:   sponsor.GetStatus(),
+			pub(keys.Sponsor, globalconfig.ConfigStatus{
+				Status:   sponsor.RedactedStatus(),
 				FromYaml: false,
 			})
 		}
@@ -58,7 +56,7 @@ func updateSponsortokenHandler(pub publisher) func(w http.ResponseWriter, r *htt
 		settings.SetString(keys.SponsorToken, req.Token)
 		setConfigDirty()
 
-		jsonWrite(w, sponsor.GetStatus())
+		jsonWrite(w, sponsor.RedactedStatus())
 	}
 }
 
@@ -66,10 +64,7 @@ func deleteSponsorTokenHandler(pub publisher) func(w http.ResponseWriter, r *htt
 	return func(w http.ResponseWriter, r *http.Request) {
 		settings.SetString(keys.SponsorToken, "")
 
-		pub(keys.Sponsor, struct {
-			Status   sponsor.Status `json:"status"`
-			FromYaml bool           `json:"fromYaml"`
-		}{
+		pub(keys.Sponsor, globalconfig.ConfigStatus{
 			Status:   sponsor.Status{},
 			FromYaml: false,
 		})
