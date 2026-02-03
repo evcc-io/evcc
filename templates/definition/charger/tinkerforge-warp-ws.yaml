@@ -1,47 +1,34 @@
 template: tinkerforge-warp-ws
 products:
-  - brand: TinkerForge
-    description:
-      generic: WARP Charger Smart
-  - brand: TinkerForge
-    description:
-      generic: WARP Charger Pro
+  - { brand: TinkerForge , description: { generic: WARP1 Smart}}
+  - { brand: TinkerForge , description: { generic: WARP1 Pro}}
+  - { brand: TinkerForge , description: { generic: WARP2 Smart}}
+  - { brand: TinkerForge , description: { generic: WARP2 Pro}}
+  - { brand: TinkerForge , description: { generic: WARP3 Smart}}
+  - { brand: TinkerForge , description: { generic: WARP3 Pro}}
 capabilities: ["mA", "1p3p", "rfid"]
 requirements:
   description:
-    en: Firmware v2 required. Automatic phase switching requires the additional WARP Energy Manager.
-    de: Firmware v2 erforderlich. Für automatische Phasenumschaltung wird zusätzlich der WARP Energy Manager benötigt.
+    de: Die automatische Phasenumschaltung bei 1p Fahrzeugen muss deaktiviert sein. Siehe [docs.warp-charger.com](https://docs.warp-charger.com/docs/mqtt_http/api_reference/evse#evse_phase_auto_switch_warp3).
+    en: The automatic phase switching for 1p vehicles must be deactivated. See [docs.warp-charger.com](https://docs.warp-charger.com/docs/mqtt_http/api_reference/evse#evse_phase_auto_switch_warp3).
   evcc: ["skiptest"]
 params:
   - name: uri
     required: true
   - name: user
   - name: password
-  - name: energyManagerUri
+  - name: energyMeterIndex
+    advanced: true
+    default: 0
     description:
-      generic: Energy Manager URI
+      generic: Energy Meter Index
     help:
-      de: HTTP(S) Adresse des WARP Energy Manager
-      en: HTTP(S) address of the WARP Energy Manager
-  - name: energyManagerUser
-    description:
-      de: Energy Manager Benutzerkonto
-      en: Energy Manager Username
-    help:
-      de: bspw. E-Mail Adresse, User Id, etc.
-      en: e.g. email address, user id, etc.
-  - name: energyManagerPassword
-    description:
-      de: Energy Manager Passwort
-      en: Energy Manager Password
-    help:
-      de: Bei führenden Nullen bitte in einfache Hochkommata setzen
-      en: Use single quotes in case of leading zeros
+      de: Index des in der Warp konfigurierten Meters dessen Werte genutzt werden sollen.
+      en: Index of the meter configured in the WARP charger whose values should be used.
 render: |
   type: warp-ws
   uri: {{ .uri }}
   user: {{ .user }}
   password: {{ .password }}
-  energyManagerUri: {{ .energyManagerUri }}
-  energyManagerUser: {{ .energyManagerUser }}
-  energyManagerPassword: {{ .energyManagerPassword }}
+  energyMeterIndex: {{ .energyMeterIndex }}
+  disablePhaseAutoSwitch: true

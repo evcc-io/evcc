@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
+	"path"
 	"slices"
 	"strings"
 	"sync"
@@ -88,7 +90,7 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 		return nil, err
 	}
 
-	// Feature: Meter
+	// Feature: Meter -> Meter is legacy API, Meters is the new API
 	var currentPower, totalEnergy func() (float64, error)
 	if wb.hasFeature(warp.FeatureMeter) || wb.hasFeature(warp.FeatureMeters) {
 		currentPower = wb.currentPower
@@ -106,7 +108,12 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 		wb.emURI = wb.uri
 		wb.emHelper = wb.Helper
 	} else if cc.EnergyManagerURI != "" { // fallback to Energy Manager
-		wb.emURI = util.DefaultScheme(strings.TrimRight(cc.EnergyManagerURI, "/"), "http")
+		wb.emURI, err = parseURI(cc.EnergyManagerURI, false)
+		if wb.emURI == "" {
+			return nil, err
+		} else if err != nil {
+			wb.log.DEBUG.Println(err)
+		}
 		wb.emHelper = request.NewHelper(wb.log)
 		if cc.EnergyManagerUser != "" {
 			wb.emHelper.Client.Transport = digest.NewTransport(cc.EnergyManagerUser, cc.EnergyManagerPassword, wb.emHelper.Client.Transport)
@@ -163,7 +170,13 @@ func NewWarpWS(ctx context.Context, uri, user, password string, meterIndex uint)
 }
 
 func (w *WarpWS) run(ctx context.Context) {
-	uri := strings.Replace(w.uri, "http://", "ws://", 1) + "/ws"
+	uri, err := parseURI(w.uri, true)
+	if err != nil {
+		w.log.DEBUG.Println(err)
+		if uri == "" {
+			return
+		}
+	}
 	w.log.TRACE.Printf("connecting to %s …", uri)
 
 	bo := backoff.NewExponentialBackOff(backoff.WithMaxElapsedTime(0))
@@ -183,6 +196,22 @@ func (w *WarpWS) run(ctx context.Context) {
 			w.log.ERROR.Println(err)
 		}
 	}
+}
+
+func parseURI(uri string, toWS bool) (string, error) {
+	u, err := url.Parse(util.DefaultScheme(strings.TrimRight(uri, "/"), "http"))
+	if err != nil {
+		return "", err
+	}
+	if u.Scheme == "https" || u.Scheme == "wss" {
+		u.Scheme = "http"
+		err = fmt.Errorf("https or wss are not supported, using http/ws instead")
+	}
+	if toWS {
+		u.Scheme = "ws"
+		u.Path = path.Join(u.Path, "/ws")
+	}
+	return u.String(), err
 }
 
 func (w *WarpWS) handleConnection(ctx context.Context, conn *websocket.Conn) error {
@@ -236,7 +265,7 @@ func (w *WarpWS) handleEvent(topic string, payload json.RawMessage) error {
 			return nil
 		}
 		err = json.Unmarshal(payload, &w.meter.TmpValues)
-		if len(w.meter.TmpValues) > 6 {
+		if len(w.meter.TmpValues) > 5 {
 			copy(w.meter.Voltages[:], w.meter.TmpValues[:3])
 			copy(w.meter.Currents[:], w.meter.TmpValues[3:6])
 		}
@@ -313,8 +342,8 @@ func (w *WarpWS) Enable(enable bool) error {
 	var curr int64
 	if enable {
 		w.mu.RLock()
-		defer w.mu.RUnlock()
 		curr = w.maxCurrent
+		w.mu.RUnlock()
 	}
 	return w.setCurrent(curr)
 }
@@ -343,8 +372,6 @@ func (w *WarpWS) MaxCurrentMillis(current float64) error {
 }
 
 func (w *WarpWS) statusFromEvseStatus(state int) (api.ChargeStatus, error) {
-	w.mu.RLock()
-	defer w.mu.RUnlock()
 	if state < 3 {
 		return []api.ChargeStatus{api.StatusA, api.StatusB, api.StatusC}[state], nil
 	}
@@ -352,6 +379,8 @@ func (w *WarpWS) statusFromEvseStatus(state int) (api.ChargeStatus, error) {
 }
 
 func (w *WarpWS) Status() (api.ChargeStatus, error) {
+	w.mu.RLock()
+	defer w.mu.RUnlock()
 	return w.statusFromEvseStatus(w.evse.State.Iec61851State)
 }
 
@@ -413,7 +442,7 @@ func (w *WarpWS) disablePhaseAutoSwitch() error {
 // phases1p3p implements the api.PhaseSwitcher interface
 func (w *WarpWS) phases1p3p(phases int) error {
 	if ec, err := w.ensurePmState(); err != nil || ec.ExternalControl > warp.ExternalControlAvailable {
-		return fmt.Errorf("external control not available: %s", ec)
+		return fmt.Errorf("external control not available: %d", ec.ExternalControl)
 	}
 	w.mu.RLock()
 	em := w.emHelper
@@ -473,7 +502,7 @@ func (w *WarpWS) ensurePmState() (warp.PmState, error) {
 	uri := w.emURI
 	w.mu.RUnlock()
 
-	if em == nil || s.ExternalControl != 0 {
+	if em == nil || uri == "" || s.ExternalControl != 0 {
 		return s, nil
 	}
 
