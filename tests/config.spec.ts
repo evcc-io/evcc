@@ -75,13 +75,18 @@ test.describe("general", async () => {
 
     const experimentalInput = modal.getByLabel("Enable experimental features.");
     await expect(experimentalInput).not.toBeChecked();
-    await experimentalInput.check();
-
+    await experimentalInput.click();
     await modal.getByRole("button", { name: "Close" }).click();
     await expectModalHidden(modal);
-
-    await experimentalEntry.getByRole("button", { name: "edit" }).click();
     await expect(experimentalEntry).toContainText("on");
+
+    await restart(CONFIG_GRID_ONLY);
+    await page.reload();
+
+    await expect(experimentalEntry).toContainText("on");
+    await experimentalEntry.getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(modal);
+    await expect(experimentalInput).toBeChecked();
   });
 });
 
