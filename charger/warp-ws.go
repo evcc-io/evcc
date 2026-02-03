@@ -164,7 +164,7 @@ func NewWarpWS(ctx context.Context, uri, user, password string, meterIndex uint)
 
 func (w *WarpWS) run(ctx context.Context) {
 	uri := strings.Replace(w.uri, "http://", "ws://", 1) + "/ws"
-	w.log.TRACE.Printf("ws: connecting to %s …", uri)
+	w.log.TRACE.Printf("connecting to %s …", uri)
 
 	bo := backoff.NewExponentialBackOff(backoff.WithMaxElapsedTime(0))
 
@@ -247,28 +247,38 @@ func (w *WarpWS) handleEvent(topic string, payload json.RawMessage) error {
 		err = json.Unmarshal(payload, &w.meter)
 	case w.metersValueIDsTopic:
 		var ids []int
-		if err = json.Unmarshal(payload, &ids); err == nil {
-			for i, id := range ids {
-				w.meterMap[id] = i
-			}
+		if err = json.Unmarshal(payload, &ids); err != nil {
+			return err
+		}
+		w.meterMap = make(map[int]int, len(ids))
+		for i, id := range ids {
+			w.meterMap[id] = i
 		}
 	case w.metersValuesTopic:
-		if err = json.Unmarshal(payload, &w.meter.TmpValues); err == nil {
-			if idx, ok := w.meterMap[warp.ValueIDPowerImExSum]; ok && idx < len(w.meter.TmpValues) {
-				w.meter.Power = w.meter.TmpValues[idx]
+		if err := json.Unmarshal(payload, &w.meter.TmpValues); err != nil {
+			return err
+		}
+
+		get := func(id int) (float64, bool) {
+			if idx, ok := w.meterMap[id]; ok && idx < len(w.meter.TmpValues) {
+				return w.meter.TmpValues[idx], true
 			}
-			if idx, ok := w.meterMap[warp.ValueIDEnergyAbsImSum]; ok && idx < len(w.meter.TmpValues) {
-				w.meter.EnergyAbs = w.meter.TmpValues[idx]
+			return 0, false
+		}
+
+		s := warp.DefaultSchema
+		if v, ok := get(s.PowerID); ok {
+			w.meter.Power = v
+		}
+		if v, ok := get(s.EnergyAbsID); ok {
+			w.meter.EnergyAbs = v
+		}
+		for p, ids := range s.Phases {
+			if v, ok := get(ids.CurrentID); ok {
+				w.meter.Currents[p] = v
 			}
-			for phase := range 3 {
-				if idx, ok := w.meterMap[warp.ValueIDCurrentImExSumL1+phase]; ok && idx < len(w.meter.TmpValues) {
-					w.meter.Currents[phase] = w.meter.TmpValues[idx]
-				}
-			}
-			for phase := range 3 {
-				if idx, ok := w.meterMap[warp.ValueIDVoltageL1N+phase]; ok && idx < len(w.meter.TmpValues) {
-					w.meter.Voltages[phase] = w.meter.TmpValues[idx]
-				}
+			if v, ok := get(ids.VoltageID); ok {
+				w.meter.Voltages[p] = v
 			}
 		}
 	case "power_manager/state":
@@ -285,10 +295,10 @@ func (w *WarpWS) hasFeature(feature string) bool {
 		w.mu.RUnlock()
 		return slices.Contains(w.features, feature)
 	}
+	uri := fmt.Sprintf("%s/info/features", w.uri)
 	w.mu.RUnlock()
 
 	var f []string
-	uri := fmt.Sprintf("%s/info/features", w.uri)
 	if err := w.GetJSON(uri, &f); err == nil {
 		w.mu.Lock()
 		w.features = f
@@ -406,13 +416,14 @@ func (w *WarpWS) phases1p3p(phases int) error {
 		return fmt.Errorf("external control not available: %s", ec)
 	}
 	w.mu.RLock()
-	defer w.mu.RUnlock()
-
+	em := w.emHelper
 	uri := fmt.Sprintf("%s/power_manager/external_control", w.emURI)
+	w.mu.RUnlock()
+
 	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(map[string]int{"phases_wanted": phases}), request.JSONEncoding)
 
-	if w.emHelper != nil {
-		_, err := w.emHelper.Do(req)
+	if em != nil {
+		_, err := em.Do(req)
 		return err
 	}
 
@@ -437,13 +448,14 @@ func (w *WarpWS) ensurePmLowLevelState() (warp.PmLowLevelState, error) {
 	w.mu.RLock()
 	s := w.pmLowLevelState
 	em := w.emHelper
+	uri := w.emURI
 	w.mu.RUnlock()
-	if em == nil {
+	if em == nil || uri == "" {
 		return s, nil
 	}
 
 	var ns warp.PmLowLevelState
-	if err := w.emHelper.GetJSON(fmt.Sprintf("%s/power_manager/low_level_state", w.emURI), &ns); err != nil {
+	if err := em.GetJSON(fmt.Sprintf("%s/power_manager/low_level_state", uri), &ns); err != nil {
 		return warp.PmLowLevelState{}, err
 	}
 
@@ -458,6 +470,7 @@ func (w *WarpWS) ensurePmState() (warp.PmState, error) {
 	w.mu.RLock()
 	s := w.pmState
 	em := w.emHelper
+	uri := w.emURI
 	w.mu.RUnlock()
 
 	if em == nil || s.ExternalControl != 0 {
@@ -465,7 +478,7 @@ func (w *WarpWS) ensurePmState() (warp.PmState, error) {
 	}
 
 	var ns warp.PmState
-	if err := w.emHelper.GetJSON(fmt.Sprintf("%s/power_manager/state", w.emURI), &ns); err != nil {
+	if err := em.GetJSON(fmt.Sprintf("%s/power_manager/state", uri), &ns); err != nil {
 		return warp.PmState{}, err
 	}
 

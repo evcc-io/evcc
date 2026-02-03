@@ -2,10 +2,10 @@ template: tinkerforge-warp-ws
 products:
   - brand: TinkerForge
     description:
-      generic: WARP Charger Smart (WebSocket)
+      generic: WARP Charger Smart
   - brand: TinkerForge
     description:
-      generic: WARP Charger Pro (WebSocket)
+      generic: WARP Charger Pro
 capabilities: ["mA", "1p3p", "rfid"]
 requirements:
   description:

@@ -38,17 +38,27 @@ type MeterValues struct {
 	TmpValues []float64
 }
 
-// Meter value IDs according to Tinkerforge meter_value_id.csv
-const (
-	ValueIDVoltageL1N       = 1   // Voltage L1-N
-	ValueIDVoltageL2N       = 2   // Voltage L2-N
-	ValueIDVoltageL3N       = 3   // Voltage L3-N
-	ValueIDCurrentImExSumL1 = 13  // Current L1 Im-Ex Sum
-	ValueIDCurrentImExSumL2 = 17  // Current L2 Im-Ex Sum
-	ValueIDCurrentImExSumL3 = 21  // Current L3 Im-Ex Sum
-	ValueIDPowerImExSum     = 74  // Power Im-Ex Sum L1 L2 L3
-	ValueIDEnergyAbsImSum   = 209 // Energy Im Sum L1 L2 L3
-)
+type PhasePair struct {
+	CurrentID int
+	VoltageID int
+}
+
+type MeterSchema struct {
+	PowerID     int
+	EnergyAbsID int
+	Phases      [3]PhasePair
+}
+
+// Value IDs based on Tinkerforge's meter_value_id.csv
+var DefaultSchema = MeterSchema{
+	PowerID:     74,  // Power Im-Ex Sum L1 L2 L3
+	EnergyAbsID: 209, // Energy Im Sum L1 L2 L3
+	Phases: [3]PhasePair{
+		{CurrentID: 13, VoltageID: 1}, // Current L1 Im-Ex Sum, Voltage L1-N
+		{CurrentID: 17, VoltageID: 2}, // Current L2 Im-Ex Sum, Voltage L2-N
+		{CurrentID: 21, VoltageID: 3}, // Current L3 Im-Ex Sum, Voltage L3-N
+	},
+}
 
 type ChargeTrackerCurrentCharge struct {
 	AuthorizationInfo struct {
