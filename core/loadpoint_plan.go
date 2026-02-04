@@ -187,7 +187,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 			// TODO check when schedule is implemented
 			lp.log.DEBUG.Println("plan: continuing after target time")
 			return true
-		case lp.clock.Now().Before(lp.planSlotEnd) && !lp.planSlotEnd.IsZero():
+		case lp.clock.Now().Before(lp.planSlotEnd) && !lp.planSlotEnd.IsZero() && requiredDuration > strategy.Precondition:
 			// don't stop an already running slot if goal was not met
 			lp.log.DEBUG.Printf("plan: continuing until end of slot at %s", lp.planSlotEnd.Round(time.Second).Local())
 			return true
