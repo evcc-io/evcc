@@ -525,7 +525,7 @@ presets:
     - name: language
   tariff-base:
     - name: charges
-      type: int
+      type: float
       advanced: true
       description:
         en: Charge
@@ -534,7 +534,7 @@ presets:
         de: Zusätzlicher fester Aufschlag pro kWh (z.B. 0.05 für 5 Cent)
         en: Additional fixed charge per kWh (e.g. 0.05 for 5 cents)
     - name: tax
-      type: int
+      type: float
       advanced: true
       description:
         en: Tax
