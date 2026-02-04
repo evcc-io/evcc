@@ -51,6 +51,7 @@ render: |
           set:
             source: sequence
             set:
+  {{- if eq .powercontrol "true" }}
               - source: const
                 value: 1
                 set:
@@ -60,6 +61,9 @@ render: |
                     address: 2741
                     type: writeholding
                     encoding: int16
+              - source: sleep
+                duration: 10000ms
+  {{- end }}
               - source: modbus
                 {{- include "modbus" . | indent 14 }}
                 register:
@@ -70,6 +74,7 @@ render: |
           set:
             source: sequence
             set:
+  {{- if eq .powercontrol "true" }}
               - source: const
                 value: 0
                 set:
@@ -79,6 +84,9 @@ render: |
                     address: 2741
                     type: writeholding
                     encoding: int16
+              - source: sleep
+                duration: 10000ms
+  {{- end }}
               - source: modbus
                 {{- include "modbus" . | indent 14 }}
                 register:
@@ -89,6 +97,7 @@ render: |
           set:
             source: sequence
             set:
+  {{- if eq .powercontrol "true" }}
               - source: const
                 value: 1
                 set:
@@ -98,6 +107,9 @@ render: |
                     address: 2741
                     type: writeholding
                     encoding: int16
+              - source: sleep
+                duration: 10000ms
+  {{- end }}
               - source: modbus
                 {{- include "modbus" . | indent 14 }}
                 register:
