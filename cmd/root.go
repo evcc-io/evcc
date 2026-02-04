@@ -407,11 +407,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 		valueChan <- util.Param{Key: keys.DemoMode, Val: true}
 	}
 
-	publisher := func(k string, v any) {
+	httpd.RegisterSystemHandler(site, func(k string, v any) {
 		valueChan <- util.Param{Key: k, Val: v}
-	}
-
-	httpd.RegisterSystemHandler(site, publisher, cache, authObject, func() {
+	}, cache, authObject, func() {
 		log.INFO.Println("evcc was stopped by user. OS should restart the service. Or restart manually.")
 		err = errors.New("restart required") // https://gokrazy.org/development/process-interface/
 		once.Do(func() { close(stopC) })     // signal loop to end
@@ -428,7 +426,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 		site.DumpConfig()
 		site.Prepare(valueChan, pushChan)
 
-		httpd.RegisterSiteHandlers(site, publisher, valueChan)
+		httpd.RegisterSiteHandlers(site)
 
 		go func() {
 			site.Run(stopC, conf.Interval)

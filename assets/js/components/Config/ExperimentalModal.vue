@@ -46,8 +46,7 @@ export default defineComponent({
 		async change(e: Event) {
 			try {
 				this.error = null;
-				console.log("experimental changed", (e.target as HTMLInputElement).checked);
-				await api.post(`settings/experimental/${(e.target as HTMLInputElement).checked}`);
+				await api.post(`config/experimental/${(e.target as HTMLInputElement).checked}`);
 			} catch (err) {
 				const e = err as AxiosError<{ error: string }>;
 				this.error = e.response?.data?.error || e.message;
