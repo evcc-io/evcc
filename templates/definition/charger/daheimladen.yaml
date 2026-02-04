@@ -6,7 +6,7 @@ products:
       generic: Smart/Touch
 requirements:
   description:
-    de: Firmware-Anforderungen= Smart ab "3.21", Touch ab "1.24". In den Einstellungen muss "Nachladen" (Smart) bzw. "RSDA" (Touch) aktiviert sein
+    de: Erfordert Firmware "3.21" (Smart) bzw. "1.24" (Touch). In den Einstellungen muss "Nachladen" (Smart) bzw. "RSDA" (Touch) aktiviert sein.
     en: Firmware requirements= Smart from "3.21", Touch from "1.24". Furthermore, “Nachladen” (Smart) or “RSDA” (Touch) must be activated in settings.
 capabilities: ["mA"]
 params:
