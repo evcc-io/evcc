@@ -14,6 +14,8 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
+// TODO deprecated
+
 // Warp2 is the Warp charger v2 firmware implementation
 type Warp2 struct {
 	log           *util.Logger
