@@ -191,7 +191,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 			// don't stop an already running slot if goal was not met
 			lp.log.DEBUG.Printf("plan: continuing until end of slot at %s", lp.planSlotEnd.Round(time.Second).Local())
 			return true
-		case requiredDuration < tariff.SlotDuration:
+		case requiredDuration < tariff.SlotDuration && requiredDuration > strategy.Precondition:
 			lp.log.DEBUG.Printf("plan: continuing for remaining %v", requiredDuration.Round(time.Second))
 			return true
 		case lp.clock.Until(planStart) < tariff.SlotDuration:
