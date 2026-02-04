@@ -2,8 +2,8 @@ template: epexprijzen-nl
 products:
   - brand: epexprijzen.nl
     description:
-      en: Current energy prices in the Netherlands, including surcharges and taxes
-      de: Aktuelle Energiepreise in den Niederlanden, einschließlich Zuschlägen und Steuern
+      en: Current energy prices in the Netherlands, with optional surcharges and taxes
+      de: Aktuelle Energiepreise in den Niederlanden, mit optionalen Zuschlägen und Steuern
 requirements:
   evcc: ["skiptest"]
 group: price
@@ -43,6 +43,18 @@ params:
     choice: ["hourly", "quarterly"]
     default: quarterly
     required: true
+  - name: exclude-energy-tax
+    description:
+      en: Exclude energy tax from prices
+      de: Energiesteuer von Preisen ausschließen
+    type: bool
+    default: false
+  - name: exclude-provider-charge
+    description:
+      en: Exclude provider charge from prices
+      de: Anbietergebühr von Preisen ausschließen
+    type: bool
+    default: false
   - preset: tariff-base
   - name: interval
     default: 1h
@@ -54,11 +66,14 @@ render: |
     source: http
     uri: https://epexprijzen.nl/api/v1/prices/{{ .provider }}/{{ index . "price-interval" }}
     jq: |
-      (.today // []) + (.tomorrow // []) | 
+      . as $root |
+      ({{ if index . "exclude-energy-tax" }}$root.energy_tax{{ else }}0{{ end }}) as $energy_tax |
+      ({{ if index . "exclude-provider-charge" }}$root.provider_charge{{ else }}0{{ end }}) as $provider_charge |
+      ($root.today // []) + ($root.tomorrow // []) | 
       map({
         "start": (.t | strptime("%Y-%m-%dT%H:%M:%S%z") | strftime("%Y-%m-%dT%H:%M:%SZ")),
         "end": (.t | strptime("%Y-%m-%dT%H:%M:%S%z") | mktime + {{ if eq (index . "price-interval") "hourly" }}3600{{ else }}900{{ end }} | strftime("%Y-%m-%dT%H:%M:%SZ")),
-        "value": .price
+        "value": (.price - $energy_tax - $provider_charge)
       }) | tostring
     cache: 1h
   interval: {{ .interval }}
