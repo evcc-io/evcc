@@ -1,0 +1,44 @@
+template: tinkerforge-warp2-ws
+products:
+  - { brand: TinkerForge, description: { generic: WARP2 Smart + Energy Manager } }
+  - { brand: TinkerForge, description: { generic: WARP2 Pro + Energy Manager } }
+capabilities: ["mA", "1p3p", "rfid"]
+requirements:
+  description:
+    en: Firmware v2 required. Automatic phase switching requires the additional WARP Energy Manager.
+    de: Firmware v2 erforderlich. Für automatische Phasenumschaltung wird zusätzlich der WARP Energy Manager benötigt.
+  evcc: ["skiptest"]
+params:
+  - name: uri
+    required: true
+  - name: user
+  - name: password
+  - name: energyManagerUri
+    description:
+      generic: Energy Manager URI
+    help:
+      de: HTTP(S) Adresse des WARP Energy Manager
+      en: HTTP(S) address of the WARP Energy Manager
+  - name: energyManagerUser
+    description:
+      de: Energy Manager Benutzerkonto
+      en: Energy Manager Username
+    help:
+      de: bspw. E-Mail Adresse, User Id, etc.
+      en: e.g. email address, user id, etc.
+  - name: energyManagerPassword
+    description:
+      de: Energy Manager Passwort
+      en: Energy Manager Password
+    help:
+      de: Bei führenden Nullen bitte in einfache Hochkommata setzen
+      en: Use single quotes in case of leading zeros
+render: |
+  type: warp-ws
+  uri: {{ .uri }}
+  user: {{ .user }}
+  password: {{ .password }}
+  energyManagerUri: {{ .energyManagerUri }}
+  energyManagerUser: {{ .energyManagerUser }}
+  energyManagerPassword: {{ .energyManagerPassword }}
+  disablePhaseAutoSwitch: true
