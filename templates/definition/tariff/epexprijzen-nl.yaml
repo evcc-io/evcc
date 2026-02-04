@@ -67,8 +67,8 @@ render: |
     uri: https://epexprijzen.nl/api/v1/prices/{{ .provider }}/{{ index . "price-interval" }}
     jq: |
       . as $root |
-      ({{ if index . "exclude-energy-tax" }}$root.energy_tax{{ else }}0{{ end }}) as $energy_tax |
-      ({{ if index . "exclude-provider-charge" }}$root.provider_charge{{ else }}0{{ end }}) as $provider_charge |
+      ({{ if index . "exclude-energy-tax" }}($root.energy_tax // 0){{ else }}0{{ end }}) as $energy_tax |
+      ({{ if index . "exclude-provider-charge" }}($root.provider_charge // 0){{ else }}0{{ end }}) as $provider_charge |
       ($root.today // []) + ($root.tomorrow // []) | 
       map({
         "start": (.t | strptime("%Y-%m-%dT%H:%M:%S%z") | strftime("%Y-%m-%dT%H:%M:%SZ")),
