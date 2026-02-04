@@ -69,9 +69,8 @@ func NewNiuFromConfig(other map[string]any) (api.Vehicle, error) {
 
 // login implements the Niu oauth2 api
 func (v *Niu) login() error {
-	hash := md5.New()
-	hash.Write([]byte(v.password))
-	md5hash := hex.EncodeToString(hash.Sum(nil))
+	hash := md5.Sum([]byte(v.password))
+	md5hash := hex.EncodeToString(hash[:])
 
 	data := url.Values{
 		"account":    {v.user},
