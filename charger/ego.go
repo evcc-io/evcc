@@ -33,25 +33,24 @@ import (
 
 // Ego charger implementation for E.G.O. Smart Heater
 type Ego struct {
-	log     *util.Logger
-	conn    *modbus.Connection
-	lp      loadpoint.API
-	power   uint32
-	enabled bool
+	log   *util.Logger
+	conn  *modbus.Connection
+	lp    loadpoint.API
+	power uint32
 }
 
 const (
-	egoRegRelais1Power      = 4096  // 0x1000
-	egoRegRelais2Power      = 4128  // 0x1020
-	egoRegRelais3Power      = 4160  // 0x1040
-	egoRegRelaisStatus      = 5128  // 0x1408
-	egoRegTempBoiler        = 5124  // 0x1404
-	egoRegTempMax           = 4618  // 0x120A
-	egoRegTempNominal       = 4619  // 0x120B
-	egoRegPowerNominal      = 4864  // 0x1300
-	egoRegHomeTotalPower    = 4865  // 0x1301
-	egoRegManufacturerID    = 8192  // 0x2000
-	egoModbusID             = 247   // Fixed Modbus slave address
+	egoRegRelais1Power   = 4096 // 0x1000
+	egoRegRelais2Power   = 4128 // 0x1020
+	egoRegRelais3Power   = 4160 // 0x1040
+	egoRegRelaisStatus   = 5128 // 0x1408
+	egoRegTempBoiler     = 5124 // 0x1404
+	egoRegTempMax        = 4618 // 0x120A
+	egoRegTempNominal    = 4619 // 0x120B
+	egoRegPowerNominal   = 4864 // 0x1300
+	egoRegHomeTotalPower = 4865 // 0x1301
+	egoRegManufacturerID = 8192 // 0x2000
+	egoModbusID          = 247  // Fixed Modbus slave address
 )
 
 func init() {
@@ -127,9 +126,12 @@ func (wb *Ego) Features() []api.Feature {
 }
 
 func (wb *Ego) heartbeat(ctx context.Context, timeout time.Duration) {
-	for tick := time.Tick(timeout); ; {
+	ticker := time.NewTicker(timeout)
+	defer ticker.Stop()
+
+	for {
 		select {
-		case <-tick:
+		case <-ticker.C:
 		case <-ctx.Done():
 			return
 		}
@@ -197,12 +199,7 @@ func (wb *Ego) Enable(enable bool) error {
 		}
 	}
 
-	res := wb.setPower(power)
-	if res == nil {
-		wb.enabled = enable
-	}
-
-	return res
+	return wb.setPower(power)
 }
 
 // MaxCurrent implements the api.Charger interface
