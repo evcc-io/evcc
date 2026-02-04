@@ -33,6 +33,7 @@ import (
 
 // Ego charger implementation for E.G.O. Smart Heater
 type Ego struct {
+	*embed
 	log   *util.Logger
 	conn  *modbus.Connection
 	lp    loadpoint.API
@@ -50,22 +51,25 @@ const (
 	egoRegPowerNominal   = 4864 // 0x1300
 	egoRegHomeTotalPower = 4865 // 0x1301
 	egoRegManufacturerID = 8192 // 0x2000
-	egoModbusID          = 247  // Fixed Modbus slave address
+	egoModbusID          = 247  // Modbus slave address
 )
 
 func init() {
-	registry.AddCtx("ego-smartheater", func(ctx context.Context, other map[string]any) (api.Charger, error) {
-		return newEgoFromConfig(ctx, other)
-	})
+	registry.AddCtx("ego-smartheater", newEgoFromConfig)
 }
 
 // newEgoFromConfig creates an Ego charger from generic config
 func newEgoFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
+		embed              `mapstructure:",squash"`
 		modbus.TcpSettings `mapstructure:",squash"`
 	}{
+		embed: embed{
+			Icon_:     "heater",
+			Features_: []api.Feature{api.IntegratedDevice, api.Heating},
+		},
 		TcpSettings: modbus.TcpSettings{
-			ID: egoModbusID, // fixed slave ID
+			ID: egoModbusID,
 		},
 	}
 
@@ -73,11 +77,11 @@ func newEgoFromConfig(ctx context.Context, other map[string]any) (api.Charger, e
 		return nil, err
 	}
 
-	return NewEgo(ctx, cc.URI, cc.ID)
+	return NewEgo(ctx, &cc.embed, cc.URI, cc.ID)
 }
 
 // NewEgo creates E.G.O. Smart Heater charger
-func NewEgo(ctx context.Context, uri string, slaveID uint8) (api.Charger, error) {
+func NewEgo(ctx context.Context, embed *embed, uri string, slaveID uint8) (api.Charger, error) {
 	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
 	if err != nil {
 		return nil, err
@@ -91,8 +95,9 @@ func NewEgo(ctx context.Context, uri string, slaveID uint8) (api.Charger, error)
 	conn.Logger(log.TRACE)
 
 	wb := &Ego{
-		log:  log,
-		conn: conn,
+		embed: embed,
+		log:   log,
+		conn:  conn,
 	}
 
 	// Verify connection by reading manufacturer ID
@@ -109,20 +114,6 @@ func NewEgo(ctx context.Context, uri string, slaveID uint8) (api.Charger, error)
 	go wb.heartbeat(ctx, 30*time.Second)
 
 	return wb, nil
-}
-
-var _ api.IconDescriber = (*Ego)(nil)
-
-// Icon implements the api.IconDescriber interface
-func (wb *Ego) Icon() string {
-	return "heater"
-}
-
-var _ api.FeatureDescriber = (*Ego)(nil)
-
-// Features implements the api.FeatureDescriber interface
-func (wb *Ego) Features() []api.Feature {
-	return []api.Feature{api.IntegratedDevice, api.Heating}
 }
 
 func (wb *Ego) heartbeat(ctx context.Context, timeout time.Duration) {
