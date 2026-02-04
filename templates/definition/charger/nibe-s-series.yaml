@@ -102,13 +102,13 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 2741
-              type: holding
+              type: writeholding
               encoding: int16
         - source: modbus
           {{- include "modbus" . | indent 8 }}
           register:
             address: 6007
-            type: holding
+            type: writeholding
             encoding: int16
           scale: 0.01
     switch:
@@ -118,6 +118,6 @@ render: |
           {{- include "modbus" . | indent 8 }}
           register:
             address: 2741
-            type: holding
+            type: writeholding
             encoding: int16
   {{- end }}
