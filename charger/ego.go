@@ -117,12 +117,9 @@ func NewEgo(ctx context.Context, embed *embed, uri string, slaveID uint8) (api.C
 }
 
 func (wb *Ego) heartbeat(ctx context.Context, timeout time.Duration) {
-	ticker := time.NewTicker(timeout)
-	defer ticker.Stop()
-
-	for {
+	for tick := time.Tick(timeout); ; {
 		select {
-		case <-ticker.C:
+		case <-tick:
 		case <-ctx.Done():
 			return
 		}
