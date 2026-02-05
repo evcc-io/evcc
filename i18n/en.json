@@ -172,7 +172,23 @@
       "loading": "Loading YAML editor…"
     },
     "eebus": {
-      "description": "Configuration that enables evcc to communicate with other EEBus devices.",
+      "certificate": {
+        "private": "Private key",
+        "public": "Public certificate",
+        "title": "Certificates"
+      },
+      "description": "Configuration that enables evcc to communicate with EEBus compatible devices like chargers or a control unit of your grid operator. All relevant initialization and certificate generation is done automatically on first start.",
+      "descriptionAdvanced": "No changes required. Only perform changes if you really know what you're doing. If you change either the SHIP-id or the certificates, you'll need to pair your devices again.",
+      "interfaces": "Interfaces",
+      "interfacesHelp": "Limit the network interfaces that EEBus should use to avoid communication problems. Leave the field blank to use all interfaces. One entry per line.",
+      "port": "Port",
+      "portHelp": "The port to be used.",
+      "removeConfirm": "All EEBus configuration will be removed. New certificates and identifiers will be generated on next start. Are you sure?",
+      "shipid": "SHIP-ID",
+      "shipidExplain": "Permanent device identifier for identification in the EEBus network.",
+      "shipidHelp": "This SHIP-ID is linked to the certificates below.",
+      "ski": "SKI",
+      "skiExplain": "Unique security identifier for pairing EEBus devices.",
       "title": "EEBus"
     },
     "experimental": {
@@ -209,6 +225,7 @@
       "dragList": "Reorderable list",
       "experimental": "Experimental",
       "forceSave": "Save anyway",
+      "fromYamlHint": "Note: Configured via evcc.yaml. Remove the entry from the file to enable editing here.",
       "hideAdvancedSettings": "Hide advanced settings",
       "invalidFileSelected": "Invalid file selected",
       "noFileSelected": "No file selected.",
@@ -247,8 +264,7 @@
       "downloadCsv": "Download CSV",
       "eventsRecorded": "Recorded {count} grid limitation events.",
       "lastEvent": "Most recent {timeAgo}.",
-      "title": "External Limit",
-      "yamlConfigured": "Note: Configured via evcc.yaml. Remove the entry from the file to enable editing here."
+      "title": "External Limit"
     },
     "icon": {
       "change": "change",
@@ -390,8 +406,7 @@
       "unconfigured": "not configured",
       "vehicles": "My Vehicles",
       "welcomeBannerText": "Start with creating at least one **charger**, **heater**, **grid**, **solar**, **battery** or **additional meter**. If you just want to test, pick a **demo device**.",
-      "welcomeBannerTitle": "Let's configure your system!",
-      "yaml": "Devices from evcc.yaml are not editable."
+      "welcomeBannerTitle": "Let's configure your system!"
     },
     "messaging": {
       "description": "Receive messages about your charging sessions.",
@@ -543,6 +558,7 @@
       "integrations": "Integrations",
       "loadpoints": "Charging & Heating",
       "meter": "Solar & Battery",
+      "services": "Services",
       "system": "System",
       "vehicles": "Vehicles"
     },

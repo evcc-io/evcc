@@ -1,4 +1,5 @@
 template: tinkerforge-warp3
+deprecated: true
 products:
   - brand: TinkerForge
     description:
@@ -15,6 +16,6 @@ params:
     default: warp
 render: |
   type: warp2
-  {{ include "mqtt" . }}
+  {{- include "mqtt" . }}
   topic: {{ .topic }}
   energymanager: {{ .topic }}

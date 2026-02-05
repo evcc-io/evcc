@@ -25,7 +25,6 @@ type Estimator struct {
 	charger api.Charger
 	vehicle api.Vehicle
 
-	capacity          float64 // vehicle capacity in Wh cached to simplify testing
 	virtualCapacity   float64 // estimated virtual vehicle capacity in Wh
 	vehicleSoc        float64 // estimated vehicle Soc
 	initialSoc        float64 // first received valid vehicle Soc
@@ -43,19 +42,10 @@ func NewEstimator(log *util.Logger, charger api.Charger, vehicle api.Vehicle) *E
 		vehicle: vehicle,
 	}
 
-	s.Reset()
+	s.virtualCapacity = s.vehicle.Capacity() * 1e3 / ChargeEfficiency // initial capacity taking efficiency into account
+	s.energyPerSocStep = s.virtualCapacity / 100
 
 	return s
-}
-
-// Reset resets the estimation process to default values
-func (s *Estimator) Reset() {
-	s.prevSoc = 0
-	s.prevChargedEnergy = 0
-	s.initialSoc = 0
-	s.capacity = s.vehicle.Capacity() * 1e3           // cache to simplify debugging
-	s.virtualCapacity = s.capacity / ChargeEfficiency // initial capacity taking efficiency into account
-	s.energyPerSocStep = s.virtualCapacity / 100
 }
 
 // RemainingChargeDuration returns the estimated remaining duration
@@ -99,60 +89,39 @@ func (s *Estimator) RemainingChargeEnergy(targetSoc int) float64 {
 }
 
 // Soc replaces the api.Vehicle.Soc interface to take charged energy into account
-func (s *Estimator) Soc(fetchedSoc *float64, chargedEnergy float64) (float64, error) {
+func (s *Estimator) Soc(fetchedSoc *float64, chargedEnergy float64) float64 {
 	if fetchedSoc != nil {
 		s.vehicleSoc = *fetchedSoc
 	} else {
 		s.log.WARN.Printf("missing vehicle soc- ignored by estimator")
 	}
 
-	if s.virtualCapacity > 0 {
-		socDelta := s.vehicleSoc - s.prevSoc
-		energyDelta := max(chargedEnergy, 0) - s.prevChargedEnergy
+	socDelta := s.vehicleSoc - s.prevSoc
+	energyDelta := max(chargedEnergy, 0) - s.prevChargedEnergy
 
-		if socDelta != 0 || energyDelta < 0 { // soc value change or unexpected energy reset
-			// compare ChargeState of vehicle and charger
-			var invalid bool
-
-			if vs, ok := s.vehicle.(api.ChargeState); ok {
-				ccs, err := s.charger.Status()
-				if err != nil {
-					return 0, err
-				}
-				vcs, err := vs.Status()
-				if err != nil {
-					vcs = ccs // sanitize vehicle errors
-				} else {
-					s.log.DEBUG.Printf("vehicle status: %s", vcs)
-				}
-				invalid = vcs != ccs
-			}
-
-			if !invalid {
-				if s.initialSoc == 0 {
-					s.initialSoc = s.vehicleSoc
-					s.initialEnergy = chargedEnergy
-				}
-
-				socDiff := s.vehicleSoc - s.initialSoc
-				energyDiff := chargedEnergy - s.initialEnergy
-
-				// recalculate gradient, wh per soc %
-				if socDiff > 10 && energyDiff > 0 {
-					s.energyPerSocStep = energyDiff / socDiff
-					s.virtualCapacity = s.energyPerSocStep * 100
-					s.log.DEBUG.Printf("soc gradient updated: soc: %.1f%%, socDiff: %.1f%%, energyDiff: %.0fWh, energyPerSocStep: %.1fWh, virtualCapacity: %.0fWh", s.vehicleSoc, socDiff, energyDiff, s.energyPerSocStep, s.virtualCapacity)
-				}
-			}
-
-			// sample charged energy at soc change, reset energy delta
-			s.prevChargedEnergy = max(chargedEnergy, 0)
-			s.prevSoc = s.vehicleSoc
-		} else {
-			s.vehicleSoc = min(*fetchedSoc+energyDelta/s.energyPerSocStep, 100)
-			s.log.DEBUG.Printf("soc estimated: %.2f%% (vehicle: %.2f%%)", s.vehicleSoc, *fetchedSoc)
+	if socDelta != 0 || energyDelta < 0 { // soc value change or unexpected energy reset
+		if s.initialSoc == 0 {
+			s.initialSoc = s.vehicleSoc
+			s.initialEnergy = chargedEnergy
 		}
+
+		socDiff := s.vehicleSoc - s.initialSoc
+		energyDiff := chargedEnergy - s.initialEnergy
+
+		// recalculate gradient, wh per soc %
+		if socDiff > 10 && energyDiff > 0 {
+			s.energyPerSocStep = energyDiff / socDiff
+			s.virtualCapacity = max(s.vehicle.Capacity()*1e3, s.energyPerSocStep*100)
+			s.log.DEBUG.Printf("soc gradient updated: soc: %.1f%%, socDiff: %.1f%%, energyDiff: %.0fWh, energyPerSocStep: %.1fWh, virtualCapacity: %.0fWh", s.vehicleSoc, socDiff, energyDiff, s.energyPerSocStep, s.virtualCapacity)
+		}
+
+		// sample charged energy at soc change, reset energy delta
+		s.prevChargedEnergy = max(chargedEnergy, 0)
+		s.prevSoc = s.vehicleSoc
+	} else {
+		s.vehicleSoc = min(*fetchedSoc+energyDelta/s.energyPerSocStep, 100)
+		s.log.DEBUG.Printf("soc estimated: %.2f%% (vehicle: %.2f%%)", s.vehicleSoc, *fetchedSoc)
 	}
 
-	return s.vehicleSoc, nil
+	return s.vehicleSoc
 }

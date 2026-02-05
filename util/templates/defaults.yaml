@@ -14,12 +14,16 @@ params:
     description:
       en: Modbus Type
       de: Modbus Typ
+    required: true
   - name: host
     required: true
     description:
       de: IP-Adresse oder Hostname
       en: IP address or hostname
     example: 192.0.2.2
+    pattern:
+      regex: "^[^\\/\\s]+(:[0-9]{1,5})?$" # any char except slash/space, optional :port
+      examples: ["192.168.1.100", "example.com", "server.local:8080"]
   - name: ip
     description:
       de: IP-Adresse
@@ -265,6 +269,7 @@ params:
     help:
       en: Usually found on the web interface of the wallbox
       de: Üblicherweise im Web Interface der Wallbox zu finden
+    service: eebus/services
   - name: uri
     private: true
     description:
@@ -373,6 +378,7 @@ params:
     description:
       en: Channel
       de: Kanal
+    type: int
   - name: clientid
     description:
       generic: Client ID
@@ -519,7 +525,7 @@ presets:
     - name: language
   tariff-base:
     - name: charges
-      type: int
+      type: float
       advanced: true
       description:
         en: Charge
@@ -528,7 +534,7 @@ presets:
         de: Zusätzlicher fester Aufschlag pro kWh (z.B. 0.05 für 5 Cent)
         en: Additional fixed charge per kWh (e.g. 0.05 for 5 cents)
     - name: tax
-      type: int
+      type: float
       advanced: true
       description:
         en: Tax
@@ -557,6 +563,16 @@ presets:
     - name: lat
       required: true
     - name: lon
+      required: true
+    - name: az
+      description:
+        en: Azimuth
+        de: Azimut
+      help:
+        en: Orientation of PV modules in degree. -180 = north, -90 = east, 0 = south, 90 = west, 180 = north
+        de: Ausrichtung der PV-Module in Grad. -180 = Norden, -90 = Osten, 0 = Süden, 90 = Westen, 180 = Norden
+      type: int
+      example: 0
       required: true
     - name: dec
       description:
@@ -681,6 +697,10 @@ presets:
       help:
         de: IP Adresse oder der Hostname des MQTT Brokers
         en: IP address or hostname of the MQTT broker
+      pattern:
+        regex: "^(tls://)?[^\\/\\s]+(:[0-9]{1,5})?$" # optional tls:// prefix, any char except slash/space, optional :port
+        examples:
+          ["192.168.1.100", "example.com", "server.local:8080", "tls://mqtt.example.com:8883"]
     - name: port
       default: 1883
       help:

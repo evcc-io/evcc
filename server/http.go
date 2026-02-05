@@ -140,7 +140,6 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 	}
 
 	routes := map[string]route{
-		"health":                  {"GET", "/health", healthHandler(site)},
 		"buffersoc":               {"POST", "/buffersoc/{value:[0-9.]+}", floatHandler(site.SetBufferSoc, site.GetBufferSoc)},
 		"bufferstartsoc":          {"POST", "/bufferstartsoc/{value:[0-9.]+}", floatHandler(site.SetBufferStartSoc, site.GetBufferStartSoc)},
 		"batterydischargecontrol": {"POST", "/batterydischargecontrol/{value:[01truefalse]+}", boolHandler(site.SetBatteryDischargeControl, site.GetBatteryDischargeControl)},
@@ -298,7 +297,6 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 
 		// yaml handlers
 		for key, fun := range map[string]func() (any, any){
-			keys.EEBus:     func() (any, any) { return map[string]any{}, eebus.Config{} },
 			keys.Hems:      func() (any, any) { return map[string]any{}, config.Typed{} },
 			keys.Tariffs:   func() (any, any) { return map[string]any{}, globalconfig.Tariffs{} },
 			keys.Messaging: func() (any, any) { return map[string]any{}, globalconfig.Messaging{} }, // has default
@@ -317,6 +315,7 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 			keys.ModbusProxy: func() any { return new([]globalconfig.ModbusProxy) }, // slice
 			keys.Shm:         func() any { return new(shm.Config) },
 			keys.Influx:      func() any { return new(globalconfig.Influx) },
+			keys.EEBus:       func() any { return new(eebus.Config) },
 		} {
 			routes["update"+key] = route{Method: "POST", Pattern: "/" + key, HandlerFunc: settingsSetJsonHandler(key, pub, fun)}
 			routes["delete"+key] = route{Method: "DELETE", Pattern: "/" + key, HandlerFunc: settingsDeleteJsonHandler(key, pub, fun())}

@@ -121,7 +121,7 @@ func NewZaptec(ctx context.Context, user, password, id string, priority bool, pa
 	})
 
 	// Get shared token source for this user (per-user uniqueness)
-	ts, err := zaptec.GetTokenSource(tsCtx, user, password)
+	ts, err := zaptec.TokenSource(tsCtx, user, password)
 	if err != nil {
 		return nil, err
 	}

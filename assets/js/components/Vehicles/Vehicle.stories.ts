@@ -10,8 +10,10 @@ const baseState = {
     features: [],
     name: "",
     repeatingPlans: [],
-    planPrecondition: 0,
-    planContinuous: false,
+    planStrategy: {
+      continuous: false,
+      precondition: 0,
+    },
   },
   enabled: false,
   connected: true,

@@ -80,6 +80,7 @@ import LimitEnergySelect from "./LimitEnergySelect.vue";
 import { distanceUnit, distanceValue } from "@/units.ts";
 import { defineComponent, type PropType } from "vue";
 import { CHARGE_MODE, type Forecast, type Vehicle } from "@/types/evcc";
+import type { PlanStrategy } from "@/components/ChargingPlans/types";
 
 export default defineComponent({
 	name: "Vehicle",
@@ -103,8 +104,7 @@ export default defineComponent({
 		effectiveLimitSoc: Number,
 		effectivePlanSoc: Number,
 		effectivePlanTime: String,
-		effectivePlanPrecondition: Number,
-		effectivePlanContinuous: Boolean,
+		effectivePlanStrategy: Object as PropType<PlanStrategy>,
 		batteryBoostActive: Boolean,
 		enabled: Boolean,
 		heating: Boolean,

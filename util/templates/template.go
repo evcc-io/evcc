@@ -16,10 +16,17 @@ import (
 
 // Template describes is a proxy device for use with cli and automated testing
 type Template struct {
-	TemplateDefinition
-
-	title  string
-	titles []string
+	Template     string
+	Deprecated   bool           `json:"-"`
+	Auth         map[string]any `json:",omitempty"` // OAuth parameters (if required)
+	Group        string         `json:",omitempty"` // the group this template belongs to, references groupList entries
+	Covers       []string       `json:",omitempty"` // list of covered outdated template names
+	Products     []Product      `json:",omitempty"` // list of products this template is compatible with
+	Capabilities []string       `json:",omitempty"`
+	Countries    []CountryCode  `json:",omitempty"` // list of countries supported by this template
+	Requirements Requirements   `json:",omitempty"`
+	Params       []Param        `json:",omitempty"`
+	Render       string         `json:"-"` // rendering template
 }
 
 // UpdateParamWithDefaults adds default values to specific param name entries
@@ -55,6 +62,20 @@ func (t *Template) UpdateModbusParamsWithDefaults() error {
 	}
 
 	t.Params[idx] = modbusParam
+	return nil
+}
+
+func (t *Template) SortRequiredParamsFirst() error {
+	slices.SortStableFunc(t.Params, func(a, b Param) int {
+		if a.Required && !b.Required {
+			return -1
+		}
+		if b.Required && !a.Required {
+			return +1
+		}
+		return 0
+	})
+
 	return nil
 }
 
@@ -112,44 +133,18 @@ func (t *Template) Validate() error {
 				}
 			}
 		}
+
+		// validate pattern examples against pattern
+		if p.Pattern != nil && p.Pattern.Regex != "" && len(p.Pattern.Examples) > 0 {
+			for _, example := range p.Pattern.Examples {
+				if err := p.Pattern.Validate(example); err != nil {
+					return fmt.Errorf("param %s: pattern example %q is invalid: pattern=%q", p.Name, example, p.Pattern.Regex)
+				}
+			}
+		}
 	}
 
 	return nil
-}
-
-// set the language title by combining all product titles
-func (t *Template) SetCombinedTitle(lang string) {
-	if len(t.titles) == 0 {
-		t.resolveTitles(lang)
-	}
-
-	t.title = strings.Join(t.titles, "/")
-}
-
-// set the title for this templates
-func (t *Template) SetTitle(title string) {
-	t.title = title
-}
-
-// return the title for this template
-func (t *Template) Title() string {
-	return t.title
-}
-
-// return the language specific product titles
-func (t *Template) Titles(lang string) []string {
-	if len(t.titles) == 0 {
-		t.resolveTitles(lang)
-	}
-
-	return t.titles
-}
-
-// set the language specific product titles
-func (t *Template) resolveTitles(lang string) {
-	for _, p := range t.Products {
-		t.titles = append(t.titles, p.Title(lang))
-	}
 }
 
 // add the referenced base Params and overwrite existing ones
@@ -392,10 +387,17 @@ func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, m
 				}
 
 				// validate required fields from yaml
-				if s == "" && p.IsRequired() && (renderMode == RenderModeUnitTest || renderMode == RenderModeInstance && !testing.Testing()) {
+				if p.IsRequired() && p.IsZero(s) && (renderMode == RenderModeUnitTest || renderMode == RenderModeInstance && !testing.Testing()) {
 					// validate required per usage
 					if len(p.Usages) == 0 || slices.Contains(p.Usages, usage) {
 						return nil, nil, fmt.Errorf("missing required `%s`", p.Name)
+					}
+				}
+
+				// validate pattern if defined
+				if s != "" && p.Pattern != nil && p.Pattern.Regex != "" {
+					if err := p.Pattern.Validate(s); err != nil {
+						return nil, nil, fmt.Errorf("%s: %w", p.Name, err)
 					}
 				}
 

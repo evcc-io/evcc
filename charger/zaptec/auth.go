@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/coreos/go-oidc/v3/oidc"
+	"github.com/evcc-io/evcc/util/cache"
 	"golang.org/x/oauth2"
 )
 
@@ -23,10 +24,9 @@ func (p *passwordTokenSource) Token() (*oauth2.Token, error) {
 	return p.config.PasswordCredentialsToken(p.ctx, p.user, p.pass)
 }
 
-// tokenSourceCache stores per-user token sources
 var (
-	tokenSourceMu    sync.Mutex
-	tokenSourceCache = make(map[string]oauth2.TokenSource)
+	// TokenSourceCache stores per-user token sources
+	tokenSourceCache = cache.New[oauth2.TokenSource]()
 
 	oidcProvider     *oidc.Provider
 	oidcProviderOnce sync.Once
@@ -41,48 +41,35 @@ func getOIDCProvider(ctx context.Context) (*oidc.Provider, error) {
 	return oidcProvider, oidcProviderErr
 }
 
-// GetTokenSource returns a shared oauth2.TokenSource for the given user credentials.
-// Multiple chargers using the same user credentials will share the same TokenSource,
-// ensuring tokens are reused and authentication is deduplicated.
-func GetTokenSource(ctx context.Context, user, pass string) (oauth2.TokenSource, error) {
-	tokenSourceMu.Lock()
-	defer tokenSourceMu.Unlock()
+// TokenSource returns a shared oauth2.TokenSource for the given user.
+func TokenSource(ctx context.Context, user, pass string) (oauth2.TokenSource, error) {
+	return tokenSourceCache.GetOrCreate(user, func() (oauth2.TokenSource, error) {
+		provider, err := getOIDCProvider(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to initialize OIDC provider: %w", err)
+		}
 
-	// Use username as the cache key (assuming username is unique)
-	if ts, exists := tokenSourceCache[user]; exists {
-		return ts, nil
-	}
+		oc := &oauth2.Config{
+			Endpoint: provider.Endpoint(),
+			Scopes: []string{
+				oidc.ScopeOpenID,
+			},
+		}
 
-	// Get the cached OIDC provider (initialized once)
-	provider, err := getOIDCProvider(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to initialize OIDC provider: %w", err)
-	}
+		// Create the password token source
+		pts := &passwordTokenSource{
+			ctx:    ctx,
+			config: oc,
+			user:   user,
+			pass:   pass,
+		}
 
-	oc := &oauth2.Config{
-		Endpoint: provider.Endpoint(),
-		Scopes: []string{
-			oidc.ScopeOpenID,
-		},
-	}
+		// Get initial token
+		token, err := pts.Token()
+		if err != nil {
+			return nil, err
+		}
 
-	// Create the password token source
-	pts := &passwordTokenSource{
-		ctx:    ctx,
-		config: oc,
-		user:   user,
-		pass:   pass,
-	}
-
-	// Get initial token
-	token, err := pts.Token()
-	if err != nil {
-		return nil, err
-	}
-
-	// Wrap with ReuseTokenSource to cache tokens
-	ts := oauth2.ReuseTokenSource(token, pts)
-	tokenSourceCache[user] = ts
-
-	return ts, nil
+		return oauth2.ReuseTokenSource(token, pts), nil
+	})
 }

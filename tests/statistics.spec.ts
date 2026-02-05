@@ -54,7 +54,7 @@ test.describe("statistics values", async () => {
     await expect(page.getByTestId("savings-tile-solar")).toContainText("30 kWh solar");
     await expect(page.getByTestId("savings-tile-solar")).toContainText("20 kWh grid");
 
-    await expect(page.getByTestId("savings-tile-price")).toContainText("18.0rp/kWh");
+    await expect(page.getByTestId("savings-tile-price")).toContainText("18.0ct./kWh");
     await expect(page.getByTestId("savings-tile-price")).toContainText("6 Fr. saved");
 
     await expect(page.getByTestId("savings-tile-co2")).toContainText("8g/kWh");
@@ -74,7 +74,7 @@ test.describe("statistics values", async () => {
     await expect(page.getByTestId("savings-tile-solar")).toContainText("30 kWh solar");
     await expect(page.getByTestId("savings-tile-solar")).toContainText("70 kWh grid");
 
-    await expect(page.getByTestId("savings-tile-price")).toContainText("24.0rp/kWh");
+    await expect(page.getByTestId("savings-tile-price")).toContainText("24.0ct./kWh");
     await expect(page.getByTestId("savings-tile-price")).toContainText("6 Fr. saved");
 
     await expect(page.getByTestId("savings-tile-co2")).toContainText("14g/kWh");
@@ -87,7 +87,7 @@ test.describe("statistics values", async () => {
     await expect(page.getByTestId("savings-modal")).toBeVisible();
 
     await expect(page.getByTestId("savings-reference")).toContainText("Reference data:");
-    await expect(page.getByTestId("savings-reference")).toContainText("30.0 rp/kWh (grid)");
+    await expect(page.getByTestId("savings-reference")).toContainText("30.0 ct./kWh (grid)");
     await expect(page.getByTestId("savings-reference")).toContainText("⌀ 344 g/kWh");
     await expect(page.getByTestId("savings-reference")).toContainText("Germany");
 

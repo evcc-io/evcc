@@ -73,7 +73,7 @@ var conf = globalconfig.All{
 		Topic: "evcc",
 	},
 	EEBus: eebus.Config{
-		URI: ":4712",
+		Port: 4712,
 	},
 	Database: globalconfig.DB{
 		Type: "sqlite",
@@ -84,6 +84,7 @@ var conf = globalconfig.All{
 var fromYaml struct {
 	sponsor bool
 	hems    bool
+	eebus   bool
 }
 
 var nameRE = regexp.MustCompile(`^[a-zA-Z0-9_.:-]+$`)
@@ -164,7 +165,7 @@ func configureCircuits(conf *[]config.Named) error {
 
 	children := slices.Clone(*conf)
 
-	// TODO: check for circular references
+	// TODO check for circular references
 NEXT:
 	for i, cc := range children {
 		if cc.Name == "" {
@@ -238,6 +239,7 @@ func configureMeters(static []config.Named, names ...string) error {
 			return fmt.Errorf("cannot create meter %d: missing name", i+1)
 		}
 
+		// configure all, if no name refs are given
 		if len(names) > 0 && !slices.Contains(names, cc.Name) {
 			continue
 		}
@@ -272,7 +274,8 @@ func configureMeters(static []config.Named, names ...string) error {
 		eg.Go(func() error {
 			cc := conf.Named()
 
-			if len(names) > 0 && !slices.Contains(names, cc.Name) {
+			// always skip unreferenced db devices
+			if !slices.Contains(names, cc.Name) {
 				return nil
 			}
 
@@ -310,6 +313,7 @@ func configureChargers(static []config.Named, names ...string) error {
 			return fmt.Errorf("cannot create charger %d: missing name", i+1)
 		}
 
+		// configure all, if no name refs are given
 		if len(names) > 0 && !slices.Contains(names, cc.Name) {
 			continue
 		}
@@ -344,7 +348,8 @@ func configureChargers(static []config.Named, names ...string) error {
 		eg.Go(func() error {
 			cc := conf.Named()
 
-			if len(names) > 0 && !slices.Contains(names, cc.Name) {
+			// always skip unreferenced db devices
+			if !slices.Contains(names, cc.Name) {
 				return nil
 			}
 
@@ -776,14 +781,23 @@ func configureOCPP(cfg *ocpp.Config, externalUrl string) {
 func configureEEBus(conf *eebus.Config) error {
 	// migrate settings
 	if settings.Exists(keys.EEBus) {
-		*conf = eebus.Config{}
-		if err := settings.Yaml(keys.EEBus, new(map[string]any), &conf); err != nil {
+		if err := migrateYamlToJson(keys.EEBus, conf); err != nil {
 			return err
 		}
+	} else if conf.IsConfigured() {
+		fromYaml.eebus = true
 	}
 
-	if !conf.Configured() {
-		return nil
+	if !conf.IsConfigured() {
+		cc, err := eebus.DefaultConfig(conf)
+		if err != nil {
+			return err
+		}
+
+		*conf = *cc
+		if err := settings.SetJson(keys.EEBus, conf); err != nil {
+			return err
+		}
 	}
 
 	var err error
@@ -964,32 +978,10 @@ func configureDevices(conf globalconfig.All) error {
 	return joinErrors(errs...)
 }
 
-// migrateYamlToJson converts a settings value from yaml to json if needed
-func migrateYamlToJson[T any](key string) error {
-	var err error
-	if settings.IsJson(key) {
-		// already JSON, nothing to do
-		return nil
-	}
-
-	var data T
-	if err := settings.Yaml(key, new(T), &data); err == nil {
-		settings.SetJson(key, data)
-		log.INFO.Printf("migrated %s setting to JSON", key)
-	}
-
-	return err
-}
-
 func configureModbusProxy(conf *[]globalconfig.ModbusProxy) error {
 	if settings.Exists(keys.ModbusProxy) {
-		// TODO: delete if not needed any more
-		if err := migrateYamlToJson[[]globalconfig.ModbusProxy](keys.ModbusProxy); err != nil {
+		if err := migrateYamlToJson(keys.ModbusProxy, conf); err != nil {
 			return err
-		}
-
-		if err := settings.Json(keys.ModbusProxy, &conf); err != nil {
-			return fmt.Errorf("failed to read modbusproxy setting: %w", err)
 		}
 	}
 

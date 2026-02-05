@@ -45,6 +45,7 @@ func getPreferredLanguage(header string) string {
 func indexHandler(customCss bool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=UTF-8")
+		w.Header().Set("Cache-Control", "no-cache")
 
 		indexTemplate, err := fs.ReadFile(assets.Web, "index.html")
 		if err != nil {
@@ -233,20 +234,6 @@ func stateHandler(cache *util.ParamCache) http.HandlerFunc {
 		}
 
 		jsonWrite(w, res)
-	}
-}
-
-// healthHandler returns current charge mode
-func healthHandler(site site.API) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if site == nil || !site.Healthy() {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-
-		w.Header().Set("Content-Type", "text/plain")
-		w.WriteHeader(http.StatusOK)
-		fmt.Fprintln(w, "OK")
 	}
 }
 
