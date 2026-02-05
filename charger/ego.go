@@ -231,35 +231,25 @@ func (wb *Ego) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-	relaisStatus := binary.BigEndian.Uint16(b)
-	var totalPower uint16
+	relay := binary.BigEndian.Uint16(b)
+	var res uint16
 
 	// Read individual relay powers and sum based on status
-	if relaisStatus&0x01 != 0 { // Relay 1 is on
-		b, err := wb.conn.ReadHoldingRegisters(egoRegRelais1Power, 1)
-		if err != nil {
-			return 0, err
+	for bit, addr := range map[uint16]uint16{
+		0x01: egoRegRelais1Power,
+		0x02: egoRegRelais2Power,
+		0x04: egoRegRelais3Power,
+	} {
+		if relay&bit != 0 { // Relay is on
+			b, err := wb.conn.ReadHoldingRegisters(addr, 1)
+			if err != nil {
+				return 0, err
+			}
+			res += binary.BigEndian.Uint16(b)
 		}
-		totalPower += binary.BigEndian.Uint16(b)
 	}
 
-	if relaisStatus&0x02 != 0 { // Relay 2 is on
-		b, err := wb.conn.ReadHoldingRegisters(egoRegRelais2Power, 1)
-		if err != nil {
-			return 0, err
-		}
-		totalPower += binary.BigEndian.Uint16(b)
-	}
-
-	if relaisStatus&0x04 != 0 { // Relay 3 is on
-		b, err := wb.conn.ReadHoldingRegisters(egoRegRelais3Power, 1)
-		if err != nil {
-			return 0, err
-		}
-		totalPower += binary.BigEndian.Uint16(b)
-	}
-
-	return float64(totalPower), nil
+	return float64(res), nil
 }
 
 var _ api.Battery = (*Ego)(nil)
@@ -271,8 +261,7 @@ func (wb *Ego) Soc() (float64, error) {
 		return 0, err
 	}
 
-	temperature := int16(binary.BigEndian.Uint16(b))
-	return float64(temperature), nil
+	return float64(int16(binary.BigEndian.Uint16(b))), nil
 }
 
 var _ api.SocLimiter = (*Ego)(nil)
