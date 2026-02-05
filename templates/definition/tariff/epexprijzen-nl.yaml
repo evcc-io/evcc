@@ -2,8 +2,8 @@ template: epexprijzen-nl
 products:
   - brand: epexprijzen.nl
     description:
-      en: Current energy prices in the Netherlands, including surcharges and taxes
-      de: Aktuelle Energiepreise in den Niederlanden, einschließlich Zuschlägen und Steuern
+      en: Current energy prices in the Netherlands. Prices include energy tax and provider charge by default. When 'tax' or 'charges' are configured in EVCC, the template automatically subtracts the corresponding amounts to avoid double-counting.
+      de: Aktuelle Energiepreise in den Niederlanden. Preise enthalten standardmäßig Energiesteuer und Anbietergebühr. Wenn 'tax' oder 'charges' in EVCC konfiguriert sind, zieht die Vorlage automatisch die entsprechenden Beträge ab, um Doppelzählungen zu vermeiden.
 requirements:
   evcc: ["skiptest"]
 group: price
@@ -54,11 +54,14 @@ render: |
     source: http
     uri: https://epexprijzen.nl/api/v1/prices/{{ .provider }}/{{ index . "price-interval" }}
     jq: |
-      (.today // []) + (.tomorrow // []) | 
+      . as $root |
+      ({{ if index . "tax" }}($root.energy_tax // 0){{ else }}0{{ end }}) as $energy_tax |
+      ({{ if index . "charges" }}($root.provider_charge // 0){{ else }}0{{ end }}) as $provider_charge |
+      ($root.today // []) + ($root.tomorrow // []) | 
       map({
         "start": (.t | strptime("%Y-%m-%dT%H:%M:%S%z") | strftime("%Y-%m-%dT%H:%M:%SZ")),
         "end": (.t | strptime("%Y-%m-%dT%H:%M:%S%z") | mktime + {{ if eq (index . "price-interval") "hourly" }}3600{{ else }}900{{ end }} | strftime("%Y-%m-%dT%H:%M:%SZ")),
-        "value": .price
+        "value": (.price - $energy_tax - $provider_charge)
       }) | tostring
     cache: 1h
   interval: {{ .interval }}
