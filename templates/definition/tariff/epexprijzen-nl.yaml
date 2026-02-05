@@ -2,8 +2,8 @@ template: epexprijzen-nl
 products:
   - brand: epexprijzen.nl
     description:
-      en: Current energy prices in the Netherlands, with optional surcharges and taxes
-      de: Aktuelle Energiepreise in den Niederlanden, mit optionalen Zuschlägen und Steuern
+      en: Current energy prices in the Netherlands. Prices include energy tax and provider charge by default. When 'tax' or 'charges' are configured in EVCC, the template automatically subtracts the corresponding amounts to avoid double-counting.
+      de: Aktuelle Energiepreise in den Niederlanden. Preise enthalten standardmäßig Energiesteuer und Anbietergebühr. Wenn 'tax' oder 'charges' in EVCC konfiguriert sind, zieht die Vorlage automatisch die entsprechenden Beträge ab, um Doppelzählungen zu vermeiden.
 requirements:
   evcc: ["skiptest"]
 group: price
@@ -43,18 +43,6 @@ params:
     choice: ["hourly", "quarterly"]
     default: quarterly
     required: true
-  - name: exclude-energy-tax
-    description:
-      en: Exclude energy tax from prices
-      de: Energiesteuer von Preisen ausschließen
-    type: bool
-    default: false
-  - name: exclude-provider-charge
-    description:
-      en: Exclude provider charge from prices
-      de: Anbietergebühr von Preisen ausschließen
-    type: bool
-    default: false
   - preset: tariff-base
   - name: interval
     default: 1h
@@ -67,8 +55,8 @@ render: |
     uri: https://epexprijzen.nl/api/v1/prices/{{ .provider }}/{{ index . "price-interval" }}
     jq: |
       . as $root |
-      ({{ if index . "exclude-energy-tax" }}($root.energy_tax // 0){{ else }}0{{ end }}) as $energy_tax |
-      ({{ if index . "exclude-provider-charge" }}($root.provider_charge // 0){{ else }}0{{ end }}) as $provider_charge |
+      ({{ if index . "tax" }}($root.energy_tax // 0){{ else }}0{{ end }}) as $energy_tax |
+      ({{ if index . "charges" }}($root.provider_charge // 0){{ else }}0{{ end }}) as $provider_charge |
       ($root.today // []) + ($root.tomorrow // []) | 
       map({
         "start": (.t | strptime("%Y-%m-%dT%H:%M:%S%z") | strftime("%Y-%m-%dT%H:%M:%SZ")),
