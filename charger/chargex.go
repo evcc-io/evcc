@@ -115,7 +115,7 @@ func (wb *ChargeX) moduleReg(offset uint16) uint16 {
 // setCurrent writes the current limit in Amperes
 func (wb *ChargeX) setCurrent(current float64) error {
 	// Read module state to determine charging mode (1p or 3p)
-	b, err := wb.conn.ReadHoldingRegisters(wb.moduleReg(chargexRegModuleState), 1)
+	b, err := wb.conn.ReadHoldingRegisters(wb.moduleReg(chargexRegModuleState), 2)
 	if err != nil {
 		return err
 	}
