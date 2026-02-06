@@ -1,6 +1,11 @@
 <template>
 	<div class="zones-field">
-		<div v-for="(zone, index) in modelValue" :key="index" class="mb-2">
+		<div
+			v-for="(zone, index) in modelValue"
+			:key="index"
+			data-testid="property-zone"
+			class="mb-2"
+		>
 			<!-- Summary View (read-only) -->
 			<PropertyZoneForm
 				v-if="editIndex === index"
@@ -14,7 +19,6 @@
 				v-else
 				:zone="zone"
 				:currency="currency"
-				:showDelete="modelValue.length > 1"
 				@edit="startEdit(index)"
 				@remove="removeZone(index)"
 			/>
@@ -58,11 +62,6 @@ export default {
 		return {
 			editIndex: null as number | null,
 		};
-	},
-	mounted() {
-		if (this.modelValue.length === 0) {
-			this.addZone();
-		}
 	},
 	methods: {
 		addZone() {

@@ -4,7 +4,7 @@
 		:name="tariff.name"
 		:editable="!!tariff.id"
 		:error="hasError"
-		:data-testid="tariffType"
+		:data-testid="`tariff-${tariffType}`"
 		@edit="$emit('edit', tariffType, tariff.id)"
 	>
 		<template #icon>

@@ -14,7 +14,6 @@
 				<shopicon-regular-edit size="s" class="flex-shrink-0"></shopicon-regular-edit>
 			</button>
 			<button
-				v-if="showDelete"
 				type="button"
 				class="btn btn-sm btn-outline-secondary border-0"
 				:aria-label="$t('config.tariff.zones.remove')"
@@ -39,7 +38,6 @@ export default {
 	props: {
 		zone: { type: Object as PropType<Zone>, required: true },
 		currency: { type: String as PropType<CURRENCY>, required: true },
-		showDelete: { type: Boolean, required: true },
 	},
 	emits: ["edit", "remove"],
 	computed: {

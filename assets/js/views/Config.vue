@@ -609,7 +609,7 @@ export default defineComponent({
 			tariffs: [] as any[], // ConfigTariff[] - tariff device entities
 			tariffRefs: {
 				grid: "",
-				feedin: "",
+				feedIn: "",
 				co2: "",
 				planner: "",
 				solar: [] as string[],
@@ -695,7 +695,7 @@ export default defineComponent({
 			return name ? this.tariffs.find((t) => t.name === name) : null;
 		},
 		feedinTariff() {
-			const name = this.tariffRefs?.feedin;
+			const name = this.tariffRefs?.feedIn;
 			return name ? this.tariffs.find((t) => t.name === name) : null;
 		},
 		co2Tariff() {

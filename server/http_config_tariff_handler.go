@@ -13,7 +13,9 @@ import (
 
 // tariffsHandler returns assignment of tariff devices
 func tariffsHandler(w http.ResponseWriter, r *http.Request) {
-	var refs globalconfig.TariffRefs
+	refs := globalconfig.TariffRefs{
+		Solar: []string{},
+	}
 	if settings.Exists(keys.TariffRefs) {
 		if err := settings.Json(keys.TariffRefs, &refs); err != nil {
 			jsonError(w, http.StatusInternalServerError, err)

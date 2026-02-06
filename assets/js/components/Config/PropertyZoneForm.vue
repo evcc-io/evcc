@@ -2,9 +2,12 @@
 	<div class="border rounded p-3">
 		<!-- Price input -->
 		<div class="mb-3">
-			<label class="form-label">{{ $t("config.tariff.zones.price") }}</label>
+			<label :for="formId('price')" class="form-label">{{
+				$t("config.tariff.zones.price")
+			}}</label>
 			<div class="d-flex w-50 w-min-200">
 				<input
+					:id="formId('price')"
 					v-model.number.lazy="uiZone.price"
 					type="number"
 					step="any"
@@ -26,7 +29,7 @@
 
 		<!-- Month selector -->
 		<div class="mb-3">
-			<label class="form-label">
+			<label :for="formId('months')" class="form-label">
 				{{ $t("config.tariff.zones.months") }}
 				<small class="evcc-gray">{{ $t("config.form.optional") }}</small>
 			</label>
@@ -42,7 +45,7 @@
 
 		<!-- Weekday selector -->
 		<div class="mb-3">
-			<label class="form-label">
+			<label :for="formId('weekdays')" class="form-label">
 				{{ $t("config.tariff.zones.weekdays") }}
 				<small class="evcc-gray">{{ $t("config.form.optional") }}</small>
 			</label>
@@ -64,17 +67,21 @@
 			</label>
 			<div class="d-flex gap-2 align-items-center">
 				<input
+					:id="formId('time-from')"
 					v-model="uiZone.timeFrom"
 					type="time"
 					class="form-control"
 					:class="{ 'is-invalid': isTimeRangeInvalid }"
+					:aria-label="$t('config.tariff.zones.timeFrom')"
 				/>
 				<span>–</span>
 				<input
+					:id="formId('time-to')"
 					v-model="uiZone.timeTo"
 					type="time"
 					class="form-control"
 					:class="{ 'is-invalid': isTimeRangeInvalid }"
+					:aria-label="$t('config.tariff.zones.timeTo')"
 				/>
 			</div>
 			<div v-if="isTimeRangeInvalid" class="invalid-feedback d-block">
