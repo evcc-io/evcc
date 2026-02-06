@@ -1,0 +1,18 @@
+template: deprecated-meter
+# deprecated: true
+group: generic
+products:
+  - description:
+      generic: Old Meter
+params:
+  - name: usage
+    choice: ["grid"]
+  - name: power
+    description:
+      generic: Power
+
+render: |
+  type: custom
+  power:
+    source: const
+    value: {{ .power }}

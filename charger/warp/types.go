@@ -2,89 +2,69 @@ package warp
 
 const (
 	FeatureMeter          = "meter"
+	FeatureMeters         = "meters"
 	FeatureMeterAllValues = "meter_all_values"
 	FeatureMeterPhases    = "meter_phases"
 	FeatureNfc            = "nfc"
+	FeaturePhaseSwitch    = "phase_switch"
 )
 
 // https://www.warp-charger.com/api.html#evse_state
 type EvseState struct {
-	Iec61851State          int   `json:"iec61851_state"`
-	ChargerState           int   `json:"charger_state"`
-	ContactorState         int   `json:"contactor_state"`
-	ContactorError         int   `json:"contactor_error"`
-	AllowedChargingCurrent int64 `json:"allowed_charging_current"`
-	ErrorState             int   `json:"error_state"`
-	LockState              int   `json:"lock_state"`
+	Iec61851State int `json:"iec61851_state"`
 }
 
 type EvseExternalCurrent struct {
 	Current int `json:"current"`
 }
 
-// https://www.warp-charger.com/api.html#evse_low_level_state
-type LowLevelState struct {
-	TimeSinceStateChange int64 `json:"time_since_state_change"`
-	Uptime               int64 `json:"uptime"`
-	LedState             int   `json:"led_state"`
-	CpPwmDutyCycle       int   `json:"cp_pwm_duty_cycle"`
-	AdcValues            []int `json:"adc_values"`
-	Voltages             []int
-	Resistances          []int
-	Gpio                 []bool
+type EvseUserEnabled struct {
+	Enabled bool `json:"enabled"`
 }
 
-// https://www.warp-charger.com/api.html#meter_state
-type MeterState struct {
-	State int `json:"state"` // Warp 1 only
+type Evse struct {
+	State           EvseState
+	ExternalCurrent EvseExternalCurrent
+	UserCurrent     EvseExternalCurrent
+	UserEnabled     EvseUserEnabled
 }
 
-// https://www.warp-charger.com/api.html#meter_values
 type MeterValues struct {
-	Power           float64 `json:"power"`
-	EnergyRel       float64 `json:"energy_rel"`
-	EnergyAbs       float64 `json:"energy_abs"`
-	PhasesActive    []bool  `json:"phases_active"`
-	PhasesConnected []bool  `json:"phases_connected"`
+	Power     float64 `json:"power"`
+	EnergyRel float64 `json:"energy_rel"`
+	EnergyAbs float64 `json:"energy_abs"`
+	Currents  [3]float64
+	Voltages  [3]float64
+	TmpValues []float64
 }
 
-// https://www.warp-charger.com/api.html#meter_all_values
-type MeterAllValues struct {
-	PhasesActive    []bool `json:"phases_active"`
-	PhasesConnected []bool `json:"phases_connected"`
+type PhasePair struct {
+	CurrentID int
+	VoltageID int
 }
 
-type UsersConfig struct {
-	Users []User `json:"users"`
+type MeterSchema struct {
+	PowerID     int
+	EnergyAbsID int
+	Phases      [3]PhasePair
+}
+
+// Value IDs based on Tinkerforge's meter_value_id.csv
+var DefaultSchema = MeterSchema{
+	PowerID:     74,  // Power Im-Ex Sum L1 L2 L3
+	EnergyAbsID: 209, // Energy Im Sum L1 L2 L3
+	Phases: [3]PhasePair{
+		{CurrentID: 13, VoltageID: 1}, // Current L1 Im-Ex Sum, Voltage L1-N
+		{CurrentID: 17, VoltageID: 2}, // Current L2 Im-Ex Sum, Voltage L2-N
+		{CurrentID: 21, VoltageID: 3}, // Current L3 Im-Ex Sum, Voltage L3-N
+	},
 }
 
 type ChargeTrackerCurrentCharge struct {
-	UserID            int     `json:"user_id"`
-	MeterStart        float64 `json:"meter_start"`
-	AuthorizationType int     `json:"authorization_type"`
 	AuthorizationInfo struct {
 		TagType int    `json:"tag_type"`
 		TagId   string `json:"tag_id"`
 	} `json:"authorization_info"`
-}
-
-type User struct {
-	ID          int    `json:"id"`
-	Roles       int    `json:"roles"`
-	Current     int    `json:"current"`
-	DisplayName string `json:"display_name"`
-	UserName    string `json:"username"`
-}
-
-type LastNfcTag struct {
-	UserID int    `json:"user_id"`
-	Type   int    `json:"tag_type"`
-	ID     string `json:"tag_id"`
-}
-
-type EmConfig struct {
-	ContactorInstalled bool `json:"contactor_installed"`
-	PhaseSwitchingMode int  `json:"phase_switching_mode"`
 }
 
 //go:generate go tool enumer -type ExternalControl -trimprefix ExternalControl -transform whitespace
@@ -97,15 +77,10 @@ const (
 	ExternalControlCurrentlySwitching
 )
 
-type EmState struct {
+type PmState struct {
 	ExternalControl ExternalControl `json:"external_control"`
-	PhasesSwitched  int             `json:"phases_switched"`
-	Input3State     bool            `json:"input3_state"`
-	Input4State     bool            `json:"input4_state"`
-	RelayState      bool            `json:"relay_state"`
-	ErrorFlags      int             `json:"error_flags"`
 }
 
-type EmLowLevelState struct {
+type PmLowLevelState struct {
 	Is3phase bool `json:"is_3phase"`
 }

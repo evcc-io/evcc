@@ -1,0 +1,120 @@
+template: intilion-scalebloc
+products:
+  - brand: INTILION
+    description:
+      generic: scalebloc energy
+requirements:
+  description:
+    de: |
+      Der INTILION scalebloc kommuniziert über Modbus TCP/IP.
+      Die Modbus-Schnittstelle muss im Gerät aktiviert sein.
+      Standard-IP-Adresse: 192.168.2.2
+    en: |
+      The INTILION scalebloc communicates via Modbus TCP/IP.
+      The Modbus interface must be enabled in the device.
+      Default IP address: 192.168.2.2
+params:
+  - name: usage
+    choice: ["grid", "battery"]
+  - name: modbus
+    choice: ["tcpip"]
+    port: 502
+    id: 1
+    help:
+      en: Modbus TCP must be enabled. Default address is 192.168.2.2
+      de: Modbus TCP muss aktiviert sein. Standard-Adresse ist 192.168.2.2
+  - preset: battery-params
+    usages: ["battery"]
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  # Grid meter from integrated energy meter
+  power:
+    source: calc
+    add:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 6010 # Active power L1
+        type: input
+        decode: int16
+      scale: 100
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 6012 # Active power L2
+        type: input
+        decode: int16
+      scale: 100
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 6014 # Active power L3
+        type: input
+        decode: int16
+      scale: 100
+  currents:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 6006 # Current L1
+        type: input
+        decode: int16
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 6007 # Current L2
+        type: input
+        decode: int16
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 6008 # Current L3
+        type: input
+        decode: int16
+      scale: 0.1
+  voltages:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 6000 # Voltage L1-N
+        type: input
+        decode: uint16
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 6001 # Voltage L2-N
+        type: input
+        decode: uint16
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 6002 # Voltage L3-N
+        type: input
+        decode: uint16
+      scale: 0.1
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  # Battery system information
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 5040 # System active power
+      type: input
+      decode: int16
+    scale: 100
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 5002 # System SoC
+      type: input
+      decode: uint16
+    scale: 0.1
+  {{- include "battery-params" . }}
+  {{- end }}

@@ -1,5 +1,5 @@
 # STEP 1 build ui
-FROM --platform=$BUILDPLATFORM node:22-alpine AS node
+FROM --platform=$BUILDPLATFORM node:24-alpine AS node
 
 RUN apk update && apk add --no-cache make
 
