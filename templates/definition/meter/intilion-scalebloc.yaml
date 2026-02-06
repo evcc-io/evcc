@@ -4,7 +4,6 @@ products:
     description:
       generic: scalebloc energy
 requirements:
-  evcc: ["sponsorship"]
   description:
     de: |
       Der INTILION scalebloc kommuniziert über Modbus TCP/IP.
