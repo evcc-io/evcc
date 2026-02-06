@@ -1,16 +1,11 @@
-import { test, expect, type Page, type Locator } from "@playwright/test";
+import { test, expect, type Locator } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
 import { expectModalHidden, expectModalVisible, editorClear, editorPaste } from "./utils";
 
 const CONFIG_WITH_TARIFFS = "config-with-tariffs.evcc.yaml";
 const CONFIG_TARIFFS_LEGACY = "tariffs-legacy.sql";
 
-async function deleteTariff(
-  page: Page,
-  modal: Locator,
-  tariffLocator: Locator,
-  nth?: number
-): Promise<void> {
+async function deleteTariff(modal: Locator, tariffLocator: Locator, nth?: number): Promise<void> {
   const target = nth !== undefined ? tariffLocator.nth(nth) : tariffLocator;
   await target.getByRole("button", { name: "edit" }).click();
   await expectModalVisible(modal);
@@ -119,7 +114,7 @@ grid:
 
     const modal = page.getByTestId("tariff-modal");
     const tariffGrid = page.getByTestId("tariff-grid");
-    const tariffFeedin = page.getByTestId("tariff-feedin");
+    const tariffFeedin = page.getByTestId("tariff-feedIn");
     const tariffCo2 = page.getByTestId("tariff-co2");
     const tariffSolar = page.getByTestId("tariff-solar");
     const tariffPlanner = page.getByTestId("tariff-planner");
@@ -221,18 +216,18 @@ grid:
     await expect(tariffPlanner).toContainText("Price");
 
     // delete all in reverse order
-    await deleteTariff(page, modal, tariffPlanner);
+    await deleteTariff(modal, tariffPlanner);
     await expect(tariffPlanner).toHaveCount(0);
-    await deleteTariff(page, modal, tariffSolar, 1);
+    await deleteTariff(modal, tariffSolar, 1);
     await expect(tariffSolar).toHaveCount(1);
-    await deleteTariff(page, modal, tariffSolar, 0);
+    await deleteTariff(modal, tariffSolar, 0);
     await expect(tariffSolar).toHaveCount(0);
-    await deleteTariff(page, modal, tariffCo2);
+    await deleteTariff(modal, tariffCo2);
     await expect(tariffCo2).toHaveCount(0);
-    await deleteTariff(page, modal, tariffFeedin);
+    await deleteTariff(modal, tariffFeedin);
     await expect(tariffFeedin).toHaveCount(0);
     await expect(addTariff).toBeVisible();
-    await deleteTariff(page, modal, tariffGrid);
+    await deleteTariff(modal, tariffGrid);
     await expect(tariffGrid).toHaveCount(0);
 
     // final state: both add buttons visible again

@@ -116,7 +116,7 @@ export default defineComponent({
 			return this.tariffType === "solar";
 		},
 		hasDescription(): boolean {
-			return ["grid", "feedin", "co2", "planner", "solar"].includes(this.tariffType || "");
+			return !!this.tariffType;
 		},
 	},
 	methods: {
@@ -184,7 +184,7 @@ export default defineComponent({
 			// Map tariff types to product groups
 			const groupMap: Record<string, { service: Product[]; generic: Product[] }> = {
 				grid: { service: priceProducts, generic: priceGeneric },
-				feedin: { service: priceProducts, generic: priceGeneric },
+				feedIn: { service: priceProducts, generic: priceGeneric },
 				co2: { service: co2Products, generic: co2Generic },
 				solar: { service: solarProducts, generic: solarGeneric },
 			};
@@ -211,7 +211,7 @@ export default defineComponent({
 				// Select appropriate YAML template based on tariff type
 				if (
 					this.tariffType === "grid" ||
-					this.tariffType === "feedin" ||
+					this.tariffType === "feedIn" ||
 					this.tariffType === "planner"
 				) {
 					values.yaml = tariffPriceYaml;

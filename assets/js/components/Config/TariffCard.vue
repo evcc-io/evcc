@@ -64,7 +64,7 @@ export default {
 		iconComponent(): string {
 			const iconMap: Record<TariffType, string> = {
 				grid: "shopicon-regular-invoice",
-				feedin: "shopicon-regular-receivepayment",
+				feedIn: "shopicon-regular-receivepayment",
 				co2: "shopicon-regular-eco1",
 				planner: "shopicon-regular-clock",
 				solar: "shopicon-regular-sun",

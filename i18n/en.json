@@ -654,7 +654,7 @@
       "customForecast": "User defined forecast",
       "customTariff": "User defined tariff",
       "description": "Configure your energy tariffs and forecasts. Use device-based configuration for dynamic management or YAML for static settings.",
-      "feedin": {
+      "feedIn": {
         "description": "Compensation for electricity exported to the grid. Used to calculate actual charging costs.",
         "titleAdd": "Add Grid Export Tariff",
         "titleEdit": "Edit Grid Export Tariff"
@@ -668,7 +668,7 @@
       "legacyWarning": "New tariff configuration available! Remove and save your tariffs here to use the new guided process.",
       "option": {
         "co2": "Add CO₂ forecast",
-        "feedin": "Add grid export tariff",
+        "feedIn": "Add grid export tariff",
         "grid": "Add grid import tariff",
         "planner": "Add planner forecast",
         "solar": "Add solar forecast"
@@ -689,7 +689,7 @@
       "titleChoice": "What Do You Want To Add?",
       "type": {
         "co2": "CO₂ Intensity",
-        "feedin": "Feed-In Price",
+        "feedIn": "Feed-In Price",
         "grid": "Grid Consumption Price",
         "planner": "Planner",
         "solar": "Solar"

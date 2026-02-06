@@ -180,13 +180,13 @@
 						@edit="editTariff('grid', gridTariff.id)"
 					/>
 					<TariffCard
-						v-if="feedinTariff"
-						:tariff="feedinTariff"
-						tariff-type="feedin"
-						:has-error="hasDeviceError('tariff', feedinTariff.name)"
-						:tags="deviceTags('tariff', feedinTariff.name)"
+						v-if="feedInTariff"
+						:tariff="feedInTariff"
+						tariff-type="feedIn"
+						:has-error="hasDeviceError('tariff', feedInTariff.name)"
+						:tags="deviceTags('tariff', feedInTariff.name)"
 						:currency="currency"
-						@edit="editTariff('feedin', feedinTariff.id)"
+						@edit="editTariff('feedIn', feedInTariff.id)"
 					/>
 					<NewDeviceButton
 						v-if="possibleTariffTypes.length"
@@ -694,7 +694,7 @@ export default defineComponent({
 			const name = this.tariffRefs?.grid;
 			return name ? this.tariffs.find((t) => t.name === name) : null;
 		},
-		feedinTariff() {
+		feedInTariff() {
 			const name = this.tariffRefs?.feedIn;
 			return name ? this.tariffs.find((t) => t.name === name) : null;
 		},
@@ -713,7 +713,7 @@ export default defineComponent({
 		possibleTariffTypes(): TariffType[] {
 			const types: TariffType[] = [];
 			if (!this.gridTariff) types.push("grid");
-			if (!this.feedinTariff) types.push("feedin");
+			if (!this.feedInTariff) types.push("feedIn");
 			return types;
 		},
 		possibleForecastTypes(): TariffType[] {

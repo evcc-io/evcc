@@ -653,7 +653,7 @@
       "customForecast": "Benutzerdefinierte Vorhersage",
       "customTariff": "Benutzerdefinierter Tarif",
       "description": "Konfiguriere deine Energietarife und Vorhersagen. Nutze gerätebasierte Konfiguration für dynamisches Management oder YAML für statische Einstellungen.",
-      "feedin": {
+      "feedIn": {
         "description": "Vergütung für ins Netz eingespeisten Strom. Zur Berechnung der realen Ladekosten.",
         "titleAdd": "Einspeisevergütung hinzufügen",
         "titleEdit": "Einspeisevergütung bearbeiten"
@@ -667,7 +667,7 @@
       "legacyWarning": "Neue Tarifkonfiguration verfügbar! Entferne die Konfiguration hier und speichere, um den neuen geführten Prozess zu nutzen.",
       "option": {
         "co2": "CO₂-Vorhersage hinzufügen",
-        "feedin": "Einspeisevergütung hinzufügen",
+        "feedIn": "Einspeisevergütung hinzufügen",
         "grid": "Netzbezugstarif hinzufügen",
         "planner": "Planer-Vorhersage hinzufügen",
         "solar": "Solar-Vorhersage hinzufügen"
@@ -688,7 +688,7 @@
       "titleChoice": "Was möchtest du hinzufügen?",
       "type": {
         "co2": "CO₂ Vorhersage",
-        "feedin": "Einspeisevergütung",
+        "feedIn": "Einspeisevergütung",
         "grid": "Netzbezugspreis",
         "planner": "Planer",
         "solar": "Solar"
