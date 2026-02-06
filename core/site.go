@@ -303,23 +303,22 @@ func (site *Site) restoreSettings() error {
 		return nil
 	}
 	if v, err := settings.Float(keys.BufferSoc); err == nil {
-		if err := site.SetBufferSoc(v); err != nil {
+		if err := site.SetBufferSoc(v); err != nil && !errors.Is(err, ErrBatteryNotConfigured) {
 			return err
 		}
 	}
 	if v, err := settings.Float(keys.BufferStartSoc); err == nil {
-		if err := site.SetBufferStartSoc(v); err != nil {
+		if err := site.SetBufferStartSoc(v); err != nil && !errors.Is(err, ErrBatteryNotConfigured) {
 			return err
 		}
 	}
-	// TODO migrate from YAML
 	if v, err := settings.Float(keys.PrioritySoc); err == nil {
-		if err := site.SetPrioritySoc(v); err != nil {
+		if err := site.SetPrioritySoc(v); err != nil && !errors.Is(err, ErrBatteryNotConfigured) {
 			return err
 		}
 	}
 	if v, err := settings.Bool(keys.BatteryDischargeControl); err == nil {
-		if err := site.SetBatteryDischargeControl(v); err != nil {
+		if err := site.SetBatteryDischargeControl(v); err != nil && !errors.Is(err, ErrBatteryControlNotAvailable) {
 			return err
 		}
 	}
@@ -329,7 +328,7 @@ func (site *Site) restoreSettings() error {
 		}
 	}
 	if v, err := settings.Float(keys.BatteryGridChargeLimit); err == nil {
-		if err := site.SetBatteryGridChargeLimit(&v); err != nil {
+		if err := site.SetBatteryGridChargeLimit(&v); err != nil && !errors.Is(err, ErrBatteryControlNotAvailable) {
 			return err
 		}
 	}
