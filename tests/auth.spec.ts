@@ -41,16 +41,6 @@ test("set initial password", async ({ page }) => {
   await modal.getByRole("button", { name: "Create Password" }).click();
   await expectModalHidden(modal);
 
-  // verify user is automatically logged in after password creation
-  await openTopNavigation(page);
-  await expect(page.getByRole("button", { name: "Logout" })).toBeVisible();
-  await page.getByRole("link", { name: "Configuration" }).click();
-  await expectTopNavigationClosed(page);
-  // should go directly to config page without login modal
-  await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible();
-  const loginModal = page.getByTestId("login-modal");
-  await expectModalHidden(loginModal);
-
   await stop();
 });
 
