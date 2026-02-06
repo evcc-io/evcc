@@ -1,0 +1,74 @@
+template: redfish-power
+products:
+  - brand: Redfish-compatible
+    description:
+      de: BMC
+      en: BMC
+  - brand: Supermicro
+    description:
+      de: IPMI BMC
+      en: IPMI BMC
+requirements:
+  description:
+    de: |
+      Redfish-kompatible BMC-Leistungsmessung für Server.
+
+      Hinweise:
+      - Manche BMCs benötigen kostenpflichtige Lizenzen
+      - Manche Systeme zeigen dauerhaft 0 Watt an (keine Sensoren)
+      - Kompatibilität vorab per curl-Test oder Web-Interface prüfen
+    en: |
+      Redfish-compatible BMC power measurement for servers.
+
+      Notes:
+      - Some BMCs require paid licenses
+      - Some systems always report 0 Watts (no sensors)
+      - Test compatibility beforehand via curl or web interface
+params:
+  - name: usage
+    choice: ["charge"]
+    default: charge
+  - name: host
+    required: true
+    help:
+      de: Hostname oder IP-Adresse des BMC
+      en: Hostname or IP address of the BMC
+  - name: user
+    description:
+      de: Redfish / BMC Benutzername
+      en: Redfish / BMC username
+    required: true
+  - name: password
+    description:
+      de: Redfish / BMC Passwort
+      en: Redfish / BMC password
+    required: true
+    mask: true
+  - name: chassis
+    default: "1"
+    description:
+      de: Redfish Chassis ID
+      en: Redfish Chassis ID
+    help:
+      de: Standard "1" für die meisten Hersteller. Dell iDRAC benötigt "System.Embedded.1"
+      en: Default "1" for most vendors. Dell iDRAC requires "System.Embedded.1"
+  - name: insecure
+    default: true
+    type: bool
+    description:
+      de: TLS-Zertifikatsüberprüfung überspringen
+      en: Skip TLS certificate verification
+    help:
+      de: Nur in vertrauenswürdigen Netzwerken verwenden! BMCs nutzen selbstsignierte Zertifikate
+      en: Only use in trusted networks! BMCs use self-signed certificates
+render: |
+  type: custom
+  power:
+    source: http
+    uri: https://{{ .host }}/redfish/v1/Chassis/{{ .chassis }}/Power
+    method: GET
+    insecure: {{ .insecure }}
+    headers:
+    - Accept: application/json
+    - Authorization: Basic {{ printf "%s:%s" .user .password | b64enc }}
+    jq: .PowerControl[0].PowerConsumedWatts // .PowerControl[0].PowerInputWatts // .PowerMetrics.AverageConsumedWatts // 0
