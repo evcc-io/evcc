@@ -45,7 +45,7 @@
   },
   "engines": {
     "npm": ">=10.0.0",
-    "node": ">=22.0.0"
+    "node": ">=24.0.0"
   },
   "license": "MIT",
   "repository": "github:evcc-io/evcc",
