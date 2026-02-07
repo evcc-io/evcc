@@ -57,10 +57,10 @@ func (c *Controller) ChargeEnable(enable bool) error {
 	c.configureChargeSchedule(&stat.EvInfo.Schedules[0])
 
 	const (
-		timeFormat = "15:04" // Hours & minutes only
+		timeFormat        = "15:04" // Hours & minutes only
 		fallbackStartTime = "00:01" // Fallback time for schedules crossing midnight
 	)
-	
+
 	currentTime := time.Now() // Call once and reuse
 
 	if enable {
@@ -74,8 +74,8 @@ func (c *Controller) ChargeEnable(enable bool) error {
 		// Parse times for comparison and handle edge case: StartTime > EndTime
 		start, err1 := time.Parse(timeFormat, stat.EvInfo.Schedules[0].StartTime)
 		
-	 if err1 == nil && start.After(currentTime) {
-	 	stat.EvInfo.Schedules[0].StartTime = fallbackStartTime
+	if err1 == nil && start.After(currentTime) {
+		stat.EvInfo.Schedules[0].StartTime = fallbackStartTime
 		}
 	}
 
