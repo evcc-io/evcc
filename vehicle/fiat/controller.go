@@ -54,30 +54,30 @@ func (c *Controller) ChargeEnable(enable bool) error {
 	}
 
 	// configure first schedule and make sure it's active
- c.configureChargeSchedule(&stat.EvInfo.Schedules[0])
- 
- timeFormat := "15:04"
+	c.configureChargeSchedule(&stat.EvInfo.Schedules[0])
 
- if enable {
-     // start charging by updating active charge schedule to start now and end in 12h
-     stat.EvInfo.Schedules[0].StartTime = time.Now().Format(timeFormat)
-     stat.EvInfo.Schedules[0].EndTime = time.Now().Add(12 * time.Hour).Format(timeFormat)
- } else {
-     // stop charging by updating active charge schedule end time to now
-     nowStr := time.Now().Format(timeFormat)
-     stat.EvInfo.Schedules[0].EndTime = nowStr
+	const (
+		timeFormat          = "15:04"
+		fallbackStartTime   = "00:01" // Fallback time for schedules crossing midnight
+	)
+	
+	currentTime := time.Now() // Call once and reuse
 
-     // Parse times for comparison
-     start, err1 := time.Parse(timeFormat, stat.EvInfo.Schedules[0].StartTime)
-     end, err2 := time.Parse(timeFormat, nowStr)
-
-     if err1 == nil && err2 == nil {
-         // If StartTime is after EndTime, fix it
-         if start.After(end) {
-             stat.EvInfo.Schedules[0].StartTime = "00:01"
-         }
-     }
- }
+	if enable {
+		// Start charging: update active schedule with current time and end time (12h later)
+		stat.EvInfo.Schedules[0].StartTime = currentTime.Format(timeFormat)
+		stat.EvInfo.Schedules[0].EndTime = currentTime.Add(12 * time.Hour).Format(timeFormat)
+	} else {
+		// Stop charging: update end time to current time
+		stat.EvInfo.Schedules[0].EndTime = currentTime.Format(timeFormat)
+		
+		// Parse times for comparison and handle edge case: StartTime > EndTime
+		start, err1 := time.Parse(timeFormat, stat.EvInfo.Schedules[0].StartTime)
+		
+	 if err1 == nil && start.After(currentTime) {
+	 	stat.EvInfo.Schedules[0].StartTime = fallbackStartTime
+		}
+	}
 
 	// make sure the other charge schedules are disabled in case user changed them
 	c.disableConflictingChargeSchedule(&stat.EvInfo.Schedules[1])
