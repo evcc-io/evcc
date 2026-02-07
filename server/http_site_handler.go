@@ -26,7 +26,6 @@ import (
 	"github.com/evcc-io/evcc/util/logstash"
 	"github.com/gorilla/mux"
 	"github.com/itchyny/gojq"
-	"go.yaml.in/yaml/v4"
 	"golang.org/x/text/language"
 )
 
@@ -46,6 +45,7 @@ func getPreferredLanguage(header string) string {
 func indexHandler(customCss bool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=UTF-8")
+		w.Header().Set("Cache-Control", "no-cache")
 
 		indexTemplate, err := fs.ReadFile(assets.Web, "index.html")
 		if err != nil {
@@ -62,7 +62,7 @@ func indexHandler(customCss bool) http.HandlerFunc {
 
 		defaultLang := getPreferredLanguage(r.Header.Get("Accept-Language"))
 
-		if err := t.Execute(w, map[string]interface{}{
+		if err := t.Execute(w, map[string]any{
 			"Version":     util.Version,
 			"Commit":      util.Commit,
 			"DefaultLang": defaultLang,
@@ -81,36 +81,13 @@ func jsonHandler(h http.Handler) http.Handler {
 	})
 }
 
-func jsonWrite(w http.ResponseWriter, data interface{}) {
-	if err := json.NewEncoder(w).Encode(data); err != nil {
-		log.ERROR.Printf("httpd: failed to encode JSON: %v", err)
-	}
+func jsonWrite(w http.ResponseWriter, data any) {
+	json.NewEncoder(w).Encode(data)
 }
 
 func jsonError(w http.ResponseWriter, status int, err error) {
 	w.WriteHeader(status)
-
-	res := struct {
-		Error       string `json:"error"`
-		Line        int    `json:"line,omitempty"`
-		IsAuthError bool   `json:"isAuthError,omitempty"`
-	}{
-		Error:       err.Error(),
-		IsAuthError: errors.Is(err, api.ErrLoginRequired) || errors.Is(err, api.ErrMissingToken),
-	}
-
-	var (
-		ype *yaml.ParserError
-		yue *yaml.UnmarshalError
-	)
-	switch {
-	case errors.As(err, &ype):
-		res.Line = ype.Line
-	case errors.As(err, &yue):
-		res.Line = yue.Line
-	}
-
-	jsonWrite(w, res)
+	jsonWrite(w, util.ErrorAsJson(err))
 }
 
 func handler[T any](conv func(string) (T, error), set func(T) error, get func() T) http.HandlerFunc {
@@ -260,20 +237,6 @@ func stateHandler(cache *util.ParamCache) http.HandlerFunc {
 	}
 }
 
-// healthHandler returns current charge mode
-func healthHandler(site site.API) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if site == nil || !site.Healthy() {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-
-		w.Header().Set("Content-Type", "text/plain")
-		w.WriteHeader(http.StatusOK)
-		fmt.Fprintln(w, "OK")
-	}
-}
-
 // tariffHandler returns the configured tariff
 func tariffHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -370,7 +333,10 @@ func getBackup(authObject auth.Auth) http.HandlerFunc {
 			return
 		}
 
-		settings.Persist()
+		if err := settings.Persist(); err != nil {
+			http.Error(w, "Synching DB failed", http.StatusInternalServerError)
+			return
+		}
 
 		f, err := os.Open(db.FilePath)
 		if err != nil {

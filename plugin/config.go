@@ -12,7 +12,7 @@ var registry = reg.New[Plugin]("plugin")
 
 // plugin types
 type (
-	Plugin  interface{}
+	Plugin  any
 	Getters interface {
 		StringGetter
 		FloatGetter

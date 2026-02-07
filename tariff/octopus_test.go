@@ -10,8 +10,11 @@ import (
 func TestOctopusConfigParse(t *testing.T) {
 	test.SkipCI(t)
 
+	validTestApiKey32 := "oe_test_testingYqLeoRu2xsn9WEiv6"
+	validTestApiKey40 := "oe_test_testingYBsFMxfqXG9guAdTVgFssdJmv"
+
 	// This test will start failing if you remove the deprecated "tariff" config var.
-	validTariffConfig := map[string]interface{}{
+	validTariffConfig := map[string]any{
 		"region":      "H",
 		"tariff":      "GO-22-03-29",
 		"directDebit": "True",
@@ -20,7 +23,7 @@ func TestOctopusConfigParse(t *testing.T) {
 	_, err := buildOctopusFromConfig(validTariffConfig)
 	require.NoError(t, err)
 
-	validProductCodeConfig := map[string]interface{}{
+	validProductCodeConfig := map[string]any{
 		"region":      "H",
 		"productcode": "GO-22-03-29",
 		"directDebit": "False",
@@ -29,7 +32,7 @@ func TestOctopusConfigParse(t *testing.T) {
 	_, err = buildOctopusFromConfig(validProductCodeConfig)
 	require.NoError(t, err)
 
-	invalidApiAndProductCodeConfig := map[string]interface{}{
+	invalidApiAndProductCodeConfig := map[string]any{
 		"region":          "H",
 		"productcode":     "GO-22-03-29",
 		"tariffDirection": "import",
@@ -38,17 +41,24 @@ func TestOctopusConfigParse(t *testing.T) {
 	_, err = buildOctopusFromConfig(invalidApiAndProductCodeConfig)
 	require.Error(t, err)
 
-	invalidTariffDirectionConfig := map[string]interface{}{
+	invalidTariffDirectionConfig := map[string]any{
 		"tariffDirection": "invalid",
-		"apikey":          "test",
+		"apikey":          validTestApiKey32,
 	}
 	_, err = buildOctopusFromConfig(invalidTariffDirectionConfig)
 	require.Errorf(t, err, "invalid tariff type")
 
-	validApiExportConfig := map[string]interface{}{
+	validApiExportConfig32 := map[string]any{
 		"tariffDirection": "export",
-		"apikey":          "test",
+		"apikey":          validTestApiKey32,
 	}
-	_, err = buildOctopusFromConfig(validApiExportConfig)
+	_, err = buildOctopusFromConfig(validApiExportConfig32)
+	require.NoError(t, err)
+
+	validApiExportConfig40 := map[string]any{
+		"tariffDirection": "export",
+		"apikey":          validTestApiKey40,
+	}
+	_, err = buildOctopusFromConfig(validApiExportConfig40)
 	require.NoError(t, err)
 }

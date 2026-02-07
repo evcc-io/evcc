@@ -19,7 +19,6 @@ package charger
 
 import (
 	"context"
-	"errors"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/measurement"
@@ -55,7 +54,7 @@ const (
 //go:generate go tool decorate -f decorateSgReady -b *SgReady -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.SocLimiter,GetLimitSoc,func() (int64, error)"
 
 // NewSgReadyFromConfig creates an SG Ready configurable charger from generic config
-func NewSgReadyFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewSgReadyFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		embed                   `mapstructure:",squash"`
 		SetMode                 plugin.Config
@@ -134,11 +133,11 @@ func (wb *SgReady) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	if mode == Dim {
-		return api.StatusNone, errors.New("dim mode")
+	status := map[int64]api.ChargeStatus{
+		Dim:    api.StatusB,
+		Normal: api.StatusB,
+		Boost:  api.StatusC,
 	}
-
-	status := map[int64]api.ChargeStatus{Boost: api.StatusC, Normal: api.StatusB}
 	return status[mode], nil
 }
 

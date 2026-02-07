@@ -29,5 +29,6 @@ func TokenExtra(t *oauth2.Token, key string) string {
 }
 
 func tokenError(err error) bool {
-	return errors.Is(err, api.ErrLoginRequired) || errors.Is(err, api.ErrMissingToken)
+	ae := new(api.ErrLoginRequired)
+	return errors.As(err, &ae)
 }

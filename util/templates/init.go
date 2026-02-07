@@ -64,31 +64,22 @@ func register(class Class, tmpl Template) error {
 }
 
 func fromBytes(b []byte) (Template, error) {
-	// panic if template definition contains unknown fields
+	// error on unknown fields
 	dec := yaml.NewDecoder(bytes.NewReader(b))
 	dec.KnownFields(true)
 
-	var definition TemplateDefinition
-	if err := dec.Decode(&definition); err != nil {
+	var tmpl Template
+	if err := dec.Decode(&tmpl); err != nil {
 		return Template{}, err
 	}
 
-	tmpl := Template{
-		TemplateDefinition: definition,
+	for _, f := range []func() error{tmpl.ResolvePresets, tmpl.ResolveGroup, tmpl.UpdateParamsWithDefaults, tmpl.UpdateModbusParamsWithDefaults, tmpl.SortRequiredParamsFirst, tmpl.Validate} {
+		if err := f(); err != nil {
+			return tmpl, fmt.Errorf("template '%s': %w", tmpl.Template, err)
+		}
 	}
 
-	err := tmpl.ResolvePresets()
-	if err == nil {
-		err = tmpl.ResolveGroup()
-	}
-	if err == nil {
-		err = tmpl.UpdateParamsWithDefaults()
-	}
-	if err == nil {
-		err = tmpl.Validate()
-	}
-
-	return tmpl, err
+	return tmpl, nil
 }
 
 func load(class Class) {

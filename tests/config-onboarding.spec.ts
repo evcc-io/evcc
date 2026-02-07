@@ -29,23 +29,12 @@ test.describe("onboarding", async () => {
     await expect(page.locator("body")).toContainText("Hello aboard!");
     await page.getByRole("link", { name: "Let's start configuration" }).click();
 
-    // login
-    const login = page.getByTestId("login-modal");
-    await expectModalVisible(login);
-    await login.getByLabel("Administrator Password").fill(PASSWORD);
-    await login.getByRole("button", { name: "Login" }).click();
-    await expectModalHidden(login);
-
-    // config page
+    // config page (already logged in from password creation)
     await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible();
     await expect(page.getByTestId("welcome-banner")).toBeVisible();
-    await page
-      .getByTestId("welcome-banner")
-      .getByRole("button", { name: "Enable experimental features" })
-      .click();
+    await expect(page.getByTestId("welcome-banner")).toContainText("Start with creating a");
 
     // create loadpoint with charger
-    await expect(page.getByTestId("loadpoint-required")).toBeVisible();
     await page.getByTestId("add-loadpoint").click();
     const lpModal = page.getByTestId("loadpoint-modal");
     await expectModalVisible(lpModal);
@@ -62,9 +51,10 @@ test.describe("onboarding", async () => {
     await expectModalVisible(lpModal);
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(lpModal);
+
+    await restart();
+
     await expect(page.getByTestId("welcome-banner")).not.toBeVisible();
-    await expect(page.getByTestId("loadpoint-required")).not.toBeVisible();
-    await expect(page.getByTestId("experimental-banner")).toBeVisible();
 
     // create grid meter
     await page.getByRole("button", { name: "Add grid meter" }).click();

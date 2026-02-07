@@ -41,7 +41,7 @@ type Status struct {
 		NrOfPhases             int    //  1,
 		TwinSerial             int    //  -1,
 	}
-	TwinCharger interface{}
+	TwinCharger any
 }
 
 // /servlet/rest/chargebox/slaves/false

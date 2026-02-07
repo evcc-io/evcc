@@ -34,16 +34,17 @@ type Circuit struct {
 	getMaxCurrent func() (float64, error) // dynamic max allowed current
 	getMaxPower   func() (float64, error) // dynamic max allowed power
 
-	current float64
-	power   float64
-	dimmed  bool
+	current   float64
+	power     float64
+	dimmed    bool
+	curtailed bool
 
 	currentUpdated time.Time
 	powerUpdated   time.Time
 }
 
 // NewFromConfig creates a new Circuit
-func NewFromConfig(ctx context.Context, log *util.Logger, other map[string]interface{}) (api.Circuit, error) {
+func NewFromConfig(ctx context.Context, log *util.Logger, other map[string]any) (api.Circuit, error) {
 	cc := struct {
 		Title         string         // title
 		ParentRef     string         `mapstructure:"parent"` // parent circuit reference
@@ -148,6 +149,12 @@ func (c *Circuit) GetParent() api.Circuit {
 
 // setParent set parent circuit
 func (c *Circuit) setParent(parent api.Circuit) error {
+	// prevent cyclical dependency
+	for p := parent.GetParent(); p != nil; p = p.GetParent() {
+		if c == p {
+			return fmt.Errorf("cycle detected: %s and %s cannot be mutual parents", c.GetTitle(), parent.GetTitle())
+		}
+	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if c.parent != nil {
@@ -288,9 +295,9 @@ func (c *Circuit) Update(loadpoints []api.CircuitLoad) (err error) {
 
 	defer func() {
 		if maxPower != 0 && c.power > maxPower {
-			c.log.WARN.Printf("over power detected: %.5gW > %.5gW", c.power, maxPower)
+			c.log.WARN.Printf("over power detected: %.0fW > %.0fW", c.power, maxPower)
 		} else {
-			c.log.DEBUG.Printf("power: %.5gW", c.power)
+			c.log.DEBUG.Printf("power: %.0fW", c.power)
 		}
 
 		if maxCurrent != 0 && c.current > maxCurrent {
@@ -340,10 +347,10 @@ func (c *Circuit) ValidatePower(old, new float64) float64 {
 
 		if delta > potential {
 			capped := min(new, max(0, old+potential))
-			c.log.DEBUG.Printf("validate power: %.5gW + (%.5gW -> %.5gW) > %.5gW capped at %.5gW", c.power, old, new, maxPower, capped)
+			c.log.DEBUG.Printf("validate power: %.0fW + (%.0fW -> %.0fW) > %.0fW capped at %.0fW", c.power, old, new, maxPower, capped)
 			new = capped
 		} else {
-			c.log.TRACE.Printf("validate power: %.5gW + (%.5gW -> %.5gW) <= %.5gW ok", c.power, old, new, maxPower)
+			c.log.TRACE.Printf("validate power: %.0fW + (%.0fW -> %.0fW) <= %.0fW ok", c.power, old, new, maxPower)
 		}
 	}
 
@@ -395,4 +402,25 @@ func (c *Circuit) Dimmed() bool {
 	}
 
 	return c.parent.Dimmed()
+}
+
+func (c *Circuit) Curtail(curtail bool) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.curtailed = curtail
+}
+
+func (c *Circuit) Curtailed() bool {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	if c.curtailed {
+		return true
+	}
+
+	if c.parent == nil {
+		return false
+	}
+
+	return c.parent.Curtailed()
 }

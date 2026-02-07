@@ -20,17 +20,17 @@ func init() {
 }
 
 // NewBMWFromConfig creates a new vehicle
-func NewBMWFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+func NewBMWFromConfig(other map[string]any) (api.Vehicle, error) {
 	return NewBMWMiniFromConfig("bmw", other)
 }
 
 // NewMiniFromConfig creates a new vehicle
-func NewMiniFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+func NewMiniFromConfig(other map[string]any) (api.Vehicle, error) {
 	return NewBMWMiniFromConfig("mini", other)
 }
 
 // NewBMWMiniFromConfig creates a new vehicle
-func NewBMWMiniFromConfig(brand string, other map[string]interface{}) (api.Vehicle, error) {
+func NewBMWMiniFromConfig(brand string, other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed               `mapstructure:",squash"`
 		User, Password, VIN string

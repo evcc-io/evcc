@@ -33,7 +33,7 @@ func init() {
 }
 
 // NewOVMSFromConfig creates a new vehicle
-func NewOvmsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+func NewOvmsFromConfig(other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed                             `mapstructure:",squash"`
 		User, Password, VehicleID, Server string

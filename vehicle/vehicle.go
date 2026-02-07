@@ -2,6 +2,7 @@ package vehicle
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -23,7 +24,7 @@ func init() {
 }
 
 // NewConfigurableFromConfig creates a new Vehicle
-func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}) (api.Vehicle, error) {
+func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, error) {
 	var cc struct {
 		embed         `mapstructure:",squash"`
 		Soc           plugin.Config
@@ -137,6 +138,15 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}
 	chargeEnable, err := cc.ChargeEnable.BoolSetter(ctx, "chargeenable")
 	if err != nil {
 		return nil, fmt.Errorf("chargeEnable: %w", err)
+	}
+
+	switch {
+	case maxCurrent == nil && getMaxCurrent != nil:
+		return nil, errors.New("cannot have current without current control")
+	case status == nil && maxCurrent != nil:
+		return nil, errors.New("cannot have current control without status")
+	case status == nil && chargeEnable != nil:
+		return nil, errors.New("cannot have charge control without status")
 	}
 
 	return decorateVehicle(v, limitSoc, status, rng, odo, climater, maxCurrent, getMaxCurrent, finishTime, wakeup, chargeEnable), nil

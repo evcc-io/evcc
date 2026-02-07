@@ -22,7 +22,7 @@ func init() {
 }
 
 // NewPolestarFromConfig creates a new vehicle
-func NewPolestarFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+func NewPolestarFromConfig(other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed          `mapstructure:",squash"`
 		User, Password string

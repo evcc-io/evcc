@@ -1,4 +1,5 @@
 template: mz2mqtt
+deprecated: true
 products:
   - description:
       generic: mz2mqtt

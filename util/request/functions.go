@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"slices"
 
 	"github.com/cenkalti/backoff/v4"
 )
@@ -50,7 +51,8 @@ func NewStatusError(resp *http.Response) *StatusError {
 }
 
 func (e *StatusError) Error() string {
-	return fmt.Sprintf("unexpected status: %d (%s)", e.resp.StatusCode, http.StatusText(e.resp.StatusCode))
+	req := e.resp.Request
+	return fmt.Sprintf("unexpected status: %d (%s) %s %s", e.resp.StatusCode, http.StatusText(e.resp.StatusCode), req.Method, req.URL)
 }
 
 // Response returns the response with the unexpected error
@@ -65,12 +67,7 @@ func (e *StatusError) StatusCode() int {
 
 // HasStatus returns true if the response's status code matches any of the given codes
 func (e *StatusError) HasStatus(codes ...int) bool {
-	for _, code := range codes {
-		if e.resp.StatusCode == code {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(codes, e.resp.StatusCode)
 }
 
 // ResponseError turns an HTTP status code into an error

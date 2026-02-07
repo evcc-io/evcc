@@ -33,7 +33,7 @@ type PSA struct {
 }
 
 // newPSA creates a new vehicle
-func newPSA(brand, realm string, other map[string]interface{}) (api.Vehicle, error) {
+func newPSA(brand, realm string, other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed    `mapstructure:",squash"`
 		VIN      string

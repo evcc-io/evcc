@@ -44,7 +44,7 @@ func BenchmarkLog(b *testing.B) {
 	log.Write([]byte(s2))
 	log.Write([]byte(s3))
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		log.All(nil, jww.LevelTrace, 1)
 	}
 }

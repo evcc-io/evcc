@@ -20,7 +20,7 @@ type solarDetails struct {
 	Today            dailyDetails `json:"today,omitempty"`            // tomorrow
 	Tomorrow         dailyDetails `json:"tomorrow,omitempty"`         // tomorrow
 	DayAfterTomorrow dailyDetails `json:"dayAfterTomorrow,omitempty"` // day after tomorrow
-	Timeseries       []tsEntry    `json:"timeseries,omitempty"`       // timeseries of forecasted energy
+	Timeseries       timeseries   `json:"timeseries,omitempty"`       // timeseries of forecasted energy
 }
 
 type dailyDetails struct {
@@ -32,7 +32,7 @@ type dailyDetails struct {
 //   - the current green share, calculated for the part of the consumption between powerFrom and powerTo
 //     the consumption below powerFrom will get the available green power first
 func (site *Site) greenShare(powerFrom float64, powerTo float64) float64 {
-	greenPower := math.Max(0, site.pvPower) + math.Max(0, site.batteryPower)
+	greenPower := math.Max(0, site.pvPower) + math.Max(0, site.battery.Power)
 	greenPowerAvailable := math.Max(0, greenPower-powerFrom)
 
 	power := powerTo - powerFrom

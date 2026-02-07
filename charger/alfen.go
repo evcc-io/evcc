@@ -59,7 +59,7 @@ func init() {
 //go:generate go tool decorate -f decorateAlfen -b *Alfen -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
 
 // NewAlfenFromConfig creates a Alfen charger from generic config
-func NewAlfenFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewAlfenFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: 1,
 	}
@@ -155,18 +155,17 @@ func (wb *Alfen) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (wb *Alfen) Enable(enable bool) error {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
 	var curr float64
 	if enable {
-		wb.mu.Lock()
 		curr = wb.curr
-		wb.mu.Unlock()
 	}
 
 	err := wb.setCurrent(curr)
 	if err == nil {
-		wb.mu.Lock()
 		wb.enabled = enable
-		wb.mu.Unlock()
 	}
 
 	return err
@@ -191,11 +190,12 @@ func (wb *Alfen) setCurrent(current float64) error {
 
 // MaxCurrent implements the api.ChargerEx interface
 func (wb *Alfen) MaxCurrentMillis(current float64) error {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
 	err := wb.setCurrent(current)
 	if err == nil {
-		wb.mu.Lock()
 		wb.curr = current
-		wb.mu.Unlock()
 	}
 
 	return err

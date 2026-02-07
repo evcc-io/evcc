@@ -42,7 +42,7 @@ func init() {
 const stekkerURI = "https://stekker.app/epex-forecast"
 
 // NewStekkerFromConfig creates provider from config
-func NewStekkerFromConfig(other map[string]interface{}) (api.Tariff, error) {
+func NewStekkerFromConfig(other map[string]any) (api.Tariff, error) {
 	var cc struct {
 		embed  `mapstructure:",squash"`
 		Region string
@@ -120,7 +120,7 @@ func (t *Stekker) run(done chan error) {
 
 		raw := strings.ReplaceAll(val, "&quot;", "\"")
 
-		var data []map[string]interface{}
+		var data []map[string]any
 		if err := json.Unmarshal([]byte(raw), &data); err != nil {
 			once.Do(func() { done <- err })
 			t.log.ERROR.Println("unmarshal error:", err)
@@ -134,8 +134,8 @@ func (t *Stekker) run(done chan error) {
 				continue
 			}
 
-			xs, _ := series["x"].([]interface{})
-			ys, _ := series["y"].([]interface{})
+			xs, _ := series["x"].([]any)
+			ys, _ := series["y"].([]any)
 
 			for i := range xs {
 				xt, ok1 := xs[i].(string)

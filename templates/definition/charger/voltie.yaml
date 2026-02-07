@@ -1,0 +1,15 @@
+template: voltie
+products:
+  - brand: Voltie
+    description:
+      generic: Charger
+capabilities: ["mA"]
+requirements:
+  evcc: ["sponsorship"]
+params:
+  - name: modbus
+    choice: ["tcpip"]
+    id: 1
+render: |
+  type: voltie
+  {{- include "modbus" . }}

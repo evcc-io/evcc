@@ -6,7 +6,7 @@
 
 		<div class="mb-3 row" data-testid="battery-boost">
 			<label :for="formId('batteryBoost')" class="col-sm-4 col-form-label pt-0 pt-sm-2">
-				{{ $t("main.loadpointSettings.batteryBoost.label") }}&nbsp;🧪
+				{{ $t("main.loadpointSettings.batteryBoost.label") }}
 			</label>
 			<div class="col-sm-8 pe-0">
 				<div class="form-check form-switch my-1">

@@ -13,7 +13,7 @@ func TestEncode(t *testing.T) {
 	now := time.Now()
 
 	tc := []struct {
-		in  interface{}
+		in  any
 		out string
 	}{
 		{int64(1), "1"},
@@ -35,7 +35,7 @@ func TestEncode(t *testing.T) {
 
 func TestEncodeSlice(t *testing.T) {
 	tc := []struct {
-		in  interface{}
+		in  any
 		out string
 	}{
 		{[]string{"a", "b"}, `["a","b"]`},

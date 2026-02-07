@@ -47,7 +47,7 @@ test.describe("opening logs", async () => {
 test.describe("features", async () => {
   test("content", async ({ page }) => {
     await page.goto("/#/log");
-    await page.getByTestId("log-search").fill("listening at");
-    await expect(page.getByTestId("log-content")).toContainText("listening at");
+    await page.getByTestId("log-search").fill("UI local");
+    await expect(page.getByTestId("log-content")).toContainText("UI local");
   });
 });

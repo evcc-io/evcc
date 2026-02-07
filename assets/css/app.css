@@ -564,8 +564,12 @@ input::-webkit-datetime-edit {
 }
 input.form-control:disabled,
 input.form-control:read-only,
+textarea.form-control:disabled,
+textarea.form-control:read-only,
 .dark input.form-control:disabled,
-.dark input.form-control:read-only {
+.dark input.form-control:read-only,
+.dark textarea.form-control:disabled,
+.dark textarea.form-control:read-only {
 	background-color: var(--evcc-gray-10);
 	color: var(--bs-default-text);
 	opacity: 1;
@@ -576,12 +580,51 @@ input.form-control:read-only,
 	color: var(--evcc-default-text);
 }
 
-.dark .form-control::placeholder {
-	color: var(--bs-gray-medium);
+.form-control::placeholder {
+	opacity: 0.5 !important;
 }
 
 input[type="time"]::-webkit-calendar-picker-indicator {
 	display: none;
+}
+
+/* Safari: hide the datalist dropdown button */
+input[list]::-webkit-list-button {
+	display: none !important;
+	appearance: none !important;
+	opacity: 0 !important;
+	width: 0 !important;
+	pointer-events: none !important;
+}
+
+.form-control-clear {
+	position: absolute;
+	right: 0;
+	top: 0;
+	bottom: 0;
+	justify-content: center;
+	display: flex;
+	align-items: center;
+	justify-self: center;
+	width: 36px;
+	height: 100%;
+	border: none;
+	background-color: transparent;
+	background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-1 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M 2,3 L 12,13 M 12,3 L 2,13'/%3e%3c/svg%3e");
+	background-repeat: no-repeat;
+	background-position: calc(50% - 3px) center;
+	background-size: 0.75rem;
+	padding: 0;
+	cursor: pointer;
+}
+
+.dark .form-control-clear {
+	background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-1 0 16 16'%3e%3cpath fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M 2,3 L 12,13 M 12,3 L 2,13'/%3e%3c/svg%3e");
+}
+
+/* hide dropdown arrow if clear is visible */
+.form-select.has-clear-button {
+	background-image: none;
 }
 
 .table {
@@ -671,11 +714,29 @@ html.app .modal-dialog {
 }
 
 .dark .round-box--error {
+	box-shadow: 0 0 0.5rem var(--bs-danger);
+	border: 1px solid var(--bs-danger);
+}
+
+.dark .round-box--error .tags * {
+	color: var(--bs-danger) !important;
+}
+
+.round-box--warning {
 	box-shadow: 0 0 0.5rem var(--bs-warning);
 	border: 1px solid var(--bs-warning);
 }
 
-.dark .round-box--error .tags * {
+.round-box--warning .tags * {
+	color: var(--bs-warning-text-emphasis) !important;
+}
+
+.dark .round-box--warning {
+	box-shadow: 0 0 0.5rem var(--bs-warning);
+	border: 1px solid var(--bs-warning);
+}
+
+.dark .round-box--warning .tags * {
 	color: var(--bs-warning) !important;
 }
 

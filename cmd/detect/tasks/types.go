@@ -16,7 +16,7 @@ type ResultDetails struct {
 type Result struct {
 	Task
 	ResultDetails
-	Attributes map[string]interface{} // TODO remove, only used for post-processing
+	Attributes map[string]any // TODO remove, only used for post-processing
 }
 
 type TaskType string
@@ -25,7 +25,7 @@ type Task struct {
 	ID      string
 	Type    TaskType
 	Depends string
-	Config  map[string]interface{}
+	Config  map[string]any
 	TaskHandler
 }
 

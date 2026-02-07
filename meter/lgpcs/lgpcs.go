@@ -83,7 +83,7 @@ func (m *Com) Login() error {
 		return errors.New("neither registration nor password provided - at least one needed")
 	}
 
-	data := map[string]interface{}{
+	data := map[string]any{
 		"password": m.password,
 	}
 	uri := fmt.Sprintf("%s/v1/user/setting/login", m.uri)

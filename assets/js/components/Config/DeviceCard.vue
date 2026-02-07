@@ -1,6 +1,15 @@
 <template>
-	<div class="root round-box" :class="{ 'round-box--error': error }">
-		<div class="d-flex align-items-center mb-2">
+	<div
+		class="root"
+		:class="{
+			'round-box': !unconfigured,
+			'round-box--error': error,
+			'round-box--warning': warning,
+			'root--unconfigured': unconfigured,
+			'root--with-tags': $slots.tags,
+		}"
+	>
+		<div class="d-flex align-items-center" :class="{ 'mb-2': $slots.tags }">
 			<div class="icon me-2">
 				<slot name="icon" />
 			</div>
@@ -13,20 +22,22 @@
 			<button
 				ref="tooltip"
 				type="button"
-				class="btn btn-sm btn-outline-secondary position-relative border-0 p-2"
-				:class="{ 'opacity-25': !editable }"
+				class="btn btn-sm btn-outline-secondary position-relative border-0 p-2 edit-button"
+				:class="{ 'opacity-25': !editable, invisible: noEditButton }"
 				data-bs-toggle="tooltip"
 				data-bs-html="true"
 				:title="tooltipTitle"
 				:aria-label="editable ? $t('config.main.edit') : null"
-				:disabled="!editable"
+				:disabled="!editable || noEditButton"
 				@click="edit"
 			>
 				<shopicon-regular-adjust size="s"></shopicon-regular-adjust>
 			</button>
 		</div>
-		<hr class="my-3 divide" />
-		<slot name="tags" />
+		<div v-if="$slots.tags">
+			<hr class="my-3 divide" />
+			<slot name="tags" />
+		</div>
 	</div>
 </template>
 
@@ -42,6 +53,9 @@ export default {
 		title: String,
 		editable: Boolean,
 		error: Boolean,
+		unconfigured: Boolean,
+		warning: Boolean,
+		noEditButton: Boolean,
 	},
 	emits: ["edit"],
 	data() {
@@ -56,7 +70,7 @@ export default {
 			}
 			let title = `${this.$t("config.main.name")}: <span class='font-monospace'>${this.name}</span>`;
 			if (!this.editable) {
-				title += `<div class="mt-1">${this.$t("config.main.yaml")}</div>`;
+				title += `<div class="mt-1">${this.$t("config.general.fromYamlHint")}</div>`;
 			}
 			return `<div class="text-start">${title}</div>`;
 		},
@@ -94,10 +108,30 @@ export default {
 	list-style-type: none;
 	border-radius: 1rem;
 	padding: 1rem 1.5rem;
+}
+.root--with-tags {
 	min-height: 8rem;
+}
+.root--unconfigured {
+	background: none;
+	border: 1px solid var(--evcc-gray-50);
+	transition: border-color var(--evcc-transition-fast) linear;
+	order: 1; /* unconfigured tiles at the end of the list */
+}
+.root--unconfigured:hover {
+	border-color: var(--evcc-default-text);
+}
+.root--unconfigured :deep(.value),
+.root--unconfigured :deep(.label) {
+	color: var(--evcc-gray) !important;
+	font-weight: normal !important;
 }
 .icon:empty {
 	display: none;
+}
+.edit-button {
+	/* transparent button, right align icon */
+	margin-right: -0.5rem;
 }
 .divide {
 	margin-left: -1.5rem;

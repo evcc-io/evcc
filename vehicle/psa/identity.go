@@ -45,7 +45,7 @@ func NewIdentity(log *util.Logger, brand, user string, oc *oauth2.Config, token 
 	}
 
 	if !token.Valid() {
-		if tok, err := v.RefreshToken(token); err == nil {
+		if tok, err := v.refreshToken(token); err == nil {
 			token = tok
 		}
 	}
@@ -54,7 +54,7 @@ func NewIdentity(log *util.Logger, brand, user string, oc *oauth2.Config, token 
 		return nil, errors.New("token expired")
 	}
 
-	v.TokenSource = oauth.RefreshTokenSource(token, v)
+	v.TokenSource = oauth.RefreshTokenSource(token, v.refreshToken)
 
 	// add instance
 	addInstance(v.subject, v)
@@ -62,7 +62,7 @@ func NewIdentity(log *util.Logger, brand, user string, oc *oauth2.Config, token 
 	return v, nil
 }
 
-func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
+func (v *Identity) refreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	v.mu.Lock()
 	defer v.mu.Unlock()
 
@@ -77,7 +77,7 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 		return nil, err
 	}
 
-	v.TokenSource = oauth.RefreshTokenSource(tok, v)
+	v.TokenSource = oauth.RefreshTokenSource(tok, v.refreshToken)
 	err = settings.SetJson(v.subject, tok)
 
 	return tok, err

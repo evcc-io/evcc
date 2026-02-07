@@ -16,7 +16,7 @@ func init() {
 }
 
 // NewSequenceFromConfig creates sequence provider
-func NewSequenceFromConfig(ctx context.Context, other map[string]interface{}) (Plugin, error) {
+func NewSequenceFromConfig(ctx context.Context, other map[string]any) (Plugin, error) {
 	var cc struct {
 		Set []Config
 	}

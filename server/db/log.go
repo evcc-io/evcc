@@ -16,15 +16,15 @@ func (l *Logger) LogMode(logger.LogLevel) logger.Interface {
 	return l
 }
 
-func (l *Logger) Info(_ context.Context, msg string, val ...interface{}) {
+func (l *Logger) Info(_ context.Context, msg string, val ...any) {
 	l.log.INFO.Printf(msg, val...)
 }
 
-func (l *Logger) Warn(_ context.Context, msg string, val ...interface{}) {
+func (l *Logger) Warn(_ context.Context, msg string, val ...any) {
 	l.log.WARN.Printf(msg, val...)
 }
 
-func (l *Logger) Error(_ context.Context, msg string, val ...interface{}) {
+func (l *Logger) Error(_ context.Context, msg string, val ...any) {
 	l.log.ERROR.Printf(msg, val...)
 }
 

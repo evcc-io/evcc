@@ -57,7 +57,7 @@ func init() {
 }
 
 // NewKSEFromConfig creates a KSE charger from generic config
-func NewKSEFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewKSEFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := modbus.Settings{
 		ID:       100,
 		Baudrate: 9600,

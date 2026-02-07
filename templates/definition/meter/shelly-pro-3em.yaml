@@ -1,8 +1,7 @@
 template: shelly-pro-3em
 products:
-  - brand: Shelly
-    description:
-      generic: Pro 3 EM
+  - { brand: Shelly, description: { generic: Pro 3 EM } }
+  - { brand: Shelly, description: { generic: 3 EM-63T/W Gen3 } }
 params:
   - name: usage
     choice: ["grid", "pv", "charge"]
@@ -12,11 +11,7 @@ params:
 render: |
   type: shelly
   uri: http://{{ .host }}  # shelly device ip address (local)
-  {{- if .user }}
   user: {{ .user }}
-  {{- end }}
-  {{- if .password }}
   password: {{ .password }}
-  {{- end }}
   usage: {{ .usage }}
   channel: 0  # shelly device relay channel

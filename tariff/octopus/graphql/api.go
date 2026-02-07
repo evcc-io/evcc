@@ -83,7 +83,7 @@ func (c *OctopusGraphQLClient) refreshToken() error {
 	defer cancel()
 
 	var q krakenTokenAuthentication
-	if err := c.Client.Mutate(ctx, &q, map[string]interface{}{"apiKey": c.apikey}); err != nil {
+	if err := c.Client.Mutate(ctx, &q, map[string]any{"apiKey": c.apikey}); err != nil {
 		return err
 	}
 
@@ -149,7 +149,7 @@ func (c *OctopusGraphQLClient) TariffCode(direction TariffDirection) (string, er
 	defer cancel()
 
 	var q krakenAccountElectricityAgreements
-	if err := c.Client.Query(ctx, &q, map[string]interface{}{"accountNumber": acc}); err != nil {
+	if err := c.Client.Query(ctx, &q, map[string]any{"accountNumber": acc}); err != nil {
 		return "", err
 	}
 

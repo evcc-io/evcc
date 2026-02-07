@@ -33,7 +33,7 @@ func init() {
 }
 
 // NewSocketPluginFromConfig creates a HTTP provider
-func NewSocketPluginFromConfig(other map[string]interface{}) (Plugin, error) {
+func NewSocketPluginFromConfig(other map[string]any) (Plugin, error) {
 	cc := struct {
 		URI               string
 		Headers           map[string]string

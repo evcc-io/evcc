@@ -1,0 +1,10 @@
+template: hyundai-us
+products:
+  - brand: Hyundai (US)
+    description:
+      generic: Bluelink
+params:
+  - preset: vehicle-base
+render: |
+  type: hyundai-us
+  {{ include "vehicle-base" . }}

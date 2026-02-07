@@ -40,8 +40,8 @@ type AuthCallback struct {
 }
 
 type AuthCallbackValue struct {
-	Name  string      `json:"name"`
-	Value interface{} `json:"value"`
+	Name  string `json:"name"`
+	Value any    `json:"value"`
 }
 
 type Token struct {

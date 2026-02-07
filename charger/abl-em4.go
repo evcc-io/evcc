@@ -53,7 +53,7 @@ func init() {
 }
 
 // NewAblEm4FromConfig creates an ABL eM4 charger from generic config
-func NewAblEm4FromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewAblEm4FromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		modbus.TcpSettings `mapstructure:",squash"`
 		Connector          uint16

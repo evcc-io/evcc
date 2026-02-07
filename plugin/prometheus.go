@@ -26,7 +26,7 @@ func init() {
 	registry.Add("prometheus", NewPrometheusFromConfig)
 }
 
-func NewPrometheusFromConfig(other map[string]interface{}) (Plugin, error) {
+func NewPrometheusFromConfig(other map[string]any) (Plugin, error) {
 	cc := struct {
 		Uri, Query string
 		Timeout    time.Duration

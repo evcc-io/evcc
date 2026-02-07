@@ -67,7 +67,7 @@ func NewConnection(uri string, usage string, cache time.Duration) (*Connection, 
 // Enable implements the api.Charger interface
 func (c *Connection) Enable(enable bool) error {
 	var res StateResponse
-	data := map[string]interface{}{
+	data := map[string]any{
 		"power_on": enable,
 	}
 

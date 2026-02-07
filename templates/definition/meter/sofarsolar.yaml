@@ -21,8 +21,7 @@ params:
     comset: 8N1
     port: 502
     id: 1
-  - name: capacity
-    advanced: true
+  - preset: battery-params
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -97,5 +96,5 @@ render: |
       address: 0x0210 # The residual capacity of battery
       type: holding
       decode: uint16
-  capacity: {{ .capacity }} # kWh
+  {{- include "battery-params" . }}
   {{- end }}

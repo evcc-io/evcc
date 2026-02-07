@@ -17,7 +17,7 @@ import (
 var re = regexp.MustCompile(`(?i)\${(\w+)(:([a-zA-Z0-9%.]+))?}`)
 
 // FormatValue will apply specific formatting in addition to standard sprintf
-func FormatValue(format string, val interface{}) string {
+func FormatValue(format string, val any) string {
 	switch typed := val.(type) {
 	case bool:
 		if format == "%d" {
@@ -47,7 +47,7 @@ func FormatValue(format string, val interface{}) string {
 }
 
 // ReplaceFormatted replaces all occurrences of ${key} with formatted val from the kv map
-func ReplaceFormatted(s string, kv map[string]interface{}) (string, error) {
+func ReplaceFormatted(s string, kv map[string]any) (string, error) {
 	// Enhanced golang template logic
 	tpl, err := template.New("base").
 		Funcs(sprig.TxtFuncMap()).
