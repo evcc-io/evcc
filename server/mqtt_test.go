@@ -7,7 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 )
@@ -115,7 +114,7 @@ func (suite *mqttSuite) TestGrid() {
 	suite.Equal(topics, suite.topics, "topics")
 	suite.Equal([]string{"0", "1", "", "", ""}, suite.payloads, "payloads")
 
-	suite.publish("test", false, measurement{Controllable: lo.ToPtr(false)})
+	suite.publish("test", false, measurement{Controllable: new(false)})
 	suite.Equal(topics, suite.topics, "topics")
 	suite.Equal([]string{"0", "", "", "", "false"}, suite.payloads, "payloads")
 
