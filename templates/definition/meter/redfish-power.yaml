@@ -38,12 +38,18 @@ params:
       de: Redfish / BMC Benutzername
       en: Redfish / BMC username
     required: true
+    help:
+      de: "Empfohlen: Separaten Nur-Lese-Account anlegen"
+      en: "Recommended: Create separate read-only account"
   - name: password
     description:
       de: Redfish / BMC Passwort
       en: Redfish / BMC password
     required: true
     mask: true
+    help:
+      de: "Empfohlen: Separaten Nur-Lese-Account anlegen"
+      en: "Recommended: Create separate read-only account"
   - name: chassis
     default: "1"
     description:
@@ -53,14 +59,14 @@ params:
       de: Standard "1" für die meisten Hersteller. Dell iDRAC benötigt "System.Embedded.1"
       en: Default "1" for most vendors. Dell iDRAC requires "System.Embedded.1"
   - name: insecure
-    default: true
+    default: false
     type: bool
     description:
       de: TLS-Zertifikatsüberprüfung überspringen
       en: Skip TLS certificate verification
     help:
-      de: Nur in vertrauenswürdigen Netzwerken verwenden! BMCs nutzen selbstsignierte Zertifikate
-      en: Only use in trusted networks! BMCs use self-signed certificates
+      de: Auf 'true' setzen für selbstsignierte Zertifikate (Standard bei BMCs). Nur in vertrauenswürdigen Netzwerken verwenden!
+      en: Set to 'true' for self-signed certificates (common on BMCs). Only use in trusted networks!
 render: |
   type: custom
   power:
