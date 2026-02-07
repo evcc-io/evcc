@@ -756,12 +756,14 @@
   "forecast": {
     "co2": {
       "average": "Durchschnitt",
+      "constant": "CO₂-Intensität",
       "lowestHour": "Sauberste Stunde",
       "range": "Bereich"
     },
     "modalTitle": "Vorhersage",
     "price": {
       "average": "Durchschnitt",
+      "constant": "Preis",
       "lowestHour": "Günstigste Stunde",
       "range": "Bereich"
     },
