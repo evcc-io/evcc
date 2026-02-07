@@ -56,13 +56,26 @@ func (c *Controller) ChargeEnable(enable bool) error {
 	// configure first schedule and make sure it's active
 	c.configureChargeSchedule(&stat.EvInfo.Schedules[0])
 
+	const (
+		timeFormat        = "15:04" // Hours & minutes only
+		fallbackStartTime = "00:01" // Fallback time for schedules crossing midnight
+	)
+
+	currentTime := time.Now() // Call once and reuse
+
 	if enable {
-		// start charging by updating active charge schedule to start now and end in 12h
-		stat.EvInfo.Schedules[0].StartTime = time.Now().Format("15:04")                   // only hour and minutes
-		stat.EvInfo.Schedules[0].EndTime = time.Now().Add(time.Hour * 12).Format("15:04") // only hour and minutes
+		// Start charging: update active schedule with current time and end time (12h later)
+		stat.EvInfo.Schedules[0].StartTime = currentTime.Format(timeFormat)
+		stat.EvInfo.Schedules[0].EndTime = currentTime.Add(12 * time.Hour).Format(timeFormat)
 	} else {
-		// stop charging by updating active charge schedule end time to now
-		stat.EvInfo.Schedules[0].EndTime = time.Now().Format("15:04") // only hour and minutes
+		// Stop charging: update end time to current time
+		stat.EvInfo.Schedules[0].EndTime = currentTime.Format(timeFormat)
+
+		// Parse times for comparison and handle edge case: StartTime > EndTime
+		start, err1 := time.Parse(timeFormat, stat.EvInfo.Schedules[0].StartTime)
+		if err1 == nil && start.After(currentTime) {
+			stat.EvInfo.Schedules[0].StartTime = fallbackStartTime
+		}
 	}
 
 	// make sure the other charge schedules are disabled in case user changed them
