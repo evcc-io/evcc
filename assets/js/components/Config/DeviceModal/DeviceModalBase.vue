@@ -325,7 +325,7 @@ export default defineComponent({
 			return this.templateParams.filter((p) => p.Advanced || p.Deprecated);
 		},
 		visibleParams() {
-			return this.authRequired ? this.authParams : this.normalParams;
+			return this.authRequired ? this.authParams : this.templateParams;
 		},
 		modbus(): ModbusParam | undefined {
 			const params = this.template?.Params || [];
