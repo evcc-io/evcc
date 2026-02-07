@@ -14,10 +14,12 @@ import (
 
 	evopt "github.com/andig/evopt/client"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/metrics"
 	"github.com/evcc-io/evcc/core/types"
 	"github.com/evcc-io/evcc/tariff"
+	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -75,7 +77,7 @@ func (br batteryResult) MarshalJSON() ([]byte, error) {
 	})
 }
 
-type responseDetails struct {
+type requestDetails struct {
 	Timestamps     []time.Time     `json:"timestamp"`
 	BatteryDetails []batteryDetail `json:"batteryDetails"`
 }
@@ -175,7 +177,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	// end of horizon Wh value
 	pa := lo.Min(req.TimeSeries.PN) * eta * 0.99
 
-	details := responseDetails{
+	details := requestDetails{
 		Timestamps: asTimestamps(dt),
 	}
 
@@ -233,7 +235,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	site.publish("evopt", struct {
 		Req     evopt.OptimizationInput  `json:"req"`
 		Res     evopt.OptimizationResult `json:"res"`
-		Details responseDetails          `json:"details"`
+		Details requestDetails           `json:"details"`
 	}{
 		Req:     req,
 		Res:     *resp.JSON200,
@@ -256,6 +258,20 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	}
 
 	site.publish("evopt-batteries", batteries)
+
+	for i, dev := range site.batteryMeters {
+		if j := slices.IndexFunc(batteries, func(bat batteryResult) bool {
+			return bat.Name == dev.Config().Name
+		}); j >= 0 {
+			res := batteries[j]
+			site.battery.Devices[i].Forecast = &types.BatteryForecast{
+				Full:  res.Full,
+				Empty: res.Empty,
+			}
+		}
+	}
+
+	site.publish(keys.Battery, util.NewSharder(keys.Battery, site.battery))
 
 	return nil
 }

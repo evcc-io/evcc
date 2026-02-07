@@ -667,7 +667,8 @@ func (site *Site) updateBatteryMeters() {
 	}
 
 	site.battery.Devices = mm
-	site.publish(keys.Battery, site.battery)
+	// site.publish(keys.Battery, site.battery)
+	site.publish(keys.Battery, util.NewSharder(keys.Battery, site.battery))
 }
 
 // updateAuxMeters updates aux meters
