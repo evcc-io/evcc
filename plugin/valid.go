@@ -20,7 +20,7 @@ type validPlugin struct {
 }
 
 // NewValidFromConfig creates valid provider
-func NewValidFromConfig(ctx context.Context, other map[string]interface{}) (Plugin, error) {
+func NewValidFromConfig(ctx context.Context, other map[string]any) (Plugin, error) {
 	var cc struct {
 		Valid, Value Config
 	}

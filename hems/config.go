@@ -16,7 +16,7 @@ type HEMS interface {
 }
 
 // NewFromConfig creates new HEMS from config
-func NewFromConfig(ctx context.Context, typ string, other map[string]interface{}, site site.API) (HEMS, error) {
+func NewFromConfig(ctx context.Context, typ string, other map[string]any, site site.API) (HEMS, error) {
 	switch strings.ToLower(typ) {
 	case "sma", "shm", "semp":
 		return nil, errors.New("breaking change: Sunny Home Manager integration is always on. See https://github.com/evcc-io/evcc/releases and https://docs.evcc.io/en/docs/integrations/sma-sunny-home-manager")

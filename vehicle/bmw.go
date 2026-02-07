@@ -21,17 +21,17 @@ func init() {
 }
 
 // NewBMWFromConfig creates a new vehicle
-func NewBMWFromConfig(ctx context.Context, other map[string]interface{}) (api.Vehicle, error) {
+func NewBMWFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, error) {
 	return NewBMWMiniFromConfig(ctx, "bmw", other)
 }
 
 // NewMiniFromConfig creates a new vehicle
-func NewMiniFromConfig(ctx context.Context, other map[string]interface{}) (api.Vehicle, error) {
+func NewMiniFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, error) {
 	return NewBMWMiniFromConfig(ctx, "mini", other)
 }
 
 // NewBMWMiniFromConfig creates a new vehicle
-func NewBMWMiniFromConfig(ctx context.Context, brand string, other map[string]interface{}) (api.Vehicle, error) {
+func NewBMWMiniFromConfig(ctx context.Context, brand string, other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed               `mapstructure:",squash"`
 		User, Password, VIN string

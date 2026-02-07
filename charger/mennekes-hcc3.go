@@ -53,7 +53,7 @@ func init() {
 }
 
 // NewMennekesHcc3FromConfig creates a Mennekes mennekesHcc3 charger from generic config
-func NewMennekesHcc3FromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewMennekesHcc3FromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: 255,
 	}

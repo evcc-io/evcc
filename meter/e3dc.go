@@ -31,7 +31,7 @@ func init() {
 
 //go:generate go tool decorate -f decorateE3dc -b *E3dc -r api.Meter -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64" -t "api.BatteryController,SetBatteryMode,func(api.BatteryMode) error" -t "api.MaxACPowerGetter,MaxACPower,func() float64"
 
-func NewE3dcFromConfig(other map[string]interface{}) (api.Meter, error) {
+func NewE3dcFromConfig(other map[string]any) (api.Meter, error) {
 	cc := struct {
 		batteryCapacity `mapstructure:",squash"`
 		pvMaxACPower    `mapstructure:",squash"`

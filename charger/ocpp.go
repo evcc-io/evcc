@@ -56,7 +56,7 @@ func init() {
 }
 
 // NewOCPPFromConfig creates a OCPP charger from generic config
-func NewOCPPFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewOCPPFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		StationId      string
 		IdTag          string

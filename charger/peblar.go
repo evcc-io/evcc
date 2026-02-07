@@ -74,7 +74,7 @@ func init() {
 //go:generate go tool decorate -f decoratePeblar -b *Peblar -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
 
 // NewPeblarFromConfig creates a Peblar charger from generic config
-func NewPeblarFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewPeblarFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: 255,
 	}

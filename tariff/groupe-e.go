@@ -24,7 +24,7 @@ func init() {
 	registry.Add("groupe-e", NewGroupeEFromConfig)
 }
 
-func NewGroupeEFromConfig(other map[string]interface{}) (api.Tariff, error) {
+func NewGroupeEFromConfig(other map[string]any) (api.Tariff, error) {
 	t := &GroupeE{
 		log:  util.NewLogger("groupe-e"),
 		data: util.NewMonitor[api.Rates](2 * time.Hour),

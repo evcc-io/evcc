@@ -19,7 +19,7 @@ func init() {
 	registry.Add("homeassistant-switch", NewHomeAssistantSwitchFromConfig)
 }
 
-func NewHomeAssistantSwitchFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewHomeAssistantSwitchFromConfig(other map[string]any) (api.Charger, error) {
 	var cc struct {
 		embed        `mapstructure:",squash"`
 		URI          string

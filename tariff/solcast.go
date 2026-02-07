@@ -30,7 +30,7 @@ func init() {
 	registry.Add("solcast", NewSolcastFromConfig)
 }
 
-func NewSolcastFromConfig(other map[string]interface{}) (api.Tariff, error) {
+func NewSolcastFromConfig(other map[string]any) (api.Tariff, error) {
 	cc := struct {
 		Site     string
 		Token    string

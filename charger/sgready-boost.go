@@ -15,7 +15,7 @@ func init() {
 }
 
 // NewSgReadyBoostFromConfig creates an SG Ready charger with boost relay from generic config
-func NewSgReadyBoostFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewSgReadyBoostFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		embed                   `mapstructure:",squash"`
 		Charger                 config.Typed

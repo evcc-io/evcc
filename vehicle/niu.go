@@ -32,7 +32,7 @@ func init() {
 }
 
 // NewFordFromConfig creates a new vehicle
-func NewNiuFromConfig(ctx context.Context, other map[string]interface{}) (api.Vehicle, error) {
+func NewNiuFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed                  `mapstructure:",squash"`
 		User, Password, Serial string

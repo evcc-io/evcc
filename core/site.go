@@ -129,7 +129,7 @@ type MetersConfig struct {
 }
 
 // NewSiteFromConfig creates a new site
-func NewSiteFromConfig(other map[string]interface{}) (*Site, error) {
+func NewSiteFromConfig(other map[string]any) (*Site, error) {
 	site := NewSite()
 
 	// TODO remove

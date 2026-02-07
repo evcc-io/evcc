@@ -73,7 +73,7 @@ func (v *Identity) getDeviceID() (string, error) {
 	}
 
 	uuid := uuid.NewString()
-	data := map[string]interface{}{
+	data := map[string]any{
 		"pushRegId": lo.RandomString(64, []rune("0123456789ABCDEF")),
 		"pushType":  v.config.PushType,
 		"uuid":      uuid,
@@ -129,7 +129,7 @@ func (v *Identity) getCookies() (cookieClient *request.Helper, err error) {
 }
 
 func (v *Identity) setLanguage(cookieClient *request.Helper, language string) error {
-	data := map[string]interface{}{
+	data := map[string]any{
 		"lang": language,
 	}
 
@@ -340,7 +340,7 @@ func (v *Identity) brandLoginKiaEU(user, password string) (string, error) {
 */
 
 func (v *Identity) bluelinkLogin(cookieClient *request.Helper, user, password string) (string, error) {
-	data := map[string]interface{}{
+	data := map[string]any{
 		"email":    user,
 		"password": password,
 	}

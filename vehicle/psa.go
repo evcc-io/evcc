@@ -34,7 +34,7 @@ type PSA struct {
 }
 
 // newPSA creates a new vehicle
-func newPSA(ctx context.Context, brand, realm string, other map[string]interface{}) (api.Vehicle, error) {
+func newPSA(ctx context.Context, brand, realm string, other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed    `mapstructure:",squash"`
 		VIN      string

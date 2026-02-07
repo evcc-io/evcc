@@ -23,7 +23,7 @@ func init() {
 }
 
 // NewFritzDECTFromConfig creates a fritzdect charger from generic config
-func NewFritzDECTFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewFritzDECTFromConfig(other map[string]any) (api.Charger, error) {
 	var cc struct {
 		embed              `mapstructure:",squash"`
 		fritzdect.Settings `mapstructure:",squash"`

@@ -28,7 +28,7 @@ func init() {
 	registry.Add("tibber", NewTibberFromConfig)
 }
 
-func NewTibberFromConfig(other map[string]interface{}) (api.Tariff, error) {
+func NewTibberFromConfig(other map[string]any) (api.Tariff, error) {
 	var cc struct {
 		embed  `mapstructure:",squash"`
 		Token  string
@@ -72,7 +72,7 @@ func NewTibberFromConfig(other map[string]interface{}) (api.Tariff, error) {
 func (t *Tibber) run(done chan error) {
 	var once sync.Once
 
-	v := map[string]interface{}{
+	v := map[string]any{
 		"id": graphql.ID(t.homeID),
 	}
 

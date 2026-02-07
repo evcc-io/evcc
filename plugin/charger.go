@@ -19,7 +19,7 @@ func init() {
 }
 
 // NewChargerEnableFromConfig creates type conversion provider
-func NewChargerEnableFromConfig(ctx context.Context, other map[string]interface{}) (Plugin, error) {
+func NewChargerEnableFromConfig(ctx context.Context, other map[string]any) (Plugin, error) {
 	var cc struct {
 		Config config.Typed
 	}

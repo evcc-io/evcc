@@ -58,7 +58,7 @@ func init() {
 //go:generate go tool decorate -f decorateZaptec -b *Zaptec -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
 
 // NewZaptecFromConfig creates a Zaptec Pro charger from generic config
-func NewZaptecFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewZaptecFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		User, Password string
 		Id             string

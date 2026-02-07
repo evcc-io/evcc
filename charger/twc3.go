@@ -55,7 +55,7 @@ type Vitals struct {
 }
 
 // NewTwc3FromConfig creates a new charger
-func NewTwc3FromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewTwc3FromConfig(other map[string]any) (api.Charger, error) {
 	cc := struct {
 		URI   string
 		Cache time.Duration

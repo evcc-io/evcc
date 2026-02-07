@@ -19,7 +19,7 @@ func init() {
 }
 
 // NewCalcFromConfig creates calc provider
-func NewCalcFromConfig(ctx context.Context, other map[string]interface{}) (Plugin, error) {
+func NewCalcFromConfig(ctx context.Context, other map[string]any) (Plugin, error) {
 	var cc struct {
 		Add  []Config
 		Mul  []Config

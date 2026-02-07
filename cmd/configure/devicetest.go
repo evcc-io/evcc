@@ -24,7 +24,7 @@ const (
 type DeviceTest struct {
 	DeviceCategory DeviceCategory
 	Template       templates.Template
-	ConfigValues   map[string]interface{}
+	ConfigValues   map[string]any
 }
 
 // Test returns:
@@ -60,7 +60,7 @@ func (d *DeviceTest) configure() (interface{}, error) {
 
 	var instance struct {
 		Type  string
-		Other map[string]interface{} `yaml:",inline"`
+		Other map[string]any `yaml:",inline"`
 	}
 
 	if err := yaml.Unmarshal(b, &instance); err != nil {

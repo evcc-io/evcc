@@ -19,7 +19,7 @@ func init() {
 }
 
 // NewOpenWBFromConfig creates a new configurable meter
-func NewOpenWBFromConfig(other map[string]interface{}) (api.Meter, error) {
+func NewOpenWBFromConfig(other map[string]any) (api.Meter, error) {
 	cc := struct {
 		mqtt.Config     `mapstructure:",squash"`
 		Topic           string

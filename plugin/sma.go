@@ -21,7 +21,7 @@ func init() {
 }
 
 // NewSMAFromConfig creates SMA provider
-func NewSMAFromConfig(other map[string]interface{}) (Plugin, error) {
+func NewSMAFromConfig(other map[string]any) (Plugin, error) {
 	cc := struct {
 		URI, Password, Interface string
 		Serial                   uint32

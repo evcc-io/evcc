@@ -25,7 +25,7 @@ func init() {
 }
 
 // NewAiwaysFromConfig creates a new vehicle
-func NewAiwaysFromConfig(ctx context.Context, other map[string]interface{}) (api.Vehicle, error) {
+func NewAiwaysFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed               `mapstructure:",squash"`
 		User, Password, VIN string

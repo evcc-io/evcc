@@ -76,4 +76,4 @@ var DeviceCategories = map[DeviceCategory]DeviceCategoryData{
 	},
 }
 
-type localizeMap map[string]interface{}
+type localizeMap map[string]any

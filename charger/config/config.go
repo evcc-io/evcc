@@ -12,7 +12,7 @@ import (
 var Registry = reg.New[api.Charger]("charger")
 
 // NewFromConfig creates charger from configuration
-func NewFromConfig(ctx context.Context, typ string, other map[string]interface{}) (api.Charger, error) {
+func NewFromConfig(ctx context.Context, typ string, other map[string]any) (api.Charger, error) {
 	factory, err := Registry.Get(strings.ToLower(typ))
 	if err != nil {
 		return nil, err

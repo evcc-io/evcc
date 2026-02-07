@@ -32,7 +32,7 @@ func (c *CmdConfigure) processDeviceSelection(deviceCategory DeviceCategory) (te
 
 // processDeviceValues processes the user provided values, creates
 // a device configuration and check if it is a valid device
-func (c *CmdConfigure) processDeviceValues(values map[string]interface{}, templateItem templates.Template, device device, deviceCategory DeviceCategory) (device, error) {
+func (c *CmdConfigure) processDeviceValues(values map[string]any, templateItem templates.Template, device device, deviceCategory DeviceCategory) (device, error) {
 	c.addedDeviceIndex++
 
 	device.Name = fmt.Sprintf("%s%d", DeviceCategories[deviceCategory].defaultName, c.addedDeviceIndex)
@@ -226,7 +226,7 @@ func (c *CmdConfigure) askSponsortoken(required, feature bool) error {
 	return err
 }
 
-func (c *CmdConfigure) configureMQTT(_ templates.Template) (map[string]interface{}, error) {
+func (c *CmdConfigure) configureMQTT(_ templates.Template) (map[string]any, error) {
 	fmt.Println()
 	fmt.Println("-- MQTT Broker ----------------------------")
 
@@ -255,7 +255,7 @@ func (c *CmdConfigure) configureMQTT(_ templates.Template) (map[string]interface
 
 		broker := fmt.Sprintf("%s:%s", host, port)
 
-		mqttConfig := map[string]interface{}{
+		mqttConfig := map[string]any{
 			"broker":     broker,
 			"user":       user,
 			"password":   password,
@@ -351,7 +351,7 @@ func (c *CmdConfigure) paramChoiceValues(params []templates.Param, name string) 
 
 // processConfig processes an EVCC configuration item
 // Returns a map with param name and values
-func (c *CmdConfigure) processConfig(templateItem *templates.Template, deviceCategory DeviceCategory) map[string]interface{} {
+func (c *CmdConfigure) processConfig(templateItem *templates.Template, deviceCategory DeviceCategory) map[string]any {
 	fmt.Println()
 	fmt.Println(c.localizedString("Config_Title"))
 	fmt.Println()
@@ -362,10 +362,10 @@ func (c *CmdConfigure) processConfig(templateItem *templates.Template, deviceCat
 }
 
 // process a list of params
-func (c *CmdConfigure) processParams(templateItem *templates.Template, deviceCategory DeviceCategory) map[string]interface{} {
+func (c *CmdConfigure) processParams(templateItem *templates.Template, deviceCategory DeviceCategory) map[string]any {
 	usageFilter := DeviceCategories[deviceCategory].categoryFilter
 
-	additionalConfig := make(map[string]interface{})
+	additionalConfig := make(map[string]any)
 
 	for _, param := range templateItem.Params {
 		switch param.Name {
@@ -491,7 +491,7 @@ func (c *CmdConfigure) processModbusConfig(templateItem *templates.Template) {
 		index, _ = c.askChoice(c.localizedString("Config_ModbusInterface"), choices)
 	}
 
-	values := make(map[string]interface{})
+	values := make(map[string]any)
 	templateItem.Params[modbusIndex].Value = choiceTypes[index]
 
 	// add the interface type specific modbus params

@@ -20,7 +20,7 @@ func init() {
 }
 
 // NewZeroFromConfig creates a new vehicle
-func NewZeroFromConfig(ctx context.Context, other map[string]interface{}) (api.Vehicle, error) {
+func NewZeroFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, error) {
 	var res *zero.API
 	var err error
 

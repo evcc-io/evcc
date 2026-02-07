@@ -52,7 +52,7 @@ func init() {
 }
 
 // NewHardyBarthFromConfig creates a HardyBarth cPH1 charger from generic config
-func NewHardyBarthFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewHardyBarthFromConfig(other map[string]any) (api.Charger, error) {
 	cc := struct {
 		URI           string
 		ChargeControl int

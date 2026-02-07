@@ -61,7 +61,7 @@ func init() {
 // https://cdn.shopify.com/s/files/1/0101/2409/9669/files/heidelberg-energy-control-modbus.pdf (older)
 
 // NewHeidelbergECFromConfig creates a HeidelbergEC charger from generic config
-func NewHeidelbergECFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewHeidelbergECFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := modbus.Settings{
 		ID: 1,
 	}

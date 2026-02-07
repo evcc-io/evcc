@@ -49,7 +49,7 @@ func init() {
 //go:generate go tool decorate -f decorateBoschBpts5Hybrid -b api.Meter -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64"
 
 // NewBoschBpts5HybridFromConfig creates a Bosch BPT-S 5 Hybrid Meter from generic config
-func NewBoschBpts5HybridFromConfig(other map[string]interface{}) (api.Meter, error) {
+func NewBoschBpts5HybridFromConfig(other map[string]any) (api.Meter, error) {
 	var cc struct {
 		batteryCapacity `mapstructure:",squash"`
 		URI             string

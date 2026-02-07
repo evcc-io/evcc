@@ -17,7 +17,7 @@ func init() {
 }
 
 // NewConfigurableFromConfig creates Messenger from config
-func NewConfigurableFromConfig(ctx context.Context, other map[string]interface{}) (Messenger, error) {
+func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (Messenger, error) {
 	var cc struct {
 		Send     plugin.Config
 		Encoding string

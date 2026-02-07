@@ -32,7 +32,7 @@ func init() {
 	registry.Add("entsoe", NewEntsoeFromConfig)
 }
 
-func NewEntsoeFromConfig(other map[string]interface{}) (api.Tariff, error) {
+func NewEntsoeFromConfig(other map[string]any) (api.Tariff, error) {
 	var cc struct {
 		embed         `mapstructure:",squash"`
 		Securitytoken string

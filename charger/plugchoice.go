@@ -51,7 +51,7 @@ func init() {
 }
 
 // NewPlugchoiceFromConfig creates a Plugchoice charger from generic config
-func NewPlugchoiceFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewPlugchoiceFromConfig(other map[string]any) (api.Charger, error) {
 	cc := struct {
 		URI       string
 		UUID      string // kept for backward compatibility

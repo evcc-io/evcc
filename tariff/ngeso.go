@@ -26,7 +26,7 @@ func init() {
 	registry.Add("ngeso", NewNgesoFromConfig)
 }
 
-func NewNgesoFromConfig(other map[string]interface{}) (api.Tariff, error) {
+func NewNgesoFromConfig(other map[string]any) (api.Tariff, error) {
 	var cc struct {
 		Region   string
 		Postcode string

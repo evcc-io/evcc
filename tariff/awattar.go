@@ -27,7 +27,7 @@ func init() {
 	registry.Add("awattar", NewAwattarFromConfig)
 }
 
-func NewAwattarFromConfig(other map[string]interface{}) (api.Tariff, error) {
+func NewAwattarFromConfig(other map[string]any) (api.Tariff, error) {
 	cc := struct {
 		embed  `mapstructure:",squash"`
 		Region string

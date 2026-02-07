@@ -36,7 +36,7 @@ func init() {
 //go:generate go tool decorate -f decorateRCT -b *RCT -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatterySocLimiter,GetSocLimits,func() (float64, float64)" -t "api.BatteryController,SetBatteryMode,func(api.BatteryMode) error" -t "api.BatteryCapacity,Capacity,func() float64"
 
 // NewRCTFromConfig creates an RCT from generic config
-func NewRCTFromConfig(ctx context.Context, other map[string]interface{}) (api.Meter, error) {
+func NewRCTFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	cc := struct {
 		batteryCapacity  `mapstructure:",squash"`
 		batterySocLimits `mapstructure:",squash"`

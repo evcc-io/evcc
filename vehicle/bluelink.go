@@ -24,7 +24,7 @@ func init() {
 }
 
 // NewHyundaiFromConfig creates a new vehicle
-func NewHyundaiFromConfig(ctx context.Context, other map[string]interface{}) (api.Vehicle, error) {
+func NewHyundaiFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, error) {
 	settings := bluelink.Config{
 		URI:               "https://prd.eu-ccapi.hyundai.com:8080",
 		BasicToken:        "NmQ0NzdjMzgtM2NhNC00Y2YzLTk1NTctMmExOTI5YTk0NjU0OktVeTQ5WHhQekxwTHVvSzB4aEJDNzdXNlZYaG10UVI5aVFobUlGampvWTRJcHhzVg==",
@@ -45,7 +45,7 @@ func NewHyundaiFromConfig(ctx context.Context, other map[string]interface{}) (ap
 }
 
 // NewKiaFromConfig creates a new vehicle
-func NewKiaFromConfig(ctx context.Context, other map[string]interface{}) (api.Vehicle, error) {
+func NewKiaFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, error) {
 	settings := bluelink.Config{
 		URI:               "https://prd.eu-ccapi.kia.com:8080",
 		BasicToken:        "ZmRjODVjMDAtMGEyZi00YzY0LWJjYjQtMmNmYjE1MDA3MzBhOnNlY3JldA==",
@@ -63,7 +63,7 @@ func NewKiaFromConfig(ctx context.Context, other map[string]interface{}) (api.Ve
 }
 
 // newBluelinkFromConfig creates a new Vehicle
-func newBluelinkFromConfig(ctx context.Context, brand string, other map[string]interface{}, settings bluelink.Config) (api.Vehicle, error) {
+func newBluelinkFromConfig(ctx context.Context, brand string, other map[string]any, settings bluelink.Config) (api.Vehicle, error) {
 	cc := struct {
 		embed          `mapstructure:",squash"`
 		User, Password string

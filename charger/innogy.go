@@ -56,7 +56,7 @@ func init() {
 }
 
 // NewInnogyFromConfig creates a Innogy charger from generic config
-func NewInnogyFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewInnogyFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: 1,
 	}

@@ -90,7 +90,7 @@ type EVECUBELastStatusPacket struct {
 
 // EVECUBEAutomationStatus is the /api/admin/automation/status response
 type EVECUBEAutomationStatus struct {
-	Connectors map[string]interface{} `json:"connectors"`
+	Connectors map[string]any `json:"connectors"`
 	AuthTag    struct {
 		Tag string `json:"tag"`
 	} `json:"authTag"`
@@ -98,11 +98,11 @@ type EVECUBEAutomationStatus struct {
 
 // EVECUBEUnitConfigRequest is the request body for /api/admin/unitconfig POST
 type EVECUBEUnitConfigRequest struct {
-	Values map[string]interface{} `json:"values"`
+	Values map[string]any `json:"values"`
 }
 
 // NewEVECUBEFromConfig creates a EVECUBE charger from generic config
-func NewEVECUBEFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewEVECUBEFromConfig(other map[string]any) (api.Charger, error) {
 	cc := struct {
 		URI       string
 		User      string
@@ -276,7 +276,7 @@ func (wb *EVECUBE) MaxCurrent(current int64) error {
 // setValue sets a named value via admin API
 func (wb *EVECUBE) setValue(key string, value int64) error {
 	reqBody := EVECUBEUnitConfigRequest{
-		Values: map[string]interface{}{
+		Values: map[string]any{
 			key: value,
 		},
 	}
@@ -296,7 +296,7 @@ func (wb *EVECUBE) setValue(key string, value int64) error {
 		req.SetBasicAuth(wb.user, wb.pass)
 	}
 
-	var resp map[string]interface{}
+	var resp map[string]any
 	if err := wb.DoJSON(req, &resp); err != nil {
 		return err
 	}

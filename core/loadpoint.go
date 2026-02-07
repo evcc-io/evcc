@@ -178,7 +178,7 @@ type Loadpoint struct {
 }
 
 // NewLoadpointFromConfig creates a new loadpoint
-func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, other map[string]interface{}) (*Loadpoint, error) {
+func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, other map[string]any) (*Loadpoint, error) {
 	lp := NewLoadpoint(log, settings)
 	if err := util.DecodeOther(other, lp); err != nil {
 		return nil, err

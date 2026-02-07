@@ -25,7 +25,7 @@ func init() {
 }
 
 // NewVolvoFromConfig creates a new vehicle
-func NewVolvoFromConfig(ctx context.Context, other map[string]interface{}) (api.Vehicle, error) {
+func NewVolvoFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed               `mapstructure:",squash"`
 		User, Password, VIN string

@@ -12,14 +12,14 @@ import (
 // Instance is an actual instantiated template
 type Instance struct {
 	Type  string
-	Other map[string]interface{} `yaml:",inline"`
+	Other map[string]any `yaml:",inline"`
 }
 
 // RenderInstance renders an actual configuration instance
-func RenderInstance(class Class, other map[string]interface{}) (*Instance, error) {
+func RenderInstance(class Class, other map[string]any) (*Instance, error) {
 	var cc struct {
 		Template string
-		Other    map[string]interface{} `mapstructure:",remain"`
+		Other    map[string]any `mapstructure:",remain"`
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {

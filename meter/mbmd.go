@@ -31,7 +31,7 @@ func init() {
 //go:generate go tool decorate -f decorateModbusMbmd -b api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.PhasePowers,Powers,func() (float64, float64, float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64"
 
 // NewModbusMbmdFromConfig creates api.Meter from config
-func NewModbusMbmdFromConfig(ctx context.Context, other map[string]interface{}) (api.Meter, error) {
+func NewModbusMbmdFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	cc := struct {
 		Model              string
 		batteryCapacity    `mapstructure:",squash"`
