@@ -54,16 +54,30 @@ func (c *Controller) ChargeEnable(enable bool) error {
 	}
 
 	// configure first schedule and make sure it's active
-	c.configureChargeSchedule(&stat.EvInfo.Schedules[0])
+ c.configureChargeSchedule(&stat.EvInfo.Schedules[0])
+ 
+ timeFormat := "15:04"
 
-	if enable {
-		// start charging by updating active charge schedule to start now and end in 12h
-		stat.EvInfo.Schedules[0].StartTime = time.Now().Format("15:04")                   // only hour and minutes
-		stat.EvInfo.Schedules[0].EndTime = time.Now().Add(time.Hour * 12).Format("15:04") // only hour and minutes
-	} else {
-		// stop charging by updating active charge schedule end time to now
-		stat.EvInfo.Schedules[0].EndTime = time.Now().Format("15:04") // only hour and minutes
-	}
+ if enable {
+     // start charging by updating active charge schedule to start now and end in 12h
+     stat.EvInfo.Schedules[0].StartTime = time.Now().Format(timeFormat)
+     stat.EvInfo.Schedules[0].EndTime = time.Now().Add(12 * time.Hour).Format(timeFormat)
+ } else {
+     // stop charging by updating active charge schedule end time to now
+     nowStr := time.Now().Format(timeFormat)
+     stat.EvInfo.Schedules[0].EndTime = nowStr
+
+     // Parse times for comparison
+     start, err1 := time.Parse(timeFormat, stat.EvInfo.Schedules[0].StartTime)
+     end, err2 := time.Parse(timeFormat, nowStr)
+
+     if err1 == nil && err2 == nil {
+         // If StartTime is after EndTime, fix it
+         if start.After(end) {
+             stat.EvInfo.Schedules[0].StartTime = "00:01"
+         }
+     }
+ }
 
 	// make sure the other charge schedules are disabled in case user changed them
 	c.disableConflictingChargeSchedule(&stat.EvInfo.Schedules[1])
