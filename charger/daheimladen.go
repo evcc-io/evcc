@@ -290,10 +290,10 @@ func (wb *DaheimLaden) Voltages() (float64, float64, float64, error) {
 	return wb.getPhaseValues(dlRegVoltages)
 }
 
-var _ api.Identifier = (*DaheimLadenMB)(nil)
+var _ api.Identifier = (*DaheimLaden)(nil)
 
 // Identify implements the api.Identifier interface. Only usable with PRO
-func (wb *DaheimLadenMB) Identify() (string, error) {
+func (wb *DaheimLaden) Identify() (string, error) {
 	b, err := wb.conn.ReadHoldingRegisters(dlRegCardId, 16)
 	if err != nil {
 		return "", err
