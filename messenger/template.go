@@ -1,4 +1,4 @@
-package meter
+package messenger
 
 import (
 	"context"
@@ -11,8 +11,8 @@ func init() {
 	registry.AddCtx("template", NewFromTemplateConfig)
 }
 
-func NewFromTemplateConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
-	instance, err := templates.RenderInstance(templates.Meter, other)
+func NewFromTemplateConfig(ctx context.Context, other map[string]any) (api.Messenger, error) {
+	instance, err := templates.RenderInstance(templates.Messenger, other)
 	if err != nil {
 		return nil, err
 	}
