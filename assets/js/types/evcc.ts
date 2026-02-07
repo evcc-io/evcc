@@ -60,6 +60,8 @@ export interface FatalError {
 
 export interface State {
   offline: boolean;
+  telemetry?: boolean;
+  experimental?: boolean;
   setupRequired?: boolean;
   startupCompleted?: boolean;
   loadpoints: Loadpoint[];

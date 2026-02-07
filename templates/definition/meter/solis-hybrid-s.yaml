@@ -38,7 +38,7 @@ render: |
     register:
       address: 33263 # Meter total active power
       type: input
-      decode: int32
+      decode: int32nan
     scale: -1
   energy:
     source: modbus
@@ -127,7 +127,7 @@ render: |
         register:
           type: input
           address: 33135 # Battery current direction
-          decode: uint16 # 0：charge, 1：discharge
+          decode: uint16 # 0: charge, 1: discharge
         scale: 2
       - source: const
         value: -1
