@@ -324,6 +324,9 @@ export default defineComponent({
 		advancedParams() {
 			return this.templateParams.filter((p) => p.Advanced || p.Deprecated);
 		},
+		visibleParams() {
+			return this.authRequired ? this.authParams : this.templateParams;
+		},
 		modbus(): ModbusParam | undefined {
 			const params = this.template?.Params || [];
 			return (params as ModbusParam[]).find((p) => p.Name === "modbus");
@@ -744,7 +747,8 @@ export default defineComponent({
 				clearTimeout(this.serviceValuesTimer);
 			}
 			this.serviceValuesTimer = setTimeout(async () => {
-				this.serviceValues = await fetchServiceValues(this.templateParams, {
+				// Fetch only visible params to prevent premature auth instance creation
+				this.serviceValues = await fetchServiceValues(this.visibleParams, {
 					...this.modbusDefaults,
 					...this.values,
 				});
