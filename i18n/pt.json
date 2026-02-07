@@ -172,7 +172,23 @@
       "loading": "A carregar editor YAML…"
     },
     "eebus": {
-      "description": "Configuração que permite o evcc comunicar com outros dispositivos EEBus.",
+      "certificate": {
+        "private": "Chave privada",
+        "public": "Certificado publico",
+        "title": "Certificados"
+      },
+      "description": "Configuração que permite o evcc comunicar com outros dispositivos compatíveis com EEBus, como carregadores ou unidades de controlo do operador de rede. Toda a inicialização e geração de certificados é feita automaticamente na primeira inicialização.",
+      "descriptionAdvanced": "Não são necessárias alterações. Somente altere se souber realmente o que está a fazer. Se mudar quer o SHIP-id ou os certificados, terá que emparelhar novamente os seus dispositivos.",
+      "interfaces": "Interfaces",
+      "interfacesHelp": "Limitar as interfaces que o EEBus pode usar para evitar problemas de comunicação. Deixar em branco para usar todas as interfaces. Um entrada por linha.",
+      "port": "Porta",
+      "portHelp": "Porta a usar.",
+      "removeConfirm": "Toda a configuração EEBus será eliminada. Serão gerados novos certificados e identificadores na próxima inicialização. Tem a certeza?",
+      "shipid": "SHIP-ID",
+      "shipidExplain": "Identificador permanente do dispositivo a ser usado dentro da rede EEBus.",
+      "shipidHelp": "Este SHIP-ID está vinculado ao certificado abaixo.",
+      "ski": "SKI",
+      "skiExplain": "Identificador de segurança único para o emparelhamento de dispositivos EEBus.",
       "title": "EEBus"
     },
     "experimental": {
@@ -544,6 +560,7 @@
       "integrations": "Integrações",
       "loadpoints": "Carregamento e aquecimento",
       "meter": "Solar e Bateria",
+      "services": "Serviços",
       "system": "Sistema",
       "vehicles": "Veículos"
     },
