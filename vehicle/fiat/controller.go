@@ -57,8 +57,8 @@ func (c *Controller) ChargeEnable(enable bool) error {
 	c.configureChargeSchedule(&stat.EvInfo.Schedules[0])
 
 	const (
-		timeFormat          = "15:04"
-		fallbackStartTime   = "00:01" // Fallback time for schedules crossing midnight
+		timeFormat = "15:04" // Hours & minutes only
+		fallbackStartTime = "00:01" // Fallback time for schedules crossing midnight
 	)
 	
 	currentTime := time.Now() // Call once and reuse
