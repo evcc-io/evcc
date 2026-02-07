@@ -56,8 +56,7 @@ func init() {
 // NewEEBusFromConfig creates an EEBus charger from generic config
 func NewEEBusFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	var cc struct {
-		Ski           string
-		Ip            string
+		Ski, Ip       string
 		Meter         bool
 		ChargedEnergy *bool
 		VasVW         bool

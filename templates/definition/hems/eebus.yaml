@@ -1,0 +1,25 @@
+template: eebus
+products:
+  - brand: EEBUS
+    description:
+      generic: EnWG §14a, EEG §9
+params:
+  - preset: eebus
+  - name: contractualconsumptionnominalmax
+    type: float
+  - name: failsafeconsumptionactivepowerlimit
+    type: float
+  - name: productionnominalmax
+    type: float
+  - name: failsafeproductionactivepowerlimit
+    type: float
+  - name: failsafedurationminimum
+    type: duration
+render: |
+  type: eebus
+  ski: {{ .ski }}
+  contractualconsumptionnominalmax: {{ .contractualconsumptionnominalmax }}
+  failsafeconsumptionactivepowerlimit: {{ .failsafeconsumptionactivepowerlimit }}
+  productionnominalmax: {{ .productionnominalmax }}
+  failsafeproductionactivepowerlimit: {{ .failsafeproductionactivepowerlimit }}
+  failsafedurationminimum: {{ .failsafedurationminimum }}

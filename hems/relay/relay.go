@@ -9,12 +9,18 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/hems/config"
+	"github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/hems/shared"
 	"github.com/evcc-io/evcc/hems/smartgrid"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
 	"github.com/samber/lo"
 )
+
+func init() {
+	config.Registry.AddCtx("relay", NewFromConfig)
+}
 
 type Relay struct {
 	log *util.Logger
@@ -29,7 +35,7 @@ type Relay struct {
 }
 
 // NewFromConfig creates an Relay HEMS from generic config
-func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*Relay, error) {
+func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (hems.API, error) {
 	cc := struct {
 		MaxPower    float64
 		Limit       plugin.Config
