@@ -34,7 +34,6 @@ export default {
 } satisfies Preview;
 
 setup((app) => {
-  app.config.globalProperties.$hiddenFeatures = () => true;
   app.use(setupI18n());
 
   // Mock router-link for Storybook

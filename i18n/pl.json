@@ -1109,7 +1109,6 @@
   "passwordModal": {
     "description": "Ustaw hasło, aby chronić ustawienia konfiguracji. Korzystanie z ekranu głównego jest nadal możliwe bez logowania.",
     "empty": "Hasło nie powinno być puste",
-    "error": "Błąd: ",
     "labelCurrent": "Aktualne hasło",
     "labelNew": "Nowe hasło",
     "labelRepeat": "Powtórz hasło",

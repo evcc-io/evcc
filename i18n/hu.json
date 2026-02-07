@@ -1116,7 +1116,6 @@
   "passwordModal": {
     "description": "Állítson be egy jelszót a konfigurációs beállítások védelmére. A főképernyő használata továbbra is lehetséges bejelentkezés nélkül.",
     "empty": "A jelszó nem lehet üres",
-    "error": "Hiba: ",
     "labelCurrent": "Jelenlegi jelszó",
     "labelNew": "Új jelszó",
     "labelRepeat": "Jelszó megismétlése",

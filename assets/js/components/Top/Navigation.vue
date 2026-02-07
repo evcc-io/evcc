@@ -166,6 +166,7 @@ export default defineComponent({
 		battery: { type: Object as PropType<Battery> },
 		evopt: { type: Object as PropType<EvOpt>, required: false },
 		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
+		experimental: Boolean,
 	},
 	emits: ["auth-required"],
 	data() {
@@ -213,7 +214,7 @@ export default defineComponent({
 			return grid || solar || co2;
 		},
 		optimizeAvailable() {
-			return !!this.evopt && this.$hiddenFeatures();
+			return !!this.evopt && this.experimental;
 		},
 		showLogout() {
 			return isLoggedIn();
