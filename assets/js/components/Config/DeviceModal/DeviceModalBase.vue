@@ -429,6 +429,11 @@ export default defineComponent({
 		},
 	},
 	watch: {
+		id() {
+			console.log("asd");
+
+			this.loadTemplate();
+		},
 		isModalVisible(visible) {
 			if (visible) {
 				this.templateName =
