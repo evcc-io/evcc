@@ -12,6 +12,10 @@ requirements:
       - **Total_in** für den Gesamtverbrauch in KWh (4 Nachkommastellen)
       - **Total_out** für den Gesamteinspeisung in KWh mit (4 Nachkommastellen)
       - **Power_curr** für den aktuellen Verbrauch bzw. die aktuelle Einspeisung (0 Nachkommastellen)
+      Optional werden auch Phasenwerte unterstützt.
+      - **power_l1**, **power_l2**, **power_l3** für die Leistung der einzelnen Phasen in W (0 Nachkommastellen)
+      - **voltage_l1**, **voltage_l2**, **voltage_l3** für die Spannung der einzelnen Phasen in V (4 Nachkommastellen)
+      - **current_l1**, **current_l2**, **current_l3** für die Stromstärke der einzelnen Phasen in A (4 Nachkommastellen)
 
       Ein entsprechendes Lesekopf-Script sieht wie folgt aus:
       ```
@@ -19,15 +23,21 @@ requirements:
       >B
       =>sensor53 r
       >M 1
-      // highlight-next-line
       +1,3,s,16,9600,SML
-      // highlight-next-line
       1,77070100010800ff@1000,Gesamtverbrauch,KWh,Total_in,4
-      // highlight-next-line
       1,77070100020800ff@1000,Gesamteinspeisung,KWh,Total_out,4
-      // highlight-next-line
       1,77070100100700ff@1,Verbrauch,W,Power_curr,0
       1,77070100600100ff@#,Zählernummer,,Meter_Id,0
+      # Optional
+      1,77070100240700ff@1,Leistung_L1,W,power_l1,0
+      1,77070100380700ff@1,Leistung_L2,W,power_l2,0
+      1,770701004c0700ff@1,Leistung_L3,W,power_l3,0
+      1,77070100200700ff@1,Spannung L1,V,voltage_l1,4
+      1,77070100340700ff@1,Spannung L2,V,voltage_l2,4
+      1,77070100480700ff@1,Spannung L3,V,voltage_l3,4
+      1,770701001f0700ff@1,Strom L1,A,current_l1,4
+      1,77070100330700ff@1,Strom L2,A,current_l2,4
+      1,77070100470700ff@1,Strom L3,A,current_l3,4
       #
       ```
     en: |
@@ -36,6 +46,10 @@ requirements:
       - **Total_in** for the total consumption in KWh (4 decimal places)
       - **Total_out** for the total feed-in in KWh (4 decimal places)
       - **Power_curr** for the current consumption or the current feed-in in W  (0 decimal places)
+      As an option, phase values are also supported.
+      - **power_l1**, **power_l2**, **power_l3** for the power of the individual phases in W (0 decimal places)
+      - **voltage_l1**, **voltage_l2**, **voltage_l3** for the voltage of the individual phases in V (4 decimal places)
+      - **current_l1**, **current_l2**, **current_l3** for the current of the individual phases in A (4 decimal places)
 
       A corresponding IR reader script looks like this:
       ```
@@ -43,15 +57,21 @@ requirements:
       >B
       =>sensor53 r
       >M 1
-      // highlight-next-line
       +1,3,s,16,9600,SML
-      // highlight-next-line
       1,77070100010800ff@1000,Gesamtverbrauch,KWh,Total_in,4
-      // highlight-next-line
       1,77070100020800ff@1000,Gesamteinspeisung,KWh,Total_out,4
-      // highlight-next-line
       1,77070100100700ff@1,Verbrauch,W,Power_curr,0
       1,77070100600100ff@#,Zählernummer,,Meter_Id,0
+      # Optional
+      1,77070100240700ff@1,Leistung_L1,W,power_l1,0
+      1,77070100380700ff@1,Leistung_L2,W,power_l2,0
+      1,770701004c0700ff@1,Leistung_L3,W,power_l3,0
+      1,77070100200700ff@1,Spannung L1,V,voltage_l1,4
+      1,77070100340700ff@1,Spannung L2,V,voltage_l2,4
+      1,77070100480700ff@1,Spannung L3,V,voltage_l3,4
+      1,770701001f0700ff@1,Strom L1,A,current_l1,4
+      1,77070100330700ff@1,Strom L2,A,current_l2,4
+      1,77070100470700ff@1,Strom L3,A,current_l3,4
       #
       ```
 params:
