@@ -45,6 +45,7 @@ const (
 	dlRegEvseMaxCurrent  = 32  // Uint16 RO 0.1A
 	dlRegCableMaxCurrent = 36  // Uint16 RO 0.1A
 	dlRegStationId       = 38  // Chr[16] RO UTF16
+	dlRegCardId          = 54  // Chr[16] RO UTF16
 	dlRegChargedEnergy   = 72  // Uint16 RO 0.1kWh
 	dlRegChargingTime    = 78  // Uint32 RO 1s
 	dlRegSafeCurrent     = 87  // Uint16 WR 0.1A
@@ -289,6 +290,17 @@ func (wb *DaheimLaden) Voltages() (float64, float64, float64, error) {
 	return wb.getPhaseValues(dlRegVoltages)
 }
 
+var _ api.Identifier = (*DaheimLadenMB)(nil)
+
+// Identify implements the api.Identifier interface. Only usable with PRO
+func (wb *DaheimLadenMB) Identify() (string, error) {
+	b, err := wb.conn.ReadHoldingRegisters(dlRegCardId, 16)
+	if err != nil {
+		return "", err
+	}
+	return unicode.UTF16(unicode.BigEndian, unicode.IgnoreBOM).NewDecoder().String(string(b))
+}
+
 // phases1p3p implements the api.PhaseSwitcher interface
 func (wb *DaheimLaden) phases1p3p(phases int) error {
 	b := make([]byte, 2)
@@ -343,6 +355,9 @@ func (wb *DaheimLaden) Diagnose() {
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(dlRegSafeCurrent, 1); err == nil {
 		fmt.Printf("\tSafe Current:\t%.1fA\n", float64(binary.BigEndian.Uint16(b)/10))
+	}
+	if b, err := wb.conn.ReadHoldingRegisters(dlRegCardId, 16); err == nil {
+		fmt.Printf("\tCard ID:\t%s\n", utf16BytesToString(b))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(dlRegCommTimeout, 1); err == nil {
 		fmt.Printf("\tConnection Timeout:\t%d\n", binary.BigEndian.Uint16(b))
