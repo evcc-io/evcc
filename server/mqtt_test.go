@@ -119,8 +119,8 @@ func (suite *mqttSuite) TestMeasurement() {
 
 func (suite *mqttSuite) TestBatteryState() {
 	topics := []string{
-		"test/power", "test/energy", "test/capacity", "test/soc", "test",
-		"test/1/title", "test/1/icon", "test/1/power", "test/1/energy", "test/1/powers", "test/1/currents", "test/1/excessDCPower", "test/1/capacity", "test/1/soc", "test/1/controllable",
+		"test/power", "test/energy", "test/capacity", "test/soc", "test/devices",
+		"test/devices/1/title", "test/devices/1/icon", "test/devices/1/power", "test/devices/1/energy", "test/devices/1/powers", "test/devices/1/currents", "test/devices/1/excessDCPower", "test/devices/1/capacity", "test/devices/1/soc", "test/devices/1/controllable",
 	}
 
 	suite.publish("test", false, types.BatteryState{
