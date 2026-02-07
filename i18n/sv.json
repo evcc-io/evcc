@@ -172,7 +172,23 @@
       "loading": "Öppnar Yaml-editorn…"
     },
     "eebus": {
-      "description": "Inställning som tillåter evcc att kommunicera med andra EEBus-enheter.",
+      "certificate": {
+        "private": "Privat nyckel",
+        "public": "Publikt certifikat",
+        "title": "Certifikat"
+      },
+      "description": "Inställning som tillåter evcc att kommunicera med EEBus-kompatibla enheter som laddare eller kontrollenheter från din nätoperatör. Initiering och generering av certifikat sker vid igångsättning.",
+      "descriptionAdvanced": "Inga ändringar behövs. Gör enbart ändringar om du är säker på vad du gör. Om du ändrar SHIP-id eller certifikat så måste enheterna paras igen.",
+      "interfaces": "Gränssnitt",
+      "interfacesHelp": "Begränsa nätverkets gränssnitt som EEBus kan använda för att undvika kommunikationsproblem. Lämna blankt för att använda alla gränssnitt. Ett inlägg per rad.",
+      "port": "Port",
+      "portHelp": "Port som ska användas.",
+      "removeConfirm": "All EEBus konfiguration kommer raderas. Nya certifikat och id kommer att genereras vid nästa start. Är du säker?",
+      "shipid": "SHIP-ID",
+      "shipidExplain": "Permanent enhets-id för identifiering i EEBus-nätverket.",
+      "shipidHelp": "Detta SHIP-ID är länkat till certifikatet nedan.",
+      "ski": "SKI",
+      "skiExplain": "Unikt säkerhets-id för att para EEBus-enheter.",
       "title": "EEBus"
     },
     "experimental": {
@@ -544,6 +560,7 @@
       "integrations": "Integrationer",
       "loadpoints": "Laddare & värmekällor",
       "meter": "Sol & batteri",
+      "services": "Tjänster",
       "system": "System",
       "vehicles": "Fordon"
     },

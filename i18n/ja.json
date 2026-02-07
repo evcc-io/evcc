@@ -12,6 +12,7 @@
     "disconnect": "切断",
     "loggedOut": "ログアウト成功",
     "logoutFailed": "ログアウト失敗",
+    "modalDescriptionLogin": "承認プロセスを完了し、{provider} との接続を確立します。",
     "successCloseModal": "このダイアログを閉じることができます。",
     "successCloseTab": "このタブを閉じることができます。",
     "title": "認証ステータス"
@@ -22,9 +23,12 @@
       "never": "十分な余剰がある場合のみ。"
     },
     "control": "バッテリーコントロール",
+    "discharge": "高速モードおよび計画充電での放電を防止します。",
     "disclaimerHint": "注意：",
     "gridChargeTab": "グリッド充電",
+    "legendBottomName": "ホームバッテリー充電を優先する",
     "legendTopAutostart": "自動的に開始",
+    "legendTopName": "バッテリー対応車両充電",
     "modalTitle": "ホームバッテリー",
     "usageTab": "バッテリー使用量"
   },
@@ -33,11 +37,20 @@
       "titleAdd": "バッテリーを追加",
       "titleEdit": "バッテリーを編集"
     },
+    "charge": {
+      "titleAdd": "充電メーターを追加",
+      "titleEdit": "充電メーターを編集"
+    },
     "charger": {
       "chargers": "EV充電器",
       "ocppConnected": "接続しました！",
+      "ocppDescription": "evccにはOCPPサーバーがビルトインされています。以下の手順に従ってください：",
       "ocppLabel": "OCPPサーバーURL",
       "ocppNextStep": "次のステップ",
+      "ocppStep1": "evccをOCPP サーバーとして使用するように充電器を構成します。",
+      "ocppStep2": "充電器がevccに接続されるまで待ちます。",
+      "ocppStep3": "続行して構成を完了します。",
+      "ocppWaiting": "接続を待っています",
       "titleAdd": {
         "charging": "充電器を追加",
         "heating": "ヒーターを追加"
@@ -50,10 +63,19 @@
     "deviceValue": {
       "chargeStatus": "ステータス",
       "chargeStatusA": "未接続",
-      "chargeStatusB": "接続",
+      "chargeStatusB": "接続済み",
+      "chargeStatusC": "充電中",
       "chargeStatusF": "エラー",
+      "chargedEnergy": "充電済み",
+      "co2": "グリッドCO₂",
+      "connections": "接続",
+      "currency": "通貨",
       "detected": "検出",
+      "energy": "エネルギー",
       "gridPrice": "グリッド価格",
+      "no": "いいえ",
+      "soc": "充電",
+      "temp": "温度",
       "url": "URL",
       "yes": "はい"
     },
@@ -65,13 +87,22 @@
     "devices": {
       "solarSystem": "ソーラーシステム"
     },
+    "eebus": {
+      "certificate": {
+        "private": "プライベートキー",
+        "public": "公開証明書"
+      },
+      "interfaces": "インターフェイス",
+      "port": "ポート"
+    },
     "experimental": {
       "title": "実験的"
     },
     "form": {
       "danger": "危険",
       "deprecated": "非推奨",
-      "example": "例"
+      "example": "例",
+      "optional": "オプション"
     },
     "general": {
       "cancel": "キャンセル",
@@ -79,12 +110,15 @@
       "close": "閉じる",
       "copied": "コピーしました！",
       "copy": "コピー",
+      "customOption": "ユーザー定義デバイス",
       "delete": "削除",
+      "experimental": "実験的",
       "hideAdvancedSettings": "詳細設定を隠す",
       "noFileSelected": "ファイルが選択されていません。",
       "off": "オフ",
       "on": "オン",
       "password": "パスワード",
+      "remove": "削除",
       "reset": "リセット",
       "save": "保存",
       "saved": "保存しました。",
@@ -108,6 +142,7 @@
       "downloadCsv": "CSVをダウンロード"
     },
     "icon": {
+      "change": "変更",
       "label": "アイコン"
     },
     "influx": {
@@ -128,8 +163,14 @@
         "charging": "充電器",
         "heating": "ヒーター"
       },
+      "chargerTypeLabel": "充電器タイプ",
+      "circuitInvalid": "サーキットが存在しません",
+      "circuitLabel": "サーキット",
+      "circuitUnassigned": "未割り当て",
       "defaultModeLabel": "デフォルトモード",
       "delete": "削除",
+      "energyMeterLabel": "エネルギーメーター",
+      "pollModeCharging": "充電中",
       "pollModeConnected": "接続済み",
       "priorityLabel": "優先度",
       "save": "保存",
@@ -470,10 +511,78 @@
       "price": "価格",
       "vehicle": "車両"
     },
+    "date": "開始",
+    "energy": "充電済み",
     "filter": {
       "allLoadpoints": "全ての充電ポイント",
       "allVehicles": "全ての車両",
       "filter": "フィルター"
+    },
+    "group": {
+      "co2": "排出量",
+      "grid": "グリッド",
+      "price": "価格",
+      "self": "ソーラー"
+    },
+    "groupBy": {
+      "loadpoint": "充電ポイント",
+      "vehicle": "車両"
+    },
+    "loadpoint": "充電ポイント",
+    "period": {
+      "month": "月",
+      "year": "年"
+    },
+    "price": "コスト",
+    "solar": "ソーラー",
+    "title": "充電セッション",
+    "type": {
+      "price": "価格",
+      "solar": "ソーラー"
+    },
+    "vehicle": "車両"
+  },
+  "settings": {
+    "fullscreen": {
+      "label": "フルスクリーン"
+    },
+    "hiddenFeatures": {
+      "label": "実験的"
+    },
+    "language": {
+      "auto": "自動的",
+      "label": "言語"
+    },
+    "loadpoints": {
+      "label": "充電ポイント"
+    },
+    "sponsorToken": {
+      "expires": "スポンサートークンの有効期限は {inXDays} です。"
+    },
+    "telemetry": {
+      "label": "テレメトリ"
+    },
+    "theme": {
+      "auto": "システム",
+      "dark": "ダーク",
+      "label": "デザイン",
+      "light": "ライト"
+    },
+    "time": {
+      "label": "タイムフォーマット"
+    },
+    "title": "ユーザーインターフェイス",
+    "unit": {
+      "label": "ユニット",
+      "mi": "マイル"
     }
+  },
+  "smartCost": {
+    "activeHoursLabel": "アクティブタイム",
+    "saved": "保存しました。"
+  },
+  "startupError": {
+    "restartButton": "再起動",
+    "title": "起動エラー"
   }
 }
