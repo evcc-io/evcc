@@ -70,10 +70,10 @@ func (c *Controller) ChargeEnable(enable bool) error {
 	} else {
 		// Stop charging: update end time to current time
 		stat.EvInfo.Schedules[0].EndTime = currentTime.Format(timeFormat)
-		
+
 		// Parse times for comparison and handle edge case: StartTime > EndTime
 		start, err1 := time.Parse(timeFormat, stat.EvInfo.Schedules[0].StartTime)
-		
+
 	if err1 == nil && start.After(currentTime) {
 		stat.EvInfo.Schedules[0].StartTime = fallbackStartTime
 		}
