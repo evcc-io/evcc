@@ -18,6 +18,7 @@ var deviceCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(deviceCmd)
+	withCustomTemplate(deviceCmd)
 }
 
 func runDevice(cmd *cobra.Command, args []string) {
