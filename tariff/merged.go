@@ -23,10 +23,9 @@ func init() {
 }
 
 func NewMergedFromConfig(ctx context.Context, other map[string]any) (api.Tariff, error) {
-	cc := struct {
-		Primary   Typed
-		Secondary Typed
-	}{}
+	var cc struct {
+		Primary, Secondary Typed
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err

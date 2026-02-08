@@ -40,7 +40,7 @@ func TestMergedRates(t *testing.T) {
 	}
 
 	ext := &Merged{
-		log:       util.NewLogger("merged"),
+		log:       util.NewLogger("foo"),
 		primary:   &mockTariff{rates: primaryRates, typ: api.TariffTypePriceForecast},
 		secondary: &mockTariff{rates: secondaryRates, typ: api.TariffTypePriceForecast},
 	}
@@ -68,7 +68,7 @@ func TestMergedPrimaryFailure(t *testing.T) {
 	}
 
 	ext := &Merged{
-		log:       util.NewLogger("merged"),
+		log:       util.NewLogger("foo"),
 		primary:   &mockTariff{err: assert.AnError, typ: api.TariffTypePriceForecast},
 		secondary: &mockTariff{rates: secondaryRates, typ: api.TariffTypePriceForecast},
 	}
@@ -87,7 +87,7 @@ func TestMergedSecondaryFailure(t *testing.T) {
 	}
 
 	ext := &Merged{
-		log:       util.NewLogger("merged"),
+		log:       util.NewLogger("foo"),
 		primary:   &mockTariff{rates: primaryRates, typ: api.TariffTypePriceForecast},
 		secondary: &mockTariff{err: assert.AnError, typ: api.TariffTypePriceForecast},
 	}
@@ -106,7 +106,7 @@ func TestMergedEmptyPrimary(t *testing.T) {
 	}
 
 	ext := &Merged{
-		log:       util.NewLogger("merged"),
+		log:       util.NewLogger("foo"),
 		primary:   &mockTariff{rates: api.Rates{}, typ: api.TariffTypePriceForecast},
 		secondary: &mockTariff{rates: secondaryRates, typ: api.TariffTypePriceForecast},
 	}
@@ -120,7 +120,7 @@ func TestMergedEmptyPrimary(t *testing.T) {
 
 func TestMergedType(t *testing.T) {
 	ext := &Merged{
-		log:       util.NewLogger("merged"),
+		log:       util.NewLogger("foo"),
 		primary:   &mockTariff{typ: api.TariffTypePriceForecast},
 		secondary: &mockTariff{typ: api.TariffTypePriceForecast},
 	}
@@ -130,7 +130,7 @@ func TestMergedType(t *testing.T) {
 
 func TestMergedBothFail(t *testing.T) {
 	ext := &Merged{
-		log:       util.NewLogger("merged"),
+		log:       util.NewLogger("foo"),
 		primary:   &mockTariff{err: assert.AnError, typ: api.TariffTypePriceForecast},
 		secondary: &mockTariff{err: assert.AnError, typ: api.TariffTypePriceForecast},
 	}
@@ -156,7 +156,7 @@ func TestMergedGapBetweenPrimaryAndSecondary(t *testing.T) {
 	}
 
 	ext := &Merged{
-		log:       util.NewLogger("merged"),
+		log:       util.NewLogger("foo"),
 		primary:   &mockTariff{rates: primaryRates, typ: api.TariffTypePriceForecast},
 		secondary: &mockTariff{rates: secondaryRates, typ: api.TariffTypePriceForecast},
 	}
