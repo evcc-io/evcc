@@ -27,6 +27,10 @@ func NewConnection(uri, user, password string, channels []int, cache time.Durati
 		return nil, errors.New("missing uri")
 	}
 
+	if l := len(channels); l != 1 && l != 3 {
+		return nil, fmt.Errorf("invalid number of channels: %d", l)
+	}
+
 	used := make(map[int]bool)
 	for _, c := range channels {
 		if c < 1 || c > 8 {
@@ -286,10 +290,6 @@ func (c *Connection) Currents() (float64, float64, float64, error) {
 
 // getPhaseValues returns 3 sequential phase values
 func (c *Connection) getPhaseValues(fun func(StatusSNSResponse) Channels) (float64, float64, float64, error) {
-	if len(c.channels) < 1 || len(c.channels) > 3 {
-		return 0, 0, 0, nil
-	}
-
 	s, err := c.statusSnsG.Get()
 	if err != nil {
 		return 0, 0, 0, err
