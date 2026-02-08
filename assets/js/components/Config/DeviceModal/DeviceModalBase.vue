@@ -66,7 +66,7 @@
 							/>
 						</div>
 
-						<p v-if="auth.error" class="text-danger">{{ auth.error }}</p>
+						<ErrorMessage :error="auth.error" />
 
 						<div
 							class="my-4 d-flex align-items-stretch justify-content-sm-between align-items-sm-baseline flex-column-reverse flex-sm-row gap-2"
@@ -167,6 +167,7 @@
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
 import GenericModal, { type ModalFade } from "../../Helper/GenericModal.vue";
+import ErrorMessage from "../../Helper/ErrorMessage.vue";
 import PropertyEntry from "../PropertyEntry.vue";
 import PropertyCollapsible from "../PropertyCollapsible.vue";
 import Modbus from "./Modbus.vue";
@@ -203,6 +204,7 @@ export default defineComponent({
 	name: "DeviceModalBase",
 	components: {
 		GenericModal,
+		ErrorMessage,
 		PropertyEntry,
 		PropertyCollapsible,
 		Modbus,
@@ -321,6 +323,9 @@ export default defineComponent({
 		},
 		advancedParams() {
 			return this.templateParams.filter((p) => p.Advanced || p.Deprecated);
+		},
+		visibleParams() {
+			return this.authRequired ? this.authParams : this.templateParams;
 		},
 		modbus(): ModbusParam | undefined {
 			const params = this.template?.Params || [];
@@ -742,7 +747,8 @@ export default defineComponent({
 				clearTimeout(this.serviceValuesTimer);
 			}
 			this.serviceValuesTimer = setTimeout(async () => {
-				this.serviceValues = await fetchServiceValues(this.templateParams, {
+				// Fetch only visible params to prevent premature auth instance creation
+				this.serviceValues = await fetchServiceValues(this.visibleParams, {
 					...this.modbusDefaults,
 					...this.values,
 				});

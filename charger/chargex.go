@@ -41,11 +41,11 @@ type ChargeX struct {
 const (
 	// Module specific base address (module X: 100 + module_index*12)
 	chargexRegModuleBase     = 100 // 0x0064 Base address for module 0
-	chargexRegModulePower    = 0   // PAC_X offset (U32, 2 registers)
-	chargexRegModuleCurrent1 = 2   // IAC_SUM_1_X offset (U32, 2 registers)
-	chargexRegModuleCurrent2 = 4   // IAC_SUM_2_X offset (U32, 2 registers)
-	chargexRegModuleCurrent3 = 6   // IAC_SUM_3_X offset (U32, 2 registers)
-	chargexRegModuleState    = 8   // States_CP_X offset (B16, 1 register!)
+	chargexRegModulePower    = 0   // PAC_X offset
+	chargexRegModuleCurrent1 = 2   // IAC_SUM_1_X offset
+	chargexRegModuleCurrent2 = 4   // IAC_SUM_2_X offset
+	chargexRegModuleCurrent3 = 6   // IAC_SUM_3_X offset
+	chargexRegModuleState    = 8   // States_CP_X offset
 
 	// Holding registers (read/write)
 	chargexRegTargetPower  = 504 // 0x01F8 PAC_Target_Power (W) - U32
@@ -96,7 +96,7 @@ func NewChargeX(ctx context.Context, uri string, id uint8, connector uint16) (ap
 		curr:      6, // assume min current
 	}
 
-	// Initialize charging mode to 0 (Full control) to ensure evcc has full control
+	// Initialize charging mode to 0 (Full control)
 	b := make([]byte, 4)
 	binary.BigEndian.PutUint32(b, 0)
 	if _, err := conn.WriteMultipleRegisters(chargexRegChargingMode, 2, b); err != nil {
@@ -115,12 +115,12 @@ func (wb *ChargeX) moduleReg(offset uint16) uint16 {
 // setCurrent writes the current limit in Amperes
 func (wb *ChargeX) setCurrent(current float64) error {
 	// Read module state to determine charging mode (1p or 3p)
-	b, err := wb.conn.ReadHoldingRegisters(wb.moduleReg(chargexRegModuleState), 1)
+	b, err := wb.conn.ReadHoldingRegisters(wb.moduleReg(chargexRegModuleState), 2)
 	if err != nil {
 		return err
 	}
 
-	state := binary.BigEndian.Uint16(b)
+	state := binary.BigEndian.Uint32(b)
 	// Bit 1: ChMode - 0=single phase, 1=3 phase
 	phases := 3
 	if (state & (1 << 1)) == 0 {
@@ -128,7 +128,10 @@ func (wb *ChargeX) setCurrent(current float64) error {
 	}
 
 	b = make([]byte, 4)
-	binary.BigEndian.PutUint32(b, uint32(230*current*float64(phases)))
+	targetPower := uint32(230 * current * float64(phases))
+	binary.BigEndian.PutUint32(b, targetPower)
+
+	wb.log.DEBUG.Printf("set charge power: %dW (%.1fA, %dp)", targetPower, current, phases)
 
 	_, err = wb.conn.WriteMultipleRegisters(chargexRegTargetPower, 2, b)
 	return err
@@ -136,12 +139,12 @@ func (wb *ChargeX) setCurrent(current float64) error {
 
 // Status implements the api.Charger interface
 func (wb *ChargeX) Status() (api.ChargeStatus, error) {
-	b, err := wb.conn.ReadHoldingRegisters(wb.moduleReg(chargexRegModuleState), 1)
+	b, err := wb.conn.ReadHoldingRegisters(wb.moduleReg(chargexRegModuleState), 2)
 	if err != nil {
 		return api.StatusNone, err
 	}
 
-	state := binary.BigEndian.Uint16(b)
+	state := binary.BigEndian.Uint32(b)
 
 	// Bit 0: Charging (1=charging, 0=not charging)
 	// Bit 1: ChMode (0=single phase, 1=3 phase)
@@ -167,13 +170,13 @@ var _ api.StatusReasoner = (*ChargeX)(nil)
 
 // StatusReason implements the api.StatusReasoner interface
 func (wb *ChargeX) StatusReason() (api.Reason, error) {
-	b, err := wb.conn.ReadHoldingRegisters(wb.moduleReg(chargexRegModuleState), 1)
+	b, err := wb.conn.ReadHoldingRegisters(wb.moduleReg(chargexRegModuleState), 2)
 	if err != nil {
 		return api.ReasonUnknown, err
 	}
 
 	// Check if not authorized
-	if (binary.BigEndian.Uint16(b) & (1 << 2)) == 0 {
+	if (binary.BigEndian.Uint32(b) & (1 << 2)) == 0 {
 		return api.ReasonWaitingForAuthorization, nil
 	}
 

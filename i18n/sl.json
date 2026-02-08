@@ -209,6 +209,7 @@
       "dragList": "Seznam, ki ga je mogoče prerazporediti",
       "experimental": "Eksperimentalno",
       "forceSave": "Vseeno shrani",
+      "fromYamlHint": "Opomba: Konfigurirano prek evcc.yaml. Odstranite vnos iz datoteke, da omogočite urejanje tukaj.",
       "hideAdvancedSettings": "Skrij napredne nastavitve",
       "invalidFileSelected": "Izbrana neveljavna datoteka",
       "noFileSelected": "Izbrana ni nobena datoteka.",
@@ -247,8 +248,7 @@
       "downloadCsv": "Prenesi CSV",
       "eventsRecorded": "Zabeleženo {count} dogodkov omejitve omrežja.",
       "lastEvent": "Najnovejše {timeAgo}.",
-      "title": "Zunanja meja",
-      "yamlConfigured": "Opomba: Konfigurirano prek evcc.yaml. Odstranite vnos iz datoteke, da omogočite urejanje tukaj."
+      "title": "Zunanja meja"
     },
     "icon": {
       "change": "sprememba",
@@ -390,8 +390,7 @@
       "unconfigured": "ni konfigurirano",
       "vehicles": "Moja vozila",
       "welcomeBannerText": "Začnite z ustvarjanjem vsaj enega **polnilnika**, **grelca**, **omrežja**, **sončne energije**, **baterije** ali **dodatnega merilnika**. Če želite samo preizkusiti, izberite **demo napravo**.",
-      "welcomeBannerTitle": "Konfigurirajmo vaš sistem!",
-      "yaml": "Naprav iz datoteke evcc.yaml ni mogoče urejati."
+      "welcomeBannerTitle": "Konfigurirajmo vaš sistem!"
     },
     "messaging": {
       "description": "Prejemanje sporočil o vaših sejah polnjenja.",
@@ -1122,7 +1121,6 @@
   "passwordModal": {
     "description": "Nastavite geslo za zaščito konfiguracijskih nastavitev. Uporaba glavnega vmesnika je še vedno možna brez prijave.",
     "empty": "Geslo ne sme biti prazno",
-    "error": "Napaka: ",
     "labelCurrent": "Trenutno geslo",
     "labelNew": "Novo geslo",
     "labelRepeat": "Ponovi geslo",

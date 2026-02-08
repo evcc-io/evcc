@@ -20,6 +20,7 @@ import (
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/server/db"
+	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/server/mcp"
 	"github.com/evcc-io/evcc/server/network"
 	"github.com/evcc-io/evcc/server/updater"
@@ -55,12 +56,17 @@ var (
 	runAsService bool
 )
 
+const rootName = "evcc"
+
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:     "evcc",
+	Use:     rootName,
 	Short:   "evcc - open source solar charging",
 	Version: util.FormattedVersion(),
 	Run:     runRoot,
+	// always allow Ctrl-C in child commands
+	PersistentPreRun:  allowCtrlC,
+	PersistentPostRun: awaitShutdown,
 }
 
 func init() {
@@ -74,16 +80,14 @@ func init() {
 
 	cobra.OnInitialize(initConfig)
 
+	withCustomTemplate(rootCmd)
+
 	// global options
 	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "Config file (default \"~/evcc.yaml\" or \"/etc/evcc.yaml\")")
 	rootCmd.PersistentFlags().StringVar(&cfgDatabase, "database", "", "Database location (default \"~/.evcc/evcc.db\")")
 	rootCmd.PersistentFlags().BoolP("help", "h", false, "Help")
-	rootCmd.PersistentFlags().Bool(flagDemoMode, false, flagDemoModeDescription)
 	rootCmd.PersistentFlags().Bool(flagHeaders, false, flagHeadersDescription)
 	rootCmd.PersistentFlags().Bool(flagIgnoreDatabase, false, flagIgnoreDatabaseDescription)
-	rootCmd.PersistentFlags().String(flagTemplate, "", flagTemplateDescription)
-	rootCmd.PersistentFlags().String(flagTemplateType, "", flagTemplateTypeDescription)
-	rootCmd.PersistentFlags().StringVar(&customCssFile, flagCustomCss, "", flagCustomCssDescription)
 
 	// config file options
 	rootCmd.PersistentFlags().StringP("log", "l", "info", "Log level (fatal, error, warn, info, debug, trace)")
@@ -99,6 +103,8 @@ func init() {
 	bind(rootCmd, "mcp")
 
 	rootCmd.Flags().Bool(flagDisableAuth, false, flagDisableAuthDescription)
+	rootCmd.Flags().Bool(flagDemoMode, false, flagDemoModeDescription)
+	rootCmd.Flags().StringVar(&customCssFile, flagCustomCss, "", flagCustomCssDescription)
 }
 
 // initConfig reads in config file and ENV variables if set
@@ -129,6 +135,34 @@ func Execute() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+}
+
+func withCustomTemplate(cmd *cobra.Command) {
+	cmd.Flags().String(flagTemplate, "", flagTemplateDescription)
+	cmd.Flags().String(flagTemplateType, "", flagTemplateTypeDescription)
+}
+
+func allowCtrlC(cmd *cobra.Command, args []string) {
+	if cmd.Name() == rootName {
+		return
+	}
+
+	go func() {
+		signalC := make(chan os.Signal, 1)
+		signal.Notify(signalC, os.Interrupt, syscall.SIGTERM)
+
+		<-signalC // wait for signal
+		os.Exit(1)
+	}()
+}
+
+func awaitShutdown(cmd *cobra.Command, args []string) {
+	if cmd.Name() == rootName {
+		return
+	}
+
+	// wait for shutdown
+	<-shutdownDoneC()
 }
 
 func runRoot(cmd *cobra.Command, args []string) {
@@ -176,10 +210,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	ocppCS := ocpp.Instance()
 	ocppCS.SetUpdated(func() {
 		// republish when OCPP state updates
-		valueChan <- util.Param{Key: keys.Ocpp, Val: struct {
-			Config ocpp.Config `json:"config"`
-			Status ocpp.Status `json:"status"`
-		}{
+		valueChan <- util.Param{Key: keys.Ocpp, Val: globalconfig.ConfigStatus{
 			Config: conf.Ocpp,
 			Status: ocpp.GetStatus(),
 		}}
@@ -329,35 +360,29 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}
 
 	// publish initial settings
-	valueChan <- util.Param{Key: keys.EEBus, Val: conf.EEBus.Configured()}
+	valueChan <- util.Param{Key: keys.EEBus, Val: globalconfig.ConfigStatus{
+		Config:   conf.EEBus.Redacted(),
+		Status:   eebus.GetStatus(),
+		FromYaml: fromYaml.eebus,
+	}}
 	valueChan <- util.Param{Key: keys.Shm, Val: conf.SHM}
 	valueChan <- util.Param{Key: keys.Influx, Val: conf.Influx}
 	valueChan <- util.Param{Key: keys.Interval, Val: conf.Interval}
-	valueChan <- util.Param{Key: keys.Messaging, Val: conf.Messaging.Configured()}
+	valueChan <- util.Param{Key: keys.Messaging, Val: conf.Messaging.IsConfigured()}
 	valueChan <- util.Param{Key: keys.ModbusProxy, Val: conf.ModbusProxy}
 	valueChan <- util.Param{Key: keys.Mqtt, Val: conf.Mqtt}
 	valueChan <- util.Param{Key: keys.Network, Val: conf.Network}
-	valueChan <- util.Param{Key: keys.Ocpp, Val: struct {
-		Config ocpp.Config `json:"config"`
-		Status ocpp.Status `json:"status"`
-	}{
+	valueChan <- util.Param{Key: keys.Ocpp, Val: globalconfig.ConfigStatus{
 		Config: conf.Ocpp,
 		Status: ocpp.GetStatus(),
 	}}
-	valueChan <- util.Param{Key: keys.Sponsor, Val: struct {
-		Status   sponsor.Status `json:"status"`
-		FromYaml bool           `json:"fromYaml"`
-	}{
-		Status:   sponsor.GetStatus(),
+	valueChan <- util.Param{Key: keys.Sponsor, Val: globalconfig.ConfigStatus{
+		Status:   sponsor.RedactedStatus(),
 		FromYaml: fromYaml.sponsor,
 	}}
 
-	valueChan <- util.Param{Key: keys.Hems, Val: struct {
-		Config   globalconfig.Hems `json:"config"`
-		Status   *hemsapi.Status   `json:"status,omitempty"`
-		FromYaml bool              `json:"fromYaml"`
-	}{
-		Config:   conf.HEMS,
+	valueChan <- util.Param{Key: keys.Hems, Val: globalconfig.ConfigStatus{
+		Config:   conf.HEMS.Redacted(),
 		Status:   hemsapi.GetStatus(hems),
 		FromYaml: fromYaml.hems,
 	}}
@@ -368,6 +393,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	valueChan <- util.Param{Key: keys.Database, Val: db.FilePath}
 	valueChan <- util.Param{Key: keys.System, Val: util.System()}
 	valueChan <- util.Param{Key: keys.Timezone, Val: time.Now().Format("MST -07:00")}
+	valueChan <- util.Param{Key: keys.Experimental, Val: isExperimental()}
 
 	// run shutdown functions on stop
 	var once sync.Once
@@ -417,7 +443,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 		site.DumpConfig()
 		site.Prepare(valueChan, pushChan)
 
-		httpd.RegisterSiteHandlers(site, valueChan)
+		httpd.RegisterSiteHandlers(site)
 
 		go func() {
 			site.Run(stopC, conf.Interval)

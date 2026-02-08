@@ -209,6 +209,7 @@
       "dragList": "Lista reordenável",
       "experimental": "Experimental",
       "forceSave": "Guardar na mesma",
+      "fromYamlHint": "Nota: Configurado através do evcc.yaml. Remova a entrada do ficheiro para permitir a edição aqui.",
       "hideAdvancedSettings": "Ocultar definições avançadas",
       "invalidFileSelected": "Ficheiro selecionado inválido",
       "noFileSelected": "Nenhum ficheiro selecionado.",
@@ -247,8 +248,7 @@
       "downloadCsv": "Descarregar CSV",
       "eventsRecorded": "Registou {count} eventos de limitação da rede.",
       "lastEvent": "Mais recente {timeAgo}.",
-      "title": "Limite externo",
-      "yamlConfigured": "Nota: Configurado através do evcc.yaml. Remova a entrada do ficheiro para permitir a edição aqui."
+      "title": "Limite externo"
     },
     "icon": {
       "change": "alterar",
@@ -390,8 +390,7 @@
       "unconfigured": "não configurado",
       "vehicles": "Os meus Veículos",
       "welcomeBannerText": "Comece por criar pelo menos um **carregador**, **aquecedor**, **rede**, **solar**, **bateria** ou **medidor adicional**. Se quiser apenas testar, escolha um **dispositivo de demonstração**.",
-      "welcomeBannerTitle": "Configuremos agora o seu sistema!",
-      "yaml": "Os dispositivos de evcc.yaml não são editáveis."
+      "welcomeBannerTitle": "Configuremos agora o seu sistema!"
     },
     "messaging": {
       "description": "Receber mensagens sobre as sessões de carregamento.",
@@ -1117,7 +1116,6 @@
   "passwordModal": {
     "description": "Defina uma Palavra-passe para proteger as definições de configuração. Continua a ser possível utilizar o menu principal sem iniciar sessão.",
     "empty": "A Palavra-passe não deve ficar por preencher",
-    "error": "Erro: ",
     "labelCurrent": "Palavra-passe atual",
     "labelNew": "Nova Palavra-passe",
     "labelRepeat": "Repetir palavra-passe",

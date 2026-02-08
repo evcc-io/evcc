@@ -209,6 +209,7 @@
       "dragList": "Yeniden sıralanabilir liste",
       "experimental": "Deneysel",
       "forceSave": "Yine de kaydet",
+      "fromYamlHint": "Not: evcc.yaml aracılığıyla yapılandırıldı. Burada düzenlemeyi etkinleştirmek için dosyadan öğeyi kaldır.",
       "hideAdvancedSettings": "“Gelişmiş ayarları gizle”",
       "invalidFileSelected": "Geçersiz dosya seçildi",
       "noFileSelected": "Seçili dosya yok.",
@@ -247,8 +248,7 @@
       "downloadCsv": "CSV'yi indir",
       "eventsRecorded": "{count} şebeke sınırlama etkinliği kaydedildi.",
       "lastEvent": "En son {timeAgo}.",
-      "title": "Dış Limit",
-      "yamlConfigured": "Not: evcc.yaml aracılığıyla yapılandırıldı. Burada düzenlemeyi etkinleştirmek için dosyadan öğeyi kaldır."
+      "title": "Dış Limit"
     },
     "icon": {
       "change": "değiştir",
@@ -390,8 +390,7 @@
       "unconfigured": "yapılandırılmadı",
       "vehicles": "Araçlarım",
       "welcomeBannerText": "Önce bir **doldurma cihazı**, **ısıtıcı**, **elektrik sayacı**, **güneş enerjisi**, **batarya** veya **ek sayaç** oluştur. Sadece denemek istiyorsan, bir **demo cihazı** seç.",
-      "welcomeBannerTitle": "Haydi sistemini yapılandıralım!",
-      "yaml": "evcc.yaml'daki cihazlar düzenlenemez."
+      "welcomeBannerTitle": "Haydi sistemini yapılandıralım!"
     },
     "messaging": {
       "description": "Dolum oturumları hakkında bildirimler al.",
@@ -1117,7 +1116,6 @@
   "passwordModal": {
     "description": "Yapılandırma ayarlarını korumak için bir şifre belirle. Ana görünüme erişim oturum açmadan da mümkün.",
     "empty": "Şifre boş olamaz",
-    "error": "Hata: ",
     "labelCurrent": "Mevcut şifre",
     "labelNew": "Yeni şifre",
     "labelRepeat": "Yeni şifreyi tekrarla",

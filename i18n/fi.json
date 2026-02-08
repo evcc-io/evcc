@@ -99,7 +99,7 @@
     },
     "control": {
       "description": "Yleensä oletusarvot ovat sopivat. Muuta vain jos tiedät mitä olet tekemässä.",
-      "descriptionInterval": "Päivitysjakso sekunneissa. Määrittää, kuinka usein evcc lukee mittaritietoja ja säätää lataustehoa. Oletus 30 s on turvallinen valinta. Ajoneuvot, latauslaitteet ja inverterit tyypillisesti tarvitsevat useita sekunteja toimintansa säätämiseen. Jos laitteesi reagoivat nopeasti, voit määrittää lyhyemmän aikajakson. Suosittelemme painokkaasti, että alle 10 s jaksoa ei määritettäisi. Jos kohtaat virheellistä toimitaa tai hyppiviä tehoarvoja suosittelemme pidemtämään aikaväliä.",
+      "descriptionInterval": "Päivitysjakso sekunneissa. Määrittää, kuinka usein evcc lukee mittaritietoja ja säätää lataustehoa. Oletus 30 s on turvallinen asetus. Ajoneuvot, latauslaitteet ja invertterit tyypillisesti tarvitsevat useita sekunteja toimintansa säätämiseen. Jos laitteesi reagoivat nopeasti, voit määrittää lyhyemmän aikajakson. Suosittelemme voimakkaasti, että alle 10 s jaksoa ei määritettäisi. Jos kohtaat virheellistä toimitaa tai hyppiviä tehoarvoja, suosittelemme pidentämään aikaväliä.",
       "descriptionResidualPower": "Siirtää ohjaussilmukan toimintapistettä. Mikäli sinulla on kotiakku on suositeltavaa asettaa ohjausarvo 100 W:iin. Tämä antaa akulle pienen etusijan suhteessa sähköverkon käyttöön.",
       "labelInterval": "Päivitystiheys",
       "labelResidualPower": "Jäännösteho",
@@ -209,6 +209,7 @@
       "dragList": "Järjestettävä lista",
       "experimental": "Kokeellinen",
       "forceSave": "Tallenna joka tapauksessa",
+      "fromYamlHint": "Huomio: Asetus on evcc.yaml-tiedostosta. Poista asetus tiedostosta, jotta voisit muokata sitä täällä.",
       "hideAdvancedSettings": "Piilota edistyneet asetukset",
       "invalidFileSelected": "Valittu virheellinen tiedosto",
       "noFileSelected": "Ei valittua tiedostoa.",
@@ -243,12 +244,11 @@
         "limitpower": "Raja (kW)",
         "type": "Tyyppi"
       },
-      "description": "Ulkoisten järjestelmien (esim. §14a EnWG, §9 EEG-rajapinta tai ylemmän tason energianhallintajärjestelmä) suorittama tehonrajoitus. Toimii yhdessä kuormituksenhallintaominaisuuden kanssa.",
+      "description": "Ulkoisten järjestelmien (esim. saksalaisen energialainsäädännön §14a EnWG, §9 EEG-rajapinta tai ylemmän tason energianhallintajärjestelmä) suorittama tehonrajoitus. Toimii yhdessä kuormituksenhallintaominaisuuden kanssa.",
       "downloadCsv": "Lataa CSV-taulukko",
       "eventsRecorded": "Tallennettu {count} verkon rajoitustapahtumaa.",
       "lastEvent": "Viimeisin {timeAgo}.",
-      "title": "Ulkoinen raja",
-      "yamlConfigured": "Huomio: Asetus on evcc.yaml-tiedostosta. Poista asetus tiedostosta, jotta voisit muokata sitä täällä."
+      "title": "Ulkoinen raja"
     },
     "icon": {
       "change": "vaihda",
@@ -389,9 +389,8 @@
       "title": "Määritykset",
       "unconfigured": "ei määritetty",
       "vehicles": "Minun ajoneuvot",
-      "welcomeBannerText": "Aloita luomalla vähintään yksi **laturi**, **lämmitin**, **verkko**, **aurinkopaneeli**, **akku** tai **lisämittari**. Jos haluat vain testata, valitse **esittelylaite**.",
-      "welcomeBannerTitle": "Määritetään järjestelmäsi!",
-      "yaml": "evcc.yaml-asetuksissa määritettyjä laitteita ei voi muokata."
+      "welcomeBannerText": "Aloita luomalla vähintään yksi **laturi**, **lämmitin**, **sähköverkko**, **aurinkopaneeli**, **akku** tai **lisämittari**. Jos haluat vain testata, valitse **esittelylaite**.",
+      "welcomeBannerTitle": "Määritetään järjestelmäsi!"
     },
     "messaging": {
       "description": "Vastaanota viestejä koskien lataustapahtumiasi.",
@@ -894,7 +893,7 @@
       "none": "ei mitään",
       "optimization": {
         "cheapest": "halvin",
-        "continuous": "jatkuva",
+        "continuous": "yhtenäinen",
         "label": "Optimointi"
       },
       "planNumber": "Suunnitelma {number}",
@@ -908,8 +907,8 @@
       "repeating": "toistetaan",
       "repeatingPlans": "Toistuvat suunnitelmat",
       "selectAll": "Valitse kaikki",
-      "strategyDisabledDescription": "Lataus aloitetaan mahdollisimman myöhään, jotta se valmistuu juuri ennen lähtöä. Dynaamisten verkkohintojen tai CO₂-tariffin ansiosta tässä on enemmän vaihtoehtoja.",
-      "strategySettings": "Strategia-asetukset",
+      "strategyDisabledDescription": "Lataus aloitetaan mahdollisimman myöhään, jotta se valmistuu juuri ennen lähtöä. Jos dynaaminen sähköverkkohinnoittelu tai CO₂-tariffit ovat asetetut, on tässä tarjolla enemmän valintoja.",
+      "strategySettings": "Strategiamääritykset",
       "time": "Aika",
       "title": "Suunnitelma",
       "titleMinSoc": "Minimi lataus",
@@ -1118,7 +1117,6 @@
   "passwordModal": {
     "description": "Aseta salasana suojellaksesi määritys asetuksia. Pääikkunan käyttö on silti mahdollista ilman kirjautumista.",
     "empty": "Salasana ei tulisi olla tyhjä",
-    "error": "Virhe: ",
     "labelCurrent": "Nykyinen salasana",
     "labelNew": "Uusi salasana",
     "labelRepeat": "Toista salasana",

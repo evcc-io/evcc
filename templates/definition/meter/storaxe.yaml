@@ -16,7 +16,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 2 # RealPower
+      address: 1 # RealPower
       type: input
       decode: int16
     scale: 100
@@ -24,28 +24,28 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 115 # EnergyExportedAC
+      address: 114 # EnergyExportedAC
       type: input
       decode: uint32
   voltages:
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
-        address: 7 # ACVoltageL1
+        address: 6 # ACVoltageL1
         type: input
         decode: int16
       scale: 0.1
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
-        address: 8 # ACVoltageL2
+        address: 7 # ACVoltageL2
         type: input
         decode: int16
       scale: 0.1
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
-        address: 9 # ACVoltageL3
+        address: 8 # ACVoltageL3
         type: input
         decode: int16
       scale: 0.1  
@@ -53,21 +53,21 @@ render: |
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
-        address: 10 # ACCurrentL1
+        address: 9 # ACCurrentL1
         type: input
         decode: int16
       scale: 0.1
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
-        address: 11 # ACCurrentL2
+        address: 10 # ACCurrentL2
         type: input
         decode: int16
       scale: 0.1
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
-        address: 12 # ACCurrentL3
+        address: 11 # ACCurrentL3
         type: input
         decode: int16
       scale: 0.1
@@ -75,7 +75,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 119 # SoCestim
+      address: 125 # SXSSOC
       type: input
       decode: int16
   {{- include "battery-params" . }}

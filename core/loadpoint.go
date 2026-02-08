@@ -152,6 +152,7 @@ type Loadpoint struct {
 	planSlotEnd      time.Time        // current plan slot end time
 	planActive       bool             // charge plan exists and has a currently active slot
 	planOverrunSent  bool             // notification has been sent already
+	planLocked       PlanLock         // locked plan
 
 	// cached state
 	status         api.ChargeStatus // Charger status
@@ -506,11 +507,6 @@ func (lp *Loadpoint) evVehicleConnectHandler() {
 	// soc update reset
 	lp.socUpdated = time.Time{}
 
-	// soc update reset on car change
-	if lp.socEstimator != nil {
-		lp.socEstimator.Reset()
-	}
-
 	// set default or start detection
 	if !lp.chargerHasFeature(api.IntegratedDevice) {
 		lp.vehicleDefaultOrDetect()
@@ -532,6 +528,9 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 
 	// session is persisted during evChargeStopHandler which runs before
 	lp.clearSession()
+
+	// clear locked plan goal on disconnect
+	lp.clearPlanLock()
 
 	// phases are unknown when vehicle disconnects
 	lp.ResetMeasuredPhases()
@@ -691,8 +690,7 @@ func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan c
 	// restored settings
 	lp.publish(keys.PlanTime, lp.planTime)
 	lp.publish(keys.PlanEnergy, lp.planEnergy)
-	lp.publish(keys.PlanPrecondition, int64(lp.planStrategy.Precondition.Seconds()))
-	lp.publish(keys.PlanContinuous, lp.planStrategy.Continuous)
+	lp.publish(keys.PlanStrategy, lp.planStrategy)
 	lp.publish(keys.LimitSoc, lp.limitSoc)
 	lp.publish(keys.LimitEnergy, lp.limitEnergy)
 
@@ -989,8 +987,7 @@ func (lp *Loadpoint) repeatingPlanning() bool {
 	if !lp.socBasedPlanning() {
 		return false
 	}
-	_, _, id := lp.NextVehiclePlan()
-	return id > 1
+	return lp.getPlanId() > 1
 }
 
 // vehicleHasSoc returns true if active vehicle supports returning soc, i.e. it is not an offline vehicle
@@ -1760,21 +1757,27 @@ func (lp *Loadpoint) publishSocAndRange() {
 		return socR, limitR
 	}
 
-	pollAllowed := lp.vehicleSocPollAllowed()
-	if pollAllowed {
-		lp.socUpdated = lp.clock.Now()
-	}
-
 	soc, limit := socAndLimit("charger", lp.charger)
-	if soc == nil && (pollAllowed || lp.chargerHasFeature(api.IntegratedDevice)) {
+	if soc == nil && (lp.vehicleSocPollAllowed() || lp.chargerHasFeature(api.IntegratedDevice)) {
+		lp.socUpdated = lp.clock.Now()
 		soc, limit = socAndLimit("vehicle", lp.GetVehicle())
+
+		// range
+		if vs, ok := lp.GetVehicle().(api.VehicleRange); ok {
+			if rng, err := vs.Range(); err == nil {
+				lp.log.DEBUG.Printf("vehicle range: %dkm", rng)
+				lp.publish(keys.VehicleRange, rng)
+			} else if !loadpoint.AcceptableError(err) {
+				lp.log.ERROR.Printf("vehicle range: %v", err)
+			}
+		}
 	}
 
 	if soc != nil {
 		if socEstimator == nil {
 			lp.vehicleSoc = *soc
 		} else {
-			lp.vehicleSoc, _ = socEstimator.Soc(soc, lp.GetChargedEnergy())
+			lp.vehicleSoc = socEstimator.Soc(soc, lp.GetChargedEnergy())
 			lp.log.DEBUG.Printf("vehicle soc (estimator): %.0f%%", lp.vehicleSoc)
 		}
 	}
@@ -1798,16 +1801,6 @@ func (lp *Loadpoint) publishSocAndRange() {
 		lp.SetRemainingDuration(d)
 
 		lp.SetRemainingEnergy(socEstimator.RemainingChargeEnergy(limitSoc))
-	}
-
-	// range
-	if vs, ok := lp.GetVehicle().(api.VehicleRange); ok && pollAllowed {
-		if rng, err := vs.Range(); err == nil {
-			lp.log.DEBUG.Printf("vehicle range: %dkm", rng)
-			lp.publish(keys.VehicleRange, rng)
-		} else if !loadpoint.AcceptableError(err) {
-			lp.log.ERROR.Printf("vehicle range: %v", err)
-		}
 	}
 
 	// trigger message after variables are updated

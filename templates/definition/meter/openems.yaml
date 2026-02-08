@@ -32,7 +32,6 @@ params:
     choice: ["grid", "pv", "battery"]
   - name: host
   - name: password
-    mask: true
     default: user
     advanced: true
   - name: maxacpower

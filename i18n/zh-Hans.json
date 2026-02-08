@@ -171,6 +171,7 @@
       "delete": "删除",
       "docsLink": "查看文档。",
       "experimental": "实验性",
+      "fromYamlHint": "evcc.yaml 中的设备不可编辑。",
       "hideAdvancedSettings": "隐藏高级设置",
       "off": "关",
       "on": "开",
@@ -306,8 +307,7 @@
       "name": "名称",
       "title": "配置",
       "unconfigured": "未配置",
-      "vehicles": "我的车辆",
-      "yaml": "evcc.yaml 中的设备不可编辑。"
+      "vehicles": "我的车辆"
     },
     "messaging": {
       "description": "接收有关您充电会话及其他事件的消息。",
@@ -849,7 +849,6 @@
   "passwordModal": {
     "description": "设置密码以保护配置设置。主屏幕仍可在未登录情况下使用。",
     "empty": "密码不能为空",
-    "error": "错误： ",
     "labelCurrent": "当前密码",
     "labelNew": "新密码",
     "labelRepeat": "重复新密码",

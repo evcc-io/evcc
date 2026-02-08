@@ -4,9 +4,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"net"
 	"slices"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -34,7 +32,6 @@ import (
 	"github.com/enbility/spine-go/model"
 	"github.com/enbility/spine-go/spine"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/machine"
 )
 
 type Device interface {
@@ -82,29 +79,33 @@ type EEBus struct {
 	mux sync.Mutex
 	log *util.Logger
 
-	Ski string
+	ski string
 
 	clients map[string][]Device
 }
 
 var Instance *EEBus
 
+func GetStatus() any {
+	return struct {
+		Ski string `json:"ski"`
+	}{
+		Ski: Ski(),
+	}
+}
+
 func NewServer(other Config) (*EEBus, error) {
 	cc := Config{
-		URI: ":4712",
+		Port: 4712,
 	}
 
 	if err := mergo.Merge(&cc, other, mergo.WithOverride); err != nil {
 		return nil, err
 	}
 
-	log := util.NewLogger("eebus")
-
-	protectedID := machine.ProtectedID("evcc-eebus")
-	serial := fmt.Sprintf("%s-%0x", "EVCC", protectedID[:8])
-
-	if len(cc.ShipID) != 0 {
-		serial = cc.ShipID
+	serial := cc.ShipID
+	if serial == "" {
+		serial = createShipID()
 	}
 
 	certificate, err := tls.X509KeyPair([]byte(cc.Certificate.Public), []byte(cc.Certificate.Private))
@@ -112,22 +113,11 @@ func NewServer(other Config) (*EEBus, error) {
 		return nil, err
 	}
 
-	_, portValue, err := net.SplitHostPort(cc.URI)
-	if err != nil {
-		return nil, err
-	}
-
-	port, err := strconv.Atoi(portValue)
-	if err != nil {
-		return nil, err
-	}
-
-	// TODO: get the voltage from the site
 	configuration, err := eebusapi.NewConfiguration(
 		BrandName, BrandName, Model, serial,
 		model.DeviceTypeTypeEnergyManagementSystem,
 		[]model.EntityTypeType{model.EntityTypeTypeCEM},
-		port, certificate, time.Second*4,
+		cc.Port, certificate, time.Second*4,
 	)
 	if err != nil {
 		return nil, err
@@ -147,8 +137,8 @@ func NewServer(other Config) (*EEBus, error) {
 	}
 
 	c := &EEBus{
-		log:     log,
-		Ski:     ski,
+		log:     util.NewLogger("eebus"),
+		ski:     ski,
 		clients: make(map[string][]Device),
 	}
 
@@ -226,7 +216,7 @@ func (c *EEBus) RegisterDevice(ski, ip string, device Device) error {
 	ski = shiputil.NormalizeSKI(ski)
 	c.log.TRACE.Printf("registering ski: %s", ski)
 
-	if ski == c.Ski {
+	if ski == c.ski {
 		return errors.New("device ski can not be identical to host ski")
 	}
 

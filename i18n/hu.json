@@ -209,6 +209,7 @@
       "dragList": "Átrendezhető lista",
       "experimental": "Kísérleti",
       "forceSave": "Mentés mindenképpen",
+      "fromYamlHint": "Megjegyzés: Az evcc.yaml fájlban konfigurálható. A szerkesztés engedélyezéséhez távolítsa el a bejegyzést a fájlból.",
       "hideAdvancedSettings": "Speciális beállítások elrejtése",
       "invalidFileSelected": "Érvénytelen fájl kiválasztva",
       "noFileSelected": "Nincs fájl kiválasztva.",
@@ -247,8 +248,7 @@
       "downloadCsv": "CSV letöltése",
       "eventsRecorded": "{count} rácskorlátozási esemény rögzítve.",
       "lastEvent": "Legutóbbi {timeAgo}.",
-      "title": "Külső határ",
-      "yamlConfigured": "Megjegyzés: Az evcc.yaml fájlban konfigurálható. A szerkesztés engedélyezéséhez távolítsa el a bejegyzést a fájlból."
+      "title": "Külső határ"
     },
     "icon": {
       "change": "változtatás",
@@ -390,8 +390,7 @@
       "unconfigured": "nincs konfigurálva",
       "vehicles": "Járműveim",
       "welcomeBannerText": "Kezdje azzal, hogy létrehoz legalább egy **töltőt**, **fűtőt**, **hálózatot**, **napelemet**, **akkumulátort** vagy **kiegészítő mérőt**. Ha csak tesztelni szeretne, válasszon egy **demo eszközt**.",
-      "welcomeBannerTitle": "Konfiguráljuk a rendszerét!",
-      "yaml": "Az evcc.yaml fájlban szereplő eszközök nem szerkeszthetők."
+      "welcomeBannerTitle": "Konfiguráljuk a rendszerét!"
     },
     "messaging": {
       "description": "Értesítési üzenetek beállítása a töltési folyamatokról.",
@@ -1117,7 +1116,6 @@
   "passwordModal": {
     "description": "Állítson be egy jelszót a konfigurációs beállítások védelmére. A főképernyő használata továbbra is lehetséges bejelentkezés nélkül.",
     "empty": "A jelszó nem lehet üres",
-    "error": "Hiba: ",
     "labelCurrent": "Jelenlegi jelszó",
     "labelNew": "Új jelszó",
     "labelRepeat": "Jelszó megismétlése",

@@ -209,6 +209,7 @@
       "dragList": "Sorteerbare lijst",
       "experimental": "Experimenteel",
       "forceSave": "Toch opslaan",
+      "fromYamlHint": "Opmerking: Geconfigureerd via evcc.yaml. Verwijder de betreffende regels uit het bestand om hier bewerkingen mogelijk te maken.",
       "hideAdvancedSettings": "Verberg geavanceerde instellingen",
       "invalidFileSelected": "Ongeldig bestand geselecteerd",
       "noFileSelected": "Geen bestand geselecteerd.",
@@ -247,8 +248,7 @@
       "downloadCsv": "Download CSV",
       "eventsRecorded": "{count} gebeurtenissen met rasterbeperkingen geregistreerd.",
       "lastEvent": "Meest recent {timeAgo}.",
-      "title": "Externe limiet",
-      "yamlConfigured": "Opmerking: Geconfigureerd via evcc.yaml. Verwijder de betreffende regels uit het bestand om hier bewerkingen mogelijk te maken."
+      "title": "Externe limiet"
     },
     "icon": {
       "change": "wijzig",
@@ -390,8 +390,7 @@
       "unconfigured": "Niet geconfigureerd",
       "vehicles": "Mijn voertuigen",
       "welcomeBannerText": "Begin met het aanmaken van minstens één **oplader**, **verwarmer**, **netstroom**, **zonnepanelen**, **thuisbatterij** of **extra meter**. Als je gewoon wilt testen, kies dan een **demo-apparaat**.",
-      "welcomeBannerTitle": "Start met het configureren van uw systeem!",
-      "yaml": "Apparaten geconfigureerd in evcc.yaml kunnen hier niet worden bewerkt."
+      "welcomeBannerTitle": "Start met het configureren van uw systeem!"
     },
     "messaging": {
       "description": "Ontvang berichten over je oplaadsessies.",
@@ -1118,7 +1117,6 @@
   "passwordModal": {
     "description": "Stel een wachtwoord in voor het afschermen van de instellingen. Het hoofdscherm blijft beschikbaar zonder wachtwoord.",
     "empty": "Wachtwoord mag niet leeg zijn",
-    "error": "Fout: ",
     "labelCurrent": "Huidig wachtwoord",
     "labelNew": "Nieuw wachtwoord",
     "labelRepeat": "Wachtwoord herhalen",

@@ -209,6 +209,7 @@
       "dragList": "Lista reordenable",
       "experimental": "Experimental",
       "forceSave": "Guardar de todos modos",
+      "fromYamlHint": "Nota: Configurado a través de evcc.yaml. Elimina la entrada del archivo para poder editar aquí.",
       "hideAdvancedSettings": "Ocultar configuración avanzada",
       "invalidFileSelected": "Se ha seleccionado un archivo no válido",
       "noFileSelected": "No hay ningún archivo seleccionado.",
@@ -247,8 +248,7 @@
       "downloadCsv": "Descargar CSV",
       "eventsRecorded": "Se registraron {count} eventos de limitación de la red.",
       "lastEvent": "Más reciente {timeAgo}.",
-      "title": "Límite externo",
-      "yamlConfigured": "Nota: Configurado a través de evcc.yaml. Elimina la entrada del archivo para poder editar aquí."
+      "title": "Límite externo"
     },
     "icon": {
       "change": "cambio",
@@ -390,8 +390,7 @@
       "unconfigured": "no configurado",
       "vehicles": "Mis vehículos",
       "welcomeBannerText": "Empiece por crear al menos un **cargador**, **calentador**, **red**, **solar**, **batería** o **contador adicional**. Si solo desea realizar una prueba, elija un **dispositivo de demostración**.",
-      "welcomeBannerTitle": "¡Configuremos su sistema!",
-      "yaml": "Los dispositivos de evcc.yaml no se pueden editar."
+      "welcomeBannerTitle": "¡Configuremos su sistema!"
     },
     "messaging": {
       "description": "Recibe mensajes sobre tus sesiones de carga.",
@@ -1112,7 +1111,6 @@
   "passwordModal": {
     "description": "Establezca una contraseña para proteger los ajustes de configuración. Se puede seguir utilizando la pantalla principal sin necesidad de iniciar sesión.",
     "empty": "La contraseña no debe estar vacía",
-    "error": "Error: ",
     "labelCurrent": "Contraseña actual",
     "labelNew": "Nueva contraseña",
     "labelRepeat": "Repita la contraseña",

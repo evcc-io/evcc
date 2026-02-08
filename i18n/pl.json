@@ -209,6 +209,7 @@
       "dragList": "Lista do ponownego zamówienia",
       "experimental": "Eksperymentalny",
       "forceSave": "Zapisz mimo to",
+      "fromYamlHint": "Uwaga: Konfiguracja odbywa się za pomocą pliku evcc.yaml. Aby umożliwić edycję w tym miejscu, usuń wpis z pliku.",
       "hideAdvancedSettings": "Ukryj ustawienia zaawansowane",
       "invalidFileSelected": "Wybrano nieprawidłowy plik",
       "noFileSelected": "Nie wybrano pliku.",
@@ -247,8 +248,7 @@
       "downloadCsv": "Pobierz CSV",
       "eventsRecorded": "Zarejestrowano {count} zdarzeń związanych z ograniczeniami sieci.",
       "lastEvent": "Najnowsze {timeAgo}.",
-      "title": "Limit zewnętrzny",
-      "yamlConfigured": "Uwaga: Konfiguracja odbywa się za pomocą pliku evcc.yaml. Aby umożliwić edycję w tym miejscu, usuń wpis z pliku."
+      "title": "Limit zewnętrzny"
     },
     "icon": {
       "change": "zmień",
@@ -390,8 +390,7 @@
       "unconfigured": "nie skonfigurowane",
       "vehicles": "Moje pojazdy",
       "welcomeBannerText": "Zacznij od utworzenia co najmniej jednej **ładowarki**, **grzejnika**, **sieci**, **panelu słonecznego**, **baterii** lub **dodatkowego licznika**. Jeśli chcesz tylko przetestować, wybierz **urządzenie demonstracyjne**.",
-      "welcomeBannerTitle": "Skonfigurujmy Twój system!",
-      "yaml": "Urządzenia z pliku evcc.yaml nie mogą być edytowane."
+      "welcomeBannerTitle": "Skonfigurujmy Twój system!"
     },
     "messaging": {
       "description": "Otrzymuj wiadomości o sesjach ładowania.",
@@ -1110,7 +1109,6 @@
   "passwordModal": {
     "description": "Ustaw hasło, aby chronić ustawienia konfiguracji. Korzystanie z ekranu głównego jest nadal możliwe bez logowania.",
     "empty": "Hasło nie powinno być puste",
-    "error": "Błąd: ",
     "labelCurrent": "Aktualne hasło",
     "labelNew": "Nowe hasło",
     "labelRepeat": "Powtórz hasło",

@@ -45,12 +45,77 @@ render: |
       2: 1
       3: 3
     set:
-      source: modbus
-      {{- include "modbus" . | indent 4 }}
-      register:
-        address: 6008
-        type: writeholding
-        encoding: int16
+      source: switch
+      switch:
+        - case: 0
+          set:
+            source: sequence
+            set:
+  {{- if eq .powercontrol "true" }}
+              - source: const
+                value: 1
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 2741
+                    type: writeholding
+                    encoding: int16
+              - source: sleep
+                duration: 10000ms
+  {{- end }}
+              - source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 6008
+                  type: writeholding
+                  encoding: int16  
+        - case: 1
+          set:
+            source: sequence
+            set:
+  {{- if eq .powercontrol "true" }}
+              - source: const
+                value: 0
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 2741
+                    type: writeholding
+                    encoding: int16
+              - source: sleep
+                duration: 10000ms
+  {{- end }}
+              - source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 6008
+                  type: writeholding
+                  encoding: int16         
+        - case: 3
+          set:
+            source: sequence
+            set:
+  {{- if eq .powercontrol "true" }}
+              - source: const
+                value: 1
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 2741
+                    type: writeholding
+                    encoding: int16
+              - source: sleep
+                duration: 10000ms
+  {{- end }}
+              - source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 6008
+                  type: writeholding
+                  encoding: int16  
   getmode: # operation mode (1: reduced, 2: normal, 3 boost)
     source: map
     values:
@@ -91,33 +156,11 @@ render: |
     scale: 0.1
   {{- if eq .powercontrol "true" }}
   setmaxpower:
-    source: switch
-    default: 
-      source: sequence
-      set:
-        - source: const
-          value: 1
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 2741
-              type: holding
-              encoding: int16
-        - source: modbus
-          {{- include "modbus" . | indent 8 }}
-          register:
-            address: 6007
-            type: holding
-            encoding: int16
-          scale: 0.01
-    switch:
-      - case: 0 # disable limitation
-        set:
-          source: modbus
-          {{- include "modbus" . | indent 8 }}
-          register:
-            address: 2741
-            type: holding
-            encoding: int16
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 6007
+      type: writeholding
+      encoding: int16
+    scale: 0.01
   {{- end }}

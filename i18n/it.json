@@ -209,6 +209,7 @@
       "dragList": "Elenco riordinabile",
       "experimental": "Sperimentale",
       "forceSave": "Salva comunque",
+      "fromYamlHint": "Nota: configurato tramite evcc.yaml. Rimuovere la voce dal file per abilitare la modifica qui.",
       "hideAdvancedSettings": "Nascondi impostazioni avanzate",
       "invalidFileSelected": "File non valido selezionato",
       "noFileSelected": "Nessun file selezionato.",
@@ -247,8 +248,7 @@
       "downloadCsv": "Scarica CSV",
       "eventsRecorded": "Registrati {count} eventi di limitazione della griglia.",
       "lastEvent": "Più recente {timeAgo}.",
-      "title": "HEMSLimite esterno",
-      "yamlConfigured": "Nota: configurato tramite evcc.yaml. Rimuovere la voce dal file per abilitare la modifica qui."
+      "title": "HEMSLimite esterno"
     },
     "icon": {
       "change": "cambiamento",
@@ -390,8 +390,7 @@
       "unconfigured": "non configurato",
       "vehicles": "I miei veicoli",
       "welcomeBannerText": "Inizia creando almeno un **caricabatterie**, un **riscaldatore**, una **rete**, un **impianto solare**, una **batteria** o un **contatore aggiuntivo**. Se desideri solo effettuare un test, scegli un **dispositivo demo**.",
-      "welcomeBannerTitle": "Configuriamo il tuo sistema!",
-      "yaml": "I dispositivi di evcc.yaml non sono modificabili."
+      "welcomeBannerTitle": "Configuriamo il tuo sistema!"
     },
     "messaging": {
       "description": "Ricevi messaggi sulle sessioni di ricarica.",
@@ -1112,7 +1111,6 @@
   "passwordModal": {
     "description": "Imposta una password per proteggere le impostazioni di configurazione. È comunque possibile utilizzare la schermata principale senza effettuare il login.",
     "empty": "La password non deve essere vuota",
-    "error": "Errore: ",
     "labelCurrent": "Password attuale",
     "labelNew": "Nuova password",
     "labelRepeat": "Ripeti la password",

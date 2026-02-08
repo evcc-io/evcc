@@ -1,4 +1,4 @@
-import type { StaticPlan, RepeatingPlan } from "../components/ChargingPlans/types";
+import type { StaticPlan, RepeatingPlan, PlanStrategy } from "../components/ChargingPlans/types";
 import type { ForecastSlot, SolarDetails } from "../components/Forecast/types";
 
 // react-native-webview
@@ -60,6 +60,8 @@ export interface FatalError {
 
 export interface State {
   offline: boolean;
+  telemetry?: boolean;
+  experimental?: boolean;
   setupRequired?: boolean;
   startupCompleted?: boolean;
   loadpoints: Loadpoint[];
@@ -71,7 +73,7 @@ export interface State {
   version?: string;
   system?: string;
   timezone?: string;
-  battery?: BatteryMeter[];
+  battery?: Battery;
   pv?: Meter[];
   aux?: Meter[];
   ext?: Meter[];
@@ -84,7 +86,7 @@ export interface State {
   hems?: Hems;
   shm?: ShmConfig;
   sponsor?: Sponsor;
-  eebus?: any;
+  eebus?: Eebus;
   modbusproxy?: ModbusProxy[];
   messaging?: any;
   interval?: number;
@@ -191,7 +193,7 @@ export interface ConfigLoadpoint {
   smartCostLimit: number | null;
   planEnergy?: number;
   planTime?: string;
-  planPrecondition?: number;
+  planStrategy?: PlanStrategy;
   limitEnergy?: number;
   limitSoc?: number;
   circuit?: string;
@@ -246,8 +248,7 @@ export interface Loadpoint {
   effectivePlanId: number;
   effectivePlanSoc: number;
   effectivePlanTime: string | null;
-  effectivePlanPrecondition: number;
-  effectivePlanContinuous: boolean;
+  effectivePlanStrategy: PlanStrategy;
   effectivePriority: number;
   enableDelay: number;
   enableThreshold: number;
@@ -265,8 +266,7 @@ export interface Loadpoint {
   planActive: boolean;
   planEnergy: number;
   planOverrun: number;
-  planPrecondition: number;
-  planContinuous: boolean;
+  planStrategy: PlanStrategy;
   planProjectedEnd: string | null;
   planProjectedStart: string | null;
   planTime: string | null;
@@ -440,6 +440,29 @@ export enum MODBUS_PROTOCOL {
   RTU = "rtu",
 }
 
+export type Certificate = {
+  public: string;
+  private: string;
+};
+
+export type Eebus = {
+  config: EebusConfig;
+  status: EebusStatus;
+  fromYaml?: boolean;
+};
+
+export type EebusConfig = {
+  uri: string;
+  port: number;
+  shipid: string;
+  interfaces?: string[];
+  certificate?: Certificate;
+};
+
+export type EebusStatus = {
+  ski: string;
+};
+
 export type ModbusProxy = {
   port: number;
   readonly: MODBUS_PROXY_READONLY;
@@ -469,6 +492,13 @@ export interface Meter {
   energy?: number;
 }
 
+export interface Battery {
+  power: number;
+  capacity: number;
+  soc: number;
+  devices: BatteryMeter[];
+}
+
 export interface BatteryMeter extends Meter {
   soc: number;
   controllable: boolean;
@@ -481,8 +511,7 @@ export interface Vehicle {
   limitSoc?: number;
   plan?: StaticPlan;
   repeatingPlans: RepeatingPlan[] | null;
-  planPrecondition: number;
-  planContinuous: boolean;
+  planStrategy: PlanStrategy;
   title: string;
   features?: string[];
   capacity?: number;

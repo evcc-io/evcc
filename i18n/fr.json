@@ -209,6 +209,7 @@
       "dragList": "Liste à ordonner",
       "experimental": "Expérimental",
       "forceSave": "Enregistrer quand même",
+      "fromYamlHint": "Remarque : configuré via evcc.yaml. Supprimez l'entrée du fichier pour pouvoir effectuer des modifications ici.",
       "hideAdvancedSettings": "Masquer les paramètres avancés",
       "invalidFileSelected": "Fichier sélectionné non valide",
       "noFileSelected": "Aucun fichier sélectionné.",
@@ -247,8 +248,7 @@
       "downloadCsv": "Télécharger CSV",
       "eventsRecorded": "Enregistrement de {count} événements liés à la limitation de la grille.",
       "lastEvent": "Le plus récent {timeAgo}.",
-      "title": "Limite externe",
-      "yamlConfigured": "Remarque : configuré via evcc.yaml. Supprimez l'entrée du fichier pour pouvoir effectuer des modifications ici."
+      "title": "Limite externe"
     },
     "icon": {
       "change": "changer",
@@ -390,8 +390,7 @@
       "unconfigured": "non configuré",
       "vehicles": "Mes véhicules",
       "welcomeBannerText": "Commencez par créer au moins un **chargeur**, un **chauffage**, un **réseau**, un **système solaire**, une **batterie** ou un **compteur supplémentaire**. Si vous souhaitez simplement tester, choisissez un **appareil de démonstration**.",
-      "welcomeBannerTitle": "Configurons votre système !",
-      "yaml": "Un appareil provenant du evcc.yaml n’est pas modifiable."
+      "welcomeBannerTitle": "Configurons votre système !"
     },
     "messaging": {
       "description": "Recevoir des messages à propos de vos sessions de charge.",
@@ -525,8 +524,8 @@
         "standby": "Standby"
       },
       "schema": {
-        "http": "HTTP (non crypté)",
-        "https": "HTTP (crypté)"
+        "http": "HTTP (non chiffré)",
+        "https": "HTTPS (chiffré)"
       },
       "status": {
         "A": "A (non connecté)",
@@ -1118,7 +1117,6 @@
   "passwordModal": {
     "description": "Configurez un mot de passe pour protéger la configuration. L’utilisation de l’écran principal et toujours possible sans authentification.",
     "empty": "Le mot de passe ne doit pas être vide",
-    "error": "Erreur : ",
     "labelCurrent": "Mot de passe actuel",
     "labelNew": "Nouveau mot de passe",
     "labelRepeat": "Répétez le mot de passe",

@@ -13,6 +13,7 @@ requirements:
 group: price
 countries: ["CH"]
 params:
+  - preset: tariff-base
   - name: tariff_name
     description:
       generic: Desired tariff (400D for dynamic).
@@ -21,6 +22,8 @@ params:
     choice: ["400D", "400F", "400ST", "400WP", "400L", "400LS", "16L", "16LS"]
     required: true
     default: 400D
+  - name: tax
+    default: 0.081
   - name: interval
     default: 1h
     advanced: true

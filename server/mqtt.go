@@ -62,7 +62,8 @@ func (m *MQTT) encode(v any) string {
 	case string:
 		return val
 	case float64:
-		return fmt.Sprintf("%.5g", val)
+		// trim trailing zeros
+		return strings.TrimRight(strings.TrimRight(fmt.Sprintf("%.3f", val), "0"), ".")
 	case time.Time:
 		if val.IsZero() {
 			return ""
@@ -76,6 +77,10 @@ func (m *MQTT) encode(v any) string {
 	default:
 		return fmt.Sprintf("%v", val)
 	}
+}
+
+func mqttTagAttribute(attr string, f reflect.StructField) bool {
+	return tagAttribute("mqtt", attr, f)
 }
 
 func (m *MQTT) publishComplex(topic string, retained bool, payload any) {
@@ -128,9 +133,14 @@ func (m *MQTT) publishComplex(topic string, retained bool, payload any) {
 		// loop struct
 		for i := range typ.NumField() {
 			if f := typ.Field(i); f.IsExported() {
-				topic := fmt.Sprintf("%s/%s", topic, strings.ToLower(f.Name[:1])+f.Name[1:])
+				topic := topic
+				if !mqttTagAttribute("squash", f) {
+					topic = fmt.Sprintf("%s/%s", topic, strings.ToLower(f.Name[:1])+f.Name[1:])
+				} else {
+					println(1)
+				}
 
-				if val.Field(i).IsZero() && omitEmpty(f) {
+				if val.Field(i).IsZero() && jsonOmitEmpty(f) {
 					m.publishSingleValue(topic, retained, nil)
 				} else {
 					m.publishComplex(topic, retained, val.Field(i).Interface())

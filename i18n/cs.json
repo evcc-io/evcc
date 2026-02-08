@@ -209,6 +209,7 @@
       "dragList": "Seznam umožňující úpravy pořadí",
       "experimental": "Experimentální nastavení",
       "forceSave": "Vynutit uložení",
+      "fromYamlHint": "Poznámka: Konfigurace se provádí prostřednictvím souboru evcc.yaml. Chcete-li zde povolit úpravy, odstraňte záznam ze souboru.",
       "hideAdvancedSettings": "Skrýt pokročilá nastavení",
       "invalidFileSelected": "Zvolen neplatný soubor",
       "noFileSelected": "Nebyl zvolen žádný soubor.",
@@ -247,8 +248,7 @@
       "downloadCsv": "Stáhnout CSV",
       "eventsRecorded": "Zaznamenáno {count} událostí omezení mřížky.",
       "lastEvent": "Nejnovější {timeAgo}.",
-      "title": "Vnější limit",
-      "yamlConfigured": "Poznámka: Konfigurace se provádí prostřednictvím souboru evcc.yaml. Chcete-li zde povolit úpravy, odstraňte záznam ze souboru."
+      "title": "Vnější limit"
     },
     "icon": {
       "change": "Změnit",
@@ -390,8 +390,7 @@
       "unconfigured": "není konfigurováno",
       "vehicles": "Má vozidla",
       "welcomeBannerText": "Začněte vytvořením alespoň jednoho **nabíječe**, **ohřívače**, **sítě**, **solárního panelu**, **baterie** nebo **dalšího měřiče**. Pokud chcete pouze otestovat, vyberte **demo zařízení**.",
-      "welcomeBannerTitle": "Pojďme nakonfigurovat váš systém!",
-      "yaml": "Zařízení z evcc.yaml nelze upravovat."
+      "welcomeBannerTitle": "Pojďme nakonfigurovat váš systém!"
     },
     "messaging": {
       "description": "Dostávejte notifikace o průběhu nabíjení.",
@@ -1117,7 +1116,6 @@
   "passwordModal": {
     "description": "Nastavte heslo pro zabezpečení konfiguračního menu. Obrazovka přehledu bude stále dostupná i bez ověření heslem.",
     "empty": "Heslo nesmí být prázdné",
-    "error": "Chyba: ",
     "labelCurrent": "Současné heslo",
     "labelNew": "Nové heslo",
     "labelRepeat": "Opakujte heslo",

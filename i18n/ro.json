@@ -209,6 +209,7 @@
       "dragList": "Listă reordonabilă",
       "experimental": "Experimental",
       "forceSave": "Salvați oricum",
+      "fromYamlHint": "Notă: Configurat prin evcc.yaml. Ștergeți intrarea din fișier pentru a activa editarea aici.",
       "hideAdvancedSettings": "Ascunde setările avansate",
       "invalidFileSelected": "Fișier invalid selectat",
       "noFileSelected": "Nu a fost selectat niciun fișier.",
@@ -247,8 +248,7 @@
       "downloadCsv": "Descărcați CSV",
       "eventsRecorded": "Au fost înregistrate {count} evenimente de limitare a grilei.",
       "lastEvent": "Cel mai recent {timeAgo}.",
-      "title": "Limită externă",
-      "yamlConfigured": "Notă: Configurat prin evcc.yaml. Ștergeți intrarea din fișier pentru a activa editarea aici."
+      "title": "Limită externă"
     },
     "icon": {
       "change": "schimbare",
@@ -390,8 +390,7 @@
       "unconfigured": "neconfigurat",
       "vehicles": "Masinile mele",
       "welcomeBannerText": "Începeți prin a crea cel puțin un **încărcător**, **încălzitor**, **rețea**, **sistem solar**, **baterie** sau **contor suplimentar**. Dacă doriți doar să testați, alegeți un **dispozitiv demo**.",
-      "welcomeBannerTitle": "Să configurăm sistemul tău!",
-      "yaml": "Dispozitivele din evcc.yaml nu pot fi editate."
+      "welcomeBannerTitle": "Să configurăm sistemul tău!"
     },
     "messaging": {
       "description": "Primiți mesaje despre sesiunile dvs. de încărcare.",
@@ -1109,7 +1108,6 @@
   "passwordModal": {
     "description": "Setați o parolă pentru a proteja setările de configurare. Utilizarea ecranului principal este în continuare posibilă fără autentificare.",
     "empty": "Parola nu trebuie să fie goală",
-    "error": "Eroare: ",
     "labelCurrent": "Parola actuală",
     "labelNew": "Parolă nouă",
     "labelRepeat": "Repetați parola",

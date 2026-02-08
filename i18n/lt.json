@@ -209,6 +209,7 @@
       "dragList": "Galima sukeisti vietomis",
       "experimental": "Eksperimentinis",
       "forceSave": "Vistiek įrašyti",
+      "fromYamlHint": "Pastaba: Sukonfigūruota naudojant evcc.yaml. Pašalinkite įrašą iš failo, kad būtų galima redaguoti čia.",
       "hideAdvancedSettings": "Slėpti išplėstinius nustatymus",
       "invalidFileSelected": "Pasirinktas netinkamas failas",
       "noFileSelected": "Nepasirinktas failas.",
@@ -247,8 +248,7 @@
       "downloadCsv": "Atsisiųsti CSV failą",
       "eventsRecorded": "Užfiksuota {count} tinklo galios apribojimo įvykių.",
       "lastEvent": "Naujausias {timeAgo}.",
-      "title": "Išorinė riba",
-      "yamlConfigured": "Pastaba: Sukonfigūruota naudojant evcc.yaml. Pašalinkite įrašą iš failo, kad būtų galima redaguoti čia."
+      "title": "Išorinė riba"
     },
     "icon": {
       "change": "pakeisti",
@@ -390,8 +390,7 @@
       "unconfigured": "nesukonfigūruota",
       "vehicles": "Mano automobiliai",
       "welcomeBannerText": "Pradžiai sukonfigūruokite bent vieną **įkroviklį**, **šildytuvą**, **tinklo skaitiklį**, **saulės jėgainę** ar **papildomą skaitiklį**. Jei norite tik pasibandyti, pasirinkite **demonstracinį įrenginį**.",
-      "welcomeBannerTitle": "Sukonfigūruokime jūsų sistemą!",
-      "yaml": "Įtaisas iš evcc.yaml , čia konfigūruoti neina."
+      "welcomeBannerTitle": "Sukonfigūruokime jūsų sistemą!"
     },
     "messaging": {
       "description": "Gaukite pranešimus apie įkrovimo sesijas.",
@@ -1119,7 +1118,6 @@
   "passwordModal": {
     "description": "Nustatykite slaptažodį konfigūracijos apsaugai. Pagrindiniu ekranu galima naudotis ir neprisijungus.",
     "empty": "Slaptažodis negali būti tuščias",
-    "error": "Klaida: ",
     "labelCurrent": "Dabartinis slaptažodis",
     "labelNew": "Naujas slaptažodis",
     "labelRepeat": "Pakartoti slaptažodį",

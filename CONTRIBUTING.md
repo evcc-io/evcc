@@ -150,6 +150,25 @@ evcc has a large German-speaking user base, but we want to be open and accessibl
 
 Thank you all for helping make evcc accessible! 🌍
 
+## AI-Generated Content
+
+AI tools can be valuable aids for writing code, documentation, and creating issue reports.
+We welcome their use as part of the development process.
+
+When submitting AI-assisted contributions, keep these principles in mind:
+
+- **Understanding**: Fully understand all changes and be prepared to answer questions about them.
+- **Human-written intent**: Write issue descriptions, PR explanations, and commit messages in your own words. Keep them clear and concise, not lengthy generated text.
+- **Value**: Ensure contributions justify the review effort required from maintainers.
+
+Contributors remain responsible for their work regardless of which tools were used to create it.
+
+Contributions that appear to violate these principles will be closed with the following comment:
+
+```
+This contribution does not appear to meet our [AI contribution guidelines](https://github.com/evcc-io/evcc/blob/master/CONTRIBUTING.md#ai-generated-content).
+```
+
 ## Adding or modifying translations
 
 evcc already includes many translations for the UI. We're using [Weblate](https://hosted.weblate.org/projects/evcc/evcc/) to maintain translations. Feel free to add more languages or verify and edit existing translations. Weblate will automatically push all modifications to the evcc repository where they get reviewed and merged.

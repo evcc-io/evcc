@@ -209,6 +209,7 @@
       "dragList": "Sortéirbar Lëscht",
       "experimental": "Experimentell",
       "forceSave": "Trotzdem späicheren",
+      "fromYamlHint": "Bemierkung: Konfiguréiert iwwer evcc.yaml. Läscht d'Astellungen aus der Datei fir d'Ännerung hei z'erméiglechen.",
       "hideAdvancedSettings": "Fortgeschratten Astellunge verstoppen",
       "invalidFileSelected": "Ongülteg Datei ausgewielt",
       "noFileSelected": "Keng Datei ausgewielt.",
@@ -247,8 +248,7 @@
       "downloadCsv": "CSV eroflueden",
       "eventsRecorded": "{count} gespäichert Limitatiounen vum Netz.",
       "lastEvent": "Méi rezent {timeAgo}.",
-      "title": "Äusserlech Grenz",
-      "yamlConfigured": "Bemierkung: Konfiguréiert iwwer evcc.yaml. Läscht d'Astellungen aus der Datei fir d'Ännerung hei z'erméiglechen."
+      "title": "Äusserlech Grenz"
     },
     "icon": {
       "change": "änneren",
@@ -390,8 +390,7 @@
       "unconfigured": "net konfiguréiert",
       "vehicles": "Meng Gefierer",
       "welcomeBannerText": "Fänkt un mat der Erstelle vun op d'mannst engem **Ladegerät**, **Heizer**, **Netz**, **Solarpanel**, **Batterie** oder **zousätzlechen Zähler**. Wann Dir just testen wëllt, wielt e **Demonstratiounsapparat**.",
-      "welcomeBannerTitle": "Loosst eis de System konfiguréieren!",
-      "yaml": "Geräter aus der evcc.yaml Datei si net editiérbar."
+      "welcomeBannerTitle": "Loosst eis de System konfiguréieren!"
     },
     "messaging": {
       "description": "Notifikatiounen iwwer Är Opluedsessioune kréien.",
@@ -1117,7 +1116,6 @@
   "passwordModal": {
     "description": "Definéiert e Passwuert fir d'Konfiguratiounsastellungen ze schützen. Et kann een den Haaptbildschierm och ouni Login nach ëmmer benotzen.",
     "empty": "Passwuert duerf net eidel sinn",
-    "error": "Feeler: ",
     "labelCurrent": "Aktuellt Passwuert",
     "labelNew": "Neit Passwuert",
     "labelRepeat": "Neit Passwuert widderhuelen",

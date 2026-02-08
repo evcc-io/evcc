@@ -209,6 +209,7 @@
       "dragList": "Omordningsbar liste",
       "experimental": "Eksperimentell",
       "forceSave": "Lagre likevel",
+      "fromYamlHint": "Merk: Konfigurert via evcc.yaml. Fjern oppføringen fra filen for å aktivere redigering her.",
       "hideAdvancedSettings": "Skjul avanserte innstillinger",
       "invalidFileSelected": "Ugyldig fil valgt",
       "noFileSelected": "Ingen fil valgt.",
@@ -247,8 +248,7 @@
       "downloadCsv": "Last ned CSV",
       "eventsRecorded": "Registrerte {count} hendelser med rutenettbegrensning.",
       "lastEvent": "Siste {timeAgo}.",
-      "title": "Ekstern grense",
-      "yamlConfigured": "Merk: Konfigurert via evcc.yaml. Fjern oppføringen fra filen for å aktivere redigering her."
+      "title": "Ekstern grense"
     },
     "icon": {
       "change": "endring",
@@ -390,8 +390,7 @@
       "unconfigured": "ikke konfigurert",
       "vehicles": "Mine kjøretøy",
       "welcomeBannerText": "Begynn med å opprette minst én **lader**, **varmeapparat**, **nett**, **solcelle**, **batteri** eller **ekstra måler**. Hvis du bare vil teste, velger du en **demoenhet**.",
-      "welcomeBannerTitle": "La oss konfigurere systemet ditt!",
-      "yaml": "Enheter fra evcc.yaml kan ikke redigeres."
+      "welcomeBannerTitle": "La oss konfigurere systemet ditt!"
     },
     "messaging": {
       "description": "Motta meldinger om ladingsøktene dine.",
@@ -1109,7 +1108,6 @@
   "passwordModal": {
     "description": "Angi et passord for å beskytte konfigurasjonsinnstillingene. Det er fortsatt mulig å bruke hovedskjermen uten å logge inn.",
     "empty": "Passordet må ikke være tomt",
-    "error": "Feil: ",
     "labelCurrent": "Gjeldende passord",
     "labelNew": "Nytt passord",
     "labelRepeat": "Gjenta passord",

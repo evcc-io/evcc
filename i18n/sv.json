@@ -209,6 +209,7 @@
       "dragList": "Sorterbar lista",
       "experimental": "Experimentella funktioner",
       "forceSave": "Spara ändå",
+      "fromYamlHint": "Obs: Konfigurerad via evcc.yaml. Ta bort posten från filen för att aktivera redigering här.",
       "hideAdvancedSettings": "Dölj avancerade inställningar",
       "invalidFileSelected": "Ogiltig fil vald",
       "noFileSelected": "Ingen fil vald.",
@@ -243,12 +244,11 @@
         "limitpower": "Begränsning (kW)",
         "type": "Typ"
       },
-      "description": "Effektbegränsning genom externa system (t.ex. §14a EnWG, §9 EEG-gränssnitt eller överordnat energihanteringssystem). Fungerar tillsammans med belastningshanteringsfunktionen.",
+      "description": "Effektbegränsning genom externa system (t.ex. §14a EnWG, §9 (EEG-gränssnitt eller överordnat energihanteringssystem). Fungerar tillsammans med lasthanteringsfunktionen.",
       "downloadCsv": "Hämta CSV",
       "eventsRecorded": "Registrerade {count} händelser med nätbegränsning.",
       "lastEvent": "Senaste {timeAgo}.",
-      "title": "Extern gräns",
-      "yamlConfigured": "Obs: Konfigurerad via evcc.yaml. Ta bort posten från filen för att aktivera redigering här."
+      "title": "Extern gräns"
     },
     "icon": {
       "change": "ändra",
@@ -390,8 +390,7 @@
       "unconfigured": "ej konfigurerad",
       "vehicles": "Mina fordon",
       "welcomeBannerText": "Börja med att skapa minst en **laddare**, **värmare**, **nät**, **solcell**, **batteri** eller **extra mätare**. Om du bara vill testa, välj en **demoenhet**.",
-      "welcomeBannerTitle": "Låt oss konfigurera ditt system!",
-      "yaml": "Konfigurera i evcc.yaml. Kan inte ändras i UI."
+      "welcomeBannerTitle": "Låt oss konfigurera ditt system!"
     },
     "messaging": {
       "description": "Få notiser om dina laddningar.",
@@ -1119,7 +1118,6 @@
   "passwordModal": {
     "description": "Använd lösenord för att skydda inställningarna. Huvudskärmen kan användas utan att logga in.",
     "empty": "Lösenordet får inte vara tomt",
-    "error": "Fel: ",
     "labelCurrent": "Nuvarande lösenord",
     "labelNew": "Nytt lösenord",
     "labelRepeat": "Upprepa lösenord",

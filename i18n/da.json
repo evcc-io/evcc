@@ -209,6 +209,7 @@
       "dragList": "Rækkefølgen kan ændres",
       "experimental": "Eksperimentel",
       "forceSave": "Gem alligevel",
+      "fromYamlHint": "Bemærk: Er konfigureret via evcc.yaml. Fjern indtastningen fra filen for at aktivere redigering her.",
       "hideAdvancedSettings": "Skjul avancerede indstillinger",
       "invalidFileSelected": "Ugyldig fil er valgt",
       "noFileSelected": "Ingen fil valgt.",
@@ -247,8 +248,7 @@
       "downloadCsv": "Download CSV",
       "eventsRecorded": "Registrerede {count} netbegrænsningshændelser.",
       "lastEvent": "Sidst {timeAgo}.",
-      "title": "Ekstern grænse",
-      "yamlConfigured": "Bemærk: Er konfigureret via evcc.yaml. Fjern indtastningen fra filen for at aktivere redigering her."
+      "title": "Ekstern grænse"
     },
     "icon": {
       "change": "ændre",
@@ -390,8 +390,7 @@
       "unconfigured": "ikke konfigureret",
       "vehicles": "Mine køretøjer",
       "welcomeBannerText": "Start med at oprette mindst én **lader**, **varmer**, **elnet**, **sol**, **batteri** eller **ekstra måler**. Hvis du blot vil teste, kan du vælge en **demoenhed**.",
-      "welcomeBannerTitle": "Lad os konfigurere dit system!",
-      "yaml": "Enheder fra evcc.yaml kan ikke ændres her."
+      "welcomeBannerTitle": "Lad os konfigurere dit system!"
     },
     "messaging": {
       "description": "Modtag beskeder om dine opladningssessioner.",
@@ -1119,7 +1118,6 @@
   "passwordModal": {
     "description": "Angiv adgangskode for at beskytte konfigurations indstillinger. Det er stadig mulig at benytte hovedskærmen uden at logge på.",
     "empty": "Adgangskode må ikke være tomt",
-    "error": "Fejl: ",
     "labelCurrent": "Nuværende adgangskode",
     "labelNew": "Ny adgangskode",
     "labelRepeat": "Gentag adgangskoden",
