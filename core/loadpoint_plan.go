@@ -228,7 +228,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		case requiredDuration < tariff.SlotDuration:
 			lp.log.DEBUG.Printf("plan: continuing for remaining %v", requiredDuration.Round(time.Second))
 			return true
-		case lp.clock.Until(planStart) < tariff.SlotDuration:
+		case lp.clock.Until(planStart) < tariff.SlotDuration-time.Minute:
 			lp.log.DEBUG.Printf("plan: avoid re-start within %v, continuing for remaining %v", tariff.SlotDuration, lp.clock.Until(planStart).Round(time.Second))
 			return true
 		}
