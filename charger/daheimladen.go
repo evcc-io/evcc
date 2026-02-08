@@ -354,11 +354,12 @@ func (wb *DaheimLaden) Diagnose() {
 		s, _ := utf16BEBytesAsString(b)
 		fmt.Printf("\tStation ID:\t%s\n", s)
 	}
+	if b, err := wb.conn.ReadHoldingRegisters(dlRegCardId, 16); err == nil {
+		s, _ := utf16BEBytesAsString(b)
+		fmt.Printf("\tCard ID:\t%s\n", s)
+	}
 	if b, err := wb.conn.ReadHoldingRegisters(dlRegSafeCurrent, 1); err == nil {
 		fmt.Printf("\tSafe Current:\t%.1fA\n", float64(binary.BigEndian.Uint16(b)/10))
-	}
-	if b, err := wb.conn.ReadHoldingRegisters(dlRegCardId, 16); err == nil {
-		fmt.Printf("\tCard ID:\t%s\n", utf16BytesToString(b))
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(dlRegCommTimeout, 1); err == nil {
 		fmt.Printf("\tConnection Timeout:\t%d\n", binary.BigEndian.Uint16(b))
