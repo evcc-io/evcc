@@ -41,12 +41,6 @@ export interface HemsStatus {
   maxPower: number;
 }
 
-export interface Hems {
-  status?: HemsStatus;
-  config: HemsConfig;
-  fromYaml: boolean;
-}
-
 export interface ShmConfig {
   vendorId: string;
   deviceId: string;
@@ -77,16 +71,17 @@ export interface State {
   pv?: Meter[];
   aux?: Meter[];
   ext?: Meter[];
+  tariffs?: ConfigStatus<unknown, unknown>;
   tariffGrid?: number;
   tariffFeedIn?: number;
   tariffCo2?: number;
   tariffSolar?: number;
   mqtt?: MqttConfig;
   influx?: InfluxConfig;
-  hems?: Hems;
+  hems?: ConfigStatus<HemsConfig, HemsStatus>;
   shm?: ShmConfig;
-  sponsor?: Sponsor;
-  eebus?: Eebus;
+  sponsor?: ConfigStatus<unknown, SponsorStatus>;
+  eebus?: ConfigStatus<EebusConfig, EebusStatus>;
   modbusproxy?: ModbusProxy[];
   messaging?: any;
   interval?: number;
@@ -98,6 +93,15 @@ export interface State {
   database?: string;
   ocpp?: Ocpp;
 }
+
+export interface ConfigStatus<T, S> {
+  config?: T;
+  status?: S;
+  fromYaml?: boolean;
+  yamlSource?: YamlSource;
+}
+
+export type YamlSource = "fs" | "db" | "";
 
 export interface OcppConfig {
   port: number;
@@ -320,11 +324,16 @@ export enum CURRENCY {
   CAD = "CAD",
   CHF = "CHF",
   CNY = "CNY",
+  CZK = "CZK",
   EUR = "EUR",
   GBP = "GBP",
+  HUF = "HUF",
   ILS = "ILS",
+  JPY = "JPY",
   NZD = "NZD",
+  NOK = "NOK",
   PLN = "PLN",
+  RON = "RON",
   USD = "USD",
   DKK = "DKK",
   SEK = "SEK",
@@ -393,10 +402,7 @@ export interface SponsorStatus {
   token?: string;
 }
 
-export interface Sponsor {
-  status?: SponsorStatus;
-  fromYaml: boolean;
-}
+export type Sponsor = ConfigStatus<unknown, SponsorStatus>;
 
 export type VehicleOption = {
   key?: string | null;
@@ -443,12 +449,6 @@ export enum MODBUS_PROTOCOL {
 export type Certificate = {
   public: string;
   private: string;
-};
-
-export type Eebus = {
-  config: EebusConfig;
-  status: EebusStatus;
-  fromYaml?: boolean;
 };
 
 export type EebusConfig = {
@@ -558,9 +558,10 @@ export interface SelectOption<T> {
   disabled?: boolean;
 }
 
-export type DeviceType = "charger" | "meter" | "vehicle" | "loadpoint";
+export type DeviceType = "charger" | "meter" | "vehicle" | "loadpoint" | "tariff";
 export type MeterType = "grid" | "pv" | "battery" | "charge" | "aux" | "ext";
 export type MeterTemplateUsage = "grid" | "pv" | "battery" | "charge" | "aux";
+export type TariffType = "grid" | "feedIn" | "co2" | "planner" | "solar";
 
 // see https://stackoverflow.com/a/54178819
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
@@ -666,4 +667,12 @@ export interface OptimizationDetails {
 // Error response
 export interface Error {
   message: string; // Error description
+}
+
+// Tariff zone configuration
+export interface Zone {
+  price: number | null;
+  days: string;
+  months: string;
+  hours: string;
 }

@@ -32,13 +32,14 @@
 		</div>
 		<hr v-if="result" class="divider" />
 		<div v-if="result" :class="{ 'opacity-25': isRunning }">
-			<DeviceTags :tags="result" class="success-values" />
+			<DeviceTags :tags="result" :currency="currency" class="success-values" />
 		</div>
 	</div>
 </template>
 
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
+import type { CURRENCY } from "@/types/evcc";
 import DeviceTags from "./DeviceTags.vue";
 import SponsorTokenRequired from "./DeviceModal/SponsorTokenRequired.vue";
 
@@ -53,6 +54,7 @@ export default defineComponent({
 		result: Object as PropType<Record<string, any> | null>,
 		error: String as PropType<string | null>,
 		sponsorTokenRequired: Boolean,
+		currency: String as PropType<CURRENCY>,
 	},
 	emits: ["test"],
 	data() {

@@ -14,6 +14,14 @@ import (
 	"github.com/spf13/cast"
 )
 
+// Zone defines a time-based price zone
+type Zone struct {
+	Price  float64 `mapstructure:"price"`
+	Days   string  `mapstructure:"days,omitempty"`
+	Hours  string  `mapstructure:"hours,omitempty"`
+	Months string  `mapstructure:"months,omitempty"`
+}
+
 const (
 	ParamUsage  = "usage"
 	ParamModbus = "modbus"
@@ -234,6 +242,9 @@ func (p *Param) DefaultValue(renderMode int) any {
 	// return empty list to allow iterating over in template
 	if p.Type == TypeList {
 		return []string{}
+	}
+	if p.Type == TypeZones {
+		return []any{}
 	}
 
 	if (renderMode == RenderModeDocs || renderMode == RenderModeUnitTest) && p.Default == "" {

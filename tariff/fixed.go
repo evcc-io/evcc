@@ -13,6 +13,7 @@ import (
 )
 
 type Fixed struct {
+	*embed
 	clock   clock.Clock
 	zones   fixed.Zones
 	dynamic bool
@@ -26,6 +27,7 @@ func init() {
 
 func NewFixedFromConfig(other map[string]any) (api.Tariff, error) {
 	var cc struct {
+		embed `mapstructure:",squash"`
 		Price float64
 		Zones []struct {
 			Price               float64
@@ -37,7 +39,12 @@ func NewFixedFromConfig(other map[string]any) (api.Tariff, error) {
 		return nil, err
 	}
 
+	if err := cc.init(); err != nil {
+		return nil, err
+	}
+
 	t := &Fixed{
+		embed:   &cc.embed,
 		clock:   clock.New(),
 		dynamic: len(cc.Zones) >= 1,
 	}
@@ -125,10 +132,15 @@ func (t *Fixed) Rates() (api.Rates, error) {
 				end = dayStart.Add(time.Minute * time.Duration(markers[i+1].Minutes()))
 			}
 
+			price := zone.Price
+			if t.embed != nil && (t.Charges != 0 || t.Tax != 0 || t.Formula != "") {
+				price = t.totalPrice(zone.Price, ts)
+			}
+
 			rate := api.Rate{
 				Start: ts,
 				End:   end,
-				Value: zone.Price,
+				Value: price,
 			}
 
 			res = append(res, rate)
