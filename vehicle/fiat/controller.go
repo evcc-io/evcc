@@ -76,7 +76,7 @@ func (c *Controller) ChargeEnable(enable bool) error {
 		stat.EvInfo.Schedules[0].EndTime = rounded.Format(timeFormat)
 
 		// Parse times for comparison and handle edge case: StartTime > EndTime (hour & minutes only)
-		if start, err := time.Parse(timeFormat, stat.EvInfo.Schedules[0].StartTime); err == nil && start.Hour()*60+start.Minute() > rounded.Hour()*60+rounded.Minute()) {
+		if start, err := time.Parse(timeFormat, stat.EvInfo.Schedules[0].StartTime); err == nil && start.Hour()*60+start.Minute() > rounded.Hour()*60+rounded.Minute() {
 			stat.EvInfo.Schedules[0].StartTime = fallbackStartTime
 		}
 	}
