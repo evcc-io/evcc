@@ -82,7 +82,6 @@ render: |
   temp:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    scale: 0.1
     register:
       address: 3
       type: input
@@ -91,8 +90,8 @@ render: |
   limittemp:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    scale: 0.1
     register:
       address: 5048
       type: input
       encoding: int16
+    scale: 0.1
