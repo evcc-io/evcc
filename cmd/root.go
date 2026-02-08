@@ -65,7 +65,8 @@ var rootCmd = &cobra.Command{
 	Version: util.FormattedVersion(),
 	Run:     runRoot,
 	// always allow Ctrl-C in child commands
-	PersistentPreRun: allowCtrlC,
+	PersistentPreRun:  allowCtrlC,
+	PersistentPostRun: awaitShutdown,
 }
 
 func init() {
@@ -79,16 +80,14 @@ func init() {
 
 	cobra.OnInitialize(initConfig)
 
+	withCustomTemplate(rootCmd)
+
 	// global options
 	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "Config file (default \"~/evcc.yaml\" or \"/etc/evcc.yaml\")")
 	rootCmd.PersistentFlags().StringVar(&cfgDatabase, "database", "", "Database location (default \"~/.evcc/evcc.db\")")
 	rootCmd.PersistentFlags().BoolP("help", "h", false, "Help")
-	rootCmd.PersistentFlags().Bool(flagDemoMode, false, flagDemoModeDescription)
 	rootCmd.PersistentFlags().Bool(flagHeaders, false, flagHeadersDescription)
 	rootCmd.PersistentFlags().Bool(flagIgnoreDatabase, false, flagIgnoreDatabaseDescription)
-	rootCmd.PersistentFlags().String(flagTemplate, "", flagTemplateDescription)
-	rootCmd.PersistentFlags().String(flagTemplateType, "", flagTemplateTypeDescription)
-	rootCmd.PersistentFlags().StringVar(&customCssFile, flagCustomCss, "", flagCustomCssDescription)
 
 	// config file options
 	rootCmd.PersistentFlags().StringP("log", "l", "info", "Log level (fatal, error, warn, info, debug, trace)")
@@ -104,6 +103,8 @@ func init() {
 	bind(rootCmd, "mcp")
 
 	rootCmd.Flags().Bool(flagDisableAuth, false, flagDisableAuthDescription)
+	rootCmd.Flags().Bool(flagDemoMode, false, flagDemoModeDescription)
+	rootCmd.Flags().StringVar(&customCssFile, flagCustomCss, "", flagCustomCssDescription)
 }
 
 // initConfig reads in config file and ENV variables if set
@@ -136,6 +137,11 @@ func Execute() {
 	}
 }
 
+func withCustomTemplate(cmd *cobra.Command) {
+	cmd.Flags().String(flagTemplate, "", flagTemplateDescription)
+	cmd.Flags().String(flagTemplateType, "", flagTemplateTypeDescription)
+}
+
 func allowCtrlC(cmd *cobra.Command, args []string) {
 	if cmd.Name() == rootName {
 		return
@@ -148,6 +154,15 @@ func allowCtrlC(cmd *cobra.Command, args []string) {
 		<-signalC // wait for signal
 		os.Exit(1)
 	}()
+}
+
+func awaitShutdown(cmd *cobra.Command, args []string) {
+	if cmd.Name() == rootName {
+		return
+	}
+
+	// wait for shutdown
+	<-shutdownDoneC()
 }
 
 func runRoot(cmd *cobra.Command, args []string) {

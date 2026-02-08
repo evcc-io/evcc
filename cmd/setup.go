@@ -522,8 +522,8 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) error {
 
 	// setup additional templates
 	if err == nil {
-		if cmd.PersistentFlags().Changed(flagTemplate) {
-			class, err := templates.ClassString(cmd.PersistentFlags().Lookup(flagTemplateType).Value.String())
+		if cmd.Flags().Changed(flagTemplate) {
+			class, err := templates.ClassString(cmd.Flags().Lookup(flagTemplateType).Value.String())
 			if err != nil {
 				return err
 			}
