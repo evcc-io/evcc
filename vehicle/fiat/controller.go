@@ -61,19 +61,22 @@ func (c *Controller) ChargeEnable(enable bool) error {
 		fallbackStartTime = "00:01" // Fallback time for schedules crossing midnight
 	)
 
-	currentTime := time.Now() // Call once and reuse
+	now := time.Now() // Call once and reuse
 
 	if enable {
 		// Start charging: update active schedule with current time and end time (12h later)
-		stat.EvInfo.Schedules[0].StartTime = currentTime.Format(timeFormat)
-		stat.EvInfo.Schedules[0].EndTime = currentTime.Add(12 * time.Hour).Format(timeFormat)
+		stat.EvInfo.Schedules[0].StartTime = now.Format(timeFormat)
+		stat.EvInfo.Schedules[0].EndTime = now.Add(12 * time.Hour).Format(timeFormat)
 	} else {
-		// Stop charging: update end time to current time
-		stat.EvInfo.Schedules[0].EndTime = currentTime.Format(timeFormat)
+		// Stop charging: update end time, rounded to next 5 mninutes
+		rounded := now.Truncate(5 * time.Minute)
+		if rounded.Before(now) {
+			rounded = rounded.Add(5 * time.Minute)
+		}
+		stat.EvInfo.Schedules[0].EndTime = rounded.Format(timeFormat)
 
 		// Parse times for comparison and handle edge case: StartTime > EndTime
-		start, err1 := time.Parse(timeFormat, stat.EvInfo.Schedules[0].StartTime)
-		if err1 == nil && start.After(currentTime) {
+		if start, err := time.Parse(timeFormat, stat.EvInfo.Schedules[0].StartTime); err == nil && start.After(rounded) {
 			stat.EvInfo.Schedules[0].StartTime = fallbackStartTime
 		}
 	}
