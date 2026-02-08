@@ -16,7 +16,7 @@ func setFormattedValue(message, param string, v interface{}) (string, error) {
 		return fmt.Sprintf("%v", v), nil
 	}
 
-	return util.ReplaceFormatted(message, map[string]interface{}{
+	return util.ReplaceFormatted(message, map[string]any{
 		param: v,
 	})
 }

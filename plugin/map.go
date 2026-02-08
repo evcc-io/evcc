@@ -18,7 +18,7 @@ func init() {
 }
 
 // NewMapFromConfig creates type conversion provider
-func NewMapFromConfig(ctx context.Context, other map[string]interface{}) (Plugin, error) {
+func NewMapFromConfig(ctx context.Context, other map[string]any) (Plugin, error) {
 	var cc struct {
 		Values   map[int64]int64
 		Get, Set Config

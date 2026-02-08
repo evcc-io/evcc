@@ -62,7 +62,7 @@ func indexHandler(customCss bool) http.HandlerFunc {
 
 		defaultLang := getPreferredLanguage(r.Header.Get("Accept-Language"))
 
-		if err := t.Execute(w, map[string]interface{}{
+		if err := t.Execute(w, map[string]any{
 			"Version":     util.Version,
 			"Commit":      util.Commit,
 			"DefaultLang": defaultLang,

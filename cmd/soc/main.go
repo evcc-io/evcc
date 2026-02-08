@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"math"
@@ -34,7 +35,7 @@ func main() {
 		log.Fatal("not enough arguments")
 	}
 
-	params := make(map[string]interface{})
+	params := make(map[string]any)
 	params["brand"] = strings.ToLower(os.Args[1])
 
 	action := "soc"
@@ -65,7 +66,7 @@ func main() {
 		log.Fatal("unexpected number of parameters")
 	}
 
-	v, err := vehicle.NewCloudFromConfig(params)
+	v, err := vehicle.NewCloudFromConfig(context.Background(), params)
 	if err != nil {
 		log.Fatal(err)
 	}

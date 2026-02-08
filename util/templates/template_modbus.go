@@ -11,7 +11,7 @@ import (
 var modbusTmpl string
 
 // ModbusParams adds the modbus parameters' default values
-func (t *Template) ModbusParams(modbusType string, values map[string]interface{}) {
+func (t *Template) ModbusParams(modbusType string, values map[string]any) {
 	if len(t.ModbusChoices()) == 0 {
 		return
 	}
@@ -36,7 +36,7 @@ func (t *Template) ModbusParams(modbusType string, values map[string]interface{}
 }
 
 // ModbusValues adds the values required for modbus.tpl to the value map
-func (t *Template) ModbusValues(renderMode int, values map[string]interface{}) {
+func (t *Template) ModbusValues(renderMode int, values map[string]any) {
 	choices := t.ModbusChoices()
 	if len(choices) == 0 {
 		return

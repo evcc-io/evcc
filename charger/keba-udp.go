@@ -35,7 +35,7 @@ func init() {
 //go:generate go tool decorate -f decorateKebaUdp -b *KebaUdp -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)"
 
 // NewKebaUdpFromConfig creates a new Keba UDP charger
-func NewKebaUdpFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewKebaUdpFromConfig(other map[string]any) (api.Charger, error) {
 	cc := struct {
 		URI     string
 		Serial  string

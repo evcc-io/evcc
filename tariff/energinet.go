@@ -28,7 +28,7 @@ func init() {
 	registry.Add("energinet", NewEnerginetFromConfig)
 }
 
-func NewEnerginetFromConfig(other map[string]interface{}) (api.Tariff, error) {
+func NewEnerginetFromConfig(other map[string]any) (api.Tariff, error) {
 	var cc struct {
 		embed  `mapstructure:",squash"`
 		Region string

@@ -24,7 +24,7 @@ func init() {
 	registry.AddCtx("tessie", NewTessieFromConfig)
 }
 
-func NewTessieFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewTessieFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		Vin        string
 		Token      string

@@ -49,6 +49,7 @@ params:
     example: "https://evcc.example.org/providerauth/callback"
   - name: vin
     example: WF0FXX...
+    required: true
   - name: accessToken
     deprecated: true
   - name: refreshToken

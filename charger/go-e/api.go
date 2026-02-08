@@ -24,7 +24,7 @@ type Response interface {
 	Identify() string
 }
 
-type UpdateResponse map[string]interface{}
+type UpdateResponse map[string]any
 
 type API interface {
 	IsV2() bool

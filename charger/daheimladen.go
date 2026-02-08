@@ -67,7 +67,7 @@ func init() {
 //go:generate go tool decorate -f decorateDaheimLaden -b *DaheimLaden -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
 
 // NewDaheimLadenFromConfig creates a DaheimLaden charger from generic config
-func NewDaheimLadenFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewDaheimLadenFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		modbus.TcpSettings `mapstructure:",squash"`
 		Phases1p3p         bool

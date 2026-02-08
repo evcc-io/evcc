@@ -23,7 +23,7 @@ func (site *Site) publishCircuits() {
 
 	for _, c := range cc {
 		instance := c.Instance()
-		props := deviceProperties(c)
+		props := config.DeviceProperties(c)
 
 		data := circuitStruct{
 			Title:      props.Title,

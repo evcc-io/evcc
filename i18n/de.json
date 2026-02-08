@@ -658,6 +658,7 @@
     "about": "Über",
     "authProviders": {
       "confirmLogout": "Sicher, dass du {title} trennen möchtest?",
+      "loggedOut": "Erfolgreich abgemeldet",
       "title": "Autorisierungsstatus"
     },
     "blog": "Blog",

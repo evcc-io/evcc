@@ -119,13 +119,13 @@ func updateSessionHandler(w http.ResponseWriter, r *http.Request) {
 
 	id := mux.Vars(r)["id"]
 
-	var data map[string]interface{}
+	var data map[string]any
 	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
 		jsonError(w, http.StatusBadRequest, errors.New("invalid JSON"))
 		return
 	}
 
-	updates := map[string]interface{}{}
+	updates := map[string]any{}
 	for _, field := range []string{"vehicle", "loadpoint"} {
 		if val, ok := data[field]; ok {
 			updates[field] = val

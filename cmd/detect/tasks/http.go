@@ -22,7 +22,7 @@ type HttpResult struct {
 	Jq interface{}
 }
 
-func HttpHandlerFactory(conf map[string]interface{}) (TaskHandler, error) {
+func HttpHandlerFactory(conf map[string]any) (TaskHandler, error) {
 	handler := HttpHandler{
 		Schema: "http",
 		Method: "GET",

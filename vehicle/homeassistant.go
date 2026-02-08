@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"context"
 	"errors"
 	"strconv"
 	"time"
@@ -18,11 +19,11 @@ type HomeAssistant struct {
 
 // Register on startup
 func init() {
-	registry.Add("homeassistant", NewHomeAssistantVehicleFromConfig)
+	registry.AddCtx("homeassistant", NewHomeAssistantVehicleFromConfig)
 }
 
 // Constructor from YAML config
-func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error) {
+func NewHomeAssistantVehicleFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, error) {
 	var cc struct {
 		embed   `mapstructure:",squash"`
 		URI     string
@@ -64,7 +65,7 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 	}
 
 	res := &HomeAssistant{
-		embed: &cc.embed,
+		embed: cc.embed.withContext(ctx),
 		conn:  conn,
 		soc:   cc.Sensors.Soc,
 	}

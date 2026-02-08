@@ -74,7 +74,7 @@ func init() {
 //go:generate go tool decorate -f decorateDsmr -b api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)"
 
 // NewDsmrFromConfig creates a DSMR meter from generic config
-func NewDsmrFromConfig(other map[string]interface{}) (api.Meter, error) {
+func NewDsmrFromConfig(other map[string]any) (api.Meter, error) {
 	cc := struct {
 		URI     string
 		Energy  string

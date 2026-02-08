@@ -554,20 +554,6 @@ func (mr *MockVehicleMockRecorder) GetTitle() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTitle", reflect.TypeOf((*MockVehicle)(nil).GetTitle))
 }
 
-// Icon mocks base method.
-func (m *MockVehicle) Icon() string {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Icon")
-	ret0, _ := ret[0].(string)
-	return ret0
-}
-
-// Icon indicates an expected call of Icon.
-func (mr *MockVehicleMockRecorder) Icon() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Icon", reflect.TypeOf((*MockVehicle)(nil).Icon))
-}
-
 // Identifiers mocks base method.
 func (m *MockVehicle) Identifiers() []string {
 	m.ctrl.T.Helper()
@@ -608,18 +594,6 @@ func (m *MockVehicle) Phases() int {
 func (mr *MockVehicleMockRecorder) Phases() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Phases", reflect.TypeOf((*MockVehicle)(nil).Phases))
-}
-
-// SetTitle mocks base method.
-func (m *MockVehicle) SetTitle(arg0 string) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetTitle", arg0)
-}
-
-// SetTitle indicates an expected call of SetTitle.
-func (mr *MockVehicleMockRecorder) SetTitle(arg0 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTitle", reflect.TypeOf((*MockVehicle)(nil).SetTitle), arg0)
 }
 
 // Soc mocks base method.

@@ -43,7 +43,7 @@ func generateEEBUSCert() {
 	}
 
 	t := template.Must(template.New("out").Funcs(sprig.FuncMap()).Parse(tmpl))
-	if err := t.Execute(os.Stdout, map[string]interface{}{
+	if err := t.Execute(os.Stdout, map[string]any{
 		"public":  pubKey,
 		"private": privKey,
 	}); err != nil {

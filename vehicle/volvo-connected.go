@@ -2,13 +2,13 @@ package vehicle
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/plugin/auth"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/vehicle/volvo/connected"
-	"github.com/spf13/cast"
 )
 
 // VolvoConnected is an api.Vehicle implementation for Volvo Connected Car vehicles
@@ -22,7 +22,7 @@ func init() {
 }
 
 // NewVolvoConnectedFromConfig creates a new VolvoConnected vehicle
-func NewVolvoConnectedFromConfig(ctx context.Context, other map[string]interface{}) (api.Vehicle, error) {
+func NewVolvoConnectedFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed       `mapstructure:",squash"`
 		VIN         string
@@ -38,21 +38,32 @@ func NewVolvoConnectedFromConfig(ctx context.Context, other map[string]interface
 		return nil, err
 	}
 
-	log := util.NewLogger("volvo-connected").Redact(cc.VIN, cc.VccApiKey)
+	if cc.VccApiKey == "" {
+		return nil, errors.New("missing vccapikey")
+	}
+
+	if cc.VIN == "" {
+		return nil, errors.New("missing vin")
+	}
+
+	if err := cc.Credentials.Error(); err != nil {
+		return nil, err
+	}
+
+	log := util.NewLogger("volvo-connected").Redact(cc.VIN, cc.Credentials.ID, cc.Credentials.Secret, cc.VccApiKey)
+	embed := cc.embed.withContext(ctx)
 
 	oc := connected.Oauth2Config(cc.Credentials.ID, cc.Credentials.Secret, cc.RedirectUri)
-	ts, err := auth.NewOauth(ctx, cast.ToString(ctx.Value(api.ContextTitle)), oc)
+	ts, err := auth.NewOauth(ctx, "Volvo", embed.GetTitle(), oc)
 	if err != nil {
 		return nil, err
 	}
 
 	api := connected.NewAPI(log, cc.VccApiKey, ts)
 
-	cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
-
 	v := &VolvoConnected{
-		embed:    cc.embed.withContext(ctx),
-		Provider: connected.NewProvider(api, cc.VIN, cc.Cache),
+		embed:    embed,
+		Provider: connected.NewProvider(api, ts, cc.VIN, cc.Cache),
 	}
 
 	return v, err

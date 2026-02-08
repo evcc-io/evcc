@@ -67,7 +67,7 @@ func (v *MqttConnector) Unsubscribe(vin string) {
 }
 
 func (v *MqttConnector) run(ctx context.Context, ts oauth2.TokenSource) {
-	bo := backoff.NewExponentialBackOff(backoff.WithMaxInterval(time.Minute))
+	bo := backoff.NewExponentialBackOff(backoff.WithInitialInterval(time.Second), backoff.WithMaxInterval(time.Minute))
 
 	for ctx.Err() == nil {
 		time.Sleep(bo.NextBackOff())

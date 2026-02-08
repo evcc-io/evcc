@@ -96,7 +96,7 @@ func init() {
 }
 
 // NewPulsatrixFromConfig creates a pulsatrix charger from generic config
-func NewPulsatrixFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewPulsatrixFromConfig(other map[string]any) (api.Charger, error) {
 	var cc struct {
 		Host string
 	}

@@ -126,10 +126,10 @@ func (v *API) Cockpit(accountID string, vin string) (Response, error) {
 func (v *API) WakeUp(accountID string, vin string) (Response, error) {
 	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kcm/v1/vehicles/%s/charge/pause-resume", v.keys.Target, accountID, vin)
 
-	data := map[string]interface{}{
-		"data": map[string]interface{}{
+	data := map[string]any{
+		"data": map[string]any{
 			"type": "ChargePauseResume",
-			"attributes": map[string]interface{}{
+			"attributes": map[string]any{
 				"action": "resume",
 			},
 		},
@@ -162,10 +162,10 @@ func (v *API) Position(accountID string, vin string) (Response, error) {
 func (v *API) Action(accountID, action string, vin string) (Response, error) {
 	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v1/cars/%s/actions/charging-start", v.keys.Target, accountID, vin)
 
-	data := map[string]interface{}{
-		"data": map[string]interface{}{
+	data := map[string]any{
+		"data": map[string]any{
 			"type": "ChargingStart",
-			"attributes": map[string]interface{}{
+			"attributes": map[string]any{
 				"action": action,
 			},
 		},

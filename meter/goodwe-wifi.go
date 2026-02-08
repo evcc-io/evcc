@@ -22,7 +22,7 @@ func init() {
 
 // TODO deprecated remove
 
-func NewGoodWeWifiFromConfig(other map[string]interface{}) (api.Meter, error) {
+func NewGoodWeWifiFromConfig(other map[string]any) (api.Meter, error) {
 	cc := struct {
 		batteryCapacity `mapstructure:",squash"`
 		URI, Usage      string

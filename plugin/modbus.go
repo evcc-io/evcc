@@ -26,7 +26,7 @@ func init() {
 }
 
 // NewModbusFromConfig creates Modbus plugin
-func NewModbusFromConfig(ctx context.Context, other map[string]interface{}) (Plugin, error) {
+func NewModbusFromConfig(ctx context.Context, other map[string]any) (Plugin, error) {
 	cc := struct {
 		modbus.Settings `mapstructure:",squash"`
 		Register        modbus.Register

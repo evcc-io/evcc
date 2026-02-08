@@ -56,7 +56,7 @@ func init() {
 }
 
 // NewWebastoNextFromConfig creates a WebastoNext charger from generic config
-func NewWebastoNextFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewWebastoNextFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: 255,
 	}

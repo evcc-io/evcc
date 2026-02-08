@@ -31,7 +31,7 @@ func init() {
 }
 
 // NewNRGKickConnectFromConfig creates a NRGKickConnect charger from generic config
-func NewNRGKickConnectFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewNRGKickConnectFromConfig(other map[string]any) (api.Charger, error) {
 	cc := struct {
 		URI, Mac, Password string
 		Cache              time.Duration

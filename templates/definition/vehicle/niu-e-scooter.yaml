@@ -6,8 +6,9 @@ products:
 group: scooter
 params:
   - name: title
+    deprecated: true
   - name: icon
-    default: scooter
+    deprecated: true
   - name: user
     required: true
   - name: password
@@ -21,12 +22,6 @@ params:
     default: 4
 render: |
   type: niu
-  {{- if .title }}
-  title: {{ .title }}
-  {{- end }}
-  {{- if .icon }}
-  icon: {{ .icon }}
-  {{- end }}
   user: {{ .user }} # NIU app user
   password: {{ .password }} # NIU app password
   serial: {{ .serial }} # NIU E-Scooter serial number like shown in app

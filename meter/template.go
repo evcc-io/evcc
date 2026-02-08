@@ -11,7 +11,7 @@ func init() {
 	registry.AddCtx("template", NewMeterFromTemplateConfig)
 }
 
-func NewMeterFromTemplateConfig(ctx context.Context, other map[string]interface{}) (api.Meter, error) {
+func NewMeterFromTemplateConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	instance, err := templates.RenderInstance(templates.Meter, other)
 	if err != nil {
 		return nil, err

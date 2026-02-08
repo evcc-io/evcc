@@ -25,7 +25,7 @@ func init() {
 }
 
 // NewVehicleApiFromConfig creates a new vehicle-api charger
-func NewVehicleApiFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewVehicleApiFromConfig(other map[string]any) (api.Charger, error) {
 	cc := struct {
 		GeofenceEnabled bool    `mapstructure:"geofence_enabled"`
 		Lat             float64 `mapstructure:"lat"`
