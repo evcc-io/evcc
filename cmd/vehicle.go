@@ -20,6 +20,8 @@ var vehicleCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(vehicleCmd)
+	withCustomTemplate(vehicleCmd)
+
 	vehicleCmd.Flags().Int64P(flagCurrent, "i", 0, flagCurrentDescription)
 	vehicleCmd.Flags().BoolP(flagStart, "a", false, flagStartDescription)
 	vehicleCmd.Flags().BoolP(flagStop, "o", false, flagStopDescription)

@@ -20,6 +20,8 @@ var chargerCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(chargerCmd)
+	withCustomTemplate(chargerCmd)
+
 	chargerCmd.Flags().Float64P(flagCurrent, "i", 0, flagCurrentDescription)
 	//lint:ignore SA1019 as Title is safe on ascii
 	chargerCmd.Flags().BoolP(flagEnable, "e", false, strings.Title(flagEnable))

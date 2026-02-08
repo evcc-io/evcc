@@ -18,6 +18,8 @@ var meterCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(meterCmd)
+	withCustomTemplate(meterCmd)
+
 	meterCmd.Flags().StringP(flagBatteryMode, "b", "", flagBatteryModeDescription)
 	meterCmd.Flags().DurationP(flagBatteryModeWait, "w", 0, flagBatteryModeWaitDescription)
 	meterCmd.Flags().Bool(flagDiagnose, false, flagDiagnoseDescription)
