@@ -7,7 +7,7 @@
 			</a>
 		</p>
 		<slot name="afterDescription" />
-		<p v-if="error" class="text-danger" data-testid="error">{{ error }}</p>
+		<ErrorMessage :error="error" data-testid="error" />
 		<form ref="form" class="container mx-0 px-0">
 			<div v-if="!noYamlEditor" class="editor-container">
 				<YamlEditorContainer
@@ -49,13 +49,14 @@
 
 <script>
 import GenericModal from "../Helper/GenericModal.vue";
+import ErrorMessage from "../Helper/ErrorMessage.vue";
 import api from "@/api";
 import { docsPrefix } from "@/i18n";
 import YamlEditorContainer from "./YamlEditorContainer.vue";
 
 export default {
 	name: "YamlModal",
-	components: { GenericModal, YamlEditorContainer },
+	components: { GenericModal, ErrorMessage, YamlEditorContainer },
 	props: {
 		title: String,
 		description: String,

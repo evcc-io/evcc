@@ -1118,7 +1118,6 @@
   "passwordModal": {
     "description": "Nustatykite slaptažodį konfigūracijos apsaugai. Pagrindiniu ekranu galima naudotis ir neprisijungus.",
     "empty": "Slaptažodis negali būti tuščias",
-    "error": "Klaida: ",
     "labelCurrent": "Dabartinis slaptažodis",
     "labelNew": "Naujas slaptažodis",
     "labelRepeat": "Pakartoti slaptažodį",
