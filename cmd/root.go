@@ -65,7 +65,8 @@ var rootCmd = &cobra.Command{
 	Version: util.FormattedVersion(),
 	Run:     runRoot,
 	// always allow Ctrl-C in child commands
-	PersistentPreRun: allowCtrlC,
+	PersistentPreRun:  allowCtrlC,
+	PersistentPostRun: awaitShutdown,
 }
 
 func init() {
@@ -148,6 +149,15 @@ func allowCtrlC(cmd *cobra.Command, args []string) {
 		<-signalC // wait for signal
 		os.Exit(1)
 	}()
+}
+
+func awaitShutdown(cmd *cobra.Command, args []string) {
+	if cmd.Name() == rootName {
+		return
+	}
+
+	// wait for shutdown
+	<-shutdownDoneC()
 }
 
 func runRoot(cmd *cobra.Command, args []string) {

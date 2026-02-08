@@ -97,7 +97,4 @@ func runChargerRamp(cmd *cobra.Command, args []string) {
 		}
 		ramp(v, digits, delay)
 	}
-
-	// wait for shutdown
-	<-shutdownDoneC()
 }
