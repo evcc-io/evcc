@@ -132,7 +132,4 @@ func runVehicle(cmd *cobra.Command, args []string) {
 			}
 		}
 	}
-
-	// wait for shutdown
-	<-shutdownDoneC()
 }

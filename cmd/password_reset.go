@@ -41,7 +41,4 @@ func runPasswordReset(cmd *cobra.Command, args []string) {
 	if confirm {
 		auth.New().RemoveAdminPassword()
 	}
-
-	// wait for shutdown
-	<-shutdownDoneC()
 }

@@ -90,7 +90,4 @@ func runTariff(cmd *cobra.Command, args []string) {
 
 		fmt.Println()
 	}
-
-	// wait for shutdown
-	<-shutdownDoneC()
 }
