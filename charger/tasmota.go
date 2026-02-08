@@ -75,13 +75,11 @@ func NewTasmota(embed embed, uri, user, password, usage string, channels []int, 
 	if vl1 == 0 && vl2 == 0 && vl3 == 0 {
 		return c, nil
 	} else {
-
 		var currents, voltages func() (float64, float64, float64, error)
 		if len(channels) == 3 {
 			currents = c.currents
 			voltages = c.voltages
 		}
-
 		return decorateTasmota(c, currents, voltages), nil
 	}
 }
