@@ -206,13 +206,13 @@ func (c *Connection) CurrentPower() (float64, error) {
 	}
 
 	// SML power available
-	if s.StatusSNS.SML.PowerCurr != nil {
-		return *s.StatusSNS.SML.PowerCurr, nil
+	if sml := s.StatusSNS.SML.PowerCurr; sml != nil {
+		return *sml, nil
 	}
 
 	var res float64
 	for _, channel := range c.channels {
-		power, err := s.StatusSNS.Energy.Power.Channel(channel)
+		power, err := s.StatusSNS.Energy.Power.Value(channel)
 		if err != nil {
 			return 0, err
 		}
@@ -230,8 +230,8 @@ func (c *Connection) TotalEnergy() (float64, error) {
 	}
 
 	// SML total energy available
-	if res.StatusSNS.SML.TotalIn != nil {
-		return *res.StatusSNS.SML.TotalIn, err
+	if sml := res.StatusSNS.SML.TotalIn; sml != nil {
+		return *sml, err
 	}
 
 	return res.StatusSNS.Energy.Total, err
@@ -299,7 +299,7 @@ func (c *Connection) getPhaseValues(fun func(StatusSNSResponse) Channels) (float
 	res := make([]float64, 3)
 
 	for i, cc := range c.channels {
-		res[i], err = all.Channel(cc)
+		res[i], err = all.Value(cc)
 		if err != nil {
 			return 0, 0, 0, err
 		}

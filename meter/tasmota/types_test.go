@@ -15,15 +15,15 @@ func TestUnmarshalStatusSNSResponse(t *testing.T) {
 	// Test cases for #6082
 	jsonstr := `{"StatusSNS":{"Time":"2023-02-05T20:31:48","ENERGY":{"TotalStartTime":"2023-02-05T11:04:13","Total":1290.3960,"Yesterday":0.8540,"Today":0.1730,"Power":47.11,"ApparentPower":0.0,"ReactivePower":0.0,"Factor":0.00,"Voltage":0.00,"Current":0.000}}}`
 	require.NoError(t, json.Unmarshal([]byte(jsonstr), &res))
-	if power, err := res.StatusSNS.Energy.Power.Channel(1); err == nil && power != 47.11 {
-		t.Error("StatusSNS.Energy.Power.Channel(1) != 47.11")
+	if power, err := res.StatusSNS.Energy.Power.Value(1); err == nil && power != 47.11 {
+		t.Error("StatusSNS.Energy.Power.Value(1) != 47.11")
 	}
 
 	// Test case for #5731
 	jsonstr = `{"StatusSNS":{"Time":"2023-01-09T18:57:39","Switch1":"ON","Switch2":"OFF","ANALOG":{"Temperature":49.6},"ENERGY":{"TotalStartTime":"2023-01-09T13:59:15","Total":0.077,"Yesterday":0.000,"Today":0.077,"Power":[8.15,0],"ApparentPower":[5,0],"ReactivePower":[4,0],"Factor":[0.00,0.00],"Frequency":50,"Voltage":237,"Current":[0.000,0.000]},"TempUnit":"C"}}`
 	require.NoError(t, json.Unmarshal([]byte(jsonstr), &res))
-	if power, err := res.StatusSNS.Energy.Power.Channel(1); err == nil && power != 8.15 {
-		t.Error("StatusSNS.Energy.Power.Channel(1) != 8.15")
+	if power, err := res.StatusSNS.Energy.Power.Value(1); err == nil && power != 8.15 {
+		t.Error("StatusSNS.Energy.Power.Value(1) != 8.15")
 	}
 
 	// Test case for #3787

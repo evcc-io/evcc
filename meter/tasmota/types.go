@@ -104,11 +104,11 @@ type StatusSNSResponse struct {
 // Channels is a Tasmota specific helper type to handle meter value lists and single meter values
 type Channels []float64
 
-func (ch *Channels) Channel(channel int) (float64, error) {
+func (ch *Channels) Value(channel int) (float64, error) {
 	if *ch == nil {
 		return 0, nil
 	}
-	if channel < 1 || channel > len(*ch) {
+	if channel < 1 || channel >= len(*ch) {
 		return 0, fmt.Errorf("invalid channel: %d", channel)
 	}
 	return (*ch)[channel-1], nil
