@@ -10,22 +10,23 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-// Merge combines a primary tariff with a secondary (forecast) tariff.
+// Merged combines a primary tariff with a secondary (forecast) tariff.
 // Primary rates are used where available, secondary fills gaps after primary ends.
-type Merge struct {
+type Merged struct {
 	log       *util.Logger
 	primary   api.Tariff
 	secondary api.Tariff
 }
 
 func init() {
-	registry.AddCtx("merge", NewMergeFromConfig)
+	registry.AddCtx("merged", NewMergedFromConfig)
 }
 
-func NewMergeFromConfig(ctx context.Context, other map[string]any) (api.Tariff, error) {
-	var cc struct {
-		Primary, Secondary Typed
-	}
+func NewMergedFromConfig(ctx context.Context, other map[string]any) (api.Tariff, error) {
+	cc := struct {
+		Primary   Typed
+		Secondary Typed
+	}{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
@@ -45,8 +46,8 @@ func NewMergeFromConfig(ctx context.Context, other map[string]any) (api.Tariff, 
 		return nil, fmt.Errorf("primary and secondary tariff types are not compatible: %v vs %v", pType, sType)
 	}
 
-	t := &Merge{
-		log:       util.NewLogger("merge"),
+	t := &Merged{
+		log:       util.NewLogger("merged"),
 		primary:   primary,
 		secondary: secondary,
 	}
@@ -55,7 +56,7 @@ func NewMergeFromConfig(ctx context.Context, other map[string]any) (api.Tariff, 
 }
 
 // Rates implements the api.Tariff interface
-func (t *Merge) Rates() (api.Rates, error) {
+func (t *Merged) Rates() (api.Rates, error) {
 	result, err := t.primary.Rates()
 	if err != nil {
 		t.log.DEBUG.Printf("primary tariff failed, falling back to secondary: %v", err)
@@ -75,17 +76,17 @@ func (t *Merge) Rates() (api.Rates, error) {
 
 	// Find where primary data ends and append secondary rates starting there
 	primaryEnd := result[len(result)-1].End
-	if idx, ok := slices.BinarySearchFunc(secondaryRates, primaryEnd, func(r api.Rate, t time.Time) int {
+	if idx, found := slices.BinarySearchFunc(secondaryRates, primaryEnd, func(r api.Rate, t time.Time) int {
 		return r.Start.Compare(t)
-	}); ok {
+	}); found {
 		return append(result, secondaryRates[idx:]...), nil
 	}
 
-	t.log.WARN.Printf("secondary tariff does not align gaplessly with primary, ignoring secondary")
+	t.log.WARN.Printf("secondary tariff does not align gapless with primary, ignoring secondary")
 	return result, nil
 }
 
 // Type implements the api.Tariff interface
-func (t *Merge) Type() api.TariffType {
+func (t *Merged) Type() api.TariffType {
 	return t.primary.Type()
 }

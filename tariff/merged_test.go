@@ -25,7 +25,7 @@ func (m *mockTariff) Type() api.TariffType {
 	return m.typ
 }
 
-func TestMergeRates(t *testing.T) {
+func TestMergedRates(t *testing.T) {
 	now := clock.NewMock().Now()
 
 	primaryRates := api.Rates{
@@ -39,8 +39,8 @@ func TestMergeRates(t *testing.T) {
 		{Start: now.Add(3 * time.Hour), End: now.Add(4 * time.Hour), Value: 0.24}, // after primary
 	}
 
-	ext := &Merge{
-		log:       util.NewLogger("foo"),
+	ext := &Merged{
+		log:       util.NewLogger("merged"),
 		primary:   &mockTariff{rates: primaryRates, typ: api.TariffTypePriceForecast},
 		secondary: &mockTariff{rates: secondaryRates, typ: api.TariffTypePriceForecast},
 	}
@@ -59,7 +59,7 @@ func TestMergeRates(t *testing.T) {
 	assert.Equal(t, expected, rates)
 }
 
-func TestMergePrimaryFailure(t *testing.T) {
+func TestMergedPrimaryFailure(t *testing.T) {
 	now := clock.NewMock().Now()
 
 	secondaryRates := api.Rates{
@@ -67,8 +67,8 @@ func TestMergePrimaryFailure(t *testing.T) {
 		{Start: now.Add(time.Hour), End: now.Add(2 * time.Hour), Value: 0.22},
 	}
 
-	ext := &Merge{
-		log:       util.NewLogger("foo"),
+	ext := &Merged{
+		log:       util.NewLogger("merged"),
 		primary:   &mockTariff{err: assert.AnError, typ: api.TariffTypePriceForecast},
 		secondary: &mockTariff{rates: secondaryRates, typ: api.TariffTypePriceForecast},
 	}
@@ -78,7 +78,7 @@ func TestMergePrimaryFailure(t *testing.T) {
 	assert.Equal(t, secondaryRates, rates)
 }
 
-func TestMergeSecondaryFailure(t *testing.T) {
+func TestMergedSecondaryFailure(t *testing.T) {
 	now := clock.NewMock().Now()
 
 	primaryRates := api.Rates{
@@ -86,8 +86,8 @@ func TestMergeSecondaryFailure(t *testing.T) {
 		{Start: now.Add(time.Hour), End: now.Add(2 * time.Hour), Value: 0.12},
 	}
 
-	ext := &Merge{
-		log:       util.NewLogger("foo"),
+	ext := &Merged{
+		log:       util.NewLogger("merged"),
 		primary:   &mockTariff{rates: primaryRates, typ: api.TariffTypePriceForecast},
 		secondary: &mockTariff{err: assert.AnError, typ: api.TariffTypePriceForecast},
 	}
@@ -97,7 +97,7 @@ func TestMergeSecondaryFailure(t *testing.T) {
 	assert.Equal(t, primaryRates, rates)
 }
 
-func TestMergeEmptyPrimary(t *testing.T) {
+func TestMergedEmptyPrimary(t *testing.T) {
 	now := clock.NewMock().Now()
 
 	secondaryRates := api.Rates{
@@ -105,8 +105,8 @@ func TestMergeEmptyPrimary(t *testing.T) {
 		{Start: now.Add(time.Hour), End: now.Add(2 * time.Hour), Value: 0.22},
 	}
 
-	ext := &Merge{
-		log:       util.NewLogger("foo"),
+	ext := &Merged{
+		log:       util.NewLogger("merged"),
 		primary:   &mockTariff{rates: api.Rates{}, typ: api.TariffTypePriceForecast},
 		secondary: &mockTariff{rates: secondaryRates, typ: api.TariffTypePriceForecast},
 	}
@@ -118,9 +118,9 @@ func TestMergeEmptyPrimary(t *testing.T) {
 	assert.Equal(t, secondaryRates, rates)
 }
 
-func TestMergeType(t *testing.T) {
-	ext := &Merge{
-		log:       util.NewLogger("foo"),
+func TestMergedType(t *testing.T) {
+	ext := &Merged{
+		log:       util.NewLogger("merged"),
 		primary:   &mockTariff{typ: api.TariffTypePriceForecast},
 		secondary: &mockTariff{typ: api.TariffTypePriceForecast},
 	}
@@ -128,9 +128,9 @@ func TestMergeType(t *testing.T) {
 	assert.Equal(t, api.TariffTypePriceForecast, ext.Type())
 }
 
-func TestMergeBothFail(t *testing.T) {
-	ext := &Merge{
-		log:       util.NewLogger("foo"),
+func TestMergedBothFail(t *testing.T) {
+	ext := &Merged{
+		log:       util.NewLogger("merged"),
 		primary:   &mockTariff{err: assert.AnError, typ: api.TariffTypePriceForecast},
 		secondary: &mockTariff{err: assert.AnError, typ: api.TariffTypePriceForecast},
 	}
@@ -140,7 +140,7 @@ func TestMergeBothFail(t *testing.T) {
 	assert.Nil(t, rates)
 }
 
-func TestMergeGapBetweenPrimaryAndSecondary(t *testing.T) {
+func TestMergedGapBetweenPrimaryAndSecondary(t *testing.T) {
 	now := clock.NewMock().Now()
 
 	// Primary ends at hour 2
@@ -155,8 +155,8 @@ func TestMergeGapBetweenPrimaryAndSecondary(t *testing.T) {
 		{Start: now.Add(5 * time.Hour), End: now.Add(6 * time.Hour), Value: 0.24},
 	}
 
-	ext := &Merge{
-		log:       util.NewLogger("foo"),
+	ext := &Merged{
+		log:       util.NewLogger("merged"),
 		primary:   &mockTariff{rates: primaryRates, typ: api.TariffTypePriceForecast},
 		secondary: &mockTariff{rates: secondaryRates, typ: api.TariffTypePriceForecast},
 	}
