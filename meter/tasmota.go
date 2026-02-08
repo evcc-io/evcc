@@ -57,13 +57,13 @@ func NewTasmota(uri, user, password, usage string, channels []int, cache time.Du
 	}
 
 	// check if phase specific readings are supported by the device, if not return the base meter implementation without decorators
-	vl1, vl2, vl3, err := c.conn.Voltages()
+	vl1, _, _, err := c.conn.Voltages()
 	if err != nil {
 		return nil, err
 	}
 
 	// if all voltages are 0, we assume that the device does not support phase specific readings and return the base meter implementation without decorators
-	if vl1 == 0 && vl2 == 0 && vl3 == 0 {
+	if vl1 == 0 {
 		return c, nil
 	} else {
 		var currents, voltages, powers func() (float64, float64, float64, error)
