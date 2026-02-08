@@ -27,11 +27,22 @@ func NewConnection(uri, user, password string, channels []int, cache time.Durati
 		return nil, errors.New("missing uri")
 	}
 
+	// If only one channel is provided, ensure it is a valid single channel
+	if len(channels) == 1 {
+		if channels[0] < 1 || channels[0] > 8 {
+			return nil, fmt.Errorf("invalid channel: %d", channels[0])
+		}
+		return &Connection{}, nil // No need to validate duplicates for single channel
+	}
+
+	// Only one or three channels are supported
+	if len(channels) != 1 && len(channels) != 3 {
+		return nil, fmt.Errorf("invalid number of channels, can only be 1 or 3: %d", len(channels))
+	}
+
+	// Ensure no duplicate channels
 	used := make(map[int]bool)
 	for _, c := range channels {
-		if c < 1 || c > 8 {
-			return nil, fmt.Errorf("invalid channel: %d", c)
-		}
 		if used[c] {
 			return nil, fmt.Errorf("duplicate channel: %d", c)
 		}
@@ -286,10 +297,6 @@ func (c *Connection) Currents() (float64, float64, float64, error) {
 
 // getPhaseValues returns 3 sequential phase values
 func (c *Connection) getPhaseValues(fun func(StatusSNSResponse) Channels) (float64, float64, float64, error) {
-	if len(c.channels) < 1 || len(c.channels) > 3 {
-		return 0, 0, 0, nil
-	}
-
 	s, err := c.statusSnsG.Get()
 	if err != nil {
 		return 0, 0, 0, err
