@@ -11,6 +11,12 @@
 		:disabled="!editable || noEditButton"
 		@click="edit"
 	>
+		<span
+			v-if="badge"
+			class="position-absolute top-0 start-100 translate-middle p-2 rounded-circle bg-warning"
+		>
+			<span class="visually-hidden">new</span>
+		</span>
 		<shopicon-regular-adjust size="s"></shopicon-regular-adjust>
 	</button>
 </template>
@@ -25,6 +31,7 @@ export default {
 		name: String,
 		editable: Boolean,
 		noEditButton: Boolean,
+		badge: Boolean,
 	},
 	emits: ["edit"],
 	data() {

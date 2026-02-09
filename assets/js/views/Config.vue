@@ -165,7 +165,6 @@
 				</div>
 
 				<h2 class="my-4 mt-5">{{ $t("config.section.integrations") }}</h2>
-
 				<div class="p-0 config-list">
 					<AuthProvidersCard
 						:providers="authProviders"
@@ -187,11 +186,12 @@
 					</DeviceCard>
 					<DeviceCard
 						:title="$t('config.messaging.title')"
-						editable
+						:editable="messagingYamlSource !== 'fs'"
 						:error="hasClassError('messenger')"
 						:unconfigured="isUnconfigured(messagingTags)"
+						:badge="messagingYamlSource === 'db'"
 						data-testid="messaging"
-						@edit="openModal('messagingModal')"
+						@edit="messagingModal().show()"
 					>
 						<template #icon><NotificationIcon /></template>
 						<template #tags>
@@ -369,8 +369,8 @@
 				<ControlModal @changed="loadDirty" />
 				<HemsModal :fromYaml="hems?.fromYaml" @changed="yamlChanged" />
 				<ShmModal @changed="loadDirty" />
+				<MessagingLegacyModal @changed="yamlChanged" />
 				<MessagingModal
-					:messaging-configured="messagingConfigured"
 					:messengers="messengers"
 					@yaml-changed="yamlChanged"
 					@events-changed="messagingEventsChanged"
@@ -483,6 +483,7 @@ import AuthSuccessBanner from "../components/Config/AuthSuccessBanner.vue";
 import PasswordModal from "../components/Auth/PasswordModal.vue";
 import AuthProvidersCard from "../components/Config/AuthProvidersCard.vue";
 import MessengerModal from "@/components/Config/Messaging/MessengerModal.vue";
+import MessagingLegacyModal from "@/components/Config/Messaging/MessagingLegacyModal.vue";
 
 export default defineComponent({
 	name: "Config",
@@ -506,6 +507,7 @@ export default defineComponent({
 		ShmIcon,
 		InfluxIcon,
 		InfluxModal,
+		MessagingLegacyModal,
 		MessagingModal,
 		MessengerModal,
 		MeterModal,
@@ -721,7 +723,7 @@ export default defineComponent({
 			return { configured: { value: false } };
 		},
 		messagingTags(): DeviceTags {
-			if (this.messengers.length > 0) {
+			if (this.messagingUiConfigured) {
 				const allEvents = Object.keys(MESSAGING_EVENTS).length;
 				const events = store.state?.messagingEvents || [];
 				const enabledEvents = Object.values(events).filter((e) => !e.disabled).length;
@@ -732,7 +734,7 @@ export default defineComponent({
 				};
 			}
 
-			return { configured: { value: store.state?.messaging } };
+			return { configured: { value: this.messagingYamlConfigured } };
 		},
 		backupRestoreProps() {
 			return {
@@ -744,6 +746,15 @@ export default defineComponent({
 			return [...this.circuits].sort(
 				(a, b) => sortedNames.indexOf(a.name) - sortedNames.indexOf(b.name)
 			);
+		},
+		messagingYamlSource() {
+			return store.state.messaging?.yamlSource;
+		},
+		messagingYamlConfigured() {
+			return this.messagingYamlSource === "fs" || this.messagingYamlSource === "db";
+		},
+		messagingUiConfigured() {
+			return this.messengers.length > 0;
 		},
 	},
 	watch: {
@@ -859,7 +870,9 @@ export default defineComponent({
 		},
 		messagingModal() {
 			return Modal.getOrCreateInstance(
-				document.getElementById("messagingModal") as HTMLElement
+				document.getElementById(
+					this.messagingYamlSource === "db" ? "messagingLegacyModal" : "messagingModal"
+				) as HTMLElement
 			);
 		},
 		messengerModal() {

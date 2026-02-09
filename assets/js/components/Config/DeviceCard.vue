@@ -23,6 +23,7 @@
 				:name="name"
 				:editable="editable"
 				:noEditButton="noEditButton"
+				:badge="badge"
 				@edit="$emit('edit')"
 			/>
 		</div>
@@ -47,6 +48,7 @@ export default {
 		unconfigured: Boolean,
 		warning: Boolean,
 		noEditButton: Boolean,
+		badge: Boolean,
 	},
 	emits: ["edit"],
 };

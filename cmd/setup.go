@@ -82,9 +82,10 @@ var conf = globalconfig.All{
 }
 
 var fromYaml struct {
-	sponsor bool
-	hems    bool
-	eebus   bool
+	sponsor   bool
+	hems      bool
+	eebus     bool
+	messaging globalconfig.YamlSource
 }
 
 var nameRE = regexp.MustCompile(`^[a-zA-Z0-9_.:-]+$`)
@@ -273,17 +274,31 @@ func configurableInstance[T any](typ string, conf *config.Config, newFromConf ne
 }
 
 func configureMessengers(confMessaging *globalconfig.Messaging, confEvents *globalconfig.MessagingEvents, vehicles messenger.Vehicles, valueChan chan<- util.Param, cache *util.ParamCache) (chan messenger.Event, error) {
-	// migrate settings
+	// yaml config from file
+	if len(confMessaging.Events) != 0 || len(confMessaging.Services) != 0 {
+		fromYaml.messaging = globalconfig.YamlSourceFs
+	}
+
+	// yaml config from db (deprecated)
 	if settings.Exists(keys.Messaging) {
+		if fromYaml.messaging == globalconfig.YamlSourceFs {
+			// just warn, no error to not break previous behavior
+			log.WARN.Println("messaging configured via UI yaml; evcc.yaml config will be ignored")
+		}
 		*confMessaging = globalconfig.Messaging{}
 		if err := settings.Yaml(keys.Messaging, new(map[string]any), &confMessaging); err != nil {
 			return nil, err
 		}
+		fromYaml.messaging = globalconfig.YamlSourceDb
 	}
+
 	if settings.Exists(keys.MessagingEvents) {
 		*confEvents = globalconfig.MessagingEvents{}
 		if err := settings.Json(keys.MessagingEvents, &confEvents); err != nil {
 			return nil, err
+		}
+		if fromYaml.messaging != globalconfig.YamlSourceNone && confEvents != nil {
+			return nil, errors.New("yaml and device config exists for messaging; remove yaml config")
 		}
 	}
 

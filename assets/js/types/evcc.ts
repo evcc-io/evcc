@@ -88,7 +88,7 @@ export interface State {
   sponsor?: Sponsor;
   eebus?: Eebus;
   modbusproxy?: ModbusProxy[];
-  messaging?: boolean;
+  messaging?: ConfigStatus<unknown, unknown>;
   messagingEvents?: MessagingEvents;
   interval?: number;
   circuits?: Record<string, Circuit>;
@@ -99,6 +99,15 @@ export interface State {
   database?: string;
   ocpp?: Ocpp;
 }
+
+export interface ConfigStatus<T, S> {
+  config?: T;
+  status?: S;
+  fromYaml?: boolean;
+  yamlSource?: YamlSource;
+}
+
+export type YamlSource = "fs" | "db" | undefined;
 
 export interface OcppConfig {
   port: number;
