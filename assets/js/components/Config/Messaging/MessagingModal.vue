@@ -54,6 +54,7 @@
 				<div v-for="(m, index) in messengers" :key="index" class="my-4">
 					<div
 						class="d-flex align-items-center justify-content-between py-2 px-4 border rounded"
+						:data-testid="`messenger-box-${index}`"
 					>
 						<div class="flex-grow-1">
 							<small class="text-muted">#{{ index + 1 }}</small>
@@ -70,7 +71,6 @@
 				<button
 					type="button"
 					class="d-flex btn btn-sm btn-outline-secondary border-0 align-items-center gap-2 evcc-gray"
-					:aria-label="$t('config.general.remove')"
 					tabindex="0"
 					@click="openMessenger()"
 				>

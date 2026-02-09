@@ -754,7 +754,10 @@ export default defineComponent({
 			return this.messagingYamlSource === "fs" || this.messagingYamlSource === "db";
 		},
 		messagingUiConfigured() {
-			return this.messengers.length > 0;
+			return (
+				this.messengers.length > 0 ||
+				Object.keys(store.state.messagingEvents ?? {}).length > 0
+			);
 		},
 	},
 	watch: {
