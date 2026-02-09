@@ -1,8 +1,9 @@
 template: tplink
 products:
-  - brand: TP-Link
-    description:
-      generic: H-Series Smart Plug
+  - { brand: TP-Link, description: { generic: HS100 } }
+  - { brand: TP-Link, description: { generic: HS103 } }
+  - { brand: TP-Link, description: { generic: HS105 } }
+  - { brand: TP-Link, description: { generic: HS110 } }
 group: switchsockets
 params:
   - name: host
