@@ -1116,7 +1116,6 @@
   "passwordModal": {
     "description": "Nastavte heslo pro zabezpečení konfiguračního menu. Obrazovka přehledu bude stále dostupná i bez ověření heslem.",
     "empty": "Heslo nesmí být prázdné",
-    "error": "Chyba: ",
     "labelCurrent": "Současné heslo",
     "labelNew": "Nové heslo",
     "labelRepeat": "Opakujte heslo",

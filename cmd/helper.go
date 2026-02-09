@@ -132,7 +132,5 @@ func migrateYamlToJson[T any](key string, res *T) error {
 		return err
 	}
 
-	settings.SetJson(key, res)
-
-	return nil
+	return settings.SetJson(key, res)
 }

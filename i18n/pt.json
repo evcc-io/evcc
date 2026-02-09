@@ -1116,7 +1116,6 @@
   "passwordModal": {
     "description": "Defina uma Palavra-passe para proteger as definições de configuração. Continua a ser possível utilizar o menu principal sem iniciar sessão.",
     "empty": "A Palavra-passe não deve ficar por preencher",
-    "error": "Erro: ",
     "labelCurrent": "Palavra-passe atual",
     "labelNew": "Nova Palavra-passe",
     "labelRepeat": "Repetir palavra-passe",

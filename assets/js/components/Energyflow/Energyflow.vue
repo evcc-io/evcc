@@ -129,9 +129,9 @@
 								<template v-if="batteryGridChargeLimitSet" #subline>
 									<div class="d-none d-md-block">&nbsp;</div>
 								</template>
-								<template v-if="battery.length > 1" #expanded>
+								<template v-if="hasMultipleBatteries" #expanded>
 									<EnergyflowEntry
-										v-for="(b, index) in battery"
+										v-for="(b, index) in batteryDevices"
 										:key="index"
 										:name="b.title || genericBatteryTitle(index)"
 										:details="b.soc"
@@ -271,9 +271,9 @@
 										</span>
 									</button>
 								</template>
-								<template v-if="battery.length > 1" #expanded>
+								<template v-if="hasMultipleBatteries" #expanded>
 									<EnergyflowEntry
-										v-for="(b, index) in battery"
+										v-for="(b, index) in batteryDevices"
 										:key="index"
 										:name="b.title || genericBatteryTitle(index)"
 										:details="b.soc"
@@ -316,7 +316,7 @@ import collector from "@/mixins/collector.js";
 import { defineComponent, type PropType } from "vue";
 import {
 	SMART_COST_TYPE,
-	type BatteryMeter,
+	type Battery,
 	type Meter,
 	type CURRENCY,
 	type Forecast,
@@ -333,6 +333,7 @@ export default defineComponent({
 	mixins: [formatter, collector],
 	props: {
 		gridConfigured: Boolean,
+		experimental: Boolean,
 		gridPower: { type: Number, default: 0 },
 		homePower: { type: Number, default: 0 },
 		pvConfigured: Boolean,
@@ -342,9 +343,7 @@ export default defineComponent({
 		pvPower: { type: Number, default: 0 },
 		loadpoints: { type: Array as PropType<UiLoadpoint[]>, default: () => [] },
 		batteryConfigured: { type: Boolean },
-		battery: { type: Array as PropType<BatteryMeter[]>, default: () => [] },
-		batteryPower: { type: Number, default: 0 },
-		batterySoc: { type: Number, default: 0 },
+		battery: { type: Object as PropType<Battery> },
 		batteryDischargeControl: { type: Boolean },
 		batteryGridChargeLimit: { type: Number },
 		batteryGridChargeActive: { type: Boolean },
@@ -387,6 +386,18 @@ export default defineComponent({
 		},
 		pvProduction() {
 			return Math.abs(this.pvPower);
+		},
+		batterySoc() {
+			return this.battery?.soc;
+		},
+		batteryPower() {
+			return this.battery?.power ?? 0;
+		},
+		batteryDevices() {
+			return this.battery?.devices ?? [];
+		},
+		hasMultipleBatteries() {
+			return this.batteryDevices.length > 1;
 		},
 		batteryDischarge() {
 			return this.dischargePower(this.batteryPower);
@@ -500,7 +511,7 @@ export default defineComponent({
 				return undefined;
 			}
 			const { today, scale } = this.forecast.solar || {};
-			const factor = this.$hiddenFeatures() && settings.solarAdjusted && scale ? scale : 1;
+			const factor = this.experimental && settings.solarAdjusted && scale ? scale : 1;
 			const energy = today?.energy || 0;
 			return energy * factor;
 		},

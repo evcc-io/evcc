@@ -120,7 +120,7 @@ func (s *HTTPd) Router() *mux.Router {
 }
 
 // RegisterSiteHandlers connects the http handlers to the site
-func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param) {
+func (s *HTTPd) RegisterSiteHandlers(site site.API) {
 	router := s.Server.Handler.(*mux.Router)
 
 	// api
@@ -293,6 +293,7 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 			"interval":           {"POST", "/interval/{value:[0-9.]+}", settingsSetDurationHandler(keys.Interval, pub)},
 			"updatesponsortoken": {"POST", "/sponsortoken", updateSponsortokenHandler(pub)},
 			"deletesponsortoken": {"DELETE", "/sponsortoken", deleteSponsorTokenHandler(pub)},
+			"experimental":       {"POST", "/experimental/{value:[01truefalse]+}", boolHandler(setExperimental(pub), getExperimental)},
 		}
 
 		// yaml handlers

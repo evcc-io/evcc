@@ -40,7 +40,6 @@ const (
 	AuxMeters     = "auxMeters"
 
 	// battery settings
-	BatteryCapacity         = "batteryCapacity"
 	BatteryDischargeControl = "batteryDischargeControl"
 	BatteryGridChargeLimit  = "batteryGridChargeLimit"
 	BatteryGridChargeActive = "batteryGridChargeActive"
@@ -48,11 +47,8 @@ const (
 	BufferStartSoc          = "bufferStartSoc"
 
 	// battery status
-	Battery       = "battery"
-	BatteryEnergy = "batteryEnergy"
-	BatteryMode   = "batteryMode"
-	BatteryPower  = "batteryPower"
-	BatterySoc    = "batterySoc"
+	Battery     = "battery"
+	BatteryMode = "batteryMode"
 
 	// external battery control
 	BatteryModeExternal = "batteryModeExternal"

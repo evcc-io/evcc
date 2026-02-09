@@ -194,7 +194,7 @@
       "title": "EEBus"
     },
     "experimental": {
-      "description": "Enable user interface for features that are still being tested and may change in future versions.",
+      "description": "Provides early access to features that are still being tested. These may be unstable and could change or be removed in future versions.",
       "title": "Experimental"
     },
     "ext": {
@@ -225,6 +225,7 @@
       "dragHandle": "Drag handle",
       "dragItem": "Draggable: {title}",
       "dragList": "Reorderable list",
+      "error": "Error",
       "experimental": "Experimental",
       "forceSave": "Save anyway",
       "fromYamlHint": "Note: Configured via evcc.yaml. Remove the entry from the file to enable editing here.",
@@ -811,12 +812,14 @@
   "forecast": {
     "co2": {
       "average": "Average",
+      "constant": "CO₂ intensity",
       "lowestHour": "Cleanest hour",
       "range": "Range"
     },
     "modalTitle": "Forecast",
     "price": {
       "average": "Average",
+      "constant": "Price",
       "lowestHour": "Cheapest hour",
       "range": "Range"
     },
@@ -1180,7 +1183,6 @@
   "passwordModal": {
     "description": "Set a password to protect the configuration settings. Using the main screen is still possible without login.",
     "empty": "Password should not be empty",
-    "error": "Error: ",
     "labelCurrent": "Current password",
     "labelNew": "New password",
     "labelRepeat": "Repeat password",
@@ -1294,7 +1296,7 @@
     },
     "hiddenFeatures": {
       "label": "Experimental",
-      "value": "Show experimental features."
+      "value": "Enable experimental features."
     },
     "language": {
       "auto": "Automatic",

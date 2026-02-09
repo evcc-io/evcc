@@ -14,6 +14,8 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
+// TODO deprecated
+
 // Warp2 is the Warp charger v2 firmware implementation
 type Warp2 struct {
 	log           *util.Logger
@@ -290,14 +292,14 @@ func (wb *Warp2) identify() (string, error) {
 	return res.AuthorizationInfo.TagId, err
 }
 
-func (wb *Warp2) emState() (warp.EmState, error) {
-	var res warp.EmState
+func (wb *Warp2) emState() (warp.PmState, error) {
+	var res warp.PmState
 	err := wb.emStateG(&res)
 	return res, err
 }
 
-func (wb *Warp2) emLowLevelState() (warp.EmLowLevelState, error) {
-	var res warp.EmLowLevelState
+func (wb *Warp2) emLowLevelState() (warp.PmLowLevelState, error) {
+	var res warp.PmLowLevelState
 	err := wb.emLowLevelG(&res)
 	return res, err
 }

@@ -1118,7 +1118,6 @@
   "passwordModal": {
     "description": "Använd lösenord för att skydda inställningarna. Huvudskärmen kan användas utan att logga in.",
     "empty": "Lösenordet får inte vara tomt",
-    "error": "Fel: ",
     "labelCurrent": "Nuvarande lösenord",
     "labelNew": "Nytt lösenord",
     "labelRepeat": "Upprepa lösenord",

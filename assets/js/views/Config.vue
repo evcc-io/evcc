@@ -16,6 +16,7 @@
 
 				<h2 class="my-4 mt-5">{{ $t("config.section.general") }}</h2>
 				<GeneralConfig
+					:experimental="experimental"
 					:sponsor-error="hasClassError('sponsorship')"
 					@site-changed="siteChanged"
 				/>
@@ -382,7 +383,7 @@
 				/>
 				<TariffsModal @changed="yamlChanged" />
 				<TelemetryModal :sponsor="sponsor" :telemetry="telemetry" />
-				<ExperimentalModal />
+				<ExperimentalModal :experimental="experimental" />
 				<ModbusProxyModal :is-sponsor="isSponsor" @changed="loadDirty" />
 				<CircuitsModal
 					:gridMeter="gridMeter"
@@ -704,8 +705,10 @@ export default defineComponent({
 			return store.state?.ocpp;
 		},
 		telemetry() {
-			// @ts-expect-error: telemetry property exists but not in TypeScript definitions
-			return store.state?.telemetry === true;
+			return store.state?.telemetry;
+		},
+		experimental() {
+			return store.state?.experimental;
 		},
 		eebus() {
 			return store.state?.eebus;
