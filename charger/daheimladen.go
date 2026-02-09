@@ -299,7 +299,7 @@ func (wb *DaheimLaden) Identify() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return unicode.UTF16(unicode.BigEndian, unicode.IgnoreBOM).NewDecoder().String(string(b))
+	return utf16BEBytesAsString(b)
 }
 
 // phases1p3p implements the api.PhaseSwitcher interface
