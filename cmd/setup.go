@@ -1028,7 +1028,7 @@ func configureTariffs(conf *globalconfig.Tariffs) (*tariff.Tariffs, error) {
 	if settings.Exists(keys.Tariffs) {
 		if fromYaml.tariffs == globalconfig.YamlSourceFs {
 			// just warn, no error to not break previous behavior
-			log.WARN.Println("tariffs configured in via UI yaml; evcc.yaml config will be ignored")
+			log.WARN.Println("tariffs configured via UI yaml; evcc.yaml config will be ignored")
 		}
 		*conf = globalconfig.Tariffs{}
 		if err := settings.Yaml(keys.Tariffs, new(map[string]any), &conf); err != nil {
