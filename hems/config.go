@@ -7,9 +7,8 @@ import (
 
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/hems/config"
-	"github.com/evcc-io/evcc/hems/hems"
-
 	_ "github.com/evcc-io/evcc/hems/eebus"
+	"github.com/evcc-io/evcc/hems/hems"
 	_ "github.com/evcc-io/evcc/hems/relay"
 )
 
