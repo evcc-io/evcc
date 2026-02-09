@@ -16,11 +16,6 @@ group: co2
 countries: ["BE", "DE", "LU"]
 params:
   - name: apiKey
-    type: string
-    required: true
-    help:
-      de: "Erstelle eine App in [api-portal.eco2grid.com](https://api-portal.eco2grid.com) und kopiere den Key"
-      en: "Create an app in [api-portal.eco2grid.com](https://api-portal.eco2grid.com) and copy the key"
     deprecated: true
   - name: clientid
     required: true
@@ -43,7 +38,7 @@ render: |
       source: clientcredentials
       clientid: {{ .clientid }}
       clientsecret: {{ .clientsecret }}
-      TokenURL: https://signin.energy/am/oauth2/realms/root/realms/difesp/access_token
+      tokenurl: https://signin.energy/am/oauth2/realms/root/realms/difesp/access_token
       scopes: [esp]
     uri: https://explore.traxes.io/greengrid-compass/v1/co2-intensity-forecast?zone={{ .zone }}&start={{ `{{ now | date "2006-01-02T" }}` }}00:00:00Z&end={{ `{{ addDate now 0 0 5 | date "2006-01-02T" }}` }}00:00:00Z&time-resolution=hourly&calculation-type=production&emission-type=operational&forecast-type=actual
     jq: |
