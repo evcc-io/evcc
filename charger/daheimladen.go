@@ -26,7 +26,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
-	"golang.org/x/text/encoding/unicode"
 )
 
 // DaheimLaden charger implementation
