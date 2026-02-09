@@ -62,11 +62,6 @@ func (v *Identity) Login() error {
 }
 
 func (v *Identity) retrieveToken(data url.Values) (*oauth2.Token, error) {
-	var loginData requests.LoginData
-	answer := requests.Answer{
-		Data: &loginData,
-	}
-
 	data.Set("deviceId", v.deviceId)
 	data.Set("response_type", "code")
 	data.Set("scope", "all")
@@ -92,24 +87,27 @@ func (v *Identity) retrieveToken(data url.Values) (*oauth2.Token, error) {
 		return nil, err
 	}
 
-	var body []byte
-	body, err = requests.DecryptAnswer(resp)
-	if err == nil && len(body) != 0 {
-		err = json.Unmarshal(body, &answer)
-		if err == nil && answer.Code != 0 {
-			err = fmt.Errorf("%d: %s", answer.Code, answer.Message)
-		}
-
-		tok := oauth2.Token{
-			AccessToken:  loginData.Access_token,
-			RefreshToken: loginData.Refresh_token,
-			TokenType:    loginData.Token_type,
-		}
-		tok.Expiry = time.Now().Add(time.Second * time.Duration(loginData.Expires_in))
-		return &tok, err
+	body, err := requests.DecodeResponse(resp)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, err
+	var res requests.Answer[requests.LoginData]
+	if err := json.Unmarshal(body, &res); err != nil {
+		return nil, err
+	}
+	if res.Code != 0 {
+		return nil, fmt.Errorf("%d: %s", res.Code, res.Message)
+	}
+
+	tok := oauth2.Token{
+		AccessToken:  res.Data.Access_token,
+		RefreshToken: res.Data.Refresh_token,
+		TokenType:    res.Data.Token_type,
+		Expiry:       time.Now().Add(time.Second * time.Duration(res.Data.Expires_in)),
+	}
+
+	return &tok, nil
 }
 
 func (v *Identity) refreshToken(token *oauth2.Token) (*oauth2.Token, error) {

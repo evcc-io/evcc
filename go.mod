@@ -8,7 +8,7 @@ require (
 	github.com/Masterminds/sprig/v3 v3.3.0
 	github.com/PuerkitoBio/goquery v1.11.0
 	github.com/WulfgarW/sensonet v0.0.7
-	github.com/andig/evopt v0.0.0-20260119220201-238830f9254a
+	github.com/andig/evopt v0.0.0-20260202080401-5c7f3dae3896
 	github.com/andig/go-powerwall v0.2.1-0.20230808194509-dd70cdb6e140
 	github.com/andig/gosunspec v0.0.0-20240918203654-860ce51d602b
 	github.com/andig/mbserver v0.0.0-20230310211055-1d29cbb5820e
@@ -73,13 +73,13 @@ require (
 	github.com/lunixbochs/struc v0.0.0-20241101090106-8d528fa2c543
 	github.com/mabunixda/wattpilot v1.8.5
 	github.com/mitchellh/go-homedir v1.1.0
-	github.com/modelcontextprotocol/go-sdk v1.2.0
+	github.com/modelcontextprotocol/go-sdk v1.3.0
 	github.com/muka/go-bluetooth v0.0.0-20240701044517-04c4f09c514e
 	github.com/mxschmitt/golang-combinations v1.2.0
 	github.com/nicksnyder/go-i18n/v2 v2.6.1
 	github.com/olekukonko/tablewriter v1.1.3
 	github.com/philippseith/signalr v0.8.0
-	github.com/prometheus-community/pro-bing v0.7.0
+	github.com/prometheus-community/pro-bing v0.8.0
 	github.com/prometheus/client_golang v1.23.2
 	github.com/prometheus/common v0.67.5
 	github.com/robertkrimen/otto v0.5.1
@@ -96,21 +96,21 @@ require (
 	github.com/spf13/viper v1.21.0
 	github.com/stianeikeland/go-rpio/v4 v4.6.0
 	github.com/stretchr/testify v1.11.1
-	github.com/teslamotors/vehicle-command v0.4.0
+	github.com/teslamotors/vehicle-command v0.4.1
 	github.com/tess1o/go-ecoflow v1.1.1-0.20251003083510-2ccc15a17e29
 	github.com/traefik/yaegi v0.16.1
-	github.com/volkszaehler/mbmd v0.0.0-20260107074546-6cbf4285cea8
+	github.com/volkszaehler/mbmd v0.0.0-20260131091050-86c2d25b6103
 	gitlab.com/bboehmke/sunny v0.16.0
 	go.bug.st/serial v1.6.4
 	go.uber.org/mock v0.6.0
 	go.yaml.in/yaml/v4 v4.0.0-rc.4
 	golang.org/x/crypto v0.47.0
-	golang.org/x/crypto/x509roots/fallback v0.0.0-20260113154411-7d0074ccc6f1
+	golang.org/x/crypto/x509roots/fallback v0.0.0-20260209163710-e08b06753d6a
 	golang.org/x/exp v0.0.0-20260112195511-716be5621a96
 	golang.org/x/net v0.49.0
-	golang.org/x/oauth2 v0.34.0
+	golang.org/x/oauth2 v0.35.0
 	golang.org/x/sync v0.19.0
-	golang.org/x/text v0.33.0
+	golang.org/x/text v0.34.0
 	golang.org/x/tools v0.41.0
 	google.golang.org/grpc v1.78.0
 	google.golang.org/protobuf v1.36.11
@@ -173,7 +173,7 @@ require (
 	github.com/gokrazy/tools v0.0.0-20250601065736-ab76ef531d30 // indirect
 	github.com/golanguzb70/lrucache v1.2.0 // indirect
 	github.com/google/go-querystring v1.2.0 // indirect
-	github.com/google/jsonschema-go v0.3.0 // indirect
+	github.com/google/jsonschema-go v0.4.2 // indirect
 	github.com/google/renameio/v2 v2.0.0 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/gosimple/unidecode v1.0.1 // indirect
@@ -248,7 +248,7 @@ require (
 	modernc.org/libc v1.67.6 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
-	modernc.org/sqlite v1.44.3 // indirect
+	modernc.org/sqlite v1.45.0 // indirect
 )
 
 tool (

@@ -6,6 +6,7 @@ import (
 
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/types"
 	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
@@ -105,9 +106,11 @@ func TestGreenShare(t *testing.T) {
 		t.Log(tc.title)
 
 		s := &Site{
-			gridPower:    tc.grid,
-			pvPower:      tc.pv,
-			batteryPower: tc.battery,
+			gridPower: tc.grid,
+			pvPower:   tc.pv,
+			battery: types.BatteryState{
+				Power: tc.battery,
+			},
 		}
 
 		totalPower := tc.grid + tc.pv + max(0, tc.battery)

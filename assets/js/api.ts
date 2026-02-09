@@ -40,9 +40,9 @@ const errorInterceptor = (error: any) => {
     message.push(`${error.response.data.error}.`);
   }
   if (error.config) {
-    const method = error.config.method.toUpperCase();
-    const url = error.request.responseURL;
-    message.push(`${method} ${url}`);
+    const { baseURL, url, method } = error.config;
+    const fullUrl = error.request.responseURL || `${baseURL}${url}`;
+    message.push(`${method.toUpperCase()} ${fullUrl}`);
   }
   window.app.raise({ message });
   return Promise.reject(error);

@@ -127,6 +127,7 @@ import type {
 	Forecast,
 	SMART_COST_TYPE,
 } from "@/types/evcc";
+import type { PlanStrategy } from "@/components/ChargingPlans/types";
 
 export default defineComponent({
 	name: "Loadpoint",
@@ -189,8 +190,7 @@ export default defineComponent({
 		planTime: String as PropType<string | null>,
 		effectivePlanTime: String as PropType<string | null>,
 		effectivePlanSoc: Number,
-		effectivePlanPrecondition: Number,
-		effectivePlanContinuous: Boolean,
+		effectivePlanStrategy: Object as PropType<PlanStrategy>,
 		vehicleProviderLoggedIn: Boolean,
 		vehicleProviderLoginPath: String,
 		vehicleProviderLogoutPath: String,

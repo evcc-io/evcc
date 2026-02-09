@@ -72,8 +72,8 @@ func (e *StatusError) HasStatus(codes ...int) bool {
 
 // ResponseError turns an HTTP status code into an error
 func ResponseError(resp *http.Response) error {
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return &StatusError{resp: resp}
+	if c := resp.StatusCode; c < 200 || c >= 300 {
+		return backoff.Permanent(&StatusError{resp: resp})
 	}
 	return nil
 }
@@ -82,13 +82,14 @@ func ResponseError(resp *http.Response) error {
 func ReadBody(resp *http.Response) ([]byte, error) {
 	defer resp.Body.Close()
 
+	if err := ResponseError(resp); err != nil {
+		b, _ := io.ReadAll(resp.Body)
+		return b, err
+	}
+
 	b, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return []byte{}, err
-	}
-
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return b, backoff.Permanent(&StatusError{resp: resp})
 	}
 
 	return b, nil

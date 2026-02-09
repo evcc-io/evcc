@@ -1111,7 +1111,6 @@
   "passwordModal": {
     "description": "Establezca una contraseña para proteger los ajustes de configuración. Se puede seguir utilizando la pantalla principal sin necesidad de iniciar sesión.",
     "empty": "La contraseña no debe estar vacía",
-    "error": "Error: ",
     "labelCurrent": "Contraseña actual",
     "labelNew": "Nueva contraseña",
     "labelRepeat": "Repita la contraseña",

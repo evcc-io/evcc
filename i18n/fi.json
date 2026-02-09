@@ -1117,7 +1117,6 @@
   "passwordModal": {
     "description": "Aseta salasana suojellaksesi määritys asetuksia. Pääikkunan käyttö on silti mahdollista ilman kirjautumista.",
     "empty": "Salasana ei tulisi olla tyhjä",
-    "error": "Virhe: ",
     "labelCurrent": "Nykyinen salasana",
     "labelNew": "Uusi salasana",
     "labelRepeat": "Toista salasana",
