@@ -147,6 +147,7 @@ var chargeStatusMap = map[string]api.ChargeStatus{
 	// Status C - Charging
 	"c":        api.StatusC,
 	"charging": api.StatusC,
+	"connected_charging": api.StatusC,
 	"on":       api.StatusC,
 	"true":     api.StatusC,
 	"active":   api.StatusC,
@@ -166,7 +167,8 @@ var chargeStatusMap = map[string]api.ChargeStatus{
 	"stopped":            api.StatusB,
 	"starting":           api.StatusB,
 	"paused":             api.StatusB,
-
+	"connected_finished": api.StatusB,
+	
 	// Status A - Disconnected
 	"a":                   api.StatusA,
 	"disconnected":        api.StatusA,
