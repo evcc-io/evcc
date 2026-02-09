@@ -63,6 +63,7 @@
 		:required="required"
 		rows="4"
 	/>
+	<PropertyZonesField v-else-if="zones" :id="id" v-model="value" :currency="currency" />
 	<div v-else class="d-flex" :class="sizeClass">
 		<div class="position-relative flex-grow-1">
 			<input
@@ -109,13 +110,14 @@
 import "@h2d2/shopicons/es/regular/minus";
 import VehicleIcon from "../VehicleIcon";
 import SelectGroup from "../Helper/SelectGroup.vue";
+import PropertyZonesField from "./PropertyZonesField.vue";
 import formatter from "@/mixins/formatter";
 
 const NS_PER_SECOND = 1000000000;
 
 export default {
 	name: "PropertyField",
-	components: { VehicleIcon, SelectGroup },
+	components: { VehicleIcon, SelectGroup, PropertyZonesField },
 	mixins: [formatter],
 	props: {
 		id: String,
@@ -133,6 +135,7 @@ export default {
 		modelValue: [String, Number, Boolean, Object],
 		label: String,
 		serviceValues: { type: Array, default: () => [] },
+		currency: { type: String, default: "EUR" },
 	},
 	emits: ["update:modelValue"],
 	data: () => {
@@ -174,7 +177,7 @@ export default {
 			if (this.masked) {
 				return "password";
 			}
-			if (["Int", "Float", "Duration"].includes(this.type)) {
+			if (["Int", "Float", "Duration", "PricePerKWh"].includes(this.type)) {
 				return "number";
 			}
 			return "text";
@@ -183,7 +186,7 @@ export default {
 			if (this.size) {
 				return this.size;
 			}
-			if (["Int", "Float", "Duration"].includes(this.type)) {
+			if (["Int", "Float", "Duration", "PricePerKWh"].includes(this.type)) {
 				return "w-50 w-min-200";
 			}
 			return "";
@@ -199,10 +202,10 @@ export default {
 			return result;
 		},
 		endAlign() {
-			return ["Int", "Float", "Duration"].includes(this.type);
+			return ["Int", "Float", "Duration", "PricePerKWh"].includes(this.type);
 		},
 		step() {
-			if (this.type === "Float" || this.type === "Duration") {
+			if (this.type === "Float" || this.type === "Duration" || this.type === "PricePerKWh") {
 				return "any";
 			}
 			return null;
@@ -211,10 +214,17 @@ export default {
 			if (this.type === "Duration") {
 				return this.fmtDurationUnit(this.value, this.unit);
 			}
+			if (this.pricePerKWh) {
+				return this.pricePerKWhUnit(this.currency);
+			}
 			if (this.unit) {
 				return this.unit;
 			}
 			return null;
+		},
+		useLazyBinding() {
+			// avoid conversion loop issues
+			return this.pricePerKWh;
 		},
 		icons() {
 			return this.property === "icon";
@@ -229,6 +239,12 @@ export default {
 		},
 		array() {
 			return this.type === "List";
+		},
+		zones() {
+			return this.type === "Zones";
+		},
+		pricePerKWh() {
+			return this.type === "PricePerKWh";
 		},
 		select() {
 			return this.choice.length > 0;
@@ -277,6 +293,12 @@ export default {
 					return this.modelValue / this.durationFactor / NS_PER_SECOND;
 				}
 
+				if (this.pricePerKWh) {
+					const value = this.modelValue * this.pricePerKWhDisplayFactor(this.currency);
+					// Round to 6 decimals to eliminate floating-point errors
+					return Math.round(value * 1e6) / 1e6;
+				}
+
 				return this.modelValue;
 			},
 			set(value) {
@@ -292,6 +314,10 @@ export default {
 
 				if (this.type === "Duration" && typeof newValue === "number") {
 					newValue = newValue * this.durationFactor * NS_PER_SECOND;
+				}
+
+				if (this.pricePerKWh) {
+					newValue = value / this.pricePerKWhDisplayFactor(this.currency);
 				}
 
 				this.$emit("update:modelValue", newValue);

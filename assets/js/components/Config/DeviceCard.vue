@@ -31,6 +31,12 @@
 				:disabled="!editable || noEditButton"
 				@click="edit"
 			>
+				<span
+					v-if="badge"
+					class="position-absolute top-0 start-100 translate-middle p-2 rounded-circle bg-warning"
+				>
+					<span class="visually-hidden">new</span>
+				</span>
 				<shopicon-regular-adjust size="s"></shopicon-regular-adjust>
 			</button>
 		</div>
@@ -56,6 +62,7 @@ export default {
 		unconfigured: Boolean,
 		warning: Boolean,
 		noEditButton: Boolean,
+		badge: Boolean,
 	},
 	emits: ["edit"],
 	data() {
@@ -65,14 +72,17 @@ export default {
 	},
 	computed: {
 		tooltipTitle() {
-			if (!this.name) {
+			let result = "";
+			if (this.name) {
+				result += `${this.$t("config.main.name")}: <span class='font-monospace'>${this.name}</span>`;
+			}
+			if (!this.editable) {
+				result += `<div class="mt-1">${this.$t("config.general.fromYamlHint")}</div>`;
+			}
+			if (!result) {
 				return "";
 			}
-			let title = `${this.$t("config.main.name")}: <span class='font-monospace'>${this.name}</span>`;
-			if (!this.editable) {
-				title += `<div class="mt-1">${this.$t("config.general.fromYamlHint")}</div>`;
-			}
-			return `<div class="text-start">${title}</div>`;
+			return `<div class="text-start">${result}</div>`;
 		},
 	},
 	watch: {
