@@ -105,7 +105,7 @@ function syncAllModals(): void {
 
 // Parse brackets: "meter[type:grid]" => { name: "meter", type: "grid" }
 // "meter[choices:pv,battery]" => { name: "meter", choices: ["pv", "battery"] }
-function parseKey(key: string): { name: string; type?: string; choices?: string[] } {
+export function parseKey(key: string): { name: string; type?: string; choices?: string[] } {
   const bracketMatch = key.match(/^([^[]+)\[([^\]]+)\]$/);
   if (!bracketMatch) {
     return { name: key };
@@ -129,7 +129,7 @@ function parseKey(key: string): { name: string; type?: string; choices?: string[
 }
 
 // Parse raw query string into ordered stack entries
-function parseQueryString(queryString: string): ModalEntry[] {
+export function parseQueryString(queryString: string): ModalEntry[] {
   if (!queryString) return [];
   const entries: ModalEntry[] = [];
   const parts = queryString.split("&");
@@ -163,7 +163,7 @@ function parseQueryString(queryString: string): ModalEntry[] {
 }
 
 // Build query object from stack entries for router.push
-function buildQuery(stack: ModalEntry[]): Record<string, string> {
+export function buildQuery(stack: ModalEntry[]): Record<string, string> {
   const query: Record<string, string> = {};
   for (const entry of stack) {
     let key = entry.name;
@@ -178,7 +178,7 @@ function buildQuery(stack: ModalEntry[]): Record<string, string> {
 }
 
 // Extract raw query string from fullPath
-function extractQueryString(fullPath: string): string {
+export function extractQueryString(fullPath: string): string {
   const qIdx = fullPath.indexOf("?");
   if (qIdx === -1) return "";
   return fullPath.substring(qIdx + 1);
