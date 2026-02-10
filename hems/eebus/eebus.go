@@ -296,7 +296,7 @@ func (c *EEBus) updateSession(id *uint, typ smartgrid.Type, limit float64) error
 	if limit > 0 && *id == 0 {
 		var power *float64
 		if p := c.root.GetChargePower(); p > 0 {
-			power = &p
+			power = new(p)
 		}
 
 		sid, err := smartgrid.StartManage(typ, power, limit)
