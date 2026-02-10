@@ -46,17 +46,15 @@ func setupTestLoadpoint(t *testing.T, mockClock *clock.Mock) (*Loadpoint, *gomoc
 	return lp, ctrl
 }
 
-// TestPlannerActive_StopWhenOnlyPreconditionRemains_ShortDuration tests PR #27299 fix
-// Based on REAL log scenario: Feb 4, 2026 at 02:30:38
-// Bug: "plan: continuing for remaining 2m43s" when requiredDuration < precondition
+// TestPlannerActive_StopWhenOnlyPreconditionRemains_ShortDuration tests
+// avoid: "plan: continuing for remaining 11m0s" when requiredDuration < precondition
 //
-// Real scenario from logs:
+// scenario:
 // - Time: 02:30:38
 // - Target: 07:00:00 (4.5 hours away)
-// - Required: 2m43s (163 seconds)
+// - Required: 11m
 // - Precondition: 15 minutes (900 seconds)
-// - 163s < 900s = precondition-only situation
-// - Bug: Continued charging anyway
+// - 660s < 900s = precondition-only situation
 // - Should: Stop immediately, charge later closer to target
 func TestPlannerActive_StopWhenOnlyPreconditionRemains_ShortDuration(t *testing.T) {
 	mockClk := clock.NewMock()
@@ -78,14 +76,14 @@ func TestPlannerActive_StopWhenOnlyPreconditionRemains_ShortDuration(t *testing.
 	mockTariff.EXPECT().Rates().Return(tariffRates, nil).AnyTimes()
 	lp.planner = planner.New(lp.log, mockTariff)
 
-	// State from real logs:
+	// State:
 	// - planActive = true (was charging)
-	// - requiredDuration = 2m43s (via planEnergy calculation)
+	// - requiredDuration = 11m (via planEnergy calculation)
 	// - precondition = 15 minutes (default)
 	lp.planActive = true
 	lp.planSlotEnd = time.Time{} // Not in a slot currently
 	lp.planTime = targetTime
-	lp.planEnergy = 0.67 // 2m43s at 7.36kW (from logs: 163s * 7360W / 3600 / 1000)
+	lp.planEnergy = 2.68 // 11m at 7.36kW
 	lp.planStrategy = api.PlanStrategy{
 		Precondition: 15 * time.Minute, // Standard precondition
 	}
@@ -93,22 +91,20 @@ func TestPlannerActive_StopWhenOnlyPreconditionRemains_ShortDuration(t *testing.
 	// Execute
 	active := lp.plannerActive()
 
-	// Verify: Should STOP because requiredDuration (163s) < precondition (900s)
-	// With fix: returns false (stops, will charge later near target)
-	// Without fix: returns true (bug - "continuing for remaining 2m43s")
-	assert.False(t, active, "Should stop when requiredDuration (2m43s) < precondition (15min)")
+	// Verify: Should STOP because requiredDuration (660s) < precondition (900s)
+	// returns false (stops, will charge later near target)
+	assert.False(t, active, "Should stop when requiredDuration (11min) < precondition (15min)")
 }
 
-// TestPlannerActive_StopWhenOnlyPreconditionRemains_WithinSlot tests PR #27299 fix for line 224
-// Variant of the Feb 4 scenario but with planSlotEnd set (still within active slot)
-// Bug: "plan: continuing until end of slot" when requiredDuration < precondition
+// TestPlannerActive_StopWhenOnlyPreconditionRemains_WithinSlot tests
+// Variant of the above scenario but with planSlotEnd set (still within active slot)
+// avoid: "plan: continuing until end of slot" when requiredDuration < precondition
 //
 // Scenario: Still charging in a slot that ends soon, but only precondition time remains
-// - NOW: within active slot (slot ends in 5 minutes)
-// - Required: 2m43s (163 seconds)
+// - NOW: within active slot (slot ends in 10 minutes)
+// - Required: 11m
 // - Precondition: 15 minutes (900 seconds)
-// - 163s < 900s = precondition-only situation
-// - Bug: Continues until slot end even though only precondition remains
+// - 660s < 900s = precondition-only situation
 // - Should: Stop now, charge later closer to target
 func TestPlannerActive_StopWhenOnlyPreconditionRemains_WithinSlot(t *testing.T) {
 	mockClk := clock.NewMock()
@@ -130,11 +126,11 @@ func TestPlannerActive_StopWhenOnlyPreconditionRemains_WithinSlot(t *testing.T) 
 	mockTariff.EXPECT().Rates().Return(tariffRates, nil).AnyTimes()
 	lp.planner = planner.New(lp.log, mockTariff)
 
-	// State: currently within an active slot (ends in 5 minutes)
+	// State: currently within an active slot (ends in 10 minutes)
 	lp.planActive = true
-	lp.planSlotEnd = now.Add(5 * time.Minute) // Still in slot, ends soon
+	lp.planSlotEnd = now.Add(10 * time.Minute) // Still in slot, ends soon
 	lp.planTime = targetTime
-	lp.planEnergy = 0.67 // 2m43s at 7.36kW (from logs: 163s * 7360W / 3600 / 1000)
+	lp.planEnergy = 2.68 // 11m at 7.36kW
 	lp.planStrategy = api.PlanStrategy{
 		Precondition: 15 * time.Minute, // Standard precondition
 	}
@@ -142,25 +138,22 @@ func TestPlannerActive_StopWhenOnlyPreconditionRemains_WithinSlot(t *testing.T) 
 	// Execute
 	active := lp.plannerActive()
 
-	// Verify: Should STOP because requiredDuration (163s) < precondition (900s)
+	// Verify: Should STOP because requiredDuration (660s) < precondition (900s)
 	// Even though we're within a slot, we should stop if only precondition remains
-	// With fix: returns false (stops, will charge later near target)
-	// Without fix: returns true (bug - "continuing until end of slot")
-	assert.False(t, active, "Should stop even within slot when requiredDuration (2m43s) < precondition (15min)")
+	// returns false (stops, will charge later near target)
+	assert.False(t, active, "Should stop even within slot when requiredDuration (11min) < precondition (15min)")
 }
 
-// TestPlannerActive_AvoidRestartWithinThreshold tests PR #27298 fix for line 231
+// TestPlannerActive_AvoidRestartWithinThreshold tests
 // Scenario: Just finished charging in cheap slot, next is expensive (15min), then cheap again
-// Bug: Threshold 15min causes continuing through the expensive slot
-// Fix: Threshold 14min allows stopping to skip the expensive slot
+// Threshold 14min allows stopping to skip the expensive slot
 //
-// Pattern (15-minute slots, NOW is 1s after slot boundary):
+// Pattern (15-minute slots, NOW is 1s after slot boundary, depends on cycle time)):
 // - Slot 0 (09:45-10:00): cheap 0.20, was charging here (just ended)
 // - Slot 1 (10:00-10:15): expensive 0.50 (should SKIP)
 // - Slot 2 (10:15-10:30): cheap 0.20 (resume here)
 // - At NOW (10:00:01), next cheap planStart is 10:15 → 14m59s away
-// - Bug: 14m59s < 15min → continues into expensive slot
-// - Fix: 14m59s >= 14min → stops, skips expensive, resumes at cheap
+// - stops, skips expensive, resumes at cheap
 func TestPlannerActive_AvoidRestartWithinThreshold(t *testing.T) {
 	mockClk := clock.NewMock()
 	// 1 second past slot boundary so planStart (10:15) is 14m59s away
@@ -219,23 +212,21 @@ func TestPlannerActive_AvoidRestartWithinThreshold(t *testing.T) {
 	active := lp.plannerActive()
 
 	// Verify: Should STOP (skip expensive slot 1, wait for cheap slot 2)
-	// With fix (14min): next cheap at +15min (14m59s away) >= 14min → false (stop)
-	// Without fix (15min): next cheap at +15min (14m59s away) < 15min → true (continue)
-	assert.False(t, active, "Should stop to skip expensive slot when next cheap is 14m59s away")
+	// next cheap at 15min slot boundary (14m59s away) >= 14min → false (stop)
+	assert.False(t, active, "Should stop to skip expensive slot when next cheap on next slot boundary")
 }
 
-// TestPlannerActive_ContinuousModeKeepsCharging tests continuous mode functionality
+// TestPlannerActive_ContinuousModeKeepsCharging tests continuous execution
 // Validates that continuous mode prevents interruptions through expensive gap
-// Bug: Missing case for strategy.Continuous on line 234
 //
-// Real-world scenario from logs (2026-01-31):
+// scenario:
 // - 04:00-04:15: Charged in cheap slot (0.311 EUR/kWh)
 // - 04:17: NOW - just after cheap slot ended (in expensive gap)
 // - 04:15-05:00: Expensive gap (45 minutes, THREE 15-min expensive slots)
 // - 05:00-07:00: Next cheap slot
 // - Target: 07:00, Required: ~1h30m
-// - Planner prefers: wait until 05:00 (cheap slot)
-// - Continuous mode: keep charging through gap
+// - Planner prefers: wait until 05:00 (at equal or unsignificant cheaper costs)
+// - Continuous mode: keep charging continuous
 func TestPlannerActive_ContinuousModeKeepsCharging(t *testing.T) {
 	mockClk := clock.NewMock()
 	// Simulate 04:17 (2 minutes after cheap slot ended)
@@ -245,9 +236,10 @@ func TestPlannerActive_ContinuousModeKeepsCharging(t *testing.T) {
 	lp, ctrl := setupTestLoadpoint(t, mockClk)
 	defer ctrl.Finish()
 
-	// Tariff structure from real logs: 15-minute slots
+	// Tariff structure: 15-minute slots
 	// Previous cheap slot: 04:00-04:15 (ended 2 minutes ago)
-	// Expensive gap: 04:15-05:00 (45 minutes, THREE 15-min expensive slots)
+	// constructed tariff gap: 04:15-05:00 (45 minutes, THREE 15-min more expensive slots)
+	// not testing planner logic here, just that continuous mode keeps charging on alternative later plans (at usually equal costs)!
 	// Next cheap: 05:00-07:00
 	tariffRates := api.Rates{
 		// Previous cheap slot (ended at 04:15)
@@ -265,28 +257,26 @@ func TestPlannerActive_ContinuousModeKeepsCharging(t *testing.T) {
 	mockTariff.EXPECT().Rates().Return(tariffRates, nil).AnyTimes()
 	lp.planner = planner.New(lp.log, mockTariff, planner.WithClock(mockClk))
 
-	// State matches real scenario:
-	// - Was charging 04:00-04:15, now at 04:17 (in expensive gap)
+	// State matches scenario:
+	// - Was charging 04:00-04:15, now at 04:17 (in more expensive gap)
 	// - Still need ~1h30m of charging
 	// - Target time: 07:00 (2h43m from now)
-	// - Three expensive slots ahead (45 min total gap)
-	lp.planActive = true                               // Was charging in 04:00-04:15
-	lp.planSlotEnd = time.Time{}                       // Not in active slot (gap between slots)
+	// - Three constructed expensive slots ahead (45 min total gap)
+	lp.planActive = true                                // Was charging in 04:00-04:15
+	lp.planSlotEnd = time.Time{}                        // Not in active slot (gap between slots)
 	lp.planTime = now.Add(2*time.Hour + 43*time.Minute) // Target: 07:00
-	lp.planEnergy = 16.56                              // ~1h30m at 11kW
+	lp.planEnergy = 16.56                               // ~1h30m at 11kW
 	lp.planStrategy = api.PlanStrategy{
-		Continuous:   true,              // User wants continuous charging
-		Precondition: 15 * time.Minute,  // Standard precondition
+		Continuous:   true,             // User wants continuous charging
+		Precondition: 15 * time.Minute, // Standard precondition
 	}
 
 	// Execute
 	active := lp.plannerActive()
 
-	// Verify: Should CONTINUE charging through 45-minute expensive gap
-	// Planner sees three expensive slots and prefers waiting until 05:00
+	// Verify: Should CONTINUE charging through 45-minute constructed gap
+	// Planner sees three expensive slots and prefers waiting until 05:00 (usually equal costs at later time)
 	// But continuous mode overrides: keep charging to avoid interruption
-	// With fix: returns true (line 234: strategy.Continuous && requiredDuration > precondition)
-	// Without fix: returns false (bug - line 234 missing, falls through to return false)
+	// returns true (strategy.Continuous && requiredDuration > precondition)
 	assert.True(t, active, "Should continue charging in continuous mode through expensive gap (real scenario from logs)")
 }
-
