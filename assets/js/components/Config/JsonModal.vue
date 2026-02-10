@@ -1,5 +1,13 @@
 <template>
-	<GenericModal ref="modal" :id="`${name}Modal`" :data-testid="`${name}-modal`" :title="title" :size="size" :config-modal-name="name" @open="open">
+	<GenericModal
+		:id="`${name}Modal`"
+		ref="modal"
+		:data-testid="`${name}-modal`"
+		:title="title"
+		:size="size"
+		:config-modal-name="name"
+		@open="open"
+	>
 		<p v-if="description || docsLink">
 			<span v-if="description">{{ description + " " }}</span>
 			<a v-if="docsLink" :href="docsLink" target="_blank">

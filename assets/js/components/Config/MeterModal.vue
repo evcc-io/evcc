@@ -11,7 +11,7 @@
 		:transform-api-data="transformApiData"
 		:filter-template-params="filterTemplateParams"
 		:on-template-change="handleTemplateChange"
-		:show-main-content="!!meterType"
+		:show-main-content="!!selectedType"
 		:apply-custom-defaults="applyCustomDefaults"
 		:custom-fields="customFields"
 		:preserve-on-template-change="preserveFields"
@@ -23,7 +23,7 @@
 		@close="handleClose"
 	>
 		<template #pre-content>
-			<div v-if="!meterType" class="d-flex flex-column gap-4">
+			<div v-if="!selectedType" class="d-flex flex-column gap-4">
 				<NewDeviceButton
 					v-for="t in typeChoices"
 					:key="t"
@@ -36,7 +36,7 @@
 
 		<template #description>
 			<p v-if="hasDescription" class="mt-0 mb-4">
-				{{ $t(`config.${meterType}.description`) }}
+				{{ $t(`config.${selectedType}.description`) }}
 			</p>
 		</template>
 
@@ -71,7 +71,7 @@
 				/>
 			</FormRow>
 			<FormRow
-				v-if="meterType === 'ext'"
+				v-if="selectedType === 'ext'"
 				id="meterParamExtMeterUsage"
 				:label="$t('config.meter.usage.label')"
 			>
@@ -105,7 +105,7 @@ import {
 } from "./DeviceModal";
 import { customTemplateOption, type TemplateGroup } from "./DeviceModal/TemplateSelector.vue";
 import defaultMeterYaml from "./defaultYaml/meter.yaml?raw";
-import { getModal, closeModal } from "@/configModal";
+import { getModal, replaceModal } from "@/configModal";
 
 const initialValues = {
 	type: ConfigType.Template,
@@ -135,10 +135,9 @@ export default defineComponent({
 	props: {
 		isSponsor: Boolean,
 	},
-	emits: ["added", "updated", "removed", "close"],
+	emits: ["changed", "close"],
 	data() {
 		return {
-			selectedType: null as MeterType | null,
 			extMeterUsage: "charge" as MeterTemplateUsage,
 			selectedTemplate: null as string | null,
 			iconChoices: ICONS,
@@ -151,7 +150,7 @@ export default defineComponent({
 		id(): number | undefined {
 			return getModal("meter")?.id;
 		},
-		type(): MeterType | undefined {
+		selectedType(): MeterType | undefined {
 			return getModal("meter")?.type as MeterType | undefined;
 		},
 		typeChoices(): MeterType[] {
@@ -159,37 +158,34 @@ export default defineComponent({
 		},
 		modalTitle(): string {
 			if (this.isNew) {
-				if (this.meterType) {
-					return this.$t(`config.${this.meterType}.titleAdd`);
+				if (this.selectedType) {
+					return this.$t(`config.${this.selectedType}.titleAdd`);
 				} else {
 					return this.$t("config.meter.titleChoice");
 				}
 			}
-			return this.$t(`config.${this.meterType}.titleEdit`);
-		},
-		meterType(): MeterType | null {
-			return this.type || this.selectedType;
+			return this.$t(`config.${this.selectedType}.titleEdit`);
 		},
 		templateUsage(): MeterTemplateUsage | undefined {
-			if (!this.meterType) return undefined;
+			if (!this.selectedType) return undefined;
 
 			// For ext meters, the user selects the template usage explicitly
 			// For other meter types, the meter type IS the template usage
-			if (this.meterType === "ext") {
+			if (this.selectedType === "ext") {
 				return this.extMeterUsage;
 			}
-			// For non-ext meters, meterType directly maps to template usage
+			// For non-ext meters, selectedType directly maps to template usage
 			// (grid->grid, pv->pv, battery->battery, charge->charge, aux->aux)
-			return this.meterType;
+			return this.selectedType;
 		},
 		hasDeviceTitle(): boolean {
-			return ["pv", "battery", "aux", "ext"].includes(this.meterType || "");
+			return ["pv", "battery", "aux", "ext"].includes(this.selectedType || "");
 		},
 		hasDeviceIcon(): boolean {
-			return ["aux", "ext"].includes(this.meterType || "");
+			return ["aux", "ext"].includes(this.selectedType || "");
 		},
 		hasDescription(): boolean {
-			return ["ext", "aux"].includes(this.meterType || "");
+			return ["ext", "aux"].includes(this.selectedType || "");
 		},
 		isNew(): boolean {
 			return this.id === undefined;
@@ -204,12 +200,12 @@ export default defineComponent({
 	methods: {
 		onConfigurationLoaded(values: DeviceValues) {
 			// Restore extMeterUsage when editing an existing ext meter
-			if (this.meterType === "ext" && values.usage) {
+			if (this.selectedType === "ext" && values.usage) {
 				this.extMeterUsage = values.usage;
 			}
 		},
 		selectType(type: MeterType) {
-			this.selectedType = type;
+			replaceModal("meter", { id: this.id, type });
 		},
 		provideTemplateOptions(products: Product[]): TemplateGroup[] {
 			return [
@@ -237,7 +233,7 @@ export default defineComponent({
 
 			// Make capacity non-advanced for battery meters
 			return filtered.map((p) => {
-				if (this.meterType === "battery" && p.Name === "capacity") {
+				if (this.selectedType === "battery" && p.Name === "capacity") {
 					p.Advanced = false;
 				}
 				return p;
@@ -247,7 +243,7 @@ export default defineComponent({
 			if (values.type === ConfigType.Template) {
 				// Set the template usage (what the template should do)
 				// For ext meters: user-selected usage (grid, pv, battery, charge, aux)
-				// For other meters: meterType itself is the usage
+				// For other meters: selectedType itself is the usage
 				data.usage = this.templateUsage;
 			}
 			return data;
@@ -261,8 +257,8 @@ export default defineComponent({
 		},
 		applyCustomDefaults(_template: Template | null, values: DeviceValues) {
 			// Apply default icon when template is loaded or meter type is selected
-			if (this.meterType && !values.deviceIcon) {
-				values.deviceIcon = defaultIcons[this.meterType] || "";
+			if (this.selectedType && !values.deviceIcon) {
+				values.deviceIcon = defaultIcons[this.selectedType] || "";
 			}
 		},
 		extMeterUsageChanged() {
@@ -270,20 +266,23 @@ export default defineComponent({
 			// This triggers product reload via effectiveUsage computed property change
 			this.selectedTemplate = null;
 		},
+		async emitChanged(action: "added" | "updated" | "removed", name?: string, type?: string) {
+			const result = { action, name, type };
+			this.$emit("changed", result);
+		},
 		handleAdded(name: string) {
-			closeModal({ action: "added", name });
-			this.$emit("added", this.meterType, name);
+			const type: string | undefined = this.selectedType ?? undefined;
+			this.emitChanged("added", name, type);
 		},
 		handleUpdated() {
-			closeModal({ action: "updated" });
-			this.$emit("updated");
+			const type: string | undefined = this.selectedType ?? undefined;
+			this.emitChanged("updated", undefined, type);
 		},
 		handleRemoved() {
-			closeModal({ action: "removed" });
-			this.$emit("removed", this.meterType);
+			const type: string | undefined = this.selectedType ?? undefined;
+			this.emitChanged("removed", undefined, type);
 		},
 		handleClose() {
-			this.selectedType = null;
 			this.extMeterUsage = "charge";
 			this.$emit("close");
 		},

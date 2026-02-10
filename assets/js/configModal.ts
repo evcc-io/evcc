@@ -13,6 +13,7 @@ export interface ModalResult {
   action: "added" | "updated" | "removed" | "cancelled";
   name?: string;
   id?: number;
+  type?: string;
 }
 
 const configModal = reactive({
@@ -72,16 +73,21 @@ function showElement(el: HTMLElement): void {
 
 function hideElement(name: string, el: HTMLElement): void {
   const instance = Modal.getInstance(el);
-  // @ts-expect-error bs internal
-  if (instance && el._isShown) {
-    _dismissingViaRoute.add(name);
-    instance.hide();
+  if (instance) {
+    // Check if modal is actually visible
+    const isVisible = el.classList.contains("show") || el.style.display !== "none";
+    if (isVisible) {
+      _dismissingViaRoute.add(name);
+      instance.hide();
+    }
   }
 }
 
 function syncModal(name: string): void {
   const el = _modals.get(name);
-  if (!el) return;
+  if (!el) {
+    return;
+  }
   const inStack = configModal.stack.some((m) => m.name === name);
   const onTop = isTopModal(name);
   if (inStack && onTop) {
@@ -186,7 +192,7 @@ export function initConfigModal(router: Router): void {
     () => syncAllModals()
   );
 
-  router.afterEach((to, _from) => {
+  router.afterEach((to) => {
     if (to.path !== "/config") {
       // Clear stack when leaving config page
       if (configModal.stack.length > 0) {
@@ -238,19 +244,30 @@ export function openModal(
   });
 }
 
-export function closeModal(result?: ModalResult): void {
-  if (!_router) return;
-  if (configModal.stack.length === 0) return;
+export async function closeModal(result?: ModalResult): Promise<void> {
+  if (!_router) {
+    return;
+  }
+  if (configModal.stack.length === 0) {
+    return;
+  }
 
   const resolve = _resolvers.pop();
+  const currentModal = configModal.stack[configModal.stack.length - 1];
   const newStack = configModal.stack.slice(0, -1);
   const query = buildQuery(newStack);
+
+  // Merge type from modal stack into result if not provided
+  const finalResult = result ?? { action: "cancelled" };
+  if (currentModal?.type && !finalResult.type) {
+    finalResult.type = currentModal.type;
+  }
 
   // Update stack synchronously to prevent double-close from GenericModal's handleHidden
   configModal.stack = newStack;
 
-  _router.push({ path: "/config", query });
-  resolve?.(result ?? { action: "cancelled" });
+  await _router.push({ path: "/config", query });
+  resolve?.(finalResult);
 }
 
 export function replaceModal(
@@ -266,6 +283,9 @@ export function replaceModal(
 
   const newStack = [...configModal.stack.slice(0, -1), entry];
   const query = buildQuery(newStack);
+
+  // Update stack synchronously to avoid race conditions
+  configModal.stack = newStack;
 
   _router.replace({ path: "/config", query });
 }

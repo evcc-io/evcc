@@ -85,7 +85,7 @@ import { defineComponent, type PropType } from "vue";
 import FormRow from "./FormRow.vue";
 import DeviceModalBase from "./DeviceModal/DeviceModalBase.vue";
 import { ConfigType } from "@/types/evcc";
-import { getModal, closeModal } from "@/configModal";
+import { getModal } from "@/configModal";
 import {
 	type DeviceValues,
 	type Template,
@@ -128,7 +128,7 @@ export default defineComponent({
 		},
 		isSponsor: Boolean,
 	},
-	emits: ["added", "updated", "removed", "close"],
+	emits: ["changed", "close"],
 	data() {
 		return {
 			initialValues,
@@ -321,17 +321,18 @@ export default defineComponent({
 				this.ocppNextStepConfirmed = true;
 			}
 		},
+		async emitChanged(action: "added" | "updated" | "removed", name?: string) {
+			const result = { action, name };
+			this.$emit("changed", result);
+		},
 		handleAdded(name: string) {
-			closeModal({ action: "added", name });
-			this.$emit("added", name);
+			this.emitChanged("added", name);
 		},
 		handleUpdated() {
-			closeModal({ action: "updated" });
-			this.$emit("updated");
+			this.emitChanged("updated");
 		},
 		handleRemoved() {
-			closeModal({ action: "removed" });
-			this.$emit("removed");
+			this.emitChanged("removed");
 		},
 		reset() {
 			this.ocppNextStepConfirmed = false;

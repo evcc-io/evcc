@@ -583,7 +583,7 @@ import EditIcon from "../MaterialIcon/Edit.vue";
 import NewDeviceButton from "./NewDeviceButton.vue";
 import InvalidReferenceAlert from "./InvalidReferenceAlert.vue";
 import { handleError, customChargerName } from "./DeviceModal";
-import { getModal, openModal } from "@/configModal";
+import { getModal, openModal, replaceModal, closeModal } from "@/configModal";
 import {
 	LOADPOINT_TYPE,
 	type DeviceType,
@@ -648,12 +648,11 @@ export default {
 			default: () => false,
 		},
 	},
-	emits: ["updated"],
+	emits: ["changed"],
 	data() {
 		return {
 			isModalVisible: false,
 			saving: false,
-			selectedType: null as LoadpointType | null,
 			values: deepClone(defaultValues) as ConfigLoadpoint,
 			chargerPower: "11kw",
 			solarMode: "default",
@@ -664,6 +663,9 @@ export default {
 	computed: {
 		id(): number | undefined {
 			return getModal("loadpoint")?.id;
+		},
+		selectedType(): LoadpointType | undefined {
+			return getModal("loadpoint")?.type as LoadpointType | undefined;
 		},
 		modalTitle() {
 			if (this.isNew) {
@@ -814,7 +816,6 @@ export default {
 	},
 	methods: {
 		reset() {
-			this.selectedType = null;
 			this.values = deepClone(defaultValues);
 			this.updatePhases();
 		},
@@ -829,13 +830,17 @@ export default {
 				console.error(e);
 			}
 		},
+		async emitChanged(action: "added" | "updated" | "removed") {
+			const result = { action };
+			await closeModal(result);
+			this.$emit("changed", result);
+		},
 		async update() {
 			this.saving = true;
 			try {
 				const values = deepClone(this.values);
 				await api.put(`config/loadpoints/${this.id}`, values);
-				this.$emit("updated");
-				(this.$refs["modal"] as any).close();
+				this.emitChanged("updated");
 			} catch (e) {
 				handleError(e, "update failed");
 			}
@@ -844,8 +849,7 @@ export default {
 		async remove() {
 			try {
 				await api.delete(`config/loadpoints/${this.id}`);
-				this.$emit("updated");
-				(this.$refs["modal"] as any).close();
+				this.emitChanged("removed");
 			} catch (e) {
 				console.error(e);
 				alert("delete failed");
@@ -855,8 +859,7 @@ export default {
 			this.saving = true;
 			try {
 				await api.post("config/loadpoints", this.values);
-				this.$emit("updated");
-				(this.$refs["modal"] as any).close();
+				this.emitChanged("added");
 			} catch (e) {
 				handleError(e, "create failed");
 			}
@@ -871,7 +874,9 @@ export default {
 		async editCharger() {
 			const charger = this.chargers.find((c) => c.name === this.values.charger);
 			if (charger && charger.id === undefined) {
-				alert("yaml configured chargers can not be edited. Remove charger from yaml first.");
+				alert(
+					"yaml configured chargers can not be edited. Remove charger from yaml first."
+				);
 				return;
 			}
 			const result = await openModal("charger", {
@@ -934,7 +939,7 @@ export default {
 			}
 		},
 		selectType(type: LoadpointType) {
-			this.selectedType = type;
+			replaceModal("loadpoint", { id: this.id, type });
 		},
 	},
 };

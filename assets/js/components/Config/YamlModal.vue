@@ -1,9 +1,9 @@
 <template>
 	<GenericModal
+		:id="`${name}Modal`"
 		ref="modal"
 		:size="size"
 		:title="title"
-		:id="`${name}Modal`"
 		:data-testid="`${name}-modal`"
 		:config-modal-name="name"
 		@open="open"

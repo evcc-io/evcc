@@ -167,6 +167,7 @@
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
 import GenericModal from "../../Helper/GenericModal.vue";
+import { closeModal } from "@/configModal";
 import ErrorMessage from "../../Helper/ErrorMessage.vue";
 import PropertyEntry from "../PropertyEntry.vue";
 import PropertyCollapsible from "../PropertyCollapsible.vue";
@@ -657,7 +658,7 @@ export default defineComponent({
 				this.succeeded = true;
 				await sleep(500);
 				this.$emit("added", name);
-				(this.$refs["modal"] as any).close();
+				await closeModal({ action: "added", name });
 			} catch (e) {
 				handleError(e, "create failed");
 				this.saving = false;
@@ -686,12 +687,11 @@ export default defineComponent({
 			try {
 				console.log("calling device.update", this.apiData);
 				await this.device.update(this.id!, this.apiData, force);
-				console.log("update succeeded, closing modal");
 				this.saving = false;
 				this.succeeded = true;
 				await sleep(500);
 				this.$emit("updated");
-				(this.$refs["modal"] as any).close();
+				await closeModal({ action: "updated" });
 			} catch (e) {
 				console.error("update failed", e);
 				handleError(e, "update failed");
@@ -702,7 +702,7 @@ export default defineComponent({
 			try {
 				await this.device.remove(this.id!);
 				this.$emit("removed");
-				(this.$refs["modal"] as any).close();
+				await closeModal({ action: "removed" });
 			} catch (e) {
 				handleError(e, "remove failed");
 			}

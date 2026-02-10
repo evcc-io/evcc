@@ -328,25 +328,11 @@
 					:meters="meters"
 					:circuits="circuits"
 					:hasDeviceError="hasDeviceError"
-					@updated="loadpointChanged"
+					@changed="loadpointChanged"
 				/>
-				<VehicleModal
-					:is-sponsor="isSponsor"
-					@vehicle-changed="vehicleChanged"
-				/>
-				<MeterModal
-					:is-sponsor="isSponsor"
-					@added="meterAdded"
-					@updated="meterChanged"
-					@removed="meterRemoved"
-				/>
-				<ChargerModal
-					:is-sponsor="isSponsor"
-					:ocpp="ocpp"
-					@added="chargerAdded"
-					@updated="chargerChanged"
-					@removed="chargerChanged"
-				/>
+				<VehicleModal :is-sponsor="isSponsor" @vehicle-changed="vehicleChanged" />
+				<MeterModal :is-sponsor="isSponsor" @changed="meterChanged" />
+				<ChargerModal :is-sponsor="isSponsor" :ocpp="ocpp" @changed="chargerChanged" />
 				<InfluxModal @changed="loadDirty" />
 				<MqttModal @changed="loadDirty" />
 				<NetworkModal @changed="loadDirty" />
@@ -408,7 +394,7 @@ import LoadpointIcon from "../components/MaterialIcon/Loadpoint.vue";
 import MessagingModal from "../components/Config/MessagingModal.vue";
 import MeterModal from "../components/Config/MeterModal.vue";
 import MeterCard from "../components/Config/MeterCard.vue";
-import { openModal } from "@/configModal";
+import { openModal, type ModalResult } from "@/configModal";
 import ModbusProxyIcon from "../components/MaterialIcon/ModbusProxy.vue";
 import ModbusProxyModal from "../components/Config/ModbusProxyModal.vue";
 import MqttIcon from "../components/MaterialIcon/Mqtt.vue";
@@ -774,7 +760,47 @@ export default defineComponent({
 				.map((name) => this.meters.find((m) => m.name === name))
 				.filter((m): m is ConfigMeter => m !== undefined);
 		},
-		async meterChanged() {
+		async meterChanged(result: ModalResult) {
+			console.log("meterChanged", result);
+			// Added: update site config
+			if (result.action === "added") {
+				const type = result.type as MeterType;
+				const name = result.name!;
+
+				switch (type) {
+					case "grid":
+						this.site.grid = name;
+						this.saveSite(type);
+						break;
+					case "pv":
+						if (!this.site.pv) this.site.pv = [];
+						this.site.pv.push(name);
+						this.saveSite(type);
+						break;
+					case "battery":
+						if (!this.site.battery) this.site.battery = [];
+						this.site.battery.push(name);
+						this.saveSite(type);
+						break;
+					case "aux":
+						if (!this.site.aux) this.site.aux = [];
+						this.site.aux.push(name);
+						this.saveSite(type);
+						break;
+					case "ext":
+						if (!this.site.ext) this.site.ext = [];
+						this.site.ext.push(name);
+						this.saveSite(type);
+						break;
+				}
+			}
+
+			// Removed: reload site config
+			if (result.action === "removed") {
+				await this.loadSite();
+			}
+
+			// Reload meters and update UI
 			await this.loadMeters();
 			await this.loadDirty();
 			this.updateValues();
@@ -797,43 +823,6 @@ export default defineComponent({
 		},
 		yamlChanged() {
 			this.loadDirty();
-		},
-		meterAdded(type: MeterType, name: string) {
-			if (type === "grid") {
-				this.site.grid = name;
-				this.saveSite(type);
-			} else if (type !== "charge") {
-				switch (type) {
-					case "pv":
-						if (!this.site.pv) this.site.pv = [];
-						this.site.pv.push(name);
-						break;
-					case "battery":
-						if (!this.site.battery) this.site.battery = [];
-						this.site.battery.push(name);
-						break;
-					case "aux":
-						if (!this.site.aux) this.site.aux = [];
-						this.site.aux.push(name);
-						break;
-					case "ext":
-						if (!this.site.ext) this.site.ext = [];
-						this.site.ext.push(name);
-						break;
-				}
-				this.saveSite(type);
-			}
-			this.meterChanged();
-		},
-		meterRemoved(type: MeterType) {
-			if (type !== "charge") {
-				this.loadSite();
-				this.loadDirty();
-			}
-			this.meterChanged();
-		},
-		async chargerAdded() {
-			await this.chargerChanged();
 		},
 		async saveSite(key: keyof SiteConfig) {
 			const body = key ? { [key]: this.site[key] } : this.site;
