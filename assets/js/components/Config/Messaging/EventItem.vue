@@ -7,7 +7,7 @@
 				class="form-check-input form-check-input"
 				type="checkbox"
 				role="switch"
-				:aria-label="getVisibilityLabel"
+				:aria-label="visibilityLabel"
 				tabindex="0"
 				@change="updateDisabled(($event.target as HTMLInputElement).checked)"
 			/>
@@ -77,7 +77,7 @@ export default {
 	},
 	emits: ["update:disabled", "update:title", "update:message"],
 	computed: {
-		getVisibilityLabel() {
+		visibilityLabel() {
 			return this.$t(`config.messaging.${this.disabled ? "enableEvent" : "disableEvent"}`, {
 				event: this.type,
 			});
