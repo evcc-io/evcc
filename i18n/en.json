@@ -460,8 +460,10 @@
       "eventMessage": "Message",
       "eventTitle": "Title",
       "events": "Events",
+      "hide": "Enable {event} event",
       "legacyWarning": "New messaging configuration available! Remove and save your messaging events and services here to use the new guided process.",
       "messengers": "Messengers",
+      "show": "Disable {event} event",
       "title": "Notifications"
     },
     "messenger": {

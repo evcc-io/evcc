@@ -97,9 +97,10 @@ test.describe("messaging", async () => {
     await expectModalVisible(modal);
 
     // validate start event
-    const switchInput = modal.getByTestId("event-start-switch");
-    const titleInput = modal.getByTestId("event-start-title").locator("input");
-    const messageInput = modal.getByTestId("event-start-message");
+    const eventStart = modal.getByTestId("event-start");
+    const switchInput = eventStart.getByRole("switch");
+    const titleInput = eventStart.getByLabel("Title");
+    const messageInput = eventStart.getByLabel("Message");
 
     await expect(switchInput).not.toBeChecked();
     await expect(titleInput).toBeDisabled();

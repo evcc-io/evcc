@@ -1,5 +1,5 @@
 <template>
-	<div>
+	<div :data-testid="`event-${type}`">
 		<div class="form-check form-switch mb-4">
 			<input
 				:id="formId('switch')"
@@ -7,7 +7,7 @@
 				class="form-check-input form-check-input"
 				type="checkbox"
 				role="switch"
-				:data-testid="`event-${type}-switch`"
+				:aria-label="getVisibilityLabel()"
 				tabindex="0"
 				@change="updateDisabled(($event.target as HTMLInputElement).checked)"
 			/>
@@ -23,7 +23,6 @@
 				<PropertyField
 					:id="formId('title')"
 					:model-value="title"
-					:data-testid="`event-${type}-title`"
 					type="String"
 					:disabled="disabled"
 					required
@@ -39,7 +38,6 @@
 				<PropertyField
 					:id="formId('message')"
 					:model-value="message"
-					:data-testid="`event-${type}-message`"
 					type="String"
 					property="eventMessage"
 					:disabled="disabled"
@@ -100,6 +98,11 @@ export default {
 		},
 		updateMessage(newValue: string) {
 			this.$emit("update:message", newValue);
+		},
+		getVisibilityLabel() {
+			return this.$t(`config.messaging.event.${this.disabled ? "show" : "hide"}`, {
+				event: this.type,
+			});
 		},
 	},
 };
