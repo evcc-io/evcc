@@ -158,15 +158,34 @@ func NewOCPP(ctx context.Context,
 		func(cp *ocpp.CP) error {
 			log.DEBUG.Printf("waiting for chargepoint: %v", connectTimeout)
 
+			timeout := time.After(connectTimeout)
+
 			select {
 			case <-ctx.Done():
 				return ctx.Err()
-			case <-time.After(connectTimeout):
+			case <-timeout:
 				return api.ErrTimeout
 			case <-cp.HasConnected():
 			}
 
-			return cp.Setup(ctx, meterValues, meterInterval, forcePowerCtrl)
+			// retry setup on failure; handles firmware that connects
+			// but doesn't respond until after reconnect
+			for {
+				err := cp.Setup(ctx, meterValues, meterInterval, forcePowerCtrl)
+				if err == nil {
+					return nil
+				}
+
+				log.WARN.Printf("setup failed: %v, waiting for reconnect", err)
+
+				select {
+				case <-ctx.Done():
+					return ctx.Err()
+				case <-timeout:
+					return err
+				case <-cp.BootNotificationC():
+				}
+			}
 		},
 	)
 	if err != nil {
