@@ -284,9 +284,6 @@ export function replaceModal(
   const newStack = [...configModal.stack.slice(0, -1), entry];
   const query = buildQuery(newStack);
 
-  // Update stack synchronously to avoid race conditions
-  configModal.stack = newStack;
-
   _router.replace({ path: "/config", query });
 }
 

@@ -343,6 +343,7 @@
 				<TariffsModal @changed="yamlChanged" />
 				<TelemetryModal :sponsor="sponsor" :telemetry="telemetry" />
 				<ExperimentalModal :experimental="experimental" />
+				<TitleModal @changed="loadDirty" />
 				<ModbusProxyModal :is-sponsor="isSponsor" @changed="loadDirty" />
 				<CircuitsModal
 					:gridMeter="gridMeter"
@@ -407,6 +408,7 @@ import store from "../store";
 import TariffsModal from "../components/Config/TariffsModal.vue";
 import TelemetryModal from "../components/Config/TelemetryModal.vue";
 import ExperimentalModal from "../components/Config/ExperimentalModal.vue";
+import TitleModal from "../components/Config/TitleModal.vue";
 import Header from "../components/Top/Header.vue";
 import VehicleIcon from "../components/VehicleIcon";
 import VehicleModal from "../components/Config/VehicleModal.vue";
@@ -476,6 +478,7 @@ export default defineComponent({
 		TariffsModal,
 		TelemetryModal,
 		ExperimentalModal,
+		TitleModal,
 		TopHeader: Header,
 		VehicleIcon,
 		VehicleModal,
@@ -761,7 +764,6 @@ export default defineComponent({
 				.filter((m): m is ConfigMeter => m !== undefined);
 		},
 		async meterChanged(result: ModalResult) {
-			console.log("meterChanged", result);
 			// Added: update site config
 			if (result.action === "added") {
 				const type = result.type as MeterType;
