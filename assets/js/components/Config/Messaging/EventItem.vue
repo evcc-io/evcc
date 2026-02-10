@@ -78,9 +78,7 @@ export default {
 	emits: ["update:disabled", "update:title", "update:message"],
 	computed: {
 		visibilityLabel() {
-			return this.$t(`config.messaging.${this.disabled ? "enableEvent" : "disableEvent"}`, {
-				event: this.type,
-			});
+			return this.$t(`config.messaging.${this.disabled ? "enableEvent" : "disableEvent"}`);
 		},
 	},
 	mounted() {
