@@ -7,7 +7,7 @@
 		endpoint="/config/messagingEvents"
 		state-key="messagingEvents"
 		data-testid="messaging-modal"
-		:size="activeEventsTab ? 'xl' : 'm'"
+		size="xl"
 		:transform-read-values="transformReadValues"
 		:disable-save="!activeEventsTab"
 		:disable-cancel="!activeEventsTab"
@@ -38,16 +38,15 @@
 				</li>
 			</ul>
 			<div v-if="activeEventsTab" class="my-5">
-				<div v-for="(event, index) in events" :key="event" class="mb-5">
-					<div v-if="values[event]">
-						<hr v-if="index > 0" class="my-5" />
-						<EventItem
-							v-model:disabled="values[event].disabled"
-							v-model:title="values[event].title"
-							v-model:message="values[event].msg"
-							:type="event"
-						/>
-					</div>
+				<div class="mb-5">
+					<EventItem
+						v-for="event in visibleEvents(values)"
+						:key="event"
+						v-model:disabled="values[event].disabled"
+						v-model:title="values[event].title"
+						v-model:message="values[event].msg"
+						:type="event"
+					/>
 				</div>
 			</div>
 			<div v-else>
@@ -113,6 +112,9 @@ export default {
 		},
 	},
 	methods: {
+		visibleEvents(values: MessagingEvents) {
+			return this.events.filter((e) => values[e]);
+		},
 		eventCount(events: MessagingEvents) {
 			return Object.values(events).filter((e) => !e.disabled).length;
 		},

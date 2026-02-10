@@ -1,5 +1,11 @@
 <template>
-	<div :data-testid="`event-${type}`" role="group" :aria-label="type">
+	<div
+		:data-testid="`event-${type}`"
+		role="group"
+		:aria-label="type"
+		class="collapsible-wrapper mb-2"
+		:class="{ open: !disabled }"
+	>
 		<div class="form-check form-switch mb-4">
 			<input
 				:id="formId('switch')"
@@ -14,36 +20,40 @@
 				{{ $t(`config.messaging.event.${type}.title`) }}
 			</label>
 		</div>
-		<div class="row mb-3" :class="{ 'opacity-25': disabled }">
-			<div class="col-md-2 col-form-label">
-				<label :for="formId('title')">{{ $t("config.messaging.eventTitle") }}</label>
+		<div class="collapsible-content">
+			<div class="row mb-3">
+				<div class="col-md-2 col-form-label">
+					<label :for="formId('title')">{{ $t("config.messaging.eventTitle") }}</label>
+				</div>
+				<div class="col-md-10">
+					<PropertyField
+						:id="formId('title')"
+						:model-value="title"
+						type="String"
+						:disabled="disabled"
+						required
+						@update:model-value="updateTitle"
+					/>
+				</div>
 			</div>
-			<div class="col-md-10">
-				<PropertyField
-					:id="formId('title')"
-					:model-value="title"
-					type="String"
-					:disabled="disabled"
-					required
-					@update:model-value="updateTitle"
-				/>
-			</div>
-		</div>
-		<div class="row" :class="{ 'opacity-25': disabled }">
-			<div class="col-md-2 col-form-label">
-				<label :for="formId('message')">{{ $t("config.messaging.eventMessage") }}</label>
-			</div>
-			<div class="col-md-10">
-				<PropertyField
-					:id="formId('message')"
-					:model-value="message"
-					type="String"
-					property="eventMessage"
-					:disabled="disabled"
-					:rows="3"
-					required
-					@change="updateMessage($event.target.value)"
-				/>
+			<div class="row mb-5">
+				<div class="col-md-2 col-form-label">
+					<label :for="formId('message')">{{
+						$t("config.messaging.eventMessage")
+					}}</label>
+				</div>
+				<div class="col-md-10">
+					<PropertyField
+						:id="formId('message')"
+						:model-value="message"
+						type="String"
+						property="eventMessage"
+						:disabled="disabled"
+						:rows="3"
+						required
+						@change="updateMessage($event.target.value)"
+					/>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -101,3 +111,13 @@ export default {
 	},
 };
 </script>
+
+<style scoped>
+.collapsible-wrapper {
+	grid-template-rows: auto 0fr;
+}
+
+.collapsible-wrapper.open {
+	grid-template-rows: auto 1fr;
+}
+</style>
