@@ -415,8 +415,6 @@
     "messaging": {
       "addMessenger": "Add messenger",
       "description": "Receive messages about your charging sessions.",
-      "disableEvent": "Disable event",
-      "enableEvent": "Enable event",
       "event": {
         "asleep": {
           "messageDefault": "Charge release, vehicle {vehicleName} not charging.",
