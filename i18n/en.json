@@ -415,6 +415,8 @@
     "messaging": {
       "addMessenger": "Add messenger",
       "description": "Receive messages about your charging sessions.",
+      "disableEvent": "Disable {event} event",
+      "enableEvent": "Enable {event} event",
       "event": {
         "asleep": {
           "messageDefault": "Charge release, vehicle {vehicleName} not charging.",
@@ -460,10 +462,8 @@
       "eventMessage": "Message",
       "eventTitle": "Title",
       "events": "Events",
-      "hide": "Enable {event} event",
       "legacyWarning": "New messaging configuration available! Remove and save your messaging events and services here to use the new guided process.",
       "messengers": "Messengers",
-      "show": "Disable {event} event",
       "title": "Notifications"
     },
     "messenger": {
