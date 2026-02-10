@@ -347,13 +347,6 @@ func getBackup(authObject auth.Auth) http.HandlerFunc {
 
 		filename := "evcc-backup-" + time.Now().Format("2006-01-02--15-04") + ".db"
 
-		fi, err := f.Stat()
-		if err != nil {
-			http.Error(w, "Could not stat DB file: "+err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		w.Header().Set("Content-Length", strconv.FormatInt(fi.Size(), 10))
 		w.Header().Set("Content-Type", "application/octet-stream")
 		w.Header().Set("Content-Disposition", `attachment; filename="`+filename+`"`)
 
