@@ -452,22 +452,21 @@ import Header from "../components/Top/Header.vue";
 import VehicleIcon from "../components/VehicleIcon";
 import VehicleModal from "../components/Config/VehicleModal.vue";
 import { defineComponent, type PropType } from "vue";
-import {
-	type Circuit,
-	type ConfigCharger,
-	type ConfigVehicle,
-	type ConfigCircuit,
-	type ConfigLoadpoint,
-	type ConfigMeter,
-	type LoadpointType,
-	type Timeout,
-	type VehicleOption,
-	type MeterType,
-	type SiteConfig,
-	type DeviceType,
-	type Notification,
-	type ConfigMessenger,
-	MESSAGING_EVENTS,
+import type {
+	Circuit,
+	ConfigCharger,
+	ConfigVehicle,
+	ConfigCircuit,
+	ConfigLoadpoint,
+	ConfigMeter,
+	LoadpointType,
+	Timeout,
+	VehicleOption,
+	MeterType,
+	SiteConfig,
+	DeviceType,
+	Notification,
+	ConfigMessenger,
 } from "@/types/evcc";
 
 type DeviceValuesMap = Record<DeviceType, Record<string, any>>;
