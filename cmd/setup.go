@@ -98,7 +98,7 @@ func nameValid(name string) error {
 
 func loadConfigFile(conf *globalconfig.All, checkDB bool) error {
 	if err := viper.ReadInConfig(); err != nil {
-		if !errors.As(err, &vpr.ConfigFileNotFoundError{}) {
+		if _, ok := errors.AsType[*vpr.ConfigFileNotFoundError](err); !ok {
 			return fmt.Errorf("failed reading config file: %w", err)
 		}
 	}
@@ -390,7 +390,7 @@ func vehicleInstance(cc config.Named) (api.Vehicle, error) {
 	}
 
 	if err != nil {
-		if ce := new(util.ConfigError); errors.As(err, &ce) {
+		if _, ok := errors.AsType[*util.ConfigError](err); ok {
 			return nil, err
 		}
 
@@ -856,7 +856,7 @@ func tariffInstance(name string, conf config.Typed) (api.Tariff, error) {
 
 	instance, err := tariff.NewFromConfig(ctx, conf.Type, props)
 	if err != nil {
-		if ce := new(util.ConfigError); errors.As(err, &ce) {
+		if _, ok := errors.AsType[*util.ConfigError](err); ok {
 			return nil, err
 		}
 
