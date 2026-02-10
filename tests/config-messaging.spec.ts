@@ -118,7 +118,7 @@ test.describe("messaging", async () => {
     // validate connection
     await modal.getByRole("button", { name: "Save", exact: true }).click();
     await expectModalHidden(modal);
-    await expect(messagingCard).toContainText(["Events", "1/8", "Messengers", "0"].join(""));
+    await expect(messagingCard).toContainText(["Events", "1", "Messengers", "0"].join(""));
 
     // restart button appears
     const restartButton = page
@@ -168,7 +168,7 @@ test.describe("messaging", async () => {
 
     await messagingModal.getByRole("button", { name: "Close" }).click();
     await expectModalHidden(messagingModal);
-    await expect(messagingCard).toContainText(["Events", "0/8", "Messengers", "1"].join(""));
+    await expect(messagingCard).toContainText(["Events", "0", "Messengers", "1"].join(""));
 
     await messagingCard.getByRole("button", { name: "edit" }).click();
     await messagingModal.getByRole("button", { name: "edit" }).click();

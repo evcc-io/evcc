@@ -724,12 +724,11 @@ export default defineComponent({
 		},
 		messagingTags(): DeviceTags {
 			if (this.messagingUiConfigured) {
-				const allEvents = Object.keys(MESSAGING_EVENTS).length;
 				const events = store.state?.messagingEvents || [];
 				const enabledEvents = Object.values(events).filter((e) => !e.disabled).length;
 
 				return {
-					events: { value: `${enabledEvents}/${allEvents}` },
+					events: { value: enabledEvents },
 					messengers: { value: this.messengers.length },
 				};
 			}
