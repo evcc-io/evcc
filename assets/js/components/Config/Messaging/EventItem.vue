@@ -1,5 +1,5 @@
 <template>
-	<div :data-testid="`event-${type}`">
+	<div :data-testid="`event-${type}`" role="group" :aria-label="type">
 		<div class="form-check form-switch mb-4">
 			<input
 				:id="formId('switch')"
