@@ -1121,7 +1121,6 @@
   "passwordModal": {
     "description": "Nastavite geslo za zaščito konfiguracijskih nastavitev. Uporaba glavnega vmesnika je še vedno možna brez prijave.",
     "empty": "Geslo ne sme biti prazno",
-    "error": "Napaka: ",
     "labelCurrent": "Trenutno geslo",
     "labelNew": "Novo geslo",
     "labelRepeat": "Ponovi geslo",

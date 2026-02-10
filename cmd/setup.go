@@ -522,8 +522,8 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) error {
 
 	// setup additional templates
 	if err == nil {
-		if cmd.PersistentFlags().Changed(flagTemplate) {
-			class, err := templates.ClassString(cmd.PersistentFlags().Lookup(flagTemplateType).Value.String())
+		if cmd.Flags().Changed(flagTemplate) {
+			class, err := templates.ClassString(cmd.Flags().Lookup(flagTemplateType).Value.String())
 			if err != nil {
 				return err
 			}
@@ -1174,4 +1174,10 @@ func configureAuth(router *mux.Router, paramC chan<- util.Param) {
 
 	// wire the handler
 	providerauth.Setup(auth, paramC)
+}
+
+// isExperimental returns if experimental features are enabled
+func isExperimental() bool {
+	b, _ := settings.Bool(keys.Experimental)
+	return b
 }

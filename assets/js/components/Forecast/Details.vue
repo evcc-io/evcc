@@ -36,6 +36,14 @@
 			</div>
 		</div>
 	</div>
+	<div v-else-if="isConstantValue" class="row">
+		<div class="col-6 col-sm-4 mb-3 d-flex flex-column">
+			<div class="label">{{ label("constant") }}</div>
+			<div class="value text-price text-nowrap" :class="highlightColor">
+				{{ constantValue }}
+			</div>
+		</div>
+	</div>
 	<div v-else class="row">
 		<div class="col-12 col-sm-6 col-lg-4 mb-3 d-flex flex-column">
 			<div class="label">{{ label("range") }}</div>
@@ -117,6 +125,17 @@ export default defineComponent({
 			return slots
 				.filter((slot) => new Date(slot.end) > now)
 				.slice(0, FORECASTED_HOURS * SLOTS_PER_HOUR);
+		},
+		isConstantValue(): boolean {
+			if (this.isSolar) return false;
+			const slots = this.upcomingSlots;
+			if (slots.length === 0) return false;
+
+			const firstValue = slots[0]?.value;
+			return slots.every((slot) => slot.value === firstValue);
+		},
+		constantValue(): string {
+			return this.fmtValue(this.upcomingSlots[0]!.value, true);
 		},
 		averagePrice() {
 			if (this.isSolar) return "";

@@ -1111,7 +1111,6 @@
   "passwordModal": {
     "description": "Imposta una password per proteggere le impostazioni di configurazione. È comunque possibile utilizzare la schermata principale senza effettuare il login.",
     "empty": "La password non deve essere vuota",
-    "error": "Errore: ",
     "labelCurrent": "Password attuale",
     "labelNew": "Nuova password",
     "labelRepeat": "Ripeti la password",

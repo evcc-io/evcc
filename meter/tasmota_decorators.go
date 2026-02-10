@@ -6,7 +6,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateTasmota(base *Tasmota, phaseVoltages func() (float64, float64, float64, error), phaseCurrents func() (float64, float64, float64, error)) api.Meter {
+func decorateTasmota(base *Tasmota, phaseVoltages func() (float64, float64, float64, error), phaseCurrents func() (float64, float64, float64, error), phasePowers func() (float64, float64, float64, error)) api.Meter {
 	switch {
 	case phaseCurrents == nil && phaseVoltages == nil:
 		return base
@@ -22,7 +22,7 @@ func decorateTasmota(base *Tasmota, phaseVoltages func() (float64, float64, floa
 			},
 		}
 
-	case phaseCurrents != nil && phaseVoltages == nil:
+	case phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
 		return &struct {
 			*Tasmota
 			api.PhaseCurrents
@@ -33,7 +33,7 @@ func decorateTasmota(base *Tasmota, phaseVoltages func() (float64, float64, floa
 			},
 		}
 
-	case phaseCurrents != nil && phaseVoltages != nil:
+	case phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
 		return &struct {
 			*Tasmota
 			api.PhaseCurrents
@@ -42,6 +42,40 @@ func decorateTasmota(base *Tasmota, phaseVoltages func() (float64, float64, floa
 			Tasmota: base,
 			PhaseCurrents: &decorateTasmotaPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decorateTasmotaPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case phaseCurrents != nil && phasePowers != nil && phaseVoltages == nil:
+		return &struct {
+			*Tasmota
+			api.PhaseCurrents
+			api.PhasePowers
+		}{
+			Tasmota: base,
+			PhaseCurrents: &decorateTasmotaPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateTasmotaPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+		}
+
+	case phaseCurrents != nil && phasePowers != nil && phaseVoltages != nil:
+		return &struct {
+			*Tasmota
+			api.PhaseCurrents
+			api.PhasePowers
+			api.PhaseVoltages
+		}{
+			Tasmota: base,
+			PhaseCurrents: &decorateTasmotaPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhasePowers: &decorateTasmotaPhasePowersImpl{
+				phasePowers: phasePowers,
 			},
 			PhaseVoltages: &decorateTasmotaPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
@@ -58,6 +92,14 @@ type decorateTasmotaPhaseCurrentsImpl struct {
 
 func (impl *decorateTasmotaPhaseCurrentsImpl) Currents() (float64, float64, float64, error) {
 	return impl.phaseCurrents()
+}
+
+type decorateTasmotaPhasePowersImpl struct {
+	phasePowers func() (float64, float64, float64, error)
+}
+
+func (impl *decorateTasmotaPhasePowersImpl) Powers() (float64, float64, float64, error) {
+	return impl.phasePowers()
 }
 
 type decorateTasmotaPhaseVoltagesImpl struct {
