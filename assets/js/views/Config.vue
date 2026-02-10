@@ -32,7 +32,7 @@
 						:editable="!!loadpoint.id"
 						:error="hasDeviceError('loadpoint', loadpoint.name)"
 						data-testid="loadpoint"
-						@edit="editLoadpoint(loadpoint.id)"
+						@edit="openModal('loadpoint', { id: loadpoint.id })"
 					>
 						<template #tags>
 							<DeviceTags :tags="loadpointTags(loadpoint)" />
@@ -49,7 +49,7 @@
 					<NewDeviceButton
 						data-testid="add-loadpoint"
 						:title="$t('config.main.addLoadpoint')"
-						@click="newLoadpoint"
+						@click="openModal('loadpoint')"
 					/>
 				</div>
 
@@ -63,7 +63,7 @@
 						:editable="vehicle.id >= 0"
 						:error="hasDeviceError('vehicle', vehicle.name)"
 						data-testid="vehicle"
-						@edit="editVehicle(vehicle.id)"
+						@edit="openModal('vehicle', { id: vehicle.id })"
 					>
 						<template #icon>
 							<VehicleIcon :name="vehicle.config?.icon" />
@@ -75,7 +75,7 @@
 					<NewDeviceButton
 						data-testid="add-vehicle"
 						:title="$t('config.main.addVehicle')"
-						@click="newVehicle"
+						@click="openModal('vehicle')"
 					/>
 				</div>
 
@@ -88,13 +88,13 @@
 						meter-type="grid"
 						:has-error="hasDeviceError('meter', gridMeter.name)"
 						:tags="deviceTags('meter', gridMeter.name)"
-						@edit="editMeter"
+						@edit="(type, id) => openModal('meter', { type, id })"
 					/>
 					<NewDeviceButton
 						v-else
 						:title="$t('config.main.addGrid')"
 						data-testid="add-grid"
-						@click="newMeter('grid')"
+						@click="openModal('meter', { type: 'grid' })"
 					/>
 					<DeviceCard
 						:title="$t('config.tariffs.title')"
@@ -102,7 +102,7 @@
 						:unconfigured="isUnconfigured(tariffTags)"
 						:error="hasClassError('tariff')"
 						data-testid="tariffs"
-						@edit="openModal('tariffsModal')"
+						@edit="openModal('tariffs')"
 					>
 						<template #icon>
 							<shopicon-regular-receivepayment></shopicon-regular-receivepayment>
@@ -121,7 +121,7 @@
 						meter-type="pv"
 						:has-error="hasDeviceError('meter', meter.name)"
 						:tags="deviceTags('meter', meter.name)"
-						@edit="editMeter"
+						@edit="(type, id) => openModal('meter', { type, id })"
 					/>
 					<MeterCard
 						v-for="meter in batteryMeters"
@@ -130,11 +130,11 @@
 						meter-type="battery"
 						:has-error="hasDeviceError('meter', meter.name)"
 						:tags="deviceTags('meter', meter.name)"
-						@edit="editMeter"
+						@edit="(type, id) => openModal('meter', { type, id })"
 					/>
 					<NewDeviceButton
 						:title="$t('config.main.addPvBattery')"
-						@click="addSolarBatteryMeter"
+						@click="openModal('meter', { choices: ['pv', 'battery'] })"
 					/>
 				</div>
 
@@ -147,7 +147,7 @@
 						meter-type="aux"
 						:has-error="hasDeviceError('meter', meter.name)"
 						:tags="deviceTags('meter', meter.name)"
-						@edit="editMeter"
+						@edit="(type, id) => openModal('meter', { type, id })"
 					/>
 					<MeterCard
 						v-for="meter in extMeters"
@@ -156,11 +156,11 @@
 						meter-type="ext"
 						:has-error="hasDeviceError('meter', meter.name)"
 						:tags="deviceTags('meter', meter.name)"
-						@edit="editMeter"
+						@edit="(type, id) => openModal('meter', { type, id })"
 					/>
 					<NewDeviceButton
 						:title="$t('config.main.addAdditional')"
-						@click="newAdditionalMeter"
+						@click="openModal('meter', { choices: ['aux', 'ext'] })"
 					/>
 				</div>
 
@@ -178,7 +178,7 @@
 						:error="hasClassError('mqtt')"
 						:unconfigured="isUnconfigured(mqttTags)"
 						data-testid="mqtt"
-						@edit="openModal('mqttModal')"
+						@edit="openModal('mqtt')"
 					>
 						<template #icon><MqttIcon /></template>
 						<template #tags>
@@ -191,7 +191,7 @@
 						:error="hasClassError('messenger')"
 						:unconfigured="isUnconfigured(messagingTags)"
 						data-testid="messaging"
-						@edit="openModal('messagingModal')"
+						@edit="openModal('messaging')"
 					>
 						<template #icon><NotificationIcon /></template>
 						<template #tags>
@@ -204,7 +204,7 @@
 						:error="hasClassError('influx')"
 						:unconfigured="isUnconfigured(influxTags)"
 						data-testid="influx"
-						@edit="openModal('influxModal')"
+						@edit="openModal('influx')"
 					>
 						<template #icon><InfluxIcon /></template>
 						<template #tags>
@@ -217,7 +217,7 @@
 						:error="hasClassError('circuit')"
 						:unconfigured="circuitsSorted.length === 0"
 						data-testid="circuits"
-						@edit="openModal('circuitsModal')"
+						@edit="openModal('circuits')"
 					>
 						<template #icon><CircuitsIcon /></template>
 						<template #tags>
@@ -245,7 +245,7 @@
 						:error="hasClassError('modbusproxy')"
 						:unconfigured="isUnconfigured(modbusproxyTags)"
 						data-testid="modbusproxy"
-						@edit="openModal('modbusProxyModal')"
+						@edit="openModal('modbusproxy')"
 					>
 						<template #icon><ModbusProxyIcon /></template>
 						<template #tags>
@@ -258,7 +258,7 @@
 						:error="hasClassError('hems')"
 						:unconfigured="isUnconfigured(hemsTags)"
 						data-testid="hems"
-						@edit="openModal('hemsModal')"
+						@edit="openModal('hems')"
 					>
 						<template #icon><HemsIcon /></template>
 						<template #tags>
@@ -274,7 +274,7 @@
 						editable
 						:error="hasClassError('ocpp')"
 						data-testid="ocpp"
-						@edit="openModal('ocppModal')"
+						@edit="openModal('ocpp')"
 					>
 						<template #icon><OcppIcon /></template>
 					</DeviceCard>
@@ -283,7 +283,7 @@
 						editable
 						:error="hasClassError('shm')"
 						data-testid="shm"
-						@edit="openModal('shmModal')"
+						@edit="openModal('shm')"
 					>
 						<template #icon><ShmIcon /></template>
 					</DeviceCard>
@@ -292,7 +292,7 @@
 						editable
 						:error="hasClassError('eebus')"
 						data-testid="eebus"
-						@edit="openModal('eebusModal')"
+						@edit="openModal('eebus')"
 					>
 						<template #icon><EebusIcon /></template>
 					</DeviceCard>
@@ -311,7 +311,7 @@
 					<button
 						data-testid="backup-restore"
 						class="btn btn-outline-secondary text-truncate"
-						@click="openModal('backupRestoreModal')"
+						@click="openModal('backuprestore')"
 					>
 						{{ $t("config.system.backupRestore.title") }}
 					</button>
@@ -321,47 +321,31 @@
 				</div>
 
 				<LoadpointModal
-					:id="selectedLoadpointId"
-					ref="loadpointModal"
 					:vehicleOptions="vehicleOptions"
 					:loadpointCount="loadpoints.length"
 					:chargers="chargers"
 					:chargerValues="deviceValues['charger']"
 					:meters="meters"
 					:circuits="circuits"
-					:fade="loadpointSubModalOpen ? 'left' : undefined"
 					:hasDeviceError="hasDeviceError"
 					@updated="loadpointChanged"
-					@open-charger-modal="editLoadpointCharger"
-					@open-meter-modal="editLoadpointMeter"
-					@opened="loadpointSubModalOpen = false"
 				/>
 				<VehicleModal
-					:id="selectedVehicleId"
 					:is-sponsor="isSponsor"
 					@vehicle-changed="vehicleChanged"
 				/>
 				<MeterModal
-					:id="selectedMeterId"
-					:type="selectedMeterType"
-					:typeChoices="selectedMeterTypeChoices"
-					:fade="loadpointSubModalOpen ? 'right' : undefined"
 					:is-sponsor="isSponsor"
 					@added="meterAdded"
 					@updated="meterChanged"
 					@removed="meterRemoved"
-					@close="meterModalClosed"
 				/>
 				<ChargerModal
-					:id="selectedChargerId"
-					:loadpointType="selectedLoadpointType"
-					:fade="loadpointSubModalOpen ? 'right' : undefined"
 					:is-sponsor="isSponsor"
 					:ocpp="ocpp"
 					@added="chargerAdded"
 					@updated="chargerChanged"
-					@removed="chargerRemoved"
-					@close="chargerModalClosed"
+					@removed="chargerChanged"
 				/>
 				<InfluxModal @changed="loadDirty" />
 				<MqttModal @changed="loadDirty" />
@@ -424,7 +408,7 @@ import LoadpointIcon from "../components/MaterialIcon/Loadpoint.vue";
 import MessagingModal from "../components/Config/MessagingModal.vue";
 import MeterModal from "../components/Config/MeterModal.vue";
 import MeterCard from "../components/Config/MeterCard.vue";
-import Modal from "bootstrap/js/dist/modal";
+import { openModal } from "@/configModal";
 import ModbusProxyIcon from "../components/MaterialIcon/ModbusProxy.vue";
 import ModbusProxyModal from "../components/Config/ModbusProxyModal.vue";
 import MqttIcon from "../components/MaterialIcon/Mqtt.vue";
@@ -448,7 +432,6 @@ import type {
 	ConfigCircuit,
 	ConfigLoadpoint,
 	ConfigMeter,
-	LoadpointType,
 	Timeout,
 	VehicleOption,
 	MeterType,
@@ -527,14 +510,6 @@ export default defineComponent({
 			loadpoints: [] as ConfigLoadpoint[],
 			chargers: [] as ConfigCharger[],
 			circuits: [] as ConfigCircuit[],
-			selectedVehicleId: undefined as number | undefined,
-			selectedMeterId: undefined as number | undefined,
-			selectedMeterType: undefined as MeterType | undefined,
-			selectedMeterTypeChoices: [] as MeterType[],
-			selectedChargerId: undefined as number | undefined,
-			selectedLoadpointId: undefined as number | undefined,
-			selectedLoadpointType: undefined as LoadpointType | undefined,
-			loadpointSubModalOpen: false,
 			site: {
 				grid: "",
 				pv: [] as string[],
@@ -592,12 +567,6 @@ export default defineComponent({
 		extMeters() {
 			const names = this.site?.ext;
 			return this.getMetersByNames(names);
-		},
-		selectedMeterName() {
-			return this.getMeterById(this.selectedMeterId)?.name;
-		},
-		selectedChargerName() {
-			return this.getChargerById(this.selectedChargerId)?.name;
 		},
 		tariffTags(): DeviceTags {
 			const { currency, tariffGrid, tariffFeedIn, tariffCo2, tariffSolar } = store.state;
@@ -805,85 +774,6 @@ export default defineComponent({
 				.map((name) => this.meters.find((m) => m.name === name))
 				.filter((m): m is ConfigMeter => m !== undefined);
 		},
-		getMeterById(id?: number) {
-			if (!id || !this.meters) {
-				return undefined;
-			}
-			return this.meters.find((m) => m.id === id);
-		},
-		getChargerById(id?: number) {
-			if (!id || !this.chargers) {
-				return undefined;
-			}
-			return this.chargers.find((c) => c.id === id);
-		},
-		vehicleModal() {
-			return Modal.getOrCreateInstance(
-				document.getElementById("vehicleModal") as HTMLElement
-			);
-		},
-		meterModal() {
-			return Modal.getOrCreateInstance(document.getElementById("meterModal") as HTMLElement);
-		},
-		loadpointModal() {
-			return Modal.getOrCreateInstance(
-				document.getElementById("loadpointModal") as HTMLElement
-			);
-		},
-		chargerModal() {
-			return Modal.getOrCreateInstance(
-				document.getElementById("chargerModal") as HTMLElement
-			);
-		},
-		editLoadpointCharger(name: string, loadpointType?: LoadpointType) {
-			this.loadpointSubModalOpen = true;
-			const charger = this.chargers.find((c) => c.name === name);
-			if (charger && charger.id === undefined) {
-				alert(
-					"yaml configured chargers can not be edited. Remove charger from yaml first."
-				);
-				return;
-			}
-			this.loadpointModal().hide();
-			this.$nextTick(() => this.editCharger(charger?.id, loadpointType));
-		},
-		editLoadpointMeter(name: string) {
-			this.loadpointSubModalOpen = true;
-			const meter = this.meters.find((m) => m.name === name);
-			if (meter && meter.id === undefined) {
-				alert("yaml configured meters can not be edited. Remove meter from yaml first.");
-				return;
-			}
-			this.loadpointModal().hide();
-			this.$nextTick(() => this.editMeter("charge", meter?.id));
-		},
-		editMeter(type: MeterType, id?: number) {
-			this.selectedMeterType = type;
-			this.selectedMeterId = id;
-			this.$nextTick(() => this.meterModal().show());
-		},
-		newMeter(type: MeterType) {
-			this.selectedMeterId = undefined;
-			this.selectedMeterType = type;
-			this.$nextTick(() => this.meterModal().show());
-		},
-		addSolarBatteryMeter() {
-			this.selectedMeterId = undefined;
-			this.selectedMeterType = undefined;
-			this.selectedMeterTypeChoices = ["pv", "battery"] as MeterType[];
-			this.$nextTick(() => this.meterModal().show());
-		},
-		newAdditionalMeter() {
-			this.selectedMeterId = undefined;
-			this.selectedMeterType = undefined;
-			this.selectedMeterTypeChoices = ["aux", "ext"] as MeterType[];
-			this.$nextTick(() => this.meterModal().show());
-		},
-		editCharger(id?: number, loadpointType?: LoadpointType) {
-			this.selectedChargerId = id;
-			this.selectedLoadpointType = loadpointType;
-			this.$nextTick(() => this.chargerModal().show());
-		},
 		async meterChanged() {
 			await this.loadMeters();
 			await this.loadDirty();
@@ -894,34 +784,11 @@ export default defineComponent({
 			await this.loadDirty();
 			this.updateValues();
 		},
-		editLoadpoint(id?: number) {
-			if (!id) alert("missing loadpoint id");
-			this.selectedLoadpointId = id;
-			this.$nextTick(() => this.loadpointModal().show());
-		},
-		newLoadpoint() {
-			this.selectedLoadpointId = undefined;
-			(
-				this.$refs["loadpointModal"] as InstanceType<typeof LoadpointModal> | undefined
-			)?.reset();
-			this.$nextTick(() => this.loadpointModal().show());
-		},
 		async loadpointChanged() {
-			this.selectedLoadpointId = undefined;
 			await this.loadLoadpoints();
 			this.loadDirty();
 		},
-		editVehicle(id: number) {
-			this.selectedVehicleId = id;
-			this.$nextTick(() => this.vehicleModal().show());
-		},
-		newVehicle() {
-			this.selectedVehicleId = undefined;
-			this.$nextTick(() => this.vehicleModal().show());
-		},
 		vehicleChanged() {
-			this.selectedVehicleId = undefined;
-			this.vehicleModal().hide();
 			this.loadVehicles();
 			this.loadDirty();
 		},
@@ -932,17 +799,10 @@ export default defineComponent({
 			this.loadDirty();
 		},
 		meterAdded(type: MeterType, name: string) {
-			if (type === "charge") {
-				// update loadpoint
-				(
-					this.$refs["loadpointModal"] as InstanceType<typeof LoadpointModal> | undefined
-				)?.setMeter(name);
-			} else if (type === "grid") {
-				// update site grid
+			if (type === "grid") {
 				this.site.grid = name;
 				this.saveSite(type);
-			} else {
-				// update site pv, battery, aux, ext with type-safe approach
+			} else if (type !== "charge") {
 				switch (type) {
 					case "pv":
 						if (!this.site.pv) this.site.pv = [];
@@ -966,39 +826,14 @@ export default defineComponent({
 			this.meterChanged();
 		},
 		meterRemoved(type: MeterType) {
-			if (type === "charge") {
-				// update loadpoint
-				(
-					this.$refs["loadpointModal"] as InstanceType<typeof LoadpointModal> | undefined
-				)?.setMeter("");
-			} else {
-				// update site grid, pv, battery, aux, ext
+			if (type !== "charge") {
 				this.loadSite();
 				this.loadDirty();
 			}
 			this.meterChanged();
 		},
-		async chargerAdded(name: string) {
+		async chargerAdded() {
 			await this.chargerChanged();
-			(
-				this.$refs["loadpointModal"] as InstanceType<typeof LoadpointModal> | undefined
-			)?.setCharger(name);
-		},
-		chargerRemoved() {
-			(
-				this.$refs["loadpointModal"] as InstanceType<typeof LoadpointModal> | undefined
-			)?.setCharger("");
-			this.chargerChanged();
-		},
-		meterModalClosed() {
-			if (this.selectedMeterType === "charge") {
-				// reopen loadpoint modal
-				this.loadpointModal().show();
-			}
-		},
-		chargerModalClosed() {
-			// reopen loadpoint modal
-			this.loadpointModal().show();
 		},
 		async saveSite(key: keyof SiteConfig) {
 			const body = key ? { [key]: this.site[key] } : this.site;
@@ -1060,14 +895,7 @@ export default defineComponent({
 			const meterTags = meter ? this.deviceTags("meter", meter) : {};
 			return { ...chargerTags, ...meterTags };
 		},
-		openModal(id: string) {
-			const $el = document.getElementById(id);
-			if ($el) {
-				Modal.getOrCreateInstance($el).show();
-			} else {
-				console.error(`modal ${id} not found`);
-			}
-		},
+		openModal,
 		circuitTags(circuit: ConfigCircuit) {
 			const circuits = store.state?.circuits || {};
 			const data =

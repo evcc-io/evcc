@@ -1,5 +1,5 @@
 <template>
-	<GenericModal ref="modal" :title="title" :size="size" @open="open">
+	<GenericModal ref="modal" :id="`${name}Modal`" :data-testid="`${name}-modal`" :title="title" :size="size" :config-modal-name="name" @open="open">
 		<p v-if="description || docsLink">
 			<span v-if="description">{{ description + " " }}</span>
 			<a v-if="docsLink" :href="docsLink" target="_blank">
@@ -89,6 +89,7 @@ export default {
 		storeValuesInArray: Boolean,
 		size: { type: String },
 		confirmRemove: String,
+		name: String,
 	},
 	emits: ["changed", "open"],
 	data() {

@@ -2,9 +2,8 @@
 	<DeviceModalBase
 		:id="id"
 		v-model:external-template="selectedTemplate"
-		modal-id="meterModal"
+		name="meter"
 		device-type="meter"
-		:fade="fade"
 		:is-sponsor="isSponsor"
 		:modal-title="modalTitle"
 		:provide-template-options="provideTemplateOptions"
@@ -19,7 +18,7 @@
 		:usage="templateUsage"
 		:on-configuration-loaded="onConfigurationLoaded"
 		@added="handleAdded"
-		@updated="$emit('updated')"
+		@updated="handleUpdated"
 		@removed="handleRemoved"
 		@close="handleClose"
 	>
@@ -90,14 +89,13 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, type PropType } from "vue";
+import { defineComponent } from "vue";
 import FormRow from "./FormRow.vue";
 import PropertyField from "./PropertyField.vue";
 import NewDeviceButton from "./NewDeviceButton.vue";
 import DeviceModalBase from "./DeviceModal/DeviceModalBase.vue";
 import { ICONS } from "../VehicleIcon/VehicleIcon.vue";
 import { ConfigType, type MeterType, type MeterTemplateUsage } from "@/types/evcc";
-import type { ModalFade } from "../Helper/GenericModal.vue";
 import {
 	type DeviceValues,
 	type Template,
@@ -107,6 +105,7 @@ import {
 } from "./DeviceModal";
 import { customTemplateOption, type TemplateGroup } from "./DeviceModal/TemplateSelector.vue";
 import defaultMeterYaml from "./defaultYaml/meter.yaml?raw";
+import { getModal, closeModal } from "@/configModal";
 
 const initialValues = {
 	type: ConfigType.Template,
@@ -134,10 +133,6 @@ export default defineComponent({
 		DeviceModalBase,
 	},
 	props: {
-		id: Number,
-		type: { type: String as PropType<MeterType>, default: null },
-		typeChoices: { type: Array as () => MeterType[], default: () => [] },
-		fade: String as PropType<ModalFade>,
 		isSponsor: Boolean,
 	},
 	emits: ["added", "updated", "removed", "close"],
@@ -153,6 +148,15 @@ export default defineComponent({
 		};
 	},
 	computed: {
+		id(): number | undefined {
+			return getModal("meter")?.id;
+		},
+		type(): MeterType | undefined {
+			return getModal("meter")?.type as MeterType | undefined;
+		},
+		typeChoices(): MeterType[] {
+			return (getModal("meter")?.choices as MeterType[]) || [];
+		},
 		modalTitle(): string {
 			if (this.isNew) {
 				if (this.meterType) {
@@ -267,9 +271,15 @@ export default defineComponent({
 			this.selectedTemplate = null;
 		},
 		handleAdded(name: string) {
+			closeModal({ action: "added", name });
 			this.$emit("added", this.meterType, name);
 		},
+		handleUpdated() {
+			closeModal({ action: "updated" });
+			this.$emit("updated");
+		},
 		handleRemoved() {
+			closeModal({ action: "removed" });
 			this.$emit("removed", this.meterType);
 		},
 		handleClose() {

@@ -1,13 +1,12 @@
 <template>
 	<YamlModal
-		id="messagingModal"
+		name="messaging"
 		:title="$t('config.messaging.title')"
 		:description="$t('config.messaging.description')"
 		docs="/docs/reference/configuration/messaging"
 		:defaultYaml="defaultYaml"
 		endpoint="/config/messaging"
 		removeKey="messaging"
-		data-testid="messaging-modal"
 		@changed="$emit('changed')"
 	/>
 </template>

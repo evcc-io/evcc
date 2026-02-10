@@ -1,9 +1,8 @@
 <template>
 	<DeviceModalBase
 		:id="id"
-		modal-id="chargerModal"
+		name="charger"
 		device-type="charger"
-		:fade="fade"
 		:is-sponsor="isSponsor"
 		:modal-title="modalTitle"
 		:provide-template-options="provideTemplateOptions"
@@ -17,9 +16,9 @@
 		:custom-fields="customFields"
 		:get-product-name="getProductName"
 		:hide-template-fields="showOcppOnboarding"
-		@added="$emit('added', $event)"
-		@updated="$emit('updated')"
-		@removed="$emit('removed')"
+		@added="handleAdded"
+		@updated="handleUpdated"
+		@removed="handleRemoved"
 		@close="$emit('close')"
 		@reset="reset"
 	>
@@ -86,7 +85,7 @@ import { defineComponent, type PropType } from "vue";
 import FormRow from "./FormRow.vue";
 import DeviceModalBase from "./DeviceModal/DeviceModalBase.vue";
 import { ConfigType } from "@/types/evcc";
-import type { ModalFade } from "../Helper/GenericModal.vue";
+import { getModal, closeModal } from "@/configModal";
 import {
 	type DeviceValues,
 	type Template,
@@ -123,9 +122,6 @@ export default defineComponent({
 		DeviceModalBase,
 	},
 	props: {
-		id: Number,
-		loadpointType: { type: String as PropType<LoadpointType>, default: null },
-		fade: String as PropType<ModalFade>,
 		ocpp: {
 			type: Object as PropType<Ocpp>,
 			default: () => ({ config: { port: 0 }, status: { stations: [] } }),
@@ -143,6 +139,12 @@ export default defineComponent({
 		};
 	},
 	computed: {
+		id(): number | undefined {
+			return getModal("charger")?.id;
+		},
+		loadpointType(): LoadpointType | null {
+			return (getModal("charger")?.type as LoadpointType) || null;
+		},
 		modalTitle(): string {
 			if (this.isNew) {
 				return this.$t(`config.charger.titleAdd.${this.loadpointType}`);
@@ -318,6 +320,18 @@ export default defineComponent({
 			if (window.confirm(this.$t("config.charger.ocppConfirmContinue"))) {
 				this.ocppNextStepConfirmed = true;
 			}
+		},
+		handleAdded(name: string) {
+			closeModal({ action: "added", name });
+			this.$emit("added", name);
+		},
+		handleUpdated() {
+			closeModal({ action: "updated" });
+			this.$emit("updated");
+		},
+		handleRemoved() {
+			closeModal({ action: "removed" });
+			this.$emit("removed");
 		},
 		reset() {
 			this.ocppNextStepConfirmed = false;
