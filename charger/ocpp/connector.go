@@ -117,7 +117,7 @@ func (conn *Connector) WatchDog(ctx context.Context, timeout time.Duration) {
 		update := conn.clock.Since(conn.meterUpdated) > timeout
 		conn.mu.Unlock()
 
-		if update {
+		if update && conn.cp.Connected() {
 			conn.TriggerMessageRequest(core.MeterValuesFeatureName)
 		}
 

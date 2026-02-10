@@ -105,8 +105,14 @@ func (cp *CP) Setup(ctx context.Context, meterValues string, meterInterval time.
 		}
 	}
 
-	// see who's there
-	if cp.HasRemoteTriggerFeature {
+	// BootNotification is normally received before Setup runs (we wait for it
+	// after WebSocket connect). Only trigger it as fallback for chargers that
+	// didn't send it (e.g. timeout-based connection without reboot).
+	cp.mu.RLock()
+	hasBootResult := cp.BootNotificationResult != nil
+	cp.mu.RUnlock()
+
+	if !hasBootResult && cp.HasRemoteTriggerFeature {
 		if err := cp.TriggerMessageRequest(0, core.BootNotificationFeatureName); err != nil {
 			cp.log.DEBUG.Printf("failed triggering BootNotification: %v", err)
 		}
@@ -115,7 +121,9 @@ func (cp *CP) Setup(ctx context.Context, meterValues string, meterInterval time.
 		case <-time.After(Timeout):
 			cp.log.DEBUG.Printf("BootNotification timeout")
 		case res := <-cp.bootNotificationRequestC:
+			cp.mu.Lock()
 			cp.BootNotificationResult = res
+			cp.mu.Unlock()
 		}
 	}
 
@@ -163,6 +171,10 @@ func (cp *CP) Setup(ctx context.Context, meterValues string, meterInterval time.
 		cp.ChargingRateUnit = types.ChargingRateUnitWatts
 		cp.PhaseSwitching = true // assume phase switching is available for power-based charging
 	}
+
+	cp.mu.Lock()
+	cp.initialized = true
+	cp.mu.Unlock()
 
 	return nil
 }

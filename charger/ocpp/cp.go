@@ -3,6 +3,7 @@ package ocpp
 import (
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
@@ -15,13 +16,14 @@ type CP struct {
 	mu          sync.RWMutex
 	log         *util.Logger
 	onceConnect sync.Once
-	onceBoot    sync.Once
 
 	id string
 
-	connected bool
-	connectC  chan struct{}
-	meterC    chan struct{}
+	connected   bool
+	initialized bool        // true after first Setup completes
+	bootTimer   *time.Timer // timeout for BootNotification wait after WebSocket connect
+	connectC    chan struct{}
+	meterC      chan struct{}
 
 	// configuration properties
 	PhaseSwitching          bool
@@ -122,7 +124,34 @@ func (cp *CP) connect(connect bool) {
 		cp.onceConnect.Do(func() {
 			close(cp.connectC)
 		})
+	} else {
+		// cancel boot timer on disconnect
+		if cp.bootTimer != nil {
+			cp.bootTimer.Stop()
+			cp.bootTimer = nil
+		}
 	}
+}
+
+// onTransportConnect is called when the WebSocket connection is established.
+// Instead of marking the CP as connected immediately, it waits for the
+// BootNotification handshake to complete (or a timeout to expire).
+func (cp *CP) onTransportConnect() {
+	cp.mu.Lock()
+
+	// cancel any previous boot timer
+	if cp.bootTimer != nil {
+		cp.bootTimer.Stop()
+	}
+
+	cp.bootTimer = time.AfterFunc(Timeout, func() {
+		if !cp.Connected() {
+			cp.log.DEBUG.Printf("boot notification timeout, proceeding")
+			cp.connect(true)
+		}
+	})
+
+	cp.mu.Unlock()
 }
 
 func (cp *CP) Connected() bool {
@@ -132,6 +161,18 @@ func (cp *CP) Connected() bool {
 	return cp.connected
 }
 
+func (cp *CP) Initialized() bool {
+	cp.mu.RLock()
+	defer cp.mu.RUnlock()
+
+	return cp.initialized
+}
+
 func (cp *CP) HasConnected() <-chan struct{} {
 	return cp.connectC
+}
+
+// BootNotificationC returns the channel for monitoring BootNotification messages.
+func (cp *CP) BootNotificationC() <-chan *core.BootNotificationRequest {
+	return cp.bootNotificationRequestC
 }
