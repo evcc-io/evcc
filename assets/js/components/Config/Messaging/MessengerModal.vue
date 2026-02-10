@@ -1,6 +1,6 @@
 <template>
 	<DeviceModalBase
-		:id="selectedMessengerId"
+		:id="id"
 		fade="right"
 		modal-id="messengerModal"
 		device-type="messenger"
@@ -34,7 +34,7 @@ export default defineComponent({
 		DeviceModalBase,
 	},
 	props: {
-		selectedMessengerId: Number,
+		id: Number,
 	},
 	emits: ["messenger-changed", "messenger-closed"],
 	data() {
@@ -44,7 +44,7 @@ export default defineComponent({
 	},
 	computed: {
 		isNew(): boolean {
-			return this.selectedMessengerId === undefined;
+			return this.id === undefined;
 		},
 	},
 	methods: {

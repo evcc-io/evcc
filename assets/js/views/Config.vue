@@ -377,7 +377,7 @@
 					@open-messenger-modal="openMessengerModal"
 				/>
 				<MessengerModal
-					:selected-messenger-id="selectedMessengerId"
+					:id="selectedMessengerId"
 					@messenger-changed="messengerModalChanged"
 					@messenger-closed="messengerModalClosed"
 				/>
