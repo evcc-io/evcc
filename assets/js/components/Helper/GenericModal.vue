@@ -58,9 +58,6 @@ export default defineComponent({
 	},
 	computed: {
 		classes() {
-			// Note: the `show` class is managed by Bootstrap's Modal plugin.
-			// Do NOT add it here via Vue — it conflicts with Bootstrap's hide()
-			// when syncAllModals() hides the parent while opening a child modal.
 			return ["modal", "fade", "text-dark", this.sizeClass, this.fadeClass];
 		},
 		sizeClass() {

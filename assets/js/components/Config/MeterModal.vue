@@ -17,9 +17,9 @@
 		:preserve-on-template-change="preserveFields"
 		:usage="templateUsage"
 		:on-configuration-loaded="onConfigurationLoaded"
-		@added="handleAdded"
-		@updated="handleUpdated"
-		@removed="handleRemoved"
+		@added="(name) => emitChanged('added', name)"
+		@updated="() => emitChanged('updated')"
+		@removed="() => emitChanged('removed')"
 		@close="handleClose"
 	>
 		<template #pre-content>
@@ -266,21 +266,10 @@ export default defineComponent({
 			// This triggers product reload via effectiveUsage computed property change
 			this.selectedTemplate = null;
 		},
-		async emitChanged(action: "added" | "updated" | "removed", name?: string, type?: string) {
+		async emitChanged(action: "added" | "updated" | "removed", name?: string) {
+			const type = this.selectedType;
 			const result = { action, name, type };
 			this.$emit("changed", result);
-		},
-		handleAdded(name: string) {
-			const type: string | undefined = this.selectedType ?? undefined;
-			this.emitChanged("added", name, type);
-		},
-		handleUpdated() {
-			const type: string | undefined = this.selectedType ?? undefined;
-			this.emitChanged("updated", undefined, type);
-		},
-		handleRemoved() {
-			const type: string | undefined = this.selectedType ?? undefined;
-			this.emitChanged("removed", undefined, type);
 		},
 		handleClose() {
 			this.extMeterUsage = "charge";

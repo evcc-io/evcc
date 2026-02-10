@@ -40,7 +40,7 @@ async function ensureAuth(to: RouteLocationNormalizedGeneric) {
 }
 
 // Custom stringifyQuery to keep brackets unencoded in URLs
-function stringifyQuery(query?: Record<string, any>): string {
+export function stringifyQuery(query?: Record<string, any>): string {
   if (!query) return "";
   const parts: string[] = [];
   for (const key of Object.keys(query)) {

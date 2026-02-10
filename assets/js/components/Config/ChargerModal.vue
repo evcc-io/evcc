@@ -16,9 +16,9 @@
 		:custom-fields="customFields"
 		:get-product-name="getProductName"
 		:hide-template-fields="showOcppOnboarding"
-		@added="handleAdded"
-		@updated="handleUpdated"
-		@removed="handleRemoved"
+		@added="(name) => emitChanged('added', name)"
+		@updated="() => emitChanged('updated')"
+		@removed="() => emitChanged('removed')"
 		@close="$emit('close')"
 		@reset="reset"
 	>
@@ -324,15 +324,6 @@ export default defineComponent({
 		async emitChanged(action: "added" | "updated" | "removed", name?: string) {
 			const result = { action, name };
 			this.$emit("changed", result);
-		},
-		handleAdded(name: string) {
-			this.emitChanged("added", name);
-		},
-		handleUpdated() {
-			this.emitChanged("updated");
-		},
-		handleRemoved() {
-			this.emitChanged("removed");
 		},
 		reset() {
 			this.ocppNextStepConfirmed = false;

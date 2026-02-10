@@ -873,12 +873,6 @@ export default {
 		},
 		async editCharger() {
 			const charger = this.chargers.find((c) => c.name === this.values.charger);
-			if (charger && charger.id === undefined) {
-				alert(
-					"yaml configured chargers can not be edited. Remove charger from yaml first."
-				);
-				return;
-			}
 			const result = await openModal("charger", {
 				id: charger?.id,
 				type: this.loadpointType || undefined,
@@ -891,10 +885,6 @@ export default {
 		},
 		async editMeter() {
 			const meter = this.meters.find((m) => m.name === this.values.meter);
-			if (meter && meter.id === undefined) {
-				alert("yaml configured meters can not be edited. Remove meter from yaml first.");
-				return;
-			}
 			const result = await openModal("meter", {
 				id: meter?.id,
 				type: "charge",
