@@ -649,7 +649,7 @@
     "validation": {
       "failed": "fehlgeschlagen",
       "label": "Status",
-      "running": "Prüfe …",
+      "running": "prüfe …",
       "success": "erfolgreich",
       "unknown": "unbekannt",
       "validate": "prüfen"

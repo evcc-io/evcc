@@ -707,7 +707,7 @@
     "validation": {
       "failed": "failed",
       "label": "Status",
-      "running": "Validating…",
+      "running": "validating…",
       "success": "successful",
       "unknown": "unknown",
       "validate": "validate"
