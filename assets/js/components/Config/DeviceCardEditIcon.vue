@@ -28,7 +28,6 @@ import Tooltip from "bootstrap/js/dist/tooltip";
 export default {
 	name: "DeviceCardEditIcon",
 	props: {
-		name: String,
 		editable: Boolean,
 		noEditButton: Boolean,
 		badge: Boolean,
@@ -41,14 +40,10 @@ export default {
 	},
 	computed: {
 		tooltipTitle() {
-			if (!this.name) {
-				return "";
-			}
-			let title = `${this.$t("config.main.name")}: <span class='font-monospace'>${this.name}</span>`;
 			if (!this.editable) {
-				title += `<div class="mt-1">${this.$t("config.general.fromYamlHint")}</div>`;
+				return `<div class="text-start mt-1">${this.$t("config.general.fromYamlHint")}</div>`;
 			}
-			return `<div class="text-start">${title}</div>`;
+			return "";
 		},
 	},
 	watch: {
@@ -69,7 +64,7 @@ export default {
 		initTooltip() {
 			this.$nextTick(() => {
 				this.tooltip?.dispose();
-				if (this.$refs.tooltip) {
+				if (this.$refs.tooltip && this.tooltipTitle) {
 					this.tooltip = new Tooltip(this.$refs.tooltip);
 				}
 			});

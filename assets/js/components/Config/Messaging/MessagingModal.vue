@@ -61,7 +61,6 @@
 							<span class="fw-semibold mx-3">{{ messengerType(m) }}</span>
 						</div>
 						<DeviceCardEditIcon
-							:name="m.name"
 							:editable="true"
 							:no-edit-button="false"
 							@edit="openMessenger(m.id)"
@@ -139,7 +138,7 @@ export default {
 		},
 		messengerType(m: ConfigMessenger) {
 			const type =
-				m.type === "custom" ? this.$t("config.general.customOption") : m.config.template;
+				m.type === "custom" ? this.$t("config.messenger.custom") : m.config.template;
 			return capitalize(type ?? "");
 		},
 	},

@@ -6,12 +6,6 @@ params:
     required: true
     example: ntfy.sh
     default: ntfy.sh
-    description:
-      de: Host
-      en: Host
-    help:
-      de: Hostname oder IP-Adresse des ntfy-Servers.
-      en: Host name or IP address of the ntfy server.
   - name: topics
     required: true
     type: list

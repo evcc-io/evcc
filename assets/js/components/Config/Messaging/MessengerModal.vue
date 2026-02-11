@@ -51,11 +51,14 @@ export default defineComponent({
 			return [
 				{
 					label: "generic",
-					options: [customTemplateOption(this.$t("config.general.customOption"))],
+					options: [
+						...products.filter((p: Product) => p.group === "generic"),
+						customTemplateOption(this.$t("config.messenger.custom")),
+					],
 				},
 				{
 					label: "primary",
-					options: [...products.filter((p: Product) => p.template !== "offline")],
+					options: [...products.filter((p: Product) => p.group !== "generic")],
 				},
 			];
 		},

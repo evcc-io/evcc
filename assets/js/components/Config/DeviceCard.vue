@@ -20,7 +20,6 @@
 				>{{ title }}</strong
 			>
 			<DeviceCardEditIcon
-				:name="name"
 				:editable="editable"
 				:noEditButton="noEditButton"
 				:badge="badge"

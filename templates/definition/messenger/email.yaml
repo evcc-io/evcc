@@ -1,46 +1,20 @@
 template: email
 products:
-  - brand: Shoutrrr
-    description:
-      generic: Email
+  - description:
+      en: Email
+      de: E-Mail
 params:
   - name: host
     required: true
     example: smtp.example.com
-    description:
-      de: Host
-      en: Host
-    help:
-      de: Hostname oder IP-Adresse des E-Mail-Servers.
-      en: Host name or IP address of the email server.
   - name: port
     required: true
     example: 465
     default: 465
-    description:
-      de: Port
-      en: Port
-    help:
-      de: Portadresse des E-Mail-Servers.
-      en: Port address of the email server.
   - name: user
     required: true
-    example: john.doe
-    description:
-      de: Benutzer
-      en: User
-    help:
-      de: Benutzername für den E-Mail-Server.
-      en: Username for the email server.
   - name: password
     required: true
-    mask: true
-    description:
-      de: Passwort
-      en: Password
-    help:
-      de: Benutzerpasswort
-      en: User password.
   - name: from
     required: true
     example: john.doe@example.com

@@ -465,6 +465,7 @@
       "title": "Notifications"
     },
     "messenger": {
+      "custom": "User-defined messenger",
       "generic": "Generic messenger",
       "primary": "Specific messenger",
       "template": "Messenger",
