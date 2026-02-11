@@ -69,14 +69,16 @@ func (c *Controller) ChargeEnable(enable bool) error {
 		stat.EvInfo.Schedules[0].EndTime = now.Add(12 * time.Hour).Format(timeFormat)
 	} else {
 		// Stop charging: update end time, rounded to next 5 minutes to increase probability to be accepted by the car the first time
-		rounded := now.Truncate(5 * time.Minute)
-		if rounded.Before(now) {
-			rounded = rounded.Add(5 * time.Minute)
+		roundedEndTime := now.Truncate(5 * time.Minute)
+		if roundedEndTime.Before(now) {
+			roundedEndTime = roundedEndTime.Add(5 * time.Minute)
 		}
-		stat.EvInfo.Schedules[0].EndTime = rounded.Format(timeFormat)
+		stat.EvInfo.Schedules[0].EndTime = roundedEndTime.Format(timeFormat)
 
-		// Parse times for comparison and handle edge case: StartTime > EndTime (hour & minutes only)
-		if start, err := time.Parse(timeFormat, stat.EvInfo.Schedules[0].StartTime); err == nil && start.Hour()*60+start.Minute() > rounded.Hour()*60+rounded.Minute() {
+		// Make sure start time is always before end time (parse both from string to ensure proper comparison)
+		start, err1 := time.Parse(timeFormat, stat.EvInfo.Schedules[0].StartTime)
+		end, err2 := time.Parse(timeFormat, stat.EvInfo.Schedules[0].EndTime)
+		if err1 == nil && err2 == nill && start.After(end) {
 			stat.EvInfo.Schedules[0].StartTime = fallbackStartTime
 		}
 	}
