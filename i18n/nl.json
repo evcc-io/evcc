@@ -172,11 +172,27 @@
       "loading": "YAML editor laden…"
     },
     "eebus": {
-      "description": "Configuratie voor communicatie met andere EEBus apparaten.",
+      "certificate": {
+        "private": "Privé sleutel",
+        "public": "Publiek certificaat",
+        "title": "Certificaten"
+      },
+      "description": "Configuratie waarmee evcc kan communiceren met EEBus-compatibele apparaten zoals laders of apparatuur van je netbeheerder. Alle relevante initialisatie en het genereren van een certificaat wordt automatisch uitgevoerd bij de eerste start.",
+      "descriptionAdvanced": "Geen wijzigingen nodig. Voer alleen wijzigingen door als je echt weet wat je doet. Als je de SHIP-ID of de certificaten wijzigt, moet u uw apparaten opnieuw koppelen.",
+      "interfaces": "Interfaces",
+      "interfacesHelp": "Beperk de netwerkinterfaces die EEBus mag gebruiken om communicatieproblemen te voorkomen. Laat het veld leeg om alle interfaces te gebruiken. Eén invoer per regel.",
+      "port": "Poort",
+      "portHelp": "De te gebruiken poort.",
+      "removeConfirm": "Alle EEBus-configuratie wordt verwijderd. Nieuwe certificaten en identificatiecodes worden gegenereerd bij de volgende opstart. Weet u het zeker?",
+      "shipid": "SHIP-ID",
+      "shipidExplain": "Permanente apparaat identificatiecode voor identificatie in het EEBus-netwerk.",
+      "shipidHelp": "Deze SHIP-ID is gekoppeld aan de onderstaande certificaten.",
+      "ski": "SKI",
+      "skiExplain": "Unieke beveiligingsidentificatiecode voor het koppelen van EEBus-apparaten.",
       "title": "EEBus"
     },
     "experimental": {
-      "description": "Toon eigenschappen in de gebruikers interface die nog onder test zijn en nog in volgende versies kunnen wijzigen.",
+      "description": "Biedt eerder toegang tot functies die nog worden getest. Deze kunnen instabiel zijn en kunnen in toekomstige versies worden gewijzigd of verwijderd.",
       "title": "Experimenteel"
     },
     "ext": {
@@ -207,6 +223,7 @@
       "dragHandle": "Schuifknop",
       "dragItem": "Verschuifbaar:{title}",
       "dragList": "Sorteerbare lijst",
+      "error": "Fout",
       "experimental": "Experimenteel",
       "forceSave": "Toch opslaan",
       "fromYamlHint": "Opmerking: Geconfigureerd via evcc.yaml. Verwijder de betreffende regels uit het bestand om hier bewerkingen mogelijk te maken.",
@@ -544,6 +561,7 @@
       "integrations": "Integraties",
       "loadpoints": "Laden en verwarmen",
       "meter": "Zonnepanelen & accu",
+      "services": "Diensten",
       "system": "Systeem",
       "vehicles": "Voertuigen"
     },
@@ -740,12 +758,14 @@
   "forecast": {
     "co2": {
       "average": "Gemiddeld",
+      "constant": "CO₂-intensiteit",
       "lowestHour": "Schoonste uur",
       "range": "Bereik"
     },
     "modalTitle": "Voorspelling",
     "price": {
       "average": "Gemiddeld",
+      "constant": "Prijs",
       "lowestHour": "Goedkoopste uur",
       "range": "Bereik"
     },
@@ -1230,7 +1250,7 @@
     },
     "hiddenFeatures": {
       "label": "Experimenteel",
-      "value": "Toon experimentele functies."
+      "value": "Experimentele functies inschakelen."
     },
     "language": {
       "auto": "Automatisch",
