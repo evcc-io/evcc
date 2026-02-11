@@ -2,6 +2,7 @@
 	<GenericModal
 		id="experimentalModal"
 		:title="`${$t('config.experimental.title')} 🧪`"
+		config-modal-name="experimental"
 		data-testid="experimental-modal"
 	>
 		<p>{{ $t("config.experimental.description") }}</p>
