@@ -154,7 +154,7 @@ import { logout, isLoggedIn, openLoginModal } from "../Auth/auth";
 import { isApp, sendToApp } from "@/utils/native";
 import { isUserConfigError } from "@/utils/fatal";
 import { defineComponent, type PropType } from "vue";
-import type { FatalError, Sponsor, EvOpt, AuthProviders } from "@/types/evcc";
+import type { FatalError, Sponsor, EvOpt, AuthProviders, Battery } from "@/types/evcc";
 
 export default defineComponent({
 	name: "TopNavigation",
@@ -163,9 +163,10 @@ export default defineComponent({
 		authProviders: { type: Object as PropType<AuthProviders>, default: () => ({}) },
 		sponsor: { type: Object as PropType<Sponsor>, default: () => ({}) },
 		forecast: Object,
-		battery: Array,
+		battery: { type: Object as PropType<Battery> },
 		evopt: { type: Object as PropType<EvOpt>, required: false },
 		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
+		experimental: Boolean,
 	},
 	emits: ["auth-required"],
 	data() {
@@ -176,7 +177,7 @@ export default defineComponent({
 	},
 	computed: {
 		batteryConfigured() {
-			return this.battery?.length;
+			return this.battery && this.battery.devices.length;
 		},
 		providers() {
 			return Object.entries(this.authProviders)
@@ -213,7 +214,7 @@ export default defineComponent({
 			return grid || solar || co2;
 		},
 		optimizeAvailable() {
-			return !!this.evopt && this.$hiddenFeatures();
+			return !!this.evopt && this.experimental;
 		},
 		showLogout() {
 			return isLoggedIn();

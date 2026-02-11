@@ -181,9 +181,8 @@ func createChallengeResponse(challenge, pass string) (string, error) {
 		return "", err
 	}
 
-	hash := md5.New()
-	hash.Write([]byte(utf16le))
+	hash := md5.Sum([]byte(utf16le))
+	md5hash := hex.EncodeToString(hash[:])
 
-	md5hash := hex.EncodeToString(hash.Sum(nil))
 	return challenge + "-" + md5hash, nil
 }

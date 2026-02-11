@@ -59,6 +59,7 @@ test.describe("charging loadpoint", async () => {
 
     // create loadpoint
     await lpModal.getByRole("button", { name: "Save" }).click();
+    await expectModalHidden(lpModal);
     await expect(page.getByTestId("loadpoint")).toHaveCount(1);
     await expect(page.getByTestId("loadpoint")).toContainText("Solar Carport");
     await expect(page.getByTestId("loadpoint")).toContainText("charging");
@@ -124,6 +125,7 @@ test.describe("charging loadpoint", async () => {
     await page.getByTestId("loadpoint").getByRole("button", { name: "edit" }).click();
     await expectModalVisible(lpModal);
     await lpModal.getByRole("button", { name: "Delete" }).click();
+    await expectModalHidden(lpModal);
     await expect(page.getByTestId("loadpoint")).toHaveCount(0);
 
     // restart
@@ -265,6 +267,7 @@ test.describe("charging loadpoint", async () => {
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(lpModal);
     await restart();
+    await page.reload();
 
     // change on main ui
     await page.goto("/");
@@ -346,6 +349,10 @@ test.describe("charging loadpoint", async () => {
     await expectModalVisible(lpModal);
     await expect(lpModal.getByRole("heading", { name: "Edit Charger or Heater" })).toBeVisible();
 
+    // close modal before restarting
+    await lpModal.getByRole("button", { name: "Close" }).click();
+    await expectModalHidden(lpModal);
+
     // restart without saving loadpoint
     await restart();
     await page.reload();
@@ -379,6 +386,9 @@ test.describe("charging loadpoint", async () => {
     await expectModalVisible(meterModal);
     await meterModal.getByRole("button", { name: "Delete" }).click();
     await expectModalHidden(meterModal);
+    await expectModalVisible(lpModal);
+    await lpModal.getByRole("button", { name: "Close" }).click();
+    await expectModalHidden(lpModal);
 
     // restart without saving loadpoint
     await restart();

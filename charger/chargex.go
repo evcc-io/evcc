@@ -115,12 +115,12 @@ func (wb *ChargeX) moduleReg(offset uint16) uint16 {
 // setCurrent writes the current limit in Amperes
 func (wb *ChargeX) setCurrent(current float64) error {
 	// Read module state to determine charging mode (1p or 3p)
-	b, err := wb.conn.ReadHoldingRegisters(wb.moduleReg(chargexRegModuleState), 1)
+	b, err := wb.conn.ReadHoldingRegisters(wb.moduleReg(chargexRegModuleState), 2)
 	if err != nil {
 		return err
 	}
 
-	state := binary.BigEndian.Uint16(b)
+	state := binary.BigEndian.Uint32(b)
 	// Bit 1: ChMode - 0=single phase, 1=3 phase
 	phases := 3
 	if (state & (1 << 1)) == 0 {
@@ -128,7 +128,10 @@ func (wb *ChargeX) setCurrent(current float64) error {
 	}
 
 	b = make([]byte, 4)
-	binary.BigEndian.PutUint32(b, uint32(230*current*float64(phases)))
+	targetPower := uint32(230 * current * float64(phases))
+	binary.BigEndian.PutUint32(b, targetPower)
+
+	wb.log.DEBUG.Printf("set charge power: %dW (%.1fA, %dp)", targetPower, current, phases)
 
 	_, err = wb.conn.WriteMultipleRegisters(chargexRegTargetPower, 2, b)
 	return err

@@ -60,6 +60,8 @@ export interface FatalError {
 
 export interface State {
   offline: boolean;
+  telemetry?: boolean;
+  experimental?: boolean;
   setupRequired?: boolean;
   startupCompleted?: boolean;
   loadpoints: Loadpoint[];
@@ -71,7 +73,7 @@ export interface State {
   version?: string;
   system?: string;
   timezone?: string;
-  battery?: BatteryMeter[];
+  battery?: Battery;
   pv?: Meter[];
   aux?: Meter[];
   ext?: Meter[];
@@ -488,6 +490,13 @@ export interface Meter {
   title?: string;
   icon?: string;
   energy?: number;
+}
+
+export interface Battery {
+  power: number;
+  capacity: number;
+  soc: number;
+  devices: BatteryMeter[];
 }
 
 export interface BatteryMeter extends Meter {

@@ -1118,7 +1118,6 @@
   "passwordModal": {
     "description": "Angiv adgangskode for at beskytte konfigurations indstillinger. Det er stadig mulig at benytte hovedskærmen uden at logge på.",
     "empty": "Adgangskode må ikke være tomt",
-    "error": "Fejl: ",
     "labelCurrent": "Nuværende adgangskode",
     "labelNew": "Ny adgangskode",
     "labelRepeat": "Gentag adgangskoden",
