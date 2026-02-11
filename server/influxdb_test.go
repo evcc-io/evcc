@@ -114,7 +114,7 @@ func (w *influxSuite) TestBatteryState() {
 		Soc:   20.0,
 		Devices: []types.Measurement{{
 			Power: 1,
-			Soc:   lo.ToPtr(10.0),
+			Soc:   new(10.0),
 		}},
 	}})
 	w.Equal([]*write.Point{

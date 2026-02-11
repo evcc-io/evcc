@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/evcc-io/evcc/core/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 )
@@ -126,7 +127,7 @@ func (suite *mqttSuite) TestBatteryState() {
 		Soc:   20.0,
 		Devices: []types.Measurement{{
 			Power: 1,
-			Soc:   lo.ToPtr(10.0),
+			Soc:   new(10.0),
 		}},
 	})
 
