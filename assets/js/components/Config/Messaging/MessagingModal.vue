@@ -1,6 +1,7 @@
 <template>
 	<JsonModal
 		id="messagingModal"
+		name="messaging"
 		:title="$t('config.messaging.title')"
 		:description="$t('config.messaging.description')"
 		docs="/docs/reference/configuration/messaging"
@@ -12,7 +13,7 @@
 		:disable-save="!activeEventsTab"
 		:disable-cancel="!activeEventsTab"
 		disable-remove
-		@changed="$emit('events-changed')"
+		@changed="$emit('changed')"
 	>
 		<template #default="{ values }: { values: MessagingEvents }">
 			<ul class="nav nav-tabs mb-4">
@@ -89,6 +90,7 @@ import EventItem from "./EventItem.vue";
 import { type PropType } from "vue";
 import DeviceCardEditIcon from "../DeviceCardEditIcon.vue";
 import { capitalize } from "./utils";
+import { openModal } from "@/configModal";
 
 export default {
 	name: "MessagingModal",
@@ -100,7 +102,7 @@ export default {
 	props: {
 		messengers: { type: Array as PropType<ConfigMessenger[]>, required: true },
 	},
-	emits: ["yaml-changed", "events-changed", "open-messenger-modal"],
+	emits: ["changed"],
 	data() {
 		return {
 			activeEventsTab: true,
@@ -132,8 +134,8 @@ export default {
 
 			return v;
 		},
-		openMessenger(id?: number) {
-			this.$emit("open-messenger-modal", id);
+		async openMessenger(id?: number) {
+			await openModal("messenger", { id });
 		},
 		messengerType(m: ConfigMessenger) {
 			const type =

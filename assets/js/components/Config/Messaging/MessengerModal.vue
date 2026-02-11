@@ -1,17 +1,16 @@
 <template>
 	<DeviceModalBase
 		:id="id"
-		fade="right"
+		name="messenger"
 		modal-id="messengerModal"
 		device-type="messenger"
 		:modal-title="$t(`config.messenger.${isNew ? 'titleAdd' : 'titleEdit'}`)"
 		:provide-template-options="provideTemplateOptions"
 		:initial-values="initialValues"
 		:on-template-change="handleTemplateChange"
-		@added="$emit('messenger-changed', $event)"
-		@updated="$emit('messenger-changed')"
-		@removed="$emit('messenger-changed')"
-		@close="$emit('messenger-closed')"
+		@added="$emit('changed', $event)"
+		@updated="$emit('changed')"
+		@removed="$emit('changed')"
 	></DeviceModalBase>
 </template>
 
@@ -22,6 +21,7 @@ import type { DeviceValues, Product } from "../DeviceModal";
 import { type TemplateGroup, customTemplateOption } from "../DeviceModal/TemplateSelector.vue";
 import { ConfigType } from "@/types/evcc";
 import defaultMessengerYaml from "../defaultYaml/messenger.yaml?raw";
+import { getModal } from "@/configModal";
 
 const initialValues = {
 	type: ConfigType.Template,
@@ -29,20 +29,20 @@ const initialValues = {
 };
 
 export default defineComponent({
-	name: "VehicleModal",
+	name: "MessengerModal",
 	components: {
 		DeviceModalBase,
 	},
-	props: {
-		id: Number,
-	},
-	emits: ["messenger-changed", "messenger-closed"],
+	emits: ["changed"],
 	data() {
 		return {
 			initialValues,
 		};
 	},
 	computed: {
+		id(): number | undefined {
+			return getModal("messenger")?.id;
+		},
 		isNew(): boolean {
 			return this.id === undefined;
 		},

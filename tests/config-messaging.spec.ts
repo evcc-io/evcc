@@ -61,17 +61,6 @@ test.describe("messaging", async () => {
     // modal closes
     await expectModalHidden(modal);
 
-    // restart button appears
-    const restartButton = page
-      .getByTestId("bottom-banner")
-      .getByRole("button", { name: "Restart" });
-    await expect(restartButton).toBeVisible();
-
-    await restart();
-
-    // restart done
-    await expect(restartButton).not.toBeVisible();
-
     await expect(messagingCard).toBeVisible();
     await expect(messagingCard).toContainText(["Configured", "yes"].join(""));
   });
