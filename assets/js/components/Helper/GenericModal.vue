@@ -36,9 +36,8 @@
 
 <script lang="ts">
 import Modal from "bootstrap/js/dist/modal";
-import { defineComponent, type PropType } from "vue";
-
-export type ModalFade = "left" | "right" | undefined;
+import { defineComponent } from "vue";
+import { registerModal, unregisterModal, onModalHidden, getModalFade } from "@/configModal";
 
 export default defineComponent({
 	name: "GenericModal",
@@ -47,9 +46,9 @@ export default defineComponent({
 		title: String,
 		dataTestid: String,
 		uncloseable: Boolean,
-		fade: String as PropType<ModalFade>,
 		size: String,
 		autofocus: { type: Boolean, default: true },
+		configModalName: String,
 	},
 	emits: ["open", "opened", "close", "closed", "visibilitychange"],
 	data() {
@@ -59,23 +58,14 @@ export default defineComponent({
 	},
 	computed: {
 		classes() {
-			return [
-				"modal",
-				"fade",
-				"text-dark",
-				{ show: this.isModalVisible },
-				this.sizeClass,
-				this.fadeClass,
-			];
+			return ["modal", "fade", "text-dark", this.sizeClass, this.fadeClass];
 		},
 		sizeClass() {
 			return this.size ? `modal-${this.size}` : "";
 		},
-		fadeClass() {
-			if (this.fade) {
-				return `fade-${this.fade}`;
-			}
-			return "";
+		fadeClass(): string {
+			const fade = this.configModalName && getModalFade(this.configModalName);
+			return fade ? `fade-${fade}` : "";
 		},
 	},
 	mounted() {
@@ -84,6 +74,9 @@ export default defineComponent({
 		this.$refs["modal"]?.addEventListener("hide.bs.modal", this.handleHide);
 		this.$refs["modal"]?.addEventListener("hidden.bs.modal", this.handleHidden);
 		document.addEventListener("visibilitychange", this.handleVisibilityChange);
+		if (this.configModalName) {
+			registerModal(this.configModalName, this.$refs["modal"] as HTMLElement);
+		}
 	},
 	unmounted() {
 		this.$refs["modal"]?.removeEventListener("show.bs.modal", this.handleShow);
@@ -91,16 +84,16 @@ export default defineComponent({
 		this.$refs["modal"]?.removeEventListener("hide.bs.modal", this.handleHide);
 		this.$refs["modal"]?.removeEventListener("hidden.bs.modal", this.handleHidden);
 		document.removeEventListener("visibilitychange", this.handleVisibilityChange);
+		if (this.configModalName) {
+			unregisterModal(this.configModalName);
+		}
 	},
 	methods: {
 		handleShow() {
-			console.log(this.dataTestid, "> show");
 			this.$emit("open");
 		},
 		handleShown() {
-			console.log(this.dataTestid, "> shown");
 			this.$emit("opened");
-			// focus first input or select if autofocus is enabled
 			if (this.autofocus) {
 				this.$nextTick(() => {
 					const firstInput =
@@ -113,24 +106,21 @@ export default defineComponent({
 			this.isModalVisible = true;
 		},
 		handleHide() {
-			console.log(this.dataTestid, "> hide");
 			this.$emit("close");
 		},
 		handleHidden() {
-			console.log(this.dataTestid, "> hidden");
 			this.$emit("closed");
 			this.isModalVisible = false;
+			if (this.configModalName) {
+				onModalHidden(this.configModalName);
+			}
 		},
 		open() {
 			const modal = this.$refs["modal"] as HTMLElement;
-			// @ts-expect-error bs internal
-			console.log(this.dataTestid, "> open", modal._isShown);
 			Modal.getOrCreateInstance(modal).show();
 		},
 		close() {
 			const modal = this.$refs["modal"] as HTMLElement;
-			// @ts-expect-error bs internal
-			console.log(this.dataTestid, "> close", modal._isShown);
 			Modal.getOrCreateInstance(modal).hide();
 		},
 		handleVisibilityChange() {
