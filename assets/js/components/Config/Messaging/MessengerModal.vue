@@ -2,7 +2,6 @@
 	<DeviceModalBase
 		:id="id"
 		name="messenger"
-		modal-id="messengerModal"
 		device-type="messenger"
 		:modal-title="$t(`config.messenger.${isNew ? 'titleAdd' : 'titleEdit'}`)"
 		:provide-template-options="provideTemplateOptions"
