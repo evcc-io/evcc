@@ -82,7 +82,7 @@ import deepEqual from "@/utils/deepEqual";
 import convertRates from "@/utils/convertRates";
 import { debounceLeading } from "@/utils/debounceLeading";
 import { defineComponent, type PropType } from "vue";
-import type { Vehicle, Timeout, CURRENCY, Forecast } from "@/types/evcc";
+import type { Vehicle, CURRENCY, Forecast } from "@/types/evcc";
 import type {
 	StaticPlan,
 	RepeatingPlan,
