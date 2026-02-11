@@ -165,6 +165,14 @@ func (v *Twc3) ChargedEnergy() (float64, error) {
 	return res.SessionEnergyWh / 1e3, err
 }
 
+var _ api.ConnectionTimer = (*Twc3)(nil)
+
+// ConnectionDuration implements the api.ConnectionTimer interface
+func (v *Twc3) ConnectionDuration() (time.Duration, error) {
+	res, err := v.vitalsG()
+	return time.Duration(res.SessionS) * time.Second, err
+}
+
 // removed: https://github.com/evcc-io/evcc/issues/13555
 // var _ api.ChargeTimer = (*Twc3)(nil)
 
