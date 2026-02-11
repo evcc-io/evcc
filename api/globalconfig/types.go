@@ -23,7 +23,7 @@ type ConfigStatus struct {
 	Config     any        `json:"config,omitempty"`
 	Status     any        `json:"status,omitempty"`
 	FromYaml   bool       `json:"fromYaml,omitempty"`
-	YamlSource YamlSource `json:"yamlSource"`
+	YamlSource YamlSource `json:"yamlSource,omitempty"`
 }
 
 type YamlSource string
