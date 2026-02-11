@@ -177,7 +177,7 @@
         "public": "Publikt certifikat",
         "title": "Certifikat"
       },
-      "description": "Inställning som tillåter evcc att kommunicera med EEBus-kompatibla enheter som laddare eller kontrollenheter från din nätoperatör. Initiering och generering av certifikat sker vid igångsättning.",
+      "description": "Inställning som tillåter evcc att kommunicera med EEBus-kompatibla enheter som laddare eller kontrollenheter från din nätoperatör. Initiering och generering av certifikat sker vid första uppstart.",
       "descriptionAdvanced": "Inga ändringar behövs. Gör enbart ändringar om du är säker på vad du gör. Om du ändrar SHIP-id eller certifikat så måste enheterna paras igen.",
       "interfaces": "Gränssnitt",
       "interfacesHelp": "Begränsa nätverkets gränssnitt som EEBus kan använda för att undvika kommunikationsproblem. Lämna blankt för att använda alla gränssnitt. Ett inlägg per rad.",
@@ -223,6 +223,7 @@
       "dragHandle": "Senarelägga",
       "dragItem": "Går att senarelägga: {title}",
       "dragList": "Sorterbar lista",
+      "error": "Fel",
       "experimental": "Experimentella funktioner",
       "forceSave": "Spara ändå",
       "fromYamlHint": "Obs: Konfigurerad via evcc.yaml. Ta bort posten från filen för att aktivera redigering här.",
@@ -758,12 +759,14 @@
   "forecast": {
     "co2": {
       "average": "Genomsnitt",
+      "constant": "CO₂ intensitet",
       "lowestHour": "Timme med lägst CO₂",
       "range": "Intervall"
     },
     "modalTitle": "Prognos",
     "price": {
       "average": "Genomsnitt",
+      "constant": "Pris",
       "lowestHour": "Billigaste timmen",
       "range": "Intervall"
     },
