@@ -16,25 +16,27 @@ test.describe("messaging", async () => {
     await start();
     await page.goto("/#/config");
 
-    const messagingCard = page.getByTestId("messaging");
-    await expect(messagingCard).toBeVisible();
-    await expect(messagingCard).toContainText(["Configured", "no"].join(""));
+    const card = page.getByTestId("messaging");
+    await expect(card).toBeVisible();
+    await expect(card).toContainText(["Configured", "no"].join(""));
   });
 
   test("messaging from yaml ui (legacy)", async ({ page }) => {
     await start(undefined, CONFIG_MESSAGING_LEGACY);
     await page.goto("/#/config");
 
-    const messagingCard = page.getByTestId("messaging");
-    await expect(messagingCard).toBeVisible();
-    await expect(messagingCard).toContainText(["Configured", "yes"].join(""));
+    const card = page.getByTestId("messaging");
+    await expect(card).toBeVisible();
+    await expect(card).toContainText(["Configured", "yes"].join(""));
 
-    await messagingCard.getByRole("button", { name: "edit" }).click();
+    await card.getByRole("button", { name: "edit" }).click();
     const modal = page.getByTestId("messaging-legacy-modal");
     await expectModalVisible(modal);
 
     // check for new configuration notice
-    await expect(modal.getByRole("alert")).toContainText("New messaging configuration available");
+    await expect(modal.getByRole("alert")).toContainText(
+      "New notification configuration available"
+    );
 
     const validYaml = `events:
   start:
@@ -61,27 +63,27 @@ test.describe("messaging", async () => {
     // modal closes
     await expectModalHidden(modal);
 
-    await expect(messagingCard).toBeVisible();
-    await expect(messagingCard).toContainText(["Configured", "yes"].join(""));
+    await expect(card).toBeVisible();
+    await expect(card).toContainText(["Configured", "yes"].join(""));
   });
 
   test("messaging from evcc.yaml", async ({ page }) => {
     await start(CONFIG_WITH_MESSAGING);
     await page.goto("/#/config");
 
-    const messagingCard = page.getByTestId("messaging");
-    await expect(messagingCard).toBeVisible();
-    await expect(messagingCard).toContainText(["Configured", "yes"].join(""));
+    const card = page.getByTestId("messaging");
+    await expect(card).toBeVisible();
+    await expect(card).toContainText(["Configured", "yes"].join(""));
   });
   test("messaging events via ui", async ({ page }) => {
     await start();
     await page.goto("/#/config");
 
-    const messagingCard = page.getByTestId("messaging");
-    await expect(messagingCard).toBeVisible();
-    await expect(messagingCard).toContainText(["Configured", "no"].join(""));
+    const card = page.getByTestId("messaging");
+    await expect(card).toBeVisible();
+    await expect(card).toContainText(["Configured", "no"].join(""));
 
-    await messagingCard.getByRole("button", { name: "edit" }).click();
+    await card.getByRole("button", { name: "edit" }).click();
     const modal = page.getByTestId("messaging-modal");
     await expectModalVisible(modal);
 
@@ -107,7 +109,7 @@ test.describe("messaging", async () => {
     // validate connection
     await modal.getByRole("button", { name: "Save", exact: true }).click();
     await expectModalHidden(modal);
-    await expect(messagingCard).toContainText(["Events", "1", "Messengers", "0"].join(""));
+    await expect(card).toContainText(["Events", "1", "Services", "0"].join(""));
 
     // restart button appears
     const restartButton = page
@@ -118,7 +120,7 @@ test.describe("messaging", async () => {
     await restart();
     await page.reload();
 
-    await messagingCard.getByRole("button", { name: "edit" }).click();
+    await card.getByRole("button", { name: "edit" }).click();
 
     // validate start event
     await expect(switchInput).toBeChecked();
@@ -131,43 +133,45 @@ test.describe("messaging", async () => {
     await start();
     await page.goto("/#/config");
 
-    const messagingCard = page.getByTestId("messaging");
-    await expect(messagingCard).toBeVisible();
-    await expect(messagingCard).toContainText(["Configured", "no"].join(""));
+    const card = page.getByTestId("messaging");
+    await expect(card).toBeVisible();
+    await expect(card).toContainText(["Configured", "no"].join(""));
 
-    await messagingCard.getByRole("button", { name: "edit" }).click();
-    const messagingModal = page.getByTestId("messaging-modal");
-    await expectModalVisible(messagingModal);
+    await card.getByRole("button", { name: "edit" }).click();
+    const modal = page.getByTestId("messaging-modal");
+    await expectModalVisible(modal);
 
-    await messagingModal.getByRole("link", { name: "Messengers (0)" }).click();
-    await messagingModal.getByRole("button", { name: "Add messenger" }).click();
+    await modal.getByRole("link", { name: "Services (0)" }).click();
+    await modal.getByRole("button", { name: "Add service" }).click();
 
     const messengerModal = page.getByTestId("messenger-modal");
-    await expectModalHidden(messagingModal);
+    await expectModalHidden(modal);
     await expectModalVisible(messengerModal);
 
-    await messengerModal.getByLabel("Messenger").selectOption("User-defined device");
+    await messengerModal.getByLabel("Service").selectOption("User-defined service");
     await messengerModal.getByRole("button", { name: "Validate & save" }).click();
 
     await expectModalHidden(messengerModal);
-    await expectModalVisible(messagingModal);
+    await expectModalVisible(modal);
 
-    const messengerBox = messagingModal.getByTestId("messenger-box-0");
-    await expect(messengerBox).toHaveText(["#1", "User-defined device"].join(""));
+    const messengerBox = modal.getByTestId("messenger-box-0");
+    await expect(messengerBox).toHaveText(["#1", "User-defined service"].join(""));
+    await modal.getByRole("button", { name: "Close" }).click();
+    await expectModalHidden(modal);
+    await expect(card).toContainText(["Events", "0", "Services", "1"].join(""));
 
-    await messagingModal.getByRole("button", { name: "Close" }).click();
-    await expectModalHidden(messagingModal);
-    await expect(messagingCard).toContainText(["Events", "0", "Messengers", "1"].join(""));
-
-    await messagingCard.getByRole("button", { name: "edit" }).click();
-    await messagingModal.getByRole("button", { name: "edit" }).click();
+    await card.getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(modal);
+    await messengerBox.getByRole("button", { name: "edit" }).click();
+    await expectModalHidden(modal);
+    await expectModalVisible(messengerModal);
     await messengerModal.getByRole("button", { name: "Delete" }).click();
-    await expect(messengerBox).not.toBeVisible();
-    await messagingModal.getByRole("button", { name: "Close" }).click();
-
     await expectModalHidden(messengerModal);
-    await expectModalHidden(messagingModal);
+    await expectModalVisible(modal);
+    await expect(messengerBox).not.toBeVisible();
+    await page.keyboard.press("Escape");
+    await expectModalHidden(modal);
 
-    await expect(messagingCard).toContainText(["Configured", "no"].join(""));
+    await expect(card).toContainText(["Configured", "no"].join(""));
   });
 });

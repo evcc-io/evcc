@@ -128,12 +128,14 @@
       "dimmed": "Gedimmt",
       "enabled": "Ladebereit",
       "energy": "Energie",
+      "events": "Ereignisse",
       "feedinPrice": "Einspeisevergütung",
       "gridPrice": "Netzpreis",
       "heaterTempLimit": "Heizungslimit",
       "hemsActiveLimit": "Aktives Limit",
       "hemsType": "Kommunikation",
       "identifier": "RFID-Kennung",
+      "messengers": "Dienste",
       "no": "Nein",
       "odometer": "Kilometerstand",
       "org": "Organisation",
@@ -229,6 +231,7 @@
       "fromYamlHint": "Hinweis: Konfiguriert über evcc.yaml. Entferne den Eintrag aus der Datei, um die Bearbeitung hier zu aktivieren.",
       "hideAdvancedSettings": "Erweiterte Einstellungen ausblenden",
       "invalidFileSelected": "Ungültige Datei ausgewählt",
+      "legacy": "veraltet",
       "noFileSelected": "Keine Datei ausgewählt.",
       "off": "aus",
       "on": "an",
@@ -410,8 +413,64 @@
       "welcomeBannerTitle": "Los geht's mit der Konfiguration!"
     },
     "messaging": {
+      "addMessenger": "Dienst hinzufügen",
       "description": "Benachrichtigungen über Ladevorgänge und andere Ereignisse erhalten.",
+      "event": {
+        "asleep": {
+          "messageDefault": "Ladefreigabe, Fahrzeug {vehicleName} lädt nicht.",
+          "title": "Wenn das Laden pausiert wird",
+          "titleDefault": "Fahrzeug schläft"
+        },
+        "connect": {
+          "messageDefault": "Auto verbunden bei {pvPower}kW PV",
+          "title": "Wenn ein Auto verbunden wird",
+          "titleDefault": "Auto verbunden"
+        },
+        "disconnect": {
+          "messageDefault": "Auto getrennt nach {connectedDuration}",
+          "title": "Wenn ein Auto getrennt wird",
+          "titleDefault": "Auto getrennt"
+        },
+        "guest": {
+          "messageDefault": "Unbekanntes Fahrzeug, Gast verbunden?",
+          "title": "Wenn ein unbekanntes Auto verbunden wird",
+          "titleDefault": "Unbekanntes Fahrzeug"
+        },
+        "planoverrun": {
+          "messageDefault": "{vehicleTitle}: Plan wird überschritten.",
+          "title": "Wenn das geplante Laden überschritten wird",
+          "titleDefault": "Plan überschritten"
+        },
+        "soc": {
+          "messageDefault": "Batterie geladen auf {vehicleSoc}%",
+          "title": "Ladestandsaktualisierung",
+          "titleDefault": "Ladestand aktualisiert"
+        },
+        "start": {
+          "messageDefault": "Laden im {mode}-Modus gestartet.",
+          "title": "Wenn das Laden startet",
+          "titleDefault": "Ladevorgang gestartet"
+        },
+        "stop": {
+          "messageDefault": "Laden beendet: {chargedEnergy}kWh in {chargeDuration}.",
+          "title": "Wenn das Laden stoppt",
+          "titleDefault": "Ladevorgang beendet"
+        }
+      },
+      "eventMessage": "Nachricht",
+      "eventTitle": "Titel",
+      "events": "Ereignisse",
+      "legacyWarning": "Neue Benachrichtigungskonfiguration verfügbar! Entferne und speichere deine Konfiguration hier, um den neuen geführten Prozess zu verwenden.",
+      "messengers": "Dienste",
       "title": "Benachrichtigungen"
+    },
+    "messenger": {
+      "custom": "Benutzerdefinierter Dienst",
+      "generic": "Generischer Dienst",
+      "primary": "Spezifischer Dienst",
+      "template": "Dienst",
+      "titleAdd": "Dienst hinzufügen",
+      "titleEdit": "Dienst bearbeiten"
     },
     "meter": {
       "cancel": "Abbrechen",

@@ -135,7 +135,7 @@
       "hemsActiveLimit": "Active limit",
       "hemsType": "Communication",
       "identifier": "RFID-Identifier",
-      "messengers": "Messengers",
+      "messengers": "Services",
       "no": "no",
       "odometer": "Odometer",
       "org": "Organization",
@@ -413,8 +413,8 @@
       "welcomeBannerTitle": "Let's configure your system!"
     },
     "messaging": {
-      "addMessenger": "Add messenger",
-      "description": "Receive messages about your charging sessions.",
+      "addMessenger": "Add service",
+      "description": "Receive notifications about your charging sessions.",
       "event": {
         "asleep": {
           "messageDefault": "Charge release, vehicle {vehicleName} not charging.",
@@ -443,8 +443,8 @@
         },
         "soc": {
           "messageDefault": "Battery charged to {vehicleSoc}%",
-          "title": "For SoC updates",
-          "titleDefault": "Soc updated"
+          "title": "Charge level update",
+          "titleDefault": "Charge level updated"
         },
         "start": {
           "messageDefault": "Started charging in {mode} mode.",
@@ -460,17 +460,17 @@
       "eventMessage": "Message",
       "eventTitle": "Title",
       "events": "Events",
-      "legacyWarning": "New messaging configuration available! Remove and save your messaging events and services here to use the new guided process.",
-      "messengers": "Messengers",
+      "legacyWarning": "New notification configuration available! Remove and save your configuration here to use the new guided process.",
+      "messengers": "Services",
       "title": "Notifications"
     },
     "messenger": {
-      "custom": "User-defined messenger",
-      "generic": "Generic messenger",
-      "primary": "Specific messenger",
-      "template": "Messenger",
-      "titleAdd": "Add Messenger",
-      "titleEdit": "Edit Messenger"
+      "custom": "User-defined service",
+      "generic": "Generic service",
+      "primary": "Specific service",
+      "template": "Service",
+      "titleAdd": "Add Service",
+      "titleEdit": "Edit Service"
     },
     "meter": {
       "cancel": "Cancel",
