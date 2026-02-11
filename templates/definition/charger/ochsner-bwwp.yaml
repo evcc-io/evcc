@@ -15,6 +15,7 @@ render: |
   setmaxpower:
     source: watchdog
     timeout: 5s  # da WP alle 5s modbus Meldung erwartet
+    initial: 0
     set:  
       source: delta  # nur Differenz zu der von WP berechneten Überschussleistung (Reg. 2012)
       get:
@@ -23,7 +24,7 @@ render: |
         id: {{ .id }}
         register:
           address: 2012 # totale von der WP berechnete Überschussleistung Auflösung 1 W
-          type: input
+          type: holding
           decode: int16
       set:
         source: modbus
@@ -39,7 +40,7 @@ render: |
     id: {{ .id }}
     register:
       address: 2000 # angezeigte Temperatur Auflösung 0,1°C
-      type: input
+      type: holding
       decode: int16
     scale: 0.1
   limittemp:
