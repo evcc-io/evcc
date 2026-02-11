@@ -78,7 +78,7 @@ func (c *Controller) ChargeEnable(enable bool) error {
 		// Make sure start time is always before end time (parse both from string to ensure proper comparison)
 		start, err1 := time.Parse(timeFormat, stat.EvInfo.Schedules[0].StartTime)
 		end, err2 := time.Parse(timeFormat, stat.EvInfo.Schedules[0].EndTime)
-		if err1 == nil && err2 == nill && start.After(end) {
+		if err1 == nil && err2 == nil && start.After(end) {
 			stat.EvInfo.Schedules[0].StartTime = fallbackStartTime
 		}
 	}
