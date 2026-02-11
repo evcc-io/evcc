@@ -192,7 +192,7 @@
       "title": "EEBus"
     },
     "experimental": {
-      "description": "Activer l'interface utilisateur pour des fonctionnalités en cours de test et susceptibles d'évoluer dans les versions futures.",
+      "description": "Permet d'accéder en avant-première à des fonctionnalités encore en phase de test. Celles-ci peuvent être instables et susceptibles d'être modifiées ou supprimées dans les versions futures.",
       "title": "Expérimental"
     },
     "ext": {
@@ -223,6 +223,7 @@
       "dragHandle": "Poignée de déplacement",
       "dragItem": "Déplaçable : {title}",
       "dragList": "Liste à ordonner",
+      "error": "Erreur",
       "experimental": "Expérimental",
       "forceSave": "Enregistrer quand même",
       "fromYamlHint": "Remarque : configuré via evcc.yaml. Supprimez l'entrée du fichier pour pouvoir effectuer des modifications.",
@@ -757,12 +758,14 @@
   "forecast": {
     "co2": {
       "average": "Moyenne",
+      "constant": "Intensité en CO₂",
       "lowestHour": "Heure la plus propre",
       "range": "Amplitude"
     },
     "modalTitle": "Prévisions",
     "price": {
       "average": "Moyenne",
+      "constant": "Prix",
       "lowestHour": "Heure la moins chère",
       "range": "Amplitude"
     },
@@ -1247,7 +1250,7 @@
     },
     "hiddenFeatures": {
       "label": "Expérimental",
-      "value": "Afficher les fonctions expérimentales."
+      "value": "Activer les fonctions expérimentales."
     },
     "language": {
       "auto": "Automatique",

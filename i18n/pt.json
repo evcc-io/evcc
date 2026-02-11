@@ -192,7 +192,7 @@
       "title": "EEBus"
     },
     "experimental": {
-      "description": "Ativar interface de utilizador para funcionalidades que ainda estão a ser testadas e podem ser alteradas em versões futuras.",
+      "description": "Fornece acesso antecipado a funcionalidades que ainda estão a ser testadas. Estas podem ser instáveis e podem ser alteradas ou removidas em versões futuras.",
       "title": "Experimental"
     },
     "ext": {
@@ -223,6 +223,7 @@
       "dragHandle": "Arrastar",
       "dragItem": "Arrastável: {title}",
       "dragList": "Lista reordenável",
+      "error": "Erro",
       "experimental": "Experimental",
       "forceSave": "Guardar na mesma",
       "fromYamlHint": "Nota: Configurado através do evcc.yaml. Remova a entrada do ficheiro para permitir a edição aqui.",
@@ -757,12 +758,14 @@
   "forecast": {
     "co2": {
       "average": "Média",
+      "constant": "Intensidade de CO₂",
       "lowestHour": "Horário mais \"Verde\"",
       "range": "Intervalo"
     },
     "modalTitle": "Previsões",
     "price": {
       "average": "Média",
+      "constant": "Preço",
       "lowestHour": "Horário mais barato",
       "range": "Intervalo"
     },
@@ -963,7 +966,7 @@
       "title": "Limite externo:"
     },
     "loadpoint": {
-      "avgPrice": "Preço",
+      "avgPrice": "Preço ⌀",
       "charged": "Carregado",
       "co2": "CO₂",
       "duration": "Duração",
@@ -1158,7 +1161,7 @@
   },
   "sessions": {
     "avgPower": "Potência",
-    "avgPrice": "Preço",
+    "avgPrice": "Preço ⌀",
     "chargeDuration": "Duração",
     "chartTitle": {
       "avgCo2ByGroup": "CO₂ {byGroup}",
@@ -1246,7 +1249,7 @@
     },
     "hiddenFeatures": {
       "label": "Experimental",
-      "value": "Mostrar funcionalidades experimentais."
+      "value": "Ativar funcionalidades experimentais."
     },
     "language": {
       "auto": "Automático",
