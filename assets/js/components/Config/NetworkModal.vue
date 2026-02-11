@@ -1,12 +1,11 @@
 <template>
 	<JsonModal
-		id="networkModal"
+		name="network"
 		:title="$t('config.network.title')"
 		endpoint="/config/network"
 		state-key="network"
 		:transform-write-values="transformWriteValues"
 		disable-remove
-		data-testid="network-modal"
 		@changed="$emit('changed')"
 	>
 		<template #default="{ values }">

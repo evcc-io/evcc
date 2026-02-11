@@ -1,12 +1,11 @@
 <template>
 	<JsonModal
-		id="eebusModal"
+		name="eebus"
 		:title="$t('config.eebus.title')"
 		:description="$t('config.eebus.description')"
 		docs="/docs/reference/configuration/eebus"
 		endpoint="/config/eebus"
 		state-key="eebus.config"
-		data-testid="eebus-modal"
 		:no-buttons="fromYaml"
 		:confirm-remove="$t('config.eebus.removeConfirm')"
 		@changed="$emit('changed')"
