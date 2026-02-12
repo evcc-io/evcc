@@ -24,7 +24,7 @@ render: |
         id: {{ .id }}
         register:
           address: 2012 # totale von der WP berechnete Überschussleistung Auflösung 1 W
-          type: holding
+          type: input
           decode: int16
       set:
         source: modbus
@@ -40,7 +40,7 @@ render: |
     id: {{ .id }}
     register:
       address: 2000 # angezeigte Temperatur Auflösung 0,1°C
-      type: holding
+      type: input
       decode: int16
     scale: 0.1
   limittemp:
