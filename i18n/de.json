@@ -418,7 +418,7 @@
       "event": {
         "asleep": {
           "messageDefault": "Ladefreigabe, Fahrzeug {vehicleName} lädt nicht.",
-          "title": "Wenn das Laden pausiert wird",
+          "title": "Wenn Fahrzeug nicht lädt",
           "titleDefault": "Fahrzeug schläft"
         },
         "connect": {

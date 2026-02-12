@@ -418,7 +418,7 @@
       "event": {
         "asleep": {
           "messageDefault": "Charge release, vehicle {vehicleName} not charging.",
-          "title": "When charging is paused",
+          "title": "When waiting for vehicle",
           "titleDefault": "Vehicle asleep"
         },
         "connect": {
