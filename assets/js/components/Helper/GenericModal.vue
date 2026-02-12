@@ -3,7 +3,7 @@
 		<div
 			:id="id"
 			ref="modal"
-			:class="classes"
+			:class="['modal', 'fade', 'text-dark', fadeClass]"
 			tabindex="-1"
 			role="dialog"
 			:aria-hidden="isModalVisible ? 'false' : 'true'"
@@ -11,7 +11,7 @@
 			:data-bs-keyboard="uncloseable ? 'false' : 'true'"
 			:data-testid="dataTestid"
 		>
-			<div class="modal-dialog modal-dialog-centered" role="document">
+			<div class="modal-dialog modal-dialog-centered" :class="sizeClass" role="document">
 				<div class="modal-content">
 					<div class="modal-header">
 						<h5 class="modal-title">
@@ -57,9 +57,6 @@ export default defineComponent({
 		};
 	},
 	computed: {
-		classes() {
-			return ["modal", "fade", "text-dark", this.sizeClass, this.fadeClass];
-		},
 		sizeClass() {
 			return this.size ? `modal-${this.size}` : "";
 		},
