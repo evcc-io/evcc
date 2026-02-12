@@ -66,6 +66,16 @@ func TestRange(t *testing.T) {
 			want: 150,
 		},
 		{
+			name: "km returns value truncated",
+			status: func() (Status, error) {
+				var s Status
+				s.Payload.EvRangeWithAc.Value = 150.9
+				s.Payload.EvRangeWithAc.Unit = "km"
+				return s, nil
+			},
+			want: 150,
+		},
+		{
 			name: "mi converts to km and truncates",
 			status: func() (Status, error) {
 				var s Status
@@ -102,35 +112,6 @@ func TestRange(t *testing.T) {
 
 			if tc.wantErr != "" {
 				require.Error(t, err)
-				require.EqualError(t, err, tc.wantErr)
-				return
-			}
-			require.NoError(t, err)
-			require.Equal(t, tc.want, got)
-		})
-	}
-}
-
-func TestConvertToKm(t *testing.T) {
-	tests := []struct {
-		name    string
-		value   float64
-		unit    string
-		want    int64
-		wantErr string
-	}{
-		{"km returns value unchanged", 150, "km", 150, ""},
-		{"km with decimals truncates", 150.9, "km", 150, ""},
-		{"mi converts to km", 100, "mi", 160, ""},
-		{"mi with decimals truncates", 62.5, "mi", 100, ""},
-		{"unsupported unit returns error", 1, "f", 0, "unsupported unit type: f"},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			got, err := convertToKm(tc.value, tc.unit)
-
-			if tc.wantErr != "" {
 				require.EqualError(t, err, tc.wantErr)
 				return
 			}
