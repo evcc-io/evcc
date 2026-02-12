@@ -1,14 +1,14 @@
 template: pvnode
 products:
-  - brand: PVnode
+  - brand: pvnode
 requirements:
   description:
     en: |
-      [PVNode](https://pvnode.com) provides 15-minute PV production forecasts via REST API.
+      [pvnode](https://pvnode.com) provides 15-minute PV production forecasts via REST API.
       An API key is required (free plan available with +1 day forecast).
       **Attention**: With free plan only one location (lat, lon) is allowed. Location is saved on first request and can not be changed afterwards, otherwise a 403 response is sent.
     de: |
-      [PVNode](https://pvnode.com) liefert 15-Minuten PV Vorhersagen per REST API.
+      [pvnode](https://pvnode.com) liefert 15-Minuten PV Vorhersagen per REST API.
       Ein API-Key ist erforderlich (kostenloser Plan mit +1 Tag Vorhersage verfügbar).
       **Achtung**: Mit dem kostenlosen Plan ist lediglich ein Standort (lat, lon) erlaubt. Der Standort wird bei der ersten Abfrage gespeichert und kann danach nicht mehr angepasst werden, andernfalls wird eine 403 Antwort gesendet.
   evcc: ["skiptest"]
@@ -26,8 +26,8 @@ params:
     required: true
   - name: apikey
     description:
-      en: PVnode API key
-      de: PVnode API Key
+      en: pvnode API key
+      de: pvnode API Key
     required: true
   - name: forecast_days
     description:
