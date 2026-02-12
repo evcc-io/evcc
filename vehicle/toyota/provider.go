@@ -27,5 +27,8 @@ func (v *Provider) Soc() (float64, error) {
 // Range implements the api.VehicleRange interface
 func (v *Provider) Range() (int64, error) {
 	res, err := v.status()
-	return int64(res.Payload.EvRangeWithAc.Value), err
+	if err != nil {
+		return 0, err
+	}
+	return res.Payload.EvRangeWithAc.ValueInKilometers()
 }
