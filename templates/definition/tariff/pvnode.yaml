@@ -6,7 +6,7 @@ requirements:
     en: |
       [PVNode](https://pvnode.com) provides 15-minute PV production forecasts via REST API.
       An API key is required (free plan available with +1 day forecast).
-      **Attention**: With free plan only one location (lat, lon) is allowed. Location is saved on first request and can not be changed afterwards, otherwise a 403 response is sent. 
+      **Attention**: With free plan only one location (lat, lon) is allowed. Location is saved on first request and can not be changed afterwards, otherwise a 403 response is sent.
     de: |
       [PVNode](https://pvnode.com) liefert 15-Minuten PV Vorhersagen per REST API.
       Ein API-Key ist erforderlich (kostenloser Plan mit +1 Tag Vorhersage verfügbar).
@@ -60,7 +60,4 @@ render: |
           value: (.pv_watts | round )
         }
       ] | tostring
-
   interval: {{ .interval }}
-
-
