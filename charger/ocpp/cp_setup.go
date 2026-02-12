@@ -118,6 +118,8 @@ func (cp *CP) Setup(ctx context.Context, meterValues string, meterInterval time.
 		}
 
 		select {
+		case <-ctx.Done():
+			return ctx.Err()
 		case <-time.After(Timeout):
 			cp.log.DEBUG.Printf("BootNotification timeout")
 		case res := <-cp.bootNotificationRequestC:
