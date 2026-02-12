@@ -141,6 +141,8 @@ test.describe("messaging", async () => {
     const modal = page.getByTestId("messaging-modal");
     await expectModalVisible(modal);
 
+    // confirm save unsaved changes
+    page.once("dialog", (dialog) => dialog.accept());
     await modal.getByRole("link", { name: "Services (0)" }).click();
     await modal.getByRole("button", { name: "Add service" }).click();
 
@@ -172,6 +174,6 @@ test.describe("messaging", async () => {
     await page.keyboard.press("Escape");
     await expectModalHidden(modal);
 
-    await expect(card).toContainText(["Configured", "no"].join(""));
+    await expect(card).toContainText(["Events", "0", "Services", "0"].join(""));
   });
 });

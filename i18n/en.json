@@ -216,6 +216,7 @@
       "cancel": "Cancel",
       "clear": "Clear",
       "close": "Close",
+      "confirmSave": "There are unsaved changes. Save now?",
       "copied": "Copied!",
       "copy": "Copy",
       "customHelp": "Create a user-defined device using evcc's plugin system.",

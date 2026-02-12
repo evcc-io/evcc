@@ -216,6 +216,7 @@
       "cancel": "Abbrechen",
       "clear": "Löschen",
       "close": "Schließen",
+      "confirmSave": "Es gibt ungespeicherte Änderungen. Jetzt speichern?",
       "copied": "Kopiert!",
       "copy": "Kopieren",
       "customHelp": "Erstelle ein benutzerdefiniertes Gerät mit evcc's Plugin-System.",

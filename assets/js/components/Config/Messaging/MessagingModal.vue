@@ -15,14 +15,24 @@
 		disable-remove
 		@changed="$emit('changed')"
 	>
-		<template #default="{ values }: { values: MessagingEvents }">
+		<template
+			#default="{
+				values,
+				changes,
+				save,
+			}: {
+				values: MessagingEvents;
+				changes: boolean;
+				save: (shouldClose?: boolean) => Promise<void>;
+			}"
+		>
 			<ul class="nav nav-tabs mb-4">
 				<li class="nav-item">
 					<a
 						class="nav-link tabular"
 						:class="{ active: activeEventsTab }"
 						href="#"
-						@click.prevent="activeEventsTab = true"
+						@click.prevent="switchToTab(true, changes, save)"
 					>
 						{{ $t("config.messaging.events") }} ({{ eventCount(values) }})
 					</a>
@@ -32,7 +42,7 @@
 						class="nav-link tabular"
 						:class="{ active: !activeEventsTab }"
 						href="#"
-						@click.prevent="activeEventsTab = false"
+						@click.prevent="switchToTab(false, changes, save)"
 					>
 						{{ $t("config.messaging.messengers") }} ({{ messengers.length }})
 					</a>
@@ -140,6 +150,22 @@ export default {
 			const type =
 				m.type === "custom" ? this.$t("config.messenger.custom") : m.config.template;
 			return capitalize(type ?? "");
+		},
+		async switchToTab(
+			isEventsTab: boolean,
+			changes: boolean,
+			save: (shouldClose?: boolean) => Promise<void>
+		) {
+			if (this.activeEventsTab === isEventsTab) return;
+
+			if (this.activeEventsTab && !isEventsTab && changes) {
+				if (!window.confirm(this.$t("config.general.confirmSave"))) {
+					return;
+				}
+				await save(false);
+			}
+
+			this.activeEventsTab = isEventsTab;
 		},
 	},
 };
