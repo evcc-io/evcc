@@ -53,6 +53,15 @@
 						required
 						@change="updateMessage($event.target.value)"
 					/>
+					<div class="text-end small text-gray mt-1">
+						<a
+							:href="`${docsPrefix()}/docs/reference/configuration/messaging#msg`"
+							target="_blank"
+							class="text-gray"
+						>
+							{{ $t("config.messaging.seePlaceholders") }}
+						</a>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -63,6 +72,7 @@
 import type { PropType } from "vue";
 import { MESSAGING_EVENTS } from "@/types/evcc";
 import PropertyField from "../PropertyField.vue";
+import { docsPrefix } from "@/i18n";
 
 const EVENT_PARAMS: Record<MESSAGING_EVENTS, Record<string, string>> = {
 	asleep: { vehicleName: "{{ if .vehicleTitle }}{{ .vehicleTitle }} {{ end }}" },
@@ -96,6 +106,7 @@ export default {
 		}
 	},
 	methods: {
+		docsPrefix,
 		formId(name: string) {
 			return `messaging-event-${this.type}-${name}`;
 		},

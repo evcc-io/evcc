@@ -463,6 +463,7 @@
       "events": "Ereignisse",
       "legacyWarning": "Neue Benachrichtigungskonfiguration verfügbar! Entferne und speichere deine Konfiguration hier, um den neuen geführten Prozess zu verwenden.",
       "messengers": "Dienste",
+      "seePlaceholders": "siehe Platzhalter",
       "title": "Benachrichtigungen"
     },
     "messenger": {

@@ -463,6 +463,7 @@
       "events": "Events",
       "legacyWarning": "New notification configuration available! Remove and save your configuration here to use the new guided process.",
       "messengers": "Services",
+      "seePlaceholders": "see placeholders",
       "title": "Notifications"
     },
     "messenger": {
