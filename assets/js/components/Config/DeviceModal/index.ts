@@ -190,7 +190,7 @@ export function createDeviceUtils(deviceType: DeviceType) {
     if (id !== undefined) {
       url += `/merge/${id}`;
     }
-    return api.post(url, data, { validateStatus: (status) => status >= 200 && status < 500 });
+    return api.post(url, data);
   }
 
   function update(id: number, data: any, force = false) {
