@@ -46,6 +46,7 @@ func NewGpioPluginFromConfig(ctx context.Context, other map[string]any) (Plugin,
 	switch cc.Function {
 	case GpioTypeRead:
 		p.pin.Input()
+		p.pin.PullUp()
 	case GpioTypeWrite:
 		p.pin.Output()
 	default:

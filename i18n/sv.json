@@ -70,7 +70,7 @@
       "ocppStep2": "Vänta, din laddare ansluter till evcc.",
       "ocppStep3": "Fortsätt och slutför konfigurationen.",
       "ocppWaiting": "Väntar på anslutning",
-      "switchsockets": "Omkopplingsbara uttag",
+      "switchsockets": "Fjärrströmbrytare",
       "template": "Tillverkare",
       "titleAdd": {
         "charging": "Lägg till laddare",
@@ -172,11 +172,27 @@
       "loading": "Öppnar Yaml-editorn…"
     },
     "eebus": {
-      "description": "Inställning som tillåter evcc att kommunicera med andra EEBus-enheter.",
+      "certificate": {
+        "private": "Privat nyckel",
+        "public": "Publikt certifikat",
+        "title": "Certifikat"
+      },
+      "description": "Inställning som tillåter evcc att kommunicera med EEBus-kompatibla enheter som laddare eller kontrollenheter från din nätoperatör. Initiering och generering av certifikat sker vid första uppstart.",
+      "descriptionAdvanced": "Inga ändringar behövs. Gör enbart ändringar om du är säker på vad du gör. Om du ändrar SHIP-id eller certifikat så måste enheterna paras igen.",
+      "interfaces": "Gränssnitt",
+      "interfacesHelp": "Begränsa nätverkets gränssnitt som EEBus kan använda för att undvika kommunikationsproblem. Lämna blankt för att använda alla gränssnitt. Ett inlägg per rad.",
+      "port": "Port",
+      "portHelp": "Port som ska användas.",
+      "removeConfirm": "All EEBus konfiguration kommer raderas. Nya certifikat och id kommer att genereras vid nästa start. Är du säker?",
+      "shipid": "SHIP-ID",
+      "shipidExplain": "Permanent enhets-id för identifiering i EEBus-nätverket.",
+      "shipidHelp": "Detta SHIP-ID är länkat till certifikatet nedan.",
+      "ski": "SKI",
+      "skiExplain": "Unikt säkerhets-id för att para EEBus-enheter.",
       "title": "EEBus"
     },
     "experimental": {
-      "description": "Aktivera användargränssnittet för funktioner som fortfarande testas och kan komma att ändras i framtida versioner.",
+      "description": "Ger tillgång till funktioner som fortfarande testas. De kan kan vara instabila och komma att ändras eller tas bort i framtida versioner.",
       "title": "Experimentell"
     },
     "ext": {
@@ -207,6 +223,7 @@
       "dragHandle": "Senarelägga",
       "dragItem": "Går att senarelägga: {title}",
       "dragList": "Sorterbar lista",
+      "error": "Fel",
       "experimental": "Experimentella funktioner",
       "forceSave": "Spara ändå",
       "fromYamlHint": "Obs: Konfigurerad via evcc.yaml. Ta bort posten från filen för att aktivera redigering här.",
@@ -244,7 +261,7 @@
         "limitpower": "Begränsning (kW)",
         "type": "Typ"
       },
-      "description": "Effektbegränsning genom externa system (t.ex. §14a EnWG, §9 (EEG-gränssnitt eller överordnat energihanteringssystem). Fungerar tillsammans med lasthanteringsfunktionen.",
+      "description": "Effektbegränsning genom externa system (t.ex. §14a EnWG, §9 EEG-gränssnitt eller överordnat energihanteringssystem). Fungerar tillsammans med lasthanteringsfunktionen.",
       "downloadCsv": "Hämta CSV",
       "eventsRecorded": "Registrerade {count} händelser med nätbegränsning.",
       "lastEvent": "Senaste {timeAgo}.",
@@ -544,6 +561,7 @@
       "integrations": "Integrationer",
       "loadpoints": "Laddare & värmekällor",
       "meter": "Sol & batteri",
+      "services": "Tjänster",
       "system": "System",
       "vehicles": "Fordon"
     },
@@ -741,12 +759,14 @@
   "forecast": {
     "co2": {
       "average": "Genomsnitt",
+      "constant": "CO₂ intensitet",
       "lowestHour": "Timme med lägst CO₂",
       "range": "Intervall"
     },
     "modalTitle": "Prognos",
     "price": {
       "average": "Genomsnitt",
+      "constant": "Pris",
       "lowestHour": "Billigaste timmen",
       "range": "Intervall"
     },
@@ -1231,7 +1251,7 @@
     },
     "hiddenFeatures": {
       "label": "Experimentella funktioner",
-      "value": "Visa experimentella funktioner."
+      "value": "Aktivera experimentella funktioner."
     },
     "language": {
       "auto": "Automatisk",

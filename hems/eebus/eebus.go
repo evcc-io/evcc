@@ -15,7 +15,6 @@ import (
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
-	"github.com/samber/lo"
 )
 
 type EEBus struct {
@@ -297,7 +296,7 @@ func (c *EEBus) updateSession(id *uint, typ smartgrid.Type, limit float64) error
 	if limit > 0 && *id == 0 {
 		var power *float64
 		if p := c.root.GetChargePower(); p > 0 {
-			power = lo.ToPtr(p)
+			power = new(p)
 		}
 
 		sid, err := smartgrid.StartManage(typ, power, limit)
