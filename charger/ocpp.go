@@ -182,7 +182,7 @@ func NewOCPP(ctx context.Context,
 				case <-ctx.Done():
 					return ctx.Err()
 				case <-timeout:
-					return err
+					return api.ErrTimeout
 				case <-cp.BootNotificationC():
 				}
 			}

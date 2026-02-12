@@ -145,6 +145,10 @@ func (cp *CP) onTransportConnect() {
 	}
 
 	cp.bootTimer = time.AfterFunc(Timeout, func() {
+		cp.mu.Lock()
+		cp.bootTimer = nil
+		cp.mu.Unlock()
+
 		if !cp.Connected() {
 			cp.log.DEBUG.Printf("boot notification timeout, proceeding")
 			cp.connect(true)

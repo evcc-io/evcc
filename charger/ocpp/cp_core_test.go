@@ -85,11 +85,9 @@ func TestTransportConnectTimeoutFallback(t *testing.T) {
 	// should not be connected yet
 	assert.False(t, cp.Connected(), "should not be connected immediately after transport connect")
 
-	// wait for timeout
-	time.Sleep(100 * time.Millisecond)
-
 	// should be connected after timeout (fallback)
-	assert.True(t, cp.Connected(), "should be connected after boot timeout")
+	require.Eventually(t, cp.Connected, time.Second, 10*time.Millisecond,
+		"should be connected after boot timeout")
 }
 
 func TestDisconnectCancelsTimer(t *testing.T) {
@@ -114,11 +112,9 @@ func TestDisconnectCancelsTimer(t *testing.T) {
 	assert.Nil(t, cp.bootTimer, "boot timer should be nil after disconnect")
 	cp.mu.RUnlock()
 
-	// wait past the original timeout
-	time.Sleep(250 * time.Millisecond)
-
 	// should still be disconnected (timer was cancelled)
-	assert.False(t, cp.Connected(), "should not be connected after cancelled timer")
+	require.Never(t, cp.Connected, 300*time.Millisecond, 10*time.Millisecond,
+		"should not be connected after cancelled timer")
 }
 
 func TestBootNotificationChannelFull(t *testing.T) {
