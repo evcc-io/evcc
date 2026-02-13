@@ -777,7 +777,7 @@ func TestPVHysteresisAfterPhaseSwitch(t *testing.T) {
 	}
 }
 
-// test PV hysteresis after phase switch down, depending on remaining energy
+// test GetMaxPhaseCurrent behavior with and without measured phase currents depending on charger status
 func TestGetMaxPhaseCurrent(t *testing.T) {
 	tc := []struct {
 		offeredCurrent float64
