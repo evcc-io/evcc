@@ -96,6 +96,7 @@
 			@change-vehicle="changeVehicle"
 			@remove-vehicle="removeVehicle"
 			@open-loadpoint-settings="openSettingsModal"
+			@batteryboost-updated="setBatteryBoost"
 		/>
 	</div>
 </template>
@@ -157,6 +158,7 @@ export default defineComponent({
 		charging: Boolean,
 		batteryBoost: Boolean,
 		batteryConfigured: Boolean,
+		batterySoc: Number,
 
 		// session
 		sessionEnergy: Number,

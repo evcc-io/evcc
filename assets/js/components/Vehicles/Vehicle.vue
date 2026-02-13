@@ -13,13 +13,20 @@
 			@open-minsoc-settings="openMinSocSettings"
 			@open-plan-modal="openPlanModal"
 		/>
-		<VehicleSoc
-			v-bind="vehicleSocProps"
-			class="mt-2 mb-4"
-			@limit-soc-updated="limitSocUpdated"
-			@limit-soc-drag="limitSocDrag"
-			@plan-clicked="openPlanModal"
-		/>
+		<div class="mt-2 mb-4 d-flex gap-2">
+			<BatteryBoostButton
+				class="flex-grow-0"
+				v-bind="batteryBoostButtonProps"
+				@updated="$emit('batteryboost-updated', $event)"
+			/>
+			<VehicleSoc
+				class="flex-grow-1 position-relative"
+				v-bind="vehicleSocProps"
+				@limit-soc-updated="limitSocUpdated"
+				@limit-soc-drag="limitSocDrag"
+				@plan-clicked="openPlanModal"
+			/>
+		</div>
 		<div class="details d-flex flex-wrap justify-content-between">
 			<LabelAndValue
 				v-if="socBasedCharging"
@@ -81,6 +88,7 @@ import { distanceUnit, distanceValue } from "@/units.ts";
 import { defineComponent, type PropType } from "vue";
 import { CHARGE_MODE, type Forecast, type Vehicle } from "@/types/evcc";
 import type { PlanStrategy } from "@/components/ChargingPlans/types";
+import BatteryBoostButton from "../Loadpoints/BatteryBoostButton.vue";
 
 export default defineComponent({
 	name: "Vehicle",
@@ -92,6 +100,7 @@ export default defineComponent({
 		ChargingPlan,
 		LimitSocSelect,
 		LimitEnergySelect,
+		BatteryBoostButton,
 	},
 	mixins: [collector, formatter],
 	props: {
@@ -105,7 +114,9 @@ export default defineComponent({
 		effectivePlanSoc: Number,
 		effectivePlanTime: String,
 		effectivePlanStrategy: Object as PropType<PlanStrategy>,
+		batteryBoost: Boolean,
 		batteryBoostActive: Boolean,
+		batterySoc: Number,
 		enabled: Boolean,
 		heating: Boolean,
 		id: [String, Number],
@@ -153,6 +164,7 @@ export default defineComponent({
 		"change-vehicle",
 		"remove-vehicle",
 		"open-loadpoint-settings",
+		"batteryboost-updated",
 	],
 	data() {
 		return {
@@ -183,6 +195,9 @@ export default defineComponent({
 		},
 		chargingPlan() {
 			return this.collectProps(ChargingPlan);
+		},
+		batteryBoostButtonProps() {
+			return this.collectProps(BatteryBoostButton);
 		},
 		formattedSoc() {
 			if (!this.vehicleSoc) {
