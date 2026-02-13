@@ -1086,7 +1086,9 @@ func (lp *Loadpoint) processChargerStatus() (bool, error) {
 	var welcomeCharge bool
 
 	for _, status := range statusChanges {
-		for _, ev := range statusEvents(lp.prevStatus, status) {
+		prevStatus := lp.prevStatus
+
+		for _, ev := range statusEvents(prevStatus, status) {
 			lp.bus.Publish(ev)
 
 			// send connect/disconnect events except during startup
@@ -1102,7 +1104,7 @@ func (lp *Loadpoint) processChargerStatus() (bool, error) {
 			}
 		}
 		//update stored previous status
-		lp.prevStatus = lp.status
+		lp.prevStatus = status
 
 		// update whenever there is a state change
 		lp.bus.Publish(evChargeCurrent, lp.offeredCurrent)
@@ -1115,7 +1117,7 @@ func (lp *Loadpoint) processChargerStatus() (bool, error) {
 func (lp *Loadpoint) getStatusChanges() ([]api.ChargeStatus, error) {
 	var res []api.ChargeStatus
 
-	if lp.status != lp.prevStatus {
+	if lp.GetStatus() != lp.prevStatus {
 		res = []api.ChargeStatus{lp.status}
 	}
 

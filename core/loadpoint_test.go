@@ -849,8 +849,11 @@ func TestConnectionDurationDropDetection(t *testing.T) {
 
 	lp.enabled = true
 	lp.status = api.StatusC
+	lp.prevStatus = api.StatusC
 	lp.connectedDuration = 10 * time.Minute
 	lp.connectedTime = connectedTime
+
+	lp.UpdateChargerStatusAndPowerAndCurrents()
 
 	ct.EXPECT().ConnectionDuration().Return(0*time.Second, nil)
 	lp.Update(500, 0, nil, nil, false, false, 0, nil, nil)
@@ -894,20 +897,23 @@ func TestWelcomeChargeAppliedOnlyOnce(t *testing.T) {
 	attachListeners(t, lp)
 
 	lp.enabled = true
-	lp.status = api.StatusA
+	lp.prevStatus = api.StatusA
 
 	// No welcome charge when not connected
 	ch.EXPECT().Status().Return(api.StatusA, nil)
+	lp.UpdateChargerStatusAndPowerAndCurrents()
 	welcomeCharge, _ := lp.processChargerStatus()
 	assert.False(t, welcomeCharge)
 
 	// Welcome charge when connected
 	ch.EXPECT().Status().Return(api.StatusC, nil)
+	lp.UpdateChargerStatusAndPowerAndCurrents()
 	welcomeCharge, _ = lp.processChargerStatus()
 	assert.True(t, welcomeCharge)
 
 	// No welcome charge when still connected
 	ch.EXPECT().Status().Return(api.StatusB, nil)
+	lp.UpdateChargerStatusAndPowerAndCurrents()
 	welcomeCharge, _ = lp.processChargerStatus()
 	assert.False(t, welcomeCharge)
 }
