@@ -1083,11 +1083,12 @@ func (lp *Loadpoint) processChargerStatus() (bool, error) {
 		return false, err
 	}
 
-	var welcomeCharge bool
+	var (
+		welcomeCharge bool
+		prevStatus    = lp.prevStatus
+	)
 
 	for _, status := range statusChanges {
-		prevStatus := lp.prevStatus
-
 		for _, ev := range statusEvents(prevStatus, status) {
 			lp.bus.Publish(ev)
 
@@ -1104,11 +1105,13 @@ func (lp *Loadpoint) processChargerStatus() (bool, error) {
 			}
 		}
 		//update stored previous status
-		lp.prevStatus = status
+		prevStatus = status
 
 		// update whenever there is a state change
 		lp.bus.Publish(evChargeCurrent, lp.offeredCurrent)
 	}
+
+	lp.prevStatus = prevStatus
 
 	return welcomeCharge, nil
 }
@@ -1117,7 +1120,10 @@ func (lp *Loadpoint) processChargerStatus() (bool, error) {
 func (lp *Loadpoint) getStatusChanges() ([]api.ChargeStatus, error) {
 	var res []api.ChargeStatus
 
-	if lp.GetStatus() != lp.prevStatus {
+	status := lp.GetStatus()
+	prevStatus := lp.prevStatus
+
+	if status != prevStatus {
 		res = []api.ChargeStatus{lp.status}
 	}
 
@@ -1131,9 +1137,9 @@ func (lp *Loadpoint) getStatusChanges() ([]api.ChargeStatus, error) {
 		defer func() { lp.connectedDuration = d }()
 
 		// connection duration dropped without disconnect status, indicates intermediate disconnect
-		if lp.status != api.StatusA && lp.prevStatus != api.StatusA && d < lp.connectedDuration {
+		if status != api.StatusA && prevStatus != api.StatusA && d < lp.connectedDuration {
 			lp.log.DEBUG.Printf("connection duration drop detected (%s -> %v)", lp.connectedDuration.Round(time.Second), d.Round(time.Second))
-			res = []api.ChargeStatus{api.StatusA, lp.status}
+			res = []api.ChargeStatus{api.StatusA, status}
 		}
 	}
 
@@ -1856,7 +1862,7 @@ func (lp *Loadpoint) phaseSwitchCompleted() bool {
 	return time.Since(lp.phasesSwitched) > phaseSwitchDuration
 }
 
-// Update is the main control function. It reevaluates meters and charger state
+// Update is the main control function. It reevaluates meters and charger state. Must be called after UpdateChargerStatusAndPowerAndCurrents to make sure charger status, charge power and currents are up to date.
 func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64) {
 	// smart cost
 	smartCostActive, smartCostNextStart := lp.checkSmartLimit(lp.GetSmartCostLimit(), consumption, true)
