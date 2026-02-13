@@ -21,6 +21,7 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -95,7 +96,22 @@ func NewSungrow(ctx context.Context, uri, device, comset string, baudrate int, p
 		curr: 60,
 	}
 
+	go wb.heartbeat(ctx)
+
 	return wb, nil
+}
+
+func (wb *Sungrow) heartbeat(ctx context.Context) {
+	for tick := time.Tick(30 * time.Second); ; {
+		select {
+		case <-tick:
+		case <-ctx.Done():
+			return
+		}
+		if _, err := wb.conn.ReadInputRegisters(sgRegState, 1); err != nil {
+			wb.log.ERROR.Println("heartbeat:", err)
+		}
+	}
 }
 
 // getPhaseValues returns 3 non-sequential register values
