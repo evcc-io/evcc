@@ -155,14 +155,15 @@ type Loadpoint struct {
 	planLocked       PlanLock         // locked plan
 
 	// cached state
-	status         api.ChargeStatus // Charger status
-	prevStatus     api.ChargeStatus // Previous charger status to detect changes
-	chargePower    float64          // Charging power
-	chargeCurrents []float64        // Phase currents
-	connectedTime  time.Time        // Time when vehicle was connected
-	pvTimer        time.Time        // PV enabled/disable timer
-	phaseTimer     time.Time        // 1p3p switch timer
-	wakeUpTimer    *Timer           // Vehicle wake-up timeout
+	status          api.ChargeStatus // Charger status
+	statusReadError error            // Last status read error
+	prevStatus      api.ChargeStatus // Previous charger status to detect changes
+	chargePower     float64          // Charging power
+	chargeCurrents  []float64        // Phase currents
+	connectedTime   time.Time        // Time when vehicle was connected
+	pvTimer         time.Time        // PV enabled/disable timer
+	phaseTimer      time.Time        // 1p3p switch timer
+	wakeUpTimer     *Timer           // Vehicle wake-up timeout
 
 	// charge progress
 	vehicleSoc              float64       // Vehicle or charger soc
@@ -965,7 +966,7 @@ func (lp *Loadpoint) charging() bool {
 	return lp.GetStatus() == api.StatusC
 }
 
-// setStatus updates the internal charging state according to EV
+// setStatus updates the internal charging state according to EV and resets previous errors
 func (lp *Loadpoint) setStatus(status api.ChargeStatus) {
 	lp.Lock()
 	defer lp.Unlock()
@@ -1078,6 +1079,10 @@ func statusEvents(prevStatus, status api.ChargeStatus) []string {
 
 // processChargerStatus updates charger status and detects car connected/disconnected events
 func (lp *Loadpoint) processChargerStatus() (bool, error) {
+	if lp.statusReadError != nil {
+		return false, lp.statusReadError
+	}
+
 	statusChanges, err := lp.getStatusChanges()
 	if err != nil || len(statusChanges) == 0 {
 		return false, err
@@ -1558,9 +1563,9 @@ func (lp *Loadpoint) UpdateChargerStatusAndPowerAndCurrents() float64 {
 		lp.log.DEBUG.Printf("charger status: %s", status)
 		lp.setStatus(status)
 	} else {
-		lp.setStatus(api.StatusNone) // reset status on error
 		lp.log.ERROR.Printf("charger status: %v", err)
 	}
+	lp.statusReadError = err
 
 	power, err := backoff.RetryWithData(lp.chargeMeter.CurrentPower, modbus.Backoff())
 	if err == nil {
@@ -1919,9 +1924,6 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 	if err != nil {
 		lp.log.ERROR.Println(err)
 		return
-	}
-	if lp.status == api.StatusNone {
-		return // exit, status from charger was not available in lp.UpdateChargerStatusAndPowerAndCurrents
 	}
 
 	lp.publish(keys.VehicleWelcomeActive, welcomeCharge)
