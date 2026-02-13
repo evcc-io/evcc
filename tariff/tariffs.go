@@ -44,12 +44,12 @@ func Rates(t api.Tariff) api.Rates {
 	return rr
 }
 
-// ensure tariff is not a wrapper
-func exists(t api.Tariff) bool {
-	return t != nil && t.Type() != 0
-}
-
 func (t *Tariffs) Get(u api.TariffUsage) api.Tariff {
+	// ensure tariff is not a wrapper
+	exists := func(t api.Tariff) bool {
+		return t != nil && t.Type() != 0
+	}
+
 	switch u {
 	case api.TariffUsageCo2:
 		return t.Co2
