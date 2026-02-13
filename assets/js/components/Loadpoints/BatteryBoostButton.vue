@@ -1,13 +1,17 @@
 <template>
 	<button
 		class="root d-flex align-items-center justify-content-center position-relative"
-		:class="{ active, full }"
-		:style="{ '--soc': `${batterySoc}%` }"
+		:class="{ active, belowLimit }"
+		:style="{ '--soc': `${adjustedSoc}%` }"
 		:disabled="disabled"
 		data-testid="battery-boost-button"
 		@click="toggle"
 	>
-		<div v-if="active" class="progress position-absolute" :style="{ height: `${batterySoc}%` }">
+		<div
+			v-if="active"
+			class="progress position-absolute"
+			:style="{ height: `${adjustedSoc}%` }"
+		>
 			<div class="progress-bar bg-primary progress-bar-striped progress-bar-animated"></div>
 		</div>
 		<div class="icon-wrapper" :style="iconStyle">
@@ -31,6 +35,7 @@ export default defineComponent({
 	},
 	props: {
 		batteryBoost: Boolean,
+		batteryBoostLimit: { type: Number, default: 100 },
 		mode: String as PropType<CHARGE_MODE>,
 		batterySoc: { type: Number, default: 0 },
 	},
@@ -39,6 +44,17 @@ export default defineComponent({
 		disabled() {
 			return this.mode && [CHARGE_MODE.OFF, CHARGE_MODE.NOW].includes(this.mode);
 		},
+		adjustedSoc(): number {
+			const range = 100 - this.batteryBoostLimit;
+			if (range <= 0) return 0;
+			return Math.max(
+				0,
+				Math.min(100, ((this.batterySoc - this.batteryBoostLimit) / range) * 100)
+			);
+		},
+		belowLimit(): boolean {
+			return this.batterySoc < this.batteryBoostLimit;
+		},
 		iconStyle() {
 			return {
 				clipPath: this.active ? `inset(0 0 calc(var(--soc)) 0)` : undefined,
@@ -46,9 +62,6 @@ export default defineComponent({
 		},
 		active(): boolean {
 			return this.batteryBoost;
-		},
-		full(): boolean {
-			return this.batterySoc > 95;
 		},
 		iconActiveStyle() {
 			return {
@@ -75,30 +88,38 @@ export default defineComponent({
 	border: none;
 	background: none;
 	padding: 0;
-	box-shadow: 0 0 3px 0 #0ba63133;
 	opacity: 1;
 }
 .root:disabled {
 	color: inherit;
 	opacity: 0.25;
 }
-.root:hover {
-	box-shadow: 0 0 3px 0 #0ba63166;
-}
 .root:active {
 	box-shadow: 0 0 3px 0 #0ba63199;
 }
+.root.belowLimit:not(:disabled) {
+	opacity: 0.5;
+}
+.root:before,
 .root:after {
 	content: "";
 	position: absolute;
 	inset: 0;
 	border-radius: var(--bs-border-radius);
-	border: 1px solid var(--bs-primary);
+	border-width: 1px;
+	border-style: solid;
 	transition: border-color var(--evcc-transition-very-fast) linear;
+}
+.root:before {
+	border-color: #0ba63133;
+	clip-path: inset(0 0 calc(var(--soc)) 0);
+}
+.root:after {
+	border-color: var(--bs-primary);
 	clip-path: inset(calc(100% - var(--soc)) 0 0 0);
 }
-.root.full:after {
-	border-width: 2px;
+.root:hover:before {
+	border-color: #0ba63166;
 }
 .root.active:after {
 	display: none;

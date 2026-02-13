@@ -15,6 +15,7 @@
 		/>
 		<div class="mt-2 mb-4 d-flex gap-2">
 			<BatteryBoostButton
+				v-if="showBoostButton"
 				class="flex-grow-0"
 				v-bind="batteryBoostButtonProps"
 				@updated="$emit('batteryboost-updated', $event)"
@@ -116,6 +117,8 @@ export default defineComponent({
 		effectivePlanStrategy: Object as PropType<PlanStrategy>,
 		batteryBoost: Boolean,
 		batteryBoostActive: Boolean,
+		batteryBoostAvailable: Boolean,
+		batteryBoostLimit: { type: Number, default: 100 },
 		batterySoc: Number,
 		enabled: Boolean,
 		heating: Boolean,
@@ -195,6 +198,9 @@ export default defineComponent({
 		},
 		chargingPlan() {
 			return this.collectProps(ChargingPlan);
+		},
+		showBoostButton(): boolean {
+			return this.batteryBoostAvailable && this.batteryBoostLimit < 100;
 		},
 		batteryBoostButtonProps() {
 			return this.collectProps(BatteryBoostButton);

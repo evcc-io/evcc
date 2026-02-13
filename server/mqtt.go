@@ -260,6 +260,7 @@ func (m *MQTT) listenLoadpointSetters(topic string, site site.API, lp loadpoint.
 		{"smartCostLimit", floatPtrSetter(pass(lp.SetSmartCostLimit))},
 		{"smartFeedInPriorityLimit", floatPtrSetter(pass(lp.SetSmartFeedInPriorityLimit))},
 		{"batteryBoost", boolSetter(lp.SetBatteryBoost)},
+		{"batteryBoostLimit", intSetter(pass(lp.SetBatteryBoostLimit))},
 		{"planStrategy", planStrategySetter(lp.SetPlanStrategy)},
 		{"planEnergy", planGoalSetter(lp.SetPlanEnergy)},
 		{"vehicle", func(payload string) error {

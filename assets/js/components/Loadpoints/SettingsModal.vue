@@ -34,7 +34,7 @@
 				v-if="batteryBoostAvailable"
 				v-bind="batteryBoostProps"
 				class="mt-2"
-				@batteryboost-updated="changeBatteryBoost"
+				@batteryboostlimit-updated="changeBatteryBoostLimit"
 			/>
 			<h6>
 				{{ $t("main.loadpointSettings.currents") }}
@@ -167,7 +167,7 @@ export default defineComponent({
 		phasesConfigured: { type: Number, default: 0 },
 		chargerPhases1p3p: Boolean,
 		chargerSinglePhase: Boolean,
-		batteryBoost: Boolean,
+		batteryBoostLimit: { type: Number, default: 100 },
 		batteryBoostAvailable: Boolean,
 		mode: String,
 		minSoc: Number,
@@ -190,7 +190,7 @@ export default defineComponent({
 		"phasesconfigured-updated",
 		"maxcurrent-updated",
 		"mincurrent-updated",
-		"batteryboost-updated",
+		"batteryboostlimit-updated",
 	],
 	data() {
 		return {
@@ -285,8 +285,8 @@ export default defineComponent({
 		modalInvisible() {
 			this.isModalVisible = false;
 		},
-		changeBatteryBoost(boost: boolean) {
-			this.$emit("batteryboost-updated", boost);
+		changeBatteryBoostLimit(limit: number) {
+			this.$emit("batteryboostlimit-updated", limit);
 		},
 	},
 });

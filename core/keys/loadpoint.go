@@ -21,7 +21,8 @@ const (
 	DisableThreshold = "disableThreshold"
 	EnableDelay      = "enableDelay"
 	DisableDelay     = "disableDelay"
-	BatteryBoost     = "batteryBoost"
+	BatteryBoost      = "batteryBoost"
+	BatteryBoostLimit = "batteryBoostLimit"
 
 	PhasesConfigured = "phasesConfigured" // desired phase mode (0/1/3, 0 = automatic), user selection
 	PhasesActive     = "phasesActive"     // expectedly active phases, taking vehicle into account (1/2/3)
