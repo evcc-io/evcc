@@ -44,6 +44,11 @@ func Rates(t api.Tariff) api.Rates {
 	return rr
 }
 
+// ensure tariff is not a wrapper
+func exists(t api.Tariff) bool {
+	return t != nil && t.Type() != 0
+}
+
 func (t *Tariffs) Get(u api.TariffUsage) api.Tariff {
 	switch u {
 	case api.TariffUsageCo2:
@@ -58,15 +63,15 @@ func (t *Tariffs) Get(u api.TariffUsage) api.Tariff {
 	// TODO solar
 	case api.TariffUsagePlanner:
 		switch {
-		case t.Planner != nil:
+		case exists(t.Planner):
 			// prio 0: manually set planner tariff
 			return t.Planner
 
-		case t.Grid != nil && t.Grid.Type() == api.TariffTypePriceForecast:
+		case exists(t.Grid) && t.Grid.Type() == api.TariffTypePriceForecast:
 			// prio 1: grid tariff with forecast
 			return t.Grid
 
-		case t.Co2 != nil:
+		case exists(t.Co2):
 			// prio 2: co2 tariff
 			return t.Co2
 
