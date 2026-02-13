@@ -155,15 +155,14 @@ type Loadpoint struct {
 	planLocked       PlanLock         // locked plan
 
 	// cached state
-	status         api.ChargeStatus       // Charger status
-	prevStatus     api.ChargeStatus       // Previous charger status to detect changes
-	remoteDemand   loadpoint.RemoteDemand // External status demand
-	chargePower    float64                // Charging power
-	chargeCurrents []float64              // Phase currents
-	connectedTime  time.Time              // Time when vehicle was connected
-	pvTimer        time.Time              // PV enabled/disable timer
-	phaseTimer     time.Time              // 1p3p switch timer
-	wakeUpTimer    *Timer                 // Vehicle wake-up timeout
+	status         api.ChargeStatus // Charger status
+	prevStatus     api.ChargeStatus // Previous charger status to detect changes
+	chargePower    float64          // Charging power
+	chargeCurrents []float64        // Phase currents
+	connectedTime  time.Time        // Time when vehicle was connected
+	pvTimer        time.Time        // PV enabled/disable timer
+	phaseTimer     time.Time        // 1p3p switch timer
+	wakeUpTimer    *Timer           // Vehicle wake-up timeout
 
 	// charge progress
 	vehicleSoc              float64       // Vehicle or charger soc
@@ -1077,8 +1076,8 @@ func statusEvents(prevStatus, status api.ChargeStatus) []string {
 	return res
 }
 
-// updateChargerStatus updates charger status and detects car connected/disconnected events
-func (lp *Loadpoint) updateChargerStatus() (bool, error) {
+// processChargerStatus updates charger status and detects car connected/disconnected events
+func (lp *Loadpoint) processChargerStatus() (bool, error) {
 	statusChanges, err := lp.getStatusChanges()
 	if err != nil || len(statusChanges) == 0 {
 		return false, err
@@ -1087,10 +1086,7 @@ func (lp *Loadpoint) updateChargerStatus() (bool, error) {
 	var welcomeCharge bool
 
 	for _, status := range statusChanges {
-		prevStatus := lp.GetStatus()
-		lp.setStatus(status)
-
-		for _, ev := range statusEvents(prevStatus, status) {
+		for _, ev := range statusEvents(lp.prevStatus, status) {
 			lp.bus.Publish(ev)
 
 			// send connect/disconnect events except during startup
@@ -1105,10 +1101,12 @@ func (lp *Loadpoint) updateChargerStatus() (bool, error) {
 				}
 			}
 		}
-	}
+		//update stored previous status
+		lp.prevStatus = lp.status
 
-	// update whenever there is a state change
-	lp.bus.Publish(evChargeCurrent, lp.offeredCurrent)
+		// update whenever there is a state change
+		lp.bus.Publish(evChargeCurrent, lp.offeredCurrent)
+	}
 
 	return welcomeCharge, nil
 }
@@ -1117,17 +1115,8 @@ func (lp *Loadpoint) updateChargerStatus() (bool, error) {
 func (lp *Loadpoint) getStatusChanges() ([]api.ChargeStatus, error) {
 	var res []api.ChargeStatus
 
-	status, err := lp.charger.Status()
-	if err != nil {
-		return nil, fmt.Errorf("charger status: %w", err)
-	}
-
-	lp.log.DEBUG.Printf("charger status: %s", status)
-
-	// detect if charger status changed
-	prevStatus := lp.GetStatus()
-	if status != prevStatus {
-		res = []api.ChargeStatus{status}
+	if lp.status != lp.prevStatus {
+		res = []api.ChargeStatus{lp.status}
 	}
 
 	// check charger connection duration
@@ -1140,9 +1129,9 @@ func (lp *Loadpoint) getStatusChanges() ([]api.ChargeStatus, error) {
 		defer func() { lp.connectedDuration = d }()
 
 		// connection duration dropped without disconnect status, indicates intermediate disconnect
-		if status != api.StatusA && prevStatus != api.StatusA && d < lp.connectedDuration {
+		if lp.status != api.StatusA && lp.prevStatus != api.StatusA && d < lp.connectedDuration {
 			lp.log.DEBUG.Printf("connection duration drop detected (%s -> %v)", lp.connectedDuration.Round(time.Second), d.Round(time.Second))
-			res = []api.ChargeStatus{api.StatusA, status}
+			res = []api.ChargeStatus{api.StatusA, lp.status}
 		}
 	}
 
@@ -1553,11 +1542,12 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 	return targetCurrent
 }
 
-// UpdateCharger updates charger status and charge meter power and currents for load management
+// UpdateChargerStatusAndPowerAndCurrents updates charger status and charge meter power and currents for load management
 func (lp *Loadpoint) UpdateChargerStatusAndPowerAndCurrents() float64 {
 	// update charger status
-	status, err := lp.charger.Status()
+	status, err := backoff.RetryWithData(lp.charger.Status, modbus.Backoff())
 	if err == nil {
+		lp.log.DEBUG.Printf("charger status: %s", status)
 		lp.setStatus(status)
 	} else {
 		lp.setStatus(api.StatusNone) // reset status on error
@@ -1918,7 +1908,11 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 	}
 
 	// read and publish status
-	welcomeCharge := lp.processChargerStatus()
+	welcomeCharge, err := lp.processChargerStatus()
+	if err != nil {
+		lp.log.ERROR.Println(err)
+		return
+	}
 	if lp.status == api.StatusNone {
 		return // exit, status was not available in lp.UpdateChargerStatusAndPowerAndCurrents
 	}
@@ -1963,8 +1957,6 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 
 	// update and publish plan without being short-circuited by modes etc.
 	plannerActive := lp.plannerActive()
-
-	var err error
 
 	// execute loading strategy
 	switch {

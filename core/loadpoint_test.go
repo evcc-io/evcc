@@ -811,6 +811,8 @@ func TestGetMaxPhaseCurrent(t *testing.T) {
 
 		assert.Equal(t, tc.res, lp.GetMaxPhaseCurrent())
 	}
+}
+
 func TestConnectionDurationDropDetection(t *testing.T) {
 	clock := clock.NewMock()
 	ctrl := gomock.NewController(t)
@@ -896,16 +898,16 @@ func TestWelcomeChargeAppliedOnlyOnce(t *testing.T) {
 
 	// No welcome charge when not connected
 	ch.EXPECT().Status().Return(api.StatusA, nil)
-	welcomeCharge, _ := lp.updateChargerStatus()
+	welcomeCharge, _ := lp.processChargerStatus()
 	assert.False(t, welcomeCharge)
 
 	// Welcome charge when connected
 	ch.EXPECT().Status().Return(api.StatusC, nil)
-	welcomeCharge, _ = lp.updateChargerStatus()
+	welcomeCharge, _ = lp.processChargerStatus()
 	assert.True(t, welcomeCharge)
 
 	// No welcome charge when still connected
 	ch.EXPECT().Status().Return(api.StatusB, nil)
-	welcomeCharge, _ = lp.updateChargerStatus()
+	welcomeCharge, _ = lp.processChargerStatus()
 	assert.False(t, welcomeCharge)
 }
