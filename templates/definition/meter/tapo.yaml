@@ -1,8 +1,7 @@
 template: tapo
 products:
-  - brand: TP-Link
-    description:
-      generic: Tapo P-Series Smart Plug
+  - { brand: TP-Link, description: { generic: Tapo P110 } }
+  - { brand: TP-Link, description: { generic: Tapo P115 } }
 group: switchsockets
 requirements:
   description:
