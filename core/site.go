@@ -879,7 +879,7 @@ func (site *Site) updateLoadpoints(rates api.Rates) float64 {
 	)
 
 	for _, lp := range site.loadpoints {
-		go func() {
+		wg.go(func() {
 			power := lp.UpdateChargerStatusAndPowerAndCurrents()
 			site.prioritizer.UpdateChargePowerFlexibility(lp, rates)
 
