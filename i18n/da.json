@@ -172,11 +172,27 @@
       "loading": "Indlæser YAML-editor…"
     },
     "eebus": {
-      "description": "Indstilling der tillader evcc at kommunikere med andre EEBus enheder.",
+      "certificate": {
+        "private": "Privat nøgle",
+        "public": "Offentligt certifikat",
+        "title": "Certifikater"
+      },
+      "description": "Konfiguration, der gør det muligt for evcc at kommunikere med EEBus-kompatible enheder som ladere eller en styreenhed fra din netoperatør. Al nødvendig initialisering og dannelse af certifikater udføres automatisk ved første opstart.",
+      "descriptionAdvanced": "Ingen ændringer nødvendige. Foretag kun ændringer, hvis du virkelig ved, hvad du laver. Hvis du ændrer enten SHIP-id’et eller certifikaterne, skal dine enheder parres igen.",
+      "interfaces": "Grænseflader",
+      "interfacesHelp": "Begræns de netværksgrænseflader, som EEBus skal bruge, for at undgå kommunikationsproblemer. Lad feltet stå tomt for at bruge alle grænseflader. Én indtastning pr. linje.",
+      "port": "Port",
+      "portHelp": "Porten, der skal bruges.",
+      "removeConfirm": "Hele EEBus-konfigurationen fjernes. Nye certifikater og identifikatorer genereres ved næste opstart. Er du sikker på, at du vil fortsætte?",
+      "shipid": "SHIP-ID",
+      "shipidExplain": "Permanent enhedsidentifikator til identifikation i EEBus-netværket.",
+      "shipidHelp": "Dette SHIP-id er knyttet til certifikaterne nedenfor.",
+      "ski": "SKI",
+      "skiExplain": "Unik sikkerhedsidentifikator til parring af EEBus-enheder.",
       "title": "EEBus"
     },
     "experimental": {
-      "description": "Aktivér brugerfladen for funktioner, som stadig testes og kan ændres i kommende versioner.",
+      "description": "Giver tidlig adgang til funktioner, der stadig testes. Disse kan være ustabile og kan blive ændret eller fjernet i fremtidige versioner.",
       "title": "Eksperimentel"
     },
     "ext": {
@@ -207,6 +223,7 @@
       "dragHandle": "Træk-håndtag",
       "dragItem": "Kan trækkes: {title}",
       "dragList": "Rækkefølgen kan ændres",
+      "error": "Fejl",
       "experimental": "Eksperimentel",
       "forceSave": "Gem alligevel",
       "fromYamlHint": "Bemærk: Er konfigureret via evcc.yaml. Fjern indtastningen fra filen for at aktivere redigering her.",
@@ -544,6 +561,7 @@
       "integrations": "Integrationer",
       "loadpoints": "Lader og varmelegemer",
       "meter": "Sol og batteri",
+      "services": "Tjenester",
       "system": "System",
       "vehicles": "Køretøjer"
     },
@@ -741,12 +759,14 @@
   "forecast": {
     "co2": {
       "average": "Gennemsnit",
+      "constant": "CO₂-belastning",
       "lowestHour": "Reneste time",
       "range": "spændvidde"
     },
     "modalTitle": "Prognose",
     "price": {
       "average": "Gennemsnit",
+      "constant": "Pris",
       "lowestHour": "Billigste time",
       "range": "Spændvidde"
     },
@@ -1231,7 +1251,7 @@
     },
     "hiddenFeatures": {
       "label": "Experimentalt",
-      "value": "Vis eksperimentelle funktioner."
+      "value": "Aktivér eksperimentelle funktioner."
     },
     "language": {
       "auto": "Automatisk",
