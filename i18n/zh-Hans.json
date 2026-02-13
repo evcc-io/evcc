@@ -697,7 +697,7 @@
     },
     "loadpointSettings": {
       "batteryBoost": {
-        "description": "使用住宅电池快速充电。",
+        "description": "使用住宅电池快速充电，直到电量降至 {limit}。",
         "label": "电池快充",
         "mode": "仅在太阳能和最小+太阳能模式下可用。",
         "once": "本次充电会话已启用快充。"
