@@ -120,7 +120,7 @@ func (s *HTTPd) Router() *mux.Router {
 }
 
 // RegisterSiteHandlers connects the http handlers to the site
-func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param) {
+func (s *HTTPd) RegisterSiteHandlers(site site.API) {
 	router := s.Server.Handler.(*mux.Router)
 
 	// api
@@ -140,7 +140,6 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 	}
 
 	routes := map[string]route{
-		"health":                  {"GET", "/health", healthHandler(site)},
 		"buffersoc":               {"POST", "/buffersoc/{value:[0-9.]+}", floatHandler(site.SetBufferSoc, site.GetBufferSoc)},
 		"bufferstartsoc":          {"POST", "/bufferstartsoc/{value:[0-9.]+}", floatHandler(site.SetBufferStartSoc, site.GetBufferStartSoc)},
 		"batterydischargecontrol": {"POST", "/batterydischargecontrol/{value:[01truefalse]+}", boolHandler(site.SetBatteryDischargeControl, site.GetBatteryDischargeControl)},
@@ -291,14 +290,14 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 			"deletedevice":       {"DELETE", "/devices/{class:[a-z]+}/{id:[0-9.]+}", deleteDeviceHandler(site)},
 			"testconfig":         {"POST", "/test/{class:[a-z]+}", testConfigHandler},
 			"testmerged":         {"POST", "/test/{class:[a-z]+}/merge/{id:[0-9.]+}", testConfigHandler},
-			"interval":           {"POST", "/interval/{value:[0-9.]+}", settingsSetDurationHandler(keys.Interval)},
+			"interval":           {"POST", "/interval/{value:[0-9.]+}", settingsSetDurationHandler(keys.Interval, pub)},
 			"updatesponsortoken": {"POST", "/sponsortoken", updateSponsortokenHandler(pub)},
 			"deletesponsortoken": {"DELETE", "/sponsortoken", deleteSponsorTokenHandler(pub)},
+			"experimental":       {"POST", "/experimental/{value:[01truefalse]+}", boolHandler(setExperimental(pub), getExperimental)},
 		}
 
 		// yaml handlers
 		for key, fun := range map[string]func() (any, any){
-			keys.EEBus:     func() (any, any) { return map[string]any{}, eebus.Config{} },
 			keys.Hems:      func() (any, any) { return map[string]any{}, config.Typed{} },
 			keys.Tariffs:   func() (any, any) { return map[string]any{}, globalconfig.Tariffs{} },
 			keys.Messaging: func() (any, any) { return map[string]any{}, globalconfig.Messaging{} }, // has default
@@ -317,6 +316,7 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 			keys.ModbusProxy: func() any { return new([]globalconfig.ModbusProxy) }, // slice
 			keys.Shm:         func() any { return new(shm.Config) },
 			keys.Influx:      func() any { return new(globalconfig.Influx) },
+			keys.EEBus:       func() any { return new(eebus.Config) },
 		} {
 			routes["update"+key] = route{Method: "POST", Pattern: "/" + key, HandlerFunc: settingsSetJsonHandler(key, pub, fun)}
 			routes["delete"+key] = route{Method: "DELETE", Pattern: "/" + key, HandlerFunc: settingsDeleteJsonHandler(key, pub, fun())}

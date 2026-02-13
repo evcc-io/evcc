@@ -3,12 +3,12 @@ products:
   - brand: Solax
     description:
       generic: X3-HAC
-capabilities: ["mA"]
+capabilities: ["1p3p", "mA"]
 requirements:
   evcc: ["sponsorship"]
   description:
-    de: Die Wallbox muss sich im Modus "Schnell" befinden und vom Wechselrichtersystem entkoppelt sein.
-    en: The charger must be in “Fast” mode and decoupled from the inverter system.
+    de: Die Wallbox muss sich im Modus "Schnell" befinden und vom Wechselrichtersystem entkoppelt sein. Die Wallbox muss Firmware Version V9.05 oder höher installiert haben, damit die Phasenumschaltung funktioniert.
+    en: The charger must be in “Fast” mode and decoupled from the inverter system. For the phase switching to work, the charger must have firmware version V9.05 or higher installed.
 params:
   - name: modbus
     choice: ["rs485"]

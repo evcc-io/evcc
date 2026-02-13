@@ -15,6 +15,7 @@ var passwordResetCmd = &cobra.Command{
 
 func init() {
 	passwordCmd.AddCommand(passwordResetCmd)
+	passwordResetCmd.Flags().BoolP(flagForce, "f", false, "Force (no confirmation)")
 }
 
 func runPasswordReset(cmd *cobra.Command, args []string) {
@@ -28,20 +29,20 @@ func runPasswordReset(cmd *cobra.Command, args []string) {
 		log.FATAL.Fatal(err)
 	}
 
-	prompt := &survey.Confirm{
-		Message: "Are you sure?",
-		Help:    "help",
-	}
+	confirm, _ := cmd.Flags().GetBool(flagForce)
 
-	var confirm bool
-	if err := survey.AskOne(prompt, &confirm); err != nil {
-		log.FATAL.Fatal(err)
+	if !confirm {
+		prompt := &survey.Confirm{
+			Message: "Are you sure?",
+			Help:    "help",
+		}
+
+		if err := survey.AskOne(prompt, &confirm); err != nil {
+			log.FATAL.Fatal(err)
+		}
 	}
 
 	if confirm {
 		auth.New().RemoveAdminPassword()
 	}
-
-	// wait for shutdown
-	<-shutdownDoneC()
 }

@@ -4,10 +4,24 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util/sponsor"
 )
+
+func setExperimental(pub publisher) func(bool) error {
+	return func(b bool) error {
+		settings.SetBool(keys.Experimental, b)
+		pub(keys.Experimental, b)
+		return nil
+	}
+}
+
+func getExperimental() bool {
+	b, _ := settings.Bool(keys.Experimental)
+	return b
+}
 
 func updateSponsortokenHandler(pub publisher) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -26,11 +40,8 @@ func updateSponsortokenHandler(pub publisher) func(w http.ResponseWriter, r *htt
 				return
 			}
 
-			pub(keys.Sponsor, struct {
-				Status   sponsor.Status `json:"status"`
-				FromYaml bool           `json:"fromYaml"`
-			}{
-				Status:   sponsor.GetStatus(),
+			pub(keys.Sponsor, globalconfig.ConfigStatus{
+				Status:   sponsor.RedactedStatus(),
 				FromYaml: false,
 			})
 		}
@@ -39,7 +50,7 @@ func updateSponsortokenHandler(pub publisher) func(w http.ResponseWriter, r *htt
 		settings.SetString(keys.SponsorToken, req.Token)
 		setConfigDirty()
 
-		jsonWrite(w, sponsor.GetStatus())
+		jsonWrite(w, sponsor.RedactedStatus())
 	}
 }
 
@@ -47,10 +58,7 @@ func deleteSponsorTokenHandler(pub publisher) func(w http.ResponseWriter, r *htt
 	return func(w http.ResponseWriter, r *http.Request) {
 		settings.SetString(keys.SponsorToken, "")
 
-		pub(keys.Sponsor, struct {
-			Status   sponsor.Status `json:"status"`
-			FromYaml bool           `json:"fromYaml"`
-		}{
+		pub(keys.Sponsor, globalconfig.ConfigStatus{
 			Status:   sponsor.Status{},
 			FromYaml: false,
 		})

@@ -100,7 +100,7 @@
     "control": {
       "description": "Normalmente funciona com os valores padrão. Mude-os apenas se sabe o que está a fazer.",
       "descriptionInterval": "Ciclo de atualização em segundos. Define a frequência com que o evcc lê os dados do medidor e ajusta a cobrança. O padrão de 30 segundos é uma escolha segura. Dispositivos como veículos, wallboxes e inversores normalmente precisam de vários segundos para ajustar o seu comportamento. Se os seus componentes reagem rapidamente, pode usar valores mais baixos. Recomendamos fortemente não ir abaixo de 10 segundos. Se observar um comportamento de controlo irregular ou valores de potência instáveis, escolha um intervalo maior.",
-      "descriptionResidualPower": "Desloca o ponto de operação do circuito de controlo. O valor padrão de 100 W dá às baterias domésticas uma ligeira prioridade sobre o uso da rede. Se não tiver uma bateria, pode definir este valor para 0 W para minimizar o consumo da rede no modo solar.",
+      "descriptionResidualPower": "Altera o ponto de operação do circuito de controlo. Se tiver uma bateria doméstica, recomenda-se definir um valor de 100 W. Desta forma, a bateria terá uma ligeira prioridade sobre a utilização da rede.",
       "labelInterval": "Intervalo das actualizações",
       "labelResidualPower": "Potência residual",
       "title": "Comportamento de controlo"
@@ -137,9 +137,9 @@
       "no": "não",
       "odometer": "Totalizador Km",
       "org": "Organização",
-      "phaseCurrents": "Corrente L1, L2, L3",
-      "phasePowers": "Energia L1, L2, L3",
-      "phaseVoltages": "Voltagem L1, L2, L3",
+      "phaseCurrents": "Corrente",
+      "phasePowers": "Energia",
+      "phaseVoltages": "Voltagem",
       "phases1p3p": "Comutador de fases",
       "power": "Energia em tempo real",
       "powerRange": "Potência",
@@ -172,11 +172,27 @@
       "loading": "A carregar editor YAML…"
     },
     "eebus": {
-      "description": "Configuração que permite o evcc comunicar com outros dispositivos EEBus.",
+      "certificate": {
+        "private": "Chave privada",
+        "public": "Certificado publico",
+        "title": "Certificados"
+      },
+      "description": "Configuração que permite o evcc comunicar com outros dispositivos compatíveis com EEBus, como carregadores ou unidades de controlo do operador de rede. Toda a inicialização e geração de certificados é feita automaticamente na primeira inicialização.",
+      "descriptionAdvanced": "Não são necessárias alterações. Somente altere se souber realmente o que está a fazer. Se mudar quer o SHIP-id ou os certificados, terá que emparelhar novamente os seus dispositivos.",
+      "interfaces": "Interfaces",
+      "interfacesHelp": "Limitar as interfaces que o EEBus pode usar para evitar problemas de comunicação. Deixar em branco para usar todas as interfaces. Um entrada por linha.",
+      "port": "Porta",
+      "portHelp": "Porta a usar.",
+      "removeConfirm": "Toda a configuração EEBus será eliminada. Serão gerados novos certificados e identificadores na próxima inicialização. Tem a certeza?",
+      "shipid": "SHIP-ID",
+      "shipidExplain": "Identificador permanente do dispositivo a ser usado dentro da rede EEBus.",
+      "shipidHelp": "Este SHIP-ID está vinculado ao certificado abaixo.",
+      "ski": "SKI",
+      "skiExplain": "Identificador de segurança único para o emparelhamento de dispositivos EEBus.",
       "title": "EEBus"
     },
     "experimental": {
-      "description": "Ativar interface de utilizador para funcionalidades que ainda estão a ser testadas e podem ser alteradas em versões futuras.",
+      "description": "Fornece acesso antecipado a funcionalidades que ainda estão a ser testadas. Estas podem ser instáveis e podem ser alteradas ou removidas em versões futuras.",
       "title": "Experimental"
     },
     "ext": {
@@ -207,8 +223,10 @@
       "dragHandle": "Arrastar",
       "dragItem": "Arrastável: {title}",
       "dragList": "Lista reordenável",
+      "error": "Erro",
       "experimental": "Experimental",
       "forceSave": "Guardar na mesma",
+      "fromYamlHint": "Nota: Configurado através do evcc.yaml. Remova a entrada do ficheiro para permitir a edição aqui.",
       "hideAdvancedSettings": "Ocultar definições avançadas",
       "invalidFileSelected": "Ficheiro selecionado inválido",
       "noFileSelected": "Nenhum ficheiro selecionado.",
@@ -243,12 +261,11 @@
         "limitpower": "Limite (kW)",
         "type": "Tipo"
       },
-      "description": "Limitação da potência por sistemas externos (por exemplo, controladores EnWG 14a). Requer configuração de gestão de carga.",
+      "description": "Limitação de potência por sistemas externos (por exemplo, §14a EnWG, §9 EEG interface ou sistema de gestão de energia de nível superior). Funciona em conjunto com a funcionalidade de gestão de carga.",
       "downloadCsv": "Descarregar CSV",
       "eventsRecorded": "Registou {count} eventos de limitação da rede.",
       "lastEvent": "Mais recente {timeAgo}.",
-      "title": "HEMS",
-      "yamlConfigured": "Nota: Configurado através do evcc.yaml. Remova a entrada do ficheiro para permitir a edição aqui."
+      "title": "Limite externo"
     },
     "icon": {
       "change": "alterar",
@@ -294,6 +311,7 @@
       "chargerTypeLabel": "Tipo de Carregador",
       "chargingTitle": "Comportamento",
       "circuitHelp": "Atribuição de gestão de carga para garantir que os limites de potência e corrente não são excedidos.",
+      "circuitInvalid": "O circuito não existe",
       "circuitLabel": "Circuito",
       "circuitUnassigned": "não atribuído",
       "defaultModeHelp": {
@@ -370,6 +388,7 @@
       "vehicleAutoDetection": "detecção automática",
       "vehicleHelpAutoDetection": "Seleciona automaticamente o veículo mais provável. É possível cancelar manualmente.",
       "vehicleHelpDefault": "Presumir sempre que este veículo está a carregar aqui. Detecção automática desativada. É possível a desativação manual.",
+      "vehicleInvalid": "O veículo não existe",
       "vehicleLabel": "Veículo predefinido",
       "vehiclesTitle": "Veículos"
     },
@@ -387,9 +406,8 @@
       "title": "Configuração",
       "unconfigured": "não configurado",
       "vehicles": "Os meus Veículos",
-      "welcomeBannerText": "Comece criando um **carregador ou aquecedor**. Se ainda não tiver um carregador real, escolha um **carregador de demonstração**.",
-      "welcomeBannerTitle": "Configuremos agora o seu sistema!",
-      "yaml": "Os dispositivos de evcc.yaml não são editáveis."
+      "welcomeBannerText": "Comece por criar pelo menos um **carregador**, **aquecedor**, **rede**, **solar**, **bateria** ou **medidor adicional**. Se quiser apenas testar, escolha um **dispositivo de demonstração**.",
+      "welcomeBannerTitle": "Configuremos agora o seu sistema!"
     },
     "messaging": {
       "description": "Receber mensagens sobre as sessões de carregamento.",
@@ -543,6 +561,7 @@
       "integrations": "Integrações",
       "loadpoints": "Carregamento e aquecimento",
       "meter": "Solar e Bateria",
+      "services": "Serviços",
       "system": "Sistema",
       "vehicles": "Veículos"
     },
@@ -739,12 +758,14 @@
   "forecast": {
     "co2": {
       "average": "Média",
+      "constant": "Intensidade de CO₂",
       "lowestHour": "Horário mais \"Verde\"",
       "range": "Intervalo"
     },
     "modalTitle": "Previsões",
     "price": {
       "average": "Média",
+      "constant": "Preço",
       "lowestHour": "Horário mais barato",
       "range": "Intervalo"
     },
@@ -761,6 +782,9 @@
       "price": "Preço",
       "solar": "Solar"
     }
+  },
+  "general": {
+    "note": "Nota:"
   },
   "header": {
     "about": "Sobre",
@@ -886,6 +910,11 @@
       "goal": "Carga pretendida",
       "modalTitle": "Plano de carga",
       "none": "nenhum",
+      "optimization": {
+        "cheapest": "mais barato",
+        "continuous": "contínuo",
+        "label": "Otimização"
+      },
       "planNumber": "Plano {number}",
       "precondition": {
         "description": "Carregar {duration} antes da partida para pré-condicionamento da bateria.",
@@ -897,6 +926,8 @@
       "repeating": "recorrente",
       "repeatingPlans": "Repetição de planos",
       "selectAll": "Selecionar tudo",
+      "strategyDisabledDescription": "O carregamento começa o mais tarde possível para terminar a tempo da partida. Com preços dinâmicos da rede ou tarifa de CO₂, há mais opções disponíveis aqui.",
+      "strategySettings": "Definições da estratégia",
       "time": "Hora",
       "title": "Plano",
       "titleMinSoc": "Carga mínima",
@@ -935,7 +966,7 @@
       "title": "Limite externo:"
     },
     "loadpoint": {
-      "avgPrice": "Preço",
+      "avgPrice": "Preço ⌀",
       "charged": "Carregado",
       "co2": "CO₂",
       "duration": "Duração",
@@ -1105,7 +1136,6 @@
   "passwordModal": {
     "description": "Defina uma Palavra-passe para proteger as definições de configuração. Continua a ser possível utilizar o menu principal sem iniciar sessão.",
     "empty": "A Palavra-passe não deve ficar por preencher",
-    "error": "Erro: ",
     "labelCurrent": "Palavra-passe atual",
     "labelNew": "Nova Palavra-passe",
     "labelRepeat": "Repetir palavra-passe",
@@ -1131,7 +1161,7 @@
   },
   "sessions": {
     "avgPower": "Potência",
-    "avgPrice": "Preço",
+    "avgPrice": "Preço ⌀",
     "chargeDuration": "Duração",
     "chartTitle": {
       "avgCo2ByGroup": "CO₂ {byGroup}",
@@ -1219,7 +1249,7 @@
     },
     "hiddenFeatures": {
       "label": "Experimental",
-      "value": "Mostrar funcionalidades experimentais."
+      "value": "Ativar funcionalidades experimentais."
     },
     "language": {
       "auto": "Automático",

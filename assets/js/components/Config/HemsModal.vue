@@ -1,6 +1,6 @@
 <template>
 	<YamlModal
-		id="hemsModal"
+		name="hems"
 		:title="$t('config.hems.title')"
 		:description="$t('config.hems.description')"
 		docs="/docs/features/14a-enwg-steuve"
@@ -9,7 +9,6 @@
 		removeKey="hems"
 		:noYamlEditor="fromYaml"
 		:disableSave="fromYaml"
-		data-testid="hems-modal"
 		@changed="$emit('changed')"
 		@open="loadSessions"
 	>
@@ -31,7 +30,7 @@
 				</a>
 			</div>
 			<p v-if="fromYaml" class="text-muted">
-				{{ $t("config.hems.yamlConfigured") }}
+				{{ $t("config.general.fromYamlHint") }}
 			</p>
 		</template>
 	</YamlModal>

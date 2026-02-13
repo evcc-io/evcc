@@ -31,38 +31,6 @@ Either `brand`, or `description` need to be set.
 
 `group` is used to group switchable sockets and generic device support (e.g. SunSpec) templates.
 
-## `guidedsetup` (Obsolete)
-
-`guidedsetup` is enabled when the device has linked templates or >1 usage. It is used with devices that provide multiple meter usages, or meter devices that are typically installed with specific other devices. Mostly used for meter devices that provided multiple usage data with the same user input. These devices are then sorted at the bottom of the product list.
-
-## `linked`
-
-Allows to define a list of meter devices that are typically installed with this device. Enables `guidedsetup` mode.
-
-#### `template`
-
-`template` expects the linked device `template` value
-
-#### `usage`
-
-`usage` expects the meter usage type this device will be used for
-
-**Possible values**:
-
-- `grid`: for grid meters
-- `pv`:  for pv inverter/meter
-- `battery`: for battery inverter/meter
-
-#### `multiple`
-
-`multiple:true` to define that multiple devices of this template can be added
-
-#### `excludetemplate`
-
-`excludetemplate` defines a linked device `template` value. If defined and a device of the linked template is added, then this linked template won't be considered in the flow
-
-Example Use Case: With SMA Home Manager, there can be a SMA Energy Meter used for getting the PV generation or multiple SMA PV inverters. But never both together. So if the used added an SMA Energy Meter, then the flow shoudn't ask for SMA PV inverters.
-
 ## `capabilities`
 
 `capabilities` provides an option to define special capabilities of the device as a list of strings
@@ -85,12 +53,51 @@ Example Use Case: With SMA Home Manager, there can be a SMA Energy Meter used fo
 **Possible Values**:
 
 - `sponsorship`: If the device requires a sponsorship token
-- `eebus`: If the device is accessed via the eebus protocol and thus requires the corresponding setup
+- `eebus`: If the device is accessed via the EEBus protocol and thus requires the corresponding setup
 - `mqtt`: If the device a MQTT setup
 
 ### `description`
 
-`description` expects language specific texts via `de`, `en` to provide specific things the user has to do, e.g. minimum firmware versions or specific hardware setup requirements. The content can be multiline and Markdown
+`description` expects language-specific texts via `de`, `en` to provide specific things the user has to do, e.g. minimum firmware versions or specific hardware setup requirements.
+
+**Markdown formatting**:
+
+- The content can be multiline
+- The content supports Markdown formatting
+- External URLs should always use Markdown link format with the hostname as display text: `[docs.example.com](https://docs.example.com/path/to/page)`. This provides clear context while keeping the text readable.
+- Use code formatting `` `text` `` for technical identifiers, tokens, configuration values, and entity patterns
+- Use bold formatting `**text**` sparingly and only for important warnings or critical information
+
+Example:
+
+```
+en: |
+  Requires `hcaptcha` token from [developer.example.com](https://developer.example.com/tokens).
+
+  **Attention**: Token is only valid for 2 minutes.
+```
+
+## `auth`
+
+`auth` defines OAuth authentication configuration for devices that require user authorization. When specified, the UI OAuth flow and token management are handled automatically. The auth endpoint is called when all required parameters are filled and is re-called on every parameter change.
+
+### `type`
+
+`type` specifies the OAuth provider type. This must reference a dedicated OAuth implementation.
+
+**Available types**: `homeassistant`, `ford-connect`, `viessmann`, `cardata`, `volvo-connected`
+
+### `params`
+
+`params` is a list of parameter names (from the `params` section) that are required for the OAuth configuration. These parameters will be passed to the authentication provider when initiating the OAuth flow. Once all listed parameters have values, the authorization is prepared and the UI displays a redirect link to the external service and device code (if applicable). The preparation is re-triggered whenever any parameter value changes.
+
+**Example**:
+
+```yaml
+auth:
+  type: viessmann
+  params: [clientid, redirecturi, gateway_serial]
+```
 
 ## `params`
 
@@ -110,10 +117,6 @@ Example Use Case: With SMA Home Manager, there can be a SMA Energy Meter used fo
 
 - `usage`: specifies a list of meter classes, the device can be used for. Possible values are `grid`, `pv`, `battery`, and `charger`
 - `modbus`: specifies that this device is accessed via modbus. It requires the `choice` property to have a list of possible interface values the device provides. These values can be `rs485` and `tcpip`. The command will use either to ask the appropriate questions and settings. The `render` section needs to include the string `{{include "modbus" .}}` in all places where the configuration needs modbus settings.
-
-#### Usage Options
-
-- `allineone`: Defines if the different usages are all available in a single device. Enables `guidedsetup` mode.
 
 #### Modbus Options
 
@@ -154,11 +157,21 @@ Example Use Case: With SMA Home Manager, there can be a SMA Energy Meter used fo
 
 ### `mask`
 
-`mask: true` defines if the user input should be masked, e.g. for passwords. Defaut is `false`
+`mask: true` defines if the user input should be masked in the UI (password field). Used for sensitive credentials like passwords, tokens, and API keys that should be hidden from view. Default is `false`.
+
+**Note**: Cannot be used together with `private`.
+
+### `private`
+
+`private: true` marks a parameter as containing personal data (e.g., email addresses, VIN numbers, MAC addresses, locations). This data will be redacted from bug reports and diagnostic information but is visible in the UI. Default is `false`.
+
+**Examples of private data**: usernames, email addresses, VIN, URI, MAC addresses, latitude/longitude, serial numbers
+
+**Note**: Cannot be used together with `mask`.
 
 ### `default`
 
-`default` defines a default value to be used. For these cases the user can then simply press enter in the CLI.
+`default` defines a default value to be used, which will be pre-filled in the configuration UI.
 
 ### `example`
 
@@ -166,24 +179,93 @@ Example Use Case: With SMA Home Manager, there can be a SMA Energy Meter used fo
 
 ### `type`
 
-`type` allows to define the value type to let the CLI verify the user provided content
+`type` allows to define the value type to let the UI verify the user provided content
 
 **Possible values**:
 
 - `string`: for string values (default)
-- `bool`: for `true` and `false` values. If `help` is provided, than that help text is presented as the question
-- `int`: for int values
-- `float`: for float values
-- `list`: for a list of strings, e.g.used for defining a list of `identifiers` for `vehicles`
-- `chargemodes`: for a selection of charge modes (including `None` which results in the param not being set)
+- `bool`: for `true` and `false` values
+- `choice`: for a selection from predefined options (defined in `choice` property)
+- `chargemodes`: for a selection of charge modes (`Off`, `Now`, `MinPV`, `PV`), including `None` which results in the param not being set
+- `duration`: for duration values (e.g., `5m`, `1h30m`, `10s`)
+- `float`: for floating point numbers
+- `int`: for integer values
+- `list`: for a list of strings (newline-separated in textarea), e.g., used for defining a list of `identifiers` for vehicles
+
+### `choice`
+
+`choice` defines the list of possible values when `type: choice` is used. The user can select one value from this list via a dropdown.
+
+**Format**: Array of strings
+
+**Example**:
+
+```yaml
+- name: schema
+  type: choice
+  choice: ["https", "http"]
+  default: https
+
+- name: channel
+  type: choice
+  choice: ["general", "feedIn", "controlledLoad"]
+  required: true
+```
 
 ### `advanced`
 
-`advanced` allows to specify if the param should only be asked if the cli is run with `--advanced`. Mostly used for non required params that are meant for users with advanced needs and knowledge.
+`advanced: true` marks a parameter as advanced. Advanced parameters are hidden by default in the UI and can be expanded by the user. Mostly used for non-required params that are meant for users with advanced needs and knowledge.
 
 ### `help`
 
 `help` expects language specific help texts via `generic` (language independent), `de`, `en`
+
+### `service`
+
+`service` specifies an API endpoint that provides dynamic data or suggestions for this parameter during configuration. When set, the UI will call this service to provide auto-completion or pre-populated options to the user.
+
+**Format**: `service-name/endpoint` or `service-name/endpoint?param1={param1}&param2={param2}`
+
+Parameters from other params can be referenced using `{param-name}` syntax, which will be replaced with the user's input for that parameter. The endpoint will only be called once the user has entered values for all referenced parameters. The endpoint is called every time a referenced parameter value changes.
+
+**UI behaviour**:
+
+Service endpoints must return an array of strings (e.g., `["value1", "value2"]`). These values are shown as suggestions, not strict selections - users can always enter custom text values. The UI handles service responses differently based on the parameter configuration and response content:
+
+- **Auto-fill (prepopulation)**: If the service returns exactly **one** value, the parameter is **required**, and the field is currently **empty**, the value will be automatically filled into the field.
+
+- **Dropdown suggestions**: In all other cases (multiple values, non-required parameter, or field already has a value), the returned values are shown as a dropdown/datalist for the user to select from or ignore.
+
+- **Empty response**: If the service returns an empty array or no data, the field remains a regular text input.
+
+**Available services**:
+
+- **Hardware**
+
+  `hardware/serial`: Lists available serial ports on the system
+
+- **Modbus**
+
+  `modbus/read?...`: Reads a value from a modbus register (for validation/testing)
+
+  The `modbus` service supports a special `{modbus}` parameter that will be automatically expanded to the appropriate connection parameters based on the user's modbus configuration:
+
+  ```yaml
+  # Template definition
+  - name: voltage
+    service: modbus/read?address=100&type=holding&{modbus}
+  # Expanded for TCP connection:
+  # modbus/read?address=100&type=holding&uri=192.168.1.10:502&id=1
+
+  # Expanded for RTU connection:
+  # modbus/read?address=100&type=holding&device=/dev/ttyUSB0&baudrate=9600&id=1
+  ```
+
+- **Home Assistant**
+
+  `homeassistant/instances`: Auto-discovers Home Assistant instances on the network
+
+  `homeassistant/entities?uri={uri}&domain=sensor`: Lists entities from a Home Assistant instance filtered by domain(s). Multiple domains can be comma-separated (e.g., `domain=sensor,binary_sensor` or `domain=number,input_number`)
 
 ## `render`
 

@@ -2,6 +2,7 @@ package charger
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -9,6 +10,8 @@ import (
 	"github.com/samber/lo"
 	"golang.org/x/text/encoding/unicode"
 )
+
+var ErrLoadpointNotInitialized = errors.New("loadpoint not initialized")
 
 // TODO remove when used
 var _ = ensureCharger

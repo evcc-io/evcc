@@ -356,6 +356,9 @@ func (lp *Loadpoint) getPlanEnergy() (time.Time, float64) {
 
 // setPlanEnergy sets plan target energy (no mutex)
 func (lp *Loadpoint) setPlanEnergy(finishAt time.Time, energy float64) {
+	// clear locked goal when energy plan changes
+	lp.clearPlanLock()
+
 	lp.planEnergy = energy
 	lp.publish(keys.PlanEnergy, energy)
 	lp.settings.SetFloat(keys.PlanEnergy, energy)
@@ -402,8 +405,9 @@ func (lp *Loadpoint) setPlanStrategy(strategy api.PlanStrategy) error {
 	}
 
 	lp.planStrategy = strategy
-	lp.publish(keys.PlanPrecondition, int64(strategy.Precondition.Seconds()))
-	lp.publish(keys.PlanContinuous, strategy.Continuous)
+	lp.publish(keys.PlanStrategy, strategy)
+
+	lp.publish(keys.EffectivePlanStrategy, lp.getEffectivePlanStrategy())
 
 	lp.requestUpdate()
 

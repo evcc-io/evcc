@@ -1,0 +1,4 @@
+vehicles:
+  - name: car
+    type: offline
+    title: Legacy Vehicle

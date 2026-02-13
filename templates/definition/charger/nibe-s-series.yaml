@@ -9,11 +9,13 @@ requirements:
     de: |
       Modbus Verbindung zur NIBE S Wärmepumpe. Firmware 4.7.5 oder neuer benötigt.
       In der Inneneinheit muss im Menü 7.5.9 Modbus aktiviert sein.
+      Zur Verwendung der Leistungssteuerung muss im Menü 7.4 unter dem Punkt AUX von Modbus ext. Leistungsbegrenzung ausgewählt sein.
       Es muss einmalig im Holding Register 3032 der Wert „1“ (uint8) geschrieben werden.
     en: |
       Modbus connection to the NIBE S heat pump.
       Firmware version 4.7.5 or newer is required.
       In the indoor unit, Modbus must be enabled in menu 7.5.9
+      To use the power control function, external power limitation must be selected under Menu 7.4, item AUX from modbus.
       The value “1” (uint8) must be written once to holding register 3032.
 params:
   - name: modbus
@@ -27,6 +29,13 @@ params:
     description:
       de: Temperatursensor
       en: Temperature sensor
+  - name: powercontrol
+    required: true
+    type: bool
+    default: true
+    description:
+      de: Leistungssteuerung
+      en: power limitation
 render: |
   type: sgready
   setmode:
@@ -36,12 +45,77 @@ render: |
       2: 1
       3: 3
     set:
-      source: modbus
-      {{- include "modbus" . | indent 4 }}
-      register:
-        address: 6008
-        type: writeholding
-        encoding: int16
+      source: switch
+      switch:
+        - case: 0
+          set:
+            source: sequence
+            set:
+  {{- if eq .powercontrol "true" }}
+              - source: const
+                value: 1
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 2741
+                    type: writeholding
+                    encoding: int16
+              - source: sleep
+                duration: 10000ms
+  {{- end }}
+              - source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 6008
+                  type: writeholding
+                  encoding: int16  
+        - case: 1
+          set:
+            source: sequence
+            set:
+  {{- if eq .powercontrol "true" }}
+              - source: const
+                value: 0
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 2741
+                    type: writeholding
+                    encoding: int16
+              - source: sleep
+                duration: 10000ms
+  {{- end }}
+              - source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 6008
+                  type: writeholding
+                  encoding: int16         
+        - case: 3
+          set:
+            source: sequence
+            set:
+  {{- if eq .powercontrol "true" }}
+              - source: const
+                value: 1
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 2741
+                    type: writeholding
+                    encoding: int16
+              - source: sleep
+                duration: 10000ms
+  {{- end }}
+              - source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 6008
+                  type: writeholding
+                  encoding: int16  
   getmode: # operation mode (1: reduced, 2: normal, 3 boost)
     source: map
     values:
@@ -80,3 +154,13 @@ render: |
       type: input
       encoding: uint16
     scale: 0.1
+  {{- if eq .powercontrol "true" }}
+  setmaxpower:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 6007
+      type: writeholding
+      encoding: int16
+    scale: 0.01
+  {{- end }}

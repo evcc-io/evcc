@@ -1,7 +1,7 @@
 <template>
 	<div v-if="tags" class="tags">
 		<span
-			v-for="(entry, index) in entries"
+			v-for="(entry, index) in regularEntries"
 			:key="index"
 			:data-testid="`device-tag-${entry.name}`"
 			class="d-flex gap-2 overflow-hidden text-truncate"
@@ -9,27 +9,51 @@
 			<div class="label overflow-hidden text-truncate flex-shrink-1 flex-grow-1">
 				{{ $t(`config.deviceValue.${entry.name}`) }}
 			</div>
-			<div
-				class="value overflow-hidden"
-				:class="{
-					'value--error': !!entry.error,
-					'value--warning': entry.warning,
-					'value--muted': entry.muted || entry.value === false,
-					'text-truncate': allowTruncate(entry.name),
-					'flex-shrink-0': !allowTruncate(entry.name),
-				}"
-			>
+			<div class="value overflow-hidden text-truncate" :class="valueClasses(entry)">
 				{{ fmtDeviceValue(entry) }}
 			</div>
 		</span>
+		<table v-if="hasPhaseEntries" class="table table-borderless table-sm my-0">
+			<thead>
+				<tr>
+					<th></th>
+					<th class="small evcc-gray text-end ps-2">L1</th>
+					<th class="small evcc-gray text-end ps-2">L2</th>
+					<th class="small evcc-gray text-end ps-2">L3</th>
+					<th></th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr
+					v-for="(entry, index) in phaseEntries"
+					:key="index"
+					:data-testid="`device-tag-${entry.name}`"
+				>
+					<td class="text-truncate">
+						{{ $t(`config.deviceValue.${entry.name}`) }}
+					</td>
+					<td
+						v-for="(val, idx) in entry.value"
+						:key="idx"
+						class="value text-end tabular ps-2"
+						:class="valueClasses(entry)"
+					>
+						{{ fmtPhaseValue(entry.name, val) }}
+					</td>
+					<td class="value unit-col ps-1" :class="valueClasses(entry)">
+						{{ getPhaseUnit(entry.name) }}
+					</td>
+				</tr>
+			</tbody>
+		</table>
 	</div>
 </template>
 <script>
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 
-const NO_TRUNCATE = ["phasePowers", "phaseVoltages", "phaseCurrents"];
-
 const HIDDEN_TAGS = ["icon", "heating", "integratedDevice"];
+
+const PHASE_TAGS = ["phaseCurrents", "phaseVoltages", "phasePowers"];
 
 export default {
 	name: "DeviceTags",
@@ -38,15 +62,32 @@ export default {
 		tags: Object,
 	},
 	computed: {
-		entries() {
+		regularEntries() {
 			return Object.entries(this.tags)
-				.filter(([name]) => !HIDDEN_TAGS.includes(name))
+				.filter(([name]) => !HIDDEN_TAGS.includes(name) && !PHASE_TAGS.includes(name))
 				.map(([name, { value, error, warning, muted, options }]) => {
 					return { name, value, error, warning, muted, options };
 				});
 		},
+		phaseEntries() {
+			return Object.entries(this.tags)
+				.filter(([name]) => PHASE_TAGS.includes(name))
+				.map(([name, { value, error, warning, muted, options }]) => {
+					return { name, value, error, warning, muted, options };
+				});
+		},
+		hasPhaseEntries() {
+			return this.phaseEntries.length > 0;
+		},
 	},
 	methods: {
+		valueClasses(entry) {
+			return {
+				"value--error": !!entry.error,
+				"value--warning": entry.warning,
+				"value--muted": entry.muted || entry.value === false,
+			};
+		},
 		fmtDeviceValue(entry) {
 			const { name, value, options = {} } = entry;
 			if (value === null || value === undefined) {
@@ -70,12 +111,6 @@ export default {
 				case "odometer":
 				case "range":
 					return `${this.fmtNumber(value, 0)} km`;
-				case "phaseCurrents":
-					return value.map((v) => this.fmtNumber(v, 1)).join(" · ") + " A";
-				case "phaseVoltages":
-					return value.map((v) => this.fmtNumber(v, 0)).join(" · ") + " V";
-				case "phasePowers":
-					return value.map((v) => this.fmtW(v, POWER_UNIT.KW, false)).join(" · ") + " kW";
 				case "chargeStatus":
 					return value ? this.$t(`config.deviceValue.chargeStatus${value}`) : "-";
 				case "gridPrice":
@@ -101,8 +136,30 @@ export default {
 			}
 			return value;
 		},
-		allowTruncate(name) {
-			return !NO_TRUNCATE.includes(name);
+		fmtPhaseValue(name, value) {
+			if (value === null || value === undefined) {
+				return "–";
+			}
+			switch (name) {
+				case "phaseCurrents":
+					return this.fmtNumber(value, 1);
+				case "phaseVoltages":
+					return this.fmtNumber(value, 0);
+				case "phasePowers":
+					return this.fmtW(value, POWER_UNIT.KW, false);
+			}
+			return value;
+		},
+		getPhaseUnit(name) {
+			switch (name) {
+				case "phaseCurrents":
+					return "A";
+				case "phaseVoltages":
+					return "V";
+				case "phasePowers":
+					return "kW";
+			}
+			return "";
 		},
 	},
 };
@@ -132,5 +189,13 @@ export default {
 }
 .value--muted {
 	color: var(--evcc-gray) !important;
+}
+table th,
+table td {
+	padding: 0 0 0.5rem 0;
+	white-space: nowrap;
+}
+.unit-col {
+	width: 0.1%;
 }
 </style>

@@ -1,7 +1,13 @@
 <template>
 	<div class="strategy-wrapper" :class="{ open: show }">
 		<div class="strategy-content">
-			<div class="row">
+			<div v-if="disabled" class="row mb-4">
+				<div class="small text-muted">
+					<strong class="text-primary">{{ $t("general.note") }}</strong>
+					{{ $t("main.chargingPlan.strategyDisabledDescription") }}
+				</div>
+			</div>
+			<div v-else class="row">
 				<div class="col-12 col-sm-6 col-lg-3 offset-lg-3 mb-3">
 					<div class="row">
 						<label :for="formId('continuous')" class="col-form-label col-5 col-sm-12">
@@ -68,6 +74,7 @@ export default defineComponent({
 		show: Boolean,
 		precondition: { type: Number, default: 0 },
 		continuous: { type: Boolean, default: false },
+		disabled: Boolean,
 	},
 	emits: ["update"],
 	data() {

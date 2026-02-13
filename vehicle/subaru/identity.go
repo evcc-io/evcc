@@ -2,7 +2,6 @@ package subaru
 
 import (
 	"fmt"
-	"maps"
 	"net/http"
 	"net/url"
 	"strings"
@@ -83,12 +82,9 @@ func (v *Identity) authenticate(initial Auth, user, password string) (*Token, er
 
 func (v *Identity) authorize(token Token) (string, error) {
 	uri := fmt.Sprintf("%s/%s", BaseUrl, AuthorizationPath)
-	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
+	req, _ := request.New(http.MethodGet, uri, nil, map[string]string{
 		"Cookie": fmt.Sprintf("iPlanetDirectoryPro=%s", token.TokenID),
 	})
-	if err != nil {
-		return "", err
-	}
 
 	originalCheckRedirect := v.Client.CheckRedirect
 	defer func() { v.Client.CheckRedirect = originalCheckRedirect }()
@@ -96,7 +92,8 @@ func (v *Identity) authorize(token Token) (string, error) {
 	var param request.InterceptResult
 	v.Client.CheckRedirect, param = request.InterceptRedirect("code", true)
 	var code string
-	if _, err = v.Do(req); err == nil {
+	_, err := v.Do(req)
+	if err == nil {
 		code, err = param()
 	}
 	return code, err
@@ -113,19 +110,16 @@ func (v *Identity) fetchTokenCredentials(code string) error {
 		"code_verifier": {"plain"},
 	}
 
-	headers := make(map[string]string)
-	maps.Copy(headers, request.URLEncoding)
-	headers["Authorization"] = AppAuthorization
-	req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), headers)
-	if err != nil {
-		return err
-	}
+	req, _ := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), map[string]string{
+		"Content-Type":  request.FormContent,
+		"Authorization": AppAuthorization,
+	})
 
 	var res struct {
 		oauth2.Token
 		IDToken string `json:"id_token"`
 	}
-	if err = v.DoJSON(req, &res); err != nil {
+	if err := v.DoJSON(req, &res); err != nil {
 		return fmt.Errorf("failed to fetch token credentials: %w", err)
 	}
 
@@ -161,14 +155,11 @@ func (v *Identity) refreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 		"refresh_token": {token.RefreshToken},
 	}
 
-	headers := make(map[string]string)
-	maps.Copy(headers, request.URLEncoding)
-	headers["Authorization"] = AppAuthorization
 	var res oauth2.Token
-	req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), headers)
-	if err != nil {
-		return nil, err
-	}
+	req, _ := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), map[string]string{
+		"Content-Type":  request.FormContent,
+		"Authorization": AppAuthorization,
+	})
 	if err := v.DoJSON(req, &res); err != nil {
 		return nil, err
 	}
@@ -177,19 +168,16 @@ func (v *Identity) refreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 
 func (v *Identity) Login(user, password string) error {
 	uri := fmt.Sprintf("%s/%s", BaseUrl, AuthenticationPath)
-	req, err := request.New(http.MethodPost, uri, nil, map[string]string{
+	req, _ := request.New(http.MethodPost, uri, nil, map[string]string{
 		"Accept":   "application/json",
 		"X-Region": "EU",
 		"Region":   "EU",
 		"Brand":    "S",
 		"X-Brand":  "S",
 	})
-	if err != nil {
-		return fmt.Errorf("failed to create authentication request: %w", err)
-	}
 
 	var auth Auth
-	if err = v.DoJSON(req, &auth); err != nil {
+	if err := v.DoJSON(req, &auth); err != nil {
 		return fmt.Errorf("failed to get initial auth response: %w", err)
 	}
 

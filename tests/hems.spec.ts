@@ -120,7 +120,7 @@ limit:
 
     // verify circuits
     await expect(page.getByTestId("circuits")).toContainText(
-      ["HEMS (lpc)", "Power", "0.0 kW"].join("")
+      ["External Limit (lpc)", "Power", "0.0 kW"].join("")
     );
 
     // enable hems in simulator
@@ -132,7 +132,7 @@ limit:
     // verify config ui
     await page.goto("/#/config");
     await expect(page.getByTestId("circuits")).toContainText(
-      ["HEMS (lpc)", "Power", "0.0 kW / 4.2 kW"].join("")
+      ["External Limit (lpc)", "Power", "0.0 kW / 4.2 kW"].join("")
     );
 
     // verify main ui

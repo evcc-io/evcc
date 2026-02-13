@@ -13,7 +13,6 @@ import (
 	"github.com/evcc-io/evcc/hems/smartgrid"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
-	"github.com/samber/lo"
 )
 
 type Relay struct {
@@ -129,7 +128,7 @@ func (c *Relay) updateSession(limit float64) error {
 	if limit > 0 && c.smartgridID == 0 {
 		var power *float64
 		if p := c.root.GetChargePower(); p > 0 {
-			power = lo.ToPtr(p)
+			power = new(p)
 		}
 
 		sid, err := smartgrid.StartManage(smartgrid.Dim, power, limit)

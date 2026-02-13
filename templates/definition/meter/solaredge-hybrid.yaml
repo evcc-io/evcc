@@ -15,7 +15,6 @@ requirements:
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
-    allinone: true
   - name: modbus
     choice: ["tcpip", "rs485"]
     id: 1
@@ -28,6 +27,8 @@ params:
     type: duration
     default: 60s
     advanced: true
+  - name: timeout
+    deprecated: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}

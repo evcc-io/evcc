@@ -133,11 +133,9 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 		lp.socUpdated = time.Time{}
 
 		// resolve optional config
-		var estimate bool
-		if lp.Soc.Estimate == nil || *lp.Soc.Estimate {
-			estimate = true
+		if v.Capacity() > 0 && (lp.Soc.Estimate == nil || *lp.Soc.Estimate) {
+			lp.socEstimator = soc.NewEstimator(lp.log, lp.charger, v)
 		}
-		lp.socEstimator = soc.NewEstimator(lp.log, lp.charger, v, estimate)
 
 		lp.publish(keys.VehicleName, vehicle.Settings(lp.log, v).Name())
 		lp.publish(keys.VehicleTitle, v.GetTitle())
@@ -250,13 +248,11 @@ func (lp *Loadpoint) vehicleUnidentified() bool {
 // vehicleDefaultOrDetect will assign and update default vehicle or start detection
 func (lp *Loadpoint) vehicleDefaultOrDetect() {
 	if lp.defaultVehicle != nil {
-		if lp.vehicle != lp.defaultVehicle {
-			lp.setActiveVehicle(lp.defaultVehicle)
-		} else {
-			// default vehicle is already active, update odometer anyway
-			// need to do this here since setActiveVehicle would short-circuit
-			lp.addTask(lp.vehicleOdometer)
-		}
+		// Always call setActiveVehicle even if defaultVehicle is already active.
+		// This ensures a fresh SOC estimator is created on each vehicle connect,
+		// which resets the estimator's initial values for the new charging session.
+		// setActiveVehicle is safe to call repeatedly - it only logs when vehicle actually changes.
+		lp.setActiveVehicle(lp.defaultVehicle)
 	} else if len(lp.coordinatedVehicles()) > 0 && lp.connected() {
 		lp.startVehicleDetection()
 	}
@@ -328,6 +324,10 @@ func (lp *Loadpoint) vehicleClimatePollAllowed() bool {
 
 // vehicleSocPollAllowed validates charging state against polling mode
 func (lp *Loadpoint) vehicleSocPollAllowed() bool {
+	if lp.vehicleHasFeature(api.Offline) {
+		return false
+	}
+
 	// always update soc when charging
 	if lp.charging() || lp.vehicleHasFeature(api.Streaming) {
 		return true

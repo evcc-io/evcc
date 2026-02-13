@@ -105,6 +105,7 @@ async function _start(config?: string, flags: string | string[] = []) {
   const configArgs = config ? ["--config", config.includes("/") ? config : `tests/${config}`] : [];
   const port = workerPort();
   const ocpp = ocppPort();
+
   log(`wait until port ${port} is available`);
   // wait for port to be available
   await waitOn({ resources: [`tcp:${port}`], reverse: true, log: LOG_ENABLED });

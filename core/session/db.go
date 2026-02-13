@@ -13,17 +13,15 @@ type DB struct {
 	name string
 }
 
-var (
-	sessions Sessions
-)
+var sessions Sessions
 
 func init() {
-	db.Register(func() error {
-		if err := db.Instance.AutoMigrate(new(Session)); err != nil {
+	db.Register(func(db *gorm.DB) error {
+		if err := db.AutoMigrate(new(Session)); err != nil {
 			return err
 		}
 
-		return db.Instance.Find(&sessions).Error
+		return db.Find(&sessions).Error
 	})
 }
 

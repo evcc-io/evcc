@@ -32,7 +32,7 @@ type dailyDetails struct {
 //   - the current green share, calculated for the part of the consumption between powerFrom and powerTo
 //     the consumption below powerFrom will get the available green power first
 func (site *Site) greenShare(powerFrom float64, powerTo float64) float64 {
-	greenPower := math.Max(0, site.pvPower) + math.Max(0, site.batteryPower)
+	greenPower := math.Max(0, site.pvPower) + math.Max(0, site.battery.Power)
 	greenPowerAvailable := math.Max(0, greenPower-powerFrom)
 
 	power := powerTo - powerFrom
@@ -115,7 +115,7 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 
 	// calculate adjusted solar rates
 	if solar := tariff.Rates(site.GetTariff(api.TariffUsageSolar)); len(solar) > 0 {
-		fc.Solar = lo.ToPtr(site.solarDetails(solar))
+		fc.Solar = new(site.solarDetails(solar))
 	}
 
 	site.publish(keys.Forecast, util.NewSharder(keys.Forecast, fc))
@@ -169,7 +169,7 @@ func (site *Site) solarDetails(solar api.Rates) solarDetails {
 
 		const minEnergy = 0.5 // kWh
 		if produced+fcst > minEnergy {
-			res.Scale = lo.ToPtr(scale)
+			res.Scale = new(scale)
 		}
 	}
 

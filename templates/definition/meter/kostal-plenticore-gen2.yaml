@@ -5,12 +5,6 @@ products:
       de: Plenticore Hybrid, inkl. Netzladung der Hausbatterie
       en: Plenticore Hybrid, incl. grid charging of the house battery
 capabilities: ["battery-control"]
-linked:
-  - template: kostal-ksem-inverter
-    usage: grid
-  - template: kostal-ksem
-    usage: grid
-    excludetemplate: kostal-ksem-inverter
 covers: ["kostal-plenticore-hw0200"]
 requirements:
   description:
@@ -25,7 +19,6 @@ requirements:
 params:
   - name: usage
     choice: ["pv", "battery"]
-    allinone: true
   - name: modbus
     choice: ["tcpip"]
     id: 71
@@ -39,7 +32,18 @@ params:
     default: little
     advanced: true
   - name: maxacpower
+    service: modbus/read?address=531&type=holding&encoding=uint16&{modbus}
   - preset: battery-params
+  - name: capacity
+    service: modbus/read?address=1068&type=holding&encoding=float32s&scale=0.001&{modbus}
+  - name: minsoc
+    service: modbus/read?address=1042&type=holding&encoding=float32s&{modbus}
+  - name: maxsoc
+    service: modbus/read?address=1044&type=holding&encoding=float32s&{modbus}
+  - name: maxchargepower
+    service: modbus/read?address=1038&type=holding&encoding=float32s&resulttype=int&{modbus}
+  - name: maxdischargepower
+    service: modbus/read?address=1040&type=holding&encoding=float32s&resulttype=int&{modbus}
   - name: maxchargerate
     deprecated: true
   - name: watchdog
@@ -81,6 +85,7 @@ render: |
   batterymode:
     source: watchdog
     timeout: {{ .watchdog }} # re-write at timeout/2
+    defer: true # make sure timeouts are followed on update
     reset: 1 # reset watchdog on normal
     set:
       source: switch
@@ -109,8 +114,9 @@ render: |
               encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
       - case: 3 # charge
         set:
+          {{- if .maxchargepower }}
           source: const
-          value: {{ if .maxchargerate }}-{{ .maxchargerate }}{{ end }} # %
+          value: -{{ .maxchargepower }} # W
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
@@ -118,5 +124,9 @@ render: |
               address: 1034 # Battery charge power (DC) setpoint, absolute [W]
               type: writemultiple
               encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
+          {{- else }}
+          source: error
+          error: ErrNotAvailable
+          {{- end }}
   {{- include "battery-params" . }}
   {{- end }}

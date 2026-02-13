@@ -51,6 +51,7 @@
 			</div>
 			<Loadpoints
 				v-else
+				:key="`loadpoints-${orderedVisibleLoadpoints.length}`"
 				class="mt-1 mt-sm-2 flex-grow-1"
 				:loadpoints="orderedVisibleLoadpoints"
 				:vehicles="vehicleList"
@@ -87,7 +88,7 @@ import WelcomeIcons from "./WelcomeIcons.vue";
 import { defineComponent, type PropType } from "vue";
 import type {
 	AuthProviders,
-	BatteryMeter,
+	Battery,
 	Meter,
 	CURRENCY,
 	Forecast,
@@ -127,13 +128,11 @@ export default defineComponent({
 		pv: { type: Array as PropType<Meter[]>, default: () => [] },
 		aux: { type: Array as PropType<Meter[]>, default: () => [] },
 		ext: { type: Array as PropType<Meter[]>, default: () => [] },
-		batteryPower: Number,
-		batterySoc: Number,
 		batteryDischargeControl: Boolean,
 		batteryGridChargeLimit: { type: Number, default: null },
 		batteryGridChargeActive: Boolean,
 		batteryMode: String,
-		battery: { type: Array as PropType<BatteryMeter[]>, default: () => [] },
+		battery: { type: Object as PropType<Battery> },
 		gridCurrents: Array,
 		prioritySoc: Number,
 		bufferSoc: Number,
@@ -164,6 +163,7 @@ export default defineComponent({
 		forecast: Object as PropType<Forecast>,
 		circuits: Object as PropType<Record<string, Circuit>>,
 		telemetry: Boolean,
+		experimental: Boolean,
 		evopt: { type: Object as PropType<EvOpt> },
 	},
 	computed: {
@@ -173,8 +173,11 @@ export default defineComponent({
 		orderedVisibleLoadpoints() {
 			return this.loadpoints.filter((lp) => lp.visible);
 		},
+		batterySoc() {
+			return this.battery?.soc;
+		},
 		batteryConfigured() {
-			return this.battery?.length > 0;
+			return this.battery && this.battery.devices.length > 0;
 		},
 		pvConfigured() {
 			return this.pv?.length > 0;

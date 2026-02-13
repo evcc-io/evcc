@@ -21,7 +21,6 @@ params:
       de: Benutzername für Admin-API
     example: admin
   - name: password
-    mask: true
     help:
       en: Password for admin API
       de: Passwort für Admin-API
@@ -34,12 +33,6 @@ params:
 render: |
   type: evecube
   uri: http://{{ .host }}
-  {{- if .user }}
   user: {{ .user }}
-  {{- end }}
-  {{- if .password }}
   password: {{ .password }}
-  {{- end }}
-  {{- if ne .connector "1" }}
   connector: {{ .connector }}
-  {{- end }}

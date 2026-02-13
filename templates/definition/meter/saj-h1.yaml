@@ -9,6 +9,8 @@ params:
   - name: modbus
     choice: ["tcpip"]
   - preset: battery-params
+  - name: timeout
+    deprecated: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
