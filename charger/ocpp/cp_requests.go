@@ -57,6 +57,20 @@ func (cp *CP) RemoteStartTransactionRequest(connectorId int, idTag string) error
 	return wait(err, rc)
 }
 
+func (cp *CP) RemoteStopTransactionRequest(transactionId int) error {
+	rc := make(chan error, 1)
+
+	err := Instance().RemoteStopTransaction(cp.id, func(request *core.RemoteStopTransactionConfirmation, err error) {
+		if err == nil && request != nil && request.Status != types.RemoteStartStopStatusAccepted {
+			err = errors.New(string(request.Status))
+		}
+
+		rc <- err
+	}, transactionId)
+
+	return wait(err, rc)
+}
+
 func (cp *CP) SetChargingProfileRequest(connectorId int, profile *types.ChargingProfile) error {
 	rc := make(chan error, 1)
 
