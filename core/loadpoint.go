@@ -1915,14 +1915,13 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 		}
 	}
 
-	// read and publish status
 	welcomeCharge, err := lp.processChargerStatus()
 	if err != nil {
 		lp.log.ERROR.Println(err)
 		return
 	}
 	if lp.status == api.StatusNone {
-		return // exit, status was not available in lp.UpdateChargerStatusAndPowerAndCurrents
+		return // exit, status from charger was not available in lp.UpdateChargerStatusAndPowerAndCurrents
 	}
 
 	lp.publish(keys.VehicleWelcomeActive, welcomeCharge)
