@@ -54,33 +54,15 @@ func (c *Controller) ChargeEnable(enable bool) error {
 	}
 
 	// configure first schedule and make sure it's active
-	c.configureChargeSchedule(&stat.EvInfo.Schedules[0])
-
-	const (
-		timeFormat        = "15:04" // Hours & minutes only
-		fallbackStartTime = "00:01" // Fallback time for schedules crossing midnight
-	)
-
 	now := time.Now() // Call once and reuse
 
 	if enable {
-		// Start charging: update active schedule with current time and end time (12h later)
-		stat.EvInfo.Schedules[0].StartTime = now.Format(timeFormat)
-		stat.EvInfo.Schedules[0].EndTime = now.Add(12 * time.Hour).Format(timeFormat)
+		// Start charging: configure charge from now to 12h later
+		in12hours := now.Add(12 * time.Hour)
+		c.configureChargeSchedule(&stat.EvInfo.Schedules[0], now, in12hours)
 	} else {
-		// Stop charging: update end time, rounded to next 5 minutes to increase probability to be accepted by the car the first time
-		roundedEndTime := now.Truncate(5 * time.Minute)
-		if roundedEndTime.Before(now) {
-			roundedEndTime = roundedEndTime.Add(5 * time.Minute)
-		}
-		stat.EvInfo.Schedules[0].EndTime = roundedEndTime.Format(timeFormat)
-
-		// Make sure start time is always before end time (parse both from string to ensure proper comparison)
-		start, err1 := time.Parse(timeFormat, stat.EvInfo.Schedules[0].StartTime)
-		end, err2 := time.Parse(timeFormat, stat.EvInfo.Schedules[0].EndTime)
-		if err1 == nil && err2 == nil && start.After(end) {
-			stat.EvInfo.Schedules[0].StartTime = fallbackStartTime
-		}
+		// Stop charging: update end time (use empty time to keep start time as it was for history in Fiat app)
+		c.configureChargeSchedule(&stat.EvInfo.Schedules[0], time.Time{}, now)
 	}
 
 	// make sure the other charge schedules are disabled in case user changed them
@@ -96,7 +78,22 @@ func (c *Controller) ChargeEnable(enable bool) error {
 	return err
 }
 
-func (c *Controller) configureChargeSchedule(schedule *Schedule) {
+func roundUpTo(d time.Duration, t time.Time) time.Time {
+	// Round up to next d boundary
+	rt := t.Truncate(d)
+	if !rt.After(t) {
+		rt = rt.Add(d)
+	}
+	return rt
+}
+
+func (c *Controller) configureChargeSchedule(schedule *Schedule, start time.Time, end time.Time) {
+	const (
+		timeFormat        = "15:04"         // Hours & minutes only
+		fallbackStartTime = "00:01"         // Fallback time for schedules crossing midnight
+		minTimeInterval   = 5 * time.Minute // Minimum time interval accepted by Fiat API in schedules; used for rounding up start and end time to avoid API rejections
+	)
+
 	// all values are set to be sure no manual change can lead to inconsistencies
 	schedule.CabinPriority = false
 	schedule.ChargeToFull = false
@@ -113,6 +110,38 @@ func (c *Controller) configureChargeSchedule(schedule *Schedule) {
 	schedule.ScheduledDays.Friday = (weekday == time.Friday)
 	schedule.ScheduledDays.Saturday = (weekday == time.Saturday)
 	schedule.ScheduledDays.Sunday = (weekday == time.Sunday)
+
+	// Update start only if provided (non-zero)
+	if !start.IsZero() {
+		// TODO: test with out rounding & round DOWN. Round up only as last resort.
+		//rounded := roundUpTo(minTimeInterval, *start)
+		schedule.StartTime = start.Format(timeFormat)
+		c.log.DEBUG.Printf("set charge schedule start: %s", schedule.StartTime)
+	}
+
+	// Update end only if provided (non-zero); round up to next 5 minutes boundary to increase chance of API accepting the schedule the first time
+	if !end.IsZero() {
+		rounded := roundUpTo(minTimeInterval, end)
+		schedule.EndTime = rounded.Format(timeFormat)
+		c.log.DEBUG.Printf("set charge schedule end: %s (rounded from %s)", schedule.EndTime, end.Format(timeFormat))
+	}
+
+	// If one of the time changed, make sure start time is always before end time (parse both from string to ensure proper comparison)
+	if !start.IsZero() || !end.IsZero() {
+		chkStart, err1 := time.Parse(timeFormat, schedule.StartTime)
+		chkEnd, err2 := time.Parse(timeFormat, schedule.EndTime)
+		if err1 == nil && err2 == nil && chkStart.After(chkEnd) {
+			// If start time is after end time, set start time to fallback value (00:01) to avoid API rejections for schedules crossing midnight
+			c.log.DEBUG.Printf("start time %s is after end time %s, setting start time to fallback value %s", schedule.StartTime, schedule.EndTime, fallbackStartTime)
+			schedule.StartTime = fallbackStartTime
+		} else if err1 != nil || err2 != nil {
+			c.log.WARN.Printf("failed to parse schedule times: start=%v, end=%v", err1, err2)
+			if err1 != nil {
+				// If start time cannot be parsed, also set to fallback value
+				schedule.StartTime = fallbackStartTime
+			}
+		}
+	}
 }
 
 func (c *Controller) disableConflictingChargeSchedule(schedule *Schedule) {
