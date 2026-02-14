@@ -7,7 +7,7 @@
 			@test="$emit('test')"
 		/>
 
-		<div class="my-4 d-flex justify-content-between">
+		<div class="mt-4 d-flex justify-content-between">
 			<button
 				v-if="isDeletable"
 				type="button"

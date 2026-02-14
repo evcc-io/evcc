@@ -13,6 +13,7 @@
 				:class="selectMode ? 'btn-check' : 'd-none'"
 				:name="property"
 				:value="key"
+				:disabled="disabled"
 				@click="toggleSelectMode"
 			/>
 			<label
@@ -42,11 +43,24 @@
 			{ value: false, name: $t('config.options.boolean.no') },
 			{ value: true, name: $t('config.options.boolean.yes') },
 		]"
+		:disabled="disabled"
 	/>
-	<select v-else-if="select" :id="id" v-model="value" class="form-select" :class="inputClasses">
-		<option v-if="!required" value="">---</option>
+	<select
+		v-else-if="select"
+		:id="id"
+		v-model="value"
+		class="form-select"
+		:class="inputClasses"
+		:disabled="disabled"
+	>
+		<option v-if="!required" value="" :disabled="disabled">---</option>
 		<template v-for="({ key, name }, idx) in selectOptions">
-			<option v-if="key !== null && name !== null" :key="key" :value="key">
+			<option
+				v-if="key !== null && name !== null"
+				:key="key"
+				:value="key"
+				:disabled="disabled"
+			>
 				{{ name }}
 			</option>
 			<option v-else :key="idx" disabled>─────</option>
@@ -61,7 +75,8 @@
 		:type="inputType"
 		:placeholder="placeholder"
 		:required="required"
-		rows="4"
+		:rows="rows || 4"
+		:disabled="disabled"
 	/>
 	<div v-else class="d-flex" :class="sizeClass">
 		<div class="position-relative flex-grow-1">
@@ -81,12 +96,14 @@
 					unitValue ? 'border-top-right-radius: 0; border-bottom-right-radius: 0' : null
 				"
 				:autocomplete="masked || datalistId ? 'off' : null"
+				:disabled="disabled"
 			/>
 			<button
 				v-if="showClearButton"
 				type="button"
 				class="form-control-clear"
 				:aria-label="$t('config.general.clear')"
+				:disabled="disabled"
 				@click="value = ''"
 			></button>
 			<datalist v-if="showDatalist" :id="datalistId">
@@ -128,11 +145,13 @@ export default {
 		scale: Number,
 		required: Boolean,
 		invalid: Boolean,
+		disabled: Boolean,
 		pattern: { type: Object, default: () => ({}) },
 		choice: { type: Array, default: () => [] },
 		modelValue: [String, Number, Boolean, Object],
 		label: String,
 		serviceValues: { type: Array, default: () => [] },
+		rows: { type: Number },
 	},
 	emits: ["update:modelValue"],
 	data: () => {
@@ -221,7 +240,9 @@ export default {
 		},
 		textarea() {
 			return (
-				this.array || ["accessToken", "refreshToken", "identifiers"].includes(this.property)
+				this.rows ||
+				this.array ||
+				["accessToken", "refreshToken", "identifiers"].includes(this.property)
 			);
 		},
 		boolean() {
