@@ -956,7 +956,7 @@
     },
     "loadpointSettings": {
       "batteryBoost": {
-        "description": "Carica rapida dalla batteria di casa.",
+        "description": "Carica rapida dalla batteria di casa fino a quando non si scarica a {limit}.",
         "label": "Boost da batteria",
         "mode": "Disponibile solo in modalità solare e min+solare.",
         "once": "Boost attivo per questa sessione di ricarica."

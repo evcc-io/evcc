@@ -972,7 +972,9 @@
     },
     "loadpointSettings": {
       "batteryBoost": {
-        "description": "Schnell aus Hausbatterie laden.",
+        "description": "Schnellladen aus der Hausbatterie erlauben, bis sie auf {limit} entladen ist.",
+        "descriptionDisabled": "Limit wählen, um Schnellladen aus der Hausbatterie zu erlauben.",
+        "disabled": "Deaktiviert",
         "label": "Batterie Boost",
         "mode": "Nur im PV- und Min+PV-Modus verfügbar.",
         "once": "Boost ist für diesen Ladevorgang aktiviert."

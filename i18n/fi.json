@@ -980,7 +980,7 @@
     },
     "loadpointSettings": {
       "batteryBoost": {
-        "description": "Nopea lataus kodin akusta.",
+        "description": "Nopea lataus kodin akusta, kunnes se purkautuu tasolle {limit}.",
         "label": "Akun tehostaminen",
         "mode": "Saatavilla vain aurinkosähkö(pv)- ja min + pv-tilassa.",
         "once": "Tehostus on aktiivinen tälle latausistunnolle."

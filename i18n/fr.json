@@ -982,7 +982,7 @@
     },
     "loadpointSettings": {
       "batteryBoost": {
-        "description": "Chargement rapide à partir de la batterie domestique.",
+        "description": "Chargement rapide à partir de la batterie domestique jusqu'à ce qu'elle soit déchargée à {limit}.",
         "label": "Boost Batterie",
         "mode": "Uniquement disponible en mode solaire et min+solaire ».",
         "once": "Boost actif pour cette session de charge."

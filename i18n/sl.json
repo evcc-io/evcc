@@ -983,7 +983,7 @@
     },
     "loadpointSettings": {
       "batteryBoost": {
-        "description": "Hitro polnjenje iz domače baterije.",
+        "description": "Hitro polnjenje iz domače baterije, dokler se ne izprazni na {limit}.",
         "label": "Pospeševanje baterije",
         "mode": "Na voljo samo v solarnem in min+solarnem načinu.",
         "once": "Pospeševanje z baterijo aktivno za to sejo polnjenja."

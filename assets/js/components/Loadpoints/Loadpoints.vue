@@ -30,6 +30,7 @@
 					:gridConfigured="gridConfigured"
 					:pvConfigured="pvConfigured"
 					:batteryConfigured="batteryConfigured"
+					:batterySoc="batterySoc"
 					:forecast="forecast"
 					class="h-100"
 					:class="{ 'loadpoint-unselected': !selected(loadpoint.id) }"
@@ -85,6 +86,7 @@ export default defineComponent({
 		gridConfigured: Boolean,
 		pvConfigured: Boolean,
 		batteryConfigured: Boolean,
+		batterySoc: Number,
 		forecast: Object, // as PropType<Forecast>,
 	},
 	emits: ["id-changed"],

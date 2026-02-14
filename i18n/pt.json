@@ -981,7 +981,7 @@
     },
     "loadpointSettings": {
       "batteryBoost": {
-        "description": "Carga rápida da bateria de casa.",
+        "description": "Carga rápida da bateria de casa até que descarregue para {limit}.",
         "label": "Boost bateria",
         "mode": "Disponível apenas nos modos solar e min+solar.",
         "once": "Boost ativo para esta sessão de carga."

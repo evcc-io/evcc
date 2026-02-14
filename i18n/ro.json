@@ -953,7 +953,7 @@
     },
     "loadpointSettings": {
       "batteryBoost": {
-        "description": "Încărcare rapidă de la bateria de acasă.",
+        "description": "Încărcare rapidă de la bateria de acasă până când se descarcă la {limit}.",
         "label": "Îmbunătățirea bateriei",
         "mode": "Disponibil numai în modul solar și min+solar.",
         "once": "Boost activ pentru această sesiune de încărcare."

@@ -616,6 +616,27 @@ func (lp *Loadpoint) SetBatteryBoost(enable bool) error {
 	return nil
 }
 
+// GetBatteryBoostLimit returns the battery boost soc limit
+func (lp *Loadpoint) GetBatteryBoostLimit() int {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.batteryBoostLimit
+}
+
+// SetBatteryBoostLimit sets the battery boost soc limit
+func (lp *Loadpoint) SetBatteryBoostLimit(limit int) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	lp.log.DEBUG.Println("set battery boost limit:", limit)
+
+	if lp.batteryBoostLimit != limit {
+		lp.batteryBoostLimit = limit
+		lp.settings.SetInt(keys.BatteryBoostLimit, int64(limit))
+		lp.publish(keys.BatteryBoostLimit, limit)
+	}
+}
+
 // HasChargeMeter determines if a physical charge meter is attached
 func (lp *Loadpoint) HasChargeMeter() bool {
 	_, isWrapped := lp.chargeMeter.(*wrapper.ChargeMeter)

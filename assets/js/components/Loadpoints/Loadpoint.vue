@@ -37,7 +37,7 @@
 			@maxcurrent-updated="setMaxCurrent"
 			@mincurrent-updated="setMinCurrent"
 			@phasesconfigured-updated="setPhasesConfigured"
-			@batteryboost-updated="setBatteryBoost"
+			@batteryboostlimit-updated="setBatteryBoostLimit"
 		/>
 
 		<div
@@ -96,6 +96,7 @@
 			@change-vehicle="changeVehicle"
 			@remove-vehicle="removeVehicle"
 			@open-loadpoint-settings="openSettingsModal"
+			@batteryboost-updated="setBatteryBoost"
 		/>
 	</div>
 </template>
@@ -156,7 +157,9 @@ export default defineComponent({
 		chargeDuration: { type: Number, default: 0 },
 		charging: Boolean,
 		batteryBoost: Boolean,
+		batteryBoostLimit: { type: Number, default: 100 },
 		batteryConfigured: Boolean,
+		batterySoc: Number,
 
 		// session
 		sessionEnergy: Number,
@@ -316,7 +319,8 @@ export default defineComponent({
 				this.batteryBoost &&
 				this.charging &&
 				this.mode &&
-				!["off", "now"].includes(this.mode)
+				!["off", "now"].includes(this.mode) &&
+				(this.batterySoc ?? 0) >= this.batteryBoostLimit
 			);
 		},
 		plannerForecast() {
@@ -389,6 +393,9 @@ export default defineComponent({
 		},
 		setBatteryBoost(batteryBoost: boolean) {
 			api.post(this.apiPath("batteryboost") + `/${batteryBoost ? "1" : "0"}`);
+		},
+		setBatteryBoostLimit(limit: number) {
+			api.post(this.apiPath("batteryboostlimit") + "/" + limit);
 		},
 		fmtPower(value: number) {
 			return this.fmtW(value, POWER_UNIT.AUTO);
