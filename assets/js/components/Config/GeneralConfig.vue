@@ -4,7 +4,7 @@
 			test-id="generalconfig-title"
 			:label="$t('config.general.title')"
 			:text="title || '---'"
-			modal-id="titleModal"
+			@edit="openModal('title')"
 		>
 		</GeneralConfigEntry>
 
@@ -12,21 +12,21 @@
 			test-id="generalconfig-password"
 			:label="$t('config.general.password')"
 			text="*******"
-			modal-id="passwordUpdateModal"
+			@edit="openModal('passwordupdate')"
 		/>
 
 		<GeneralConfigEntry
 			test-id="generalconfig-telemetry"
 			:label="$t('config.general.telemetry')"
 			:text="$t(`config.general.${telemetryEnabled ? 'on' : 'off'}`)"
-			modal-id="telemetryModal"
+			@edit="openModal('telemetry')"
 		/>
 
 		<GeneralConfigEntry
 			test-id="generalconfig-experimental"
 			:label="$t('config.general.experimental')"
-			:text="$t(`config.general.${hiddenFeatures ? 'on' : 'off'}`)"
-			modal-id="experimentalModal"
+			:text="$t(`config.general.${experimental ? 'on' : 'off'}`)"
+			@edit="openModal('experimental')"
 		/>
 
 		<GeneralConfigEntry
@@ -34,7 +34,7 @@
 			:label="$t('config.sponsor.title')"
 			:text="sponsorStatus.title"
 			:text-class="sponsorStatus.textClass"
-			modal-id="sponsorModal"
+			@edit="openModal('sponsor')"
 		>
 			<template #text-prefix>
 				<span
@@ -49,46 +49,39 @@
 			test-id="generalconfig-network"
 			:label="$t('config.network.title')"
 			:text="networkStatus"
-			modal-id="networkModal"
+			@edit="openModal('network')"
 		/>
 
 		<GeneralConfigEntry
 			test-id="generalconfig-control"
 			:label="$t('config.control.title')"
 			:text="controlStatus"
-			modal-id="controlModal"
+			@edit="openModal('control')"
 		/>
-		<TitleModal ref="titleModal" @changed="load" />
 	</div>
 </template>
 
 <script>
-import TitleModal from "./TitleModal.vue";
 import GeneralConfigEntry from "./GeneralConfigEntry.vue";
-import api from "@/api";
-import settings from "@/settings";
+import { openModal } from "@/configModal";
 import store from "@/store";
 import formatter from "@/mixins/formatter";
 
 export default {
 	name: "GeneralConfig",
-	components: { TitleModal, GeneralConfigEntry },
+	components: { GeneralConfigEntry },
 	mixins: [formatter],
 	props: {
 		sponsorError: Boolean,
+		experimental: Boolean,
 	},
 	emits: ["site-changed"],
-	data() {
-		return {
-			title: "",
-		};
-	},
 	computed: {
+		title() {
+			return store.state?.siteTitle || "";
+		},
 		telemetryEnabled() {
 			return store.state?.telemetry === true;
-		},
-		hiddenFeatures() {
-			return settings.hiddenFeatures === true;
 		},
 		networkStatus() {
 			return `${store.state?.network?.port ?? ""}`;
@@ -124,28 +117,8 @@ export default {
 			return { title, expiresSoon, textClass, badgeClass };
 		},
 	},
-	async mounted() {
-		await this.load();
-	},
 	methods: {
-		async changed() {
-			this.$emit("site-changed");
-			this.load();
-		},
-		async load() {
-			try {
-				const res = await api.get("/config/site", {
-					validateStatus: (code) => [200, 404].includes(code),
-				});
-				if (res.status === 200) {
-					this.title = res.data.title;
-				} else {
-					console.log("TODO: implement site endpoint in config error mode");
-				}
-			} catch (e) {
-				console.error(e);
-			}
-		},
+		openModal,
 	},
 };
 </script>

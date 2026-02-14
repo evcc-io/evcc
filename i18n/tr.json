@@ -1116,7 +1116,6 @@
   "passwordModal": {
     "description": "Yapılandırma ayarlarını korumak için bir şifre belirle. Ana görünüme erişim oturum açmadan da mümkün.",
     "empty": "Şifre boş olamaz",
-    "error": "Hata: ",
     "labelCurrent": "Mevcut şifre",
     "labelNew": "Yeni şifre",
     "labelRepeat": "Yeni şifreyi tekrarla",

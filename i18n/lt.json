@@ -119,7 +119,7 @@
       "chargedEnergy": "Įkrauta",
       "co2": "Tinklo CO₂",
       "configured": "Sukonfigūruota",
-      "connections": "Sąsajos",
+      "connections": "Jungtys",
       "controllable": "Valdomas",
       "currency": "Valiuta",
       "current": "Srovė",
@@ -172,11 +172,27 @@
       "loading": "Užkraunamas YAML redaktorius…"
     },
     "eebus": {
-      "description": "Konfigūracija, leidžianti evcc susisiekti su EEBus įrenginiais.",
+      "certificate": {
+        "private": "Privatus raktas",
+        "public": "Viešas sertifikatas",
+        "title": "Sertifikatai"
+      },
+      "description": "Konfigūracija, leidžianti evcc bendrauti su EEBus suderinamais įrenginiais, tokiais kaip įkrovikliai arba jūsų tinklo operatoriaus valdiklis. Visas reikalingas inicijavimas ir sertifikatų generavimas atliekami automatiškai pirmą kartą paleidus.",
+      "descriptionAdvanced": "Nereikia jokių pakeitimų. Atlikite pakeitimus tik tuo atveju, jei tikrai žinote, ką darote. Jei pakeisite SHIP-id arba sertifikatus, turėsite iš naujo susieti įrenginius.",
+      "interfaces": "Sąsajos",
+      "interfacesHelp": "Apribokite tinklo sąsajas, kurias turėtų naudoti EEBus, kad išvengtumėte ryšio problemų. Palikite lauką tuščią, jei norite naudoti visas sąsajas. Vienas įrašas vienoje eilutėje.",
+      "port": "EEBus prievadas",
+      "portHelp": "Naudojamas prievadas.",
+      "removeConfirm": "Visa EEBus konfigūracija bus pašalinta. Kitą kartą paleidus bus sugeneruoti nauji sertifikatai ir identifikatoriai. Ar tikrai tęsti?",
+      "shipid": "SHIP-ID",
+      "shipidExplain": "Nuolatinis įrenginio identifikatorius, skirtas identifikuoti EEBus tinkle.",
+      "shipidHelp": "Šis SHIP-ID yra susietas su toliau pateiktais sertifikatais.",
+      "ski": "SKI",
+      "skiExplain": "Unikalus saugos identifikatorius, skirtas EEBus įrenginių susiejimui.",
       "title": "EEBus"
     },
     "experimental": {
-      "description": "Įjungti vartotojo sąsają funkcijoms, kurios vis dar testuojamos ir gali keistis būsimose versijose.",
+      "description": "Suteikia išankstinę prieigą prie funkcijų, kurios vis dar testuojamos. Jos gali būti nestabilios bei gali pasikeisti arba būti pašalintos būsimose versijose.",
       "title": "Eksperimentinis"
     },
     "ext": {
@@ -207,6 +223,7 @@
       "dragHandle": "Vilkti",
       "dragItem": "Galima vilkti: {title}",
       "dragList": "Galima sukeisti vietomis",
+      "error": "Klaida",
       "experimental": "Eksperimentinis",
       "forceSave": "Vistiek įrašyti",
       "fromYamlHint": "Pastaba: Sukonfigūruota naudojant evcc.yaml. Pašalinkite įrašą iš failo, kad būtų galima redaguoti čia.",
@@ -544,6 +561,7 @@
       "integrations": "Integracijos",
       "loadpoints": "Įkrovimas ir Šildymas",
       "meter": "Saulės elektrinės ir kaupikliai",
+      "services": "Paslaugos",
       "system": "Sistema",
       "vehicles": "Automobiliai"
     },
@@ -741,12 +759,14 @@
   "forecast": {
     "co2": {
       "average": "Vidurkis",
+      "constant": "CO₂ intensyvumas",
       "lowestHour": "Švariausia valanda",
       "range": "Diapazonas"
     },
     "modalTitle": "Prognozė",
     "price": {
       "average": "Vidurkis",
+      "constant": "Kaina",
       "lowestHour": "Pigiausia valanda",
       "range": "Diapazonas"
     },
@@ -760,7 +780,7 @@
     "solarAdjust": "Pakoreguoti saulės prognozę remiantis faktiškais gamybos duomenimis{percent}.",
     "type": {
       "co2": "CO₂",
-      "price": "Kaina",
+      "price": "Kainos",
       "solar": "Saulės"
     }
   },
@@ -1118,7 +1138,6 @@
   "passwordModal": {
     "description": "Nustatykite slaptažodį konfigūracijos apsaugai. Pagrindiniu ekranu galima naudotis ir neprisijungus.",
     "empty": "Slaptažodis negali būti tuščias",
-    "error": "Klaida: ",
     "labelCurrent": "Dabartinis slaptažodis",
     "labelNew": "Naujas slaptažodis",
     "labelRepeat": "Pakartoti slaptažodį",
@@ -1232,7 +1251,7 @@
     },
     "hiddenFeatures": {
       "label": "Eksperimentinė",
-      "value": "Rodyti eksperimentines funkcijas."
+      "value": "Įjungti eksperimentines funkcijas."
     },
     "language": {
       "auto": "Automatiškai",

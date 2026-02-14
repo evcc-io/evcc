@@ -172,11 +172,27 @@
       "loading": "YAML-Editeur gëtt gelueden …"
     },
     "eebus": {
-      "description": "Konfiguratioun déi et evcc erméiglecht fir mat aneren EEBus-Geräter ze kommunizéieren.",
+      "certificate": {
+        "private": "Private Schlëssel",
+        "public": "Ëffentlecht Zertifikaat",
+        "title": "Zertifikater"
+      },
+      "description": "Konfiguratioun, déi et dem evcc erlaabt, mat EEBus-kompatiblen Apparater wéi Ladegeräter oder enger Kontroll-Eenheet vun Ärem Netzbetreiber ze kommunizéieren. All relevant Initialiséierung an d'Generéiere vun Zertifikater gëtt beim éischte Start automatesch duerchgefouert.",
+      "descriptionAdvanced": "Keng Ännerungen néideg. Maacht Ännerungen nëmmen wann Dir wierklech wësst, wat Dir maacht. Wann Dir entweder d'SHIP-ID oder d'Zertifikater ännert, musst Dir Är Apparater erëm koppelen.",
+      "interfaces": "Schnëttstellen",
+      "interfacesHelp": "Limitéiert d'Netzwierkschnëttstellen, déi EEBus soll benotzen, fir Kommunikatiounsproblemer ze vermeiden. Loosst d'Feld eidel, fir all Schnëttstellen ze benotzen. Eng Entrée pro Zeil.",
+      "port": "Port",
+      "portHelp": "De Port, deen ze benotzen ass.",
+      "removeConfirm": "All EEBus-Konfiguratioun gëtt ewechgeholl. Nei Zertifikater a Identifikateuren ginn beim nächsten Start generéiert. Sidd Dir sécher?",
+      "shipid": "SHIP-ID",
+      "shipidExplain": "Permanente Apparat-Identifikator fir d'Identifikatioun am EEBus-Netzwierk.",
+      "shipidHelp": "Dës SHIP-ID ass mat deenen ënnen genannten Zertifikater verbonnen.",
+      "ski": "SKI",
+      "skiExplain": "Eenzegaartege Sécherheetsidentifikator fir d'Paarung vun EEBus-Geräter.",
       "title": "EEBus"
     },
     "experimental": {
-      "description": "Benotzerinterface fir Funktiounen aktivéieren, déi nach getest ginn a sech a zukünftege Versiounen ännere kënnen.",
+      "description": "Bitt fréien Zougang zu Funktiounen, déi nach getest ginn. Dës kënnen onstabil sinn a kéinten an zukünftege Versioune geännert oder ewechgeholl ginn.",
       "title": "Experimentell"
     },
     "ext": {
@@ -207,6 +223,7 @@
       "dragHandle": "Verréckelen",
       "dragItem": "Verréckelbar: {title}",
       "dragList": "Sortéirbar Lëscht",
+      "error": "Feeler",
       "experimental": "Experimentell",
       "forceSave": "Trotzdem späicheren",
       "fromYamlHint": "Bemierkung: Konfiguréiert iwwer evcc.yaml. Läscht d'Astellungen aus der Datei fir d'Ännerung hei z'erméiglechen.",
@@ -544,6 +561,7 @@
       "integrations": "Integratiounen",
       "loadpoints": "Lueden & Heizen",
       "meter": "PV & Batterie",
+      "services": "Servicer",
       "system": "System",
       "vehicles": "Gefierer"
     },
@@ -740,12 +758,14 @@
   "forecast": {
     "co2": {
       "average": "Moyenne",
+      "constant": "CO₂-Intensitéit",
       "lowestHour": "Déi properst Stonn",
       "range": "Beräich"
     },
     "modalTitle": "Prognose",
     "price": {
       "average": "Duerchschnitt",
+      "constant": "Präis",
       "lowestHour": "Bëllegst Stonn",
       "range": "Beräich"
     },
@@ -1116,7 +1136,6 @@
   "passwordModal": {
     "description": "Definéiert e Passwuert fir d'Konfiguratiounsastellungen ze schützen. Et kann een den Haaptbildschierm och ouni Login nach ëmmer benotzen.",
     "empty": "Passwuert duerf net eidel sinn",
-    "error": "Feeler: ",
     "labelCurrent": "Aktuellt Passwuert",
     "labelNew": "Neit Passwuert",
     "labelRepeat": "Neit Passwuert widderhuelen",
@@ -1230,7 +1249,7 @@
     },
     "hiddenFeatures": {
       "label": "Experimentell",
-      "value": "Experimentell Funktiounen weisen."
+      "value": "Experimentell Funktiounen aktivéieren."
     },
     "language": {
       "auto": "Automatesch",

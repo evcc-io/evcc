@@ -36,12 +36,12 @@ params:
     description:
       de: Aktivierungsstatus-Sensor
       en: Enabled status sensor
-    service: homeassistant/entities?uri={uri}&domain=sensor,binary_sensor
+    service: homeassistant/entities?uri={uri}&domain=sensor,binary_sensor,switch
     example: "binary_sensor.charger_enabled"
     required: true
     help:
-      en: Entity ID for enabled state (sensor or binary_sensor with on/off or true/false state)
-      de: Entitäts-ID für Aktivierungsstatus (sensor oder binary_sensor mit on/off oder true/false Zustand)
+      en: Entity ID for enabled state (sensor, binary_sensor or switch with on/off or true/false state)
+      de: Entitäts-ID für Aktivierungsstatus (sensor, binary_sensor oder switch mit on/off oder true/false Zustand)
   - name: enable
     description:
       de: Aktivierungsschalter
