@@ -15,6 +15,7 @@ render: |
   setmaxpower:
     source: watchdog
     timeout: 5s  # da WP alle 5s modbus Meldung erwartet
+    initial: 0
     set:  
       source: delta  # nur Differenz zu der von WP berechneten Überschussleistung (Reg. 2012)
       get:
