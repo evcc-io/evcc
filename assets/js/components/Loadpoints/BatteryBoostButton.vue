@@ -1,7 +1,7 @@
 <template>
 	<button
-		class="root d-flex align-items-center justify-content-center position-relative"
-		:class="{ active, belowLimit }"
+		class="root position-relative"
+		:class="{ active, belowLimit, full }"
 		:style="{ '--soc': `${adjustedSoc}%` }"
 		:disabled="disabled"
 		data-testid="battery-boost-button"
@@ -15,10 +15,10 @@
 			<div class="progress-bar bg-primary progress-bar-striped progress-bar-animated"></div>
 		</div>
 		<div class="icon-wrapper" :style="iconStyle">
-			<BatteryBoost />
+			<BatteryBoost :active="active && !belowLimit" />
 		</div>
 		<div class="icon-wrapper text-white" :style="iconActiveStyle">
-			<BatteryBoost />
+			<BatteryBoost :active="active && !belowLimit" />
 		</div>
 	</button>
 </template>
@@ -63,9 +63,12 @@ export default defineComponent({
 		active(): boolean {
 			return this.batteryBoost;
 		},
+		full(): boolean {
+			return !this.active && this.adjustedSoc >= 90;
+		},
 		iconActiveStyle() {
 			return {
-				display: this.active ? "flex" : "none",
+				opacity: this.active ? 1 : 0,
 				clipPath: this.active ? `inset(calc(100% - var(--soc)) 0 0 0)` : undefined,
 			};
 		},
@@ -95,7 +98,7 @@ export default defineComponent({
 	opacity: 0.25;
 }
 .root:active {
-	box-shadow: 0 0 3px 0 #0ba63199;
+	box-shadow: 0 0 1px 0 var(--bs-primary);
 }
 .root.belowLimit:not(:disabled) {
 	opacity: 0.5;
@@ -105,24 +108,59 @@ export default defineComponent({
 	content: "";
 	position: absolute;
 	inset: 0;
+	border-color: var(--bs-primary);
 	border-radius: var(--bs-border-radius);
-	border-width: 1px;
+	border-width: 2px;
 	border-style: solid;
-	transition: border-color var(--evcc-transition-very-fast) linear;
+	transition: opacity var(--evcc-transition-very-fast) linear;
 }
 .root:before {
-	border-color: #0ba63133;
+	opacity: 0.25;
 	clip-path: inset(0 0 calc(var(--soc)) 0);
 }
 .root:after {
-	border-color: var(--bs-primary);
 	clip-path: inset(calc(100% - var(--soc)) 0 0 0);
 }
 .root:hover:before {
-	border-color: #0ba63166;
+	opacity: 0.5;
 }
 .root.active:after {
 	display: none;
+}
+.root.full:after {
+	clip-path: none;
+	background: conic-gradient(
+		from var(--border-angle, 0deg),
+		var(--bs-primary-dim) 0%,
+		var(--bs-primary) 12%,
+		var(--bs-primary-dim) 33%,
+		var(--bs-primary) 45%,
+		var(--bs-primary-dim) 66%,
+		var(--bs-primary) 78%,
+		var(--bs-primary-dim) 100%
+	);
+	border: none;
+	mask:
+		linear-gradient(#fff 0 0) content-box,
+		linear-gradient(#fff 0 0);
+	mask-composite: exclude;
+	padding: 2px;
+	animation: rotate-border 3s linear infinite;
+}
+.root.full:hover:after,
+.root.full:active:after {
+	background: var(--bs-primary);
+	animation: none;
+}
+@keyframes rotate-border {
+	to {
+		--border-angle: 360deg;
+	}
+}
+@property --border-angle {
+	syntax: "<angle>";
+	initial-value: 0deg;
+	inherits: false;
 }
 .progress {
 	border-radius: 0;
@@ -140,5 +178,7 @@ export default defineComponent({
 	display: flex;
 	align-items: center;
 	justify-content: center;
+	transform: translateZ(0); /* fix Safari hover jump */
+	transition: opacity var(--evcc-transition-fast) ease;
 }
 </style>
