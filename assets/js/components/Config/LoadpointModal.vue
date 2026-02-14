@@ -2,11 +2,10 @@
 	<GenericModal
 		id="loadpointModal"
 		ref="modal"
+		config-modal-name="loadpoint"
 		:title="modalTitle"
 		data-testid="loadpoint-modal"
-		:fade="fade"
 		@open="onOpen"
-		@opened="onOpened"
 		@close="onClose"
 	>
 		<div v-if="!loadpointType" class="d-flex flex-column gap-4">
@@ -576,7 +575,7 @@ import FormRow from "./FormRow.vue";
 import PropertyField from "./PropertyField.vue";
 import SelectGroup from "../Helper/SelectGroup.vue";
 import api from "@/api";
-import GenericModal, { type ModalFade } from "../Helper/GenericModal.vue";
+import GenericModal from "../Helper/GenericModal.vue";
 import deepClone from "@/utils/deepClone";
 import deepEqual from "@/utils/deepEqual";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
@@ -584,6 +583,7 @@ import EditIcon from "../MaterialIcon/Edit.vue";
 import NewDeviceButton from "./NewDeviceButton.vue";
 import InvalidReferenceAlert from "./InvalidReferenceAlert.vue";
 import { handleError, customChargerName } from "./DeviceModal";
+import { getModal, openModal, replaceModal, closeModal } from "@/configModal";
 import {
 	LOADPOINT_TYPE,
 	type DeviceType,
@@ -637,11 +637,8 @@ export default {
 	},
 	mixins: [formatter],
 	props: {
-		id: Number,
-		name: String,
 		vehicleOptions: { type: Array as PropType<VehicleOption[]>, default: () => [] },
 		loadpointCount: { type: Number, default: 0 },
-		fade: String as PropType<ModalFade>,
 		chargers: { type: Array as PropType<ConfigCharger[]>, default: () => [] },
 		chargerValues: { type: Object, default: () => {} },
 		meters: { type: Array as PropType<ConfigMeter[]>, default: () => [] },
@@ -651,12 +648,11 @@ export default {
 			default: () => false,
 		},
 	},
-	emits: ["updated", "openMeterModal", "openChargerModal", "opened"],
+	emits: ["changed"],
 	data() {
 		return {
 			isModalVisible: false,
 			saving: false,
-			selectedType: null as LoadpointType | null,
 			values: deepClone(defaultValues) as ConfigLoadpoint,
 			chargerPower: "11kw",
 			solarMode: "default",
@@ -665,6 +661,12 @@ export default {
 		};
 	},
 	computed: {
+		id(): number | undefined {
+			return getModal("loadpoint")?.id;
+		},
+		selectedType(): LoadpointType | undefined {
+			return getModal("loadpoint")?.type as LoadpointType | undefined;
+		},
 		modalTitle() {
 			if (this.isNew) {
 				return this.$t(`config.loadpoint.titleAdd.${this.loadpointType || "unknown"}`);
@@ -814,7 +816,6 @@ export default {
 	},
 	methods: {
 		reset() {
-			this.selectedType = null;
 			this.values = deepClone(defaultValues);
 			this.updatePhases();
 		},
@@ -829,13 +830,17 @@ export default {
 				console.error(e);
 			}
 		},
+		async emitChanged(action: "added" | "updated" | "removed") {
+			const result = { action };
+			await closeModal(result);
+			this.$emit("changed", result);
+		},
 		async update() {
 			this.saving = true;
 			try {
 				const values = deepClone(this.values);
 				await api.put(`config/loadpoints/${this.id}`, values);
-				this.$emit("updated");
-				(this.$refs["modal"] as any).close();
+				this.emitChanged("updated");
 			} catch (e) {
 				handleError(e, "update failed");
 			}
@@ -844,8 +849,7 @@ export default {
 		async remove() {
 			try {
 				await api.delete(`config/loadpoints/${this.id}`);
-				this.$emit("updated");
-				(this.$refs["modal"] as any).close();
+				this.emitChanged("removed");
 			} catch (e) {
 				console.error(e);
 				alert("delete failed");
@@ -855,8 +859,7 @@ export default {
 			this.saving = true;
 			try {
 				await api.post("config/loadpoints", this.values);
-				this.$emit("updated");
-				(this.$refs["modal"] as any).close();
+				this.emitChanged("added");
 			} catch (e) {
 				handleError(e, "create failed");
 			}
@@ -865,25 +868,32 @@ export default {
 		onOpen() {
 			this.isModalVisible = true;
 		},
-		onOpened() {
-			this.$emit("opened");
-		},
 		onClose() {
 			this.isModalVisible = false;
 		},
-		editCharger() {
-			this.$emit("openChargerModal", this.values.charger, this.loadpointType);
+		async editCharger() {
+			const charger = this.chargers.find((c) => c.name === this.values.charger);
+			const result = await openModal("charger", {
+				id: charger?.id,
+				type: this.loadpointType || undefined,
+			});
+			if (result.action === "added" && result.name) {
+				this.values.charger = result.name;
+			} else if (result.action === "removed") {
+				this.values.charger = "";
+			}
 		},
-		editMeter() {
-			this.$emit("openMeterModal", this.values.meter);
-		},
-		// called externally
-		setMeter(meter: string) {
-			this.values.meter = meter;
-		},
-		// called externally
-		setCharger(charger: string) {
-			this.values.charger = charger;
+		async editMeter() {
+			const meter = this.meters.find((m) => m.name === this.values.meter);
+			const result = await openModal("meter", {
+				id: meter?.id,
+				type: "charge",
+			});
+			if (result.action === "added" && result.name) {
+				this.values.meter = result.name;
+			} else if (result.action === "removed") {
+				this.values.meter = "";
+			}
 		},
 		updateChargerPower() {
 			const { minCurrent, maxCurrent } = this.values;
@@ -919,7 +929,7 @@ export default {
 			}
 		},
 		selectType(type: LoadpointType) {
-			this.selectedType = type;
+			replaceModal("loadpoint", { id: this.id, type });
 		},
 	},
 };

@@ -14,9 +14,10 @@ render: |
   type: heatpump
   setmaxpower:
     source: watchdog
-    timeout: 600s  # da WP nach 10 min ohne Meldung abschaltet
+    timeout: 5s  # da WP alle 5s modbus Meldung erwartet
+    initial: 0
     set:  
-      source: delta  # nur Differenz zu letztem Wert
+      source: delta  # nur Differenz zu der von WP berechneten Überschussleistung (Reg. 2012)
       get:
         source: modbus
         uri: {{ .host }}:{{ .port }}

@@ -173,6 +173,8 @@
     },
     "eebus": {
       "description": "Конфігурація, яка дозволяє evcc спілкуватися з іншими пристроями EEBus.",
+      "shipid": "SHIP-ID",
+      "ski": "SKI",
       "title": "EEBus'"
     },
     "experimental": {

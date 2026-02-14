@@ -756,12 +756,14 @@
   "forecast": {
     "co2": {
       "average": "Average",
+      "constant": "CO₂ intensity",
       "lowestHour": "Cleanest hour",
       "range": "Range"
     },
     "modalTitle": "Forecast",
     "price": {
       "average": "Average",
+      "constant": "Price",
       "lowestHour": "Cheapest hour",
       "range": "Range"
     },

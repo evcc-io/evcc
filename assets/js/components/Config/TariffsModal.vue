@@ -1,13 +1,12 @@
 <template>
 	<YamlModal
-		id="tariffsModal"
+		name="tariffs"
 		:title="$t('config.tariffs.title')"
 		:description="$t('config.tariffs.description')"
 		docs="/docs/tariffs"
 		:defaultYaml="defaultYaml"
 		removeKey="tariffs"
 		endpoint="/config/tariffs"
-		data-testid="tariffs-modal"
 		@changed="$emit('changed')"
 	/>
 </template>

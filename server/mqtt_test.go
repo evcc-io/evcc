@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/core/types"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 )
@@ -108,7 +107,7 @@ func (suite *mqttSuite) TestMeasurement() {
 	suite.Equal(topics, suite.topics, "topics")
 	suite.Equal([]string{"", "", "0", "1", "", "", "", "", "", ""}, suite.payloads, "payloads")
 
-	suite.publish("test", false, types.Measurement{Controllable: lo.ToPtr(false)})
+	suite.publish("test", false, types.Measurement{Controllable: new(false)})
 	suite.Equal(topics, suite.topics, "topics")
 	suite.Equal([]string{"", "", "0", "", "", "", "", "", "", "false"}, suite.payloads, "payloads")
 
@@ -128,7 +127,7 @@ func (suite *mqttSuite) TestBatteryState() {
 		Soc:   20.0,
 		Devices: []types.Measurement{{
 			Power: 1,
-			Soc:   lo.ToPtr(10.0),
+			Soc:   new(10.0),
 		}},
 	})
 

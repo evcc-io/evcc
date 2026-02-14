@@ -1,0 +1,97 @@
+# https://dimplex.atlassian.net/wiki/spaces/DW/pages/3399811073/Modbus+TCP+-+Energiemanagementsysteme+Anbindung
+template: glen-dimplex
+products:
+  - brand: Glen Dimplex
+    description:
+      generic: WPM (SG Ready)
+group: heating
+requirements:
+  # evcc: ["sponsorship"]
+params:
+  - name: modbus
+    choice: ["tcpip"]
+render: |
+  type: sgready
+  getmode:
+    source: map
+    values:
+      0: 2 # Mode "Hardware" > "normal"
+      10: 2 # Mode "Yellow" > "normal"
+      11: 3 # Mode "Green" > "boost"
+      12: 1 # Mode "Red" > "dim"
+      13: 3 # Mode "Forced on" > "boost"
+    get:
+      source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 5167 # Smart_Grid
+        type: holding # read the holding register to get current smart grid mode
+        encoding: uint16
+  setmode:
+    source: switch
+    switch:
+    - case: 2 # normal
+      set:
+        source: const
+        value: 10 # Yellow
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 5167 # Smart_Grid
+            type: writeholding
+            encoding: uint16
+    - case: 3 # boost
+      set:
+        source: const
+        value: 11 # Green
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 5167 # Smart_Grid
+            type: writeholding
+            encoding: uint16
+    - case: 1 # dim
+      set:
+        source: const
+        value: 12 # Red
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 5167 # Smart_Grid
+            type: writeholding
+            encoding: uint16
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 5170 # Leist_Elekt
+      type: input
+      encoding: uint16
+    scale: 10
+  setmaxpower:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 5182 # PV_Ueberschuss
+      type: writeholding
+      decode: int16
+    scale: 0.1
+  temp:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 3
+      type: input
+      encoding: int16
+    scale: 0.1
+  limittemp:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 5048
+      type: input
+      encoding: int16
+    scale: 0.1

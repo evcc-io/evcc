@@ -100,7 +100,7 @@ func (v *API) Status(vin string) (StatusResponse, error) {
 		err = v.DoJSON(req, &res)
 	}
 
-	if se := new(request.StatusError); errors.As(err, &se) {
+	if _, ok := errors.AsType[*request.StatusError](err); ok {
 		var rr RolesRights
 		rr, err = v.RolesRights(vin)
 

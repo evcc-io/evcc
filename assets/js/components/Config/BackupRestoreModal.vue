@@ -2,6 +2,7 @@
 	<div>
 		<GenericModal
 			id="backupRestoreModal"
+			config-modal-name="backuprestore"
 			:title="$t('config.system.backupRestore.title')"
 			data-testid="backup-restore-modal"
 			@closed="backupRestoreModalClosed"
