@@ -97,29 +97,29 @@ func (suite *mqttSuite) TestSlice() {
 }
 
 func (suite *mqttSuite) TestMeasurement() {
-	topics := []string{"test/title", "test/icon", "test/power", "test/energy", "test/powers", "test/currents", "test/excessDCPower", "test/capacity", "test/soc", "test/controllable"}
+	topics := []string{"test/title", "test/icon", "test/power", "test/energy", "test/powers", "test/currents", "test/excessDCPower", "test/capacity", "test/soc", "test/controllable", "test/forecast"}
 
 	suite.publish("test", false, types.Measurement{})
 	suite.Equal(topics, suite.topics, "topics")
-	suite.Equal([]string{"", "", "0", "", "", "", "", "", "", ""}, suite.payloads, "payloads")
+	suite.Equal([]string{"", "", "0", "", "", "", "", "", "", "", ""}, suite.payloads, "empty payloads")
 
 	suite.publish("test", false, types.Measurement{Energy: 1})
 	suite.Equal(topics, suite.topics, "topics")
-	suite.Equal([]string{"", "", "0", "1", "", "", "", "", "", ""}, suite.payloads, "payloads")
+	suite.Equal([]string{"", "", "0", "1", "", "", "", "", "", "", ""}, suite.payloads, "energy payloads")
 
 	suite.publish("test", false, types.Measurement{Controllable: new(false)})
 	suite.Equal(topics, suite.topics, "topics")
-	suite.Equal([]string{"", "", "0", "", "", "", "", "", "", "false"}, suite.payloads, "payloads")
+	suite.Equal([]string{"", "", "0", "", "", "", "", "", "", "false", ""}, suite.payloads, "controllable payloads")
 
 	suite.publish("test", false, types.Measurement{Currents: []float64{1, 2, 3}})
-	suite.Equal(append(topics, "test/currents/1", "test/currents/2", "test/currents/3"), suite.topics, "topics")
-	suite.Equal([]string{"", "", "0", "", "", "3", "", "", "", "", "1", "2", "3"}, suite.payloads, "payloads")
+	suite.Equal(append(topics, "test/currents/1", "test/currents/2", "test/currents/3"), suite.topics, "currents topics")
+	suite.Equal([]string{"", "", "0", "", "", "3", "", "", "", "", "", "1", "2", "3"}, suite.payloads, "currents payloads")
 }
 
 func (suite *mqttSuite) TestBatteryState() {
 	topics := []string{
 		"test/power", "test/energy", "test/capacity", "test/soc", "test/devices",
-		"test/devices/1/title", "test/devices/1/icon", "test/devices/1/power", "test/devices/1/energy", "test/devices/1/powers", "test/devices/1/currents", "test/devices/1/excessDCPower", "test/devices/1/capacity", "test/devices/1/soc", "test/devices/1/controllable",
+		"test/devices/1/title", "test/devices/1/icon", "test/devices/1/power", "test/devices/1/energy", "test/devices/1/powers", "test/devices/1/currents", "test/devices/1/excessDCPower", "test/devices/1/capacity", "test/devices/1/soc", "test/devices/1/controllable", "test/devices/1/forecast",
 	}
 
 	suite.publish("test", false, types.BatteryState{
@@ -132,5 +132,5 @@ func (suite *mqttSuite) TestBatteryState() {
 	})
 
 	suite.Equal(topics, suite.topics, "topics")
-	suite.Equal([]string{"2", "", "", "20", "1", "", "", "1", "", "", "", "", "", "10", ""}, suite.payloads, "payloads")
+	suite.Equal([]string{"2", "", "", "20", "1", "", "", "1", "", "", "", "", "", "10", "", ""}, suite.payloads, "payloads")
 }
