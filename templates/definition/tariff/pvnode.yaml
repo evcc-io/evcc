@@ -24,6 +24,26 @@ params:
       en: "0 = north, 90 = east, 180 = south, 270 = west"
       de: "0 = Norden, 90 = Osten, 180 = Süden, 270 = Westen"
     required: true
+  - name: dec
+    description:
+      en: Slope of PV array in degrees
+      de: Neigung der PV-Fläche in Grad
+    required: true
+  - name: kwp
+    description:
+      en: Power in kWp of PV array
+      de: Leistung in kWp der PV-Anlage
+    required: true
+  - name: lat
+    description:
+      en: Latitude of the site's location
+      de: Breitengrad des Standorts.
+    required: true
+  - name: lon
+    description:
+      en: Longitude of the site's location
+      de: Längengrad des Standorts
+    required: true
   - name: apikey
     description:
       en: pvnode API key
