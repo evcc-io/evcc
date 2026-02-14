@@ -2,7 +2,7 @@ package ocpp
 
 import "time"
 
-var Timeout = 30 * time.Second // default request / response timeout on protocol level
+var Timeout = 65 * time.Second // default request / response timeout on protocol level
 
 const (
 	// Core profile keys
