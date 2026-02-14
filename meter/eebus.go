@@ -51,8 +51,7 @@ func init() {
 // NewEEBusFromConfig creates an EEBus meter from generic config
 func NewEEBusFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	var cc struct {
-		Ski      string
-		Ip       string
+		Ski, Ip  string
 		Usage    *templates.Usage
 		Timeout_ time.Duration `mapstructure:"timeout"` // TODO deprecated
 	}
