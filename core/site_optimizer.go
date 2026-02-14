@@ -2,7 +2,6 @@ package core
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -53,29 +52,29 @@ type batteryDetail struct {
 
 type batteryResult struct {
 	batteryDetail
-	Full  time.Time `json:"full"`
-	Empty time.Time `json:"empty"`
+	Full  *time.Time `json:"full"`
+	Empty *time.Time `json:"empty"`
 }
 
-func (br batteryResult) MarshalJSON() ([]byte, error) {
-	var full, empty int64
-	if !br.Full.IsZero() {
-		full = int64(time.Until(br.Full).Seconds())
-	}
-	if !br.Empty.IsZero() {
-		empty = int64(time.Until(br.Empty).Seconds())
-	}
+// func (br batteryResult) MarshalJSON() ([]byte, error) {
+// 	var full, empty int64
+// 	if !br.Full.IsZero() {
+// 		full = int64(time.Until(br.Full).Seconds())
+// 	}
+// 	if !br.Empty.IsZero() {
+// 		empty = int64(time.Until(br.Empty).Seconds())
+// 	}
 
-	return json.Marshal(struct {
-		batteryResult
-		UntilFull  int64 `json:"untilFull,omitempty"`
-		UntilEmpty int64 `json:"untilEmpty,omitempty"`
-	}{
-		batteryResult: br,
-		UntilFull:     full,
-		UntilEmpty:    empty,
-	})
-}
+// 	return json.Marshal(struct {
+// 		batteryResult
+// 		UntilFull  int64 `json:"untilFull,omitempty"`
+// 		UntilEmpty int64 `json:"untilEmpty,omitempty"`
+// 	}{
+// 		batteryResult: br,
+// 		UntilFull:     full,
+// 		UntilEmpty:    empty,
+// 	})
+// }
 
 type requestDetails struct {
 	Timestamps     []time.Time     `json:"timestamp"`
@@ -393,15 +392,15 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 	return bat, detail
 }
 
-func matchSoc(ts []float32, fun func(float32) bool) time.Time {
+func matchSoc(ts []float32, fun func(float32) bool) *time.Time {
 	for i, soc := range ts {
 		if fun(soc) {
 			// TODO first slot
-			return time.Now().Add(time.Duration(i+1) * tariff.SlotDuration)
+			return new(time.Now().Add(time.Duration(i+1) * tariff.SlotDuration))
 		}
 	}
 
-	return time.Time{}
+	return nil
 }
 
 // continuousDemand creates a slice of power demands depending on loadpoint mode
