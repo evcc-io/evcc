@@ -91,6 +91,7 @@ export default defineComponent({
 	border: none;
 	background: none;
 	padding: 0;
+	color: var(--evcc-default-text);
 	opacity: 1;
 }
 .root:disabled {
