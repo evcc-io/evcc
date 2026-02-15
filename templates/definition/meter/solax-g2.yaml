@@ -11,7 +11,7 @@ products:
       generic: Q.VOLT P5T-X
   - brand: Qcells
     description:
-      generic: Q.VOLT P17T-X 
+      generic: Q.VOLT P17T-X
 params:
   - name: usage
     choice: ["grid", "pv"]
