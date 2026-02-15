@@ -1,7 +1,6 @@
 package charger
 
-//go:generate go tool decorate -f decorateHomeAssistant -b *HomeAssistant -r api.Charger -t "api.ChargerEx,MaxCurrentMillis,func(float64) error" -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)"
-//  -t "api.CurrentGetter,GetMaxCurrent,func() (float64, error)"
+//go:generate go tool decorate -f decorateHomeAssistant -b *HomeAssistant -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)"
 
 import (
 	"errors"
@@ -53,6 +52,9 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Charger, error) {
 	}
 	if cc.Enable == "" {
 		return nil, errors.New("missing enable switch entity")
+	}
+	if cc.MaxCurrent == "" {
+		return nil, errors.New("missing maxcurrent number entity")
 	}
 
 	log := util.NewLogger("ha-charger")
