@@ -6,12 +6,23 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateHomeAssistant(base *HomeAssistant, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error)) api.Charger {
+func decorateHomeAssistant(base *HomeAssistant, chargerEx func(float64) error, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error)) api.Charger {
 	switch {
-	case meter == nil:
+	case chargerEx == nil && meter == nil:
 		return base
 
-	case meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
+	case chargerEx != nil && meter == nil:
+		return &struct {
+			*HomeAssistant
+			api.ChargerEx
+		}{
+			HomeAssistant: base,
+			ChargerEx: &decorateHomeAssistantChargerExImpl{
+				chargerEx: chargerEx,
+			},
+		}
+
+	case chargerEx == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
 		return &struct {
 			*HomeAssistant
 			api.Meter
@@ -22,7 +33,22 @@ func decorateHomeAssistant(base *HomeAssistant, meter func() (float64, error), m
 			},
 		}
 
-	case meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
+	case chargerEx != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
+		return &struct {
+			*HomeAssistant
+			api.ChargerEx
+			api.Meter
+		}{
+			HomeAssistant: base,
+			ChargerEx: &decorateHomeAssistantChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateHomeAssistantMeterImpl{
+				meter: meter,
+			},
+		}
+
+	case chargerEx == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
 		return &struct {
 			*HomeAssistant
 			api.Meter
@@ -37,7 +63,26 @@ func decorateHomeAssistant(base *HomeAssistant, meter func() (float64, error), m
 			},
 		}
 
-	case meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages == nil:
+	case chargerEx != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
+		return &struct {
+			*HomeAssistant
+			api.ChargerEx
+			api.Meter
+			api.MeterEnergy
+		}{
+			HomeAssistant: base,
+			ChargerEx: &decorateHomeAssistantChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateHomeAssistantMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateHomeAssistantMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case chargerEx == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages == nil:
 		return &struct {
 			*HomeAssistant
 			api.Meter
@@ -52,7 +97,26 @@ func decorateHomeAssistant(base *HomeAssistant, meter func() (float64, error), m
 			},
 		}
 
-	case meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages == nil:
+	case chargerEx != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages == nil:
+		return &struct {
+			*HomeAssistant
+			api.ChargerEx
+			api.Meter
+			api.PhaseCurrents
+		}{
+			HomeAssistant: base,
+			ChargerEx: &decorateHomeAssistantChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateHomeAssistantMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateHomeAssistantPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case chargerEx == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages == nil:
 		return &struct {
 			*HomeAssistant
 			api.Meter
@@ -71,7 +135,30 @@ func decorateHomeAssistant(base *HomeAssistant, meter func() (float64, error), m
 			},
 		}
 
-	case meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
+	case chargerEx != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages == nil:
+		return &struct {
+			*HomeAssistant
+			api.ChargerEx
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+		}{
+			HomeAssistant: base,
+			ChargerEx: &decorateHomeAssistantChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateHomeAssistantMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateHomeAssistantMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateHomeAssistantPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case chargerEx == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
 		return &struct {
 			*HomeAssistant
 			api.Meter
@@ -86,7 +173,26 @@ func decorateHomeAssistant(base *HomeAssistant, meter func() (float64, error), m
 			},
 		}
 
-	case meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
+	case chargerEx != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
+		return &struct {
+			*HomeAssistant
+			api.ChargerEx
+			api.Meter
+			api.PhaseVoltages
+		}{
+			HomeAssistant: base,
+			ChargerEx: &decorateHomeAssistantChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateHomeAssistantMeterImpl{
+				meter: meter,
+			},
+			PhaseVoltages: &decorateHomeAssistantPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case chargerEx == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
 		return &struct {
 			*HomeAssistant
 			api.Meter
@@ -105,7 +211,30 @@ func decorateHomeAssistant(base *HomeAssistant, meter func() (float64, error), m
 			},
 		}
 
-	case meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages != nil:
+	case chargerEx != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
+		return &struct {
+			*HomeAssistant
+			api.ChargerEx
+			api.Meter
+			api.MeterEnergy
+			api.PhaseVoltages
+		}{
+			HomeAssistant: base,
+			ChargerEx: &decorateHomeAssistantChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateHomeAssistantMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateHomeAssistantMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseVoltages: &decorateHomeAssistantPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case chargerEx == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages != nil:
 		return &struct {
 			*HomeAssistant
 			api.Meter
@@ -124,7 +253,30 @@ func decorateHomeAssistant(base *HomeAssistant, meter func() (float64, error), m
 			},
 		}
 
-	case meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages != nil:
+	case chargerEx != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages != nil:
+		return &struct {
+			*HomeAssistant
+			api.ChargerEx
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			HomeAssistant: base,
+			ChargerEx: &decorateHomeAssistantChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decorateHomeAssistantMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decorateHomeAssistantPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decorateHomeAssistantPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case chargerEx == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages != nil:
 		return &struct {
 			*HomeAssistant
 			api.Meter
@@ -133,6 +285,33 @@ func decorateHomeAssistant(base *HomeAssistant, meter func() (float64, error), m
 			api.PhaseVoltages
 		}{
 			HomeAssistant: base,
+			Meter: &decorateHomeAssistantMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateHomeAssistantMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decorateHomeAssistantPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decorateHomeAssistantPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case chargerEx != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages != nil:
+		return &struct {
+			*HomeAssistant
+			api.ChargerEx
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			HomeAssistant: base,
+			ChargerEx: &decorateHomeAssistantChargerExImpl{
+				chargerEx: chargerEx,
+			},
 			Meter: &decorateHomeAssistantMeterImpl{
 				meter: meter,
 			},
@@ -149,6 +328,14 @@ func decorateHomeAssistant(base *HomeAssistant, meter func() (float64, error), m
 	}
 
 	return nil
+}
+
+type decorateHomeAssistantChargerExImpl struct {
+	chargerEx func(float64) error
+}
+
+func (impl *decorateHomeAssistantChargerExImpl) MaxCurrentMillis(p0 float64) error {
+	return impl.chargerEx(p0)
 }
 
 type decorateHomeAssistantMeterImpl struct {
