@@ -177,26 +177,15 @@ render: |
             decode: uint16
     - case: 2 # hold
       set:
-        source: sequence
+        source: const
+        value: 1 # feed-in-priority
         set:
-        - source: const
-          value: 0 # Stop force charge & discharge
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 0x0020 # Manual mode
-              type: writesingle
-              decode: uint16
-        - source: const
-          value: 3 # manual mode
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 0x001F # SolarChargeUseMode
-              type: writesingle
-              decode: uint16
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 0x001F # SolarChargeUseMode
+            type: writesingle
+            decode: uint16
     - case: 3 # charge
       set:
         source: sequence
