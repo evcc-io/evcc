@@ -53,102 +53,150 @@ func (c *Controller) ChargeEnable(enable bool) error {
 		return api.ErrNotAvailable
 	}
 
-	// configure first schedule and make sure it's active
-	now := time.Now() // Call once and reuse
+	hasChanged := false // Will track if we made any change to the schedule to avoid unnecessary updates through API call
+	now := time.Now()   // Call once and reuse
 
 	if enable {
 		// Start charging: configure charge from now to 12h later
 		in12hours := now.Add(12 * time.Hour)
-		c.configureChargeSchedule(&stat.EvInfo.Schedules[0], now, in12hours)
+		hasChanged = c.configureChargeSchedule(&stat.EvInfo.Schedules[0], now, in12hours)
 	} else {
 		// Stop charging: update end time (use empty time to keep start time as it was for history in Fiat app)
-		c.configureChargeSchedule(&stat.EvInfo.Schedules[0], time.Time{}, now)
+		hasChanged = c.configureChargeSchedule(&stat.EvInfo.Schedules[0], time.Time{}, now)
 	}
 
 	// make sure the other charge schedules are disabled in case user changed them
-	c.disableConflictingChargeSchedule(&stat.EvInfo.Schedules[1])
-	c.disableConflictingChargeSchedule(&stat.EvInfo.Schedules[2])
+	hasChanged = hasChanged || c.disableConflictingChargeSchedule(&stat.EvInfo.Schedules[1])
+	hasChanged = hasChanged || c.disableConflictingChargeSchedule(&stat.EvInfo.Schedules[2])
 
-	// post new schedule
-	res, err := c.api.UpdateSchedule(c.vin, c.pin, stat.EvInfo.Schedules)
-	if err == nil && res.ResponseStatus != "pending" {
-		err = fmt.Errorf("invalid response status: %s", res.ResponseStatus)
+	// post new schedule, but only if something changed to avoid unnecessary API calls
+	if hasChanged {
+		res, err := c.api.UpdateSchedule(c.vin, c.pin, stat.EvInfo.Schedules)
+		c.log.INFO.Printf("updated first charge schedule: enable=%v, start=%s, end=%s", enable, stat.EvInfo.Schedules[0].StartTime, stat.EvInfo.Schedules[0].EndTime)
+		if err == nil && res.ResponseStatus != "pending" {
+			err = fmt.Errorf("invalid response status: %s", res.ResponseStatus)
+		}
 	}
 
 	return err
 }
 
-func roundUpTo(d time.Duration, t time.Time) time.Time {
-	// Round up to next d boundary
-	rt := t.Truncate(d)
-	if !rt.After(t) {
-		rt = rt.Add(d)
-	}
-	return rt
-}
+// computeNewApiScheduleTime computes the new schedule time to set in the API based on the current schedule time and the target time provided by the user, while ensuring it fits API requirements (rounding up to next 5 minutes boundary and avoiding changes if time difference is not significant to prevent API rejections for unchanged schedules)
+func (c *Controller) computeNewApiScheduleTime(current string, target time.Time, timeFormat string) string {
 
-func (c *Controller) configureChargeSchedule(schedule *Schedule, start time.Time, end time.Time) {
 	const (
-		timeFormat        = "15:04"         // Hours & minutes only
-		fallbackStartTime = "00:01"         // Fallback time for schedules crossing midnight
-		minTimeInterval   = 5 * time.Minute // Minimum time interval accepted by Fiat API in schedules; used for rounding up start and end time to avoid API rejections
+		minTimeInterval = 5 * time.Minute // Minimum time interval accepted by Fiat API in schedules; used for rounding up start and end time to avoid API rejections
 	)
 
-	// all values are set to be sure no manual change can lead to inconsistencies
-	schedule.CabinPriority = false
-	schedule.ChargeToFull = false
-	schedule.EnableScheduleType = true
-	schedule.RepeatSchedule = true
-	schedule.ScheduleType = "CHARGE"
+	// By default, return current time unchanged to avoid changing if target time is not significantly different from current time
+	result := current
 
-	// only enable for current day to avoid undesired charge start in the future
-	weekday := time.Now().Weekday()
-	schedule.ScheduledDays.Monday = (weekday == time.Monday)
-	schedule.ScheduledDays.Tuesday = (weekday == time.Tuesday)
-	schedule.ScheduledDays.Wednesday = (weekday == time.Wednesday)
-	schedule.ScheduledDays.Thursday = (weekday == time.Thursday)
-	schedule.ScheduledDays.Friday = (weekday == time.Friday)
-	schedule.ScheduledDays.Saturday = (weekday == time.Saturday)
-	schedule.ScheduledDays.Sunday = (weekday == time.Sunday)
+	// Parse previous schedule time to detect if this is a meaningful change
+	currentTime, err1 := time.Parse(timeFormat, current)
+	targetTime, err2 := time.Parse(timeFormat, target.Format(timeFormat)) // Format target time to same format as current time for proper comparison
+	timeDiff := targetTime.Sub(currentTime).Abs()
+	c.log.DEBUG.Printf("current schedule time: %s, target time: %s, time difference: %s", currentTime.Format(timeFormat), targetTime.Format(timeFormat), timeDiff)
+
+	// Round up only if end time changed significantly (>1 min) or if parsing previous time failed
+	if err1 != nil || err2 != nil || timeDiff > time.Minute {
+		// round up to next 5 minutes boundary to avoid API rejections
+		roundedTarget := target.Truncate(minTimeInterval)
+		if roundedTarget.Before(target) {
+			roundedTarget = roundedTarget.Add(minTimeInterval)
+		}
+		result = roundedTarget.Format(timeFormat)
+		c.log.DEBUG.Printf("target time %s rounded to %s to fit API requirements", target.Format(timeFormat), result)
+	}
+
+	return result
+}
+
+// configureChargeSchedule configures the provided schedule with the provided start and end time, while ensuring it fits API requirements and avoiding unnecessary changes if times are not significantly different to prevent API rejections for unchanged schedules. It returns true if the schedule was changed and false otherwise.
+func (c *Controller) configureChargeSchedule(schedule *Schedule, start time.Time, end time.Time) bool {
+	const (
+		timeFormat        = "15:04" // Hours & minutes only
+		fallbackStartTime = "00:00" // Fallback time for schedules crossing midnight
+	)
+
+	hasChanged := false // track if we made any change to the schedule to avoid unnecessary API calls
+
+	// Make sure schedule is enabled and of type CHARGE
+	if schedule.ScheduleType != "CHARGE" || !schedule.EnableScheduleType {
+		schedule.ScheduleType = "CHARGE"
+		schedule.EnableScheduleType = true
+		schedule.CabinPriority = false
+		schedule.ChargeToFull = false
+		schedule.RepeatSchedule = true
+		hasChanged = true
+		c.log.DEBUG.Printf("schedule type changed to CHARGE and enabled")
+	}
 
 	// Update start only if provided (non-zero)
 	if !start.IsZero() {
-		// TODO: test with out rounding & round DOWN. Round up only as last resort.
-		//rounded := roundUpTo(minTimeInterval, *start)
-		schedule.StartTime = start.Format(timeFormat)
-		c.log.DEBUG.Printf("set charge schedule start: %s", schedule.StartTime)
+		newStartStr := c.computeNewApiScheduleTime(schedule.StartTime, start, timeFormat)
+
+		// Update only if different from current
+		if newStartStr != schedule.StartTime {
+			schedule.StartTime = newStartStr
+			hasChanged = true
+			c.log.DEBUG.Printf("set charge schedule start: %s", schedule.StartTime)
+
+			// only enable for current day to avoid undesired charge start in the future
+			weekday := time.Now().Weekday()
+			schedule.ScheduledDays.Monday = (weekday == time.Monday)
+			schedule.ScheduledDays.Tuesday = (weekday == time.Tuesday)
+			schedule.ScheduledDays.Wednesday = (weekday == time.Wednesday)
+			schedule.ScheduledDays.Thursday = (weekday == time.Thursday)
+			schedule.ScheduledDays.Friday = (weekday == time.Friday)
+			schedule.ScheduledDays.Saturday = (weekday == time.Saturday)
+			schedule.ScheduledDays.Sunday = (weekday == time.Sunday)
+		}
 	}
 
-	// Update end only if provided (non-zero); round up to next 5 minutes boundary to increase chance of API accepting the schedule the first time
+	// Update end only if provided (non-zero)
 	if !end.IsZero() {
-		rounded := roundUpTo(minTimeInterval, end)
-		schedule.EndTime = rounded.Format(timeFormat)
-		c.log.DEBUG.Printf("set charge schedule end: %s (rounded from %s)", schedule.EndTime, end.Format(timeFormat))
+		newEndStr := c.computeNewApiScheduleTime(schedule.EndTime, end, timeFormat)
+
+		// Update only if different from current
+		if newEndStr != schedule.EndTime {
+			schedule.EndTime = newEndStr
+			hasChanged = true
+			c.log.DEBUG.Printf("set charge schedule end: %s", schedule.EndTime)
+		}
 	}
 
 	// If one of the time changed, make sure start time is always before end time (parse both from string to ensure proper comparison)
-	if !start.IsZero() || !end.IsZero() {
+	if (!start.IsZero() || !end.IsZero()) && hasChanged {
 		chkStart, err1 := time.Parse(timeFormat, schedule.StartTime)
 		chkEnd, err2 := time.Parse(timeFormat, schedule.EndTime)
 		if err1 == nil && err2 == nil && chkStart.After(chkEnd) {
 			// If start time is after end time, set start time to fallback value (00:01) to avoid API rejections for schedules crossing midnight
 			c.log.DEBUG.Printf("start time %s is after end time %s, setting start time to fallback value %s", schedule.StartTime, schedule.EndTime, fallbackStartTime)
 			schedule.StartTime = fallbackStartTime
+			hasChanged = true
 		} else if err1 != nil || err2 != nil {
 			c.log.WARN.Printf("failed to parse schedule times: start=%v, end=%v", err1, err2)
 			if err1 != nil {
 				// If start time cannot be parsed, also set to fallback value
 				schedule.StartTime = fallbackStartTime
+				hasChanged = true
+				c.log.DEBUG.Printf("set charge schedule start to fallback value %s due to parse error", fallbackStartTime)
 			}
 		}
 	}
+
+	return hasChanged
 }
 
-func (c *Controller) disableConflictingChargeSchedule(schedule *Schedule) {
+// disableConflictingChargeSchedule makes sure the provided schedule is disabled if it's of type CHARGE to avoid conflicts between schedules and potential API rejections for conflicting schedules. It returns true if the schedule was changed and false otherwise.
+func (c *Controller) disableConflictingChargeSchedule(schedule *Schedule) bool {
 	// make sure the other charge schedules are disabled in case user changed them
 	if schedule.ScheduleType == "CHARGE" && schedule.EnableScheduleType {
 		schedule.EnableScheduleType = false
+		c.log.INFO.Printf("disabled charge schedule other than the first one to avoid conflicts")
+		return true // schedule was changed
 	}
+	return false // schedule was not changed
 }
 
 var _ api.Resurrector = (*Controller)(nil)
