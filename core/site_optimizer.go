@@ -458,64 +458,6 @@ func matchSoc(ts []float32, fun func(float32) bool) *time.Time {
 	return nil
 }
 
-func aggregateBatteryForecast(measurements []types.Measurement) *types.BatteryForecast {
-	if len(measurements) == 0 {
-		return nil
-	}
-
-	var allFullAt, allEmptyAt *time.Time
-	allHaveFull := true
-	allHaveEmpty := true
-
-	for _, m := range measurements {
-		if m.Forecast == nil {
-			return nil
-		}
-
-		if m.Forecast.Full == nil {
-			allHaveFull = false
-		} else {
-			allFullAt = maxTime(allFullAt, m.Forecast.Full)
-		}
-
-		if m.Forecast.Empty == nil {
-			allHaveEmpty = false
-		} else {
-			allEmptyAt = maxTime(allEmptyAt, m.Forecast.Empty)
-		}
-	}
-
-	if !allHaveFull {
-		allFullAt = nil
-	}
-	if !allHaveEmpty {
-		allEmptyAt = nil
-	}
-
-	if allFullAt == nil && allEmptyAt == nil {
-		return nil
-	}
-
-	return &types.BatteryForecast{
-		Full:  allFullAt,
-		Empty: allEmptyAt,
-	}
-}
-
-func maxTime(current, candidate *time.Time) *time.Time {
-	if candidate == nil {
-		return nil
-	}
-
-	if current == nil || candidate.After(*current) {
-		res := *candidate
-		return &res
-	}
-
-	res := *current
-	return &res
-}
-
 // continuousDemand creates a slice of power demands depending on loadpoint mode
 func continuousDemand(lp loadpoint.API, minLen int) []float32 {
 	if lp.GetStatus() != api.StatusC {
