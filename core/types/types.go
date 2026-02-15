@@ -54,9 +54,10 @@ func (m Measurement) GetTitle() string {
 }
 
 type BatteryState struct {
-	Power    float64       `json:"power"`
-	Energy   float64       `json:"energy,omitempty"`
-	Capacity float64       `json:"capacity,omitempty"`
-	Soc      float64       `json:"soc"`
-	Devices  []Measurement `json:"devices,omitempty" influxdb:"battery"`
+	Power    float64          `json:"power"`
+	Energy   float64          `json:"energy,omitempty"`
+	Capacity float64          `json:"capacity,omitempty"`
+	Soc      float64          `json:"soc"`
+	Devices  []Measurement    `json:"devices,omitempty" influxdb:"battery"`
+	Forecast *BatteryForecast `json:"forecast,omitempty"`
 }

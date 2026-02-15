@@ -245,7 +245,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	for i, batReq := range req.Batteries {
 		batResp := resp.JSON200.Batteries[i]
 
-		batteries = append(batteries, batteryResult{
+		batResult := batteryResult{
 			batteryDetail: details.BatteryDetails[i],
 			Full: matchSoc(batResp.StateOfCharge, func(soc float32) bool {
 				return soc >= batReq.SMax
@@ -253,26 +253,81 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 			Empty: matchSoc(batResp.StateOfCharge, func(soc float32) bool {
 				return soc <= batReq.SMin
 			}),
-		})
-	}
+		}
 
-	site.publish("evopt-batteries", batteries)
+		batteries = append(batteries, batResult)
 
-	for i, dev := range site.batteryMeters {
-		if j := slices.IndexFunc(batteries, func(bat batteryResult) bool {
-			return bat.Name == dev.Config().Name
-		}); j >= 0 {
-			res := batteries[j]
-			site.battery.Devices[i].Forecast = &types.BatteryForecast{
-				Full:  res.Full,
-				Empty: res.Empty,
+		for j, dev := range site.batteryMeters {
+			if details.BatteryDetails[i].Name == dev.Config().Name {
+				site.battery.Devices[j].Forecast = &types.BatteryForecast{
+					Full:  batResult.Full,
+					Empty: batResult.Empty,
+				}
+
+				break
 			}
 		}
 	}
 
+	site.publish("evopt-batteries", batteries)
+
+	site.battery.Forecast = site.addBatteryForecastTotals(req.Batteries, resp.JSON200.Batteries)
+
 	site.publish(keys.Battery, util.NewSharder(keys.Battery, site.battery))
 
 	return nil
+}
+
+func (site *Site) addBatteryForecastTotals(req []evopt.BatteryConfig, resp []evopt.BatteryResult) *types.BatteryForecast {
+	if len(resp) == 0 || len(resp[0].StateOfCharge) == 0 {
+		return nil
+	}
+
+	length := len(resp[0].StateOfCharge)
+
+	var full, empty time.Time
+	var fullSlot int
+
+NOT_YET_FULL:
+	for i := range length {
+		for j, batReq := range req {
+			batResp := resp[j]
+			if batResp.StateOfCharge[i] < batReq.SMax {
+				continue NOT_YET_FULL
+			}
+		}
+
+		fullSlot = i
+		full = time.Now().Add(time.Duration(i+1) * tariff.SlotDuration)
+		break
+	}
+
+NOT_YET_EMPTY:
+	for i := fullSlot + 1; i < length; i++ {
+		for j, batReq := range req {
+			batResp := resp[j]
+			if batResp.StateOfCharge[i] > batReq.SMin {
+				continue NOT_YET_EMPTY
+			}
+		}
+
+		empty = time.Now().Add(time.Duration(i+1) * tariff.SlotDuration)
+		break
+	}
+
+	if full.IsZero() && empty.IsZero() {
+		return nil
+	}
+
+	var res types.BatteryForecast
+	if !full.IsZero() {
+		res.Full = &full
+	}
+	if !empty.IsZero() {
+		res.Empty = &empty
+	}
+
+	return &res
 }
 
 func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDuration time.Duration, grid api.Rates) (evopt.BatteryConfig, batteryDetail) {
@@ -401,6 +456,64 @@ func matchSoc(ts []float32, fun func(float32) bool) *time.Time {
 	}
 
 	return nil
+}
+
+func aggregateBatteryForecast(measurements []types.Measurement) *types.BatteryForecast {
+	if len(measurements) == 0 {
+		return nil
+	}
+
+	var allFullAt, allEmptyAt *time.Time
+	allHaveFull := true
+	allHaveEmpty := true
+
+	for _, m := range measurements {
+		if m.Forecast == nil {
+			return nil
+		}
+
+		if m.Forecast.Full == nil {
+			allHaveFull = false
+		} else {
+			allFullAt = maxTime(allFullAt, m.Forecast.Full)
+		}
+
+		if m.Forecast.Empty == nil {
+			allHaveEmpty = false
+		} else {
+			allEmptyAt = maxTime(allEmptyAt, m.Forecast.Empty)
+		}
+	}
+
+	if !allHaveFull {
+		allFullAt = nil
+	}
+	if !allHaveEmpty {
+		allEmptyAt = nil
+	}
+
+	if allFullAt == nil && allEmptyAt == nil {
+		return nil
+	}
+
+	return &types.BatteryForecast{
+		Full:  allFullAt,
+		Empty: allEmptyAt,
+	}
+}
+
+func maxTime(current, candidate *time.Time) *time.Time {
+	if candidate == nil {
+		return nil
+	}
+
+	if current == nil || candidate.After(*current) {
+		res := *candidate
+		return &res
+	}
+
+	res := *current
+	return &res
 }
 
 // continuousDemand creates a slice of power demands depending on loadpoint mode
