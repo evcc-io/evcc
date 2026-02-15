@@ -158,15 +158,34 @@ func NewOCPP(ctx context.Context,
 		func(cp *ocpp.CP) error {
 			log.DEBUG.Printf("waiting for chargepoint: %v", connectTimeout)
 
+			timeout := time.After(connectTimeout)
+
 			select {
 			case <-ctx.Done():
 				return ctx.Err()
-			case <-time.After(connectTimeout):
+			case <-timeout:
 				return api.ErrTimeout
 			case <-cp.HasConnected():
 			}
 
-			return cp.Setup(ctx, meterValues, meterInterval, forcePowerCtrl)
+			// retry setup on failure; handles firmware that connects
+			// but doesn't respond until after reconnect
+			for {
+				err := cp.Setup(ctx, meterValues, meterInterval, forcePowerCtrl)
+				if err == nil {
+					return nil
+				}
+
+				log.WARN.Printf("setup failed: %v, waiting for reconnect", err)
+
+				select {
+				case <-ctx.Done():
+					return ctx.Err()
+				case <-timeout:
+					return api.ErrTimeout
+				case <-cp.BootNotificationC():
+				}
+			}
 		},
 	)
 	if err != nil {
@@ -198,7 +217,34 @@ func NewOCPP(ctx context.Context,
 		go conn.WatchDog(ctx, 10*time.Second)
 	}
 
+	// monitor for charger reboots and re-run setup
+	go c.monitorReboot(ctx, meterValues, meterInterval, forcePowerCtrl)
+
 	return c, conn.Initialized()
+}
+
+// monitorReboot watches for charger reboots (detected via BootNotification
+// after initial setup) and re-runs setup to reconfigure the charger.
+func (c *OCPP) monitorReboot(ctx context.Context, meterValues string, meterInterval time.Duration, forcePowerCtrl bool) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+
+		case boot := <-c.cp.BootNotificationC():
+			// only re-initialize if the charge point was previously initialized
+			if !c.cp.Initialized() {
+				continue
+			}
+
+			c.log.INFO.Printf("charger reboot detected (model: %s, vendor: %s), re-initializing",
+				boot.ChargePointModel, boot.ChargePointVendor)
+
+			if err := c.cp.Setup(ctx, meterValues, meterInterval, forcePowerCtrl); err != nil {
+				c.log.ERROR.Printf("failed to re-initialize after reboot: %v", err)
+			}
+		}
+	}
 }
 
 // Connector returns the connector instance
