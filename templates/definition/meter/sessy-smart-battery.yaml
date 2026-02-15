@@ -9,12 +9,6 @@ params:
     choice: ["battery"]
   - name: host
     required: true
-  - name: user
-    required: true
-  - name: password
-    required: true
-    description:
-      en: Local API Password
   - name: cache
     advanced: true
     default: 60
@@ -29,10 +23,6 @@ render: |
     method: GET
     headers:
       - content-type: application/json
-    auth:
-      type: basic
-      user: {{ .user }}
-      password: {{ .password }}
     insecure: false
     jq: .sessy.power
     cache: {{ .cache }}
@@ -43,10 +33,6 @@ render: |
     method: GET
     headers:
       - content-type: application/json
-    auth:
-      type: basic
-      user: {{ .user }}
-      password: {{ .password }}
     insecure: false
     jq: .sessy_energy.import_wh
     cache: {{ .cache }}
@@ -57,10 +43,6 @@ render: |
     method: GET
     headers:
       - content-type: application/json
-    auth:
-      type: basic
-      user: {{ .user }}
-      password: {{ .password }}
     insecure: false
     jq: .sessy.state_of_charge
     scale: 100
@@ -72,10 +54,6 @@ render: |
       method: GET
       headers:
         - content-type: application/json
-      auth:
-        type: basic
-        user: {{ .user }}
-        password: {{ .password }}
       insecure: false
       jq: .renewable_energy_phase1.voltage_rms
       scale: 0.001
@@ -86,10 +64,6 @@ render: |
       method: GET
       headers:
         - content-type: application/json
-      auth:
-        type: basic
-        user: {{ .user }}
-        password: {{ .password }}
       insecure: false
       jq: .renewable_energy_phase2.voltage_rms
       scale: 0.001
@@ -100,10 +74,6 @@ render: |
       method: GET
       headers:
         - content-type: application/json
-      auth:
-        type: basic
-        user: {{ .user }}
-        password: {{ .password }}
       insecure: false
       jq: .renewable_energy_phase3.voltage_rms
       scale: 0.001
