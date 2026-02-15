@@ -1,6 +1,7 @@
 <template>
 	<button
 		class="root position-relative"
+		tabindex="0"
 		:class="{ active, belowLimit, full }"
 		:style="{ '--soc': `${adjustedSoc}%` }"
 		:disabled="disabled"
@@ -25,7 +26,7 @@
 
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
-import { CHARGE_MODE } from "@/types/evcc";
+import { CHARGE_MODE, type Timeout } from "@/types/evcc";
 import BatteryBoost from "../MaterialIcon/BatteryBoost.vue";
 
 export default defineComponent({
@@ -39,8 +40,17 @@ export default defineComponent({
 		mode: String as PropType<CHARGE_MODE>,
 		batterySoc: { type: Number, default: 0 },
 	},
-	emits: ["updated"],
+	emits: ["updated", "status"],
+	data() {
+		return {
+			selected: null as boolean | null,
+			timeout: null as Timeout | null,
+		};
+	},
 	computed: {
+		active(): boolean {
+			return this.selected ?? this.batteryBoost;
+		},
 		disabled() {
 			return this.mode && [CHARGE_MODE.OFF, CHARGE_MODE.NOW].includes(this.mode);
 		},
@@ -60,9 +70,6 @@ export default defineComponent({
 				clipPath: this.active ? `inset(0 0 calc(var(--soc)) 0)` : undefined,
 			};
 		},
-		active(): boolean {
-			return this.batteryBoost;
-		},
 		full(): boolean {
 			return !this.active && this.adjustedSoc >= 90;
 		},
@@ -73,9 +80,48 @@ export default defineComponent({
 			};
 		},
 	},
+	watch: {
+		batteryBoost() {
+			this.clearSelected();
+		},
+	},
+	unmounted() {
+		this.clearSelected();
+	},
 	methods: {
 		toggle() {
-			this.$emit("updated", !this.batteryBoost);
+			(this.$el as HTMLElement).blur();
+			const status = (key: string, params?: Record<string, unknown>, type?: string) =>
+				this.$emit("status", {
+					message: this.$t(`main.vehicleStatus.${key}`, params ?? {}),
+					type,
+				});
+			const newValue = !this.active;
+
+			// below limit: only show message, don't toggle
+			if (newValue && this.belowLimit) {
+				status("batteryBoostBelowLimit");
+				return;
+			}
+
+			// optimistic update, instant user feedback
+			this.selected = newValue;
+			if (this.timeout) clearTimeout(this.timeout);
+			this.timeout = setTimeout(() => this.clearSelected(), 5000);
+
+			if (newValue) {
+				status("batteryBoostEnabled", { limit: `${this.batteryBoostLimit}%` }, "primary");
+			} else {
+				status("batteryBoostDisabled");
+			}
+			this.$emit("updated", newValue);
+		},
+		clearSelected() {
+			this.selected = null;
+			if (this.timeout) {
+				clearTimeout(this.timeout);
+				this.timeout = null;
+			}
 		},
 	},
 });
@@ -93,13 +139,16 @@ export default defineComponent({
 	padding: 0;
 	color: var(--evcc-default-text);
 	opacity: 1;
+	transition: opacity var(--evcc-transition-fast) linear;
+}
+.root:focus,
+.root:active {
+	outline: var(--bs-focus-ring-width) solid var(--bs-focus-ring-color);
+	outline-width: var(--bs-focus-ring-width);
 }
 .root:disabled {
 	color: inherit;
 	opacity: 0.25;
-}
-.root:active {
-	box-shadow: 0 0 1px 0 var(--bs-primary);
 }
 .root.belowLimit:not(:disabled) {
 	opacity: 0.5;
@@ -113,7 +162,7 @@ export default defineComponent({
 	border-radius: var(--bs-border-radius);
 	border-width: 2px;
 	border-style: solid;
-	transition: opacity var(--evcc-transition-very-fast) linear;
+	transition: opacity var(--evcc-transition-fast) linear;
 }
 .root:before {
 	opacity: 0.25;
@@ -148,8 +197,7 @@ export default defineComponent({
 	padding: 2px;
 	animation: rotate-border 3s linear infinite;
 }
-.root.full:hover:after,
-.root.full:active:after {
+.root.full:hover:after {
 	background: var(--bs-primary);
 	animation: none;
 }

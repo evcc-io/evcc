@@ -520,6 +520,11 @@ export interface Vehicle {
 
 export type Timeout = ReturnType<typeof setInterval> | null;
 
+export interface VehicleStatus {
+  message: string;
+  type?: string;
+}
+
 export interface Tariff {
   rates: Rate[];
   lastUpdate: Date;

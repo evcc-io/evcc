@@ -4,7 +4,11 @@
 		style="min-height: 24px"
 		data-testid="vehicle-status"
 	>
-		<div class="charger-status" data-testid="vehicle-status-charger">
+		<div
+			class="charger-status"
+			:class="chargerStatusType ? `text-${chargerStatusType}` : ''"
+			data-testid="vehicle-status-charger"
+		>
 			{{ chargerStatus }}
 		</div>
 		<div class="d-flex flex-wrap justify-content-end gap-3 flex-grow-1">
@@ -57,7 +61,7 @@ import { DEFAULT_LOCALE } from "@/i18n.ts";
 import formatter from "@/mixins/formatter";
 import minuteTicker from "@/mixins/minuteTicker";
 import { defineComponent, type PropType } from "vue";
-import { SMART_COST_TYPE, type CURRENCY } from "@/types/evcc";
+import { SMART_COST_TYPE, type CURRENCY, type VehicleStatus, type Timeout } from "@/types/evcc";
 
 import ClimaterIcon from "../MaterialIcon/Climater.vue";
 import DynamicPriceIcon from "../MaterialIcon/DynamicPrice.vue";
@@ -125,8 +129,15 @@ export default defineComponent({
 		vehicleClimaterActive: Boolean,
 		vehicleWelcomeActive: Boolean,
 		vehicleLimitSoc: { type: Number, default: 0 },
+		statusOverride: { type: Object as PropType<VehicleStatus>, default: undefined },
 	},
 	emits: ["open-loadpoint-settings", "open-minsoc-settings", "open-plan-modal"],
+	data() {
+		return {
+			statusOverrideActive: false,
+			statusTimeout: null as Timeout | null,
+		};
+	},
 	computed: {
 		pvTimerActive() {
 			return (
@@ -180,7 +191,16 @@ export default defineComponent({
 		smartFeedInPriorityLimitFmt() {
 			return this.fmtPricePerKWh(this.smartFeedInPriorityLimit, this.currency, true);
 		},
+		chargerStatusType(): string | undefined {
+			if (this.statusOverrideActive && this.statusOverride) {
+				return this.statusOverride.type;
+			}
+			return undefined;
+		},
 		chargerStatus() {
+			if (this.statusOverrideActive && this.statusOverride) {
+				return this.statusOverride.message;
+			}
 			const t = (key: string) => {
 				if (this.heating) {
 					// check for special heating status translation
@@ -392,6 +412,20 @@ export default defineComponent({
 
 			return items.filter((item) => item.visible);
 		},
+	},
+	watch: {
+		statusOverride(val: VehicleStatus | undefined) {
+			if (val) {
+				this.statusOverrideActive = true;
+				if (this.statusTimeout) clearTimeout(this.statusTimeout);
+				this.statusTimeout = setTimeout(() => {
+					this.statusOverrideActive = false;
+				}, 2500);
+			}
+		},
+	},
+	unmounted() {
+		if (this.statusTimeout) clearTimeout(this.statusTimeout);
 	},
 	methods: {
 		openLoadpointSettings() {

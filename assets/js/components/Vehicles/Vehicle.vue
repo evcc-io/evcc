@@ -19,6 +19,7 @@
 				class="flex-grow-0"
 				v-bind="batteryBoostButtonProps"
 				@updated="$emit('batteryboost-updated', $event)"
+				@status="handleBoostStatus"
 			/>
 			<VehicleSoc
 				class="flex-grow-1 position-relative"
@@ -87,7 +88,7 @@ import LimitSocSelect from "./LimitSocSelect.vue";
 import LimitEnergySelect from "./LimitEnergySelect.vue";
 import { distanceUnit, distanceValue } from "@/units.ts";
 import { defineComponent, type PropType } from "vue";
-import { CHARGE_MODE, type Forecast, type Vehicle } from "@/types/evcc";
+import { CHARGE_MODE, type Forecast, type VehicleStatus, type Vehicle } from "@/types/evcc";
 import type { PlanStrategy } from "@/components/ChargingPlans/types";
 import BatteryBoostButton from "../Loadpoints/BatteryBoostButton.vue";
 
@@ -172,6 +173,7 @@ export default defineComponent({
 	data() {
 		return {
 			displayLimitSoc: this.effectiveLimitSoc,
+			statusOverride: undefined as VehicleStatus | undefined,
 		};
 	},
 	computed: {
@@ -191,7 +193,7 @@ export default defineComponent({
 			return this.collectProps(Soc);
 		},
 		vehicleStatus() {
-			return this.collectProps(Status);
+			return { ...this.collectProps(Status), statusOverride: this.statusOverride };
 		},
 		vehicleTitleProps() {
 			return this.collectProps(Title);
@@ -281,6 +283,9 @@ export default defineComponent({
 			(
 				this.$refs["chargingPlan"] as InstanceType<typeof ChargingPlan> | undefined
 			)?.openPlanModal();
+		},
+		handleBoostStatus(status: VehicleStatus) {
+			this.statusOverride = status;
 		},
 		openMinSocSettings() {
 			(

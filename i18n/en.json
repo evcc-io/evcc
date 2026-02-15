@@ -1083,6 +1083,9 @@
     "vehicleStatus": {
       "awaitingAuthorization": "Waiting for authorization.",
       "batteryBoost": "Battery boost active.",
+      "batteryBoostBelowLimit": "Battery too low for boost.",
+      "batteryBoostDisabled": "Battery boost disabled.",
+      "batteryBoostEnabled": "Boost until battery at {limit}.",
       "charging": "Charging…",
       "cheapEnergyCharging": "Cheap energy available.",
       "cheapEnergyNextStart": "Cheap energy in {duration}.",
