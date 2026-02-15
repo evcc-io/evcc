@@ -1,6 +1,6 @@
 package charger
 
-//go:generate go tool decorate -f decorateHomeAssistant -b *HomeAssistant -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)"
+//go:generate go tool decorate -f decorateHomeAssistant -b *HomeAssistant -r api.Charger -t "api.ChargerEx,MaxCurrentMillis,func(float64) error" -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)"
 //  -t "api.CurrentGetter,GetMaxCurrent,func() (float64, error)"
 
 import (
@@ -117,5 +117,12 @@ func (c *HomeAssistant) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (c *HomeAssistant) MaxCurrent(current int64) error {
-	return c.conn.CallNumberService(c.maxcurrent, float64(current))
+	return c.MaxCurrentMillis(float64(current))
+}
+
+var _ api.ChargerEx = (*HomeAssistant)(nil)
+
+// MaxCurrentMillis implements the api.ChargerEx interface
+func (c *HomeAssistant) MaxCurrentMillis(current float64) error {
+	return c.conn.CallNumberService(c.maxcurrent, current)
 }
