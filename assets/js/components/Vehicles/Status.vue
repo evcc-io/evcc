@@ -77,7 +77,7 @@ import VehicleLimitReachedIcon from "../MaterialIcon/VehicleLimitReached.vue";
 import VehicleLimitWarningIcon from "../MaterialIcon/VehicleLimitWarning.vue";
 import VehicleMinSocIcon from "../MaterialIcon/VehicleMinSoc.vue";
 import WelcomeIcon from "../MaterialIcon/Welcome.vue";
-import BatteryBoostIcon from "../MaterialIcon/BatteryBoost.vue";
+
 import SunPauseIcon from "../MaterialIcon/SunPause.vue";
 
 import StatusItem from "./StatusItem.vue";
@@ -93,7 +93,7 @@ export default defineComponent({
 	mixins: [formatter, minuteTicker],
 	props: {
 		vehicleSoc: { type: Number, default: 0 },
-		batteryBoostActive: Boolean,
+
 		charging: Boolean,
 		chargingPlanDisabled: Boolean,
 		chargerStatusReason: String,
@@ -358,15 +358,6 @@ export default defineComponent({
 							? "text-warning"
 							: "",
 					testId: "vehicle-status-smartfeedinpriority",
-					clickable: true,
-					clickHandler: () => this.openLoadpointSettings(),
-				},
-				{
-					id: "batteryBoost",
-					visible: this.batteryBoostActive,
-					tooltipContent: t("batteryBoost"),
-					iconComponent: BatteryBoostIcon,
-					testId: "vehicle-status-batteryboost",
 					clickable: true,
 					clickHandler: () => this.openLoadpointSettings(),
 				},
