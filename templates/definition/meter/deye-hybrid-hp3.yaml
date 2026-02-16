@@ -192,7 +192,7 @@ render: |
             register:
               address: 166 
               type: writemultiple
-              decode: int32s
+              decode: int16
         - source: const
           value: 0
           set:
@@ -232,7 +232,7 @@ render: |
             register:
               address: 166 
               type: writemultiple
-              decode: int32s
+              decode: int16
         - source: const
           value: 0
           set:
@@ -272,7 +272,7 @@ render: |
             register:
               address: 166 
               type: writemultiple
-              decode: int32s
+              decode: int16
         - source: const
           value: 0
           set:
