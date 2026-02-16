@@ -273,93 +273,6 @@ func configurableInstance[T any](typ string, conf *config.Config, newFromConf ne
 	return err
 }
 
-func configureMessengers(confMessaging *globalconfig.Messaging, confEvents *globalconfig.MessagingEvents, vehicles messenger.Vehicles, valueChan chan<- util.Param, cache *util.ParamCache) (chan messenger.Event, error) {
-	// yaml config from file
-	if len(confMessaging.Events) != 0 || len(confMessaging.Services) != 0 {
-		fromYaml.messaging = globalconfig.YamlSourceFs
-	}
-
-	// yaml config from db (deprecated)
-	if settings.Exists(keys.Messaging) {
-		if fromYaml.messaging == globalconfig.YamlSourceFs {
-			// just warn, no error to not break previous behavior
-			log.WARN.Println("messaging configured via UI yaml; evcc.yaml config will be ignored")
-		}
-		*confMessaging = globalconfig.Messaging{}
-		if err := settings.Yaml(keys.Messaging, new(map[string]any), &confMessaging); err != nil {
-			return nil, err
-		}
-		fromYaml.messaging = globalconfig.YamlSourceDb
-	}
-
-	if settings.Exists(keys.MessagingEvents) {
-		*confEvents = globalconfig.MessagingEvents{}
-		if err := settings.Json(keys.MessagingEvents, &confEvents); err != nil {
-			return nil, err
-		}
-		if fromYaml.messaging != globalconfig.YamlSourceNone && confEvents != nil {
-			return nil, errors.New("yaml and device config exists for messaging; remove yaml config")
-		}
-	}
-
-	messageChan := make(chan messenger.Event, 1)
-
-	var eg errgroup.Group
-
-	for i, cc := range confMessaging.Services {
-		// add name for meter/charger parity
-		cc := config.Named{
-			Name:  fmt.Sprintf("push-%d", i+1),
-			Type:  cc.Type,
-			Other: cc.Other,
-		}
-
-		eg.Go(func() error {
-			return staticInstance("messenger", cc, messenger.NewFromConfig, config.Messengers())
-		})
-	}
-
-	// append devices from database
-	configurable, err := config.ConfigurationsByClass(templates.Messenger)
-	if err != nil {
-		return messageChan, err
-	}
-
-	for _, conf := range configurable {
-		eg.Go(func() error {
-			return configurableInstance("messenger", &conf, messenger.NewFromConfig, config.Messengers())
-		})
-	}
-
-	if err := eg.Wait(); err != nil {
-		return messageChan, &ClassError{ClassMessenger, err}
-	}
-
-	var events globalconfig.MessagingEvents
-
-	if len(*confEvents) > 0 {
-		events = conf.MessagingEvents
-	} else {
-		events = confMessaging.Events
-	}
-
-	messageHub, err := messenger.NewHub(events, vehicles, cache)
-
-	if err != nil {
-		return messageChan, fmt.Errorf("failed configuring push services: %w", err)
-	}
-
-	for _, dev := range config.Messengers().Devices() {
-		if inst := dev.Instance(); inst != nil {
-			messageHub.Add(inst)
-		}
-	}
-
-	go messageHub.Run(messageChan, valueChan)
-
-	return messageChan, nil
-}
-
 func configureMeters(static []config.Named, names ...string) error {
 	var eg errgroup.Group
 
@@ -878,6 +791,93 @@ func configureEEBus(conf *eebus.Config) error {
 	shutdown.Register(eebus.Instance.Shutdown)
 
 	return nil
+}
+
+func configureMessengers(confMessaging *globalconfig.Messaging, confEvents *globalconfig.MessagingEvents, vehicles messenger.Vehicles, valueChan chan<- util.Param, cache *util.ParamCache) (chan messenger.Event, error) {
+	// yaml config from file
+	if len(confMessaging.Events) != 0 || len(confMessaging.Services) != 0 {
+		fromYaml.messaging = globalconfig.YamlSourceFs
+	}
+
+	// yaml config from db (deprecated)
+	if settings.Exists(keys.Messaging) {
+		if fromYaml.messaging == globalconfig.YamlSourceFs {
+			// just warn, no error to not break previous behavior
+			log.WARN.Println("messaging configured via UI yaml; evcc.yaml config will be ignored")
+		}
+		*confMessaging = globalconfig.Messaging{}
+		if err := settings.Yaml(keys.Messaging, new(map[string]any), &confMessaging); err != nil {
+			return nil, err
+		}
+		fromYaml.messaging = globalconfig.YamlSourceDb
+	}
+
+	if settings.Exists(keys.MessagingEvents) {
+		*confEvents = globalconfig.MessagingEvents{}
+		if err := settings.Json(keys.MessagingEvents, &confEvents); err != nil {
+			return nil, err
+		}
+		if fromYaml.messaging != globalconfig.YamlSourceNone && confEvents != nil {
+			return nil, errors.New("yaml and device config exists for messaging; remove yaml config")
+		}
+	}
+
+	messageChan := make(chan messenger.Event, 1)
+
+	var eg errgroup.Group
+
+	for i, cc := range confMessaging.Services {
+		// add name for meter/charger parity
+		cc := config.Named{
+			Name:  fmt.Sprintf("push-%d", i+1),
+			Type:  cc.Type,
+			Other: cc.Other,
+		}
+
+		eg.Go(func() error {
+			return staticInstance("messenger", cc, messenger.NewFromConfig, config.Messengers())
+		})
+	}
+
+	// append devices from database
+	configurable, err := config.ConfigurationsByClass(templates.Messenger)
+	if err != nil {
+		return messageChan, err
+	}
+
+	for _, conf := range configurable {
+		eg.Go(func() error {
+			return configurableInstance("messenger", &conf, messenger.NewFromConfig, config.Messengers())
+		})
+	}
+
+	if err := eg.Wait(); err != nil {
+		return messageChan, &ClassError{ClassMessenger, err}
+	}
+
+	var events globalconfig.MessagingEvents
+
+	if len(*confEvents) > 0 {
+		events = conf.MessagingEvents
+	} else {
+		events = confMessaging.Events
+	}
+
+	messageHub, err := messenger.NewHub(events, vehicles, cache)
+
+	if err != nil {
+		return messageChan, fmt.Errorf("failed configuring push services: %w", err)
+	}
+
+	for _, dev := range config.Messengers().Devices() {
+		if inst := dev.Instance(); inst != nil {
+			messageHub.Add(inst)
+		}
+	}
+
+	go messageHub.Run(messageChan, valueChan)
+
+	return messageChan, nil
 }
 
 func tariffInstance(name string, conf config.Typed) (api.Tariff, error) {
