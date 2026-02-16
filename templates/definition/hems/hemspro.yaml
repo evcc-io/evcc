@@ -1,0 +1,10 @@
+template: hemspro
+products:
+  - brand: HEMS Pro
+    description:
+      generic: EnWG §14a, EEG §9
+render: |
+  type: relay
+  limit:
+    type: gpio
+    pin: 19

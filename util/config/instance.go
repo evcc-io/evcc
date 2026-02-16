@@ -4,6 +4,7 @@ import (
 	evbus "github.com/asaskevich/EventBus"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/hems/hems"
 )
 
 var bus = evbus.New()
@@ -13,6 +14,7 @@ var instance struct {
 	chargers   *handler[api.Charger]
 	vehicles   *handler[api.Vehicle]
 	circuits   *handler[api.Circuit]
+	hems       *handler[hems.API]
 	loadpoints *handler[loadpoint.API]
 }
 
@@ -50,6 +52,10 @@ func Vehicles() Handler[api.Vehicle] {
 
 func Circuits() Handler[api.Circuit] {
 	return instance.circuits
+}
+
+func Hems() Handler[hems.API] {
+	return instance.hems
 }
 
 func Loadpoints() Handler[loadpoint.API] {
