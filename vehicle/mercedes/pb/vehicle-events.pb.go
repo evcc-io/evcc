@@ -670,7 +670,7 @@ type VEPUpdate struct {
 	Vin            string `protobuf:"bytes,2,opt,name=vin,proto3" json:"vin,omitempty"`
 	// indicates whether this is a full update of VEP-attributes.
 	// All attributes cached in the FE should be erased and completely
-	// replaced by this messenger.
+	// replaced by this push.
 	FullUpdate bool `protobuf:"varint,15,opt,name=full_update,json=fullUpdate,proto3" json:"full_update,omitempty"`
 	// when was the event emitted? This is the time of the update (unix timestamp in seconds), (deprecated)
 	// not when the attributes where changed. To compare attribute changes, you need to look into each attribute timestamp
