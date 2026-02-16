@@ -977,7 +977,10 @@
         "disabled": "Deaktiviert",
         "label": "Batterie Boost",
         "mode": "Nur im PV- und Min+PV-Modus verfügbar.",
-        "once": "Boost ist für diesen Ladevorgang aktiviert."
+        "once": "Boost ist für diesen Ladevorgang aktiviert.",
+        "stateActive": "Batterie Boost aktiv",
+        "stateBelowLimit": "Batterie zu niedrig für Boost",
+        "stateReady": "Batterie Boost bereit"
       },
       "batteryUsage": "Hausbatterie",
       "currents": "Ladestrom",

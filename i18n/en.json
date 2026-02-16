@@ -977,7 +977,10 @@
         "disabled": "Disabled",
         "label": "Battery Boost",
         "mode": "Only available in solar and min+solar mode.",
-        "once": "Boost active for this charging session."
+        "once": "Boost active for this charging session.",
+        "stateActive": "Battery boost active",
+        "stateBelowLimit": "Battery too low for boost",
+        "stateReady": "Battery boost ready"
       },
       "batteryUsage": "Home Battery",
       "currents": "Charging Current",

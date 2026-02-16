@@ -31,13 +31,13 @@ test.describe("boost", async () => {
     );
     await modal.getByLabel("Close").click();
     await expectModalHidden(modal);
-    const status = page.getByTestId("vehicle-status");
+    await expect(boostButton).toHaveAttribute("aria-label", "Battery boost ready");
     // activate boost
     await boostButton.click();
-    await expect(status).toContainText("Boost until battery at 20%.");
+    await expect(boostButton).toHaveAttribute("aria-label", "Battery boost active");
     // deactivate boost
     await boostButton.click();
-    await expect(status).toContainText("Battery boost disabled.");
+    await expect(boostButton).toHaveAttribute("aria-label", "Battery boost ready");
   });
 
   test("battery too low for boost when limit above soc", async ({ page }) => {
@@ -52,9 +52,8 @@ test.describe("boost", async () => {
     await modal.getByTestId("battery-boost-limit").selectOption("90 %");
     await modal.getByLabel("Close").click();
     await expectModalHidden(modal);
-    // try to activate boost with limit (90%) above battery soc (50%)
-    await boostButton.click();
-    await expect(page.getByTestId("vehicle-status")).toContainText("Battery too low for boost.");
+    // limit (90%) above battery soc (50%)
+    await expect(boostButton).toHaveAttribute("aria-label", "Battery too low for boost");
   });
 
   test("boost button disabled in fast mode", async ({ page }) => {

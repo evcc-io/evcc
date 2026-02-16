@@ -5,6 +5,7 @@
 		:class="{ active, belowLimit, full }"
 		:style="{ '--soc': `${adjustedSoc}%` }"
 		:disabled="disabled"
+		:aria-label="ariaLabel"
 		data-testid="battery-boost-button"
 		@click="toggle"
 	>
@@ -72,6 +73,12 @@ export default defineComponent({
 		},
 		full(): boolean {
 			return !this.active && this.adjustedSoc >= 90;
+		},
+		ariaLabel(): string {
+			const t = (key: string) => this.$t(`main.loadpointSettings.batteryBoost.${key}`);
+			if (this.active) return t("stateActive");
+			if (this.belowLimit) return t("stateBelowLimit");
+			return t("stateReady");
 		},
 		iconActiveStyle() {
 			return {
