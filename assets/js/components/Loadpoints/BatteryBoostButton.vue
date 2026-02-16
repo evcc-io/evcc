@@ -227,6 +227,25 @@ export default defineComponent({
 .progress-bar {
 	height: 100%;
 	width: 100%;
+	background-image: linear-gradient(
+		0deg,
+		rgba(255, 255, 255, 0.15) 25%,
+		transparent 25%,
+		transparent 50%,
+		rgba(255, 255, 255, 0.15) 50%,
+		rgba(255, 255, 255, 0.15) 75%,
+		transparent 75%,
+		transparent
+	) !important;
+	animation: progress-bar-stripes-down 1s linear infinite !important;
+}
+@keyframes progress-bar-stripes-down {
+	from {
+		background-position: 0 0;
+	}
+	to {
+		background-position: 0 1rem;
+	}
 }
 .icon-wrapper {
 	position: absolute;
