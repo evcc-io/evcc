@@ -16,6 +16,7 @@ type CP struct {
 	mu          sync.RWMutex
 	log         *util.Logger
 	onceConnect sync.Once
+	onceMonitor sync.Once
 
 	id string
 
@@ -179,4 +180,10 @@ func (cp *CP) HasConnected() <-chan struct{} {
 // BootNotificationC returns the channel for monitoring BootNotification messages.
 func (cp *CP) BootNotificationC() <-chan *core.BootNotificationRequest {
 	return cp.bootNotificationRequestC
+}
+
+// StartMonitor ensures the given function runs only once per CP instance.
+// Used to start the reboot monitor goroutine for multi-connector charge points.
+func (cp *CP) StartMonitor(start func()) {
+	cp.onceMonitor.Do(start)
 }

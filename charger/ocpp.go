@@ -217,8 +217,10 @@ func NewOCPP(ctx context.Context,
 		go conn.WatchDog(ctx, 10*time.Second)
 	}
 
-	// monitor for charger reboots and re-run setup
-	go c.monitorReboot(ctx, meterValues, meterInterval, forcePowerCtrl)
+	// monitor for charger reboots and re-run setup (once per CP, not per connector)
+	cp.StartMonitor(func() {
+		go c.monitorReboot(ctx, meterValues, meterInterval, forcePowerCtrl)
+	})
 
 	return c, conn.Initialized()
 }
