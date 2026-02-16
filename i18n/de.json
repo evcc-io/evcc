@@ -961,6 +961,7 @@
       "charged": "Geladen",
       "co2": "⌀ CO₂",
       "duration": "Ladedauer",
+      "emission": "Emission",
       "fallbackName": "Ladepunkt",
       "finished": "Ladeende",
       "power": "Leistung",

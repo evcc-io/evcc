@@ -50,6 +50,7 @@ export default defineComponent({
 		sessionSolarPercentage: { type: Number, default: 0 },
 		chargeRemainingDurationInterpolated: { type: Number, default: 0 },
 		chargeDurationInterpolated: Number,
+		sessionEnergy: { type: Number, default: 0 },
 		tariffCo2: Number,
 		tariffGrid: Number,
 	},
@@ -101,6 +102,11 @@ export default defineComponent({
 					valueSm: this.fmtCo2Short(this.sessionCo2PerKWh),
 					available: this.tariffCo2 !== undefined,
 				},
+				{
+					key: "emission" as const,
+					value: this.emissionFormatted,
+					available: this.tariffCo2 !== undefined,
+				},
 			];
 			// only show options that are available
 			return result.filter(({ available }) => available === undefined || available);
@@ -141,6 +147,9 @@ export default defineComponent({
 		},
 		solarFormatted() {
 			return this.fmtPercentage(this.sessionSolarPercentage, 1);
+		},
+		emissionFormatted() {
+			return this.fmtGrams((this.sessionCo2PerKWh * this.sessionEnergy) / 1000);
 		},
 		priceFormatted() {
 			return `${this.fmtMoney(this.sessionPrice, this.currency)} ${this.fmtCurrencySymbol(

@@ -961,6 +961,7 @@
       "charged": "Charged",
       "co2": "⌀ CO₂",
       "duration": "Duration",
+      "emission": "Emission",
       "fallbackName": "Charging point",
       "finished": "Finish time",
       "power": "Power",
