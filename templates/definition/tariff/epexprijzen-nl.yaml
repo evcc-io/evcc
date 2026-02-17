@@ -52,7 +52,7 @@ render: |
   {{ include "tariff-base" . }}
   forecast:
     source: http
-    uri: https://epexprijzen.nl/api/v1/prices/{{ .provider }}/{{ index . "price-interval" }}
+    uri: https://epexprijzen.nl/api/v1/prices/{{ .provider }}/{{ index . "price-interval" }}?nocache={{ now | date "2006010215" }}
     jq: |
       . as $root |
       ({{ if index . "tax" }}($root.energy_tax // 0){{ else }}0{{ end }}) as $energy_tax |
