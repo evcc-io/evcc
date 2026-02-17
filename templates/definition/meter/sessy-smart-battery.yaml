@@ -9,6 +9,10 @@ params:
     choice: ["battery"]
   - name: host
     required: true
+  - name: user
+    required: true
+  - name: password
+    required: true
   - name: cache
     advanced: true
     default: 60
@@ -21,6 +25,10 @@ render: |
     source: http
     uri: http://{{ .host }}/api/v1/power/status
     method: GET
+    auth:
+      type: basic
+      user: {{ .user }}
+      password: {{ .password }}
     headers:
       - content-type: application/json
     insecure: false
@@ -31,6 +39,10 @@ render: |
     source: http
     uri: http://{{ .host }}/api/v1/energy/status
     method: GET
+    auth:
+      type: basic
+      user: {{ .user }}
+      password: {{ .password }}
     headers:
       - content-type: application/json
     insecure: false
@@ -41,6 +53,10 @@ render: |
     source: http
     uri: http://{{ .host }}/api/v1/power/status
     method: GET
+    auth:
+      type: basic
+      user: {{ .user }}
+      password: {{ .password }}
     headers:
       - content-type: application/json
     insecure: false
@@ -52,6 +68,10 @@ render: |
     - source: http
       uri: http://{{ .host }}/api/v1/power/status
       method: GET
+      auth:
+        type: basic
+        user: {{ .user }}
+        password: {{ .password }}
       headers:
         - content-type: application/json
       insecure: false
@@ -62,6 +82,10 @@ render: |
     - source: http
       uri: http://{{ .host }}/api/v1/power/status
       method: GET
+      auth:
+        type: basic
+        user: {{ .user }}
+        password: {{ .password }}
       headers:
         - content-type: application/json
       insecure: false
@@ -72,6 +96,10 @@ render: |
     - source: http
       uri: http://{{ .host }}/api/v1/power/status
       method: GET
+      auth:
+        type: basic
+        user: {{ .user }}
+        password: {{ .password }}
       headers:
         - content-type: application/json
       insecure: false
