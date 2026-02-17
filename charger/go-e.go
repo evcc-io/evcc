@@ -170,7 +170,7 @@ func (c *GoE) CurrentPower() (float64, error) {
 
 var _ api.PhasePowers = (*GoE)(nil)
 
-// Voltages implements the api.PhasePowers interface
+// Powers implements the api.PhasePowers interface
 func (c *GoE) Powers() (float64, float64, float64, error) {
 	resp, err := c.api.Status()
 	if err != nil {
