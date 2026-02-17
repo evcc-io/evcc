@@ -192,7 +192,7 @@ paths:
     post:
       operationId: setLoadpointBatteryBoost
       summary: Set battery boost
-      description: "Enable or disable battery boost."
+      description: "Enable or disable battery boost. When active, the maximum available home battery power is added until the home battery is drained to configured SoC limit."
       externalDocs:
         url: https://docs.evcc.io/en/docs/features/battery#battery-boost
       tags:
@@ -203,6 +203,21 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/BooleanResult"
+  /loadpoints/{id}/batteryboostlimit/{soc}:
+    post:
+      operationId: setLoadpointBatteryBoostLimit
+      summary: Set battery boost SoC limit
+      description: "Set the SoC limit for battery boost. Home battery will be used to support charging up to this SoC level. A value of 100 (default) disabled the boost feature in UI and API."
+      externalDocs:
+        url: https://docs.evcc.io/en/docs/features/battery#battery-boost
+      tags:
+        - loadpoints
+      parameters:
+        - $ref: "#/components/parameters/id"
+        - $ref: "#/components/parameters/soc"
+      responses:
+        "200":
+          $ref: "#/components/responses/IntegerResult"
   /loadpoints/{id}/disable/delay/{delay}:
     post:
       operationId: setLoadpointDisableDelay

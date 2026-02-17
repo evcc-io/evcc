@@ -1,23 +1,19 @@
-package push
+package messenger
 
 import (
 	"context"
 	"fmt"
 	"strings"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	reg "github.com/evcc-io/evcc/util/registry"
 )
 
-// Messenger implements message sending
-type Messenger interface {
-	Send(title, msg string)
-}
-
-var registry = reg.New[Messenger]("messenger")
+var registry = reg.New[api.Messenger]("messenger")
 
 // NewFromConfig creates messenger from configuration
-func NewFromConfig(ctx context.Context, typ string, other map[string]any) (Messenger, error) {
+func NewFromConfig(ctx context.Context, typ string, other map[string]any) (api.Messenger, error) {
 	factory, err := registry.Get(strings.ToLower(typ))
 	if err != nil {
 		return nil, err

@@ -981,7 +981,7 @@
     },
     "loadpointSettings": {
       "batteryBoost": {
-        "description": "Schnell vun der Hausbatterie lueden.",
+        "description": "Schnell vun der Hausbatterie lueden, bis se op {limit} entlueden ass.",
         "label": "Batterie Boost",
         "mode": "Nëmmen am PV- a Min+PV-Modus verfügbar.",
         "once": "Boost ass dir dës Luedsessioun aktivéiert."
