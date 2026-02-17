@@ -390,6 +390,7 @@ export type SessionInfoKey =
   | "solar"
   | "avgPrice"
   | "price"
+  | "emission"
   | "co2";
 
 export interface SponsorStatus {
