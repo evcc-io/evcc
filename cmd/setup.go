@@ -81,10 +81,10 @@ var conf = globalconfig.All{
 	},
 }
 
-var fromYaml struct {
-	sponsor bool
-	hems    bool
-	eebus   bool
+var yamlSource struct {
+	sponsor globalconfig.YamlSource
+	hems    globalconfig.YamlSource
+	eebus   globalconfig.YamlSource
 }
 
 var nameRE = regexp.MustCompile(`^[a-zA-Z0-9_.:-]+$`)
@@ -505,7 +505,7 @@ func configureSponsorship(token string) (err error) {
 			return err
 		}
 	} else if token != "" {
-		fromYaml.sponsor = true
+		yamlSource.sponsor = globalconfig.YamlSourceFile
 	}
 
 	return sponsor.ConfigureSponsorship(token)
@@ -715,9 +715,10 @@ func configureHEMS(conf *globalconfig.Hems, site *core.Site) (hemsapi.API, error
 			if err := settings.Yaml(keys.Hems, new(map[string]any), &conf); err != nil {
 				return nil, err
 			}
+			yamlSource.hems = globalconfig.YamlSourceDb
 		}
 	} else {
-		fromYaml.hems = true
+		yamlSource.hems = globalconfig.YamlSourceFile
 	}
 
 	if conf.Type == "" {
@@ -785,7 +786,7 @@ func configureEEBus(conf *eebus.Config) error {
 			return err
 		}
 	} else if conf.IsConfigured() {
-		fromYaml.eebus = true
+		yamlSource.eebus = globalconfig.YamlSourceFile
 	}
 
 	if !conf.IsConfigured() {
