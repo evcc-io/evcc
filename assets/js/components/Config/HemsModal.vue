@@ -47,7 +47,7 @@ export default {
 	components: { YamlModal },
 	mixins: [formatter],
 	props: {
-		yamlSource: Boolean,
+		yamlSource: String,
 	},
 	emits: ["changed"],
 	data() {
@@ -58,7 +58,7 @@ export default {
 	},
 	computed: {
 		fromYaml() {
-			return !!this.yamlSource && this.yamlSource === "file";
+			return this.yamlSource === "file";
 		},
 		sessionCount() {
 			return this.sessions.length;

@@ -145,7 +145,7 @@ export default {
 	emits: ["changed"],
 	computed: {
 		fromYaml(): boolean {
-			return !!this.yamlSource && this.yamlSource === "file";
+			return this.yamlSource === "file";
 		},
 	},
 	methods: {
