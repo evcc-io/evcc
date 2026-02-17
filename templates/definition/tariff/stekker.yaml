@@ -1,5 +1,4 @@
 template: stekker
-deprecated: true
 products:
   - brand: Stekker spot prices and AI Forecast
 requirements:
