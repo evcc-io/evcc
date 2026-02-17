@@ -522,7 +522,6 @@ test.describe("heating loadpoint", async () => {
     // add loadpoint
     await newLoadpoint(page, "Wärmepumpe", LoadpointType.Heating);
     const lpModal = page.getByTestId("loadpoint-modal");
-    await lpModal.getByRole("button", { name: "Add heater" }).click();
     await addDemoCharger(page, LoadpointType.Heating);
 
     // check heading
