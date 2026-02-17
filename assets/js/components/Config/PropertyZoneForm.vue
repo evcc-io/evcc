@@ -144,31 +144,28 @@ export default {
 		monthOptions() {
 			return this.getMonthsList("long");
 		},
-		validatePrice() {
+		isValidPrice() {
 			const price = this.uiZone.price;
-			return price === null || isNaN(price);
+			return price !== null && !isNaN(price);
 		},
-		validateTimeRange() {
+		isValidTimeRange() {
 			const { timeFrom, timeTo } = this.uiZone;
-			// All-day is valid
-			if (!timeFrom && !timeTo) return false;
-			if (timeFrom === "00:00" && timeTo === "00:00") return false;
-			// Require both or neither
-			if (!timeFrom || !timeTo) return true;
-			// Invalid range
-			if (timeTo === "00:00" && timeFrom !== "00:00") return true;
-			return timeFrom >= timeTo;
+			// values required
+			if (!timeFrom || !timeTo) return false;
+			// end of day
+			if (timeTo === "00:00") return true;
+			return timeFrom < timeTo;
 		},
 		isTimeRangeInvalid() {
 			if (!this.saveAttempted) return false;
-			return this.validateTimeRange;
+			return !this.isValidTimeRange;
 		},
 		isPriceInvalid() {
 			if (!this.saveAttempted) return false;
-			return this.validatePrice;
+			return !this.isValidPrice;
 		},
 		hasValidationErrors() {
-			return this.validatePrice || this.validateTimeRange;
+			return !this.isValidPrice || !this.isValidTimeRange;
 		},
 	},
 	watch: {
