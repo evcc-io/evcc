@@ -457,6 +457,7 @@ params:
       de: Breitengrad
     type: float
     example: 55.7351
+    service: location/lat
   - name: lon
     private: true
     description:
@@ -464,6 +465,7 @@ params:
       de: Längengrad
     type: float
     example: 9.1275
+    service: lon
 
 presets:
   vehicle-base:
