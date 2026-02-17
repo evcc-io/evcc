@@ -112,7 +112,7 @@ export default {
 			return this.sponsor?.status?.token;
 		},
 		fromYaml() {
-			return this.sponsor?.fromYaml;
+			return !!this.sponsor?.yamlSource;
 		},
 		name() {
 			return this.sponsor?.status?.name || "";

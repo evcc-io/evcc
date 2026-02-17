@@ -35,7 +35,7 @@ func init() {
 	registry.AddCtx("openwb-native", NewOpenWbNativeFromConfig)
 }
 
-//go:generate go tool decorate -o openwb-native_decorators_linux.go -f decorateOpenWbNative -b *OpenWbNative -r api.Charger -t "api.ChargerEx,MaxCurrentMillis,func(float64) error" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.Identifier,Identify,func() (string, error)"
+//go:generate go tool decorate -o openwb-native_decorators_linux.go -f decorateOpenWbNative -b *OpenWbNative -r api.Charger -t api.ChargerEx,api.PhaseSwitcher,api.Identifier
 
 // NewOpenWbNativeFromConfig creates an OpenWbNative charger from generic config
 func NewOpenWbNativeFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
