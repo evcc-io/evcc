@@ -511,7 +511,7 @@ func configureSponsorship(token string) (err error) {
 			// just warn, no error to not break previous behavior
 			log.WARN.Println("sponsortoken configured via UI yaml; evcc.yaml config will be ignored")
 		} else {
-			yamlSource.sponsor = globalconfig.YamlSourceFs
+			yamlSource.sponsor = globalconfig.YamlSourceFile
 		}
 	}
 
@@ -717,10 +717,10 @@ func configureGo(conf []globalconfig.Go) error {
 func configureHEMS(conf *globalconfig.Hems, site *core.Site) (hemsapi.API, error) {
 	// use yaml if configured
 	if conf.Type != "" {
-		yamlSource.hems = globalconfig.YamlSourceFs
+		yamlSource.hems = globalconfig.YamlSourceFile
 	}
 	if settings.Exists(keys.Hems) {
-		if yamlSource.hems == globalconfig.YamlSourceFs {
+		if yamlSource.hems == globalconfig.YamlSourceFile {
 			// just warn, no error to not break previous behavior
 			log.WARN.Println("sponsortoken configured via evcc.yaml; UI yaml config will be ignored")
 		} else {
@@ -792,11 +792,11 @@ func configureOCPP(cfg *ocpp.Config, externalUrl string) {
 // setup EEBus
 func configureEEBus(conf *eebus.Config) error {
 	if conf.IsConfigured() {
-		yamlSource.hems = globalconfig.YamlSourceFs
+		yamlSource.hems = globalconfig.YamlSourceFile
 	}
 	// migrate settings
 	if settings.Exists(keys.EEBus) {
-		if yamlSource.hems == globalconfig.YamlSourceFs {
+		if yamlSource.hems == globalconfig.YamlSourceFile {
 			// just warn, no error to not break previous behavior
 			log.WARN.Println("eebus configured via UI; evcc.yaml config will be ignored")
 		} else {

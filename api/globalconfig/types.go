@@ -28,7 +28,7 @@ type ConfigStatus struct {
 type YamlSource string
 
 const (
-	YamlSourceFs   YamlSource = "file"
+	YamlSourceFile YamlSource = "file"
 	YamlSourceDb   YamlSource = "db"
 	YamlSourceNone YamlSource = ""
 )

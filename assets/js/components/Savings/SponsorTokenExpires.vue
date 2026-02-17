@@ -10,7 +10,7 @@
 			<i18n-t
 				tag="span"
 				:keypath="
-					yamlSource === 'file'
+					!!yamlSource
 						? 'settings.sponsorToken.expiresUpdateYaml'
 						: 'settings.sponsorToken.expiresUpdateUi'
 				"
