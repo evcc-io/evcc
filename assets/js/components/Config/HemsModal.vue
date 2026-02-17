@@ -58,7 +58,7 @@ export default {
 	},
 	computed: {
 		fromYaml() {
-			return this.yamlSource === "file";
+			return !!this.yamlSource;
 		},
 		sessionCount() {
 			return this.sessions.length;
