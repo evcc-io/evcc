@@ -85,7 +85,8 @@ export interface State {
   sponsor?: ConfigStatus<unknown, SponsorStatus>;
   eebus?: ConfigStatus<EebusConfig, EebusStatus>;
   modbusproxy?: ModbusProxy[];
-  messaging?: any;
+  messaging?: ConfigStatus<unknown, unknown>;
+  messagingEvents?: MessagingEvents;
   interval?: number;
   circuits?: Record<string, Circuit>;
   siteTitle?: string;
@@ -163,6 +164,7 @@ export enum ConfigType {
 }
 
 export type ConfigVehicle = Entity;
+export type ConfigMessenger = Entity;
 
 // Configuration-specific types for device setup/configuration contexts
 export interface ConfigCharger extends Omit<Entity, "type"> {
@@ -394,6 +396,7 @@ export type SessionInfoKey =
   | "solar"
   | "avgPrice"
   | "price"
+  | "emission"
   | "co2";
 
 export interface SponsorStatus {
@@ -472,6 +475,25 @@ export type ModbusProxy = {
   settings: ModbusProxySettings;
 };
 
+export type MessagingEvents = Record<MESSAGING_EVENTS, MessagingEvent>;
+
+export enum MESSAGING_EVENTS {
+  START = "start",
+  STOP = "stop",
+  CONNECT = "connect",
+  DISCONNECT = "disconnect",
+  SOC = "soc",
+  GUEST = "guest",
+  ASLEEP = "asleep",
+  PLANOVERRUN = "planoverrun",
+}
+
+export interface MessagingEvent {
+  title: string;
+  msg: string;
+  disabled: boolean;
+}
+
 export interface ModbusProxySettings {
   uri?: string;
   rtu?: boolean;
@@ -523,6 +545,11 @@ export interface Vehicle {
 
 export type Timeout = ReturnType<typeof setInterval> | null;
 
+export interface VehicleStatus {
+  message: string;
+  type?: string;
+}
+
 export interface Tariff {
   rates: Rate[];
   lastUpdate: Date;
@@ -561,7 +588,7 @@ export interface SelectOption<T> {
   disabled?: boolean;
 }
 
-export type DeviceType = "charger" | "meter" | "vehicle" | "loadpoint" | "tariff";
+export type DeviceType = "charger" | "meter" | "vehicle" | "loadpoint" | "messenger" | "tariff";
 export type MeterType = "grid" | "pv" | "battery" | "charge" | "aux" | "ext";
 export type MeterTemplateUsage = "grid" | "pv" | "battery" | "charge" | "aux";
 export type TariffType = "grid" | "feedIn" | "co2" | "planner" | "solar";

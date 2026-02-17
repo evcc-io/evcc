@@ -741,7 +741,7 @@
     },
     "loadpointSettings": {
       "batteryBoost": {
-        "description": "Fast மின்னூட்டு இருந்து வீடு battery.",
+        "description": "வீட்டு மின்கலத்திலிருந்து {limit} வரை இறங்கும் வரை விரைவு மின்னூட்டம்.",
         "label": "மின்கலம் ஊட்டம்",
         "mode": "ஞாயிறு மற்றும் குறை+ஞாயிறு பயன்முறையில் மட்டுமே கிடைக்கும்.",
         "once": "Boost செயலில் க்கு this charging session."

@@ -983,7 +983,7 @@
     },
     "loadpointSettings": {
       "batteryBoost": {
-        "description": "Greitas įkrovimas iš namų kaupiklio.",
+        "description": "Greitas įkrovimas iš namų kaupiklio, kol jis išsikraus iki {limit}.",
         "label": "Kaupikliu paspartintas įkrovimas",
         "mode": "Galimas tik Saulė ir Min+Saulė režimuose.",
         "once": "Paspartinimas aktyvuotas šiai įkrovimo sesijai."

@@ -19,26 +19,12 @@
 				:title="name"
 				>{{ title }}</strong
 			>
-			<button
-				ref="tooltip"
-				type="button"
-				class="btn btn-sm btn-outline-secondary position-relative border-0 p-2 edit-button"
-				:class="{ 'opacity-25': !editable, invisible: noEditButton }"
-				data-bs-toggle="tooltip"
-				data-bs-html="true"
-				:title="tooltipTitle"
-				:aria-label="editable ? $t('config.main.edit') : null"
-				:disabled="!editable || noEditButton"
-				@click="edit"
-			>
-				<span
-					v-if="badge"
-					class="position-absolute top-0 start-100 translate-middle p-2 rounded-circle bg-warning"
-				>
-					<span class="visually-hidden">new</span>
-				</span>
-				<shopicon-regular-adjust size="s"></shopicon-regular-adjust>
-			</button>
+			<DeviceCardEditIcon
+				:editable="editable"
+				:noEditButton="noEditButton"
+				:badge="badge"
+				@edit="$emit('edit')"
+			/>
 		</div>
 		<div v-if="$slots.tags">
 			<hr class="my-3 divide" />
@@ -48,12 +34,11 @@
 </template>
 
 <script>
-import "@h2d2/shopicons/es/regular/adjust";
-import "@h2d2/shopicons/es/regular/invoice";
-import Tooltip from "bootstrap/js/dist/tooltip";
+import DeviceCardEditIcon from "./DeviceCardEditIcon.vue";
 
 export default {
 	name: "DeviceCard",
+	components: { DeviceCardEditIcon },
 	props: {
 		name: String,
 		title: String,
@@ -65,50 +50,6 @@ export default {
 		badge: Boolean,
 	},
 	emits: ["edit"],
-	data() {
-		return {
-			tooltip: null,
-		};
-	},
-	computed: {
-		tooltipTitle() {
-			let result = "";
-			if (this.name) {
-				result += `${this.$t("config.main.name")}: <span class='font-monospace'>${this.name}</span>`;
-			}
-			if (!this.editable) {
-				result += `<div class="mt-1">${this.$t("config.general.fromYamlHint")}</div>`;
-			}
-			if (!result) {
-				return "";
-			}
-			return `<div class="text-start">${result}</div>`;
-		},
-	},
-	watch: {
-		tooltipTitle() {
-			this.initTooltip();
-		},
-	},
-	mounted() {
-		this.initTooltip();
-	},
-	methods: {
-		edit() {
-			if (this.editable) {
-				this.tooltip?.hide();
-				this.$emit("edit");
-			}
-		},
-		initTooltip() {
-			this.$nextTick(() => {
-				this.tooltip?.dispose();
-				if (this.$refs.tooltip) {
-					this.tooltip = new Tooltip(this.$refs.tooltip);
-				}
-			});
-		},
-	},
 };
 </script>
 
@@ -139,15 +80,8 @@ export default {
 .icon:empty {
 	display: none;
 }
-.edit-button {
-	/* transparent button, right align icon */
-	margin-right: -0.5rem;
-}
 .divide {
 	margin-left: -1.5rem;
 	margin-right: -1.5rem;
-}
-button:disabled {
-	pointer-events: auto;
 }
 </style>

@@ -11,7 +11,7 @@
 		:currency="currency"
 		:preserve-on-template-change="preserveFields"
 		@added="handleAdded"
-		@updated="$emit('updated')"
+		@updated="handleUpdated"
 		@removed="handleRemoved"
 		@close="handleClose"
 	>
@@ -85,7 +85,7 @@ export default defineComponent({
 	props: {
 		currency: { type: String as PropType<CURRENCY>, default: CURRENCY.EUR },
 	},
-	emits: ["added", "updated", "removed", "close"],
+	emits: ["changed", "close"],
 	data() {
 		return {
 			initialValues,
@@ -233,10 +233,13 @@ export default defineComponent({
 			this.selectedType = type;
 		},
 		handleAdded(name: string) {
-			this.$emit("added", this.tariffType, name);
+			this.$emit("changed", { action: "added", type: this.tariffType, name });
+		},
+		handleUpdated() {
+			this.$emit("changed", { action: "updated", type: this.tariffType });
 		},
 		handleRemoved() {
-			this.$emit("removed", this.tariffType);
+			this.$emit("changed", { action: "removed", type: this.tariffType });
 		},
 		handleClose() {
 			this.selectedType = null;

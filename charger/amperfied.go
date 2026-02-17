@@ -59,7 +59,7 @@ func init() {
 	registry.AddCtx("amperfied", NewAmperfiedFromConfig)
 }
 
-//go:generate go tool decorate -f decorateAmperfied -b *Amperfied -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
+//go:generate go tool decorate -f decorateAmperfied -b *Amperfied -r api.Charger -t api.PhaseSwitcher,api.PhaseGetter
 
 // NewAmperfiedFromConfig creates a Amperfied charger from generic config
 func NewAmperfiedFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {

@@ -2,10 +2,10 @@ template: orno-we525_526
 products:
   - brand: ORNO
     description:
-      generic: WE-525
+      generic: OR-WE-525
   - brand: ORNO
     description:
-      generic: WE-526
+      generic: OR-WE-526
 params:
   - name: usage
     choice: ["pv", "charge"]

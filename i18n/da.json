@@ -983,7 +983,7 @@
     },
     "loadpointSettings": {
       "batteryBoost": {
-        "description": "Hurtig opladning fra husbatteriet.",
+        "description": "Hurtig opladning fra husbatteriet, indtil det er afladet til {limit}.",
         "label": "Batteri boost",
         "mode": "Kun tilgængelig i solar og min+solar mode.",
         "once": "Boost er aktiveret for denne opladning."

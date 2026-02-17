@@ -953,7 +953,7 @@
     },
     "loadpointSettings": {
       "batteryBoost": {
-        "description": "Hurtiglading fra hjemmebatteriet.",
+        "description": "Hurtiglading fra hjemmebatteriet til det er utladet til {limit}.",
         "label": "Batteriboost",
         "mode": "Kun tilgjengelig i solenergi- og min+solenergi-modus.",
         "once": "Boost aktiv for denne ladingsøkten."

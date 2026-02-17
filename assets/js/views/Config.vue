@@ -252,11 +252,12 @@
 					</DeviceCard>
 					<DeviceCard
 						:title="$t('config.messaging.title')"
-						editable
+						:editable="messagingYamlSource !== 'file'"
 						:error="hasClassError('messenger')"
 						:unconfigured="isUnconfigured(messagingTags)"
+						:badge="messagingYamlSource === 'db'"
 						data-testid="messaging"
-						@edit="openModal('messaging')"
+						@edit="openMessagingModal"
 					>
 						<template #icon><NotificationIcon /></template>
 						<template #tags>
@@ -295,7 +296,7 @@
 								v-else
 								:key="circuit.name"
 							>
-								<hr v-if="idx > 0" />
+								<hr v-if="Number(idx) > 0" />
 								<p class="my-2 fw-bold">
 									{{ circuit.config?.title }}
 									<code>({{ circuit.name }})</code>
@@ -402,29 +403,22 @@
 				<MqttModal @changed="loadDirty" />
 				<NetworkModal @changed="loadDirty" />
 				<ControlModal @changed="loadDirty" />
-				<HemsModal :yamlSource="hems?.yamlSource" @changed="yamlChanged" />
+				<HemsModal :yamlSource="hems?.yamlSource" @changed="loadDirty" />
 				<ShmModal @changed="loadDirty" />
-				<MessagingModal @changed="yamlChanged" />
-				<TariffsLegacyModal @changed="yamlChanged" />
-				<TariffModal
-					:currency="currency"
-					@added="tariffAdded"
-					@updated="tariffChanged"
-					@removed="tariffRemoved"
-				/>
+				<MessagingLegacyModal @changed="loadDirty" />
+				<MessagingModal :messengers="messengers" @changed="loadDirty" />
+				<MessengerModal @changed="messengerChanged" />
+				<TariffsLegacyModal @changed="loadDirty" />
+				<TariffModal :currency="currency" @changed="tariffChanged" />
 				<TelemetryModal :sponsor="sponsor" :telemetry="telemetry" />
 				<ExperimentalModal :experimental="experimental" />
 				<TitleModal @changed="loadDirty" />
 				<ModbusProxyModal :is-sponsor="isSponsor" @changed="loadDirty" />
-				<CircuitsModal
-					:gridMeter="gridMeter"
-					:extMeters="extMeters"
-					@changed="yamlChanged"
-				/>
+				<CircuitsModal :gridMeter="gridMeter" :extMeters="extMeters" @changed="loadDirty" />
 				<EebusModal
 					:status="eebus?.status"
 					:yamlSource="eebus?.yamlSource"
-					@changed="yamlChanged"
+					@changed="loadDirty"
 				/>
 				<OcppModal :ocpp="ocpp" />
 				<BackupRestoreModal v-bind="backupRestoreProps" />
@@ -463,7 +457,9 @@ import InfluxIcon from "../components/MaterialIcon/Influx.vue";
 import InfluxModal from "../components/Config/InfluxModal.vue";
 import LoadpointModal from "../components/Config/LoadpointModal.vue";
 import LoadpointIcon from "../components/MaterialIcon/Loadpoint.vue";
-import MessagingModal from "../components/Config/MessagingModal.vue";
+import MessagingModal from "../components/Config/Messaging/MessagingModal.vue";
+import MessengerModal from "@/components/Config/Messaging/MessengerModal.vue";
+import MessagingLegacyModal from "@/components/Config/Messaging/MessagingLegacyModal.vue";
 import MeterModal from "../components/Config/MeterModal.vue";
 import MeterCard from "../components/Config/MeterCard.vue";
 import { openModal, type ModalResult } from "@/configModal";
@@ -491,6 +487,7 @@ import type {
 	ConfigCharger,
 	ConfigVehicle,
 	ConfigCircuit,
+	ConfigMessenger,
 	ConfigLoadpoint,
 	ConfigMeter,
 	Timeout,
@@ -538,7 +535,9 @@ export default defineComponent({
 		ShmIcon,
 		InfluxIcon,
 		InfluxModal,
+		MessagingLegacyModal,
 		MessagingModal,
+		MessengerModal,
 		MeterModal,
 		MeterCard,
 		LoadpointModal,
@@ -571,6 +570,7 @@ export default defineComponent({
 	},
 	data() {
 		return {
+			messengers: [] as ConfigMessenger[],
 			vehicles: [] as ConfigVehicle[],
 			meters: [] as ConfigMeter[],
 			loadpoints: [] as ConfigLoadpoint[],
@@ -598,6 +598,7 @@ export default defineComponent({
 				vehicle: {},
 				charger: {},
 				loadpoint: {},
+				messenger: {},
 				tariff: {},
 			} as DeviceValuesMap,
 			isComponentMounted: true,
@@ -777,7 +778,27 @@ export default defineComponent({
 			return { configured: { value: false } };
 		},
 		messagingTags(): DeviceTags {
-			return { configured: { value: store.state?.messaging || false } };
+			if (this.messagingUiConfigured) {
+				const events = store.state?.messagingEvents || [];
+				const enabledEvents = Object.values(events).filter((e: any) => !e.disabled).length;
+				return {
+					events: { value: enabledEvents },
+					messengers: { value: this.messengers.length },
+				};
+			}
+			return { configured: { value: this.messagingYamlConfigured } };
+		},
+		messagingYamlSource() {
+			return store.state.messaging?.yamlSource;
+		},
+		messagingYamlConfigured() {
+			return this.messagingYamlSource === "file" || this.messagingYamlSource === "db";
+		},
+		messagingUiConfigured() {
+			return (
+				this.messengers.length > 0 ||
+				Object.keys(store.state.messagingEvents ?? {}).length > 0
+			);
 		},
 		backupRestoreProps() {
 			return {
@@ -842,6 +863,7 @@ export default defineComponent({
 			await this.loadChargers();
 			await this.loadLoadpoints();
 			await this.loadCircuits();
+			await this.loadMessengers();
 			await this.loadTariffs();
 			await this.loadTariffRefs();
 			await this.loadDirty();
@@ -857,6 +879,9 @@ export default defineComponent({
 			const validateStatus = (code: number) => [200, 404].includes(code);
 			const response = await api.get(`/config/${path}`, { validateStatus });
 			return response.status === 200 ? response.data : undefined;
+		},
+		async loadMessengers() {
+			this.messengers = (await this.loadConfig("devices/messenger")) || [];
 		},
 		async loadVehicles() {
 			this.vehicles = (await this.loadConfig("devices/vehicle")) || [];
@@ -963,39 +988,34 @@ export default defineComponent({
 			this.loadVehicles();
 			this.loadDirty();
 		},
-		async tariffAdded(usage: TariffType, name: string) {
-			try {
-				// Update local tariffRefs
+		async tariffChanged(result: ModalResult) {
+			if (result.action === "added") {
+				const usage = result.type as TariffType;
+				const name = result.name!;
 				if (usage === "solar") {
 					this.tariffRefs.solar.push(name);
 				} else {
 					this.tariffRefs[usage] = name;
 				}
-
-				// Send entire struct
 				await api.put("/config/tariff", this.tariffRefs);
-				await this.loadTariffRefs();
-				await this.loadDirty();
-				this.tariffChanged();
-			} catch (error) {
-				console.error("tariffAdded error:", error);
-				throw error;
 			}
-		},
-		async tariffRemoved() {
-			await this.loadTariffRefs();
-			this.tariffChanged();
-		},
-		async tariffChanged() {
+			if (result.action === "removed") {
+				await this.loadTariffRefs();
+			}
 			await this.loadTariffs();
 			await this.loadTariffRefs();
-			this.loadDirty();
+			await this.loadDirty();
 			this.updateValues();
 		},
-		siteChanged() {
+		openMessagingModal() {
+			const modalName = this.messagingYamlSource === "db" ? "messaginglegacy" : "messaging";
+			openModal(modalName);
+		},
+		async messengerChanged() {
+			this.loadMessengers();
 			this.loadDirty();
 		},
-		yamlChanged() {
+		siteChanged() {
 			this.loadDirty();
 		},
 		async saveSite(key: keyof SiteConfig) {
@@ -1101,7 +1121,7 @@ export default defineComponent({
 			header?.requestAuthProvider(providerId);
 		},
 	},
-});
+}) as any;
 </script>
 <style scoped>
 .config-list {

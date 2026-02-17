@@ -73,7 +73,6 @@ render: |
   status:
     source: http
     uri: {{ .url }}:{{ .port }}/api/1/vehicles/{{ .vin }}/vehicle_data?endpoints=charge_state
-    method: GET
     jq: (if (.response.response.charge_state.charging_state == "Charging") then "C"
       elif (.response.response.charge_state.charging_state == "Stopped") then "B"
       elif (.response.response.charge_state.charging_state == "NoPower") then "B"
