@@ -788,7 +788,7 @@ func configureEEBus(conf *eebus.Config) error {
 	if settings.Exists(keys.EEBus) {
 		if yamlSource.eebus == globalconfig.YamlSourceFile {
 			// just warn, no error to not break previous behavior
-			log.WARN.Println("eebus configured via UI; evcc.yaml config will be ignored")
+			log.WARN.Println("eebus configured via evcc.yaml; UI config will be ignored")
 		} else {
 			yamlSource.eebus = globalconfig.YamlSourceDb
 			if err := migrateYamlToJson(keys.EEBus, conf); err != nil {
