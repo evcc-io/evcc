@@ -14,9 +14,9 @@ import (
 
 func init() {
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /lat", getLatitude)
-	mux.HandleFunc("GET /lon", getLongitude)
-	mux.HandleFunc("GET /ip", getIP)
+	mux.HandleFunc("GET /lat", update(getLatitude))
+	mux.HandleFunc("GET /lon", update(getLongitude))
+	mux.HandleFunc("GET /ip", update(getIP))
 
 	service.Register("location", mux)
 }
@@ -35,27 +35,28 @@ var (
 	location     IpApi
 )
 
-func update() {
-	onceLocation.Do(func() {
-		log := util.NewLogger("main")
-		client := request.NewHelper(log)
-		if err := client.GetJSON("http://ip-api.com/json", &location); err != nil {
-			log.ERROR.Printf("location: %v", err)
-		}
-	})
+func update(fun func(http.ResponseWriter, *http.Request)) func(w http.ResponseWriter, req *http.Request) {
+	return func(w http.ResponseWriter, req *http.Request) {
+		onceLocation.Do(func() {
+			log := util.NewLogger("main")
+			client := request.NewHelper(log)
+			if err := client.GetJSON("http://ip-api.com/json", &location); err != nil {
+				log.ERROR.Printf("location: %v", err)
+			}
+		})
+
+		fun(w, req)
+	}
 }
 
 func getLatitude(w http.ResponseWriter, req *http.Request) {
-	update()
 	json.NewEncoder(w).Encode([]string{cast.ToString(location.Lat)})
 }
 
 func getLongitude(w http.ResponseWriter, req *http.Request) {
-	update()
 	json.NewEncoder(w).Encode([]string{cast.ToString(location.Lon)})
 }
 
 func getIP(w http.ResponseWriter, req *http.Request) {
-	update()
 	json.NewEncoder(w).Encode([]string{location.Query.String()})
 }
