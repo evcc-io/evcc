@@ -149,7 +149,8 @@ export default defineComponent({
 			return this.fmtPercentage(this.sessionSolarPercentage, 1);
 		},
 		emissionFormatted() {
-			return this.fmtGrams((this.sessionCo2PerKWh * this.sessionEnergy) / 1000);
+			const kWh = this.sessionEnergy / 1000;
+			return this.fmtGrams(this.sessionCo2PerKWh * kWh);
 		},
 		priceFormatted() {
 			return `${this.fmtMoney(this.sessionPrice, this.currency)} ${this.fmtCurrencySymbol(
