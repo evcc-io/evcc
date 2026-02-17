@@ -60,7 +60,7 @@ func deleteSponsorTokenHandler(pub publisher) func(w http.ResponseWriter, r *htt
 
 		pub(keys.Sponsor, globalconfig.ConfigStatus{
 			Status:     sponsor.Status{},
-			YamlSource: globalconfig.YamlSourceDb,
+			YamlSource: globalconfig.YamlSourceNone,
 		})
 
 		setConfigDirty()
