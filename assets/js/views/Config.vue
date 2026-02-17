@@ -186,7 +186,7 @@
 					</DeviceCard>
 					<DeviceCard
 						:title="$t('config.messaging.title')"
-						:editable="messagingYamlSource !== 'fs'"
+						:editable="messagingYamlSource !== 'file'"
 						:error="hasClassError('messenger')"
 						:unconfigured="isUnconfigured(messagingTags)"
 						:badge="messagingYamlSource === 'db'"
@@ -337,7 +337,7 @@
 				<MqttModal @changed="loadDirty" />
 				<NetworkModal @changed="loadDirty" />
 				<ControlModal @changed="loadDirty" />
-				<HemsModal :fromYaml="hems?.fromYaml" @changed="loadDirty" />
+				<HemsModal :yamlSource="hems?.yamlSource" @changed="loadDirty" />
 				<ShmModal @changed="loadDirty" />
 				<MessagingLegacyModal @changed="loadDirty" />
 				<MessagingModal :messengers="messengers" @changed="loadDirty" />
@@ -350,7 +350,7 @@
 				<CircuitsModal :gridMeter="gridMeter" :extMeters="extMeters" @changed="loadDirty" />
 				<EebusModal
 					:status="eebus?.status"
-					:from-yaml="eebus?.fromYaml"
+					:yamlSource="eebus?.yamlSource"
 					@changed="loadDirty"
 				/>
 				<OcppModal :ocpp="ocpp" />
@@ -693,7 +693,7 @@ export default defineComponent({
 			return store.state.messaging?.yamlSource;
 		},
 		messagingYamlConfigured() {
-			return this.messagingYamlSource === "fs" || this.messagingYamlSource === "db";
+			return this.messagingYamlSource === "file" || this.messagingYamlSource === "db";
 		},
 		messagingUiConfigured() {
 			return (

@@ -41,11 +41,7 @@ export interface HemsStatus {
   maxPower: number;
 }
 
-export interface Hems {
-  status?: HemsStatus;
-  config: HemsConfig;
-  fromYaml: boolean;
-}
+export type Hems = ConfigStatus<HemsConfig, HemsStatus>;
 
 export interface ShmConfig {
   vendorId: string;
@@ -100,14 +96,13 @@ export interface State {
   ocpp?: Ocpp;
 }
 
-export interface ConfigStatus<T, S> {
-  config?: T;
+export interface ConfigStatus<C, S> {
+  config?: C;
   status?: S;
-  fromYaml?: boolean;
   yamlSource?: YamlSource;
 }
 
-export type YamlSource = "fs" | "db" | undefined;
+export type YamlSource = "file" | "db" | undefined;
 
 export interface OcppConfig {
   port: number;
@@ -404,10 +399,7 @@ export interface SponsorStatus {
   token?: string;
 }
 
-export interface Sponsor {
-  status?: SponsorStatus;
-  fromYaml: boolean;
-}
+export type Sponsor = ConfigStatus<any, SponsorStatus>;
 
 export type VehicleOption = {
   key?: string | null;
@@ -456,11 +448,7 @@ export type Certificate = {
   private: string;
 };
 
-export type Eebus = {
-  config: EebusConfig;
-  status: EebusStatus;
-  fromYaml?: boolean;
-};
+export type Eebus = ConfigStatus<EebusConfig, EebusStatus>;
 
 export type EebusConfig = {
   uri: string;

@@ -41,8 +41,8 @@ func updateSponsortokenHandler(pub publisher) func(w http.ResponseWriter, r *htt
 			}
 
 			pub(keys.Sponsor, globalconfig.ConfigStatus{
-				Status:   sponsor.RedactedStatus(),
-				FromYaml: false,
+				Status:     sponsor.RedactedStatus(),
+				YamlSource: globalconfig.YamlSourceNone,
 			})
 		}
 
@@ -59,8 +59,8 @@ func deleteSponsorTokenHandler(pub publisher) func(w http.ResponseWriter, r *htt
 		settings.SetString(keys.SponsorToken, "")
 
 		pub(keys.Sponsor, globalconfig.ConfigStatus{
-			Status:   sponsor.Status{},
-			FromYaml: false,
+			Status:     sponsor.Status{},
+			YamlSource: globalconfig.YamlSourceNone,
 		})
 
 		setConfigDirty()

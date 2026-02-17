@@ -81,10 +81,10 @@ var conf = globalconfig.All{
 	},
 }
 
-var fromYaml struct {
-	sponsor   bool
-	hems      bool
-	eebus     bool
+var yamlSource struct {
+	sponsor   globalconfig.YamlSource
+	hems      globalconfig.YamlSource
+	eebus     globalconfig.YamlSource
 	messaging globalconfig.YamlSource
 }
 
@@ -99,7 +99,7 @@ func nameValid(name string) error {
 
 func loadConfigFile(conf *globalconfig.All, checkDB bool) error {
 	if err := viper.ReadInConfig(); err != nil {
-		if !errors.As(err, &vpr.ConfigFileNotFoundError{}) {
+		if _, ok := errors.AsType[vpr.ConfigFileNotFoundError](err); !ok {
 			return fmt.Errorf("failed reading config file: %w", err)
 		}
 	}
@@ -372,7 +372,7 @@ func vehicleInstance(cc config.Named) (api.Vehicle, error) {
 	}
 
 	if err != nil {
-		if ce := new(util.ConfigError); errors.As(err, &ce) {
+		if _, ok := errors.AsType[*util.ConfigError](err); ok {
 			return nil, err
 		}
 
@@ -487,7 +487,7 @@ func configureSponsorship(token string) (err error) {
 			return err
 		}
 	} else if token != "" {
-		fromYaml.sponsor = true
+		yamlSource.sponsor = globalconfig.YamlSourceFile
 	}
 
 	return sponsor.ConfigureSponsorship(token)
@@ -697,9 +697,10 @@ func configureHEMS(conf *globalconfig.Hems, site *core.Site) (hemsapi.API, error
 			if err := settings.Yaml(keys.Hems, new(map[string]any), &conf); err != nil {
 				return nil, err
 			}
+			yamlSource.hems = globalconfig.YamlSourceDb
 		}
 	} else {
-		fromYaml.hems = true
+		yamlSource.hems = globalconfig.YamlSourceFile
 	}
 
 	if conf.Type == "" {
@@ -767,7 +768,7 @@ func configureEEBus(conf *eebus.Config) error {
 			return err
 		}
 	} else if conf.IsConfigured() {
-		fromYaml.eebus = true
+		yamlSource.eebus = globalconfig.YamlSourceFile
 	}
 
 	if !conf.IsConfigured() {
@@ -796,12 +797,12 @@ func configureEEBus(conf *eebus.Config) error {
 func configureMessengers(confMessaging *globalconfig.Messaging, confEvents *globalconfig.MessagingEvents, vehicles messenger.Vehicles, valueChan chan<- util.Param, cache *util.ParamCache) (chan messenger.Event, error) {
 	// yaml config from file
 	if len(confMessaging.Events) != 0 || len(confMessaging.Services) != 0 {
-		fromYaml.messaging = globalconfig.YamlSourceFs
+		yamlSource.messaging = globalconfig.YamlSourceFile
 	}
 
 	// yaml config from db (deprecated)
 	if settings.Exists(keys.Messaging) {
-		if fromYaml.messaging == globalconfig.YamlSourceFs {
+		if yamlSource.messaging == globalconfig.YamlSourceFile {
 			// just warn, no error to not break previous behavior
 			log.WARN.Println("messaging configured via UI yaml; evcc.yaml config will be ignored")
 		}
@@ -809,7 +810,7 @@ func configureMessengers(confMessaging *globalconfig.Messaging, confEvents *glob
 		if err := settings.Yaml(keys.Messaging, new(map[string]any), &confMessaging); err != nil {
 			return nil, err
 		}
-		fromYaml.messaging = globalconfig.YamlSourceDb
+		yamlSource.messaging = globalconfig.YamlSourceDb
 	}
 
 	if settings.Exists(keys.MessagingEvents) {
@@ -817,7 +818,7 @@ func configureMessengers(confMessaging *globalconfig.Messaging, confEvents *glob
 		if err := settings.Json(keys.MessagingEvents, &confEvents); err != nil {
 			return nil, err
 		}
-		if fromYaml.messaging != globalconfig.YamlSourceNone && confEvents != nil {
+		if yamlSource.messaging != globalconfig.YamlSourceNone && confEvents != nil {
 			return nil, errors.New("yaml and device config exists for messaging; remove yaml config")
 		}
 	}
@@ -890,7 +891,7 @@ func tariffInstance(name string, conf config.Typed) (api.Tariff, error) {
 
 	instance, err := tariff.NewFromConfig(ctx, conf.Type, props)
 	if err != nil {
-		if ce := new(util.ConfigError); errors.As(err, &ce) {
+		if _, ok := errors.AsType[*util.ConfigError](err); ok {
 			return nil, err
 		}
 
