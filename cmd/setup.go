@@ -504,7 +504,6 @@ func configureSponsorship(token string) (err error) {
 		if token, err = settings.String(keys.SponsorToken); err != nil {
 			return err
 		}
-		yamlSource.sponsor = globalconfig.YamlSourceDb
 	} else if token != "" {
 		yamlSource.sponsor = globalconfig.YamlSourceFile
 	}
@@ -801,7 +800,6 @@ func configureEEBus(conf *eebus.Config) error {
 		if err := settings.SetJson(keys.EEBus, conf); err != nil {
 			return err
 		}
-		yamlSource.eebus = globalconfig.YamlSourceDb
 	}
 
 	var err error
