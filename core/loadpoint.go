@@ -118,6 +118,7 @@ type Loadpoint struct {
 	smartCostLimit           *float64 // always charge if consumption cost is below this value
 	smartFeedInPriorityLimit *float64 // prevent charging if feed-in cost is above this value
 	batteryBoost             int      // battery boost state
+	batteryBoostLimit        int      // battery boost soc limit (0-100, 100=disabled)
 
 	mode                api.ChargeMode
 	enabled             bool      // Charger enabled state
@@ -286,14 +287,15 @@ func NewLoadpoint(log *util.Logger, settings settings.Settings) *Loadpoint {
 	bus := evbus.New()
 
 	lp := &Loadpoint{
-		log:        log,      // logger
-		settings:   settings, // settings
-		clock:      clock,    // mockable time
-		bus:        bus,      // event bus
-		mode:       api.ModeOff,
-		status:     api.StatusNone,
-		minCurrent: 6,  // A
-		maxCurrent: 16, // A
+		log:               log,      // logger
+		settings:          settings, // settings
+		clock:             clock,    // mockable time
+		bus:               bus,      // event bus
+		mode:              api.ModeOff,
+		status:            api.StatusNone,
+		minCurrent:        6,   // A
+		maxCurrent:        16,  // A
+		batteryBoostLimit: 100, // disabled
 		Soc: loadpoint.SocConfig{
 			Poll: loadpoint.PollConfig{
 				Interval: pollInterval,
@@ -357,6 +359,9 @@ func (lp *Loadpoint) restoreSettings() {
 	}
 	if v, err := lp.settings.Float(keys.SmartFeedInPriorityLimit); err == nil {
 		lp.SetSmartFeedInPriorityLimit(&v)
+	}
+	if v, err := lp.settings.Int(keys.BatteryBoostLimit); err == nil {
+		lp.SetBatteryBoostLimit(int(v))
 	}
 
 	var thresholds loadpoint.ThresholdsConfig
@@ -699,6 +704,7 @@ func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan c
 
 	// battery boost
 	lp.publish(keys.BatteryBoost, lp.batteryBoost != boostDisabled)
+	lp.publish(keys.BatteryBoostLimit, lp.batteryBoostLimit)
 
 	// read initial charger state to prevent immediately disabling charger
 	if enabled, err := lp.charger.Enabled(); err == nil {
@@ -1860,6 +1866,18 @@ func (lp *Loadpoint) phaseSwitchCompleted() bool {
 
 // Update is the main control function. It reevaluates meters and charger state
 func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64) {
+	// auto-disable battery boost when SOC drops below limit
+	if lp.GetBatteryBoost() != boostDisabled {
+		limit := lp.GetBatteryBoostLimit()
+		if limit < 100 {
+			batterySoc := lp.site.GetBatterySoc()
+			if batterySoc < float64(limit) {
+				lp.log.DEBUG.Printf("battery boost disabled: soc below limit (%.0f%% < %d%%)", batterySoc, limit)
+				_ = lp.SetBatteryBoost(false)
+			}
+		}
+	}
+
 	// smart cost
 	smartCostActive, smartCostNextStart := lp.checkSmartLimit(lp.GetSmartCostLimit(), consumption, true)
 	lp.publish(keys.SmartCostActive, smartCostActive)

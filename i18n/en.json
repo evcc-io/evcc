@@ -1033,10 +1033,15 @@
     },
     "loadpointSettings": {
       "batteryBoost": {
-        "description": "Fast charge from home battery.",
+        "description": "Allow fast charging from home battery until it's drained to {limit}.",
+        "descriptionDisabled": "Select a limit to allow fast charging from home battery.",
+        "disabled": "Disabled",
         "label": "Battery Boost",
         "mode": "Only available in solar and min+solar mode.",
-        "once": "Boost active for this charging session."
+        "once": "Boost active for this charging session.",
+        "stateActive": "Battery boost active",
+        "stateBelowLimit": "Battery too low for boost",
+        "stateReady": "Battery boost ready"
       },
       "batteryUsage": "Home Battery",
       "currents": "Charging Current",
@@ -1142,6 +1147,9 @@
     "vehicleStatus": {
       "awaitingAuthorization": "Waiting for authorization.",
       "batteryBoost": "Battery boost active.",
+      "batteryBoostBelowLimit": "Battery too low for boost.",
+      "batteryBoostDisabled": "Battery boost disabled.",
+      "batteryBoostEnabled": "Boost until battery at {limit}.",
       "charging": "Charging…",
       "cheapEnergyCharging": "Cheap energy available.",
       "cheapEnergyNextStart": "Cheap energy in {duration}.",

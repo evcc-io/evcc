@@ -961,7 +961,7 @@
     },
     "loadpointSettings": {
       "batteryBoost": {
-        "description": "Ev bataryasından hızlı doldur.",
+        "description": "Ev bataryasından {limit} seviyesine düşene kadar hızlı şarj.",
         "label": "'Batarya Takviyesi”",
         "mode": "Sadece GES ve Asg.+GES modunda kullanılabilir.",
         "once": "Bu doldurma oturumu için takviye etkin."

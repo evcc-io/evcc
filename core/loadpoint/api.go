@@ -167,6 +167,10 @@ type API interface {
 	GetBatteryBoost() int
 	// SetBatteryBoost sets the battery boost
 	SetBatteryBoost(enable bool) error
+	// GetBatteryBoostLimit returns the battery boost soc limit
+	GetBatteryBoostLimit() int
+	// SetBatteryBoostLimit sets the battery boost soc limit
+	SetBatteryBoostLimit(int)
 
 	//
 	// smart grid charging
