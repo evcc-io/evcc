@@ -13,46 +13,38 @@ render: |
   power:
     source: http
     uri: http://{{ .host }}/json
-    method: GET
     cache: {{ .cache }}
     # Power (Watt): Calculated from Import - Export * 1000
     jq: (.instantaneous_power_import | tonumber * 1000) - (.instantaneous_power_export | tonumber * 1000)
   energy:
     source: http
     uri: http://{{ .host }}/json
-    method: GET
     cache: {{ .cache }}
     # Total Import Energy (kWh)
     jq: .active_import_energy_total | tonumber
   currents:
     - source: http
       uri: http://{{ .host }}/json
-      method: GET
-      cache: {{ .cache }}
       jq: .current_phase_Bl1 | tonumber
+      cache: {{ .cache }}
     - source: http
       uri: http://{{ .host }}/json
-      method: GET
-      cache: {{ .cache }}
       jq: .current_phase_Bl2 | tonumber
+      cache: {{ .cache }}
     - source: http
       uri: http://{{ .host }}/json
-      method: GET
-      cache: {{ .cache }}
       jq: .current_phase_Bl3 | tonumber
+      cache: {{ .cache }}
   voltages:
     - source: http
       uri: http://{{ .host }}/json
-      method: GET
-      cache: {{ .cache }}
       jq: .voltage_phase_l1 | tonumber
+      cache: {{ .cache }}
     - source: http
       uri: http://{{ .host }}/json
-      method: GET
-      cache: {{ .cache }}
       jq: .voltage_phase_l2 | tonumber
+      cache: {{ .cache }}
     - source: http
       uri: http://{{ .host }}/json
-      method: GET
-      cache: {{ .cache }}
       jq: .voltage_phase_l3 | tonumber
+      cache: {{ .cache }}
