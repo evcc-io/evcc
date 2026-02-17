@@ -42,7 +42,7 @@ func updateSponsortokenHandler(pub publisher) func(w http.ResponseWriter, r *htt
 
 			pub(keys.Sponsor, globalconfig.ConfigStatus{
 				Status:     sponsor.RedactedStatus(),
-				YamlSource: globalconfig.YamlSourceDb,
+				YamlSource: globalconfig.YamlSourceNone,
 			})
 		}
 
