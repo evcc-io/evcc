@@ -200,6 +200,8 @@ grid:
     await addForecast.click();
     await expectModalVisible(modal);
     await expect(addPlannerForecast).not.toBeVisible();
+    await modal.getByRole("button", { name: "Close" }).click();
+    await expectModalHidden(modal);
 
     // restart and verify persistence
     await restart();

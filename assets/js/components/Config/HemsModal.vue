@@ -1,6 +1,6 @@
 <template>
 	<YamlModal
-		id="hemsModal"
+		name="hems"
 		:title="$t('config.hems.title')"
 		:description="$t('config.hems.description')"
 		docs="/docs/features/14a-enwg-steuve"
@@ -9,7 +9,6 @@
 		removeKey="hems"
 		:noYamlEditor="fromYaml"
 		:disableSave="fromYaml"
-		data-testid="hems-modal"
 		@changed="$emit('changed')"
 		@open="loadSessions"
 	>
@@ -48,7 +47,7 @@ export default {
 	components: { YamlModal },
 	mixins: [formatter],
 	props: {
-		fromYaml: Boolean,
+		yamlSource: String,
 	},
 	emits: ["changed"],
 	data() {
@@ -58,6 +57,9 @@ export default {
 		};
 	},
 	computed: {
+		fromYaml() {
+			return this.yamlSource === "file";
+		},
 		sessionCount() {
 			return this.sessions.length;
 		},

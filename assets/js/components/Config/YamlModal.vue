@@ -1,5 +1,14 @@
 <template>
-	<GenericModal ref="modal" :size="size" :title="title" @open="open" @close="close">
+	<GenericModal
+		:id="`${name}Modal`"
+		ref="modal"
+		:size="size"
+		:title="title"
+		:data-testid="`${name}-modal`"
+		:config-modal-name="name"
+		@open="open"
+		@close="close"
+	>
 		<p v-if="description || docsLink">
 			<span v-if="description">{{ description + " " }}</span>
 			<a v-if="docsLink" :href="docsLink" target="_blank">
@@ -7,7 +16,7 @@
 			</a>
 		</p>
 		<slot name="afterDescription" />
-		<p v-if="error" class="text-danger" data-testid="error">{{ error }}</p>
+		<ErrorMessage :error="error" data-testid="error" />
 		<form ref="form" class="container mx-0 px-0">
 			<div v-if="!noYamlEditor" class="editor-container">
 				<YamlEditorContainer
@@ -49,13 +58,14 @@
 
 <script>
 import GenericModal from "../Helper/GenericModal.vue";
+import ErrorMessage from "../Helper/ErrorMessage.vue";
 import api from "@/api";
 import { docsPrefix } from "@/i18n";
 import YamlEditorContainer from "./YamlEditorContainer.vue";
 
 export default {
 	name: "YamlModal",
-	components: { GenericModal, YamlEditorContainer },
+	components: { GenericModal, ErrorMessage, YamlEditorContainer },
 	props: {
 		title: String,
 		description: String,
@@ -66,6 +76,7 @@ export default {
 		size: { type: String, default: "xl" },
 		noYamlEditor: Boolean,
 		disableSave: Boolean,
+		name: String,
 	},
 	emits: ["changed", "open"],
 	data() {

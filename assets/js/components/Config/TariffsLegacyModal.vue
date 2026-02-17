@@ -1,6 +1,6 @@
 <template>
 	<YamlModal
-		id="tariffsModal"
+		name="tariffsLegacy"
 		:title="`${$t('config.tariff.title')} (${$t('config.general.legacy')})`"
 		:description="$t('config.tariff.description')"
 		docs="/docs/tariffs"

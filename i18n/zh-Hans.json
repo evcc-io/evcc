@@ -849,7 +849,6 @@
   "passwordModal": {
     "description": "设置密码以保护配置设置。主屏幕仍可在未登录情况下使用。",
     "empty": "密码不能为空",
-    "error": "错误： ",
     "labelCurrent": "当前密码",
     "labelNew": "新密码",
     "labelRepeat": "重复新密码",

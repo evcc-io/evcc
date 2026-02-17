@@ -22,14 +22,13 @@ import (
 type ConfigStatus struct {
 	Config     any        `json:"config,omitempty"`
 	Status     any        `json:"status,omitempty"`
-	FromYaml   bool       `json:"fromYaml,omitempty"`
 	YamlSource YamlSource `json:"yamlSource,omitempty"`
 }
 
 type YamlSource string
 
 const (
-	YamlSourceFs   YamlSource = "fs"
+	YamlSourceFile YamlSource = "file"
 	YamlSourceDb   YamlSource = "db"
 	YamlSourceNone YamlSource = ""
 )

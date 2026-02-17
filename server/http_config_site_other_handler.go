@@ -10,6 +10,19 @@ import (
 	"github.com/evcc-io/evcc/util/sponsor"
 )
 
+func setExperimental(pub publisher) func(bool) error {
+	return func(b bool) error {
+		settings.SetBool(keys.Experimental, b)
+		pub(keys.Experimental, b)
+		return nil
+	}
+}
+
+func getExperimental() bool {
+	b, _ := settings.Bool(keys.Experimental)
+	return b
+}
+
 func updateSponsortokenHandler(pub publisher) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req struct {
@@ -28,8 +41,8 @@ func updateSponsortokenHandler(pub publisher) func(w http.ResponseWriter, r *htt
 			}
 
 			pub(keys.Sponsor, globalconfig.ConfigStatus{
-				Status:   sponsor.RedactedStatus(),
-				FromYaml: false,
+				Status:     sponsor.RedactedStatus(),
+				YamlSource: globalconfig.YamlSourceNone,
 			})
 		}
 
@@ -46,8 +59,8 @@ func deleteSponsorTokenHandler(pub publisher) func(w http.ResponseWriter, r *htt
 		settings.SetString(keys.SponsorToken, "")
 
 		pub(keys.Sponsor, globalconfig.ConfigStatus{
-			Status:   sponsor.Status{},
-			FromYaml: false,
+			Status:     sponsor.Status{},
+			YamlSource: globalconfig.YamlSourceNone,
 		})
 
 		setConfigDirty()

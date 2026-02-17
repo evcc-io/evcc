@@ -172,11 +172,27 @@
       "loading": "Načítám editor YAML…"
     },
     "eebus": {
-      "description": "Nastavení, které umožňuje evcc komunikovat s dalšími EEBus zařízeními.",
+      "certificate": {
+        "private": "Privátní klíč",
+        "public": "Veřejný klíč",
+        "title": "Ověřovací klíče"
+      },
+      "description": "Nastavení, které umožňuje evcc komunikovat s dalšími zařízeními komunikujícími skrze EEBus jako např. nabíjecí stanice, nebo chytré řízení vašeho poskytovatele energie. Všechny kroky inicializace a generování priv./veř. klíčů proběhne automaticky při prvním spuštění.",
+      "descriptionAdvanced": "Žádné změny nejsou běžně potřeba. Provádějte změny, jen pokud víte co děláte. Pokud změníte SHIP identifikátor nebo klíče, bude nutné opětovně propojit zařízení.",
+      "interfaces": "Rozhraní",
+      "interfacesHelp": "Omezte síťová rozhraní, která může EEBus protokol použít abyste předešli problémům. Ponechte prázdné pro použití všech rozhrazení. Jeden vstup - jeden řádek.",
+      "port": "Port",
+      "portHelp": "Port k využití.",
+      "removeConfirm": "Všechna konfigurace EEBus bude odebrána. Nové certifikáty a identifikátory budou vygenerovány při dalším spuštění. Chcete pokračovat?",
+      "shipid": "SHIP-ID",
+      "shipidExplain": "Stálý identifikátor zařízení sloužící pro identifikaci v rámci sítě EEBus.",
+      "shipidHelp": "Toto SHIP-ID je spojeno s certifikáty níže.",
+      "ski": "SKI",
+      "skiExplain": "Unikátní bezpečnostní identifikátor pro párování s EEBus zařízeními.",
       "title": "EEBus"
     },
     "experimental": {
-      "description": "Povolit uživatelské rozhraní pro funkce, které jsou stále testovány a mohou se v budoucích verzích změnit.",
+      "description": "Povolí přístup k funkcím, které jsou stále testovány. Mohou se v budoucích verzích změnit, nebo být úplně odebrány a nemusí být plně a spolehlivě funkční.",
       "title": "Experimentální"
     },
     "ext": {
@@ -207,6 +223,7 @@
       "dragHandle": "Tažná rukojeť",
       "dragItem": "Přetahovatelné: {title}",
       "dragList": "Seznam umožňující úpravy pořadí",
+      "error": "Chyba",
       "experimental": "Experimentální nastavení",
       "forceSave": "Vynutit uložení",
       "fromYamlHint": "Poznámka: Konfigurace se provádí prostřednictvím souboru evcc.yaml. Chcete-li zde povolit úpravy, odstraňte záznam ze souboru.",
@@ -544,6 +561,7 @@
       "integrations": "Integrace",
       "loadpoints": "Nabíjení a kotle (topení)",
       "meter": "Solár a baterie",
+      "services": "Služby",
       "system": "Systém",
       "vehicles": "Vozidla"
     },
@@ -740,12 +758,14 @@
   "forecast": {
     "co2": {
       "average": "Průměr",
+      "constant": "Uhlíková stopa CO₂",
       "lowestHour": "Nejčistší hodina",
       "range": "Rozsah"
     },
     "modalTitle": "Předpověď",
     "price": {
       "average": "Průměr",
+      "constant": "Cena",
       "lowestHour": "Nejlevnější hodina",
       "range": "Rozsah"
     },
@@ -1116,7 +1136,6 @@
   "passwordModal": {
     "description": "Nastavte heslo pro zabezpečení konfiguračního menu. Obrazovka přehledu bude stále dostupná i bez ověření heslem.",
     "empty": "Heslo nesmí být prázdné",
-    "error": "Chyba: ",
     "labelCurrent": "Současné heslo",
     "labelNew": "Nové heslo",
     "labelRepeat": "Opakujte heslo",
@@ -1230,7 +1249,7 @@
     },
     "hiddenFeatures": {
       "label": "Experimentální nastavení",
-      "value": "Zobrazit experimentální funkce."
+      "value": "Povolit BETA funkce."
     },
     "language": {
       "auto": "Automaticky",

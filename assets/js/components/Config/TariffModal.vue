@@ -1,7 +1,7 @@
 <template>
 	<DeviceModalBase
 		:id="id"
-		modal-id="tariffModal"
+		name="tariff"
 		device-type="tariff"
 		:modal-title="modalTitle"
 		:provide-template-options="provideTemplateOptions"
@@ -61,6 +61,7 @@ import PropertyField from "./PropertyField.vue";
 import { ConfigType, CURRENCY, type TariffType } from "@/types/evcc";
 import { customTemplateOption, type TemplateGroup } from "./DeviceModal/TemplateSelector.vue";
 import type { Product, DeviceValues } from "./DeviceModal";
+import { getModal } from "@/configModal";
 import tariffPriceYaml from "./defaultYaml/tariffPrice.yaml?raw";
 import tariffCo2Yaml from "./defaultYaml/tariffCo2.yaml?raw";
 import tariffSolarYaml from "./defaultYaml/tariffSolar.yaml?raw";
@@ -82,9 +83,6 @@ export default defineComponent({
 		PropertyField,
 	},
 	props: {
-		id: Number,
-		type: { type: String as PropType<TariffType | null>, default: null },
-		typeChoices: { type: Array as () => TariffType[], default: () => [] },
 		currency: { type: String as PropType<CURRENCY>, default: CURRENCY.EUR },
 	},
 	emits: ["added", "updated", "removed", "close"],
@@ -96,6 +94,15 @@ export default defineComponent({
 		};
 	},
 	computed: {
+		id(): number | undefined {
+			return getModal("tariff")?.id;
+		},
+		type(): TariffType | undefined {
+			return getModal("tariff")?.type as TariffType | undefined;
+		},
+		typeChoices(): TariffType[] {
+			return (getModal("tariff")?.choices as TariffType[]) || [];
+		},
 		isNew(): boolean {
 			return this.id === undefined;
 		},

@@ -69,7 +69,7 @@ export default defineComponent({
 			return store.state.version;
 		},
 		batteryModalAvailabe() {
-			return store.state.battery?.length;
+			return store.state.battery?.devices.length;
 		},
 		showRoutes() {
 			return this.state.startupCompleted;

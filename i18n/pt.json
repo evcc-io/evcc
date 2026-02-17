@@ -172,11 +172,27 @@
       "loading": "A carregar editor YAML…"
     },
     "eebus": {
-      "description": "Configuração que permite o evcc comunicar com outros dispositivos EEBus.",
+      "certificate": {
+        "private": "Chave privada",
+        "public": "Certificado publico",
+        "title": "Certificados"
+      },
+      "description": "Configuração que permite o evcc comunicar com outros dispositivos compatíveis com EEBus, como carregadores ou unidades de controlo do operador de rede. Toda a inicialização e geração de certificados é feita automaticamente na primeira inicialização.",
+      "descriptionAdvanced": "Não são necessárias alterações. Somente altere se souber realmente o que está a fazer. Se mudar quer o SHIP-id ou os certificados, terá que emparelhar novamente os seus dispositivos.",
+      "interfaces": "Interfaces",
+      "interfacesHelp": "Limitar as interfaces que o EEBus pode usar para evitar problemas de comunicação. Deixar em branco para usar todas as interfaces. Um entrada por linha.",
+      "port": "Porta",
+      "portHelp": "Porta a usar.",
+      "removeConfirm": "Toda a configuração EEBus será eliminada. Serão gerados novos certificados e identificadores na próxima inicialização. Tem a certeza?",
+      "shipid": "SHIP-ID",
+      "shipidExplain": "Identificador permanente do dispositivo a ser usado dentro da rede EEBus.",
+      "shipidHelp": "Este SHIP-ID está vinculado ao certificado abaixo.",
+      "ski": "SKI",
+      "skiExplain": "Identificador de segurança único para o emparelhamento de dispositivos EEBus.",
       "title": "EEBus"
     },
     "experimental": {
-      "description": "Ativar interface de utilizador para funcionalidades que ainda estão a ser testadas e podem ser alteradas em versões futuras.",
+      "description": "Fornece acesso antecipado a funcionalidades que ainda estão a ser testadas. Estas podem ser instáveis e podem ser alteradas ou removidas em versões futuras.",
       "title": "Experimental"
     },
     "ext": {
@@ -207,6 +223,7 @@
       "dragHandle": "Arrastar",
       "dragItem": "Arrastável: {title}",
       "dragList": "Lista reordenável",
+      "error": "Erro",
       "experimental": "Experimental",
       "forceSave": "Guardar na mesma",
       "fromYamlHint": "Nota: Configurado através do evcc.yaml. Remova a entrada do ficheiro para permitir a edição aqui.",
@@ -544,6 +561,7 @@
       "integrations": "Integrações",
       "loadpoints": "Carregamento e aquecimento",
       "meter": "Solar e Bateria",
+      "services": "Serviços",
       "system": "Sistema",
       "vehicles": "Veículos"
     },
@@ -740,12 +758,14 @@
   "forecast": {
     "co2": {
       "average": "Média",
+      "constant": "Intensidade de CO₂",
       "lowestHour": "Horário mais \"Verde\"",
       "range": "Intervalo"
     },
     "modalTitle": "Previsões",
     "price": {
       "average": "Média",
+      "constant": "Preço",
       "lowestHour": "Horário mais barato",
       "range": "Intervalo"
     },
@@ -946,7 +966,7 @@
       "title": "Limite externo:"
     },
     "loadpoint": {
-      "avgPrice": "Preço",
+      "avgPrice": "Preço ⌀",
       "charged": "Carregado",
       "co2": "CO₂",
       "duration": "Duração",
@@ -1116,7 +1136,6 @@
   "passwordModal": {
     "description": "Defina uma Palavra-passe para proteger as definições de configuração. Continua a ser possível utilizar o menu principal sem iniciar sessão.",
     "empty": "A Palavra-passe não deve ficar por preencher",
-    "error": "Erro: ",
     "labelCurrent": "Palavra-passe atual",
     "labelNew": "Nova Palavra-passe",
     "labelRepeat": "Repetir palavra-passe",
@@ -1142,7 +1161,7 @@
   },
   "sessions": {
     "avgPower": "Potência",
-    "avgPrice": "Preço",
+    "avgPrice": "Preço ⌀",
     "chargeDuration": "Duração",
     "chartTitle": {
       "avgCo2ByGroup": "CO₂ {byGroup}",
@@ -1230,7 +1249,7 @@
     },
     "hiddenFeatures": {
       "label": "Experimental",
-      "value": "Mostrar funcionalidades experimentais."
+      "value": "Ativar funcionalidades experimentais."
     },
     "language": {
       "auto": "Automático",

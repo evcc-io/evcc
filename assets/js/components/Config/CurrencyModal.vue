@@ -4,6 +4,7 @@
 		ref="modal"
 		:title="$t('config.currency.title')"
 		data-testid="currency-modal"
+		config-modal-name="currency"
 		@open="open"
 	>
 		<p>{{ $t("config.currency.description") }}</p>

@@ -1,12 +1,11 @@
 <template>
 	<JsonModal
-		id="eebusModal"
+		name="eebus"
 		:title="$t('config.eebus.title')"
 		:description="$t('config.eebus.description')"
 		docs="/docs/reference/configuration/eebus"
 		endpoint="/config/eebus"
 		state-key="eebus.config"
-		data-testid="eebus-modal"
 		:no-buttons="fromYaml"
 		:confirm-remove="$t('config.eebus.removeConfirm')"
 		@changed="$emit('changed')"
@@ -120,7 +119,7 @@
 <script lang="ts">
 import type { PropType } from "vue";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import type { EebusConfig, EebusStatus } from "@/types/evcc";
+import type { EebusConfig, EebusStatus, YamlSource } from "@/types/evcc";
 import JsonModal from "./JsonModal.vue";
 import FormRow from "./FormRow.vue";
 import PropertyField from "./PropertyField.vue";
@@ -141,9 +140,14 @@ export default {
 			type: Object as PropType<EebusStatus>,
 			default: () => ({}),
 		},
-		fromYaml: Boolean,
+		yamlSource: String as PropType<YamlSource>,
 	},
 	emits: ["changed"],
+	computed: {
+		fromYaml(): boolean {
+			return this.yamlSource === "file";
+		},
+	},
 	methods: {
 		formId(s: string) {
 			return `eebus-${s}`;

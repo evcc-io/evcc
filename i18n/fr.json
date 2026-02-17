@@ -24,21 +24,21 @@
     "bufferStart": {
       "above": "lorsque chargé à plus que {soc}.",
       "full": "quand chargé à {soc}.",
-      "never": "seulement quand surplus suffisant."
+      "never": "seulement quand le surplus est suffisant."
     },
     "capacity": "{energy} sur {total}",
     "control": "Contrôle batterie",
-    "discharge": "Empêcher la décharge en mode rapide et charge planifiée.",
-    "disclaimerHint": "NB :",
-    "disclaimerText": "ces réglages n'affectent que le mode solaire. Le comportement de charge est adapté en conséquence.",
+    "discharge": "Empêcher la décharge en mode rapide et en charge planifiée.",
+    "disclaimerHint": "Note :",
+    "disclaimerText": "Ces réglages n'affectent que le mode solaire. Le comportement de charge est adapté en conséquence.",
     "gridChargeTab": "Chargement réseau",
-    "legendBottomName": "Priorité chargement batterie maison",
-    "legendBottomSubline": "Jusqu'à ce que le {soc} soit atteint.",
-    "legendMiddleName": "Priorité chargement du véhicule",
-    "legendMiddleSubline": "lorsque la batterie maison est au-dessus du {soc}.",
+    "legendBottomName": "Prioriser le chargement de la batterie domestique",
+    "legendBottomSubline": "Jusqu'à ce que {soc} soit atteint.",
+    "legendMiddleName": "Prioriser le chargement du véhicule",
+    "legendMiddleSubline": "lorsque la batterie maison est au-dessus de {soc}.",
     "legendTopAutostart": "Démarrer automatiquement",
-    "legendTopName": "Recharge soutenue par la batterie",
-    "legendTopSubline": "lorsque la batterie maison est au-dessus du {soc}.",
+    "legendTopName": "Charge véhicule par la batterie",
+    "legendTopSubline": "lorsque la batterie domestique est au-dessus de {soc}.",
     "modalTitle": "Batterie domestique",
     "usageTab": "Utilisation batterie"
   },
@@ -59,11 +59,11 @@
     "charger": {
       "chargers": "Chargeurs VE",
       "generic": "Intégrations génériques",
-      "heatingdevices": "Dispositif de chauffage",
+      "heatingdevices": "Dispositifs de chauffage",
       "ocppConfirmContinue": "Votre chargeur n'est pas encore connecté à evcc. Êtes-vous sûr de vouloir continuer ?",
       "ocppConnected": "Connecté !",
       "ocppDescription": "evcc dispose d'un serveur OCPP intégré. Suivez ces étapes :",
-      "ocppHelp": "Copiez cette URL dans la configuration de votre chargeur. Consultez le manuel du fabricant pour plus de détails. Le chargeur ajoutera automatiquement son identifiant unique (ID de station) à l'URL. Dans de rares cas, vous devrez peut-être spécifier l'identifiant manuellement. Exemple : `{url}`",
+      "ocppHelp": "Copiez cette URL dans la configuration de votre chargeur. Consultez le manuel du fabricant pour plus de détails. Le chargeur doit ajouter automatiquement son identifiant unique (ID de station) à l'URL. Dans de rares cas, vous devrez peut-être spécifier l'identifiant manuellement. Exemple : `{url}`",
       "ocppLabel": "URL du serveur OCPP",
       "ocppNextStep": "Étape suivante",
       "ocppStep1": "Configurez votre chargeur pour utiliser evcc comme serveur OCPP.",
@@ -99,7 +99,7 @@
     },
     "control": {
       "description": "Les valeurs par défaut sont généralement bonnes. Ne faites des changements que si vous savez ce que vous faites.",
-      "descriptionInterval": "Cycle de mise à jour en secondes. Définit la fréquence à laquelle evcc lit les données du compteur et ajuste la facturation. La valeur par défaut de 30 secondes est un choix sûr. Les appareils tels que les véhicules, les boîtiers muraux et les onduleurs ont généralement besoin de plusieurs secondes pour ajuster leur comportement. Si vos composants réagissent rapidement, vous pouvez utiliser des valeurs plus faibles. Nous vous recommandons vivement de ne pas descendre en dessous de 10 secondes. Si vous observez un comportement de contrôle erratique ou des valeurs de puissance instables, choisissez un intervalle plus long.",
+      "descriptionInterval": "Cycle de mise à jour en secondes. Définit la fréquence à laquelle evcc lit les données du compteur et ajuste la charge. La valeur par défaut de 30 secondes est un choix sûr. Les appareils tels que les véhicules, les chargeurs et les onduleurs ont généralement besoin de plusieurs secondes pour ajuster leur comportement. Si vos composants réagissent rapidement, vous pouvez utiliser des valeurs plus faibles. Nous vous recommandons vivement de ne pas descendre en dessous de 10 secondes. Si vous observez un comportement de contrôle erratique ou des valeurs de puissance instables, choisissez un intervalle plus long.",
       "descriptionResidualPower": "Déplace le point de fonctionnement de la boucle de contrôle. Si vous disposez d'une batterie domestique, il est recommandé de définir une valeur de 100 W. De cette manière, la batterie aura une légère priorité sur l'utilisation du réseau.",
       "labelInterval": "Intervalle de mise à jour",
       "labelResidualPower": "Puissance résiduelle",
@@ -108,7 +108,7 @@
     "deviceValue": {
       "amount": "Montant",
       "broker": "Courtier",
-      "bucket": "Bucket",
+      "bucket": "Seau",
       "capacity": "Capacité",
       "chargeStatus": "Statut",
       "chargeStatusA": "pas connecté",
@@ -128,7 +128,7 @@
       "dimmed": "Atténué",
       "enabled": "Activé",
       "energy": "Énergie",
-      "feedinPrice": "Prix de revente",
+      "feedinPrice": "Prix de vente",
       "gridPrice": "Prix du réseau",
       "heaterTempLimit": "Limite du chauffage",
       "hemsActiveLimit": "Limite active",
@@ -142,7 +142,7 @@
       "phaseVoltages": "Voltage",
       "phases1p3p": "Commutation de phase",
       "power": "Puissance",
-      "powerRange": "Fourchette puissance",
+      "powerRange": "Plage de puissance",
       "range": "Autonomie",
       "singlePhase": "Monophasé",
       "soc": "Charge",
@@ -164,7 +164,7 @@
     },
     "devices": {
       "auxMeter": "Consommateur intelligent",
-      "batteryStorage": "Stockage de la batterie",
+      "batteryStorage": "Stockage batterie",
       "consumer": "Consommateur",
       "solarSystem": "Système photovoltaïque"
     },
@@ -172,15 +172,31 @@
       "loading": "Chargement de l’éditeur YAML…"
     },
     "eebus": {
-      "description": "Configuration permettant à evcc de communiquer avec d’autres appareils EEBus.",
+      "certificate": {
+        "private": "Clé privée",
+        "public": "Certificat public",
+        "title": "Certificats"
+      },
+      "description": "Configuration permettant à evcc de communiquer avec des appareils compatibles EEBus comme des chargeurs ou un compteur de votre opérateur réseau. Toutes les initialisations nécessaires et la génération de certificat sont faites automatiquement au premier démarrage.",
+      "descriptionAdvanced": "Aucun changement nécessaire. Ne faire des modifications que si vous savez ce que vous faites. Si vous changez le SHIP-id ou les certificats, vous aurez besoin d'appairer à nouveau vos appareils.",
+      "interfaces": "Interfaces",
+      "interfacesHelp": "Limiter les interfaces réseaux utilisées par EEBus afin de limiter des problèmes de communication. Laissez le champ vide pour utiliser toutes les interfaces. Une entrée par ligne.",
+      "port": "Port",
+      "portHelp": "Le port a utiliser.",
+      "removeConfirm": "Toutes les configurations EEBus seront supprimées. De nouveaux certificats et identifiants seront générés au prochain démarrage. Êtes-vous sûr ?",
+      "shipid": "SHIP-ID",
+      "shipidExplain": "Identifiant permanent de l'appareil, le désignant sur le réseau EEBus.",
+      "shipidHelp": "Ce SHIP-ID est lié au certificat ci-dessous.",
+      "ski": "SKI",
+      "skiExplain": "Identifiant unique de sécurité pour appairer des appareils EEBus.",
       "title": "EEBus"
     },
     "experimental": {
-      "description": "Activer l'interface utilisateur pour les fonctionnalités qui sont encore en cours de test et susceptibles d'être modifiées dans les versions futures.",
+      "description": "Permet d'accéder en avant-première à des fonctionnalités encore en phase de test. Celles-ci peuvent être instables et susceptibles d'être modifiées ou supprimées dans les versions futures.",
       "title": "Expérimental"
     },
     "ext": {
-      "description": "Enregistre les valeurs de consommateurs non contrôlés (par ex. réfrigérateur, machine à laver, etc) à des fins statistiques. Ces compteurs peuvent aussi être utilisé pour de la gestion de charge (par ex. Sous-distribution).",
+      "description": "Enregistre les valeurs de consommateurs non contrôlés (par ex. réfrigérateur, machine à laver, etc) à des fins statistiques. Ces compteurs peuvent aussi être utilisés pour de la gestion de charge (par ex. sous-distribution).",
       "titleAdd": "Ajouter un compteur de consommateur",
       "titleEdit": "Modifier le compteur de consommateur"
     },
@@ -192,7 +208,7 @@
     },
     "general": {
       "applyAndClose": "Appliquer & fermer",
-      "authPerform": "Se connecter à {provider}",
+      "authPerform": "Se connecter avec {provider}",
       "authPerformHint": "Va s’ouvrir dans un nouvel onglet. Revenez ici pour continuer.",
       "authPrepare": "Préparer la connexion",
       "cancel": "Annuler",
@@ -200,16 +216,17 @@
       "close": "Fermer",
       "copied": "Copié !",
       "copy": "Copier",
-      "customHelp": "Créer un appareil sur mesure en utilisant le système de plugins d’evcc.",
-      "customOption": "Appareil sur mesure",
+      "customHelp": "Créer un appareil personnalisé en utilisant le système de greffons d’evcc.",
+      "customOption": "Appareil personnalisé",
       "delete": "Supprimer",
       "docsLink": "Se référer à la documentation.",
       "dragHandle": "Poignée de déplacement",
       "dragItem": "Déplaçable : {title}",
       "dragList": "Liste à ordonner",
+      "error": "Erreur",
       "experimental": "Expérimental",
       "forceSave": "Enregistrer quand même",
-      "fromYamlHint": "Remarque : configuré via evcc.yaml. Supprimez l'entrée du fichier pour pouvoir effectuer des modifications ici.",
+      "fromYamlHint": "Remarque : configuré via evcc.yaml. Supprimez l'entrée du fichier pour pouvoir effectuer des modifications.",
       "hideAdvancedSettings": "Masquer les paramètres avancés",
       "invalidFileSelected": "Fichier sélectionné non valide",
       "noFileSelected": "Aucun fichier sélectionné.",
@@ -226,15 +243,15 @@
       "selectFile": "Parcourir",
       "showAdvancedSettings": "Afficher les paramètres avancés",
       "telemetry": "Télémétrie",
-      "templateLoading": "Charge...",
+      "templateLoading": "Chargement...",
       "title": "Titre",
       "typeDeprecated": "Le type '{type}' est obsolète est sera supprimé dans une future version. Veuillez consulter les notes de modifications et recréer cet appareil.",
       "validateSave": "Valider & enregistrer"
     },
     "grid": {
       "title": "Compteur du réseau",
-      "titleAdd": "Ajouter un compteur pour réseau",
-      "titleEdit": "Modifier le compteur pour réseau"
+      "titleAdd": "Ajouter un compteur de réseau",
+      "titleEdit": "Modifier le compteur de réseau"
     },
     "hems": {
       "csv": {
@@ -256,7 +273,7 @@
     },
     "influx": {
       "description": "Écrit les données de charge et autres métriques dans InfluxDB. Utilise Grafana ou d’autres outils pour visualiser les données.",
-      "descriptionToken": "Se référer à la document InfluxDB pour apprendre comment en créer une. https://docs.influxdata.com/influxdb/v2/admin/",
+      "descriptionToken": "Se référer à la documentation InfluxDB pour apprendre comment en créer un. https://docs.influxdata.com/influxdb/v2/admin/",
       "labelBucket": "Seau",
       "labelCheckInsecure": "Autoriser les certificats auto-signés",
       "labelDatabase": "Base de données",
@@ -286,9 +303,9 @@
         "heating": "Chauffage"
       },
       "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "Va utiliser des courants de 6 à 16 A.",
+      "chargerPower11kwHelp": "Utilisera des courants de 6 à 16 A.",
       "chargerPower22kw": "22 kW",
-      "chargerPower22kwHelp": "Va utiliser des courants de 6 à 32 A.",
+      "chargerPower22kwHelp": "Utilisera des courants de 6 à 32 A.",
       "chargerPowerCustom": "autre",
       "chargerPowerCustomHelp": "Définir un intervalle de courant personnalisé.",
       "chargerTypeLabel": "Type de chargeur",
@@ -305,15 +322,15 @@
       "defaultModeLabel": "Mode par défaut",
       "delete": "Supprimer",
       "electricalSubtitle": "En cas de doute, demandez à votre électricien.",
-      "electricalTitle": "Électricité",
-      "energyMeterHelp": "Compteur supplémentaire si le chargeur n’en a pas un intégré.",
+      "electricalTitle": "Électrique",
+      "energyMeterHelp": "Compteur supplémentaire si le chargeur n’en comporte pas.",
       "energyMeterLabel": "Compteur d’énergie",
       "estimateLabel": "Interpoler le niveau de charge entre deux mises à jour via l’API",
       "maxCurrentHelp": "Doit être supérieur au courant minimum.",
       "maxCurrentLabel": "Courant maximum",
       "minCurrentHelp": "Allez en dessous de 6 A seulement si vous savez ce que vous faîtes.",
       "minCurrentLabel": "Courant minimum",
-      "noVehicles": "Aucun véhicule n’est configuré.",
+      "noVehicles": "Aucun véhicule configuré.",
       "option": {
         "charging": "Ajouter un point de charge",
         "heating": "Ajouter un dispositif de chauffage"
@@ -321,14 +338,14 @@
       "phases1p": "Monophasé",
       "phases3p": "Triphasé",
       "phasesAutomatic": "Phases automatiques",
-      "phasesAutomaticHelp": "Votre chargeur supporte la commutation automatique entre chargement en monophasé ou triphasé. Dans l’écran principal vous pouvez ajuster le comportement pendant la charge.",
+      "phasesAutomaticHelp": "Votre chargeur supporte la commutation automatique entre chargement en monophasé ou en triphasé. Dans l’écran principal vous pouvez ajuster le comportement pendant la charge.",
       "phasesHelp": "Nombre de phases connectées.",
       "phasesLabel": "Phases",
-      "pollIntervalDanger": "L'interrogation régulière du véhicule peut décharger la batterie du véhicule. Certains fabricants de véhicules peuvent empêcher activement le chargement dans ce cas. Déconseillé ! N'utilisez cette fonction que si vous êtes conscient des risques.",
+      "pollIntervalDanger": "L'interrogation régulière du véhicule peut décharger la batterie du véhicule. Dans ce cas, certains fabricants de véhicules peuvent empêcher activement le chargement. Déconseillé ! N'utilisez cette fonction que si vous êtes conscient des risques.",
       "pollIntervalHelp": "Temps entre deux mises à jour du véhicule via l’API. Un intervalle court peut décharger la batterie du véhicule.",
       "pollIntervalLabel": "Intervalle de mise à jour",
       "pollModeAlways": "toujours",
-      "pollModeAlwaysHelp": "Toujours mettre à jour régulièrement le statut du véhicule.",
+      "pollModeAlwaysHelp": "Toujours mettre à jour le statut à intervalles réguliers.",
       "pollModeCharging": "en charge",
       "pollModeChargingHelp": "Mettre à jour régulièrement le statut du véhicule uniquement lors de la charge.",
       "pollModeConnected": "connecté",
@@ -338,7 +355,7 @@
       "priorityLabel": "Priorité",
       "save": "Enregistrer",
       "showAllSettings": "Voir tous les paramètres",
-      "solarBehaviorCustomHelp": "Définir vos propres seuils et délais d’activation de la charge solaire.",
+      "solarBehaviorCustomHelp": "Définir vos propres seuils et délais d’activation.",
       "solarBehaviorDefaultHelp": "Démarrer après {enableDelay} de surplus suffisant. S'arrête lorsque le surplus n'est pas suffisant pour {disableDelay}.",
       "solarBehaviorLabel": "Solaire",
       "solarModeCustom": "personnalisé",
@@ -399,7 +416,7 @@
     "meter": {
       "cancel": "Annuler",
       "delete": "Supprimer",
-      "generic": "Intégration génériques",
+      "generic": "Intégrations génériques",
       "option": {
         "aux": "Ajouter un consommateur auto-regulé",
         "battery": "Ajouter un compteur de batterie",
@@ -415,7 +432,7 @@
         "aux": "Consommateur auto-régulé",
         "battery": "Batterie",
         "charge": "Consommateur / Chargeur",
-        "grid": "Réseau",
+        "grid": "Réseau électrique",
         "label": "Utilisation",
         "pv": "Production"
       },
@@ -424,7 +441,7 @@
     "modbus": {
       "baudrate": "Débit en bauds",
       "comset": "ComSet",
-      "connection": "Connections Modbus",
+      "connection": "Connection Modbus",
       "connectionHintSerial": "L'appareil est directement connecté via RS485 (ou adaptateur USB vers RS485).",
       "connectionHintTcpip": "L'appareil est accessible via le réseau (LAN/WiFi).",
       "connectionValueSerial": "RS485",
@@ -465,10 +482,10 @@
     "mqtt": {
       "authentication": "Authentification",
       "description": "Connectez-vous à un courtier MQTT pour échanger des données avec d'autres systèmes de votre réseau.",
-      "descriptionClientId": "Auteur des messages. `evcc-XXXX` sera utilisé si laissé vide.",
+      "descriptionClientId": "Auteur des messages. Si laissé vide, `evcc-[rand]` sera utilisé.",
       "descriptionTopic": "Laisser vide pour désactiver la publication.",
       "labelBroker": "Courtier",
-      "labelCaCert": "Certificat serveur (CA)",
+      "labelCaCert": "Certificat serveur (AC)",
       "labelCheckInsecure": "Autoriser les certificats auto-signés",
       "labelClientCert": "Certificat client",
       "labelClientId": "Identifiant client",
@@ -483,7 +500,7 @@
     "network": {
       "descriptionExternalUrl": "Adresse pour les autres appareils qui souhaitent se connecter à evcc et pour la détection automatique de l'application evcc.",
       "descriptionHost": "Utilisé pour annoncer evcc sur votre réseau local.",
-      "descriptionInternalUrl": "Adresse réseau locale de evcc.",
+      "descriptionInternalUrl": "Adresse réseau local de evcc.",
       "descriptionPort": "Port pour l'interface web et l'API. Vous devrez mettre à jour l'URL de votre navigateur si vous modifiez cela.",
       "descriptionSchema": "Cela n'affecte que la façon dont les URL sont générées. La sélection de HTTPS n'activera pas le cryptage.",
       "labelExternalUrl": "URL externe",
@@ -495,9 +512,9 @@
     },
     "ocpp": {
       "connectedChargers": "Chargeurs connectés",
-      "connectionStatus": "Identifiants de station configurés",
+      "connectionStatus": "Identifiants de stations configurées",
       "connectionStatusHelp": "État de connexion des chargeurs configurés.",
-      "detectedChargers": "Identifiants de stations détectés",
+      "detectedChargers": "Identifiants de stations détectées",
       "detectedHelp": "Ces chargeurs ont tenté de se connecter à evcc. Pour utiliser un chargeur, créez un point de charge avec son identifiant de station.",
       "noChargers": "Aucun chargeur OCPP détecté.",
       "noStations": "Aucune station connectée",
@@ -521,7 +538,7 @@
       },
       "operationMode": {
         "heating": "Chauffage",
-        "standby": "Standby"
+        "standby": "En attente"
       },
       "schema": {
         "http": "HTTP (non chiffré)",
@@ -544,17 +561,18 @@
       "integrations": "Intégrations",
       "loadpoints": "Charge et chauffage",
       "meter": "Solaire & Batterie",
+      "services": "Services",
       "system": "Système",
       "vehicles": "Véhicules"
     },
     "shm": {
       "cardTitle": "Sunny Home Manager",
-      "description": "evcc est équipé d'une intégration pour le SMA Sunny Home Manager (SHM) via le protocole SEMP. S'il fonctionne sur le même réseau, après vous être connecté à votre compte Sunny Portal, vous devriez automatiquement avoir la possibilité d'ajouter tous les chargeurs configurés dans evcc en tant que nouveaux consommateurs détectés. Tout devrait être prêt à l'emploi immédiatement, sans qu'aucun réglage ne soit nécessaire.",
-      "descriptionDeviceId": "Chaîne HEX à 12 caractères. Préfixe pour tous les appareils (point de recharge, etc.).",
+      "description": "evcc est équipé d'une intégration pour le SMA Sunny Home Manager (SHM) via le protocole SEMP. S'il fonctionne sur le même réseau, après vous être connecté à votre compte Sunny Portal, vous devriez automatiquement avoir la possibilité d'ajouter tous les chargeurs configurés dans evcc en tant que nouveaux consommateurs détectés. Tout devrait être prêt à l'emploi immédiatement, sans qu'aucun réglage ci-dessous ne soit nécessaire.",
+      "descriptionDeviceId": "Chaîne HEX de 12 caractères. Préfixe pour tous les appareils (point de charge, etc.).",
       "descriptionIdPattern": "Schéma d'identification",
       "descriptionIds": "Dans Sunny Portal, chaque appareil consommateur doit disposer d'un identifiant unique. evcc génère un identifiant unique basé sur votre matériel. Si vous migrez evcc vers un autre matériel, ces identifiants peuvent changer. Si vous souhaitez conserver l'historique, vous pouvez remplacer les identifiants générés ici. Ouvrez l'URL SEMP (/semp) pour vérifier vos identifiants actuels.",
       "descriptionSempUrl": "URL SEMP",
-      "descriptionVendorId": "Chaîne HEX à 8 caractères. Préfixe général de toutes les entités. Par défaut, evcc utilisera son propre identifiant fournisseur interne.",
+      "descriptionVendorId": "Chaîne HEX de 8 caractères. Préfixe général de toutes les entités. Par défaut, evcc utilisera son propre identifiant fournisseur interne.",
       "labelDeviceId": "Identifiant de l'appareil",
       "labelVendorId": "Identifiant du fournisseur",
       "title": "SMA Sunny Home Manager"
@@ -562,15 +580,15 @@
     "sponsor": {
       "addToken": "Entrer le jeton",
       "changeToken": "Modifier le jeton",
-      "description": "Le modèle de parrainage nous aide à maintenir le projet et à construire de manière durable de nouvelles fonctionnalités passionnantes. En tant que sponsor, vous avez accès à toutes les implémentations de chargeurs.",
-      "descriptionToken": "Les sponsors obtiennent leur jeton sur {url}. Pour démarrer, nous offrons également un jeton d’essai pour les tests {trialToken}.",
+      "description": "Le modèle de parrainage nous aide à maintenir le projet et à construire de manière durable de nouvelles fonctionnalités passionnantes. En tant que parrain, vous avez accès à toutes les implémentations de chargeurs.",
+      "descriptionToken": "Les parrains obtiennent leur jeton sur {url}. Pour démarrer, nous offrons également un jeton d’essai pour les tests {trialToken}.",
       "enterYourToken": "Entrer votre jeton",
-      "error": "Le jeton de sponsor n’est pas valide.",
+      "error": "Le jeton de parrain n’est pas valide.",
       "invalid": "invalide",
-      "labelToken": "Jeton de sponsor",
-      "title": "Sponsoring",
-      "tokenRequired": "Vous devez configurer un jeton de sponsor avant de pouvoir créer cet appareil.",
-      "tokenRequiredFeature": "Cette fonctionnalité nécessite un jeton sponsor.",
+      "labelToken": "Jeton de parrain",
+      "title": "Parrainage",
+      "tokenRequired": "Vous devez configurer un jeton de parrain avant de pouvoir créer cet appareil.",
+      "tokenRequiredFeature": "Cette fonctionnalité nécessite un jeton de parrain.",
       "tokenRequiredLearnMore": "Plus d’information.",
       "tokenRequiredShort": "Aucun jeton de parrainage n'est configuré.",
       "trialToken": "jeton d’essai",
@@ -582,8 +600,8 @@
         "backup": {
           "action": "Télécharger la sauvegarde...",
           "confirmationButton": "Télécharger la sauvegarde",
-          "confirmationText": "Téléchargez le fichier de base de données.",
-          "description": "Sauvegardez vos données dans un fichier. Ce fichier peut être utilisé pour restaurer vos données en cas de défaillance du système.",
+          "confirmationText": "Télécharger le fichier de base de données.",
+          "description": "Sauvegarder vos données dans un fichier. Ce fichier peut être utilisé pour restaurer vos données en cas de défaillance du système.",
           "title": "Sauvegarde"
         },
         "cancel": "Annuler",
@@ -597,7 +615,7 @@
           "sessions": "Sessions de charge",
           "sessionsDescription": "Supprime l'historique des sessions de charge.",
           "settings": "Configuration et réglages",
-          "settingsDescription": "Supprime tous les appareils, services, planifications, caches, etc. configurés.",
+          "settingsDescription": "Supprime tous les appareils configurés, services, planifications, caches, etc...",
           "title": "Réinitialiser"
         },
         "restore": {
@@ -618,7 +636,7 @@
       "restartingMessage": "Redémarrage d’evcc en cours."
     },
     "tariffs": {
-      "description": "Définissez vos tarifs d'énergie pour calculer les coûts de vos sessions de recharge.",
+      "description": "Définissez vos tarifs d'énergie pour calculer les coûts de vos sessions de charge.",
       "title": "Tarifs"
     },
     "telemetry": {
@@ -650,13 +668,13 @@
       "maximumCurrent": "Courant maximum",
       "maximumCurrentHelp": "Doit être supérieur au courant minimum.",
       "maximumPhases": "Maximum de phases",
-      "maximumPhasesHelp": "Combien de phases ce véhicule peut-il charger ? Utilisé pour calculer le surplus solaire minimum requis et la durée du plan.",
+      "maximumPhasesHelp": "Avec combien de phases ce véhicule peut-il charger ? Utilisé pour calculer le surplus solaire minimum requis et la durée du plan de charge.",
       "maximumPower": "Puissance de charge maximale",
       "maximumPowerHelp": "Puissance maximale que le véhicule peut consommer",
       "minimumCurrent": "Courant minimum",
-      "minimumCurrentHelp": "Ne descends en dessous de 6A que si tu sais ce que tu fais.",
+      "minimumCurrentHelp": "Ne descendre en dessous de 6A que si vous savez ce que vous faites.",
       "online": "Véhicules avec API en ligne",
-      "primary": "Intégration génériques",
+      "primary": "Intégrations génériques",
       "priority": "Priorité",
       "priorityHelp": "Une priorité plus élevée signifie que ce véhicule bénéficie d'un accès privilégié au surplus solaire.",
       "save": "Enregistrer",
@@ -674,20 +692,20 @@
       "greenEnergySub2": "depuis octobre 2022",
       "greenShare": "Part solaire",
       "greenShareSub1": "puissance fournie par",
-      "greenShareSub2": "solaire et stockage de batterie",
+      "greenShareSub2": "solaire et stockage batterie",
       "power": "Puissance de charge",
       "powerSub1": "{activeClients} de {totalClients} participants",
       "powerSub2": "sont en train de charger…",
       "tabTitle": "Communauté en ligne"
     },
     "savings": {
-      "co2Saved": "{value} économisé",
+      "co2Saved": "{value} économisés",
       "co2Title": "Emissions de CO₂",
       "configurePriceCo2": "Infos sur la configuration du prix et des données de CO₂.",
       "footerLong": "{percent} énergie solaire",
       "footerShort": "{percent} solaire",
       "modalTitle": "Aperçu de l'énergie de charge",
-      "moneySaved": "{value} économisé",
+      "moneySaved": "{value} économisés",
       "percentGrid": "{grid} kWh réseau",
       "percentSelf": "{self} kWh solaire",
       "percentTitle": "Énergie solaire",
@@ -695,12 +713,12 @@
         "30d": "30 derniers jours",
         "365d": "365 derniers jours",
         "thisYear": "cette année",
-        "total": "tout"
+        "total": "tout le temps"
       },
-      "periodLabel": "Période :",
+      "periodLabel": "Période :",
       "priceTitle": "Prix de l'énergie",
-      "referenceGrid": "réseau",
-      "referenceLabel": "Données de référence :",
+      "referenceGrid": "réseau électrique",
+      "referenceLabel": "Données de référence :",
       "tabTitle": "Mes données"
     },
     "sponsor": {
@@ -708,18 +726,18 @@
       "becomeSponsorExtended": "Soutenez-nous directement pour obtenir des autocollants.",
       "confetti": "Prêt pour les confettis ?",
       "confettiPromise": "Vous obtenez des autocollants et des confettis numériques",
-      "sticker": "… ou autocollants evcc ?",
+      "sticker": "… ou des autocollants evcc ?",
       "supportUs": "Notre mission est de faire du solaire la norme. Aidez evcc en payant ce que ça vaut pour vous.",
-      "thanks": "Merci, {sponsor} ! Votre contribution permet de poursuivre le développement d'evcc.",
+      "thanks": "Merci, {sponsor} ! Votre contribution permet de poursuivre le développement d'evcc.",
       "titleNoSponsor": "Soutenez-nous",
-      "titleSponsor": "Vous êtes un supporter",
+      "titleSponsor": "Vous êtes un soutien",
       "titleTrial": "Mode d'essai",
-      "titleVictron": "Commandité par Victron Energy",
+      "titleVictron": "Parrainé par Victron Energy",
       "trial": "Vous êtes en mode essai et pouvez utiliser toutes les fonctionnalités. Pensez à soutenir le projet.",
       "victron": "Vous utilisez evcc sur le matériel Victron Energy et avez accès à toutes les fonctionnalités."
     },
     "telemetry": {
-      "optIn": "Je souhaite partager mes données de chargement avec la communauté.",
+      "optIn": "Je souhaite partager mes données.",
       "optInMoreDetails": "Plus de détails {0}.",
       "optInMoreDetailsLink": "ici",
       "optInSponsorship": "Parrainage requis."
@@ -728,7 +746,7 @@
       "availableLong": "mise à jour disponible",
       "modalCancel": "Annuler",
       "modalDownload": "Télécharger",
-      "modalInstalledVersion": "Version actuellement installée",
+      "modalInstalledVersion": "Version installée",
       "modalNoReleaseNotes": "Aucune note de version disponible. Plus d'informations sur la nouvelle version disponibles ici :",
       "modalTitle": "Mise à jour disponible",
       "modalUpdate": "Installer",
@@ -740,23 +758,25 @@
   "forecast": {
     "co2": {
       "average": "Moyenne",
+      "constant": "Intensité en CO₂",
       "lowestHour": "Heure la plus propre",
       "range": "Amplitude"
     },
     "modalTitle": "Prévisions",
     "price": {
       "average": "Moyenne",
+      "constant": "Prix",
       "lowestHour": "Heure la moins chère",
       "range": "Amplitude"
     },
     "solar": {
-      "dayAfterTomorrow": "Après demain",
+      "dayAfterTomorrow": "Après-demain",
       "partly": "partiellement",
       "remaining": "restant",
       "today": "Aujourd'hui",
       "tomorrow": "Demain"
     },
-    "solarAdjust": "Ajuster la prévision solaire basé sur la production réelle{percent}.",
+    "solarAdjust": "Ajuster la prévision solaire se basant sur la production réelle{percent}.",
     "type": {
       "co2": "CO₂",
       "price": "Prix",
@@ -781,7 +801,7 @@
     "logout": "Se déconnecter",
     "nativeSettings": "Changer de serveur",
     "needHelp": "Besoin d'aide ?",
-    "sessions": "Sessions de recharge"
+    "sessions": "Sessions de charge"
   },
   "help": {
     "discussionsButton": "Discussions GitHub",
@@ -789,23 +809,23 @@
     "issueButton": "Signaler un problème",
     "issueDescription": "Trouvé un comportement étrange ou erroné ?",
     "logsButton": "Voir les journaux",
-    "logsDescription": "Vérifiez s’il y a des erreurs dans les journaux.",
+    "logsDescription": "Vérifier s’il y a des erreurs dans les journaux.",
     "modalTitle": "Besoin d'aide ?",
-    "primaryActions": "Quelque chose ne fonctionne pas comme ça devrait ? Voici où trouver de l'aide.",
+    "primaryActions": "Quelque chose ne fonctionne pas comme il devrait ? Voici où trouver de l'aide.",
     "restart": {
       "cancel": "Annuler",
       "confirm": "Oui, redémarrer !",
       "description": "En temps normal, un redémarrage ne devrait pas être nécessaire. Envisagez de signaler un bug si vous devez redémarrer evcc régulièrement.",
-      "disclaimer": "NB : evcc va s'arrêter et s'en remettre au système d'exploitation pour redémarrer le service.",
-      "modalTitle": "Voulez-vous vraiment redémarrer ?"
+      "disclaimer": "Remarque : evcc va s'arrêter et s'en remettre au système d'exploitation pour redémarrer le service.",
+      "modalTitle": "Voulez-vous vraiment redémarrer ?"
     },
     "restartButton": "Redémarrer",
-    "restartDescription": "Déjà essayé de redémarrer ?",
-    "secondaryActions": "Toujours pas de solution ? Voici quelques options plus avancées."
+    "restartDescription": "Avez-vous essayé de redémarrer ?",
+    "secondaryActions": "Toujours pas de solution ? Voici quelques options plus avancées."
   },
   "issue": {
     "additional": {
-      "description": "Merci d’inclure la configuration et les journaux afin de nous permettre de reproduire le problème efficacement. Nous vous encourageons à partager autant d’information que possible. L’état n’est normalement pas nécessaire.",
+      "description": "Merci d’inclure la configuration et les journaux afin de nous permettre de reproduire le problème rapidement. Nous vous encourageons à partager autant d’information que possible. L’état n’est normalement pas nécessaire.",
       "include": "inclure",
       "lines": "lignes",
       "logs": "Journaux",
@@ -823,13 +843,13 @@
     "additionalContext": "Contexte additionnel",
     "additionalContextPlaceholder": "Toute information utile...\n- Détails de configuration\n- Ce que vous avez essayé\n- Détails de l’environnement",
     "createButtonDiscussion": "Démarrer une discussion sur GitHub…",
-    "createButtonIssue": "Créer un Cas sur GitHub…",
-    "description": "Votre installation ne fonctionne pas comme attendu ? Utilisez cette pas pour obtenir de l’aide ou signaler un problème. Fournissez suffisamment de détails pour nous permettre de comprendre et reproduire le problème tout en restant concis, clair et facile à suivre.",
+    "createButtonIssue": "Créer un problème sur GitHub…",
+    "description": "Votre installation ne fonctionne pas comme attendu ? Utilisez cette page pour obtenir de l’aide ou signaler un problème. Fournissez suffisamment de détails pour nous permettre de comprendre et de reproduire le problème, tout en restant concis, clair et facile à suivre.",
     "helpType": {
       "discussion": "J’ai besoin d’aide avec mon installation",
-      "discussionDescription": "Les discussions de la communautés fournissent des réponses.",
+      "discussionDescription": "Les discussions de la communauté fournissent des réponses.",
       "issue": "J’ai trouvé un bug",
-      "issueDescription": "Je suis certain que quelque chose doit être réparé.",
+      "issueDescription": "Je suis certain que quelque-chose est cassé et doit être réparé.",
       "title": "À quel problème avons-nous affaire ?"
     },
     "issueDescription": "Description",
@@ -839,15 +859,15 @@
     "subTitleIssue": "Décrivez le problème",
     "summary": {
       "confirmationButtonDiscussion": "Démarrer une Discussion sur GitHub",
-      "confirmationButtonIssue": "Créer un Cas sur GitHub",
+      "confirmationButtonIssue": "Créer un problème sur GitHub",
       "copied": "Copié !",
       "copyButton": "Copier les informations additionnelles",
       "instructions": "A cause des limitations de GitHub sur la taille des URL, il faut procéder en deux étapes :",
-      "singleStepDescription": "Cliquer sur le bouton ci-dessous pour ouvrir GitHub avec un formulaire pré-rempli avec les détails de votre problème. Les données sensibles ont été automatiquement rendues anonymes, mais veuillez vérifier avant de partager.",
+      "singleStepDescription": "Cliquer sur le bouton ci-dessous pour ouvrir GitHub avec un formulaire pré-rempli contenant les détails de votre problème. Les données sensibles ont été automatiquement rendues anonymes, mais veuillez vérifier avant de partager.",
       "step1Description": "Cliquer sur le bouton ci-dessous pour créer une entrée simple GitHub avec votre titre, description et détails.",
       "step2Description": "Après avoir créé l’entrée, revenir ici pour copier les informations additionnelles ci-dessous et les copier dans le formulaire GitHub. Les données sensibles ont été automatiquement rendues anonymes, mais vérifiez avant de partager.",
-      "stepOneDiscussion": "Étape 1 : créer la discussion de base",
-      "stepOneIssue": "Étape 1 : créer le case de base",
+      "stepOneDiscussion": "Étape 1 : créer une discussion basique",
+      "stepOneIssue": "Étape 1 : créer un problème basique",
       "stepTwo": "Étape 2 : copier les informations additionnelles",
       "title": "Résumé du problème GitHub"
     },
@@ -860,7 +880,7 @@
     "areaLabel": "Filtrer par zone",
     "areas": "Toutes les zones",
     "download": "Télécharger les journaux complets",
-    "levelLabel": "Filtrer par niveau",
+    "levelLabel": "Filtrer par niveau de journalisation",
     "nAreas": "{count} zones",
     "noResults": "Aucune entrée de journal ne correspond.",
     "search": "Rechercher",
@@ -875,7 +895,7 @@
     "error": "Connection échouée : ",
     "iframeHint": "Ouvrir evcc dans un nouvel onglet.",
     "iframeIssue": "Votre mot de passe est correct, mais votre navigateur n’a pas gardé le cookie d’authentification. Cela peut arriver si evcc est accédé dans un iframe via HTTP.",
-    "invalid": "Mot de passe invalide.",
+    "invalid": "Mot de passe incorrect.",
     "login": "S’identifier",
     "password": "Mot de passe administrateur",
     "reset": "Réinitialiser le mot de passe ?",
@@ -884,11 +904,11 @@
   "main": {
     "chargingPlan": {
       "active": "Actif",
-      "addRepeatingPlan": "Ajouter un planning récurrent",
+      "addRepeatingPlan": "Ajouter un plan récurrent",
       "arrivalTab": "Arrivée",
       "day": "Jour",
       "departureTab": "Départ",
-      "goal": "Objectif de recharge",
+      "goal": "Objectif de charge",
       "modalTitle": "Planification de la charge",
       "none": "aucune",
       "optimization": {
@@ -896,7 +916,7 @@
         "continuous": "continu",
         "label": "Optimisation"
       },
-      "planNumber": "Planning {number}",
+      "planNumber": "Plan {number}",
       "precondition": {
         "description": "Charge {duration} avant le départ pour pré-conditionner la batterie.",
         "label": "Chargement tardif",
@@ -905,10 +925,10 @@
       },
       "remove": "Enlever",
       "repeating": "récurrent",
-      "repeatingPlans": "Plannings récurrents",
+      "repeatingPlans": "Plans récurrents",
       "selectAll": "Sélect. tous",
-      "strategyDisabledDescription": "La recharge commence le plus tard possible afin de se terminer juste à temps pour le départ. Avec les prix dynamiques du réseau ou la tarification CO₂, davantage d'options sont disponibles ici.",
-      "strategySettings": "Paramètres stratégiques",
+      "strategyDisabledDescription": "La charge commence le plus tard possible afin de se terminer juste à temps pour le départ. Avec les prix dynamiques du réseau ou la tarification CO₂, davantage d'options sont disponibles ici.",
+      "strategySettings": "Paramètres de stratégie",
       "time": "Heure",
       "title": "Planification",
       "titleMinSoc": "Charge min",
@@ -928,13 +948,13 @@
       "forecastTooltip": "prévision : production solaire restante aujourd’hui",
       "gridImport": "Utilisation du réseau",
       "homePower": "Consommation",
-      "loadpoints": "Recharge| Recharge | {count} chargeurs",
+      "loadpoints": "Chargeur| Chargeur | {count} chargeurs",
       "loadpointsLimit": "limite à {limit}",
       "noEnergy": "Aucune donnée de compteur",
       "pv": "Système photovoltaïque",
-      "pvExport": "Injection",
+      "pvExport": "Injection réseau",
       "pvProduction": "Production",
-      "selfConsumption": "Consommation propre"
+      "selfConsumption": "Auto-consommation"
     },
     "heatingStatus": {
       "charging": "Chauffage…",
@@ -954,15 +974,15 @@
       "fallbackName": "Point de chargement",
       "finished": "Heure de fin",
       "power": "Puissance",
-      "price": "Prix",
+      "price": "Coût",
       "remaining": "Temps restant",
-      "remoteDisabledHard": "{source} : désactivée",
-      "remoteDisabledSoft": "{source} : charge PV adaptative désactivée",
+      "remoteDisabledHard": "{source} : désactivée",
+      "remoteDisabledSoft": "{source} : charge solaire adaptative désactivée",
       "solar": "Solaire"
     },
     "loadpointSettings": {
       "batteryBoost": {
-        "description": "Chargement rapide de la batterie domestique.",
+        "description": "Chargement rapide à partir de la batterie domestique.",
         "label": "Boost Batterie",
         "mode": "Uniquement disponible en mode solaire et min+solaire ».",
         "once": "Boost actif pour cette session de charge."
@@ -976,16 +996,16 @@
         "label": "Limite par défaut"
       },
       "maxCurrent": {
-        "label": "Courant de charge max"
+        "label": "Courant max."
       },
       "minCurrent": {
-        "label": "Courant de charge min"
+        "label": "Courant min."
       },
       "minSoc": {
         "description": "Le véhicule est chargé en mode „Rapide” à {0} en mode solaire, puis avec le surplus solaire. Utile pour s'assurer d'un minimum d'autonomie, même pour les jours plus sombres.",
-        "label": "Recharge min. %"
+        "label": "Charge min. %"
       },
-      "onlyForSocBasedCharging": "Ces options sont disponibles uniquement pour les véhicules avec niveau de charge connu.",
+      "onlyForSocBasedCharging": "Ces options sont disponibles uniquement pour les véhicules avec un niveau de charge connu.",
       "phasesConfigured": {
         "label": "Phases",
         "no1p3pSupport": "Comment est connecté votre chargeur ?",
@@ -1001,7 +1021,7 @@
       "vehicle": "Véhicule"
     },
     "mode": {
-      "minpv": "Min+Sol",
+      "minpv": "Min+Solaire",
       "now": "Rapide",
       "off": "Arrêté",
       "pv": "Solaire",
@@ -1020,23 +1040,23 @@
       "descriptionEnergy": "Jusqu'à quand le véhicule doit-il être chargé à {targetEnergy} ?",
       "descriptionSoc": "Quand le véhicule doit-il être chargé à {targetSoc} ?",
       "goalReached": "Objectif déjà atteint",
-      "inactiveLabel": "Temps visé",
-      "nextPlan": "Prochain planning",
+      "inactiveLabel": "Temps cible",
+      "nextPlan": "Prochain plan",
       "notReachableInTime": "L’objectif sera atteint avec un retard de {overrun}.",
-      "onlyInPvMode": "Le plan de recharge ne fonctionne qu’en mode solaire.",
+      "onlyInPvMode": "Le plan de charge ne fonctionne qu’en mode solaire.",
       "planDuration": "Durée de charge",
       "planPeriodLabel": "Période",
       "planPeriodValue": "{start} à {end}",
-      "planUnknown": "encore inconnu",
+      "planUnknown": "pas encore connu",
       "preview": "Prévisualiser le plan",
-      "priceLimit": "limite de prix : {price}",
+      "priceLimit": "limite de prix : {price}",
       "remove": "Ôter",
       "setTargetTime": "aucun",
       "targetIsAboveLimit": "La limite de charge configurée de {limit} sera ignorée durant cette période.",
-      "targetIsAboveVehicleLimit": "La limite du véhicule est en dessous de l'objectif de recharge.",
+      "targetIsAboveVehicleLimit": "La limite du véhicule est en dessous de l'objectif de charge.",
       "targetIsInThePast": "Choisis une période dans le futur, Marty.",
       "targetIsTooFarInTheFuture": "Nous ajusterons le plan dès qu'on en saura plus sur le futur.",
-      "title": "Temps visé",
+      "title": "Temps cible",
       "today": "aujourd'hui",
       "tomorrow": "demain",
       "update": "Mettre à jour",
@@ -1082,20 +1102,20 @@
       "connected": "Connecté.",
       "disconnectRequired": "Session terminée. Veuillez vous reconnecter.",
       "disconnected": "Déconnecté.",
-      "feedinPriorityNextStart": "Les taux d'alimentation élevés commencent dans la {duration}.",
-      "feedinPriorityPausing": "Chargement solaire interrompu pour maximiser l'alimentation.",
+      "feedinPriorityNextStart": "Les taux élevés d'injection commencent dans {duration}.",
+      "feedinPriorityPausing": "Chargement solaire interrompu pour maximiser l'injection.",
       "finished": "Terminée.",
       "minCharge": "Charge minimale jusqu'à {soc}.",
       "pvDisable": "Pas assez de surplus. Pause imminente.",
       "pvEnable": "Surplus disponible. Démarrage imminent.",
-      "scale1p": "Réduction en monophasé imminente.",
-      "scale3p": "Augmentation en triphasé imminente.",
+      "scale1p": "Charge réduite en monophasé imminente.",
+      "scale3p": "Charge augmentée en triphasé imminente.",
       "targetChargeActive": "Plan de charge actif. Fin estimée dans {duration}.",
       "targetChargePlanned": "Le plan de charge démarre dans {duration}.",
       "targetChargeWaitForVehicle": "Plan de charge prêt. Attente du véhicule…",
       "vehicleLimit": "Limite du véhicule",
       "vehicleLimitReached": "Limite du véhicule atteinte.",
-      "waitForVehicle": "Prêt à charger. Attente du véhicule…",
+      "waitForVehicle": "Prêt. Attente du véhicule…",
       "welcome": "Courte charge initiale pour confirmer la connexion."
     },
     "vehicles": "Place de stationnement",
@@ -1111,18 +1131,17 @@
     "message": "Pas de connexion au serveur.",
     "restart": "Redémarrer",
     "restartNeeded": "Nécessaire afin de prendre en compte les modifications.",
-    "restarting": "Le serveur se à nouveau disponible dans quelques instants.",
+    "restarting": "Le serveur sera à nouveau disponible dans quelques instants.",
     "starting": "Démarrage du serveur..."
   },
   "passwordModal": {
-    "description": "Configurez un mot de passe pour protéger la configuration. L’utilisation de l’écran principal et toujours possible sans authentification.",
+    "description": "Configurez un mot de passe pour protéger la configuration. L’utilisation de l’écran principal est toujours possible sans authentification.",
     "empty": "Le mot de passe ne doit pas être vide",
-    "error": "Erreur : ",
     "labelCurrent": "Mot de passe actuel",
     "labelNew": "Nouveau mot de passe",
     "labelRepeat": "Répétez le mot de passe",
     "newPassword": "Créer un mot de passe",
-    "noMatch": "Les deux mots de passes ne correspondent pas",
+    "noMatch": "Les deux mots de passe ne correspondent pas",
     "titleNew": "Définir un mot de passe administrateur",
     "titleUpdate": "Mettre à jour le mot de passe administrateur",
     "updatePassword": "Mettre à jour le mot de passe"
@@ -1134,11 +1153,11 @@
     "delete": "Supprimer",
     "finished": "Terminé",
     "meter": "Compteur",
-    "meterstart": "Compteur début",
-    "meterstop": "Compteur fin",
+    "meterstart": "Début du Compteur",
+    "meterstop": "Fin du Compteur",
     "odometer": "Kilométrage",
     "price": "Prix",
-    "started": "Commencé",
+    "started": "Démarré",
     "title": "Session de charge"
   },
   "sessions": {
@@ -1159,7 +1178,7 @@
       "groupedPriceByGroup": "Coût total {byGroup}",
       "historyCo2": "Émissions de CO₂",
       "historyCo2Sub": "{value} total",
-      "historyPrice": "Coûts de recharge",
+      "historyPrice": "Coûts de charge",
       "historyPriceSub": "{value} total",
       "solar": "Part de Solaire par An",
       "solarByGroup": "Part de Solaire {byGroup}"
@@ -1170,38 +1189,38 @@
       "chargeduration": "Durée",
       "co2perkwh": "CO₂/kWh",
       "created": "Créé",
-      "finished": "Fin",
+      "finished": "Terminé",
       "identifier": "Identifiant",
-      "loadpoint": "Point de chargement",
-      "meterstart": "Compteur début (kWh)",
-      "meterstop": "Compteur fin (kWh)",
+      "loadpoint": "Point de charge",
+      "meterstart": "Début de Compteur (kWh)",
+      "meterstop": "Fin de Compteur (kWh)",
       "odometer": "Kilométrage (km)",
       "price": "Prix",
       "priceperkwh": "Prix/kWh",
-      "solarpercentage": "% solaire",
+      "solarpercentage": "Solaire (%)",
       "vehicle": "Véhicule"
     },
     "csvPeriod": "Télécharger CSV {period}",
     "csvTotal": "Télécharger CSV total",
-    "date": "Début session",
+    "date": "Début",
     "energy": "Chargé",
     "filter": {
-      "allLoadpoints": "tous les points de chargement",
+      "allLoadpoints": "tous les points de charge",
       "allVehicles": "tous les véhicules",
-      "filter": "Filtrer"
+      "filter": "Filtre"
     },
     "group": {
       "co2": "Émissions",
-      "grid": "Réseau",
+      "grid": "Réseau électrique",
       "price": "Prix",
       "self": "Solaire"
     },
     "groupBy": {
-      "loadpoint": "Point de recharge",
+      "loadpoint": "Point de charge",
       "none": "Total",
       "vehicle": "Véhicule"
     },
-    "loadpoint": "Point de chargement",
+    "loadpoint": "Point de charge",
     "noData": "Pas de session de charge ce mois-ci.",
     "overview": "Aperçu",
     "period": {
@@ -1209,7 +1228,7 @@
       "total": "Total",
       "year": "Année"
     },
-    "price": "Prix",
+    "price": "Coût",
     "reallyDelete": "Voulez-vous vraiment supprimer cette session ?",
     "showIndividualEntries": "Afficher les sessions individuelles",
     "solar": "Solaire",
@@ -1231,7 +1250,7 @@
     },
     "hiddenFeatures": {
       "label": "Expérimental",
-      "value": "Afficher les fonctions expérimentales."
+      "value": "Activer les fonctions expérimentales."
     },
     "language": {
       "auto": "Automatique",
@@ -1244,11 +1263,11 @@
       "show": "Afficher {title}"
     },
     "sponsorToken": {
-      "expires": "Votre jeton de sponsor expire dans {inXDays}.",
+      "expires": "Votre jeton de parrain expire dans {inXDays}.",
       "expiresUpdateUi": "{getNewToken} et mettez-le à jour ici.",
       "expiresUpdateYaml": "{getNewToken} et mettez-le à jour dans votre evcc.yaml.",
       "getNewToken": "Obtenez-en un nouveau",
-      "hint": "Remarque : nous allons automatiser cela à l'avenir."
+      "hint": "Remarque : nous allons automatiser cela à l'avenir."
     },
     "telemetry": {
       "label": "Télémétrie"
@@ -1275,38 +1294,38 @@
     "activeHours": "{active} sur {total}",
     "activeHoursLabel": "Temps actif",
     "applyToAll": "Appliquer partout ?",
-    "batteryDescription": "Charge la batterie domestique avec du courant du réseau.",
+    "batteryDescription": "Charge la batterie domestique avec l'electricité du réseau.",
     "cheapTitle": "Charge bon marché depuis le réseau",
     "cleanTitle": "Charge propre depuis le réseau",
     "co2Label": "Émissions de CO₂",
     "co2Limit": "Limite CO₂",
     "enable": "Activer la limite",
     "loadpointDescription": "Autorise la charge rapide temporaire en mode solaire.",
-    "modalTitle": "Recharge réseau intelligente",
+    "modalTitle": "Charge réseau intelligente",
     "none": "aucune",
     "priceLabel": "Prix de l'énergie",
     "priceLimit": "Limite de prix",
     "resetAction": "Supprimer la limite",
-    "resetWarning": "Aucun prix dynamique ou basé sur le CO₂ n’est configuré. Pourtant, il la limite {limit} est définie. Voulez-vous nettoyer la configuration ?",
+    "resetWarning": "Aucun prix dynamique du réseau ou basé sur le CO₂ n’est configuré. Pourtant, il y a une limite {limit} de définie. Voulez-vous nettoyer la configuration ?",
     "saved": "Enregistré."
   },
   "smartFeedInPriority": {
     "activeHoursLabel": "Temps de pause",
-    "description": "La charge est interrompue lorsque les prix sont élevés afin de donner la priorité à l'alimentation rentable du réseau.",
-    "priceLabel": "Taux d'alimentation",
-    "priceLimit": "Limite d'alimentation",
-    "resetWarning": "Aucun tarif de rachat dynamique n'est configuré. Cependant, il y a toujours une limite de {limit}. Nettoyez votre configuration ?",
-    "title": "Priorité à l'alimentation"
+    "description": "La charge est interrompue lorsque les prix sont élevés afin de donner la priorité à l'injection rentable dans le réseau.",
+    "priceLabel": "Prix d'injection",
+    "priceLimit": "Limite d'injection",
+    "resetWarning": "Aucun tarif dynamique d'injection n'est configuré. Cependant, il y a toujours une limite de {limit}. Nettoyez votre configuration ?",
+    "title": "Priorité à l'injection"
   },
   "startupError": {
     "configFile": "Fichier de configuration utilisé :",
     "configuration": "Config",
-    "description": "Veuillez vérifier votre fichier de configuration. Si le message d'erreur ne vous aide pas, recherchez une solution : {0}.",
+    "description": "Veuillez vérifier votre fichier de configuration. Si le message d'erreur ne vous aide pas, recherchez une solution : {0}.",
     "discussions": "Discussions GitHub",
     "editConfiguration": "Modifier la configuration",
-    "fixAndRestart": "Corrigez le problème et redémarrez le serveur.",
-    "hint": "Remarque : Il se peut aussi que vous ayez un appareil défectueux (onduleur, compteur, …). Vérifiez vos connexions réseau.",
-    "lineError": "Erreur à la ligne {0}.",
+    "fixAndRestart": "Merci de corriger le problème et de redémarrer le serveur.",
+    "hint": "Remarque : il se peut aussi que vous ayez un appareil défectueux (onduleur, compteur, …). Vérifiez vos connexions réseau.",
+    "lineError": "Erreur à {0}.",
     "lineErrorLink": "Ligne {0}",
     "restartButton": "Redémarrer",
     "title": "Erreur au démarrage"

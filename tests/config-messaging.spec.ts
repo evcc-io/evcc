@@ -28,7 +28,7 @@ test.describe("messaging", async () => {
     await page.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(modal);
 
-    page.reload();
+    await page.goto("/#/config");
 
     await page.getByTestId("messaging").getByRole("button", { name: "edit" }).click();
     await expectModalVisible(modal);

@@ -41,6 +41,8 @@ export interface HemsStatus {
   maxPower: number;
 }
 
+export type Hems = ConfigStatus<HemsConfig, HemsStatus>;
+
 export interface ShmConfig {
   vendorId: string;
   deviceId: string;
@@ -54,6 +56,8 @@ export interface FatalError {
 
 export interface State {
   offline: boolean;
+  telemetry?: boolean;
+  experimental?: boolean;
   setupRequired?: boolean;
   startupCompleted?: boolean;
   loadpoints: Loadpoint[];
@@ -65,7 +69,7 @@ export interface State {
   version?: string;
   system?: string;
   timezone?: string;
-  battery?: BatteryMeter[];
+  battery?: Battery;
   pv?: Meter[];
   aux?: Meter[];
   ext?: Meter[];
@@ -92,14 +96,13 @@ export interface State {
   ocpp?: Ocpp;
 }
 
-export interface ConfigStatus<T, S> {
-  config?: T;
+export interface ConfigStatus<C, S> {
+  config?: C;
   status?: S;
-  fromYaml?: boolean;
   yamlSource?: YamlSource;
 }
 
-export type YamlSource = "fs" | "db" | "";
+export type YamlSource = "file" | "db" | undefined;
 
 export interface OcppConfig {
   port: number;
@@ -400,7 +403,7 @@ export interface SponsorStatus {
   token?: string;
 }
 
-export type Sponsor = ConfigStatus<unknown, SponsorStatus>;
+export type Sponsor = ConfigStatus<any, SponsorStatus>;
 
 export type VehicleOption = {
   key?: string | null;
@@ -449,6 +452,8 @@ export type Certificate = {
   private: string;
 };
 
+export type Eebus = ConfigStatus<EebusConfig, EebusStatus>;
+
 export type EebusConfig = {
   uri: string;
   port: number;
@@ -488,6 +493,13 @@ export interface Meter {
   title?: string;
   icon?: string;
   energy?: number;
+}
+
+export interface Battery {
+  power: number;
+  capacity: number;
+  soc: number;
+  devices: BatteryMeter[];
 }
 
 export interface BatteryMeter extends Meter {

@@ -1,26 +1,26 @@
 <template>
 	<GenericModal
 		id="experimentalModal"
-		:title="$t('config.experimental.title')"
+		:title="`${$t('config.experimental.title')} 🧪`"
+		config-modal-name="experimental"
 		data-testid="experimental-modal"
 	>
 		<p>{{ $t("config.experimental.description") }}</p>
+		<ErrorMessage :error="error" />
 		<div class="form-check form-switch my-3">
 			<input
 				id="experimentalEnabled"
-				v-model="hiddenFeatures"
+				:checked="experimental"
 				class="form-check-input"
 				type="checkbox"
 				role="switch"
+				@change="change"
 			/>
 			<div class="form-check-label">
 				<label for="experimentalEnabled">
-					{{ $t("settings.hiddenFeatures.value") }} 🧪
+					{{ $t("settings.hiddenFeatures.value") }}
 				</label>
 			</div>
-		</div>
-		<div class="small text-muted">
-			{{ $t("settings.deviceInfo") }}
 		</div>
 	</GenericModal>
 </template>
@@ -28,19 +28,30 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import GenericModal from "../Helper/GenericModal.vue";
-import { getHiddenFeatures, setHiddenFeatures } from "@/featureflags.ts";
+import ErrorMessage from "../Helper/ErrorMessage.vue";
+import api from "@/api";
+import type { AxiosError } from "axios";
 
 export default defineComponent({
 	name: "ExperimentalModal",
-	components: { GenericModal },
+	components: { GenericModal, ErrorMessage },
+	props: {
+		experimental: Boolean,
+	},
 	data() {
 		return {
-			hiddenFeatures: getHiddenFeatures(),
+			error: null as string | null,
 		};
 	},
-	watch: {
-		hiddenFeatures(value) {
-			setHiddenFeatures(value);
+	methods: {
+		async change(e: Event) {
+			try {
+				this.error = null;
+				await api.post(`config/experimental/${(e.target as HTMLInputElement).checked}`);
+			} catch (err) {
+				const e = err as AxiosError<{ error: string }>;
+				this.error = e.response?.data?.error || e.message;
+			}
 		},
 	},
 });

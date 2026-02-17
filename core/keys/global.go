@@ -2,6 +2,7 @@ package keys
 
 const (
 	Interval           = "interval"
+	Experimental       = "experimental"
 	PasswordConfigured = "passwordConfigured"
 	Sponsor            = "sponsor"
 	SponsorToken       = "sponsorToken"
