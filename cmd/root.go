@@ -361,8 +361,8 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// publish initial settings
 	valueChan <- util.Param{Key: keys.EEBus, Val: globalconfig.ConfigStatus{
-		Config:   conf.EEBus.Redacted(),
-		Status:   eebus.GetStatus(),
+		Config:     conf.EEBus.Redacted(),
+		Status:     eebus.GetStatus(),
 		YamlSource: yamlSource.eebus,
 	}}
 	valueChan <- util.Param{Key: keys.Shm, Val: conf.SHM}
@@ -377,13 +377,13 @@ func runRoot(cmd *cobra.Command, args []string) {
 		Status: ocpp.GetStatus(),
 	}}
 	valueChan <- util.Param{Key: keys.Sponsor, Val: globalconfig.ConfigStatus{
-		Status:   sponsor.RedactedStatus(),
+		Status:     sponsor.RedactedStatus(),
 		YamlSource: yamlSource.sponsor,
 	}}
 
 	valueChan <- util.Param{Key: keys.Hems, Val: globalconfig.ConfigStatus{
-		Config:   conf.HEMS.Redacted(),
-		Status:   hemsapi.GetStatus(hems),
+		Config:     conf.HEMS.Redacted(),
+		Status:     hemsapi.GetStatus(hems),
 		YamlSource: yamlSource.hems,
 	}}
 
