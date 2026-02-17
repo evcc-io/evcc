@@ -465,7 +465,7 @@ params:
       de: Längengrad
     type: float
     example: 9.1275
-    service: lon
+    service: location/lon
 
 presets:
   vehicle-base:
