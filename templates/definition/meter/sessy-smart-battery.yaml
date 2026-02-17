@@ -15,7 +15,7 @@ params:
     required: true
   - name: cache
     advanced: true
-    default: 60
+    default: 10
   - name: capacity
     advanced: true
     default: 5

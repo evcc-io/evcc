@@ -10,7 +10,7 @@ params:
     required: true
   - name: cache
     advanced: true
-    default: 60
+    default: 10
 render: |
   type: custom
   power:
