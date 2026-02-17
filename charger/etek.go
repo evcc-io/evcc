@@ -65,7 +65,7 @@ func init() {
 	registry.AddCtx("etek", NewEtekFromConfig)
 }
 
-//go:generate go tool decorate -f decorateEtek -b *Etek -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)"
+//go:generate go tool decorate -f decorateEtek -b *Etek -r api.Charger -t api.Meter,api.MeterEnergy,api.PhaseVoltages
 
 // NewEtekFromConfig creates an ETEK EKEPC2 charger from generic config
 func NewEtekFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {

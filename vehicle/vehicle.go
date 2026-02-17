@@ -11,7 +11,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-//go:generate go tool decorate -f decorateVehicle -b api.Vehicle -t "api.SocLimiter,GetLimitSoc,func() (int64, error)" -t "api.ChargeState,Status,func() (api.ChargeStatus, error)" -t "api.VehicleRange,Range,func() (int64, error)" -t "api.VehicleOdometer,Odometer,func() (float64, error)" -t "api.VehicleClimater,Climater,func() (bool, error)" -t "api.CurrentController,MaxCurrent,func(int64) error" -t "api.CurrentGetter,GetMaxCurrent,func() (float64, error)" -t "api.VehicleFinishTimer,FinishTime,func() (time.Time, error)" -t "api.Resurrector,WakeUp,func() error" -t "api.ChargeController,ChargeEnable,func(bool) error"
+//go:generate go tool decorate -f decorateVehicle -b api.Vehicle -t api.SocLimiter,api.ChargeState,api.VehicleRange,api.VehicleOdometer,api.VehicleClimater,api.CurrentController,api.CurrentGetter,api.VehicleFinishTimer,api.Resurrector,api.ChargeController
 
 // Vehicle is an api.Vehicle implementation with configurable getters and setters.
 type Vehicle struct {

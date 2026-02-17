@@ -49,7 +49,7 @@ func init() {
 	registry.AddCtx("nrggen2", NewNRGKickGen2FromConfig)
 }
 
-//go:generate go tool decorate -f decorateNRGKickGen2 -b *NRGKickGen2 -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
+//go:generate go tool decorate -f decorateNRGKickGen2 -b *NRGKickGen2 -r api.Charger -t api.PhaseSwitcher
 
 // NewNRGKickGen2FromConfig creates a NRGKickGen2 charger from generic config
 func NewNRGKickGen2FromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
