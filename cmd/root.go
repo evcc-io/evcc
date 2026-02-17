@@ -369,7 +369,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	valueChan <- util.Param{Key: keys.Influx, Val: conf.Influx}
 	valueChan <- util.Param{Key: keys.Interval, Val: conf.Interval}
 	valueChan <- util.Param{Key: keys.Messaging, Val: globalconfig.ConfigStatus{
-		YamlSource: fromYaml.messaging,
+		YamlSource: yamlSource.messaging,
 	}}
 	valueChan <- util.Param{Key: keys.MessagingEvents, Val: conf.MessagingEvents}
 	valueChan <- util.Param{Key: keys.ModbusProxy, Val: conf.ModbusProxy}
