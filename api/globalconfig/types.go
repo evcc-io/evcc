@@ -20,10 +20,18 @@ import (
 
 // ConfigStatus for publishing config, status and source to UI and external systems
 type ConfigStatus struct {
-	Config   any  `json:"config,omitempty"`
-	Status   any  `json:"status,omitempty"`
-	FromYaml bool `json:"fromYaml,omitempty"`
+	Config     any        `json:"config,omitempty"`
+	Status     any        `json:"status,omitempty"`
+	YamlSource YamlSource `json:"yamlSource,omitempty"`
 }
+
+type YamlSource string
+
+const (
+	YamlSourceFs   YamlSource = "file"
+	YamlSourceDb   YamlSource = "db"
+	YamlSourceNone YamlSource = ""
+)
 
 type All struct {
 	Network      Network

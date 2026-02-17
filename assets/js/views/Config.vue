@@ -337,7 +337,7 @@
 				<MqttModal @changed="loadDirty" />
 				<NetworkModal @changed="loadDirty" />
 				<ControlModal @changed="loadDirty" />
-				<HemsModal :fromYaml="hems?.fromYaml" @changed="yamlChanged" />
+				<HemsModal :fromYaml="hems?.yamlSource === 'file'" @changed="yamlChanged" />
 				<ShmModal @changed="loadDirty" />
 				<MessagingModal @changed="yamlChanged" />
 				<TariffsModal @changed="yamlChanged" />
@@ -352,7 +352,7 @@
 				/>
 				<EebusModal
 					:status="eebus?.status"
-					:from-yaml="eebus?.fromYaml"
+					:from-yaml="eebus?.yamlSource === 'file'"
 					@changed="yamlChanged"
 				/>
 				<OcppModal :ocpp="ocpp" />

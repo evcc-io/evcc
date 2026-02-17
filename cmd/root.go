@@ -363,7 +363,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	valueChan <- util.Param{Key: keys.EEBus, Val: globalconfig.ConfigStatus{
 		Config:   conf.EEBus.Redacted(),
 		Status:   eebus.GetStatus(),
-		FromYaml: fromYaml.eebus,
+		YamlSource: yamlSource.eebus,
 	}}
 	valueChan <- util.Param{Key: keys.Shm, Val: conf.SHM}
 	valueChan <- util.Param{Key: keys.Influx, Val: conf.Influx}
@@ -378,13 +378,13 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}}
 	valueChan <- util.Param{Key: keys.Sponsor, Val: globalconfig.ConfigStatus{
 		Status:   sponsor.RedactedStatus(),
-		FromYaml: fromYaml.sponsor,
+		YamlSource: yamlSource.sponsor,
 	}}
 
 	valueChan <- util.Param{Key: keys.Hems, Val: globalconfig.ConfigStatus{
 		Config:   conf.HEMS.Redacted(),
 		Status:   hemsapi.GetStatus(hems),
-		FromYaml: fromYaml.hems,
+		YamlSource: yamlSource.hems,
 	}}
 
 	// publish system infos

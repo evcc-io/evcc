@@ -60,6 +60,6 @@ TokenExpires.args = {
       expiresAt: new Date().toISOString(),
       expiresSoon: true,
     },
-    fromYaml: false,
+    yamlSource: "file",
   },
 };

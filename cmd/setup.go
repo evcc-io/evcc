@@ -81,10 +81,10 @@ var conf = globalconfig.All{
 	},
 }
 
-var fromYaml struct {
-	sponsor bool
-	hems    bool
-	eebus   bool
+var yamlSource struct {
+	sponsor globalconfig.YamlSource
+	hems    globalconfig.YamlSource
+	eebus   globalconfig.YamlSource
 }
 
 var nameRE = regexp.MustCompile(`^[a-zA-Z0-9_.:-]+$`)
@@ -501,11 +501,18 @@ func configureVehicles(static []config.Named, names ...string) error {
 
 func configureSponsorship(token string) (err error) {
 	if settings.Exists(keys.SponsorToken) {
+		yamlSource.sponsor = globalconfig.YamlSourceDb
 		if token, err = settings.String(keys.SponsorToken); err != nil {
 			return err
 		}
-	} else if token != "" {
-		fromYaml.sponsor = true
+	}
+	if token != "" {
+		if yamlSource.sponsor == globalconfig.YamlSourceDb {
+			// just warn, no error to not break previous behavior
+			log.WARN.Println("sponsortoken configured via UI yaml; evcc.yaml config will be ignored")
+		} else {
+			yamlSource.sponsor = globalconfig.YamlSourceFs
+		}
 	}
 
 	return sponsor.ConfigureSponsorship(token)
@@ -709,15 +716,20 @@ func configureGo(conf []globalconfig.Go) error {
 // setup HEMS
 func configureHEMS(conf *globalconfig.Hems, site *core.Site) (hemsapi.API, error) {
 	// use yaml if configured
-	if conf.Type == "" {
-		if settings.Exists(keys.Hems) {
+	if conf.Type != "" {
+		yamlSource.hems = globalconfig.YamlSourceFs
+	}
+	if settings.Exists(keys.Hems) {
+		if yamlSource.hems == globalconfig.YamlSourceFs {
+			// just warn, no error to not break previous behavior
+			log.WARN.Println("sponsortoken configured via evcc.yaml; UI yaml config will be ignored")
+		} else {
 			*conf = globalconfig.Hems{}
 			if err := settings.Yaml(keys.Hems, new(map[string]any), &conf); err != nil {
 				return nil, err
 			}
+			yamlSource.hems = globalconfig.YamlSourceDb
 		}
-	} else {
-		fromYaml.hems = true
 	}
 
 	if conf.Type == "" {
@@ -779,13 +791,20 @@ func configureOCPP(cfg *ocpp.Config, externalUrl string) {
 
 // setup EEBus
 func configureEEBus(conf *eebus.Config) error {
+	if conf.IsConfigured() {
+		yamlSource.hems = globalconfig.YamlSourceFs
+	}
 	// migrate settings
 	if settings.Exists(keys.EEBus) {
-		if err := migrateYamlToJson(keys.EEBus, conf); err != nil {
-			return err
+		if yamlSource.hems == globalconfig.YamlSourceFs {
+			// just warn, no error to not break previous behavior
+			log.WARN.Println("eebus configured via UI; evcc.yaml config will be ignored")
+		} else {
+			yamlSource.hems = globalconfig.YamlSourceDb
+			if err := migrateYamlToJson(keys.EEBus, conf); err != nil {
+				return err
+			}
 		}
-	} else if conf.IsConfigured() {
-		fromYaml.eebus = true
 	}
 
 	if !conf.IsConfigured() {
@@ -798,6 +817,7 @@ func configureEEBus(conf *eebus.Config) error {
 		if err := settings.SetJson(keys.EEBus, conf); err != nil {
 			return err
 		}
+		yamlSource.hems = globalconfig.YamlSourceDb
 	}
 
 	var err error
