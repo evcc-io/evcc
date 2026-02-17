@@ -781,20 +781,14 @@ func configureOCPP(cfg *ocpp.Config, externalUrl string) {
 
 // setup EEBus
 func configureEEBus(conf *eebus.Config) error {
-	if conf.IsConfigured() {
-		yamlSource.eebus = globalconfig.YamlSourceFile
-	}
 	// migrate settings
 	if settings.Exists(keys.EEBus) {
-		if yamlSource.eebus == globalconfig.YamlSourceFile {
-			// just warn, no error to not break previous behavior
-			log.WARN.Println("eebus configured via evcc.yaml; UI config will be ignored")
-		} else {
-			yamlSource.eebus = globalconfig.YamlSourceDb
-			if err := migrateYamlToJson(keys.EEBus, conf); err != nil {
-				return err
-			}
+		if err := migrateYamlToJson(keys.EEBus, conf); err != nil {
+			return err
 		}
+		yamlSource.eebus = globalconfig.YamlSourceDb
+	} else if conf.IsConfigured() {
+		yamlSource.eebus = globalconfig.YamlSourceFile
 	}
 
 	if !conf.IsConfigured() {
