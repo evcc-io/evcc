@@ -785,7 +785,6 @@ func configureEEBus(conf *eebus.Config) error {
 		if err := migrateYamlToJson(keys.EEBus, conf); err != nil {
 			return err
 		}
-		yamlSource.eebus = globalconfig.YamlSourceDb
 	} else if conf.IsConfigured() {
 		yamlSource.eebus = globalconfig.YamlSourceFile
 	}
