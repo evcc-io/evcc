@@ -501,18 +501,12 @@ func configureVehicles(static []config.Named, names ...string) error {
 
 func configureSponsorship(token string) (err error) {
 	if settings.Exists(keys.SponsorToken) {
-		yamlSource.sponsor = globalconfig.YamlSourceDb
 		if token, err = settings.String(keys.SponsorToken); err != nil {
 			return err
 		}
-	}
-	if token != "" {
-		if yamlSource.sponsor == globalconfig.YamlSourceDb {
-			// just warn, no error to not break previous behavior
-			log.WARN.Println("sponsortoken configured via UI yaml; evcc.yaml config will be ignored")
-		} else {
-			yamlSource.sponsor = globalconfig.YamlSourceFile
-		}
+		yamlSource.sponsor = globalconfig.YamlSourceDb
+	} else if token != "" {
+		yamlSource.sponsor = globalconfig.YamlSourceFile
 	}
 
 	return sponsor.ConfigureSponsorship(token)
@@ -716,20 +710,16 @@ func configureGo(conf []globalconfig.Go) error {
 // setup HEMS
 func configureHEMS(conf *globalconfig.Hems, site *core.Site) (hemsapi.API, error) {
 	// use yaml if configured
-	if conf.Type != "" {
-		yamlSource.hems = globalconfig.YamlSourceFile
-	}
-	if settings.Exists(keys.Hems) {
-		if yamlSource.hems == globalconfig.YamlSourceFile {
-			// just warn, no error to not break previous behavior
-			log.WARN.Println("sponsortoken configured via evcc.yaml; UI yaml config will be ignored")
-		} else {
+	if conf.Type == "" {
+		if settings.Exists(keys.Hems) {
 			*conf = globalconfig.Hems{}
 			if err := settings.Yaml(keys.Hems, new(map[string]any), &conf); err != nil {
 				return nil, err
 			}
 			yamlSource.hems = globalconfig.YamlSourceDb
 		}
+	} else {
+		yamlSource.hems = globalconfig.YamlSourceFile
 	}
 
 	if conf.Type == "" {
