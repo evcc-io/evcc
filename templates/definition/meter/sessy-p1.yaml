@@ -97,3 +97,34 @@ render: |
       scale: 0.001
       cache: {{ .cache }}
       timeout: 10s
+  voltages:
+    - source: http
+      uri: http://{{ .host }}/api/v2/p1/details
+      method: GET
+      headers:
+        - content-type: application/json
+      insecure: false
+      jq: .voltage_l1
+      scale: 0.001
+      cache: {{ .cache }}
+      timeout: 10s
+    - source: http
+      uri: http://{{ .host }}/api/v2/p1/details
+      method: GET
+      headers:
+        - content-type: application/json
+      insecure: false
+      jq: .voltage_l2
+      scale: 0.001
+      cache: {{ .cache }}
+      timeout: 10s
+    - source: http
+      uri: http://{{ .host }}/api/v2/p1/details
+      method: GET
+      headers:
+        - content-type: application/json
+      insecure: false
+      jq: .voltage_l3
+      scale: 0.001
+      cache: {{ .cache }}
+      timeout: 10s
