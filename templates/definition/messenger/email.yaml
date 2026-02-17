@@ -1,0 +1,39 @@
+template: email
+products:
+  - description:
+      en: Email
+      de: E-Mail
+params:
+  - name: host
+    required: true
+    example: smtp.example.com
+  - name: port
+    required: true
+    example: 465
+    default: 465
+  - name: user
+    required: true
+  - name: password
+    required: true
+  - name: from
+    required: true
+    example: john.doe@example.com
+    description:
+      de: Von
+      en: From
+    help:
+      de: E-Mail-Adresse des Absenders.
+      en: Sender's email address.
+  - name: to
+    required: true
+    type: list
+    example: recipient@example.com
+    description:
+      de: An
+      en: To
+    help:
+      de: E-Mail-Adressen der Empfänger. One entry per line.
+      en: Email addresses of recipients. Ein Eintrag pro Zeile.
+render: |
+  type: shout
+  uri: smtp://{{ .user }}:{{ .password }}@{{ .host }}:{{ .port }}/?fromAddress={{ .from }}&to={{ .to | join "," }}

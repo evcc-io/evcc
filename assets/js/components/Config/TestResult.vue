@@ -30,9 +30,13 @@
 		<div v-if="error" class="text-danger" :class="{ 'opacity-25': isRunning }">
 			{{ error }}
 		</div>
-		<hr v-if="result" class="divider" />
-		<div v-if="result" :class="{ 'opacity-25': isRunning }">
-			<DeviceTags :tags="result" :currency="currency" class="success-values" />
+		<hr v-if="hasResult" class="divider" />
+		<div v-if="hasResult" :class="{ 'opacity-25': isRunning }">
+			<DeviceTags
+				:tags="result as Record<string, any>"
+				:currency="currency"
+				class="success-values"
+			/>
 		</div>
 	</div>
 </template>
@@ -61,6 +65,11 @@ export default defineComponent({
 		return {
 			showTokenRequired: false,
 		};
+	},
+	computed: {
+		hasResult() {
+			return this.result && Object.keys(this.result).length > 0;
+		},
 	},
 	watch: {
 		sponsorTokenRequired() {

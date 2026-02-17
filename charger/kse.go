@@ -71,7 +71,7 @@ func NewKSEFromConfig(ctx context.Context, other map[string]any) (api.Charger, e
 	return NewKSE(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.ID)
 }
 
-//go:generate go tool decorate -f decorateKSE -b *KSE -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)" -t "api.Identifier,Identify,func() (string, error)"
+//go:generate go tool decorate -f decorateKSE -b *KSE -r api.Charger -t api.PhaseSwitcher,api.PhaseGetter,api.Identifier
 
 // NewKSE creates KSE charger
 func NewKSE(ctx context.Context, uri, device, comset string, baudrate int, slaveID uint8) (api.Charger, error) {

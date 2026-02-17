@@ -1,0 +1,39 @@
+template: telegram
+products:
+  - brand: Telegram
+requirements:
+  evcc: ["skiptest"]
+params:
+  - name: token
+    required: true
+    mask: true
+    example: 123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11
+    description:
+      de: Token
+      en: Token
+    help:
+      de: Auch Bot-ID genannt.
+      en: Also called Bot ID.
+  - name: chats
+    required: true
+    type: list
+    example: -210987654
+    description:
+      de: Chat-IDs
+      en: Chat IDs
+    help:
+      de: >
+        Chat-Identifikatoren und Gruppen-Identifikatoren können angegeben werden. Letztere haben ein Minuszeichen. Ein Eintrag pro Zeile.
+        Tipp: In Telegram im Browser anmelden und die Chats öffnen, um die Kennungen in der URL zu sehen.
+      en: >
+        Chat identifiers and group identifiers can be specified. The latter have a minus sign. One entry per line.
+        Tip: Log in to Telegram in your browser and open the chats to see the identifiers in the URL.
+render: |
+  type: telegram
+  token: {{ .token }}
+  {{- if .chats }}
+  chats:
+  {{- range .chats }}
+  - {{ . }}
+  {{- end }}
+  {{- end }}

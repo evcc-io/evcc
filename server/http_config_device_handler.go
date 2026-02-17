@@ -17,6 +17,7 @@ import (
 	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/meter"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/tariff"
@@ -76,6 +77,9 @@ func devicesConfigHandler(w http.ResponseWriter, r *http.Request) {
 
 	case templates.Circuit:
 		res, err = devicesConfig(class, config.Circuits(), hidePrivate)
+
+	case templates.Messenger:
+		res, err = devicesConfig(class, config.Messengers(), hidePrivate)
 
 	case templates.Tariff:
 		res, err = devicesConfig(class, config.Tariffs(), hidePrivate)
@@ -200,6 +204,9 @@ func deviceConfigHandler(w http.ResponseWriter, r *http.Request) {
 	case templates.Circuit:
 		res, err = deviceConfig(class, id, config.Circuits(), hidePrivate)
 
+	case templates.Messenger:
+		res, err = deviceConfig(class, id, config.Messengers(), hidePrivate)
+
 	case templates.Tariff:
 		res, err = deviceConfig(class, id, config.Tariffs(), hidePrivate)
 	}
@@ -258,6 +265,9 @@ func deviceStatusHandler(w http.ResponseWriter, r *http.Request) {
 
 	case templates.Circuit:
 		instance, err = deviceStatus(name, config.Circuits())
+
+	case templates.Messenger:
+		instance, err = deviceStatus(name, config.Messengers())
 
 	case templates.Tariff:
 		instance, err = deviceStatus(name, config.Tariffs())
@@ -320,6 +330,9 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		conf, err = newDevice(ctx, class, req, func(ctx context.Context, _ string, other map[string]any) (api.Circuit, error) {
 			return circuit.NewFromConfig(ctx, util.NewLogger("circuit"), other)
 		}, config.Circuits(), force)
+
+	case templates.Messenger:
+		conf, err = newDevice(ctx, class, req, messenger.NewFromConfig, config.Messengers(), force)
 
 	case templates.Tariff:
 		conf, err = newDevice(ctx, class, req, tariff.NewFromConfig, config.Tariffs(), force)
@@ -404,6 +417,9 @@ func updateDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		err = updateDevice(ctx, id, class, req, func(ctx context.Context, _ string, other map[string]any) (api.Circuit, error) {
 			return circuit.NewFromConfig(ctx, util.NewLogger("circuit"), other)
 		}, config.Circuits(), force)
+
+	case templates.Messenger:
+		err = updateDevice(ctx, id, class, req, messenger.NewFromConfig, config.Messengers(), force)
 
 	case templates.Tariff:
 		err = updateDevice(ctx, id, class, req, tariff.NewFromConfig, config.Tariffs(), force)
@@ -583,6 +599,9 @@ func deleteDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Requ
 				}
 			}
 
+		case templates.Messenger:
+			err = deleteDevice(id, config.Messengers())
+
 		case templates.Tariff:
 			err = deleteDevice(id, config.Tariffs())
 
@@ -660,6 +679,9 @@ func testConfigHandler(w http.ResponseWriter, r *http.Request) {
 
 	case templates.Circuit:
 		err = api.ErrNotAvailable
+
+	case templates.Messenger:
+		instance, err = testConfig(ctx, id, class, req, messenger.NewFromConfig, config.Messengers())
 
 	case templates.Tariff:
 		instance, err = testConfig(ctx, id, class, req, tariff.NewFromConfig, config.Tariffs())
