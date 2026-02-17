@@ -13,20 +13,17 @@
 		>
 			<div class="modal-dialog modal-dialog-centered" :class="sizeClass" role="document">
 				<div class="modal-content">
-					<div class="modal-header d-flex justify-content-between align-items-center">
+					<div class="modal-header">
 						<h5 class="modal-title">
 							{{ title }}
 						</h5>
-						<div class="d-flex align-items-center gap-1">
-							<slot name="header-actions"></slot>
-							<button
-								v-if="!uncloseable"
-								type="button"
-								class="btn-close"
-								data-bs-dismiss="modal"
-								aria-label="Close"
-							></button>
-						</div>
+						<button
+							v-if="!uncloseable"
+							type="button"
+							class="btn-close"
+							data-bs-dismiss="modal"
+							aria-label="Close"
+						></button>
 					</div>
 					<div ref="modalBody" class="modal-body">
 						<slot />

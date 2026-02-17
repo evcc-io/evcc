@@ -134,7 +134,6 @@
       "dimmed": "Dimmed",
       "enabled": "Enabled",
       "energy": "Energy",
-      "events": "Events",
       "feedinPrice": "Feed-in price",
       "forecast": "Forecast",
       "gridPrice": "Grid price",
@@ -143,7 +142,6 @@
       "hemsType": "Communication",
       "identifier": "RFID-Identifier",
       "max": "max",
-      "messengers": "Services",
       "no": "no",
       "odometer": "Odometer",
       "org": "Organization",
@@ -225,7 +223,6 @@
       "cancel": "Cancel",
       "clear": "Clear",
       "close": "Close",
-      "confirmSave": "There are unsaved changes. Save now?",
       "copied": "Copied!",
       "copy": "Copy",
       "customHelp": "Create a user-defined device using evcc's plugin system.",
@@ -423,65 +420,8 @@
       "welcomeBannerTitle": "Let's configure your system!"
     },
     "messaging": {
-      "addMessenger": "Add service",
-      "description": "Receive notifications about your charging sessions.",
-      "event": {
-        "asleep": {
-          "messageDefault": "Charge release, vehicle {vehicleName} not charging.",
-          "title": "When waiting for vehicle",
-          "titleDefault": "Vehicle asleep"
-        },
-        "connect": {
-          "messageDefault": "Car connected at {pvPower}kW PV",
-          "title": "When a car connects",
-          "titleDefault": "Car connected"
-        },
-        "disconnect": {
-          "messageDefault": "Car disconnected after {connectedDuration}",
-          "title": "When a car disconnects",
-          "titleDefault": "Car disconnected"
-        },
-        "guest": {
-          "messageDefault": "Unknown vehicle, guest connected?",
-          "title": "When an unknown car connects",
-          "titleDefault": "Unknown vehicle"
-        },
-        "planoverrun": {
-          "messageDefault": "{vehicleTitle}: Plan will overrun.",
-          "title": "When plan charging is going to overrun",
-          "titleDefault": "Plan overrun"
-        },
-        "soc": {
-          "messageDefault": "Battery charged to {vehicleSoc}%",
-          "title": "Charge level update",
-          "titleDefault": "Charge level updated"
-        },
-        "start": {
-          "messageDefault": "Started charging in {mode} mode.",
-          "title": "When charging starts",
-          "titleDefault": "Charge started"
-        },
-        "stop": {
-          "messageDefault": "Finished charging {chargedEnergy}kWh in {chargeDuration}.",
-          "title": "When charging stops",
-          "titleDefault": "Charge finished"
-        }
-      },
-      "eventMessage": "Message",
-      "eventTitle": "Title",
-      "events": "Events",
-      "legacyWarning": "New notification configuration available! Remove and save your configuration here to use the new guided process.",
-      "messengers": "Services",
-      "seePlaceholders": "see placeholders",
+      "description": "Receive messages about your charging sessions.",
       "title": "Notifications"
-    },
-    "messenger": {
-      "custom": "User-defined service",
-      "generic": "Generic service",
-      "primary": "Specific service",
-      "template": "Service",
-      "titleAdd": "Add Service",
-      "titleEdit": "Edit Service"
     },
     "meter": {
       "cancel": "Cancel",
@@ -788,7 +728,7 @@
     "validation": {
       "failed": "failed",
       "label": "Status",
-      "running": "validating…",
+      "running": "Validating…",
       "success": "successful",
       "unknown": "unknown",
       "validate": "validate"

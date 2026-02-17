@@ -8,10 +8,10 @@ import (
 )
 
 func init() {
-	registry.AddCtx("template", NewFromTemplateConfig)
+	registry.AddCtx("template", NewChargerFromTemplateConfig)
 }
 
-func NewFromTemplateConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
+func NewChargerFromTemplateConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	instance, err := templates.RenderInstance(templates.Charger, other)
 	if err != nil {
 		return nil, err

@@ -24,7 +24,7 @@ import (
 	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/core/vehicle"
 	"github.com/evcc-io/evcc/core/wrapper"
-	"github.com/evcc-io/evcc/messenger"
+	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/modbus"
@@ -79,9 +79,9 @@ type Loadpoint struct {
 	clock    clock.Clock // mockable time
 	bus      evbus.Bus   // event bus
 	site     site.API
-	pushChan chan<- messenger.Event // notifications
-	uiChan   chan<- util.Param      // client push messages
-	lpChan   chan<- *Loadpoint      // update requests
+	pushChan chan<- push.Event // notifications
+	uiChan   chan<- util.Param // client push messages
+	lpChan   chan<- *Loadpoint // update requests
 	log      *util.Logger
 
 	rwMutex      int64        // count reentrant RWMutex
@@ -444,7 +444,7 @@ func (lp *Loadpoint) configureChargerType(charger api.Charger) {
 
 // pushEvent sends push messages to clients
 func (lp *Loadpoint) pushEvent(event string) {
-	lp.pushChan <- messenger.Event{Event: event}
+	lp.pushChan <- push.Event{Event: event}
 }
 
 // publish sends values to UI and databases
@@ -617,7 +617,7 @@ func (lp *Loadpoint) defaultMode() {
 }
 
 // Prepare loadpoint configuration by adding missing helper elements
-func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan chan<- messenger.Event, lpChan chan<- *Loadpoint) {
+func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan chan<- push.Event, lpChan chan<- *Loadpoint) {
 	lp.site = site
 	lp.uiChan = uiChan
 	lp.pushChan = pushChan

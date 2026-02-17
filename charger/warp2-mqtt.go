@@ -38,7 +38,7 @@ func init() {
 	registry.Add("warp-fw2", NewWarp2FromConfig) // deprecated
 }
 
-//go:generate go tool decorate -f decorateWarp2 -b *Warp2 -r api.Charger -t api.Meter,api.MeterEnergy,api.PhaseCurrents,api.PhaseVoltages,api.Identifier,api.PhaseSwitcher,api.PhaseGetter
+//go:generate go tool decorate -f decorateWarp2 -b *Warp2 -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.Identifier,Identify,func() (string, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
 
 // NewWarpFromConfig creates a new configurable charger
 func NewWarp2FromConfig(other map[string]any) (api.Charger, error) {

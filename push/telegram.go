@@ -1,4 +1,4 @@
-package messenger
+package push
 
 import (
 	"context"
@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
@@ -25,7 +24,7 @@ type Telegram struct {
 }
 
 // NewTelegramFromConfig creates new pushover messenger
-func NewTelegramFromConfig(ctx context.Context, other map[string]any) (api.Messenger, error) {
+func NewTelegramFromConfig(ctx context.Context, other map[string]any) (Messenger, error) {
 	var cc struct {
 		Token string
 		Chats []int64

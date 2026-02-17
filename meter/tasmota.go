@@ -21,7 +21,7 @@ func init() {
 	registry.Add("tasmota", NewTasmotaFromConfig)
 }
 
-//go:generate go tool decorate -f decorateTasmota -b *Tasmota -r api.Meter -t api.PhaseVoltages,api.PhaseCurrents,api.PhasePowers
+//go:generate go tool decorate -f decorateTasmota -b *Tasmota -r api.Meter -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhasePowers,Powers,func() (float64, float64, float64, error)"
 
 // NewTasmotaFromConfig creates a Tasmota meter from generic config
 func NewTasmotaFromConfig(other map[string]any) (api.Meter, error) {

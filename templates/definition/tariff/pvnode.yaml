@@ -46,7 +46,9 @@ render: |
   features: ["cacheable"]
   forecast:
     source: http
-    uri: https://api.pvnode.com/v1/forecast/?latitude={{ .lat }}&longitude={{ .lon }}&slope={{ .dec }}&orientation={{ .az }}&pv_power_kw={{ .kwp }}&required_data=pv_watts&forecast_days={{ .forecast_days }}&past_days=0
+    method: GET
+    uri: >-
+      https://api.pvnode.com/v1/forecast/?latitude={{ .lat }}&longitude={{ .lon }}&slope={{ .dec }}&orientation={{ .az }}&pv_power_kw={{ .kwp }}&required_data=pv_watts&forecast_days={{ .forecast_days }}&past_days=0
     auth:
       type: bearer
       token: {{ .apikey }}

@@ -33,7 +33,7 @@ func init() {
 
 	baseTmpl = template.Must(FuncMap(template.New("base")).ParseFS(includeFS, "includes/*.tpl"))
 
-	for _, class := range []Class{Charger, Meter, Vehicle, Tariff, Messenger} {
+	for _, class := range []Class{Charger, Meter, Vehicle, Tariff} {
 		load(class)
 	}
 }

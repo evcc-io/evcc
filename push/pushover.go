@@ -1,10 +1,9 @@
-package messenger
+package push
 
 import (
 	"errors"
 	"strings"
 
-	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/gregdel/pushover"
 )
@@ -22,7 +21,7 @@ type PushOver struct {
 }
 
 // NewPushOverFromConfig creates new pushover messenger
-func NewPushOverFromConfig(other map[string]any) (api.Messenger, error) {
+func NewPushOverFromConfig(other map[string]any) (Messenger, error) {
 	var cc struct {
 		App        string
 		Recipients []string

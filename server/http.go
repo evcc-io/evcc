@@ -311,13 +311,12 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 
 		// json handlers
 		for key, fun := range map[string]func() any{
-			keys.Network:         func() any { return new(globalconfig.Network) },       // has default
-			keys.Mqtt:            func() any { return new(globalconfig.Mqtt) },          // has default
-			keys.ModbusProxy:     func() any { return new([]globalconfig.ModbusProxy) }, // slice
-			keys.Shm:             func() any { return new(shm.Config) },
-			keys.Influx:          func() any { return new(globalconfig.Influx) },
-			keys.EEBus:           func() any { return new(eebus.Config) },
-			keys.MessagingEvents: func() any { return new(globalconfig.MessagingEvents) },
+			keys.Network:     func() any { return new(globalconfig.Network) },       // has default
+			keys.Mqtt:        func() any { return new(globalconfig.Mqtt) },          // has default
+			keys.ModbusProxy: func() any { return new([]globalconfig.ModbusProxy) }, // slice
+			keys.Shm:         func() any { return new(shm.Config) },
+			keys.Influx:      func() any { return new(globalconfig.Influx) },
+			keys.EEBus:       func() any { return new(eebus.Config) },
 		} {
 			routes["update"+key] = route{Method: "POST", Pattern: "/" + key, HandlerFunc: settingsSetJsonHandler(key, pub, fun)}
 			routes["delete"+key] = route{Method: "DELETE", Pattern: "/" + key, HandlerFunc: settingsDeleteJsonHandler(key, pub, fun())}

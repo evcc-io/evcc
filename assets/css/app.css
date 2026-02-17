@@ -776,26 +776,3 @@ input::-webkit-date-and-time-value {
 .tabular {
 	font-variant-numeric: tabular-nums;
 }
-
-/* Collapsible wrapper pattern with choreographed animation */
-.collapsible-wrapper {
-	display: grid;
-	grid-template-rows: 0fr;
-	transition: grid-template-rows var(--evcc-transition-fast) ease 0.2s;
-}
-
-.collapsible-wrapper.open {
-	grid-template-rows: 1fr;
-	transition: grid-template-rows var(--evcc-transition-fast) ease;
-}
-
-.collapsible-content {
-	overflow: hidden;
-	opacity: 0;
-	transition: opacity 0.2s ease;
-}
-
-.collapsible-wrapper.open .collapsible-content {
-	opacity: 1;
-	transition: opacity var(--evcc-transition-fast) ease 0.2s;
-}

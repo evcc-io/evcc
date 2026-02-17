@@ -1,5 +1,0 @@
-messaging:
-  events:
-    start:
-      title: Charge started
-      msg: Started charging

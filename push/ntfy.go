@@ -1,4 +1,4 @@
-package messenger
+package push
 
 import (
 	"encoding/base64"
@@ -8,7 +8,6 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 )
@@ -26,7 +25,7 @@ type Ntfy struct {
 }
 
 // NewNtfyFromConfig creates new Ntfy messenger
-func NewNtfyFromConfig(other map[string]any) (api.Messenger, error) {
+func NewNtfyFromConfig(other map[string]any) (Messenger, error) {
 	var cc struct {
 		URI       string
 		Priority  string
