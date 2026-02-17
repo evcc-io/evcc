@@ -27,11 +27,11 @@ import (
 	"github.com/evcc-io/evcc/hems"
 	hemsapi "github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/hems/shm"
+	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/meter"
 	"github.com/evcc-io/evcc/plugin/golang"
 	"github.com/evcc-io/evcc/plugin/javascript"
 	"github.com/evcc-io/evcc/plugin/mqtt"
-	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/server/db/settings"
@@ -82,9 +82,10 @@ var conf = globalconfig.All{
 }
 
 var yamlSource struct {
-	sponsor globalconfig.YamlSource
-	hems    globalconfig.YamlSource
-	eebus   globalconfig.YamlSource
+	sponsor   globalconfig.YamlSource
+	hems      globalconfig.YamlSource
+	eebus     globalconfig.YamlSource
+	messaging globalconfig.YamlSource
 }
 
 var nameRE = regexp.MustCompile(`^[a-zA-Z0-9_.:-]+$`)
@@ -231,6 +232,47 @@ NEXT:
 	return nil
 }
 
+type newFromConfFunc[T any] func(context.Context, string, map[string]any) (T, error)
+
+func staticInstance[T any](typ string, cc config.Named, newFromConf newFromConfFunc[T], h config.Handler[T]) error {
+	ctx := util.WithLogger(context.TODO(), util.NewLogger(cc.Name))
+
+	instance, err := newFromConf(ctx, cc.Type, cc.Other)
+	if err != nil {
+		return &DeviceError{cc.Name, fmt.Errorf("cannot create %s '%s': %w", typ, cc.Name, err)}
+	}
+
+	if err := h.Add(config.NewStaticDevice(cc, instance)); err != nil {
+		return &DeviceError{cc.Name, err}
+	}
+
+	return nil
+}
+
+func configurableInstance[T any](typ string, conf *config.Config, newFromConf newFromConfFunc[T], h config.Handler[T]) error {
+	cc := conf.Named()
+	ctx := util.WithLogger(context.TODO(), util.NewLogger(cc.Name))
+
+	props, err := customDevice(cc.Other)
+	if err != nil {
+		err = &DeviceError{cc.Name, fmt.Errorf("cannot decode custom %s '%s': %w", typ, cc.Name, err)}
+	}
+
+	var instance T
+	if err == nil {
+		instance, err = newFromConf(ctx, cc.Type, props)
+		if err != nil {
+			err = &DeviceError{cc.Name, fmt.Errorf("cannot create %s '%s': %w", typ, cc.Name, err)}
+		}
+	}
+
+	if e := h.Add(config.NewConfigurableDevice(conf, instance)); e != nil && err == nil {
+		err = &DeviceError{cc.Name, e}
+	}
+
+	return err
+}
+
 func configureMeters(static []config.Named, names ...string) error {
 	var eg errgroup.Group
 
@@ -249,18 +291,7 @@ func configureMeters(static []config.Named, names ...string) error {
 		}
 
 		eg.Go(func() error {
-			ctx := util.WithLogger(context.TODO(), util.NewLogger(cc.Name))
-
-			instance, err := meter.NewFromConfig(ctx, cc.Type, cc.Other)
-			if err != nil {
-				return &DeviceError{cc.Name, fmt.Errorf("cannot create meter '%s': %w", cc.Name, err)}
-			}
-
-			if err := config.Meters().Add(config.NewStaticDevice(cc, instance)); err != nil {
-				return &DeviceError{cc.Name, err}
-			}
-
-			return nil
+			return staticInstance("meter", cc, meter.NewFromConfig, config.Meters())
 		})
 	}
 
@@ -279,26 +310,7 @@ func configureMeters(static []config.Named, names ...string) error {
 				return nil
 			}
 
-			ctx := util.WithLogger(context.TODO(), util.NewLogger(cc.Name))
-
-			props, err := customDevice(cc.Other)
-			if err != nil {
-				err = &DeviceError{cc.Name, fmt.Errorf("cannot decode custom meter '%s': %w", cc.Name, err)}
-			}
-
-			var instance api.Meter
-			if err == nil {
-				instance, err = meter.NewFromConfig(ctx, cc.Type, props)
-				if err != nil {
-					err = &DeviceError{cc.Name, fmt.Errorf("cannot create meter '%s': %w", cc.Name, err)}
-				}
-			}
-
-			if e := config.Meters().Add(config.NewConfigurableDevice(&conf, instance)); e != nil && err == nil {
-				err = &DeviceError{cc.Name, e}
-			}
-
-			return err
+			return configurableInstance("meter", &conf, meter.NewFromConfig, config.Meters())
 		})
 	}
 
@@ -323,18 +335,7 @@ func configureChargers(static []config.Named, names ...string) error {
 		}
 
 		eg.Go(func() error {
-			ctx := util.WithLogger(context.TODO(), util.NewLogger(cc.Name))
-
-			instance, err := charger.NewFromConfig(ctx, cc.Type, cc.Other)
-			if err != nil {
-				return &DeviceError{cc.Name, fmt.Errorf("cannot create charger '%s': %w", cc.Name, err)}
-			}
-
-			if err := config.Chargers().Add(config.NewStaticDevice(cc, instance)); err != nil {
-				return &DeviceError{cc.Name, err}
-			}
-
-			return nil
+			return staticInstance("charger", cc, charger.NewFromConfig, config.Chargers())
 		})
 	}
 
@@ -353,26 +354,7 @@ func configureChargers(static []config.Named, names ...string) error {
 				return nil
 			}
 
-			ctx := util.WithLogger(context.TODO(), util.NewLogger(cc.Name))
-
-			props, err := customDevice(cc.Other)
-			if err != nil {
-				err = &DeviceError{cc.Name, fmt.Errorf("cannot decode custom charger '%s': %w", cc.Name, err)}
-			}
-
-			var instance api.Charger
-			if err == nil {
-				instance, err = charger.NewFromConfig(ctx, cc.Type, props)
-				if err != nil {
-					err = &DeviceError{cc.Name, fmt.Errorf("cannot create charger '%s': %w", cc.Name, err)}
-				}
-			}
-
-			if e := config.Chargers().Add(config.NewConfigurableDevice(&conf, instance)); e != nil && err == nil {
-				err = &DeviceError{cc.Name, e}
-			}
-
-			return err
+			return configurableInstance("charger", &conf, charger.NewFromConfig, config.Chargers())
 		})
 	}
 
@@ -812,34 +794,86 @@ func configureEEBus(conf *eebus.Config) error {
 	return nil
 }
 
-// setup messaging
-func configureMessengers(conf *globalconfig.Messaging, vehicles push.Vehicles, valueChan chan<- util.Param, cache *util.ParamCache) (chan push.Event, error) {
-	// migrate settings
+func configureMessengers(confMessaging *globalconfig.Messaging, confEvents *globalconfig.MessagingEvents, vehicles messenger.Vehicles, valueChan chan<- util.Param, cache *util.ParamCache) (chan messenger.Event, error) {
+	// yaml config from file
+	if len(confMessaging.Events) != 0 || len(confMessaging.Services) != 0 {
+		yamlSource.messaging = globalconfig.YamlSourceFile
+	}
+
+	// yaml config from db (deprecated)
 	if settings.Exists(keys.Messaging) {
-		*conf = globalconfig.Messaging{}
-		if err := settings.Yaml(keys.Messaging, new(map[string]any), &conf); err != nil {
+		if yamlSource.messaging == globalconfig.YamlSourceFile {
+			// just warn, no error to not break previous behavior
+			log.WARN.Println("messaging configured via UI yaml; evcc.yaml config will be ignored")
+		}
+		*confMessaging = globalconfig.Messaging{}
+		if err := settings.Yaml(keys.Messaging, new(map[string]any), &confMessaging); err != nil {
 			return nil, err
+		}
+		yamlSource.messaging = globalconfig.YamlSourceDb
+	}
+
+	if settings.Exists(keys.MessagingEvents) {
+		*confEvents = globalconfig.MessagingEvents{}
+		if err := settings.Json(keys.MessagingEvents, &confEvents); err != nil {
+			return nil, err
+		}
+		if yamlSource.messaging != globalconfig.YamlSourceNone && confEvents != nil {
+			return nil, errors.New("yaml and device config exists for messaging; remove yaml config")
 		}
 	}
 
-	messageChan := make(chan push.Event, 1)
+	messageChan := make(chan messenger.Event, 1)
 
-	messageHub, err := push.NewHub(conf.Events, vehicles, cache)
+	var eg errgroup.Group
+
+	for i, cc := range confMessaging.Services {
+		// add name for meter/charger parity
+		cc := config.Named{
+			Name:  fmt.Sprintf("push-%d", i+1),
+			Type:  cc.Type,
+			Other: cc.Other,
+		}
+
+		eg.Go(func() error {
+			return staticInstance("messenger", cc, messenger.NewFromConfig, config.Messengers())
+		})
+	}
+
+	// append devices from database
+	configurable, err := config.ConfigurationsByClass(templates.Messenger)
+	if err != nil {
+		return messageChan, err
+	}
+
+	for _, conf := range configurable {
+		eg.Go(func() error {
+			return configurableInstance("messenger", &conf, messenger.NewFromConfig, config.Messengers())
+		})
+	}
+
+	if err := eg.Wait(); err != nil {
+		return messageChan, &ClassError{ClassMessenger, err}
+	}
+
+	var events globalconfig.MessagingEvents
+
+	if len(*confEvents) > 0 {
+		events = conf.MessagingEvents
+	} else {
+		events = confMessaging.Events
+	}
+
+	messageHub, err := messenger.NewHub(events, vehicles, cache)
+
 	if err != nil {
 		return messageChan, fmt.Errorf("failed configuring push services: %w", err)
 	}
 
-	for _, conf := range conf.Services {
-		props, err := customDevice(conf.Other)
-		if err != nil {
-			return nil, fmt.Errorf("cannot decode push service '%s': %w", conf.Type, err)
+	for _, dev := range config.Messengers().Devices() {
+		if inst := dev.Instance(); inst != nil {
+			messageHub.Add(inst)
 		}
-
-		impl, err := push.NewFromConfig(context.TODO(), conf.Type, props)
-		if err != nil {
-			return messageChan, fmt.Errorf("failed configuring push service %s: %w", conf.Type, err)
-		}
-		messageHub.Add(impl)
 	}
 
 	go messageHub.Run(messageChan, valueChan)

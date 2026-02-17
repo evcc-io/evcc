@@ -84,7 +84,8 @@ export interface State {
   sponsor?: Sponsor;
   eebus?: Eebus;
   modbusproxy?: ModbusProxy[];
-  messaging?: any;
+  messaging?: ConfigStatus<unknown, unknown>;
+  messagingEvents?: MessagingEvents;
   interval?: number;
   circuits?: Record<string, Circuit>;
   siteTitle?: string;
@@ -162,6 +163,7 @@ export enum ConfigType {
 }
 
 export type ConfigVehicle = Entity;
+export type ConfigMessenger = Entity;
 
 // Configuration-specific types for device setup/configuration contexts
 export interface ConfigCharger extends Omit<Entity, "type"> {
@@ -466,6 +468,25 @@ export type ModbusProxy = {
   settings: ModbusProxySettings;
 };
 
+export type MessagingEvents = Record<MESSAGING_EVENTS, MessagingEvent>;
+
+export enum MESSAGING_EVENTS {
+  START = "start",
+  STOP = "stop",
+  CONNECT = "connect",
+  DISCONNECT = "disconnect",
+  SOC = "soc",
+  GUEST = "guest",
+  ASLEEP = "asleep",
+  PLANOVERRUN = "planoverrun",
+}
+
+export interface MessagingEvent {
+  title: string;
+  msg: string;
+  disabled: boolean;
+}
+
 export interface ModbusProxySettings {
   uri?: string;
   rtu?: boolean;
@@ -555,7 +576,7 @@ export interface SelectOption<T> {
   disabled?: boolean;
 }
 
-export type DeviceType = "charger" | "meter" | "vehicle" | "loadpoint";
+export type DeviceType = "charger" | "meter" | "vehicle" | "loadpoint" | "messenger";
 export type MeterType = "grid" | "pv" | "battery" | "charge" | "aux" | "ext";
 export type MeterTemplateUsage = "grid" | "pv" | "battery" | "charge" | "aux";
 

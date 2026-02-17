@@ -165,7 +165,6 @@
 				</div>
 
 				<h2 class="my-4 mt-5">{{ $t("config.section.integrations") }}</h2>
-
 				<div class="p-0 config-list">
 					<AuthProvidersCard
 						:providers="authProviders"
@@ -187,11 +186,12 @@
 					</DeviceCard>
 					<DeviceCard
 						:title="$t('config.messaging.title')"
-						editable
+						:editable="messagingYamlSource !== 'file'"
 						:error="hasClassError('messenger')"
 						:unconfigured="isUnconfigured(messagingTags)"
+						:badge="messagingYamlSource === 'db'"
 						data-testid="messaging"
-						@edit="openModal('messaging')"
+						@edit="openMessagingModal"
 					>
 						<template #icon><NotificationIcon /></template>
 						<template #tags>
@@ -337,23 +337,21 @@
 				<MqttModal @changed="loadDirty" />
 				<NetworkModal @changed="loadDirty" />
 				<ControlModal @changed="loadDirty" />
-				<HemsModal :yamlSource="hems?.yamlSource" @changed="yamlChanged" />
+				<HemsModal :yamlSource="hems?.yamlSource" @changed="loadDirty" />
 				<ShmModal @changed="loadDirty" />
-				<MessagingModal @changed="yamlChanged" />
-				<TariffsModal @changed="yamlChanged" />
+				<MessagingLegacyModal @changed="loadDirty" />
+				<MessagingModal :messengers="messengers" @changed="loadDirty" />
+				<MessengerModal @changed="messengerChanged" />
+				<TariffsModal @changed="loadDirty" />
 				<TelemetryModal :sponsor="sponsor" :telemetry="telemetry" />
 				<ExperimentalModal :experimental="experimental" />
 				<TitleModal @changed="loadDirty" />
 				<ModbusProxyModal :is-sponsor="isSponsor" @changed="loadDirty" />
-				<CircuitsModal
-					:gridMeter="gridMeter"
-					:extMeters="extMeters"
-					@changed="yamlChanged"
-				/>
+				<CircuitsModal :gridMeter="gridMeter" :extMeters="extMeters" @changed="loadDirty" />
 				<EebusModal
 					:status="eebus?.status"
 					:yamlSource="eebus?.yamlSource"
-					@changed="yamlChanged"
+					@changed="loadDirty"
 				/>
 				<OcppModal :ocpp="ocpp" />
 				<BackupRestoreModal v-bind="backupRestoreProps" />
@@ -392,7 +390,7 @@ import InfluxIcon from "../components/MaterialIcon/Influx.vue";
 import InfluxModal from "../components/Config/InfluxModal.vue";
 import LoadpointModal from "../components/Config/LoadpointModal.vue";
 import LoadpointIcon from "../components/MaterialIcon/Loadpoint.vue";
-import MessagingModal from "../components/Config/MessagingModal.vue";
+import MessagingModal from "../components/Config/Messaging/MessagingModal.vue";
 import MeterModal from "../components/Config/MeterModal.vue";
 import MeterCard from "../components/Config/MeterCard.vue";
 import { openModal, type ModalResult } from "@/configModal";
@@ -426,6 +424,7 @@ import type {
 	SiteConfig,
 	DeviceType,
 	Notification,
+	ConfigMessenger,
 } from "@/types/evcc";
 
 type DeviceValuesMap = Record<DeviceType, Record<string, any>>;
@@ -440,6 +439,8 @@ import WelcomeBanner from "../components/Config/WelcomeBanner.vue";
 import AuthSuccessBanner from "../components/Config/AuthSuccessBanner.vue";
 import PasswordModal from "../components/Auth/PasswordModal.vue";
 import AuthProvidersCard from "../components/Config/AuthProvidersCard.vue";
+import MessengerModal from "@/components/Config/Messaging/MessengerModal.vue";
+import MessagingLegacyModal from "@/components/Config/Messaging/MessagingLegacyModal.vue";
 
 export default defineComponent({
 	name: "Config",
@@ -463,7 +464,9 @@ export default defineComponent({
 		ShmIcon,
 		InfluxIcon,
 		InfluxModal,
+		MessagingLegacyModal,
 		MessagingModal,
+		MessengerModal,
 		MeterModal,
 		MeterCard,
 		LoadpointModal,
@@ -494,6 +497,7 @@ export default defineComponent({
 	},
 	data() {
 		return {
+			messengers: [] as ConfigMessenger[],
 			vehicles: [] as ConfigVehicle[],
 			meters: [] as ConfigMeter[],
 			loadpoints: [] as ConfigLoadpoint[],
@@ -522,6 +526,9 @@ export default defineComponent({
 		return { title: this.$t("config.main.title") };
 	},
 	computed: {
+		messagingConfigured() {
+			return store.state.messaging;
+		},
 		callbackCompleted() {
 			return this.$route.query["callbackCompleted"] as string | undefined;
 		},
@@ -659,7 +666,17 @@ export default defineComponent({
 			return { configured: { value: false } };
 		},
 		messagingTags(): DeviceTags {
-			return { configured: { value: store.state?.messaging || false } };
+			if (this.messagingUiConfigured) {
+				const events = store.state?.messagingEvents || [];
+				const enabledEvents = Object.values(events).filter((e) => !e.disabled).length;
+
+				return {
+					events: { value: enabledEvents },
+					messengers: { value: this.messengers.length },
+				};
+			}
+
+			return { configured: { value: this.messagingYamlConfigured } };
 		},
 		backupRestoreProps() {
 			return {
@@ -670,6 +687,18 @@ export default defineComponent({
 			const sortedNames = Object.keys(store.state?.circuits || {});
 			return [...this.circuits].sort(
 				(a, b) => sortedNames.indexOf(a.name) - sortedNames.indexOf(b.name)
+			);
+		},
+		messagingYamlSource() {
+			return store.state.messaging?.yamlSource;
+		},
+		messagingYamlConfigured() {
+			return this.messagingYamlSource === "file" || this.messagingYamlSource === "db";
+		},
+		messagingUiConfigured() {
+			return (
+				this.messengers.length > 0 ||
+				Object.keys(store.state.messagingEvents ?? {}).length > 0
 			);
 		},
 	},
@@ -706,6 +735,7 @@ export default defineComponent({
 			}
 		},
 		async loadAll() {
+			await this.loadMessengers();
 			await this.loadVehicles();
 			await this.loadMeters();
 			await this.loadSite();
@@ -725,6 +755,9 @@ export default defineComponent({
 			const validateStatus = (code: number) => [200, 404].includes(code);
 			const response = await api.get(`/config/${path}`, { validateStatus });
 			return response.status === 200 ? response.data : undefined;
+		},
+		async loadMessengers() {
+			this.messengers = (await this.loadConfig("devices/messenger")) || [];
 		},
 		async loadVehicles() {
 			this.vehicles = (await this.loadConfig("devices/vehicle")) || [];
@@ -801,8 +834,6 @@ export default defineComponent({
 			if (result.action === "removed") {
 				await this.loadSite();
 			}
-
-			// Reload meters and update UI
 			await this.loadMeters();
 			await this.loadDirty();
 			this.updateValues();
@@ -820,10 +851,15 @@ export default defineComponent({
 			this.loadVehicles();
 			this.loadDirty();
 		},
-		siteChanged() {
+		openMessagingModal() {
+			const modalName = this.messagingYamlSource === "db" ? "messaginglegacy" : "messaging";
+			openModal(modalName);
+		},
+		async messengerChanged() {
+			this.loadMessengers();
 			this.loadDirty();
 		},
-		yamlChanged() {
+		siteChanged() {
 			this.loadDirty();
 		},
 		async saveSite(key: keyof SiteConfig) {
@@ -860,6 +896,7 @@ export default defineComponent({
 			if (!this.offline) {
 				const devices = {
 					meter: this.meters,
+					messenger: this.messengers,
 					vehicle: this.vehicles,
 					charger: this.chargers,
 				} as Record<DeviceType, any[]>;
