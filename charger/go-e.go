@@ -168,6 +168,20 @@ func (c *GoE) CurrentPower() (float64, error) {
 // removed: https://github.com/evcc-io/evcc/issues/13726
 // var _ api.ChargeRater = (*GoE)(nil)
 
+var _ api.PhasePowers = (*GoE)(nil)
+
+// Voltages implements the api.PhasePowers interface
+func (c *GoE) Powers() (float64, float64, float64, error) {
+	resp, err := c.api.Status()
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	u1, u2, u3 := resp.Powers()
+
+	return u1, u2, u3, err
+}
+
 var _ api.PhaseCurrents = (*GoE)(nil)
 
 // Currents implements the api.PhaseCurrents interface

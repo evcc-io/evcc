@@ -56,6 +56,13 @@ func (g *StatusResponse) TotalEnergy() float64 {
 	return float64(g.Eto) / 1e1 // 0.1kWh to kWh (130 == 13kWh)
 }
 
+func (g *StatusResponse) Powers() (float64, float64, float64) {
+	if len(g.Nrg) == 16 {
+		return g.Nrg[7] / 10, g.Nrg[8] / 10, g.Nrg[9] / 10
+	}
+	return 0, 0, 0
+}
+
 func (g *StatusResponse) Currents() (float64, float64, float64) {
 	if len(g.Nrg) == 16 {
 		return g.Nrg[4] / 10, g.Nrg[5] / 10, g.Nrg[6] / 10
