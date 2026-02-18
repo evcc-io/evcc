@@ -179,7 +179,7 @@ func (c *GoE) Powers() (float64, float64, float64, error) {
 
 	p1, p2, p3 := resp.Powers()
 
-	return p1, p2, p3, err
+	return p1, p2, p3, nil
 }
 
 var _ api.PhaseCurrents = (*GoE)(nil)
@@ -193,7 +193,7 @@ func (c *GoE) Currents() (float64, float64, float64, error) {
 
 	i1, i2, i3 := resp.Currents()
 
-	return i1, i2, i3, err
+	return i1, i2, i3, nil
 }
 
 var _ api.PhaseVoltages = (*GoE)(nil)
@@ -207,7 +207,7 @@ func (c *GoE) Voltages() (float64, float64, float64, error) {
 
 	u1, u2, u3 := resp.Voltages()
 
-	return u1, u2, u3, err
+	return u1, u2, u3, nil
 }
 
 var _ api.Identifier = (*GoE)(nil)
