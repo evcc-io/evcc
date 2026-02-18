@@ -177,9 +177,9 @@ func (c *GoE) Powers() (float64, float64, float64, error) {
 		return 0, 0, 0, err
 	}
 
-	u1, u2, u3 := resp.Powers()
+	p1, p2, p3 := resp.Powers()
 
-	return u1, u2, u3, err
+	return p1, p2, p3, err
 }
 
 var _ api.PhaseCurrents = (*GoE)(nil)
