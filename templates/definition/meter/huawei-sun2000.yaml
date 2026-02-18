@@ -47,7 +47,6 @@ params:
     required: true
   - name: maxdischargepower
     service: modbus/read?address=37048&type=holding&encoding=uint32&{modbus}
-    required: true
   - name: minsoc
     service: modbus/read?address=47082&type=holding&encoding=uint16&scale=0.1&{modbus}
   - name: maxsoc
