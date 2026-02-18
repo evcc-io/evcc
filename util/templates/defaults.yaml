@@ -421,6 +421,10 @@ params:
       en: ZIP code
       de: Postleitzahl
   - name: storageunit
+    type: int
+    default: 1
+    advanced: true
+    usages: ["battery"]
     description:
       en: Battery storage unit index
       de: Nummer des Batteriespeichers

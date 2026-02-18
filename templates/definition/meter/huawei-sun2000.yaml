@@ -25,9 +25,6 @@ params:
   - name: maxacpower
     service: modbus/read?address=30073&type=holding&encoding=uint32&{modbus}
   - name: storageunit
-    type: int
-    default: 1
-    advanced: true
   - name: forceaccharging
     default: false
     advanced: true
