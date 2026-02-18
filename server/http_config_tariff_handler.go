@@ -13,9 +13,7 @@ import (
 
 // tariffsHandler returns assignment of tariff devices
 func tariffsHandler(w http.ResponseWriter, r *http.Request) {
-	refs := globalconfig.TariffRefs{
-		Solar: []string{},
-	}
+	var refs globalconfig.TariffRefs
 	if settings.Exists(keys.TariffRefs) {
 		if err := settings.Json(keys.TariffRefs, &refs); err != nil {
 			jsonError(w, http.StatusInternalServerError, err)
@@ -27,11 +25,12 @@ func tariffsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func validateTariffRef(w http.ResponseWriter, ref string) bool {
-	if ref != "" {
-		if _, err := config.Tariffs().ByName(ref); err != nil {
-			jsonError(w, http.StatusBadRequest, err)
-			return false
-		}
+	if ref == "" {
+		return true
+	}
+	if _, err := config.Tariffs().ByName(ref); err != nil {
+		jsonError(w, http.StatusBadRequest, err)
+		return false
 	}
 	return true
 }
@@ -45,19 +44,7 @@ func updateTariffHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Validate all refs
-	if !validateTariffRef(w, refs.Grid) {
-		return
-	}
-	if !validateTariffRef(w, refs.FeedIn) {
-		return
-	}
-	if !validateTariffRef(w, refs.Co2) {
-		return
-	}
-	if !validateTariffRef(w, refs.Planner) {
-		return
-	}
-	for _, ref := range refs.Solar {
+	for _, ref := range append([]string{refs.Grid, refs.FeedIn, refs.Co2, refs.Planner}, refs.Solar...) {
 		if !validateTariffRef(w, ref) {
 			return
 		}

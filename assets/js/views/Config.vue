@@ -912,6 +912,7 @@ export default defineComponent({
 			});
 			if (response.status === 200) {
 				this.tariffRefs = response.data;
+				if (!this.tariffRefs.solar) this.tariffRefs.solar = [];
 			}
 		},
 		async loadSite() {
