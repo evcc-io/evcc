@@ -50,7 +50,7 @@ var dependents = make(map[string][]string)
 func init() {
 	reflectTypes := map[reflect.Type][]reflect.Type{
 		reflect.TypeFor[api.Meter]():             {reflect.TypeFor[api.MeterEnergy](), reflect.TypeFor[api.PhaseCurrents](), reflect.TypeFor[api.PhaseVoltages](), reflect.TypeFor[api.MaxACPowerGetter]()},
-		reflect.TypeFor[api.PhaseCurrents]():     {reflect.TypeFor[api.PhasePowers]()}, // phase powers are only used to determine currents sign
+		reflect.TypeFor[api.PhasePowers]():       {reflect.TypeFor[api.PhaseCurrents]()}, // phase powers are only used to determine currents sign
 		reflect.TypeFor[api.PhaseSwitcher]():     {reflect.TypeFor[api.PhaseGetter]()},
 		reflect.TypeFor[api.Battery]():           {reflect.TypeFor[api.BatteryCapacity](), reflect.TypeFor[api.SocLimiter](), reflect.TypeFor[api.BatteryController](), reflect.TypeFor[api.BatterySocLimiter](), reflect.TypeFor[api.BatteryPowerLimiter]()},
 		reflect.TypeFor[api.ChargeState]():       {reflect.TypeFor[api.ChargeController](), reflect.TypeFor[api.CurrentController]()},

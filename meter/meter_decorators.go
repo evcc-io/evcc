@@ -8,10 +8,10 @@ import (
 
 func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error), phasePowers func() (float64, float64, float64, error), maxACPowerGetter func() float64) api.Meter {
 	switch {
-	case maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
+	case maxACPowerGetter == nil && meterEnergy == nil && phasePowers == nil && phaseVoltages == nil:
 		return base
 
-	case maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
+	case maxACPowerGetter == nil && meterEnergy != nil && phasePowers == nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
 			api.MeterEnergy
@@ -22,33 +22,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
-		return &struct {
-			api.Meter
-			api.PhaseCurrents
-		}{
-			Meter: base,
-			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-		}
-
-	case maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
-		return &struct {
-			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
-		}{
-			Meter: base,
-			MeterEnergy: &decorateMeterMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-		}
-
-	case maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
+	case maxACPowerGetter == nil && meterEnergy == nil && phasePowers == nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
 			api.PhaseVoltages
@@ -59,7 +33,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
+	case maxACPowerGetter == nil && meterEnergy != nil && phasePowers == nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
 			api.MeterEnergy
@@ -74,37 +48,29 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
+	case maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents == nil && phasePowers != nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
-			api.PhaseCurrents
-			api.PhaseVoltages
+			api.PhasePowers
 		}{
 			Meter: base,
-			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
+			PhasePowers: &decorateMeterPhasePowersImpl{
+				phasePowers: phasePowers,
 			},
 		}
 
-	case maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
+	case maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents == nil && phasePowers != nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
 			api.MeterEnergy
-			api.PhaseCurrents
-			api.PhaseVoltages
+			api.PhasePowers
 		}{
 			Meter: base,
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
-			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
+			PhasePowers: &decorateMeterPhasePowersImpl{
+				phasePowers: phasePowers,
 			},
 		}
 
@@ -139,6 +105,40 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 			PhasePowers: &decorateMeterPhasePowersImpl{
 				phasePowers: phasePowers,
+			},
+		}
+
+	case maxACPowerGetter == nil && meterEnergy == nil && phaseCurrents == nil && phasePowers != nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.PhasePowers
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			PhasePowers: &decorateMeterPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case maxACPowerGetter == nil && meterEnergy != nil && phaseCurrents == nil && phasePowers != nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.MeterEnergy
+			api.PhasePowers
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhasePowers: &decorateMeterPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
 			},
 		}
 
@@ -184,7 +184,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
+	case maxACPowerGetter != nil && meterEnergy == nil && phasePowers == nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
 			api.MaxACPowerGetter
@@ -195,7 +195,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
+	case maxACPowerGetter != nil && meterEnergy != nil && phasePowers == nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
 			api.MaxACPowerGetter
@@ -210,41 +210,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
-		return &struct {
-			api.Meter
-			api.MaxACPowerGetter
-			api.PhaseCurrents
-		}{
-			Meter: base,
-			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
-				maxACPowerGetter: maxACPowerGetter,
-			},
-			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-		}
-
-	case maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
-		return &struct {
-			api.Meter
-			api.MaxACPowerGetter
-			api.MeterEnergy
-			api.PhaseCurrents
-		}{
-			Meter: base,
-			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
-				maxACPowerGetter: maxACPowerGetter,
-			},
-			MeterEnergy: &decorateMeterMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-		}
-
-	case maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
+	case maxACPowerGetter != nil && meterEnergy == nil && phasePowers == nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
 			api.MaxACPowerGetter
@@ -259,7 +225,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
+	case maxACPowerGetter != nil && meterEnergy != nil && phasePowers == nil && phaseVoltages != nil:
 		return &struct {
 			api.Meter
 			api.MaxACPowerGetter
@@ -278,32 +244,27 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 		}
 
-	case maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
+	case maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents == nil && phasePowers != nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
 			api.MaxACPowerGetter
-			api.PhaseCurrents
-			api.PhaseVoltages
+			api.PhasePowers
 		}{
 			Meter: base,
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
 				maxACPowerGetter: maxACPowerGetter,
 			},
-			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
+			PhasePowers: &decorateMeterPhasePowersImpl{
+				phasePowers: phasePowers,
 			},
 		}
 
-	case maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
+	case maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents == nil && phasePowers != nil && phaseVoltages == nil:
 		return &struct {
 			api.Meter
 			api.MaxACPowerGetter
 			api.MeterEnergy
-			api.PhaseCurrents
-			api.PhaseVoltages
+			api.PhasePowers
 		}{
 			Meter: base,
 			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
@@ -312,11 +273,8 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			MeterEnergy: &decorateMeterMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
-			PhaseCurrents: &decorateMeterPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
+			PhasePowers: &decorateMeterPhasePowersImpl{
+				phasePowers: phasePowers,
 			},
 		}
 
@@ -359,6 +317,48 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 			},
 			PhasePowers: &decorateMeterPhasePowersImpl{
 				phasePowers: phasePowers,
+			},
+		}
+
+	case maxACPowerGetter != nil && meterEnergy == nil && phaseCurrents == nil && phasePowers != nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.MaxACPowerGetter
+			api.PhasePowers
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			PhasePowers: &decorateMeterPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case maxACPowerGetter != nil && meterEnergy != nil && phaseCurrents == nil && phasePowers != nil && phaseVoltages != nil:
+		return &struct {
+			api.Meter
+			api.MaxACPowerGetter
+			api.MeterEnergy
+			api.PhasePowers
+			api.PhaseVoltages
+		}{
+			Meter: base,
+			MaxACPowerGetter: &decorateMeterMaxACPowerGetterImpl{
+				maxACPowerGetter: maxACPowerGetter,
+			},
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhasePowers: &decorateMeterPhasePowersImpl{
+				phasePowers: phasePowers,
+			},
+			PhaseVoltages: &decorateMeterPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
 			},
 		}
 

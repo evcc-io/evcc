@@ -8,10 +8,10 @@ import (
 
 func decorateShelly(base *Shelly, phaseVoltages func() (float64, float64, float64, error), phaseCurrents func() (float64, float64, float64, error), phasePowers func() (float64, float64, float64, error)) api.Meter {
 	switch {
-	case phaseCurrents == nil && phaseVoltages == nil:
+	case phasePowers == nil && phaseVoltages == nil:
 		return base
 
-	case phaseCurrents == nil && phaseVoltages != nil:
+	case phasePowers == nil && phaseVoltages != nil:
 		return &struct {
 			*Shelly
 			api.PhaseVoltages
@@ -22,26 +22,26 @@ func decorateShelly(base *Shelly, phaseVoltages func() (float64, float64, float6
 			},
 		}
 
-	case phaseCurrents != nil && phasePowers == nil && phaseVoltages == nil:
+	case phaseCurrents == nil && phasePowers != nil && phaseVoltages == nil:
 		return &struct {
 			*Shelly
-			api.PhaseCurrents
+			api.PhasePowers
 		}{
 			Shelly: base,
-			PhaseCurrents: &decorateShellyPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
+			PhasePowers: &decorateShellyPhasePowersImpl{
+				phasePowers: phasePowers,
 			},
 		}
 
-	case phaseCurrents != nil && phasePowers == nil && phaseVoltages != nil:
+	case phaseCurrents == nil && phasePowers != nil && phaseVoltages != nil:
 		return &struct {
 			*Shelly
-			api.PhaseCurrents
+			api.PhasePowers
 			api.PhaseVoltages
 		}{
 			Shelly: base,
-			PhaseCurrents: &decorateShellyPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
+			PhasePowers: &decorateShellyPhasePowersImpl{
+				phasePowers: phasePowers,
 			},
 			PhaseVoltages: &decorateShellyPhaseVoltagesImpl{
 				phaseVoltages: phaseVoltages,
