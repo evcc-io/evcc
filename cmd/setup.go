@@ -1016,7 +1016,7 @@ func configureTariffs(conf *globalconfig.Tariffs) (*tariff.Tariffs, error) {
 	}
 
 	// yaml config from file
-	if conf.Currency != "" || conf.Grid.Type != "" || conf.FeedIn.Type != "" || conf.Co2.Type != "" || conf.Planner.Type != "" || conf.Solar != nil {
+	if conf.IsConfigured() {
 		yamlSource.tariffs = globalconfig.YamlSourceFile
 	}
 
@@ -1039,8 +1039,7 @@ func configureTariffs(conf *globalconfig.Tariffs) (*tariff.Tariffs, error) {
 		if err := settings.Json(keys.TariffRefs, &refs); err != nil {
 			return &tariffs, err
 		}
-		var refsExist = refs.Grid != "" || refs.FeedIn != "" || refs.Co2 != "" || refs.Planner != "" || len(refs.Solar) > 0
-		if yamlSource.tariffs != globalconfig.YamlSourceNone && refsExist {
+		if yamlSource.tariffs != globalconfig.YamlSourceNone && refs.IsConfigured() {
 			return &tariffs, errors.New("yaml and device config exists for tariffs; remove yaml config")
 		}
 	}

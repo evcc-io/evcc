@@ -173,12 +173,20 @@ type Tariffs struct {
 	Solar    []config.Typed
 }
 
+func (c Tariffs) IsConfigured() bool {
+	return c.Currency != "" || c.Grid.Type != "" || c.FeedIn.Type != "" || c.Co2.Type != "" || c.Planner.Type != "" || c.Solar != nil
+}
+
 type TariffRefs struct {
 	Grid    string   `json:"grid"`
 	FeedIn  string   `json:"feedIn"`
 	Co2     string   `json:"co2"`
 	Planner string   `json:"planner"`
 	Solar   []string `json:"solar"`
+}
+
+func (c TariffRefs) IsConfigured() bool {
+	return c.Grid != "" || c.FeedIn != "" || c.Co2 != "" || c.Planner != "" || len(c.Solar) > 0
 }
 
 type Network struct {
