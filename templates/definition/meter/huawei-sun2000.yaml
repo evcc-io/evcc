@@ -22,11 +22,8 @@ params:
     choice: ["rs485", "tcpip"]
   - name: timeout
     default: 15s
-  - name: storageunit
-    type: int
-    default: 1
-    advanced: true
   - name: maxacpower
+  - name: storageunit
   - name: forceaccharging
     default: false
     advanced: true
