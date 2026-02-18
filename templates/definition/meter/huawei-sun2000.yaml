@@ -50,10 +50,8 @@ params:
     required: true
   - name: minsoc
     service: modbus/read?address=47082&type=holding&encoding=uint16&scale=0.1&{modbus}
-    advanced: true
   - name: maxsoc
     service: modbus/read?address=47081&type=holding&encoding=uint16&scale=0.1&{modbus}
-    advanced: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
