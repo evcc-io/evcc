@@ -71,8 +71,7 @@ func updateTariffHandler(w http.ResponseWriter, r *http.Request) {
 
 	setConfigDirty()
 
-	status := map[bool]int{false: http.StatusOK, true: http.StatusAccepted}
-	w.WriteHeader(status[ConfigDirty()])
+	w.WriteHeader(http.StatusAccepted)
 }
 
 // updateCurrencyHandler updates the currency setting
