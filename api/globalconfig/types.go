@@ -193,11 +193,10 @@ func (refs TariffRefs) IsConfigured() bool {
 func (refs TariffRefs) Used() iter.Seq[string] {
 	return func(yield func(string) bool) {
 		for _, ref := range append([]string{refs.Grid, refs.FeedIn, refs.Co2, refs.Planner}, refs.Solar...) {
-			if ref == "" {
-				continue
-			}
-			if !yield(ref) {
-				return
+			if ref != "" {
+				if !yield(ref) {
+					return
+				}
 			}
 		}
 	}
