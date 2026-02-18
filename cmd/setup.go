@@ -967,86 +967,47 @@ func configureTariffDevices(names ...string) error {
 	return eg.Wait()
 }
 
-// loadSingleTariff handles loading for a single tariff type
-func loadSingleTariff(
-	eg *errgroup.Group,
-	yamlConf config.Typed,
-	deviceName string,
-	target *api.Tariff,
-) {
-	// Load YAML config
+func configureTariff(yamlConf config.Typed, deviceName string, target *api.Tariff) error {
 	if yamlConf.Type != "" {
-		eg.Go(func() error {
-			instance, err := tariffInstance("tariff", yamlConf)
-			if err != nil {
-				return err
-			}
-			*target = instance
-			return nil
-		})
-		return
+		instance, err := tariffInstance("tariff", yamlConf)
+		if err != nil {
+			return err
+		}
+		*target = instance
+		return nil
 	}
-
-	// Load device config
 	if deviceName != "" {
-		eg.Go(func() error {
-			dev, err := config.Tariffs().ByName(deviceName)
-			if err != nil {
-				return fmt.Errorf("tariff device not found: %w", err)
-			}
-			*target = dev.Instance()
-			return nil
-		})
+		dev, err := config.Tariffs().ByName(deviceName)
+		if err != nil {
+			return fmt.Errorf("tariff device not found: %w", err)
+		}
+		*target = dev.Instance()
 	}
+	return nil
 }
 
-// loadMultipleTariffs handles loading for tariff types that support arrays
-func loadMultipleTariffs(
-	eg *errgroup.Group,
-	yamlConfs []config.Typed,
-	deviceNames []string,
-	target *api.Tariff,
-) {
-	// Load YAML configs
+func configureSolarTariffs(yamlConfs []config.Typed, deviceNames []string, target *api.Tariff) error {
 	if len(yamlConfs) > 0 {
-		eg.Go(func() error {
-			if len(yamlConfs) == 1 {
-				instance, err := tariffInstance("tariff", yamlConfs[0])
-				if err != nil {
-					return err
-				}
-				*target = instance
-				return nil
-			}
-			return configureSolarTariff(yamlConfs, target)
-		})
-		return
+		if len(yamlConfs) == 1 {
+			return configureTariff(yamlConfs[0], "", target)
+		}
+		return configureSolarTariff(yamlConfs, target)
 	}
-
-	// Load device configs
 	if len(deviceNames) > 0 {
-		eg.Go(func() error {
-			if len(deviceNames) == 1 {
-				dev, err := config.Tariffs().ByName(deviceNames[0])
-				if err != nil {
-					return fmt.Errorf("tariff device not found: %w", err)
-				}
-				*target = dev.Instance()
-				return nil
+		if len(deviceNames) == 1 {
+			return configureTariff(config.Typed{}, deviceNames[0], target)
+		}
+		tt := make([]api.Tariff, len(deviceNames))
+		for i, name := range deviceNames {
+			dev, err := config.Tariffs().ByName(name)
+			if err != nil {
+				return fmt.Errorf("tariff device %s not found: %w", name, err)
 			}
-			// Multiple tariffs
-			tt := make([]api.Tariff, len(deviceNames))
-			for i, name := range deviceNames {
-				dev, err := config.Tariffs().ByName(name)
-				if err != nil {
-					return fmt.Errorf("tariff device %s not found: %w", name, err)
-				}
-				tt[i] = dev.Instance()
-			}
-			*target = tariff.NewCombined(tt)
-			return nil
-		})
+			tt[i] = dev.Instance()
+		}
+		*target = tariff.NewCombined(tt)
 	}
+	return nil
 }
 
 func configureTariffs(conf *globalconfig.Tariffs) (*tariff.Tariffs, error) {
@@ -1086,11 +1047,11 @@ func configureTariffs(conf *globalconfig.Tariffs) (*tariff.Tariffs, error) {
 
 	// load all tariffs
 	var eg errgroup.Group
-	loadSingleTariff(&eg, conf.Grid, refs.Grid, &tariffs.Grid)
-	loadSingleTariff(&eg, conf.FeedIn, refs.FeedIn, &tariffs.FeedIn)
-	loadSingleTariff(&eg, conf.Co2, refs.Co2, &tariffs.Co2)
-	loadSingleTariff(&eg, conf.Planner, refs.Planner, &tariffs.Planner)
-	loadMultipleTariffs(&eg, conf.Solar, refs.Solar, &tariffs.Solar)
+	eg.Go(func() error { return configureTariff(conf.Grid, refs.Grid, &tariffs.Grid) })
+	eg.Go(func() error { return configureTariff(conf.FeedIn, refs.FeedIn, &tariffs.FeedIn) })
+	eg.Go(func() error { return configureTariff(conf.Co2, refs.Co2, &tariffs.Co2) })
+	eg.Go(func() error { return configureTariff(conf.Planner, refs.Planner, &tariffs.Planner) })
+	eg.Go(func() error { return configureSolarTariffs(conf.Solar, refs.Solar, &tariffs.Solar) })
 	if err := eg.Wait(); err != nil {
 		return &tariffs, &ClassError{ClassTariff, err}
 	}
@@ -1100,11 +1061,11 @@ func configureTariffs(conf *globalconfig.Tariffs) (*tariff.Tariffs, error) {
 		conf.Currency = cur
 	}
 	if conf.Currency != "" {
-		if cur, err := currency.ParseISO(conf.Currency); err != nil {
+		cur, err := currency.ParseISO(conf.Currency)
+		if err != nil {
 			return &tariffs, err
-		} else {
-			tariffs.Currency = cur
 		}
+		tariffs.Currency = cur
 	}
 
 	return &tariffs, nil

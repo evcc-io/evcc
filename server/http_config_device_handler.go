@@ -499,18 +499,10 @@ func cleanupTariffRef(name string) {
 		return
 	}
 
-	// Remove from all fields
-	if refs.Grid == name {
-		refs.Grid = ""
-	}
-	if refs.FeedIn == name {
-		refs.FeedIn = ""
-	}
-	if refs.Co2 == name {
-		refs.Co2 = ""
-	}
-	if refs.Planner == name {
-		refs.Planner = ""
+	for _, ref := range []*string{&refs.Grid, &refs.FeedIn, &refs.Co2, &refs.Planner} {
+		if *ref == name {
+			*ref = ""
+		}
 	}
 	refs.Solar = slices.DeleteFunc(refs.Solar, func(ref string) bool { return ref == name })
 
