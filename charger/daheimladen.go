@@ -197,7 +197,7 @@ func (wb *DaheimLaden) Status() (api.ChargeStatus, error) {
 func (wb *DaheimLaden) Enabled() (bool, error) {
 	curr, err := wb.getCurrent()
 
-	return curr >= 50, err
+	return curr >= 60, err
 }
 
 // Enable implements the api.Charger interface
