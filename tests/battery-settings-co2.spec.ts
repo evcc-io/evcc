@@ -27,13 +27,13 @@ test.describe("battery settings co2", async () => {
     await page.getByRole("button", { name: "Close" }).click();
     await expectModalHidden(modal);
     await page.getByTestId("energyflow").click();
-    await page.getByRole("button", { name: "grid charging active (≤ 150 g)" }).click();
+    await page.getByRole("button", { name: "Grid charging: active (≤ 150 g)" }).click();
     await expectModalVisible(modal);
     await modal.getByLabel("CO₂ limit").selectOption({ label: "≤ 10 g/kWh" });
     await expect(modal.getByTestId("active-hours")).toHaveText("Active time");
     await modal.getByRole("button", { name: "Close" }).click();
     await expectModalHidden(modal);
     await expect(modal).not.toBeVisible();
-    await expect(page.getByRole("button", { name: "grid charging when ≤ 10 g" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Grid charging: when ≤ 10 g" })).toBeVisible();
   });
 });
