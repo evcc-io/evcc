@@ -26,6 +26,8 @@ export const convertToUiLoadpoints = (
       order: getLoadpointOrder(id),
       visible: isLoadpointVisible(id),
       sessionInfo: getLoadpointSessionInfo(id),
+      lastSmartCostLimit: getLoadpointLastSmartCostLimit(id),
+      lastSmartFeedInPriorityLimit: getLoadpointLastSmartFeedInPriorityLimit(id),
     };
   });
 
@@ -56,8 +58,24 @@ export const getLoadpointSessionInfo = (id: string): SessionInfoKey | undefined 
   return get(id).info;
 };
 
+export const getLoadpointLastSmartCostLimit = (id: string): number | undefined => {
+  return get(id).lastSmartCostLimit;
+};
+
 export const setLoadpointSessionInfo = (id: string, value: SessionInfoKey) => {
   get(id).info = value;
+};
+
+export const setLoadpointLastSmartCostLimit = (id: string, value: number) => {
+  get(id).lastSmartCostLimit = value;
+};
+
+export const getLoadpointLastSmartFeedInPriorityLimit = (id: string): number | undefined => {
+  return get(id).lastSmartFeedInPriorityLimit;
+};
+
+export const setLoadpointLastSmartFeedInPriorityLimit = (id: string, value: number) => {
+  get(id).lastSmartFeedInPriorityLimit = value;
 };
 
 export const resetLoadpointsOrder = () => {

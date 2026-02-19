@@ -10,10 +10,11 @@
 		<div class="container">
 			<SmartCostLimit
 				:current-limit="smartCostLimit"
+				:last-limit="lastSmartCostLimit"
 				:smart-cost-type="smartCostType"
 				:currency="currency"
 				is-loadpoint
-				:loadpoint-id="Number(loadpointId)"
+				:loadpoint-id="loadpointId"
 				:multiple-loadpoints="multipleLoadpoints"
 				:possible="smartCostAvailable"
 				:tariff="forecast?.planner"
@@ -21,8 +22,9 @@
 			/>
 			<SmartFeedInPriority
 				:current-limit="smartFeedInPriorityLimit"
+				:last-limit="lastSmartFeedInPriorityLimit"
 				:currency="currency"
-				:loadpoint-id="Number(loadpointId)"
+				:loadpoint-id="loadpointId"
 				:multiple-loadpoints="multipleLoadpoints"
 				:possible="smartFeedInPriorityAvailable"
 				:tariff="forecast?.feedin"
@@ -32,7 +34,7 @@
 				v-if="batteryBoostAvailable"
 				v-bind="batteryBoostProps"
 				class="mt-2"
-				@batteryboost-updated="changeBatteryBoost"
+				@batteryboostlimit-updated="changeBatteryBoostLimit"
 			/>
 			<h6>
 				{{ $t("main.loadpointSettings.currents") }}
@@ -161,11 +163,11 @@ export default defineComponent({
 	},
 	mixins: [formatter, collector],
 	props: {
-		id: [String, Number],
+		id: { type: String, required: true },
 		phasesConfigured: { type: Number, default: 0 },
 		chargerPhases1p3p: Boolean,
 		chargerSinglePhase: Boolean,
-		batteryBoost: Boolean,
+		batteryBoostLimit: { type: Number, default: 100 },
 		batteryBoostAvailable: Boolean,
 		mode: String,
 		minSoc: Number,
@@ -181,12 +183,14 @@ export default defineComponent({
 		currency: String as PropType<CURRENCY>,
 		multipleLoadpoints: Boolean,
 		forecast: Object as PropType<Forecast>,
+		lastSmartCostLimit: Number,
+		lastSmartFeedInPriorityLimit: Number,
 	},
 	emits: [
 		"phasesconfigured-updated",
 		"maxcurrent-updated",
 		"mincurrent-updated",
-		"batteryboost-updated",
+		"batteryboostlimit-updated",
 	],
 	data() {
 		return {
@@ -281,8 +285,8 @@ export default defineComponent({
 		modalInvisible() {
 			this.isModalVisible = false;
 		},
-		changeBatteryBoost(boost: boolean) {
-			this.$emit("batteryboost-updated", boost);
+		changeBatteryBoostLimit(limit: number) {
+			this.$emit("batteryboostlimit-updated", limit);
 		},
 	},
 });

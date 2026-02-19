@@ -51,7 +51,7 @@ const (
 	Boost        // 3
 )
 
-//go:generate go tool decorate -f decorateSgReady -b *SgReady -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.SocLimiter,GetLimitSoc,func() (int64, error)"
+//go:generate go tool decorate -f decorateSgReady -b *SgReady -r api.Charger -t api.Meter,api.MeterEnergy,api.Battery,api.SocLimiter
 
 // NewSgReadyFromConfig creates an SG Ready configurable charger from generic config
 func NewSgReadyFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {

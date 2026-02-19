@@ -2,26 +2,27 @@ package keys
 
 const (
 	// loadpoint settings
-	Title            = "title"       // loadpoint title
-	Mode             = "mode"        // charge mode
-	DefaultMode      = "defaultMode" // default charge mode
-	Charger          = "charger"     // charger ref
-	Meter            = "meter"       // meter ref
-	Circuit          = "circuit"     // circuit ref
-	DefaultVehicle   = "vehicle"     // default vehicle ref
-	Priority         = "priority"    // priority
-	MinCurrent       = "minCurrent"  // min current
-	MaxCurrent       = "maxCurrent"  // max current
-	MinSoc           = "minSoc"      // min soc
-	LimitSoc         = "limitSoc"    // limit soc
-	LimitEnergy      = "limitEnergy" // limit energy
-	Soc              = "soc"
-	Thresholds       = "thresholds"
-	EnableThreshold  = "enableThreshold"
-	DisableThreshold = "disableThreshold"
-	EnableDelay      = "enableDelay"
-	DisableDelay     = "disableDelay"
-	BatteryBoost     = "batteryBoost"
+	Title             = "title"       // loadpoint title
+	Mode              = "mode"        // charge mode
+	DefaultMode       = "defaultMode" // default charge mode
+	Charger           = "charger"     // charger ref
+	Meter             = "meter"       // meter ref
+	Circuit           = "circuit"     // circuit ref
+	DefaultVehicle    = "vehicle"     // default vehicle ref
+	Priority          = "priority"    // priority
+	MinCurrent        = "minCurrent"  // min current
+	MaxCurrent        = "maxCurrent"  // max current
+	MinSoc            = "minSoc"      // min soc
+	LimitSoc          = "limitSoc"    // limit soc
+	LimitEnergy       = "limitEnergy" // limit energy
+	Soc               = "soc"
+	Thresholds        = "thresholds"
+	EnableThreshold   = "enableThreshold"
+	DisableThreshold  = "disableThreshold"
+	EnableDelay       = "enableDelay"
+	DisableDelay      = "disableDelay"
+	BatteryBoost      = "batteryBoost"
+	BatteryBoostLimit = "batteryBoostLimit"
 
 	PhasesConfigured = "phasesConfigured" // desired phase mode (0/1/3, 0 = automatic), user selection
 	PhasesActive     = "phasesActive"     // expectedly active phases, taking vehicle into account (1/2/3)
@@ -57,7 +58,9 @@ const (
 	EffectivePlanSoc    = "effectivePlanSoc"    // effective plan soc
 	EffectiveMinCurrent = "effectiveMinCurrent" // effective min current
 	EffectiveMaxCurrent = "effectiveMaxCurrent" // effective max current
-	EffectiveLimitSoc   = "effectiveLimitSoc"   // effective limit soc
+
+	EffectiveLimitSoc     = "effectiveLimitSoc"     // effective limit soc
+	EffectivePlanStrategy = "effectivePlanStrategy" // effective plan strategy
 
 	// measurements
 	ChargePower       = "chargePower"       // charge power
@@ -73,14 +76,15 @@ const (
 	ChargeRemainingEnergy   = "chargeRemainingEnergy"   // charge remaining energy
 
 	// plan
+	Plan               = "plan"               // charge plan time slots
 	PlanTime           = "planTime"           // charge plan finish time goal
 	PlanEnergy         = "planEnergy"         // charge plan energy goal
 	PlanSoc            = "planSoc"            // charge plan soc goal
-	PlanPrecondition   = "planPrecondition"   // charge plan precondition duration
 	PlanActive         = "planActive"         // charge plan has determined current slot to be an active slot
 	PlanProjectedStart = "planProjectedStart" // charge plan start time (earliest slot)
 	PlanProjectedEnd   = "planProjectedEnd"   // charge plan ends (end of last slot)
 	PlanOverrun        = "planOverrun"        // charge plan goal not reachable in time
+	PlanStrategy       = "planStrategy"       // charge plan strategy (precondition, continuous)
 
 	// repeating plans
 	RepeatingPlans = "repeatingPlans" // key to access all repeating plans in db

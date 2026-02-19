@@ -148,6 +148,18 @@ func (d *dumper) Dump(name string, v any) {
 		fmt.Fprintf(w, "Capacity:\t%.1fkWh\t\t\n", v.Capacity())
 	}
 
+	if v, ok := v.(api.BatterySocLimiter); ok {
+		min, max := v.GetSocLimits()
+		fmt.Fprintf(w, "Min soc:\t%.0f%%\t\t\n", min)
+		fmt.Fprintf(w, "Max soc:\t%.0f%%\t\t\n", max)
+	}
+
+	if v, ok := v.(api.BatteryPowerLimiter); ok {
+		charge, discharge := v.GetPowerLimits()
+		fmt.Fprintf(w, "Charge power:\t%.0fW\t\t\n", charge)
+		fmt.Fprintf(w, "Discharge power:\t%.0fW\t\t\n", discharge)
+	}
+
 	if v, ok := v.(api.MaxACPowerGetter); ok {
 		fmt.Fprintf(w, "Max AC power:\t%.0fW\t\t\n", v.MaxACPower())
 	}

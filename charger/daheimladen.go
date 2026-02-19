@@ -45,6 +45,7 @@ const (
 	dlRegEvseMaxCurrent  = 32  // Uint16 RO 0.1A
 	dlRegCableMaxCurrent = 36  // Uint16 RO 0.1A
 	dlRegStationId       = 38  // Chr[16] RO UTF16
+	dlRegCardId          = 54  // Chr[16] RO UTF16
 	dlRegChargedEnergy   = 72  // Uint16 RO 0.1kWh
 	dlRegChargingTime    = 78  // Uint32 RO 1s
 	dlRegSafeCurrent     = 87  // Uint16 WR 0.1A
@@ -64,7 +65,7 @@ func init() {
 	registry.AddCtx("daheimladen", NewDaheimLadenFromConfig)
 }
 
-//go:generate go tool decorate -f decorateDaheimLaden -b *DaheimLaden -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
+//go:generate go tool decorate -f decorateDaheimLaden -b *DaheimLaden -r api.Charger -t api.PhaseSwitcher,api.PhaseGetter
 
 // NewDaheimLadenFromConfig creates a DaheimLaden charger from generic config
 func NewDaheimLadenFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
@@ -289,6 +290,17 @@ func (wb *DaheimLaden) Voltages() (float64, float64, float64, error) {
 	return wb.getPhaseValues(dlRegVoltages)
 }
 
+var _ api.Identifier = (*DaheimLaden)(nil)
+
+// Identify implements the api.Identifier interface. Only usable with PRO
+func (wb *DaheimLaden) Identify() (string, error) {
+	b, err := wb.conn.ReadHoldingRegisters(dlRegCardId, 16)
+	if err != nil {
+		return "", err
+	}
+	return utf16BEBytesAsString(b)
+}
+
 // phases1p3p implements the api.PhaseSwitcher interface
 func (wb *DaheimLaden) phases1p3p(phases int) error {
 	b := make([]byte, 2)
@@ -340,6 +352,10 @@ func (wb *DaheimLaden) Diagnose() {
 	if b, err := wb.conn.ReadHoldingRegisters(dlRegStationId, 16); err == nil {
 		s, _ := utf16BEBytesAsString(b)
 		fmt.Printf("\tStation ID:\t%s\n", s)
+	}
+	if b, err := wb.conn.ReadHoldingRegisters(dlRegCardId, 16); err == nil {
+		s, _ := utf16BEBytesAsString(b)
+		fmt.Printf("\tCard ID:\t%s\n", s)
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(dlRegSafeCurrent, 1); err == nil {
 		fmt.Printf("\tSafe Current:\t%.1fA\n", float64(binary.BigEndian.Uint16(b)/10))

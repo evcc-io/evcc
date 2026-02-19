@@ -1,0 +1,61 @@
+template: pvnode
+products:
+  - brand: pvnode
+requirements:
+  description:
+    en: |
+      [pvnode](https://pvnode.com) provides 15-minute PV production forecasts via REST API.
+      An API key is required (free plan available with +1 day forecast).
+      **Attention**: The free plan only allows 40 queries per month. These queries must be from only one location (lat, lon). Location is saved on first request and can not be changed afterwards, otherwise a 403 response is sent.
+    de: |
+      [pvnode](https://pvnode.com) liefert 15-Minuten PV Vorhersagen per REST API.
+      Ein API-Key ist erforderlich (kostenloser Plan mit +1 Tag Vorhersage verfügbar).
+      **Achtung**: Mit dem kostenlosen Plan sind lediglich 40 Abfragen/Monat erlaubt. Diese Abfragen dürfen nur von einem Standort (lat, lon) sein. Der Standort wird bei der ersten Abfrage gespeichert und kann danach nicht mehr angepasst werden, andernfalls wird eine 403 Antwort gesendet.
+  evcc: ["skiptest"]
+group: solar
+
+params:
+  - preset: forecast-base
+  - name: az
+    description:
+      en: Azimuth
+      de: Azimut
+    help:
+      en: "0 = north, 90 = east, 180 = south, 270 = west"
+      de: "0 = Norden, 90 = Osten, 180 = Süden, 270 = Westen"
+    required: true
+  - name: apikey
+    description:
+      en: pvnode API key
+      de: pvnode API Key
+    required: true
+  - name: forecast_days
+    description:
+      en: Forecast days (free plan = 1).
+      de: Vorhersagetage (Free Plan = 1).
+    type: int
+    default: 1
+    advanced: true
+  - name: interval
+    default: 24h
+    advanced: true
+
+render: |
+  type: custom
+  tariff: solar
+  features: ["cacheable"]
+  forecast:
+    source: http
+    uri: https://api.pvnode.com/v1/forecast/?latitude={{ .lat }}&longitude={{ .lon }}&slope={{ .dec }}&orientation={{ .az }}&pv_power_kw={{ .kwp }}&required_data=pv_watts&forecast_days={{ .forecast_days }}&past_days=0
+    auth:
+      type: bearer
+      token: {{ .apikey }}
+    jq: |
+      [.values[] |
+        {
+          start: (.dtm | sub(" "; "T") + "Z"),
+          end:   (.dtm | sub(" "; "T") + "Z" | fromdateiso8601 + 900 | todateiso8601 ),
+          value: (.pv_watts | round )
+        }
+      ] | tostring
+  interval: {{ .interval }}

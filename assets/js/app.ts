@@ -5,7 +5,6 @@ import { VueHeadMixin, createHead } from "@unhead/vue/client";
 import App from "./views/App.vue";
 import setupRouter from "./router.ts";
 import setupI18n from "./i18n.ts";
-import featureflags from "./featureflags.ts";
 import { watchThemeChanges } from "./theme.ts";
 import { appDetection, sendToApp } from "./utils/native";
 import type { Notification } from "./types/evcc";
@@ -74,7 +73,6 @@ const head = createHead();
 
 app.use(i18n);
 app.use(setupRouter(i18n.global));
-app.use(featureflags);
 app.use(head);
 app.mixin(VueHeadMixin);
 window.app = app.mount("#app");

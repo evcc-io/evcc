@@ -13,9 +13,8 @@ import (
 )
 
 type planStruct struct {
-	Soc          int       `json:"soc"`
-	Precondition int64     `json:"precondition"`
-	Time         time.Time `json:"time"`
+	Soc  int       `json:"soc"`
+	Time time.Time `json:"time"`
 }
 
 type vehicleStruct struct {
@@ -31,6 +30,7 @@ type vehicleStruct struct {
 	Features       []string            `json:"features,omitempty"`
 	Plan           *planStruct         `json:"plan,omitempty"`
 	RepeatingPlans []api.RepeatingPlan `json:"repeatingPlans"`
+	PlanStrategy   api.PlanStrategy    `json:"planStrategy"`
 }
 
 // publishVehicles returns a list of vehicle titles
@@ -47,8 +47,11 @@ func (site *Site) publishVehicles() {
 		ac := instance.OnIdentified()
 
 		var plan *planStruct
-		if time, precondition, soc := v.GetPlanSoc(); !time.IsZero() {
-			plan = &planStruct{Soc: soc, Precondition: int64(precondition.Seconds()), Time: time}
+		if time, soc := v.GetPlanSoc(); !time.IsZero() {
+			plan = &planStruct{
+				Soc:  soc,
+				Time: time,
+			}
 		}
 
 		res[v.Name()] = vehicleStruct{
@@ -64,8 +67,10 @@ func (site *Site) publishVehicles() {
 			Features:       lo.Map(instance.Features(), func(f api.Feature, _ int) string { return f.String() }),
 			Plan:           plan,
 			RepeatingPlans: v.GetRepeatingPlans(),
+			PlanStrategy:   v.GetPlanStrategy(),
 		}
 
+		// publish effective plan strategy immediately for soc-based planning
 		if lp := site.coordinator.Owner(instance); lp != nil {
 			lp.PublishEffectiveValues()
 		}

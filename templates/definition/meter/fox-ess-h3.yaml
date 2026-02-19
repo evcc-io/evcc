@@ -10,6 +10,7 @@ params:
   - name: modbus
     choice: ["rs485", "tcpip"]
     id: 247
+  - preset: battery-params
   - name: capacity
     advanced: true
   # battery control
@@ -99,7 +100,5 @@ render: |
         address: 41009 # limit soc
         type: writesingle
         decode: uint16
-  capacity: {{ .capacity }} # kWh
-  minsoc: {{ .minsoc }} # %
-  maxsoc: {{ .maxsoc }} # %
+  {{- include "battery-params" . }}
   {{- end }}

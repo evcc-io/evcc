@@ -17,8 +17,7 @@ params:
     choice: ["tcpip"]
     port: 502
     id: 64
-  - name: capacity
-    advanced: true
+  - preset: battery-params
   - name: watchdog
     type: duration
     default: 240s
@@ -89,5 +88,5 @@ render: |
               address: 43 # 2Bh battery discharging power [W]
               type: writemultiple
               encoding: uint16
-  capacity: {{ .capacity }} # kWh
+  {{- include "battery-params" . }}
   {{- end }}

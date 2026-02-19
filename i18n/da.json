@@ -1,4 +1,24 @@
 {
+  "authProviders": {
+    "authCode": "Godkendelseskode",
+    "authCodeHelp": "Kopiér koden og anvend den i næste trin. Den er gyldig i {duration}.",
+    "authorizationFailed": "Godkendelse mislykkedes",
+    "authorizationRequired": "Godkendelse krævet",
+    "authorizationSuccessful": "Godkendelse lykkedes",
+    "buttonConnect": "Opret forbindelse til {provider}",
+    "buttonDisconnect": "Afbryd forbindelse",
+    "confirmLogout": "Er du sikker på, at du vil afbryde {title}?",
+    "connect": "forbind",
+    "disconnect": "afbryd",
+    "loggedOut": "Du er nu logget ud",
+    "logoutFailed": "Kunne ikke logge ud",
+    "modalDescriptionLogin": "Fuldfør autorisationsprocessen for at etablere forbindelsen med {provider}.",
+    "modalDescriptionLogout": "Dette vil afbryde din {provider}-konto og fjerne adgangen til dens data.",
+    "success": "{title} er nu forbundet og klar til brug.",
+    "successCloseModal": "Du kan nu lukke dialogboksen.",
+    "successCloseTab": "Du kan nu lukke denne fane.",
+    "title": "Godkendelsesstatus"
+  },
   "batterySettings": {
     "batteryLevel": "Batteri-niveau",
     "bufferStart": {
@@ -40,8 +60,16 @@
       "chargers": "EV opladere",
       "generic": "Generisk integration",
       "heatingdevices": "Varmeenheder",
-      "ocppHelp": "Kopier denne adresse til opladerens konfiguration.",
+      "ocppConfirmContinue": "Din lader er endnu ikke forbundet til evcc. Vil du fortsætte alligevel?",
+      "ocppConnected": "Forbundet!",
+      "ocppDescription": "evcc indeholder en OCPP-server. Følg disse trin:",
+      "ocppHelp": "Kopier denne URL til konfigurationen af din oplader. Se producentens manual for detaljer. Opladeren vil automatisk tilføje sin unikke identifikator (stations-ID) til URL'en. I sjældne tilfælde skal du muligvis angive identifikatoren manuelt. Eksempel: `{url}`",
       "ocppLabel": "OCPP-Server URL",
+      "ocppNextStep": "Fortsæt",
+      "ocppStep1": "Indstil din lader til at bruge evcc som OCPP-server.",
+      "ocppStep2": "Afvent, at din lader tilslutter sig evcc.",
+      "ocppStep3": "Fortsæt og fuldfør konfigurationen.",
+      "ocppWaiting": "Venter på forbindelse",
       "switchsockets": "Omskiftelige stikkontakter",
       "template": "Fabrikant",
       "titleAdd": {
@@ -59,6 +87,7 @@
         },
         "heatpump": "Brugerdefineret varmepumpe",
         "sgready": "Brugerdefineret varmepumpe (sg-ready via plugins)",
+        "sgready-boost": "Brugerdefineret varmepumpe (SG-Ready-Boost, ikke længere understøttet)",
         "sgready-relay": "Brugerdefineret varmepumpe (sg-ready via relæer)",
         "switchsocket": "Brugerdefineret stikkontakt"
       }
@@ -70,8 +99,8 @@
     },
     "control": {
       "description": "Standardværdierne er normalt fine. Kun hvis du ved, hvad du gør, kan du ændre dem.",
-      "descriptionInterval": "Opdateringscyklus i sekunder. Definerer, hvor ofte evcc læser målerdata, justerer ladeeffekt og opdaterer brugergrænsefladen. Korte intervaller (< 30s) kan forårsage store udsving og fejlagtigt resultat.",
-      "descriptionResidualPower": "Skifter driftspunktet for kontrolsløjfen. Hvis du har et hjemmebatteri, anbefales det at indstille en værdi på 100 W. På denne måde vil batteriet få en lille prioritet frem for netbrug.",
+      "descriptionInterval": "Opdateringsinterval i sekunder. Angiver, hvor ofte evcc aflæser målerdata og justerer opladningen. Standardværdien på 30 sekunder er et sikkert valg. Enheder som køretøjer, ladere og invertere har typisk brug for flere sekunder til at tilpasse deres adfærd. Hvis dine komponenter reagerer hurtigt, kan du anvende lavere værdier. Vi anbefaler kraftigt ikke at gå under 10 sekunder. Hvis du observerer ustabil regulering eller springende effektværdier, bør du vælge et længere interval.",
+      "descriptionResidualPower": "Forskubber reguleringspunktet. Hvis du har et hjemmebatteri anbefales det at sætte værdien til 100 W. Derved får hjemmebatteriet let prioritet over elnettet.",
       "labelInterval": "Opdateringsinterval",
       "labelResidualPower": "Tilbageværende effekt",
       "title": "kontrol adfærd"
@@ -90,10 +119,13 @@
       "chargedEnergy": "Opladet",
       "co2": "Elnettet CO₂",
       "configured": "Konfigureret",
+      "connections": "Tilslutninger",
       "controllable": "Kan styres",
       "currency": "Møntenhed",
       "current": "Ström",
       "currentRange": "Strømstyrke",
+      "detected": "Registreret",
+      "dimmed": "Reduceret",
       "enabled": "Aktiveret",
       "energy": "Energi",
       "feedinPrice": "Indfødningstarif",
@@ -105,9 +137,9 @@
       "no": "nej",
       "odometer": "Kilometertæller",
       "org": "Organisation",
-      "phaseCurrents": "Strømstyrke L1, L2, L3",
-      "phasePowers": "Effekt L1, L2, L3",
-      "phaseVoltages": "Spænding L1, L2, L3",
+      "phaseCurrents": "Strømstyrke",
+      "phasePowers": "Effekt",
+      "phaseVoltages": "Spænding",
       "phases1p3p": "Fase-skift",
       "power": "Effekt",
       "powerRange": "Effekt",
@@ -140,8 +172,28 @@
       "loading": "Indlæser YAML-editor…"
     },
     "eebus": {
-      "description": "Indstilling der tillader evcc at kommunikere med andre EEBus enheder.",
+      "certificate": {
+        "private": "Privat nøgle",
+        "public": "Offentligt certifikat",
+        "title": "Certifikater"
+      },
+      "description": "Konfiguration, der gør det muligt for evcc at kommunikere med EEBus-kompatible enheder som ladere eller en styreenhed fra din netoperatør. Al nødvendig initialisering og dannelse af certifikater udføres automatisk ved første opstart.",
+      "descriptionAdvanced": "Ingen ændringer nødvendige. Foretag kun ændringer, hvis du virkelig ved, hvad du laver. Hvis du ændrer enten SHIP-id’et eller certifikaterne, skal dine enheder parres igen.",
+      "interfaces": "Grænseflader",
+      "interfacesHelp": "Begræns de netværksgrænseflader, som EEBus skal bruge, for at undgå kommunikationsproblemer. Lad feltet stå tomt for at bruge alle grænseflader. Én indtastning pr. linje.",
+      "port": "Port",
+      "portHelp": "Porten, der skal bruges.",
+      "removeConfirm": "Hele EEBus-konfigurationen fjernes. Nye certifikater og identifikatorer genereres ved næste opstart. Er du sikker på, at du vil fortsætte?",
+      "shipid": "SHIP-ID",
+      "shipidExplain": "Permanent enhedsidentifikator til identifikation i EEBus-netværket.",
+      "shipidHelp": "Dette SHIP-id er knyttet til certifikaterne nedenfor.",
+      "ski": "SKI",
+      "skiExplain": "Unik sikkerhedsidentifikator til parring af EEBus-enheder.",
       "title": "EEBus"
+    },
+    "experimental": {
+      "description": "Giver tidlig adgang til funktioner, der stadig testes. Disse kan være ustabile og kan blive ændret eller fjernet i fremtidige versioner.",
+      "title": "Eksperimentel"
     },
     "ext": {
       "description": "Måler energiforbrug fra enheder, der ikke styres (som f.eks. køleskab eller vaskemaskine), til statistik. Måleren kan også bruges til belastningsstyring, f.eks. i en undergruppe.",
@@ -156,8 +208,14 @@
     },
     "general": {
       "applyAndClose": "Anvend og luk",
+      "authPerform": "Forbind til {provider}",
+      "authPerformHint": "Åbnes i en ny fane. Kom tilbage hertil for at fortsætte.",
+      "authPrepare": "Forbereder forbindelse",
       "cancel": "Afbryd",
+      "clear": "Slet",
       "close": "Luk",
+      "copied": "Kopieret!",
+      "copy": "Kopier",
       "customHelp": "Opret en brugerdefineret enhed ved hjælp af evcc's plugin-system.",
       "customOption": "Brugerdefineret enhed",
       "delete": "Slet",
@@ -165,8 +223,10 @@
       "dragHandle": "Træk-håndtag",
       "dragItem": "Kan trækkes: {title}",
       "dragList": "Rækkefølgen kan ændres",
+      "error": "Fejl",
       "experimental": "Eksperimentel",
       "forceSave": "Gem alligevel",
+      "fromYamlHint": "Bemærk: Er konfigureret via evcc.yaml. Fjern indtastningen fra filen for at aktivere redigering her.",
       "hideAdvancedSettings": "Skjul avancerede indstillinger",
       "invalidFileSelected": "Ugyldig fil er valgt",
       "noFileSelected": "Ingen fil valgt.",
@@ -185,6 +245,7 @@
       "telemetry": "Telemetri",
       "templateLoading": "Indlæser...",
       "title": "Titel",
+      "typeDeprecated": "Typen “{type}” er forældet og vil blive fjernet i en kommende version. Tjek ændringsloggen og genskab enheden.",
       "validateSave": "Valider & gem"
     },
     "grid": {
@@ -193,8 +254,18 @@
       "titleEdit": "Rediger måler for elnettet"
     },
     "hems": {
-      "description": "Effektbegrænsning fra eksterne systemer (fx EnWG 14a-styringer). Kræver konfiguration af belastningsstyring.",
-      "title": "HEMS"
+      "csv": {
+        "created": "Oprettet",
+        "finished": "Afsluttet",
+        "gridpower": "Strømforbrug fra elnettet (kW)",
+        "limitpower": "Grænse (kW)",
+        "type": "Type"
+      },
+      "description": "Effektbegrænsning via eksterne systemer (f.eks. §14a EnWG, §9 EEG-grænseflade eller overordnet energistyringssystem). Fungerer sammen med belastningsstyringsfunktionen.",
+      "downloadCsv": "Download CSV",
+      "eventsRecorded": "Registrerede {count} netbegrænsningshændelser.",
+      "lastEvent": "Sidst {timeAgo}.",
+      "title": "Ekstern grænse"
     },
     "icon": {
       "change": "ændre",
@@ -240,6 +311,7 @@
       "chargerTypeLabel": "Oplader type",
       "chargingTitle": "Tilstand",
       "circuitHelp": "Belastningsstyring som sikrer, at effekt- og strømgrænser ikke overskrides.",
+      "circuitInvalid": "Kredsløbet findes ikke",
       "circuitLabel": "Kredsløb",
       "circuitUnassigned": "ikke tildelt",
       "defaultModeHelp": {
@@ -316,6 +388,7 @@
       "vehicleAutoDetection": "Automatisk registrering",
       "vehicleHelpAutoDetection": "Vælg automatisk det mest sandsynlige køretøj. Det er muligt selv at vælge.",
       "vehicleHelpDefault": "Antag altid, at dette køretøj oplader her. Automatisk registrering deaktiveret. Manuel tilsidesættelse er mulig.",
+      "vehicleInvalid": "Køretøjet findes ikke",
       "vehicleLabel": "Standard køretøj",
       "vehiclesTitle": "Køretøjer"
     },
@@ -333,7 +406,8 @@
       "title": "Opsætning",
       "unconfigured": "ikke konfigureret",
       "vehicles": "Mine køretøjer",
-      "yaml": "Enheder fra evcc.yaml kan ikke ændres her."
+      "welcomeBannerText": "Start med at oprette mindst én **lader**, **varmer**, **elnet**, **sol**, **batteri** eller **ekstra måler**. Hvis du blot vil teste, kan du vælge en **demoenhed**.",
+      "welcomeBannerTitle": "Lad os konfigurere dit system!"
     },
     "messaging": {
       "description": "Modtag beskeder om dine opladningssessioner.",
@@ -368,9 +442,9 @@
       "baudrate": "Baudrate",
       "comset": "ComSet",
       "connection": "Modbus forbindelse",
-      "connectionHintSerial": "Enheden er direkte forbundet til evcc via et RS485-interface.",
-      "connectionHintTcpip": "Enheden kan adresseres fra evcc via LAN/Wifi.",
-      "connectionValueSerial": "Serial / USB",
+      "connectionHintSerial": "Enheden er direkte forbundet via RS485 (eller USB-til-RS485-adapter).",
+      "connectionHintTcpip": "Enheden er tilgængelig via netværk (LAN/WiFi).",
+      "connectionValueSerial": "RS485",
       "connectionValueTcpip": "Netværk",
       "device": "Enhedsnavn",
       "deviceHint": "Eksempel: /dev/ttyUSB0",
@@ -385,7 +459,24 @@
       "protocolValueTcp": "TCP"
     },
     "modbusproxy": {
-      "description": "Tillad flere klienter at få adgang til en enkelt Modbus-enhed.",
+      "add": "Tilføj proxyforbindelse",
+      "connection": "Forbindelse nr. {number}",
+      "description": "Nogle Modbus-enheder understøtter kun én eller meget få forbindelser. evcc kan fungere som en proxy, der muliggør samtidig adgang for flere klienter (hjemmeautomatisering, scripts osv.).",
+      "device": "Enhed",
+      "option": {
+        "deny": "fejl",
+        "false": "nej",
+        "true": "stille"
+      },
+      "readonly": {
+        "help": {
+          "deny": "Skriveadgang er blokeret på grund af en Modbus-fejl.",
+          "false": "Skriveadgang videresendes.",
+          "true": "Skriveadgang er blokeret uden svar."
+        },
+        "label": "Skrivebeskyttet"
+      },
+      "sourcePortHelp": "Port til indgående klientforbindelser. Porten skal være ledig.",
       "title": "Modbus Proxy"
     },
     "mqtt": {
@@ -407,13 +498,34 @@
       "title": "MQTT"
     },
     "network": {
-      "descriptionHost": "Brug .local suffiks for at aktivere mDNS. Relevant for opdagelse af mobilappen og nogle OCPP-opladere.",
+      "descriptionExternalUrl": "Adresse for tilslutning fra andre enheder og til automatisk opdagelse af evcc-appen.",
+      "descriptionHost": "Anvendes til at gøre evcc synlig i det lokale netværk.",
+      "descriptionInternalUrl": "Lokal netværksadresse for evcc.",
       "descriptionPort": "Port til webgrænsefladen og API. Du skal opdatere din browser-URL, hvis du ændrer dette.",
       "descriptionSchema": "Påvirker kun, hvordan URL'er genereres. Valg af HTTPS vil ikke aktivere kryptering.",
-      "labelHost": "Værtsnavn",
+      "labelExternalUrl": "Ekstern webadresse",
+      "labelHost": "mDNS-værtsnavn",
+      "labelInternalUrl": "Intern webadresse",
       "labelPort": "port",
       "labelSchema": "Skema",
       "title": "Netværk"
+    },
+    "ocpp": {
+      "connectedChargers": "Tilsluttede ladere",
+      "connectionStatus": "Konfigurerede stations-ID’er",
+      "connectionStatusHelp": "Forbindelsesstatus for konfigurerede ladere.",
+      "detectedChargers": "Registrerede stations-ID’er",
+      "detectedHelp": "Disse ladere har forsøgt at forbinde til evcc. For at bruge en lader skal du oprette et loadpoint med dens stations-ID.",
+      "noChargers": "Ingen OCPP-ladere fundet.",
+      "noStations": "Ingen stationer tilsluttet",
+      "status": {
+        "configured": "Ikke tilsluttet",
+        "connected": "Tilsluttet",
+        "unknown": "Ukendt"
+      },
+      "title": "OCPP Server",
+      "url": "Server URL",
+      "urlHelp": "Kopier denne URL til din laders opsætning. Tjek producentens vejledning for detaljer. Laderen tilføjer normalt automatisk sit unikke ID (stations-id) til URL’en. I sjældne tilfælde skal ID’et angives manuelt. Eksempel: {url}"
     },
     "options": {
       "boolean": {
@@ -449,6 +561,7 @@
       "integrations": "Integrationer",
       "loadpoints": "Lader og varmelegemer",
       "meter": "Sol og batteri",
+      "services": "Tjenester",
       "system": "System",
       "vehicles": "Køretøjer"
     },
@@ -475,6 +588,7 @@
       "labelToken": "Sponsor token",
       "title": "Sponsorat",
       "tokenRequired": "Du skal konfigurere et sponsortoken, før du kan oprette denne enhed.",
+      "tokenRequiredFeature": "Denne funktion kræver et sponsor-token.",
       "tokenRequiredLearnMore": "Lær mere.",
       "tokenRequiredShort": "Der er ingen sponsor token konfiguret.",
       "trialToken": "afprøvningstoken",
@@ -486,7 +600,7 @@
         "backup": {
           "action": "Download sikkerhedskopi...",
           "confirmationButton": "Download sikkerhedskopi",
-          "confirmationText": "Indtast venligst din adgangskode for at downloade databasefilen.",
+          "confirmationText": "Download databasefilen.",
           "description": "Sikkerhedskopier dine data til en fil. Den kan bruges til at gendanne dine data i tilfælde af systemfejl.",
           "title": "Sikkerhedskopier"
         },
@@ -556,6 +670,8 @@
       "maximumCurrentHelp": "Skal være højere end minimal strømstyrke.",
       "maximumPhases": "Maksimal antal faser",
       "maximumPhasesHelp": "Hvor mange faser kan dette køretøj oplades med? Bruges til at beregne det krævede minimale soloverskud og planens varighed.",
+      "maximumPower": "Maksimal ladeeffekt",
+      "maximumPowerHelp": "Maksimal effekt, som køretøjet kan oplades med",
       "minimumCurrent": "Minimal strømstyrke",
       "minimumCurrentHelp": "Gå kun under 6A, hvis du ved, hvad du har med at gøre.",
       "online": "Køretøj med online API",
@@ -643,12 +759,14 @@
   "forecast": {
     "co2": {
       "average": "Gennemsnit",
+      "constant": "CO₂-belastning",
       "lowestHour": "Reneste time",
       "range": "spændvidde"
     },
     "modalTitle": "Prognose",
     "price": {
       "average": "Gennemsnit",
+      "constant": "Pris",
       "lowestHour": "Billigste time",
       "range": "Spændvidde"
     },
@@ -666,11 +784,15 @@
       "solar": "Sol"
     }
   },
+  "general": {
+    "note": "Note:"
+  },
   "header": {
     "about": "Om",
     "authProviders": {
       "confirmLogout": "Er du sikker på du vil fjerne forbindelsen til {title}?",
       "loggedOut": "Du er nu logget ud",
+      "success": "Godkendelse med {title} lykkedes. Du kan nu lukke fanen.",
       "title": "Autorisation status"
     },
     "blog": "Blog",
@@ -750,6 +872,8 @@
       "stepTwo": "Trin 2: Kopiér yderligere oplysninger",
       "title": "GitHub-problemoversigt"
     },
+    "system": "System",
+    "timezone": "Tidszone",
     "title": "Indberet et problem",
     "version": "Version"
   },
@@ -788,16 +912,24 @@
       "goal": "Opladnings mål",
       "modalTitle": "Lade plan",
       "none": "ingen",
+      "optimization": {
+        "cheapest": "billigst",
+        "continuous": "kontinuerlig",
+        "label": "Optimering"
+      },
       "planNumber": "Plan {number}",
-      "preconditionDescription": "Oplad {duration} før afgang til batterikonditionering.",
-      "preconditionLong": "Sen opladning",
-      "preconditionOptionAll": "alt",
-      "preconditionOptionNo": "nej",
-      "preconditionShort": "Sen",
+      "precondition": {
+        "description": "Oplad {duration} før afgang til batterikonditionering.",
+        "label": "Sen opladning",
+        "optionAll": "alt",
+        "optionNo": "nej"
+      },
       "remove": "Fjern",
       "repeating": "Gentager",
       "repeatingPlans": "Gentager plan",
       "selectAll": "Vælg alt",
+      "strategyDisabledDescription": "Opladningen påbegyndes så sent som muligt og afsluttes præcis ved afgang. Med dynamiske elpriser eller CO₂-tariffer er der flere valgmuligheder.",
+      "strategySettings": "Indstillinger for strategi",
       "time": "Tid",
       "title": "Plan",
       "titleMinSoc": "Min. ladning",
@@ -851,7 +983,7 @@
     },
     "loadpointSettings": {
       "batteryBoost": {
-        "description": "Hurtig opladning fra husbatteriet.",
+        "description": "Hurtig opladning fra husbatteriet, indtil det er afladet til {limit}.",
         "label": "Batteri boost",
         "mode": "Kun tilgængelig i solar og min+solar mode.",
         "once": "Boost er aktiveret for denne opladning."
@@ -1000,12 +1132,12 @@
     "message": "Ikke forbundet til en server.",
     "restart": "Genstart",
     "restartNeeded": "Påkrævet for at anvende ændringer.",
-    "restarting": "Serveren kommer tilbage om et øjeblik."
+    "restarting": "Serveren kommer tilbage om et øjeblik.",
+    "starting": "Starter server..."
   },
   "passwordModal": {
     "description": "Angiv adgangskode for at beskytte konfigurations indstillinger. Det er stadig mulig at benytte hovedskærmen uden at logge på.",
     "empty": "Adgangskode må ikke være tomt",
-    "error": "Fejl: ",
     "labelCurrent": "Nuværende adgangskode",
     "labelNew": "Ny adgangskode",
     "labelRepeat": "Gentag adgangskoden",
@@ -1119,7 +1251,7 @@
     },
     "hiddenFeatures": {
       "label": "Experimentalt",
-      "value": "Vis eksperimentelle brugergrænsefladefunktioner."
+      "value": "Aktivér eksperimentelle funktioner."
     },
     "language": {
       "auto": "Automatisk",
@@ -1132,8 +1264,10 @@
       "show": "Vis {title}"
     },
     "sponsorToken": {
-      "expires": "Din sponsortoken udløber {inXDays}. {getNewToken} og opdater det her.",
-      "getNew": "Hent en ny",
+      "expires": "Din sponsortoken udløber {inXDays}.",
+      "expiresUpdateUi": "{getNewToken} og opdater det her.",
+      "expiresUpdateYaml": "{getNewToken} og opdater det i din evcc.yaml.",
+      "getNewToken": "Hent en ny",
       "hint": "Note: Vi automatiserer dette i fremtiden."
     },
     "telemetry": {
@@ -1166,6 +1300,7 @@
     "cleanTitle": "Grøn opladning fra elnettet",
     "co2Label": "CO₂ udledning",
     "co2Limit": "CO₂ grænse",
+    "enable": "Aktivér begrænsning",
     "loadpointDescription": "Aktiverer midlertidig hurtig-opladning i solcelle tilstand.",
     "modalTitle": "Smart opladning fra elnettet",
     "none": "ingen",
@@ -1188,6 +1323,7 @@
     "configuration": "Opsætning",
     "description": "Tjek venligst din konfigurationsfil. Hvis fejlmeddelelsen ikke hjælper, så tjek {0}.",
     "discussions": "GitHub Diskussioner",
+    "editConfiguration": "Rediger konfiguration",
     "fixAndRestart": "Løs problemet og genstart serveren.",
     "hint": "Bemærk: Det kan også være, at du har en defekt enhed (inverter, måler, ...). Tjek dine netværksforbindelser.",
     "lineError": "Fejl i {0}.",

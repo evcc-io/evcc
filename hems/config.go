@@ -7,16 +7,12 @@ import (
 
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/hems/eebus"
+	"github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/hems/relay"
 )
 
-// HEMS describes the HEMS system interface
-type HEMS interface {
-	Run()
-}
-
 // NewFromConfig creates new HEMS from config
-func NewFromConfig(ctx context.Context, typ string, other map[string]any, site site.API) (HEMS, error) {
+func NewFromConfig(ctx context.Context, typ string, other map[string]any, site site.API) (hems.API, error) {
 	switch strings.ToLower(typ) {
 	case "sma", "shm", "semp":
 		return nil, errors.New("breaking change: Sunny Home Manager integration is always on. See https://github.com/evcc-io/evcc/releases and https://docs.evcc.io/en/docs/integrations/sma-sunny-home-manager")

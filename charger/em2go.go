@@ -69,7 +69,7 @@ func init() {
 	registry.AddCtx("em2go-home", NewEm2GoFromConfig)
 }
 
-//go:generate go tool decorate -f decorateEm2Go -b *Em2Go -r api.Charger -t "api.ChargerEx,MaxCurrentMillis,func(float64) error" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
+//go:generate go tool decorate -f decorateEm2Go -b *Em2Go -r api.Charger -t api.ChargerEx,api.PhaseSwitcher,api.PhaseGetter
 
 // NewEm2GoFromConfig creates a Em2Go charger from generic config
 func NewEm2GoFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
@@ -199,6 +199,12 @@ func (wb *Em2Go) Enable(enable bool) error {
 
 		// send default current
 		return wb.setCurrent(wb.current)
+	}
+
+	// experimental workaround for EM2GO home FW 1.4
+	// https://github.com/evcc-io/evcc/discussions/25940#discussioncomment-15221487
+	if !enable {
+		return wb.setCurrent(0)
 	}
 
 	return nil

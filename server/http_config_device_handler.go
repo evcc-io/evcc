@@ -14,6 +14,7 @@ import (
 	"github.com/evcc-io/evcc/charger"
 	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/meter"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
@@ -23,11 +24,11 @@ import (
 	"go.yaml.in/yaml/v4"
 )
 
-func devicesConfig[T any](class templates.Class, h config.Handler[T]) ([]map[string]any, error) {
+func devicesConfig[T any](class templates.Class, h config.Handler[T], hidePrivate bool) ([]map[string]any, error) {
 	var res []map[string]any
 
 	for _, dev := range h.Devices() {
-		dc, err := deviceConfigMap(class, dev)
+		dc, err := deviceConfigMap(class, dev, hidePrivate)
 		if err != nil {
 			return nil, err
 		}
@@ -54,20 +55,26 @@ func devicesConfigHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Check if private data should be hidden (default: true, showing private data)
+	hidePrivate := r.URL.Query().Get("private") == "false"
+
 	var res []map[string]any
 
 	switch class {
 	case templates.Meter:
-		res, err = devicesConfig(class, config.Meters())
+		res, err = devicesConfig(class, config.Meters(), hidePrivate)
 
 	case templates.Charger:
-		res, err = devicesConfig(class, config.Chargers())
+		res, err = devicesConfig(class, config.Chargers(), hidePrivate)
 
 	case templates.Vehicle:
-		res, err = devicesConfig(class, config.Vehicles())
+		res, err = devicesConfig(class, config.Vehicles(), hidePrivate)
 
 	case templates.Circuit:
-		res, err = devicesConfig(class, config.Circuits())
+		res, err = devicesConfig(class, config.Circuits(), hidePrivate)
+
+	case templates.Messenger:
+		res, err = devicesConfig(class, config.Messengers(), hidePrivate)
 	}
 
 	if err != nil {
@@ -78,7 +85,7 @@ func devicesConfigHandler(w http.ResponseWriter, r *http.Request) {
 	jsonWrite(w, res)
 }
 
-func deviceConfigMap[T any](class templates.Class, dev config.Device[T]) (map[string]any, error) {
+func deviceConfigMap[T any](class templates.Class, dev config.Device[T], hidePrivate bool) (map[string]any, error) {
 	conf := dev.Config()
 
 	dc := map[string]any{
@@ -102,7 +109,7 @@ func deviceConfigMap[T any](class templates.Class, dev config.Device[T]) (map[st
 		}
 
 		if conf.Type == typeTemplate {
-			params, err := sanitizeMasked(class, conf.Other)
+			params, err := sanitizeMasked(class, conf.Other, hidePrivate)
 			if err != nil {
 				return nil, err
 			}
@@ -146,13 +153,13 @@ func deviceConfigMap[T any](class templates.Class, dev config.Device[T]) (map[st
 	return dc, nil
 }
 
-func deviceConfig[T any](class templates.Class, id int, h config.Handler[T]) (map[string]any, error) {
+func deviceConfig[T any](class templates.Class, id int, h config.Handler[T], hidePrivate bool) (map[string]any, error) {
 	dev, err := h.ByName(config.NameForID(id))
 	if err != nil {
 		return nil, err
 	}
 
-	return deviceConfigMap(class, dev)
+	return deviceConfigMap(class, dev, hidePrivate)
 }
 
 // deviceConfigHandler returns a device configuration by class
@@ -171,20 +178,26 @@ func deviceConfigHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Check if private data should be hidden (default: true, showing private data)
+	hidePrivate := r.URL.Query().Get("private") == "false"
+
 	var res map[string]any
 
 	switch class {
 	case templates.Meter:
-		res, err = deviceConfig(class, id, config.Meters())
+		res, err = deviceConfig(class, id, config.Meters(), hidePrivate)
 
 	case templates.Charger:
-		res, err = deviceConfig(class, id, config.Chargers())
+		res, err = deviceConfig(class, id, config.Chargers(), hidePrivate)
 
 	case templates.Vehicle:
-		res, err = deviceConfig(class, id, config.Vehicles())
+		res, err = deviceConfig(class, id, config.Vehicles(), hidePrivate)
 
 	case templates.Circuit:
-		res, err = deviceConfig(class, id, config.Circuits())
+		res, err = deviceConfig(class, id, config.Circuits(), hidePrivate)
+
+	case templates.Messenger:
+		res, err = deviceConfig(class, id, config.Messengers(), hidePrivate)
 	}
 
 	if err != nil {
@@ -241,6 +254,9 @@ func deviceStatusHandler(w http.ResponseWriter, r *http.Request) {
 
 	case templates.Circuit:
 		instance, err = deviceStatus(name, config.Circuits())
+
+	case templates.Messenger:
+		instance, err = deviceStatus(name, config.Messengers())
 	}
 
 	if err != nil {
@@ -300,6 +316,9 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		conf, err = newDevice(ctx, class, req, func(ctx context.Context, _ string, other map[string]any) (api.Circuit, error) {
 			return circuit.NewFromConfig(ctx, util.NewLogger("circuit"), other)
 		}, config.Circuits(), force)
+
+	case templates.Messenger:
+		conf, err = newDevice(ctx, class, req, messenger.NewFromConfig, config.Messengers(), force)
 	}
 
 	if err != nil {
@@ -381,6 +400,9 @@ func updateDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		err = updateDevice(ctx, id, class, req, func(ctx context.Context, _ string, other map[string]any) (api.Circuit, error) {
 			return circuit.NewFromConfig(ctx, util.NewLogger("circuit"), other)
 		}, config.Circuits(), force)
+
+	case templates.Messenger:
+		err = updateDevice(ctx, id, class, req, messenger.NewFromConfig, config.Messengers(), force)
 	}
 
 	setConfigDirty()
@@ -527,6 +549,9 @@ func deleteDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Requ
 					lp.SetCircuitRef("")
 				}
 			}
+
+		case templates.Messenger:
+			err = deleteDevice(id, config.Messengers())
 		}
 
 		setConfigDirty()
@@ -597,6 +622,9 @@ func testConfigHandler(w http.ResponseWriter, r *http.Request) {
 
 	case templates.Circuit:
 		err = api.ErrNotAvailable
+
+	case templates.Messenger:
+		instance, err = testConfig(ctx, id, class, req, messenger.NewFromConfig, config.Messengers())
 	}
 
 	if err != nil {

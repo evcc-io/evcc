@@ -378,16 +378,8 @@
         "description": "Charging sessions",
         "items": {
           "properties": {
-            "chargeDuration": {
-              "description": "Duration of active charging",
-              "type": "number"
-            },
             "chargedEnergy": {
               "description": "Charged energy in kWh",
-              "type": "number"
-            },
-            "co2PerKWh": {
-              "description": "Average CO₂ emissions per kWh",
               "type": "number"
             },
             "created": {
@@ -417,18 +409,6 @@
               "nullable": true,
               "type": "number"
             },
-            "price": {
-              "description": "Total price of the session",
-              "type": "number"
-            },
-            "pricePerKWh": {
-              "description": "Average price per kWh",
-              "type": "number"
-            },
-            "solarPercentage": {
-              "description": "Solar percentage of the session",
-              "type": "number"
-            },
             "vehicle": {
               "$ref": "#/components/schemas/VehicleName"
             }
@@ -453,6 +433,60 @@
         "example": 25.5,
         "minimum": 0,
         "type": "number"
+      },
+      "GridSessions": {
+        "description": "Grid limitation sessions",
+        "items": {
+          "properties": {
+            "chargeDuration": {
+              "description": "Duration of active charging",
+              "type": "number"
+            },
+            "co2PerKWh": {
+              "description": "Average CO₂ emissions per kWh",
+              "type": "number"
+            },
+            "created": {
+              "$ref": "#/components/schemas/Timestamp"
+            },
+            "finished": {
+              "$ref": "#/components/schemas/Timestamp"
+            },
+            "gridPower": {
+              "description": "Grid power in watts",
+              "type": "number"
+            },
+            "id": {
+              "$ref": "#/components/schemas/Id"
+            },
+            "limitPower": {
+              "description": "Limitation power in watts",
+              "type": "number"
+            },
+            "price": {
+              "description": "Total price of the session",
+              "type": "number"
+            },
+            "pricePerKWh": {
+              "description": "Average price per kWh",
+              "type": "number"
+            },
+            "solarPercentage": {
+              "description": "Solar percentage of the session",
+              "type": "number"
+            },
+            "type": {
+              "description": "Type of grid limitation event",
+              "enum": [
+                "consumption",
+                "feedin"
+              ],
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "type": "array"
       },
       "HourMinuteTime": {
         "description": "Time in `HH:MM` format",
@@ -560,6 +594,21 @@
         },
         "type": "object"
       },
+      "PlanStrategy": {
+        "description": "Charging plan strategy configuration",
+        "properties": {
+          "continuous": {
+            "description": "Force continuous planning",
+            "type": "boolean"
+          },
+          "precondition": {
+            "description": "Precondition duration in seconds",
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
       "Power": {
         "description": "Power in W",
         "example": 2500,
@@ -604,9 +653,6 @@
             "description": "Set plan active.",
             "type": "boolean"
           },
-          "precondition": {
-            "$ref": "#/components/schemas/Precondition"
-          },
           "soc": {
             "$ref": "#/components/schemas/Soc"
           },
@@ -641,9 +687,6 @@
           "energy": {
             "$ref": "#/components/schemas/Energy"
           },
-          "precondition": {
-            "$ref": "#/components/schemas/Precondition"
-          },
           "time": {
             "$ref": "#/components/schemas/Timestamp"
           }
@@ -655,9 +698,6 @@
           "url": "https://docs.evcc.io/en/docs/features/plans#create-charging-plan"
         },
         "properties": {
-          "precondition": {
-            "$ref": "#/components/schemas/Precondition"
-          },
           "soc": {
             "$ref": "#/components/schemas/Soc"
           },
@@ -991,16 +1031,49 @@
         ]
       }
     },
-    "/health": {
+    "/gridsessions": {
       "get": {
-        "description": "Returns 200 if the evcc loop runs as expected.",
-        "operationId": "healthCheck",
+        "description": "Returns a list of HEMS grid limitation events.",
+        "operationId": "getGridSessions",
+        "parameters": [
+          {
+            "description": "Response format (default json)",
+            "in": "query",
+            "name": "format",
+            "schema": {
+              "enum": [
+                "csv"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Language (defaults to accept header)",
+            "in": "query",
+            "name": "lang",
+            "schema": {
+              "example": "de",
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
-              "text/plain": {
+              "application/json": {
                 "schema": {
-                  "example": "OK",
+                  "properties": {
+                    "result": {
+                      "$ref": "#/components/schemas/GridSessions"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "text/csv": {
+                "schema": {
+                  "description": "Download csv-file",
+                  "format": "binary",
                   "type": "string"
                 }
               }
@@ -1008,15 +1081,15 @@
             "description": "Success"
           }
         },
-        "summary": "Health check",
+        "summary": "Grid limitation sessions",
         "tags": [
-          "general"
+          "sessions"
         ]
       }
     },
     "/loadpoints/{id}/batteryboost/{enable}": {
       "post": {
-        "description": "Enable or disable battery boost.",
+        "description": "Enable or disable battery boost. When active, the maximum available home battery power is added until the home battery is drained to configured SoC limit.",
         "externalDocs": {
           "url": "https://docs.evcc.io/en/docs/features/battery#battery-boost"
         },
@@ -1035,6 +1108,32 @@
           }
         },
         "summary": "Set battery boost",
+        "tags": [
+          "loadpoints"
+        ]
+      }
+    },
+    "/loadpoints/{id}/batteryboostlimit/{soc}": {
+      "post": {
+        "description": "Set the SoC limit for battery boost. Home battery will be used to support charging up to this SoC level. A value of 100 (default) disabled the boost feature in UI and API.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/battery#battery-boost"
+        },
+        "operationId": "setLoadpointBatteryBoostLimit",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "$ref": "#/components/parameters/soc"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/IntegerResult"
+          }
+        },
+        "summary": "Set battery boost SoC limit",
         "tags": [
           "loadpoints"
         ]
@@ -1333,9 +1432,6 @@
                           "properties": {
                             "planId": {
                               "$ref": "#/components/schemas/Id"
-                            },
-                            "precondition": {
-                              "$ref": "#/components/schemas/Precondition"
                             }
                           },
                           "type": "object"
@@ -1511,6 +1607,51 @@
           }
         },
         "summary": "Simulate soc-based charging plan",
+        "tags": [
+          "loadpoints"
+        ]
+      }
+    },
+    "/loadpoints/{id}/plan/strategy": {
+      "post": {
+        "description": "Updates the charging plan strategy for the loadpoint.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/plans"
+        },
+        "operationId": "setLoadpointPlanStrategy",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlanStrategy"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "result": {
+                      "$ref": "#/components/schemas/PlanStrategy"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Success"
+          }
+        },
+        "summary": "Set plan strategy",
         "tags": [
           "loadpoints"
         ]
@@ -2412,13 +2553,6 @@
           },
           {
             "$ref": "#/components/parameters/timestamp"
-          },
-          {
-            "in": "query",
-            "name": "precondition",
-            "schema": {
-              "$ref": "#/components/schemas/Precondition"
-            }
           }
         ],
         "responses": {
@@ -2428,7 +2562,15 @@
                 "schema": {
                   "properties": {
                     "result": {
-                      "$ref": "#/components/schemas/StaticSocPlan"
+                      "properties": {
+                        "soc": {
+                          "$ref": "#/components/schemas/Soc"
+                        },
+                        "time": {
+                          "$ref": "#/components/schemas/Timestamp"
+                        }
+                      },
+                      "type": "object"
                     }
                   },
                   "type": "object"
@@ -2439,6 +2581,51 @@
           }
         },
         "summary": "Set a SoC-based charging plan",
+        "tags": [
+          "vehicles"
+        ]
+      }
+    },
+    "/vehicles/{name}/plan/strategy": {
+      "post": {
+        "description": "Updates the charging plan strategy for the vehicle.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/features/plans"
+        },
+        "operationId": "setVehiclePlanStrategy",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/vehicleName"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlanStrategy"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "result": {
+                      "$ref": "#/components/schemas/PlanStrategy"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Success"
+          }
+        },
+        "summary": "Set plan strategy",
         "tags": [
           "vehicles"
         ]

@@ -1,12 +1,11 @@
 <template>
 	<JsonModal
-		id="shmModal"
+		name="shm"
 		:title="$t('config.shm.title')"
 		:description="$t('config.shm.description')"
 		docs="/docs/reference/configuration/hems"
 		endpoint="/config/shm"
 		state-key="shm"
-		data-testid="shm-modal"
 		disable-remove
 		@changed="$emit('changed')"
 	>

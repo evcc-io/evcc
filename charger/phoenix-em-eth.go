@@ -34,7 +34,7 @@ func init() {
 	registry.AddCtx("phoenix-em-eth", NewPhoenixEMEthFromConfig)
 }
 
-//go:generate go tool decorate -f decoratePhoenixEMEth -b *PhoenixEMEth -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)"
+//go:generate go tool decorate -f decoratePhoenixEMEth -b *PhoenixEMEth -r api.Charger -t api.Meter,api.MeterEnergy,api.PhaseCurrents,api.PhaseVoltages
 
 // NewPhoenixEMEthFromConfig creates a Phoenix charger from generic config
 func NewPhoenixEMEthFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {

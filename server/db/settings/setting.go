@@ -17,6 +17,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/samber/lo"
 	"go.yaml.in/yaml/v4"
+	"gorm.io/gorm"
 )
 
 var ErrNotFound = errors.New("not found")
@@ -33,12 +34,14 @@ var (
 	settings []setting
 )
 
-func Init() error {
-	err := db.Instance.AutoMigrate(new(setting))
-	if err == nil {
-		err = db.Instance.Find(&settings).Error
-	}
-	return err
+func init() {
+	db.Register(func(db *gorm.DB) error {
+		if err := db.AutoMigrate(new(setting)); err != nil {
+			return err
+		}
+
+		return db.Find(&settings).Error
+	})
 }
 
 func Persist() error {
@@ -240,6 +243,11 @@ func Yaml(key string, other, res any) error {
 	}
 
 	return DecodeOtherSliceOrMap(other, res)
+}
+
+func IsJson(key string) bool {
+	s, err := String(key)
+	return err == nil && json.Unmarshal([]byte(s), &json.RawMessage{}) == nil
 }
 
 // wrapping Settings into a struct for better decoupling

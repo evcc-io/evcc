@@ -5,12 +5,6 @@ products:
       de: Plenticore Hybrid, inkl. Netzladung der Hausbatterie
       en: Plenticore Hybrid, incl. grid charging of the house battery
 capabilities: ["battery-control"]
-linked:
-  - template: kostal-ksem-inverter
-    usage: grid
-  - template: kostal-ksem
-    usage: grid
-    excludetemplate: kostal-ksem-inverter
 covers: ["kostal-plenticore-hw0200"]
 requirements:
   description:
@@ -25,7 +19,6 @@ requirements:
 params:
   - name: usage
     choice: ["pv", "battery"]
-    allinone: true
   - name: modbus
     choice: ["tcpip"]
     id: 71
@@ -38,15 +31,21 @@ params:
     choice: ["little", "big"]
     default: little
     advanced: true
-  - name: capacity
-    advanced: true
   - name: maxacpower
-  - name: maxchargerate
-    advanced: true
+    service: modbus/read?address=531&type=holding&encoding=uint16&{modbus}
+  - preset: battery-params
+  - name: capacity
+    service: modbus/read?address=1068&type=holding&encoding=float32s&scale=0.001&{modbus}
   - name: minsoc
-    advanced: true
+    service: modbus/read?address=1042&type=holding&encoding=float32s&{modbus}
   - name: maxsoc
-    advanced: true
+    service: modbus/read?address=1044&type=holding&encoding=float32s&{modbus}
+  - name: maxchargepower
+    service: modbus/read?address=1038&type=holding&encoding=float32s&resulttype=int&{modbus}
+  - name: maxdischargepower
+    service: modbus/read?address=1040&type=holding&encoding=float32s&resulttype=int&{modbus}
+  - name: maxchargerate
+    deprecated: true
   - name: watchdog
     type: duration
     default: 60s
@@ -83,11 +82,10 @@ render: |
     source: sunspec
     {{- include "modbus" . | indent 2 }}
     value: 802:SoC # 802 battery control
-  minsoc: {{ .minsoc }} # %
-  maxsoc: {{ .maxsoc }} # %
   batterymode:
     source: watchdog
     timeout: {{ .watchdog }} # re-write at timeout/2
+    defer: true # make sure timeouts are followed on update
     reset: 1 # reset watchdog on normal
     set:
       source: switch
@@ -95,35 +93,40 @@ render: |
       - case: 1 # normal
         set:
           source: const
-          value: 0 # % (set once to reset from forced charge)
+          value: 0 # W (set once to reset from forced charge)
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
-              address: 1028 # battery charge current (DC) setpoint, relative [%]
+              address: 1034 # Battery charge power (DC) setpoint, absolute [W]
               type: writemultiple
               encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
       - case: 2 # hold
         set:
           source: const
-          value: 0 # %
+          value: 0 # W
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
-              address: 1028 # battery charge current (DC) setpoint, relative [%]
+              address: 1040 # Battery max. discharge power limit, absolute [W]
               type: writemultiple
               encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
       - case: 3 # charge
         set:
+          {{- if .maxchargepower }}
           source: const
-          value: -{{ .maxchargerate }} # %
+          value: -{{ .maxchargepower }} # W
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
-              address: 1028 # battery charge current (DC) setpoint, relative [%]
+              address: 1034 # Battery charge power (DC) setpoint, absolute [W]
               type: writemultiple
               encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
-  capacity: {{ .capacity }} # kWh
+          {{- else }}
+          source: error
+          error: ErrNotAvailable
+          {{- end }}
+  {{- include "battery-params" . }}
   {{- end }}

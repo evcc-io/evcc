@@ -13,15 +13,6 @@ import (
 
 const ApiURL = "https://api-cardata.bmwgroup.com"
 
-var Config = oauth2.Config{
-	Scopes: []string{"authenticate_user", "openid", "cardata:streaming:read", "cardata:api:read"},
-	Endpoint: oauth2.Endpoint{
-		DeviceAuthURL: "https://customer.bmwgroup.com/gcdm/oauth/device/code",
-		TokenURL:      "https://customer.bmwgroup.com/gcdm/oauth/token",
-		AuthStyle:     oauth2.AuthStyleInParams,
-	},
-}
-
 // requiredKeys are the necessary data dictionary entities according to
 // https://mybmwweb-utilities.api.bmw/de-de/utilities/bmw/api/cd/catalogue/file
 var requiredKeys = []string{

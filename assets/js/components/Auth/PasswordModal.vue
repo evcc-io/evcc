@@ -4,11 +4,12 @@
 		ref="modal"
 		:title="title"
 		:data-testid="dataTestId"
+		:config-modal-name="configModalName"
 		:uncloseable="isUncloseable"
 		@open="open"
 		@closed="closed"
 	>
-		<p v-if="error" class="text-danger">{{ $t("passwordModal.error") }} "{{ error }}"</p>
+		<ErrorMessage :error="error" />
 		<p v-if="isSetupMode" class="mb-4">{{ $t("passwordModal.description") }}</p>
 		<form
 			v-if="modalVisible"
@@ -87,6 +88,7 @@
 
 <script lang="ts">
 import GenericModal from "../Helper/GenericModal.vue";
+import ErrorMessage from "../Helper/ErrorMessage.vue";
 import FormRow from "../Helper/FormRow.vue";
 import api from "@/api";
 import { updateAuthStatus } from "./auth";
@@ -94,7 +96,7 @@ import { defineComponent } from "vue";
 
 export default defineComponent({
 	name: "PasswordModal",
-	components: { FormRow, GenericModal },
+	components: { FormRow, GenericModal, ErrorMessage },
 	props: {
 		updateMode: Boolean,
 	},
@@ -112,6 +114,9 @@ export default defineComponent({
 	computed: {
 		modalId() {
 			return this.updateMode ? "passwordUpdateModal" : "passwordSetupModal";
+		},
+		configModalName() {
+			return this.updateMode ? "passwordupdate" : undefined;
 		},
 		dataTestId() {
 			return this.updateMode ? "password-update-modal" : "password-setup-modal";

@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/samber/lo"
+	"github.com/evcc-io/evcc/core/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 )
@@ -16,14 +16,6 @@ func TestMqttNaNInf(t *testing.T) {
 	m := &MQTT{}
 	assert.Equal(t, "NaN", m.encode(math.NaN()), "NaN not encoded as string")
 	assert.Equal(t, "+Inf", m.encode(math.Inf(0)), "Inf not encoded as string")
-}
-
-type measurement struct {
-	Power        float64   `json:"power"`
-	Energy       float64   `json:"energy,omitempty"`
-	Currents     []float64 `json:"currents,omitempty"`
-	Soc          *float64  `json:"soc,omitempty"`
-	Controllable *bool     `json:"controllable,omitempty"`
 }
 
 func TestMqttTypes(t *testing.T) {
@@ -104,22 +96,41 @@ func (suite *mqttSuite) TestSlice() {
 	suite.Equal([]string{"2", "10", "20"}, suite.payloads, "payloads")
 }
 
-func (suite *mqttSuite) TestGrid() {
-	topics := []string{"test/power", "test/energy", "test/currents", "test/soc", "test/controllable"}
+func (suite *mqttSuite) TestMeasurement() {
+	topics := []string{"test/title", "test/icon", "test/power", "test/energy", "test/powers", "test/currents", "test/excessDCPower", "test/capacity", "test/soc", "test/controllable"}
 
-	suite.publish("test", false, measurement{})
+	suite.publish("test", false, types.Measurement{})
 	suite.Equal(topics, suite.topics, "topics")
-	suite.Equal([]string{"0", "", "", "", ""}, suite.payloads, "payloads")
+	suite.Equal([]string{"", "", "0", "", "", "", "", "", "", ""}, suite.payloads, "payloads")
 
-	suite.publish("test", false, measurement{Energy: 1})
+	suite.publish("test", false, types.Measurement{Energy: 1})
 	suite.Equal(topics, suite.topics, "topics")
-	suite.Equal([]string{"0", "1", "", "", ""}, suite.payloads, "payloads")
+	suite.Equal([]string{"", "", "0", "1", "", "", "", "", "", ""}, suite.payloads, "payloads")
 
-	suite.publish("test", false, measurement{Controllable: lo.ToPtr(false)})
+	suite.publish("test", false, types.Measurement{Controllable: new(false)})
 	suite.Equal(topics, suite.topics, "topics")
-	suite.Equal([]string{"0", "", "", "", "false"}, suite.payloads, "payloads")
+	suite.Equal([]string{"", "", "0", "", "", "", "", "", "", "false"}, suite.payloads, "payloads")
 
-	suite.publish("test", false, measurement{Currents: []float64{1, 2, 3}})
+	suite.publish("test", false, types.Measurement{Currents: []float64{1, 2, 3}})
 	suite.Equal(append(topics, "test/currents/1", "test/currents/2", "test/currents/3"), suite.topics, "topics")
-	suite.Equal([]string{"0", "", "3", "", "", "1", "2", "3"}, suite.payloads, "payloads")
+	suite.Equal([]string{"", "", "0", "", "", "3", "", "", "", "", "1", "2", "3"}, suite.payloads, "payloads")
+}
+
+func (suite *mqttSuite) TestBatteryState() {
+	topics := []string{
+		"test/power", "test/energy", "test/capacity", "test/soc", "test/devices",
+		"test/devices/1/title", "test/devices/1/icon", "test/devices/1/power", "test/devices/1/energy", "test/devices/1/powers", "test/devices/1/currents", "test/devices/1/excessDCPower", "test/devices/1/capacity", "test/devices/1/soc", "test/devices/1/controllable",
+	}
+
+	suite.publish("test", false, types.BatteryState{
+		Power: 2,
+		Soc:   20.0,
+		Devices: []types.Measurement{{
+			Power: 1,
+			Soc:   new(10.0),
+		}},
+	})
+
+	suite.Equal(topics, suite.topics, "topics")
+	suite.Equal([]string{"2", "", "", "20", "1", "", "", "1", "", "", "", "", "", "10", ""}, suite.payloads, "payloads")
 }

@@ -12,7 +12,7 @@ capacity: {{ .capacity }}
 phases: {{ .phases }}
 {{- end }}
 
-{{- if or .mode .minCurrent .maxCurrent .priority }}
+{{- if or .mode .minCurrent .maxCurrent .maxPower .priority }}
 onIdentify:
 {{- if .mode }}
   mode: {{ .mode }}
@@ -22,6 +22,9 @@ onIdentify:
 {{- end }}
 {{- if .maxCurrent }}
   maxCurrent: {{ .maxCurrent }}
+{{- end }}
+{{- if .maxPower }}
+  maxPower: {{ .maxPower }}
 {{- end }}
 {{- if .priority }}
   priority: {{ .priority }}

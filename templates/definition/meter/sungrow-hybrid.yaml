@@ -12,27 +12,28 @@ requirements:
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
-    allinone: true
   - name: modbus
     choice: ["rs485", "tcpip"]
     baudrate: 9600
-  - name: timeout
-  - name: capacity
-    advanced: true
   - name: maxacpower
-  - name: minsoc
-    advanced: true
-  - name: maxsoc
-    advanced: true
+    service: modbus/read?address=5000&type=input&encoding=uint16&scale=100&{modbus}
+  - preset: battery-params
   - name: maxchargepower
-    default: 10600 # 10.6kW, max allowed value for register
+    service: modbus/read?address=13051&type=holding&encoding=uint16&scale=1&{modbus}
+    required: true
+  - name: maxdischargepower
+    service: modbus/read?address=33047&type=holding&encoding=uint16&scale=10&{modbus}
+    required: true
+  - name: capacity
+    service: modbus/read?address=5638&type=input&encoding=uint16&scale=0.01&resulttype=float&{modbus}
+  - name: timeout
+    deprecated: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     register:
       type: input
       address: 13009 # Export power
@@ -97,7 +98,6 @@ render: |
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    timeout: {{ .timeout }}
     register:
       address: 5016 # Total DC power
       type: input
@@ -173,6 +173,15 @@ render: |
         source: sequence
         set:
         - source: const
+          value: 0xCC # Stop (Default)
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 13050 # Charge/discharge command
+              type: writesingle
+              decode: uint16
+        - source: const
           value: 0 # Self-consumption mode (Default)
           set:
             source: modbus
@@ -182,17 +191,7 @@ render: |
               type: writesingle
               decode: uint16
         - source: const
-          value: 0xCC # Stop (Default)
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 13050 # Charge/discharge command
-              type: writesingle
-              decode: uint16
-        # Reset max battery discharge power
-        - source: const
-          value: {{ div .maxchargepower 10 }}
+          value: {{ div .maxdischargepower 10 }}
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
@@ -254,42 +253,14 @@ render: |
               address: 13050 # Charge/discharge command
               type: writesingle
               decode: uint16
-        {{- if .maxchargepower }}
         - source: const
-          value: {{ .maxchargepower }} # W
+          value: {{ .maxchargepower }}
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
-              address: 13051 # Charge power
+              address: 13051 # Battery max forced (dis)charge power
               type: writesingle
               decode: uint16
-        {{- else }}
-        - source: go
-          script: power
-          in:
-          - name: power
-            type: int
-            config:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 5627 # BDC rated power
-                type: input
-                decode: uint16
-              scale: 100
-          out:
-          - name: power
-            type: int
-            config:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 13051 # Charge/discharge power
-                type: writesingle
-                decode: uint16
-        {{- end }}
-  capacity: {{ .capacity }} # kWh
-  minsoc: {{ .minsoc }} # %
-  maxsoc: {{ .maxsoc }} # %
+  {{- include "battery-params" . }}
   {{- end }}

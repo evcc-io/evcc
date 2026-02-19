@@ -85,7 +85,7 @@ func NewOstromFromConfig(other map[string]any) (api.Tariff, error) {
 
 	t.Client.Transport = &oauth2.Transport{
 		Base:   t.Client.Transport,
-		Source: oauth.RefreshTokenSource(nil, t),
+		Source: oauth2.ReuseTokenSource(nil, oauth.BootstrapTokenSource(t.refreshToken)),
 	}
 
 	contracts, err := t.getContracts()
@@ -158,7 +158,7 @@ func (t *Ostrom) getFixedPrice() (float64, error) {
 	return 0, errors.New("tariff not found")
 }
 
-func (t *Ostrom) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
+func (t *Ostrom) refreshToken() (*oauth2.Token, error) {
 	uri := ostrom.URI_AUTH + "/oauth2/token"
 	data := url.Values{"grant_type": {"client_credentials"}}
 	req, _ := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), map[string]string{

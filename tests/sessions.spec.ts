@@ -343,6 +343,7 @@ test.describe("session details", async () => {
     await expect(modal.getByTestId("session-details-energy")).toContainText("1:00");
     await expect(modal.getByTestId("session-details-solar")).toContainText("100.0% (10.0 kWh)");
     await expect(modal.getByTestId("session-details-price")).toContainText("2.00 € 20.0 ct/kWh");
+    await expect(modal.getByTestId("session-details-co2")).toContainText("3 kg");
     await expect(modal.getByTestId("session-details-co2")).toContainText("300 g/kWh");
   });
 
@@ -352,6 +353,17 @@ test.describe("session details", async () => {
     const modal = page.getByTestId("session-details");
     await expectModalVisible(modal);
 
+    // select guest vehicle
+    await modal.getByLabel("Vehicle").selectOption("Guest vehicle");
+    await modal.getByRole("button", { name: "Close" }).click();
+    await expectModalHidden(modal);
+
+    page.reload();
+    await page.getByTestId("sessions-entry").nth(0).click();
+    await expectModalVisible(modal);
+    await expect(modal.getByLabel("Vehicle")).toHaveValue("");
+
+    // edit carport and select known vehicle
     await modal.getByLabel("Charging point").selectOption("Carport");
     await modal.getByLabel("Vehicle").selectOption("blauer e-Golf");
     await modal.getByRole("button", { name: "Close" }).click();

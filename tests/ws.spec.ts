@@ -1,11 +1,13 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
-test.use({ baseURL: baseUrl() });
 
-test.beforeAll(async () => {
+test.use({ baseURL: baseUrl() });
+test.describe.configure({ mode: "parallel" });
+
+test.beforeEach(async () => {
   await start("basics.evcc.yaml");
 });
-test.afterAll(async () => {
+test.afterEach(async () => {
   await stop();
 });
 

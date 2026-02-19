@@ -1,0 +1,30 @@
+template: tinkerforge-warp-ws
+products:
+  - { brand: TinkerForge, description: { generic: WARP3 Smart } }
+  - { brand: TinkerForge, description: { generic: WARP3 Pro } }
+capabilities: ["mA", "1p3p", "rfid"]
+requirements:
+  description:
+    de: Die WARP-eigene automatische Phasenumschaltung wird von EVCC beim Verbinden mit der Wallbox deaktiviert. Siehe [docs.warp-charger.com](https://docs.warp-charger.com/docs/mqtt_http/api_reference/evse#evse_phase_auto_switch_warp3).
+    en: WARP's own automatic phase switching will be deactivated by EVCC when connecting to the wallbox. See [docs.warp-charger.com](https://docs.warp-charger.com/docs/mqtt_http/api_reference/evse#evse_phase_auto_switch_warp3).
+  evcc: ["skiptest"]
+params:
+  - name: uri
+    required: true
+  - name: user
+  - name: password
+  - name: energyMeterIndex
+    advanced: true
+    default: 0
+    description:
+      generic: Energy Meter Index
+    help:
+      de: Index des in der Warp konfigurierten Meters dessen Werte genutzt werden sollen.
+      en: Index of the meter configured in the WARP charger whose values should be used.
+render: |
+  type: warp-ws
+  uri: {{ .uri }}
+  user: {{ .user }}
+  password: {{ .password }}
+  energyMeterIndex: {{ .energyMeterIndex }}
+  disablePhaseAutoSwitch: true

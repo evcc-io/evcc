@@ -1,0 +1,149 @@
+package messenger
+
+import (
+	"fmt"
+	"reflect"
+	"strings"
+	"text/template"
+
+	"github.com/Masterminds/sprig/v3"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/globalconfig"
+	"github.com/evcc-io/evcc/core/vehicle"
+	"github.com/evcc-io/evcc/util"
+)
+
+// Event is a notification event
+type Event struct {
+	Loadpoint *int // optional loadpoint id
+	Event     string
+}
+
+type Vehicles interface {
+	// ByName returns a single vehicle adapter by name
+	ByName(string) (vehicle.API, error)
+}
+
+// Hub subscribes to event notifications and sends them to client devices
+type Hub struct {
+	definitions globalconfig.MessagingEvents
+	sender      []api.Messenger
+	cache       *util.ParamCache
+	vehicles    Vehicles
+}
+
+// NewHub creates push hub with definitions and receiver
+func NewHub(cc globalconfig.MessagingEvents, vv Vehicles, cache *util.ParamCache) (*Hub, error) {
+	// keep only enabled events
+	filtered := make(globalconfig.MessagingEvents, len(cc))
+
+	for k, v := range cc {
+		if !v.Disabled {
+			filtered[k] = v
+		}
+	}
+
+	// instantiate all event templates
+	for k, v := range filtered {
+		if _, err := template.New("out").Funcs(sprig.FuncMap()).Parse(v.Title); err != nil {
+			return nil, fmt.Errorf("invalid event title: %s (%w)", k, err)
+		}
+		if _, err := template.New("out").Funcs(sprig.FuncMap()).Parse(v.Msg); err != nil {
+			return nil, fmt.Errorf("invalid event message: %s (%w)", k, err)
+		}
+	}
+
+	h := &Hub{
+		definitions: cc,
+		cache:       cache,
+		vehicles:    vv,
+	}
+
+	return h, nil
+}
+
+// Add adds a sender to the list of senders
+func (h *Hub) Add(sender api.Messenger) {
+	h.sender = append(h.sender, sender)
+}
+
+// apply applies the event template to the content to produce the actual message
+func (h *Hub) apply(ev Event, tmpl string) (string, error) {
+	attr := make(map[string]any)
+
+	// loadpoint id
+	if ev.Loadpoint != nil {
+		attr["loadpoint"] = *ev.Loadpoint + 1
+	}
+
+	// get all values from cache
+	for _, p := range h.cache.All() {
+		if p.Loadpoint == nil || ev.Loadpoint == p.Loadpoint {
+			val := p.Val
+
+			// resolve pointers (https://github.com/evcc-io/evcc/issues/24688)
+			if rv := reflect.ValueOf(p.Val); rv.Kind() == reflect.Pointer && !rv.IsNil() {
+				val = rv.Elem().Interface()
+			}
+
+			attr[p.Key] = val
+		}
+	}
+
+	// add missing attributes
+	if name, ok := attr["vehicleName"].(string); ok {
+		if v, err := h.vehicles.ByName(name); err == nil {
+			attr["vehicleLimitSoc"] = v.GetLimitSoc()
+			attr["vehicleMinSoc"] = v.GetMinSoc()
+			attr["vehiclePlanTime"], attr["vehiclePlanSoc"] = v.GetPlanSoc()
+
+			instance := v.Instance()
+			attr["vehicleTitle"] = instance.GetTitle()
+			attr["vehicleIcon"] = instance.Icon()
+			attr["vehicleCapacity"] = instance.Capacity()
+		}
+	}
+
+	return util.ReplaceFormatted(tmpl, attr)
+}
+
+// Run is the Hub's main publishing loop
+func (h *Hub) Run(events <-chan Event, valueChan chan<- util.Param) {
+	log := util.NewLogger("push")
+
+	for ev := range events {
+		if len(h.sender) == 0 {
+			continue
+		}
+
+		definition, ok := h.definitions[ev.Event]
+		if !ok {
+			continue
+		}
+
+		// let cache catch up, refs https://github.com/evcc-io/evcc/pull/445
+		flushC := util.Flusher()
+		valueChan <- util.Param{Val: flushC}
+		<-flushC
+
+		title, err := h.apply(ev, definition.Title)
+		if err != nil {
+			log.ERROR.Printf("invalid title template for %s: %v", ev.Event, err)
+			continue
+		}
+
+		msg, err := h.apply(ev, definition.Msg)
+		if err != nil {
+			log.ERROR.Printf("invalid message template for %s: %v", ev.Event, err)
+			continue
+		}
+
+		if strings.TrimSpace(msg) == "" {
+			continue
+		}
+
+		for _, sender := range h.sender {
+			go sender.Send(title, msg)
+		}
+	}
+}

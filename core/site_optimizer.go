@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"slices"
+	"strings"
 	"sync/atomic"
 	"time"
 
@@ -14,6 +15,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/metrics"
+	"github.com/evcc-io/evcc/core/types"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/request"
@@ -53,7 +55,7 @@ type responseDetails struct {
 
 const slotsPerHour = float64(time.Hour / tariff.SlotDuration)
 
-func (site *Site) optimizerUpdateAsync(battery []measurement) {
+func (site *Site) optimizerUpdateAsync(battery []types.Measurement) {
 	var err error
 
 	if time.Since(updated) < 2*time.Minute {
@@ -80,17 +82,23 @@ func (site *Site) optimizerUpdateAsync(battery []measurement) {
 	err = site.optimizerUpdate(battery)
 }
 
-func (site *Site) optimizerUpdate(battery []measurement) error {
+func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	uri := os.Getenv("EVOPT_URI")
 	if uri == "" {
 		return nil
 	}
 
-	solar := currentRates(site.GetTariff(api.TariffUsageSolar))
+	solarTariff := site.GetTariff(api.TariffUsageSolar)
+	solar := currentRates(solarTariff)
+
 	grid := currentRates(site.GetTariff(api.TariffUsageGrid))
 	feedIn := currentRates(site.GetTariff(api.TariffUsageFeedIn))
 
-	minLen := lo.Min([]int{len(grid), len(feedIn), len(solar)})
+	minLen := lo.Min([]int{len(grid), len(feedIn)})
+	if solarTariff != nil {
+		// allow empty solar forecast
+		minLen = min(minLen, len(solar))
+	}
 	if minLen < 8 {
 		return fmt.Errorf("not enough slots for optimization: %d (grid=%d, feedIn=%d, solar=%d)", minLen, len(grid), len(feedIn), len(solar))
 	}
@@ -110,9 +118,15 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 		return err
 	}
 
-	solarEnergy, err := solarRatesToEnergy(solar)
-	if err != nil {
-		return err
+	// allow empty solar forecast
+	ft := lo.RepeatBy(minLen, func(i int) float32 { return float32(0) })
+	if solarTariff != nil {
+		solarEnergy, err := solarRatesToEnergy(solar)
+		if err != nil {
+			return err
+		}
+
+		ft = prorate(scaleAndPrune(solarEnergy, 1, minLen), firstSlotDuration)
 	}
 
 	req := evopt.OptimizationInput{
@@ -125,7 +139,7 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 		TimeSeries: evopt.TimeSeries{
 			Dt: dt,
 			Gt: prorate(gt, firstSlotDuration),
-			Ft: prorate(scaleAndPrune(solarEnergy, 1, minLen), firstSlotDuration),
+			Ft: ft,
 			PN: scaleAndPrune(grid, 1e3, minLen),
 			PE: scaleAndPrune(feedIn, 1e3, minLen),
 		},
@@ -195,59 +209,32 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 			}
 		}
 
+		var demand []float32
+
 		switch lp.GetMode() {
 		case api.ModeOff:
 			// disable charging
 			bat.CMax = 0
 
-		case api.ModeNow, api.ModeMinPV:
-			// forced min/max charging
-			if demand := continuousDemand(lp, minLen); demand != nil {
-				bat.PDemand = prorate(demand, firstSlotDuration)
-			}
+		case api.ModeNow:
+			// forced max charging
+			demand = continuousDemand(lp, minLen)
+
+		case api.ModeMinPV:
+			// forced min charging
+			demand = continuousDemand(lp, minLen)
+			// add smartcost limit and plan goal, if configured
+			demand = applySmartCostLimit(lp, demand, grid, minLen)
+			site.applyPlanGoal(lp, &bat, minLen)
 
 		case api.ModePV:
-			// add plan goal
-			goal, socBased := lp.GetPlanGoal()
-			if goal > 0 {
-				if v := lp.GetVehicle(); socBased && v != nil {
-					goal *= v.Capacity() * 10
-				} else {
-					goal *= 1000 // Wh
-				}
-			}
+			// add smartcost limit and plan goal, if configured
+			demand = applySmartCostLimit(lp, nil, grid, minLen)
+			site.applyPlanGoal(lp, &bat, minLen)
+		}
 
-			if ts := lp.EffectivePlanTime(); !ts.IsZero() {
-				// TODO precise slot placement
-				if slot := int(time.Until(ts) / tariff.SlotDuration); slot < minLen && slot >= 0 {
-					bat.SGoal = lo.RepeatBy(minLen, func(_ int) float32 { return 0 })
-					bat.SGoal[slot] = float32(goal)
-				} else {
-					site.log.DEBUG.Printf("plan beyond forecast range or overrun: %.1f at %v slot %d", goal, ts.Round(time.Minute), slot)
-				}
-			}
-
-			// TODO remove once (using) smartcost limit becomes obsolete
-			if costLimit := lp.GetSmartCostLimit(); costLimit != nil {
-				maxLen := min(minLen, len(grid))
-
-				// limit hit?
-				if slices.ContainsFunc(grid[:maxLen], func(r api.Rate) bool {
-					return r.Value <= *costLimit
-				}) {
-					maxPower := lp.EffectiveMaxPower()
-
-					bat.PDemand = prorate(lo.RepeatBy(minLen, func(i int) float32 {
-						return float32(maxPower / slotsPerHour)
-					}), firstSlotDuration)
-
-					for i := range maxLen {
-						if grid[i].Value > *costLimit {
-							bat.PDemand[i] = 0
-						}
-					}
-				}
-			}
+		if demand != nil {
+			bat.PDemand = prorate(demand, firstSlotDuration)
 		}
 
 		req.Batteries = append(req.Batteries, bat)
@@ -316,16 +303,8 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 		return err
 	}
 
-	if resp.StatusCode() == http.StatusInternalServerError {
-		return errors.New(resp.JSON500.Message)
-	}
-
-	if resp.StatusCode() == http.StatusBadRequest {
-		return errors.New(resp.JSON400.Message)
-	}
-
 	if resp.StatusCode() != http.StatusOK {
-		return fmt.Errorf("invalid status: %d", resp.StatusCode())
+		return apiError(resp)
 	}
 
 	site.publish("evopt", struct {
@@ -510,4 +489,91 @@ func scaleAndPrune(rates api.Rates, div float64, maxLen int) []float32 {
 	}
 
 	return res
+}
+
+func (site *Site) applyPlanGoal(lp loadpoint.API, bat *evopt.BatteryConfig, minLen int) {
+	goal, socBased := lp.GetPlanGoal()
+	if goal <= 0 {
+		return
+	}
+
+	// Convert to Wh
+	if vehicle := lp.GetVehicle(); socBased && vehicle != nil {
+		goal *= vehicle.Capacity() * 10
+	} else {
+		goal *= 1000 // Wh
+	}
+
+	ts := lp.EffectivePlanTime()
+	if ts.IsZero() {
+		return
+	}
+
+	// TODO precise slot placement
+	slot := int(time.Until(ts) / tariff.SlotDuration)
+	if slot >= 0 && slot < minLen {
+		bat.SGoal = make([]float32, minLen)
+		bat.SGoal[slot] = float32(goal)
+		bat.SMax = max(bat.SMax, float32(goal))
+	} else {
+		site.log.DEBUG.Printf("plan beyond forecast range or overrun: %.1f at %v slot %d", goal, ts.Round(time.Minute), slot)
+	}
+}
+
+// TODO remove once smart cost limit usage becomes obsolete
+func applySmartCostLimit(lp loadpoint.API, demand []float32, grid api.Rates, minLen int) []float32 {
+	costLimit := lp.GetSmartCostLimit()
+	if costLimit == nil {
+		return demand
+	}
+
+	maxLen := min(minLen, len(grid))
+
+	// Check if any slots meet the cost limit
+	if hasAffordableSlots := slices.ContainsFunc(grid[:maxLen], func(r api.Rate) bool {
+		return r.Value <= *costLimit
+	}); !hasAffordableSlots {
+		return demand
+	}
+
+	maxPower := lp.EffectiveMaxPower()
+
+	if demand == nil {
+		demand = make([]float32, minLen)
+	}
+
+	for i := range maxLen {
+		if grid[i].Value <= *costLimit {
+			demand[i] = float32(maxPower / slotsPerHour)
+		}
+		// else: keep existing demand (either 0 or minPower from ModeMinPV)
+	}
+
+	return demand
+}
+
+// apiError extracts error message from optimizer API response
+func apiError(resp *evopt.PostOptimizeChargeScheduleResponse) error {
+	var errObj *evopt.Error
+	switch resp.StatusCode() {
+	case http.StatusBadRequest:
+		errObj = resp.JSON400
+	case http.StatusInternalServerError:
+		errObj = resp.JSON500
+	}
+
+	if errObj == nil {
+		return fmt.Errorf("invalid status: %d", resp.StatusCode())
+	}
+
+	if len(errObj.Details) > 0 {
+		var details []string
+		for field, msg := range errObj.Details {
+			details = append(details, fmt.Sprintf("%s: %s", field, msg))
+		}
+		slices.Sort(details)
+		return fmt.Errorf("%s (%s)", errObj.Message, strings.Join(details, ", "))
+	}
+
+	return errors.New(errObj.Message)
 }
