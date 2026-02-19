@@ -145,10 +145,22 @@ func TestBatteryForecastTotals(t *testing.T) {
 			0, 1,
 		},
 		{
+			"first full finally empty",
+			[]float32{100, 100, 0},
+			[]float32{100, 0, 0},
+			0, 2,
+		},
+		{
 			"first empty then full",
 			[]float32{0, 100},
 			[]float32{0, 100},
 			1, 0,
+		},
+		{
+			"first empty finally full",
+			[]float32{0, 100, 100},
+			[]float32{0, 0, 100},
+			2, 0,
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
