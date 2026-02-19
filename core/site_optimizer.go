@@ -293,10 +293,14 @@ func (site *Site) addBatteryForecastTotals(req []evopt.BatteryConfig, resp []evo
 
 	var res types.BatteryForecast
 	if fullSlot != zero {
-		res.Full = new(now.Add(time.Duration(fullSlot) * tariff.SlotDuration))
+		if ts := now.Add(time.Duration(fullSlot) * tariff.SlotDuration); ts.After(time.Now()) {
+			res.Full = new(ts)
+		}
 	}
 	if emptySlot != zero {
-		res.Empty = new(now.Add(time.Duration(emptySlot) * tariff.SlotDuration))
+		if ts := now.Add(time.Duration(emptySlot) * tariff.SlotDuration); ts.After(time.Now()) {
+			res.Empty = new(ts)
+		}
 	}
 
 	return &res
