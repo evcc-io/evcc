@@ -4,12 +4,14 @@ import (
 	"testing"
 	"time"
 
+	evopt "github.com/andig/evopt/client"
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/metrics"
 	"github.com/evcc-io/evcc/server/db"
 	"github.com/jinzhu/now"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
@@ -107,4 +109,57 @@ func TestLoadpointProfile(t *testing.T) {
 
 	// expected slots: 0.25 kWh...
 	require.Equal(t, []float64{250, 250, 250, 250, 250, 250, 250, 50}, loadpointProfile(lp, 8))
+}
+
+func TestBatteryForecastTotals(t *testing.T) {
+	site := new(Site)
+
+	req := []evopt.BatteryConfig{
+		{SMax: 80},
+		{SMax: 80},
+	}
+
+	const zero = -1
+
+	for _, tc := range []struct {
+		name        string
+		bat1, bat2  []float32
+		full, empty int
+	}{
+		{
+			"never full",
+			[]float32{0, 0},
+			[]float32{0, 0},
+			zero, 0,
+		},
+		{
+			"never empty",
+			[]float32{100, 100},
+			[]float32{100, 100},
+			0, zero,
+		},
+		{
+			"first full then empty",
+			[]float32{100, 0},
+			[]float32{100, 0},
+			0, 1,
+		},
+		{
+			"first empty then full",
+			[]float32{0, 100},
+			[]float32{0, 100},
+			1, 0,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			resp := []evopt.BatteryResult{
+				{StateOfCharge: tc.bat1},
+				{StateOfCharge: tc.bat2},
+			}
+
+			full, empty := site.batteryForecastFullAndEmptySlots(req, resp)
+			assert.Equal(t, tc.full, full, "full")
+			assert.Equal(t, tc.empty, empty, "empty")
+		})
+	}
 }

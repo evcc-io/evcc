@@ -283,10 +283,29 @@ func (site *Site) addBatteryForecastTotals(req []evopt.BatteryConfig, resp []evo
 		return nil
 	}
 
+	now := time.Now().Round(tariff.SlotDuration)
+	fullSlot, emptySlot := site.batteryForecastFullAndEmptySlots(req, resp)
+
+	const zero = -1
+	if fullSlot == zero && emptySlot == zero {
+		return nil
+	}
+
+	var res types.BatteryForecast
+	if fullSlot != zero {
+		res.Full = new(now.Add(time.Duration(fullSlot) * tariff.SlotDuration))
+	}
+	if emptySlot != zero {
+		res.Empty = new(now.Add(time.Duration(emptySlot) * tariff.SlotDuration))
+	}
+
+	return &res
+}
+
+func (site *Site) batteryForecastFullAndEmptySlots(req []evopt.BatteryConfig, resp []evopt.BatteryResult) (int, int) {
 	length := len(resp[0].StateOfCharge)
 
-	var full, empty time.Time
-	var fullSlot int
+	fullSlot, emptySlot := -1, -1
 
 NOT_YET_FULL:
 	for i := range length {
@@ -298,12 +317,11 @@ NOT_YET_FULL:
 		}
 
 		fullSlot = i
-		full = time.Now().Add(time.Duration(i+1) * tariff.SlotDuration)
 		break
 	}
 
 NOT_YET_EMPTY:
-	for i := fullSlot + 1; i < length; i++ {
+	for i := range length {
 		for j, batReq := range req {
 			batResp := resp[j]
 			if batResp.StateOfCharge[i] > batReq.SMin {
@@ -311,23 +329,11 @@ NOT_YET_EMPTY:
 			}
 		}
 
-		empty = time.Now().Add(time.Duration(i+1) * tariff.SlotDuration)
+		emptySlot = i
 		break
 	}
 
-	if full.IsZero() && empty.IsZero() {
-		return nil
-	}
-
-	var res types.BatteryForecast
-	if !full.IsZero() {
-		res.Full = &full
-	}
-	if !empty.IsZero() {
-		res.Empty = &empty
-	}
-
-	return &res
+	return fullSlot, emptySlot
 }
 
 func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDuration time.Duration, grid api.Rates) (evopt.BatteryConfig, batteryDetail) {
