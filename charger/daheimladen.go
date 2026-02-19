@@ -197,13 +197,13 @@ func (wb *DaheimLaden) Status() (api.ChargeStatus, error) {
 func (wb *DaheimLaden) Enabled() (bool, error) {
 	curr, err := wb.getCurrent()
 
-	// assume enabled if current limit > 1A (instead 0A), to have the option to avoid AutoStart
-	return curr > 10, err
+	return curr >= 60, err
 }
 
 // Enable implements the api.Charger interface
 func (wb *DaheimLaden) Enable(enable bool) error {
-	var current uint16
+	// must be > 0 to disable unauthorised autostart
+	var current uint16 = 1
 	if enable {
 		current = wb.curr
 	}
