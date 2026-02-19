@@ -107,7 +107,7 @@ func NewDaheimLaden(ctx context.Context, uri string, id uint8, phases bool) (api
 	if err != nil {
 		return nil, fmt.Errorf("current limit: %w", err)
 	}
-	if curr > 60 {
+	if curr >= 60 {
 		wb.curr = curr
 	}
 
