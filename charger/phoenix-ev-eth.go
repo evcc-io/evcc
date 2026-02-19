@@ -26,6 +26,7 @@ package charger
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -62,7 +63,7 @@ func init() {
 	registry.AddCtx("phoenix-ev-eth", NewPhoenixEVEthFromConfig)
 }
 
-//go:generate go tool decorate -f decoratePhoenixEVEth -b *PhoenixEVEth -r api.Charger -t api.Meter,api.MeterEnergy,api.PhaseCurrents,api.PhaseVoltages,api.ChargerEx,api.Identifier
+//go:generate go tool decorate -f decoratePhoenixEVEth -b *PhoenixEVEth -r api.Charger -t api.Meter,api.MeterEnergy,api.PhaseCurrents,api.PhaseVoltages,api.ChargerEx,api.Identifier,api.ConnectionTimer
 
 // NewPhoenixEVEthFromConfig creates a PhoenixEVEth charger from generic config
 func NewPhoenixEVEthFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
@@ -245,6 +246,34 @@ func (wb *PhoenixEVEth) identify() (string, error) {
 	}
 
 	return bytesAsString(b), nil
+}
+
+var _ api.ConnectionTimer = (*PhoenixEVEth)(nil)
+
+// ConnectionDuration implements the api.ConnectionTimer interface
+func (wb *PhoenixEVEth) ConnectionDuration() (time.Duration, error) {
+
+	// The following chargetime counter gets valid until first energy is charged,
+	// until that it could hold the charge time of the previous session.
+	eb, err := wb.conn.ReadInputRegisters(phxRegChargedEnergy, 2)
+	if err != nil {
+		return 0, err
+	}
+
+	chargedEnergy := encoding.Int32LswFirst(eb)
+	if chargedEnergy == 0 {
+		// Return 0 because nothing is charged, so we have now valid counter
+		return 0, nil
+	}
+
+	// Chargetime is the nearest value I could get, but is not reset via reconnect, but during new start charge
+	b, err := wb.conn.ReadInputRegisters(phxRegChargeTime, 1)
+	if err != nil {
+		return 0, err
+	}
+	duration := time.Duration(encoding.Uint16(b)) * time.Second
+
+	return duration, nil
 }
 
 var _ api.Diagnosis = (*PhoenixEVEth)(nil)
