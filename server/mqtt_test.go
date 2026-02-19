@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/core/types"
+	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 )
@@ -97,7 +98,11 @@ func (suite *mqttSuite) TestSlice() {
 }
 
 func (suite *mqttSuite) TestMeasurement() {
-	topics := []string{"test/title", "test/icon", "test/power", "test/energy", "test/powers", "test/currents", "test/excessDCPower", "test/capacity", "test/soc", "test/controllable", "test/forecast"}
+	topics := lo.Map([]string{
+		"title", "icon", "power", "energy", "powers", "currents", "excessDCPower", "capacity", "soc", "controllable", "forecast",
+	}, func(s string, _ int) string {
+		return "test/" + s
+	})
 
 	suite.publish("test", false, types.Measurement{})
 	suite.Equal(topics, suite.topics, "topics")
@@ -117,10 +122,13 @@ func (suite *mqttSuite) TestMeasurement() {
 }
 
 func (suite *mqttSuite) TestBatteryState() {
-	topics := []string{
-		"test/power", "test/energy", "test/capacity", "test/soc", "test/devices",
-		"test/devices/1/title", "test/devices/1/icon", "test/devices/1/power", "test/devices/1/energy", "test/devices/1/powers", "test/devices/1/currents", "test/devices/1/excessDCPower", "test/devices/1/capacity", "test/devices/1/soc", "test/devices/1/controllable", "test/devices/1/forecast",
-	}
+	topics := lo.Map([]string{
+		"power", "energy", "capacity", "soc",
+		"devices", "devices/1/title", "devices/1/icon", "devices/1/power", "devices/1/energy", "devices/1/powers", "devices/1/currents", "devices/1/excessDCPower", "devices/1/capacity", "devices/1/soc", "devices/1/controllable", "devices/1/forecast",
+		"forecast",
+	}, func(s string, _ int) string {
+		return "test/" + s
+	})
 
 	suite.publish("test", false, types.BatteryState{
 		Power: 2,
@@ -132,5 +140,5 @@ func (suite *mqttSuite) TestBatteryState() {
 	})
 
 	suite.Equal(topics, suite.topics, "topics")
-	suite.Equal([]string{"2", "", "", "20", "1", "", "", "1", "", "", "", "", "", "10", "", ""}, suite.payloads, "payloads")
+	suite.Equal([]string{"2", "", "", "20", "1", "", "", "1", "", "", "", "", "", "10", "", "", ""}, suite.payloads, "payloads")
 }
