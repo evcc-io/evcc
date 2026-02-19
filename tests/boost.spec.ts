@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
-import { expectModalHidden, newLoadpoint, addDemoCharger } from "./utils";
+import { expectModalHidden, newLoadpoint, addDemoCharger, ChargerStatus } from "./utils";
 test.use({ baseURL: baseUrl() });
 
 const CONFIG_BATTERY = "battery-settings.evcc.yaml";
@@ -83,10 +83,10 @@ test.describe("boost", async () => {
   test("boost default for ui-created loadpoint", async ({ page }) => {
     await start(CONFIG_BATTERY);
 
-    // create a second loadpoint via config UI
+    // create a second loadpoint
     await page.goto("/#/config");
     await newLoadpoint(page, "New Charger");
-    await addDemoCharger(page);
+    await addDemoCharger(page, undefined, ChargerStatus.Connected);
     const lpModal = page.getByTestId("loadpoint-modal");
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(lpModal);
@@ -96,12 +96,14 @@ test.describe("boost", async () => {
     await page.goto("/");
     await expect(page.getByTestId("loadpoint")).toHaveCount(2);
 
-    // boost button on new loadpoint should not be visible (batteryBoostLimit defaults to 100 = disabled)
-    const boostButton = page.getByTestId("battery-boost-button");
+    const lp = page.getByTestId("loadpoint").last();
+
+    // not visible by default
+    const boostButton = lp.getByTestId("battery-boost-button");
     await expect(boostButton).not.toBeVisible();
 
-    // set boost limit to 50% on new loadpoint and verify button appears
-    await page.getByTestId("loadpoint-settings-button").last().click();
+    // visible after setting limit
+    await lp.getByTestId("loadpoint-settings-button").last().click();
     const modal = page.getByTestId("loadpoint-settings-modal").last();
     await modal.getByTestId("battery-boost-limit").selectOption("50 %");
     await page.waitForLoadState("networkidle");

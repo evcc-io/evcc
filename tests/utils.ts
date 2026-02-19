@@ -63,9 +63,16 @@ export enum LoadpointType {
   Heating = "heating",
 }
 
+export enum ChargerStatus {
+  Disconnected = "A",
+  Connected = "B",
+  Charging = "C",
+}
+
 export async function addDemoCharger(
   page: Page,
-  type: LoadpointType = LoadpointType.Charging
+  type: LoadpointType = LoadpointType.Charging,
+  status?: ChargerStatus
 ): Promise<void> {
   const lpModal = page.getByTestId("loadpoint-modal");
   await lpModal
@@ -77,6 +84,9 @@ export async function addDemoCharger(
   await modal
     .getByLabel("Manufacturer")
     .selectOption(type === LoadpointType.Heating ? "Demo heat pump" : "Demo charger");
+  if (status) {
+    await modal.getByLabel("Charge status").selectOption(status);
+  }
   await modal.getByRole("button", { name: "Save" }).click();
   await expectModalHidden(modal);
   await expectModalVisible(lpModal);
