@@ -1,0 +1,19 @@
+template: shout
+products:
+  - brand: Shoutrrr
+requirements:
+  description:
+    en: Shoutrrr sends messages to various services like Slack, Teams, Matrix, Mattermost. See [containrrr.dev/shoutrrr](https://containrrr.dev/shoutrrr/latest/services/overview/) for supported services.
+    de: Shoutrrr sendet Nachrichten an verschiedene Dienste wie Slack, Teams, Matrix, Mattermost. Übersicht unter [containrrr.dev/shoutrrr](https://containrrr.dev/shoutrrr/latest/services/overview/).
+group: generic
+params:
+  - name: uri
+    required: true
+    example: gotify://gotify.example.com:443/secr3t/?priority=1
+    private: true
+    help:
+      en: See [containrrr.dev/shoutrrr](https://containrrr.dev/shoutrrr/latest/services/overview/) for possible formats.
+      de: Übersicht unter [containrrr.dev/shoutrrr](https://containrrr.dev/shoutrrr/latest/services/overview/) für mögliche Formate.
+render: |
+  type: shout
+  uri: {{ .uri }}

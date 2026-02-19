@@ -961,7 +961,7 @@
     },
     "loadpointSettings": {
       "batteryBoost": {
-        "description": "Gyorstöltés otthoni akkumulátorról.",
+        "description": "Gyorstöltés otthoni akkumulátorról, amíg az le nem merül {limit} szintre.",
         "label": "Akkumulátoros Rásegítés",
         "mode": "Csak szolár és min+szolár módban elérhető.",
         "once": "Rásegítés aktív ehhez a töltési folyamathoz."

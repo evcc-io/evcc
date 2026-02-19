@@ -44,7 +44,7 @@ type SEMP struct {
 	hasStatusParam bool
 }
 
-//go:generate go tool decorate -f decorateSEMP -b *SEMP -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)" -t "api.ChargeRater,ChargedEnergy,func() (float64, error)"
+//go:generate go tool decorate -f decorateSEMP -b *SEMP -r api.Charger -t api.PhaseSwitcher,api.PhaseGetter,api.ChargeRater
 
 func init() {
 	registry.AddCtx("semp", NewSEMPFromConfig)

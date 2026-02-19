@@ -983,7 +983,7 @@
     },
     "loadpointSettings": {
       "batteryBoost": {
-        "description": "Snabbladdning från hembatteri.",
+        "description": "Snabbladdning från hembatteri tills det är urladdat till {limit}.",
         "label": "Batteri Boost",
         "mode": "Endast tillgänglig vid 'Sol' och 'Min+Sol' läge.",
         "once": "Boost är aktiverat för denna laddning."

@@ -77,7 +77,6 @@ export default defineComponent({
 	name: "Sponsor",
 	props: {
 		status: Object as PropType<SponsorStatus>,
-		fromYaml: Boolean,
 	},
 	computed: {
 		name() {

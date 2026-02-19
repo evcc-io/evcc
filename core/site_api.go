@@ -132,6 +132,13 @@ func (site *Site) SetExtMeterRefs(ref []string) {
 	settings.SetString(keys.ExtMeters, strings.Join(filterConfigurable(ref), ","))
 }
 
+// GetBatterySoc returns the current battery soc
+func (site *Site) GetBatterySoc() float64 {
+	site.RLock()
+	defer site.RUnlock()
+	return site.battery.Soc
+}
+
 // Loadpoints returns the loadpoints as api interfaces
 func (site *Site) Loadpoints() []loadpoint.API {
 	return lo.Map(site.loadpoints, func(lp *Loadpoint, _ int) loadpoint.API { return lp })

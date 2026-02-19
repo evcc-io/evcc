@@ -981,7 +981,7 @@
     },
     "loadpointSettings": {
       "batteryBoost": {
-        "description": "Povolí využití energie uložené v baterii domu pro nabíjení.",
+        "description": "Povolí využití energie uložené v baterii domu pro nabíjení, dokud se nevybije na {limit}.",
         "label": "Rychlé dobití",
         "mode": "Dostupné pouze v solárním režimu a režimu min+solar.",
         "once": "Rychlé dobití je aktivováno pro tuto nabíjecí relaci."

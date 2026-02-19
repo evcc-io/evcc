@@ -19,7 +19,7 @@ type Zendure struct {
 	conn  *zendure.Connection
 }
 
-//go:generate go tool decorate -f decorateZendure -b *Zendure -r api.Meter -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64"
+//go:generate go tool decorate -f decorateZendure -b *Zendure -r api.Meter -t api.Battery,api.BatteryCapacity
 
 // NewZendureFromConfig creates a Zendure meter from generic config
 func NewZendureFromConfig(other map[string]any) (api.Meter, error) {

@@ -14,6 +14,7 @@ import (
 	"github.com/evcc-io/evcc/charger"
 	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/meter"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
@@ -71,6 +72,9 @@ func devicesConfigHandler(w http.ResponseWriter, r *http.Request) {
 
 	case templates.Circuit:
 		res, err = devicesConfig(class, config.Circuits(), hidePrivate)
+
+	case templates.Messenger:
+		res, err = devicesConfig(class, config.Messengers(), hidePrivate)
 	}
 
 	if err != nil {
@@ -191,6 +195,9 @@ func deviceConfigHandler(w http.ResponseWriter, r *http.Request) {
 
 	case templates.Circuit:
 		res, err = deviceConfig(class, id, config.Circuits(), hidePrivate)
+
+	case templates.Messenger:
+		res, err = deviceConfig(class, id, config.Messengers(), hidePrivate)
 	}
 
 	if err != nil {
@@ -247,6 +254,9 @@ func deviceStatusHandler(w http.ResponseWriter, r *http.Request) {
 
 	case templates.Circuit:
 		instance, err = deviceStatus(name, config.Circuits())
+
+	case templates.Messenger:
+		instance, err = deviceStatus(name, config.Messengers())
 	}
 
 	if err != nil {
@@ -306,6 +316,9 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		conf, err = newDevice(ctx, class, req, func(ctx context.Context, _ string, other map[string]any) (api.Circuit, error) {
 			return circuit.NewFromConfig(ctx, util.NewLogger("circuit"), other)
 		}, config.Circuits(), force)
+
+	case templates.Messenger:
+		conf, err = newDevice(ctx, class, req, messenger.NewFromConfig, config.Messengers(), force)
 	}
 
 	if err != nil {
@@ -387,6 +400,9 @@ func updateDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		err = updateDevice(ctx, id, class, req, func(ctx context.Context, _ string, other map[string]any) (api.Circuit, error) {
 			return circuit.NewFromConfig(ctx, util.NewLogger("circuit"), other)
 		}, config.Circuits(), force)
+
+	case templates.Messenger:
+		err = updateDevice(ctx, id, class, req, messenger.NewFromConfig, config.Messengers(), force)
 	}
 
 	setConfigDirty()
@@ -533,6 +549,9 @@ func deleteDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Requ
 					lp.SetCircuitRef("")
 				}
 			}
+
+		case templates.Messenger:
+			err = deleteDevice(id, config.Messengers())
 		}
 
 		setConfigDirty()
@@ -603,6 +622,9 @@ func testConfigHandler(w http.ResponseWriter, r *http.Request) {
 
 	case templates.Circuit:
 		err = api.ErrNotAvailable
+
+	case templates.Messenger:
+		instance, err = testConfig(ctx, id, class, req, messenger.NewFromConfig, config.Messengers())
 	}
 
 	if err != nil {

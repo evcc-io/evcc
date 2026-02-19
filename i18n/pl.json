@@ -954,7 +954,7 @@
     },
     "loadpointSettings": {
       "batteryBoost": {
-        "description": "Szybkie ładowanie z domowego magazynu energii.",
+        "description": "Szybkie ładowanie z domowego magazynu energii, aż rozładuje się do {limit}.",
         "label": "Doładowanie akumulatora",
         "mode": "Dostępne tylko w trybie słonce i min+słońce.",
         "once": "Doładowanie aktywne dla tej sesji ładowania."

@@ -982,7 +982,7 @@
     },
     "loadpointSettings": {
       "batteryBoost": {
-        "description": "Snelladen vanuit thuisbatterij.",
+        "description": "Snelladen vanuit thuisbatterij tot deze is ontladen naar {limit}.",
         "label": "Batterij Boost",
         "mode": "Enkel beschikbaar in PV en Min+PV modus.",
         "once": "Boost geactiveerd voor deze laadsessie."
