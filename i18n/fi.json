@@ -428,7 +428,7 @@
           "titleDefault": "Auto yhdistettynä"
         },
         "disconnect": {
-          "messageDefault": "Auto irroitettu {connectDuration} jälkeen",
+          "messageDefault": "Auto irroitettu {connectedDuration} jälkeen",
           "title": "Autoa irroitettaessa",
           "titleDefault": "Auto irroitettu"
         },
