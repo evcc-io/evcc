@@ -203,7 +203,7 @@ func (wb *DaheimLaden) Enabled() (bool, error) {
 // Enable implements the api.Charger interface
 func (wb *DaheimLaden) Enable(enable bool) error {
 	// must be > 0 to disable unauthorised autostart
-	var current uint16 = 1
+	current := uint16(1)
 	if enable {
 		current = wb.curr
 	}
