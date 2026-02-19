@@ -307,35 +307,23 @@ func (site *Site) addBatteryForecastTotals(req []evopt.BatteryConfig, resp []evo
 }
 
 func (site *Site) batteryForecastFullAndEmptySlots(req []evopt.BatteryConfig, resp []evopt.BatteryResult) (int, int) {
-	length := len(resp[0].StateOfCharge)
-
-	fullSlot, emptySlot := -1, -1
-
-NOT_YET_FULL:
-	for i := range length {
-		for j, batReq := range req {
-			batResp := resp[j]
-			if batResp.StateOfCharge[i] < batReq.SMax {
-				continue NOT_YET_FULL
+	matchSlot := func(fun func(soc float32, batIdx int) bool) int {
+		for i := range resp[0].StateOfCharge {
+			for batIdx := range req {
+				if fun(resp[batIdx].StateOfCharge[i], batIdx) {
+					return i
+				}
 			}
 		}
-
-		fullSlot = i
-		break
+		return -1
 	}
 
-NOT_YET_EMPTY:
-	for i := range length {
-		for j, batReq := range req {
-			batResp := resp[j]
-			if batResp.StateOfCharge[i] > batReq.SMin {
-				continue NOT_YET_EMPTY
-			}
-		}
-
-		emptySlot = i
-		break
-	}
+	fullSlot := matchSlot(func(soc float32, batIdx int) bool {
+		return soc >= req[batIdx].SMax
+	})
+	emptySlot := matchSlot(func(soc float32, batIdx int) bool {
+		return soc <= req[batIdx].SMin
+	})
 
 	return fullSlot, emptySlot
 }
