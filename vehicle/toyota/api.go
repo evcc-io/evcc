@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/evcc-io/evcc/util"
@@ -81,8 +82,13 @@ func (v *API) Vehicles() ([]string, error) {
 func (v *API) Status(vin string) (Status, error) {
 	uri := fmt.Sprintf("%s/%s", ApiBaseUrl, RemoteElectricStatusPath)
 
+	req, _ := request.New(http.MethodGet, uri, nil, map[string]string{
+		"Accept": request.JSONContent,
+		"vin":    vin,
+	})
+
 	var res Status
-	err := v.GetJSON(uri, &res)
+	err := v.DoJSON(req, &res)
 
 	return res, err
 }
