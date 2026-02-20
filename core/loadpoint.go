@@ -1140,15 +1140,13 @@ func (lp *Loadpoint) getStatusChanges() ([]api.ChargeStatus, error) {
 
 	// check for intermediate disconnect (duration drop without StatusA)
 	if ct, ok := lp.charger.(api.DisconnectDetector); ok {
-		if status != api.StatusA && prevStatus != api.StatusA {
-			disconnected, err := ct.DisconnectDetected()
-			if err != nil {
-				return nil, fmt.Errorf("disconnect detection: %w", err)
-			}
-			if disconnected {
-				lp.log.DEBUG.Printf("intermediate disconnect detected")
-				res = []api.ChargeStatus{api.StatusA, status}
-			}
+		disconnected, err := ct.DisconnectDetected()
+		if err != nil {
+			return nil, fmt.Errorf("disconnect detection: %w", err)
+		}
+		if status != api.StatusA && prevStatus != api.StatusA && disconnected {
+			lp.log.DEBUG.Printf("intermediate disconnect detected")
+			res = []api.ChargeStatus{api.StatusA, status}
 		}
 	}
 
