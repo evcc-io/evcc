@@ -33,7 +33,7 @@ render: |
       timeout: {{ .timeout }}
       jq: (. == "on")
   climater:
-      source: mqtt
-      topic: phev/climate/status
-      timeout: {{ .timeout }}
-      jq: (. != "off")
+    source: mqtt
+    topic: phev/climate/status
+    timeout: {{ .timeout }}
+    jq: (. != "off")
