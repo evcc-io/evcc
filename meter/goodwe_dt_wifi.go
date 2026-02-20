@@ -14,7 +14,6 @@ import (
 type GoodWeDTWifi struct {
 	log   *util.Logger
 	conn  *net.UDPConn
-	addr  *net.UDPAddr
 	model string
 }
 
@@ -45,13 +44,11 @@ func NewGoodWeDTWifi(other map[string]interface{}) (api.Meter, error) {
 	g := &GoodWeDTWifi{
 		log:  log,
 		conn: conn,
-		addr: addr,
 	}
 
 	if err := g.detectFamily(); err != nil {
 		return nil, fmt.Errorf("family detection failed: %w", err)
 	}
-
 	return g, nil
 }
 
@@ -76,15 +73,14 @@ func (g *GoodWeDTWifi) sendCommand(pdu []byte) ([]byte, error) {
 	if len(pdu) != 6 {
 		return nil, fmt.Errorf("invalid PDU length")
 	}
-	packet := append(pdu, modbusCRC(pdu)...)
 
+	packet := append(pdu, modbusCRC(pdu)...)
 	_, err := g.conn.Write(packet)
 	if err != nil {
 		return nil, err
 	}
 
-	// IMPORTANT: Set a fresh deadline before EVERY read
-	// (UDP deadlines are absolute and are cleared after each operation)
+	// fresh deadline before every read (required for UDP)
 	if err := g.conn.SetReadDeadline(time.Now().Add(4 * time.Second)); err != nil {
 		return nil, fmt.Errorf("set read deadline: %w", err)
 	}
@@ -114,6 +110,7 @@ func (g *GoodWeDTWifi) detectFamily() error {
 	if err != nil {
 		return err
 	}
+
 	if len(data) < 16 {
 		return fmt.Errorf("short model data")
 	}
@@ -134,9 +131,11 @@ func (g *GoodWeDTWifi) CurrentPower() (float64, error) {
 	if err != nil {
 		return 0, err
 	}
+
 	if len(data) < 146 {
 		return 0, fmt.Errorf("short runtime data")
 	}
+
 	// total_inverter_power (register 30127 → offset 54)
 	return float64(int32(binary.BigEndian.Uint32(data[54:58]))), nil
 }
@@ -148,9 +147,11 @@ func (g *GoodWeDTWifi) TotalEnergy() (float64, error) {
 	if err != nil {
 		return 0, err
 	}
+
 	if len(data) < 146 {
 		return 0, fmt.Errorf("short runtime data")
 	}
+
 	// e_total (register 30145 → offset 90, 0.1 kWh)
 	return float64(binary.BigEndian.Uint32(data[90:94])) / 10.0, nil
 }
