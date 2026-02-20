@@ -23,6 +23,7 @@ const (
 	RemoteElectricStatusPath = "v1/global/remote/electric/status"
 	ApiKey                   = "tTZipv6liF74PwMfk9Ed68AQ0bISswwf3iHQdqcF"
 	ClientRefKey             = "3e0b15f6c9c87fbd"
+	Channel                  = "ONEAPP" // Required x-channel header value for Toyota OneApp API
 )
 
 type API struct {
@@ -64,6 +65,7 @@ func (v *API) Vehicles() ([]string, error) {
 		"x-api-key":    ApiKey,
 		"x-client-ref": v.clientRef,
 		"x-appversion": ClientRefKey,
+		"x-channel":    Channel,
 	})
 	var resp Vehicles
 	if err == nil {
@@ -85,6 +87,7 @@ func (v *API) Status(vin string) (Status, error) {
 		"x-api-key":    ApiKey,
 		"x-client-ref": v.clientRef,
 		"x-appversion": ClientRefKey,
+		"x-channel":    Channel,
 		"vin":          vin,
 	})
 	var status Status
