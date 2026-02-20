@@ -40,6 +40,11 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 		Soc                *plugin.Config // optional
 		LimitSoc           *plugin.Config // optional
 		BatteryMode        *plugin.Config // optional
+
+		Dim       *plugin.Config // optional
+		Dimmed    *plugin.Config // optional
+		Curtail   *plugin.Config // optional
+		Curtailed *plugin.Config // optional
 	}{
 		batterySocLimits: batterySocLimits{
 			MinSoc: 20,
@@ -91,6 +96,38 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 		}
 	}
 
+	// decorate dimmer
+	dimmed, err := cc.Dimmed.BoolGetter(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("dimmed: %w", err)
+	}
+
+	dim, err := cc.Dim.BoolSetter(ctx, "dim")
+	if err != nil {
+		return nil, fmt.Errorf("dim: %w", err)
+	}
+
+	var dimmer api.Dimmer
+	if dim != nil && dimmed != nil {
+		dimmer = NewDimmer(dim, dimmed)
+	}
+
+	// decorate curtailer
+	curtailed, err := cc.Curtailed.BoolGetter(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("curtailed: %w", err)
+	}
+
+	curtail, err := cc.Curtail.BoolSetter(ctx, "dim")
+	if err != nil {
+		return nil, fmt.Errorf("curtail: %w", err)
+	}
+
+	var curtailer api.Curtailer
+	if curtail != nil {
+		curtailer = NewCurtailer(curtail, curtailed)
+	}
+
 	if socG != nil {
 		return m.DecorateBattery(
 			energyG,
@@ -100,8 +137,11 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 		), nil
 	}
 
+	_, _ = dimmer, curtailer
+
 	return m.Decorate(
 		energyG, currentsG, voltagesG, powersG, cc.pvMaxACPower.Decorator(),
+		// WithCurtailer(curtailer), WithDimmer(dimmer),
 	), nil
 }
 
@@ -118,11 +158,20 @@ type Meter struct {
 	currentPowerG func() (float64, error)
 }
 
+// type Option func(*Meter)
+
+// func WithDimmer(dimmer api.Dimmer) Option {
+// 	return func(m *Meter) {
+// 		// m.dimmer = dimmer
+// 	}
+// }
+
 // Decorate attaches additional capabilities to the base meter
 func (m *Meter) Decorate(
 	totalEnergy func() (float64, error),
 	currents, voltages, powers func() (float64, float64, float64, error),
 	maxACPower func() float64,
+	// opt ...Option,
 ) api.Meter {
 	return decorateMeter(m,
 		totalEnergy, currents, voltages, powers,
