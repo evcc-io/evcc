@@ -83,7 +83,6 @@ func (v *API) Status(vin string) (Status, error) {
 	uri := fmt.Sprintf("%s/%s", ApiBaseUrl, RemoteElectricStatusPath)
 
 	req, _ := request.New(http.MethodGet, uri, nil, map[string]string{
-		"Accept": request.JSONContent,
 		"vin":    vin,
 	})
 
