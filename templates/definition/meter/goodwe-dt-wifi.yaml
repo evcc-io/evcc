@@ -1,0 +1,19 @@
+template: goodwe-dt-wifi
+products:
+  - brand: GoodWe
+    description:
+      generic: GoodWe over WiFi (DT/DNS series with proprietary protocol)
+capabilities: ["battery-control"] # stub for future if needed
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: uri
+    required: true
+    description:
+      en: IP address or hostname of the WiFi dongle
+      de: IP-Adresse des WiFi-Dongles
+render: |
+  type: goodwe-dt-wifi
+  uri: {{ .uri }}
+
+
