@@ -46,11 +46,12 @@ type Smaevcharger struct {
 }
 
 func init() {
+	// TODO remove deprecated
 	registry.Add("smaevcharger", NewSmaevchargerFromConfig)
 }
 
 // NewSmaevchargerFromConfig creates a SMA EV Charger from generic config
-func NewSmaevchargerFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewSmaevchargerFromConfig(other map[string]any) (api.Charger, error) {
 	cc := struct {
 		Uri      string
 		User     string
@@ -246,7 +247,7 @@ var _ api.MeterEnergy = (*Smaevcharger)(nil)
 // TotalEnergy implements the api.MeterEnergy interface
 func (wb *Smaevcharger) TotalEnergy() (float64, error) {
 	res, err := wb.getMeasurement("Measurement.Metering.GridMs.TotWhIn")
-	if se := new(smaevcharger.ErrUnknownMeasurement); errors.As(err, &se) {
+	if _, ok := errors.AsType[*smaevcharger.ErrUnknownMeasurement](err); ok {
 		res, err = wb.getMeasurement("Measurement.Metering.GridMs.TotWhIn.ChaSta")
 	}
 	return res / 1e3, err
@@ -257,7 +258,7 @@ var _ api.Meter = (*Smaevcharger)(nil)
 // CurrentPower implements the api.Meter interface
 func (wb *Smaevcharger) CurrentPower() (float64, error) {
 	res, err := wb.getMeasurement("Measurement.Metering.GridMs.TotWIn")
-	if se := new(smaevcharger.ErrUnknownMeasurement); errors.As(err, &se) {
+	if _, ok := errors.AsType[*smaevcharger.ErrUnknownMeasurement](err); ok {
 		res, err = wb.getMeasurement("Measurement.Metering.GridMs.TotWIn.ChaSta")
 	}
 	return res, err
@@ -268,7 +269,7 @@ var _ api.ChargeRater = (*Smaevcharger)(nil)
 // ChargedEnergy implements the api.ChargeRater interface
 func (wb *Smaevcharger) ChargedEnergy() (float64, error) {
 	res, err := wb.getMeasurement("Measurement.ChaSess.WhIn")
-	if se := new(smaevcharger.ErrUnknownMeasurement); errors.As(err, &se) {
+	if _, ok := errors.AsType[*smaevcharger.ErrUnknownMeasurement](err); ok {
 		res, err = wb.getMeasurement("Measurement.Metering.GridMs.TotWhIn.ChaSta")
 	}
 	return res / 1e3, err

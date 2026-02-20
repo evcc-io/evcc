@@ -36,3 +36,4 @@ params:
   - preset: ocpp
 render: |
   {{ include "ocpp" . }}
+  profilekindrelative: true

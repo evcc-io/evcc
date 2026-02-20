@@ -6,13 +6,14 @@ import (
 	"strings"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
 	reg "github.com/evcc-io/evcc/util/registry"
 )
 
 var Registry = reg.New[api.Charger]("charger")
 
 // NewFromConfig creates charger from configuration
-func NewFromConfig(ctx context.Context, typ string, other map[string]interface{}) (api.Charger, error) {
+func NewFromConfig(ctx context.Context, typ string, other map[string]any) (api.Charger, error) {
 	factory, err := Registry.Get(strings.ToLower(typ))
 	if err != nil {
 		return nil, err
@@ -20,7 +21,7 @@ func NewFromConfig(ctx context.Context, typ string, other map[string]interface{}
 
 	v, err := factory(ctx, other)
 	if err != nil {
-		return nil, fmt.Errorf("cannot create charger type '%s': %w", typ, err)
+		return nil, fmt.Errorf("cannot create charger type '%s': %w", util.TypeWithTemplateName(typ, other), err)
 	}
 
 	return v, nil

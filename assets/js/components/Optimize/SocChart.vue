@@ -189,7 +189,8 @@ export default defineComponent({
 								// Show ticks at exact hour boundaries
 								if (minute === 0) {
 									// Show labels only at hours divisible by 4
-									if (hour % 4 === 0) {
+									const step = window.innerWidth < 576 ? 6 : 4;
+									if (hour % step === 0) {
 										return hour.toString();
 									}
 									// Show tick but no label for other hours

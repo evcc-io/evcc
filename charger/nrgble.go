@@ -13,6 +13,6 @@ func init() {
 }
 
 // NewNRGKickBLEFromConfig creates a NRGKickBLE charger from generic config
-func NewNRGKickBLEFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewNRGKickBLEFromConfig(other map[string]any) (api.Charger, error) {
 	return nil, errors.New("NRGKick bluetooth is only supported on linux")
 }

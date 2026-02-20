@@ -20,13 +20,11 @@ const CURRENCY_SYMBOLS: Record<CURRENCY, string> = {
 };
 
 // list of currencies where energy price should be displayed in subunits (factor 100)
-const ENERGY_PRICE_IN_SUBUNIT: Record<CURRENCY, string> = {
+const ENERGY_PRICE_IN_SUBUNIT: Partial<Record<CURRENCY, string>> = {
   AUD: "c", // Australian cent
   BGN: "st", // Bulgarian stotinka
   BRL: "¢", // Brazilian centavo
   CAD: "¢", // Canadian cent
-  CHF: "rp", // Swiss Rappen
-  CNY: "f", // Chinese fen
   EUR: "ct", // Euro cent
   GBP: "p", // GB pence
   ILS: "ag", // Israeli agora
@@ -53,6 +51,12 @@ export default defineComponent({
     };
   },
   methods: {
+    energyPriceSubunit(currency: CURRENCY): string | undefined {
+      if (currency === CURRENCY.CHF) {
+        return this.$i18n?.locale === "de" ? "Rp." : "ct.";
+      }
+      return ENERGY_PRICE_IN_SUBUNIT[currency];
+    },
     round(num: number, precision: number) {
       const base = 10 ** precision;
       return (Math.round(num * base) / base).toFixed(precision);
@@ -306,7 +310,7 @@ export default defineComponent({
       let value = amout;
       let minimumFractionDigits = 1;
       let maximumFractionDigits = 3;
-      if (ENERGY_PRICE_IN_SUBUNIT[currency]) {
+      if (this.energyPriceSubunit(currency)) {
         value *= 100;
         minimumFractionDigits = 1;
         maximumFractionDigits = 1;
@@ -325,10 +329,10 @@ export default defineComponent({
       return Intl?.DateTimeFormat?.().resolvedOptions?.().timeZone || "UTC";
     },
     pricePerKWhUnit(currency = CURRENCY.EUR, short = false) {
-      const unit = ENERGY_PRICE_IN_SUBUNIT[currency] || currency;
+      const unit = this.energyPriceSubunit(currency) || CURRENCY_SYMBOLS[currency] || currency;
       return `${unit}${short ? "" : "/kWh"}`;
     },
-    fmtTimeAgo(elapsed: number) {
+    fmtTimeAgo(elapsed: number, numeric: "auto" | "always" = "auto") {
       const units = {
         day: 24 * 60 * 60 * 1000,
         hour: 60 * 60 * 1000,
@@ -342,7 +346,7 @@ export default defineComponent({
         if (Math.abs(elapsed) > units[unitKey] || u == "second") {
           try {
             const rtf = new Intl.RelativeTimeFormat(this.$i18n?.locale, {
-              numeric: "auto",
+              numeric,
             });
             return rtf.format(Math.round(elapsed / units[unitKey]), unitKey);
           } catch (e) {

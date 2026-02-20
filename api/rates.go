@@ -47,7 +47,7 @@ func (rr Rates) At(ts time.Time) (Rate, error) {
 	return Rate{}, ErrNotAvailable
 }
 
-var _ BytesMarshaler = Rates{}
+var _ BytesMarshaler = (*Rates)(nil)
 
 // MarshalBytes implements server.BytesMarshaler
 func (r Rates) MarshalBytes() ([]byte, error) {

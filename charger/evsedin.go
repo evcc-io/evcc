@@ -32,7 +32,7 @@ func init() {
 // https://www.evracing.cz/user/documents/upload/EVSE-WB-DIN_latest.pdf
 
 // NewEvseDINFromConfig creates an EVSE DIN charger from generic config
-func NewEvseDINFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewEvseDINFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := modbus.Settings{
 		Baudrate: 9600,
 		Comset:   "8N1",
@@ -46,7 +46,7 @@ func NewEvseDINFromConfig(ctx context.Context, other map[string]interface{}) (ap
 	return NewEvseDIN(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID)
 }
 
-//go:generate go tool decorate -f decorateEvseDIN -b *EvseDIN -r api.Charger -t "api.ChargerEx,MaxCurrentMillis,func(float64) error"
+//go:generate go tool decorate -f decorateEvseDIN -b *EvseDIN -r api.Charger -t api.ChargerEx
 
 // NewEvseDIN creates EVSE DIN charger
 func NewEvseDIN(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8) (api.Charger, error) {

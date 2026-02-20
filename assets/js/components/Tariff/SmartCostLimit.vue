@@ -2,6 +2,7 @@
 	<SmartTariffBase
 		v-bind="labels"
 		:current-limit="currentLimit"
+		:last-limit="lastLimit"
 		:is-co2="isCo2"
 		:currency="currency"
 		:apply-all="multipleLoadpoints && isLoadpoint"
@@ -21,6 +22,8 @@
 import SmartTariffBase from "./SmartTariffBase.vue";
 import { defineComponent, type PropType } from "vue";
 import api from "@/api";
+import { setLoadpointLastSmartCostLimit } from "@/uiLoadpoints";
+import settings from "@/settings";
 import { type CURRENCY, SMART_COST_TYPE } from "@/types/evcc";
 import { type ForecastSlot } from "../Forecast/types";
 
@@ -36,8 +39,9 @@ export default defineComponent({
 		currency: String as PropType<CURRENCY>,
 		multipleLoadpoints: Boolean,
 		isLoadpoint: Boolean,
-		loadpointId: Number,
+		loadpointId: String,
 		possible: Boolean,
+		lastLimit: Number,
 		tariff: Array as PropType<ForecastSlot[]>,
 	},
 	computed: {
@@ -69,18 +73,27 @@ export default defineComponent({
 			// Smart cost: charge when costs are below or equal to limit
 			return value <= this.currentLimit;
 		},
-		async saveLimit(limit: string) {
+		async saveLimit(limit: number) {
+			// save last selected value to be suggest again when reactivating limit
+			this.saveLastLimit(limit);
+
 			const url = this.isLoadpoint
 				? `loadpoints/${this.loadpointId}/smartcostlimit`
 				: "batterygridchargelimit";
 
-			if (limit === "null") {
-				await api.delete(url);
+			await api.post(`${url}/${encodeURIComponent(limit)}`);
+		},
+		saveLastLimit(limit: number) {
+			if (this.isLoadpoint) {
+				setLoadpointLastSmartCostLimit(this.loadpointId!, limit);
 			} else {
-				await api.post(`${url}/${encodeURIComponent(limit)}`);
+				settings.lastBatterySmartCostLimit = limit;
 			}
 		},
 		async deleteLimit() {
+			// save last selected value to be suggest again when reactivating limit
+			this.saveLastLimit(this.currentLimit || 0);
+
 			const url = this.isLoadpoint
 				? `loadpoints/${this.loadpointId}/smartcostlimit`
 				: "batterygridchargelimit";

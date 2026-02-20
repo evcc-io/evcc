@@ -21,14 +21,14 @@ type CreateContainer struct {
 	TechnicalDescriptors []string `json:"technicalDescriptors"`
 }
 
-type TelematicDataPoint struct {
-	Timestamp time.Time
-	Unit      string
-	Value     string
+type ContainerContents struct {
+	TelematicData map[string]TelematicData
 }
 
 type TelematicData struct {
-	TelematicData map[string]TelematicDataPoint
+	Timestamp time.Time
+	Unit      string
+	Value     string
 }
 
 type StreamingMessage struct {

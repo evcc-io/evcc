@@ -15,7 +15,7 @@ jobs:
       pull-requests: write
     runs-on: depot-ubuntu-24.04-arm
     steps:
-      - uses: actions/stale@v9
+      - uses: actions/stale@v10
         id: stale
         with:
           days-before-stale: 7

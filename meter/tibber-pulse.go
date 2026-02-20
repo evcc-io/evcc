@@ -47,7 +47,7 @@ type Tibber struct {
 	data *util.Monitor[tibber.LiveMeasurement]
 }
 
-func NewTibberFromConfig(ctx context.Context, other map[string]interface{}) (api.Meter, error) {
+func NewTibberFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	cc := struct {
 		Token   string
 		HomeID  string
@@ -209,8 +209,6 @@ func NewTibberFromConfig(ctx context.Context, other map[string]interface{}) (api
 			}
 		}
 	}()
-
-	log.DEBUG.Printf("!! User-Agent set to %s", getUserAgent())
 
 	return t, nil
 }

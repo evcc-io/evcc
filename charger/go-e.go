@@ -38,18 +38,18 @@ type GoE struct {
 }
 
 func init() {
-	registry.Add("go-e", func(other map[string]interface{}) (api.Charger, error) {
+	registry.Add("go-e", func(other map[string]any) (api.Charger, error) {
 		return newGoEFromConfig(true, other)
 	})
-	registry.Add("go-e-v3", func(other map[string]interface{}) (api.Charger, error) {
+	registry.Add("go-e-v3", func(other map[string]any) (api.Charger, error) {
 		return newGoEFromConfig(false, other)
 	})
 }
 
-//go:generate go tool decorate -f decorateGoE -b *GoE -r api.Charger -t "api.ChargeRater,ChargedEnergy,func() (float64, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
+//go:generate go tool decorate -f decorateGoE -b *GoE -r api.Charger -t api.ChargeRater,api.PhaseSwitcher
 
 // newGoEFromConfig creates a go-e charger from generic config
-func newGoEFromConfig(v2 bool, other map[string]interface{}) (api.Charger, error) {
+func newGoEFromConfig(v2 bool, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		Token string
 		URI   string

@@ -60,22 +60,22 @@ var elwaStandbyPower uint16 = 10
 
 func init() {
 	// https://github.com/evcc-io/evcc/discussions/12761
-	registry.AddCtx("ac-elwa-2", func(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+	registry.AddCtx("ac-elwa-2", func(ctx context.Context, other map[string]any) (api.Charger, error) {
 		return newMyPvFromConfig(ctx, "ac-elwa-2", other, 2)
 	})
 
 	// https: // github.com/evcc-io/evcc/issues/18020
-	registry.AddCtx("ac-thor", func(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+	registry.AddCtx("ac-thor", func(ctx context.Context, other map[string]any) (api.Charger, error) {
 		return newMyPvFromConfig(ctx, "ac-thor", other, 9)
 	})
 
-	registry.AddCtx("ac-elwa-e", func(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+	registry.AddCtx("ac-elwa-e", func(ctx context.Context, other map[string]any) (api.Charger, error) {
 		return newMyPvFromConfig(ctx, "ac-elwa-e", other, 2)
 	})
 }
 
 // newMyPvFromConfig creates a MyPv charger from generic config
-func newMyPvFromConfig(ctx context.Context, name string, other map[string]interface{}, statusC uint16) (api.Charger, error) {
+func newMyPvFromConfig(ctx context.Context, name string, other map[string]any, statusC uint16) (api.Charger, error) {
 	cc := struct {
 		modbus.TcpSettings `mapstructure:",squash"`
 		TempSource         int

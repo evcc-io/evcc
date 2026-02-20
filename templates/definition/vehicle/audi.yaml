@@ -7,5 +7,5 @@ params:
   - name: vin
     example: WAUZZZ...
 render: |
-  type: etron
+  type: audi
   {{ include "vehicle-base" . }}

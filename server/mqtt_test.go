@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/evcc-io/evcc/core/types"
 	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -16,14 +17,6 @@ func TestMqttNaNInf(t *testing.T) {
 	m := &MQTT{}
 	assert.Equal(t, "NaN", m.encode(math.NaN()), "NaN not encoded as string")
 	assert.Equal(t, "+Inf", m.encode(math.Inf(0)), "Inf not encoded as string")
-}
-
-type measurement struct {
-	Power        float64   `json:"power"`
-	Energy       float64   `json:"energy,omitempty"`
-	Currents     []float64 `json:"currents,omitempty"`
-	Soc          *float64  `json:"soc,omitempty"`
-	Controllable *bool     `json:"controllable,omitempty"`
 }
 
 func TestMqttTypes(t *testing.T) {
@@ -36,7 +29,7 @@ type mqttSuite struct {
 	topics, payloads []string
 }
 
-func (suite *mqttSuite) publish(topic string, retained bool, payload interface{}) {
+func (suite *mqttSuite) publish(topic string, retained bool, payload any) {
 	suite.MQTT.publish(topic, retained, payload)
 }
 
@@ -104,22 +97,55 @@ func (suite *mqttSuite) TestSlice() {
 	suite.Equal([]string{"2", "10", "20"}, suite.payloads, "payloads")
 }
 
-func (suite *mqttSuite) TestGrid() {
-	topics := []string{"test/power", "test/energy", "test/currents", "test/soc", "test/controllable"}
+func (suite *mqttSuite) TestNilInterface() {
+	var ptr *time.Time
+	suite.publish("test", false, ptr)
+	suite.Equal([]string{"test"}, suite.topics, "topics")
+	suite.Equal([]string{""}, suite.payloads, "payloads")
+}
 
-	suite.publish("test", false, measurement{})
+func (suite *mqttSuite) TestMeasurement() {
+	topics := lo.Map([]string{
+		"title", "icon", "power", "energy", "powers", "currents", "excessDCPower", "capacity", "soc", "controllable", "forecast",
+	}, func(s string, _ int) string {
+		return "test/" + s
+	})
+
+	suite.publish("test", false, types.Measurement{})
 	suite.Equal(topics, suite.topics, "topics")
-	suite.Equal([]string{"0", "", "", "", ""}, suite.payloads, "payloads")
+	suite.Equal([]string{"", "", "0", "", "", "", "", "", "", "", ""}, suite.payloads, "empty payloads")
 
-	suite.publish("test", false, measurement{Energy: 1})
+	suite.publish("test", false, types.Measurement{Energy: 1})
 	suite.Equal(topics, suite.topics, "topics")
-	suite.Equal([]string{"0", "1", "", "", ""}, suite.payloads, "payloads")
+	suite.Equal([]string{"", "", "0", "1", "", "", "", "", "", "", ""}, suite.payloads, "energy payloads")
 
-	suite.publish("test", false, measurement{Controllable: lo.ToPtr(false)})
+	suite.publish("test", false, types.Measurement{Controllable: new(false)})
 	suite.Equal(topics, suite.topics, "topics")
-	suite.Equal([]string{"0", "", "", "", "false"}, suite.payloads, "payloads")
+	suite.Equal([]string{"", "", "0", "", "", "", "", "", "", "false", ""}, suite.payloads, "controllable payloads")
 
-	suite.publish("test", false, measurement{Currents: []float64{1, 2, 3}})
-	suite.Equal(append(topics, "test/currents/1", "test/currents/2", "test/currents/3"), suite.topics, "topics")
-	suite.Equal([]string{"0", "", "3", "", "", "1", "2", "3"}, suite.payloads, "payloads")
+	suite.publish("test", false, types.Measurement{Currents: []float64{1, 2, 3}})
+	suite.Equal(append(topics, "test/currents/1", "test/currents/2", "test/currents/3"), suite.topics, "currents topics")
+	suite.Equal([]string{"", "", "0", "", "", "3", "", "", "", "", "", "1", "2", "3"}, suite.payloads, "currents payloads")
+}
+
+func (suite *mqttSuite) TestBatteryState() {
+	topics := lo.Map([]string{
+		"power", "energy", "capacity", "soc",
+		"devices", "devices/1/title", "devices/1/icon", "devices/1/power", "devices/1/energy", "devices/1/powers", "devices/1/currents", "devices/1/excessDCPower", "devices/1/capacity", "devices/1/soc", "devices/1/controllable", "devices/1/forecast",
+		"forecast",
+	}, func(s string, _ int) string {
+		return "test/" + s
+	})
+
+	suite.publish("test", false, types.BatteryState{
+		Power: 2,
+		Soc:   20.0,
+		Devices: []types.Measurement{{
+			Power: 1,
+			Soc:   new(10.0),
+		}},
+	})
+
+	suite.Equal(topics, suite.topics, "topics")
+	suite.Equal([]string{"2", "", "", "20", "1", "", "", "1", "", "", "", "", "", "10", "", "", ""}, suite.payloads, "payloads")
 }

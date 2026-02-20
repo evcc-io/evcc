@@ -105,10 +105,11 @@
 						</td>
 					</tr>
 					<tr v-if="session.co2PerKWh != null" data-testid="session-details-co2">
-						<th>
+						<th class="align-baseline">
 							{{ $t("session.co2") }}
 						</th>
 						<td>
+							{{ totalCo2Formatted }}<br />
 							{{ fmtCo2Medium(session.co2PerKWh) }}
 						</td>
 					</tr>
@@ -193,6 +194,10 @@ export default defineComponent({
 		chargedEnergy() {
 			return this.session.chargedEnergy * 1e3;
 		},
+		totalCo2Formatted(): string {
+			const grams = (this.session.co2PerKWh ?? 0) * (this.session.chargedEnergy ?? 0);
+			return this.fmtGrams(grams);
+		},
 		avgPower() {
 			const hours = this.session.chargeDuration / 1e9 / 3600;
 			return this.chargedEnergy / hours;
@@ -229,7 +234,7 @@ export default defineComponent({
 			await this.updateSession({ vehicle: title });
 		},
 		async removeVehicle() {
-			await this.updateSession({ vehicle: null });
+			await this.updateSession({ vehicle: "" });
 		},
 		async changeLoadpoint(title: string) {
 			await this.updateSession({ loadpoint: title });

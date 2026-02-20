@@ -1,0 +1,46 @@
+template: octopus-de
+products:
+  - brand: Octopus Energy Germany
+    description:
+      generic: Deutschland
+requirements:
+  evcc: ["skiptest"]
+countries: ["DE"]
+group: price
+params:
+  - name: email
+    type: string
+    required: true
+    example: "user@example.com"
+    description:
+      en: Email Address
+      de: E-Mail-Adresse
+    help:
+      de: "Die E-Mail-Adresse Ihres Octopus Energy Kontos."
+      en: "The email address of your Octopus Energy account."
+  - name: password
+    type: string
+    required: true
+    mask: true
+    example: "secret"
+    description:
+      en: Password
+      de: Passwort
+    help:
+      de: "Das Passwort Ihres Octopus Energy Kontos."
+      en: "The password of your Octopus Energy account."
+  - name: accountNumber
+    type: string
+    required: true
+    example: "A-XX345678"
+    description:
+      en: Account Number
+      de: Kundennummer
+    help:
+      de: "Ihre Octopus Energy Kundennummer (z.B. A-12345678)."
+      en: "Your Octopus Energy account number (e.g., A-12345678)."
+render: |
+  type: octopus-de
+  accountNumber: {{ .accountNumber }}
+  email: {{ .email }}
+  password: {{ .password }}

@@ -60,7 +60,7 @@ func (r Zones) TimeTableMarkers() []HourMin {
 
 HOURS:
 	// 1hr intervals
-	for hour := 0; hour < 24; hour++ {
+	for hour := range 24 {
 		for _, m := range res {
 			if m.Hour == hour && m.Min == 0 {
 				continue HOURS

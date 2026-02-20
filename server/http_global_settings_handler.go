@@ -4,12 +4,14 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/server/db/settings"
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/redact"
 	"github.com/gorilla/mux"
 	"go.yaml.in/yaml/v4"
 )
@@ -17,6 +19,12 @@ import (
 func settingsGetStringHandler(key string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		res, _ := settings.String(key)
+
+		// Check if private data should be hidden
+		if r.URL.Query().Get("private") == "false" && res != "" {
+			res = redact.String(res)
+		}
+
 		jsonWrite(w, res)
 	}
 }
@@ -28,7 +36,7 @@ func settingsDeleteHandler(key string) http.HandlerFunc {
 	}
 }
 
-func settingsSetDurationHandler(key string) http.HandlerFunc {
+func settingsSetDurationHandler(key string, pub publisher) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
@@ -40,6 +48,8 @@ func settingsSetDurationHandler(key string) http.HandlerFunc {
 
 		settings.SetInt(key, int64(time.Second*time.Duration(val)))
 		setConfigDirty()
+
+		pub(key, val)
 
 		jsonWrite(w, val)
 	}
@@ -71,7 +81,13 @@ func settingsSetYamlHandler(key string, other, struc any) http.HandlerFunc {
 	}
 }
 
-func settingsSetJsonHandler(key string, valueChan chan<- util.Param, newStruc func() any) http.HandlerFunc {
+func allowPub(key string) bool {
+	// don't publish on update - would overwrite globalconfig.Info struct with config
+	// TODO come up with a general solution once all endpoinds use Info
+	return key != keys.EEBus
+}
+
+func settingsSetJsonHandler(key string, pub publisher, newStruc func() any) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		struc := newStruc()
 		dec := json.NewDecoder(r.Body)
@@ -83,27 +99,34 @@ func settingsSetJsonHandler(key string, valueChan chan<- util.Param, newStruc fu
 
 		oldStruc := newStruc()
 		if err := settings.Json(key, &oldStruc); err == nil {
-			if err := mergeMaskedAny(oldStruc, struc); err != nil {
-				jsonError(w, http.StatusInternalServerError, err)
-				return
+			// Skip merge for slices - they should be replaced entirely
+			if reflect.ValueOf(struc).Elem().Kind() != reflect.Slice {
+				if err := mergeMaskedAny(oldStruc, struc); err != nil {
+					jsonError(w, http.StatusInternalServerError, err)
+					return
+				}
 			}
 		}
 
 		settings.SetJson(key, struc)
 		setConfigDirty()
 
-		valueChan <- util.Param{Key: key, Val: struc}
+		if allowPub(key) {
+			pub(key, struc)
+		}
 
 		jsonWrite(w, true)
 	}
 }
 
-func settingsDeleteJsonHandler(key string, valueChan chan<- util.Param, struc any) http.HandlerFunc {
+func settingsDeleteJsonHandler(key string, pub publisher, struc any) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		settings.SetString(key, "")
 		setConfigDirty()
 
-		valueChan <- util.Param{Key: key, Val: struc}
+		if allowPub(key) {
+			pub(key, struc)
+		}
 
 		jsonWrite(w, true)
 	}

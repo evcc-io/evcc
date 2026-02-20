@@ -21,7 +21,7 @@ func init() {
 }
 
 // NewTPLinkFromConfig creates a TP-Link charger from generic config
-func NewTPLinkFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewTPLinkFromConfig(other map[string]any) (api.Charger, error) {
 	var cc struct {
 		embed        `mapstructure:",squash"`
 		URI          string

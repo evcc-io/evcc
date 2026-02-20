@@ -35,7 +35,7 @@ func init() {
 }
 
 // NewCarWingsFromConfig creates a new vehicle
-func NewCarWingsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+func NewCarWingsFromConfig(other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed                       `mapstructure:",squash"`
 		User, Password, Region, VIN string

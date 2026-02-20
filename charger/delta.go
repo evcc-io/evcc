@@ -64,7 +64,7 @@ func init() {
 }
 
 // NewDeltaFromConfig creates a Delta charger from generic config
-func NewDeltaFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewDeltaFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		Connector       uint16
 		modbus.Settings `mapstructure:",squash"`

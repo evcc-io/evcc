@@ -54,7 +54,7 @@ func init() {
 }
 
 // NewEEBusFromConfig creates an EEBus charger from generic config
-func NewEEBusFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewEEBusFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	var cc struct {
 		Ski           string
 		Ip            string
@@ -73,7 +73,7 @@ func NewEEBusFromConfig(ctx context.Context, other map[string]interface{}) (api.
 	return NewEEBus(ctx, cc.Ski, cc.Ip, cc.Meter, hasChargedEnergy, cc.VasVW)
 }
 
-//go:generate go tool decorate -f decorateEEBus -b *EEBus -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.ChargeRater,ChargedEnergy,func() (float64, error)"
+//go:generate go tool decorate -f decorateEEBus -b *EEBus -r api.Charger -t api.Meter,api.PhaseCurrents,api.ChargeRater
 
 // NewEEBus creates EEBus charger
 func NewEEBus(ctx context.Context, ski, ip string, hasMeter, hasChargedEnergy, vasVW bool) (api.Charger, error) {

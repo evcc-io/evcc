@@ -32,7 +32,7 @@ func NewConnection(uri string) (*Connection, error) {
 }
 
 // ExecCmd executes an TP-Link Smart Home Protocol command and provides the response
-func (d *Connection) ExecCmd(cmd string, res interface{}) error {
+func (d *Connection) ExecCmd(cmd string, res any) error {
 	// encode command message
 	buf := bytes.NewBuffer([]byte{0, 0, 0, 0})
 	var key byte = 171 // initialization vector

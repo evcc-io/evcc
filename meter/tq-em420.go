@@ -93,7 +93,7 @@ type TqEM420 struct {
 }
 
 // NewTqEm420FromConfig creates a new configurable meter
-func NewTqEm420FromConfig(other map[string]interface{}) (api.Meter, error) {
+func NewTqEm420FromConfig(other map[string]any) (api.Meter, error) {
 	cc := struct {
 		URI    string
 		Token  string

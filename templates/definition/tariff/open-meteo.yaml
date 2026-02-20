@@ -9,16 +9,6 @@ requirements:
 group: solar
 params:
   - preset: forecast-base
-  - name: az
-    description:
-      en: Azimuth
-      de: Azimut
-    help:
-      en: -180 = north, -90 = east, 0 = south, 90 = west, 180 = north
-      de: -180 = Norden, -90 = Osten, 0 = Süden, 90 = Westen, 180 = Norden
-    type: int
-    example: 0
-    required: true
   - name: ac
     description:
       en: AC Power [kW]
@@ -72,7 +62,7 @@ render: |
   tariff: solar
   forecast:
     source: http
-    uri: https://api.open-meteo.com/v1/forecast?latitude={{ .lat }}&longitude={{ .lon }}&azimuth={{ .az }}&tilt={{ .dec }}&minutely_15=temperature_2m,global_tilted_irradiance_instant&daily=sunrise,sunset&forecast_days=3&timezone=GMT&timeformat=unixtime
+    uri: https://api.open-meteo.com/v1/forecast?latitude={{ .lat }}&longitude={{ .lon }}&azimuth={{ .az }}&tilt={{ .dec }}&minutely_15=temperature_2m,global_tilted_irradiance_instant&daily=sunrise,sunset&forecast_days=5&timezone=GMT&timeformat=unixtime
     jq: |
       def alphatemp: {{ .alphatemp }}; # temperature coefficient
       def rossmodel: {{ .rossmodel }}; # cooling type

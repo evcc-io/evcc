@@ -1,9 +1,6 @@
 package cardata
 
 import (
-	"errors"
-
-	"github.com/evcc-io/evcc/api"
 	"golang.org/x/oauth2"
 )
 
@@ -26,8 +23,4 @@ func TokenExtra(t *oauth2.Token, key string) string {
 		return v.(string)
 	}
 	return ""
-}
-
-func tokenError(err error) bool {
-	return errors.Is(err, api.ErrLoginRequired) || errors.Is(err, api.ErrMissingToken)
 }

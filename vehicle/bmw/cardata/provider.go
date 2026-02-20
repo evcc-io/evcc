@@ -2,14 +2,15 @@ package cardata
 
 import (
 	"context"
+	"fmt"
 	"maps"
 	"slices"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
-	"github.com/samber/lo"
 	"github.com/spf13/cast"
 	"golang.org/x/oauth2"
 )
@@ -23,19 +24,24 @@ type Provider struct {
 	api *API
 	ts  oauth2.TokenSource
 
-	vin string
+	vin       string
+	container string
 
-	initial   map[string]TelematicDataPoint
+	rest      map[string]TelematicData
 	streaming map[string]StreamingData
+	updated   time.Time
+	cache     time.Duration
 }
 
 // NewProvider creates a vehicle api provider
-func NewProvider(ctx context.Context, log *util.Logger, api *API, ts oauth2.TokenSource, clientID, vin string) *Provider {
+func NewProvider(ctx context.Context, log *util.Logger, api *API, ts oauth2.TokenSource, clientID, vin string, cache time.Duration) *Provider {
 	v := &Provider{
 		log:       log,
 		api:       api,
 		ts:        ts,
 		vin:       vin,
+		cache:     cache,
+		rest:      make(map[string]TelematicData),
 		streaming: make(map[string]StreamingData),
 	}
 
@@ -51,6 +57,7 @@ func NewProvider(ctx context.Context, log *util.Logger, api *API, ts oauth2.Toke
 		for msg := range recvC {
 			v.mu.Lock()
 			maps.Copy(v.streaming, msg.Data)
+			v.updated = time.Now()
 			v.mu.Unlock()
 		}
 	}()
@@ -58,57 +65,16 @@ func NewProvider(ctx context.Context, log *util.Logger, api *API, ts oauth2.Toke
 	return v
 }
 
-func (v *Provider) any(key string) (any, error) {
-	v.mu.Lock()
-	defer v.mu.Unlock()
-
-	if a, ok := v.streaming[key]; ok {
-		return a.Value, nil
-	}
-
-	if v.initial == nil {
-		// don't try as long as there's no token
-		if _, err := v.ts.Token(); err != nil {
-			return nil, api.ErrNotAvailable
-		}
-
-		defer func() {
-			if v.initial == nil {
-				v.initial = make(map[string]TelematicDataPoint)
-			}
-		}()
-
-		container, err := v.ensureContainer()
-		if err != nil {
-			v.log.ERROR.Printf("get container: %v", err)
-			return nil, api.ErrNotAvailable
-		}
-
-		if res, err := v.api.GetTelematics(v.vin, container); err == nil {
-			v.initial = res.TelematicData
-		} else {
-			v.log.ERROR.Printf("get telematics: %v", err)
-			return nil, api.ErrNotAvailable
-		}
-	}
-
-	if el, ok := v.initial[key]; ok {
-		return el.Value, nil
-	}
-
-	return nil, api.ErrNotAvailable
-}
-
-func (v *Provider) ensureContainer() (string, error) {
+func (v *Provider) findOrCreateContainer() (string, error) {
 	containers, err := v.api.GetContainers()
 	if err != nil {
 		return "", err
 	}
 
-	if cc := lo.Filter(containers, func(c Container, _ int) bool {
+	if i := slices.IndexFunc(containers, func(c Container) bool {
 		return c.Name == "evcc.io" && c.Purpose == requiredVersion
-	}); len(cc) > 0 {
-		return cc[0].ContainerId, nil
+	}); i >= 0 {
+		return containers[i].ContainerId, nil
 	}
 
 	res, err := v.api.CreateContainer(CreateContainer{
@@ -119,6 +85,62 @@ func (v *Provider) ensureContainer() (string, error) {
 
 	return res.ContainerId, err
 }
+
+func (v *Provider) setupContainer() error {
+	container, err := v.findOrCreateContainer()
+	if err != nil {
+		return fmt.Errorf("get container: %v", err)
+	}
+
+	v.container = container
+
+	return nil
+}
+
+func (v *Provider) updateContainerData() error {
+	res, err := v.api.GetTelematics(v.vin, v.container)
+	if err != nil {
+		return fmt.Errorf("get telematics: %v", err)
+	}
+
+	v.rest = res.TelematicData
+	v.streaming = make(map[string]StreamingData) // reset streaming
+
+	return nil
+}
+
+func (v *Provider) any(key string) (any, error) {
+	v.mu.Lock()
+	defer v.mu.Unlock()
+
+	_, tokenErr := v.ts.Token()
+
+	switch {
+	case tokenErr == nil && v.updated.IsZero():
+		// this will only happen once
+		if err := v.setupContainer(); err != nil {
+			v.log.WARN.Println(err)
+		}
+		fallthrough
+
+	case tokenErr == nil && time.Since(v.updated) > v.cache && v.container != "":
+		if err := v.updateContainerData(); err != nil {
+			v.log.WARN.Println(err)
+		}
+		v.updated = time.Now()
+	}
+
+	if a, ok := v.streaming[key]; ok {
+		return a.Value, nil
+	}
+
+	if el, ok := v.rest[key]; ok {
+		return el.Value, nil
+	}
+
+	return nil, api.ErrNotAvailable
+}
+
 func (v *Provider) String(key string) (string, error) {
 	res, err := v.any(key)
 	if err != nil {
@@ -167,15 +189,18 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 		status = api.StatusB
 	}
 
-	hv, err := v.String("vehicle.drivetrain.electricEngine.charging.hvStatus")
-	if err != nil || hv == "" || hv == "INVALID" {
-		hv, err = v.String("vehicle.drivetrain.electricEngine.charging.status")
+	// evaluate status first, since it's usually available through
+	// mqtt, while hvStatus might only be available through rest
+	// (https://github.com/evcc-io/evcc/pull/26235)
+	cs, err := v.String("vehicle.drivetrain.electricEngine.charging.status")
+	if err != nil || cs == "" {
+		cs, err = v.String("vehicle.drivetrain.electricEngine.charging.hvStatus")
 	}
 
 	if slices.Contains([]string{
-		"CHARGING",       // vehicle.drivetrain.electricEngine.charging.hvStatus
 		"CHARGINGACTIVE", // vehicle.drivetrain.electricEngine.charging.status
-	}, hv) {
+		"CHARGING",       // vehicle.drivetrain.electricEngine.charging.hvStatus
+	}, cs) {
 		return api.StatusC, nil
 	}
 
@@ -215,13 +240,15 @@ var _ api.VehicleClimater = (*Provider)(nil)
 
 // Climater implements the api.VehicleClimater interface
 func (v *Provider) Climater() (bool, error) {
+	activeStates := []string{"HEATING", "COOLING", "VENTILATION", "DEFROST"}
+
 	res, err := v.String("vehicle.cabin.hvac.preconditioning.status.comfortState")
 	if err == nil && res != "" {
-		return slices.Contains([]string{"COMFORT_HEATING", "COMFORT_COOLING", "COMFORT_VENTILATION", "DEFROST"}, res), nil
+		return slices.Contains(activeStates, strings.TrimPrefix(strings.ToUpper(res), "COMFORT_")), nil
 	}
 
 	if res, err = v.String("vehicle.vehicle.preConditioning.activity"); err == nil {
-		return slices.Contains([]string{"HEATING", "COOLING", "VENTILATION"}, res), nil
+		return slices.Contains(activeStates, strings.ToUpper(res)), nil
 	}
 
 	return false, err

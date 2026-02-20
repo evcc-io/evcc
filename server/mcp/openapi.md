@@ -230,13 +230,13 @@ call getState {
 }
 ```
 
-## healthCheck
+## removeGlobalSmartCostLimit
 
-Returns 200 if the evcc loop runs as expected.
+Convenience method to remove limit for all loadpoints at once. Value is applied to each individual loadpoint.
 
 **Tags:** general
 
-## removeGlobalSmartCostLimit
+## removeGlobalSmartFeedInPriorityLimit
 
 Convenience method to remove limit for all loadpoints at once. Value is applied to each individual loadpoint.
 
@@ -258,6 +258,26 @@ Convenience method to set smart charging cost limit for all loadpoints at once. 
 
 ```json
 call setGlobalSmartCostLimit {
+  "cost": 123.45
+}
+```
+
+## setGlobalSmartFeedInPriorityLimit
+
+Convenience method to set smart feed-in priority limit for all loadpoints at once. Value is applied to each individual loadpoint.
+
+**Tags:** general
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| cost | number | Cost limit in configured currency (default EUR) or CO2 limit in g/kWh |
+
+**Example call:**
+
+```json
+call setGlobalSmartFeedInPriorityLimit {
   "cost": 123.45
 }
 ```
@@ -320,6 +340,26 @@ Delete cost or emission limit for fast-charging with grid energy.
 
 ```json
 call deleteLoadpointSmartCostLimit {
+  "id": 123
+}
+```
+
+## deleteLoadpointSmartFeedInPriorityLimit
+
+Delete limit for feed-in priority optimization.
+
+**Tags:** loadpoints
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| id | integer | Loadpoint index starting at 1 |
+
+**Example call:**
+
+```json
+call deleteLoadpointSmartFeedInPriorityLimit {
   "id": 123
 }
 ```
@@ -442,7 +482,7 @@ call removeLoadpointVehicle {
 
 ## setLoadpointBatteryBoost
 
-Enable or disable battery boost.
+Enable or disable battery boost. When active, the maximum available home battery power is added until the home battery is drained to configured SoC limit.
 
 **Tags:** loadpoints
 
@@ -459,6 +499,28 @@ Enable or disable battery boost.
 call setLoadpointBatteryBoost {
   "enable": "example",
   "id": 123
+}
+```
+
+## setLoadpointBatteryBoostLimit
+
+Set the SoC limit for battery boost. Home battery will be used to support charging up to this SoC level. A value of 100 (default) disabled the boost feature in UI and API.
+
+**Tags:** loadpoints
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| id | integer | Loadpoint index starting at 1 |
+| soc | number | SOC in % |
+
+**Example call:**
+
+```json
+call setLoadpointBatteryBoostLimit {
+  "id": 123,
+  "soc": 123.45
 }
 ```
 
@@ -684,6 +746,28 @@ call setLoadpointPhases {
 }
 ```
 
+## setLoadpointPlanStrategy
+
+Updates the charging plan strategy for the loadpoint.
+
+**Tags:** loadpoints
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| id | integer | Loadpoint index starting at 1 |
+| requestBody | object | The JSON request body. |
+
+**Example call:**
+
+```json
+call setLoadpointPlanStrategy {
+  "id": 123,
+  "requestBody": "..."
+}
+```
+
 ## setLoadpointPriority
 
 Set loadpoint priority.
@@ -723,6 +807,28 @@ Set cost or emission limit for fast-charging with grid energy.
 
 ```json
 call setLoadpointSmartCostLimit {
+  "cost": 123.45,
+  "id": 123
+}
+```
+
+## setLoadpointSmartFeedInPriorityLimit
+
+Set limit for feed-in priority optimization.
+
+**Tags:** loadpoints
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| cost | number | Cost limit in configured currency (default EUR) or CO2 limit in g/kWh |
+| id | integer | Loadpoint index starting at 1 |
+
+**Example call:**
+
+```json
+call setLoadpointSmartFeedInPriorityLimit {
   "cost": 123.45,
   "id": 123
 }
@@ -790,6 +896,28 @@ call deleteSession {
 }
 ```
 
+## getGridSessions
+
+Returns a list of HEMS grid limitation events.
+
+**Tags:** sessions
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| format | string | Response format (default json) |
+| lang | string | Language (defaults to accept header) |
+
+**Example call:**
+
+```json
+call getGridSessions {
+  "format": "example",
+  "lang": "example"
+}
+```
+
 ## getSessions
 
 Returns a list of charging sessions.
@@ -838,6 +966,12 @@ call updateSession {
 }
 ```
 
+## clearCache
+
+Clears all cached data. This resets all cached values from tariffs, vehicle APIs, and other components that use caching.
+
+**Tags:** system
+
 ## getLogAreas
 
 Returns a list of all log areas (e.g. `lp-1`, `site`, `db`).
@@ -869,12 +1003,6 @@ call getSystemLogs {
   "level": "example"
 }
 ```
-
-## getTelemetryStatus
-
-Returns the current telemetry status.
-
-**Tags:** system
 
 ## setTelemetryStatus
 
@@ -964,6 +1092,28 @@ call setVehicleMinSoc {
 }
 ```
 
+## setVehiclePlanStrategy
+
+Updates the charging plan strategy for the vehicle.
+
+**Tags:** vehicles
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| name | string | Vehicle name |
+| requestBody | object | The JSON request body. |
+
+**Example call:**
+
+```json
+call setVehiclePlanStrategy {
+  "name": "example",
+  "requestBody": "..."
+}
+```
+
 ## setVehicleSocLimit
 
 Charging will stop when this SoC is reached.
@@ -997,7 +1147,6 @@ Create charging plan with fixed time and SoC target.
 | Name | Type | Description |
 |------|------|-------------|
 | name | string | Vehicle name |
-| precondition | integer | Late charging duration in seconds. |
 | soc | number | SOC in % |
 | timestamp | string | Timestamp in RFC3339 format |
 
@@ -1006,7 +1155,6 @@ Create charging plan with fixed time and SoC target.
 ```json
 call setVehicleSocPlan {
   "name": "example",
-  "precondition": 123,
   "soc": 123.45,
   "timestamp": "example"
 }
@@ -1023,7 +1171,7 @@ Updates the repeating charging plan.
 | Name | Type | Description |
 |------|------|-------------|
 | name | string | Vehicle name |
-| requestBody | object | The JSON request body. |
+| requestBody | array | The JSON request body. |
 
 **Example call:**
 

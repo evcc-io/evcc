@@ -27,7 +27,7 @@ type ServiceInfo struct {
 		Status string
 	}
 	LicenseRequired            bool
-	CumulatedLicense           map[string]interface{}
+	CumulatedLicense           map[string]any
 	PrimaryUserRequired        bool
 	TermsAndConditionsRequired bool
 	ServiceEol                 string
@@ -35,5 +35,5 @@ type ServiceInfo struct {
 	InvocationUrl              struct {
 		Content string
 	}
-	Operation []map[string]interface{}
+	Operation []map[string]any
 }

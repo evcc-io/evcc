@@ -44,14 +44,14 @@ type SEMP struct {
 	hasStatusParam bool
 }
 
-//go:generate go tool decorate -f decorateSEMP -b *SEMP -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)" -t "api.ChargeRater,ChargedEnergy,func() (float64, error)"
+//go:generate go tool decorate -f decorateSEMP -b *SEMP -r api.Charger -t api.PhaseSwitcher,api.PhaseGetter,api.ChargeRater
 
 func init() {
 	registry.AddCtx("semp", NewSEMPFromConfig)
 }
 
 // NewSEMPFromConfig creates a SEMP charger from generic config
-func NewSEMPFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewSEMPFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		URI      string
 		DeviceID string
@@ -163,7 +163,7 @@ func (wb *SEMP) heartbeat(ctx context.Context) {
 		select {
 		case <-ticker.C:
 			// Check if we need to send an update
-			if wb.conn.TimeSinceLastUpdate() >= time.Minute {
+			if time.Since(wb.conn.Updated()) >= time.Minute {
 				if err := wb.conn.SendDeviceControl(wb.deviceID, wb.calcPower(wb.enabled, wb.current, wb.phases)); err != nil {
 					wb.log.ERROR.Printf("heartbeat: failed to send update: %v", err)
 				}

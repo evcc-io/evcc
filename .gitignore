@@ -18,6 +18,7 @@ __debug_bin*
 !package*.json
 !evcc.dist.yaml
 !tests/**/*.evcc.yaml
+!tests/**/*.tpl.yaml
 !tsconfig.json
 /templates/docs
 evcc

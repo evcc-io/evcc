@@ -1,6 +1,9 @@
 <template>
 	<div class="loadpoint d-flex flex-column pt-4 pb-2 px-3 px-sm-4 mx-2 mx-sm-0">
-		<div class="d-block d-sm-flex justify-content-between align-items-center mb-3">
+		<div
+			class="d-block d-sm-flex justify-content-between align-items-center mb-3"
+			:class="expandLoadpointHeader ? 'd-lg-block d-xl-flex' : ''"
+		>
 			<div class="d-flex justify-content-between align-items-center mb-3 text-truncate">
 				<h3 class="me-2 mb-0 text-truncate d-flex">
 					<VehicleIcon
@@ -12,23 +15,29 @@
 						{{ loadpointTitle }}
 					</div>
 				</h3>
-				<LoadpointSettingsButton class="d-block d-sm-none" @click="openSettingsModal" />
+				<LoadpointSettingsButton
+					:class="expandLoadpointHeader ? 'd-lg-block d-xl-none' : ''"
+					class="d-block d-sm-none"
+					@click="openSettingsModal"
+				/>
 			</div>
 			<div class="mb-3 d-flex align-items-center">
 				<Mode class="flex-grow-1" v-bind="modeProps" @updated="setTargetMode" />
 				<LoadpointSettingsButton
 					:id="id"
+					:class="expandLoadpointHeader ? 'd-lg-none d-xl-block' : ''"
 					class="d-none d-sm-block ms-2"
 					@click="openSettingsModal"
 				/>
 			</div>
 		</div>
 		<LoadpointSettingsModal
+			:id="id"
 			v-bind="settingsModal"
 			@maxcurrent-updated="setMaxCurrent"
 			@mincurrent-updated="setMinCurrent"
 			@phasesconfigured-updated="setPhasesConfigured"
-			@batteryboost-updated="setBatteryBoost"
+			@batteryboostlimit-updated="setBatteryBoostLimit"
 		/>
 
 		<div
@@ -87,6 +96,7 @@
 			@change-vehicle="changeVehicle"
 			@remove-vehicle="removeVehicle"
 			@open-loadpoint-settings="openSettingsModal"
+			@batteryboost-updated="setBatteryBoost"
 		/>
 	</div>
 </template>
@@ -118,6 +128,7 @@ import type {
 	Forecast,
 	SMART_COST_TYPE,
 } from "@/types/evcc";
+import type { PlanStrategy } from "@/components/ChargingPlans/types";
 
 export default defineComponent({
 	name: "Loadpoint",
@@ -133,7 +144,7 @@ export default defineComponent({
 	},
 	mixins: [formatter, collector],
 	props: {
-		id: String,
+		id: { type: String, required: true },
 		single: Boolean,
 
 		// main
@@ -146,7 +157,9 @@ export default defineComponent({
 		chargeDuration: { type: Number, default: 0 },
 		charging: Boolean,
 		batteryBoost: Boolean,
+		batteryBoostLimit: { type: Number, default: 100 },
 		batteryConfigured: Boolean,
+		batterySoc: Number,
 
 		// session
 		sessionEnergy: Number,
@@ -177,10 +190,10 @@ export default defineComponent({
 		planProjectedEnd: String as PropType<string | null>,
 		planOverrun: { type: Number, default: 0 },
 		planEnergy: Number,
-		planPrecondition: Number,
 		planTime: String as PropType<string | null>,
 		effectivePlanTime: String as PropType<string | null>,
 		effectivePlanSoc: Number,
+		effectivePlanStrategy: Object as PropType<PlanStrategy>,
 		vehicleProviderLoggedIn: Boolean,
 		vehicleProviderLoginPath: String,
 		vehicleProviderLogoutPath: String,
@@ -221,9 +234,12 @@ export default defineComponent({
 		tariffCo2: Number,
 		currency: String,
 		multipleLoadpoints: Boolean,
+		fullWidth: Boolean,
 		gridConfigured: Boolean,
 		pvConfigured: Boolean,
 		forecast: Object as PropType<Forecast>,
+		lastSmartCostLimit: Number,
+		lastSmartFeedInPriorityLimit: Number,
 	},
 	data() {
 		return {
@@ -235,6 +251,9 @@ export default defineComponent({
 		};
 	},
 	computed: {
+		expandLoadpointHeader() {
+			return this.multipleLoadpoints && !this.fullWidth;
+		},
 		vehicle() {
 			return this.vehicles?.find((v) => v.name === this.vehicleName);
 		},
@@ -293,14 +312,15 @@ export default defineComponent({
 			return this.pvConfigured || this.gridConfigured;
 		},
 		batteryBoostAvailable() {
-			return this.batteryConfigured && this.$hiddenFeatures();
+			return this.batteryConfigured;
 		},
 		batteryBoostActive() {
 			return (
 				this.batteryBoost &&
 				this.charging &&
 				this.mode &&
-				!["off", "now"].includes(this.mode)
+				!["off", "now"].includes(this.mode) &&
+				(this.batterySoc ?? 0) >= this.batteryBoostLimit
 			);
 		},
 		plannerForecast() {
@@ -373,6 +393,9 @@ export default defineComponent({
 		},
 		setBatteryBoost(batteryBoost: boolean) {
 			api.post(this.apiPath("batteryboost") + `/${batteryBoost ? "1" : "0"}`);
+		},
+		setBatteryBoostLimit(limit: number) {
+			api.post(this.apiPath("batteryboostlimit") + "/" + limit);
 		},
 		fmtPower(value: number) {
 			return this.fmtW(value, POWER_UNIT.AUTO);

@@ -34,7 +34,7 @@ func init() {
 }
 
 // NewOctopusFromConfig creates the tariff provider from the given config map, and runs it.
-func NewOctopusFromConfig(other map[string]interface{}) (api.Tariff, error) {
+func NewOctopusFromConfig(other map[string]any) (api.Tariff, error) {
 	t, err := buildOctopusFromConfig(other)
 	if err != nil {
 		return nil, err
@@ -45,7 +45,7 @@ func NewOctopusFromConfig(other map[string]interface{}) (api.Tariff, error) {
 
 // buildOctopusFromConfig creates the Tariff provider from the given config map.
 // Split out to allow for testing.
-func buildOctopusFromConfig(other map[string]interface{}) (*Octopus, error) {
+func buildOctopusFromConfig(other map[string]any) (*Octopus, error) {
 	var cc struct {
 		Region          string
 		Tariff          string // DEPRECATED: use ProductCode
@@ -97,8 +97,9 @@ func buildOctopusFromConfig(other map[string]interface{}) (*Octopus, error) {
 		if cc.Region != "" || cc.Tariff != "" {
 			return nil, errors.New("cannot use apikey at same time as product code")
 		}
-		// We permit the specific special apiKey "test" as sk_live_ keys are considered Stripe secrets by Github
-		if cc.ApiKey != "test" && (len(cc.ApiKey) != 32 || !strings.HasPrefix(cc.ApiKey, "sk_live_")) {
+		// We permit the special "oe_test_" key prefix as sk_live_ keys are considered Stripe secrets by GitHub
+		// Keys are either 32 or 40 characters long
+		if (len(cc.ApiKey) != 32 && len(cc.ApiKey) != 40) || (!strings.HasPrefix(cc.ApiKey, "sk_live_") && !strings.HasPrefix(cc.ApiKey, "oe_test_")) {
 			return nil, errors.New("invalid apikey format")
 		}
 	}

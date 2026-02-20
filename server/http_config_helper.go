@@ -27,7 +27,7 @@ const (
 )
 
 var (
-	customTypes = []string{"custom", "template", "heatpump", "switchsocket", "sgready", "sgready-boost"}
+	customTypes = []string{"custom", "template", "heatpump", "switchsocket", "sgready", "sgready-relay"}
 )
 
 type configReq struct {
@@ -110,8 +110,17 @@ func templateForConfig(class templates.Class, conf map[string]any) (templates.Te
 func filterValidTemplateParams(tmpl *templates.Template, conf map[string]any) map[string]any {
 	res := make(map[string]any)
 
+	// check if template has modbus capability
+	hasModbus := len(tmpl.ModbusChoices()) > 0
+
 	for k, v := range conf {
 		if k == "template" {
+			res[k] = v
+			continue
+		}
+
+		// preserve modbus fields if template supports modbus
+		if hasModbus && slices.Contains(templates.ModbusParams, k) {
 			res[k] = v
 			continue
 		}
@@ -124,7 +133,7 @@ func filterValidTemplateParams(tmpl *templates.Template, conf map[string]any) ma
 	return res
 }
 
-func sanitizeMasked(class templates.Class, conf map[string]any) (map[string]any, error) {
+func sanitizeMasked(class templates.Class, conf map[string]any, hidePrivate bool) (map[string]any, error) {
 	tmpl, err := templateForConfig(class, conf)
 	if err != nil {
 		return nil, err
@@ -133,8 +142,12 @@ func sanitizeMasked(class templates.Class, conf map[string]any) (map[string]any,
 	res := make(map[string]any, len(conf))
 
 	for k, v := range conf {
-		if i, p := tmpl.ParamByName(k); i >= 0 && p.IsMasked() {
-			v = masked
+		if i, p := tmpl.ParamByName(k); i >= 0 {
+			if p.IsMasked() {
+				v = masked
+			} else if hidePrivate && p.IsPrivate() {
+				v = masked
+			}
 		}
 
 		res[k] = v
@@ -326,6 +339,11 @@ func testInstance(instance any) map[string]testResult {
 			key = "heaterTempLimit"
 		}
 		makeResult(key, val, err)
+	}
+
+	if dev, ok := instance.(api.Dimmer); ok {
+		val, err := dev.Dimmed()
+		makeResult("dimmed", val, err)
 	}
 
 	if dev, ok := instance.(api.Identifier); ok {

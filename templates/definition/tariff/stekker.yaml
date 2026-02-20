@@ -51,7 +51,9 @@ params:
         "HR",
       ]
   - preset: tariff-base
+  - preset: tariff-features
 render: |
   type: stekker
   region: {{ .region }}
   {{ include "tariff-base" . }}
+  {{ include "tariff-features" . }}

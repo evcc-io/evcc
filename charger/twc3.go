@@ -55,7 +55,7 @@ type Vitals struct {
 }
 
 // NewTwc3FromConfig creates a new charger
-func NewTwc3FromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewTwc3FromConfig(other map[string]any) (api.Charger, error) {
 	cc := struct {
 		URI   string
 		Cache time.Duration
@@ -104,7 +104,7 @@ func (c *Twc3) Enabled() (bool, error) {
 // Enable implements the api.Charger interface
 func (c *Twc3) Enable(enable bool) error {
 	if c.lp == nil {
-		return errors.New("loadpoint not initialized")
+		return ErrLoadpointNotInitialized
 	}
 
 	// ignore disabling when vehicle is already disconnected
@@ -134,7 +134,7 @@ func (c *Twc3) Enable(enable bool) error {
 // MaxCurrent implements the api.Charger interface
 func (c *Twc3) MaxCurrent(current int64) error {
 	if c.lp == nil {
-		return errors.New("loadpoint not initialized")
+		return ErrLoadpointNotInitialized
 	}
 
 	v, ok := c.lp.GetVehicle().(api.CurrentController)
@@ -163,6 +163,14 @@ var _ api.ChargeRater = (*Twc3)(nil)
 func (v *Twc3) ChargedEnergy() (float64, error) {
 	res, err := v.vitalsG()
 	return res.SessionEnergyWh / 1e3, err
+}
+
+var _ api.ConnectionTimer = (*Twc3)(nil)
+
+// ConnectionDuration implements the api.ConnectionTimer interface
+func (v *Twc3) ConnectionDuration() (time.Duration, error) {
+	res, err := v.vitalsG()
+	return time.Duration(res.SessionS) * time.Second, err
 }
 
 // removed: https://github.com/evcc-io/evcc/issues/13555

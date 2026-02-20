@@ -1,0 +1,63 @@
+template: ntfy
+products:
+  - brand: Ntfy
+params:
+  - name: host
+    required: true
+    example: ntfy.sh
+    default: ntfy.sh
+  - name: topics
+    required: true
+    type: list
+    example: evcc_alert
+    description:
+      de: Themen
+      en: Topics
+    help:
+      de: Ein Eintrag pro Zeile.
+      en: One entry per line.
+  - name: authtoken
+    mask: true
+    example: tk_7eevizlsiwf9yi4uxsrs83r4352o0
+    description:
+      de: Access Token
+      en: Access token
+    help:
+      de: Wird für den sicheren Zugriff auf den privaten ntfy-Server verwendet.
+      en: Used for secure access to the private ntfy server.
+  - name: priority
+    required: true
+    type: choice
+    choice: ["max", "high", "default", "low", "min"]
+    default: default
+    description:
+      de: Priorität
+      en: Priority
+    help:
+      de: >
+        Nachrichten haben eine Prioritätsstufe, die bestimmt, wie dringend dein Telefon dich benachrichtigt.
+        Unter Android kannst du Benachrichtigungstöne und Vibrationsmuster basierend auf diesen Prioritätsstufen anpassen.
+        Weitere Details unter [docs.ntfy.sh](https://docs.ntfy.sh/publish#message-priority).
+      en: >
+        Messages have a priority level that determines how urgently your phone notifies you.
+        On Android, you can customize notification sounds and vibration patterns based on these priority levels.
+        For more details, see [docs.ntfy.sh](https://docs.ntfy.sh/publish#message-priority).
+  - name: tags
+    type: list
+    example: electric_plug
+    description:
+      de: Tags & Emojis
+      en: Tags & emojis
+    help:
+      de: >
+        Nachrichten können mit Emojis oder Zeichenketten markiert werden, die im Titel oder in der Nachricht angezeigt werden.
+        Weitere Details unter [docs.ntfy.sh](https://docs.ntfy.sh/publish#tags-emojis). Ein Eintrag pro Zeile.
+      en: >
+        Messages can be tagged with emojis or strings, which will be shown in the title or message.
+        For more details, see [docs.ntfy.sh](https://docs.ntfy.sh/publish#tags-emojis). One entry per line.
+render: |
+  type: ntfy
+  uri: https://{{ .host }}/{{ .topics | join "," }}
+  priority: {{ .priority }}
+  tags: {{ .tags | join "," }}
+  authtoken: {{ .authtoken }}

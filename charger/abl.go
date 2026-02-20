@@ -79,7 +79,7 @@ func init() {
 // https://www.goingelectric.de/forum/viewtopic.php?p=1550459#p1550459
 
 // NewABLeMHFromConfig creates a ABLeMH charger from generic config
-func NewABLeMHFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewABLeMHFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		modbus.Settings `mapstructure:",squash"`
 		Timeout         time.Duration
@@ -96,7 +96,7 @@ func NewABLeMHFromConfig(ctx context.Context, other map[string]interface{}) (api
 	return NewABLeMH(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.ID, cc.Timeout)
 }
 
-//go:generate go tool decorate -f decorateABLeMH -b *ABLeMH -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)"
+//go:generate go tool decorate -f decorateABLeMH -b *ABLeMH -r api.Charger -t api.Meter,api.PhaseCurrents
 
 // NewABLeMH creates ABLeMH charger
 func NewABLeMH(ctx context.Context, uri, device, comset string, baudrate int, slaveID uint8, timeout time.Duration) (api.Charger, error) {

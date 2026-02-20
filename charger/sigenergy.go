@@ -48,7 +48,7 @@ func init() {
 }
 
 // NewSigenergyFromConfig creates a new Sigenergy ModbusTCP charger
-func NewSigenergyFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewSigenergyFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: 1,
 	}

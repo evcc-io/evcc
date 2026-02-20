@@ -24,7 +24,7 @@ func (d *dumper) Header(name, underline string) {
 	fmt.Println(strings.Repeat(underline, len(name)))
 }
 
-func (d *dumper) DumpWithHeader(name string, device interface{}) {
+func (d *dumper) DumpWithHeader(name string, device any) {
 	if d.len > 1 {
 		d.Header(name, "-")
 	}
@@ -62,7 +62,7 @@ func (d *dumper) measureTime(w *tabwriter.Writer, label string, fn func() (strin
 	}
 }
 
-func (d *dumper) Dump(name string, v interface{}) {
+func (d *dumper) Dump(name string, v any) {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 
 	var isHeating bool
@@ -146,6 +146,18 @@ func (d *dumper) Dump(name string, v interface{}) {
 
 	if v, ok := v.(api.BatteryCapacity); ok {
 		fmt.Fprintf(w, "Capacity:\t%.1fkWh\t\t\n", v.Capacity())
+	}
+
+	if v, ok := v.(api.BatterySocLimiter); ok {
+		min, max := v.GetSocLimits()
+		fmt.Fprintf(w, "Min soc:\t%.0f%%\t\t\n", min)
+		fmt.Fprintf(w, "Max soc:\t%.0f%%\t\t\n", max)
+	}
+
+	if v, ok := v.(api.BatteryPowerLimiter); ok {
+		charge, discharge := v.GetPowerLimits()
+		fmt.Fprintf(w, "Charge power:\t%.0fW\t\t\n", charge)
+		fmt.Fprintf(w, "Discharge power:\t%.0fW\t\t\n", discharge)
 	}
 
 	if v, ok := v.(api.MaxACPowerGetter); ok {
@@ -303,7 +315,7 @@ func (d *dumper) Dump(name string, v interface{}) {
 	w.Flush()
 }
 
-func (d *dumper) DumpDiagnosis(v interface{}) {
+func (d *dumper) DumpDiagnosis(v any) {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
 
 	if v, ok := v.(api.Diagnosis); ok {

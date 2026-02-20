@@ -11,12 +11,9 @@ capabilities: ["battery-control"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
-    allinone: true
   - name: host
   - name: port
     default: 502
-  - name: capacity
-    advanced: true
   - name: maxacpower
   - name: meterid # grid meter VRM instance
     description:
@@ -27,15 +24,7 @@ params:
     help:
       de: "Kann im VRM Portal oder im RemoteUI ausgelesen werden."
       en: "Can be read out in VRM portal or via remoteUI."
-  # battery control
-  - name: minsoc
-    type: int
-    advanced: true
-  - name: maxsoc
-    type: int
-    advanced: true
-  - name: maxchargepower
-  - name: maxdischargepower
+  - preset: battery-params
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -176,9 +165,5 @@ render: |
         type: writesingle
         decode: uint16
       scale: 10
-  capacity: {{ .capacity }} # kWh
-  minsoc: {{ .minsoc }} # %
-  maxsoc: {{ .maxsoc }} # %
-  maxchargepower: {{ .maxchargepower }} # W
-  maxdischargepower: {{ .maxdischargepower }} # W
+  {{- include "battery-params" . }}
   {{- end }}
