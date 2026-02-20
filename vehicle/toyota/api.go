@@ -5,11 +5,11 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/transport"
 	"golang.org/x/oauth2"
 )
 
@@ -28,9 +28,8 @@ const (
 
 type API struct {
 	*request.Helper
-	log       *util.Logger
-	identity  *Identity
-	clientRef string
+	log      *util.Logger
+	identity *Identity
 }
 
 func NewAPI(log *util.Logger, identity *Identity) *API {
@@ -42,16 +41,26 @@ func NewAPI(log *util.Logger, identity *Identity) *API {
 
 	v.Timeout = 120 * time.Second
 
-	// replace client transport with authenticated transport
-	v.Transport = &oauth2.Transport{
-		Source: identity,
-		Base:   v.Transport,
-	}
-
 	// create HMAC digest for x-client-ref header
 	h := hmac.New(sha256.New, []byte(ClientRefKey))
 	h.Write([]byte(v.identity.uuid))
-	v.clientRef = hex.EncodeToString(h.Sum(nil))
+	clientRef := hex.EncodeToString(h.Sum(nil))
+
+	// replace client transport with authenticated transport
+	v.Transport = &transport.Decorator{
+		Decorator: transport.DecorateHeaders(map[string]string{
+			"Accept":       request.JSONContent,
+			"x-guid":       v.identity.uuid,
+			"x-api-key":    ApiKey,
+			"x-client-ref": clientRef,
+			"x-appversion": ClientRefKey,
+			"x-channel":    Channel,
+		}),
+		Base: &oauth2.Transport{
+			Source: identity,
+			Base:   v.Transport,
+		},
+	}
 
 	return v
 }
@@ -59,20 +68,11 @@ func NewAPI(log *util.Logger, identity *Identity) *API {
 func (v *API) Vehicles() ([]string, error) {
 	uri := fmt.Sprintf("%s/%s", ApiBaseUrl, VehicleGuidPath)
 
-	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
-		"Accept":       request.JSONContent,
-		"x-guid":       v.identity.uuid,
-		"x-api-key":    ApiKey,
-		"x-client-ref": v.clientRef,
-		"x-appversion": ClientRefKey,
-		"x-channel":    Channel,
-	})
-	var resp Vehicles
-	if err == nil {
-		err = v.DoJSON(req, &resp)
-	}
+	var res Vehicles
+	err := v.GetJSON(uri, &res)
+
 	var vehicles []string
-	for _, v := range resp.Payload {
+	for _, v := range res.Payload {
 		vehicles = append(vehicles, v.VIN)
 	}
 	return vehicles, err
@@ -81,18 +81,8 @@ func (v *API) Vehicles() ([]string, error) {
 func (v *API) Status(vin string) (Status, error) {
 	uri := fmt.Sprintf("%s/%s", ApiBaseUrl, RemoteElectricStatusPath)
 
-	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
-		"Accept":       request.JSONContent,
-		"x-guid":       v.identity.uuid,
-		"x-api-key":    ApiKey,
-		"x-client-ref": v.clientRef,
-		"x-appversion": ClientRefKey,
-		"x-channel":    Channel,
-		"vin":          vin,
-	})
-	var status Status
-	if err == nil {
-		err = v.DoJSON(req, &status)
-	}
-	return status, err
+	var res Status
+	err := v.GetJSON(uri, &res)
+
+	return res, err
 }
