@@ -12,9 +12,9 @@ import (
 )
 
 type GoodWeDTWifi struct {
-	log  *util.Logger
-	conn *net.UDPConn
-	addr *net.UDPAddr
+	log   *util.Logger
+	conn  *net.UDPConn
+	addr  *net.UDPAddr
 	model string
 }
 
@@ -56,7 +56,7 @@ func NewGoodWeDTWifi(other map[string]interface{}) (api.Meter, error) {
 	return g, nil
 }
 
-// modbusCRC (little-endian, exact match to Marcel's library)
+// modbusCRC16 – exact match to Marcel Blijleven's library
 func modbusCRC(data []byte) []byte {
 	crc := uint16(0xFFFF)
 	for _, b := range data {
@@ -72,14 +72,12 @@ func modbusCRC(data []byte) []byte {
 	return []byte{byte(crc & 0xFF), byte(crc >> 8)}
 }
 
-// sendCommand sends raw Modbus PDU + CRC, returns register data only
+// sendCommand sends raw Modbus RTU PDU + CRC, returns register payload
 func (g *GoodWeDTWifi) sendCommand(pdu []byte) ([]byte, error) {
 	if len(pdu) != 6 {
 		return nil, fmt.Errorf("invalid PDU length")
 	}
 	packet := append(pdu, modbusCRC(pdu)...)
-
-	g.log.DEBUG.Printf("sent: % x", packet)
 
 	_, err := g.conn.Write(packet)
 	if err != nil {
@@ -92,8 +90,6 @@ func (g *GoodWeDTWifi) sendCommand(pdu []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	g.log.DEBUG.Printf("received: % x", buf[:n])
-
 	if n < 6 || buf[0] != 0xaa || buf[1] != 0x55 || buf[2] != 0x7f || buf[3] != 0x03 {
 		return nil, fmt.Errorf("invalid response header")
 	}
@@ -103,10 +99,10 @@ func (g *GoodWeDTWifi) sendCommand(pdu []byte) ([]byte, error) {
 		return nil, fmt.Errorf("short response")
 	}
 
-	return buf[5 : 5+byteCount], nil // pure register data
+	return buf[5 : 5+byteCount], nil
 }
 
-// detectFamily uses the exact model probe from your logs
+// detectFamily
 func (g *GoodWeDTWifi) detectFamily() error {
 	pdu := []byte{0x7f, 0x03, 0x9c, 0xed, 0x00, 0x08}
 	data, err := g.sendCommand(pdu)
@@ -114,22 +110,19 @@ func (g *GoodWeDTWifi) detectFamily() error {
 		return err
 	}
 	if len(data) < 16 {
-		return fmt.Errorf("short model data: %d bytes", len(data))
+		return fmt.Errorf("short model data")
 	}
 
 	model := strings.TrimSpace(string(data[0:16]))
-	g.log.DEBUG.Printf("model string: %s", model)
-
 	if strings.Contains(model, "DNS") || strings.Contains(model, "DT") {
 		g.model = "DT"
 	} else {
 		return fmt.Errorf("unknown model: %s", model)
 	}
-	g.log.DEBUG.Printf("detected model family: %s", g.model)
 	return nil
 }
 
-// CurrentPower (total_inverter_power at offset 54)
+// CurrentPower implements api.Meter
 func (g *GoodWeDTWifi) CurrentPower() (float64, error) {
 	pdu := []byte{0x7f, 0x03, 0x75, 0x94, 0x00, 0x49}
 	data, err := g.sendCommand(pdu)
@@ -139,12 +132,11 @@ func (g *GoodWeDTWifi) CurrentPower() (float64, error) {
 	if len(data) < 146 {
 		return 0, fmt.Errorf("short runtime data")
 	}
-	power := float64(int32(binary.BigEndian.Uint32(data[54:58])))
-	return power, nil
+	// total_inverter_power (register 30127 → offset 54)
+	return float64(int32(binary.BigEndian.Uint32(data[54:58]))), nil
 }
 
-// TotalEnergy (e_total at offset 90, /10 → kWh)
-// TotalEnergy implements api.MeterEnergy  (lifetime total in kWh)
+// TotalEnergy implements api.MeterEnergy (lifetime in kWh)
 func (g *GoodWeDTWifi) TotalEnergy() (float64, error) {
 	pdu := []byte{0x7f, 0x03, 0x75, 0x94, 0x00, 0x49}
 	data, err := g.sendCommand(pdu)
@@ -154,12 +146,6 @@ func (g *GoodWeDTWifi) TotalEnergy() (float64, error) {
 	if len(data) < 146 {
 		return 0, fmt.Errorf("short runtime data")
 	}
-
-	// e_total at register 30145 → offset 90, 4 bytes (Energy4 in Marcel's map)
-	// scaled by 0.1 kWh → divide by 10
-	energyRaw := binary.BigEndian.Uint32(data[90:94])
-	energy := float64(energyRaw) / 10.0
-
-	return energy, nil
+	// e_total (register 30145 → offset 90, 0.1 kWh)
+	return float64(binary.BigEndian.Uint32(data[90:94])) / 10.0, nil
 }
-
