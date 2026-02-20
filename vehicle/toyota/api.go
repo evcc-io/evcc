@@ -23,6 +23,7 @@ const (
 	RemoteElectricStatusPath = "v1/global/remote/electric/status"
 	ApiKey                   = "tTZipv6liF74PwMfk9Ed68AQ0bISswwf3iHQdqcF"
 	ClientRefKey             = "3e0b15f6c9c87fbd"
+	Channel                  = "ONEAPP" // Required x-channel header value for Toyota OneApp API
 )
 
 type API struct {
@@ -55,16 +56,28 @@ func NewAPI(log *util.Logger, identity *Identity) *API {
 	return v
 }
 
-func (v *API) Vehicles() ([]string, error) {
-	uri := fmt.Sprintf("%s/%s", ApiBaseUrl, VehicleGuidPath)
-
-	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
+// prepareHeaders creates the standard headers required for Toyota API requests
+func (v *API) prepareHeaders(vin string) map[string]string {
+	headers := map[string]string{
 		"Accept":       request.JSONContent,
 		"x-guid":       v.identity.uuid,
 		"x-api-key":    ApiKey,
 		"x-client-ref": v.clientRef,
 		"x-appversion": ClientRefKey,
-	})
+		"x-channel":    Channel,
+	}
+
+	if vin != "" {
+		headers["vin"] = vin
+	}
+
+	return headers
+}
+
+func (v *API) Vehicles() ([]string, error) {
+	uri := fmt.Sprintf("%s/%s", ApiBaseUrl, VehicleGuidPath)
+
+	req, err := request.New(http.MethodGet, uri, nil, v.prepareHeaders(""))
 	var resp Vehicles
 	if err == nil {
 		err = v.DoJSON(req, &resp)
@@ -79,14 +92,7 @@ func (v *API) Vehicles() ([]string, error) {
 func (v *API) Status(vin string) (Status, error) {
 	uri := fmt.Sprintf("%s/%s", ApiBaseUrl, RemoteElectricStatusPath)
 
-	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
-		"Accept":       request.JSONContent,
-		"x-guid":       v.identity.uuid,
-		"x-api-key":    ApiKey,
-		"x-client-ref": v.clientRef,
-		"x-appversion": ClientRefKey,
-		"vin":          vin,
-	})
+	req, err := request.New(http.MethodGet, uri, nil, v.prepareHeaders(vin))
 	var status Status
 	if err == nil {
 		err = v.DoJSON(req, &status)
