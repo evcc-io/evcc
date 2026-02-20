@@ -6,6 +6,3 @@ hems:
   limit:
     source: const
     value: true
-
-circuits:
-  - name: main
