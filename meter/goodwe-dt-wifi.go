@@ -46,9 +46,6 @@ func NewGoodWeDTWifi(other map[string]interface{}) (api.Meter, error) {
 		conn: conn,
 	}
 
-	if err := g.detectFamily(); err != nil {
-		return nil, fmt.Errorf("family detection failed: %w", err)
-	}
 	return g, nil
 }
 
@@ -126,6 +123,12 @@ func (g *GoodWeDTWifi) detectFamily() error {
 
 // CurrentPower implements api.Meter
 func (g *GoodWeDTWifi) CurrentPower() (float64, error) {
+	if g.model == "" {
+		if err := g.detectFamily(); err != nil {
+			return 0, err
+		}
+	}
+
 	pdu := []byte{0x7f, 0x03, 0x75, 0x94, 0x00, 0x49}
 	data, err := g.sendCommand(pdu)
 	if err != nil {
@@ -142,6 +145,12 @@ func (g *GoodWeDTWifi) CurrentPower() (float64, error) {
 
 // TotalEnergy implements api.MeterEnergy (lifetime in kWh)
 func (g *GoodWeDTWifi) TotalEnergy() (float64, error) {
+	if g.model == "" {
+		if err := g.detectFamily(); err != nil {
+			return 0, err
+		}
+	}
+
 	pdu := []byte{0x7f, 0x03, 0x75, 0x94, 0x00, 0x49}
 	data, err := g.sendCommand(pdu)
 	if err != nil {
