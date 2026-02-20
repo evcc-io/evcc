@@ -252,7 +252,6 @@ var _ api.ConnectionTimer = (*PhoenixEVEth)(nil)
 
 // ConnectionDuration implements the api.ConnectionTimer interface
 func (wb *PhoenixEVEth) ConnectionDuration() (time.Duration, error) {
-
 	// The following chargetime counter gets valid until first energy is charged,
 	// until that it could hold the charge time of the previous session.
 	eb, err := wb.conn.ReadInputRegisters(phxRegChargedEnergy, 2)
