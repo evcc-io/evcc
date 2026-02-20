@@ -1,11 +1,11 @@
 package messenger
 
 import (
-	"github.com/containrrr/shoutrrr"
-	"github.com/containrrr/shoutrrr/pkg/router"
-	"github.com/containrrr/shoutrrr/pkg/types"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/nicholas-fedor/shoutrrr"
+	"github.com/nicholas-fedor/shoutrrr/pkg/router"
+	"github.com/nicholas-fedor/shoutrrr/pkg/types"
 )
 
 func init() {
