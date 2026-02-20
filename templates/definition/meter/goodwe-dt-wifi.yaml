@@ -14,5 +14,3 @@ params:
 render: |
   type: goodwe-dt-wifi
   uri: {{ .uri }}
-
-
