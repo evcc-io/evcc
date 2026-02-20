@@ -22,9 +22,9 @@ const (
 	AuthorizationPath        = "oauth2/realms/root/realms/tme/authorize?client_id=oneapp&scope=openid+profile+write&response_type=code&redirect_uri=com.toyota.oneapp:/oauth2Callback&code_challenge=plain&code_challenge_method=plain"
 	VehicleGuidPath          = "v2/vehicle/guid"
 	RemoteElectricStatusPath = "v1/global/remote/electric/status"
-	ApiKey                   = "tTZipv6liF74PwMfk9Ed68AQ0bISswwf3iHQdqcF"
-	ClientRefKey             = "3e0b15f6c9c87fbd"
-	Channel                  = "ONEAPP" // Required x-channel header value for Toyota OneApp API
+	apiKey                   = "tTZipv6liF74PwMfk9Ed68AQ0bISswwf3iHQdqcF"
+	clientRefKey             = "3e0b15f6c9c87fbd"
+	channel                  = "ONEAPP" // Required x-channel header value for Toyota OneApp API
 )
 
 type API struct {
@@ -43,7 +43,7 @@ func NewAPI(log *util.Logger, identity *Identity) *API {
 	v.Timeout = 120 * time.Second
 
 	// create HMAC digest for x-client-ref header
-	h := hmac.New(sha256.New, []byte(ClientRefKey))
+	h := hmac.New(sha256.New, []byte(clientRefKey))
 	h.Write([]byte(v.identity.uuid))
 	clientRef := hex.EncodeToString(h.Sum(nil))
 
@@ -52,10 +52,10 @@ func NewAPI(log *util.Logger, identity *Identity) *API {
 		Decorator: transport.DecorateHeaders(map[string]string{
 			"Accept":       request.JSONContent,
 			"x-guid":       v.identity.uuid,
-			"x-api-key":    ApiKey,
+			"x-api-key":    apiKey,
 			"x-client-ref": clientRef,
-			"x-appversion": ClientRefKey,
-			"x-channel":    Channel,
+			"x-appversion": clientRefKey,
+			"x-channel":    channel,
 		}),
 		Base: &oauth2.Transport{
 			Source: identity,
@@ -83,7 +83,7 @@ func (v *API) Status(vin string) (Status, error) {
 	uri := fmt.Sprintf("%s/%s", ApiBaseUrl, RemoteElectricStatusPath)
 
 	req, _ := request.New(http.MethodGet, uri, nil, map[string]string{
-		"vin":    vin,
+		"vin": vin,
 	})
 
 	var res Status
