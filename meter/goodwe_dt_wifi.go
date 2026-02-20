@@ -41,7 +41,6 @@ func NewGoodWeDTWifi(other map[string]interface{}) (api.Meter, error) {
 	if err != nil {
 		return nil, err
 	}
-	conn.SetReadDeadline(time.Now().Add(5 * time.Second))
 
 	g := &GoodWeDTWifi{
 		log:  log,
@@ -72,7 +71,7 @@ func modbusCRC(data []byte) []byte {
 	return []byte{byte(crc & 0xFF), byte(crc >> 8)}
 }
 
-// sendCommand sends raw Modbus RTU PDU + CRC, returns register payload
+// sendCommand sends raw Modbus RTU PDU + CRC and returns register payload
 func (g *GoodWeDTWifi) sendCommand(pdu []byte) ([]byte, error) {
 	if len(pdu) != 6 {
 		return nil, fmt.Errorf("invalid PDU length")
@@ -82,6 +81,12 @@ func (g *GoodWeDTWifi) sendCommand(pdu []byte) ([]byte, error) {
 	_, err := g.conn.Write(packet)
 	if err != nil {
 		return nil, err
+	}
+
+	// IMPORTANT: Set a fresh deadline before EVERY read
+	// (UDP deadlines are absolute and are cleared after each operation)
+	if err := g.conn.SetReadDeadline(time.Now().Add(4 * time.Second)); err != nil {
+		return nil, fmt.Errorf("set read deadline: %w", err)
 	}
 
 	buf := make([]byte, 512)

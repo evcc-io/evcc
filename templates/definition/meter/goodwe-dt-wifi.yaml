@@ -3,7 +3,6 @@ products:
   - brand: GoodWe
     description:
       generic: GoodWe over WiFi (DT/DNS series with proprietary protocol)
-capabilities: ["battery-control"] # stub for future if needed
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
