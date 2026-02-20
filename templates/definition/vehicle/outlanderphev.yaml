@@ -19,7 +19,7 @@ render: |
     source: mqtt
     topic: phev/battery/level
     timeout: {{ .timeout }}
-    jq: ((. - 6) * 100 / 88)
+    jq: ((. - 6) * 100 / 88 | if . < 0 then 0 elif . > 100 then 100 else . end)
   status:
     source: combined
     plugged:
