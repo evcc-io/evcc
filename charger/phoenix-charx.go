@@ -38,9 +38,10 @@ const (
 
 // PhoenixCharx is an api.Charger implementation for Phoenix CHARX controller
 type PhoenixCharx struct {
-	conn      *modbus.Connection
-	connector uint16
-	current   uint16
+	conn             *modbus.Connection
+	connector        uint16
+	current          uint16
+	lastConnDuration time.Duration // last known connection duration for disconnect detection
 }
 
 func init() {
@@ -203,16 +204,22 @@ func (wb *PhoenixCharx) ChargeDuration() (time.Duration, error) {
 	return time.Duration(encoding.Uint32(b)) * time.Second, nil
 }
 
-var _ api.ConnectionTimer = (*PhoenixCharx)(nil)
+var _ api.DisconnectDetector = (*PhoenixCharx)(nil)
 
-// ConnectionDuration implements the api.ConnectionTimer interface
-func (wb *PhoenixCharx) ConnectionDuration() (time.Duration, error) {
+// DisconnectDetected implements the api.DisconnectDetector interface.
+// It reads the hardware connection duration, compares it to the last known value,
+// and returns true when a drop is detected (intermediate disconnect without StatusA).
+func (wb *PhoenixCharx) DisconnectDetected() (bool, error) {
 	b, err := wb.conn.ReadHoldingRegisters(wb.register(charxRegConnectionTime), 2)
 	if err != nil {
-		return 0, err
+		return false, err
 	}
 
-	return time.Duration(encoding.Uint32(b)) * time.Second, nil
+	d := time.Duration(encoding.Uint32(b)) * time.Second
+	last := wb.lastConnDuration
+	wb.lastConnDuration = d
+
+	return d < last, nil
 }
 
 // currentPower implements the api.Meter interface

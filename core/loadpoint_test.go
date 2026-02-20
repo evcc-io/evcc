@@ -765,15 +765,15 @@ func TestPVHysteresisAfterPhaseSwitch(t *testing.T) {
 	}
 }
 
-func TestConnectionDurationDropDetection(t *testing.T) {
+func TestDisconnectDetected(t *testing.T) {
 	clock := clock.NewMock()
 	ctrl := gomock.NewController(t)
 	ch := api.NewMockCharger(ctrl)
-	ct := api.NewMockConnectionTimer(ctrl)
+	ct := api.NewMockDisconnectDetector(ctrl)
 
 	charger := struct {
 		api.Charger
-		api.ConnectionTimer
+		api.DisconnectDetector
 	}{
 		ch, ct,
 	}
@@ -801,10 +801,9 @@ func TestConnectionDurationDropDetection(t *testing.T) {
 
 	lp.enabled = true
 	lp.status = api.StatusC
-	lp.connectedDuration = 10 * time.Minute
 	lp.connectedTime = connectedTime
 
-	ct.EXPECT().ConnectionDuration().Return(0*time.Second, nil)
+	ct.EXPECT().DisconnectDetected().Return(true, nil)
 	lp.Update(500, 0, nil, nil, false, false, 0, nil, nil)
 	ctrl.Finish()
 

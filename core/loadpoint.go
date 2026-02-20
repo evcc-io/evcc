@@ -167,7 +167,6 @@ type Loadpoint struct {
 	// charge progress
 	vehicleSoc              float64       // Vehicle or charger soc
 	chargeDuration          time.Duration // Charge duration
-	connectedDuration       time.Duration // Connection duration
 	energyMetrics           EnergyMetrics // Stats for charged energy by session
 	chargeRemainingDuration time.Duration // Remaining charge duration
 	chargeRemainingEnergy   float64       // Remaining charge energy in kWh
@@ -1139,19 +1138,17 @@ func (lp *Loadpoint) getStatusChanges() ([]api.ChargeStatus, error) {
 		res = []api.ChargeStatus{status}
 	}
 
-	// check charger connection duration
-	if ct, ok := lp.charger.(api.ConnectionTimer); ok {
-		d, err := ct.ConnectionDuration()
-		if err != nil {
-			return nil, fmt.Errorf("connection duration: %w", err)
-		}
-
-		defer func() { lp.connectedDuration = d }()
-
-		// connection duration dropped without disconnect status, indicates intermediate disconnect
-		if status != api.StatusA && prevStatus != api.StatusA && d < lp.connectedDuration {
-			lp.log.DEBUG.Printf("connection duration drop detected (%s -> %v)", lp.connectedDuration.Round(time.Second), d.Round(time.Second))
-			res = []api.ChargeStatus{api.StatusA, status}
+	// check for intermediate disconnect (duration drop without StatusA)
+	if ct, ok := lp.charger.(api.DisconnectDetector); ok {
+		if status != api.StatusA && prevStatus != api.StatusA {
+			disconnected, err := ct.DisconnectDetected()
+			if err != nil {
+				return nil, fmt.Errorf("disconnect detection: %w", err)
+			}
+			if disconnected {
+				lp.log.DEBUG.Printf("intermediate disconnect detected")
+				res = []api.ChargeStatus{api.StatusA, status}
+			}
 		}
 	}
 
