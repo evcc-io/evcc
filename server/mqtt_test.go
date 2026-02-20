@@ -97,6 +97,13 @@ func (suite *mqttSuite) TestSlice() {
 	suite.Equal([]string{"2", "10", "20"}, suite.payloads, "payloads")
 }
 
+func (suite *mqttSuite) TestNilInterface() {
+	var ptr *time.Time
+	suite.publish("test", false, ptr)
+	suite.Equal([]string{"test"}, suite.topics, "topics")
+	suite.Equal([]string{""}, suite.payloads, "payloads")
+}
+
 func (suite *mqttSuite) TestMeasurement() {
 	topics := lo.Map([]string{
 		"title", "icon", "power", "energy", "powers", "currents", "excessDCPower", "capacity", "soc", "controllable", "forecast",
