@@ -19,9 +19,10 @@ type CP struct {
 
 	id string
 
-	connected bool
-	connectC  chan struct{}
-	meterC    chan struct{}
+	connected         bool
+	connectC          chan struct{}
+	meterC            chan struct{}
+	bootNotificationC chan struct{}
 
 	// configuration properties
 	PhaseSwitching          bool
@@ -32,9 +33,8 @@ type CP struct {
 	NumberOfConnectors      int
 	IdTag                   string
 
-	meterValuesSample        string
-	bootNotificationRequestC chan *core.BootNotificationRequest
-	BootNotificationResult   *core.BootNotificationRequest
+	meterValuesSample      string
+	BootNotificationResult *core.BootNotificationRequest
 
 	connectors map[int]*Connector
 }
@@ -46,9 +46,9 @@ func NewChargePoint(log *util.Logger, id string) *CP {
 
 		connectors: make(map[int]*Connector),
 
-		connectC:                 make(chan struct{}, 1),
-		meterC:                   make(chan struct{}, 1),
-		bootNotificationRequestC: make(chan *core.BootNotificationRequest, 1),
+		connectC:          make(chan struct{}, 1),
+		meterC:            make(chan struct{}, 1),
+		bootNotificationC: make(chan struct{}),
 
 		ChargingRateUnit:        "A",
 		HasRemoteTriggerFeature: true, // assume remote trigger feature is available
@@ -134,4 +134,8 @@ func (cp *CP) Connected() bool {
 
 func (cp *CP) HasConnected() <-chan struct{} {
 	return cp.connectC
+}
+
+func (cp *CP) HasBootNotification() <-chan struct{} {
+	return cp.bootNotificationC
 }
