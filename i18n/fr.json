@@ -128,12 +128,14 @@
       "dimmed": "Atténué",
       "enabled": "Activé",
       "energy": "Énergie",
+      "events": "Evénements",
       "feedinPrice": "Prix de vente",
       "gridPrice": "Prix du réseau",
       "heaterTempLimit": "Limite du chauffage",
       "hemsActiveLimit": "Limite active",
       "hemsType": "Communication",
       "identifier": "Identifiant RFID",
+      "messengers": "Services",
       "no": "non",
       "odometer": "Compteur kilométrique",
       "org": "Organisation",
@@ -214,6 +216,7 @@
       "cancel": "Annuler",
       "clear": "Effacer",
       "close": "Fermer",
+      "confirmSave": "Il y a des modifications. Enregistrer maintenant ?",
       "copied": "Copié !",
       "copy": "Copier",
       "customHelp": "Créer un appareil personnalisé en utilisant le système de greffons d’evcc.",
@@ -229,6 +232,7 @@
       "fromYamlHint": "Remarque : configuré via evcc.yaml. Supprimez l'entrée du fichier pour pouvoir effectuer des modifications.",
       "hideAdvancedSettings": "Masquer les paramètres avancés",
       "invalidFileSelected": "Fichier sélectionné non valide",
+      "legacy": "historique",
       "noFileSelected": "Aucun fichier sélectionné.",
       "off": "désactivé",
       "on": "activé",
@@ -410,8 +414,65 @@
       "welcomeBannerTitle": "Configurons votre système !"
     },
     "messaging": {
-      "description": "Recevoir des messages à propos de vos sessions de charge.",
+      "addMessenger": "Ajouter un service",
+      "description": "Recevoir des notifications à propos de vos sessions de charge.",
+      "event": {
+        "asleep": {
+          "messageDefault": "Charge arrêtée, le véhicule {vehicleName} ne charge plus.",
+          "title": "En attente du véhicule",
+          "titleDefault": "Véhicule en veille"
+        },
+        "connect": {
+          "messageDefault": "Véhicule connecté à {pvPower}kW PV",
+          "title": "Quand un véhicule se connecte",
+          "titleDefault": "Véhicule connecté"
+        },
+        "disconnect": {
+          "messageDefault": "Véhicule déconnecté après {connectedDuration}",
+          "title": "Un véhicule se déconnecte",
+          "titleDefault": "Véhicule déconnecté"
+        },
+        "guest": {
+          "messageDefault": "Véhicule inconnu, invité connecté ?",
+          "title": "Un véhicule inconnu se connecte",
+          "titleDefault": "Véhicule inconnu"
+        },
+        "planoverrun": {
+          "messageDefault": "{vehicleTitle} : Le plan va être dépassé.",
+          "title": "Lorsque le plan de charge va être dépassé",
+          "titleDefault": "Plan dépassé"
+        },
+        "soc": {
+          "messageDefault": "Batterie chargée à {vehicleSoc}%",
+          "title": "Mise à jour du niveau de charge",
+          "titleDefault": "Niveau de charge mis à jour"
+        },
+        "start": {
+          "messageDefault": "Charge démarrée en mode {mode}.",
+          "title": "Démarrage de la charge",
+          "titleDefault": "Charge démarrée"
+        },
+        "stop": {
+          "messageDefault": "Charge de {chargedEnergy}kWh terminée en {chargeDuration}.",
+          "title": "Fin de la charge",
+          "titleDefault": "Charge terminée"
+        }
+      },
+      "eventMessage": "Message",
+      "eventTitle": "Titre",
+      "events": "Evénements",
+      "legacyWarning": "Un nouveau mode de configuration des notifications est disponible ! Supprimez la configuration ci-dessous et enregistrez pour utiliser le nouveau mode de configuration par assistant.",
+      "messengers": "Services",
+      "seePlaceholders": "voir les champs de saisie",
       "title": "Notifications"
+    },
+    "messenger": {
+      "custom": "Service défini par l'utilisateur",
+      "generic": "Service générique",
+      "primary": "Service spécifique",
+      "template": "Service",
+      "titleAdd": "Ajouter un service",
+      "titleEdit": "Modifier le service"
     },
     "meter": {
       "cancel": "Annuler",
@@ -651,7 +712,7 @@
     "validation": {
       "failed": "échec",
       "label": "Statut",
-      "running": "En cours de validation…",
+      "running": "en cours de validation…",
       "success": "réussi",
       "unknown": "inconnu",
       "validate": "valider"
@@ -941,10 +1002,13 @@
       "battery": "Batterie",
       "batteryCharge": "Batterie en charge",
       "batteryDischarge": "Décharge de la batterie",
-      "batteryGridChargeActive": "charge réseau active",
-      "batteryGridChargeLimit": "charge réseau quand",
+      "batteryForecastEmpty": "vide dans {timeago}",
+      "batteryForecastFull": "plein dans {timeago}",
+      "batteryGridChargeActive": "Charge réseau : active",
+      "batteryGridChargeLimit": "Charge réseau : quand",
       "batteryHold": "Batterie (verrouillée)",
       "batteryTooltip": "{energy} sur {total} ({soc})",
+      "forecast": "Prévisions : ",
       "forecastTooltip": "prévision : production solaire restante aujourd’hui",
       "gridImport": "Utilisation du réseau",
       "homePower": "Consommation",
@@ -971,6 +1035,7 @@
       "charged": "Chargé",
       "co2": "CO₂ ⌀",
       "duration": "Durée",
+      "emission": "Emission",
       "fallbackName": "Point de chargement",
       "finished": "Heure de fin",
       "power": "Puissance",
@@ -983,9 +1048,14 @@
     "loadpointSettings": {
       "batteryBoost": {
         "description": "Chargement rapide à partir de la batterie domestique jusqu'à ce qu'elle soit déchargée à {limit}.",
+        "descriptionDisabled": "Sélectionnez une limite pour autoriser la charge rapide depuis la batterie résidentielle.",
+        "disabled": "Désactivé",
         "label": "Boost Batterie",
         "mode": "Uniquement disponible en mode solaire et min+solaire ».",
-        "once": "Boost actif pour cette session de charge."
+        "once": "Boost actif pour cette session de charge.",
+        "stateActive": "Boost batterie activé",
+        "stateBelowLimit": "Niveau de batterie trop bas pour le boost",
+        "stateReady": "Boost de batterie prêt"
       },
       "batteryUsage": "Batterie domestique",
       "currents": "Courant de charge",
@@ -1091,6 +1161,9 @@
     "vehicleStatus": {
       "awaitingAuthorization": "En attente d’autorisation.",
       "batteryBoost": "Boost Batterie actif.",
+      "batteryBoostBelowLimit": "Niveau de batterie trop bas pour boost.",
+      "batteryBoostDisabled": "Boost batterie désactivé.",
+      "batteryBoostEnabled": "Boost batterie jusqu'à {limit}.",
       "charging": "En charge…",
       "cheapEnergyCharging": "Énergie bon marché disponible.",
       "cheapEnergyNextStart": "Énergie bon marché dans {duration}.",
