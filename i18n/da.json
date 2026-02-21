@@ -128,12 +128,14 @@
       "dimmed": "Reduceret",
       "enabled": "Aktiveret",
       "energy": "Energi",
+      "events": "Begivenheder",
       "feedinPrice": "Indfødningstarif",
       "gridPrice": "God pris",
       "heaterTempLimit": "Opvarmning begrænsning",
       "hemsActiveLimit": "Aktiv begrænsning",
       "hemsType": "Kommunikation",
       "identifier": "RFID-identifikator",
+      "messengers": "Tjenester",
       "no": "nej",
       "odometer": "Kilometertæller",
       "org": "Organisation",
@@ -214,6 +216,7 @@
       "cancel": "Afbryd",
       "clear": "Slet",
       "close": "Luk",
+      "confirmSave": "Ændringer er ikke gemt. Skal de gemmes nu?",
       "copied": "Kopieret!",
       "copy": "Kopier",
       "customHelp": "Opret en brugerdefineret enhed ved hjælp af evcc's plugin-system.",
@@ -229,6 +232,7 @@
       "fromYamlHint": "Bemærk: Er konfigureret via evcc.yaml. Fjern indtastningen fra filen for at aktivere redigering her.",
       "hideAdvancedSettings": "Skjul avancerede indstillinger",
       "invalidFileSelected": "Ugyldig fil er valgt",
+      "legacy": "ældre",
       "noFileSelected": "Ingen fil valgt.",
       "off": "slukket",
       "on": "tændt",
@@ -410,7 +414,30 @@
       "welcomeBannerTitle": "Lad os konfigurere dit system!"
     },
     "messaging": {
+      "addMessenger": "Tilføj tjeneste",
       "description": "Modtag beskeder om dine opladningssessioner.",
+      "event": {
+        "asleep": {
+          "messageDefault": "Ladefrigivelse: Køretøjet {vehicleName} lader ikke.",
+          "title": "Når der ventes på køretøj",
+          "titleDefault": "Køretøjet sover"
+        },
+        "connect": {
+          "messageDefault": "Bil forbundet med {pvPower}kW PV",
+          "title": "Når bilen forbindes",
+          "titleDefault": "Bil er forbundet"
+        },
+        "disconnect": {
+          "messageDefault": "Bilen er frakoblet efter {connectedDuration}",
+          "title": "Når bilen frakobles",
+          "titleDefault": "Bilen er frakoblet"
+        },
+        "guest": {
+          "messageDefault": "Ukendt køretøj, er et gæstekøretøj forbundet?",
+          "title": "Når en ukendt bil forbindes",
+          "titleDefault": "Ukendt køretøj"
+        }
+      },
       "title": "Beskeder"
     },
     "meter": {
