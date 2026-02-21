@@ -6,12 +6,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decoratePhoenixEVEth(base *PhoenixEVEth, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error), chargerEx func(float64) error, identifier func() (string, error)) api.Charger {
+func decoratePhoenixEVEth(base *PhoenixEVEth, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error), chargerEx func(float64) error, identifier func() (string, error), chargeRater func() (float64, error)) api.Charger {
 	switch {
-	case chargerEx == nil && identifier == nil && meter == nil:
+	case chargeRater == nil && chargerEx == nil && identifier == nil && meter == nil:
 		return base
 
-	case chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
+	case chargeRater == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
 		return &struct {
 			*PhoenixEVEth
 			api.Meter
@@ -22,7 +22,7 @@ func decoratePhoenixEVEth(base *PhoenixEVEth, meter func() (float64, error), met
 			},
 		}
 
-	case chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
+	case chargeRater == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
 		return &struct {
 			*PhoenixEVEth
 			api.Meter
@@ -37,7 +37,7 @@ func decoratePhoenixEVEth(base *PhoenixEVEth, meter func() (float64, error), met
 			},
 		}
 
-	case chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages == nil:
+	case chargeRater == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages == nil:
 		return &struct {
 			*PhoenixEVEth
 			api.Meter
@@ -52,7 +52,7 @@ func decoratePhoenixEVEth(base *PhoenixEVEth, meter func() (float64, error), met
 			},
 		}
 
-	case chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages == nil:
+	case chargeRater == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages == nil:
 		return &struct {
 			*PhoenixEVEth
 			api.Meter
@@ -71,7 +71,7 @@ func decoratePhoenixEVEth(base *PhoenixEVEth, meter func() (float64, error), met
 			},
 		}
 
-	case chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
+	case chargeRater == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
 		return &struct {
 			*PhoenixEVEth
 			api.Meter
@@ -86,7 +86,7 @@ func decoratePhoenixEVEth(base *PhoenixEVEth, meter func() (float64, error), met
 			},
 		}
 
-	case chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
+	case chargeRater == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
 		return &struct {
 			*PhoenixEVEth
 			api.Meter
@@ -105,7 +105,7 @@ func decoratePhoenixEVEth(base *PhoenixEVEth, meter func() (float64, error), met
 			},
 		}
 
-	case chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages != nil:
+	case chargeRater == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages != nil:
 		return &struct {
 			*PhoenixEVEth
 			api.Meter
@@ -124,7 +124,7 @@ func decoratePhoenixEVEth(base *PhoenixEVEth, meter func() (float64, error), met
 			},
 		}
 
-	case chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages != nil:
+	case chargeRater == nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages != nil:
 		return &struct {
 			*PhoenixEVEth
 			api.Meter
@@ -147,7 +147,7 @@ func decoratePhoenixEVEth(base *PhoenixEVEth, meter func() (float64, error), met
 			},
 		}
 
-	case chargerEx != nil && identifier == nil && meter == nil:
+	case chargeRater == nil && chargerEx != nil && identifier == nil && meter == nil:
 		return &struct {
 			*PhoenixEVEth
 			api.ChargerEx
@@ -158,7 +158,7 @@ func decoratePhoenixEVEth(base *PhoenixEVEth, meter func() (float64, error), met
 			},
 		}
 
-	case chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
+	case chargeRater == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
 		return &struct {
 			*PhoenixEVEth
 			api.ChargerEx
@@ -173,7 +173,7 @@ func decoratePhoenixEVEth(base *PhoenixEVEth, meter func() (float64, error), met
 			},
 		}
 
-	case chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
+	case chargeRater == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
 		return &struct {
 			*PhoenixEVEth
 			api.ChargerEx
@@ -192,7 +192,7 @@ func decoratePhoenixEVEth(base *PhoenixEVEth, meter func() (float64, error), met
 			},
 		}
 
-	case chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages == nil:
+	case chargeRater == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages == nil:
 		return &struct {
 			*PhoenixEVEth
 			api.ChargerEx
@@ -211,102 +211,13 @@ func decoratePhoenixEVEth(base *PhoenixEVEth, meter func() (float64, error), met
 			},
 		}
 
-	case chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages == nil:
+	case chargeRater == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages == nil:
 		return &struct {
 			*PhoenixEVEth
 			api.ChargerEx
 			api.Meter
 			api.MeterEnergy
 			api.PhaseCurrents
-		}{
-			PhoenixEVEth: base,
-			ChargerEx: &decoratePhoenixEVEthChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Meter: &decoratePhoenixEVEthMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decoratePhoenixEVEthMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decoratePhoenixEVEthPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-		}
-
-	case chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
-		return &struct {
-			*PhoenixEVEth
-			api.ChargerEx
-			api.Meter
-			api.PhaseVoltages
-		}{
-			PhoenixEVEth: base,
-			ChargerEx: &decoratePhoenixEVEthChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Meter: &decoratePhoenixEVEthMeterImpl{
-				meter: meter,
-			},
-			PhaseVoltages: &decoratePhoenixEVEthPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
-		return &struct {
-			*PhoenixEVEth
-			api.ChargerEx
-			api.Meter
-			api.MeterEnergy
-			api.PhaseVoltages
-		}{
-			PhoenixEVEth: base,
-			ChargerEx: &decoratePhoenixEVEthChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Meter: &decoratePhoenixEVEthMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decoratePhoenixEVEthMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseVoltages: &decoratePhoenixEVEthPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages != nil:
-		return &struct {
-			*PhoenixEVEth
-			api.ChargerEx
-			api.Meter
-			api.PhaseCurrents
-			api.PhaseVoltages
-		}{
-			PhoenixEVEth: base,
-			ChargerEx: &decoratePhoenixEVEthChargerExImpl{
-				chargerEx: chargerEx,
-			},
-			Meter: &decoratePhoenixEVEthMeterImpl{
-				meter: meter,
-			},
-			PhaseCurrents: &decoratePhoenixEVEthPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-			PhaseVoltages: &decoratePhoenixEVEthPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
-		}
-
-	case chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages != nil:
-		return &struct {
-			*PhoenixEVEth
-			api.ChargerEx
-			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
-			api.PhaseVoltages
 		}{
 			PhoenixEVEth: base,
 			ChargerEx: &decoratePhoenixEVEthChargerExImpl{
@@ -321,108 +232,18 @@ func decoratePhoenixEVEth(base *PhoenixEVEth, meter func() (float64, error), met
 			PhaseCurrents: &decoratePhoenixEVEthPhaseCurrentsImpl{
 				phaseCurrents: phaseCurrents,
 			},
-			PhaseVoltages: &decoratePhoenixEVEthPhaseVoltagesImpl{
-				phaseVoltages: phaseVoltages,
-			},
 		}
 
-	case chargerEx == nil && identifier != nil && meter == nil:
+	case chargeRater == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
 		return &struct {
 			*PhoenixEVEth
-			api.Identifier
-		}{
-			PhoenixEVEth: base,
-			Identifier: &decoratePhoenixEVEthIdentifierImpl{
-				identifier: identifier,
-			},
-		}
-
-	case chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
-		return &struct {
-			*PhoenixEVEth
-			api.Identifier
-			api.Meter
-		}{
-			PhoenixEVEth: base,
-			Identifier: &decoratePhoenixEVEthIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decoratePhoenixEVEthMeterImpl{
-				meter: meter,
-			},
-		}
-
-	case chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
-		return &struct {
-			*PhoenixEVEth
-			api.Identifier
-			api.Meter
-			api.MeterEnergy
-		}{
-			PhoenixEVEth: base,
-			Identifier: &decoratePhoenixEVEthIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decoratePhoenixEVEthMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decoratePhoenixEVEthMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-		}
-
-	case chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages == nil:
-		return &struct {
-			*PhoenixEVEth
-			api.Identifier
-			api.Meter
-			api.PhaseCurrents
-		}{
-			PhoenixEVEth: base,
-			Identifier: &decoratePhoenixEVEthIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decoratePhoenixEVEthMeterImpl{
-				meter: meter,
-			},
-			PhaseCurrents: &decoratePhoenixEVEthPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-		}
-
-	case chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages == nil:
-		return &struct {
-			*PhoenixEVEth
-			api.Identifier
-			api.Meter
-			api.MeterEnergy
-			api.PhaseCurrents
-		}{
-			PhoenixEVEth: base,
-			Identifier: &decoratePhoenixEVEthIdentifierImpl{
-				identifier: identifier,
-			},
-			Meter: &decoratePhoenixEVEthMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decoratePhoenixEVEthMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-			PhaseCurrents: &decoratePhoenixEVEthPhaseCurrentsImpl{
-				phaseCurrents: phaseCurrents,
-			},
-		}
-
-	case chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
-		return &struct {
-			*PhoenixEVEth
-			api.Identifier
+			api.ChargerEx
 			api.Meter
 			api.PhaseVoltages
 		}{
 			PhoenixEVEth: base,
-			Identifier: &decoratePhoenixEVEthIdentifierImpl{
-				identifier: identifier,
+			ChargerEx: &decoratePhoenixEVEthChargerExImpl{
+				chargerEx: chargerEx,
 			},
 			Meter: &decoratePhoenixEVEthMeterImpl{
 				meter: meter,
@@ -432,17 +253,17 @@ func decoratePhoenixEVEth(base *PhoenixEVEth, meter func() (float64, error), met
 			},
 		}
 
-	case chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
+	case chargeRater == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
 		return &struct {
 			*PhoenixEVEth
-			api.Identifier
+			api.ChargerEx
 			api.Meter
 			api.MeterEnergy
 			api.PhaseVoltages
 		}{
 			PhoenixEVEth: base,
-			Identifier: &decoratePhoenixEVEthIdentifierImpl{
-				identifier: identifier,
+			ChargerEx: &decoratePhoenixEVEthChargerExImpl{
+				chargerEx: chargerEx,
 			},
 			Meter: &decoratePhoenixEVEthMeterImpl{
 				meter: meter,
@@ -455,17 +276,17 @@ func decoratePhoenixEVEth(base *PhoenixEVEth, meter func() (float64, error), met
 			},
 		}
 
-	case chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages != nil:
+	case chargeRater == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages != nil:
 		return &struct {
 			*PhoenixEVEth
-			api.Identifier
+			api.ChargerEx
 			api.Meter
 			api.PhaseCurrents
 			api.PhaseVoltages
 		}{
 			PhoenixEVEth: base,
-			Identifier: &decoratePhoenixEVEthIdentifierImpl{
-				identifier: identifier,
+			ChargerEx: &decoratePhoenixEVEthChargerExImpl{
+				chargerEx: chargerEx,
 			},
 			Meter: &decoratePhoenixEVEthMeterImpl{
 				meter: meter,
@@ -478,18 +299,18 @@ func decoratePhoenixEVEth(base *PhoenixEVEth, meter func() (float64, error), met
 			},
 		}
 
-	case chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages != nil:
+	case chargeRater == nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages != nil:
 		return &struct {
 			*PhoenixEVEth
-			api.Identifier
+			api.ChargerEx
 			api.Meter
 			api.MeterEnergy
 			api.PhaseCurrents
 			api.PhaseVoltages
 		}{
 			PhoenixEVEth: base,
-			Identifier: &decoratePhoenixEVEthIdentifierImpl{
-				identifier: identifier,
+			ChargerEx: &decoratePhoenixEVEthChargerExImpl{
+				chargerEx: chargerEx,
 			},
 			Meter: &decoratePhoenixEVEthMeterImpl{
 				meter: meter,
@@ -505,7 +326,186 @@ func decoratePhoenixEVEth(base *PhoenixEVEth, meter func() (float64, error), met
 			},
 		}
 
-	case chargerEx != nil && identifier != nil && meter == nil:
+	case chargeRater == nil && chargerEx == nil && identifier != nil && meter == nil:
+		return &struct {
+			*PhoenixEVEth
+			api.Identifier
+		}{
+			PhoenixEVEth: base,
+			Identifier: &decoratePhoenixEVEthIdentifierImpl{
+				identifier: identifier,
+			},
+		}
+
+	case chargeRater == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
+		return &struct {
+			*PhoenixEVEth
+			api.Identifier
+			api.Meter
+		}{
+			PhoenixEVEth: base,
+			Identifier: &decoratePhoenixEVEthIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decoratePhoenixEVEthMeterImpl{
+				meter: meter,
+			},
+		}
+
+	case chargeRater == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
+		return &struct {
+			*PhoenixEVEth
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+		}{
+			PhoenixEVEth: base,
+			Identifier: &decoratePhoenixEVEthIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decoratePhoenixEVEthMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decoratePhoenixEVEthMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case chargeRater == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages == nil:
+		return &struct {
+			*PhoenixEVEth
+			api.Identifier
+			api.Meter
+			api.PhaseCurrents
+		}{
+			PhoenixEVEth: base,
+			Identifier: &decoratePhoenixEVEthIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decoratePhoenixEVEthMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decoratePhoenixEVEthPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case chargeRater == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages == nil:
+		return &struct {
+			*PhoenixEVEth
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+		}{
+			PhoenixEVEth: base,
+			Identifier: &decoratePhoenixEVEthIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decoratePhoenixEVEthMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decoratePhoenixEVEthMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decoratePhoenixEVEthPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case chargeRater == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
+		return &struct {
+			*PhoenixEVEth
+			api.Identifier
+			api.Meter
+			api.PhaseVoltages
+		}{
+			PhoenixEVEth: base,
+			Identifier: &decoratePhoenixEVEthIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decoratePhoenixEVEthMeterImpl{
+				meter: meter,
+			},
+			PhaseVoltages: &decoratePhoenixEVEthPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case chargeRater == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
+		return &struct {
+			*PhoenixEVEth
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+			api.PhaseVoltages
+		}{
+			PhoenixEVEth: base,
+			Identifier: &decoratePhoenixEVEthIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decoratePhoenixEVEthMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decoratePhoenixEVEthMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseVoltages: &decoratePhoenixEVEthPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case chargeRater == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages != nil:
+		return &struct {
+			*PhoenixEVEth
+			api.Identifier
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			PhoenixEVEth: base,
+			Identifier: &decoratePhoenixEVEthIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decoratePhoenixEVEthMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decoratePhoenixEVEthPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decoratePhoenixEVEthPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case chargeRater == nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages != nil:
+		return &struct {
+			*PhoenixEVEth
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			PhoenixEVEth: base,
+			Identifier: &decoratePhoenixEVEthIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decoratePhoenixEVEthMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decoratePhoenixEVEthMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decoratePhoenixEVEthPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decoratePhoenixEVEthPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case chargeRater == nil && chargerEx != nil && identifier != nil && meter == nil:
 		return &struct {
 			*PhoenixEVEth
 			api.ChargerEx
@@ -520,7 +520,7 @@ func decoratePhoenixEVEth(base *PhoenixEVEth, meter func() (float64, error), met
 			},
 		}
 
-	case chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
+	case chargeRater == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
 		return &struct {
 			*PhoenixEVEth
 			api.ChargerEx
@@ -539,7 +539,7 @@ func decoratePhoenixEVEth(base *PhoenixEVEth, meter func() (float64, error), met
 			},
 		}
 
-	case chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
+	case chargeRater == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
 		return &struct {
 			*PhoenixEVEth
 			api.ChargerEx
@@ -562,7 +562,7 @@ func decoratePhoenixEVEth(base *PhoenixEVEth, meter func() (float64, error), met
 			},
 		}
 
-	case chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages == nil:
+	case chargeRater == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages == nil:
 		return &struct {
 			*PhoenixEVEth
 			api.ChargerEx
@@ -585,7 +585,7 @@ func decoratePhoenixEVEth(base *PhoenixEVEth, meter func() (float64, error), met
 			},
 		}
 
-	case chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages == nil:
+	case chargeRater == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages == nil:
 		return &struct {
 			*PhoenixEVEth
 			api.ChargerEx
@@ -612,7 +612,7 @@ func decoratePhoenixEVEth(base *PhoenixEVEth, meter func() (float64, error), met
 			},
 		}
 
-	case chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
+	case chargeRater == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
 		return &struct {
 			*PhoenixEVEth
 			api.ChargerEx
@@ -635,7 +635,7 @@ func decoratePhoenixEVEth(base *PhoenixEVEth, meter func() (float64, error), met
 			},
 		}
 
-	case chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
+	case chargeRater == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
 		return &struct {
 			*PhoenixEVEth
 			api.ChargerEx
@@ -662,7 +662,7 @@ func decoratePhoenixEVEth(base *PhoenixEVEth, meter func() (float64, error), met
 			},
 		}
 
-	case chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages != nil:
+	case chargeRater == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages != nil:
 		return &struct {
 			*PhoenixEVEth
 			api.ChargerEx
@@ -689,7 +689,7 @@ func decoratePhoenixEVEth(base *PhoenixEVEth, meter func() (float64, error), met
 			},
 		}
 
-	case chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages != nil:
+	case chargeRater == nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages != nil:
 		return &struct {
 			*PhoenixEVEth
 			api.ChargerEx
@@ -700,6 +700,866 @@ func decoratePhoenixEVEth(base *PhoenixEVEth, meter func() (float64, error), met
 			api.PhaseVoltages
 		}{
 			PhoenixEVEth: base,
+			ChargerEx: &decoratePhoenixEVEthChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decoratePhoenixEVEthIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decoratePhoenixEVEthMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decoratePhoenixEVEthMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decoratePhoenixEVEthPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decoratePhoenixEVEthPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case chargeRater != nil && chargerEx == nil && identifier == nil && meter == nil:
+		return &struct {
+			*PhoenixEVEth
+			api.ChargeRater
+		}{
+			PhoenixEVEth: base,
+			ChargeRater: &decoratePhoenixEVEthChargeRaterImpl{
+				chargeRater: chargeRater,
+			},
+		}
+
+	case chargeRater != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
+		return &struct {
+			*PhoenixEVEth
+			api.ChargeRater
+			api.Meter
+		}{
+			PhoenixEVEth: base,
+			ChargeRater: &decoratePhoenixEVEthChargeRaterImpl{
+				chargeRater: chargeRater,
+			},
+			Meter: &decoratePhoenixEVEthMeterImpl{
+				meter: meter,
+			},
+		}
+
+	case chargeRater != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
+		return &struct {
+			*PhoenixEVEth
+			api.ChargeRater
+			api.Meter
+			api.MeterEnergy
+		}{
+			PhoenixEVEth: base,
+			ChargeRater: &decoratePhoenixEVEthChargeRaterImpl{
+				chargeRater: chargeRater,
+			},
+			Meter: &decoratePhoenixEVEthMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decoratePhoenixEVEthMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case chargeRater != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages == nil:
+		return &struct {
+			*PhoenixEVEth
+			api.ChargeRater
+			api.Meter
+			api.PhaseCurrents
+		}{
+			PhoenixEVEth: base,
+			ChargeRater: &decoratePhoenixEVEthChargeRaterImpl{
+				chargeRater: chargeRater,
+			},
+			Meter: &decoratePhoenixEVEthMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decoratePhoenixEVEthPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case chargeRater != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages == nil:
+		return &struct {
+			*PhoenixEVEth
+			api.ChargeRater
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+		}{
+			PhoenixEVEth: base,
+			ChargeRater: &decoratePhoenixEVEthChargeRaterImpl{
+				chargeRater: chargeRater,
+			},
+			Meter: &decoratePhoenixEVEthMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decoratePhoenixEVEthMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decoratePhoenixEVEthPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case chargeRater != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
+		return &struct {
+			*PhoenixEVEth
+			api.ChargeRater
+			api.Meter
+			api.PhaseVoltages
+		}{
+			PhoenixEVEth: base,
+			ChargeRater: &decoratePhoenixEVEthChargeRaterImpl{
+				chargeRater: chargeRater,
+			},
+			Meter: &decoratePhoenixEVEthMeterImpl{
+				meter: meter,
+			},
+			PhaseVoltages: &decoratePhoenixEVEthPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case chargeRater != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
+		return &struct {
+			*PhoenixEVEth
+			api.ChargeRater
+			api.Meter
+			api.MeterEnergy
+			api.PhaseVoltages
+		}{
+			PhoenixEVEth: base,
+			ChargeRater: &decoratePhoenixEVEthChargeRaterImpl{
+				chargeRater: chargeRater,
+			},
+			Meter: &decoratePhoenixEVEthMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decoratePhoenixEVEthMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseVoltages: &decoratePhoenixEVEthPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case chargeRater != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages != nil:
+		return &struct {
+			*PhoenixEVEth
+			api.ChargeRater
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			PhoenixEVEth: base,
+			ChargeRater: &decoratePhoenixEVEthChargeRaterImpl{
+				chargeRater: chargeRater,
+			},
+			Meter: &decoratePhoenixEVEthMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decoratePhoenixEVEthPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decoratePhoenixEVEthPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case chargeRater != nil && chargerEx == nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages != nil:
+		return &struct {
+			*PhoenixEVEth
+			api.ChargeRater
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			PhoenixEVEth: base,
+			ChargeRater: &decoratePhoenixEVEthChargeRaterImpl{
+				chargeRater: chargeRater,
+			},
+			Meter: &decoratePhoenixEVEthMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decoratePhoenixEVEthMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decoratePhoenixEVEthPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decoratePhoenixEVEthPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case chargeRater != nil && chargerEx != nil && identifier == nil && meter == nil:
+		return &struct {
+			*PhoenixEVEth
+			api.ChargeRater
+			api.ChargerEx
+		}{
+			PhoenixEVEth: base,
+			ChargeRater: &decoratePhoenixEVEthChargeRaterImpl{
+				chargeRater: chargeRater,
+			},
+			ChargerEx: &decoratePhoenixEVEthChargerExImpl{
+				chargerEx: chargerEx,
+			},
+		}
+
+	case chargeRater != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
+		return &struct {
+			*PhoenixEVEth
+			api.ChargeRater
+			api.ChargerEx
+			api.Meter
+		}{
+			PhoenixEVEth: base,
+			ChargeRater: &decoratePhoenixEVEthChargeRaterImpl{
+				chargeRater: chargeRater,
+			},
+			ChargerEx: &decoratePhoenixEVEthChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decoratePhoenixEVEthMeterImpl{
+				meter: meter,
+			},
+		}
+
+	case chargeRater != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
+		return &struct {
+			*PhoenixEVEth
+			api.ChargeRater
+			api.ChargerEx
+			api.Meter
+			api.MeterEnergy
+		}{
+			PhoenixEVEth: base,
+			ChargeRater: &decoratePhoenixEVEthChargeRaterImpl{
+				chargeRater: chargeRater,
+			},
+			ChargerEx: &decoratePhoenixEVEthChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decoratePhoenixEVEthMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decoratePhoenixEVEthMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case chargeRater != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages == nil:
+		return &struct {
+			*PhoenixEVEth
+			api.ChargeRater
+			api.ChargerEx
+			api.Meter
+			api.PhaseCurrents
+		}{
+			PhoenixEVEth: base,
+			ChargeRater: &decoratePhoenixEVEthChargeRaterImpl{
+				chargeRater: chargeRater,
+			},
+			ChargerEx: &decoratePhoenixEVEthChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decoratePhoenixEVEthMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decoratePhoenixEVEthPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case chargeRater != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages == nil:
+		return &struct {
+			*PhoenixEVEth
+			api.ChargeRater
+			api.ChargerEx
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+		}{
+			PhoenixEVEth: base,
+			ChargeRater: &decoratePhoenixEVEthChargeRaterImpl{
+				chargeRater: chargeRater,
+			},
+			ChargerEx: &decoratePhoenixEVEthChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decoratePhoenixEVEthMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decoratePhoenixEVEthMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decoratePhoenixEVEthPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case chargeRater != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
+		return &struct {
+			*PhoenixEVEth
+			api.ChargeRater
+			api.ChargerEx
+			api.Meter
+			api.PhaseVoltages
+		}{
+			PhoenixEVEth: base,
+			ChargeRater: &decoratePhoenixEVEthChargeRaterImpl{
+				chargeRater: chargeRater,
+			},
+			ChargerEx: &decoratePhoenixEVEthChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decoratePhoenixEVEthMeterImpl{
+				meter: meter,
+			},
+			PhaseVoltages: &decoratePhoenixEVEthPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case chargeRater != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
+		return &struct {
+			*PhoenixEVEth
+			api.ChargeRater
+			api.ChargerEx
+			api.Meter
+			api.MeterEnergy
+			api.PhaseVoltages
+		}{
+			PhoenixEVEth: base,
+			ChargeRater: &decoratePhoenixEVEthChargeRaterImpl{
+				chargeRater: chargeRater,
+			},
+			ChargerEx: &decoratePhoenixEVEthChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decoratePhoenixEVEthMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decoratePhoenixEVEthMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseVoltages: &decoratePhoenixEVEthPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case chargeRater != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages != nil:
+		return &struct {
+			*PhoenixEVEth
+			api.ChargeRater
+			api.ChargerEx
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			PhoenixEVEth: base,
+			ChargeRater: &decoratePhoenixEVEthChargeRaterImpl{
+				chargeRater: chargeRater,
+			},
+			ChargerEx: &decoratePhoenixEVEthChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decoratePhoenixEVEthMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decoratePhoenixEVEthPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decoratePhoenixEVEthPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case chargeRater != nil && chargerEx != nil && identifier == nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages != nil:
+		return &struct {
+			*PhoenixEVEth
+			api.ChargeRater
+			api.ChargerEx
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			PhoenixEVEth: base,
+			ChargeRater: &decoratePhoenixEVEthChargeRaterImpl{
+				chargeRater: chargeRater,
+			},
+			ChargerEx: &decoratePhoenixEVEthChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Meter: &decoratePhoenixEVEthMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decoratePhoenixEVEthMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decoratePhoenixEVEthPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decoratePhoenixEVEthPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case chargeRater != nil && chargerEx == nil && identifier != nil && meter == nil:
+		return &struct {
+			*PhoenixEVEth
+			api.ChargeRater
+			api.Identifier
+		}{
+			PhoenixEVEth: base,
+			ChargeRater: &decoratePhoenixEVEthChargeRaterImpl{
+				chargeRater: chargeRater,
+			},
+			Identifier: &decoratePhoenixEVEthIdentifierImpl{
+				identifier: identifier,
+			},
+		}
+
+	case chargeRater != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
+		return &struct {
+			*PhoenixEVEth
+			api.ChargeRater
+			api.Identifier
+			api.Meter
+		}{
+			PhoenixEVEth: base,
+			ChargeRater: &decoratePhoenixEVEthChargeRaterImpl{
+				chargeRater: chargeRater,
+			},
+			Identifier: &decoratePhoenixEVEthIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decoratePhoenixEVEthMeterImpl{
+				meter: meter,
+			},
+		}
+
+	case chargeRater != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
+		return &struct {
+			*PhoenixEVEth
+			api.ChargeRater
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+		}{
+			PhoenixEVEth: base,
+			ChargeRater: &decoratePhoenixEVEthChargeRaterImpl{
+				chargeRater: chargeRater,
+			},
+			Identifier: &decoratePhoenixEVEthIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decoratePhoenixEVEthMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decoratePhoenixEVEthMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case chargeRater != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages == nil:
+		return &struct {
+			*PhoenixEVEth
+			api.ChargeRater
+			api.Identifier
+			api.Meter
+			api.PhaseCurrents
+		}{
+			PhoenixEVEth: base,
+			ChargeRater: &decoratePhoenixEVEthChargeRaterImpl{
+				chargeRater: chargeRater,
+			},
+			Identifier: &decoratePhoenixEVEthIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decoratePhoenixEVEthMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decoratePhoenixEVEthPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case chargeRater != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages == nil:
+		return &struct {
+			*PhoenixEVEth
+			api.ChargeRater
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+		}{
+			PhoenixEVEth: base,
+			ChargeRater: &decoratePhoenixEVEthChargeRaterImpl{
+				chargeRater: chargeRater,
+			},
+			Identifier: &decoratePhoenixEVEthIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decoratePhoenixEVEthMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decoratePhoenixEVEthMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decoratePhoenixEVEthPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case chargeRater != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
+		return &struct {
+			*PhoenixEVEth
+			api.ChargeRater
+			api.Identifier
+			api.Meter
+			api.PhaseVoltages
+		}{
+			PhoenixEVEth: base,
+			ChargeRater: &decoratePhoenixEVEthChargeRaterImpl{
+				chargeRater: chargeRater,
+			},
+			Identifier: &decoratePhoenixEVEthIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decoratePhoenixEVEthMeterImpl{
+				meter: meter,
+			},
+			PhaseVoltages: &decoratePhoenixEVEthPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case chargeRater != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
+		return &struct {
+			*PhoenixEVEth
+			api.ChargeRater
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+			api.PhaseVoltages
+		}{
+			PhoenixEVEth: base,
+			ChargeRater: &decoratePhoenixEVEthChargeRaterImpl{
+				chargeRater: chargeRater,
+			},
+			Identifier: &decoratePhoenixEVEthIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decoratePhoenixEVEthMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decoratePhoenixEVEthMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseVoltages: &decoratePhoenixEVEthPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case chargeRater != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages != nil:
+		return &struct {
+			*PhoenixEVEth
+			api.ChargeRater
+			api.Identifier
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			PhoenixEVEth: base,
+			ChargeRater: &decoratePhoenixEVEthChargeRaterImpl{
+				chargeRater: chargeRater,
+			},
+			Identifier: &decoratePhoenixEVEthIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decoratePhoenixEVEthMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decoratePhoenixEVEthPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decoratePhoenixEVEthPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case chargeRater != nil && chargerEx == nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages != nil:
+		return &struct {
+			*PhoenixEVEth
+			api.ChargeRater
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			PhoenixEVEth: base,
+			ChargeRater: &decoratePhoenixEVEthChargeRaterImpl{
+				chargeRater: chargeRater,
+			},
+			Identifier: &decoratePhoenixEVEthIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decoratePhoenixEVEthMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decoratePhoenixEVEthMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decoratePhoenixEVEthPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decoratePhoenixEVEthPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case chargeRater != nil && chargerEx != nil && identifier != nil && meter == nil:
+		return &struct {
+			*PhoenixEVEth
+			api.ChargeRater
+			api.ChargerEx
+			api.Identifier
+		}{
+			PhoenixEVEth: base,
+			ChargeRater: &decoratePhoenixEVEthChargeRaterImpl{
+				chargeRater: chargeRater,
+			},
+			ChargerEx: &decoratePhoenixEVEthChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decoratePhoenixEVEthIdentifierImpl{
+				identifier: identifier,
+			},
+		}
+
+	case chargeRater != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages == nil:
+		return &struct {
+			*PhoenixEVEth
+			api.ChargeRater
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+		}{
+			PhoenixEVEth: base,
+			ChargeRater: &decoratePhoenixEVEthChargeRaterImpl{
+				chargeRater: chargeRater,
+			},
+			ChargerEx: &decoratePhoenixEVEthChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decoratePhoenixEVEthIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decoratePhoenixEVEthMeterImpl{
+				meter: meter,
+			},
+		}
+
+	case chargeRater != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages == nil:
+		return &struct {
+			*PhoenixEVEth
+			api.ChargeRater
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+		}{
+			PhoenixEVEth: base,
+			ChargeRater: &decoratePhoenixEVEthChargeRaterImpl{
+				chargeRater: chargeRater,
+			},
+			ChargerEx: &decoratePhoenixEVEthChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decoratePhoenixEVEthIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decoratePhoenixEVEthMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decoratePhoenixEVEthMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case chargeRater != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages == nil:
+		return &struct {
+			*PhoenixEVEth
+			api.ChargeRater
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+			api.PhaseCurrents
+		}{
+			PhoenixEVEth: base,
+			ChargeRater: &decoratePhoenixEVEthChargeRaterImpl{
+				chargeRater: chargeRater,
+			},
+			ChargerEx: &decoratePhoenixEVEthChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decoratePhoenixEVEthIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decoratePhoenixEVEthMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decoratePhoenixEVEthPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case chargeRater != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages == nil:
+		return &struct {
+			*PhoenixEVEth
+			api.ChargeRater
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+		}{
+			PhoenixEVEth: base,
+			ChargeRater: &decoratePhoenixEVEthChargeRaterImpl{
+				chargeRater: chargeRater,
+			},
+			ChargerEx: &decoratePhoenixEVEthChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decoratePhoenixEVEthIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decoratePhoenixEVEthMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decoratePhoenixEVEthMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseCurrents: &decoratePhoenixEVEthPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+		}
+
+	case chargeRater != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents == nil && phaseVoltages != nil:
+		return &struct {
+			*PhoenixEVEth
+			api.ChargeRater
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+			api.PhaseVoltages
+		}{
+			PhoenixEVEth: base,
+			ChargeRater: &decoratePhoenixEVEthChargeRaterImpl{
+				chargeRater: chargeRater,
+			},
+			ChargerEx: &decoratePhoenixEVEthChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decoratePhoenixEVEthIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decoratePhoenixEVEthMeterImpl{
+				meter: meter,
+			},
+			PhaseVoltages: &decoratePhoenixEVEthPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case chargeRater != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents == nil && phaseVoltages != nil:
+		return &struct {
+			*PhoenixEVEth
+			api.ChargeRater
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+			api.PhaseVoltages
+		}{
+			PhoenixEVEth: base,
+			ChargeRater: &decoratePhoenixEVEthChargeRaterImpl{
+				chargeRater: chargeRater,
+			},
+			ChargerEx: &decoratePhoenixEVEthChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decoratePhoenixEVEthIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decoratePhoenixEVEthMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decoratePhoenixEVEthMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+			PhaseVoltages: &decoratePhoenixEVEthPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case chargeRater != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy == nil && phaseCurrents != nil && phaseVoltages != nil:
+		return &struct {
+			*PhoenixEVEth
+			api.ChargeRater
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			PhoenixEVEth: base,
+			ChargeRater: &decoratePhoenixEVEthChargeRaterImpl{
+				chargeRater: chargeRater,
+			},
+			ChargerEx: &decoratePhoenixEVEthChargerExImpl{
+				chargerEx: chargerEx,
+			},
+			Identifier: &decoratePhoenixEVEthIdentifierImpl{
+				identifier: identifier,
+			},
+			Meter: &decoratePhoenixEVEthMeterImpl{
+				meter: meter,
+			},
+			PhaseCurrents: &decoratePhoenixEVEthPhaseCurrentsImpl{
+				phaseCurrents: phaseCurrents,
+			},
+			PhaseVoltages: &decoratePhoenixEVEthPhaseVoltagesImpl{
+				phaseVoltages: phaseVoltages,
+			},
+		}
+
+	case chargeRater != nil && chargerEx != nil && identifier != nil && meter != nil && meterEnergy != nil && phaseCurrents != nil && phaseVoltages != nil:
+		return &struct {
+			*PhoenixEVEth
+			api.ChargeRater
+			api.ChargerEx
+			api.Identifier
+			api.Meter
+			api.MeterEnergy
+			api.PhaseCurrents
+			api.PhaseVoltages
+		}{
+			PhoenixEVEth: base,
+			ChargeRater: &decoratePhoenixEVEthChargeRaterImpl{
+				chargeRater: chargeRater,
+			},
 			ChargerEx: &decoratePhoenixEVEthChargerExImpl{
 				chargerEx: chargerEx,
 			},
@@ -722,6 +1582,14 @@ func decoratePhoenixEVEth(base *PhoenixEVEth, meter func() (float64, error), met
 	}
 
 	return nil
+}
+
+type decoratePhoenixEVEthChargeRaterImpl struct {
+	chargeRater func() (float64, error)
+}
+
+func (impl *decoratePhoenixEVEthChargeRaterImpl) ChargedEnergy() (float64, error) {
+	return impl.chargeRater()
 }
 
 type decoratePhoenixEVEthChargerExImpl struct {
