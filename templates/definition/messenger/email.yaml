@@ -12,9 +12,7 @@ params:
     example: 465
     default: 465
   - name: user
-    required: true
   - name: password
-    required: true
   - name: from
     required: true
     example: john.doe@example.com
