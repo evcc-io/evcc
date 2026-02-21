@@ -943,7 +943,6 @@ func configureTariffDevices(names ...string) error {
 	var eg errgroup.Group
 
 	for _, conf := range configurable {
-		conf := conf // shadow loop variable
 		eg.Go(func() error {
 			cc := conf.Named()
 
