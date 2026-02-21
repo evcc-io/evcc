@@ -403,11 +403,11 @@
       "title": "Konfiguracja",
       "unconfigured": "nie skonfigurowane",
       "vehicles": "Moje pojazdy",
-      "welcomeBannerText": "Zacznij od utworzenia co najmniej jednej **ładowarki**, **grzejnika**, **sieci**, **panelu słonecznego**, **baterii** lub **dodatkowego licznika**. Jeśli chcesz tylko przetestować, wybierz **urządzenie demonstracyjne**.",
+      "welcomeBannerText": "Zacznij od utworzenia co najmniej jednej **ładowarki**, **podgrzewacza**, **sieci energetycznej**, **systemu pv**, **magazynu energii** lub **dodatkowego licznika**. Jeśli chcesz tylko przetestować, wybierz **urządzenie demonstracyjne**.",
       "welcomeBannerTitle": "Skonfigurujmy Twój system!"
     },
     "messaging": {
-      "description": "Otrzymuj wiadomości o sesjach ładowania.",
+      "description": "Otrzymuj powiadomienia o swoich sesjach ładowania.",
       "title": "Powiadomienia"
     },
     "meter": {
@@ -647,7 +647,7 @@
     "validation": {
       "failed": "nie udało się",
       "label": "Status",
-      "running": "Weryfikacja…",
+      "running": "weryfikowanie…",
       "success": "udany",
       "unknown": "nieznany",
       "validate": "zweryfikować"
@@ -971,10 +971,15 @@
     },
     "loadpointSettings": {
       "batteryBoost": {
-        "description": "Szybkie ładowanie z domowego magazynu energii, aż rozładuje się do {limit}.",
-        "label": "Doładowanie akumulatora",
+        "description": "Przyspieszone ładowanie z domowego magazynu energii, aż rozładuje się do {limit}.",
+        "descriptionDisabled": "Wybierz limit umożliwiający przyspieszone ładowanie z domowego magazynu energii.",
+        "disabled": "Wyłączone",
+        "label": "Turbo ładowanie",
         "mode": "Dostępne tylko w trybie słonce i min+słońce.",
-        "once": "Doładowanie aktywne dla tej sesji ładowania."
+        "once": "Turbo ładowanie aktywne dla tej sesji.",
+        "stateActive": "Turbo ładowanie aktywne",
+        "stateBelowLimit": "Magazyn energii zbyt rozładowany dla turbo ładowania",
+        "stateReady": "Turbo ładowanie gotowe"
       },
       "batteryUsage": "Domowy magazyn energii",
       "currents": "Prąd ładowania",
