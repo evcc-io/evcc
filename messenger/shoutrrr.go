@@ -9,6 +9,7 @@ import (
 )
 
 func init() {
+	registry.Add("email", NewShoutrrrFromConfig)
 	registry.Add("shout", NewShoutrrrFromConfig)
 }
 
