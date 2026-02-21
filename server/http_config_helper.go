@@ -357,8 +357,7 @@ func testInstance(instance any) map[string]testResult {
 		// Determine field names based on tariff type
 		var valueKey, ratesKey string
 		switch dev.Type() {
-		case api.TariffTypePriceDynamic:
-		case api.TariffTypePriceForecast:
+		case api.TariffTypePriceDynamic, api.TariffTypePriceForecast:
 			valueKey = "price"
 			ratesKey = "priceRates"
 		case api.TariffTypeCo2:
