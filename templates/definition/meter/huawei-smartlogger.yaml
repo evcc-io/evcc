@@ -7,13 +7,10 @@ capabilities: ["battery-control"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
-  - name: storageunit
-    type: int
-    default: 1
-    advanced: true
   - name: modbus
     choice: ["tcpip"]
   - name: maxacpower
+  - name: storageunit
   - preset: battery-params
   - name: timeout
     deprecated: true

@@ -30,6 +30,7 @@
 					:gridConfigured="gridConfigured"
 					:pvConfigured="pvConfigured"
 					:batteryConfigured="batteryConfigured"
+					:batterySoc="batterySoc"
 					:forecast="forecast"
 					class="h-100"
 					:class="{ 'loadpoint-unselected': !selected(loadpoint.id) }"
@@ -37,7 +38,7 @@
 				/>
 			</div>
 		</div>
-		<div v-if="loadpoints.length > 1" class="d-flex d-lg-none justify-content-center">
+		<div v-if="loadpoints.length > 1" class="d-flex d-lg-none justify-content-center flex-wrap">
 			<button
 				v-for="loadpoint in loadpoints"
 				:key="loadpoint.id"
@@ -85,6 +86,7 @@ export default defineComponent({
 		gridConfigured: Boolean,
 		pvConfigured: Boolean,
 		batteryConfigured: Boolean,
+		batterySoc: Number,
 		forecast: Object, // as PropType<Forecast>,
 	},
 	emits: ["id-changed"],

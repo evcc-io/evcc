@@ -41,6 +41,7 @@ type API interface {
 	// battery
 	//
 
+	GetBatterySoc() float64
 	GetPrioritySoc() float64
 	SetPrioritySoc(float64) error
 	GetBufferSoc() float64

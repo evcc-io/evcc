@@ -1,4 +1,4 @@
-package push
+package messenger
 
 import (
 	"fmt"
@@ -7,6 +7,7 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/core/vehicle"
 	"github.com/evcc-io/evcc/util"
@@ -25,16 +26,25 @@ type Vehicles interface {
 
 // Hub subscribes to event notifications and sends them to client devices
 type Hub struct {
-	definitions map[string]globalconfig.MessagingEventTemplate
-	sender      []Messenger
+	definitions globalconfig.MessagingEvents
+	sender      []api.Messenger
 	cache       *util.ParamCache
 	vehicles    Vehicles
 }
 
 // NewHub creates push hub with definitions and receiver
-func NewHub(cc map[string]globalconfig.MessagingEventTemplate, vv Vehicles, cache *util.ParamCache) (*Hub, error) {
-	// instantiate all event templates
+func NewHub(cc globalconfig.MessagingEvents, vv Vehicles, cache *util.ParamCache) (*Hub, error) {
+	// keep only enabled events
+	filtered := make(globalconfig.MessagingEvents, len(cc))
+
 	for k, v := range cc {
+		if !v.Disabled {
+			filtered[k] = v
+		}
+	}
+
+	// instantiate all event templates
+	for k, v := range filtered {
 		if _, err := template.New("out").Funcs(sprig.FuncMap()).Parse(v.Title); err != nil {
 			return nil, fmt.Errorf("invalid event title: %s (%w)", k, err)
 		}
@@ -44,7 +54,7 @@ func NewHub(cc map[string]globalconfig.MessagingEventTemplate, vv Vehicles, cach
 	}
 
 	h := &Hub{
-		definitions: cc,
+		definitions: filtered,
 		cache:       cache,
 		vehicles:    vv,
 	}
@@ -53,7 +63,7 @@ func NewHub(cc map[string]globalconfig.MessagingEventTemplate, vv Vehicles, cach
 }
 
 // Add adds a sender to the list of senders
-func (h *Hub) Add(sender Messenger) {
+func (h *Hub) Add(sender api.Messenger) {
 	h.sender = append(h.sender, sender)
 }
 

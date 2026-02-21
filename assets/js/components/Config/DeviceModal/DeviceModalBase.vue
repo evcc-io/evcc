@@ -10,6 +10,9 @@
 		@close="handleClose"
 		@visibilitychange="handleVisibilityChange"
 	>
+		<template #header-actions>
+			<DeviceInfoButton v-if="id" :id="id" />
+		</template>
 		<form ref="form" class="container mx-0 px-0">
 			<slot name="pre-content" :values="values"></slot>
 
@@ -167,6 +170,7 @@
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
 import GenericModal from "../../Helper/GenericModal.vue";
+import DeviceInfoButton from "./DeviceInfoButton.vue";
 import { closeModal } from "@/configModal";
 import ErrorMessage from "../../Helper/ErrorMessage.vue";
 import PropertyEntry from "../PropertyEntry.vue";
@@ -205,6 +209,7 @@ export default defineComponent({
 	name: "DeviceModalBase",
 	components: {
 		GenericModal,
+		DeviceInfoButton,
 		ErrorMessage,
 		PropertyEntry,
 		PropertyCollapsible,

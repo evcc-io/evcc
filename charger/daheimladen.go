@@ -65,7 +65,7 @@ func init() {
 	registry.AddCtx("daheimladen", NewDaheimLadenFromConfig)
 }
 
-//go:generate go tool decorate -f decorateDaheimLaden -b *DaheimLaden -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
+//go:generate go tool decorate -f decorateDaheimLaden -b *DaheimLaden -r api.Charger -t api.PhaseSwitcher,api.PhaseGetter
 
 // NewDaheimLadenFromConfig creates a DaheimLaden charger from generic config
 func NewDaheimLadenFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
@@ -107,7 +107,7 @@ func NewDaheimLaden(ctx context.Context, uri string, id uint8, phases bool) (api
 	if err != nil {
 		return nil, fmt.Errorf("current limit: %w", err)
 	}
-	if curr > 0 {
+	if curr >= 60 {
 		wb.curr = curr
 	}
 
@@ -197,12 +197,13 @@ func (wb *DaheimLaden) Status() (api.ChargeStatus, error) {
 func (wb *DaheimLaden) Enabled() (bool, error) {
 	curr, err := wb.getCurrent()
 
-	return curr > 0, err
+	return curr >= 60, err
 }
 
 // Enable implements the api.Charger interface
 func (wb *DaheimLaden) Enable(enable bool) error {
-	var current uint16
+	// must be > 0 to disable unauthorised autostart
+	current := uint16(1)
 	if enable {
 		current = wb.curr
 	}

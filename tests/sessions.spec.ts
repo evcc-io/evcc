@@ -343,6 +343,7 @@ test.describe("session details", async () => {
     await expect(modal.getByTestId("session-details-energy")).toContainText("1:00");
     await expect(modal.getByTestId("session-details-solar")).toContainText("100.0% (10.0 kWh)");
     await expect(modal.getByTestId("session-details-price")).toContainText("2.00 € 20.0 ct/kWh");
+    await expect(modal.getByTestId("session-details-co2")).toContainText("3 kg");
     await expect(modal.getByTestId("session-details-co2")).toContainText("300 g/kWh");
   });
 

@@ -962,7 +962,7 @@
     },
     "loadpointSettings": {
       "batteryBoost": {
-        "description": "Brzo punjenje pomoću kućne baterije.",
+        "description": "Brzo punjenje pomoću kućne baterije dok se ne isprazni na {limit}.",
         "label": "Ubrzaj punjenje s baterijom",
         "mode": "Dostupno samo u modusu 'Solarno' i 'Min+Solarno'.",
         "once": "Ubrzano punjenje je aktivno za ovu sesiju punjenja."

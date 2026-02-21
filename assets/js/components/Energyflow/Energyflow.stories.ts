@@ -68,6 +68,92 @@ GridAndPV.args = {
   },
 } as any;
 
+function hoursFromNow(h: number): string {
+  return new Date(Date.now() + h * 60 * 60 * 1000).toISOString();
+}
+
+const batteryBase = {
+  gridConfigured: true,
+  pvConfigured: true,
+  batteryConfigured: true,
+  homePower: 800,
+};
+
+const bat = (power: number, soc: number, forecast: any, devices: any[] = []) => ({
+  power,
+  soc,
+  capacity: 10,
+  devices,
+  forecast,
+});
+
+const dev = (title: string, power: number, soc: number, forecast: any) => ({
+  title,
+  power,
+  soc,
+  capacity: 10,
+  controllable: true,
+  forecast,
+});
+
+export const BatteryForecastDischarging = Template.bind({});
+BatteryForecastDischarging.args = {
+  ...batteryBase,
+  gridPower: 500,
+  homePower: 1800,
+  battery: bat(1300, 62, { full: null, empty: hoursFromNow(0.4) }),
+} as any;
+
+export const BatteryForecastCharging = Template.bind({});
+BatteryForecastCharging.args = {
+  ...batteryBase,
+  pvPower: 6000,
+  gridPower: -1000,
+  battery: bat(-4200, 45, { full: hoursFromNow(2.5), empty: null }),
+} as any;
+
+export const BatteryForecastBoth = Template.bind({});
+BatteryForecastBoth.args = {
+  ...batteryBase,
+  pvPower: 3000,
+  gridPower: -500,
+  battery: bat(-1700, 70, { full: hoursFromNow(2), empty: hoursFromNow(36) }),
+} as any;
+
+export const BatteryForecastMultiDischarging = Template.bind({});
+BatteryForecastMultiDischarging.args = {
+  ...batteryBase,
+  gridPower: 500,
+  homePower: 2500,
+  battery: bat(2000, 55, { full: null, empty: hoursFromNow(48) }, [
+    dev("Powerwall", 1200, 60, { full: null, empty: hoursFromNow(48) }),
+    dev("BYD", 800, 48, { full: null, empty: hoursFromNow(0.25) }),
+  ]),
+} as any;
+
+export const BatteryForecastMultiCharging = Template.bind({});
+BatteryForecastMultiCharging.args = {
+  ...batteryBase,
+  pvPower: 8000,
+  gridPower: -1000,
+  homePower: 1000,
+  battery: bat(-6000, 40, { full: hoursFromNow(26), empty: null }, [
+    dev("Powerwall", -3500, 35, { full: hoursFromNow(26), empty: null }),
+    dev("BYD", -2500, 47, { full: hoursFromNow(0.7), empty: null }),
+  ]),
+} as any;
+
+export const BatteryForecastGridChargeLimit = Template.bind({});
+BatteryForecastGridChargeLimit.args = {
+  ...batteryBase,
+  pvPower: 5000,
+  gridPower: -500,
+  batteryGridChargeLimit: 0.15,
+  smartCostType: "price",
+  currency: CURRENCY.EUR,
+  battery: bat(-3700, 50, { full: hoursFromNow(1.5), empty: null }),
+} as any;
+
 export const BatteryAndGrid = Template.bind({});
 BatteryAndGrid.args = {
   gridConfigured: true,

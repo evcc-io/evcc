@@ -46,7 +46,7 @@ func NewEvseDINFromConfig(ctx context.Context, other map[string]any) (api.Charge
 	return NewEvseDIN(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID)
 }
 
-//go:generate go tool decorate -f decorateEvseDIN -b *EvseDIN -r api.Charger -t "api.ChargerEx,MaxCurrentMillis,func(float64) error"
+//go:generate go tool decorate -f decorateEvseDIN -b *EvseDIN -r api.Charger -t api.ChargerEx
 
 // NewEvseDIN creates EVSE DIN charger
 func NewEvseDIN(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8) (api.Charger, error) {

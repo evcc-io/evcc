@@ -68,8 +68,8 @@ meters:
       vm: shared
       script: |
         if (state.batterypower < 0) state.batterySoc++; else state.batterySoc--;
-        if (state.batterySoc < 10) state.batterySoc = 90;
-        if (state.batterySoc > 90) state.batterySoc = 10;
+        if (state.batterySoc < 10) state.batterySoc = 100;
+        if (state.batterySoc > 100) state.batterySoc = 10;
         state.batterySoc;
     capacity: 13.4
     batterymode:

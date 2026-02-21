@@ -332,7 +332,7 @@ export default defineComponent({
       const unit = this.energyPriceSubunit(currency) || CURRENCY_SYMBOLS[currency] || currency;
       return `${unit}${short ? "" : "/kWh"}`;
     },
-    fmtTimeAgo(elapsed: number) {
+    fmtTimeAgo(elapsed: number, numeric: "auto" | "always" = "auto") {
       const units = {
         day: 24 * 60 * 60 * 1000,
         hour: 60 * 60 * 1000,
@@ -346,7 +346,7 @@ export default defineComponent({
         if (Math.abs(elapsed) > units[unitKey] || u == "second") {
           try {
             const rtf = new Intl.RelativeTimeFormat(this.$i18n?.locale, {
-              numeric: "auto",
+              numeric,
             });
             return rtf.format(Math.round(elapsed / units[unitKey]), unitKey);
           } catch (e) {
