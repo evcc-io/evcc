@@ -9,21 +9,23 @@ import (
 )
 
 type Controller struct {
-	pvd *Provider
-	api *API
-	log *util.Logger
-	vin string
-	pin string
+	pvd                 *Provider
+	api                 *API
+	log                 *util.Logger
+	vin                 string
+	pin                 string
+	isChargedControlled bool
 }
 
 // NewController creates a vehicle current and charge controller
 func NewController(provider *Provider, api *API, log *util.Logger, vin string, pin string) *Controller {
 	impl := &Controller{
-		pvd: provider,
-		api: api,
-		log: log,
-		vin: vin,
-		pin: pin,
+		pvd:                 provider,
+		api:                 api,
+		log:                 log,
+		vin:                 vin,
+		pin:                 pin,
+		isChargedControlled: false, // false for now, will be set to true when ChargeEnable is actually called.
 	}
 	return impl
 }
@@ -44,6 +46,8 @@ func (c *Controller) ChargeEnable(enable bool) error {
 		return api.ErrMissingCredentials
 	}
 
+	c.isChargedControlled = true // set to true when ChargeEnable is called for the first time, to indicate that we are actually controlling the charge, this will be used in WakeUp method to decide if we should call ChargeNow or not
+
 	// get current schedule status from provider (cached)
 	stat, err := c.pvd.statusG()
 	if err != nil {
@@ -57,10 +61,10 @@ func (c *Controller) ChargeEnable(enable bool) error {
 	now := time.Now()   // Call once and reuse
 
 	if enable {
-		// Start charging: configure charge from now (end time will be handled in computeNewApiScheduleTime)
-		hasChanged = c.configureChargeSchedule(&stat.EvInfo.Schedules[0], now, time.Time{}) // only set start time to now and keep end time unchanged to avoid undesired charge stop in the future
+		// Start charging from now until end of day (23:55)
+		hasChanged = c.configureChargeSchedule(&stat.EvInfo.Schedules[0], now, time.Time{})
 	} else {
-		// Stop charging: update end time (use empty time to keep start time as it was for history in Fiat app)
+		// Stop charging: set charge end time to now to stop charging immediately (use empty time to keep start time as it was for history in Fiat app)
 		hasChanged = c.configureChargeSchedule(&stat.EvInfo.Schedules[0], time.Time{}, now)
 	}
 
@@ -71,51 +75,35 @@ func (c *Controller) ChargeEnable(enable bool) error {
 	// post new schedule, but only if something changed to avoid unnecessary API calls
 	if hasChanged {
 		res, err := c.api.UpdateSchedule(c.vin, c.pin, stat.EvInfo.Schedules)
-		c.log.INFO.Printf("updated first charge schedule: enable=%v, start=%s, end=%s", enable, stat.EvInfo.Schedules[0].StartTime, stat.EvInfo.Schedules[0].EndTime)
-		if err == nil && res.ResponseStatus != "pending" {
-			err = fmt.Errorf("invalid response status: %s", res.ResponseStatus)
+		if err != nil {
+			return fmt.Errorf("failed to update schedule: %w", err)
 		}
+		if res.ResponseStatus != "pending" {
+			return fmt.Errorf("invalid response status: %s", res.ResponseStatus)
+		}
+		c.log.INFO.Printf("updated first charge schedule: enable=%v, start=%s, end=%s",
+			enable, stat.EvInfo.Schedules[0].StartTime, stat.EvInfo.Schedules[0].EndTime)
 	}
 
-	return err
+	return nil
 }
 
-// computeNewApiScheduleTime computes the new schedule time to set in the API based on the current schedule time and the target time provided by the user, while ensuring it fits API requirements (rounding up to next 5 minutes boundary and avoiding changes if time difference is not significant to prevent API rejections for unchanged schedules)
-func (c *Controller) computeNewApiScheduleTime(current string, target time.Time, timeFormat string) string {
-
-	const (
-		minTimeInterval = 5 * time.Minute // Minimum time interval accepted by Fiat API in schedules; used for rounding up start and end time to avoid API rejections
-	)
-
-	// By default, return current time unchanged to avoid changing if target time is not significantly different from current time
-	result := current
-
-	// Parse previous schedule time to detect if this is a meaningful change
-	currentTime, err1 := time.Parse(timeFormat, current)
-	targetTime, err2 := time.Parse(timeFormat, target.Format(timeFormat)) // Format target time to same format as current time for proper comparison
-	timeDiff := targetTime.Sub(currentTime).Abs()
-	c.log.DEBUG.Printf("current schedule time: %s, target time: %s, time difference: %s", currentTime.Format(timeFormat), targetTime.Format(timeFormat), timeDiff)
-
-	// Round up only if end time changed significantly or if parsing previous time failed
-	if err1 != nil || err2 != nil || timeDiff > time.Minute {
-		// round up to next 5 minutes boundary to avoid API rejections
-		roundedTarget := target.Truncate(minTimeInterval)
-		if roundedTarget.Before(target) {
-			roundedTarget = roundedTarget.Add(minTimeInterval)
-		}
-		result = roundedTarget.Format(timeFormat)
-		c.log.DEBUG.Printf("target time %s rounded to %s to fit API requirements", target.Format(timeFormat), result)
+func roundUpTo(d time.Duration, t time.Time) time.Time {
+	// Round up time to next d boundary
+	rt := t.Truncate(d)
+	if !rt.After(t) {
+		rt = rt.Add(d)
 	}
-
-	return result
+	return rt
 }
 
 // configureChargeSchedule configures the provided schedule with the provided start and end time, while ensuring it fits API requirements and avoiding unnecessary changes if times are not significantly different to prevent API rejections for unchanged schedules. It returns true if the schedule was changed and false otherwise.
 func (c *Controller) configureChargeSchedule(schedule *Schedule, start time.Time, end time.Time) bool {
 	const (
-		timeFormat        = "15:04" // Hours & minutes only
-		defaultEndTime    = "23:55" // Default end time to use when enabling charge to avoid API rejections for schedules without end time; set to end of the day to avoid undesired charge stop in the future
-		fallbackStartTime = "00:00" // Fallback time for schedules crossing midnight
+		minTimeInterval   = 5 * time.Minute // Minimum time interval accepted by Fiat API in schedules; used for rounding up start and end time to avoid API rejections
+		timeFormat        = "15:04"         // Hours & minutes only
+		defaultEndTime    = "23:55"         // Default end time to use when enabling charge; this is the last time of the day accepted by the Fiat API
+		fallbackStartTime = "00:05"         // Fallback time for schedules crossing midnight; this is the first time of the day accepted by the Fiat API after the risky midnight
 	)
 
 	hasChanged := false // track if we made any change to the schedule to avoid unnecessary API calls
@@ -133,7 +121,8 @@ func (c *Controller) configureChargeSchedule(schedule *Schedule, start time.Time
 
 	// Update start only if provided (non-zero)
 	if !start.IsZero() {
-		newStartStr := c.computeNewApiScheduleTime(schedule.StartTime, start, timeFormat)
+		// round up to next 5 minutes boundary to avoid API rejections and make sure the schedule will be applied by the vehicle
+		newStartStr := roundUpTo(minTimeInterval, start).Format(timeFormat)
 
 		// Update only if different from current
 		if newStartStr != schedule.StartTime {
@@ -156,7 +145,8 @@ func (c *Controller) configureChargeSchedule(schedule *Schedule, start time.Time
 
 	// Update end only if provided (non-zero)
 	if !end.IsZero() {
-		newEndStr := c.computeNewApiScheduleTime(schedule.EndTime, end, timeFormat)
+		// round up to next 5 minutes boundary to avoid API rejections and make sure the schedule will be applied by the vehicle
+		newEndStr := roundUpTo(minTimeInterval, end).Format(timeFormat)
 
 		// Update only if different from current
 		if newEndStr != schedule.EndTime {
@@ -194,7 +184,7 @@ func (c *Controller) disableConflictingChargeSchedule(schedule *Schedule) bool {
 	// make sure the other charge schedules are disabled in case user changed them
 	if schedule.ScheduleType == "CHARGE" && schedule.EnableScheduleType {
 		schedule.EnableScheduleType = false
-		c.log.INFO.Printf("disabled charge schedule other than the first one to avoid conflicts")
+		c.log.DEBUG.Printf("disabled charge schedule other than the first one to avoid conflicts")
 		return true // schedule was changed
 	}
 	return false // schedule was not changed
@@ -208,13 +198,19 @@ func (c *Controller) WakeUp() error {
 		return nil
 	}
 
-	// Trigger deep refresh to wake up the vehicle, and this requires the same pin authentication as other actions
-	res, err := c.api.DeepRefresh(c.vin, c.pin)
-	if err != nil && res.ResponseStatus == "pending" {
-		c.log.DEBUG.Printf("vehicle wakeup triggered successfully with deep refresh action")
+	// Only call ChargeNow to WakeUp if the charger is handling the charging and not the vehicle, otherwise schedules will not work properly.
+	if !c.isChargedControlled {
+		res, err := c.api.ChargeNow(c.vin, c.pin)
+		if err != nil {
+			return fmt.Errorf("charge now call failed: %w", err)
+		}
+		if res.ResponseStatus != "pending" {
+			return fmt.Errorf("invalid response status: %s", res.ResponseStatus)
+		}
+		c.log.DEBUG.Printf("vehicle wakeup triggered successfully with charge now action")
 	} else {
-		err = fmt.Errorf("invalid response status: %s", res.ResponseStatus)
+		c.log.DEBUG.Printf("vehicle wakeup skipped because charge is controlled by evcc, to avoid conflicts with schedules")
 	}
 
-	return err
+	return nil
 }

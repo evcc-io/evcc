@@ -164,10 +164,6 @@ func (v *API) ChargeNow(vin, pin string) (ActionResponse, error) {
 	return v.Action(vin, pin, "ev/chargenow", "CNOW")
 }
 
-func (v *API) DeepRefresh(vin, pin string) (ActionResponse, error) {
-	return v.Action(vin, pin, "ev", "DEEPREFRESH")
-}
-
 func (v *API) UpdateSchedule(vin, pin string, schedules []Schedule) (ActionResponse, error) {
 	var res ActionResponse
 
@@ -194,7 +190,7 @@ func (v *API) UpdateSchedule(vin, pin string, schedules []Schedule) (ActionRespo
 	}
 
 	if err == nil && res.Message != "" {
-		err = fmt.Errorf("action schedules: %s", res.Message)
+		err = fmt.Errorf("unable to set action schedules: %s", res.Message)
 	}
 
 	return res, err
