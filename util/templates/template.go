@@ -11,7 +11,6 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
-	"github.com/go-viper/mapstructure/v2"
 	"github.com/spf13/cast"
 )
 
@@ -362,18 +361,9 @@ func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, m
 
 		switch typed := val.(type) {
 		case []any:
-			// validate zones structure if this is a zones parameter
 			if i != -1 && p.Type == TypeZones {
-				for idx, zone := range typed {
-					var z Zone
-					if err := mapstructure.Decode(zone, &z); err != nil {
-						return nil, nil, fmt.Errorf("zones[%d]: %w", idx, err)
-					}
-				}
-				// pass zones through as structured data for template iteration
-				if res[out] == nil {
-					res[out] = typed
-				}
+				// keep as structured data
+				res[out] = typed
 			} else {
 				var list []string
 				for _, v := range typed {
