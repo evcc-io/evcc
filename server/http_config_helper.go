@@ -369,7 +369,6 @@ func testInstance(instance any) map[string]testResult {
 			ratesKey = "solarRates"
 		default:
 			valueKey = "price"
-			ratesKey = ""
 		}
 
 		if err == nil && len(rates) > 0 {
