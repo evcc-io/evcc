@@ -20,12 +20,12 @@ import (
 type Rabot struct {
 	*embed
 	*request.Helper
-	log        *util.Logger
-	login      string
-	password   string
-	gross      bool
-	contractId string
-	data       *util.Monitor[api.Rates]
+	log           *util.Logger
+	login         string
+	password      string
+	gross         bool
+	baseTransport http.RoundTripper
+	data          *util.Monitor[api.Rates]
 }
 
 var _ api.Tariff = (*Rabot)(nil)
@@ -68,21 +68,13 @@ func NewRabotFromConfig(other map[string]any) (api.Tariff, error) {
 		data:     util.NewMonitor[api.Rates](2 * time.Hour),
 	}
 
-	if cc.Login != "" && cc.Password != "" {
-		sessionToken, err := t.authenticate()
-		if err != nil {
-			return nil, err
-		}
-
-		t.Client.Transport = transport.BearerAuth(sessionToken, t.Client.Transport)
-	} else {
-		t.Client.Transport = transport.BearerAuth(rabot.AppToken, t.Client.Transport)
-	}
+	t.baseTransport = t.Client.Transport
+	t.Client.Transport = transport.BearerAuth(rabot.AppToken, t.baseTransport)
 
 	return runOrError(t)
 }
 
-func (t *Rabot) authenticate() (string, error) {
+func (t *Rabot) authenticate() (string, string, error) {
 	body, err := json.Marshal(struct {
 		Login    string `json:"login"`
 		Password string `json:"password"`
@@ -91,7 +83,7 @@ func (t *Rabot) authenticate() (string, error) {
 		Password: t.password,
 	})
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	req, err := request.New(http.MethodPost, rabot.BaseURI+"/api/prosumer/session/login", bytes.NewReader(body), map[string]string{
@@ -100,38 +92,35 @@ func (t *Rabot) authenticate() (string, error) {
 		"Accept":        request.JSONContent,
 	})
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	client := request.NewHelper(t.log)
 	var loginRes rabot.LoginResponse
 	if err := client.DoJSON(req, &loginRes); err != nil {
-		return "", fmt.Errorf("login: %w", err)
+		return "", "", fmt.Errorf("login: %w", err)
 	}
 
 	t.log.Redact(loginRes.SessionToken)
 
-	// fetch contract ID
 	req, err = request.New(http.MethodGet, rabot.BaseURI+"/api/prosumer/v2/contract/list?contractStatus=active", nil, map[string]string{
 		"Authorization": "Bearer " + loginRes.SessionToken,
 		"Accept":        request.JSONContent,
 	})
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	var contractsRes rabot.ContractsResponse
 	if err := client.DoJSON(req, &contractsRes); err != nil {
-		return "", fmt.Errorf("contracts: %w", err)
+		return "", "", fmt.Errorf("contracts: %w", err)
 	}
 
 	if len(contractsRes.Contracts) == 0 {
-		return "", fmt.Errorf("no active contracts found")
+		return "", "", fmt.Errorf("no active contracts found")
 	}
 
-	t.contractId = contractsRes.Contracts[0].ID
-
-	return loginRes.SessionToken, nil
+	return loginRes.SessionToken, contractsRes.Contracts[0].ID, nil
 }
 
 func (t *Rabot) run(done chan error) {
@@ -140,15 +129,15 @@ func (t *Rabot) run(done chan error) {
 	for tick := time.Tick(time.Hour); ; <-tick {
 		var uri string
 		if t.gross {
-			sessionToken, err := t.authenticate()
+			sessionToken, contractId, err := t.authenticate()
 			if err != nil {
 				once.Do(func() { done <- err })
 				t.log.ERROR.Println(err)
 				continue
 			}
 
-			t.Client.Transport = transport.BearerAuth(sessionToken, http.DefaultTransport)
-			uri = fmt.Sprintf("%s/api/price-preview/%s", rabot.BaseURI, t.contractId)
+			t.Client.Transport = transport.BearerAuth(sessionToken, t.baseTransport)
+			uri = fmt.Sprintf("%s/api/price-preview/%s", rabot.BaseURI, contractId)
 		} else {
 			uri = rabot.BaseURI + "/api/price-preview"
 		}
