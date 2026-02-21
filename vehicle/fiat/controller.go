@@ -57,9 +57,8 @@ func (c *Controller) ChargeEnable(enable bool) error {
 	now := time.Now()   // Call once and reuse
 
 	if enable {
-		// Start charging: configure charge from now to 12h later
-		in12hours := now.Add(12 * time.Hour)
-		hasChanged = c.configureChargeSchedule(&stat.EvInfo.Schedules[0], now, in12hours)
+		// Start charging: configure charge from now (end time will be handled in computeNewApiScheduleTime)
+		hasChanged = c.configureChargeSchedule(&stat.EvInfo.Schedules[0], now, time.Time{}) // only set start time to now and keep end time unchanged to avoid undesired charge stop in the future
 	} else {
 		// Stop charging: update end time (use empty time to keep start time as it was for history in Fiat app)
 		hasChanged = c.configureChargeSchedule(&stat.EvInfo.Schedules[0], time.Time{}, now)
@@ -97,8 +96,8 @@ func (c *Controller) computeNewApiScheduleTime(current string, target time.Time,
 	timeDiff := targetTime.Sub(currentTime).Abs()
 	c.log.DEBUG.Printf("current schedule time: %s, target time: %s, time difference: %s", currentTime.Format(timeFormat), targetTime.Format(timeFormat), timeDiff)
 
-	// Round up only if end time changed significantly (>1 min) or if parsing previous time failed
-	if err1 != nil || err2 != nil || timeDiff > time.Minute {
+	// Round up only if end time changed significantly or if parsing previous time failed
+	if err1 != nil || err2 != nil || timeDiff > (minTimeInterval/2) {
 		// round up to next 5 minutes boundary to avoid API rejections
 		roundedTarget := target.Truncate(minTimeInterval)
 		if roundedTarget.Before(target) {
@@ -115,6 +114,7 @@ func (c *Controller) computeNewApiScheduleTime(current string, target time.Time,
 func (c *Controller) configureChargeSchedule(schedule *Schedule, start time.Time, end time.Time) bool {
 	const (
 		timeFormat        = "15:04" // Hours & minutes only
+		defaultEndTime    = "23:55" // Default end time to use when enabling charge to avoid API rejections for schedules without end time; set to end of the day to avoid undesired charge stop in the future
 		fallbackStartTime = "00:00" // Fallback time for schedules crossing midnight
 	)
 
@@ -138,8 +138,9 @@ func (c *Controller) configureChargeSchedule(schedule *Schedule, start time.Time
 		// Update only if different from current
 		if newStartStr != schedule.StartTime {
 			schedule.StartTime = newStartStr
+			schedule.EndTime = defaultEndTime // Set default end time when enabling charge to avoid API rejections for schedules without end time
 			hasChanged = true
-			c.log.DEBUG.Printf("set charge schedule start: %s", schedule.StartTime)
+			c.log.DEBUG.Printf("set charge schedule start: %s with default end time: %s", schedule.StartTime, schedule.EndTime)
 
 			// only enable for current day to avoid undesired charge start in the future
 			weekday := time.Now().Weekday()
