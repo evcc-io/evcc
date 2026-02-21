@@ -967,9 +967,9 @@ func configureTariffDevices(names ...string) error {
 	return eg.Wait()
 }
 
-func configureTariff(yamlConf config.Typed, deviceName string, target *api.Tariff) error {
-	if yamlConf.Type != "" {
-		instance, err := tariffInstance("tariff", yamlConf)
+func configureTariff(conf config.Typed, deviceName string, target *api.Tariff) error {
+	if conf.Type != "" {
+		instance, err := tariffInstance("tariff", conf)
 		if err != nil {
 			return err
 		}
@@ -986,12 +986,12 @@ func configureTariff(yamlConf config.Typed, deviceName string, target *api.Tarif
 	return nil
 }
 
-func configureSolarTariffs(yamlConfs []config.Typed, deviceNames []string, target *api.Tariff) error {
-	if len(yamlConfs) > 0 {
-		if len(yamlConfs) == 1 {
-			return configureTariff(yamlConfs[0], "", target)
+func configureSolarTariffs(confs []config.Typed, deviceNames []string, target *api.Tariff) error {
+	if len(confs) > 0 {
+		if len(confs) == 1 {
+			return configureTariff(confs[0], "", target)
 		}
-		return configureSolarTariff(yamlConfs, target)
+		return configureSolarTariff(confs, target)
 	}
 	if len(deviceNames) > 0 {
 		if len(deviceNames) == 1 {
