@@ -26,6 +26,7 @@ package charger
 import (
 	"context"
 	"fmt"
+	"math"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -247,7 +248,17 @@ func (wb *PhoenixEVEth) chargedEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return float64(encoding.Uint32LswFirst(b)), nil
+	charged := float64(encoding.Uint32LswFirst(b))
+
+	// borrow fractional part from totalEnergy for sub-kWh precision
+	if charged > 0 {
+		if total, err := wb.totalEnergy(); err == nil {
+			_, frac := math.Modf(total)
+			charged += frac
+		}
+	}
+
+	return charged, nil
 }
 
 // identify implements the api.Identifier interface
