@@ -1,0 +1,27 @@
+template: rabot-energy
+products:
+  - brand: rabot.energy
+group: price
+countries: ["DE"]
+params:
+  - name: gross
+    type: bool
+    default: false
+    description:
+      en: use gross prices (login mandatory)
+      de: Bruttopreise verwenden (Login notwendig)
+  - name: login
+    description:
+      en: Login / email address
+      de: Login / E-Mail-Adresse
+  - name: password
+    description:
+      en: password
+      de: Passwort
+  - preset: tariff-base
+render: |
+  type: rabot
+  gross: {{ .gross }}
+  login: {{ .login }}
+  password: {{ .password }}
+  {{ include "tariff-base" . }}
