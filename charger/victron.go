@@ -36,13 +36,15 @@ type Victron struct {
 }
 
 type victronRegs struct {
-	Mode       uint16
-	Energy     uint16
-	Power      uint16
-	Status     uint16
-	SetCurrent uint16
-	Enabled    uint16
-	isGX       bool
+	Mode              uint16
+	Energy            uint16
+	Power             uint16
+	Status            uint16
+	SetCurrent        uint16
+	Enabled           uint16
+	PhaseSwitch       uint16
+	ThreePhaseEnabled uint16
+	isGX              bool
 }
 
 var (
@@ -57,13 +59,15 @@ var (
 	}
 
 	victronEVCS = victronRegs{
-		Mode:       5009,
-		Energy:     5021,
-		Power:      5014,
-		Status:     5015,
-		SetCurrent: 5016,
-		Enabled:    5010,
-		isGX:       false,
+		Mode:              5009,
+		Energy:            5021,
+		Power:             5014,
+		Status:            5015,
+		SetCurrent:        5016,
+		Enabled:           5010,
+		PhaseSwitch:       5055,
+		ThreePhaseEnabled: 5100,
+		isGX:              false,
 	}
 )
 
@@ -71,6 +75,8 @@ func init() {
 	registry.AddCtx("victron", NewVictronGXFromConfig)
 	registry.AddCtx("victron-evcs", NewVictronEVCSFromConfig)
 }
+
+//go:generate go tool decorate -f decorateVictron -b *Victron -r api.Charger -t api.PhaseSwitcher,api.PhaseGetter
 
 // NewVictronGXFromConfig creates a ABB charger from generic config
 func NewVictronGXFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
@@ -84,19 +90,24 @@ func NewVictronEVCSFromConfig(ctx context.Context, other map[string]any) (api.Ch
 
 // NewVictronFromConfig creates a ABB charger from generic config
 func NewVictronFromConfig(ctx context.Context, other map[string]any, regs victronRegs) (api.Charger, error) {
-	cc := modbus.TcpSettings{
-		ID: cast.ToUint8(regs.isGX) * 100,
+	cc := struct {
+		modbus.TcpSettings `mapstructure:",squash"`
+		Phases1p3p         bool
+	}{
+		TcpSettings: modbus.TcpSettings{
+			ID: cast.ToUint8(regs.isGX) * 100,
+		},
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewVictron(ctx, cc.URI, cc.ID, regs)
+	return NewVictron(ctx, cc.URI, cc.ID, regs, cc.Phases1p3p)
 }
 
 // NewVictron creates Victron charger
-func NewVictron(ctx context.Context, uri string, slaveID uint8, regs victronRegs) (api.Charger, error) {
+func NewVictron(ctx context.Context, uri string, slaveID uint8, regs victronRegs, phases bool) (api.Charger, error) {
 	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
 	if err != nil {
 		return nil, err
@@ -119,7 +130,21 @@ func NewVictron(ctx context.Context, uri string, slaveID uint8, regs victronRegs
 		return nil, errors.New("charger must be in manual mode")
 	}
 
-	return wb, nil
+	// phase switching (EVCS only, requires hardware mod with second contactor)
+	var phasesS func(int) error
+	var phasesG func() (int, error)
+
+	if phases && !regs.isGX {
+		b, err := wb.conn.ReadHoldingRegisters(wb.regs.ThreePhaseEnabled, 1)
+		if err != nil || binary.BigEndian.Uint16(b) != 1 {
+			log.ERROR.Printf("phases1p3p: Phase switching is not available, register %d has value %d, expected 1", wb.regs.ThreePhaseEnabled, binary.BigEndian.Uint16(b))
+		} else {
+			phasesS = wb.phases1p3p
+			phasesG = wb.getPhases
+		}
+	}
+
+	return decorateVictron(wb, phasesS, phasesG), nil
 }
 
 // Status implements the api.Charger interface
@@ -193,4 +218,29 @@ func (wb *Victron) ChargedEnergy() (float64, error) {
 	}
 
 	return float64(binary.BigEndian.Uint16(b)) / 100, nil
+}
+
+// phases1p3p implements the api.PhaseSwitcher interface
+func (wb *Victron) phases1p3p(phases int) error {
+	// register 5055: 1 = single phase, 0 = three phase
+	var u uint16
+	if phases == 1 {
+		u = 1
+	}
+
+	_, err := wb.conn.WriteSingleRegister(wb.regs.PhaseSwitch, u)
+	return err
+}
+
+// getPhases implements the api.PhaseGetter interface
+func (wb *Victron) getPhases() (int, error) {
+	b, err := wb.conn.ReadHoldingRegisters(wb.regs.PhaseSwitch, 1)
+	if err != nil {
+		return 0, err
+	}
+
+	if binary.BigEndian.Uint16(b) == 1 {
+		return 1, nil
+	}
+	return 3, nil
 }
