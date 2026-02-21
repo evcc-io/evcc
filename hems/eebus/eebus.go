@@ -174,8 +174,14 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, passthrough func(b
 	return c, nil
 }
 
+// ConsumptionLimit implements hems.API
 func (c *EEBus) ConsumptionLimit() float64 {
 	return c.consumptionLimit.Value
+}
+
+// FeedinLimit implements hems.API
+func (c *EEBus) FeedinLimit() float64 {
+	return c.productionLimit.Value
 }
 
 func (c *EEBus) Run() {
