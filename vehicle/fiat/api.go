@@ -159,8 +159,13 @@ func (v *API) Action(vin, pin, action, cmd string) (ActionResponse, error) {
 	return res, err
 }
 
+// Warning: calling ChargeNow will start charging immediately and schedules will not be able to stop the charging.
 func (v *API) ChargeNow(vin, pin string) (ActionResponse, error) {
 	return v.Action(vin, pin, "ev/chargenow", "CNOW")
+}
+
+func (v *API) DeepRefresh(vin, pin string) (ActionResponse, error) {
+	return v.Action(vin, pin, "ev", "DEEPREFRESH")
 }
 
 func (v *API) UpdateSchedule(vin, pin string, schedules []Schedule) (ActionResponse, error) {

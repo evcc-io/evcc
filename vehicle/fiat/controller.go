@@ -97,7 +97,7 @@ func (c *Controller) computeNewApiScheduleTime(current string, target time.Time,
 	c.log.DEBUG.Printf("current schedule time: %s, target time: %s, time difference: %s", currentTime.Format(timeFormat), targetTime.Format(timeFormat), timeDiff)
 
 	// Round up only if end time changed significantly or if parsing previous time failed
-	if err1 != nil || err2 != nil || timeDiff > (minTimeInterval/2) {
+	if err1 != nil || err2 != nil || timeDiff > time.Minute {
 		// round up to next 5 minutes boundary to avoid API rejections
 		roundedTarget := target.Truncate(minTimeInterval)
 		if roundedTarget.Before(target) {
@@ -204,12 +204,15 @@ var _ api.Resurrector = (*Controller)(nil)
 
 func (c *Controller) WakeUp() error {
 	if c.pin == "" {
-		c.log.DEBUG.Printf("pin required for vehicle wakeup")
+		c.log.DEBUG.Printf("Vehicle cannot be woken up: no PIN provided")
 		return nil
 	}
 
-	res, err := c.api.ChargeNow(c.vin, c.pin)
-	if err == nil && res.ResponseStatus != "pending" {
+	// Trigger deep refresh to wake up the vehicle, and this requires the same pin authentication as other actions
+	res, err := c.api.DeepRefresh(c.vin, c.pin)
+	if err != nil && res.ResponseStatus == "pending" {
+		c.log.DEBUG.Printf("vehicle wakeup triggered successfully with deep refresh action")
+	} else {
 		err = fmt.Errorf("invalid response status: %s", res.ResponseStatus)
 	}
 
