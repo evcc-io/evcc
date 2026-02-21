@@ -11,8 +11,6 @@ params:
     description:
       en: Price
       de: Preis
-  - preset: tariff-base
 render: |
   type: fixed
   price: {{ .price }}
-  {{ include "tariff-base" . }}

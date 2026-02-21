@@ -20,7 +20,6 @@ params:
       de: Wenn keine Zone zutrifft
   - name: zones
     required: true
-  - preset: tariff-base
 render: |
   type: fixed
   price: {{ .price }}
@@ -37,4 +36,3 @@ render: |
     months: {{ .months }}
     {{- end }}
   {{- end }}
-  {{ include "tariff-base" . }}
