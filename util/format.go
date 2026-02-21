@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"slices"
 	"strings"
+	"sync"
 	"text/template"
 	"time"
 
@@ -14,6 +15,30 @@ import (
 )
 
 var re = regexp.MustCompile(`(?i)\${(\w+)(:([a-zA-Z0-9%.]+))?}`)
+
+// tplCache caches parsed templates by their source string to avoid reparsing
+var tplCache sync.Map // map[string]*template.Template
+
+// getTemplate returns a parsed template for the given source string, using
+// an internal cache to avoid reparsing identical templates repeatedly.
+func getTemplate(src string) (*template.Template, error) {
+	if v, ok := tplCache.Load(src); ok {
+		return v.(*template.Template), nil
+	}
+
+	t, err := template.New("base").
+		Funcs(sprig.TxtFuncMap()).
+		Funcs(map[string]any{
+			"timeRound": timeRound,
+			"addDate":   addDate,
+		}).Parse(src)
+	if err != nil {
+		return nil, err
+	}
+
+	tplCache.Store(src, t)
+	return t, nil
+}
 
 // FormatValue will apply specific formatting in addition to standard sprintf
 func FormatValue(format string, val any) string {
@@ -47,13 +72,7 @@ func FormatValue(format string, val any) string {
 
 // ReplaceFormatted replaces all occurrences of ${key} with formatted val from the kv map
 func ReplaceFormatted(s string, kv map[string]any) (string, error) {
-	// Enhanced golang template logic
-	tpl, err := template.New("base").
-		Funcs(sprig.TxtFuncMap()).
-		Funcs(map[string]any{
-			"timeRound": timeRound,
-			"addDate":   addDate,
-		}).Parse(s)
+	tpl, err := getTemplate(s)
 	if err != nil {
 		return s, err
 	}
