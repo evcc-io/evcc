@@ -918,6 +918,26 @@ func configureTariff(u api.TariffUsage, conf config.Typed, t *api.Tariff) error 
 	return nil
 }
 
+func configureTariffWithFees(u api.TariffUsage, conf config.Typed, fees config.Typed, t *api.Tariff) error {
+	var res api.Tariff
+	if err := configureTariff(u, conf, &res); res == nil || err != nil {
+		return err
+	}
+
+	// fees
+	if fees.Type != "" {
+		var ft api.Tariff
+		if err := configureTariff(u, fees, &ft); ft == nil || err != nil {
+			return err
+		}
+
+		res = tariff.NewCombined([]api.Tariff{res, ft})
+	}
+
+	*t = res
+	return nil
+}
+
 func configureSolarTariff(conf []config.Typed, t *api.Tariff) error {
 	var eg errgroup.Group
 	tt := make([]api.Tariff, len(conf))
@@ -965,8 +985,12 @@ func configureTariffs(conf *globalconfig.Tariffs) (*tariff.Tariffs, error) {
 	}
 
 	var eg errgroup.Group
-	eg.Go(func() error { return configureTariff(api.TariffUsageGrid, conf.Grid, &tariffs.Grid) })
-	eg.Go(func() error { return configureTariff(api.TariffUsageFeedIn, conf.FeedIn, &tariffs.FeedIn) })
+	eg.Go(func() error {
+		return configureTariffWithFees(api.TariffUsageGrid, conf.Grid, conf.GridFees, &tariffs.Grid)
+	})
+	eg.Go(func() error {
+		return configureTariffWithFees(api.TariffUsageFeedIn, conf.FeedIn, conf.FeedInFees, &tariffs.FeedIn)
+	})
 	eg.Go(func() error { return configureTariff(api.TariffUsageCo2, conf.Co2, &tariffs.Co2) })
 	eg.Go(func() error { return configureTariff(api.TariffUsagePlanner, conf.Planner, &tariffs.Planner) })
 	if len(conf.Solar) > 0 {
