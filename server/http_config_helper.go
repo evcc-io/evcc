@@ -374,8 +374,7 @@ func testInstance(instance any) map[string]testResult {
 
 		if err == nil && len(rates) > 0 {
 			// Get current rate value
-			now := time.Now()
-			if rate, err := rates.At(now); err == nil {
+			if rate, err := rates.At(time.Now()); err == nil {
 				makeResult(valueKey, rate.Value, nil)
 			}
 
