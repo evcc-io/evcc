@@ -1,0 +1,96 @@
+template: sessy-smart-battery
+covers: [sessy-smart-battery]
+products:
+  - brand: Sessy
+    description:
+      generic: Sessy Smart Battery
+params:
+  - name: usage
+    choice: ["battery"]
+  - name: host
+  - name: user
+    required: true
+  - name: password
+    required: true
+  - name: cache
+    default: 10
+  - name: capacity
+    default: 5
+render: |
+  type: custom
+  power:
+    source: http
+    uri: http://{{ .host }}/api/v1/power/status
+    auth:
+      type: basic
+      user: {{ .user }}
+      password: {{ .password }}
+    headers:
+      - content-type: application/json
+    jq: .sessy.power
+    cache: {{ .cache }}
+    timeout: 10s
+  energy:
+    source: http
+    uri: http://{{ .host }}/api/v1/energy/status
+    auth:
+      type: basic
+      user: {{ .user }}
+      password: {{ .password }}
+    headers:
+      - content-type: application/json
+    jq: .sessy_energy.import_wh
+    cache: {{ .cache }}
+    timeout: 10s
+  soc:
+    source: http
+    uri: http://{{ .host }}/api/v1/power/status
+    auth:
+      type: basic
+      user: {{ .user }}
+      password: {{ .password }}
+    headers:
+      - content-type: application/json
+    jq: .sessy.state_of_charge
+    scale: 100
+    cache: {{ .cache }}
+    timeout: 10s
+  voltages:
+    - source: http
+      uri: http://{{ .host }}/api/v1/power/status
+      auth:
+        type: basic
+        user: {{ .user }}
+        password: {{ .password }}
+      headers:
+        - content-type: application/json
+      jq: .renewable_energy_phase1.voltage_rms
+      scale: 0.001
+      cache: {{ .cache }}
+      timeout: 10s
+    - source: http
+      uri: http://{{ .host }}/api/v1/power/status
+      auth:
+        type: basic
+        user: {{ .user }}
+        password: {{ .password }}
+      headers:
+        - content-type: application/json
+      jq: .renewable_energy_phase2.voltage_rms
+      scale: 0.001
+      cache: {{ .cache }}
+      timeout: 10s
+    - source: http
+      uri: http://{{ .host }}/api/v1/power/status
+      auth:
+        type: basic
+        user: {{ .user }}
+        password: {{ .password }}
+      headers:
+        - content-type: application/json
+      jq: .renewable_energy_phase3.voltage_rms
+      scale: 0.001
+      cache: {{ .cache }}
+      timeout: 10s
+
+  capacity: {{ .capacity }}
