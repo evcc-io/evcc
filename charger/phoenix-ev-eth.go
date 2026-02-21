@@ -59,8 +59,6 @@ const (
 	phxRegChargedEnergyEx = 3376 // Holding, 64bit, Wh (4)
 )
 
-const phxSF float64 = 0.01 // scale factor from register values to real values (2 decimal places)
-
 func init() {
 	registry.AddCtx("phoenix-ev-eth", NewPhoenixEVEthFromConfig)
 }
@@ -250,7 +248,7 @@ func (wb *PhoenixEVEth) chargedEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return float64(encoding.Uint32LswFirst(b)) * phxSF, nil
+	return float64(encoding.Uint32LswFirst(b)), nil
 }
 
 // identify implements the api.Identifier interface
