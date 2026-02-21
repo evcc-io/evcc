@@ -92,6 +92,12 @@ func dump(r io.ReadCloser, w *strings.Builder) error {
 func (r *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	r.log.TRACE.Printf("%s %s", req.Method, req.URL.String())
 
+	// add evcc user agent
+	if req.Header.Get("User-Agent") == "" {
+		req = req.Clone(req.Context())
+		req.Header.Set("User-Agent", "evcc/"+util.FormattedVersion())
+	}
+
 	// dump without headers
 	var err error
 	var save io.ReadCloser

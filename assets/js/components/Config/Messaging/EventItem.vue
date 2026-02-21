@@ -51,7 +51,7 @@
 						:disabled="disabled"
 						:rows="3"
 						required
-						@change="updateMessage($event.target.value)"
+						@update:model-value="updateMessage"
 					/>
 					<div class="text-end small text-gray mt-1">
 						<a

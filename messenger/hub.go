@@ -54,7 +54,7 @@ func NewHub(cc globalconfig.MessagingEvents, vv Vehicles, cache *util.ParamCache
 	}
 
 	h := &Hub{
-		definitions: cc,
+		definitions: filtered,
 		cache:       cache,
 		vehicles:    vv,
 	}

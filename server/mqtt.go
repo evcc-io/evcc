@@ -14,6 +14,7 @@ import (
 	"github.com/evcc-io/evcc/core/vehicle"
 	"github.com/evcc-io/evcc/plugin/mqtt"
 	"github.com/evcc-io/evcc/util"
+	"github.com/samber/lo"
 )
 
 // MQTT is the MQTT server. It uses the MQTT client for publishing.
@@ -53,7 +54,7 @@ func NewMQTT(root string, site site.API) (*MQTT, error) {
 
 func (m *MQTT) encode(v any) string {
 	// nil should erase the value
-	if v == nil {
+	if v == nil || lo.IsNil(v) {
 		return ""
 	}
 

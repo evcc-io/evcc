@@ -56,14 +56,16 @@ test.describe("battery settings", async () => {
     await page.getByRole("button", { name: "Close" }).click();
     await expectModalHidden(modal);
     await page.getByTestId("energyflow").click();
-    await page.getByRole("button", { name: "grid charging active (≤ 50.0 ct)" }).click();
+    await page.getByRole("button", { name: "Grid charging: active (≤ 50.0 ct)" }).click();
     await expectModalVisible(modal);
     await modal.getByLabel("Price limit").selectOption({ label: "≤ -10.0 ct/kWh" });
     await expect(modal.getByTestId("active-hours")).toHaveText("Active time");
     await modal.getByRole("button", { name: "Close" }).click();
     await expectModalHidden(modal);
     await expect(modal).not.toBeVisible();
-    await expect(page.getByRole("button", { name: "grid charging when ≤ -10.0 ct" })).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Grid charging: when ≤ -10.0 ct" })
+    ).toBeVisible();
   });
 
   test("hold mode display", async ({ page }) => {

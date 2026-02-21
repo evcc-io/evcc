@@ -23,11 +23,8 @@ params:
     help:
       de: Der Wechselrichter hat einen dritten PV-Eingang (MPPT3)
       en: The inverter has a third PV input (MPPT3)
-  - name: storageunit
-    type: int
-    default: 1
-    advanced: true
   - name: maxacpower
+  - name: storageunit
   - preset: battery-params
   - name: defaultmode
     default: 0 # "SelfUse"
