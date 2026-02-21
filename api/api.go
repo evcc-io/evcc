@@ -9,7 +9,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-//go:generate go tool mockgen -package api -destination mock.go github.com/evcc-io/evcc/api Charger,ChargeState,CurrentLimiter,CurrentGetter,PhaseSwitcher,PhaseGetter,FeatureDescriber,Identifier,Meter,MeterEnergy,PhaseCurrents,Vehicle,ConnectionTimer,ChargeRater,Battery,BatteryController,BatterySocLimiter,Circuit,Dimmer,Tariff
+//go:generate go tool mockgen -package api -destination mock.go github.com/evcc-io/evcc/api Charger,ChargeState,CurrentLimiter,CurrentGetter,PhaseSwitcher,PhaseGetter,FeatureDescriber,Identifier,Meter,MeterEnergy,PhaseCurrents,Vehicle,DisconnectDetector,ChargeRater,Battery,BatteryController,BatterySocLimiter,Circuit,Dimmer,Tariff
 
 // Meter provides total active power in W
 type Meter interface {
@@ -117,9 +117,10 @@ type ChargeTimer interface {
 	ChargeDuration() (time.Duration, error)
 }
 
-// ConnectionTimer provides current connection duration
-type ConnectionTimer interface {
-	ConnectionDuration() (time.Duration, error)
+// DisconnectDetector detects intermediate disconnects without a status change to StatusA.
+// Returns true when a car disconnect is detected.
+type DisconnectDetector interface {
+	DisconnectDetected() (bool, error)
 }
 
 // ChargeRater provides charged energy amount in kWh

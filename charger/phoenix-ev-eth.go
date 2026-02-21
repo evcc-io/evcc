@@ -35,8 +35,9 @@ import (
 )
 
 type PhoenixEVEth struct {
-	conn     *modbus.Connection
-	isWallbe bool
+	conn              *modbus.Connection
+	isWallbe          bool
+	lastChargedEnergy uint32 // last known charged energy (Wh) for disconnect detection
 }
 
 const (
@@ -260,6 +261,24 @@ func (wb *PhoenixEVEth) identify() (string, error) {
 	}
 
 	return bytesAsString(b), nil
+}
+
+var _ api.DisconnectDetector = (*PhoenixEVEth)(nil)
+
+// DisconnectDetected implements the api.DisconnectDetector interface.
+// Register 132 holds the session charged energy in Wh and resets to 0 on vehicle disconnect.
+// A drop in value indicates an intermediate disconnect without a StatusA transition.
+func (wb *PhoenixEVEth) DisconnectDetected() (bool, error) {
+	b, err := wb.conn.ReadInputRegisters(phxRegChargedEnergy, 2)
+	if err != nil {
+		return false, err
+	}
+
+	d := encoding.Uint32LswFirst(b)
+	last := wb.lastChargedEnergy
+	wb.lastChargedEnergy = d
+
+	return d < last, nil
 }
 
 var _ api.Diagnosis = (*PhoenixEVEth)(nil)

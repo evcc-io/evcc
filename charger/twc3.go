@@ -15,9 +15,10 @@ import (
 
 // Twc3 is an api.Vehicle implementation for Twc3 cars
 type Twc3 struct {
-	lp      loadpoint.API
-	vitalsG func() (Vitals, error)
-	enabled bool
+	lp               loadpoint.API
+	vitalsG          func() (Vitals, error)
+	enabled          bool
+	lastConnDuration time.Duration // last known connection duration for disconnect detection
 }
 
 func init() {
@@ -165,12 +166,22 @@ func (v *Twc3) ChargedEnergy() (float64, error) {
 	return res.SessionEnergyWh / 1e3, err
 }
 
-var _ api.ConnectionTimer = (*Twc3)(nil)
+var _ api.DisconnectDetector = (*Twc3)(nil)
 
-// ConnectionDuration implements the api.ConnectionTimer interface
-func (v *Twc3) ConnectionDuration() (time.Duration, error) {
+// DisconnectDetected implements the api.DisconnectDetector interface.
+// It reads the session duration from vitals, compares it to the last known value,
+// and returns true when a drop is detected (intermediate disconnect without StatusA).
+func (v *Twc3) DisconnectDetected() (bool, error) {
 	res, err := v.vitalsG()
-	return time.Duration(res.SessionS) * time.Second, err
+	if err != nil {
+		return false, err
+	}
+
+	d := time.Duration(res.SessionS) * time.Second
+	last := v.lastConnDuration
+	v.lastConnDuration = d
+
+	return d < last, nil
 }
 
 // removed: https://github.com/evcc-io/evcc/issues/13555
