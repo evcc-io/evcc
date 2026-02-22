@@ -9,6 +9,7 @@ import (
 	ucapi "github.com/enbility/eebus-go/usecases/api"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/hems/smartgrid"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/server/eebus"
@@ -162,14 +163,30 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, passthrough func(b
 	return c, nil
 }
 
+var _ hems.API = (*EEBus)(nil)
+
 // ConsumptionLimit implements hems.API
-func (c *EEBus) ConsumptionLimit() float64 {
-	return c.consumptionLimit.Value
+func (c *EEBus) ConsumptionLimit() *float64 {
+	c.mux.RLock()
+	defer c.mux.RUnlock()
+
+	if !c.consumptionLimit.IsActive {
+		return nil
+	}
+
+	return new(c.consumptionLimit.Value)
 }
 
-// FeedinLimit implements hems.API
-func (c *EEBus) FeedinLimit() float64 {
-	return c.productionLimit.Value
+// ProductionLimit implements hems.API
+func (c *EEBus) ProductionLimit() *float64 {
+	c.mux.RLock()
+	defer c.mux.RUnlock()
+
+	if !c.productionLimit.IsActive {
+		return nil
+	}
+
+	return new(c.productionLimit.Value)
 }
 
 func (c *EEBus) Run() {

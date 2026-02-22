@@ -2,21 +2,26 @@ package fnn
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/hems/smartgrid"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
 )
 
 type Fnn3 struct {
+	mu         sync.Mutex
 	log        *util.Logger
 	root       api.Circuit
 	s1, s2, w3 func() (bool, error)
+	limit      *float64
 	maxPower   float64
 	interval   time.Duration
+	// TODO smartgrid session
 }
 
 // NewFromConfig creates an Fnn3 HEMS from generic config
@@ -77,6 +82,20 @@ func NewFnn3(root api.Circuit, s1, s2, w3 func() (bool, error), maxPower float64
 	return c, nil
 }
 
+var _ hems.API = (*Fnn3)(nil)
+
+// ConsumptionLimit implements hems.API
+func (c *Fnn3) ConsumptionLimit() *float64 {
+	return nil
+}
+
+// ProductionLimit implements hems.API
+func (c *Fnn3) ProductionLimit() *float64 {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.limit
+}
+
 func (c *Fnn3) Run() {
 	for range time.Tick(c.interval) {
 		if err := c.run(); err != nil {
@@ -123,6 +142,14 @@ func (c *Fnn3) run() error {
 }
 
 func (c *Fnn3) curtail(frac float64) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	c.limit = nil
+	if frac < 1.0 {
+		c.limit = new(c.maxPower * frac)
+	}
+
 	c.root.Curtail(frac < 1.0)
 	// TODO make ProductionNominalMax configurable (Site kWp)
 	// c.root.SetMaxPower(c.maxPower*frac)
