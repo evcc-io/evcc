@@ -15,9 +15,6 @@ params:
       en: Login / email address
       de: Login / E-Mail-Adresse
   - name: password
-    description:
-      en: password
-      de: Passwort
   - preset: tariff-base
 render: |
   type: rabot
