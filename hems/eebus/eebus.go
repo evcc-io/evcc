@@ -240,12 +240,12 @@ func (c *EEBus) run() error {
 	if c.productionLimitActivated.IsZero() {
 		if c.productionLimit.IsActive {
 			c.log.WARN.Println("activating production limit")
-			c.setProductionLimit(c.productionLimit.Value)
+			c.setProductionLimit(c.productionLimit.Value, true)
 		}
 	} else {
 		if time.Since(c.productionLimitActivated) > c.productionLimit.Duration {
 			c.log.DEBUG.Println("production limit duration exceeded")
-			c.setProductionLimit(0)
+			c.setProductionLimit(0, false)
 		}
 	}
 
@@ -257,7 +257,7 @@ func (c *EEBus) setStatusAndLimit(status status, consumption, production float64
 	c.statusUpdated = time.Now()
 
 	c.setConsumptionLimit(consumption)
-	c.setProductionLimit(production)
+	c.setProductionLimit(production, true)
 }
 
 func (c *EEBus) setConsumptionLimit(limit float64) {
@@ -283,9 +283,7 @@ func (c *EEBus) setConsumptionLimit(limit float64) {
 	}
 }
 
-func (c *EEBus) setProductionLimit(limit float64) {
-	active := limit > 0
-
+func (c *EEBus) setProductionLimit(limit float64, active bool) {
 	if active {
 		c.productionLimitActivated = time.Now()
 	} else {
