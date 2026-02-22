@@ -117,7 +117,7 @@ func (c *Fnn3) run() error {
 		return c.curtail(0.0)
 	}
 
-	if c.s1 != nil && c.s2 != nil {
+	if c.s2 != nil {
 		s2, err := c.s2()
 		if err != nil {
 			return err
@@ -127,7 +127,9 @@ func (c *Fnn3) run() error {
 			// 30%
 			return c.curtail(0.3)
 		}
+	}
 
+	if c.s1 != nil {
 		s1, err := c.s1()
 		if err != nil {
 			return err
