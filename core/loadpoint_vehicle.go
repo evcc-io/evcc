@@ -41,9 +41,11 @@ func (lp *Loadpoint) setVehicleIdentifier(id string) {
 	if lp.vehicleIdentifier != id {
 		lp.vehicleIdentifier = id
 		lp.publish(keys.VehicleIdentity, id)
-		lp.updateSession(func(session *session.Session) {
-			session.Identifier = id
-		})
+		if id != "" {
+			lp.updateSession(func(session *session.Session) {
+				session.Identifier = id
+			})
+		}
 	}
 }
 
