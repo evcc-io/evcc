@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -15,7 +16,8 @@ type goodWeWifi struct {
 	log    *util.Logger
 	conn   *net.UDPConn
 	family string // "DT" or "HYBRID"
-	usage  string // "grid", "pv", "battery"
+	usage  string
+	mu     sync.Mutex
 }
 
 func init() {
@@ -24,7 +26,7 @@ func init() {
 
 func NewGoodWeWifi(other map[string]interface{}) (api.Meter, error) {
 	var cc struct {
-		URI   string `mapstructure:"uri"`
+		URI  string `mapstructure:"uri"`
 		Usage string `mapstructure:"usage"`
 	}
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -53,12 +55,15 @@ func NewGoodWeWifi(other map[string]interface{}) (api.Meter, error) {
 		return nil, fmt.Errorf("family detection failed: %w", err)
 	}
 
-	// DT series only supports "pv". Fail fast on unsupported usage.
 	if g.family == "DT" && (g.usage == "battery" || g.usage == "grid") {
 		return nil, fmt.Errorf("usage '%s' is not supported on DT/DNS series (only 'pv' is valid)", g.usage)
 	}
 
 	return g, nil
+}
+
+func (g *goodWeWifi) Close() error {
+	return g.conn.Close()
 }
 
 // modbusCRC16 – exact match to Marcel Blijleven's library
@@ -77,8 +82,11 @@ func modbusCRC(data []byte) []byte {
 	return []byte{byte(crc & 0xFF), byte(crc >> 8)}
 }
 
-// sendCommand – shared low-level function
+// sendCommand – locked, fresh deadline, no response CRC (GoodWe WiFi protocol does not include one)
 func (g *goodWeWifi) sendCommand(pdu []byte) ([]byte, error) {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+
 	if len(pdu) != 6 {
 		return nil, fmt.Errorf("invalid PDU length")
 	}
@@ -112,8 +120,9 @@ func (g *goodWeWifi) sendCommand(pdu []byte) ([]byte, error) {
 	return buf[5 : 5+byteCount], nil
 }
 
-// detectFamily – works for DT/DNS and ET/EH/BT/BH
+// detectFamily …
 func (g *goodWeWifi) detectFamily() error {
+	// (same as before – unchanged)
 	pdu := []byte{0x7f, 0x03, 0x9c, 0xed, 0x00, 0x08}
 	data, err := g.sendCommand(pdu)
 	if err != nil {
@@ -137,17 +146,29 @@ func (g *goodWeWifi) detectFamily() error {
 	return nil
 }
 
-// CurrentPower implements api.Meter
+// CurrentPower – now fully respects usage on HYBRID
 func (g *goodWeWifi) CurrentPower() (float64, error) {
 	var pdu []byte
 	var offset int
 
 	if g.family == "DT" {
 		pdu = []byte{0x7f, 0x03, 0x75, 0x94, 0x00, 0x49}
-		offset = 54
+		offset = 54 // total inverter power (only pv usage allowed)
 	} else {
-		pdu = []byte{0x7f, 0x03, 0x75, 0x00, 0x00, 0x2a}
-		offset = 12
+		// HYBRID family – per-usage registers (from Marcel's et.py)
+		switch g.usage {
+		case "pv":
+			pdu = []byte{0x7f, 0x03, 0x75, 0x00, 0x00, 0x2a}
+			offset = 12
+		case "grid":
+			pdu = []byte{0x7f, 0x03, 0x75, 0x00, 0x00, 0x2a}
+			offset = 24 // grid power (negative = export)
+		case "battery":
+			pdu = []byte{0x7f, 0x03, 0x75, 0x00, 0x00, 0x2a}
+			offset = 36 // battery power
+		default:
+			return 0, fmt.Errorf("unknown usage: %s", g.usage)
+		}
 	}
 
 	data, err := g.sendCommand(pdu)
@@ -158,12 +179,12 @@ func (g *goodWeWifi) CurrentPower() (float64, error) {
 		return 0, fmt.Errorf("short runtime data")
 	}
 
-	return float64(int32(binary.BigEndian.Uint32(data[offset : offset+4]))), nil
+	return float64(int32(binary.BigEndian.Uint32(data[offset:offset+4]))), nil
 }
 
-// TotalEnergy implements api.MeterEnergy (lifetime total in kWh)
+// TotalEnergy – family aware
 func (g *goodWeWifi) TotalEnergy() (float64, error) {
-	pdu := []byte{0x7f, 0x03, 0x75, 0x94, 0x00, 0x49}
+	pdu := []byte{0x7f, 0x03, 0x75, 0x94, 0x00, 0x49} // works for both families
 	data, err := g.sendCommand(pdu)
 	if err != nil {
 		return 0, err
