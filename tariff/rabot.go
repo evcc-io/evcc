@@ -33,12 +33,12 @@ func init() {
 }
 
 func NewRabotFromConfig(other map[string]any) (api.Tariff, error) {
-	cc := struct {
+	var cc {
 		embed    `mapstructure:",squash"`
 		Login    string
 		Password string
 		Gross    bool
-	}{}
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
