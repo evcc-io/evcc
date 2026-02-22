@@ -14,18 +14,16 @@ import (
 	"github.com/evcc-io/evcc/tariff/rabot"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/evcc-io/evcc/util/transport"
 )
 
 type Rabot struct {
 	*embed
 	*request.Helper
-	log           *util.Logger
-	login         string
-	password      string
-	gross         bool
-	baseTransport http.RoundTripper
-	data          *util.Monitor[api.Rates]
+	log      *util.Logger
+	login    string
+	password string
+	gross    bool
+	data     *util.Monitor[api.Rates]
 }
 
 var _ api.Tariff = (*Rabot)(nil)
@@ -36,13 +34,11 @@ func init() {
 
 func NewRabotFromConfig(other map[string]any) (api.Tariff, error) {
 	cc := struct {
-		embed `mapstructure:",squash"`
+		embed    `mapstructure:",squash"`
 		Login    string
 		Password string
 		Gross    bool
-	}{
-		Gross: true,
-	}
+	}{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
@@ -68,9 +64,6 @@ func NewRabotFromConfig(other map[string]any) (api.Tariff, error) {
 		data:     util.NewMonitor[api.Rates](2 * time.Hour),
 	}
 
-	t.baseTransport = t.Client.Transport
-	t.Client.Transport = transport.BearerAuth(rabot.AppToken, t.baseTransport)
-
 	return runOrError(t)
 }
 
@@ -95,9 +88,8 @@ func (t *Rabot) authenticate() (string, string, error) {
 		return "", "", err
 	}
 
-	client := request.NewHelper(t.log)
 	var loginRes rabot.LoginResponse
-	if err := client.DoJSON(req, &loginRes); err != nil {
+	if err := t.DoJSON(req, &loginRes); err != nil {
 		return "", "", fmt.Errorf("login: %w", err)
 	}
 
@@ -112,7 +104,7 @@ func (t *Rabot) authenticate() (string, string, error) {
 	}
 
 	var contractsRes rabot.ContractsResponse
-	if err := client.DoJSON(req, &contractsRes); err != nil {
+	if err := t.DoJSON(req, &contractsRes); err != nil {
 		return "", "", fmt.Errorf("contracts: %w", err)
 	}
 
@@ -128,6 +120,8 @@ func (t *Rabot) run(done chan error) {
 
 	for tick := time.Tick(time.Hour); ; <-tick {
 		var uri string
+		var auth string
+
 		if t.gross {
 			sessionToken, contractId, err := t.authenticate()
 			if err != nil {
@@ -136,15 +130,22 @@ func (t *Rabot) run(done chan error) {
 				continue
 			}
 
-			t.Client.Transport = transport.BearerAuth(sessionToken, t.baseTransport)
+			auth = "Bearer " + sessionToken
 			uri = fmt.Sprintf("%s/api/price-preview/%s", rabot.BaseURI, contractId)
 		} else {
+			auth = "Bearer " + rabot.AppToken
 			uri = rabot.BaseURI + "/api/price-preview"
 		}
 
 		var res rabot.PriceResponse
 		if err := backoff.Retry(func() error {
-			return backoffPermanentError(t.GetJSON(uri, &res))
+			req, err := request.New(http.MethodGet, uri, nil, request.AcceptJSON, map[string]string{
+				"Authorization": auth,
+			})
+			if err != nil {
+				return backoff.Permanent(err)
+			}
+			return backoffPermanentError(t.DoJSON(req, &res))
 		}, bo()); err != nil {
 			once.Do(func() { done <- err })
 			t.log.ERROR.Println(err)

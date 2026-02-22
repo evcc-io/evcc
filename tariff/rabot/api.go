@@ -4,7 +4,7 @@ import "time"
 
 const (
 	BaseURI  = "https://api.rabot-charge.de"
-	AppToken = "41ee682c-a700-4c6f-85b5-fd912ec4a70d"
+	AppToken = "41ee682c-a700-4c6f-85b5-fd912ec4a70d" // gitleaks:allow (public API token)
 )
 
 type LoginResponse struct {
