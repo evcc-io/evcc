@@ -21,10 +21,10 @@ type goodWeWifi struct {
 }
 
 func init() {
-	registry.Add("goodwe-wifi", NewGoodWeWifi)
+	registry.Add("goodwe-wifi", NewGoodWeWifiFromConfig)
 }
 
-func NewGoodWeWifi(other map[string]interface{}) (api.Meter, error) {
+func NewGoodWeWifiFromConfig(other map[string]interface{}) (api.Meter, error) {
 	var cc struct {
 		URI  string `mapstructure:"uri"`
 		Usage string `mapstructure:"usage"`
