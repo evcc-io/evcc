@@ -4,12 +4,12 @@ package hems
 type API interface {
 	Run()
 	ConsumptionLimit() float64
-	FeedinLimit() float64
+	ProductionLimit() float64
 }
 
 type Status struct {
 	ConsumptionLimit float64 `json:"consumptionLimit"`
-	FeedinLimit      float64 `json:"feedinLimit,omitempty"`
+	ProductionLimit  float64 `json:"productionLimit"`
 }
 
 func GetStatus(api API) *Status {
@@ -18,6 +18,6 @@ func GetStatus(api API) *Status {
 	}
 	return &Status{
 		ConsumptionLimit: api.ConsumptionLimit(),
-		FeedinLimit:      api.FeedinLimit(),
+		ProductionLimit:  api.ProductionLimit(),
 	}
 }

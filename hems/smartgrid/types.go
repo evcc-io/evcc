@@ -21,7 +21,7 @@ type Type string
 
 const (
 	Dim     Type = "consumption"
-	Curtail Type = "feedin"
+	Curtail Type = "production"
 )
 
 type GridSessions []GridSession
