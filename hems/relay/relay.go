@@ -101,13 +101,13 @@ func (c *Relay) Run() {
 }
 
 func (c *Relay) run() error {
-	limited, err := c.w1()
+	active, err := c.w1()
 	if err != nil {
 		return err
 	}
 
 	var limit float64
-	if limited {
+	if active {
 		limit = c.maxPower
 	}
 
@@ -115,37 +115,8 @@ func (c *Relay) run() error {
 		return err
 	}
 
-	if err := c.updateSession(limit); err != nil {
+	if err := smartgrid.UpdateSession(&c.smartgridID, smartgrid.Dim, c.root.GetChargePower(), limit, active); err != nil {
 		return fmt.Errorf("smartgrid session: %v", err)
-	}
-
-	return nil
-}
-
-// TODO keep in sync across HEMS implementations
-func (c *Relay) updateSession(limit float64) error {
-	// start session
-	if limit > 0 && c.smartgridID == 0 {
-		var power *float64
-		if p := c.root.GetChargePower(); p > 0 {
-			power = new(p)
-		}
-
-		sid, err := smartgrid.StartManage(smartgrid.Dim, power, limit)
-		if err != nil {
-			return err
-		}
-
-		c.smartgridID = sid
-	}
-
-	// stop session
-	if limit == 0 && c.smartgridID != 0 {
-		if err := smartgrid.StopManage(c.smartgridID); err != nil {
-			return err
-		}
-
-		c.smartgridID = 0
 	}
 
 	return nil

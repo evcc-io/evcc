@@ -14,14 +14,16 @@ import (
 )
 
 type Fnn3 struct {
-	mu         sync.Mutex
-	log        *util.Logger
+	mu  sync.Mutex
+	log *util.Logger
+
 	root       api.Circuit
 	s1, s2, w3 func() (bool, error)
-	limit      *float64
-	maxPower   float64
-	interval   time.Duration
-	// TODO smartgrid session
+
+	smartgridID uint
+	limit       *float64
+	maxPower    float64
+	interval    time.Duration
 }
 
 // NewFromConfig creates an Fnn3 HEMS from generic config
@@ -145,13 +147,20 @@ func (c *Fnn3) curtail(frac float64) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
+	active := frac < 1.0
+
 	c.limit = nil
-	if frac < 1.0 {
+	if active {
 		c.limit = new(c.maxPower * frac)
 	}
 
-	c.root.Curtail(frac < 1.0)
+	c.root.Curtail(active)
 	// TODO make ProductionNominalMax configurable (Site kWp)
 	// c.root.SetMaxPower(c.maxPower*frac)
+
+	if err := smartgrid.UpdateSession(&c.smartgridID, smartgrid.Curtail, c.root.GetChargePower(), c.maxPower*frac, active); err != nil {
+		c.log.ERROR.Printf("smartgrid session: %v", err)
+	}
+
 	return nil
 }

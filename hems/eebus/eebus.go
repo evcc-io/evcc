@@ -272,8 +272,8 @@ func (c *EEBus) setConsumptionLimit(limit float64) {
 	c.root.Dim(active)
 	c.root.SetMaxPower(limit)
 
-	if err := c.updateSession(&c.smartgridConsumptionId, smartgrid.Dim, limit); err != nil {
-		c.log.ERROR.Printf("smartgrid dim session: %v", err)
+	if err := smartgrid.UpdateSession(&c.smartgridConsumptionId, smartgrid.Dim, c.root.GetChargePower(), limit, active); err != nil {
+		c.log.ERROR.Printf("smartgrid session: %v", err)
 	}
 
 	if c.passthrough != nil {
@@ -296,36 +296,7 @@ func (c *EEBus) setProductionLimit(limit float64) {
 	// TODO make ProductionNominalMax configurable (Site kWp)
 	// c.root.SetMaxProduction(limit)
 
-	if err := c.updateSession(&c.smartgridProductionId, smartgrid.Curtail, limit); err != nil {
-		c.log.ERROR.Printf("smartgrid curtail session: %v", err)
+	if err := smartgrid.UpdateSession(&c.smartgridProductionId, smartgrid.Curtail, c.root.GetChargePower(), limit, active); err != nil {
+		c.log.ERROR.Printf("smartgrid session: %v", err)
 	}
-}
-
-// TODO keep in sync across HEMS implementations
-func (c *EEBus) updateSession(id *uint, typ smartgrid.Type, limit float64) error {
-	// start session
-	if limit > 0 && *id == 0 {
-		var power *float64
-		if p := c.root.GetChargePower(); p > 0 {
-			power = new(p)
-		}
-
-		sid, err := smartgrid.StartManage(typ, power, limit)
-		if err != nil {
-			return err
-		}
-
-		*id = sid
-	}
-
-	// stop session
-	if limit == 0 && *id != 0 {
-		if err := smartgrid.StopManage(*id); err != nil {
-			return err
-		}
-
-		*id = 0
-	}
-
-	return nil
 }
