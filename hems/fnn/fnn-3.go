@@ -2,13 +2,11 @@ package fnn
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/site"
-	"github.com/evcc-io/evcc/hems/shared"
+	"github.com/evcc-io/evcc/hems/smartgrid"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
 )
@@ -25,9 +23,9 @@ type Fnn3 struct {
 func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*Fnn3, error) {
 	cc := struct {
 		MaxPower float64
-		S1       plugin.Config
-		S2       plugin.Config
 		W3       plugin.Config
+		S1       *plugin.Config
+		S2       *plugin.Config
 		Interval time.Duration
 	}{
 		Interval: 10 * time.Second,
@@ -37,23 +35,13 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*F
 		return nil, err
 	}
 
-	// get root circuit
-	root := circuit.Root()
-	if root == nil {
-		return nil, errors.New("hems requires load management- please configure root circuit")
-	}
-
-	// register LPP circuit if not already registered
-	lpp, err := shared.GetOrCreateCircuit("lpp", "fnn-3")
+	// setup grid control circuit
+	gridcontrol, err := smartgrid.SetupCircuit("fnn-3")
 	if err != nil {
 		return nil, err
 	}
 
-	// wrap old root with new pc parent
-	if err := root.Wrap(lpp); err != nil {
-		return nil, err
-	}
-	site.SetCircuit(lpp)
+	site.SetCircuit(gridcontrol)
 
 	// s1 getter
 	s1G, err := cc.S1.BoolGetter(ctx)
@@ -71,7 +59,7 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*F
 		return nil, err
 	}
 
-	return NewFnn3(lpp, s1G, s2G, w3G, cc.MaxPower, cc.Interval)
+	return NewFnn3(gridcontrol, s1G, s2G, w3G, cc.MaxPower, cc.Interval)
 }
 
 // NewFnn3 creates Fnn3 HEMS
@@ -108,24 +96,26 @@ func (c *Fnn3) run() error {
 		return c.curtail(0.0)
 	}
 
-	s2, err := c.s2()
-	if err != nil {
-		return err
-	}
+	if c.s1 != nil && c.s2 != nil {
+		s2, err := c.s2()
+		if err != nil {
+			return err
+		}
 
-	if s2 {
-		// 30%
-		return c.curtail(0.3)
-	}
+		if s2 {
+			// 30%
+			return c.curtail(0.3)
+		}
 
-	s1, err := c.s1()
-	if err != nil {
-		return err
-	}
+		s1, err := c.s1()
+		if err != nil {
+			return err
+		}
 
-	if s1 {
-		// 60%
-		return c.curtail(0.6)
+		if s1 {
+			// 60%
+			return c.curtail(0.6)
+		}
 	}
 
 	// 100%

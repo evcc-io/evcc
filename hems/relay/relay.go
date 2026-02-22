@@ -2,14 +2,11 @@ package relay
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/site"
-	"github.com/evcc-io/evcc/hems/shared"
 	"github.com/evcc-io/evcc/hems/smartgrid"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
@@ -42,23 +39,13 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*R
 		return nil, err
 	}
 
-	// get root circuit
-	root := circuit.Root()
-	if root == nil {
-		return nil, errors.New("hems requires load management- please configure root circuit")
-	}
-
-	// register LPC circuit if not already registered
-	lpc, err := shared.GetOrCreateCircuit("lpc", "relay")
+	// setup grid control circuit
+	gridcontrol, err := smartgrid.SetupCircuit("relay")
 	if err != nil {
 		return nil, err
 	}
 
-	// wrap old root with new pc parent
-	if err := root.Wrap(lpc); err != nil {
-		return nil, err
-	}
-	site.SetCircuit(lpc)
+	site.SetCircuit(gridcontrol)
 
 	// limit getter
 	limitG, err := cc.Limit.BoolGetter(ctx)
@@ -71,7 +58,7 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*R
 		return nil, err
 	}
 
-	return NewRelay(lpc, limitG, passthroughS, cc.MaxPower, cc.Interval)
+	return NewRelay(gridcontrol, limitG, passthroughS, cc.MaxPower, cc.Interval)
 }
 
 // NewRelay creates Relay HEMS

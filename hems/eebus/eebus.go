@@ -8,9 +8,7 @@ import (
 
 	ucapi "github.com/enbility/eebus-go/usecases/api"
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/site"
-	"github.com/evcc-io/evcc/hems/shared"
 	"github.com/evcc-io/evcc/hems/smartgrid"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/server/eebus"
@@ -85,22 +83,12 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*E
 		return nil, err
 	}
 
-	// get root circuit
-	root := circuit.Root()
-	if root == nil {
-		return nil, errors.New("hems requires load management- please configure root circuit")
-	}
-
-	// register LPC circuit if not already registered
-	gridcontrol, err := shared.GetOrCreateCircuit("gridcontrol", "eebus")
+	// setup grid control circuit
+	gridcontrol, err := smartgrid.SetupCircuit("eebus")
 	if err != nil {
 		return nil, err
 	}
 
-	// wrap old root with new grid control parent
-	if err := root.Wrap(gridcontrol); err != nil {
-		return nil, err
-	}
 	site.SetCircuit(gridcontrol)
 
 	return NewEEBus(ctx, cc.Ski, cc.Limits, passthroughS, gridcontrol, cc.Interval)
