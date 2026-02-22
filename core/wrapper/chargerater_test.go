@@ -12,11 +12,11 @@ import (
 
 func TestNoMeter(t *testing.T) {
 	cr := NewChargeRater(util.NewLogger("foo"), nil)
-	clck := clock.NewMock()
-	cr.clck = clck
+	clock := clock.NewMock()
+	cr.clock = clock
 
 	cr.StartCharge(false)
-	clck.Add(time.Hour)
+	clock.Add(time.Hour)
 
 	if f, err := cr.ChargedEnergy(); f != 0 || err != nil {
 		t.Errorf("energy: %.1f %v", f, err)
@@ -25,18 +25,18 @@ func TestNoMeter(t *testing.T) {
 	cr.StartCharge(true)
 
 	// 1kWh
-	clck.Add(time.Hour)
+	clock.Add(time.Hour)
 	cr.SetChargePower(1e3)
 	cr.SetChargePower(1e3) // should be ignored as time is identical
 
 	// 0kWh
-	clck.Add(time.Hour)
+	clock.Add(time.Hour)
 	cr.SetChargePower(0)
 
 	cr.StopCharge()
 
 	// 1kWh - not counted
-	clck.Add(time.Hour)
+	clock.Add(time.Hour)
 	cr.SetChargePower(1e3)
 
 	if f, err := cr.ChargedEnergy(); f != 1 || err != nil {
@@ -47,8 +47,67 @@ func TestNoMeter(t *testing.T) {
 	cr.StartCharge(true)
 
 	// 1kWh
-	clck.Add(2 * time.Hour)
+	clock.Add(2 * time.Hour)
 	cr.SetChargePower(1e3)
+	cr.StopCharge()
+
+	if f, err := cr.ChargedEnergy(); f != 3 || err != nil {
+		t.Errorf("energy: %.1f %v", f, err)
+	}
+
+	cr.ResetCharge()
+
+	// 1kWh
+	cr.StartCharge(true)
+	clock.Add(time.Hour)
+	cr.SetChargePower(1e3)
+	cr.StopCharge()
+
+	if f, err := cr.ChargedEnergy(); f != 1 || err != nil {
+		t.Errorf("energy: %.1f %v", f, err)
+	}
+}
+
+func TestWrappedMeter(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mm := api.NewMockMeter(ctrl)
+
+	cr := NewChargeRater(util.NewLogger("foo"), mm)
+	clock := clock.NewMock()
+	cr.clock = clock
+
+	// me.EXPECT().TotalEnergy().Return(2.0, nil)
+
+	cr.StartCharge(false)
+
+	// ignored with meter present
+	clock.Add(time.Hour)
+	cr.SetChargePower(1e3)
+	clock.Add(time.Hour)
+	cr.SetChargePower(0)
+
+	// me.EXPECT().TotalEnergy().Return(3.0, nil)
+
+	cr.StopCharge()
+
+	if f, err := cr.ChargedEnergy(); f != 1 || err != nil {
+		t.Errorf("energy: %.1f %v", f, err)
+	}
+
+	// ignored with meter present
+	clock.Add(time.Hour)
+	cr.SetChargePower(1e3)
+
+	// continue
+	// me.EXPECT().TotalEnergy().Return(10.0, nil)
+
+	cr.StartCharge(true)
+	clock.Add(time.Hour) // actual timing ignored as energy comes from meter
+
+	// me.EXPECT().TotalEnergy().Return(12.0, nil)
+
 	cr.StopCharge()
 
 	if f, err := cr.ChargedEnergy(); f != 3 || err != nil {
@@ -56,7 +115,7 @@ func TestNoMeter(t *testing.T) {
 	}
 }
 
-func TestWrappedMeter(t *testing.T) {
+func TestWrappedEnergyMeter(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -71,17 +130,17 @@ func TestWrappedMeter(t *testing.T) {
 	cm := &EnergyDecorator{Meter: mm, MeterEnergy: me}
 
 	cr := NewChargeRater(util.NewLogger("foo"), cm)
-	clck := clock.NewMock()
-	cr.clck = clck
+	clock := clock.NewMock()
+	cr.clock = clock
 
 	me.EXPECT().TotalEnergy().Return(2.0, nil)
 
 	cr.StartCharge(false)
 
 	// ignored with meter present
-	clck.Add(time.Hour)
+	clock.Add(time.Hour)
 	cr.SetChargePower(1e3)
-	clck.Add(time.Hour)
+	clock.Add(time.Hour)
 	cr.SetChargePower(0)
 
 	me.EXPECT().TotalEnergy().Return(3.0, nil)
@@ -93,14 +152,14 @@ func TestWrappedMeter(t *testing.T) {
 	}
 
 	// ignored with meter present
-	clck.Add(time.Hour)
+	clock.Add(time.Hour)
 	cr.SetChargePower(1e3)
 
 	// continue
 	me.EXPECT().TotalEnergy().Return(10.0, nil)
 
 	cr.StartCharge(true)
-	clck.Add(time.Hour) // actual timing ignored as energy comes from meter
+	clock.Add(time.Hour) // actual timing ignored as energy comes from meter
 
 	me.EXPECT().TotalEnergy().Return(12.0, nil)
 

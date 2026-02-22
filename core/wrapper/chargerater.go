@@ -17,7 +17,7 @@ import (
 type ChargeRater struct {
 	sync.Mutex
 	log           *util.Logger
-	clck          clock.Clock
+	clock         clock.Clock
 	meter         api.Meter
 	charging      bool
 	start         time.Time
@@ -34,7 +34,7 @@ type ChargeResetter interface {
 func NewChargeRater(log *util.Logger, meter api.Meter) *ChargeRater {
 	return &ChargeRater{
 		log:   log,
-		clck:  clock.New(),
+		clock: clock.New(),
 		meter: meter,
 	}
 }
@@ -46,7 +46,7 @@ func (cr *ChargeRater) StartCharge(continued bool) {
 	defer cr.Unlock()
 
 	// time is needed if MeterEnergy is not supported
-	cr.start = cr.clck.Now()
+	cr.start = cr.clock.Now()
 
 	// get end energy amount
 	if m, ok := cr.meter.(api.MeterEnergy); ok {
@@ -104,7 +104,7 @@ func (cr *ChargeRater) ResetCharge() {
 	}
 
 	cr.chargedEnergy = 0
-	cr.start = cr.clck.Now()
+	cr.start = cr.clock.Now()
 }
 
 // SetChargePower increments consumed energy by amount in kWh since last update
@@ -119,9 +119,9 @@ func (cr *ChargeRater) SetChargePower(power float64) {
 	// update energy amount if not provided by meter
 	if _, ok := cr.meter.(api.MeterEnergy); !ok {
 		// convert power to energy in kWh
-		cr.chargedEnergy += power / 1e3 * float64(cr.clck.Since(cr.start)) / float64(time.Hour)
+		cr.chargedEnergy += power / 1e3 * float64(cr.clock.Since(cr.start)) / float64(time.Hour)
 		// move timestamp
-		cr.start = cr.clck.Now()
+		cr.start = cr.clock.Now()
 	}
 }
 
