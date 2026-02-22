@@ -8,7 +8,9 @@ const (
 )
 
 type LoginResponse struct {
-	SessionToken string `json:"sessionToken"`
+	SessionToken string  `json:"sessionToken"`
+	RefreshToken string  `json:"refreshToken"`
+	ExpiresIn    float32 `json:"expiresIn"`
 }
 
 type Contract struct {

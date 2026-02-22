@@ -1,8 +1,6 @@
 package tariff
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"slices"
@@ -14,16 +12,17 @@ import (
 	"github.com/evcc-io/evcc/tariff/rabot"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/transport"
+	"golang.org/x/oauth2"
 )
 
 type Rabot struct {
 	*embed
 	*request.Helper
-	log      *util.Logger
-	login    string
-	password string
-	gross    bool
-	data     *util.Monitor[api.Rates]
+	log        *util.Logger
+	gross      bool
+	contractId string
+	data       *util.Monitor[api.Rates]
 }
 
 var _ api.Tariff = (*Rabot)(nil)
@@ -33,12 +32,12 @@ func init() {
 }
 
 func NewRabotFromConfig(other map[string]any) (api.Tariff, error) {
-	var cc {
+	cc := struct {
 		embed    `mapstructure:",squash"`
 		Login    string
 		Password string
 		Gross    bool
-	}
+	}{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
@@ -55,64 +54,51 @@ func NewRabotFromConfig(other map[string]any) (api.Tariff, error) {
 	log := util.NewLogger("rabot").Redact(cc.Password)
 
 	t := &Rabot{
-		embed:    &cc.embed,
-		log:      log,
-		login:    cc.Login,
-		password: cc.Password,
-		gross:    cc.Gross,
-		Helper:   request.NewHelper(log),
-		data:     util.NewMonitor[api.Rates](2 * time.Hour),
+		embed:  &cc.embed,
+		log:    log,
+		gross:  cc.Gross,
+		Helper: request.NewHelper(log),
+		data:   util.NewMonitor[api.Rates](2 * time.Hour),
+	}
+
+	if cc.Gross {
+		ts, err := rabot.TokenSource(log, cc.Login, cc.Password)
+		if err != nil {
+			return nil, err
+		}
+
+		t.Client.Transport = &oauth2.Transport{
+			Source: ts,
+			Base:   t.Client.Transport,
+		}
+
+		if err := t.fetchContractId(); err != nil {
+			return nil, err
+		}
+	} else {
+		t.Client.Transport = transport.BearerAuth(rabot.AppToken, t.Client.Transport)
 	}
 
 	return runOrError(t)
 }
 
-func (t *Rabot) authenticate() (string, string, error) {
-	body, err := json.Marshal(struct {
-		Login    string `json:"login"`
-		Password string `json:"password"`
-	}{
-		Login:    t.login,
-		Password: t.password,
-	})
+func (t *Rabot) fetchContractId() error {
+	req, err := request.New(http.MethodGet, rabot.BaseURI+"/api/prosumer/v2/contract/list?contractStatus=active", nil, request.AcceptJSON)
 	if err != nil {
-		return "", "", err
+		return err
 	}
 
-	req, err := request.New(http.MethodPost, rabot.BaseURI+"/api/prosumer/session/login", bytes.NewReader(body), map[string]string{
-		"Authorization": "Bearer " + rabot.AppToken,
-		"Content-Type":  request.JSONContent,
-		"Accept":        request.JSONContent,
-	})
-	if err != nil {
-		return "", "", err
+	var res rabot.ContractsResponse
+	if err := t.DoJSON(req, &res); err != nil {
+		return fmt.Errorf("contracts: %w", err)
 	}
 
-	var loginRes rabot.LoginResponse
-	if err := t.DoJSON(req, &loginRes); err != nil {
-		return "", "", fmt.Errorf("login: %w", err)
+	if len(res.Contracts) == 0 {
+		return fmt.Errorf("no active contracts found")
 	}
 
-	t.log.Redact(loginRes.SessionToken)
-
-	req, err = request.New(http.MethodGet, rabot.BaseURI+"/api/prosumer/v2/contract/list?contractStatus=active", nil, map[string]string{
-		"Authorization": "Bearer " + loginRes.SessionToken,
-		"Accept":        request.JSONContent,
-	})
-	if err != nil {
-		return "", "", err
-	}
-
-	var contractsRes rabot.ContractsResponse
-	if err := t.DoJSON(req, &contractsRes); err != nil {
-		return "", "", fmt.Errorf("contracts: %w", err)
-	}
-
-	if len(contractsRes.Contracts) == 0 {
-		return "", "", fmt.Errorf("no active contracts found")
-	}
-
-	return loginRes.SessionToken, contractsRes.Contracts[0].ID, nil
+	t.contractId = res.Contracts[0].ID
+	return nil
 }
 
 func (t *Rabot) run(done chan error) {
@@ -120,32 +106,15 @@ func (t *Rabot) run(done chan error) {
 
 	for tick := time.Tick(time.Hour); ; <-tick {
 		var uri string
-		var auth string
-
 		if t.gross {
-			sessionToken, contractId, err := t.authenticate()
-			if err != nil {
-				once.Do(func() { done <- err })
-				t.log.ERROR.Println(err)
-				continue
-			}
-
-			auth = "Bearer " + sessionToken
-			uri = fmt.Sprintf("%s/api/price-preview/%s", rabot.BaseURI, contractId)
+			uri = fmt.Sprintf("%s/api/price-preview/%s", rabot.BaseURI, t.contractId)
 		} else {
-			auth = "Bearer " + rabot.AppToken
 			uri = rabot.BaseURI + "/api/price-preview"
 		}
 
 		var res rabot.PriceResponse
 		if err := backoff.Retry(func() error {
-			req, err := request.New(http.MethodGet, uri, nil, request.AcceptJSON, map[string]string{
-				"Authorization": auth,
-			})
-			if err != nil {
-				return backoff.Permanent(err)
-			}
-			return backoffPermanentError(t.DoJSON(req, &res))
+			return backoffPermanentError(t.GetJSON(uri, &res))
 		}, bo()); err != nil {
 			once.Do(func() { done <- err })
 			t.log.ERROR.Println(err)
