@@ -20,17 +20,6 @@ params:
   - name: modbus
     choice: ["tcpip"]
     id: 1
-  - name: phases1p3p
-    description:
-      de: 1P/3P Phasenumschaltung
-      en: 1P/3P phase switching
-    help:
-      en: "Requires a hardware modification. An additional relay (e.g. contactor) needs to be fitted to switch between single-phase and three-phase charging. [More info](https://community.victronenergy.com/t/charging-an-ev-with-excess-solar-switching-between-1p-and-3p/21181)"
-      de: "Erfordert eine Hardware-Modifikation. Ein zusätzliches Relais (z.B. Contactor) muss eingebaut werden, um zwischen einphasigem und dreiphasigem Laden umschalten zu können. [Mehr Infos](https://community.victronenergy.com/t/charging-an-ev-with-excess-solar-switching-between-1p-and-3p/21181)"
-    type: bool
-    default: false
-    advanced: true
 render: |
   type: victron-evcs
   {{- include "modbus" . }}
-  phases1p3p: {{ .phases1p3p }}
