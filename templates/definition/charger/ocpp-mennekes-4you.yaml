@@ -7,6 +7,7 @@ products:
     description:
       generic: Amtron 4You
 capabilities: ["rfid"]
+requirements:
   evcc: ["sponsorship", "skiptest"]
 params:
   - preset: ocpp
