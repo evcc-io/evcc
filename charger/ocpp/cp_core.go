@@ -38,7 +38,7 @@ func (cp *CP) OnBootNotification(request *core.BootNotificationRequest) (*core.B
 	select {
 	case cp.bootNotificationRequestC <- request:
 	default:
-		cp.log.DEBUG.Println("boot notification channel full, discarding")
+		cp.log.DEBUG.Printf("boot notification channel full, discarding")
 	}
 
 	return res, nil

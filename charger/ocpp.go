@@ -158,12 +158,10 @@ func NewOCPP(ctx context.Context,
 		func(cp *ocpp.CP) error {
 			log.DEBUG.Printf("waiting for chargepoint: %v", connectTimeout)
 
-			timeout := time.After(connectTimeout)
-
 			select {
 			case <-ctx.Done():
 				return ctx.Err()
-			case <-timeout:
+			case <-time.After(connectTimeout):
 				return api.ErrTimeout
 			case <-cp.HasConnected():
 			}
@@ -181,7 +179,7 @@ func NewOCPP(ctx context.Context,
 				select {
 				case <-ctx.Done():
 					return ctx.Err()
-				case <-timeout:
+				case <-time.After(connectTimeout):
 					return api.ErrTimeout
 				case <-cp.BootNotificationC():
 				}
@@ -243,7 +241,17 @@ func (c *OCPP) monitorReboot(ctx context.Context, meterValues string, meterInter
 				boot.ChargePointModel, boot.ChargePointVendor)
 
 			if err := c.cp.Setup(ctx, meterValues, meterInterval, forcePowerCtrl); err != nil {
-				c.log.ERROR.Printf("failed to re-initialize after reboot: %v", err)
+				c.log.ERROR.Printf("failed to re-initialize after reboot: %v, retrying", err)
+
+				select {
+				case <-ctx.Done():
+					return
+				case <-time.After(ocpp.Timeout):
+				}
+
+				if err := c.cp.Setup(ctx, meterValues, meterInterval, forcePowerCtrl); err != nil {
+					c.log.ERROR.Printf("failed to re-initialize after reboot: %v", err)
+				}
 			}
 		}
 	}
