@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/assert"
@@ -341,6 +342,78 @@ func TestHATariffSolcast(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, result, 2)
 	assert.InDelta(t, 1500.0, result[0].Value, 1e-6)
+}
+
+// --- forecast fetch error ---
+
+func TestHATariffForecastHAFetchError(t *testing.T) {
+	// wrap as permanent so the backoff loop exits immediately
+	source := &mockHASource{jsonErr: backoff.Permanent(fmt.Errorf("connection refused"))}
+	emb := &embed{}
+	require.NoError(t, emb.init())
+	_, err := newHATariff(emb, util.NewLogger("test"), source,
+		"http://ha.local:8123", []string{"sensor.nordpool"}, []string{"raw_today"}, "nordpool",
+		0, time.Hour, time.Minute)
+	require.Error(t, err)
+}
+
+// --- unknown format ---
+
+func TestHATariffUnknownFormat(t *testing.T) {
+	source := &mockHASource{
+		attributes: map[string]map[string]any{
+			"sensor.foo": {"data": json.RawMessage(`[]`)},
+		},
+	}
+	emb := &embed{}
+	require.NoError(t, emb.init())
+	_, err := newHATariff(emb, util.NewLogger("test"), source,
+		"http://ha.local:8123", []string{"sensor.foo"}, []string{"data"}, "unknown",
+		0, time.Hour, time.Minute)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "unsupported")
+}
+
+// --- parser negative paths ---
+
+func TestParseZonneplan_InvalidPayload(t *testing.T) {
+	_, err := parseZonneplan(json.RawMessage(`not json`))
+	require.Error(t, err)
+}
+
+func TestParseZonneplan_InvalidTimestamp(t *testing.T) {
+	_, err := parseZonneplan(json.RawMessage(`[{"datetime":"not-a-time","electricity_price":1000}]`))
+	require.Error(t, err)
+}
+
+func TestParseEntsoe_InvalidPayload(t *testing.T) {
+	_, err := parseEntsoe(json.RawMessage(`not json`))
+	require.Error(t, err)
+}
+
+func TestParseEntsoe_InvalidTimestamp(t *testing.T) {
+	_, err := parseEntsoe(json.RawMessage(`[{"time":"not-a-time","price":0.23}]`))
+	require.Error(t, err)
+}
+
+func TestParseWatts_InvalidPayload(t *testing.T) {
+	_, err := parseWatts(json.RawMessage(`not json`))
+	require.Error(t, err)
+}
+
+func TestParseWatts_InvalidTimestamp(t *testing.T) {
+	_, err := parseWatts(json.RawMessage(`{"not-a-timestamp": 123}`))
+	require.Error(t, err)
+}
+
+func TestParseSolcast_InvalidPayload(t *testing.T) {
+	_, err := parseSolcast(json.RawMessage(`not json`))
+	require.Error(t, err)
+}
+
+func TestParseSolcast_InvalidTimestamp(t *testing.T) {
+	_, err := parseSolcast(json.RawMessage(`[{"period_start":"not-a-time","pv_estimate":1.5}]`))
+	require.Error(t, err)
 }
 
 // --- config validation ---

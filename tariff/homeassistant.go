@@ -36,6 +36,7 @@ type HATariff struct {
 	entities   []string
 	attributes []string
 	format     string
+	interval   time.Duration
 	priceG     func() (float64, error)
 	data       *util.Monitor[api.Rates]
 	typ        api.TariffType
@@ -81,7 +82,8 @@ func NewHATariffFromConfig(other map[string]any) (api.Tariff, error) {
 		return nil, err
 	}
 
-	baseURI := util.DefaultScheme(strings.TrimSuffix(cc.URI, "/"), "http")
+	raw := strings.TrimSuffix(strings.TrimSuffix(cc.URI, "/"), "/api")
+	baseURI := util.DefaultScheme(raw, "http")
 
 	return newHATariff(&cc.embed, log, conn, baseURI, cc.Entities, cc.Attributes, cc.Format, cc.Tariff, cc.Interval, cc.Cache)
 }
@@ -106,6 +108,7 @@ func newHATariff(
 		attributes: attributes,
 		format:     format,
 		typ:        typ,
+		interval:   interval,
 		data:       util.NewMonitor[api.Rates](2 * interval),
 	}
 
@@ -145,7 +148,10 @@ func newHATariff(
 func (t *HATariff) run(done chan error) {
 	var once sync.Once
 
-	for tick := time.Tick(time.Hour); ; <-tick {
+	ticker := time.NewTicker(t.interval)
+	defer ticker.Stop()
+
+	for ; ; <-ticker.C {
 		if err := backoff.Retry(func() error {
 			var combined api.Rates
 
@@ -201,6 +207,12 @@ func (t *HATariff) run(done chan error) {
 // parseRates converts a raw JSON attribute to api.Rates using the configured format
 func (t *HATariff) parseRates(raw json.RawMessage) (api.Rates, error) {
 	switch t.format {
+	case "", "nordpool":
+		var rates api.Rates
+		if err := json.Unmarshal(raw, &rates); err != nil {
+			return nil, err
+		}
+		return rates, nil
 	case "zonneplan":
 		return parseZonneplan(raw)
 	case "entsoe":
@@ -209,12 +221,8 @@ func (t *HATariff) parseRates(raw json.RawMessage) (api.Rates, error) {
 		return parseWatts(raw)
 	case "solcast":
 		return parseSolcast(raw)
-	default: // "" or "nordpool" — native api.Rates JSON (start/end/value)
-		var rates api.Rates
-		if err := json.Unmarshal(raw, &rates); err != nil {
-			return nil, err
-		}
-		return rates, nil
+	default:
+		return nil, fmt.Errorf("unsupported tariff format %q", t.format)
 	}
 }
 
