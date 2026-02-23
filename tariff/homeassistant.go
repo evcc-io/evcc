@@ -7,6 +7,7 @@ import (
 	"maps"
 	"net/url"
 	"slices"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -23,7 +24,6 @@ func init() {
 
 // haStateSource abstracts HA state fetching for testability
 type haStateSource interface {
-	GetFloatState(entity string) (float64, error)
 	GetJSON(uri string, result any) error
 }
 
@@ -115,11 +115,24 @@ func newHATariff(
 			return nil, errors.New("price mode requires exactly one entity")
 		}
 		priceG := func() (float64, error) {
-			v, err := source.GetFloatState(entities[0])
-			if err != nil {
-				t.log.WARN.Printf("entity %s: %v", entities[0], err)
+			uri := fmt.Sprintf("%s/api/states/%s", t.baseURI, url.PathEscape(entities[0]))
+			var res struct {
+				State string `json:"state"`
 			}
-			return v, err
+			if err := t.source.GetJSON(uri, &res); err != nil {
+				t.log.WARN.Printf("entity %s: %v", entities[0], err)
+				return 0, err
+			}
+			if res.State == "unknown" || res.State == "unavailable" {
+				t.log.WARN.Printf("entity %s: state is %s", entities[0], res.State)
+				return 0, api.ErrNotAvailable
+			}
+			v, err := strconv.ParseFloat(res.State, 64)
+			if err != nil {
+				t.log.WARN.Printf("entity %s: non-numeric state %q", entities[0], res.State)
+				return 0, err
+			}
+			return v, nil
 		}
 		t.priceG = util.Cached(priceG, cache)
 		return t, nil

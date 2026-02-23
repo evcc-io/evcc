@@ -2,7 +2,7 @@ package tariff
 
 import (
 	"encoding/json"
-	"fmt"
+	"fmt" // used in TestHATariffPriceModeError
 	"testing"
 	"time"
 
@@ -14,15 +14,11 @@ import (
 
 // mockHASource implements haStateSource for testing.
 // attributes maps entity → attribute name → value.
+// priceState is the raw state string returned for price-mode entities.
 type mockHASource struct {
-	price      float64
-	priceErr   error
+	priceState string
 	attributes map[string]map[string]any
 	jsonErr    error
-}
-
-func (m *mockHASource) GetFloatState(_ string) (float64, error) {
-	return m.price, m.priceErr
 }
 
 func (m *mockHASource) GetJSON(uri string, result any) error {
@@ -38,7 +34,7 @@ func (m *mockHASource) GetJSON(uri string, result any) error {
 		attrs = map[string]any{}
 	}
 
-	b, err := json.Marshal(map[string]any{"attributes": attrs})
+	b, err := json.Marshal(map[string]any{"state": m.priceState, "attributes": attrs})
 	if err != nil {
 		return err
 	}
@@ -78,7 +74,7 @@ func newTestTariff(t *testing.T, source haStateSource, entities []string, attrs 
 // --- price mode ---
 
 func TestHATariffPriceMode(t *testing.T) {
-	source := &mockHASource{price: 0.25}
+	source := &mockHASource{priceState: "0.25"}
 	tar := newTestTariff(t, source, []string{"sensor.price"}, nil, "")
 
 	assert.Equal(t, api.TariffTypePriceDynamic, tar.Type())
@@ -91,7 +87,14 @@ func TestHATariffPriceMode(t *testing.T) {
 }
 
 func TestHATariffPriceModeError(t *testing.T) {
-	source := &mockHASource{priceErr: fmt.Errorf("unavailable")}
+	source := &mockHASource{jsonErr: fmt.Errorf("connection refused")}
+	tar := newTestTariff(t, source, []string{"sensor.price"}, nil, "")
+	_, err := tar.Rates()
+	require.Error(t, err)
+}
+
+func TestHATariffPriceModeUnavailable(t *testing.T) {
+	source := &mockHASource{priceState: "unavailable"}
 	tar := newTestTariff(t, source, []string{"sensor.price"}, nil, "")
 	_, err := tar.Rates()
 	require.Error(t, err)
