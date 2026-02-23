@@ -380,6 +380,13 @@ func (c *EEBus) Infof(format string, args ...any) {
 }
 
 func (c *EEBus) Error(args ...any) {
+	if len(args) == 2 {
+		// TODO remove when enbility/ship-go is upgraded
+		if err := fmt.Sprint(args...); err == "websocket server error: http: Server closed" {
+			return
+		}
+	}
+
 	c.log.ERROR.Println(args...)
 }
 
