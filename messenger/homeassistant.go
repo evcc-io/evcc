@@ -7,6 +7,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/homeassistant"
+	"github.com/evcc-io/evcc/util/request"
 )
 
 func init() {
@@ -23,6 +24,7 @@ type HAMessenger struct {
 	log    *util.Logger
 	conn   haSender
 	notify string
+	data   map[string]any
 }
 
 // NewHAMessengerFromConfig creates a new Home Assistant messenger
@@ -30,6 +32,7 @@ func NewHAMessengerFromConfig(other map[string]any) (api.Messenger, error) {
 	var cc struct {
 		URI    string
 		Notify string
+		Data   map[string]any
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -41,7 +44,7 @@ func NewHAMessengerFromConfig(other map[string]any) (api.Messenger, error) {
 	}
 
 	if cc.Notify != "" {
-		if _, service, ok := strings.Cut(cc.Notify, "."); !ok || service == "" {
+		if !isValidEntityID(cc.Notify) {
 			return nil, errors.New("notify must be in domain.service format")
 		}
 	}
@@ -57,7 +60,22 @@ func NewHAMessengerFromConfig(other map[string]any) (api.Messenger, error) {
 		log:    log,
 		conn:   conn,
 		notify: cc.Notify,
+		data:   cc.Data,
 	}, nil
+}
+
+// isValidEntityID checks that s is in "domain.service" format
+func isValidEntityID(s string) bool {
+	dot := false
+	for i, c := range s {
+		if c == '.' {
+			if i == 0 || dot {
+				return false
+			}
+			dot = true
+		}
+	}
+	return dot && s[len(s)-1] != '.'
 }
 
 // Send sends a notification via Home Assistant
@@ -66,10 +84,24 @@ func (m *HAMessenger) Send(title, msg string) {
 		var err error
 		if m.notify != "" {
 			domain, service, _ := strings.Cut(m.notify, ".")
-			err = m.conn.CallService(domain, service, map[string]any{
+			payload := map[string]any{
 				"title":   title,
 				"message": msg,
-			})
+			}
+			if len(m.data) > 0 {
+				payload["data"] = m.data
+			}
+			err = m.conn.CallService(domain, service, payload)
+			// fall back to new-style notify.send_message for integrations
+			// that no longer support the legacy service call (e.g. Telegram in HA 2024+)
+			var se *request.StatusError
+			if errors.As(err, &se) && se.HasStatus(400) {
+				err = m.conn.CallService("notify", "send_message", map[string]any{
+					"entity_id": m.notify,
+					"title":     title,
+					"message":   msg,
+				})
+			}
 		} else {
 			err = m.conn.CallService("persistent_notification", "create", map[string]any{
 				"title":           title,

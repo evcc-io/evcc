@@ -3,6 +3,7 @@ package homeassistant
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"maps"
 	"net/http"
 	"slices"
@@ -19,6 +20,7 @@ func init() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /instances", getInstances)
 	mux.HandleFunc("GET /entities", getEntities)
+	mux.HandleFunc("GET /services", getServices)
 
 	service.Register("homeassistant", mux)
 }
@@ -67,6 +69,60 @@ func getEntities(w http.ResponseWriter, req *http.Request) {
 	}), func(e StateResponse, _ int) string {
 		return e.EntityId
 	}))
+}
+
+type serviceDomainResponse struct {
+	Domain   string         `json:"domain"`
+	Services map[string]any `json:"services"`
+}
+
+func getServices(w http.ResponseWriter, req *http.Request) {
+	uri := util.DefaultScheme(strings.TrimSuffix(req.URL.Query().Get("uri"), "/"), "http")
+	if uri == "" {
+		jsonError(w, http.StatusBadRequest, errors.New("missing uri"))
+		return
+	}
+
+	conn, _ := NewConnection(log, uri, "")
+
+	var filterDomains []string
+	if domain := req.URL.Query().Get("domain"); domain != "" {
+		filterDomains = strings.Split(domain, ",")
+	}
+
+	seen := make(map[string]struct{})
+
+	// collect matching services from /api/services
+	var svcRes []serviceDomainResponse
+	if err := conn.GetJSON(fmt.Sprintf("%s/api/services", uri), &svcRes); err != nil {
+		jsonError(w, http.StatusBadRequest, err)
+		return
+	}
+	for _, sd := range svcRes {
+		if len(filterDomains) > 0 && !lo.Contains(filterDomains, sd.Domain) {
+			continue
+		}
+		for svc := range sd.Services {
+			seen[sd.Domain+"."+svc] = struct{}{}
+		}
+	}
+
+	// collect matching entities from /api/states (e.g. Telegram notify entities)
+	if states, err := conn.GetStates(); err == nil {
+		for _, e := range states {
+			for _, domain := range filterDomains {
+				if strings.HasPrefix(e.EntityId, domain+".") {
+					seen[e.EntityId] = struct{}{}
+					break
+				}
+			}
+		}
+	}
+
+	result := slices.Sorted(maps.Keys(seen))
+
+	w.Header().Set("Cache-control", "max-age=300")
+	jsonWrite(w, result)
 }
 
 // jsonWrite writes a JSON response

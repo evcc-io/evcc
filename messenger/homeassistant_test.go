@@ -1,12 +1,14 @@
 package messenger
 
 import (
+	"net/http"
 	"strings"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -17,11 +19,12 @@ type mockHASender struct {
 	service string
 	data    map[string]any
 	err     error
+	callFn  func(domain, service string, data map[string]any) error
 	called  chan struct{}
 }
 
 func newMockHASender() *mockHASender {
-	return &mockHASender{called: make(chan struct{}, 1)}
+	return &mockHASender{called: make(chan struct{}, 10)}
 }
 
 func (m *mockHASender) CallService(domain, service string, data map[string]any) error {
@@ -33,6 +36,9 @@ func (m *mockHASender) CallService(domain, service string, data map[string]any) 
 	select {
 	case m.called <- struct{}{}:
 	default:
+	}
+	if m.callFn != nil {
+		return m.callFn(domain, service, data)
 	}
 	return m.err
 }
@@ -54,6 +60,15 @@ func newTestHAMessenger(notify string, sender *mockHASender) *HAMessenger {
 	}
 }
 
+func newTestHAMessengerWithData(notify string, data map[string]any, sender *mockHASender) *HAMessenger {
+	return &HAMessenger{
+		log:    util.NewLogger("ha-test"),
+		conn:   sender,
+		notify: notify,
+		data:   data,
+	}
+}
+
 func TestHAMessengerNotifyPath(t *testing.T) {
 	sender := newMockHASender()
 	m := newTestHAMessenger("notify.mobile_app_android", sender)
@@ -68,6 +83,51 @@ func TestHAMessengerNotifyPath(t *testing.T) {
 	assert.Equal(t, "mobile_app_android", sender.service)
 	assert.Equal(t, "Test Title", sender.data["title"])
 	assert.Equal(t, "Test Message", sender.data["message"])
+}
+
+func TestHAMessengerNotifyFallback(t *testing.T) {
+	// simulate an integration that returns 400 on the legacy call (e.g. Telegram in HA 2024+)
+	sender := newMockHASender()
+	calls := 0
+	sender.callFn = func(domain, service string, data map[string]any) error {
+		calls++
+		if calls == 1 {
+			return request.NewStatusError(&http.Response{
+				StatusCode: http.StatusBadRequest,
+				Request:    &http.Request{},
+			})
+		}
+		return nil
+	}
+	m := newTestHAMessenger("notify.telegram_bot", sender)
+
+	m.Send("Test Title", "Test Message")
+	sender.waitCall(t)
+	sender.waitCall(t)
+
+	sender.mu.Lock()
+	defer sender.mu.Unlock()
+
+	assert.Equal(t, 2, calls)
+	assert.Equal(t, "notify", sender.domain)
+	assert.Equal(t, "send_message", sender.service)
+	assert.Equal(t, "notify.telegram_bot", sender.data["entity_id"])
+}
+
+func TestHAMessengerNotifyData(t *testing.T) {
+	sender := newMockHASender()
+	m := newTestHAMessengerWithData("notify.mobile_app_android", map[string]any{
+		"ttl":      0,
+		"priority": "high",
+	}, sender)
+
+	m.Send("Test Title", "Test Message")
+	sender.waitCall(t)
+
+	sender.mu.Lock()
+	defer sender.mu.Unlock()
+
+	assert.Equal(t, map[string]any{"ttl": 0, "priority": "high"}, sender.data["data"])
 }
 
 func TestHAMessengerPersistentNotification(t *testing.T) {
