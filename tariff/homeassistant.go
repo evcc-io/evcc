@@ -48,9 +48,9 @@ func NewHATariffFromConfig(other map[string]any) (api.Tariff, error) {
 	cc := struct {
 		embed      `mapstructure:",squash"`
 		URI        string
-		Entities   []string // one or more entity IDs to merge (e.g. today, d1, d2, d3)
-		Attributes []string // attributes to read from each entity
-		Format     string   // "nordpool" (native), "zonneplan", "entsoe", "watts", "solcast"
+		Entities   []string       // one or more entity IDs to merge (e.g. today, d1, d2, d3)
+		Attributes []string       // attributes to read from each entity
+		Format     string         // "nordpool" (native), "zonneplan", "entsoe", "watts", "solcast"
 		Tariff     api.TariffType `mapstructure:"tariff"`
 		Interval   time.Duration
 		Cache      time.Duration
