@@ -20,7 +20,6 @@ package charger
 import (
 	"context"
 	"encoding/binary"
-	"errors"
 	"fmt"
 
 	"github.com/evcc-io/evcc/api"
@@ -92,7 +91,6 @@ func NewVictronEVCSFromConfig(ctx context.Context, other map[string]any) (api.Ch
 func NewVictronFromConfig(ctx context.Context, other map[string]any, regs victronRegs) (api.Charger, error) {
 	cc := struct {
 		modbus.TcpSettings `mapstructure:",squash"`
-		Phases1p3p         bool
 	}{
 		TcpSettings: modbus.TcpSettings{
 			ID: cast.ToUint8(regs.isGX) * 100,
@@ -103,11 +101,11 @@ func NewVictronFromConfig(ctx context.Context, other map[string]any, regs victro
 		return nil, err
 	}
 
-	return NewVictron(ctx, cc.URI, cc.ID, regs, cc.Phases1p3p)
+	return NewVictron(ctx, cc.URI, cc.ID, regs)
 }
 
 // NewVictron creates Victron charger
-func NewVictron(ctx context.Context, uri string, slaveID uint8, regs victronRegs, phases bool) (api.Charger, error) {
+func NewVictron(ctx context.Context, uri string, slaveID uint8, regs victronRegs) (api.Charger, error) {
 	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
 	if err != nil {
 		return nil, err
@@ -126,19 +124,21 @@ func NewVictron(ctx context.Context, uri string, slaveID uint8, regs victronRegs
 		return nil, err
 	}
 
-	if binary.BigEndian.Uint16(b) != 0 {
-		return nil, errors.New("charger must be in manual mode")
+	if mode := binary.BigEndian.Uint16(b); mode != 0 {
+		return nil, fmt.Errorf("charger must be in manual mode (current mode: %d)", mode)
 	}
 
-	// phase switching (EVCS only, requires hardware mod with second contactor)
+	// phase switching (EVCS only, requires hardware modification with second contactor)
 	var phasesS func(int) error
 	var phasesG func() (int, error)
 
-	if phases && !regs.isGX {
+	if !regs.isGX {
 		b, err := wb.conn.ReadHoldingRegisters(wb.regs.ThreePhaseEnabled, 1)
-		if err != nil || binary.BigEndian.Uint16(b) != 1 {
-			log.ERROR.Printf("phases1p3p: Phase switching is not available, register %d has value %d, expected 1", wb.regs.ThreePhaseEnabled, binary.BigEndian.Uint16(b))
-		} else {
+		if err != nil {
+			return nil, err
+		}
+
+		if binary.BigEndian.Uint16(b) == 1 {
 			phasesS = wb.phases1p3p
 			phasesG = wb.getPhases
 		}
@@ -157,7 +157,7 @@ func (wb *Victron) Status() (api.ChargeStatus, error) {
 	u := binary.BigEndian.Uint16(b)
 	switch u {
 	case 0, 1, 2, 3:
-		return api.ChargeStatusString(string('A' + rune(binary.BigEndian.Uint16(b))))
+		return api.ChargeStatusString(string('A' + rune(u)))
 	case 5, 6, 21:
 		return api.StatusB, nil
 	default:
