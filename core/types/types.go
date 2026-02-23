@@ -18,33 +18,12 @@ type Measurement struct {
 	Capacity      *float64         `json:"capacity,omitempty"`
 	Soc           *float64         `json:"soc,omitempty"`
 	Controllable  *bool            `json:"controllable,omitempty"`
-	Forecast      *BatteryForecast `json:"forecast,omitempty"`
 }
 
 type BatteryForecast struct {
 	Full  *time.Time `json:"full"`
 	Empty *time.Time `json:"empty"`
 }
-
-// func (f BatteryForecast) MarshalJSON() ([]byte, error) {
-// 	var full, empty int64
-// 	if !f.Full.IsZero() {
-// 		full = int64(time.Until(f.Full).Seconds())
-// 	}
-// 	if !f.Empty.IsZero() {
-// 		empty = int64(time.Until(f.Empty).Seconds())
-// 	}
-
-// 	return json.Marshal(struct {
-// 		BatteryForecast
-// 		UntilFull  int64 `json:"untilFull,omitempty"`
-// 		UntilEmpty int64 `json:"untilEmpty,omitempty"`
-// 	}{
-// 		BatteryForecast: f,
-// 		UntilFull:       full,
-// 		UntilEmpty:      empty,
-// 	})
-// }
 
 var _ api.TitleDescriber = (*Measurement)(nil)
 

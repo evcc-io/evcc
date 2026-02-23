@@ -134,9 +134,7 @@
 										v-if="batteryForecastEmpty"
 										class="d-flex align-items-center mb-2"
 									>
-										<ForecastMessage>{{
-											batteryForecastEmpty
-										}}</ForecastMessage>
+										<ForecastMessage :message="batteryForecastEmpty" />
 									</div>
 									<div
 										v-else-if="batteryForecastFull"
@@ -153,7 +151,6 @@
 										v-for="(b, index) in batteryDevices"
 										:key="index"
 										:name="b.title || genericBatteryTitle(index)"
-										:prediction="fmtForecast(b.forecast, false)"
 										:details="b.soc"
 										:detailsFmt="batteryFmt"
 										:power="dischargePower(b.power)"
@@ -278,7 +275,7 @@
 										v-if="batteryForecastFull"
 										class="d-flex align-items-center mb-2"
 									>
-										<ForecastMessage>{{ batteryForecastFull }}</ForecastMessage>
+										<ForecastMessage :message="batteryForecastFull" />
 									</div>
 									<div
 										v-else-if="batteryForecastEmpty"
@@ -312,7 +309,6 @@
 										v-for="(b, index) in batteryDevices"
 										:key="index"
 										:name="b.title || genericBatteryTitle(index)"
-										:prediction="fmtForecast(b.forecast, true)"
 										:details="b.soc"
 										:detailsFmt="batteryFmt"
 										:power="chargePower(b.power)"
@@ -589,11 +585,9 @@ export default defineComponent({
 			return [...this.aux, ...this.ext];
 		},
 		batteryForecastFull(): string | undefined {
-			if (this.batteryExpanded && this.hasMultipleBatteries) return undefined;
 			return this.fmtForecast(this.battery?.forecast, true);
 		},
 		batteryForecastEmpty(): string | undefined {
-			if (this.batteryExpanded && this.hasMultipleBatteries) return undefined;
 			return this.fmtForecast(this.battery?.forecast, false);
 		},
 		batteryForecastExists(): boolean {

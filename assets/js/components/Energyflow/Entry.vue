@@ -10,8 +10,7 @@
 				</span>
 				<div class="d-flex flex-grow-1 ms-3 align-items-center text-truncate">
 					<span v-if="!$slots['expanded']" class="text-truncate">
-						{{ name }}<template v-if="prediction">: </template>
-						<ForecastMessage v-if="prediction" inline>{{ prediction }}</ForecastMessage>
+						{{ name }}
 					</span>
 					<button
 						v-else
@@ -81,16 +80,14 @@ import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import AnimatedNumber from "../Helper/AnimatedNumber.vue";
 import VehicleIcon from "../VehicleIcon";
 import ForecastIcon from "../MaterialIcon/Forecast.vue";
-import ForecastMessage from "./ForecastMessage.vue";
 import { defineComponent, type PropType } from "vue";
 
 export default defineComponent({
 	name: "EnergyflowEntry",
-	components: { BatteryIcon, AnimatedNumber, VehicleIcon, ForecastIcon, ForecastMessage },
+	components: { BatteryIcon, AnimatedNumber, VehicleIcon, ForecastIcon },
 	mixins: [formatter],
 	props: {
 		name: { type: String },
-		prediction: { type: String },
 		icon: { type: String },
 		iconProps: { type: Object, default: () => ({}) },
 		power: { type: Number, default: 0 },

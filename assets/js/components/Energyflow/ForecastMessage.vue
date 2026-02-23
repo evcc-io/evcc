@@ -1,7 +1,6 @@
 <template>
 	<router-link to="/optimize" class="root" @click.stop>
-		<template v-if="!inline">{{ $t("main.energyflow.forecast") }} </template>
-		<span class="message"><slot /></span>
+		{{ $t("main.energyflow.forecast") }} <span class="message">{{ message }}</span>
 	</router-link>
 </template>
 
@@ -11,10 +10,7 @@ import { defineComponent } from "vue";
 export default defineComponent({
 	name: "ForecastMessage",
 	props: {
-		inline: {
-			type: Boolean,
-			default: false,
-		},
+		message: { type: String, required: true },
 	},
 });
 </script>

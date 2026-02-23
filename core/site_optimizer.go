@@ -256,17 +256,6 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		}
 
 		batteries = append(batteries, batResult)
-
-		for j, dev := range site.batteryMeters {
-			if details.BatteryDetails[i].Name == dev.Config().Name {
-				site.battery.Devices[j].Forecast = &types.BatteryForecast{
-					Full:  batResult.Full,
-					Empty: batResult.Empty,
-				}
-
-				break
-			}
-		}
 	}
 
 	site.publish("evopt-batteries", batteries)
