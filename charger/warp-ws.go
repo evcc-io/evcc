@@ -168,32 +168,41 @@ func NewWarpWS(ctx context.Context, uri, user, password string, meterIndex uint)
 		metersValuesTopic:   fmt.Sprintf("meters/%d/values", meterIndex),
 	}
 
-	go w.run(ctx)
-
-	return w, nil
-}
-
-func (w *WarpWS) run(ctx context.Context) {
 	uri, err := parseURI(w.uri, true)
 	if err != nil {
 		w.log.DEBUG.Println(err)
 		if uri == "" {
-			return
+			return nil, err
 		}
 	}
-	w.log.TRACE.Printf("connecting to %s …", uri)
 
+	go w.run(uri, ctx)
+
+	return w, nil
+}
+
+func (w *WarpWS) run(uri string, ctx context.Context) {
 	bo := backoff.NewExponentialBackOff(backoff.WithMaxElapsedTime(0))
+	bo.MaxInterval = 30 * time.Second
 	for ctx.Err() == nil {
-		conn, _, err := websocket.Dial(ctx, uri, nil)
+		w.log.DEBUG.Printf("ws connecting to %s …", uri)
+		conn, resp, err := websocket.Dial(ctx, uri, nil)
 		if err != nil {
+			if resp != nil {
+				resp.Body.Close()
+			}
+			if conn != nil {
+				conn.Close(websocket.StatusInternalError, "dial failed")
+			}
 			if ctx.Err() != nil {
 				return
 			}
+			w.log.DEBUG.Printf("ws reconnecting to %s in %v", uri, bo.NextBackOff())
 			time.Sleep(bo.NextBackOff())
 			continue
 		}
 
+		w.log.DEBUG.Printf("ws connected to %s", uri)
 		bo.Reset()
 		if err := w.handleConnection(ctx, conn); err != nil {
 			w.log.ERROR.Println(err)
@@ -238,9 +247,9 @@ func (w *WarpWS) handleConnection(ctx context.Context, conn *websocket.Conn) err
 				return err
 			}
 
-			w.log.TRACE.Printf("ws event %s: %s", event.Topic, event.Payload)
+			w.log.TRACE.Printf("%s ws event %s: %s", w.uri, event.Topic, event.Payload)
 			if err := w.handleEvent(event.Topic, event.Payload); err != nil {
-				w.log.ERROR.Printf("bad payload for topic %s: %v", event.Topic, err)
+				w.log.ERROR.Printf("bad payload from %s for topic %s: %v", w.uri, event.Topic, err)
 			}
 		}
 	}
