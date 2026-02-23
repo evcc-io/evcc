@@ -2,10 +2,10 @@ template: ocpp-mennekes-4you
 products:
   - brand: Mennekes
     description:
-      generic: Amtron 4Business
+      generic: AMTRON 4Business
   - brand: Mennekes
     description:
-      generic: Amtron 4You
+      generic: AMTRON 4You
 capabilities: ["rfid"]
 requirements:
   evcc: ["sponsorship", "skiptest"]
