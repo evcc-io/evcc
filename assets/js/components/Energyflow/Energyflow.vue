@@ -153,7 +153,7 @@
 										v-for="(b, index) in batteryDevices"
 										:key="index"
 										:name="b.title || genericBatteryTitle(index)"
-										:prediction="devicePrediction(b, false)"
+										:prediction="fmtForecast(b.forecast, false)"
 										:details="b.soc"
 										:detailsFmt="batteryFmt"
 										:power="dischargePower(b.power)"
@@ -312,7 +312,7 @@
 										v-for="(b, index) in batteryDevices"
 										:key="index"
 										:name="b.title || genericBatteryTitle(index)"
-										:prediction="devicePrediction(b, true)"
+										:prediction="fmtForecast(b.forecast, true)"
 										:details="b.soc"
 										:detailsFmt="batteryFmt"
 										:power="chargePower(b.power)"
@@ -588,17 +588,13 @@ export default defineComponent({
 		consumers() {
 			return [...this.aux, ...this.ext];
 		},
-		batteryForecastFull(): string | null {
-			if (this.batteryExpanded && this.hasMultipleBatteries) return null;
-			const timeago = this.fmtForecastRelative(this.battery?.forecast?.full);
-			if (!timeago) return null;
-			return this.$t("main.energyflow.batteryForecastFull", { timeago });
+		batteryForecastFull(): string | undefined {
+			if (this.batteryExpanded && this.hasMultipleBatteries) return undefined;
+			return this.fmtForecast(this.battery?.forecast, true);
 		},
-		batteryForecastEmpty(): string | null {
-			if (this.batteryExpanded && this.hasMultipleBatteries) return null;
-			const timeago = this.fmtForecastRelative(this.battery?.forecast?.empty);
-			if (!timeago) return null;
-			return this.$t("main.energyflow.batteryForecastEmpty", { timeago });
+		batteryForecastEmpty(): string | undefined {
+			if (this.batteryExpanded && this.hasMultipleBatteries) return undefined;
+			return this.fmtForecast(this.battery?.forecast, false);
 		},
 		batteryForecastExists(): boolean {
 			return !!(this.batteryForecastEmpty || this.batteryForecastFull);
@@ -704,30 +700,17 @@ export default defineComponent({
 		genericConsumerTitle(index: number) {
 			return `${this.$t("config.devices.consumer")} #${index + 1}`;
 		},
-		fmtForecastRelative(isoString?: string | null): string | null {
-			if (!isoString) return null;
-			const elapsed = new Date(isoString).getTime() - Date.now();
-			if (elapsed <= 0) return null;
-			return this.fmtTimeAgo(elapsed, "always");
-		},
-		deviceForecastFull(device: { forecast?: { full?: string | null } }): string | null {
-			return this.fmtForecastRelative(device.forecast?.full);
-		},
-		deviceForecastEmpty(device: { forecast?: { empty?: string | null } }): string | null {
-			return this.fmtForecastRelative(device.forecast?.empty);
-		},
-		devicePrediction(
-			device: { forecast?: { full?: string | null; empty?: string | null } },
+		fmtForecast(
+			forecast: { full?: string | null; empty?: string | null } | undefined,
 			full: boolean
 		): string | undefined {
-			const timeago = full
-				? this.deviceForecastFull(device)
-				: this.deviceForecastEmpty(device);
-			if (!timeago) return undefined;
+			const isoString = full ? forecast?.full : forecast?.empty;
+			if (!isoString) return undefined;
+			const time = this.fmtAbsoluteDate(new Date(isoString));
 			const key = full
 				? "main.energyflow.batteryForecastFull"
 				: "main.energyflow.batteryForecastEmpty";
-			return this.$t(key, { timeago });
+			return this.$t(key, { time });
 		},
 	},
 });

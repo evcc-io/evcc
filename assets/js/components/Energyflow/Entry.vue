@@ -1,6 +1,6 @@
 <template>
-	<div>
-		<div class="mb-2 entry" :class="{ 'evcc-gray': !active }">
+	<div class="entry" :class="{ 'evcc-gray': !active }">
+		<div class="mb-2">
 			<div class="d-flex justify-content-between">
 				<span class="d-flex flex-nowrap">
 					<BatteryIcon v-if="isBattery" v-bind="iconProps" />
@@ -10,10 +10,8 @@
 				</span>
 				<div class="d-flex flex-grow-1 ms-3 align-items-center text-truncate">
 					<span v-if="!$slots['expanded']" class="text-truncate">
-						{{ name
-						}}<ForecastMessage v-if="prediction" class="ms-1" inline>{{
-							prediction
-						}}</ForecastMessage>
+						{{ name }}<template v-if="prediction">: </template>
+						<ForecastMessage v-if="prediction" inline>{{ prediction }}</ForecastMessage>
 					</span>
 					<button
 						v-else
@@ -205,6 +203,7 @@ export default defineComponent({
 .entry {
 	transition: color var(--evcc-transition-medium) linear;
 }
+
 .power {
 	min-width: 75px;
 }
