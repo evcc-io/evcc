@@ -231,7 +231,7 @@ func TestHATariffZonneplan(t *testing.T) {
 
 	source := &mockHASource{
 		attributes: map[string]map[string]any{
-			"sensor.zonneplan_current_electricity_tariff": {"forecast": json.RawMessage(raw)},
+			"sensor.zonneplan_current_electricity_tariff": {"forecast": raw},
 		},
 	}
 	tar := newTestTariff(t, source,
@@ -291,7 +291,7 @@ func TestHATariffWatts(t *testing.T) {
 
 	source := &mockHASource{
 		attributes: map[string]map[string]any{
-			"sensor.energy_production_today": {"watts": json.RawMessage(raw)},
+			"sensor.energy_production_today": {"watts": raw},
 		},
 	}
 	tar := newTestTariff(t, source,
@@ -331,7 +331,7 @@ func TestHATariffSolcast(t *testing.T) {
 
 	source := &mockHASource{
 		attributes: map[string]map[string]any{
-			"sensor.solcast_pv_forecast": {"detailedForecast": json.RawMessage(raw)},
+			"sensor.solcast_pv_forecast": {"detailedForecast": raw},
 		},
 	}
 	tar := newTestTariff(t, source,
