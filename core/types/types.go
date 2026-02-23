@@ -8,16 +8,16 @@ import (
 
 // Measurement is the device measurements struct
 type Measurement struct {
-	Title         string           `json:"title,omitempty"`
-	Icon          string           `json:"icon,omitempty"`
-	Power         float64          `json:"power"`
-	Energy        float64          `json:"energy,omitempty"`
-	Powers        []float64        `json:"powers,omitempty"`
-	Currents      []float64        `json:"currents,omitempty"`
-	ExcessDCPower float64          `json:"excessdcpower,omitempty"`
-	Capacity      *float64         `json:"capacity,omitempty"`
-	Soc           *float64         `json:"soc,omitempty"`
-	Controllable  *bool            `json:"controllable,omitempty"`
+	Title         string    `json:"title,omitempty"`
+	Icon          string    `json:"icon,omitempty"`
+	Power         float64   `json:"power"`
+	Energy        float64   `json:"energy,omitempty"`
+	Powers        []float64 `json:"powers,omitempty"`
+	Currents      []float64 `json:"currents,omitempty"`
+	ExcessDCPower float64   `json:"excessdcpower,omitempty"`
+	Capacity      *float64  `json:"capacity,omitempty"`
+	Soc           *float64  `json:"soc,omitempty"`
+	Controllable  *bool     `json:"controllable,omitempty"`
 }
 
 type BatteryForecast struct {
