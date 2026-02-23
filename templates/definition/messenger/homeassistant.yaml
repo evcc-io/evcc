@@ -26,6 +26,4 @@ params:
 render: |
   type: homeassistant
   uri: {{ .uri }}
-  {{- if .notify }}
   notify: {{ .notify }}
-  {{- end }}
