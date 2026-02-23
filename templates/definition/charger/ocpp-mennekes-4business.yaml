@@ -3,6 +3,9 @@ products:
   - brand: Mennekes
     description:
       generic: Amtron 4Business
+  - brand: Mennekes
+    description:
+      generic: Amtron 4You
 capabilities: ["rfid"]
   evcc: ["sponsorship", "skiptest"]
 params:
