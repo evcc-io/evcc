@@ -40,6 +40,12 @@ func NewHAMessengerFromConfig(other map[string]any) (api.Messenger, error) {
 		return nil, errors.New("missing uri")
 	}
 
+	if cc.Notify != "" {
+		if _, service, ok := strings.Cut(cc.Notify, "."); !ok || service == "" {
+			return nil, errors.New("notify must be in domain.service format")
+		}
+	}
+
 	log := util.NewLogger("homeassistant")
 
 	conn, err := homeassistant.NewConnection(log, cc.URI, "")
