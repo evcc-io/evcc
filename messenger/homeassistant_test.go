@@ -38,7 +38,7 @@ func newTestHAMessenger(notify string, sender *mockHASender) *HAMessenger {
 
 func TestHAMessengerNotifyPath(t *testing.T) {
 	sender := &mockHASender{}
-	m := newTestHAMessenger("notify.mobile_app_iphone", sender)
+	m := newTestHAMessenger("notify.mobile_app_android", sender)
 
 	m.Send("Test Title", "Test Message")
 	time.Sleep(50 * time.Millisecond)
@@ -47,7 +47,7 @@ func TestHAMessengerNotifyPath(t *testing.T) {
 	defer sender.mu.Unlock()
 
 	assert.Equal(t, "notify", sender.domain)
-	assert.Equal(t, "mobile_app_iphone", sender.service)
+	assert.Equal(t, "mobile_app_android", sender.service)
 	assert.Equal(t, "Test Title", sender.data["title"])
 	assert.Equal(t, "Test Message", sender.data["message"])
 }

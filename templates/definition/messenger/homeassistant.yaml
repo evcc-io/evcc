@@ -1,0 +1,31 @@
+template: homeassistant
+products:
+  - brand: Home Assistant
+params:
+  - name: uri
+    required: true
+    example: http://homeassistant.local:8123
+    description:
+      de: URL
+      en: URL
+    help:
+      de: URL der Home Assistant Instanz.
+      en: URL of the Home Assistant instance.
+  - name: notify
+    example: notify.mobile_app_android
+    description:
+      de: Benachrichtigungsdienst
+      en: Notify service
+    help:
+      de: >
+        Home Assistant Benachrichtigungsdienst in der Form `domain.service` (z. B. `notify.mobile_app_android`).
+        Leer lassen, um eine persistente Benachrichtigung in der HA-Oberfläche zu erstellen.
+      en: >
+        Home Assistant notify service in the form `domain.service` (e.g. `notify.mobile_app_android`).
+        Leave empty to create a persistent notification in the HA UI.
+render: |
+  type: homeassistant
+  uri: {{ .uri }}
+  {{- if .notify }}
+  notify: {{ .notify }}
+  {{- end }}
