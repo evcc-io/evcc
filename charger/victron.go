@@ -78,17 +78,17 @@ func init() {
 
 //go:generate go tool decorate -f decorateVictron -b *Victron -r api.Charger -t api.PhaseSwitcher,api.PhaseGetter
 
-// NewVictronGXFromConfig creates a ABB charger from generic config
+// NewVictronGXFromConfig creates a Victron charger from generic config
 func NewVictronGXFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	return NewVictronFromConfig(ctx, other, victronGX)
 }
 
-// NewVictronEVCSFromConfig creates a ABB charger from generic config
+// NewVictronEVCSFromConfig creates a Victron charger from generic config
 func NewVictronEVCSFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	return NewVictronFromConfig(ctx, other, victronEVCS)
 }
 
-// NewVictronFromConfig creates a ABB charger from generic config
+// NewVictronFromConfig creates a Victron charger from generic config
 func NewVictronFromConfig(ctx context.Context, other map[string]any, regs victronRegs) (api.Charger, error) {
 	cc := struct {
 		modbus.TcpSettings `mapstructure:",squash"`
