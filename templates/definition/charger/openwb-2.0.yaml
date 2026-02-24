@@ -3,7 +3,7 @@ products:
   - brand: openWB
     description:
       generic: Software 2.x
-capabilities: ["1p3p", "mA", "rfid"]
+capabilities: ["1p3p", "mA"]
 requirements:
   description:
     de: |
@@ -12,12 +12,18 @@ requirements:
 
       * Steuerungsmodus: `secondary`
       * Steuerung über Modbus als secondary: `An`
+
+      RFID-Autorisierung ist mit openWB Software 2.x leider aktuell nicht sinnvoll nutzbar, siehe
+      [`Issue 2832`](https://github.com/openWB/core/issues/2832)
     en: |
       Requires [`Software 2.x`](https://github.com/openWB/core).
       The following changes are necessary under the 'Einstellungen' tab:
 
       * Steuerungsmodus: `secondary`
       * Steuerung über Modbus als secondary: `An`
+
+      RFID-Authorisation currently is not usable with openWB Software 2.x, check
+      [`openWB Issue 2832`](https://github.com/openWB/core/issues/2832)
 params:
   - name: modbus
     choice: ["tcpip"]
