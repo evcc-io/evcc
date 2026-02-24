@@ -197,15 +197,8 @@ func (w *WarpWS) run(uri string, ctx context.Context) {
 			if ctx.Err() != nil {
 				return
 			}
-			d := bo.NextBackOff()
-			w.log.DEBUG.Printf("ws reconnecting to %s in %v", uri, d)
-
-			select {
-			case <-ctx.Done():
-				return
-			case <-time.After(d):
-				// continue to next reconnect attempt
-			}
+			w.log.DEBUG.Printf("ws reconnecting to %s in %v", uri, bo.NextBackOff())
+			time.Sleep(bo.NextBackOff())
 			continue
 		}
 
