@@ -439,6 +439,7 @@ params:
     type: string
     description:
       generic: Station ID
+    private: true
   - name: meter
     description:
       en: Meter ID
@@ -632,9 +633,10 @@ presets:
       description:
         generic: Station ID
       help:
-        en: Unique identifier of the charger. evcc auto-detects this once the charger connects.
-        de: Eindeutige Wallbox-Kennung. evcc erkennt diese automatisch, sobald sich die Wallbox verbindet.
+        en: Unique identifier of the charger. Automatically detected once the charger connects.
+        de: Eindeutige Wallbox-Kennung. Wird automatisch erkannt, sobald sich die Wallbox verbindet.
       example: EVB-P12354
+      private: true
     - name: connector
       description:
         en: Connector number
