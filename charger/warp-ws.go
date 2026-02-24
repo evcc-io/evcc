@@ -20,7 +20,7 @@ import (
 	"github.com/evcc-io/evcc/charger/warp"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/jpfielding/go-http-digest/pkg/digest"
+	"github.com/icholy/digest"
 )
 
 type WarpWS struct {
@@ -109,7 +109,7 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 		wb.pmURI = wb.uri
 		wb.pmHelper = wb.Helper
 	} else if cc.EnergyManagerURI != "" { // fallback to Energy Manager
-		wb.pmURI, err = parseURI(cc.EnergyManagerURI, false)
+		wb.pmURI, _, err = parseURI(cc.EnergyManagerURI, false)
 		if wb.pmURI == "" {
 			return nil, err
 		} else if err != nil {
@@ -117,7 +117,10 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 		}
 		wb.pmHelper = request.NewHelper(wb.log)
 		if cc.EnergyManagerUser != "" {
-			wb.pmHelper.Client.Transport = digest.NewTransport(cc.EnergyManagerUser, cc.EnergyManagerPassword, wb.pmHelper.Client.Transport)
+			wb.pmHelper.Client.Transport = &digest.Transport{
+				Username: cc.EnergyManagerUser,
+				Password: cc.EnergyManagerPassword,
+			}
 		}
 	}
 
@@ -152,61 +155,112 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 }
 
 func NewWarpWS(ctx context.Context, uri, user, password string, meterIndex uint) (*WarpWS, error) {
-	log := util.NewLogger("warp-ws")
+	wsURI, hostname, err := parseURI(uri, true)
+	if err != nil {
+		if wsURI == "" {
+			return nil, err
+		}
+	}
+	log := util.NewLogger(fmt.Sprintf("warp-ws %s", hostname))
+
+	digOpts := &digest.Options{
+		URI:    wsURI,
+		Method: "GET",
+		Count:  1,
+	}
 
 	client := request.NewHelper(log)
-	if user != "" {
-		client.Client.Transport = digest.NewTransport(user, password, client.Client.Transport)
+	if user != "" && password != "" {
+		digOpts.Username = user
+		digOpts.Password = password
+		client.Client.Transport = &digest.Transport{
+			Username: user,
+			Password: password,
+		}
 	}
 
 	w := &WarpWS{
 		Helper: client, log: log,
-		uri:                 util.DefaultScheme(uri, "http"),
+		uri:                 uri,
 		meterIndex:          meterIndex,
 		meterMap:            map[int]int{},
 		metersValueIDsTopic: fmt.Sprintf("meters/%d/value_ids", meterIndex),
 		metersValuesTopic:   fmt.Sprintf("meters/%d/values", meterIndex),
 	}
 
-	go w.run(ctx)
+	go w.run(ctx, digOpts)
 
 	return w, nil
 }
 
-func (w *WarpWS) run(ctx context.Context) {
-	uri, err := parseURI(w.uri, true)
-	if err != nil {
-		w.log.DEBUG.Println(err)
-		if uri == "" {
-			return
-		}
-	}
-	w.log.TRACE.Printf("connecting to %s …", uri)
-
+func (w *WarpWS) run(ctx context.Context, digOpts *digest.Options) {
 	bo := backoff.NewExponentialBackOff(backoff.WithMaxElapsedTime(0))
+	bo.MaxInterval = 30 * time.Second
+
 	for ctx.Err() == nil {
-		conn, _, err := websocket.Dial(ctx, uri, nil)
+		w.log.DEBUG.Println("ws connecting …")
+
+		conn, _, err := dialWebsocket(ctx, digOpts)
 		if err != nil {
-			if ctx.Err() != nil {
-				return
+			w.log.ERROR.Println("ws dial failed")
+		} else {
+			w.log.DEBUG.Printf("ws connected")
+			bo.Reset()
+
+			if err := w.handleConnection(ctx, conn); err != nil {
+				w.log.ERROR.Println(err)
 			}
-			time.Sleep(bo.NextBackOff())
-			continue
 		}
 
-		bo.Reset()
-		if err := w.handleConnection(ctx, conn); err != nil {
-			w.log.ERROR.Println(err)
+		select {
+		case <-ctx.Done():
+			return
+		case <-time.After(bo.NextBackOff()):
 		}
 	}
 }
 
-func parseURI(uri string, toWS bool) (string, error) {
+func dialWebsocket(ctx context.Context, digOpts *digest.Options) (*websocket.Conn, *http.Response, error) {
+	// err will be non nil if auth is needed
+	conn, resp, err := websocket.Dial(ctx, digOpts.URI, nil)
+	if err == nil {
+		return conn, resp, err
+	}
+
+	if digOpts.Username == "" || digOpts.Password == "" {
+		return nil, nil, fmt.Errorf("missing credentials for digest auth")
+	}
+
+	// Extract challeng from response
+	if resp == nil {
+		return nil, nil, fmt.Errorf("no response on websocket dial")
+	}
+	www := resp.Header.Get("WWW-Authenticate")
+
+	chal, err := digest.ParseChallenge(www)
+	if err != nil {
+		return nil, resp, fmt.Errorf("digest parse error: %w", err)
+	}
+
+	cred, _ := digest.Digest(chal, *digOpts)
+
+	// Dial with Digest Auth
+	dialer := websocket.DialOptions{
+		HTTPHeader: http.Header{
+			"Authorization": []string{cred.String()},
+		},
+	}
+
+	return websocket.Dial(ctx, digOpts.URI, &dialer)
+}
+
+// Returns parsed URI and hostname
+func parseURI(uri string, toWS bool) (string, string, error) {
 	u, err := url.Parse(util.DefaultScheme(strings.TrimRight(uri, "/"), "http"))
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
-	if u.Scheme == "https" || u.Scheme == "wss" {
+	if u.Scheme != "http" {
 		u.Scheme = "http"
 		err = fmt.Errorf("https or wss are not supported, using http/ws instead")
 	}
@@ -214,7 +268,8 @@ func parseURI(uri string, toWS bool) (string, error) {
 		u.Scheme = "ws"
 		u.Path = path.Join(u.Path, "/ws")
 	}
-	return u.String(), err
+	hostname := strings.Split(u.Host, ".")[0]
+	return u.String(), hostname, err
 }
 
 func (w *WarpWS) handleConnection(ctx context.Context, conn *websocket.Conn) error {
