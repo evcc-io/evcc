@@ -1,0 +1,55 @@
+template: cozify
+products:
+  - brand: Cozify HAN
+    description:
+      generic: Cozify HAN
+requirements:
+  description:
+    de: Erfordert eine Verbindung zum Cozify HAN Gateway.
+    en: Requires a connection to the Cozify HAN gateway.
+params:
+  - name: usage
+    choice: ["grid"]
+  - name: host
+    required: true
+  - name: cache
+    advanced: true
+    default: 5s
+render: |
+  type: custom
+  power:
+    source: http
+    uri: http://{{ .host }}/meter/data
+    cache: {{ .cache }}
+    jq: (.pi[0] - .pe[0])
+  energy:
+    source: http
+    uri: http://{{ .host }}/meter/data
+    cache: {{ .cache }}
+    jq:  (.ic | tonumber)
+  currents:
+    - source: http
+      uri: http://{{ .host }}/meter/data
+      cache: {{ .cache }}
+      jq: .i[0]
+    - source: http
+      uri: http://{{ .host }}/meter/data
+      cache: {{ .cache }}
+      jq: .i[1]
+    - source: http
+      uri: http://{{ .host }}/meter/data
+      cache: {{ .cache }}
+      jq: .i[2]
+  voltages:
+    - source: http
+      uri: http://{{ .host }}/meter/data
+      cache: {{ .cache }}
+      jq: .u[0]
+    - source: http
+      uri: http://{{ .host }}/meter/data
+      cache: {{ .cache }}
+      jq: .u[1]
+    - source: http
+      uri: http://{{ .host }}/meter/data
+      cache: {{ .cache }}
+      jq: .u[2]

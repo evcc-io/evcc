@@ -17,6 +17,8 @@ params:
     required: true
   - name: zone
     required: true
+    description:
+      generic: Zone
     example: "DE"
     help:
       de: "siehe https://api.electricitymap.org/v3/zones"

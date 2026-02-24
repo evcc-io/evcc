@@ -14,7 +14,7 @@
 			>
 				{{ value }}
 			</option>
-			<hr />
+			<option disabled>─────</option>
 			<option value="" :selected="!selected">
 				{{ $t(`main.vehicle.${connected ? "unknown" : "none"}`) }}
 			</option>

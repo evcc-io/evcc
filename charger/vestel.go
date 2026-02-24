@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2019-2022 andig
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -69,10 +69,10 @@ func init() {
 	registry.AddCtx("vestel", NewVestelFromConfig)
 }
 
-//go:generate go tool decorate -f decorateVestel -b *Vestel -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)" -t "api.Identifier,Identify,func() (string, error)"
+//go:generate go tool decorate -f decorateVestel -b *Vestel -r api.Charger -t api.PhaseSwitcher,api.PhaseGetter,api.Identifier
 
 // NewVestelFromConfig creates a Vestel charger from generic config
-func NewVestelFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewVestelFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: 255,
 	}
@@ -150,7 +150,7 @@ func NewVestel(ctx context.Context, uri string, id uint8) (api.Charger, error) {
 	}
 	go wb.heartbeat(ctx, timeout)
 
-	return decorateVestel(wb, phasesS, phasesG, identify), err
+	return decorateVestel(wb, phasesS, phasesG, identify), nil
 }
 
 func (wb *Vestel) heartbeat(ctx context.Context, timeout time.Duration) {

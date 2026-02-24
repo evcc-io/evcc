@@ -25,7 +25,7 @@ func init() {
 }
 
 // NewGoPluginFromConfig creates a Go provider
-func NewGoPluginFromConfig(ctx context.Context, other map[string]interface{}) (Plugin, error) {
+func NewGoPluginFromConfig(ctx context.Context, other map[string]any) (Plugin, error) {
 	var cc struct {
 		VM     string
 		Script string

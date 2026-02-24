@@ -16,15 +16,22 @@ func TestTimer(t *testing.T) {
 
 	// start
 	at.Start()
+
+	// maximum 2 attempts
+	at.wakeupAttemptsLeft = 2
+
 	clck.Add(10 * time.Second)
-	require.False(t, at.Expired())
+	require.Equal(t, WakeUpTimerInactive, at.Elapsed())
 
 	// wait another 20 sec to expire the timer - this will reset the timer as well
 	clck.Add(wakeupTimeout + 10*time.Second)
-	require.True(t, at.Expired())
+	require.Equal(t, WakeUpTimerElapsed, at.Elapsed())
 
-	// start
-	at.Start()
+	// elapse
 	clck.Add(time.Minute)
-	require.True(t, at.Expired())
+	require.Equal(t, WakeUpTimerElapsed, at.Elapsed())
+
+	// elapse
+	clck.Add(time.Minute)
+	require.Equal(t, WakeUpTimerFinished, at.Elapsed())
 }

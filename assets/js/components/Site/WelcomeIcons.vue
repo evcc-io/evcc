@@ -91,13 +91,13 @@ export default defineComponent({
 			const excludeIndices = [this.leftIconIndex, this.centerIconIndex, this.rightIconIndex];
 			switch (this.updatePosition) {
 				case 0:
-					this.leftIconIndex = this.getRandomIcon(excludeIndices);
+					this.leftIconIndex = this.getRandomIcon(excludeIndices) || 0;
 					break;
 				case 1:
-					this.centerIconIndex = this.getRandomIcon(excludeIndices);
+					this.centerIconIndex = this.getRandomIcon(excludeIndices) || 0;
 					break;
 				case 2:
-					this.rightIconIndex = this.getRandomIcon(excludeIndices);
+					this.rightIconIndex = this.getRandomIcon(excludeIndices) || 0;
 					break;
 			}
 			this.updatePosition = (this.updatePosition + Math.ceil(Math.random() * 2)) % 3;

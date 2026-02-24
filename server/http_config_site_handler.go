@@ -26,7 +26,7 @@ func siteHandler(site site.API) http.HandlerFunc {
 			Ext:     site.GetExtMeterRefs(),
 		}
 
-		jsonResult(w, res)
+		jsonWrite(w, res)
 	}
 }
 

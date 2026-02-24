@@ -28,7 +28,7 @@ func init() {
 	registry.Add("grünstromindex", NewGrünStromIndexFromConfig)
 }
 
-func NewGrünStromIndexFromConfig(other map[string]interface{}) (api.Tariff, error) {
+func NewGrünStromIndexFromConfig(other map[string]any) (api.Tariff, error) {
 	var cc struct {
 		Zip   string
 		Token string
@@ -52,11 +52,7 @@ func NewGrünStromIndexFromConfig(other map[string]interface{}) (api.Tariff, err
 		Source: corrently.TokenSource(log, &oauth2.Token{AccessToken: cc.Token}),
 	}
 
-	done := make(chan error)
-	go t.run(done)
-	err := <-done
-
-	return t, err
+	return runOrError(t)
 }
 
 func (t *GrünStromIndex) run(done chan error) {

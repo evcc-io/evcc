@@ -33,7 +33,7 @@ func init() {
 }
 
 // NewSeatFromConfig creates a new vehicle
-func NewSeatFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+func NewSeatFromConfig(other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed               `mapstructure:",squash"`
 		User, Password, VIN string

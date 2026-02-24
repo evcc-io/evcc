@@ -2,61 +2,64 @@ import Navigation from "./Navigation.vue";
 import type { Meta, StoryFn } from "@storybook/vue3";
 
 export default {
-	title: "Top/Navigation",
-	component: Navigation,
-	parameters: {
-		layout: "centered",
-	},
-	argTypes: {
-		vehicleLogins: { control: "object" },
-		sponsor: { control: "object" },
-	},
+  title: "Top/Navigation",
+  component: Navigation,
+  parameters: {
+    layout: "centered",
+  },
+  argTypes: {
+    authProviders: { control: "object" },
+    sponsor: { control: "object" },
+  },
 } as Meta<typeof Navigation>;
 
 const Template: StoryFn<typeof Navigation> = (args) => ({
-	components: { Navigation },
-	setup() {
-		return { args };
-	},
-	template: '<Navigation v-bind="args" />',
+  components: { Navigation },
+  setup() {
+    return { args };
+  },
+  template: '<Navigation v-bind="args" />',
 });
 
 export const Standard = Template.bind({});
 Standard.args = {};
 
-export const VehicleLogins = Template.bind({});
-VehicleLogins.args = {
-	vehicleLogins: {
-		"Mercedes EQS": {
-			authenticated: true,
-			uri: "https://login-provider-a.test/",
-		},
-		"Nissan Leaf Pro": {
-			authenticated: true,
-			uri: "https://login-provider-b.test/",
-		},
-	},
+export const OAuthStatus = Template.bind({});
+OAuthStatus.args = {
+  authProviders: {
+    "Mercedes EQS": {
+      authenticated: true,
+      id: "mercedes-eqs-9oqwjdf9oqwjd",
+    },
+    "Nissan Leaf Pro": {
+      authenticated: true,
+      id: "nissan-leaf-pro-9oqwjdf9oqwjd",
+    },
+  },
 };
 
-export const PendingVehicleLogins = Template.bind({});
-PendingVehicleLogins.args = {
-	vehicleLogins: {
-		"Mercedes EQS": {
-			authenticated: true,
-			uri: "https://login-provider-a.test/",
-		},
-		"Nissan Leaf Pro": {
-			authenticated: false,
-			uri: "https://login-provider-b.test/",
-		},
-	},
+export const PendingOAuthStatus = Template.bind({});
+PendingOAuthStatus.args = {
+  authProviders: {
+    "Mercedes EQS": {
+      authenticated: true,
+      id: "mercedes-eqs-9oqwjdf9oqwjd",
+    },
+    "Nissan Leaf Pro": {
+      authenticated: false,
+      id: "nissan-leaf-pro-9oqwjdf9oqwjd",
+    },
+  },
 };
 
 export const TokenExpires = Template.bind({});
 TokenExpires.args = {
-	sponsor: {
-		name: "Sponsor",
-		expiresAt: new Date().toISOString(),
-		expiresSoon: true,
-	},
+  sponsor: {
+    status: {
+      name: "Sponsor",
+      expiresAt: new Date().toISOString(),
+      expiresSoon: true,
+    },
+    yamlSource: "file",
+  },
 };

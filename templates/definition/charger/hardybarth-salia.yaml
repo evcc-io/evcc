@@ -14,8 +14,27 @@ products:
       generic: cPμ2
 requirements:
   evcc: ["sponsorship"]
+  description:
+    de: >-
+      Wenn du ohne Benutzername und Passwort die Meldung '401 (Unauthorized)' bekommst,
+      benutze die Benutzernamen und Passwort Kombination, die du vom Installateur deiner Wallbox bekommen hast,
+      die auch für die Weboberfläche der Wallbox funktioniert.
+    en: >-
+      If you get the message '401 (Unauthorized)' without a username and password,
+      use the username and password that you received from the installer of your wallbox.
+      The combo that also works for the web interface of the wallbox.
 params:
   - name: host
+  - name: user
+    help:
+      de: Benutzername (optional, nur bei aktivierter Basic Auth der Wallbox)
+      en: Username (optional, only if Basic Auth is enabled on the wallbox)
+  - name: password
+    help:
+      de: Passwort (optional, nur bei aktivierter Basic Auth der Wallbox)
+      en: Password (optional, only if Basic Auth is enabled on the wallbox)
 render: |
   type: hardybarth-salia
   uri: http://{{ .host }}
+  user: {{ .user }}
+  password: {{ .password }}

@@ -3,7 +3,6 @@ package core
 import (
 	"errors"
 	"regexp"
-	"slices"
 	"strings"
 	"time"
 
@@ -39,9 +38,17 @@ func (lp *Loadpoint) coordinatedVehicles() []api.Vehicle {
 
 // setVehicleIdentifier updated the vehicle id as read from the charger
 func (lp *Loadpoint) setVehicleIdentifier(id string) {
-	if lp.vehicleIdentifier != id {
-		lp.vehicleIdentifier = id
-		lp.publish(keys.VehicleIdentity, id)
+	if lp.vehicleIdentifier == id {
+		return
+	}
+
+	lp.vehicleIdentifier = id
+	lp.publish(keys.VehicleIdentity, id)
+
+	if id != "" {
+		lp.updateSession(func(session *session.Session) {
+			session.Identifier = id
+		})
 	}
 }
 
@@ -115,12 +122,12 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 	from := "unknown"
 	if lp.vehicle != nil {
 		lp.coordinator.Release(lp.vehicle)
-		from = lp.vehicle.Title()
+		from = lp.vehicle.GetTitle()
 	}
 	to := "unknown"
 	if v != nil {
 		lp.coordinator.Acquire(v)
-		to = v.Title()
+		to = v.GetTitle()
 	}
 
 	lp.vehicle = v
@@ -134,13 +141,12 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 		lp.socUpdated = time.Time{}
 
 		// resolve optional config
-		var estimate bool
-		if lp.Soc.Estimate == nil || *lp.Soc.Estimate {
-			estimate = true
+		if v.Capacity() > 0 && (lp.Soc.Estimate == nil || *lp.Soc.Estimate) {
+			lp.socEstimator = soc.NewEstimator(lp.log, lp.charger, v)
 		}
-		lp.socEstimator = soc.NewEstimator(lp.log, lp.charger, v, estimate)
 
 		lp.publish(keys.VehicleName, vehicle.Settings(lp.log, v).Name())
+		lp.publish(keys.VehicleTitle, v.GetTitle())
 
 		if mode, ok := v.OnIdentified().GetMode(); ok {
 			lp.SetMode(mode)
@@ -151,9 +157,7 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 		lp.progress.Reset()
 	} else {
 		lp.socEstimator = nil
-		lp.publish(keys.VehicleSoc, 0)
-		lp.publish(keys.VehicleName, "")
-		lp.publish(keys.VehicleOdometer, 0.0)
+		lp.unpublishVehicleIdentity()
 	}
 
 	// re-publish vehicle settings
@@ -164,12 +168,9 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 	lp.PublishEffectiveValues()
 
 	lp.updateSession(func(session *session.Session) {
-		var title string
 		if v != nil {
-			title = v.Title()
+			session.Vehicle = v.GetTitle()
 		}
-
-		lp.session.Vehicle = title
 	})
 }
 
@@ -198,6 +199,12 @@ func (lp *Loadpoint) wakeUpResurrector(resurrector api.Resurrector, name string)
 	}
 }
 
+// unpublishVehicleIdentity resets published vehicle identification
+func (lp *Loadpoint) unpublishVehicleIdentity() {
+	lp.publish(keys.VehicleName, "")
+	lp.publish(keys.VehicleTitle, "")
+}
+
 // unpublishVehicle resets published vehicle data
 func (lp *Loadpoint) unpublishVehicle() {
 	lp.vehicleSoc = 0
@@ -206,6 +213,7 @@ func (lp *Loadpoint) unpublishVehicle() {
 	lp.publish(keys.VehicleSoc, 0.0)
 	lp.publish(keys.VehicleRange, int64(0))
 	lp.publish(keys.VehicleLimitSoc, 0.0)
+	lp.publish(keys.VehicleOdometer, 0.0)
 
 	lp.setRemainingEnergy(0)
 	lp.setRemainingDuration(0)
@@ -213,8 +221,7 @@ func (lp *Loadpoint) unpublishVehicle() {
 
 // vehicleHasFeature checks availability of vehicle feature
 func (lp *Loadpoint) vehicleHasFeature(f api.Feature) bool {
-	v, ok := lp.GetVehicle().(api.FeatureDescriber)
-	return ok && slices.Contains(v.Features(), f)
+	return hasFeature(lp.GetVehicle(), f)
 }
 
 // vehicleUnidentified returns true if there are associated vehicles and detection is running.
@@ -246,13 +253,11 @@ func (lp *Loadpoint) vehicleUnidentified() bool {
 // vehicleDefaultOrDetect will assign and update default vehicle or start detection
 func (lp *Loadpoint) vehicleDefaultOrDetect() {
 	if lp.defaultVehicle != nil {
-		if lp.vehicle != lp.defaultVehicle {
-			lp.setActiveVehicle(lp.defaultVehicle)
-		} else {
-			// default vehicle is already active, update odometer anyway
-			// need to do this here since setActiveVehicle would short-circuit
-			lp.addTask(lp.vehicleOdometer)
-		}
+		// Always call setActiveVehicle even if defaultVehicle is already active.
+		// This ensures a fresh SOC estimator is created on each vehicle connect,
+		// which resets the estimator's initial values for the new charging session.
+		// setActiveVehicle is safe to call repeatedly - it only logs when vehicle actually changes.
+		lp.setActiveVehicle(lp.defaultVehicle)
 	} else if len(lp.coordinatedVehicles()) > 0 && lp.connected() {
 		lp.startVehicleDetection()
 	}
@@ -315,20 +320,21 @@ func (lp *Loadpoint) vehicleOdometer() {
 
 // vehicleClimatePollAllowed determines if polling depending on mode and connection status
 func (lp *Loadpoint) vehicleClimatePollAllowed() bool {
-	switch {
-	case lp.Soc.Poll.Mode == loadpoint.PollCharging && lp.charging():
+	if lp.charging() || lp.vehicleHasFeature(api.Streaming) {
 		return true
-	case (lp.Soc.Poll.Mode == loadpoint.PollConnected || lp.Soc.Poll.Mode == loadpoint.PollAlways) && lp.connected():
-		return true
-	default:
-		return false
 	}
+
+	return (lp.Soc.Poll.Mode == loadpoint.PollConnected || lp.Soc.Poll.Mode == loadpoint.PollAlways) && lp.connected()
 }
 
 // vehicleSocPollAllowed validates charging state against polling mode
 func (lp *Loadpoint) vehicleSocPollAllowed() bool {
+	if lp.vehicleHasFeature(api.Offline) {
+		return false
+	}
+
 	// always update soc when charging
-	if lp.charging() {
+	if lp.charging() || lp.vehicleHasFeature(api.Streaming) {
 		return true
 	}
 

@@ -9,13 +9,13 @@ products:
       en: Smartmeter (via Inverter)
 params:
   - name: usage
-    choice: ["grid", "pv"]
+    choice: ["grid", "pv", "charge"]
   - name: modbus
     choice: ["tcpip"]
 render: |
   type: custom
   # sunspec model 201 or 203 (int+sf)/ 211 or 213 (float) meter
-  {{- if eq .usage "grid" }}
+  {{- if or (eq .usage "grid") (eq .usage "charge") }}
   power:
     source: sunspec
     uri: {{ .host }}:{{ .port }}

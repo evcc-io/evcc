@@ -3,6 +3,7 @@ package graphql
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"sync"
 	"time"
@@ -82,7 +83,7 @@ func (c *OctopusGraphQLClient) refreshToken() error {
 	defer cancel()
 
 	var q krakenTokenAuthentication
-	if err := c.Client.Mutate(ctx, &q, map[string]interface{}{"apiKey": c.apikey}); err != nil {
+	if err := c.Client.Mutate(ctx, &q, map[string]any{"apiKey": c.apikey}); err != nil {
 		return err
 	}
 
@@ -131,8 +132,8 @@ func (c *OctopusGraphQLClient) AccountNumber() (accountNumber string, err error)
 	return c.accountNumber, nil
 }
 
-// TariffCode queries the Tariff Code of the first Electricity Agreement active on the account.
-func (c *OctopusGraphQLClient) TariffCode() (string, error) {
+// TariffCode queries the Tariff Code of the first valid Electricity Agreement active on the account that matches the given TariffDirection.
+func (c *OctopusGraphQLClient) TariffCode(direction TariffDirection) (string, error) {
 	// Update refresh token (if necessary)
 	if err := c.refreshToken(); err != nil {
 		return "", err
@@ -148,7 +149,7 @@ func (c *OctopusGraphQLClient) TariffCode() (string, error) {
 	defer cancel()
 
 	var q krakenAccountElectricityAgreements
-	if err := c.Client.Query(ctx, &q, map[string]interface{}{"accountNumber": acc}); err != nil {
+	if err := c.Client.Query(ctx, &q, map[string]any{"accountNumber": acc}); err != nil {
 		return "", err
 	}
 
@@ -156,11 +157,21 @@ func (c *OctopusGraphQLClient) TariffCode() (string, error) {
 		return "", errors.New("no electricity agreements found")
 	}
 
-	// check type
-	//switch t := q.Account.ElectricityAgreements[0].Tariff.(type) {
-	//
-	//}
-	tariffCode := q.Account.ElectricityAgreements[0].Tariff.TariffCode()
+	// Filter out any inappropriate tariffs; select the first tariff that aligns with our configuration.
+	var tariffCode string
+	for _, agreement := range q.Account.ElectricityAgreements {
+		if agreement.Tariff.TariffDirection() != direction {
+			c.log.TRACE.Println("GraphQL: filtering tariff with incorrect import/export type:", agreement.Tariff.TariffCode())
+			continue
+		}
+		tariffCode = agreement.Tariff.TariffCode()
+		break
+	}
+
+	if tariffCode == "" {
+		return "", fmt.Errorf("no electricity agreement for type %s", direction)
+	}
+
 	c.log.TRACE.Println("GraphQL: tariff code found:", tariffCode)
 
 	return tariffCode, nil

@@ -1,14 +1,24 @@
 <template>
-	<GenericModal ref="modal" :size="size" :title="title" @open="open" @close="close">
+	<GenericModal
+		:id="`${name}Modal`"
+		ref="modal"
+		:size="size"
+		:title="title"
+		:data-testid="`${name}-modal`"
+		:config-modal-name="name"
+		@open="open"
+		@close="close"
+	>
 		<p v-if="description || docsLink">
 			<span v-if="description">{{ description + " " }}</span>
 			<a v-if="docsLink" :href="docsLink" target="_blank">
 				{{ $t("config.general.docsLink") }}
 			</a>
 		</p>
-		<p v-if="error" class="text-danger" data-testid="error">{{ error }}</p>
+		<slot name="afterDescription" />
+		<ErrorMessage :error="error" data-testid="error" />
 		<form ref="form" class="container mx-0 px-0">
-			<div class="editor-container">
+			<div v-if="!noYamlEditor" class="editor-container">
 				<YamlEditorContainer
 					v-model="yaml"
 					:errorLine="errorLine"
@@ -16,6 +26,7 @@
 					:hidden="!modalVisible"
 				/>
 			</div>
+			<slot name="extra" />
 
 			<div class="mt-4 d-flex justify-content-between">
 				<button
@@ -26,6 +37,7 @@
 					{{ $t("config.general.cancel") }}
 				</button>
 				<button
+					v-if="!disableSave"
 					type="submit"
 					class="btn btn-primary"
 					:disabled="saving || nothingChanged"
@@ -46,13 +58,14 @@
 
 <script>
 import GenericModal from "../Helper/GenericModal.vue";
+import ErrorMessage from "../Helper/ErrorMessage.vue";
 import api from "@/api";
 import { docsPrefix } from "@/i18n";
 import YamlEditorContainer from "./YamlEditorContainer.vue";
 
 export default {
 	name: "YamlModal",
-	components: { GenericModal, YamlEditorContainer },
+	components: { GenericModal, ErrorMessage, YamlEditorContainer },
 	props: {
 		title: String,
 		description: String,
@@ -61,8 +74,11 @@ export default {
 		defaultYaml: String,
 		removeKey: String,
 		size: { type: String, default: "xl" },
+		noYamlEditor: Boolean,
+		disableSave: Boolean,
+		name: String,
 	},
-	emits: ["changed"],
+	emits: ["changed", "open"],
 	data() {
 		return {
 			saving: false,
@@ -92,6 +108,7 @@ export default {
 		async open() {
 			this.reset();
 			this.modalVisible = true;
+			this.$emit("open");
 			await this.load();
 		},
 		close() {
@@ -100,8 +117,8 @@ export default {
 		async load() {
 			try {
 				const { data } = await api.get(this.endpoint);
-				this.serverYaml = data.result;
-				this.yaml = data.result || this.defaultYaml;
+				this.serverYaml = data;
+				this.yaml = data || this.defaultYaml;
 			} catch (e) {
 				console.error(e);
 			}

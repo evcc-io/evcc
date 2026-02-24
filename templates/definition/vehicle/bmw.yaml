@@ -1,4 +1,5 @@
 template: bmw
+deprecated: true
 products:
   - brand: BMW
 requirements:
@@ -22,6 +23,9 @@ params:
     advanced: true
   - name: hcaptcha
     required: true
+    description:
+      de: Captcha Token
+      en: Captcha Token
   - preset: vehicle-features
 render: |
   type: bmw

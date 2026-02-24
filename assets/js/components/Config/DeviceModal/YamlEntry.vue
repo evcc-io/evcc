@@ -14,8 +14,7 @@
 import { defineComponent } from "vue";
 import YamlEditorContainer from "../YamlEditorContainer.vue";
 import { docsPrefix } from "@/i18n";
-
-type DeviceType = "vehicle" | "charger" | "meter";
+import { type DeviceType } from "@/types/evcc";
 
 export default defineComponent({
 	name: "YamlEntry",

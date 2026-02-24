@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"slices"
 	"strings"
 	"time"
 
@@ -19,10 +20,10 @@ func init() {
 }
 
 type HttpResult struct {
-	Jq interface{}
+	Jq any
 }
 
-func HttpHandlerFactory(conf map[string]interface{}) (TaskHandler, error) {
+func HttpHandlerFactory(conf map[string]any) (TaskHandler, error) {
 	handler := HttpHandler{
 		Schema: "http",
 		Method: "GET",
@@ -93,15 +94,7 @@ func (h *HttpHandler) Test(log *util.Logger, in ResultDetails) []ResultDetails {
 	defer resp.Body.Close()
 
 	if len(h.Codes) > 0 {
-		var status bool
-		for _, code := range h.Codes {
-			if resp.StatusCode == code {
-				status = true
-				break
-			}
-		}
-
-		if !status {
+		if !slices.Contains(h.Codes, resp.StatusCode) {
 			return nil
 		}
 	}

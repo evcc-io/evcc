@@ -1,0 +1,54 @@
+template: vehicle-api
+group: generic
+products:
+  - description:
+      de: Fahrzeug-API Ladesteuerung
+      en: Vehicle API-only charger
+requirements:
+  description:
+    en: |
+      A charger implementation that delegates control to the vehicle instead of controlling the charger directly.
+      This is useful for "granny chargers" or simple chargers that cannot be controlled.
+
+      The charger requires a vehicle that supports charge control (start/stop charging) and the ability to report the charging status.
+      If the vehicle supports position tracking, this can be used for geofencing.
+      When geofencing is enabled, the evcc will only affect charging behavior when the vehicle is within the specified radius of the home coordinates.
+    de: |
+      Eine Charger Implementierung, welche das Fahrzeug API für die Steuerung nutzt, anstatt den Charger direkt zu steuern.
+      Dies ist nützlich für "Granny-Charger" oder einfache Charger, die nicht gesteuert werden können.
+
+      Der Lader benötigt ein Fahrzeug, das sowohl Ladesteuerung als auch das Auslesen des Ladestatus unterstützt.
+
+      Wenn das Fahrzeug die Positionsverfolgung unterstützt, kann dies für Geofencing verwendet werden.
+      Wenn Geofencing aktiviert ist, wird evcc nur eingreifen, wenn sich das Fahrzeug innerhalb des angegebenen Radius des Standortes befindet.
+params:
+  - name: geofence_enabled
+    description:
+      de: Geofencing aktivieren
+      en: Enable geofencing
+    type: bool
+    default: false
+  - name: latitude
+    deprecated: true
+  - name: longitude
+    deprecated: true
+  - name: lat
+  - name: lon
+  - name: radius
+    description:
+      de: Geofence-Radius in Metern
+      en: Geofence radius in meters
+    type: int
+    default: 100
+    help:
+      en: Radius around charging location where charging is controlled by evcc (in meters)
+      de: Radius um den Ladestandort, in an dem evcc die Ladung steuert (in Metern)
+    advanced: true
+render: |
+  type: vehicle-api
+  {{- if .geofence_enabled }}
+  geofence_enabled: {{ .geofence_enabled }}
+  lat: {{ .lat }}
+  lon: {{ .lon }}
+  radius: {{ .radius }}
+  {{- end }}

@@ -6,7 +6,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decoratePowerWall(base *PowerWall, meterEnergy func() (float64, error), battery func() (float64, error), batteryCapacity func() float64, batteryController func(api.BatteryMode) error) api.Meter {
+func decoratePowerWall(base *PowerWall, meterEnergy func() (float64, error), battery func() (float64, error), batteryCapacity func() float64, batterySocLimiter func() (float64, float64), batteryPowerLimiter func() (float64, float64), batteryController func(api.BatteryMode) error) api.Meter {
 	switch {
 	case battery == nil && meterEnergy == nil:
 		return base
@@ -22,7 +22,7 @@ func decoratePowerWall(base *PowerWall, meterEnergy func() (float64, error), bat
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && batteryController == nil && meterEnergy == nil:
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryPowerLimiter == nil && batterySocLimiter == nil && meterEnergy == nil:
 		return &struct {
 			*PowerWall
 			api.Battery
@@ -33,7 +33,7 @@ func decoratePowerWall(base *PowerWall, meterEnergy func() (float64, error), bat
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && batteryController == nil && meterEnergy != nil:
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryPowerLimiter == nil && batterySocLimiter == nil && meterEnergy != nil:
 		return &struct {
 			*PowerWall
 			api.Battery
@@ -48,7 +48,7 @@ func decoratePowerWall(base *PowerWall, meterEnergy func() (float64, error), bat
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController == nil && meterEnergy == nil:
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryPowerLimiter == nil && batterySocLimiter == nil && meterEnergy == nil:
 		return &struct {
 			*PowerWall
 			api.Battery
@@ -63,7 +63,7 @@ func decoratePowerWall(base *PowerWall, meterEnergy func() (float64, error), bat
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController == nil && meterEnergy != nil:
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryPowerLimiter == nil && batterySocLimiter == nil && meterEnergy != nil:
 		return &struct {
 			*PowerWall
 			api.Battery
@@ -82,7 +82,251 @@ func decoratePowerWall(base *PowerWall, meterEnergy func() (float64, error), bat
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && batteryController != nil && meterEnergy == nil:
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryPowerLimiter == nil && batterySocLimiter != nil && meterEnergy == nil:
+		return &struct {
+			*PowerWall
+			api.Battery
+			api.BatterySocLimiter
+		}{
+			PowerWall: base,
+			Battery: &decoratePowerWallBatteryImpl{
+				battery: battery,
+			},
+			BatterySocLimiter: &decoratePowerWallBatterySocLimiterImpl{
+				batterySocLimiter: batterySocLimiter,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryPowerLimiter == nil && batterySocLimiter != nil && meterEnergy != nil:
+		return &struct {
+			*PowerWall
+			api.Battery
+			api.BatterySocLimiter
+			api.MeterEnergy
+		}{
+			PowerWall: base,
+			Battery: &decoratePowerWallBatteryImpl{
+				battery: battery,
+			},
+			BatterySocLimiter: &decoratePowerWallBatterySocLimiterImpl{
+				batterySocLimiter: batterySocLimiter,
+			},
+			MeterEnergy: &decoratePowerWallMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryPowerLimiter == nil && batterySocLimiter != nil && meterEnergy == nil:
+		return &struct {
+			*PowerWall
+			api.Battery
+			api.BatteryCapacity
+			api.BatterySocLimiter
+		}{
+			PowerWall: base,
+			Battery: &decoratePowerWallBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decoratePowerWallBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatterySocLimiter: &decoratePowerWallBatterySocLimiterImpl{
+				batterySocLimiter: batterySocLimiter,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryPowerLimiter == nil && batterySocLimiter != nil && meterEnergy != nil:
+		return &struct {
+			*PowerWall
+			api.Battery
+			api.BatteryCapacity
+			api.BatterySocLimiter
+			api.MeterEnergy
+		}{
+			PowerWall: base,
+			Battery: &decoratePowerWallBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decoratePowerWallBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatterySocLimiter: &decoratePowerWallBatterySocLimiterImpl{
+				batterySocLimiter: batterySocLimiter,
+			},
+			MeterEnergy: &decoratePowerWallMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryPowerLimiter != nil && batterySocLimiter == nil && meterEnergy == nil:
+		return &struct {
+			*PowerWall
+			api.Battery
+			api.BatteryPowerLimiter
+		}{
+			PowerWall: base,
+			Battery: &decoratePowerWallBatteryImpl{
+				battery: battery,
+			},
+			BatteryPowerLimiter: &decoratePowerWallBatteryPowerLimiterImpl{
+				batteryPowerLimiter: batteryPowerLimiter,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryPowerLimiter != nil && batterySocLimiter == nil && meterEnergy != nil:
+		return &struct {
+			*PowerWall
+			api.Battery
+			api.BatteryPowerLimiter
+			api.MeterEnergy
+		}{
+			PowerWall: base,
+			Battery: &decoratePowerWallBatteryImpl{
+				battery: battery,
+			},
+			BatteryPowerLimiter: &decoratePowerWallBatteryPowerLimiterImpl{
+				batteryPowerLimiter: batteryPowerLimiter,
+			},
+			MeterEnergy: &decoratePowerWallMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryPowerLimiter != nil && batterySocLimiter == nil && meterEnergy == nil:
+		return &struct {
+			*PowerWall
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryPowerLimiter
+		}{
+			PowerWall: base,
+			Battery: &decoratePowerWallBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decoratePowerWallBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryPowerLimiter: &decoratePowerWallBatteryPowerLimiterImpl{
+				batteryPowerLimiter: batteryPowerLimiter,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryPowerLimiter != nil && batterySocLimiter == nil && meterEnergy != nil:
+		return &struct {
+			*PowerWall
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryPowerLimiter
+			api.MeterEnergy
+		}{
+			PowerWall: base,
+			Battery: &decoratePowerWallBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decoratePowerWallBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryPowerLimiter: &decoratePowerWallBatteryPowerLimiterImpl{
+				batteryPowerLimiter: batteryPowerLimiter,
+			},
+			MeterEnergy: &decoratePowerWallMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryPowerLimiter != nil && batterySocLimiter != nil && meterEnergy == nil:
+		return &struct {
+			*PowerWall
+			api.Battery
+			api.BatteryPowerLimiter
+			api.BatterySocLimiter
+		}{
+			PowerWall: base,
+			Battery: &decoratePowerWallBatteryImpl{
+				battery: battery,
+			},
+			BatteryPowerLimiter: &decoratePowerWallBatteryPowerLimiterImpl{
+				batteryPowerLimiter: batteryPowerLimiter,
+			},
+			BatterySocLimiter: &decoratePowerWallBatterySocLimiterImpl{
+				batterySocLimiter: batterySocLimiter,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController == nil && batteryPowerLimiter != nil && batterySocLimiter != nil && meterEnergy != nil:
+		return &struct {
+			*PowerWall
+			api.Battery
+			api.BatteryPowerLimiter
+			api.BatterySocLimiter
+			api.MeterEnergy
+		}{
+			PowerWall: base,
+			Battery: &decoratePowerWallBatteryImpl{
+				battery: battery,
+			},
+			BatteryPowerLimiter: &decoratePowerWallBatteryPowerLimiterImpl{
+				batteryPowerLimiter: batteryPowerLimiter,
+			},
+			BatterySocLimiter: &decoratePowerWallBatterySocLimiterImpl{
+				batterySocLimiter: batterySocLimiter,
+			},
+			MeterEnergy: &decoratePowerWallMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryPowerLimiter != nil && batterySocLimiter != nil && meterEnergy == nil:
+		return &struct {
+			*PowerWall
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryPowerLimiter
+			api.BatterySocLimiter
+		}{
+			PowerWall: base,
+			Battery: &decoratePowerWallBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decoratePowerWallBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryPowerLimiter: &decoratePowerWallBatteryPowerLimiterImpl{
+				batteryPowerLimiter: batteryPowerLimiter,
+			},
+			BatterySocLimiter: &decoratePowerWallBatterySocLimiterImpl{
+				batterySocLimiter: batterySocLimiter,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController == nil && batteryPowerLimiter != nil && batterySocLimiter != nil && meterEnergy != nil:
+		return &struct {
+			*PowerWall
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryPowerLimiter
+			api.BatterySocLimiter
+			api.MeterEnergy
+		}{
+			PowerWall: base,
+			Battery: &decoratePowerWallBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decoratePowerWallBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryPowerLimiter: &decoratePowerWallBatteryPowerLimiterImpl{
+				batteryPowerLimiter: batteryPowerLimiter,
+			},
+			BatterySocLimiter: &decoratePowerWallBatterySocLimiterImpl{
+				batterySocLimiter: batterySocLimiter,
+			},
+			MeterEnergy: &decoratePowerWallMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryPowerLimiter == nil && batterySocLimiter == nil && meterEnergy == nil:
 		return &struct {
 			*PowerWall
 			api.Battery
@@ -97,7 +341,7 @@ func decoratePowerWall(base *PowerWall, meterEnergy func() (float64, error), bat
 			},
 		}
 
-	case battery != nil && batteryCapacity == nil && batteryController != nil && meterEnergy != nil:
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryPowerLimiter == nil && batterySocLimiter == nil && meterEnergy != nil:
 		return &struct {
 			*PowerWall
 			api.Battery
@@ -116,7 +360,7 @@ func decoratePowerWall(base *PowerWall, meterEnergy func() (float64, error), bat
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController != nil && meterEnergy == nil:
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryPowerLimiter == nil && batterySocLimiter == nil && meterEnergy == nil:
 		return &struct {
 			*PowerWall
 			api.Battery
@@ -135,7 +379,7 @@ func decoratePowerWall(base *PowerWall, meterEnergy func() (float64, error), bat
 			},
 		}
 
-	case battery != nil && batteryCapacity != nil && batteryController != nil && meterEnergy != nil:
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryPowerLimiter == nil && batterySocLimiter == nil && meterEnergy != nil:
 		return &struct {
 			*PowerWall
 			api.Battery
@@ -152,6 +396,298 @@ func decoratePowerWall(base *PowerWall, meterEnergy func() (float64, error), bat
 			},
 			BatteryController: &decoratePowerWallBatteryControllerImpl{
 				batteryController: batteryController,
+			},
+			MeterEnergy: &decoratePowerWallMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryPowerLimiter == nil && batterySocLimiter != nil && meterEnergy == nil:
+		return &struct {
+			*PowerWall
+			api.Battery
+			api.BatteryController
+			api.BatterySocLimiter
+		}{
+			PowerWall: base,
+			Battery: &decoratePowerWallBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decoratePowerWallBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatterySocLimiter: &decoratePowerWallBatterySocLimiterImpl{
+				batterySocLimiter: batterySocLimiter,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryPowerLimiter == nil && batterySocLimiter != nil && meterEnergy != nil:
+		return &struct {
+			*PowerWall
+			api.Battery
+			api.BatteryController
+			api.BatterySocLimiter
+			api.MeterEnergy
+		}{
+			PowerWall: base,
+			Battery: &decoratePowerWallBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decoratePowerWallBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatterySocLimiter: &decoratePowerWallBatterySocLimiterImpl{
+				batterySocLimiter: batterySocLimiter,
+			},
+			MeterEnergy: &decoratePowerWallMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryPowerLimiter == nil && batterySocLimiter != nil && meterEnergy == nil:
+		return &struct {
+			*PowerWall
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.BatterySocLimiter
+		}{
+			PowerWall: base,
+			Battery: &decoratePowerWallBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decoratePowerWallBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decoratePowerWallBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatterySocLimiter: &decoratePowerWallBatterySocLimiterImpl{
+				batterySocLimiter: batterySocLimiter,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryPowerLimiter == nil && batterySocLimiter != nil && meterEnergy != nil:
+		return &struct {
+			*PowerWall
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.BatterySocLimiter
+			api.MeterEnergy
+		}{
+			PowerWall: base,
+			Battery: &decoratePowerWallBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decoratePowerWallBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decoratePowerWallBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatterySocLimiter: &decoratePowerWallBatterySocLimiterImpl{
+				batterySocLimiter: batterySocLimiter,
+			},
+			MeterEnergy: &decoratePowerWallMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryPowerLimiter != nil && batterySocLimiter == nil && meterEnergy == nil:
+		return &struct {
+			*PowerWall
+			api.Battery
+			api.BatteryController
+			api.BatteryPowerLimiter
+		}{
+			PowerWall: base,
+			Battery: &decoratePowerWallBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decoratePowerWallBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryPowerLimiter: &decoratePowerWallBatteryPowerLimiterImpl{
+				batteryPowerLimiter: batteryPowerLimiter,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryPowerLimiter != nil && batterySocLimiter == nil && meterEnergy != nil:
+		return &struct {
+			*PowerWall
+			api.Battery
+			api.BatteryController
+			api.BatteryPowerLimiter
+			api.MeterEnergy
+		}{
+			PowerWall: base,
+			Battery: &decoratePowerWallBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decoratePowerWallBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryPowerLimiter: &decoratePowerWallBatteryPowerLimiterImpl{
+				batteryPowerLimiter: batteryPowerLimiter,
+			},
+			MeterEnergy: &decoratePowerWallMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryPowerLimiter != nil && batterySocLimiter == nil && meterEnergy == nil:
+		return &struct {
+			*PowerWall
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.BatteryPowerLimiter
+		}{
+			PowerWall: base,
+			Battery: &decoratePowerWallBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decoratePowerWallBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decoratePowerWallBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryPowerLimiter: &decoratePowerWallBatteryPowerLimiterImpl{
+				batteryPowerLimiter: batteryPowerLimiter,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryPowerLimiter != nil && batterySocLimiter == nil && meterEnergy != nil:
+		return &struct {
+			*PowerWall
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.BatteryPowerLimiter
+			api.MeterEnergy
+		}{
+			PowerWall: base,
+			Battery: &decoratePowerWallBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decoratePowerWallBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decoratePowerWallBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryPowerLimiter: &decoratePowerWallBatteryPowerLimiterImpl{
+				batteryPowerLimiter: batteryPowerLimiter,
+			},
+			MeterEnergy: &decoratePowerWallMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryPowerLimiter != nil && batterySocLimiter != nil && meterEnergy == nil:
+		return &struct {
+			*PowerWall
+			api.Battery
+			api.BatteryController
+			api.BatteryPowerLimiter
+			api.BatterySocLimiter
+		}{
+			PowerWall: base,
+			Battery: &decoratePowerWallBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decoratePowerWallBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryPowerLimiter: &decoratePowerWallBatteryPowerLimiterImpl{
+				batteryPowerLimiter: batteryPowerLimiter,
+			},
+			BatterySocLimiter: &decoratePowerWallBatterySocLimiterImpl{
+				batterySocLimiter: batterySocLimiter,
+			},
+		}
+
+	case battery != nil && batteryCapacity == nil && batteryController != nil && batteryPowerLimiter != nil && batterySocLimiter != nil && meterEnergy != nil:
+		return &struct {
+			*PowerWall
+			api.Battery
+			api.BatteryController
+			api.BatteryPowerLimiter
+			api.BatterySocLimiter
+			api.MeterEnergy
+		}{
+			PowerWall: base,
+			Battery: &decoratePowerWallBatteryImpl{
+				battery: battery,
+			},
+			BatteryController: &decoratePowerWallBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryPowerLimiter: &decoratePowerWallBatteryPowerLimiterImpl{
+				batteryPowerLimiter: batteryPowerLimiter,
+			},
+			BatterySocLimiter: &decoratePowerWallBatterySocLimiterImpl{
+				batterySocLimiter: batterySocLimiter,
+			},
+			MeterEnergy: &decoratePowerWallMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryPowerLimiter != nil && batterySocLimiter != nil && meterEnergy == nil:
+		return &struct {
+			*PowerWall
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.BatteryPowerLimiter
+			api.BatterySocLimiter
+		}{
+			PowerWall: base,
+			Battery: &decoratePowerWallBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decoratePowerWallBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decoratePowerWallBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryPowerLimiter: &decoratePowerWallBatteryPowerLimiterImpl{
+				batteryPowerLimiter: batteryPowerLimiter,
+			},
+			BatterySocLimiter: &decoratePowerWallBatterySocLimiterImpl{
+				batterySocLimiter: batterySocLimiter,
+			},
+		}
+
+	case battery != nil && batteryCapacity != nil && batteryController != nil && batteryPowerLimiter != nil && batterySocLimiter != nil && meterEnergy != nil:
+		return &struct {
+			*PowerWall
+			api.Battery
+			api.BatteryCapacity
+			api.BatteryController
+			api.BatteryPowerLimiter
+			api.BatterySocLimiter
+			api.MeterEnergy
+		}{
+			PowerWall: base,
+			Battery: &decoratePowerWallBatteryImpl{
+				battery: battery,
+			},
+			BatteryCapacity: &decoratePowerWallBatteryCapacityImpl{
+				batteryCapacity: batteryCapacity,
+			},
+			BatteryController: &decoratePowerWallBatteryControllerImpl{
+				batteryController: batteryController,
+			},
+			BatteryPowerLimiter: &decoratePowerWallBatteryPowerLimiterImpl{
+				batteryPowerLimiter: batteryPowerLimiter,
+			},
+			BatterySocLimiter: &decoratePowerWallBatterySocLimiterImpl{
+				batterySocLimiter: batterySocLimiter,
 			},
 			MeterEnergy: &decoratePowerWallMeterEnergyImpl{
 				meterEnergy: meterEnergy,
@@ -184,6 +720,22 @@ type decoratePowerWallBatteryControllerImpl struct {
 
 func (impl *decoratePowerWallBatteryControllerImpl) SetBatteryMode(p0 api.BatteryMode) error {
 	return impl.batteryController(p0)
+}
+
+type decoratePowerWallBatteryPowerLimiterImpl struct {
+	batteryPowerLimiter func() (float64, float64)
+}
+
+func (impl *decoratePowerWallBatteryPowerLimiterImpl) GetPowerLimits() (float64, float64) {
+	return impl.batteryPowerLimiter()
+}
+
+type decoratePowerWallBatterySocLimiterImpl struct {
+	batterySocLimiter func() (float64, float64)
+}
+
+func (impl *decoratePowerWallBatterySocLimiterImpl) GetSocLimits() (float64, float64) {
+	return impl.batterySocLimiter()
 }
 
 type decoratePowerWallMeterEnergyImpl struct {

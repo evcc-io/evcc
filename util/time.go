@@ -2,6 +2,7 @@ package util
 
 import (
 	"fmt"
+	"slices"
 	"time"
 )
 
@@ -34,21 +35,11 @@ func GetNextOccurrence(weekdays []int, timeStr string, tz string) (time.Time, er
 	// Check the next 7 days for a valid match
 	for range 7 {
 		weekday := int(target.Weekday())
-		if contains(weekdays, weekday) {
+		if slices.Contains(weekdays, weekday) {
 			return target, nil
 		}
 		target = target.AddDate(0, 0, 1)
 	}
 
 	return time.Time{}, fmt.Errorf("no valid weekday found")
-}
-
-// helper function to check if a slice contains a value
-func contains(slice []int, val int) bool {
-	for _, item := range slice {
-		if item == val {
-			return true
-		}
-	}
-	return false
 }

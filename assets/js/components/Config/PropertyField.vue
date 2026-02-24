@@ -1,19 +1,5 @@
 <template>
-	<div v-if="unitValue" class="input-group" :class="inputClasses">
-		<input
-			:id="id"
-			v-model="value"
-			:type="inputType"
-			:step="step"
-			:placeholder="placeholder"
-			:required="required"
-			:aria-describedby="id + '_unit'"
-			class="form-control"
-			:class="{ 'text-end': endAlign }"
-		/>
-		<span :id="id + '_unit'" class="input-group-text">{{ unitValue }}</span>
-	</div>
-	<div v-else-if="icons" class="d-flex flex-wrap">
+	<div v-if="icons" class="d-flex flex-wrap">
 		<div
 			v-for="{ key } in selectOptions"
 			v-show="key === value || selectMode"
@@ -27,13 +13,13 @@
 				:class="selectMode ? 'btn-check' : 'd-none'"
 				:name="property"
 				:value="key"
+				:disabled="disabled"
 				@click="toggleSelectMode"
 			/>
 			<label
 				class="btn btn-outline-secondary"
 				:class="key === value ? 'active' : ''"
 				:for="`icon_${key}`"
-				:aria-label="key"
 			>
 				<VehicleIcon v-if="key" :name="key" />
 				<shopicon-regular-minus v-else></shopicon-regular-minus>
@@ -52,18 +38,32 @@
 		class="w-50"
 		equal-width
 		transparent
+		:aria-label="label"
 		:options="[
 			{ value: false, name: $t('config.options.boolean.no') },
 			{ value: true, name: $t('config.options.boolean.yes') },
 		]"
+		:disabled="disabled"
 	/>
-	<select v-else-if="select" :id="id" v-model="value" class="form-select" :class="inputClasses">
-		<option v-if="!required" value="">---</option>
+	<select
+		v-else-if="select"
+		:id="id"
+		v-model="value"
+		class="form-select"
+		:class="inputClasses"
+		:disabled="disabled"
+	>
+		<option v-if="!required" value="" :disabled="disabled">---</option>
 		<template v-for="({ key, name }, idx) in selectOptions">
-			<option v-if="key !== null && name !== null" :key="key" :value="key">
+			<option
+				v-if="key !== null && name !== null"
+				:key="key"
+				:value="key"
+				:disabled="disabled"
+			>
 				{{ name }}
 			</option>
-			<hr v-else :key="idx" />
+			<option v-else :key="idx" disabled>─────</option>
 		</template>
 	</select>
 	<textarea
@@ -75,20 +75,51 @@
 		:type="inputType"
 		:placeholder="placeholder"
 		:required="required"
-		rows="4"
+		:rows="rows || 4"
+		:disabled="disabled"
 	/>
-	<input
-		v-else
-		:id="id"
-		v-model="value"
-		class="form-control"
-		:class="inputClasses"
-		:type="inputType"
-		:step="step"
-		:placeholder="placeholder"
-		:required="required"
-		:autocomplete="masked ? 'off' : null"
-	/>
+	<div v-else class="d-flex" :class="sizeClass">
+		<div class="position-relative flex-grow-1">
+			<input
+				:id="id"
+				v-model="value"
+				:list="datalistId"
+				:type="inputType"
+				:step="step"
+				:placeholder="placeholder"
+				:required="required"
+				:pattern="patternRegex"
+				:title="patternTitle"
+				:aria-describedby="unitValue ? id + '_unit' : null"
+				:class="`${datalistId && serviceValues.length > 0 ? 'form-select' : 'form-control'} ${showClearButton ? 'has-clear-button' : ''} ${invalid ? 'is-invalid' : ''} ${endAlign ? 'text-end' : ''}`"
+				:style="
+					unitValue ? 'border-top-right-radius: 0; border-bottom-right-radius: 0' : null
+				"
+				:autocomplete="masked || datalistId ? 'off' : null"
+				:disabled="disabled"
+			/>
+			<button
+				v-if="showClearButton"
+				type="button"
+				class="form-control-clear"
+				:aria-label="$t('config.general.clear')"
+				:disabled="disabled"
+				@click="value = ''"
+			></button>
+			<datalist v-if="showDatalist" :id="datalistId">
+				<option v-for="v in serviceValues" :key="v" :value="v">
+					{{ v }}
+				</option>
+			</datalist>
+		</div>
+		<span
+			v-if="unitValue"
+			:id="id + '_unit'"
+			class="input-group-text"
+			style="border-top-left-radius: 0; border-bottom-left-radius: 0"
+			>{{ unitValue }}</span
+		>
+	</div>
 </template>
 
 <script>
@@ -114,14 +145,50 @@ export default {
 		scale: Number,
 		required: Boolean,
 		invalid: Boolean,
+		disabled: Boolean,
+		pattern: { type: Object, default: () => ({}) },
 		choice: { type: Array, default: () => [] },
 		modelValue: [String, Number, Boolean, Object],
+		label: String,
+		serviceValues: { type: Array, default: () => [] },
+		rows: { type: Number },
 	},
 	emits: ["update:modelValue"],
 	data: () => {
 		return { selectMode: false };
 	},
 	computed: {
+		patternRegex() {
+			return this.pattern.Regex || null;
+		},
+		patternTitle() {
+			const examples = this.pattern.Examples || [];
+			if (!examples.length) return null;
+			return examples.join(", ");
+		},
+		datalistId() {
+			return this.serviceValues.length > 0 ? `${this.id}-datalist` : null;
+		},
+		showDatalist() {
+			if (!this.datalistId) return false;
+			const length = this.serviceValues.length;
+			// no values
+			if (length === 0) return false;
+			// value selected, dont offer single same option again
+			// Convert both to strings for comparison to handle number/string type mismatches
+			const valueStr = String(this.value ?? "");
+			if (
+				this.value != null &&
+				valueStr !== "" &&
+				this.serviceValues.some((v) => String(v) === valueStr)
+			) {
+				return false;
+			}
+			return true;
+		},
+		showClearButton() {
+			return this.datalistId && this.value;
+		},
 		inputType() {
 			if (this.masked) {
 				return "password";
@@ -144,6 +211,9 @@ export default {
 			let result = this.sizeClass;
 			if (this.invalid) {
 				result += " is-invalid";
+			}
+			if (this.showClearButton) {
+				result += " has-clear-button";
 			}
 			return result;
 		},
@@ -169,7 +239,11 @@ export default {
 			return this.property === "icon";
 		},
 		textarea() {
-			return ["accessToken", "refreshToken", "identifiers"].includes(this.property);
+			return (
+				this.rows ||
+				this.array ||
+				["accessToken", "refreshToken", "identifiers"].includes(this.property)
+			);
 		},
 		boolean() {
 			return this.type === "Bool";
@@ -198,7 +272,7 @@ export default {
 			// Otherwise, convert them to the correct format
 			return values.map((value) => ({
 				key: value,
-				name: this.$t(`config.options.${this.property}.${value || "none"}`),
+				name: this.getOptionName(value),
 			}));
 		},
 		value: {
@@ -246,6 +320,10 @@ export default {
 		},
 	},
 	methods: {
+		getOptionName(value) {
+			const translationKey = `config.options.${this.property}.${value || "none"}`;
+			return this.$te(translationKey) ? this.$t(translationKey) : value;
+		},
 		toggleSelectMode() {
 			this.$nextTick(() => {
 				this.selectMode = !this.selectMode;
@@ -255,7 +333,7 @@ export default {
 };
 </script>
 
-<style>
+<style scoped>
 input[type="number"] {
 	appearance: textfield;
 }

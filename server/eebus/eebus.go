@@ -4,9 +4,8 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"net"
 	"slices"
-	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -20,16 +19,19 @@ import (
 	"github.com/enbility/eebus-go/usecases/cem/evsoc"
 	"github.com/enbility/eebus-go/usecases/cem/opev"
 	"github.com/enbility/eebus-go/usecases/cem/oscev"
-	"github.com/enbility/eebus-go/usecases/cs/lpc"
-	"github.com/enbility/eebus-go/usecases/cs/lpp"
+	csplc "github.com/enbility/eebus-go/usecases/cs/lpc"
+	cslpp "github.com/enbility/eebus-go/usecases/cs/lpp"
+	eglpc "github.com/enbility/eebus-go/usecases/eg/lpc"
+	eglpp "github.com/enbility/eebus-go/usecases/eg/lpp"
 	"github.com/enbility/eebus-go/usecases/ma/mgcp"
+	"github.com/enbility/eebus-go/usecases/ma/mpc"
 	shipapi "github.com/enbility/ship-go/api"
 	"github.com/enbility/ship-go/mdns"
 	shiputil "github.com/enbility/ship-go/util"
 	spineapi "github.com/enbility/spine-go/api"
 	"github.com/enbility/spine-go/model"
+	"github.com/enbility/spine-go/spine"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/machine"
 )
 
 type Device interface {
@@ -37,8 +39,8 @@ type Device interface {
 	UseCaseEvent(device spineapi.DeviceRemoteInterface, entity spineapi.EntityRemoteInterface, event eebusapi.EventType)
 }
 
-// EVSE UseCases
-type UseCasesEVSE struct {
+// Customer Energy Management
+type CustomerEnergyManagement struct {
 	EvseCC ucapi.CemEVSECCInterface
 	EvCC   ucapi.CemEVCCInterface
 	EvCem  ucapi.CemEVCEMInterface
@@ -46,47 +48,64 @@ type UseCasesEVSE struct {
 	OpEV   ucapi.CemOPEVInterface
 	OscEV  ucapi.CemOSCEVInterface
 }
-type UseCasesCS struct {
-	LPC  ucapi.CsLPCInterface
-	LPP  ucapi.CsLPPInterface
-	MGCP ucapi.MaMGCPInterface
+
+// Controllable System
+type ControllableSystem struct {
+	ucapi.CsLPCInterface
+	ucapi.CsLPPInterface
+}
+
+// Monitoring Appliance
+type MonitoringAppliance struct {
+	ucapi.MaMGCPInterface
+	ucapi.MaMPCInterface
+}
+
+// Energy Guard
+type EnergyGuard struct {
+	ucapi.EgLPCInterface
+	ucapi.EgLPPInterface
 }
 
 type EEBus struct {
-	service eebusapi.ServiceInterface
+	service        eebusapi.ServiceInterface
+	remoteServices []shipapi.RemoteService
 
-	evseUC UseCasesEVSE
-	csUC   UseCasesCS
+	cem CustomerEnergyManagement
+	cs  ControllableSystem
+	ma  MonitoringAppliance
+	eg  EnergyGuard
 
 	mux sync.Mutex
 	log *util.Logger
 
-	SKI string
+	ski string
 
 	clients map[string][]Device
 }
 
 var Instance *EEBus
 
+func GetStatus() any {
+	return struct {
+		Ski string `json:"ski"`
+	}{
+		Ski: Ski(),
+	}
+}
+
 func NewServer(other Config) (*EEBus, error) {
 	cc := Config{
-		URI: ":4712",
+		Port: 4712,
 	}
 
 	if err := mergo.Merge(&cc, other, mergo.WithOverride); err != nil {
 		return nil, err
 	}
 
-	log := util.NewLogger("eebus")
-
-	protectedID, err := machine.ProtectedID("evcc-eebus")
-	if err != nil {
-		return nil, err
-	}
-	serial := fmt.Sprintf("%s-%0x", "EVCC", protectedID[:8])
-
-	if len(cc.ShipID) != 0 {
-		serial = cc.ShipID
+	serial := cc.ShipID
+	if serial == "" {
+		serial = createShipID()
 	}
 
 	certificate, err := tls.X509KeyPair([]byte(cc.Certificate.Public), []byte(cc.Certificate.Private))
@@ -94,22 +113,11 @@ func NewServer(other Config) (*EEBus, error) {
 		return nil, err
 	}
 
-	_, portValue, err := net.SplitHostPort(cc.URI)
-	if err != nil {
-		return nil, err
-	}
-
-	port, err := strconv.Atoi(portValue)
-	if err != nil {
-		return nil, err
-	}
-
-	// TODO: get the voltage from the site
 	configuration, err := eebusapi.NewConfiguration(
 		BrandName, BrandName, Model, serial,
 		model.DeviceTypeTypeEnergyManagementSystem,
 		[]model.EntityTypeType{model.EntityTypeTypeCEM},
-		port, certificate, time.Second*4,
+		cc.Port, certificate, time.Second*4,
 	)
 	if err != nil {
 		return nil, err
@@ -129,8 +137,8 @@ func NewServer(other Config) (*EEBus, error) {
 	}
 
 	c := &EEBus{
-		log:     log,
-		SKI:     ski,
+		log:     util.NewLogger("eebus"),
+		ski:     ski,
 		clients: make(map[string][]Device),
 	}
 
@@ -140,31 +148,63 @@ func NewServer(other Config) (*EEBus, error) {
 		return nil, err
 	}
 
-	localEntity := c.service.LocalDevice().EntityForType(model.EntityTypeTypeCEM)
+	localDevice := c.service.LocalDevice()
 
-	// evse
-	c.evseUC = UseCasesEVSE{
-		EvseCC: evsecc.NewEVSECC(localEntity, c.ucCallback),
-		EvCC:   evcc.NewEVCC(c.service, localEntity, c.ucCallback),
-		EvCem:  evcem.NewEVCEM(c.service, localEntity, c.ucCallback),
-		OpEV:   opev.NewOPEV(localEntity, c.ucCallback),
-		OscEV:  oscev.NewOSCEV(localEntity, c.ucCallback),
-		EvSoc:  evsoc.NewEVSOC(localEntity, c.ucCallback),
+	{
+		// CEM entity for for connected EVSE and Meters
+		localEntity := localDevice.Entity([]model.AddressEntityType{1})
+
+		// customer energy management to EVSE
+		c.cem = CustomerEnergyManagement{
+			EvseCC: evsecc.NewEVSECC(localEntity, c.ucCallback),
+			EvCC:   evcc.NewEVCC(c.service, localEntity, c.ucCallback),
+			EvCem:  evcem.NewEVCEM(c.service, localEntity, c.ucCallback),
+			OpEV:   opev.NewOPEV(localEntity, c.ucCallback),
+			OscEV:  oscev.NewOSCEV(localEntity, c.ucCallback),
+			EvSoc:  evsoc.NewEVSOC(localEntity, c.ucCallback),
+		}
+
+		// monitoring appliance to meters
+		c.ma = MonitoringAppliance{
+			MaMGCPInterface: mgcp.NewMGCP(localEntity, c.ucCallback),
+			MaMPCInterface:  mpc.NewMPC(localEntity, c.ucCallback),
+		}
 	}
 
-	// controllable system
-	c.csUC = UseCasesCS{
-		LPC:  lpc.NewLPC(localEntity, c.ucCallback),
-		LPP:  lpp.NewLPP(localEntity, c.ucCallback),
-		MGCP: mgcp.NewMGCP(localEntity, c.ucCallback),
+	{
+		// CEM entity for connected SMGW
+		// LPC/LPP use a 60s heartbeat timeout, but some EVSE devices have then issues when not set to 4s right now even though they should not connect to this one anyway
+		localEntity := spine.NewEntityLocal(localDevice, model.EntityTypeTypeCEM, []model.AddressEntityType{2}, time.Second*4)
+		localDevice.AddEntity(localEntity)
+
+		// controllable system
+		c.cs = ControllableSystem{
+			CsLPCInterface: csplc.NewLPC(localEntity, c.ucCallback),
+			CsLPPInterface: cslpp.NewLPP(localEntity, c.ucCallback),
+		}
+	}
+
+	{
+		// GridGuard entity for connected Controllable Systems
+		// LPC/LPP use a 60s heartbeat timeout, but some EVSE devices have then issues when not set to 4s right now
+		localEntity := spine.NewEntityLocal(localDevice, model.EntityTypeTypeGridGuard, []model.AddressEntityType{3}, time.Second*4)
+		localDevice.AddEntity(localEntity)
+
+		// energy guard
+		c.eg = EnergyGuard{
+			EgLPCInterface: eglpc.NewLPC(localEntity, c.ucCallback),
+			EgLPPInterface: eglpp.NewLPP(localEntity, c.ucCallback),
+		}
 	}
 
 	// register use cases
 	for _, uc := range []eebusapi.UseCaseInterface{
-		c.evseUC.EvseCC, c.evseUC.EvCC,
-		c.evseUC.EvCem, c.evseUC.OpEV,
-		c.evseUC.OscEV, c.evseUC.EvSoc,
-		c.csUC.LPC, c.csUC.LPP, c.csUC.MGCP,
+		c.cem.EvseCC, c.cem.EvCC,
+		c.cem.EvCem, c.cem.OpEV,
+		c.cem.OscEV, c.cem.EvSoc,
+		c.cs.CsLPCInterface, c.cs.CsLPPInterface,
+		c.ma.MaMGCPInterface, c.ma.MaMPCInterface,
+		c.eg.EgLPCInterface, c.eg.EgLPPInterface,
 	} {
 		c.service.AddUseCase(uc)
 	}
@@ -176,7 +216,7 @@ func (c *EEBus) RegisterDevice(ski, ip string, device Device) error {
 	ski = shiputil.NormalizeSKI(ski)
 	c.log.TRACE.Printf("registering ski: %s", ski)
 
-	if ski == c.SKI {
+	if ski == c.ski {
 		return errors.New("device ski can not be identical to host ski")
 	}
 
@@ -202,16 +242,30 @@ func (c *EEBus) UnregisterDevice(ski string, device Device) {
 	defer c.mux.Unlock()
 
 	if idx := slices.Index(c.clients[ski], device); idx != -1 {
-		c.clients[ski] = slices.Delete(c.clients[ski], idx, idx)
+		c.clients[ski] = slices.Delete(c.clients[ski], idx, idx+1)
 	}
 }
 
-func (c *EEBus) Evse() *UseCasesEVSE {
-	return &c.evseUC
+func (c *EEBus) CustomerEnergyManagement() *CustomerEnergyManagement {
+	return &c.cem
 }
 
-func (c *EEBus) ControllableSystem() *UseCasesCS {
-	return &c.csUC
+func (c *EEBus) ControllableSystem() *ControllableSystem {
+	return &c.cs
+}
+
+func (c *EEBus) MonitoringAppliance() *MonitoringAppliance {
+	return &c.ma
+}
+
+func (c *EEBus) EnergyGuard() *EnergyGuard {
+	return &c.eg
+}
+
+func (c *EEBus) RemoteServices() []shipapi.RemoteService {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+	return c.remoteServices
 }
 
 func (c *EEBus) Run() {
@@ -264,6 +318,9 @@ func (c *EEBus) RemoteSKIDisconnected(service eebusapi.ServiceInterface, ski str
 // this is needed to provide an UI for pairing with other devices
 // if not all incoming pairing requests should be accepted
 func (c *EEBus) VisibleRemoteServicesUpdated(service eebusapi.ServiceInterface, entries []shipapi.RemoteService) {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+	c.remoteServices = slices.Clone(entries)
 }
 
 // Provides the SHIP ID the remote service reported during the handshake process
@@ -290,34 +347,49 @@ func (c *EEBus) ServicePairingDetailUpdate(ski string, detail *shipapi.Connectio
 
 // EEBUS Logging interface
 
-func (c *EEBus) Trace(args ...interface{}) {
+func (c *EEBus) Trace(args ...any) {
 	c.log.TRACE.Println(args...)
 }
 
-func (c *EEBus) Tracef(format string, args ...interface{}) {
+func (c *EEBus) Tracef(format string, args ...any) {
 	c.log.TRACE.Printf(format, args...)
 }
 
-func (c *EEBus) Debug(args ...interface{}) {
-	c.log.DEBUG.Println(args...)
+func isRelevant(s string) bool {
+	return strings.Contains(s, "connect") || strings.Contains(s, " event ")
 }
 
-func (c *EEBus) Debugf(format string, args ...interface{}) {
-	c.log.DEBUG.Printf(format, args...)
+func (c *EEBus) Debug(args ...any) {
+	if s := fmt.Sprint(args...); isRelevant(s) {
+		c.log.DEBUG.Print(s)
+	}
 }
 
-func (c *EEBus) Info(args ...interface{}) {
+func (c *EEBus) Debugf(format string, args ...any) {
+	if s := fmt.Sprintf(format, args...); isRelevant(s) {
+		c.log.DEBUG.Print(s)
+	}
+}
+
+func (c *EEBus) Info(args ...any) {
 	c.log.INFO.Println(args...)
 }
 
-func (c *EEBus) Infof(format string, args ...interface{}) {
+func (c *EEBus) Infof(format string, args ...any) {
 	c.log.INFO.Printf(format, args...)
 }
 
-func (c *EEBus) Error(args ...interface{}) {
+func (c *EEBus) Error(args ...any) {
+	if len(args) == 2 {
+		// TODO remove when enbility/ship-go is upgraded
+		if err := fmt.Sprint(args...); err == "websocket server error: http: Server closed" {
+			return
+		}
+	}
+
 	c.log.ERROR.Println(args...)
 }
 
-func (c *EEBus) Errorf(format string, args ...interface{}) {
+func (c *EEBus) Errorf(format string, args ...any) {
 	c.log.ERROR.Printf(format, args...)
 }

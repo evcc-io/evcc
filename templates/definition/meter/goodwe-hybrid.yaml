@@ -11,13 +11,24 @@ params:
     choice: ["rs485", "tcpip", "udp"]
     baudrate: 9600
     id: 247
+  - name: maxacpower
   - name: battery
     default: 1
     type: choice
+    description:
+      en: Battery number
+      de: Batteriespeichernummer
     choice: [1, 2]
-  - name: capacity
-    advanced: true
-  - name: maxacpower
+    usages: ["battery"]
+  - preset: battery-params
+  - name: maxchargepower
+    default: 10000
+  - name: maxdischargepower
+    default: 10000
+  - name: minsoc
+    default: 10
+  - name: maxsoc
+    default: 100
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -37,6 +48,50 @@ render: |
       type: holding
       decode: float32
     scale: 0.001
+  powers:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 36019 # Meter Active Power R, W
+        type: holding
+        decode: int32
+      scale: -1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 36021 # Meter Active Power S, W
+        type: holding
+        decode: int32
+      scale: -1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 36023 # Meter Active Power T, W
+        type: holding
+        decode: int32
+      scale: -1
+  currents:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 36055 # Meter Current R, A
+        type: holding
+        decode: uint16
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 36056 # Meter Current S, A
+        type: holding
+        decode: uint16
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 36057 # Meter Current T, A  
+        type: holding
+        decode: uint16
+      scale: 0.1
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
@@ -166,7 +221,7 @@ render: |
                 type: writesingle
                 encoding: uint16
           - source: const
-            value: 10000 # For charge battery mode: Maximum allowed power from Grid in W 
+            value: {{ .maxchargepower }} # For charge battery mode: Maximum allowed power from Grid in W 
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
@@ -174,5 +229,5 @@ render: |
                 address: 47512 # EMSPowerSet [0-10000]
                 type: writemultiple
                 encoding: uint16
-  capacity: {{ .capacity }} # kWh
+  {{- include "battery-params" . }}
   {{- end }}

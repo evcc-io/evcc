@@ -1,9 +1,9 @@
 <template>
 	<div class="root position-relative">
-		<div class="chart position-relative">
+		<div class="chart position-relative" :class="{ 'chart--with-target': targetText }">
 			<div
 				v-for="(slot, index) in slots"
-				:key="`${slot.day}-${slot.startHour}`"
+				:key="`${slot.day}-${fmtHourMinute(slot.start)}`"
 				:data-index="index"
 				class="slot user-select-none"
 				:class="{
@@ -22,12 +22,14 @@
 				@mouseup="hoverSlot(null)"
 				@click="selectSlot(index)"
 			>
-				<div class="slot-bar" :style="valueStyle(slot.value)">
-					<span v-if="slot.value === undefined && avgValue" class="unknown">?</span>
-				</div>
+				<div
+					class="slot-bar"
+					:style="valueStyle(slot.value)"
+					:class="{ unknown: slot.value === undefined && avgValue }"
+				></div>
 				<div class="slot-label">
-					<span v-if="!slot.isTarget || targetNearlyOutOfRange">{{
-						formatHour(slot.startHour)
+					<span v-if="slot.start.getMinutes() === 0">{{
+						formatHour(slot.start.getHours())
 					}}</span>
 					<br />
 					<span v-if="showWeekday(index)">{{ slot.day }}</span>
@@ -59,8 +61,7 @@ import { is12hFormat } from "@/units";
 import PlanEndIcon from "../MaterialIcon/PlanEnd.vue";
 import formatter from "@/mixins/formatter";
 import type { Slot } from "@/types/evcc";
-
-const BAR_WIDTH = 20;
+const BAR_WIDTH = 8;
 
 export default defineComponent({
 	name: "TariffChart",
@@ -96,12 +97,10 @@ export default defineComponent({
 			return { min, range: max - min };
 		},
 		targetLeft() {
-			const fullHours = Math.floor(this.targetOffset);
-			const hourFraction = this.targetOffset - fullHours;
-			return `${fullHours * BAR_WIDTH + 4 + hourFraction * 12}px`;
+			return `${(this.targetOffset / 0.25) * BAR_WIDTH}px`;
 		},
 		targetNearlyOutOfRange() {
-			return this.targetOffset > this.slots.length - 4;
+			return this.targetOffset > this.slots.length - 8;
 		},
 		targetOutOfRange() {
 			return this.targetOffset > this.slots.length;
@@ -142,7 +141,7 @@ export default defineComponent({
 					return false;
 				}
 			}
-			if (slot.startHour === 0) {
+			if (slot.start.getHours() === 0 && slot.start.getMinutes() === 0) {
 				return true;
 			}
 			return false;
@@ -152,7 +151,7 @@ export default defineComponent({
 			const height =
 				value !== undefined && !isNaN(val)
 					? `${10 + (90 / this.valueInfo.range) * (val - this.valueInfo.min)}%`
-					: "75%";
+					: "50%";
 			return { height };
 		},
 		startLongPress(index: number) {
@@ -179,7 +178,10 @@ export default defineComponent({
 	overflow-x: auto;
 	align-items: flex-end;
 	overflow-y: none;
-	padding-bottom: 55px;
+	padding-bottom: 35px;
+}
+.chart--with-target {
+	padding-bottom: 57px;
 }
 .target-inline {
 	height: 130px;
@@ -219,7 +221,7 @@ export default defineComponent({
 }
 .slot {
 	text-align: center;
-	padding: 4px;
+	padding: 2px;
 	height: 100%;
 	display: flex;
 	justify-content: flex-end;
@@ -229,24 +231,14 @@ export default defineComponent({
 	transition-property: opacity, background, color;
 	transition-duration: var(--evcc-transition-fast);
 	transition-timing-function: ease-in;
-	width: 20px;
+	width: 8px;
 	flex-grow: 0;
 	flex-shrink: 0;
-}
-@media (max-width: 991px) {
-	.chart {
-		overflow-x: auto;
-	}
-}
-@media (min-width: 992px) {
-	.chart {
-		overflow-x: hidden;
-	}
 }
 .slot-bar {
 	background-clip: content-box !important;
 	background: var(--bs-gray-light);
-	border-radius: 8px;
+	border-radius: 2px;
 	width: 100%;
 	align-items: center;
 	display: flex;
@@ -254,12 +246,15 @@ export default defineComponent({
 	color: var(--bs-white);
 	transition: height var(--evcc-transition-fast) ease-in;
 }
+.slot-bar.unknown {
+	opacity: 0.33;
+}
 .slot-label {
 	color: var(--bs-gray-light);
 	line-height: 1.1;
 	position: absolute;
 	top: 100%;
-	left: -50%;
+	left: -100%;
 	width: 200%;
 	text-align: center;
 }
@@ -280,9 +275,6 @@ export default defineComponent({
 }
 .slot.warning .slot-label {
 	color: var(--bs-warning);
-}
-.unknown {
-	margin: 0 -0.5rem;
 }
 .slot.hovered {
 	opacity: 1;

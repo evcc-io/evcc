@@ -90,14 +90,14 @@
 import "@h2d2/shopicons/es/regular/exclamationtriangle";
 import formatter from "@/mixins/formatter";
 import { defineComponent, type PropType } from "vue";
-import type { Notification, Timeout } from "@/types/evcc";
+import type { Notification, Timeout, UiLoadpoint } from "@/types/evcc";
 
 export default defineComponent({
 	name: "Notifications",
 	mixins: [formatter],
 	props: {
 		notifications: { type: Array as PropType<Notification[]>, default: () => [] },
-		loadpointTitles: { type: Array as PropType<string[]>, default: () => [] },
+		loadpoints: { type: Array as PropType<UiLoadpoint[]>, default: () => [] },
 	},
 	data() {
 		return {
@@ -128,8 +128,10 @@ export default defineComponent({
 		message({ message, lp }: { message: string | string[]; lp?: number }) {
 			const lines = Array.isArray(message) ? message : [message];
 			if (lp) {
-				// add loadpoint title to first line
-				lines[0] = `${this.loadpointTitles[lp - 1] || lp}: ${lines[0]}`;
+				// Find loadpoint by id (which is the original 1-based index)
+				const loadpoint = this.loadpoints.find((l) => l.id === String(lp));
+				const title = loadpoint?.displayTitle || lp;
+				lines[0] = `${title}: ${lines[0]}`;
 			}
 			return lines;
 		},

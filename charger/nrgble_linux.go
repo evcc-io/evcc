@@ -66,24 +66,6 @@ func NewNRGKickBLE(device, mac string, pin int) (*NRGKickBLE, error) {
 		return nil, err
 	}
 
-	// set LE mode
-	btmgmt := hw.NewBtMgmt(ainfo.AdapterID)
-
-	err = btmgmt.SetPowered(false)
-	if err == nil {
-		err = btmgmt.SetLe(true)
-		if err == nil {
-			err = btmgmt.SetBredr(false)
-			if err == nil {
-				err = btmgmt.SetPowered(true)
-			}
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
 	adapt, err := adapter.NewAdapter1FromAdapterID(ainfo.AdapterID)
 	if err != nil {
 		return nil, err

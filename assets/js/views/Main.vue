@@ -1,21 +1,22 @@
 <template>
 	<Site
-		v-if="state.startup"
 		:notifications="notifications"
 		v-bind="state"
 		:selected-loadpoint-index="selectedLoadpointIndex"
 	/>
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent, type PropType } from "vue";
 import Site from "../components/Site/Site.vue";
 import store from "../store";
+import type { Notification } from "@/types/evcc";
 
-export default {
+export default defineComponent({
 	name: "Main",
 	components: { Site },
 	props: {
-		notifications: Array,
+		notifications: Array as PropType<Notification[]>,
 		selectedLoadpointIndex: Number,
 	},
 	data() {
@@ -29,5 +30,5 @@ export default {
 		// no custom title
 		return { title: "evcc", titleTemplate: null };
 	},
-};
+});
 </script>

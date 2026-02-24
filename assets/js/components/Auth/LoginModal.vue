@@ -2,39 +2,16 @@
 	<GenericModal
 		id="loginModal"
 		:title="$t('loginModal.title')"
-		size="sm"
+		:size="modalSize"
 		data-testid="login-modal"
 		@open="open"
 		@closed="closed"
 	>
-		<form v-if="modalVisible" @submit.prevent="login">
-			<div class="mb-4">
-				<label for="loginPassword" class="col-form-label">
-					<div class="w-100">
-						<span class="label">{{ $t("loginModal.password") }}</span>
-					</div>
-				</label>
-				<input
-					id="loginPassword"
-					ref="password"
-					v-model="password"
-					class="form-control"
-					autocomplete="current-password"
-					type="password"
-					required
-				/>
-			</div>
-
-			<p v-if="error" class="text-danger my-4">{{ $t("loginModal.error") }}{{ error }}</p>
-			<a
-				v-if="iframeHint"
-				class="text-muted my-4 d-block text-center"
-				:href="evccUrl"
-				target="_blank"
-				data-testid="login-iframe-hint"
-			>
-				{{ $t("loginModal.iframeHint") }}
-			</a>
+		<div v-if="demoMode" class="alert alert-warning" role="alert">
+			{{ $t("loginModal.demoMode") }}
+		</div>
+		<form v-else-if="modalVisible" @submit.prevent="login">
+			<PasswordInput v-model:password="password" :error="error" :iframe-hint="iframeHint" />
 
 			<button type="submit" class="btn btn-primary w-100 mb-3" :disabled="loading">
 				<span
@@ -64,10 +41,14 @@ import api from "@/api";
 import { updateAuthStatus, getAndClearNextUrl, getAndClearNextModal, isLoggedIn } from "./auth";
 import { docsPrefix } from "@/i18n";
 import { defineComponent } from "vue";
+import PasswordInput from "./PasswordInput.vue";
 
 export default defineComponent({
 	name: "LoginModal",
-	components: { GenericModal },
+	components: { GenericModal, PasswordInput },
+	props: {
+		demoMode: Boolean,
+	},
 	data: () => {
 		return {
 			modalVisible: false,
@@ -82,8 +63,8 @@ export default defineComponent({
 		resetUrl() {
 			return `${docsPrefix()}/docs/faq#password-reset`;
 		},
-		evccUrl() {
-			return window.location.href;
+		modalSize() {
+			return this.demoMode ? "md" : "sm";
 		},
 	},
 	methods: {
@@ -111,7 +92,7 @@ export default defineComponent({
 			try {
 				const data = { password: this.password };
 				const res = await api.post("/auth/login", data, {
-					validateStatus: (code) => [200, 401].includes(code),
+					validateStatus: (code) => [200, 401, 403].includes(code),
 				});
 				this.resetHint = false;
 				this.iframeHint = false;
@@ -134,6 +115,9 @@ export default defineComponent({
 				if (res.status === 401) {
 					this.error = this.$t("loginModal.invalid");
 					this.resetHint = true;
+				}
+				if (res.status === 403) {
+					this.error = this.$t("loginModal.demoMode");
 				}
 			} catch (err) {
 				console.error(err);

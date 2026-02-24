@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"strings"
 	"sync"
@@ -110,33 +111,59 @@ func (h *SocketHub) deleteSubscriber(s *socketSubscriber) {
 }
 
 func (h *SocketHub) welcome(subscriber *socketSubscriber, params []util.Param) {
-	var msg strings.Builder
-	msg.WriteString("{")
+	msg := make(map[string]json.RawMessage, len(params))
+
 	for _, p := range params {
-		if msg.Len() > 1 {
-			msg.WriteString(",")
+		k := p.Key
+		if p.Loadpoint != nil {
+			k = "loadpoints." + p.UniqueID()
 		}
-		msg.WriteString(kv(p))
+
+		msg[k] = json.RawMessage(socketEncode(p.Val))
 	}
-	msg.WriteString("}")
+
+	b, _ := json.Marshal(msg)
 
 	// should not block
-	subscriber.send <- []byte(msg.String())
+	subscriber.send <- b
 }
 
 func (h *SocketHub) broadcast(p util.Param) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 
-	if len(h.subscribers) > 0 {
-		msg := "{" + kv(p) + "}"
+	if len(h.subscribers) == 0 {
+		return
+	}
 
-		for s := range h.subscribers {
-			select {
-			case s.send <- []byte(msg):
-			default:
-				s.closeSlow()
-			}
+	msg := make(map[string]json.RawMessage)
+
+	k := p.Key
+	if p.Loadpoint != nil {
+		k = "loadpoints." + p.UniqueID()
+	}
+
+	// Sharder splits data into chunks
+	if sp, ok := (p.Val).(util.Sharder); ok {
+		shards := sp.Shards()
+		if len(shards) == 0 {
+			return // nothing changed, skip broadcast
+		}
+
+		for _, shard := range shards {
+			msg[k+"."+shard.Key] = json.RawMessage(socketEncode(shard.Value))
+		}
+	} else {
+		msg[k] = json.RawMessage(socketEncode(p.Val))
+	}
+
+	b, _ := json.Marshal(msg)
+
+	for s := range h.subscribers {
+		select {
+		case s.send <- b:
+		default:
+			s.closeSlow()
 		}
 	}
 }

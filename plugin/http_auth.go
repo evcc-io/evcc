@@ -10,6 +10,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/transport"
 	"github.com/jpfielding/go-http-digest/pkg/digest"
+	"golang.org/x/oauth2"
 )
 
 // Auth is the authorization config
@@ -47,11 +48,14 @@ func (p *Auth) Transport(ctx context.Context, log *util.Logger, base http.RoundT
 			p.Other["password"] = p.Password
 		}
 
-		authorizer, err := auth.NewFromConfig(ctx, p.Source, p.Other)
+		ts, err := auth.NewFromConfig(ctx, p.Source, p.Other)
 		if err != nil {
 			return nil, err
 		}
 
-		return authorizer.Transport(base), nil
+		return &oauth2.Transport{
+			Source: ts,
+			Base:   base,
+		}, nil
 	}
 }

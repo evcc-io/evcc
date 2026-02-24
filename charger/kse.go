@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2022-2024 premultiply
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -57,7 +57,7 @@ func init() {
 }
 
 // NewKSEFromConfig creates a KSE charger from generic config
-func NewKSEFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewKSEFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := modbus.Settings{
 		ID:       100,
 		Baudrate: 9600,
@@ -71,7 +71,7 @@ func NewKSEFromConfig(ctx context.Context, other map[string]interface{}) (api.Ch
 	return NewKSE(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.ID)
 }
 
-//go:generate go tool decorate -f decorateKSE -b *KSE -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)" -t "api.Identifier,Identify,func() (string, error)"
+//go:generate go tool decorate -f decorateKSE -b *KSE -r api.Charger -t api.PhaseSwitcher,api.PhaseGetter,api.Identifier
 
 // NewKSE creates KSE charger
 func NewKSE(ctx context.Context, uri, device, comset string, baudrate int, slaveID uint8) (api.Charger, error) {
@@ -112,7 +112,7 @@ func NewKSE(ctx context.Context, uri, device, comset string, baudrate int, slave
 		identify = wb.identify
 	}
 
-	return decorateKSE(wb, phases1p3p, getPhases, identify), err
+	return decorateKSE(wb, phases1p3p, getPhases, identify), nil
 }
 
 // Status implements the api.Charger interface

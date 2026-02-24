@@ -23,3 +23,12 @@ func (v *Provider) Soc() (float64, error) {
 	res, err := v.status()
 	return float64(res.Payload.BatteryLevel), err
 }
+
+// Range implements the api.VehicleRange interface
+func (v *Provider) Range() (int64, error) {
+	res, err := v.status()
+	if err != nil {
+		return 0, err
+	}
+	return res.Payload.EvRangeWithAc.ValueInKilometers()
+}

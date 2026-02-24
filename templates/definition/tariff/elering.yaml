@@ -4,6 +4,8 @@ products:
   - brand: Nordpool
     description:
       generic: "Elering"
+requirements:
+  evcc: ["skiptest"]
 group: price
 countries: ["EE", "LT", "LV", "FI"]
 params:

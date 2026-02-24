@@ -13,13 +13,22 @@
 			@open-minsoc-settings="openMinSocSettings"
 			@open-plan-modal="openPlanModal"
 		/>
-		<VehicleSoc
-			v-bind="vehicleSocProps"
-			class="mt-2 mb-4"
-			@limit-soc-updated="limitSocUpdated"
-			@limit-soc-drag="limitSocDrag"
-			@plan-clicked="openPlanModal"
-		/>
+		<div class="mt-2 mb-4 d-flex gap-2">
+			<BatteryBoostButton
+				v-if="showBoostButton"
+				class="flex-grow-0"
+				v-bind="batteryBoostButtonProps"
+				@updated="$emit('batteryboost-updated', $event)"
+				@status="handleBoostStatus"
+			/>
+			<VehicleSoc
+				class="flex-grow-1 position-relative"
+				v-bind="vehicleSocProps"
+				@limit-soc-updated="limitSocUpdated"
+				@limit-soc-drag="limitSocDrag"
+				@plan-clicked="openPlanModal"
+			/>
+		</div>
 		<div class="details d-flex flex-wrap justify-content-between">
 			<LabelAndValue
 				v-if="socBasedCharging"
@@ -68,7 +77,7 @@
 </template>
 
 <script lang="ts">
-import collector from "@/mixins/collector";
+import collector from "@/mixins/collector.ts";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import LabelAndValue from "../Helper/LabelAndValue.vue";
 import Title from "./Title.vue";
@@ -77,9 +86,11 @@ import Status from "./Status.vue";
 import ChargingPlan from "../ChargingPlans/ChargingPlan.vue";
 import LimitSocSelect from "./LimitSocSelect.vue";
 import LimitEnergySelect from "./LimitEnergySelect.vue";
-import { distanceUnit, distanceValue } from "@/units";
+import { distanceUnit, distanceValue } from "@/units.ts";
 import { defineComponent, type PropType } from "vue";
-import { CHARGE_MODE, type Forecast, type Vehicle } from "@/types/evcc";
+import { CHARGE_MODE, type Forecast, type VehicleStatus, type Vehicle } from "@/types/evcc";
+import type { PlanStrategy } from "@/components/ChargingPlans/types";
+import BatteryBoostButton from "../Loadpoints/BatteryBoostButton.vue";
 
 export default defineComponent({
 	name: "Vehicle",
@@ -91,6 +102,7 @@ export default defineComponent({
 		ChargingPlan,
 		LimitSocSelect,
 		LimitEnergySelect,
+		BatteryBoostButton,
 	},
 	mixins: [collector, formatter],
 	props: {
@@ -103,7 +115,12 @@ export default defineComponent({
 		effectiveLimitSoc: Number,
 		effectivePlanSoc: Number,
 		effectivePlanTime: String,
+		effectivePlanStrategy: Object as PropType<PlanStrategy>,
+		batteryBoost: Boolean,
 		batteryBoostActive: Boolean,
+		batteryBoostAvailable: Boolean,
+		batteryBoostLimit: { type: Number, default: 100 },
+		batterySoc: Number,
 		enabled: Boolean,
 		heating: Boolean,
 		id: [String, Number],
@@ -120,7 +137,6 @@ export default defineComponent({
 		planProjectedEnd: String,
 		planTime: String,
 		planTimeUnreachable: Boolean,
-		planPrecondition: Number,
 		planOverrun: Number,
 		pvAction: String,
 		pvRemainingInterpolated: Number,
@@ -129,14 +145,18 @@ export default defineComponent({
 		smartCostNextStart: String,
 		smartCostLimit: Number,
 		smartCostType: String,
+		smartFeedInPriorityActive: Boolean,
+		smartFeedInPriorityNextStart: String,
+		smartFeedInPriorityLimit: Number,
 		socBasedCharging: Boolean,
 		socBasedPlanning: Boolean,
 		tariffCo2: Number,
 		tariffGrid: Number,
+		tariffFeedIn: Number,
 		vehicle: Object as PropType<Vehicle>,
 		vehicleDetectionActive: Boolean,
 		vehicleName: String,
-		vehicleRange: Number,
+		vehicleRange: { type: Number, default: 0 },
 		vehicles: Array,
 		vehicleSoc: { type: Number, default: 0 },
 		vehicleLimitSoc: Number,
@@ -148,10 +168,12 @@ export default defineComponent({
 		"change-vehicle",
 		"remove-vehicle",
 		"open-loadpoint-settings",
+		"batteryboost-updated",
 	],
 	data() {
 		return {
 			displayLimitSoc: this.effectiveLimitSoc,
+			statusOverride: undefined as VehicleStatus | undefined,
 		};
 	},
 	computed: {
@@ -171,13 +193,19 @@ export default defineComponent({
 			return this.collectProps(Soc);
 		},
 		vehicleStatus() {
-			return this.collectProps(Status);
+			return { ...this.collectProps(Status), statusOverride: this.statusOverride };
 		},
 		vehicleTitleProps() {
 			return this.collectProps(Title);
 		},
 		chargingPlan() {
 			return this.collectProps(ChargingPlan);
+		},
+		showBoostButton(): boolean {
+			return this.connected && this.batteryBoostAvailable && this.batteryBoostLimit < 100;
+		},
+		batteryBoostButtonProps() {
+			return this.collectProps(BatteryBoostButton);
 		},
 		formattedSoc() {
 			if (!this.vehicleSoc) {
@@ -222,6 +250,9 @@ export default defineComponent({
 		smartCostDisabled() {
 			return this.chargingPlanDisabled;
 		},
+		smartFeedInPriorityDisabled() {
+			return this.chargingPlanDisabled;
+		},
 	},
 	watch: {
 		effectiveLimitSoc() {
@@ -252,6 +283,9 @@ export default defineComponent({
 			(
 				this.$refs["chargingPlan"] as InstanceType<typeof ChargingPlan> | undefined
 			)?.openPlanModal();
+		},
+		handleBoostStatus(status: VehicleStatus) {
+			this.statusOverride = status;
 		},
 		openMinSocSettings() {
 			(

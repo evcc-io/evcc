@@ -4,16 +4,16 @@ type User struct {
 	Code    int64  `json:"code"`
 	Message string `json:"message"`
 	Data    *struct {
-		Email        string      `json:"email"`
-		HeadURL      string      `json:"headUrl"`
-		IsFirstLogin int64       `json:"isFirstLogin"`
-		Mobile       interface{} `json:"mobile"`
-		Nickname     string      `json:"nickname"`
-		Sex          interface{} `json:"sex"`
-		Token        string      `json:"token"`
-		UserID       int64       `json:"userId"`
-		UserType     int64       `json:"userType"`
-		Username     string      `json:"username"`
+		Email        string `json:"email"`
+		HeadURL      string `json:"headUrl"`
+		IsFirstLogin int64  `json:"isFirstLogin"`
+		Mobile       any    `json:"mobile"`
+		Nickname     string `json:"nickname"`
+		Sex          any    `json:"sex"`
+		Token        string `json:"token"`
+		UserID       int64  `json:"userId"`
+		UserType     int64  `json:"userType"`
+		Username     string `json:"username"`
 	} `json:"data"`
 	Timestamp int64 `json:"timestamp"`
 }

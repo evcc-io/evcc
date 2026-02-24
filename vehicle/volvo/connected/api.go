@@ -2,13 +2,12 @@ package connected
 
 import (
 	"fmt"
-	"net/http"
 
-	"github.com/evcc-io/evcc/plugin/auth"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
 	"github.com/samber/lo"
+	"golang.org/x/oauth2"
 )
 
 // api constants
@@ -22,18 +21,20 @@ type API struct {
 }
 
 // NewAPI creates a new api client
-func NewAPI(log *util.Logger, vccapikey string, authorizer auth.Authorizer) *API {
+func NewAPI(log *util.Logger, vccapikey string, ts oauth2.TokenSource) *API {
 	v := &API{
 		Helper: request.NewHelper(log),
 	}
 
-	decoratedTransport := &transport.Decorator{
-		Base: v.Client.Transport,
-		Decorator: transport.DecorateHeaders(map[string]string{
-			"vcc-api-key": vccapikey,
-		}),
+	v.Client.Transport = &oauth2.Transport{
+		Source: ts,
+		Base: &transport.Decorator{
+			Decorator: transport.DecorateHeaders(map[string]string{
+				"vcc-api-key": vccapikey,
+			}),
+			Base: v.Client.Transport,
+		},
 	}
-	v.Client.Transport = authorizer.Transport(decoratedTransport)
 
 	return v
 }
@@ -52,16 +53,21 @@ func (v *API) Vehicles() ([]string, error) {
 }
 
 // Range provides range status api response
-func (v *API) RechargeStatus(vin string) (RechargeStatus, error) {
-	uri := fmt.Sprintf("%s/energy/v1/vehicles/%s/recharge-status", ApiURL, vin)
-	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
-		"Accept": "application/vnd.volvocars.api.energy.vehicledata.v1+json",
-	})
+func (v *API) EnergyState(vin string) (EnergyState, error) {
+	uri := fmt.Sprintf("%s/energy/v2/vehicles/%s/state", ApiURL, vin)
 
-	var res RechargeStatus
-	if err == nil {
-		err = v.DoJSON(req, &res)
-	}
+	var res EnergyState
+	err := v.GetJSON(uri, &res)
+
+	return res, err
+}
+
+// Range provides range status api response
+func (v *API) OdometerState(vin string) (OdometerState, error) {
+	uri := fmt.Sprintf("%s/connected-vehicle/v2/vehicles/%s/odometer", ApiURL, vin)
+
+	var res OdometerState
+	err := v.GetJSON(uri, &res)
 
 	return res, err
 }

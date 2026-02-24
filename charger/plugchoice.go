@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2025 andig
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -51,7 +51,7 @@ func init() {
 }
 
 // NewPlugchoiceFromConfig creates a Plugchoice charger from generic config
-func NewPlugchoiceFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewPlugchoiceFromConfig(other map[string]any) (api.Charger, error) {
 	cc := struct {
 		URI       string
 		UUID      string // kept for backward compatibility

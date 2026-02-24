@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2023 andig
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -73,17 +73,17 @@ func init() {
 }
 
 // NewVictronGXFromConfig creates a ABB charger from generic config
-func NewVictronGXFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewVictronGXFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	return NewVictronFromConfig(ctx, other, victronGX)
 }
 
 // NewVictronEVCSFromConfig creates a ABB charger from generic config
-func NewVictronEVCSFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewVictronEVCSFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	return NewVictronFromConfig(ctx, other, victronEVCS)
 }
 
 // NewVictronFromConfig creates a ABB charger from generic config
-func NewVictronFromConfig(ctx context.Context, other map[string]interface{}, regs victronRegs) (api.Charger, error) {
+func NewVictronFromConfig(ctx context.Context, other map[string]any, regs victronRegs) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: cast.ToUint8(regs.isGX) * 100,
 	}
@@ -119,7 +119,7 @@ func NewVictron(ctx context.Context, uri string, slaveID uint8, regs victronRegs
 		return nil, errors.New("charger must be in manual mode")
 	}
 
-	return wb, err
+	return wb, nil
 }
 
 // Status implements the api.Charger interface

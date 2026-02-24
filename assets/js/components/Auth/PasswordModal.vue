@@ -1,15 +1,16 @@
 <template>
 	<GenericModal
-		id="passwordModal"
+		:id="modalId"
 		ref="modal"
 		:title="title"
-		data-testid="password-modal"
-		:uncloseable="!updateMode"
+		:data-testid="dataTestId"
+		:config-modal-name="configModalName"
+		:uncloseable="isUncloseable"
 		@open="open"
 		@closed="closed"
 	>
-		<p v-if="error" class="text-danger">{{ $t("passwordModal.error") }} "{{ error.trim() }}"</p>
-		<p v-if="!updateMode" class="mb-4">{{ $t("passwordModal.description") }}</p>
+		<ErrorMessage :error="error" />
+		<p v-if="isSetupMode" class="mb-4">{{ $t("passwordModal.description") }}</p>
 		<form
 			v-if="modalVisible"
 			ref="form"
@@ -19,7 +20,7 @@
 		>
 			<!-- password manager hint -->
 			<input
-				id="username"
+				:id="formId('Username')"
 				class="d-none"
 				type="text"
 				name="username"
@@ -28,20 +29,20 @@
 			/>
 			<FormRow
 				v-if="updateMode"
-				id="passwordCurrent"
+				:id="formId('Current')"
 				:label="$t('passwordModal.labelCurrent')"
 			>
 				<input
-					id="passwordCurrent"
+					:id="formId('Current')"
 					v-model="passwordCurrent"
 					type="password"
 					class="form-control"
 					autocomplete="current-password"
 				/>
 			</FormRow>
-			<FormRow id="passwordNew" :label="$t('passwordModal.labelNew')">
+			<FormRow :id="formId('New')" :label="$t('passwordModal.labelNew')">
 				<input
-					id="passwordNew"
+					:id="formId('New')"
 					v-model="passwordNew"
 					type="password"
 					class="form-control"
@@ -52,9 +53,9 @@
 					{{ $t("passwordModal.empty") }}
 				</div>
 			</FormRow>
-			<FormRow id="passwordRepeat" :label="$t('passwordModal.labelRepeat')">
+			<FormRow :id="formId('Repeat')" :label="$t('passwordModal.labelRepeat')">
 				<input
-					id="passwordRepeat"
+					:id="formId('Repeat')"
 					ref="passwordRepeat"
 					v-model="passwordRepeat"
 					type="password"
@@ -85,17 +86,21 @@
 	</GenericModal>
 </template>
 
-<script type="ts">
+<script lang="ts">
 import GenericModal from "../Helper/GenericModal.vue";
+import ErrorMessage from "../Helper/ErrorMessage.vue";
 import FormRow from "../Helper/FormRow.vue";
 import api from "@/api";
-import { updateAuthStatus, isConfigured } from "./auth";
-import  { defineComponent } from "vue";
+import { updateAuthStatus } from "./auth";
+import { defineComponent } from "vue";
 
 export default defineComponent({
 	name: "PasswordModal",
-	components: { FormRow, GenericModal },
-	data: () => {
+	components: { FormRow, GenericModal, ErrorMessage },
+	props: {
+		updateMode: Boolean,
+	},
+	data() {
 		return {
 			modalVisible: false,
 			passwordCurrent: "",
@@ -103,18 +108,30 @@ export default defineComponent({
 			passwordRepeat: "",
 			showValidation: false,
 			loading: false,
-			error: false,
+			error: "" as string,
 		};
 	},
 	computed: {
+		modalId() {
+			return this.updateMode ? "passwordUpdateModal" : "passwordSetupModal";
+		},
+		configModalName() {
+			return this.updateMode ? "passwordupdate" : undefined;
+		},
+		dataTestId() {
+			return this.updateMode ? "password-update-modal" : "password-setup-modal";
+		},
+		isSetupMode() {
+			return !this.updateMode;
+		},
+		isUncloseable() {
+			return !this.updateMode;
+		},
 		passwordsMatch() {
 			return this.passwordNew === this.passwordRepeat;
 		},
 		passwordEmpty() {
 			return this.passwordNew.length === 0;
-		},
-		updateMode() {
-			return isConfigured();
 		},
 		title() {
 			return this.updateMode
@@ -128,6 +145,10 @@ export default defineComponent({
 		},
 	},
 	methods: {
+		formId(name: string) {
+			const prefix = this.updateMode ? "passwordUpdate" : "passwordSetup";
+			return `${prefix}_${name}`;
+		},
 		open() {
 			this.modalVisible = true;
 		},
@@ -136,12 +157,13 @@ export default defineComponent({
 			this.passwordCurrent = "";
 			this.passwordNew = "";
 			this.passwordRepeat = "";
-			this.error = false;
+			this.error = "";
 			this.loading = false;
 			this.showValidation = false;
 		},
-		async setPassword(e) {
-			this.$refs.passwordRepeat.setCustomValidity(
+		async setPassword(e: Event) {
+			const passwordRepeatInput = this.$refs["passwordRepeat"] as HTMLInputElement;
+			passwordRepeatInput.setCustomValidity(
 				this.passwordsMatch && !this.passwordEmpty ? "" : "invalid"
 			);
 
@@ -149,14 +171,15 @@ export default defineComponent({
 			e.stopPropagation();
 			this.showValidation = true;
 
-			if (this.$refs.form.checkValidity()) {
+			const form = this.$refs["form"] as HTMLFormElement;
+			if (form.checkValidity()) {
 				await this.savePassword();
 				await updateAuthStatus();
 			}
 		},
 		async savePassword() {
 			this.loading = true;
-			this.error = null;
+			this.error = "";
 			try {
 				const data = {
 					current: this.passwordCurrent,
@@ -164,8 +187,8 @@ export default defineComponent({
 				};
 				await api.put("/auth/password", data);
 				this.loading = false;
-				this.$refs.modal?.close();
-			} catch (error) {
+				(this.$refs["modal"] as any)?.close();
+			} catch (error: any) {
 				console.error(error);
 				this.error = error.response.data;
 				this.showValidation = false;

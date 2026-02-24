@@ -13,7 +13,7 @@ func (cp *CP) ChangeAvailabilityRequest(connectorId int, availabilityType core.A
 	rc := make(chan error, 1)
 
 	err := Instance().ChangeAvailability(cp.id, func(request *core.ChangeAvailabilityConfirmation, err error) {
-		if err == nil && request != nil && request.Status != core.AvailabilityStatusAccepted {
+		if err == nil && request != nil && request.Status != core.AvailabilityStatusAccepted && request.Status != core.AvailabilityStatusScheduled {
 			err = errors.New(string(request.Status))
 		}
 

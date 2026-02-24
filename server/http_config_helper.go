@@ -18,15 +18,16 @@ import (
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/go-viper/mapstructure/v2"
 	"github.com/samber/lo"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v4"
 )
 
 const (
-	typeCustom   = "custom"   // typeCustom is the custom configuration type
 	typeTemplate = "template" // typeTemplate is the updatable configuration type
+	masked       = "***"      // masked indicates a masked config parameter value
+)
 
-	// masked indicates a masked config parameter value
-	masked = "***"
+var (
+	customTypes = []string{"custom", "template", "heatpump", "switchsocket", "sgready", "sgready-relay"}
 )
 
 type configReq struct {
@@ -106,7 +107,33 @@ func templateForConfig(class templates.Class, conf map[string]any) (templates.Te
 	return templates.ByName(class, typ)
 }
 
-func sanitizeMasked(class templates.Class, conf map[string]any) (map[string]any, error) {
+func filterValidTemplateParams(tmpl *templates.Template, conf map[string]any) map[string]any {
+	res := make(map[string]any)
+
+	// check if template has modbus capability
+	hasModbus := len(tmpl.ModbusChoices()) > 0
+
+	for k, v := range conf {
+		if k == "template" {
+			res[k] = v
+			continue
+		}
+
+		// preserve modbus fields if template supports modbus
+		if hasModbus && slices.Contains(templates.ModbusParams, k) {
+			res[k] = v
+			continue
+		}
+
+		if i, _ := tmpl.ParamByName(k); i >= 0 {
+			res[k] = v
+		}
+	}
+
+	return res
+}
+
+func sanitizeMasked(class templates.Class, conf map[string]any, hidePrivate bool) (map[string]any, error) {
 	tmpl, err := templateForConfig(class, conf)
 	if err != nil {
 		return nil, err
@@ -115,14 +142,18 @@ func sanitizeMasked(class templates.Class, conf map[string]any) (map[string]any,
 	res := make(map[string]any, len(conf))
 
 	for k, v := range conf {
-		if i, p := tmpl.ParamByName(k); i >= 0 && p.IsMasked() {
-			v = masked
+		if i, p := tmpl.ParamByName(k); i >= 0 {
+			if p.IsMasked() {
+				v = masked
+			} else if hidePrivate && p.IsPrivate() {
+				v = masked
+			}
 		}
 
 		res[k] = v
 	}
 
-	return res, nil
+	return filterValidTemplateParams(&tmpl, res), nil
 }
 
 func mergeMasked(class templates.Class, conf, old map[string]any) (map[string]any, error) {
@@ -141,7 +172,7 @@ func mergeMasked(class templates.Class, conf, old map[string]any) (map[string]an
 		res[k] = v
 	}
 
-	return res, nil
+	return filterValidTemplateParams(&tmpl, res), nil
 }
 
 func startDeviceTimeout() (context.Context, context.CancelFunc, chan struct{}) {
@@ -280,6 +311,18 @@ func testInstance(instance any) map[string]testResult {
 		makeResult("phases1p3p", true, nil)
 	}
 
+	if hasFeature(instance, api.Heating) {
+		makeResult("heating", true, nil)
+	}
+
+	if hasFeature(instance, api.IntegratedDevice) {
+		makeResult("integratedDevice", true, nil)
+	}
+
+	if dev, ok := instance.(api.IconDescriber); ok && dev.Icon() != "" {
+		makeResult("icon", dev.Icon(), nil)
+	}
+
 	if cc, ok := instance.(api.PhaseDescriber); ok && cc.Phases() == 1 {
 		makeResult("singlePhase", true, nil)
 	}
@@ -298,6 +341,11 @@ func testInstance(instance any) map[string]testResult {
 		makeResult(key, val, err)
 	}
 
+	if dev, ok := instance.(api.Dimmer); ok {
+		val, err := dev.Dimmed()
+		makeResult("dimmed", val, err)
+	}
+
 	if dev, ok := instance.(api.Identifier); ok {
 		val, err := dev.Identify()
 		makeResult("identifier", val, err)
@@ -314,6 +362,14 @@ func mergeMaskedAny(old, new any) error {
 type maskedTransformer struct{}
 
 func (maskedTransformer) Transformer(typ reflect.Type) func(dst, src reflect.Value) error {
+	// Only provide transformer for booleans to prevent them from being merged
+	if typ.Kind() == reflect.Bool {
+		return func(dst, src reflect.Value) error {
+			// Keep dst value, don't merge
+			return nil
+		}
+	}
+
 	if typ.Kind() != reflect.String {
 		return nil
 	}
@@ -338,8 +394,10 @@ func decodeDeviceConfig(r io.Reader) (configReq, error) {
 		return res, nil
 	}
 
-	if !strings.EqualFold(res.Type, typeCustom) {
-		return configReq{}, errors.New("invalid config: yaml only allowed for custom type")
+	if !slices.ContainsFunc(customTypes, func(s string) bool {
+		return strings.EqualFold(res.Type, s)
+	}) {
+		return configReq{}, errors.New("invalid config: yaml only allowed for types " + strings.Join(customTypes, ", "))
 	}
 
 	if len(res.Other) != 0 {

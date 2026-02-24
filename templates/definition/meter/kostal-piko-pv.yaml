@@ -2,7 +2,10 @@ template: kostal-piko-pv
 products:
   - brand: Kostal
     description:
-      generic: Piko, Piko BA
+      generic: Piko
+  - brand: Kostal
+    description:
+      generic: Piko BA
 params:
   - name: usage
     choice: ["grid", "pv"]

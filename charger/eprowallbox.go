@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2025 premultiply
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -80,7 +80,7 @@ func NewEProWallbox(ctx context.Context, uri, device, comset string, baudrate in
 
 	go wb.heartbeat(ctx)
 
-	return wb, err
+	return wb, nil
 }
 
 func (wb *EProWallbox) heartbeat(ctx context.Context) {

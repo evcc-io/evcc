@@ -10,8 +10,11 @@ params:
   - name: id
     type: int
     description:
-      de: "Wechselrichter ID (falls mehrere vorhanden). Die Nummerierung beginnt bei 0. Siehe AhoyDTU Webinterface -> Inverter #[ID]"
-      en: "Inverter ID (if multiple exist). The numbering starts at 0. See AhoyDTU webinterface -> Inverter #[ID]"
+      de: Wechselrichter ID
+      en: Inverter ID
+    help:
+      de: "Falls mehrere vorhanden. Die Nummerierung beginnt bei 0. Siehe AhoyDTU Webinterface -> Inverter #[ID]"
+      en: "If multiple exist. The numbering starts at 0. See AhoyDTU webinterface -> Inverter #[ID]"
     default: 0
 render: |
   type: custom

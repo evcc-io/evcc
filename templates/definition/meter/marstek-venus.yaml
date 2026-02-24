@@ -8,37 +8,29 @@ params:
   - name: usage
     choice: ["battery"]
   - name: modbus
-    choice: ["rs485"]
+    choice: ["rs485", "tcpip"]
     baudrate: 115200
     comset: 8N1
+  - preset: battery-params
   - name: capacity
-    default: 5.12
     help:
       de: Venus-E 5.12 kWh, Venus-C 2.56 kWh
       en: Venus-E 5.12 kWh, Venus-C 2.56 kWh
   - name: minsoc
     default: 11
-    type: int
-    advanced: true
-    description:
-      de: Venus kann nur bis 11% entladen werden.
-      en: Venus can only be discharged down to 11%.
   - name: maxsoc
     default: 100
-    type: int
-    advanced: true
   - name: maxchargepower
     default: 2500
-    advanced: true
-    description:
-      en: Charge power in watts for Charge mode. 2500W is the maximum for Venus.
-      de: Ladeleistung in Watt für den Charge-Modus. 2500W ist das Maximum für Venus.
   - name: work_mode_normal
     default: 1
     advanced: true
     description:
-      en: Work mode for Normal state. 0 manual, 1 anti-feed, 2 trade mode.
-      de: Work mode für Normal-Modus. 0 manuell, 1 Eigenverbrauch, 2 AI-Optimierung.
+      en: Work mode for Normal state
+      de: Work mode für Normal-Modus
+    help:
+      en: 0=manual, 1=anti-feed, 2=trade mode.
+      de: 0=manuell, 1=Eigenverbrauch, 2=AI-Optimierung.
 render: |
   type: custom
   power:
@@ -154,4 +146,4 @@ render: |
               type: writesingle
               decode: uint16
     # Do not disable RS485 Control Mode because it will reset the device and let it charge/discharge again
-  capacity: {{ .capacity }} # kWh
+  {{- include "battery-params" . }}

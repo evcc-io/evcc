@@ -1,0 +1,17 @@
+template: alpitronic
+products:
+  - brand: Alpitronic
+    description:
+      generic: Hypercharger
+capabilities: ["mA", "rfid", "iso151182"]
+requirements:
+  evcc: ["sponsorship"]
+params:
+  - name: modbus
+    choice: ["tcpip"]
+  - name: connector
+    default: 1
+render: |
+  type: alpitronic
+  {{- include "modbus" . }}
+  connector: {{ .connector }}

@@ -10,7 +10,7 @@ import (
 
 // Logger is a simple logger interface
 type Logger interface {
-	Println(v ...interface{})
+	Println(v ...any)
 }
 
 type logger struct {
@@ -23,7 +23,7 @@ func SignalrLogger(log Logger) signalr.StructuredLogger {
 
 var skipped = []string{"ts", "class", "hub", "protocol", "value"}
 
-func (l *logger) Log(keyVals ...interface{}) error {
+func (l *logger) Log(keyVals ...any) error {
 	b := new(strings.Builder)
 
 	var skip bool

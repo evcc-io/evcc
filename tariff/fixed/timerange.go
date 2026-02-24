@@ -85,7 +85,7 @@ func ParseTimeRange(s string) (TimeRange, error) {
 func ParseTimeRanges(s string) ([]TimeRange, error) {
 	var res []TimeRange
 
-	for _, segment := range strings.Split(s, ",") {
+	for segment := range strings.SplitSeq(s, ",") {
 		tr, err := ParseTimeRange(segment)
 		if err != nil {
 			return nil, err

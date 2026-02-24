@@ -2,7 +2,10 @@ template: abl-em4
 products:
   - brand: ABL
     description:
-      generic: eM4 (SBCx)
+      generic: eM4 Single (SBCx)
+  - brand: ABL
+    description:
+      generic: eM4 Twin (SBCx)
 capabilities: ["mA"]
 requirements:
   evcc: ["sponsorship"]

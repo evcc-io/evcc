@@ -77,6 +77,7 @@ export default defineComponent({
 	props: {
 		forecast: { type: Object as PropType<Forecast>, default: () => ({}) },
 		currency: { type: String as PropType<CURRENCY> },
+		experimental: Boolean,
 	},
 	data(): {
 		isModalVisible: boolean;
@@ -94,7 +95,7 @@ export default defineComponent({
 			return settings.solarAdjusted;
 		},
 		showSolarAdjust() {
-			return !!this.forecast.solar && this.$hiddenFeatures();
+			return !!this.forecast.solar && this.experimental;
 		},
 		solar() {
 			return this.showSolarAdjust && this.solarAdjusted
@@ -145,7 +146,7 @@ export default defineComponent({
 			// fallback to first available type
 			this.selectedType =
 				Object.values(ForecastType).find((type) => availableTypes[type]) ||
-				Object.values(ForecastType)[0];
+				Object.values(ForecastType)[0]!;
 		},
 		changeAdjusted() {
 			settings.solarAdjusted = !settings.solarAdjusted;

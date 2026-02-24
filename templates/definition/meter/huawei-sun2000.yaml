@@ -18,20 +18,13 @@ requirements:
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
-    allinone: true
   - name: modbus
     choice: ["rs485", "tcpip"]
   - name: timeout
     default: 15s
-  - name: storageunit
-    type: int
-    default: 1
-    advanced: true
-  - name: maxchargepower
-    default: 10000
-  - name: capacity
-    advanced: true
   - name: maxacpower
+    service: modbus/read?address=30073&type=holding&encoding=uint32&{modbus}
+  - name: storageunit
   - name: forceaccharging
     default: false
     advanced: true
@@ -43,6 +36,18 @@ params:
     help:
       en: Keep AC charging active to charge the storage from other inverters via AC. Prevents stand-by.
       de: AC-Laden bleibt aktiv zum Laden des Speichers aus anderen AC Quellen für Wechselrichterkaskaden. Verhindert Stand-by.
+  - preset: battery-params
+  - name: capacity
+    service: modbus/read?address=37758&type=holding&encoding=uint32&scale=0.001&{modbus}
+  - name: maxchargepower
+    service: modbus/read?address=37046&type=holding&encoding=uint32&{modbus}
+    required: true
+  - name: maxdischargepower
+    service: modbus/read?address=37048&type=holding&encoding=uint32&{modbus}
+  - name: minsoc
+    service: modbus/read?address=47082&type=holding&encoding=uint16&scale=0.1&{modbus}
+  - name: maxsoc
+    service: modbus/read?address=47081&type=holding&encoding=uint16&scale=0.1&{modbus}
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -276,5 +281,5 @@ render: |
                 address: 47087 # Charge from grid
                 type: writesingle
                 encoding: uint16
-  capacity: {{ .capacity }} # kWh
+  {{- include "battery-params" . }}
   {{- end }}

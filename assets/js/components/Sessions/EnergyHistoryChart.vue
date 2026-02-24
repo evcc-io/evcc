@@ -45,7 +45,7 @@ export default defineComponent({
 			if (this.sessions.length === 0) {
 				return null;
 			}
-			return new Date(this.sessions[0].created);
+			return new Date(this.sessions[0]!.created);
 		},
 		month() {
 			return (this.firstDay?.getMonth() || 0) + 1;
@@ -57,7 +57,7 @@ export default defineComponent({
 			if (this.sessions.length === 0) {
 				return null;
 			}
-			return new Date(this.sessions[this.sessions.length - 1].created);
+			return new Date(this.sessions[this.sessions.length - 1]!.created);
 		},
 		chartData(): ChartData<"bar", number[], unknown> {
 			console.log("update energy history data");
@@ -106,13 +106,14 @@ export default defineComponent({
 						const charged = session.chargedEnergy;
 						const self = (charged / 100) * session.solarPercentage;
 						const grid = charged - self;
-						result[index]["self"] = (result[index]["self"] || 0) + self;
-						result[index]["grid"] = (result[index]["grid"] || 0) + grid;
+						const item = result[index]!;
+						item["self"] = (item["self"] || 0) + self;
+						item["grid"] = (item["grid"] || 0) + grid;
 					} else {
 						const groupKey = session[this.groupBy];
 						groups.add(groupKey);
-						result[index][groupKey] =
-							(result[index][groupKey] || 0) + session.chargedEnergy;
+						result[index]![groupKey] =
+							(result[index]![groupKey] || 0) + session.chargedEnergy;
 					}
 				});
 			}
@@ -180,13 +181,13 @@ export default defineComponent({
 							const { innerWidth, innerHeight } = window;
 
 							return {
-								x: Math.min(x, innerWidth - (width || 0)),
-								y: Math.min(y, innerHeight - (height || 0)),
+								x: Math.min(x ?? 0, innerWidth - (width ?? 0)),
+								y: Math.min(y ?? 0, innerHeight - (height ?? 0)),
 							};
 						},
 						callbacks: {
 							title: (tooltipItem: TooltipItem<"bar">[]) => {
-								const { label } = tooltipItem[0];
+								const { label } = tooltipItem[0] || { label: "" };
 								if (this.period === PERIODS.TOTAL) {
 									return label;
 								} else if (this.period === PERIODS.YEAR) {

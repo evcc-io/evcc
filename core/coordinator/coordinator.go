@@ -144,7 +144,7 @@ func (c *Coordinator) identifyVehicleByStatus(available []api.Vehicle) api.Vehic
 				continue
 			}
 
-			c.log.DEBUG.Printf("vehicle status: %s (%s)", status, vehicle.Title())
+			c.log.DEBUG.Printf("vehicle status: %s (%s)", status, vehicle.GetTitle())
 
 			// vehicle is plugged or charging, so it should be the right one
 			if status == api.StatusB || status == api.StatusC {

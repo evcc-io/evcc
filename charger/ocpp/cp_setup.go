@@ -86,7 +86,7 @@ func (cp *CP) Setup(ctx context.Context, meterValues string, meterInterval time.
 
 		case match(KeySupportedFeatureProfiles):
 			if !hasProperty(*opt.Value, smartcharging.ProfileName) {
-				cp.log.WARN.Printf("the required SmartCharging feature profile is not indicated as supported")
+				cp.log.WARN.Printf("missing required SmartCharging profile")
 			}
 			// correct the availability assumption of RemoteTrigger only in case of a valid looking FeatureProfile list
 			if hasProperty(*opt.Value, core.ProfileName) {
@@ -174,7 +174,7 @@ func (cp *CP) HasMeasurement(val types.Measurand) bool {
 
 func (cp *CP) tryMeasurands(measurands string, key string) []string {
 	var accepted []string
-	for _, m := range strings.Split(measurands, ",") {
+	for m := range strings.SplitSeq(measurands, ",") {
 		if err := cp.ChangeConfigurationRequest(key, m); err == nil {
 			accepted = append(accepted, m)
 		}

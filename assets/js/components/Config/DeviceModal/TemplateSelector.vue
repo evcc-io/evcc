@@ -6,6 +6,7 @@
 			ref="select"
 			v-model="modelProxy"
 			class="form-select w-100"
+			:disabled="disabled"
 			@change="changed"
 		>
 			<template v-for="group in groups" :key="group.label">
@@ -37,7 +38,7 @@
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
 import FormRow from "../FormRow.vue";
-import type { DeviceType } from "@/types/evcc";
+import { type DeviceType } from "@/types/evcc";
 
 export interface TemplateOption {
 	name: string;
@@ -63,6 +64,7 @@ export default defineComponent({
 		modelValue: String as PropType<string | null>,
 		productName: String,
 		groups: Array as PropType<TemplateGroup[]>,
+		disabled: Boolean,
 	},
 	emits: ["update:modelValue", "change"],
 	computed: {
@@ -81,12 +83,12 @@ export default defineComponent({
 		},
 		getProductName() {
 			const select = this.$refs["select"] as HTMLSelectElement;
-			return select.options[select.selectedIndex].text;
+			return select.options[select.selectedIndex]?.text || "";
 		},
 	},
 });
 
-export function customTemplateOption(name: string) {
-	return { template: "custom", name };
+export function customTemplateOption(name: string, template = "custom") {
+	return { name, template, group: "" };
 }
 </script>

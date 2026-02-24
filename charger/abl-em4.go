@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2023 premultiply
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -53,7 +53,7 @@ func init() {
 }
 
 // NewAblEm4FromConfig creates an ABL eM4 charger from generic config
-func NewAblEm4FromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewAblEm4FromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		modbus.TcpSettings `mapstructure:",squash"`
 		Connector          uint16
@@ -175,9 +175,14 @@ func (wb *AblEm4) MaxCurrentMillis(current float64) error {
 		return fmt.Errorf("invalid current %.1f", current)
 	}
 
-	wb.current = uint16(current * 10)
+	curr := uint16(current * 10)
 
-	return wb.setCurrent(wb.current)
+	err := wb.setCurrent(curr)
+	if err == nil {
+		wb.current = curr
+	}
+
+	return err
 }
 
 var _ api.Meter = (*AblEm4)(nil)

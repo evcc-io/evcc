@@ -36,7 +36,7 @@ type Connector struct {
 	meterInterval time.Duration
 }
 
-func NewConnector(log *util.Logger, id int, cp *CP, idTag string, meterInterval time.Duration) (*Connector, error) {
+func NewConnector(ctx context.Context, log *util.Logger, id int, cp *CP, idTag string, meterInterval time.Duration) (*Connector, error) {
 	conn := &Connector{
 		log:          log,
 		cp:           cp,
@@ -52,6 +52,12 @@ func NewConnector(log *util.Logger, id int, cp *CP, idTag string, meterInterval 
 	if err := cp.registerConnector(id, conn); err != nil {
 		return nil, err
 	}
+
+	go func() {
+		// deregister connector when the context is cancelled
+		<-ctx.Done()
+		cp.deregisterConnector(conn.id)
+	}()
 
 	// trigger status for all connectors
 
@@ -105,8 +111,7 @@ func (conn *Connector) GetScheduleLimit(duration int) (float64, error) {
 // WatchDog triggers meter values messages if older than timeout.
 // Must be wrapped in a goroutine.
 func (conn *Connector) WatchDog(ctx context.Context, timeout time.Duration) {
-	tick := time.NewTicker(2 * time.Second)
-	for {
+	for tick := time.NewTicker(2 * time.Second); ; {
 		conn.mu.Lock()
 		update := conn.clock.Since(conn.meterUpdated) > timeout
 		conn.mu.Unlock()

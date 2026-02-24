@@ -37,7 +37,7 @@
 import LabelAndValue from "../Helper/LabelAndValue.vue";
 import AnimatedNumber from "../Helper/AnimatedNumber.vue";
 import formatter from "@/mixins/formatter";
-import { estimatedSoc, energyOptions, optionStep, fmtEnergy } from "@/utils/energyOptions";
+import { estimatedSoc, energyOptions, optionStep, fmtEnergy } from "@/utils/energyOptions.ts";
 import { defineComponent } from "vue";
 
 export default defineComponent({
@@ -45,9 +45,9 @@ export default defineComponent({
 	components: { LabelAndValue, AnimatedNumber },
 	mixins: [formatter],
 	props: {
-		limitEnergy: Number,
+		limitEnergy: { type: Number, default: 0 },
 		socPerKwh: Number,
-		chargedEnergy: Number,
+		chargedEnergy: { type: Number, required: true },
 		capacity: Number,
 	},
 	emits: ["limit-energy-updated"],
@@ -56,10 +56,10 @@ export default defineComponent({
 			return energyOptions(
 				this.chargedEnergy,
 				this.capacity || 100,
-				this.socPerKwh,
 				this.fmtWh,
 				this.fmtPercentage,
-				this.$t("main.targetEnergy.noLimit")
+				this.$t("main.targetEnergy.noLimit"),
+				this.socPerKwh
 			);
 		},
 		step() {

@@ -1,6 +1,6 @@
 <template>
-	<div data-testid="offline-indicator">
-		<div v-if="offline" class="modal-backdrop" />
+	<div data-testid="offline-indicator" :aria-hidden="!visible">
+		<div v-if="offline || starting" class="modal-backdrop" />
 		<div
 			class="fixed-bottom alert d-flex justify-content-center align-items-center mb-0 rounded-0 p-2"
 			:class="{ visible: visible, 'alert-danger': showError, 'alert-secondary': !showError }"
@@ -23,6 +23,14 @@
 				<CloudOffline class="m-2" />
 				{{ $t("offline.message") }}
 			</div>
+			<div v-else-if="starting" class="d-flex align-items-center">
+				<span
+					class="spinner-border spinner-border-sm m-1 me-2"
+					role="status"
+					aria-hidden="true"
+				></span>
+				{{ $t("offline.starting") }}
+			</div>
 			<div
 				v-else-if="showError"
 				class="d-flex align-items-center container px-4 justify-content-center"
@@ -38,7 +46,11 @@
 							{{ $t("offline.configurationError") }}
 						</strong>
 					</div>
-					<div v-if="fatalText" class="text-break">{{ fatalText }}</div>
+					<div class="d-flex flex-column gap-1">
+						<div v-for="fatalText in fatalTexts" :key="fatalText" class="text-break">
+							{{ fatalText }}
+						</div>
+					</div>
 				</div>
 				<RestartButton error @restart="restart" />
 			</div>
@@ -62,7 +74,8 @@ export default defineComponent({
 	},
 	props: {
 		offline: Boolean,
-		fatal: Object as PropType<FatalError>,
+		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
+		startupCompleted: Boolean,
 	},
 	data() {
 		return { dismissed: false };
@@ -74,22 +87,31 @@ export default defineComponent({
 		restarting() {
 			return restart.restarting;
 		},
+		starting() {
+			return this.startupCompleted === false;
+		},
 		visible() {
-			return this.offline || this.restartNeeded || this.restarting || this.showError;
+			return (
+				this.starting ||
+				this.offline ||
+				this.restartNeeded ||
+				this.restarting ||
+				this.showError
+			);
 		},
 		showError() {
 			return (
 				!this.offline &&
 				!this.restartNeeded &&
 				!this.restarting &&
-				this.fatal?.error &&
+				this.fatal.length > 0 &&
 				!this.dismissed
 			);
 		},
-		fatalText() {
-			const { error, class: errorClass } = this.fatal || {};
-			if (!error) return;
-			return errorClass ? `${errorClass}: ${error}` : error;
+		fatalTexts() {
+			return this.fatal.map(({ error, class: errorClass }) =>
+				errorClass ? `${errorClass}: ${error}` : error
+			);
 		},
 	},
 	watch: {
@@ -111,16 +133,19 @@ export default defineComponent({
 .alert {
 	opacity: 0;
 	transform: translateY(100%);
+	min-height: 58px;
 	transition:
 		transform var(--evcc-transition-fast) ease-in,
 		opacity var(--evcc-transition-fast) ease-in;
-	min-height: 58px;
 	/* above backdrop, below modal https://getbootstrap.com/docs/5.3/layout/z-index/ */
 	z-index: 1054 !important;
 }
 .alert.visible {
 	opacity: 1;
 	transform: translateY(0);
+	transition:
+		transform var(--evcc-transition-medium) ease-in,
+		opacity var(--evcc-transition-medium) ease-in;
 }
 
 .fatal-icon {

@@ -26,4 +26,3 @@ render: |
       address: 4129 # Total
       type: holding
       decode: uint32
-    scale: 0.1

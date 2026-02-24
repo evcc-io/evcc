@@ -49,7 +49,8 @@ export default defineComponent({
 		},
 		isPhaseActive(num: number) {
 			if (this.chargeCurrentsActive && this.chargeCurrents) {
-				return this.chargeCurrents[num - 1] >= MIN_ACTIVE_CURRENT;
+				const current = this.chargeCurrents[num - 1];
+				return current !== undefined && current >= MIN_ACTIVE_CURRENT;
 			}
 			return num <= (this.phasesActive || 0);
 		},

@@ -3,6 +3,7 @@
 		id="controlModal"
 		ref="modal"
 		:title="$t('config.control.title')"
+		config-modal-name="control"
 		data-testid="control-modal"
 		@open="open"
 	>
@@ -16,7 +17,7 @@
 				example="30 s"
 				docsLink="/docs/reference/configuration/interval"
 			>
-				<div class="input-group w-50 w-sm-25">
+				<div class="input-group input-width">
 					<input
 						id="controlInterval"
 						v-model="values.interval"
@@ -38,7 +39,7 @@
 				example="100 W"
 				docsLink="/docs/reference/configuration/site#residualpower"
 			>
-				<div class="input-group w-50 w-sm-25">
+				<div class="input-group input-width">
 					<input
 						id="controlResidualPower"
 						v-model="values.residualPower"
@@ -153,5 +154,8 @@ export default {
 	margin-left: calc(var(--bs-gutter-x) * -0.5);
 	margin-right: calc(var(--bs-gutter-x) * -0.5);
 	padding-right: 0;
+}
+.input-width {
+	width: 140px;
 }
 </style>

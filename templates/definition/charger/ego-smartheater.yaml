@@ -1,0 +1,23 @@
+template: ego-smartheater
+products:
+  - brand: E.G.O.
+    description:
+      generic: Smart Heater
+group: heating
+requirements:
+  description:
+    de: |
+      Der Smart Heater muss mit dem lokalen Netzwerk verbunden sein. Nachrichten müssen mindestens alle 60 Sekunden wiederholt werden, sonst schaltet sich der Heater aus Sicherheitsgründen ab.
+
+      **Wichtig:** Im Loadpoint-Setup `mincurrent: 4` und `maxcurrent: 16` setzen, sowie `phases: 1` für einphasigen Betrieb konfigurieren.
+    en: |
+      The Smart Heater must be connected to the local network. Messages must be repeated at least every 60 seconds, otherwise the heater will turn off for safety reasons.
+
+      **Important:** In the loadpoint configuration, set `mincurrent: 4` and `maxcurrent: 16`, as well as `phases: 1` for single-phase operation.
+  evcc: ["sponsorship"]
+params:
+  - name: modbus
+    choice: ["tcpip"]
+render: |
+  type: ego-smartheater
+  {{- include "modbus" . }}

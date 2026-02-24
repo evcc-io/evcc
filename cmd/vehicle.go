@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util/config"
@@ -18,12 +20,15 @@ var vehicleCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(vehicleCmd)
+	withCustomTemplate(vehicleCmd)
+
 	vehicleCmd.Flags().Int64P(flagCurrent, "i", 0, flagCurrentDescription)
 	vehicleCmd.Flags().BoolP(flagStart, "a", false, flagStartDescription)
 	vehicleCmd.Flags().BoolP(flagStop, "o", false, flagStopDescription)
 	vehicleCmd.Flags().BoolP(flagWakeup, "w", false, flagWakeupDescription)
 	vehicleCmd.Flags().Bool(flagDiagnose, false, flagDiagnoseDescription)
 	vehicleCmd.Flags().Bool(flagCloud, false, flagCloudDescription)
+	vehicleCmd.Flags().Duration(flagTimeout, time.Second, flagTimeoutDescription)
 }
 
 func runVehicle(cmd *cobra.Command, args []string) {
@@ -111,19 +116,22 @@ func runVehicle(cmd *cobra.Command, args []string) {
 	}
 
 	if !flagUsed {
-		d := dumper{len: len(vehicles)}
+		timeout, _ := cmd.Flags().GetDuration(flagTimeout)
+		d := dumper{len: len(vehicles), timeout: timeout}
 		flag := cmd.Flag(flagDiagnose).Changed
 
 		for _, dev := range vehicles {
 			v := dev.Instance()
 
-			d.DumpWithHeader(dev.Config().Name, v)
+			header := dev.Config().Name
+			if title := v.GetTitle(); title != "" {
+				header = fmt.Sprintf("%s (%s)", title, header)
+			}
+
+			d.DumpWithHeader(header, v)
 			if flag {
 				d.DumpDiagnosis(v)
 			}
 		}
 	}
-
-	// wait for shutdown
-	<-shutdownDoneC()
 }

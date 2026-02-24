@@ -31,7 +31,7 @@ func init() {
 }
 
 // NewScriptPluginFromConfig creates a script plugin.
-func NewScriptPluginFromConfig(other map[string]interface{}) (Plugin, error) {
+func NewScriptPluginFromConfig(other map[string]any) (Plugin, error) {
 	cc := struct {
 		Cmd               string
 		pipeline.Settings `mapstructure:",squash"`
@@ -92,8 +92,7 @@ func (p *Script) exec(script string) (string, error) {
 
 	if err != nil {
 		// use STDOUT if available
-		var ee *exec.ExitError
-		if errors.As(err, &ee) {
+		if ee, ok := errors.AsType[*exec.ExitError](err); ok {
 			s = strings.TrimSpace(string(ee.Stderr))
 		}
 
@@ -128,7 +127,7 @@ func (p *Script) StringGetter() (func() (string, error), error) {
 
 func scriptSetter[T any](p *Script, param string) (func(T) error, error) {
 	return func(val T) error {
-		cmd, err := util.ReplaceFormatted(p.script, map[string]interface{}{
+		cmd, err := util.ReplaceFormatted(p.script, map[string]any{
 			param: val,
 		})
 

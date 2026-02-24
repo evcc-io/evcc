@@ -9,15 +9,6 @@ requirements:
 group: solar
 params:
   - preset: forecast-base
-  - name: az
-    description:
-      en: Azimuth
-      de: Azimut
-    help:
-      en: -180 = north, -90 = east, 0 = south, 90 = west, 180 = north
-      de: -180 = Norden, -90 = Osten, 0 = Süden, 90 = Westen, 180 = Norden
-    example: 180
-    required: true
   - name: horizon
     description:
       en: Horizon
@@ -28,9 +19,6 @@ params:
     example: 0,0,15,30,45,60,60,60,45,30,15,0
     advanced: true
   - name: apikey
-    description:
-      en: API key
-      de: API-Key
     advanced: true
   - name: interval
     default: 1h
@@ -38,6 +26,7 @@ params:
 render: |
   type: custom
   tariff: solar
+  features: ["cacheable"]
   forecast:
     source: http
     uri: https://api.forecast.solar/{{ if .apikey }}{{ .apikey }}/{{ end }}estimate/{{ .lat }}/{{ .lon }}/{{ .dec }}/{{ .az }}/{{ .kwp }}?time=utc&full=1&resolution=60{{ if .horizon }}&horizon={{ unquote .horizon }}{{ end }}

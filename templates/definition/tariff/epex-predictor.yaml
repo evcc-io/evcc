@@ -1,0 +1,37 @@
+template: epex-predictor
+products:
+  - brand: EPEX Predictor
+    description:
+      generic: Predicted EPEX spot prices
+requirements:
+  description:
+    de: EPEX Spot Preisvorhersagen von epexpredictor.batzill.com
+    en: EPEX spot price predictions from epexpredictor.batzill.com
+  evcc: ["skiptest"]
+group: price
+countries: ["DE", "AT", "NL", "BE", "SE", "DK"]
+params:
+  - name: uri
+    default: https://epexpredictor.batzill.com
+    description:
+      en: API endpoint (for self-hosted instances)
+      de: API-Endpunkt (für selbst gehostete Instanzen)
+    advanced: true
+  - name: region
+    example: DE
+    type: choice
+    choice: ["DE", "AT", "NL", "BE", "SE_1", "SE_2", "SE_3", "SE_4", "DK_1", "DK_2"]
+    required: true
+  - preset: tariff-base
+render: |
+  type: custom
+  {{ include "tariff-base" . }}
+  forecast:
+    source: http
+    uri: {{ .uri }}/prices?region={{ .region }}&unit=EUR_PER_KWH&timezone=UTC
+    jq: |
+      [.prices[] | {
+        "start": .startsAt,
+        "end": (.startsAt | strptime("%Y-%m-%dT%H:%M:%SZ") | mktime + 900 | strftime("%Y-%m-%dT%H:%M:%SZ")),
+        "value": .total
+      }] | tostring

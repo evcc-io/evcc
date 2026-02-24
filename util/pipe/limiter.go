@@ -15,14 +15,14 @@ type Piper interface {
 
 type cacheItem struct {
 	updated time.Time
-	val     interface{}
+	val     any
 }
 
 // Deduplicator allows filtering of channel data by given criteria
 type Deduplicator struct {
 	clock    clock.Clock
 	interval time.Duration
-	filter   map[string]interface{}
+	filter   map[string]any
 	cache    map[string]cacheItem
 }
 
@@ -31,7 +31,7 @@ func NewDeduplicator(interval time.Duration, filter ...string) Piper {
 	l := &Deduplicator{
 		clock:    clock.New(),
 		interval: interval,
-		filter:   make(map[string]interface{}),
+		filter:   make(map[string]any),
 		cache:    make(map[string]cacheItem),
 	}
 

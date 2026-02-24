@@ -5,16 +5,15 @@ products:
   - brand: Solinteng
   - brand: A-Tronix
   - brand: St-ems
+capabilities: ["battery-control"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
-    allinone: true
   - name: modbus
     choice: ["rs485"]
     port: 502
     id: 247
-  - name: capacity
-    advanced: true
+  - preset: battery-params
   - name: delay
     default: 100ms
     advanced: true
@@ -108,5 +107,13 @@ render: |
       address: 43000    # SOC
       type: holding
       decode: int16
-  capacity: {{ .capacity }} # kWh
+  limitsoc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    delay: {{ .delay }}
+    register:
+      address: 52503 # min soc
+      type: writeholding
+      encoding: uint16
+  {{- include "battery-params" . }}
   {{- end }}

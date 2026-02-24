@@ -3,6 +3,9 @@ products:
   - brand: Free2Move
     description:
       generic: eProWallbox
+  - brand: Free2Move
+    description:
+      generic: eProWallbox Move
 capabilities: ["mA"]
 requirements:
   evcc: ["sponsorship"]

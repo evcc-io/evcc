@@ -1,6 +1,15 @@
 <template>
-	<li class="root round-box" :class="{ 'round-box--error': error }">
-		<div class="d-flex align-items-center mb-2">
+	<div
+		class="root"
+		:class="{
+			'round-box': !unconfigured,
+			'round-box--error': error,
+			'round-box--warning': warning,
+			'root--unconfigured': unconfigured,
+			'root--with-tags': $slots.tags,
+		}"
+	>
+		<div class="d-flex align-items-center" :class="{ 'mb-2': $slots.tags }">
 			<div class="icon me-2">
 				<slot name="icon" />
 			</div>
@@ -10,81 +19,37 @@
 				:title="name"
 				>{{ title }}</strong
 			>
-			<button
-				ref="tooltip"
-				type="button"
-				class="btn btn-sm btn-outline-secondary position-relative border-0 p-2"
-				:class="{ 'opacity-25': !editable }"
-				data-bs-toggle="tooltip"
-				data-bs-html="true"
-				:title="tooltipTitle"
-				:aria-label="editable ? $t('config.main.edit') : null"
-				:disabled="!editable"
-				@click="edit"
-			>
-				<shopicon-regular-adjust size="s"></shopicon-regular-adjust>
-			</button>
+			<DeviceCardEditIcon
+				:editable="editable"
+				:noEditButton="noEditButton"
+				:badge="badge"
+				@edit="$emit('edit')"
+			/>
 		</div>
-		<hr class="my-3 divide" />
-		<slot name="tags" />
-	</li>
+		<div v-if="$slots.tags">
+			<hr class="my-3 divide" />
+			<slot name="tags" />
+		</div>
+	</div>
 </template>
 
 <script>
-import "@h2d2/shopicons/es/regular/adjust";
-import "@h2d2/shopicons/es/regular/invoice";
-import Tooltip from "bootstrap/js/dist/tooltip";
+import DeviceCardEditIcon from "./DeviceCardEditIcon.vue";
 
 export default {
 	name: "DeviceCard",
+	components: { DeviceCardEditIcon },
 	props: {
 		name: String,
 		title: String,
 		editable: Boolean,
 		error: Boolean,
+		unconfigured: Boolean,
+		warning: Boolean,
+		noEditButton: Boolean,
+		badge: Boolean,
 	},
 	emits: ["edit"],
-	data() {
-		return {
-			tooltip: null,
-		};
-	},
-	computed: {
-		tooltipTitle() {
-			if (!this.name) {
-				return "";
-			}
-			let title = `${this.$t("config.main.name")}: <span class='font-monospace'>${this.name}</span>`;
-			if (!this.editable) {
-				title += `<div class="mt-1">${this.$t("config.main.yaml")}</div>`;
-			}
-			return `<div class="text-start">${title}</div>`;
-		},
-	},
-	watch: {
-		tooltipTitle() {
-			this.initTooltip();
-		},
-	},
-	mounted() {
-		this.initTooltip();
-	},
-	methods: {
-		edit() {
-			if (this.editable) {
-				this.tooltip?.hide();
-				this.$emit("edit");
-			}
-		},
-		initTooltip() {
-			this.$nextTick(() => {
-				this.tooltip?.dispose();
-				if (this.$refs.tooltip) {
-					this.tooltip = new Tooltip(this.$refs.tooltip);
-				}
-			});
-		},
-	},
 };
 </script>
 
@@ -94,7 +59,23 @@ export default {
 	list-style-type: none;
 	border-radius: 1rem;
 	padding: 1rem 1.5rem;
+}
+.root--with-tags {
 	min-height: 8rem;
+}
+.root--unconfigured {
+	background: none;
+	border: 1px solid var(--evcc-gray-50);
+	transition: border-color var(--evcc-transition-fast) linear;
+	order: 1; /* unconfigured tiles at the end of the list */
+}
+.root--unconfigured:hover {
+	border-color: var(--evcc-default-text);
+}
+.root--unconfigured :deep(.value),
+.root--unconfigured :deep(.label) {
+	color: var(--evcc-gray) !important;
+	font-weight: normal !important;
 }
 .icon:empty {
 	display: none;
@@ -102,8 +83,5 @@ export default {
 .divide {
 	margin-left: -1.5rem;
 	margin-right: -1.5rem;
-}
-button:disabled {
-	pointer-events: auto;
 }
 </style>

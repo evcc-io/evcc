@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _ClassName = "configfilemeterchargervehicletariffcircuitsitemqttdatabasemodbusproxyeebusjavascriptgohemsinfluxmessengersponsorshiploadpoint"
+const _ClassName = "configfilemeterchargervehicletariffcircuitsitemqttdatabasemodbusproxyeebusjavascriptgohemsshminfluxmessengersponsorshiploadpoint"
 
-var _ClassIndex = [...]uint8{0, 10, 15, 22, 29, 35, 42, 46, 50, 58, 69, 74, 84, 86, 90, 96, 105, 116, 125}
+var _ClassIndex = [...]uint8{0, 10, 15, 22, 29, 35, 42, 46, 50, 58, 69, 74, 84, 86, 90, 93, 99, 108, 119, 128}
 
-const _ClassLowerName = "configfilemeterchargervehicletariffcircuitsitemqttdatabasemodbusproxyeebusjavascriptgohemsinfluxmessengersponsorshiploadpoint"
+const _ClassLowerName = "configfilemeterchargervehicletariffcircuitsitemqttdatabasemodbusproxyeebusjavascriptgohemsshminfluxmessengersponsorshiploadpoint"
 
 func (i Class) String() string {
 	i -= 1
@@ -39,13 +39,14 @@ func _ClassNoOp() {
 	_ = x[ClassJavascript-(12)]
 	_ = x[ClassGo-(13)]
 	_ = x[ClassHEMS-(14)]
-	_ = x[ClassInflux-(15)]
-	_ = x[ClassMessenger-(16)]
-	_ = x[ClassSponsorship-(17)]
-	_ = x[ClassLoadpoint-(18)]
+	_ = x[ClassSHM-(15)]
+	_ = x[ClassInflux-(16)]
+	_ = x[ClassMessenger-(17)]
+	_ = x[ClassSponsorship-(18)]
+	_ = x[ClassLoadpoint-(19)]
 }
 
-var _ClassValues = []Class{ClassConfigFile, ClassMeter, ClassCharger, ClassVehicle, ClassTariff, ClassCircuit, ClassSite, ClassMqtt, ClassDatabase, ClassModbusProxy, ClassEEBus, ClassJavascript, ClassGo, ClassHEMS, ClassInflux, ClassMessenger, ClassSponsorship, ClassLoadpoint}
+var _ClassValues = []Class{ClassConfigFile, ClassMeter, ClassCharger, ClassVehicle, ClassTariff, ClassCircuit, ClassSite, ClassMqtt, ClassDatabase, ClassModbusProxy, ClassEEBus, ClassJavascript, ClassGo, ClassHEMS, ClassSHM, ClassInflux, ClassMessenger, ClassSponsorship, ClassLoadpoint}
 
 var _ClassNameToValueMap = map[string]Class{
 	_ClassName[0:10]:         ClassConfigFile,
@@ -76,14 +77,16 @@ var _ClassNameToValueMap = map[string]Class{
 	_ClassLowerName[84:86]:   ClassGo,
 	_ClassName[86:90]:        ClassHEMS,
 	_ClassLowerName[86:90]:   ClassHEMS,
-	_ClassName[90:96]:        ClassInflux,
-	_ClassLowerName[90:96]:   ClassInflux,
-	_ClassName[96:105]:       ClassMessenger,
-	_ClassLowerName[96:105]:  ClassMessenger,
-	_ClassName[105:116]:      ClassSponsorship,
-	_ClassLowerName[105:116]: ClassSponsorship,
-	_ClassName[116:125]:      ClassLoadpoint,
-	_ClassLowerName[116:125]: ClassLoadpoint,
+	_ClassName[90:93]:        ClassSHM,
+	_ClassLowerName[90:93]:   ClassSHM,
+	_ClassName[93:99]:        ClassInflux,
+	_ClassLowerName[93:99]:   ClassInflux,
+	_ClassName[99:108]:       ClassMessenger,
+	_ClassLowerName[99:108]:  ClassMessenger,
+	_ClassName[108:119]:      ClassSponsorship,
+	_ClassLowerName[108:119]: ClassSponsorship,
+	_ClassName[119:128]:      ClassLoadpoint,
+	_ClassLowerName[119:128]: ClassLoadpoint,
 }
 
 var _ClassNames = []string{
@@ -101,10 +104,11 @@ var _ClassNames = []string{
 	_ClassName[74:84],
 	_ClassName[84:86],
 	_ClassName[86:90],
-	_ClassName[90:96],
-	_ClassName[96:105],
-	_ClassName[105:116],
-	_ClassName[116:125],
+	_ClassName[90:93],
+	_ClassName[93:99],
+	_ClassName[99:108],
+	_ClassName[108:119],
+	_ClassName[119:128],
 }
 
 // ClassString retrieves an enum value from the enum constants string name.

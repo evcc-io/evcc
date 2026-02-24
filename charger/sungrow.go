@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2024 premultiply
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -21,11 +21,11 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
-	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/volkszaehler/mbmd/meters/rs485"
 )
 
@@ -68,7 +68,7 @@ func init() {
 }
 
 // NewSungrowFromConfig creates a Sungrow charger from generic config
-func NewSungrowFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewSungrowFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := modbus.Settings{
 		ID: 248,
 	}
@@ -87,10 +87,6 @@ func NewSungrow(ctx context.Context, uri, device, comset string, baudrate int, p
 		return nil, err
 	}
 
-	if !sponsor.IsAuthorized() {
-		return nil, api.ErrSponsorRequired
-	}
-
 	log := util.NewLogger("sungrow")
 	conn.Logger(log.TRACE)
 
@@ -100,7 +96,22 @@ func NewSungrow(ctx context.Context, uri, device, comset string, baudrate int, p
 		curr: 60,
 	}
 
-	return wb, err
+	go wb.heartbeat(ctx)
+
+	return wb, nil
+}
+
+func (wb *Sungrow) heartbeat(ctx context.Context) {
+	for tick := time.Tick(30 * time.Second); ; {
+		select {
+		case <-tick:
+		case <-ctx.Done():
+			return
+		}
+		if _, err := wb.conn.ReadInputRegisters(sgRegState, 1); err != nil {
+			wb.log.ERROR.Println("heartbeat:", err)
+		}
+	}
 }
 
 // getPhaseValues returns 3 non-sequential register values
@@ -212,7 +223,7 @@ func (wb *Sungrow) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-	return rs485.RTUUint32ToFloat64Swapped(b), err
+	return rs485.RTUUint32ToFloat64Swapped(b), nil
 }
 
 var _ api.PhaseCurrents = (*Sungrow)(nil)
@@ -238,7 +249,7 @@ func (wb *Sungrow) TotalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return rs485.RTUUint32ToFloat64Swapped(b) / 1e3, err
+	return rs485.RTUUint32ToFloat64Swapped(b) / 1e3, nil
 }
 
 var _ api.PhaseSwitcher = (*Sungrow)(nil)
@@ -251,10 +262,11 @@ func (wb *Sungrow) Phases1p3p(phases int) error {
 		u = 1
 	}
 
-	// Switch phases
-	_, err := wb.conn.WriteSingleRegister(sgRegPhaseSwitch, u)
-
-	return err
+	return whenDisabled(wb, func() error {
+		// Switch phases
+		_, err := wb.conn.WriteSingleRegister(sgRegPhaseSwitch, u)
+		return err
+	})
 }
 
 var _ api.PhaseGetter = (*Sungrow)(nil)

@@ -3,24 +3,26 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"maps"
 	"net"
 	"os"
-	"regexp"
-	"slices"
 	"strings"
 
 	"github.com/evcc-io/evcc/cmd/shutdown"
+	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
-	"gopkg.in/yaml.v3"
+	"github.com/evcc-io/evcc/util/config"
+	"go.yaml.in/yaml/v4"
 )
 
 // parseLogLevels parses --log area:level[,...] switch into levels per log area
 func parseLogLevels() {
 	levels := viper.GetStringMapString("levels")
+	if levels == nil {
+		levels = make(map[string]string)
+	}
 
 	var level string
-	for _, kv := range strings.Split(viper.GetString("log"), ",") {
+	for kv := range strings.SplitSeq(viper.GetString("log"), ",") {
 		areaLevel := strings.SplitN(kv, ":", 2)
 		if len(areaLevel) == 1 {
 			level = areaLevel[0]
@@ -48,35 +50,6 @@ func unwrap(err error) (res []string) {
 	return
 }
 
-var redactSecrets = []string{
-	"mac",                   // infrastructure
-	"sponsortoken", "plant", // global settings
-	"apikey", "user", "password", "pin", // users
-	"token", "access", "refresh", "accesstoken", "refreshtoken", // tokens, including template variations
-	"ain", "secret", "serial", "deviceid", "machineid", "idtag", // devices
-	"app", "chats", "recipients", // push messaging
-	"vin",               // vehicles
-	"lat", "lon", "zip", // solar forecast
-}
-
-// redact redacts a configuration string
-func redact(src string) string {
-	return regexp.
-		MustCompile(fmt.Sprintf(`(?i)\b(%s)\b.*?:.*`, strings.Join(redactSecrets, "|"))).
-		ReplaceAllString(src, "$1: *****")
-}
-
-func redactMap(src map[string]any) map[string]any {
-	res := maps.Clone(src)
-	for k := range res {
-		if slices.Contains(redactSecrets, k) {
-			res[k] = "*****"
-		}
-	}
-
-	return res
-}
-
 // fatal logs a fatal error and runs shutdown functions before terminating
 func fatal(err error) {
 	log.FATAL.Println(err)
@@ -91,22 +64,31 @@ func shutdownDoneC() <-chan struct{} {
 	return doneC
 }
 
+// joinErrors is like errors.Join but does not wrap single errors (refs https://groups.google.com/g/golang-nuts/c/N0D1g5Ec_ZU)
+func joinErrors(errs ...error) error {
+	switch len(errs) {
+	case 0:
+		return nil
+	case 1:
+		return errs[0]
+	default:
+		return errors.Join(errs...)
+	}
+}
+
 func wrapFatalError(err error) error {
 	if err == nil {
 		return nil
 	}
 
-	var opErr *net.OpError
-	var pathErr *os.PathError
-
-	switch {
-	case errors.As(err, &opErr):
-		if opErr.Op == "listen" && strings.Contains(opErr.Error(), "address already in use") {
+	if err2, ok := errors.AsType[*net.OpError](err); ok {
+		if err2.Op == "listen" && strings.Contains(err2.Error(), "address already in use") {
 			err = fmt.Errorf("could not open port- check that evcc is not already running (%w)", err)
 		}
+	}
 
-	case errors.As(err, &pathErr):
-		if pathErr.Op == "remove" && strings.Contains(pathErr.Error(), "operation not permitted") {
+	if err2, ok := errors.AsType[*os.PathError](err); ok {
+		if err2.Op == "remove" && strings.Contains(err2.Error(), "operation not permitted") {
 			err = fmt.Errorf("could not remove file- check that evcc is not already running (%w)", err)
 		}
 	}
@@ -123,4 +105,29 @@ func customDevice(other map[string]any) (map[string]any, error) {
 	var res map[string]any
 	err := yaml.Unmarshal([]byte(customYaml), &res)
 	return res, err
+}
+
+func deviceHeader[T any](dev config.Device[T]) string {
+	name := dev.Config().Name
+
+	if cd, ok := dev.(config.ConfigurableDevice[T]); ok {
+		if title := cd.Properties().Title; title != "" {
+			return fmt.Sprintf("%s (%s)", title, name)
+		}
+	}
+
+	return name
+}
+
+// migrateYamlToJson converts a settings value from yaml to json if needed
+func migrateYamlToJson[T any](key string, res *T) error {
+	if settings.IsJson(key) {
+		return settings.Json(key, res)
+	}
+
+	if err := settings.Yaml(key, new(T), res); err != nil {
+		return err
+	}
+
+	return settings.SetJson(key, res)
 }

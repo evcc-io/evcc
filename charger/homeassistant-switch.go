@@ -2,20 +2,16 @@ package charger
 
 import (
 	"errors"
-	"fmt"
-	"net/http"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/request"
-	"github.com/evcc-io/evcc/util/transport"
+	"github.com/evcc-io/evcc/util/homeassistant"
 )
 
 type HomeAssistantSwitch struct {
-	baseURL      string
-	switchEntity string
-	powerEntity  string
-	*request.Helper
+	conn   *homeassistant.Connection
+	enable string
+	power  string
 	*switchSocket
 }
 
@@ -23,13 +19,14 @@ func init() {
 	registry.Add("homeassistant-switch", NewHomeAssistantSwitchFromConfig)
 }
 
-func NewHomeAssistantSwitchFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewHomeAssistantSwitchFromConfig(other map[string]any) (api.Charger, error) {
 	var cc struct {
 		embed        `mapstructure:",squash"`
-		BaseURL      string
-		Token        string
-		SwitchEntity string
-		PowerEntity  string
+		URI          string
+		Token_       string `mapstructure:"token"` // TODO deprecated
+		Home         string // TODO deprecated
+		Enable       string
+		Power        string
 		StandbyPower float64
 	}
 
@@ -37,73 +34,48 @@ func NewHomeAssistantSwitchFromConfig(other map[string]interface{}) (api.Charger
 		return nil, err
 	}
 
-	return NewHomeAssistantSwitch(cc.embed, cc.BaseURL, cc.Token, cc.SwitchEntity, cc.PowerEntity, cc.StandbyPower)
+	return NewHomeAssistantSwitch(cc.embed, cc.URI, cc.Home, cc.Enable, cc.Power, cc.StandbyPower)
 }
 
-//go:generate go tool decorate -f decorateHomeAssistantSwitch -b *HomeAssistantSwitch -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)"
+func NewHomeAssistantSwitch(embed embed, uri, home, enable, power string, standbypower float64) (api.Charger, error) {
+	if enable == "" {
+		return nil, errors.New("missing enable switch entity")
+	}
 
-func NewHomeAssistantSwitch(embed embed, baseURL, token, switchEntity, powerEntity string, standbypower float64) (api.Charger, error) {
+	// standbypower < 0 ensures that currentPower is never used by the switch socket if not present
+	if power == "" && standbypower >= 0 {
+		return nil, errors.New("missing either power entity or negative standbypower")
+	}
+
+	log := util.NewLogger("ha-switch")
+
+	conn, err := homeassistant.NewConnection(log, uri, home)
+	if err != nil {
+		return nil, err
+	}
+
 	c := &HomeAssistantSwitch{
-		baseURL:      baseURL,
-		switchEntity: switchEntity,
-		powerEntity:  powerEntity,
-		Helper:       request.NewHelper(util.NewLogger("ha-switch")),
-	}
-
-	if switchEntity == "" {
-		return nil, errors.New("missing switch entity")
-	}
-	if powerEntity == "" {
-		return nil, errors.New("missing power entity")
+		enable: enable,
+		power:  power,
+		conn:   conn,
 	}
 
 	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.currentPower, standbypower)
-	c.Helper.Client.Transport = &transport.Decorator{
-		Decorator: transport.DecorateHeaders(map[string]string{
-			"Authorization": "Bearer " + token,
-			"Content-Type":  "application/json",
-		}),
-		Base: c.Helper.Client.Transport,
-	}
 
-	return decorateHomeAssistantSwitch(c, c.currentPower), nil
+	return c, nil
 }
 
 // Enabled implements the api.Charger interface
 func (c *HomeAssistantSwitch) Enabled() (bool, error) {
-	var res struct {
-		State string `json:"state"`
-	}
-
-	uri := fmt.Sprintf("%s/api/states/%s", c.baseURL, c.switchEntity)
-	err := c.Helper.GetJSON(uri, &res)
-
-	return res.State == "on", err
+	return c.conn.GetBoolState(c.enable)
 }
 
 // Enable implements the api.Charger interface
 func (c *HomeAssistantSwitch) Enable(enable bool) error {
-	service := "turn_off"
-	if enable {
-		service = "turn_on"
-	}
-
-	data := map[string]any{"entity_id": c.switchEntity}
-
-	uri := fmt.Sprintf("%s/api/services/switch/%s", c.baseURL, service)
-	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
-
-	return c.Helper.DoJSON(req, nil)
+	return c.conn.CallSwitchService(c.enable, enable)
 }
 
 // currentPower implements the api.Meter interface (optional)
 func (c *HomeAssistantSwitch) currentPower() (float64, error) {
-	var res struct {
-		State float64 `json:"state,string"`
-	}
-
-	uri := fmt.Sprintf("%s/api/states/%s", c.baseURL, c.powerEntity)
-	err := c.Helper.GetJSON(uri, &res)
-
-	return res.State, err
+	return c.conn.GetFloatState(c.power)
 }

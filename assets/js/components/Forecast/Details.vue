@@ -36,6 +36,14 @@
 			</div>
 		</div>
 	</div>
+	<div v-else-if="isConstantValue" class="row">
+		<div class="col-6 col-sm-4 mb-3 d-flex flex-column">
+			<div class="label">{{ label("constant") }}</div>
+			<div class="value text-price text-nowrap" :class="highlightColor">
+				{{ constantValue }}
+			</div>
+		</div>
+	</div>
 	<div v-else class="row">
 		<div class="col-12 col-sm-6 col-lg-4 mb-3 d-flex flex-column">
 			<div class="label">{{ label("range") }}</div>
@@ -65,11 +73,15 @@
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
+import minuteTicker from "@/mixins/minuteTicker";
 import AnimatedNumber from "../Helper/AnimatedNumber.vue";
-import type { CURRENCY, Timeout } from "@/types/evcc";
-import { ForecastType } from "@/utils/forecast";
+import type { CURRENCY } from "@/types/evcc";
+import { ForecastType, findLowestSumSlotIndex } from "@/utils/forecast";
 import type { ForecastSlot, SolarDetails } from "./types";
 const LOCALES_WITHOUT_DAY_AFTER_TOMORROW = ["en", "tr"];
+
+const FORECASTED_HOURS = 96;
+const SLOTS_PER_HOUR = 4;
 
 export interface Energy {
 	energy: string;
@@ -87,7 +99,7 @@ export default defineComponent({
 	components: {
 		AnimatedNumber,
 	},
-	mixins: [formatter],
+	mixins: [formatter, minuteTicker],
 	props: {
 		type: { type: String as () => ForecastType, required: true },
 		grid: { type: Array as PropType<ForecastSlot[]> },
@@ -98,7 +110,6 @@ export default defineComponent({
 	data() {
 		return {
 			now: new Date(),
-			interval: null as Timeout,
 		};
 	},
 	computed: {
@@ -111,7 +122,20 @@ export default defineComponent({
 		upcomingSlots(): ForecastSlot[] {
 			const now = this.now;
 			const slots = this.isPrice ? this.grid || [] : this.co2 || [];
-			return slots.filter((slot) => new Date(slot.end) > now).slice(0, 48);
+			return slots
+				.filter((slot) => new Date(slot.end) > now)
+				.slice(0, FORECASTED_HOURS * SLOTS_PER_HOUR);
+		},
+		isConstantValue(): boolean {
+			if (this.isSolar) return false;
+			const slots = this.upcomingSlots;
+			if (slots.length === 0) return false;
+
+			const firstValue = slots[0]?.value;
+			return slots.every((slot) => slot.value === firstValue);
+		},
+		constantValue(): string {
+			return this.fmtValue(this.upcomingSlots[0]!.value, true);
 		},
 		averagePrice() {
 			if (this.isSolar) return "";
@@ -129,12 +153,15 @@ export default defineComponent({
 		lowestPriceHour() {
 			if (this.isSolar) return "";
 			const slots = this.upcomingSlots;
-			const min = Math.min(...slots.map((slot) => slot.value));
-			const slot = slots.find((slot) => slot.value === min);
-			if (!slot) return "";
-			const start = new Date(slot.start);
-			const end = new Date(slot.end);
-			return `${this.weekdayShort(start)} ${this.hourShort(start)} – ${this.hourShort(end)}`;
+			const index = findLowestSumSlotIndex(slots, SLOTS_PER_HOUR);
+			if (index === -1) return "";
+			const startSlot = slots[index];
+			const endSlot = slots[index + SLOTS_PER_HOUR - 1];
+			if (!startSlot || !endSlot) return "";
+			const start = new Date(startSlot.start);
+			const end = new Date(endSlot.end);
+
+			return `${this.weekdayShort(start)} ${this.fmtHourMinute(start)} – ${this.fmtHourMinute(end)}`;
 		},
 		highlightColor() {
 			switch (this.type) {
@@ -147,16 +174,13 @@ export default defineComponent({
 			}
 		},
 	},
+	watch: {
+		everyMinute(): void {
+			this.now = new Date();
+		},
+	},
 	mounted() {
 		this.now = new Date();
-		this.interval = setInterval(() => {
-			this.now = new Date();
-		}, 1000 * 60);
-	},
-	beforeUnmount() {
-		if (this.interval) {
-			clearInterval(this.interval);
-		}
 	},
 	methods: {
 		label(key: string) {
