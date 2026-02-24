@@ -275,7 +275,10 @@ func dialWebsocket(ctx context.Context, wsURI string, auth *wsAuth) (*websocket.
 		Count:    1,
 	}
 
-	cred, _ := digest.Digest(chal, *digOpts)
+	cred, err := digest.Digest(chal, *digOpts);
+	if err != nil {
+		return nil, err
+	}
 
 	// Dial with Digest Auth
 	dialer := websocket.DialOptions{
