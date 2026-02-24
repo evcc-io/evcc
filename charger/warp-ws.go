@@ -20,7 +20,6 @@ import (
 	"github.com/evcc-io/evcc/charger/warp"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/icholy/digest"
 )
 
 type WarpWS struct {
@@ -117,9 +116,10 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 		}
 		wb.pmHelper = request.NewHelper(wb.log)
 		if cc.EnergyManagerUser != "" {
-			wb.pmHelper.Client.Transport = &digest.Transport{
+			wb.pmHelper.Client.Transport = &warp.DigestTransport{
 				Username: cc.EnergyManagerUser,
 				Password: cc.EnergyManagerPassword,
+				Base:     wb.pmHelper.Client.Transport,
 			}
 		}
 	}
@@ -159,9 +159,10 @@ func NewWarpWS(ctx context.Context, uri, user, password string, meterIndex uint)
 
 	client := request.NewHelper(log)
 	if user != "" {
-		client.Client.Transport = &digest.Transport{
+		client.Client.Transport = &warp.DigestTransport{
 			Username: user,
 			Password: password,
+			Base:     client.Client.Transport,
 		}
 	}
 
@@ -202,7 +203,7 @@ func (w *WarpWS) run(uri, user, pass string, ctx context.Context) {
 			if conn != nil {
 				conn.Close(websocket.StatusInternalError, "dial failed")
 			}
-			w.log.ERROR.Printf("ws dial to %s failed: %v", uri, err)
+			w.log.ERROR.Printf("ws dial failed: %v", err)
 		} else {
 			w.log.DEBUG.Printf("ws connected to %s", uri)
 			bo.Reset()
@@ -233,29 +234,22 @@ func dialWebsocket(ctx context.Context, wsURL, user, pass string) (*websocket.Co
 	}
 
 	// Extract challeng from response
-	if resp == nil {
-		return nil, nil, fmt.Errorf("no response on websocket dial")
-	}
 	www := resp.Header.Get("WWW-Authenticate")
+	resp.Body.Close()
 
-	chal, err := digest.ParseChallenge(www)
+	ch, err := warp.ParseDigestChallenge(www)
 	if err != nil {
 		return nil, resp, fmt.Errorf("digest parse error: %w", err)
 	}
 
-	cred, _ := digest.Digest(chal, digest.Options{
-		Username: user,
-		Password: pass,
-		Method:   "GET",
-		URI:      wsURL,
-		Count:    1,
-	})
-	resp.Body.Close()
+	// Build authorization header
+	u, _ := url.Parse(wsURL)
+	auth := warp.BuildDigestAuthHeader(ch, "GET", u.Path, user, pass)
 
 	// Dial with Digest Auth
 	dialer := websocket.DialOptions{
 		HTTPHeader: http.Header{
-			"Authorization": []string{cred.String()},
+			"Authorization": []string{auth},
 		},
 	}
 
