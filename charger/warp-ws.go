@@ -31,8 +31,6 @@ type WarpWS struct {
 	uri        string
 	pmURI      string
 	meterIndex uint
-	user       string
-	password   string
 
 	mu sync.RWMutex
 
@@ -175,8 +173,6 @@ func NewWarpWS(ctx context.Context, uri, user, password string, meterIndex uint)
 		meterMap:            map[int]int{},
 		metersValueIDsTopic: fmt.Sprintf("meters/%d/value_ids", meterIndex),
 		metersValuesTopic:   fmt.Sprintf("meters/%d/values", meterIndex),
-		user:                user,
-		password:            password,
 	}
 
 	uri, err := parseURI(w.uri, true)
@@ -187,19 +183,19 @@ func NewWarpWS(ctx context.Context, uri, user, password string, meterIndex uint)
 		}
 	}
 
-	go w.run(uri, ctx)
+	go w.run(uri, user, password, ctx)
 
 	return w, nil
 }
 
-func (w *WarpWS) run(uri string, ctx context.Context) {
+func (w *WarpWS) run(uri, user, pass string, ctx context.Context) {
 	bo := backoff.NewExponentialBackOff(backoff.WithMaxElapsedTime(0))
 	bo.MaxInterval = 30 * time.Second
 
 	for ctx.Err() == nil {
 		w.log.DEBUG.Printf("ws connecting to %s …", uri)
 
-		conn, resp, err := dialWebsocket(ctx, uri, w.user, w.password)
+		conn, resp, err := dialWebsocket(ctx, uri, user, pass)
 		if err != nil {
 			if resp != nil {
 				resp.Body.Close()
@@ -390,6 +386,7 @@ func (w *WarpWS) hasFeature(feature string) bool {
 
 	var f []string
 	if err := w.GetJSON(uri, &f); err == nil {
+		w.log.DEBUG.Printf("%s features response: %s", w.uri, f)
 		w.mu.Lock()
 		w.features = f
 		w.mu.Unlock()
@@ -497,6 +494,7 @@ func (w *WarpWS) disablePhaseAutoSwitch() error {
 	uri := fmt.Sprintf("%s/evse/phase_auto_switch", w.uri)
 	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(map[string]bool{"enabled": false}), request.JSONEncoding)
 	_, err := w.Do(req)
+	w.log.DEBUG.Println("disable phase auto switch was successful")
 	return err
 }
 
