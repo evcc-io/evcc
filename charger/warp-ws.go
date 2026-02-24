@@ -56,6 +56,11 @@ type WarpWS struct {
 	pmLowLevelState warp.PmLowLevelState
 }
 
+type wsAuth struct {
+	user     string
+	password string
+}
+
 type warpEvent struct {
 	Topic   string          `json:"topic"`
 	Payload json.RawMessage `json:"payload"`
@@ -85,7 +90,15 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 		return nil, err
 	}
 
-	wb, err := NewWarpWS(ctx, cc.URI, cc.User, cc.Password, cc.EnergyMeterIndex)
+	var auth *wsAuth
+	if cc.User != "" && cc.Password != "" {
+		auth = &wsAuth{
+			user:     cc.User,
+			password: cc.Password,
+		}
+	}
+
+	wb, err := NewWarpWS(ctx, cc.URI, cc.EnergyMeterIndex, auth)
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +122,7 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 		wb.pmURI = wb.uri
 		wb.pmHelper = wb.Helper
 	} else if cc.EnergyManagerURI != "" { // fallback to Energy Manager
-		wb.pmURI, _, err = parseURI(cc.EnergyManagerURI, false)
+		wb.pmURI, err = parseURI(cc.EnergyManagerURI, false)
 		if wb.pmURI == "" {
 			return nil, err
 		} else if err != nil {
@@ -118,8 +131,9 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 		wb.pmHelper = request.NewHelper(wb.log)
 		if cc.EnergyManagerUser != "" {
 			wb.pmHelper.Client.Transport = &digest.Transport{
-				Username: cc.EnergyManagerUser,
-				Password: cc.EnergyManagerPassword,
+				Username:  cc.EnergyManagerUser,
+				Password:  cc.EnergyManagerPassword,
+				Transport: wb.pmHelper.Client.Transport,
 			}
 		}
 	}
@@ -154,28 +168,35 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 	return decorateWarpWS(wb, currentPower, totalEnergy, currents, voltages, identify, phases, getPhases), nil
 }
 
-func NewWarpWS(ctx context.Context, uri, user, password string, meterIndex uint) (*WarpWS, error) {
-	wsURI, hostname, err := parseURI(uri, true)
+func hostname(raw string) string {
+	if i := strings.Index(raw, "://"); i != -1 {
+		raw = raw[i+3:]
+	}
+	if i := strings.Index(raw, "/"); i != -1 {
+		raw = raw[:i]
+	}
+	if i := strings.Index(raw, ":"); i != -1 {
+		raw = raw[:i]
+	}
+	parts := strings.Split(raw, ".")
+	return parts[0]
+}
+
+func NewWarpWS(ctx context.Context, uri string, meterIndex uint, auth *wsAuth) (*WarpWS, error) {
+	wsURI, err := parseURI(uri, true)
 	if err != nil {
 		if wsURI == "" {
 			return nil, err
 		}
 	}
-	log := util.NewLogger(fmt.Sprintf("warp-ws %s", hostname))
-
-	digOpts := &digest.Options{
-		URI:    wsURI,
-		Method: "GET",
-		Count:  1,
-	}
+	log := util.NewLogger(fmt.Sprintf("warp-ws %s", hostname(uri)))
 
 	client := request.NewHelper(log)
-	if user != "" && password != "" {
-		digOpts.Username = user
-		digOpts.Password = password
+	if auth != nil {
 		client.Client.Transport = &digest.Transport{
-			Username: user,
-			Password: password,
+			Username:  auth.user,
+			Password:  auth.password,
+			Transport: client.Client.Transport,
 		}
 	}
 
@@ -188,19 +209,19 @@ func NewWarpWS(ctx context.Context, uri, user, password string, meterIndex uint)
 		metersValuesTopic:   fmt.Sprintf("meters/%d/values", meterIndex),
 	}
 
-	go w.run(ctx, digOpts)
+	go w.run(ctx, wsURI, auth)
 
 	return w, nil
 }
 
-func (w *WarpWS) run(ctx context.Context, digOpts *digest.Options) {
+func (w *WarpWS) run(ctx context.Context, wsURI string, auth *wsAuth) {
 	bo := backoff.NewExponentialBackOff(backoff.WithMaxElapsedTime(0))
 	bo.MaxInterval = 30 * time.Second
 
 	for ctx.Err() == nil {
 		w.log.DEBUG.Println("ws connecting …")
 
-		conn, _, err := dialWebsocket(ctx, digOpts)
+		conn, err := dialWebsocket(ctx, wsURI, auth)
 		if err != nil {
 			w.log.ERROR.Println("ws dial failed")
 		} else {
@@ -220,26 +241,38 @@ func (w *WarpWS) run(ctx context.Context, digOpts *digest.Options) {
 	}
 }
 
-func dialWebsocket(ctx context.Context, digOpts *digest.Options) (*websocket.Conn, *http.Response, error) {
+func dialWebsocket(ctx context.Context, wsURI string, auth *wsAuth) (*websocket.Conn, error) {
 	// err will be non nil if auth is needed
-	conn, resp, err := websocket.Dial(ctx, digOpts.URI, nil)
+	conn, resp, err := websocket.Dial(ctx, wsURI, nil)
 	if err == nil {
-		return conn, resp, err
+		return conn, err
 	}
 
-	if digOpts.Username == "" || digOpts.Password == "" {
-		return nil, nil, fmt.Errorf("missing credentials for digest auth")
+	if !(resp != nil && resp.StatusCode == http.StatusUnauthorized) {
+		return nil, err
+	}
+
+	if auth == nil {
+		return nil, fmt.Errorf("missing credentials for digest auth")
 	}
 
 	// Extract challeng from response
 	if resp == nil {
-		return nil, nil, fmt.Errorf("no response on websocket dial")
+		return nil, fmt.Errorf("no response on websocket dial")
 	}
 	www := resp.Header.Get("WWW-Authenticate")
 
 	chal, err := digest.ParseChallenge(www)
 	if err != nil {
-		return nil, resp, fmt.Errorf("digest parse error: %w", err)
+		return nil, fmt.Errorf("digest parse error: %w", err)
+	}
+
+	digOpts := &digest.Options{
+		Username: auth.user,
+		Password: auth.password,
+		URI:      wsURI,
+		Method:   "GET",
+		Count:    1,
 	}
 
 	cred, _ := digest.Digest(chal, *digOpts)
@@ -251,16 +284,17 @@ func dialWebsocket(ctx context.Context, digOpts *digest.Options) (*websocket.Con
 		},
 	}
 
-	return websocket.Dial(ctx, digOpts.URI, &dialer)
+	conn, _, err = websocket.Dial(ctx, wsURI, &dialer)
+	return conn, err
 }
 
 // Returns parsed URI and hostname
-func parseURI(uri string, toWS bool) (string, string, error) {
+func parseURI(uri string, toWS bool) (string, error) {
 	u, err := url.Parse(util.DefaultScheme(strings.TrimRight(uri, "/"), "http"))
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
-	if u.Scheme != "http" {
+	if u.Scheme == "https" || u.Scheme == "wss" {
 		u.Scheme = "http"
 		err = fmt.Errorf("https or wss are not supported, using http/ws instead")
 	}
@@ -268,8 +302,7 @@ func parseURI(uri string, toWS bool) (string, string, error) {
 		u.Scheme = "ws"
 		u.Path = path.Join(u.Path, "/ws")
 	}
-	hostname := strings.Split(u.Host, ".")[0]
-	return u.String(), hostname, err
+	return u.String(), err
 }
 
 func (w *WarpWS) handleConnection(ctx context.Context, conn *websocket.Conn) error {
