@@ -933,39 +933,6 @@ func configureSolarTariff(conf []config.Typed, t *api.Tariff) error {
 	return nil
 }
 
-func configureTariffDevices(names ...string) error {
-	// load tariff devices from database
-	configurable, err := config.ConfigurationsByClass(templates.Tariff)
-	if err != nil {
-		return err
-	}
-
-	var eg errgroup.Group
-
-	for _, conf := range configurable {
-		eg.Go(func() error {
-			cc := conf.Named()
-
-			if len(names) > 0 && !slices.Contains(names, cc.Name) {
-				return nil
-			}
-
-			instance, err := tariffInstance(cc.Name, config.Typed{Type: cc.Type, Other: cc.Other})
-			if err != nil {
-				return err
-			}
-
-			if e := config.Tariffs().Add(config.NewConfigurableDevice(&conf, instance)); e != nil {
-				return &DeviceError{cc.Name, e}
-			}
-
-			return nil
-		})
-	}
-
-	return eg.Wait()
-}
-
 func configureTariff(conf config.Typed, deviceName string, target *api.Tariff) error {
 	if conf.Type != "" {
 		instance, err := tariffInstance("tariff", conf)
@@ -1009,7 +976,7 @@ func configureSolarTariffs(confs []config.Typed, deviceNames []string, target *a
 	return nil
 }
 
-func configureTariffs(conf *globalconfig.Tariffs) (*tariff.Tariffs, error) {
+func configureTariffs(conf *globalconfig.Tariffs, names ...string) (*tariff.Tariffs, error) {
 	tariffs := tariff.Tariffs{
 		Currency: currency.EUR,
 	}
@@ -1043,8 +1010,41 @@ func configureTariffs(conf *globalconfig.Tariffs) (*tariff.Tariffs, error) {
 		}
 	}
 
-	// load all tariffs
+	// load tariff devices from database
+	configurable, err := config.ConfigurationsByClass(templates.Tariff)
+	if err != nil {
+		return &tariffs, err
+	}
+
 	var eg errgroup.Group
+
+	for _, conf := range configurable {
+		eg.Go(func() error {
+			cc := conf.Named()
+
+			if len(names) > 0 && !slices.Contains(names, cc.Name) {
+				return nil
+			}
+
+			instance, err := tariffInstance(cc.Name, config.Typed{Type: cc.Type, Other: cc.Other})
+			if err != nil {
+				return err
+			}
+
+			if e := config.Tariffs().Add(config.NewConfigurableDevice(&conf, instance)); e != nil {
+				return &DeviceError{cc.Name, e}
+			}
+
+			return nil
+		})
+	}
+
+	if err := eg.Wait(); err != nil {
+		return &tariffs, err
+	}
+
+	// resolve tariff roles
+	eg = errgroup.Group{}
 	eg.Go(func() error { return configureTariff(conf.Grid, refs.Grid, &tariffs.Grid) })
 	eg.Go(func() error { return configureTariff(conf.FeedIn, refs.FeedIn, &tariffs.FeedIn) })
 	eg.Go(func() error { return configureTariff(conf.Co2, refs.Co2, &tariffs.Co2) })
@@ -1080,10 +1080,6 @@ func configureDevices(conf globalconfig.All) error {
 
 	if err := configureMeters(conf.Meters, references.meter...); err != nil {
 		errs = append(errs, &ClassError{ClassMeter, err})
-	}
-
-	if err := configureTariffDevices(references.tariff...); err != nil {
-		errs = append(errs, &ClassError{ClassTariff, err})
 	}
 
 	if err := configureChargers(conf.Chargers, references.charger...); err != nil {
@@ -1148,7 +1144,7 @@ func configureSiteAndLoadpoints(conf *globalconfig.All) (*core.Site, error) {
 		errs = append(errs, &ClassError{ClassLoadpoint, err})
 	}
 
-	tariffs, err := configureTariffs(&conf.Tariffs)
+	tariffs, err := configureTariffs(&conf.Tariffs, references.tariff...)
 	if err != nil {
 		errs = append(errs, &ClassError{ClassTariff, err})
 	}
