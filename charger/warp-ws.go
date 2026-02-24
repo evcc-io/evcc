@@ -20,7 +20,7 @@ import (
 	"github.com/evcc-io/evcc/charger/warp"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/icholy/digest"
+	"github.com/jpfielding/go-http-digest/pkg/digest"
 )
 
 type WarpWS struct {
@@ -117,10 +117,7 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 		}
 		wb.pmHelper = request.NewHelper(wb.log)
 		if cc.EnergyManagerUser != "" {
-			wb.pmHelper.Client.Transport = &digest.Transport{
-				Username: cc.EnergyManagerUser,
-				Password: cc.EnergyManagerPassword,
-			}
+			wb.pmHelper.Client.Transport = digest.NewTransport(cc.EnergyManagerUser, cc.EnergyManagerPassword, wb.pmHelper.Client.Transport)
 		}
 	}
 
@@ -159,10 +156,7 @@ func NewWarpWS(ctx context.Context, uri, user, password string, meterIndex uint)
 
 	client := request.NewHelper(log)
 	if user != "" {
-		client.Client.Transport = &digest.Transport{
-			Username: user,
-			Password: password,
-		}
+		client.Client.Transport = digest.NewTransport(user, password, client.Client.Transport)
 	}
 
 	w := &WarpWS{
@@ -174,87 +168,37 @@ func NewWarpWS(ctx context.Context, uri, user, password string, meterIndex uint)
 		metersValuesTopic:   fmt.Sprintf("meters/%d/values", meterIndex),
 	}
 
-	uri, err := parseURI(w.uri, true)
-	if err != nil {
-		w.log.DEBUG.Println(err)
-		if uri == "" {
-			return nil, err
-		}
-	}
-
-	go w.run(ctx, uri, user, password)
+	go w.run(ctx)
 
 	return w, nil
 }
 
-func (w *WarpWS) run(ctx context.Context, uri, user, pass string) {
-	bo := backoff.NewExponentialBackOff(
-		backoff.WithMaxInterval(30*time.Second),
-		backoff.WithMaxElapsedTime(0))
-
-	for ctx.Err() == nil {
-		w.log.DEBUG.Printf("ws connecting to %s", uri)
-
-		conn, resp, err := dialWebsocket(ctx, uri, user, pass)
-		if err != nil {
-			if resp != nil {
-				resp.Body.Close()
-			}
-			if conn != nil {
-				conn.Close(websocket.StatusInternalError, "dial failed")
-			}
-			w.log.ERROR.Printf("ws dial to %s failed: %v", uri, err)
-		} else {
-			w.log.DEBUG.Printf("ws connected to %s", uri)
-			bo.Reset()
-
-			if err := w.handleConnection(ctx, conn); err != nil {
-				w.log.ERROR.Println(err)
-			}
-		}
-
-		select {
-		case <-ctx.Done():
-			return
-		case <-time.After(bo.NextBackOff()):
-		}
-	}
-}
-
-func dialWebsocket(ctx context.Context, wsURL, user, pass string) (*websocket.Conn, *http.Response, error) {
-	conn, resp, err := websocket.Dial(ctx, wsURL, nil)
-	if err == nil {
-		return conn, resp, err
-	}
-
-	// Extract challeng from response
-	if resp == nil {
-		return nil, nil, fmt.Errorf("no response on websocket dial")
-	}
-	www := resp.Header.Get("WWW-Authenticate")
-
-	chal, err := digest.ParseChallenge(www)
+func (w *WarpWS) run(ctx context.Context) {
+	uri, err := parseURI(w.uri, true)
 	if err != nil {
-		return nil, resp, fmt.Errorf("digest parse error: %w", err)
+		w.log.DEBUG.Println(err)
+		if uri == "" {
+			return
+		}
 	}
+	w.log.TRACE.Printf("connecting to %s …", uri)
 
-	cred, _ := digest.Digest(chal, digest.Options{
-		Username: user,
-		Password: pass,
-		Method:   "GET",
-		URI:      wsURL,
-		Count:    1,
-	})
-	resp.Body.Close()
+	bo := backoff.NewExponentialBackOff(backoff.WithMaxElapsedTime(0))
+	for ctx.Err() == nil {
+		conn, _, err := websocket.Dial(ctx, uri, nil)
+		if err != nil {
+			if ctx.Err() != nil {
+				return
+			}
+			time.Sleep(bo.NextBackOff())
+			continue
+		}
 
-	// Dial with Digest Auth
-	dialer := websocket.DialOptions{
-		HTTPHeader: http.Header{
-			"Authorization": []string{cred.String()},
-		},
+		bo.Reset()
+		if err := w.handleConnection(ctx, conn); err != nil {
+			w.log.ERROR.Println(err)
+		}
 	}
-
-	return websocket.Dial(ctx, wsURL, &dialer)
 }
 
 func parseURI(uri string, toWS bool) (string, error) {
@@ -294,9 +238,9 @@ func (w *WarpWS) handleConnection(ctx context.Context, conn *websocket.Conn) err
 				return err
 			}
 
-			w.log.TRACE.Printf("%s ws event %s: %s", w.uri, event.Topic, event.Payload)
+			w.log.TRACE.Printf("ws event %s: %s", event.Topic, event.Payload)
 			if err := w.handleEvent(event.Topic, event.Payload); err != nil {
-				w.log.ERROR.Printf("bad payload from %s for topic %s: %v", w.uri, event.Topic, err)
+				w.log.ERROR.Printf("bad payload for topic %s: %v", event.Topic, err)
 			}
 		}
 	}
@@ -387,7 +331,6 @@ func (w *WarpWS) hasFeature(feature string) bool {
 
 	var f []string
 	if err := w.GetJSON(uri, &f); err == nil {
-		w.log.DEBUG.Printf("%s features response: %s", w.uri, f)
 		w.mu.Lock()
 		w.features = f
 		w.mu.Unlock()
@@ -495,7 +438,6 @@ func (w *WarpWS) disablePhaseAutoSwitch() error {
 	uri := fmt.Sprintf("%s/evse/phase_auto_switch", w.uri)
 	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(map[string]bool{"enabled": false}), request.JSONEncoding)
 	_, err := w.Do(req)
-	w.log.DEBUG.Println("disable phase auto switch was successful")
 	return err
 }
 
