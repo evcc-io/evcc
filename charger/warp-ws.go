@@ -182,18 +182,17 @@ func NewWarpWS(ctx context.Context, uri, user, password string, meterIndex uint)
 		}
 	}
 
-	go w.run(ctx, uri, user, password)
+	go w.run(uri, user, password, ctx)
 
 	return w, nil
 }
 
-func (w *WarpWS) run(ctx context.Context, uri, user, pass string) {
-	bo := backoff.NewExponentialBackOff(
-		backoff.WithMaxInterval(30*time.Second),
-		backoff.WithMaxElapsedTime(0))
+func (w *WarpWS) run(uri, user, pass string, ctx context.Context) {
+	bo := backoff.NewExponentialBackOff(backoff.WithMaxElapsedTime(0))
+	bo.MaxInterval = 30 * time.Second
 
 	for ctx.Err() == nil {
-		w.log.DEBUG.Printf("ws connecting to %s", uri)
+		w.log.DEBUG.Printf("ws connecting to %s …", uri)
 
 		conn, resp, err := dialWebsocket(ctx, uri, user, pass)
 		if err != nil {
@@ -213,10 +212,16 @@ func (w *WarpWS) run(ctx context.Context, uri, user, pass string) {
 			}
 		}
 
+		if ctx.Err() != nil {
+			return
+		}
+		d := bo.NextBackOff()
+		w.log.DEBUG.Printf("ws reconnecting to %s in %v", uri, d)
+
 		select {
 		case <-ctx.Done():
 			return
-		case <-time.After(bo.NextBackOff()):
+		case <-time.After(d):
 		}
 	}
 }
