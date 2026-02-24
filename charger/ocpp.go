@@ -217,6 +217,11 @@ func NewOCPP(ctx context.Context,
 
 	// monitor for charger reboots and re-run setup (once per CP, not per connector)
 	cp.StartMonitor(func() {
+		// drain boot notification from initial setup
+		select {
+		case <-cp.BootNotificationC():
+		default:
+		}
 		go c.monitorReboot(ctx, meterValues, meterInterval, forcePowerCtrl)
 	})
 

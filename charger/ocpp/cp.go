@@ -153,14 +153,16 @@ func (cp *CP) onTransportConnect() {
 // onBootTimeout is called when the BootNotification wait timer expires.
 func (cp *CP) onBootTimeout() {
 	cp.mu.Lock()
+	if cp.bootTimer == nil {
+		// timer was cancelled by disconnect or BootNotification
+		cp.mu.Unlock()
+		return
+	}
 	cp.bootTimer = nil
-	connected := cp.connected
 	cp.mu.Unlock()
 
-	if !connected {
-		cp.log.DEBUG.Printf("boot notification timeout, proceeding")
-		cp.connect(true)
-	}
+	cp.log.DEBUG.Printf("boot notification timeout, proceeding")
+	cp.connect(true)
 }
 
 func (cp *CP) Connected() bool {
