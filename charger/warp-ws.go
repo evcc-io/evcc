@@ -20,6 +20,7 @@ import (
 	"github.com/evcc-io/evcc/charger/warp"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/jpfielding/go-http-digest/pkg/digest"
 )
 
 type WarpWS struct {
@@ -31,8 +32,6 @@ type WarpWS struct {
 	uri        string
 	pmURI      string
 	meterIndex uint
-	user       string
-	password   string
 
 	mu sync.RWMutex
 
@@ -118,11 +117,7 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 		}
 		wb.pmHelper = request.NewHelper(wb.log)
 		if cc.EnergyManagerUser != "" {
-			wb.pmHelper.Client.Transport = &warp.DigestTransport{
-				Username: cc.EnergyManagerUser,
-				Password: cc.EnergyManagerPassword,
-				Base:     wb.pmHelper.Client.Transport,
-			}
+			wb.pmHelper.Client.Transport = digest.NewTransport(cc.EnergyManagerUser, cc.EnergyManagerPassword, wb.pmHelper.Client.Transport)
 		}
 	}
 
@@ -161,11 +156,7 @@ func NewWarpWS(ctx context.Context, uri, user, password string, meterIndex uint)
 
 	client := request.NewHelper(log)
 	if user != "" {
-		client.Client.Transport = &warp.DigestTransport{
-			Username: user,
-			Password: password,
-			Base:     client.Client.Transport,
-		}
+		client.Client.Transport = digest.NewTransport(user, password, client.Client.Transport)
 	}
 
 	w := &WarpWS{
@@ -175,8 +166,6 @@ func NewWarpWS(ctx context.Context, uri, user, password string, meterIndex uint)
 		meterMap:            map[int]int{},
 		metersValueIDsTopic: fmt.Sprintf("meters/%d/value_ids", meterIndex),
 		metersValuesTopic:   fmt.Sprintf("meters/%d/values", meterIndex),
-		user:                user,
-		password:            password,
 	}
 
 	uri, err := parseURI(w.uri, true)
@@ -195,11 +184,9 @@ func NewWarpWS(ctx context.Context, uri, user, password string, meterIndex uint)
 func (w *WarpWS) run(uri string, ctx context.Context) {
 	bo := backoff.NewExponentialBackOff(backoff.WithMaxElapsedTime(0))
 	bo.MaxInterval = 30 * time.Second
-
 	for ctx.Err() == nil {
 		w.log.DEBUG.Printf("ws connecting to %s …", uri)
-
-		conn, resp, err := dialWebsocket(ctx, uri, w.user, w.password)
+		conn, resp, err := websocket.Dial(ctx, uri, nil)
 		if err != nil {
 			if resp != nil {
 				resp.Body.Close()
@@ -207,57 +194,27 @@ func (w *WarpWS) run(uri string, ctx context.Context) {
 			if conn != nil {
 				conn.Close(websocket.StatusInternalError, "dial failed")
 			}
-			w.log.ERROR.Printf("ws dial failed: %v", err)
-		} else {
-			w.log.DEBUG.Printf("ws connected to %s", uri)
-			bo.Reset()
-
-			if err := w.handleConnection(ctx, conn); err != nil {
-				w.log.ERROR.Println(err)
+			if ctx.Err() != nil {
+				return
 			}
+			d := bo.NextBackOff()
+			w.log.DEBUG.Printf("ws reconnecting to %s in %v", uri, d)
+
+			select {
+			case <-ctx.Done():
+				return
+			case <-time.After(d):
+				// continue to next reconnect attempt
+			}
+			continue
 		}
 
-		if ctx.Err() != nil {
-			return
-		}
-		d := bo.NextBackOff()
-		w.log.DEBUG.Printf("ws reconnecting to %s in %v", uri, d)
-
-		select {
-		case <-ctx.Done():
-			return
-		case <-time.After(d):
+		w.log.DEBUG.Printf("ws connected to %s", uri)
+		bo.Reset()
+		if err := w.handleConnection(ctx, conn); err != nil {
+			w.log.ERROR.Println(err)
 		}
 	}
-}
-
-func dialWebsocket(ctx context.Context, wsURL, user, pass string) (*websocket.Conn, *http.Response, error) {
-	conn, resp, err := websocket.Dial(ctx, wsURL, nil)
-	if err == nil {
-		return conn, resp, err
-	}
-
-	// Extract challeng from response
-	www := resp.Header.Get("WWW-Authenticate")
-	resp.Body.Close()
-
-	ch, err := warp.ParseDigestChallenge(www)
-	if err != nil {
-		return nil, resp, fmt.Errorf("digest parse error: %w", err)
-	}
-
-	// Build authorization header
-	u, _ := url.Parse(wsURL)
-	auth := warp.BuildDigestAuthHeader(ch, "GET", u.Path, user, pass)
-
-	// Dial with Digest Auth
-	dialer := websocket.DialOptions{
-		HTTPHeader: http.Header{
-			"Authorization": []string{auth},
-		},
-	}
-
-	return websocket.Dial(ctx, wsURL, &dialer)
 }
 
 func parseURI(uri string, toWS bool) (string, error) {
