@@ -698,7 +698,7 @@ export default defineComponent({
 		messagingUiConfigured() {
 			return (
 				this.messengers.length > 0 ||
-				Object.keys(store.state.messagingEvents ?? {}).length > 0
+				Object.values(store.state.messagingEvents ?? {}).some((e) => !e.disabled)
 			);
 		},
 	},

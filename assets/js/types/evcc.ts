@@ -511,17 +511,24 @@ export interface Meter {
   energy?: number;
 }
 
+export interface BatteryForecast {
+  full: string | null; // ISO 8601 datetime
+  empty: string | null; // ISO 8601 datetime
+}
+
 export interface Battery {
   power: number;
   capacity: number;
   soc: number;
   devices: BatteryMeter[];
+  forecast?: BatteryForecast;
 }
 
 export interface BatteryMeter extends Meter {
   soc: number;
   controllable: boolean;
   capacity: number; // 0 when not specified
+  forecast?: BatteryForecast;
 }
 
 export interface Vehicle {
