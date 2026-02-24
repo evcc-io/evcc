@@ -1006,7 +1006,7 @@ func configureTariffs(conf *globalconfig.Tariffs, names ...string) (*tariff.Tari
 			return &tariffs, err
 		}
 		if yamlSource.tariffs != globalconfig.YamlSourceNone && refs.IsConfigured() {
-			return &tariffs, errors.New("yaml and device config exists for tariffs; remove yaml config")
+			return &tariffs, errors.New("tariffs are configured via UI; having an additional yaml config is not allowed")
 		}
 	}
 
