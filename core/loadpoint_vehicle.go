@@ -38,9 +38,17 @@ func (lp *Loadpoint) coordinatedVehicles() []api.Vehicle {
 
 // setVehicleIdentifier updated the vehicle id as read from the charger
 func (lp *Loadpoint) setVehicleIdentifier(id string) {
-	if lp.vehicleIdentifier != id {
-		lp.vehicleIdentifier = id
-		lp.publish(keys.VehicleIdentity, id)
+	if lp.vehicleIdentifier == id {
+		return
+	}
+
+	lp.vehicleIdentifier = id
+	lp.publish(keys.VehicleIdentity, id)
+
+	if id != "" {
+		lp.updateSession(func(session *session.Session) {
+			session.Identifier = id
+		})
 	}
 }
 
@@ -160,12 +168,9 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 	lp.PublishEffectiveValues()
 
 	lp.updateSession(func(session *session.Session) {
-		var title string
 		if v != nil {
-			title = v.GetTitle()
+			session.Vehicle = v.GetTitle()
 		}
-
-		lp.session.Vehicle = title
 	})
 }
 
