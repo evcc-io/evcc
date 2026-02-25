@@ -174,6 +174,6 @@ test.describe("messaging", async () => {
     await page.keyboard.press("Escape");
     await expectModalHidden(modal);
 
-    await expect(card).toContainText(["Events", "0", "Services", "0"].join(""));
+    await expect(card).toContainText(["Configured", "no"].join(""));
   });
 });

@@ -84,7 +84,7 @@ params:
 
         ```
         curl --silent -H "Authorization: Bearer $VIESSMANN_TOKEN" \
-          https://api.viessmann-climatesolutions.com/iot/v1/equipment/installations?includeGateways=true \
+          https://api.viessmann-climatesolutions.com/iot/v2/equipment/installations?includeGateways=true \
           | jq '.data[].id'
         ```
       en: |
@@ -126,7 +126,7 @@ params:
 
         ```
         curl --silent -H "Authorization: Bearer $VIESSMANN_TOKEN" \
-          https://api.viessmann-climatesolutions.com/iot/v1/equipment/installations?includeGateways=true \
+          https://api.viessmann-climatesolutions.com/iot/v2/equipment/installations?includeGateways=true \
           | jq '.data[].id'
         ```
   - name: device_id

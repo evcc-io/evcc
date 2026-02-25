@@ -38,7 +38,7 @@
 				/>
 			</div>
 		</div>
-		<div v-if="loadpoints.length > 1" class="d-flex d-lg-none justify-content-center">
+		<div v-if="loadpoints.length > 1" class="d-flex d-lg-none justify-content-center flex-wrap">
 			<button
 				v-for="loadpoint in loadpoints"
 				:key="loadpoint.id"

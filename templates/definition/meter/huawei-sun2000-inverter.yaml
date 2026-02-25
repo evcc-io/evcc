@@ -1,21 +1,25 @@
-template: huawei-dongle
+template: huawei-sun2000-inverter
+covers: ["huawei-dongle"]
 products:
   - brand: Huawei
     description:
-      generic: SUN2000 (SDongle)
+      de: SUN2000 PV-Wechselrichter (ohne Batteriespeicher)
+      en: SUN2000 Inverter (without battery)
 requirements:
   description:
     de: |
+      Bei angeschlossenem Batteriespeicher bitte unbedingt "Huawei SUN2000 Hybrid-Wechselrichter" nutzen.
       Erfordert "Modbus/TCP". Freischaltung via "Errichterzugang" in den Kommunikationseinstellungen des Wechselrichters. 
       Siehe https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264
     en: |
+      If you have a battery storage system, please be sure to use "Huawei SUN2000 Hybrid-Inverter".
       Needs "Modbus/TCP". Activation using "maintenance access" within the communication settings of the inverter.
       See https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264
 params:
   - name: usage
     choice: ["pv"]
   - name: modbus
-    choice: ["tcpip"]
+    choice: ["rs485", "tcpip"]
   - name: timeout
     default: 15s
 render: |
@@ -28,7 +32,7 @@ render: |
     register:
       address: 32080 # Active generation power AC
       type: holding
-      decode: int32
+      decode: int32nan
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -36,5 +40,5 @@ render: |
     register:
       address: 32106 # Accumulated energy yield
       type: holding
-      decode: uint32
+      decode: uint32nan
     scale: 0.01

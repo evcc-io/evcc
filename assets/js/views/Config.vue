@@ -329,6 +329,7 @@
 					:circuits="circuits"
 					:hasDeviceError="hasDeviceError"
 					@changed="loadpointChanged"
+					@dismissed="loadpointDismissed"
 				/>
 				<VehicleModal :is-sponsor="isSponsor" @vehicle-changed="vehicleChanged" />
 				<MeterModal :is-sponsor="isSponsor" @changed="meterChanged" />
@@ -698,7 +699,7 @@ export default defineComponent({
 		messagingUiConfigured() {
 			return (
 				this.messengers.length > 0 ||
-				Object.keys(store.state.messagingEvents ?? {}).length > 0
+				Object.values(store.state.messagingEvents ?? {}).some((e) => !e.disabled)
 			);
 		},
 	},
@@ -846,6 +847,11 @@ export default defineComponent({
 		async loadpointChanged() {
 			await this.loadLoadpoints();
 			this.loadDirty();
+		},
+		async loadpointDismissed() {
+			await this.loadChargers();
+			await this.loadMeters();
+			this.updateValues();
 		},
 		vehicleChanged() {
 			this.loadVehicles();
