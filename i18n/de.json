@@ -1392,5 +1392,13 @@
     "lineErrorLink": "Zeile {0}",
     "restartButton": "Neu starten",
     "title": "Fehler beim Starten"
+  },
+  "tabBar": {
+    "battery": "Batterie",
+    "charge": "Laden",
+    "comingSoon": "Diese Seite ist in Arbeit.",
+    "forecast": "Vorhersage",
+    "more": "Mehr",
+    "sessions": "Ladelog"
   }
 }

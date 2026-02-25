@@ -94,6 +94,14 @@
 	--safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
 	--safe-area-inset-left: env(safe-area-inset-left, 0px);
 	--safe-area-inset-right: env(safe-area-inset-right, 0px);
+
+	--tab-bar-height: 67px;
+}
+
+@media (--md-and-up) {
+	:root {
+		--tab-bar-height: 51px;
+	}
 }
 
 :root.dark {

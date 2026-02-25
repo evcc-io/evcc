@@ -1392,5 +1392,13 @@
     "lineErrorLink": "line {0}",
     "restartButton": "Restart",
     "title": "Startup Error"
+  },
+  "tabBar": {
+    "battery": "Battery",
+    "charge": "Charge",
+    "comingSoon": "This page is under construction.",
+    "forecast": "Forecast",
+    "more": "More",
+    "sessions": "Sessions"
   }
 }
