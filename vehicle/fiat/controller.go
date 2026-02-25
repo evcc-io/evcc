@@ -9,23 +9,23 @@ import (
 )
 
 type Controller struct {
-	pvd                 *Provider
-	api                 *API
-	log                 *util.Logger
-	vin                 string
-	pin                 string
-	isChargedControlled bool
+	pvd                   *Provider
+	api                   *API
+	log                   *util.Logger
+	vin                   string
+	pin                   string
+	scheduleBasedCharging bool
 }
 
 // NewController creates a vehicle current and charge controller
 func NewController(provider *Provider, api *API, log *util.Logger, vin string, pin string) *Controller {
 	impl := &Controller{
-		pvd:                 provider,
-		api:                 api,
-		log:                 log,
-		vin:                 vin,
-		pin:                 pin,
-		isChargedControlled: false, // false for now, will be set to true when ChargeEnable is actually called.
+		pvd:                   provider,
+		api:                   api,
+		log:                   log,
+		vin:                   vin,
+		pin:                   pin,
+		scheduleBasedCharging: false, // false for now, will be set to true when ChargeEnable is actually called.
 	}
 	return impl
 }
@@ -46,8 +46,6 @@ func (c *Controller) ChargeEnable(enable bool) error {
 		return api.ErrMissingCredentials
 	}
 
-	c.isChargedControlled = true // set to true when ChargeEnable is called for the first time, to indicate that we are actually controlling the charge, this will be used in WakeUp method to decide if we should call ChargeNow or not
-
 	// get current schedule status from provider (cached)
 	stat, err := c.pvd.statusG()
 	if err != nil {
@@ -56,6 +54,8 @@ func (c *Controller) ChargeEnable(enable bool) error {
 	if stat.EvInfo == nil || stat.EvInfo.Schedules == nil || len(stat.EvInfo.Schedules) == 0 {
 		return api.ErrNotAvailable
 	}
+
+	c.scheduleBasedCharging = true // set to true when ChargeEnable is called for the first time, to indicate that we are actually controlling the charge, this will be used in WakeUp method to decide if we should call ChargeNow or not
 
 	hasChanged := false // Will track if we made any change to the schedule to avoid unnecessary updates through API call
 	now := time.Now()   // Call once and reuse
@@ -81,7 +81,7 @@ func (c *Controller) ChargeEnable(enable bool) error {
 		if res.ResponseStatus != "pending" {
 			return fmt.Errorf("invalid response status: %s", res.ResponseStatus)
 		}
-		c.log.INFO.Printf("updated first charge schedule: enable=%v, start=%s, end=%s",
+		c.log.DEBUG.Printf("updated first charge schedule: enable=%v, start=%s, end=%s",
 			enable, stat.EvInfo.Schedules[0].StartTime, stat.EvInfo.Schedules[0].EndTime)
 	}
 
@@ -89,7 +89,7 @@ func (c *Controller) ChargeEnable(enable bool) error {
 }
 
 func roundUpTo(d time.Duration, t time.Time) time.Time {
-	// Round up time to next d boundary
+	// Round up time to next d boundary. If time is already aligned to the boundary, move to the next one.
 	rt := t.Truncate(d)
 	if !rt.After(t) {
 		rt = rt.Add(d)
@@ -161,7 +161,7 @@ func (c *Controller) configureChargeSchedule(schedule *Schedule, start time.Time
 		chkStart, err1 := time.Parse(timeFormat, schedule.StartTime)
 		chkEnd, err2 := time.Parse(timeFormat, schedule.EndTime)
 		if err1 == nil && err2 == nil && chkStart.After(chkEnd) {
-			// If start time is after end time, set start time to fallback value (00:01) to avoid API rejections for schedules crossing midnight
+			// If start time is after end time, set start time to fallback value to avoid API rejections for schedules crossing midnight
 			c.log.DEBUG.Printf("start time %s is after end time %s, setting start time to fallback value %s", schedule.StartTime, schedule.EndTime, fallbackStartTime)
 			schedule.StartTime = fallbackStartTime
 			hasChanged = true
@@ -194,12 +194,12 @@ var _ api.Resurrector = (*Controller)(nil)
 
 func (c *Controller) WakeUp() error {
 	if c.pin == "" {
-		c.log.DEBUG.Printf("Vehicle cannot be woken up: no PIN provided")
+		c.log.DEBUG.Printf("vehicle cannot be woken up: no PIN provided")
 		return nil
 	}
 
 	// Only call ChargeNow to WakeUp if the charger is handling the charging and not the vehicle, otherwise schedules will not work properly.
-	if !c.isChargedControlled {
+	if !c.scheduleBasedCharging {
 		res, err := c.api.ChargeNow(c.vin, c.pin)
 		if err != nil {
 			return fmt.Errorf("charge now call failed: %w", err)
