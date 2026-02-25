@@ -23,7 +23,6 @@ params:
       en: Charge
     unit: "%"
     type: int
-  - name: capacity
   - name: controllable
     description:
       de: Steuerbar
@@ -33,15 +32,7 @@ params:
       de: "Unterstützt aktive Batteriesteuerung"
       en: "Supports active battery control"
     advanced: true
-  - name: maxchargepower
-    advanced: true
-  - name: maxdischargepower
-    description:
-      de: Maximale Entladeleistung
-      en: Maximum discharge power
-    unit: W
-    type: int
-    advanced: true
+  - preset: battery-params
   - name: energy
     description:
       de: Zählerstand
@@ -85,15 +76,7 @@ render: |
   soc:
     source: const
     value: {{ .soc }}
-  {{- if .capacity }}
-  capacity: {{ .capacity }} # kWh
-  {{- end }}
-  {{- if .maxchargepower }}
-  maxchargepower: {{ .maxchargepower }} # W
-  {{- end }}
-  {{- if .maxdischargepower }}
-  maxdischargepower: {{ .maxdischargepower }} # W
-  {{- end }}
+  {{- include "battery-params" . }}
   {{- if .controllable }}
   batterymode:
     source: js
