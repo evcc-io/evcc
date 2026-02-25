@@ -14,8 +14,7 @@ params:
     help:
       en: ModbusTCP server needs to be enabled.
       de: Der ModbusTCP Server muss aktiviert sein.
-  - name: capacity
-    advanced: true
+  - preset: battery-params
   - name: maxchargepower
     default: 4200
   - name: watchdog
@@ -110,4 +109,4 @@ render: |
                 address: 40151 # SMA Modbus Profile: Inverter.WModCfg.WCtlComCfg.WCtlComAct
                 type: writemultiple
                 decode: uint32
-  capacity: {{ .capacity }} # kWh
+  {{- include "battery-params" . }}
