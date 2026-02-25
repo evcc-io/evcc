@@ -168,28 +168,15 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 	return decorateWarpWS(wb, currentPower, totalEnergy, currents, voltages, identify, phases, getPhases), nil
 }
 
-func hostname(raw string) string {
-	if i := strings.Index(raw, "://"); i != -1 {
-		raw = raw[i+3:]
-	}
-	if i := strings.Index(raw, "/"); i != -1 {
-		raw = raw[:i]
-	}
-	if i := strings.Index(raw, ":"); i != -1 {
-		raw = raw[:i]
-	}
-	parts := strings.Split(raw, ".")
-	return parts[0]
-}
-
 func NewWarpWS(ctx context.Context, uri string, meterIndex uint, auth *wsAuth) (*WarpWS, error) {
+	log := util.NewLogger("warp-ws")
+
 	wsURI, err := parseURI(uri, true)
 	if err != nil {
 		if wsURI == "" {
 			return nil, err
 		}
 	}
-	log := util.NewLogger(fmt.Sprintf("warp-ws %s", hostname(uri)))
 
 	client := request.NewHelper(log)
 	if auth != nil {
@@ -245,10 +232,10 @@ func dialWebsocket(ctx context.Context, wsURI string, auth *wsAuth) (*websocket.
 	// err will be non nil if auth is needed
 	conn, resp, err := websocket.Dial(ctx, wsURI, nil)
 	if err == nil {
-		return conn, err
+		return conn, nil
 	}
 
-	if !(resp != nil && resp.StatusCode == http.StatusUnauthorized) {
+	if resp == nil || resp.StatusCode != http.StatusUnauthorized {
 		return nil, err
 	}
 
@@ -257,9 +244,6 @@ func dialWebsocket(ctx context.Context, wsURI string, auth *wsAuth) (*websocket.
 	}
 
 	// Extract challeng from response
-	if resp == nil {
-		return nil, fmt.Errorf("no response on websocket dial")
-	}
 	www := resp.Header.Get("WWW-Authenticate")
 
 	chal, err := digest.ParseChallenge(www)
