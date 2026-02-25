@@ -568,7 +568,8 @@
       "labelHost": "mDNS-Hostname",
       "labelInternalUrl": "Interne URL",
       "labelPort": "Port",
-      "title": "Netzwerk"
+      "title": "Netzwerk",
+      "warningUrlPath": "Die URL benötigt normalerweise keinen Pfad. Bist du dir sicher?"
     },
     "ocpp": {
       "connectedChargers": "Verbundene Wallboxen",
