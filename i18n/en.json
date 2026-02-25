@@ -568,7 +568,8 @@
       "labelHost": "mDNS Hostname",
       "labelInternalUrl": "Internal URL",
       "labelPort": "Port",
-      "title": "Network"
+      "title": "Network",
+      "warningUrlPath": "The URL usually doesn't need a path. Are you sure this is correct?"
     },
     "ocpp": {
       "connectedChargers": "Connected chargers",
