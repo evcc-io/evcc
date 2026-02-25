@@ -23,6 +23,7 @@ params:
       en: Charge
     unit: "%"
     type: int
+  - name: capacity
   - name: controllable
     description:
       de: Steuerbar
@@ -31,18 +32,8 @@ params:
     help:
       de: "Unterstützt aktive Batteriesteuerung"
       en: "Supports active battery control"
-  - name: capacity
-    description:
-      de: Akkukapazität
-      en: Battery capacity
-    unit: kWh
-    type: float
+    advanced: true
   - name: maxchargepower
-    description:
-      de: Maximale Ladeleistung
-      en: Maximum charge power
-    unit: W
-    type: int
     advanced: true
   - name: maxdischargepower
     description:
