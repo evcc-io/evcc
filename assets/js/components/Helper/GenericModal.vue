@@ -53,7 +53,7 @@ export default defineComponent({
 		autofocus: { type: Boolean, default: true },
 		configModalName: String,
 	},
-	emits: ["open", "opened", "close", "closed", "visibilitychange"],
+	emits: ["open", "opened", "close", "closed", "dismiss", "visibilitychange"],
 	data() {
 		return {
 			isModalVisible: false,
@@ -112,7 +112,9 @@ export default defineComponent({
 			this.$emit("closed");
 			this.isModalVisible = false;
 			if (this.configModalName) {
-				onModalHidden(this.configModalName);
+				if (onModalHidden(this.configModalName)) {
+					this.$emit("dismiss");
+				}
 			}
 		},
 		open() {
