@@ -31,6 +31,26 @@ params:
     help:
       de: "Unterstützt aktive Batteriesteuerung"
       en: "Supports active battery control"
+  - name: capacity
+    description:
+      de: Akkukapazität
+      en: Battery capacity
+    unit: kWh
+    type: float
+  - name: maxchargepower
+    description:
+      de: Maximale Ladeleistung
+      en: Maximum charge power
+    unit: W
+    type: int
+    advanced: true
+  - name: maxdischargepower
+    description:
+      de: Maximale Entladeleistung
+      en: Maximum discharge power
+    unit: W
+    type: int
+    advanced: true
   - name: energy
     description:
       de: Zählerstand
@@ -74,6 +94,15 @@ render: |
   soc:
     source: const
     value: {{ .soc }}
+  {{- if .capacity }}
+  capacity: {{ .capacity }} # kWh
+  {{- end }}
+  {{- if .maxchargepower }}
+  maxchargepower: {{ .maxchargepower }} # W
+  {{- end }}
+  {{- if .maxdischargepower }}
+  maxdischargepower: {{ .maxdischargepower }} # W
+  {{- end }}
   {{- if .controllable }}
   batterymode:
     source: js
