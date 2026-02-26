@@ -160,12 +160,12 @@ func NewWarpWS(ctx context.Context, uri, user, password string, meterIndex uint)
 		metersValuesTopic:   fmt.Sprintf("meters/%d/values", meterIndex),
 	}
 
-	go w.run(ctx, w.uri+"/ws", client.Client)
+	go w.run(ctx, client.Client)
 
 	return w, nil
 }
 
-func (w *WarpWS) run(ctx context.Context, uri string, client *http.Client) {
+func (w *WarpWS) run(ctx context.Context, client *http.Client) {
 	bo := backoff.NewExponentialBackOff(
 		backoff.WithMaxElapsedTime(0),
 		backoff.WithMaxInterval(30*time.Second),
@@ -174,7 +174,7 @@ func (w *WarpWS) run(ctx context.Context, uri string, client *http.Client) {
 	for ctx.Err() == nil {
 		w.log.DEBUG.Println("websocket: connecting")
 
-		conn, _, err := websocket.Dial(ctx, uri, &websocket.DialOptions{
+		conn, _, err := websocket.Dial(ctx, w.uri+"/ws", &websocket.DialOptions{
 			HTTPClient: client,
 		})
 		if err != nil {
