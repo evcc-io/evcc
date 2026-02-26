@@ -146,7 +146,6 @@ func NewWarpWS(ctx context.Context, uri, user, password string, meterIndex uint)
 	log := util.NewLogger("warp-ws")
 
 	client := request.NewHelper(log)
-
 	if user != "" {
 		client.Transport = digest.NewTransport(user, password, client.Transport)
 	}
