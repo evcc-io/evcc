@@ -161,7 +161,7 @@ func NewWarpWS(ctx context.Context, uri, user, password string, meterIndex uint)
 		metersValuesTopic:   fmt.Sprintf("meters/%d/values", meterIndex),
 	}
 
-	go w.run(ctx, uri+"/ws", client.Client)
+	go w.run(ctx, w.uri+"/ws", client.Client)
 
 	return w, nil
 }
