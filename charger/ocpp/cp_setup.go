@@ -164,6 +164,12 @@ func (cp *CP) Setup(ctx context.Context, meterValues string, meterInterval time.
 		cp.PhaseSwitching = true // assume phase switching is available for power-based charging
 	}
 
+	// start station-level watchdog to trigger meter values for whole station (fallback)
+	if cp.HasRemoteTriggerFeature && meterInterval > 0 {
+		// add delay to give push updates and connector-specific triggers time to respond first
+		go cp.WatchDog(ctx, meterInterval+5*time.Second)
+	}
+
 	return nil
 }
 
