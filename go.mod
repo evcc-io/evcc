@@ -55,7 +55,6 @@ require (
 	github.com/hashicorp/go-version v1.8.0
 	github.com/hasura/go-graphql-client v0.15.1
 	github.com/holoplot/go-evdev v0.0.0-20250804134636-ab1d56a1fe83
-	github.com/icholy/digest v1.1.0
 	github.com/influxdata/influxdb-client-go/v2 v2.14.0
 	github.com/insomniacslk/tapo v1.0.2
 	github.com/itchyny/gojq v0.12.18
