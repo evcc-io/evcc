@@ -18,7 +18,6 @@ import (
 	"github.com/evcc-io/evcc/core/metrics"
 	"github.com/evcc-io/evcc/core/types"
 	"github.com/evcc-io/evcc/tariff"
-	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -273,7 +272,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 
 	site.battery.Forecast = site.addBatteryForecastTotals(req.Batteries, resp.JSON200.Batteries)
 
-	site.publish(keys.Battery, util.NewSharder(keys.Battery, site.battery))
+	site.publish(keys.Battery, site.battery)
 
 	return nil
 }

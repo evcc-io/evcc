@@ -102,7 +102,10 @@ test.describe("network modal", async () => {
     await expectModalVisible(modal);
 
     const portValue = await modal.getByLabel("Port").inputValue();
+    await modal.getByLabel("External URL").fill(NETWORK_EXTERNAL_URL + "/somepath");
+    await expect(modal.getByRole("status")).toContainText("doesn't need a path");
     await modal.getByLabel("External URL").fill(NETWORK_EXTERNAL_URL);
+    await expect(modal.getByRole("status")).not.toBeVisible();
     await modal.getByLabel("mDNS Hostname").fill(NETWORK_HOST);
 
     await modal.getByRole("button", { name: "Save" }).click();
