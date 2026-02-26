@@ -49,6 +49,11 @@ func NewConnection(log *util.Logger, uri, home string) (*Connection, error) {
 	return c, nil
 }
 
+// URI returns the base URI of the Home Assistant instance
+func (c *Connection) URI() string {
+	return c.instance.URI()
+}
+
 // GetStates retrieves the list of entities
 func (c *Connection) GetStates() ([]StateResponse, error) {
 	var res []StateResponse

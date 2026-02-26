@@ -32,14 +32,25 @@ func getInstances(w http.ResponseWriter, req *http.Request) {
 	jsonWrite(w, slices.Sorted(maps.Values(instances)))
 }
 
-func getEntities(w http.ResponseWriter, req *http.Request) {
+func connectionFromRequest(w http.ResponseWriter, req *http.Request) (*Connection, bool) {
 	uri := util.DefaultScheme(strings.TrimSuffix(req.URL.Query().Get("uri"), "/"), "http")
 	if uri == "" {
 		jsonError(w, http.StatusBadRequest, errors.New("missing uri"))
+		return nil, false
+	}
+	conn, err := NewConnection(log, uri, "")
+	if err != nil {
+		jsonError(w, http.StatusBadRequest, err)
+		return nil, false
+	}
+	return conn, true
+}
+
+func getEntities(w http.ResponseWriter, req *http.Request) {
+	conn, ok := connectionFromRequest(w, req)
+	if !ok {
 		return
 	}
-
-	conn, _ := NewConnection(log, uri, "")
 	res, err := conn.GetStates()
 	if err != nil {
 		jsonError(w, http.StatusBadRequest, err)
@@ -77,13 +88,10 @@ type serviceDomainResponse struct {
 }
 
 func getServices(w http.ResponseWriter, req *http.Request) {
-	uri := util.DefaultScheme(strings.TrimSuffix(req.URL.Query().Get("uri"), "/"), "http")
-	if uri == "" {
-		jsonError(w, http.StatusBadRequest, errors.New("missing uri"))
+	conn, ok := connectionFromRequest(w, req)
+	if !ok {
 		return
 	}
-
-	conn, _ := NewConnection(log, uri, "")
 
 	var filterDomains []string
 	if domain := req.URL.Query().Get("domain"); domain != "" {
@@ -94,7 +102,7 @@ func getServices(w http.ResponseWriter, req *http.Request) {
 
 	// collect matching services from /api/services
 	var svcRes []serviceDomainResponse
-	if err := conn.GetJSON(fmt.Sprintf("%s/api/services", uri), &svcRes); err != nil {
+	if err := conn.GetJSON(fmt.Sprintf("%s/api/services", conn.URI()), &svcRes); err != nil {
 		jsonError(w, http.StatusBadRequest, err)
 		return
 	}
