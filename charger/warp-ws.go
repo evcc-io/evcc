@@ -20,7 +20,7 @@ import (
 	"github.com/evcc-io/evcc/charger/warp"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/jpfielding/go-http-digest/pkg/digest"
+	"github.com/icholy/digest"
 )
 
 type WarpWS struct {
@@ -56,13 +56,6 @@ type WarpWS struct {
 	pmLowLevelState warp.PmLowLevelState
 }
 
-type warpEvent struct {
-	Topic   string          `json:"topic"`
-	Payload json.RawMessage `json:"payload"`
-}
-
-var _ api.ChargerEx = (*WarpWS)(nil)
-
 func init() {
 	registry.AddCtx("warp-ws", NewWarpWSFromConfig)
 }
@@ -85,7 +78,7 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 		return nil, err
 	}
 
-	wb, err := NewWarpWS(ctx, cc.URI, cc.User, cc.Password, cc.EnergyMeterIndex)
+	wb, err := NewWarpWS(ctx, cc.URI, cc.EnergyMeterIndex, cc.User, cc.Password)
 	if err != nil {
 		return nil, err
 	}
@@ -109,15 +102,15 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 		wb.pmURI = wb.uri
 		wb.pmHelper = wb.Helper
 	} else if cc.EnergyManagerURI != "" { // fallback to Energy Manager
-		wb.pmURI, err = parseURI(cc.EnergyManagerURI, false)
-		if wb.pmURI == "" {
-			return nil, err
-		} else if err != nil {
-			wb.log.DEBUG.Println(err)
-		}
+		wb.pmURI = util.DefaultScheme(strings.TrimRight(cc.EnergyManagerURI, "/"), "http")
 		wb.pmHelper = request.NewHelper(wb.log)
+
 		if cc.EnergyManagerUser != "" {
-			wb.pmHelper.Client.Transport = digest.NewTransport(cc.EnergyManagerUser, cc.EnergyManagerPassword, wb.pmHelper.Client.Transport)
+			wb.pmHelper.Client.Transport = &digest.Transport{
+				Username:  cc.EnergyManagerUser,
+				Password:  cc.EnergyManagerPassword,
+				Transport: wb.pmHelper.Client.Transport,
+			}
 		}
 	}
 
@@ -151,70 +144,125 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 	return decorateWarpWS(wb, currentPower, totalEnergy, currents, voltages, identify, phases, getPhases), nil
 }
 
-func NewWarpWS(ctx context.Context, uri, user, password string, meterIndex uint) (*WarpWS, error) {
+func NewWarpWS(ctx context.Context, uri string, meterIndex uint, user, password string) (*WarpWS, error) {
 	log := util.NewLogger("warp-ws")
 
+	wsURI, err := parseURI(uri)
+	if err != nil {
+		return nil, err
+	}
+
 	client := request.NewHelper(log)
+
 	if user != "" {
-		client.Client.Transport = digest.NewTransport(user, password, client.Client.Transport)
+		client.Client.Transport = &digest.Transport{
+			Username:  user,
+			Password:  password,
+			Transport: client.Client.Transport,
+		}
 	}
 
 	w := &WarpWS{
 		Helper: client, log: log,
-		uri:                 util.DefaultScheme(uri, "http"),
+		uri:                 uri,
 		meterIndex:          meterIndex,
 		meterMap:            map[int]int{},
 		metersValueIDsTopic: fmt.Sprintf("meters/%d/value_ids", meterIndex),
 		metersValuesTopic:   fmt.Sprintf("meters/%d/values", meterIndex),
 	}
 
-	go w.run(ctx)
+	go w.run(ctx, digest.Options{
+		URI:      wsURI,
+		Username: user,
+		Password: password,
+	})
 
 	return w, nil
 }
 
-func (w *WarpWS) run(ctx context.Context) {
-	uri, err := parseURI(w.uri, true)
-	if err != nil {
-		w.log.DEBUG.Println(err)
-		if uri == "" {
-			return
-		}
-	}
-	w.log.TRACE.Printf("connecting to %s …", uri)
+func (w *WarpWS) run(ctx context.Context, options digest.Options) {
+	bo := backoff.NewExponentialBackOff(
+		backoff.WithMaxElapsedTime(0),
+		backoff.WithMaxInterval(30*time.Second),
+	)
 
-	bo := backoff.NewExponentialBackOff(backoff.WithMaxElapsedTime(0))
 	for ctx.Err() == nil {
-		conn, _, err := websocket.Dial(ctx, uri, nil)
+		w.log.DEBUG.Println("websocket: connecting")
+
+		conn, err := dialWebsocket(ctx, options)
 		if err != nil {
-			if ctx.Err() != nil {
-				return
+			if !errors.Is(context.DeadlineExceeded, err) {
+				w.log.ERROR.Printf("websocket: %v", err)
 			}
-			time.Sleep(bo.NextBackOff())
+
+			select {
+			case <-ctx.Done():
+				return
+			case <-time.After(bo.NextBackOff()):
+			}
+
 			continue
 		}
 
 		bo.Reset()
+
 		if err := w.handleConnection(ctx, conn); err != nil {
 			w.log.ERROR.Println(err)
 		}
 	}
 }
 
-func parseURI(uri string, toWS bool) (string, error) {
+func dialWebsocket(ctx context.Context, options digest.Options) (*websocket.Conn, error) {
+	// err will be non nil if auth is needed
+	conn, resp, err := websocket.Dial(ctx, options.URI, nil)
+	if err == nil {
+		return conn, nil
+	}
+
+	if resp == nil || resp.StatusCode != http.StatusUnauthorized {
+		return nil, err
+	}
+
+	if options.Username == "" {
+		return nil, errors.New("websocket: missing credentials")
+	}
+
+	// extract challenge from response
+	challenge, err := digest.ParseChallenge(resp.Header.Get("WWW-Authenticate"))
+	if err != nil {
+		return nil, fmt.Errorf("websocket: %w", err)
+	}
+
+	options.Method = "GET"
+	options.Count = 1
+
+	cred, err := digest.Digest(challenge, options)
+	if err != nil {
+		return nil, err
+	}
+
+	// Dial with Digest Auth
+	dialer := websocket.DialOptions{
+		HTTPHeader: http.Header{
+			"Authorization": []string{cred.String()},
+		},
+	}
+
+	conn, _, err = websocket.Dial(ctx, options.URI, &dialer)
+	return conn, err
+}
+
+// Returns parsed URI and hostname
+func parseURI(uri string) (string, error) {
 	u, err := url.Parse(util.DefaultScheme(strings.TrimRight(uri, "/"), "http"))
 	if err != nil {
 		return "", err
 	}
-	if u.Scheme == "https" || u.Scheme == "wss" {
-		u.Scheme = "http"
-		err = fmt.Errorf("https or wss are not supported, using http/ws instead")
-	}
-	if toWS {
-		u.Scheme = "ws"
-		u.Path = path.Join(u.Path, "/ws")
-	}
-	return u.String(), err
+
+	u.Scheme = "ws"
+	u.Path = path.Join(u.Path, "/ws")
+
+	return u.String(), nil
 }
 
 func (w *WarpWS) handleConnection(ctx context.Context, conn *websocket.Conn) error {
@@ -230,7 +278,10 @@ func (w *WarpWS) handleConnection(ctx context.Context, conn *websocket.Conn) err
 
 		dec := json.NewDecoder(r)
 		for {
-			var event warpEvent
+			var event struct {
+				Topic   string          `json:"topic"`
+				Payload json.RawMessage `json:"payload"`
+			}
 			if err := dec.Decode(&event); err != nil {
 				if errors.Is(err, io.EOF) {
 					break //next frame
@@ -238,7 +289,7 @@ func (w *WarpWS) handleConnection(ctx context.Context, conn *websocket.Conn) err
 				return err
 			}
 
-			w.log.TRACE.Printf("ws event %s: %s", event.Topic, event.Payload)
+			w.log.TRACE.Printf("websocket: event %s: %s", event.Topic, event.Payload)
 			if err := w.handleEvent(event.Topic, event.Payload); err != nil {
 				w.log.ERROR.Printf("bad payload for topic %s: %v", event.Topic, err)
 			}
@@ -360,6 +411,8 @@ func (w *WarpWS) Enabled() (bool, error) {
 func (w *WarpWS) MaxCurrent(current int64) error {
 	return w.MaxCurrentMillis(float64(current))
 }
+
+var _ api.ChargerEx = (*WarpWS)(nil)
 
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (w *WarpWS) MaxCurrentMillis(current float64) error {
