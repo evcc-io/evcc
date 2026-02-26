@@ -185,7 +185,7 @@ func NewWarpWS(ctx context.Context, uri, user, password, emUri, emUser, emPasswo
 		metersValuesTopic:   fmt.Sprintf("meters/%d/values", meterIndex),
 	}
 
-	wsURI, err := w.parseURI(conn.URI, true)
+	wsURI, err := w.parseURI(conn.URI)
 	if err != nil {
 		return nil, err
 	}
@@ -198,24 +198,27 @@ func (w *WarpWS) run(ctx context.Context, wsURI string) {
 	bo := backoff.NewExponentialBackOff(backoff.WithMaxElapsedTime(0), backoff.WithMaxInterval(30*time.Second))
 
 	for ctx.Err() == nil {
-		w.log.DEBUG.Println("ws connecting …")
+		w.log.DEBUG.Println("websocket: connecting")
 
 		conn, err := w.dialWebsocket(ctx, wsURI)
 		if err != nil {
-			w.log.ERROR.Println("ws dial failed")
-		} else {
-			w.log.DEBUG.Printf("ws connected")
-			bo.Reset()
-
-			if err := w.handleConnection(ctx, conn); err != nil {
-				w.log.ERROR.Println(err)
+			if ctx.Err() == nil {
+				w.log.ERROR.Printf("websocket: %v", err)
 			}
+
+			select {
+			case <-ctx.Done():
+				return
+			case <-time.After(bo.NextBackOff()):
+			}
+
+			continue
 		}
 
-		select {
-		case <-ctx.Done():
-			return
-		case <-time.After(bo.NextBackOff()):
+		bo.Reset()
+
+		if err := w.handleConnection(ctx, conn); err != nil {
+			w.log.ERROR.Println(err)
 		}
 	}
 }
@@ -232,7 +235,7 @@ func (w *WarpWS) dialWebsocket(ctx context.Context, wsURI string) (*websocket.Co
 	}
 
 	if w.Auth == nil {
-		return nil, fmt.Errorf("ws missing credentials")
+		return nil, fmt.Errorf("websocket: missing credentials")
 	}
 
 	// Extract challenge from response
@@ -241,27 +244,24 @@ func (w *WarpWS) dialWebsocket(ctx context.Context, wsURI string) (*websocket.Co
 		return nil, err
 	}
 
-	digOpts := &digest.Options{
+	cred, err := digest.Digest(chal, digest.Options{
 		Username: w.Auth.User,
 		Password: w.Auth.Password,
 		URI:      wsURI,
 		Method:   "GET",
 		Count:    1,
-	}
-
-	cred, err := digest.Digest(chal, *digOpts)
+	})
 	if err != nil {
 		return nil, err
 	}
 
 	// Dial with Digest Auth
-	dialOpts := websocket.DialOptions{
+	conn, _, err = websocket.Dial(ctx, wsURI, &websocket.DialOptions{
 		HTTPHeader: http.Header{
 			"Authorization": []string{cred.String()},
 		},
-	}
+	})
 
-	conn, _, err = websocket.Dial(ctx, wsURI, &dialOpts)
 	return conn, err
 }
 
@@ -298,7 +298,7 @@ func (w *WarpWS) handleConnection(ctx context.Context, conn *websocket.Conn) err
 			var event warpEvent
 			if err := dec.Decode(&event); err != nil {
 				if errors.Is(err, io.EOF) {
-					break //next frame
+					break // next frame
 				}
 				return err
 			}
