@@ -185,7 +185,7 @@ func NewWarpWS(ctx context.Context, uri, user, password, emUri, emUser, emPasswo
 		metersValuesTopic:   fmt.Sprintf("meters/%d/values", meterIndex),
 	}
 
-	wsURI, err := w.parseURI(conn.URI)
+	wsURI, err := w.parseURI(conn.URI, true)
 	if err != nil {
 		return nil, err
 	}
