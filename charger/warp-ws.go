@@ -191,7 +191,7 @@ func (w *WarpWS) run(ctx context.Context, options digest.Options) {
 
 		conn, err := dialWebsocket(ctx, options)
 		if err != nil {
-			if !errors.Is(context.DeadlineExceeded, err) {
+			if !errors.Is(err, context.DeadlineExceeded) {
 				w.log.ERROR.Printf("websocket: %v", err)
 			}
 
