@@ -89,7 +89,7 @@
     "prettier-plugin-sh": "^0.18.0",
     "prettier-plugin-sort-json": "^4.1.1",
     "rollup-plugin-visualizer": "^6.0.5",
-    "storybook": "^10.1.10",
+    "storybook": "^10.2.13",
     "terser": "^5.44.1",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
