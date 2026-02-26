@@ -32,23 +32,18 @@ func getInstances(w http.ResponseWriter, req *http.Request) {
 	jsonWrite(w, slices.Sorted(maps.Values(instances)))
 }
 
-func connectionFromRequest(w http.ResponseWriter, req *http.Request) (*Connection, bool) {
+func connectionFromRequest(req *http.Request) (*Connection, error) {
 	uri := util.DefaultScheme(strings.TrimSuffix(req.URL.Query().Get("uri"), "/"), "http")
 	if uri == "" {
-		jsonError(w, http.StatusBadRequest, errors.New("missing uri"))
-		return nil, false
+		return nil, errors.New("missing uri")
 	}
-	conn, err := NewConnection(log, uri, "")
-	if err != nil {
-		jsonError(w, http.StatusBadRequest, err)
-		return nil, false
-	}
-	return conn, true
+	return NewConnection(log, uri, "")
 }
 
 func getEntities(w http.ResponseWriter, req *http.Request) {
-	conn, ok := connectionFromRequest(w, req)
-	if !ok {
+	conn, err := connectionFromRequest(req)
+	if err != nil {
+		jsonError(w, http.StatusBadRequest, err)
 		return
 	}
 	res, err := conn.GetStates()
@@ -88,8 +83,9 @@ type serviceDomainResponse struct {
 }
 
 func getServices(w http.ResponseWriter, req *http.Request) {
-	conn, ok := connectionFromRequest(w, req)
-	if !ok {
+	conn, err := connectionFromRequest(req)
+	if err != nil {
+		jsonError(w, http.StatusBadRequest, err)
 		return
 	}
 
@@ -107,7 +103,7 @@ func getServices(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	for _, sd := range svcRes {
-		if len(filterDomains) > 0 && !lo.Contains(filterDomains, sd.Domain) {
+		if len(filterDomains) > 0 && !slices.Contains(filterDomains, sd.Domain) {
 			continue
 		}
 		for svc := range sd.Services {
