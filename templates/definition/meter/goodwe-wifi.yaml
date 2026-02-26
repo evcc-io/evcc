@@ -16,4 +16,3 @@ render: |
   type: goodwe-wifi
   usage: {{ .usage }}
   uri: {{ .uri }}
-
