@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
-	"path"
 	"slices"
 	"strings"
 	"sync"
@@ -156,22 +154,14 @@ func NewWarpWS(ctx context.Context, uri, user, password string, meterIndex uint)
 	w := &WarpWS{
 		Helper:              client,
 		log:                 log,
-		uri:                 uri,
+		uri:                 util.DefaultScheme(strings.TrimRight(uri, "/"), "http"),
 		meterIndex:          meterIndex,
 		meterMap:            map[int]int{},
 		metersValueIDsTopic: fmt.Sprintf("meters/%d/value_ids", meterIndex),
 		metersValuesTopic:   fmt.Sprintf("meters/%d/values", meterIndex),
 	}
 
-	// create ws uri
-	u, err := url.Parse(util.DefaultScheme(strings.TrimRight(uri, "/"), "http"))
-	if err != nil {
-		return nil, err
-	}
-	u.Scheme = "ws"
-	u.Path = path.Join(u.Path, "/ws")
-
-	go w.run(ctx, u.String(), client.Client)
+	go w.run(ctx, uri+"/ws", client.Client)
 
 	return w, nil
 }
