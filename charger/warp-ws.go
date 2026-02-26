@@ -64,14 +64,13 @@ func init() {
 
 func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	var cc struct {
-		URI                    string
-		User                   string
-		Password               string
-		EnergyManagerURI       string
-		EnergyManagerUser      string
-		EnergyManagerPassword  string
-		DisablePhaseAutoSwitch bool
-		EnergyMeterIndex       uint
+		URI                   string
+		User                  string
+		Password              string
+		EnergyManagerURI      string
+		EnergyManagerUser     string
+		EnergyManagerPassword string
+		EnergyMeterIndex      uint
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -131,10 +130,13 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 		}
 	}
 
-	// Phase Auto Switching needs to be disabled for WARP3
+	// Phase Auto Switching needs to be disabled for WARP3 and WARP2 + EM
 	// Necessary if charging 1p only vehicles
-	if cc.DisablePhaseAutoSwitch {
-		// unfortunately no feature to check for, instead this is set in template
+	wT, err := wb.getWarpType()
+	if err != nil {
+		return nil, err
+	}
+	if wT == "warp3" || (wT == "warp2" && wb.pmURI != "") {
 		if err := wb.disablePhaseAutoSwitch(); err != nil {
 			return nil, err
 		}
@@ -571,4 +573,17 @@ func (w *WarpWS) ensurePmState() (warp.PmState, error) {
 	w.mu.Unlock()
 
 	return ns, nil
+}
+
+func (w *WarpWS) getWarpType() (string, error) {
+	w.mu.RLock()
+	uri := fmt.Sprintf("%s/info/name", w.uri)
+	w.mu.RUnlock()
+
+	var n warp.Name
+	err := w.GetJSON(uri, &n)
+	if err != nil {
+		return "", err
+	}
+	return n.WarpType, nil
 }
