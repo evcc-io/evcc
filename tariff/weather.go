@@ -75,9 +75,9 @@ func (t *Weather) run(done chan error) {
 	client := request.NewHelper(t.log)
 
 	for tick := time.Tick(time.Hour); ; <-tick {
-		// Use ISO 8601 time format (default) so timestamps are strings like "2006-01-02T15:04"
+		// Request UTC timezone so timestamps are unambiguous ISO 8601 strings like "2024-01-15T14:00"
 		uri := fmt.Sprintf(
-			"https://api.open-meteo.com/v1/forecast?latitude=%f&longitude=%f&hourly=temperature_2m&forecast_days=3",
+			"https://api.open-meteo.com/v1/forecast?latitude=%f&longitude=%f&hourly=temperature_2m&forecast_days=3&timezone=UTC",
 			t.latitude, t.longitude,
 		)
 
@@ -96,8 +96,8 @@ func (t *Weather) run(done chan error) {
 				break
 			}
 
-			// Open-Meteo returns ISO 8601 strings like "2024-01-15T14:00"
-			ts, err := time.ParseInLocation("2006-01-02T15:04", tsStr, time.Local)
+			// Open-Meteo returns ISO 8601 UTC strings like "2024-01-15T14:00" when timezone=UTC
+			ts, err := time.ParseInLocation("2006-01-02T15:04", tsStr, time.UTC)
 			if err != nil {
 				t.log.WARN.Printf("open-meteo: cannot parse timestamp %q: %v", tsStr, err)
 				continue
