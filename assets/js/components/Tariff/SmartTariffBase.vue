@@ -365,7 +365,6 @@ export default defineComponent({
 				// 3 decimal precision
 				const valueRounded = Math.ceil(value * 1000) / 1000;
 				this.selectedLimit = valueRounded;
-				this.active = true;
 				this.saveLimit(valueRounded);
 			}
 		},
