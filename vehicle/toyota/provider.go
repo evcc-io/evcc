@@ -21,7 +21,6 @@ type Provider struct {
 
 func NewProvider(log *util.Logger, api *API, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
-		log: log,
 		refresh: func() error {
 			return api.RefreshStatus(vin)
 		},
