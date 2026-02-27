@@ -27,7 +27,7 @@
 						:id="formId"
 						v-model.number="selectedLimit"
 						class="form-select form-select-sm"
-						:disabled="!active"
+						:class="{ disabled: !active }"
 						:aria-label="limitLabel"
 						@change="changeLimit"
 					>
@@ -374,20 +374,19 @@ export default defineComponent({
 			this.saveLimit(value);
 		},
 		toggleActive($event: Event) {
-			const active = ($event.target as HTMLInputElement).checked;
-			if (active) {
+			this.active = ($event.target as HTMLInputElement).checked;
+			if (this.active) {
 				this.saveLimit(this.lastLimit);
 			} else {
 				this.resetLimit();
 			}
-			this.active = active;
 			if (this.applyAll) {
 				this.applyToAllVisible = true;
 			}
 		},
 		saveLimit(limit: number) {
-			this.$emit("save-limit", limit);
-			if (this.applyAll) {
+			this.$emit("save-limit", limit, this.active);
+			if (this.applyAll && this.active) {
 				this.applyToAllVisible = true;
 			}
 		},
