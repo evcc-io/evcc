@@ -21,7 +21,6 @@ params:
     advanced: true
   - preset: battery-params
   - name: capacity
-    advanced: false
     service: modbus/read?address=60031&type=holding&encoding=uint32&scale=0.001&resulttype=int&{modbus}
   - name: minsoc
     advanced: true

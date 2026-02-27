@@ -17,6 +17,7 @@ params:
   - preset: battery-params
   - name: maxchargepower
     default: 4200
+    required: true
   - name: watchdog
     type: duration
     default: 60s
