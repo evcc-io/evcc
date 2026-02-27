@@ -9,23 +9,21 @@ import (
 )
 
 type Controller struct {
-	pvd                   *Provider
-	api                   *API
-	log                   *util.Logger
-	vin                   string
-	pin                   string
-	scheduleBasedCharging bool
+	pvd *Provider
+	api *API
+	log *util.Logger
+	vin string
+	pin string
 }
 
 // NewController creates a vehicle current and charge controller
 func NewController(provider *Provider, api *API, log *util.Logger, vin string, pin string) *Controller {
 	impl := &Controller{
-		pvd:                   provider,
-		api:                   api,
-		log:                   log,
-		vin:                   vin,
-		pin:                   pin,
-		scheduleBasedCharging: false, // false for now, will be set to true when ChargeEnable is actually called.
+		pvd: provider,
+		api: api,
+		log: log,
+		vin: vin,
+		pin: pin,
 	}
 	return impl
 }
@@ -54,8 +52,6 @@ func (c *Controller) ChargeEnable(enable bool) error {
 	if stat.EvInfo == nil || stat.EvInfo.Schedules == nil || len(stat.EvInfo.Schedules) == 0 {
 		return api.ErrNotAvailable
 	}
-
-	c.scheduleBasedCharging = true // set to true when ChargeEnable is called for the first time, to indicate that we are actually controlling the charge, this will be used in WakeUp method to decide if we should call ChargeNow or not
 
 	hasChanged := false // Will track if we made any change to the schedule to avoid unnecessary updates through API call
 	now := time.Now()   // Call once and reuse
@@ -130,16 +126,6 @@ func (c *Controller) configureChargeSchedule(schedule *Schedule, start time.Time
 			schedule.EndTime = defaultEndTime // Set default end time when enabling charge to avoid API rejections for schedules without end time
 			hasChanged = true
 			c.log.DEBUG.Printf("set charge schedule start: %s with default end time: %s", schedule.StartTime, schedule.EndTime)
-
-			// only enable for current day to avoid undesired charge start in the future
-			weekday := start.Weekday()
-			schedule.ScheduledDays.Monday = (weekday == time.Monday)
-			schedule.ScheduledDays.Tuesday = (weekday == time.Tuesday)
-			schedule.ScheduledDays.Wednesday = (weekday == time.Wednesday)
-			schedule.ScheduledDays.Thursday = (weekday == time.Thursday)
-			schedule.ScheduledDays.Friday = (weekday == time.Friday)
-			schedule.ScheduledDays.Saturday = (weekday == time.Saturday)
-			schedule.ScheduledDays.Sunday = (weekday == time.Sunday)
 		}
 	}
 
@@ -156,16 +142,12 @@ func (c *Controller) configureChargeSchedule(schedule *Schedule, start time.Time
 		}
 	}
 
-	// If one of the time changed, make sure start time is always before end time (parse both from string to ensure proper comparison)
+	// If one of the time changed, make sure the schedule is always consistent even in edge cases.
 	if (!start.IsZero() || !end.IsZero()) && hasChanged {
+		// To ensure proper comparison of times, we need to parse them back from string to time.Time.
 		chkStart, err1 := time.Parse(timeFormat, schedule.StartTime)
 		chkEnd, err2 := time.Parse(timeFormat, schedule.EndTime)
-		if err1 == nil && err2 == nil && chkStart.After(chkEnd) {
-			// If start time is after end time, set start time to fallback value to avoid API rejections for schedules crossing midnight
-			c.log.DEBUG.Printf("start time %s is after end time %s, setting start time to fallback value %s", schedule.StartTime, schedule.EndTime, fallbackStartTime)
-			schedule.StartTime = fallbackStartTime
-			hasChanged = true
-		} else if err1 != nil || err2 != nil {
+		if err1 != nil || err2 != nil {
 			c.log.WARN.Printf("failed to parse schedule times: start=%v, end=%v", err1, err2)
 			if err1 != nil {
 				// If start time cannot be parsed, also set to fallback value
@@ -173,7 +155,35 @@ func (c *Controller) configureChargeSchedule(schedule *Schedule, start time.Time
 				hasChanged = true
 				c.log.DEBUG.Printf("set charge schedule start to fallback value %s due to parse error", fallbackStartTime)
 			}
+			if err2 != nil {
+				// If start time cannot be parsed, also set to fallback value
+				schedule.EndTime = defaultEndTime
+				hasChanged = true
+				c.log.DEBUG.Printf("set charge schedule end to default value %s due to parse error", defaultEndTime)
+			}
+		} else if chkStart.After(chkEnd) {
+			// If start time is after end time, set start time to fallback value to avoid API rejections for schedules crossing midnight
+			c.log.DEBUG.Printf("start time %s is after end time %s, setting start time to fallback value %s", schedule.StartTime, schedule.EndTime, fallbackStartTime)
+			schedule.StartTime = fallbackStartTime
+			hasChanged = true
+		} else if chkStart.Equal(chkEnd) {
+			// If start time is equal to end time, it means the charge has been stopped before the schedule start time => disable it to avoid charge to start
+			c.log.DEBUG.Printf("start time %s is equal to end time %s, disabling schedule", schedule.StartTime, schedule.EndTime)
+			schedule.EnableScheduleType = false
+			hasChanged = true
 		}
+	}
+
+	// If schedule was changed, make sure it's only enabled for current day to avoid undesired charge start in the future when schedule is applied by the vehicle
+	if hasChanged {
+		weekday := start.Weekday()
+		schedule.ScheduledDays.Monday = (weekday == time.Monday)
+		schedule.ScheduledDays.Tuesday = (weekday == time.Tuesday)
+		schedule.ScheduledDays.Wednesday = (weekday == time.Wednesday)
+		schedule.ScheduledDays.Thursday = (weekday == time.Thursday)
+		schedule.ScheduledDays.Friday = (weekday == time.Friday)
+		schedule.ScheduledDays.Saturday = (weekday == time.Saturday)
+		schedule.ScheduledDays.Sunday = (weekday == time.Sunday)
 	}
 
 	return hasChanged
@@ -198,19 +208,24 @@ func (c *Controller) WakeUp() error {
 		return nil
 	}
 
-	// Only call ChargeNow to WakeUp if the charger is handling the charging and not the vehicle, otherwise schedules will not work properly.
-	if !c.scheduleBasedCharging {
-		res, err := c.api.ChargeNow(c.vin, c.pin)
-		if err != nil {
-			return fmt.Errorf("charge now call failed: %w", err)
-		}
-		if res.ResponseStatus != "pending" {
-			return fmt.Errorf("invalid response status: %s", res.ResponseStatus)
-		}
-		c.log.DEBUG.Printf("vehicle wakeup triggered successfully with charge now action")
-	} else {
-		c.log.DEBUG.Printf("vehicle wakeup skipped because charge is controlled by evcc, to avoid conflicts with schedules")
+	// get current schedule status from provider (cached)
+	stat, err := c.pvd.statusG()
+	if err == nil && stat.EvInfo != nil && stat.EvInfo.Schedules != nil && len(stat.EvInfo.Schedules) > 0 &&
+		stat.EvInfo.Schedules[0].EnableScheduleType && stat.EvInfo.Schedules[0].ScheduleType == "CHARGE" {
+		// If the first schedule is already enabled for charge, don't go further to avoid chargeNow forcing immediate charge start and messing up with schedules
+		c.log.DEBUG.Printf("vehicle wakeup skipped because charge schedule is already enabled, to avoid conflicts with schedules")
+		return nil
 	}
+
+	// No charge schedule is set and we need to wakeup the vehicle as charge is not starting => let's call ChargeNow to start the charge
+	res, err := c.api.ChargeNow(c.vin, c.pin)
+	if err != nil {
+		return fmt.Errorf("charge now call failed: %w", err)
+	}
+	if res.ResponseStatus != "pending" {
+		return fmt.Errorf("invalid response status: %s", res.ResponseStatus)
+	}
+	c.log.DEBUG.Printf("vehicle wakeup triggered successfully with charge now action")
 
 	return nil
 }
