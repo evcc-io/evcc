@@ -20,11 +20,10 @@ type CP struct {
 
 	id string
 
-	connected   bool
-	initialized bool        // true after first Setup completes
-	bootTimer   *time.Timer // timeout for BootNotification wait after WebSocket connect
-	connectC    chan struct{}
-	meterC      chan struct{}
+	connected bool
+	bootTimer *time.Timer // timeout for BootNotification wait after WebSocket connect
+	connectC  chan struct{}
+	meterC    chan struct{}
 
 	// configuration properties
 	PhaseSwitching          bool
@@ -115,6 +114,15 @@ func (cp *CP) RegisterID(id string) {
 	cp.id = id
 }
 
+// stopBootTimer cancels and clears the boot notification wait timer.
+// Must be called with cp.mu held.
+func (cp *CP) stopBootTimer() {
+	if cp.bootTimer != nil {
+		cp.bootTimer.Stop()
+		cp.bootTimer = nil
+	}
+}
+
 func (cp *CP) connect(connect bool) {
 	cp.mu.Lock()
 	defer cp.mu.Unlock()
@@ -126,11 +134,7 @@ func (cp *CP) connect(connect bool) {
 			close(cp.connectC)
 		})
 	} else {
-		// cancel boot timer on disconnect
-		if cp.bootTimer != nil {
-			cp.bootTimer.Stop()
-			cp.bootTimer = nil
-		}
+		cp.stopBootTimer()
 	}
 }
 
@@ -139,15 +143,10 @@ func (cp *CP) connect(connect bool) {
 // BootNotification handshake to complete (or a timeout to expire).
 func (cp *CP) onTransportConnect() {
 	cp.mu.Lock()
+	defer cp.mu.Unlock()
 
-	// cancel any previous boot timer
-	if cp.bootTimer != nil {
-		cp.bootTimer.Stop()
-	}
-
+	cp.stopBootTimer()
 	cp.bootTimer = time.AfterFunc(Timeout, cp.onBootTimeout)
-
-	cp.mu.Unlock()
 }
 
 // onBootTimeout is called when the BootNotification wait timer expires.
@@ -170,13 +169,6 @@ func (cp *CP) Connected() bool {
 	defer cp.mu.RUnlock()
 
 	return cp.connected
-}
-
-func (cp *CP) Initialized() bool {
-	cp.mu.RLock()
-	defer cp.mu.RUnlock()
-
-	return cp.initialized
 }
 
 func (cp *CP) HasConnected() <-chan struct{} {

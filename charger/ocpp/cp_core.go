@@ -20,15 +20,9 @@ func (cp *CP) OnBootNotification(request *core.BootNotificationRequest) (*core.B
 		Status:      core.RegistrationStatusAccepted,
 	}
 
-	// store boot notification result
 	cp.mu.Lock()
 	cp.BootNotificationResult = request
-
-	// stop boot timer - BootNotification arrived before timeout
-	if cp.bootTimer != nil {
-		cp.bootTimer.Stop()
-		cp.bootTimer = nil
-	}
+	cp.stopBootTimer()
 	cp.mu.Unlock()
 
 	// mark charge point as ready for communication

@@ -154,11 +154,8 @@ func TestReconnectAfterReboot(t *testing.T) {
 	log := util.NewLogger("test")
 	cp := NewChargePoint(log, "test-cp")
 
-	// simulate initial connection + setup
+	// simulate initial connection
 	cp.connect(true)
-	cp.mu.Lock()
-	cp.initialized = true
-	cp.mu.Unlock()
 
 	// simulate disconnect
 	cp.connect(false)
@@ -197,18 +194,4 @@ func TestStartMonitorOnlyOnce(t *testing.T) {
 	cp.StartMonitor(start)
 
 	assert.Equal(t, 1, callCount, "StartMonitor should only call start once")
-}
-
-func TestInitializedFlag(t *testing.T) {
-	log := util.NewLogger("test")
-	cp := NewChargePoint(log, "test-cp")
-
-	assert.False(t, cp.Initialized(), "should not be initialized initially")
-
-	// simulate Setup completing
-	cp.mu.Lock()
-	cp.initialized = true
-	cp.mu.Unlock()
-
-	assert.True(t, cp.Initialized(), "should be initialized after setup")
 }

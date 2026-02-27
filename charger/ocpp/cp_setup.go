@@ -174,10 +174,6 @@ func (cp *CP) Setup(ctx context.Context, meterValues string, meterInterval time.
 		cp.PhaseSwitching = true // assume phase switching is available for power-based charging
 	}
 
-	cp.mu.Lock()
-	cp.initialized = true
-	cp.mu.Unlock()
-
 	return nil
 }
 

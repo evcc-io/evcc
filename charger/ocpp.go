@@ -237,11 +237,6 @@ func (c *OCPP) monitorReboot(ctx context.Context, meterValues string, meterInter
 			return
 
 		case boot := <-c.cp.BootNotificationC():
-			// only re-initialize if the charge point was previously initialized
-			if !c.cp.Initialized() {
-				continue
-			}
-
 			c.log.INFO.Printf("charger reboot detected (model: %s, vendor: %s), re-initializing",
 				boot.ChargePointModel, boot.ChargePointVendor)
 
