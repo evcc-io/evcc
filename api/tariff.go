@@ -12,6 +12,7 @@ const (
 	TariffTypePriceForecast
 	TariffTypeCo2
 	TariffTypeSolar
+	TariffTypeWeather // outdoor temperature forecast in °C
 )
 
 type TariffUsage int
@@ -23,4 +24,5 @@ const (
 	TariffUsageGrid
 	TariffUsagePlanner
 	TariffUsageSolar
+	TariffUsageWeather // outdoor temperature forecast
 )

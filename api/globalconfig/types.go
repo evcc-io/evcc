@@ -171,6 +171,7 @@ type Tariffs struct {
 	Co2      config.Typed
 	Planner  config.Typed
 	Solar    []config.Typed
+	Weather  config.Typed
 }
 
 type Network struct {

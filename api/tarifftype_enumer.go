@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _TariffTypeName = "pricestaticpricedynamicpriceforecastco2solar"
+const _TariffTypeName = "pricestaticpricedynamicpriceforecastco2solarweather"
 
-var _TariffTypeIndex = [...]uint8{0, 11, 23, 36, 39, 44}
+var _TariffTypeIndex = [...]uint8{0, 11, 23, 36, 39, 44, 51}
 
-const _TariffTypeLowerName = "pricestaticpricedynamicpriceforecastco2solar"
+const _TariffTypeLowerName = "pricestaticpricedynamicpriceforecastco2solarweather"
 
 func (i TariffType) String() string {
 	i -= 1
@@ -30,9 +30,10 @@ func _TariffTypeNoOp() {
 	_ = x[TariffTypePriceForecast-(3)]
 	_ = x[TariffTypeCo2-(4)]
 	_ = x[TariffTypeSolar-(5)]
+	_ = x[TariffTypeWeather-(6)]
 }
 
-var _TariffTypeValues = []TariffType{TariffTypePriceStatic, TariffTypePriceDynamic, TariffTypePriceForecast, TariffTypeCo2, TariffTypeSolar}
+var _TariffTypeValues = []TariffType{TariffTypePriceStatic, TariffTypePriceDynamic, TariffTypePriceForecast, TariffTypeCo2, TariffTypeSolar, TariffTypeWeather}
 
 var _TariffTypeNameToValueMap = map[string]TariffType{
 	_TariffTypeName[0:11]:       TariffTypePriceStatic,
@@ -45,6 +46,8 @@ var _TariffTypeNameToValueMap = map[string]TariffType{
 	_TariffTypeLowerName[36:39]: TariffTypeCo2,
 	_TariffTypeName[39:44]:      TariffTypeSolar,
 	_TariffTypeLowerName[39:44]: TariffTypeSolar,
+	_TariffTypeName[44:51]:      TariffTypeWeather,
+	_TariffTypeLowerName[44:51]: TariffTypeWeather,
 }
 
 var _TariffTypeNames = []string{
@@ -53,6 +56,7 @@ var _TariffTypeNames = []string{
 	_TariffTypeName[23:36],
 	_TariffTypeName[36:39],
 	_TariffTypeName[39:44],
+	_TariffTypeName[44:51],
 }
 
 // TariffTypeString retrieves an enum value from the enum constants string name.
@@ -101,3 +105,5 @@ func (i *TariffType) UnmarshalText(text []byte) error {
 	*i, err = TariffTypeString(string(text))
 	return err
 }
+
+// Made with Bob

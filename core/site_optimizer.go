@@ -523,10 +523,59 @@ func (site *Site) homeProfile(minLen int) ([]float64, error) {
 		res = res[:minLen]
 	}
 
+	// apply weather-based temperature correction to household load
+	res = site.applyTemperatureCorrection(res)
+
 	// convert to Wh
 	return lo.Map(res, func(v float64, i int) float64 {
 		return v * 1e3
 	}), nil
+}
+
+// applyTemperatureCorrection adjusts the household load profile based on outdoor temperature forecast.
+// When the outside temperature is below the heating threshold, the load is increased proportionally
+// to account for additional heating energy demand.
+// Formula: load[t] = load[t] * (1 + heatingCoefficient * max(0, heatingThreshold - T[t]))
+func (site *Site) applyTemperatureCorrection(profile []float64) []float64 {
+	weatherTariff := site.GetTariff(api.TariffUsageWeather)
+	if weatherTariff == nil {
+		return profile
+	}
+
+	rates, err := weatherTariff.Rates()
+	if err != nil || len(rates) == 0 {
+		return profile
+	}
+
+	threshold := site.HeatingThreshold
+	if threshold == 0 {
+		threshold = 15.0 // default: heating kicks in below 15°C
+	}
+	coeff := site.HeatingCoefficient
+	if coeff == 0 {
+		coeff = 0.05 // default: 5% load increase per °C below threshold
+	}
+
+	result := make([]float64, len(profile))
+	copy(result, profile)
+
+	slotStart := time.Now().Truncate(tariff.SlotDuration)
+	for i := range profile {
+		ts := slotStart.Add(time.Duration(i) * tariff.SlotDuration)
+		// find the rate covering this time slot
+		for _, r := range rates {
+			if !ts.Before(r.Start) && ts.Before(r.End) {
+				tempC := r.Value
+				delta := threshold - tempC
+				if delta > 0 {
+					result[i] = profile[i] * (1 + coeff*delta)
+				}
+				break
+			}
+		}
+	}
+
+	return result
 }
 
 // profileSlotsFromNow strips away any slots before "now".

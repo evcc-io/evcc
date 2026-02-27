@@ -977,6 +977,9 @@ func configureTariffs(conf *globalconfig.Tariffs) (*tariff.Tariffs, error) {
 			return configureSolarTariff(conf.Solar, &tariffs.Solar)
 		})
 	}
+	if conf.Weather.Type != "" {
+		eg.Go(func() error { return configureTariff(api.TariffUsageWeather, conf.Weather, &tariffs.Weather) })
+	}
 
 	if err := eg.Wait(); err != nil {
 		return &tariffs, &ClassError{ClassTariff, err}
