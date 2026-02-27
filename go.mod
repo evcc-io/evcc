@@ -33,7 +33,7 @@ require (
 	github.com/enbility/ship-go v0.6.0
 	github.com/enbility/spine-go v0.7.0
 	github.com/evcc-io/openapi-mcp v0.6.0
-	github.com/evcc-io/rct v0.1.2-0.20251121151844-04c32662cf6f
+	github.com/evcc-io/rct v0.1.2-0.20260222151045-de2e4108c99c
 	github.com/evcc-io/tesla-proxy-client v0.0.0-20240221194046-4168b3759701
 	github.com/fatih/structs v1.1.0
 	github.com/getkin/kin-openapi v0.133.0
@@ -55,6 +55,7 @@ require (
 	github.com/hashicorp/go-version v1.8.0
 	github.com/hasura/go-graphql-client v0.15.1
 	github.com/holoplot/go-evdev v0.0.0-20250804134636-ab1d56a1fe83
+	github.com/icholy/digest v1.1.0
 	github.com/influxdata/influxdb-client-go/v2 v2.14.0
 	github.com/insomniacslk/tapo v1.0.2
 	github.com/itchyny/gojq v0.12.18

@@ -534,7 +534,6 @@ export interface BatteryMeter extends Meter {
   soc: number;
   controllable: boolean;
   capacity: number; // 0 when not specified
-  forecast?: BatteryForecast;
 }
 
 export interface Vehicle {

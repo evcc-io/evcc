@@ -83,6 +83,8 @@
 	--bs-danger: var(--evcc-red);
 	--bs-danger-rgb: var(--evcc-red-rgb);
 
+	--bs-form-invalid-border-color: var(--bs-danger);
+
 	--bs-body-font-size: 14px;
 	--bs-font-sans-serif:
 		Montserrat, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans",

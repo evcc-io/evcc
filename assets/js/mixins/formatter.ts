@@ -195,26 +195,9 @@ export default defineComponent({
       const today = new Date();
       return today.toDateString() === date.toDateString();
     },
-    isTomorrow(date: Date) {
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      return tomorrow.toDateString() === date.toDateString();
-    },
     weekdayPrefix(date: Date) {
       if (this.isToday(date)) {
         return "";
-      }
-      if (this.isTomorrow(date)) {
-        try {
-          const rtf = new Intl.RelativeTimeFormat(this.$i18n?.locale, {
-            numeric: "auto",
-          });
-          const part = rtf.formatToParts(1, "day")[0];
-          return part?.value || "";
-        } catch (e) {
-          console.warn("weekdayPrefix: Intl.RelativeTimeFormat not supported", e);
-          return "tomorrow";
-        }
       }
       return new Intl.DateTimeFormat(this.$i18n?.locale, {
         weekday: "short",
@@ -356,7 +339,7 @@ export default defineComponent({
         if (Math.abs(elapsed) > units[unitKey] || u == "second") {
           try {
             const rtf = new Intl.RelativeTimeFormat(this.$i18n?.locale, {
-              numeric,
+              numeric: "auto",
             });
             return rtf.format(Math.round(elapsed / units[unitKey]), unitKey);
           } catch (e) {
