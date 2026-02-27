@@ -50,7 +50,11 @@ func NewProvider(log *util.Logger, api *API, vin string, cache time.Duration) *P
 var _ api.Resurrector = (*Provider)(nil)
 
 func (v *Provider) WakeUp() error {
-	return v.refresh()
+	if err := v.refresh(); err != nil {
+		return err
+	}
+	v.lastRefresh = time.Now()
+	return nil
 }
 
 func (v *Provider) Soc() (float64, error) {
