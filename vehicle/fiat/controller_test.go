@@ -86,17 +86,17 @@ func TestConfigureChargeSchedule_EndEarlierThanCurrent(t *testing.T) {
 	}
 
 	// it will round to 19:55 and update.
-	now := makeTime(19, 51)
+	now := makeTime(19, 54)
 	has := c.configureChargeSchedule(schedule, time.Time{}, now)
 	assert.True(t, has)
 	assert.Equal(t, "19:55", schedule.EndTime)
 
 	// it will round to 20:00 and not update.
 	schedule.EndTime = "20:00" // reset for clarity
-	now = makeTime(19, 55)
+	now = makeTime(19, 58)
 	has = c.configureChargeSchedule(schedule, time.Time{}, now)
 	assert.False(t, has)
-	assert.Equal(t, "19:55", schedule.EndTime)
+	assert.Equal(t, "20:00", schedule.EndTime)
 }
 
 func TestConfigureChargeSchedule_ParseErrorFallback(t *testing.T) {
@@ -111,7 +111,7 @@ func TestConfigureChargeSchedule_ParseErrorFallback(t *testing.T) {
 		EndTime:            "garbage",
 	}
 
-	now := makeTime(19, 42)
+	now := makeTime(19, 43)
 	has := c.configureChargeSchedule(schedule, time.Time{}, now)
 	assert.True(t, has)
 	assert.Equal(t, "19:45", schedule.EndTime)
@@ -153,18 +153,45 @@ func TestConfigureChargeSchedule_StartEqualEnd(t *testing.T) {
 	}
 
 	// Set both start and end to values that round to the same time (19:05).
-	// First update: set start to 19:00 which rounds to 19:05
-	now := makeTime(19, 0)
+	// First update: set start to 19:03 which rounds to 19:05
+	now := makeTime(19, 3)
 	has := c.configureChargeSchedule(schedule, now, time.Time{})
 	assert.True(t, has)
 	assert.Equal(t, "19:05", schedule.StartTime)
 
-	// Second update: set end to 19:01 which also rounds to 19:05
-	has = c.configureChargeSchedule(schedule, time.Time{}, makeTime(19, 1))
+	// Second update: set end to 19:04 which also rounds to 19:05
+	has = c.configureChargeSchedule(schedule, time.Time{}, makeTime(19, 4))
 	assert.True(t, has)
 	assert.False(t, schedule.EnableScheduleType, "schedule should be disabled when start equals end")
 	assert.Equal(t, "19:05", schedule.StartTime)
 	assert.Equal(t, "19:05", schedule.EndTime)
+}
+
+func TestConfigureChargeSchedule_StopBeforeStart(t *testing.T) {
+	// if stop charge happens before the schedule start time
+	// and end time ends up before start time due to the different rounding logic
+	// schedule should still be consistant and valid
+	c := newController()
+
+	schedule := &Schedule{
+		ScheduleType:       "CHARGE",
+		EnableScheduleType: true,
+		StartTime:          "10:00",
+		EndTime:            "20:00",
+	}
+
+	// Set both start and end to values that round to the same time (19:05).
+	// First update: set start to 19:03 which rounds to 19:05
+	now := makeTime(19, 2, 0)
+	has := c.configureChargeSchedule(schedule, now, time.Time{})
+	assert.True(t, has)
+	assert.Equal(t, "19:05", schedule.StartTime)
+
+	// Second update: set end right after which rounds to 19:00
+	has = c.configureChargeSchedule(schedule, time.Time{}, makeTime(19, 2, 10))
+	// Start & end time should be consistent and valid, and in the past to avoid charge starting
+	assert.Equal(t, "00:00", schedule.StartTime)
+	assert.Equal(t, "19:00", schedule.EndTime)
 }
 
 func TestConfigureChargeSchedule_ParseErrorStartOnly(t *testing.T) {
@@ -226,16 +253,16 @@ func TestConfigureChargeSchedule_ScheduledDaysReset(t *testing.T) {
 	schedule.ScheduledDays.Saturday = true
 	schedule.ScheduledDays.Sunday = true
 
-	// Monday, 2023-01-02
-	now := time.Date(2023, 1, 2, 19, 43, 0, 0, time.UTC)
+	// Friday, 2026-02-27
+	now := time.Date(2026, 2, 27, 19, 43, 0, 0, time.UTC)
 	has := c.configureChargeSchedule(schedule, time.Time{}, now)
 	assert.True(t, has)
-	// Only Monday should be enabled
-	assert.True(t, schedule.ScheduledDays.Monday)
+	// Only Friday should be enabled
+	assert.False(t, schedule.ScheduledDays.Monday)
 	assert.False(t, schedule.ScheduledDays.Tuesday)
 	assert.False(t, schedule.ScheduledDays.Wednesday)
 	assert.False(t, schedule.ScheduledDays.Thursday)
-	assert.False(t, schedule.ScheduledDays.Friday)
+	assert.True(t, schedule.ScheduledDays.Friday)
 	assert.False(t, schedule.ScheduledDays.Saturday)
 	assert.False(t, schedule.ScheduledDays.Sunday)
 }
