@@ -131,33 +131,14 @@ func (c *Controller) configureChargeSchedule(schedule *Schedule, start time.Time
 
 	// Update end only if provided (non-zero)
 	if !end.IsZero() {
-		// round up to next 5 minutes boundary to avoid API rejections and make sure the schedule will be applied by the vehicle
-		newEndStr := roundUpTo(minTimeInterval, end).Format(timeFormat)
+		// round to 5 minutes to avoid API rejections, and allow some delay to stop charge (the round down is the delay)
+		newEndStr := end.Round(minTimeInterval).Format(timeFormat)
 
 		// Update only if different from current
 		if newEndStr != schedule.EndTime {
-			// Guard against the case where the previous end time has already passed but the vehicle hasn't stopped charging yet.
-			// Without this check the controller would keep bumping the end time every loop (e.g. 19:40 -> 19:45 -> 19:50 …) and never actually stop the charge.
-			// Only when the current time is at least half the minimum interval past the old end do we permit the update.
-			if oldEnd, err := time.Parse(timeFormat, schedule.EndTime); err == nil {
-				// align oldEnd to the same day as 'end' so we can compare
-				oldEndTime := time.Date(end.Year(), end.Month(), end.Day(),
-					oldEnd.Hour(), oldEnd.Minute(), 0, 0, end.Location())
-
-				if end.After(oldEndTime) && end.Sub(oldEndTime) < minTimeInterval/2 {
-					c.log.DEBUG.Printf("skipped updating charge schedule end from %s to %s; only %s past old end",
-						schedule.EndTime, newEndStr, end.Sub(oldEndTime))
-				} else {
-					schedule.EndTime = newEndStr
-					hasChanged = true
-					c.log.DEBUG.Printf("set charge schedule end: %s", schedule.EndTime)
-				}
-			} else {
-				// parsing failed – fallback to previous behaviour
-				schedule.EndTime = newEndStr
-				hasChanged = true
-				c.log.DEBUG.Printf("set charge schedule end: %s", schedule.EndTime)
-			}
+			schedule.EndTime = newEndStr
+			hasChanged = true
+			c.log.DEBUG.Printf("set charge schedule end: %s", schedule.EndTime)
 		}
 	}
 
@@ -195,7 +176,7 @@ func (c *Controller) configureChargeSchedule(schedule *Schedule, start time.Time
 
 	// If schedule was changed, make sure it's only enabled for current day to avoid undesired charge start in the future when schedule is applied by the vehicle
 	if hasChanged {
-		weekday := start.Weekday()
+		weekday := time.Now().Weekday()
 		schedule.ScheduledDays.Monday = (weekday == time.Monday)
 		schedule.ScheduledDays.Tuesday = (weekday == time.Tuesday)
 		schedule.ScheduledDays.Wednesday = (weekday == time.Wednesday)
