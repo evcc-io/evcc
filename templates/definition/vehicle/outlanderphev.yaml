@@ -1,12 +1,12 @@
 template: outlanderphev
 products:
   - description:
-      generic: phev2mqtt - Mitsubishi Outlander PHEV to MQTT gateway
+      generic: phev2mqtt
 group: generic
 requirements:
   description:
-    en: Open source PHEV to MQTT gateway https://github.com/buxtronix/phev2mqtt. MQTT broker required.
-    de: Open Source PHEV to MQTT gateway https://github.com/buxtronix/phev2mqtt. Voraussetzung ist konfigurierter MQTT Broker.
+    en: Support for Mitsubishi Outlander PHEV via [github.com/buxtronix/phev2mqtt](https://github.com/buxtronix/phev2mqtt). MQTT broker required.
+    de: Unterstützung für Mitsubishi Outlander PHEV über [github.com/buxtronix/phev2mqtt](https://github.com/buxtronix/phev2mqtt). MQTT-Broker erforderlich.
 params:
   - preset: vehicle-common
   - name: timeout
