@@ -325,7 +325,7 @@ export default defineComponent({
     pricePerKWhDisplayFactor(currency = CURRENCY.EUR) {
       return this.energyPriceSubunit(currency) ? 100 : 1;
     },
-    fmtTimeAgo(elapsed: number, numeric: "auto" | "always" = "auto") {
+    fmtTimeAgo(elapsed: number) {
       const units = {
         day: 24 * 60 * 60 * 1000,
         hour: 60 * 60 * 1000,
