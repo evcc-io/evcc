@@ -2,6 +2,7 @@ package plugin
 
 import (
 	"context"
+	"crypto/sha256"
 	"fmt"
 	"net/http"
 	"strings"
@@ -12,6 +13,11 @@ import (
 	"github.com/jpfielding/go-http-digest/pkg/digest"
 	"golang.org/x/oauth2"
 )
+
+func init() {
+	// some servers send SHA256 instead of the RFC 7616 compliant SHA-256
+	digest.Algs["SHA256"] = sha256.New
+}
 
 // Auth is the authorization config
 type Auth struct {

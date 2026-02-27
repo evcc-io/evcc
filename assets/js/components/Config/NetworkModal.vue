@@ -43,6 +43,7 @@
 				id="networkExternalUrl"
 				:label="$t('config.network.labelExternalUrl')"
 				:help="$t('config.network.descriptionExternalUrl')"
+				:warning="urlPathWarning(values.externalUrl)"
 				example="https://evcc.example.org"
 				optional
 			>
@@ -83,6 +84,16 @@ export default {
 	components: { FormRow, JsonModal },
 	emits: ["changed"],
 	methods: {
+		urlPathWarning(url) {
+			try {
+				if (new URL(url).pathname > "/") {
+					return this.$t("config.network.warningUrlPath");
+				}
+			} catch {
+				// ignore
+			}
+			return null;
+		},
 		transformWriteValues(values) {
 			const payload = { ...values };
 			delete payload.internalUrl;

@@ -31,6 +31,18 @@ params:
     help:
       de: "Unterstützt aktive Batteriesteuerung"
       en: "Supports active battery control"
+    advanced: true
+  - preset: battery-params
+  - name: capacity
+    advanced: true
+  - name: minsoc
+    advanced: true
+  - name: maxsoc
+    advanced: true
+  - name: maxchargepower
+    advanced: true
+  - name: maxdischargepower
+    advanced: true
   - name: energy
     description:
       de: Zählerstand
@@ -74,6 +86,7 @@ render: |
   soc:
     source: const
     value: {{ .soc }}
+  {{- include "battery-params" . }}
   {{- if .controllable }}
   batterymode:
     source: js

@@ -12,7 +12,7 @@ params:
   - name: host
   - name: port
     default: 8899
-    advanced: true
+    required: true
   - name: externalpower
     type: bool
     description:

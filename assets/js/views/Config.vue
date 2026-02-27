@@ -329,6 +329,7 @@
 					:circuits="circuits"
 					:hasDeviceError="hasDeviceError"
 					@changed="loadpointChanged"
+					@dismissed="loadpointDismissed"
 				/>
 				<VehicleModal :is-sponsor="isSponsor" @vehicle-changed="vehicleChanged" />
 				<MeterModal :is-sponsor="isSponsor" @changed="meterChanged" />
@@ -846,6 +847,11 @@ export default defineComponent({
 		async loadpointChanged() {
 			await this.loadLoadpoints();
 			this.loadDirty();
+		},
+		async loadpointDismissed() {
+			await this.loadChargers();
+			await this.loadMeters();
+			this.updateValues();
 		},
 		vehicleChanged() {
 			this.loadVehicles();
