@@ -149,11 +149,6 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 func NewWarpWS(ctx context.Context, uri string, meterIndex uint, user, password string) (*WarpWS, error) {
 	log := util.NewLogger("warp-ws")
 
-	wsURI, err := parseURI(uri)
-	if err != nil {
-		return nil, err
-	}
-
 	client := request.NewHelper(log)
 
 	if user != "" {
@@ -166,11 +161,16 @@ func NewWarpWS(ctx context.Context, uri string, meterIndex uint, user, password 
 
 	w := &WarpWS{
 		Helper: client, log: log,
-		uri:                 uri,
+		uri:                 util.DefaultScheme(strings.TrimRight(uri, "/"), "http"),
 		meterIndex:          meterIndex,
 		meterMap:            map[int]int{},
 		metersValueIDsTopic: fmt.Sprintf("meters/%d/value_ids", meterIndex),
 		metersValuesTopic:   fmt.Sprintf("meters/%d/values", meterIndex),
+	}
+
+	wsURI, err := parseURI(w.uri)
+	if err != nil {
+		return nil, err
 	}
 
 	go w.run(ctx, digest.Options{
@@ -256,7 +256,7 @@ func dialWebsocket(ctx context.Context, options digest.Options) (*websocket.Conn
 
 // Returns parsed URI and hostname
 func parseURI(uri string) (string, error) {
-	u, err := url.Parse(util.DefaultScheme(strings.TrimRight(uri, "/"), "http"))
+	u, err := url.Parse(uri)
 	if err != nil {
 		return "", err
 	}
