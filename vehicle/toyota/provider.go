@@ -35,29 +35,16 @@ func NewProvider(log *util.Logger, api *API, vin string, cache time.Duration) *P
 	// after the POST would still return stale data.
 	impl.status = util.Cached(func() (Status, error) {
 		res, err := api.Status(vin)
-		if err == nil {
-			impl.triggerRefreshIfCharging(res)
+		if err == nil && strings.EqualFold(res.Payload.ChargingStatus, "charging") && time.Since(impl.lastRefresh) >= refreshInterval {
+			impl.lastRefresh = time.Now()
+			if err := impl.refresh(); err != nil {
+				impl.log.ERROR.Printf("status refresh: %v", err)
+			}
 		}
 		return res, err
 	}, min(cache, pollInterval))
 
 	return impl
-}
-
-func (v *Provider) triggerRefreshIfCharging(res Status) {
-	if !strings.EqualFold(res.Payload.ChargingStatus, "charging") {
-		return
-	}
-
-	if time.Since(v.lastRefresh) < refreshInterval {
-		return
-	}
-
-	v.lastRefresh = time.Now()
-
-	if err := v.refresh(); err != nil {
-		v.log.ERROR.Printf("status refresh: %v", err)
-	} else {
 }
 
 var _ api.Resurrector = (*Provider)(nil)
