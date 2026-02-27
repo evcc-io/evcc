@@ -132,11 +132,11 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 
 	// Phase Auto Switching needs to be disabled for WARP3 and WARP2 + EM
 	// Necessary if charging 1p only vehicles
-	wT, err := wb.getWarpType()
+	typ, err := wb.getWarpType()
 	if err != nil {
 		return nil, err
 	}
-	if wT == "warp3" || (wT == "warp2" && wb.pmURI != "") {
+	if typ == "warp3" || (typ == "warp2" && wb.pmURI != "") {
 		if err := wb.disablePhaseAutoSwitch(); err != nil {
 			return nil, err
 		}
