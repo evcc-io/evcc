@@ -1,5 +1,7 @@
 package warp
 
+import "github.com/evcc-io/evcc/util/request"
+
 const (
 	FeatureMeter          = "meter"
 	FeatureMeters         = "meters"
@@ -8,6 +10,13 @@ const (
 	FeatureNfc            = "nfc"
 	FeaturePhaseSwitch    = "phase_switch"
 )
+
+type Connection struct {
+	*request.Helper
+	URI      string
+	Username string
+	Password string
+}
 
 // https://www.warp-charger.com/api.html#evse_state
 type EvseState struct {

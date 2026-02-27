@@ -10,7 +10,6 @@ import (
 	"net/url"
 	"path"
 	"slices"
-	"strings"
 	"sync"
 	"time"
 
@@ -24,13 +23,11 @@ import (
 )
 
 type WarpWS struct {
-	*request.Helper
+	*warp.Connection
+	PM *warp.Connection
 
 	// config
-	pmHelper   *request.Helper
 	log        *util.Logger
-	uri        string
-	pmURI      string
 	meterIndex uint
 
 	mu sync.RWMutex
@@ -75,7 +72,7 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 		return nil, err
 	}
 
-	wb, err := NewWarpWS(ctx, cc.URI, cc.EnergyMeterIndex, cc.User, cc.Password)
+	wb, err := NewWarpWS(ctx, cc.URI, cc.User, cc.Password, cc.EnergyManagerURI, cc.EnergyManagerUser, cc.EnergyManagerPassword, cc.EnergyMeterIndex)
 	if err != nil {
 		return nil, err
 	}
@@ -94,33 +91,21 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 		voltages = wb.voltages
 	}
 
-	// Feature: Phase Switching
-	if wb.hasFeature(warp.FeaturePhaseSwitch) && wb.pmURI == "" {
-		wb.pmURI = wb.uri
-		wb.pmHelper = wb.Helper
-	} else if cc.EnergyManagerURI != "" { // fallback to Energy Manager
-		wb.pmURI = util.DefaultScheme(strings.TrimRight(cc.EnergyManagerURI, "/"), "http")
-		wb.pmHelper = request.NewHelper(wb.log)
-
-		if cc.EnergyManagerUser != "" {
-			wb.pmHelper.Client.Transport = &digest.Transport{
-				Username:  cc.EnergyManagerUser,
-				Password:  cc.EnergyManagerPassword,
-				Transport: wb.pmHelper.Client.Transport,
-			}
-		}
-	}
-
 	// Feature: NFC
 	var identify func() (string, error)
 	if wb.hasFeature(warp.FeatureNfc) {
 		identify = wb.identify
 	}
 
+	// Feature: Phase Switching
+	if wb.hasFeature(warp.FeaturePhaseSwitch) && wb.PM == nil {
+		wb.PM = wb.Connection // Energy Manager not needed, charger will do the phase switching
+	}
+
 	// only setup phase switching methods if power manager endpoint is set
 	var phases func(int) error
 	var getPhases func() (int, error)
-	if wb.pmURI != "" {
+	if wb.PM != nil {
 		if res, err := wb.ensurePmState(); err == nil && res.ExternalControl != warp.ExternalControlDeactivated {
 			wb.pmState = res
 			phases = wb.phases1p3p
@@ -134,7 +119,7 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 	if err != nil {
 		return nil, err
 	}
-	if typ == "warp3" || (typ == "warp2" && wb.pmURI != "") {
+	if typ == "warp3" || (typ == "warp2" && wb.PM != nil && wb.PM != wb.Connection) {
 		if err := wb.disablePhaseAutoSwitch(); err != nil {
 			return nil, err
 		}
@@ -144,42 +129,34 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 	return decorateWarpWS(wb, currentPower, totalEnergy, currents, voltages, identify, phases, getPhases), nil
 }
 
-func NewWarpWS(ctx context.Context, uri string, meterIndex uint, user, password string) (*WarpWS, error) {
+func NewWarpWS(ctx context.Context, uri, user, pass, emURI, emUser, emPass string, meterIndex uint) (*WarpWS, error) {
 	log := util.NewLogger("warp-ws")
 
-	client := request.NewHelper(log)
-
-	if user != "" {
-		client.Client.Transport = &digest.Transport{
-			Username:  user,
-			Password:  password,
-			Transport: client.Client.Transport,
-		}
+	c := warp.NewConnection(log, uri, user, pass)
+	var pm *warp.Connection
+	if emURI != "" {
+		pm = warp.NewConnection(log, emURI, emUser, emPass)
 	}
 
 	w := &WarpWS{
-		Helper:     client,
+		Connection: c,
+		PM:         pm,
 		log:        log,
-		uri:        util.DefaultScheme(strings.TrimRight(uri, "/"), "http"),
 		meterIndex: meterIndex,
 		meterMap:   map[int]int{},
 	}
 
-	wsURI, err := parseURI(w.uri)
+	wsURI, err := parseURI(w.URI)
 	if err != nil {
 		return nil, err
 	}
 
-	go w.run(ctx, digest.Options{
-		URI:      wsURI,
-		Username: user,
-		Password: password,
-	})
+	go w.run(ctx, wsURI)
 
 	return w, nil
 }
 
-func (w *WarpWS) run(ctx context.Context, options digest.Options) {
+func (w *WarpWS) run(ctx context.Context, wsURI string) {
 	bo := backoff.NewExponentialBackOff(
 		backoff.WithMaxElapsedTime(0),
 		backoff.WithMaxInterval(30*time.Second),
@@ -188,7 +165,11 @@ func (w *WarpWS) run(ctx context.Context, options digest.Options) {
 	for ctx.Err() == nil {
 		w.log.DEBUG.Println("websocket: connecting")
 
-		conn, err := dialWebsocket(ctx, options)
+		conn, err := dialWebsocket(ctx, digest.Options{
+			URI:      wsURI,
+			Username: w.Username,
+			Password: w.Password,
+		})
 		if err != nil {
 			if !errors.Is(err, context.DeadlineExceeded) {
 				w.log.ERROR.Printf("websocket: %v", err)
@@ -379,7 +360,7 @@ func (w *WarpWS) hasFeature(feature string) bool {
 		w.mu.RUnlock()
 		return slices.Contains(w.features, feature)
 	}
-	uri := fmt.Sprintf("%s/info/features", w.uri)
+	uri := fmt.Sprintf("%s/info/features", w.URI)
 	w.mu.RUnlock()
 
 	var f []string
@@ -483,14 +464,14 @@ func (w *WarpWS) identify() (string, error) {
 }
 
 func (w *WarpWS) setCurrent(curr int64) error {
-	uri := fmt.Sprintf("%s/evse/external_current", w.uri)
+	uri := fmt.Sprintf("%s/evse/external_current", w.URI)
 	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(map[string]int64{"current": curr}), request.JSONEncoding)
 	_, err := w.Do(req)
 	return err
 }
 
 func (w *WarpWS) disablePhaseAutoSwitch() error {
-	uri := fmt.Sprintf("%s/evse/phase_auto_switch", w.uri)
+	uri := fmt.Sprintf("%s/evse/phase_auto_switch", w.URI)
 	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(map[string]bool{"enabled": false}), request.JSONEncoding)
 	_, err := w.Do(req)
 	return err
@@ -502,8 +483,8 @@ func (w *WarpWS) phases1p3p(phases int) error {
 		return fmt.Errorf("external control not available: %d", ec.ExternalControl)
 	}
 	w.mu.RLock()
-	em := w.pmHelper
-	uri := fmt.Sprintf("%s/power_manager/external_control", w.pmURI)
+	em := w.PM
+	uri := fmt.Sprintf("%s/power_manager/external_control", w.PM.URI)
 	w.mu.RUnlock()
 
 	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(map[string]int{"phases_wanted": phases}), request.JSONEncoding)
@@ -533,8 +514,8 @@ func (w *WarpWS) getPhases() (int, error) {
 func (w *WarpWS) ensurePmLowLevelState() (warp.PmLowLevelState, error) {
 	w.mu.RLock()
 	s := w.pmLowLevelState
-	em := w.pmHelper
-	uri := w.pmURI
+	em := w.PM
+	uri := w.PM.URI
 	w.mu.RUnlock()
 	if em == nil || uri == "" {
 		return s, nil
@@ -555,8 +536,8 @@ func (w *WarpWS) ensurePmLowLevelState() (warp.PmLowLevelState, error) {
 func (w *WarpWS) ensurePmState() (warp.PmState, error) {
 	w.mu.RLock()
 	s := w.pmState
-	em := w.pmHelper
-	uri := w.pmURI
+	em := w.PM
+	uri := w.PM.URI
 	w.mu.RUnlock()
 
 	if em == nil || uri == "" || s.ExternalControl != warp.ExternalControlAvailable {
@@ -577,7 +558,7 @@ func (w *WarpWS) ensurePmState() (warp.PmState, error) {
 
 func (w *WarpWS) getWarpType() (string, error) {
 	var res warp.Name
-	uri := fmt.Sprintf("%s/info/name", w.uri)
+	uri := fmt.Sprintf("%s/info/name", w.URI)
 	err := w.GetJSON(uri, &res)
 	return res.WarpType, err
 }
