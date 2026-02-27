@@ -1,9 +1,5 @@
 <template>
-	<div
-		class="tab-item dropup d-flex flex-column flex-md-row align-items-center justify-content-center gap-md-1 position-relative"
-		:class="{ active: moreActive }"
-		data-testid="tab-more"
-	>
+	<Item :active="moreActive" class="dropup" data-testid="tab-more">
 		<button
 			ref="moreButton"
 			type="button"
@@ -91,16 +87,18 @@
 				</button>
 			</li>
 		</ul>
-	</div>
+	</Item>
 </template>
 
 <script lang="ts">
 import Modal from "bootstrap/js/dist/modal";
 import Dropdown from "bootstrap/js/dist/dropdown";
+import Item from "./Item.vue";
 import MoreIcon from "../MaterialIcon/More.vue";
 import "@h2d2/shopicons/es/regular/newtab";
 import { logout, isLoggedIn } from "../Auth/auth";
 import { isApp, sendToApp } from "@/utils/native";
+
 import { isUserConfigError } from "@/utils/fatal";
 import { defineComponent, type PropType } from "vue";
 import type { FatalError, Sponsor, EvOpt, AuthProviders } from "@/types/evcc";
@@ -108,6 +106,7 @@ import type { FatalError, Sponsor, EvOpt, AuthProviders } from "@/types/evcc";
 export default defineComponent({
 	name: "MoreMenu",
 	components: {
+		Item,
 		MoreIcon,
 	},
 	props: {
@@ -199,48 +198,24 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.tab-item {
-	flex: 1 1 0;
-	min-width: 0;
-	padding: 6px 0;
-	color: var(--evcc-gray);
-	border-top: 2px solid transparent;
-	touch-action: manipulation;
-	-webkit-tap-highlight-color: transparent;
-	transition:
-		color var(--evcc-transition-very-fast),
-		border-color var(--evcc-transition-very-fast);
-}
-
-.tab-item:hover {
-	color: color-mix(in srgb, var(--evcc-gray) 70%, white);
-}
-
-.tab-item:active {
-	color: color-mix(in srgb, var(--evcc-gray) 70%, black);
-}
-
-.tab-item.active {
-	color: var(--bs-primary);
-	border-top-color: var(--bs-primary);
-}
-
-.tab-icon {
-	width: 24px;
-	height: 24px;
-}
-
-.tab-label {
-	font-size: 10px;
-	line-height: 1.2;
-}
-
 .tab-more-button {
-	padding: 6px 0;
+	padding: 0;
 	color: inherit;
 	cursor: pointer;
 	outline: none;
 	-webkit-tap-highlight-color: transparent;
+}
+
+.tab-label {
+	display: none;
+	font-size: 10px;
+	line-height: 1.2;
+}
+
+@media (min-width: 400px) {
+	.tab-label {
+		display: block;
+	}
 }
 
 .tab-badge {
@@ -267,16 +242,6 @@ export default defineComponent({
 	background-color: transparent;
 	color: var(--bs-primary);
 	border-left: 2px solid var(--bs-primary);
-}
-
-@media (--md-and-up) {
-	.tab-icon {
-		width: 18px;
-		height: 18px;
-	}
-	.tab-label {
-		font-size: 11px;
-	}
 }
 
 .external {

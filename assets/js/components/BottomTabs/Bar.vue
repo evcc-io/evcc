@@ -1,11 +1,11 @@
 <template>
-	<nav class="bottom-tab-bar position-fixed start-0 end-0 bottom-0">
-		<div class="container d-flex align-items-stretch">
-			<Item to="/" :label="$t('tabBar.charge')" data-testid="tab-charge" exact>
+	<nav class="bottom-tab-bar d-flex position-fixed start-0 end-0 bottom-0">
+		<div class="container d-flex align-items-stretch px-0">
+			<Item to="/" :label="$t('tabBar.charge')" exact>
 				<shopicon-regular-lightning class="tab-icon"></shopicon-regular-lightning>
 			</Item>
 
-			<Item to="/battery" :label="$t('tabBar.battery')" data-testid="tab-battery">
+			<Item to="/battery" :label="$t('tabBar.battery')">
 				<BatteryIcon
 					class="tab-icon"
 					:soc="batterySoc || 0"
@@ -14,11 +14,11 @@
 				/>
 			</Item>
 
-			<Item to="/forecast" :label="$t('tabBar.forecast')" data-testid="tab-forecast">
+			<Item to="/forecast" :label="$t('tabBar.forecast')">
 				<ForecastGraphIcon class="tab-icon" />
 			</Item>
 
-			<Item to="/sessions" :label="$t('tabBar.sessions')" data-testid="tab-sessions">
+			<Item to="/sessions" :label="$t('tabBar.sessions')">
 				<shopicon-regular-cablecharge class="tab-icon"></shopicon-regular-cablecharge>
 			</Item>
 
@@ -76,17 +76,9 @@ export default defineComponent({
 <style scoped>
 .bottom-tab-bar {
 	z-index: 1030;
-	min-height: 50px;
-	padding-bottom: var(--safe-area-inset-bottom);
 	background: color-mix(in srgb, var(--evcc-background) 80%, transparent);
 	backdrop-filter: blur(20px);
 	-webkit-backdrop-filter: blur(20px);
 	border-top: 1px solid var(--evcc-gray-10);
-}
-
-@media (--md-and-up) {
-	.bottom-tab-bar {
-		min-height: auto;
-	}
 }
 </style>

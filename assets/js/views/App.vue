@@ -219,6 +219,6 @@ export default defineComponent({
 .app {
 	min-height: 100vh;
 	min-height: 100dvh;
-	padding-bottom: calc(var(--tab-bar-height) + var(--safe-area-inset-bottom));
+	padding-bottom: var(--tab-bar-height);
 }
 </style>
