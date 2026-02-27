@@ -14,7 +14,6 @@ const (
 )
 
 type Provider struct {
-	log         *util.Logger
 	status      func() (Status, error)
 	refresh     func() error
 	lastRefresh time.Time
