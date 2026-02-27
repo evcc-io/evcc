@@ -578,6 +578,6 @@ func (w *WarpWS) ensurePmState() (warp.PmState, error) {
 func (w *WarpWS) getWarpType() (string, error) {
 	var res warp.Name
 	uri := fmt.Sprintf("%s/info/name", w.uri)
-    err := w.GetJSON(uri, &res)
+	err := w.GetJSON(uri, &res)
 	return res.WarpType, err
 }
