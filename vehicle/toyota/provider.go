@@ -56,7 +56,7 @@ func (v *Provider) triggerRefreshIfCharging(res Status) {
 	v.lastRefresh = time.Now()
 
 	if err := v.refresh(); err != nil {
-		v.log.ERROR.Printf("trigger realtime status refresh: %v", err)
+		v.log.ERROR.Printf("status refresh: %v", err)
 	} else {
 		v.log.DEBUG.Println("trigger realtime status refresh")
 	}
