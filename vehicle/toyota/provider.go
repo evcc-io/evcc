@@ -58,8 +58,6 @@ func (v *Provider) triggerRefreshIfCharging(res Status) {
 	if err := v.refresh(); err != nil {
 		v.log.ERROR.Printf("status refresh: %v", err)
 	} else {
-		v.log.DEBUG.Println("trigger realtime status refresh")
-	}
 }
 
 var _ api.Resurrector = (*Provider)(nil)
