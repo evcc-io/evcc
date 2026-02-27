@@ -38,7 +38,7 @@ func NewProvider(log *util.Logger, api *API, vin string, cache time.Duration) *P
 		if err == nil && strings.EqualFold(res.Payload.ChargingStatus, "charging") && time.Since(impl.lastRefresh) >= refreshInterval {
 			impl.lastRefresh = time.Now()
 			if err := impl.refresh(); err != nil {
-				impl.log.ERROR.Printf("status refresh: %v", err)
+				log.ERROR.Printf("status refresh: %v", err)
 			}
 		}
 		return res, err
