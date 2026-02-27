@@ -136,12 +136,9 @@ func (c *Controller) configureChargeSchedule(schedule *Schedule, start time.Time
 
 		// Update only if different from current
 		if newEndStr != schedule.EndTime {
-			// guard against the case where the previous end time has already
-			// passed but the vehicle hasn't stopped charging yet. Without this
-			// check the controller would keep bumping the end time every loop
-			// (e.g. 19:40 -> 19:45 -> 19:50 …) and never actually stop the
-			// charge. Only when the current time is at least half the minimum
-			// interval past the old end do we permit the update.
+			// Guard against the case where the previous end time has already passed but the vehicle hasn't stopped charging yet.
+			// Without this check the controller would keep bumping the end time every loop (e.g. 19:40 -> 19:45 -> 19:50 …) and never actually stop the charge.
+			// Only when the current time is at least half the minimum interval past the old end do we permit the update.
 			if oldEnd, err := time.Parse(timeFormat, schedule.EndTime); err == nil {
 				// align oldEnd to the same day as 'end' so we can compare
 				oldEndTime := time.Date(end.Year(), end.Month(), end.Day(),
