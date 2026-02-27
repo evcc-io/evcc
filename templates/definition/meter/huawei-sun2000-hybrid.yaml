@@ -9,13 +9,13 @@ capabilities: ["battery-control"]
 requirements:
   description:
     de: |
-      Grid und Batterie erfordern den PowerSensor.
-      "Modbus/TCP" erfordert Freischaltung via "Errichterzugang" in den Kommunikationseinstellungen des Wechselrichters. 
-      Siehe https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264
+      Netz und Batterie erfordern den Huawei Smart Power Sensor (DDSU/DTSU666 or SmartPS).
+
+      Modbus TCP erfordert die Freischaltung in den Kommunikationseinstellungen des Wechselrichters via "Installateur Zugang", siehe [Modbus TCP Aktivierungs-Anleitung](https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264).
     en: |
-      Grid and Battery require the PowerSensor.
-      Modbus/TCP requires activation using "maintenance access" within the communication settings of the inverter.
-      See https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264
+      Grid and Battery require the Huawei Smart Power Sensor (DDSU/DTSU666 or SmartPS).
+
+      Modbus TCP requires activation within the communication settings of the inverter using an "installer account", see [Modbus TCP Activation Guide](https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264).
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -35,8 +35,8 @@ params:
       en: Inverter cascade
       de: Wechselrichterkaskade
     help:
-      en: Keep AC charging active to charge the storage from other inverters via AC. Prevents stand-by.
-      de: AC-Laden bleibt aktiv zum Laden des Speichers aus anderen AC Quellen für Wechselrichterkaskaden. Verhindert Stand-by.
+      en: Keep AC charging active to charge the storage from other inverters via AC. May prevent standby with older firmware versions.
+      de: AC-Laden bleibt aktiv zum Laden des Speichers aus anderen AC Quellen für Wechselrichterkaskaden. Verhindert u.U. den Standby mit älteren Firmware-Versionen.
   - preset: battery-params
   - name: capacity
     service: modbus/read?address=37758&type=holding&encoding=uint32&scale=0.001&{modbus}
@@ -45,6 +45,7 @@ params:
     required: true
   - name: maxdischargepower
     service: modbus/read?address=37048&type=holding&encoding=uint32&{modbus}
+    required: true
   - name: minsoc
     service: modbus/read?address=47082&type=holding&encoding=uint16&scale=0.1&{modbus}
   - name: maxsoc
@@ -182,6 +183,15 @@ render: |
                 address: 47100 # Forcible charge/discharge
                 type: writesingle
                 encoding: uint16
+          - source: const
+            value: {{ .maxdischargepower }}
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 47077 # Max. Discharge Power
+                type: writemultiple
+                encoding: uint32
           {{- if eq .forceaccharging "false" }}
           - source: const
             value: 0 # Disable
@@ -198,7 +208,7 @@ render: |
           source: sequence
           set:
           - source: const
-            value: 2 # discharge
+            value: 0 # stop
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
@@ -207,32 +217,25 @@ render: |
                 type: writesingle
                 encoding: uint16
           - source: const
-            value: 0 # duration
+            value: 0 # W Discharge Power
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 47246 # Forcible charge/discharge setting mode
-                type: writesingle
-                encoding: uint16
-          - source: const
-            value: 1 # Minute
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 47083 # Forced charging and discharging period
-                type: writesingle
-                encoding: uint16
-          - source: const
-            value: 0 # W
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 47249 # Forcible discharge power
+                address: 47077 # Max. Discharge Power
                 type: writemultiple
                 encoding: uint32
+          {{- if eq .forceaccharging "false" }}
+          - source: const
+            value: 0 # Disable
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 47087 # Charge from grid
+                type: writesingle
+                encoding: uint16
+          {{- end }}
       - case: 3 # charge
         set:
           source: sequence
