@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
-	"path"
 	"slices"
 	"strings"
 	"sync"
@@ -20,7 +18,7 @@ import (
 	"github.com/evcc-io/evcc/charger/warp"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/icholy/digest"
+	"github.com/jpfielding/go-http-digest/pkg/digest"
 )
 
 type WarpWS struct {
@@ -77,7 +75,7 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 		return nil, err
 	}
 
-	wb, err := NewWarpWS(ctx, cc.URI, cc.EnergyMeterIndex, cc.User, cc.Password)
+	wb, err := NewWarpWS(ctx, cc.URI, cc.User, cc.Password, cc.EnergyMeterIndex)
 	if err != nil {
 		return nil, err
 	}
@@ -146,43 +144,30 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 	return decorateWarpWS(wb, currentPower, totalEnergy, currents, voltages, identify, phases, getPhases), nil
 }
 
-func NewWarpWS(ctx context.Context, uri string, meterIndex uint, user, password string) (*WarpWS, error) {
+func NewWarpWS(ctx context.Context, uri, user, password string, meterIndex uint) (*WarpWS, error) {
 	log := util.NewLogger("warp-ws")
 
-	wsURI, err := parseURI(uri)
-	if err != nil {
-		return nil, err
-	}
-
 	client := request.NewHelper(log)
-
 	if user != "" {
-		client.Client.Transport = &digest.Transport{
-			Username:  user,
-			Password:  password,
-			Transport: client.Client.Transport,
-		}
+		client.Transport = digest.NewTransport(user, password, client.Transport)
 	}
 
 	w := &WarpWS{
-		Helper: client, log: log,
-		uri:                 uri,
+		Helper:              client,
+		log:                 log,
+		uri:                 util.DefaultScheme(strings.TrimRight(uri, "/"), "http"),
 		meterIndex:          meterIndex,
 		meterMap:            map[int]int{},
 		metersValueIDsTopic: fmt.Sprintf("meters/%d/value_ids", meterIndex),
 		metersValuesTopic:   fmt.Sprintf("meters/%d/values", meterIndex),
 	}
 
-	go w.run(ctx, digest.Options{
-		URI:      wsURI,
-		Username: user,
-		Password: password,
-	})
+	go w.run(ctx, client.Client)
 
 	return w, nil
 }
 
-func (w *WarpWS) run(ctx context.Context, options digest.Options) {
+func (w *WarpWS) run(ctx context.Context, client *http.Client) {
 	bo := backoff.NewExponentialBackOff(
 		backoff.WithMaxElapsedTime(0),
 		backoff.WithMaxInterval(30*time.Second),
@@ -191,7 +176,9 @@ func (w *WarpWS) run(ctx context.Context, options digest.Options) {
 	for ctx.Err() == nil {
 		w.log.DEBUG.Println("websocket: connecting")
 
-		conn, err := dialWebsocket(ctx, options)
+		conn, _, err := websocket.Dial(ctx, w.uri+"/ws", &websocket.DialOptions{
+			HTTPClient: client,
+		})
 		if err != nil {
 			if !errors.Is(err, context.DeadlineExceeded) {
 				w.log.ERROR.Printf("websocket: %v", err)
@@ -212,59 +199,6 @@ func (w *WarpWS) run(ctx context.Context, options digest.Options) {
 			w.log.ERROR.Println(err)
 		}
 	}
-}
-
-func dialWebsocket(ctx context.Context, options digest.Options) (*websocket.Conn, error) {
-	// err will be non nil if auth is needed
-	conn, resp, err := websocket.Dial(ctx, options.URI, nil)
-	if err == nil {
-		return conn, nil
-	}
-
-	if resp == nil || resp.StatusCode != http.StatusUnauthorized {
-		return nil, err
-	}
-
-	if options.Username == "" {
-		return nil, errors.New("websocket: missing credentials")
-	}
-
-	// extract challenge from response
-	challenge, err := digest.ParseChallenge(resp.Header.Get("WWW-Authenticate"))
-	if err != nil {
-		return nil, fmt.Errorf("websocket: %w", err)
-	}
-
-	options.Method = "GET"
-	options.Count = 1
-
-	cred, err := digest.Digest(challenge, options)
-	if err != nil {
-		return nil, err
-	}
-
-	// Dial with Digest Auth
-	dialer := websocket.DialOptions{
-		HTTPHeader: http.Header{
-			"Authorization": []string{cred.String()},
-		},
-	}
-
-	conn, _, err = websocket.Dial(ctx, options.URI, &dialer)
-	return conn, err
-}
-
-// Returns parsed URI and hostname
-func parseURI(uri string) (string, error) {
-	u, err := url.Parse(util.DefaultScheme(strings.TrimRight(uri, "/"), "http"))
-	if err != nil {
-		return "", err
-	}
-
-	u.Scheme = "ws"
-	u.Path = path.Join(u.Path, "/ws")
-
-	return u.String(), nil
 }
 
 func (w *WarpWS) handleConnection(ctx context.Context, conn *websocket.Conn) error {
