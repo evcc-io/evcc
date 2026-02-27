@@ -43,10 +43,8 @@ type WarpWS struct {
 	maxCurrent int64 // input from evcc
 
 	// meter
-	meter               warp.MeterValues
-	meterMap            map[int]int
-	metersValueIDsTopic string
-	metersValuesTopic   string
+	meter    warp.MeterValues
+	meterMap map[int]int
 
 	// nfc
 	chargeTracker warp.ChargeTrackerCurrentCharge
@@ -160,12 +158,11 @@ func NewWarpWS(ctx context.Context, uri string, meterIndex uint, user, password 
 	}
 
 	w := &WarpWS{
-		Helper: client, log: log,
-		uri:                 util.DefaultScheme(strings.TrimRight(uri, "/"), "http"),
-		meterIndex:          meterIndex,
-		meterMap:            map[int]int{},
-		metersValueIDsTopic: fmt.Sprintf("meters/%d/value_ids", meterIndex),
-		metersValuesTopic:   fmt.Sprintf("meters/%d/values", meterIndex),
+		Helper:     client,
+		log:        log,
+		uri:        util.DefaultScheme(strings.TrimRight(uri, "/"), "http"),
+		meterIndex: meterIndex,
+		meterMap:   map[int]int{},
 	}
 
 	wsURI, err := parseURI(w.uri)
@@ -300,6 +297,9 @@ func (w *WarpWS) handleConnection(ctx context.Context, conn *websocket.Conn) err
 }
 
 func (w *WarpWS) handleEvent(topic string, payload json.RawMessage) error {
+	metersValueIDsTopic := fmt.Sprintf("meters/%d/value_ids", w.meterIndex)
+	metersValuesTopic := fmt.Sprintf("meters/%d/values", w.meterIndex)
+
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
@@ -329,7 +329,7 @@ func (w *WarpWS) handleEvent(topic string, payload json.RawMessage) error {
 			return nil
 		}
 		err = json.Unmarshal(payload, &w.meter)
-	case w.metersValueIDsTopic:
+	case metersValueIDsTopic:
 		var ids []int
 		if err = json.Unmarshal(payload, &ids); err != nil {
 			return err
@@ -338,7 +338,7 @@ func (w *WarpWS) handleEvent(topic string, payload json.RawMessage) error {
 		for i, id := range ids {
 			w.meterMap[id] = i
 		}
-	case w.metersValuesTopic:
+	case metersValuesTopic:
 		if err := json.Unmarshal(payload, &w.meter.TmpValues); err != nil {
 			return err
 		}
