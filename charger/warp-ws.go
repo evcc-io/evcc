@@ -484,17 +484,16 @@ func (w *WarpWS) phases1p3p(phases int) error {
 	}
 	w.mu.RLock()
 	em := w.PM
-	uri := fmt.Sprintf("%s/power_manager/external_control", w.PM.URI)
 	w.mu.RUnlock()
 
-	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(map[string]int{"phases_wanted": phases}), request.JSONEncoding)
-
-	if em != nil {
-		_, err := em.Do(req)
-		return err
+	// Should point to warp connection or energy manager connection
+	if em == nil {
+		return fmt.Errorf("Power Manager endpoint shouldn't be nil")
 	}
 
-	_, err := w.Do(req)
+	uri := fmt.Sprintf("%s/power_manager/external_control", em.URI)
+	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(map[string]int{"phases_wanted": phases}), request.JSONEncoding)
+	_, err := em.Do(req)
 	return err
 }
 
@@ -515,14 +514,13 @@ func (w *WarpWS) ensurePmLowLevelState() (warp.PmLowLevelState, error) {
 	w.mu.RLock()
 	s := w.pmLowLevelState
 	em := w.PM
-	uri := w.PM.URI
 	w.mu.RUnlock()
-	if em == nil || uri == "" {
+	if em == nil {
 		return s, nil
 	}
 
 	var ns warp.PmLowLevelState
-	if err := em.GetJSON(fmt.Sprintf("%s/power_manager/low_level_state", uri), &ns); err != nil {
+	if err := em.GetJSON(fmt.Sprintf("%s/power_manager/low_level_state", em.URI), &ns); err != nil {
 		return warp.PmLowLevelState{}, err
 	}
 
@@ -537,15 +535,14 @@ func (w *WarpWS) ensurePmState() (warp.PmState, error) {
 	w.mu.RLock()
 	s := w.pmState
 	em := w.PM
-	uri := w.PM.URI
 	w.mu.RUnlock()
 
-	if em == nil || uri == "" || s.ExternalControl != warp.ExternalControlAvailable {
+	if em == nil || s.ExternalControl != warp.ExternalControlAvailable {
 		return s, nil
 	}
 
 	var ns warp.PmState
-	if err := em.GetJSON(fmt.Sprintf("%s/power_manager/state", uri), &ns); err != nil {
+	if err := em.GetJSON(fmt.Sprintf("%s/power_manager/state", em.URI), &ns); err != nil {
 		return warp.PmState{}, err
 	}
 
