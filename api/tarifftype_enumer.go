@@ -106,4 +106,3 @@ func (i *TariffType) UnmarshalText(text []byte) error {
 	return err
 }
 
-// Made with Bob

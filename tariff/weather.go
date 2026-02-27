@@ -130,4 +130,3 @@ func (t *Weather) Type() api.TariffType {
 	return api.TariffTypeWeather
 }
 
-// Made with Bob

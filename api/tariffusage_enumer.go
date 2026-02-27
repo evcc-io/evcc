@@ -94,4 +94,3 @@ func (i TariffUsage) IsATariffUsage() bool {
 	return false
 }
 
-// Made with Bob
