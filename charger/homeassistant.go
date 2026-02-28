@@ -54,6 +54,9 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Charger, error) {
 	if cc.Enable == "" {
 		return nil, errors.New("missing enable switch entity")
 	}
+	if cc.MaxCurrent == "" {
+		return nil, errors.New("missing maxcurrent number entity")
+	}
 
 	log := util.NewLogger("ha-charger")
 
@@ -117,5 +120,12 @@ func (c *HomeAssistant) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (c *HomeAssistant) MaxCurrent(current int64) error {
-	return c.conn.CallNumberService(c.maxcurrent, float64(current))
+	return c.MaxCurrentMillis(float64(current))
+}
+
+var _ api.ChargerEx = (*HomeAssistant)(nil)
+
+// MaxCurrentMillis implements the api.ChargerEx interface
+func (c *HomeAssistant) MaxCurrentMillis(current float64) error {
+	return c.conn.CallNumberService(c.maxcurrent, current)
 }
