@@ -35,7 +35,7 @@ export default defineComponent({
 				pvPossible: this.pvPossible,
 				smartCostAvailable: this.smartCostAvailable,
 				t: this.$t,
-			}).map((c) => c.key as CHARGE_MODE);
+			}).map((c) => c.key);
 		},
 	},
 	methods: {

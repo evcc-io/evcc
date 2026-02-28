@@ -1,7 +1,7 @@
 import { CHARGE_MODE } from "@/types/evcc";
 
 export interface ChargeModeChoice {
-	key: string;
+	key: CHARGE_MODE;
 	name: string;
 }
 
