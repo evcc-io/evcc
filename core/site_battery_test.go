@@ -355,3 +355,89 @@ func TestChargeToSocWatchdog(t *testing.T) {
 
 	ctrl.Finish()
 }
+
+func TestHoldAtSocResolution(t *testing.T) {
+	for _, tc := range []struct {
+		name       string
+		batterySoc float64
+		targetSoc  float64
+		expectedHW api.BatteryMode
+	}{
+		{"above target allows discharge", 80, 60, api.BatteryNormal},
+		{"at target holds", 60, 60, api.BatteryHold},
+		{"below target holds", 50, 60, api.BatteryHold},
+		{"zero target defaults to hold", 50, 0, api.BatteryHold},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+
+			var bat api.Meter
+			batCon := api.NewMockBatteryController(ctrl)
+
+			bat = &struct {
+				api.Meter
+				api.BatteryController
+			}{
+				BatteryController: batCon,
+			}
+
+			site := &Site{
+				log:                    util.NewLogger("foo"),
+				batteryMeters:          []config.Device[api.Meter]{config.NewStaticDevice(config.Named{}, bat)},
+				batteryMode:            api.BatteryNormal,
+				batteryModeExternal:    api.BatteryHoldAtSoc,
+				batteryModeExternalSoc: tc.targetSoc,
+				battery:                types.BatteryState{Soc: tc.batterySoc},
+			}
+
+			batCon.EXPECT().SetBatteryMode(tc.expectedHW).Times(1)
+			site.updateBatteryMode(false, api.Rate{})
+
+			assert.Equal(t, tc.expectedHW, site.batteryMode)
+
+			ctrl.Finish()
+		})
+	}
+}
+
+func TestHoldAtSocTransition(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	var bat api.Meter
+	batCon := api.NewMockBatteryController(ctrl)
+
+	bat = &struct {
+		api.Meter
+		api.BatteryController
+	}{
+		BatteryController: batCon,
+	}
+
+	site := &Site{
+		log:                    util.NewLogger("foo"),
+		batteryMeters:          []config.Device[api.Meter]{config.NewStaticDevice(config.Named{}, bat)},
+		batteryMode:            api.BatteryHold,
+		batteryModeExternal:    api.BatteryHoldAtSoc,
+		batteryModeExternalSoc: 60,
+		battery:                types.BatteryState{Soc: 80},
+	}
+
+	// 1. SOC above target → normal (discharge allowed)
+	batCon.EXPECT().SetBatteryMode(api.BatteryNormal).Times(1)
+	site.updateBatteryMode(false, api.Rate{})
+	assert.Equal(t, api.BatteryNormal, site.batteryMode)
+
+	// 2. SOC drops to target → hold
+	site.battery.Soc = 60
+	batCon.EXPECT().SetBatteryMode(api.BatteryHold).Times(1)
+	site.updateBatteryMode(false, api.Rate{})
+	assert.Equal(t, api.BatteryHold, site.batteryMode)
+
+	// 3. SOC rises above target (PV charging) → normal again
+	site.battery.Soc = 65
+	batCon.EXPECT().SetBatteryMode(api.BatteryNormal).Times(1)
+	site.updateBatteryMode(false, api.Rate{})
+	assert.Equal(t, api.BatteryNormal, site.batteryMode)
+
+	ctrl.Finish()
+}

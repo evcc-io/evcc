@@ -11,4 +11,5 @@ const (
 	BatteryCharge
 	BatteryNoCharge
 	BatteryChargeToSoc
+	BatteryHoldAtSoc
 )

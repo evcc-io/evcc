@@ -194,12 +194,12 @@ func updateBatteryMode(site site.API) http.HandlerFunc {
 			val = s
 		}
 
-		// parse optional target soc for chargetosoc mode
+		// parse target soc required for chargetosoc/holdatsoc mode
 		var soc float64
-		if val == api.BatteryChargeToSoc {
+		if val == api.BatteryChargeToSoc || val == api.BatteryHoldAtSoc {
 			socStr := r.URL.Query().Get("soc")
 			if socStr == "" {
-				jsonError(w, http.StatusBadRequest, errors.New("soc parameter required for chargetosoc mode"))
+				jsonError(w, http.StatusBadRequest, errors.New("soc parameter required for chargetosoc/holdatsoc mode"))
 				return
 			}
 
