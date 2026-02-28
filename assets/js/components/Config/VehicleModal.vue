@@ -27,12 +27,7 @@
 					v-model="values.mode"
 					type="Choice"
 					class="w-100"
-					:choice="[
-						{ key: 'off', name: $t('main.mode.off') },
-						{ key: 'pv', name: $t('main.mode.pv') },
-						{ key: 'minpv', name: $t('main.mode.minpv') },
-						{ key: 'now', name: $t('main.mode.now') },
-					]"
+					:choice="modeChoices"
 				/>
 			</FormRow>
 			<FormRow
@@ -154,6 +149,7 @@ import PropertyField from "./PropertyField.vue";
 import SelectGroup from "../Helper/SelectGroup.vue";
 import DeviceModalBase from "./DeviceModal/DeviceModalBase.vue";
 import { ConfigType } from "@/types/evcc";
+import { getModeChoices } from "@/utils/modeChoices";
 import { customTemplateOption, type TemplateGroup } from "./DeviceModal/TemplateSelector.vue";
 import type { Product, ApiData, DeviceValues, TemplateParam } from "./DeviceModal";
 import defaultVehicleYaml from "./defaultYaml/vehicle.yaml?raw";
@@ -186,6 +182,8 @@ export default defineComponent({
 	},
 	props: {
 		isSponsor: Boolean,
+		pvPossible: { type: Boolean, default: false },
+		smartCostAvailable: { type: Boolean, default: false },
 	},
 	emits: ["vehicle-changed"],
 	data() {
@@ -199,6 +197,14 @@ export default defineComponent({
 		},
 		isNew(): boolean {
 			return this.id === undefined;
+		},
+		modeChoices() {
+			return getModeChoices({
+				includeEmpty: false,
+				pvPossible: this.pvPossible,
+				smartCostAvailable: this.smartCostAvailable,
+				t: this.$t,
+			});
 		},
 		priorityOptions() {
 			const result: { key: number | undefined; name: string }[] = Array.from(

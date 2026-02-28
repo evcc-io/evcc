@@ -115,13 +115,7 @@
 								type="Choice"
 								class="w-100"
 								required
-								:choice="[
-									{ key: '', name: '---' },
-									{ key: 'off', name: $t('main.mode.off') },
-									{ key: 'pv', name: $t('main.mode.pv') },
-									{ key: 'minpv', name: $t('main.mode.minpv') },
-									{ key: 'now', name: $t('main.mode.now') },
-								]"
+								:choice="defaultModeChoices"
 							/>
 						</FormRow>
 
@@ -593,6 +587,7 @@ import NewDeviceButton from "./NewDeviceButton.vue";
 import InvalidReferenceAlert from "./InvalidReferenceAlert.vue";
 import { handleError, customChargerName, createDeviceUtils } from "./DeviceModal";
 import { getModal, openModal, replaceModal, closeModal } from "@/configModal";
+import { getModeChoices } from "@/utils/modeChoices";
 import {
 	LOADPOINT_TYPE,
 	type DeviceType,
@@ -652,6 +647,8 @@ export default {
 		chargerValues: { type: Object, default: () => {} },
 		meters: { type: Array as PropType<ConfigMeter[]>, default: () => [] },
 		circuits: { type: Array as PropType<ConfigCircuit[]>, default: () => [] },
+		pvPossible: { type: Boolean, default: false },
+		smartCostAvailable: { type: Boolean, default: false },
 		hasDeviceError: {
 			type: Function as PropType<(type: DeviceType, name: string) => boolean>,
 			default: () => false,
@@ -784,6 +781,14 @@ export default {
 		},
 		loadpointType(): LoadpointType | null {
 			return this.selectedType ?? this.chargerType;
+		},
+		defaultModeChoices() {
+			return getModeChoices({
+				includeEmpty: true,
+				pvPossible: this.pvPossible,
+				smartCostAvailable: this.smartCostAvailable,
+				t: this.$t,
+			});
 		},
 		addChargerLabel() {
 			if (this.loadpointType) {
