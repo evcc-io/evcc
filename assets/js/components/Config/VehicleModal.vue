@@ -27,7 +27,7 @@
 					v-model="values.mode"
 					type="Choice"
 					class="w-100"
-					:choice="modeChoices"
+					:choice="chargeModeChoices"
 				/>
 			</FormRow>
 			<FormRow
@@ -198,7 +198,7 @@ export default defineComponent({
 		isNew(): boolean {
 			return this.id === undefined;
 		},
-		modeChoices() {
+		chargeModeChoices() {
 			return getChargeModeChoices({
 				includeEmpty: false,
 				pvPossible: this.pvPossible,
