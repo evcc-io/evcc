@@ -96,32 +96,6 @@ func TestConfigureChargeSchedule_NoChangeWhenNoEndOrStart(t *testing.T) {
 	assert.Equal(t, "19:40", schedule.EndTime)
 }
 
-func TestConfigureChargeSchedule_StartEqualEnd(t *testing.T) {
-	// if start time equals end time, it means charge was stopped before the
-	// schedule start time; the schedule should be disabled to avoid unwanted
-	// charge start.
-	// We test this by setting start and end to the same value through updates.
-	c := newController()
-
-	schedule := &Schedule{
-		ScheduleType:       "CHARGE",
-		EnableScheduleType: true,
-	}
-
-	// Set both start and end to values that round to the same time (19:05).
-	// First update: set start to 19:03 which rounds to 19:05
-	has := c.configureChargeSchedule(schedule, makeTime(19, 3), time.Time{})
-	assert.True(t, has)
-	assert.Equal(t, "19:05", schedule.StartTime)
-
-	// Second update: set end to 19:04 which also rounds to 19:05
-	has = c.configureChargeSchedule(schedule, time.Time{}, makeTime(19, 4))
-	assert.True(t, has)
-	assert.Equal(t, "19:05", schedule.StartTime)
-	assert.Equal(t, "19:05", schedule.EndTime)
-	assert.False(t, schedule.EnableScheduleType, "schedule should be disabled when start equals end")
-}
-
 func TestConfigureChargeSchedule_ParseErrorStartOnly(t *testing.T) {
 	// if only the start time fails to parse, it should be set to fallback
 	c := newController()
@@ -247,12 +221,10 @@ func TestConfigureChargeSchedule_AvoidEndlessEndPostpone(t *testing.T) {
 	assert.Equal(t, "19:45", schedule.EndTime)
 }
 
-func TestConfigureChargeSchedule_RestartChargeAfterStartPrevention(t *testing.T) {
-	// if start time equals end time, it means charge was stopped before the
-	// schedule start time; the schedule should be disabled to avoid unwanted
-	// charge start.
+func TestConfigureChargeSchedule_StartStopStartAgainInShortTime(t *testing.T) {
+	// if start time equals end time, it means charge was stopped right before or right after the schedule start time.
 	// If after this, we want to start charge again, we need to make sure the schedule is correctly re-enabled
-	// by setting end time to default value when enabling charge, otherwise the schedule will remain disabled as start and end times will be equal.
+	// by setting end time to default value when enabling charge.
 	c := newController()
 
 	schedule := &Schedule{
@@ -265,18 +237,23 @@ func TestConfigureChargeSchedule_RestartChargeAfterStartPrevention(t *testing.T)
 	has := c.configureChargeSchedule(schedule, makeTime(19, 3), time.Time{})
 	assert.True(t, has)
 	assert.Equal(t, "19:05", schedule.StartTime)
+	assert.Equal(t, "23:55", schedule.EndTime) // Default end time should always be set when enabling charge
 
 	// Second update: set end to 19:04 which also rounds to 19:05
 	has = c.configureChargeSchedule(schedule, time.Time{}, makeTime(19, 4))
 	assert.True(t, has)
 	assert.Equal(t, "19:05", schedule.StartTime)
 	assert.Equal(t, "19:05", schedule.EndTime)
-	assert.False(t, schedule.EnableScheduleType, "schedule should be disabled when start equals end")
 
-	// Start charge again: few seconds after
+	// Start charge again: few seconds before schedule start time
 	has = c.configureChargeSchedule(schedule, makeTime(19, 4, 30), time.Time{})
 	assert.True(t, has)
 	assert.Equal(t, "19:05", schedule.StartTime)
 	assert.Equal(t, "23:55", schedule.EndTime) // Default end time should always be set when enabling charge
-	assert.True(t, schedule.EnableScheduleType, "schedule should be enabled when start and end times are different")
+
+	// Start charge again: few seconds after schedule start time
+	has = c.configureChargeSchedule(schedule, makeTime(19, 5, 15), time.Time{})
+	assert.False(t, has, "unexpected change when start again right after schedule start")
+	assert.Equal(t, "19:05", schedule.StartTime)
+	assert.Equal(t, "23:55", schedule.EndTime) // Default end time should always be set when enabling charge
 }

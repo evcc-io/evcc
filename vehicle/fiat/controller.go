@@ -132,7 +132,7 @@ func (c *Controller) configureChargeSchedule(schedule *Schedule, start time.Time
 			hasChanged = true
 			c.log.DEBUG.Printf("set charge schedule start: %s with default end time: %s", schedule.StartTime, schedule.EndTime)
 		} else if schedule.StartTime == schedule.EndTime {
-			// If start and end are the same, it means it was previously disabled
+			// If start and end are the same, it means we previously stop around the same time it starts.
 			// We want to start charge again => we need to set end time to default value to make sure the schedule is enabled
 			schedule.EndTime = defaultEndTime // Set default end time when enabling charge to avoid API rejections for schedules without end time
 			setScheduleDays(schedule, start)  // Set schedule days matching the provided start time to ensure the schedule is only applied for the current day when it's updated
@@ -179,11 +179,6 @@ func (c *Controller) configureChargeSchedule(schedule *Schedule, start time.Time
 			c.log.DEBUG.Printf("start time %s is after end time %s, setting start time to fallback value %s", schedule.StartTime, schedule.EndTime, fallbackStartTime)
 			schedule.StartTime = fallbackStartTime
 			setScheduleDays(schedule, end) // Set schedule days matching the provided end time to ensure the schedule is only applied for the current day when it's updated
-			hasChanged = true
-		} else if chkStart.Equal(chkEnd) {
-			// If start time is equal to end time, it means the charge has been stopped before the schedule start time => disable it to avoid charge to start
-			c.log.DEBUG.Printf("start time %s is equal to end time %s, disabling schedule", schedule.StartTime, schedule.EndTime)
-			schedule.EnableScheduleType = false
 			hasChanged = true
 		}
 	}
