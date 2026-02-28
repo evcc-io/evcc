@@ -191,6 +191,7 @@ func TestUpdatePowerZero(t *testing.T) {
 
 func TestPVHysteresis(t *testing.T) {
 	const dt = time.Minute
+	const ds = time.Second
 	const phases = 3
 	type se struct {
 		site    float64
@@ -205,98 +206,98 @@ func TestPVHysteresis(t *testing.T) {
 		// keep disabled
 		{false, 0, 0, []se{
 			{0, 0, 0},
-			{0, 1, 0},
-			{0, dt - 1, 0},
-			{0, dt + 1, 0},
+			{0, ds, 0},
+			{0, dt - ds, 0},
+			{0, dt + ds, 0},
 		}},
 		// enable when threshold not configured but min power met
 		{false, 0, 0, []se{
 			{-6 * 100 * phases, 0, 0},
-			{-6 * 100 * phases, 1, 0},
-			{-6 * 100 * phases, dt - 1, 0},
-			{-6 * 100 * phases, dt + 1, minA},
+			{-6 * 100 * phases, ds, 0},
+			{-6 * 100 * phases, dt - ds, 0},
+			{-6 * 100 * phases, dt + ds, minA},
 		}},
 		// keep disabled when threshold not configured
 		{false, 0, 0, []se{
 			{-400, 0, 0},
-			{-400, 1, 0},
-			{-400, dt - 1, 0},
-			{-400, dt + 1, 0},
+			{-400, ds, 0},
+			{-400, dt - ds, 0},
+			{-400, dt + ds, 0},
 		}},
 		// keep disabled when threshold (lower minCurrent) not met
 		{false, -500, 0, []se{
 			{-400, 0, 0},
-			{-400, 1, 0},
-			{-400, dt - 1, 0},
-			{-400, dt + 1, 0},
+			{-400, ds, 0},
+			{-400, dt - ds, 0},
+			{-400, dt + ds, 0},
 		}},
 		// keep disabled when threshold (higher minCurrent) not met
 		{false, -7 * 100 * phases, 0, []se{
 			{-6 * 100 * phases, 0, 0},
-			{-6 * 100 * phases, 1, 0},
-			{-6 * 100 * phases, dt - 1, 0},
-			{-6 * 100 * phases, dt + 1, 0},
+			{-6 * 100 * phases, ds, 0},
+			{-6 * 100 * phases, dt - ds, 0},
+			{-6 * 100 * phases, dt + ds, 0},
 		}},
 		// enable when threshold met
 		{false, -500, 0, []se{
 			{-500, 0, 0},
-			{-500, 1, 0},
-			{-500, dt - 1, 0},
-			{-500, dt + 1, minA},
+			{-500, ds, 0},
+			{-500, dt - ds, 0},
+			{-500, dt + ds, minA},
 		}},
 		// keep enabled at max
 		{true, 500, 0, []se{
 			{-16 * 100 * phases, 0, maxA},
-			{-16 * 100 * phases, 1, maxA},
-			{-16 * 100 * phases, dt - 1, maxA},
-			{-16 * 100 * phases, dt + 1, maxA},
+			{-16 * 100 * phases, ds, maxA},
+			{-16 * 100 * phases, dt - ds, maxA},
+			{-16 * 100 * phases, dt + ds, maxA},
 		}},
 		// keep enabled at min
 		{true, 500, 0, []se{
 			{-6 * 100 * phases, 0, minA},
-			{-6 * 100 * phases, 1, minA},
-			{-6 * 100 * phases, dt - 1, minA},
-			{-6 * 100 * phases, dt + 1, minA},
+			{-6 * 100 * phases, ds, minA},
+			{-6 * 100 * phases, dt - ds, minA},
+			{-6 * 100 * phases, dt + ds, minA},
 		}},
 		// keep enabled at min (negative threshold)
 		{true, 0, 500, []se{
 			{-500, 0, minA},
-			{-500, 1, minA},
-			{-500, dt - 1, minA},
-			{-500, dt + 1, minA},
+			{-500, ds, minA},
+			{-500, dt - ds, minA},
+			{-500, dt + ds, minA},
 		}},
 		// disable when threshold met
 		{true, 0, 500, []se{
 			{500, 0, minA},
-			{500, 1, minA},
-			{500, dt - 1, minA},
-			{500, dt + 1, 0},
+			{500, ds, minA},
+			{500, dt - ds, minA},
+			{500, dt + ds, 0},
 		}},
 		// reset enable timer when threshold not met while timer active
 		{false, -500, 0, []se{
 			{-500, 0, 0},
-			{-500, 1, 0},
-			{-499, dt - 1, 0}, // should reset timer
-			{-500, dt + 1, 0}, // new begin of timer
+			{-500, ds, 0},
+			{-499, dt - ds, 0}, // should reset timer
+			{-500, dt + ds, 0}, // new begin of timer
 			{-500, 2 * dt, 0},
-			{-500, 2*dt + 1, minA},
+			{-500, 2*dt + ds, minA},
 		}},
 		// reset enable timer when threshold not met while timer active and threshold not configured
 		{false, 0, 0, []se{
-			{-6*100*10 - 1, dt + 1, 0},
-			{-6 * 100 * phases, dt + 1, 0},
-			{-6 * 100 * phases, dt + 2, 0},
+			{-6*100*10 - 1, dt + ds, 0},
+			{-6 * 100 * phases, dt + ds, 0},
+			{-6 * 100 * phases, dt + 2*ds, 0},
 			{-6 * 100 * phases, 2 * dt, 0},
-			{-6 * 100 * phases, 2*dt + 1, minA},
+			{-6 * 100 * phases, 2*dt + ds, minA},
 		}},
 		// reset disable timer when threshold not met while timer active
 		{true, 0, 500, []se{
 			{500, 0, minA},
-			{500, 1, minA},
-			{499, dt - 1, minA}, // reset timer
-			{500, dt + 1, minA}, // within reset timer duration
-			{500, 2 * dt, minA}, // still within reset timer duration
-			{500, 2*dt + 1, 0},  // reset timer elapsed
+			{500, ds, minA},
+			{499, dt - ds, minA}, // reset timer
+			{500, dt + ds, minA}, // within reset timer duration
+			{500, 2 * dt, minA},  // still within reset timer duration
+			{500, 2*dt + ds, 0},  // reset timer elapsed
 		}},
 	}
 
@@ -699,6 +700,7 @@ func TestSocPoll(t *testing.T) {
 // test PV hysteresis after phase switch down, depending on remaining energy
 func TestPVHysteresisAfterPhaseSwitch(t *testing.T) {
 	const dt = time.Minute
+	const ds = time.Second
 	type se struct {
 		site    float64
 		delay   time.Duration // test case delay since start
@@ -710,16 +712,16 @@ func TestPVHysteresisAfterPhaseSwitch(t *testing.T) {
 		// immediately disable when threshold met after phase switch
 		{[]se{
 			{1200, 0, minA},
-			{1200, 1, minA},
-			{1200, dt - 1, minA},
-			{1200, dt + 1, 0},
+			{1200, ds, minA},
+			{1200, dt - ds, minA},
+			{1200, dt + ds, 0},
 		}},
 		// stay enabled when threshold not met after phase switch
 		{[]se{
 			{500, 0, minA},
-			{500, 1, minA},
-			{500, dt - 1, minA},
-			{500, dt + 1, minA},
+			{500, ds, minA},
+			{500, dt - ds, minA},
+			{500, dt + ds, minA},
 		}},
 	}
 
