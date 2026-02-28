@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/types"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/stretchr/testify/assert"
@@ -221,4 +222,136 @@ func TestForcedBatteryChargeLimits(t *testing.T) {
 
 		ctrl.Finish()
 	}
+}
+
+func TestChargeToSocResolution(t *testing.T) {
+	for _, tc := range []struct {
+		name       string
+		batterySoc float64
+		targetSoc  float64
+		expectedHW api.BatteryMode // hardware mode applied
+	}{
+		{"below target allows pv charging", 50, 80, api.BatteryNormal},
+		{"at target stops charging", 80, 80, api.BatteryNoCharge},
+		{"above target stops charging", 90, 80, api.BatteryNoCharge},
+		{"zero target defaults to normal", 50, 0, api.BatteryNormal},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+
+			var bat api.Meter
+			batCon := api.NewMockBatteryController(ctrl)
+
+			bat = &struct {
+				api.Meter
+				api.BatteryController
+			}{
+				BatteryController: batCon,
+			}
+
+			site := &Site{
+				log:                    util.NewLogger("foo"),
+				batteryMeters:          []config.Device[api.Meter]{config.NewStaticDevice(config.Named{}, bat)},
+				batteryMode:            api.BatteryNormal,
+				batteryModeExternal:    api.BatteryChargeToSoc,
+				batteryModeExternalSoc: tc.targetSoc,
+				battery:                types.BatteryState{Soc: tc.batterySoc},
+			}
+
+			batCon.EXPECT().SetBatteryMode(tc.expectedHW).Times(1)
+			site.updateBatteryMode(false, api.Rate{})
+
+			assert.Equal(t, tc.expectedHW, site.batteryMode)
+
+			ctrl.Finish()
+		})
+	}
+}
+
+func TestChargeToSocTransition(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	var bat api.Meter
+	batCon := api.NewMockBatteryController(ctrl)
+
+	bat = &struct {
+		api.Meter
+		api.BatteryController
+	}{
+		BatteryController: batCon,
+	}
+
+	site := &Site{
+		log:                    util.NewLogger("foo"),
+		batteryMeters:          []config.Device[api.Meter]{config.NewStaticDevice(config.Named{}, bat)},
+		batteryMode:            api.BatteryNormal,
+		batteryModeExternal:    api.BatteryChargeToSoc,
+		batteryModeExternalSoc: 80,
+		battery:                types.BatteryState{Soc: 50},
+	}
+
+	// 1. SOC below target → normal (pv charging only)
+	batCon.EXPECT().SetBatteryMode(api.BatteryNormal).Times(1)
+	site.updateBatteryMode(false, api.Rate{})
+	assert.Equal(t, api.BatteryNormal, site.batteryMode)
+
+	// 2. SOC reaches target → nocharge
+	site.battery.Soc = 80
+	batCon.EXPECT().SetBatteryMode(api.BatteryNoCharge).Times(1)
+	site.updateBatteryMode(false, api.Rate{})
+	assert.Equal(t, api.BatteryNoCharge, site.batteryMode)
+
+	// 3. SOC drops below target → normal again
+	site.battery.Soc = 75
+	batCon.EXPECT().SetBatteryMode(api.BatteryNormal).Times(1)
+	site.updateBatteryMode(false, api.Rate{})
+	assert.Equal(t, api.BatteryNormal, site.batteryMode)
+
+	ctrl.Finish()
+}
+
+func TestChargeToSocWatchdog(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	var bat api.Meter
+	batCon := api.NewMockBatteryController(ctrl)
+
+	bat = &struct {
+		api.Meter
+		api.BatteryController
+	}{
+		BatteryController: batCon,
+	}
+
+	site := &Site{
+		log:           util.NewLogger("foo"),
+		batteryMeters: []config.Device[api.Meter]{config.NewStaticDevice(config.Named{}, bat)},
+		batteryMode:   api.BatteryNormal,
+		battery:       types.BatteryState{Soc: 50},
+	}
+
+	// set external ChargeToSoc mode
+	site.SetBatteryModeExternalSoc(api.BatteryChargeToSoc, 80)
+	assert.Equal(t, api.BatteryChargeToSoc, site.batteryModeExternal)
+	assert.Equal(t, 80.0, site.batteryModeExternalSoc)
+
+	// apply → normal (pv charging only)
+	batCon.EXPECT().SetBatteryMode(api.BatteryNormal).Times(1)
+	site.updateBatteryMode(false, api.Rate{})
+
+	// expire watchdog
+	site.batteryModeExternalTimer = site.batteryModeExternalTimer.Add(-time.Hour)
+	site.batteryModeWatchdogExpired()
+
+	// mode reverted, soc cleared
+	assert.Equal(t, api.BatteryUnknown, site.batteryModeExternal)
+	assert.Equal(t, 0.0, site.batteryModeExternalSoc)
+
+	// battery returns to normal
+	batCon.EXPECT().SetBatteryMode(api.BatteryNormal).Times(1)
+	site.updateBatteryMode(false, api.Rate{})
+
+	assert.True(t, site.batteryModeExternalTimer.IsZero())
+
+	ctrl.Finish()
 }

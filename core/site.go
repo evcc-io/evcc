@@ -99,6 +99,7 @@ type Site struct {
 	battery                  types.BatteryState // Battery cached and published state
 	batteryMode              api.BatteryMode    // Battery mode (runtime only, not persisted)
 	batteryModeExternal      api.BatteryMode    // Battery mode (external, runtime only, not persisted)
+	batteryModeExternalSoc   float64            // Battery mode target SOC for ChargeToSoc (external, runtime only)
 	batteryModeExternalTimer time.Time          // Battery mode timer for external control
 }
 

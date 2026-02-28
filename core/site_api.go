@@ -377,6 +377,18 @@ func (site *Site) GetBatteryModeExternal() api.BatteryMode {
 
 // SetBatteryModeExternal sets the external battery mode
 func (site *Site) SetBatteryModeExternal(mode api.BatteryMode) error {
+	return site.SetBatteryModeExternalSoc(mode, 0)
+}
+
+// GetBatteryModeExternalSoc returns the target SOC for ChargeToSoc mode
+func (site *Site) GetBatteryModeExternalSoc() float64 {
+	site.RLock()
+	defer site.RUnlock()
+	return site.batteryModeExternalSoc
+}
+
+// SetBatteryModeExternalSoc sets the external battery mode with a target SOC
+func (site *Site) SetBatteryModeExternalSoc(mode api.BatteryMode, soc float64) error {
 	site.log.DEBUG.Printf("set external battery mode: %s", mode.String())
 
 	if !site.hasBatteryControl() {
@@ -388,9 +400,11 @@ func (site *Site) SetBatteryModeExternal(mode api.BatteryMode) error {
 
 	disable := mode == api.BatteryUnknown
 
-	if mode != site.batteryModeExternal {
+	if mode != site.batteryModeExternal || soc != site.batteryModeExternalSoc {
 		site.batteryModeExternal = mode
+		site.batteryModeExternalSoc = soc
 		site.publish(keys.BatteryModeExternal, mode)
+		site.publish(keys.BatteryModeExternalSoc, soc)
 
 		// start watchdog if not running
 		if !disable && site.batteryModeExternalTimer.IsZero() {
