@@ -60,7 +60,7 @@ func (c *Controller) ChargeEnable(enable bool) error {
 		// Start charging from now until end of day (23:55)
 		hasChanged = hasChanged || c.configureChargeSchedule(&stat.EvInfo.Schedules[0], now, time.Time{})
 	} else {
-		// Stop charging: set charge end time to now to stop charging as soon as possible (within the next 5 minutes, due to 5-minute rounding; use empty time to keep start time as it was for history in Fiat app)
+		// Stop charging: set charge end time to now to stop charging as soon as possible; use empty time to keep start time as it was for history in Fiat app
 		hasChanged = hasChanged || c.configureChargeSchedule(&stat.EvInfo.Schedules[0], time.Time{}, now)
 	}
 
@@ -84,19 +84,23 @@ func (c *Controller) ChargeEnable(enable bool) error {
 	return nil
 }
 
-func roundUpTo(d time.Duration, t time.Time) time.Time {
-	// Round up time to next d boundary. If time is already aligned to the boundary, move to the next one.
-	rt := t.Truncate(d)
-	if !rt.After(t) {
-		rt = rt.Add(d)
-	}
-	return rt
+// Helper to set the correct schedule days matching the provided time, to ensure the schedule is only applied for the current day when it's updated
+func setScheduleDays(schedule *Schedule, t time.Time) {
+	weekday := t.Weekday()
+	schedule.ScheduledDays.Monday = (weekday == time.Monday)
+	schedule.ScheduledDays.Tuesday = (weekday == time.Tuesday)
+	schedule.ScheduledDays.Wednesday = (weekday == time.Wednesday)
+	schedule.ScheduledDays.Thursday = (weekday == time.Thursday)
+	schedule.ScheduledDays.Friday = (weekday == time.Friday)
+	schedule.ScheduledDays.Saturday = (weekday == time.Saturday)
+	schedule.ScheduledDays.Sunday = (weekday == time.Sunday)
 }
 
-// configureChargeSchedule configures the provided schedule with the provided start and end time, while ensuring it fits API requirements and avoiding unnecessary changes if times are not significantly different to prevent API rejections for unchanged schedules. It returns true if the schedule was changed and false otherwise.
+// configureChargeSchedule configures the provided schedule with the provided start and end time, while ensuring it fits API requirements and avoiding unnecessary.
+// It returns true if the schedule was changed and false otherwise.
 func (c *Controller) configureChargeSchedule(schedule *Schedule, start time.Time, end time.Time) bool {
 	const (
-		minTimeInterval   = 5 * time.Minute // Minimum time interval accepted by Fiat API in schedules; used for rounding up start and end time to avoid API rejections
+		minTimeInterval   = 5 * time.Minute // Minimum time interval accepted by Fiat API in schedules; used for rounding start and end time to avoid API rejections
 		timeFormat        = "15:04"         // Hours & minutes only
 		defaultEndTime    = "23:55"         // Default end time to use when enabling charge; this is the last time of the day accepted by the Fiat API
 		fallbackStartTime = "00:00"         // Fallback time for schedules crossing midnight; this is the first time of the day accepted by the Fiat API
@@ -117,13 +121,14 @@ func (c *Controller) configureChargeSchedule(schedule *Schedule, start time.Time
 
 	// Update start only if provided (non-zero)
 	if !start.IsZero() {
-		// round up to next 5 minutes boundary to avoid API rejections and make sure the schedule will be applied by the vehicle
-		newStartStr := roundUpTo(minTimeInterval, start).Format(timeFormat)
+		// round to 5 minutes to avoid API rejections, and allow trying to start in few minutes in the past to start as soon as possible
+		newStartStr := start.Round(minTimeInterval).Format(timeFormat)
 
 		// Update only if different from current
 		if newStartStr != schedule.StartTime {
 			schedule.StartTime = newStartStr
 			schedule.EndTime = defaultEndTime // Set default end time when enabling charge to avoid API rejections for schedules without end time
+			setScheduleDays(schedule, start)  // Set schedule days matching the provided start time to ensure the schedule is only applied for the current day when it's updated
 			hasChanged = true
 			c.log.DEBUG.Printf("set charge schedule start: %s with default end time: %s", schedule.StartTime, schedule.EndTime)
 		}
@@ -150,21 +155,23 @@ func (c *Controller) configureChargeSchedule(schedule *Schedule, start time.Time
 		if err1 != nil || err2 != nil {
 			c.log.WARN.Printf("failed to parse schedule times: start=%v, end=%v", err1, err2)
 			if err1 != nil {
-				// If start time cannot be parsed, also set to fallback value
+				// If start time cannot be parsed, set to fallback value
 				schedule.StartTime = fallbackStartTime
+				setScheduleDays(schedule, end) // Set schedule days matching the provided end time to ensure the schedule is only applied for the current day when it's updated
 				hasChanged = true
 				c.log.DEBUG.Printf("set charge schedule start to fallback value %s due to parse error", fallbackStartTime)
 			}
 			if err2 != nil {
-				// If start time cannot be parsed, also set to fallback value
+				// If end time cannot be parsed, set to default end time
 				schedule.EndTime = defaultEndTime
 				hasChanged = true
 				c.log.DEBUG.Printf("set charge schedule end to default value %s due to parse error", defaultEndTime)
 			}
 		} else if chkStart.After(chkEnd) {
-			// If start time is after end time, set start time to fallback value to avoid API rejections for schedules crossing midnight
+			// If start time is after end time (can only happen when setting end), set start time to fallback value to avoid API rejections for schedules crossing midnight
 			c.log.DEBUG.Printf("start time %s is after end time %s, setting start time to fallback value %s", schedule.StartTime, schedule.EndTime, fallbackStartTime)
 			schedule.StartTime = fallbackStartTime
+			setScheduleDays(schedule, end) // Set schedule days matching the provided end time to ensure the schedule is only applied for the current day when it's updated
 			hasChanged = true
 		} else if chkStart.Equal(chkEnd) {
 			// If start time is equal to end time, it means the charge has been stopped before the schedule start time => disable it to avoid charge to start
@@ -172,18 +179,6 @@ func (c *Controller) configureChargeSchedule(schedule *Schedule, start time.Time
 			schedule.EnableScheduleType = false
 			hasChanged = true
 		}
-	}
-
-	// If schedule was changed, make sure it's only enabled for current day to avoid undesired charge start in the future when schedule is applied by the vehicle
-	if hasChanged {
-		weekday := time.Now().Weekday()
-		schedule.ScheduledDays.Monday = (weekday == time.Monday)
-		schedule.ScheduledDays.Tuesday = (weekday == time.Tuesday)
-		schedule.ScheduledDays.Wednesday = (weekday == time.Wednesday)
-		schedule.ScheduledDays.Thursday = (weekday == time.Thursday)
-		schedule.ScheduledDays.Friday = (weekday == time.Friday)
-		schedule.ScheduledDays.Saturday = (weekday == time.Saturday)
-		schedule.ScheduledDays.Sunday = (weekday == time.Sunday)
 	}
 
 	return hasChanged
