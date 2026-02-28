@@ -1,11 +1,11 @@
 import { CHARGE_MODE } from "@/types/evcc";
 
-export interface ModeChoice {
+export interface ChargeModeChoice {
 	key: string;
 	name: string;
 }
 
-export interface ModeChoicesOptions {
+export interface ChargeModeChoicesOptions {
 	includeEmpty?: boolean;
 	pvPossible?: boolean;
 	smartCostAvailable?: boolean;
@@ -16,7 +16,7 @@ export interface ModeChoicesOptions {
  * Get available charge modes based on system capabilities.
  * Filters modes based on pvPossible and smartCostAvailable.
  */
-function getAvailableModes(
+function getAvailableChargeModes(
 	pvPossible: boolean = false,
 	smartCostAvailable: boolean = false
 ): CHARGE_MODE[] {
@@ -33,7 +33,7 @@ function getAvailableModes(
  * Get mode label with smart renaming.
  * Renames 'pv' to 'smart' for non-pv and dynamic tariffs scenarios.
  */
-function getModeLabel(
+function getChargeModeLabel(
 	mode: CHARGE_MODE,
 	t: (key: string) => string,
 	pvPossible: boolean = false,
@@ -50,7 +50,7 @@ function getModeLabel(
  * Generate mode choices for select/choice fields.
  * Includes empty option if specified for forms where it's optional.
  */
-export function getModeChoices(options: ModeChoicesOptions = {}): ModeChoice[] {
+export function getChargeModeChoices(options: ChargeModeChoicesOptions = {}): ChargeModeChoice[] {
 	const {
 		includeEmpty = false,
 		pvPossible = false,
@@ -58,18 +58,18 @@ export function getModeChoices(options: ModeChoicesOptions = {}): ModeChoice[] {
 		t = (key: string) => key,
 	} = options;
 
-	const choices: ModeChoice[] = [];
+	const choices: ChargeModeChoice[] = [];
 
 	if (includeEmpty) {
 		choices.push({ key: "", name: "---" });
 	}
 
-	const modes = getAvailableModes(pvPossible, smartCostAvailable);
+	const modes = getAvailableChargeModes(pvPossible, smartCostAvailable);
 
 	modes.forEach((mode) => {
 		choices.push({
 			key: mode,
-			name: getModeLabel(mode, t, pvPossible, smartCostAvailable),
+			name: getChargeModeLabel(mode, t, pvPossible, smartCostAvailable),
 		});
 	});
 

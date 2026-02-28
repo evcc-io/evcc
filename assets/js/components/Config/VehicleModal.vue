@@ -149,7 +149,7 @@ import PropertyField from "./PropertyField.vue";
 import SelectGroup from "../Helper/SelectGroup.vue";
 import DeviceModalBase from "./DeviceModal/DeviceModalBase.vue";
 import { ConfigType } from "@/types/evcc";
-import { getModeChoices } from "@/utils/modeChoices";
+import { getChargeModeChoices } from "@/utils/modeChoices";
 import { customTemplateOption, type TemplateGroup } from "./DeviceModal/TemplateSelector.vue";
 import type { Product, ApiData, DeviceValues, TemplateParam } from "./DeviceModal";
 import defaultVehicleYaml from "./defaultYaml/vehicle.yaml?raw";
@@ -199,7 +199,7 @@ export default defineComponent({
 			return this.id === undefined;
 		},
 		modeChoices() {
-			return getModeChoices({
+			return getChargeModeChoices({
 				includeEmpty: false,
 				pvPossible: this.pvPossible,
 				smartCostAvailable: this.smartCostAvailable,

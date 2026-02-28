@@ -587,7 +587,7 @@ import NewDeviceButton from "./NewDeviceButton.vue";
 import InvalidReferenceAlert from "./InvalidReferenceAlert.vue";
 import { handleError, customChargerName, createDeviceUtils } from "./DeviceModal";
 import { getModal, openModal, replaceModal, closeModal } from "@/configModal";
-import { getModeChoices } from "@/utils/modeChoices";
+import { getChargeModeChoices } from "@/utils/modeChoices";
 import {
 	LOADPOINT_TYPE,
 	type DeviceType,
@@ -783,7 +783,7 @@ export default {
 			return this.selectedType ?? this.chargerType;
 		},
 		modeChoices() {
-			return getModeChoices({
+			return getChargeModeChoices({
 				includeEmpty: true,
 				pvPossible: this.pvPossible,
 				smartCostAvailable: this.smartCostAvailable,
