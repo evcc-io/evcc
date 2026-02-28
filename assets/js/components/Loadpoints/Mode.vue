@@ -30,11 +30,11 @@ export default defineComponent({
 
 	computed: {
 		choices(): ChargeModeChoice[] {
-                        return getChargeModeChoices({
-                                pvPossible: this.pvPossible,
-                                smartCostAvailable: this.smartCostAvailable,
-                                t: this.$t,
-                        });
+			return getChargeModeChoices({
+				pvPossible: this.pvPossible,
+				smartCostAvailable: this.smartCostAvailable,
+				t: this.$t,
+			});
 		},
 		modes(): CHARGE_MODE[] {
 			return this.choices.map((c) => c.key);

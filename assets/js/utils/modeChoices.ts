@@ -53,11 +53,7 @@ function getChargeModeLabel(
  * must prepend their own entry ("{ key: '', name: '---' }").
  */
 export function getChargeModeChoices(options: ChargeModeChoicesOptions = {}): ChargeModeChoice[] {
-  const {
-    pvPossible = false,
-    smartCostAvailable = false,
-    t = (key: string) => key,
-  } = options;
+  const { pvPossible = false, smartCostAvailable = false, t = (key: string) => key } = options;
 
   const choices: ChargeModeChoice[] = [];
   const modes = getAvailableChargeModes(pvPossible, smartCostAvailable);
