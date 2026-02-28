@@ -115,7 +115,7 @@
 								type="Choice"
 								class="w-100"
 								required
-								:choice="defaultModeChoices"
+:choice="modeChoices"
 							/>
 						</FormRow>
 
@@ -782,7 +782,7 @@ export default {
 		loadpointType(): LoadpointType | null {
 			return this.selectedType ?? this.chargerType;
 		},
-		defaultModeChoices() {
+		modeChoices() {
 			return getModeChoices({
 				includeEmpty: true,
 				pvPossible: this.pvPossible,
