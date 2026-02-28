@@ -1,11 +1,11 @@
 import { CHARGE_MODE } from "@/types/evcc";
 
-export interface ChargeModeChoice {
+interface ChargeModeChoice {
 	key: CHARGE_MODE;
 	name: string;
 }
 
-export interface ChargeModeChoicesOptions {
+interface ChargeModeChoicesOptions {
 	includeEmpty?: boolean;
 	pvPossible?: boolean;
 	smartCostAvailable?: boolean;
