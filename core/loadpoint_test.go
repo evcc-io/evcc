@@ -863,3 +863,85 @@ func TestWelcomeChargeAppliedOnlyOnce(t *testing.T) {
 	welcomeCharge, _ = lp.updateChargerStatus()
 	assert.False(t, welcomeCharge)
 }
+
+// TestPVTimerSubSecondJitter reproduces a real-world issue where the PV enable (or
+// disable) timer fails to fire despite showing "0s remaining" in the log.
+//
+// Scenario: a site with 5 loadpoints at 15s interval means each loadpoint's full
+// Update cycle runs every 75s (round-robin). With an enable delay of 150s, the timer
+// check lands at exactly 2×75s = 150s from clock start. But pvTimer was set with
+// sub-second precision (e.g. 400ms into the second), so elapsed = 149.6s < 150s.
+// The log rounds remaining (0.4s) to "0s" but the strict >= check fails, delaying
+// the enable by another full 75s cycle.
+func TestPVTimerSubSecondJitter(t *testing.T) {
+	const (
+		enableDelay     = 150 * time.Second // 2m30s
+		phases          = 3
+		numLoadpoints   = 5
+		siteInterval    = 15 * time.Second
+		lpUpdateCycle   = time.Duration(numLoadpoints) * siteInterval // 75s
+		subSecondOffset = 400 * time.Millisecond
+	)
+
+	tc := []struct {
+		name    string
+		enabled bool
+		site    float64
+	}{
+		{"enable", false, -float64(phases) * minA * 100},
+		{"disable", true, 500},
+	}
+
+	for _, tc := range tc {
+		t.Run(tc.name, func(t *testing.T) {
+			clk := clock.NewMock()
+
+			Voltage = 100
+			lp := &Loadpoint{
+				log:            util.NewLogger("foo"),
+				clock:          clk,
+				minCurrent:     minA,
+				maxCurrent:     maxA,
+				phases:         phases,
+				measuredPhases: phases,
+				Enable: loadpoint.ThresholdConfig{
+					Delay:     enableDelay,
+					Threshold: -500,
+				},
+				Disable: loadpoint.ThresholdConfig{
+					Delay:     enableDelay,
+					Threshold: 500,
+				},
+			}
+			lp.status = api.StatusB
+			lp.enabled = tc.enabled
+
+			// Step 1: Simulate the clock being 400ms past the second when pvMaxCurrent
+			// first runs and starts the timer. This gives pvTimer sub-second precision.
+			clk.Add(subSecondOffset)
+			current := lp.pvMaxCurrent(api.ModePV, tc.site, 0, false, false)
+			assert.False(t, lp.pvTimer.IsZero(), "timer should have started")
+
+			if tc.enabled {
+				assert.Equal(t, minA, current, "should stay enabled while timer runs")
+			} else {
+				assert.Equal(t, 0.0, current, "should stay disabled while timer runs")
+			}
+
+			// Step 2: Advance to 2 × lpUpdateCycle = 150.0s from clock zero.
+			// pvTimer started at 0.4s, so elapsed = 149.6s.
+			// remaining = 150s - 149.6s = 0.4s → rounds to "0s" in the log.
+			// Without fix: 149.6s < 150s → timer does NOT fire.
+			// With fix (rounding elapsed): 149.6s.Round(1s) = 150s >= 150s → timer fires.
+			clk.Set(clk.Now().Add(2*lpUpdateCycle - subSecondOffset))
+
+			current = lp.pvMaxCurrent(api.ModePV, tc.site, 0, false, false)
+
+			if tc.enabled {
+				assert.Equal(t, 0.0, current, "disable: timer should have fired")
+			} else {
+				assert.Equal(t, minA, current, "enable: timer should have fired")
+			}
+		})
+	}
+}
