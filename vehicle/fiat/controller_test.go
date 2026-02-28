@@ -246,3 +246,37 @@ func TestConfigureChargeSchedule_AvoidEndlessEndPostpone(t *testing.T) {
 	assert.True(t, has, "expected schedule to be bumped")
 	assert.Equal(t, "19:45", schedule.EndTime)
 }
+
+func TestConfigureChargeSchedule_RestartChargeAfterStartPrevention(t *testing.T) {
+	// if start time equals end time, it means charge was stopped before the
+	// schedule start time; the schedule should be disabled to avoid unwanted
+	// charge start.
+	// If after this, we want to start charge again, we need to make sure the schedule is correctly re-enabled
+	// by setting end time to default value when enabling charge, otherwise the schedule will remain disabled as start and end times will be equal.
+	c := newController()
+
+	schedule := &Schedule{
+		ScheduleType:       "CHARGE",
+		EnableScheduleType: true,
+	}
+
+	// Set both start and end to values that round to the same time (19:05).
+	// First update: set start to 19:03 which rounds to 19:05
+	has := c.configureChargeSchedule(schedule, makeTime(19, 3), time.Time{})
+	assert.True(t, has)
+	assert.Equal(t, "19:05", schedule.StartTime)
+
+	// Second update: set end to 19:04 which also rounds to 19:05
+	has = c.configureChargeSchedule(schedule, time.Time{}, makeTime(19, 4))
+	assert.True(t, has)
+	assert.Equal(t, "19:05", schedule.StartTime)
+	assert.Equal(t, "19:05", schedule.EndTime)
+	assert.False(t, schedule.EnableScheduleType, "schedule should be disabled when start equals end")
+
+	// Start charge again: few seconds after
+	has = c.configureChargeSchedule(schedule, makeTime(19, 4, 30), time.Time{})
+	assert.True(t, has)
+	assert.Equal(t, "19:05", schedule.StartTime)
+	assert.Equal(t, "23:55", schedule.EndTime) // Default end time should always be set when enabling charge
+	assert.True(t, schedule.EnableScheduleType, "schedule should be enabled when start and end times are different")
+}
