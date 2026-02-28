@@ -534,11 +534,11 @@ func (site *Site) homeProfile(minLen int) ([]float64, error) {
 
 // applyTemperatureCorrection adjusts the household load profile based on outdoor temperature.
 //
-// The correction is gated on the 24h average forecast temperature of the upcoming day:
+// The correction is gated on the 24h average actual temperature of the past 24 hours:
 // if that average is at or above heatingThreshold, heating is considered off and no
 // correction is applied to any slot.
 //
-// When heating is active (24h avg < threshold), for each future slot i:
+// When heating is active (past 24h avg < threshold), for each future slot i:
 //  1. Looks up the forecast temperature T_future at that slot's wall-clock time
 //  2. Computes the average historical temperature T_past_avg at the same hour-of-day
 //     from the past 7 days of Open-Meteo data already present in the rates slice
@@ -567,25 +567,25 @@ func (site *Site) applyTemperatureCorrection(profile []float64) []float64 {
 
 	currentTime := time.Now()
 
-	// Compute the 24h average forecast temperature for the upcoming day.
-	// "Upcoming day" = the next 24 hours from now.
-	tomorrow := currentTime.Add(24 * time.Hour)
-	var futureSum float64
-	var futureCount int
+	// Compute the 24h average actual temperature from the past 24 hours.
+	// Uses past rates (Start < now) within the last 24h window.
+	yesterday := currentTime.Add(-24 * time.Hour)
+	var pastSum24h float64
+	var pastCount24h int
 	for _, r := range rates {
-		if !r.Start.Before(currentTime) && r.Start.Before(tomorrow) {
-			futureSum += r.Value
-			futureCount++
+		if !r.Start.Before(yesterday) && r.Start.Before(currentTime) {
+			pastSum24h += r.Value
+			pastCount24h++
 		}
 	}
-	if futureCount == 0 {
+	if pastCount24h == 0 {
 		return profile
 	}
-	futureAvg24h := futureSum / float64(futureCount)
+	pastAvg24h := pastSum24h / float64(pastCount24h)
 
-	// If the 24h average forecast temperature is at or above the heating threshold,
+	// If the past 24h average actual temperature is at or above the heating threshold,
 	// heating is considered off — no correction needed.
-	if futureAvg24h >= threshold {
+	if pastAvg24h >= threshold {
 		return profile
 	}
 
