@@ -333,11 +333,11 @@
 					@changed="loadpointChanged"
 					@dismissed="loadpointDismissed"
 				/>
-				<VehicleModal 
-					:is-sponsor="isSponsor" 
+				<VehicleModal
+					:is-sponsor="isSponsor"
 					:pvPossible="pvPossible"
 					:smartCostAvailable="smartCostAvailable"
-					@vehicle-changed="vehicleChanged" 
+					@vehicle-changed="vehicleChanged"
 				/>
 				<MeterModal :is-sponsor="isSponsor" @changed="meterChanged" />
 				<ChargerModal :is-sponsor="isSponsor" :ocpp="ocpp" @changed="chargerChanged" />

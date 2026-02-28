@@ -17,7 +17,7 @@
 <script lang="ts">
 import { CHARGE_MODE } from "@/types/evcc";
 import { defineComponent } from "vue";
-import { getChargeModeChoices } from "@/utils/modeChoices";
+import { getChargeModeChoices, type NonEmptyChargeModeChoice } from "@/utils/modeChoices";
 
 export default defineComponent({
 	name: "Mode",
@@ -29,7 +29,7 @@ export default defineComponent({
 	emits: ["updated"],
 
 	computed: {
-		choices() {
+		choices(): NonEmptyChargeModeChoice[] {
 			return getChargeModeChoices({
 				includeEmpty: false,
 				pvPossible: this.pvPossible,

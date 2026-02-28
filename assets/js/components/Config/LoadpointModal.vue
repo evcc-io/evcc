@@ -115,7 +115,7 @@
 								type="Choice"
 								class="w-100"
 								required
-:choice="chargeModeChoices"
+								:choice="chargeModeChoices"
 							/>
 						</FormRow>
 
