@@ -20,15 +20,13 @@ function getAvailableModes(
 	pvPossible: boolean = false,
 	smartCostAvailable: boolean = false
 ): CHARGE_MODE[] {
-	const { OFF, PV, MINPV, NOW } = CHARGE_MODE;
-
 	if (pvPossible) {
-		return [OFF, PV, MINPV, NOW];
+		return [CHARGE_MODE.OFF, CHARGE_MODE.PV, CHARGE_MODE.MINPV, CHARGE_MODE.NOW];
 	}
 	if (smartCostAvailable) {
-		return [OFF, PV, NOW];
+		return [CHARGE_MODE.OFF, CHARGE_MODE.PV, CHARGE_MODE.NOW];
 	}
-	return [OFF, NOW];
+	return [CHARGE_MODE.OFF, CHARGE_MODE.NOW];
 }
 
 /**
@@ -41,10 +39,8 @@ function getModeLabel(
 	pvPossible: boolean = false,
 	smartCostAvailable: boolean = false
 ): string {
-	const { PV } = CHARGE_MODE;
-
 	// rename pv mode to smart for non-pv and dynamic tariffs scenarios
-	if (mode === PV && !pvPossible && smartCostAvailable) {
+	if (mode === CHARGE_MODE.PV && !pvPossible && smartCostAvailable) {
 		return t("main.mode.smart");
 	}
 	return t(`main.mode.${mode}`);
