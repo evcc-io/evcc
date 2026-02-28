@@ -9,4 +9,5 @@ const (
 	BatteryNormal
 	BatteryHold
 	BatteryCharge
+	BatteryNoCharge
 )
