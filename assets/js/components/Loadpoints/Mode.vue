@@ -17,7 +17,7 @@
 <script lang="ts">
 import { CHARGE_MODE } from "@/types/evcc";
 import { defineComponent } from "vue";
-import { getChargeModeChoices, type NonEmptyChargeModeChoice } from "@/utils/modeChoices";
+import { getChargeModeChoices, type ChargeModeChoice } from "@/utils/modeChoices";
 
 export default defineComponent({
 	name: "Mode",
@@ -29,13 +29,12 @@ export default defineComponent({
 	emits: ["updated"],
 
 	computed: {
-		choices(): NonEmptyChargeModeChoice[] {
-			return getChargeModeChoices({
-				includeEmpty: false,
-				pvPossible: this.pvPossible,
-				smartCostAvailable: this.smartCostAvailable,
-				t: this.$t,
-			});
+		choices(): ChargeModeChoice[] {
+                        return getChargeModeChoices({
+                                pvPossible: this.pvPossible,
+                                smartCostAvailable: this.smartCostAvailable,
+                                t: this.$t,
+                        });
 		},
 		modes(): CHARGE_MODE[] {
 			return this.choices.map((c) => c.key);

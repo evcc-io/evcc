@@ -783,12 +783,13 @@ export default {
 			return this.selectedType ?? this.chargerType;
 		},
 		chargeModeChoices() {
-			return getChargeModeChoices({
-				includeEmpty: true,
+			const modes = getChargeModeChoices({
 				pvPossible: this.pvPossible,
 				smartCostAvailable: this.smartCostAvailable,
 				t: this.$t,
 			});
+			// As it is possible to submit no default charge mode, we need to add an empty option.
+			return [{ key: "", name: "---" }, ...modes];
 		},
 		addChargerLabel() {
 			if (this.loadpointType) {

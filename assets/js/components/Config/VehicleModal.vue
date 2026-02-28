@@ -200,7 +200,6 @@ export default defineComponent({
 		},
 		chargeModeChoices() {
 			return getChargeModeChoices({
-				includeEmpty: false,
 				pvPossible: this.pvPossible,
 				smartCostAvailable: this.smartCostAvailable,
 				t: this.$t,

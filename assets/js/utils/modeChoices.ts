@@ -1,19 +1,13 @@
 import { CHARGE_MODE } from "@/types/evcc";
 
-// includes empty string when includeEmpty is true
+// A charge mode selection entry.  The helper always returns a non-empty
+// list of actual modes.
 export interface ChargeModeChoice {
-  key: CHARGE_MODE | "";
-  name: string;
-}
-
-// used by callers that know no empty entry will be returned
-export interface NonEmptyChargeModeChoice {
   key: CHARGE_MODE;
   name: string;
 }
 
 interface ChargeModeChoicesOptions {
-  includeEmpty?: boolean;
   pvPossible?: boolean;
   smartCostAvailable?: boolean;
   t?: (key: string) => string;
@@ -55,28 +49,17 @@ function getChargeModeLabel(
 
 /**
  * Generate mode choices for select/choice fields.
- * Includes empty option if specified for forms where it's optional.
+ * Always returns a list of actual modes.  Callers that need a placeholder
+ * must prepend their own entry ("{ key: '', name: '---' }").
  */
-export function getChargeModeChoices(
-  options?: ChargeModeChoicesOptions & { includeEmpty?: false }
-): NonEmptyChargeModeChoice[];
-export function getChargeModeChoices(
-  options: ChargeModeChoicesOptions & { includeEmpty: true }
-): ChargeModeChoice[];
 export function getChargeModeChoices(options: ChargeModeChoicesOptions = {}): ChargeModeChoice[] {
   const {
-    includeEmpty = false,
     pvPossible = false,
     smartCostAvailable = false,
     t = (key: string) => key,
   } = options;
 
   const choices: ChargeModeChoice[] = [];
-
-  if (includeEmpty) {
-    choices.push({ key: "", name: "---" });
-  }
-
   const modes = getAvailableChargeModes(pvPossible, smartCostAvailable);
 
   modes.forEach((mode) => {
