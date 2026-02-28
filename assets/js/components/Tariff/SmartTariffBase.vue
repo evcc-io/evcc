@@ -74,7 +74,8 @@
 		</div>
 		<TariffChart
 			v-if="rates.length"
-			:slots="slots"
+			:slots="chartSlots"
+			:inactive="!active"
 			@slot-hovered="slotHovered"
 			@slot-selected="slotSelected"
 		/>
@@ -205,42 +206,10 @@ export default defineComponent({
 			return { min, max };
 		},
 		slots(): Slot[] {
-			if (!this.rates?.length) {
-				return [];
-			}
-
-			const rates = this.rates;
-			const quarterHour = 15 * 60 * 1000;
-
-			const base = new Date();
-			base.setSeconds(0, 0);
-			base.setMinutes(base.getMinutes() - (base.getMinutes() % 15));
-
-			return Array.from({ length: 96 * 4 }, (_, i) => {
-				const start = new Date(base.getTime() + quarterHour * i);
-				const end = new Date(start.getTime() + quarterHour);
-				const value = this.findRateInRange(start, end, rates)?.value;
-				const active =
-					this.limitDirection === "below" &&
-					this.currentLimit !== null &&
-					value !== undefined &&
-					value <= this.currentLimit;
-				const warning =
-					this.limitDirection === "above" &&
-					this.currentLimit !== null &&
-					value !== undefined &&
-					value >= this.currentLimit;
-
-				return {
-					day: this.weekdayShort(start),
-					value,
-					start,
-					end,
-					charging: active,
-					selectable: value !== undefined,
-					warning,
-				};
-			});
+			return this.slotsForLimit(this.currentLimit);
+		},
+		chartSlots(): Slot[] {
+			return this.slotsForLimit(this.currentLimit ?? this.selectedLimit);
 		},
 		totalSlots() {
 			return this.slots.filter((s) => s.value !== undefined);
@@ -356,11 +325,49 @@ export default defineComponent({
 			}
 			return this.fmtPricePerKWh(value, this.currency, true);
 		},
+		slotsForLimit(limit: number | null): Slot[] {
+			if (!this.rates?.length) {
+				return [];
+			}
+
+			const rates = this.rates;
+			const quarterHour = 15 * 60 * 1000;
+
+			const base = new Date();
+			base.setSeconds(0, 0);
+			base.setMinutes(base.getMinutes() - (base.getMinutes() % 15));
+
+			return Array.from({ length: 96 * 4 }, (_, i) => {
+				const start = new Date(base.getTime() + quarterHour * i);
+				const end = new Date(start.getTime() + quarterHour);
+				const value = this.findRateInRange(start, end, rates)?.value;
+				const active =
+					this.limitDirection === "below" &&
+					limit !== null &&
+					value !== undefined &&
+					value <= limit;
+				const warning =
+					this.limitDirection === "above" &&
+					limit !== null &&
+					value !== undefined &&
+					value >= limit;
+
+				return {
+					day: this.weekdayShort(start),
+					value,
+					start,
+					end,
+					charging: active,
+					selectable: value !== undefined,
+					warning,
+				};
+			});
+		},
 		slotHovered(index: number) {
 			this.activeIndex = index;
 		},
 		slotSelected(index: number) {
-			const value = this.slots[index]?.value;
+			const value = this.chartSlots[index]?.value;
 			if (value !== undefined) {
 				// 3 decimal precision
 				const valueRounded = Math.ceil(value * 1000) / 1000;
