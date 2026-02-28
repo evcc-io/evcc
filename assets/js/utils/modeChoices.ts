@@ -1,7 +1,5 @@
 import { CHARGE_MODE } from "@/types/evcc";
 
-// A charge mode selection entry.  The helper always returns a non-empty
-// list of actual modes.
 export interface ChargeModeChoice {
   key: CHARGE_MODE;
   name: string;
@@ -55,15 +53,10 @@ function getChargeModeLabel(
 export function getChargeModeChoices(options: ChargeModeChoicesOptions = {}): ChargeModeChoice[] {
   const { pvPossible = false, smartCostAvailable = false, t = (key: string) => key } = options;
 
-  const choices: ChargeModeChoice[] = [];
   const modes = getAvailableChargeModes(pvPossible, smartCostAvailable);
 
-  modes.forEach((mode) => {
-    choices.push({
-      key: mode,
-      name: getChargeModeLabel(mode, t, pvPossible, smartCostAvailable),
-    });
-  });
-
-  return choices;
+  return modes.map((mode) => ({
+    key: mode,
+    name: getChargeModeLabel(mode, t, pvPossible, smartCostAvailable),
+  }));
 }
