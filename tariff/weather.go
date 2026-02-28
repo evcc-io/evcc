@@ -75,9 +75,11 @@ func (t *Weather) run(done chan error) {
 	client := request.NewHelper(t.log)
 
 	for tick := time.Tick(time.Hour); ; <-tick {
-		// Request UTC timezone so timestamps are unambiguous ISO 8601 strings like "2024-01-15T14:00"
+		// Request past 7 days + 3 day forecast in UTC so timestamps are unambiguous ISO 8601 strings.
+		// Past data is used to compute the average historical temperature per time-of-day slot,
+		// which is compared against the forecast to derive a load correction factor.
 		uri := fmt.Sprintf(
-			"https://api.open-meteo.com/v1/forecast?latitude=%f&longitude=%f&hourly=temperature_2m&forecast_days=3&timezone=UTC",
+			"https://api.open-meteo.com/v1/forecast?latitude=%f&longitude=%f&hourly=temperature_2m&past_days=7&forecast_days=3&timezone=UTC",
 			t.latitude, t.longitude,
 		)
 
