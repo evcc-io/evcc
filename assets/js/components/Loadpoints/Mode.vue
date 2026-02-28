@@ -29,21 +29,23 @@ export default defineComponent({
 	emits: ["updated"],
 
 	computed: {
-		choices() {
+		modes(): CHARGE_MODE[] {
 			return getModeChoices({
 				includeEmpty: false,
 				pvPossible: this.pvPossible,
 				smartCostAvailable: this.smartCostAvailable,
 				t: this.$t,
-			});
-		},
-		modes(): CHARGE_MODE[] {
-			return this.choices.map((c) => c.key as CHARGE_MODE);
+			}).map((c) => c.key as CHARGE_MODE);
 		},
 	},
 	methods: {
 		label(mode: CHARGE_MODE) {
-			const choice = this.choices.find((c) => c.key === mode);
+			const choice = getModeChoices({
+				includeEmpty: false,
+				pvPossible: this.pvPossible,
+				smartCostAvailable: this.smartCostAvailable,
+				t: this.$t,
+			}).find((c) => c.key === mode);
 			return choice ? choice.name : this.$t(`main.mode.${mode}`);
 		},
 		isActive(mode: CHARGE_MODE) {
