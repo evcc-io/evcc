@@ -2,6 +2,7 @@ package meter
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"net"
 	"strings"
@@ -95,7 +96,7 @@ func (g *goodWeWifi) sendCommand(pdu []byte) ([]byte, error) {
 	defer g.mu.Unlock()
 
 	if len(pdu) != 6 {
-		return nil, fmt.Errorf("invalid PDU length")
+		return nil, errors.New("invalid PDU length")
 	}
 
 	packet := append(pdu, modbusCRC(pdu)...)
@@ -116,12 +117,12 @@ func (g *goodWeWifi) sendCommand(pdu []byte) ([]byte, error) {
 	}
 
 	if n < 6 || buf[0] != 0xaa || buf[1] != 0x55 || buf[2] != 0x7f || buf[3] != 0x03 {
-		return nil, fmt.Errorf("invalid response header")
+		return nil, errors.New("invalid response header")
 	}
 
 	byteCount := int(buf[4])
 	if n < 5+byteCount+2 {
-		return nil, fmt.Errorf("short response")
+		return nil, errors.New("short response")
 	}
 
 	return buf[5 : 5+byteCount], nil
@@ -135,7 +136,7 @@ func (g *goodWeWifi) detectFamily() error {
 		return err
 	}
 	if len(data) < 16 {
-		return fmt.Errorf("short model data")
+		return errors.New("short model data")
 	}
 
 	model := strings.TrimSpace(string(data[0:16]))
@@ -182,7 +183,7 @@ func (g *goodWeWifi) CurrentPower() (float64, error) {
 		return 0, err
 	}
 	if len(data) < offset+4 {
-		return 0, fmt.Errorf("short runtime data")
+		return 0, errors.New("short runtime data")
 	}
 
 	return float64(int32(binary.BigEndian.Uint32(data[offset : offset+4]))), nil
@@ -196,7 +197,7 @@ func (g *goodWeWifi) TotalEnergy() (float64, error) {
 		return 0, err
 	}
 	if len(data) < 94 {
-		return 0, fmt.Errorf("short runtime data")
+		return 0, errors.New("short runtime data")
 	}
 	return float64(binary.BigEndian.Uint32(data[90:94])) / 10.0, nil
 }
@@ -204,7 +205,7 @@ func (g *goodWeWifi) TotalEnergy() (float64, error) {
 // Soc implements api.Battery (only available on HYBRID)
 func (g *goodWeWifi) Soc() (float64, error) {
 	if g.family != "HYBRID" {
-		return 0, fmt.Errorf("battery not supported on DT family")
+		return 0, errors.New("battery not supported on DT family")
 	}
 
 	pdu := []byte{0x7f, 0x03, 0x75, 0x00, 0x00, 0x2a}
@@ -213,7 +214,7 @@ func (g *goodWeWifi) Soc() (float64, error) {
 		return 0, err
 	}
 	if len(data) < 30 {
-		return 0, fmt.Errorf("short battery data")
+		return 0, errors.New("short battery data")
 	}
 
 	soc := float64(binary.BigEndian.Uint16(data[28:30])) // typical SoC location
@@ -223,7 +224,7 @@ func (g *goodWeWifi) Soc() (float64, error) {
 // Capacity implements api.BatteryCapacity (only available on HYBRID)
 func (g *goodWeWifi) Capacity() (float64, error) {
 	if g.family != "HYBRID" {
-		return 0, fmt.Errorf("battery not supported on DT family")
+		return 0, errors.New("battery not supported on DT family")
 	}
 
 	// Many hybrids do not expose nominal capacity via the WiFi protocol.
