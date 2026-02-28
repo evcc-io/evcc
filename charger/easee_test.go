@@ -323,7 +323,7 @@ func TestEasee_waitForDynamicChargerCurrent(t *testing.T) {
 }
 
 func TestEasee_StatusReason(t *testing.T) {
-	tc := []struct {
+	testcases := []struct {
 		opMode         int
 		expectedReason api.Reason
 	}{
@@ -335,7 +335,7 @@ func TestEasee_StatusReason(t *testing.T) {
 		{easee.ModeReadyToCharge, api.ReasonUnknown},
 		{easee.ModeDeauthenticating, api.ReasonUnknown},
 	}
-	for _, tc := range tc {
+	for _, tc := range testcases {
 		t.Logf("%+v", tc)
 
 		e := newEasee()
