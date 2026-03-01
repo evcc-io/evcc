@@ -70,7 +70,7 @@
 				:selectedId="selectedLoadpointId"
 				@id-changed="selectedLoadpointChanged"
 			/>
-			<Footer v-bind="footer"></Footer>
+			<!-- Footer removed to make room for BottomTabBar — code kept for later reuse -->
 		</div>
 	</div>
 </template>
@@ -81,7 +81,6 @@ import TopNavigationArea from "../Top/TopNavigationArea.vue";
 import Energyflow from "../Energyflow/Energyflow.vue";
 import HemsWarning from "../HemsWarning.vue";
 import Loadpoints from "../Loadpoints/Loadpoints.vue";
-import Footer from "../Footer/Footer.vue";
 import formatter from "@/mixins/formatter";
 import collector from "@/mixins/collector.ts";
 import WelcomeIcons from "./WelcomeIcons.vue";
@@ -107,7 +106,6 @@ export default defineComponent({
 	components: {
 		Loadpoints,
 		Energyflow,
-		Footer,
 		HemsWarning,
 		TopNavigationArea,
 		WelcomeIcons,
@@ -235,8 +233,8 @@ export default defineComponent({
 </script>
 <style scoped>
 .site {
-	min-height: 100vh;
-	min-height: 100dvh;
+	min-height: calc(100vh - var(--tab-bar-height) - var(--safe-area-inset-bottom));
+	min-height: calc(100dvh - var(--tab-bar-height) - var(--safe-area-inset-bottom));
 }
 .content-area {
 	flex-grow: 1;

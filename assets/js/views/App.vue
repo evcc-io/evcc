@@ -6,6 +6,8 @@
 			:offline="offline"
 		></router-view>
 
+		<BottomTabBar v-bind="bottomTabBarProps" />
+
 		<GlobalSettingsModal v-bind="globalSettingsProps" />
 		<BatterySettingsModal v-if="batteryModalAvailabe" v-bind="batterySettingsProps" />
 		<ForecastModal v-bind="forecastModalProps" />
@@ -18,6 +20,7 @@
 
 <script lang="ts">
 import store from "../store";
+import BottomTabBar from "../components/BottomTabs/Bar.vue";
 import GlobalSettingsModal from "../components/GlobalSettings/GlobalSettingsModal.vue";
 import BatterySettingsModal from "../components/Battery/BatterySettingsModal.vue";
 import ForecastModal from "../components/Forecast/ForecastModal.vue";
@@ -41,6 +44,7 @@ setInterval(() => {
 export default defineComponent({
 	name: "App",
 	components: {
+		BottomTabBar,
 		GlobalSettingsModal,
 		HelpModal,
 		BatterySettingsModal,
@@ -92,6 +96,9 @@ export default defineComponent({
 		},
 		loginModalProps() {
 			return this.collectProps(LoginModal, this.state);
+		},
+		bottomTabBarProps() {
+			return this.collectProps(BottomTabBar, this.state);
 		},
 	},
 	watch: {
@@ -212,5 +219,6 @@ export default defineComponent({
 .app {
 	min-height: 100vh;
 	min-height: 100dvh;
+	padding-bottom: var(--tab-bar-height);
 }
 </style>

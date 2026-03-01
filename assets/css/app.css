@@ -12,6 +12,7 @@
 }
 
 /* Bootstrap Breakpoints as Custom Media Queries */
+@custom-media --xs-and-up (min-width: 400px);
 @custom-media --sm-and-up (min-width: 576px);
 @custom-media --md-and-up (min-width: 768px);
 @custom-media --lg-and-up (min-width: 992px);
@@ -96,6 +97,8 @@
 	--safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
 	--safe-area-inset-left: env(safe-area-inset-left, 0px);
 	--safe-area-inset-right: env(safe-area-inset-right, 0px);
+
+	--tab-bar-height: 3rem;
 }
 
 :root.dark {

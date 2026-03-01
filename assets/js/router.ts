@@ -94,6 +94,16 @@ export default function setupRouter(i18n: VueI18nInstance) {
         },
       },
       {
+        path: "/forecast",
+        component: () => import("./views/Forecast.vue"),
+        props: true,
+      },
+      {
+        path: "/battery",
+        component: () => import("./views/Battery.vue"),
+        props: true,
+      },
+      {
         path: "/energy",
         component: () => import("./views/Energy.vue"),
         props: true,
