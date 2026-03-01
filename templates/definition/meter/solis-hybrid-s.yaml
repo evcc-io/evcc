@@ -13,13 +13,15 @@ capabilities: ["battery-control"]
 requirements:
   description:
     de: |
-      Um die aktive Ladesteuerung zum Netzladen nutzen zu können ist eine einmalige manuelle Einrichtung notwendig.
-      Navigiere zu "System Settings" > "Storage Mode" im Wechselrichter Menü und aktiviere "Allow grid charging".
-      Wenn die aktive Ladesteuerung dann die "Battery Reserve"-Einstellung anpasst, lädt der Wechselrichter die Batterie aus dem Netz bis zum hier konfigurierten Max SOC Wert auf (Standard: 95%).
+      Die aktive Batteriesteuerung überschreibt die Wechselrichter Einstellungen "Allow grid charging" und "Battery Reserve SOC".
+      Der Parameter "Netzladen im Hold-Modus erlauben" (gridchargeonhold, Standard: false) bestimmt, ob "Allow grid charging" aktiviert bleibt wenn der Max. SOC Wert erreicht ist.
+      Dies ist für Umgebungen mit mehreren Wechselrichtern parallel zum Solis Inverter gedacht, in denen der Solis Inverter den
+      Überschuss der anderen Inverter in seine Batterie laden soll. Eine Ladung aus dem öffentlichen Netz über den Max. SOC hinaus erfolgt dabei nicht.
     en: |
-      To use active battery control with grid charging, a one-time manual setup is required.
-      Navigate to "System Settings" > "Storage Mode" in the inverter menu and enable "Allow grid charging".
-      When active battery control adjusts the "Battery Reserve" setting, the inverter will charge the battery from the grid up to the Max SOC setting configured here (Default: 95%).
+      Active battery control overrides the inverter settings "Allow grid charging" and "Battery Reserve SOC".
+      The "Keep grid charging on in hold mode" (gridchargeonhold, default: false) determines whether "Allow grid charging" remains enabled when the Max. SOC value is reached.
+      This is intended for environments with multiple inverters parallel to the Solis inverter, where the Solis inverter should
+      charge its battery from the surplus of the other inverters. Charging from the public grid beyond Max. SOC will not occur.
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -29,6 +31,12 @@ params:
     id: 1
   - name: maxacpower
   - preset: battery-params
+  - name: gridchargeonhold
+    default: false
+    type: bool
+    description:
+      en: Keep grid charging on in hold mode
+      de: Netzladen im Hold-Modus erlauben
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -145,12 +153,78 @@ render: |
       address: 33139 # Battery capacity SOC
       type: input
       decode: uint16
-  limitsoc:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 43024 # Battery Reserve Mode SOC
-      type: writeholding
-      encoding: uint16
+  batterymode:
+    source: switch
+    switch:
+    - case: 1  # normal
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: {{ .minsoc }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 43024 # Battery Reserve SOC
+              type: writeholding
+              decode: uint16
+        - source: const
+          value: 48 # Bits 4+5: Battery Reserve (16) + Allow Grid Charge (32)
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 43110
+              type: writeholding
+              decode: uint16
+    - case: 2  # hold
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: {{ .maxsoc }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 43024 # Battery Reserve SOC
+              type: writeholding
+              decode: uint16
+        - source: const
+          {{- if .gridchargeonhold }}
+          value: 48 # Bits 4+5: Battery Reserve (16) + Allow Grid Charge (32)
+          {{- else }}
+          value: 16 # Bit 4 only: Battery Reserve (16)
+          {{- end }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 43110
+              type: writeholding
+              decode: uint16
+    - case: 3  # charge
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: {{ .maxsoc }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 43024 # Battery Reserve SOC
+              type: writeholding
+              decode: uint16
+        - source: const
+          value: 48 # Bits 4+5: Battery Reserve (16) + Allow Grid Charge (32)
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 43110
+              type: writeholding
+              decode: uint16
   {{- include "battery-params" . }}
   {{- end }}
