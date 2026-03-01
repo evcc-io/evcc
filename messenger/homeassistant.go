@@ -14,15 +14,10 @@ func init() {
 	registry.Add("homeassistant", NewHAMessengerFromConfig)
 }
 
-// haSender abstracts the Home Assistant service call for testability
-type haSender interface {
-	CallService(domain, service string, data map[string]any) error
-}
-
 // HAMessenger implements the Home Assistant messenger
 type HAMessenger struct {
 	log    *util.Logger
-	conn   haSender
+	conn   *homeassistant.Connection
 	notify string
 	data   map[string]any
 }

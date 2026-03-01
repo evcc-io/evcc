@@ -58,9 +58,15 @@ func (c *Connection) URI() string {
 func (c *Connection) GetStates() ([]StateResponse, error) {
 	var res []StateResponse
 	uri := fmt.Sprintf("%s/api/states", c.instance.URI())
-
 	err := c.GetJSON(uri, &res)
+	return res, err
+}
 
+// GetServices retrieves the list of callable services
+func (c *Connection) GetServices() ([]ServiceDomainResponse, error) {
+	var res []ServiceDomainResponse
+	uri := fmt.Sprintf("%s/api/services", c.instance.URI())
+	err := c.GetJSON(uri, &res)
 	return res, err
 }
 

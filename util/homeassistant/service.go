@@ -3,7 +3,6 @@ package homeassistant
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"maps"
 	"net/http"
 	"slices"
@@ -11,7 +10,6 @@ import (
 
 	"github.com/evcc-io/evcc/server/service"
 	"github.com/evcc-io/evcc/util"
-	"github.com/samber/lo"
 )
 
 var log = util.NewLogger("homeassistant")
@@ -40,46 +38,52 @@ func connectionFromRequest(req *http.Request) (*Connection, error) {
 	return NewConnection(log, uri, "")
 }
 
+// domainsFromRequest parses the comma-separated "domain" query parameter.
+func domainsFromRequest(req *http.Request) []string {
+	if domain := req.URL.Query().Get("domain"); domain != "" {
+		return strings.Split(domain, ",")
+	}
+	return nil
+}
+
+// matchesDomains reports whether entityID belongs to any of the given domains.
+// If domains is empty, all entities match.
+func matchesDomains(entityID string, domains []string) bool {
+	if len(domains) == 0 {
+		return true
+	}
+	for _, d := range domains {
+		if strings.HasPrefix(entityID, d+".") {
+			return true
+		}
+	}
+	return false
+}
+
 func getEntities(w http.ResponseWriter, req *http.Request) {
 	conn, err := connectionFromRequest(req)
 	if err != nil {
 		jsonError(w, http.StatusBadRequest, err)
 		return
 	}
-	res, err := conn.GetStates()
+
+	states, err := conn.GetStates()
 	if err != nil {
 		jsonError(w, http.StatusBadRequest, err)
 		return
 	}
 
-	var domains []string
-	if domain := req.URL.Query().Get("domain"); domain != "" {
-		domains = strings.Split(domain, ",")
+	domains := domainsFromRequest(req)
+
+	var result []string
+	for _, e := range states {
+		if matchesDomains(e.EntityId, domains) {
+			result = append(result, e.EntityId)
+		}
 	}
 
-	// cache list of entities
 	w.Header().Set("Cache-control", "max-age=300")
-
-	jsonWrite(w, lo.Map(lo.Filter(res, func(e StateResponse, _ int) bool {
-		if len(domains) == 0 {
-			return true
-		}
-
-		for _, domain := range domains {
-			if strings.HasPrefix(e.EntityId, domain+".") {
-				return true
-			}
-		}
-
-		return false
-	}), func(e StateResponse, _ int) string {
-		return e.EntityId
-	}))
-}
-
-type serviceDomainResponse struct {
-	Domain   string         `json:"domain"`
-	Services map[string]any `json:"services"`
+	jsonWrite(w, result)
 }
 
 func getServices(w http.ResponseWriter, req *http.Request) {
@@ -89,46 +93,37 @@ func getServices(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	var filterDomains []string
-	if domain := req.URL.Query().Get("domain"); domain != "" {
-		filterDomains = strings.Split(domain, ",")
-	}
+	domains := domainsFromRequest(req)
 
 	seen := make(map[string]struct{})
 
 	// collect callable services from /api/services (e.g. notify.mobile_app_android)
-	var svcRes []serviceDomainResponse
-	if err := conn.GetJSON(fmt.Sprintf("%s/api/services", conn.URI()), &svcRes); err != nil {
+	svcRes, err := conn.GetServices()
+	if err != nil {
 		jsonError(w, http.StatusBadRequest, err)
 		return
 	}
 	for _, sd := range svcRes {
-		if len(filterDomains) > 0 && !slices.Contains(filterDomains, sd.Domain) {
-			continue
-		}
-		for svc := range sd.Services {
-			seen[sd.Domain+"."+svc] = struct{}{}
+		if len(domains) == 0 || slices.Contains(domains, sd.Domain) {
+			for svc := range sd.Services {
+				seen[sd.Domain+"."+svc] = struct{}{}
+			}
 		}
 	}
 
 	// collect entity-based notifiers from /api/states (e.g. Telegram in HA 2024+)
-	if len(filterDomains) > 0 {
+	if len(domains) > 0 {
 		if states, err := conn.GetStates(); err == nil {
 			for _, e := range states {
-				for _, domain := range filterDomains {
-					if strings.HasPrefix(e.EntityId, domain+".") {
-						seen[e.EntityId] = struct{}{}
-						break
-					}
+				if matchesDomains(e.EntityId, domains) {
+					seen[e.EntityId] = struct{}{}
 				}
 			}
 		}
 	}
 
-	result := slices.Sorted(maps.Keys(seen))
-
 	w.Header().Set("Cache-control", "max-age=300")
-	jsonWrite(w, result)
+	jsonWrite(w, slices.Sorted(maps.Keys(seen)))
 }
 
 // jsonWrite writes a JSON response
