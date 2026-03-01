@@ -267,7 +267,7 @@ jobs:
           TZ: Europe/Berlin
 
       - name: Upload Playwright Report
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7.0.0
         if: ${{ !cancelled() }}
         with:
           name: playwright-report
@@ -275,7 +275,7 @@ jobs:
           retention-days: 14
 
       - name: Upload Playwright Raw Test Results
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7.0.0
         if: failure()
         with:
           name: playwright-test-results
