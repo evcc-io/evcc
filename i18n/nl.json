@@ -105,6 +105,12 @@
       "labelResidualPower": "Vermogensoverschot",
       "title": "Regelgedrag"
     },
+    "currency": {
+      "description": "Gebruikt om energieprijzen, kosten en besparingen te tonen op basis van uw tarief.",
+      "example": "Uw laadprijs was {price}. U heeft {amount} bespaard.",
+      "label": "Valuta",
+      "title": "Valuta"
+    },
     "deviceValue": {
       "amount": "Aantal",
       "broker": "Agent",
@@ -130,11 +136,13 @@
       "energy": "Energie",
       "events": "Gebeurtenissen",
       "feedinPrice": "Terugleververgoeding",
+      "forecast": "Voorspelling",
       "gridPrice": "Netprijs",
       "heaterTempLimit": "Verwarming limiet",
       "hemsActiveLimit": "Actieve limiet",
       "hemsType": "Communicatie",
       "identifier": "RFID-Nummer",
+      "max": "max",
       "messengers": "Diensten",
       "no": "nee",
       "odometer": "Kilometerstand",
@@ -145,6 +153,7 @@
       "phases1p3p": "Fase-omschakeling",
       "power": "Vermogen",
       "powerRange": "Vermogen",
+      "price": "Prijs",
       "range": "Actieradius",
       "singlePhase": "Monofase",
       "soc": "Laden",
@@ -324,6 +333,7 @@
       },
       "defaultModeHelpKeep": "Behoud de laatst-geselecteerde modus.",
       "defaultModeLabel": "Standaard mode",
+      "defaultsHintLink": "Instellingen aanpassen",
       "delete": "Wissen",
       "electricalSubtitle": "Bij twijfel, raadpleeg een elektricien.",
       "electricalTitle": "Elektrisch",
@@ -569,7 +579,8 @@
       "labelInternalUrl": "Interne URL",
       "labelPort": "Poort",
       "labelSchema": "Schema",
-      "title": "Netwerk"
+      "title": "Netwerk",
+      "warningUrlPath": "De URL bevat doorgaans geen path. Weet u zeker dat dit juist is?"
     },
     "ocpp": {
       "connectedChargers": "Verbonden laders",
@@ -695,6 +706,72 @@
       "restartRequiredMessage": "Configuratie gewijzigd.",
       "restartingDescription": "Even geduld aub…",
       "restartingMessage": "Evcc wordt herstart."
+    },
+    "tariff": {
+      "addForecast": "Voorspelling toevoegen",
+      "addTariff": "Tarief toevoegen",
+      "co2": {
+        "description": "CO₂ intensiteitsvoorspelling voor netstroom. Voor CO₂-geoptimaliseerd laden en het berekenen van emissie besparingen.",
+        "titleAdd": "CO₂-voorspelling toevoegen",
+        "titleEdit": "CO₂-voorspelling aanpassen"
+      },
+      "co2Services": "CO₂-diensten",
+      "customForecast": "Gebruikers eigen voorspelling",
+      "customTariff": "Gebruikers eigen tarieven",
+      "description": "Configureer uw eigen tarieven en voorspellingen. Gebruik apparaat-gebaseerde configuratie voor dynamisch beheer of gebruik YAML voor statisch beheer.",
+      "feedIn": {
+        "description": "Vergoeding voor energie die geëxporteerd wordt naar het net. Wordt gebruikt om de werkelijke kosten van het laden te berekenen.",
+        "titleAdd": "Net-export tarief toevoegen",
+        "titleEdit": "Net-export tarief aanpassen"
+      },
+      "generic": "Generieke integraties",
+      "grid": {
+        "description": "Electriciteits-prijzen voor consumptie van het net. Gebruikt om de werkelijke laadkosten uit te rekenen, en voor het laden van de auto of thuis-accu en het inschakelen van verwarming tegen de beste prijs.",
+        "titleAdd": "Electriciteits tarief toevoegen voor import"
+      },
+      "option": {
+        "co2": "CO₂-voorspelling toevoegen",
+        "solar": "PV-voorspelling toevoegen"
+      },
+      "planner": {
+        "description": "Geavanceerde instelling. Doorgaans niet nodig omdat dynamische energieprijzen en CO₂ voorspellingen gebruikt worden. Deze instelling voegt een extra methode toe die het laden planbaar maakt. Deze methode is niet voor statistieken of prijsberekeningen.",
+        "titleAdd": "Planner voorspelling toevoegen",
+        "titleEdit": "Planner voorspelling aanpassen"
+      },
+      "services": "Diensten",
+      "solar": {
+        "description": "Voorspelling van zonne-energie van uw PV. Wordt weergegeven in de interface en gebruikt voor optimalisaties in de toekomst.",
+        "titleAdd": "PV voorspelling toevoegen",
+        "titleEdit": "PV voorspelling aanpassen"
+      },
+      "template": "Aanbieder",
+      "title": "Tarieven & voorspelingen",
+      "titleChoice": "Wat wilt u toevoegen?",
+      "type": {
+        "co2": "CO₂ intensiteit",
+        "planner": "Planner",
+        "solar": "PV"
+      },
+      "zones": {
+        "add": "Zone toevoegen",
+        "allDays": "Alle dagen",
+        "allMonths": "Alle maanden",
+        "allTimes": "Alle tijdstippen",
+        "cancel": "Annuleren",
+        "days": "Dagen",
+        "edit": "Aanpassen",
+        "hours": "Uren",
+        "months": "Maanden",
+        "price": "Prijs",
+        "priceRequired": "Prijs is verplicht",
+        "remove": "Zone verwijderen",
+        "save": "Opslaan",
+        "selectAll": "Alle dagen",
+        "timeFrom": "Van",
+        "timeRangeError": "Starttijd moet voor de eindtijd liggen. Om middernacht te overbruggen moet u twee losse zones maken.",
+        "timeTo": "Tot",
+        "weekdays": "Weekdagen"
+      }
     },
     "tariffs": {
       "description": "Voer jouw energietarief in om de kosten van het laden te berekenen.",
@@ -1002,8 +1079,8 @@
       "battery": "Batterij",
       "batteryCharge": "Batterij opladen",
       "batteryDischarge": "Batterij ontladen",
-      "batteryForecastEmpty": "leeg {timeago}",
-      "batteryForecastFull": "vol {timeago}",
+      "batteryForecastEmpty": "leeg {time}",
+      "batteryForecastFull": "vol {time}",
       "batteryGridChargeActive": "Net laden: actief",
       "batteryGridChargeLimit": "Net laden: wanneer",
       "batteryHold": "Batterij (aanhouden)",
@@ -1167,7 +1244,7 @@
       "charging": "Opladen…",
       "cheapEnergyCharging": "Goedkope energie beschikbaar.",
       "cheapEnergyNextStart": "Goedkope energie in {duration}.",
-      "cheapEnergySet": "Prijslimit ingesteld.",
+      "cheapEnergySet": "Prijslimiet ingesteld.",
       "cleanEnergyCharging": "Schone energie beschikbaar.",
       "cleanEnergyNextStart": "Schone energie in {duration}.",
       "cleanEnergySet": "CO₂ limiet ingesteld.",
@@ -1183,7 +1260,7 @@
       "pvEnable": "Voldoende PV overschot beschikbaar. Laden wordt gestart.",
       "scale1p": "Wordt gereduceerd naar laden op 1 fase.",
       "scale3p": "Wordt verhoogd naar laden op 3 fasen.",
-      "targetChargeActive": "Laadplan actief. Geschatte beëindiging over {duration}.",
+      "targetChargeActive": "Laadplan actief. Geschat einde over {duration}.",
       "targetChargePlanned": "Laadplan begint over {duration}.",
       "targetChargeWaitForVehicle": "Laadplan gereed. Wachten op voertuig…",
       "vehicleLimit": "Voertuiglimiet",
@@ -1401,6 +1478,6 @@
     "lineError": "Fout in {0}.",
     "lineErrorLink": "lijn {0}",
     "restartButton": "Herstart",
-    "title": "Start Error"
+    "title": "Opstart fout"
   }
 }
