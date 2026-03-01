@@ -193,10 +193,10 @@ func (wb *OpenWbNative) gpioSwitchPhases(phases int) error {
 	}
 
 	return wb.runGpioSequence([]gpioAction{
-		{pin: func() { wb.gpio.cp.SetValue(1) }, delay: time.Second},   // enable phases switch relay (NO), disconnect CP
-		{pin: func() { phLine.SetValue(1) }, delay: wb.cpWait / 2},     // move latching relay to desired position
-		{pin: func() { phLine.SetValue(0) }, delay: wb.cpWait / 2},     // lock latching relay
-		{pin: func() { wb.gpio.cp.SetValue(0) }, delay: time.Second},   // disable phase switching, reconnect CP
+		{pin: func() { wb.gpio.cp.SetValue(1) }, delay: time.Second}, // enable phases switch relay (NO), disconnect CP
+		{pin: func() { phLine.SetValue(1) }, delay: wb.cpWait / 2},   // move latching relay to desired position
+		{pin: func() { phLine.SetValue(0) }, delay: wb.cpWait / 2},   // lock latching relay
+		{pin: func() { wb.gpio.cp.SetValue(0) }, delay: time.Second}, // disable phase switching, reconnect CP
 	})
 }
 
