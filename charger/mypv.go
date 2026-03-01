@@ -300,7 +300,7 @@ func (wb *MyPv) CurrentPower() (float64, error) {
 		if err != nil {
 			return 0, err
 		}
-		wb.log.DEBUG.Printf("operation mode %.0f", float64(binary.BigEndian.Uint16(c)))
+		wb.log.TRACE.Printf("operation mode %.0f", float64(binary.BigEndian.Uint16(c)))
 
 		if binary.BigEndian.Uint16(c) == 3 {
 			// get power of heater on relay as set in web interface
@@ -314,18 +314,19 @@ func (wb *MyPv) CurrentPower() (float64, error) {
 			if err != nil {
 				return 0, err
 			}
-			wb.log.DEBUG.Printf("max. power: controlled %.0f W / combined %.0f W", float64(binary.BigEndian.Uint16(d)), float64(binary.BigEndian.Uint16(e)))
+			wb.log.TRACE.Printf("max. power: controlled %.0f W / combined %.0f W", float64(binary.BigEndian.Uint16(d)), float64(binary.BigEndian.Uint16(e)))
 
 			// relay power = combined power - controlled power, finally corrected with 110% factor
 			var rp float64 = float64((binary.BigEndian.Uint16(e) - binary.BigEndian.Uint16(d))) / float64(1.1)
 
 			// relay power value from AC Thor must be calculated back with scale factor
 			if wb.scale != 0 {
+				wb.log.TRACE.Printf("scale factor: %.2f / relay power: %.0f", wb.scale, rp)
 				rp = rp / wb.scale
 			} else {
 				rp = 0
 			}
-			wb.log.DEBUG.Printf("power on relay: register difference %.0f W / corrected %.0f W", float64(binary.BigEndian.Uint16(e)-binary.BigEndian.Uint16(d)), rp)
+			wb.log.TRACE.Printf("power on relay: register difference %.0f W / corrected %.0f W", float64(binary.BigEndian.Uint16(e)-binary.BigEndian.Uint16(d)), rp)
 
 			f, err := wb.conn.ReadHoldingRegisters(elwaRegRelayState, 1)
 			if err != nil {
@@ -334,10 +335,12 @@ func (wb *MyPv) CurrentPower() (float64, error) {
 
 			if binary.BigEndian.Uint16(f) == 1 {
 				p = float64(binary.BigEndian.Uint16(b)) + rp
-				wb.log.DEBUG.Printf("relay on / relay heater power %.0f W / total power %.0f W", rp, p)
+				// wb.log.DEBUG.Printf("relay on / relay heater power %.0f W / total power %.0f W", rp, p)
+				wb.log.DEBUG.Printf("relay [%.0f W] on / total power = %.0f", rp, p)
 			} else {
 				p = float64(binary.BigEndian.Uint16(b))
-				wb.log.DEBUG.Printf("relay off / relay heater power %.0f W / total power %.0f W", rp, p)
+				// wb.log.DEBUG.Printf("relay off / relay heater power %.0f W / total power %.0f W", rp, p)
+				wb.log.DEBUG.Printf("relay [%.0f W] off / total power = %.0f", rp, p)
 			}
 		}
 	}
