@@ -2,27 +2,28 @@ package relay
 
 import (
 	"context"
-	"errors"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/site"
-	"github.com/evcc-io/evcc/hems/shared"
+	"github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/hems/smartgrid"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
 )
 
 type Relay struct {
+	mu  sync.Mutex
 	log *util.Logger
 
 	root        api.Circuit
+	w1          func() (bool, error)
 	passthrough func(bool) error
 
 	smartgridID uint
-	limit       func() (bool, error)
+	limit       *float64
 	maxPower    float64
 	interval    time.Duration
 }
@@ -42,23 +43,13 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*R
 		return nil, err
 	}
 
-	// get root circuit
-	root := circuit.Root()
-	if root == nil {
-		return nil, errors.New("hems requires load management- please configure root circuit")
-	}
-
-	// register LPC circuit if not already registered
-	lpc, err := shared.GetOrCreateCircuit("lpc", "relay")
+	// setup grid control circuit
+	gridcontrol, err := smartgrid.SetupCircuit("relay")
 	if err != nil {
 		return nil, err
 	}
 
-	// wrap old root with new pc parent
-	if err := root.Wrap(lpc); err != nil {
-		return nil, err
-	}
-	site.SetCircuit(lpc)
+	site.SetCircuit(gridcontrol)
 
 	// limit getter
 	limitG, err := cc.Limit.BoolGetter(ctx)
@@ -71,25 +62,34 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*R
 		return nil, err
 	}
 
-	return NewRelay(lpc, limitG, passthroughS, cc.MaxPower, cc.Interval)
+	return NewRelay(gridcontrol, limitG, passthroughS, cc.MaxPower, cc.Interval)
 }
 
 // NewRelay creates Relay HEMS
-func NewRelay(root api.Circuit, limit func() (bool, error), passthrough func(bool) error, maxPower float64, interval time.Duration) (*Relay, error) {
+func NewRelay(root api.Circuit, w1 func() (bool, error), passthrough func(bool) error, maxPower float64, interval time.Duration) (*Relay, error) {
 	c := &Relay{
 		log:         util.NewLogger("relay"),
 		root:        root,
 		passthrough: passthrough,
 		maxPower:    maxPower,
-		limit:       limit,
+		w1:          w1,
 		interval:    interval,
 	}
 
 	return c, nil
 }
 
-func (c *Relay) ConsumptionLimit() float64 {
-	return c.maxPower
+var _ hems.API = (*Relay)(nil)
+
+func (c *Relay) ConsumptionLimit() *float64 {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.limit
+}
+
+// ProductionLimit implements hems.API
+func (c *Relay) ProductionLimit() *float64 {
+	return nil
 }
 
 func (c *Relay) Run() {
@@ -101,13 +101,13 @@ func (c *Relay) Run() {
 }
 
 func (c *Relay) run() error {
-	limited, err := c.limit()
+	active, err := c.w1()
 	if err != nil {
 		return err
 	}
 
 	var limit float64
-	if limited {
+	if active {
 		limit = c.maxPower
 	}
 
@@ -115,43 +115,22 @@ func (c *Relay) run() error {
 		return err
 	}
 
-	if err := c.updateSession(limit); err != nil {
+	if err := smartgrid.UpdateSession(&c.smartgridID, smartgrid.Dim, c.root.GetChargePower(), limit, active); err != nil {
 		return fmt.Errorf("smartgrid session: %v", err)
 	}
 
 	return nil
 }
 
-// TODO keep in sync across HEMS implementations
-func (c *Relay) updateSession(limit float64) error {
-	// start session
-	if limit > 0 && c.smartgridID == 0 {
-		var power *float64
-		if p := c.root.GetChargePower(); p > 0 {
-			power = new(p)
-		}
-
-		sid, err := smartgrid.StartManage(smartgrid.Dim, power, limit)
-		if err != nil {
-			return err
-		}
-
-		c.smartgridID = sid
-	}
-
-	// stop session
-	if limit == 0 && c.smartgridID != 0 {
-		if err := smartgrid.StopManage(c.smartgridID); err != nil {
-			return err
-		}
-
-		c.smartgridID = 0
-	}
-
-	return nil
-}
-
 func (c *Relay) setLimited(limit float64) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	c.limit = nil
+	if limit > 0 {
+		c.limit = new(limit)
+	}
+
 	c.root.Dim(limit > 0)
 	c.root.SetMaxPower(limit)
 

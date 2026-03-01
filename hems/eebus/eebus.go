@@ -8,9 +8,8 @@ import (
 
 	ucapi "github.com/enbility/eebus-go/usecases/api"
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/site"
-	"github.com/evcc-io/evcc/hems/shared"
+	"github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/hems/smartgrid"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/server/eebus"
@@ -85,22 +84,12 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*E
 		return nil, err
 	}
 
-	// get root circuit
-	root := circuit.Root()
-	if root == nil {
-		return nil, errors.New("hems requires load management- please configure root circuit")
-	}
-
-	// register LPC circuit if not already registered
-	gridcontrol, err := shared.GetOrCreateCircuit("gridcontrol", "eebus")
+	// setup grid control circuit
+	gridcontrol, err := smartgrid.SetupCircuit("eebus")
 	if err != nil {
 		return nil, err
 	}
 
-	// wrap old root with new grid control parent
-	if err := root.Wrap(gridcontrol); err != nil {
-		return nil, err
-	}
 	site.SetCircuit(gridcontrol)
 
 	return NewEEBus(ctx, cc.Ski, cc.Limits, passthroughS, gridcontrol, cc.Interval)
@@ -174,8 +163,30 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, passthrough func(b
 	return c, nil
 }
 
-func (c *EEBus) ConsumptionLimit() float64 {
-	return c.consumptionLimit.Value
+var _ hems.API = (*EEBus)(nil)
+
+// ConsumptionLimit implements hems.API
+func (c *EEBus) ConsumptionLimit() *float64 {
+	c.mux.RLock()
+	defer c.mux.RUnlock()
+
+	if !c.consumptionLimit.IsActive {
+		return nil
+	}
+
+	return new(c.consumptionLimit.Value)
+}
+
+// ProductionLimit implements hems.API
+func (c *EEBus) ProductionLimit() *float64 {
+	c.mux.RLock()
+	defer c.mux.RUnlock()
+
+	if !c.productionLimit.IsActive {
+		return nil
+	}
+
+	return new(c.productionLimit.Value)
 }
 
 func (c *EEBus) Run() {
@@ -229,12 +240,12 @@ func (c *EEBus) run() error {
 	if c.productionLimitActivated.IsZero() {
 		if c.productionLimit.IsActive {
 			c.log.WARN.Println("activating production limit")
-			c.setProductionLimit(c.productionLimit.Value)
+			c.setProductionLimit(c.productionLimit.Value, true)
 		}
 	} else {
 		if time.Since(c.productionLimitActivated) > c.productionLimit.Duration {
 			c.log.DEBUG.Println("production limit duration exceeded")
-			c.setProductionLimit(0)
+			c.setProductionLimit(0, false)
 		}
 	}
 
@@ -246,7 +257,7 @@ func (c *EEBus) setStatusAndLimit(status status, consumption, production float64
 	c.statusUpdated = time.Now()
 
 	c.setConsumptionLimit(consumption)
-	c.setProductionLimit(production)
+	c.setProductionLimit(production, true)
 }
 
 func (c *EEBus) setConsumptionLimit(limit float64) {
@@ -261,8 +272,8 @@ func (c *EEBus) setConsumptionLimit(limit float64) {
 	c.root.Dim(active)
 	c.root.SetMaxPower(limit)
 
-	if err := c.updateSession(&c.smartgridConsumptionId, smartgrid.Dim, limit); err != nil {
-		c.log.ERROR.Printf("smartgrid dim session: %v", err)
+	if err := smartgrid.UpdateSession(&c.smartgridConsumptionId, smartgrid.Dim, c.root.GetChargePower(), limit, active); err != nil {
+		c.log.ERROR.Printf("smartgrid session: %v", err)
 	}
 
 	if c.passthrough != nil {
@@ -272,9 +283,7 @@ func (c *EEBus) setConsumptionLimit(limit float64) {
 	}
 }
 
-func (c *EEBus) setProductionLimit(limit float64) {
-	active := limit > 0
-
+func (c *EEBus) setProductionLimit(limit float64, active bool) {
 	if active {
 		c.productionLimitActivated = time.Now()
 	} else {
@@ -285,36 +294,7 @@ func (c *EEBus) setProductionLimit(limit float64) {
 	// TODO make ProductionNominalMax configurable (Site kWp)
 	// c.root.SetMaxProduction(limit)
 
-	if err := c.updateSession(&c.smartgridProductionId, smartgrid.Curtail, limit); err != nil {
-		c.log.ERROR.Printf("smartgrid curtail session: %v", err)
+	if err := smartgrid.UpdateSession(&c.smartgridProductionId, smartgrid.Curtail, c.root.GetChargePower(), limit, active); err != nil {
+		c.log.ERROR.Printf("smartgrid session: %v", err)
 	}
-}
-
-// TODO keep in sync across HEMS implementations
-func (c *EEBus) updateSession(id *uint, typ smartgrid.Type, limit float64) error {
-	// start session
-	if limit > 0 && *id == 0 {
-		var power *float64
-		if p := c.root.GetChargePower(); p > 0 {
-			power = new(p)
-		}
-
-		sid, err := smartgrid.StartManage(typ, power, limit)
-		if err != nil {
-			return err
-		}
-
-		*id = sid
-	}
-
-	// stop session
-	if limit == 0 && *id != 0 {
-		if err := smartgrid.StopManage(*id); err != nil {
-			return err
-		}
-
-		*id = 0
-	}
-
-	return nil
 }
