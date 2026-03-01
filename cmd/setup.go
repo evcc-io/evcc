@@ -26,6 +26,7 @@ import (
 	coresettings "github.com/evcc-io/evcc/core/settings"
 	"github.com/evcc-io/evcc/hems"
 	hemsapi "github.com/evcc-io/evcc/hems/hems"
+	"github.com/evcc-io/evcc/hems/shared"
 	"github.com/evcc-io/evcc/hems/shm"
 	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/meter"
@@ -710,6 +711,12 @@ func configureHEMS(conf *globalconfig.Hems, site *core.Site) (hemsapi.API, error
 	props, err := customDevice(conf.Other)
 	if err != nil {
 		return nil, fmt.Errorf("cannot decode custom hems '%s': %w", conf.Type, err)
+	}
+
+	if circuit.Root() == nil {
+		if _, err := shared.GetOrCreateCircuit("lpc", "lpc"); err != nil {
+			return nil, fmt.Errorf("failed creating root circuit for hems: %w", err)
+		}
 	}
 
 	hems, err := hems.NewFromConfig(context.TODO(), conf.Type, props, site)
