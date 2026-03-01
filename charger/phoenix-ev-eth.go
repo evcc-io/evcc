@@ -26,6 +26,7 @@ package charger
 import (
 	"context"
 	"fmt"
+	"math"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -47,7 +48,7 @@ const (
 	phxRegCurrents        = 114  // Input
 	phxRegPower           = 120  // Input
 	phxRegEnergy          = 128  // Input
-	phxRegChargedEnergy   = 132  // Input
+	phxRegChargedEnergy   = 132  // Input [kWh]
 	phxRegFirmwareWallbe  = 149  // Input
 	phxRegEnable          = 400  // Coil
 	phxRegCardEnabled     = 419  // Coil
@@ -62,7 +63,7 @@ func init() {
 	registry.AddCtx("phoenix-ev-eth", NewPhoenixEVEthFromConfig)
 }
 
-//go:generate go tool decorate -f decoratePhoenixEVEth -b *PhoenixEVEth -r api.Charger -t api.Meter,api.MeterEnergy,api.PhaseCurrents,api.PhaseVoltages,api.ChargerEx,api.Identifier
+//go:generate go tool decorate -f decoratePhoenixEVEth -b *PhoenixEVEth -r api.Charger -t api.Meter,api.MeterEnergy,api.PhaseCurrents,api.PhaseVoltages,api.ChargerEx,api.Identifier,api.ChargeRater
 
 // NewPhoenixEVEthFromConfig creates a PhoenixEVEth charger from generic config
 func NewPhoenixEVEthFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
@@ -102,7 +103,10 @@ func NewPhoenixEVEth(ctx context.Context, uri string, slaveID uint8) (api.Charge
 		voltages         func() (float64, float64, float64, error)
 		maxCurrentMillis func(float64) error
 		identify         func() (string, error)
+		chargedEnergy    func() (float64, error)
 	)
+
+	chargedEnergy = wb.chargedEnergy
 
 	// check presence of meter by voltage on l1
 	if b, err := wb.conn.ReadInputRegisters(phxRegVoltages, 2); err == nil && encoding.Uint32LswFirst(b) > 0 {
@@ -123,7 +127,7 @@ func NewPhoenixEVEth(ctx context.Context, uri string, slaveID uint8) (api.Charge
 		maxCurrentMillis = wb.maxCurrentMillis
 	}
 
-	return decoratePhoenixEVEth(wb, currentPower, totalEnergy, currents, voltages, maxCurrentMillis, identify), nil
+	return decoratePhoenixEVEth(wb, currentPower, totalEnergy, currents, voltages, maxCurrentMillis, identify, chargedEnergy), nil
 }
 
 // Status implements the api.Charger interface
@@ -235,6 +239,26 @@ func (wb *PhoenixEVEth) getPhaseValues(reg uint16) (float64, float64, float64, e
 	}
 
 	return res[0], res[1], res[2], nil
+}
+
+// chargedEnergy implements the api.ChargeRater interface
+func (wb *PhoenixEVEth) chargedEnergy() (float64, error) {
+	b, err := wb.conn.ReadInputRegisters(phxRegChargedEnergy, 2)
+	if err != nil {
+		return 0, err
+	}
+
+	charged := float64(encoding.Uint32LswFirst(b))
+
+	// borrow fractional part from totalEnergy for sub-kWh precision
+	if charged > 0 {
+		if total, err := wb.totalEnergy(); err == nil {
+			_, frac := math.Modf(total)
+			charged += frac
+		}
+	}
+
+	return charged, nil
 }
 
 // identify implements the api.Identifier interface
