@@ -1,8 +1,9 @@
 template: octopus-de
 products:
-  - brand: Octopus Energy Germany
+  - brand: Octopus Energy
     description:
-      generic: Deutschland
+      de: Deutschland
+      en: Germany
 requirements:
   evcc: ["skiptest"]
 countries: ["DE"]

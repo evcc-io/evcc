@@ -1,0 +1,25 @@
+## static price
+
+price: # current price
+  source: const
+  value: 0.294 # EUR/kWh
+
+
+## dynamic price (uncomment to use)
+
+#price: # current price
+#  source: http
+#  uri: https://example.com/api/price
+#  jq: .price
+
+## forecast (for dynamic tariffs with hourly prices)
+
+#forecast: # hourly price forecast
+#  source: http
+#  uri: https://example.com/api/forecast
+#  jq: |
+#    map({
+#      "start": .start,
+#      "end": .end,
+#      "value": .price
+#    }) | tostring

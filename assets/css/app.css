@@ -72,6 +72,9 @@
 
 	--bs-warning: var(--evcc-orange);
 	--bs-warning-rgb: var(--evcc-orange-rgb);
+	--bs-warning-bg-subtle: color-mix(in srgb, var(--evcc-orange) 10%, transparent);
+	--bs-warning-border-subtle: color-mix(in srgb, var(--evcc-orange) 30%, transparent);
+	--bs-warning-text-emphasis: var(--evcc-orange);
 	--bs-danger-50: #dc354580;
 
 	--bs-danger: var(--evcc-red);
@@ -501,6 +504,10 @@ small {
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
+.form-select.disabled,
+.form-select:disabled {
+	background-color: var(--bs-secondary-bg);
+}
 
 .dark .dropdown-menu {
 	box-shadow: 0 0 8px var(--evcc-background);
@@ -515,6 +522,7 @@ small {
 	color: var(--bs-gray-medium) !important;
 }
 
+.dark .form-select.disabled,
 .dark .form-select:disabled {
 	opacity: 0.5;
 }

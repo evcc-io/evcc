@@ -235,6 +235,9 @@ func (p *Param) DefaultValue(renderMode int) any {
 	if p.Type == TypeList {
 		return []string{}
 	}
+	if p.Type == TypeZones {
+		return []any{}
+	}
 
 	if (renderMode == RenderModeDocs || renderMode == RenderModeUnitTest) && p.Default == "" {
 		return p.Example

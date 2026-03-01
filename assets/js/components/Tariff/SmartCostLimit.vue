@@ -73,9 +73,11 @@ export default defineComponent({
 			// Smart cost: charge when costs are below or equal to limit
 			return value <= this.currentLimit;
 		},
-		async saveLimit(limit: number) {
+		async saveLimit(limit: number, active: boolean) {
 			// save last selected value to be suggest again when reactivating limit
 			this.saveLastLimit(limit);
+
+			if (!active) return;
 
 			const url = this.isLoadpoint
 				? `loadpoints/${this.loadpointId}/smartcostlimit`

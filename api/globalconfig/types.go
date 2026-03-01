@@ -2,6 +2,7 @@ package globalconfig
 
 import (
 	"encoding/json"
+	"iter"
 	"net"
 	"os"
 	"strconv"
@@ -171,6 +172,34 @@ type Tariffs struct {
 	Co2      config.Typed
 	Planner  config.Typed
 	Solar    []config.Typed
+}
+
+func (c Tariffs) IsConfigured() bool {
+	return c.Currency != "" || c.Grid.Type != "" || c.FeedIn.Type != "" || c.Co2.Type != "" || c.Planner.Type != "" || len(c.Solar) > 0
+}
+
+type TariffRefs struct {
+	Grid    string   `json:"grid"`
+	FeedIn  string   `json:"feedIn"`
+	Co2     string   `json:"co2"`
+	Planner string   `json:"planner"`
+	Solar   []string `json:"solar"`
+}
+
+func (refs TariffRefs) IsConfigured() bool {
+	return refs.Grid != "" || refs.FeedIn != "" || refs.Co2 != "" || refs.Planner != "" || len(refs.Solar) > 0
+}
+
+func (refs TariffRefs) Used() iter.Seq[string] {
+	return func(yield func(string) bool) {
+		for _, ref := range append([]string{refs.Grid, refs.FeedIn, refs.Co2, refs.Planner}, refs.Solar...) {
+			if ref != "" {
+				if !yield(ref) {
+					return
+				}
+			}
+		}
+	}
 }
 
 type Network struct {
