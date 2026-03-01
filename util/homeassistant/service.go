@@ -3,6 +3,7 @@ package homeassistant
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"maps"
 	"net/http"
 	"slices"
@@ -19,6 +20,7 @@ func init() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /instances", getInstances)
 	mux.HandleFunc("GET /entities", getEntities)
+	mux.HandleFunc("GET /services", getServices)
 
 	service.Register("homeassistant", mux)
 }
@@ -30,14 +32,20 @@ func getInstances(w http.ResponseWriter, req *http.Request) {
 	jsonWrite(w, slices.Sorted(maps.Values(instances)))
 }
 
-func getEntities(w http.ResponseWriter, req *http.Request) {
+func connectionFromRequest(req *http.Request) (*Connection, error) {
 	uri := util.DefaultScheme(strings.TrimSuffix(req.URL.Query().Get("uri"), "/"), "http")
 	if uri == "" {
-		jsonError(w, http.StatusBadRequest, errors.New("missing uri"))
+		return nil, errors.New("missing uri")
+	}
+	return NewConnection(log, uri, "")
+}
+
+func getEntities(w http.ResponseWriter, req *http.Request) {
+	conn, err := connectionFromRequest(req)
+	if err != nil {
+		jsonError(w, http.StatusBadRequest, err)
 		return
 	}
-
-	conn, _ := NewConnection(log, uri, "")
 	res, err := conn.GetStates()
 	if err != nil {
 		jsonError(w, http.StatusBadRequest, err)
@@ -67,6 +75,60 @@ func getEntities(w http.ResponseWriter, req *http.Request) {
 	}), func(e StateResponse, _ int) string {
 		return e.EntityId
 	}))
+}
+
+type serviceDomainResponse struct {
+	Domain   string         `json:"domain"`
+	Services map[string]any `json:"services"`
+}
+
+func getServices(w http.ResponseWriter, req *http.Request) {
+	conn, err := connectionFromRequest(req)
+	if err != nil {
+		jsonError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	var filterDomains []string
+	if domain := req.URL.Query().Get("domain"); domain != "" {
+		filterDomains = strings.Split(domain, ",")
+	}
+
+	seen := make(map[string]struct{})
+
+	// collect callable services from /api/services (e.g. notify.mobile_app_android)
+	var svcRes []serviceDomainResponse
+	if err := conn.GetJSON(fmt.Sprintf("%s/api/services", conn.URI()), &svcRes); err != nil {
+		jsonError(w, http.StatusBadRequest, err)
+		return
+	}
+	for _, sd := range svcRes {
+		if len(filterDomains) > 0 && !slices.Contains(filterDomains, sd.Domain) {
+			continue
+		}
+		for svc := range sd.Services {
+			seen[sd.Domain+"."+svc] = struct{}{}
+		}
+	}
+
+	// collect entity-based notifiers from /api/states (e.g. Telegram in HA 2024+)
+	if len(filterDomains) > 0 {
+		if states, err := conn.GetStates(); err == nil {
+			for _, e := range states {
+				for _, domain := range filterDomains {
+					if strings.HasPrefix(e.EntityId, domain+".") {
+						seen[e.EntityId] = struct{}{}
+						break
+					}
+				}
+			}
+		}
+	}
+
+	result := slices.Sorted(maps.Keys(seen))
+
+	w.Header().Set("Cache-control", "max-age=300")
+	jsonWrite(w, result)
 }
 
 // jsonWrite writes a JSON response
