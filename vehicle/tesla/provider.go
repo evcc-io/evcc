@@ -106,19 +106,16 @@ func (v *Provider) FinishTime() (time.Time, error) {
 
 // TODO api.Climater implementation has been removed as it drains battery. Re-check at a later time.
 
-// var _ api.VehiclePosition = (*Provider)(nil)
+var _ api.VehiclePosition = (*Provider)(nil)
 
-// // Position implements the api.VehiclePosition interface
-// func (v *Provider) Position() (float64, float64, error) {
-// 	res, err := v.dataG()
-// 	if err != nil {
-// 		return 0, 0, err
-// 	}
-// 	if res.Response.DriveState.Latitude != 0 || res.Response.DriveState.Longitude != 0 {
-// 		return res.Response.DriveState.Latitude, res.Response.DriveState.Longitude, nil
-// 	}
-// 	return res.Response.DriveState.ActiveRouteLatitude, res.Response.DriveState.ActiveRouteLongitude, nil
-// }
+// Position implements the api.VehiclePosition interface
+func (v *Provider) Position() (float64, float64, error) {
+	res, err := v.dataG()
+	if err != nil {
+		return 0, 0, err
+	}
+	return res.Response.DriveState.Latitude, res.Response.DriveState.Longitude, nil
+}
 
 var _ api.SocLimiter = (*Provider)(nil)
 
