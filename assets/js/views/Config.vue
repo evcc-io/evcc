@@ -830,6 +830,12 @@ export default defineComponent({
 		tariffsYamlDisabled() {
 			return this.tariffsYamlSource === "file";
 		},
+		pvPossible(): boolean {
+			return this.pvMeters.length > 0;
+		},
+		smartCostAvailable(): boolean {
+			return !!store.state?.tariffGrid;
+		},
 	},
 	watch: {
 		offline() {
