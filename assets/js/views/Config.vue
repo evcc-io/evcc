@@ -96,24 +96,6 @@
 						data-testid="add-grid"
 						@click="openModal('meter', { type: 'grid' })"
 					/>
-					<DeviceCard
-						v-if="!!tariffsYamlSource"
-						:title="$t('config.tariff.title')"
-						:editable="tariffsYamlSource === 'db'"
-						:unconfigured="isUnconfigured(tariffTags)"
-						:error="hasClassError('tariff')"
-						:badge="tariffsYamlSource === 'db'"
-						data-testid="tariffs-legacy"
-						:currency="currency"
-						@edit="openModal('tariffsLegacy')"
-					>
-						<template #icon>
-							<shopicon-regular-receivepayment></shopicon-regular-receivepayment>
-						</template>
-						<template #tags>
-							<DeviceTags :tags="tariffTags" :currency="currency" />
-						</template>
-					</DeviceCard>
 				</div>
 				<h2 class="my-4 mt-5">{{ $t("config.section.meter") }}</h2>
 				<div class="p-0 config-list">
@@ -167,10 +149,27 @@
 					/>
 				</div>
 
-				<h2 v-if="!tariffsYamlSource" class="my-4 mt-5">
-					{{ $t("config.tariff.title") }}
-				</h2>
-				<div v-if="!tariffsYamlSource" class="p-0 config-list">
+				<h2 class="my-4 mt-5">{{ $t("config.tariff.title") }}</h2>
+				<div v-if="!!tariffsYamlSource" class="p-0 config-list">
+					<DeviceCard
+						:title="$t('config.tariff.title')"
+						:editable="tariffsYamlSource === 'db'"
+						:unconfigured="isUnconfigured(tariffTags)"
+						:error="hasClassError('tariff')"
+						:badge="tariffsYamlSource === 'db'"
+						data-testid="tariffs-legacy"
+						:currency="currency"
+						@edit="openModal('tariffsLegacy')"
+					>
+						<template #icon>
+							<shopicon-regular-receivepayment></shopicon-regular-receivepayment>
+						</template>
+						<template #tags>
+							<DeviceTags :tags="tariffTags" :currency="currency" />
+						</template>
+					</DeviceCard>
+				</div>
+				<div v-else class="p-0 config-list">
 					<TariffCard
 						v-if="gridTariff"
 						:tariff="gridTariff"
