@@ -104,7 +104,16 @@ func (v *Provider) FinishTime() (time.Time, error) {
 	return time.Now().Add(time.Duration(res.Response.ChargeState.MinutesToFullCharge) * time.Minute), nil
 }
 
-// TODO api.Climater implementation has been removed as it drains battery. Re-check at a later time.
+var _ api.VehicleClimater = (*Provider)(nil)
+
+// Climater implements the api.VehicleClimater interface
+func (v *Provider) Climater() (bool, error) {
+	res, err := v.dataG()
+	if err != nil {
+		return false, err
+	}
+	return res.Response.ClimateState.IsPreconditioning, nil
+}
 
 // var _ api.VehiclePosition = (*Provider)(nil)
 
