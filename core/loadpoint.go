@@ -1763,6 +1763,8 @@ func (lp *Loadpoint) publishSocAndRange() {
 		return socR, limitR
 	}
 
+	remainingChargeDuration := soc.RemainingChargeDuration
+
 	soc, limit := socAndLimit("charger", lp.charger)
 	if soc == nil && (lp.vehicleSocPollAllowed() || lp.chargerHasFeature(api.IntegratedDevice)) {
 		lp.socUpdated = lp.clock.Now()
@@ -1807,6 +1809,14 @@ func (lp *Loadpoint) publishSocAndRange() {
 		lp.SetRemainingDuration(d)
 
 		lp.SetRemainingEnergy(socEstimator.RemainingChargeEnergy(limitSoc))
+	} else if v := lp.GetVehicle(); v != nil && v.Capacity() > 0 && lp.vehicleSoc > 0 {
+		// estimator disabled but vehicle capacity known: calculate remaining duration without soc estimation
+		limitSoc := min(apiLimitSoc, lp.EffectiveLimitSoc())
+		var d time.Duration
+		if lp.charging() {
+			d = remainingChargeDuration(float64(limitSoc), lp.chargePower, lp.vehicleSoc, v.Capacity())
+		}
+		lp.SetRemainingDuration(d)
 	}
 
 	// trigger message after variables are updated
