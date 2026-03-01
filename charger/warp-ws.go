@@ -24,7 +24,7 @@ import (
 
 type WarpWS struct {
 	*warp.Connection
-	PM *warp.Connection
+	PM *warp.Connection // separate Energy Manager
 
 	// config
 	log        *util.Logger
@@ -485,11 +485,6 @@ func (w *WarpWS) phases1p3p(phases int) error {
 	w.mu.RLock()
 	em := w.PM
 	w.mu.RUnlock()
-
-	// Should point to warp connection or energy manager connection
-	if em == nil {
-		return fmt.Errorf("Power Manager endpoint shouldn't be nil")
-	}
 
 	uri := fmt.Sprintf("%s/power_manager/external_control", em.URI)
 	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(map[string]int{"phases_wanted": phases}), request.JSONEncoding)
