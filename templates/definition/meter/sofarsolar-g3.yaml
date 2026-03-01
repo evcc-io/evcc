@@ -42,8 +42,8 @@ params:
       de: "Normal (Passiv): Soll-Netzleistung (Hex)"
       en: "Normal (Passive): Desired Grid Power (hex)"
     help:
-      de: 8-stellige Hexzahl ohne 0x Prefix (signed 32-bit).
-      en: 8-digit hex value without 0x prefix (signed 32-bit).
+      de: 8-stellige Hexzahl ohne 0x Prefix (signed 32-bit, z.B. FFFFC180 für -16000).
+      en: 8-digit hex value without 0x prefix (signed 32-bit, e.g. FFFFC180 for -16000).
     default: "00000000"
     advanced: true
   - name: normalmaxbatterypower
@@ -51,8 +51,8 @@ params:
       de: "Normal (Passiv): Max Batterieleistung (Hex)"
       en: "Normal (Passive): Max Battery Power (hex)"
     help:
-      de: 8-stellige Hexzahl ohne 0x Prefix (signed 32-bit).
-      en: 8-digit hex value without 0x prefix (signed 32-bit).
+      de: 8-stellige Hexzahl ohne 0x Prefix (signed 32-bit, z.B. FFFFC180 für -16000).
+      en: 8-digit hex value without 0x prefix (signed 32-bit, e.g. FFFFC180 for -16000).
     default: "00007530"
     advanced: true
   - name: normalminbatterypower
@@ -69,8 +69,8 @@ params:
       de: "Hold (Passiv): Soll-Netzleistung (Hex)"
       en: "Hold (Passive): Desired Grid Power (hex)"
     help:
-      de: 8-stellige Hexzahl ohne 0x Prefix (signed 32-bit).
-      en: 8-digit hex value without 0x prefix (signed 32-bit).
+      de: 8-stellige Hexzahl ohne 0x Prefix (signed 32-bit, z.B. FFFFC180 für -16000).
+      en: 8-digit hex value without 0x prefix (signed 32-bit, e.g. FFFFC180 for -16000).
     default: "00000000"
     advanced: true
   - name: holdmaxbatterypower
@@ -78,8 +78,8 @@ params:
       de: "Hold (Passiv): Max Batterieleistung (Hex)"
       en: "Hold (Passive): Max Battery Power (hex)"
     help:
-      de: 8-stellige Hexzahl ohne 0x Prefix (signed 32-bit).
-      en: 8-digit hex value without 0x prefix (signed 32-bit).
+      de: 8-stellige Hexzahl ohne 0x Prefix (signed 32-bit, z.B. FFFFC180 für -16000).
+      en: 8-digit hex value without 0x prefix (signed 32-bit, e.g. FFFFC180 for -16000).
     default: "00007530"
     advanced: true
   - name: holdminbatterypower
@@ -87,8 +87,8 @@ params:
       de: "Hold (Passiv): Min Batterieleistung (Hex)"
       en: "Hold (Passive): Min Battery Power (hex)"
     help:
-      de: 8-stellige Hexzahl ohne 0x Prefix (signed 32-bit).
-      en: 8-digit hex value without 0x prefix (signed 32-bit).
+      de: 8-stellige Hexzahl ohne 0x Prefix (signed 32-bit, z.B. FFFFC180 für -16000).
+      en: 8-digit hex value without 0x prefix (signed 32-bit, e.g. FFFFC180 for -16000).
     default: "00000000"
     advanced: true
   - name: chargedesiredgridpower
@@ -96,8 +96,8 @@ params:
       de: "Charge (Passiv): Soll-Netzleistung (Hex)"
       en: "Charge (Passive): Desired Grid Power (hex)"
     help:
-      de: 8-stellige Hexzahl ohne 0x Prefix (signed 32-bit).
-      en: 8-digit hex value without 0x prefix (signed 32-bit).
+      de: 8-stellige Hexzahl ohne 0x Prefix (signed 32-bit, z.B. FFFFC180 für -16000).
+      en: 8-digit hex value without 0x prefix (signed 32-bit, e.g. FFFFC180 for -16000).
     default: "00000000"
     advanced: true
   - name: chargemaxbatterypower
@@ -105,8 +105,8 @@ params:
       de: "Charge (Passiv): Max Batterieleistung (Hex)"
       en: "Charge (Passive): Max Battery Power (hex)"
     help:
-      de: 8-stellige Hexzahl ohne 0x Prefix (signed 32-bit).
-      en: 8-digit hex value without 0x prefix (signed 32-bit).
+      de: 8-stellige Hexzahl ohne 0x Prefix (signed 32-bit, z.B. FFFFC180 für -16000).
+      en: 8-digit hex value without 0x prefix (signed 32-bit, e.g. FFFFC180 for -16000).
     default: "00007530"
     advanced: true
   - name: chargeminbatterypower
@@ -114,8 +114,8 @@ params:
       de: "Charge (Passiv): Min Batterieleistung (Hex)"
       en: "Charge (Passive): Min Battery Power (hex)"
     help:
-      de: 8-stellige Hexzahl ohne 0x Prefix (signed 32-bit).
-      en: 8-digit hex value without 0x prefix (signed 32-bit).
+      de: 8-stellige Hexzahl ohne 0x Prefix (signed 32-bit, z.B. FFFFC180 für -16000).
+      en: 8-digit hex value without 0x prefix (signed 32-bit, e.g. FFFFC180 for -16000).
     default: "FFFF8AD0"
     advanced: true
   - name: externalpower
@@ -296,7 +296,8 @@ render: |
     source: switch
     switch:
     - case: 1 # normal
-      {{- if eq .defaultmode "3" }}
+      {{- $defaultmode := int .defaultmode }}
+      {{- if or (eq $defaultmode 3) (eq $defaultmode 0) }}
       set:
         source: sequence
         set:
