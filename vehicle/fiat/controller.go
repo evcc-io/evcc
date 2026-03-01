@@ -106,7 +106,7 @@ func (c *Controller) configureChargeSchedule(schedule *Schedule, start time.Time
 		fallbackStartTime = "00:00"         // Fallback time for schedules crossing midnight; this is the first time of the day accepted by the Fiat API
 	)
 
-	hasChanged := false // track if we made any change to the schedule to avoid unnecessary API calls
+	var hasChanged bool // track if we made any change to the schedule to avoid unnecessary API calls
 
 	// Make sure schedule is enabled and of type CHARGE
 	if schedule.ScheduleType != "CHARGE" || !schedule.EnableScheduleType {
