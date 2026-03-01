@@ -28,7 +28,7 @@ package meter
 //
 // # Real captured frames
 //
-// All hex constants below are verbatim UDP payloads captured from a
+// Hex constants marked "real capture" are verbatim UDP payloads captured from a
 // GW3000-DNS-30 inverter (S/N 53000DSC243W0186) as published in:
 // https://github.com/evcc-io/evcc/discussions/27411
 //
@@ -48,6 +48,25 @@ package meter
 //	Stripped payload layout (byte offsets are 0-based):
 //	  [54..57] = 00 00 07 b4  → int32 BE  = 1972  → CurrentPower = 1972 W
 //	  [90..93] = 00 00 a9 f9  → uint32 BE = 43513 → TotalEnergy  = 4351.3 kWh
+//
+// # Inverter families and their PDUs
+//
+// Family "DT"  (model token "DNS" or "DT"):
+//   - CurrentPower PDU: READ 73 regs @ 0x7594 → {7f 03 75 94 00 49}
+//   - CurrentPower offset: 54 (int32, W)
+//   - TotalEnergy PDU: same as above
+//   - TotalEnergy offset: 90 (uint32, ×0.1 kWh)
+//   - Soc: not supported (DT = string inverter, no battery)
+//   - Allowed usages: "pv" only
+//
+// Family "HYBRID" (model tokens "ET", "EH", "BT", "BH"):
+//   - CurrentPower PDU: READ 42 regs @ 0x7500 → {7f 03 75 00 00 2a}
+//   - pv offset:      12 (int32, W)
+//   - grid offset:    24 (int32, W, negative = exporting)
+//   - battery offset: 36 (int32, W, positive = discharging)
+//   - Soc offset:     28 (uint16, %)
+//   - TotalEnergy PDU: DT PDU (known limitation — see TestTotalEnergy_HybridUsage)
+//   - Allowed usages: "pv", "grid", "battery"
 
 import (
 	"encoding/binary"
@@ -64,7 +83,7 @@ import (
 )
 
 // ---------------------------------------------------------------------------
-// Captured frames (verbatim from discussion #27411)
+// Captured frames (verbatim from discussion #27411, GW3000-DNS-30)
 // ---------------------------------------------------------------------------
 
 // modelNameResponseHex is the complete UDP datagram returned by the inverter
@@ -74,8 +93,9 @@ const modelNameResponseHex = "aa557f03104757333030302d444e532d33300000000557"
 // runtimeDataResponseHex is the first complete runtime datagram
 // (READ 73 regs @ 0x7594 = 30100), copied verbatim from discussion #27411.
 // Stripped payload (146 bytes):
-//   [54..57] = 00 00 07 b4  → int32 BE = 1972 W
-//   [90..93] = 00 00 a9 f9  → uint32 BE = 43513 → 4351.3 kWh
+//
+//	[54..57] = 00 00 07 b4  → int32 BE = 1972 W
+//	[90..93] = 00 00 a9 f9  → uint32 BE = 43513 → 4351.3 kWh
 const runtimeDataResponseHex = "aa557f03921a020e0e301007cf005f053b000b00000000" +
 	"ffffffffffffffffffffffffffffffffffff08eeffffffff" +
 	"0056ffffffff1387ffffffff000007b4000100000000000000" +
@@ -119,11 +139,11 @@ func buildModelFrame(model string) []byte {
 	return frame
 }
 
-// buildRuntimeFrame constructs a synthetic AA55 runtime response whose
-// stripped payload is payloadLen bytes (minimum 94), with:
-//   - powerW    placed at offset 54 (DT CurrentPower offset)
-//   - energyVal placed at offset 90 (TotalEnergy offset, as the code reads it)
-func buildRuntimeFrame(payloadLen int, powerW int32, energyVal uint32) []byte {
+// buildDTRuntimeFrame constructs a synthetic AA55 DT runtime response
+// (READ 73 regs @ 0x7594, byteCount ≥ 94) with:
+//   - powerW    placed at offset 54 (DT CurrentPower offset, int32 BE)
+//   - energyVal placed at offset 90 (TotalEnergy offset, uint32 BE, ×0.1 kWh)
+func buildDTRuntimeFrame(payloadLen int, powerW int32, energyVal uint32) []byte {
 	if payloadLen < 94 {
 		payloadLen = 94
 	}
@@ -133,6 +153,29 @@ func buildRuntimeFrame(payloadLen int, powerW int32, energyVal uint32) []byte {
 	frame := []byte{0xAA, 0x55, 0x7F, 0x03, byte(payloadLen)}
 	frame = append(frame, payload...)
 	frame = append(frame, 0x00, 0x00) // CRC placeholder
+	return frame
+}
+
+// buildRuntimeFrame is an alias for buildDTRuntimeFrame kept for
+// compatibility with existing integration tests.
+var buildRuntimeFrame = buildDTRuntimeFrame
+
+// buildHybridRuntimeFrame constructs a synthetic AA55 HYBRID runtime response
+// (READ 42 regs @ 0x7500, byteCount = 84) with:
+//   - pvW      placed at offset 12 (int32 BE, W)
+//   - gridW    placed at offset 24 (int32 BE, W; negative = exporting)
+//   - batteryW placed at offset 36 (int32 BE, W; positive = discharging)
+//   - soc      placed at offset 28 (uint16 BE, %)
+func buildHybridRuntimeFrame(pvW, gridW, batteryW int32, soc uint16) []byte {
+	const payloadLen = 84 // 42 registers × 2 bytes
+	payload := make([]byte, payloadLen)
+	binary.BigEndian.PutUint32(payload[12:], uint32(pvW))
+	binary.BigEndian.PutUint32(payload[24:], uint32(gridW))
+	binary.BigEndian.PutUint32(payload[36:], uint32(batteryW))
+	binary.BigEndian.PutUint16(payload[28:], soc)
+	frame := []byte{0xAA, 0x55, 0x7F, 0x03, byte(payloadLen)}
+	frame = append(frame, payload...)
+	frame = append(frame, 0x00, 0x00)
 	return frame
 }
 
@@ -215,8 +258,16 @@ func parseHybridPower(payload []byte, usage string) (float64, error) {
 	return float64(int32(binary.BigEndian.Uint32(payload[offset : offset+4]))), nil
 }
 
+func parseSoc(payload []byte) (float64, error) {
+	const offset = 28
+	if len(payload) < offset+2 {
+		return 0, fmt.Errorf("short runtime data")
+	}
+	return float64(binary.BigEndian.Uint16(payload[offset : offset+2])), nil
+}
+
 // ---------------------------------------------------------------------------
-// Payload-parsing unit tests  (no network, no port-8899 requirement)
+// Header-stripping unit tests  (no network)
 // ---------------------------------------------------------------------------
 
 func TestStripAA55Header_Valid(t *testing.T) {
@@ -235,13 +286,17 @@ func TestStripAA55Header_BadMagic(t *testing.T) {
 }
 
 func TestStripAA55Header_TruncatedPayload(t *testing.T) {
-	// header says 10 bytes follow but only 3 are present
+	// byteCount says 10 but only 3 payload bytes present
 	frame := []byte{0xAA, 0x55, 0x7F, 0x03, 0x0A, 0x01, 0x02, 0x03, 0x00, 0x00}
 	_, err := stripAA55Header(frame)
 	assert.Error(t, err)
 }
 
-// TestParseDTPower_RealCapture verifies power parsing against the real capture.
+// ---------------------------------------------------------------------------
+// DT payload-parsing unit tests  (no network)
+// ---------------------------------------------------------------------------
+
+// TestParseDTPower_RealCapture verifies against the real GW3000-DNS-30 capture.
 // Stripped payload offset 54 = 00 00 07 b4 → 1972 W.
 func TestParseDTPower_RealCapture(t *testing.T) {
 	frame := mustDecodeHex(runtimeDataResponseHex)
@@ -250,17 +305,24 @@ func TestParseDTPower_RealCapture(t *testing.T) {
 
 	power, err := parseDTPower(payload)
 	require.NoError(t, err)
-	assert.InDelta(t, 1972.0, power, 0.5)
+	assert.InDelta(t, 1972.0, power, 0.5, "DT CurrentPower must match real capture")
 }
 
-func TestParseDTPower_SecondCapture(t *testing.T) {
-	frame := mustDecodeHex(runtimeDataResponse2Hex)
-	payload, err := stripAA55Header(frame)
-	require.NoError(t, err)
-
+func TestParseDTPower_KnownPositive(t *testing.T) {
+	payload := make([]byte, 100)
+	binary.BigEndian.PutUint32(payload[54:], uint32(int32(5000)))
 	power, err := parseDTPower(payload)
 	require.NoError(t, err)
-	assert.InDelta(t, 1972.0, power, 0.5)
+	assert.InDelta(t, 5000.0, power, 0.5)
+}
+
+func TestParseDTPower_NegativeValue(t *testing.T) {
+	payload := make([]byte, 100)
+	var neg int32 = -500
+	binary.BigEndian.PutUint32(payload[54:], uint32(neg))
+	power, err := parseDTPower(payload)
+	require.NoError(t, err)
+	assert.InDelta(t, -500.0, power, 0.5, "DT power must handle negative (signed int32)")
 }
 
 func TestParseDTPower_Zero(t *testing.T) {
@@ -270,21 +332,15 @@ func TestParseDTPower_Zero(t *testing.T) {
 	assert.Equal(t, 0.0, power)
 }
 
-// TestParseDTPower_Negative verifies signed int32 decoding for negative power.
-func TestParseDTPower_Negative(t *testing.T) {
-	payload := make([]byte, 100)
-	var neg int32 = -500
-	binary.BigEndian.PutUint32(payload[54:], uint32(neg))
-	power, err := parseDTPower(payload)
-	require.NoError(t, err)
-	assert.InDelta(t, -500.0, power, 0.5)
-}
-
 func TestParseDTPower_Short(t *testing.T) {
-	_, err := parseDTPower(make([]byte, 20))
+	_, err := parseDTPower(make([]byte, 50))
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "short")
 }
+
+// ---------------------------------------------------------------------------
+// TotalEnergy unit tests  (no network)
+// ---------------------------------------------------------------------------
 
 // TestParseTotalEnergy_RealCapture verifies TotalEnergy parsing against the
 // real capture.  Stripped payload offset 90 = 00 00 a9 f9 → 43513 → 4351.3 kWh.
@@ -292,14 +348,11 @@ func TestParseTotalEnergy_RealCapture(t *testing.T) {
 	frame := mustDecodeHex(runtimeDataResponseHex)
 	payload, err := stripAA55Header(frame)
 	require.NoError(t, err)
-
 	energy, err := parseTotalEnergy(payload)
 	require.NoError(t, err)
-	assert.InDelta(t, 4351.3, energy, 0.001)
+	assert.InDelta(t, 4351.3, energy, 0.001, "TotalEnergy must match real capture (÷10)")
 }
 
-// TestParseTotalEnergy_KnownValue places a known value at offset 90 and
-// verifies the ÷10 scaling with a synthetic payload.
 func TestParseTotalEnergy_KnownValue(t *testing.T) {
 	payload := make([]byte, 100)
 	binary.BigEndian.PutUint32(payload[90:], 43513) // 4351.3 kWh × 10
@@ -314,6 +367,10 @@ func TestParseTotalEnergy_Short(t *testing.T) {
 	assert.Contains(t, err.Error(), "short")
 }
 
+// ---------------------------------------------------------------------------
+// HYBRID power unit tests  (no network)
+// ---------------------------------------------------------------------------
+
 // TestParseHybridPower_Offsets verifies each usage maps to its documented offset.
 func TestParseHybridPower_Offsets(t *testing.T) {
 	cases := []struct {
@@ -322,8 +379,8 @@ func TestParseHybridPower_Offsets(t *testing.T) {
 		power  int32
 	}{
 		{"pv", 12, 3000},
-		{"grid", 24, -800},  // negative = exporting to grid
-		{"battery", 36, 500},
+		{"grid", 24, -800},    // negative = exporting to grid
+		{"battery", 36, 500},  // positive = discharging
 	}
 	for _, tc := range cases {
 		t.Run(tc.usage, func(t *testing.T) {
@@ -336,9 +393,89 @@ func TestParseHybridPower_Offsets(t *testing.T) {
 	}
 }
 
+func TestParseHybridPower_BatteryCharging(t *testing.T) {
+	// When charging, battery power is negative.
+	payload := make([]byte, 100)
+	var charging int32 = -1500
+	binary.BigEndian.PutUint32(payload[36:], uint32(charging))
+	power, err := parseHybridPower(payload, "battery")
+	require.NoError(t, err)
+	assert.InDelta(t, -1500.0, power, 0.5, "charging battery must report negative power")
+}
+
+func TestParseHybridPower_GridImporting(t *testing.T) {
+	// When importing from grid, grid power is positive.
+	payload := make([]byte, 100)
+	var importing int32 = 1200
+	binary.BigEndian.PutUint32(payload[24:], uint32(importing))
+	power, err := parseHybridPower(payload, "grid")
+	require.NoError(t, err)
+	assert.InDelta(t, 1200.0, power, 0.5, "importing grid must report positive power")
+}
+
 func TestParseHybridPower_UnknownUsage(t *testing.T) {
 	_, err := parseHybridPower(make([]byte, 100), "solar")
 	assert.Error(t, err)
+}
+
+// ---------------------------------------------------------------------------
+// SoC (battery state of charge) unit tests  (no network)
+// ---------------------------------------------------------------------------
+
+// TestParseSoc_KnownValue verifies that SoC is read as uint16 from offset 28.
+func TestParseSoc_KnownValue(t *testing.T) {
+	payload := make([]byte, 100)
+	binary.BigEndian.PutUint16(payload[28:], 75)
+	soc, err := parseSoc(payload)
+	require.NoError(t, err)
+	assert.InDelta(t, 75.0, soc, 0.5)
+}
+
+func TestParseSoc_FullyCharged(t *testing.T) {
+	payload := make([]byte, 100)
+	binary.BigEndian.PutUint16(payload[28:], 100)
+	soc, err := parseSoc(payload)
+	require.NoError(t, err)
+	assert.InDelta(t, 100.0, soc, 0.5)
+}
+
+func TestParseSoc_Empty(t *testing.T) {
+	payload := make([]byte, 100)
+	binary.BigEndian.PutUint16(payload[28:], 0)
+	soc, err := parseSoc(payload)
+	require.NoError(t, err)
+	assert.Equal(t, 0.0, soc)
+}
+
+func TestParseSoc_Short(t *testing.T) {
+	_, err := parseSoc(make([]byte, 20))
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "short")
+}
+
+// TestParseHybridFrame_AllFields verifies that buildHybridRuntimeFrame places
+// all four values correctly and that our parse helpers recover them.
+func TestParseHybridFrame_AllFields(t *testing.T) {
+	frame := buildHybridRuntimeFrame(3500, -1200, 2000, 75)
+	payload, err := stripAA55Header(frame)
+	require.NoError(t, err)
+	require.GreaterOrEqual(t, len(payload), 40, "HYBRID payload must be ≥ 40 bytes")
+
+	pv, err := parseHybridPower(payload, "pv")
+	require.NoError(t, err)
+	assert.InDelta(t, 3500.0, pv, 0.5)
+
+	grid, err := parseHybridPower(payload, "grid")
+	require.NoError(t, err)
+	assert.InDelta(t, -1200.0, grid, 0.5)
+
+	battery, err := parseHybridPower(payload, "battery")
+	require.NoError(t, err)
+	assert.InDelta(t, 2000.0, battery, 0.5)
+
+	soc, err := parseSoc(payload)
+	require.NoError(t, err)
+	assert.InDelta(t, 75.0, soc, 0.5)
 }
 
 // ---------------------------------------------------------------------------
@@ -367,9 +504,7 @@ func TestDetectFamily_DNS30_isDT(t *testing.T) {
 // that CurrentPower with usage="pv" reads offset 12 from the HYBRID response.
 func TestDetectFamily_ET_isHybrid(t *testing.T) {
 	modelFrame := buildModelFrame("GW10K-ET")
-	runtimeFrame := buildRuntimeFrame(100, 0, 0)
-	// Place 2000 W at HYBRID pv offset (12)
-	binary.BigEndian.PutUint32(runtimeFrame[5+12:], uint32(int32(2000)))
+	runtimeFrame := buildHybridRuntimeFrame(2000, 0, 0, 50)
 
 	host := mockOnPort8899(t, [][]byte{modelFrame, runtimeFrame})
 
@@ -380,6 +515,130 @@ func TestDetectFamily_ET_isHybrid(t *testing.T) {
 	require.NoError(t, err)
 	assert.InDelta(t, 2000.0, power, 0.5)
 }
+
+// TestDetectFamily_EH_isHybrid verifies that a GW6000-EH (single-phase hybrid
+// with battery) is recognised as HYBRID.
+func TestDetectFamily_EH_isHybrid(t *testing.T) {
+	modelFrame := buildModelFrame("GW6000-EH")
+	runtimeFrame := buildHybridRuntimeFrame(1800, -300, 500, 82)
+
+	host := mockOnPort8899(t, [][]byte{modelFrame, runtimeFrame})
+
+	m, err := NewGoodWeWifi(host, "pv")
+	require.NoError(t, err, "GW6000-EH should be detected as HYBRID without error")
+
+	power, err := m.CurrentPower()
+	require.NoError(t, err)
+	assert.InDelta(t, 1800.0, power, 0.5)
+}
+
+// TestDetectFamily_BT_isHybrid verifies BT series (3-phase hybrid, HV battery).
+func TestDetectFamily_BT_isHybrid(t *testing.T) {
+	modelFrame := buildModelFrame("GW15K-BT")
+	runtimeFrame := buildHybridRuntimeFrame(12000, -4000, 3000, 65)
+
+	host := mockOnPort8899(t, [][]byte{modelFrame, runtimeFrame})
+
+	m, err := NewGoodWeWifi(host, "pv")
+	require.NoError(t, err, "GW15K-BT should be detected as HYBRID without error")
+
+	power, err := m.CurrentPower()
+	require.NoError(t, err)
+	assert.InDelta(t, 12000.0, power, 0.5)
+}
+
+// TestDetectFamily_BH_isHybrid verifies BH series (single-phase, HV battery).
+func TestDetectFamily_BH_isHybrid(t *testing.T) {
+	modelFrame := buildModelFrame("GW5000-BH")
+	runtimeFrame := buildHybridRuntimeFrame(4500, 500, -1000, 30)
+
+	host := mockOnPort8899(t, [][]byte{modelFrame, runtimeFrame})
+
+	m, err := NewGoodWeWifi(host, "pv")
+	require.NoError(t, err, "GW5000-BH should be detected as HYBRID without error")
+
+	power, err := m.CurrentPower()
+	require.NoError(t, err)
+	assert.InDelta(t, 4500.0, power, 0.5)
+}
+
+// TestHybridGridUsage verifies that usage="grid" on a HYBRID inverter reads
+// the correct offset (24) and returns the right signed value.
+func TestHybridGridUsage(t *testing.T) {
+	modelFrame := buildModelFrame("GW10K-ET")
+	// grid = -2000 W (exporting)
+	runtimeFrame := buildHybridRuntimeFrame(5000, -2000, 1000, 70)
+
+	host := mockOnPort8899(t, [][]byte{modelFrame, runtimeFrame})
+
+	m, err := NewGoodWeWifi(host, "grid")
+	require.NoError(t, err)
+
+	power, err := m.CurrentPower()
+	require.NoError(t, err)
+	assert.InDelta(t, -2000.0, power, 0.5,
+		"grid usage must return negative when exporting")
+}
+
+// TestHybridBatteryUsage verifies that usage="battery" on a HYBRID inverter
+// reads offset 36 and returns the correct signed value.
+func TestHybridBatteryUsage(t *testing.T) {
+	modelFrame := buildModelFrame("GW10K-ET")
+	// battery = 3000 W discharging
+	runtimeFrame := buildHybridRuntimeFrame(5000, -2000, 3000, 55)
+
+	host := mockOnPort8899(t, [][]byte{modelFrame, runtimeFrame})
+
+	m, err := NewGoodWeWifi(host, "battery")
+	require.NoError(t, err)
+
+	power, err := m.CurrentPower()
+	require.NoError(t, err)
+	assert.InDelta(t, 3000.0, power, 0.5,
+		"battery usage must return positive when discharging")
+}
+
+// TestHybridBatteryCharging verifies that a charging battery returns negative
+// power via usage="battery".
+func TestHybridBatteryCharging(t *testing.T) {
+	modelFrame := buildModelFrame("GW6000-EH")
+	// battery = -1500 W (charging)
+	runtimeFrame := buildHybridRuntimeFrame(3000, 500, -1500, 40)
+
+	host := mockOnPort8899(t, [][]byte{modelFrame, runtimeFrame})
+
+	m, err := NewGoodWeWifi(host, "battery")
+	require.NoError(t, err)
+
+	power, err := m.CurrentPower()
+	require.NoError(t, err)
+	assert.InDelta(t, -1500.0, power, 0.5,
+		"battery usage must return negative when charging")
+}
+
+// TestHybridSoc verifies that Soc() reads the uint16 at offset 28 of the
+// HYBRID payload and returns it as a percentage.
+func TestHybridSoc(t *testing.T) {
+	modelFrame := buildModelFrame("GW10K-ET")
+	runtimeFrame := buildHybridRuntimeFrame(4000, -1000, 2000, 83)
+
+	host := mockOnPort8899(t, [][]byte{modelFrame, runtimeFrame, runtimeFrame})
+
+	m, err := NewGoodWeWifi(host, "battery")
+	require.NoError(t, err)
+
+	// Soc() is part of api.Battery; the meter must implement it.
+	bm, ok := m.(api.Battery)
+	require.True(t, ok, "HYBRID goodWeWifi must implement api.Battery")
+
+	soc, err := bm.Soc()
+	require.NoError(t, err)
+	assert.InDelta(t, 83.0, soc, 0.5)
+}
+
+// ---------------------------------------------------------------------------
+// Usage-restriction tests
+// ---------------------------------------------------------------------------
 
 // TestDTRejectsBatteryUsage verifies that construction with usage="battery" on
 // a DT inverter returns an error containing "battery".
@@ -411,6 +670,10 @@ func TestUnknownModel(t *testing.T) {
 	assert.Contains(t, err.Error(), "unknown model")
 }
 
+// ---------------------------------------------------------------------------
+// End-to-end integration tests with real captures
+// ---------------------------------------------------------------------------
+
 // TestCurrentPower_RealCapture is an end-to-end integration test using both
 // real captured frames.
 func TestCurrentPower_RealCapture(t *testing.T) {
@@ -432,7 +695,7 @@ func TestCurrentPower_RealCapture(t *testing.T) {
 func TestTotalEnergy_KnownValue(t *testing.T) {
 	host := mockOnPort8899(t, [][]byte{
 		mustDecodeHex(modelNameResponseHex),
-		buildRuntimeFrame(100, 0, 43513), // 4351.3 kWh
+		buildDTRuntimeFrame(100, 0, 43513), // 4351.3 kWh
 	})
 
 	m, err := NewGoodWeWifi(host, "pv")
@@ -445,6 +708,29 @@ func TestTotalEnergy_KnownValue(t *testing.T) {
 	require.NoError(t, err)
 	assert.InDelta(t, 4351.3, energy, 0.001)
 }
+
+// TestTotalEnergy_RealCapture verifies TotalEnergy end-to-end against the
+// real GW3000-DNS-30 captures (both captures contain the same energy value).
+func TestTotalEnergy_RealCapture(t *testing.T) {
+	host := mockOnPort8899(t, [][]byte{
+		mustDecodeHex(modelNameResponseHex),
+		mustDecodeHex(runtimeDataResponseHex),
+	})
+
+	m, err := NewGoodWeWifi(host, "pv")
+	require.NoError(t, err)
+
+	me, ok := m.(api.MeterEnergy)
+	require.True(t, ok, "goodWeWifi must implement api.MeterEnergy")
+
+	energy, err := me.TotalEnergy()
+	require.NoError(t, err)
+	assert.InDelta(t, 4351.3, energy, 0.001, "TotalEnergy from real capture must be 4351.3 kWh")
+}
+
+// ---------------------------------------------------------------------------
+// PDU wire format tests
+// ---------------------------------------------------------------------------
 
 // TestSentPDU_DT verifies the exact bytes sent to a DT inverter for a runtime
 // data request.  From the real capture:
@@ -510,6 +796,67 @@ func TestSentPDU_DT(t *testing.T) {
 		runtimePDU[6:8],
 		"DT runtime PDU CRC mismatch")
 }
+
+// TestSentPDU_HYBRID verifies the exact bytes sent to a HYBRID inverter for a
+// runtime data request: READ 42 regs @ 0x7500 → {7f 03 75 00 00 2a <crc>}.
+func TestSentPDU_HYBRID(t *testing.T) {
+	conn, err := net.ListenPacket("udp4", "127.0.0.1:8899")
+	if err != nil {
+		t.Skipf("cannot bind 127.0.0.1:8899: %v", err)
+	}
+	t.Cleanup(func() { conn.Close() })
+
+	responses := [][]byte{
+		buildModelFrame("GW10K-ET"),
+		buildHybridRuntimeFrame(2000, 0, 0, 50),
+	}
+	received := make(chan []byte, 10)
+
+	go func() {
+		buf := make([]byte, 1024)
+		i := 0
+		for {
+			n, addr, err := conn.ReadFrom(buf)
+			if err != nil {
+				return
+			}
+			pkt := make([]byte, n)
+			copy(pkt, buf[:n])
+			received <- pkt
+			_, _ = conn.WriteTo(responses[i%len(responses)], addr)
+			i++
+		}
+	}()
+
+	m, err := NewGoodWeWifi("127.0.0.1", "pv")
+	require.NoError(t, err)
+
+	// Drain identification PDU.
+	select {
+	case <-received:
+	case <-time.After(3 * time.Second):
+		t.Fatal("timed out waiting for identification PDU")
+	}
+
+	_, _ = m.CurrentPower()
+
+	var runtimePDU []byte
+	select {
+	case runtimePDU = <-received:
+	case <-time.After(3 * time.Second):
+		t.Fatal("timed out waiting for HYBRID runtime PDU")
+	}
+
+	require.Len(t, runtimePDU, 8, "HYBRID PDU must be exactly 8 bytes (6 + 2 CRC)")
+	assert.Equal(t,
+		[]byte{0x7F, 0x03, 0x75, 0x00, 0x00, 0x2A},
+		runtimePDU[:6],
+		"HYBRID runtime PDU header mismatch (READ 42 regs @ 0x7500)")
+}
+
+// ---------------------------------------------------------------------------
+// Timeout test
+// ---------------------------------------------------------------------------
 
 // TestTimeout verifies that the constructor returns an error within a
 // reasonable time when the inverter never responds (sendCommand has a
