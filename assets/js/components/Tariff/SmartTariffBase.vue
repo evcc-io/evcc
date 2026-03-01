@@ -27,7 +27,7 @@
 						:id="formId"
 						v-model.number="selectedLimit"
 						class="form-select form-select-sm"
-						:disabled="!active"
+						:class="{ disabled: !active }"
 						:aria-label="limitLabel"
 						@change="changeLimit"
 					>
@@ -74,7 +74,8 @@
 		</div>
 		<TariffChart
 			v-if="rates.length"
-			:slots="slots"
+			:slots="chartSlots"
+			:inactive="!active"
 			@slot-hovered="slotHovered"
 			@slot-selected="slotSelected"
 		/>
@@ -206,20 +207,10 @@ export default defineComponent({
 			return { min, max };
 		},
 		slots(): Slot[] {
-			return generateRateSlots(
-				this.rates,
-				this.weekdayShort,
-				(value) =>
-					this.limitDirection === "below" &&
-					this.currentLimit !== null &&
-					value !== undefined &&
-					value <= this.currentLimit,
-				(value) =>
-					this.limitDirection === "above" &&
-					this.currentLimit !== null &&
-					value !== undefined &&
-					value >= this.currentLimit
-			);
+			return this.slotsForLimit(this.currentLimit);
+		},
+		chartSlots(): Slot[] {
+			return this.slotsForLimit(this.currentLimit ?? this.selectedLimit);
 		},
 		totalSlots() {
 			return this.slots.filter((s) => s.value !== undefined);
@@ -320,16 +311,31 @@ export default defineComponent({
 			}
 			return this.fmtPricePerKWh(value, this.currency, true);
 		},
+		slotsForLimit(limit: number | null): Slot[] {
+			return generateRateSlots(
+				this.rates,
+				this.weekdayShort,
+				(value) =>
+					this.limitDirection === "below" &&
+					limit !== null &&
+					value !== undefined &&
+					value <= limit,
+				(value) =>
+					this.limitDirection === "above" &&
+					limit !== null &&
+					value !== undefined &&
+					value >= limit
+			);
+		},
 		slotHovered(index: number) {
 			this.activeIndex = index;
 		},
 		slotSelected(index: number) {
-			const value = this.slots[index]?.value;
+			const value = this.chartSlots[index]?.value;
 			if (value !== undefined) {
 				// 3 decimal precision
 				const valueRounded = Math.ceil(value * 1000) / 1000;
 				this.selectedLimit = valueRounded;
-				this.active = true;
 				this.saveLimit(valueRounded);
 			}
 		},
@@ -338,20 +344,19 @@ export default defineComponent({
 			this.saveLimit(value);
 		},
 		toggleActive($event: Event) {
-			const active = ($event.target as HTMLInputElement).checked;
-			if (active) {
+			this.active = ($event.target as HTMLInputElement).checked;
+			if (this.active) {
 				this.saveLimit(this.lastLimit);
 			} else {
 				this.resetLimit();
 			}
-			this.active = active;
 			if (this.applyAll) {
 				this.applyToAllVisible = true;
 			}
 		},
 		saveLimit(limit: number) {
-			this.$emit("save-limit", limit);
-			if (this.applyAll) {
+			this.$emit("save-limit", limit, this.active);
+			if (this.applyAll && this.active) {
 				this.applyToAllVisible = true;
 			}
 		},

@@ -465,7 +465,6 @@ export default defineComponent({
 				this.$emit("update:externalTemplate", newValue);
 			}
 
-			console.log("templateName changed", { newValue, oldValue });
 			// Reset values when template changes (except on initial load or when switching to YAML input)
 			// YAML input types set values.type and values.yaml in handleTemplateChange callback
 			if (oldValue != null) {

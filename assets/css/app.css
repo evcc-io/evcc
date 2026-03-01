@@ -504,6 +504,10 @@ small {
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
+.form-select.disabled,
+.form-select:disabled {
+	background-color: var(--bs-secondary-bg);
+}
 
 .dark .dropdown-menu {
 	box-shadow: 0 0 8px var(--evcc-background);
@@ -518,6 +522,7 @@ small {
 	color: var(--bs-gray-medium) !important;
 }
 
+.dark .form-select.disabled,
 .dark .form-select:disabled {
 	opacity: 0.5;
 }

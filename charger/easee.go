@@ -794,6 +794,21 @@ func (c *Easee) GetPhases() (int, error) {
 	return phases, nil
 }
 
+var _ api.StatusReasoner = (*Easee)(nil)
+
+// StatusReason implements the api.StatusReasoner interface
+func (c *Easee) StatusReason() (api.Reason, error) {
+	c.mux.RLock()
+	defer c.mux.RUnlock()
+	switch c.opMode {
+	case easee.ModeAwaitingAuthentication:
+		return api.ReasonWaitingForAuthorization, nil
+	case easee.ModeCompleted:
+		return api.ReasonDisconnectRequired, nil
+	}
+	return api.ReasonUnknown, nil
+}
+
 var _ api.Identifier = (*Easee)(nil)
 
 // Currents implements the api.PhaseCurrents interface
