@@ -115,6 +115,38 @@ const runtimeDataResponse2Hex = "aa557f03921a020e0e301107cf005f053b000b00000000"
 	"0039efa0"
 
 // ---------------------------------------------------------------------------
+// Additional real captures from marcelblijleven/goodwe tests/sample/
+// (https://github.com/marcelblijleven/goodwe/tree/master/tests/sample)
+//
+// All are DT-family 146-byte runtime responses (READ 73 regs @ 0x7594).
+// Values confirmed by applying the same offset arithmetic:
+//   power  = int32 BE @ stripped-payload[54..57]
+//   energy = uint32 BE @ stripped-payload[90..93], ÷10 → kWh
+//
+// GW8K-DT:      power=643 W,   energy=0xFFFFFFFF (meter not connected → skip)
+// GW17K-DT:     power=12470 W, energy=299844 → 29984.4 kWh
+// GW20KAU-DT:   power=4957 W,  energy=43048  → 4304.8 kWh
+// GW6000-DT:    power=1835 W,  energy=133502 → 13350.2 kWh
+//
+// GW5000-MS and GW10K-MS-30 are single-phase string inverters (MS series).
+// Their running-data payload is identical in layout to DT (146 bytes), but
+// "MS" is not in the evcc detectFamily token list → constructor returns
+// "unknown model" error.  Included here to document that behaviour.
+// ---------------------------------------------------------------------------
+
+const gw8kDTRuntimeHex = "aa557f0392150818102b1b0ac3000613f40008ffffffffffffffffffffffffffffffff102910220ff0094409650930000a000a000a1390138c13880000028300010000000000000000000000000000000000000000ffff01c5ffffffffffffffffffffffffffff00200000000000000000ffffffffffffffffffffffffffffffff020018620c6000000000000002d800810000ffff0054f42f"
+
+const gw17kDTRuntimeHex = "aa557f03921805140a23371518006912930094ffffffffffffffffffffffffffffffff102210130fff093f094f094500b000af00af138a138a138a000030b600010000000000000000000000000000000000000000ffff01c9ffffffff012500049344000020a500010000000000000000ffffffffffffffffffffffffffffffff0222184a0c4600000004000003a300f7000400000064b2f2"
+
+const gw20kAUDTRuntimeHex = "aa557f0392160a1513172a0f4100440dbc0047ffffffffffffffffffffffffffffffff0f2d0f4d0f6908d508bc08eb0048004a00471384138413850000135d000100000000000000000000000000cd0000000003e7ffff016cffffffff00c60000a8280000047300200000000000000000ffffffffffffffffffffffffffffffff0000174b0bad000000040000044b00000004000000696b04"
+
+const gw6000DTRuntimeHex = "aa557f039215081f0c03020c88001f0ca90020ffffffffffffffffffffffffffffffffffffffffffff08d008f90906001b001a001b1386138613860000072b0001000000000000ffffffffffffffffffffffff0000ffff019dffffffff003c0002097e0000210300140000ffff0000ffff0000ffff0000ffffffffffffffffffff0000177c0beeffffffff00cf016302f00000000000649f03"
+
+// GW5000-MS and GW10K-MS-30: 146-byte payload but "MS" not in detectFamily →
+// constructor must return an "unknown model" error.
+const gw5000MSRuntimeHex = "aa557f0392150a0f09030c0c7c000205c8000305980004ffffffffffffffffffffffffffffffffffff0961ffffffff0009ffffffff1386ffffffff000001270001000000000000ffffffffffffffffffffffffffffffff006bffffffff0004000000440000000700490000ffff0000ffff0000ffff0000ffffffffffffffffffff09500f63ffffffffffff01e1ffffffffffff0103002a4038"
+
+// ---------------------------------------------------------------------------
 // Test helpers
 // ---------------------------------------------------------------------------
 
@@ -365,6 +397,135 @@ func TestParseTotalEnergy_Short(t *testing.T) {
 	_, err := parseTotalEnergy(make([]byte, 50))
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "short")
+}
+
+// ---------------------------------------------------------------------------
+// DT real-capture parsing tests — multiple inverter models
+// (frames from marcelblijleven/goodwe tests/sample/, all DT family)
+// ---------------------------------------------------------------------------
+
+// TestParseDTPower_GW17K verifies the DT offset against a GW17K-DT capture.
+// power@54 = 0x00 00 30 b6 = 12470 W.
+func TestParseDTPower_GW17K(t *testing.T) {
+	frame := mustDecodeHex(gw17kDTRuntimeHex)
+	payload, err := stripAA55Header(frame)
+	require.NoError(t, err)
+	power, err := parseDTPower(payload)
+	require.NoError(t, err)
+	assert.InDelta(t, 12470.0, power, 0.5)
+}
+
+// TestParseTotalEnergy_GW17K verifies TotalEnergy against a GW17K-DT capture.
+// energy@90 = 0x00 04 93 44 = 299844 → 29984.4 kWh.
+func TestParseTotalEnergy_GW17K(t *testing.T) {
+	frame := mustDecodeHex(gw17kDTRuntimeHex)
+	payload, err := stripAA55Header(frame)
+	require.NoError(t, err)
+	energy, err := parseTotalEnergy(payload)
+	require.NoError(t, err)
+	assert.InDelta(t, 29984.4, energy, 0.001)
+}
+
+// TestParseDTPower_GW20KAU verifies DT offset for a GW20KAU-DT capture.
+// power@54 = 0x00 00 13 5d = 4957 W.
+func TestParseDTPower_GW20KAU(t *testing.T) {
+	frame := mustDecodeHex(gw20kAUDTRuntimeHex)
+	payload, err := stripAA55Header(frame)
+	require.NoError(t, err)
+	power, err := parseDTPower(payload)
+	require.NoError(t, err)
+	assert.InDelta(t, 4957.0, power, 0.5)
+}
+
+// TestParseTotalEnergy_GW20KAU verifies TotalEnergy for GW20KAU-DT.
+// energy@90 = 0x00 00 a8 28 = 43048 → 4304.8 kWh.
+func TestParseTotalEnergy_GW20KAU(t *testing.T) {
+	frame := mustDecodeHex(gw20kAUDTRuntimeHex)
+	payload, err := stripAA55Header(frame)
+	require.NoError(t, err)
+	energy, err := parseTotalEnergy(payload)
+	require.NoError(t, err)
+	assert.InDelta(t, 4304.8, energy, 0.001)
+}
+
+// TestParseDTPower_GW6000DT verifies DT offset for a GW6000-DT capture.
+// power@54 = 0x00 00 07 2b = 1835 W.
+func TestParseDTPower_GW6000DT(t *testing.T) {
+	frame := mustDecodeHex(gw6000DTRuntimeHex)
+	payload, err := stripAA55Header(frame)
+	require.NoError(t, err)
+	power, err := parseDTPower(payload)
+	require.NoError(t, err)
+	assert.InDelta(t, 1835.0, power, 0.5)
+}
+
+// TestParseTotalEnergy_GW6000DT verifies TotalEnergy for GW6000-DT.
+// energy@90 = 0x00 02 09 7e = 133502 → 13350.2 kWh.
+func TestParseTotalEnergy_GW6000DT(t *testing.T) {
+	frame := mustDecodeHex(gw6000DTRuntimeHex)
+	payload, err := stripAA55Header(frame)
+	require.NoError(t, err)
+	energy, err := parseTotalEnergy(payload)
+	require.NoError(t, err)
+	assert.InDelta(t, 13350.2, energy, 0.001)
+}
+
+// TestParseDTPower_GW8KDT verifies DT offset for a GW8K-DT capture.
+// power@54 = 0x00 00 02 83 = 643 W.
+// energy@90 = 0xFFFFFFFF — meter not connected, TotalEnergy not testable.
+func TestParseDTPower_GW8KDT(t *testing.T) {
+	frame := mustDecodeHex(gw8kDTRuntimeHex)
+	payload, err := stripAA55Header(frame)
+	require.NoError(t, err)
+	power, err := parseDTPower(payload)
+	require.NoError(t, err)
+	assert.InDelta(t, 643.0, power, 0.5)
+}
+
+// TestDetectFamily_GW17KDT_integration is an end-to-end test using the real
+// GW17K-DT runtime capture, verifying detection and power reading.
+func TestDetectFamily_GW17KDT_integration(t *testing.T) {
+	modelFrame := buildModelFrame("GW17K-DT")
+	host := mockOnPort8899(t, [][]byte{
+		modelFrame,
+		mustDecodeHex(gw17kDTRuntimeHex),
+	})
+
+	m, err := NewGoodWeWifi(host, "pv")
+	require.NoError(t, err, "GW17K-DT should be detected as DT")
+
+	power, err := m.CurrentPower()
+	require.NoError(t, err)
+	assert.InDelta(t, 12470.0, power, 0.5)
+}
+
+// TestDetectFamily_GW20KAUDT_integration tests GW20KAU-DT end-to-end.
+func TestDetectFamily_GW20KAUDT_integration(t *testing.T) {
+	modelFrame := buildModelFrame("GW20KAU-DT")
+	host := mockOnPort8899(t, [][]byte{
+		modelFrame,
+		mustDecodeHex(gw20kAUDTRuntimeHex),
+	})
+
+	m, err := NewGoodWeWifi(host, "pv")
+	require.NoError(t, err, "GW20KAU-DT should be detected as DT")
+
+	power, err := m.CurrentPower()
+	require.NoError(t, err)
+	assert.InDelta(t, 4957.0, power, 0.5)
+}
+
+// TestDetectFamily_MSUnknown verifies that MS-series inverters (GW5000-MS)
+// are rejected with an "unknown model" error since "MS" is not in the
+// detectFamily token list.
+func TestDetectFamily_MSUnknown(t *testing.T) {
+	modelFrame := buildModelFrame("GW5000-MS")
+	host := mockOnPort8899(t, [][]byte{modelFrame})
+
+	_, err := NewGoodWeWifi(host, "pv")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "unknown model",
+		"MS-series inverter should be rejected as unknown model")
 }
 
 // ---------------------------------------------------------------------------
