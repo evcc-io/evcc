@@ -54,7 +54,7 @@ func (c *Controller) ChargeEnable(enable bool) error {
 	}
 
 	hasChanged := false // Will track if we made any change to the schedule to avoid unnecessary updates through API call
-	now := time.Now()   // Call once and reuse
+	now := time.Now()
 
 	if enable {
 		// Start charging from now until end of day (23:55)
