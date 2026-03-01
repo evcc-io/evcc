@@ -74,6 +74,7 @@ import (
 	"fmt"
 	"net"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -147,8 +148,37 @@ const gw6000DTRuntimeHex = "aa557f039215081f0c03020c88001f0ca90020ffffffffffffff
 const gw5000MSRuntimeHex = "aa557f0392150a0f09030c0c7c000205c8000305980004ffffffffffffffffffffffffffffffffffff0961ffffffff0009ffffffff1386ffffffff000001270001000000000000ffffffffffffffffffffffffffffffff006bffffffff0004000000440000000700490000ffff0000ffff0000ffff0000ffffffffffffffffffff09500f63ffffffffffff01e1ffffffffffff0103002a4038"
 
 // ---------------------------------------------------------------------------
-// Test helpers
+// ET/EH/BT/BH family real captures
+// (frames from marcelblijleven/goodwe tests/sample/)
+//
+// Runtime PDU: READ 125 regs @ 0x891C → 250-byte payload.
+// Offsets in stripped payload (all signed int32 BE unless noted):
+//   pv power       : offset  74  (total_inverter_power, S32, W)
+//   grid power     : offset  78  (ac_active_power, S32, negative = exporting)
+//   battery power  : offset 164  (pbattery1, S32, negative = charging)
+//   e_total        : offset 182  (U32, ÷10 → kWh)
+//
+// Battery info PDU: READ 24 regs @ 0x9088 → 48-byte payload.
+//   SoC            : offset  14  (U16, %)
+//
+// GW10K-ET fw617:  pv=831W   grid=-3W    bat=-2512W  e_total=6085.3 kWh
+// GW25K-ET:        pv=1945W  grid=1511W  bat=0W      e_total=160.3 kWh
+// GW29K9-ET:       pv=1735W  grid=-5403W bat=0W      e_total=4562.3 kWh
+// GW6000-EH:       pv=1561W  (grid register contains stale data in this capture)
 // ---------------------------------------------------------------------------
+
+const gw10kETRuntimeHex = "aa55f703fa1508160b0b0c0cfe00330000069f0cfe0035000006e100000000000000000000000000000000000002020959000f138700000150096f000d13870000011f096b000b1387000000ce00010000033ffffffffd000000000000000009560006138600010000006b096d000913880001000000bd096c00021387000100000000000000e000000050000000e9000001380000020a000401fe0000024b00001f640fb209eeff9efffff63000030000002000010000000000000000edb50000007d0000b8520000241e00620000024400000001588a007400006bbd003500005f65001d0005000000010000000000000000000107000800000209ee000055ae"
+
+const gw25kETRuntimeHex = "aa55f703fa170c030e07071cd3000e000004091cd30000000003d51d82000d000000001d82000000000000000002020905001d13830000024d0906001b1385000002290900002a138500000323000100000799000005e7000004d7000008d308f7001e138300000000003408fc0012138500000000000f08f6002013850000000001580000002c0000001000000153000001980000001a000701ce000001ae00001e350f1a0868000000000000000200000020000100000000000000000643000000930000056100000184001d00000094000a000000ac000200000391006e000002b800000004000000000000000000000000000002040180000200008f005ece"
+
+const gw29k9ETRuntimeHex = "aa55f703fa1801110e310e1aad000f000001de1aad0000000002a7168d001200000186168d000000000000000202020909001d1387000002470919001b1387000002350920001d13850000024b0001000006c7ffffeae500000133000007b708fb00071386000000000015090b0007138800000000000509190006138500000000002500000287000002800000028b0000004200001ba0000100f1000000cd00001db40eda0000ffff0000000000000000002000010000000000000000b237000000090000af6100000497000c0000005700000001a39e01b600000000000000000000000000060000000000000000000000000000020400ce00000000030064b6"
+
+const gw6000EHRuntimeHex = "aa55f703fa1508081228090ce7001a000003590ce00015000002b3ffffffffffffffffffffffffffffffff00000202093e0042138500000619ffffffffffff7fffffffffffffffffff7fffffff0001000006190000ff5c7fffffffffffffff000000000000000000000000ffffffffffffffffffffffffffffffffffffffffffffffff000006bc7fffffff7fffffff00000000000006bd0000025c7fff018201000edeffff00000001000000000000000000030001ffff0000000000000252000000dc0000024a0000002100d8000000000000000002bd010f000000000000000000000000000700000000000000000000400000010708484700000000ffffbcb6"
+
+// Battery info frames: READ 24 regs @ 0x9088 → 48-byte payload, SoC at offset 14.
+// GW10K-ET: SoC=68%, GW25K-ET: SoC=100%
+const gw10kETBatteryInfoHex = "aa55f7033000ff01000001015e001900190000004400630005000001010000000000000000000000000000000000000000000000006447"
+const gw25kETBatteryInfoHex = "aa55f7033000ff0137000100e600000028000000640064000400000105000000000316000000000000000000000000000000000000dc7a"
 
 // mustDecodeHex decodes a compact hex string (spaces stripped) or panics.
 func mustDecodeHex(s string) []byte {
@@ -250,9 +280,10 @@ func mockOnPort8899(t *testing.T, responses [][]byte) string {
 
 // stripAA55Header mimics what sendCommand returns: the bare payload after the
 // 5-byte AA55 prefix, with the trailing 2-byte CRC excluded.
+// buf[2] is the inverter source address, which varies by family:
+//   DT/DNS: 0x7F,  ET/EH/BT/BH: 0xF7 — we accept both.
 func stripAA55Header(frame []byte) ([]byte, error) {
-	if len(frame) < 6 || frame[0] != 0xAA || frame[1] != 0x55 ||
-		frame[2] != 0x7F || frame[3] != 0x03 {
+	if len(frame) < 6 || frame[0] != 0xAA || frame[1] != 0x55 || frame[3] != 0x03 {
 		return nil, fmt.Errorf("invalid response header")
 	}
 	byteCount := int(frame[4])
@@ -260,6 +291,27 @@ func stripAA55Header(frame []byte) ([]byte, error) {
 		return nil, fmt.Errorf("short response")
 	}
 	return frame[5 : 5+byteCount], nil
+}
+
+// buildETRuntimeFrame constructs a synthetic AA55 ET runtime response
+// (READ 125 regs @ 0x891C, byteCount = 250) with the given values encoded
+// at the ET family offsets:
+//   pvW      → S32 at offset 74
+//   gridW    → S32 at offset 78  (negative = exporting)
+//   batteryW → S32 at offset 164 (negative = charging)
+//   eTotalX10 → U32 at offset 182 (divide by 10 for kWh)
+// Source byte is 0xF7 (ET family inverter address).
+func buildETRuntimeFrame(pvW, gridW, batteryW int32, eTotalX10 uint32) []byte {
+	const payloadLen = 250 // 125 registers × 2 bytes
+	payload := make([]byte, payloadLen)
+	binary.BigEndian.PutUint32(payload[74:], uint32(pvW))
+	binary.BigEndian.PutUint32(payload[78:], uint32(gridW))
+	binary.BigEndian.PutUint32(payload[164:], uint32(batteryW))
+	binary.BigEndian.PutUint32(payload[182:], eTotalX10)
+	frame := []byte{0xAA, 0x55, 0xF7, 0x03, byte(payloadLen)}
+	frame = append(frame, payload...)
+	frame = append(frame, 0x00, 0x00)
+	return frame
 }
 
 func parseDTPower(payload []byte) (float64, error) {
@@ -529,6 +581,293 @@ func TestDetectFamily_MSUnknown(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
+// ET family payload-parsing unit tests  (no network)
+// ---------------------------------------------------------------------------
+
+// TestParseETPower_AllUsages verifies all three ET payload offsets in one pass.
+// Source: GW10K-ET fw617 real capture.
+//   pv      (offset  74) = 831 W
+//   grid    (offset  78) = -3 W  (tiny export)
+//   battery (offset 164) = -2512 W  (charging)
+func TestParseETPower_AllUsages(t *testing.T) {
+	frame := mustDecodeHex(gw10kETRuntimeHex)
+	payload, err := stripAA55Header(frame)
+	require.NoError(t, err)
+	require.GreaterOrEqual(t, len(payload), 168, "ET payload must be ≥168 bytes")
+
+	cases := []struct {
+		usage    string
+		offset   int
+		expected float64
+	}{
+		{"pv", 74, 831},
+		{"grid", 78, -3},
+		{"battery", 164, -2512},
+	}
+	for _, tc := range cases {
+		val := float64(int32(binary.BigEndian.Uint32(payload[tc.offset : tc.offset+4])))
+		assert.InDelta(t, tc.expected, val, 0.5, "ET %s power at offset %d", tc.usage, tc.offset)
+	}
+}
+
+// TestParseETPower_GridImporting verifies positive grid power (importing) from GW25K-ET.
+// grid offset 78 = 1511 W
+func TestParseETPower_GridImporting(t *testing.T) {
+	frame := mustDecodeHex(gw25kETRuntimeHex)
+	payload, err := stripAA55Header(frame)
+	require.NoError(t, err)
+	val := float64(int32(binary.BigEndian.Uint32(payload[78:82])))
+	assert.InDelta(t, 1511.0, val, 0.5)
+}
+
+// TestParseETPower_GridExporting verifies large negative grid power from GW29K9-ET.
+// grid offset 78 = -5403 W  (29.9 kW inverter exporting heavily)
+func TestParseETPower_GridExporting(t *testing.T) {
+	frame := mustDecodeHex(gw29k9ETRuntimeHex)
+	payload, err := stripAA55Header(frame)
+	require.NoError(t, err)
+	val := float64(int32(binary.BigEndian.Uint32(payload[78:82])))
+	assert.InDelta(t, -5403.0, val, 0.5)
+}
+
+// TestParseETEnergy_GW10K verifies ET e_total from GW10K-ET capture.
+// e_total offset 182 = 60853 → 6085.3 kWh
+func TestParseETEnergy_GW10K(t *testing.T) {
+	frame := mustDecodeHex(gw10kETRuntimeHex)
+	payload, err := stripAA55Header(frame)
+	require.NoError(t, err)
+	raw := binary.BigEndian.Uint32(payload[182:186])
+	assert.InDelta(t, 6085.3, float64(raw)/10.0, 0.001)
+}
+
+// TestParseETEnergy_GW25K verifies ET e_total from GW25K-ET capture.
+// e_total offset 182 = 1603 → 160.3 kWh  (newer installation)
+func TestParseETEnergy_GW25K(t *testing.T) {
+	frame := mustDecodeHex(gw25kETRuntimeHex)
+	payload, err := stripAA55Header(frame)
+	require.NoError(t, err)
+	raw := binary.BigEndian.Uint32(payload[182:186])
+	assert.InDelta(t, 160.3, float64(raw)/10.0, 0.001)
+}
+
+// TestParseETSoc_GW10K verifies SoC from GW10K-ET battery_info capture.
+// Battery info PDU: READ 24 @ 0x9088, SoC at offset 14 = 68 %
+func TestParseETSoc_GW10K(t *testing.T) {
+	frame := mustDecodeHex(gw10kETBatteryInfoHex)
+	payload, err := stripAA55Header(frame)
+	require.NoError(t, err)
+	require.GreaterOrEqual(t, len(payload), 16)
+	soc := float64(binary.BigEndian.Uint16(payload[14:16]))
+	assert.InDelta(t, 68.0, soc, 0.5)
+}
+
+// TestParseETSoc_GW25K verifies SoC=100% from GW25K-ET battery_info capture.
+func TestParseETSoc_GW25K(t *testing.T) {
+	frame := mustDecodeHex(gw25kETBatteryInfoHex)
+	payload, err := stripAA55Header(frame)
+	require.NoError(t, err)
+	soc := float64(binary.BigEndian.Uint16(payload[14:16]))
+	assert.InDelta(t, 100.0, soc, 0.5)
+}
+
+// ---------------------------------------------------------------------------
+// ET family integration tests  (require mock on port 8899)
+// ---------------------------------------------------------------------------
+
+// TestDetectFamily_ET_isET verifies GW10K-ET is classified as "ET" family
+// (not the old "HYBRID") so the correct PDU is used.
+func TestDetectFamily_ET_isET(t *testing.T) {
+	modelFrame := buildModelFrame("GW10K-ET")
+	host := mockOnPort8899(t, [][]byte{
+		modelFrame,
+		mustDecodeHex(gw10kETRuntimeHex),
+	})
+
+	m, err := NewGoodWeWifi(host, "pv")
+	require.NoError(t, err)
+
+	gw, ok := m.(*goodWeWifi)
+	require.True(t, ok)
+	assert.Equal(t, "ET", gw.family, "GW10K-ET must be classified as ET family")
+}
+
+// TestDetectFamily_EH_isET verifies GW6000-EH is classified as "ET" family.
+func TestDetectFamily_EH_isET(t *testing.T) {
+	modelFrame := buildModelFrame("GW6000-EH")
+	host := mockOnPort8899(t, [][]byte{
+		modelFrame,
+		mustDecodeHex(gw6000EHRuntimeHex),
+	})
+
+	m, err := NewGoodWeWifi(host, "pv")
+	require.NoError(t, err)
+
+	gw, ok := m.(*goodWeWifi)
+	require.True(t, ok)
+	assert.Equal(t, "ET", gw.family, "GW6000-EH must be classified as ET family")
+}
+
+// TestETCurrentPower_PV verifies end-to-end PV power for GW10K-ET: 831 W.
+func TestETCurrentPower_PV(t *testing.T) {
+	host := mockOnPort8899(t, [][]byte{
+		buildModelFrame("GW10K-ET"),
+		mustDecodeHex(gw10kETRuntimeHex),
+	})
+
+	m, err := NewGoodWeWifi(host, "pv")
+	require.NoError(t, err)
+
+	power, err := m.CurrentPower()
+	require.NoError(t, err)
+	assert.InDelta(t, 831.0, power, 0.5)
+}
+
+// TestETCurrentPower_Grid verifies end-to-end grid power for GW25K-ET: 1511 W.
+func TestETCurrentPower_Grid(t *testing.T) {
+	host := mockOnPort8899(t, [][]byte{
+		buildModelFrame("GW25K-ET"),
+		mustDecodeHex(gw25kETRuntimeHex),
+	})
+
+	m, err := NewGoodWeWifi(host, "grid")
+	require.NoError(t, err)
+
+	power, err := m.CurrentPower()
+	require.NoError(t, err)
+	assert.InDelta(t, 1511.0, power, 0.5)
+}
+
+// TestETCurrentPower_GridExport verifies large export from GW29K9-ET: -5403 W.
+func TestETCurrentPower_GridExport(t *testing.T) {
+	host := mockOnPort8899(t, [][]byte{
+		buildModelFrame("GW29K9-ET"),
+		mustDecodeHex(gw29k9ETRuntimeHex),
+	})
+
+	m, err := NewGoodWeWifi(host, "grid")
+	require.NoError(t, err)
+
+	power, err := m.CurrentPower()
+	require.NoError(t, err)
+	assert.InDelta(t, -5403.0, power, 0.5)
+}
+
+// TestETCurrentPower_BatteryCharging verifies battery charging from GW10K-ET: -2512 W.
+func TestETCurrentPower_BatteryCharging(t *testing.T) {
+	host := mockOnPort8899(t, [][]byte{
+		buildModelFrame("GW10K-ET"),
+		mustDecodeHex(gw10kETRuntimeHex),
+	})
+
+	m, err := NewGoodWeWifi(host, "battery")
+	require.NoError(t, err)
+
+	power, err := m.CurrentPower()
+	require.NoError(t, err)
+	assert.InDelta(t, -2512.0, power, 0.5)
+}
+
+// TestETTotalEnergy verifies TotalEnergy for GW10K-ET: 6085.3 kWh.
+func TestETTotalEnergy(t *testing.T) {
+	host := mockOnPort8899(t, [][]byte{
+		buildModelFrame("GW10K-ET"),
+		mustDecodeHex(gw10kETRuntimeHex),
+	})
+
+	m, err := NewGoodWeWifi(host, "pv")
+	require.NoError(t, err)
+
+	// TotalEnergy triggers a second sendCommand with the ET runtime PDU.
+	energy, err := m.(api.MeterEnergy).TotalEnergy()
+	require.NoError(t, err)
+	assert.InDelta(t, 6085.3, energy, 0.001)
+}
+
+// TestETSoc verifies Soc() for GW10K-ET: 68 %.
+func TestETSoc(t *testing.T) {
+	host := mockOnPort8899(t, [][]byte{
+		buildModelFrame("GW10K-ET"),
+		mustDecodeHex(gw10kETBatteryInfoHex),
+	})
+
+	m, err := NewGoodWeWifi(host, "battery")
+	require.NoError(t, err)
+
+	battery, ok := m.(api.Battery)
+	require.True(t, ok, "ET family must implement api.Battery")
+
+	soc, err := battery.Soc()
+	require.NoError(t, err)
+	assert.InDelta(t, 68.0, soc, 0.5)
+}
+
+// TestSentPDU_ET verifies the exact bytes sent to an ET-family inverter for
+// CurrentPower: must be READ 125 regs @ 0x891C = {7f 03 89 1c 00 7d} + CRC.
+// This mirrors the structure of TestSentPDU_DT.
+func TestSentPDU_ET(t *testing.T) {
+	var captured []byte
+	var mu sync.Mutex
+
+	conn, err := net.ListenPacket("udp4", "127.0.0.1:8899")
+	if err != nil {
+		t.Skipf("cannot bind 127.0.0.1:8899 (%v) — skipping", err)
+	}
+	defer conn.Close()
+
+	go func() {
+		buf := make([]byte, 512)
+		callIdx := 0
+		for {
+			n, addr, err := conn.ReadFrom(buf)
+			if err != nil {
+				return
+			}
+			switch callIdx {
+			case 0: // model name query
+				conn.WriteTo(buildModelFrame("GW10K-ET"), addr)
+			case 1: // runtime data query — capture it
+				mu.Lock()
+				captured = make([]byte, n)
+				copy(captured, buf[:n])
+				mu.Unlock()
+				conn.WriteTo(mustDecodeHex(gw10kETRuntimeHex), addr)
+			}
+			callIdx++
+		}
+	}()
+
+	m, err := NewGoodWeWifi("127.0.0.1", "pv")
+	require.NoError(t, err)
+	_, _ = m.CurrentPower()
+
+	mu.Lock()
+	defer mu.Unlock()
+	require.GreaterOrEqual(t, len(captured), 6, "must have captured the runtime PDU")
+	assert.Equal(t, []byte{0x7f, 0x03, 0x89, 0x1c, 0x00, 0x7d}, captured[:6],
+		"ET runtime PDU must be READ 125 @ 0x891C")
+}
+
+// TestSentPDU_ET_Simple checks the ET PDU bytes without network I/O.
+// The 6-byte body of the ET runtime data command must be {7f 03 89 1c 00 7d}.
+func TestSentPDU_ET_Simple(t *testing.T) {
+	etPDU := []byte{0x7f, 0x03, 0x89, 0x1c, 0x00, 0x7d}
+	assert.Equal(t, byte(0x89), etPDU[2], "high byte of register address")
+	assert.Equal(t, byte(0x1c), etPDU[3], "low byte of register address (0x891C = reg 35100)")
+	assert.Equal(t, byte(0x00), etPDU[4])
+	assert.Equal(t, byte(0x7d), etPDU[5], "register count = 125 = 0x7d")
+}
+
+// TestSentPDU_ETBattery_Simple checks the ET battery info PDU bytes.
+// Must be READ 24 regs @ 0x9088 = {7f 03 90 88 00 18}.
+func TestSentPDU_ETBattery_Simple(t *testing.T) {
+	batPDU := []byte{0x7f, 0x03, 0x90, 0x88, 0x00, 0x18}
+	assert.Equal(t, byte(0x90), batPDU[2])
+	assert.Equal(t, byte(0x88), batPDU[3], "0x9088 = reg 37000")
+	assert.Equal(t, byte(0x00), batPDU[4])
+	assert.Equal(t, byte(0x18), batPDU[5], "register count = 24 = 0x18")
+}
+
+// ---------------------------------------------------------------------------
 // HYBRID power unit tests  (no network)
 // ---------------------------------------------------------------------------
 
@@ -661,72 +1000,90 @@ func TestDetectFamily_DNS30_isDT(t *testing.T) {
 	assert.InDelta(t, 1972.0, power, 0.5)
 }
 
-// TestDetectFamily_ET_isHybrid verifies that a GW10K-ET model is accepted and
-// that CurrentPower with usage="pv" reads offset 12 from the HYBRID response.
-func TestDetectFamily_ET_isHybrid(t *testing.T) {
-	modelFrame := buildModelFrame("GW10K-ET")
-	runtimeFrame := buildHybridRuntimeFrame(2000, 0, 0, 50)
-
-	host := mockOnPort8899(t, [][]byte{modelFrame, runtimeFrame})
+// TestDetectFamily_ET_isET_legacy verifies that a GW10K-ET model is classified
+// as "ET" (not "HYBRID") and that CurrentPower uses the correct 250-byte PDU.
+// Uses the real GW10K-ET capture; expected pv = 831 W.
+func TestDetectFamily_ET_isET_legacy(t *testing.T) {
+	host := mockOnPort8899(t, [][]byte{
+		buildModelFrame("GW10K-ET"),
+		mustDecodeHex(gw10kETRuntimeHex),
+	})
 
 	m, err := NewGoodWeWifi(host, "pv")
-	require.NoError(t, err, "GW10K-ET should be detected as HYBRID without error")
+	require.NoError(t, err, "GW10K-ET should be detected as ET without error")
+
+	gw := m.(*goodWeWifi)
+	assert.Equal(t, "ET", gw.family)
 
 	power, err := m.CurrentPower()
 	require.NoError(t, err)
-	assert.InDelta(t, 2000.0, power, 0.5)
+	assert.InDelta(t, 831.0, power, 0.5)
 }
 
-// TestDetectFamily_EH_isHybrid verifies that a GW6000-EH (single-phase hybrid
-// with battery) is recognised as HYBRID.
-func TestDetectFamily_EH_isHybrid(t *testing.T) {
-	modelFrame := buildModelFrame("GW6000-EH")
-	runtimeFrame := buildHybridRuntimeFrame(1800, -300, 500, 82)
-
-	host := mockOnPort8899(t, [][]byte{modelFrame, runtimeFrame})
+// TestDetectFamily_EH_isET_legacy verifies that GW6000-EH is classified as "ET".
+// Uses the real GW6000-EH capture; expected pv = 1561 W.
+func TestDetectFamily_EH_isET_legacy(t *testing.T) {
+	host := mockOnPort8899(t, [][]byte{
+		buildModelFrame("GW6000-EH"),
+		mustDecodeHex(gw6000EHRuntimeHex),
+	})
 
 	m, err := NewGoodWeWifi(host, "pv")
-	require.NoError(t, err, "GW6000-EH should be detected as HYBRID without error")
+	require.NoError(t, err, "GW6000-EH should be detected as ET without error")
+
+	gw := m.(*goodWeWifi)
+	assert.Equal(t, "ET", gw.family)
 
 	power, err := m.CurrentPower()
 	require.NoError(t, err)
-	assert.InDelta(t, 1800.0, power, 0.5)
+	assert.InDelta(t, 1561.0, power, 0.5)
 }
 
-// TestDetectFamily_BT_isHybrid verifies BT series (3-phase hybrid, HV battery).
-func TestDetectFamily_BT_isHybrid(t *testing.T) {
-	modelFrame := buildModelFrame("GW15K-BT")
-	runtimeFrame := buildHybridRuntimeFrame(12000, -4000, 3000, 65)
-
-	host := mockOnPort8899(t, [][]byte{modelFrame, runtimeFrame})
+// TestDetectFamily_BT_isET verifies BT series (3-phase hybrid, HV battery)
+// is classified as "ET" family. Uses a synthetic ET-format frame.
+func TestDetectFamily_BT_isET(t *testing.T) {
+	frame := buildETRuntimeFrame(12000, -4000, 3000, 50000)
+	host := mockOnPort8899(t, [][]byte{
+		buildModelFrame("GW15K-BT"),
+		frame,
+	})
 
 	m, err := NewGoodWeWifi(host, "pv")
-	require.NoError(t, err, "GW15K-BT should be detected as HYBRID without error")
+	require.NoError(t, err, "GW15K-BT should be detected as ET without error")
+
+	gw := m.(*goodWeWifi)
+	assert.Equal(t, "ET", gw.family)
 
 	power, err := m.CurrentPower()
 	require.NoError(t, err)
 	assert.InDelta(t, 12000.0, power, 0.5)
 }
 
-// TestDetectFamily_BH_isHybrid verifies BH series (single-phase, HV battery).
-func TestDetectFamily_BH_isHybrid(t *testing.T) {
-	modelFrame := buildModelFrame("GW5000-BH")
-	runtimeFrame := buildHybridRuntimeFrame(4500, 500, -1000, 30)
-
-	host := mockOnPort8899(t, [][]byte{modelFrame, runtimeFrame})
+// TestDetectFamily_BH_isET verifies BH series (single-phase, HV battery)
+// is classified as "ET" family. Uses a synthetic ET-format frame.
+func TestDetectFamily_BH_isET(t *testing.T) {
+	frame := buildETRuntimeFrame(4500, 500, -1000, 30000)
+	host := mockOnPort8899(t, [][]byte{
+		buildModelFrame("GW5000-BH"),
+		frame,
+	})
 
 	m, err := NewGoodWeWifi(host, "pv")
-	require.NoError(t, err, "GW5000-BH should be detected as HYBRID without error")
+	require.NoError(t, err, "GW5000-BH should be detected as ET without error")
+
+	gw := m.(*goodWeWifi)
+	assert.Equal(t, "ET", gw.family)
 
 	power, err := m.CurrentPower()
 	require.NoError(t, err)
 	assert.InDelta(t, 4500.0, power, 0.5)
 }
 
-// TestHybridGridUsage verifies that usage="grid" on a HYBRID inverter reads
-// the correct offset (24) and returns the right signed value.
+// TestHybridGridUsage verifies that usage="grid" on a HYBRID (ES/EM) inverter
+// reads offset 24 and returns the correct signed value.
+// Uses GW5048D-ES as the model name (genuine ES-family token).
 func TestHybridGridUsage(t *testing.T) {
-	modelFrame := buildModelFrame("GW10K-ET")
+	modelFrame := buildModelFrame("GW5048D-ES")
 	// grid = -2000 W (exporting)
 	runtimeFrame := buildHybridRuntimeFrame(5000, -2000, 1000, 70)
 
@@ -741,10 +1098,10 @@ func TestHybridGridUsage(t *testing.T) {
 		"grid usage must return negative when exporting")
 }
 
-// TestHybridBatteryUsage verifies that usage="battery" on a HYBRID inverter
-// reads offset 36 and returns the correct signed value.
+// TestHybridBatteryUsage verifies that usage="battery" on a HYBRID (ES/EM)
+// inverter reads offset 36 and returns the correct signed value.
 func TestHybridBatteryUsage(t *testing.T) {
-	modelFrame := buildModelFrame("GW10K-ET")
+	modelFrame := buildModelFrame("GW5048D-ES")
 	// battery = 3000 W discharging
 	runtimeFrame := buildHybridRuntimeFrame(5000, -2000, 3000, 55)
 
@@ -760,9 +1117,9 @@ func TestHybridBatteryUsage(t *testing.T) {
 }
 
 // TestHybridBatteryCharging verifies that a charging battery returns negative
-// power via usage="battery".
+// power via usage="battery" on a HYBRID (ES/EM) inverter.
 func TestHybridBatteryCharging(t *testing.T) {
-	modelFrame := buildModelFrame("GW6000-EH")
+	modelFrame := buildModelFrame("GW5048-EM")
 	// battery = -1500 W (charging)
 	runtimeFrame := buildHybridRuntimeFrame(3000, 500, -1500, 40)
 
@@ -778,9 +1135,9 @@ func TestHybridBatteryCharging(t *testing.T) {
 }
 
 // TestHybridSoc verifies that Soc() reads the uint16 at offset 28 of the
-// HYBRID payload and returns it as a percentage.
+// HYBRID (ES/EM) payload and returns it as a percentage.
 func TestHybridSoc(t *testing.T) {
-	modelFrame := buildModelFrame("GW10K-ET")
+	modelFrame := buildModelFrame("GW5048D-ES")
 	runtimeFrame := buildHybridRuntimeFrame(4000, -1000, 2000, 83)
 
 	host := mockOnPort8899(t, [][]byte{modelFrame, runtimeFrame, runtimeFrame})
@@ -958,8 +1315,8 @@ func TestSentPDU_DT(t *testing.T) {
 		"DT runtime PDU CRC mismatch")
 }
 
-// TestSentPDU_HYBRID verifies the exact bytes sent to a HYBRID inverter for a
-// runtime data request: READ 42 regs @ 0x7500 → {7f 03 75 00 00 2a <crc>}.
+// TestSentPDU_HYBRID verifies the exact bytes sent to a HYBRID (ES/EM) inverter
+// for a runtime data request: READ 42 regs @ 0x7500 → {7f 03 75 00 00 2a <crc>}.
 func TestSentPDU_HYBRID(t *testing.T) {
 	conn, err := net.ListenPacket("udp4", "127.0.0.1:8899")
 	if err != nil {
@@ -968,7 +1325,7 @@ func TestSentPDU_HYBRID(t *testing.T) {
 	t.Cleanup(func() { conn.Close() })
 
 	responses := [][]byte{
-		buildModelFrame("GW10K-ET"),
+		buildModelFrame("GW5048D-ES"),
 		buildHybridRuntimeFrame(2000, 0, 0, 50),
 	}
 	received := make(chan []byte, 10)
