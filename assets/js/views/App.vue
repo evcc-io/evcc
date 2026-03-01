@@ -127,16 +127,16 @@ export default defineComponent({
 		},
 		pageShowHandler(event: PageTransitionEvent) {
 			if (event.persisted) {
+				this.clearReconnectTimeout();
 				this.disconnect();
 				this.connect();
 			}
 		},
 		pageVisibilityChanged() {
-			if (document.hidden) {
-				this.clearReconnectTimeout();
-				this.disconnect();
-			} else {
-				this.disconnect();
+			// disconnect in any case to ensure fresh connection
+			this.clearReconnectTimeout();
+			this.disconnect();
+			if (!document.hidden) {
 				this.connect();
 			}
 		},
