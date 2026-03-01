@@ -105,6 +105,12 @@
       "labelResidualPower": "Artık güç",
       "title": "Kontrol davranışı"
     },
+    "currency": {
+      "description": "Tarifene göre enerji fiyatlarını, maliyetleri ve tasarrufları biçimlendirmek için kullanılır.",
+      "example": "Doldurma ücretin {price} idi. {amount} tasarruf ettin.",
+      "label": "Para birimi",
+      "title": "Para birimi"
+    },
     "deviceValue": {
       "amount": "Miktar",
       "broker": "Aracı",
@@ -128,12 +134,16 @@
       "dimmed": "Karartılmış",
       "enabled": "Etkin",
       "energy": "Enerji",
+      "events": "Etkinlikler",
       "feedinPrice": "Satış fiyatı",
+      "forecast": "Tahmin",
       "gridPrice": "Alım fiyatı",
       "heaterTempLimit": "Isıtıcı sınırlaması",
       "hemsActiveLimit": "Etkin sınır",
       "hemsType": "İletişim",
       "identifier": "RFID tanımlayıcısı",
+      "max": "azami",
+      "messengers": "Hizmetler",
       "no": "hayır",
       "odometer": "Kilometre Sayacı",
       "org": "Organizasyon",
@@ -143,6 +153,7 @@
       "phases1p3p": "Faz değiştirme",
       "power": "Güç",
       "powerRange": "“Güç”",
+      "price": "Fiyat",
       "range": "Menzil",
       "singlePhase": "“Tek aşamalı”",
       "soc": "Doluluk",
@@ -172,11 +183,27 @@
       "loading": "YAML düzenleyici yükleniyor…"
     },
     "eebus": {
-      "description": "evcc'nin diğer EEBus cihazlarıyla iletişim kurmasını sağlayan yapılandırma.",
+      "certificate": {
+        "private": "Özel anahtar",
+        "public": "Açık sertifika",
+        "title": "Sertifikalar"
+      },
+      "description": "EVCC'nin doldurma cihazları veya şebeke operatörünüzün kontrol ünitesi gibi EEBus uyumlu cihazlarla iletişim kurmasını sağlayan yapılandırma. İlgili tüm başlatma ve sertifika oluşturma işlemleri ilk başlatmada otomatik olarak gerçekleştirilir.",
+      "descriptionAdvanced": "Değişiklik yapmaya gerek yok. Yalnızca ne yaptığını gerçekten biliyorsan değişiklik yap. SHIP kimliğini veya sertifikaları değiştirirsen, cihazlarını yeniden eşleştirmen gerekir.",
+      "interfaces": "Arayüzler",
+      "interfacesHelp": "İletişim sorunlarını önlemek için EEBus'un kullanacağı ağ arayüzlerini sınırla. Tüm arayüzleri kullanmak için alanı boş bırak. Her satıra bir giriş yap.",
+      "port": "Port",
+      "portHelp": "Kullanılacak port.",
+      "removeConfirm": "Tüm EEBus yapılandırmaları kaldırılacak. Bir sonraki başlatmada yeni sertifikalar ve tanımlayıcılar oluşturulacak. Emin misin?",
+      "shipid": "SHIP-ID",
+      "shipidExplain": "EEBus ağında tanımlama için kalıcı cihaz tanımlayıcı.",
+      "shipidHelp": "Bu SHIP-ID, aşağıdaki sertifikalarla bağlantılı.",
+      "ski": "SKI",
+      "skiExplain": "EEBus cihazlarını eşleştirmek için benzersiz güvenlik tanımlayıcı.",
       "title": "EEBus"
     },
     "experimental": {
-      "description": "Halen test aşamasında olan ve gelecek sürümlerde değişebilecek özellikler için kullanıcı arayüzünü etkinleştir.",
+      "description": "Hala test aşamasında olan özelliklere erken erişim sağlar. Bu özellikler istikrarsız olabilir ve gelecek sürümlerde değiştirilebilir veya kaldırılabilir.",
       "title": "Deneysel"
     },
     "ext": {
@@ -198,6 +225,7 @@
       "cancel": "İptal",
       "clear": "Temizle",
       "close": "Kapat",
+      "confirmSave": "Kaydedilmemiş değişiklikler var. Şimdi kaydedilsin mi?",
       "copied": "Kopyalandı!",
       "copy": "Kopyala",
       "customHelp": "evcc'nin eklenti sistemini kullanarak kullanıcı tanımlı bir cihaz oluştur.",
@@ -207,11 +235,13 @@
       "dragHandle": "Sürükleme kolu",
       "dragItem": "Sürüklenebilir: {title}",
       "dragList": "Yeniden sıralanabilir liste",
+      "error": "Hata",
       "experimental": "Deneysel",
       "forceSave": "Yine de kaydet",
       "fromYamlHint": "Not: evcc.yaml aracılığıyla yapılandırıldı. Burada düzenlemeyi etkinleştirmek için dosyadan öğeyi kaldır.",
       "hideAdvancedSettings": "“Gelişmiş ayarları gizle”",
       "invalidFileSelected": "Geçersiz dosya seçildi",
+      "legacy": "eskimiş",
       "noFileSelected": "Seçili dosya yok.",
       "off": "kapalı",
       "on": "açık",
@@ -303,6 +333,8 @@
       },
       "defaultModeHelpKeep": "Son seçilen modu korur.",
       "defaultModeLabel": "“Varsayılan şekil”",
+      "defaultsHint": "Varsayılan durum, GES fazlalık davranışı ve elektriksel ayrıntılar mantıklı varsayılan değerleri kullanır.",
+      "defaultsHintLink": "Ayarları düzenle",
       "delete": "“Sil”",
       "electricalSubtitle": "Emin değilsen elektrikçine sor.",
       "electricalTitle": "“Elektrikli”",
@@ -393,8 +425,65 @@
       "welcomeBannerTitle": "Haydi sistemini yapılandıralım!"
     },
     "messaging": {
-      "description": "Dolum oturumları hakkında bildirimler al.",
+      "addMessenger": "Hizmet ekle",
+      "description": "Doldurma oturumlarıyla ilgili bildirimler al.",
+      "event": {
+        "asleep": {
+          "messageDefault": "Doldurmaya onay verildi, araç {vehicleName} doldurmuyor.",
+          "title": "Araç doldurmuyorsa",
+          "titleDefault": "Araç uykuda"
+        },
+        "connect": {
+          "messageDefault": "Araç {pvPower}kW GES ile bağlı",
+          "title": "Araç bağlandığında",
+          "titleDefault": "Araç bağlı"
+        },
+        "disconnect": {
+          "messageDefault": "{connectedDuration} sonra araç bağlantısı kesildi",
+          "title": "Araç bağlantısı kesildiğinde",
+          "titleDefault": "Araç bağlantısı kesildi"
+        },
+        "guest": {
+          "messageDefault": "Bilinmeyen araç, misafir mi bağlı?",
+          "title": "Bilinmeyen bir araç bağlandığında",
+          "titleDefault": "Bilinmeyen araç"
+        },
+        "planoverrun": {
+          "messageDefault": "{vehicleTitle}: Plan aşılacak.",
+          "title": "Planlı doldurma aşılacağı zaman",
+          "titleDefault": "Plan aşıldı"
+        },
+        "soc": {
+          "messageDefault": "Batarya %{vehicleSoc} dolduruldu",
+          "title": "Doldurma seviyesi güncellemesi",
+          "titleDefault": "Doldurma seviyesi güncellendi"
+        },
+        "start": {
+          "messageDefault": "{mode} durumunda doldurmaya başladı.",
+          "title": "Doldurma başladığında",
+          "titleDefault": "Doldurma başladı"
+        },
+        "stop": {
+          "messageDefault": "Doldurma tamamlandı: {chargedEnergy}kWh {chargeDuration} içinde.",
+          "title": "Doldurma durduğunda",
+          "titleDefault": "Doldurma tamamlandı"
+        }
+      },
+      "eventMessage": "Bildiri",
+      "eventTitle": "Başlık",
+      "events": "Etkinlikler",
+      "legacyWarning": "Yeni bildirim yapılandırması kullanıma sunuldu! Yeni kılavuzlu süreci kullanmak için yapılandırmanı buradan kaldır ve kayded.",
+      "messengers": "Hizmetler",
+      "seePlaceholders": "yer tutuculara bak",
       "title": "Bildirimler"
+    },
+    "messenger": {
+      "custom": "Kullanıcı tanımlı hizmet",
+      "generic": "Genel hizmet",
+      "primary": "Özel hizmet",
+      "template": "Hizmet",
+      "titleAdd": "Hizmet Ekle",
+      "titleEdit": "Hizmeti Düzenle"
     },
     "meter": {
       "cancel": "İptal",
@@ -491,7 +580,8 @@
       "labelInternalUrl": "Dahili URL",
       "labelPort": "Port",
       "labelSchema": "Şema",
-      "title": "Ağ"
+      "title": "Ağ",
+      "warningUrlPath": "URL genellikle bir yola ihtiyaç duymaz. Bunun doğru olduğundan emin misin?"
     },
     "ocpp": {
       "connectedChargers": "Bağlı doldurma cihazları",
@@ -534,7 +624,7 @@
       }
     },
     "pv": {
-      "titleAdd": "GES Sayacı Ekle",
+      "titleAdd": "GES Ekle",
       "titleEdit": "GES Sayacını Düzenle"
     },
     "section": {
@@ -544,6 +634,7 @@
       "integrations": "Bütünleştirmeler",
       "loadpoints": "Doldurma ve Isıtma",
       "meter": "GES ve Batarya",
+      "services": "Hizmetler",
       "system": "Sistem",
       "vehicles": "Araçlar"
     },
@@ -617,12 +708,85 @@
       "restartingDescription": "Lütfen bekle…",
       "restartingMessage": "evcc yeniden başlatılıyor."
     },
+    "tariff": {
+      "addForecast": "Tahmin ekle",
+      "addTariff": "Tarife ekle",
+      "co2": {
+        "description": "Şebeke elektriği için CO₂ yoğunluğu tahmini. CO₂ iyileştirmeli doldurma ve salım tasarruflarının hesaplanması için.",
+        "titleAdd": "CO₂ Tahmini Ekle",
+        "titleEdit": "CO₂ Tahminini Düzenle"
+      },
+      "co2Services": "CO₂ Hizmetleri",
+      "customForecast": "Kullanıcı tanımlı tahmin",
+      "customTariff": "Kullanıcı tanımlı tarife",
+      "description": "Enerji tarifelerini ve tahminlerini yapılandır. Dinamik yönetim için cihaz tabanlı yapılandırmayı veya statik ayarlar için YAML kullan.",
+      "feedIn": {
+        "description": "Şebekeye ihraç edilen elektrik için alınan ücret. Gerçek doldurma maliyetlerini hesaplamak için kullanılır.",
+        "titleAdd": "Şebekeye İhracat Tarifesi Ekle",
+        "titleEdit": "Şebekeye İhracat Tarifesini düzenle"
+      },
+      "generic": "Genel bütünleştirmeler",
+      "grid": {
+        "description": "Şebeke tüketimi için elektrik fiyatı. Gerçek doldurma maliyetlerini hesaplamak ve araçların doldurulmasını, ısıtma cihazlarının yönetimini veya ev bataryalarının şebekeden doldurmasını fiyat iyileştirmeli sağlamak için.",
+        "titleAdd": "Şebekeden İthalat Tarifesi Ekle",
+        "titleEdit": "Şebekeden İthalat Tarifesini Düzenle"
+      },
+      "legacyWarning": "Yeni tarife yapılandırması mevcut! Yeni kılavuzlu süreci kullanmak için tarifelerini buradan kaldır ve kayded.",
+      "option": {
+        "co2": "CO₂ tahmini ekle",
+        "feedIn": "Şebekeye ihracat tarifesi ekle",
+        "grid": "Şebekeden ithalat tarifesi ekle",
+        "planner": "Planlayıcı tahmini ekle",
+        "solar": "Güneş tahmini ekle"
+      },
+      "planner": {
+        "description": "Gelişmiş ayar. Dinamik elektrik tarifeleri veya CO₂ tahminleri otomatik olarak kullanıldığından genellikle gerekli değildir. İstatistik ve fiyat hesaplamaları için değil, yalnızca doldurma planlaması için kullanılan ek bir veri kaynağını etkinleştirir.",
+        "titleAdd": "Planlayıcı Tahmini Ekle",
+        "titleEdit": "Planlayıcı Tahminini Düzenle"
+      },
+      "services": "Hizmetler",
+      "solar": {
+        "description": "GES için güneş enerjisi üretim tahmini. Arayüzde görüntülenir ve ileride iyileştirme hesaplamaları için kullanılacak.",
+        "titleAdd": "Güneş Tahmini Ekle",
+        "titleEdit": "Güneş Tahmini Düzenle"
+      },
+      "template": "Sağlayıcı",
+      "title": "Tarifeler ve Tahminler",
+      "titleChoice": "Ne eklemek istersin?",
+      "type": {
+        "co2": "CO₂ Yoğunluğu",
+        "feedIn": "İhracat Fiyatı",
+        "grid": "Şebekeden Tüketim Fiyatı",
+        "planner": "Planlayıcı",
+        "solar": "Güneş enerjisi"
+      },
+      "zones": {
+        "add": "Bölge ekle",
+        "allDays": "Tüm günler",
+        "allMonths": "Tüm aylar",
+        "allTimes": "Tüm zamanlar",
+        "cancel": "İptal",
+        "days": "Günler",
+        "edit": "Düzenle",
+        "hours": "Saatler",
+        "months": "Aylar",
+        "price": "Fiyat",
+        "priceRequired": "Fiyat zorunludur",
+        "remove": "Bölgeyi kaldır",
+        "save": "Kaydet",
+        "selectAll": "Tüm günler",
+        "timeFrom": "Başlangıç",
+        "timeRangeError": "Başlangıç zamanı bitiş zamanından önce olmalı. Gece yarısını kapsayacak şekilde iki ayrı bölge oluştur.",
+        "timeTo": "Bitiş",
+        "weekdays": "Hafta günleri"
+      }
+    },
     "tariffs": {
       "description": "Doldurma oturumlarının maliyetlerini hesaplamak için elektrik tarifelerini gir.",
       "title": "Tarifeler"
     },
     "telemetry": {
-      "description": "EVCC'yi iyileştirmek için veri paylaşımını yapılandır. Gizliliğin bizim için önemlidir ve katılım tamamen isteğe bağlıdır.",
+      "description": "evcc'yi iyileştirmek için veri paylaşımını yapılandır. Gizliliğin bizim için önemlidir ve katılım tamamen isteğe bağlıdır.",
       "title": "Uzaktan ölçüm"
     },
     "title": {
@@ -633,7 +797,7 @@
     "validation": {
       "failed": "başarısız",
       "label": "Durum",
-      "running": "Doğrulanıyor…",
+      "running": "doğrulanıyor…",
       "success": "başarılı",
       "unknown": "bilinmiyor",
       "validate": "doğrula"
@@ -681,7 +845,7 @@
       "tabTitle": "Canlı topluluk"
     },
     "savings": {
-      "co2Saved": "{value} CO₂ tasarruf edildi",
+      "co2Saved": "{value} tasarruf edildi",
       "co2Title": "CO₂ Emisyonu",
       "configurePriceCo2": "Fiyat ve CO₂ emisyonlarını yapılandır.",
       "footerLong": "{percent} güneş enerjisi",
@@ -740,12 +904,14 @@
   "forecast": {
     "co2": {
       "average": "“Ortalama”",
+      "constant": "CO₂ yoğunluğu",
       "lowestHour": "“En temiz saat”",
       "range": "“Aralık”"
     },
     "modalTitle": "“Öngörü”",
     "price": {
       "average": "“Ortalama”",
+      "constant": "Fiyat",
       "lowestHour": "“En ucuz saat”",
       "range": "“Aralık”"
     },
@@ -920,10 +1086,13 @@
       "battery": "Batarya",
       "batteryCharge": "Batarya doldurma",
       "batteryDischarge": "Batarya boşaltma",
-      "batteryGridChargeActive": "“şebekeden doldurma etkin”",
-      "batteryGridChargeLimit": "“şebekeden doldur şayet”",
+      "batteryForecastEmpty": "boş {time}",
+      "batteryForecastFull": "dolu {time}",
+      "batteryGridChargeActive": "Şebekeden doldurma: etkin",
+      "batteryGridChargeLimit": "Şebekeden doldurma: şayet",
       "batteryHold": "Batarya (kilitli)",
       "batteryTooltip": "{total} ({soc})'ın {energy}'ı",
+      "forecast": "Tahmin: ",
       "forecastTooltip": "“öngörü: bugün kalan güneşden üreti̇m”",
       "gridImport": "Şebeke kullanımı",
       "homePower": "Tüketim",
@@ -950,6 +1119,7 @@
       "charged": "Doldu",
       "co2": "⌀ CO₂",
       "duration": "Süre",
+      "emission": "Salım",
       "fallbackName": "Doldurma noktası",
       "finished": "“Doldurma sonu”",
       "power": "Güç",
@@ -962,9 +1132,14 @@
     "loadpointSettings": {
       "batteryBoost": {
         "description": "Ev bataryasından {limit} seviyesine düşene kadar hızlı şarj.",
+        "descriptionDisabled": "Ev bataryasından hızlı doldurabilmek için bir sınır seç.",
+        "disabled": "Devre dışı",
         "label": "'Batarya Takviyesi”",
-        "mode": "Sadece GES ve Asg.+GES modunda kullanılabilir.",
-        "once": "Bu doldurma oturumu için takviye etkin."
+        "mode": "Sadece GES ve Asg.+GES durumunda kullanılabilir.",
+        "once": "Bu doldurma oturumu için takviye etkin.",
+        "stateActive": "Batarya desteği etkin",
+        "stateBelowLimit": "Desdek için batarya çok düşük",
+        "stateReady": "Batarya desteği hazır"
       },
       "batteryUsage": "“Ev Bataryası”",
       "currents": "Doldurma Akımı",
@@ -1070,6 +1245,9 @@
     "vehicleStatus": {
       "awaitingAuthorization": "İzin bekliyorum.",
       "batteryBoost": "Batarya takviyesi etkin.",
+      "batteryBoostBelowLimit": "Desdek için batarya çok düşük.",
+      "batteryBoostDisabled": "Batarya desteği devre dışı bırakıldı.",
+      "batteryBoostEnabled": "Batarya {limit} seviyesine kadar destek.",
       "charging": "doluyor…",
       "cheapEnergyCharging": "Ucuz enerji mevcut.",
       "cheapEnergyNextStart": "{duration} içinde ucuz enerji.",
@@ -1229,7 +1407,7 @@
     },
     "hiddenFeatures": {
       "label": "Deneysel",
-      "value": "Deneysel özellikleri göster."
+      "value": "Deneysel özellikleri etkinleştir."
     },
     "language": {
       "auto": "Otomatik",
