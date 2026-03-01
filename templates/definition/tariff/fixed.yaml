@@ -1,0 +1,16 @@
+template: fixed
+products:
+  - description:
+      de: Fester Preis
+      en: Fixed Price
+group: price
+params:
+  - name: price
+    type: pricePerKWh
+    required: true
+    description:
+      en: Price
+      de: Preis
+render: |
+  type: fixed
+  price: {{ .price }}

@@ -105,6 +105,12 @@
       "labelResidualPower": "Residual power",
       "title": "Control behavior"
     },
+    "currency": {
+      "description": "Used to format energy prices, costs and savings based on your tariff.",
+      "example": "Your charging price was {price}. You saved {amount}.",
+      "label": "Currency",
+      "title": "Currency"
+    },
     "deviceValue": {
       "amount": "Amount",
       "broker": "Broker",
@@ -130,11 +136,13 @@
       "energy": "Energy",
       "events": "Events",
       "feedinPrice": "Feed-in price",
+      "forecast": "Forecast",
       "gridPrice": "Grid price",
       "heaterTempLimit": "Heater limit",
       "hemsActiveLimit": "Active limit",
       "hemsType": "Communication",
       "identifier": "RFID-Identifier",
+      "max": "max",
       "messengers": "Services",
       "no": "no",
       "odometer": "Odometer",
@@ -145,6 +153,7 @@
       "phases1p3p": "Phase switch",
       "power": "Power",
       "powerRange": "Power",
+      "price": "Price",
       "range": "Range",
       "singlePhase": "Single phase",
       "soc": "Charge",
@@ -696,9 +705,78 @@
       "restartingDescription": "Please wait…",
       "restartingMessage": "Restarting evcc."
     },
-    "tariffs": {
-      "description": "Define your energy tariffs to calculate the costs of your charging sessions.",
-      "title": "Tariffs"
+    "tariff": {
+      "addForecast": "Add forecast",
+      "addTariff": "Add tariff",
+      "co2": {
+        "description": "CO₂ intensity forecast for grid electricity. For CO₂-optimized charging and calculating emission savings.",
+        "titleAdd": "Add CO₂ Forecast",
+        "titleEdit": "Edit CO₂ Forecast"
+      },
+      "co2Services": "CO₂ Services",
+      "customForecast": "User defined forecast",
+      "customTariff": "User defined tariff",
+      "description": "Configure your energy tariffs and forecasts. Use device-based configuration for dynamic management or YAML for static settings.",
+      "feedIn": {
+        "description": "Compensation for electricity exported to the grid. Used to calculate actual charging costs.",
+        "titleAdd": "Add Grid Export Tariff",
+        "titleEdit": "Edit Grid Export Tariff"
+      },
+      "generic": "Generic integrations",
+      "grid": {
+        "description": "Electricity price for grid consumption. For calculating actual charging costs and price-optimized charging of vehicles, heating devices, or grid charging your home battery.",
+        "titleAdd": "Add Grid Import Tariff",
+        "titleEdit": "Edit Grid Import Tariff"
+      },
+      "legacyWarning": "New tariff configuration available! Remove and save your tariffs here to use the new guided process.",
+      "option": {
+        "co2": "Add CO₂ forecast",
+        "feedIn": "Add grid export tariff",
+        "grid": "Add grid import tariff",
+        "planner": "Add planner forecast",
+        "solar": "Add solar forecast"
+      },
+      "planner": {
+        "description": "Advanced setting. Usually not needed as dynamic electricity tariffs or CO₂ forecasts are used automatically. Enables an additional data source that's only used for charge planning, not for statistics and price calculations.",
+        "titleAdd": "Add Planner Forecast",
+        "titleEdit": "Edit Planner Forecast"
+      },
+      "services": "Services",
+      "solar": {
+        "description": "Solar production forecast for your PV system. Displayed in the interface and will be used for optimization algorithms in the future.",
+        "titleAdd": "Add Solar Forecast",
+        "titleEdit": "Edit Solar Forecast"
+      },
+      "template": "Provider",
+      "title": "Tariffs & Forecasts",
+      "titleChoice": "What Do You Want To Add?",
+      "type": {
+        "co2": "CO₂ Intensity",
+        "feedIn": "Feed-In Price",
+        "grid": "Grid Consumption Price",
+        "planner": "Planner",
+        "solar": "Solar"
+      },
+      "zones": {
+        "add": "Add zone",
+        "allDays": "All days",
+        "allMonths": "All months",
+        "allTimes": "All times",
+        "cancel": "Cancel",
+        "days": "Days",
+        "edit": "Edit",
+        "hours": "Hours",
+        "months": "Months",
+        "price": "Price",
+        "priceRequired": "Price is required",
+        "remove": "Remove zone",
+        "save": "Save",
+        "selectAll": "All days",
+        "timeFrom": "From",
+        "timeRangeError": "Start time must be before end time. To span midnight, create two separate zones.",
+        "timeTo": "To",
+        "weekdays": "Weekdays"
+      }
     },
     "telemetry": {
       "description": "Configure data sharing to help improve evcc. Your privacy is important to us and participation is completely optional.",

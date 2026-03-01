@@ -470,6 +470,11 @@ params:
     type: float
     example: 9.1275
     service: location/lon
+  - name: zones
+    type: zones
+    description:
+      en: Price zones
+      de: Preiszonen
 
 presets:
   vehicle-base:
@@ -531,14 +536,14 @@ presets:
     - name: language
   tariff-base:
     - name: charges
-      type: float
+      type: pricePerKWh
       advanced: true
       description:
         en: Charge
         de: Aufschlag
       help:
-        de: Zusätzlicher fester Aufschlag pro kWh (z.B. 0.05 für 5 Cent)
-        en: Additional fixed charge per kWh (e.g. 0.05 for 5 cents)
+        de: Zusätzlicher fester Aufschlag pro kWh
+        en: Additional fixed charge per kWh
     - name: tax
       type: float
       advanced: true

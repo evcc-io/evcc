@@ -351,6 +351,37 @@ func testInstance(instance any) map[string]testResult {
 		makeResult("identifier", val, err)
 	}
 
+	if dev, ok := instance.(api.Tariff); ok {
+		rates, err := dev.Rates()
+
+		// Determine field names based on tariff type
+		var valueKey, ratesKey string
+		switch dev.Type() {
+		case api.TariffTypePriceDynamic, api.TariffTypePriceForecast:
+			valueKey = "price"
+			ratesKey = "priceRates"
+		case api.TariffTypeCo2:
+			valueKey = "co2"
+			ratesKey = "co2Rates"
+		case api.TariffTypeSolar:
+			valueKey = "power"
+			ratesKey = "solarRates"
+		default:
+			valueKey = "price"
+		}
+
+		if err == nil && len(rates) > 0 {
+			// Get current rate value
+			if rate, err := rates.At(time.Now()); err == nil {
+				makeResult(valueKey, rate.Value, nil)
+			}
+
+			if ratesKey != "" {
+				makeResult(ratesKey, rates, nil)
+			}
+		}
+	}
+
 	return res
 }
 
