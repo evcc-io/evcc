@@ -117,6 +117,8 @@ require (
 	gorm.io/gorm v1.31.1
 )
 
+require github.com/warthog618/go-gpiocdev v0.9.1
+
 require (
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver/v3 v3.4.0 // indirect
