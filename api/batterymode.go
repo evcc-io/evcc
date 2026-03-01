@@ -9,4 +9,7 @@ const (
 	BatteryNormal
 	BatteryHold
 	BatteryCharge
+	BatteryNoCharge
+	BatteryChargeToSoc
+	BatteryHoldAtSoc
 )

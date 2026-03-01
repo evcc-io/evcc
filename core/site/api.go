@@ -83,4 +83,8 @@ type API interface {
 	GetBatteryModeExternal() api.BatteryMode
 	// SetBatteryModeExternal sets the external battery mode
 	SetBatteryModeExternal(api.BatteryMode) error
+	// GetBatteryModeExternalSoc returns the target SOC for ChargeToSoc mode
+	GetBatteryModeExternalSoc() float64
+	// SetBatteryModeExternalSoc sets the external battery mode with a target SOC
+	SetBatteryModeExternalSoc(api.BatteryMode, float64) error
 }

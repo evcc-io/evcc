@@ -194,9 +194,37 @@ func updateBatteryMode(site site.API) http.HandlerFunc {
 			val = s
 		}
 
-		site.SetBatteryModeExternal(val)
+		// parse target soc required for chargetosoc/holdatsoc mode
+		var soc float64
+		if val == api.BatteryChargeToSoc || val == api.BatteryHoldAtSoc {
+			socStr := r.URL.Query().Get("soc")
+			if socStr == "" {
+				jsonError(w, http.StatusBadRequest, errors.New("soc parameter required for chargetosoc/holdatsoc mode"))
+				return
+			}
 
-		jsonWrite(w, site.GetBatteryModeExternal())
+			var err error
+			soc, err = strconv.ParseFloat(socStr, 64)
+			if err != nil || soc <= 0 || soc > 100 {
+				jsonError(w, http.StatusBadRequest, fmt.Errorf("invalid soc value: %s", socStr))
+				return
+			}
+		}
+
+		if err := site.SetBatteryModeExternalSoc(val, soc); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		res := struct {
+			Mode api.BatteryMode `json:"mode"`
+			Soc  float64         `json:"soc,omitempty"`
+		}{
+			Mode: site.GetBatteryModeExternal(),
+			Soc:  site.GetBatteryModeExternalSoc(),
+		}
+
+		jsonWrite(w, res)
 	}
 }
 

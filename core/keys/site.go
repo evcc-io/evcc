@@ -51,7 +51,8 @@ const (
 	BatteryMode = "batteryMode"
 
 	// external battery control
-	BatteryModeExternal = "batteryModeExternal"
+	BatteryModeExternal    = "batteryModeExternal"
+	BatteryModeExternalSoc = "batteryModeExternalSoc"
 
 	// smart charging
 	SmartCostAvailable           = "smartCostAvailable"           // smart cost available
