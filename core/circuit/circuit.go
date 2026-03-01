@@ -23,6 +23,7 @@ type Circuit struct {
 	mu  sync.RWMutex
 	log *util.Logger
 
+	name     string
 	title    string
 	parent   api.Circuit   // parent circuit
 	children []api.Circuit // child circuits
@@ -44,8 +45,9 @@ type Circuit struct {
 }
 
 // NewFromConfig creates a new Circuit
-func NewFromConfig(ctx context.Context, log *util.Logger, other map[string]any) (api.Circuit, error) {
+func NewFromConfig(other map[string]any) (api.Circuit, error) {
 	cc := struct {
+		Name          string         // name
 		Title         string         // title
 		ParentRef     string         `mapstructure:"parent"` // parent circuit reference
 		MeterRef      string         `mapstructure:"meter"`  // meter reference
@@ -54,6 +56,7 @@ func NewFromConfig(ctx context.Context, log *util.Logger, other map[string]any) 
 		GetMaxCurrent *plugin.Config // dynamic max allowed current
 		GetMaxPower   *plugin.Config // dynamic max allowed power
 		Timeout       time.Duration  // timeout between meter updates
+		Template      string
 	}{
 		Timeout: time.Minute,
 	}
@@ -74,10 +77,14 @@ func NewFromConfig(ctx context.Context, log *util.Logger, other map[string]any) 
 		}
 	}
 
-	circuit, err := New(log, cc.Title, cc.MaxCurrent, cc.MaxPower, meter, cc.Timeout)
+	log := util.NewLogger("circuit-" + cc.Name)
+
+	circuit, err := New(log, cc.Name, cc.Title, cc.MaxCurrent, cc.MaxPower, meter, cc.Timeout)
 	if err != nil {
 		return nil, err
 	}
+
+	ctx := context.TODO()
 
 	circuit.getMaxPower, err = cc.GetMaxPower.FloatGetter(ctx)
 	if err != nil {
@@ -105,9 +112,10 @@ func NewFromConfig(ctx context.Context, log *util.Logger, other map[string]any) 
 }
 
 // New creates a circuit
-func New(log *util.Logger, title string, maxCurrent, maxPower float64, meter api.Meter, timeout time.Duration) (*Circuit, error) {
+func New(log *util.Logger, name string, title string, maxCurrent, maxPower float64, meter api.Meter, timeout time.Duration) (*Circuit, error) {
 	c := &Circuit{
 		log:        log,
+		name:       name,
 		title:      title,
 		maxCurrent: maxCurrent,
 		maxPower:   maxPower,
