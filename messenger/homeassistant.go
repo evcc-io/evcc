@@ -43,12 +43,6 @@ func NewHAMessengerFromConfig(other map[string]any) (api.Messenger, error) {
 		return nil, errors.New("missing uri")
 	}
 
-	if cc.Notify != "" {
-		if !isValidEntityID(cc.Notify) {
-			return nil, errors.New("notify must be in domain.service format")
-		}
-	}
-
 	log := util.NewLogger("homeassistant")
 
 	conn, err := homeassistant.NewConnection(log, cc.URI, "")
@@ -62,12 +56,6 @@ func NewHAMessengerFromConfig(other map[string]any) (api.Messenger, error) {
 		notify: cc.Notify,
 		data:   cc.Data,
 	}, nil
-}
-
-// isValidEntityID checks that s is in "domain.service" format
-func isValidEntityID(s string) bool {
-	domain, service, ok := strings.Cut(s, ".")
-	return ok && domain != "" && service != ""
 }
 
 // Send sends a notification via Home Assistant
@@ -85,8 +73,7 @@ func (m *HAMessenger) Send(title, msg string) {
 		err = m.conn.CallService(domain, service, payload)
 		// fall back to new-style notify.send_message for integrations
 		// that no longer support the legacy service call (e.g. Telegram in HA 2024+)
-		var se *request.StatusError
-		if errors.As(err, &se) && se.HasStatus(400) {
+		if se, ok := errors.AsType[*request.StatusError](err); ok && se.HasStatus(400) {
 			err = m.conn.CallService("notify", "send_message", map[string]any{
 				"entity_id": m.notify,
 				"title":     title,
@@ -101,6 +88,6 @@ func (m *HAMessenger) Send(title, msg string) {
 		})
 	}
 	if err != nil {
-		m.log.ERROR.Printf("homeassistant: %v", err)
+		m.log.ERROR.Println(err)
 	}
 }

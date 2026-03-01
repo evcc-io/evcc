@@ -112,12 +112,14 @@ func getServices(w http.ResponseWriter, req *http.Request) {
 	}
 
 	// collect matching entities from /api/states (e.g. Telegram notify entities)
-	if states, err := conn.GetStates(); err == nil {
-		for _, e := range states {
-			for _, domain := range filterDomains {
-				if strings.HasPrefix(e.EntityId, domain+".") {
-					seen[e.EntityId] = struct{}{}
-					break
+	if len(filterDomains) > 0 {
+		if states, err := conn.GetStates(); err == nil {
+			for _, e := range states {
+				for _, domain := range filterDomains {
+					if strings.HasPrefix(e.EntityId, domain+".") {
+						seen[e.EntityId] = struct{}{}
+						break
+					}
 				}
 			}
 		}

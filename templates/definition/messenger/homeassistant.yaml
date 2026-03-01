@@ -56,7 +56,9 @@ params:
 render: |
   type: homeassistant
   uri: {{ .uri }}
+  {{- if .notify }}
   notify: {{ .notify }}
+  {{- end }}
   {{- if or .critical .group .notification_channel }}
   data:
     {{- if .critical }}
