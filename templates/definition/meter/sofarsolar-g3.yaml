@@ -44,6 +44,9 @@ params:
     help:
       de: 8-stellige Hexzahl ohne 0x Prefix (signed 32-bit, z.B. FFFFC180 für -16000).
       en: 8-digit hex value without 0x prefix (signed 32-bit, e.g. FFFFC180 for -16000).
+    pattern:
+      regex: "^'?[0-9A-Fa-f]{8}'?$"
+      examples: ["00000000", "FFFF8AD0"]
     default: "00000000"
     advanced: true
   - name: normalmaxbatterypower
@@ -53,6 +56,9 @@ params:
     help:
       de: 8-stellige Hexzahl ohne 0x Prefix (signed 32-bit, z.B. FFFFC180 für -16000).
       en: 8-digit hex value without 0x prefix (signed 32-bit, e.g. FFFFC180 for -16000).
+    pattern:
+      regex: "^'?[0-9A-Fa-f]{8}'?$"
+      examples: ["00007530", "FFFF8AD0"]
     default: "00007530"
     advanced: true
   - name: normalminbatterypower
@@ -62,6 +68,9 @@ params:
     help:
       de: 8-stellige Hexzahl ohne 0x Prefix (signed 32-bit, z.B. FFFFC180 für -16000).
       en: 8-digit hex value without 0x prefix (signed 32-bit, e.g. FFFFC180 for -16000).
+    pattern:
+      regex: "^'?[0-9A-Fa-f]{8}'?$"
+      examples: ["FFFF8AD0", "00000000"]
     default: "FFFF8AD0"
     advanced: true
   - name: holddesiredgridpower
@@ -71,6 +80,9 @@ params:
     help:
       de: 8-stellige Hexzahl ohne 0x Prefix (signed 32-bit, z.B. FFFFC180 für -16000).
       en: 8-digit hex value without 0x prefix (signed 32-bit, e.g. FFFFC180 for -16000).
+    pattern:
+      regex: "^'?[0-9A-Fa-f]{8}'?$"
+      examples: ["00000000", "FFFF8AD0"]
     default: "00000000"
     advanced: true
   - name: holdmaxbatterypower
@@ -80,6 +92,9 @@ params:
     help:
       de: 8-stellige Hexzahl ohne 0x Prefix (signed 32-bit, z.B. FFFFC180 für -16000).
       en: 8-digit hex value without 0x prefix (signed 32-bit, e.g. FFFFC180 for -16000).
+    pattern:
+      regex: "^'?[0-9A-Fa-f]{8}'?$"
+      examples: ["00007530", "FFFF8AD0"]
     default: "00007530"
     advanced: true
   - name: holdminbatterypower
@@ -89,6 +104,9 @@ params:
     help:
       de: 8-stellige Hexzahl ohne 0x Prefix (signed 32-bit, z.B. FFFFC180 für -16000).
       en: 8-digit hex value without 0x prefix (signed 32-bit, e.g. FFFFC180 for -16000).
+    pattern:
+      regex: "^'?[0-9A-Fa-f]{8}'?$"
+      examples: ["00000000", "FFFF8AD0"]
     default: "00000000"
     advanced: true
   - name: chargedesiredgridpower
@@ -98,6 +116,9 @@ params:
     help:
       de: 8-stellige Hexzahl ohne 0x Prefix (signed 32-bit, z.B. FFFFC180 für -16000).
       en: 8-digit hex value without 0x prefix (signed 32-bit, e.g. FFFFC180 for -16000).
+    pattern:
+      regex: "^'?[0-9A-Fa-f]{8}'?$"
+      examples: ["00000000", "FFFF8AD0"]
     default: "00000000"
     advanced: true
   - name: chargemaxbatterypower
@@ -107,6 +128,9 @@ params:
     help:
       de: 8-stellige Hexzahl ohne 0x Prefix (signed 32-bit, z.B. FFFFC180 für -16000).
       en: 8-digit hex value without 0x prefix (signed 32-bit, e.g. FFFFC180 for -16000).
+    pattern:
+      regex: "^'?[0-9A-Fa-f]{8}'?$"
+      examples: ["00007530", "FFFF8AD0"]
     default: "00007530"
     advanced: true
   - name: chargeminbatterypower
@@ -116,6 +140,9 @@ params:
     help:
       de: 8-stellige Hexzahl ohne 0x Prefix (signed 32-bit, z.B. FFFFC180 für -16000).
       en: 8-digit hex value without 0x prefix (signed 32-bit, e.g. FFFFC180 for -16000).
+    pattern:
+      regex: "^'?[0-9A-Fa-f]{8}'?$"
+      examples: ["FFFF8AD0", "00000000"]
     default: "FFFF8AD0"
     advanced: true
   - name: externalpower
@@ -296,7 +323,7 @@ render: |
     source: switch
     switch:
     - case: 1 # normal
-      {{- $defaultmode := int .defaultmode }}
+      {{- $defaultmode := int .defaultmode }} 
       {{- if or (eq $defaultmode 3) (eq $defaultmode 0) }}
       set:
         source: sequence
