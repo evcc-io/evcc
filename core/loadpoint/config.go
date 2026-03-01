@@ -23,7 +23,7 @@ type DynamicConfig struct {
 	PhasesConfigured         int       `json:"phasesConfigured"`
 	MinCurrent               float64   `json:"minCurrent"`
 	MaxCurrent               float64   `json:"maxCurrent"`
-	MaxCurrent1p             float64   `json:"maxCurrent1p"`
+	MaxCurrent1p             *float64  `json:"maxCurrent1p"`
 	SmartCostLimit           *float64  `json:"smartCostLimit"`
 	SmartFeedInPriorityLimit *float64  `json:"smartFeedInPriorityLimit"`
 	PlanEnergy               float64   `json:"planEnergy"`
@@ -88,8 +88,8 @@ func (payload DynamicConfig) Apply(lp API) error {
 	if err == nil && payload.MaxCurrent != 0 {
 		err = lp.SetMaxCurrent(payload.MaxCurrent)
 	}
-	if err == nil && payload.MaxCurrent1p != 0 {
-		err = lp.SetMaxCurrent1p(payload.MaxCurrent1p)
+	if err == nil && payload.MaxCurrent1p != nil {
+		err = lp.SetMaxCurrent1p(*payload.MaxCurrent1p)
 	}
 
 	return err
