@@ -85,6 +85,7 @@ var yamlSource struct {
 	sponsor   globalconfig.YamlSource
 	hems      globalconfig.YamlSource
 	eebus     globalconfig.YamlSource
+	tariffs   globalconfig.YamlSource
 	messaging globalconfig.YamlSource
 }
 
@@ -903,21 +904,6 @@ func tariffInstance(name string, conf config.Typed) (api.Tariff, error) {
 	return instance, nil
 }
 
-func configureTariff(u api.TariffUsage, conf config.Typed, t *api.Tariff) error {
-	if conf.Type == "" {
-		return nil
-	}
-
-	name := u.String()
-	res, err := tariffInstance(name, conf)
-	if err != nil {
-		return &DeviceError{name, err}
-	}
-
-	*t = res
-	return nil
-}
-
 func configureSolarTariff(conf []config.Typed, t *api.Tariff) error {
 	var eg errgroup.Group
 	tt := make([]api.Tariff, len(conf))
@@ -947,39 +933,137 @@ func configureSolarTariff(conf []config.Typed, t *api.Tariff) error {
 	return nil
 }
 
-func configureTariffs(conf *globalconfig.Tariffs) (*tariff.Tariffs, error) {
+func configureTariff(conf config.Typed, deviceName string, target *api.Tariff) error {
+	if conf.Type != "" {
+		instance, err := tariffInstance("tariff", conf)
+		if err != nil {
+			return err
+		}
+		*target = instance
+		return nil
+	}
+	if deviceName != "" {
+		dev, err := config.Tariffs().ByName(deviceName)
+		if err != nil {
+			return fmt.Errorf("tariff device not found: %w", err)
+		}
+		*target = dev.Instance()
+	}
+	return nil
+}
+
+func configureSolarTariffs(confs []config.Typed, deviceNames []string, target *api.Tariff) error {
+	if len(confs) > 0 {
+		if len(confs) == 1 {
+			return configureTariff(confs[0], "", target)
+		}
+		return configureSolarTariff(confs, target)
+	}
+	if len(deviceNames) > 0 {
+		if len(deviceNames) == 1 {
+			return configureTariff(config.Typed{}, deviceNames[0], target)
+		}
+		tt := make([]api.Tariff, len(deviceNames))
+		for i, name := range deviceNames {
+			dev, err := config.Tariffs().ByName(name)
+			if err != nil {
+				return fmt.Errorf("tariff device %s not found: %w", name, err)
+			}
+			tt[i] = dev.Instance()
+		}
+		*target = tariff.NewCombined(tt)
+	}
+	return nil
+}
+
+func configureTariffs(conf *globalconfig.Tariffs, names ...string) (*tariff.Tariffs, error) {
 	tariffs := tariff.Tariffs{
 		Currency: currency.EUR,
 	}
 
-	// migrate settings
+	// yaml config from file
+	if conf.IsConfigured() {
+		yamlSource.tariffs = globalconfig.YamlSourceFile
+	}
+
+	// yaml config from db (deprecated)
 	if settings.Exists(keys.Tariffs) {
+		if yamlSource.tariffs == globalconfig.YamlSourceFile {
+			// just warn, no error to not break previous behavior
+			log.WARN.Println("tariffs configured via UI; evcc.yaml config will be ignored")
+		}
 		*conf = globalconfig.Tariffs{}
 		if err := settings.Yaml(keys.Tariffs, new(map[string]any), &conf); err != nil {
 			return &tariffs, err
 		}
+		yamlSource.tariffs = globalconfig.YamlSourceDb
 	}
 
-	if conf.Currency != "" {
-		tariffs.Currency = currency.MustParseISO(conf.Currency)
+	// device config from db
+	var refs globalconfig.TariffRefs
+	if settings.Exists(keys.TariffRefs) {
+		if err := settings.Json(keys.TariffRefs, &refs); err != nil {
+			return &tariffs, err
+		}
+		if yamlSource.tariffs != globalconfig.YamlSourceNone && refs.IsConfigured() {
+			return &tariffs, errors.New("tariffs are configured via UI; having an additional yaml config is not allowed")
+		}
+	}
+
+	// load tariff devices from database
+	configurable, err := config.ConfigurationsByClass(templates.Tariff)
+	if err != nil {
+		return &tariffs, err
 	}
 
 	var eg errgroup.Group
-	eg.Go(func() error { return configureTariff(api.TariffUsageGrid, conf.Grid, &tariffs.Grid) })
-	eg.Go(func() error { return configureTariff(api.TariffUsageFeedIn, conf.FeedIn, &tariffs.FeedIn) })
-	eg.Go(func() error { return configureTariff(api.TariffUsageCo2, conf.Co2, &tariffs.Co2) })
-	eg.Go(func() error { return configureTariff(api.TariffUsagePlanner, conf.Planner, &tariffs.Planner) })
-	if len(conf.Solar) > 0 {
+
+	for _, conf := range configurable {
 		eg.Go(func() error {
-			if len(conf.Solar) == 1 {
-				return configureTariff(api.TariffUsageSolar, conf.Solar[0], &tariffs.Solar)
+			cc := conf.Named()
+
+			if len(names) > 0 && !slices.Contains(names, cc.Name) {
+				return nil
 			}
-			return configureSolarTariff(conf.Solar, &tariffs.Solar)
+
+			instance, err := tariffInstance(cc.Name, config.Typed{Type: cc.Type, Other: cc.Other})
+			if err != nil {
+				return err
+			}
+
+			if e := config.Tariffs().Add(config.NewConfigurableDevice(&conf, instance)); e != nil {
+				return &DeviceError{cc.Name, e}
+			}
+
+			return nil
 		})
 	}
 
 	if err := eg.Wait(); err != nil {
+		return &tariffs, err
+	}
+
+	// resolve tariff roles
+	eg = errgroup.Group{}
+	eg.Go(func() error { return configureTariff(conf.Grid, refs.Grid, &tariffs.Grid) })
+	eg.Go(func() error { return configureTariff(conf.FeedIn, refs.FeedIn, &tariffs.FeedIn) })
+	eg.Go(func() error { return configureTariff(conf.Co2, refs.Co2, &tariffs.Co2) })
+	eg.Go(func() error { return configureTariff(conf.Planner, refs.Planner, &tariffs.Planner) })
+	eg.Go(func() error { return configureSolarTariffs(conf.Solar, refs.Solar, &tariffs.Solar) })
+	if err := eg.Wait(); err != nil {
 		return &tariffs, &ClassError{ClassTariff, err}
+	}
+
+	// validate currency
+	if cur, _ := settings.String(keys.Currency); cur != "" {
+		conf.Currency = cur
+	}
+	if conf.Currency != "" {
+		cur, err := currency.ParseISO(conf.Currency)
+		if err != nil {
+			return &tariffs, err
+		}
+		tariffs.Currency = cur
 	}
 
 	return &tariffs, nil
@@ -1060,7 +1144,7 @@ func configureSiteAndLoadpoints(conf *globalconfig.All) (*core.Site, error) {
 		errs = append(errs, &ClassError{ClassLoadpoint, err})
 	}
 
-	tariffs, err := configureTariffs(&conf.Tariffs)
+	tariffs, err := configureTariffs(&conf.Tariffs, references.tariff...)
 	if err != nil {
 		errs = append(errs, &ClassError{ClassTariff, err})
 	}

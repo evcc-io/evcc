@@ -105,6 +105,12 @@
       "labelResidualPower": "Residualleistung",
       "title": "Regelverhalten"
     },
+    "currency": {
+      "description": "Wird für die Erfassung und Formatierung von Energiepreisen, Kosten und Einsparungen verwendet.",
+      "example": "Dein Ladepreis betrug {price}. Du hast {amount} gespart.",
+      "label": "Währung",
+      "title": "Währung"
+    },
     "deviceValue": {
       "amount": "Anzahl",
       "broker": "Broker",
@@ -130,11 +136,13 @@
       "energy": "Energie",
       "events": "Ereignisse",
       "feedinPrice": "Einspeisevergütung",
+      "forecast": "Vorhersage",
       "gridPrice": "Netzpreis",
       "heaterTempLimit": "Heizungslimit",
       "hemsActiveLimit": "Aktives Limit",
       "hemsType": "Kommunikation",
       "identifier": "RFID-Kennung",
+      "max": "max",
       "messengers": "Dienste",
       "no": "Nein",
       "odometer": "Kilometerstand",
@@ -324,6 +332,8 @@
       },
       "defaultModeHelpKeep": "Zuletzt ausgewählter Modus wird beibehalten.",
       "defaultModeLabel": "Standard-Modus",
+      "defaultsHint": "Standardmodus, PV-Überschussverhalten und elektrische Details verwenden sinnvolle Standardwerte.",
+      "defaultsHintLink": "Einstellungen anpassen",
       "delete": "Löschen",
       "electricalSubtitle": "Im Zweifelsfall Elektriker fragen.",
       "electricalTitle": "Elektrisch",
@@ -358,7 +368,6 @@
       "priorityHelp": "Höherer Prioritäten haben Vorrang beim PV-Überschuss.",
       "priorityLabel": "Priorität",
       "save": "Speichern",
-      "showAllSettings": "Alle Einstellungen anzeigen",
       "solarBehaviorCustomHelp": "Definiere eigene Ein- und Ausschaltschwellen und Verzögerungen.",
       "solarBehaviorDefaultHelp": "Start nach {enableDelay} ausreichend vorhandenem Überschuss. Stop wenn für {disableDelay} nicht genug Überschuss vorhanden ist.",
       "solarBehaviorLabel": "PV-Überschuss",
@@ -567,7 +576,8 @@
       "labelHost": "mDNS-Hostname",
       "labelInternalUrl": "Interne URL",
       "labelPort": "Port",
-      "title": "Netzwerk"
+      "title": "Netzwerk",
+      "warningUrlPath": "Die URL benötigt normalerweise keinen Pfad. Bist du dir sicher?"
     },
     "ocpp": {
       "connectedChargers": "Verbundene Wallboxen",
@@ -694,9 +704,78 @@
       "restartingDescription": "Bitte warten …",
       "restartingMessage": "evcc wird neu gestartet."
     },
-    "tariffs": {
-      "description": "Hinterlege deine Stromtarife, um die Kosten zu berechnen.",
-      "title": "Tarife"
+    "tariff": {
+      "addForecast": "Vorhersage hinzufügen",
+      "addTariff": "Tarif hinzufügen",
+      "co2": {
+        "description": "CO₂-Intensitätsprognose für Netzstrom. Für CO₂-optimiertes Laden und Berechnung von Emissionseinsparungen.",
+        "titleAdd": "CO₂-Vorhersage hinzufügen",
+        "titleEdit": "CO₂-Vorhersage bearbeiten"
+      },
+      "co2Services": "CO₂-Dienste",
+      "customForecast": "Benutzerdefinierte Vorhersage",
+      "customTariff": "Benutzerdefinierter Tarif",
+      "description": "Konfiguriere deine Energietarife und Vorhersagen. Nutze gerätebasierte Konfiguration für dynamisches Management oder YAML für statische Einstellungen.",
+      "feedIn": {
+        "description": "Vergütung für ins Netz eingespeisten Strom. Zur Berechnung der realen Ladekosten.",
+        "titleAdd": "Einspeisevergütung hinzufügen",
+        "titleEdit": "Einspeisevergütung bearbeiten"
+      },
+      "generic": "Generische Integrationen",
+      "grid": {
+        "description": "Strompreis für den Netzbezug. Für die Berechnung von realen Ladekosten und preisoptimiertes Laden von Fahrzeugen, Steuern von Wärmeerzeugern oder Netzladen der Hausbatterie.",
+        "titleAdd": "Netzbezugstarif hinzufügen",
+        "titleEdit": "Netzbezugstarif bearbeiten"
+      },
+      "legacyWarning": "Neue Tarifkonfiguration verfügbar! Entferne die Konfiguration hier und speichere, um den neuen geführten Prozess zu nutzen.",
+      "option": {
+        "co2": "CO₂-Vorhersage hinzufügen",
+        "feedIn": "Einspeisevergütung hinzufügen",
+        "grid": "Netzbezugstarif hinzufügen",
+        "planner": "Planer-Vorhersage hinzufügen",
+        "solar": "Solar-Vorhersage hinzufügen"
+      },
+      "planner": {
+        "description": "Erweiterte Einstellung. Normalerweise nicht nötig, da dynamische Stromtarife oder CO₂-Vorhersagen automatisch verwendet werden. Ermöglicht eine zusätzliche Datenquelle, die nur für die Ladeplanung verwendet wird und nicht für Statistiken und Preisberechnungen.",
+        "titleAdd": "Planer-Vorhersage hinzufügen",
+        "titleEdit": "Planer-Vorhersage bearbeiten"
+      },
+      "services": "Dienste",
+      "solar": {
+        "description": "Solarproduktionsprognose für deine PV-Anlage. Wird in der Oberfläche angezeigt und zukünftig für Optimierungsalgorithmen verwendet.",
+        "titleAdd": "Solar-Vorhersage hinzufügen",
+        "titleEdit": "Solar-Vorhersage bearbeiten"
+      },
+      "template": "Anbieter",
+      "title": "Tarife & Vorhersagen",
+      "titleChoice": "Was möchtest du hinzufügen?",
+      "type": {
+        "co2": "CO₂ Vorhersage",
+        "feedIn": "Einspeisevergütung",
+        "grid": "Netzbezugspreis",
+        "planner": "Planer",
+        "solar": "Solar"
+      },
+      "zones": {
+        "add": "Zone hinzufügen",
+        "allDays": "Alle Tage",
+        "allMonths": "Alle Monate",
+        "allTimes": "Alle Zeiten",
+        "cancel": "Abbrechen",
+        "days": "Tage",
+        "edit": "Bearbeiten",
+        "hours": "Stunden",
+        "months": "Monate",
+        "price": "Preis",
+        "priceRequired": "Preis ist erforderlich",
+        "remove": "Zone entfernen",
+        "save": "Speichern",
+        "selectAll": "Alle Tage",
+        "timeFrom": "Von",
+        "timeRangeError": "Startzeit muss vor Endzeit liegen. Um Mitternacht zu überspannen, erstelle zwei separate Zonen.",
+        "timeTo": "Bis",
+        "weekdays": "Wochentage"
+      }
     },
     "telemetry": {
       "description": "Konfiguriere die Datenfreigabe, um evcc zu verbessern. Deine Privatsphäre ist uns wichtig und die Teilnahme ist völlig freiwillig.",
@@ -992,8 +1071,8 @@
       "battery": "Batterie",
       "batteryCharge": "Batterie laden",
       "batteryDischarge": "Batterie entladen",
-      "batteryForecastEmpty": "leer {timeago}",
-      "batteryForecastFull": "voll {timeago}",
+      "batteryForecastEmpty": "leer {time}",
+      "batteryForecastFull": "voll {time}",
       "batteryGridChargeActive": "Netzladen: aktiv",
       "batteryGridChargeLimit": "Netzladen: wenn",
       "batteryHold": "Batterie (gesperrt)",

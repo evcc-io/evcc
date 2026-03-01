@@ -193,7 +193,6 @@ energy:
   source: const
   value: 3000 # W`
     );
-    await expect(restResult).toContainText("Status: unknown");
     await restResult.getByRole("link", { name: "validate" }).click();
     await expect(restResult).toContainText("Status: failed");
     await expect(restResult).toContainText("has invalid keys: apower");
@@ -208,7 +207,6 @@ energy:
   source: unknown
   value: 3000 # W`
     );
-    await expect(restResult).toContainText("Status: unknown");
     await restResult.getByRole("link", { name: "validate" }).click();
     await expect(restResult).toContainText("Status: failed");
     await expect(restResult).toContainText("invalid plugin type: unknown");
@@ -223,7 +221,6 @@ energy:
   source: const
   value: 300 # kWh`
     );
-    await expect(restResult).toContainText("Status: unknown");
     await restResult.getByRole("link", { name: "validate" }).click();
     await expect(restResult).toContainText("Status: failed");
     await expect(restResult).toContainText("power: missing plugin source");

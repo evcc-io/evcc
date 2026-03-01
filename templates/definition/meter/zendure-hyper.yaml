@@ -25,9 +25,14 @@ params:
     choice: ["EU", "Global"]
     default: EU
     required: true
+  - preset: battery-params
   - name: capacity
     default: 2
     advanced: true
+  - name: maxchargepower
+    default: 1200
+  - name: maxdischargepower
+    default: 800
   - name: timeout
 render: |
   type: zendure
@@ -35,5 +40,7 @@ render: |
   region: {{ .region }}
   account: {{ .account }}
   serial: {{ .serial }}
+  {{- if eq .usage "battery" }}
+  {{- include "battery-params" . }}
+  {{- end }}
   timeout: {{ .timeout }}
-  capacity: {{ .capacity }}

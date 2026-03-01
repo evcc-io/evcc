@@ -361,12 +361,17 @@ func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, m
 
 		switch typed := val.(type) {
 		case []any:
-			var list []string
-			for _, v := range typed {
-				list = append(list, p.yamlQuote(fmt.Sprintf("%v", v)))
-			}
-			if res[out] == nil || len(res[out].([]any)) == 0 {
-				res[out] = list
+			if i != -1 && p.Type == TypeZones {
+				// keep as structured data
+				res[out] = typed
+			} else {
+				var list []string
+				for _, v := range typed {
+					list = append(list, p.yamlQuote(fmt.Sprintf("%v", v)))
+				}
+				if res[out] == nil || len(res[out].([]any)) == 0 {
+					res[out] = list
+				}
 			}
 
 		case []string:

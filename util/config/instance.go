@@ -15,6 +15,7 @@ var instance struct {
 	circuits   *handler[api.Circuit]
 	messengers *handler[api.Messenger]
 	loadpoints *handler[loadpoint.API]
+	tariffs    *handler[api.Tariff]
 }
 
 func init() {
@@ -28,6 +29,7 @@ func Reset() {
 	instance.circuits = &handler[api.Circuit]{topic: "circuit"}
 	instance.messengers = &handler[api.Messenger]{topic: "messenger"}
 	instance.loadpoints = &handler[loadpoint.API]{topic: "loadpoint"}
+	instance.tariffs = &handler[api.Tariff]{topic: "tariff"}
 }
 
 type Handler[T any] interface {
@@ -60,6 +62,10 @@ func Circuits() Handler[api.Circuit] {
 
 func Loadpoints() Handler[loadpoint.API] {
 	return instance.loadpoints
+}
+
+func Tariffs() Handler[api.Tariff] {
+	return instance.tariffs
 }
 
 // Instances returns the instances of the given devices

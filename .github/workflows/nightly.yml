@@ -165,7 +165,7 @@ jobs:
           key: ${{ runner.os }}-${{ github.sha }}-dist
 
       - name: Create nightly build
-        uses: goreleaser/goreleaser-action@v6
+        uses: goreleaser/goreleaser-action@v7
         with:
           version: '~> v2'
           args: --snapshot -f .goreleaser-nightly.yml --clean

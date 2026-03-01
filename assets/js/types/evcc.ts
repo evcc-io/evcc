@@ -73,16 +73,17 @@ export interface State {
   pv?: Meter[];
   aux?: Meter[];
   ext?: Meter[];
+  tariffs?: ConfigStatus<unknown, unknown>;
   tariffGrid?: number;
   tariffFeedIn?: number;
   tariffCo2?: number;
   tariffSolar?: number;
   mqtt?: MqttConfig;
   influx?: InfluxConfig;
-  hems?: Hems;
+  hems?: ConfigStatus<HemsConfig, HemsStatus>;
   shm?: ShmConfig;
-  sponsor?: Sponsor;
-  eebus?: Eebus;
+  sponsor?: ConfigStatus<unknown, SponsorStatus>;
+  eebus?: ConfigStatus<EebusConfig, EebusStatus>;
   modbusproxy?: ModbusProxy[];
   messaging?: ConfigStatus<unknown, unknown>;
   messagingEvents?: MessagingEvents;
@@ -326,11 +327,16 @@ export enum CURRENCY {
   CAD = "CAD",
   CHF = "CHF",
   CNY = "CNY",
+  CZK = "CZK",
   EUR = "EUR",
   GBP = "GBP",
+  HUF = "HUF",
   ILS = "ILS",
+  JPY = "JPY",
   NZD = "NZD",
+  NOK = "NOK",
   PLN = "PLN",
+  RON = "RON",
   USD = "USD",
   DKK = "DKK",
   SEK = "SEK",
@@ -528,7 +534,6 @@ export interface BatteryMeter extends Meter {
   soc: number;
   controllable: boolean;
   capacity: number; // 0 when not specified
-  forecast?: BatteryForecast;
 }
 
 export interface Vehicle {
@@ -589,9 +594,10 @@ export interface SelectOption<T> {
   disabled?: boolean;
 }
 
-export type DeviceType = "charger" | "meter" | "vehicle" | "loadpoint" | "messenger";
+export type DeviceType = "charger" | "meter" | "vehicle" | "loadpoint" | "messenger" | "tariff";
 export type MeterType = "grid" | "pv" | "battery" | "charge" | "aux" | "ext";
 export type MeterTemplateUsage = "grid" | "pv" | "battery" | "charge" | "aux";
+export type TariffType = "grid" | "feedIn" | "co2" | "planner" | "solar";
 
 // see https://stackoverflow.com/a/54178819
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
@@ -697,4 +703,12 @@ export interface OptimizationDetails {
 // Error response
 export interface Error {
   message: string; // Error description
+}
+
+// Tariff zone configuration
+export interface Zone {
+  price: number | null;
+  days: string;
+  months: string;
+  hours: string;
 }
