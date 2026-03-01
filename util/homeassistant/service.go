@@ -96,7 +96,7 @@ func getServices(w http.ResponseWriter, req *http.Request) {
 
 	seen := make(map[string]struct{})
 
-	// collect matching services from /api/services
+	// collect callable services from /api/services (e.g. notify.mobile_app_android)
 	var svcRes []serviceDomainResponse
 	if err := conn.GetJSON(fmt.Sprintf("%s/api/services", conn.URI()), &svcRes); err != nil {
 		jsonError(w, http.StatusBadRequest, err)
@@ -111,7 +111,7 @@ func getServices(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	// collect matching entities from /api/states (e.g. Telegram notify entities)
+	// collect entity-based notifiers from /api/states (e.g. Telegram in HA 2024+)
 	if len(filterDomains) > 0 {
 		if states, err := conn.GetStates(); err == nil {
 			for _, e := range states {
