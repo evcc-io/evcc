@@ -1221,6 +1221,14 @@ func (lp *Loadpoint) resetPVTimer(typ ...string) {
 	lp.publishTimer(pvTimer, 0, timerInactive)
 }
 
+// pvTimerElapsed returns elapsed time since the pv enable/disable timer was started,
+// rounded to the nearest second. Rounding is required because poll cycles can land a
+// fraction of a second short of the configured delay, which would prevent the timer
+// from firing until the next full poll cycle.
+func (lp *Loadpoint) pvTimerElapsed() time.Duration {
+	return lp.clock.Since(lp.pvTimer).Round(time.Second)
+}
+
 // resetPhaseTimer resets the phase switch timer to disabled state
 func (lp *Loadpoint) resetPhaseTimer() {
 	if lp.phaseTimer.IsZero() {
@@ -1388,7 +1396,13 @@ func (lp *Loadpoint) publishTimer(name string, delay time.Duration, action strin
 		timer = lp.phaseTimer
 	}
 
-	remaining := max(delay-lp.clock.Since(timer), 0)
+	var since time.Duration
+	if name == pvTimer {
+		since = lp.pvTimerElapsed()
+	} else {
+		since = lp.clock.Since(timer).Round(time.Second)
+	}
+	remaining := max(delay-since, 0)
 
 	lp.publish(name+"Action", action)
 	lp.publish(name+"Remaining", remaining)
@@ -1396,7 +1410,7 @@ func (lp *Loadpoint) publishTimer(name string, delay time.Duration, action strin
 	if action == timerInactive {
 		lp.log.DEBUG.Printf("%s timer %s", name, action)
 	} else {
-		lp.log.DEBUG.Printf("%s %s in %v", name, action, remaining.Round(time.Second))
+		lp.log.DEBUG.Printf("%s %s in %v", name, action, remaining)
 	}
 }
 
@@ -1494,7 +1508,7 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 
 			lp.publishTimer(pvTimer, lp.GetDisableDelay(), pvDisable)
 
-			elapsed := lp.clock.Since(lp.pvTimer)
+			elapsed := lp.pvTimerElapsed()
 			if elapsed >= lp.GetDisableDelay() {
 				lp.log.DEBUG.Println("pv disable timer elapsed")
 
@@ -1506,7 +1520,7 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 
 			// suppress duplicate log message after timer started
 			if elapsed > time.Second {
-				lp.log.DEBUG.Printf("pv disable timer remaining: %v", (lp.GetDisableDelay() - elapsed).Round(time.Second))
+				lp.log.DEBUG.Printf("pv disable timer remaining: %v", lp.GetDisableDelay()-elapsed)
 			}
 		} else {
 			// reset timer
@@ -1530,7 +1544,7 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 
 			lp.publishTimer(pvTimer, lp.GetEnableDelay(), pvEnable)
 
-			elapsed := lp.clock.Since(lp.pvTimer)
+			elapsed := lp.pvTimerElapsed()
 			if elapsed >= lp.GetEnableDelay() {
 				lp.log.DEBUG.Println("pv enable timer elapsed")
 
@@ -1542,7 +1556,7 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 
 			// suppress duplicate log message after timer started
 			if elapsed > time.Second {
-				lp.log.DEBUG.Printf("pv enable timer remaining: %v", (lp.GetEnableDelay() - elapsed).Round(time.Second))
+				lp.log.DEBUG.Printf("pv enable timer remaining: %v", lp.GetEnableDelay()-elapsed)
 			}
 		} else {
 			// reset timer
