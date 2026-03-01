@@ -60,10 +60,12 @@ type Site struct {
 	log *util.Logger
 
 	// configuration
-	Title         string       `mapstructure:"title"`         // UI title
-	Voltage       float64      `mapstructure:"voltage"`       // Operating voltage. 230V for Germany.
-	ResidualPower float64      `mapstructure:"residualPower"` // PV meter only: household usage. Grid meter: household safety margin
-	Meters        MetersConfig `mapstructure:"meters"`        // Meter references
+	Title              string       `mapstructure:"title"`              // UI title
+	Voltage            float64      `mapstructure:"voltage"`            // Operating voltage. 230V for Germany.
+	ResidualPower      float64      `mapstructure:"residualPower"`      // PV meter only: household usage. Grid meter: household safety margin
+	Meters             MetersConfig `mapstructure:"meters"`             // Meter references
+	HeatingThreshold   float64      `mapstructure:"heatingThreshold"`   // °C 24h avg forecast above which heating corrections are disabled (default 12°C)
+	HeatingCoefficient float64      `mapstructure:"heatingCoefficient"` // fractional load increase per °C below threshold (default 0.05)
 
 	// meters
 	circuit       api.Circuit                // Circuit

@@ -503,8 +503,8 @@ func loadpointProfile(lp loadpoint.API, minLen int) []float64 {
 
 // homeProfile returns the home base load in Wh
 func (site *Site) homeProfile(minLen int) ([]float64, error) {
-	// kWh over last 30 days
-	profile, err := metrics.Profile(now.BeginningOfDay().AddDate(0, 0, -30))
+	// kWh average over last 7 days
+	profile, err := metrics.Profile(now.BeginningOfDay().AddDate(0, 0, -7))
 	if err != nil {
 		return nil, err
 	}
@@ -523,10 +523,129 @@ func (site *Site) homeProfile(minLen int) ([]float64, error) {
 		res = res[:minLen]
 	}
 
+	// apply weather-based temperature correction to household load
+	res = site.applyTemperatureCorrection(res)
+
 	// convert to Wh
 	return lo.Map(res, func(v float64, i int) float64 {
 		return v * 1e3
 	}), nil
+}
+
+// applyTemperatureCorrection adjusts the household load profile based on outdoor temperature.
+//
+// The correction is gated on the 24h average actual temperature of the past 24 hours:
+// if that average is at or above heatingThreshold, heating is considered off and no
+// correction is applied to any slot.
+//
+// When heating is active (past 24h avg < threshold), for each future slot i:
+//  1. Looks up the forecast temperature T_future at that slot's wall-clock time
+//  2. Computes the average historical temperature T_past_avg at the same hour-of-day
+//     from the past 7 days of Open-Meteo data already present in the rates slice
+//  3. Applies: load[i] = load[i] * (1 + coeff * (T_past_avg - T_future))
+//     A positive delta (tomorrow colder than historical average) increases the load estimate.
+//     A negative delta (tomorrow warmer) decreases it.
+func (site *Site) applyTemperatureCorrection(profile []float64) []float64 {
+	weatherTariff := site.GetTariff(api.TariffUsageWeather)
+	if weatherTariff == nil {
+		return profile
+	}
+
+	rates, err := weatherTariff.Rates()
+	if err != nil || len(rates) == 0 {
+		return profile
+	}
+
+	threshold := site.HeatingThreshold
+	if threshold == 0 {
+		threshold = 12.0 // default: heating off above 12°C daily average (average insulated house)
+	}
+	coeff := site.HeatingCoefficient
+	if coeff == 0 {
+		coeff = 0.05 // default: 5% load change per °C delta
+	}
+
+	currentTime := time.Now()
+
+	// Compute the 24h average actual temperature from the past 24 hours.
+	// Uses past rates (Start < now) within the last 24h window.
+	yesterday := currentTime.Add(-24 * time.Hour)
+	var pastSum24h float64
+	var pastCount24h int
+	for _, r := range rates {
+		if !r.Start.Before(yesterday) && r.Start.Before(currentTime) {
+			pastSum24h += r.Value
+			pastCount24h++
+		}
+	}
+	if pastCount24h == 0 {
+		return profile
+	}
+	pastAvg24h := pastSum24h / float64(pastCount24h)
+
+	// If the past 24h average actual temperature is at or above the heating threshold,
+	// heating is considered off — no correction needed.
+	if pastAvg24h >= threshold {
+		return profile
+	}
+
+	// Pre-compute average historical temperature per hour-of-day (0..23) from past rates.
+	// Past rates are those whose Start is before the current time.
+	pastTempSum := make([]float64, 24)
+	pastTempCount := make([]int, 24)
+	for _, r := range rates {
+		if r.Start.Before(currentTime) {
+			h := r.Start.UTC().Hour()
+			pastTempSum[h] += r.Value
+			pastTempCount[h]++
+		}
+	}
+	pastTempAvg := make([]float64, 24)
+	for h := range 24 {
+		if pastTempCount[h] > 0 {
+			pastTempAvg[h] = pastTempSum[h] / float64(pastTempCount[h])
+		}
+	}
+
+	result := make([]float64, len(profile))
+	copy(result, profile)
+
+	slotStart := currentTime.Truncate(tariff.SlotDuration)
+	for i := range profile {
+		ts := slotStart.Add(time.Duration(i) * tariff.SlotDuration)
+
+		// find the forecast temperature for this slot (nearest hourly rate at or before ts)
+		tFuture, found := nearestRate(rates, ts)
+		if !found {
+			continue
+		}
+
+		h := ts.UTC().Hour()
+		tPastAvg := pastTempAvg[h]
+
+		// delta > 0: tomorrow colder than historical average → load increases
+		// delta < 0: tomorrow warmer → load decreases
+		delta := tPastAvg - tFuture
+		result[i] = profile[i] * (1 + coeff*delta)
+	}
+
+	return result
+}
+
+// nearestRate returns the Value of the rate whose Start is closest to (and not after) ts.
+// Returns false if no such rate exists.
+func nearestRate(rates api.Rates, ts time.Time) (float64, bool) {
+	var best api.Rate
+	found := false
+	for _, r := range rates {
+		if !r.Start.After(ts) {
+			if !found || r.Start.After(best.Start) {
+				best = r
+				found = true
+			}
+		}
+	}
+	return best.Value, found
 }
 
 // profileSlotsFromNow strips away any slots before "now".
