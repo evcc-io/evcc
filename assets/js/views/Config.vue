@@ -830,12 +830,6 @@ export default defineComponent({
 		tariffsYamlDisabled() {
 			return this.tariffsYamlSource === "file";
 		},
-		messagingUiConfigured() {
-			return (
-				this.messengers.length > 0 ||
-				Object.values(store.state.messagingEvents ?? {}).some((e) => !e.disabled)
-			);
-		},
 	},
 	watch: {
 		offline() {
