@@ -37,6 +37,87 @@ params:
       en: Valid values are 0 (self use), 1 (time of use), 2 (timing mode), 4 (peak-shaving mode)
     default: 0 # self use
     advanced: true
+  - name: normaldesiredgridpower
+    description:
+      de: "Normal (Passiv): Soll-Netzleistung (Hex)"
+      en: "Normal (Passive): Desired Grid Power (hex)"
+    help:
+      de: 8-stellige Hexzahl ohne 0x Prefix (signed 32-bit).
+      en: 8-digit hex value without 0x prefix (signed 32-bit).
+    default: "00000000"
+    advanced: true
+  - name: normalmaxbatterypower
+    description:
+      de: "Normal (Passiv): Max Batterieleistung (Hex)"
+      en: "Normal (Passive): Max Battery Power (hex)"
+    help:
+      de: 8-stellige Hexzahl ohne 0x Prefix (signed 32-bit).
+      en: 8-digit hex value without 0x prefix (signed 32-bit).
+    default: "00007530"
+    advanced: true
+  - name: normalminbatterypower
+    description:
+      de: "Normal (Passiv): Min Batterieleistung (Hex)"
+      en: "Normal (Passive): Min Battery Power (hex)"
+    help:
+      de: 8-stellige Hexzahl ohne 0x Prefix (signed 32-bit, z.B. FFFFC180 für -16000).
+      en: 8-digit hex value without 0x prefix (signed 32-bit, e.g. FFFFC180 for -16000).
+    default: "FFFF8AD0"
+    advanced: true
+  - name: holddesiredgridpower
+    description:
+      de: "Hold (Passiv): Soll-Netzleistung (Hex)"
+      en: "Hold (Passive): Desired Grid Power (hex)"
+    help:
+      de: 8-stellige Hexzahl ohne 0x Prefix (signed 32-bit).
+      en: 8-digit hex value without 0x prefix (signed 32-bit).
+    default: "00000000"
+    advanced: true
+  - name: holdmaxbatterypower
+    description:
+      de: "Hold (Passiv): Max Batterieleistung (Hex)"
+      en: "Hold (Passive): Max Battery Power (hex)"
+    help:
+      de: 8-stellige Hexzahl ohne 0x Prefix (signed 32-bit).
+      en: 8-digit hex value without 0x prefix (signed 32-bit).
+    default: "00007530"
+    advanced: true
+  - name: holdminbatterypower
+    description:
+      de: "Hold (Passiv): Min Batterieleistung (Hex)"
+      en: "Hold (Passive): Min Battery Power (hex)"
+    help:
+      de: 8-stellige Hexzahl ohne 0x Prefix (signed 32-bit).
+      en: 8-digit hex value without 0x prefix (signed 32-bit).
+    default: "00000000"
+    advanced: true
+  - name: chargedesiredgridpower
+    description:
+      de: "Charge (Passiv): Soll-Netzleistung (Hex)"
+      en: "Charge (Passive): Desired Grid Power (hex)"
+    help:
+      de: 8-stellige Hexzahl ohne 0x Prefix (signed 32-bit).
+      en: 8-digit hex value without 0x prefix (signed 32-bit).
+    default: "00000000"
+    advanced: true
+  - name: chargemaxbatterypower
+    description:
+      de: "Charge (Passiv): Max Batterieleistung (Hex)"
+      en: "Charge (Passive): Max Battery Power (hex)"
+    help:
+      de: 8-stellige Hexzahl ohne 0x Prefix (signed 32-bit).
+      en: 8-digit hex value without 0x prefix (signed 32-bit).
+    default: "00007530"
+    advanced: true
+  - name: chargeminbatterypower
+    description:
+      de: "Charge (Passiv): Min Batterieleistung (Hex)"
+      en: "Charge (Passive): Min Battery Power (hex)"
+    help:
+      de: 8-stellige Hexzahl ohne 0x Prefix (signed 32-bit).
+      en: 8-digit hex value without 0x prefix (signed 32-bit).
+    default: "FFFF8AD0"
+    advanced: true
   - name: externalpower
     type: bool
     description:
@@ -215,6 +296,38 @@ render: |
     source: switch
     switch:
     - case: 1 # normal
+      {{- if eq .defaultmode "3" }}
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 3 # passive
+          set:
+            source: ignore
+            error: "modbus: response data size '18' does not match count '4'"
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 0x1110
+                type: writemultiple
+                decode: int16
+        - source: convert
+          convert: int2bytes
+          set:
+            source: const
+            value: '0x{{ trimAll "'" .normaldesiredgridpower }}_{{ trimAll "'" .normalminbatterypower }}_{{ trimAll "'" .normalmaxbatterypower }}'
+            set:
+              source: ignore
+              error: "modbus: response data size '18' does not match count '4'"
+              set:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 0x1187
+                  type: writemultiple
+                  decode: bytes
+      {{- else }}
       set:
         source: const
         value: {{ .defaultmode }} # set back to default energy storage mode
@@ -228,6 +341,7 @@ render: |
               address: 0x1110
               type: writemultiple
               decode: int16
+      {{- end }}
     - case: 2 # hold
       set:
         source: sequence
@@ -248,7 +362,7 @@ render: |
           convert: int2bytes
           set:
             source: const
-            value: '0x00000000_00000000_7FFFFFFF'
+            value: '0x{{ trimAll "'" .holddesiredgridpower }}_{{ trimAll "'" .holdminbatterypower }}_{{ trimAll "'" .holdmaxbatterypower }}'
             set:
               source: ignore
               error: "modbus: response data size '18' does not match count '4'"
@@ -279,7 +393,7 @@ render: |
           convert: int2bytes
           set:
             source: const
-            value: '0x00000000_7FFFFFFF_7FFFFFFF'
+            value: '0x{{ trimAll "'" .chargedesiredgridpower }}_{{ trimAll "'" .chargeminbatterypower }}_{{ trimAll "'" .chargemaxbatterypower }}'
             set:
               source: ignore
               error: "modbus: response data size '18' does not match count '4'"
