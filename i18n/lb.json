@@ -108,7 +108,7 @@
     "deviceValue": {
       "amount": "Unzahl",
       "broker": "Broker",
-      "bucket": "Eemer",
+      "bucket": "Bucket",
       "capacity": "Capacitéit",
       "chargeStatus": "Status",
       "chargeStatusA": "net verbonnen",
@@ -128,12 +128,14 @@
       "dimmed": "Gedimmt",
       "enabled": "Ageschalt",
       "energy": "Energie",
+      "events": "Evenementer",
       "feedinPrice": "Präis fir anzespeisen",
       "gridPrice": "Netz Präis",
       "heaterTempLimit": "Limitt vun der Heizung",
       "hemsActiveLimit": "Aktiivt Limit",
       "hemsType": "Communicatioun",
       "identifier": "RFID-Identifikatioun",
+      "messengers": "Servicer",
       "no": "nee",
       "odometer": "Kilometerzäler",
       "org": "Organisatioun",
@@ -214,6 +216,7 @@
       "cancel": "Ofbriechen",
       "clear": "Läschen",
       "close": "Zoumaachen",
+      "confirmSave": "Et ginn net gespäichert Ännerungen. Elo späicheren?",
       "copied": "Kopéiert!",
       "copy": "Kopéieren",
       "customHelp": "Erstell ee benotzerdefinéiert Gerät mam evcc-Plugin-System.",
@@ -229,6 +232,7 @@
       "fromYamlHint": "Bemierkung: Konfiguréiert iwwer evcc.yaml. Läscht d'Astellungen aus der Datei fir d'Ännerung hei z'erméiglechen.",
       "hideAdvancedSettings": "Fortgeschratten Astellunge verstoppen",
       "invalidFileSelected": "Ongülteg Datei ausgewielt",
+      "legacy": "vereelzt",
       "noFileSelected": "Keng Datei ausgewielt.",
       "off": "aus",
       "on": "un",
@@ -274,7 +278,7 @@
     "influx": {
       "description": "Schreift Lueddaten an aner Moossen an InfluxDB. Benotzt Grafana oder aner Tools fir d'Donnéeën ze visualiséieren.",
       "descriptionToken": "Kuckt d'InfluxDB Dokumentatioun fir ze léieren wéi een eng erstellt. https://docs.influxdata.com/influxdb/v2/admin/",
-      "labelBucket": "Eemer",
+      "labelBucket": "Bucket",
       "labelCheckInsecure": "Onsécher Verbindungen erlaben",
       "labelDatabase": "Datebank",
       "labelInsecure": "Zertifikatiwwerpréiwung",
@@ -320,6 +324,8 @@
       },
       "defaultModeHelpKeep": "De leschte Modus deen ausgewielt gouf gëtt bäibehal.",
       "defaultModeLabel": "Standard-Modus",
+      "defaultsHint": "De Standardmodus, d'PV-Iwwerschossverhalen an d'elektresch Detailer verwenne raisonnabel Standardwäerter.",
+      "defaultsHintLink": "Astellungen upassen",
       "delete": "Läschen",
       "electricalSubtitle": "Wann onsécher sidd, da léiwer den Elektriker froen.",
       "electricalTitle": "Elektresch",
@@ -387,7 +393,7 @@
       "titleLabel": "Titel",
       "vehicleAutoDetection": "automatesch Erkennung",
       "vehicleHelpAutoDetection": "Automatesch dat plausibelst Gefier auswielen. Manuell Iwwersteierung méiglech.",
-      "vehicleHelpDefault": "Ëmmer unhuelen, daRF dëst Gefier hei luet. Auto-Erkennung deaktivéiert. Manuell Iwwersteierung méiglech.",
+      "vehicleHelpDefault": "Ëmmer unhuelen, datt dëst Gefier hei luet. Auto-Erkennung deaktivéiert. Manuell Iwwersteierung méiglech.",
       "vehicleInvalid": "Dat Gefier existéiert net",
       "vehicleLabel": "Standard-Gefier",
       "vehiclesTitle": "Gefierer"
@@ -410,8 +416,65 @@
       "welcomeBannerTitle": "Loosst eis de System konfiguréieren!"
     },
     "messaging": {
+      "addMessenger": "Service derbäisetzen",
       "description": "Notifikatiounen iwwer Är Opluedsessioune kréien.",
+      "event": {
+        "asleep": {
+          "messageDefault": "Fräiloosse vum Oplueden, Gefier {vehicleName} luet net.",
+          "title": "Wann een op d'Gefier waart",
+          "titleDefault": "Gefier schléift"
+        },
+        "connect": {
+          "messageDefault": "Auto ugeschloss mat {pvPower} kW PV",
+          "title": "Wann een Auto sech verbënnt",
+          "titleDefault": "Auto ass verbonnen"
+        },
+        "disconnect": {
+          "messageDefault": "Auto no {connectedDuration} getrennt",
+          "title": "Wann een Auto getrennt gëtt",
+          "titleDefault": "Auto getrennt"
+        },
+        "guest": {
+          "messageDefault": "Onbekanntent Gefier, Gaascht verbonnen?",
+          "title": "Wann en onbekannten Auto sech verbënnt",
+          "titleDefault": "Onbekannt Gefier"
+        },
+        "planoverrun": {
+          "messageDefault": "{vehicleTitle}: De Plang gëtt iwwerschratt.",
+          "title": "Wann dat geplangten Oplueden iwwerschratt gëtt",
+          "titleDefault": "Plang iwwerschratt"
+        },
+        "soc": {
+          "messageDefault": "Batterie op {vehicleSoc}% opgelueden",
+          "title": "Luedstandsaktualiséierung",
+          "titleDefault": "Luedstand aktualiséiert"
+        },
+        "start": {
+          "messageDefault": "Oplueden am {mode} Modus ugefaangen.",
+          "title": "Wann d'Oplueden ufänkt",
+          "titleDefault": "Oplueden ugefaangen"
+        },
+        "stop": {
+          "messageDefault": "{chargedEnergy} kWh fäerdeg opgeluede an {chargeDuration}.",
+          "title": "Wann d'Oplueden ophält",
+          "titleDefault": "Oplueden ofgeschloss"
+        }
+      },
+      "eventMessage": "Noriicht",
+      "eventTitle": "Titel",
+      "events": "Evenementer",
+      "legacyWarning": "Nei Konfiguratioun vun den Notifikatiounen verfügbar! Späichert a läscht hei Är Konfiguratioun, fir den neie guidéierte Prozess ze verwennen.",
+      "messengers": "Servicer",
+      "seePlaceholders": "Plazhalter kucken",
       "title": "Notifikatiounen"
+    },
+    "messenger": {
+      "custom": "Benotzerdefinéierte Service",
+      "generic": "Allgemenge Service",
+      "primary": "Spezifesche Service",
+      "template": "Service",
+      "titleAdd": "Service derbäisetzen",
+      "titleEdit": "Service beaarbechten"
     },
     "meter": {
       "cancel": "Ofbriechen",
@@ -442,8 +505,8 @@
       "baudrate": "Baudrate",
       "comset": "ComSet",
       "connection": "Modbus Verbindung",
-      "connectionHintSerial": "Den Apparat ass direkt iwwer RS485 (oder en USB-zu-RS485-Adapter) ugeschloss.",
-      "connectionHintTcpip": "Den Apparat ass iwwer d'Netzwierk (LAN/WiFi) z'erreechen.",
+      "connectionHintSerial": "Den Apparat ass direkt per RS485 mat EVCC verbonnen.",
+      "connectionHintTcpip": "Den Apparat kann direkt per LAN/Wifi duerch evcc konfiguréiert ginn.",
       "connectionValueSerial": "RS485",
       "connectionValueTcpip": "Netzwierk",
       "device": "Numm vum Apparat",
@@ -508,7 +571,8 @@
       "labelInternalUrl": "Intern URL",
       "labelPort": "Port",
       "labelSchema": "Schema",
-      "title": "Netzwierk"
+      "title": "Netzwierk",
+      "warningUrlPath": "D'URL brauch normalerweis keen Zougankspad. Sidd Dir sécher, datt dat richteg ass?"
     },
     "ocpp": {
       "connectedChargers": "Verbonne Wallboxen",
@@ -651,7 +715,7 @@
     "validation": {
       "failed": "feelgeschloen",
       "label": "Status",
-      "running": "Validéiert…",
+      "running": "validéiert…",
       "success": "erfollegräich",
       "unknown": "onbekannt",
       "validate": "validéieren"
@@ -940,10 +1004,13 @@
       "battery": "Batterie",
       "batteryCharge": "Batterie oplueden",
       "batteryDischarge": "Batterie entlueden",
-      "batteryGridChargeActive": "Netzlueden aktiv",
-      "batteryGridChargeLimit": "Netzluede wann",
+      "batteryForecastEmpty": "eidel {time}",
+      "batteryForecastFull": "voll {time}",
+      "batteryGridChargeActive": "Oluede vum Netz: aktiv",
+      "batteryGridChargeLimit": "Opluede vum Netz: wann",
       "batteryHold": "Batterie (gespäert)",
       "batteryTooltip": "{energy} vun {total} ({soc})",
+      "forecast": "Viraussoen: ",
       "forecastTooltip": "Prognose: Rescht Solarproduktioun fir haut",
       "gridImport": "Verbrauch vum Stroumnetz",
       "homePower": "Verbrauch",
@@ -970,6 +1037,7 @@
       "charged": "Opgelueden",
       "co2": "⌀ CO₂",
       "duration": "Dauer",
+      "emission": "Emissioun",
       "fallbackName": "Luedstatioun",
       "finished": "Fäerdeg um",
       "power": "Leeschtung",
@@ -982,9 +1050,14 @@
     "loadpointSettings": {
       "batteryBoost": {
         "description": "Schnell vun der Hausbatterie lueden, bis se op {limit} entlueden ass.",
+        "descriptionDisabled": "Wielt eng Limitt, fir et ze erlabe séier vun der Hausbatterie opzelueden.",
+        "disabled": "Deaktivéiert",
         "label": "Batterie Boost",
         "mode": "Nëmmen am PV- a Min+PV-Modus verfügbar.",
-        "once": "Boost ass dir dës Luedsessioun aktivéiert."
+        "once": "Boost ass dir dës Luedsessioun aktivéiert.",
+        "stateActive": "Batterieboost aktiv",
+        "stateBelowLimit": "Batterie ze niddereg fir de Boost",
+        "stateReady": "Batterieboost bereet"
       },
       "batteryUsage": "Hausbatterie",
       "currents": "Luedstroum",
@@ -1090,6 +1163,9 @@
     "vehicleStatus": {
       "awaitingAuthorization": "Waarden op d'Autorisatioun.",
       "batteryBoost": "Batterie Boost ass aktiv.",
+      "batteryBoostBelowLimit": "Batterie ze niddereg fir de Boost.",
+      "batteryBoostDisabled": "Batterieboost deaktivéiert.",
+      "batteryBoostEnabled": "Boost bis d'Batterie bei {limit} ass.",
       "charging": "Luet…",
       "cheapEnergyCharging": "Gënschteg Energie verfügbar.",
       "cheapEnergyNextStart": "Gënschteg Energie an {duration}.",

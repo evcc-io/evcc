@@ -44,7 +44,7 @@
   },
   "config": {
     "aux": {
-      "description": "Equipamento capaz de ajustar o seu consumo baseado no excedente disponível (como caldeiras AQS inteligentes). O evcc assume que esse equipamento reduz o seu consumo automaticamente, se necessário.",
+      "description": "Equipamento capaz de ajustar o seu consumo baseado no excedente disponível (como caldeiras inteligentes). O evcc assume que esse equipamento reduz o seu consumo automaticamente, se necessário.",
       "titleAdd": "Adicionar Equipamento com capacidade de auto-ajuste de consumos",
       "titleEdit": "Editar Equipamento com capacidade de auto-ajuste de consumos"
     },
@@ -128,12 +128,14 @@
       "dimmed": "Escurecido",
       "enabled": "Ativado",
       "energy": "Energia",
+      "events": "Eventos",
       "feedinPrice": "Preço de injeção na rede",
       "gridPrice": "Preço da Rede",
       "heaterTempLimit": "Limite do aquecimento",
       "hemsActiveLimit": "Limite ativo",
       "hemsType": "Comunicação",
       "identifier": "Identificador RFID",
+      "messengers": "Serviços",
       "no": "não",
       "odometer": "Totalizador Km",
       "org": "Organização",
@@ -214,6 +216,7 @@
       "cancel": "Cancelar",
       "clear": "Apagar",
       "close": "Fechar",
+      "confirmSave": "Existem modificações não guardadas. Guardar agora?",
       "copied": "Copiado!",
       "copy": "Copiar",
       "customHelp": "Criar um dispositivo definido pelo utilizador utilizando o sistema de plugins do evcc.",
@@ -229,6 +232,7 @@
       "fromYamlHint": "Nota: Configurado através do evcc.yaml. Remova a entrada do ficheiro para permitir a edição aqui.",
       "hideAdvancedSettings": "Ocultar definições avançadas",
       "invalidFileSelected": "Ficheiro selecionado inválido",
+      "legacy": "histórico",
       "noFileSelected": "Nenhum ficheiro selecionado.",
       "off": "desligado",
       "on": "ligado",
@@ -295,7 +299,7 @@
       "addMeter": "Adicionar contador de energia dedicado",
       "cancel": "Cancelar",
       "chargerError": {
-        "charging": "É necessário configurar um Carregador EV.",
+        "charging": "É necessário configurar um carregador.",
         "heating": "A configuração do aquecimento é necessária."
       },
       "chargerLabel": {
@@ -320,6 +324,8 @@
       },
       "defaultModeHelpKeep": "Mantém o último modo selecionado.",
       "defaultModeLabel": "Modo predefinido",
+      "defaultsHint": "O modo padrão, o comportamento solar e os detalhes elétricos utilizam valores predefinidos razoáveis.",
+      "defaultsHintLink": "Personalizar configurações",
       "delete": "Apagar",
       "electricalSubtitle": "Em caso de dúvida, pergunte ao seu eletricista.",
       "electricalTitle": "Elétrico",
@@ -410,8 +416,65 @@
       "welcomeBannerTitle": "Configuremos agora o seu sistema!"
     },
     "messaging": {
-      "description": "Receber mensagens sobre as sessões de carregamento.",
+      "addMessenger": "Adicionar serviço",
+      "description": "Receber notificações sobre as sessões de carregamento.",
+      "event": {
+        "asleep": {
+          "messageDefault": "Liberação de carga, veículo {vehicleName} não está a carregar.",
+          "title": "Enquanto espera pelo veículo",
+          "titleDefault": "Veículo inativo"
+        },
+        "connect": {
+          "messageDefault": "Carro conectado com {pvPower}kW PV",
+          "title": "Quando um carro se conecta",
+          "titleDefault": "Carro conectado"
+        },
+        "disconnect": {
+          "messageDefault": "Carro desligado após {connectedDuration}",
+          "title": "Quando um carro se desliga",
+          "titleDefault": "Carro desligado"
+        },
+        "guest": {
+          "messageDefault": "Veículo desconhecido, convidado conectado?",
+          "title": "Quando um carro desconhecido se conecta",
+          "titleDefault": "Veículo desconhecido"
+        },
+        "planoverrun": {
+          "messageDefault": "{vehicleTitle}: O plano será excedido.",
+          "title": "Quando a carga planejada estiver prestes a exceder o limite",
+          "titleDefault": "Plano excedido"
+        },
+        "soc": {
+          "messageDefault": "Bateria carregada a {vehicleSoc}%",
+          "title": "Atualização do nível de carga",
+          "titleDefault": "Nível de carga atualizado"
+        },
+        "start": {
+          "messageDefault": "Iniciou o carregamento no modo {mode}.",
+          "title": "Quando o carregamento começar",
+          "titleDefault": "Carga iniciada"
+        },
+        "stop": {
+          "messageDefault": "Concluída a carga de {chargedEnergy} kWh em {chargeDuration}.",
+          "title": "Quando o carregamento parar",
+          "titleDefault": "Carregamento concluído"
+        }
+      },
+      "eventMessage": "Mensagem",
+      "eventTitle": "Título",
+      "events": "Eventos",
+      "legacyWarning": "Nova configuração de notificações disponível! Remova e guarde a sua configuração aqui para utilizar o novo processo guiado.",
+      "messengers": "Serviços",
+      "seePlaceholders": "ver espaços reservados",
       "title": "Notificações"
+    },
+    "messenger": {
+      "custom": "Serviço personalizado",
+      "generic": "Serviço genérico",
+      "primary": "Serviço específico",
+      "template": "Serviço",
+      "titleAdd": "Adicionar serviço",
+      "titleEdit": "Editar serviço"
     },
     "meter": {
       "cancel": "Cancelar",
@@ -508,7 +571,8 @@
       "labelInternalUrl": "URL interna",
       "labelPort": "Porta",
       "labelSchema": "Esquema",
-      "title": "Rede"
+      "title": "Rede",
+      "warningUrlPath": "A URL normalmente não precisa de um caminho. Tem a certeza de que está correto?"
     },
     "ocpp": {
       "connectedChargers": "Carregadores conectados",
@@ -651,7 +715,7 @@
     "validation": {
       "failed": "falhou",
       "label": "Status",
-      "running": "A validar…",
+      "running": "validação…",
       "success": "concluído com sucesso",
       "unknown": "desconhecido",
       "validate": "validar"
@@ -940,10 +1004,13 @@
       "battery": "Bateria",
       "batteryCharge": "Carga de Bateria",
       "batteryDischarge": "Descarga de Bateria",
-      "batteryGridChargeActive": "carga da Rede ativa",
-      "batteryGridChargeLimit": "carga da Rede quando",
+      "batteryForecastEmpty": "vazio {time}",
+      "batteryForecastFull": "cheio {time}",
+      "batteryGridChargeActive": "Carga da rede: ativa",
+      "batteryGridChargeLimit": "Carga da rede: quando",
       "batteryHold": "Bateria (suspensa)",
       "batteryTooltip": "{energy} de {total} ({soc})",
+      "forecast": "Previsões: ",
       "forecastTooltip": "previsão: produção solar restante de hoje",
       "gridImport": "Consumo da Rede",
       "homePower": "Consumo",
@@ -970,21 +1037,27 @@
       "charged": "Carregado",
       "co2": "CO₂",
       "duration": "Duração",
+      "emission": "Emissões",
       "fallbackName": "Posto de Carregamento",
       "finished": "Tempo de finalização",
       "power": "Potência",
       "price": "Custo",
       "remaining": "Tempo restante",
       "remoteDisabledHard": "{source}: desativado",
-      "remoteDisabledSoft": "{source}:carregamento PV adaptável desativado",
+      "remoteDisabledSoft": "{source}: carregamento PV adaptável desativado",
       "solar": "Solar"
     },
     "loadpointSettings": {
       "batteryBoost": {
         "description": "Carga rápida da bateria de casa até que descarregue para {limit}.",
+        "descriptionDisabled": "Selecione um limite para permitir o carregamento rápido da bateria doméstica.",
+        "disabled": "Desativado",
         "label": "Boost bateria",
         "mode": "Disponível apenas nos modos solar e min+solar.",
-        "once": "Boost ativo para esta sessão de carga."
+        "once": "Boost ativo para esta sessão de carga.",
+        "stateActive": "Boost de bateria ativo",
+        "stateBelowLimit": "Bateria com carga insuficiente para o boost",
+        "stateReady": "Boost da bateria pronto"
       },
       "batteryUsage": "Bateria de casa",
       "currents": "Corrente de carga",
@@ -1090,6 +1163,9 @@
     "vehicleStatus": {
       "awaitingAuthorization": "À espera de autorização.",
       "batteryBoost": "Boost da bateria ativo.",
+      "batteryBoostBelowLimit": "Bateria com carga insuficiente para boost.",
+      "batteryBoostDisabled": "Boost da bateria desativado.",
+      "batteryBoostEnabled": "Boost até a bateria atingir {limit}.",
       "charging": "A carregar…",
       "cheapEnergyCharging": "Energia barata disponível.",
       "cheapEnergyNextStart": "Energia barata em {duration}.",
