@@ -65,6 +65,10 @@ type API interface {
 	GetMaxCurrent() float64
 	// SetMaxCurrent sets the max charging current
 	SetMaxCurrent(float64) error
+	// GetMaxCurrent1p returns the max charging current for single-phase
+	GetMaxCurrent1p() float64
+	// SetMaxCurrent1p sets the max charging current for single-phase (0 = use maxCurrent)
+	SetMaxCurrent1p(float64) error
 
 	// GetMode returns the current charge mode
 	GetMode() api.ChargeMode

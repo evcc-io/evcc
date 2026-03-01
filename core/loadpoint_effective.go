@@ -190,6 +190,15 @@ func (lp *Loadpoint) effectiveMaxCurrent() float64 {
 	return maxCurrent
 }
 
+// effectiveMaxCurrent1p returns the effective max current for single-phase charging.
+// If maxCurrent1p is not configured (0), it falls back to effectiveMaxCurrent.
+func (lp *Loadpoint) effectiveMaxCurrent1p() float64 {
+	if lp.maxCurrent1p > 0 {
+		return lp.maxCurrent1p
+	}
+	return lp.effectiveMaxCurrent()
+}
+
 // EffectiveLimitSoc returns the effective session limit soc
 func (lp *Loadpoint) EffectiveLimitSoc() int {
 	lp.RLock()

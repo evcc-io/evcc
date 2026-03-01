@@ -10,8 +10,9 @@ const (
 	Circuit           = "circuit"     // circuit ref
 	DefaultVehicle    = "vehicle"     // default vehicle ref
 	Priority          = "priority"    // priority
-	MinCurrent        = "minCurrent"  // min current
-	MaxCurrent        = "maxCurrent"  // max current
+	MinCurrent        = "minCurrent"   // min current
+	MaxCurrent        = "maxCurrent"   // max current
+	MaxCurrent1p      = "maxCurrent1p" // max current for single-phase
 	MinSoc            = "minSoc"      // min soc
 	LimitSoc          = "limitSoc"    // limit soc
 	LimitEnergy       = "limitEnergy" // limit energy

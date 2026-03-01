@@ -749,6 +749,37 @@ func (lp *Loadpoint) SetMaxCurrent(current float64) error {
 	return nil
 }
 
+// GetMaxCurrent1p returns the max loadpoint current for single-phase charging
+func (lp *Loadpoint) GetMaxCurrent1p() float64 {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.maxCurrent1p
+}
+
+// setMaxCurrent1p sets the max loadpoint current for single-phase charging (no mutex)
+func (lp *Loadpoint) setMaxCurrent1p(current float64) {
+	lp.maxCurrent1p = current
+	lp.publish(keys.MaxCurrent1p, lp.maxCurrent1p)
+	lp.settings.SetFloat(keys.MaxCurrent1p, lp.maxCurrent1p)
+}
+
+// SetMaxCurrent1p sets the max loadpoint current for single-phase charging
+func (lp *Loadpoint) SetMaxCurrent1p(current float64) error {
+	lp.Lock()
+	defer lp.Unlock()
+
+	if current != 0 && current < lp.maxCurrent {
+		return errors.New("max single-phase current must be greater or equal than max current")
+	}
+
+	lp.log.DEBUG.Println("set max current 1p:", current)
+	if current != lp.maxCurrent1p {
+		lp.setMaxCurrent1p(current)
+	}
+
+	return nil
+}
+
 // IsFastChargingActive indicates if fast charging with maximum power is active
 func (lp *Loadpoint) IsFastChargingActive() bool {
 	lp.RLock()

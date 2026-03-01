@@ -112,6 +112,7 @@ type Loadpoint struct {
 	priority                 int      // Priority
 	minCurrent               float64  // PV mode: start current	Min+PV mode: min current
 	maxCurrent               float64  // Max allowed current. Physically ensured by the charger
+	maxCurrent1p             float64  // Max allowed current for single-phase (0 = use maxCurrent)
 	phasesConfigured         int      // Charger configured phase mode 0/1/3
 	limitSoc                 int      // Session limit for soc
 	limitEnergy              float64  // Session limit for energy
@@ -347,6 +348,9 @@ func (lp *Loadpoint) restoreSettings() {
 	}
 	if v, err := lp.settings.Float(keys.MaxCurrent); err == nil && v > 0 {
 		lp.setMaxCurrent(v)
+	}
+	if v, err := lp.settings.Float(keys.MaxCurrent1p); err == nil && v > 0 {
+		lp.setMaxCurrent1p(v)
 	}
 	if v, err := lp.settings.Int(keys.LimitSoc); err == nil && v > 0 {
 		lp.setLimitSoc(int(v))
@@ -856,10 +860,12 @@ func (lp *Loadpoint) syncCharger() error {
 	return nil
 }
 
-// coarseCurrent returns true if charger or vehicle require full amp steps
+// coarseCurrent returns true if charger or vehicle require full amp steps.
+// If the charger implements ChargerEx (mA precision), the vehicle's CoarseCurrent
+// flag is ignored: it only describes the vehicle API's limitation, not the charger's.
 func (lp *Loadpoint) coarseCurrent() bool {
 	_, ok := lp.charger.(api.ChargerEx)
-	return !ok || lp.vehicleHasFeature(api.CoarseCurrent)
+	return !ok
 }
 
 // roundedCurrent rounds current down to full amps if charger or vehicle require it
@@ -1444,14 +1450,16 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 	// read only once to simplify testing
 	minCurrent := lp.effectiveMinCurrent()
 	maxCurrent := lp.effectiveMaxCurrent()
+	maxCurrent1p := lp.effectiveMaxCurrent1p()
 
 	// push demand to drain battery
 	sitePower -= lp.boostPower(batteryBoostPower)
 
 	// switch phases up/down
+	// use maxCurrent1p as scale-up threshold: switch to 3p only when 1p limit is exceeded
 	var scaledTo int
 	if lp.hasPhaseSwitching() && lp.phaseSwitchCompleted() {
-		scaledTo = lp.pvScalePhases(sitePower, minCurrent, maxCurrent)
+		scaledTo = lp.pvScalePhases(sitePower, minCurrent, maxCurrent1p)
 	}
 
 	// calculate target charge current from delta power and actual current
@@ -1556,8 +1564,12 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 	// reset timer to disabled state
 	lp.resetPVTimer()
 
-	// cap at maximum current
-	targetCurrent = min(targetCurrent, maxCurrent)
+	// cap at maximum current (phase-aware: allow higher current on single-phase if configured)
+	if lp.ActivePhases() == 1 {
+		targetCurrent = min(targetCurrent, maxCurrent1p)
+	} else {
+		targetCurrent = min(targetCurrent, maxCurrent)
+	}
 
 	return targetCurrent
 }
