@@ -69,6 +69,8 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 		EnergyManagerUser     string
 		EnergyManagerPassword string
 		EnergyMeterIndex      uint
+
+		DisablePhaseAutoSwitch_ bool `mapstructure:"disablePhaseAutoSwitch"` // TODO deprecated
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
