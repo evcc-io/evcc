@@ -99,6 +99,7 @@ require (
 	github.com/tess1o/go-ecoflow v1.1.1-0.20251003083510-2ccc15a17e29
 	github.com/traefik/yaegi v0.16.1
 	github.com/volkszaehler/mbmd v0.0.0-20260131091050-86c2d25b6103
+	github.com/warthog618/go-gpiocdev v0.9.1
 	gitlab.com/bboehmke/sunny v0.16.0
 	go.bug.st/serial v1.6.4
 	go.uber.org/mock v0.6.0
@@ -115,8 +116,6 @@ require (
 	google.golang.org/protobuf v1.36.11
 	gorm.io/gorm v1.31.1
 )
-
-require github.com/warthog618/go-gpiocdev v0.9.1
 
 require (
 	github.com/Masterminds/goutils v1.1.1 // indirect
