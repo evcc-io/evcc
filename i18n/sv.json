@@ -29,7 +29,7 @@
     "capacity": "{energy} av {total}",
     "control": "Batteriinställningar",
     "discharge": "Förhindra urladdning i snabbt läge och vid schemalagd laddning.",
-    "disclaimerHint": "OBS:",
+    "disclaimerHint": "Obs:",
     "disclaimerText": "Inställningarna gäller enbart sol-läge. Laddning justeras därefter.",
     "gridChargeTab": "Laddning från nätet",
     "legendBottomName": "Prioritera laddning av hemmabatteri",
@@ -128,12 +128,14 @@
       "dimmed": "Nedtonad",
       "enabled": "Aktiverad",
       "energy": "Energi",
+      "events": "Händelser",
       "feedinPrice": "Inmatningspris",
       "gridPrice": "Nätpris",
       "heaterTempLimit": "Värmarbegränsning",
       "hemsActiveLimit": "Aktiv begränsning",
       "hemsType": "Kommunikation",
       "identifier": "RFID-identifierare",
+      "messengers": "Tjänster",
       "no": "nej",
       "odometer": "Mätarställning",
       "org": "Organisation",
@@ -192,7 +194,7 @@
       "title": "EEBus"
     },
     "experimental": {
-      "description": "Ger tillgång till funktioner som fortfarande testas. De kan kan vara instabila och komma att ändras eller tas bort i framtida versioner.",
+      "description": "Ger tillgång till funktioner som fortfarande testas. De kan vara instabila och komma att ändras eller tas bort i framtida versioner.",
       "title": "Experimentell"
     },
     "ext": {
@@ -214,6 +216,7 @@
       "cancel": "Avbryt",
       "clear": "Rensa",
       "close": "Stäng",
+      "confirmSave": "Det finns ej sparade ändringar. Spara nu?",
       "copied": "Kopierad!",
       "copy": "Kopiera",
       "customHelp": "Skapa en egen enhet med hjälp av evcc's plugin-system.",
@@ -320,6 +323,8 @@
       },
       "defaultModeHelpKeep": "Använder senast valda läge.",
       "defaultModeLabel": "Standardinställning",
+      "defaultsHint": "Standardläget, sol-överskottsbeteendet och de elektriska detaljerna använder sig av rimliga standardvärden.",
+      "defaultsHintLink": "Ändra inställningar",
       "delete": "Radera",
       "electricalSubtitle": "Om du är osäker, kontakta elektriker.",
       "electricalTitle": "Elektrisk",
@@ -410,8 +415,65 @@
       "welcomeBannerTitle": "Låt oss konfigurera ditt system!"
     },
     "messaging": {
+      "addMessenger": "Lägg till tjänst",
       "description": "Få notiser om dina laddningar.",
+      "event": {
+        "asleep": {
+          "messageDefault": "Sluta ladda, fordonet {vehicleName} laddar inte.",
+          "title": "Om fordonet inte laddar",
+          "titleDefault": "Fordonet sover"
+        },
+        "connect": {
+          "messageDefault": "Bil ansluten {pvPower}kW",
+          "title": "När en bil ansluts",
+          "titleDefault": "Bil ansluten"
+        },
+        "disconnect": {
+          "messageDefault": "Bil frånkopplad efter {connectedDuration}",
+          "title": "När en bil frånkopplas",
+          "titleDefault": "Bil frånkopplad"
+        },
+        "guest": {
+          "messageDefault": "Okänt fordon, gäst inkopplad?",
+          "title": "När ett okänt fordon inkopplas",
+          "titleDefault": "Okänt fordon"
+        },
+        "planoverrun": {
+          "messageDefault": "{vehicleTitle}: Laddplan kommer åsidosättas.",
+          "title": "När laddplan kommer att åsidosättas",
+          "titleDefault": "Laddplan åsidosätts"
+        },
+        "soc": {
+          "messageDefault": "Batteriladdningl {vehicleSoc}%",
+          "title": "Uppdatera laddnivå",
+          "titleDefault": "Laddnivå uppdaterad"
+        },
+        "start": {
+          "messageDefault": "Laddning startad i {mode}-läge.",
+          "title": "När laddning startar",
+          "titleDefault": "Laddning startad"
+        },
+        "stop": {
+          "messageDefault": "Laddning klar, {chargedEnergy}kWh på {chargeDuration}.",
+          "title": "När laddning stoppar",
+          "titleDefault": "Laddning klar"
+        }
+      },
+      "eventMessage": "Meddelande",
+      "eventTitle": "Titel",
+      "events": "Händelser",
+      "legacyWarning": "Ny notifieringskonfiguration tillgänglig! Ta bort och spara din konfiguration här för att använda den nya guidade processen.",
+      "messengers": "Tjänster",
+      "seePlaceholders": "se platshållare",
       "title": "Notiser"
+    },
+    "messenger": {
+      "custom": "Användardefinierad tjänst",
+      "generic": "Generisk tjänst",
+      "primary": "Specifik tjänst",
+      "template": "Tjänst",
+      "titleAdd": "Lägg till tjänst",
+      "titleEdit": "Ändra tjänst"
     },
     "meter": {
       "cancel": "Avbryt",
@@ -508,7 +570,8 @@
       "labelInternalUrl": "Intern URL",
       "labelPort": "Port",
       "labelSchema": "Schema",
-      "title": "Nätverk"
+      "title": "Nätverk",
+      "warningUrlPath": "URL:en behöver vanligtvis ingen sökväg. Är du säker?"
     },
     "ocpp": {
       "connectedChargers": "Anslutna laddare",
@@ -652,7 +715,7 @@
     "validation": {
       "failed": "misslyckades",
       "label": "Status",
-      "running": "Validerar…",
+      "running": "validerar…",
       "success": "lyckades",
       "unknown": "okänd",
       "validate": "validerar"
@@ -942,10 +1005,13 @@
       "battery": "Batteri",
       "batteryCharge": "Batteri laddas",
       "batteryDischarge": "Batteri laddas ur",
-      "batteryGridChargeActive": "nätladdning aktiv",
-      "batteryGridChargeLimit": "nätladdning när",
+      "batteryForecastEmpty": "tom {time}",
+      "batteryForecastFull": "full {time}",
+      "batteryGridChargeActive": "Nätladdning: aktiv",
+      "batteryGridChargeLimit": "Nätladdning: när",
       "batteryHold": "Batteri (låst)",
       "batteryTooltip": "{energy} av {total} ({soc})",
+      "forecast": "Prognos: ",
       "forecastTooltip": "Prognos: återstående solproduktion idag",
       "gridImport": "Import från elnät",
       "homePower": "Konsumtion",
@@ -972,6 +1038,7 @@
       "charged": "Laddat",
       "co2": "⌀ CO₂",
       "duration": "Laddtid",
+      "emission": "Utsläpp",
       "fallbackName": "Laddplats",
       "finished": "Sluttid",
       "power": "Effekt",
@@ -984,9 +1051,14 @@
     "loadpointSettings": {
       "batteryBoost": {
         "description": "Snabbladdning från hembatteri tills det är urladdat till {limit}.",
+        "descriptionDisabled": "Välj begränsning för att tillåta snabb laddning från hembatteri.",
+        "disabled": "Avaktiverad",
         "label": "Batteri Boost",
         "mode": "Endast tillgänglig vid 'Sol' och 'Min+Sol' läge.",
-        "once": "Boost är aktiverat för denna laddning."
+        "once": "Boost är aktiverat för denna laddning.",
+        "stateActive": "Batteriboost aktiv",
+        "stateBelowLimit": "Batterinivå för låg för boost",
+        "stateReady": "Beredd för batteriboost"
       },
       "batteryUsage": "Hembatteri",
       "currents": "Laddström",
@@ -1092,6 +1164,9 @@
     "vehicleStatus": {
       "awaitingAuthorization": "Väntar på godkännande.",
       "batteryBoost": "Batteriboost är aktiv.",
+      "batteryBoostBelowLimit": "Batterinivå för låg för boost.",
+      "batteryBoostDisabled": "Batteriboost avaktiverad.",
+      "batteryBoostEnabled": "Boost tills batteriet är på {limit}.",
       "charging": "Laddar…",
       "cheapEnergyCharging": "Billig energi är tillgänglig.",
       "cheapEnergyNextStart": "Billig energi om {duration}.",
