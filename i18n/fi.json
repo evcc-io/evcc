@@ -1002,10 +1002,13 @@
       "battery": "Akku",
       "batteryCharge": "Akunlataus",
       "batteryDischarge": "Akku purkautuu",
-      "batteryGridChargeActive": "lataaminen verkkosta aktiivinen",
-      "batteryGridChargeLimit": "milloin ladataan verkosta",
+      "batteryForecastEmpty": "varaus loppuu {timeago}",
+      "batteryForecastFull": "varaus täynnä {timeago}",
+      "batteryGridChargeActive": "Ladataan verkosta",
+      "batteryGridChargeLimit": "Milloin ladataan verkosta",
       "batteryHold": "Akku (lukittu)",
       "batteryTooltip": "{energy} / {total} ({soc})",
+      "forecast": "Ennuste: ",
       "forecastTooltip": "ennuste: jäljellä oleva aurinkotuotanto tänään",
       "gridImport": "Kulutus sähköverkosta",
       "homePower": "Kodin sähkönkulutus",
@@ -1069,7 +1072,7 @@
         "label": "Minimivirta"
       },
       "minSoc": {
-        "description": "Ajoneuvo ladataan nopeasti {0} asti huolimatta aurinkoenergian ylijäämästä, tämän jälkeen vain ylijäämäenergialla. Tämä on hyödyllinen takaamaan minimi toimintamatka myös pimeinä päivinä.",
+        "description": "Ajoneuvo ladataan välittömästi {0} asti huolimatta aurinkoenergian ylijäämästä, tämän jälkeen vain ylijäämäenergialla. Tämä on hyödyllinen takaamaan minimi toimintamatka myös pimeinä päivinä.",
         "label": "Minimi lataustaso"
       },
       "onlyForSocBasedCharging": "Nämä vaihtoehdot ovat käytettävissä vain ajoneuvoille, joiden lataustaso on tiedossa.",
@@ -1089,7 +1092,7 @@
     },
     "mode": {
       "minpv": "Minimi+PV",
-      "now": "Nopea",
+      "now": "Välitön",
       "off": "Seis",
       "pv": "PV",
       "smart": "Älykäs"
@@ -1370,7 +1373,7 @@
     "co2Label": "CO₂ päästö",
     "co2Limit": "CO₂ raja",
     "enable": "Kytke rajoitus",
-    "loadpointDescription": "Mahdollistaa nopean lataamisen väliaikaisesti aurinkosähkötilassa (PV).",
+    "loadpointDescription": "Mahdollistaa välittömän lataamisen väliaikaisesti aurinkosähkötilassa (PV) kun sähkö on halpaa.",
     "modalTitle": "Älykäs lataus verkosta",
     "none": "ei mitään",
     "priceLabel": "Energian hinta",
