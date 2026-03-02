@@ -1,0 +1,35 @@
+template: zendure-3ct
+products:
+  - brand: Zendure
+    description:
+      generic: 3CT
+params:
+  - name: usage
+    choice: ["grid"]
+  - name: host
+  - name: cache
+    advanced: true
+    default: 1s
+render: |
+  {{- define "uri" -}}
+  http://{{ .host }}/properties/report
+  {{- end }}
+  type: custom
+  power:
+    source: http
+    uri: {{ include "uri" . }}
+    jq: .total_power
+    cache: {{ .cache }}
+  powers:
+  - source: http
+    uri: {{ include "uri" . }}
+    jq: .a_aprt_power
+    cache: {{ .cache }}
+  - source: http
+    uri: {{ include "uri" . }}
+    jq: .b_aprt_power
+    cache: {{ .cache }}
+  - source: http
+    uri: {{ include "uri" . }}
+    jq: .c_aprt_power
+    cache: {{ .cache }}
