@@ -66,6 +66,8 @@ func NewTemperatureFromConfig(other map[string]any) (api.Tariff, error) {
 		data:      util.NewMonitor[api.Rates](2 * time.Hour),
 	}
 
+	t.log.INFO.Printf("configured for lat=%.4f lon=%.4f", cc.Latitude, cc.Longitude)
+
 	return runOrError(t)
 }
 
@@ -75,9 +77,6 @@ func (t *Temperature) run(done chan error) {
 	client := request.NewHelper(t.log)
 
 	for tick := time.Tick(time.Hour); ; <-tick {
-		// Request past 7 days + 3 day forecast in UTC so timestamps are unambiguous ISO 8601 strings.
-		// Past data is used to compute the average historical temperature per time-of-day slot,
-		// which is compared against the forecast to derive a load correction factor.
 		uri := fmt.Sprintf(
 			"https://api.open-meteo.com/v1/forecast?latitude=%f&longitude=%f&hourly=temperature_2m&past_days=7&forecast_days=3&timezone=UTC",
 			t.latitude, t.longitude,
@@ -88,7 +87,7 @@ func (t *Temperature) run(done chan error) {
 			return backoffPermanentError(client.GetJSON(uri, &res))
 		}, bo()); err != nil {
 			once.Do(func() { done <- err })
-			t.log.ERROR.Println("open-meteo:", err)
+			t.log.ERROR.Println(err)
 			continue
 		}
 
@@ -101,7 +100,7 @@ func (t *Temperature) run(done chan error) {
 			// Open-Meteo returns ISO 8601 UTC strings like "2024-01-15T14:00" when timezone=UTC
 			ts, err := time.ParseInLocation("2006-01-02T15:04", tsStr, time.UTC)
 			if err != nil {
-				t.log.WARN.Printf("open-meteo: cannot parse timestamp %q: %v", tsStr, err)
+				t.log.WARN.Printf("cannot parse timestamp %q: %v", tsStr, err)
 				continue
 			}
 
@@ -110,6 +109,14 @@ func (t *Temperature) run(done chan error) {
 				End:   ts.Add(time.Hour),
 				Value: res.Hourly.Temperature2m[i],
 			})
+		}
+
+		if len(data) > 0 {
+			t.log.DEBUG.Printf("updated %d hourly slots (%s … %s)",
+				len(data),
+				data[0].Start.Local().Format("2006-01-02 15:04"),
+				data[len(data)-1].Start.Local().Format("2006-01-02 15:04"),
+			)
 		}
 
 		mergeRates(t.data, data)
