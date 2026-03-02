@@ -5,7 +5,7 @@ products:
       generic: Solarflow 800 Pro
 params:
   - name: usage
-    choice: ["pv", "battery", "grid"]
+    choice: ["pv", "battery"]
   - name: host
   - name: maxacpower
     default: 800 # W
@@ -17,13 +17,6 @@ params:
     default: 1s
 render: |
   type: custom
-  {{- if eq .usage "grid" }}
-  power:
-    source: http
-    uri: http://{{ .host }}/properties/report
-    jq: .properties.energyPower
-    cache: {{ .cache }}
-  {{- end }}
   {{- if eq .usage "pv" }}
   power:
     source: http
