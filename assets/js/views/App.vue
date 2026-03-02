@@ -189,13 +189,15 @@ export default defineComponent({
 			};
 			this.ws.onopen = () => {
 				console.log("websocket connected");
-				window.app.setOnline();
 			};
 			this.ws.onclose = () => {
+				window.clearTimeout(dataTimeout);
 				window.app.setOffline();
 				this.reconnect();
 			};
 			this.ws.onmessage = (evt) => {
+				window.clearTimeout(dataTimeout);
+				window.app.setOnline();
 				try {
 					const msg = JSON.parse(evt.data);
 					if (msg.startupCompleted) {
@@ -210,6 +212,13 @@ export default defineComponent({
 					});
 				}
 			};
+
+			// Safari/iOS 26 may fail WS handshake or open without delivering data.
+			// If no message received within 10s, tear down and retry.
+			const dataTimeout = window.setTimeout(() => {
+				console.log("websocket data timeout, reconnecting");
+				this.ws?.close();
+			}, 10000);
 		},
 		reload() {
 			window.location.reload();
