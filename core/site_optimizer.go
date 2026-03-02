@@ -179,6 +179,15 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		Timestamps: asTimestamps(dt),
 	}
 
+	if site.circuit != nil {
+		if pMaxImp := site.circuit.GetMaxPower(); pMaxImp > 0 {
+			req.Grid = evopt.GridConfig{
+				// hard grid import limit if no price penalty is set by PrcPExcImp
+				PMaxImp: float32(pMaxImp),
+			}
+		}
+	}
+
 	add := func(battery evopt.BatteryConfig, detail batteryDetail) {
 		battery.PA = pa
 		req.Batteries = append(req.Batteries, battery)
