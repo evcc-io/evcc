@@ -76,10 +76,14 @@ func (t *Temperature) run(done chan error) {
 
 	client := request.NewHelper(t.log)
 
+	// Configure how many days of historical and forecast data to fetch
+	pastDays := 7     // days of historical data
+	forecastDays := 3 // days of forecast data
+
 	for ; true; <-time.Tick(time.Hour) {
 		uri := fmt.Sprintf(
-			"https://api.open-meteo.com/v1/forecast?latitude=%f&longitude=%f&hourly=temperature_2m&past_days=7&forecast_days=3&timezone=UTC",
-			t.latitude, t.longitude,
+			"https://api.open-meteo.com/v1/forecast?latitude=%f&longitude=%f&hourly=temperature_2m&past_days=%d&forecast_days=%d&timezone=UTC",
+			t.latitude, t.longitude, pastDays, forecastDays,
 		)
 
 		var res openMeteoResponse
