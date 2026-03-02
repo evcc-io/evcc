@@ -138,5 +138,3 @@ func (t *Temperature) Rates() (api.Rates, error) {
 func (t *Temperature) Type() api.TariffType {
 	return api.TariffTypeTemperature
 }
-
-// Made with Bob
