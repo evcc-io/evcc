@@ -1038,6 +1038,11 @@ func configureTariffs(conf *globalconfig.Tariffs, names ...string) (*tariff.Tari
 			return nil
 		})
 	}
+	if conf.Temperature.Type != "" {
+		eg.Go(func() error {
+			return configureTariff(api.TariffUsageTemperature, conf.Temperature, &tariffs.Temperature)
+		})
+	}
 
 	if err := eg.Wait(); err != nil {
 		return &tariffs, err

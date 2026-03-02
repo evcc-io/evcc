@@ -172,6 +172,7 @@ type Tariffs struct {
 	Co2      config.Typed
 	Planner  config.Typed
 	Solar    []config.Typed
+	Temperature config.Typed
 }
 
 func (c Tariffs) IsConfigured() bool {
