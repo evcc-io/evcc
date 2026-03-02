@@ -24,7 +24,7 @@ import (
 
 type WarpWS struct {
 	*warp.Connection
-	PM *warp.Connection // separate Energy Manager
+	pm *warp.Connection // separate Energy Manager
 
 	// config
 	log        *util.Logger
@@ -98,14 +98,14 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 	}
 
 	// Feature: Phase Switching
-	if wb.hasFeature(warp.FeaturePhaseSwitch) && wb.PM == nil {
-		wb.PM = wb.Connection // Energy Manager not needed, charger will do the phase switching
+	if wb.hasFeature(warp.FeaturePhaseSwitch) && wb.pm == nil {
+		wb.pm = wb.Connection // Energy Manager not needed, charger will do the phase switching
 	}
 
 	// only setup phase switching methods if power manager endpoint is set
 	var phases func(int) error
 	var getPhases func() (int, error)
-	if wb.PM != nil {
+	if wb.pm != nil {
 		if res, err := wb.ensurePmState(); err == nil && res.ExternalControl != warp.ExternalControlDeactivated {
 			wb.pmState = res
 			phases = wb.phases1p3p
@@ -119,7 +119,7 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 	if err != nil {
 		return nil, err
 	}
-	if typ == "warp3" || (typ == "warp2" && wb.PM != nil && wb.PM != wb.Connection) {
+	if typ == "warp3" || (typ == "warp2" && wb.pm != nil && wb.pm != wb.Connection) {
 		if err := wb.disablePhaseAutoSwitch(); err != nil {
 			return nil, err
 		}
@@ -140,7 +140,7 @@ func NewWarpWS(ctx context.Context, uri, user, pass, emURI, emUser, emPass strin
 
 	w := &WarpWS{
 		Connection: c,
-		PM:         pm,
+		pm:         pm,
 		log:        log,
 		meterIndex: meterIndex,
 		meterMap:   map[int]int{},
@@ -483,7 +483,7 @@ func (w *WarpWS) phases1p3p(phases int) error {
 		return fmt.Errorf("external control not available: %d", ec.ExternalControl)
 	}
 	w.mu.RLock()
-	em := w.PM
+	em := w.pm
 	w.mu.RUnlock()
 
 	uri := fmt.Sprintf("%s/power_manager/external_control", em.URI)
@@ -508,7 +508,7 @@ func (w *WarpWS) getPhases() (int, error) {
 func (w *WarpWS) ensurePmLowLevelState() (warp.PmLowLevelState, error) {
 	w.mu.RLock()
 	s := w.pmLowLevelState
-	em := w.PM
+	em := w.pm
 	w.mu.RUnlock()
 	if em == nil {
 		return s, nil
@@ -529,7 +529,7 @@ func (w *WarpWS) ensurePmLowLevelState() (warp.PmLowLevelState, error) {
 func (w *WarpWS) ensurePmState() (warp.PmState, error) {
 	w.mu.RLock()
 	s := w.pmState
-	em := w.PM
+	em := w.pm
 	w.mu.RUnlock()
 
 	if em == nil || s.ExternalControl != warp.ExternalControlAvailable {
