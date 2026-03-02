@@ -55,8 +55,8 @@ func NewTemperatureFromConfig(other map[string]any) (api.Tariff, error) {
 		return nil, err
 	}
 
-	if cc.Latitude == 0 && cc.Longitude == 0 {
-		return nil, fmt.Errorf("open-meteo: latitude and longitude must be configured")
+	if cc.Latitude < -90 || cc.Latitude > 90 || cc.Longitude < -180 || cc.Longitude > 180 {
+		return nil, fmt.Errorf("open-meteo: latitude must be in [-90, 90] and longitude in [-180, 180]")
 	}
 
 	t := &Temperature{
@@ -76,7 +76,7 @@ func (t *Temperature) run(done chan error) {
 
 	client := request.NewHelper(t.log)
 
-	for tick := time.Tick(time.Hour); ; <-tick {
+	for ; true; <-time.Tick(time.Hour) {
 		uri := fmt.Sprintf(
 			"https://api.open-meteo.com/v1/forecast?latitude=%f&longitude=%f&hourly=temperature_2m&past_days=7&forecast_days=3&timezone=UTC",
 			t.latitude, t.longitude,
