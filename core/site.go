@@ -666,14 +666,9 @@ func (site *Site) updateBatteryMeters() {
 		site.log.DEBUG.Printf("battery soc: %.0f%%", math.Round(site.battery.Soc))
 	}
 
-	// keep forecast property created by optimizer
-	for i := range site.battery.Devices {
-		mm[i].Forecast = site.battery.Devices[i].Forecast
-	}
-
 	site.battery.Devices = mm
 
-	site.publish(keys.Battery, util.NewSharder(keys.Battery, site.battery))
+	site.publish(keys.Battery, site.battery)
 }
 
 // updateAuxMeters updates aux meters

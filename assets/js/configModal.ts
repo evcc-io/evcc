@@ -40,15 +40,16 @@ export function unregisterModal(name: string): void {
 }
 
 // Called by GenericModal on hidden.bs.modal (user ESC/backdrop)
-export function onModalHidden(name: string): void {
+export function onModalHidden(name: string): boolean {
   if (_dismissingViaRoute.has(name)) {
     _dismissingViaRoute.delete(name);
-    return;
+    return false;
   }
   // User dismissed via backdrop/ESC — sync route
   if (configModal.stack.some((m) => m.name === name)) {
     closeModal();
   }
+  return true;
 }
 
 // Reactive fade direction for a named modal

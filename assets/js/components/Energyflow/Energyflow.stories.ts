@@ -87,13 +87,12 @@ const bat = (power: number, soc: number, forecast: any, devices: any[] = []) => 
   forecast,
 });
 
-const dev = (title: string, power: number, soc: number, forecast: any) => ({
+const dev = (title: string, power: number, soc: number) => ({
   title,
   power,
   soc,
   capacity: 10,
   controllable: true,
-  forecast,
 });
 
 export const BatteryForecastDischarging = Template.bind({});
@@ -120,26 +119,15 @@ BatteryForecastBoth.args = {
   battery: bat(-1700, 70, { full: hoursFromNow(2), empty: hoursFromNow(36) }),
 } as any;
 
-export const BatteryForecastMultiDischarging = Template.bind({});
-BatteryForecastMultiDischarging.args = {
-  ...batteryBase,
-  gridPower: 500,
-  homePower: 2500,
-  battery: bat(2000, 55, { full: null, empty: hoursFromNow(48) }, [
-    dev("Powerwall", 1200, 60, { full: null, empty: hoursFromNow(48) }),
-    dev("BYD", 800, 48, { full: null, empty: hoursFromNow(0.25) }),
-  ]),
-} as any;
-
-export const BatteryForecastMultiCharging = Template.bind({});
-BatteryForecastMultiCharging.args = {
+export const BatteryForecastMulti = Template.bind({});
+BatteryForecastMulti.args = {
   ...batteryBase,
   pvPower: 8000,
   gridPower: -1000,
   homePower: 1000,
   battery: bat(-6000, 40, { full: hoursFromNow(26), empty: null }, [
-    dev("Powerwall", -3500, 35, { full: hoursFromNow(26), empty: null }),
-    dev("BYD", -2500, 47, { full: hoursFromNow(0.7), empty: null }),
+    dev("Powerwall", -3500, 35),
+    dev("BYD", -2500, 47),
   ]),
 } as any;
 

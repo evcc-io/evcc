@@ -156,12 +156,9 @@ func NewSEMP(ctx context.Context, uri, deviceID string, cache time.Duration) (ap
 
 // heartbeat ensures that device control updates are sent at least once per minute
 func (wb *SEMP) heartbeat(ctx context.Context) {
-	ticker := time.NewTicker(time.Second)
-	defer ticker.Stop()
-
-	for {
+	for tick := time.NewTicker(time.Second); ; {
 		select {
-		case <-ticker.C:
+		case <-tick.C:
 			// Check if we need to send an update
 			if time.Since(wb.conn.Updated()) >= time.Minute {
 				if err := wb.conn.SendDeviceControl(wb.deviceID, wb.calcPower(wb.enabled, wb.current, wb.phases)); err != nil {
