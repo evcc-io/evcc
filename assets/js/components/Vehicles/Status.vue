@@ -220,6 +220,9 @@ export default defineComponent({
 				if (this.vehicleLimitReached) {
 					return t("finished");
 				}
+				if (this.chargerStatusReason === REASON_AUTH) {
+					return t("waitForAuthorization");
+				}
 				return t("waitForVehicle");
 			}
 
