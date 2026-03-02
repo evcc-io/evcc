@@ -187,7 +187,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 			}
 		}
 	}
-	
+
 	add := func(battery evopt.BatteryConfig, detail batteryDetail) {
 		battery.PA = pa
 		req.Batteries = append(req.Batteries, battery)
