@@ -111,11 +111,13 @@ export default defineComponent({
 	mounted() {
 		this.connect();
 		document.addEventListener("visibilitychange", this.pageVisibilityChanged, false);
+		window.addEventListener("pageshow", this.pageShowHandler);
 	},
 	unmounted() {
 		this.disconnect();
 		this.clearReconnectTimeout();
 		document.removeEventListener("visibilitychange", this.pageVisibilityChanged, false);
+		window.removeEventListener("pageshow", this.pageShowHandler);
 	},
 	methods: {
 		clearReconnectTimeout() {
@@ -123,11 +125,18 @@ export default defineComponent({
 				window.clearTimeout(this.reconnectTimeout);
 			}
 		},
-		pageVisibilityChanged() {
-			if (document.hidden) {
+		pageShowHandler(event: PageTransitionEvent) {
+			if (event.persisted) {
 				this.clearReconnectTimeout();
 				this.disconnect();
-			} else {
+				this.connect();
+			}
+		},
+		pageVisibilityChanged() {
+			// disconnect in any case to ensure fresh connection
+			this.clearReconnectTimeout();
+			this.disconnect();
+			if (!document.hidden) {
 				this.connect();
 			}
 		},
