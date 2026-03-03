@@ -103,6 +103,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     delay: {{ .delay }}
+    scale: 0.01
     register:
       address: 43000    # SOC
       type: holding

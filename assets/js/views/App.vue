@@ -57,6 +57,7 @@ export default defineComponent({
 	data: () => {
 		return {
 			reconnectTimeout: null as number | null,
+			dataTimeout: null as number | null,
 			ws: null as WebSocket | null,
 			authNotConfigured: false,
 		};
@@ -148,6 +149,10 @@ export default defineComponent({
 			}, 2500);
 		},
 		disconnect() {
+			if (this.dataTimeout) {
+				window.clearTimeout(this.dataTimeout);
+				this.dataTimeout = null;
+			}
 			if (this.ws) {
 				this.ws.onerror = null;
 				this.ws.onopen = null;
@@ -189,13 +194,21 @@ export default defineComponent({
 			};
 			this.ws.onopen = () => {
 				console.log("websocket connected");
-				window.app.setOnline();
 			};
 			this.ws.onclose = () => {
+				if (this.dataTimeout) {
+					window.clearTimeout(this.dataTimeout);
+					this.dataTimeout = null;
+				}
 				window.app.setOffline();
 				this.reconnect();
 			};
 			this.ws.onmessage = (evt) => {
+				if (this.dataTimeout) {
+					window.clearTimeout(this.dataTimeout);
+					this.dataTimeout = null;
+				}
+				window.app.setOnline();
 				try {
 					const msg = JSON.parse(evt.data);
 					if (msg.startupCompleted) {
@@ -210,6 +223,15 @@ export default defineComponent({
 					});
 				}
 			};
+
+			// Safari/iOS 26 may fail WS handshake or open without delivering data.
+			// Safari/iOS 26 may fail WS handshake or open without delivering data.
+			// If no message received within 10s, tear down and retry.
+			this.dataTimeout = window.setTimeout(() => {
+				console.log("websocket data timeout, reconnecting");
+				this.dataTimeout = null;
+				this.ws?.close();
+			}, 10000);
 		},
 		reload() {
 			window.location.reload();
