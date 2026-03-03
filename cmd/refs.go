@@ -15,12 +15,17 @@ import (
 )
 
 var references struct {
-	meter, charger, vehicle, circuit []string
+	meter, charger, vehicle, circuit, tariff []string
 }
 
 func collectRefs(conf globalconfig.All) error {
 	// site
 	if err := collectSiteRefs(conf); err != nil {
+		return err
+	}
+
+	// tariffs
+	if err := collectTariffRefs(); err != nil {
 		return err
 	}
 
@@ -70,6 +75,35 @@ func collectSiteRefs(conf globalconfig.All) error {
 			references.meter = append(references.meter, strings.Split(v, ",")...)
 		}
 	}
+
+	return nil
+}
+
+func collectTariffRefs() error {
+	// Load tariff device references from settings
+	if !settings.Exists(keys.TariffRefs) {
+		return nil
+	}
+
+	var refs globalconfig.TariffRefs
+	if err := settings.Json(keys.TariffRefs, &refs); err != nil {
+		return err
+	}
+
+	// Collect all non-empty refs
+	if refs.Grid != "" {
+		references.tariff = append(references.tariff, refs.Grid)
+	}
+	if refs.FeedIn != "" {
+		references.tariff = append(references.tariff, refs.FeedIn)
+	}
+	if refs.Co2 != "" {
+		references.tariff = append(references.tariff, refs.Co2)
+	}
+	if refs.Planner != "" {
+		references.tariff = append(references.tariff, refs.Planner)
+	}
+	references.tariff = append(references.tariff, refs.Solar...)
 
 	return nil
 }

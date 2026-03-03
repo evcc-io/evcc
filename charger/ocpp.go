@@ -195,7 +195,7 @@ func NewOCPP(ctx context.Context,
 	}
 
 	if cp.HasRemoteTriggerFeature {
-		go conn.WatchDog(ctx, 10*time.Second)
+		go conn.WatchDog(ctx, meterInterval)
 	}
 
 	return c, conn.Initialized()
