@@ -1,6 +1,7 @@
 package ocpp
 
 import (
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -182,16 +183,24 @@ func TestReconnectAfterReboot(t *testing.T) {
 	}
 }
 
-func TestStartMonitorOnlyOnce(t *testing.T) {
+func TestMonitorRebootOnlyOnce(t *testing.T) {
 	log := util.NewLogger("test")
 	cp := NewChargePoint(log, "test-cp")
 
-	callCount := 0
-	start := func() { callCount++ }
+	ctx := t.Context()
+	var callCount atomic.Int32
+	setup := func() error { callCount.Add(1); return nil }
 
-	cp.StartMonitor(start)
-	cp.StartMonitor(start)
-	cp.StartMonitor(start)
+	cp.MonitorReboot(ctx, setup)
+	cp.MonitorReboot(ctx, setup)
+	cp.MonitorReboot(ctx, setup)
 
-	assert.Equal(t, 1, callCount, "StartMonitor should only call start once")
+	// send a boot notification to trigger the monitor
+	cp.bootNotificationRequestC <- &core.BootNotificationRequest{
+		ChargePointModel: "TestModel",
+	}
+
+	// wait for the goroutine to process it
+	require.Eventually(t, func() bool { return callCount.Load() == 1 }, time.Second, 10*time.Millisecond,
+		"setup should be called exactly once")
 }

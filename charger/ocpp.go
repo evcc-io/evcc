@@ -166,25 +166,7 @@ func NewOCPP(ctx context.Context,
 			case <-cp.HasConnected():
 			}
 
-			// retry setup on failure; handles firmware that connects
-			// but doesn't respond until after reconnect
-			for {
-				err := cp.Setup(ctx, meterValues, meterInterval, forcePowerCtrl)
-				if err == nil {
-					return nil
-				}
-
-				log.WARN.Printf("setup failed: %v, waiting for reconnect", err)
-
-				select {
-				case <-ctx.Done():
-					return ctx.Err()
-				case <-time.After(connectTimeout):
-					return api.ErrTimeout
-					// TODO remove here since handled below?
-					// case <-cp.BootNotificationC():
-				}
-			}
+			return cp.Setup(ctx, meterValues, meterInterval, forcePowerCtrl)
 		},
 	)
 	if err != nil {

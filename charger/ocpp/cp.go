@@ -176,11 +176,6 @@ func (cp *CP) HasConnected() <-chan struct{} {
 	return cp.connectC
 }
 
-// // BootNotificationC returns the channel for monitoring BootNotification messages.
-// func (cp *CP) BootNotificationC() <-chan *core.BootNotificationRequest {
-// 	return cp.bootNotificationRequestC
-// }
-
 // MonitorReboot ensures the given function runs only once per CP instance.
 // Used to start the reboot monitor goroutine for multi-connector charge points.
 func (cp *CP) MonitorReboot(ctx context.Context, setup func() error) {
