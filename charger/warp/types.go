@@ -13,7 +13,7 @@ const (
 
 type Connection struct {
 	*request.Helper
-	URI      string
+	URI string
 }
 
 // https://www.warp-charger.com/api.html#evse_state

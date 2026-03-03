@@ -20,15 +20,15 @@ type Helper struct {
 }
 
 // NewClient creates http client with default transport
-func NewClient(log *util.Logger, explicitCreds...string) *http.Client {
+func NewClient(log *util.Logger, explicitCreds ...string) *http.Client {
 	// base as before
 	base := NewTripper(log, transport.Default())
 
 	user, pass := "", ""
 	if len(explicitCreds) == 2 {
-        // 2) fallback to explicitly provided credentials
-        user, pass = explicitCreds[0], explicitCreds[1]
-	} 
+		// 2) fallback to explicitly provided credentials
+		user, pass = explicitCreds[0], explicitCreds[1]
+	}
 
 	// digest infront of the old transport, leaving user and password blank as it might not be needed
 	dt := &digest.Transport{
@@ -44,12 +44,11 @@ func NewClient(log *util.Logger, explicitCreds...string) *http.Client {
 }
 
 // NewHelper creates http helper for simplified PUT GET logic
-func NewHelper(log *util.Logger, explicitCreds...string) *Helper {
+func NewHelper(log *util.Logger, explicitCreds ...string) *Helper {
 	return &Helper{
 		Client: NewClient(log, explicitCreds...),
 	}
 }
-
 
 // DoBody executes HTTP request and returns the response body
 func (r *Helper) DoBody(req *http.Request) ([]byte, error) {

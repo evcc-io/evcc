@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"path"
 	"slices"
+	"strings"
 	"sync"
 	"time"
 
@@ -130,7 +131,7 @@ func NewWarpWS(ctx context.Context, uri, user, pass, emURI, emUser, emPass strin
 	log := util.NewLogger("warp-ws")
 
 	w := &WarpWS{
-		Connection: warp.NewConnection(log, uri, user, pass),
+		Connection: NewConnection(log, uri, user, pass),
 		log:        log,
 		meterIndex: meterIndex,
 		meterMap:   map[int]int{},
@@ -141,7 +142,7 @@ func NewWarpWS(ctx context.Context, uri, user, pass, emURI, emUser, emPass strin
 	}
 
 	if emURI != "" {
-		w.pm = warp.NewConnection(log, emURI, emUser, emPass)
+		w.pm = NewConnection(log, emURI, emUser, emPass)
 	} else {
 		w.pm = w.Connection
 	}
@@ -154,6 +155,14 @@ func NewWarpWS(ctx context.Context, uri, user, pass, emURI, emUser, emPass strin
 	go w.run(ctx, wsURI)
 
 	return w, nil
+}
+
+func NewConnection(log *util.Logger, uri, user, pass string) *warp.Connection {
+	c := &warp.Connection{
+		Helper: request.NewHelper(log, user, pass),
+		URI:    util.DefaultScheme(strings.TrimRight(uri, "/"), "http"),
+	}
+	return c
 }
 
 func (w *WarpWS) run(ctx context.Context, wsURI string) {
