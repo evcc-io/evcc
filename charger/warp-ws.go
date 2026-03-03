@@ -135,6 +135,10 @@ func NewWarpWS(ctx context.Context, uri, user, pass, emURI, emUser, emPass strin
 		meterMap:   map[int]int{},
 	}
 
+	if err := w.GetJSON(fmt.Sprintf("%s/info/features", w.URI), &w.features); err != nil {
+		return nil, err
+	}
+
 	if emURI != "" {
 		w.pm = warp.NewConnection(log, emURI, emUser, emPass)
 	} else {
@@ -292,7 +296,7 @@ func (w *WarpWS) handleEvent(topic string, payload json.RawMessage) error {
 	case "evse/state":
 		err = json.Unmarshal(payload, &w.evse.State)
 	case "meter/all_values":
-		if !slices.Contains(w.features, warp.FeatureMeterAllValues) || slices.Contains(w.features, warp.FeatureMeters) {
+		if !w.hasFeature(warp.FeatureMeterAllValues) || w.hasFeature(warp.FeatureMeters) {
 			return nil
 		}
 		err = json.Unmarshal(payload, &w.meter.TmpValues)
@@ -301,7 +305,7 @@ func (w *WarpWS) handleEvent(topic string, payload json.RawMessage) error {
 			copy(w.meter.Currents[:], w.meter.TmpValues[3:6])
 		}
 	case "meter/values":
-		if !slices.Contains(w.features, warp.FeatureMeter) || slices.Contains(w.features, warp.FeatureMeters) {
+		if !w.hasFeature(warp.FeatureMeter) || w.hasFeature(warp.FeatureMeters) {
 			return nil
 		}
 		err = json.Unmarshal(payload, &w.meter)
@@ -350,23 +354,7 @@ func (w *WarpWS) handleEvent(topic string, payload json.RawMessage) error {
 }
 
 func (w *WarpWS) hasFeature(feature string) bool {
-	w.mu.RLock()
-	if w.features != nil {
-		w.mu.RUnlock()
-		return slices.Contains(w.features, feature)
-	}
-	uri := fmt.Sprintf("%s/info/features", w.URI)
-	w.mu.RUnlock()
-
-	var f []string
-	if err := w.GetJSON(uri, &f); err == nil {
-		w.mu.Lock()
-		w.features = f
-		w.mu.Unlock()
-		return slices.Contains(f, feature)
-	}
-
-	return false
+	return slices.Contains(w.features, feature)
 }
 
 func (w *WarpWS) Enable(enable bool) error {
