@@ -1282,9 +1282,15 @@ func (lp *Loadpoint) fastCharging() error {
 		maxPower1p := Voltage * lp.effectiveMaxCurrent()
 
 		// load management limit active
-		if circuitMaxPower := circuitMaxPower(lp.circuit); circuitMaxPower > 0 && circuitMaxPower < 1.1*maxPower1p {
-			phases = 1
-			lp.log.DEBUG.Printf("fast charging: scaled to 1p to match %.0fW max circuit power", circuitMaxPower)
+		if circuitMaxPower := circuitMaxPower(lp.circuit); circuitMaxPower > 0 {
+			// Available headroom = circuit limit - current circuit load + EV's own current draw.
+			// Adding back lp.chargePower avoids double-counting when the EV is already charging,
+			// which would otherwise cause oscillation between 1p and 3p on each tick.
+			available := circuitMaxPower - lp.circuit.GetChargePower() + lp.chargePower
+			if available < 1.1*maxPower1p {
+				phases = 1
+				lp.log.DEBUG.Printf("fast charging: scaled to 1p, available circuit power %.0fW < %.0fW 1p threshold", available, 1.1*maxPower1p)
+			}
 		}
 
 		if err := lp.scalePhasesIfAvailable(phases); err != nil {

@@ -479,3 +479,94 @@ func TestScalePhasesIfAvailable(t *testing.T) {
 		ctrl.Finish()
 	}
 }
+
+func TestFastChargingCircuit(t *testing.T) {
+	Voltage = 230
+
+	// maxPower1p = Voltage * maxA = 230 * 16 = 3680W
+	// threshold   = 1.1 * maxPower1p          = 4048W
+
+	tc := []struct {
+		desc            string
+		circuitMaxPower float64 // 0 = no circuit
+		circuitPower    float64 // current circuit meter reading (negative = solar export)
+		evPower         float64 // EV charge power already reflected in circuit reading
+		expectPhases    int
+	}{
+		{
+			desc:         "no circuit: always use 3p",
+			expectPhases: 3,
+		},
+		{
+			desc:            "circuit limit above threshold, no solar: use 3p",
+			circuitMaxPower: 5750,
+			circuitPower:    500,
+			expectPhases:    3,
+		},
+		{
+			desc:            "circuit limit below threshold, no solar: use 1p",
+			circuitMaxPower: 2500,
+			circuitPower:    500,
+			expectPhases:    1,
+		},
+		{
+			desc:            "circuit limit below threshold, solar surplus: use 3p",
+			circuitMaxPower: 2500,
+			circuitPower:    -5000, // solar surplus, net grid export
+			expectPhases:    3,
+		},
+		{
+			desc:            "circuit limit below threshold, solar surplus, EV already charging: no oscillation, use 3p",
+			circuitMaxPower: 2500,
+			circuitPower:    -3000, // house(1k)+EV(2k)-solar(6k) = -3k
+			evPower:         2000,
+			expectPhases:    3,
+		},
+	}
+
+	for _, tc := range tc {
+		t.Run(tc.desc, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+
+			plainCharger := api.NewMockCharger(ctrl)
+			phaseCharger := api.NewMockPhaseSwitcher(ctrl)
+
+			lp := &Loadpoint{
+				log:         util.NewLogger("foo"),
+				clock:       clock.NewMock(),
+				wakeUpTimer: NewTimer(),
+				bus:         evbus.New(),
+				charger: struct {
+					*api.MockCharger
+					*api.MockPhaseSwitcher
+				}{plainCharger, phaseCharger},
+				minCurrent:  minA,
+				maxCurrent:  maxA,
+				phases:      1, // start at 1-phase
+				chargePower: tc.evPower,
+			}
+
+			if tc.circuitMaxPower > 0 {
+				circuit := api.NewMockCircuit(ctrl)
+				circuit.EXPECT().GetMaxPower().Return(tc.circuitMaxPower)
+				circuit.EXPECT().GetChargePower().Return(tc.circuitPower)
+				circuit.EXPECT().ValidateCurrent(gomock.Any(), gomock.Any()).DoAndReturn(func(_, new float64) float64 { return new })
+				circuit.EXPECT().ValidatePower(gomock.Any(), gomock.Any()).DoAndReturn(func(_, new float64) float64 { return new })
+				lp.circuit = circuit
+			}
+
+			if tc.expectPhases != lp.phases {
+				phaseCharger.EXPECT().Phases1p3p(tc.expectPhases).Return(nil)
+			}
+
+			plainCharger.EXPECT().MaxCurrent(int64(maxA)).Return(nil)
+			plainCharger.EXPECT().Enable(true).Return(nil)
+
+			err := lp.fastCharging()
+			require.NoError(t, err)
+			require.Equal(t, tc.expectPhases, lp.phases)
+
+			ctrl.Finish()
+		})
+	}
+}
