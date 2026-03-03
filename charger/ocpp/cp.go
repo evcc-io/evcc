@@ -1,6 +1,7 @@
 package ocpp
 
 import (
+	"context"
 	"fmt"
 	"sync"
 	"time"
@@ -175,13 +176,38 @@ func (cp *CP) HasConnected() <-chan struct{} {
 	return cp.connectC
 }
 
-// BootNotificationC returns the channel for monitoring BootNotification messages.
-func (cp *CP) BootNotificationC() <-chan *core.BootNotificationRequest {
-	return cp.bootNotificationRequestC
+// // BootNotificationC returns the channel for monitoring BootNotification messages.
+// func (cp *CP) BootNotificationC() <-chan *core.BootNotificationRequest {
+// 	return cp.bootNotificationRequestC
+// }
+
+// MonitorReboot ensures the given function runs only once per CP instance.
+// Used to start the reboot monitor goroutine for multi-connector charge points.
+func (cp *CP) MonitorReboot(ctx context.Context, setup func() error) {
+	cp.onceMonitor.Do(func() {
+		// drain boot notification from initial setup
+		select {
+		case <-cp.bootNotificationRequestC:
+		default:
+		}
+
+		go cp.monitorReboot(ctx, setup)
+	})
 }
 
-// StartMonitor ensures the given function runs only once per CP instance.
-// Used to start the reboot monitor goroutine for multi-connector charge points.
-func (cp *CP) StartMonitor(start func()) {
-	cp.onceMonitor.Do(start)
+func (cp *CP) monitorReboot(ctx context.Context, setup func() error) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+
+		case boot := <-cp.bootNotificationRequestC:
+			cp.log.INFO.Printf("reboot detected (model: %s, vendor: %s), re-initializing",
+				boot.ChargePointModel, boot.ChargePointVendor)
+
+			if err := setup(); err != nil {
+				cp.log.ERROR.Printf("failed to re-initialize after reboot: %v", err)
+			}
+		}
+	}
 }

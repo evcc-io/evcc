@@ -181,7 +181,8 @@ func NewOCPP(ctx context.Context,
 					return ctx.Err()
 				case <-time.After(connectTimeout):
 					return api.ErrTimeout
-				case <-cp.BootNotificationC():
+					// TODO remove here since handled below?
+					// case <-cp.BootNotificationC():
 				}
 			}
 		},
@@ -216,45 +217,11 @@ func NewOCPP(ctx context.Context,
 	}
 
 	// monitor for charger reboots and re-run setup (once per CP, not per connector)
-	cp.StartMonitor(func() {
-		// drain boot notification from initial setup
-		select {
-		case <-cp.BootNotificationC():
-		default:
-		}
-		go c.monitorReboot(ctx, meterValues, meterInterval, forcePowerCtrl)
+	cp.MonitorReboot(ctx, func() error {
+		return c.cp.Setup(ctx, meterValues, meterInterval, forcePowerCtrl)
 	})
 
 	return c, conn.Initialized()
-}
-
-// monitorReboot watches for charger reboots (detected via BootNotification
-// after initial setup) and re-runs setup to reconfigure the charger.
-func (c *OCPP) monitorReboot(ctx context.Context, meterValues string, meterInterval time.Duration, forcePowerCtrl bool) {
-	for {
-		select {
-		case <-ctx.Done():
-			return
-
-		case boot := <-c.cp.BootNotificationC():
-			c.log.INFO.Printf("charger reboot detected (model: %s, vendor: %s), re-initializing",
-				boot.ChargePointModel, boot.ChargePointVendor)
-
-			if err := c.cp.Setup(ctx, meterValues, meterInterval, forcePowerCtrl); err != nil {
-				c.log.ERROR.Printf("failed to re-initialize after reboot: %v, retrying", err)
-
-				select {
-				case <-ctx.Done():
-					return
-				case <-time.After(ocpp.Timeout):
-				}
-
-				if err := c.cp.Setup(ctx, meterValues, meterInterval, forcePowerCtrl); err != nil {
-					c.log.ERROR.Printf("failed to re-initialize after reboot: %v", err)
-				}
-			}
-		}
-	}
 }
 
 // Connector returns the connector instance
