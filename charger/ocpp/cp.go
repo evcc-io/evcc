@@ -183,7 +183,7 @@ func (cp *CP) HasConnected() <-chan struct{} {
 
 // MonitorReboot ensures the given function runs only once per CP instance.
 // Used to start the reboot monitor goroutine for multi-connector charge points.
-func (cp *CP) MonitorReboot(ctx context.Context, setup func() error) {
+func (cp *CP) MonitorReboot(ctx context.Context, setup func()) {
 	cp.onceMonitor.Do(func() {
 		// drain boot notification from initial setup
 		select {
@@ -195,7 +195,7 @@ func (cp *CP) MonitorReboot(ctx context.Context, setup func() error) {
 	})
 }
 
-func (cp *CP) monitorReboot(ctx context.Context, setup func() error) {
+func (cp *CP) monitorReboot(ctx context.Context, setup func()) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -205,9 +205,7 @@ func (cp *CP) monitorReboot(ctx context.Context, setup func() error) {
 			cp.log.INFO.Printf("reboot detected (model: %s, vendor: %s), re-initializing",
 				boot.ChargePointModel, boot.ChargePointVendor)
 
-			if err := setup(); err != nil {
-				cp.log.ERROR.Printf("failed to re-initialize after reboot: %v", err)
-			}
+			setup()
 		}
 	}
 }

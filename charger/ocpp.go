@@ -174,7 +174,7 @@ func NewOCPP(ctx context.Context,
 					return nil
 				}
 
-				log.WARN.Printf("setup failed: %v, waiting for reconnect", err)
+				log.WARN.Printf("initial setup failed, waiting for reconnect: %v", err)
 
 				select {
 				case <-ctx.Done():
@@ -217,8 +217,10 @@ func NewOCPP(ctx context.Context,
 	}
 
 	// monitor for charger reboots and re-run setup (once per CP, not per connector)
-	cp.MonitorReboot(ctx, func() error {
-		return c.cp.Setup(ctx, meterValues, meterInterval, forcePowerCtrl)
+	cp.MonitorReboot(ctx, func() {
+		if err := c.cp.Setup(ctx, meterValues, meterInterval, forcePowerCtrl); err != nil {
+			log.WARN.Printf("setup after reboot failed, waiting for reconnect: %v", err)
+		}
 	})
 
 	return c, conn.Initialized()
