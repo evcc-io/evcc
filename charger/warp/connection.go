@@ -8,6 +8,13 @@ import (
 	"github.com/icholy/digest"
 )
 
+type Connection struct {
+	*request.Helper
+	URI      string
+	Username string
+	Password string
+}
+
 func NewConnection(log *util.Logger, uri, user, pass string) *Connection {
 	c := &Connection{
 		Helper:   request.NewHelper(log),
@@ -15,11 +22,7 @@ func NewConnection(log *util.Logger, uri, user, pass string) *Connection {
 		Username: user,
 		Password: pass,
 	}
-	c.ApplyDigest()
-	return c
-}
 
-func (c *Connection) ApplyDigest() {
 	if c.Username != "" && c.Password != "" {
 		c.Client.Transport = &digest.Transport{
 			Username:  c.Username,
@@ -27,4 +30,6 @@ func (c *Connection) ApplyDigest() {
 			Transport: c.Client.Transport,
 		}
 	}
+
+	return c
 }
