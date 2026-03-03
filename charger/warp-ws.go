@@ -360,9 +360,7 @@ func (w *WarpWS) hasFeature(feature string) bool {
 func (w *WarpWS) Enable(enable bool) error {
 	var curr int64
 	if enable {
-		w.mu.RLock()
 		curr = w.maxCurrent
-		w.mu.RUnlock()
 	}
 	return w.setCurrent(curr)
 }
@@ -385,9 +383,7 @@ func (w *WarpWS) MaxCurrentMillis(current float64) error {
 	curr := int64(current * 1e3)
 	err := w.setCurrent(curr)
 	if err == nil {
-		w.mu.Lock()
 		w.maxCurrent = curr
-		w.mu.Unlock()
 	}
 	return err
 }
