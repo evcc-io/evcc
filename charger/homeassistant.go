@@ -1,6 +1,6 @@
 package charger
 
-//go:generate go tool decorate -f decorateHomeAssistant -b *HomeAssistant -r api.Charger -t api.Meter,api.MeterEnergy,api.PhaseCurrents,api.PhaseVoltages
+//go:generate go tool decorate -f decorateHomeAssistant -b *HomeAssistant -r api.Charger -t api.Meter,api.MeterEnergy,api.PhaseCurrents,api.PhaseVoltages, api.PhaseSwitcher,api.PhaseGetter
 //  -t api.CurrentGetter
 
 import (
@@ -19,6 +19,7 @@ type HomeAssistant struct {
 	enabled    string
 	enable     string
 	maxcurrent string
+	phases	   string // Option- select entity for 1p/3p phase switching 
 }
 
 func init() {
@@ -39,6 +40,7 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Charger, error) {
 		Energy     string   // optional - energy sensor
 		Currents   []string // optional - current sensors for L1, L2, L3
 		Voltages   []string // optional - voltage sensors for L1, L2, L3
+		Phases     string   // NEW optional - select entity for 1p/3p phase switching 
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -71,11 +73,14 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Charger, error) {
 		enabled:    cc.Enabled,
 		enable:     cc.Enable,
 		maxcurrent: cc.MaxCurrent,
+		phases: 	cc.Phases, 
 	}
 
 	// decorators for optional interfaces
 	var power, energy func() (float64, error)
 	var currents, voltages func() (float64, float64, float64, error)
+	var phases1p3p func(int) error    
+	var phasesG func() (int, error) 
 
 	if cc.Power != "" {
 		power = func() (float64, error) { return conn.GetFloatState(cc.Power) }
@@ -98,7 +103,12 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Charger, error) {
 		return nil, fmt.Errorf("voltages: %w", err)
 	}
 
-	return decorateHomeAssistant(c, power, energy, currents, voltages), nil
+	if cc.Phases != "" {
+		phases1p3p = c.phases1p3p
+		phasesG = c.getPhases
+	}
+	
+	return decorateHomeAssistant(c, power, energy, currents, voltages, phases1p3p, phasesG), nil
 }
 
 var _ api.Charger = (*HomeAssistant)(nil)
@@ -128,4 +138,60 @@ var _ api.ChargerEx = (*HomeAssistant)(nil)
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (c *HomeAssistant) MaxCurrentMillis(current float64) error {
 	return c.conn.CallNumberService(c.maxcurrent, current)
+}
+
+// Phase Switching implements the api.PhaseSwitcher interface
+func (c *HomeAssistant) phases1p3p(phases int) error {
+	if c.phases == "" {
+		return errors.New("phase switching not configured")
+	}
+
+	// Determine the option value for the select entity
+	option := strconv.Itoa(phases)
+
+	// 1) Set phase select entity (e.g. select.wallbox_phases -> "1" or "3")
+	if err := c.conn.CallSelectService(c.phases, option); err != nil {
+		return fmt.Errorf("set phases: %w", err)
+	}
+
+	// 2) Check if currently enabled
+	enabled, err := c.Enabled()
+	if err != nil {
+		return fmt.Errorf("get enabled state: %w", err)
+	}
+
+	// 3) Disable charging to apply new phase setting
+	if err := c.Enable(false); err != nil {
+		return fmt.Errorf("disable for phase switch: %w", err)
+	}
+
+	// 4) Re-enable if it was enabled before
+	if enabled {
+		if err := c.Enable(true); err != nil {
+			return fmt.Errorf("re-enable after phase switch: %w", err)
+		}
+	}
+
+	return nil
+}
+
+// getPhases implements the api.PhaseGetter interface
+func (c *HomeAssistant) getPhases() (int, error) {
+	if c.phases == "" {
+		return 0, errors.New("phase switching not configured")
+	}
+
+	// Read the current state of the select entity
+	state, err := c.conn.GetStringState(c.phases)
+	if err != nil {
+		return 0, fmt.Errorf("get phases: %w", err)
+	}
+
+	// Parse "1" or "3" from the select state
+	phases, err := strconv.Atoi(state)
+	if err != nil {
+		return 0, fmt.Errorf("invalid phase value %q: %w", state, err)
+	}
+
+	return phases, nil
 }
