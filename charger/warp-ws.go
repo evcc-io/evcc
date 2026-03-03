@@ -72,58 +72,58 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 		return nil, err
 	}
 
-	wb, err := NewWarpWS(ctx, cc.URI, cc.User, cc.Password, cc.EnergyManagerURI, cc.EnergyManagerUser, cc.EnergyManagerPassword, cc.EnergyMeterIndex)
+	w, err := NewWarpWS(ctx, cc.URI, cc.User, cc.Password, cc.EnergyManagerURI, cc.EnergyManagerUser, cc.EnergyManagerPassword, cc.EnergyMeterIndex)
 	if err != nil {
 		return nil, err
 	}
 
 	// Feature: Meter -> Meter is legacy API, Meters is the new API
 	var currentPower, totalEnergy func() (float64, error)
-	if wb.hasFeature(warp.FeatureMeter) || wb.hasFeature(warp.FeatureMeters) {
-		currentPower = wb.currentPower
-		totalEnergy = wb.totalEnergy
+	if w.hasFeature(warp.FeatureMeter) || w.hasFeature(warp.FeatureMeters) {
+		currentPower = w.currentPower
+		totalEnergy = w.totalEnergy
 	}
 
 	// Feature: Meters | MeterAllValues
 	var currents, voltages func() (float64, float64, float64, error)
-	if wb.hasFeature(warp.FeatureMeters) || wb.hasFeature(warp.FeatureMeterAllValues) {
-		currents = wb.currents
-		voltages = wb.voltages
+	if w.hasFeature(warp.FeatureMeters) || w.hasFeature(warp.FeatureMeterAllValues) {
+		currents = w.currents
+		voltages = w.voltages
 	}
 
 	// Feature: NFC
 	var identify func() (string, error)
-	if wb.hasFeature(warp.FeatureNfc) {
-		identify = wb.identify
+	if w.hasFeature(warp.FeatureNfc) {
+		identify = w.identify
 	}
 
 	// Feature: Phase Switching
-	if wb.hasFeature(warp.FeaturePhaseSwitch) && wb.pm == nil {
-		wb.pm = wb.Connection // Energy Manager not needed, charger will do the phase switching
+	if w.hasFeature(warp.FeaturePhaseSwitch) && w.pm == nil {
+		w.pm = w.Connection // Energy Manager not needed, charger will do the phase switching
 	}
 
 	// only setup phase switching methods if power manager endpoint is set
 	var phases func(int) error
 	var getPhases func() (int, error)
-	if wb.pm != nil {
-		if res, err := wb.ensurePmState(); err == nil && res.ExternalControl != warp.ExternalControlDeactivated {
-			wb.pmState = res
-			phases = wb.phases1p3p
-			getPhases = wb.getPhases
+	if w.pm != nil {
+		if res, err := w.ensurePmState(); err == nil && res.ExternalControl != warp.ExternalControlDeactivated {
+			w.pmState = res
+			phases = w.phases1p3p
+			getPhases = w.getPhases
 		}
 	}
 
 	// Phase Auto Switching needs to be disabled for WARP3 and WARP2 + EM
 	// Necessary if charging 1p only vehicles
-	typ, err := wb.getWarpType()
+	typ, err := w.getWarpType()
 	if err != nil {
 		return nil, err
 	}
-	if typ == "warp3" || (typ == "warp2" && wb.pm != nil && wb.pm != wb.Connection) {
-		if err := wb.disablePhaseAutoSwitch(); err != nil {
+	if typ == "warp3" || (typ == "warp2" && w.pm != nil && w.pm != w.Connection) {
+		if err := w.disablePhaseAutoSwitch(); err != nil {
 			return nil, err
 		}
-		wb.log.TRACE.Println("disabled phase auto switching")
+		w.log.TRACE.Println("disabled phase auto switching")
 	}
 
 	return decorateWarpWS(wb, currentPower, totalEnergy, currents, voltages, identify, phases, getPhases), nil
@@ -132,18 +132,15 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 func NewWarpWS(ctx context.Context, uri, user, pass, emURI, emUser, emPass string, meterIndex uint) (*WarpWS, error) {
 	log := util.NewLogger("warp-ws")
 
-	c := warp.NewConnection(log, uri, user, pass)
-	var pm *warp.Connection
-	if emURI != "" {
-		pm = warp.NewConnection(log, emURI, emUser, emPass)
-	}
-
 	w := &WarpWS{
-		Connection: c,
-		pm:         pm,
+		Connection: warp.NewConnection(log, uri, user, pass),
 		log:        log,
 		meterIndex: meterIndex,
 		meterMap:   map[int]int{},
+	}
+
+	if emURI != "" {
+		w.pm = warp.NewConnection(log, emURI, emUser, emPass)
 	}
 
 	wsURI, err := parseURI(w.URI)
@@ -529,23 +526,24 @@ func (w *WarpWS) ensurePmLowLevelState() (warp.PmLowLevelState, error) {
 func (w *WarpWS) ensurePmState() (warp.PmState, error) {
 	w.mu.RLock()
 	s := w.pmState
-	em := w.pm
 	w.mu.RUnlock()
 
-	if em == nil || s.ExternalControl != warp.ExternalControlAvailable {
+	if w.pm == nil || s.ExternalControl != warp.ExternalControlAvailable {
 		return s, nil
 	}
 
-	var ns warp.PmState
-	if err := em.GetJSON(fmt.Sprintf("%s/power_manager/state", em.URI), &ns); err != nil {
+	var res warp.PmState
+	if err := w.pm.GetJSON(fmt.Sprintf("%s/power_manager/state", w.pm.URI), &res); err != nil {
 		return warp.PmState{}, err
 	}
 
 	w.mu.Lock()
-	w.pmState = ns
-	w.mu.Unlock()
+	defer w.mu.Unlock()
 
-	return ns, nil
+	// TODO why assign and return?
+	w.pmState = res
+
+	return res, nil
 }
 
 func (w *WarpWS) getWarpType() (string, error) {
