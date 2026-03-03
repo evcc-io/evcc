@@ -8,6 +8,7 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/transport"
+	"github.com/icholy/digest"
 )
 
 // Timeout is the default request timeout used by the Helper
@@ -19,19 +20,36 @@ type Helper struct {
 }
 
 // NewClient creates http client with default transport
-func NewClient(log *util.Logger) *http.Client {
+func NewClient(log *util.Logger, explicitCreds...string) *http.Client {
+	// base as before
+	base := NewTripper(log, transport.Default())
+
+	user, pass := "", ""
+	if len(explicitCreds) == 2 {
+        // 2) fallback to explicitly provided credentials
+        user, pass = explicitCreds[0], explicitCreds[1]
+	} 
+
+	// digest infront of the old transport, leaving user and password blank as it might not be needed
+	dt := &digest.Transport{
+		Username: user,
+		Password: pass,
+	}
+	dt.Transport = base
+
 	return &http.Client{
 		Timeout:   Timeout,
-		Transport: NewTripper(log, transport.Default()),
+		Transport: dt,
 	}
 }
 
 // NewHelper creates http helper for simplified PUT GET logic
-func NewHelper(log *util.Logger) *Helper {
+func NewHelper(log *util.Logger, explicitCreds...string) *Helper {
 	return &Helper{
-		Client: NewClient(log),
+		Client: NewClient(log, explicitCreds...),
 	}
 }
+
 
 // DoBody executes HTTP request and returns the response body
 func (r *Helper) DoBody(req *http.Request) ([]byte, error) {
