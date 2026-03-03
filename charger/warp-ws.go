@@ -98,14 +98,10 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 	}
 
 	// Feature: Phase Switching
-	if w.hasFeature(warp.FeaturePhaseSwitch) && w.pm == nil {
-		w.pm = w.Connection // Energy Manager not needed, charger will do the phase switching
-	}
-
 	// only setup phase switching methods if power manager endpoint is set
 	var phases func(int) error
 	var getPhases func() (int, error)
-	if w.pm != nil {
+	if w.hasFeature(warp.FeaturePhaseSwitch) && w.pm != nil {
 		if res, err := w.ensurePmState(); err == nil && res.ExternalControl != warp.ExternalControlDeactivated {
 			w.pmState = res
 			phases = w.phases1p3p
@@ -141,6 +137,8 @@ func NewWarpWS(ctx context.Context, uri, user, pass, emURI, emUser, emPass strin
 
 	if emURI != "" {
 		w.pm = warp.NewConnection(log, emURI, emUser, emPass)
+	} else {
+		w.pm = w.Connection
 	}
 
 	wsURI, err := parseURI(w.URI)
@@ -479,13 +477,10 @@ func (w *WarpWS) phases1p3p(phases int) error {
 	if ec, err := w.ensurePmState(); err != nil || ec.ExternalControl > warp.ExternalControlAvailable {
 		return fmt.Errorf("external control not available: %d", ec.ExternalControl)
 	}
-	w.mu.RLock()
-	em := w.pm
-	w.mu.RUnlock()
 
-	uri := fmt.Sprintf("%s/power_manager/external_control", em.URI)
+	uri := fmt.Sprintf("%s/power_manager/external_control", w.pm.URI)
 	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(map[string]int{"phases_wanted": phases}), request.JSONEncoding)
-	_, err := em.Do(req)
+	_, err := w.pm.Do(req)
 	return err
 }
 
@@ -505,20 +500,15 @@ func (w *WarpWS) getPhases() (int, error) {
 func (w *WarpWS) ensurePmLowLevelState() (warp.PmLowLevelState, error) {
 	w.mu.RLock()
 	s := w.pmLowLevelState
-	em := w.pm
 	w.mu.RUnlock()
-	if em == nil {
+	if w.pm == nil {
 		return s, nil
 	}
 
 	var ns warp.PmLowLevelState
-	if err := em.GetJSON(fmt.Sprintf("%s/power_manager/low_level_state", em.URI), &ns); err != nil {
+	if err := w.pm.GetJSON(fmt.Sprintf("%s/power_manager/low_level_state", w.pm.URI), &ns); err != nil {
 		return warp.PmLowLevelState{}, err
 	}
-
-	w.mu.Lock()
-	w.pmLowLevelState = ns
-	w.mu.Unlock()
 
 	return ns, nil
 }
@@ -536,12 +526,6 @@ func (w *WarpWS) ensurePmState() (warp.PmState, error) {
 	if err := w.pm.GetJSON(fmt.Sprintf("%s/power_manager/state", w.pm.URI), &res); err != nil {
 		return warp.PmState{}, err
 	}
-
-	w.mu.Lock()
-	defer w.mu.Unlock()
-
-	// TODO why assign and return?
-	w.pmState = res
 
 	return res, nil
 }
