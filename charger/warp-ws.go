@@ -47,8 +47,8 @@ type WarpWS struct {
 	chargeTracker warp.ChargeTrackerCurrentCharge
 
 	// power manager
-	pmState         warp.PmState
-	pmLowLevelState warp.PmLowLevelState
+	pmState         *warp.PmState
+	pmLowLevelState *warp.PmLowLevelState
 }
 
 func init() {
@@ -103,7 +103,7 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 	var getPhases func() (int, error)
 	if w.hasFeature(warp.FeaturePhaseSwitch) && w.pm != nil {
 		if res, err := w.ensurePmState(); err == nil && res.ExternalControl != warp.ExternalControlDeactivated {
-			w.pmState = res
+			w.pmState = &res
 			phases = w.phases1p3p
 			getPhases = w.getPhases
 		}
@@ -458,6 +458,7 @@ func (w *WarpWS) disablePhaseAutoSwitch() error {
 
 // phases1p3p implements the api.PhaseSwitcher interface
 func (w *WarpWS) phases1p3p(phases int) error {
+	// ensure that phases can be switched
 	if ec, err := w.ensurePmState(); err != nil || ec.ExternalControl > warp.ExternalControlAvailable {
 		return fmt.Errorf("external control not available: %d", ec.ExternalControl)
 	}
@@ -485,8 +486,8 @@ func (w *WarpWS) ensurePmLowLevelState() (warp.PmLowLevelState, error) {
 	w.mu.RLock()
 	s := w.pmLowLevelState
 	w.mu.RUnlock()
-	if w.pm == nil {
-		return s, nil
+	if s != nil {
+		return *s, nil
 	}
 
 	var ns warp.PmLowLevelState
@@ -501,9 +502,8 @@ func (w *WarpWS) ensurePmState() (warp.PmState, error) {
 	w.mu.RLock()
 	s := w.pmState
 	w.mu.RUnlock()
-
-	if w.pm == nil || s.ExternalControl != warp.ExternalControlAvailable {
-		return s, nil
+	if s != nil {
+		return *s, nil
 	}
 
 	var res warp.PmState
