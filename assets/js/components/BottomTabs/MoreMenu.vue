@@ -13,11 +13,10 @@
 				class="tab-badge position-absolute rounded-circle"
 				:class="badgeClass"
 			></span>
-			<MoreIcon class="tab-icon d-block" size="s" />
-			<span
-				class="tab-label fw-bold text-uppercase mt-1 mt-md-0 text-truncate text-center text-md-start"
-				>{{ $t("tabBar.more") }}</span
-			>
+			<MoreIcon class="tab-icon d-block" />
+			<span class="tab-label fw-bold mt-1 mt-md-0 text-truncate text-center text-md-start">{{
+				$t("tabBar.more")
+			}}</span>
 		</button>
 		<ul class="dropdown-menu dropdown-menu-end">
 			<li>
@@ -162,7 +161,7 @@ export default defineComponent({
 		},
 	},
 	mounted() {
-		const el = this.$refs.moreButton as HTMLElement;
+		const el = this.$refs["moreButton"] as HTMLElement;
 		if (el) {
 			this.dropdown = new Dropdown(el);
 		}

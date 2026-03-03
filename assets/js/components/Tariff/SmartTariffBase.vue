@@ -4,7 +4,7 @@
 		<p>
 			{{ description }}
 		</p>
-		<div class="row mb-3 align-items-center">
+		<div class="row mb-3 align-items-center" style="max-width: 1000px">
 			<label :for="formId" class="col-sm-4 col-form-label pt-0 pt-sm-2">
 				{{ limitLabel }}
 			</label>

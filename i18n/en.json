@@ -40,6 +40,7 @@
     "legendTopName": "Battery-supported vehicle charging",
     "legendTopSubline": "when home battery is above {soc}.",
     "modalTitle": "Home Battery",
+    "noBattery": "No batteries configured.",
     "usageTab": "Battery usage"
   },
   "config": {
