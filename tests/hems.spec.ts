@@ -13,14 +13,6 @@ import { startSimulator, stopSimulator, simulatorUrl, simulatorApply } from "./s
 test.use({ baseURL: baseUrl() });
 test.describe.configure({ mode: "parallel" });
 
-test.beforeAll(async () => {
-  await startSimulator();
-});
-
-test.afterAll(async () => {
-  await stopSimulator();
-});
-
 test.afterEach(async () => {
   await stop();
 });
@@ -70,6 +62,7 @@ test.describe("HEMS", () => {
   });
 
   test("configure loadmanagement and hems via UI, verify logic", async ({ page }) => {
+    await startSimulator();
     await start(CONFIG);
 
     await page.goto("/#/config");
@@ -111,16 +104,26 @@ limit:
     const lpModal = page.getByTestId("loadpoint-modal");
     await newLoadpoint(page, "Carport");
     await addDemoCharger(page);
-    await lpModal.getByLabel("Circuit").selectOption("gridcontrol");
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(lpModal);
     await expect(page.getByTestId("loadpoint")).toContainText("Carport");
 
     await restart(CONFIG);
+    await page.goto("/#/config");
+
+    // assign loadpoint to circuit
+    await page.getByTestId("loadpoint").getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(lpModal);
+    await lpModal.getByLabel("Circuit").selectOption("gridcontrol");
+    await lpModal.getByRole("button", { name: "Save" }).click();
+    await expectModalHidden(lpModal);
+
+    await restart(CONFIG);
+    await page.goto("/#/config");
 
     // verify circuits
     await expect(page.getByTestId("circuits")).toContainText(
-      ["External Limit (gridcontrol)", "Power", "0.0 kW"].join("")
+      ["External Limit", "Power", "0.0 kW"].join("")
     );
 
     // enable hems in simulator
@@ -132,7 +135,8 @@ limit:
     // verify config ui
     await page.goto("/#/config");
     await expect(page.getByTestId("circuits")).toContainText(
-      ["External Limit (gridcontrol)", "Power", "0.0 kW / 4.2 kW"].join("")
+      ["External Limit", "Consumption limited", "yes", "Power", "0.0 kW / 4.2 kW"].join(""),
+      { timeout: 10000 }
     );
 
     // verify main ui
@@ -150,5 +154,7 @@ limit:
     // verify main ui
     await page.goto("/");
     await expect(hemsWarning).not.toBeVisible();
+
+    await stopSimulator();
   });
 });

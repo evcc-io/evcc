@@ -2,10 +2,7 @@
 	<template v-for="(node, idx) in nodes" :key="node.name">
 		<hr v-if="idx > 0 || depth > 0" />
 		<div :style="style">
-			<p class="my-2 fw-bold">
-				<span v-if="nodeTitle(node)">{{ nodeTitle(node) }}</span>
-				<code v-else>({{ node.name }})</code>
-			</p>
+			<p class="my-2 fw-bold">{{ nodeTitle(node) }}</p>
 			<DeviceTags :tags="circuitTags(node)" />
 		</div>
 		<CircuitTags v-if="node.children?.length" :nodes="node.children" :depth="depth + 1" />
@@ -32,9 +29,8 @@ export default defineComponent({
 	},
 	methods: {
 		nodeTitle(node: CircuitNode): string {
-			if (node.title) return node.title;
 			if (node.name === GRID_CONTROL) return this.$t("config.hems.title");
-			return "";
+			return node.title || "";
 		},
 		circuitTags(node: CircuitNode) {
 			const result: Record<string, object> = {};

@@ -38,7 +38,7 @@ func (site *Site) publishCircuits() {
 		props := deviceProperties(c)
 
 		data := circuitStruct{
-			Title:      props.Title,
+			Title:      instance.GetTitle(),
 			Icon:       props.Icon,
 			Parent:     names[instance.GetParent()],
 			Power:      instance.GetChargePower(),
