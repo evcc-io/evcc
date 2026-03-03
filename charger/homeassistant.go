@@ -6,6 +6,8 @@ package charger
 import (
 	"errors"
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -146,9 +148,9 @@ func (c *HomeAssistant) phases1p3p(phases int) error {
 		return errors.New("phase switching not configured")
 	}
 
-	// Determine the option value for the select entity
+	// set phase select entity (e.g. select.wallbox_phases -> "1" or "3")
 	option := strconv.Itoa(phases)
-
+	
 	// 1) Set phase select entity (e.g. select.wallbox_phases -> "1" or "3")
 	if err := c.conn.CallSelectService(c.phases, option); err != nil {
 		return fmt.Errorf("set phases: %w", err)
@@ -193,5 +195,47 @@ func (c *HomeAssistant) getPhases() (int, error) {
 		return 0, fmt.Errorf("invalid phase value %q: %w", state, err)
 	}
 
+	// parse phase count from state string
+	phases, err := parsePhases(state)
+	if err != nil {
+		return 0, err
+	}
+
 	return phases, nil
 }
+
+ // parsePhases extracts the phase count from a select entity state.
+ // It accepts:
+ //   - bare numeric: "1", "3"
+ //   - labeled with leading digit: "1-phase", "3-phase", "1p", "3p"
+ //   - labeled with keyword: "single", "three"
+ //
+ // Returns an error if the state cannot be parsed or is not 1 or 3.
+ func parsePhases(state string) (int, error) {
+ 	state = strings.TrimSpace(state)
+ 
+ 	// try direct integer parse first (most common case: "1" or "3")
+ 	if phases, err := strconv.Atoi(state); err == nil {
+ 		if phases == 1 || phases == 3 {
+ 			return phases, nil
+ 		}
+ 		return 0, fmt.Errorf("unsupported phase value: %d", phases)
+ 	}
+ 
+ 	// try extracting leading digit (e.g. "1-phase", "3-phase", "1p", "3p")
+ 	if len(state) > 0 && (state[0] == '1' || state[0] == '3') {
+ 		return int(state[0] - '0'), nil
+ 	}
+ 
+ 	// try keyword matching (e.g. "single", "three")
+ 	lower := strings.ToLower(state)
+ 	if strings.Contains(lower, "single") || strings.Contains(lower, "one") || strings.Contains(lower, "1p") {
+ 		return 1, nil
+ 	}
+ 	if strings.Contains(lower, "three") || strings.Contains(lower, "triple") || strings.Contains(lower, "3p") {
+ 		return 3, nil
+ 	}
+ 
+ 	return 0, fmt.Errorf("cannot parse phase value from %q: expected '1', '3', or labeled variant", state)
+ }
+
