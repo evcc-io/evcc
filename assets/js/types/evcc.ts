@@ -1,6 +1,8 @@
 import type { StaticPlan, RepeatingPlan, PlanStrategy } from "../components/ChargingPlans/types";
 import type { ForecastSlot, SolarDetails } from "../components/Forecast/types";
 
+export const GRID_CONTROL = "gridcontrol";
+
 // react-native-webview
 interface WebView {
   postMessage: (message: string) => void;
@@ -138,12 +140,15 @@ export interface Config {
 }
 
 export interface Circuit {
-  name: string;
-  maxPower: number;
-  power?: number;
-  maxCurrent: number;
+  title?: string;
+  icon?: string;
+  parent?: string;
+  power: number;
   current?: number;
-  config?: Config;
+  maxPower?: number;
+  maxCurrent?: number;
+  dimmed?: boolean;
+  curtailed?: boolean;
 }
 
 export interface Entity {

@@ -80,7 +80,7 @@ test.describe("HEMS", () => {
     await expectModalVisible(circuitsModal);
     const circuitsEditor = circuitsModal.getByTestId("yaml-editor");
     await editorClear(circuitsEditor);
-    await editorPaste(circuitsEditor, page, `- name: lpc`);
+    await editorPaste(circuitsEditor, page, `- name: gridcontrol`);
     await circuitsModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(circuitsModal);
 
@@ -111,7 +111,7 @@ limit:
     const lpModal = page.getByTestId("loadpoint-modal");
     await newLoadpoint(page, "Carport");
     await addDemoCharger(page);
-    await lpModal.getByLabel("Circuit").selectOption("lpc");
+    await lpModal.getByLabel("Circuit").selectOption("gridcontrol");
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(lpModal);
     await expect(page.getByTestId("loadpoint")).toContainText("Carport");
@@ -120,7 +120,7 @@ limit:
 
     // verify circuits
     await expect(page.getByTestId("circuits")).toContainText(
-      ["External Limit (lpc)", "Power", "0.0 kW"].join("")
+      ["External Limit (gridcontrol)", "Power", "0.0 kW"].join("")
     );
 
     // enable hems in simulator
@@ -132,7 +132,7 @@ limit:
     // verify config ui
     await page.goto("/#/config");
     await expect(page.getByTestId("circuits")).toContainText(
-      ["External Limit (lpc)", "Power", "0.0 kW / 4.2 kW"].join("")
+      ["External Limit (gridcontrol)", "Power", "0.0 kW / 4.2 kW"].join("")
     );
 
     // verify main ui
