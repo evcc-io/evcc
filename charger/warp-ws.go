@@ -126,7 +126,7 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 		w.log.TRACE.Println("disabled phase auto switching")
 	}
 
-	return decorateWarpWS(wb, currentPower, totalEnergy, currents, voltages, identify, phases, getPhases), nil
+	return decorateWarpWS(w, currentPower, totalEnergy, currents, voltages, identify, phases, getPhases), nil
 }
 
 func NewWarpWS(ctx context.Context, uri, user, pass, emURI, emUser, emPass string, meterIndex uint) (*WarpWS, error) {
