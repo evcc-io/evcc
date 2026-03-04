@@ -212,6 +212,18 @@ func (c *Easee) waitForOptionalState() {
 	c.log.WARN.Println("did not receive full state from cloud")
 }
 
+func (c *Easee) registerPendingTick(tick int64, ch chan easee.SignalRCommandResponse) {
+	c.cmdMu.Lock()
+	c.pendingTicks[tick] = ch
+	c.cmdMu.Unlock()
+}
+
+func (c *Easee) unregisterPendingTick(tick int64) {
+	c.cmdMu.Lock()
+	delete(c.pendingTicks, tick)
+	c.cmdMu.Unlock()
+}
+
 // check c.obsTime for presence of ALL of the following keys: easee.SESSION_ENERGY, easee.LIFETIME_ENERGY
 func (c *Easee) optionalStatePresent() bool {
 	c.mux.Lock()
