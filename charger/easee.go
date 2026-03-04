@@ -109,16 +109,16 @@ func NewEasee(ctx context.Context, user, password, charger string, timeout time.
 	done := make(chan struct{})
 
 	c := &Easee{
-		Helper:       request.NewHelper(log),
-		charger:      charger,
-		authorize:    authorize,
-		log:          log,
-		current:      6, // default current
-		startDone:    sync.OnceFunc(func() { close(done) }),
+		Helper:          request.NewHelper(log),
+		charger:         charger,
+		authorize:       authorize,
+		log:             log,
+		current:         6, // default current
+		startDone:       sync.OnceFunc(func() { close(done) }),
 		pendingTicks:    make(map[int64]chan easee.SignalRCommandResponse),
 		expectedOrphans: make(map[easee.ObservationID]int),
-		obsC:         make(chan easee.Observation),
-		obsTime:      make(map[easee.ObservationID]time.Time),
+		obsC:            make(chan easee.Observation),
+		obsTime:         make(map[easee.ObservationID]time.Time),
 	}
 
 	c.Client.Timeout = timeout

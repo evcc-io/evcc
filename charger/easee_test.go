@@ -31,13 +31,13 @@ func createPayload(id easee.ObservationID, timestamp time.Time, dataType easee.D
 func newEasee() *Easee {
 	log := util.NewLogger("easee")
 	e := Easee{
-		Helper:       request.NewHelper(log),
-		obsTime:      make(map[easee.ObservationID]time.Time),
+		Helper:          request.NewHelper(log),
+		obsTime:         make(map[easee.ObservationID]time.Time),
 		pendingTicks:    make(map[int64]chan easee.SignalRCommandResponse),
 		expectedOrphans: make(map[easee.ObservationID]int),
-		log:          log,
-		startDone:    func() {},
-		obsC:         make(chan easee.Observation),
+		log:             log,
+		startDone:       func() {},
+		obsC:            make(chan easee.Observation),
 	}
 	e.Client.Timeout = 500 * time.Millisecond //aggressive timeout to accelerate testing
 	return &e
