@@ -265,6 +265,7 @@ func (wb *Nexblue) TotalEnergy() (float64, error) {
 
 var _ api.PhaseSwitcher = (*Nexblue)(nil)
 
+// Phases1p3p implements the api.PhaseSwitcher interface
 func (wb *Nexblue) Phases1p3p(phases int) error {
 	req, _ := request.New(http.MethodPost,
 		fmt.Sprintf("%s/v1/charger/%s/setting", nexblueAPI, wb.serial), request.MarshalJSON(struct {
