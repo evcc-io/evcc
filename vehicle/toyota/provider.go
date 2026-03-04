@@ -25,6 +25,8 @@ func NewProvider(log *util.Logger, api *API, vin string, cache time.Duration) *P
 
 	impl.status = util.Cached(func() (Status, error) {
 		res, err := api.Status(vin)
+		// Trigger a status refresh while charging so the TCU pushes
+		// fresh data to the cloud for the next poll cycle.
 		if err == nil && strings.EqualFold(res.Payload.ChargingStatus, "charging") && time.Since(impl.lastRefresh) >= refreshInterval {
 			impl.lastRefresh = time.Now()
 			if err := impl.refresh(); err != nil {
