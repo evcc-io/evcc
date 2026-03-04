@@ -8,10 +8,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-const (
-	refreshInterval = 15 * time.Minute
-	pollInterval    = 5 * time.Minute
-)
+const refreshInterval = 15 * time.Minute
 
 type Provider struct {
 	status      func() (Status, error)
@@ -26,11 +23,6 @@ func NewProvider(log *util.Logger, api *API, vin string, cache time.Duration) *P
 		},
 	}
 
-	// Poll at most every 5 min to pick up cloud updates promptly after a
-	// realtime-status refresh. The refresh POST wakes the car's TCU which
-	// pushes fresh data to the cloud after ~5 min. Returning the current
-	// (possibly stale) GET response is intentional — re-reading immediately
-	// after the POST would still return stale data.
 	impl.status = util.Cached(func() (Status, error) {
 		res, err := api.Status(vin)
 		if err == nil && strings.EqualFold(res.Payload.ChargingStatus, "charging") && time.Since(impl.lastRefresh) >= refreshInterval {
@@ -40,7 +32,7 @@ func NewProvider(log *util.Logger, api *API, vin string, cache time.Duration) *P
 			}
 		}
 		return res, err
-	}, min(cache, pollInterval))
+	}, cache)
 
 	return impl
 }
