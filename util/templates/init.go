@@ -45,7 +45,7 @@ func Register(class Class, filepath string) error {
 		return err
 	}
 
-	tmpl, err := fromBytes(b)
+	tmpl, err := fromBytes(class, b)
 	if err != nil {
 		return fmt.Errorf("processing template '%s' failed: %w", filepath, err)
 	}
@@ -63,7 +63,7 @@ func register(class Class, tmpl Template) error {
 	return nil
 }
 
-func fromBytes(b []byte) (Template, error) {
+func fromBytes(class Class, b []byte) (Template, error) {
 	// error on unknown fields
 	dec := yaml.NewDecoder(bytes.NewReader(b))
 	dec.KnownFields(true)
@@ -72,6 +72,8 @@ func fromBytes(b []byte) (Template, error) {
 	if err := dec.Decode(&tmpl); err != nil {
 		return Template{}, err
 	}
+
+	tmpl.prepare(class)
 
 	for _, f := range []func() error{tmpl.ResolvePresets, tmpl.ResolveGroup, tmpl.UpdateParamsWithDefaults, tmpl.UpdateModbusParamsWithDefaults, tmpl.SortRequiredParamsFirst, tmpl.Validate} {
 		if err := f(); err != nil {
@@ -96,7 +98,7 @@ func load(class Class) {
 			return err
 		}
 
-		tmpl, err := fromBytes(b)
+		tmpl, err := fromBytes(class, b)
 		if err != nil {
 			return fmt.Errorf("processing template '%s' failed: %w", filepath, err)
 		}

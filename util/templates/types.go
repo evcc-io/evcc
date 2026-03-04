@@ -15,8 +15,9 @@ import (
 )
 
 const (
-	ParamUsage  = "usage"
-	ParamModbus = "modbus"
+	ParamUsage    = "usage"
+	ParamModbus   = "modbus"
+	ParamReversed = "reversed"
 
 	HemsTypeSMA = "sma"
 
