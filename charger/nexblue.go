@@ -45,11 +45,11 @@ type Nexblue struct {
 
 type nexblueStatus struct {
 	ChargingState  int       `json:"charging_state"`
-	Power          float64   `json:"power"`          // kW
-	Energy         float64   `json:"energy"`         // kWh (session)
+	Power          float64   `json:"power"`           // kW
+	Energy         float64   `json:"energy"`          // kWh (session)
 	LifetimeEnergy float64   `json:"lifetime_energy"` // kWh (total)
-	CurrentLimit   int       `json:"current_limit"`  // A
-	VoltageList    []float64 `json:"voltage_list"`   // V per phase
+	CurrentLimit   int       `json:"current_limit"`   // A
+	VoltageList    []float64 `json:"voltage_list"`    // V per phase
 }
 
 type nexblueTokenSource struct {
