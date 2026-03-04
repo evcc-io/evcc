@@ -6,7 +6,7 @@ requirements:
     en: Free Weather API [open-meteo.com](https://open-meteo.com) for outdoor temperature data. Open-Meteo is an open-source weather API and offers free access for non-commercial use. No API key required.
     de: Freie Wetter-API [open-meteo.com](https://open-meteo.com) für Außentemperaturdaten. Open-Meteo ist eine Open-Source-Wetter-API und bietet kostenlosen Zugriff für nicht-kommerzielle Nutzung. Kein API-Schlüssel erforderlich.
   evcc: ["skiptest"]
-group: temperature
+group: solar
 params:
   - name: latitude
     description:
