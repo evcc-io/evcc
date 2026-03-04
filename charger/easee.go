@@ -398,8 +398,17 @@ func (c *Easee) CommandResponse(i json.RawMessage) {
 	}
 	c.log.TRACE.Printf("CommandResponse %s: %+v", res.SerialNumber, res)
 
+	c.cmdMu.Lock()
+	ch, ok := c.pendingTicks[res.Ticks]
+	c.cmdMu.Unlock()
+
+	if !ok {
+		c.log.WARN.Printf("CommandResponse: no pending tick for %d (serial=%s), ignoring", res.Ticks, res.SerialNumber)
+		return
+	}
+
 	select {
-	case c.cmdC <- res:
+	case ch <- res:
 	default:
 	}
 }
@@ -558,26 +567,25 @@ func (c *Easee) postJSONAndWait(uri string, data any) (bool, error) {
 			return true, nil
 		}
 
-		return false, c.waitForTickResponse(cmd.Ticks)
+		ch := make(chan easee.SignalRCommandResponse, 1)
+		c.registerPendingTick(cmd.Ticks, ch)
+		defer c.unregisterPendingTick(cmd.Ticks)
+		return false, c.waitForTickResponse(cmd.Ticks, ch)
 	}
 
 	// all other response codes lead to an error
 	return false, fmt.Errorf("invalid status: %d", resp.StatusCode)
 }
 
-func (c *Easee) waitForTickResponse(expectedTick int64) error {
-	for {
-		select {
-		case cmdResp := <-c.cmdC:
-			if cmdResp.Ticks == expectedTick {
-				if !cmdResp.WasAccepted {
-					return fmt.Errorf("command rejected: %d", cmdResp.Ticks)
-				}
-				return nil
-			}
-		case <-time.After(c.Client.Timeout):
-			return api.ErrTimeout
+func (c *Easee) waitForTickResponse(expectedTick int64, ch <-chan easee.SignalRCommandResponse) error {
+	select {
+	case cmdResp := <-ch:
+		if !cmdResp.WasAccepted {
+			return fmt.Errorf("command rejected: %d", cmdResp.Ticks)
 		}
+		return nil
+	case <-time.After(c.Client.Timeout):
+		return api.ErrTimeout
 	}
 }
 

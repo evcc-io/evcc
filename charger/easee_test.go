@@ -34,7 +34,6 @@ func newEasee() *Easee {
 		obsTime:   make(map[easee.ObservationID]time.Time),
 		log:       log,
 		startDone: func() {},
-		cmdC:      make(chan easee.SignalRCommandResponse),
 		obsC:      make(chan easee.Observation),
 	}
 	e.Client.Timeout = 500 * time.Millisecond //aggressive timeout to accelerate testing
@@ -166,15 +165,12 @@ func TestEasee_waitForTickResponse(t *testing.T) {
 
 			e := newEasee()
 
-			// Set up the command channel for test and Easee to share
-			cmdC := make(chan easee.SignalRCommandResponse, 1) // make it buffered for ease of testing
-			e.cmdC = cmdC
-
+			ch := make(chan easee.SignalRCommandResponse, 1)
 			if tc.cmdCValue != nil {
-				cmdC <- *tc.cmdCValue
+				ch <- *tc.cmdCValue
 			}
 
-			err := e.waitForTickResponse(tc.expectedTick)
+			err := e.waitForTickResponse(tc.expectedTick, ch)
 
 			// Assert the result
 			if tc.expectedErr != nil {
@@ -227,7 +223,18 @@ func TestEasee_postJsonAndWait(t *testing.T) {
 
 		if tc.cmdResp != nil {
 			go func() {
-				e.cmdC <- *tc.cmdResp
+				// wait for postJSONAndWait to register the per-tick channel
+				var ch chan easee.SignalRCommandResponse
+				for {
+					e.cmdMu.Lock()
+					ch = e.pendingTicks[tc.cmdResp.Ticks]
+					e.cmdMu.Unlock()
+					if ch != nil {
+						break
+					}
+					time.Sleep(time.Millisecond)
+				}
+				ch <- *tc.cmdResp
 			}()
 		}
 
