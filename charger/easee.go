@@ -63,7 +63,8 @@ type Easee struct {
 	currentL1, currentL2, currentL3 float64
 	rfid      string
 	lp        loadpoint.API
-	cmdC      chan easee.SignalRCommandResponse
+	cmdMu        sync.Mutex
+	pendingTicks map[int64]chan easee.SignalRCommandResponse
 	obsC      chan easee.Observation
 	obsTime   map[easee.ObservationID]time.Time
 	startDone func()
@@ -113,7 +114,7 @@ func NewEasee(ctx context.Context, user, password, charger string, timeout time.
 		log:       log,
 		current:   6, // default current
 		startDone: sync.OnceFunc(func() { close(done) }),
-		cmdC:      make(chan easee.SignalRCommandResponse),
+		pendingTicks: make(map[int64]chan easee.SignalRCommandResponse),
 		obsC:      make(chan easee.Observation),
 		obsTime:   make(map[easee.ObservationID]time.Time),
 	}
