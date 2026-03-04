@@ -12,39 +12,48 @@ import (
 const refreshInterval = 15 * time.Minute
 
 type Provider struct {
-	mu          sync.Mutex
-	status      func() (Status, error)
-	refresh     func() error
-	lastRefresh time.Time
+	status  func() (Status, error)
+	refresh func() error
 }
 
 func NewProvider(log *util.Logger, api *API, vin string, cache time.Duration) *Provider {
-	impl := &Provider{}
+	var (
+		mu          sync.Mutex
+		lastRefresh time.Time
+	)
 
-	impl.refresh = func() error {
+	refresh := func() error {
 		err := api.RefreshStatus(vin)
 		if err == nil {
-			impl.mu.Lock()
-			impl.lastRefresh = time.Now()
-			impl.mu.Unlock()
+			mu.Lock()
+			lastRefresh = time.Now()
+			mu.Unlock()
 		}
 		return err
 	}
 
-	impl.status = util.Cached(func() (Status, error) {
-		res, err := api.Status(vin)
-		// While charging, periodically ask the TCU to push fresh data
-		// to the cloud so subsequent polls return up-to-date SOC values.
-		impl.mu.Lock()
-		needsRefresh := err == nil && strings.EqualFold(res.Payload.ChargingStatus, "charging") && time.Since(impl.lastRefresh) >= refreshInterval
-		impl.mu.Unlock()
-		if needsRefresh {
-			if err := impl.refresh(); err != nil {
-				log.ERROR.Printf("status refresh: %v", err)
+	impl := &Provider{
+		status: util.Cached(func() (Status, error) {
+			res, err := api.Status(vin)
+			if err != nil {
+				return res, err
 			}
-		}
-		return res, err
-	}, cache)
+
+			// While charging, periodically ask the TCU to push fresh data
+			// to the cloud so subsequent polls return up-to-date SOC values.
+			mu.Lock()
+			needsRefresh := strings.EqualFold(res.Payload.ChargingStatus, "charging") && time.Since(lastRefresh) >= refreshInterval
+			mu.Unlock()
+			if needsRefresh {
+				if err := refresh(); err != nil {
+					log.ERROR.Printf("status refresh: %v", err)
+				}
+			}
+
+			return res, nil
+		}, cache),
+		refresh: refresh,
+	}
 
 	return impl
 }
