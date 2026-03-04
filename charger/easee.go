@@ -61,13 +61,13 @@ type Easee struct {
 	phaseMode             int
 	currentPower, sessionEnergy, totalEnergy,
 	currentL1, currentL2, currentL3 float64
-	rfid      string
-	lp        loadpoint.API
+	rfid         string
+	lp           loadpoint.API
 	cmdMu        sync.Mutex
 	pendingTicks map[int64]chan easee.SignalRCommandResponse
-	obsC      chan easee.Observation
-	obsTime   map[easee.ObservationID]time.Time
-	startDone func()
+	obsC         chan easee.Observation
+	obsTime      map[easee.ObservationID]time.Time
+	startDone    func()
 }
 
 func init() {
@@ -108,15 +108,15 @@ func NewEasee(ctx context.Context, user, password, charger string, timeout time.
 	done := make(chan struct{})
 
 	c := &Easee{
-		Helper:    request.NewHelper(log),
-		charger:   charger,
-		authorize: authorize,
-		log:       log,
-		current:   6, // default current
-		startDone: sync.OnceFunc(func() { close(done) }),
+		Helper:       request.NewHelper(log),
+		charger:      charger,
+		authorize:    authorize,
+		log:          log,
+		current:      6, // default current
+		startDone:    sync.OnceFunc(func() { close(done) }),
 		pendingTicks: make(map[int64]chan easee.SignalRCommandResponse),
-		obsC:      make(chan easee.Observation),
-		obsTime:   make(map[easee.ObservationID]time.Time),
+		obsC:         make(chan easee.Observation),
+		obsTime:      make(map[easee.ObservationID]time.Time),
 	}
 
 	c.Client.Timeout = timeout
