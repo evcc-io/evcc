@@ -1,5 +1,8 @@
 <template>
-	<div class="d-flex flex-column site safe-area-inset">
+	<div
+		class="d-flex flex-column site safe-area-inset"
+		:class="{ 'site--bottomtabs': experimental }"
+	>
 		<div class="container px-4 top-area">
 			<div
 				class="d-flex justify-content-between align-items-center my-3 my-md-4"
@@ -70,13 +73,14 @@
 				:selectedId="selectedLoadpointId"
 				@id-changed="selectedLoadpointChanged"
 			/>
-			<!-- Footer removed to make room for BottomTabBar — code kept for later reuse -->
+			<Footer v-if="!experimental" v-bind="footer" />
 		</div>
 	</div>
 </template>
 
 <script lang="ts">
 import "@h2d2/shopicons/es/regular/arrowup";
+import Footer from "../Footer/Footer.vue";
 import TopNavigationArea from "../Top/TopNavigationArea.vue";
 import Energyflow from "../Energyflow/Energyflow.vue";
 import HemsWarning from "../HemsWarning.vue";
@@ -104,6 +108,7 @@ import type { Grid } from "./types";
 export default defineComponent({
 	name: "Site",
 	components: {
+		Footer,
 		Loadpoints,
 		Energyflow,
 		HemsWarning,
@@ -233,6 +238,10 @@ export default defineComponent({
 </script>
 <style scoped>
 .site {
+	min-height: 100vh;
+	min-height: 100dvh;
+}
+.site--bottomtabs {
 	min-height: calc(100vh - var(--tab-bar-height) - var(--safe-area-inset-bottom));
 	min-height: calc(100dvh - var(--tab-bar-height) - var(--safe-area-inset-bottom));
 }

@@ -1,12 +1,12 @@
 <template>
-	<div class="app">
+	<div class="app" :class="{ 'app--bottomtabs': state.experimental }">
 		<router-view
 			v-if="showRoutes"
 			:notifications="notifications"
 			:offline="offline"
 		></router-view>
 
-		<BottomTabBar v-bind="bottomTabBarProps" />
+		<BottomTabBar v-if="state.experimental" v-bind="bottomTabBarProps" />
 
 		<GlobalSettingsModal v-bind="globalSettingsProps" />
 		<BatterySettingsModal v-if="batteryModalAvailabe" v-bind="batterySettingsProps" />
@@ -219,6 +219,8 @@ export default defineComponent({
 .app {
 	min-height: 100vh;
 	min-height: 100dvh;
+}
+.app--bottomtabs {
 	padding-bottom: var(--tab-bar-height);
 }
 </style>
