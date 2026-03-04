@@ -2,6 +2,7 @@ package toyota
 
 import (
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -11,24 +12,33 @@ import (
 const refreshInterval = 15 * time.Minute
 
 type Provider struct {
+	mu          sync.Mutex
 	status      func() (Status, error)
 	refresh     func() error
 	lastRefresh time.Time
 }
 
 func NewProvider(log *util.Logger, api *API, vin string, cache time.Duration) *Provider {
-	impl := &Provider{
-		refresh: func() error {
-			return api.RefreshStatus(vin)
-		},
+	impl := &Provider{}
+
+	impl.refresh = func() error {
+		err := api.RefreshStatus(vin)
+		if err == nil {
+			impl.mu.Lock()
+			impl.lastRefresh = time.Now()
+			impl.mu.Unlock()
+		}
+		return err
 	}
 
 	impl.status = util.Cached(func() (Status, error) {
 		res, err := api.Status(vin)
-		// Trigger a status refresh while charging so the TCU pushes
-		// fresh data to the cloud for the next poll cycle.
-		if err == nil && strings.EqualFold(res.Payload.ChargingStatus, "charging") && time.Since(impl.lastRefresh) >= refreshInterval {
-			impl.lastRefresh = time.Now()
+		// While charging, periodically ask the TCU to push fresh data
+		// to the cloud so subsequent polls return up-to-date SOC values.
+		impl.mu.Lock()
+		needsRefresh := err == nil && strings.EqualFold(res.Payload.ChargingStatus, "charging") && time.Since(impl.lastRefresh) >= refreshInterval
+		impl.mu.Unlock()
+		if needsRefresh {
 			if err := impl.refresh(); err != nil {
 				log.ERROR.Printf("status refresh: %v", err)
 			}
@@ -42,11 +52,7 @@ func NewProvider(log *util.Logger, api *API, vin string, cache time.Duration) *P
 var _ api.Resurrector = (*Provider)(nil)
 
 func (v *Provider) WakeUp() error {
-	err := v.refresh()
-	if err == nil {
-		v.lastRefresh = time.Now()
-	}
-	return err
+	return v.refresh()
 }
 
 func (v *Provider) Soc() (float64, error) {
