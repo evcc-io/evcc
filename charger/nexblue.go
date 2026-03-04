@@ -30,6 +30,7 @@ import (
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
+	"github.com/samber/lo"
 	"golang.org/x/oauth2"
 )
 
@@ -39,7 +40,6 @@ const nexblueAPI = "https://api.nexblue.com/third_party/openapi"
 type Nexblue struct {
 	*request.Helper
 	serial  string
-	current int64
 	enabled bool
 	statusG util.Cacheable[nexblueStatus]
 }
@@ -56,8 +56,6 @@ type nexblueStatus struct {
 func init() {
 	registry.AddCtx("nexblue", NewNexblueFromConfig)
 }
-
-//go:generate go tool decorate -f decorateNexblue -b *Nexblue -r api.Charger -t api.PhaseSwitcher
 
 // NewNexblueFromConfig creates a Nexblue charger from generic config
 func NewNexblueFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
@@ -90,22 +88,20 @@ func NewNexblue(ctx context.Context, user, password, serial string, cache time.D
 	}
 
 	wb := &Nexblue{
-		Helper:  request.NewHelper(log),
-		current: 6,
+		Helper: request.NewHelper(log),
 	}
 
 	// authHelper uses a separate client injected via context to avoid circular
 	// dependency when oauth2.Transport later calls Token() on token refresh.
 	authHelper := request.NewHelper(log)
 	login := func(_ *oauth2.Token) (*oauth2.Token, error) {
-		req, err := request.New(http.MethodPost, nexblueAPI+"/account/login", request.MarshalJSON(struct {
+		req, _ := request.New(http.MethodPost, nexblueAPI+"/account/login", request.MarshalJSON(struct {
 			Username    string `json:"username"`
 			Password    string `json:"password"`
 			AccountType int    `json:"account_type"`
-		}{user, password, 0}), request.JSONEncoding)
-		if err != nil {
-			return nil, err
-		}
+		}{
+			user, password, 0,
+		}), request.JSONEncoding)
 
 		var res struct {
 			AccessToken string `json:"access_token"`
@@ -130,38 +126,34 @@ func NewNexblue(ctx context.Context, user, password, serial string, cache time.D
 	authCtx := context.WithValue(ctx, oauth2.HTTPClient, authHelper.Client)
 	wb.Client = oauth2.NewClient(authCtx, oauth.RefreshTokenSource(tok, login))
 
-	if serial == "" {
-		serial, err = ensureCharger("", func() ([]string, error) {
-			return wb.chargerSerials()
-		})
-		if err != nil {
-			return nil, err
-		}
+	wb.serial, err = ensureCharger("", func() ([]string, error) {
+		return wb.chargerSerials()
+	})
+	if err != nil {
+		return nil, err
 	}
-	wb.serial = serial
 
 	wb.statusG = util.ResettableCached(func() (nexblueStatus, error) {
 		var res nexblueStatus
 		return res, wb.GetJSON(fmt.Sprintf("%s/chargers/%s/cmd/status", nexblueAPI, wb.serial), &res)
 	}, cache)
 
-	return decorateNexblue(wb, wb.phases1p3p), nil
+	return wb, nil
 }
 
 func (wb *Nexblue) chargerSerials() ([]string, error) {
+	type charger = struct {
+		SerialNumber string `json:"serial_number"`
+	}
 	var res struct {
-		Data []struct {
-			SerialNumber string `json:"serial_number"`
-		} `json:"data"`
+		Data []charger
 	}
-	if err := wb.GetJSON(nexblueAPI+"/chargers", &res); err != nil {
-		return nil, err
-	}
-	serials := make([]string, 0, len(res.Data))
-	for _, c := range res.Data {
-		serials = append(serials, c.SerialNumber)
-	}
-	return serials, nil
+
+	err := wb.GetJSON(nexblueAPI+"/chargers", &res)
+
+	return lo.Map(res.Data, func(c charger, _ int) string {
+		return c.SerialNumber
+	}), err
 }
 
 // Status implements the api.Charger interface
@@ -227,15 +219,12 @@ func (wb *Nexblue) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (wb *Nexblue) MaxCurrent(current int64) error {
-	req, err := request.New(http.MethodPost,
-		fmt.Sprintf("%s/chargers/%s/cmd/set_current_limit", nexblueAPI, wb.serial),
-		request.MarshalJSON(struct {
+	req, _ := request.New(http.MethodPost,
+		fmt.Sprintf("%s/chargers/%s/cmd/set_current_limit", nexblueAPI, wb.serial), request.MarshalJSON(struct {
 			CurrentLimit int64 `json:"current_limit"`
-		}{current}),
-		request.JSONEncoding)
-	if err != nil {
-		return err
-	}
+		}{
+			current,
+		}), request.JSONEncoding)
 
 	var res struct {
 		Result int `json:"result"`
@@ -247,8 +236,6 @@ func (wb *Nexblue) MaxCurrent(current int64) error {
 		return fmt.Errorf("set current limit failed: %d", res.Result)
 	}
 
-	wb.current = current
-	wb.statusG.Reset()
 	return nil
 }
 
@@ -276,20 +263,16 @@ func (wb *Nexblue) TotalEnergy() (float64, error) {
 	return res.LifetimeEnergy, err
 }
 
-// phases1p3p implements the api.PhaseSwitcher interface
-// Note: phase switching uses the v1 settings endpoint (/v1/charger/) which differs from
-// the management endpoints (/chargers/), as documented in the Nexblue OpenAPI specification.
-func (wb *Nexblue) phases1p3p(phases int) error {
-	req, err := request.New(http.MethodPost,
-		fmt.Sprintf("%s/v1/charger/%s/setting", nexblueAPI, wb.serial),
-		request.MarshalJSON(struct {
-			PhaseMode int `json:"phase_mode"`
-		}{phases}),
-		request.JSONEncoding)
-	if err != nil {
-		return err
-	}
+var _ api.PhaseSwitcher = (*Nexblue)(nil)
 
-	_, err = wb.DoBody(req)
+func (wb *Nexblue) Phases1p3p(phases int) error {
+	req, _ := request.New(http.MethodPost,
+		fmt.Sprintf("%s/v1/charger/%s/setting", nexblueAPI, wb.serial), request.MarshalJSON(struct {
+			PhaseMode int `json:"phase_mode"`
+		}{
+			phases,
+		}), request.JSONEncoding)
+
+	_, err := wb.DoBody(req)
 	return err
 }
