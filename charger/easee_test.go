@@ -173,7 +173,7 @@ func TestEasee_waitForTickResponse(t *testing.T) {
 				ch <- *tc.cmdCValue
 			}
 
-			err := e.waitForTickResponse(tc.expectedTick, ch)
+			err := e.waitForTickResponse(ch)
 
 			// Assert the result
 			if tc.expectedErr != nil {

@@ -570,14 +570,14 @@ func (c *Easee) postJSONAndWait(uri string, data any) (bool, error) {
 		ch := make(chan easee.SignalRCommandResponse, 1)
 		c.registerPendingTick(cmd.Ticks, ch)
 		defer c.unregisterPendingTick(cmd.Ticks)
-		return false, c.waitForTickResponse(cmd.Ticks, ch)
+		return false, c.waitForTickResponse(ch)
 	}
 
 	// all other response codes lead to an error
 	return false, fmt.Errorf("invalid status: %d", resp.StatusCode)
 }
 
-func (c *Easee) waitForTickResponse(expectedTick int64, ch <-chan easee.SignalRCommandResponse) error {
+func (c *Easee) waitForTickResponse(ch <-chan easee.SignalRCommandResponse) error {
 	select {
 	case cmdResp := <-ch:
 		if !cmdResp.WasAccepted {
