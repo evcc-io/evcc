@@ -97,6 +97,7 @@
 	--safe-area-inset-right: env(safe-area-inset-right, 0px);
 
 	--tab-bar-height: 3rem;
+	--tab-bar-background: var(--evcc-background);
 }
 
 :root.dark {
@@ -114,6 +115,7 @@
 	--bs-border-color-translucent: rgba(255, 255, 255, 0.175);
 	--bs-code-color: var(--evcc-dark-green);
 	--evcc-backdrop: #000000aa; /* black + transparent */
+	--tab-bar-background: var(--evcc-box);
 	color-scheme: dark;
 }
 
@@ -482,6 +484,13 @@ small {
 
 .dark .btn-close {
 	filter: invert(1);
+}
+
+.circle-badge {
+	display: inline-block;
+	width: 12px;
+	height: 12px;
+	border-radius: 50%;
 }
 
 .dropdown-menu {

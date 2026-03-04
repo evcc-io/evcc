@@ -22,7 +22,8 @@
 				<shopicon-regular-cablecharge class="tab-icon"></shopicon-regular-cablecharge>
 			</Item>
 
-			<MoreMenu
+			<MoreItem
+				:active="moreActive"
 				:auth-providers="authProviders"
 				:sponsor="sponsor"
 				:fatal="fatal"
@@ -39,7 +40,7 @@ import "@h2d2/shopicons/es/regular/cablecharge";
 import ForecastGraphIcon from "../MaterialIcon/ForecastGraph.vue";
 import BatteryIcon from "../Energyflow/BatteryIcon.vue";
 import Item from "./Item.vue";
-import MoreMenu from "./MoreMenu.vue";
+import MoreItem from "./MoreItem.vue";
 import { defineComponent, type PropType } from "vue";
 import type { FatalError, Forecast, Sponsor, EvOpt, AuthProviders, Battery } from "@/types/evcc";
 
@@ -49,7 +50,7 @@ export default defineComponent({
 		BatteryIcon,
 		ForecastGraphIcon,
 		Item,
-		MoreMenu,
+		MoreItem,
 	},
 	props: {
 		battery: { type: Object as PropType<Battery> },
@@ -69,6 +70,10 @@ export default defineComponent({
 		batteryHold() {
 			return this.batteryMode === "hold";
 		},
+		moreActive() {
+			const mainTabs = ["/", "/battery", "/forecast", "/sessions"];
+			return !mainTabs.includes(this.$route.path);
+		},
 	},
 });
 </script>
@@ -76,9 +81,14 @@ export default defineComponent({
 <style scoped>
 .bottom-tab-bar {
 	z-index: 1030;
-	background: color-mix(in srgb, var(--evcc-background) 80%, transparent);
+	background: color-mix(in srgb, var(--tab-bar-background) 80%, transparent);
 	backdrop-filter: blur(20px);
 	-webkit-backdrop-filter: blur(20px);
 	border-top: 1px solid var(--evcc-gray-10);
+	box-shadow: 0 -1px 6px rgba(0, 0, 0, 0.05);
+}
+
+:root.dark .bottom-tab-bar {
+	border-top-color: var(--bs-border-color);
 }
 </style>

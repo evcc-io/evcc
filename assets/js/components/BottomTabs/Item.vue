@@ -7,12 +7,22 @@
 		:data-testid="label ? `tab-${label.toLowerCase()}` : undefined"
 		@click="vibrate"
 	>
-		<slot />
 		<span
-			v-if="label"
-			class="tab-label fw-bold mt-1 mt-md-0 text-truncate text-center text-md-start"
-			>{{ label }}</span
+			class="tab-content d-flex flex-column flex-md-row align-items-center position-relative"
 		>
+			<span
+				v-if="badge"
+				class="tab-badge circle-badge position-absolute"
+				:class="badge"
+			></span>
+			<slot />
+			<span
+				v-if="label"
+				class="tab-label mt-1 mt-md-0 ms-md-1 text-truncate text-center text-md-start"
+				>{{ label }}</span
+			>
+		</span>
+		<slot name="menu" />
 	</component>
 </template>
 
@@ -27,6 +37,7 @@ export default defineComponent({
 		label: { type: String, default: undefined },
 		exact: { type: Boolean, default: false },
 		active: { type: Boolean, default: false },
+		badge: { type: String, default: undefined },
 	},
 	computed: {
 		linkProps() {
@@ -59,6 +70,7 @@ export default defineComponent({
 	touch-action: manipulation;
 	-webkit-tap-highlight-color: transparent;
 	-webkit-touch-callout: none;
+	-webkit-user-select: none;
 	user-select: none;
 	transition: color var(--evcc-transition-fast);
 }
@@ -100,6 +112,25 @@ export default defineComponent({
 @media (min-width: 400px) {
 	.tab-label {
 		display: block;
+	}
+}
+
+@media (min-width: 768px) {
+	.tab-label {
+		font-size: 14px;
+		font-weight: normal;
+	}
+}
+
+.tab-badge {
+	top: -4px;
+	right: -4px;
+}
+
+@media (min-width: 768px) {
+	.tab-badge {
+		top: -6px;
+		right: -14px;
 	}
 }
 </style>
