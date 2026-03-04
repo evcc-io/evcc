@@ -27,6 +27,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"golang.org/x/oauth2"
@@ -50,36 +51,6 @@ type nexblueStatus struct {
 	LifetimeEnergy float64   `json:"lifetime_energy"` // kWh (total)
 	CurrentLimit   int       `json:"current_limit"`   // A
 	VoltageList    []float64 `json:"voltage_list"`    // V per phase
-}
-
-type nexblueTokenSource struct {
-	helper   *request.Helper
-	user     string
-	password string
-}
-
-func (ts *nexblueTokenSource) Token() (*oauth2.Token, error) {
-	req, err := request.New(http.MethodPost, nexblueAPI+"/account/login", request.MarshalJSON(struct {
-		Username    string `json:"username"`
-		Password    string `json:"password"`
-		AccountType int    `json:"account_type"`
-	}{ts.user, ts.password, 0}), request.JSONEncoding)
-	if err != nil {
-		return nil, err
-	}
-
-	var res struct {
-		AccessToken string `json:"access_token"`
-		ExpiresIn   int    `json:"expires_in"`
-	}
-	if err := ts.helper.DoJSON(req, &res); err != nil {
-		return nil, err
-	}
-
-	return &oauth2.Token{
-		AccessToken: res.AccessToken,
-		Expiry:      time.Now().Add(time.Duration(res.ExpiresIn) * time.Second),
-	}, nil
 }
 
 func init() {
@@ -123,15 +94,41 @@ func NewNexblue(ctx context.Context, user, password, serial string, cache time.D
 		current: 6,
 	}
 
-	ts := &nexblueTokenSource{helper: wb.Helper, user: user, password: password}
-	tok, err := ts.Token()
+	// authHelper uses a separate client injected via context to avoid circular
+	// dependency when oauth2.Transport later calls Token() on token refresh.
+	authHelper := request.NewHelper(log)
+	login := func(_ *oauth2.Token) (*oauth2.Token, error) {
+		req, err := request.New(http.MethodPost, nexblueAPI+"/account/login", request.MarshalJSON(struct {
+			Username    string `json:"username"`
+			Password    string `json:"password"`
+			AccountType int    `json:"account_type"`
+		}{user, password, 0}), request.JSONEncoding)
+		if err != nil {
+			return nil, err
+		}
+
+		var res struct {
+			AccessToken string `json:"access_token"`
+			ExpiresIn   int    `json:"expires_in"`
+		}
+		if err := authHelper.DoJSON(req, &res); err != nil {
+			return nil, err
+		}
+
+		return &oauth2.Token{
+			AccessToken: res.AccessToken,
+			Expiry:      time.Now().Add(time.Duration(res.ExpiresIn) * time.Second),
+		}, nil
+	}
+
+	tok, err := login(nil)
 	if err != nil {
 		return nil, err
 	}
-	wb.Client.Transport = &oauth2.Transport{
-		Source: oauth2.ReuseTokenSource(tok, ts),
-		Base:   wb.Client.Transport,
-	}
+
+	// Inject authHelper's client as base transport; oauth2.NewClient wraps it with oauth2.Transport.
+	authCtx := context.WithValue(ctx, oauth2.HTTPClient, authHelper.Client)
+	wb.Client = oauth2.NewClient(authCtx, oauth.RefreshTokenSource(tok, login))
 
 	if serial == "" {
 		serial, err = ensureCharger("", func() ([]string, error) {
