@@ -1,6 +1,6 @@
-template: temperature
+template: open-meteo-temperature
 products:
-  - brand: Open-Meteo
+  - brand: Open-Meteo Temperature
 requirements:
   description:
     en: Free Weather API [open-meteo.com](https://open-meteo.com) for outdoor temperature data. Open-Meteo is an open-source weather API and offers free access for non-commercial use. No API key required.
