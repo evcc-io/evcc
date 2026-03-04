@@ -33,7 +33,8 @@ func newEasee() *Easee {
 	e := Easee{
 		Helper:       request.NewHelper(log),
 		obsTime:      make(map[easee.ObservationID]time.Time),
-		pendingTicks: make(map[int64]chan easee.SignalRCommandResponse),
+		pendingTicks:    make(map[int64]chan easee.SignalRCommandResponse),
+		expectedOrphans: make(map[easee.ObservationID]int),
 		log:          log,
 		startDone:    func() {},
 		obsC:         make(chan easee.Observation),
