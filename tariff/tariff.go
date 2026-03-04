@@ -120,7 +120,7 @@ func (t *Tariff) run(forecastG func() (string, error), done chan error, interval
 			periodStart = beginningOfDay()
 		}
 		if t.typ == api.TariffTypeTemperature {
-			// Keep 7 days of historical data for temperature correction algorithm
+			// Keep 7 days of historical data (in 15-minute intervals) for temperature correction algorithm
 			periodStart = time.Now().AddDate(0, 0, -7)
 		}
 		mergeRatesAfter(t.data, data, periodStart)
