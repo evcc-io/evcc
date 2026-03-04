@@ -403,14 +403,12 @@ func (c *Easee) CommandResponse(i json.RawMessage) {
 	c.cmdMu.Unlock()
 
 	if !ok {
-		c.log.WARN.Printf("CommandResponse: no pending tick for %d (serial=%s), ignoring", res.Ticks, res.SerialNumber)
+		c.log.WARN.Printf("rogue CommandResponse: charger %s sent Ticks=%d (accepted=%v, resultCode=%d) "+
+			"which was not triggered by evcc — another system may be controlling this charger",
+			res.SerialNumber, res.Ticks, res.WasAccepted, res.ResultCode)
 		return
 	}
-
-	select {
-	case ch <- res:
-	default:
-	}
+	ch <- res
 }
 
 func (c *Easee) chargers() ([]easee.Charger, error) {

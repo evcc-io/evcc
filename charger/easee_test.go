@@ -13,6 +13,7 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/jarcoal/httpmock"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // Helper function to create a payload
@@ -30,11 +31,12 @@ func createPayload(id easee.ObservationID, timestamp time.Time, dataType easee.D
 func newEasee() *Easee {
 	log := util.NewLogger("easee")
 	e := Easee{
-		Helper:    request.NewHelper(log),
-		obsTime:   make(map[easee.ObservationID]time.Time),
-		log:       log,
-		startDone: func() {},
-		obsC:      make(chan easee.Observation),
+		Helper:       request.NewHelper(log),
+		obsTime:      make(map[easee.ObservationID]time.Time),
+		pendingTicks: make(map[int64]chan easee.SignalRCommandResponse),
+		log:          log,
+		startDone:    func() {},
+		obsC:         make(chan easee.Observation),
 	}
 	e.Client.Timeout = 500 * time.Millisecond //aggressive timeout to accelerate testing
 	return &e
@@ -385,5 +387,57 @@ func TestEasee_MaxCurrent(t *testing.T) {
 		assert.Equal(t, tc.expectCurrent, e.current)
 		//TODO this fails, either current or dynamicChargerCurrent need to go
 		//assert.Equal(t, e.current, e.dynamicChargerCurrent)
+	}
+}
+
+func TestEasee_CommandResponse_rogue(t *testing.T) {
+	e := newEasee()
+
+	rogueResp := easee.SignalRCommandResponse{
+		SerialNumber: "EH123456",
+		Ticks:        999999999,
+		WasAccepted:  true,
+		ResultCode:   0,
+	}
+
+	raw, err := json.Marshal(rogueResp)
+	require.NoError(t, err)
+
+	// No pending tick registered → should log WARN (not panic, not block)
+	assert.NotPanics(t, func() {
+		e.CommandResponse(raw)
+	})
+
+	// pendingTicks should still be empty
+	e.cmdMu.Lock()
+	assert.Empty(t, e.pendingTicks)
+	e.cmdMu.Unlock()
+}
+
+func TestEasee_CommandResponse_legitimate(t *testing.T) {
+	e := newEasee()
+
+	ticks := int64(638798974487432600)
+	ch := make(chan easee.SignalRCommandResponse, 1)
+	e.registerPendingTick(ticks, ch)
+
+	resp := easee.SignalRCommandResponse{
+		SerialNumber: "EH123456",
+		Ticks:        ticks,
+		WasAccepted:  true,
+	}
+
+	raw, err := json.Marshal(resp)
+	require.NoError(t, err)
+
+	e.CommandResponse(raw)
+
+	// Channel should have received the response
+	select {
+	case got := <-ch:
+		assert.Equal(t, ticks, got.Ticks)
+		assert.True(t, got.WasAccepted)
+	case <-time.After(100 * time.Millisecond):
+		t.Fatal("CommandResponse did not deliver to pending channel")
 	}
 }
