@@ -105,6 +105,12 @@
       "labelResidualPower": "Puissance résiduelle",
       "title": "Comportement du contrôle"
     },
+    "currency": {
+      "description": "Utilisé pour formater les prix de l'énergie, les coûts et les économies en fonction de votre tarif.",
+      "example": "Votre prix de recharge était de {price}. Vous avez économisé {amount}.",
+      "label": "Devise",
+      "title": "Devise"
+    },
     "deviceValue": {
       "amount": "Montant",
       "broker": "Courtier",
@@ -130,11 +136,13 @@
       "energy": "Énergie",
       "events": "Evénements",
       "feedinPrice": "Prix de vente",
+      "forecast": "Prévisions",
       "gridPrice": "Prix du réseau",
       "heaterTempLimit": "Limite du chauffage",
       "hemsActiveLimit": "Limite active",
       "hemsType": "Communication",
       "identifier": "Identifiant RFID",
+      "max": "max",
       "messengers": "Services",
       "no": "non",
       "odometer": "Compteur kilométrique",
@@ -145,6 +153,7 @@
       "phases1p3p": "Commutation de phase",
       "power": "Puissance",
       "powerRange": "Plage de puissance",
+      "price": "Prix",
       "range": "Autonomie",
       "singlePhase": "Monophasé",
       "soc": "Charge",
@@ -324,6 +333,8 @@
       },
       "defaultModeHelpKeep": "Conserver le dernier mode sélectionné.",
       "defaultModeLabel": "Mode par défaut",
+      "defaultsHint": "Mode par défaut, comportement solaire et détails électriques utilisent des valeurs par défaut raisonnables.",
+      "defaultsHintLink": "Régler les paramètres",
       "delete": "Supprimer",
       "electricalSubtitle": "En cas de doute, demandez à votre électricien.",
       "electricalTitle": "Électrique",
@@ -569,7 +580,8 @@
       "labelInternalUrl": "URL interne",
       "labelPort": "Port",
       "labelSchema": "Schéma",
-      "title": "Réseau"
+      "title": "Réseau",
+      "warningUrlPath": "L'URL n'a généralement pas besoin de chemin d'accès. Êtes-vous sûr que c'est correct ?"
     },
     "ocpp": {
       "connectedChargers": "Chargeurs connectés",
@@ -695,6 +707,79 @@
       "restartRequiredMessage": "La configuration a changé.",
       "restartingDescription": "Veuillez patienter…",
       "restartingMessage": "Redémarrage d’evcc en cours."
+    },
+    "tariff": {
+      "addForecast": "Ajouter une prévision",
+      "addTariff": "Ajouter un tarif",
+      "co2": {
+        "description": "Prévisions d'intensité de CO₂ pour l'électricité du réseau. Pour une recharge optimisée en termes de CO₂ et le calcul des économies d'émissions.",
+        "titleAdd": "Ajouter les prévisions de CO₂",
+        "titleEdit": "Modifier les prévisions de CO₂"
+      },
+      "co2Services": "Services CO₂",
+      "customForecast": "Prévision définie par l'utilisateur",
+      "customTariff": "Tarif défini par l'utilisateur",
+      "description": "Configurez vos tarifs énergétiques et vos prévisions. Utilisez la configuration basée sur les appareils pour une gestion dynamique ou YAML pour les paramètres statiques.",
+      "feedIn": {
+        "description": "Compensation pour l'électricité exportée vers le réseau. Utilisée pour calculer les coûts de recharge réels.",
+        "titleAdd": "Ajouter un tarif d'exportation de réseau",
+        "titleEdit": "Modifier le tarif d'exportation vers le réseau"
+      },
+      "generic": "Intégrations génériques",
+      "grid": {
+        "description": "Prix de l'électricité pour la consommation du réseau. Pour calculer les coûts de recharge réels et optimiser le prix de la recharge des véhicules, des appareils de chauffage ou de la recharge de votre batterie domestique à partir du réseau.",
+        "titleAdd": "Ajouter un tarif d'importation de réseau",
+        "titleEdit": "Modifier le tarif d'importation du réseau"
+      },
+      "legacyWarning": "Nouvelle configuration tarifaire disponible ! Supprimez et enregistrez vos tarifs ici pour utiliser le nouveau processus guidé.",
+      "option": {
+        "co2": "Ajouter les prévisions de CO₂",
+        "feedIn": "Ajouter un tarif d'exportation vers le réseau",
+        "grid": "Ajouter un tarif d'importation du réseau",
+        "planner": "Ajouter prévisions du planificateur",
+        "solar": "Ajouter prévisions solaires"
+      },
+      "planner": {
+        "description": "Paramètre avancé. Généralement superflu, car les tarifs d'électricité dynamiques et les prévisions de CO₂ sont utilisés automatiquement. Active une source de données supplémentaire qui n'est utilisée que pour la planification de la recharge, et non pour les statistiques et les calculs de prix.",
+        "titleAdd": "Ajouter prévisions du planificateur",
+        "titleEdit": "Modifier prévisions du planificateur"
+      },
+      "services": "Services",
+      "solar": {
+        "description": "Prévisions de production solaire pour votre système photovoltaïque. Affichées dans l'interface, elles seront utilisées à l'avenir pour les algorithmes d'optimisation.",
+        "titleAdd": "Ajouter prévisions solaires",
+        "titleEdit": "Modifier les prévisions solaires"
+      },
+      "template": "Fournisseur",
+      "title": "Tarifs & prévisions",
+      "titleChoice": "Que voulez-vous rajouter ?",
+      "type": {
+        "co2": "Intensité de CO₂",
+        "feedIn": "Prix de rachat",
+        "grid": "Prix de consommation du réseau",
+        "planner": "Planificateur",
+        "solar": "Solaire"
+      },
+      "zones": {
+        "add": "Ajouter une zone",
+        "allDays": "Tous les jours",
+        "allMonths": "Tous les mois",
+        "allTimes": "Tout le temps",
+        "cancel": "Annuler",
+        "days": "Jours",
+        "edit": "Éditer",
+        "hours": "Heures",
+        "months": "Mois",
+        "price": "Prix",
+        "priceRequired": "Le prix est requis",
+        "remove": "Supprimer la zone",
+        "save": "Enregistrer",
+        "selectAll": "Tous les jours",
+        "timeFrom": "De",
+        "timeRangeError": "L'heure de début doit être antérieure à l'heure de fin. Pour couvrir minuit, créez deux zones distinctes.",
+        "timeTo": "À",
+        "weekdays": "Jours de la semaine"
+      }
     },
     "tariffs": {
       "description": "Définissez vos tarifs d'énergie pour calculer les coûts de vos sessions de charge.",
@@ -1002,8 +1087,8 @@
       "battery": "Batterie",
       "batteryCharge": "Batterie en charge",
       "batteryDischarge": "Décharge de la batterie",
-      "batteryForecastEmpty": "vide dans {timeago}",
-      "batteryForecastFull": "plein dans {timeago}",
+      "batteryForecastEmpty": "vide {time}",
+      "batteryForecastFull": "plein {time}",
       "batteryGridChargeActive": "Charge réseau : active",
       "batteryGridChargeLimit": "Charge réseau : quand",
       "batteryHold": "Batterie (verrouillée)",
@@ -1188,6 +1273,7 @@
       "targetChargeWaitForVehicle": "Plan de charge prêt. Attente du véhicule…",
       "vehicleLimit": "Limite du véhicule",
       "vehicleLimitReached": "Limite du véhicule atteinte.",
+      "waitForAuthorization": "Connecté. En attente d'autorisation…",
       "waitForVehicle": "Prêt. Attente du véhicule…",
       "welcome": "Courte charge initiale pour confirmer la connexion."
     },
