@@ -4,6 +4,7 @@ products:
   - brand: Sessy
     description:
       generic: Sessy Smart Battery
+capabilities: ["battery-control"]
 params:
   - name: usage
     choice: ["battery"]
@@ -154,5 +155,5 @@ render: |
             password: {{ .password }}
           headers:
           - content-type: application/json
-          body: '{"setpoint": -1700}'
+          body: '{"setpoint": -2200}'
   capacity: {{ .capacity }}
