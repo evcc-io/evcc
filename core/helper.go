@@ -19,7 +19,7 @@ var (
 // powerToCurrent is a helper function to convert power to per-phase current
 func powerToCurrent(power float64, phases int, voltage float64) float64 {
 	if voltage == 0 {
-		panic("Voltage is not set")
+		voltage = Voltage
 	}
 	return power / (float64(phases) * voltage)
 }
@@ -27,7 +27,7 @@ func powerToCurrent(power float64, phases int, voltage float64) float64 {
 // currentToPower is a helper function to convert current to sum power
 func currentToPower(current float64, phases int, voltage float64) float64 {
 	if voltage == 0 {
-		panic("Voltage is not set")
+		voltage = Voltage
 	}
 	return current * float64(phases) * voltage
 }
