@@ -172,15 +172,11 @@ export default defineComponent({
 				return;
 			}
 
-			const loc = window.location;
-			const protocol = loc.protocol == "https:" ? "wss:" : "ws:";
-			const uri =
-				protocol +
-				"//" +
-				loc.hostname +
-				(loc.port ? ":" + loc.port : "") +
-				loc.pathname +
-				"ws";
+			const loc = new URL("ws", window.location.href);
+			loc.protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+			// force Safari to use a fresh connection
+			loc.searchParams.set("t", String(Date.now()));
+			const uri = loc.href;
 
 			this.ws = new WebSocket(uri);
 			this.ws.onerror = () => {
