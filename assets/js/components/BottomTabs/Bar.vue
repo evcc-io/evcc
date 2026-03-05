@@ -19,7 +19,7 @@
 			</Item>
 
 			<Item to="/sessions" :label="$t('tabBar.sessions')">
-				<shopicon-regular-cablecharge class="tab-icon"></shopicon-regular-cablecharge>
+				<SessionsIcon class="tab-icon" />
 			</Item>
 
 			<MoreItem
@@ -36,8 +36,8 @@
 
 <script lang="ts">
 import "@h2d2/shopicons/es/regular/lightning";
-import "@h2d2/shopicons/es/regular/cablecharge";
 import ForecastGraphIcon from "../MaterialIcon/ForecastGraph.vue";
+import SessionsIcon from "../MaterialIcon/Sessions.vue";
 import BatteryIcon from "../Energyflow/BatteryIcon.vue";
 import Item from "./Item.vue";
 import MoreItem from "./MoreItem.vue";
@@ -49,6 +49,7 @@ export default defineComponent({
 	components: {
 		BatteryIcon,
 		ForecastGraphIcon,
+		SessionsIcon,
 		Item,
 		MoreItem,
 	},
