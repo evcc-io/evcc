@@ -545,7 +545,8 @@ func TestEasee_Phases1p3p_registersExpectedOrphan(t *testing.T) {
 		MaxCircuitCurrentP2: &maxP2,
 		MaxCircuitCurrentP3: &maxP3,
 	}
-	body, _ := json.Marshal(getResp)
+	body, err := json.Marshal(getResp)
+	require.NoError(t, err)
 	httpmock.RegisterResponder(http.MethodGet, getURI,
 		httpmock.NewBytesResponder(200, body))
 
@@ -553,7 +554,7 @@ func TestEasee_Phases1p3p_registersExpectedOrphan(t *testing.T) {
 	httpmock.RegisterResponder(http.MethodPost, getURI,
 		httpmock.NewStringResponder(200, ""))
 
-	err := e.Phases1p3p(1)
+	err = e.Phases1p3p(1)
 	assert.NoError(t, err)
 
 	// The orphan counter should have been registered before the POST.
