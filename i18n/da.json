@@ -87,7 +87,7 @@
         },
         "heatpump": "Brugerdefineret varmepumpe",
         "sgready": "Brugerdefineret varmepumpe (sg-ready via plugins)",
-        "sgready-boost": "Brugerdefineret varmepumpe (SG-Ready-Boost, ikke længere understøttet)",
+        "sgready-boost": "Brugerdefineret varmepumpe (sg-ready-boost, ikke længere understøttet)",
         "sgready-relay": "Brugerdefineret varmepumpe (sg-ready via relæer)",
         "switchsocket": "Brugerdefineret stikkontakt"
       }
@@ -104,6 +104,12 @@
       "labelInterval": "Opdateringsinterval",
       "labelResidualPower": "Tilbageværende effekt",
       "title": "kontrol adfærd"
+    },
+    "currency": {
+      "description": "Bruges til at formatere energipriser, omkostninger og besparelser baseret på din tarif.",
+      "example": "Din opladningspris var {price}. Du har sparet {amount}.",
+      "label": "Møntfod",
+      "title": "Møntfod"
     },
     "deviceValue": {
       "amount": "Mængde",
@@ -128,12 +134,16 @@
       "dimmed": "Reduceret",
       "enabled": "Aktiveret",
       "energy": "Energi",
+      "events": "Begivenheder",
       "feedinPrice": "Indfødningstarif",
+      "forecast": "Prognose",
       "gridPrice": "God pris",
       "heaterTempLimit": "Opvarmning begrænsning",
       "hemsActiveLimit": "Aktiv begrænsning",
       "hemsType": "Kommunikation",
       "identifier": "RFID-identifikator",
+      "max": "max",
+      "messengers": "Tjenester",
       "no": "nej",
       "odometer": "Kilometertæller",
       "org": "Organisation",
@@ -143,6 +153,7 @@
       "phases1p3p": "Fase-skift",
       "power": "Effekt",
       "powerRange": "Effekt",
+      "price": "Pris",
       "range": "Rækkevidde",
       "singlePhase": "Enkelt fase",
       "soc": "Oplader",
@@ -214,6 +225,7 @@
       "cancel": "Afbryd",
       "clear": "Slet",
       "close": "Luk",
+      "confirmSave": "Ændringer er ikke gemt. Skal de gemmes nu?",
       "copied": "Kopieret!",
       "copy": "Kopier",
       "customHelp": "Opret en brugerdefineret enhed ved hjælp af evcc's plugin-system.",
@@ -229,6 +241,7 @@
       "fromYamlHint": "Bemærk: Er konfigureret via evcc.yaml. Fjern indtastningen fra filen for at aktivere redigering her.",
       "hideAdvancedSettings": "Skjul avancerede indstillinger",
       "invalidFileSelected": "Ugyldig fil er valgt",
+      "legacy": "ældre",
       "noFileSelected": "Ingen fil valgt.",
       "off": "slukket",
       "on": "tændt",
@@ -320,6 +333,8 @@
       },
       "defaultModeHelpKeep": "Gemmer den senest valgte tilstand.",
       "defaultModeLabel": "Standardtilstand",
+      "defaultsHint": "Standardtilstand, soladfærd og elektriske detaljer bruger fornuftige standardværdier.",
+      "defaultsHintLink": "Juster indstillinger",
       "delete": "Slet",
       "electricalSubtitle": "Ved tvivl, spørg din elektriker.",
       "electricalTitle": "Elektrisk",
@@ -410,8 +425,65 @@
       "welcomeBannerTitle": "Lad os konfigurere dit system!"
     },
     "messaging": {
-      "description": "Modtag beskeder om dine opladningssessioner.",
+      "addMessenger": "Tilføj tjeneste",
+      "description": "Modtag beskeder om opladningssessioner.",
+      "event": {
+        "asleep": {
+          "messageDefault": "Ladefrigivelse: Køretøjet {vehicleName} lader ikke.",
+          "title": "Når der ventes på køretøj",
+          "titleDefault": "Køretøjet sover"
+        },
+        "connect": {
+          "messageDefault": "Bil forbundet med {pvPower}kW PV",
+          "title": "Når bilen forbindes",
+          "titleDefault": "Bil er forbundet"
+        },
+        "disconnect": {
+          "messageDefault": "Bilen er frakoblet efter {connectedDuration}",
+          "title": "Når bilen frakobles",
+          "titleDefault": "Bilen er frakoblet"
+        },
+        "guest": {
+          "messageDefault": "Ukendt køretøj, er et gæstekøretøj forbundet?",
+          "title": "Når en ukendt bil forbindes",
+          "titleDefault": "Ukendt køretøj"
+        },
+        "planoverrun": {
+          "messageDefault": "{vehicleTitle}: Tidsplanen overskrides.",
+          "title": "Når opladningsplanen overskrides",
+          "titleDefault": "Planen overskrides"
+        },
+        "soc": {
+          "messageDefault": "Batteri er opladet til {vehicleSoc}%",
+          "title": "Opdatering af ladeniveau",
+          "titleDefault": "Opladningsniveau er opdateret"
+        },
+        "start": {
+          "messageDefault": "Opladning er startet i {mode} mode.",
+          "title": "Når opladning starter",
+          "titleDefault": "Opladning er startet"
+        },
+        "stop": {
+          "messageDefault": "Opladning er afsluttet {chargedEnergy}kWh på {chargeDuration}.",
+          "title": "Når opladning stopper",
+          "titleDefault": "Opladning er færdig"
+        }
+      },
+      "eventMessage": "Besked",
+      "eventTitle": "Titel",
+      "events": "Hændelser",
+      "legacyWarning": "Ny konfiguration til notifikationer er tilgængelig! Fjern og gem din konfiguration her for at tage den nye guidede proces i brug.",
+      "messengers": "Tjenester",
+      "seePlaceholders": "Vis pladsholdere",
       "title": "Beskeder"
+    },
+    "messenger": {
+      "custom": "Bruger-defineret tjeneste",
+      "generic": "Standardtjeneste",
+      "primary": "Specifik tjeneste",
+      "template": "Tjeneste",
+      "titleAdd": "Tilføj tjeneste",
+      "titleEdit": "Juster tjeneste"
     },
     "meter": {
       "cancel": "Afbryd",
@@ -508,7 +580,8 @@
       "labelInternalUrl": "Intern webadresse",
       "labelPort": "port",
       "labelSchema": "Skema",
-      "title": "Netværk"
+      "title": "Netværk",
+      "warningUrlPath": "URL’en kræver som regel ikke en sti. Er du sikker på, at det er rigtigt?"
     },
     "ocpp": {
       "connectedChargers": "Tilsluttede ladere",
@@ -636,6 +709,79 @@
       "restartingDescription": "Vent venligst…",
       "restartingMessage": "Genstarter evcc."
     },
+    "tariff": {
+      "addForecast": "Tilføj prognose",
+      "addTariff": "Tilføj tarif",
+      "co2": {
+        "description": "CO₂-intensitetsprognose for netstrøm. Til CO₂-optimeret opladning og beregning af emissionsbesparelser.",
+        "titleAdd": "Tilføj CO₂ prognose",
+        "titleEdit": "Juster CO₂ prognose"
+      },
+      "co2Services": "CO₂ tjenester",
+      "customForecast": "Bruger-defineret prognose",
+      "customTariff": "Bruger-defineret tarif",
+      "description": "Konfigurér dine energitariffer og prognoser. Brug enhedsbaseret konfiguration til dynamisk styring eller YAML til statiske indstillinger.",
+      "feedIn": {
+        "description": "Kompenser for eksporteret energi til el-nettet. Benyttes for at beregne den aktuelle opladningspris.",
+        "titleAdd": "Tilføj eksport tarif til el-nettet",
+        "titleEdit": "Juster eksport tarif til el-nettet"
+      },
+      "generic": "Generiske integrationer",
+      "grid": {
+        "description": "Elpris for strøm fra el-nettet. Bruges til beregning af faktiske opladningsomkostninger og prisoptimeret opladning af køretøjer, varmeenheder eller opladning af hjemmebatteriet fra el-nettet.",
+        "titleAdd": "Tilføj elnet import tarif",
+        "titleEdit": "Juster elnet import tarif"
+      },
+      "legacyWarning": "Ny tarif konfiguration er tilgængelig. Fjern og gem dine tariffer her, for at benytte den nye guidede proces.",
+      "option": {
+        "co2": "Tilføj CO₂ prognose",
+        "feedIn": "Tilføj elnet eksport tarif",
+        "grid": "Tilføj elnet import tarif",
+        "planner": "Tilføj planlægnings prognose",
+        "solar": "Tilføj sol prognose"
+      },
+      "planner": {
+        "description": "Avanceret indstilling. Normalt ikke nødvendig, da dynamiske eltariffer eller CO₂-prognoser bruges automatisk. Aktiverer en ekstra datakilde, som kun anvendes til ladeplanlægning – ikke til statistik eller prisberegninger.",
+        "titleAdd": "Tilføj planlægnings prognose",
+        "titleEdit": "Juster planlægningsprognose"
+      },
+      "services": "Tjenester",
+      "solar": {
+        "description": "Prognose for energi produktion fra dit solcelleanlæg. Vises i brugergrænsefladen og vil blive brugt af optimeringsalgoritmer i fremtiden.",
+        "titleAdd": "Tilføj sol prognose",
+        "titleEdit": "Juster sol prognose"
+      },
+      "template": "Udbyder",
+      "title": "Tariffer og prognoser",
+      "titleChoice": "Hvad ønsker du at tilføje?",
+      "type": {
+        "co2": "CO₂ Intensitet",
+        "feedIn": "Indfødningspris",
+        "grid": "Forbrugspris fra elnettet",
+        "planner": "Planlægning",
+        "solar": "Sol"
+      },
+      "zones": {
+        "add": "Tilføj zone",
+        "allDays": "Alle dage",
+        "allMonths": "Alle måneder",
+        "allTimes": "Alle tidspunkter",
+        "cancel": "Fortryd",
+        "days": "Dage",
+        "edit": "Juster",
+        "hours": "Timer",
+        "months": "Måneder",
+        "price": "Pris",
+        "priceRequired": "Pris er nødvendig",
+        "remove": "Fjern zone",
+        "save": "Gem",
+        "selectAll": "Alle dage",
+        "timeFrom": "Fra",
+        "timeRangeError": "Starttidspunkt skal være før sluttidspunkt. For at krydse midnat, skal der oprettes to separate zoner.",
+        "timeTo": "Til",
+        "weekdays": "Ugedage"
+      }
+    },
     "tariffs": {
       "description": "Definer dine energitakster for at beregne omkostningerne ved dine opladningssessioner.",
       "title": "Tariffer"
@@ -652,7 +798,7 @@
     "validation": {
       "failed": "mislykkedes",
       "label": "Status",
-      "running": "Validering…",
+      "running": "validering…",
       "success": "succes",
       "unknown": "ukendt",
       "validate": "validerer"
@@ -942,10 +1088,13 @@
       "battery": "Batteri",
       "batteryCharge": "Batteriet oplades",
       "batteryDischarge": "Batteriet aflades",
-      "batteryGridChargeActive": "Oplader fra elnettet",
-      "batteryGridChargeLimit": "Oplader fra elnettet når",
+      "batteryForecastEmpty": "tom {time}",
+      "batteryForecastFull": "fyldt {time}",
+      "batteryGridChargeActive": "Opladning fra elnettet: aktiv",
+      "batteryGridChargeLimit": "Opladning fra elnettet: når",
       "batteryHold": "Batteri (låst)",
       "batteryTooltip": "{energy} af {total} ({soc})",
+      "forecast": "Prognose: ",
       "forecastTooltip": "prognose: resterende solenergi produktion i dag",
       "gridImport": "Forbrug fra elnet",
       "homePower": "Forbrug",
@@ -972,6 +1121,7 @@
       "charged": "Opladet",
       "co2": "⌀ CO₂",
       "duration": "Varighed",
+      "emission": "Udledning",
       "fallbackName": "Ladepunkt",
       "finished": "Sluttidspunkt",
       "power": "Effekt",
@@ -984,9 +1134,14 @@
     "loadpointSettings": {
       "batteryBoost": {
         "description": "Hurtig opladning fra husbatteriet, indtil det er afladet til {limit}.",
+        "descriptionDisabled": "Vælg en grænse for at tillade hurtig opladning fra hjemmebatteriet.",
+        "disabled": "Deaktiveret",
         "label": "Batteri boost",
         "mode": "Kun tilgængelig i solar og min+solar mode.",
-        "once": "Boost er aktiveret for denne opladning."
+        "once": "Boost er aktiveret for denne opladning.",
+        "stateActive": "Batteriboost er aktiv",
+        "stateBelowLimit": "Batteriniveau er for lav til boost",
+        "stateReady": "Batteriboost er klar"
       },
       "batteryUsage": "Husbatteri",
       "currents": "Ladestrøm",
@@ -1092,6 +1247,9 @@
     "vehicleStatus": {
       "awaitingAuthorization": "Venter på godkendelse.",
       "batteryBoost": "Boost fra batteri er aktiv.",
+      "batteryBoostBelowLimit": "Batteriniveau er for lav til boost.",
+      "batteryBoostDisabled": "Batteriboost er deaktiveret.",
+      "batteryBoostEnabled": "Boost indtil batteri er på {limit}.",
       "charging": "Oplader…",
       "cheapEnergyCharging": "Billig energi er tilgængelig.",
       "cheapEnergyNextStart": "Billig energi i {duration}.",
@@ -1116,6 +1274,7 @@
       "targetChargeWaitForVehicle": "Plan for opladning er klar. Venter på køretøj…",
       "vehicleLimit": "Køretøjets grænse",
       "vehicleLimitReached": "Køretøjets grænse er nået.",
+      "waitForAuthorization": "Forbundet. Venter på autorisation…",
       "waitForVehicle": "Parat. Venter på køretøj…",
       "welcome": "Kort indledende opladning for at bekræfte forbindelsen."
     },
