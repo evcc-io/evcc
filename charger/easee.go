@@ -61,14 +61,14 @@ type Easee struct {
 	phaseMode             int
 	currentPower, sessionEnergy, totalEnergy,
 	currentL1, currentL2, currentL3 float64
-	rfid         string
-	lp           loadpoint.API
-	cmdMu        sync.Mutex
+	rfid            string
+	lp              loadpoint.API
+	cmdMu           sync.Mutex
 	pendingTicks    map[int64]chan easee.SignalRCommandResponse
 	expectedOrphans map[easee.ObservationID]int
 	obsC            chan easee.Observation
-	obsTime      map[easee.ObservationID]time.Time
-	startDone    func()
+	obsTime         map[easee.ObservationID]time.Time
+	startDone       func()
 }
 
 func init() {
@@ -417,20 +417,18 @@ func (c *Easee) CommandResponse(i json.RawMessage) {
 		return
 	}
 
-	obsID := easee.ObservationID(res.ID)
 	c.log.TRACE.Printf("CommandResponse %s: %+v", res.SerialNumber, res)
 
 	c.cmdMu.Lock()
 	ch, ok := c.pendingTicks[res.Ticks]
 	c.cmdMu.Unlock()
-	// ch is safe to use outside the lock: it is only removed from pendingTicks
-	// (and never closed) by the caller that created it, after this handler returns.
 
 	if ok {
 		ch <- res
 		return
 	}
 
+	obsID := easee.ObservationID(res.ID)
 	if c.consumeExpectedOrphan(obsID) {
 		return
 	}
