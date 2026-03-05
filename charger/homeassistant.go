@@ -197,6 +197,7 @@ func (c *HomeAssistant) phases1p3p(phases int) error {
 // Reads the current state of the phases select entity and parses it
 // using parsePhases, which accepts both bare numeric values ("1", "3")
 // and labeled options (e.g. "1-phase", "3-phase").
+// getPhases implements the api.PhaseGetter interface
 func (c *HomeAssistant) getPhases() (int, error) {
 	if c.phases == "" {
 		return 0, errors.New("phase switching not configured")
