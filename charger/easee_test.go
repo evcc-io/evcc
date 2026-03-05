@@ -523,3 +523,43 @@ func TestEasee_registerExpectedOrphan_multipleRegistrations(t *testing.T) {
 	assert.True(t, e.consumeExpectedOrphan(easee.CIRCUIT_MAX_CURRENT_P1))
 	assert.False(t, e.consumeExpectedOrphan(easee.CIRCUIT_MAX_CURRENT_P1))
 }
+
+func TestEasee_Phases1p3p_registersExpectedOrphan(t *testing.T) {
+	const siteID = 12345
+	const circuitID = 67890
+	const chargerID = "TESTTEST"
+
+	e := newEasee()
+	e.charger = chargerID
+	e.site = siteID
+	e.circuit = circuitID
+
+	httpmock.ActivateNonDefault(e.Client)
+	defer httpmock.DeactivateAndReset()
+
+	// Mock GET circuit settings
+	getURI := fmt.Sprintf("%s/sites/%d/circuits/%d/settings", easee.API, siteID, circuitID)
+	maxP1, maxP2, maxP3 := 32.0, 32.0, 32.0
+	getResp := easee.CircuitSettings{
+		MaxCircuitCurrentP1: &maxP1,
+		MaxCircuitCurrentP2: &maxP2,
+		MaxCircuitCurrentP3: &maxP3,
+	}
+	body, _ := json.Marshal(getResp)
+	httpmock.RegisterResponder(http.MethodGet, getURI,
+		httpmock.NewBytesResponder(200, body))
+
+	// Mock POST circuit settings — return 200 (sync)
+	httpmock.RegisterResponder(http.MethodPost, getURI,
+		httpmock.NewStringResponder(200, ""))
+
+	err := e.Phases1p3p(1)
+	assert.NoError(t, err)
+
+	// The orphan counter should have been registered before the POST.
+	// Since no CommandResponse arrived in this test, the counter stays at 1.
+	e.cmdMu.Lock()
+	count := e.expectedOrphans[easee.CIRCUIT_MAX_CURRENT_P1]
+	e.cmdMu.Unlock()
+	assert.Equal(t, 1, count, "expected orphan should be registered before the POST")
+}

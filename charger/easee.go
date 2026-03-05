@@ -793,6 +793,7 @@ func (c *Easee) Phases1p3p(phases int) error {
 			data.DynamicCircuitCurrentP3 = &max3
 		}
 
+		c.registerExpectedOrphan(easee.CIRCUIT_MAX_CURRENT_P1)
 		_, err = c.postJSONAndWait(uri, data)
 	} else {
 		// charger level
