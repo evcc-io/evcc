@@ -226,6 +226,24 @@ func (c *Easee) unregisterPendingTick(tick int64) {
 	c.cmdMu.Unlock()
 }
 
+func (c *Easee) registerExpectedOrphan(ids ...easee.ObservationID) {
+	c.cmdMu.Lock()
+	defer c.cmdMu.Unlock()
+	for _, id := range ids {
+		c.expectedOrphans[id]++
+	}
+}
+
+func (c *Easee) consumeExpectedOrphan(id easee.ObservationID) bool {
+	c.cmdMu.Lock()
+	defer c.cmdMu.Unlock()
+	if c.expectedOrphans[id] > 0 {
+		c.expectedOrphans[id]--
+		return true
+	}
+	return false
+}
+
 // check c.obsTime for presence of ALL of the following keys: easee.SESSION_ENERGY, easee.LIFETIME_ENERGY
 func (c *Easee) optionalStatePresent() bool {
 	c.mux.Lock()

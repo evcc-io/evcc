@@ -442,3 +442,31 @@ func TestEasee_CommandResponse_legitimate(t *testing.T) {
 		t.Fatal("CommandResponse did not deliver to pending channel")
 	}
 }
+
+func TestEasee_registerAndConsumeExpectedOrphan(t *testing.T) {
+	e := newEasee()
+
+	// Not registered yet — consume returns false
+	assert.False(t, e.consumeExpectedOrphan(easee.CIRCUIT_MAX_CURRENT_P1))
+
+	// Register once
+	e.registerExpectedOrphan(easee.CIRCUIT_MAX_CURRENT_P1)
+
+	// First consume succeeds
+	assert.True(t, e.consumeExpectedOrphan(easee.CIRCUIT_MAX_CURRENT_P1))
+
+	// Second consume fails (counter back to zero)
+	assert.False(t, e.consumeExpectedOrphan(easee.CIRCUIT_MAX_CURRENT_P1))
+}
+
+func TestEasee_registerExpectedOrphan_multipleRegistrations(t *testing.T) {
+	e := newEasee()
+
+	// Register twice (two concurrent calls in flight)
+	e.registerExpectedOrphan(easee.CIRCUIT_MAX_CURRENT_P1)
+	e.registerExpectedOrphan(easee.CIRCUIT_MAX_CURRENT_P1)
+
+	assert.True(t, e.consumeExpectedOrphan(easee.CIRCUIT_MAX_CURRENT_P1))
+	assert.True(t, e.consumeExpectedOrphan(easee.CIRCUIT_MAX_CURRENT_P1))
+	assert.False(t, e.consumeExpectedOrphan(easee.CIRCUIT_MAX_CURRENT_P1))
+}
