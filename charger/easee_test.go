@@ -443,6 +443,58 @@ func TestEasee_CommandResponse_legitimate(t *testing.T) {
 	}
 }
 
+func TestEasee_CommandResponse_expectedOrphan(t *testing.T) {
+	e := newEasee()
+
+	// Pre-register the expected orphan
+	e.registerExpectedOrphan(easee.CIRCUIT_MAX_CURRENT_P1)
+
+	resp := easee.SignalRCommandResponse{
+		SerialNumber: "EH123456",
+		ID:           int(easee.CIRCUIT_MAX_CURRENT_P1),
+		Ticks:        111111111,
+		WasAccepted:  true,
+		ResultCode:   0,
+	}
+
+	raw, err := json.Marshal(resp)
+	require.NoError(t, err)
+
+	// Should not panic and should consume the orphan counter
+	assert.NotPanics(t, func() {
+		e.CommandResponse(raw)
+	})
+
+	// Counter should now be zero — a second response would be rogue
+	assert.False(t, e.consumeExpectedOrphan(easee.CIRCUIT_MAX_CURRENT_P1))
+}
+
+func TestEasee_CommandResponse_rogueAfterOrphanConsumed(t *testing.T) {
+	e := newEasee()
+
+	// Register and immediately consume via CommandResponse
+	e.registerExpectedOrphan(easee.CIRCUIT_MAX_CURRENT_P1)
+
+	resp := easee.SignalRCommandResponse{
+		SerialNumber: "EH123456",
+		ID:           int(easee.CIRCUIT_MAX_CURRENT_P1),
+		Ticks:        111111111,
+		WasAccepted:  true,
+	}
+	raw, _ := json.Marshal(resp)
+	e.CommandResponse(raw) // consumes the counter
+
+	// A second identical response with counter=0 should be treated as rogue (not panic)
+	assert.NotPanics(t, func() {
+		e.CommandResponse(raw)
+	})
+
+	// pendingTicks untouched
+	e.cmdMu.Lock()
+	assert.Empty(t, e.pendingTicks)
+	e.cmdMu.Unlock()
+}
+
 func TestEasee_registerAndConsumeExpectedOrphan(t *testing.T) {
 	e := newEasee()
 

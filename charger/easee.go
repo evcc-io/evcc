@@ -416,19 +416,27 @@ func (c *Easee) CommandResponse(i json.RawMessage) {
 		c.log.ERROR.Printf("invalid message: %s %v", i, err)
 		return
 	}
+
+	obsID := easee.ObservationID(res.ID)
 	c.log.TRACE.Printf("CommandResponse %s: %+v", res.SerialNumber, res)
 
 	c.cmdMu.Lock()
 	ch, ok := c.pendingTicks[res.Ticks]
 	c.cmdMu.Unlock()
 
-	if !ok {
-		c.log.WARN.Printf("rogue CommandResponse: charger %s sent Ticks=%d (accepted=%v, resultCode=%d) "+
-			"which was not triggered by evcc — another system may be controlling this charger",
-			res.SerialNumber, res.Ticks, res.WasAccepted, res.ResultCode)
+	if ok {
+		ch <- res
 		return
 	}
-	ch <- res
+
+	if c.consumeExpectedOrphan(obsID) {
+		return
+	}
+
+	c.log.WARN.Printf("rogue CommandResponse: charger %s ObservationID=%s Ticks=%d "+
+		"(accepted=%v, resultCode=%d) which was not triggered by evcc — "+
+		"another system may be controlling this charger",
+		res.SerialNumber, obsID, res.Ticks, res.WasAccepted, res.ResultCode)
 }
 
 func (c *Easee) chargers() ([]easee.Charger, error) {
