@@ -38,9 +38,7 @@ params:
     description:
       de: Energy Manager Passwort
       en: Energy Manager Password
-    help:
-      de: Bei führenden Nullen bitte in einfache Hochkommata setzen
-      en: Use single quotes in case of leading zeros
+    mask: true
 render: |
   type: warp-ws
   uri: {{ .uri }}
@@ -50,4 +48,3 @@ render: |
   energyManagerUser: {{ .energyManagerUser }}
   energyManagerPassword: {{ .energyManagerPassword }}
   energyMeterIndex: {{ .energyMeterIndex }}
-  disablePhaseAutoSwitch: true

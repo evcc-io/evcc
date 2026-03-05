@@ -14,6 +14,7 @@ import (
 	"github.com/evcc-io/evcc/core/vehicle"
 	"github.com/evcc-io/evcc/plugin/mqtt"
 	"github.com/evcc-io/evcc/util"
+	"github.com/samber/lo"
 )
 
 // MQTT is the MQTT server. It uses the MQTT client for publishing.
@@ -53,7 +54,7 @@ func NewMQTT(root string, site site.API) (*MQTT, error) {
 
 func (m *MQTT) encode(v any) string {
 	// nil should erase the value
-	if v == nil {
+	if v == nil || lo.IsNil(v) {
 		return ""
 	}
 
@@ -247,7 +248,7 @@ func (m *MQTT) listenSiteSetters(topic string, site site.API) error {
 func (m *MQTT) listenLoadpointSetters(topic string, site site.API, lp loadpoint.API) error {
 	for _, s := range []setter{
 		{"mode", setterFunc(api.ChargeModeString, pass(lp.SetMode))},
-		{"phases", intSetter(lp.SetPhasesConfigured)},
+		{"phasesConfigured", intSetter(lp.SetPhasesConfigured)},
 		{"limitSoc", intSetter(pass(lp.SetLimitSoc))},
 		{"priority", intSetter(pass(lp.SetPriority))},
 		{"minCurrent", floatSetter(lp.SetMinCurrent)},

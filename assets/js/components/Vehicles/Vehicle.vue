@@ -202,7 +202,7 @@ export default defineComponent({
 			return this.collectProps(ChargingPlan);
 		},
 		showBoostButton(): boolean {
-			return this.batteryBoostAvailable && this.batteryBoostLimit < 100;
+			return this.connected && this.batteryBoostAvailable && this.batteryBoostLimit < 100;
 		},
 		batteryBoostButtonProps() {
 			return this.collectProps(BatteryBoostButton);

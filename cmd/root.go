@@ -389,6 +389,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 		Status:     hemsapi.GetStatus(hems),
 		YamlSource: yamlSource.hems,
 	}}
+	valueChan <- util.Param{Key: keys.Tariffs, Val: globalconfig.ConfigStatus{
+		YamlSource: yamlSource.tariffs,
+	}}
 
 	// publish system infos
 	valueChan <- util.Param{Key: keys.Version, Val: util.FormattedVersion()}

@@ -10,7 +10,6 @@ import (
 
 	"github.com/evcc-io/evcc/server/service"
 	"github.com/evcc-io/evcc/util"
-	"github.com/samber/lo"
 )
 
 var log = util.NewLogger("homeassistant")
@@ -19,6 +18,7 @@ func init() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /instances", getInstances)
 	mux.HandleFunc("GET /entities", getEntities)
+	mux.HandleFunc("GET /services", getServices)
 
 	service.Register("homeassistant", mux)
 }
@@ -30,43 +30,100 @@ func getInstances(w http.ResponseWriter, req *http.Request) {
 	jsonWrite(w, slices.Sorted(maps.Values(instances)))
 }
 
-func getEntities(w http.ResponseWriter, req *http.Request) {
+func connectionFromRequest(req *http.Request) (*Connection, error) {
 	uri := util.DefaultScheme(strings.TrimSuffix(req.URL.Query().Get("uri"), "/"), "http")
 	if uri == "" {
-		jsonError(w, http.StatusBadRequest, errors.New("missing uri"))
-		return
+		return nil, errors.New("missing uri")
 	}
+	return NewConnection(log, uri, "")
+}
 
-	conn, _ := NewConnection(log, uri, "")
-	res, err := conn.GetStates()
+// domainsFromRequest parses the comma-separated "domain" query parameter.
+func domainsFromRequest(req *http.Request) []string {
+	if domain := req.URL.Query().Get("domain"); domain != "" {
+		return strings.Split(domain, ",")
+	}
+	return nil
+}
+
+// matchesDomains reports whether entityID belongs to any of the given domains.
+// If domains is empty, all entities match.
+func matchesDomains(entityID string, domains []string) bool {
+	if len(domains) == 0 {
+		return true
+	}
+	for _, d := range domains {
+		if strings.HasPrefix(entityID, d+".") {
+			return true
+		}
+	}
+	return false
+}
+
+func getEntities(w http.ResponseWriter, req *http.Request) {
+	conn, err := connectionFromRequest(req)
 	if err != nil {
 		jsonError(w, http.StatusBadRequest, err)
 		return
 	}
 
-	var domains []string
-	if domain := req.URL.Query().Get("domain"); domain != "" {
-		domains = strings.Split(domain, ",")
+	states, err := conn.GetStates()
+	if err != nil {
+		jsonError(w, http.StatusBadRequest, err)
+		return
 	}
 
-	// cache list of entities
-	w.Header().Set("Cache-control", "max-age=300")
+	domains := domainsFromRequest(req)
 
-	jsonWrite(w, lo.Map(lo.Filter(res, func(e StateResponse, _ int) bool {
-		if len(domains) == 0 {
-			return true
+	var result []string
+	for _, e := range states {
+		if matchesDomains(e.EntityId, domains) {
+			result = append(result, e.EntityId)
 		}
+	}
 
-		for _, domain := range domains {
-			if strings.HasPrefix(e.EntityId, domain+".") {
-				return true
+	w.Header().Set("Cache-control", "max-age=300")
+	jsonWrite(w, result)
+}
+
+func getServices(w http.ResponseWriter, req *http.Request) {
+	conn, err := connectionFromRequest(req)
+	if err != nil {
+		jsonError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	domains := domainsFromRequest(req)
+
+	seen := make(map[string]struct{})
+
+	// collect callable services from /api/services (e.g. notify.mobile_app_android)
+	svcRes, err := conn.GetServices()
+	if err != nil {
+		jsonError(w, http.StatusBadRequest, err)
+		return
+	}
+	for _, sd := range svcRes {
+		if len(domains) == 0 || slices.Contains(domains, sd.Domain) {
+			for svc := range sd.Services {
+				seen[sd.Domain+"."+svc] = struct{}{}
 			}
 		}
+	}
 
-		return false
-	}), func(e StateResponse, _ int) string {
-		return e.EntityId
-	}))
+	// collect entity-based notifiers from /api/states (e.g. Telegram in HA 2024+)
+	if len(domains) > 0 {
+		if states, err := conn.GetStates(); err == nil {
+			for _, e := range states {
+				if matchesDomains(e.EntityId, domains) {
+					seen[e.EntityId] = struct{}{}
+				}
+			}
+		}
+	}
+
+	w.Header().Set("Cache-control", "max-age=300")
+	jsonWrite(w, slices.Sorted(maps.Keys(seen)))
 }
 
 // jsonWrite writes a JSON response

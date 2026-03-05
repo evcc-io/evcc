@@ -111,8 +111,7 @@ func (conn *Connector) GetScheduleLimit(duration int) (float64, error) {
 // WatchDog triggers meter values messages if older than timeout.
 // Must be wrapped in a goroutine.
 func (conn *Connector) WatchDog(ctx context.Context, timeout time.Duration) {
-	tick := time.NewTicker(2 * time.Second)
-	for {
+	for tick := time.NewTicker(2 * time.Second); ; {
 		conn.mu.Lock()
 		update := conn.clock.Since(conn.meterUpdated) > timeout
 		conn.mu.Unlock()

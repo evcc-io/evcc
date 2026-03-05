@@ -128,12 +128,14 @@
       "dimmed": "Galia sumažinta",
       "enabled": "Aktyvuotas",
       "energy": "Energija",
+      "events": "Įvykiai",
       "feedinPrice": "Tiekimo į tinklą kaina",
       "gridPrice": "Energijos pirkimo kaina",
       "heaterTempLimit": "Šildymo limitas",
       "hemsActiveLimit": "Aktyvus limitas",
       "hemsType": "Komunikacija",
       "identifier": "RFID-Identifikatorius",
+      "messengers": "Paslaugos",
       "no": "ne",
       "odometer": "Odometras",
       "org": "Organizacija",
@@ -652,7 +654,7 @@
     "validation": {
       "failed": "nepavyko",
       "label": "Statusas",
-      "running": "Tikrinama…",
+      "running": "tikrinama…",
       "success": "sėkmingai",
       "unknown": "nežinomas",
       "validate": "tikrinti"

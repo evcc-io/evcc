@@ -322,6 +322,31 @@ func TestEasee_waitForDynamicChargerCurrent(t *testing.T) {
 	}
 }
 
+func TestEasee_StatusReason(t *testing.T) {
+	testcases := []struct {
+		opMode         int
+		expectedReason api.Reason
+	}{
+		{easee.ModeAwaitingAuthentication, api.ReasonWaitingForAuthorization},
+		{easee.ModeCompleted, api.ReasonDisconnectRequired},
+		{easee.ModeDisconnected, api.ReasonUnknown},
+		{easee.ModeAwaitingStart, api.ReasonUnknown},
+		{easee.ModeCharging, api.ReasonUnknown},
+		{easee.ModeReadyToCharge, api.ReasonUnknown},
+		{easee.ModeDeauthenticating, api.ReasonUnknown},
+	}
+	for _, tc := range testcases {
+		t.Logf("%+v", tc)
+
+		e := newEasee()
+		e.opMode = tc.opMode
+
+		reason, err := e.StatusReason()
+		assert.NoError(t, err)
+		assert.Equal(t, tc.expectedReason, reason)
+	}
+}
+
 func TestEasee_MaxCurrent(t *testing.T) {
 	testCases := []struct {
 		targetCurrent int64

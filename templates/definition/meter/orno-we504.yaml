@@ -2,7 +2,7 @@ template: orno-we504
 products:
   - brand: ORNO
     description:
-      generic: WE-504
+      generic: OR-WE-504
 params:
   - name: usage
     choice: ["pv", "charge"]

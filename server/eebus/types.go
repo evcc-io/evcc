@@ -21,7 +21,7 @@ type Certificate struct {
 }
 
 type Config struct {
-	URI_        string      `mapstructure:"uri" json:"uri"` // TODO deprecated
+	URI_        string      `mapstructure:"uri" json:"uri,omitempty"` // TODO deprecated
 	Port        int         `json:"port"`
 	ShipID      string      `json:"shipid"`
 	Interfaces  []string    `json:"interfaces,omitempty"`

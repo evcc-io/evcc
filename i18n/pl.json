@@ -110,7 +110,7 @@
       "broker": "Broker",
       "bucket": "Bucket",
       "capacity": "Pojemność",
-      "chargeStatus": "Status",
+      "chargeStatus": "Stan",
       "chargeStatusA": "niepodłączony",
       "chargeStatusB": "podłączony",
       "chargeStatusC": "ładowanie",
@@ -172,11 +172,24 @@
       "loading": "Wczytywanie edytora YAML…"
     },
     "eebus": {
-      "description": "Konfiguracja umożliwiająca komunikację evcc z innymi urządzeniami EEBus.",
+      "certificate": {
+        "private": "Klucz prywatny",
+        "public": "Certyfikat publiczny",
+        "title": "Certyfikaty"
+      },
+      "description": "Konfiguracja umożliwiająca komunikację evcc z urządzeniami kompatybilnymi z EEBus, takimi jak ładowarki czy jednostka sterująca operatora sieci. Wszystkie niezbędne inicjalizacje i generowanie certyfikatów odbywają się automatycznie przy pierwszym uruchomieniu.",
+      "descriptionAdvanced": "Nie są wymagane żadne zmiany. Wprowadzaj zmiany tylko wtedy, gdy naprawdę wiesz, co robisz. Jeśli zmienisz identyfikator SHIP lub certyfikaty, konieczne będzie ponowne sparowanie urządzeń.",
+      "interfaces": "Interfejsy",
+      "interfacesHelp": "Ogranicz liczbę interfejsów sieciowych, z których EEBus powinien korzystać, aby uniknąć problemów komunikacyjnych. Pozostaw pole puste, aby korzystać ze wszystkich interfejsów. Jeden wpis na wiersz.",
+      "port": "Port",
+      "portHelp": "Port, który ma być użyty.",
+      "removeConfirm": "Cała konfiguracja EEBus zostanie usunięta. Nowe certyfikaty i identyfikatory zostaną wygenerowane przy następnym uruchomieniu. Czy jesteś pewien?",
+      "shipidExplain": "Trwały identyfikator urządzenia służący do identyfikacji w sieci EEBus.",
+      "skiExplain": "Unikalny identyfikator bezpieczeństwa do parowania urządzeń EEBus.",
       "title": "EEBus"
     },
     "experimental": {
-      "description": "Włącz interfejs użytkownika dla funkcji, które są nadal testowane i mogą ulec zmianie w przyszłych wersjach.",
+      "description": "Zapewnia wczesny dostęp do funkcji, które są wciąż testowane. Mogą one być niestabilne i mogą ulec zmianie lub też zostać usunięte w przyszłych wersjach.",
       "title": "Eksperymentalny"
     },
     "ext": {
@@ -207,6 +220,7 @@
       "dragHandle": "Uchwyt do przeciągania",
       "dragItem": "Przeciągalny: {title}",
       "dragList": "Lista do ponownego zamówienia",
+      "error": "Błąd",
       "experimental": "Eksperymentalny",
       "forceSave": "Zapisz mimo to",
       "fromYamlHint": "Uwaga: Konfiguracja odbywa się za pomocą pliku evcc.yaml. Aby umożliwić edycję w tym miejscu, usuń wpis z pliku.",
@@ -477,7 +491,7 @@
       "labelPassword": "Hasło",
       "labelTopic": "Temat",
       "labelUser": "Nazwa użytkownika",
-      "publishing": "Wydawnictwo",
+      "publishing": "Publikowanie",
       "title": "MQTT"
     },
     "network": {
@@ -507,7 +521,7 @@
       },
       "title": "Serwer OCPP",
       "url": "Adres URL serwera",
-      "urlHelp": "Skopiuj ten adres URL do konfiguracji ładowarki. Szczegółowe informacje znajdziesz w instrukcji producenta. Ładowarka powinna automatycznie dodać swój unikalny identyfikator (identyfikator stacji) do adresu URL. W rzadkich przypadkach może być konieczne ręczne podanie identyfikatora. Przykład: `{url}`"
+      "urlHelp": "Skopiuj ten adres URL do konfiguracji ładowarki. Szczegółowe informacje znajdziesz w instrukcji producenta. Ładowarka powinna automatycznie dodać swój unikalny identyfikator (station ID) do adresu URL. W rzadkich przypadkach może być konieczne ręczne podanie identyfikatora. Przykład: `{url}`"
     },
     "options": {
       "boolean": {
@@ -543,6 +557,7 @@
       "integrations": "Integracje",
       "loadpoints": "Ładowanie i ogrzewanie",
       "meter": "Fotowoltaika i magazyn energii",
+      "services": "Usługi",
       "system": "System",
       "vehicles": "Pojazdy"
     },
@@ -739,12 +754,14 @@
   "forecast": {
     "co2": {
       "average": "Średnia",
+      "constant": "Intensywność CO₂",
       "lowestHour": "Najczystsze godziny",
       "range": "Zakres"
     },
     "modalTitle": "Prognoza",
     "price": {
       "average": "Średnia",
+      "constant": "Cena",
       "lowestHour": "Najtańsza godzina",
       "range": "Zakres"
     },
@@ -1222,7 +1239,7 @@
     },
     "hiddenFeatures": {
       "label": "Eksperymentalne",
-      "value": "Pokaż funkcje eksperymentalne."
+      "value": "Włącz funkcje eksperymentalne."
     },
     "language": {
       "auto": "Automatyczny",

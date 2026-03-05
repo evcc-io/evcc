@@ -44,6 +44,7 @@ func SplitConfig(payload map[string]any) (DynamicConfig, map[string]any, error) 
 		DynamicConfig `mapstructure:",squash"`
 		Other         map[string]any `mapstructure:",remain"`
 	}
+	cc.BatteryBoostLimit = 100 // default: disabled
 
 	if err := util.DecodeOther(payload, &cc); err != nil {
 		return DynamicConfig{}, nil, err

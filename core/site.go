@@ -369,7 +369,7 @@ func (site *Site) DumpConfig() {
 	if vehicles := site.Vehicles().Instances(); len(vehicles) > 1 {
 		for _, v := range vehicles {
 			if _, ok := v.(api.ChargeState); !ok && len(v.Identifiers()) == 0 {
-				site.log.WARN.Printf("vehicle '%s' does not support automatic detection", v.GetTitle())
+				site.log.INFO.Printf("vehicle '%s' does not support automatic detection", v.GetTitle())
 			}
 		}
 	}
@@ -600,9 +600,9 @@ func (site *Site) updatePvMeters() {
 }
 
 // updateBatteryMeters updates battery meters
-func (site *Site) updateBatteryMeters() []types.Measurement {
+func (site *Site) updateBatteryMeters() {
 	if len(site.batteryMeters) == 0 {
-		return nil
+		return
 	}
 
 	mm := site.collectMeters("battery", site.batteryMeters)
@@ -667,9 +667,8 @@ func (site *Site) updateBatteryMeters() []types.Measurement {
 	}
 
 	site.battery.Devices = mm
-	site.publish(keys.Battery, site.battery)
 
-	return mm
+	site.publish(keys.Battery, site.battery)
 }
 
 // updateAuxMeters updates aux meters
@@ -756,10 +755,8 @@ func (site *Site) updateGridMeter() error {
 func (site *Site) updateMeters() error {
 	var eg errgroup.Group
 
-	var battery []types.Measurement
-
 	eg.Go(func() error { site.updatePvMeters(); return nil })
-	eg.Go(func() error { battery = site.updateBatteryMeters(); return nil })
+	eg.Go(func() error { site.updateBatteryMeters(); return nil })
 	eg.Go(func() error { site.updateAuxMeters(); return nil })
 	eg.Go(func() error { site.updateExtMeters(); return nil })
 
@@ -770,7 +767,7 @@ func (site *Site) updateMeters() error {
 	}
 
 	if sponsor.IsAuthorized() {
-		go site.optimizerUpdateAsync(battery)
+		go site.optimizerUpdateAsync()
 	}
 
 	return nil
@@ -853,7 +850,7 @@ func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, b
 		} else {
 			// if battery is above bufferSoc allow using it for charging
 			batteryBuffered = site.bufferSoc > 0 && site.battery.Soc > site.bufferSoc
-			batteryStart = site.bufferStartSoc > 0 && site.battery.Soc > site.bufferStartSoc
+			batteryStart = site.bufferStartSoc > 0 && site.battery.Soc >= site.bufferStartSoc
 		}
 	}
 
