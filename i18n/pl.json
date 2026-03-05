@@ -105,6 +105,12 @@
       "labelResidualPower": "Moc resztkowa",
       "title": "Ustawienia postępowania"
     },
+    "currency": {
+      "description": "Służy do formatowania cen energii, kosztów i oszczędności na podstawie twojej taryfy.",
+      "example": "Cena ładowania wyniosła {price}. Zaoszczędziłeś {amount}.",
+      "label": "Waluta",
+      "title": "Waluta"
+    },
     "deviceValue": {
       "amount": "Ilość",
       "broker": "Broker",
@@ -128,12 +134,16 @@
       "dimmed": "Przyciemniony",
       "enabled": "Włączony",
       "energy": "Energia",
+      "events": "Wydarzenia",
       "feedinPrice": "Cena do sieci",
+      "forecast": "Prognoza",
       "gridPrice": "Cena z sieci",
       "heaterTempLimit": "Limit podgrzewacza",
       "hemsActiveLimit": "Limit aktywny",
       "hemsType": "Komunikacja",
       "identifier": "Identyfikator RFID",
+      "max": "maks",
+      "messengers": "Usługi",
       "no": "nie",
       "odometer": "Drogomierz",
       "org": "Organizacja",
@@ -143,6 +153,7 @@
       "phases1p3p": "Przełącznik fazowy",
       "power": "Moc",
       "powerRange": "Zasilanie",
+      "price": "Cena",
       "range": "Zasięg",
       "singlePhase": "Jedna faza",
       "soc": "Stan naładowania",
@@ -211,6 +222,7 @@
       "cancel": "Anuluj",
       "clear": "Wyraźne",
       "close": "Zamknij",
+      "confirmSave": "Są niezachowane zmiany. Zapisać teraz?",
       "copied": "Skopiowano!",
       "copy": "Kopia",
       "customHelp": "Utwórz urządzenie zdefiniowane przez użytkownika korzystając z systemu wtyczek evcc.",
@@ -317,6 +329,8 @@
       },
       "defaultModeHelpKeep": "Zachowuje ostatnio wybrany tryb.",
       "defaultModeLabel": "Tryb domyślny",
+      "defaultsHint": "Tryb domyślny, zachowanie energii słonecznej i szczegóły elektryczne korzystają z rozsądnych wartości domyślnych.",
+      "defaultsHintLink": "Dostosuj ustawienia",
       "delete": "Usuń",
       "electricalSubtitle": "W razie wątpliwości skonsultuj się z elektrykiem.",
       "electricalTitle": "Elektryczny",
@@ -403,12 +417,68 @@
       "title": "Konfiguracja",
       "unconfigured": "nie skonfigurowane",
       "vehicles": "Moje pojazdy",
-      "welcomeBannerText": "Zacznij od utworzenia co najmniej jednej **ładowarki**, **grzejnika**, **sieci**, **panelu słonecznego**, **baterii** lub **dodatkowego licznika**. Jeśli chcesz tylko przetestować, wybierz **urządzenie demonstracyjne**.",
+      "welcomeBannerText": "Zacznij od utworzenia co najmniej jednej **ładowarki**, **podgrzewacza**, **sieci energetycznej**, **systemu pv**, **magazynu energii** lub **dodatkowego licznika**. Jeśli chcesz tylko przetestować, wybierz **urządzenie demonstracyjne**.",
       "welcomeBannerTitle": "Skonfigurujmy Twój system!"
     },
     "messaging": {
-      "description": "Otrzymuj wiadomości o sesjach ładowania.",
+      "addMessenger": "Dodaj usługę",
+      "description": "Otrzymuj powiadomienia o swoich sesjach ładowania.",
+      "event": {
+        "asleep": {
+          "title": "Podczas oczekiwania na pojazd",
+          "titleDefault": "Pojazd uśpiony"
+        },
+        "connect": {
+          "messageDefault": "Samochód podłączony do {pvPower}kW mocy PV",
+          "title": "Kiedy samochód się podłączy",
+          "titleDefault": "Samochód podłączony"
+        },
+        "disconnect": {
+          "messageDefault": "Samochód odłączony po {connectedDuration}",
+          "title": "Kiedy samochód się odłącza",
+          "titleDefault": "Samochód odłączony"
+        },
+        "guest": {
+          "messageDefault": "Nieznany pojazd, połączony gość?",
+          "title": "Kiedy podłączy się nieznany samochód",
+          "titleDefault": "Nieznany samochód"
+        },
+        "planoverrun": {
+          "messageDefault": "{vehicleTitle}: Plan zostanie przekroczony.",
+          "title": "Kiedy plan ładowania zostanie przekroczony",
+          "titleDefault": "Przekroczenie planu"
+        },
+        "soc": {
+          "messageDefault": "Akumulator trakcyjny naładowany do {vehicleSoc}%",
+          "title": "Aktualizacja poziomu naładowania",
+          "titleDefault": "Zaktualizowano poziom naładowania"
+        },
+        "start": {
+          "messageDefault": "Rozpoczęto ładowanie w trybie {mode}.",
+          "title": "Kiedy rozpocznie się ładowanie",
+          "titleDefault": "Rozpoczęto ładowanie"
+        },
+        "stop": {
+          "messageDefault": "Zakończono ładowanie {chargedEnergy}kWh w ciągu {chargeDuration}.",
+          "title": "Gdy ładowanie się zatrzyma",
+          "titleDefault": "Ładowanie zakończone"
+        }
+      },
+      "eventMessage": "Wiadomość",
+      "eventTitle": "Tytuł",
+      "events": "Wydarzenia",
+      "legacyWarning": "Dostępna jest nowa konfiguracja powiadomień! Usuń i zapisz swoją konfigurację tutaj, aby skorzystać z nowego procesu.",
+      "messengers": "Sewisy",
+      "seePlaceholders": "zobacz symbole zastępcze",
       "title": "Powiadomienia"
+    },
+    "messenger": {
+      "custom": "Serwis zdefiniowany przez użytkownika",
+      "generic": "Ogólny serwis",
+      "primary": "Określony serwis",
+      "template": "Serwis",
+      "titleAdd": "Dodaj Serwis",
+      "titleEdit": "Edytuj Serwis"
     },
     "meter": {
       "cancel": "Anuluj",
@@ -647,7 +717,7 @@
     "validation": {
       "failed": "nie udało się",
       "label": "Status",
-      "running": "Weryfikacja…",
+      "running": "weryfikowanie…",
       "success": "udany",
       "unknown": "nieznany",
       "validate": "zweryfikować"
@@ -930,11 +1000,14 @@
       "battery": "Akumulator",
       "batteryCharge": "Ładowanie magazynu energii",
       "batteryDischarge": "Rozładowywanie magazynu energii",
-      "batteryGridChargeActive": "ładowanie z sieci aktywne",
-      "batteryGridChargeLimit": "ładowanie z sieci gdy",
+      "batteryForecastEmpty": "pusty {timeago}",
+      "batteryForecastFull": "pełny {timeago}",
+      "batteryGridChargeActive": "Ładowanie z sieci: aktywne",
+      "batteryGridChargeLimit": "Ładowanie z sieci: gdy",
       "batteryHold": "Magazyn energii (chroniony)",
       "batteryTooltip": "{energy} z {total} ({soc})",
-      "forecastTooltip": "prognoza: pozostała dziś produkcja energii słonecznej",
+      "forecast": "Prognoza: ",
+      "forecastTooltip": "prognoza: pozostała na dziś produkcja energii słonecznej",
       "gridImport": "Z sieci",
       "homePower": "Konsumpcja",
       "loadpoints": "Odbiornik energii| Odbiornik energii | {count} odbiorniki energii",
@@ -971,10 +1044,15 @@
     },
     "loadpointSettings": {
       "batteryBoost": {
-        "description": "Szybkie ładowanie z domowego magazynu energii, aż rozładuje się do {limit}.",
-        "label": "Doładowanie akumulatora",
+        "description": "Przyspieszone ładowanie z domowego magazynu energii, aż rozładuje się do {limit}.",
+        "descriptionDisabled": "Wybierz limit umożliwiający przyspieszone ładowanie z domowego magazynu energii.",
+        "disabled": "Wyłączone",
+        "label": "Turbo ładowanie",
         "mode": "Dostępne tylko w trybie słonce i min+słońce.",
-        "once": "Doładowanie aktywne dla tej sesji ładowania."
+        "once": "Turbo ładowanie aktywne dla tej sesji.",
+        "stateActive": "Turbo ładowanie aktywne",
+        "stateBelowLimit": "Magazyn energii zbyt rozładowany dla turbo ładowania",
+        "stateReady": "Turbo ładowanie gotowe"
       },
       "batteryUsage": "Domowy magazyn energii",
       "currents": "Prąd ładowania",
@@ -1079,7 +1157,10 @@
     },
     "vehicleStatus": {
       "awaitingAuthorization": "Oczekiwanie na zezwolenie.",
-      "batteryBoost": "Doładowanie akumulatora aktywne.",
+      "batteryBoost": "Turbo ładowanie aktywne.",
+      "batteryBoostBelowLimit": "Magazyn energii zbyt rozładowany dla turbo ładowania.",
+      "batteryBoostDisabled": "Turbo ładowanie wyłączone.",
+      "batteryBoostEnabled": "Turbo ładowanie, aż akumulator osiągnie {limit}.",
       "charging": "Ładuje się…",
       "cheapEnergyCharging": "Dostępna tania energia.",
       "cheapEnergyNextStart": "Tania energia za {duration}.",
