@@ -128,12 +128,14 @@
       "dimmed": "Gedimd",
       "enabled": "Ingeschakeld",
       "energy": "Energie",
+      "events": "Gebeurtenissen",
       "feedinPrice": "Terugleververgoeding",
       "gridPrice": "Netprijs",
       "heaterTempLimit": "Verwarming limiet",
       "hemsActiveLimit": "Actieve limiet",
       "hemsType": "Communicatie",
       "identifier": "RFID-Nummer",
+      "messengers": "Diensten",
       "no": "nee",
       "odometer": "Kilometerstand",
       "org": "Organisatie",
@@ -197,7 +199,7 @@
     },
     "ext": {
       "description": "Registreert energie van ongestuurde verbruikers (bijv. koelkast, wasmachine, etc) voor statistieken. Deze meters kunnen ook gebruikt worden voor Load Balancing (inclusief onderverdeling).",
-      "titleAdd": "Externe verbruiker toevoegen",
+      "titleAdd": "Toevoegen verbruikmeter",
       "titleEdit": "Wijzig verbruikmeter"
     },
     "form": {
@@ -214,6 +216,7 @@
       "cancel": "Annuleren",
       "clear": "Leegmaken",
       "close": "Sluiten",
+      "confirmSave": "Er zijn niet-opgeslagen wijzigingen. Nu opslaan?",
       "copied": "Gekopieerd!",
       "copy": "Kopieer",
       "customHelp": "Creëer een gebruiker-gedefinieerd apparaat met evcc’s plugin systeem.",
@@ -229,6 +232,7 @@
       "fromYamlHint": "Opmerking: Geconfigureerd via evcc.yaml. Verwijder de betreffende regels uit het bestand om hier bewerkingen mogelijk te maken.",
       "hideAdvancedSettings": "Verberg geavanceerde instellingen",
       "invalidFileSelected": "Ongeldig bestand geselecteerd",
+      "legacy": "verouderde functies",
       "noFileSelected": "Geen bestand geselecteerd.",
       "off": "uit",
       "on": "aan",
@@ -410,8 +414,65 @@
       "welcomeBannerTitle": "Start met het configureren van uw systeem!"
     },
     "messaging": {
-      "description": "Ontvang berichten over je oplaadsessies.",
-      "title": "Notificaties"
+      "addMessenger": "Diensten toevoegen",
+      "description": "Ontvang meldingen over je oplaadsessies.",
+      "event": {
+        "asleep": {
+          "messageDefault": "Laadmechanisme vrijgegeven, voertuig {vehicleName} laadt niet op.",
+          "title": "Tijdens het wachten op een voertuig",
+          "titleDefault": "Voertuig in slaapstand"
+        },
+        "connect": {
+          "messageDefault": "Auto aangesloten op {pvPower}kW PV",
+          "title": "Wanneer een auto verbinding maakt",
+          "titleDefault": "Auto verbonden"
+        },
+        "disconnect": {
+          "messageDefault": "Auto losgekoppeld na {connectedDuration}",
+          "title": "Wanneer een auto de verbinding verbreekt",
+          "titleDefault": "Auto losgekoppeld"
+        },
+        "guest": {
+          "messageDefault": "Onbekend voertuig, gast verbonden?",
+          "title": "Wanneer een onbekende auto verbinding maakt",
+          "titleDefault": "Onbekend voertuig"
+        },
+        "planoverrun": {
+          "messageDefault": "{vehicleTitle}: Planning zal uitlopen.",
+          "title": "Wanneer de oplaad planning uitloopt",
+          "titleDefault": "Planning uitgelopen"
+        },
+        "soc": {
+          "messageDefault": "Batterij opgeladen tot {vehicleSoc}%",
+          "title": "Laadniveau update",
+          "titleDefault": "Laadniveau bijgewerkt"
+        },
+        "start": {
+          "messageDefault": "Opladen gestart in {mode}-modus.",
+          "title": "Wanneer het opladen begint",
+          "titleDefault": "Opladen gestart"
+        },
+        "stop": {
+          "messageDefault": "Het opladen van {chargedEnergy}kWh is voltooid in {chargeDuration}.",
+          "title": "Wanneer het opladen stopt",
+          "titleDefault": "Opladen voltooid"
+        }
+      },
+      "eventMessage": "Bericht",
+      "eventTitle": "Titel",
+      "events": "Gebeurtenissen",
+      "legacyWarning": "Nieuwe meldingsconfiguratie beschikbaar! Verwijder uw configuratie hier en sla deze op om het nieuwe begeleide proces te gebruiken.",
+      "messengers": "Diensten",
+      "seePlaceholders": "zie tijdelijke aanduidingen",
+      "title": "Meldingen"
+    },
+    "messenger": {
+      "custom": "Gebruiker gedefinieerde dienst",
+      "generic": "Algemene dienst",
+      "primary": "Specifieke dienst",
+      "template": "Dienst",
+      "titleAdd": "Dienst toevoegen",
+      "titleEdit": "Bewerken Dienst"
     },
     "meter": {
       "cancel": "Annuleren",
@@ -651,7 +712,7 @@
     "validation": {
       "failed": "mislukt",
       "label": "Status",
-      "running": "Bezig met valideren…",
+      "running": "bezig met valideren…",
       "success": "succesvol",
       "unknown": "onbekend",
       "validate": "valideer"
@@ -941,10 +1002,13 @@
       "battery": "Batterij",
       "batteryCharge": "Batterij opladen",
       "batteryDischarge": "Batterij ontladen",
-      "batteryGridChargeActive": "net laden actief",
-      "batteryGridChargeLimit": "net laden wanneer",
+      "batteryForecastEmpty": "leeg {timeago}",
+      "batteryForecastFull": "vol {timeago}",
+      "batteryGridChargeActive": "Net laden: actief",
+      "batteryGridChargeLimit": "Net laden: wanneer",
       "batteryHold": "Batterij (aanhouden)",
       "batteryTooltip": "{energy} van {total} ({soc})",
+      "forecast": "Voorspelling: ",
       "forecastTooltip": "Voorspelling: resterende zonneproductie voor vandaag",
       "gridImport": "Netafname",
       "homePower": "Consumptie",
@@ -971,6 +1035,7 @@
       "charged": "Geladen",
       "co2": "⌀ CO₂",
       "duration": "Duur",
+      "emission": "Uitstoot",
       "fallbackName": "Laadpunt",
       "finished": "Eindtijd",
       "power": "Vermogen",
@@ -983,9 +1048,14 @@
     "loadpointSettings": {
       "batteryBoost": {
         "description": "Snelladen vanuit thuisbatterij tot deze is ontladen naar {limit}.",
+        "descriptionDisabled": "Selecteer een limiet om snel opladen vanaf de thuisbatterij mogelijk te maken.",
+        "disabled": "Uitgeschakeld",
         "label": "Batterij Boost",
         "mode": "Enkel beschikbaar in PV en Min+PV modus.",
-        "once": "Boost geactiveerd voor deze laadsessie."
+        "once": "Boost geactiveerd voor deze laadsessie.",
+        "stateActive": "Batterijboost actief",
+        "stateBelowLimit": "Batterij te laag voor boost",
+        "stateReady": "Batterijboost klaar"
       },
       "batteryUsage": "Thuisbatterij",
       "currents": "Laadstroom",
@@ -1091,6 +1161,9 @@
     "vehicleStatus": {
       "awaitingAuthorization": "Wachten op autorisatie.",
       "batteryBoost": "Batterijboost actief.",
+      "batteryBoostBelowLimit": "Batterij te laag voor boost.",
+      "batteryBoostDisabled": "Batterijboost uitgeschakeld.",
+      "batteryBoostEnabled": "Boost tot de batterij tot {limit}.",
       "charging": "Opladen…",
       "cheapEnergyCharging": "Goedkope energie beschikbaar.",
       "cheapEnergyNextStart": "Goedkope energie in {duration}.",
@@ -1124,7 +1197,7 @@
   "notifications": {
     "dismissAll": "Alles verwijderen",
     "logs": "Volledige logboeken bekijken",
-    "modalTitle": "Notificaties"
+    "modalTitle": "Meldingen"
   },
   "offline": {
     "configurationError": "Fout tijdens opstarten. Controleer de configuratie en start opnieuw.",
