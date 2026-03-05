@@ -1,0 +1,167 @@
+template: anker-solix-x1
+products:
+  - brand: Anker
+    description:
+      generic: Solix X1
+capabilities: ["battery-control"]
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: modbus
+    choice: ["tcpip"]
+    port: 502
+    id: 1
+  - preset: battery-params
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10014 # Grid Power
+      type: input
+      decode: int32
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10032 # Total Purchased Energy
+      type: input
+      decode: uint32
+    scale: 0.1
+  currents:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 10205 # Grid Phase A Current
+        type: input
+        decode: uint16
+      scale: 0.01
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 10206 # Grid Phase B Current
+        type: input
+        decode: int16
+      scale: 0.01
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 10207 # Grid Phase C Current
+        type: input
+        decode: int16
+      scale: 0.01
+  voltages:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 10202 # Grid Phase A Voltage
+        type: input
+        decode: uint16
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 10203 # Grid Phase B Voltage
+        type: input
+        decode: uint16
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 10204 # Grid Phase C Voltage
+        type: input
+        decode: uint16
+      scale: 0.1
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10002 # PV Power
+      type: input
+      decode: int32
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10026 # Total PV Generation
+      type: input
+      decode: uint32
+    scale: 0.1
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10006 # Battery Power
+      type: input
+      decode: int32
+    scale: -1
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10264 # Total Battery Discharge Energy
+      type: input
+      decode: uint32
+    scale: 0.1
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10010 # SOC
+      type: input
+      decode: uint16
+  batterymode:
+    source: switch
+    switch:
+    - case: 1 # normal
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 0 # Self Use Mode
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 10063 # Work Mode
+              type: writesingle
+              decode: uint16
+        - source: const
+          value: 0 # No charge/discharge control
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 10071 # Battery Charge/Discharge Control
+              type: writemultiple
+              decode: int32
+    - case: 2 # hold
+      set:
+        source: const
+        value: 0 # Hold current state
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 10071 # Battery Charge/Discharge Control
+            type: writemultiple
+            decode: int32
+    - case: 3 # charge
+      set:
+        source: const
+        value: {{ .maxchargepower }} # Configured max charge power
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 10071 # Battery Charge/Discharge Control (positive = charge)
+            type: writemultiple
+            decode: int32
+  {{- include "battery-params" . }}
+  {{- end }}
