@@ -481,7 +481,8 @@ func TestEasee_CommandResponse_rogueAfterOrphanConsumed(t *testing.T) {
 		Ticks:        111111111,
 		WasAccepted:  true,
 	}
-	raw, _ := json.Marshal(resp)
+	raw, err := json.Marshal(resp)
+	require.NoError(t, err)
 	e.CommandResponse(raw) // consumes the counter
 
 	// A second identical response with counter=0 should be treated as rogue (not panic)

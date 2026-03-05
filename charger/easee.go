@@ -423,6 +423,8 @@ func (c *Easee) CommandResponse(i json.RawMessage) {
 	c.cmdMu.Lock()
 	ch, ok := c.pendingTicks[res.Ticks]
 	c.cmdMu.Unlock()
+	// ch is safe to use outside the lock: it is only removed from pendingTicks
+	// (and never closed) by the caller that created it, after this handler returns.
 
 	if ok {
 		ch <- res
