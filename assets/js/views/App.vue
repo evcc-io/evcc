@@ -185,7 +185,8 @@ export default defineComponent({
 				loc.hostname +
 				(loc.port ? ":" + loc.port : "") +
 				loc.pathname +
-				"ws";
+				"ws?t=" +
+				Date.now(); // force Safari to use a fresh connection
 
 			this.ws = new WebSocket(uri);
 			this.ws.onerror = () => {
