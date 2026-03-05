@@ -108,7 +108,8 @@ func (conn *Connector) GetScheduleLimit(duration int) (float64, error) {
 	return 0, fmt.Errorf("invalid ChargingSchedule")
 }
 
-// WatchDog triggers meter values messages if older than timeout.
+// WatchDog triggers meter values messages for this connector if older than timeout.
+// Uses a delayed timeout to give push updates a chance to arrive first.
 // Must be wrapped in a goroutine.
 func (conn *Connector) WatchDog(ctx context.Context, timeout time.Duration) {
 	for tick := time.NewTicker(2 * time.Second); ; {

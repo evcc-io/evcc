@@ -1,8 +1,10 @@
 package ocpp
 
 import (
+	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
@@ -134,4 +136,38 @@ func (cp *CP) Connected() bool {
 
 func (cp *CP) HasConnected() <-chan struct{} {
 	return cp.connectC
+}
+
+// WatchDog triggers meter values messages for the whole station if older than timeout.
+// Uses a delayed timeout to give push updates and connector-specific watchdogs a chance to trigger first.
+// Must be wrapped in a goroutine.
+func (cp *CP) WatchDog(ctx context.Context, timeout time.Duration) {
+	for tick := time.NewTicker(2 * time.Second); ; {
+		var needUpdate bool
+
+		cp.mu.RLock()
+		for _, conn := range cp.connectors {
+			conn.mu.Lock()
+			if conn.clock.Since(conn.meterUpdated) > timeout {
+				needUpdate = true
+			}
+			conn.mu.Unlock()
+			if needUpdate {
+				break
+			}
+		}
+		cp.mu.RUnlock()
+
+		if needUpdate {
+			// Trigger measured values for the entire station as a fallback,
+			// as a last hope that data will be sent for all connectors.
+			cp.TriggerMessageRequest(0, core.MeterValuesFeatureName)
+		}
+
+		select {
+		case <-ctx.Done():
+			return
+		case <-tick.C:
+		}
+	}
 }

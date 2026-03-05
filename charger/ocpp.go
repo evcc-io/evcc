@@ -195,7 +195,8 @@ func NewOCPP(ctx context.Context,
 	}
 
 	if cp.HasRemoteTriggerFeature {
-		go conn.WatchDog(ctx, meterInterval)
+		// add small delay to give push updates time to arrive first
+		go conn.WatchDog(ctx, meterInterval+2*time.Second)
 	}
 
 	return c, conn.Initialized()
