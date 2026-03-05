@@ -177,16 +177,11 @@ export default defineComponent({
 				return;
 			}
 
-			const loc = window.location;
-			const protocol = loc.protocol == "https:" ? "wss:" : "ws:";
-			const uri =
-				protocol +
-				"//" +
-				loc.hostname +
-				(loc.port ? ":" + loc.port : "") +
-				loc.pathname +
-				"ws?t=" +
-				Date.now(); // force Safari to use a fresh connection
+			const loc = new URL("ws", window.location.href);
+			loc.protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+			// force Safari to use a fresh connection
+			loc.searchParams.set("t", String(Date.now()));
+			const uri = loc.href;
 
 			this.ws = new WebSocket(uri);
 			this.ws.onerror = () => {
@@ -225,7 +220,6 @@ export default defineComponent({
 				}
 			};
 
-			// Safari/iOS 26 may fail WS handshake or open without delivering data.
 			// Safari/iOS 26 may fail WS handshake or open without delivering data.
 			// If no message received within 10s, tear down and retry.
 			this.dataTimeout = window.setTimeout(() => {
