@@ -15,27 +15,28 @@ import (
 )
 
 type RealTimeData struct {
-	ID               string  `json:"ID"`
-	ChargeState      int     `json:"ChargeState"`
-	ReadyState       int     `json:"ReadyState"`
-	ChargePower      float64 `json:"ChargePower"`
-	ChargeEnergy     float64 `json:"ChargeEnergy"`
-	SlaveError       int     `json:"SlaveError"`
-	ChargeTime       int     `json:"ChargeTime"`
-	HousePower       float64 `json:"HousePower"`
-	FVPower          float64 `json:"FVPower"`
-	BatteryPower     float64 `json:"BatteryPower"`
-	Paused           int     `json:"Paused"`
-	Locked           int     `json:"Locked"`
-	Timer            int     `json:"Timer"`
-	Intensity        int     `json:"Intensity"`
-	Dynamic          int     `json:"Dynamic"`
-	MinIntensity     int     `json:"MinIntensity"`
-	MaxIntensity     int     `json:"MaxIntensity"`
-	PauseDynamic     int     `json:"PauseDynamic"`
-	FirmwareVersion  string  `json:"FirmwareVersion"`
-	DynamicPowerMode int     `json:"DynamicPowerMode"`
-	ContractedPower  int     `json:"ContractedPower"`
+	ID                  string  `json:"ID"`
+	ChargeState         int     `json:"ChargeState"`
+	ReadyState          int     `json:"ReadyState"`
+	ChargePower         float64 `json:"ChargePower"`
+	ChargeEnergy        float64 `json:"ChargeEnergy"`
+	SlaveError          int     `json:"SlaveError"`
+	ChargeTime          int     `json:"ChargeTime"`
+	HousePower          float64 `json:"HousePower"`
+	FVPower             float64 `json:"FVPower"`
+	BatteryPower        float64 `json:"BatteryPower"`
+	Paused              int     `json:"Paused"`
+	Locked              int     `json:"Locked"`
+	Timer               int     `json:"Timer"`
+	Intensity           int     `json:"Intensity"`
+	Dynamic             int     `json:"Dynamic"`
+	MinIntensity        int     `json:"MinIntensity"`
+	MaxIntensity        int     `json:"MaxIntensity"`
+	PauseDynamic        int     `json:"PauseDynamic"`
+	FirmwareVersion     string  `json:"FirmwareVersion"`
+	DynamicPowerMode    int     `json:"DynamicPowerMode"`
+	ContractedPower     int     `json:"ContractedPower"`
+	VoltageInstallation int     `json:"VoltageInstallation"`
 }
 
 // Trydan charger implementation
@@ -174,6 +175,31 @@ var _ api.Meter = (*Trydan)(nil)
 func (c Trydan) CurrentPower() (float64, error) {
 	data, err := c.statusG.Get()
 	return data.ChargePower, err
+}
+
+var _ api.PhaseVoltages = (*Trydan)(nil)
+
+// Voltages implements the api.PhaseVoltages interface
+func (c Trydan) Voltages() (float64, float64, float64, error) {
+	data, err := c.statusG.Get()
+	if err != nil {
+		return 0, 0, 0, err
+	}
+	return float64(data.VoltageInstallation), 0, 0, nil
+}
+
+var _ api.PhaseCurrents = (*Trydan)(nil)
+
+// Currents implements the api.PhaseCurrents interface
+func (c Trydan) Currents() (float64, float64, float64, error) {
+	data, err := c.statusG.Get()
+	if err != nil {
+		return 0, 0, 0, err
+	}
+	if data.VoltageInstallation == 0 {
+		return 0, 0, 0, fmt.Errorf("VoltageInstallation not available")
+	}
+	return data.ChargePower / float64(data.VoltageInstallation), 0, 0, nil
 }
 
 var _ api.Diagnosis = (*Trydan)(nil)

@@ -159,6 +159,7 @@ type Loadpoint struct {
 	status         api.ChargeStatus // Charger status
 	chargePower    float64          // Charging power
 	chargeCurrents []float64        // Phase currents
+	chargeVoltages []float64        // Phase voltages
 	connectedTime  time.Time        // Time when vehicle was connected
 	pvTimer        time.Time        // PV enabled/disable timer
 	phaseTimer     time.Time        // 1p3p switch timer
@@ -886,9 +887,17 @@ func (lp *Loadpoint) setLimit(current float64) error {
 
 		currentLimit := lp.circuit.ValidateCurrent(actualCurrent, current)
 
+		// use measured phase voltage when available; chargers may operate at a voltage
+		// different from the site's configured value, causing power limits to be mis-converted
 		activePhases := lp.ActivePhases()
-		powerLimit := lp.circuit.ValidatePower(lp.chargePower, currentToPower(current, activePhases))
-		currentLimitViaPower := powerToCurrent(powerLimit, activePhases)
+		volt := Voltage
+		if v := lp.chargeVoltages; v != nil {
+			if vm := max(v[0], v[1], v[2]); vm > 0 {
+				volt = vm
+			}
+		}
+		powerLimit := lp.circuit.ValidatePower(lp.chargePower, currentToPower(current, activePhases, volt))
+		currentLimitViaPower := powerToCurrent(powerLimit, activePhases, volt)
 
 		current = lp.roundedCurrent(min(currentLimit, currentLimitViaPower))
 	}
@@ -1320,7 +1329,7 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) in
 	scalable := (sitePower > 0 || !lp.enabled) && activePhases > 1 && lp.phasesConfigured < 3
 
 	// scale down phases
-	if targetCurrent := powerToCurrent(availablePower, activePhases); targetCurrent < minCurrent && scalable {
+	if targetCurrent := powerToCurrent(availablePower, activePhases, Voltage); targetCurrent < minCurrent && scalable {
 		lp.log.DEBUG.Printf("available power %.0fW < %.0fW min %dp threshold", availablePower, float64(activePhases)*Voltage*minCurrent, activePhases)
 
 		if !lp.charging() { // scale immediately if not charging
@@ -1345,11 +1354,11 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) in
 	}
 
 	maxPhases := lp.MaxActivePhases()
-	target1pCurrent := powerToCurrent(availablePower, 1)
+	target1pCurrent := powerToCurrent(availablePower, 1, Voltage)
 	scalable = maxPhases > 1 && phases < maxPhases && target1pCurrent > maxCurrent
 
 	// scale up phases
-	if targetCurrent := powerToCurrent(availablePower, maxPhases); targetCurrent >= minCurrent && scalable {
+	if targetCurrent := powerToCurrent(availablePower, maxPhases, Voltage); targetCurrent >= minCurrent && scalable {
 		lp.log.DEBUG.Printf("available power %.0fW > %.0fW min %dp threshold", availablePower, float64(maxPhases)*Voltage*minCurrent, maxPhases)
 
 		if !lp.charging() { // scale immediately if not charging
@@ -1463,9 +1472,9 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 	}
 	if lp.chargerHasFeature(api.IntegratedDevice) {
 		// for slow-acting heating devices, only take actually consumed power into account
-		effectiveCurrent = powerToCurrent(lp.chargePower, activePhases)
+		effectiveCurrent = powerToCurrent(lp.chargePower, activePhases, Voltage)
 	}
-	deltaCurrent := powerToCurrent(-sitePower, activePhases)
+	deltaCurrent := powerToCurrent(-sitePower, activePhases, Voltage)
 	targetCurrent := max(effectiveCurrent+deltaCurrent, 0)
 
 	// in MinPV mode or under special conditions return at least minCurrent
@@ -1640,6 +1649,8 @@ func (lp *Loadpoint) phasesFromChargeCurrents() {
 
 // updateChargeVoltages uses PhaseVoltages interface to count phases with nominal grid voltage
 func (lp *Loadpoint) updateChargeVoltages() {
+	lp.chargeVoltages = nil
+
 	phaseMeter, ok := lp.chargeMeter.(api.PhaseVoltages)
 	if !ok {
 		return // don't guess
@@ -1655,6 +1666,7 @@ func (lp *Loadpoint) updateChargeVoltages() {
 	}
 
 	chargeVoltages := []float64{u1, u2, u3}
+	lp.chargeVoltages = chargeVoltages
 	lp.log.DEBUG.Printf("charge voltages: %.3gV", chargeVoltages)
 	lp.publish(keys.ChargeVoltages, chargeVoltages)
 

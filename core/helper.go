@@ -17,19 +17,19 @@ var (
 )
 
 // powerToCurrent is a helper function to convert power to per-phase current
-func powerToCurrent(power float64, phases int) float64 {
-	if Voltage == 0 {
+func powerToCurrent(power float64, phases int, voltage float64) float64 {
+	if voltage == 0 {
 		panic("Voltage is not set")
 	}
-	return power / (float64(phases) * Voltage)
+	return power / (float64(phases) * voltage)
 }
 
 // currentToPower is a helper function to convert current to sum power
-func currentToPower(current float64, phases int) float64 {
-	if Voltage == 0 {
+func currentToPower(current float64, phases int, voltage float64) float64 {
+	if voltage == 0 {
 		panic("Voltage is not set")
 	}
-	return current * float64(phases) * Voltage
+	return current * float64(phases) * voltage
 }
 
 // printPtr returns a string representation of a pointer value
