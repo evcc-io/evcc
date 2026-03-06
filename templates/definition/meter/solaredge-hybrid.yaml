@@ -90,18 +90,22 @@ render: |
   {{- if eq .usage "pv" }}
   power:
     source: calc
-    add:
-      - source: sunspec
-        {{- include "modbus" . | indent 6 }}
-        value:
-          - 101:DCW
-          - 103:DCW
-      - source: modbus
-        {{- include "modbus" . | indent 6 }}
-        register:
-          address: 62836 # Battery 1 Instantaneous Power
-          type: holding
-          decode: float32nans
+    max:
+      - source: const
+        value: 0
+      - source: calc
+        add:
+          - source: sunspec
+            {{- include "modbus" . | indent 10 }}
+            value:
+              - 101:DCW
+              - 103:DCW
+          - source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 0xE174 # Battery 1 Instantaneous Power
+              type: holding
+              decode: float32nans
   energy:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
