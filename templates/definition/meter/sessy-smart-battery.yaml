@@ -17,6 +17,7 @@ params:
     default: 10
   - name: capacity
     default: 5
+  - preset: battery-params
 render: |
   type: custom
   power:
