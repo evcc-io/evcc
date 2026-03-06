@@ -111,21 +111,20 @@ func (h *SocketHub) deleteSubscriber(s *socketSubscriber) {
 }
 
 func (h *SocketHub) welcome(subscriber *socketSubscriber, params []util.Param) {
-	msg := make(map[string]json.RawMessage, len(params))
-
 	for _, p := range params {
 		k := p.Key
 		if p.Loadpoint != nil {
 			k = "loadpoints." + p.UniqueID()
 		}
 
-		msg[k] = json.RawMessage(socketEncode(p.Val))
+		msg := map[string]json.RawMessage{
+			k: json.RawMessage(socketEncode(p.Val)),
+		}
+
+		if b, err := json.Marshal(msg); err == nil {
+			subscriber.send <- b
+		}
 	}
-
-	b, _ := json.Marshal(msg)
-
-	// should not block
-	subscriber.send <- b
 }
 
 func (h *SocketHub) broadcast(p util.Param) {
