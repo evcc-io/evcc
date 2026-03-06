@@ -4,11 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"slices"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/coder/websocket"
+	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -111,6 +113,14 @@ func (h *SocketHub) deleteSubscriber(s *socketSubscriber) {
 }
 
 func (h *SocketHub) welcome(subscriber *socketSubscriber, params []util.Param) {
+	// ensure startupCompleted is first so client resets state before receiving data
+	slices.SortStableFunc(params, func(a, b util.Param) int {
+		if a.Key == keys.StartupCompleted {
+			return -1
+		}
+		return 0
+	})
+
 	for _, p := range params {
 		k := p.Key
 		if p.Loadpoint != nil {
