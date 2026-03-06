@@ -127,8 +127,10 @@ func (h *SocketHub) welcome(subscriber *socketSubscriber, params []util.Param) {
 	if b, err := json.Marshal(msg); err == nil {
 		subscriber.send <- b
 	}
-	if b, err := json.Marshal(forecast); err == nil {
-		subscriber.send <- b
+	if len(forecast) > 0 {
+		if b, err := json.Marshal(forecast); err == nil {
+			subscriber.send <- b
+		}
 	}
 }
 
