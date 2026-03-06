@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"strings"
 	"sync"
 	"time"
 
@@ -53,11 +52,7 @@ func (h *SocketHub) ServeWebsocket(w http.ResponseWriter, r *http.Request) {
 		InsecureSkipVerify: true,
 	}
 
-	// https://github.com/nhooyr/websocket/issues/218
-	ua := strings.ToLower(r.Header.Get("User-Agent"))
-	if strings.Contains(ua, "safari") && !strings.Contains(ua, "chrome") && !strings.Contains(ua, "android") {
-		acceptOptions.CompressionMode = websocket.CompressionDisabled
-	}
+	acceptOptions.CompressionMode = websocket.CompressionContextTakeover
 
 	conn, err := websocket.Accept(w, r, acceptOptions)
 	if err != nil {
