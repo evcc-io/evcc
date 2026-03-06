@@ -103,7 +103,7 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 	// only setup phase switching methods if power manager endpoint is set
 	var phases func(int) error
 	var getPhases func() (int, error)
-	if w.hasFeature(warp.FeaturePhaseSwitch) && w.pm != nil {
+	if (w.hasFeature(warp.FeaturePhaseSwitch) || cc.EnergyManagerURI != "") && w.pm != nil {
 		if res, err := w.ensurePmState(); err == nil && res.ExternalControl != warp.ExternalControlDeactivated {
 			w.pmState = &res
 			phases = w.phases1p3p
