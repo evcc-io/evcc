@@ -65,6 +65,7 @@ type Easee struct {
 	lp              loadpoint.API
 	cmdMu           sync.Mutex
 	pendingTicks    map[int64]chan easee.SignalRCommandResponse
+	pendingByID     map[easee.ObservationID]chan easee.SignalRCommandResponse
 	expectedOrphans map[easee.ObservationID]int
 	obsC            chan easee.Observation
 	obsTime         map[easee.ObservationID]time.Time
@@ -116,6 +117,7 @@ func NewEasee(ctx context.Context, user, password, charger string, timeout time.
 		current:         6, // default current
 		startDone:       sync.OnceFunc(func() { close(done) }),
 		pendingTicks:    make(map[int64]chan easee.SignalRCommandResponse),
+		pendingByID:     make(map[easee.ObservationID]chan easee.SignalRCommandResponse),
 		expectedOrphans: make(map[easee.ObservationID]int),
 		obsC:            make(chan easee.Observation),
 		obsTime:         make(map[easee.ObservationID]time.Time),
@@ -224,6 +226,18 @@ func (c *Easee) unregisterPendingTick(tick int64) {
 	c.cmdMu.Lock()
 	delete(c.pendingTicks, tick)
 	c.cmdMu.Unlock()
+}
+
+func (c *Easee) registerPendingByID(id easee.ObservationID, ch chan easee.SignalRCommandResponse) {
+	c.cmdMu.Lock()
+	defer c.cmdMu.Unlock()
+	c.pendingByID[id] = ch
+}
+
+func (c *Easee) unregisterPendingByID(id easee.ObservationID) {
+	c.cmdMu.Lock()
+	defer c.cmdMu.Unlock()
+	delete(c.pendingByID, id)
 }
 
 func (c *Easee) registerExpectedOrphan(ids ...easee.ObservationID) {
@@ -419,16 +433,23 @@ func (c *Easee) CommandResponse(i json.RawMessage) {
 
 	c.log.TRACE.Printf("CommandResponse %s: %+v", res.SerialNumber, res)
 
+	obsID := easee.ObservationID(res.ID)
+
 	c.cmdMu.Lock()
-	ch, ok := c.pendingTicks[res.Ticks]
+	chTick, tickOk := c.pendingTicks[res.Ticks]
+	chID, idOk := c.pendingByID[obsID]
 	c.cmdMu.Unlock()
 
-	if ok {
-		ch <- res
+	if tickOk {
+		chTick <- res
 		return
 	}
 
-	obsID := easee.ObservationID(res.ID)
+	if idOk {
+		chID <- res
+		return
+	}
+
 	if c.consumeExpectedOrphan(obsID) {
 		return
 	}
@@ -596,6 +617,9 @@ func (c *Easee) postJSONAndWait(uri string, data any) (bool, error) {
 		ch := make(chan easee.SignalRCommandResponse, 1)
 		c.registerPendingTick(cmd.Ticks, ch)
 		defer c.unregisterPendingTick(cmd.Ticks)
+		obsID := easee.ObservationID(cmd.CommandId)
+		c.registerPendingByID(obsID, ch)
+		defer c.unregisterPendingByID(obsID)
 		return false, c.waitForTickResponse(ch)
 	}
 

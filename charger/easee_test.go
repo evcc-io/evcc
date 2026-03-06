@@ -34,6 +34,7 @@ func newEasee() *Easee {
 		Helper:          request.NewHelper(log),
 		obsTime:         make(map[easee.ObservationID]time.Time),
 		pendingTicks:    make(map[int64]chan easee.SignalRCommandResponse),
+		pendingByID:     make(map[easee.ObservationID]chan easee.SignalRCommandResponse),
 		expectedOrphans: make(map[easee.ObservationID]int),
 		log:             log,
 		startDone:       func() {},
@@ -494,6 +495,41 @@ func TestEasee_CommandResponse_rogueAfterOrphanConsumed(t *testing.T) {
 	e.cmdMu.Lock()
 	assert.Empty(t, e.pendingTicks)
 	e.cmdMu.Unlock()
+}
+
+func TestEasee_CommandResponse_matchedByID(t *testing.T) {
+	e := newEasee()
+
+	ch := make(chan easee.SignalRCommandResponse, 1)
+	e.registerPendingByID(easee.LOCATION, ch)
+	defer e.unregisterPendingByID(easee.LOCATION)
+
+	// Ticks do NOT match any pendingTicks entry — only the ID matches
+	resp := easee.SignalRCommandResponse{
+		SerialNumber: "EH123456",
+		ID:           int(easee.LOCATION),
+		Ticks:        999999999, // not in pendingTicks
+		WasAccepted:  true,
+		ResultCode:   0,
+	}
+
+	raw, err := json.Marshal(resp)
+	require.NoError(t, err)
+
+	assert.NotPanics(t, func() {
+		e.CommandResponse(raw)
+	})
+
+	select {
+	case got := <-ch:
+		assert.Equal(t, resp.Ticks, got.Ticks)
+		assert.True(t, got.WasAccepted)
+	default:
+		t.Fatal("expected CommandResponse to be delivered to pendingByID channel")
+	}
+
+	// pendingByID consumed the response — expectedOrphans untouched
+	assert.False(t, e.consumeExpectedOrphan(easee.LOCATION))
 }
 
 func TestEasee_registerAndConsumeExpectedOrphan(t *testing.T) {
