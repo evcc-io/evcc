@@ -105,6 +105,12 @@
       "labelResidualPower": "Jäännösteho",
       "title": "Määrittele toimintaa"
     },
+    "currency": {
+      "description": "Käytetään energian hinnan, tariffien mukaisten kulujen ja säästöjen ilmoittamiseen.",
+      "example": "Latauksesi oli {price} hintainen. Säästit {amount}.",
+      "label": "Valuutta",
+      "title": "Valuutta"
+    },
     "deviceValue": {
       "amount": "Määrä",
       "broker": "Välittäjä (Broker)",
@@ -130,11 +136,13 @@
       "energy": "Energia",
       "events": "Tapahtumat",
       "feedinPrice": "Sähköverkkoon myynninhinta",
+      "forecast": "Ennuste",
       "gridPrice": "Verkosta ostonhinta",
       "heaterTempLimit": "Lämmityksen raja",
       "hemsActiveLimit": "Aktiivinen raja",
       "hemsType": "Kommunikaatiomenetelmä",
       "identifier": "RFID-tunniste",
+      "max": "maksimi",
       "messengers": "Palvelut",
       "no": "ei",
       "odometer": "Matkamittari",
@@ -145,6 +153,7 @@
       "phases1p3p": "Vaihekytkin",
       "power": "Teho",
       "powerRange": "Teho",
+      "price": "Hinta",
       "range": "Toimintasäde",
       "singlePhase": "Yksivaiheinen",
       "soc": "Lataus",
@@ -324,6 +333,8 @@
       },
       "defaultModeHelpKeep": "Säilyttää viimeksi valitun lataus/käyttötilan.",
       "defaultModeLabel": "Oletustila",
+      "defaultsHint": "Vakiotila, aurinkovoiman käyttö ja sähköjärjestelmän yksityiskohdat käyttävät järkeviä vakioasetuksia.",
+      "defaultsHintLink": "Säädä asetuksia",
       "delete": "Poista",
       "electricalSubtitle": "Jos olet epävarma, kysy sähköasentajaltasi.",
       "electricalTitle": "Sähköinen",
@@ -569,7 +580,8 @@
       "labelInternalUrl": "Sisäinen URL",
       "labelPort": "Portti",
       "labelSchema": "Kaavio",
-      "title": "Verkko"
+      "title": "Verkko",
+      "warningUrlPath": "URL ei yleensä sisällä polkua. Oletko varma, että asetus on oikein?"
     },
     "ocpp": {
       "connectedChargers": "Yhdistetyt laturit",
@@ -695,6 +707,79 @@
       "restartRequiredMessage": "Määritykset muutettu.",
       "restartingDescription": "Ole hyvä ja odota…",
       "restartingMessage": "Käynnistetään uudelleen evcc."
+    },
+    "tariff": {
+      "addForecast": "Lisää ennuste",
+      "addTariff": "Lisää tariffi",
+      "co2": {
+        "description": "CO₂-päästökertoimen ennuste sähköverkon sähkölle. Käytetään CO₂-optimoituun lataukseen ja päästösäästöjen laskelmiin.",
+        "titleAdd": "Lisää CO₂-ennuste",
+        "titleEdit": "Muokkaa CO₂-ennustetta"
+      },
+      "co2Services": "CO₂-palvelut",
+      "customForecast": "Itse määritelty ennuste",
+      "customTariff": "Itse määritelty tariffi",
+      "description": "Määritä energiatariffit ja ennusteet. Käytä laitekohtaisia asetuksia dynaamiseen määrittelyyn tai YAML-asetuksia vakioasetuksiin.",
+      "feedIn": {
+        "description": "Sähkön myyntihinta verkkoon viedylle sähkölle. Käytetään laskemaan tosiasiallisia latauskustannuksia.",
+        "titleAdd": "Lisää myyntihinta verkkoon myydylle sähkölle",
+        "titleEdit": "Muokkaa sähkönverkkoon myydyn sähkön hintaa"
+      },
+      "generic": "Yleiset integraatiot",
+      "grid": {
+        "description": "Sähkön hinta verkossa. Käytetään latauskustannuksien määrittelyssä sekä hintaoptimoidussa auton latauksessa, lämmityksessä tai kotiakun latauksessa verkosta.",
+        "titleAdd": "Lisää sähkön ostohinta",
+        "titleEdit": "Muokkaa sähkön ostohintaa"
+      },
+      "legacyWarning": "Uusi tariffiasetus saatavilla! Poista ja tallenna tariffisi täällä käyttäen uudistettua opastettua prosessia.",
+      "option": {
+        "co2": "Lisää sähkön CO₂-ennuste",
+        "feedIn": "Lisää sähkön myyntihinta",
+        "grid": "Lisää sähkön ostohinta",
+        "planner": "Lisää ennuste suunnitelmalle",
+        "solar": "Lisää aurinkotuotantoennuste"
+      },
+      "planner": {
+        "description": "Lisäasetukset. Tavanomaisesti näitä ei tarvitse asettaa, sillä vaihtuva (pörssi)sähkönhintaa tai CO₂-ennustetta käytetään automaattisesti. Mahdollistaa lisätietolähteiden määrittämisen, joita voidaan käyttää latausoptimoinninsuunnitteluun, muttei kuitenkaan tilastoihin tai hintalaskelmiin.",
+        "titleAdd": "Lisää ennuste suunnitelmaan",
+        "titleEdit": "Muokkaa suunnitelman ennustetta"
+      },
+      "services": "Palvelut",
+      "solar": {
+        "description": "Aurinkotuotantoennuste aurinkovoimalle. Näytetään käyttöliittymässä ja mahdollisesti käytetään tulevaisuudessa latausoptimointialgoritmiin.",
+        "titleAdd": "Lisää aurinkotuotantoennuste",
+        "titleEdit": "Muokkaa aurinkotuotantoennustetta"
+      },
+      "template": "Lähde",
+      "title": "Tariffit & Ennusteet",
+      "titleChoice": "Mitä haluat lisätä?",
+      "type": {
+        "co2": "CO₂-intensiteetti",
+        "feedIn": "Syöttöhinta",
+        "grid": "Verkkosähkön hinta",
+        "planner": "Suunnitelma",
+        "solar": "Aurinko"
+      },
+      "zones": {
+        "add": "Lisää hintajakso",
+        "allDays": "Kaikkina päivinä",
+        "allMonths": "Joka kuussa",
+        "allTimes": "Koko päivän",
+        "cancel": "Peruuta",
+        "days": "Päivät",
+        "edit": "Muokkaa",
+        "hours": "Tunnit",
+        "months": "Kuukaudet",
+        "price": "Hinta",
+        "priceRequired": "Hinta vaaditaan",
+        "remove": "Poista hintajakso",
+        "save": "Tallenna",
+        "selectAll": "Kaikkina päivinä",
+        "timeFrom": "Alkaen",
+        "timeRangeError": "Alkuaika pitää olla ennen päättymisaikaa. Jatkaaksesi keskiyönyli, luo kaksi erillistä aikajaksoa.",
+        "timeTo": "Päättyen",
+        "weekdays": "Viikonpäivät"
+      }
     },
     "tariffs": {
       "description": "Määrittele energiatariffisi, jotta latausistuntojesi kustannukset lasketaan.",
@@ -1002,10 +1087,13 @@
       "battery": "Akku",
       "batteryCharge": "Akunlataus",
       "batteryDischarge": "Akku purkautuu",
-      "batteryGridChargeActive": "lataaminen verkkosta aktiivinen",
-      "batteryGridChargeLimit": "milloin ladataan verkosta",
+      "batteryForecastEmpty": "varaus loppuu {time}",
+      "batteryForecastFull": "varaus täynnä {time}",
+      "batteryGridChargeActive": "Ladataan verkosta",
+      "batteryGridChargeLimit": "Milloin ladataan verkosta",
       "batteryHold": "Akku (lukittu)",
       "batteryTooltip": "{energy} / {total} ({soc})",
+      "forecast": "Ennuste: ",
       "forecastTooltip": "ennuste: jäljellä oleva aurinkotuotanto tänään",
       "gridImport": "Kulutus sähköverkosta",
       "homePower": "Kodin sähkönkulutus",
@@ -1069,7 +1157,7 @@
         "label": "Minimivirta"
       },
       "minSoc": {
-        "description": "Ajoneuvo ladataan nopeasti {0} asti huolimatta aurinkoenergian ylijäämästä, tämän jälkeen vain ylijäämäenergialla. Tämä on hyödyllinen takaamaan minimi toimintamatka myös pimeinä päivinä.",
+        "description": "Ajoneuvo ladataan välittömästi {0} asti huolimatta aurinkoenergian ylijäämästä, tämän jälkeen vain ylijäämäenergialla. Tämä on hyödyllinen takaamaan minimi toimintamatka myös pimeinä päivinä.",
         "label": "Minimi lataustaso"
       },
       "onlyForSocBasedCharging": "Nämä vaihtoehdot ovat käytettävissä vain ajoneuvoille, joiden lataustaso on tiedossa.",
@@ -1089,7 +1177,7 @@
     },
     "mode": {
       "minpv": "Minimi+PV",
-      "now": "Nopea",
+      "now": "Välitön",
       "off": "Seis",
       "pv": "PV",
       "smart": "Älykäs"
@@ -1185,6 +1273,7 @@
       "targetChargeWaitForVehicle": "Lataussuunnitelma valmis. Odotetaan ajoneuvoa…",
       "vehicleLimit": "Ajoneuvon latausraja",
       "vehicleLimitReached": "Ajoneuvon raja saavutettu.",
+      "waitForAuthorization": "Yhdistetty. Odottaa valtuutusta…",
       "waitForVehicle": "Valmiina. Odotetaan ajoneuvoa…",
       "welcome": "Lyhyt aloitus lataus yhteyden vahvistamiseksi."
     },
@@ -1370,7 +1459,7 @@
     "co2Label": "CO₂ päästö",
     "co2Limit": "CO₂ raja",
     "enable": "Kytke rajoitus",
-    "loadpointDescription": "Mahdollistaa nopean lataamisen väliaikaisesti aurinkosähkötilassa (PV).",
+    "loadpointDescription": "Mahdollistaa välittömän lataamisen väliaikaisesti aurinkosähkötilassa (PV) kun sähkö on halpaa.",
     "modalTitle": "Älykäs lataus verkosta",
     "none": "ei mitään",
     "priceLabel": "Energian hinta",

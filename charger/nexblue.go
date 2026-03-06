@@ -219,12 +219,12 @@ func (wb *Nexblue) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (wb *Nexblue) MaxCurrent(current int64) error {
-	req, _ := request.New(http.MethodPost,
-		fmt.Sprintf("%s/chargers/%s/cmd/set_current_limit", nexblueAPI, wb.serial), request.MarshalJSON(struct {
-			CurrentLimit int64 `json:"current_limit"`
-		}{
-			current,
-		}), request.JSONEncoding)
+	uri := fmt.Sprintf("%s/chargers/%s/cmd/set_current_limit", nexblueAPI, wb.serial)
+	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(struct {
+		CurrentLimit int64 `json:"current_limit"`
+	}{
+		current,
+	}), request.JSONEncoding)
 
 	var res struct {
 		Result int `json:"result"`
@@ -267,12 +267,12 @@ var _ api.PhaseSwitcher = (*Nexblue)(nil)
 
 // Phases1p3p implements the api.PhaseSwitcher interface
 func (wb *Nexblue) Phases1p3p(phases int) error {
-	req, _ := request.New(http.MethodPost,
-		fmt.Sprintf("%s/v1/charger/%s/setting", nexblueAPI, wb.serial), request.MarshalJSON(struct {
-			PhaseMode int `json:"phase_mode"`
-		}{
-			phases,
-		}), request.JSONEncoding)
+	uri := fmt.Sprintf("%s/v1/charger/%s/setting", nexblueAPI, wb.serial)
+	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(struct {
+		PhaseMode int `json:"phase_mode"`
+	}{
+		phases,
+	}), request.JSONEncoding)
 
 	_, err := wb.DoBody(req)
 	return err
