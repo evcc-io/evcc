@@ -15,9 +15,9 @@ params:
     required: true
   - name: cache
     default: 10
+  - preset: battery-params
   - name: capacity
     default: 5
-  - preset: battery-params
 render: |
   type: custom
   power:
