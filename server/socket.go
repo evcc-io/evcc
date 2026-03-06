@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -113,13 +112,8 @@ func (h *SocketHub) deleteSubscriber(s *socketSubscriber) {
 }
 
 func (h *SocketHub) welcome(subscriber *socketSubscriber, params []util.Param) {
-	// ensure startupCompleted is first so client resets state before receiving data
-	slices.SortStableFunc(params, func(a, b util.Param) int {
-		if a.Key == keys.StartupCompleted {
-			return -1
-		}
-		return 0
-	})
+	msg := make(map[string]json.RawMessage, len(params))
+	forecast := make(map[string]json.RawMessage)
 
 	for _, p := range params {
 		k := p.Key
@@ -127,13 +121,19 @@ func (h *SocketHub) welcome(subscriber *socketSubscriber, params []util.Param) {
 			k = "loadpoints." + p.UniqueID()
 		}
 
-		msg := map[string]json.RawMessage{
-			k: json.RawMessage(socketEncode(p.Val)),
+		if p.Key == keys.Forecast {
+			forecast[k] = json.RawMessage(socketEncode(p.Val))
+		} else {
+			msg[k] = json.RawMessage(socketEncode(p.Val))
 		}
+	}
 
-		if b, err := json.Marshal(msg); err == nil {
-			subscriber.send <- b
-		}
+	// send complete state (small), then forecast (potentially large)
+	if b, err := json.Marshal(msg); err == nil {
+		subscriber.send <- b
+	}
+	if b, err := json.Marshal(forecast); err == nil {
+		subscriber.send <- b
 	}
 }
 
