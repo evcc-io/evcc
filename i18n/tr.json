@@ -1272,6 +1272,7 @@
       "targetChargeWaitForVehicle": "Doldurma planı hazır. Araç bekleniyor…",
       "vehicleLimit": "Araç sınırı",
       "vehicleLimitReached": "Araç sınırına ulaşıldı.",
+      "waitForAuthorization": "Bağlandı. Yetkilendirme bekleniyor…",
       "waitForVehicle": "Doldurmaya hazır. Araç bekleniyor…",
       "welcome": "Bağlantıyı onaylamak için kısa ilk dolum."
     },
