@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"iter"
 	"strings"
 	"sync"
 
@@ -13,7 +14,7 @@ import (
 
 // Sharder splits data into chunks, omitting unmodified chunks
 type Sharder interface {
-	Shards() []Shard
+	Shards(useCache bool) iter.Seq2[string, any]
 }
 
 type Shard struct {
@@ -36,41 +37,43 @@ func (s *sharderImpl) MarshalJSON() ([]byte, error) {
 	return json.Marshal(s.struc)
 }
 
-func (s *sharderImpl) Shards() []Shard {
+func (s *sharderImpl) Shards(useCache bool) iter.Seq2[string, any] {
 	ff := structs.Fields(s.struc)
-	res := make([]Shard, 0, len(ff))
 
-	shardMu.Lock()
-	defer shardMu.Unlock()
-
-	for _, f := range ff {
-		key := f.Name()
-		if t := f.Tag("json"); t != "" {
-			if n := strings.Split(t, ",")[0]; n != "" {
-				key = n
-			}
-		}
-
-		// Use JSON for stable hashing (fmt.Append includes pointer addresses)
-		b, err := json.Marshal(f.Value())
-		if err != nil {
-			// Fallback to fmt.Append if JSON fails
-			b = fmt.Append(nil, f.Value())
-		}
-
-		hash := sha256.Sum256(b)
-		if cached, ok := shardCache[s.prefix+key]; ok && hash == cached {
-			continue
-		}
-		shardCache[s.prefix+key] = hash
-
-		res = append(res, Shard{
-			Key:   key,
-			Value: f.Value(),
-		})
+	if useCache {
+		shardMu.Lock()
+		defer shardMu.Unlock()
 	}
 
-	return res
+	return func(yield func(string, any) bool) {
+		for _, f := range ff {
+			key := f.Name()
+			if t := f.Tag("json"); t != "" {
+				if n := strings.Split(t, ",")[0]; n != "" {
+					key = n
+				}
+			}
+
+			if useCache {
+				// Use JSON for stable hashing (fmt.Append includes pointer addresses)
+				b, err := json.Marshal(f.Value())
+				if err != nil {
+					// Fallback to fmt.Append if JSON fails
+					b = fmt.Append(nil, f.Value())
+				}
+
+				hash := sha256.Sum256(b)
+				if cached, ok := shardCache[s.prefix+key]; ok && hash == cached {
+					continue
+				}
+				shardCache[s.prefix+key] = hash
+			}
+
+			if !yield(key, f.Value()) {
+				break
+			}
+		}
+	}
 }
 
 var _ api.StructMarshaler = (*sharderImpl)(nil)
