@@ -38,15 +38,13 @@ func (s *sharderImpl) MarshalJSON() ([]byte, error) {
 }
 
 func (s *sharderImpl) Shards(useCache bool) iter.Seq2[string, any] {
-	ff := structs.Fields(s.struc)
-
 	if useCache {
 		shardMu.Lock()
 		defer shardMu.Unlock()
 	}
 
 	return func(yield func(string, any) bool) {
-		for _, f := range ff {
+		for _, f := range structs.Fields(s.struc) {
 			key := f.Name()
 			if t := f.Tag("json"); t != "" {
 				if n := strings.Split(t, ",")[0]; n != "" {
