@@ -4,11 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"strings"
 	"sync"
 	"time"
 
 	"github.com/coder/websocket"
+	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -52,11 +52,7 @@ func (h *SocketHub) ServeWebsocket(w http.ResponseWriter, r *http.Request) {
 		InsecureSkipVerify: true,
 	}
 
-	// https://github.com/nhooyr/websocket/issues/218
-	ua := strings.ToLower(r.Header.Get("User-Agent"))
-	if strings.Contains(ua, "safari") && !strings.Contains(ua, "chrome") && !strings.Contains(ua, "android") {
-		acceptOptions.CompressionMode = websocket.CompressionDisabled
-	}
+	acceptOptions.CompressionMode = websocket.CompressionContextTakeover
 
 	conn, err := websocket.Accept(w, r, acceptOptions)
 	if err != nil {
@@ -88,6 +84,7 @@ func (h *SocketHub) subscribe(ctx context.Context, conn *websocket.Conn) error {
 		select {
 		case msg := <-s.send:
 			if err := writeTimeout(ctx, socketWriteTimeout, conn, msg); err != nil {
+				log.INFO.Printf("ws write error: %v, msg len: %.1fkB", err, float64(len(msg))/1024)
 				return err
 			}
 		case <-ctx.Done():
@@ -112,6 +109,7 @@ func (h *SocketHub) deleteSubscriber(s *socketSubscriber) {
 
 func (h *SocketHub) welcome(subscriber *socketSubscriber, params []util.Param) {
 	msg := make(map[string]json.RawMessage, len(params))
+	forecast := make(map[string]json.RawMessage)
 
 	for _, p := range params {
 		k := p.Key
@@ -119,13 +117,22 @@ func (h *SocketHub) welcome(subscriber *socketSubscriber, params []util.Param) {
 			k = "loadpoints." + p.UniqueID()
 		}
 
-		msg[k] = json.RawMessage(socketEncode(p.Val))
+		if p.Key == keys.Forecast {
+			forecast[k] = json.RawMessage(socketEncode(p.Val))
+		} else {
+			msg[k] = json.RawMessage(socketEncode(p.Val))
+		}
 	}
 
-	b, _ := json.Marshal(msg)
-
-	// should not block
-	subscriber.send <- b
+	// send complete state (small), then forecast (potentially large)
+	if b, err := json.Marshal(msg); err == nil {
+		subscriber.send <- b
+	}
+	if len(forecast) > 0 {
+		if b, err := json.Marshal(forecast); err == nil {
+			subscriber.send <- b
+		}
+	}
 }
 
 func (h *SocketHub) broadcast(p util.Param) {
