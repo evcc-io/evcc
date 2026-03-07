@@ -20,7 +20,6 @@ package charger
 import (
 	"context"
 	"encoding/binary"
-	"errors"
 	"fmt"
 
 	"github.com/evcc-io/evcc/api"
@@ -36,13 +35,15 @@ type Victron struct {
 }
 
 type victronRegs struct {
-	Mode       uint16
-	Energy     uint16
-	Power      uint16
-	Status     uint16
-	SetCurrent uint16
-	Enabled    uint16
-	isGX       bool
+	Mode              uint16
+	Energy            uint16
+	Power             uint16
+	Status            uint16
+	SetCurrent        uint16
+	Enabled           uint16
+	PhaseSwitch       uint16
+	ThreePhaseEnabled uint16
+	isGX              bool
 }
 
 var (
@@ -57,13 +58,15 @@ var (
 	}
 
 	victronEVCS = victronRegs{
-		Mode:       5009,
-		Energy:     5021,
-		Power:      5014,
-		Status:     5015,
-		SetCurrent: 5016,
-		Enabled:    5010,
-		isGX:       false,
+		Mode:              5009,
+		Energy:            5021,
+		Power:             5014,
+		Status:            5015,
+		SetCurrent:        5016,
+		Enabled:           5010,
+		PhaseSwitch:       5055,
+		ThreePhaseEnabled: 5100,
+		isGX:              false,
 	}
 )
 
@@ -72,20 +75,26 @@ func init() {
 	registry.AddCtx("victron-evcs", NewVictronEVCSFromConfig)
 }
 
-// NewVictronGXFromConfig creates a ABB charger from generic config
+//go:generate go tool decorate -f decorateVictron -b *Victron -r api.Charger -t api.PhaseSwitcher,api.PhaseGetter
+
+// NewVictronGXFromConfig creates a Victron charger from generic config
 func NewVictronGXFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	return NewVictronFromConfig(ctx, other, victronGX)
 }
 
-// NewVictronEVCSFromConfig creates a ABB charger from generic config
+// NewVictronEVCSFromConfig creates a Victron charger from generic config
 func NewVictronEVCSFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	return NewVictronFromConfig(ctx, other, victronEVCS)
 }
 
-// NewVictronFromConfig creates a ABB charger from generic config
+// NewVictronFromConfig creates a Victron charger from generic config
 func NewVictronFromConfig(ctx context.Context, other map[string]any, regs victronRegs) (api.Charger, error) {
-	cc := modbus.TcpSettings{
-		ID: cast.ToUint8(regs.isGX) * 100,
+	cc := struct {
+		modbus.TcpSettings `mapstructure:",squash"`
+	}{
+		TcpSettings: modbus.TcpSettings{
+			ID: cast.ToUint8(regs.isGX) * 100,
+		},
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -115,11 +124,27 @@ func NewVictron(ctx context.Context, uri string, slaveID uint8, regs victronRegs
 		return nil, err
 	}
 
-	if binary.BigEndian.Uint16(b) != 0 {
-		return nil, errors.New("charger must be in manual mode")
+	if mode := binary.BigEndian.Uint16(b); mode != 0 {
+		return nil, fmt.Errorf("charger must be in manual mode (current mode: %d)", mode)
 	}
 
-	return wb, nil
+	// phase switching (EVCS only, requires hardware modification with second contactor)
+	var phasesS func(int) error
+	var phasesG func() (int, error)
+
+	if !regs.isGX {
+		b, err := wb.conn.ReadHoldingRegisters(wb.regs.ThreePhaseEnabled, 1)
+		if err != nil {
+			return nil, err
+		}
+
+		if binary.BigEndian.Uint16(b) == 1 {
+			phasesS = wb.phases1p3p
+			phasesG = wb.getPhases
+		}
+	}
+
+	return decorateVictron(wb, phasesS, phasesG), nil
 }
 
 // Status implements the api.Charger interface
@@ -132,7 +157,7 @@ func (wb *Victron) Status() (api.ChargeStatus, error) {
 	u := binary.BigEndian.Uint16(b)
 	switch u {
 	case 0, 1, 2, 3:
-		return api.ChargeStatusString(string('A' + rune(binary.BigEndian.Uint16(b))))
+		return api.ChargeStatusString(string('A' + rune(u)))
 	case 5, 6, 21:
 		return api.StatusB, nil
 	default:
@@ -193,4 +218,29 @@ func (wb *Victron) ChargedEnergy() (float64, error) {
 	}
 
 	return float64(binary.BigEndian.Uint16(b)) / 100, nil
+}
+
+// phases1p3p implements the api.PhaseSwitcher interface
+func (wb *Victron) phases1p3p(phases int) error {
+	// register 5055: 1 = single phase, 0 = three phase
+	var u uint16
+	if phases == 1 {
+		u = 1
+	}
+
+	_, err := wb.conn.WriteSingleRegister(wb.regs.PhaseSwitch, u)
+	return err
+}
+
+// getPhases implements the api.PhaseGetter interface
+func (wb *Victron) getPhases() (int, error) {
+	b, err := wb.conn.ReadHoldingRegisters(wb.regs.PhaseSwitch, 1)
+	if err != nil {
+		return 0, err
+	}
+
+	if binary.BigEndian.Uint16(b) == 1 {
+		return 1, nil
+	}
+	return 3, nil
 }
