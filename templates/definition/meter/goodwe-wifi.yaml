@@ -1,10 +1,8 @@
 template: goodwe-wifi
-# UDP implementation is broken
-# deprecated: true
 products:
   - brand: GoodWe
     description:
-      generic: GoodWe over Wifi
+      generic: GoodWe with stock WiFi dongle (DT/DNS or ET/EH/BT/BH – auto detected)
 requirements:
   evcc: ["skiptest"]
 params:
