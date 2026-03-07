@@ -16,7 +16,7 @@ func GetOrCreateCircuit(name, title string) (api.Circuit, error) {
 	}
 
 	// create new circuit
-	circuit, err := circuit.New(util.NewLogger(name), title, 0, 0, nil, time.Minute)
+	circuit, err := circuit.New(util.NewLogger(name), name, title, 0, 0, nil, time.Minute)
 	if err != nil {
 		return nil, err
 	}
