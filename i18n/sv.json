@@ -106,7 +106,10 @@
       "title": "Kontrollera beteende"
     },
     "currency": {
-      "description": "Används för att samla in och formatera energipriser, kostnader och besparingar."
+      "description": "Används för att samla in och formatera energipriser, kostnader och besparingar.",
+      "example": "Ditt laddningspris var {price}. Du sparade {amount}.",
+      "label": "Valuta",
+      "title": "Valuta"
     },
     "deviceValue": {
       "amount": "Belopp",
@@ -133,11 +136,13 @@
       "energy": "Energi",
       "events": "Händelser",
       "feedinPrice": "Inmatningspris",
+      "forecast": "Prognos",
       "gridPrice": "Nätpris",
       "heaterTempLimit": "Värmarbegränsning",
       "hemsActiveLimit": "Aktiv begränsning",
       "hemsType": "Kommunikation",
       "identifier": "RFID-identifierare",
+      "max": "max",
       "messengers": "Tjänster",
       "no": "nej",
       "odometer": "Mätarställning",
@@ -148,6 +153,7 @@
       "phases1p3p": "Fasväxlare",
       "power": "Effekt",
       "powerRange": "Kraft",
+      "price": "Pris",
       "range": "Räckvidd",
       "singlePhase": "En-fas",
       "soc": "Laddnivå",
@@ -235,6 +241,7 @@
       "fromYamlHint": "Obs: Konfigurerad via evcc.yaml. Ta bort posten från filen för att aktivera redigering här.",
       "hideAdvancedSettings": "Dölj avancerade inställningar",
       "invalidFileSelected": "Ogiltig fil vald",
+      "legacy": "äldre",
       "noFileSelected": "Ingen fil vald.",
       "off": "av",
       "on": "på",
@@ -701,6 +708,38 @@
       "restartRequiredMessage": "Inställningar ändrade.",
       "restartingDescription": "Vänligen vänta…",
       "restartingMessage": "Startar om evcc."
+    },
+    "tariff": {
+      "addForecast": "Lägg till prognos",
+      "addTariff": "Lägg till tariff",
+      "co2": {
+        "description": "CO₂-intensitetsprognos för nätel. För CO₂-optimerad laddning och beräkning av utsläppsbesparingar.",
+        "titleAdd": "Lägg till CO₂-prognos",
+        "titleEdit": "Ändra CO₂-prognos"
+      },
+      "co2Services": "CO₂ -tjänster",
+      "customForecast": "Egen prognos",
+      "customTariff": "Egen tariff",
+      "description": "Konfigurera dina energitariffer och prognoser. Använd enhetsbaserad konfiguration för dynamisk styrning eller YAML för statiska inställningar.",
+      "feedIn": {
+        "description": "Ersättning för el som matas ut i nätet. För beräkning av verkliga laddningskostnader.",
+        "titleAdd": "Lägg till tariff för nätexport",
+        "titleEdit": "Ändra tariff för nätexport"
+      },
+      "generic": "Generiska integrationer",
+      "grid": {
+        "description": "Elpris från nätet. För beräkning av verkliga laddningskostnader och prisoptimerad laddning av fordon, styrning av värme eller nätladdning av hushållsbatteriet.",
+        "titleAdd": "Lägg till tariff för import av el",
+        "titleEdit": "Ändra tariff för import av el"
+      },
+      "legacyWarning": "Ny tariffkonfiguration tillgänglig! Ta bort konfigurationen här och spara för att använda den nya guidade processen.",
+      "option": {
+        "co2": "Lägg till CO₂ prognos",
+        "feedIn": "Lägg till tariff för export av el",
+        "grid": "Lägg till tariff för import av el",
+        "planner": "Lägg till planläggningsprognos",
+        "solar": "Lägg till solprognos"
+      }
     },
     "tariffs": {
       "description": "Lägg in din energitariff för att beräkna kostnaden för dina laddningar.",
