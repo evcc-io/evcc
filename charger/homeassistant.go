@@ -211,37 +211,20 @@ func (c *HomeAssistant) getPhases() (int, error) {
 	return parsePhases(state)
 }
 
+
 // parsePhases extracts the phase count from a select entity state.
-// It accepts:
-//   - bare numeric: "1", "3"
-//   - labeled with leading digit: "1-phase", "3-phase", "1p", "3p"
-//   - labeled with keyword: "single", "three"
-//
-// Returns an error if the state cannot be parsed or is not 1 or 3.
+// The select entity must use "1" or "3" as option values.
+// This matches the hardware capability where phase switching
+// only supports single-phase (1) or three-phase (3) operation.
 func parsePhases(state string) (int, error) {
-	state = strings.TrimSpace(state)
-
-	// try direct integer parse first (most common case: "1" or "3")
-	if phases, err := strconv.Atoi(state); err == nil {
-		if phases == 1 || phases == 3 {
-			return phases, nil
-		}
-		return 0, fmt.Errorf("unsupported phase value: %d", phases)
+	phases, err := strconv.Atoi(strings.TrimSpace(state))
+	if err != nil {
+		return 0, fmt.Errorf("invalid phase value %q: expected '1' or '3': %w", state, err)
 	}
 
-	// try extracting leading digit (e.g. "1-phase", "3-phase", "1p", "3p")
-	if len(state) > 0 && (state[0] == '1' || state[0] == '3') {
-		return int(state[0] - '0'), nil
+	if phases != 1 && phases != 3 {
+		return 0, fmt.Errorf("unsupported phase count %d: must be 1 or 3", phases)
 	}
 
-	// try keyword matching (e.g. "single", "three")
-	lower := strings.ToLower(state)
-	if strings.Contains(lower, "single") || strings.Contains(lower, "one") || strings.Contains(lower, "1p") {
-		return 1, nil
-	}
-	if strings.Contains(lower, "three") || strings.Contains(lower, "triple") || strings.Contains(lower, "3p") {
-		return 3, nil
-	}
-
-	return 0, fmt.Errorf("cannot parse phase value from %q: expected '1', '3', or labeled variant", state)
+	return phases, nil
 }
