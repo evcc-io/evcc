@@ -1,11 +1,13 @@
 package charger
 
-//go:generate go tool decorate -f decorateHomeAssistant -b *HomeAssistant -r api.Charger -t api.Meter,api.MeterEnergy,api.PhaseCurrents,api.PhaseVoltages
+//go:generate go tool decorate -f decorateHomeAssistant -b *HomeAssistant -r api.Charger -t api.Meter,api.MeterEnergy,api.PhaseCurrents,api.PhaseVoltages,api.PhaseSwitcher,api.PhaseGetter
 //  -t api.CurrentGetter
 
 import (
 	"errors"
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -19,6 +21,7 @@ type HomeAssistant struct {
 	enabled    string
 	enable     string
 	maxcurrent string
+	phases     string // optional - select entity for 1p/3p phase switching
 }
 
 func init() {
@@ -39,6 +42,7 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Charger, error) {
 		Energy     string   // optional - energy sensor
 		Currents   []string // optional - current sensors for L1, L2, L3
 		Voltages   []string // optional - voltage sensors for L1, L2, L3
+		Phases     string   // optional - select entity for 1p/3p phase switching
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -71,11 +75,14 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Charger, error) {
 		enabled:    cc.Enabled,
 		enable:     cc.Enable,
 		maxcurrent: cc.MaxCurrent,
+		phases:     cc.Phases,
 	}
 
 	// decorators for optional interfaces
 	var power, energy func() (float64, error)
 	var currents, voltages func() (float64, float64, float64, error)
+	var phases1p3p func(int) error
+	var phasesG func() (int, error)
 
 	if cc.Power != "" {
 		power = func() (float64, error) { return conn.GetFloatState(cc.Power) }
@@ -98,7 +105,13 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Charger, error) {
 		return nil, fmt.Errorf("voltages: %w", err)
 	}
 
-	return decorateHomeAssistant(c, power, energy, currents, voltages), nil
+	// phase switching (optional)
+	if cc.Phases != "" {
+		phases1p3p = c.phases1p3p
+		phasesG = c.getPhases
+	}
+
+	return decorateHomeAssistant(c, power, energy, currents, voltages, phases1p3p, phasesG), nil
 }
 
 var _ api.Charger = (*HomeAssistant)(nil)
@@ -128,4 +141,86 @@ var _ api.ChargerEx = (*HomeAssistant)(nil)
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (c *HomeAssistant) MaxCurrentMillis(current float64) error {
 	return c.conn.CallNumberService(c.maxcurrent, current)
+}
+
+// phases1p3p implements the api.PhaseSwitcher interface.
+//
+// This follows the same pattern as the native Kathrein charger:
+//  1. Set the phase select entity (abstracts e.g. Modbus register 0x00A1)
+//  2. Disable charging to apply the new phase setting
+//  3. Re-enable charging if it was previously enabled
+//
+// Phase switching requires a charge stop/start cycle to take effect.
+func (c *HomeAssistant) phases1p3p(phases int) error {
+	if c.phases == "" {
+		return errors.New("phase switching not configured")
+	}
+
+	// validate input: only 1 or 3 phases are supported
+	if phases != 1 && phases != 3 {
+		return fmt.Errorf("unsupported phase count: %d (must be 1 or 3)", phases)
+	}
+
+	// short-circuit: skip if already at requested phase count
+	if current, err := c.getPhases(); err == nil && current == phases {
+		return nil
+	}
+
+	// set phase select entity (e.g. select.wallbox_phases -> "1" or "3")
+	if err := c.conn.CallSelectService(c.phases, strconv.Itoa(phases)); err != nil {
+		return fmt.Errorf("set phases: %w", err)
+	}
+
+	// check if currently enabled
+	enabled, err := c.Enabled()
+	if err != nil {
+		return fmt.Errorf("get enabled state: %w", err)
+	}
+
+	// disable charging to apply new phase setting
+	if err := c.Enable(false); err != nil {
+		return fmt.Errorf("disable for phase switch: %w", err)
+	}
+
+	// re-enable if it was enabled before
+	if enabled {
+		if err := c.Enable(true); err != nil {
+			return fmt.Errorf("re-enable after phase switch: %w", err)
+		}
+	}
+
+	return nil
+}
+
+// getPhases implements the api.PhaseGetter interface.
+// Reads the current state of the phases select entity and parses it
+// as a bare integer ("1" or "3").
+func (c *HomeAssistant) getPhases() (int, error) {
+	if c.phases == "" {
+		return 0, errors.New("phase switching not configured")
+	}
+
+	state, err := c.conn.GetStringState(c.phases)
+	if err != nil {
+		return 0, fmt.Errorf("get phases: %w", err)
+	}
+
+	return parsePhases(state)
+}
+
+// parsePhases extracts the phase count from a select entity state.
+// The select entity must use "1" or "3" as option values.
+// This matches the hardware capability where phase switching
+// only supports single-phase (1) or three-phase (3) operation.
+func parsePhases(state string) (int, error) {
+	phases, err := strconv.Atoi(strings.TrimSpace(state))
+	if err != nil {
+		return 0, fmt.Errorf("invalid phase value %q: expected '1' or '3': %w", state, err)
+	}
+
+	if phases != 1 && phases != 3 {
+		return 0, fmt.Errorf("unsupported phase count %d: must be 1 or 3", phases)
+	}
+
+	return phases, nil
 }
