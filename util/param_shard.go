@@ -14,7 +14,8 @@ import (
 
 // Sharder splits data into chunks, omitting unmodified chunks
 type Sharder interface {
-	Shards(useCache bool) iter.Seq2[string, any]
+	ModifiedShards() iter.Seq2[string, any]
+	AllShards() iter.Seq2[string, any]
 }
 
 type Shard struct {
@@ -37,7 +38,15 @@ func (s *sharderImpl) MarshalJSON() ([]byte, error) {
 	return json.Marshal(s.struc)
 }
 
-func (s *sharderImpl) Shards(useCache bool) iter.Seq2[string, any] {
+func (s *sharderImpl) AllShards() iter.Seq2[string, any] {
+	return s.shards(false)
+}
+
+func (s *sharderImpl) ModifiedShards() iter.Seq2[string, any] {
+	return s.shards(true)
+}
+
+func (s *sharderImpl) shards(useCache bool) iter.Seq2[string, any] {
 	if useCache {
 		shardMu.Lock()
 		defer shardMu.Unlock()
@@ -45,33 +54,44 @@ func (s *sharderImpl) Shards(useCache bool) iter.Seq2[string, any] {
 
 	return func(yield func(string, any) bool) {
 		for _, f := range structs.Fields(s.struc) {
-			key := f.Name()
-			if t := f.Tag("json"); t != "" {
-				if n := strings.Split(t, ",")[0]; n != "" {
-					key = n
-				}
+			key := jsonKey(f)
+			if useCache && s.skipCachedShard(key, f.Value()) {
+				continue
 			}
-
-			if useCache {
-				// Use JSON for stable hashing (fmt.Append includes pointer addresses)
-				b, err := json.Marshal(f.Value())
-				if err != nil {
-					// Fallback to fmt.Append if JSON fails
-					b = fmt.Append(nil, f.Value())
-				}
-
-				hash := sha256.Sum256(b)
-				if cached, ok := shardCache[s.prefix+key]; ok && hash == cached {
-					continue
-				}
-				shardCache[s.prefix+key] = hash
-			}
-
 			if !yield(key, f.Value()) {
 				break
 			}
 		}
 	}
+}
+
+func jsonKey(f *structs.Field) string {
+	key := f.Name()
+	if t := f.Tag("json"); t != "" {
+		if n := strings.Split(t, ",")[0]; n != "" {
+			key = n
+		}
+	}
+	return key
+}
+
+func (s *sharderImpl) skipCachedShard(key string, value any) bool {
+	// Use JSON for stable hashing (fmt.Append includes pointer addresses)
+	b, err := json.Marshal(value)
+	if err != nil {
+		// Fallback to fmt.Append if JSON fails
+		b = fmt.Append(nil, value)
+	}
+
+	hash := sha256.Sum256(b)
+	cacheKey := s.prefix + key
+
+	if cached, ok := shardCache[cacheKey]; ok && hash == cached {
+		return true
+	}
+
+	shardCache[cacheKey] = hash
+	return false
 }
 
 var _ api.StructMarshaler = (*sharderImpl)(nil)

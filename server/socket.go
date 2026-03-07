@@ -145,7 +145,7 @@ func (h *SocketHub) broadcast(p util.Param) {
 
 	// Sharder splits data into chunks
 	if sp, ok := (p.Val).(util.Sharder); ok {
-		for key, val := range sp.Shards(true) {
+		for key, val := range sp.ModifiedShards() {
 			msg[k+"."+key] = json.RawMessage(socketEncode(val))
 		}
 	} else {

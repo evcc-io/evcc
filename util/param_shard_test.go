@@ -17,12 +17,12 @@ func TestSharder(t *testing.T) {
 	assert.Equal(t, map[string]any{
 		"A": "a",
 		"B": "b",
-	}, maps.Collect(s.Shards(false)), "non-cached")
+	}, maps.Collect(s.AllShards()), "non-cached")
 
 	assert.Equal(t, map[string]any{
 		"A": "a",
 		"B": "b",
-	}, maps.Collect(s.Shards(true)), "cache cold")
+	}, maps.Collect(s.ModifiedShards()), "cache cold")
 
-	assert.Equal(t, map[string]any{}, maps.Collect(s.Shards(true)), "cache warm")
+	assert.Equal(t, map[string]any{}, maps.Collect(s.ModifiedShards()), "cache warm")
 }
