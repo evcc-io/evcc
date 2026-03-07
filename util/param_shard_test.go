@@ -25,4 +25,10 @@ func TestSharder(t *testing.T) {
 	}, maps.Collect(s.ModifiedShards()), "cache cold")
 
 	assert.Equal(t, map[string]any{}, maps.Collect(s.ModifiedShards()), "cache warm")
+
+	s = NewSharder("foo", S{"a", "c"})
+
+	assert.Equal(t, map[string]any{
+		"B": "c",
+	}, maps.Collect(s.ModifiedShards()), "cache modied")
 }
