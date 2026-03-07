@@ -107,13 +107,13 @@ const runtimeDataResponseHex = "aa557f03921a020e0e301007cf005f053b000b00000000" 
 
 // runtimeDataResponse2Hex is the second capture (one second later, same values),
 // copied verbatim from discussion #27411.
-const runtimeDataResponse2Hex = "aa557f03921a020e0e301107cf005f053b000b00000000" +
-	"ffffffffffffffffffffffffffffffffffff08eeffffffff" +
-	"0056ffffffff1387ffffffff000007b4000100000000000000" +
-	"0007a600000002ffffffff03e7ffff011bffffffff00140000" +
-	"a9f9000013ff0006ffffffffffffffffffffffffffffffffffff" +
-	"ffffffffffffffff0e05ffffffffffff013e000000030cdaffff" +
-	"0039efa0"
+// const runtimeDataResponse2Hex = "aa557f03921a020e0e301107cf005f053b000b00000000" +
+// 	"ffffffffffffffffffffffffffffffffffff08eeffffffff" +
+// 	"0056ffffffff1387ffffffff000007b4000100000000000000" +
+// 	"0007a600000002ffffffff03e7ffff011bffffffff00140000" +
+// 	"a9f9000013ff0006ffffffffffffffffffffffffffffffffffff" +
+// 	"ffffffffffffffff0e05ffffffffffff013e000000030cdaffff" +
+// 	"0039efa0"
 
 // ---------------------------------------------------------------------------
 // Additional real captures from marcelblijleven/goodwe tests/sample/
@@ -145,7 +145,7 @@ const gw6000DTRuntimeHex = "aa557f039215081f0c03020c88001f0ca90020ffffffffffffff
 
 // GW5000-MS and GW10K-MS-30: 146-byte payload but "MS" not in detectFamily →
 // constructor must return an "unknown model" error.
-const gw5000MSRuntimeHex = "aa557f0392150a0f09030c0c7c000205c8000305980004ffffffffffffffffffffffffffffffffffff0961ffffffff0009ffffffff1386ffffffff000001270001000000000000ffffffffffffffffffffffffffffffff006bffffffff0004000000440000000700490000ffff0000ffff0000ffff0000ffffffffffffffffffff09500f63ffffffffffff01e1ffffffffffff0103002a4038"
+// const gw5000MSRuntimeHex = "aa557f0392150a0f09030c0c7c000205c8000305980004ffffffffffffffffffffffffffffffffffff0961ffffffff0009ffffffff1386ffffffff000001270001000000000000ffffffffffffffffffffffffffffffff006bffffffff0004000000440000000700490000ffff0000ffff0000ffff0000ffffffffffffffffffff09500f63ffffffffffff01e1ffffffffffff0103002a4038"
 
 // ---------------------------------------------------------------------------
 // ET/EH/BT/BH family real captures
@@ -220,7 +220,7 @@ func buildDTRuntimeFrame(payloadLen int, powerW int32, energyVal uint32) []byte 
 
 // buildRuntimeFrame is an alias for buildDTRuntimeFrame kept for
 // compatibility with existing integration tests.
-var buildRuntimeFrame = buildDTRuntimeFrame
+// var buildRuntimeFrame = buildDTRuntimeFrame
 
 // buildHybridRuntimeFrame constructs a synthetic AA55 HYBRID runtime response
 // (READ 42 regs @ 0x7500, byteCount = 84) with:
@@ -281,7 +281,7 @@ func mockOnPort8899(t *testing.T, responses [][]byte) string {
 // stripAA55Header mimics what sendCommand returns: the bare payload after the
 // 5-byte AA55 prefix, with the trailing 2-byte CRC excluded.
 // buf[2] is the inverter source address, which varies by family:
-//   DT/DNS: 0x7F,  ET/EH/BT/BH: 0xF7 — we accept both.
+// DT/DNS: 0x7F,  ET/EH/BT/BH: 0xF7 — we accept both.
 func stripAA55Header(frame []byte) ([]byte, error) {
 	if len(frame) < 6 || frame[0] != 0xAA || frame[1] != 0x55 || frame[3] != 0x03 {
 		return nil, fmt.Errorf("invalid response header")
@@ -296,10 +296,12 @@ func stripAA55Header(frame []byte) ([]byte, error) {
 // buildETRuntimeFrame constructs a synthetic AA55 ET runtime response
 // (READ 125 regs @ 0x891C, byteCount = 250) with the given values encoded
 // at the ET family offsets:
-//   pvW      → S32 at offset 74
-//   gridW    → S32 at offset 78  (negative = exporting)
-//   batteryW → S32 at offset 164 (negative = charging)
-//   eTotalX10 → U32 at offset 182 (divide by 10 for kWh)
+//
+// pvW      → S32 at offset 74
+// gridW    → S32 at offset 78  (negative = exporting)
+// batteryW → S32 at offset 164 (negative = charging)
+// eTotalX10 → U32 at offset 182 (divide by 10 for kWh)
+//
 // Source byte is 0xF7 (ET family inverter address).
 func buildETRuntimeFrame(pvW, gridW, batteryW int32, eTotalX10 uint32) []byte {
 	const payloadLen = 250 // 125 registers × 2 bytes
@@ -586,9 +588,10 @@ func TestDetectFamily_MSUnknown(t *testing.T) {
 
 // TestParseETPower_AllUsages verifies all three ET payload offsets in one pass.
 // Source: GW10K-ET fw617 real capture.
-//   pv      (offset  74) = 831 W
-//   grid    (offset  78) = -3 W  (tiny export)
-//   battery (offset 164) = -2512 W  (charging)
+//
+// pv      (offset  74) = 831 W
+// grid    (offset  78) = -3 W  (tiny export)
+// battery (offset 164) = -2512 W  (charging)
 func TestParseETPower_AllUsages(t *testing.T) {
 	frame := mustDecodeHex(gw10kETRuntimeHex)
 	payload, err := stripAA55Header(frame)
@@ -879,8 +882,10 @@ func TestParseHybridPower_Offsets(t *testing.T) {
 		power  int32
 	}{
 		{"pv", 12, 3000},
-		{"grid", 24, -800},    // negative = exporting to grid
-		{"battery", 36, 500},  // positive = discharging
+		// negative = exporting to grid
+		{"grid", 24, -800},
+		// positive = discharging
+		{"battery", 36, 500},
 	}
 	for _, tc := range cases {
 		t.Run(tc.usage, func(t *testing.T) {
