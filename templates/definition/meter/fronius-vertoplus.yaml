@@ -244,5 +244,23 @@ render: |
             uri: {{ .host }}:{{ .port }}
             id: 1
             value: 124:0:OutWRte
+    - case: 4 # nocharge
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 1
+          set:
+            source: sunspec
+            uri: {{ .host }}:{{ .port }}
+            id: 1
+            value: 124:0:StorCtl_Mod
+        - source: const
+          value: 0 # %
+          set:
+            source: sunspec
+            uri: {{ .host }}:{{ .port }}
+            id: 1
+            value: 124:0:InWRte
   {{- include "battery-params" . }}
   {{- end }}
