@@ -193,11 +193,8 @@ func (c *HomeAssistant) phases1p3p(phases int) error {
 }
 
 // getPhases implements the api.PhaseGetter interface.
-//
 // Reads the current state of the phases select entity and parses it
-// using parsePhases, which accepts both bare numeric values ("1", "3")
-// and labeled options (e.g. "1-phase", "3-phase").
-// getPhases implements the api.PhaseGetter interface
+// as a bare integer ("1" or "3").
 func (c *HomeAssistant) getPhases() (int, error) {
 	if c.phases == "" {
 		return 0, errors.New("phase switching not configured")
@@ -210,7 +207,6 @@ func (c *HomeAssistant) getPhases() (int, error) {
 
 	return parsePhases(state)
 }
-
 
 // parsePhases extracts the phase count from a select entity state.
 // The select entity must use "1" or "3" as option values.
