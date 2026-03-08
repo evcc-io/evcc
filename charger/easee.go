@@ -74,7 +74,10 @@ type Easee struct {
 	pendingTicks    map[int64]chan easee.SignalRCommandResponse
 	pendingByID     map[easee.ObservationID]chan easee.SignalRCommandResponse
 	expectedOrphans map[easee.ObservationID]int
-	obsC            chan easee.Observation
+
+	dispatcher *easee.CommandDispatcher
+
+	obsC chan easee.Observation
 	obsTime         map[easee.ObservationID]time.Time
 	lastObsReceived time.Time
 	startDone       func()
@@ -132,6 +135,8 @@ func NewEasee(ctx context.Context, user, password, charger string, timeout time.
 	}
 
 	c.Client.Timeout = timeout
+
+	c.dispatcher = easee.NewCommandDispatcher(c.Helper, log, timeout)
 
 	ts, err := easee.TokenSource(log, user, password)
 	if err != nil {
