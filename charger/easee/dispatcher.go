@@ -118,9 +118,10 @@ func (d *CommandDispatcher) Send(uri string, data any) error {
 		return nil
 	}
 
-	// For non-2xx responses (other than 202), the http.Client transport will
-	// have already returned an error above via the tripper. But if we somehow
-	// reach here with a non-202 2xx, treat it as success. Only 202 proceeds.
+	// Any status other than 200 or 202 is unexpected — return an error.
+	// Note: http.Client.Post only errors on transport failures (DNS, TLS, etc.),
+	// not on HTTP error responses, so this guard is the actual defense against
+	// 4xx/5xx responses from the Easee API.
 	if resp.StatusCode != 202 {
 		return fmt.Errorf("unexpected status: %d", resp.StatusCode)
 	}
@@ -167,13 +168,16 @@ func (d *CommandDispatcher) Send(uri string, data any) error {
 		d.mu.Unlock()
 	}()
 
+	timer := time.NewTimer(d.timeout)
+	defer timer.Stop()
+
 	select {
 	case res := <-ch:
 		if !res.WasAccepted {
 			return fmt.Errorf("command rejected: %d", res.Ticks)
 		}
 		return nil
-	case <-time.After(d.timeout):
+	case <-timer.C:
 		return api.ErrTimeout
 	}
 }
