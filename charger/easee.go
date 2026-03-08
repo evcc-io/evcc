@@ -818,12 +818,11 @@ func (c *Easee) Phases1p3p(phases int) error {
 
 		// Register before POST so the SignalR CommandResponse that the Easee
 		// cloud sends on HTTP 200 (sync) responses is silently consumed rather
-		// than logged as rogue. On error we undo the registration; on 202/noop
-		// paths no extra CommandResponse is expected, so the counter is
-		// intentionally left to be consumed by the eventual SignalR message.
-		c.registerExpectedOrphan(easee.CIRCUIT_MAX_CURRENT_P1)
-		if _, err = c.postJSONAndWait(uri, data); err != nil {
-			c.consumeExpectedOrphan(easee.CIRCUIT_MAX_CURRENT_P1)
+		// than logged as rogue. On error we undo the registration.
+		c.dispatcher.ExpectOrphan(easee.CIRCUIT_MAX_CURRENT_P1)
+		err = c.dispatcher.Send(uri, data)
+		if err != nil {
+			c.dispatcher.CancelOrphan(easee.CIRCUIT_MAX_CURRENT_P1)
 		}
 	} else {
 		// charger level
@@ -839,7 +838,7 @@ func (c *Easee) Phases1p3p(phases int) error {
 
 			uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
 
-			if _, err = c.postJSONAndWait(uri, data); err != nil {
+			if err = c.dispatcher.Send(uri, data); err != nil {
 				return err
 			}
 		}
@@ -919,7 +918,7 @@ func (c *Easee) updateSmartCharging() {
 
 		uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
 
-		if _, err := c.postJSONAndWait(uri, data); err != nil {
+		if err := c.dispatcher.Send(uri, data); err != nil {
 			c.log.WARN.Printf("smart charging: %v", err)
 			return
 		}

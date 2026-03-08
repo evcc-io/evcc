@@ -619,10 +619,9 @@ func TestEasee_Phases1p3p_registersExpectedOrphan(t *testing.T) {
 
 	// The orphan counter should have been registered before the POST.
 	// Since no CommandResponse arrived in this test, the counter stays at 1.
-	e.cmdMu.Lock()
-	count := e.expectedOrphans[easee.CIRCUIT_MAX_CURRENT_P1]
-	e.cmdMu.Unlock()
-	assert.Equal(t, 1, count, "expected orphan should be registered before the POST")
+	// CancelOrphan returns true iff a counter entry was consumed.
+	assert.True(t, e.dispatcher.CancelOrphan(easee.CIRCUIT_MAX_CURRENT_P1),
+		"expected orphan should be registered before the POST")
 }
 
 func TestLivenessCheck_staleObservations(t *testing.T) {
