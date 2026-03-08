@@ -1,0 +1,65 @@
+template: iotawatt
+products:
+  - brand: IoTaWatt
+    description:
+      generic: Energy Monitor
+requirements:
+  description:
+    en: |
+      Configure one IoTaWatt series (input or output) per channel.
+      For single-phase setups, only the L1 series is required (e.g. `Solar` or `GridNet`).
+      For three-phase setups, specify the series for each phase (e.g. `Grid_A`, `Grid_B`, `Grid_C`).
+      Three-phase mode automatically provides per-phase power, current, and voltage readings.
+      All series must be of unit Watts.
+    de: |
+      Konfiguriere eine IoTaWatt Serie (Eingang oder Ausgang) pro Kanal.
+      Für einphasige Installationen wird nur die L1 Serie benötigt (z.B. `Solar` oder `GridNet`).
+      Für dreiphasige Installationen die Serie für jede Phase angeben (z.B. `Grid_A`, `Grid_B`, `Grid_C`).
+      Der Dreiphasen-Modus liefert automatisch phasenweise Leistungs-, Strom- und Spannungsmessungen.
+      Alle Serien müssen die Einheit Watt haben.
+params:
+  - name: usage
+    choice: ["grid", "pv", "charge"]
+  - name: uri
+    description:
+      en: IoTaWatt URI
+      de: IoTaWatt URI
+    example: http://192.0.2.2
+    required: true
+    help:
+      en: "URI of the IoTaWatt device (e.g. `http://192.168.1.100` or `http://iotawatt.local`)."
+      de: "URI des IoTaWatt-Geräts (z.B. `http://192.168.1.100` oder `http://iotawatt.local`)."
+  - name: series
+    required: true
+    description:
+      en: L1 / single-phase series
+      de: L1 / Einphasig-Serie
+    example: GridNet
+    service: iotawatt/series?uri={uri}
+    help:
+      en: "IoTaWatt series name (Watts). Examples: `GridNet` (grid), `Solar` (pv), `Tesla` (charge). For single-phase setups this is the only series needed."
+      de: "IoTaWatt Serienname (Watt). Beispiele: `GridNet` (Netz), `Solar` (PV), `Tesla` (Laden). Für einphasige Installationen ist dies die einzige benötigte Serie."
+  - name: seriesL2
+    description:
+      en: L2 series (three-phase)
+      de: L2 Serie (Dreiphasig)
+    service: iotawatt/series?uri={uri}
+    help:
+      en: "IoTaWatt series name for phase L2. Leave empty for single-phase setups."
+      de: "IoTaWatt Serienname für Phase L2. Für einphasige Installationen leer lassen."
+  - name: seriesL3
+    description:
+      en: L3 series (three-phase)
+      de: L3 Serie (Dreiphasig)
+    service: iotawatt/series?uri={uri}
+    help:
+      en: "IoTaWatt series name for phase L3. Leave empty for single-phase setups."
+      de: "IoTaWatt Serienname für Phase L3. Für einphasige Installationen leer lassen."
+render: |
+  type: iotawatt
+  uri: {{ .uri }}
+  usage: {{ .usage }}
+  channels:
+    - {{ .series }}
+    - {{ .seriesL2 }}
+    - {{ .seriesL3 }}
