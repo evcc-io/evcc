@@ -2,8 +2,8 @@ package easee
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -102,14 +102,78 @@ func (d *CommandDispatcher) CancelOrphan(id ObservationID) bool {
 
 // Send posts to uri with data, parses the Easee-specific response body, and
 // if the response is asynchronous (HTTP 202), waits for the matching SignalR
-// CommandResponse. Implemented in Task 4.
+// CommandResponse.
+//
+// Returns nil on success (both synchronous HTTP 200 and confirmed async HTTP 202,
+// including noops where Ticks == 0). Returns an error on HTTP failure, decode
+// failure, command rejection, or timeout.
 func (d *CommandDispatcher) Send(uri string, data any) error {
-	return errors.New("not implemented")
-}
+	resp, err := d.helper.Post(uri, request.JSONContent, request.MarshalJSON(data))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
 
-// suppress unused import errors during incremental development
-var (
-	_ = fmt.Sprintf
-	_ = json.NewDecoder
-	_ = api.ErrTimeout
-)
+	if resp.StatusCode == 200 {
+		return nil
+	}
+
+	// For non-2xx responses (other than 202), the http.Client transport will
+	// have already returned an error above via the tripper. But if we somehow
+	// reach here with a non-202 2xx, treat it as success. Only 202 proceeds.
+	if resp.StatusCode != 202 {
+		return fmt.Errorf("unexpected status: %d", resp.StatusCode)
+	}
+
+	// HTTP 202: parse the response body to get the command correlation info.
+	var cmd RestCommandResponse
+	if strings.Contains(uri, "/commands/") {
+		// Command endpoints return a single object.
+		if err := json.NewDecoder(resp.Body).Decode(&cmd); err != nil {
+			return err
+		}
+	} else {
+		// Settings endpoints return an array; take index 0 if present.
+		var cmdArr []RestCommandResponse
+		if err := json.NewDecoder(resp.Body).Decode(&cmdArr); err != nil {
+			return err
+		}
+		if len(cmdArr) != 0 {
+			cmd = cmdArr[0]
+		}
+	}
+
+	if cmd.Ticks == 0 {
+		// Noop: the API indicates no state change was needed.
+		return nil
+	}
+
+	// Create a buffered channel (capacity 1) so Dispatch never blocks even if
+	// Send has already returned due to timeout.
+	ch := make(chan SignalRCommandResponse, 1)
+
+	d.mu.Lock()
+	d.pendingTicks[cmd.Ticks] = ch
+	// Note: if two concurrent Send calls share the same ObservationID, the
+	// second would overwrite the first's pendingByID entry. In practice this
+	// cannot occur because the loadpoint serializes Enable/MaxCurrent calls.
+	d.pendingByID[ObservationID(cmd.CommandId)] = ch
+	d.mu.Unlock()
+
+	defer func() {
+		d.mu.Lock()
+		delete(d.pendingTicks, cmd.Ticks)
+		delete(d.pendingByID, ObservationID(cmd.CommandId))
+		d.mu.Unlock()
+	}()
+
+	select {
+	case res := <-ch:
+		if !res.WasAccepted {
+			return fmt.Errorf("command rejected: %d", res.Ticks)
+		}
+		return nil
+	case <-time.After(d.timeout):
+		return api.ErrTimeout
+	}
+}
