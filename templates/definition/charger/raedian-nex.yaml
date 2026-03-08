@@ -1,0 +1,108 @@
+template: raedian-nex
+products:
+  - brand: Raedian
+    description:
+      generic: NEX
+params:
+  - name: modbus
+    choice: ["tcpip"]
+render: |
+  type: custom
+  status:
+    source: modbus
+    {{- include "modbus" . | indent 4 }}
+    register: 32780
+    type: holding
+    decode: uint32
+    map:
+      - 0: A
+      - 1: B
+      - 2: C
+      - 3: C
+      - 4: C
+  maxcurrent:
+    source: modbus
+    {{- include "modbus" . | indent 4 }}
+    register: 33024
+    type: writemultiple
+    encoding: uint32
+    scale: 0.001
+  enabled:
+    source: modbus
+    {{- include "modbus" . | indent 4 }}
+    register: 33029
+    type: holding
+    decode: uint16
+    map:
+      - 0: true
+      - 1: false
+  enable:
+    source: switch
+    switch:
+      - case: true
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 10 }}
+          register: 33029
+          type: writesingle
+          encoding: uint16
+          value: 0
+      - case: false
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 10 }}
+          register: 33029
+          type: writesingle
+          encoding: uint16
+          value: 1
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 4 }}
+    register: 32796
+    type: holding
+    decode: uint32
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 4 }}
+    register: 32798
+    type: holding
+    decode: uint32
+    scale: 0.001
+  currents:
+    - source: modbus
+      {{- include "modbus" . | indent 6 }}
+      register: 32784
+      type: holding
+      decode: uint32
+      scale: 0.001
+    - source: modbus
+      {{- include "modbus" . | indent 6 }}
+      register: 32786
+      type: holding
+      decode: uint32
+      scale: 0.001
+    - source: modbus
+      {{- include "modbus" . | indent 6 }}
+      register: 32788
+      type: holding
+      decode: uint32
+      scale: 0.001
+  voltages:
+    - source: modbus
+      {{- include "modbus" . | indent 6 }}
+      register: 32790
+      type: holding
+      decode: uint32
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 6 }}
+      register: 32792
+      type: holding
+      decode: uint32
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 6 }}
+      register: 32794
+      type: holding
+      decode: uint32
+      scale: 0.1
