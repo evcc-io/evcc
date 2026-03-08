@@ -219,6 +219,14 @@ func (v *Ovms) Odometer() (float64, error) {
 	return res.Odometer / 10, err
 }
 
+var _ api.VehicleClimater = (*Ovms)(nil)
+
+// Climater implements the api.VehicleClimater interface
+func (v *Ovms) Climater() (bool, error) {
+	res, err := v.chargeG()
+	return res.Climater == 1, err
+}
+
 var _ api.VehicleFinishTimer = (*Ovms)(nil)
 
 // FinishTime implements the api.VehicleFinishTimer interface
