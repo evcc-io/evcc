@@ -703,15 +703,12 @@ func (c *Easee) MaxCurrent(current int64) error {
 	}
 
 	uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
-	noop, err := c.postJSONAndWait(uri, data)
-	if err != nil {
-		return err
-	}
-
-	if !noop {
-		if err := c.waitForDynamicChargerCurrent(float64(current)); err != nil {
+	if err := c.dispatcher.Send(uri, data); err == nil {
+		if err := c.waitForDynamicChargerCurrent(cur); err != nil {
 			return err
 		}
+	} else {
+		return err
 	}
 
 	c.mux.Lock()

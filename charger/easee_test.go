@@ -376,11 +376,11 @@ func TestEasee_MaxCurrent(t *testing.T) {
 		e := newEasee()
 		e.charger = "CHARGERID"
 		e.maxChargerCurrent = 16
-		e.dynamicChargerCurrent = 6
+		e.dynamicChargerCurrent = tc.expectCurrent // noop: already at target (capped) value
 
 		uriPattern := fmt.Sprintf("=~%s.*", easee.API)
 
-		//register mock NoOp reply, suffices for this test case
+		// register mock NoOp reply (HTTP 202, empty array → Ticks==0)
 		httpmock.ActivateNonDefault(e.Client)
 		httpmock.RegisterResponder(http.MethodPost, uriPattern,
 			httpmock.NewStringResponder(202, "[]"))
