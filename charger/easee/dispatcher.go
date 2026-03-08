@@ -59,7 +59,7 @@ func (d *CommandDispatcher) Dispatch(res SignalRCommandResponse) {
 	}
 
 	if idOk {
-		chID <- res
+		chID <- res // buffered (capacity 1), see comment above
 		return
 	}
 
@@ -92,6 +92,9 @@ func (d *CommandDispatcher) CancelOrphan(id ObservationID) bool {
 	defer d.mu.Unlock()
 	if d.expectedOrphans[id] > 0 {
 		d.expectedOrphans[id]--
+		if d.expectedOrphans[id] == 0 {
+			delete(d.expectedOrphans, id)
+		}
 		return true
 	}
 	return false
