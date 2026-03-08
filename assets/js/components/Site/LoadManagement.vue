@@ -99,7 +99,7 @@
 					<div
 						class="load-management-progress progress"
 						role="progressbar"
-						:aria-valuenow="usagePercent(entry.circuit)"
+						:aria-valuenow="entry.circuit.power ?? 0"
 						aria-valuemin="0"
 						:aria-valuemax="entry.circuit.maxPower"
 					>
@@ -166,7 +166,7 @@
 <script lang="ts">
 import "@h2d2/shopicons/es/regular/powersupply";
 import "@h2d2/shopicons/es/regular/arrowdropdown";
-import { defineComponent, type PropType, computed } from "vue";
+import { defineComponent, type PropType, computed, getCurrentInstance } from "vue";
 import type { Circuit } from "@/types/evcc";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import AnimatedNumber from "../Helper/AnimatedNumber.vue";
@@ -192,8 +192,10 @@ export default defineComponent({
 	setup(props: { circuits?: Record<string, Circuit> }) {
 		const circuitsList = computed(() => props.circuits ?? {});
 		const transition = { transition: "width var(--evcc-transition-fast) linear" };
-		const collapseId = "load-management-content";
-		const headerId = "load-management-header";
+		const instance = getCurrentInstance();
+		const idSuffix = instance?.uid ?? Math.random().toString(36).slice(2, 9);
+		const collapseId = `load-management-content-${idSuffix}`;
+		const headerId = `load-management-header-${idSuffix}`;
 		const orderedCircuits = computed(() => {
 			const circuits = circuitsList.value;
 			const entries: { name: string; circuit: Circuit; depth: number }[] = [];
@@ -304,13 +306,6 @@ export default defineComponent({
 		},
 		maxCurrentFormat(v: number): string {
 			return Number(v.toFixed(1)).toString();
-		},
-		formatCurrent(v: number, maxCurrent?: number): string {
-			const current = `${Number(v.toFixed(1))} A`;
-			if (typeof maxCurrent === "number" && maxCurrent > 0) {
-				return `${current} / ${Number(maxCurrent.toFixed(1))} A`;
-			}
-			return current;
 		},
 	},
 });
