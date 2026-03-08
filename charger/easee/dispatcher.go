@@ -141,6 +141,9 @@ func (d *CommandDispatcher) Send(uri string, data any) error {
 		}
 		if len(cmdArr) != 0 {
 			cmd = cmdArr[0]
+			for _, extra := range cmdArr[1:] {
+				d.log.TRACE.Printf("ignoring additional CommandResponse in settings reply: %+v", extra)
+			}
 		}
 	}
 
