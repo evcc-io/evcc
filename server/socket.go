@@ -89,7 +89,7 @@ func (h *SocketHub) subscribe(ctx context.Context, conn *websocket.Conn) error {
 		select {
 		case msg := <-s.send:
 			if err := writeTimeout(ctx, socketWriteTimeout, conn, msg); err != nil {
-				log.INFO.Printf("ws write error: %v, len: %.1fkB, msg: %s", err, float64(len(msg))/1024, msg[:min(len(msg), 20)])
+				log.TRACE.Printf("ws write error: %v, len: %.1fkB, msg: %s", err, float64(len(msg))/1024, msg[:min(len(msg), 20)])
 				return err
 			}
 		case <-ctx.Done():
