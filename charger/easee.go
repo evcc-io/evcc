@@ -444,39 +444,12 @@ func (c *Easee) SubscribeToMyProduct(i json.RawMessage) {
 // CommandResponse implements the signalr receiver
 func (c *Easee) CommandResponse(i json.RawMessage) {
 	var res easee.SignalRCommandResponse
-
 	if err := json.Unmarshal(i, &res); err != nil {
 		c.log.ERROR.Printf("invalid message: %s %v", i, err)
 		return
 	}
-
 	c.log.TRACE.Printf("CommandResponse %s: %+v", res.SerialNumber, res)
-
-	obsID := easee.ObservationID(res.ID)
-
-	c.cmdMu.Lock()
-	chTick, tickOk := c.pendingTicks[res.Ticks]
-	chID, idOk := c.pendingByID[obsID]
-	c.cmdMu.Unlock()
-
-	if tickOk {
-		chTick <- res
-		return
-	}
-
-	if idOk {
-		chID <- res
-		return
-	}
-
-	if c.consumeExpectedOrphan(obsID) {
-		return
-	}
-
-	c.log.WARN.Printf("rogue CommandResponse: charger %s ObservationID=%s Ticks=%d "+
-		"(accepted=%v, resultCode=%d) which was not triggered by evcc — "+
-		"another system may be controlling this charger",
-		res.SerialNumber, obsID, res.Ticks, res.WasAccepted, res.ResultCode)
+	c.dispatcher.Dispatch(res)
 }
 
 func (c *Easee) chargers() ([]easee.Charger, error) {

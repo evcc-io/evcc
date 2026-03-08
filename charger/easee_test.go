@@ -30,8 +30,9 @@ func createPayload(id easee.ObservationID, timestamp time.Time, dataType easee.D
 
 func newEasee() *Easee {
 	log := util.NewLogger("easee")
+	helper := request.NewHelper(log)
 	e := Easee{
-		Helper:          request.NewHelper(log),
+		Helper:          helper,
 		obsTime:         make(map[easee.ObservationID]time.Time),
 		pendingTicks:    make(map[int64]chan easee.SignalRCommandResponse),
 		pendingByID:     make(map[easee.ObservationID]chan easee.SignalRCommandResponse),
@@ -39,6 +40,7 @@ func newEasee() *Easee {
 		log:             log,
 		startDone:       func() {},
 		obsC:            make(chan easee.Observation),
+		dispatcher:      easee.NewCommandDispatcher(helper, log, 500*time.Millisecond),
 	}
 	e.Client.Timeout = 500 * time.Millisecond //aggressive timeout to accelerate testing
 	return &e
@@ -418,37 +420,41 @@ func TestEasee_CommandResponse_rogue(t *testing.T) {
 
 func TestEasee_CommandResponse_legitimate(t *testing.T) {
 	e := newEasee()
+	httpmock.ActivateNonDefault(e.Client)
 
-	ticks := int64(638798974487432600)
-	ch := make(chan easee.SignalRCommandResponse, 1)
-	e.registerPendingTick(ticks, ch)
+	const ticks int64 = 638798974487432600
+	const uri = easee.API + "/chargers/EH123456/settings"
+
+	body := fmt.Sprintf(`[{"device":"EH123456","commandId":48,"ticks":%d}]`, ticks)
+	httpmock.RegisterResponder(http.MethodPost, uri,
+		httpmock.NewStringResponder(http.StatusAccepted, body))
 
 	resp := easee.SignalRCommandResponse{
 		SerialNumber: "EH123456",
 		Ticks:        ticks,
 		WasAccepted:  true,
 	}
-
 	raw, err := json.Marshal(resp)
 	require.NoError(t, err)
 
-	e.CommandResponse(raw)
+	errCh := make(chan error, 1)
+	go func() {
+		// Small delay to let Send register the pending tick before we dispatch
+		time.Sleep(10 * time.Millisecond)
+		e.CommandResponse(raw)
+		errCh <- nil
+	}()
 
-	// Channel should have received the response
-	select {
-	case got := <-ch:
-		assert.Equal(t, ticks, got.Ticks)
-		assert.True(t, got.WasAccepted)
-	case <-time.After(100 * time.Millisecond):
-		t.Fatal("CommandResponse did not deliver to pending channel")
-	}
+	err = e.dispatcher.Send(uri, nil)
+	assert.NoError(t, err)
+	<-errCh
 }
 
 func TestEasee_CommandResponse_expectedOrphan(t *testing.T) {
 	e := newEasee()
 
-	// Pre-register the expected orphan
-	e.registerExpectedOrphan(easee.CIRCUIT_MAX_CURRENT_P1)
+	// Pre-register the expected orphan via the dispatcher's public API
+	e.dispatcher.ExpectOrphan(easee.CIRCUIT_MAX_CURRENT_P1)
 
 	resp := easee.SignalRCommandResponse{
 		SerialNumber: "EH123456",
@@ -467,7 +473,7 @@ func TestEasee_CommandResponse_expectedOrphan(t *testing.T) {
 	})
 
 	// Counter should now be zero — a second response would be rogue
-	assert.False(t, e.consumeExpectedOrphan(easee.CIRCUIT_MAX_CURRENT_P1))
+	assert.False(t, e.dispatcher.CancelOrphan(easee.CIRCUIT_MAX_CURRENT_P1))
 }
 
 func TestEasee_CommandResponse_rogueAfterOrphanConsumed(t *testing.T) {
@@ -499,37 +505,37 @@ func TestEasee_CommandResponse_rogueAfterOrphanConsumed(t *testing.T) {
 
 func TestEasee_CommandResponse_matchedByID(t *testing.T) {
 	e := newEasee()
+	httpmock.ActivateNonDefault(e.Client)
 
-	ch := make(chan easee.SignalRCommandResponse, 1)
-	e.registerPendingByID(easee.LOCATION, ch)
-	defer e.unregisterPendingByID(easee.LOCATION)
+	const ticks int64 = 638798974487432601
+	const obsID = easee.LOCATION // commandId in body
+	const uri = easee.API + "/chargers/EH123456/settings"
 
-	// Ticks do NOT match any pendingTicks entry — only the ID matches
+	body := fmt.Sprintf(`[{"device":"EH123456","commandId":%d,"ticks":%d}]`, int(obsID), ticks)
+	httpmock.RegisterResponder(http.MethodPost, uri,
+		httpmock.NewStringResponder(http.StatusAccepted, body))
+
+	// Ticks do NOT match — only the ID matches (wrong ticks value in SignalR response)
 	resp := easee.SignalRCommandResponse{
 		SerialNumber: "EH123456",
-		ID:           int(easee.LOCATION),
-		Ticks:        999999999, // not in pendingTicks
+		ID:           int(obsID),
+		Ticks:        ticks + 1, // wrong ticks → forces ID fallback path
 		WasAccepted:  true,
 		ResultCode:   0,
 	}
-
 	raw, err := json.Marshal(resp)
 	require.NoError(t, err)
 
-	assert.NotPanics(t, func() {
+	errCh := make(chan error, 1)
+	go func() {
+		time.Sleep(10 * time.Millisecond)
 		e.CommandResponse(raw)
-	})
+		errCh <- nil
+	}()
 
-	select {
-	case got := <-ch:
-		assert.Equal(t, resp.Ticks, got.Ticks)
-		assert.True(t, got.WasAccepted)
-	default:
-		t.Fatal("expected CommandResponse to be delivered to pendingByID channel")
-	}
-
-	// pendingByID consumed the response — expectedOrphans untouched
-	assert.False(t, e.consumeExpectedOrphan(easee.LOCATION))
+	err = e.dispatcher.Send(uri, nil)
+	assert.NoError(t, err)
+	<-errCh
 }
 
 func TestEasee_registerAndConsumeExpectedOrphan(t *testing.T) {
