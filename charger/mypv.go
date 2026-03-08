@@ -54,6 +54,7 @@ const (
 	elwaRegOperationState     = 1077
 	elwaERegOperationState    = elwaRegStatus // same register for elwa-e operation state
 	elwaRegRelayState         = 1058
+	elwaRegVoltage            = 1061
 	elwaRegOperationMode      = 1065 // https://github.com/evcc-io/evcc/discussions/23708
 	elwaRegMaxControlledPower = 1014 // max. power for linear controlled output
 	elwaRegMaxCombinedPower   = 1071 // (max. power for linear controlled output + configured relais power) * 1.10
@@ -270,9 +271,16 @@ func (wb *MyPv) MaxCurrentMillis(current float64) error {
 			phases = p
 		}
 	}
-	power := uint16(voltage * current * float64(phases))
 
-	err := wb.setPower(power)
+	b, err := wb.conn.ReadHoldingRegisters(elwaRegVoltage, 1)
+	if err != nil {
+		return err
+	}
+	wb.log.TRACE.Printf("voltage L1: %.1f V", float64(binary.BigEndian.Uint16(b)))
+
+	power := uint16(float64(binary.BigEndian.Uint16(b)) * current * float64(phases))
+
+	err = wb.setPower(power)
 	if err == nil {
 		atomic.StoreUint32(&wb.power, uint32(power))
 	}
