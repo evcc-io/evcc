@@ -510,7 +510,7 @@ func (c *Easee) Enable(enable bool) (err error) {
 		}
 
 		uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
-		if _, err := c.postJSONAndWait(uri, data); err != nil {
+		if err := c.dispatcher.Send(uri, data); err != nil {
 			return err
 		}
 	}
@@ -532,7 +532,7 @@ func (c *Easee) Enable(enable bool) (err error) {
 	}
 
 	uri := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, c.charger, action)
-	if _, err := c.postJSONAndWait(uri, nil); err != nil {
+	if err := c.dispatcher.Send(uri, nil); err != nil {
 		return err
 	}
 
