@@ -703,11 +703,10 @@ func (c *Easee) MaxCurrent(current int64) error {
 	}
 
 	uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
-	if err := c.dispatcher.Send(uri, data); err == nil {
-		if err := c.waitForDynamicChargerCurrent(cur); err != nil {
-			return err
-		}
-	} else {
+	if err := c.dispatcher.Send(uri, data); err != nil {
+		return err
+	}
+	if err := c.waitForDynamicChargerCurrent(cur); err != nil {
 		return err
 	}
 
