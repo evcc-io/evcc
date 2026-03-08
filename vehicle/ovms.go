@@ -224,10 +224,7 @@ var _ api.VehicleClimater = (*Ovms)(nil)
 // Climater implements the api.VehicleClimater interface
 func (v *Ovms) Climater() (bool, error) {
 	res, err := v.chargeG()
-	if err != nil {
-		return false, err
-	}
-	return (res.Climater == 1), err
+	return res.Climater == 1, err
 }
 
 var _ api.VehicleFinishTimer = (*Ovms)(nil)
