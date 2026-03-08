@@ -4,11 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/coder/websocket"
-	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -52,7 +52,12 @@ func (h *SocketHub) ServeWebsocket(w http.ResponseWriter, r *http.Request) {
 		InsecureSkipVerify: true,
 	}
 
-	acceptOptions.CompressionMode = websocket.CompressionContextTakeover
+	// Safari deflate message compression is broken, enable for others
+	// see: https://github.com/gorilla/websocket/issues/731
+	ua := strings.ToLower(r.Header.Get("User-Agent"))
+	if strings.Contains(ua, "chrome") || strings.Contains(ua, "firefox") {
+		acceptOptions.CompressionMode = websocket.CompressionContextTakeover
+	}
 
 	conn, err := websocket.Accept(w, r, acceptOptions)
 	if err != nil {
@@ -84,7 +89,7 @@ func (h *SocketHub) subscribe(ctx context.Context, conn *websocket.Conn) error {
 		select {
 		case msg := <-s.send:
 			if err := writeTimeout(ctx, socketWriteTimeout, conn, msg); err != nil {
-				log.INFO.Printf("ws write error: %v, msg len: %.1fkB", err, float64(len(msg))/1024)
+				log.INFO.Printf("ws write error: %v, len: %.1fkB, msg: %s", err, float64(len(msg))/1024, msg[:min(len(msg), 20)])
 				return err
 			}
 		case <-ctx.Done():
@@ -109,7 +114,7 @@ func (h *SocketHub) deleteSubscriber(s *socketSubscriber) {
 
 func (h *SocketHub) welcome(subscriber *socketSubscriber, params []util.Param) {
 	msg := make(map[string]json.RawMessage, len(params))
-	forecast := make(map[string]json.RawMessage)
+	var sharded []map[string]json.RawMessage
 
 	for _, p := range params {
 		k := p.Key
@@ -117,19 +122,25 @@ func (h *SocketHub) welcome(subscriber *socketSubscriber, params []util.Param) {
 			k = "loadpoints." + p.UniqueID()
 		}
 
-		if p.Key == keys.Forecast {
-			forecast[k] = json.RawMessage(socketEncode(p.Val))
+		// Sharder splits data into chunks, sent individually after main state
+		if sp, ok := (p.Val).(util.Sharder); ok {
+			for key, val := range sp.AllShards() {
+				shard := map[string]json.RawMessage{
+					k + "." + key: json.RawMessage(socketEncode(val)),
+				}
+				sharded = append(sharded, shard)
+			}
 		} else {
 			msg[k] = json.RawMessage(socketEncode(p.Val))
 		}
 	}
 
-	// send complete state (small), then forecast (potentially large)
+	// send complete state first, then shards individually
 	if b, err := json.Marshal(msg); err == nil {
 		subscriber.send <- b
 	}
-	if len(forecast) > 0 {
-		if b, err := json.Marshal(forecast); err == nil {
+	for _, shard := range sharded {
+		if b, err := json.Marshal(shard); err == nil {
 			subscriber.send <- b
 		}
 	}
