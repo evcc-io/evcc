@@ -203,6 +203,7 @@ export default defineComponent({
 			const names = Object.keys(circuits);
 			for (const name of names) {
 				const c = circuits[name];
+				if (c === undefined) continue;
 				const parent = c.parent ?? "";
 				if (!byParent.has(parent)) byParent.set(parent, []);
 				byParent.get(parent)!.push(name);
@@ -211,7 +212,9 @@ export default defineComponent({
 				const children = byParent.get(parentKey);
 				if (!children) return;
 				for (const name of children) {
-					entries.push({ name, circuit: circuits[name], depth });
+					const circuit = circuits[name];
+					if (circuit === undefined) continue;
+					entries.push({ name, circuit, depth });
 					pushChildren(name, depth + 1);
 				}
 			};
