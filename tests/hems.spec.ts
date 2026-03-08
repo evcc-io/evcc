@@ -1,11 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
-import {
-  expectModalVisible,
-  expectModalHidden,
-  editorClear,
-  editorPaste,
-} from "./utils";
+import { expectModalVisible, expectModalHidden, editorClear, editorPaste } from "./utils";
 import { startSimulator, stopSimulator, simulatorUrl, simulatorApply } from "./simulator";
 
 test.use({ baseURL: baseUrl() });
@@ -154,7 +149,18 @@ limit:
 
     // verify external control is the top-most circuit, with main beneath it
     await expect(page.getByTestId("circuits")).toContainText(
-      ["External Limit", "Consumption limited", "yes", "Power", "0.0 kW / 4.2 kW", "House", "Consumption limited", "yes", "Power", "0.0 kW"].join("")
+      [
+        "External Limit",
+        "Consumption limited",
+        "yes",
+        "Power",
+        "0.0 kW / 4.2 kW",
+        "House",
+        "Consumption limited",
+        "yes",
+        "Power",
+        "0.0 kW",
+      ].join("")
     );
   });
 });
