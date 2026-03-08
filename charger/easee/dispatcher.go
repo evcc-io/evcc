@@ -2,8 +2,8 @@ package easee
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
-	"strings"
 	"sync"
 	"time"
 
@@ -48,7 +48,12 @@ func (d *CommandDispatcher) Dispatch(res SignalRCommandResponse) {
 	chID, idOk := d.pendingByID[obsID]
 	d.mu.Unlock()
 
+	// Tick lookup takes priority over ID lookup (primary correlation).
+	// ID lookup is a fallback for backend clock drift / load balancer
+	// scenarios where the delivered Ticks differs from the HTTP 202 body.
 	if tickOk {
+		// Channels are buffered (capacity 1) — this send never blocks even if
+		// the waiter has timed out and unregistered the channel already.
 		chTick <- res
 		return
 	}
@@ -96,13 +101,12 @@ func (d *CommandDispatcher) CancelOrphan(id ObservationID) bool {
 // if the response is asynchronous (HTTP 202), waits for the matching SignalR
 // CommandResponse. Implemented in Task 4.
 func (d *CommandDispatcher) Send(uri string, data any) error {
-	panic("not implemented")
+	return errors.New("not implemented")
 }
 
 // suppress unused import errors during incremental development
 var (
 	_ = fmt.Sprintf
 	_ = json.NewDecoder
-	_ = strings.Contains
 	_ = api.ErrTimeout
 )
