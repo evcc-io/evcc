@@ -139,11 +139,16 @@ export interface Config {
 
 export interface Circuit {
   name: string;
+  parent?: string;
   maxPower: number;
   power?: number;
   maxCurrent: number;
   current?: number;
   config?: Config;
+  title?: string;
+  icon?: string;
+  dimmed?: boolean;
+  curtailed?: boolean;
 }
 
 export interface Entity {

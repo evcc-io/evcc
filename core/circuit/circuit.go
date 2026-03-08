@@ -79,14 +79,18 @@ func NewFromConfig(ctx context.Context, log *util.Logger, other map[string]any) 
 		return nil, err
 	}
 
-	circuit.getMaxPower, err = cc.GetMaxPower.FloatGetter(ctx)
-	if err != nil {
-		return nil, err
+	if cc.GetMaxPower != nil {
+		circuit.getMaxPower, err = cc.GetMaxPower.FloatGetter(ctx)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	circuit.getMaxCurrent, err = cc.GetMaxCurrent.FloatGetter(ctx)
-	if err != nil {
-		return nil, err
+	if cc.GetMaxCurrent != nil {
+		circuit.getMaxCurrent, err = cc.GetMaxCurrent.FloatGetter(ctx)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if cc.ParentRef != "" {

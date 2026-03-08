@@ -1100,6 +1100,16 @@
       "description": "Reduced charging to not exceed {limit}.",
       "title": "External limit:"
     },
+    "loadManagement": {
+      "curtailed": "Curtailed",
+      "curtailedTooltip": "Feed-in curtailment active (§9 EEG)",
+      "current": "Current",
+      "dimmed": "Dimmed",
+      "dimmedTooltip": "Demand reduction active (§14a EnWG)",
+      "power": "Power",
+      "title": "Load Management",
+      "toggleExpand": "Expand or collapse load management"
+    },
     "loadpoint": {
       "avgPrice": "⌀ Price",
       "charged": "Charged",

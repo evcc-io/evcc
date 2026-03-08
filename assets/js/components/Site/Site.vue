@@ -49,27 +49,33 @@
 					</router-link>
 				</div>
 			</div>
-			<Loadpoints
-				v-else
-				:key="`loadpoints-${orderedVisibleLoadpoints.length}`"
-				class="mt-1 mt-sm-2 flex-grow-1"
-				:loadpoints="orderedVisibleLoadpoints"
-				:vehicles="vehicleList"
-				:smartCostType="smartCostType"
-				:smartCostAvailable="smartCostAvailable"
-				:smartFeedInPriorityAvailable="smartFeedInPriorityAvailable"
-				:tariffGrid="tariffGrid"
-				:tariffCo2="tariffCo2"
-				:tariffFeedIn="tariffFeedIn"
-				:currency="currency"
-				:gridConfigured="gridConfigured"
-				:pvConfigured="pvConfigured"
-				:batteryConfigured="batteryConfigured"
-				:batterySoc="batterySoc"
-				:forecast="forecast"
-				:selectedId="selectedLoadpointId"
-				@id-changed="selectedLoadpointChanged"
-			/>
+			<template v-else>
+				<LoadManagement
+					v-if="hasCircuits"
+					:circuits="circuits"
+					class="mt-1 mt-sm-2"
+				/>
+				<Loadpoints
+					:key="`loadpoints-${orderedVisibleLoadpoints.length}`"
+					class="mt-1 mt-sm-2 flex-grow-1"
+					:loadpoints="orderedVisibleLoadpoints"
+					:vehicles="vehicleList"
+					:smartCostType="smartCostType"
+					:smartCostAvailable="smartCostAvailable"
+					:smartFeedInPriorityAvailable="smartFeedInPriorityAvailable"
+					:tariffGrid="tariffGrid"
+					:tariffCo2="tariffCo2"
+					:tariffFeedIn="tariffFeedIn"
+					:currency="currency"
+					:gridConfigured="gridConfigured"
+					:pvConfigured="pvConfigured"
+					:batteryConfigured="batteryConfigured"
+					:batterySoc="batterySoc"
+					:forecast="forecast"
+					:selectedId="selectedLoadpointId"
+					@id-changed="selectedLoadpointChanged"
+				/>
+			</template>
 			<Footer v-bind="footer"></Footer>
 		</div>
 	</div>
@@ -80,6 +86,7 @@ import "@h2d2/shopicons/es/regular/arrowup";
 import TopNavigationArea from "../Top/TopNavigationArea.vue";
 import Energyflow from "../Energyflow/Energyflow.vue";
 import HemsWarning from "../HemsWarning.vue";
+import LoadManagement from "./LoadManagement.vue";
 import Loadpoints from "../Loadpoints/Loadpoints.vue";
 import Footer from "../Footer/Footer.vue";
 import formatter from "@/mixins/formatter";
@@ -105,6 +112,7 @@ import type { Grid } from "./types";
 export default defineComponent({
 	name: "Site",
 	components: {
+		LoadManagement,
 		Loadpoints,
 		Energyflow,
 		Footer,
@@ -224,6 +232,10 @@ export default defineComponent({
 			return this.fatal.map(({ error, class: errorClass }) =>
 				errorClass ? `${errorClass}: ${error}` : error
 			);
+		},
+		hasCircuits() {
+			const c = this.circuits;
+			return c != null && Object.keys(c).length > 0;
 		},
 	},
 	methods: {

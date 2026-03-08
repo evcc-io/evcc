@@ -1100,6 +1100,16 @@
       "description": "Reduziere Ladeleistung, um {limit} nicht zu überschreiten.",
       "title": "Externe Begrenzung:"
     },
+    "loadManagement": {
+      "curtailed": "Abgeregelt",
+      "curtailedTooltip": "Einspeisereduktion aktiv (§9 EEG)",
+      "current": "Strom",
+      "dimmed": "Gedimmt",
+      "dimmedTooltip": "Lastreduktion aktiv (§14a EnWG)",
+      "power": "Leistung",
+      "title": "Lastmanagement",
+      "toggleExpand": "Lastmanagement ein- oder ausklappen"
+    },
     "loadpoint": {
       "avgPrice": "⌀ Preis",
       "charged": "Geladen",

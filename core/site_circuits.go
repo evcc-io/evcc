@@ -14,6 +14,7 @@ import (
 type circuitStruct struct {
 	Title      string   `json:"title,omitempty"`
 	Icon       string   `json:"icon,omitempty"`
+	Parent     string   `json:"parent,omitempty"`
 	Power      float64  `json:"power"`
 	Current    *float64 `json:"current,omitempty"`
 	MaxPower   float64  `json:"maxPower,omitempty"`
@@ -39,6 +40,15 @@ func (site *Site) publishCircuits() {
 			MaxCurrent: instance.GetMaxCurrent(),
 			Dimmed:     instance.Dimmed(),
 			Curtailed:  instance.Curtailed(),
+		}
+
+		if parent := instance.GetParent(); parent != nil {
+			for _, d := range cc {
+				if d.Instance() == parent {
+					data.Parent = d.Config().Name
+					break
+				}
+			}
 		}
 
 		if instance.GetMaxCurrent() > 0 {

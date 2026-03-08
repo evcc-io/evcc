@@ -92,6 +92,30 @@ meters:
       vm: shared
       script: state.loadpoints[1].chargepower;
 
+  - name: circuit_meter
+    type: template
+    template: demo-meter
+    power: 1500
+    currentL1: 3
+    currentL2: 3
+    currentL3: 3
+
+  - name: circuit_meter_sub1
+    type: template
+    template: demo-meter
+    power: 800
+    currentL1: 2
+    currentL2: 2
+    currentL3: 2
+
+  - name: circuit_meter_sub2
+    type: template
+    template: demo-meter
+    power: 700
+    currentL1: 2
+    currentL2: 2
+    currentL3: 2
+
 chargers:
   - name: charger_1
     type: custom
@@ -240,17 +264,58 @@ site:
     pv: pv
     battery: battery
 
+# Load management: root circuit and subcircuits. Optional per circuit:
+#   title, parent, meter, maxcurrent, maxpower, timeout (e.g. 1m, 30s),
+#   getmaxpower / getmaxcurrent (plugin for dynamic limits, e.g. source: const value: 11000)
+circuits:
+  # Root circuit (no parent): main house / feed
+  - name: main
+    title: Main
+    meter: circuit_meter
+    maxcurrent: 16
+    maxpower: 11000
+    timeout: 1m
+
+  # Subcircuit: Carport branch under main
+  - name: carport_branch
+    title: Carport
+    parent: main
+    meter: circuit_meter_sub1
+    maxcurrent: 10
+    maxpower: 6900
+    timeout: 1m
+
+  # Subcircuit: Garage branch under main
+  - name: garage_branch
+    title: Garage
+    parent: main
+    meter: circuit_meter_sub2
+    maxcurrent: 10
+    maxpower: 6900
+    timeout: 30s
+
+  # Subcircuit with optional values omitted: no meter, no maxcurrent, no maxpower
+  - name: office_branch
+    title: Office
+    parent: main
+
+  # Minimal subcircuit: only name and parent (no title, no meter, no limits)
+  - name: shed_branch
+    parent: main
+
 loadpoints:
   - title: Carport
     charger: charger_1
     mode: pv
     meter: meter_charger_1
     vehicle: vehicle_1
+    circuit: carport_branch
   - title: Garage
     charger: charger_2
     mode: "off"
     meter: meter_charger_2
     vehicle: vehicle_2
+    circuit: garage_branch
 
 tariffs:
   currency: EUR # three letter ISO-4217 currency code (default EUR)
