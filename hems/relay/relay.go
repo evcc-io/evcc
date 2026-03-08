@@ -8,7 +8,6 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/site"
-	"github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/hems/smartgrid"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
@@ -77,19 +76,6 @@ func NewRelay(root api.Circuit, w1 func() (bool, error), passthrough func(bool) 
 	}
 
 	return c, nil
-}
-
-var _ hems.API = (*Relay)(nil)
-
-func (c *Relay) ConsumptionLimit() *float64 {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	return c.limit
-}
-
-// ProductionLimit implements hems.API
-func (c *Relay) ProductionLimit() *float64 {
-	return nil
 }
 
 func (c *Relay) Run() {

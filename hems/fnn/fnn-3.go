@@ -7,7 +7,6 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/site"
-	"github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/hems/smartgrid"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
@@ -82,20 +81,6 @@ func NewFnn3(root api.Circuit, s1, s2, w3 func() (bool, error), maxPower float64
 	}
 
 	return c, nil
-}
-
-var _ hems.API = (*Fnn3)(nil)
-
-// ConsumptionLimit implements hems.API
-func (c *Fnn3) ConsumptionLimit() *float64 {
-	return nil
-}
-
-// ProductionLimit implements hems.API
-func (c *Fnn3) ProductionLimit() *float64 {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	return c.limit
 }
 
 func (c *Fnn3) Run() {
