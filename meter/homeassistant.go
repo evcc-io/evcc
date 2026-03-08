@@ -68,24 +68,24 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
 	}
 
 	// phase currents (optional)
-	if phases, err := homeassistant.ValidatePhaseEntities(cc.Currents); len(phases) > 0 {
-		currentsG = func() (float64, float64, float64, error) { return conn.GetPhaseFloatStates(phases) }
-	} else if err != nil {
+	if phases, err := homeassistant.ValidatePhaseEntities(cc.Currents); err != nil {
 		return nil, fmt.Errorf("currents: %w", err)
+	} else if len(phases) > 0 {
+		currentsG = func() (float64, float64, float64, error) { return conn.GetPhaseFloatStates(phases) }
 	}
 
 	// phase voltages (optional)
-	if phases, err := homeassistant.ValidatePhaseEntities(cc.Voltages); len(phases) > 0 {
-		voltagesG = func() (float64, float64, float64, error) { return conn.GetPhaseFloatStates(phases) }
-	} else if err != nil {
+	if phases, err := homeassistant.ValidatePhaseEntities(cc.Voltages); err != nil {
 		return nil, fmt.Errorf("voltages: %w", err)
+	} else if len(phases) > 0 {
+		voltagesG = func() (float64, float64, float64, error) { return conn.GetPhaseFloatStates(phases) }
 	}
 
 	// phase powers (optional)
-	if phases, err := homeassistant.ValidatePhaseEntities(cc.Powers); len(phases) > 0 {
-		powersG = func() (float64, float64, float64, error) { return conn.GetPhaseFloatStates(phases) }
-	} else if err != nil {
+	if phases, err := homeassistant.ValidatePhaseEntities(cc.Powers); err != nil {
 		return nil, fmt.Errorf("powers: %w", err)
+	} else if len(phases) > 0 {
+		powersG = func() (float64, float64, float64, error) { return conn.GetPhaseFloatStates(phases) }
 	}
 
 	if cc.Soc != "" {
