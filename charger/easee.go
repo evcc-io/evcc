@@ -24,7 +24,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"strings"
 	"sync"
 	"time"
 
@@ -70,10 +69,6 @@ type Easee struct {
 	currentL1, currentL2, currentL3 float64
 	rfid            string
 	lp              loadpoint.API
-	cmdMu           sync.Mutex
-	pendingTicks    map[int64]chan easee.SignalRCommandResponse
-	pendingByID     map[easee.ObservationID]chan easee.SignalRCommandResponse
-	expectedOrphans map[easee.ObservationID]int
 
 	dispatcher *easee.CommandDispatcher
 
@@ -127,9 +122,6 @@ func NewEasee(ctx context.Context, user, password, charger string, timeout time.
 		log:             log,
 		current:         6, // default current
 		startDone:       sync.OnceFunc(func() { close(done) }),
-		pendingTicks:    make(map[int64]chan easee.SignalRCommandResponse),
-		pendingByID:     make(map[easee.ObservationID]chan easee.SignalRCommandResponse),
-		expectedOrphans: make(map[easee.ObservationID]int),
 		obsC:            make(chan easee.Observation),
 		obsTime:         make(map[easee.ObservationID]time.Time),
 	}
@@ -227,48 +219,6 @@ func (c *Easee) waitForOptionalState() {
 		time.Sleep(100 * time.Millisecond)
 	}
 	c.log.WARN.Println("did not receive full state from cloud")
-}
-
-func (c *Easee) registerPendingTick(tick int64, ch chan easee.SignalRCommandResponse) {
-	c.cmdMu.Lock()
-	c.pendingTicks[tick] = ch
-	c.cmdMu.Unlock()
-}
-
-func (c *Easee) unregisterPendingTick(tick int64) {
-	c.cmdMu.Lock()
-	delete(c.pendingTicks, tick)
-	c.cmdMu.Unlock()
-}
-
-func (c *Easee) registerPendingByID(id easee.ObservationID, ch chan easee.SignalRCommandResponse) {
-	c.cmdMu.Lock()
-	defer c.cmdMu.Unlock()
-	c.pendingByID[id] = ch
-}
-
-func (c *Easee) unregisterPendingByID(id easee.ObservationID) {
-	c.cmdMu.Lock()
-	defer c.cmdMu.Unlock()
-	delete(c.pendingByID, id)
-}
-
-func (c *Easee) registerExpectedOrphan(ids ...easee.ObservationID) {
-	c.cmdMu.Lock()
-	defer c.cmdMu.Unlock()
-	for _, id := range ids {
-		c.expectedOrphans[id]++
-	}
-}
-
-func (c *Easee) consumeExpectedOrphan(id easee.ObservationID) bool {
-	c.cmdMu.Lock()
-	defer c.cmdMu.Unlock()
-	if c.expectedOrphans[id] > 0 {
-		c.expectedOrphans[id]--
-		return true
-	}
-	return false
 }
 
 // check c.obsTime for presence of ALL of the following keys: easee.SESSION_ENERGY, easee.LIFETIME_ENERGY
@@ -570,65 +520,6 @@ func (c *Easee) inExpectedOpMode(enable bool) bool {
 
 	// paused/stopped
 	return c.opMode == easee.ModeAwaitingStart || c.opMode == easee.ModeAwaitingAuthentication
-}
-
-// posts JSON to the Easee API endpoint and waits for the async response
-func (c *Easee) postJSONAndWait(uri string, data any) (bool, error) {
-	resp, err := c.Post(uri, request.JSONContent, request.MarshalJSON(data))
-	if err != nil {
-		return false, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode == 200 { // sync call
-		return false, nil
-	}
-
-	if resp.StatusCode == 202 { // async call, wait for response
-		var cmd easee.RestCommandResponse
-
-		if strings.Contains(uri, "/commands/") { // command endpoint
-			if err := json.NewDecoder(resp.Body).Decode(&cmd); err != nil {
-				return false, err
-			}
-		} else { // settings endpoint
-			var cmdArr []easee.RestCommandResponse
-			if err := json.NewDecoder(resp.Body).Decode(&cmdArr); err != nil {
-				return false, err
-			}
-
-			if len(cmdArr) != 0 {
-				cmd = cmdArr[0]
-			}
-		}
-
-		if cmd.Ticks == 0 { // api thinks this was a noop
-			return true, nil
-		}
-
-		ch := make(chan easee.SignalRCommandResponse, 1)
-		c.registerPendingTick(cmd.Ticks, ch)
-		defer c.unregisterPendingTick(cmd.Ticks)
-		obsID := easee.ObservationID(cmd.CommandId)
-		c.registerPendingByID(obsID, ch)
-		defer c.unregisterPendingByID(obsID)
-		return false, c.waitForTickResponse(ch)
-	}
-
-	// all other response codes lead to an error
-	return false, fmt.Errorf("invalid status: %d", resp.StatusCode)
-}
-
-func (c *Easee) waitForTickResponse(ch <-chan easee.SignalRCommandResponse) error {
-	select {
-	case cmdResp := <-ch:
-		if !cmdResp.WasAccepted {
-			return fmt.Errorf("command rejected: %d", cmdResp.Ticks)
-		}
-		return nil
-	case <-time.After(c.Client.Timeout):
-		return api.ErrTimeout
-	}
 }
 
 // wait for opMode become expected op mode

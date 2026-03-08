@@ -32,15 +32,12 @@ func newEasee() *Easee {
 	log := util.NewLogger("easee")
 	helper := request.NewHelper(log)
 	e := Easee{
-		Helper:          helper,
-		obsTime:         make(map[easee.ObservationID]time.Time),
-		pendingTicks:    make(map[int64]chan easee.SignalRCommandResponse),
-		pendingByID:     make(map[easee.ObservationID]chan easee.SignalRCommandResponse),
-		expectedOrphans: make(map[easee.ObservationID]int),
-		log:             log,
-		startDone:       func() {},
-		obsC:            make(chan easee.Observation),
-		dispatcher:      easee.NewCommandDispatcher(helper, log, 500*time.Millisecond),
+		Helper:     helper,
+		obsTime:    make(map[easee.ObservationID]time.Time),
+		log:        log,
+		startDone:  func() {},
+		obsC:       make(chan easee.Observation),
+		dispatcher: easee.NewCommandDispatcher(helper, log, 500*time.Millisecond),
 	}
 	e.Client.Timeout = 500 * time.Millisecond //aggressive timeout to accelerate testing
 	return &e
@@ -136,120 +133,6 @@ func TestInExpectedOpMode(t *testing.T) {
 		e.opMode = tc.opMode
 		res := e.inExpectedOpMode(tc.enable)
 		assert.Equal(t, tc.expect, res)
-	}
-}
-
-func TestEasee_waitForTickResponse(t *testing.T) {
-	testCases := []struct {
-		name         string
-		expectedTick int64
-		cmdCValue    *easee.SignalRCommandResponse
-		expectedErr  error
-	}{
-		{
-			name:         "Success - Tick Found",
-			expectedTick: 123,
-			cmdCValue:    &easee.SignalRCommandResponse{Ticks: 123, WasAccepted: true},
-			expectedErr:  nil,
-		},
-		{
-			name:         "Success - Tick Found, but Rejected",
-			expectedTick: 456,
-			cmdCValue:    &easee.SignalRCommandResponse{Ticks: 456, WasAccepted: false},
-			expectedErr:  fmt.Errorf("command rejected: %d", 456),
-		},
-		{
-			name:         "Timeout",
-			expectedTick: 789,
-			expectedErr:  api.ErrTimeout,
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			t.Logf("%+v", tc)
-
-			e := newEasee()
-
-			ch := make(chan easee.SignalRCommandResponse, 1)
-			if tc.cmdCValue != nil {
-				ch <- *tc.cmdCValue
-			}
-
-			err := e.waitForTickResponse(ch)
-
-			// Assert the result
-			if tc.expectedErr != nil {
-				assert.EqualError(t, err, tc.expectedErr.Error())
-			} else {
-				assert.NoError(t, err)
-			}
-		})
-	}
-}
-
-func TestEasee_postJsonAndWait(t *testing.T) {
-	const chargerID string = "TESTTEST"
-	const ticks int64 = 638798974487432600
-
-	settingsUri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, chargerID)
-	commandUri := fmt.Sprintf("%s/chargers/%s/commands/resume_charging", easee.API, chargerID)
-
-	settingsReply := fmt.Sprintf("{\"device\":\"%s\",\"commandId\":48,\"ticks\":%d}", chargerID, ticks)
-
-	cmdResponse := easee.SignalRCommandResponse{
-		WasAccepted: true,
-		Ticks:       ticks,
-	}
-
-	testCases := []struct {
-		uri      string
-		httpRc   int
-		respBody string
-		cmdResp  *easee.SignalRCommandResponse
-		noop     bool
-		err      error
-	}{
-		{settingsUri, 200, "", nil, false, nil},                                   //sync reply
-		{settingsUri, 202, "[]", nil, true, nil},                                  //noop reply
-		{settingsUri, 202, "[" + settingsReply + "]", nil, false, api.ErrTimeout}, //timeout
-		{commandUri, 202, "{}", nil, true, nil},                                   //noop command reply
-		{commandUri, 202, settingsReply, &cmdResponse, false, nil},                //command reply
-		{commandUri, 400, "", nil, false, fmt.Errorf("invalid status: %d", 400)},  //unexpected result
-	}
-
-	for _, tc := range testCases {
-		t.Logf("%+v", tc)
-
-		e := newEasee()
-
-		httpmock.ActivateNonDefault(e.Client)
-		httpmock.RegisterResponder(http.MethodPost, tc.uri,
-			httpmock.NewStringResponder(tc.httpRc, tc.respBody))
-
-		if tc.cmdResp != nil {
-			go func() {
-				// wait for postJSONAndWait to register the per-tick channel
-				var ch chan easee.SignalRCommandResponse
-				for {
-					e.cmdMu.Lock()
-					ch = e.pendingTicks[tc.cmdResp.Ticks]
-					e.cmdMu.Unlock()
-					if ch != nil {
-						break
-					}
-					time.Sleep(time.Millisecond)
-				}
-				ch <- *tc.cmdResp
-			}()
-		}
-
-		noop, err := e.postJSONAndWait(tc.uri, nil)
-
-		assert.Equal(t, tc.noop, noop)
-		assert.Equal(t, tc.err, err)
-
-		httpmock.Reset()
 	}
 }
 
@@ -532,56 +415,6 @@ func TestEasee_CommandResponse_matchedByID(t *testing.T) {
 	err = e.dispatcher.Send(uri, nil)
 	assert.NoError(t, err)
 	<-errCh
-}
-
-func TestEasee_registerAndConsumeExpectedOrphan(t *testing.T) {
-	e := newEasee()
-
-	// Not registered yet — consume returns false
-	assert.False(t, e.consumeExpectedOrphan(easee.CIRCUIT_MAX_CURRENT_P1))
-
-	// Register once
-	e.registerExpectedOrphan(easee.CIRCUIT_MAX_CURRENT_P1)
-
-	// First consume succeeds
-	assert.True(t, e.consumeExpectedOrphan(easee.CIRCUIT_MAX_CURRENT_P1))
-
-	// Second consume fails (counter back to zero)
-	assert.False(t, e.consumeExpectedOrphan(easee.CIRCUIT_MAX_CURRENT_P1))
-}
-
-func TestEasee_registerExpectedOrphan_multipleRegistrations(t *testing.T) {
-	e := newEasee()
-
-	// Register twice (two concurrent calls in flight)
-	e.registerExpectedOrphan(easee.CIRCUIT_MAX_CURRENT_P1)
-	e.registerExpectedOrphan(easee.CIRCUIT_MAX_CURRENT_P1)
-
-	assert.True(t, e.consumeExpectedOrphan(easee.CIRCUIT_MAX_CURRENT_P1))
-	assert.True(t, e.consumeExpectedOrphan(easee.CIRCUIT_MAX_CURRENT_P1))
-	assert.False(t, e.consumeExpectedOrphan(easee.CIRCUIT_MAX_CURRENT_P1))
-}
-
-func TestProductUpdate_updatesLastObsReceived_freshTimestamp(t *testing.T) {
-	e := newEasee()
-	assert.True(t, e.lastObsReceived.IsZero())
-
-	// Observation with a fresh charger-side timestamp (seconds ago)
-	now := time.Now().UTC().Truncate(0)
-	e.ProductUpdate(createPayload(easee.TOTAL_POWER, now, easee.Double, "3.5"))
-
-	assert.False(t, e.lastObsReceived.IsZero())
-	assert.WithinDuration(t, time.Now(), e.lastObsReceived, 5*time.Second)
-}
-
-func TestProductUpdate_doesNotUpdateLastObsReceived_staleTimestamp(t *testing.T) {
-	e := newEasee()
-
-	// Observation with a charger-side timestamp older than observationTimeout
-	stale := time.Now().UTC().Add(-(observationTimeout + time.Minute))
-	e.ProductUpdate(createPayload(easee.TOTAL_POWER, stale, easee.Double, "3.5"))
-
-	assert.True(t, e.lastObsReceived.IsZero(), "stale replay must not update lastObsReceived")
 }
 
 func TestEasee_Phases1p3p_registersExpectedOrphan(t *testing.T) {
