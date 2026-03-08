@@ -74,7 +74,7 @@ func TestDispatcher_CancelOrphan_DoubleConsume(t *testing.T) {
 func TestDispatcher_Send_HTTP200Sync(t *testing.T) {
 	d := newTestDispatcher(t)
 	httpmock.ActivateNonDefault(d.helper.Client)
-	t.Cleanup(httpmock.Reset)
+	// per-client mock; no global teardown needed
 
 	httpmock.RegisterResponder(http.MethodPost, testURI,
 		httpmock.NewStringResponder(http.StatusOK, ""))
@@ -85,7 +85,7 @@ func TestDispatcher_Send_HTTP200Sync(t *testing.T) {
 func TestDispatcher_Send_Noop(t *testing.T) {
 	d := newTestDispatcher(t)
 	httpmock.ActivateNonDefault(d.helper.Client)
-	t.Cleanup(httpmock.Reset)
+	// per-client mock; no global teardown needed
 
 	// Empty array body → Ticks == 0 → noop
 	httpmock.RegisterResponder(http.MethodPost, testURI,
@@ -97,7 +97,7 @@ func TestDispatcher_Send_Noop(t *testing.T) {
 func TestDispatcher_Send_HTTPError(t *testing.T) {
 	d := newTestDispatcher(t)
 	httpmock.ActivateNonDefault(d.helper.Client)
-	t.Cleanup(httpmock.Reset)
+	// per-client mock; no global teardown needed
 
 	httpmock.RegisterResponder(http.MethodPost, testURI,
 		httpmock.NewStringResponder(http.StatusBadRequest, ""))
@@ -111,14 +111,21 @@ func TestDispatcher_Send_TicksMatch(t *testing.T) {
 
 	d := newTestDispatcher(t)
 	httpmock.ActivateNonDefault(d.helper.Client)
-	t.Cleanup(httpmock.Reset)
+	// per-client mock; no global teardown needed
 
 	body := fmt.Sprintf(`[{"device":"TESTTEST","commandId":48,"ticks":%d}]`, ticks)
 	httpmock.RegisterResponder(http.MethodPost, testURI,
 		httpmock.NewStringResponder(http.StatusAccepted, body))
 
 	go func() {
+		deadline := time.After(2 * time.Second)
 		for {
+			select {
+			case <-deadline:
+				t.Error("timed out waiting for pendingTicks registration")
+				return
+			default:
+			}
 			d.mu.Lock()
 			_, ok := d.pendingTicks[ticks]
 			d.mu.Unlock()
@@ -139,14 +146,21 @@ func TestDispatcher_Send_IDFallback(t *testing.T) {
 
 	d := newTestDispatcher(t)
 	httpmock.ActivateNonDefault(d.helper.Client)
-	t.Cleanup(httpmock.Reset)
+	// per-client mock; no global teardown needed
 
 	body := fmt.Sprintf(`[{"device":"TESTTEST","commandId":%d,"ticks":%d}]`, int(obsID), ticks)
 	httpmock.RegisterResponder(http.MethodPost, testURI,
 		httpmock.NewStringResponder(http.StatusAccepted, body))
 
 	go func() {
+		deadline := time.After(2 * time.Second)
 		for {
+			select {
+			case <-deadline:
+				t.Error("timed out waiting for pendingTicks registration")
+				return
+			default:
+			}
 			d.mu.Lock()
 			_, ok := d.pendingTicks[ticks]
 			d.mu.Unlock()
@@ -167,7 +181,7 @@ func TestDispatcher_Send_Timeout(t *testing.T) {
 
 	d := newTestDispatcher(t)
 	httpmock.ActivateNonDefault(d.helper.Client)
-	t.Cleanup(httpmock.Reset)
+	// per-client mock; no global teardown needed
 
 	body := fmt.Sprintf(`[{"device":"TESTTEST","commandId":48,"ticks":%d}]`, ticks)
 	httpmock.RegisterResponder(http.MethodPost, testURI,
@@ -182,14 +196,21 @@ func TestDispatcher_Send_Rejected(t *testing.T) {
 
 	d := newTestDispatcher(t)
 	httpmock.ActivateNonDefault(d.helper.Client)
-	t.Cleanup(httpmock.Reset)
+	// per-client mock; no global teardown needed
 
 	body := fmt.Sprintf(`[{"device":"TESTTEST","commandId":48,"ticks":%d}]`, ticks)
 	httpmock.RegisterResponder(http.MethodPost, testURI,
 		httpmock.NewStringResponder(http.StatusAccepted, body))
 
 	go func() {
+		deadline := time.After(2 * time.Second)
 		for {
+			select {
+			case <-deadline:
+				t.Error("timed out waiting for pendingTicks registration")
+				return
+			default:
+			}
 			d.mu.Lock()
 			_, ok := d.pendingTicks[ticks]
 			d.mu.Unlock()
@@ -211,7 +232,7 @@ func TestDispatcher_Send_CommandURI(t *testing.T) {
 
 	d := newTestDispatcher(t)
 	httpmock.ActivateNonDefault(d.helper.Client)
-	t.Cleanup(httpmock.Reset)
+	// per-client mock; no global teardown needed
 
 	// /commands/ endpoint → body is a JSON object, not an array
 	body := fmt.Sprintf(`{"device":"TESTTEST","commandId":48,"ticks":%d}`, ticks)
@@ -219,7 +240,14 @@ func TestDispatcher_Send_CommandURI(t *testing.T) {
 		httpmock.NewStringResponder(http.StatusAccepted, body))
 
 	go func() {
+		deadline := time.After(2 * time.Second)
 		for {
+			select {
+			case <-deadline:
+				t.Error("timed out waiting for pendingTicks registration")
+				return
+			default:
+			}
 			d.mu.Lock()
 			_, ok := d.pendingTicks[ticks]
 			d.mu.Unlock()
