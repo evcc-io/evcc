@@ -144,26 +144,9 @@ func (c *HomeAssistant) MaxCurrentMillis(current float64) error {
 }
 
 // phases1p3p implements the api.PhaseSwitcher interface.
-//
-// This follows the same pattern as the native Kathrein charger:
-//  1. Set the phase select entity (abstracts e.g. Modbus register 0x00A1)
-//  2. Disable charging to apply the new phase setting
-//  3. Re-enable charging if it was previously enabled
-//
-// Phase switching requires a charge stop/start cycle to take effect.
 func (c *HomeAssistant) phases1p3p(phases int) error {
 	if c.phases == "" {
 		return errors.New("phase switching not configured")
-	}
-
-	// validate input: only 1 or 3 phases are supported
-	if phases != 1 && phases != 3 {
-		return fmt.Errorf("unsupported phase count: %d (must be 1 or 3)", phases)
-	}
-
-	// short-circuit: skip if already at requested phase count
-	if current, err := c.getPhases(); err == nil && current == phases {
-		return nil
 	}
 
 	// set phase select entity (e.g. select.wallbox_phases -> "1" or "3")
