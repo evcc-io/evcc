@@ -13,19 +13,15 @@ import (
 const GridControl = "gridcontrol"
 
 // SetupCircuit returns or registers the grid control circuit
-func SetupCircuit(title string) (api.Circuit, error) {
-	// get root circuit
-	root := circuit.Root()
-	if root == nil {
-		return nil, errors.New("hems requires load management- please configure root circuit")
+func SetupCircuit() (api.Circuit, error) {
+	if _, err := config.Circuits().ByName(GridControl); err == nil {
+		return nil, errors.New("gridcontrol is a reserved name and will be auto-created as root circuit when hems is configured")
 	}
 
-	if dev, err := config.Circuits().ByName(GridControl); err == nil {
-		return dev.Instance(), err
-	}
+	root := circuit.Root()
 
 	// create new circuit
-	circuit, err := circuit.New(util.NewLogger(GridControl), title, 0, 0, nil, time.Minute)
+	circuit, err := circuit.New(util.NewLogger(GridControl), "", 0, 0, nil, time.Minute)
 	if err != nil {
 		return nil, err
 	}
@@ -36,8 +32,10 @@ func SetupCircuit(title string) (api.Circuit, error) {
 	}
 
 	// wrap old root with new grid control parent
-	if err := root.Wrap(circuit); err != nil {
-		return nil, err
+	if root != nil {
+		if err := root.Wrap(circuit); err != nil {
+			return nil, err
+		}
 	}
 
 	return circuit, nil

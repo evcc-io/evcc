@@ -42,7 +42,7 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*F
 	}
 
 	// setup grid control circuit
-	gridcontrol, err := smartgrid.SetupCircuit("fnn-3")
+	gridcontrol, err := smartgrid.SetupCircuit()
 	if err != nil {
 		return nil, err
 	}

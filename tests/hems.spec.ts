@@ -5,8 +5,6 @@ import {
   expectModalHidden,
   editorClear,
   editorPaste,
-  addDemoCharger,
-  newLoadpoint,
 } from "./utils";
 import { startSimulator, stopSimulator, simulatorUrl, simulatorApply } from "./simulator";
 
@@ -61,21 +59,12 @@ test.describe("HEMS", () => {
     await expectModalHidden(hemsModal);
   });
 
-  test("configure loadmanagement and hems via UI, verify logic", async ({ page }) => {
+  test("external control without circuits", async ({ page }) => {
+    const GRID_CONFIG = "hems-grid.evcc.yaml";
     await startSimulator();
-    await start(CONFIG);
+    await start(GRID_CONFIG);
 
     await page.goto("/#/config");
-
-    // configure circuits
-    await page.getByTestId("circuits").getByRole("button", { name: "edit" }).click();
-    const circuitsModal = page.getByTestId("circuits-modal");
-    await expectModalVisible(circuitsModal);
-    const circuitsEditor = circuitsModal.getByTestId("yaml-editor");
-    await editorClear(circuitsEditor);
-    await editorPaste(circuitsEditor, page, `- name: gridcontrol`);
-    await circuitsModal.getByRole("button", { name: "Save" }).click();
-    await expectModalHidden(circuitsModal);
 
     // configure hems
     await page.getByTestId("hems").getByRole("button", { name: "edit" }).click();
@@ -97,31 +86,10 @@ limit:
     await hemsModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(hemsModal);
 
-    await restart(CONFIG);
+    await restart(GRID_CONFIG);
     await page.goto("/#/config");
 
-    // configure loadpoint
-    const lpModal = page.getByTestId("loadpoint-modal");
-    await newLoadpoint(page, "Carport");
-    await addDemoCharger(page);
-    await lpModal.getByRole("button", { name: "Save" }).click();
-    await expectModalHidden(lpModal);
-    await expect(page.getByTestId("loadpoint")).toContainText("Carport");
-
-    await restart(CONFIG);
-    await page.goto("/#/config");
-
-    // assign loadpoint to circuit
-    await page.getByTestId("loadpoint").getByRole("button", { name: "edit" }).click();
-    await expectModalVisible(lpModal);
-    await lpModal.getByLabel("Circuit").selectOption("gridcontrol");
-    await lpModal.getByRole("button", { name: "Save" }).click();
-    await expectModalHidden(lpModal);
-
-    await restart(CONFIG);
-    await page.goto("/#/config");
-
-    // verify circuits
+    // verify external control is the only circuit visible
     await expect(page.getByTestId("circuits")).toContainText(
       ["External Limit", "Power", "0.0 kW"].join("")
     );
@@ -135,15 +103,7 @@ limit:
     // verify config ui
     await page.goto("/#/config");
     await expect(page.getByTestId("circuits")).toContainText(
-      ["External Limit", "Consumption limited", "yes", "Power", "0.0 kW / 4.2 kW"].join(""),
-      { timeout: 10000 }
-    );
-
-    // verify main ui
-    await page.getByTestId("home-link").click();
-    const hemsWarning = page.getByTestId("hems-warning");
-    await expect(hemsWarning).toContainText(
-      "External limit: Reduced charging to not exceed 4.2 kW."
+      ["External Limit", "Consumption limited", "yes", "Power", "0.0 kW / 4.2 kW"].join("")
     );
 
     // disable in simulator
@@ -151,10 +111,50 @@ limit:
     await hemsRelayCheckbox.uncheck();
     await simulatorApply(page);
 
-    // verify main ui
-    await page.goto("/");
-    await expect(hemsWarning).not.toBeVisible();
-
     await stopSimulator();
+  });
+
+  test("external control with circuits", async ({ page }) => {
+    const GRID_CONFIG = "hems-grid.evcc.yaml";
+    await start(GRID_CONFIG);
+
+    await page.goto("/#/config");
+
+    // configure circuits
+    await page.getByTestId("circuits").getByRole("button", { name: "edit" }).click();
+    const circuitsModal = page.getByTestId("circuits-modal");
+    await expectModalVisible(circuitsModal);
+    const circuitsEditor = circuitsModal.getByTestId("yaml-editor");
+    await editorClear(circuitsEditor);
+    await editorPaste(circuitsEditor, page, `- name: main\n  title: House`);
+    await circuitsModal.getByRole("button", { name: "Save" }).click();
+    await expectModalHidden(circuitsModal);
+
+    // configure hems
+    await page.getByTestId("hems").getByRole("button", { name: "edit" }).click();
+    const hemsModal = page.getByTestId("hems-modal");
+    await expectModalVisible(hemsModal);
+    const hemsEditor = hemsModal.getByTestId("yaml-editor");
+    await editorClear(hemsEditor);
+    await editorPaste(
+      hemsEditor,
+      page,
+      `type: relay
+maxPower: 4200
+interval: 0.1s
+limit:
+  source: const
+  value: true`
+    );
+    await hemsModal.getByRole("button", { name: "Save" }).click();
+    await expectModalHidden(hemsModal);
+
+    await restart(GRID_CONFIG);
+    await page.goto("/#/config");
+
+    // verify external control is the top-most circuit, with main beneath it
+    await expect(page.getByTestId("circuits")).toContainText(
+      ["External Limit", "Consumption limited", "yes", "Power", "0.0 kW / 4.2 kW", "House", "Consumption limited", "yes", "Power", "0.0 kW"].join("")
+    );
   });
 });

@@ -84,7 +84,7 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*E
 	}
 
 	// setup grid control circuit
-	gridcontrol, err := smartgrid.SetupCircuit("eebus")
+	gridcontrol, err := smartgrid.SetupCircuit()
 	if err != nil {
 		return nil, err
 	}
