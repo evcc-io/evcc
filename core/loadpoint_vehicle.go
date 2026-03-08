@@ -242,7 +242,7 @@ func (lp *Loadpoint) vehicleUnidentified() bool {
 	// request vehicle api refresh while waiting to identify
 	select {
 	case <-lp.vehicleDetectTicker.C:
-		lp.log.DEBUG.Println("vehicle api refresh")
+		lp.log.DEBUG.Println("vehicle api cache reset")
 		util.ResetCached()
 	default:
 	}
@@ -266,7 +266,7 @@ func (lp *Loadpoint) vehicleDefaultOrDetect() {
 // startVehicleDetection reset connection timer and starts api refresh timer
 func (lp *Loadpoint) startVehicleDetection() {
 	// flush all vehicles before detection starts
-	lp.log.DEBUG.Println("vehicle api refresh")
+	lp.log.DEBUG.Println("vehicle api cache reset")
 	util.ResetCached()
 
 	lp.vehicleDetect = lp.clock.Now()

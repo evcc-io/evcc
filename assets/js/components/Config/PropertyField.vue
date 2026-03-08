@@ -83,7 +83,7 @@
 		<div class="position-relative flex-grow-1">
 			<input
 				:id="id"
-				v-model="value"
+				:value="value"
 				:list="datalistId"
 				:type="inputType"
 				:step="step"
@@ -98,6 +98,8 @@
 				"
 				:autocomplete="masked || datalistId ? 'off' : null"
 				:disabled="disabled"
+				@change="onFieldChange"
+				@input="onFieldInput"
 			/>
 			<button
 				v-if="showClearButton"
@@ -346,6 +348,20 @@ export default {
 		},
 	},
 	methods: {
+		coerceValue(val) {
+			if (this.inputType === "number") {
+				return val === "" ? "" : Number(val);
+			}
+			return val;
+		},
+		onFieldChange(e) {
+			this.value = this.coerceValue(e.target.value);
+		},
+		onFieldInput(e) {
+			if (!this.useLazyBinding) {
+				this.value = this.coerceValue(e.target.value);
+			}
+		},
 		getOptionName(value) {
 			const translationKey = `config.options.${this.property}.${value || "none"}`;
 			return this.$te(translationKey) ? this.$t(translationKey) : value;

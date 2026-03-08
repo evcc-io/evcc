@@ -1,8 +1,10 @@
 package ocpp
 
 import (
+	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
@@ -15,11 +17,12 @@ type CP struct {
 	mu          sync.RWMutex
 	log         *util.Logger
 	onceConnect sync.Once
-	onceBoot    sync.Once
+	onceMonitor sync.Once
 
 	id string
 
 	connected bool
+	bootTimer *time.Timer // timeout for BootNotification wait after WebSocket connect
 	connectC  chan struct{}
 	meterC    chan struct{}
 
@@ -112,6 +115,15 @@ func (cp *CP) RegisterID(id string) {
 	cp.id = id
 }
 
+// stopBootTimer cancels and clears the boot notification wait timer.
+// Must be called with cp.mu held.
+func (cp *CP) stopBootTimer() {
+	if cp.bootTimer != nil {
+		cp.bootTimer.Stop()
+		cp.bootTimer = nil
+	}
+}
+
 func (cp *CP) connect(connect bool) {
 	cp.mu.Lock()
 	defer cp.mu.Unlock()
@@ -122,7 +134,35 @@ func (cp *CP) connect(connect bool) {
 		cp.onceConnect.Do(func() {
 			close(cp.connectC)
 		})
+	} else {
+		cp.stopBootTimer()
 	}
+}
+
+// onTransportConnect is called when the WebSocket connection is established.
+// Instead of marking the CP as connected immediately, it waits for the
+// BootNotification handshake to complete (or a timeout to expire).
+func (cp *CP) onTransportConnect() {
+	cp.mu.Lock()
+	defer cp.mu.Unlock()
+
+	cp.stopBootTimer()
+	cp.bootTimer = time.AfterFunc(Timeout, cp.onBootTimeout)
+}
+
+// onBootTimeout is called when the BootNotification wait timer expires.
+func (cp *CP) onBootTimeout() {
+	cp.mu.Lock()
+	if cp.bootTimer == nil {
+		// timer was cancelled by disconnect or BootNotification
+		cp.mu.Unlock()
+		return
+	}
+	cp.bootTimer = nil
+	cp.mu.Unlock()
+
+	cp.log.DEBUG.Printf("boot notification timeout, proceeding")
+	cp.connect(true)
 }
 
 func (cp *CP) Connected() bool {
@@ -134,4 +174,35 @@ func (cp *CP) Connected() bool {
 
 func (cp *CP) HasConnected() <-chan struct{} {
 	return cp.connectC
+}
+
+// MonitorReboot ensures the given function runs only once per CP instance.
+// Used to start the reboot monitor goroutine for multi-connector charge points.
+func (cp *CP) MonitorReboot(ctx context.Context, setup func() error) {
+	cp.onceMonitor.Do(func() {
+		// drain boot notification from initial setup
+		select {
+		case <-cp.bootNotificationRequestC:
+		default:
+		}
+
+		go cp.monitorReboot(ctx, setup)
+	})
+}
+
+func (cp *CP) monitorReboot(ctx context.Context, setup func() error) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+
+		case boot := <-cp.bootNotificationRequestC:
+			cp.log.INFO.Printf("reboot detected (model: %s, vendor: %s), re-initializing",
+				boot.ChargePointModel, boot.ChargePointVendor)
+
+			if err := setup(); err != nil {
+				cp.log.ERROR.Printf("failed to re-initialize after reboot: %v", err)
+			}
+		}
+	}
 }
