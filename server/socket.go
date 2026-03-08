@@ -114,7 +114,7 @@ func (h *SocketHub) deleteSubscriber(s *socketSubscriber) {
 
 func (h *SocketHub) welcome(subscriber *socketSubscriber, params []util.Param) {
 	msg := make(map[string]json.RawMessage, len(params))
-	var sharded []map[string]json.RawMessage
+	sharders := make(map[string]util.Sharder)
 
 	for _, p := range params {
 		k := p.Key
@@ -122,26 +122,26 @@ func (h *SocketHub) welcome(subscriber *socketSubscriber, params []util.Param) {
 			k = "loadpoints." + p.UniqueID()
 		}
 
-		// Sharder splits data into chunks, sent individually after main state
-		if sp, ok := (p.Val).(util.Sharder); ok {
-			for key, val := range sp.AllShards() {
-				shard := map[string]json.RawMessage{
-					k + "." + key: json.RawMessage(socketEncode(val)),
-				}
-				sharded = append(sharded, shard)
-			}
+		// Sharder values are split into shards and sent as a separate message
+		if sharder, ok := (p.Val).(util.Sharder); ok {
+			sharders[k] = sharder
 		} else {
 			msg[k] = json.RawMessage(socketEncode(p.Val))
 		}
 	}
 
-	// send complete state first, then shards individually
+	// send compact state first, then potentially large sharded data
 	if b, err := json.Marshal(msg); err == nil {
 		subscriber.send <- b
 	}
-	for _, shard := range sharded {
-		if b, err := json.Marshal(shard); err == nil {
-			subscriber.send <- b
+
+	for k, sharder := range sharders {
+		for key, val := range sharder.AllShards() {
+			if b, err := json.Marshal(map[string]json.RawMessage{
+				k + "." + key: json.RawMessage(socketEncode(val)),
+			}); err == nil {
+				subscriber.send <- b
+			}
 		}
 	}
 }
