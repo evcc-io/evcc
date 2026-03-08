@@ -13,12 +13,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// suppress unused import errors for imports needed in later tasks
-var (
-	_ = fmt.Sprintf
-	_ = http.StatusOK
-	_ = api.ErrTimeout
-	_ = httpmock.NewMockTransport
+const (
+	testURI    = API + "/chargers/TESTTEST/settings"
+	testCmdURI = API + "/chargers/TESTTEST/commands/resume_charging"
 )
 
 func newTestDispatcher(t *testing.T) *CommandDispatcher {
@@ -70,4 +67,169 @@ func TestDispatcher_CancelOrphan_DoubleConsume(t *testing.T) {
 	d.Dispatch(SignalRCommandResponse{ID: int(CIRCUIT_MAX_CURRENT_P1), Ticks: 111})
 	// CancelOrphan now finds nothing
 	assert.False(t, d.CancelOrphan(CIRCUIT_MAX_CURRENT_P1))
+}
+
+// --- Send tests ---
+
+func TestDispatcher_Send_HTTP200Sync(t *testing.T) {
+	d := newTestDispatcher(t)
+	httpmock.ActivateNonDefault(d.helper.Client)
+	t.Cleanup(httpmock.Reset)
+
+	httpmock.RegisterResponder(http.MethodPost, testURI,
+		httpmock.NewStringResponder(http.StatusOK, ""))
+
+	assert.NoError(t, d.Send(testURI, nil))
+}
+
+func TestDispatcher_Send_Noop(t *testing.T) {
+	d := newTestDispatcher(t)
+	httpmock.ActivateNonDefault(d.helper.Client)
+	t.Cleanup(httpmock.Reset)
+
+	// Empty array body → Ticks == 0 → noop
+	httpmock.RegisterResponder(http.MethodPost, testURI,
+		httpmock.NewStringResponder(http.StatusAccepted, "[]"))
+
+	assert.NoError(t, d.Send(testURI, nil))
+}
+
+func TestDispatcher_Send_HTTPError(t *testing.T) {
+	d := newTestDispatcher(t)
+	httpmock.ActivateNonDefault(d.helper.Client)
+	t.Cleanup(httpmock.Reset)
+
+	httpmock.RegisterResponder(http.MethodPost, testURI,
+		httpmock.NewStringResponder(http.StatusBadRequest, ""))
+
+	err := d.Send(testURI, nil)
+	assert.Error(t, err)
+}
+
+func TestDispatcher_Send_TicksMatch(t *testing.T) {
+	const ticks int64 = 638798974487432600
+
+	d := newTestDispatcher(t)
+	httpmock.ActivateNonDefault(d.helper.Client)
+	t.Cleanup(httpmock.Reset)
+
+	body := fmt.Sprintf(`[{"device":"TESTTEST","commandId":48,"ticks":%d}]`, ticks)
+	httpmock.RegisterResponder(http.MethodPost, testURI,
+		httpmock.NewStringResponder(http.StatusAccepted, body))
+
+	go func() {
+		for {
+			d.mu.Lock()
+			_, ok := d.pendingTicks[ticks]
+			d.mu.Unlock()
+			if ok {
+				break
+			}
+			time.Sleep(time.Millisecond)
+		}
+		d.Dispatch(SignalRCommandResponse{Ticks: ticks, WasAccepted: true})
+	}()
+
+	assert.NoError(t, d.Send(testURI, nil))
+}
+
+func TestDispatcher_Send_IDFallback(t *testing.T) {
+	const ticks int64 = 638798974487432600
+	const obsID = DYNAMIC_CHARGER_CURRENT // ObservationID = 48
+
+	d := newTestDispatcher(t)
+	httpmock.ActivateNonDefault(d.helper.Client)
+	t.Cleanup(httpmock.Reset)
+
+	body := fmt.Sprintf(`[{"device":"TESTTEST","commandId":%d,"ticks":%d}]`, int(obsID), ticks)
+	httpmock.RegisterResponder(http.MethodPost, testURI,
+		httpmock.NewStringResponder(http.StatusAccepted, body))
+
+	go func() {
+		for {
+			d.mu.Lock()
+			_, ok := d.pendingTicks[ticks]
+			d.mu.Unlock()
+			if ok {
+				break
+			}
+			time.Sleep(time.Millisecond)
+		}
+		// Wrong Ticks (T+1), correct ID — triggers the ID fallback path
+		d.Dispatch(SignalRCommandResponse{ID: int(obsID), Ticks: ticks + 1, WasAccepted: true})
+	}()
+
+	assert.NoError(t, d.Send(testURI, nil))
+}
+
+func TestDispatcher_Send_Timeout(t *testing.T) {
+	const ticks int64 = 789
+
+	d := newTestDispatcher(t)
+	httpmock.ActivateNonDefault(d.helper.Client)
+	t.Cleanup(httpmock.Reset)
+
+	body := fmt.Sprintf(`[{"device":"TESTTEST","commandId":48,"ticks":%d}]`, ticks)
+	httpmock.RegisterResponder(http.MethodPost, testURI,
+		httpmock.NewStringResponder(http.StatusAccepted, body))
+
+	// No Dispatch call → Send times out
+	assert.ErrorIs(t, d.Send(testURI, nil), api.ErrTimeout)
+}
+
+func TestDispatcher_Send_Rejected(t *testing.T) {
+	const ticks int64 = 456
+
+	d := newTestDispatcher(t)
+	httpmock.ActivateNonDefault(d.helper.Client)
+	t.Cleanup(httpmock.Reset)
+
+	body := fmt.Sprintf(`[{"device":"TESTTEST","commandId":48,"ticks":%d}]`, ticks)
+	httpmock.RegisterResponder(http.MethodPost, testURI,
+		httpmock.NewStringResponder(http.StatusAccepted, body))
+
+	go func() {
+		for {
+			d.mu.Lock()
+			_, ok := d.pendingTicks[ticks]
+			d.mu.Unlock()
+			if ok {
+				break
+			}
+			time.Sleep(time.Millisecond)
+		}
+		d.Dispatch(SignalRCommandResponse{Ticks: ticks, WasAccepted: false})
+	}()
+
+	err := d.Send(testURI, nil)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "rejected")
+}
+
+func TestDispatcher_Send_CommandURI(t *testing.T) {
+	const ticks int64 = 638798974487432600
+
+	d := newTestDispatcher(t)
+	httpmock.ActivateNonDefault(d.helper.Client)
+	t.Cleanup(httpmock.Reset)
+
+	// /commands/ endpoint → body is a JSON object, not an array
+	body := fmt.Sprintf(`{"device":"TESTTEST","commandId":48,"ticks":%d}`, ticks)
+	httpmock.RegisterResponder(http.MethodPost, testCmdURI,
+		httpmock.NewStringResponder(http.StatusAccepted, body))
+
+	go func() {
+		for {
+			d.mu.Lock()
+			_, ok := d.pendingTicks[ticks]
+			d.mu.Unlock()
+			if ok {
+				break
+			}
+			time.Sleep(time.Millisecond)
+		}
+		d.Dispatch(SignalRCommandResponse{Ticks: ticks, WasAccepted: true})
+	}()
+
+	assert.NoError(t, d.Send(testCmdURI, nil))
 }
