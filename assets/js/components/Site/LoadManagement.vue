@@ -31,8 +31,19 @@
 				v-for="entry in visibleCircuits"
 				:key="entry.name"
 				class="load-management-circuit rounded p-3 px-sm-4 mx-2 mx-sm-0"
-				:class="{ 'load-management-circuit--child': entry.depth > 0 }"
+				:class="{
+					'load-management-circuit--child': entry.depth > 0,
+					'load-management-circuit--expand-trigger': entry.depth === 0,
+				}"
 				:style="entry.depth ? { marginLeft: (entry.depth * 1.25 + 0.5) + 'rem' } : undefined"
+				:role="entry.depth === 0 ? 'button' : undefined"
+				:tabindex="entry.depth === 0 ? 0 : undefined"
+				:aria-label="
+					entry.depth === 0 ? $t('main.loadManagement.toggleExpand') : undefined
+				"
+				@click.stop="toggleExpandFromRoot(entry)"
+				@keydown.enter.prevent="toggleExpandFromRoot(entry)"
+				@keydown.space.prevent="toggleExpandFromRoot(entry)"
 			>
 				<div class="mb-2">
 					<div class="d-flex justify-content-between align-items-center">
@@ -183,7 +194,7 @@ export default defineComponent({
 	},
 	data() {
 		return {
-			open: true,
+			open: false,
 			ready: false,
 			contentCompleteHeight: null as number | null,
 			collapsedHeight: null as number | null,
@@ -200,7 +211,7 @@ export default defineComponent({
 			const circuits = circuitsList.value;
 			const entries: { name: string; circuit: Circuit; depth: number }[] = [];
 			const byParent = new Map<string, string[]>();
-			const names = Object.keys(circuits);
+			const names = Object.keys(circuits).sort((a, b) => a.localeCompare(b));
 			for (const name of names) {
 				const c = circuits[name];
 				if (c === undefined) continue;
@@ -253,16 +264,22 @@ export default defineComponent({
 		},
 	},
 	mounted() {
-		window.addEventListener("resize", this.updateHeight);
-		setTimeout(() => {
-			this.ready = true;
+		this.ready = true;
+		const el = this.$refs["contentInner"] as HTMLElement | undefined;
+		if (el) {
 			this.updateHeight();
-		}, 200);
+			const ro = new ResizeObserver(() => this.updateHeight());
+			ro.observe(el);
+			(this as { _resizeObserver?: ResizeObserver })._resizeObserver = ro;
+		}
 	},
 	unmounted() {
-		window.removeEventListener("resize", this.updateHeight);
+		(this as { _resizeObserver?: ResizeObserver })._resizeObserver?.disconnect();
 	},
 	methods: {
+		toggleExpandFromRoot(entry: { depth: number }) {
+			if (entry.depth === 0) this.open = !this.open;
+		},
 		updateHeight() {
 			const height =
 				(this.$refs["contentInner"] as HTMLElement | undefined)?.offsetHeight ?? 0;
@@ -348,8 +365,17 @@ export default defineComponent({
 	background-color: var(--evcc-box);
 }
 
+.load-management-circuit--expand-trigger {
+	cursor: pointer;
+}
+
+.load-management-circuit--expand-trigger:hover {
+	opacity: 0.95;
+}
+
 .load-management-circuit--child {
-	border-left: 3px solid var(--evcc-gray);
+	border-left: 6px solid var(--evcc-gray);
+	box-shadow: inset 10px 0 14px -6px rgba(0, 0, 0, 0.12);
 }
 
 .load-management-progress {
