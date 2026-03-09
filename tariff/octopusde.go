@@ -234,66 +234,87 @@ func simpleRates(info octoDeGql.SimpleProductUnitRateInformation, from, to time.
 	}}, nil
 }
 
+// computeHorizon returns the end of the planning window, capped by agreementValidTo.
+func computeHorizon(now, agreementValidTo time.Time, planDays int) time.Time {
+	h := now.AddDate(0, 0, planDays)
+	if !agreementValidTo.IsZero() && agreementValidTo.Before(h) {
+		return agreementValidTo
+	}
+	return h
+}
+
+// computePeriod converts day-relative time offsets into absolute start/end times,
+// handling the midnight-wrapping convention ("00:00:00" means end-of-day).
+func computePeriod(day time.Time, fromOffset, toOffset time.Duration) (time.Time, time.Time) {
+	start := day.Add(fromOffset)
+	var end time.Time
+	switch {
+	case toOffset == 0:
+		// "00:00:00" as end means end of day (midnight)
+		end = day.Add(24 * time.Hour)
+	case toOffset < fromOffset:
+		// wraps past midnight
+		end = day.Add(toOffset).Add(24 * time.Hour)
+	default:
+		end = day.Add(toOffset)
+	}
+	return start, end
+}
+
+// ratePeriodsForDay expands one TouRate slot for a single day into RatePeriods,
+// filtered to the window [now, horizon].
+func ratePeriodsForDay(day, now, horizon time.Time, r octoDeGql.TouRate) ([]RatePeriod, error) {
+	grossRate, err := parseFloat(r.LatestGrossUnitRateCentsPerKwh)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse gross unit rate for slot %q: %w", r.TimeslotName, err)
+	}
+	netRate, err := parseFloat(r.NetUnitRateCentsPerKwh)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse net unit rate for slot %q: %w", r.TimeslotName, err)
+	}
+
+	var periods []RatePeriod
+	for _, rule := range r.TimeslotActivationRules {
+		fromOffset, err := parseTimeOfDay(rule.ActiveFromTime)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse activeFromTime %q: %w", rule.ActiveFromTime, err)
+		}
+		toOffset, err := parseTimeOfDay(rule.ActiveToTime)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse activeToTime %q: %w", rule.ActiveToTime, err)
+		}
+
+		start, end := computePeriod(day, fromOffset, toOffset)
+		if end.Before(now) || start.After(horizon) {
+			continue
+		}
+
+		periods = append(periods, RatePeriod{
+			ValidFrom:                start,
+			ValidTo:                  end,
+			GrossUnitRateCentsPerKwh: grossRate,
+			NetUnitRateCentsPerKwh:   netRate,
+		})
+	}
+	return periods, nil
+}
+
 // generateTouRates produces rate periods for a Time of Use tariff over the next 7 days
 // by repeating each timeslot's activation window for each day in the planning horizon.
 // now is the reference time used for filtering past periods and computing the horizon.
 func generateTouRates(rates []octoDeGql.TouRate, agreementValidTo time.Time, now time.Time) ([]RatePeriod, error) {
 	const planDays = 7
-	horizon := now.AddDate(0, 0, planDays)
-	if !agreementValidTo.IsZero() && agreementValidTo.Before(horizon) {
-		horizon = agreementValidTo
-	}
-
-	// Midnight of today in local time
+	horizon := computeHorizon(now, agreementValidTo, planDays)
 	startDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
 
 	var result []RatePeriod
 	for day := startDay; day.Before(horizon); day = day.Add(24 * time.Hour) {
 		for _, r := range rates {
-			grossRate, err := parseFloat(r.LatestGrossUnitRateCentsPerKwh)
+			dayPeriods, err := ratePeriodsForDay(day, now, horizon, r)
 			if err != nil {
-				return nil, fmt.Errorf("failed to parse gross unit rate for slot %q: %w", r.TimeslotName, err)
+				return nil, err
 			}
-			netRate, err := parseFloat(r.NetUnitRateCentsPerKwh)
-			if err != nil {
-				return nil, fmt.Errorf("failed to parse net unit rate for slot %q: %w", r.TimeslotName, err)
-			}
-
-			for _, rule := range r.TimeslotActivationRules {
-				fromOffset, err := parseTimeOfDay(rule.ActiveFromTime)
-				if err != nil {
-					return nil, fmt.Errorf("failed to parse activeFromTime %q: %w", rule.ActiveFromTime, err)
-				}
-				toOffset, err := parseTimeOfDay(rule.ActiveToTime)
-				if err != nil {
-					return nil, fmt.Errorf("failed to parse activeToTime %q: %w", rule.ActiveToTime, err)
-				}
-
-				periodStart := day.Add(fromOffset)
-				var periodEnd time.Time
-				switch {
-				case toOffset == 0:
-					// "00:00:00" as end means end of day (midnight)
-					periodEnd = day.Add(24 * time.Hour)
-				case toOffset < fromOffset:
-					// wraps past midnight
-					periodEnd = day.Add(toOffset).Add(24 * time.Hour)
-				default:
-					periodEnd = day.Add(toOffset)
-				}
-
-				// Skip periods entirely in the past or beyond the horizon
-				if periodEnd.Before(now) || periodStart.After(horizon) {
-					continue
-				}
-
-				result = append(result, RatePeriod{
-					ValidFrom:                periodStart,
-					ValidTo:                  periodEnd,
-					GrossUnitRateCentsPerKwh: grossRate,
-					NetUnitRateCentsPerKwh:   netRate,
-				})
-			}
+			result = append(result, dayPeriods...)
 		}
 	}
 
