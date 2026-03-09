@@ -267,11 +267,11 @@ var _ api.PhaseSwitcher = (*Nexblue)(nil)
 
 // Phases1p3p implements the api.PhaseSwitcher interface
 func (wb *Nexblue) Phases1p3p(phases int) error {
-	uri := fmt.Sprintf("%s/v1/charger/%s/setting", nexblueAPI, wb.serial)
+	uri := fmt.Sprintf("https://api.nexblue.com/chargers/command/%s/switch_phase_mode", wb.serial)
 	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(struct {
-		PhaseMode int `json:"phase_mode"`
+		EnforceSinglePhase bool `json:"enforce_single_phase"`
 	}{
-		phases,
+		phases == 1,
 	}), request.JSONEncoding)
 
 	_, err := wb.DoBody(req)
