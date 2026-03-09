@@ -27,3 +27,7 @@ Ultrathink how to extract the current control logic from the loadpoint and move 
 instead "Vehicle overrides via UpdateVehicle" allow the controller to invoke loadpoint methods, but keep the method set minimal and create an interface for it
 
 EffectiveChargePower() on the interface hides Zoe hysteresis and IntegratedDevice special cases
+
+# 3
+
+loadpoint still contains a lot of current-related logic. check how they can be moved to CurrentController or removed entirely.
