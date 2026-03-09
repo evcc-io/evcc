@@ -443,90 +443,632 @@ For the `PowerController`, this simply returns `chargePower` (no adjustment need
 
 ## Migration Path
 
-### Phase 1: Define interfaces and create controller package
+### Phase 1: Define interfaces and create controller package ✅ DONE
 
-**New files:**
+**Created files:**
 - `core/chargercontroller/controller.go` — `Controller` interface
 - `core/chargercontroller/power.go` — `PowerController` struct
-- `core/chargercontroller/current.go` — `CurrentController` struct
+- `core/loadpoint_controller.go` — `currentControllerAdapter` (transitional thin wrapper)
 
 **Modified files:**
-- `api/api.go` — add `PowerController`, `PowerLimiter` interfaces
+- `api/api.go` — added `PowerController`, `PowerLimiter` interfaces
 
-**Testing:** Unit tests for both controller implementations in isolation.
-
-### Phase 2: Create `CurrentController` by extracting from Loadpoint
-
-Move these methods from `core/loadpoint.go` and `core/loadpoint_phases.go` into `CurrentController`:
-
-| From Loadpoint | To CurrentController |
-|----------------|---------------------|
-| `setLimit(current)` | `setChargerCurrent(current)` (private, called by `SetOfferedPower`) |
-| `roundedCurrent()` / `coarseCurrent()` | same names, private |
-| `effectiveMinCurrent()` / `effectiveMaxCurrent()` | same, private |
-| `effectiveCurrent()` | `EffectiveChargePower()` (returns watts) |
-| `pvScalePhases()` | `optimizePhases(targetPower)` |
-| `scalePhases()` / `scalePhasesIfAvailable()` | private helpers |
-| `activePhases()` / `minActivePhases()` / `maxActivePhases()` | private, with public `ActivePhases()` |
-| `hasPhaseSwitching()` | private |
-| Phase state fields: `phases`, `measuredPhases`, `phasesConfigured`, `phaseTimer`, `phasesSwitched` | controller fields |
-| `offeredCurrent` | controller field |
-| `chargerSwitched` | controller field |
-
-**Critical:** The loadpoint still needs to read some controller state for publishing to UI (active phases, offered current, phase timer). The controller should expose these via read-only methods.
-
-**Testing:** Existing `setLimit` tests adapted for `SetOfferedPower`. Phase switching tests stay similar.
-
-### Phase 3: Create `PowerController` struct
-
-Simpler implementation. Wraps `api.PowerController` chargers. New code.
-
-**Testing:** New unit tests.
-
-### Phase 4: Wire controllers into Loadpoint
+### Phase 2: Wire controllers into Loadpoint ✅ DONE
 
 **Modified files:**
 - `core/loadpoint.go`:
-  - Add `controller chargercontroller.Controller` field
-  - In `Prepare()`: create `PowerController` or `CurrentController` based on charger type
-  - Replace `pvMaxCurrent()` with `pvMaxPower()`
-  - Replace all `setLimit()` calls with `controller.SetOfferedPower()`
-  - Replace `fastCharging()` with `controller.SetMaxPower()`
-  - Replace `disableUnlessClimater()` to use `controller.SetOfferedPower()`
-  - Update `evChargeCurrentWrappedMeterHandler` to use controller
-  - Remove extracted fields and methods
-- `core/loadpoint_phases.go`: Remove methods moved to controller (keep `ActivePhases()` as delegation to controller)
-- `core/loadpoint_effective.go`: Simplify — `EffectiveMinPower()` and `EffectiveMaxPower()` delegate to controller
+  - Added `controller chargercontroller.Controller` field
+  - In `Prepare()`: creates `PowerController` or `currentControllerAdapter` based on charger type
+  - `Update()` strategy switch uses `controller.SetOfferedPower()` / `controller.SetMaxPower()` / `controller.MinPower()`
+  - `disableUnlessClimater()` uses controller
+  - `evChargeCurrentWrappedMeterHandler()` uses `controller.EffectiveChargePower()`
+  - `UpdateChargePowerAndCurrents()` feeds measured power to `PowerController`
+- `core/loadpoint_effective.go`: `EffectiveMinPower()` and `EffectiveMaxPower()` delegate to controller
 
-**Testing:** Full integration tests with mock controllers.
-
-### Phase 5: Migrate chargers
+### Phase 3: Migrate chargers ✅ DONE
 
 **Modified files:**
-- `charger/heatpump.go` — add `api.PowerController`, remove `loadpoint.Controller`
-- `charger/mypv.go` — add `api.PowerController`, remove `loadpoint.Controller`
-- `charger/ego.go` — add `api.PowerController`, remove `loadpoint.Controller`
-- `charger/sgready.go` — add `api.PowerController`, remove `loadpoint.Controller`
+- `charger/heatpump.go` — added `api.PowerController` (`MaxPower`)
+- `charger/mypv.go` — added `api.PowerController` (`MaxPower`)
+- `charger/ego.go` — added `api.PowerController` (`MaxPower`)
+- `charger/sgready.go` — added `api.PowerController` (`MaxPower`)
 
-**Testing:** Charger unit tests, integration tests.
+Note: `loadpoint.Controller` dependency kept for backward compat. Remove after Phase 4.
+
+---
+
+### Phase 4: Extract `CurrentController` from Loadpoint — THE BIG REFACTOR
+
+The `currentControllerAdapter` in `core/loadpoint_controller.go` is a thin wrapper that delegates everything back to the loadpoint. This means all current/phase logic still lives in `loadpoint.go`. The goal of Phase 4 is to extract this logic into a standalone `CurrentController` in `core/chargercontroller/current.go`, making the loadpoint operate exclusively in watts.
+
+#### 4.1 The Problem with the Current State
+
+The `currentControllerAdapter` just delegates:
+```go
+func (a *currentControllerAdapter) SetOfferedPower(power float64) error {
+    current := powerToCurrent(power, a.lp.ActivePhases())
+    return a.lp.setLimit(current)  // ALL logic still in loadpoint
+}
+```
+
+The loadpoint still owns ~400 lines of current-specific logic:
+
+| Method/Field | Lines | What it does |
+|---|---|---|
+| `setLimit(current)` | ~90 | Round, circuit validate, set charger current, enable/disable, vehicle wake-up |
+| `fastCharging()` | ~20 | Force 3p + max current |
+| `pvMaxCurrent()` | ~120 | Convert surplus W→A, phase switching, PV timers |
+| `pvScalePhases()` | ~80 | Phase switching decisions with timers |
+| `scalePhases()`/`scalePhasesIfAvailable()` | ~25 | Execute phase switch on charger |
+| `effectiveCurrent()` | ~12 | Current with Zoe hysteresis |
+| `effectiveMinCurrent()`/`effectiveMaxCurrent()` | ~45 | Min/max from config+vehicle+charger |
+| `roundedCurrent()`/`coarseCurrent()` | ~10 | Integer rounding |
+| Phase fields | — | `phases`, `measuredPhases`, `phasesConfigured`, `phaseTimer`, `phasesSwitched`, `offeredCurrent`, `chargeCurrents`, `chargerSwitched` |
+| Phase helpers | ~60 | `activePhases()`, `minActivePhases()`, `maxActivePhases()`, `hasPhaseSwitching()`, `phaseSwitchCompleted()`, `chargerUpdateCompleted()`, `phasesFromChargeCurrents()` |
+
+#### 4.2 Target Architecture
+
+```
+core/chargercontroller/
+├── controller.go          # Controller interface (exists)
+├── power.go               # PowerController (exists)
+└── current.go             # CurrentController (NEW - extracted from loadpoint)
+```
+
+The `CurrentController` is a standalone struct that:
+1. Implements `chargercontroller.Controller`
+2. Owns ALL current, phase, and charger enable/disable state
+3. Receives power targets in watts, handles conversion internally
+4. Exposes read-only accessors for state the loadpoint needs to publish
+
+#### 4.3 `Host` Interface — Controller → Loadpoint Dependency
+
+The `CurrentController` needs dynamic, vehicle-dependent state from the loadpoint. Rather than copying vehicle state into the controller (via `UpdateVehicle`), the controller calls back through a minimal `Host` interface that the loadpoint implements:
+
+```go
+// core/chargercontroller/host.go
+
+// Host provides the controller with access to vehicle-dependent state
+// and loadpoint callbacks. The loadpoint implements this interface.
+type Host interface {
+    // GetVehicle returns the currently active vehicle, or nil.
+    // The controller queries vehicle limits, phases, and features directly.
+    GetVehicle() api.Vehicle
+
+    // WakeUpVehicle attempts to wake a sleeping vehicle.
+    // Returns nil if no vehicle is connected or it has no Resurrector.
+    WakeUpVehicle() error
+
+    // Charging returns true if the charger status is C (actively charging).
+    Charging() bool
+
+    // StartWakeUpTimer starts the vehicle wake-up timeout.
+    StartWakeUpTimer()
+
+    // StopWakeUpTimer stops the vehicle wake-up timeout.
+    StopWakeUpTimer()
+}
+```
+
+**Why a Host interface instead of `UpdateVehicle()`:**
+- Vehicle state (limits, phases, features) can change at any time — not just on vehicle assignment
+- The controller always reads the latest values via `host.GetVehicle()`, no stale state
+- No synchronization burden on the loadpoint to call `UpdateVehicle` at the right times
+- The loadpoint already has `GetVehicle()` as a public method; the interface just formalizes the contract
+- Testable: mock the Host interface in controller tests
+
+**Loadpoint implementation:**
+
+```go
+// core/loadpoint_host.go
+
+// Verify Loadpoint implements chargercontroller.Host
+var _ chargercontroller.Host = (*Loadpoint)(nil)
+
+func (lp *Loadpoint) WakeUpVehicle() error {
+    v := lp.GetVehicle()
+    if v == nil {
+        return nil
+    }
+    if r, ok := v.(api.Resurrector); ok {
+        return r.WakeUp()
+    }
+    return nil
+}
+
+func (lp *Loadpoint) Charging() bool {
+    return lp.charging()
+}
+
+func (lp *Loadpoint) StartWakeUpTimer() {
+    lp.startWakeUpTimer()
+}
+
+func (lp *Loadpoint) StopWakeUpTimer() {
+    lp.stopWakeUpTimer()
+}
+```
+
+Note: `GetVehicle()` already exists on `Loadpoint` — no new method needed.
+
+#### 4.3b `CurrentController` Struct Design
+
+```go
+// core/chargercontroller/current.go
+
+type CurrentController struct {
+    log   *util.Logger
+    clock clock.Clock
+    host  Host // loadpoint callbacks (vehicle limits, wake-up, charging state)
+
+    // charger interfaces (set at creation, immutable)
+    charger        api.Charger
+    chargerEx      api.ChargerEx      // optional: milliamp precision
+    phaseSwitcher  api.PhaseSwitcher  // optional: 1p/3p switching
+    currentLimiter api.CurrentLimiter // optional: charger min/max current
+    circuit        api.Circuit        // optional: load management
+
+    // configuration
+    minCurrent       float64 // PV mode start current
+    maxCurrent       float64 // max allowed current
+    phasesConfigured int     // 0=auto, 1, 3
+
+    // charger control state
+    offeredCurrent  float64
+    enabled         bool
+    chargerSwitched time.Time
+
+    // phase state
+    phases         int       // charger enabled phases
+    measuredPhases int       // physically measured phases
+    phaseTimer     time.Time // 1p3p switch timer
+    phasesSwitched time.Time // last phase switch timestamp
+
+    // measurement state (fed from loadpoint's meter reads)
+    chargePower    float64   // measured charge power
+    chargeCurrents []float64 // measured per-phase currents
+
+    // timing configuration (from loadpoint enable/disable delay config)
+    enableDelay  time.Duration
+    disableDelay time.Duration
+
+    // callbacks
+    setEnabled func(bool)              // update loadpoint enabled state
+    publish    func(key string, val any) // publish state to UI
+}
+```
+
+**Key difference from `UpdateVehicle` approach**: No vehicle-related fields on the controller. Instead, methods call `c.host.GetVehicle()` and query the vehicle directly, always getting current values. Vehicle wake-up calls `c.host.WakeUpVehicle()`.
+
+```go
+func (c *CurrentController) effectiveMinCurrent() float64 {
+    var vehicleMin, chargerMin float64
+    if v := c.host.GetVehicle(); v != nil {
+        if res, ok := v.OnIdentified().GetMinCurrent(); ok {
+            vehicleMin = res
+        }
+    }
+    if c.currentLimiter != nil {
+        if res, _, err := c.currentLimiter.GetMinMaxCurrent(); err == nil {
+            chargerMin = res
+        }
+    }
+    switch {
+    case max(vehicleMin, chargerMin) == 0:
+        return c.minCurrent
+    case chargerMin > 0:
+        return max(vehicleMin, chargerMin)
+    default:
+        return max(vehicleMin, c.minCurrent)
+    }
+}
+
+func (c *CurrentController) coarseCurrent() bool {
+    if c.chargerEx == nil {
+        return true
+    }
+    if v := c.host.GetVehicle(); v != nil {
+        return slices.Contains(v.Features(), api.CoarseCurrent)
+    }
+    return false
+}
+
+func (c *CurrentController) getVehiclePhases() int {
+    if v := c.host.GetVehicle(); v != nil {
+        return v.Phases()
+    }
+    return 0
+}
+```
+
+#### 4.4 Method Extraction Map
+
+| Loadpoint Method | → CurrentController Method | Notes |
+|---|---|---|
+| `setLimit(current float64) error` | `setChargerCurrent(current float64) error` | Private. Core of `SetOfferedPower`. |
+| `fastCharging() error` | `SetMaxPower() error` | Forces max phases, then max current. |
+| `roundedCurrent(current) float64` | `roundedCurrent(current) float64` | Private. |
+| `coarseCurrent() bool` | `coarseCurrent() bool` | Private. Uses `chargerEx` and `coarseCurrentMode`. |
+| `effectiveMinCurrent() float64` | `effectiveMinCurrent() float64` | Private. Uses `minCurrent`, `vehicleMinCurrent`, `currentLimiter`. |
+| `effectiveMaxCurrent() float64` | `effectiveMaxCurrent() float64` | Private. Uses `maxCurrent`, `vehicleMaxCurrent`, `currentLimiter`. |
+| `effectiveCurrent() float64` | Used internally by `EffectiveChargePower()` | Zoe +2A hysteresis logic. |
+| `pvScalePhases(sitePower, min, max)` | `optimizePhases(targetPower float64)` | Called inside `SetOfferedPower`. Rewritten to work with target power instead of sitePower+current. |
+| `scalePhases(phases int) error` | `scalePhases(phases int) error` | Private. Calls `phaseSwitcher.Phases1p3p`. |
+| `scalePhasesIfAvailable(phases)` | `scalePhasesIfAvailable(phases)` | Private. |
+| `activePhases() int` | `activePhases() int` | Private. Public `ActivePhases()` for loadpoint reads. |
+| `minActivePhases() int` | `minActivePhases() int` | Private. |
+| `maxActivePhases() int` | `maxActivePhases() int` | Private. |
+| `hasPhaseSwitching() bool` | `hasPhaseSwitching() bool` | Private. Checks `phaseSwitcher != nil`. |
+| `phaseSwitchCompleted() bool` | `phaseSwitchCompleted() bool` | Private. |
+| `chargerUpdateCompleted() bool` | `chargerUpdateCompleted() bool` | Private. |
+| `resetPhaseTimer()` | `resetPhaseTimer()` | Private. |
+| `publishTimer()` | Calls `publish` callback | Reuse same keys. |
+| `phasesFromChargeCurrents()` | `updateMeasuredPhases()` | Called when charge currents are updated. |
+| `effectiveMaxPower() float64` | `MaxPower() float64` | Combines `effectiveMaxCurrent * Voltage * maxActivePhases`, capped by vehicle max power via `host.GetVehicle()`. |
+
+#### 4.5 `SetOfferedPower` Implementation
+
+The key method. Replaces `setLimit(current)` + phase-switching that was embedded in `pvMaxCurrent()`:
+
+```go
+func (c *CurrentController) SetOfferedPower(power float64) error {
+    // 1. Phase optimization: decide whether to switch 1p↔3p
+    //    This replaces pvScalePhases which was called from pvMaxCurrent.
+    //    Uses target power to decide, not sitePower + deltas.
+    if c.hasPhaseSwitching() && c.phaseSwitchCompleted() {
+        c.optimizePhases(power)
+    }
+
+    // 2. Convert power to current at active phases
+    activePhases := c.activePhases()
+    current := powerToCurrent(power, activePhases)
+    current = c.roundedCurrent(current)
+
+    // 3. Apply circuit limits (both current and power based)
+    if c.circuit != nil {
+        var actualCurrent float64
+        if c.chargeCurrents != nil {
+            actualCurrent = max(c.chargeCurrents[0], c.chargeCurrents[1], c.chargeCurrents[2])
+        } else if c.host.Charging() {
+            actualCurrent = c.offeredCurrent
+        }
+
+        currentLimit := c.circuit.ValidateCurrent(actualCurrent, current)
+        powerLimit := c.circuit.ValidatePower(c.chargePower, currentToPower(current, activePhases))
+        currentLimitViaPower := powerToCurrent(powerLimit, activePhases)
+        current = c.roundedCurrent(min(currentLimit, currentLimitViaPower))
+    }
+
+    // 4. Validate min/max
+    effMinCurrent := c.effectiveMinCurrent()
+    if effMaxCurrent := c.effectiveMaxCurrent(); effMinCurrent > effMaxCurrent {
+        return fmt.Errorf("invalid config: min current %.3gA exceeds max current %.3gA", effMinCurrent, effMaxCurrent)
+    }
+
+    // 5. Set current on charger
+    if current != c.offeredCurrent && current >= effMinCurrent {
+        if err := c.setChargerCurrent(current); err != nil {
+            return err
+        }
+    }
+
+    // 6. Enable/disable
+    if enabled := current >= effMinCurrent; enabled != c.enabled {
+        if err := c.charger.Enable(enabled); err != nil {
+            // vehicle wake-up on ErrAsleep
+            if enabled && errors.Is(err, api.ErrAsleep) {
+                if wakeErr := c.host.WakeUpVehicle(); wakeErr != nil {
+                    return fmt.Errorf("wake-up vehicle: %w", wakeErr)
+                }
+            }
+            return fmt.Errorf("charger %s: %w", enabledStatus[enabled], err)
+        }
+
+        c.enabled = enabled
+        c.setEnabled(enabled)
+        c.chargerSwitched = c.clock.Now()
+
+        if !enabled {
+            c.offeredCurrent = 0
+        }
+        c.publish(keys.ChargeCurrent, c.offeredCurrent)
+
+        if enabled {
+            c.host.StartWakeUpTimer()
+        } else {
+            c.host.StopWakeUpTimer()
+        }
+    }
+
+    return nil
+}
+```
+
+#### 4.6 Phase Optimization (`optimizePhases`)
+
+Replaces `pvScalePhases()`. The key difference: it operates on target power, not on sitePower + effective current deltas. The loadpoint's `pvMaxPower()` has already calculated the target; the controller just decides the optimal phase count to deliver it.
+
+```go
+func (c *CurrentController) optimizePhases(targetPower float64) {
+    activePhases := c.activePhases()
+    effMinCurrent := c.effectiveMinCurrent()
+    effMaxCurrent := c.effectiveMaxCurrent()
+
+    minPowerAtActive := currentToPower(effMinCurrent, activePhases)
+    maxPowerAt1p := currentToPower(effMaxCurrent, 1)
+
+    scalable := (targetPower < minPowerAtActive || !c.enabled) &&
+                activePhases > 1 && c.phasesConfigured < 3
+
+    // Scale down: target power below minimum at current phase count
+    if scalable {
+        if !c.host.Charging() {
+            c.phaseTimer = elapsed // scale immediately if not charging
+        }
+        if c.phaseTimer.IsZero() {
+            c.phaseTimer = c.clock.Now()
+        }
+        c.publishTimer(phaseTimer, c.disableDelay, phaseScale1p)
+
+        if c.clock.Since(c.phaseTimer) >= c.disableDelay {
+            _ = c.scalePhases(1)
+            c.phaseTimer = time.Time{}
+        }
+        return
+    }
+
+    // Scale up: target power exceeds 1p max AND fits minimum at max phases
+    maxPhases := c.maxActivePhases()
+    minPowerAtMax := currentToPower(effMinCurrent, maxPhases)
+
+    if activePhases == 1 && targetPower > maxPowerAt1p && targetPower >= minPowerAtMax {
+        if c.phaseTimer.IsZero() {
+            c.phaseTimer = c.clock.Now()
+        }
+        c.publishTimer(phaseTimer, c.enableDelay, phaseScale3p)
+
+        if c.clock.Since(c.phaseTimer) >= c.enableDelay {
+            _ = c.scalePhases(maxPhases)
+            c.phaseTimer = time.Time{}
+        }
+        return
+    }
+
+    // No scaling needed — reset timer
+    c.resetPhaseTimer()
+}
+```
+
+#### 4.7 Read-Only Accessors for Loadpoint
+
+The loadpoint needs to read controller state for UI publishing, SOC estimation, and API responses:
+
+```go
+// Read-only accessors exposed to the loadpoint
+func (c *CurrentController) ActivePhases() int          // for UI, SOC estimation
+func (c *CurrentController) GetPhases() int             // enabled phases
+func (c *CurrentController) GetPhasesConfigured() int   // for API
+func (c *CurrentController) GetMeasuredPhases() int     // for diagnostics
+func (c *CurrentController) GetOfferedCurrent() float64 // for UI, session tracking
+func (c *CurrentController) HasPhaseSwitching() bool    // for UI
+func (c *CurrentController) IsChargerUpdateCompleted() bool
+func (c *CurrentController) IsPhaseSwitchCompleted() bool
+
+// Setters called by the loadpoint
+func (c *CurrentController) SetPhasesConfigured(phases int) error  // from API
+func (c *CurrentController) SetMinCurrent(current float64)         // from API
+func (c *CurrentController) SetMaxCurrent(current float64)         // from API
+func (c *CurrentController) UpdateChargePower(power float64)       // from meter
+func (c *CurrentController) UpdateChargeCurrents(currents []float64) // from meter
+func (c *CurrentController) ResetMeasuredPhases()                  // on disconnect/phase switch
+```
+
+#### 4.8 `pvMaxPower()` — Replaces `pvMaxCurrent()` in Loadpoint
+
+With current/phase logic extracted, `pvMaxCurrent()` (~120 lines) becomes `pvMaxPower()` (~50 lines):
+
+```go
+func (lp *Loadpoint) pvMaxPower(mode api.ChargeMode, sitePower, batteryBoostPower float64,
+    batteryBuffered, batteryStart bool) float64 {
+
+    minPower := lp.controller.MinPower()
+    maxPower := lp.controller.MaxPower()
+
+    // push demand to drain battery
+    sitePower -= lp.boostPower(batteryBoostPower)
+
+    // target power = current consumption + available surplus
+    effectiveChargePower := lp.controller.EffectiveChargePower()
+    targetPower := max(effectiveChargePower-sitePower, 0)
+
+    // MinPV / battery-buffered floor
+    if battery := batteryStart || batteryBuffered && lp.charging();
+        (mode == api.ModeMinPV || battery) && targetPower < minPower {
+        return minPower
+    }
+
+    lp.log.DEBUG.Printf("pv charge power: %.0fW = %.0fW + %.0fW (%.0fW site)",
+        targetPower, effectiveChargePower, effectiveChargePower-targetPower, sitePower)
+
+    // PV disable timer (thresholds are already in watts)
+    if mode == api.ModePV && lp.enabled && targetPower < minPower {
+        if sitePower >= lp.Disable.Threshold {
+            // ... same timer logic as current pvMaxCurrent, just returning 0/minPower instead of 0/minCurrent
+            if elapsed := lp.clock.Since(lp.pvTimer); elapsed >= lp.GetDisableDelay() {
+                lp.resetPVTimer()
+                return 0
+            }
+        } else {
+            lp.resetPVTimer("disable")
+        }
+        return minPower
+    }
+
+    // PV enable timer
+    if mode == api.ModePV && !lp.enabled {
+        if (lp.Enable.Threshold == 0 && targetPower >= minPower) ||
+           (lp.Enable.Threshold != 0 && sitePower <= lp.Enable.Threshold) {
+            if elapsed := lp.clock.Since(lp.pvTimer); elapsed >= lp.GetEnableDelay() {
+                lp.resetPVTimer()
+                return minPower
+            }
+        } else {
+            lp.resetPVTimer("enable")
+        }
+        return 0
+    }
+
+    lp.resetPVTimer()
+    return min(targetPower, maxPower)
+}
+```
+
+**Key simplifications vs `pvMaxCurrent()`:**
+- No `effectiveCurrent()` with its Zoe hysteresis — controller provides `EffectiveChargePower()` which already handles this
+- No `IntegratedDevice` special case — `EffectiveChargePower()` handles it
+- No `pvScalePhases()` call — phase switching moved to `CurrentController.SetOfferedPower()`
+- No `scaledTo == 3` adjustment — not needed
+- No `powerToCurrent`/`currentToPower` conversions — everything is watts
+- No `activePhases` local variable — not needed
+- ~50 lines vs ~120 lines
+
+#### 4.9 Loadpoint Cleanup — What Gets Removed
+
+After extraction, remove from `core/loadpoint.go`:
+- **Fields**: `offeredCurrent`, `chargerSwitched`, `phasesSwitched`, `phases`, `measuredPhases`, `phasesConfigured`, `chargeCurrents`, `phaseTimer`
+- **Methods**: `setLimit()`, `fastCharging()`, `effectiveCurrent()`, `roundedCurrent()`, `coarseCurrent()`, `pvMaxCurrent()`, `pvScalePhases()`, `scalePhases()`, `scalePhasesIfAvailable()`, `scalePhasesRequired()`
+
+Remove from `core/loadpoint_phases.go`:
+- **Methods**: `activePhases()`, `minActivePhases()`, `maxActivePhases()`, `hasPhaseSwitching()`, `phaseSwitchCompleted()`, `chargerUpdateCompleted()`, `resetPhaseTimer()`, `phasesFromChargeCurrents()`
+- Keep `ActivePhases()` as delegation: `func (lp *Loadpoint) ActivePhases() int { return lp.controller.ActivePhases() }`
+- Keep `GetPhases()`, `GetPhasesConfigured()`, `SetPhasesConfigured()` as delegation to controller
+
+Remove from `core/loadpoint_effective.go`:
+- **Methods**: `effectiveMinCurrent()`, `effectiveMaxCurrent()`
+- Simplify `EffectiveMinPower()` → `controller.MinPower()`
+- Simplify `EffectiveMaxPower()` → `controller.MaxPower()` with circuit cap
+- Keep publishing `EffectiveMinCurrent`/`EffectiveMaxCurrent` by reading from controller for UI compat
+
+Remove from `core/loadpoint_controller.go`:
+- **Entire file** — `currentControllerAdapter` no longer needed
+
+#### 4.10 Incremental Sub-Steps
+
+The extraction is too large for a single commit. Break it into sub-steps that compile and pass tests at each point:
+
+**Step 4A: Create `CurrentController` skeleton + `Host` interface**
+- Create `core/chargercontroller/host.go` with the `Host` interface
+- Create `core/chargercontroller/current.go` with struct, constructor, and stubbed methods
+- Create `core/loadpoint_host.go` — loadpoint implements `Host` interface
+- The constructor accepts `Host`, charger, circuit, clock, logger, config, publish callback
+- All methods initially delegate back to equivalent loadpoint methods via the `Host` interface
+- Tests: builds, all existing tests pass (no behavior change)
+
+**Step 4B: Move `setLimit` → `setChargerCurrent`**
+- Move the current-setting logic (charger.MaxCurrent, circuit validation, enable/disable, vehicle wake-up) into `CurrentController`
+- `currentControllerAdapter.SetOfferedPower` → `CurrentController.SetOfferedPower`
+- Remove `setLimit` from loadpoint
+- Tests: `TestSetLimit*` adapted to test `CurrentController.SetOfferedPower`
+
+**Step 4C: Move phase state and switching**
+- Move `phases`, `measuredPhases`, `phasesConfigured`, `phaseTimer`, `phasesSwitched` fields
+- Move `scalePhases`, `scalePhasesIfAvailable`, `hasPhaseSwitching`, `activePhases`, `minActivePhases`, `maxActivePhases`
+- Move `phasesFromChargeCurrents` → `updateMeasuredPhases`
+- Loadpoint delegates `ActivePhases()`, `GetPhases()`, etc. to controller
+- Tests: `TestPvScalePhases*`, `TestFastChargingCircuitBasedPhaseScaling` adapted
+
+**Step 4D: Move `fastCharging` → `SetMaxPower`**
+- Move phase-forcing + max current logic
+- Tests: existing `fastCharging` tests adapted
+
+**Step 4E: Move effective current calculation**
+- Move `effectiveMinCurrent`, `effectiveMaxCurrent`, `effectiveCurrent`, `roundedCurrent`, `coarseCurrent`
+- Move `offeredCurrent`, `chargeCurrents`
+- Controller receives vehicle overrides via `UpdateVehicle()`
+- Tests: `TestEffectiveMinMaxCurrent` adapted
+
+**Step 4F: Integrate `optimizePhases` into `SetOfferedPower`**
+- Replace external `pvScalePhases()` call (from `pvMaxCurrent`) with internal phase optimization
+- This is the step where phase switching moves from strategy to control layer
+- Tests: new tests for power-based phase optimization
+
+**Step 4G: Replace `pvMaxCurrent` with `pvMaxPower`**
+- Create `pvMaxPower()` that works entirely in watts
+- Update `Update()` PV path to use `pvMaxPower()` → `controller.SetOfferedPower()`
+- Remove `pvMaxCurrent()`
+- Tests: existing PV tests adapted to power-based assertions
+
+**Step 4H: Remove `currentControllerAdapter`**
+- Delete `core/loadpoint_controller.go`
+- All current-controlled chargers now use `CurrentController`
+- Final cleanup of loadpoint — remove any remaining current-specific code
+
+#### 4.11 The Vehicle Problem — Solved by Host Interface
+
+The loadpoint's `effectiveMinCurrent()` and `effectiveMaxCurrent()` consult:
+1. Loadpoint config (`minCurrent`, `maxCurrent`) — owned by controller
+2. Vehicle capabilities (`v.OnIdentified().GetMinCurrent()`, `.GetMaxCurrent()`) — queried via `host.GetVehicle()`
+3. Charger capabilities (`charger.(api.CurrentLimiter).GetMinMaxCurrent()`) — owned by controller
+
+The `Host` interface (defined in 4.3) solves the vehicle problem cleanly:
+- The controller calls `c.host.GetVehicle()` and queries vehicle limits/phases/features directly
+- No stale state, no synchronization, no `UpdateVehicle()` calls to orchestrate
+- Vehicle connects/disconnects are invisible to the controller; `GetVehicle()` returns nil when no vehicle
+- Wake-up on `ErrAsleep` calls `c.host.WakeUpVehicle()` — the loadpoint handles Resurrector lookup
+- Charging state calls `c.host.Charging()` — the loadpoint owns charger status
+
+#### 4.12 The `Controller` Interface Extension
+
+The `Controller` interface needs additional read-only accessors so the loadpoint can publish state and delegate API calls:
+
+```go
+type Controller interface {
+    // ... existing methods ...
+    SetOfferedPower(power float64) error
+    SetMaxPower() error
+    MinPower() float64
+    MaxPower() float64
+    EffectiveChargePower() float64
+
+    // State accessors for UI/API
+    ActivePhases() int
+}
+```
+
+Note: Phase-specific accessors (`GetPhases`, `SetPhasesConfigured`, etc.) are `CurrentController`-specific. The loadpoint uses type assertions to access them:
+
+```go
+if cc, ok := lp.controller.(*chargercontroller.CurrentController); ok {
+    lp.publish(keys.PhasesConfigured, cc.GetPhasesConfigured())
+    lp.publish(keys.ChargerPhases1p3p, cc.HasPhaseSwitching())
+}
+```
+
+For `PowerController`, these are not applicable — power devices don't have phases.
+
+### Phase 5: Replace `pvMaxCurrent` with `pvMaxPower` ✅ Covered in Step 4G
 
 ### Phase 6: Clean up
 
-- Remove `loadpoint.Controller` interface if no longer used
-- Remove `powerToCurrent`/`currentToPower` from `core/helper.go` (move to controller package as private)
+- Remove `loadpoint.Controller` interface from `core/loadpoint/api.go`
+- Remove `LoadpointControl` methods from chargers (heatpump, mypv, ego, sgready)
+- Remove `lp loadpoint.API` fields from chargers
+- Move `powerToCurrent`/`currentToPower` from `core/helper.go` to `chargercontroller/` (private)
 - Regenerate mocks: `go generate ./api/... ./core/...`
-- Update WebSocket publishes for new state locations
-- Update frontend if needed (`powerControlled` flag, `offeredPower` field)
+- Update WebSocket key publishing for new state locations
+- Update frontend if needed
 
 ## State Publishing
 
-The controller needs to publish state for the UI. Options:
+The controller publishes state for the UI via a `publish func(key string, val any)` callback injected at creation. This keeps the same WebSocket keys the frontend expects.
 
-**Option A: Controller publishes directly** via a `publish func(key string, val interface{})` callback.
+For `CurrentController`:
+- `keys.ChargeCurrent` — offered current
+- `keys.PhasesActive` — active phases
+- Phase timer state
 
-**Option B: Loadpoint reads controller state** each cycle and publishes. Cleaner separation but more boilerplate.
-
-**Recommendation:** Option A for simplicity. The controller receives a `publish` function in `Prepare()`.
+For `PowerController`:
+- Minimal publishing needed (offered power is the loadpoint's concern)
 
 ## What Stays Unchanged
 
@@ -546,6 +1088,9 @@ The controller needs to publish state for the UI. Options:
 | `effectiveCurrent` hysteresis regression | Test with Zoe-like scenarios |
 | Loadpoint tests break | Tests are the main work; extract test helpers |
 | Third-party charger plugins break | Keep `api.Charger` interface unchanged; `loadpoint.Controller` stays temporarily |
+| Vehicle state consistency | Controller queries `host.GetVehicle()` on every call; always reads latest values |
+| Power→current→power round-trip in `currentControllerAdapter` | Eliminated once `CurrentController` is complete |
+| `optimizePhases` differs from `pvScalePhases` | Keep identical timer durations/thresholds; test equivalence |
 
 ## Summary of Complexity Reduction
 
@@ -553,7 +1098,10 @@ The controller needs to publish state for the UI. Options:
 |--------|-------|
 | Loadpoint manages current, phases, and power | Loadpoint manages power only |
 | `pvMaxCurrent()` — 120 lines with phase switching | `pvMaxPower()` — ~50 lines, no phase awareness |
-| `setLimit()` — 90 lines with circuit+enable+wake-up | `controller.SetOfferedPower()` — same logic, but in the right place |
+| `setLimit()` — 90 lines with circuit+enable+wake-up | `CurrentController.SetOfferedPower()` — same logic, encapsulated |
 | `IntegratedDevice` special cases scattered | `PowerController` struct handles power devices cleanly |
 | Chargers need `loadpoint.Controller` to query phases | Chargers implement `api.PowerController`, no loadpoint coupling |
 | Power→current→power round-trip | Direct power path, no conversion loss |
+| Phase switching embedded in strategy (`pvMaxCurrent`) | Phase switching encapsulated in controller (`optimizePhases`) |
+| `effectiveCurrent()` Zoe hysteresis leaked into strategy | `EffectiveChargePower()` hides it behind controller interface |
+| ~400 lines of current logic in loadpoint | ~0 lines of current logic in loadpoint |
