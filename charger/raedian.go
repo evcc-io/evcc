@@ -33,16 +33,16 @@ import (
 type Raedian struct {
 	log  *util.Logger
 	conn *modbus.Connection
+	curr uint32 // mA
 }
 
 const (
-	raedianRegStatus        = 32780 // uint32 RO ENUM (0=A, 1=B, 2/3/4=C)
-	raedianRegCurrents      = 32784 // uint32 RO mA
-	raedianRegVoltages      = 32790 // uint32 RO 0.1V
-	raedianRegPower         = 32796 // uint32 RO W
-	raedianRegChargedEnergy = 32798 // uint32 RO Wh
-	raedianRegMaxCurrent    = 33024 // uint32 WR mA
-	raedianRegEnable        = 33029 // uint16 WR (0=enabled, 1=disabled)
+	raedianRegStatus        = 0x800C // uint32 RO ENUM (0=A, 1=B, 2/3/4=C)
+	raedianRegCurrents      = 0x8010 // uint32 RO mA
+	raedianRegVoltages      = 0x8016 // uint32 RO 0.1V
+	raedianRegPower         = 0x801C // uint32 RO W
+	raedianRegChargedEnergy = 0x801E // uint32 RO Wh
+	raedianRegMaxCurrent    = 0x8100 // uint32 WR mA
 )
 
 func init() {
@@ -81,6 +81,13 @@ func NewRaedian(ctx context.Context, uri string, slaveID uint8) (*Raedian, error
 	wb := &Raedian{
 		log:  log,
 		conn: conn,
+		curr: 6000, // assume min current
+	}
+
+	if b, err := wb.conn.ReadHoldingRegisters(raedianRegMaxCurrent, 2); err == nil {
+		if cur := binary.BigEndian.Uint32(b); cur >= 6000 {
+			wb.curr = cur
+		}
 	}
 
 	return wb, nil
@@ -93,37 +100,64 @@ func (wb *Raedian) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	u := binary.BigEndian.Uint32(b)
-	switch u {
-	case 0:
+	// Register layout: A3 A2 A1 A0 (big-endian)
+	// A1 (b[2]): Bit7 = current limit flag, Bits 6~0 = charging state
+	state := b[2] & 0x7F
+	switch state {
+	case 0x00:
 		return api.StatusA, nil
-	case 1:
+	case 0x01, 0x02:
 		return api.StatusB, nil
-	case 2, 3, 4:
+	case 0x03, 0x04:
 		return api.StatusC, nil
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %d", u)
+		return api.StatusNone, fmt.Errorf("invalid status: %#x", state)
 	}
+}
+
+var _ api.StatusReasoner = (*Raedian)(nil)
+
+// StatusReason implements the api.StatusReasoner interface
+func (wb *Raedian) StatusReason() (api.Reason, error) {
+	b, err := wb.conn.ReadHoldingRegisters(raedianRegStatus, 2)
+	if err != nil {
+		return api.ReasonUnknown, err
+	}
+
+	// A1 (b[2]) Bits 6~0: 0x01 = State B1, pending authorization
+	if b[2]&0x7F == 0x01 {
+		return api.ReasonWaitingForAuthorization, nil
+	}
+
+	return api.ReasonUnknown, nil
 }
 
 // Enabled implements the api.Charger interface
 func (wb *Raedian) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(raedianRegEnable, 1)
+	b, err := wb.conn.ReadHoldingRegisters(raedianRegMaxCurrent, 2)
 	if err != nil {
 		return false, err
 	}
 
-	return binary.BigEndian.Uint16(b) == 0, nil
+	cur := binary.BigEndian.Uint32(b)
+	if cur != 0 {
+		wb.curr = cur
+	}
+
+	return cur != 0, nil
 }
 
 // Enable implements the api.Charger interface
 func (wb *Raedian) Enable(enable bool) error {
-	var val uint16 = 1
+	var cur uint32
 	if enable {
-		val = 0
+		cur = wb.curr
 	}
 
-	_, err := wb.conn.WriteSingleRegister(raedianRegEnable, val)
+	b := make([]byte, 4)
+	binary.BigEndian.PutUint32(b, cur)
+
+	_, err := wb.conn.WriteMultipleRegisters(raedianRegMaxCurrent, 2, b)
 	return err
 }
 
@@ -142,6 +176,10 @@ func (wb *Raedian) MaxCurrentMillis(current float64) error {
 	binary.BigEndian.PutUint32(b, curr)
 
 	_, err := wb.conn.WriteMultipleRegisters(raedianRegMaxCurrent, 2, b)
+	if err == nil {
+		wb.curr = curr
+	}
+
 	return err
 }
 
