@@ -2,7 +2,9 @@ package tariff
 
 import (
 	"errors"
+	"fmt"
 	"slices"
+	"strconv"
 	"sync"
 	"time"
 
@@ -80,11 +82,14 @@ func (t *OctopusDe) run(done chan error) {
 	var once sync.Once
 
 	for tick := time.Tick(time.Hour); ; <-tick {
-		var rates []octoDeGql.RatePeriod
+		var rates []RatePeriod
 
 		if err := backoff.Retry(func() error {
-			var err error
-			rates, err = t.gqlClient.UnitRateForecast()
+			agr, err := t.gqlClient.ActiveAgreement()
+			if err != nil {
+				return backoffPermanentError(err)
+			}
+			rates, err = ratesForAgreement(agr, time.Now())
 			return backoffPermanentError(err)
 		}, bo()); err != nil {
 			once.Do(func() { done <- err })
@@ -108,7 +113,7 @@ func (t *OctopusDe) run(done chan error) {
 				End:   rateEnd,
 				// Convert from cents per kWh to price per kWh (divide by 100)
 				// Use gross price (including tax) as that's what the customer pays
-				Value: r.LatestGrossUnitRateCentsPerKwh / 100,
+				Value: r.GrossUnitRateCentsPerKwh / 100,
 			}
 			data = append(data, ar)
 		}
@@ -130,4 +135,197 @@ func (t *OctopusDe) Rates() (api.Rates, error) {
 // Type implements the api.Tariff interface
 func (t *OctopusDe) Type() api.TariffType {
 	return api.TariffTypePriceForecast
+}
+
+// RatePeriod represents a parsed rate period with pricing in cents per kWh.
+type RatePeriod struct {
+	ValidFrom                time.Time
+	ValidTo                  time.Time
+	NetUnitRateCentsPerKwh   float64
+	GrossUnitRateCentsPerKwh float64
+}
+
+// ratesForAgreement determines the tariff type of agr and returns the corresponding
+// rate periods. It supports Dynamic, Simple, and Time-of-Use tariffs.
+// now is used as the reference time for ToU rate generation.
+func ratesForAgreement(agr octoDeGql.Agreement, now time.Time) ([]RatePeriod, error) {
+	// Dynamic tariff: has unitRateForecast entries with per-slot prices
+	if len(agr.UnitRateForecast) > 0 {
+		rates, err := extractForecastRates(agr.UnitRateForecast)
+		if err != nil {
+			return nil, err
+		}
+		if len(rates) > 0 {
+			return rates, nil
+		}
+	}
+
+	// Simple tariff: single fixed rate covering the agreement period
+	if agr.UnitRateInformation.SimpleProductUnitRateInformation.LatestGrossUnitRateCentsPerKwh != "" {
+		return simpleRates(agr.UnitRateInformation.SimpleProductUnitRateInformation, agr.ValidFrom, agr.ValidTo)
+	}
+
+	// Time of Use tariff: multiple time-slot rates that repeat daily
+	if touRateSlots := agr.UnitRateInformation.TimeOfUseProductUnitRateInformation.Rates; len(touRateSlots) > 0 {
+		return generateTouRates(touRateSlots, agr.ValidTo, now)
+	}
+
+	return nil, errors.New("unsupported tariff type for active agreement")
+}
+
+// extractForecastRates converts dynamic-tariff UnitRateForecast entries into RatePeriod values.
+func extractForecastRates(forecasts []octoDeGql.UnitRateForecast) ([]RatePeriod, error) {
+	var rates []RatePeriod
+	for _, forecast := range forecasts {
+		info := forecast.UnitRateInformation
+
+		// Dynamic forecasts typically use TimeOfUseProductUnitRateInformation
+		if info.TimeOfUseProductUnitRateInformation.Rates != nil {
+			for _, r := range info.TimeOfUseProductUnitRateInformation.Rates {
+				netRate, err := parseFloat(r.NetUnitRateCentsPerKwh)
+				if err != nil {
+					return nil, fmt.Errorf("failed to parse net unit rate: %w", err)
+				}
+				grossRate, err := parseFloat(r.LatestGrossUnitRateCentsPerKwh)
+				if err != nil {
+					return nil, fmt.Errorf("failed to parse gross unit rate: %w", err)
+				}
+				rates = append(rates, RatePeriod{
+					ValidFrom:                forecast.ValidFrom,
+					ValidTo:                  forecast.ValidTo,
+					GrossUnitRateCentsPerKwh: grossRate,
+					NetUnitRateCentsPerKwh:   netRate,
+				})
+			}
+			continue
+		}
+
+		// Forecast that uses SimpleProductUnitRateInformation
+		if info.SimpleProductUnitRateInformation.LatestGrossUnitRateCentsPerKwh != "" {
+			r, err := simpleRates(info.SimpleProductUnitRateInformation, forecast.ValidFrom, forecast.ValidTo)
+			if err != nil {
+				return nil, err
+			}
+			rates = append(rates, r...)
+		}
+	}
+	return rates, nil
+}
+
+// simpleRates converts a SimpleProductUnitRateInformation into a single RatePeriod
+// covering from to to. A zero to means indefinite; run() handles zero ValidTo.
+func simpleRates(info octoDeGql.SimpleProductUnitRateInformation, from, to time.Time) ([]RatePeriod, error) {
+	netRate, err := parseFloat(info.NetUnitRateCentsPerKwh)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse net unit rate: %w", err)
+	}
+	grossRate, err := parseFloat(info.LatestGrossUnitRateCentsPerKwh)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse gross unit rate: %w", err)
+	}
+	if from.IsZero() {
+		from = time.Now()
+	}
+	return []RatePeriod{{
+		ValidFrom:                from,
+		ValidTo:                  to, // zero means indefinite; run() handles zero ValidTo
+		GrossUnitRateCentsPerKwh: grossRate,
+		NetUnitRateCentsPerKwh:   netRate,
+	}}, nil
+}
+
+// generateTouRates produces rate periods for a Time of Use tariff over the next 7 days
+// by repeating each timeslot's activation window for each day in the planning horizon.
+// now is the reference time used for filtering past periods and computing the horizon.
+func generateTouRates(rates []octoDeGql.TouRate, agreementValidTo time.Time, now time.Time) ([]RatePeriod, error) {
+	const planDays = 7
+	horizon := now.AddDate(0, 0, planDays)
+	if !agreementValidTo.IsZero() && agreementValidTo.Before(horizon) {
+		horizon = agreementValidTo
+	}
+
+	// Midnight of today in local time
+	startDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+
+	var result []RatePeriod
+	for day := startDay; day.Before(horizon); day = day.Add(24 * time.Hour) {
+		for _, r := range rates {
+			grossRate, err := parseFloat(r.LatestGrossUnitRateCentsPerKwh)
+			if err != nil {
+				return nil, fmt.Errorf("failed to parse gross unit rate for slot %q: %w", r.TimeslotName, err)
+			}
+			netRate, err := parseFloat(r.NetUnitRateCentsPerKwh)
+			if err != nil {
+				return nil, fmt.Errorf("failed to parse net unit rate for slot %q: %w", r.TimeslotName, err)
+			}
+
+			for _, rule := range r.TimeslotActivationRules {
+				fromOffset, err := parseTimeOfDay(rule.ActiveFromTime)
+				if err != nil {
+					return nil, fmt.Errorf("failed to parse activeFromTime %q: %w", rule.ActiveFromTime, err)
+				}
+				toOffset, err := parseTimeOfDay(rule.ActiveToTime)
+				if err != nil {
+					return nil, fmt.Errorf("failed to parse activeToTime %q: %w", rule.ActiveToTime, err)
+				}
+
+				periodStart := day.Add(fromOffset)
+				var periodEnd time.Time
+				switch {
+				case toOffset == 0:
+					// "00:00:00" as end means end of day (midnight)
+					periodEnd = day.Add(24 * time.Hour)
+				case toOffset < fromOffset:
+					// wraps past midnight
+					periodEnd = day.Add(toOffset).Add(24 * time.Hour)
+				default:
+					periodEnd = day.Add(toOffset)
+				}
+
+				// Skip periods entirely in the past or beyond the horizon
+				if periodEnd.Before(now) || periodStart.After(horizon) {
+					continue
+				}
+
+				result = append(result, RatePeriod{
+					ValidFrom:                periodStart,
+					ValidTo:                  periodEnd,
+					GrossUnitRateCentsPerKwh: grossRate,
+					NetUnitRateCentsPerKwh:   netRate,
+				})
+			}
+		}
+	}
+
+	if len(result) == 0 {
+		if !agreementValidTo.IsZero() && agreementValidTo.Before(now) {
+			return nil, errors.New("time-of-use agreement has expired")
+		}
+		return nil, errors.New("time-of-use tariff has no upcoming periods")
+	}
+	return result, nil
+}
+
+// parseTimeOfDay parses a time string in "HH:MM:SS" or "HH:MM" format and returns
+// the duration offset from midnight.
+func parseTimeOfDay(s string) (time.Duration, error) {
+	var h, m, sec int
+	switch len(s) {
+	case 8: // HH:MM:SS
+		if _, err := fmt.Sscanf(s, "%d:%d:%d", &h, &m, &sec); err != nil {
+			return 0, fmt.Errorf("invalid time format %q: %w", s, err)
+		}
+	case 5: // HH:MM
+		if _, err := fmt.Sscanf(s, "%d:%d", &h, &m); err != nil {
+			return 0, fmt.Errorf("invalid time format %q: %w", s, err)
+		}
+	default:
+		return 0, fmt.Errorf("unsupported time format %q", s)
+	}
+	return time.Duration(h)*time.Hour + time.Duration(m)*time.Minute + time.Duration(sec)*time.Second, nil
+}
+
+// parseFloat parses a string to float64.
+func parseFloat(s string) (float64, error) {
+	return strconv.ParseFloat(s, 64)
 }
