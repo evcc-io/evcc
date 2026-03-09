@@ -22,4 +22,8 @@ type Controller interface {
 	// For current controllers, this accounts for vehicle current hysteresis.
 	// For power controllers, this returns the measured charge power as-is.
 	EffectiveChargePower() float64
+
+	// SyncState synchronizes the controller's internal enabled/offered state
+	// with the initial charger state discovered during Prepare().
+	SyncState(enabled bool)
 }

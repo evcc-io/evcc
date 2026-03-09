@@ -719,7 +719,17 @@ func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan c
 			func(key string, val any) { lp.publish(key, val) },
 		)
 	} else {
-		lp.controller = &currentControllerAdapter{lp: lp}
+		cc := chargercontroller.NewCurrentController(
+			lp.log, lp.clock, lp,
+			lp.charger, lp.circuit,
+			lp.effectiveMinCurrent(), lp.effectiveMaxCurrent(),
+			lp.phasesConfigured,
+			lp.phases,
+			lp.Enable.Delay, lp.Disable.Delay,
+			lp.setAndPublishEnabled,
+			func(key string, val any) { lp.publish(key, val) },
+		)
+		lp.controller = cc
 	}
 
 	// read initial charger state to prevent immediately disabling charger
@@ -728,6 +738,8 @@ func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan c
 			// set defined current for use by pv mode
 			_ = lp.setLimit(lp.effectiveMinCurrent())
 		}
+		// sync controller state with initial charger state
+		lp.controller.SyncState(enabled)
 	} else {
 		lp.log.ERROR.Printf("charger enabled: %v", err)
 	}
@@ -1580,6 +1592,105 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 	return targetCurrent
 }
 
+// pvMaxPower calculates the maximum target power for PV mode.
+// It works entirely in watts, delegating phase switching to the controller.
+func (lp *Loadpoint) pvMaxPower(mode api.ChargeMode, sitePower, batteryBoostPower float64, batteryBuffered, batteryStart bool) float64 {
+	minPower := lp.controller.MinPower()
+	maxPower := lp.controller.MaxPower()
+
+	// push demand to drain battery
+	sitePower -= lp.boostPower(batteryBoostPower)
+
+	// calculate target power from surplus and current charge power
+	effectiveChargePower := lp.controller.EffectiveChargePower()
+	targetPower := max(effectiveChargePower+(-sitePower), 0)
+
+	// in MinPV mode or under special conditions return at least minPower
+	if battery := batteryStart || batteryBuffered && lp.charging(); (mode == api.ModeMinPV || battery) && targetPower < minPower {
+		lp.log.DEBUG.Printf("pv charge power: min %.0fW > %.0fW (%.0fW site)", minPower, targetPower, sitePower)
+		return minPower
+	}
+
+	lp.log.DEBUG.Printf("pv charge power: %.0fW = %.0fW + %.0fW (%.0fW site)", targetPower, effectiveChargePower, -sitePower, sitePower)
+
+	if mode == api.ModePV && lp.enabled && targetPower < minPower {
+		// kick off disable sequence
+		if sitePower >= lp.Disable.Threshold {
+			lp.log.DEBUG.Printf("projected site power %.0fW >= %.0fW disable threshold", sitePower, lp.Disable.Threshold)
+
+			if lp.pvTimer.IsZero() {
+				lp.log.DEBUG.Printf("pv disable timer start: %v", lp.GetDisableDelay())
+				lp.pvTimer = lp.clock.Now()
+			}
+
+			lp.publishTimer(pvTimer, lp.GetDisableDelay(), pvDisable)
+
+			elapsed := lp.clock.Since(lp.pvTimer)
+			if elapsed >= lp.GetDisableDelay() {
+				lp.log.DEBUG.Println("pv disable timer elapsed")
+
+				// reset timer to prevent immediate charger re-enabling
+				lp.resetPVTimer()
+
+				return 0
+			}
+
+			// suppress duplicate log message after timer started
+			if elapsed > time.Second {
+				lp.log.DEBUG.Printf("pv disable timer remaining: %v", (lp.GetDisableDelay() - elapsed).Round(time.Second))
+			}
+		} else {
+			// reset timer
+			lp.resetPVTimer("disable")
+		}
+
+		return minPower
+	}
+
+	if mode == api.ModePV && !lp.enabled {
+		// kick off enable sequence
+		if (lp.Enable.Threshold == 0 && targetPower >= minPower) ||
+			(lp.Enable.Threshold != 0 && sitePower <= lp.Enable.Threshold) {
+			lp.log.DEBUG.Printf("site power %.0fW <= %.0fW enable threshold", sitePower, lp.Enable.Threshold)
+
+			if lp.pvTimer.IsZero() {
+				lp.log.DEBUG.Printf("pv enable timer start: %v", lp.GetEnableDelay())
+				lp.pvTimer = lp.clock.Now()
+			}
+
+			lp.publishTimer(pvTimer, lp.GetEnableDelay(), pvEnable)
+
+			elapsed := lp.clock.Since(lp.pvTimer)
+			if elapsed >= lp.GetEnableDelay() {
+				lp.log.DEBUG.Println("pv enable timer elapsed")
+
+				// reset timer to prevent immediate charger re-disabling
+				lp.resetPVTimer()
+
+				return minPower
+			}
+
+			// suppress duplicate log message after timer started
+			if elapsed > time.Second {
+				lp.log.DEBUG.Printf("pv enable timer remaining: %v", (lp.GetEnableDelay() - elapsed).Round(time.Second))
+			}
+		} else {
+			// reset timer
+			lp.resetPVTimer("enable")
+		}
+
+		return 0
+	}
+
+	// reset timer to disabled state
+	lp.resetPVTimer()
+
+	// cap at maximum power
+	targetPower = min(targetPower, maxPower)
+
+	return targetPower
+}
+
 // UpdateChargePowerAndCurrents updates charge meter power and currents for load management
 func (lp *Loadpoint) UpdateChargePowerAndCurrents() float64 {
 	power, err := backoff.RetryWithData(lp.chargeMeter.CurrentPower, modbus.Backoff())
@@ -1588,9 +1699,12 @@ func (lp *Loadpoint) UpdateChargePowerAndCurrents() float64 {
 		lp.chargePower = power // update value if no error
 		lp.Unlock()
 
-		// update power controller with measured power
-		if pc, ok := lp.controller.(*chargercontroller.PowerController); ok {
-			pc.UpdateChargePower(power)
+		// update controller with measured power
+		switch c := lp.controller.(type) {
+		case *chargercontroller.PowerController:
+			c.UpdateChargePower(power)
+		case *chargercontroller.CurrentController:
+			c.UpdateChargePower(power)
 		}
 
 		lp.log.DEBUG.Printf("charge power: %.0fW", power)
@@ -1623,6 +1737,11 @@ func (lp *Loadpoint) UpdateChargePowerAndCurrents() float64 {
 			lp.Lock()
 			lp.chargeCurrents = []float64{i1, i2, i3}
 			lp.Unlock()
+
+			// update controller with measured currents
+			if cc, ok := lp.controller.(*chargercontroller.CurrentController); ok {
+				cc.UpdateChargeCurrents(lp.chargeCurrents)
+			}
 
 			lp.log.DEBUG.Printf("charge currents: %.3gA", lp.chargeCurrents)
 			lp.publish(keys.ChargeCurrents, lp.chargeCurrents)
@@ -2062,12 +2181,7 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 			break
 		}
 
-		targetCurrent := lp.pvMaxCurrent(mode, sitePower, batteryBoostPower, batteryBuffered, batteryStart)
-
-		var targetPower float64
-		if targetCurrent > 0 {
-			targetPower = currentToPower(targetCurrent, lp.ActivePhases())
-		}
+		targetPower := lp.pvMaxPower(mode, sitePower, batteryBoostPower, batteryBuffered, batteryStart)
 
 		if targetPower == 0 && lp.vehicleClimateActive() {
 			targetPower = lp.controller.MinPower()

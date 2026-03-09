@@ -566,6 +566,7 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 	rater.EXPECT().ChargedEnergy().Return(0.0, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().Status().Return(api.StatusC, nil)
+	charger.EXPECT().MaxCurrent(int64(maxA)).Return(nil) // controller syncs to max current
 	lp.Update(-1, 0, nil, nil, false, false, 0, nil, nil)
 
 	t.Log("at 1:00h charging at 5 kWh")

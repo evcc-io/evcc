@@ -70,6 +70,12 @@ func (c *PowerController) EffectiveChargePower() float64 {
 	return c.chargePower
 }
 
+// SyncState synchronizes the controller's enabled state with the initial charger state.
+func (c *PowerController) SyncState(enabled bool) {
+	c.enabled = enabled
+}
+
+
 // UpdateChargePower updates the measured charge power from the meter.
 func (c *PowerController) UpdateChargePower(power float64) {
 	c.chargePower = power
@@ -117,5 +123,3 @@ func (c *PowerController) SetOfferedPower(power float64) error {
 
 	return nil
 }
-
-var enabledStatus = map[bool]string{false: "disable", true: "enable"}
