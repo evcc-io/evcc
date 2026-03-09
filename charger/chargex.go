@@ -116,18 +116,16 @@ func NewChargeX(ctx context.Context, uri string, id uint8, connector uint16) (ap
 		return nil, fmt.Errorf("target timeout: %w", err)
 	}
 	if u := binary.BigEndian.Uint32(b); u > 0 {
-		go wb.heartbeat(ctx, u)
+		go wb.heartbeat(ctx, time.Duration(u)*time.Second/2)
 	}
 
 	return wb, nil
 }
 
-func (wb *ChargeX) heartbeat(ctx context.Context, timeoutSecs uint32) {
-	ticker := time.NewTicker(time.Duration(timeoutSecs) * time.Second / 2)
-	defer ticker.Stop()
-	for {
+func (wb *ChargeX) heartbeat(ctx context.Context, timeout time.Duration) {
+	for tick := time.Tick(timeout); ; {
 		select {
-		case <-ticker.C:
+		case <-tick:
 		case <-ctx.Done():
 			return
 		}
