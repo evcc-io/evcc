@@ -52,26 +52,20 @@ func init() {
 
 // NewRaedianFromConfig creates a Raedian charger from generic config
 func NewRaedianFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
-	cc := struct {
-		modbus.TcpSettings `mapstructure:",squash"`
-	}{
-		TcpSettings: modbus.TcpSettings{
-			ID: 1,
-		},
+	cc := modbus.Settings{
+		ID: 1,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewRaedian(ctx, cc.URI, cc.ID)
+	return NewRaedian(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID)
 }
 
 // NewRaedian creates Raedian charger
-func NewRaedian(ctx context.Context, uri string, slaveID uint8) (*Raedian, error) {
-	uri = util.DefaultPort(uri, 502)
-
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
+func NewRaedian(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8) (*Raedian, error) {
+	conn, err := modbus.NewConnection(ctx, uri, device, comset, baudrate, proto, slaveID)
 	if err != nil {
 		return nil, err
 	}
