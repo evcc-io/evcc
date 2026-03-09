@@ -37,13 +37,13 @@ type Raedian struct {
 }
 
 const (
-	raedianRegStatus        = 0x800C // uint32 RO ENUM (0=A, 1=B, 2/3/4=C)
+	raedianRegStatus        = 0x800C // uint32 RO ENUM
 	raedianRegCurrents      = 0x8010 // uint32 RO mA
 	raedianRegVoltages      = 0x8016 // uint32 RO 0.1V
 	raedianRegPower         = 0x801C // uint32 RO W
 	raedianRegChargedEnergy = 0x801E // uint32 RO Wh
 	raedianRegMaxCurrent    = 0x8100 // uint32 WR mA
-	raedianRegPhases        = 0x8102 // uint16 WO (0x01=1p, 0x02=3p)
+	raedianRegPhases        = 0x8102 // uint16 WO
 )
 
 func init() {
