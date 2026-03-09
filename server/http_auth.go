@@ -55,6 +55,13 @@ func updatePasswordHandler(authObject auth.Auth) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+
+		// auto-login: set auth cookie
+		if err := setAuthCookie(authObject, w); err != nil {
+			http.Error(w, "Failed to generate JWT token.", http.StatusInternalServerError)
+			return
+		}
+
 		w.WriteHeader(http.StatusCreated)
 	}
 }
@@ -103,6 +110,24 @@ func authStatusHandler(authObject auth.Auth) http.HandlerFunc {
 	}
 }
 
+func setAuthCookie(authObject auth.Auth, w http.ResponseWriter) error {
+	lifetime := time.Hour * 24 * 90 // 90 day valid
+	tokenString, err := authObject.GenerateJwtToken(lifetime)
+	if err != nil {
+		return err
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     authCookieName,
+		Value:    tokenString,
+		Path:     "/",
+		HttpOnly: true,
+		Expires:  time.Now().Add(lifetime),
+		SameSite: http.SameSiteStrictMode,
+	})
+	return nil
+}
+
 func loginHandler(authObject auth.Auth) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if authObject.GetAuthMode() == auth.Locked {
@@ -121,21 +146,10 @@ func loginHandler(authObject auth.Auth) http.HandlerFunc {
 			return
 		}
 
-		lifetime := time.Hour * 24 * 90 // 90 day valid
-		tokenString, err := authObject.GenerateJwtToken(lifetime)
-		if err != nil {
+		if err := setAuthCookie(authObject, w); err != nil {
 			http.Error(w, "Failed to generate JWT token.", http.StatusInternalServerError)
 			return
 		}
-
-		http.SetCookie(w, &http.Cookie{
-			Name:     authCookieName,
-			Value:    tokenString,
-			Path:     "/",
-			HttpOnly: true,
-			Expires:  time.Now().Add(lifetime),
-			SameSite: http.SameSiteStrictMode,
-		})
 	}
 }
 

@@ -6,8 +6,8 @@ products:
       generic: Smart/Touch
 requirements:
   description:
-    de: Die Wallbox muss über eine aktuelle Firmware mit Modbus-Unterstützung verfügen. In den Einstellungen muss "Nachladen" (Smart) bzw. "RSDA" (Touch) aktiviert sein
-    en: Wallbox must be operated with a recent firmware including Modbus support. Furthermore, “Nachladen” (Smart) or “RSDA” (Touch) must be activated in settings.
+    de: Erfordert Firmware "3.21" (Smart) bzw. "1.24" (Touch). In den Einstellungen muss "Nachladen" (Smart) bzw. "RSDA" (Touch) aktiviert sein.
+    en: Requires firmware "3.21" for Samart and "1.24" for Touch. “Nachladen” (Smart) or “RSDA” (Touch) must be activated in settings.
 capabilities: ["mA"]
 params:
   - name: host

@@ -1,12 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
-import {
-  enableExperimental,
-  expectModalVisible,
-  expectModalHidden,
-  editorClear,
-  editorPaste,
-} from "./utils";
+import { expectModalVisible, expectModalHidden, editorClear, editorPaste } from "./utils";
 
 const CONFIG_YAML = "config-circuit.evcc.yaml";
 
@@ -21,7 +15,6 @@ test.describe("circuit", async () => {
     await start(CONFIG_YAML);
 
     await page.goto("/#/config");
-    await enableExperimental(page, false);
 
     await expect(page.getByTestId("loadpoint")).toHaveCount(1);
     await expect(page.getByTestId("loadpoint")).toContainText(["Power", "1.0 kW"].join(""));
@@ -29,13 +22,12 @@ test.describe("circuit", async () => {
     await expect(page.getByTestId("grid")).toHaveCount(1);
     await expect(page.getByTestId("grid")).toContainText(["Power", "2.1 kW"].join(""));
     await expect(page.getByTestId("grid")).toContainText(
-      ["Current L1, L2, L3", "3.0 · 3.0 · 3.0 A"].join("")
+      ["L1", "L2", "L3", "Current", "3.0", "3.0", "3.0", "A"].join("")
     );
 
     await expect(page.getByTestId("circuits")).toHaveCount(1);
-    await expect(page.getByTestId("circuits")).toContainText(["Power", "2.1 kW"].join(""));
     await expect(page.getByTestId("circuits")).toContainText(
-      ["Current", "3.0 A / 16.0 A"].join("")
+      ["Main", "Power", "2.1 kW", "Current", "3.0 A / 16.0 A"].join("")
     );
   });
 
@@ -43,7 +35,6 @@ test.describe("circuit", async () => {
     await start();
 
     await page.goto("/#/config");
-    await enableExperimental(page);
 
     // add grid meter
     await page.getByRole("button", { name: "Add grid meter" }).click();
@@ -77,6 +68,9 @@ test.describe("circuit", async () => {
     await expectModalHidden(chargerModal);
     await expectModalVisible(lpModal);
 
+    // no load management, no circuits
+    await expect(lpModal.getByLabel("Circuit")).not.toBeVisible();
+
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(lpModal);
 
@@ -93,11 +87,11 @@ test.describe("circuit", async () => {
       `- name: main
   meter: db:1
   maxcurrent: 16
-- name: house
+- name: circuit_house
   title: House
   maxcurrent: 10
   parent: main
-- name: garage
+- name: circuit_garage
   title: Garage
   maxcurrent: 8
   parent: main`
@@ -117,8 +111,8 @@ test.describe("circuit", async () => {
     // assign loadpoint to circuit
     await page.getByTestId("loadpoint").getByRole("button", { name: "edit" }).click();
     await expectModalVisible(lpModal);
-    await lpModal.getByLabel("Circuit").selectOption("Garage [garage]");
-    await lpModal.getByLabel("Circuit").selectOption("House [house]");
+    await lpModal.getByLabel("Circuit").selectOption("Garage [circuit_garage]");
+    await lpModal.getByLabel("Circuit").selectOption("House [circuit_house]");
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(lpModal);
 
@@ -134,24 +128,24 @@ test.describe("circuit", async () => {
     await expect(page.getByTestId("grid")).toHaveCount(1);
     await expect(page.getByTestId("grid")).toContainText(["Power", "2.1 kW"].join(""));
     await expect(page.getByTestId("grid")).toContainText(
-      ["Current L1, L2, L3", "3.0 · 3.0 · 3.0 A"].join("")
+      ["L1", "L2", "L3", "Current", "3.0", "3.0", "3.0", "A"].join("")
     );
 
     await expect(page.getByTestId("circuits")).toHaveCount(1);
     await expect(page.getByTestId("circuits")).toContainText(
-      ["(main)", "Power", "2.1 kW", "Current", "3.0 A / 16.0 A"].join("")
+      ["Main", "Power", "2.1 kW", "Current", "3.0 A / 16.0 A"].join("")
     );
     await expect(page.getByTestId("circuits")).toContainText(
-      ["House (house)", "Power", "1.0 kW", "Current", "6.0 A / 10.0 A"].join("")
+      ["House", "Power", "1.0 kW", "Current", "6.0 A / 10.0 A"].join("")
     );
     await expect(page.getByTestId("circuits")).toContainText(
-      ["Garage (garage)", "Power", "0.0 kW", "Current", "0.0 A / 8.0 A"].join("")
+      ["Garage", "Power", "0.0 kW", "Current", "0.0 A / 8.0 A"].join("")
     );
 
     // assign to garage
     await page.getByTestId("loadpoint").getByRole("button", { name: "edit" }).click();
     await expectModalVisible(lpModal);
-    await lpModal.getByLabel("Circuit").selectOption("Garage [garage]");
+    await lpModal.getByLabel("Circuit").selectOption("Garage [circuit_garage]");
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(lpModal);
 
@@ -163,13 +157,13 @@ test.describe("circuit", async () => {
     // verify circuits
     await expect(page.getByTestId("circuits")).toHaveCount(1);
     await expect(page.getByTestId("circuits")).toContainText(
-      ["(main)", "Power", "2.1 kW", "Current", "3.0 A / 16.0 A"].join("")
+      ["Main", "Power", "2.1 kW", "Current", "3.0 A / 16.0 A"].join("")
     );
     await expect(page.getByTestId("circuits")).toContainText(
-      ["House (house)", "Power", "0.0 kW", "Current", "0.0 A / 10.0 A"].join("")
+      ["House", "Power", "0.0 kW", "Current", "0.0 A / 10.0 A"].join("")
     );
     await expect(page.getByTestId("circuits")).toContainText(
-      ["Garage (garage)", "Power", "1.0 kW", "Current", "6.0 A / 8.0 A"].join("")
+      ["Garage", "Power", "1.0 kW", "Current", "6.0 A / 8.0 A"].join("")
     );
   });
 });

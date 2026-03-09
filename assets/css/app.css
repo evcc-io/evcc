@@ -68,9 +68,13 @@
 
 	--bs-primary: var(--evcc-darker-green);
 	--bs-primary-rgb: var(--evcc-darker-green-rgb);
+	--bs-primary-dim: color-mix(in srgb, var(--bs-primary) 50%, transparent);
 
 	--bs-warning: var(--evcc-orange);
 	--bs-warning-rgb: var(--evcc-orange-rgb);
+	--bs-warning-bg-subtle: color-mix(in srgb, var(--evcc-orange) 10%, transparent);
+	--bs-warning-border-subtle: color-mix(in srgb, var(--evcc-orange) 30%, transparent);
+	--bs-warning-text-emphasis: var(--evcc-orange);
 	--bs-danger-50: #dc354580;
 
 	--bs-danger: var(--evcc-red);
@@ -78,6 +82,8 @@
 
 	--bs-danger: var(--evcc-red);
 	--bs-danger-rgb: var(--evcc-red-rgb);
+
+	--bs-form-invalid-border-color: var(--bs-danger);
 
 	--bs-body-font-size: 14px;
 	--bs-font-sans-serif:
@@ -106,6 +112,7 @@
 	--evcc-accent2: var(--evcc-dark-green);
 	--evcc-accent3: var(--evcc-darker-green);
 	--bs-primary: var(--evcc-dark-green);
+	--bs-primary-dim: color-mix(in srgb, var(--bs-primary) 70%, transparent);
 	--bs-border-color-translucent: rgba(255, 255, 255, 0.175);
 	--bs-code-color: var(--evcc-dark-green);
 	--evcc-backdrop: #000000aa; /* black + transparent */
@@ -497,6 +504,10 @@ small {
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
+.form-select.disabled,
+.form-select:disabled {
+	background-color: var(--bs-secondary-bg);
+}
 
 .dark .dropdown-menu {
 	box-shadow: 0 0 8px var(--evcc-background);
@@ -511,6 +522,7 @@ small {
 	color: var(--bs-gray-medium) !important;
 }
 
+.dark .form-select.disabled,
 .dark .form-select:disabled {
 	opacity: 0.5;
 }
@@ -588,29 +600,38 @@ input[type="time"]::-webkit-calendar-picker-indicator {
 	display: none;
 }
 
+/* Safari: hide the datalist dropdown button */
 input[list]::-webkit-list-button {
 	display: none !important;
 	appearance: none !important;
+	opacity: 0 !important;
+	width: 0 !important;
+	pointer-events: none !important;
 }
 
 .form-control-clear {
 	position: absolute;
-	right: 0.75rem;
+	right: 0;
 	top: 0;
 	bottom: 0;
 	justify-content: center;
 	display: flex;
 	align-items: center;
 	justify-self: center;
-	width: 1.1rem;
-	font-size: 1.5rem;
-	font-weight: normal;
-	color: var(--evcc-default-text);
+	width: 36px;
+	height: 100%;
 	border: none;
 	background-color: transparent;
+	background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-1 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M 2,3 L 12,13 M 12,3 L 2,13'/%3e%3c/svg%3e");
+	background-repeat: no-repeat;
+	background-position: calc(50% - 3px) center;
+	background-size: 0.75rem;
 	padding: 0;
-	margin: 0;
 	cursor: pointer;
+}
+
+.dark .form-control-clear {
+	background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-1 0 16 16'%3e%3cpath fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M 2,3 L 12,13 M 12,3 L 2,13'/%3e%3c/svg%3e");
 }
 
 /* hide dropdown arrow if clear is visible */
@@ -763,4 +784,27 @@ input::-webkit-date-and-time-value {
 }
 .tabular {
 	font-variant-numeric: tabular-nums;
+}
+
+/* Collapsible wrapper pattern with choreographed animation */
+.collapsible-wrapper {
+	display: grid;
+	grid-template-rows: 0fr;
+	transition: grid-template-rows var(--evcc-transition-fast) ease 0.2s;
+}
+
+.collapsible-wrapper.open {
+	grid-template-rows: 1fr;
+	transition: grid-template-rows var(--evcc-transition-fast) ease;
+}
+
+.collapsible-content {
+	overflow: hidden;
+	opacity: 0;
+	transition: opacity 0.2s ease;
+}
+
+.collapsible-wrapper.open .collapsible-content {
+	opacity: 1;
+	transition: opacity var(--evcc-transition-fast) ease 0.2s;
 }

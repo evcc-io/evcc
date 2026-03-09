@@ -1,7 +1,7 @@
 <template>
 	<DeviceModalBase
 		:id="id"
-		modal-id="vehicleModal"
+		name="vehicle"
 		device-type="vehicle"
 		:is-sponsor="isSponsor"
 		:modal-title="$t(`config.vehicle.${isNew ? 'titleAdd' : 'titleEdit'}`)"
@@ -98,6 +98,21 @@
 			</div>
 
 			<FormRow
+				id="vehicleParamMaxPower"
+				:label="$t('config.vehicle.maximumPower')"
+				:help="$t('config.vehicle.maximumPowerHelp')"
+			>
+				<PropertyField
+					id="vehicleParamMaxPower"
+					v-model="values.maxPower"
+					type="Float"
+					unit="W"
+					size="w-25 w-min-200"
+					class="me-2"
+				/>
+			</FormRow>
+
+			<FormRow
 				id="vehicleParamPriority"
 				:label="$t('config.vehicle.priority')"
 				:help="$t('config.vehicle.priorityHelp')"
@@ -125,6 +140,7 @@
 					property="identifiers"
 					size="w-100"
 					class="me-2"
+					:rows="4"
 				/>
 			</FormRow>
 		</template>
@@ -141,6 +157,7 @@ import { ConfigType } from "@/types/evcc";
 import { customTemplateOption, type TemplateGroup } from "./DeviceModal/TemplateSelector.vue";
 import type { Product, ApiData, DeviceValues, TemplateParam } from "./DeviceModal";
 import defaultVehicleYaml from "./defaultYaml/vehicle.yaml?raw";
+import { getModal } from "@/configModal";
 
 const initialValues = {
 	type: ConfigType.Template,
@@ -149,7 +166,15 @@ const initialValues = {
 	yaml: undefined,
 	template: null,
 };
-const CUSTOM_FIELDS = ["minCurrent", "maxCurrent", "priority", "identifiers", "phases", "mode"];
+const CUSTOM_FIELDS = [
+	"minCurrent",
+	"maxCurrent",
+	"maxPower",
+	"priority",
+	"identifiers",
+	"phases",
+	"mode",
+];
 
 export default defineComponent({
 	name: "VehicleModal",
@@ -160,7 +185,6 @@ export default defineComponent({
 		DeviceModalBase,
 	},
 	props: {
-		id: Number,
 		isSponsor: Boolean,
 	},
 	emits: ["vehicle-changed"],
@@ -170,6 +194,9 @@ export default defineComponent({
 		};
 	},
 	computed: {
+		id(): number | undefined {
+			return getModal("vehicle")?.id;
+		},
 		isNew(): boolean {
 			return this.id === undefined;
 		},

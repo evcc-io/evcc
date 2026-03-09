@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"strings"
 	"text/template"
+	"time"
 
 	"github.com/Masterminds/sprig/v3"
 	"go.yaml.in/yaml/v4"
@@ -65,6 +66,9 @@ func FuncMap(tmpl *template.Template) *template.Template {
 				return "", err
 			}
 			return buf.String(), nil
+		},
+		"timeRound": func(t time.Time, d time.Duration) time.Time {
+			return t.Round(d)
 		},
 		"urlEncode": url.QueryEscape,
 		"unquote":   unquote,

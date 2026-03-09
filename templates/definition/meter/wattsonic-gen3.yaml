@@ -7,17 +7,11 @@ capabilities: ["battery-control"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
-    allinone: true
   - name: modbus
     choice: ["rs485"]
     port: 502
     id: 255
-  - name: capacity
-    advanced: true
-  - name: minsoc
-    advanced: true
-  - name: maxsoc
-    advanced: true
+  - preset: battery-params
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -107,7 +101,5 @@ render: |
       type: writeholding
       encoding: uint16
     scale: 10
-  capacity: {{ .capacity }} # kWh
-  minsoc: {{ .minsoc }} # %
-  maxsoc: {{ .maxsoc }} # %
+  {{- include "battery-params" . }}
   {{- end }}

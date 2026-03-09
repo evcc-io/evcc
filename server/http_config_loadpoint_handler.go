@@ -27,7 +27,7 @@ func getLoadpointStaticConfig(lp loadpoint.API) loadpoint.StaticConfig {
 }
 
 func getLoadpointDynamicConfig(lp loadpoint.API) loadpoint.DynamicConfig {
-	planTime, planPrecondition, planEnergy := lp.GetPlanEnergy()
+	planTime, planEnergy := lp.GetPlanEnergy()
 	return loadpoint.DynamicConfig{
 		Title:                    lp.GetTitle(),
 		DefaultMode:              string(lp.GetDefaultMode()),
@@ -41,7 +41,8 @@ func getLoadpointDynamicConfig(lp loadpoint.API) loadpoint.DynamicConfig {
 		Soc:                      lp.GetSocConfig(),
 		PlanEnergy:               planEnergy,
 		PlanTime:                 planTime,
-		PlanPrecondition:         int64(planPrecondition.Seconds()),
+		PlanStrategy:             lp.GetPlanStrategy(),
+		BatteryBoostLimit:        lp.GetBatteryBoostLimit(),
 		LimitEnergy:              lp.GetLimitEnergy(),
 		LimitSoc:                 lp.GetLimitSoc(),
 	}

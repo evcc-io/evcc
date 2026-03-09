@@ -3,6 +3,7 @@
 		id="telemetryModal"
 		:title="$t('config.telemetry.title')"
 		size="lg"
+		config-modal-name="telemetry"
 		data-testid="telemetry-modal"
 	>
 		<p>{{ $t("config.telemetry.description") }}</p>
@@ -25,7 +26,7 @@ export default defineComponent({
 	},
 	computed: {
 		sponsorActive(): boolean {
-			return !!this.sponsor?.status.name;
+			return !!this.sponsor?.status?.name;
 		},
 	},
 });

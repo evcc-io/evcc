@@ -83,7 +83,7 @@ func NewInnogyFromConfig(ctx context.Context, other map[string]any) (api.Charger
 	return decorateInnogy(wb, totalEnergy, voltages), nil
 }
 
-//go:generate go tool decorate -f decorateInnogy -b *Innogy -r api.Charger -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)"
+//go:generate go tool decorate -f decorateInnogy -b *Innogy -r api.Charger -t api.MeterEnergy,api.PhaseVoltages
 
 // NewInnogy creates a Innogy charger
 func NewInnogy(ctx context.Context, uri string, id uint8) (*Innogy, error) {

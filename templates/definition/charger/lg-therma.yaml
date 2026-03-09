@@ -10,17 +10,17 @@ requirements:
       Modbus Verbindung zur LG Therma V Wärmepumpe.
       Funktioniert über SG Ready Energiezustände für intelligente Steuerung.
       Inneneinheit/Fernbedienung in den erweiterten Einstellungen > "Konnektivität" > "Energiezustand" > "Signaltyp" > auf "Modbus" einstellen.
-      Da die interne Energiemessung zu hohe Werte anzeigt ist eine externe Energiemessung empfohlen.
-      Werkseinstellung Modbus Addresse(HEX) = 21 (33).
+      Da die interne Energiemessung zu hohe Werte anzeigt, ist eine externe Energiemessung empfohlen.
+      Werkseinstellung Modbus Adresse(HEX) = 21 (33).
       Modbus Register sind im Installationshandbuch zu finden (Adresse jeweils ohne die führende Ziffer und -1).
       Informationen zu den Energiezuständen finden sich auch im Installationshandbuch.
       Die Energiezustände 6 und 7 können an der Inneneinheit in den erweiterten Einstellungen > "Konnektivität" > "Energiezustand" > "Definition der Energiezustände" angepasst werden.
-      Wenn die interne Energiemessung nicht funktioniert (nicht jedes Model unterstützt das Register), dann setze die Energiemessung auf "Nein".
+      Wenn die interne Energiemessung nicht funktioniert (nicht jedes Modell unterstützt das Register), dann setze die Energiemessung auf "Nein".
     en: |
       Modbus connection to LG Therma V heat pump.
       Uses SG Ready energy states for intelligent control.
       Set the indoor unit in the installer settings > "Connectivity" > "Energy state" > "ESS use type" > to "Modbus".
-      Since the internal power measurement shows to high values, an external power measurement is suggested.
+      Since the internal power measurement shows too high values, an external power measurement is suggested.
       Factory setting Modbus (HEX) = 21 (33).
       Modbus registers can be found within the installation manual (address without the leading number and -1).
       Information on the energy state can be found within the installation manual. 
@@ -92,7 +92,7 @@ render: |
     {{- include "modbus" . | indent 2 }}
     scale: 0.1
     register:
-      address:  {{ if eq .tempsource "water_inlet" -}} 2 {{ else }} 5 {{- end }} # 5 DHW Tank Temperatur, 2 Wassereinlasstemperatur
+      address: {{ if eq .tempsource "water_inlet" -}} 2 {{ else }} 5 {{- end }} # 5 DHW Tank Temperatur, 2 Wassereinlasstemperatur
       type: input
       encoding: uint16
   {{- if eq .haspower "true" }}

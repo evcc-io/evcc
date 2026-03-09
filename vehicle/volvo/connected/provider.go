@@ -71,7 +71,7 @@ var _ api.VehicleRange = (*Provider)(nil)
 // Range implements the api.VehicleRange interface
 func (v *Provider) Range() (rng int64, err error) {
 	res, err := v.statusG()
-	return res.ElectricRange.Value, err
+	return int64(res.ElectricRange.Value), err
 }
 
 var _ api.VehicleFinishTimer = (*Provider)(nil)

@@ -23,7 +23,7 @@ func init() {
 	registry.Add("tasmota", NewTasmotaFromConfig)
 }
 
-//go:generate go tool decorate -f decorateTasmota -b *Tasmota -r api.Charger -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)"
+//go:generate go tool decorate -f decorateTasmota -b *Tasmota -r api.Charger -t api.PhaseVoltages,api.PhaseCurrents
 
 // NewTasmotaFromConfig creates a Tasmota charger from generic config
 func NewTasmotaFromConfig(other map[string]any) (api.Charger, error) {
@@ -65,13 +65,19 @@ func NewTasmota(embed embed, uri, user, password, usage string, channels []int, 
 
 	c.switchSocket = NewSwitchSocket(&embed, c.Enabled, c.conn.CurrentPower, standbypower)
 
-	var currents, voltages func() (float64, float64, float64, error)
-	if len(channels) == 3 {
-		currents = c.currents
-		voltages = c.voltages
+	// check if phase specific readings are supported by the device, if not return the base meter implementation without decorators
+	var hasPhases bool
+	if len(channels) == 1 {
+		if l1, l2, l3, err := c.conn.Voltages(); err == nil && l1*l2*l3 > 0 {
+			hasPhases = true
+		}
 	}
 
-	return decorateTasmota(c, currents, voltages), nil
+	if hasPhases || len(channels) == 3 {
+		return decorateTasmota(c, c.voltages, c.currents), nil
+	}
+
+	return c, nil
 }
 
 // Enabled implements the api.Charger interface

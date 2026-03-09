@@ -18,10 +18,7 @@ params:
   - name: host
   - name: port
     default: 7979
-  - name: capacity
-    advanced: true
-  - name: maxchargepower
-    advanced: true
+  - preset: battery-params
   - name: cache
     advanced: true
     default: 5s
@@ -119,5 +116,5 @@ render: |
                     method: PUT
                     uri: http://{{ .host }}:{{ .port }}/rest/devices/battery/C24
                     body: {{ if .maxchargepower }}{{ .maxchargepower }}{{ else }}99000{{ end }}
-  capacity: {{ .capacity }} # kWh
+  {{- include "battery-params" . }}
   {{- end }}

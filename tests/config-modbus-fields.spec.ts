@@ -1,6 +1,6 @@
 import { test, expect, type Page, type Locator } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
-import { expectModalVisible, enableExperimental } from "./utils";
+import { expectModalVisible } from "./utils";
 
 const CONFIG_MODBUS_FIELDS = "config-modbus-fields.sql";
 
@@ -16,7 +16,6 @@ test.afterAll(async () => {
 
 async function openMeterModal(page: Page, title: string): Promise<Locator> {
   await page.goto("/#/config");
-  await enableExperimental(page, true);
   await page
     .getByTestId("pv")
     .filter({ hasText: title })

@@ -12,6 +12,7 @@ import {
   isLoggedIn,
   isConfigured,
 } from "./components/Auth/auth";
+import { initConfigModal } from "./configModal";
 import type { VueI18nInstance } from "vue-i18n";
 
 function hideAllModals() {
@@ -38,9 +39,29 @@ async function ensureAuth(to: RouteLocationNormalizedGeneric) {
   return true;
 }
 
+// Custom stringifyQuery to keep brackets unencoded in URLs
+export function stringifyQuery(query?: Record<string, any>): string {
+  if (!query) return "";
+  const parts: string[] = [];
+  for (const key of Object.keys(query)) {
+    const value = query[key];
+    if (Array.isArray(value)) {
+      for (const v of value) {
+        parts.push(v ? `${key}=${encodeURIComponent(v)}` : key);
+      }
+    } else if (value) {
+      parts.push(`${key}=${encodeURIComponent(value)}`);
+    } else {
+      parts.push(key);
+    }
+  }
+  return parts.join("&");
+}
+
 export default function setupRouter(i18n: VueI18nInstance) {
   const router = createRouter({
     history: createWebHashHistory(),
+    stringifyQuery,
     routes: [
       {
         path: "/",
@@ -112,5 +133,6 @@ export default function setupRouter(i18n: VueI18nInstance) {
       hideAllModals();
     }
   });
+  initConfigModal(router);
   return router;
 }

@@ -31,10 +31,11 @@ var acceptable = []string{
 	"sponsorship required, see https://docs.evcc.io/docs/sponsorship",
 	"eebus not configured",
 	"context deadline exceeded",
-	"timeout",                              // ocpp
-	"must have uri and password",           // Wattpilot
-	"either identity or uuid are required", // Plugchoice
-	"unsupported platform",                 // OpenWB Native
+	"timeout",                                        // ocpp
+	"must have uri and password",                     // Wattpilot
+	"either identity or uuid are required",           // Plugchoice
+	"unsupported platform",                           // OpenWB Native
+	"missing config values: username, password, key", // E3DC
 }
 
 func TestTemplates(t *testing.T) {

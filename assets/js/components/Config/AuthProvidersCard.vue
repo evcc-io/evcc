@@ -14,7 +14,7 @@
 				<div
 					v-for="provider in providerList"
 					:key="provider.id"
-					class="auth-provider-item d-flex align-items-baseline justify-content-between"
+					class="d-flex align-items-baseline justify-content-between mb-2"
 				>
 					<div class="d-flex align-items-baseline">
 						<span
@@ -25,7 +25,7 @@
 					</div>
 					<button
 						type="button"
-						class="btn btn-link btn-sm p-0"
+						class="btn btn-link btn-sm p-0 lh-1"
 						:class="provider.authenticated ? 'text-muted' : 'text-warning'"
 						@click="handleProviderAction(provider)"
 					>
@@ -92,9 +92,5 @@ export default defineComponent({
 <style scoped>
 .auth-providers-list {
 	width: 100%;
-}
-
-.auth-provider-item {
-	padding: 0.5rem 0;
 }
 </style>

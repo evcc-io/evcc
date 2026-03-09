@@ -6,18 +6,25 @@ products:
       en: Auth Demo Meter
 auth:
   type: demo
-  params: ["region", "method"]
+  params: ["server", "method", "redirectUri"]
 params:
   - name: usage
     choice: ["grid"]
-  - name: region
+  - name: server
     description:
-      generic: Region
-    choice: ["EU", "US", "CN", "ERROR"]
+      generic: Server
+    default: "http://localhost:7072"
+    required: true
+  - name: redirectUri
+    description:
+      generic: Redirect URI
+    example: "http://localhost:7070/providerauth/callback"
+    required: true
   - name: method
     description:
       generic: Authentication Method
     choice: ["redirect", "device-code"]
+    required: true
   - name: power
     description:
       generic: Power

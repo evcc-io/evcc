@@ -27,6 +27,10 @@ func NewConnection(uri, user, password string, channels []int, cache time.Durati
 		return nil, errors.New("missing uri")
 	}
 
+	if l := len(channels); l != 1 && l != 3 {
+		return nil, fmt.Errorf("invalid number of channels: %d", l)
+	}
+
 	used := make(map[int]bool)
 	for _, c := range channels {
 		if c < 1 || c > 8 {
@@ -200,49 +204,91 @@ func (c *Connection) CurrentPower() (float64, error) {
 	if err != nil {
 		return 0, err
 	}
+
+	// SML power available
+	if sml := s.StatusSNS.SML.PowerCurr; sml != nil {
+		return *sml, nil
+	}
+
 	var res float64
 	for _, channel := range c.channels {
-		power, err := s.StatusSNS.Energy.Power.Channel(channel)
+		power, err := s.StatusSNS.Energy.Power.Value(channel)
 		if err != nil {
 			return 0, err
 		}
 		res += power
 	}
-	return res + float64(s.StatusSNS.SML.PowerCurr), nil
+
+	return res, nil
 }
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (c *Connection) TotalEnergy() (float64, error) {
 	res, err := c.statusSnsG.Get()
-	return res.StatusSNS.Energy.Total + res.StatusSNS.SML.TotalIn, err
+	if err != nil {
+		return 0, err
+	}
+
+	// SML total energy available
+	if sml := res.StatusSNS.SML.TotalIn; sml != nil {
+		return *sml, err
+	}
+
+	return res.StatusSNS.Energy.Total, err
 }
 
-// Currents implements the api.PhaseCurrents interface
-func (c *Connection) Currents() (float64, float64, float64, error) {
-	return c.getPhaseValues(func(s StatusSNSResponse) Channels {
-		return s.StatusSNS.Energy.Current
-	})
-}
-
-// Voltages implements the api.PhaseVoltages interface
-func (c *Connection) Voltages() (float64, float64, float64, error) {
-	return c.getPhaseValues(func(s StatusSNSResponse) Channels {
-		return s.StatusSNS.Energy.Voltage
-	})
-}
-
-// getPhaseValues returns 3 sequential phase values
-func (c *Connection) getPhaseValues(fun func(StatusSNSResponse) Channels) (float64, float64, float64, error) {
+// Powers implements the api.PhasePowers interface
+func (c *Connection) Powers() (float64, float64, float64, error) {
 	s, err := c.statusSnsG.Get()
 	if err != nil {
 		return 0, 0, 0, err
 	}
 
-	all := fun(s)
+	// SML powers available
+	if sml := s.StatusSNS.SML; sml.PowerL1 != nil && sml.PowerL2 != nil && sml.PowerL3 != nil {
+		return *sml.PowerL1, *sml.PowerL2, *sml.PowerL3, nil
+	}
 
+	return c.getPhaseValues(s.StatusSNS.Energy.Power)
+}
+
+// Voltages implements the api.PhaseVoltages interface
+func (c *Connection) Voltages() (float64, float64, float64, error) {
+	s, err := c.statusSnsG.Get()
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	// SML voltages available
+	if sml := s.StatusSNS.SML; sml.VoltageL1 != nil && sml.VoltageL2 != nil && sml.VoltageL3 != nil {
+		return *sml.VoltageL1, *sml.VoltageL2, *sml.VoltageL3, nil
+	}
+
+	return c.getPhaseValues(s.StatusSNS.Energy.Voltage)
+}
+
+// Currents implements the api.PhaseCurrents interface
+func (c *Connection) Currents() (float64, float64, float64, error) {
+	s, err := c.statusSnsG.Get()
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	// SML currents available
+	if sml := s.StatusSNS.SML; sml.CurrentL1 != nil && sml.CurrentL2 != nil && sml.CurrentL3 != nil {
+		return *sml.CurrentL1, *sml.CurrentL2, *sml.CurrentL3, nil
+	}
+
+	return c.getPhaseValues(s.StatusSNS.Energy.Current)
+}
+
+// getPhaseValues returns 3 sequential phase values
+func (c *Connection) getPhaseValues(all Channels) (float64, float64, float64, error) {
 	var res [3]float64
-	for i := range res {
-		res[i], err = all.Channel(c.channels[i])
+
+	for i, cc := range c.channels {
+		var err error
+		res[i], err = all.Value(cc)
 		if err != nil {
 			return 0, 0, 0, err
 		}

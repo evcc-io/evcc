@@ -120,7 +120,7 @@ func (s *HTTPd) Router() *mux.Router {
 }
 
 // RegisterSiteHandlers connects the http handlers to the site
-func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param) {
+func (s *HTTPd) RegisterSiteHandlers(site site.API) {
 	router := s.Server.Handler.(*mux.Router)
 
 	// api
@@ -140,7 +140,6 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 	}
 
 	routes := map[string]route{
-		"health":                  {"GET", "/health", healthHandler(site)},
 		"buffersoc":               {"POST", "/buffersoc/{value:[0-9.]+}", floatHandler(site.SetBufferSoc, site.GetBufferSoc)},
 		"bufferstartsoc":          {"POST", "/bufferstartsoc/{value:[0-9.]+}", floatHandler(site.SetBufferStartSoc, site.GetBufferStartSoc)},
 		"batterydischargecontrol": {"POST", "/batterydischargecontrol/{value:[01truefalse]+}", boolHandler(site.SetBatteryDischargeControl, site.GetBatteryDischargeControl)},
@@ -158,6 +157,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 		"sessions":                {"GET", "/sessions", sessionHandler},
 		"updatesession":           {"PUT", "/session/{id:[0-9]+}", updateSessionHandler},
 		"deletesession":           {"DELETE", "/session/{id:[0-9]+}", deleteSessionHandler},
+		"gridsessions":            {"GET", "/gridsessions", gridSessionsHandler},
 		"telemetry2":              {"POST", "/settings/telemetry/{value:[01truefalse]+}", boolHandler(telemetry.Enable, telemetry.Enabled)},
 	}
 
@@ -172,6 +172,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 		"plan":           {"POST", "/vehicles/{name:[a-zA-Z0-9_.:-]+}/plan/soc/{value:[0-9]+}/{time:[0-9TZ:.+-]+}", planSocHandler(site)},
 		"plan2":          {"DELETE", "/vehicles/{name:[a-zA-Z0-9_.:-]+}/plan/soc", planSocRemoveHandler(site)},
 		"repeatingPlans": {"POST", "/vehicles/{name:[a-zA-Z0-9_.:-]+}/plan/repeating", addRepeatingPlansHandler(site)},
+		"planStrategy":   {"POST", "/vehicles/{name:[a-zA-Z0-9_.:-]+}/plan/strategy", updatePlanStrategyHandler(site)},
 
 		// config ui
 		// "mode":       {"POST", "/mode/{value:[a-z]+}", chargeModeHandler(v)},
@@ -198,9 +199,9 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 			"phases":                    {"POST", "/phases/{value:[0-9]+}", intHandler(lp.SetPhasesConfigured, lp.GetPhasesConfigured)},
 			"plan":                      {"GET", "/plan", planHandler(lp)},
 			"staticPlanPreview":         {"GET", "/plan/static/preview/{type:(?:soc|energy)}/{value:[0-9.]+}/{time:[0-9TZ:.+-]+}", staticPlanPreviewHandler(lp)},
-			"repeatingPlanPreview":      {"GET", "/plan/repeating/preview/{soc:[0-9]+}/{weekdays:[0-6,]+}/{time:[0-2][0-9]:[0-5][0-9]}/{tz:[a-zA-Z0-9_./:-]+}", repeatingPlanPreviewHandler(lp)},
 			"planenergy":                {"POST", "/plan/energy/{value:[0-9.]+}/{time:[0-9TZ:.+-]+}", planEnergyHandler(lp)},
 			"planenergy2":               {"DELETE", "/plan/energy", planRemoveHandler(lp)},
+			"planStrategy":              {"POST", "/plan/strategy", planStrategyHandler(lp)},
 			"vehicle":                   {"POST", "/vehicle/{name:[a-zA-Z0-9_.:-]+}", vehicleSelectHandler(site, lp)},
 			"vehicle2":                  {"DELETE", "/vehicle", vehicleRemoveHandler(lp)},
 			"vehicleDetect":             {"PATCH", "/vehicle", vehicleDetectHandler(lp)},
@@ -214,6 +215,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 			"smartFeedInPriorityDelete": {"DELETE", "/smartfeedinprioritylimit", floatPtrHandler(pass(lp.SetSmartFeedInPriorityLimit), lp.GetSmartFeedInPriorityLimit)},
 			"priority":                  {"POST", "/priority/{value:[0-9]+}", intHandler(pass(lp.SetPriority), lp.GetPriority)},
 			"batteryBoost":              {"POST", "/batteryboost/{value:[01truefalse]+}", boolHandler(lp.SetBatteryBoost, func() bool { return lp.GetBatteryBoost() > 0 })},
+			"batteryBoostLimit":         {"POST", "/batteryboostlimit/{value:[0-9]+}", intHandler(pass(lp.SetBatteryBoostLimit), lp.GetBatteryBoostLimit)},
 		}
 
 		for _, r := range routes {
@@ -289,14 +291,14 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 			"deletedevice":       {"DELETE", "/devices/{class:[a-z]+}/{id:[0-9.]+}", deleteDeviceHandler(site)},
 			"testconfig":         {"POST", "/test/{class:[a-z]+}", testConfigHandler},
 			"testmerged":         {"POST", "/test/{class:[a-z]+}/merge/{id:[0-9.]+}", testConfigHandler},
-			"interval":           {"POST", "/interval/{value:[0-9.]+}", settingsSetDurationHandler(keys.Interval)},
+			"interval":           {"POST", "/interval/{value:[0-9.]+}", settingsSetDurationHandler(keys.Interval, pub)},
 			"updatesponsortoken": {"POST", "/sponsortoken", updateSponsortokenHandler(pub)},
 			"deletesponsortoken": {"DELETE", "/sponsortoken", deleteSponsorTokenHandler(pub)},
+			"experimental":       {"POST", "/experimental/{value:[01truefalse]+}", boolHandler(setExperimental(pub), getExperimental)},
 		}
 
 		// yaml handlers
 		for key, fun := range map[string]func() (any, any){
-			keys.EEBus:     func() (any, any) { return map[string]any{}, eebus.Config{} },
 			keys.Hems:      func() (any, any) { return map[string]any{}, config.Typed{} },
 			keys.Tariffs:   func() (any, any) { return map[string]any{}, globalconfig.Tariffs{} },
 			keys.Messaging: func() (any, any) { return map[string]any{}, globalconfig.Messaging{} }, // has default
@@ -310,11 +312,13 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 
 		// json handlers
 		for key, fun := range map[string]func() any{
-			keys.Network:     func() any { return new(globalconfig.Network) },       // has default
-			keys.Mqtt:        func() any { return new(globalconfig.Mqtt) },          // has default
-			keys.ModbusProxy: func() any { return new([]globalconfig.ModbusProxy) }, // slice
-			keys.Shm:         func() any { return new(shm.Config) },
-			keys.Influx:      func() any { return new(globalconfig.Influx) },
+			keys.Network:         func() any { return new(globalconfig.Network) },       // has default
+			keys.Mqtt:            func() any { return new(globalconfig.Mqtt) },          // has default
+			keys.ModbusProxy:     func() any { return new([]globalconfig.ModbusProxy) }, // slice
+			keys.Shm:             func() any { return new(shm.Config) },
+			keys.Influx:          func() any { return new(globalconfig.Influx) },
+			keys.EEBus:           func() any { return new(eebus.Config) },
+			keys.MessagingEvents: func() any { return new(globalconfig.MessagingEvents) },
 		} {
 			routes["update"+key] = route{Method: "POST", Pattern: "/" + key, HandlerFunc: settingsSetJsonHandler(key, pub, fun)}
 			routes["delete"+key] = route{Method: "DELETE", Pattern: "/" + key, HandlerFunc: settingsDeleteJsonHandler(key, pub, fun())}
@@ -331,6 +335,15 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 		for _, r := range map[string]route{
 			"site":       {"GET", "/site", siteHandler(site)},
 			"updatesite": {"PUT", "/site", updateSiteHandler(site)},
+		} {
+			api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
+		}
+
+		// tariffs
+		for _, r := range map[string]route{
+			"tariff":         {"GET", "/tariff", tariffsHandler},
+			"updatetariff":   {"PUT", "/tariff", updateTariffHandler},
+			"updatecurrency": {"PUT", "/currency", updateCurrencyHandler(pub)},
 		} {
 			api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
 		}

@@ -39,6 +39,8 @@ type batterySocLimits struct {
 	MinSoc, MaxSoc float64
 }
 
+// var _ api.BatterySocLimiter = (*batterySocLimits)(nil)
+
 // Decorator returns an api.BatterySocLimiter decorator
 func (m *batterySocLimits) Decorator() func() (float64, float64) {
 	if m.MinSoc == 0 && m.MaxSoc == 0 {

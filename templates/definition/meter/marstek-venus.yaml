@@ -11,23 +11,17 @@ params:
     choice: ["rs485", "tcpip"]
     baudrate: 115200
     comset: 8N1
+  - preset: battery-params
   - name: capacity
-    default: 5.12
     help:
       de: Venus-E 5.12 kWh, Venus-C 2.56 kWh
       en: Venus-E 5.12 kWh, Venus-C 2.56 kWh
   - name: minsoc
     default: 11
-    advanced: true
   - name: maxsoc
     default: 100
-    advanced: true
   - name: maxchargepower
     default: 2500
-    advanced: true
-    help:
-      en: 2500W is the maximum for Venus.
-      de: 2500W ist das Maximum für Venus.
   - name: work_mode_normal
     default: 1
     advanced: true
@@ -152,6 +146,4 @@ render: |
               type: writesingle
               decode: uint16
     # Do not disable RS485 Control Mode because it will reset the device and let it charge/discharge again
-  capacity: {{ .capacity }} # kWh
-  minsoc: {{ .minsoc }} # %
-  maxsoc: {{ .maxsoc }} # %
+  {{- include "battery-params" . }}

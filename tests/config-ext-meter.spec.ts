@@ -1,12 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
-import {
-  editorClear,
-  editorPaste,
-  enableExperimental,
-  expectModalHidden,
-  expectModalVisible,
-} from "./utils";
+import { editorClear, editorPaste, expectModalHidden, expectModalVisible } from "./utils";
 
 const CONFIG_GRID_ONLY = "config-grid-only.evcc.yaml";
 const CONFIG_BASICS = "basics.evcc.yaml";
@@ -37,7 +31,6 @@ test.describe("ext meter", async () => {
 
   test("template-based ext meter", async ({ page }) => {
     await page.goto("/#/config");
-    await enableExperimental(page, false);
     await expect(page.getByTestId("ext")).toHaveCount(0);
 
     await page.getByRole("button", { name: "Add additional meter" }).click();
@@ -104,7 +97,6 @@ test.describe("ext meter", async () => {
 
   test("switch from template to custom ext meter", async ({ page }) => {
     await page.goto("/#/config");
-    await enableExperimental(page, false);
 
     await page.getByRole("button", { name: "Add additional meter" }).click();
     const meterModal = page.getByTestId("meter-modal");
@@ -187,7 +179,6 @@ test.describe("ext meter order", async () => {
 
   test("ensure order is preserved", async ({ page }) => {
     await page.goto("/#/config");
-    await enableExperimental(page, false);
     await expect(page.getByTestId("ext")).toHaveCount(0);
 
     // Create meters

@@ -2,6 +2,7 @@ package keys
 
 const (
 	Interval           = "interval"
+	Experimental       = "experimental"
 	PasswordConfigured = "passwordConfigured"
 	Sponsor            = "sponsor"
 	SponsorToken       = "sponsorToken"
@@ -12,11 +13,16 @@ const (
 	Hems               = "hems"
 	Shm                = "shm"
 	Messaging          = "messaging"
+	MessagingEvents    = "messagingEvents"
 	ModbusProxy        = "modbusproxy"
+	Ocpp               = "ocpp"
 	Tariffs            = "tariffs"
+	TariffRefs         = "tariffRefs"
 	Version            = "version"
 	Config             = "config"
 	Database           = "database"
+	System             = "system"
+	Timezone           = "timezone"
 	Fatal              = "fatal"
 	StartupCompleted   = "startupCompleted" // false: starting, true: started
 	SetupRequired      = "setupRequired"    // initial setup is required (lp = 0), fresh installation

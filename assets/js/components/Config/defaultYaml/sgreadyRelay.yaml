@@ -5,6 +5,7 @@ boost: # relay that switches the boost contact of the heat pump
   template: shelly # example shelly one
   host: 192.168.0.101 #
 
+
 ## optional attributes
 
 #dim: # relay that switches the dim contact of the heat pump

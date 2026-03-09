@@ -4,7 +4,7 @@
 		ref="modal"
 		:title="modalTitle"
 		data-testid="auth-provider-modal"
-		@close="handleClose"
+		@closed="handleClosed"
 	>
 		<div class="container mx-0 px-0">
 			<!-- Success message after authentication -->
@@ -56,6 +56,7 @@
 						:provider-url="auth.providerUrl ?? undefined"
 						:loading="auth.loading"
 						@prepare="prepareAuthentication"
+						@external-click="waitingForAuthentication = true"
 					/>
 				</div>
 			</template>
@@ -103,7 +104,6 @@
 
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
-import Modal from "bootstrap/js/dist/modal";
 import GenericModal from "../Helper/GenericModal.vue";
 import AuthCodeDisplay from "../Config/AuthCodeDisplay.vue";
 import AuthConnectButton from "../Config/AuthConnectButton.vue";
@@ -156,9 +156,11 @@ export default defineComponent({
 		},
 	},
 	watch: {
-		provider(newProvider) {
-			if (newProvider) {
+		providerId(newId) {
+			if (newId) {
 				this.reset();
+				// auto-run the prepare step. no user input needed
+				this.prepareAuthentication();
 			}
 		},
 	},
@@ -169,12 +171,11 @@ export default defineComponent({
 			this.logoutError = null;
 			this.waitingForAuthentication = false;
 		},
-		handleClose() {
+		handleClosed() {
 			this.reset();
 		},
 		async prepareAuthentication() {
-			if (!this.providerId) return;
-			this.waitingForAuthentication = true;
+			if (!this.providerId || this.isAuthenticated) return;
 			await prepareAuthLogin(this.auth, this.providerId);
 		},
 		async performLogout() {
@@ -185,10 +186,7 @@ export default defineComponent({
 
 			const result = await performAuthLogout(this.providerId);
 			if (result.success) {
-				const modalElement = (this.$refs["modal"] as any)?.$el;
-				if (modalElement) {
-					Modal.getInstance(modalElement)?.hide();
-				}
+				(this.$refs["modal"] as any)?.close();
 			} else {
 				this.logoutError = result.error || this.$t("authProviders.logoutFailed");
 			}

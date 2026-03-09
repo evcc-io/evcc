@@ -11,7 +11,6 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
 	"github.com/evcc-io/evcc/vehicle/saic/requests"
-	"golang.org/x/oauth2"
 )
 
 const (
@@ -56,19 +55,13 @@ func NewAPI(log *util.Logger, identity *Identity) *API {
 }
 
 func (v *API) doRepeatedRequest(path string, event_id string) error {
-	var req *http.Request
-
-	answer := requests.Answer{
-		Data: &v.request.Result,
-	}
-
 	token, err := v.identity.Token()
 	if err != nil {
 		v.request.Status = StatInvalid
 		return err
 	}
 
-	req, err = requests.CreateRequest(
+	req, err := requests.CreateRequest(
 		v.identity.baseUrl,
 		path,
 		http.MethodGet,
@@ -81,9 +74,13 @@ func (v *API) doRepeatedRequest(path string, event_id string) error {
 		return err
 	}
 
-	_, err = v.DoRequest(req, &answer)
+	var res requests.Answer[requests.ChargeStatus]
+	_, err = doRequest(v, req, &res)
 	if err == nil {
-		v.request.Status = StatValid
+		v.request = ConcurrentRequest{
+			Status: StatValid,
+			Result: res.Data,
+		}
 	} else if err != api.ErrMustRetry {
 		v.request.Status = StatInvalid
 	}
@@ -92,11 +89,10 @@ func (v *API) doRepeatedRequest(path string, event_id string) error {
 
 // This is running concurrently
 func (v *API) repeatRequest(path string, event_id string) {
-	var err error
 	var count int
 
 	v.request.Status = StatRunning
-	for err = api.ErrMustRetry; err == api.ErrMustRetry && count < 20; {
+	for err := api.ErrMustRetry; err == api.ErrMustRetry && count < 20; {
 		time.Sleep(2 * time.Second)
 		v.log.TRACE.Printf("Starting repeated query. Count: %d", count)
 		err = v.doRepeatedRequest(path, event_id)
@@ -108,20 +104,17 @@ func (v *API) repeatRequest(path string, event_id string) {
 	if v.request.Status == StatRunning {
 		v.request.Status = StatInvalid
 	}
-	v.log.TRACE.Printf("Exiting repeated query. Count: %d", count)
 }
 
-func (v *API) DoRequest(req *http.Request, result *requests.Answer) (string, error) {
-	var body []byte
-
+func doRequest[T any](v *API, req *http.Request, result *requests.Answer[T]) (string, error) {
 	resp, err := v.Do(req)
 	if err != nil {
 		return "", err
 	}
-
 	defer resp.Body.Close()
+
 	if resp.StatusCode == http.StatusUnauthorized {
-		v.log.TRACE.Printf("DoRequest: %s", resp.Status)
+		v.log.TRACE.Printf("doRequest: %s", resp.Status)
 		v.identity.Login()
 		return "", api.ErrMustRetry
 	}
@@ -129,17 +122,17 @@ func (v *API) DoRequest(req *http.Request, result *requests.Answer) (string, err
 	event_id := resp.Header.Get("event-id")
 
 	if result != nil {
-		body, err = requests.DecryptAnswer(resp)
-		if err == nil {
-			if err2 := json.Unmarshal(body, result); err2 == nil && result.Code != 0 {
-				if result.Code == 4 {
-					err = api.ErrMustRetry
-				} else {
-					err = fmt.Errorf("%d: %s", result.Code, result.Message)
-				}
+		body, err2 := requests.DecodeResponse(resp)
+		if err2 != nil {
+			return event_id, fmt.Errorf("decrypt: %w", err2)
+		}
+
+		if err2 := json.Unmarshal(body, result); err2 == nil && result.Code != 0 {
+			if result.Code == 4 {
+				err = api.ErrMustRetry
+			} else {
+				err = fmt.Errorf("%d: %s", result.Code, result.Message)
 			}
-		} else {
-			err = fmt.Errorf("decrypt: %w", err)
 		}
 	}
 
@@ -156,17 +149,13 @@ func (v *API) Vehicles() ([]Vehicle, error) {
 */
 
 func (v *API) Wakeup(vin string) error {
-	var req *http.Request
-	var err error
-	var token *oauth2.Token
-
-	token, err = v.identity.Token()
+	token, err := v.identity.Token()
 	if err != nil {
 		return err
 	}
 
 	path := "vehicle/status?vin=" + requests.Sha256(vin)
-	req, err = requests.CreateRequest(
+	req, err := requests.CreateRequest(
 		v.identity.baseUrl,
 		path,
 		http.MethodGet,
@@ -178,21 +167,14 @@ func (v *API) Wakeup(vin string) error {
 		return err
 	}
 
-	v.DoRequest(req, nil)
+	doRequest[any](v, req, nil)
 
 	return nil
 }
 
 // Status implements the /user/vehicles/<vin>/status api
 func (v *API) Status(vin string) (requests.ChargeStatus, error) {
-	var req *http.Request
-	var res requests.ChargeStatus
-	var event_id string
-	var err error
-	var token *oauth2.Token
-	answer := requests.Answer{
-		Data: &res,
-	}
+	var zero requests.ChargeStatus
 
 	// Check if we are already running in the background
 	if v.request.Status == StatValid {
@@ -203,18 +185,18 @@ func (v *API) Status(vin string) (requests.ChargeStatus, error) {
 	}
 	if v.request.Status == StatRunning {
 		v.log.TRACE.Printf("StatRunning. Exiting")
-		return res, api.ErrMustRetry
+		return zero, api.ErrMustRetry
 	}
 	v.log.TRACE.Printf("StatInvalid. Starting query")
 
-	token, err = v.identity.Token()
+	token, err := v.identity.Token()
 	if err != nil {
-		return res, err
+		return zero, err
 	}
 
 	path := "vehicle/charging/mgmtData?vin=" + requests.Sha256(vin)
 	// get charging status of vehicle
-	req, err = requests.CreateRequest(
+	req, err := requests.CreateRequest(
 		v.identity.baseUrl,
 		path,
 		http.MethodGet,
@@ -223,18 +205,18 @@ func (v *API) Status(vin string) (requests.ChargeStatus, error) {
 		token.AccessToken,
 		"")
 	if err != nil {
-		return res, err
+		return zero, err
 	}
 
-	event_id, err = v.DoRequest(req, &answer)
+	var res requests.Answer[requests.ChargeStatus]
+	event_id, err := doRequest(v, req, &res)
 	if err != nil {
-		v.log.TRACE.Printf("Getting event id failed")
-		return res, err
+		return zero, err
 	}
 
 	if event_id == "" {
 		v.log.TRACE.Printf("Answer without event ID")
-		return res, api.ErrMustRetry
+		return zero, api.ErrMustRetry
 	}
 
 	req, err = requests.CreateRequest(
@@ -246,20 +228,17 @@ func (v *API) Status(vin string) (requests.ChargeStatus, error) {
 		token.AccessToken,
 		event_id)
 	if err != nil {
-		v.log.TRACE.Printf("Could not create request %s", err.Error())
-		return res, err
+		return zero, err
 	}
 
-	_, err = v.DoRequest(req, &answer)
+	_, err = doRequest(v, req, &res)
 
 	// Continue checking....
 	if err == api.ErrMustRetry {
 		v.request.Status = StatRunning
 		v.log.TRACE.Printf(" No answer yet. Continue status query in background")
 		go v.repeatRequest(path, event_id)
-	} else if err != nil {
-		v.log.TRACE.Printf("doRequest failed with %s", err.Error())
 	}
 
-	return res, err
+	return res.Data, err
 }

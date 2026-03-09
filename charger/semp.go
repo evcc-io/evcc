@@ -44,7 +44,7 @@ type SEMP struct {
 	hasStatusParam bool
 }
 
-//go:generate go tool decorate -f decorateSEMP -b *SEMP -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)" -t "api.ChargeRater,ChargedEnergy,func() (float64, error)"
+//go:generate go tool decorate -f decorateSEMP -b *SEMP -r api.Charger -t api.PhaseSwitcher,api.PhaseGetter,api.ChargeRater
 
 func init() {
 	registry.AddCtx("semp", NewSEMPFromConfig)
@@ -156,12 +156,9 @@ func NewSEMP(ctx context.Context, uri, deviceID string, cache time.Duration) (ap
 
 // heartbeat ensures that device control updates are sent at least once per minute
 func (wb *SEMP) heartbeat(ctx context.Context) {
-	ticker := time.NewTicker(time.Second)
-	defer ticker.Stop()
-
-	for {
+	for tick := time.NewTicker(time.Second); ; {
 		select {
-		case <-ticker.C:
+		case <-tick.C:
 			// Check if we need to send an update
 			if time.Since(wb.conn.Updated()) >= time.Minute {
 				if err := wb.conn.SendDeviceControl(wb.deviceID, wb.calcPower(wb.enabled, wb.current, wb.phases)); err != nil {

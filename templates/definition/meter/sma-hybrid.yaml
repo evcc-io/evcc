@@ -12,7 +12,6 @@ requirements:
 params:
   - name: usage
     choice: ["pv", "battery", "grid"]
-    allinone: true
   - name: modbus
     choice: ["tcpip"]
     port: 502
@@ -20,9 +19,8 @@ params:
     help:
       en: ModbusTCP server needs to be enabled.
       de: Der ModbusTCP Server muss aktiviert sein.
-  - name: capacity
-    advanced: true
   - name: maxacpower
+  - preset: battery-params
   - name: maxchargepower
     default: 4200
   - name: watchdog
@@ -376,5 +374,5 @@ render: |
                 address: 40801 # CmpBMS.GridWSpt - Sollwert der Netzaustauschleistung
                 type: writemultiple
                 decode: uint32
-  capacity: {{ .capacity }} # kWh
+  {{- include "battery-params" . }}
   {{- end }}

@@ -43,7 +43,7 @@ type Vaillant struct {
 	systemId string
 }
 
-//go:generate go tool decorate -f decorateVaillant -b *Vaillant -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)"
+//go:generate go tool decorate -f decorateVaillant -b *Vaillant -r api.Charger -t api.Meter,api.Battery
 
 // NewVaillantFromConfig creates an Vaillant configurable charger from generic config
 func NewVaillantFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
@@ -58,7 +58,7 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]any) (api.Charg
 	}{
 		embed: embed{
 			Icon_:     "heatpump",
-			Features_: []api.Feature{api.Heating, api.IntegratedDevice},
+			Features_: []api.Feature{api.Continuous, api.Heating, api.IntegratedDevice},
 		},
 		Realm: sensonet.REALM_GERMANY,
 		Cache: time.Minute,

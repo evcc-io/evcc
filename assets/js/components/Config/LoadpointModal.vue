@@ -2,12 +2,12 @@
 	<GenericModal
 		id="loadpointModal"
 		ref="modal"
+		config-modal-name="loadpoint"
 		:title="modalTitle"
 		data-testid="loadpoint-modal"
-		:fade="fade"
 		@open="onOpen"
-		@opened="onOpened"
 		@close="onClose"
+		@dismiss="onDismiss"
 	>
 		<div v-if="!loadpointType" class="d-flex flex-column gap-4">
 			<NewDeviceButton
@@ -35,7 +35,6 @@
 					id="loadpointParamTitle"
 					v-model="values.title"
 					type="String"
-					class="me-2"
 					required
 				/>
 			</FormRow>
@@ -45,25 +44,12 @@
 				:label="$t(`config.loadpoint.chargerLabel.${loadpointType}`)"
 				:error="!charger ? $t(`config.loadpoint.chargerError.${loadpointType}`) : undefined"
 			>
-				<div class="d-flex">
-					<PropertyField
-						id="loadpointParamCharger"
-						:modelValue="chargerTitle"
-						type="String"
-						class="me-2 flex-grow-1"
-						readonly
-						required
-						:invalid="!charger || hasDeviceError('charger', values.charger)"
-						@click.prevent="editCharger"
-					/>
-					<button
-						class="btn btn-link btn-sm evcc-default-text"
-						type="button"
-						@click.prevent="editCharger"
-					>
-						<EditIcon />
-					</button>
-				</div>
+				<DeviceRefBox
+					compact
+					:title="chargerTitle"
+					:error="!charger || hasDeviceError('charger', values.charger)"
+					@edit="editCharger"
+				/>
 			</FormRow>
 			<div v-else class="d-flex justify-content-end">
 				<button
@@ -83,26 +69,12 @@
 					:label="$t('config.loadpoint.energyMeterLabel')"
 					:help="$t('config.loadpoint.energyMeterHelp')"
 				>
-					<div class="d-flex">
-						<PropertyField
-							id="loadpointParamMeter"
-							:modelValue="meterTitle"
-							type="String"
-							class="me-2 flex-grow-1"
-							required
-							readonly
-							:invalid="hasDeviceError('meter', values.meter)"
-							@click="editMeter"
-						/>
-						<button
-							class="btn btn-link btn-sm evcc-default-text"
-							type="button"
-							tabindex="0"
-							@click.prevent="editMeter"
-						>
-							<EditIcon />
-						</button>
-					</div>
+					<DeviceRefBox
+						compact
+						:title="meterTitle"
+						:error="hasDeviceError('meter', values.meter)"
+						@edit="editMeter"
+					/>
 				</FormRow>
 				<p v-else>
 					<button
@@ -118,409 +90,459 @@
 			</div>
 
 			<div v-if="values.charger || !isNew">
-				<h6>{{ $t("config.loadpoint.chargingTitle") }}</h6>
+				<p v-if="isNew && !showAllSettings" class="mt-4 mb-0 text-muted">
+					{{ $t("config.loadpoint.defaultsHint") }}
+					<a href="#" @click.prevent="showAllSettings = true">
+						{{ $t("config.loadpoint.defaultsHintLink") }} </a
+					>.
+				</p>
+				<div class="collapsible-wrapper" :class="{ open: !isNew || showAllSettings }">
+					<div class="collapsible-content">
+						<h6 class="mt-4">{{ $t("config.loadpoint.chargingTitle") }}</h6>
 
-				<FormRow
-					id="loadpointMode"
-					:label="$t('config.loadpoint.defaultModeLabel')"
-					:help="
-						values.defaultMode === ''
-							? $t(`config.loadpoint.defaultModeHelpKeep`)
-							: $t(`config.loadpoint.defaultModeHelp.${loadpointType}`)
-					"
-				>
-					<PropertyField
-						id="loadpointMode"
-						v-model="values.defaultMode"
-						type="Choice"
-						class="w-100"
-						required
-						:choice="[
-							{ key: '', name: '---' },
-							{ key: 'off', name: $t('main.mode.off') },
-							{ key: 'pv', name: $t('main.mode.pv') },
-							{ key: 'minpv', name: $t('main.mode.minpv') },
-							{ key: 'now', name: $t('main.mode.now') },
-						]"
-					/>
-				</FormRow>
-
-				<FormRow
-					id="loadpointSolarMode"
-					:label="$t('config.loadpoint.solarBehaviorLabel')"
-					:help="
-						solarMode === 'default'
-							? $t('config.loadpoint.solarBehaviorDefaultHelp', {
-									enableDelay: fmtDurationNs(
-										values.thresholds.enable.delay,
-										true,
-										'm'
-									),
-									disableDelay: fmtDurationNs(
-										values.thresholds.disable.delay,
-										true,
-										'm'
-									),
-								})
-							: $t('config.loadpoint.solarBehaviorCustomHelp')
-					"
-				>
-					<SelectGroup
-						id="loadpointSolarMode"
-						v-model="solarMode"
-						class="w-100"
-						:options="[
-							{ name: $t('config.loadpoint.solarModeMaximum'), value: 'default' },
-							{ name: $t('config.loadpoint.solarModeCustom'), value: 'custom' },
-						]"
-						transparent
-						equal-width
-					/>
-				</FormRow>
-
-				<div v-show="solarMode === 'custom'" class="ms-3 mb-5">
-					<div class="mb-4">
-						<div class="d-flex flex-wrap flex-sm-nowrap gap-4">
-							<FormRow
-								id="loadpointEnableThreshold"
-								:label="$t('config.loadpoint.thresholdEnableLabel')"
-								style="margin-bottom: 0 !important"
-							>
-								<PropertyField
-									id="loadpointEnableThreshold"
-									v-model="values.thresholds.enable.threshold"
-									type="Float"
-									unit="W"
-									size="w-25 w-min-200"
-									required
-								/>
-							</FormRow>
-							<FormRow
-								id="loadpointEnableDelay"
-								:label="$t('config.loadpoint.thresholdEnableDelayLabel')"
-								style="margin-bottom: 0 !important"
-							>
-								<PropertyField
-									id="loadpointEnableDelay"
-									v-model="values.thresholds.enable.delay"
-									type="Duration"
-									unit="minute"
-									size="w-25 w-min-200"
-									required
-								/>
-							</FormRow>
-						</div>
-						<div class="form-text evcc-gray">
-							{{
-								values.thresholds.enable.threshold === 0
-									? $t("config.loadpoint.thresholdEnableHelpZero", {
-											delay: fmtDurationNs(
-												values.thresholds.enable.delay,
-												true,
-												"m"
-											),
-										})
-									: values.thresholds.enable.threshold < 0
-										? $t("config.loadpoint.thresholdEnableHelpNegative", {
-												surplus: fmtW(
-													-1 * values.thresholds.enable.threshold,
-													powerUnit.AUTO
-												),
-												delay: fmtDurationNs(
-													values.thresholds.enable.delay,
-													true,
-													"m"
-												),
-											})
-										: $t("config.loadpoint.thresholdEnableHelpInvalid")
-							}}
-						</div>
-					</div>
-
-					<div>
-						<div class="d-flex flex-wrap flex-sm-nowrap gap-4">
-							<FormRow
-								id="loadpointDisableThreshold"
-								:label="$t('config.loadpoint.thresholdDisableLabel')"
-								style="margin-bottom: 0 !important"
-							>
-								<PropertyField
-									id="loadpointDisableThreshold"
-									v-model="values.thresholds.disable.threshold"
-									type="Float"
-									unit="W"
-									size="w-25 w-min-200"
-									required
-								/>
-							</FormRow>
-							<FormRow
-								id="loadpointDisableDelay"
-								:label="$t('config.loadpoint.thresholdDisableDelayLabel')"
-								style="margin-bottom: 0 !important"
-							>
-								<PropertyField
-									id="loadpointDisableDelay"
-									v-model="values.thresholds.disable.delay"
-									type="Duration"
-									unit="minute"
-									size="w-25 w-min-200"
-									required
-								/>
-							</FormRow>
-						</div>
-						<div class="form-text evcc-gray">
-							{{
-								values.thresholds.disable.threshold === 0
-									? $t("config.loadpoint.thresholdDisableHelpZero", {
-											delay: fmtDurationNs(
-												values.thresholds.disable.delay,
-												true,
-												"m"
-											),
-										})
-									: values.thresholds.disable.threshold > 0
-										? $t("config.loadpoint.thresholdDisableHelpPositive", {
-												power: fmtW(
-													values.thresholds.disable.threshold,
-													powerUnit.AUTO
-												),
-												delay: fmtDurationNs(
-													values.thresholds.disable.delay,
-													true,
-													"m"
-												),
-											})
-										: $t("config.loadpoint.thresholdDisableHelpInvalid")
-							}}
-						</div>
-					</div>
-				</div>
-
-				<FormRow
-					v-if="showPriority"
-					id="loadpointParamPriority"
-					:label="$t('config.loadpoint.priorityLabel')"
-					:help="$t('config.loadpoint.priorityHelp')"
-				>
-					<PropertyField
-						id="loadpointParamPriority"
-						v-model="values.priority"
-						type="Choice"
-						size="w-100"
-						class="me-2"
-						:choice="priorityOptions"
-						required
-					/>
-				</FormRow>
-
-				<h6>
-					{{ $t("config.loadpoint.electricalTitle") }}
-					<small class="text-muted">{{
-						$t("config.loadpoint.electricalSubtitle")
-					}}</small>
-				</h6>
-
-				<FormRow
-					id="chargerPower"
-					:label="$t('config.loadpoint.chargerTypeLabel')"
-					:help="
-						chargerPower === '11kw'
-							? $t('config.loadpoint.chargerPower11kwHelp')
-							: chargerPower === '22kw'
-								? $t('config.loadpoint.chargerPower22kwHelp')
-								: $t('config.loadpoint.chargerPowerCustomHelp')
-					"
-				>
-					<SelectGroup
-						id="chargerPower"
-						v-model="chargerPower"
-						class="w-100"
-						:options="[
-							{ name: $t('config.loadpoint.chargerPower11kw'), value: '11kw' },
-							{ name: $t('config.loadpoint.chargerPower22kw'), value: '22kw' },
-							{ name: $t('config.loadpoint.chargerPowerCustom'), value: 'other' },
-						]"
-						transparent
-					/>
-				</FormRow>
-
-				<div v-if="chargerPower === 'other'" class="row ms-3 mb-5">
-					<FormRow
-						id="loadpointMinCurrent"
-						:label="$t('config.loadpoint.minCurrentLabel')"
-						class="col-sm-6 mb-sm-0"
-						:help="
-							values.minCurrent < 6
-								? $t('config.loadpoint.minCurrentHelp')
-								: undefined
-						"
-					>
-						<PropertyField
-							id="loadpointMinCurrent"
-							v-model="values.minCurrent"
-							type="Float"
-							unit="A"
-							size="w-25 w-min-200"
-							class="me-2"
-							required
-						/>
-					</FormRow>
-
-					<FormRow
-						id="loadpointMaxCurrent"
-						:label="$t('config.loadpoint.maxCurrentLabel')"
-						class="col-sm-6 mb-sm-0"
-						:help="
-							values.maxCurrent < values.minCurrent
-								? $t('config.loadpoint.maxCurrentHelp')
-								: undefined
-						"
-					>
-						<PropertyField
-							id="loadpointMaxCurrent"
-							v-model="values.maxCurrent"
-							type="Float"
-							unit="A"
-							size="w-25 w-min-200"
-							class="me-2"
-							required
-						/>
-					</FormRow>
-				</div>
-
-				<template v-if="!chargerIsSinglePhase">
-					<FormRow
-						v-if="chargerSupports1p3p"
-						id="loadpointParamPhases"
-						:label="$t('config.loadpoint.phasesAutomatic')"
-						:help="$t('config.loadpoint.phasesAutomaticHelp')"
-					>
-					</FormRow>
-					<FormRow
-						v-else
-						id="loadpointParamPhases"
-						:label="$t('config.loadpoint.phasesLabel')"
-						:help="$t('config.loadpoint.phasesHelp')"
-					>
-						<SelectGroup
-							id="loadpointParamPhases"
-							v-model="values.phasesConfigured"
-							class="w-100"
-							:options="phasesOptions"
-							transparent
-							equal-width
-						/>
-					</FormRow>
-				</template>
-
-				<FormRow
-					v-if="showCircuit"
-					id="loadpointParamCircuit"
-					:label="$t('config.loadpoint.circuitLabel')"
-					:help="$t('config.loadpoint.circuitHelp')"
-				>
-					<PropertyField
-						id="loadpointParamCircuit"
-						v-model="values.circuit"
-						type="Choice"
-						class="me-2"
-						:choice="circuitOptions"
-						required
-					/>
-				</FormRow>
-
-				<div v-if="!chargerIsIntegratedDevice">
-					<h6>{{ $t("config.loadpoint.vehiclesTitle") }}</h6>
-
-					<div v-if="vehicleOptions.length">
 						<FormRow
-							id="loadpointParamVehicle"
-							:label="$t('config.loadpoint.vehicleLabel')"
+							id="loadpointMode"
+							:label="$t('config.loadpoint.defaultModeLabel')"
 							:help="
-								values.vehicle
-									? $t('config.loadpoint.vehicleHelpDefault')
-									: $t('config.loadpoint.vehicleHelpAutoDetection')
+								values.defaultMode === ''
+									? $t(`config.loadpoint.defaultModeHelpKeep`)
+									: $t(`config.loadpoint.defaultModeHelp.${loadpointType}`)
 							"
 						>
 							<PropertyField
-								id="loadpointParamVehicle"
-								v-model="values.vehicle"
+								id="loadpointMode"
+								v-model="values.defaultMode"
 								type="Choice"
-								class="me-2"
-								:choice="allVehicleOptions"
+								class="w-100"
 								required
+								:choice="[
+									{ key: '', name: '---' },
+									{ key: 'off', name: $t('main.mode.off') },
+									{ key: 'pv', name: $t('main.mode.pv') },
+									{ key: 'minpv', name: $t('main.mode.minpv') },
+									{ key: 'now', name: $t('main.mode.now') },
+								]"
 							/>
 						</FormRow>
 
 						<FormRow
-							id="loadpointPollMode"
-							:label="$t('config.loadpoint.pollModeLabel')"
+							id="loadpointSolarMode"
+							:label="$t('config.loadpoint.solarBehaviorLabel')"
 							:help="
-								values.soc.poll.mode === 'charging'
-									? $t('config.loadpoint.pollModeChargingHelp')
-									: values.soc.poll.mode === 'connected'
-										? $t('config.loadpoint.pollModeConnectedHelp')
-										: values.soc.poll.mode === 'always'
-											? $t('config.loadpoint.pollModeAlwaysHelp')
-											: undefined
+								solarMode === 'default'
+									? $t('config.loadpoint.solarBehaviorDefaultHelp', {
+											enableDelay: fmtDurationNs(
+												values.thresholds.enable.delay,
+												true,
+												'm'
+											),
+											disableDelay: fmtDurationNs(
+												values.thresholds.disable.delay,
+												true,
+												'm'
+											),
+										})
+									: $t('config.loadpoint.solarBehaviorCustomHelp')
 							"
 						>
 							<SelectGroup
-								id="loadpointPollMode"
-								v-model="values.soc.poll.mode"
+								id="loadpointSolarMode"
+								v-model="solarMode"
 								class="w-100"
 								:options="[
 									{
-										value: 'charging',
-										name: $t('config.loadpoint.pollModeCharging'),
+										name: $t('config.loadpoint.solarModeMaximum'),
+										value: 'default',
 									},
 									{
-										value: 'connected',
-										name: $t('config.loadpoint.pollModeConnected'),
+										name: $t('config.loadpoint.solarModeCustom'),
+										value: 'custom',
+									},
+								]"
+								transparent
+								equal-width
+							/>
+						</FormRow>
+
+						<div v-show="solarMode === 'custom'" class="ms-3 mb-5">
+							<div class="mb-4">
+								<div class="d-flex flex-wrap flex-sm-nowrap gap-4">
+									<FormRow
+										id="loadpointEnableThreshold"
+										:label="$t('config.loadpoint.thresholdEnableLabel')"
+										style="margin-bottom: 0 !important"
+									>
+										<PropertyField
+											id="loadpointEnableThreshold"
+											v-model="values.thresholds.enable.threshold"
+											type="Float"
+											unit="W"
+											size="w-25 w-min-200"
+											required
+										/>
+									</FormRow>
+									<FormRow
+										id="loadpointEnableDelay"
+										:label="$t('config.loadpoint.thresholdEnableDelayLabel')"
+										style="margin-bottom: 0 !important"
+									>
+										<PropertyField
+											id="loadpointEnableDelay"
+											v-model="values.thresholds.enable.delay"
+											type="Duration"
+											unit="minute"
+											size="w-25 w-min-200"
+											required
+										/>
+									</FormRow>
+								</div>
+								<div class="form-text evcc-gray">
+									{{
+										values.thresholds.enable.threshold === 0
+											? $t("config.loadpoint.thresholdEnableHelpZero", {
+													delay: fmtDurationNs(
+														values.thresholds.enable.delay,
+														true,
+														"m"
+													),
+												})
+											: values.thresholds.enable.threshold < 0
+												? $t(
+														"config.loadpoint.thresholdEnableHelpNegative",
+														{
+															surplus: fmtW(
+																-1 *
+																	values.thresholds.enable
+																		.threshold,
+																powerUnit.AUTO
+															),
+															delay: fmtDurationNs(
+																values.thresholds.enable.delay,
+																true,
+																"m"
+															),
+														}
+													)
+												: $t("config.loadpoint.thresholdEnableHelpInvalid")
+									}}
+								</div>
+							</div>
+
+							<div>
+								<div class="d-flex flex-wrap flex-sm-nowrap gap-4">
+									<FormRow
+										id="loadpointDisableThreshold"
+										:label="$t('config.loadpoint.thresholdDisableLabel')"
+										style="margin-bottom: 0 !important"
+									>
+										<PropertyField
+											id="loadpointDisableThreshold"
+											v-model="values.thresholds.disable.threshold"
+											type="Float"
+											unit="W"
+											size="w-25 w-min-200"
+											required
+										/>
+									</FormRow>
+									<FormRow
+										id="loadpointDisableDelay"
+										:label="$t('config.loadpoint.thresholdDisableDelayLabel')"
+										style="margin-bottom: 0 !important"
+									>
+										<PropertyField
+											id="loadpointDisableDelay"
+											v-model="values.thresholds.disable.delay"
+											type="Duration"
+											unit="minute"
+											size="w-25 w-min-200"
+											required
+										/>
+									</FormRow>
+								</div>
+								<div class="form-text evcc-gray">
+									{{
+										values.thresholds.disable.threshold === 0
+											? $t("config.loadpoint.thresholdDisableHelpZero", {
+													delay: fmtDurationNs(
+														values.thresholds.disable.delay,
+														true,
+														"m"
+													),
+												})
+											: values.thresholds.disable.threshold > 0
+												? $t(
+														"config.loadpoint.thresholdDisableHelpPositive",
+														{
+															power: fmtW(
+																values.thresholds.disable.threshold,
+																powerUnit.AUTO
+															),
+															delay: fmtDurationNs(
+																values.thresholds.disable.delay,
+																true,
+																"m"
+															),
+														}
+													)
+												: $t("config.loadpoint.thresholdDisableHelpInvalid")
+									}}
+								</div>
+							</div>
+						</div>
+
+						<FormRow
+							v-if="showPriority"
+							id="loadpointParamPriority"
+							:label="$t('config.loadpoint.priorityLabel')"
+							:help="$t('config.loadpoint.priorityHelp')"
+						>
+							<PropertyField
+								id="loadpointParamPriority"
+								v-model="values.priority"
+								type="Choice"
+								size="w-100"
+								class="me-2"
+								:choice="priorityOptions"
+								required
+							/>
+						</FormRow>
+
+						<h6>
+							{{ $t("config.loadpoint.electricalTitle") }}
+							<small class="text-muted">{{
+								$t("config.loadpoint.electricalSubtitle")
+							}}</small>
+						</h6>
+
+						<FormRow
+							id="chargerPower"
+							:label="$t('config.loadpoint.chargerTypeLabel')"
+							:help="
+								chargerPower === '11kw'
+									? $t('config.loadpoint.chargerPower11kwHelp')
+									: chargerPower === '22kw'
+										? $t('config.loadpoint.chargerPower22kwHelp')
+										: $t('config.loadpoint.chargerPowerCustomHelp')
+							"
+						>
+							<SelectGroup
+								id="chargerPower"
+								v-model="chargerPower"
+								class="w-100"
+								:options="[
+									{
+										name: $t('config.loadpoint.chargerPower11kw'),
+										value: '11kw',
 									},
 									{
-										value: 'always',
-										name: $t('config.loadpoint.pollModeAlways'),
+										name: $t('config.loadpoint.chargerPower22kw'),
+										value: '22kw',
+									},
+									{
+										name: $t('config.loadpoint.chargerPowerCustom'),
+										value: 'other',
 									},
 								]"
 								transparent
 							/>
 						</FormRow>
-						<FormRow
-							v-if="values.soc.poll.mode !== 'charging'"
-							id="loadpointPollInterval"
-							class="ms-3 mb-5"
-							:label="$t('config.loadpoint.pollIntervalLabel')"
-							:help="$t('config.loadpoint.pollIntervalHelp')"
-							:danger="$t('config.loadpoint.pollIntervalDanger')"
-						>
-							<PropertyField
-								id="loadpointPollInterval"
-								v-model="values.soc.poll.interval"
-								type="Duration"
-								unit="minute"
-								size="w-25 w-min-200"
-								class="me-2"
-								required
-							/>
-						</FormRow>
 
-						<div>
-							<div class="d-flex mb-4">
-								<input
-									id="loadpointEstimate"
-									v-model="values.soc.estimate"
-									class="form-check-input"
-									type="checkbox"
+						<div v-if="chargerPower === 'other'" class="row ms-3 mb-5">
+							<FormRow
+								id="loadpointMinCurrent"
+								:label="$t('config.loadpoint.minCurrentLabel')"
+								class="col-sm-6 mb-sm-0"
+								:help="
+									values.minCurrent < 6
+										? $t('config.loadpoint.minCurrentHelp')
+										: undefined
+								"
+							>
+								<PropertyField
+									id="loadpointMinCurrent"
+									v-model="values.minCurrent"
+									type="Float"
+									unit="A"
+									size="w-25 w-min-200"
+									class="me-2"
+									required
 								/>
-								<label class="form-check-label ms-2" for="loadpointEstimate">
-									{{ $t("config.loadpoint.estimateLabel") }}
-								</label>
+							</FormRow>
+
+							<FormRow
+								id="loadpointMaxCurrent"
+								:label="$t('config.loadpoint.maxCurrentLabel')"
+								class="col-sm-6 mb-sm-0"
+								:help="
+									values.maxCurrent < values.minCurrent
+										? $t('config.loadpoint.maxCurrentHelp')
+										: undefined
+								"
+							>
+								<PropertyField
+									id="loadpointMaxCurrent"
+									v-model="values.maxCurrent"
+									type="Float"
+									unit="A"
+									size="w-25 w-min-200"
+									class="me-2"
+									required
+								/>
+							</FormRow>
+						</div>
+
+						<template v-if="!chargerIsSinglePhase">
+							<FormRow
+								v-if="chargerSupports1p3p"
+								id="loadpointParamPhases"
+								:label="$t('config.loadpoint.phasesAutomatic')"
+								:help="$t('config.loadpoint.phasesAutomaticHelp')"
+							>
+							</FormRow>
+							<FormRow
+								v-else
+								id="loadpointParamPhases"
+								:label="$t('config.loadpoint.phasesLabel')"
+								:help="$t('config.loadpoint.phasesHelp')"
+							>
+								<SelectGroup
+									id="loadpointParamPhases"
+									v-model="values.phasesConfigured"
+									class="w-100"
+									:options="phasesOptions"
+									transparent
+									equal-width
+								/>
+							</FormRow>
+						</template>
+
+						<div v-if="showCircuit">
+							<FormRow
+								id="loadpointParamCircuit"
+								:label="$t('config.loadpoint.circuitLabel')"
+								:help="$t('config.loadpoint.circuitHelp')"
+							>
+								<InvalidReferenceAlert
+									v-if="invalidCircuit"
+									:message="$t('config.loadpoint.circuitInvalid')"
+									:value="values.circuit"
+									@remove="values.circuit = ''"
+								/>
+								<PropertyField
+									v-else
+									id="loadpointParamCircuit"
+									v-model="values.circuit"
+									type="Choice"
+									class="me-2"
+									:choice="circuitOptions"
+									required
+								/>
+							</FormRow>
+						</div>
+
+						<div v-if="!chargerIsIntegratedDevice">
+							<h6>{{ $t("config.loadpoint.vehiclesTitle") }}</h6>
+
+							<InvalidReferenceAlert
+								v-if="invalidVehicle"
+								:message="$t('config.loadpoint.vehicleInvalid')"
+								:value="values.vehicle"
+								@remove="values.vehicle = ''"
+							/>
+							<div v-else-if="vehicleOptions.length">
+								<FormRow
+									id="loadpointParamVehicle"
+									:label="$t('config.loadpoint.vehicleLabel')"
+									:help="
+										values.vehicle
+											? $t('config.loadpoint.vehicleHelpDefault')
+											: $t('config.loadpoint.vehicleHelpAutoDetection')
+									"
+								>
+									<PropertyField
+										id="loadpointParamVehicle"
+										v-model="values.vehicle"
+										type="Choice"
+										class="me-2"
+										:choice="allVehicleOptions"
+										required
+									/>
+								</FormRow>
+
+								<FormRow
+									id="loadpointPollMode"
+									:label="$t('config.loadpoint.pollModeLabel')"
+									:help="
+										values.soc.poll.mode === 'charging'
+											? $t('config.loadpoint.pollModeChargingHelp')
+											: values.soc.poll.mode === 'connected'
+												? $t('config.loadpoint.pollModeConnectedHelp')
+												: values.soc.poll.mode === 'always'
+													? $t('config.loadpoint.pollModeAlwaysHelp')
+													: undefined
+									"
+								>
+									<SelectGroup
+										id="loadpointPollMode"
+										v-model="values.soc.poll.mode"
+										class="w-100"
+										:options="[
+											{
+												value: 'charging',
+												name: $t('config.loadpoint.pollModeCharging'),
+											},
+											{
+												value: 'connected',
+												name: $t('config.loadpoint.pollModeConnected'),
+											},
+											{
+												value: 'always',
+												name: $t('config.loadpoint.pollModeAlways'),
+											},
+										]"
+										transparent
+									/>
+								</FormRow>
+								<FormRow
+									v-if="values.soc.poll.mode !== 'charging'"
+									id="loadpointPollInterval"
+									class="ms-3 mb-5"
+									:label="$t('config.loadpoint.pollIntervalLabel')"
+									:help="$t('config.loadpoint.pollIntervalHelp')"
+									:danger="$t('config.loadpoint.pollIntervalDanger')"
+								>
+									<PropertyField
+										id="loadpointPollInterval"
+										v-model="values.soc.poll.interval"
+										type="Duration"
+										unit="minute"
+										size="w-25 w-min-200"
+										class="me-2"
+										required
+									/>
+								</FormRow>
+
+								<div>
+									<div class="d-flex mb-4">
+										<input
+											id="loadpointEstimate"
+											v-model="values.soc.estimate"
+											class="form-check-input"
+											type="checkbox"
+										/>
+										<label
+											class="form-check-label ms-2"
+											for="loadpointEstimate"
+										>
+											{{ $t("config.loadpoint.estimateLabel") }}
+										</label>
+									</div>
+								</div>
+							</div>
+							<div v-else>
+								<p class="text-muted">{{ $t("config.loadpoint.noVehicles") }}</p>
 							</div>
 						</div>
-					</div>
-					<div v-else>
-						<p class="text-muted">{{ $t("config.loadpoint.noVehicles") }}</p>
 					</div>
 				</div>
 			</div>
@@ -562,19 +584,22 @@ import FormRow from "./FormRow.vue";
 import PropertyField from "./PropertyField.vue";
 import SelectGroup from "../Helper/SelectGroup.vue";
 import api from "@/api";
-import GenericModal, { type ModalFade } from "../Helper/GenericModal.vue";
+import GenericModal from "../Helper/GenericModal.vue";
 import deepClone from "@/utils/deepClone";
 import deepEqual from "@/utils/deepEqual";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
-import EditIcon from "../MaterialIcon/Edit.vue";
+import DeviceRefBox from "./DeviceRefBox.vue";
 import NewDeviceButton from "./NewDeviceButton.vue";
-import { handleError, customChargerName } from "./DeviceModal";
+import InvalidReferenceAlert from "./InvalidReferenceAlert.vue";
+import { handleError, customChargerName, createDeviceUtils } from "./DeviceModal";
+import { getModal, openModal, replaceModal, closeModal } from "@/configModal";
 import {
 	LOADPOINT_TYPE,
 	type DeviceType,
 	type LoadpointType,
 	type ConfigCharger,
 	type ConfigMeter,
+	type VehicleOption,
 	type ConfigCircuit,
 	type ConfigLoadpoint,
 } from "@/types/evcc";
@@ -610,14 +635,19 @@ const defaultThresholds = {
 
 export default {
 	name: "LoadpointModal",
-	components: { FormRow, PropertyField, GenericModal, SelectGroup, EditIcon, NewDeviceButton },
+	components: {
+		FormRow,
+		PropertyField,
+		GenericModal,
+		SelectGroup,
+		DeviceRefBox,
+		NewDeviceButton,
+		InvalidReferenceAlert,
+	},
 	mixins: [formatter],
 	props: {
-		id: Number,
-		name: String,
-		vehicleOptions: { type: Array, default: () => [] },
+		vehicleOptions: { type: Array as PropType<VehicleOption[]>, default: () => [] },
 		loadpointCount: { type: Number, default: 0 },
-		fade: String as PropType<ModalFade>,
 		chargers: { type: Array as PropType<ConfigCharger[]>, default: () => [] },
 		chargerValues: { type: Object, default: () => {} },
 		meters: { type: Array as PropType<ConfigMeter[]>, default: () => [] },
@@ -627,20 +657,27 @@ export default {
 			default: () => false,
 		},
 	},
-	emits: ["updated", "openMeterModal", "openChargerModal", "opened"],
+	emits: ["changed", "dismissed"],
 	data() {
 		return {
 			isModalVisible: false,
+			showAllSettings: false,
 			saving: false,
-			selectedType: null as LoadpointType | null,
 			values: deepClone(defaultValues) as ConfigLoadpoint,
 			chargerPower: "11kw",
 			solarMode: "default",
+			created: false,
 			tab: "solar",
 			powerUnit: POWER_UNIT,
 		};
 	},
 	computed: {
+		id(): number | undefined {
+			return getModal("loadpoint")?.id;
+		},
+		selectedType(): LoadpointType | undefined {
+			return getModal("loadpoint")?.type as LoadpointType | undefined;
+		},
 		modalTitle() {
 			if (this.isNew) {
 				return this.$t(`config.loadpoint.titleAdd.${this.loadpointType || "unknown"}`);
@@ -665,7 +702,7 @@ export default {
 				this.charger.deviceProduct ||
 				this.charger.config?.template ||
 				this.$t(customChargerName(this.charger.type, this.chargerIsHeating));
-			return `${title} [${this.values.charger}]`;
+			return title;
 		},
 		chargerStatus() {
 			if (!this.chargerValues || !this.values.charger) {
@@ -693,7 +730,7 @@ export default {
 				meter?.deviceProduct ||
 				meter?.config?.template ||
 				this.$t("config.general.customOption");
-			return `${title} [${name}]`;
+			return title;
 		},
 		isDeletable() {
 			return !this.isNew;
@@ -718,7 +755,11 @@ export default {
 			];
 		},
 		showCircuit() {
-			return this.circuits.length > 0;
+			return this.circuits.length > 0 || !!this.values.circuit;
+		},
+		invalidCircuit() {
+			const { circuit } = this.values;
+			return circuit && !this.circuitOptions.some((c) => c.key === circuit);
 		},
 		circuitOptions() {
 			const options = this.circuits.map((c) => ({
@@ -726,6 +767,10 @@ export default {
 				name: `${c.config?.title || ""} [${c.name}]`.trim(),
 			}));
 			return [{ key: "", name: "unassigned" }, ...options];
+		},
+		invalidVehicle() {
+			const { vehicle } = this.values;
+			return vehicle && !this.vehicleOptions.some(({ key }) => key === vehicle);
 		},
 		allVehicleOptions() {
 			return [
@@ -782,8 +827,9 @@ export default {
 	},
 	methods: {
 		reset() {
-			this.selectedType = null;
 			this.values = deepClone(defaultValues);
+			this.created = false;
+			this.showAllSettings = false;
 			this.updatePhases();
 		},
 		async loadConfiguration() {
@@ -797,13 +843,17 @@ export default {
 				console.error(e);
 			}
 		},
+		async emitChanged(action: "added" | "updated" | "removed") {
+			const result = { action };
+			await closeModal(result);
+			this.$emit("changed", result);
+		},
 		async update() {
 			this.saving = true;
 			try {
 				const values = deepClone(this.values);
 				await api.put(`config/loadpoints/${this.id}`, values);
-				this.$emit("updated");
-				(this.$refs["modal"] as any).close();
+				this.emitChanged("updated");
 			} catch (e) {
 				handleError(e, "update failed");
 			}
@@ -812,8 +862,7 @@ export default {
 		async remove() {
 			try {
 				await api.delete(`config/loadpoints/${this.id}`);
-				this.$emit("updated");
-				(this.$refs["modal"] as any).close();
+				this.emitChanged("removed");
 			} catch (e) {
 				console.error(e);
 				alert("delete failed");
@@ -823,8 +872,8 @@ export default {
 			this.saving = true;
 			try {
 				await api.post("config/loadpoints", this.values);
-				this.$emit("updated");
-				(this.$refs["modal"] as any).close();
+				this.created = true;
+				this.emitChanged("added");
 			} catch (e) {
 				handleError(e, "create failed");
 			}
@@ -833,25 +882,49 @@ export default {
 		onOpen() {
 			this.isModalVisible = true;
 		},
-		onOpened() {
-			this.$emit("opened");
-		},
 		onClose() {
 			this.isModalVisible = false;
 		},
-		editCharger() {
-			this.$emit("openChargerModal", this.values.charger, this.loadpointType);
+		async onDismiss() {
+			if (!this.values.id && !this.created) {
+				await this.cleanupDevice("charger", this.values.charger, this.chargers);
+				await this.cleanupDevice("meter", this.values.meter, this.meters);
+				this.$emit("dismissed");
+				this.reset();
+			}
 		},
-		editMeter() {
-			this.$emit("openMeterModal", this.values.meter);
+		async cleanupDevice(type: DeviceType, name: string, list: { name: string; id: number }[]) {
+			const id = list.find((d) => d.name === name)?.id;
+			if (id === undefined) return;
+			try {
+				await createDeviceUtils(type).remove(id);
+			} catch (e) {
+				console.error(e);
+			}
 		},
-		// called externally
-		setMeter(meter: string) {
-			this.values.meter = meter;
+		async editCharger() {
+			const charger = this.chargers.find((c) => c.name === this.values.charger);
+			const result = await openModal("charger", {
+				id: charger?.id,
+				type: this.loadpointType || undefined,
+			});
+			if (result.action === "added" && result.name) {
+				this.values.charger = result.name;
+			} else if (result.action === "removed") {
+				this.values.charger = "";
+			}
 		},
-		// called externally
-		setCharger(charger: string) {
-			this.values.charger = charger;
+		async editMeter() {
+			const meter = this.meters.find((m) => m.name === this.values.meter);
+			const result = await openModal("meter", {
+				id: meter?.id,
+				type: "charge",
+			});
+			if (result.action === "added" && result.name) {
+				this.values.meter = result.name;
+			} else if (result.action === "removed") {
+				this.values.meter = "";
+			}
 		},
 		updateChargerPower() {
 			const { minCurrent, maxCurrent } = this.values;
@@ -887,7 +960,7 @@ export default {
 			}
 		},
 		selectType(type: LoadpointType) {
-			this.selectedType = type;
+			replaceModal("loadpoint", { id: this.id, type });
 		},
 	},
 };

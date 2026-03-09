@@ -79,13 +79,13 @@ func NewEdfTempoFromConfig(other map[string]any) (api.Tariff, error) {
 
 	t.Client.Transport = &oauth2.Transport{
 		Base:   t.Client.Transport,
-		Source: oauth.RefreshTokenSource(new(oauth2.Token), t),
+		Source: oauth2.ReuseTokenSource(nil, oauth.BootstrapTokenSource(t.refreshToken)),
 	}
 
 	return runOrError(t)
 }
 
-func (t *EdfTempo) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
+func (t *EdfTempo) refreshToken() (*oauth2.Token, error) {
 	tokenURL := "https://digital.iservices.rte-france.com/token/oauth"
 	req, _ := request.New(http.MethodPost, tokenURL, nil, map[string]string{
 		"Authorization": t.basic,

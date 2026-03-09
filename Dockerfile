@@ -1,5 +1,5 @@
 # STEP 1 build ui
-FROM --platform=$BUILDPLATFORM node:22-alpine AS node
+FROM --platform=$BUILDPLATFORM node:24-alpine AS node
 
 RUN apk update && apk add --no-cache make
 
@@ -20,7 +20,7 @@ RUN make ui
 
 
 # STEP 2 build executable binary
-FROM --platform=$BUILDPLATFORM golang:1.25-alpine AS builder
+FROM --platform=$BUILDPLATFORM golang:1.26-alpine AS builder
 
 # Install git + SSL ca certificates.
 # Git is required for fetching the dependencies.
@@ -96,8 +96,6 @@ EXPOSE 8887/tcp
 EXPOSE 8899/udp
 # SMA Energy Manager
 EXPOSE 9522/udp
-
-HEALTHCHECK --interval=60s --start-period=60s --timeout=30s --retries=3 CMD [ "evcc", "health" ]
 
 ENTRYPOINT [ "/app/entrypoint.sh" ]
 CMD [ "evcc" ]

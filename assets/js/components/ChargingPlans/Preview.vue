@@ -38,13 +38,14 @@
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
 import formatter from "@/mixins/formatter";
+import minuteTicker from "@/mixins/minuteTicker";
 import TariffChart from "../Tariff/TariffChart.vue";
 import { SMART_COST_TYPE, type CURRENCY, type Rate, type Slot } from "@/types/evcc";
 
 export default defineComponent({
 	name: "ChargingPlanPreview",
 	components: { TariffChart },
-	mixins: [formatter],
+	mixins: [formatter, minuteTicker],
 	props: {
 		duration: Number,
 		power: Number,
@@ -55,7 +56,10 @@ export default defineComponent({
 		currency: String as PropType<CURRENCY>,
 	},
 	data() {
-		return { activeIndex: null as number | null, startTime: new Date() };
+		return {
+			activeIndex: null as number | null,
+			startTime: new Date(),
+		};
 	},
 	computed: {
 		endTime(): Date | null {
@@ -170,6 +174,9 @@ export default defineComponent({
 	},
 	watch: {
 		rates(): void {
+			this.startTime = new Date();
+		},
+		everyMinute(): void {
 			this.startTime = new Date();
 		},
 	},

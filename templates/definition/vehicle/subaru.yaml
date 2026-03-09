@@ -1,0 +1,14 @@
+template: subaru
+products:
+  - brand: Subaru
+requirements:
+  description:
+    de: Benötigt Subaru Connected Services Account
+    en: Requires Subaru Connected Services Account
+params:
+  - preset: vehicle-base
+  - name: vin
+    example: JF...
+render: |
+  type: subaru
+  {{ include "vehicle-base" . }}

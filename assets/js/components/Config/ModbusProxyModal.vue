@@ -1,6 +1,6 @@
 <template>
 	<JsonModal
-		id="modbusProxyModal"
+		name="modbusproxy"
 		:title="$t('config.modbusproxy.title')"
 		:description="$t('config.modbusproxy.description')"
 		docs="/docs/reference/configuration/modbusproxy"
@@ -8,7 +8,6 @@
 		state-key="modbusproxy"
 		store-values-in-array
 		disable-remove
-		data-testid="modbusproxy-modal"
 		size="xl"
 		@changed="$emit('changed')"
 	>

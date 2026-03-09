@@ -160,7 +160,7 @@ func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
 		// validate max soc
 		if fromToCharge && mode != api.BatteryHold {
 			ok, err := site.batteryMaxSocReached(dev)
-			if err != nil {
+			if err != nil && !errors.Is(err, api.ErrNotAvailable) {
 				return err
 			}
 
@@ -172,7 +172,9 @@ func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
 		}
 
 		if mode != api.BatteryUnknown {
-			if err := batCtrl.SetBatteryMode(mode); err != nil && !errors.Is(err, api.ErrNotAvailable) {
+			if err := batCtrl.SetBatteryMode(mode); err == nil {
+				site.log.DEBUG.Printf("set battery %s mode: %s", deviceTitleOrName(dev), mode)
+			} else if !errors.Is(err, api.ErrNotAvailable) {
 				return err
 			}
 		}

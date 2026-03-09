@@ -1,6 +1,25 @@
 <template>
+	<!-- Mock Login View -->
+	<div v-if="mockLoginMode" class="container" style="max-width: 400px; margin-top: 5rem">
+		<div class="alert alert-info mb-4">
+			<strong>Mock External Login Page</strong>
+			<p class="mb-0">This simulates an external OAuth provider login screen.</p>
+		</div>
+
+		<h1 class="mb-4">Select Action</h1>
+
+		<button type="button" class="btn btn-success w-100 mb-3" @click="mockLogin('demo-token')">
+			Login Successfully
+		</button>
+
+		<button type="button" class="btn btn-danger w-100 mb-3" @click="mockDeny()">
+			Deny Access
+		</button>
+	</div>
+
+	<!-- Regular Simulator View -->
 	<form
-		v-if="state"
+		v-else-if="state"
 		class="container"
 		style="max-width: 500px; margin-bottom: 8rem"
 		@submit.prevent="save"
@@ -250,6 +269,80 @@
 				</div>
 			</div>
 		</div>
+
+		<h4 class="my-4">OCPP <small>work in progress, connect only</small></h4>
+
+		<!-- Connected Clients -->
+		<div
+			v-for="client in state.ocpp.clients"
+			:key="client.stationId"
+			class="card mb-3"
+			:data-testid="`ocpp-client-${client.stationId}`"
+		>
+			<div class="card-body">
+				<div class="d-flex justify-content-between align-items-center mb-2">
+					<h5 class="card-title mb-0">{{ client.stationId }}</h5>
+					<span class="badge" :class="client.connected ? 'bg-success' : 'bg-secondary'">
+						{{ client.connected ? "Connected" : "Disconnected" }}
+					</span>
+				</div>
+				<p class="card-text text-muted small mb-2">{{ client.serverUrl }}</p>
+				<button
+					type="button"
+					class="btn btn-sm btn-danger"
+					@click="disconnectOcpp(client.stationId)"
+				>
+					Disconnect
+				</button>
+			</div>
+		</div>
+
+		<!-- Add OCPP Client Card -->
+		<div class="card mb-3" data-testid="ocpp-add-client">
+			<div class="card-body">
+				<h5 class="card-title">OCPP Client</h5>
+				<div class="row">
+					<label for="ocppServerUrl" class="col-sm-6 col-form-label">Server URL</label>
+					<div class="col-sm-6">
+						<div class="input-group mb-3">
+							<input
+								id="ocppServerUrl"
+								v-model="ocppServerUrl"
+								type="text"
+								class="form-control"
+							/>
+						</div>
+					</div>
+				</div>
+				<div class="row">
+					<label for="ocppStationId" class="col-sm-6 col-form-label">Station ID</label>
+					<div class="col-sm-6">
+						<div class="input-group mb-3">
+							<input
+								id="ocppStationId"
+								v-model="ocppStationId"
+								type="text"
+								class="form-control"
+							/>
+						</div>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-sm-6"></div>
+					<div class="col-sm-6">
+						<button
+							type="button"
+							class="btn btn-primary w-100"
+							:disabled="!ocppServerUrl || !ocppStationId || connecting"
+							@click="connectOcpp"
+						>
+							{{ connecting ? "Connecting..." : "Connect" }}
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
 		<div class="p-4 text-center fixed-bottom bg-light text-dark bg-opacity-75">
 			<button type="submit" class="btn btn-primary">Apply changes</button>
 		</div>
@@ -264,6 +357,9 @@ export default defineComponent({
 	name: "Simulator",
 	data() {
 		return {
+			mockLoginMode: false,
+			mockLoginState: "",
+			mockLoginRedirectUri: "",
 			state: null as {
 				site: {
 					grid: { power: number };
@@ -278,19 +374,76 @@ export default defineComponent({
 				}[];
 				vehicles: { soc: number; range: number }[];
 				hems: { relay: boolean };
+				ocpp: {
+					clients: { stationId: string; serverUrl: string; connected: boolean }[];
+				};
 			} | null,
+			ocppServerUrl: "ws://127.0.0.1:8887/",
+			ocppStationId: "",
+			connecting: false,
 		};
 	},
 	mounted() {
-		this.load();
+		this.checkMockLoginMode();
+		if (!this.mockLoginMode) {
+			this.load();
+		}
 	},
 	methods: {
+		checkMockLoginMode() {
+			const urlParams = new URLSearchParams(window.location.search);
+			const state = urlParams.get("state");
+			const redirectUri = urlParams.get("redirectUri");
+
+			if (state && redirectUri) {
+				this.mockLoginMode = true;
+				this.mockLoginState = state;
+				this.mockLoginRedirectUri = redirectUri;
+			}
+		},
+		mockLogin(code: string) {
+			const callbackUrl = `${this.mockLoginRedirectUri}?state=${this.mockLoginState}&code=${code}`;
+			console.log("Redirecting to:", callbackUrl);
+			window.location.href = callbackUrl;
+		},
+		mockDeny() {
+			const callbackUrl = `${this.mockLoginRedirectUri}?state=${this.mockLoginState}&error=access_denied&error_description=User denied authorization`;
+			console.log("Redirecting to:", callbackUrl);
+			window.location.href = callbackUrl;
+		},
 		async save() {
 			await axios.post("/api/state", this.state);
 		},
 		async load() {
 			const response = await axios.get("/api/state");
 			this.state = response.data;
+		},
+		async connectOcpp() {
+			this.connecting = true;
+			try {
+				await axios.post("/api/ocpp/connect", {
+					stationId: this.ocppStationId,
+					serverUrl: this.ocppServerUrl,
+				});
+				// Reload state to get updated ocpp status
+				await this.load();
+				this.ocppStationId = "";
+			} catch (error) {
+				console.error("Failed to connect OCPP client:", error);
+				alert("Failed to connect OCPP client");
+			} finally {
+				this.connecting = false;
+			}
+		},
+		async disconnectOcpp(stationId: string) {
+			try {
+				await axios.post("/api/ocpp/disconnect", { stationId });
+				// Reload state to get updated ocpp status
+				await this.load();
+			} catch (error) {
+				console.error("Failed to disconnect OCPP client:", error);
+				alert("Failed to disconnect OCPP client");
+			}
 		},
 		addVehicle() {
 			// push a duplacate of the last entry
@@ -327,6 +480,7 @@ input[type="number"]::-webkit-inner-spin-button {
 	margin: 0;
 }
 input[type="number"] {
+	appearance: textfield;
 	-moz-appearance: textfield;
 }
 input[type="number"] {

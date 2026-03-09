@@ -33,7 +33,7 @@ jobs:
     name: Call Build
     needs: check_date
     if: |
-      ${{ needs.check_date.outputs.should_run != 'false' }}
+      needs.check_date.outputs.should_run != 'false'
       && startsWith(github.ref, 'refs/heads/master')
       && ! contains(github.head_ref, 'refs/heads/chore/')
     uses: evcc-io/evcc/.github/workflows/default.yml@master
@@ -59,7 +59,7 @@ jobs:
           persist-credentials: false
 
       - name: Get dist from cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         id: cache-dist
         with:
           path: dist
@@ -158,14 +158,14 @@ jobs:
         run: make patch-asn1-sudo
 
       - name: Get dist from cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         id: cache-dist
         with:
           path: dist
           key: ${{ runner.os }}-${{ github.sha }}-dist
 
       - name: Create nightly build
-        uses: goreleaser/goreleaser-action@v6
+        uses: goreleaser/goreleaser-action@v7
         with:
           version: '~> v2'
           args: --snapshot -f .goreleaser-nightly.yml --clean

@@ -7,6 +7,7 @@ products:
   - { brand: Shelly, description: { generic: EM } }
   - { brand: Shelly, description: { generic: Pro EM } }
   - { brand: Shelly, description: { generic: Pro 3EM (monophase device profile) } }
+  - { brand: Shelly, description: { generic: Pro 4PM } }
   - { brand: Shelly, description: { generic: Plug S } }
 group: switchsockets
 params:
@@ -16,15 +17,10 @@ params:
   - name: user
   - name: password
   - name: channel
-    default: 0
 render: |
   type: shelly
   uri: http://{{ .host }}  # shelly device ip address (local)
-  {{- if .user }}
   user: {{ .user }}
-  {{- end }}
-  {{- if .password }}
   password: {{ .password }}
-  {{- end }}
   usage: {{ .usage }}
   channel: {{ .channel }}  # shelly device relay channel

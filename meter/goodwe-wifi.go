@@ -18,7 +18,7 @@ func init() {
 	registry.Add("goodwe-wifi", NewGoodWeWifiFromConfig)
 }
 
-//go:generate go tool decorate -f decorateGoodWeWifi -b *goodWeWiFi -r api.Meter -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64"
+//go:generate go tool decorate -f decorateGoodWeWifi -b *goodWeWiFi -r api.Meter -t api.Battery,api.BatteryCapacity
 
 // TODO deprecated
 

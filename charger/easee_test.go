@@ -13,6 +13,7 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/jarcoal/httpmock"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // Helper function to create a payload
@@ -30,12 +31,14 @@ func createPayload(id easee.ObservationID, timestamp time.Time, dataType easee.D
 func newEasee() *Easee {
 	log := util.NewLogger("easee")
 	e := Easee{
-		Helper:    request.NewHelper(log),
-		obsTime:   make(map[easee.ObservationID]time.Time),
-		log:       log,
-		startDone: func() {},
-		cmdC:      make(chan easee.SignalRCommandResponse),
-		obsC:      make(chan easee.Observation),
+		Helper:          request.NewHelper(log),
+		obsTime:         make(map[easee.ObservationID]time.Time),
+		pendingTicks:    make(map[int64]chan easee.SignalRCommandResponse),
+		pendingByID:     make(map[easee.ObservationID]chan easee.SignalRCommandResponse),
+		expectedOrphans: make(map[easee.ObservationID]int),
+		log:             log,
+		startDone:       func() {},
+		obsC:            make(chan easee.Observation),
 	}
 	e.Client.Timeout = 500 * time.Millisecond //aggressive timeout to accelerate testing
 	return &e
@@ -166,15 +169,12 @@ func TestEasee_waitForTickResponse(t *testing.T) {
 
 			e := newEasee()
 
-			// Set up the command channel for test and Easee to share
-			cmdC := make(chan easee.SignalRCommandResponse, 1) // make it buffered for ease of testing
-			e.cmdC = cmdC
-
+			ch := make(chan easee.SignalRCommandResponse, 1)
 			if tc.cmdCValue != nil {
-				cmdC <- *tc.cmdCValue
+				ch <- *tc.cmdCValue
 			}
 
-			err := e.waitForTickResponse(tc.expectedTick)
+			err := e.waitForTickResponse(ch)
 
 			// Assert the result
 			if tc.expectedErr != nil {
@@ -227,7 +227,18 @@ func TestEasee_postJsonAndWait(t *testing.T) {
 
 		if tc.cmdResp != nil {
 			go func() {
-				e.cmdC <- *tc.cmdResp
+				// wait for postJSONAndWait to register the per-tick channel
+				var ch chan easee.SignalRCommandResponse
+				for {
+					e.cmdMu.Lock()
+					ch = e.pendingTicks[tc.cmdResp.Ticks]
+					e.cmdMu.Unlock()
+					if ch != nil {
+						break
+					}
+					time.Sleep(time.Millisecond)
+				}
+				ch <- *tc.cmdResp
 			}()
 		}
 
@@ -322,6 +333,31 @@ func TestEasee_waitForDynamicChargerCurrent(t *testing.T) {
 	}
 }
 
+func TestEasee_StatusReason(t *testing.T) {
+	testcases := []struct {
+		opMode         int
+		expectedReason api.Reason
+	}{
+		{easee.ModeAwaitingAuthentication, api.ReasonWaitingForAuthorization},
+		{easee.ModeCompleted, api.ReasonDisconnectRequired},
+		{easee.ModeDisconnected, api.ReasonUnknown},
+		{easee.ModeAwaitingStart, api.ReasonUnknown},
+		{easee.ModeCharging, api.ReasonUnknown},
+		{easee.ModeReadyToCharge, api.ReasonUnknown},
+		{easee.ModeDeauthenticating, api.ReasonUnknown},
+	}
+	for _, tc := range testcases {
+		t.Logf("%+v", tc)
+
+		e := newEasee()
+		e.opMode = tc.opMode
+
+		reason, err := e.StatusReason()
+		assert.NoError(t, err)
+		assert.Equal(t, tc.expectedReason, reason)
+	}
+}
+
 func TestEasee_MaxCurrent(t *testing.T) {
 	testCases := []struct {
 		targetCurrent int64
@@ -354,4 +390,213 @@ func TestEasee_MaxCurrent(t *testing.T) {
 		//TODO this fails, either current or dynamicChargerCurrent need to go
 		//assert.Equal(t, e.current, e.dynamicChargerCurrent)
 	}
+}
+
+func TestEasee_CommandResponse_rogue(t *testing.T) {
+	e := newEasee()
+
+	rogueResp := easee.SignalRCommandResponse{
+		SerialNumber: "EH123456",
+		Ticks:        999999999,
+		WasAccepted:  true,
+		ResultCode:   0,
+	}
+
+	raw, err := json.Marshal(rogueResp)
+	require.NoError(t, err)
+
+	// No pending tick registered → should log WARN (not panic, not block)
+	assert.NotPanics(t, func() {
+		e.CommandResponse(raw)
+	})
+
+	// pendingTicks should still be empty
+	e.cmdMu.Lock()
+	assert.Empty(t, e.pendingTicks)
+	e.cmdMu.Unlock()
+}
+
+func TestEasee_CommandResponse_legitimate(t *testing.T) {
+	e := newEasee()
+
+	ticks := int64(638798974487432600)
+	ch := make(chan easee.SignalRCommandResponse, 1)
+	e.registerPendingTick(ticks, ch)
+
+	resp := easee.SignalRCommandResponse{
+		SerialNumber: "EH123456",
+		Ticks:        ticks,
+		WasAccepted:  true,
+	}
+
+	raw, err := json.Marshal(resp)
+	require.NoError(t, err)
+
+	e.CommandResponse(raw)
+
+	// Channel should have received the response
+	select {
+	case got := <-ch:
+		assert.Equal(t, ticks, got.Ticks)
+		assert.True(t, got.WasAccepted)
+	case <-time.After(100 * time.Millisecond):
+		t.Fatal("CommandResponse did not deliver to pending channel")
+	}
+}
+
+func TestEasee_CommandResponse_expectedOrphan(t *testing.T) {
+	e := newEasee()
+
+	// Pre-register the expected orphan
+	e.registerExpectedOrphan(easee.CIRCUIT_MAX_CURRENT_P1)
+
+	resp := easee.SignalRCommandResponse{
+		SerialNumber: "EH123456",
+		ID:           int(easee.CIRCUIT_MAX_CURRENT_P1),
+		Ticks:        111111111,
+		WasAccepted:  true,
+		ResultCode:   0,
+	}
+
+	raw, err := json.Marshal(resp)
+	require.NoError(t, err)
+
+	// Should not panic and should consume the orphan counter
+	assert.NotPanics(t, func() {
+		e.CommandResponse(raw)
+	})
+
+	// Counter should now be zero — a second response would be rogue
+	assert.False(t, e.consumeExpectedOrphan(easee.CIRCUIT_MAX_CURRENT_P1))
+}
+
+func TestEasee_CommandResponse_rogueAfterOrphanConsumed(t *testing.T) {
+	e := newEasee()
+
+	// Register and immediately consume via CommandResponse
+	e.registerExpectedOrphan(easee.CIRCUIT_MAX_CURRENT_P1)
+
+	resp := easee.SignalRCommandResponse{
+		SerialNumber: "EH123456",
+		ID:           int(easee.CIRCUIT_MAX_CURRENT_P1),
+		Ticks:        111111111,
+		WasAccepted:  true,
+	}
+	raw, err := json.Marshal(resp)
+	require.NoError(t, err)
+	e.CommandResponse(raw) // consumes the counter
+
+	// A second identical response with counter=0 should be treated as rogue (not panic)
+	assert.NotPanics(t, func() {
+		e.CommandResponse(raw)
+	})
+
+	// pendingTicks untouched
+	e.cmdMu.Lock()
+	assert.Empty(t, e.pendingTicks)
+	e.cmdMu.Unlock()
+}
+
+func TestEasee_CommandResponse_matchedByID(t *testing.T) {
+	e := newEasee()
+
+	ch := make(chan easee.SignalRCommandResponse, 1)
+	e.registerPendingByID(easee.LOCATION, ch)
+	defer e.unregisterPendingByID(easee.LOCATION)
+
+	// Ticks do NOT match any pendingTicks entry — only the ID matches
+	resp := easee.SignalRCommandResponse{
+		SerialNumber: "EH123456",
+		ID:           int(easee.LOCATION),
+		Ticks:        999999999, // not in pendingTicks
+		WasAccepted:  true,
+		ResultCode:   0,
+	}
+
+	raw, err := json.Marshal(resp)
+	require.NoError(t, err)
+
+	assert.NotPanics(t, func() {
+		e.CommandResponse(raw)
+	})
+
+	select {
+	case got := <-ch:
+		assert.Equal(t, resp.Ticks, got.Ticks)
+		assert.True(t, got.WasAccepted)
+	default:
+		t.Fatal("expected CommandResponse to be delivered to pendingByID channel")
+	}
+
+	// pendingByID consumed the response — expectedOrphans untouched
+	assert.False(t, e.consumeExpectedOrphan(easee.LOCATION))
+}
+
+func TestEasee_registerAndConsumeExpectedOrphan(t *testing.T) {
+	e := newEasee()
+
+	// Not registered yet — consume returns false
+	assert.False(t, e.consumeExpectedOrphan(easee.CIRCUIT_MAX_CURRENT_P1))
+
+	// Register once
+	e.registerExpectedOrphan(easee.CIRCUIT_MAX_CURRENT_P1)
+
+	// First consume succeeds
+	assert.True(t, e.consumeExpectedOrphan(easee.CIRCUIT_MAX_CURRENT_P1))
+
+	// Second consume fails (counter back to zero)
+	assert.False(t, e.consumeExpectedOrphan(easee.CIRCUIT_MAX_CURRENT_P1))
+}
+
+func TestEasee_registerExpectedOrphan_multipleRegistrations(t *testing.T) {
+	e := newEasee()
+
+	// Register twice (two concurrent calls in flight)
+	e.registerExpectedOrphan(easee.CIRCUIT_MAX_CURRENT_P1)
+	e.registerExpectedOrphan(easee.CIRCUIT_MAX_CURRENT_P1)
+
+	assert.True(t, e.consumeExpectedOrphan(easee.CIRCUIT_MAX_CURRENT_P1))
+	assert.True(t, e.consumeExpectedOrphan(easee.CIRCUIT_MAX_CURRENT_P1))
+	assert.False(t, e.consumeExpectedOrphan(easee.CIRCUIT_MAX_CURRENT_P1))
+}
+
+func TestEasee_Phases1p3p_registersExpectedOrphan(t *testing.T) {
+	const siteID = 12345
+	const circuitID = 67890
+	const chargerID = "TESTTEST"
+
+	e := newEasee()
+	e.charger = chargerID
+	e.site = siteID
+	e.circuit = circuitID
+
+	httpmock.ActivateNonDefault(e.Client)
+	defer httpmock.DeactivateAndReset()
+
+	// Mock GET circuit settings
+	getURI := fmt.Sprintf("%s/sites/%d/circuits/%d/settings", easee.API, siteID, circuitID)
+	maxP1, maxP2, maxP3 := 32.0, 32.0, 32.0
+	getResp := easee.CircuitSettings{
+		MaxCircuitCurrentP1: &maxP1,
+		MaxCircuitCurrentP2: &maxP2,
+		MaxCircuitCurrentP3: &maxP3,
+	}
+	body, err := json.Marshal(getResp)
+	require.NoError(t, err)
+	httpmock.RegisterResponder(http.MethodGet, getURI,
+		httpmock.NewBytesResponder(200, body))
+
+	// Mock POST circuit settings — return 200 (sync)
+	httpmock.RegisterResponder(http.MethodPost, getURI,
+		httpmock.NewStringResponder(200, ""))
+
+	err = e.Phases1p3p(1)
+	assert.NoError(t, err)
+
+	// The orphan counter should have been registered before the POST.
+	// Since no CommandResponse arrived in this test, the counter stays at 1.
+	e.cmdMu.Lock()
+	count := e.expectedOrphans[easee.CIRCUIT_MAX_CURRENT_P1]
+	e.cmdMu.Unlock()
+	assert.Equal(t, 1, count, "expected orphan should be registered before the POST")
 }

@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
-import { expectModalVisible, expectModalHidden, enableExperimental } from "./utils";
+import { expectModalVisible, expectModalHidden } from "./utils";
 
 const CONFIG_INVALID_TEMPLATE = "config-invalid-template.sql";
 
@@ -15,7 +15,6 @@ test.describe("invalid template migration", async () => {
     await start(undefined, CONFIG_INVALID_TEMPLATE);
 
     await page.goto("/#/config");
-    await enableExperimental(page, false);
 
     // startup error
     await expect(page.getByTestId("fatal-error")).toBeVisible();

@@ -85,9 +85,18 @@ type StatusSNSResponse struct {
 
 		// SML sensor readings
 		SML struct {
-			TotalIn   float64 `json:"total_in"`
-			TotalOut  float64 `json:"total_out"`
-			PowerCurr int     `json:"power_curr"`
+			TotalIn   *float64 `json:"total_in"`
+			TotalOut  *float64 `json:"total_out"`
+			PowerCurr *float64 `json:"power_curr"`
+			PowerL1   *float64 `json:"power_l1"`
+			PowerL2   *float64 `json:"power_l2"`
+			PowerL3   *float64 `json:"power_l3"`
+			VoltageL1 *float64 `json:"voltage_l1"`
+			VoltageL2 *float64 `json:"voltage_l2"`
+			VoltageL3 *float64 `json:"voltage_l3"`
+			CurrentL1 *float64 `json:"current_l1"`
+			CurrentL2 *float64 `json:"current_l2"`
+			CurrentL3 *float64 `json:"current_l3"`
 		}
 	}
 }
@@ -95,7 +104,7 @@ type StatusSNSResponse struct {
 // Channels is a Tasmota specific helper type to handle meter value lists and single meter values
 type Channels []float64
 
-func (ch *Channels) Channel(channel int) (float64, error) {
+func (ch *Channels) Value(channel int) (float64, error) {
 	if *ch == nil {
 		return 0, nil
 	}

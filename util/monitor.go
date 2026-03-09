@@ -31,8 +31,9 @@ func NewMonitor[T any](timeout time.Duration) *Monitor[T] {
 }
 
 // WithClock sets the a clock for debugging
-func (m *Monitor[T]) WithClock(clock clock.Clock) {
+func (m *Monitor[T]) WithClock(clock clock.Clock) *Monitor[T] {
 	m.clock = clock
+	return m
 }
 
 // Set updates the current value and timestamp

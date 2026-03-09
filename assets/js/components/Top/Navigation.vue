@@ -23,7 +23,12 @@
 			data-testid="topnavigation-dropdown"
 		>
 			<li>
-				<router-link class="dropdown-item" to="/sessions" active-class="active">
+				<router-link
+					class="dropdown-item"
+					to="/sessions"
+					active-class="active"
+					data-testid="topnavigation-sessions"
+				>
 					{{ $t("header.sessions") }}
 				</router-link>
 			</li>
@@ -59,7 +64,12 @@
 				</button>
 			</li>
 			<li>
-				<router-link class="dropdown-item" to="/config" active-class="active">
+				<router-link
+					class="dropdown-item"
+					to="/config"
+					active-class="active"
+					data-testid="topnavigation-config"
+				>
 					<span
 						v-if="showConfigBadge"
 						class="d-inline-block p-1 rounded-circle bg-warning rounded-circle"
@@ -114,7 +124,12 @@
 				</a>
 			</li>
 			<li v-if="isApp">
-				<button type="button" class="dropdown-item" @click="openNativeSettings">
+				<button
+					type="button"
+					class="dropdown-item"
+					data-testid="topnavigation-app"
+					@click="openNativeSettings"
+				>
 					{{ $t("header.nativeSettings") }}
 				</button>
 			</li>
@@ -139,7 +154,7 @@ import { logout, isLoggedIn, openLoginModal } from "../Auth/auth";
 import { isApp, sendToApp } from "@/utils/native";
 import { isUserConfigError } from "@/utils/fatal";
 import { defineComponent, type PropType } from "vue";
-import type { FatalError, Sponsor, EvOpt, AuthProviders } from "@/types/evcc";
+import type { FatalError, Sponsor, EvOpt, AuthProviders, Battery } from "@/types/evcc";
 
 export default defineComponent({
 	name: "TopNavigation",
@@ -148,9 +163,10 @@ export default defineComponent({
 		authProviders: { type: Object as PropType<AuthProviders>, default: () => ({}) },
 		sponsor: { type: Object as PropType<Sponsor>, default: () => ({}) },
 		forecast: Object,
-		battery: Array,
+		battery: { type: Object as PropType<Battery> },
 		evopt: { type: Object as PropType<EvOpt>, required: false },
 		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
+		experimental: Boolean,
 	},
 	emits: ["auth-required"],
 	data() {
@@ -161,7 +177,7 @@ export default defineComponent({
 	},
 	computed: {
 		batteryConfigured() {
-			return this.battery?.length;
+			return (this.battery?.devices?.length ?? 0) > 0;
 		},
 		providers() {
 			return Object.entries(this.authProviders)
@@ -176,7 +192,7 @@ export default defineComponent({
 			return this.providers.length > 0;
 		},
 		sponsorExpires(): boolean {
-			return !!this.sponsor?.status.expiresSoon;
+			return !!this.sponsor?.status?.expiresSoon;
 		},
 		showConfigBadge() {
 			return this.sponsorExpires || isUserConfigError(this.fatal);
@@ -198,7 +214,7 @@ export default defineComponent({
 			return grid || solar || co2;
 		},
 		optimizeAvailable() {
-			return !!this.evopt && this.$hiddenFeatures();
+			return !!this.evopt && this.experimental;
 		},
 		showLogout() {
 			return isLoggedIn();

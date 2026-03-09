@@ -72,12 +72,12 @@ func (o *Observation) Float64() (float64, error) {
 }
 
 type Update struct {
-	MaxChargeCurrent     *int `json:"maxChargeCurrent,omitempty"`
-	MaxChargePhases      *int `json:"maxChargePhases,omitempty"`
-	MinChargeCurrent     *int `json:"minChargeCurrent,omitempty"`
-	OfflineChargeCurrent *int `json:"offlineChargeCurrent,omitempty"`
-	OfflineChargePhase   *int `json:"offlineChargePhase,omitempty"`
-	MeterValueInterval   *int `json:"meterValueInterval,omitempty"`
+	MaxChargeCurrent     *float64 `json:"maxChargeCurrent,omitempty"`
+	MaxChargePhases      *int     `json:"maxChargePhases,omitempty"`
+	MinChargeCurrent     *float64 `json:"minChargeCurrent,omitempty"`
+	OfflineChargeCurrent *float64 `json:"offlineChargeCurrent,omitempty"`
+	OfflineChargePhase   *int     `json:"offlineChargePhase,omitempty"`
+	MeterValueInterval   *int     `json:"meterValueInterval,omitempty"`
 }
 
 type SessionPriority struct {
@@ -90,9 +90,9 @@ type Installation struct {
 }
 
 type UpdateInstallation struct {
-	AvailableCurrentPhase1 *int `json:"availableCurrentPhase1,omitempty"`
-	AvailableCurrentPhase2 *int `json:"availableCurrentPhase2,omitempty"`
-	AvailableCurrentPhase3 *int `json:"availableCurrentPhase3,omitempty"`
+	AvailableCurrentPhase1 *float64 `json:"availableCurrentPhase1,omitempty"`
+	AvailableCurrentPhase2 *float64 `json:"availableCurrentPhase2,omitempty"`
+	AvailableCurrentPhase3 *float64 `json:"availableCurrentPhase3,omitempty"`
 }
 
 type CapabilitiesResponse struct {
