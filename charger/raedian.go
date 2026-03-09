@@ -43,6 +43,7 @@ const (
 	raedianRegPower         = 0x801C // uint32 RO W
 	raedianRegChargedEnergy = 0x801E // uint32 RO Wh
 	raedianRegMaxCurrent    = 0x8100 // uint32 WR mA
+	raedianRegPhases        = 0x8102 // uint16 WO (0x01=1p, 0x02=3p)
 )
 
 func init() {
@@ -234,4 +235,17 @@ var _ api.PhaseVoltages = (*Raedian)(nil)
 // Voltages implements the api.PhaseVoltages interface
 func (wb *Raedian) Voltages() (float64, float64, float64, error) {
 	return wb.getPhaseValues(raedianRegVoltages, 10)
+}
+
+var _ api.PhaseSwitcher = (*Raedian)(nil)
+
+// Phases1p3p implements the api.PhaseSwitcher interface
+func (wb *Raedian) Phases1p3p(phases int) error {
+	u := uint16(0x01)
+	if phases == 3 {
+		u = 0x02
+	}
+
+	_, err := wb.conn.WriteSingleRegister(raedianRegPhases, u)
+	return err
 }
