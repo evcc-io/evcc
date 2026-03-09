@@ -8,7 +8,7 @@ import (
 	"sync"
 
 	"github.com/evcc-io/evcc/util"
-	"github.com/stianeikeland/go-rpio/v4"
+	"github.com/warthog618/go-gpiocdev"
 )
 
 func init() {
@@ -16,44 +16,44 @@ func init() {
 }
 
 type gpio struct {
-	mu  sync.Mutex
-	typ GpioType
-	pin rpio.Pin
+	mu   sync.Mutex
+	typ  GpioType
+	line *gpiocdev.Line
 }
 
 // NewGpioPluginFromConfig creates a GPIO provider
 func NewGpioPluginFromConfig(ctx context.Context, other map[string]any) (Plugin, error) {
-	var cc struct {
+	cc := struct {
 		Function GpioType
 		Pin      int
+		Chip     string
+	}{
+		Chip: "gpiochip0",
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	p := &gpio{
-		typ: cc.Function,
-		pin: rpio.Pin(cc.Pin),
-	}
-
-	// initialize GPIO and set pins to input
-	if err := rpio.Open(); err != nil {
-		return nil, fmt.Errorf("failed to open GPIO: %w", err)
-	}
-	defer rpio.Close()
-
+	var opts []gpiocdev.LineReqOption
 	switch cc.Function {
 	case GpioTypeRead:
-		p.pin.Input()
-		p.pin.PullUp()
+		opts = append(opts, gpiocdev.AsInput, gpiocdev.WithPullUp)
 	case GpioTypeWrite:
-		p.pin.Output()
+		opts = append(opts, gpiocdev.AsOutput(0))
 	default:
 		return nil, fmt.Errorf("invalid type: %s", cc.Function)
 	}
 
-	return p, nil
+	line, err := gpiocdev.RequestLine(cc.Chip, cc.Pin, opts...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open GPIO: %w", err)
+	}
+
+	return &gpio{
+		typ:  cc.Function,
+		line: line,
+	}, nil
 }
 
 var _ BoolGetter = (*gpio)(nil)
@@ -68,12 +68,12 @@ func (p *gpio) BoolGetter() (func() (bool, error), error) {
 		p.mu.Lock()
 		defer p.mu.Unlock()
 
-		if err := rpio.Open(); err != nil {
-			return false, fmt.Errorf("failed to open GPIO: %w", err)
+		val, err := p.line.Value()
+		if err != nil {
+			return false, fmt.Errorf("failed to read GPIO: %w", err)
 		}
-		defer rpio.Close()
 
-		return p.pin.Read() != rpio.Low, nil
+		return val != 0, nil
 	}, nil
 }
 
@@ -89,13 +89,14 @@ func (p *gpio) BoolSetter(_ string) (func(bool) error, error) {
 		p.mu.Lock()
 		defer p.mu.Unlock()
 
-		if err := rpio.Open(); err != nil {
-			return fmt.Errorf("failed to open GPIO: %w", err)
+		val := 0
+		if b {
+			val = 1
 		}
-		defer rpio.Close()
 
-		val := map[bool]rpio.State{false: rpio.Low, true: rpio.High}[b]
-		p.pin.Write(val)
+		if err := p.line.SetValue(val); err != nil {
+			return fmt.Errorf("failed to write GPIO: %w", err)
+		}
 
 		return nil
 	}, nil

@@ -21,6 +21,8 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
+	"sync"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -35,7 +37,9 @@ type ChargeX struct {
 	log       *util.Logger
 	conn      *modbus.Connection
 	connector uint16
+	mu        sync.Mutex
 	curr      float64
+	enabled   bool
 }
 
 const (
@@ -48,8 +52,9 @@ const (
 	chargexRegModuleState    = 8   // States_CP_X offset
 
 	// Holding registers (read/write)
-	chargexRegTargetPower  = 504 // 0x01F8 PAC_Target_Power (W) - U32
-	chargexRegChargingMode = 506 // 0x01FA Charging_Mode (0=Full, 1=Min, 2=NoRed) - U32
+	chargexRegTargetTimeout = 500 // 0x01F4 PAC_Target_Timeout (s) - U32
+	chargexRegTargetPower   = 504 // 0x01F8 PAC_Target_Power (W) - U32
+	chargexRegChargingMode  = 506 // 0x01FA Charging_Mode (0=Full, 1=Min, 2=NoRed) - U32
 )
 
 func init() {
@@ -103,7 +108,37 @@ func NewChargeX(ctx context.Context, uri string, id uint8, connector uint16) (ap
 		return nil, fmt.Errorf("failed to initialize charging mode: %w", err)
 	}
 
+	// Read target timeout and start heartbeat to keep PAC_Target_Power fresh.
+	// Without periodic updates the charger reverts to PAC_Default_Power after
+	// the configured timeout (default 20 min, per Aqueduct Modbus spec §3.6.1).
+	b, err = conn.ReadHoldingRegisters(chargexRegTargetTimeout, 2)
+	if err != nil {
+		return nil, fmt.Errorf("target timeout: %w", err)
+	}
+	if u := binary.BigEndian.Uint32(b); u > 0 {
+		go wb.heartbeat(ctx, time.Duration(u)*time.Second/2)
+	}
+
 	return wb, nil
+}
+
+func (wb *ChargeX) heartbeat(ctx context.Context, timeout time.Duration) {
+	for tick := time.Tick(timeout); ; {
+		select {
+		case <-tick:
+		case <-ctx.Done():
+			return
+		}
+		wb.mu.Lock()
+		var curr float64
+		if wb.enabled {
+			curr = wb.curr
+		}
+		wb.mu.Unlock()
+		if err := wb.setCurrent(curr); err != nil {
+			wb.log.ERROR.Println("heartbeat:", err)
+		}
+	}
 }
 
 // moduleReg returns the register address for a module-specific register
@@ -195,12 +230,19 @@ func (wb *ChargeX) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (wb *ChargeX) Enable(enable bool) error {
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
 	var current float64
 	if enable {
 		current = wb.curr
 	}
 
-	return wb.setCurrent(current)
+	err := wb.setCurrent(current)
+	if err == nil {
+		wb.enabled = enable
+	}
+	return err
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -215,6 +257,9 @@ func (wb *ChargeX) MaxCurrentMillis(current float64) error {
 	if current < 6 {
 		return fmt.Errorf("invalid current %.1f", current)
 	}
+
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
 
 	err := wb.setCurrent(current)
 	if err == nil {

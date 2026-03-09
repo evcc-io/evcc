@@ -104,21 +104,27 @@ func (v *Provider) FinishTime() (time.Time, error) {
 	return time.Now().Add(time.Duration(res.Response.ChargeState.MinutesToFullCharge) * time.Minute), nil
 }
 
-// TODO api.Climater implementation has been removed as it drains battery. Re-check at a later time.
+var _ api.VehicleClimater = (*Provider)(nil)
 
-// var _ api.VehiclePosition = (*Provider)(nil)
+// Climater implements the api.VehicleClimater interface
+func (v *Provider) Climater() (bool, error) {
+	res, err := v.dataG()
+	if err != nil {
+		return false, err
+	}
+	return res.Response.ClimateState.IsPreconditioning, nil
+}
 
-// // Position implements the api.VehiclePosition interface
-// func (v *Provider) Position() (float64, float64, error) {
-// 	res, err := v.dataG()
-// 	if err != nil {
-// 		return 0, 0, err
-// 	}
-// 	if res.Response.DriveState.Latitude != 0 || res.Response.DriveState.Longitude != 0 {
-// 		return res.Response.DriveState.Latitude, res.Response.DriveState.Longitude, nil
-// 	}
-// 	return res.Response.DriveState.ActiveRouteLatitude, res.Response.DriveState.ActiveRouteLongitude, nil
-// }
+var _ api.VehiclePosition = (*Provider)(nil)
+
+// Position implements the api.VehiclePosition interface
+func (v *Provider) Position() (float64, float64, error) {
+	res, err := v.dataG()
+	if err != nil {
+		return 0, 0, err
+	}
+	return res.Response.DriveState.Latitude, res.Response.DriveState.Longitude, nil
+}
 
 var _ api.SocLimiter = (*Provider)(nil)
 

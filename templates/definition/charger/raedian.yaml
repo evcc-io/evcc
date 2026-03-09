@@ -1,0 +1,16 @@
+template: raedian
+products:
+  - brand: RAEDIAN
+    description:
+      generic: NEO AC Wallbox
+  - brand: RAEDIAN
+    description:
+      generic: NEX AC Wallbox
+capabilities: ["1p3p", "mA"]
+params:
+  - name: modbus
+    choice: ["rs485", "tcpip"]
+    id: 1
+render: |
+  type: raedian
+  {{- include "modbus" . }}

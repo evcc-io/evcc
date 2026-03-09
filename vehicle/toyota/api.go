@@ -15,16 +15,17 @@ import (
 )
 
 const (
-	BaseUrl                  = "https://oneapp:oneapp@b2c-login.toyota-europe.com"
-	ApiBaseUrl               = "https://ctpa-oneapi.tceu-ctp-prd.toyotaconnectedeurope.io"
-	AccessTokenPath          = "oauth2/realms/root/realms/tme/access_token"
-	AuthenticationPath       = "json/realms/root/realms/tme/authenticate?authIndexType=service&authIndexValue=oneapp"
-	AuthorizationPath        = "oauth2/realms/root/realms/tme/authorize?client_id=oneapp&scope=openid+profile+write&response_type=code&redirect_uri=com.toyota.oneapp:/oauth2Callback&code_challenge=plain&code_challenge_method=plain"
-	VehicleGuidPath          = "v2/vehicle/guid"
-	RemoteElectricStatusPath = "v1/global/remote/electric/status"
-	apiKey                   = "tTZipv6liF74PwMfk9Ed68AQ0bISswwf3iHQdqcF"
-	clientRefKey             = "3e0b15f6c9c87fbd"
-	channel                  = "ONEAPP" // Required x-channel header value for Toyota OneApp API
+	BaseUrl                          = "https://oneapp:oneapp@b2c-login.toyota-europe.com"
+	ApiBaseUrl                       = "https://ctpa-oneapi.tceu-ctp-prd.toyotaconnectedeurope.io"
+	AccessTokenPath                  = "oauth2/realms/root/realms/tme/access_token"
+	AuthenticationPath               = "json/realms/root/realms/tme/authenticate?authIndexType=service&authIndexValue=oneapp"
+	AuthorizationPath                = "oauth2/realms/root/realms/tme/authorize?client_id=oneapp&scope=openid+profile+write&response_type=code&redirect_uri=com.toyota.oneapp:/oauth2Callback&code_challenge=plain&code_challenge_method=plain"
+	VehicleGuidPath                  = "v2/vehicle/guid"
+	RemoteElectricStatusPath         = "v1/global/remote/electric/status"
+	RemoteElectricRealtimeStatusPath = "v1/global/remote/electric/realtime-status"
+	apiKey                           = "tTZipv6liF74PwMfk9Ed68AQ0bISswwf3iHQdqcF"
+	clientRefKey                     = "3e0b15f6c9c87fbd"
+	channel                          = "ONEAPP" // Required x-channel header value for Toyota OneApp API
 )
 
 type API struct {
@@ -90,4 +91,15 @@ func (v *API) Status(vin string) (Status, error) {
 	err := v.DoJSON(req, &res)
 
 	return res, err
+}
+
+func (v *API) RefreshStatus(vin string) error {
+	uri := fmt.Sprintf("%s/%s", ApiBaseUrl, RemoteElectricRealtimeStatusPath)
+
+	req, _ := request.New(http.MethodPost, uri, nil, map[string]string{
+		"vin": vin,
+	})
+
+	_, err := v.DoBody(req)
+	return err
 }

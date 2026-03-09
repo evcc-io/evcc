@@ -1282,12 +1282,14 @@ func (lp *Loadpoint) scalePhases(phases int) error {
 func (lp *Loadpoint) fastCharging() error {
 	if lp.hasPhaseSwitching() {
 		phases := 3
-		maxPower1p := Voltage * lp.effectiveMaxCurrent()
 
 		// load management limit active
-		if circuitMaxPower := circuitMaxPower(lp.circuit); circuitMaxPower > 0 && circuitMaxPower < 1.1*maxPower1p {
-			phases = 1
-			lp.log.DEBUG.Printf("fast charging: scaled to 1p to match %.0fW max circuit power", circuitMaxPower)
+		if lp.circuit != nil {
+			minPower3p := currentToPower(lp.effectiveMinCurrent(), 3)
+			if powerLimit := lp.circuit.ValidatePower(lp.chargePower, minPower3p); powerLimit < minPower3p {
+				phases = 1
+				lp.log.DEBUG.Printf("fast charging: scaled to 1p to match %.0fW available circuit power", powerLimit)
+			}
 		}
 
 		if err := lp.scalePhasesIfAvailable(phases); err != nil {
