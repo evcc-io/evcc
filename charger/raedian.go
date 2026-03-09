@@ -36,17 +36,13 @@ type Raedian struct {
 }
 
 const (
-	raedianRegStatus     = 32780 // uint32 RO ENUM (0=A, 1=B, 2/3/4=C)
-	raedianRegCurrentL1  = 32784 // uint32 RO mA
-	raedianRegCurrentL2  = 32786 // uint32 RO mA
-	raedianRegCurrentL3  = 32788 // uint32 RO mA
-	raedianRegVoltageL1  = 32790 // uint32 RO 0.1V
-	raedianRegVoltageL2  = 32792 // uint32 RO 0.1V
-	raedianRegVoltageL3  = 32794 // uint32 RO 0.1V
-	raedianRegPower      = 32796 // uint32 RO W
-	raedianRegEnergy     = 32798 // uint32 RO Wh
-	raedianRegMaxCurrent = 33024 // uint32 WR mA
-	raedianRegEnable     = 33029 // uint16 WR (0=enabled, 1=disabled)
+	raedianRegStatus        = 32780 // uint32 RO ENUM (0=A, 1=B, 2/3/4=C)
+	raedianRegCurrents      = 32784 // uint32 RO mA
+	raedianRegVoltages      = 32790 // uint32 RO 0.1V
+	raedianRegPower         = 32796 // uint32 RO W
+	raedianRegChargedEnergy = 32798 // uint32 RO Wh
+	raedianRegMaxCurrent    = 33024 // uint32 WR mA
+	raedianRegEnable        = 33029 // uint16 WR (0=enabled, 1=disabled)
 )
 
 func init() {
@@ -161,11 +157,11 @@ func (wb *Raedian) CurrentPower() (float64, error) {
 	return float64(binary.BigEndian.Uint32(b)), nil
 }
 
-var _ api.MeterEnergy = (*Raedian)(nil)
+var _ api.ChargeRater = (*Raedian)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *Raedian) TotalEnergy() (float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(raedianRegEnergy, 2)
+// ChargedEnergy implements the api.ChargeRater interface
+func (wb *Raedian) ChargedEnergy() (float64, error) {
+	b, err := wb.conn.ReadHoldingRegisters(raedianRegChargedEnergy, 2)
 	if err != nil {
 		return 0, err
 	}
@@ -173,36 +169,31 @@ func (wb *Raedian) TotalEnergy() (float64, error) {
 	return float64(binary.BigEndian.Uint32(b)) / 1000, nil
 }
 
+// getPhaseValues reads 3 sequential uint32 registers in a single Modbus operation
+func (wb *Raedian) getPhaseValues(reg uint16, divider float64) (float64, float64, float64, error) {
+	b, err := wb.conn.ReadHoldingRegisters(reg, 6)
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	var res [3]float64
+	for i := range res {
+		res[i] = float64(binary.BigEndian.Uint32(b[4*i:])) / divider
+	}
+
+	return res[0], res[1], res[2], nil
+}
+
 var _ api.PhaseCurrents = (*Raedian)(nil)
 
 // Currents implements the api.PhaseCurrents interface
 func (wb *Raedian) Currents() (float64, float64, float64, error) {
-	var res [3]float64
-
-	for i, reg := range []uint16{raedianRegCurrentL1, raedianRegCurrentL2, raedianRegCurrentL3} {
-		b, err := wb.conn.ReadHoldingRegisters(reg, 2)
-		if err != nil {
-			return 0, 0, 0, err
-		}
-		res[i] = float64(binary.BigEndian.Uint32(b)) / 1000
-	}
-
-	return res[0], res[1], res[2], nil
+	return wb.getPhaseValues(raedianRegCurrents, 1e3)
 }
 
 var _ api.PhaseVoltages = (*Raedian)(nil)
 
 // Voltages implements the api.PhaseVoltages interface
 func (wb *Raedian) Voltages() (float64, float64, float64, error) {
-	var res [3]float64
-
-	for i, reg := range []uint16{raedianRegVoltageL1, raedianRegVoltageL2, raedianRegVoltageL3} {
-		b, err := wb.conn.ReadHoldingRegisters(reg, 2)
-		if err != nil {
-			return 0, 0, 0, err
-		}
-		res[i] = float64(binary.BigEndian.Uint32(b)) / 10
-	}
-
-	return res[0], res[1], res[2], nil
+	return wb.getPhaseValues(raedianRegVoltages, 10)
 }
