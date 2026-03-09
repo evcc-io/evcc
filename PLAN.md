@@ -81,7 +81,7 @@ lp.pvMaxPower() → targetPower (W)  ← works entirely in watts, no phase aware
 controller.SetPower(watts)
         ↓
 ┌─────────────────────────┬──────────────────────────────────┐
-│ DirectPowerController   │ CurrentController                │
+│ PowerController         │ CurrentController                │
 │                         │                                  │
 │ circuit.ValidatePower() │ optimizePhases(power)            │
 │ charger.MaxPower(W)     │ current = powerToCurrent(W, φ)  │
@@ -139,14 +139,14 @@ type PowerLimiter interface {
 }
 ```
 
-### Component: `DirectPowerController`
+### Component: `PowerController`
 
 For chargers implementing `api.PowerController` (heatpumps, water heaters, SG Ready with power envelope).
 
 ```go
 // core/chargercontroller/power.go
 
-type DirectPowerController struct {
+type PowerController struct {
     log     *util.Logger
     charger api.Charger         // for Enable/Enabled/Status
     power   api.PowerController // for MaxPower
@@ -438,7 +438,7 @@ type Controller interface {
 }
 ```
 
-For `DirectPowerController`, this simply returns `chargePower` (no adjustment needed for power devices). This also replaces the `IntegratedDevice` special case that currently exists in `pvMaxCurrent`.
+For `PowerController`, this simply returns `chargePower` (no adjustment needed for power devices). This also replaces the `IntegratedDevice` special case that currently exists in `pvMaxCurrent`.
 
 ## Migration Path
 
@@ -446,7 +446,7 @@ For `DirectPowerController`, this simply returns `chargePower` (no adjustment ne
 
 **New files:**
 - `core/chargercontroller/controller.go` — `Controller` interface
-- `core/chargercontroller/power.go` — `DirectPowerController`
+- `core/chargercontroller/power.go` — `PowerController`
 - `core/chargercontroller/current.go` — `CurrentController`
 
 **Modified files:**
@@ -476,7 +476,7 @@ Move these methods from `core/loadpoint.go` and `core/loadpoint_phases.go` into 
 
 **Testing:** Existing `setLimit` tests adapted for `SetPower`. Phase switching tests stay similar.
 
-### Phase 3: Create `DirectPowerController`
+### Phase 3: Create `PowerController`
 
 Simpler implementation. New code.
 
@@ -487,7 +487,7 @@ Simpler implementation. New code.
 **Modified files:**
 - `core/loadpoint.go`:
   - Add `controller chargercontroller.Controller` field
-  - In `Prepare()`: create `DirectPowerController` or `CurrentController` based on charger type
+  - In `Prepare()`: create `PowerController` or `CurrentController` based on charger type
   - Replace `pvMaxCurrent()` with `pvMaxPower()`
   - Replace all `setLimit()` calls with `controller.SetPower()`
   - Replace `fastCharging()` with `controller.SetMaxPower()`
@@ -553,6 +553,6 @@ The controller needs to publish state for the UI. Options:
 | Loadpoint manages current, phases, and power | Loadpoint manages power only |
 | `pvMaxCurrent()` — 120 lines with phase switching | `pvMaxPower()` — ~50 lines, no phase awareness |
 | `setLimit()` — 90 lines with circuit+enable+wake-up | `controller.SetPower()` — same logic, but in the right place |
-| `IntegratedDevice` special cases scattered | `DirectPowerController` handles power devices cleanly |
+| `IntegratedDevice` special cases scattered | `PowerController` handles power devices cleanly |
 | Chargers need `loadpoint.Controller` to query phases | Chargers implement `PowerController`, no loadpoint coupling |
 | Power→current→power round-trip | Direct power path, no conversion loss |
