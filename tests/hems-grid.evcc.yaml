@@ -9,10 +9,3 @@ meters:
     type: template
     template: demo-meter
     power: 0
-
-hems:
-  type: relay
-  maxPower: 4200
-  limit:
-    source: const
-    value: true

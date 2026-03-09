@@ -7,6 +7,7 @@ import (
 
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/hems/eebus"
+	"github.com/evcc-io/evcc/hems/fnn"
 	"github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/hems/relay"
 )
@@ -18,6 +19,8 @@ func NewFromConfig(ctx context.Context, typ string, other map[string]any, site s
 		return nil, errors.New("breaking change: Sunny Home Manager integration is always on. See https://github.com/evcc-io/evcc/releases and https://docs.evcc.io/en/docs/integrations/sma-sunny-home-manager")
 	case "eebus":
 		return eebus.NewFromConfig(ctx, other, site)
+	case "fnn-3":
+		return fnn.NewFromConfig(ctx, other, site)
 	case "relay":
 		return relay.NewFromConfig(ctx, other, site)
 	default:
