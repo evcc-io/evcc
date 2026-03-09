@@ -213,6 +213,13 @@ func (wb *SgReady) setMaxPower(power int64) error {
 	return err
 }
 
+var _ api.PowerController = (*SgReady)(nil)
+
+// MaxPower implements the api.PowerController interface
+func (wb *SgReady) MaxPower(power float64) error {
+	return wb.setMaxPower(int64(power))
+}
+
 var _ loadpoint.Controller = (*SgReady)(nil)
 
 // LoadpointControl implements loadpoint.Controller

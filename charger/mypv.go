@@ -318,3 +318,14 @@ var _ loadpoint.Controller = (*MyPv)(nil)
 func (wb *MyPv) LoadpointControl(lp loadpoint.API) {
 	wb.lp = lp
 }
+
+var _ api.PowerController = (*MyPv)(nil)
+
+// MaxPower implements the api.PowerController interface
+func (wb *MyPv) MaxPower(power float64) error {
+	err := wb.setPower(uint16(power))
+	if err == nil {
+		atomic.StoreUint32(&wb.power, uint32(power))
+	}
+	return err
+}

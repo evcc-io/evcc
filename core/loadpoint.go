@@ -14,6 +14,7 @@ import (
 	"github.com/benbjohnson/clock"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/chargercontroller"
 	"github.com/evcc-io/evcc/core/coordinator"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
@@ -132,9 +133,11 @@ type Loadpoint struct {
 	vehicleDetectTicker *clock.Ticker
 	vehicleIdentifier   string
 
-	charger          api.Charger
-	chargeTimer      api.ChargeTimer
-	chargeRater      api.ChargeRater
+	charger    api.Charger
+	controller chargercontroller.Controller // power→charger translation
+
+	chargeTimer api.ChargeTimer
+	chargeRater api.ChargeRater
 	chargedAtStartup float64 // session energy at startup
 
 	circuit        api.Circuit // Circuit
@@ -599,11 +602,13 @@ func (lp *Loadpoint) evChargeCurrentHandler(current float64) {
 // If physical charge meter is present this handler is not used.
 // The actual value is published by the evChargeCurrentHandler
 func (lp *Loadpoint) evChargeCurrentWrappedMeterHandler(current float64) {
-	power := current * float64(lp.ActivePhases()) * Voltage
-
-	// if disabled we cannot be charging
-	if !lp.enabled || !lp.charging() {
-		power = 0
+	var power float64
+	if lp.enabled && lp.charging() {
+		power = lp.controller.EffectiveChargePower()
+		if power == 0 {
+			// fallback for current-controlled chargers without phase currents
+			power = current * float64(lp.ActivePhases()) * Voltage
+		}
 	}
 
 	// handler only called if charge meter was replaced by dummy
@@ -705,6 +710,17 @@ func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan c
 	// battery boost
 	lp.publish(keys.BatteryBoost, lp.batteryBoost != boostDisabled)
 	lp.publish(keys.BatteryBoostLimit, lp.batteryBoostLimit)
+
+	// create charger controller
+	if pc, ok := lp.charger.(api.PowerController); ok {
+		lp.controller = chargercontroller.NewPowerController(
+			lp.log, lp.clock, lp.charger, pc, lp.circuit,
+			lp.setAndPublishEnabled,
+			func(key string, val any) { lp.publish(key, val) },
+		)
+	} else {
+		lp.controller = &currentControllerAdapter{lp: lp}
+	}
 
 	// read initial charger state to prevent immediately disabling charger
 	if enabled, err := lp.charger.Enabled(); err == nil {
@@ -1051,12 +1067,12 @@ func (lp *Loadpoint) minSocNotReached() bool {
 
 // disableUnlessClimater disables the charger unless climate is active
 func (lp *Loadpoint) disableUnlessClimater() error {
-	var current float64 // zero disables
+	var power float64 // zero disables
 	if lp.vehicleClimateActive() {
-		current = lp.effectiveMinCurrent()
+		power = lp.controller.MinPower()
 	}
 
-	return lp.setLimit(current)
+	return lp.controller.SetOfferedPower(power)
 }
 
 // statusEvents converts the observed charger status change into a logical sequence of events
@@ -1572,6 +1588,11 @@ func (lp *Loadpoint) UpdateChargePowerAndCurrents() float64 {
 		lp.chargePower = power // update value if no error
 		lp.Unlock()
 
+		// update power controller with measured power
+		if pc, ok := lp.controller.(*chargercontroller.PowerController); ok {
+			pc.UpdateChargePower(power)
+		}
+
 		lp.log.DEBUG.Printf("charge power: %.0fW", power)
 		lp.publish(keys.ChargePower, power)
 
@@ -1984,21 +2005,21 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 	case !lp.connected():
 		// always disable charger if not connected
 		// https://github.com/evcc-io/evcc/issues/105
-		err = lp.setLimit(0)
+		err = lp.controller.SetOfferedPower(0)
 
 	case lp.scalePhasesRequired():
 		err = lp.scalePhases(lp.phasesConfigured)
 
 	case mode == api.ModeOff:
-		var current float64
+		var power float64
 		if welcomeCharge {
-			current = lp.effectiveMinCurrent()
+			power = lp.controller.MinPower()
 		}
-		err = lp.setLimit(current)
+		err = lp.controller.SetOfferedPower(power)
 
 	// minimum or target charging
 	case lp.minSocNotReached() || plannerActive:
-		err = lp.fastCharging()
+		err = lp.controller.SetMaxPower()
 		lp.resetPhaseTimer()
 		lp.elapsePVTimer() // let PV mode disable immediately afterwards
 
@@ -2012,14 +2033,14 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 
 	// immediate charging- must be placed after limits are evaluated
 	case mode == api.ModeNow:
-		err = lp.fastCharging()
+		err = lp.controller.SetMaxPower()
 
 	case mode == api.ModeMinPV || mode == api.ModePV:
 		// cheap tariff
 		if smartCostActive {
 			rate, _ := consumption.At(time.Now())
 			lp.log.DEBUG.Printf("smart consumption active: %.2f", rate.Value)
-			err = lp.fastCharging()
+			err = lp.controller.SetMaxPower()
 			lp.resetPhaseTimer()
 			lp.elapsePVTimer() // let PV mode disable immediately afterwards
 			break
@@ -2030,11 +2051,11 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 			rate, _ := feedin.At(time.Now())
 			lp.log.DEBUG.Printf("smart feed-in active: %.2f", rate.Value)
 
-			var targetCurrent float64
+			var targetPower float64
 			if mode == api.ModeMinPV {
-				targetCurrent = lp.GetMinCurrent()
+				targetPower = lp.controller.MinPower()
 			}
-			err = lp.setLimit(targetCurrent)
+			err = lp.controller.SetOfferedPower(targetPower)
 
 			lp.resetPhaseTimer()
 			lp.elapsePVTimer() // let PV mode disable immediately afterwards
@@ -2043,16 +2064,21 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 
 		targetCurrent := lp.pvMaxCurrent(mode, sitePower, batteryBoostPower, batteryBuffered, batteryStart)
 
-		if targetCurrent == 0 && lp.vehicleClimateActive() {
-			targetCurrent = lp.effectiveMinCurrent()
+		var targetPower float64
+		if targetCurrent > 0 {
+			targetPower = currentToPower(targetCurrent, lp.ActivePhases())
 		}
 
-		if targetCurrent == 0 && welcomeCharge {
-			targetCurrent = lp.effectiveMinCurrent()
+		if targetPower == 0 && lp.vehicleClimateActive() {
+			targetPower = lp.controller.MinPower()
+		}
+
+		if targetPower == 0 && welcomeCharge {
+			targetPower = lp.controller.MinPower()
 			lp.resetPVTimer()
 		}
 
-		err = lp.setLimit(targetCurrent)
+		err = lp.controller.SetOfferedPower(targetPower)
 	}
 
 	// Wake-up checks

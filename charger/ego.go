@@ -273,6 +273,17 @@ func (wb *Ego) GetLimitSoc() (int64, error) {
 	return int64(binary.BigEndian.Uint16(b)), nil
 }
 
+var _ api.PowerController = (*Ego)(nil)
+
+// MaxPower implements the api.PowerController interface
+func (wb *Ego) MaxPower(power float64) error {
+	err := wb.setPower(int16(power))
+	if err == nil {
+		atomic.StoreUint32(&wb.power, uint32(power))
+	}
+	return err
+}
+
 var _ loadpoint.Controller = (*Ego)(nil)
 
 // LoadpointControl implements loadpoint.Controller

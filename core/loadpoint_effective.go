@@ -223,6 +223,9 @@ func (lp *Loadpoint) EffectiveStepPower() float64 {
 func (lp *Loadpoint) EffectiveMinPower() float64 {
 	lp.RLock()
 	defer lp.RUnlock()
+	if lp.controller != nil {
+		return lp.controller.MinPower()
+	}
 	return Voltage * lp.effectiveMinCurrent() * float64(lp.minActivePhases())
 }
 
@@ -232,11 +235,18 @@ func (lp *Loadpoint) EffectiveMaxPower() float64 {
 	lp.RLock()
 	defer lp.RUnlock()
 
-	if circuitMaxPower := circuitMaxPower(lp.circuit); circuitMaxPower > 0 {
-		return min(lp.effectiveMaxPower(), circuitMaxPower)
+	maxPower := lp.effectiveMaxPower()
+	if lp.controller != nil {
+		if ctrlMax := lp.controller.MaxPower(); ctrlMax > 0 {
+			maxPower = min(maxPower, ctrlMax)
+		}
 	}
 
-	return lp.effectiveMaxPower()
+	if circuitMaxPower := circuitMaxPower(lp.circuit); circuitMaxPower > 0 {
+		return min(maxPower, circuitMaxPower)
+	}
+
+	return maxPower
 }
 
 // effectiveMaxPower returns the effective max power taking vehicle capabilities and phase scaling into account
