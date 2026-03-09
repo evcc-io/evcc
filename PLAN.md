@@ -78,7 +78,7 @@ lp.Update(sitePower, ...)
         ↓
 lp.pvMaxPower() → targetPower (W)  ← works entirely in watts, no phase awareness
         ↓
-controller.SetPower(watts)
+controller.SetOfferedPower(watts)
         ↓
 ┌─────────────────────────┬──────────────────────────────────┐
 │ PowerController         │ CurrentController                │
@@ -99,12 +99,12 @@ controller.SetPower(watts)
 // core/chargercontroller/controller.go
 
 // Controller translates power targets into charger commands.
-// The loadpoint calls SetPower() with a target in watts;
+// The loadpoint calls SetOfferedPower() with a target in watts;
 // the controller handles the specifics of how to deliver that power.
 type Controller interface {
-    // SetPower sets the target charging power in watts.
+    // SetOfferedPower sets the target charging power in watts.
     // 0 or below MinPower means disable.
-    SetPower(power float64) error
+    SetOfferedPower(power float64) error
 
     // SetMaxPower requests maximum power output.
     // For current controllers, this forces max phases before setting max current.
@@ -128,7 +128,8 @@ type Controller interface {
 ```go
 // api/api.go (new interfaces)
 
-// PowerController provides power-based charger control in W
+// PowerController provides power-based charger control in W.
+// Chargers that natively accept power targets implement this interface.
 type PowerController interface {
     MaxPower(power float64) error
 }
@@ -148,10 +149,10 @@ For chargers implementing `api.PowerController` (heatpumps, water heaters, SG Re
 
 type PowerController struct {
     log     *util.Logger
-    charger api.Charger         // for Enable/Enabled/Status
+    charger api.Charger      // for Enable/Enabled/Status
     power   api.PowerController // for MaxPower
-    limiter api.PowerLimiter    // optional, for GetMinMaxPower
-    circuit api.Circuit         // optional
+    limiter api.PowerLimiter // optional, for GetMinMaxPower
+    circuit api.Circuit      // optional
 
     offeredPower float64
     enabled      bool
@@ -161,8 +162,8 @@ type PowerController struct {
 ```
 
 **Responsibilities:**
-- `SetPower(watts)`: validate against circuit limits → call `charger.MaxPower(watts)` → handle enable/disable
-- `SetMaxPower()`: call `SetPower(MaxPower())`
+- `SetOfferedPower(watts)`: validate against circuit limits → call `charger.MaxPower(watts)` → handle enable/disable
+- `SetMaxPower()`: call `SetOfferedPower(MaxPower())`
 - `MinPower()`: from `PowerLimiter` if available, else config default
 - `MaxPower()`: from `PowerLimiter` if available, else config default
 
@@ -215,13 +216,13 @@ type CurrentController struct {
 ```
 
 **Responsibilities:**
-- `SetPower(watts)`: convert to current → optimize phases → round → validate circuit → call charger → enable/disable → wake-up
+- `SetOfferedPower(watts)`: convert to current → optimize phases → round → validate circuit → call charger → enable/disable → wake-up
 - `SetMaxPower()`: force 3p (or 1p if circuit limited) → set max current
 - `MinPower()`: `effectiveMinCurrent * Voltage * minActivePhases`
 - `MaxPower()`: `effectiveMaxCurrent * Voltage * maxActivePhases`, capped by vehicle
 
 **What moves here from Loadpoint:**
-- `setLimit(current)` → becomes the core of `SetPower()`
+- `setLimit(current)` → becomes the core of `SetOfferedPower()`
 - `roundedCurrent()`, `coarseCurrent()`
 - `effectiveMinCurrent()`, `effectiveMaxCurrent()` (with vehicle override support)
 - `effectiveCurrent()` (the hysteresis logic)
@@ -231,14 +232,14 @@ type CurrentController struct {
 - `chargerSwitched` timestamp
 - Vehicle `Resurrector` wake-up on error
 
-### Phase Switching Inside `CurrentController.SetPower()`
+### Phase Switching Inside `CurrentController.SetOfferedPower()`
 
 Phase switching currently lives in `pvMaxCurrent()` (the strategy layer). It should move to the controller because it's about *how* to deliver a target power, not *what* power to deliver.
 
 The key insight: `pvScalePhases(sitePower, minCurrent, maxCurrent)` uses `availablePower = chargePower - sitePower` to decide phases. In the new design, the controller receives `targetPower` which represents the same thing (target = current consumption + surplus).
 
 ```go
-func (c *CurrentController) SetPower(power float64) error {
+func (c *CurrentController) SetOfferedPower(power float64) error {
     // 1. Optimize phases for target power
     c.optimizePhases(power)
 
@@ -310,12 +311,12 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, ...) {
 
     switch {
     case !lp.connected():
-        err = lp.controller.SetPower(0)
+        err = lp.controller.SetOfferedPower(0)
 
     case mode == api.ModeOff:
         var power float64
         if welcomeCharge { power = lp.controller.MinPower() }
-        err = lp.controller.SetPower(power)
+        err = lp.controller.SetOfferedPower(power)
 
     case lp.minSocNotReached() || plannerActive:
         err = lp.controller.SetMaxPower()
@@ -336,7 +337,7 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, ...) {
         if smartFeedInPriorityActive {
             power := float64(0)
             if mode == api.ModeMinPV { power = lp.controller.MinPower() }
-            err = lp.controller.SetPower(power)
+            err = lp.controller.SetOfferedPower(power)
             lp.elapsePVTimer()
             break
         }
@@ -344,7 +345,7 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, ...) {
         targetPower := lp.pvMaxPower(mode, sitePower, batteryBoostPower, batteryBuffered, batteryStart)
         if targetPower == 0 && lp.vehicleClimateActive() { targetPower = lp.controller.MinPower() }
         if targetPower == 0 && welcomeCharge { targetPower = lp.controller.MinPower(); lp.resetPVTimer() }
-        err = lp.controller.SetPower(targetPower)
+        err = lp.controller.SetOfferedPower(targetPower)
     }
 }
 ```
@@ -438,7 +439,7 @@ type Controller interface {
 }
 ```
 
-For `PowerController`, this simply returns `chargePower` (no adjustment needed for power devices). This also replaces the `IntegratedDevice` special case that currently exists in `pvMaxCurrent`.
+For the `PowerController`, this simply returns `chargePower` (no adjustment needed for power devices). This also replaces the `IntegratedDevice` special case that currently exists in `pvMaxCurrent`.
 
 ## Migration Path
 
@@ -446,8 +447,8 @@ For `PowerController`, this simply returns `chargePower` (no adjustment needed f
 
 **New files:**
 - `core/chargercontroller/controller.go` — `Controller` interface
-- `core/chargercontroller/power.go` — `PowerController`
-- `core/chargercontroller/current.go` — `CurrentController`
+- `core/chargercontroller/power.go` — `PowerController` struct
+- `core/chargercontroller/current.go` — `CurrentController` struct
 
 **Modified files:**
 - `api/api.go` — add `PowerController`, `PowerLimiter` interfaces
@@ -460,7 +461,7 @@ Move these methods from `core/loadpoint.go` and `core/loadpoint_phases.go` into 
 
 | From Loadpoint | To CurrentController |
 |----------------|---------------------|
-| `setLimit(current)` | `setChargerCurrent(current)` (private, called by `SetPower`) |
+| `setLimit(current)` | `setChargerCurrent(current)` (private, called by `SetOfferedPower`) |
 | `roundedCurrent()` / `coarseCurrent()` | same names, private |
 | `effectiveMinCurrent()` / `effectiveMaxCurrent()` | same, private |
 | `effectiveCurrent()` | `EffectiveChargePower()` (returns watts) |
@@ -474,11 +475,11 @@ Move these methods from `core/loadpoint.go` and `core/loadpoint_phases.go` into 
 
 **Critical:** The loadpoint still needs to read some controller state for publishing to UI (active phases, offered current, phase timer). The controller should expose these via read-only methods.
 
-**Testing:** Existing `setLimit` tests adapted for `SetPower`. Phase switching tests stay similar.
+**Testing:** Existing `setLimit` tests adapted for `SetOfferedPower`. Phase switching tests stay similar.
 
-### Phase 3: Create `PowerController`
+### Phase 3: Create `PowerController` struct
 
-Simpler implementation. New code.
+Simpler implementation. Wraps `api.PowerController` chargers. New code.
 
 **Testing:** New unit tests.
 
@@ -489,9 +490,9 @@ Simpler implementation. New code.
   - Add `controller chargercontroller.Controller` field
   - In `Prepare()`: create `PowerController` or `CurrentController` based on charger type
   - Replace `pvMaxCurrent()` with `pvMaxPower()`
-  - Replace all `setLimit()` calls with `controller.SetPower()`
+  - Replace all `setLimit()` calls with `controller.SetOfferedPower()`
   - Replace `fastCharging()` with `controller.SetMaxPower()`
-  - Replace `disableUnlessClimater()` to use `controller.SetPower()`
+  - Replace `disableUnlessClimater()` to use `controller.SetOfferedPower()`
   - Update `evChargeCurrentWrappedMeterHandler` to use controller
   - Remove extracted fields and methods
 - `core/loadpoint_phases.go`: Remove methods moved to controller (keep `ActivePhases()` as delegation to controller)
@@ -502,10 +503,10 @@ Simpler implementation. New code.
 ### Phase 5: Migrate chargers
 
 **Modified files:**
-- `charger/heatpump.go` — add `PowerController`, remove `loadpoint.Controller`
-- `charger/mypv.go` — add `PowerController`, remove `loadpoint.Controller`
-- `charger/ego.go` — add `PowerController`, remove `loadpoint.Controller`
-- `charger/sgready.go` — add `PowerController`, remove `loadpoint.Controller`
+- `charger/heatpump.go` — add `api.PowerController`, remove `loadpoint.Controller`
+- `charger/mypv.go` — add `api.PowerController`, remove `loadpoint.Controller`
+- `charger/ego.go` — add `api.PowerController`, remove `loadpoint.Controller`
+- `charger/sgready.go` — add `api.PowerController`, remove `loadpoint.Controller`
 
 **Testing:** Charger unit tests, integration tests.
 
@@ -552,7 +553,7 @@ The controller needs to publish state for the UI. Options:
 |--------|-------|
 | Loadpoint manages current, phases, and power | Loadpoint manages power only |
 | `pvMaxCurrent()` — 120 lines with phase switching | `pvMaxPower()` — ~50 lines, no phase awareness |
-| `setLimit()` — 90 lines with circuit+enable+wake-up | `controller.SetPower()` — same logic, but in the right place |
-| `IntegratedDevice` special cases scattered | `PowerController` handles power devices cleanly |
-| Chargers need `loadpoint.Controller` to query phases | Chargers implement `PowerController`, no loadpoint coupling |
+| `setLimit()` — 90 lines with circuit+enable+wake-up | `controller.SetOfferedPower()` — same logic, but in the right place |
+| `IntegratedDevice` special cases scattered | `PowerController` struct handles power devices cleanly |
+| Chargers need `loadpoint.Controller` to query phases | Chargers implement `api.PowerController`, no loadpoint coupling |
 | Power→current→power round-trip | Direct power path, no conversion loss |
