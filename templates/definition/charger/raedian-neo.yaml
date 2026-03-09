@@ -1,0 +1,13 @@
+template: raedian-neo
+products:
+  - brand: RAEDIAN
+    description:
+      generic: NEO AC Wallbox
+capabilities: ["mA"]
+params:
+  - name: modbus
+    choice: ["tcpip"]
+    id: 1
+render: |
+  type: raedian
+  {{- include "modbus" . }}
