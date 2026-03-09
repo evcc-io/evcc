@@ -1,0 +1,54 @@
+template: chargepoint-home-flex
+products:
+  - brand: ChargePoint
+    description:
+      generic: Home Flex
+params:
+  - name: user
+    required: true
+    description:
+      generic: User
+    help:
+      en: ChargePoint account email address.
+      de: E-Mail-Adresse des ChargePoint-Kontos.
+  - name: password
+    required: true
+    mask: true
+    description:
+      generic: Password
+    help:
+      en: ChargePoint account password. Tokens are stored locally after the first login.
+      de: ChargePoint-Passwort. Nach dem ersten Login werden die Tokens lokal gespeichert.
+  - name: deviceid
+    description:
+      generic: Device ID
+    help:
+      en: ChargePoint Home Flex device ID. Leave empty for automatic discovery if only one charger is registered to the account.
+      de: Geräte-ID des ChargePoint Home Flex. Leer lassen für automatische Erkennung, wenn nur ein Ladegerät am Konto registriert ist.
+    type: int
+    default: 0
+  - name: mincurrent
+    description:
+      generic: Min. Current
+    help:
+      en: Minimum charging current in Ampere (8–48 A).
+      de: Minimaler Ladestrom in Ampere (8–48 A).
+    type: int
+    default: 8
+    unit: A
+  - name: maxcurrent
+    description:
+      generic: Max. Current
+    help:
+      en: Maximum charging current in Ampere (8–48 A).
+      de: Maximaler Ladestrom in Ampere (8–48 A).
+    type: int
+    default: 48
+    unit: A
+render: |
+  type: chargepoint
+  user: {{ .user }}
+  password: {{ .password }}
+  deviceid: {{ .deviceid }}
+  mincurrent: {{ .mincurrent }}
+  maxcurrent: {{ .maxcurrent }}
