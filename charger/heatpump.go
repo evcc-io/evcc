@@ -53,7 +53,7 @@ func NewHeatpumpFromConfig(ctx context.Context, other map[string]any) (api.Charg
 	}{
 		embed: embed{
 			Icon_:     "heatpump",
-			Features_: []api.Feature{api.Heating, api.IntegratedDevice},
+			Features_: []api.Feature{api.Continuous, api.Heating, api.IntegratedDevice},
 		},
 	}
 
