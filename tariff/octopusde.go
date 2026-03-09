@@ -309,20 +309,14 @@ func generateTouRates(rates []octoDeGql.TouRate, agreementValidTo time.Time, now
 // parseTimeOfDay parses a time string in "HH:MM:SS" or "HH:MM" format and returns
 // the duration offset from midnight.
 func parseTimeOfDay(s string) (time.Duration, error) {
-	var h, m, sec int
-	switch len(s) {
-	case 8: // HH:MM:SS
-		if _, err := fmt.Sscanf(s, "%d:%d:%d", &h, &m, &sec); err != nil {
-			return 0, fmt.Errorf("invalid time format %q: %w", s, err)
+	for _, layout := range []string{"15:04:05", "15:04"} {
+		if t, err := time.Parse(layout, s); err == nil {
+			return time.Duration(t.Hour())*time.Hour +
+				time.Duration(t.Minute())*time.Minute +
+				time.Duration(t.Second())*time.Second, nil
 		}
-	case 5: // HH:MM
-		if _, err := fmt.Sscanf(s, "%d:%d", &h, &m); err != nil {
-			return 0, fmt.Errorf("invalid time format %q: %w", s, err)
-		}
-	default:
-		return 0, fmt.Errorf("unsupported time format %q", s)
 	}
-	return time.Duration(h)*time.Hour + time.Duration(m)*time.Minute + time.Duration(sec)*time.Second, nil
+	return 0, fmt.Errorf("unsupported time format %q", s)
 }
 
 // parseFloat parses a string to float64.
