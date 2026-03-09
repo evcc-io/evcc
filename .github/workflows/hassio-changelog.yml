@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
-      contents: read
+      contents: read # push to hassio-addon is authenticated via HASSIO_DEPLOY_TOKEN PAT
 
     steps:
       - name: Checkout hassio-addon
@@ -29,7 +29,7 @@ jobs:
         run: |
           # Fetch all releases into a single JSON array, then sort and format
           gh api repos/evcc-io/evcc/releases --paginate | jq -s '
-            [.[][] | select(.draft == false)]
+            [.[][] | select(.draft == false and .prerelease == false)]
             | sort_by(.published_at)
             | reverse
             | .[]
@@ -48,9 +48,9 @@ jobs:
             echo "No changelog changes detected"
             exit 0
           fi
-          git add evcc/CHANGELOG.md
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git commit -m "Update evcc changelog"
           git pull --rebase
+          git add evcc/CHANGELOG.md
+          git commit -m "Update evcc changelog"
           git push
