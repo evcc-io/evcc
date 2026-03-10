@@ -129,7 +129,7 @@ func NewNexblue(ctx context.Context, user, password, serial string, cache time.D
 	authCtx := context.WithValue(ctx, oauth2.HTTPClient, authHelper.Client)
 	wb.Client = oauth2.NewClient(authCtx, oauth.RefreshTokenSource(tok, login))
 
-	wb.serial, err = ensureCharger("", func() ([]string, error) {
+	wb.serial, err = ensureCharger(serial, func() ([]string, error) {
 		return wb.chargerSerials()
 	})
 	if err != nil {
