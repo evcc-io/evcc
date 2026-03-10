@@ -36,7 +36,7 @@ render: |
       register:
         address: 10205 # Grid Phase A Current
         type: input
-        decode: uint16
+        decode: int16
       scale: 0.01
     - source: modbus
       {{- include "modbus" . | indent 4 }}
