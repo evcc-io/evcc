@@ -836,11 +836,13 @@
       "today": "Today",
       "tomorrow": "Tomorrow"
     },
+    "priceZoom": "zoom in",
     "solarAdjust": "Adjust solar forecast based on real production data{percent}.",
+    "solarAdjustShort": "real data adjust",
     "type": {
-      "co2": "CO₂",
-      "price": "Price",
-      "solar": "Solar"
+      "co2": "CO₂ Emissions",
+      "price": "Grid Price",
+      "solar": "Solar Production"
     }
   },
   "general": {

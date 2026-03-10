@@ -4,15 +4,15 @@
 		<div class="row">
 			<main class="col-12">
 				<template v-if="batteryAvailable">
-					<h2 class="my-4" style="text-transform: none">
+					<h3 class="fw-normal my-4">
 						{{ $t("batterySettings.usageTab") }}
-					</h2>
+					</h3>
 					<BatteryUsageSettings style="max-width: 950px" v-bind="batteryUsageProps" />
 					<template v-if="gridChargePossible">
 						<hr class="my-5" />
-						<h2 class="my-4 mt-5" style="text-transform: none">
+						<h3 class="fw-normal my-4 mt-5">
 							{{ $t("batterySettings.gridChargeTab") }}
-						</h2>
+						</h3>
 						<SmartCostLimit v-bind="smartCostLimitProps" />
 					</template>
 				</template>
