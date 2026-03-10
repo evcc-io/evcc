@@ -201,6 +201,8 @@ github.com/evcc-io/ocpp-go v0.0.0-20251212212612-b7f92ee0443b h1:5vFr7wOwoi5ylyb
 github.com/evcc-io/ocpp-go v0.0.0-20251212212612-b7f92ee0443b/go.mod h1:2kcukDdhui4u730VfnYVWuwzDLgw+mBRGDir/QAyBhg=
 github.com/evcc-io/openapi-mcp v0.6.0 h1:cq8CWG+3gNQ9ID0ZE8MoDHZxgdJmBZ1fFyt5xAfTRfA=
 github.com/evcc-io/openapi-mcp v0.6.0/go.mod h1:YyOx4zwr6xVUcchAETHERZ+75cZMIrdcjVIZFwBlE1Q=
+github.com/evcc-io/optimizer v0.0.0-20260310112601-a605cb4998b0 h1:CHR4kWOXmG3zElXsqUHkt4Rw/T/ZNkAmM/W2eCPK4Cc=
+github.com/evcc-io/optimizer v0.0.0-20260310112601-a605cb4998b0/go.mod h1:cHMeq6GfoXQ8LxqY4LH1wn/hrgYEn+ka5RPI1CF37SY=
 github.com/evcc-io/rct v0.1.2-0.20260222151045-de2e4108c99c h1:bmtzp2QjwIylg7QuAAxclew4rd/G6Pub5MkTkUTjV/w=
 github.com/evcc-io/rct v0.1.2-0.20260222151045-de2e4108c99c/go.mod h1:n6MTBU36QOadGlxxiADu86VaT5l0eYdbmFBHF14AD/s=
 github.com/evcc-io/tesla-proxy-client v0.0.0-20240221194046-4168b3759701 h1:3JplY3KS6KMDVDNAU+3+KWmSWmoHIU34qwuIpW6SiHk=
