@@ -239,7 +239,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		return apiError(resp)
 	}
 
-	site.publish("optimizer", struct {
+	site.publish("evopt", struct {
 		Req     optimizer.OptimizationInput  `json:"req"`
 		Res     optimizer.OptimizationResult `json:"res"`
 		Details requestDetails               `json:"details"`
