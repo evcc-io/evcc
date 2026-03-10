@@ -266,7 +266,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		batteries = append(batteries, batResult)
 	}
 
-	site.publish("optimizer-batteries", batteries)
+	site.publish("evopt-batteries", batteries)
 
 	site.battery.Forecast = site.addBatteryForecastTotals(req.Batteries, resp.JSON200.Batteries)
 
