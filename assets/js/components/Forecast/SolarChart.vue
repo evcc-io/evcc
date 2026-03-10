@@ -5,40 +5,29 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, markRaw, type PropType } from "vue";
-import { echarts, FONT_FAMILY, markPointLabel, tooltipStyle } from "./echarts";
+import { defineComponent, type PropType } from "vue";
+import {
+	FONT_FAMILY,
+	markPointLabel,
+	tooltipStyle,
+	forecastGrid,
+	forecastXAxes,
+	forecastYAxis,
+} from "./echarts";
 import colors, { lighterColor } from "@/colors";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
+import chartMixin from "./chartMixin";
 import { highestSlotIndexByDay } from "@/utils/forecast";
 import type { SolarDetails, TimeseriesEntry } from "./types";
 
 export default defineComponent({
 	name: "SolarChart",
-	mixins: [formatter],
+	mixins: [formatter, chartMixin],
 	props: {
 		solar: { type: Object as PropType<SolarDetails> },
 		rawSolar: { type: Object as PropType<SolarDetails> },
-		chartWidth: { type: Number, required: true },
-		endDate: { type: Date, required: true },
-		scrollLeft: { type: Number, default: 0 },
-	},
-	emits: ["scroll"],
-	data(): {
-		chart: echarts.ECharts | null;
-		startDate: Date; tooltipVisible: boolean;
-	} {
-		return {
-			chart: null, tooltipVisible: false,
-			startDate: new Date(),
-		};
 	},
 	computed: {
-		nextMidnight(): Date {
-			const d = new Date(this.startDate);
-			d.setDate(d.getDate() + 1);
-			d.setHours(0, 0, 0, 0);
-			return d;
-		},
 		entries(): TimeseriesEntry[] {
 			return (this.solar?.timeseries || []).filter(
 				(e) => new Date(e.ts) >= this.startDate && new Date(e.ts) <= this.endDate
@@ -79,10 +68,15 @@ export default defineComponent({
 			return {
 				animationDuration: 0,
 				textStyle: { fontFamily: FONT_FAMILY },
-				grid: { top: 36, right: 16, bottom: 4, left: 40, borderWidth: 0 },
+				grid: forecastGrid(),
 				tooltip: {
 					trigger: "axis",
-					axisPointer: { type: "line", snap: true, snapThreshold: 50, lineStyle: { color: "transparent" } },
+					axisPointer: {
+						type: "line",
+						snap: true,
+						snapThreshold: 50,
+						lineStyle: { color: "transparent" },
+					},
 					...tooltipStyle(selfColor, () => this.chart),
 					formatter: (params: { value: [string, number] }[]) => {
 						const p = params[0];
@@ -92,49 +86,8 @@ export default defineComponent({
 						return `${time}<br/>${this.fmtW(p.value[1], POWER_UNIT.AUTO)}`;
 					},
 				},
-				xAxis: [
-					{
-						type: "time",
-						min: this.startDate,
-						max: this.endDate,
-						minInterval: 3600 * 1000,
-						maxInterval: 3600 * 1000,
-						axisLabel: {
-							color: colors.muted,
-							formatter: (value: number) => {
-								const date = new Date(value);
-								const h = date.getHours();
-								if (h === 0) return `${h}\n${this.weekdayShort(date)}`;
-								return `${h}`;
-							},
-						},
-						splitLine: { show: false },
-						axisLine: { show: false },
-						axisTick: { show: false },
-					},
-					{
-						type: "time",
-						position: "bottom",
-						min: this.startDate,
-						max: this.endDate,
-						minInterval: 24 * 3600 * 1000,
-						maxInterval: 24 * 3600 * 1000,
-						axisLabel: { show: false },
-						axisLine: { show: false },
-						axisTick: { show: false },
-						splitLine: {
-							show: true,
-							showMinLine: false,
-							showMaxLine: false,
-							lineStyle: { color: colors.border || "#eee", type: "dashed" },
-						},
-					},
-				],
-				yAxis: {
-					type: "value",
-					min: 0,
-					axisLine: { show: false },
-					axisTick: { show: false },
+				xAxis: forecastXAxes(this.startDate, this.endDate, this.weekdayShort),
+				yAxis: forecastYAxis({
 					max: (value: { max: number }) => {
 						const m = Math.max(value.max, this.combinedMax);
 						const step = Math.pow(10, Math.floor(Math.log10(m || 1)));
@@ -145,12 +98,7 @@ export default defineComponent({
 						color: colors.muted,
 						formatter: (value: number) => this.fmtW(value, POWER_UNIT.KW, false, 0),
 					},
-					splitLine: {
-						showMinLine: false,
-						showMaxLine: false,
-						lineStyle: { color: colors.border || "#eee" },
-					},
-				},
+				}),
 				series: [
 					{
 						type: "line",
@@ -177,41 +125,6 @@ export default defineComponent({
 					},
 				],
 			};
-		},
-	},
-	watch: {
-		chartOption: {
-			handler() {
-				this.chart?.setOption(this.chartOption);
-			},
-			deep: true,
-		},
-		scrollLeft(val: number) {
-			const el = this.$refs["scrollEl"] as HTMLElement;
-			if (el && Math.abs(el.scrollLeft - val) > 1) {
-				el.scrollLeft = val;
-			}
-		},
-	},
-	mounted() {
-		this.updateStartDate();
-		const el = this.$refs["chartEl"] as HTMLElement;
-		this.chart = markRaw(echarts.init(el));
-		this.chart.setOption(this.chartOption);
-		this.chart.on("showTip", () => { this.tooltipVisible = true; });
-		this.chart.on("hideTip", () => { this.tooltipVisible = false; });
-	},
-	beforeUnmount() {
-		this.chart?.dispose();
-	},
-	methods: {
-		updateStartDate() {
-			const now = new Date();
-			now.setMinutes(0, 0, 0);
-			this.startDate = now;
-		},
-		onScroll(e: Event) {
-			this.$emit("scroll", (e.target as HTMLElement).scrollLeft);
 		},
 	},
 });

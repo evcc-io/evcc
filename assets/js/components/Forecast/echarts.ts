@@ -1,4 +1,6 @@
 import * as echarts from "echarts/core";
+import colors from "@/colors";
+import type { ForecastSlot } from "./types";
 import { BarChart, LineChart } from "echarts/charts";
 import {
   GridComponent,
@@ -73,7 +75,7 @@ export function markPointLabel(
 
 export function tooltipStyle(
   color: string,
-  getChart?: () => { convertToPixel: echarts.ECharts["convertToPixel"] } | null,
+  getChart?: () => { convertToPixel: echarts.ECharts["convertToPixel"] } | null
 ) {
   return {
     backgroundColor: color,
@@ -84,7 +86,7 @@ export function tooltipStyle(
     position(
       point: [number, number],
       params: { value: [string, number] }[] | { value: [string, number] },
-      el: HTMLElement,
+      el: HTMLElement
     ): [number, number] {
       const w = el?.offsetWidth || 0;
       const h = el?.offsetHeight || 0;
@@ -107,6 +109,87 @@ export function tooltipStyle(
       color: "#fff",
     },
   };
+}
+
+export function forecastGrid() {
+  return { top: 36, right: 16, bottom: 4, left: 40, borderWidth: 0 };
+}
+
+export function forecastXAxes(startDate: Date, endDate: Date, weekdayShort: (d: Date) => string) {
+  return [
+    {
+      type: "time",
+      min: startDate,
+      max: endDate,
+      minInterval: 3600 * 1000,
+      maxInterval: 3600 * 1000,
+      axisLabel: {
+        color: colors.muted,
+        formatter: (value: number) => {
+          const date = new Date(value);
+          const h = date.getHours();
+          if (h === 0) return `${h}\n${weekdayShort(date)}`;
+          return `${h}`;
+        },
+      },
+      splitLine: { show: false },
+      axisLine: { show: false },
+      axisTick: { show: false },
+    },
+    {
+      type: "time",
+      position: "bottom",
+      min: startDate,
+      max: endDate,
+      minInterval: 24 * 3600 * 1000,
+      maxInterval: 24 * 3600 * 1000,
+      axisLabel: { show: false },
+      axisLine: { show: false },
+      axisTick: { show: false },
+      splitLine: {
+        show: true,
+        showMinLine: false,
+        showMaxLine: false,
+        lineStyle: { color: colors.border || "#eee", type: "dashed" },
+      },
+    },
+  ];
+}
+
+export function forecastYAxis(overrides: Record<string, unknown> = {}) {
+  return {
+    type: "value",
+    min: 0,
+    axisLine: { show: false },
+    axisTick: { show: false },
+    splitLine: {
+      showMinLine: false,
+      showMaxLine: false,
+      lineStyle: { color: colors.border || "#eee" },
+    },
+    ...overrides,
+  };
+}
+
+export function clampStart(ts: string, startDate: Date): string {
+  return new Date(ts) < startDate ? startDate.toISOString() : ts;
+}
+
+export function filterForecastSlots(
+  slots: ForecastSlot[],
+  startDate: Date,
+  endDate: Date
+): ForecastSlot[] {
+  if (!Array.isArray(slots)) return [];
+  return slots.filter((s) => new Date(s.end) >= startDate && new Date(s.start) <= endDate);
+}
+
+export function minSlotIndex(slots: ForecastSlot[]): number {
+  return slots.reduce((min, s, i) => (s.value < (slots[min]?.value || Infinity) ? i : min), 0);
+}
+
+export function maxSlotIndex(slots: ForecastSlot[]): number {
+  return slots.reduce((max, s, i) => (s.value > (slots[max]?.value || 0) ? i : max), 0);
 }
 
 export { echarts };

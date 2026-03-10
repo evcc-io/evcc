@@ -829,6 +829,7 @@
       "lowestHour": "Cheapest hour",
       "range": "Range"
     },
+    "priceZoom": "zoom in",
     "solar": {
       "dayAfterTomorrow": "Day after tomorrow",
       "partly": "partly",
@@ -836,7 +837,6 @@
       "today": "Today",
       "tomorrow": "Tomorrow"
     },
-    "priceZoom": "zoom in",
     "solarAdjust": "Adjust solar forecast based on real production data{percent}.",
     "solarAdjustShort": "real data adjust",
     "type": {
