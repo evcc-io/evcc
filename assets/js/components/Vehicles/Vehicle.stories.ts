@@ -129,6 +129,13 @@ OfflineVehicleWithTarget.args = {
   mode: CHARGE_MODE.PV,
 };
 
+export const WaitingForAuthorization = Template.bind({});
+WaitingForAuthorization.args = {
+  ...baseState,
+  enabled: true,
+  chargerStatusReason: "waitingforauthorization",
+};
+
 export const VehicleLimit = Template.bind({});
 VehicleLimit.args = {
   ...baseState,

@@ -1,6 +1,9 @@
 <template>
 	<div class="root position-relative">
-		<div class="chart position-relative" :class="{ 'chart--with-target': targetText }">
+		<div
+			class="chart position-relative"
+			:class="{ 'chart--with-target': targetText, inactive }"
+		>
 			<div
 				v-for="(slot, index) in slots"
 				:key="`${slot.day}-${fmtHourMinute(slot.start)}`"
@@ -73,6 +76,7 @@ export default defineComponent({
 		slots: { type: Array as PropType<Slot[]>, default: () => [] },
 		targetText: [String, null],
 		targetOffset: { type: Number, default: 0 },
+		inactive: { type: Boolean, default: false },
 	},
 	emits: ["slot-hovered", "slot-selected"],
 	data() {
@@ -281,5 +285,13 @@ export default defineComponent({
 }
 .slot.faded {
 	opacity: 0.33;
+}
+.chart.inactive .slot.active .slot-bar,
+.chart.inactive .slot.warning .slot-bar {
+	background: var(--bs-gray-medium);
+}
+.chart.inactive .slot.active .slot-label,
+.chart.inactive .slot.warning .slot-label {
+	color: var(--bs-gray-medium);
 }
 </style>

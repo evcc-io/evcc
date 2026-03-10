@@ -33,7 +33,7 @@ require (
 	github.com/enbility/ship-go v0.6.0
 	github.com/enbility/spine-go v0.7.0
 	github.com/evcc-io/openapi-mcp v0.6.0
-	github.com/evcc-io/rct v0.1.2-0.20251121151844-04c32662cf6f
+	github.com/evcc-io/rct v0.1.2-0.20260222151045-de2e4108c99c
 	github.com/evcc-io/tesla-proxy-client v0.0.0-20240221194046-4168b3759701
 	github.com/fatih/structs v1.1.0
 	github.com/getkin/kin-openapi v0.133.0
@@ -55,6 +55,7 @@ require (
 	github.com/hashicorp/go-version v1.8.0
 	github.com/hasura/go-graphql-client v0.15.1
 	github.com/holoplot/go-evdev v0.0.0-20250804134636-ab1d56a1fe83
+	github.com/icholy/digest v1.1.0
 	github.com/influxdata/influxdb-client-go/v2 v2.14.0
 	github.com/insomniacslk/tapo v1.0.2
 	github.com/itchyny/gojq v0.12.18
@@ -93,12 +94,12 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0
 	github.com/spf13/pflag v1.0.10
 	github.com/spf13/viper v1.21.0
-	github.com/stianeikeland/go-rpio/v4 v4.6.0
 	github.com/stretchr/testify v1.11.1
 	github.com/teslamotors/vehicle-command v0.4.1
 	github.com/tess1o/go-ecoflow v1.1.1-0.20251003083510-2ccc15a17e29
 	github.com/traefik/yaegi v0.16.1
 	github.com/volkszaehler/mbmd v0.0.0-20260131091050-86c2d25b6103
+	github.com/warthog618/go-gpiocdev v0.9.1
 	gitlab.com/bboehmke/sunny v0.16.0
 	go.bug.st/serial v1.6.4
 	go.uber.org/mock v0.6.0

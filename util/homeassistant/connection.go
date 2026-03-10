@@ -49,13 +49,24 @@ func NewConnection(log *util.Logger, uri, home string) (*Connection, error) {
 	return c, nil
 }
 
+// URI returns the base URI of the Home Assistant instance
+func (c *Connection) URI() string {
+	return c.instance.URI()
+}
+
 // GetStates retrieves the list of entities
 func (c *Connection) GetStates() ([]StateResponse, error) {
 	var res []StateResponse
 	uri := fmt.Sprintf("%s/api/states", c.instance.URI())
-
 	err := c.GetJSON(uri, &res)
+	return res, err
+}
 
+// GetServices retrieves the list of callable services
+func (c *Connection) GetServices() ([]ServiceDomainResponse, error) {
+	var res []ServiceDomainResponse
+	uri := fmt.Sprintf("%s/api/services", c.instance.URI())
+	err := c.GetJSON(uri, &res)
 	return res, err
 }
 
@@ -92,6 +103,9 @@ func (c *Connection) GetIntState(entity string) (int64, error) {
 
 // GetFloatState retrieves the state of an entity as float64
 func (c *Connection) GetFloatState(entity string) (float64, error) {
+	// leading minus sign?
+	entity, invert := strings.CutPrefix(entity, "-")
+
 	state, err := c.GetState(entity)
 	if err != nil {
 		return 0, err
@@ -105,6 +119,10 @@ func (c *Connection) GetFloatState(entity string) (float64, error) {
 	scale, err := state.scale()
 	if err != nil {
 		return 0, fmt.Errorf("%w for entity %s", err, entity)
+	}
+
+	if invert {
+		value = -value
 	}
 
 	return scale * value, nil

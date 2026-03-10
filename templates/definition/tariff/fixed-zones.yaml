@@ -1,0 +1,38 @@
+template: fixed-zones
+products:
+  - description:
+      de: Zeitabhängiger Tarif
+      en: Time-based Tariff
+requirements:
+  description:
+    de: Zeitabhängige Strompreise mit verschiedenen Preiszonen für Nachttarife, Wochenendtarife oder saisonale Tarife. Wenn sich Zonen überschneiden, gilt die zuletzt zutreffende Zone.
+    en: Time-dependent electricity prices with different price zones for night rates, weekend rates or seasonal tariffs. If zones overlap, the last matching zone applies.
+group: price
+params:
+  - name: price
+    type: pricePerKWh
+    required: true
+    description:
+      en: Default price
+      de: Standardpreis
+    help:
+      en: When no zone applies.
+      de: Wenn keine Zone zutrifft
+  - name: zones
+    required: true
+render: |
+  type: fixed
+  price: {{ .price }}
+  zones:
+  {{- range .zones }}
+  - price: {{ .price }}
+    {{- if .days }}
+    days: {{ .days }}
+    {{- end }}
+    {{- if .hours }}
+    hours: {{ .hours }}
+    {{- end }}
+    {{- if .months }}
+    months: {{ .months }}
+    {{- end }}
+  {{- end }}
