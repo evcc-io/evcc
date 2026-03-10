@@ -131,6 +131,8 @@ func dump(r io.ReadCloser, w *strings.Builder) error {
 func (r *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	r.log.TRACE.Printf("%s %s", req.Method, req.URL.String())
 
+	isWebSocketReq := isWebSocket(req)
+
 	// add evcc user agent
 	if req.Header.Get("User-Agent") == "" {
 		req = req.Clone(req.Context())
@@ -148,7 +150,7 @@ func (r *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 			bld.Write(bytes.TrimSpace(body[:min(LogMaxLen, len(body))]))
 		}
 	} else {
-		if !isWebSocket(req) {
+		if !isWebSocketReq {
 			if save, req.Body, err = drainBody(req.Body); err == nil {
 				err = dump(save, bld)
 			}
@@ -172,7 +174,7 @@ func (r *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 				bld.Write(bytes.TrimSpace(body[:min(LogMaxLen, len(body))]))
 			}
 		} else {
-			if !isWebSocket(req) {
+			if !isWebSocketReq {
 				if save, resp.Body, err = drainBody(resp.Body); err == nil {
 					err = dump(save, bld)
 				}
