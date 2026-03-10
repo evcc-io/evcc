@@ -108,7 +108,7 @@ func (r *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 			bld.WriteString("\n")
 			bld.Write(bytes.TrimSpace(body[:min(LogMaxLen, len(body))]))
 		}
-	} else {
+	} else if req.Method != http.MethodGet {
 		if save, req.Body, err = drainBody(req.Body); err == nil {
 			err = dump(save, bld)
 		}
@@ -130,7 +130,7 @@ func (r *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 				bld.WriteString("\n\n")
 				bld.Write(bytes.TrimSpace(body[:min(LogMaxLen, len(body))]))
 			}
-		} else {
+		} else if req.Method != http.MethodGet {
 			if save, resp.Body, err = drainBody(resp.Body); err == nil {
 				err = dump(save, bld)
 			}
