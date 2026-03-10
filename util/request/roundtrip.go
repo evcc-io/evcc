@@ -61,7 +61,42 @@ func NewTripper(log *util.Logger, base http.RoundTripper) http.RoundTripper {
 }
 
 func isWebSocket(req *http.Request) bool {
-	return strings.ToLower(req.Header.Get("Upgrade")) == "websocket"
+    // WebSocket handshake must be GET
+    if req.Method != http.MethodGet {
+        return false
+    }
+
+    // Must contain: Connection: Upgrade
+    if !headerContainsToken(req.Header, "Connection", "Upgrade") {
+        return false
+    }
+
+    // Must contain: Upgrade: websocket
+    if !headerContainsToken(req.Header, "Upgrade", "websocket") {
+        return false
+    }
+
+    // Must contain WebSocket-specific headers
+    if req.Header.Get("Sec-WebSocket-Key") == "" {
+        return false
+    }
+
+    if req.Header.Get("Sec-WebSocket-Version") == "" {
+        return false
+    }
+
+    return true
+}
+
+func headerContainsToken(h http.Header, key, token string) bool {
+    for _, v := range h.Values(key) {
+        for _, part := range strings.Split(v, ",") {
+            if strings.EqualFold(strings.TrimSpace(part), token) {
+                return true
+            }
+        }
+    }
+    return false
 }
 
 // copy of http.drainBody
