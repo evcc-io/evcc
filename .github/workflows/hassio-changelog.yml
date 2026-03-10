@@ -10,7 +10,7 @@ on:
 jobs:
   update-changelog:
     name: Update Hassio Changelog
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-24.04-arm
 
     permissions:
       contents: read # push to hassio-addon is authenticated via HASSIO_DEPLOY_TOKEN PAT
@@ -24,8 +24,6 @@ jobs:
           path: ./hassio
 
       - name: Generate changelog
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Fetch all releases into a single JSON array, then sort and format
           gh api repos/evcc-io/evcc/releases --paginate | jq -s '
