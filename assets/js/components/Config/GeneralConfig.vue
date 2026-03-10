@@ -58,10 +58,19 @@
 			:text="controlStatus"
 			@edit="openModal('control')"
 		/>
+
+		<GeneralConfigEntry
+			test-id="generalconfig-currency"
+			:label="$t('config.currency.title')"
+			:text="currency"
+			@edit="openModal('currency')"
+		/>
+		<CurrencyModal @changed="$emit('site-changed')" />
 	</div>
 </template>
 
 <script>
+import CurrencyModal from "./CurrencyModal.vue";
 import GeneralConfigEntry from "./GeneralConfigEntry.vue";
 import { openModal } from "@/configModal";
 import store from "@/store";
@@ -69,7 +78,7 @@ import formatter from "@/mixins/formatter";
 
 export default {
 	name: "GeneralConfig",
-	components: { GeneralConfigEntry },
+	components: { CurrencyModal, GeneralConfigEntry },
 	mixins: [formatter],
 	props: {
 		sponsorError: Boolean,
@@ -89,6 +98,9 @@ export default {
 		controlStatus() {
 			const sec = store.state?.interval;
 			return sec ? this.fmtDuration(sec) : "";
+		},
+		currency() {
+			return store.state?.currency || "EUR";
 		},
 		sponsorStatus() {
 			const sponsor = store.state?.sponsor || {};

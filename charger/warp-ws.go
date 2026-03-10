@@ -10,7 +10,6 @@ import (
 	"net/url"
 	"path"
 	"slices"
-	"strings"
 	"sync"
 	"time"
 
@@ -20,17 +19,15 @@ import (
 	"github.com/evcc-io/evcc/charger/warp"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/jpfielding/go-http-digest/pkg/digest"
+	"github.com/icholy/digest"
 )
 
 type WarpWS struct {
-	*request.Helper
+	*warp.Connection
+	pm *warp.Connection // separate Energy Manager
 
 	// config
-	pmHelper   *request.Helper
 	log        *util.Logger
-	uri        string
-	pmURI      string
 	meterIndex uint
 
 	mu sync.RWMutex
@@ -43,25 +40,16 @@ type WarpWS struct {
 	maxCurrent int64 // input from evcc
 
 	// meter
-	meter               warp.MeterValues
-	meterMap            map[int]int
-	metersValueIDsTopic string
-	metersValuesTopic   string
+	meter    warp.MeterValues
+	meterMap map[int]int
 
 	// nfc
 	chargeTracker warp.ChargeTrackerCurrentCharge
 
 	// power manager
-	pmState         warp.PmState
-	pmLowLevelState warp.PmLowLevelState
+	pmState         *warp.PmState
+	pmLowLevelState *warp.PmLowLevelState
 }
-
-type warpEvent struct {
-	Topic   string          `json:"topic"`
-	Payload json.RawMessage `json:"payload"`
-}
-
-var _ api.ChargerEx = (*WarpWS)(nil)
 
 func init() {
 	registry.AddCtx("warp-ws", NewWarpWSFromConfig)
@@ -71,150 +59,191 @@ func init() {
 
 func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	var cc struct {
-		URI                    string
-		User                   string
-		Password               string
-		EnergyManagerURI       string
-		EnergyManagerUser      string
-		EnergyManagerPassword  string
-		DisablePhaseAutoSwitch bool
-		EnergyMeterIndex       uint
+		URI                   string
+		User                  string
+		Password              string
+		EnergyManagerURI      string
+		EnergyManagerUser     string
+		EnergyManagerPassword string
+		EnergyMeterIndex      uint
+
+		DisablePhaseAutoSwitch_ bool `mapstructure:"disablePhaseAutoSwitch"` // TODO deprecated
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	wb, err := NewWarpWS(ctx, cc.URI, cc.User, cc.Password, cc.EnergyMeterIndex)
+	w, err := NewWarpWS(ctx, cc.URI, cc.User, cc.Password, cc.EnergyManagerURI, cc.EnergyManagerUser, cc.EnergyManagerPassword, cc.EnergyMeterIndex)
 	if err != nil {
 		return nil, err
 	}
 
 	// Feature: Meter -> Meter is legacy API, Meters is the new API
 	var currentPower, totalEnergy func() (float64, error)
-	if wb.hasFeature(warp.FeatureMeter) || wb.hasFeature(warp.FeatureMeters) {
-		currentPower = wb.currentPower
-		totalEnergy = wb.totalEnergy
+	if w.hasFeature(warp.FeatureMeter) || w.hasFeature(warp.FeatureMeters) {
+		currentPower = w.currentPower
+		totalEnergy = w.totalEnergy
 	}
 
 	// Feature: Meters | MeterAllValues
 	var currents, voltages func() (float64, float64, float64, error)
-	if wb.hasFeature(warp.FeatureMeters) || wb.hasFeature(warp.FeatureMeterAllValues) {
-		currents = wb.currents
-		voltages = wb.voltages
-	}
-
-	// Feature: Phase Switching
-	if wb.hasFeature(warp.FeaturePhaseSwitch) && wb.pmURI == "" {
-		wb.pmURI = wb.uri
-		wb.pmHelper = wb.Helper
-	} else if cc.EnergyManagerURI != "" { // fallback to Energy Manager
-		wb.pmURI, err = parseURI(cc.EnergyManagerURI, false)
-		if wb.pmURI == "" {
-			return nil, err
-		} else if err != nil {
-			wb.log.DEBUG.Println(err)
-		}
-		wb.pmHelper = request.NewHelper(wb.log)
-		if cc.EnergyManagerUser != "" {
-			wb.pmHelper.Client.Transport = digest.NewTransport(cc.EnergyManagerUser, cc.EnergyManagerPassword, wb.pmHelper.Client.Transport)
-		}
+	if w.hasFeature(warp.FeatureMeters) || w.hasFeature(warp.FeatureMeterAllValues) {
+		currents = w.currents
+		voltages = w.voltages
 	}
 
 	// Feature: NFC
 	var identify func() (string, error)
-	if wb.hasFeature(warp.FeatureNfc) {
-		identify = wb.identify
+	if w.hasFeature(warp.FeatureNfc) {
+		identify = w.identify
 	}
 
+	// Feature: Phase Switching
 	// only setup phase switching methods if power manager endpoint is set
 	var phases func(int) error
 	var getPhases func() (int, error)
-	if wb.pmURI != "" {
-		if res, err := wb.ensurePmState(); err == nil && res.ExternalControl != warp.ExternalControlDeactivated {
-			wb.pmState = res
-			phases = wb.phases1p3p
-			getPhases = wb.getPhases
+	if (w.hasFeature(warp.FeaturePhaseSwitch) || cc.EnergyManagerURI != "") && w.pm != nil {
+		if res, err := w.ensurePmState(); err == nil && res.ExternalControl != warp.ExternalControlDeactivated {
+			w.pmState = &res
+			phases = w.phases1p3p
+			getPhases = w.getPhases
 		}
 	}
 
-	// Phase Auto Switching needs to be disabled for WARP3
+	// Phase Auto Switching needs to be disabled for WARP3 and WARP2 + EM
 	// Necessary if charging 1p only vehicles
-	if cc.DisablePhaseAutoSwitch {
-		// unfortunately no feature to check for, instead this is set in template
-		if err := wb.disablePhaseAutoSwitch(); err != nil {
+	typ, err := w.getWarpType()
+	if err != nil {
+		return nil, err
+	}
+	if typ == "warp3" || (typ == "warp2" && w.pm != nil && w.pm != w.Connection) {
+		if err := w.disablePhaseAutoSwitch(); err != nil {
 			return nil, err
 		}
-		wb.log.TRACE.Println("disabled phase auto switching")
+		w.log.TRACE.Println("disabled phase auto switching")
 	}
 
-	return decorateWarpWS(wb, currentPower, totalEnergy, currents, voltages, identify, phases, getPhases), nil
+	return decorateWarpWS(w, currentPower, totalEnergy, currents, voltages, identify, phases, getPhases), nil
 }
 
-func NewWarpWS(ctx context.Context, uri, user, password string, meterIndex uint) (*WarpWS, error) {
+func NewWarpWS(ctx context.Context, uri, user, pass, emURI, emUser, emPass string, meterIndex uint) (*WarpWS, error) {
 	log := util.NewLogger("warp-ws")
 
-	client := request.NewHelper(log)
-	if user != "" {
-		client.Client.Transport = digest.NewTransport(user, password, client.Client.Transport)
-	}
-
 	w := &WarpWS{
-		Helper: client, log: log,
-		uri:                 util.DefaultScheme(uri, "http"),
-		meterIndex:          meterIndex,
-		meterMap:            map[int]int{},
-		metersValueIDsTopic: fmt.Sprintf("meters/%d/value_ids", meterIndex),
-		metersValuesTopic:   fmt.Sprintf("meters/%d/values", meterIndex),
+		Connection: warp.NewConnection(log, uri, user, pass),
+		log:        log,
+		meterIndex: meterIndex,
+		meterMap:   map[int]int{},
 	}
 
-	go w.run(ctx)
+	if err := w.GetJSON(fmt.Sprintf("%s/info/features", w.URI), &w.features); err != nil {
+		return nil, err
+	}
+
+	if emURI != "" {
+		w.pm = warp.NewConnection(log, emURI, emUser, emPass)
+	} else {
+		w.pm = w.Connection
+	}
+
+	wsURI, err := parseURI(w.URI)
+	if err != nil {
+		return nil, err
+	}
+
+	go w.run(ctx, wsURI)
 
 	return w, nil
 }
 
-func (w *WarpWS) run(ctx context.Context) {
-	uri, err := parseURI(w.uri, true)
-	if err != nil {
-		w.log.DEBUG.Println(err)
-		if uri == "" {
-			return
-		}
-	}
-	w.log.TRACE.Printf("connecting to %s …", uri)
+func (w *WarpWS) run(ctx context.Context, wsURI string) {
+	bo := backoff.NewExponentialBackOff(
+		backoff.WithMaxElapsedTime(0),
+		backoff.WithMaxInterval(30*time.Second),
+	)
 
-	bo := backoff.NewExponentialBackOff(backoff.WithMaxElapsedTime(0))
 	for ctx.Err() == nil {
-		conn, _, err := websocket.Dial(ctx, uri, nil)
+		w.log.DEBUG.Println("websocket: connecting")
+
+		conn, err := dialWebsocket(ctx, digest.Options{
+			URI:      wsURI,
+			Username: w.Username,
+			Password: w.Password,
+		})
 		if err != nil {
-			if ctx.Err() != nil {
-				return
+			if !errors.Is(err, context.DeadlineExceeded) {
+				w.log.ERROR.Printf("websocket: %v", err)
 			}
-			time.Sleep(bo.NextBackOff())
+
+			select {
+			case <-ctx.Done():
+				return
+			case <-time.After(bo.NextBackOff()):
+			}
+
 			continue
 		}
 
 		bo.Reset()
+
 		if err := w.handleConnection(ctx, conn); err != nil {
 			w.log.ERROR.Println(err)
 		}
 	}
 }
 
-func parseURI(uri string, toWS bool) (string, error) {
-	u, err := url.Parse(util.DefaultScheme(strings.TrimRight(uri, "/"), "http"))
+func dialWebsocket(ctx context.Context, options digest.Options) (*websocket.Conn, error) {
+	// err will be non nil if auth is needed
+	conn, resp, err := websocket.Dial(ctx, options.URI, nil)
+	if err == nil {
+		return conn, nil
+	}
+
+	if resp == nil || resp.StatusCode != http.StatusUnauthorized {
+		return nil, err
+	}
+
+	if options.Username == "" {
+		return nil, errors.New("websocket: missing credentials")
+	}
+
+	// extract challenge from response
+	challenge, err := digest.ParseChallenge(resp.Header.Get("WWW-Authenticate"))
+	if err != nil {
+		return nil, fmt.Errorf("websocket: %w", err)
+	}
+
+	options.Method = "GET"
+	options.Count = 1
+
+	cred, err := digest.Digest(challenge, options)
+	if err != nil {
+		return nil, err
+	}
+
+	// Dial with Digest Auth
+	dialer := websocket.DialOptions{
+		HTTPHeader: http.Header{
+			"Authorization": []string{cred.String()},
+		},
+	}
+
+	conn, _, err = websocket.Dial(ctx, options.URI, &dialer)
+	return conn, err
+}
+
+// Returns parsed URI and hostname
+func parseURI(uri string) (string, error) {
+	u, err := url.Parse(uri)
 	if err != nil {
 		return "", err
 	}
-	if u.Scheme == "https" || u.Scheme == "wss" {
-		u.Scheme = "http"
-		err = fmt.Errorf("https or wss are not supported, using http/ws instead")
-	}
-	if toWS {
-		u.Scheme = "ws"
-		u.Path = path.Join(u.Path, "/ws")
-	}
-	return u.String(), err
+
+	u.Scheme = "ws"
+	u.Path = path.Join(u.Path, "/ws")
+
+	return u.String(), nil
 }
 
 func (w *WarpWS) handleConnection(ctx context.Context, conn *websocket.Conn) error {
@@ -230,7 +259,10 @@ func (w *WarpWS) handleConnection(ctx context.Context, conn *websocket.Conn) err
 
 		dec := json.NewDecoder(r)
 		for {
-			var event warpEvent
+			var event struct {
+				Topic   string          `json:"topic"`
+				Payload json.RawMessage `json:"payload"`
+			}
 			if err := dec.Decode(&event); err != nil {
 				if errors.Is(err, io.EOF) {
 					break //next frame
@@ -238,7 +270,7 @@ func (w *WarpWS) handleConnection(ctx context.Context, conn *websocket.Conn) err
 				return err
 			}
 
-			w.log.TRACE.Printf("ws event %s: %s", event.Topic, event.Payload)
+			w.log.TRACE.Printf("websocket: event %s: %s", event.Topic, event.Payload)
 			if err := w.handleEvent(event.Topic, event.Payload); err != nil {
 				w.log.ERROR.Printf("bad payload for topic %s: %v", event.Topic, err)
 			}
@@ -247,6 +279,9 @@ func (w *WarpWS) handleConnection(ctx context.Context, conn *websocket.Conn) err
 }
 
 func (w *WarpWS) handleEvent(topic string, payload json.RawMessage) error {
+	metersValueIDsTopic := fmt.Sprintf("meters/%d/value_ids", w.meterIndex)
+	metersValuesTopic := fmt.Sprintf("meters/%d/values", w.meterIndex)
+
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
@@ -263,7 +298,7 @@ func (w *WarpWS) handleEvent(topic string, payload json.RawMessage) error {
 	case "evse/state":
 		err = json.Unmarshal(payload, &w.evse.State)
 	case "meter/all_values":
-		if !slices.Contains(w.features, warp.FeatureMeterAllValues) || slices.Contains(w.features, warp.FeatureMeters) {
+		if !w.hasFeature(warp.FeatureMeterAllValues) || w.hasFeature(warp.FeatureMeters) {
 			return nil
 		}
 		err = json.Unmarshal(payload, &w.meter.TmpValues)
@@ -272,11 +307,11 @@ func (w *WarpWS) handleEvent(topic string, payload json.RawMessage) error {
 			copy(w.meter.Currents[:], w.meter.TmpValues[3:6])
 		}
 	case "meter/values":
-		if !slices.Contains(w.features, warp.FeatureMeter) || slices.Contains(w.features, warp.FeatureMeters) {
+		if !w.hasFeature(warp.FeatureMeter) || w.hasFeature(warp.FeatureMeters) {
 			return nil
 		}
 		err = json.Unmarshal(payload, &w.meter)
-	case w.metersValueIDsTopic:
+	case metersValueIDsTopic:
 		var ids []int
 		if err = json.Unmarshal(payload, &ids); err != nil {
 			return err
@@ -285,7 +320,7 @@ func (w *WarpWS) handleEvent(topic string, payload json.RawMessage) error {
 		for i, id := range ids {
 			w.meterMap[id] = i
 		}
-	case w.metersValuesTopic:
+	case metersValuesTopic:
 		if err := json.Unmarshal(payload, &w.meter.TmpValues); err != nil {
 			return err
 		}
@@ -321,31 +356,13 @@ func (w *WarpWS) handleEvent(topic string, payload json.RawMessage) error {
 }
 
 func (w *WarpWS) hasFeature(feature string) bool {
-	w.mu.RLock()
-	if w.features != nil {
-		w.mu.RUnlock()
-		return slices.Contains(w.features, feature)
-	}
-	uri := fmt.Sprintf("%s/info/features", w.uri)
-	w.mu.RUnlock()
-
-	var f []string
-	if err := w.GetJSON(uri, &f); err == nil {
-		w.mu.Lock()
-		w.features = f
-		w.mu.Unlock()
-		return slices.Contains(f, feature)
-	}
-
-	return false
+	return slices.Contains(w.features, feature)
 }
 
 func (w *WarpWS) Enable(enable bool) error {
 	var curr int64
 	if enable {
-		w.mu.RLock()
 		curr = w.maxCurrent
-		w.mu.RUnlock()
 	}
 	return w.setCurrent(curr)
 }
@@ -361,14 +378,14 @@ func (w *WarpWS) MaxCurrent(current int64) error {
 	return w.MaxCurrentMillis(float64(current))
 }
 
+var _ api.ChargerEx = (*WarpWS)(nil)
+
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (w *WarpWS) MaxCurrentMillis(current float64) error {
 	curr := int64(current * 1e3)
 	err := w.setCurrent(curr)
 	if err == nil {
-		w.mu.Lock()
 		w.maxCurrent = curr
-		w.mu.Unlock()
 	}
 	return err
 }
@@ -428,14 +445,14 @@ func (w *WarpWS) identify() (string, error) {
 }
 
 func (w *WarpWS) setCurrent(curr int64) error {
-	uri := fmt.Sprintf("%s/evse/external_current", w.uri)
+	uri := fmt.Sprintf("%s/evse/external_current", w.URI)
 	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(map[string]int64{"current": curr}), request.JSONEncoding)
 	_, err := w.Do(req)
 	return err
 }
 
 func (w *WarpWS) disablePhaseAutoSwitch() error {
-	uri := fmt.Sprintf("%s/evse/phase_auto_switch", w.uri)
+	uri := fmt.Sprintf("%s/evse/phase_auto_switch", w.URI)
 	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(map[string]bool{"enabled": false}), request.JSONEncoding)
 	_, err := w.Do(req)
 	return err
@@ -443,22 +460,14 @@ func (w *WarpWS) disablePhaseAutoSwitch() error {
 
 // phases1p3p implements the api.PhaseSwitcher interface
 func (w *WarpWS) phases1p3p(phases int) error {
+	// ensure that phases can be switched
 	if ec, err := w.ensurePmState(); err != nil || ec.ExternalControl > warp.ExternalControlAvailable {
 		return fmt.Errorf("external control not available: %d", ec.ExternalControl)
 	}
-	w.mu.RLock()
-	em := w.pmHelper
-	uri := fmt.Sprintf("%s/power_manager/external_control", w.pmURI)
-	w.mu.RUnlock()
 
+	uri := fmt.Sprintf("%s/power_manager/external_control", w.pm.URI)
 	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(map[string]int{"phases_wanted": phases}), request.JSONEncoding)
-
-	if em != nil {
-		_, err := em.Do(req)
-		return err
-	}
-
-	_, err := w.Do(req)
+	_, err := w.pm.Do(req)
 	return err
 }
 
@@ -478,21 +487,15 @@ func (w *WarpWS) getPhases() (int, error) {
 func (w *WarpWS) ensurePmLowLevelState() (warp.PmLowLevelState, error) {
 	w.mu.RLock()
 	s := w.pmLowLevelState
-	em := w.pmHelper
-	uri := w.pmURI
 	w.mu.RUnlock()
-	if em == nil || uri == "" {
-		return s, nil
+	if s != nil {
+		return *s, nil
 	}
 
 	var ns warp.PmLowLevelState
-	if err := em.GetJSON(fmt.Sprintf("%s/power_manager/low_level_state", uri), &ns); err != nil {
+	if err := w.pm.GetJSON(fmt.Sprintf("%s/power_manager/low_level_state", w.pm.URI), &ns); err != nil {
 		return warp.PmLowLevelState{}, err
 	}
-
-	w.mu.Lock()
-	w.pmLowLevelState = ns
-	w.mu.Unlock()
 
 	return ns, nil
 }
@@ -500,22 +503,22 @@ func (w *WarpWS) ensurePmLowLevelState() (warp.PmLowLevelState, error) {
 func (w *WarpWS) ensurePmState() (warp.PmState, error) {
 	w.mu.RLock()
 	s := w.pmState
-	em := w.pmHelper
-	uri := w.pmURI
 	w.mu.RUnlock()
-
-	if em == nil || uri == "" || s.ExternalControl != warp.ExternalControlAvailable {
-		return s, nil
+	if s != nil {
+		return *s, nil
 	}
 
-	var ns warp.PmState
-	if err := em.GetJSON(fmt.Sprintf("%s/power_manager/state", uri), &ns); err != nil {
+	var res warp.PmState
+	if err := w.pm.GetJSON(fmt.Sprintf("%s/power_manager/state", w.pm.URI), &res); err != nil {
 		return warp.PmState{}, err
 	}
 
-	w.mu.Lock()
-	w.pmState = ns
-	w.mu.Unlock()
+	return res, nil
+}
 
-	return ns, nil
+func (w *WarpWS) getWarpType() (string, error) {
+	var res warp.Name
+	uri := fmt.Sprintf("%s/info/name", w.URI)
+	err := w.GetJSON(uri, &res)
+	return res.WarpType, err
 }

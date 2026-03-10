@@ -48,6 +48,12 @@ describe("basics", () => {
       { charger: "main.vehicleStatus.waitForVehicle" }
     );
   });
+  test("show waiting for authorization if enabled but charger requires auth", () => {
+    expectEntries(
+      { enabled: true, connected: true, chargerStatusReason: "waitingforauthorization" },
+      { charger: "main.vehicleStatus.waitForAuthorization" }
+    );
+  });
   test("vehicle is charging", () => {
     expectEntries({ connected: true, charging: true }, { charger: "main.vehicleStatus.charging" });
   });

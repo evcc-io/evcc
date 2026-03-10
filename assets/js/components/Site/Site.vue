@@ -177,7 +177,7 @@ export default defineComponent({
 			return this.battery?.soc;
 		},
 		batteryConfigured() {
-			return this.battery && this.battery.devices.length > 0;
+			return (this.battery?.devices?.length ?? 0) > 0;
 		},
 		pvConfigured() {
 			return this.pv?.length > 0;

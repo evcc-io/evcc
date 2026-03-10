@@ -179,6 +179,15 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		Timestamps: asTimestamps(dt),
 	}
 
+	if site.circuit != nil {
+		if pMaxImp := site.circuit.GetMaxPower(); pMaxImp > 0 {
+			req.Grid = evopt.GridConfig{
+				// hard grid import limit if no price penalty is set by PrcPExcImp
+				PMaxImp: float32(pMaxImp),
+			}
+		}
+	}
+
 	add := func(battery evopt.BatteryConfig, detail batteryDetail) {
 		battery.PA = pa
 		req.Batteries = append(req.Batteries, battery)
@@ -205,7 +214,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 			continue
 		}
 
-		add(site.batteryRequest(dev, b))
+		add(site.batteryRequest(dev, b, grid, minLen, firstSlotDuration))
 	}
 
 	httpClient := request.NewClient(site.log)
@@ -255,17 +264,6 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		}
 
 		batteries = append(batteries, batResult)
-
-		for j, dev := range site.batteryMeters {
-			if details.BatteryDetails[i].Name == dev.Config().Name {
-				site.battery.Devices[j].Forecast = &types.BatteryForecast{
-					Full:  batResult.Full,
-					Empty: batResult.Empty,
-				}
-
-				break
-			}
-		}
 	}
 
 	site.publish("evopt-batteries", batteries)
@@ -409,7 +407,7 @@ func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDurati
 	return bat, detail
 }
 
-func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measurement) (evopt.BatteryConfig, batteryDetail) {
+func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measurement, grid api.Rates, minLen int, firstSlotDuration time.Duration) (evopt.BatteryConfig, batteryDetail) {
 	bat := evopt.BatteryConfig{
 		CMax:     batteryPower,
 		DMax:     batteryPower,
@@ -441,6 +439,13 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 		Name:     dev.Config().Name,
 		Title:    deviceProperties(dev).Title,
 		Capacity: *b.Capacity,
+	}
+
+	// tariff forecast-based grid charging demand
+	if bat.ChargeFromGrid {
+		if demand := site.applyBatteryGridChargeLimit(bat.CMax, grid, minLen); demand != nil {
+			bat.PDemand = prorate(demand, firstSlotDuration)
+		}
 	}
 
 	return bat, detail
@@ -684,6 +689,30 @@ func applySmartCostLimit(lp loadpoint.API, demand []float32, grid api.Rates, min
 			demand[i] = float32(maxPower / slotsPerHour)
 		}
 		// else: keep existing demand (either 0 or minPower from ModeMinPV)
+	}
+
+	return demand
+}
+
+func (site *Site) applyBatteryGridChargeLimit(cMax float32, grid api.Rates, minLen int) []float32 {
+	limit := site.GetBatteryGridChargeLimit()
+	if limit == nil {
+		return nil
+	}
+
+	maxLen := min(minLen, len(grid))
+
+	if hasAffordableSlots := slices.ContainsFunc(grid[:maxLen], func(r api.Rate) bool {
+		return r.Value <= *limit
+	}); !hasAffordableSlots {
+		return nil
+	}
+
+	demand := make([]float32, minLen)
+	for i := range maxLen {
+		if grid[i].Value <= *limit {
+			demand[i] = float32(float64(cMax) / slotsPerHour)
+		}
 	}
 
 	return demand

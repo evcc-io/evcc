@@ -78,7 +78,7 @@ func writeRow(ww *csv.Writer, mp *message.Printer, structVal any) error {
 			continue
 		}
 
-		digits := 3
+		digits := 4
 		if format := f.Tag("format"); format == "int" {
 			digits = 0
 		}

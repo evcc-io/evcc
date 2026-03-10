@@ -69,7 +69,7 @@ export default defineComponent({
 			return store.state.version;
 		},
 		batteryModalAvailabe() {
-			return store.state.battery?.devices.length;
+			return store.state.battery?.devices?.length;
 		},
 		showRoutes() {
 			return this.state.startupCompleted;
@@ -111,11 +111,13 @@ export default defineComponent({
 	mounted() {
 		this.connect();
 		document.addEventListener("visibilitychange", this.pageVisibilityChanged, false);
+		window.addEventListener("pageshow", this.pageShowHandler);
 	},
 	unmounted() {
 		this.disconnect();
 		this.clearReconnectTimeout();
 		document.removeEventListener("visibilitychange", this.pageVisibilityChanged, false);
+		window.removeEventListener("pageshow", this.pageShowHandler);
 	},
 	methods: {
 		clearReconnectTimeout() {
@@ -123,11 +125,18 @@ export default defineComponent({
 				window.clearTimeout(this.reconnectTimeout);
 			}
 		},
-		pageVisibilityChanged() {
-			if (document.hidden) {
+		pageShowHandler(event: PageTransitionEvent) {
+			if (event.persisted) {
 				this.clearReconnectTimeout();
 				this.disconnect();
-			} else {
+				this.connect();
+			}
+		},
+		pageVisibilityChanged() {
+			// disconnect in any case to ensure fresh connection
+			this.clearReconnectTimeout();
+			this.disconnect();
+			if (!document.hidden) {
 				this.connect();
 			}
 		},
@@ -163,15 +172,11 @@ export default defineComponent({
 				return;
 			}
 
-			const loc = window.location;
-			const protocol = loc.protocol == "https:" ? "wss:" : "ws:";
-			const uri =
-				protocol +
-				"//" +
-				loc.hostname +
-				(loc.port ? ":" + loc.port : "") +
-				loc.pathname +
-				"ws";
+			const loc = new URL("ws", window.location.href);
+			loc.protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+			// force Safari to use a fresh connection
+			loc.searchParams.set("t", String(Date.now()));
+			const uri = loc.href;
 
 			this.ws = new WebSocket(uri);
 			this.ws.onerror = () => {
