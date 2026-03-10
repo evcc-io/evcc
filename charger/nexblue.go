@@ -284,6 +284,6 @@ func (wb *Nexblue) Phases1p3p(phases int) error {
 		return err
 	}
 
-	_, err = wb.DoBody(req)
+	_, err := wb.DoBody(req)
 	return err
 }
