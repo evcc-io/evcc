@@ -193,7 +193,6 @@ func NewEasee(ctx context.Context, user, password, charger string, timeout time.
 		} {
 			c.obsTime[id] = seed
 		}
-
 		c.subscribe(client)
 
 		client.Start()
@@ -780,7 +779,6 @@ var _ api.PhaseCurrents = (*Easee)(nil)
 func (c *Easee) Currents() (float64, float64, float64, error) {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
-
 	return c.currentL1, c.currentL2, c.currentL3, nil
 }
 
