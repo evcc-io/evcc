@@ -10,6 +10,11 @@ import (
 	"gorm.io/gorm"
 )
 
+const (
+	MeterTypeHousehold = 1
+	MeterTypeLoadpoint = 2
+)
+
 type meter struct {
 	Meter     int       `json:"meter" gorm:"column:meter;uniqueIndex:meter_ts"`
 	Loadpoint string    `json:"loadpoint" gorm:"column:loadpoint;uniqueIndex:meter_ts"` // loadpoint name for heater tracking
@@ -28,7 +33,7 @@ func init() {
 // Persist stores 15min consumption in Wh for household total
 func Persist(ts time.Time, value float64) error {
 	return db.Instance.Create(meter{
-		Meter:     1,
+		Meter:     MeterTypeHousehold,
 		Loadpoint: "", // empty for household total
 		Timestamp: ts.Truncate(15 * time.Minute),
 		Value:     value,
@@ -38,7 +43,7 @@ func Persist(ts time.Time, value float64) error {
 // PersistLoadpoint stores 15min consumption in Wh for a specific loadpoint
 func PersistLoadpoint(loadpointName string, ts time.Time, value float64) error {
 	return db.Instance.Create(meter{
-		Meter:     2, // 2 = loadpoint consumption
+		Meter:     MeterTypeLoadpoint,
 		Loadpoint: loadpointName,
 		Timestamp: ts.Truncate(15 * time.Minute),
 		Value:     value,
@@ -48,13 +53,13 @@ func PersistLoadpoint(loadpointName string, ts time.Time, value float64) error {
 // Profile returns a 15min average meter profile in Wh for household total.
 // Profile is sorted by timestamp starting at 00:00. It is guaranteed to contain 96 15min values.
 func Profile(from time.Time) (*[96]float64, error) {
-	return profileQuery(1, "", from)
+	return profileQuery(MeterTypeHousehold, "", from)
 }
 
 // LoadpointProfile returns a 15min average meter profile in Wh for a specific loadpoint.
 // Profile is sorted by timestamp starting at 00:00. It is guaranteed to contain 96 15min values.
 func LoadpointProfile(loadpointName string, from time.Time) (*[96]float64, error) {
-	return profileQuery(2, loadpointName, from)
+	return profileQuery(MeterTypeLoadpoint, loadpointName, from)
 }
 
 // profileQuery is the internal implementation for querying meter profiles
