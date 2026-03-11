@@ -28,6 +28,9 @@ import HelpModal from "../components/HelpModal.vue";
 import collector from "../mixins/collector";
 import { defineComponent } from "vue";
 
+const WS_OPEN_TIMEOUT_MS = 5000;
+const WS_RETRY_PARAM = "wsRetry";
+
 // assume offline if not data received for 5 minutes
 let lastDataReceived = new Date();
 const maxDataAge = 60 * 1000 * 5;
@@ -127,23 +130,31 @@ export default defineComponent({
 			}
 		},
 		// Safari 26 bug: with hash fragment URLs the HTTP upgrade
-		// request is sometimes silently dropped when storing from cache.
+		// request is sometimes silently dropped when serving from cache.
 		// Recover by navigating without hash, once (wsRetry guards against loops).
 		startOpenTimeout() {
 			const url = new URL(window.location.href);
-			if (url.searchParams.has("wsRetry")) return;
+			if (url.searchParams.has(WS_RETRY_PARAM)) return;
 			this.openTimeout = window.setTimeout(() => {
 				console.warn("websocket open timeout, forcing navigation");
 				this.ws?.close();
 				url.hash = "";
-				url.searchParams.set("wsRetry", "");
+				url.searchParams.set(WS_RETRY_PARAM, "true");
 				window.location.href = url.href;
-			}, 5000);
+			}, WS_OPEN_TIMEOUT_MS);
 		},
-		clearOpenTimeout() {
+		clearOpenTimeout(success = false) {
 			if (this.openTimeout) {
 				window.clearTimeout(this.openTimeout);
 				this.openTimeout = null;
+			}
+			if (success) {
+				const url = new URL(window.location.href);
+				if (url.searchParams.has(WS_RETRY_PARAM)) {
+					console.warn("websocket open timeout recovered, clearing retry param");
+					url.searchParams.delete(WS_RETRY_PARAM);
+					window.history.replaceState(null, "", url.href);
+				}
 			}
 		},
 		pageShowHandler(event: PageTransitionEvent) {
@@ -206,7 +217,7 @@ export default defineComponent({
 				this.ws?.close();
 			};
 			this.ws.onopen = () => {
-				this.clearOpenTimeout();
+				this.clearOpenTimeout(true);
 				console.log("websocket connected");
 				window.app.setOnline();
 			};
