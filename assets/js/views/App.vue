@@ -153,7 +153,7 @@ export default defineComponent({
 				if (url.searchParams.has(WS_RETRY_PARAM)) {
 					console.warn("websocket open timeout recovered, clearing retry param");
 					url.searchParams.delete(WS_RETRY_PARAM);
-					window.history.replaceState(null, "", url.href);
+					window.history.replaceState(window.history.state, "", url.href);
 				}
 			}
 		},
