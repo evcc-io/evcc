@@ -541,9 +541,9 @@ func (site *Site) homeProfile(minLen int) ([]float64, error) {
 		res = res[:minLen]
 	}
 
-	// If no heating devices or no heater data, use old behavior (apply correction to entire profile)
+	// If no heating devices or no heater data, return uncorrected profile
+	// Temperature correction should ONLY apply to heating loads, never to entire household
 	if gt_heater_raw == nil || len(gt_heater_raw) == 0 {
-		res = site.applyTemperatureCorrection(res)
 		// convert to Wh
 		return lo.Map(res, func(v float64, i int) float64 {
 			return v * 1e3
