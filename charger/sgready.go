@@ -78,6 +78,20 @@ func NewSgReadyFromConfig(ctx context.Context, other map[string]any) (api.Charge
 		return nil, err
 	}
 
+	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("sgready"))
+
+	modeS = func(mode int64) error {
+		switch mode {
+		case Dim:
+			log.DEBUG.Printf("set sgready mode: %s", "dim")
+		case Normal:
+			log.DEBUG.Printf("set sgready mode: %s", "normal")
+		case Boost:
+			log.DEBUG.Printf("set sgready mode: %s", "boost")
+		}
+		return modeS(mode)
+	}
+
 	modeG, err := cc.GetMode.IntGetter(ctx)
 	if err != nil {
 		return nil, err
