@@ -64,7 +64,7 @@ func runVehicle(cmd *cobra.Command, args []string) {
 			if err != nil {
 				log.ERROR.Println("max current:", err)
 			} else {
-				if vv, ok := v.(api.ChargerEx); ok {
+				if vv, ok := api.Cap[api.ChargerEx](v); ok {
 					if err := vv.MaxCurrentMillis(f); err != nil {
 						log.ERROR.Println("max current:", err)
 					}

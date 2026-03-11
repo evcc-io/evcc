@@ -54,7 +54,7 @@ func (lp *Loadpoint) setVehicleIdentifier(id string) {
 
 // identifyVehicle reads vehicle identification from charger
 func (lp *Loadpoint) identifyVehicle() {
-	identifier, ok := lp.charger.(api.Identifier)
+	identifier, ok := api.Cap[api.Identifier](lp.charger)
 	if !ok {
 		return
 	}

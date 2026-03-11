@@ -11,7 +11,7 @@ import (
 )
 
 func (lp *Loadpoint) chargeMeterTotal() float64 {
-	m, ok := lp.chargeMeter.(api.MeterEnergy)
+	m, ok := api.Cap[api.MeterEnergy](lp.chargeMeter)
 	if !ok {
 		return 0
 	}
@@ -45,7 +45,7 @@ func (lp *Loadpoint) createSession() {
 		lp.session.Vehicle = lp.GetTitle()
 	}
 
-	if c, ok := lp.charger.(api.Identifier); ok {
+	if c, ok := api.Cap[api.Identifier](lp.charger); ok {
 		if id, err := c.Identify(); err == nil {
 			lp.session.Identifier = id
 		}

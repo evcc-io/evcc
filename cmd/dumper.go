@@ -75,7 +75,7 @@ func (d *dumper) Dump(name string, v any) {
 
 	// meter
 
-	if v, ok := v.(api.Meter); ok {
+	if v, ok := api.Cap[api.Meter](v); ok {
 		d.measureTime(w, "Power", func() (string, error) {
 			power, err := backoff.RetryWithData(func() (float64, error) {
 				f, err := v.CurrentPower()
@@ -85,35 +85,35 @@ func (d *dumper) Dump(name string, v any) {
 		})
 	}
 
-	if v, ok := v.(api.MeterEnergy); ok {
+	if v, ok := api.Cap[api.MeterEnergy](v); ok {
 		d.measureTime(w, "Energy", func() (string, error) {
 			energy, err := v.TotalEnergy()
 			return fmt.Sprintf("%.1fkWh", energy), err
 		})
 	}
 
-	if v, ok := v.(api.PhaseCurrents); ok {
+	if v, ok := api.Cap[api.PhaseCurrents](v); ok {
 		d.measureTime(w, "Current L1..L3", func() (string, error) {
 			i1, i2, i3, err := v.Currents()
 			return fmt.Sprintf("%.3gA %.3gA %.3gA", i1, i2, i3), err
 		})
 	}
 
-	if v, ok := v.(api.PhaseVoltages); ok {
+	if v, ok := api.Cap[api.PhaseVoltages](v); ok {
 		d.measureTime(w, "Voltage L1..L3", func() (string, error) {
 			u1, u2, u3, err := v.Voltages()
 			return fmt.Sprintf("%.3gV %.3gV %.3gV", u1, u2, u3), err
 		})
 	}
 
-	if v, ok := v.(api.PhasePowers); ok {
+	if v, ok := api.Cap[api.PhasePowers](v); ok {
 		d.measureTime(w, "Power L1..L3", func() (string, error) {
 			p1, p2, p3, err := v.Powers()
 			return fmt.Sprintf("%.0fW %.0fW %.0fW", p1, p2, p3), err
 		})
 	}
 
-	if v, ok := v.(api.Battery); ok {
+	if v, ok := api.Cap[api.Battery](v); ok {
 		label := "Soc"
 		format := "%.0f%%"
 		if isHeating {
@@ -144,23 +144,23 @@ func (d *dumper) Dump(name string, v any) {
 		}
 	}
 
-	if v, ok := v.(api.BatteryCapacity); ok {
+	if v, ok := api.Cap[api.BatteryCapacity](v); ok {
 		fmt.Fprintf(w, "Capacity:\t%.1fkWh\t\t\n", v.Capacity())
 	}
 
-	if v, ok := v.(api.BatterySocLimiter); ok {
+	if v, ok := api.Cap[api.BatterySocLimiter](v); ok {
 		min, max := v.GetSocLimits()
 		fmt.Fprintf(w, "Min soc:\t%.0f%%\t\t\n", min)
 		fmt.Fprintf(w, "Max soc:\t%.0f%%\t\t\n", max)
 	}
 
-	if v, ok := v.(api.BatteryPowerLimiter); ok {
+	if v, ok := api.Cap[api.BatteryPowerLimiter](v); ok {
 		charge, discharge := v.GetPowerLimits()
 		fmt.Fprintf(w, "Charge power:\t%.0fW\t\t\n", charge)
 		fmt.Fprintf(w, "Discharge power:\t%.0fW\t\t\n", discharge)
 	}
 
-	if v, ok := v.(api.MaxACPowerGetter); ok {
+	if v, ok := api.Cap[api.MaxACPowerGetter](v); ok {
 		fmt.Fprintf(w, "Max AC power:\t%.0fW\t\t\n", v.MaxACPower())
 	}
 
@@ -173,7 +173,7 @@ func (d *dumper) Dump(name string, v any) {
 		})
 	}
 
-	if v, ok := v.(api.StatusReasoner); ok {
+	if v, ok := api.Cap[api.StatusReasoner](v); ok {
 		d.measureTime(w, "Status reason", func() (string, error) {
 			status, err := v.StatusReason()
 			return fmt.Sprintf("%v", status), err
@@ -181,7 +181,7 @@ func (d *dumper) Dump(name string, v any) {
 	}
 
 	// controllable battery
-	if _, ok := v.(api.BatteryController); ok {
+	if _, ok := api.Cap[api.BatteryController](v); ok {
 		fmt.Fprintf(w, "Controllable:\ttrue\t\t\n")
 	}
 
@@ -192,14 +192,14 @@ func (d *dumper) Dump(name string, v any) {
 		})
 	}
 
-	if v, ok := v.(api.ChargeRater); ok {
+	if v, ok := api.Cap[api.ChargeRater](v); ok {
 		d.measureTime(w, "Charged", func() (string, error) {
 			energy, err := v.ChargedEnergy()
 			return fmt.Sprintf("%.1fkWh", energy), err
 		})
 	}
 
-	if v, ok := v.(api.ChargeTimer); ok {
+	if v, ok := api.Cap[api.ChargeTimer](v); ok {
 		d.measureTime(w, "Duration", func() (string, error) {
 			chargeDuration, err := v.ChargeDuration()
 			return fmt.Sprintf("%v", chargeDuration.Truncate(time.Second)), err
@@ -281,7 +281,7 @@ func (d *dumper) Dump(name string, v any) {
 		})
 	}
 
-	if v, ok := v.(api.PhaseGetter); ok {
+	if v, ok := api.Cap[api.PhaseGetter](v); ok {
 		d.measureTime(w, "Phases", func() (string, error) {
 			f, err := v.GetPhases()
 			return fmt.Sprintf("%d", f), err
@@ -290,7 +290,7 @@ func (d *dumper) Dump(name string, v any) {
 
 	// Identity
 
-	if v, ok := v.(api.Identifier); ok {
+	if v, ok := api.Cap[api.Identifier](v); ok {
 		d.measureTime(w, "Identifier", func() (string, error) {
 			id, err := v.Identify()
 			if err == nil && id == "" {

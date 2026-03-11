@@ -346,13 +346,13 @@ func (site *Site) restoreSettings() error {
 }
 
 func meterCapabilities(name string, meter any) string {
-	if _, ok := meter.(api.Meter); !ok {
+	if _, ok := api.Cap[api.Meter](meter); !ok {
 		panic("not a meter: " + name)
 	}
 
-	_, power := meter.(api.Meter)
-	_, energy := meter.(api.MeterEnergy)
-	_, currents := meter.(api.PhaseCurrents)
+	_, power := api.Cap[api.Meter](meter)
+	_, energy := api.Cap[api.MeterEnergy](meter)
+	_, currents := api.Cap[api.PhaseCurrents](meter)
 
 	name += ":"
 	return fmt.Sprintf("    %-10s power %s energy %s currents %s",
@@ -394,8 +394,8 @@ func (site *Site) DumpConfig() {
 	if len(site.batteryMeters) > 0 {
 		for i, dev := range site.batteryMeters {
 			battery := dev.Instance()
-			_, ok := battery.(api.Battery)
-			_, hasCapacity := battery.(api.BatteryCapacity)
+			_, ok := api.Cap[api.Battery](battery)
+			_, hasCapacity := api.Cap[api.BatteryCapacity](battery)
 
 			site.log.INFO.Println(
 				meterCapabilities(fmt.Sprintf("battery %d", i+1), battery),
@@ -499,7 +499,7 @@ func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) [
 
 		// energy (production)
 		var energy float64
-		if m, ok := meter.(api.MeterEnergy); err == nil && ok {
+		if m, ok := api.Cap[api.MeterEnergy](meter); err == nil && ok {
 			energy, err = m.TotalEnergy()
 			if err != nil {
 				site.log.ERROR.Printf("%s %d energy: %v", key, i+1, err)
@@ -543,7 +543,7 @@ func (site *Site) updatePvMeters() {
 			site.log.WARN.Printf("pv %d power: %.0fW is negative - check configuration if sign is correct", i+1, power)
 		}
 
-		if m, ok := meter.(api.MaxACPowerGetter); ok {
+		if m, ok := api.Cap[api.MaxACPowerGetter](meter); ok {
 			if dc := power - m.MaxACPower(); dc > 0 && power > 0 {
 				mm[i].ExcessDCPower = dc
 				site.log.DEBUG.Printf("pv %d excess DC: %.0fW", i+1, dc)
@@ -611,13 +611,13 @@ func (site *Site) updateBatteryMeters() {
 		meter := dev.Instance()
 
 		// battery soc and capacity
-		if m, ok := meter.(api.Battery); ok {
+		if m, ok := api.Cap[api.Battery](meter); ok {
 			batSoc, err := soc.Guard(m.Soc())
 			if err == nil {
 				mm[i].Soc = new(batSoc)
 
-				if m, ok := m.(api.BatteryCapacity); ok {
-					mm[i].Capacity = new(m.Capacity())
+				if bc, ok := api.Cap[api.BatteryCapacity](meter); ok {
+					mm[i].Capacity = new(bc.Capacity())
 				}
 
 				site.log.DEBUG.Printf("battery %d soc: %.0f%%", i+1, batSoc)
@@ -626,7 +626,7 @@ func (site *Site) updateBatteryMeters() {
 			}
 		}
 
-		_, controllable := meter.(api.BatteryController)
+		_, controllable := api.Cap[api.BatteryController](meter)
 		mm[i].Controllable = new(controllable)
 	}
 
@@ -717,10 +717,10 @@ func (site *Site) updateGridMeter() error {
 	}
 
 	// grid phase currents (signed)
-	if phaseMeter, ok := site.gridMeter.(api.PhaseCurrents); ok {
+	if phaseMeter, ok := api.Cap[api.PhaseCurrents](site.gridMeter); ok {
 		// grid phase powers
 		var p1, p2, p3 float64
-		if phaseMeter, ok := site.gridMeter.(api.PhasePowers); ok {
+		if phaseMeter, ok := api.Cap[api.PhasePowers](site.gridMeter); ok {
 			var err error // phases needed for signed currents
 			if p1, p2, p3, err = phaseMeter.Powers(); err == nil {
 				mm.Powers = []float64{p1, p2, p3}
@@ -739,7 +739,7 @@ func (site *Site) updateGridMeter() error {
 	}
 
 	// grid energy (import)
-	if energyMeter, ok := site.gridMeter.(api.MeterEnergy); ok {
+	if energyMeter, ok := api.Cap[api.MeterEnergy](site.gridMeter); ok {
 		if f, err := energyMeter.TotalEnergy(); err == nil {
 			mm.Energy = f
 		} else {

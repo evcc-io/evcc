@@ -244,17 +244,17 @@ func testInstance(instance any) map[string]testResult {
 		res[key] = tr
 	}
 
-	if dev, ok := instance.(api.Meter); ok {
+	if dev, ok := api.Cap[api.Meter](instance); ok {
 		val, err := dev.CurrentPower()
 		makeResult("power", val, err)
 	}
 
-	if dev, ok := instance.(api.MeterEnergy); ok {
+	if dev, ok := api.Cap[api.MeterEnergy](instance); ok {
 		val, err := dev.TotalEnergy()
 		makeResult("energy", val, err)
 	}
 
-	if dev, ok := instance.(api.Battery); ok {
+	if dev, ok := api.Cap[api.Battery](instance); ok {
 		val, err := dev.Soc()
 		key := "soc"
 		if hasFeature(instance, api.Heating) {
@@ -263,7 +263,7 @@ func testInstance(instance any) map[string]testResult {
 		makeResult(key, val, err)
 	}
 
-	if _, ok := instance.(api.BatteryController); ok {
+	if _, ok := api.Cap[api.BatteryController](instance); ok {
 		makeResult("controllable", true, nil)
 	}
 
@@ -272,22 +272,22 @@ func testInstance(instance any) map[string]testResult {
 		makeResult("odometer", val, err)
 	}
 
-	if dev, ok := instance.(api.BatteryCapacity); ok {
+	if dev, ok := api.Cap[api.BatteryCapacity](instance); ok {
 		val := dev.Capacity()
 		makeResult("capacity", val, nil)
 	}
 
-	if dev, ok := instance.(api.PhaseCurrents); ok {
+	if dev, ok := api.Cap[api.PhaseCurrents](instance); ok {
 		i1, i2, i3, err := dev.Currents()
 		makeResult("phaseCurrents", []float64{i1, i2, i3}, err)
 	}
 
-	if dev, ok := instance.(api.PhaseVoltages); ok {
+	if dev, ok := api.Cap[api.PhaseVoltages](instance); ok {
 		u1, u2, u3, err := dev.Voltages()
 		makeResult("phaseVoltages", []float64{u1, u2, u3}, err)
 	}
 
-	if dev, ok := instance.(api.PhasePowers); ok {
+	if dev, ok := api.Cap[api.PhasePowers](instance); ok {
 		p1, p2, p3, err := dev.Powers()
 		makeResult("phasePowers", []float64{p1, p2, p3}, err)
 	}
@@ -302,12 +302,12 @@ func testInstance(instance any) map[string]testResult {
 		makeResult("enabled", val, err)
 	}
 
-	if dev, ok := instance.(api.ChargeRater); ok {
+	if dev, ok := api.Cap[api.ChargeRater](instance); ok {
 		val, err := dev.ChargedEnergy()
 		makeResult("chargedEnergy", val, err)
 	}
 
-	if _, ok := instance.(api.PhaseSwitcher); ok {
+	if _, ok := api.Cap[api.PhaseSwitcher](instance); ok {
 		makeResult("phases1p3p", true, nil)
 	}
 
@@ -341,12 +341,12 @@ func testInstance(instance any) map[string]testResult {
 		makeResult(key, val, err)
 	}
 
-	if dev, ok := instance.(api.Dimmer); ok {
+	if dev, ok := api.Cap[api.Dimmer](instance); ok {
 		val, err := dev.Dimmed()
 		makeResult("dimmed", val, err)
 	}
 
-	if dev, ok := instance.(api.Identifier); ok {
+	if dev, ok := api.Cap[api.Identifier](instance); ok {
 		val, err := dev.Identify()
 		makeResult("identifier", val, err)
 	}
