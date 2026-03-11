@@ -11,7 +11,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-//go:generate go tool decorate -f decorateVehicle -b api.Vehicle -t api.SocLimiter,api.ChargeState,api.VehicleRange,api.VehicleOdometer,api.VehicleClimater,api.CurrentController,api.CurrentGetter,api.VehicleFinishTimer,api.Resurrector,api.ChargeController
+//go:generate go tool decorate -f decorateVehicle -b api.Vehicle -t api.SocLimiter,api.ChargeState,api.VehicleRange,api.VehicleOdometer,api.VehicleClimater,api.CurrentController,api.CurrentGetter,api.VehicleFinishTimer,api.Resurrector,api.ChargeController,api.VehiclePosition
 
 // Vehicle is an api.Vehicle implementation with configurable getters and setters.
 type Vehicle struct {
@@ -149,7 +149,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.V
 		return nil, errors.New("cannot have charge control without status")
 	}
 
-	return decorateVehicle(v, limitSoc, status, rng, odo, climater, maxCurrent, getMaxCurrent, finishTime, wakeup, chargeEnable), nil
+	return decorateVehicle(v, limitSoc, status, rng, odo, climater, maxCurrent, getMaxCurrent, finishTime, wakeup, chargeEnable, nil), nil
 }
 
 // Soc implements the api.Vehicle interface

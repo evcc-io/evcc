@@ -142,8 +142,18 @@ func (c *Connection) GetBoolState(entity string) (bool, error) {
 	case "off", "false", "0", "inactive", "no":
 		return false, nil
 	default:
-		return false, fmt.Errorf("invalid boolean state '%s' for entity %s", state, entity)
+		return false, fmt.Errorf("invalid boolean state '%s' for entity %s", state.State, entity)
 	}
+}
+
+// GetPositionState retrieves latitude and longitude from a device_tracker entity's attributes
+func (c *Connection) GetPositionState(entity string) (float64, float64, error) {
+	state, err := c.GetState(entity)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	return state.Attributes.Latitude, state.Attributes.Longitude, nil
 }
 
 // GetTimeState retrieves the state of an entity as time
@@ -208,7 +218,7 @@ func (c *Connection) GetChargeStatus(entity string) (api.ChargeStatus, error) {
 		return status, nil
 	}
 
-	return api.StatusNone, fmt.Errorf("unknown charge status: %s", state)
+	return api.StatusNone, fmt.Errorf("unknown charge status: %s", state.State)
 }
 
 // CallService calls a Home Assistant service

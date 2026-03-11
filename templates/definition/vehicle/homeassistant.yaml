@@ -68,6 +68,16 @@ params:
       en: Finish time (ISO8601 or Unix)
     service: homeassistant/entities?uri={uri}&domain=sensor
     example: "sensor.vehicle_finish_time"
+  - name: position
+    description:
+      de: Fahrzeugposition
+      en: Vehicle position
+    service: homeassistant/entities?uri={uri}&domain=device_tracker
+    example: "device_tracker.vehicle"
+    advanced: true
+    help:
+      en: Entity ID for vehicle position (`device_tracker` with `latitude`/`longitude` attributes, can be used for geofencing with the `vehicle-api` charger)
+      de: Entitäts-ID für Fahrzeugposition (`device_tracker` mit `latitude`/`longitude`-Attributen, kann für Geofencing mit dem `vehicle-api`-Charger verwendet werden)
   - name: start_charging
     description:
       de: Service zum Laden starten
@@ -109,6 +119,7 @@ render: |
     odometer: {{ .odometer }}
     climater: {{ .climater }}
     finishTime: {{ .finishTime }}
+    position: {{ .position }}
   services:
     start_charging: {{ .start_charging }}
     stop_charging: {{ .stop_charging }}

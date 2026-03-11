@@ -14,9 +14,11 @@ type StateResponse struct {
 	EntityId   string `json:"entity_id"`
 	State      string `json:"state"`
 	Attributes struct {
-		UnitOfMeasurement string `json:"unit_of_measurement"`
-		DeviceClass       string `json:"device_class"`
-		FriendlyName      string `json:"friendly_name"`
+		UnitOfMeasurement string  `json:"unit_of_measurement"`
+		DeviceClass       string  `json:"device_class"`
+		FriendlyName      string  `json:"friendly_name"`
+		Latitude          float64 `json:"latitude"`
+		Longitude         float64 `json:"longitude"`
 	} `json:"attributes"`
 }
 
