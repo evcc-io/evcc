@@ -418,17 +418,17 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 
 	instance := dev.Instance()
 
-	if _, ok := instance.(api.BatteryController); ok {
+	if _, ok := api.Cap[api.BatteryController](instance); ok {
 		bat.ChargeFromGrid = true
 	}
 
-	if m, ok := instance.(api.BatteryPowerLimiter); ok {
+	if m, ok := api.Cap[api.BatteryPowerLimiter](instance); ok {
 		charge, discharge := m.GetPowerLimits()
 		bat.CMax = float32(charge)
 		bat.DMax = float32(discharge)
 	}
 
-	if m, ok := instance.(api.BatterySocLimiter); ok {
+	if m, ok := api.Cap[api.BatterySocLimiter](instance); ok {
 		minSoc, maxSoc := m.GetSocLimits()
 		bat.SMin = min(bat.SInitial, float32(*b.Capacity*minSoc*10)) // Wh
 		bat.SMax = max(bat.SInitial, float32(*b.Capacity*maxSoc*10)) // Wh
