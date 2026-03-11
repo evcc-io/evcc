@@ -100,8 +100,11 @@ params:
     type: int
   - name: connector
     description:
-      de: Ladepunkt (falls >1 Ladepunkt)
-      en: Loadpoint (if >1 loadpoint)
+      en: Connector number
+      de: Anschlussnummer
+    help:
+      en: For multi-connector stations. Numbering starts at 1.
+      de: Bei Ladestationen mit mehreren Anschlüssen. Zählung beginnt bei 1.
     advanced: true
     default: 1
   - name: cache
@@ -439,6 +442,11 @@ params:
     type: string
     description:
       generic: Station ID
+    help:
+      en: Unique identifier of the charger. Automatically detected once the charger connects.
+      de: Eindeutige Wallbox-Kennung. Wird automatisch erkannt, sobald sich die Wallbox verbindet.
+    example: EVB-P12354
+    private: true
   - name: meter
     description:
       en: Meter ID
@@ -470,6 +478,11 @@ params:
     type: float
     example: 9.1275
     service: location/lon
+  - name: zones
+    type: zones
+    description:
+      en: Price zones
+      de: Preiszonen
 
 presets:
   vehicle-base:
@@ -531,14 +544,14 @@ presets:
     - name: language
   tariff-base:
     - name: charges
-      type: float
+      type: pricePerKWh
       advanced: true
       description:
         en: Charge
         de: Aufschlag
       help:
-        de: Zusätzlicher fester Aufschlag pro kWh (z.B. 0.05 für 5 Cent)
-        en: Additional fixed charge per kWh (e.g. 0.05 for 5 cents)
+        de: Zusätzlicher fester Aufschlag pro kWh
+        en: Additional fixed charge per kWh
     - name: tax
       type: float
       advanced: true
@@ -628,21 +641,7 @@ presets:
 
   ocpp:
     - name: stationid
-      type: string
-      description:
-        generic: Station ID
-      help:
-        en: Unique identifier of the charger. evcc auto-detects this once the charger connects.
-        de: Eindeutige Wallbox-Kennung. evcc erkennt diese automatisch, sobald sich die Wallbox verbindet.
-      example: EVB-P12354
     - name: connector
-      description:
-        en: Connector number
-        de: Anschlussnummer
-      help:
-        de: Bei Ladestationen mit mehreren Anschlüssen. Die Zählung beginnt bei 1 für den ersten Anschluss.
-        en: For charging stations with multiple connectors. Counting starts at 1 for the first connector.
-      default: 1
     - name: remotestart
       advanced: true
       type: bool

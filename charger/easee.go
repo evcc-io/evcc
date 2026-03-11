@@ -61,12 +61,15 @@ type Easee struct {
 	phaseMode             int
 	currentPower, sessionEnergy, totalEnergy,
 	currentL1, currentL2, currentL3 float64
-	rfid      string
-	lp        loadpoint.API
-	cmdC      chan easee.SignalRCommandResponse
-	obsC      chan easee.Observation
-	obsTime   map[easee.ObservationID]time.Time
-	startDone func()
+	rfid            string
+	lp              loadpoint.API
+	cmdMu           sync.Mutex
+	pendingTicks    map[int64]chan easee.SignalRCommandResponse
+	pendingByID     map[easee.ObservationID]chan easee.SignalRCommandResponse
+	expectedOrphans map[easee.ObservationID]int
+	obsC            chan easee.Observation
+	obsTime         map[easee.ObservationID]time.Time
+	startDone       func()
 }
 
 func init() {
@@ -107,15 +110,17 @@ func NewEasee(ctx context.Context, user, password, charger string, timeout time.
 	done := make(chan struct{})
 
 	c := &Easee{
-		Helper:    request.NewHelper(log),
-		charger:   charger,
-		authorize: authorize,
-		log:       log,
-		current:   6, // default current
-		startDone: sync.OnceFunc(func() { close(done) }),
-		cmdC:      make(chan easee.SignalRCommandResponse),
-		obsC:      make(chan easee.Observation),
-		obsTime:   make(map[easee.ObservationID]time.Time),
+		Helper:          request.NewHelper(log),
+		charger:         charger,
+		authorize:       authorize,
+		log:             log,
+		current:         6, // default current
+		startDone:       sync.OnceFunc(func() { close(done) }),
+		pendingTicks:    make(map[int64]chan easee.SignalRCommandResponse),
+		pendingByID:     make(map[easee.ObservationID]chan easee.SignalRCommandResponse),
+		expectedOrphans: make(map[easee.ObservationID]int),
+		obsC:            make(chan easee.Observation),
+		obsTime:         make(map[easee.ObservationID]time.Time),
 	}
 
 	c.Client.Timeout = timeout
@@ -209,6 +214,48 @@ func (c *Easee) waitForOptionalState() {
 		time.Sleep(100 * time.Millisecond)
 	}
 	c.log.WARN.Println("did not receive full state from cloud")
+}
+
+func (c *Easee) registerPendingTick(tick int64, ch chan easee.SignalRCommandResponse) {
+	c.cmdMu.Lock()
+	c.pendingTicks[tick] = ch
+	c.cmdMu.Unlock()
+}
+
+func (c *Easee) unregisterPendingTick(tick int64) {
+	c.cmdMu.Lock()
+	delete(c.pendingTicks, tick)
+	c.cmdMu.Unlock()
+}
+
+func (c *Easee) registerPendingByID(id easee.ObservationID, ch chan easee.SignalRCommandResponse) {
+	c.cmdMu.Lock()
+	defer c.cmdMu.Unlock()
+	c.pendingByID[id] = ch
+}
+
+func (c *Easee) unregisterPendingByID(id easee.ObservationID) {
+	c.cmdMu.Lock()
+	defer c.cmdMu.Unlock()
+	delete(c.pendingByID, id)
+}
+
+func (c *Easee) registerExpectedOrphan(ids ...easee.ObservationID) {
+	c.cmdMu.Lock()
+	defer c.cmdMu.Unlock()
+	for _, id := range ids {
+		c.expectedOrphans[id]++
+	}
+}
+
+func (c *Easee) consumeExpectedOrphan(id easee.ObservationID) bool {
+	c.cmdMu.Lock()
+	defer c.cmdMu.Unlock()
+	if c.expectedOrphans[id] > 0 {
+		c.expectedOrphans[id]--
+		return true
+	}
+	return false
 }
 
 // check c.obsTime for presence of ALL of the following keys: easee.SESSION_ENERGY, easee.LIFETIME_ENERGY
@@ -383,12 +430,34 @@ func (c *Easee) CommandResponse(i json.RawMessage) {
 		c.log.ERROR.Printf("invalid message: %s %v", i, err)
 		return
 	}
+
 	c.log.TRACE.Printf("CommandResponse %s: %+v", res.SerialNumber, res)
 
-	select {
-	case c.cmdC <- res:
-	default:
+	obsID := easee.ObservationID(res.ID)
+
+	c.cmdMu.Lock()
+	chTick, tickOk := c.pendingTicks[res.Ticks]
+	chID, idOk := c.pendingByID[obsID]
+	c.cmdMu.Unlock()
+
+	if tickOk {
+		chTick <- res
+		return
 	}
+
+	if idOk {
+		chID <- res
+		return
+	}
+
+	if c.consumeExpectedOrphan(obsID) {
+		return
+	}
+
+	c.log.WARN.Printf("rogue CommandResponse: charger %s ObservationID=%s Ticks=%d "+
+		"(accepted=%v, resultCode=%d) which was not triggered by evcc — "+
+		"another system may be controlling this charger",
+		res.SerialNumber, obsID, res.Ticks, res.WasAccepted, res.ResultCode)
 }
 
 func (c *Easee) chargers() ([]easee.Charger, error) {
@@ -545,26 +614,28 @@ func (c *Easee) postJSONAndWait(uri string, data any) (bool, error) {
 			return true, nil
 		}
 
-		return false, c.waitForTickResponse(cmd.Ticks)
+		ch := make(chan easee.SignalRCommandResponse, 1)
+		c.registerPendingTick(cmd.Ticks, ch)
+		defer c.unregisterPendingTick(cmd.Ticks)
+		obsID := easee.ObservationID(cmd.CommandId)
+		c.registerPendingByID(obsID, ch)
+		defer c.unregisterPendingByID(obsID)
+		return false, c.waitForTickResponse(ch)
 	}
 
 	// all other response codes lead to an error
 	return false, fmt.Errorf("invalid status: %d", resp.StatusCode)
 }
 
-func (c *Easee) waitForTickResponse(expectedTick int64) error {
-	for {
-		select {
-		case cmdResp := <-c.cmdC:
-			if cmdResp.Ticks == expectedTick {
-				if !cmdResp.WasAccepted {
-					return fmt.Errorf("command rejected: %d", cmdResp.Ticks)
-				}
-				return nil
-			}
-		case <-time.After(c.Client.Timeout):
-			return api.ErrTimeout
+func (c *Easee) waitForTickResponse(ch <-chan easee.SignalRCommandResponse) error {
+	select {
+	case cmdResp := <-ch:
+		if !cmdResp.WasAccepted {
+			return fmt.Errorf("command rejected: %d", cmdResp.Ticks)
 		}
+		return nil
+	case <-time.After(c.Client.Timeout):
+		return api.ErrTimeout
 	}
 }
 
@@ -744,7 +815,15 @@ func (c *Easee) Phases1p3p(phases int) error {
 			data.DynamicCircuitCurrentP3 = &max3
 		}
 
-		_, err = c.postJSONAndWait(uri, data)
+		// Register before POST so the SignalR CommandResponse that the Easee
+		// cloud sends on HTTP 200 (sync) responses is silently consumed rather
+		// than logged as rogue. On error we undo the registration; on 202/noop
+		// paths no extra CommandResponse is expected, so the counter is
+		// intentionally left to be consumed by the eventual SignalR message.
+		c.registerExpectedOrphan(easee.CIRCUIT_MAX_CURRENT_P1)
+		if _, err = c.postJSONAndWait(uri, data); err != nil {
+			c.consumeExpectedOrphan(easee.CIRCUIT_MAX_CURRENT_P1)
+		}
 	} else {
 		// charger level
 		if phases == 3 {
@@ -792,6 +871,21 @@ func (c *Easee) GetPhases() (int, error) {
 		}
 	}
 	return phases, nil
+}
+
+var _ api.StatusReasoner = (*Easee)(nil)
+
+// StatusReason implements the api.StatusReasoner interface
+func (c *Easee) StatusReason() (api.Reason, error) {
+	c.mux.RLock()
+	defer c.mux.RUnlock()
+	switch c.opMode {
+	case easee.ModeAwaitingAuthentication:
+		return api.ReasonWaitingForAuthorization, nil
+	case easee.ModeCompleted:
+		return api.ReasonDisconnectRequired, nil
+	}
+	return api.ReasonUnknown, nil
 }
 
 var _ api.Identifier = (*Easee)(nil)

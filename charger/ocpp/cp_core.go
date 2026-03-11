@@ -20,9 +20,20 @@ func (cp *CP) OnBootNotification(request *core.BootNotificationRequest) (*core.B
 		Status:      core.RegistrationStatusAccepted,
 	}
 
-	cp.onceBoot.Do(func() {
-		cp.bootNotificationRequestC <- request
-	})
+	cp.mu.Lock()
+	cp.BootNotificationResult = request
+	cp.stopBootTimer()
+	cp.mu.Unlock()
+
+	// mark charge point as ready for communication
+	cp.connect(true)
+
+	// notify channel for Setup (initial) or monitorReboot (reconnection)
+	select {
+	case cp.bootNotificationRequestC <- request:
+	default:
+		cp.log.DEBUG.Printf("boot notification channel full, discarding")
+	}
 
 	return res, nil
 }
