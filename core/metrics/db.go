@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"database/sql"
 	"errors"
 	"time"
 
@@ -11,6 +12,7 @@ import (
 
 type meter struct {
 	Meter     int       `json:"meter" gorm:"column:meter;uniqueIndex:meter_ts"`
+	Loadpoint string    `json:"loadpoint" gorm:"column:loadpoint;uniqueIndex:meter_ts"` // loadpoint name for heater tracking
 	Timestamp time.Time `json:"ts" gorm:"column:ts;uniqueIndex:meter_ts"`
 	Value     float64   `json:"val" gorm:"column:val"`
 }
@@ -23,30 +25,62 @@ func init() {
 	})
 }
 
-// Persist stores 15min consumption in Wh
+// Persist stores 15min consumption in Wh for household total
 func Persist(ts time.Time, value float64) error {
 	return db.Instance.Create(meter{
 		Meter:     1,
+		Loadpoint: "", // empty for household total
 		Timestamp: ts.Truncate(15 * time.Minute),
 		Value:     value,
 	}).Error
 }
 
-// Profile returns a 15min average meter profile in Wh.
+// PersistLoadpoint stores 15min consumption in Wh for a specific loadpoint
+func PersistLoadpoint(loadpointName string, ts time.Time, value float64) error {
+	return db.Instance.Create(meter{
+		Meter:     2, // 2 = loadpoint consumption
+		Loadpoint: loadpointName,
+		Timestamp: ts.Truncate(15 * time.Minute),
+		Value:     value,
+	}).Error
+}
+
+// Profile returns a 15min average meter profile in Wh for household total.
 // Profile is sorted by timestamp starting at 00:00. It is guaranteed to contain 96 15min values.
 func Profile(from time.Time) (*[96]float64, error) {
+	return profileQuery(1, "", from)
+}
+
+// LoadpointProfile returns a 15min average meter profile in Wh for a specific loadpoint.
+// Profile is sorted by timestamp starting at 00:00. It is guaranteed to contain 96 15min values.
+func LoadpointProfile(loadpointName string, from time.Time) (*[96]float64, error) {
+	return profileQuery(2, loadpointName, from)
+}
+
+// profileQuery is the internal implementation for querying meter profiles
+func profileQuery(meterType int, loadpointName string, from time.Time) (*[96]float64, error) {
 	db, err := db.Instance.DB()
 	if err != nil {
 		return nil, err
 	}
 
 	// Use 'localtime' in strftime to fix https://github.com/evcc-io/evcc/discussions/23759
-	rows, err := db.Query(`SELECT min(ts) AS ts, avg(val) AS val
-		FROM meters
-		WHERE meter = ? AND ts >= ?
-		GROUP BY strftime("%H:%M", ts, 'localtime')
-		ORDER BY strftime("%H:%M", ts, 'localtime') ASC`, 1, from,
-	)
+	var rows *sql.Rows
+	if loadpointName == "" {
+		rows, err = db.Query(`SELECT min(ts) AS ts, avg(val) AS val
+			FROM meters
+			WHERE meter = ? AND ts >= ?
+			GROUP BY strftime("%H:%M", ts, 'localtime')
+			ORDER BY strftime("%H:%M", ts, 'localtime') ASC`, meterType, from,
+		)
+	} else {
+		rows, err = db.Query(`SELECT min(ts) AS ts, avg(val) AS val
+			FROM meters
+			WHERE meter = ? AND loadpoint = ? AND ts >= ?
+			GROUP BY strftime("%H:%M", ts, 'localtime')
+			ORDER BY strftime("%H:%M", ts, 'localtime') ASC`, meterType, loadpointName, from,
+		)
+	}
 	if err != nil {
 		return nil, err
 	}

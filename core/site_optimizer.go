@@ -516,16 +516,21 @@ func loadpointProfile(lp loadpoint.API, minLen int) []float64 {
 
 // homeProfile returns the home base load in Wh
 func (site *Site) homeProfile(minLen int) ([]float64, error) {
-	// kWh average over last 7 days
-	profile, err := metrics.Profile(now.BeginningOfDay().AddDate(0, 0, -7))
+	from := now.BeginningOfDay().AddDate(0, 0, -7)
+	
+	// kWh average over last 7 days - total household consumption
+	gt_total, err := metrics.Profile(from)
 	if err != nil {
 		return nil, err
 	}
 
+	// Query heater profile (sum of all heating loadpoints)
+	gt_heater_raw := site.extractHeaterProfile(from, time.Now())
+
 	// max 4 days
 	slots := make([]float64, 0, minLen+1)
 	for len(slots) <= minLen+24*4 { // allow for prorating first day
-		slots = append(slots, profile[:]...)
+		slots = append(slots, gt_total[:]...)
 	}
 
 	res := profileSlotsFromNow(slots)
@@ -536,11 +541,54 @@ func (site *Site) homeProfile(minLen int) ([]float64, error) {
 		res = res[:minLen]
 	}
 
-	// apply weather-based temperature correction to household load
-	res = site.applyTemperatureCorrection(res)
+	// If no heating devices or no heater data, use old behavior (apply correction to entire profile)
+	if gt_heater_raw == nil || len(gt_heater_raw) == 0 {
+		res = site.applyTemperatureCorrection(res)
+		// convert to Wh
+		return lo.Map(res, func(v float64, i int) float64 {
+			return v * 1e3
+		}), nil
+	}
+
+	// Prepare heater profile with same length as total profile
+	heaterSlots := make([]float64, 0, minLen+1)
+	for len(heaterSlots) <= minLen+24*4 {
+		heaterSlots = append(heaterSlots, gt_heater_raw[:]...)
+	}
+	gt_heater := profileSlotsFromNow(heaterSlots)
+	if len(gt_heater) > len(res) {
+		gt_heater = gt_heater[:len(res)]
+	}
+
+	// Calculate base load (non-heating): gt_base = gt_total - gt_heater
+	gt_base := make([]float64, len(res))
+	for i := range res {
+		if i < len(gt_heater) {
+			gt_base[i] = res[i] - gt_heater[i]
+			// Safety: avoid negative base load
+			if gt_base[i] < 0 {
+				gt_base[i] = 0
+			}
+		} else {
+			gt_base[i] = res[i]
+		}
+	}
+
+	// Apply temperature correction ONLY to heater profile
+	gt_heater_corrected := site.applyTemperatureCorrection(gt_heater)
+
+	// Merge back: final = base + corrected_heater
+	gt_final := make([]float64, len(res))
+	for i := range res {
+		if i < len(gt_heater_corrected) {
+			gt_final[i] = gt_base[i] + gt_heater_corrected[i]
+		} else {
+			gt_final[i] = gt_base[i]
+		}
+	}
 
 	// convert to Wh
-	return lo.Map(res, func(v float64, i int) float64 {
+	return lo.Map(gt_final, func(v float64, i int) float64 {
 		return v * 1e3
 	}), nil
 }
@@ -642,6 +690,58 @@ func (site *Site) applyTemperatureCorrection(profile []float64) []float64 {
 		result[i] = profile[i] * (1 + coeff*delta)
 	}
 
+	return result
+}
+
+// getHeatingLoadpoints returns the indices of all loadpoints with api.Heating feature
+func (site *Site) getHeatingLoadpoints() []int {
+	var heatingLPs []int
+	for i, lp := range site.loadpoints {
+		if hasFeature(lp.charger, api.Heating) {
+			heatingLPs = append(heatingLPs, i)
+		}
+	}
+	return heatingLPs
+}
+
+// extractHeaterProfile queries and aggregates consumption from all heating loadpoints
+// Returns nil if no heating devices are configured
+func (site *Site) extractHeaterProfile(from, to time.Time) []float64 {
+	heatingLPs := site.getHeatingLoadpoints()
+	if len(heatingLPs) == 0 {
+		return nil // no heating devices
+	}
+
+	// Query each heating loadpoint's profile
+	profiles := make([][]float64, 0, len(heatingLPs))
+	for _, lpID := range heatingLPs {
+		profile := metrics.LoadpointProfile(from, to, lpID)
+		if len(profile) > 0 {
+			profiles = append(profiles, profile)
+		}
+	}
+
+	if len(profiles) == 0 {
+		return nil // no data available
+	}
+
+	// Sum profiles slot-by-slot
+	return sumProfiles(profiles)
+}
+
+// sumProfiles sums multiple energy profiles slot-by-slot
+func sumProfiles(profiles [][]float64) []float64 {
+	if len(profiles) == 0 {
+		return nil
+	}
+
+	// Use the length of the first profile as reference
+	result := make([]float64, len(profiles[0]))
+	for _, profile := range profiles {
+		for i := 0; i < len(result) && i < len(profile); i++ {
+			result[i] += profile[i]
+		}
+	}
 	return result
 }
 
