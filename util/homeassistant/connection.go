@@ -168,7 +168,7 @@ var chargeStatusMap = map[string]api.ChargeStatus{
 	"on":       api.StatusC,
 	"true":     api.StatusC,
 	"active":   api.StatusC,
-	"1":        api.StatusC,
+	"3":		api.StatusC,
 
 	// Status B - Connected/Ready
 	"b":                  api.StatusB,
@@ -184,17 +184,24 @@ var chargeStatusMap = map[string]api.ChargeStatus{
 	"stopped":            api.StatusB,
 	"starting":           api.StatusB,
 	"paused":             api.StatusB,
+	"ready for charging": api.StatusB,
 
 	// Status A - Disconnected
-	"a":                   api.StatusA,
-	"disconnected":        api.StatusA,
-	"off":                 api.StatusA,
-	"none":                api.StatusA,
-	"unavailable":         api.StatusA,
-	"unknown":             api.StatusA,
-	"notreadyforcharging": api.StatusA,
-	"not_plugged":         api.StatusA,
-	"0":                   api.StatusA,
+	"a":                      api.StatusA,
+	"disconnected":           api.StatusA,
+	"off":                    api.StatusA,
+	"none":                   api.StatusA,
+	"unavailable":         	  api.StatusA,
+	"unknown":                api.StatusA,
+	"notreadyforcharging":    api.StatusA,
+	"not_plugged":            api.StatusA,
+	"0":                      api.StatusA,
+	"not ready for charging": api.StatusA,
+	"error":				  api.StatusA,
+	"authorization rejected": api.StatusA,
+	"1":                      api.StatusA,
+	"4":                      api.StatusA,
+	"5":                      api.StatusA,
 }
 
 // GetChargeStatus maps Home Assistant states to api.ChargeStatus
