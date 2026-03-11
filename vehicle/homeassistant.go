@@ -35,6 +35,7 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 			Odometer   string // optional
 			Climater   string // optional
 			FinishTime string // optional
+			Position   string // device_tracker.* optional
 		}
 		Services struct {
 			Start         string `mapstructure:"start_charging"` // script.* optional
@@ -76,6 +77,7 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 		enable     func(bool) error
 		wakeup     func() error
 		maxcurrent func(int64) error
+		position   func() (float64, float64, error)
 	)
 
 	if cc.Sensors.LimitSoc != "" {
@@ -111,6 +113,9 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 	if cc.Services.SetMaxCurrent != "" {
 		maxcurrent = func(current int64) error { return conn.CallNumberService(cc.Services.SetMaxCurrent, float64(current)) }
 	}
+	if cc.Sensors.Position != "" {
+		position = func() (float64, float64, error) { return conn.GetPositionState(cc.Sensors.Position) }
+	}
 
 	// decorate all features
 	return decorateVehicle(
@@ -125,7 +130,7 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 		finish,
 		wakeup,
 		enable,
-		nil,
+		position,
 	), nil
 }
 
