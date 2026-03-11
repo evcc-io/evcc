@@ -196,7 +196,7 @@ var chargeStatusMap = map[string]api.ChargeStatus{
 	"notreadyforcharging":   api.StatusA,
 	"not_plugged":           api.StatusA,
 	"0":                     api.StatusA,
-	"error":				 api.StatusA,
+	"error":                 api.StatusA,
 	"authorizationrejected": api.StatusA,
 	"1":                     api.StatusA,
 	"4":                     api.StatusA,
