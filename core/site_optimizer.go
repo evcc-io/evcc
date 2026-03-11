@@ -526,6 +526,9 @@ func (site *Site) homeProfile(minLen int) ([]float64, error) {
 
 	// Query heater profile (sum of all heating loadpoints)
 	gt_heater_raw := site.extractHeaterProfile(from, time.Now())
+	if gt_heater_raw != nil && len(gt_heater_raw) > 0 {
+		site.log.DEBUG.Printf("home profile: extracted heater profile with %d slots", len(gt_heater_raw))
+	}
 
 	// max 4 days
 	slots := make([]float64, 0, minLen+1)
@@ -544,6 +547,7 @@ func (site *Site) homeProfile(minLen int) ([]float64, error) {
 	// If no heating devices or no heater data, return uncorrected profile
 	// Temperature correction should ONLY apply to heating loads, never to entire household
 	if gt_heater_raw == nil || len(gt_heater_raw) == 0 {
+		site.log.DEBUG.Println("home profile: no heating devices or heater data, returning uncorrected profile")
 		// convert to Wh
 		return lo.Map(res, func(v float64, i int) float64 {
 			return v * 1e3
@@ -562,18 +566,24 @@ func (site *Site) homeProfile(minLen int) ([]float64, error) {
 
 	// Calculate base load (non-heating): gt_base = gt_total - gt_heater
 	gt_base := make([]float64, len(res))
+	negativeCount := 0
 	for i := range res {
 		if i < len(gt_heater) {
 			gt_base[i] = res[i] - gt_heater[i]
 			// Safety: avoid negative base load
 			if gt_base[i] < 0 {
+				negativeCount++
 				gt_base[i] = 0
 			}
 		} else {
 			gt_base[i] = res[i]
 		}
 	}
+	if negativeCount > 0 {
+		site.log.WARN.Printf("home profile: %d slots had negative base load (heater > total), clamped to zero", negativeCount)
+	}
 
+	site.log.DEBUG.Println("home profile: applying temperature correction to heater profile only")
 	// Apply temperature correction ONLY to heater profile
 	gt_heater_corrected := site.applyTemperatureCorrection(gt_heater)
 
@@ -709,24 +719,33 @@ func (site *Site) getHeatingLoadpoints() []int {
 func (site *Site) extractHeaterProfile(from, to time.Time) []float64 {
 	heatingLPs := site.getHeatingLoadpoints()
 	if len(heatingLPs) == 0 {
+		site.log.DEBUG.Println("heater profile: no heating loadpoints configured")
 		return nil // no heating devices
 	}
+
+	site.log.DEBUG.Printf("heater profile: querying %d heating loadpoint(s)", len(heatingLPs))
 
 	// Query each heating loadpoint's profile
 	profiles := make([][]float64, 0, len(heatingLPs))
 	for _, lpID := range heatingLPs {
 		profile := metrics.LoadpointProfile(from, to, lpID)
 		if len(profile) > 0 {
+			site.log.DEBUG.Printf("heater profile: loadpoint %d has %d slots of data", lpID, len(profile))
 			profiles = append(profiles, profile)
+		} else {
+			site.log.DEBUG.Printf("heater profile: loadpoint %d has no historical data", lpID)
 		}
 	}
 
 	if len(profiles) == 0 {
+		site.log.DEBUG.Println("heater profile: no historical data available from any heating loadpoint")
 		return nil // no data available
 	}
 
 	// Sum profiles slot-by-slot
-	return sumProfiles(profiles)
+	result := sumProfiles(profiles)
+	site.log.DEBUG.Printf("heater profile: aggregated %d heating loadpoint(s) into %d slots", len(profiles), len(result))
+	return result
 }
 
 // sumProfiles sums multiple energy profiles slot-by-slot
