@@ -131,8 +131,6 @@ func dump(r io.ReadCloser, w *strings.Builder) error {
 func (r *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	r.log.TRACE.Printf("%s %s", req.Method, req.URL.String())
 
-	isWebSocketReq := isWebSocket(req)
-
 	// add evcc user agent
 	if req.Header.Get("User-Agent") == "" {
 		req = req.Clone(req.Context())
@@ -144,13 +142,15 @@ func (r *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	var save io.ReadCloser
 
 	bld := new(strings.Builder)
-	if LogHeaders {
-		if body, err := httputil.DumpRequestOut(req, true); err == nil {
-			bld.WriteString("\n")
-			bld.Write(bytes.TrimSpace(body[:min(LogMaxLen, len(body))]))
-		}
-	} else {
-		if !isWebSocketReq {
+
+	isWebSocketReq := isWebSocket(req)
+	if !isWebSocketReq {
+		if LogHeaders {
+			if body, err := httputil.DumpRequestOut(req, true); err == nil {
+				bld.WriteString("\n")
+				bld.Write(bytes.TrimSpace(body[:min(LogMaxLen, len(body))]))
+			}
+		} else {
 			if save, req.Body, err = drainBody(req.Body); err == nil {
 				err = dump(save, bld)
 			}
@@ -168,13 +168,13 @@ func (r *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	if err == nil {
 		resMetric.WithLabelValues(req.URL.Hostname(), strconv.Itoa(resp.StatusCode)).Add(1)
 
-		if LogHeaders {
-			if body, err := httputil.DumpResponse(resp, true); err == nil {
-				bld.WriteString("\n\n")
-				bld.Write(bytes.TrimSpace(body[:min(LogMaxLen, len(body))]))
-			}
-		} else {
-			if !isWebSocketReq {
+		if !isWebSocketReq {
+			if LogHeaders {
+				if body, err := httputil.DumpResponse(resp, true); err == nil {
+					bld.WriteString("\n\n")
+					bld.Write(bytes.TrimSpace(body[:min(LogMaxLen, len(body))]))
+				}
+			} else {
 				if save, resp.Body, err = drainBody(resp.Body); err == nil {
 					err = dump(save, bld)
 				}
