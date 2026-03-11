@@ -30,8 +30,8 @@ params:
     example: "sensor.charger_status"
     required: true
     help:
-      en: Entity ID for charging status (A=ready, B=connected, C=charging, F=error)
-      de: Entitäts-ID für Ladestatus (A=bereit, B=verbunden, C=laden, F=fehler)
+      en: Entity ID for charging status (A=ready, B=connected, C=charging)
+      de: Entitäts-ID für Ladestatus (A=bereit, B=verbunden, C=laden)
   - name: enabled
     description:
       de: Aktivierungsstatus-Sensor
