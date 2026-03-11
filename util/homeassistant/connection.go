@@ -191,7 +191,7 @@ var chargeStatusMap = map[string]api.ChargeStatus{
 	"disconnected":          api.StatusA,
 	"off":                   api.StatusA,
 	"none":                  api.StatusA,
-	"unavailable":         	 api.StatusA,
+	"unavailable":           api.StatusA,
 	"unknown":               api.StatusA,
 	"notreadyforcharging":   api.StatusA,
 	"not_plugged":           api.StatusA,
