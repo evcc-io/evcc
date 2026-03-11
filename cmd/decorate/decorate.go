@@ -75,6 +75,7 @@ func init() {
 		reflect.TypeFor[api.VehicleRange](),
 		reflect.TypeFor[api.VehicleClimater](),
 		reflect.TypeFor[api.VehicleFinishTimer](),
+		reflect.TypeFor[api.VehiclePosition](),
 		reflect.TypeFor[api.Identifier](),
 		reflect.TypeFor[api.ChargerEx](),
 		reflect.TypeFor[api.ChargeRater](),
