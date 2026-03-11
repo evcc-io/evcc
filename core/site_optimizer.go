@@ -686,8 +686,17 @@ func (site *Site) applyTemperatureCorrection(profile []float64) []float64 {
 	for i := range profile {
 		ts := slotStart.Add(time.Duration(i) * tariff.SlotDuration)
 
-		// find the forecast temperature for this slot (nearest hourly rate at or before ts)
-		tFuture, found := nearestRate(rates, ts)
+		// Find the forecast temperature for this slot by direct timestamp match
+		// Both weather data and profiles are on 15-minute slots, so direct matching works
+		var tFuture float64
+		found := false
+		for _, r := range rates {
+			if r.Start.Equal(ts) {
+				tFuture = r.Value
+				found = true
+				break
+			}
+		}
 		if !found {
 			continue
 		}
@@ -763,22 +772,6 @@ func sumProfiles(profiles [][]float64) []float64 {
 		}
 	}
 	return result
-}
-
-// nearestRate returns the Value of the rate whose Start is closest to (and not after) ts.
-// Returns false if no such rate exists.
-func nearestRate(rates api.Rates, ts time.Time) (float64, bool) {
-	var best api.Rate
-	found := false
-	for _, r := range rates {
-		if !r.Start.After(ts) {
-			if !found || r.Start.After(best.Start) {
-				best = r
-				found = true
-			}
-		}
-	}
-	return best.Value, found
 }
 
 // profileSlotsFromNow strips away any slots before "now".
