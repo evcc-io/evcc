@@ -306,8 +306,9 @@ func (c *Connection) CallSelectService(entity, option string) error {
 func (c *Connection) GetStringState(entity string) (string, error) {
 	state, err := c.GetState(entity)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("get state for %s: %w", entity, err)
 	}
 
 	return state.State, nil
 }
+
