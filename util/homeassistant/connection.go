@@ -168,7 +168,7 @@ var chargeStatusMap = map[string]api.ChargeStatus{
 	"on":       api.StatusC,
 	"true":     api.StatusC,
 	"active":   api.StatusC,
-	"3":		api.StatusC,
+	"3":        api.StatusC,
 
 	// Status B - Connected/Ready
 	"b":                  api.StatusB,
