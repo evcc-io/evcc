@@ -311,4 +311,3 @@ func (c *Connection) GetStringState(entity string) (string, error) {
 
 	return state.State, nil
 }
-
