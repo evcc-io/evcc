@@ -628,12 +628,13 @@ func (site *Site) applyTemperatureCorrection(profile []float64) []float64 {
 	}
 
 	threshold := site.HeatingThreshold
-	if threshold == 0 {
-		threshold = 12.0 // default: heating off above 12°C daily average (average insulated house)
-	}
 	coeff := site.HeatingCoefficient
-	if coeff == 0 {
-		coeff = 0.05 // default: 5% load change per °C delta
+	
+	// Require explicit configuration - no defaults
+	// If either value is not configured (0), skip temperature correction
+	if threshold == 0 || coeff == 0 {
+		site.log.DEBUG.Println("temperature correction: heatingThreshold or heatingCoefficient not configured, skipping correction")
+		return profile
 	}
 
 	currentTime := time.Now()
