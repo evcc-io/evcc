@@ -368,7 +368,7 @@ func (site *Site) DumpConfig() {
 	// verify vehicle detection
 	if vehicles := site.Vehicles().Instances(); len(vehicles) > 1 {
 		for _, v := range vehicles {
-			if _, ok := v.(api.ChargeState); !ok && len(v.Identifiers()) == 0 {
+			if _, ok := api.Cap[api.ChargeState](v); !ok && len(v.Identifiers()) == 0 {
 				site.log.INFO.Printf("vehicle '%s' does not support automatic detection", v.GetTitle())
 			}
 		}
@@ -408,11 +408,11 @@ func (site *Site) DumpConfig() {
 		site.log.INFO.Println("  vehicles:")
 
 		for i, v := range vehicles {
-			_, rng := v.(api.VehicleRange)
-			_, finish := v.(api.VehicleFinishTimer)
-			_, status := v.(api.ChargeState)
-			_, climate := v.(api.VehicleClimater)
-			_, wakeup := v.(api.Resurrector)
+			_, rng := api.Cap[api.VehicleRange](v)
+			_, finish := api.Cap[api.VehicleFinishTimer](v)
+			_, status := api.Cap[api.ChargeState](v)
+			_, climate := api.Cap[api.VehicleClimater](v)
+			_, wakeup := api.Cap[api.Resurrector](v)
 			site.log.INFO.Printf("    vehicle %d: range %s finish %s status %s climate %s wakeup %s",
 				i+1, presence[rng], presence[finish], presence[status], presence[climate], presence[wakeup],
 			)
@@ -435,11 +435,11 @@ func (site *Site) DumpConfig() {
 		lp.log.INFO.Printf("loadpoint %d:", i+1)
 		lp.log.INFO.Printf("  mode:        %s", lp.GetMode())
 
-		_, power := lp.charger.(api.Meter)
-		_, energy := lp.charger.(api.MeterEnergy)
-		_, currents := lp.charger.(api.PhaseCurrents)
-		_, phases := lp.charger.(api.PhaseSwitcher)
-		_, wakeup := lp.charger.(api.Resurrector)
+		_, power := api.Cap[api.Meter](lp.charger)
+		_, energy := api.Cap[api.MeterEnergy](lp.charger)
+		_, currents := api.Cap[api.PhaseCurrents](lp.charger)
+		_, phases := api.Cap[api.PhaseSwitcher](lp.charger)
+		_, wakeup := api.Cap[api.Resurrector](lp.charger)
 
 		lp.log.INFO.Printf("  charger:     power %s energy %s currents %s phases %s wakeup %s",
 			presence[power],

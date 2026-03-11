@@ -777,7 +777,7 @@ func (lp *Loadpoint) syncCharger() error {
 		)
 
 		// use chargers actual set current if available
-		cg, isCg := lp.charger.(api.CurrentGetter)
+		cg, isCg := api.Cap[api.CurrentGetter](lp.charger)
 		if isCg {
 			if current, err = cg.GetMaxCurrent(); err == nil {
 				// smallest adjustment most PWM-Controllers can do is: 100%÷256×0,6A = 0.234A
@@ -910,7 +910,7 @@ func (lp *Loadpoint) setLimit(current float64) error {
 
 		if err != nil {
 			v := lp.GetVehicle()
-			if vv, ok := v.(api.Resurrector); ok && errors.Is(err, api.ErrAsleep) {
+			if vv, ok := api.Cap[api.Resurrector](v); ok && errors.Is(err, api.ErrAsleep) {
 				// https://github.com/evcc-io/evcc/issues/8254
 				// wakeup vehicle
 				lp.log.DEBUG.Printf("set charge current limit: waking up vehicle")
@@ -931,7 +931,7 @@ func (lp *Loadpoint) setLimit(current float64) error {
 	if enabled := current >= effMinCurrent; enabled != lp.enabled {
 		if err := lp.charger.Enable(enabled); err != nil {
 			v := lp.GetVehicle()
-			if vv, ok := v.(api.Resurrector); enabled && ok && errors.Is(err, api.ErrAsleep) {
+			if vv, ok := api.Cap[api.Resurrector](v); enabled && ok && errors.Is(err, api.ErrAsleep) {
 				// https://github.com/evcc-io/evcc/issues/8254
 				// wakeup vehicle
 				lp.log.DEBUG.Printf("charger %s: waking up vehicle", status[enabled])
@@ -1746,7 +1746,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 				// don't publish here in case it needs be updated by the estimator
 				lp.log.DEBUG.Printf("%s soc: %.0f%%", typ, soc)
 
-				if socLimiter, ok := dev.(api.SocLimiter); ok {
+				if socLimiter, ok := api.Cap[api.SocLimiter](dev); ok {
 					if limit, err := socLimiter.GetLimitSoc(); err == nil {
 						limitR = &limit
 
@@ -1771,7 +1771,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 		socR, limitR = socAndLimit("vehicle", lp.GetVehicle())
 
 		// range
-		if vs, ok := lp.GetVehicle().(api.VehicleRange); ok {
+		if vs, ok := api.Cap[api.VehicleRange](lp.GetVehicle()); ok {
 			if rng, err := vs.Range(); err == nil {
 				lp.log.DEBUG.Printf("vehicle range: %dkm", rng)
 				lp.publish(keys.VehicleRange, rng)

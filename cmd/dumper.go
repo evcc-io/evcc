@@ -166,7 +166,7 @@ func (d *dumper) Dump(name string, v any) {
 
 	// charger
 
-	if v, ok := v.(api.ChargeState); ok {
+	if v, ok := api.Cap[api.ChargeState](v); ok {
 		d.measureTime(w, "Charge status", func() (string, error) {
 			status, err := v.Status()
 			return fmt.Sprintf("%v", status), err
@@ -215,28 +215,28 @@ func (d *dumper) Dump(name string, v any) {
 
 	// vehicle
 
-	if v, ok := v.(api.VehicleRange); ok {
+	if v, ok := api.Cap[api.VehicleRange](v); ok {
 		d.measureTime(w, "Range", func() (string, error) {
 			rng, err := v.Range()
 			return fmt.Sprintf("%vkm", rng), err
 		})
 	}
 
-	if v, ok := v.(api.VehicleOdometer); ok {
+	if v, ok := api.Cap[api.VehicleOdometer](v); ok {
 		d.measureTime(w, "Odometer", func() (string, error) {
 			odo, err := v.Odometer()
 			return fmt.Sprintf("%.0fkm", odo), err
 		})
 	}
 
-	if v, ok := v.(api.VehicleFinishTimer); ok {
+	if v, ok := api.Cap[api.VehicleFinishTimer](v); ok {
 		d.measureTime(w, "Finish time", func() (string, error) {
 			ft, err := v.FinishTime()
 			return fmt.Sprintf("%v", ft.Truncate(time.Minute).In(time.Local)), err
 		})
 	}
 
-	if v, ok := v.(api.VehicleClimater); ok {
+	if v, ok := api.Cap[api.VehicleClimater](v); ok {
 		d.measureTime(w, "Climate active", func() (string, error) {
 			active, err := v.Climater()
 			return fmt.Sprintf("%v", active), err
@@ -250,7 +250,7 @@ func (d *dumper) Dump(name string, v any) {
 		})
 	}
 
-	if v, ok := v.(api.SocLimiter); ok {
+	if v, ok := api.Cap[api.SocLimiter](v); ok {
 		label := "Limit Soc"
 		format := "%d%%"
 		if isHeating {
@@ -274,7 +274,7 @@ func (d *dumper) Dump(name string, v any) {
 
 	// currents and phases
 
-	if v, ok := v.(api.CurrentGetter); ok {
+	if v, ok := api.Cap[api.CurrentGetter](v); ok {
 		d.measureTime(w, "Max Current", func() (string, error) {
 			f, err := v.GetMaxCurrent()
 			return fmt.Sprintf("%.1fA", f), err

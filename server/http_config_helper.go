@@ -267,7 +267,7 @@ func testInstance(instance any) map[string]testResult {
 		makeResult("controllable", true, nil)
 	}
 
-	if dev, ok := instance.(api.VehicleOdometer); ok {
+	if dev, ok := api.Cap[api.VehicleOdometer](instance); ok {
 		val, err := dev.Odometer()
 		makeResult("odometer", val, err)
 	}
@@ -292,7 +292,7 @@ func testInstance(instance any) map[string]testResult {
 		makeResult("phasePowers", []float64{p1, p2, p3}, err)
 	}
 
-	if dev, ok := instance.(api.ChargeState); ok {
+	if dev, ok := api.Cap[api.ChargeState](instance); ok {
 		val, err := dev.Status()
 		makeResult("chargeStatus", val, err)
 	}
@@ -327,12 +327,12 @@ func testInstance(instance any) map[string]testResult {
 		makeResult("singlePhase", true, nil)
 	}
 
-	if dev, ok := instance.(api.VehicleRange); ok {
+	if dev, ok := api.Cap[api.VehicleRange](instance); ok {
 		val, err := dev.Range()
 		makeResult("range", val, err)
 	}
 
-	if dev, ok := instance.(api.SocLimiter); ok {
+	if dev, ok := api.Cap[api.SocLimiter](instance); ok {
 		val, err := dev.GetLimitSoc()
 		key := "vehicleLimitSoc"
 		if hasFeature(instance, api.Heating) {

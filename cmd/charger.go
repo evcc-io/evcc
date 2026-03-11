@@ -100,7 +100,7 @@ func runCharger(cmd *cobra.Command, args []string) {
 		if cmd.Flag(flagWakeup).Changed {
 			flagUsed = true
 
-			if vv, ok := v.(api.Resurrector); ok {
+			if vv, ok := api.Cap[api.Resurrector](v); ok {
 				if err := vv.WakeUp(); err != nil {
 					log.ERROR.Println("wakeup:", err)
 				}
