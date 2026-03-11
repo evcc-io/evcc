@@ -46,7 +46,7 @@ func NewShellyFromConfig(other map[string]any) (api.Meter, error) {
 	}
 
 	var vol, cur, pow func() (float64, float64, float64, error)
-	if phases, ok := c.Connection.Generation.(shelly.Phases); ok {
+	if phases, ok := c.Connection.Generation.(shelly.Phases); ok && cc.Channel == 0 {
 		vol = phases.Voltages
 		cur = phases.Currents
 		pow = phases.Powers

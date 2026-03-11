@@ -1,6 +1,7 @@
 package shelly
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"slices"
@@ -191,7 +192,18 @@ func (c *gen2) CurrentPower() (float64, error) {
 
 	case c.hasEMEndpoint():
 		res, err := c.emstatus()
-		return res.TotalActPower, err
+		switch c.switchchannel {
+		case 0:
+			return res.TotalActPower, err
+		case 1:
+			return res.AActPower, err
+		case 2:
+			return res.BActPower, err
+		case 3:
+			return res.CActPower, err
+		default:
+			return 0, errors.New("invalid channel")
+		}
 
 	case c.hasSwitchEndpoint():
 		res, err := c.switchstatus.Get()

@@ -17,5 +17,5 @@ render: |
   uri: http://{{ .host }}
   user: {{ .user }}
   password: {{ .password }}
-  channel: {{ .channel }}  # shelly device relay channel
+  channel: {{ .channel }} # shelly device relay channel
   {{ include "switchsocket" . }}
