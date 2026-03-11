@@ -11,7 +11,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	evopt "github.com/andig/evopt/client"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
@@ -21,6 +20,7 @@ import (
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
+	optimizer "github.com/evcc-io/optimizer/client"
 	"github.com/jinzhu/now"
 	"github.com/samber/lo"
 	"golang.org/x/exp/constraints"
@@ -110,7 +110,7 @@ func (site *Site) optimizerUpdateAsync() {
 }
 
 func (site *Site) optimizerUpdate(battery []types.Measurement) error {
-	uri := os.Getenv("EVOPT_URI")
+	uri := os.Getenv("OPTIMIZER_URI")
 	if uri == "" {
 		return nil
 	}
@@ -156,14 +156,14 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		ft = prorate(scaleAndPrune(solarEnergy, 1, minLen), firstSlotDuration)
 	}
 
-	req := evopt.OptimizationInput{
-		Strategy: evopt.OptimizerStrategy{
-			ChargingStrategy:    evopt.OptimizerStrategyChargingStrategyChargeBeforeExport, // AttenuateGridPeaks
-			DischargingStrategy: evopt.OptimizerStrategyDischargingStrategyDischargeBeforeImport,
+	req := optimizer.OptimizationInput{
+		Strategy: optimizer.OptimizerStrategy{
+			ChargingStrategy:    optimizer.OptimizerStrategyChargingStrategyChargeBeforeExport, // AttenuateGridPeaks
+			DischargingStrategy: optimizer.OptimizerStrategyDischargingStrategyDischargeBeforeImport,
 		},
 		EtaC: eta,
 		EtaD: eta,
-		TimeSeries: evopt.TimeSeries{
+		TimeSeries: optimizer.TimeSeries{
 			Dt: dt,
 			Gt: prorate(gt, firstSlotDuration),
 			Ft: ft,
@@ -181,14 +181,14 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 
 	if site.circuit != nil {
 		if pMaxImp := site.circuit.GetMaxPower(); pMaxImp > 0 {
-			req.Grid = evopt.GridConfig{
+			req.Grid = optimizer.GridConfig{
 				// hard grid import limit if no price penalty is set by PrcPExcImp
 				PMaxImp: float32(pMaxImp),
 			}
 		}
 	}
 
-	add := func(battery evopt.BatteryConfig, detail batteryDetail) {
+	add := func(battery optimizer.BatteryConfig, detail batteryDetail) {
 		battery.PA = pa
 		req.Batteries = append(req.Batteries, battery)
 		details.BatteryDetails = append(details.BatteryDetails, detail)
@@ -220,7 +220,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	httpClient := request.NewClient(site.log)
 	httpClient.Timeout = 30 * time.Second
 
-	apiClient, err := evopt.NewClientWithResponses(uri, evopt.WithHTTPClient(httpClient))
+	apiClient, err := optimizer.NewClientWithResponses(uri, optimizer.WithHTTPClient(httpClient))
 	if err != nil {
 		return err
 	}
@@ -240,9 +240,9 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	}
 
 	site.publish("evopt", struct {
-		Req     evopt.OptimizationInput  `json:"req"`
-		Res     evopt.OptimizationResult `json:"res"`
-		Details requestDetails           `json:"details"`
+		Req     optimizer.OptimizationInput  `json:"req"`
+		Res     optimizer.OptimizationResult `json:"res"`
+		Details requestDetails               `json:"details"`
 	}{
 		Req:     req,
 		Res:     *resp.JSON200,
@@ -275,7 +275,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	return nil
 }
 
-func (site *Site) addBatteryForecastTotals(req []evopt.BatteryConfig, resp []evopt.BatteryResult) *types.BatteryForecast {
+func (site *Site) addBatteryForecastTotals(req []optimizer.BatteryConfig, resp []optimizer.BatteryResult) *types.BatteryForecast {
 	if len(resp) == 0 || len(resp[0].StateOfCharge) == 0 {
 		return nil
 	}
@@ -303,8 +303,8 @@ func (site *Site) addBatteryForecastTotals(req []evopt.BatteryConfig, resp []evo
 	return &res
 }
 
-func (site *Site) batteryForecastFullAndEmptySlots(req []evopt.BatteryConfig, resp []evopt.BatteryResult) (int, int) {
-	matchSlot := func(fun func(soc float32, bat evopt.BatteryConfig) bool) int {
+func (site *Site) batteryForecastFullAndEmptySlots(req []optimizer.BatteryConfig, resp []optimizer.BatteryResult) (int, int) {
+	matchSlot := func(fun func(soc float32, bat optimizer.BatteryConfig) bool) int {
 	NEXT:
 		for i := range resp[0].StateOfCharge {
 			for batIdx := range req {
@@ -317,18 +317,18 @@ func (site *Site) batteryForecastFullAndEmptySlots(req []evopt.BatteryConfig, re
 		return -1
 	}
 
-	fullSlot := matchSlot(func(soc float32, bat evopt.BatteryConfig) bool {
+	fullSlot := matchSlot(func(soc float32, bat optimizer.BatteryConfig) bool {
 		return soc >= bat.SMax
 	})
-	emptySlot := matchSlot(func(soc float32, bat evopt.BatteryConfig) bool {
+	emptySlot := matchSlot(func(soc float32, bat optimizer.BatteryConfig) bool {
 		return soc <= bat.SMin
 	})
 
 	return fullSlot, emptySlot
 }
 
-func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDuration time.Duration, grid api.Rates) (evopt.BatteryConfig, batteryDetail) {
-	bat := evopt.BatteryConfig{
+func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDuration time.Duration, grid api.Rates) (optimizer.BatteryConfig, batteryDetail) {
+	bat := optimizer.BatteryConfig{
 		ChargeFromGrid: true,
 		CMin:           float32(lp.EffectiveMinPower()),
 		CMax:           float32(lp.EffectiveMaxPower()),
@@ -407,8 +407,8 @@ func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDurati
 	return bat, detail
 }
 
-func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measurement, grid api.Rates, minLen int, firstSlotDuration time.Duration) (evopt.BatteryConfig, batteryDetail) {
-	bat := evopt.BatteryConfig{
+func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measurement, grid api.Rates, minLen int, firstSlotDuration time.Duration) (optimizer.BatteryConfig, batteryDetail) {
+	bat := optimizer.BatteryConfig{
 		CMax:     batteryPower,
 		DMax:     batteryPower,
 		SInitial: float32(*b.Capacity * *b.Soc * 10), // Wh
@@ -633,7 +633,7 @@ func scaleAndPrune(rates api.Rates, div float64, maxLen int) []float32 {
 	return res
 }
 
-func (site *Site) applyPlanGoal(lp loadpoint.API, bat *evopt.BatteryConfig, minLen int) {
+func (site *Site) applyPlanGoal(lp loadpoint.API, bat *optimizer.BatteryConfig, minLen int) {
 	goal, socBased := lp.GetPlanGoal()
 	if goal <= 0 {
 		return
@@ -719,8 +719,8 @@ func (site *Site) applyBatteryGridChargeLimit(cMax float32, grid api.Rates, minL
 }
 
 // apiError extracts error message from optimizer API response
-func apiError(resp *evopt.PostOptimizeChargeScheduleResponse) error {
-	var errObj *evopt.Error
+func apiError(resp *optimizer.PostOptimizeChargeScheduleResponse) error {
+	var errObj *optimizer.Error
 	switch resp.StatusCode() {
 	case http.StatusBadRequest:
 		errObj = resp.JSON400

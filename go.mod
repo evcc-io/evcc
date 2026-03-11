@@ -8,7 +8,6 @@ require (
 	github.com/Masterminds/sprig/v3 v3.3.0
 	github.com/PuerkitoBio/goquery v1.11.0
 	github.com/WulfgarW/sensonet v0.0.7
-	github.com/andig/evopt v0.0.0-20260202080401-5c7f3dae3896
 	github.com/andig/go-powerwall v0.2.1-0.20230808194509-dd70cdb6e140
 	github.com/andig/gosunspec v0.0.0-20240918203654-860ce51d602b
 	github.com/andig/mbserver v0.0.0-20230310211055-1d29cbb5820e
@@ -33,6 +32,7 @@ require (
 	github.com/enbility/ship-go v0.6.0
 	github.com/enbility/spine-go v0.7.0
 	github.com/evcc-io/openapi-mcp v0.6.0
+	github.com/evcc-io/optimizer v0.0.0-20260310135618-de48ea1cf9f6
 	github.com/evcc-io/rct v0.1.2-0.20260222151045-de2e4108c99c
 	github.com/evcc-io/tesla-proxy-client v0.0.0-20240221194046-4168b3759701
 	github.com/fatih/structs v1.1.0
