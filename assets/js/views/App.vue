@@ -57,6 +57,7 @@ export default defineComponent({
 	data: () => {
 		return {
 			reconnectTimeout: null as number | null,
+			openTimeout: null as number | null,
 			ws: null as WebSocket | null,
 			authNotConfigured: false,
 		};
@@ -125,6 +126,26 @@ export default defineComponent({
 				window.clearTimeout(this.reconnectTimeout);
 			}
 		},
+		// Safari 26 bug: with hash fragment URLs the HTTP upgrade
+		// request is sometimes silently dropped when storing from cache.
+		// Recover by navigating without hash, once (wsRetry guards against loops).
+		startOpenTimeout() {
+			const url = new URL(window.location.href);
+			if (url.searchParams.has("wsRetry")) return;
+			this.openTimeout = window.setTimeout(() => {
+				console.warn("websocket open timeout, forcing navigation");
+				this.ws?.close();
+				url.hash = "";
+				url.searchParams.set("wsRetry", "");
+				window.location.href = url.href;
+			}, 5000);
+		},
+		clearOpenTimeout() {
+			if (this.openTimeout) {
+				window.clearTimeout(this.openTimeout);
+				this.openTimeout = null;
+			}
+		},
 		pageShowHandler(event: PageTransitionEvent) {
 			if (event.persisted) {
 				this.clearReconnectTimeout();
@@ -148,6 +169,7 @@ export default defineComponent({
 			}, 2500);
 		},
 		disconnect() {
+			this.clearOpenTimeout();
 			if (this.ws) {
 				this.ws.onerror = null;
 				this.ws.onopen = null;
@@ -174,20 +196,22 @@ export default defineComponent({
 
 			const loc = new URL("ws", window.location.href);
 			loc.protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-			// force Safari to use a fresh connection
-			loc.searchParams.set("t", String(Date.now()));
-			const uri = loc.href;
+			this.ws = new WebSocket(loc.href);
 
-			this.ws = new WebSocket(uri);
+			this.startOpenTimeout();
+
 			this.ws.onerror = () => {
 				console.log({ message: "Websocket error. Trying to reconnect." });
+				this.clearOpenTimeout();
 				this.ws?.close();
 			};
 			this.ws.onopen = () => {
+				this.clearOpenTimeout();
 				console.log("websocket connected");
 				window.app.setOnline();
 			};
 			this.ws.onclose = () => {
+				this.clearOpenTimeout();
 				window.app.setOffline();
 				this.reconnect();
 			};
