@@ -1,5 +1,6 @@
 template: zendure-hyper
 covers: [zendure]
+capabilities: ["battery-control"]
 products:
   - brand: Zendure
     description:

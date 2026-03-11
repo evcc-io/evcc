@@ -1,5 +1,6 @@
 template: zendure-solarflow-ac
 covers: [zendure-solarflow-2400-ac]
+capabilities: ["battery-control"]
 products:
   - brand: Zendure
     description:
@@ -9,7 +10,19 @@ params:
     choice: ["battery"]
   - name: host
     required: true
+  - name: serial
+    required: true
+    description:
+      de: Seriennummer des Geräts
+      en: Device serial number
+    help:
+      de: "Zu finden in der Zendure App in den Einstellungen des Geräts"
+      en: "You can find this in the Zendure App in the settings of the device"
   - preset: battery-params
+  - name: maxchargepower
+    default: 1200 # W
+  - name: maxdischargepower
+    default: 800 # W
   - name: cache
     advanced: true
     default: 1s
@@ -25,4 +38,47 @@ render: |
     uri: http://{{ .host }}/properties/report
     jq: .properties.electricLevel
     cache: {{ .cache }}
+  batterymode:
+    source: switch
+    switch:
+    - case: 1 # normal
+      set:
+        source: sequence
+        set:
+        - source: http
+          uri: http://{{ .host }}/properties/write
+          method: POST
+          headers:
+          - content-type: application/json
+          body: '{"sn":"{{ .serial }}","properties":{"acMode":2}}'
+        - source: http
+          uri: http://{{ .host }}/properties/write
+          method: POST
+          headers:
+          - content-type: application/json
+          body: '{"sn":"{{ .serial }}","properties":{"outputLimit":{{ .maxdischargepower }}}}'
+    - case: 2 # hold
+      set:
+        source: http
+        uri: http://{{ .host }}/properties/write
+        method: POST
+        headers:
+        - content-type: application/json
+        body: '{"sn":"{{ .serial }}","properties":{"outputLimit":0}}'
+    - case: 3 # charge
+      set:
+        source: sequence
+        set:
+        - source: http
+          uri: http://{{ .host }}/properties/write
+          method: POST
+          headers:
+          - content-type: application/json
+          body: '{"sn":"{{ .serial }}","properties":{"outputLimit":0}}'
+        - source: http
+          uri: http://{{ .host }}/properties/write
+          method: POST
+          headers:
+          - content-type: application/json
+          body: '{"sn":"{{ .serial }}","properties":{"acMode":1,"inputLimit":{{ .maxchargepower }}}}'
   {{- include "battery-params" . }}

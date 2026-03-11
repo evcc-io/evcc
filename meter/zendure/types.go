@@ -46,6 +46,7 @@ type Data struct {
 	InputLimit      int    `json:"inputLimit"`      // 100,
 	InverseMaxPower int    `json:"inverseMaxPower"` // 1200,
 	MasterSwitch    bool   `json:"masterSwitch"`    // true,
+	MinSoc          int    `json:"minSoc"`          // 100 (= 10.0%)
 	OutputLimit     int    `json:"outputLimit"`     // 0,
 	OutputPackPower int    `json:"outputPackPower"` // 70,
 	PackInputPower  int    `json:"packInputPower"`  // 70,

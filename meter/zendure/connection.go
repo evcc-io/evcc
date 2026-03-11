@@ -2,6 +2,7 @@ package zendure
 
 import (
 	"encoding/json"
+	"fmt"
 	"net"
 	"strconv"
 	"sync"
@@ -18,9 +19,11 @@ var (
 )
 
 type Connection struct {
-	log    *util.Logger
-	data   *util.Monitor[Data]
-	serial string
+	log        *util.Logger
+	data       *util.Monitor[Data]
+	serial     string
+	client     *mqtt.Client
+	writeTopic string
 }
 
 func NewConnection(region, account, serial string, timeout time.Duration) (*Connection, error) {
@@ -48,9 +51,11 @@ func NewConnection(region, account, serial string, timeout time.Duration) (*Conn
 	}
 
 	conn := &Connection{
-		log:    log,
-		data:   util.NewMonitor[Data](timeout),
-		serial: serial,
+		log:        log,
+		data:       util.NewMonitor[Data](timeout),
+		serial:     serial,
+		client:     client,
+		writeTopic: fmt.Sprintf("iot/%s/%s/properties/write", res.Data.AppKey, serial),
 	}
 
 	topic := res.Data.AppKey + "/#"
@@ -85,4 +90,21 @@ func (c *Connection) handler(data string) {
 
 func (c *Connection) Data() (Data, error) {
 	return c.data.Get()
+}
+
+// SetProperties publishes writable properties to the Zendure cloud MQTT API
+func (c *Connection) SetProperties(props map[string]int) error {
+	payload := struct {
+		Properties map[string]int `json:"properties"`
+	}{
+		Properties: props,
+	}
+
+	data, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("marshal properties: %w", err)
+	}
+
+	c.client.Publish(c.writeTopic, false, string(data))
+	return nil
 }
