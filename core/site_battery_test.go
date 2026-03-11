@@ -164,6 +164,82 @@ func TestExternalBatteryModeChange(t *testing.T) {
 	}
 }
 
+// batteryMeterWithCapacity implements api.Meter, api.Battery, and api.BatteryCapacity
+type batteryMeterWithCapacity struct {
+	power    float64
+	soc      float64
+	capacity float64
+}
+
+func (m batteryMeterWithCapacity) CurrentPower() (float64, error) { return m.power, nil }
+func (m batteryMeterWithCapacity) Soc() (float64, error)          { return m.soc, nil }
+func (m batteryMeterWithCapacity) Capacity() float64              { return m.capacity }
+
+var _ api.Meter = batteryMeterWithCapacity{}
+var _ api.Battery = batteryMeterWithCapacity{}
+var _ api.BatteryCapacity = batteryMeterWithCapacity{}
+
+// batteryMeterWithoutCapacity implements api.Meter and api.Battery (no capacity)
+type batteryMeterWithoutCapacity struct {
+	power float64
+	soc   float64
+}
+
+func (m batteryMeterWithoutCapacity) CurrentPower() (float64, error) { return m.power, nil }
+func (m batteryMeterWithoutCapacity) Soc() (float64, error)          { return m.soc, nil }
+
+var _ api.Meter = batteryMeterWithoutCapacity{}
+var _ api.Battery = batteryMeterWithoutCapacity{}
+
+func TestBatterySocWeightedAverage(t *testing.T) {
+	for _, tc := range []struct {
+		name        string
+		meters      []api.Meter
+		expectedSoc float64
+	}{
+		{
+			"two batteries both with capacity",
+			[]api.Meter{
+				batteryMeterWithCapacity{soc: 81, capacity: 11.8},
+				batteryMeterWithCapacity{soc: 53, capacity: 1.92},
+			},
+			// (81*11.8 + 53*1.92) / (11.8 + 1.92) = (955.8 + 101.76) / 13.72 ≈ 77.08
+			77.08,
+		},
+		{
+			"single battery with capacity",
+			[]api.Meter{
+				batteryMeterWithCapacity{soc: 75, capacity: 10},
+			},
+			75.0,
+		},
+		{
+			"single battery without capacity",
+			[]api.Meter{
+				batteryMeterWithoutCapacity{soc: 75},
+			},
+			75.0,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			var devices []config.Device[api.Meter]
+			for _, m := range tc.meters {
+				devices = append(devices, config.NewStaticDevice(config.Named{}, m))
+			}
+
+			site := &Site{
+				log:           util.NewLogger("foo"),
+				batteryMeters: devices,
+			}
+
+			site.updateBatteryMeters()
+
+			assert.InDelta(t, tc.expectedSoc, site.battery.Soc, 0.01,
+				"combined battery soc should be correct for: %s", tc.name)
+		})
+	}
+}
+
 func TestForcedBatteryChargeLimits(t *testing.T) {
 	limit := 80.0
 

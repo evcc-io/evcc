@@ -630,6 +630,15 @@ func (site *Site) updateBatteryMeters() {
 		mm[i].Controllable = new(controllable)
 	}
 
+	// warn about missing capacity in multi-battery setups
+	if len(site.batteryMeters) > 1 {
+		for i, m := range mm {
+			if m.Soc != nil && (m.Capacity == nil || *m.Capacity <= 0) {
+				site.log.WARN.Printf("battery %d has no capacity configured - SOC weighting will be inaccurate; configure capacity for correct results", i+1)
+			}
+		}
+	}
+
 	batterySocAcc := lo.SumBy(mm, func(m types.Measurement) float64 {
 		if m.Soc == nil {
 			return 0
