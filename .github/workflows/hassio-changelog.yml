@@ -24,6 +24,8 @@ jobs:
           path: ./hassio
 
       - name: Generate changelog
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Fetch all releases into a single JSON array, then sort and format
           gh api repos/evcc-io/evcc/releases --paginate | jq -s '
