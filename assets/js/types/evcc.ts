@@ -283,6 +283,7 @@ export interface Loadpoint {
   sessionEnergy: number;
   sessionPrice: number | null;
   sessionPricePerKWh: number | null;
+  sessionSolarEnergy: number;
   sessionSolarPercentage: number;
   smartCostActive: boolean;
   smartCostLimit: number | null;

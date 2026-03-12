@@ -26,12 +26,13 @@ func TestEnergyMetrics(t *testing.T) {
 		title                         string
 		steps                         []tcStep
 		totalWh, solarPercentage      float64
+		solarWh                       float64
 		price, pricePerKWh, co2PerKWh *float64
 	}{
 		{
 			"initial state",
 			[]tcStep{},
-			0, 0, nil, nil, nil,
+			0, 0, 0, nil, nil, nil,
 		},
 		{
 			"energy value",
@@ -39,7 +40,7 @@ func TestEnergyMetrics(t *testing.T) {
 				{0.1, 0, nil, nil},
 				{0.2, 0, nil, nil},
 			},
-			200, 0, nil, nil, nil,
+			200, 0, 0, nil, nil, nil,
 		},
 		{
 			"ignore lower energy value",
@@ -47,7 +48,7 @@ func TestEnergyMetrics(t *testing.T) {
 				{0.2, 0, nil, nil},
 				{0.1, 0, nil, nil},
 			},
-			200, 0, nil, nil, nil,
+			200, 0, 0, nil, nil, nil,
 		},
 		{
 			"half solar",
@@ -55,7 +56,7 @@ func TestEnergyMetrics(t *testing.T) {
 				{0.1, 1, nil, nil},
 				{0.2, 0, nil, nil},
 			},
-			200, 50, nil, nil, nil,
+			200, 50, 100, nil, nil, nil,
 		},
 		{
 			"only solar",
@@ -63,14 +64,14 @@ func TestEnergyMetrics(t *testing.T) {
 				{0.1, 1, nil, nil},
 				{0.2, 1, nil, nil},
 			},
-			200, 100, nil, nil, nil,
+			200, 100, 200, nil, nil, nil,
 		},
 		{
 			"static price",
 			[]tcStep{
 				{1, 0, f(0.5), nil},
 			},
-			1000, 0, f(0.5), f(0.5), nil,
+			1000, 0, 0, f(0.5), f(0.5), nil,
 		},
 		{
 			"dynamic price",
@@ -78,7 +79,7 @@ func TestEnergyMetrics(t *testing.T) {
 				{1, 0, f(1), nil},
 				{2, 0, f(0), nil},
 			},
-			2000, 0, f(1), f(0.5), nil,
+			2000, 0, 0, f(1), f(0.5), nil,
 		},
 		{
 			"dynamic price",
@@ -86,14 +87,14 @@ func TestEnergyMetrics(t *testing.T) {
 				{2, 0, f(1), nil},
 				{4, 0, f(0), nil},
 			},
-			4000, 0, f(2), f(0.5), nil,
+			4000, 0, 0, f(2), f(0.5), nil,
 		},
 		{
 			"static co2",
 			[]tcStep{
 				{1, 0, nil, f(500)},
 			},
-			1000, 0, nil, nil, f(500),
+			1000, 0, 0, nil, nil, f(500),
 		},
 		{
 			"dynamic co2",
@@ -101,7 +102,7 @@ func TestEnergyMetrics(t *testing.T) {
 				{1, 0, nil, f(1000)},
 				{2, 0, nil, f(0)},
 			},
-			2000, 0, nil, nil, f(500),
+			2000, 0, 0, nil, nil, f(500),
 		},
 		{
 			"grid only, half, full solar, half, grid only",
@@ -112,7 +113,7 @@ func TestEnergyMetrics(t *testing.T) {
 				{4, 0.5, f(1), f(50)},
 				{5, 0, f(2), f(200)},
 			},
-			5000, 40, f(6), f(1.2), f(100),
+			5000, 40, 2000, f(6), f(1.2), f(100),
 		},
 	}
 
@@ -129,6 +130,9 @@ func TestEnergyMetrics(t *testing.T) {
 		}
 		if s.SolarPercentage() != tc.solarPercentage {
 			t.Errorf("%s: SolarPercentage was incorrect, got: %.3f, want: %.3f.", tc.title, s.SolarPercentage(), tc.solarPercentage)
+		}
+		if s.SolarWh() != tc.solarWh {
+			t.Errorf("%s: SolarWh was incorrect, got: %.3f, want: %.3f.", tc.title, s.SolarWh(), tc.solarWh)
 		}
 		price := s.Price()
 		if !isEqualFloat64(price, tc.price) {
@@ -149,7 +153,7 @@ func TestEnergyMetrics(t *testing.T) {
 	s.SetEnvironment(1, f(1), f(1))
 	s.Update(1)
 	s.Reset()
-	if s.TotalWh() != 0 || s.SolarPercentage() != 0 || s.Co2PerKWh() != nil || s.Price() != nil || s.PricePerKWh() != nil {
+	if s.TotalWh() != 0 || s.SolarPercentage() != 0 || s.SolarWh() != 0 || s.Co2PerKWh() != nil || s.Price() != nil || s.PricePerKWh() != nil {
 		t.Errorf("Metrics not properly reset %+v", s)
 	}
 }

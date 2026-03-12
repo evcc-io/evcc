@@ -70,6 +70,11 @@ func (em *EnergyMetrics) SolarPercentage() float64 {
 	return 100 / em.totalKWh * em.solarKWh
 }
 
+// SolarWh returns the self-produced (solar) energy in Wh
+func (em *EnergyMetrics) SolarWh() float64 {
+	return em.solarKWh * 1e3
+}
+
 // Price returns the total energy price in Currency
 func (em *EnergyMetrics) Price() *float64 {
 	if em.totalKWh == 0 || em.price == nil {
@@ -100,6 +105,7 @@ func (em *EnergyMetrics) Co2PerKWh() *float64 {
 func (em *EnergyMetrics) Publish(prefix string, p publisher) {
 	p.publish(prefix+"Energy", em.TotalWh())
 	p.publish(prefix+"SolarPercentage", em.SolarPercentage())
+	p.publish(prefix+"SolarEnergy", em.SolarWh())
 	p.publish(prefix+"PricePerKWh", em.PricePerKWh())
 	p.publish(prefix+"Price", em.Price())
 	p.publish(prefix+"Co2PerKWh", em.Co2PerKWh())
