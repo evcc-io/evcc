@@ -299,5 +299,3 @@ func (c *Connection) CallSelectService(entity, option string) error {
 
 	return c.CallService("select", "select_option", data)
 }
-
-
