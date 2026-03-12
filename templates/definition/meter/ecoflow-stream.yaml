@@ -1,0 +1,55 @@
+template: ecoflow-stream
+products:
+  - brand: EcoFlow
+    description:
+      generic: Stream
+requirements:
+  description:
+    de: |
+      Für die Nutzung des EcoFlow Stream Meters benötigen Sie:
+      - Einen gültigen Access Key von der EcoFlow Developer Console
+      - Den entsprechenden Secret Key
+      - Die Seriennummer des Hauptgerätes Ihres Stream Systems
+
+      Diese Credentials erhalten Sie über die EcoFlow Developer Console nach der Registrierung Ihrer Anwendung.
+    en: |
+      To use the EcoFlow Stream meter you need:
+      - A valid Access Key from the EcoFlow Developer Console
+      - The corresponding Secret Key
+      - The main device serial number of your Stream system
+
+      These credentials can be obtained through the EcoFlow Developer Console after registering your application.
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: accesskey
+    required: true
+    description:
+      generic: Access Key
+    help:
+      en: Access Key from EcoFlow Developer Console
+      de: Access Key aus der EcoFlow Developer Console
+  - name: secretkey
+    required: true
+    description:
+      generic: Secret Key
+    help:
+      en: Secret Key from EcoFlow Developer Console
+      de: Secret Key aus der EcoFlow Developer Console
+  - name: serialnumber
+    required: true
+    description:
+      generic: Serial Number
+    help:
+      en: Serial number of your main EcoFlow Stream device (e.g., BK51ZE1B2H4H0029)
+      de: Seriennummer eines Ihres EcoFlow Stream Hauptgerätes (z.B. BK51ZE1B2H4H0029)
+  - name: cache
+    default: 30s
+    advanced: true
+render: |
+  type: ecoflow-stream
+  accesskey: {{ .accesskey }}
+  secretkey: {{ .secretkey }}
+  serialnumber: {{ .serialnumber }}
+  usage: {{ .usage }}
+  cache: {{ .cache }}
