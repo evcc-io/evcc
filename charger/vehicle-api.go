@@ -55,7 +55,7 @@ func (c *VehicleApi) isVehicleAtHome(vehicle api.Vehicle) (bool, error) {
 		return true, nil // Assume at charger if geofencing is disabled
 	}
 
-	v, ok := vehicle.(api.VehiclePosition)
+	v, ok := api.Cap[api.VehiclePosition](vehicle)
 	if !ok {
 		return false, errors.New("vehicle must support position tracking if geofence is enabled")
 	}

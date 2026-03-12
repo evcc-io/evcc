@@ -151,7 +151,7 @@ func (lp *Loadpoint) getVehiclePhases() int {
 }
 
 func (lp *Loadpoint) getChargerPhysicalPhases() int {
-	if cc, ok := lp.charger.(api.PhaseDescriber); ok {
+	if cc, ok := api.Cap[api.PhaseDescriber](lp.charger); ok {
 		return cc.Phases()
 	}
 

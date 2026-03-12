@@ -9,7 +9,8 @@ type Capable interface {
 }
 
 // Cap checks whether v implements interface T, either directly (via Go type assertion)
-// or through the Capable registry (for decorated types).
+// or through the Capable registry (for decorated types) and returns the interface same
+// as a Go type assertion would do.
 func Cap[T any](v any) (T, bool) {
 	// fast path: direct type assertion (works for non-decorated concrete types)
 	if t, ok := v.(T); ok {
@@ -25,4 +26,11 @@ func Cap[T any](v any) (T, bool) {
 
 	var zero T
 	return zero, false
+}
+
+// HasCap checks whether v implements interface T, either directly (via Go type assertion)
+// or through the Capable registry (for decorated types).
+func HasCap[T any](v any) bool {
+	_, ok := Cap[T](v)
+	return ok
 }

@@ -674,7 +674,7 @@ func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan c
 	}
 
 	// charger icon
-	if c, ok := lp.charger.(api.IconDescriber); ok {
+	if c, ok := api.Cap[api.IconDescriber](lp.charger); ok {
 		lp.publish(keys.ChargerIcon, c.Icon())
 	} else {
 		lp.publish(keys.ChargerIcon, nil)

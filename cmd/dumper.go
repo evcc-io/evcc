@@ -66,7 +66,7 @@ func (d *dumper) Dump(name string, v any) {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 
 	var isHeating bool
-	if fd, ok := v.(api.FeatureDescriber); ok {
+	if fd, ok := api.Cap[api.FeatureDescriber](v); ok {
 		isHeating = slices.Contains(fd.Features(), api.Heating)
 	}
 
@@ -185,7 +185,7 @@ func (d *dumper) Dump(name string, v any) {
 		fmt.Fprintf(w, "Controllable:\ttrue\t\t\n")
 	}
 
-	if v, ok := v.(api.Charger); ok {
+	if v, ok := api.Cap[api.Charger](v); ok {
 		d.measureTime(w, "Enabled", func() (string, error) {
 			enabled, err := v.Enabled()
 			return fmt.Sprintf("%t", enabled), err
@@ -206,7 +206,7 @@ func (d *dumper) Dump(name string, v any) {
 		})
 	}
 
-	if v, ok := v.(api.CurrentLimiter); ok {
+	if v, ok := api.Cap[api.CurrentLimiter](v); ok {
 		d.measureTime(w, "Mix/Max Current", func() (string, error) {
 			min, max, err := v.GetMinMaxCurrent()
 			return fmt.Sprintf("%.1f/%.1fA", min, max), err
@@ -243,7 +243,7 @@ func (d *dumper) Dump(name string, v any) {
 		})
 	}
 
-	if v, ok := v.(api.VehiclePosition); ok {
+	if v, ok := api.Cap[api.VehiclePosition](v); ok {
 		d.measureTime(w, "Position", func() (string, error) {
 			lat, lon, err := v.Position()
 			return fmt.Sprintf("%v,%v", lat, lon), err
@@ -263,7 +263,7 @@ func (d *dumper) Dump(name string, v any) {
 		})
 	}
 
-	if v, ok := v.(api.Vehicle); ok {
+	if v, ok := api.Cap[api.Vehicle](v); ok {
 		if len(v.Identifiers()) > 0 {
 			fmt.Fprintf(w, "Identifiers:\t%v\t\t\n", v.Identifiers())
 		}
@@ -302,7 +302,7 @@ func (d *dumper) Dump(name string, v any) {
 
 	// features
 
-	if v, ok := v.(api.FeatureDescriber); ok {
+	if v, ok := api.Cap[api.FeatureDescriber](v); ok {
 		if ff := v.Features(); len(ff) > 0 {
 			fmt.Fprintf(w, "Features:\t%v\t\t\n", ff)
 		}
@@ -318,7 +318,7 @@ func (d *dumper) Dump(name string, v any) {
 func (d *dumper) DumpDiagnosis(v any) {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
 
-	if v, ok := v.(api.Diagnosis); ok {
+	if v, ok := api.Cap[api.Diagnosis](v); ok {
 		fmt.Fprintln(w, "Diagnostic dump:")
 		v.Diagnose()
 	}

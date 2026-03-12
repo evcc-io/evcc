@@ -224,7 +224,7 @@ type testResult = struct {
 }
 
 func hasFeature(instance any, f api.Feature) bool {
-	fd, ok := instance.(api.FeatureDescriber)
+	fd, ok := api.Cap[api.FeatureDescriber](instance)
 	return ok && slices.Contains(fd.Features(), f)
 }
 
@@ -297,7 +297,7 @@ func testInstance(instance any) map[string]testResult {
 		makeResult("chargeStatus", val, err)
 	}
 
-	if dev, ok := instance.(api.Charger); ok {
+	if dev, ok := api.Cap[api.Charger](instance); ok {
 		val, err := dev.Enabled()
 		makeResult("enabled", val, err)
 	}
@@ -319,11 +319,11 @@ func testInstance(instance any) map[string]testResult {
 		makeResult("integratedDevice", true, nil)
 	}
 
-	if dev, ok := instance.(api.IconDescriber); ok && dev.Icon() != "" {
+	if dev, ok := api.Cap[api.IconDescriber](instance); ok && dev.Icon() != "" {
 		makeResult("icon", dev.Icon(), nil)
 	}
 
-	if cc, ok := instance.(api.PhaseDescriber); ok && cc.Phases() == 1 {
+	if cc, ok := api.Cap[api.PhaseDescriber](instance); ok && cc.Phases() == 1 {
 		makeResult("singlePhase", true, nil)
 	}
 
@@ -351,7 +351,7 @@ func testInstance(instance any) map[string]testResult {
 		makeResult("identifier", val, err)
 	}
 
-	if dev, ok := instance.(api.Tariff); ok {
+	if dev, ok := api.Cap[api.Tariff](instance); ok {
 		rates, err := dev.Rates()
 
 		// Determine field names based on tariff type

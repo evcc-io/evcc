@@ -155,7 +155,7 @@ func (lp *Loadpoint) effectiveMinCurrent() float64 {
 		}
 	}
 
-	if c, ok := lp.charger.(api.CurrentLimiter); ok {
+	if c, ok := api.Cap[api.CurrentLimiter](lp.charger); ok {
 		if res, _, err := c.GetMinMaxCurrent(); err == nil {
 			chargerMin = res
 		}
@@ -181,7 +181,7 @@ func (lp *Loadpoint) effectiveMaxCurrent() float64 {
 		}
 	}
 
-	if c, ok := lp.charger.(api.CurrentLimiter); ok {
+	if c, ok := api.Cap[api.CurrentLimiter](lp.charger); ok {
 		if _, res, err := c.GetMinMaxCurrent(); err == nil && res > 0 {
 			maxCurrent = min(maxCurrent, res)
 		}
