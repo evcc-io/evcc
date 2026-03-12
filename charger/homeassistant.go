@@ -187,4 +187,3 @@ func (c *HomeAssistant) getPhases() (int, error) {
 
 	return int(val), nil
 }
-
