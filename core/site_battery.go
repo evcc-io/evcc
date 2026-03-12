@@ -22,7 +22,7 @@ func (site *Site) hasBatteryControl() bool {
 	for _, dev := range site.batteryMeters {
 		meter := dev.Instance()
 
-		if _, ok := api.Cap[api.BatteryController](meter); ok {
+		if api.HasCap[api.BatteryController](meter) {
 			return true
 		}
 	}

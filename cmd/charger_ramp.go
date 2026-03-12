@@ -93,7 +93,7 @@ func runChargerRamp(cmd *cobra.Command, args []string) {
 	chargers := config.Chargers().Devices()
 
 	for _, v := range config.Instances(chargers) {
-		if _, ok := api.Cap[api.ChargerEx](v); digits > 0 && !ok {
+		if digits > 0 && !api.HasCap[api.ChargerEx](v) {
 			log.ERROR.Fatalln("charger does not support mA control")
 		}
 		ramp(v, digits, delay)

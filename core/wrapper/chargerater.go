@@ -117,7 +117,7 @@ func (cr *ChargeRater) SetChargePower(power float64) {
 	}
 
 	// update energy amount if not provided by meter
-	if _, ok := api.Cap[api.MeterEnergy](cr.meter); !ok {
+	if !api.HasCap[api.MeterEnergy](cr.meter) {
 		// convert power to energy in kWh
 		cr.chargedEnergy += power / 1e3 * float64(cr.clck.Since(cr.start)) / float64(time.Hour)
 		// move timestamp

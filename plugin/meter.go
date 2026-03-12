@@ -55,11 +55,11 @@ func (o *meterPlugin) FloatGetter() (func() (float64, error), error) {
 
 	switch o.method {
 	case Energy:
-		if _, ok := api.Cap[api.MeterEnergy](o.meter); !ok {
+		if !api.HasCap[api.MeterEnergy](o.meter) {
 			return nil, err
 		}
 	case Soc:
-		if _, ok := api.Cap[api.Battery](o.meter); !ok {
+		if !api.HasCap[api.Battery](o.meter) {
 			return nil, err
 		}
 	}

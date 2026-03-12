@@ -858,8 +858,7 @@ func (lp *Loadpoint) syncCharger() error {
 
 // coarseCurrent returns true if charger or vehicle require full amp steps
 func (lp *Loadpoint) coarseCurrent() bool {
-	_, ok := api.Cap[api.ChargerEx](lp.charger)
-	return !ok || lp.vehicleHasFeature(api.CoarseCurrent)
+	return !api.HasCap[api.ChargerEx](lp.charger) || lp.vehicleHasFeature(api.CoarseCurrent)
 }
 
 // roundedCurrent rounds current down to full amps if charger or vehicle require it
@@ -1716,7 +1715,7 @@ func (lp *Loadpoint) publishChargeProgress() {
 	// TODO deprecated: use sessionEnergy instead
 	lp.publish(keys.ChargedEnergy, lp.GetChargedEnergy())
 	lp.publish(keys.ChargeDuration, lp.chargeDuration)
-	if _, ok := api.Cap[api.MeterEnergy](lp.chargeMeter); ok {
+	if api.HasCap[api.MeterEnergy](lp.chargeMeter) {
 		lp.publish(keys.ChargeTotalImport, lp.chargeMeterTotal())
 	}
 }

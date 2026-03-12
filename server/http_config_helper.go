@@ -263,7 +263,7 @@ func testInstance(instance any) map[string]testResult {
 		makeResult(key, val, err)
 	}
 
-	if _, ok := api.Cap[api.BatteryController](instance); ok {
+	if api.HasCap[api.BatteryController](instance) {
 		makeResult("controllable", true, nil)
 	}
 
@@ -307,7 +307,7 @@ func testInstance(instance any) map[string]testResult {
 		makeResult("chargedEnergy", val, err)
 	}
 
-	if _, ok := api.Cap[api.PhaseSwitcher](instance); ok {
+	if api.HasCap[api.PhaseSwitcher](instance) {
 		makeResult("phases1p3p", true, nil)
 	}
 

@@ -121,7 +121,7 @@ func New(log *util.Logger, title string, maxCurrent, maxPower float64, meter api
 
 	if maxCurrent == 0 {
 		c.log.DEBUG.Printf("validation of max phase current disabled")
-	} else if _, ok := api.Cap[api.PhaseCurrents](meter); meter != nil && !ok {
+	} else if meter != nil && !api.HasCap[api.PhaseCurrents](meter) {
 		return nil, errors.New("meter does not support phase currents")
 	}
 

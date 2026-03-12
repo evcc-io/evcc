@@ -296,7 +296,7 @@ func (lp *Loadpoint) identifyVehicleByStatus() {
 	}
 
 	// remove previous vehicle if status was not confirmed
-	if _, ok := api.Cap[api.ChargeState](lp.GetVehicle()); ok {
+	if api.HasCap[api.ChargeState](lp.GetVehicle()) {
 		lp.setActiveVehicle(nil)
 	}
 }

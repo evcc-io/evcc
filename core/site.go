@@ -346,7 +346,7 @@ func (site *Site) restoreSettings() error {
 }
 
 func meterCapabilities(name string, meter any) string {
-	if _, ok := api.Cap[api.Meter](meter); !ok {
+	if !api.HasCap[api.Meter](meter) {
 		panic("not a meter: " + name)
 	}
 
@@ -368,7 +368,7 @@ func (site *Site) DumpConfig() {
 	// verify vehicle detection
 	if vehicles := site.Vehicles().Instances(); len(vehicles) > 1 {
 		for _, v := range vehicles {
-			if _, ok := api.Cap[api.ChargeState](v); !ok && len(v.Identifiers()) == 0 {
+			if !api.HasCap[api.ChargeState](v) && len(v.Identifiers()) == 0 {
 				site.log.INFO.Printf("vehicle '%s' does not support automatic detection", v.GetTitle())
 			}
 		}
@@ -394,12 +394,12 @@ func (site *Site) DumpConfig() {
 	if len(site.batteryMeters) > 0 {
 		for i, dev := range site.batteryMeters {
 			battery := dev.Instance()
-			_, ok := api.Cap[api.Battery](battery)
-			_, hasCapacity := api.Cap[api.BatteryCapacity](battery)
+			isBattery := api.HasCap[api.Battery](battery)
+			hasCapacity := api.HasCap[api.BatteryCapacity](battery)
 
 			site.log.INFO.Println(
 				meterCapabilities(fmt.Sprintf("battery %d", i+1), battery),
-				fmt.Sprintf("soc %s capacity %s", presence[ok], presence[hasCapacity]),
+				fmt.Sprintf("soc %s capacity %s", presence[isBattery], presence[hasCapacity]),
 			)
 		}
 	}

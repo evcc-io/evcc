@@ -159,6 +159,5 @@ func (lp *Loadpoint) getChargerPhysicalPhases() int {
 }
 
 func (lp *Loadpoint) hasPhaseSwitching() bool {
-	_, ok := api.Cap[api.PhaseSwitcher](lp.charger)
-	return ok
+	return api.HasCap[api.PhaseSwitcher](lp.charger)
 }

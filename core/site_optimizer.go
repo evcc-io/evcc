@@ -418,7 +418,7 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 
 	instance := dev.Instance()
 
-	if _, ok := api.Cap[api.BatteryController](instance); ok {
+	if api.HasCap[api.BatteryController](instance) {
 		bat.ChargeFromGrid = true
 	}
 
