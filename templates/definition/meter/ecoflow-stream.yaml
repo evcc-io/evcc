@@ -42,7 +42,7 @@ params:
       generic: Serial Number
     help:
       en: Serial number of your main EcoFlow Stream device (e.g., BK51ZE1B2H4H0029)
-      de: Seriennummer eines Ihres EcoFlow Stream Hauptgerätes (z.B. BK51ZE1B2H4H0029)
+      de: Seriennummer Ihres EcoFlow Stream Hauptgerätes (z.B. BK51ZE1B2H4H0029)
   - name: cache
     default: 30s
     advanced: true
