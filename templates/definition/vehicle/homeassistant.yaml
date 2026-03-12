@@ -32,66 +32,99 @@ params:
     service: homeassistant/entities?uri={uri}&domain=sensor
     example: "sensor.vehicle_soc"
     required: true
+    help:
+      en: Entity ID for the vehicle's battery state of charge in percent
+      de: Entitäts-ID für den Batterie-Ladezustand des Fahrzeugs in Prozent
   - name: range
     description:
       de: Restreichweite [km]
       en: Remaining range [km]
     service: homeassistant/entities?uri={uri}&domain=sensor
     example: "sensor.vehicle_range"
+    help:
+      en: Entity ID for the vehicle's remaining range in kilometers
+      de: Entitäts-ID für die verbleibende Reichweite des Fahrzeugs in Kilometern
   - name: status
     description:
       de: Ladestatus
       en: Charging status
     service: homeassistant/entities?uri={uri}&domain=sensor
     example: "sensor.vehicle_charging"
+    help:
+      en: Entity ID for charging status (A=disconnected, B=connected, C=charging)
+      de: Entitäts-ID für Ladestatus (A=getrennt, B=verbunden, C=laden)
   - name: limitSoc
     description:
       de: Ziel-Ladezustand [%]
       en: Target state of charge [%]
     service: homeassistant/entities?uri={uri}&domain=number,input_number
     example: "number.vehicle_target_state_of_charge"
+    help:
+      en: Entity ID for the vehicle's target state of charge in percent (`number` or `input_number` entity)
+      de: Entitäts-ID für den Ziel-Ladezustand des Fahrzeugs in Prozent (`number` oder `input_number` Entität)
   - name: odometer
     description:
       de: Kilometerstand [km]
       en: Odometer [km]
     service: homeassistant/entities?uri={uri}&domain=sensor
     example: "sensor.vehicle_odometer"
+    help:
+      en: Entity ID for the vehicle's odometer reading in kilometers
+      de: Entitäts-ID für den Kilometerstand des Fahrzeugs
   - name: climater
     description:
       de: Klimatisierung aktiv
       en: Climatisation active
     service: homeassistant/entities?uri={uri}&domain=binary_sensor
     example: "binary_sensor.vehicle_climater"
+    help:
+      en: Entity ID for the vehicle's climatisation state (`binary_sensor` with `on`/`off` state)
+      de: Entitäts-ID für den Klimatisierungsstatus des Fahrzeugs (`binary_sensor` mit `on`/`off` Zustand)
   - name: finishTime
     description:
-      de: Ladeende (ISO8601 oder Unix)
-      en: Finish time (ISO8601 or Unix)
+      de: Ladeende
+      en: Finish time
     service: homeassistant/entities?uri={uri}&domain=sensor
     example: "sensor.vehicle_finish_time"
+    help:
+      en: Entity ID for the estimated charging finish time (ISO8601 or Unix timestamp)
+      de: Entitäts-ID für die geschätzte Ladeendzeit (ISO8601 oder Unix-Zeitstempel)
   - name: start_charging
     description:
       de: Service zum Laden starten
       en: Service to start charging
     service: homeassistant/entities?uri={uri}&domain=script
     example: "script.vehicle_start_charge"
+    help:
+      en: Entity ID for a script that starts charging the vehicle. Only useful with the [Vehicle API-only charger](https://docs.evcc.io/en/docs/devices/chargers#vehicle-api-only-charger).
+      de: Entitäts-ID für ein Skript zum Starten des Ladevorgangs. Nur sinnvoll mit der [Fahrzeug-API Ladesteuerung](https://docs.evcc.io/docs/devices/chargers#vehicle-api-only-charger).
   - name: stop_charging
     description:
       de: Service zum Laden stoppen
       en: Service to stop charging
     service: homeassistant/entities?uri={uri}&domain=script
     example: "script.vehicle_stop_charge"
+    help:
+      en: Entity ID for a script that stops charging the vehicle. Only useful with the [Vehicle API-only charger](https://docs.evcc.io/en/docs/devices/chargers#vehicle-api-only-charger).
+      de: Entitäts-ID für ein Skript zum Stoppen des Ladevorgangs. Nur sinnvoll mit der [Fahrzeug-API Ladesteuerung](https://docs.evcc.io/docs/devices/chargers#vehicle-api-only-charger).
   - name: wakeup
     description:
       de: Service zum Aufwecken
       en: Service to wake up vehicle
     service: homeassistant/entities?uri={uri}&domain=script
     example: "script.vehicle_wakeup"
+    help:
+      en: Entity ID for a script that wakes up the vehicle
+      de: Entitäts-ID für ein Skript zum Aufwecken des Fahrzeugs
   - name: setMaxCurrent
     description:
       de: Ladestromstärke setzen [A]
       en: Set charging current [A]
     service: homeassistant/entities?uri={uri}&domain=number,input_number
     example: "number.vehicle_charging_current"
+    help:
+      en: Entity ID for setting the maximum charging current in amperes (`number` or `input_number` entity)
+      de: Entitäts-ID zum Setzen der maximalen Ladestromstärke in Ampere (`number` oder `input_number` Entität)
   - preset: vehicle-features
   - name: streaming
     default: true
