@@ -97,7 +97,7 @@ func (r *persistingRunner) run(done chan error, stop <-chan struct{}) {
 	select {
 	case <-stop:
 		return // correctly stopped — no leak
-	case <-time.After(100 * time.Millisecond):
+	case <-time.After(20 * time.Millisecond):
 		close(r.running) // stop never closed — goroutine leak
 		<-r.stop
 	}
