@@ -62,7 +62,7 @@ export default defineComponent({
 			return points;
 		},
 		chartOption(): Record<string, unknown> {
-			const selfColor = colors.self || "#0FDE41FF";
+			const selfColor = colors.self || "";
 			const data = this.entries.map((e) => [e.ts, e.val]);
 
 			return {

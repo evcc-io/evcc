@@ -60,9 +60,9 @@ export function markPointLabel(
       show: true,
       position: "top",
       fontFamily: FONT_FAMILY,
-      fontSize: 13,
+      fontSize: 14,
       fontWeight: "bold" as const,
-      color: "#fff",
+      color: colors.background,
       backgroundColor: color,
       borderRadius: 4,
       padding: [5, 10],
@@ -104,15 +104,15 @@ export function tooltipStyle(
     },
     textStyle: {
       fontFamily: FONT_FAMILY,
-      fontSize: 13,
+      fontSize: 14,
       fontWeight: "bold" as const,
-      color: "#fff",
+      color: colors.background,
     },
   };
 }
 
 export function forecastGrid() {
-  return { top: 36, right: 16, bottom: 4, left: 40, borderWidth: 0 };
+  return { top: 36, right: 16, bottom: 4, left: 48, borderWidth: 0 };
 }
 
 export function forecastXAxes(startDate: Date, endDate: Date, weekdayShort: (d: Date) => string) {
@@ -125,9 +125,13 @@ export function forecastXAxes(startDate: Date, endDate: Date, weekdayShort: (d: 
       maxInterval: 3600 * 1000,
       axisLabel: {
         color: colors.muted,
+        fontSize: 14,
+        lineHeight: Math.round(14 * 1.1),
+        margin: 4,
         formatter: (value: number) => {
           const date = new Date(value);
           const h = date.getHours();
+          if (h % 2 !== 0) return "";
           if (h === 0) return `${h}\n${weekdayShort(date)}`;
           return `${h}`;
         },
@@ -150,13 +154,14 @@ export function forecastXAxes(startDate: Date, endDate: Date, weekdayShort: (d: 
         show: true,
         showMinLine: false,
         showMaxLine: false,
-        lineStyle: { color: colors.border || "#eee", type: "dashed" },
+        lineStyle: { color: colors.border || "", type: "dashed" },
       },
     },
   ];
 }
 
 export function forecastYAxis(overrides: Record<string, unknown> = {}) {
+  const { axisLabel, ...rest } = overrides;
   return {
     type: "value",
     min: 0,
@@ -165,9 +170,13 @@ export function forecastYAxis(overrides: Record<string, unknown> = {}) {
     splitLine: {
       showMinLine: false,
       showMaxLine: false,
-      lineStyle: { color: colors.border || "#eee" },
+      lineStyle: { color: colors.border || "" },
     },
-    ...overrides,
+    axisLabel: {
+      fontSize: 14,
+      ...(axisLabel as Record<string, unknown>),
+    },
+    ...rest,
   };
 }
 

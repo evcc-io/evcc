@@ -86,7 +86,7 @@ export default defineComponent({
 			};
 		},
 		chartOption(): Record<string, unknown> {
-			const priceColor = colors.price || "#FF922EFF";
+			const priceColor = colors.price || "";
 
 			// eslint-disable-next-line @typescript-eslint/no-this-alias
 			const vThis = this;
@@ -135,7 +135,7 @@ export default defineComponent({
 						barMinWidth: 4,
 						itemStyle: {
 							color: priceColor,
-							borderRadius: [2, 2, 0, 0],
+							borderRadius: 2,
 						},
 						emphasis: { disabled: true },
 						markPoint: markPointLabel(

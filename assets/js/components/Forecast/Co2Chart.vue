@@ -63,7 +63,7 @@ export default defineComponent({
 			return points;
 		},
 		chartOption(): Record<string, unknown> {
-			const co2Color = colors.co2 || "#03C1EFFF";
+			const co2Color = colors.co2 || "";
 
 			// eslint-disable-next-line @typescript-eslint/no-this-alias
 			const vThis = this;
