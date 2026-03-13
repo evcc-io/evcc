@@ -130,8 +130,9 @@
       "currency": "Currency",
       "current": "Current",
       "currentRange": "Current",
+      "curtailed": "Feed-in limited",
       "detected": "Detected",
-      "dimmed": "Dimmed",
+      "dimmed": "Consumption limited",
       "enabled": "Enabled",
       "energy": "Energy",
       "events": "Events",
@@ -1258,6 +1259,7 @@
       "targetChargeWaitForVehicle": "Charging plan ready. Waiting for vehicle…",
       "vehicleLimit": "Vehicle limit",
       "vehicleLimitReached": "Vehicle limit reached.",
+      "waitForAuthorization": "Connected. Waiting for authorization…",
       "waitForVehicle": "Ready. Waiting for vehicle…",
       "welcome": "Short initial charge to confirm connection."
     },

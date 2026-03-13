@@ -177,7 +177,7 @@ export default defineComponent({
 	},
 	computed: {
 		batteryConfigured() {
-			return this.battery && this.battery.devices.length;
+			return (this.battery?.devices?.length ?? 0) > 0;
 		},
 		providers() {
 			return Object.entries(this.authProviders)

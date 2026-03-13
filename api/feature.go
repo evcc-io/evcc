@@ -7,7 +7,8 @@ const (
 	_                Feature = iota
 	CoarseCurrent            // charger
 	IntegratedDevice         // charger
-	Heating                  // charger
+	Heating                  // charger - heating device
+	Continuous               // charger - heating device where disabled means "normal operation"
 	Average                  // tariff
 	Cacheable                // tariff
 	Offline                  // vehicle

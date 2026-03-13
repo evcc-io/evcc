@@ -86,9 +86,9 @@
           "heating": "Benutzerdefinierte Heizung"
         },
         "heatpump": "Benutzerdefinierte Wärmepumpe",
-        "sgready": "Benutzerdefinierte Wärmepumpe (SG-Ready über Plugins)",
+        "sgready": "Benutzerdefinierte Wärmepumpe (sg-ready über Plugins)",
         "sgready-boost": "Benutzerdefinierte Wärmepumpe (sg-ready-boost, veraltet)",
-        "sgready-relay": "Benutzerdefinierte Wärmepumpe (SG-Ready über Relais)",
+        "sgready-relay": "Benutzerdefinierte Wärmepumpe (sg-ready über Relais)",
         "switchsocket": "Benutzerdefinierte schaltbare Steckdose"
       }
     },
@@ -130,8 +130,9 @@
       "currency": "Währung",
       "current": "Strom",
       "currentRange": "Strom",
+      "curtailed": "Einspeisung begrenzt",
       "detected": "Erkannt",
-      "dimmed": "Gedimmt",
+      "dimmed": "Verbrauch begrenzt",
       "enabled": "Ladebereit",
       "energy": "Energie",
       "events": "Ereignisse",
@@ -153,6 +154,7 @@
       "phases1p3p": "Phasenumschaltung",
       "power": "Leistung",
       "powerRange": "Leistung",
+      "price": "Preis",
       "range": "Reichweite",
       "singlePhase": "Einphasig",
       "soc": "Ladestand",
@@ -424,7 +426,7 @@
     },
     "messaging": {
       "addMessenger": "Dienst hinzufügen",
-      "description": "Benachrichtigungen über Ladevorgänge und andere Ereignisse erhalten.",
+      "description": "Benachrichtigungen über Ladevorgänge erhalten.",
       "event": {
         "asleep": {
           "messageDefault": "Ladefreigabe, Fahrzeug {vehicleName} lädt nicht.",
@@ -621,7 +623,7 @@
     },
     "pv": {
       "titleAdd": "PV-Anlage hinzufügen",
-      "titleEdit": "PV-Anlage bearbeiten"
+      "titleEdit": "PV-Zähler bearbeiten"
     },
     "section": {
       "additionalMeter": "Zusätzliche Zähler",
@@ -1257,6 +1259,7 @@
       "targetChargeWaitForVehicle": "Ladeplan bereit. Warte auf Fahrzeug …",
       "vehicleLimit": "Fahrzeuglimit",
       "vehicleLimitReached": "Fahrzeuglimit erreicht.",
+      "waitForAuthorization": "Verbunden. Warte auf Autorisierung …",
       "waitForVehicle": "Ladebereit. Warte auf Fahrzeug …",
       "welcome": "Kurze initiale Ladung zur Bestätigung der Verbindung."
     },
