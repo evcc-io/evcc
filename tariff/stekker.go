@@ -82,7 +82,7 @@ func NewStekkerFromConfig(other map[string]any) (api.Tariff, error) {
 	return runOrError(t)
 }
 
-func (t *Stekker) run(done chan error) {
+func (t *Stekker) run(done chan error, stop <-chan struct{}) {
 	var once sync.Once
 	client := request.NewHelper(t.log)
 
@@ -92,14 +92,24 @@ func (t *Stekker) run(done chan error) {
 		if err != nil {
 			once.Do(func() { done <- err })
 			t.log.ERROR.Println("http error:", err)
-			continue
+			select {
+			case <-stop:
+				return
+			default:
+				continue
+			}
 		}
 
 		if resp.StatusCode != http.StatusOK {
 			once.Do(func() { done <- fmt.Errorf("http status %d", resp.StatusCode) })
 			t.log.ERROR.Printf("http status %d", resp.StatusCode)
 			resp.Body.Close()
-			continue
+			select {
+			case <-stop:
+				return
+			default:
+				continue
+			}
 		}
 
 		doc, err := goquery.NewDocumentFromReader(resp.Body)
@@ -107,7 +117,12 @@ func (t *Stekker) run(done chan error) {
 			resp.Body.Close()
 			once.Do(func() { done <- err })
 			t.log.ERROR.Println("parse error:", err)
-			continue
+			select {
+			case <-stop:
+				return
+			default:
+				continue
+			}
 		}
 		resp.Body.Close()
 
@@ -115,7 +130,12 @@ func (t *Stekker) run(done chan error) {
 		if !ok {
 			once.Do(func() { done <- fmt.Errorf("no forecast attribute found") })
 			t.log.ERROR.Println("no forecast attribute found")
-			continue
+			select {
+			case <-stop:
+				return
+			default:
+				continue
+			}
 		}
 
 		raw := strings.ReplaceAll(val, "&quot;", "\"")
@@ -124,7 +144,12 @@ func (t *Stekker) run(done chan error) {
 		if err := json.Unmarshal([]byte(raw), &data); err != nil {
 			once.Do(func() { done <- err })
 			t.log.ERROR.Println("unmarshal error:", err)
-			continue
+			select {
+			case <-stop:
+				return
+			default:
+				continue
+			}
 		}
 
 		var res api.Rates

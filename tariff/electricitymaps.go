@@ -73,7 +73,7 @@ func NewElectricityMapsFromConfig(other map[string]any) (api.Tariff, error) {
 	return runOrError(t)
 }
 
-func (t *ElectricityMaps) run(done chan error) {
+func (t *ElectricityMaps) run(done chan error, stop <-chan struct{}) {
 	var once sync.Once
 
 	uri := fmt.Sprintf("%s/carbon-intensity/forecast?zone=%s", t.uri, t.zone)
@@ -91,7 +91,12 @@ func (t *ElectricityMaps) run(done chan error) {
 			once.Do(func() { done <- err })
 
 			t.log.ERROR.Println(err)
-			continue
+			select {
+			case <-stop:
+				return
+			default:
+				continue
+			}
 		}
 
 		data := make(api.Rates, 0, len(res.Forecast))

@@ -78,7 +78,7 @@ func buildOctopusDeFromConfig(other map[string]any) (*OctopusDe, error) {
 	return t, nil
 }
 
-func (t *OctopusDe) run(done chan error) {
+func (t *OctopusDe) run(done chan error, stop <-chan struct{}) {
 	var once sync.Once
 
 	for tick := time.Tick(time.Hour); ; <-tick {
@@ -95,7 +95,12 @@ func (t *OctopusDe) run(done chan error) {
 			once.Do(func() { done <- err })
 
 			t.log.ERROR.Printf("failed to fetch unit rate forecast: %v", err)
-			continue
+			select {
+			case <-stop:
+				return
+			default:
+				continue
+			}
 		}
 
 		data := make(api.Rates, 0, len(rates))

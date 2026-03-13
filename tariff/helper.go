@@ -2,6 +2,7 @@ package tariff
 
 import (
 	"errors"
+	"net/http"
 	"strings"
 	"time"
 
@@ -28,10 +29,14 @@ func bo() backoff.BackOff {
 	)
 }
 
-// backoffPermanentError returns a permanent error in case of HTTP 400
+// backoffPermanentError returns a permanent error in case of HTTP 4xx/5xx,
+// except for HTTP 429 (Too Many Requests) which is transient and should be retried.
 func backoffPermanentError(err error) error {
 	if se, ok := errors.AsType[*request.StatusError](err); ok {
 		if code := se.StatusCode(); code >= 400 && code <= 599 {
+			if code == http.StatusTooManyRequests {
+				return err
+			}
 			return backoff.Permanent(se)
 		}
 	}
@@ -75,16 +80,20 @@ func beginningOfDay() time.Time {
 
 type runnable[T any] interface {
 	*T
-	run(done chan error)
+	run(done chan error, stop <-chan struct{})
 }
 
 // https://groups.google.com/g/golang-nuts/c/1cl9v_hPYHk
-// runOrError invokes t.run(chan error) and waits for the channel to return
+// runOrError invokes t.run and waits for the channel to return.
+// If the first update fails, stop is closed so the goroutine exits instead of
+// continuing to make API calls in the background.
 func runOrError[T any, I runnable[T]](t I) (*T, error) {
+	stop := make(chan struct{})
 	done := make(chan error)
-	go t.run(done)
+	go t.run(done, stop)
 
 	if err := <-done; err != nil {
+		close(stop)
 		return nil, err
 	}
 
