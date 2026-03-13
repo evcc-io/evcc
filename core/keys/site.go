@@ -47,9 +47,9 @@ const (
 	BufferStartSoc          = "bufferStartSoc"
 
 	// battery status
-	Battery                   = "battery"
-	BatteryMaxDischargePower  = "batteryMaxDischargePower"
-	BatteryMode               = "batteryMode"
+	Battery                  = "battery"
+	BatteryMaxDischargePower = "batteryMaxDischargePower"
+	BatteryMode              = "batteryMode"
 
 	// external battery control
 	BatteryModeExternal = "batteryModeExternal"
