@@ -9,3 +9,4 @@ params:
 render: |
   type: audi
   {{ include "vehicle-base" . }}
+  {{ include "vehicle-features" . }}
