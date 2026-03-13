@@ -2,8 +2,11 @@
 	<button
 		ref="tooltip"
 		type="button"
-		class="btn btn-sm btn-outline-secondary position-relative border-0 p-2 edit-button"
-		:class="{ 'opacity-25': !editable, invisible: noEditButton }"
+		class="btn btn-sm position-relative border-0 p-2 edit-button"
+		:class="[
+			danger ? 'btn-outline-danger' : 'btn-outline-secondary',
+			{ 'opacity-25': !editable, invisible: noEditButton },
+		]"
 		data-bs-toggle="tooltip"
 		data-bs-html="true"
 		:title="tooltipTitle"
@@ -31,6 +34,7 @@ export default {
 		editable: Boolean,
 		noEditButton: Boolean,
 		badge: Boolean,
+		danger: Boolean,
 	},
 	emits: ["edit"],
 	data() {

@@ -30,8 +30,8 @@ params:
     example: "sensor.charger_status"
     required: true
     help:
-      en: Entity ID for charging status (A=ready, B=connected, C=charging, F=error)
-      de: Entitäts-ID für Ladestatus (A=bereit, B=verbunden, C=laden, F=fehler)
+      en: Entity ID for charging status (A=ready, B=connected, C=charging)
+      de: Entitäts-ID für Ladestatus (A=bereit, B=verbunden, C=laden)
   - name: enabled
     description:
       de: Aktivierungsstatus-Sensor
@@ -40,8 +40,8 @@ params:
     example: "binary_sensor.charger_enabled"
     required: true
     help:
-      en: Entity ID for enabled state (sensor, binary_sensor or switch with on/off or true/false state)
-      de: Entitäts-ID für Aktivierungsstatus (sensor, binary_sensor oder switch mit on/off oder true/false Zustand)
+      en: Entity ID for enabled state (`sensor`, `binary_sensor` or `switch` with `on`/`off` or `true`/`false` state)
+      de: Entitäts-ID für Aktivierungsstatus (`sensor`, `binary_sensor` oder `switch` mit `on`/`off` oder `true`/`false` Zustand)
   - name: enable
     description:
       de: Aktivierungsschalter
@@ -50,8 +50,8 @@ params:
     example: "switch.charger_enable"
     required: true
     help:
-      en: Entity ID for enable/disable control (switch or input_boolean)
-      de: Entitäts-ID für Aktivierungs-/Deaktivierungs-Steuerung (switch oder input_boolean)
+      en: Entity ID for enable/disable control (`switch` or `input_boolean`)
+      de: Entitäts-ID für Aktivierungs-/Deaktivierungs-Steuerung (`switch` oder `input_boolean`)
   - name: setMaxCurrent
     description:
       de: Maximale Stromstärke-Entität [A]
@@ -60,8 +60,8 @@ params:
     example: "number.charger_max_current"
     required: true
     help:
-      en: Entity ID for setting maximum current in amperes (number or input_number entity)
-      de: Entitäts-ID zum Setzen der maximalen Stromstärke in Ampere (number oder input_number Entität)
+      en: Entity ID for setting maximum current in amperes (`number` or `input_number` entity)
+      de: Entitäts-ID zum Setzen der maximalen Stromstärke in Ampere (`number` oder `input_number` Entität)
   - name: power
     description:
       de: Leistungsentität

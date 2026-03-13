@@ -184,7 +184,7 @@ export default defineComponent({
 			return this.dataChanged && this.selectedActive;
 		},
 		weekdaysLabel(): string {
-			return this.getShortenedWeekdaysLabel(this.selectedWeekdays);
+			return this.fmtWeekdaysRange(this.selectedWeekdays);
 		},
 		socOptions(): SelectOption<number>[] {
 			// a list of entries from 5 to 100 with a step of 5

@@ -105,10 +105,16 @@
       "labelResidualPower": "Putere reziduală",
       "title": "Comportament de control"
     },
+    "currency": {
+      "description": "Folosit pentru a formata prețurile, costurile și economiile la energie în funcție de tariful dumneavoastră.",
+      "example": "Prețul de încărcare a fost {price}. Ați economisit {amount}.",
+      "label": "Valută",
+      "title": "Valută"
+    },
     "deviceValue": {
       "amount": "Suma",
       "broker": "Broker",
-      "bucket": "Bucket",
+      "bucket": "Găleată",
       "capacity": "Capacitatea",
       "chargeStatus": "Stare",
       "chargeStatusA": "neconectat",
@@ -128,12 +134,16 @@
       "dimmed": "Estompat",
       "enabled": "Activat",
       "energy": "Energie",
+      "events": "Evenimente",
       "feedinPrice": "Prețul de alimentare",
+      "forecast": "Prognoză",
       "gridPrice": "Prețul rețelei",
       "heaterTempLimit": "Limită încălzitor",
       "hemsActiveLimit": "Limită activă",
       "hemsType": "Comunicare",
       "identifier": "Identificator RFID",
+      "max": "max",
+      "messengers": "Servicii",
       "no": "nu",
       "odometer": "Kilometraj",
       "org": "Organizație",
@@ -143,6 +153,7 @@
       "phases1p3p": "Comutator de fază",
       "power": "Putere",
       "powerRange": "Putere",
+      "price": "preț",
       "range": "Autonomie",
       "singlePhase": "Monofazat",
       "soc": "Stare de încărcare",
@@ -172,11 +183,27 @@
       "loading": "Se încarcă editorul YAML…"
     },
     "eebus": {
-      "description": "Configurație care permite evcc să comunice cu alte dispozitive EEBus.",
+      "certificate": {
+        "private": "Cheie privată",
+        "public": "Certificat public",
+        "title": "Certificate"
+      },
+      "description": "Configurație care permite evcc să comunice cu dispozitive compatibile EEBus, cum ar fi încărcătoarele sau o unitate de control a operatorului de rețea. Toate inițializările relevante și generarea de certificate se fac automat la prima pornire.",
+      "descriptionAdvanced": "Nu sunt necesare modificări. Efectuați modificările doar dacă știți cu adevărat ce faceți. Dacă schimbați fie SHIP-id-ul, fie certificatele, va trebui să vă asociați din nou dispozitivele.",
+      "interfaces": "Interfețe",
+      "interfacesHelp": "Limitați interfețele de rețea pe care EEBus ar trebui să le utilizeze pentru a evita problemele de comunicare. Lăsați câmpul necompletat pentru a utiliza toate interfețele. O singură înregistrare pe linie.",
+      "port": "Port",
+      "portHelp": "Portul care trebuie utilizat.",
+      "removeConfirm": "Toate configurațiile EEBus vor fi eliminate. Certificate și identificatori noi vor fi generate la următoarea pornire. Ești sigur?",
+      "shipid": "SHIP-ID",
+      "shipidExplain": "Identificator permanent al dispozitivului pentru identificare în rețeaua EEBus.",
+      "shipidHelp": "Acest SHIP-ID este legat de certificatele de mai jos.",
+      "ski": "SKI",
+      "skiExplain": "Identificator unic de securitate pentru asocierea dispozitivelor EEBus.",
       "title": "EEBus"
     },
     "experimental": {
-      "description": "Activați interfața utilizatorului pentru funcții care sunt încă în curs de testare și care pot suferi modificări în versiunile viitoare.",
+      "description": "Furnizează acces timpuriu pentru funcții care sunt încă în curs de testare. Acestea pot fi instabile si pot suferi modificări sau sa fie eliminate în versiunile viitoare.",
       "title": "Experimental"
     },
     "ext": {
@@ -198,6 +225,7 @@
       "cancel": "Anulează",
       "clear": "Clar",
       "close": "Închide",
+      "confirmSave": "Există modificări nesalvate. Salvați acum?",
       "copied": "Copiată!",
       "copy": "Copiere",
       "customHelp": "Creați un dispozitiv definit de utilizator folosind sistemul de pluginuri evcc.",
@@ -207,11 +235,13 @@
       "dragHandle": "Mâner de tragere",
       "dragItem": "Draggable: {title}",
       "dragList": "Listă reordonabilă",
+      "error": "Eroare",
       "experimental": "Experimental",
       "forceSave": "Salvați oricum",
       "fromYamlHint": "Notă: Configurat prin evcc.yaml. Ștergeți intrarea din fișier pentru a activa editarea aici.",
       "hideAdvancedSettings": "Ascunde setările avansate",
       "invalidFileSelected": "Fișier invalid selectat",
+      "legacy": "vechi",
       "noFileSelected": "Nu a fost selectat niciun fișier.",
       "off": "oprit",
       "on": "pe",
@@ -257,7 +287,7 @@
     "influx": {
       "description": "Scrie datele de încărcare și alte metrici în InfluxDB. Utilizați Grafana sau alte instrumente pentru a vizualiza datele.",
       "descriptionToken": "Consultați documentația InfluxDB pentru a afla cum se creează unul. https://docs.influxdata.com/influxdb/v2/admin/",
-      "labelBucket": "Bucket",
+      "labelBucket": "Găleată",
       "labelCheckInsecure": "Permiteți certificatele autosemnate",
       "labelDatabase": "Baza de date",
       "labelInsecure": "Validarea certificatului",
@@ -303,6 +333,8 @@
       },
       "defaultModeHelpKeep": "Păstrează ultimul mod selectat.",
       "defaultModeLabel": "Mod implicit",
+      "defaultsHint": "Modul implicit, comportamentul solar și detaliile electrice utilizează valori implicite sensibile.",
+      "defaultsHintLink": "Modificați setările",
       "delete": "Șterge",
       "electricalSubtitle": "Dacă aveți dubii, adresați-vă electricianului dumneavoastră.",
       "electricalTitle": "Electric",
@@ -393,8 +425,65 @@
       "welcomeBannerTitle": "Să configurăm sistemul tău!"
     },
     "messaging": {
-      "description": "Primiți mesaje despre sesiunile dvs. de încărcare.",
+      "addMessenger": "Adăugați serviciu",
+      "description": "Primiți notificări despre sesiunile dvs. de încărcare.",
+      "event": {
+        "asleep": {
+          "messageDefault": "Eliberare încărcare, vehiculul {vehicleName} nu se încarcă.",
+          "title": "Când așteptați vehiculul",
+          "titleDefault": "Vehiculul doarme"
+        },
+        "connect": {
+          "messageDefault": "Mașină conectată la {pvPower}kW PV",
+          "title": "Când o mașină se conectează",
+          "titleDefault": "Mașină conectată"
+        },
+        "disconnect": {
+          "messageDefault": "Mașina a fost deconectată după {connectedDuration}",
+          "title": "Când o mașină se deconectează",
+          "titleDefault": "Mașină deconectată"
+        },
+        "guest": {
+          "messageDefault": "Vehicul necunoscut, oaspete conectat?",
+          "title": "Când o mașină necunoscută se conectează",
+          "titleDefault": "Vehicul necunoscut"
+        },
+        "planoverrun": {
+          "messageDefault": "{vehicleTitle}: Planul va fi depășit.",
+          "title": "Când planul de încărcare va fi depășit",
+          "titleDefault": "Plan depășit"
+        },
+        "soc": {
+          "messageDefault": "Bateria încărcată până la {vehicleSoc}%",
+          "title": "Actualizare nivel de încărcare",
+          "titleDefault": "Nivelul de încărcare a fost actualizat"
+        },
+        "start": {
+          "messageDefault": "Încărcarea a început în modul {mode}.",
+          "title": "Când începe încărcarea",
+          "titleDefault": "Încărcarea a început"
+        },
+        "stop": {
+          "messageDefault": "Încărcarea a fost finalizată cu {chargedEnergy}kWh în {chargeDuration}.",
+          "title": "Când se oprește încărcarea",
+          "titleDefault": "Încărcare finalizată"
+        }
+      },
+      "eventMessage": "Mesaj",
+      "eventTitle": "Titlu",
+      "events": "Evenimente",
+      "legacyWarning": "Nouă configurație de notificare disponibilă! Eliminați și salvați configurația aici pentru a utiliza noul proces ghidat.",
+      "messengers": "Servicii",
+      "seePlaceholders": "vezi substituenți",
       "title": "Notificări"
+    },
+    "messenger": {
+      "custom": "Serviciu definit de utilizator",
+      "generic": "Serviciu generic",
+      "primary": "Serviciu specific",
+      "template": "Serviciu",
+      "titleAdd": "Adauga serviciu",
+      "titleEdit": "Editează serviciu"
     },
     "meter": {
       "cancel": "Anulare",
@@ -489,7 +578,8 @@
       "labelHost": "Nume de gazdă mDNS",
       "labelInternalUrl": "URL intern",
       "labelPort": "Port",
-      "title": "Rețea"
+      "title": "Rețea",
+      "warningUrlPath": "De obicei, adresa URL nu necesită o cale. Ești sigur că este corectă?"
     },
     "ocpp": {
       "connectedChargers": "Încărcătoare conectate",
@@ -542,6 +632,7 @@
       "integrations": "Integrări",
       "loadpoints": "Încărcare și încălzire",
       "meter": "Energie solară și baterii",
+      "services": "Servicii",
       "system": "Sistem",
       "vehicles": "Vehicule"
     },
@@ -614,6 +705,79 @@
       "restartRequiredMessage": "Configurația a fost modificată.",
       "restartingDescription": "Vă rugăm să așteptați…",
       "restartingMessage": "Repornirea evcc."
+    },
+    "tariff": {
+      "addForecast": "Adauga prognoză",
+      "addTariff": "Adauga tafif",
+      "co2": {
+        "description": "Prognoza intensității CO₂ pentru rețeaua electrică. Pentru încărcare optimizată din punct de vedere al CO₂ și calcularea economiilor de emisii.",
+        "titleAdd": "Adauga prognoza CO₂",
+        "titleEdit": "Editează progonoza CO₂"
+      },
+      "co2Services": "Servicii CO₂",
+      "customForecast": "Prognoză definită de utilizator",
+      "customTariff": "Tarif definit de utilizator",
+      "description": "Configurați-vă tarifele și previziunile energetice. Folosiți configurația bazată pe dispozitiv pentru management dinamic sau YAML pentru setări statice.",
+      "feedIn": {
+        "description": "Compensație pentru energia electrică exportată în rețea. Folosită pentru calcularea costurilor reale de încărcare.",
+        "titleAdd": "Adauga tariful exportului in rețea",
+        "titleEdit": "Editează tariful exportului in rețea"
+      },
+      "generic": "Integrări generice",
+      "grid": {
+        "description": "Prețul energiei electrice pentru consumul din rețea. Pentru calcularea costurilor reale de încărcare și încărcarea optimizată din punct de vedere al prețului a vehiculelor, a dispozitivelor de încălzire sau încărcarea bateriei locuinței în rețea.",
+        "titleAdd": "Adaugă tariful importului din rețea",
+        "titleEdit": "Editează tariful importului din rețea"
+      },
+      "legacyWarning": "Nouă configurație tarifară disponibilă! Eliminați și salvați tarifele aici pentru a utiliza noul proces ghidat.",
+      "option": {
+        "co2": "Adaugă prognoza CO₂",
+        "feedIn": "Adauga tariful exportului in rețea",
+        "grid": "Adaugă tariful importului din rețea",
+        "planner": "Adăugați o prognoză a planificatorului",
+        "solar": "Adăugați prognoză solară"
+      },
+      "planner": {
+        "description": "Setări avansate. De obicei, nu sunt necesare, deoarece tarifele dinamice la energie electrică sau previziunile de CO₂ sunt utilizate automat. Activează o sursă de date suplimentară care este utilizată doar pentru planificarea tarifelor, nu și pentru statistici și calcule de prețuri.",
+        "titleAdd": "Adăugați prognoza Planificator",
+        "titleEdit": "Editează prognoza Planificator"
+      },
+      "services": "Servicii",
+      "solar": {
+        "description": "Prognoza producției solare pentru sistemul dumneavoastră fotovoltaic. Se afișează în interfață și va fi utilizată pentru algoritmi de optimizare în viitor.",
+        "titleAdd": "Adauga prognoză solară",
+        "titleEdit": "Editează prognoza solară"
+      },
+      "template": "Furnizor",
+      "title": "Tarife si prognoze",
+      "titleChoice": "Ce vrei să adaugi?",
+      "type": {
+        "co2": "Intensitate CO₂",
+        "feedIn": "Preț export in rețea",
+        "grid": "Preț consum din rețea",
+        "planner": "Planificator",
+        "solar": "Solar"
+      },
+      "zones": {
+        "add": "Adauga zonă",
+        "allDays": "Toate zilele",
+        "allMonths": "Toate lunile",
+        "allTimes": "Toate orele",
+        "cancel": "Anulează",
+        "days": "Zile",
+        "edit": "Editează",
+        "hours": "Ore",
+        "months": "Luni",
+        "price": "Preț",
+        "priceRequired": "Prețul este necesar",
+        "remove": "Elimină zona",
+        "save": "Salvează",
+        "selectAll": "Toate zilele",
+        "timeFrom": "Din",
+        "timeRangeError": "Ora de începere trebuie să fie anterioară orei de încheiere. Pentru a se întinde peste miezul nopții, creați două zone separate.",
+        "timeTo": "La",
+        "weekdays": "Zile lucratoare din saptamână"
+      }
     },
     "tariffs": {
       "description": "Definiți tarifele energetice pentru a calcula costurile sesiunilor de încărcare.",
@@ -738,12 +902,14 @@
   "forecast": {
     "co2": {
       "average": "Media",
+      "constant": "Intensitate CO₂",
       "lowestHour": "Ora cea mai curată",
       "range": "Gama"
     },
     "modalTitle": "Prognoză",
     "price": {
       "average": "Media",
+      "constant": "Preț",
       "lowestHour": "Cea mai ieftină oră",
       "range": "Gama"
     },
@@ -787,7 +953,7 @@
     "restart": {
       "cancel": "Anuleaza",
       "confirm": "Da, reporneste!",
-      "description": "In mod normal, restarul nu ar trebui sa fie necesar. Te rog sa trimiti un raport daca trebuie sa restartezi des EVCC.",
+      "description": "In mod normal, restartul nu ar trebui sa fie necesar. Te rog sa trimiti un raport daca trebuie sa restartezi des EVCC.",
       "disclaimer": "Nota: evcc se va inchide si se va baza pe OS sa restarteze serviciul sau.",
       "modalTitle": "Esti sigur ca vrei sa dai restart?"
     },
@@ -912,10 +1078,13 @@
       "battery": "Baterie",
       "batteryCharge": "Incarca bateria",
       "batteryDischarge": "Descărcare baterie",
-      "batteryGridChargeActive": "încărcare rețea activă",
-      "batteryGridChargeLimit": "încărcare la rețea când",
+      "batteryForecastEmpty": "gol {time}",
+      "batteryForecastFull": "plin {time}",
+      "batteryGridChargeActive": "Încărcare din rețea: activă",
+      "batteryGridChargeLimit": "Încărcare din rețea: când",
       "batteryHold": "Baterie (inchisa)",
       "batteryTooltip": "{energy} din {total} ({soc})",
+      "forecast": "Prognoză: ",
       "forecastTooltip": "prognoză: producția solară rămasă astăzi",
       "gridImport": "Folosirea rețelei",
       "homePower": "Consum",
@@ -942,6 +1111,7 @@
       "charged": "Încărcat",
       "co2": "⌀ CO₂",
       "duration": "Durata",
+      "emission": "Emisie",
       "fallbackName": "Punct de încărcare",
       "finished": "Ora de finalizare",
       "power": "Putere",
@@ -954,9 +1124,14 @@
     "loadpointSettings": {
       "batteryBoost": {
         "description": "Încărcare rapidă de la bateria de acasă până când se descarcă la {limit}.",
+        "descriptionDisabled": "Selectați o limită pentru a permite încărcarea rapidă de la bateria de acasă.",
+        "disabled": "Dezactivat",
         "label": "Îmbunătățirea bateriei",
         "mode": "Disponibil numai în modul solar și min+solar.",
-        "once": "Boost activ pentru această sesiune de încărcare."
+        "once": "Boost activ pentru această sesiune de încărcare.",
+        "stateActive": "Boost baterie activ",
+        "stateBelowLimit": "Bateria este prea descărcată pentru boost",
+        "stateReady": "Boost baterie pregatit"
       },
       "batteryUsage": "Baterie pentru uz casnic",
       "currents": "Curent încărcare",
@@ -1025,7 +1200,7 @@
       "setTargetTime": "nimic",
       "targetIsAboveLimit": "Limita configurata - {limit}, va fi ignorata in timpul incarcarii.",
       "targetIsAboveVehicleLimit": "Limita vehiculului este sub obiectivul de încărcare.",
-      "targetIsInThePast": "Alege o dată in viitor, DORELE.",
+      "targetIsInThePast": "Alege o dată in viitor, \"Dorele\".",
       "targetIsTooFarInTheFuture": "Vom ajusta planul de îndată ce vom avea mai multe informații despre viitor.",
       "title": "Timp dorit",
       "today": "astăzi",
@@ -1062,6 +1237,9 @@
     "vehicleStatus": {
       "awaitingAuthorization": "În așteptarea autorizării.",
       "batteryBoost": "Bateria activă.",
+      "batteryBoostBelowLimit": "Bateria este prea descărcată pentru boost.",
+      "batteryBoostDisabled": "Boost baterie dezactivat.",
+      "batteryBoostEnabled": "Boost până când bateria atinge {limit}.",
       "charging": "Încarcă…",
       "cheapEnergyCharging": "Energie ieftină disponibilă.",
       "cheapEnergyNextStart": "Energie ieftină în {duration}.",
@@ -1221,7 +1399,7 @@
     },
     "hiddenFeatures": {
       "label": "Experimentală",
-      "value": "Afișează caracteristici experimentale."
+      "value": "Activează caracteristici experimentale."
     },
     "language": {
       "auto": "Automat",

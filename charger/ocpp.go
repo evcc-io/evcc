@@ -195,8 +195,13 @@ func NewOCPP(ctx context.Context,
 	}
 
 	if cp.HasRemoteTriggerFeature {
-		go conn.WatchDog(ctx, 10*time.Second)
+		go conn.WatchDog(ctx, meterInterval)
 	}
+
+	// monitor for charger reboots and re-run setup (once per CP, not per connector)
+	cp.MonitorReboot(ctx, func() error {
+		return c.cp.Setup(ctx, meterValues, meterInterval, forcePowerCtrl)
+	})
 
 	return c, conn.Initialized()
 }

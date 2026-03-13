@@ -96,21 +96,6 @@
 						data-testid="add-grid"
 						@click="openModal('meter', { type: 'grid' })"
 					/>
-					<DeviceCard
-						:title="$t('config.tariffs.title')"
-						editable
-						:unconfigured="isUnconfigured(tariffTags)"
-						:error="hasClassError('tariff')"
-						data-testid="tariffs"
-						@edit="openModal('tariffs')"
-					>
-						<template #icon>
-							<shopicon-regular-receivepayment></shopicon-regular-receivepayment>
-						</template>
-						<template #tags>
-							<DeviceTags :tags="tariffTags" />
-						</template>
-					</DeviceCard>
 				</div>
 				<h2 class="my-4 mt-5">{{ $t("config.section.meter") }}</h2>
 				<div class="p-0 config-list">
@@ -164,7 +149,87 @@
 					/>
 				</div>
 
+				<h2 class="my-4 mt-5">{{ $t("config.tariff.title") }}</h2>
+				<div v-if="!!tariffsYamlSource" class="p-0 config-list">
+					<DeviceCard
+						:title="$t('config.tariff.title')"
+						:editable="tariffsYamlSource === 'db'"
+						:unconfigured="isUnconfigured(tariffTags)"
+						:error="hasClassError('tariff')"
+						:badge="tariffsYamlSource === 'db'"
+						data-testid="tariffs-legacy"
+						:currency="currency"
+						@edit="openModal('tariffsLegacy')"
+					>
+						<template #icon>
+							<shopicon-regular-receivepayment></shopicon-regular-receivepayment>
+						</template>
+						<template #tags>
+							<DeviceTags :tags="tariffTags" :currency="currency" />
+						</template>
+					</DeviceCard>
+				</div>
+				<div v-else class="p-0 config-list">
+					<TariffCard
+						v-if="gridTariff"
+						:tariff="gridTariff"
+						tariff-type="grid"
+						:has-error="hasDeviceError('tariff', gridTariff.name)"
+						:tags="deviceTags('tariff', gridTariff.name)"
+						:currency="currency"
+						@edit="openModal('tariff', { type: 'grid', id: gridTariff.id })"
+					/>
+					<TariffCard
+						v-if="feedInTariff"
+						:tariff="feedInTariff"
+						tariff-type="feedIn"
+						:has-error="hasDeviceError('tariff', feedInTariff.name)"
+						:tags="deviceTags('tariff', feedInTariff.name)"
+						:currency="currency"
+						@edit="openModal('tariff', { type: 'feedIn', id: feedInTariff.id })"
+					/>
+					<NewDeviceButton
+						v-if="possibleTariffTypes.length"
+						:title="$t('config.tariff.addTariff')"
+						@click="openModal('tariff', { choices: possibleTariffTypes })"
+					/>
+					<TariffCard
+						v-if="co2Tariff"
+						:tariff="co2Tariff"
+						tariff-type="co2"
+						:has-error="hasDeviceError('tariff', co2Tariff.name)"
+						:tags="deviceTags('tariff', co2Tariff.name)"
+						:currency="currency"
+						@edit="openModal('tariff', { type: 'co2', id: co2Tariff.id })"
+					/>
+					<TariffCard
+						v-for="tariff in solarTariffs"
+						:key="tariff.name"
+						:tariff="tariff"
+						tariff-type="solar"
+						:has-error="hasDeviceError('tariff', tariff.name)"
+						:tags="deviceTags('tariff', tariff.name)"
+						:currency="currency"
+						@edit="openModal('tariff', { type: 'solar', id: tariff.id })"
+					/>
+					<TariffCard
+						v-if="plannerTariff"
+						:tariff="plannerTariff"
+						tariff-type="planner"
+						:has-error="hasDeviceError('tariff', plannerTariff.name)"
+						:tags="deviceTags('tariff', plannerTariff.name)"
+						:currency="currency"
+						@edit="openModal('tariff', { type: 'planner', id: plannerTariff.id })"
+					/>
+					<NewDeviceButton
+						v-if="possibleForecastTypes.length"
+						:title="$t('config.tariff.addForecast')"
+						@click="openModal('tariff', { choices: possibleForecastTypes })"
+					/>
+				</div>
+
 				<h2 class="my-4 mt-5">{{ $t("config.section.integrations") }}</h2>
+
 				<div class="p-0 config-list">
 					<AuthProvidersCard
 						:providers="authProviders"
@@ -215,28 +280,17 @@
 						:title="`${$t('config.circuits.title')}`"
 						editable
 						:error="hasClassError('circuit')"
-						:unconfigured="circuitsSorted.length === 0"
+						:unconfigured="!circuitsRoot"
 						data-testid="circuits"
 						@edit="openModal('circuits')"
 					>
 						<template #icon><CircuitsIcon /></template>
 						<template #tags>
 							<DeviceTags
-								v-if="circuitsSorted.length == 0"
+								v-if="!circuitsRoot"
 								:tags="{ configured: { value: false } }"
 							/>
-							<template
-								v-for="(circuit, idx) in circuitsSorted"
-								v-else
-								:key="circuit.name"
-							>
-								<hr v-if="idx > 0" />
-								<p class="my-2 fw-bold">
-									{{ circuit.config?.title }}
-									<code>({{ circuit.name }})</code>
-								</p>
-								<DeviceTags :tags="circuitTags(circuit)" />
-							</template>
+							<CircuitTags v-else :nodes="[circuitsRoot]" />
 						</template>
 					</DeviceCard>
 					<DeviceCard
@@ -329,6 +383,7 @@
 					:circuits="circuits"
 					:hasDeviceError="hasDeviceError"
 					@changed="loadpointChanged"
+					@dismissed="loadpointDismissed"
 				/>
 				<VehicleModal :is-sponsor="isSponsor" @vehicle-changed="vehicleChanged" />
 				<MeterModal :is-sponsor="isSponsor" @changed="meterChanged" />
@@ -342,7 +397,8 @@
 				<MessagingLegacyModal @changed="loadDirty" />
 				<MessagingModal :messengers="messengers" @changed="loadDirty" />
 				<MessengerModal @changed="messengerChanged" />
-				<TariffsModal @changed="loadDirty" />
+				<TariffsLegacyModal @changed="loadDirty" />
+				<TariffModal :currency="currency" @changed="tariffChanged" />
 				<TelemetryModal :sponsor="sponsor" :telemetry="telemetry" />
 				<ExperimentalModal :experimental="experimental" />
 				<TitleModal @changed="loadDirty" />
@@ -372,6 +428,7 @@ import api from "../api";
 import ChargerModal from "../components/Config/ChargerModal.vue";
 import CircuitsIcon from "../components/MaterialIcon/Circuits.vue";
 import CircuitsModal from "../components/Config/CircuitsModal.vue";
+import CircuitTags from "../components/Config/CircuitTags.vue";
 import collector from "../mixins/collector";
 import ControlModal from "../components/Config/ControlModal.vue";
 import DeviceCard from "../components/Config/DeviceCard.vue";
@@ -391,6 +448,8 @@ import InfluxModal from "../components/Config/InfluxModal.vue";
 import LoadpointModal from "../components/Config/LoadpointModal.vue";
 import LoadpointIcon from "../components/MaterialIcon/Loadpoint.vue";
 import MessagingModal from "../components/Config/Messaging/MessagingModal.vue";
+import MessengerModal from "@/components/Config/Messaging/MessengerModal.vue";
+import MessagingLegacyModal from "@/components/Config/Messaging/MessagingLegacyModal.vue";
 import MeterModal from "../components/Config/MeterModal.vue";
 import MeterCard from "../components/Config/MeterCard.vue";
 import { openModal, type ModalResult } from "@/configModal";
@@ -403,7 +462,9 @@ import NotificationIcon from "../components/MaterialIcon/Notification.vue";
 import restart, { performRestart } from "../restart";
 import SponsorModal from "../components/Config/SponsorModal.vue";
 import store from "../store";
-import TariffsModal from "../components/Config/TariffsModal.vue";
+import TariffsLegacyModal from "../components/Config/TariffsLegacyModal.vue";
+import TariffCard from "../components/Config/TariffCard.vue";
+import TariffModal from "../components/Config/TariffModal.vue";
 import TelemetryModal from "../components/Config/TelemetryModal.vue";
 import ExperimentalModal from "../components/Config/ExperimentalModal.vue";
 import TitleModal from "../components/Config/TitleModal.vue";
@@ -412,20 +473,22 @@ import VehicleIcon from "../components/VehicleIcon";
 import VehicleModal from "../components/Config/VehicleModal.vue";
 import { defineComponent, type PropType } from "vue";
 import type {
-	Circuit,
 	ConfigCharger,
 	ConfigVehicle,
 	ConfigCircuit,
+	ConfigMessenger,
 	ConfigLoadpoint,
 	ConfigMeter,
 	Timeout,
 	VehicleOption,
 	MeterType,
+	TariffType,
 	SiteConfig,
 	DeviceType,
 	Notification,
-	ConfigMessenger,
 } from "@/types/evcc";
+import { CURRENCY, GRID_CONTROL } from "@/types/evcc";
+import { circuitTree } from "@/utils/circuits";
 
 type DeviceValuesMap = Record<DeviceType, Record<string, any>>;
 
@@ -439,8 +502,6 @@ import WelcomeBanner from "../components/Config/WelcomeBanner.vue";
 import AuthSuccessBanner from "../components/Config/AuthSuccessBanner.vue";
 import PasswordModal from "../components/Auth/PasswordModal.vue";
 import AuthProvidersCard from "../components/Config/AuthProvidersCard.vue";
-import MessengerModal from "@/components/Config/Messaging/MessengerModal.vue";
-import MessagingLegacyModal from "@/components/Config/Messaging/MessagingLegacyModal.vue";
 
 export default defineComponent({
 	name: "Config",
@@ -450,6 +511,7 @@ export default defineComponent({
 		ChargerModal,
 		CircuitsIcon,
 		CircuitsModal,
+		CircuitTags,
 		ControlModal,
 		DeviceCard,
 		DeviceTags,
@@ -478,7 +540,9 @@ export default defineComponent({
 		NetworkModal,
 		NotificationIcon,
 		SponsorModal,
-		TariffsModal,
+		TariffsLegacyModal,
+		TariffCard,
+		TariffModal,
 		TelemetryModal,
 		ExperimentalModal,
 		TitleModal,
@@ -503,6 +567,14 @@ export default defineComponent({
 			loadpoints: [] as ConfigLoadpoint[],
 			chargers: [] as ConfigCharger[],
 			circuits: [] as ConfigCircuit[],
+			tariffs: [] as any[], // ConfigTariff[] - tariff device entities
+			tariffRefs: {
+				grid: "",
+				feedIn: "",
+				co2: "",
+				planner: "",
+				solar: [] as string[],
+			},
 			site: {
 				grid: "",
 				pv: [] as string[],
@@ -517,6 +589,8 @@ export default defineComponent({
 				vehicle: {},
 				charger: {},
 				loadpoint: {},
+				messenger: {},
+				tariff: {},
 			} as DeviceValuesMap,
 			isComponentMounted: true,
 			isPageVisible: true,
@@ -526,9 +600,6 @@ export default defineComponent({
 		return { title: this.$t("config.main.title") };
 	},
 	computed: {
-		messagingConfigured() {
-			return store.state.messaging;
-		},
 		callbackCompleted() {
 			return this.$route.query["callbackCompleted"] as string | undefined;
 		},
@@ -540,6 +611,9 @@ export default defineComponent({
 		},
 		setupRequired() {
 			return store.state?.setupRequired;
+		},
+		currency(): CURRENCY {
+			return store.state?.currency ?? CURRENCY.EUR;
 		},
 		siteTitle() {
 			return this.site?.title;
@@ -564,8 +638,41 @@ export default defineComponent({
 			const names = this.site?.ext;
 			return this.getMetersByNames(names);
 		},
+		gridTariff() {
+			const name = this.tariffRefs?.grid;
+			return name ? this.tariffs.find((t) => t.name === name) : null;
+		},
+		feedInTariff() {
+			const name = this.tariffRefs?.feedIn;
+			return name ? this.tariffs.find((t) => t.name === name) : null;
+		},
+		co2Tariff() {
+			const name = this.tariffRefs?.co2;
+			return name ? this.tariffs.find((t) => t.name === name) : null;
+		},
+		plannerTariff() {
+			const name = this.tariffRefs?.planner;
+			return name ? this.tariffs.find((t) => t.name === name) : null;
+		},
+		solarTariffs() {
+			const names = this.tariffRefs?.solar || [];
+			return names.map((name) => this.tariffs.find((t) => t.name === name)).filter(Boolean);
+		},
+		possibleTariffTypes(): TariffType[] {
+			const types: TariffType[] = [];
+			if (!this.gridTariff) types.push("grid");
+			if (!this.feedInTariff) types.push("feedIn");
+			return types;
+		},
+		possibleForecastTypes(): TariffType[] {
+			const types: TariffType[] = [];
+			if (!this.co2Tariff) types.push("co2");
+			types.push("solar"); // Solar can have multiple
+			if (!this.plannerTariff) types.push("planner");
+			return types;
+		},
 		tariffTags(): DeviceTags {
-			const { currency, tariffGrid, tariffFeedIn, tariffCo2, tariffSolar } = store.state;
+			const { tariffGrid, tariffFeedIn, tariffCo2, tariffSolar } = store.state;
 			if (
 				tariffGrid === undefined &&
 				tariffFeedIn === undefined &&
@@ -575,20 +682,16 @@ export default defineComponent({
 				return { configured: { value: false } };
 			}
 			const tags = {
-				currency: {},
 				gridPrice: {},
 				feedinPrice: {},
 				co2: {},
 				solarForecast: {},
 			};
-			if (currency) {
-				tags.currency = { value: currency };
-			}
 			if (tariffGrid) {
-				tags.gridPrice = { value: tariffGrid, options: { currency } };
+				tags.gridPrice = { value: tariffGrid };
 			}
 			if (tariffFeedIn) {
-				tags.feedinPrice = { value: tariffFeedIn * -1, options: { currency } };
+				tags.feedinPrice = { value: tariffFeedIn * -1 };
 			}
 			if (tariffCo2) {
 				tags.co2 = { value: tariffCo2 };
@@ -632,9 +735,9 @@ export default defineComponent({
 			if (["relay", "eebus"].includes(type)) {
 				result.hemsType = { value: type };
 			}
-			const lpc = store.state?.circuits?.["lpc"];
-			if (lpc) {
-				const value = lpc.maxPower || null;
+			const gc = store.state?.circuits?.[GRID_CONTROL];
+			if (gc) {
+				const value = gc.maxPower || null;
 				result.hemsActiveLimit = { value };
 			}
 
@@ -668,26 +771,13 @@ export default defineComponent({
 		messagingTags(): DeviceTags {
 			if (this.messagingUiConfigured) {
 				const events = store.state?.messagingEvents || [];
-				const enabledEvents = Object.values(events).filter((e) => !e.disabled).length;
-
+				const enabledEvents = Object.values(events).filter((e: any) => !e.disabled).length;
 				return {
 					events: { value: enabledEvents },
 					messengers: { value: this.messengers.length },
 				};
 			}
-
 			return { configured: { value: this.messagingYamlConfigured } };
-		},
-		backupRestoreProps() {
-			return {
-				authDisabled: store.state?.authDisabled || false,
-			};
-		},
-		circuitsSorted() {
-			const sortedNames = Object.keys(store.state?.circuits || {});
-			return [...this.circuits].sort(
-				(a, b) => sortedNames.indexOf(a.name) - sortedNames.indexOf(b.name)
-			);
 		},
 		messagingYamlSource() {
 			return store.state.messaging?.yamlSource;
@@ -700,6 +790,26 @@ export default defineComponent({
 				this.messengers.length > 0 ||
 				Object.values(store.state.messagingEvents ?? {}).some((e) => !e.disabled)
 			);
+		},
+		backupRestoreProps() {
+			return {
+				authDisabled: store.state?.authDisabled || false,
+			};
+		},
+		circuitsRoot() {
+			return circuitTree(store.state?.circuits || {});
+		},
+		tariffsYamlSource() {
+			return store.state?.tariffs?.yamlSource;
+		},
+		tariffsUiVisible() {
+			return this.tariffsYamlSource === undefined;
+		},
+		tariffsYamlVisible() {
+			return !this.tariffsUiVisible;
+		},
+		tariffsYamlDisabled() {
+			return this.tariffsYamlSource === "file";
 		},
 	},
 	watch: {
@@ -735,13 +845,15 @@ export default defineComponent({
 			}
 		},
 		async loadAll() {
-			await this.loadMessengers();
 			await this.loadVehicles();
 			await this.loadMeters();
 			await this.loadSite();
 			await this.loadChargers();
 			await this.loadLoadpoints();
 			await this.loadCircuits();
+			await this.loadMessengers();
+			await this.loadTariffs();
+			await this.loadTariffRefs();
 			await this.loadDirty();
 			this.updateValues();
 		},
@@ -770,14 +882,26 @@ export default defineComponent({
 		},
 		async loadCircuits() {
 			const circuits = (await this.loadConfig("devices/circuit")) || [];
-			// set lpc default title
+			// set gridcontrol default title
 			circuits.forEach((c: ConfigCircuit) => {
-				if (c.name === "lpc" && !c.config?.title) {
+				if (c.name === GRID_CONTROL && !c.config?.title) {
 					c.config = c.config || {};
 					c.config.title = this.$t("config.hems.title");
 				}
 			});
 			this.circuits = circuits;
+		},
+		async loadTariffs() {
+			this.tariffs = (await this.loadConfig("devices/tariff")) || [];
+		},
+		async loadTariffRefs() {
+			const response = await api.get("/config/tariff", {
+				validateStatus: (code: number) => [200, 404].includes(code),
+			});
+			if (response.status === 200) {
+				this.tariffRefs = response.data;
+				if (!this.tariffRefs.solar) this.tariffRefs.solar = [];
+			}
 		},
 		async loadSite() {
 			const data = await this.loadConfig("site");
@@ -834,6 +958,8 @@ export default defineComponent({
 			if (result.action === "removed") {
 				await this.loadSite();
 			}
+
+			// Reload meters and update UI
 			await this.loadMeters();
 			await this.loadDirty();
 			this.updateValues();
@@ -847,9 +973,33 @@ export default defineComponent({
 			await this.loadLoadpoints();
 			this.loadDirty();
 		},
+		async loadpointDismissed() {
+			await this.loadChargers();
+			await this.loadMeters();
+			this.updateValues();
+		},
 		vehicleChanged() {
 			this.loadVehicles();
 			this.loadDirty();
+		},
+		async tariffChanged(result: ModalResult) {
+			if (result.action === "added") {
+				const usage = result.type as TariffType;
+				const name = result.name!;
+				if (usage === "solar") {
+					this.tariffRefs.solar.push(name);
+				} else {
+					this.tariffRefs[usage] = name;
+				}
+				await api.put("/config/tariff", this.tariffRefs);
+			}
+			if (result.action === "removed") {
+				await this.loadTariffRefs();
+			}
+			await this.loadTariffs();
+			await this.loadTariffRefs();
+			await this.loadDirty();
+			this.updateValues();
 		},
 		openMessagingModal() {
 			const modalName = this.messagingYamlSource === "db" ? "messaginglegacy" : "messaging";
@@ -896,9 +1046,9 @@ export default defineComponent({
 			if (!this.offline) {
 				const devices = {
 					meter: this.meters,
-					messenger: this.messengers,
 					vehicle: this.vehicles,
 					charger: this.chargers,
+					tariff: this.tariffs,
 				} as Record<DeviceType, any[]>;
 				for (const type in devices) {
 					for (const device of devices[type as DeviceType]) {
@@ -924,28 +1074,6 @@ export default defineComponent({
 			return { ...chargerTags, ...meterTags };
 		},
 		openModal,
-		circuitTags(circuit: ConfigCircuit) {
-			const circuits = store.state?.circuits || {};
-			const data =
-				(circuits[circuit.name] as Circuit | undefined) || ({} as Partial<Circuit>);
-			const result: Record<string, object> = {};
-			const p = data.power || 0;
-			if (data.maxPower) {
-				result["powerRange"] = {
-					value: [p, data.maxPower],
-					warning: data.power && data.power >= data.maxPower,
-				};
-			} else {
-				result["power"] = { value: p, muted: true };
-			}
-			if (data.maxCurrent) {
-				result["currentRange"] = {
-					value: [data.current || 0, data.maxCurrent],
-					warning: data.current && data.current >= data.maxCurrent,
-				};
-			}
-			return result;
-		},
 		hasDeviceError(type: DeviceType, name?: string) {
 			if (!name) return false;
 			const fatals = store.state?.fatal || [];
@@ -965,7 +1093,7 @@ export default defineComponent({
 			header?.requestAuthProvider(providerId);
 		},
 	},
-});
+}) as any;
 </script>
 <style scoped>
 .config-list {

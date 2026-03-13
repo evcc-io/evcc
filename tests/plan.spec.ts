@@ -18,10 +18,10 @@ test.afterEach(async () => {
   await stop();
 });
 
-function getWeekday(offset = 1) {
+function getWeekday(offset = 1, style: "long" | "short" = "long") {
   const date = new Date();
   date.setDate(date.getDate() + offset);
-  return date.toLocaleDateString("en-US", { weekday: "long" });
+  return date.toLocaleDateString("en-US", { weekday: style });
 }
 
 async function setAndVerifyPlan(
@@ -85,16 +85,19 @@ test.describe("basic functionality", async () => {
     await page.getByTestId("static-plan-active").click();
     await page.getByRole("button", { name: "Close" }).click();
 
+    const tomorrowShort = getWeekday(1, "short");
     await expect(lp1.getByTestId("plan-marker")).toBeVisible();
     await expect(lp1.getByTestId("charging-plan").getByRole("button")).toHaveText(
-      ["tomorrow 09:30", "80%"].join("")
+      [`${tomorrowShort} 09:30`, "80%"].join("")
     );
 
     await expect(lp1.getByTestId("vehicle-status-charger")).toHaveText("Connected.");
-    await expect(lp1.getByTestId("vehicle-status-planstart")).toHaveText(/tomorrow .*/);
+    await expect(lp1.getByTestId("vehicle-status-planstart")).toHaveText(
+      new RegExp(`${tomorrowShort} .*`)
+    );
     await expect(lp1.getByTestId("plan-marker")).toBeVisible();
     await expect(lp1.getByTestId("charging-plan").getByRole("button")).toHaveText(
-      ["tomorrow 09:30", "80%"].join("")
+      [`${tomorrowShort} 09:30`, "80%"].join("")
     );
     await lp1.getByTestId("charging-plan").getByRole("button").click();
     await expect(page.getByTestId("static-plan-soc")).toHaveValue("80");
@@ -633,6 +636,7 @@ test.describe("repeating", async () => {
     await page.goto("/");
 
     const tomorrow = getWeekday(1);
+    const tomorrowShort = getWeekday(1, "short");
 
     let lp1 = await page.getByTestId("loadpoint").first();
     await lp1
@@ -658,7 +662,7 @@ test.describe("repeating", async () => {
     await expect(modal.getByTestId("target-text")).toContainText("09:20");
     await modal.getByRole("button", { name: "Close" }).click();
     await expect(
-      lp1.getByTestId("charging-plan").getByRole("button", { name: "tomorrow 09:20" })
+      lp1.getByTestId("charging-plan").getByRole("button", { name: `${tomorrowShort} 09:20` })
     ).toBeVisible();
 
     await restart(CONFIG);
@@ -670,7 +674,10 @@ test.describe("repeating", async () => {
       .locator("select")
       .selectOption("Vehicle with SoC with Capacity");
 
-    await lp1.getByTestId("charging-plan").getByRole("button", { name: "tomorrow 09:20" }).click();
+    await lp1
+      .getByTestId("charging-plan")
+      .getByRole("button", { name: `${tomorrowShort} 09:20` })
+      .click();
     await expect(modal.getByTestId("plan-entry")).toHaveCount(2);
     await expect(modal.getByTestId("plan-preview-title")).toHaveText("Next plan #2");
     await expect(modal.getByTestId("target-text")).toContainText("09:20");
