@@ -1,13 +1,9 @@
 template: static
 products:
   - description:
-      en: Static
-      de: Statischer
+      en: Static circuit
+      de: Statischer Stromkreis
 params:
-  - name: name
-    description:
-      de: Externe Leistung
-      en: External power
   - name: title
     required: true
     example: Main circuit
