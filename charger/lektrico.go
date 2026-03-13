@@ -270,7 +270,7 @@ func (l *Lektrico) Enabled() (bool, error) {
 	return info.DynamicCurrent >= 6, nil
 }
 
-// Enable implements api.Charger - enables or suspends charging via dynamic_current
+// Enable implements api.Charger - enables or suspends charging via dynamic_current and user_current
 func (l *Lektrico) Enable(enable bool) error {
 	var value int64
 	if enable {
@@ -283,8 +283,14 @@ func (l *Lektrico) Enable(enable bool) error {
 		value = 0
 		l.log.DEBUG.Printf("Disable -> dynamic_current=0 (pause)")
 	}
-	return l.post("dynamic_current.set", map[string]any{
+	if err := l.post("dynamic_current.set", map[string]any{
 		"dynamic_current": value,
+	}); err != nil {
+		return err
+	}
+	return l.post("app_config.set", map[string]any{
+		"config_key":   "user_current",
+		"config_value": value,
 	})
 }
 
@@ -301,8 +307,14 @@ func (l *Lektrico) MaxCurrent(current int64) error {
 		value = 0 // below IEC minimum -> pause
 	}
 	l.log.DEBUG.Printf("MaxCurrent -> dynamic_current=%dA", value)
-	return l.post("dynamic_current.set", map[string]any{
+	if err := l.post("dynamic_current.set", map[string]any{
 		"dynamic_current": value,
+	}); err != nil {
+		return err
+	}
+	return l.post("app_config.set", map[string]any{
+		"config_key":   "user_current",
+		"config_value": value,
 	})
 }
 
