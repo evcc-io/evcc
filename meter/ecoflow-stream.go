@@ -14,6 +14,7 @@ import (
 
 // EcoFlowStream represents the EcoFlow Stream meter
 type EcoFlowStream struct {
+	ctx          context.Context
 	usage        string
 	accessKey    string
 	secretKey    string
@@ -24,11 +25,11 @@ type EcoFlowStream struct {
 }
 
 func init() {
-	registry.Add("ecoflow-stream", NewEcoFlowStreamFromConfig)
+	registry.AddCtx("ecoflow-stream", NewEcoFlowStreamFromConfig)
 }
 
 // NewEcoFlowStreamFromConfig creates an EcoFlow Stream meter from generic config
-func NewEcoFlowStreamFromConfig(other map[string]any) (api.Meter, error) {
+func NewEcoFlowStreamFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	cc := struct {
 		AccessKey    string
 		SecretKey    string
@@ -55,7 +56,7 @@ func NewEcoFlowStreamFromConfig(other map[string]any) (api.Meter, error) {
 		return nil, errors.New("missing usage")
 	}
 
-	m, err := NewEcoFlowStream(cc.AccessKey, cc.SecretKey, cc.SerialNumber, cc.Usage, cc.Cache)
+	m, err := NewEcoFlowStream(ctx, cc.AccessKey, cc.SecretKey, cc.SerialNumber, cc.Usage, cc.Cache)
 	if err != nil {
 		return nil, err
 	}
@@ -68,9 +69,10 @@ func NewEcoFlowStreamFromConfig(other map[string]any) (api.Meter, error) {
 }
 
 // NewEcoFlowStream constructs the EcoFlowStream struct
-func NewEcoFlowStream(accessKey, secretKey, serialNumber, usage string, cache time.Duration) (*EcoFlowStream, error) {
+func NewEcoFlowStream(ctx context.Context, accessKey, secretKey, serialNumber, usage string, cache time.Duration) (*EcoFlowStream, error) {
 	client := ecoflow.NewEcoflowClient(accessKey, secretKey)
 	m := &EcoFlowStream{
+		ctx:          ctx,
 		accessKey:    accessKey,
 		secretKey:    secretKey,
 		serialNumber: serialNumber,
@@ -84,9 +86,6 @@ func NewEcoFlowStream(accessKey, secretKey, serialNumber, usage string, cache ti
 
 // getData retrieves device parameters from EcoFlow API
 func (m *EcoFlowStream) getData() (*ecoflow.GetCmdResponse, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-
 	var params []string
 	switch m.usage {
 	case "grid":
@@ -97,14 +96,14 @@ func (m *EcoFlowStream) getData() (*ecoflow.GetCmdResponse, error) {
 		params = []string{"powGetBpCms", "cmsBattSoc"}
 	}
 
-	return m.client.GetDeviceParameters(ctx, m.serialNumber, params)
+	return m.client.GetDeviceParameters(m.ctx, m.serialNumber, params)
 }
 
 var _ api.Meter = (*EcoFlowStream)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (m *EcoFlowStream) CurrentPower() (float64, error) {
-	response, err := m.dataG()
+	res, err := m.dataG()
 	if err != nil {
 		return 0, err
 	}
@@ -115,11 +114,11 @@ func (m *EcoFlowStream) CurrentPower() (float64, error) {
 	// cmsBattSoc responds with int
 	switch m.usage {
 	case "grid":
-		return extractFloat(response.Data, "powGetSysGrid")
+		return extractFloat(res.Data, "powGetSysGrid")
 	case "pv":
-		return extractFloat(response.Data, "powGetPvSum")
+		return extractFloat(res.Data, "powGetPvSum")
 	case "battery":
-		pwr, err := extractFloat(response.Data, "powGetBpCms")
+		pwr, err := extractFloat(res.Data, "powGetBpCms")
 		if err != nil {
 			return 0, err
 		}
@@ -136,14 +135,14 @@ type EcoFlowStreamBattery struct {
 
 // Soc implements the api.Battery interface for battery usage
 func (m *EcoFlowStreamBattery) Soc() (float64, error) {
-	response, err := m.dataG()
+	res, err := m.dataG()
 	if err != nil {
 		return 0, err
 	}
 
 	// Access the data from the GetCmdResponse
-	if response.Data != nil {
-		if soc, ok := response.Data["cmsBattSoc"]; ok {
+	if res.Data != nil {
+		if soc, ok := res.Data["cmsBattSoc"]; ok {
 			return cast.ToFloat64E(soc)
 		}
 	}
