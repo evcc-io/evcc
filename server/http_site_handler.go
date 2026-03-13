@@ -45,7 +45,8 @@ func getPreferredLanguage(header string) string {
 func indexHandler(customCss bool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=UTF-8")
-		w.Header().Set("Cache-Control", "no-cache")
+		w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+		w.Header().Set("Pragma", "no-cache")
 
 		indexTemplate, err := fs.ReadFile(assets.Web, "index.html")
 		if err != nil {
