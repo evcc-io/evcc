@@ -637,6 +637,7 @@ func (site *Site) updateBatteryMeters() {
 
 	var maxDischargePower float64
 	for _, m := range mm {
+		// only consider max discharge power if all battery meters provide it, otherwise ignore
 		if m.MaxDischargePower == nil {
 			maxDischargePower = 0
 			break
