@@ -1426,10 +1426,6 @@ func (lp *Loadpoint) boostPower(batteryBoostPower float64) float64 {
 	if boost == boostStart {
 		delta = lp.EffectiveMaxPower()
 
-		if maxDischargePower > 0 {
-			delta = min(delta, maxDischargePower)
-		}
-
 		// expire timers
 		if lp.hasPhaseSwitching() {
 			lp.phaseTimer = elapsed
