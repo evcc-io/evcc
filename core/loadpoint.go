@@ -1454,6 +1454,8 @@ func (lp *Loadpoint) boostPower(batteryBoostPower float64) float64 {
 		return 0
 	}
 
+	maxDischargePower := lp.site.GetBatteryMaxDischargePower()
+
 	// push demand to drain battery (at least 100W)
 	delta := math.Max(100, math.Abs(lp.site.GetResidualPower()))
 
@@ -1469,6 +1471,10 @@ func (lp *Loadpoint) boostPower(batteryBoostPower float64) float64 {
 	if boost == boostStart {
 		delta = lp.EffectiveMaxPower()
 
+		if maxDischargePower > 0 {
+			delta = min(delta, maxDischargePower)
+		}
+
 		// expire timers
 		if lp.hasPhaseSwitching() {
 			lp.phaseTimer = elapsed
@@ -1478,6 +1484,11 @@ func (lp *Loadpoint) boostPower(batteryBoostPower float64) float64 {
 		if lp.charging() {
 			lp.setBatteryBoost(boostContinue)
 		}
+	}
+
+	if maxDischargePower > 0 {
+		// limit delta to what the battery can still provide
+		delta = min(delta, max(0, maxDischargePower-batteryBoostPower))
 	}
 
 	res := batteryBoostPower + delta + lp.site.GetResidualPower()

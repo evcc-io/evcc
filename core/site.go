@@ -626,8 +626,22 @@ func (site *Site) updateBatteryMeters() {
 			}
 		}
 
+		if m, ok := meter.(api.BatteryPowerLimiter); ok {
+			_, discharge := m.GetPowerLimits()
+			mm[i].MaxDischargePower = &discharge
+		}
+
 		_, controllable := meter.(api.BatteryController)
 		mm[i].Controllable = new(controllable)
+	}
+
+	var maxDischargePower float64
+	for _, m := range mm {
+		if m.MaxDischargePower == nil {
+			maxDischargePower = 0
+			break
+		}
+		maxDischargePower += *m.MaxDischargePower
 	}
 
 	batterySocAcc := lo.SumBy(mm, func(m types.Measurement) float64 {
@@ -653,6 +667,7 @@ func (site *Site) updateBatteryMeters() {
 	}
 	site.battery.Soc = batterySocAcc / totalCapacity
 	site.battery.Capacity = totalCapacity
+	site.battery.MaxDischargePower = maxDischargePower
 
 	site.battery.Power = lo.SumBy(mm, func(m types.Measurement) float64 {
 		return m.Power
@@ -669,6 +684,7 @@ func (site *Site) updateBatteryMeters() {
 	site.battery.Devices = mm
 
 	site.publish(keys.Battery, site.battery)
+	site.publish(keys.BatteryMaxDischargePower, site.battery.MaxDischargePower)
 }
 
 // updateAuxMeters updates aux meters
