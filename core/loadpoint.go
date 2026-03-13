@@ -1280,21 +1280,66 @@ func (lp *Loadpoint) scalePhases(phases int) error {
 
 // fastCharging scales to 3p if available and sets maximum current
 func (lp *Loadpoint) fastCharging() error {
-	if lp.hasPhaseSwitching() {
-		phases := 3
+	if !lp.hasPhaseSwitching() || !lp.phaseSwitchCompleted() {
+		return lp.setLimit(lp.effectiveMaxCurrent())
+	}
 
-		// load management limit active
-		if lp.circuit != nil {
-			minPower3p := currentToPower(lp.effectiveMinCurrent(), 3)
-			if powerLimit := lp.circuit.ValidatePower(lp.chargePower, minPower3p); powerLimit < minPower3p {
-				phases = 1
-				lp.log.DEBUG.Printf("fast charging: scaled to 1p to match %.0fW available circuit power", powerLimit)
-			}
+	phases := 3
+	minPower3p := currentToPower(lp.effectiveMinCurrent(), 3)
+	powerLimit := minPower3p
+
+	// load management limit active
+	if lp.circuit != nil {
+		powerLimit = lp.circuit.ValidatePower(lp.chargePower, currentToPower(lp.effectiveMaxCurrent(), 3))
+		if powerLimit < minPower3p {
+			phases = 1
 		}
+	}
 
-		if err := lp.scalePhasesIfAvailable(phases); err != nil {
+	if lp.phasesConfigured != 0 {
+		phases = lp.phasesConfigured
+	}
+
+	activePhases := lp.ActivePhases()
+
+	// scale down: immediate
+	if phases == 1 && activePhases == 3 {
+		lp.log.DEBUG.Printf("fast charging: scaled to 1p to match %.0fW available circuit power", powerLimit)
+		if err := lp.scalePhases(1); err != nil {
 			return err
 		}
+	}
+
+	// scale up: buffered and delayed
+	var waiting bool
+	if phases == 3 && activePhases == 1 {
+		const buffer = 500.0 // Watts
+		if lp.circuit != nil && powerLimit < minPower3p+buffer && lp.phasesConfigured != 3 {
+			lp.log.DEBUG.Printf("fast charging: staying at 1p (buffer), power limit %.0fW < %.0fW threshold", powerLimit, minPower3p+buffer)
+		} else {
+			if lp.circuit == nil || !lp.charging() { // scale immediately if no circuit or not charging
+				lp.phaseTimer = elapsed
+			}
+
+			if lp.phaseTimer.IsZero() {
+				lp.log.DEBUG.Printf("fast charging: start phase %s timer", phaseScale3p)
+				lp.phaseTimer = lp.clock.Now()
+			}
+
+			lp.publishTimer(phaseTimer, lp.GetEnableDelay(), phaseScale3p)
+
+			if lp.clock.Since(lp.phaseTimer) >= lp.GetEnableDelay() {
+				if err := lp.scalePhases(3); err != nil {
+					lp.log.ERROR.Println(err)
+				}
+			} else {
+				waiting = true
+			}
+		}
+	}
+
+	if !waiting {
+		lp.resetPhaseTimer()
 	}
 
 	return lp.setLimit(lp.effectiveMaxCurrent())
@@ -2006,7 +2051,6 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 	// minimum or target charging
 	case lp.minSocNotReached() || plannerActive:
 		err = lp.fastCharging()
-		lp.resetPhaseTimer()
 		lp.elapsePVTimer() // let PV mode disable immediately afterwards
 
 	case lp.LimitEnergyReached():
@@ -2027,7 +2071,6 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 			rate, _ := consumption.At(time.Now())
 			lp.log.DEBUG.Printf("smart consumption active: %.2f", rate.Value)
 			err = lp.fastCharging()
-			lp.resetPhaseTimer()
 			lp.elapsePVTimer() // let PV mode disable immediately afterwards
 			break
 		}
