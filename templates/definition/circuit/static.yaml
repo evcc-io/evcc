@@ -15,9 +15,14 @@ params:
   - name: maxpower
   - name: meter
     # service: TODO
+  - name: parent
+    description:
+      de: Übergeordneter Stromkreis
+      en: Parent circuit
 render: |
   type: static
   title: {{ .title }}
   maxCurrent: {{ .maxcurrent }}
   maxPower: {{ .maxpower }}
   meter: {{ .meter }}
+  parent: {{ .parent }}
