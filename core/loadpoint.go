@@ -1306,7 +1306,7 @@ func (lp *Loadpoint) fastCharging() error {
 	if phases == 1 && activePhases == 3 {
 		lp.log.DEBUG.Printf("fast charging: scaled to 1p to match %.0fW available circuit power", powerLimit)
 		if err := lp.scalePhases(1); err != nil {
-			return err
+			lp.log.ERROR.Println(err)
 		}
 	}
 
