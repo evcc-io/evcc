@@ -180,10 +180,17 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	}
 
 	if site.circuit != nil {
-		if pMaxImp := site.circuit.GetMaxPower(); pMaxImp > 0 {
+		pMaxPower := site.circuit.GetMaxPower()
+		pMaxFromCurrent := site.circuit.GetMaxCurrent() * site.Voltage * 3
+
+		// soft limit pMaxImp (monthly peak) defaults to current-derived if not set, and vice versa
+		pMaxImp := lo.CoalesceOrEmpty(pMaxPower, pMaxFromCurrent)
+		pMaxAbsImp := lo.CoalesceOrEmpty(pMaxFromCurrent, pMaxPower)
+
+		if pMaxImp > 0 {
 			req.Grid = optimizer.GridConfig{
-				// hard grid import limit if no price penalty is set by PrcPExcImp
-				PMaxImp: float32(pMaxImp),
+				PMaxImp:    float32(pMaxImp),
+				PMaxAbsImp: float32(pMaxAbsImp),
 			}
 		}
 	}
