@@ -1,5 +1,8 @@
 <template>
-	<nav class="bottom-tab-bar d-flex position-fixed start-0 end-0 bottom-0">
+	<nav
+		class="bottom-tab-bar d-flex position-fixed start-0 end-0 bottom-0"
+		:class="{ 'bottom-tab-bar--hidden': hidden }"
+	>
 		<div class="container d-flex align-items-stretch px-0">
 			<Item to="/" :label="$t('tabBar.charge')" exact>
 				<shopicon-regular-lightning class="tab-icon"></shopicon-regular-lightning>
@@ -62,9 +65,14 @@ export default defineComponent({
 		sponsor: { type: Object as PropType<Sponsor>, default: () => ({}) },
 		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
 		experimental: Boolean,
+		offline: Boolean,
+		startupCompleted: Boolean,
 		evopt: { type: Object as PropType<EvOpt>, required: false },
 	},
 	computed: {
+		hidden() {
+			return this.offline || this.startupCompleted === false;
+		},
 		batterySoc() {
 			return this.battery?.soc;
 		},
@@ -87,6 +95,11 @@ export default defineComponent({
 	-webkit-backdrop-filter: blur(20px);
 	border-top: 1px solid var(--evcc-gray-10);
 	box-shadow: 0 -1px 6px rgba(0, 0, 0, 0.05);
+	transition: transform var(--evcc-transition-fast) ease-in;
+}
+
+.bottom-tab-bar--hidden {
+	transform: translateY(100%);
 }
 
 :root.dark .bottom-tab-bar {
