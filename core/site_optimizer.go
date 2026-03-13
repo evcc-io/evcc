@@ -183,7 +183,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		pMaxPower := site.circuit.GetMaxPower()
 		pMaxFromCurrent := site.circuit.GetMaxCurrent() * site.Voltage * 3
 
-		// soft limit pMaxImp (monthly peak) defaults to current-derived if not set, and vice versa
+		// soft limit pMaxImp defaults to current-derived if not set, and vice versa
 		pMaxImp := lo.CoalesceOrEmpty(pMaxPower, pMaxFromCurrent)
 		pMaxAbsImp := lo.CoalesceOrEmpty(pMaxFromCurrent, pMaxPower)
 
