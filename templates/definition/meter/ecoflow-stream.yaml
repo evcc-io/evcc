@@ -36,7 +36,7 @@ params:
     help:
       en: Secret Key from EcoFlow Developer Console
       de: Secret Key aus der EcoFlow Developer Console
-  - name: serialnumber
+  - name: serial
     required: true
     description:
       generic: Serial Number
@@ -50,6 +50,6 @@ render: |
   type: ecoflow-stream
   accesskey: {{ .accesskey }}
   secretkey: {{ .secretkey }}
-  serialnumber: {{ .serialnumber }}
+  serial: {{ .serial }}
   usage: {{ .usage }}
   cache: {{ .cache }}

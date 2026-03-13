@@ -14,14 +14,12 @@ import (
 
 // EcoFlowStream represents the EcoFlow Stream meter
 type EcoFlowStream struct {
-	ctx          context.Context
-	usage        string
-	accessKey    string
-	secretKey    string
-	serialNumber string
-	cache        time.Duration
-	client       *ecoflow.Client
-	dataG        func() (*ecoflow.GetCmdResponse, error)
+	ctx    context.Context
+	usage  string
+	serial string
+	cache  time.Duration
+	client *ecoflow.Client
+	dataG  func() (*ecoflow.GetCmdResponse, error)
 }
 
 func init() {
@@ -31,11 +29,11 @@ func init() {
 // NewEcoFlowStreamFromConfig creates an EcoFlow Stream meter from generic config
 func NewEcoFlowStreamFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	cc := struct {
-		AccessKey    string
-		SecretKey    string
-		SerialNumber string
-		Usage        string
-		Cache        time.Duration
+		AccessKey string
+		SecretKey string
+		Serial    string
+		Usage     string
+		Cache     time.Duration
 	}{
 		Cache: 30 * time.Second,
 	}
@@ -49,14 +47,14 @@ func NewEcoFlowStreamFromConfig(ctx context.Context, other map[string]any) (api.
 	if cc.SecretKey == "" {
 		return nil, errors.New("missing secret key")
 	}
-	if cc.SerialNumber == "" {
+	if cc.Serial == "" {
 		return nil, errors.New("missing serial number")
 	}
 	if cc.Usage == "" {
 		return nil, errors.New("missing usage")
 	}
 
-	m, err := NewEcoFlowStream(ctx, cc.AccessKey, cc.SecretKey, cc.SerialNumber, cc.Usage, cc.Cache)
+	m, err := NewEcoFlowStream(ctx, cc.AccessKey, cc.SecretKey, cc.Serial, cc.Usage, cc.Cache)
 	if err != nil {
 		return nil, err
 	}
@@ -69,16 +67,14 @@ func NewEcoFlowStreamFromConfig(ctx context.Context, other map[string]any) (api.
 }
 
 // NewEcoFlowStream constructs the EcoFlowStream struct
-func NewEcoFlowStream(ctx context.Context, accessKey, secretKey, serialNumber, usage string, cache time.Duration) (*EcoFlowStream, error) {
+func NewEcoFlowStream(ctx context.Context, accessKey, secretKey, serial, usage string, cache time.Duration) (*EcoFlowStream, error) {
 	client := ecoflow.NewEcoflowClient(accessKey, secretKey)
 	m := &EcoFlowStream{
-		ctx:          ctx,
-		accessKey:    accessKey,
-		secretKey:    secretKey,
-		serialNumber: serialNumber,
-		usage:        usage,
-		cache:        cache,
-		client:       client,
+		ctx:    ctx,
+		serial: serial,
+		usage:  usage,
+		cache:  cache,
+		client: client,
 	}
 	m.dataG = util.Cached(m.getData, cache)
 	return m, nil
@@ -96,7 +92,7 @@ func (m *EcoFlowStream) getData() (*ecoflow.GetCmdResponse, error) {
 		params = []string{"powGetBpCms", "cmsBattSoc"}
 	}
 
-	return m.client.GetDeviceParameters(m.ctx, m.serialNumber, params)
+	return m.client.GetDeviceParameters(m.ctx, m.serial, params)
 }
 
 var _ api.Meter = (*EcoFlowStream)(nil)
