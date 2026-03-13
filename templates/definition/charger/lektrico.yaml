@@ -1,0 +1,17 @@
+template: lektrico
+products:
+  - brand: Lektrico
+    description:
+      generic: 1P7K / 3P22K Charging Station
+
+params:
+  - name: host
+    required: true
+    example: 192.168.1.100
+    help:
+      en: IP address or hostname of the Lektrico charger on your local network
+      de: IP-Adresse oder Hostname der Lektrico-Ladestation im lokalen Netzwerk
+
+render: |
+  type: lektrico
+  host: {{ .host }}
