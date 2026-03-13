@@ -685,7 +685,6 @@ func (site *Site) updateBatteryMeters() {
 	site.battery.Devices = mm
 
 	site.publish(keys.Battery, site.battery)
-	site.publish(keys.BatteryMaxDischargePower, site.battery.MaxDischargePower)
 }
 
 // updateAuxMeters updates aux meters
