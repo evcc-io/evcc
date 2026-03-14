@@ -7,8 +7,8 @@ params:
   - name: title
     required: true
     example: Main circuit
-  - name: maxcurrent
-  - name: maxpower
+  - name: maxcircuitcurrent
+  - name: maxcircuitpower
   - name: meter
     # service: TODO
   - name: parent
@@ -18,7 +18,7 @@ params:
 render: |
   type: static
   title: {{ .title }}
-  maxCurrent: {{ .maxcurrent }}
-  maxPower: {{ .maxpower }}
+  maxCurrent: {{ .maxcircuitcurrent }}
+  maxPower: {{ .maxcircuitpower }}
   meter: {{ .meter }}
   parent: {{ .parent }}
