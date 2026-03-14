@@ -87,6 +87,7 @@ export default defineComponent({
 		charging: Boolean,
 		heating: Boolean,
 		minSoc: { type: Number, default: 0 },
+		minSocActive: Boolean,
 		effectivePlanSoc: { type: Number, default: 0 },
 		effectiveLimitSoc: Number,
 		limitEnergy: { type: Number, default: 0 },
@@ -178,9 +179,6 @@ export default defineComponent({
 				return "bg-danger";
 			}
 			return "bg-primary";
-		},
-		minSocActive() {
-			return this.minSoc > 0 && this.vehicleSoc < this.minSoc;
 		},
 		remainingSocWidth() {
 			if (this.socBasedCharging) {

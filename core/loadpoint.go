@@ -1986,6 +1986,10 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 	// update and publish plan without being short-circuited by modes etc.
 	plannerActive := lp.plannerActive()
 
+	// update and publish min soc active state
+	minSocActive := lp.minSocNotReached()
+	lp.publish(keys.MinSocActive, minSocActive)
+
 	// execute loading strategy
 	switch {
 	case !lp.connected():
@@ -2004,7 +2008,7 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 		err = lp.setLimit(current)
 
 	// minimum or target charging
-	case lp.minSocNotReached() || plannerActive:
+	case minSocActive || plannerActive:
 		err = lp.fastCharging()
 		lp.resetPhaseTimer()
 		lp.elapsePVTimer() // let PV mode disable immediately afterwards
