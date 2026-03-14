@@ -113,7 +113,7 @@ func (t Trydan) Status() (api.ChargeStatus, error) {
 // Enabled implements the api.Charger interface
 func (c Trydan) Enabled() (bool, error) {
 	data, err := c.statusG.Get()
-	return data.Paused == 0 && data.Locked == 0, err
+	return data.Paused == 0, err
 }
 
 func (c *Trydan) setValue(param string, value int) error {
@@ -132,15 +132,12 @@ func (c Trydan) Enable(enable bool) error {
 		pause = 1
 	}
 
-	if err := c.setValue("Paused", pause); err != nil {
-		return err
+	err := c.setValue("Paused", pause)
+	if err == nil {
+		c.enabled = enable
 	}
-	if err := c.setValue("Locked", pause); err != nil {
-		return err
-	}
-	c.enabled = enable
 
-	return nil
+	return err
 }
 
 // MaxCurrent implements the api.Charger interface
