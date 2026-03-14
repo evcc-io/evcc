@@ -270,10 +270,7 @@ export default defineComponent({
 				},
 				{
 					id: "minSoc",
-					visible:
-						!this.heating &&
-						this.connected &&
-						this.minSocActive,
+					visible: !this.heating && this.connected && this.minSocActive,
 					content: this.fmtPercentage(this.minSoc),
 					tooltipContent: t("minCharge", {
 						soc: this.fmtPercentage(this.minSoc),

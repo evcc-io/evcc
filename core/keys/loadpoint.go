@@ -2,20 +2,20 @@ package keys
 
 const (
 	// loadpoint settings
-	Title             = "title"       // loadpoint title
-	Mode              = "mode"        // charge mode
-	DefaultMode       = "defaultMode" // default charge mode
-	Charger           = "charger"     // charger ref
-	Meter             = "meter"       // meter ref
-	Circuit           = "circuit"     // circuit ref
-	DefaultVehicle    = "vehicle"     // default vehicle ref
-	Priority          = "priority"    // priority
-	MinCurrent        = "minCurrent"  // min current
-	MaxCurrent        = "maxCurrent"  // max current
-	MinSoc            = "minSoc"      // min soc
+	Title             = "title"        // loadpoint title
+	Mode              = "mode"         // charge mode
+	DefaultMode       = "defaultMode"  // default charge mode
+	Charger           = "charger"      // charger ref
+	Meter             = "meter"        // meter ref
+	Circuit           = "circuit"      // circuit ref
+	DefaultVehicle    = "vehicle"      // default vehicle ref
+	Priority          = "priority"     // priority
+	MinCurrent        = "minCurrent"   // min current
+	MaxCurrent        = "maxCurrent"   // max current
+	MinSoc            = "minSoc"       // min soc
 	MinSocActive      = "minSocActive" // min soc active
-	LimitSoc          = "limitSoc"    // limit soc
-	LimitEnergy       = "limitEnergy" // limit energy
+	LimitSoc          = "limitSoc"     // limit soc
+	LimitEnergy       = "limitEnergy"  // limit energy
 	Soc               = "soc"
 	Thresholds        = "thresholds"
 	EnableThreshold   = "enableThreshold"
