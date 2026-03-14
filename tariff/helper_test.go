@@ -147,4 +147,3 @@ func TestRunOrError_DoesNotLeakGoroutineOnInitialFailure(t *testing.T) {
 		// goroutine has stopped — no leak, desired behaviour
 	}
 }
-
