@@ -34,7 +34,10 @@ import (
 	"golang.org/x/oauth2"
 )
 
-const nexblueAPI = "https://api.nexblue.com/third_party/openapi"
+const (
+	nexblueHost = "https://api.nexblue.com"
+	nexblueAPI  = nexblueHost + "/third_party/openapi"
+)
 
 // Nexblue charger implementation
 type Nexblue struct {
@@ -126,7 +129,7 @@ func NewNexblue(ctx context.Context, user, password, serial string, cache time.D
 	authCtx := context.WithValue(ctx, oauth2.HTTPClient, authHelper.Client)
 	wb.Client = oauth2.NewClient(authCtx, oauth.RefreshTokenSource(tok, login))
 
-	wb.serial, err = ensureCharger("", func() ([]string, error) {
+	wb.serial, err = ensureCharger(serial, func() ([]string, error) {
 		return wb.chargerSerials()
 	})
 	if err != nil {
@@ -267,11 +270,15 @@ var _ api.PhaseSwitcher = (*Nexblue)(nil)
 
 // Phases1p3p implements the api.PhaseSwitcher interface
 func (wb *Nexblue) Phases1p3p(phases int) error {
-	uri := fmt.Sprintf("%s/v1/charger/%s/setting", nexblueAPI, wb.serial)
+	if phases != 1 && phases != 3 {
+		return fmt.Errorf("invalid phases: %d", phases)
+	}
+
+	uri := fmt.Sprintf("%s/chargers/command/%s/switch_phase_mode", nexblueHost, wb.serial)
 	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(struct {
-		PhaseMode int `json:"phase_mode"`
+		EnforceSinglePhase bool `json:"enforce_single_phase"`
 	}{
-		phases,
+		phases == 1,
 	}), request.JSONEncoding)
 
 	_, err := wb.DoBody(req)

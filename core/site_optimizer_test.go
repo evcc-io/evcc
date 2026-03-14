@@ -4,12 +4,12 @@ import (
 	"testing"
 	"time"
 
-	evopt "github.com/andig/evopt/client"
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/metrics"
 	"github.com/evcc-io/evcc/server/db"
+	optimizer "github.com/evcc-io/optimizer/client"
 	"github.com/jinzhu/now"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -114,7 +114,7 @@ func TestLoadpointProfile(t *testing.T) {
 func TestBatteryForecastTotals(t *testing.T) {
 	site := new(Site)
 
-	req := []evopt.BatteryConfig{
+	req := []optimizer.BatteryConfig{
 		{SMax: 80},
 		{SMax: 80},
 	}
@@ -164,7 +164,7 @@ func TestBatteryForecastTotals(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			resp := []evopt.BatteryResult{
+			resp := []optimizer.BatteryResult{
 				{StateOfCharge: tc.bat1},
 				{StateOfCharge: tc.bat2},
 			}
