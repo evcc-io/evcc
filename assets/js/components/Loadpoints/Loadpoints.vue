@@ -190,6 +190,8 @@ export default defineComponent({
 });
 </script>
 <style scoped>
+@import "../../../css/breakpoints.css";
+
 .container--loadpoint:not(:empty) {
 	min-height: 300px;
 }
@@ -271,7 +273,7 @@ export default defineComponent({
 }
 
 /* breakpoint lg, 2-col grid */
-@media (min-width: 992px) {
+@media (--lg-and-up) {
 	.carousel {
 		display: grid !important;
 		grid-gap: 2rem;
