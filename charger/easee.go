@@ -40,6 +40,8 @@ import (
 	"golang.org/x/oauth2"
 )
 
+const obsTimeout = 5 * time.Minute
+
 // Easee charger implementation
 type Easee struct {
 	*request.Helper
@@ -181,19 +183,6 @@ func NewEasee(ctx context.Context, user, password, charger string, timeout time.
 	)
 
 	if err == nil {
-		// Pre-seed obsTime so that stale cloud state replayed by SubscribeWithCurrentState
-		// is dropped by the existing deduplication check. The 2-minute backdate
-		// accommodates clock skew without rejecting recent observations.
-		seed := time.Now().UTC().Add(-2 * time.Minute)
-		for _, id := range []easee.ObservationID{
-			easee.TOTAL_POWER,
-			easee.IN_CURRENT_T3,
-			easee.IN_CURRENT_T4,
-			easee.IN_CURRENT_T5,
-		} {
-			c.obsTime[id] = seed
-		}
-
 		c.subscribe(client)
 
 		client.Start()
@@ -762,6 +751,10 @@ func (c *Easee) CurrentPower() (float64, error) {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
 
+	if t, ok := c.obsTime[easee.TOTAL_POWER]; ok && time.Since(t) > obsTimeout {
+		return 0, nil
+	}
+
 	return c.currentPower, nil
 }
 
@@ -780,6 +773,10 @@ var _ api.PhaseCurrents = (*Easee)(nil)
 func (c *Easee) Currents() (float64, float64, float64, error) {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
+
+	if t, ok := c.obsTime[easee.IN_CURRENT_T3]; ok && time.Since(t) > obsTimeout {
+		return 0, 0, 0, nil
+	}
 
 	return c.currentL1, c.currentL2, c.currentL3, nil
 }
