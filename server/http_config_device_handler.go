@@ -11,9 +11,10 @@ import (
 	"strconv"
 
 	"dario.cat/mergo"
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/charger"
-	"github.com/evcc-io/evcc/circuit"
+	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/messenger"
@@ -26,6 +27,10 @@ import (
 	"github.com/gorilla/mux"
 	"go.yaml.in/yaml/v4"
 )
+
+func newCircuitDeviceFromConfig(_ context.Context, _ string, other map[string]any) (api.Circuit, error) {
+	return circuit.NewFromConfig(other)
+}
 
 func devicesConfig[T any](class templates.Class, h config.Handler[T], hidePrivate bool) ([]map[string]any, error) {
 	var res []map[string]any
@@ -325,7 +330,7 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		conf, err = newDevice(ctx, class, req, vehicle.NewFromConfig, config.Vehicles(), force)
 
 	case templates.Circuit:
-		conf, err = newDevice(ctx, class, req, circuit.NewFromConfig, config.Circuits(), force)
+		conf, err = newDevice(ctx, class, req, newCircuitDeviceFromConfig, config.Circuits(), force)
 
 	case templates.Tariff:
 		conf, err = newDevice(ctx, class, req, tariff.NewFromConfig, config.Tariffs(), force)
@@ -410,7 +415,7 @@ func updateDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		err = updateDevice(ctx, id, class, req, vehicle.NewFromConfig, config.Vehicles(), force)
 
 	case templates.Circuit:
-		err = updateDevice(ctx, id, class, req, circuit.NewFromConfig, config.Circuits(), force)
+		err = updateDevice(ctx, id, class, req, newCircuitDeviceFromConfig, config.Circuits(), force)
 
 	case templates.Tariff:
 		err = updateDevice(ctx, id, class, req, tariff.NewFromConfig, config.Tariffs(), force)
@@ -664,7 +669,7 @@ func testConfigHandler(w http.ResponseWriter, r *http.Request) {
 		instance, err = testConfig(ctx, id, class, req, vehicle.NewFromConfig, config.Vehicles())
 
 	case templates.Circuit:
-		instance, err = testConfig(ctx, id, class, req, circuit.NewFromConfig, config.Circuits())
+		instance, err = testConfig(ctx, id, class, req, newCircuitDeviceFromConfig, config.Circuits())
 
 	case templates.Tariff:
 		instance, err = testConfig(ctx, id, class, req, tariff.NewFromConfig, config.Tariffs())
