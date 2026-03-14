@@ -114,8 +114,9 @@ type lektricoRPCResponse struct {
 // Lektrico implements api.Charger for Lektrico 1P7K / 3P22K charging stations
 type Lektrico struct {
 	*request.Helper
+	log     *util.Logger
 	uri     string
-	current int64
+	current atomic.Int64
 	statusG util.Cacheable[lektricoInfo]
 }
 
@@ -153,10 +154,11 @@ func NewLektrico(host string, cache time.Duration) (*Lektrico, error) {
 	uri := fmt.Sprintf("http://%s/rpc", strings.TrimSuffix(host, "/"))
 
 	l := &Lektrico{
-		Helper:  request.NewHelper(log),
-		uri:     uri,
-		current: 6,
+		Helper: request.NewHelper(log),
+		log:    log,
+		uri:    uri,
 	}
+	l.current.Store(lektricoMinCurrentA)
 
 	l.statusG = util.ResettableCached(func() (lektricoInfo, error) {
 		var res lektricoInfo
@@ -226,7 +228,8 @@ func (l *Lektrico) Status() (api.ChargeStatus, error) {
 	case lektricoIECOTA:
 		return api.StatusB, nil
 	default:
-		return api.StatusA, nil
+		l.log.WARN.Printf("unknown charger state: %s", info.ExtendedChargerState)
+		return api.StatusNone, nil
 	}
 }
 
@@ -236,7 +239,7 @@ func (l *Lektrico) Enabled() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return info.DynamicCurrent >= 6, nil
+	return info.DynamicCurrent >= int(lektricoMinCurrentA), nil
 }
 
 // sendCurrent sends dynamic_current and user_current to the charger.
@@ -257,7 +260,7 @@ func (l *Lektrico) sendCurrent(value int64) error {
 func (l *Lektrico) Enable(enable bool) error {
 	var value int64
 	if enable {
-		value = l.current
+		value = l.current.Load()
 		if value < lektricoMinCurrentA {
 			value = lektricoMinCurrentA
 		}
@@ -273,7 +276,7 @@ func (l *Lektrico) MaxCurrent(current int64) error {
 	if current > lektricoMaxCurrentA {
 		current = lektricoMaxCurrentA
 	}
-	l.current = current
+	l.current.Store(current)
 	return l.sendCurrent(current)
 }
 
