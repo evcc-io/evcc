@@ -67,8 +67,8 @@
 							minlength="12"
 							maxlength="12"
 							pattern="[A-Fa-f0-9]{12}"
-						/>
-					</FormRow></template>
+						/> </FormRow
+				></template>
 			</PropertyCollapsible>
 		</template>
 	</JsonModal>

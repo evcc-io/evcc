@@ -74,9 +74,7 @@ test.describe("SHM", () => {
     expect(xml).toContain(
       `<DeviceId>F-${VALID_VENDOR_ID}-${VALID_DEVICE_ID.toLowerCase()}-00</DeviceId>`
     );
-    expect(xml).toContain(
-      `<DeviceSerial>${VALID_DEVICE_SERIAL.toLowerCase()}-0</DeviceSerial>`
-    );
+    expect(xml).toContain(`<DeviceSerial>${VALID_DEVICE_SERIAL.toLowerCase()}-0</DeviceSerial>`);
     await sempPage.close();
   });
 });
