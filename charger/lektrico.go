@@ -1,6 +1,6 @@
 package charger
 
-// LICENSE: MIT
+// https://github.com/Lektrico/lektricowifi
 //
 // Lektrico charger protocol (discovered from lektricowifi source + real device testing):
 //
@@ -29,59 +29,43 @@ package charger
 //   }
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
-	"io"
 	"math/rand"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 )
 
-func init() {
-	registry.Add("lektrico", NewLektricoFromConfig)
-}
-
-// Raw IEC states returned in charger_state / extended_charger_state
+// Raw IEC states returned in extended_charger_state
 const (
-	lektricoIECA          = "A"           // no vehicle connected
-	lektricoIECB          = "B"           // vehicle connected, not charging
-	lektricoIECBAUTH      = "B_AUTH"      // waiting for RFID authentication
-	lektricoIECBPAUSE     = "B_PAUSE"     // charging paused (dynamic_current=0)
-	lektricoIECBSCHEDULER = "B_SCHEDULER" // paused by schedule
-	lektricoIECC          = "C"           // charging active
-	lektricoIECD          = "D"           // charging active with ventilation
-	lektricoIECE          = "E"           // error
-	lektricoIECF          = "F"           // fatal error
-	lektricoIECOTA        = "OTA"         // firmware update in progress
-	lektricoIECLOCKED     = "LOCKED"      // charger locked
+	lektricoIECA          = "A"
+	lektricoIECB          = "B"
+	lektricoIECBAUTH      = "B_AUTH"
+	lektricoIECBPAUSE     = "B_PAUSE"
+	lektricoIECBSCHEDULER = "B_SCHEDULER"
+	lektricoIECC          = "C"
+	lektricoIECD          = "D"
+	lektricoIECE          = "E"
+	lektricoIECF          = "F"
+	lektricoIECOTA        = "OTA"
+	lektricoIECLOCKED     = "LOCKED"
 )
 
 // lektricoInfo maps the JSON response from charger_info.get
 type lektricoInfo struct {
-	// State
-	ChargerState         string `json:"charger_state"`          // current IEC state
-	ExtendedChargerState string `json:"extended_charger_state"` // detailed state (B_AUTH, B_PAUSE, etc.)
-	ChargerIsPaused      bool   `json:"charger_is_paused"`
-	HasActiveErrors      bool   `json:"has_active_errors"`
-
-	// Energy & power
-	InstantPower       float64   `json:"instant_power"`        // W
-	SessionEnergy      float64   `json:"session_energy"`       // Wh
-	TotalChargedEnergy float64   `json:"total_charged_energy"` // kWh
-	Currents           []float64 `json:"currents"`             // [L1, L2, L3] in A
-	Voltages           []float64 `json:"voltages"`             // [L1, L2, L3] in V
-
-	// Configuration
-	DynamicCurrent     int     `json:"dynamic_current"`      // 0=pause, 6-32=allowed current
-	InstallCurrent     int     `json:"install_current"`      // max installed current
-	CurrentLimitReason int     `json:"current_limit_reason"` // 0=no_limit, 2=user_limit, ...
-	Temperature        float64 `json:"temperature"`
-	FwVersion          string  `json:"fw_version"`
-	Headless           bool    `json:"headless"` // true = no authentication required
+	ExtendedChargerState string    `json:"extended_charger_state"`
+	HasActiveErrors      bool      `json:"has_active_errors"`
+	InstantPower         float64   `json:"instant_power"`
+	SessionEnergy        float64   `json:"session_energy"`
+	TotalChargedEnergy   float64   `json:"total_charged_energy"`
+	Currents             []float64 `json:"currents"`
+	Voltages             []float64 `json:"voltages"`
+	DynamicCurrent       int       `json:"dynamic_current"`
+	FwVersion            string    `json:"fw_version"`
 }
 
 // lektricoRPCRequest is the POST JSON-RPC request format
@@ -92,11 +76,9 @@ type lektricoRPCRequest struct {
 	Params map[string]any `json:"params,omitempty"`
 }
 
-// lektricoRPCResponse wraps the POST response (data is in the "result" field)
+// lektricoRPCResponse wraps the POST response
 type lektricoRPCResponse struct {
-	ID     int             `json:"id"`
-	Result json.RawMessage `json:"result"`
-	Error  *struct {
+	Error *struct {
 		Code    int    `json:"code"`
 		Message string `json:"message"`
 	} `json:"error,omitempty"`
@@ -104,83 +86,67 @@ type lektricoRPCResponse struct {
 
 // Lektrico implements api.Charger for Lektrico 1P7K / 3P22K charging stations
 type Lektrico struct {
-	log     *util.Logger
-	baseURL string
-	client  *http.Client
-	current int64 // last valid current, stored for Enable()
+	*request.Helper
+	uri     string
+	current int64
+	statusG util.Cacheable[lektricoInfo]
 }
 
-// LektricoConfig is the YAML configuration
-type LektricoConfig struct {
-	Host string `mapstructure:"host"`
+var _ api.Charger = (*Lektrico)(nil)
+
+func init() {
+	registry.Add("lektrico", NewLektricoFromConfig)
 }
 
-// NewLektricoFromConfig creates a Lektrico instance from evcc configuration
+// NewLektricoFromConfig creates a Lektrico charger from evcc configuration
 func NewLektricoFromConfig(other map[string]any) (api.Charger, error) {
-	var cc LektricoConfig
+	cc := struct {
+		Host  string
+		Cache time.Duration
+	}{
+		Cache: time.Second,
+	}
+
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 	if cc.Host == "" {
-		return nil, fmt.Errorf("lektrico: missing 'host' parameter (e.g. 192.168.1.100)")
+		return nil, fmt.Errorf("missing host")
 	}
-	return NewLektrico(cc.Host)
+
+	return NewLektrico(cc.Host, cc.Cache)
 }
 
 // NewLektrico creates a Lektrico charger and verifies connectivity
-func NewLektrico(host string) (*Lektrico, error) {
+func NewLektrico(host string, cache time.Duration) (*Lektrico, error) {
+	log := util.NewLogger("lektrico")
+	uri := fmt.Sprintf("http://%s/rpc", strings.TrimSuffix(host, "/"))
+
 	l := &Lektrico{
-		log:     util.NewLogger("lektrico"),
-		baseURL: fmt.Sprintf("http://%s/rpc", host),
-		client:  &http.Client{Timeout: 10 * time.Second},
+		Helper:  request.NewHelper(log),
+		uri:     uri,
 		current: 6,
 	}
 
-	// Connectivity check via Device_id.Get (minimal response, fast)
+	l.statusG = util.ResettableCached(func() (lektricoInfo, error) {
+		var res lektricoInfo
+		err := l.GetJSON(uri+"/charger_info.get", &res)
+		return res, err
+	}, cache)
+
+	// Connectivity check
 	var id struct {
 		DeviceID string `json:"device_id"`
 	}
-	if err := l.get("Device_id.Get", &id); err != nil {
+	if err := l.GetJSON(uri+"/Device_id.Get", &id); err != nil {
 		return nil, fmt.Errorf("lektrico: connection failed to %s: %w", host, err)
 	}
-	l.log.DEBUG.Printf("connected to Lektrico charger: %s (fw %s)", id.DeviceID, l.fwVersion())
+	log.DEBUG.Printf("connected to Lektrico charger: %s", id.DeviceID)
 
 	return l, nil
 }
 
-// fwVersion silently reads the firmware version for logging (best-effort)
-func (l *Lektrico) fwVersion() string {
-	var info lektricoInfo
-	if err := l.get("charger_info.get", &info); err != nil {
-		return "unknown"
-	}
-	return info.FwVersion
-}
-
-// get performs GET http://<host>/rpc/<uri> and decodes the JSON response directly
-func (l *Lektrico) get(uri string, result any) error {
-	url := l.baseURL + "/" + uri
-	resp, err := l.client.Get(url)
-	if err != nil {
-		return fmt.Errorf("GET %s: %w", uri, err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("GET %s: HTTP %d", uri, resp.StatusCode)
-	}
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return fmt.Errorf("GET %s read: %w", uri, err)
-	}
-
-	l.log.TRACE.Printf("GET /%s -> %s", uri, string(body))
-	return json.Unmarshal(body, result)
-}
-
-// post performs POST http://<host>/rpc with a JSON-RPC body
-// The charger returns {"id":..., "result":{...}} - we check for errors only
+// post sends a JSON-RPC command to the charger
 func (l *Lektrico) post(method string, params map[string]any) error {
 	payload := lektricoRPCRequest{
 		Src:    "evcc",
@@ -189,51 +155,26 @@ func (l *Lektrico) post(method string, params map[string]any) error {
 		Params: params,
 	}
 
-	body, err := json.Marshal(payload)
+	req, err := request.New(http.MethodPost, l.uri, request.MarshalJSON(payload), request.JSONEncoding)
 	if err != nil {
 		return err
 	}
 
-	l.log.TRACE.Printf("POST /rpc %s %v", method, params)
-
-	resp, err := l.client.Post(l.baseURL, "application/json", bytes.NewReader(body))
-	if err != nil {
-		return fmt.Errorf("POST %s: %w", method, err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("POST %s: HTTP %d", method, resp.StatusCode)
-	}
-
-	respBody, err := io.ReadAll(resp.Body)
-	if err != nil {
+	var resp lektricoRPCResponse
+	if err := l.DoJSON(req, &resp); err != nil {
 		return err
 	}
-
-	l.log.TRACE.Printf("POST /rpc %s -> %s", method, string(respBody))
-
-	var rpcResp lektricoRPCResponse
-	if err := json.Unmarshal(respBody, &rpcResp); err != nil {
-		return fmt.Errorf("POST %s decode: %w", method, err)
+	if resp.Error != nil {
+		return fmt.Errorf("charger error: code=%d msg=%s", resp.Error.Code, resp.Error.Message)
 	}
-	if rpcResp.Error != nil {
-		return fmt.Errorf("POST %s charger error: code=%d msg=%s",
-			method, rpcResp.Error.Code, rpcResp.Error.Message)
-	}
+
+	l.statusG.Reset()
 	return nil
 }
 
-// info reads charger_info.get - a single request returns all data
-func (l *Lektrico) info() (lektricoInfo, error) {
-	var info lektricoInfo
-	err := l.get("charger_info.get", &info)
-	return info, err
-}
-
-// Status implements api.Charger - returns IEC 61851 charge status (A/B/C/E)
+// Status implements the api.Charger interface
 func (l *Lektrico) Status() (api.ChargeStatus, error) {
-	info, err := l.info()
+	info, err := l.statusG.Get()
 	if err != nil {
 		return api.StatusNone, err
 	}
@@ -242,35 +183,33 @@ func (l *Lektrico) Status() (api.ChargeStatus, error) {
 		return api.StatusE, nil
 	}
 
-	// Use extended_charger_state which is more precise than charger_state
 	switch info.ExtendedChargerState {
 	case lektricoIECA:
-		return api.StatusA, nil // no vehicle
+		return api.StatusA, nil
 	case lektricoIECB, lektricoIECBAUTH, lektricoIECBPAUSE,
 		lektricoIECBSCHEDULER, lektricoIECLOCKED:
-		return api.StatusB, nil // connected but not charging
+		return api.StatusB, nil
 	case lektricoIECC, lektricoIECD:
-		return api.StatusC, nil // charging active
+		return api.StatusC, nil
 	case lektricoIECE, lektricoIECF:
 		return api.StatusE, nil
 	case lektricoIECOTA:
-		return api.StatusB, nil // firmware update in progress
+		return api.StatusB, nil
 	default:
-		l.log.WARN.Printf("unknown IEC state: %q", info.ExtendedChargerState)
 		return api.StatusA, nil
 	}
 }
 
-// Enabled implements api.Charger - returns true if dynamic_current >= 6 (charging allowed)
+// Enabled implements the api.Charger interface
 func (l *Lektrico) Enabled() (bool, error) {
-	info, err := l.info()
+	info, err := l.statusG.Get()
 	if err != nil {
 		return false, err
 	}
 	return info.DynamicCurrent >= 6, nil
 }
 
-// Enable implements api.Charger - enables or suspends charging via dynamic_current and user_current
+// Enable implements the api.Charger interface
 func (l *Lektrico) Enable(enable bool) error {
 	var value int64
 	if enable {
@@ -278,10 +217,6 @@ func (l *Lektrico) Enable(enable bool) error {
 		if value < 6 {
 			value = 6
 		}
-		l.log.DEBUG.Printf("Enable -> dynamic_current=%dA", value)
-	} else {
-		value = 0
-		l.log.DEBUG.Printf("Disable -> dynamic_current=0 (pause)")
 	}
 	if err := l.post("dynamic_current.set", map[string]any{
 		"dynamic_current": value,
@@ -294,7 +229,7 @@ func (l *Lektrico) Enable(enable bool) error {
 	})
 }
 
-// MaxCurrent implements api.Charger - sets the maximum allowed charge current in amps
+// MaxCurrent implements the api.Charger interface
 func (l *Lektrico) MaxCurrent(current int64) error {
 	if current > 32 {
 		current = 32
@@ -302,11 +237,8 @@ func (l *Lektrico) MaxCurrent(current int64) error {
 	var value int64
 	if current >= 6 {
 		value = current
-		l.current = current // stored for Enable()
-	} else {
-		value = 0 // below IEC minimum -> pause
+		l.current = current
 	}
-	l.log.DEBUG.Printf("MaxCurrent -> dynamic_current=%dA", value)
 	if err := l.post("dynamic_current.set", map[string]any{
 		"dynamic_current": value,
 	}); err != nil {
@@ -318,44 +250,54 @@ func (l *Lektrico) MaxCurrent(current int64) error {
 	})
 }
 
-// CurrentPower implements api.Meter - returns instant power in Watts
+var _ api.Meter = (*Lektrico)(nil)
+
+// CurrentPower implements the api.Meter interface
 func (l *Lektrico) CurrentPower() (float64, error) {
-	info, err := l.info()
+	info, err := l.statusG.Get()
 	return info.InstantPower, err
 }
 
-// TotalEnergy implements api.MeterEnergy - returns total charged energy in kWh
+var _ api.MeterEnergy = (*Lektrico)(nil)
+
+// TotalEnergy implements the api.MeterEnergy interface
 func (l *Lektrico) TotalEnergy() (float64, error) {
-	info, err := l.info()
+	info, err := l.statusG.Get()
 	return info.TotalChargedEnergy, err
 }
 
-// ChargedEnergy implements api.ChargeRater - returns session energy in kWh
+var _ api.ChargeRater = (*Lektrico)(nil)
+
+// ChargedEnergy implements the api.ChargeRater interface
 func (l *Lektrico) ChargedEnergy() (float64, error) {
-	info, err := l.info()
-	return info.SessionEnergy / 1000.0, err // Wh -> kWh
+	info, err := l.statusG.Get()
+	return info.SessionEnergy / 1000.0, err
 }
 
-// Currents implements api.PhaseCurrents - returns L1, L2, L3 currents in amps
+var _ api.PhaseCurrents = (*Lektrico)(nil)
+
+// Currents implements the api.PhaseCurrents interface
 func (l *Lektrico) Currents() (float64, float64, float64, error) {
-	info, err := l.info()
+	info, err := l.statusG.Get()
 	if err != nil {
 		return 0, 0, 0, err
 	}
 	if len(info.Currents) < 3 {
-		return 0, 0, 0, fmt.Errorf("lektrico: incomplete currents array (%d elements)", len(info.Currents))
+		return 0, 0, 0, fmt.Errorf("incomplete currents array (%d elements)", len(info.Currents))
 	}
 	return info.Currents[0], info.Currents[1], info.Currents[2], nil
 }
 
-// Voltages implements api.PhaseVoltages - returns L1, L2, L3 voltages in volts
+var _ api.PhaseVoltages = (*Lektrico)(nil)
+
+// Voltages implements the api.PhaseVoltages interface
 func (l *Lektrico) Voltages() (float64, float64, float64, error) {
-	info, err := l.info()
+	info, err := l.statusG.Get()
 	if err != nil {
 		return 0, 0, 0, err
 	}
 	if len(info.Voltages) < 3 {
-		return 0, 0, 0, fmt.Errorf("lektrico: incomplete voltages array (%d elements)", len(info.Voltages))
+		return 0, 0, 0, fmt.Errorf("incomplete voltages array (%d elements)", len(info.Voltages))
 	}
 	return info.Voltages[0], info.Voltages[1], info.Voltages[2], nil
 }
