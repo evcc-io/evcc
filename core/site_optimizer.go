@@ -37,6 +37,8 @@ var (
 type batteryType string
 
 const (
+	OPTIMIZER_URI = "https://evopt.evcc.io"
+
 	batteryTypeLoadpoint batteryType = "loadpoint"
 	batteryTypeVehicle   batteryType = "vehicle"
 	batteryTypeBattery   batteryType = "battery"
@@ -110,11 +112,6 @@ func (site *Site) optimizerUpdateAsync() {
 }
 
 func (site *Site) optimizerUpdate(battery []types.Measurement) error {
-	uri := os.Getenv("OPTIMIZER_URI")
-	if uri == "" {
-		return nil
-	}
-
 	solarTariff := site.GetTariff(api.TariffUsageSolar)
 	solar := currentRates(solarTariff)
 
@@ -220,6 +217,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	httpClient := request.NewClient(site.log)
 	httpClient.Timeout = 30 * time.Second
 
+	uri := lo.CoalesceOrEmpty(os.Getenv("OPTIMIZER_URI"), OPTIMIZER_URI)
 	apiClient, err := optimizer.NewClientWithResponses(uri, optimizer.WithHTTPClient(httpClient))
 	if err != nil {
 		return err
