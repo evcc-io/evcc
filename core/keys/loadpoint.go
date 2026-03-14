@@ -13,7 +13,7 @@ const (
 	MinCurrent        = "minCurrent"  // min current
 	MaxCurrent        = "maxCurrent"  // max current
 	MinSoc            = "minSoc"      // min soc
-	MinSocActive      = "minSocActive" // min soc active (forced charging)
+	MinSocActive      = "minSocActive" // min soc active
 	LimitSoc          = "limitSoc"    // limit soc
 	LimitEnergy       = "limitEnergy" // limit energy
 	Soc               = "soc"
