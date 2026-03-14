@@ -3,7 +3,6 @@ covers: ['enerlution']
 products:
   - brand: HYPONTECH
   - brand: Enerlution
-capabilities: []
 params:
   - name: usage
     choice: ['grid', 'pv', 'battery']
