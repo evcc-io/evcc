@@ -46,6 +46,16 @@ type Circuit struct {
 
 // NewFromConfig creates a new Circuit
 func NewFromConfig(other map[string]any) (api.Circuit, error) {
+	// map legacy keys
+	if val, ok := other["maxcircuitcurrent"]; ok {
+		other["maxcurrent"] = val
+		delete(other, "maxcircuitcurrent")
+	}
+	if val, ok := other["maxcircuitpower"]; ok {
+		other["maxpower"] = val
+		delete(other, "maxcircuitpower")
+	}
+
 	cc := struct {
 		Name          string         // name
 		Title         string         // title
