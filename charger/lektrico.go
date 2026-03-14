@@ -1,5 +1,22 @@
 package charger
 
+// LICENSE
+
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
+
+// This module is NOT covered by the MIT license. All rights reserved.
+
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
 // https://github.com/Lektrico/lektricowifi
 //
 // Lektrico charger protocol (discovered from lektricowifi source + real device testing):
@@ -38,6 +55,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/sponsor"
 )
 
 // Current limits for Lektrico chargers
@@ -109,6 +127,9 @@ func init() {
 
 // NewLektricoFromConfig creates a Lektrico charger from evcc configuration
 func NewLektricoFromConfig(other map[string]any) (api.Charger, error) {
+	if !sponsor.IsAuthorized() {
+		return nil, api.ErrSponsorRequired
+	}
 	cc := struct {
 		Host  string
 		Cache time.Duration
