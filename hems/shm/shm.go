@@ -44,6 +44,7 @@ type Config struct {
 	AllowControl_ bool   `json:"allowControl,omitempty"` // deprecated
 	VendorId      string `json:"vendorId"`
 	DeviceId      string `json:"deviceId"`
+	DeviceSerial  string `json:"deviceSerial"`
 }
 
 // NewFromConfig creates a new SEMP instance from configuration and starts it
@@ -58,6 +59,22 @@ func NewFromConfig(cfg Config, hostUri string, site site.API, addr string, route
 	uid, err := uuid.NewUUID()
 	if err != nil {
 		return err
+	}
+
+	// Only if DeviceSerial is explicitly configured: validate it and patch the
+	// UUID node (last 6 bytes) to ensure the UDN and DeviceSerial are stable across restarts.
+	// Ideally we'd have used the same machine-id approach as UniqueDeviceID does, but that
+	// would break existing installations that relied on the node ID of the UUID which was set to the MAC address
+	// of the host. See https://github.com/evcc-io/evcc/issues/28126 for context.
+	if cfg.DeviceSerial != "" {
+		serBytes, err := hex.DecodeString(cfg.DeviceSerial)
+		if err != nil {
+			return fmt.Errorf("device serial: %w", err)
+		}
+		if len(serBytes) != 6 {
+			return fmt.Errorf("invalid device serial: %v. Must be 12 characters HEX string", cfg.DeviceSerial)
+		}
+		uid = patchUUIDNode(uid, serBytes)
 	}
 
 	var did []byte
@@ -257,6 +274,13 @@ func (s *SEMP) devicePlanningQuery(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s.writeXML(w, msg)
+}
+
+// patchUUIDNode replaces the node (last 6 bytes) of a UUID with the given bytes.
+// The node part of the UUID (last segment) is the 12-char hex serial prefix.
+func patchUUIDNode(uid uuid.UUID, node []byte) uuid.UUID {
+	copy(uid[10:], node)
+	return uid
 }
 
 func (s *SEMP) serialNumber(id int) string {

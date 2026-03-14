@@ -51,8 +51,24 @@
 							minlength="12"
 							maxlength="12"
 							pattern="[A-Fa-f0-9]{12}"
-						/> </FormRow
-				></template>
+						/>
+					</FormRow>
+					<FormRow
+						id="shmDeviceserial"
+						:label="$t('config.shm.labelDeviceSerial')"
+						:help="$t('config.shm.descriptionDeviceSerial')"
+						example="CCCCCCCCCCCC"
+						optional
+					>
+						<input
+							id="shmDeviceserial"
+							v-model="values.deviceSerial"
+							class="form-control"
+							minlength="12"
+							maxlength="12"
+							pattern="[A-Fa-f0-9]{12}"
+						/>
+					</FormRow></template>
 			</PropertyCollapsible>
 		</template>
 	</JsonModal>
