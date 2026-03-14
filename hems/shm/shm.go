@@ -67,14 +67,16 @@ func NewFromConfig(cfg Config, hostUri string, site site.API, addr string, route
 	// would break existing installations that relied on the node ID of the UUID which was set to the MAC address
 	// of the host. See https://github.com/evcc-io/evcc/issues/28126 for context.
 	if cfg.DeviceSerial != "" {
-		serBytes, err := hex.DecodeString(cfg.DeviceSerial)
+		b, err := hex.DecodeString(cfg.DeviceSerial)
 		if err != nil {
 			return fmt.Errorf("device serial: %w", err)
 		}
-		if len(serBytes) != 6 {
+		if len(b) != 6 {
 			return fmt.Errorf("invalid device serial: %v. Must be 12 characters HEX string", cfg.DeviceSerial)
 		}
-		uid = patchUUIDNode(uid, serBytes)
+
+		// replaces the node (last 6 bytes) of a UUID with the given bytes.
+		copy(uid[10:], b)
 	}
 
 	var did []byte
@@ -274,13 +276,6 @@ func (s *SEMP) devicePlanningQuery(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s.writeXML(w, msg)
-}
-
-// patchUUIDNode replaces the node (last 6 bytes) of a UUID with the given bytes.
-// The node part of the UUID (last segment) is the 12-char hex serial prefix.
-func patchUUIDNode(uid uuid.UUID, node []byte) uuid.UUID {
-	copy(uid[10:], node)
-	return uid
 }
 
 func (s *SEMP) serialNumber(id int) string {
