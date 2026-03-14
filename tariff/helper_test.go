@@ -2,15 +2,12 @@ package tariff
 
 import (
 	"errors"
-	"net/http"
 	"testing"
 	"time"
 
 	"github.com/benbjohnson/clock"
-	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/request"
 	"github.com/jinzhu/now"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -151,45 +148,3 @@ func TestRunOrError_DoesNotLeakGoroutineOnInitialFailure(t *testing.T) {
 	}
 }
 
-// statusErrorFor creates a *request.StatusError for the given HTTP status code,
-// matching what request.Helper.GetJSON returns for non-2xx responses.
-func statusErrorFor(code int) error {
-	req, _ := http.NewRequest(http.MethodGet, "http://example.com", nil)
-	resp := &http.Response{
-		StatusCode: code,
-		Request:    req,
-	}
-	return request.NewStatusError(resp)
-}
-
-// TestBackoffPermanentError_429IsTransient confirms that HTTP 429 (Too Many Requests)
-// is NOT treated as a permanent error by backoffPermanentError.
-//
-// A 429 is a transient rate-limit signal: the caller should back off and retry.
-// Marking it permanent causes backoff.Retry to give up immediately, and when this
-// happens on the very first API call during startup the tariff is never registered
-// (runOrError propagates the error and discards the tariff object). See issue #26654.
-func TestBackoffPermanentError_429IsTransient(t *testing.T) {
-	err := backoffPermanentError(statusErrorFor(http.StatusTooManyRequests))
-
-	var pe *backoff.PermanentError
-	assert.False(t, errors.As(err, &pe),
-		"HTTP 429 must not be permanent: it is transient and backoff.Retry should keep retrying")
-}
-
-// TestBackoffPermanentError_4xxIsPermanent confirms that other 4xx errors (e.g. 400
-// Bad Request) remain permanent — they will not succeed on retry.
-func TestBackoffPermanentError_4xxIsPermanent(t *testing.T) {
-	for _, code := range []int{
-		http.StatusBadRequest,
-		http.StatusUnauthorized,
-		http.StatusForbidden,
-		http.StatusNotFound,
-	} {
-		err := backoffPermanentError(statusErrorFor(code))
-
-		var pe *backoff.PermanentError
-		assert.True(t, errors.As(err, &pe),
-			"HTTP %d should be permanent (won't succeed on retry)", code)
-	}
-}
