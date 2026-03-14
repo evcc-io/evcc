@@ -30,15 +30,24 @@ package charger
 
 import (
 	"fmt"
-	"math/rand"
 	"net/http"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 )
+
+// Current limits for Lektrico chargers
+const (
+	lektricoMinCurrentA int64 = 6
+	lektricoMaxCurrentA int64 = 32
+)
+
+// lektricoRPCCounter provides monotonically increasing JSON-RPC request IDs
+var lektricoRPCCounter atomic.Uint32
 
 // Raw IEC states returned in extended_charger_state
 const (
@@ -150,7 +159,7 @@ func NewLektrico(host string, cache time.Duration) (*Lektrico, error) {
 func (l *Lektrico) post(method string, params map[string]any) error {
 	payload := lektricoRPCRequest{
 		Src:    "evcc",
-		ID:     rand.Intn(90000000) + 10000000,
+		ID:     int(lektricoRPCCounter.Add(1)),
 		Method: method,
 		Params: params,
 	}
@@ -209,15 +218,9 @@ func (l *Lektrico) Enabled() (bool, error) {
 	return info.DynamicCurrent >= 6, nil
 }
 
-// Enable implements the api.Charger interface
-func (l *Lektrico) Enable(enable bool) error {
-	var value int64
-	if enable {
-		value = l.current
-		if value < 6 {
-			value = 6
-		}
-	}
+// sendCurrent sends dynamic_current and user_current to the charger.
+// A value of 0 pauses charging; values in [lektricoMinCurrentA, lektricoMaxCurrentA] set the current.
+func (l *Lektrico) sendCurrent(value int64) error {
 	if err := l.post("dynamic_current.set", map[string]any{
 		"dynamic_current": value,
 	}); err != nil {
@@ -229,25 +232,28 @@ func (l *Lektrico) Enable(enable bool) error {
 	})
 }
 
+// Enable implements the api.Charger interface
+func (l *Lektrico) Enable(enable bool) error {
+	var value int64
+	if enable {
+		value = l.current
+		if value < lektricoMinCurrentA {
+			value = lektricoMinCurrentA
+		}
+	}
+	return l.sendCurrent(value)
+}
+
 // MaxCurrent implements the api.Charger interface
 func (l *Lektrico) MaxCurrent(current int64) error {
-	if current > 32 {
-		current = 32
+	if current < lektricoMinCurrentA {
+		current = lektricoMinCurrentA
 	}
-	var value int64
-	if current >= 6 {
-		value = current
-		l.current = current
+	if current > lektricoMaxCurrentA {
+		current = lektricoMaxCurrentA
 	}
-	if err := l.post("dynamic_current.set", map[string]any{
-		"dynamic_current": value,
-	}); err != nil {
-		return err
-	}
-	return l.post("app_config.set", map[string]any{
-		"config_key":   "user_current",
-		"config_value": value,
-	})
+	l.current = current
+	return l.sendCurrent(current)
 }
 
 var _ api.Meter = (*Lektrico)(nil)
