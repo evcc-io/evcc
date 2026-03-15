@@ -239,6 +239,10 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		return apiError(resp)
 	}
 
+	if resp.JSON200.Status != optimizer.Optimal {
+		return errors.New(string(resp.JSON200.Status))
+	}
+
 	site.publish("evopt", struct {
 		Req     optimizer.OptimizationInput  `json:"req"`
 		Res     optimizer.OptimizationResult `json:"res"`
