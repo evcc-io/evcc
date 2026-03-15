@@ -85,6 +85,7 @@
 										</div>
 									</h5>
 								</div>
+								{{ c.settings }}
 								<Modbus
 									v-model:baudrate="c.settings.baudrate"
 									v-model:comset="c.settings.comset"
@@ -209,16 +210,16 @@ export default defineComponent({
 			return uri?.split(":")[1] || "";
 		},
 		updateHost(settings: ModbusProxySettings, newHost?: string) {
-			if (!newHost) {
-				return;
+			if (newHost === undefined) {
+				newHost = "";
 			}
 
 			const port = this.getPort(settings.uri);
 			settings.uri = `${newHost}:${port}`;
 		},
 		updatePort(settings: ModbusProxySettings, newPort?: string | number) {
-			if (!newPort) {
-				return;
+			if (newPort === undefined) {
+				newPort = "";
 			}
 
 			const host = this.getHost(settings.uri);
