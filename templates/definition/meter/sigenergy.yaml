@@ -16,6 +16,7 @@ params:
     default: 502
   - name: id
     default: 1
+  - name: maxacpower
   - preset: battery-params
 render: |
   type: custom
@@ -72,6 +73,7 @@ render: |
       type: holding
       address: 30035 # Photovoltaic power
       decode: int32
+  maxacpower: {{ .maxacpower }} # W
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
