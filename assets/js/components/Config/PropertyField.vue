@@ -348,7 +348,9 @@ export default {
 		},
 	},
 	mounted() {
-		this.$emit("update:modelValue", this.value);
+		if (this.choice) {
+			this.$emit("update:modelValue", this.value);
+		}
 	},
 	methods: {
 		coerceValue(val) {
