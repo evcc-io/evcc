@@ -590,6 +590,24 @@ func (site *Site) homeProfile(minLen int) ([]float64, error) {
 	}), nil
 }
 
+// compute24hAverageTemperature calculates the average temperature over the past 24 hours
+// from the provided rates. Returns the average and true if data is available, or 0 and false otherwise.
+func compute24hAverageTemperature(rates []api.Rate, currentTime time.Time) (float64, bool) {
+	yesterday := currentTime.Add(-24 * time.Hour)
+	var pastSum24h float64
+	var pastCount24h int
+	for _, r := range rates {
+		if !r.Start.Before(yesterday) && r.Start.Before(currentTime) {
+			pastSum24h += r.Value
+			pastCount24h++
+		}
+	}
+	if pastCount24h == 0 {
+		return 0, false
+	}
+	return pastSum24h / float64(pastCount24h), true
+}
+
 // applyTemperatureCorrection adjusts the household load profile based on outdoor temperature.
 //
 // The correction is gated on the 24h average actual temperature of the past 24 hours:
@@ -626,21 +644,11 @@ func (site *Site) applyTemperatureCorrection(profile []float64) []float64 {
 
 	currentTime := time.Now()
 
-	// Compute the 24h average actual temperature from the past 24 hours.
-	// Uses past rates (Start < now) within the last 24h window.
-	yesterday := currentTime.Add(-24 * time.Hour)
-	var pastSum24h float64
-	var pastCount24h int
-	for _, r := range rates {
-		if !r.Start.Before(yesterday) && r.Start.Before(currentTime) {
-			pastSum24h += r.Value
-			pastCount24h++
-		}
-	}
-	if pastCount24h == 0 {
+	// Compute the 24h average actual temperature from the past 24 hours
+	pastAvg24h, ok := compute24hAverageTemperature(rates, currentTime)
+	if !ok {
 		return profile
 	}
-	pastAvg24h := pastSum24h / float64(pastCount24h)
 
 	// If the past 24h average actual temperature is at or above the heating threshold,
 	// heating is considered off — no correction needed.
