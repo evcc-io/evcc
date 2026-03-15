@@ -133,6 +133,7 @@ func filterValidTemplateParams(tmpl *templates.Template, conf map[string]any) ma
 	return res
 }
 
+// sanitizeMasked replaces masked and private configuration properties with the `***` placeholder
 func sanitizeMasked(class templates.Class, conf map[string]any, hidePrivate bool) (map[string]any, error) {
 	tmpl, err := templateForConfig(class, conf)
 	if err != nil {
