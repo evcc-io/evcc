@@ -210,11 +210,20 @@ export default defineComponent({
 		},
 		updateHost(settings: ModbusProxySettings, newHost?: string) {
 			const port = this.getPort(settings.uri);
-			settings.uri = `${newHost === undefined ? "" : newHost}:${port}`;
+
+			if (port === "" && newHost === undefined) {
+				settings.uri = undefined;
+			} else {
+				settings.uri = `${newHost === undefined ? "" : newHost}:${port}`;
+			}
 		},
 		updatePort(settings: ModbusProxySettings, newPort?: string | number) {
 			const host = this.getHost(settings.uri);
-			settings.uri = `${host}:${newPort === undefined ? "" : newPort}`;
+			if (host === "" && newPort === undefined) {
+				settings.uri = undefined;
+			} else {
+				settings.uri = `${host}:${newPort === undefined ? "" : newPort}`;
+			}
 		},
 		updateModbus(settings: ModbusProxySettings, modbus: MODBUS_TYPE) {
 			switch (modbus) {
