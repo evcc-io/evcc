@@ -1,0 +1,32 @@
+template: emporia
+products:
+  - brand: Emporia
+    description:
+      generic: EVSE
+requirements:
+  evcc: ["sponsorship"]
+params:
+  - name: user
+    required: true
+    help:
+      de: Emailadresse des Emporia-Kontos
+      en: Emporia account email address
+  - name: password
+    required: true
+    help:
+      de: Passwort des Emporia-Kontos
+      en: Emporia account password
+  - name: devicegid
+    type: Int
+    description:
+      de: Geräte-ID
+      en: Device GID
+    help:
+      de: Geräte-ID des EVSE (optional, wird automatisch erkannt wenn nur ein Gerät vorhanden)
+      en: Device GID of the EVSE (optional, auto-detected if only one device is present)
+    advanced: true
+render: |
+  type: emporia
+  user: {{ .user }}
+  password: {{ .password }}
+  {{ if .devicegid }}deviceGid: {{ .devicegid }}{{ end }}
