@@ -97,6 +97,7 @@
 									:default-baudrate="1200"
 									:default-comset="'8N1'"
 									:default-port="502"
+									:modbus="getModbus(c.settings)"
 									@update:host="(host) => updateHost(c.settings, host)"
 									@update:port="(port) => updatePort(c.settings, port)"
 									@update:modbus="(modbus) => updateModbus(c.settings, modbus)"
@@ -175,6 +176,7 @@ export default defineComponent({
 			MODBUS_CONNECTION,
 			MODBUS_PROTOCOL,
 			MODBUS_TYPE,
+			currentModbusType: undefined as MODBUS_TYPE | undefined,
 		};
 	},
 	computed: {
@@ -188,6 +190,16 @@ export default defineComponent({
 	methods: {
 		formId(index: number, name: string) {
 			return `modbusproxy-connection-${index}-${name}`;
+		},
+		getModbus(s: ModbusProxySettings) {
+			if (this.currentModbusType) {
+				return this.currentModbusType;
+			}
+
+			if (s.device) {
+				return MODBUS_TYPE.RS485_SERIAL;
+			}
+			return s.rtu ? MODBUS_TYPE.RS485_TCPIP : MODBUS_TYPE.TCPIP;
 		},
 		getReadonlyHelp(readonly = MODBUS_PROXY_READONLY.FALSE): string {
 			return this.$t(`config.modbusproxy.readonly.help.${readonly}`);
@@ -226,6 +238,8 @@ export default defineComponent({
 			}
 		},
 		updateModbus(settings: ModbusProxySettings, modbus: MODBUS_TYPE) {
+			this.currentModbusType = modbus;
+
 			switch (modbus) {
 				case MODBUS_TYPE.RS485_SERIAL:
 					settings.uri = undefined;
