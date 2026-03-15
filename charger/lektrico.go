@@ -169,7 +169,7 @@ func (wb *Lektrico) post(method string, params map[string]any) error {
 		return err
 	}
 	if resp.Error != nil {
-		return fmt.Errorf("%s: %s", resp.Error.Code, resp.Error.Message)
+		return fmt.Errorf("%d: %s", resp.Error.Code, resp.Error.Message)
 	}
 
 	wb.statusG.Reset()
@@ -238,25 +238,6 @@ func (wb *Lektrico) Enable(enable bool) error {
 func (wb *Lektrico) MaxCurrent(current int64) error {
 	wb.current = current
 	return wb.sendCurrent(current)
-}
-
-var _ api.PhaseSwitcher = (*Lektrico)(nil)
-
-// Phases1p3p implements the api.PhaseSwitcher interface
-// relay_mode values are unverified: 0=3-phase, 1=1-phase
-func (wb *Lektrico) Phases1p3p(phases int) error {
-	relayMode := 0 // 3-phase
-	if phases == 1 {
-		relayMode = 1
-	}
-	if err := wb.post("dynamic_current.set", map[string]any{
-		"dynamic_current": wb.current,
-		"relay_mode":      relayMode,
-	}); err != nil {
-		return err
-	}
-	wb.phases = phases
-	return nil
 }
 
 var _ api.Meter = (*Lektrico)(nil)
