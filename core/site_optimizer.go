@@ -729,7 +729,7 @@ func (site *Site) extractHeaterProfile(from, to time.Time) []float64 {
 	// Query each heating loadpoint's profile
 	profiles := make([][]float64, 0, len(heatingLPs))
 	for _, lpID := range heatingLPs {
-		profile, err := metrics.LoadpointProfile(site.loadpoints[lpID].GetTitle(), from)
+		profile, err := metrics.LoadpointProfile(lpID, from)
 		if err == nil && profile != nil {
 			site.log.DEBUG.Printf("heater profile: loadpoint %d has %d slots of data", lpID, len(profile))
 			profiles = append(profiles, profile[:])

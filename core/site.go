@@ -839,7 +839,7 @@ func (site *Site) updateLoadpointConsumption(lpID int, power float64) {
 		if slotStart.Sub(site.loadpointSlotStart[lpID]) >= slotDuration {
 			// more or less full slot
 			site.log.DEBUG.Printf("15min loadpoint %d consumption: %.0fWh", lpID, lpEnergy.Accumulated)
-			if err := metrics.PersistLoadpoint(site.loadpoints[lpID].GetTitle(), site.loadpointSlotStart[lpID], lpEnergy.Accumulated); err != nil {
+			if err := metrics.PersistLoadpoint(lpID, site.loadpointSlotStart[lpID], lpEnergy.Accumulated); err != nil {
 				site.log.ERROR.Printf("persist loadpoint %d consumption: %v", lpID, err)
 			}
 		}
