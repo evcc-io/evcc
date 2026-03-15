@@ -263,9 +263,9 @@ export default defineComponent({
 			this.setProtocolByCapabilities(newValue);
 			this.$emit("update:modbus", this.selectedModbus);
 		},
-		modbus(newValue: MODBUS_TYPE) {
+		modbus(newValue: MODBUS_TYPE, oldValue: MODBUS_TYPE) {
 			if (newValue) {
-				this.setConnectionAndProtocolByModbus(newValue);
+				this.setConnectionAndProtocolByModbus(newValue, oldValue);
 			}
 		},
 		connection(newValue: MODBUS_CONNECTION, oldValue: MODBUS_CONNECTION) {
@@ -298,8 +298,8 @@ export default defineComponent({
 				? MODBUS_PROTOCOL.TCP
 				: MODBUS_PROTOCOL.RTU;
 		},
-		setConnectionAndProtocolByModbus(modbus?: MODBUS_TYPE) {
-			switch (modbus) {
+		setConnectionAndProtocolByModbus(newModbus?: MODBUS_TYPE, oldModbus?: MODBUS_TYPE) {
+			switch (newModbus) {
 				case MODBUS_TYPE.RS485_SERIAL:
 					this.connection = MODBUS_CONNECTION.SERIAL;
 					this.protocol = MODBUS_PROTOCOL.RTU;
@@ -312,6 +312,11 @@ export default defineComponent({
 					this.connection = MODBUS_CONNECTION.TCPIP;
 					this.protocol = MODBUS_PROTOCOL.TCP;
 					break;
+			}
+
+			// when switching from serial to TCP/IP, default protocol to Modbus-TCP (rtu=false)
+			if (oldModbus === MODBUS_TYPE.RS485_SERIAL && newModbus === MODBUS_TYPE.RS485_TCPIP) {
+				this.protocol = MODBUS_PROTOCOL.TCP;
 			}
 		},
 		formId(name: string): string {
