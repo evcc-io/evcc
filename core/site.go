@@ -926,6 +926,7 @@ func (site *Site) updateLoadpoints(rates api.Rates) float64 {
 
 	for i, lp := range site.loadpoints {
 		lpID := i // capture loop variable for goroutine
+		lp := lp    // capture loadpoint for goroutine
 		wg.Go(func() {
 			power := lp.UpdateChargePowerAndCurrents()
 			site.prioritizer.UpdateChargePowerFlexibility(lp, rates)

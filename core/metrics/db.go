@@ -13,7 +13,7 @@ import (
 const (
 	MeterTypeHousehold = 1
 	MeterTypeLoadpoint = 2
-	
+
 	// LoadpointNameHousehold is the identifier for household base load (non-loadpoint consumption)
 	LoadpointNameHousehold = "_household"
 )
