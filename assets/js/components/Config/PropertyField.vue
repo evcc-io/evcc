@@ -348,7 +348,7 @@ export default {
 		},
 	},
 	mounted() {
-		if (this.choice) {
+		if (this.choice.length > 0) {
 			this.$emit("update:modelValue", this.value);
 		}
 	},
