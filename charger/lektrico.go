@@ -194,7 +194,7 @@ func (wb *Lektrico) Status() (api.ChargeStatus, error) {
 	case "C":
 		return api.StatusC, nil
 	default:
-		return api.StatusNone, fmt.Errorf("unknown charger state: %s", res.ChargerState)
+		return api.StatusNone, fmt.Errorf("invalid state: %s", res.ChargerState)
 	}
 }
 
