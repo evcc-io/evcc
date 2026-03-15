@@ -12,9 +12,10 @@ import (
 )
 
 const (
-	MeterHousehold = 1 // meter ID for household base load (backward compatible with master)
-	// Loadpoint meter IDs: lpID + 2 (to avoid conflict with household=1)
-	// e.g., loadpoint 0 = meter 2, loadpoint 1 = meter 3, etc.
+	MeterHousehold      = 1    // meter ID for household base load (backward compatible with master)
+	MeterLoadpointBase  = 1000 // base offset for loadpoint meter IDs
+	// Loadpoint meter IDs: lpID + MeterLoadpointBase (to provide sufficient separation)
+	// e.g., loadpoint 0 = meter 1000, loadpoint 1 = meter 1001, etc.
 )
 
 type meter struct {
@@ -43,7 +44,7 @@ func Persist(ts time.Time, value float64) error {
 // PersistLoadpoint stores 15min consumption in Wh for a specific loadpoint
 func PersistLoadpoint(lpID int, ts time.Time, value float64) error {
 	return db.Instance.Create(meter{
-		Meter:     lpID + 2, // offset by 2 to avoid conflict with household=1
+		Meter:     lpID + MeterLoadpointBase,
 		Timestamp: ts.Truncate(15 * time.Minute),
 		Value:     value,
 	}).Error
@@ -58,7 +59,7 @@ func Profile(from time.Time) (*[96]float64, error) {
 // LoadpointProfile returns a 15min average meter profile in Wh for a specific loadpoint.
 // Profile is sorted by timestamp starting at 00:00. It is guaranteed to contain 96 15min values.
 func LoadpointProfile(lpID int, from time.Time) (*[96]float64, error) {
-	return profileQuery(lpID+2, from)
+	return profileQuery(lpID+MeterLoadpointBase, from)
 }
 
 // profileQuery is the internal implementation for querying meter profiles
