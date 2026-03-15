@@ -415,11 +415,10 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 	bat := optimizer.BatteryConfig{
 		CMax:      batteryPower,
 		DMax:      batteryPower,
-		SCapacity: float32(*b.Capacity * 10),          // Wh
+		SCapacity: float32(*b.Capacity * 1e3),         // Wh
 		SInitial:  float32(*b.Capacity * *b.Soc * 10), // Wh
 		// PA:       pa,
 	}
-	bat.SMax = max(bat.SInitial, float32(*b.Capacity*1e3)) // Wh
 
 	instance := dev.Instance()
 
