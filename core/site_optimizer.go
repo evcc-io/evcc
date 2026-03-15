@@ -616,7 +616,7 @@ func (site *Site) applyTemperatureCorrection(profile []float64) []float64 {
 
 	threshold := site.HeatingThreshold
 	coeff := site.HeatingCoefficient
-	
+
 	// Require explicit configuration - no defaults
 	// If either value is not configured (0), skip temperature correction
 	if threshold == 0 || coeff == 0 {
