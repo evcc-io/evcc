@@ -144,6 +144,7 @@ func NewLektrico(host string, cache time.Duration) (*Lektrico, error) {
 		Helper: request.NewHelper(log),
 		log:    log,
 		uri:    uri,
+		current: 6,
 	}
 
 	wb.statusG = util.ResettableCached(func() (lektricoInfo, error) {
