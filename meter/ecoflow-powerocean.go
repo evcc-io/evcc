@@ -14,25 +14,24 @@ import (
 
 // EcoFlowPowerOcean represents the EcoFlow PowerOcean meter
 type EcoFlowPowerOcean struct {
-	usage     string
-	accessKey string
-	secretKey string
-	deviceId  string
-	cache     time.Duration
-	client    *ecoflow.Client
-	dataG     func() (*ecoflow.GetCmdResponse, error)
+	ctx    context.Context
+	usage  string
+	serial string
+	cache  time.Duration
+	client *ecoflow.Client
+	dataG  func() (*ecoflow.GetCmdResponse, error)
 }
 
 func init() {
-	registry.Add("ecoflow-powerocean", NewEcoFlowPowerOceanFromConfig)
+	registry.AddCtx("ecoflow-powerocean", NewEcoFlowPowerOceanFromConfig)
 }
 
 // NewEcoFlowPowerOceanFromConfig creates an EcoFlow PowerOcean meter from generic config
-func NewEcoFlowPowerOceanFromConfig(other map[string]any) (api.Meter, error) {
+func NewEcoFlowPowerOceanFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	cc := struct {
 		AccessKey string
 		SecretKey string
-		DeviceId  string
+		Serial    string
 		Usage     string
 		Cache     time.Duration
 	}{
@@ -48,14 +47,14 @@ func NewEcoFlowPowerOceanFromConfig(other map[string]any) (api.Meter, error) {
 	if cc.SecretKey == "" {
 		return nil, errors.New("missing secret key")
 	}
-	if cc.DeviceId == "" {
-		return nil, errors.New("missing device ID")
+	if cc.Serial == "" {
+		return nil, errors.New("missing serial number")
 	}
 	if cc.Usage == "" {
 		return nil, errors.New("missing usage")
 	}
 
-	m, err := NewEcoFlowPowerOcean(cc.AccessKey, cc.SecretKey, cc.DeviceId, cc.Usage, cc.Cache)
+	m, err := NewEcoFlowPowerOcean(ctx, cc.AccessKey, cc.SecretKey, cc.Serial, cc.Usage, cc.Cache)
 	if err != nil {
 		return nil, err
 	}
@@ -68,15 +67,14 @@ func NewEcoFlowPowerOceanFromConfig(other map[string]any) (api.Meter, error) {
 }
 
 // NewEcoFlowPowerOcean constructs the EcoFlowPowerOcean struct
-func NewEcoFlowPowerOcean(accessKey, secretKey, deviceId, usage string, cache time.Duration) (*EcoFlowPowerOcean, error) {
+func NewEcoFlowPowerOcean(ctx context.Context, accessKey, secretKey, serial, usage string, cache time.Duration) (*EcoFlowPowerOcean, error) {
 	client := ecoflow.NewEcoflowClient(accessKey, secretKey)
 	m := &EcoFlowPowerOcean{
-		accessKey: accessKey,
-		secretKey: secretKey,
-		deviceId:  deviceId,
-		usage:     usage,
-		cache:     cache,
-		client:    client,
+		ctx:    ctx,
+		serial: serial,
+		usage:  usage,
+		cache:  cache,
+		client: client,
 	}
 	m.dataG = util.Cached(m.getData, cache)
 	return m, nil
@@ -84,9 +82,6 @@ func NewEcoFlowPowerOcean(accessKey, secretKey, deviceId, usage string, cache ti
 
 // getData retrieves device parameters from EcoFlow API
 func (m *EcoFlowPowerOcean) getData() (*ecoflow.GetCmdResponse, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-
 	var params []string
 	switch m.usage {
 	case "grid":
@@ -97,7 +92,7 @@ func (m *EcoFlowPowerOcean) getData() (*ecoflow.GetCmdResponse, error) {
 		params = []string{"bpPwr", "bpSoc"}
 	}
 
-	return m.client.GetDeviceParameters(ctx, m.deviceId, params)
+	return m.client.GetDeviceParameters(m.ctx, m.serial, params)
 }
 
 var _ api.Meter = (*EcoFlowPowerOcean)(nil)

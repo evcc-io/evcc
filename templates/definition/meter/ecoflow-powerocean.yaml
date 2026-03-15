@@ -9,14 +9,14 @@ requirements:
       Für die Nutzung des EcoFlow PowerOcean Meters benötigen Sie:
       - Einen gültigen Access Key von der EcoFlow Developer Console
       - Den entsprechenden Secret Key
-      - Die Device ID Ihres PowerOcean Systems
+      - Die Seriennummer Ihres PowerOcean Systems
 
       Diese Credentials erhalten Sie über die EcoFlow Developer Console nach der Registrierung Ihrer Anwendung.
     en: |
       To use the EcoFlow PowerOcean meter you need:
       - A valid Access Key from the EcoFlow Developer Console
       - The corresponding Secret Key
-      - The Device ID of your PowerOcean system
+      - The serial number of your PowerOcean system
 
       These credentials can be obtained through the EcoFlow Developer Console after registering your application.
 params:
@@ -36,13 +36,13 @@ params:
     help:
       en: Secret Key from EcoFlow Developer Console
       de: Secret Key aus der EcoFlow Developer Console
-  - name: deviceid
+  - name: serial
     required: true
     description:
-      generic: Device ID
+      generic: Serial Number
     help:
-      en: Device ID of your EcoFlow PowerOcean system (e.g., HJ31ZD1AZH5G0342)
-      de: Geräte-ID Ihres EcoFlow PowerOcean Systems (z.B. HJ31ZD1AZH5G0342)
+      en: Seriel number of your EcoFlow PowerOcean system (e.g., HJ31ZD1AZH5G0342)
+      de: Seriennummer Ihres EcoFlow PowerOcean Systems (z.B. HJ31ZD1AZH5G0342)
   - name: cache
     default: 30s
     advanced: true
@@ -50,6 +50,6 @@ render: |
   type: ecoflow-powerocean
   accesskey: {{ .accesskey }}
   secretkey: {{ .secretkey }}
-  deviceid: {{ .deviceid }}
+  serial: {{ .serial }}
   usage: {{ .usage }}
   cache: {{ .cache }}
