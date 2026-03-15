@@ -93,11 +93,11 @@ params:
     description:
       de: Service zum Laden starten
       en: Service to start charging
-    service: homeassistant/entities?uri={uri}&domain=script
-    example: "script.vehicle_start_charge"
+    service: homeassistant/entities?uri={uri}&domain=script,switch
+    example: "script.vehicle_start_charge; switch.vehicle_charger"
     help:
-      en: Entity ID for a script that starts charging the vehicle. Only useful with the [Vehicle API-only charger](https://docs.evcc.io/en/docs/devices/chargers#vehicle-api-only-charger).
-      de: Entitäts-ID für ein Skript zum Starten des Ladevorgangs. Nur sinnvoll mit der [Fahrzeug-API Ladesteuerung](https://docs.evcc.io/docs/devices/chargers#vehicle-api-only-charger).
+      en: Entity ID for a script or a switch that starts charging the vehicle. Only useful with the [Vehicle API-only charger](https://docs.evcc.io/en/docs/devices/chargers#vehicle-api-only-charger). If a switch is provided, Service to stop charging must be left empty.
+      de: Entitäts-ID für ein Skript oder einen Schalter zum Starten des Ladevorgangs. Nur sinnvoll mit der [Fahrzeug-API Ladesteuerung](https://docs.evcc.io/docs/devices/chargers#vehicle-api-only-charger). Wenn ein Schalter angegeben wird, muss der Service zum Stoppen des Ladens leer bleiben.
   - name: stop_charging
     description:
       de: Service zum Laden stoppen
@@ -111,11 +111,11 @@ params:
     description:
       de: Service zum Aufwecken
       en: Service to wake up vehicle
-    service: homeassistant/entities?uri={uri}&domain=script
-    example: "script.vehicle_wakeup"
+    service: homeassistant/entities?uri={uri}&domain=script,button
+    example: "script.vehicle_wakeup; button.wakeup_vehicle"
     help:
-      en: Entity ID for a script that wakes up the vehicle
-      de: Entitäts-ID für ein Skript zum Aufwecken des Fahrzeugs
+      en: Entity ID for a script or a button that wakes up the vehicle
+      de: Entitäts-ID für ein Skript oder eine Taste zum Aufwecken des Fahrzeugs
   - name: setMaxCurrent
     description:
       de: Ladestromstärke setzen [A]

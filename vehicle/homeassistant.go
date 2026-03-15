@@ -37,7 +37,7 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 			FinishTime string // optional
 		}
 		Services struct {
-			Start         string `mapstructure:"start_charging"` // script.* optional
+			Start         string `mapstructure:"start_charging"` // script.* or switch.* optional
 			Stop          string `mapstructure:"stop_charging"`  // script.* optional
 			Wakeup        string // script.* optional
 			SetMaxCurrent string // number.* or input_number.* optional
@@ -103,7 +103,9 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 		finish = func() (time.Time, error) { return conn.GetTimeState(cc.Sensors.FinishTime) }
 	}
 	if cc.Services.Start != "" && cc.Services.Stop != "" {
-		enable = func(enable bool) error { return res.enable(cc.Services.Start, cc.Services.Stop, enable) }
+		enable = func(enable bool) error { return res.enableViaScripts(cc.Services.Start, cc.Services.Stop, enable) }
+	} else if cc.Services.Start != "" {
+		enable = func(enable bool) error { return res.enableViaSwitch(cc.Services.Start, enable) }
 	}
 	if cc.Services.Wakeup != "" {
 		wakeup = func() error { return conn.CallSwitchService(cc.Services.Wakeup, true) }
@@ -132,10 +134,14 @@ func (v *HomeAssistant) Soc() (float64, error) {
 	return v.conn.GetFloatState(v.soc)
 }
 
-func (v *HomeAssistant) enable(on, off string, enable bool) error {
+func (v *HomeAssistant) enableViaSwitch(switchEntity string, enable bool) error {
+	return v.conn.CallSwitchService(switchEntity, enable)
+}
+
+func (v *HomeAssistant) enableViaScripts(onService, offService string, enable bool) error {
 	if enable {
-		return v.conn.CallSwitchService(on, true)
+		return v.conn.CallSwitchService(offService, true)
 	}
 
-	return v.conn.CallSwitchService(off, true)
+	return v.conn.CallSwitchService(offService, true)
 }
