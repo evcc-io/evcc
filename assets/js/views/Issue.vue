@@ -613,12 +613,14 @@ export default defineComponent({
 </script>
 
 <style scoped>
+@import "../../css/breakpoints.css";
+
 .log-count-input::-webkit-outer-spin-button,
 .log-count-input::-webkit-inner-spin-button {
 	margin-left: 0.5rem;
 }
 
-@media (min-width: 768px) {
+@media (--md-and-up) {
 	.log-lines-input {
 		width: 170px;
 	}
