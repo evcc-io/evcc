@@ -172,7 +172,7 @@ func (wb *Lektrico) post(method string, params map[string]any) error {
 		return err
 	}
 	if resp.Error != nil {
-		return fmt.Errorf("charger error: code=%d msg=%s", resp.Error.Code, resp.Error.Message)
+		return fmt.Errorf("%s: %s", resp.Error.Code, resp.Error.Message)
 	}
 
 	wb.statusG.Reset()
