@@ -36,9 +36,13 @@ package charger
 //     "voltages": [237.65, 0.0, 0.0],   // V, array [L1, L2, L3]
 //     "total_charged_energy": 9683.844, // kWh
 //     "dynamic_current": 32,            // allowed current (0=pause, 6-32=active)
+//     "relay_mode": 0,                  // phase mode
 //     "has_active_errors": false,
 //     "charger_is_paused": false,
-//     "current_limit_reason": 2,        // int (0=no_limit, 2=user_limit, ...)
+//     "current_limit_reason": 2,        // int: 0=no_limit, 1=installation_current, 2=user_limit,
+//                                       //      3=dynamic_limit, 4=schedule, 5=em_offline, 6=em,
+//                                       //      7=ocpp, 8=overtemperature, 9=switching_phases,
+//                                       //      10=user_limit, 11=1p_charging_disabled, 12+=unknown
 //     "temperature": 18.8,
 //     "fw_version": "1.51",
 //     "headless": true,                 // true = no authentication required
@@ -58,32 +62,15 @@ import (
 	"github.com/evcc-io/evcc/util/sponsor"
 )
 
-// Current limits for Lektrico chargers
-const (
-	lektricoMinCurrentA int64 = 6
-	lektricoMaxCurrentA int64 = 32
-)
-
 // lektricoRPCCounter provides monotonically increasing JSON-RPC request IDs
 var lektricoRPCCounter atomic.Uint32
 
-// Raw IEC states returned in extended_charger_state
-const (
-	lektricoIECA          = "A"
-	lektricoIECB          = "B"
-	lektricoIECBAUTH      = "B_AUTH"
-	lektricoIECBPAUSE     = "B_PAUSE"
-	lektricoIECBSCHEDULER = "B_SCHEDULER"
-	lektricoIECC          = "C"
-	lektricoIECD          = "D"
-	lektricoIECE          = "E"
-	lektricoIECF          = "F"
-	lektricoIECOTA        = "OTA"
-	lektricoIECLOCKED     = "LOCKED"
-)
+// lektricoStateBAUTH is the extended state indicating waiting for RFID authentication
+const lektricoStateBAUTH = "B_AUTH"
 
 // lektricoInfo maps the JSON response from charger_info.get
 type lektricoInfo struct {
+	ChargerState         string    `json:"charger_state"`
 	ExtendedChargerState string    `json:"extended_charger_state"`
 	HasActiveErrors      bool      `json:"has_active_errors"`
 	InstantPower         float64   `json:"instant_power"`
@@ -117,6 +104,7 @@ type Lektrico struct {
 	log     *util.Logger
 	uri     string
 	current atomic.Int64
+	phases  atomic.Int64
 	statusG util.Cacheable[lektricoInfo]
 }
 
@@ -131,6 +119,7 @@ func NewLektricoFromConfig(other map[string]any) (api.Charger, error) {
 	if !sponsor.IsAuthorized() {
 		return nil, api.ErrSponsorRequired
 	}
+
 	cc := struct {
 		Host  string
 		Cache time.Duration
@@ -158,7 +147,6 @@ func NewLektrico(host string, cache time.Duration) (*Lektrico, error) {
 		log:    log,
 		uri:    uri,
 	}
-	l.current.Store(lektricoMinCurrentA)
 
 	l.statusG = util.ResettableCached(func() (lektricoInfo, error) {
 		var res lektricoInfo
@@ -174,6 +162,11 @@ func NewLektrico(host string, cache time.Duration) (*Lektrico, error) {
 		return nil, fmt.Errorf("lektrico: connection failed to %s: %w", host, err)
 	}
 	log.DEBUG.Printf("connected to Lektrico charger: %s", id.DeviceID)
+
+	// Read initial dynamic_current
+	if info, err := l.statusG.Get(); err == nil && info.DynamicCurrent > 0 {
+		l.current.Store(int64(info.DynamicCurrent))
+	}
 
 	return l, nil
 }
@@ -211,26 +204,32 @@ func (l *Lektrico) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	if info.HasActiveErrors {
-		return api.StatusE, nil
+	switch info.ChargerState {
+	case "A":
+		return api.StatusA, nil
+	case "B":
+		return api.StatusB, nil
+	case "C":
+		return api.StatusC, nil
+	default:
+		return api.StatusNone, fmt.Errorf("unknown charger state: %s", info.ChargerState)
+	}
+}
+
+var _ api.StatusReasoner = (*Lektrico)(nil)
+
+// StatusReason implements the api.StatusReasoner interface
+func (l *Lektrico) StatusReason() (api.Reason, error) {
+	info, err := l.statusG.Get()
+	if err != nil {
+		return api.ReasonUnknown, err
 	}
 
-	switch info.ExtendedChargerState {
-	case lektricoIECA:
-		return api.StatusA, nil
-	case lektricoIECB, lektricoIECBAUTH, lektricoIECBPAUSE,
-		lektricoIECBSCHEDULER, lektricoIECLOCKED:
-		return api.StatusB, nil
-	case lektricoIECC, lektricoIECD:
-		return api.StatusC, nil
-	case lektricoIECE, lektricoIECF:
-		return api.StatusE, nil
-	case lektricoIECOTA:
-		return api.StatusB, nil
-	default:
-		l.log.WARN.Printf("unknown charger state: %s", info.ExtendedChargerState)
-		return api.StatusNone, nil
+	if info.ExtendedChargerState == lektricoStateBAUTH {
+		return api.ReasonWaitingForAuthorization, nil
 	}
+
+	return api.ReasonUnknown, nil
 }
 
 // Enabled implements the api.Charger interface
@@ -239,45 +238,55 @@ func (l *Lektrico) Enabled() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return info.DynamicCurrent >= int(lektricoMinCurrentA), nil
+
+	return info.DynamicCurrent > 0, nil
 }
 
-// sendCurrent sends dynamic_current and user_current to the charger.
+// sendCurrent sets the dynamic_current on the charger.
 // A value of 0 pauses charging; values in [lektricoMinCurrentA, lektricoMaxCurrentA] set the current.
 func (l *Lektrico) sendCurrent(value int64) error {
-	if err := l.post("dynamic_current.set", map[string]any{
+	return l.post("dynamic_current.set", map[string]any{
 		"dynamic_current": value,
-	}); err != nil {
-		return err
-	}
-	return l.post("app_config.set", map[string]any{
-		"config_key":   "user_current",
-		"config_value": value,
 	})
 }
 
 // Enable implements the api.Charger interface
 func (l *Lektrico) Enable(enable bool) error {
-	var value int64
+	var curr int64
 	if enable {
-		value = l.current.Load()
-		if value < lektricoMinCurrentA {
-			value = lektricoMinCurrentA
-		}
+		curr = l.current.Load() // restore last current
 	}
-	return l.sendCurrent(value)
+
+	return l.sendCurrent(curr)
 }
 
 // MaxCurrent implements the api.Charger interface
 func (l *Lektrico) MaxCurrent(current int64) error {
-	if current < lektricoMinCurrentA {
-		current = lektricoMinCurrentA
+	if current < 6 {
+		return fmt.Errorf("invalid current %d", current)
 	}
-	if current > lektricoMaxCurrentA {
-		current = lektricoMaxCurrentA
-	}
+
 	l.current.Store(current)
 	return l.sendCurrent(current)
+}
+
+var _ api.PhaseSwitcher = (*Lektrico)(nil)
+
+// Phases1p3p implements the api.PhaseSwitcher interface
+// relay_mode values are unverified: 0=3-phase, 1=1-phase
+func (l *Lektrico) Phases1p3p(phases int) error {
+	relayMode := 0 // 3-phase
+	if phases == 1 {
+		relayMode = 1
+	}
+	if err := l.post("dynamic_current.set", map[string]any{
+		"dynamic_current": l.current.Load(),
+		"relay_mode":      relayMode,
+	}); err != nil {
+		return err
+	}
+	l.phases.Store(int64(phases))
+	return nil
 }
 
 var _ api.Meter = (*Lektrico)(nil)
