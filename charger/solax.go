@@ -171,8 +171,6 @@ func (wb *Solax) Status() (api.ChargeStatus, error) {
 		return api.StatusB, nil
 	case 2: // "Charging"
 		return api.StatusC, nil
-	case 4: // "Fault"
-		return api.StatusE, nil
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %d", s)
 	}
