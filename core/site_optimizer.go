@@ -517,7 +517,7 @@ func loadpointProfile(lp loadpoint.API, minLen int) []float64 {
 // homeProfile returns the home base load in Wh
 func (site *Site) homeProfile(minLen int) ([]float64, error) {
 	from := now.BeginningOfDay().AddDate(0, 0, -7)
-	
+
 	// kWh average over last 7 days - base load (excludes loadpoints)
 	// Note: metrics.Profile() returns meter=1 which is calculated as:
 	// gridPower + pvPower + batteryPower - totalChargePower
