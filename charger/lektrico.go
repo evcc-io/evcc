@@ -139,8 +139,8 @@ func NewLektrico(host string, cache time.Duration) (*Lektrico, error) {
 	uri := fmt.Sprintf("http://%s/rpc", strings.TrimSuffix(host, "/"))
 
 	wb := &Lektrico{
-		Helper: request.NewHelper(log),
-		uri:    uri,
+		Helper:  request.NewHelper(log),
+		uri:     uri,
 		current: 6,
 	}
 
