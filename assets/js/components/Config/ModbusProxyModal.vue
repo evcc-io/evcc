@@ -199,8 +199,6 @@ export default defineComponent({
 				readonly: MODBUS_PROXY_READONLY.FALSE,
 				settings: {
 					uri: ":502",
-					baudrate: 9600,
-					comset: "8N1" as MODBUS_COMSET,
 				},
 			});
 		},
