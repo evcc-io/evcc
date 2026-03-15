@@ -62,9 +62,6 @@ import (
 	"github.com/evcc-io/evcc/util/sponsor"
 )
 
-// lektricoRPCCounter provides monotonically increasing JSON-RPC request IDs
-var lektricoRPCCounter atomic.Uint32
-
 // lektricoStateBAUTH is the extended state indicating waiting for RFID authentication
 const lektricoStateBAUTH = "B_AUTH"
 
@@ -102,9 +99,10 @@ type lektricoRPCResponse struct {
 type Lektrico struct {
 	*request.Helper
 	log     *util.Logger
+	rpcID   atomic.Uint32
 	uri     string
-	current atomic.Int64
-	phases  atomic.Int64
+	current int64
+	phases  int
 	statusG util.Cacheable[lektricoInfo]
 }
 
@@ -142,15 +140,15 @@ func NewLektrico(host string, cache time.Duration) (*Lektrico, error) {
 	log := util.NewLogger("lektrico")
 	uri := fmt.Sprintf("http://%s/rpc", strings.TrimSuffix(host, "/"))
 
-	l := &Lektrico{
+	wb := &Lektrico{
 		Helper: request.NewHelper(log),
 		log:    log,
 		uri:    uri,
 	}
 
-	l.statusG = util.ResettableCached(func() (lektricoInfo, error) {
+	wb.statusG = util.ResettableCached(func() (lektricoInfo, error) {
 		var res lektricoInfo
-		err := l.GetJSON(uri+"/charger_info.get", &res)
+		err := wb.GetJSON(uri+"/charger_info.get", &res)
 		return res, err
 	}, cache)
 
@@ -158,53 +156,45 @@ func NewLektrico(host string, cache time.Duration) (*Lektrico, error) {
 	var id struct {
 		DeviceID string `json:"device_id"`
 	}
-	if err := l.GetJSON(uri+"/Device_id.Get", &id); err != nil {
+	if err := wb.GetJSON(uri+"/Device_id.Get", &id); err != nil {
 		return nil, fmt.Errorf("lektrico: connection failed to %s: %w", host, err)
 	}
 	log.DEBUG.Printf("connected to Lektrico charger: %s", id.DeviceID)
 
-	// Read initial dynamic_current
-	if info, err := l.statusG.Get(); err == nil && info.DynamicCurrent > 0 {
-		l.current.Store(int64(info.DynamicCurrent))
-	}
-
-	return l, nil
+	return wb, nil
 }
 
 // post sends a JSON-RPC command to the charger
-func (l *Lektrico) post(method string, params map[string]any) error {
+func (wb *Lektrico) post(method string, params map[string]any) error {
 	payload := lektricoRPCRequest{
 		Src:    "evcc",
-		ID:     int(lektricoRPCCounter.Add(1)),
+		ID:     int(wb.rpcID.Add(1)),
 		Method: method,
 		Params: params,
 	}
 
-	req, err := request.New(http.MethodPost, l.uri, request.MarshalJSON(payload), request.JSONEncoding)
-	if err != nil {
-		return err
-	}
+	req, _ := request.New(http.MethodPost, wb.uri, request.MarshalJSON(payload), request.JSONEncoding)
 
 	var resp lektricoRPCResponse
-	if err := l.DoJSON(req, &resp); err != nil {
+	if err := wb.DoJSON(req, &resp); err != nil {
 		return err
 	}
 	if resp.Error != nil {
 		return fmt.Errorf("charger error: code=%d msg=%s", resp.Error.Code, resp.Error.Message)
 	}
 
-	l.statusG.Reset()
+	wb.statusG.Reset()
 	return nil
 }
 
 // Status implements the api.Charger interface
-func (l *Lektrico) Status() (api.ChargeStatus, error) {
-	info, err := l.statusG.Get()
+func (wb *Lektrico) Status() (api.ChargeStatus, error) {
+	res, err := wb.statusG.Get()
 	if err != nil {
 		return api.StatusNone, err
 	}
 
-	switch info.ChargerState {
+	switch res.ChargerState {
 	case "A":
 		return api.StatusA, nil
 	case "B":
@@ -212,20 +202,20 @@ func (l *Lektrico) Status() (api.ChargeStatus, error) {
 	case "C":
 		return api.StatusC, nil
 	default:
-		return api.StatusNone, fmt.Errorf("unknown charger state: %s", info.ChargerState)
+		return api.StatusNone, fmt.Errorf("unknown charger state: %s", res.ChargerState)
 	}
 }
 
 var _ api.StatusReasoner = (*Lektrico)(nil)
 
 // StatusReason implements the api.StatusReasoner interface
-func (l *Lektrico) StatusReason() (api.Reason, error) {
-	info, err := l.statusG.Get()
+func (wb *Lektrico) StatusReason() (api.Reason, error) {
+	res, err := wb.statusG.Get()
 	if err != nil {
 		return api.ReasonUnknown, err
 	}
 
-	if info.ExtendedChargerState == lektricoStateBAUTH {
+	if res.ExtendedChargerState == lektricoStateBAUTH {
 		return api.ReasonWaitingForAuthorization, nil
 	}
 
@@ -233,110 +223,99 @@ func (l *Lektrico) StatusReason() (api.Reason, error) {
 }
 
 // Enabled implements the api.Charger interface
-func (l *Lektrico) Enabled() (bool, error) {
-	info, err := l.statusG.Get()
+func (wb *Lektrico) Enabled() (bool, error) {
+	res, err := wb.statusG.Get()
 	if err != nil {
 		return false, err
 	}
 
-	return info.DynamicCurrent > 0, nil
+	return res.DynamicCurrent > 0, nil
 }
 
 // sendCurrent sets the dynamic_current on the charger.
-// A value of 0 pauses charging; values in [lektricoMinCurrentA, lektricoMaxCurrentA] set the current.
-func (l *Lektrico) sendCurrent(value int64) error {
-	return l.post("dynamic_current.set", map[string]any{
+func (wb *Lektrico) sendCurrent(value int64) error {
+	return wb.post("dynamic_current.set", map[string]any{
 		"dynamic_current": value,
 	})
 }
 
 // Enable implements the api.Charger interface
-func (l *Lektrico) Enable(enable bool) error {
+func (wb *Lektrico) Enable(enable bool) error {
 	var curr int64
 	if enable {
-		curr = l.current.Load() // restore last current
+		curr = wb.current
 	}
 
-	return l.sendCurrent(curr)
+	return wb.sendCurrent(curr)
 }
 
 // MaxCurrent implements the api.Charger interface
-func (l *Lektrico) MaxCurrent(current int64) error {
-	if current < 6 {
-		return fmt.Errorf("invalid current %d", current)
-	}
-
-	l.current.Store(current)
-	return l.sendCurrent(current)
+func (wb *Lektrico) MaxCurrent(current int64) error {
+	wb.current = current
+	return wb.sendCurrent(current)
 }
 
 var _ api.PhaseSwitcher = (*Lektrico)(nil)
 
 // Phases1p3p implements the api.PhaseSwitcher interface
 // relay_mode values are unverified: 0=3-phase, 1=1-phase
-func (l *Lektrico) Phases1p3p(phases int) error {
+func (wb *Lektrico) Phases1p3p(phases int) error {
 	relayMode := 0 // 3-phase
 	if phases == 1 {
 		relayMode = 1
 	}
-	if err := l.post("dynamic_current.set", map[string]any{
-		"dynamic_current": l.current.Load(),
+	if err := wb.post("dynamic_current.set", map[string]any{
+		"dynamic_current": wb.current,
 		"relay_mode":      relayMode,
 	}); err != nil {
 		return err
 	}
-	l.phases.Store(int64(phases))
+	wb.phases = phases
 	return nil
 }
 
 var _ api.Meter = (*Lektrico)(nil)
 
 // CurrentPower implements the api.Meter interface
-func (l *Lektrico) CurrentPower() (float64, error) {
-	info, err := l.statusG.Get()
-	return info.InstantPower, err
+func (wb *Lektrico) CurrentPower() (float64, error) {
+	res, err := wb.statusG.Get()
+	return res.InstantPower, err
 }
 
 var _ api.MeterEnergy = (*Lektrico)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
-func (l *Lektrico) TotalEnergy() (float64, error) {
-	info, err := l.statusG.Get()
-	return info.TotalChargedEnergy, err
+func (wb *Lektrico) TotalEnergy() (float64, error) {
+	res, err := wb.statusG.Get()
+	return res.TotalChargedEnergy, err
 }
 
 var _ api.ChargeRater = (*Lektrico)(nil)
 
 // ChargedEnergy implements the api.ChargeRater interface
-func (l *Lektrico) ChargedEnergy() (float64, error) {
-	info, err := l.statusG.Get()
-	return info.SessionEnergy / 1000.0, err
+func (wb *Lektrico) ChargedEnergy() (float64, error) {
+	res, err := wb.statusG.Get()
+	return res.SessionEnergy / 1000.0, err
 }
 
 var _ api.PhaseCurrents = (*Lektrico)(nil)
 
 // Currents implements the api.PhaseCurrents interface
-func (l *Lektrico) Currents() (float64, float64, float64, error) {
-	info, err := l.statusG.Get()
+func (wb *Lektrico) Currents() (float64, float64, float64, error) {
+	res, err := wb.statusG.Get()
 	if err != nil {
 		return 0, 0, 0, err
 	}
-	if len(info.Currents) < 3 {
-		return 0, 0, 0, fmt.Errorf("incomplete currents array (%d elements)", len(info.Currents))
-	}
-	return info.Currents[0], info.Currents[1], info.Currents[2], nil
+	return res.Currents[0], res.Currents[1], res.Currents[2], nil
 }
 
 var _ api.PhaseVoltages = (*Lektrico)(nil)
 
 // Voltages implements the api.PhaseVoltages interface
-func (l *Lektrico) Voltages() (float64, float64, float64, error) {
-	info, err := l.statusG.Get()
+func (wb *Lektrico) Voltages() (float64, float64, float64, error) {
+	res, err := wb.statusG.Get()
 	if err != nil {
 		return 0, 0, 0, err
 	}
-	if len(info.Voltages) < 3 {
-		return 0, 0, 0, fmt.Errorf("incomplete voltages array (%d elements)", len(info.Voltages))
-	}
-	return info.Voltages[0], info.Voltages[1], info.Voltages[2], nil
+	return res.Voltages[0], res.Voltages[1], res.Voltages[2], nil
 }
