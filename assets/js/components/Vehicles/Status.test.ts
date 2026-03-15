@@ -60,19 +60,19 @@ describe("basics", () => {
 });
 
 describe("min charge", () => {
-  test("active when minSocActive is true", () => {
+  test("active when minSocNotReached is true", () => {
     expectEntries(
-      { connected: true, minSoc: 20, minSocActive: true },
+      { connected: true, minSoc: 20, minSocNotReached: true },
       { charger: "main.vehicleStatus.connected", minsoc: "20 %" }
     );
   });
-  test("not active when minSocActive is false", () => {
+  test("not active when minSocNotReached is false", () => {
     expectEntries(
-      { connected: true, minSoc: 20, minSocActive: false },
+      { connected: true, minSoc: 20, minSocNotReached: false },
       { charger: "main.vehicleStatus.connected", minsoc: false }
     );
   });
-  test("not active when minSocActive is not set", () => {
+  test("not active when minSocNotReached is not set", () => {
     expectEntries(
       { connected: true, minSoc: 20 },
       { charger: "main.vehicleStatus.connected", minsoc: false }

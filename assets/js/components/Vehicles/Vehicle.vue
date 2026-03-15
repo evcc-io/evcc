@@ -161,7 +161,7 @@ export default defineComponent({
 		vehicleSoc: { type: Number, default: 0 },
 		vehicleLimitSoc: Number,
 		vehicleNotReachable: Boolean,
-		minSocActive: Boolean,
+		minSocNotReached: Boolean,
 	},
 	emits: [
 		"limit-soc-updated",

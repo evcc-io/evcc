@@ -105,7 +105,7 @@ export default defineComponent({
 		enabled: Boolean,
 		heating: Boolean,
 		minSoc: { type: Number, default: 0 },
-		minSocActive: Boolean,
+		minSocNotReached: Boolean,
 		phaseAction: { type: String, default: "" },
 		phaseRemainingInterpolated: Number,
 		planActive: Boolean,
@@ -270,7 +270,7 @@ export default defineComponent({
 				},
 				{
 					id: "minSoc",
-					visible: !this.heating && this.connected && this.minSocActive,
+					visible: !this.heating && this.connected && this.minSocNotReached,
 					content: this.fmtPercentage(this.minSoc),
 					tooltipContent: t("minCharge", {
 						soc: this.fmtPercentage(this.minSoc),

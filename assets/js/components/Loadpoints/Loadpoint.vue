@@ -181,7 +181,7 @@ export default defineComponent({
 		vehicleDetectionActive: Boolean,
 		vehicleRange: Number,
 		vehicleSoc: { type: Number, default: 0 },
-		minSocActive: Boolean,
+		minSocNotReached: Boolean,
 		vehicleName: String,
 		vehicleIcon: String,
 		vehicleLimitSoc: Number,
