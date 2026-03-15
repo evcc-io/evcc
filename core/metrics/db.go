@@ -13,11 +13,14 @@ import (
 const (
 	MeterTypeHousehold = 1
 	MeterTypeLoadpoint = 2
+	
+	// LoadpointNameHousehold is the identifier for household base load (non-loadpoint consumption)
+	LoadpointNameHousehold = "_household"
 )
 
 type meter struct {
 	Meter     int       `json:"meter" gorm:"column:meter;uniqueIndex:meter_ts"`
-	Loadpoint string    `json:"loadpoint" gorm:"column:loadpoint;uniqueIndex:meter_ts"` // loadpoint name for heater tracking
+	Loadpoint string    `json:"loadpoint" gorm:"column:loadpoint;uniqueIndex:meter_ts;default:'_household'"` // loadpoint name: "_household" for base load, or loadpoint title for heaters
 	Timestamp time.Time `json:"ts" gorm:"column:ts;uniqueIndex:meter_ts"`
 	Value     float64   `json:"val" gorm:"column:val"`
 }
@@ -34,7 +37,7 @@ func init() {
 func Persist(ts time.Time, value float64) error {
 	return db.Instance.Create(meter{
 		Meter:     MeterTypeHousehold,
-		Loadpoint: "", // empty for household total
+		Loadpoint: LoadpointNameHousehold,
 		Timestamp: ts.Truncate(15 * time.Minute),
 		Value:     value,
 	}).Error
@@ -53,7 +56,7 @@ func PersistLoadpoint(loadpointName string, ts time.Time, value float64) error {
 // Profile returns a 15min average meter profile in Wh for household total.
 // Profile is sorted by timestamp starting at 00:00. It is guaranteed to contain 96 15min values.
 func Profile(from time.Time) (*[96]float64, error) {
-	return profileQuery(MeterTypeHousehold, "", from)
+	return profileQuery(MeterTypeHousehold, LoadpointNameHousehold, from)
 }
 
 // LoadpointProfile returns a 15min average meter profile in Wh for a specific loadpoint.
@@ -71,21 +74,12 @@ func profileQuery(meterType int, loadpointName string, from time.Time) (*[96]flo
 
 	// Use 'localtime' in strftime to fix https://github.com/evcc-io/evcc/discussions/23759
 	var rows *sql.Rows
-	if loadpointName == "" {
-		rows, err = db.Query(`SELECT min(ts) AS ts, avg(val) AS val
-			FROM meters
-			WHERE meter = ? AND ts >= ?
-			GROUP BY strftime("%H:%M", ts, 'localtime')
-			ORDER BY strftime("%H:%M", ts, 'localtime') ASC`, meterType, from,
-		)
-	} else {
-		rows, err = db.Query(`SELECT min(ts) AS ts, avg(val) AS val
-			FROM meters
-			WHERE meter = ? AND loadpoint = ? AND ts >= ?
-			GROUP BY strftime("%H:%M", ts, 'localtime')
-			ORDER BY strftime("%H:%M", ts, 'localtime') ASC`, meterType, loadpointName, from,
-		)
-	}
+	rows, err = db.Query(`SELECT min(ts) AS ts, avg(val) AS val
+		FROM meters
+		WHERE meter = ? AND loadpoint = ? AND ts >= ?
+		GROUP BY strftime("%H:%M", ts, 'localtime')
+		ORDER BY strftime("%H:%M", ts, 'localtime') ASC`, meterType, loadpointName, from,
+	)
 	if err != nil {
 		return nil, err
 	}

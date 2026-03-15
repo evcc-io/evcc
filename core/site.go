@@ -60,10 +60,12 @@ type Site struct {
 	log *util.Logger
 
 	// configuration
-	Title         string       `mapstructure:"title"`         // UI title
-	Voltage       float64      `mapstructure:"voltage"`       // Operating voltage. 230V for Germany.
-	ResidualPower float64      `mapstructure:"residualPower"` // PV meter only: household usage. Grid meter: household safety margin
-	Meters        MetersConfig `mapstructure:"meters"`        // Meter references
+	Title              string       `mapstructure:"title"`              // UI title
+	Voltage            float64      `mapstructure:"voltage"`            // Operating voltage. 230V for Germany.
+	ResidualPower      float64      `mapstructure:"residualPower"`      // PV meter only: household usage. Grid meter: household safety margin
+	Meters             MetersConfig `mapstructure:"meters"`             // Meter references
+	HeatingThreshold   float64      `mapstructure:"heatingThreshold"`   // Temperature threshold for heating (°C)
+	HeatingCoefficient float64      `mapstructure:"heatingCoefficient"` // Heating load adjustment coefficient per degree
 
 	// meters
 	circuit       api.Circuit                // Circuit
@@ -837,7 +839,7 @@ func (site *Site) updateLoadpointConsumption(lpID int, power float64) {
 		if slotStart.Sub(site.loadpointSlotStart[lpID]) >= slotDuration {
 			// more or less full slot
 			site.log.DEBUG.Printf("15min loadpoint %d consumption: %.0fWh", lpID, lpEnergy.Accumulated)
-			if err := metrics.PersistLoadpoint(site.loadpointSlotStart[lpID], lpID, lpEnergy.Accumulated); err != nil {
+			if err := metrics.PersistLoadpoint(site.loadpoints[lpID].GetTitle(), site.loadpointSlotStart[lpID], lpEnergy.Accumulated); err != nil {
 				site.log.ERROR.Printf("persist loadpoint %d consumption: %v", lpID, err)
 			}
 		}

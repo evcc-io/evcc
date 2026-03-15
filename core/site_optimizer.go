@@ -518,8 +518,11 @@ func loadpointProfile(lp loadpoint.API, minLen int) []float64 {
 func (site *Site) homeProfile(minLen int) ([]float64, error) {
 	from := now.BeginningOfDay().AddDate(0, 0, -7)
 	
-	// kWh average over last 7 days - total household consumption
-	gt_total, err := metrics.Profile(from)
+	// kWh average over last 7 days - base load (excludes loadpoints)
+	// Note: metrics.Profile() returns meter=1 which is calculated as:
+	// gridPower + pvPower + batteryPower - totalChargePower
+	// So it already excludes all loadpoint consumption
+	gt_base, err := metrics.Profile(from)
 	if err != nil {
 		return nil, err
 	}
@@ -533,7 +536,7 @@ func (site *Site) homeProfile(minLen int) ([]float64, error) {
 	// max 4 days
 	slots := make([]float64, 0, minLen+1)
 	for len(slots) <= minLen+24*4 { // allow for prorating first day
-		slots = append(slots, gt_total[:]...)
+		slots = append(slots, gt_base[:]...)
 	}
 
 	res := profileSlotsFromNow(slots)
@@ -544,17 +547,16 @@ func (site *Site) homeProfile(minLen int) ([]float64, error) {
 		res = res[:minLen]
 	}
 
-	// If no heating devices or no heater data, return uncorrected profile
-	// Temperature correction should ONLY apply to heating loads, never to entire household
+	// If no heating devices or no heater data, return base load only
 	if gt_heater_raw == nil || len(gt_heater_raw) == 0 {
-		site.log.DEBUG.Println("home profile: no heating devices or heater data, returning uncorrected profile")
+		site.log.DEBUG.Println("home profile: no heating devices or heater data, returning base load only")
 		// convert to Wh
 		return lo.Map(res, func(v float64, i int) float64 {
 			return v * 1e3
 		}), nil
 	}
 
-	// Prepare heater profile with same length as total profile
+	// Prepare heater profile with same length as base profile
 	heaterSlots := make([]float64, 0, minLen+1)
 	for len(heaterSlots) <= minLen+24*4 {
 		heaterSlots = append(heaterSlots, gt_heater_raw[:]...)
@@ -564,36 +566,21 @@ func (site *Site) homeProfile(minLen int) ([]float64, error) {
 		gt_heater = gt_heater[:len(res)]
 	}
 
-	// Calculate base load (non-heating): gt_base = gt_total - gt_heater
-	gt_base := make([]float64, len(res))
-	negativeCount := 0
-	for i := range res {
-		if i < len(gt_heater) {
-			gt_base[i] = res[i] - gt_heater[i]
-			// Safety: avoid negative base load
-			if gt_base[i] < 0 {
-				negativeCount++
-				gt_base[i] = 0
-			}
-		} else {
-			gt_base[i] = res[i]
-		}
-	}
-	if negativeCount > 0 {
-		site.log.WARN.Printf("home profile: %d slots had negative base load (heater > total), clamped to zero", negativeCount)
-	}
-
-	site.log.DEBUG.Println("home profile: applying temperature correction to heater profile only")
-	// Apply temperature correction ONLY to heater profile
+	// Try to apply temperature correction to heater profile
+	// If correction cannot be applied (missing weather tariff, thresholds, etc.),
+	// applyTemperatureCorrection returns the uncorrected profile
+	site.log.DEBUG.Println("home profile: attempting temperature correction on heater profile")
 	gt_heater_corrected := site.applyTemperatureCorrection(gt_heater)
 
-	// Merge back: final = base + corrected_heater
+	// Merge: final = base + heater (corrected or uncorrected)
+	// Since base already excludes loadpoints, we always add the heating consumption
+	// This ensures total household consumption includes heating even if correction fails
 	gt_final := make([]float64, len(res))
 	for i := range res {
 		if i < len(gt_heater_corrected) {
-			gt_final[i] = gt_base[i] + gt_heater_corrected[i]
+			gt_final[i] = res[i] + gt_heater_corrected[i]
 		} else {
-			gt_final[i] = gt_base[i]
+			gt_final[i] = res[i]
 		}
 	}
 
@@ -738,10 +725,10 @@ func (site *Site) extractHeaterProfile(from, to time.Time) []float64 {
 	// Query each heating loadpoint's profile
 	profiles := make([][]float64, 0, len(heatingLPs))
 	for _, lpID := range heatingLPs {
-		profile := metrics.LoadpointProfile(from, to, lpID)
-		if len(profile) > 0 {
+		profile, err := metrics.LoadpointProfile(site.loadpoints[lpID].GetTitle(), from)
+		if err == nil && profile != nil {
 			site.log.DEBUG.Printf("heater profile: loadpoint %d has %d slots of data", lpID, len(profile))
-			profiles = append(profiles, profile)
+			profiles = append(profiles, profile[:])
 		} else {
 			site.log.DEBUG.Printf("heater profile: loadpoint %d has no historical data", lpID)
 		}
