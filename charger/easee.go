@@ -40,6 +40,8 @@ import (
 	"golang.org/x/oauth2"
 )
 
+const obsTimeout = 5 * time.Minute
+
 // Easee charger implementation
 type Easee struct {
 	*request.Helper
@@ -749,6 +751,10 @@ func (c *Easee) CurrentPower() (float64, error) {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
 
+	if t, ok := c.obsTime[easee.TOTAL_POWER]; ok && time.Since(t) > obsTimeout {
+		return 0, nil
+	}
+
 	return c.currentPower, nil
 }
 
@@ -767,6 +773,11 @@ var _ api.PhaseCurrents = (*Easee)(nil)
 func (c *Easee) Currents() (float64, float64, float64, error) {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
+
+	if t, ok := c.obsTime[easee.IN_CURRENT_T3]; ok && time.Since(t) > obsTimeout {
+		return 0, 0, 0, nil
+	}
+
 	return c.currentL1, c.currentL2, c.currentL3, nil
 }
 

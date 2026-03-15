@@ -409,9 +409,10 @@ func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDurati
 
 func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measurement, grid api.Rates, minLen int, firstSlotDuration time.Duration) (optimizer.BatteryConfig, batteryDetail) {
 	bat := optimizer.BatteryConfig{
-		CMax:     batteryPower,
-		DMax:     batteryPower,
-		SInitial: float32(*b.Capacity * *b.Soc * 10), // Wh
+		CMax:      batteryPower,
+		DMax:      batteryPower,
+		SCapacity: float32(*b.Capacity * 10),          // Wh
+		SInitial:  float32(*b.Capacity * *b.Soc * 10), // Wh
 		// PA:       pa,
 	}
 	bat.SMax = max(bat.SInitial, float32(*b.Capacity*1e3)) // Wh
@@ -430,8 +431,8 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 
 	if m, ok := instance.(api.BatterySocLimiter); ok {
 		minSoc, maxSoc := m.GetSocLimits()
-		bat.SMin = min(bat.SInitial, float32(*b.Capacity*minSoc*10)) // Wh
-		bat.SMax = max(bat.SInitial, float32(*b.Capacity*maxSoc*10)) // Wh
+		bat.SMin = float32(*b.Capacity * minSoc * 10) // Wh
+		bat.SMax = float32(*b.Capacity * maxSoc * 10) // Wh
 	}
 
 	detail := batteryDetail{
