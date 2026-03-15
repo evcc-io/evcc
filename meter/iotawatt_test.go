@@ -61,7 +61,7 @@ func TestIoTaWattSingleChannel(t *testing.T) {
 	srv := newIoTaWattTestServer()
 	defer srv.Close()
 
-	m, err := NewIoTaWatt(srv.URL, []string{"GridNet"}, 0)
+	m, err := NewIoTaWatt(srv.URL, []string{"GridNet"})
 	require.NoError(t, err)
 
 	t.Run("CurrentPower", func(t *testing.T) {
@@ -101,7 +101,7 @@ func TestIoTaWattSolarSingleChannel(t *testing.T) {
 	srv := newIoTaWattTestServer()
 	defer srv.Close()
 
-	m, err := NewIoTaWatt(srv.URL, []string{"Solar"}, 0)
+	m, err := NewIoTaWatt(srv.URL, []string{"Solar"})
 	require.NoError(t, err)
 
 	power, err := m.CurrentPower()
@@ -114,7 +114,7 @@ func TestIoTaWattThreePhase(t *testing.T) {
 	defer srv.Close()
 
 	channels := []string{"Grid_A", "Grid_B", "Grid_C"}
-	m, err := NewIoTaWatt(srv.URL, channels, 0)
+	m, err := NewIoTaWatt(srv.URL, channels)
 	require.NoError(t, err)
 
 	t.Run("CurrentPower", func(t *testing.T) {
@@ -176,7 +176,7 @@ func TestIoTaWattInvalidChannel(t *testing.T) {
 	srv := newIoTaWattTestServer()
 	defer srv.Close()
 
-	_, err := NewIoTaWatt(srv.URL, []string{"NonExistent"}, 0)
+	_, err := NewIoTaWatt(srv.URL, []string{"NonExistent"})
 	assert.ErrorContains(t, err, "unknown iotawatt series: NonExistent")
 }
 
@@ -184,7 +184,7 @@ func TestIoTaWattVoltageChannelRejected(t *testing.T) {
 	srv := newIoTaWattTestServer()
 	defer srv.Close()
 
-	_, err := NewIoTaWatt(srv.URL, []string{"Input_0"}, 0)
+	_, err := NewIoTaWatt(srv.URL, []string{"Input_0"})
 	assert.ErrorContains(t, err, "has unit")
 }
 
@@ -192,7 +192,7 @@ func TestIoTaWattInvalidChannelCount(t *testing.T) {
 	srv := newIoTaWattTestServer()
 	defer srv.Close()
 
-	_, err := NewIoTaWatt(srv.URL, []string{"Grid_A", "Grid_B"}, 0)
+	_, err := NewIoTaWatt(srv.URL, []string{"Grid_A", "Grid_B"})
 	assert.ErrorContains(t, err, "1 (single-phase) or 3 (three-phase)")
 }
 

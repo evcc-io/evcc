@@ -19,8 +19,8 @@ func init() {
 
 // configResponse is the response from the /config service endpoint.
 type configResponse struct {
-	ThreePhase bool              `json:"threephase"`
-	Phases     map[string]int    `json:"phases"` // input name -> phase (1, 2, 3)
+	ThreePhase bool           `json:"threephase"`
+	Phases     map[string]int `json:"phases"` // input name -> phase (1, 2, 3)
 }
 
 func connectionFromRequest(req *http.Request) (*Connection, error) {
@@ -29,7 +29,7 @@ func connectionFromRequest(req *http.Request) (*Connection, error) {
 		return nil, errMissingURI
 	}
 
-	return NewConnection(uri, 0)
+	return NewConnection(uri)
 }
 
 // getSeries returns the available Watts series names from the IoTaWatt device.

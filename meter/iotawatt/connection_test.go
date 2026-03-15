@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
+
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -26,7 +26,7 @@ func TestShowSeries(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	conn, err := NewConnection(srv.URL, time.Second)
+	conn, err := NewConnection(srv.URL)
 	require.NoError(t, err)
 
 	series, err := conn.ShowSeries()
@@ -55,7 +55,7 @@ func TestValidateSeries(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	conn, err := NewConnection(srv.URL, time.Second)
+	conn, err := NewConnection(srv.URL)
 	require.NoError(t, err)
 
 	// valid Watts series
@@ -112,7 +112,7 @@ func TestQueryPower(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	conn, err := NewConnection(srv.URL, time.Second)
+	conn, err := NewConnection(srv.URL)
 	require.NoError(t, err)
 
 	t.Run("single channel", func(t *testing.T) {
@@ -140,7 +140,7 @@ func TestQueryCurrents(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	conn, err := NewConnection(srv.URL, time.Second)
+	conn, err := NewConnection(srv.URL)
 	require.NoError(t, err)
 
 	values, err := conn.QueryCurrents("Grid_A", "Grid_B", "Grid_C")
@@ -149,7 +149,7 @@ func TestQueryCurrents(t *testing.T) {
 }
 
 func TestQueryPowerNoChannels(t *testing.T) {
-	conn, err := NewConnection("http://localhost", time.Second)
+	conn, err := NewConnection("http://localhost")
 	require.NoError(t, err)
 
 	_, err = conn.QueryPower()
@@ -173,7 +173,7 @@ func TestQueryPowerUnexpectedResponse(t *testing.T) {
 			}))
 			defer srv.Close()
 
-			conn, err := NewConnection(srv.URL, time.Second)
+			conn, err := NewConnection(srv.URL)
 			require.NoError(t, err)
 
 			_, err = conn.QueryPower("GridNet")
@@ -202,7 +202,7 @@ func TestTotalEnergy(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	conn, err := NewConnection(srv.URL, time.Second)
+	conn, err := NewConnection(srv.URL)
 	require.NoError(t, err)
 
 	// first call seeds the timestamp, returns 0
@@ -230,7 +230,7 @@ func TestTotalEnergyOnError(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	conn, err := NewConnection(srv.URL, time.Second)
+	conn, err := NewConnection(srv.URL)
 	require.NoError(t, err)
 
 	// seed
@@ -244,19 +244,19 @@ func TestTotalEnergyOnError(t *testing.T) {
 }
 
 func TestNewConnectionMissingURI(t *testing.T) {
-	_, err := NewConnection("", time.Second)
+	_, err := NewConnection("")
 	assert.ErrorContains(t, err, "missing uri")
 }
 
 func TestNewConnectionDefaultScheme(t *testing.T) {
 	// should not panic with a hostname-only URI
-	conn, err := NewConnection("iotawatt.local", time.Second)
+	conn, err := NewConnection("iotawatt.local")
 	require.NoError(t, err)
 	assert.Contains(t, conn.uri, "http://")
 }
 
 func TestNewConnectionTrailingSlash(t *testing.T) {
-	conn, err := NewConnection("http://iotawatt.local/", time.Second)
+	conn, err := NewConnection("http://iotawatt.local/")
 	require.NoError(t, err)
 	assert.Equal(t, "http://iotawatt.local", conn.uri)
 }

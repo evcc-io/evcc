@@ -2,7 +2,6 @@ package meter
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/meter/iotawatt"
@@ -19,10 +18,7 @@ func NewIoTaWattFromConfig(other map[string]any) (api.Meter, error) {
 		URI      string
 		Channels []string
 		Usage    string
-		Cache    time.Duration
-	}{
-		Cache: time.Second,
-	}
+	}{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
@@ -40,16 +36,16 @@ func NewIoTaWattFromConfig(other map[string]any) (api.Meter, error) {
 		return nil, fmt.Errorf("missing channels")
 	}
 
-	return NewIoTaWatt(cc.URI, channels, cc.Cache)
+	return NewIoTaWatt(cc.URI, channels)
 }
 
 // NewIoTaWatt creates an IoTaWatt meter
-func NewIoTaWatt(uri string, channels []string, cache time.Duration) (api.Meter, error) {
+func NewIoTaWatt(uri string, channels []string) (api.Meter, error) {
 	if len(channels) != 1 && len(channels) != 3 {
 		return nil, fmt.Errorf("channels must have 1 (single-phase) or 3 (three-phase) entries, got %d", len(channels))
 	}
 
-	conn, err := iotawatt.NewConnection(uri, cache)
+	conn, err := iotawatt.NewConnection(uri)
 	if err != nil {
 		return nil, err
 	}

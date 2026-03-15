@@ -13,17 +13,17 @@ type ShowSeriesResponse struct {
 
 // DeviceConfig is the IoTaWatt device configuration from /config.txt.
 type DeviceConfig struct {
-	Inputs    []*InputConfig `json:"inputs"`
+	Inputs    []*InputConfig  `json:"inputs"`
 	Outputs   []*OutputConfig `json:"outputs"`
-	Derive3Ph bool           `json:"derive3ph"`
+	Derive3Ph bool            `json:"derive3ph"`
 }
 
 // InputConfig describes an input channel in the device config.
 type InputConfig struct {
 	Channel int     `json:"channel"`
 	Name    string  `json:"name"`
-	Type    string  `json:"type"`    // "VT" or "CT"
-	VPhase  float64 `json:"vphase"`  // 0=L1, 120=L2, 240=L3
+	Type    string  `json:"type"`   // "VT" or "CT"
+	VPhase  float64 `json:"vphase"` // 0=L1, 120=L2, 240=L3
 }
 
 // OutputConfig describes an output in the device config.

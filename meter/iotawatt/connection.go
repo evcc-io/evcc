@@ -17,8 +17,7 @@ var errMissingURI = errors.New("missing uri")
 // Connection is the IoTaWatt connection
 type Connection struct {
 	*request.Helper
-	uri   string
-	cache time.Duration
+	uri string
 
 	mu          sync.Mutex
 	lastEnergy  time.Time
@@ -26,7 +25,7 @@ type Connection struct {
 }
 
 // NewConnection creates an IoTaWatt connection
-func NewConnection(uri string, cache time.Duration) (*Connection, error) {
+func NewConnection(uri string) (*Connection, error) {
 	if uri == "" {
 		return nil, errMissingURI
 	}
@@ -38,7 +37,6 @@ func NewConnection(uri string, cache time.Duration) (*Connection, error) {
 	c := &Connection{
 		Helper: request.NewHelper(log),
 		uri:    uri,
-		cache:  cache,
 	}
 
 	return c, nil
