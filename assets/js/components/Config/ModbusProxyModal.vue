@@ -89,7 +89,6 @@
 									v-model:baudrate="c.settings.baudrate"
 									v-model:comset="c.settings.comset"
 									v-model:device="c.settings.device"
-									:modbus="getModbus(c.settings)"
 									:component-id="`proxy-${index}`"
 									:host="getHost(c.settings.uri)"
 									:port="getPort(c.settings.uri)"
@@ -147,7 +146,6 @@ import "@h2d2/shopicons/es/regular/plus";
 import "@h2d2/shopicons/es/regular/trash";
 import JsonModal from "./JsonModal.vue";
 import {
-	MODBUS_COMSET,
 	MODBUS_CONNECTION,
 	MODBUS_PROTOCOL,
 	MODBUS_PROXY_READONLY,
@@ -190,12 +188,6 @@ export default defineComponent({
 	methods: {
 		formId(index: number, name: string) {
 			return `modbusproxy-connection-${index}-${name}`;
-		},
-		getModbus(s: ModbusProxySettings) {
-			if (s.device) {
-				return MODBUS_TYPE.RS485_SERIAL;
-			}
-			return s.rtu ? MODBUS_TYPE.RS485_TCPIP : MODBUS_TYPE.TCPIP;
 		},
 		getReadonlyHelp(readonly = MODBUS_PROXY_READONLY.FALSE): string {
 			return this.$t(`config.modbusproxy.readonly.help.${readonly}`);
