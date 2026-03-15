@@ -153,15 +153,6 @@ func NewLektrico(host string, cache time.Duration) (*Lektrico, error) {
 		return res, err
 	}, cache)
 
-	// Connectivity check
-	var id struct {
-		DeviceID string `json:"device_id"`
-	}
-	if err := wb.GetJSON(uri+"/Device_id.Get", &id); err != nil {
-		return nil, fmt.Errorf("lektrico: connection failed to %s: %w", host, err)
-	}
-	log.DEBUG.Printf("connected to Lektrico charger: %s", id.DeviceID)
-
 	return wb, nil
 }
 
