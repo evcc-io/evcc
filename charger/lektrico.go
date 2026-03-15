@@ -202,15 +202,11 @@ var _ api.StatusReasoner = (*Lektrico)(nil)
 // StatusReason implements the api.StatusReasoner interface
 func (wb *Lektrico) StatusReason() (api.Reason, error) {
 	res, err := wb.statusG.Get()
-	if err != nil {
-		return api.ReasonUnknown, err
-	}
-
-	if res.ExtendedChargerState == lektricoStateBAUTH {
+	if err == nil && res.ExtendedChargerState == lektricoStateBAUTH {
 		return api.ReasonWaitingForAuthorization, nil
 	}
 
-	return api.ReasonUnknown, nil
+	return api.ReasonUnknown, err
 }
 
 // Enabled implements the api.Charger interface
