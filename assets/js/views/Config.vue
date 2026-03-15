@@ -280,28 +280,17 @@
 						:title="`${$t('config.circuits.title')}`"
 						editable
 						:error="hasClassError('circuit')"
-						:unconfigured="circuitsSorted.length === 0"
+						:unconfigured="!circuitsRoot"
 						data-testid="circuits"
 						@edit="openModal('circuits')"
 					>
 						<template #icon><CircuitsIcon /></template>
 						<template #tags>
 							<DeviceTags
-								v-if="circuitsSorted.length == 0"
+								v-if="!circuitsRoot"
 								:tags="{ configured: { value: false } }"
 							/>
-							<template
-								v-for="(circuit, idx) in circuitsSorted"
-								v-else
-								:key="circuit.name"
-							>
-								<hr v-if="Number(idx) > 0" />
-								<p class="my-2 fw-bold">
-									{{ circuit.config?.title }}
-									<code>({{ circuit.name }})</code>
-								</p>
-								<DeviceTags :tags="circuitTags(circuit)" />
-							</template>
+							<CircuitTags v-else :nodes="[circuitsRoot]" />
 						</template>
 					</DeviceCard>
 					<DeviceCard
@@ -439,6 +428,7 @@ import api from "../api";
 import ChargerModal from "../components/Config/ChargerModal.vue";
 import CircuitsIcon from "../components/MaterialIcon/Circuits.vue";
 import CircuitsModal from "../components/Config/CircuitsModal.vue";
+import CircuitTags from "../components/Config/CircuitTags.vue";
 import collector from "../mixins/collector";
 import ControlModal from "../components/Config/ControlModal.vue";
 import DeviceCard from "../components/Config/DeviceCard.vue";
@@ -483,7 +473,6 @@ import VehicleIcon from "../components/VehicleIcon";
 import VehicleModal from "../components/Config/VehicleModal.vue";
 import { defineComponent, type PropType } from "vue";
 import type {
-	Circuit,
 	ConfigCharger,
 	ConfigVehicle,
 	ConfigCircuit,
@@ -498,7 +487,8 @@ import type {
 	DeviceType,
 	Notification,
 } from "@/types/evcc";
-import { CURRENCY } from "@/types/evcc";
+import { CURRENCY, GRID_CONTROL } from "@/types/evcc";
+import { circuitTree } from "@/utils/circuits";
 
 type DeviceValuesMap = Record<DeviceType, Record<string, any>>;
 
@@ -521,6 +511,7 @@ export default defineComponent({
 		ChargerModal,
 		CircuitsIcon,
 		CircuitsModal,
+		CircuitTags,
 		ControlModal,
 		DeviceCard,
 		DeviceTags,
@@ -744,9 +735,9 @@ export default defineComponent({
 			if (["relay", "eebus"].includes(type)) {
 				result.hemsType = { value: type };
 			}
-			const lpc = store.state?.circuits?.["lpc"];
-			if (lpc) {
-				const value = lpc.maxPower || null;
+			const gc = store.state?.circuits?.[GRID_CONTROL];
+			if (gc) {
+				const value = gc.maxPower || null;
 				result.hemsActiveLimit = { value };
 			}
 
@@ -805,11 +796,8 @@ export default defineComponent({
 				authDisabled: store.state?.authDisabled || false,
 			};
 		},
-		circuitsSorted() {
-			const sortedNames = Object.keys(store.state?.circuits || {});
-			return [...this.circuits].sort(
-				(a, b) => sortedNames.indexOf(a.name) - sortedNames.indexOf(b.name)
-			);
+		circuitsRoot() {
+			return circuitTree(store.state?.circuits || {});
 		},
 		tariffsYamlSource() {
 			return store.state?.tariffs?.yamlSource;
@@ -894,9 +882,9 @@ export default defineComponent({
 		},
 		async loadCircuits() {
 			const circuits = (await this.loadConfig("devices/circuit")) || [];
-			// set lpc default title
+			// set gridcontrol default title
 			circuits.forEach((c: ConfigCircuit) => {
-				if (c.name === "lpc" && !c.config?.title) {
+				if (c.name === GRID_CONTROL && !c.config?.title) {
 					c.config = c.config || {};
 					c.config.title = this.$t("config.hems.title");
 				}
@@ -1086,28 +1074,6 @@ export default defineComponent({
 			return { ...chargerTags, ...meterTags };
 		},
 		openModal,
-		circuitTags(circuit: ConfigCircuit) {
-			const circuits = store.state?.circuits || {};
-			const data =
-				(circuits[circuit.name] as Circuit | undefined) || ({} as Partial<Circuit>);
-			const result: Record<string, object> = {};
-			const p = data.power || 0;
-			if (data.maxPower) {
-				result["powerRange"] = {
-					value: [p, data.maxPower],
-					warning: data.power && data.power >= data.maxPower,
-				};
-			} else {
-				result["power"] = { value: p, muted: true };
-			}
-			if (data.maxCurrent) {
-				result["currentRange"] = {
-					value: [data.current || 0, data.maxCurrent],
-					warning: data.current && data.current >= data.maxCurrent,
-				};
-			}
-			return result;
-		},
 		hasDeviceError(type: DeviceType, name?: string) {
 			if (!name) return false;
 			const fatals = store.state?.fatal || [];

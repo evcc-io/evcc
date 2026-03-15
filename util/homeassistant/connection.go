@@ -103,6 +103,9 @@ func (c *Connection) GetIntState(entity string) (int64, error) {
 
 // GetFloatState retrieves the state of an entity as float64
 func (c *Connection) GetFloatState(entity string) (float64, error) {
+	// leading minus sign?
+	entity, invert := strings.CutPrefix(entity, "-")
+
 	state, err := c.GetState(entity)
 	if err != nil {
 		return 0, err
@@ -116,6 +119,10 @@ func (c *Connection) GetFloatState(entity string) (float64, error) {
 	scale, err := state.scale()
 	if err != nil {
 		return 0, fmt.Errorf("%w for entity %s", err, entity)
+	}
+
+	if invert {
+		value = -value
 	}
 
 	return scale * value, nil

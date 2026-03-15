@@ -19,7 +19,6 @@ import (
 	"github.com/evcc-io/evcc/charger/warp"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/icholy/digest"
 )
 
 type WarpWS struct {
@@ -103,7 +102,7 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 	// only setup phase switching methods if power manager endpoint is set
 	var phases func(int) error
 	var getPhases func() (int, error)
-	if w.hasFeature(warp.FeaturePhaseSwitch) && w.pm != nil {
+	if (w.hasFeature(warp.FeaturePhaseSwitch) || cc.EnergyManagerURI != "") && w.pm != nil {
 		if res, err := w.ensurePmState(); err == nil && res.ExternalControl != warp.ExternalControlDeactivated {
 			w.pmState = &res
 			phases = w.phases1p3p
@@ -166,11 +165,7 @@ func (w *WarpWS) run(ctx context.Context, wsURI string) {
 	for ctx.Err() == nil {
 		w.log.DEBUG.Println("websocket: connecting")
 
-		conn, err := dialWebsocket(ctx, digest.Options{
-			URI:      wsURI,
-			Username: w.Username,
-			Password: w.Password,
-		})
+		conn, _, err := websocket.Dial(ctx, wsURI, &websocket.DialOptions{HTTPClient: w.Client})
 		if err != nil {
 			if !errors.Is(err, context.DeadlineExceeded) {
 				w.log.ERROR.Printf("websocket: %v", err)
@@ -191,46 +186,6 @@ func (w *WarpWS) run(ctx context.Context, wsURI string) {
 			w.log.ERROR.Println(err)
 		}
 	}
-}
-
-func dialWebsocket(ctx context.Context, options digest.Options) (*websocket.Conn, error) {
-	// err will be non nil if auth is needed
-	conn, resp, err := websocket.Dial(ctx, options.URI, nil)
-	if err == nil {
-		return conn, nil
-	}
-
-	if resp == nil || resp.StatusCode != http.StatusUnauthorized {
-		return nil, err
-	}
-
-	if options.Username == "" {
-		return nil, errors.New("websocket: missing credentials")
-	}
-
-	// extract challenge from response
-	challenge, err := digest.ParseChallenge(resp.Header.Get("WWW-Authenticate"))
-	if err != nil {
-		return nil, fmt.Errorf("websocket: %w", err)
-	}
-
-	options.Method = "GET"
-	options.Count = 1
-
-	cred, err := digest.Digest(challenge, options)
-	if err != nil {
-		return nil, err
-	}
-
-	// Dial with Digest Auth
-	dialer := websocket.DialOptions{
-		HTTPHeader: http.Header{
-			"Authorization": []string{cred.String()},
-		},
-	}
-
-	conn, _, err = websocket.Dial(ctx, options.URI, &dialer)
-	return conn, err
 }
 
 // Returns parsed URI and hostname

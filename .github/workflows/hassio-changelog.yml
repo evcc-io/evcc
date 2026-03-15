@@ -1,0 +1,56 @@
+name: Hassio Addon Changelog
+
+permissions:
+  contents: read
+
+on:
+  release:
+    types: [edited, released]
+
+jobs:
+  update-changelog:
+    name: Update Hassio Changelog
+    runs-on: depot-ubuntu-24.04-arm
+
+    permissions:
+      contents: read # push to hassio-addon is authenticated via HASSIO_DEPLOY_TOKEN PAT
+
+    steps:
+      - name: Checkout hassio-addon
+        uses: actions/checkout@v6
+        with:
+          repository: evcc-io/hassio-addon
+          token: ${{ secrets.HASSIO_DEPLOY_TOKEN }}
+          path: ./hassio
+
+      - name: Generate changelog
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Fetch all releases into a single JSON array, then sort and format
+          gh api repos/evcc-io/evcc/releases --paginate | jq -s '
+            [.[][] | select(.draft == false and .prerelease == false)]
+            | sort_by(.published_at)
+            | reverse
+            | .[]
+            | "## [\(.tag_name)] - \(.published_at | split("T")[0])\n\n\(.body // "No release notes.")\n"
+          ' -r > /tmp/changelog_entries.md
+
+          printf '%s\n\n' '# Changelog' > ./hassio/evcc/CHANGELOG.md
+          printf '%s\n\n' 'All notable changes to evcc are documented here.' >> ./hassio/evcc/CHANGELOG.md
+          printf '%s\n\n' 'Full release details: https://github.com/evcc-io/evcc/releases' >> ./hassio/evcc/CHANGELOG.md
+          cat /tmp/changelog_entries.md >> ./hassio/evcc/CHANGELOG.md
+
+      - name: Push if changed
+        run: |
+          cd ./hassio
+          if git diff --quiet; then
+            echo "No changelog changes detected"
+            exit 0
+          fi
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git pull --rebase
+          git add evcc/CHANGELOG.md
+          git commit -m "Update evcc changelog"
+          git push

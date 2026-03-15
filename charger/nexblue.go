@@ -34,7 +34,10 @@ import (
 	"golang.org/x/oauth2"
 )
 
-const nexblueAPI = "https://api.nexblue.com/third_party/openapi"
+const (
+	nexblueHost = "https://api.nexblue.com"
+	nexblueAPI  = nexblueHost + "/third_party/openapi"
+)
 
 // Nexblue charger implementation
 type Nexblue struct {
@@ -126,7 +129,7 @@ func NewNexblue(ctx context.Context, user, password, serial string, cache time.D
 	authCtx := context.WithValue(ctx, oauth2.HTTPClient, authHelper.Client)
 	wb.Client = oauth2.NewClient(authCtx, oauth.RefreshTokenSource(tok, login))
 
-	wb.serial, err = ensureCharger("", func() ([]string, error) {
+	wb.serial, err = ensureCharger(serial, func() ([]string, error) {
 		return wb.chargerSerials()
 	})
 	if err != nil {
@@ -219,12 +222,12 @@ func (wb *Nexblue) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (wb *Nexblue) MaxCurrent(current int64) error {
-	req, _ := request.New(http.MethodPost,
-		fmt.Sprintf("%s/chargers/%s/cmd/set_current_limit", nexblueAPI, wb.serial), request.MarshalJSON(struct {
-			CurrentLimit int64 `json:"current_limit"`
-		}{
-			current,
-		}), request.JSONEncoding)
+	uri := fmt.Sprintf("%s/chargers/%s/cmd/set_current_limit", nexblueAPI, wb.serial)
+	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(struct {
+		CurrentLimit int64 `json:"current_limit"`
+	}{
+		current,
+	}), request.JSONEncoding)
 
 	var res struct {
 		Result int `json:"result"`
@@ -267,12 +270,16 @@ var _ api.PhaseSwitcher = (*Nexblue)(nil)
 
 // Phases1p3p implements the api.PhaseSwitcher interface
 func (wb *Nexblue) Phases1p3p(phases int) error {
-	req, _ := request.New(http.MethodPost,
-		fmt.Sprintf("%s/v1/charger/%s/setting", nexblueAPI, wb.serial), request.MarshalJSON(struct {
-			PhaseMode int `json:"phase_mode"`
-		}{
-			phases,
-		}), request.JSONEncoding)
+	if phases != 1 && phases != 3 {
+		return fmt.Errorf("invalid phases: %d", phases)
+	}
+
+	uri := fmt.Sprintf("%s/chargers/command/%s/switch_phase_mode", nexblueHost, wb.serial)
+	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(struct {
+		EnforceSinglePhase bool `json:"enforce_single_phase"`
+	}{
+		phases == 1,
+	}), request.JSONEncoding)
 
 	_, err := wb.DoBody(req)
 	return err
