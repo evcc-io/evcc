@@ -95,8 +95,11 @@
 									:port="getPort(c.settings.uri)"
 									:capabilities="['rs485', 'tcpip']"
 									hide-modbus-id
-									@update:host="(host) => updateHost(host, c.settings)"
-									@update:port="(port) => updatePort(port, c.settings)"
+									:default-baudrate="1200"
+									:default-comset="'8N1'"
+									:default-port="502"
+									@update:host="(host) => updateHost(c.settings, host)"
+									@update:port="(port) => updatePort(c.settings, port)"
 									@update:modbus="(modbus) => updateModbus(c.settings, modbus)"
 								/>
 							</div>
@@ -215,11 +218,19 @@ export default defineComponent({
 		getPort(uri?: string) {
 			return uri?.split(":")[1] || "";
 		},
-		updateHost(newHost: string, settings: ModbusProxySettings) {
+		updateHost(settings: ModbusProxySettings, newHost?: string) {
+			if (!newHost) {
+				return;
+			}
+
 			const port = this.getPort(settings.uri);
 			settings.uri = `${newHost}:${port}`;
 		},
-		updatePort(newPort: string | number, settings: ModbusProxySettings) {
+		updatePort(settings: ModbusProxySettings, newPort?: string | number) {
+			if (!newPort) {
+				return;
+			}
+
 			const host = this.getHost(settings.uri);
 			settings.uri = `${host}:${newPort}`;
 		},
