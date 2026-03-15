@@ -98,11 +98,9 @@ type lektricoRPCResponse struct {
 // Lektrico implements api.Charger for Lektrico 1P7K / 3P22K charging stations
 type Lektrico struct {
 	*request.Helper
-	log     *util.Logger
 	rpcID   atomic.Uint32
 	uri     string
 	current int64
-	phases  int
 	statusG util.Cacheable[lektricoInfo]
 }
 
