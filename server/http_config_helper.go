@@ -156,6 +156,7 @@ func sanitizeMasked(class templates.Class, conf map[string]any, hidePrivate bool
 	return filterValidTemplateParams(&tmpl, res), nil
 }
 
+// mergeMasked replaces masked `***` configuration properties with their actual values
 func mergeMasked(class templates.Class, conf, old map[string]any) (map[string]any, error) {
 	tmpl, err := templateForConfig(class, conf)
 	if err != nil {
