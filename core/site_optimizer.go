@@ -686,13 +686,13 @@ func (site *Site) applyTemperatureCorrection(profile []float64) []float64 {
 		}
 
 		h := ts.UTC().Hour()
-		
+
 		// Skip correction if no historical data for this hour
 		if pastTempCount[h] == 0 {
 			site.log.DEBUG.Printf("temperature correction: no historical data for hour %d, skipping slot %s", h, ts.Format("15:04"))
 			continue
 		}
-		
+
 		tPastAvg := pastTempAvg[h]
 
 		// delta > 0: tomorrow colder than historical average → load increases
