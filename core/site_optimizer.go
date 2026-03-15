@@ -666,6 +666,12 @@ func (site *Site) applyTemperatureCorrection(profile []float64) []float64 {
 		}
 	}
 
+	// Pre-index rates by timestamp for O(1) lookup
+	ratesByTime := make(map[time.Time]float64, len(rates))
+	for _, r := range rates {
+		ratesByTime[r.Start] = r.Value
+	}
+
 	result := make([]float64, len(profile))
 	copy(result, profile)
 
@@ -673,17 +679,8 @@ func (site *Site) applyTemperatureCorrection(profile []float64) []float64 {
 	for i := range profile {
 		ts := slotStart.Add(time.Duration(i) * tariff.SlotDuration)
 
-		// Find the forecast temperature for this slot by direct timestamp match
-		// Both weather data and profiles are on 15-minute slots, so direct matching works
-		var tFuture float64
-		found := false
-		for _, r := range rates {
-			if r.Start.Equal(ts) {
-				tFuture = r.Value
-				found = true
-				break
-			}
-		}
+		// Find the forecast temperature for this slot
+		tFuture, found := ratesByTime[ts]
 		if !found {
 			continue
 		}
