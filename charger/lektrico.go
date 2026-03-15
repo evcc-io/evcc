@@ -142,7 +142,6 @@ func NewLektrico(host string, cache time.Duration) (*Lektrico, error) {
 
 	wb := &Lektrico{
 		Helper: request.NewHelper(log),
-		log:    log,
 		uri:    uri,
 		current: 6,
 	}
