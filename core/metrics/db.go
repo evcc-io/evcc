@@ -12,8 +12,8 @@ import (
 )
 
 const (
-	MeterHousehold      = 1    // meter ID for household base load (backward compatible with master)
-	MeterLoadpointBase  = 1000 // base offset for loadpoint meter IDs
+	MeterHousehold     = 1    // meter ID for household base load (backward compatible with master)
+	MeterLoadpointBase = 1000 // base offset for loadpoint meter IDs
 	// Loadpoint meter IDs: lpID + MeterLoadpointBase (to provide sufficient separation)
 	// e.g., loadpoint 0 = meter 1000, loadpoint 1 = meter 1001, etc.
 )
