@@ -16,22 +16,39 @@ import (
 
 // parseLogLevels parses --log area:level[,...] switch into levels per log area
 func parseLogLevels() {
+	var level string
 	levels := viper.GetStringMapString("levels")
 	if levels == nil {
 		levels = make(map[string]string)
+	} else {
+		for k, v := range levels {
+			if k == "default" {
+				level = v
+			}
+		}
+		if level != "" {
+			delete(levels, "default")
+		}
 	}
 
-	var level string
+	// parse log levels from command line & overriding config file or database settings,
+	// except for the default log level which is only set if not already set by config file or database
+	// this allows users to override log levels for specific areas without affecting the default log level
+	// and also allows setting the default log level without affecting specific area log levels
 	for kv := range strings.SplitSeq(viper.GetString("log"), ",") {
 		areaLevel := strings.SplitN(kv, ":", 2)
 		if len(areaLevel) == 1 {
-			level = areaLevel[0]
+			if level == "" {
+				level = areaLevel[0]
+			}
 		} else {
 			levels[areaLevel[0]] = areaLevel[1]
 		}
 	}
-
+	viper.Set("level", level)
+	viper.Set("levels", levels)
 	util.LogLevel(level, levels)
+	return
 }
 
 // unwrap converts a wrapped error into slice of strings
