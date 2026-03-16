@@ -27,17 +27,16 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Fetch all releases into a single JSON array, then sort and format
+          # Fetch all releases into a single JSON array, then sort and format. Strip commit hashes from body
           gh api repos/evcc-io/evcc/releases --paginate | jq -s '
             [.[][] | select(.draft == false and .prerelease == false)]
             | sort_by(.published_at)
             | reverse
             | .[]
-            | "## [\(.tag_name)] - \(.published_at | split("T")[0])\n\n\(.body // "No release notes.")\n"
+            | "## [\(.tag_name)] - \(.published_at | split("T")[0])\n\n\(.body // "No release notes.") 
+            | gsub("(?m)^\\* [0-9a-f]{40} "; "* "))\n"
           ' -r > /tmp/changelog_entries.md
 
-          printf '%s\n\n' '# Changelog' > ./hassio/evcc/CHANGELOG.md
-          printf '%s\n\n' 'All notable changes to evcc are documented here.' >> ./hassio/evcc/CHANGELOG.md
           printf '%s\n\n' 'Full release details: https://github.com/evcc-io/evcc/releases' >> ./hassio/evcc/CHANGELOG.md
           cat /tmp/changelog_entries.md >> ./hassio/evcc/CHANGELOG.md
 
