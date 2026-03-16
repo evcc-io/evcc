@@ -60,7 +60,16 @@ func NewProvider(api *kamereon.API, accountID, vin string, wakeupMode string, ca
 			return api.Position(accountID, vin)
 		},
 		chargeAction: func(action string) (kamereon.ChargeAction, error) {
-			return api.ChargeAction(accountID, action, vin)
+			res, err := api.ChargeAction(accountID, action, vin)
+
+			// For stop action, fall back to KCM pause-resume endpoint if KCA endpoint fails (e.g. Zoe phase 2)
+			if action == kamereon.ActionStop {
+				if se, ok := errors.AsType[*request.StatusError](err); ok && se.HasStatus(http.StatusBadRequest) {
+					return api.ChargePauseResume(accountID, kamereon.ActionPause, vin)
+				}
+			}
+
+			return res, err
 		},
 	}
 	return impl
