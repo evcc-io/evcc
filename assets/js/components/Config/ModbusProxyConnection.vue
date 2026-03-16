@@ -11,7 +11,7 @@
 		:default-baudrate="1200"
 		:default-comset="'8N1'"
 		:default-port="502"
-		:modbus="initialModbus"
+		:modbus="initialModbusType"
 		@update:host="(host) => updateHost(host)"
 		@update:port="(port) => updatePort(port)"
 		@update:modbus="(modbus) => updateModbus(modbus)"
@@ -23,6 +23,13 @@ import { defineComponent } from "vue";
 import Modbus from "./DeviceModal/Modbus.vue";
 import { MODBUS_TYPE, type ModbusProxy, type ModbusProxySettings } from "@/types/evcc";
 import deepClone from "@/utils/deepClone";
+
+function getModbusType(s: ModbusProxySettings) {
+	if (s.device) {
+		return MODBUS_TYPE.RS485_SERIAL;
+	}
+	return s.rtu ? MODBUS_TYPE.RS485_TCPIP : MODBUS_TYPE.TCPIP;
+}
 
 export default defineComponent({
 	name: "ModbusProxyConnection",
@@ -41,7 +48,7 @@ export default defineComponent({
 	data() {
 		return {
 			localConnection: deepClone(this.connection),
-			initialModbus: undefined as MODBUS_TYPE | undefined,
+			initialModbusType: getModbusType(this.connection.settings),
 		};
 	},
 	watch: {
@@ -54,20 +61,7 @@ export default defineComponent({
 			deep: true,
 		},
 	},
-	mounted() {
-		this.initialModbus = this.getModbus(this.localConnection.settings);
-	},
 	methods: {
-		getModbus(s: ModbusProxySettings) {
-			if (this.initialModbus) {
-				return this.initialModbus;
-			}
-
-			if (s.device) {
-				return MODBUS_TYPE.RS485_SERIAL;
-			}
-			return s.rtu ? MODBUS_TYPE.RS485_TCPIP : MODBUS_TYPE.TCPIP;
-		},
 		getHost(uri?: string) {
 			return uri?.split(":")[0] || "";
 		},
@@ -92,7 +86,7 @@ export default defineComponent({
 			}
 		},
 		updateModbus(modbus: MODBUS_TYPE) {
-			this.initialModbus = modbus;
+			this.initialModbusType = modbus;
 
 			switch (modbus) {
 				case MODBUS_TYPE.RS485_SERIAL:
