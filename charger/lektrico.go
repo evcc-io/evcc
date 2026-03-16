@@ -112,10 +112,6 @@ func init() {
 
 // NewLektricoFromConfig creates a Lektrico charger from evcc configuration
 func NewLektricoFromConfig(other map[string]any) (api.Charger, error) {
-	if !sponsor.IsAuthorized() {
-		return nil, api.ErrSponsorRequired
-	}
-
 	cc := struct {
 		Host  string
 		Cache time.Duration
@@ -126,8 +122,13 @@ func NewLektricoFromConfig(other map[string]any) (api.Charger, error) {
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
+
 	if cc.Host == "" {
 		return nil, fmt.Errorf("missing host")
+	}
+
+	if !sponsor.IsAuthorized() {
+		return nil, api.ErrSponsorRequired
 	}
 
 	return NewLektrico(cc.Host, cc.Cache)
