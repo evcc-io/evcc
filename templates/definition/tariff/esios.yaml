@@ -13,22 +13,22 @@ params:
     description:
       generic: "Esios personal Security token"
     help:
-      en: Request your token at <a href="mailto:consultasios@ree.es?subject=Personal token request">consultasios@ree.es</a>
+      en: "Request your token at <a href="mailto:consultasios@ree.es?subject=Personal token request">consultasios@ree.es</a>"
     required: true
   - name: indicator
     description:
       generic: "Indicator to retrieve from the API."
     help:
-      en: 1001 = Grid Tariff, 1739 = Feed-in Tariff
+      en: "Select the indicator to request to Esios 1001 = Grid Tariff, 1739 = Feed-in Tariff"
     example: 1001
     type: choice
     choice: [1001, 1739]
     required: true
   - name: region
     description:
-      generic: "Retrieve 1 out of 5 regions from the API just for grid tariff."
+      generic: "Retrieve the region for grid tariff."
     help:
-      en: Península, Canarias, Baleares, Ceuta, Melilla
+      en: "Select 1 out of 5 regions for the grid tariff (Península, Canarias, Baleares, Ceuta, Melilla)."    
     example: Península
     type: choice
     choice: ["Península", "Canarias", "Baleares", "Ceuta", "Melilla"]
@@ -45,10 +45,11 @@ render: |
       token: {{ .securitytoken }}
     jq: |
       [.indicator.values[] 
-        | select(.geo_name == {{ if eq .indicator "1739" }}"España"{{ else }}"{{.region}}"{{ end }})
+        | select(.geo_name == {{ if eq (printf "%v" .indicator) "1739" }}{{ "España" | printf "%q" }}{{ else }}{{ .region | printf "%q" }}{{ end }})
         | {
           start: .datetime_utc,
           end: (.datetime_utc | strptime ("%FT%TZ") | mktime + 3600 | strftime("%FT%TZ")),
           value: (.value | tonumber) / 1000
           }
-      ] | tostring
+      ]
+        | tostring
