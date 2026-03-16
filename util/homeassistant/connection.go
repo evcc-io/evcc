@@ -235,9 +235,9 @@ func domain(entity string) (string, error) {
 
 // CallSwitchService is a convenience method for switch services
 func (c *Connection) CallSwitchService(entity string, turnOn bool) error {
-	parts := strings.Split(entity, ".")
-	if len(parts) == 0 {
-		return fmt.Errorf("invalid entity format: %s", entity)
+	domain, err := domain(entity)
+	if err != nil {
+		return err
 	}
 
 	service := "turn_off"
@@ -249,24 +249,19 @@ func (c *Connection) CallSwitchService(entity string, turnOn bool) error {
 		"entity_id": entity,
 	}
 
-	domain, err := domain(entity)
-	if err != nil {
-		return err
-	}
-
 	return c.CallService(domain, service, data)
 }
 
 // CallNumberService is a convenience method for setting number entity values
 func (c *Connection) CallNumberService(entity string, value float64) error {
-	data := map[string]any{
-		"entity_id": entity,
-		"value":     value,
-	}
-
 	domain, err := domain(entity)
 	if err != nil {
 		return err
+	}
+
+	data := map[string]any{
+		"entity_id": entity,
+		"value":     value,
 	}
 
 	return c.CallService(domain, "set_value", data)
