@@ -85,22 +85,10 @@
 										</div>
 									</h5>
 								</div>
-								<Modbus
-									v-model:baudrate="c.settings.baudrate"
-									v-model:comset="c.settings.comset"
-									v-model:device="c.settings.device"
-									:component-id="`proxy-${index}`"
-									:host="getHost(c.settings.uri)"
-									:port="getPort(c.settings.uri)"
-									:capabilities="['rs485', 'tcpip']"
-									hide-modbus-id
-									:default-baudrate="1200"
-									:default-comset="'8N1'"
-									:default-port="502"
-									:modbus="getModbus(c.settings)"
-									@update:host="(host) => updateHost(c.settings, host)"
-									@update:port="(port) => updatePort(c.settings, port)"
-									@update:modbus="(modbus) => updateModbus(c.settings, modbus)"
+								<ModbusProxyConnection
+									:connection="c"
+									:index="index"
+									@update:connection="values[index] = c"
 								/>
 							</div>
 						</div>
@@ -146,16 +134,9 @@ import "@h2d2/shopicons/es/regular/arrowdown";
 import "@h2d2/shopicons/es/regular/plus";
 import "@h2d2/shopicons/es/regular/trash";
 import JsonModal from "./JsonModal.vue";
-import {
-	MODBUS_CONNECTION,
-	MODBUS_PROTOCOL,
-	MODBUS_PROXY_READONLY,
-	MODBUS_TYPE,
-	type ModbusProxy,
-	type ModbusProxySettings,
-} from "@/types/evcc";
+import { MODBUS_PROXY_READONLY, type ModbusProxy } from "@/types/evcc";
 import ASCII_DIAGRAM from "./modbus-diagram.txt?raw";
-import Modbus from "./DeviceModal/Modbus.vue";
+import ModbusProxyConnection from "./ModbusProxyConnection.vue";
 import PropertyField from "./PropertyField.vue";
 import FormRow from "./FormRow.vue";
 import SponsorTokenRequired from "./DeviceModal/SponsorTokenRequired.vue";
@@ -164,7 +145,14 @@ import { defineComponent } from "vue";
 
 export default defineComponent({
 	name: "ModbusProxyModal",
-	components: { JsonModal, Modbus, FormRow, PropertyField, SponsorTokenRequired, SelectGroup },
+	components: {
+		JsonModal,
+		ModbusProxyConnection,
+		FormRow,
+		PropertyField,
+		SponsorTokenRequired,
+		SelectGroup,
+	},
 	props: {
 		isSponsor: Boolean,
 	},
@@ -172,11 +160,6 @@ export default defineComponent({
 	data() {
 		return {
 			ASCII_DIAGRAM,
-			MODBUS_PROXY_READONLY,
-			MODBUS_CONNECTION,
-			MODBUS_PROTOCOL,
-			MODBUS_TYPE,
-			currentModbusType: undefined as MODBUS_TYPE | undefined,
 		};
 	},
 	computed: {
@@ -191,16 +174,6 @@ export default defineComponent({
 		formId(index: number, name: string) {
 			return `modbusproxy-connection-${index}-${name}`;
 		},
-		getModbus(s: ModbusProxySettings) {
-			if (this.currentModbusType) {
-				return this.currentModbusType;
-			}
-
-			if (s.device) {
-				return MODBUS_TYPE.RS485_SERIAL;
-			}
-			return s.rtu ? MODBUS_TYPE.RS485_TCPIP : MODBUS_TYPE.TCPIP;
-		},
 		getReadonlyHelp(readonly = MODBUS_PROXY_READONLY.FALSE): string {
 			return this.$t(`config.modbusproxy.readonly.help.${readonly}`);
 		},
@@ -213,46 +186,6 @@ export default defineComponent({
 					uri: ":502",
 				},
 			});
-		},
-		getHost(uri?: string) {
-			return uri?.split(":")[0] || "";
-		},
-		getPort(uri?: string) {
-			return uri?.split(":")[1] || "";
-		},
-		updateHost(settings: ModbusProxySettings, newHost?: string) {
-			const port = this.getPort(settings.uri);
-
-			if (port === "" && newHost === undefined) {
-				settings.uri = undefined;
-			} else {
-				settings.uri = `${newHost === undefined ? "" : newHost}:${port}`;
-			}
-		},
-		updatePort(settings: ModbusProxySettings, newPort?: string | number) {
-			const host = this.getHost(settings.uri);
-			if (host === "" && newPort === undefined) {
-				settings.uri = undefined;
-			} else {
-				settings.uri = `${host}:${newPort === undefined ? "" : newPort}`;
-			}
-		},
-		updateModbus(settings: ModbusProxySettings, modbus: MODBUS_TYPE) {
-			this.currentModbusType = modbus;
-
-			switch (modbus) {
-				case MODBUS_TYPE.RS485_SERIAL:
-					settings.uri = undefined;
-					settings.rtu = undefined;
-					break;
-				case MODBUS_TYPE.RS485_TCPIP:
-				case MODBUS_TYPE.TCPIP:
-					settings.device = undefined;
-					settings.baudrate = undefined;
-					settings.comset = undefined;
-					settings.rtu = modbus === MODBUS_TYPE.RS485_TCPIP;
-					break;
-			}
 		},
 	},
 });
