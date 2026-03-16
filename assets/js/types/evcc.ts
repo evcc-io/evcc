@@ -1,6 +1,8 @@
 import type { StaticPlan, RepeatingPlan, PlanStrategy } from "../components/ChargingPlans/types";
 import type { ForecastSlot, SolarDetails } from "../components/Forecast/types";
 
+export const GRID_CONTROL = "gridcontrol";
+
 // react-native-webview
 interface WebView {
   postMessage: (message: string) => void;
@@ -36,12 +38,6 @@ export interface InfluxConfig {
 export interface HemsConfig {
   type: string;
 }
-
-export interface HemsStatus {
-  maxPower: number;
-}
-
-export type Hems = ConfigStatus<HemsConfig, HemsStatus>;
 
 export interface ShmConfig {
   vendorId: string;
@@ -80,7 +76,7 @@ export interface State {
   tariffSolar?: number;
   mqtt?: MqttConfig;
   influx?: InfluxConfig;
-  hems?: ConfigStatus<HemsConfig, HemsStatus>;
+  hems?: ConfigStatus<HemsConfig, unknown>;
   shm?: ShmConfig;
   sponsor?: ConfigStatus<unknown, SponsorStatus>;
   eebus?: ConfigStatus<EebusConfig, EebusStatus>;
@@ -138,15 +134,14 @@ export interface Config {
 }
 
 export interface Circuit {
-  name: string;
-  parent?: string;
-  maxPower: number;
-  power?: number;
-  maxCurrent: number;
-  current?: number;
-  config?: Config;
   title?: string;
   icon?: string;
+  parent?: string;
+  power?: number;
+  current?: number;
+  maxPower?: number;
+  maxCurrent?: number;
+  config?: Config;
   dimmed?: boolean;
   curtailed?: boolean;
 }
@@ -271,6 +266,7 @@ export interface Loadpoint {
   limitSoc: number;
   maxCurrent: number;
   minCurrent: number;
+  minSocNotReached: boolean;
   mode: CHARGE_MODE;
   offeredCurrent: number;
   phaseAction: PHASE_ACTION;
