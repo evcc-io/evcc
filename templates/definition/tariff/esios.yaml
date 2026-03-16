@@ -28,7 +28,7 @@ params:
     description:
       generic: "Retrieve the region for grid tariff."
     help:
-      en: "Select 1 out of 5 regions for the grid tariff (Península, Canarias, Baleares, Ceuta, Melilla)."
+      en: "Select 1 out of 5 regions for the grid tariff (Península, Canarias, Baleares, Ceuta, Melilla)."    
     example: Península
     type: choice
     choice: ["Península", "Canarias", "Baleares", "Ceuta", "Melilla"]
@@ -40,16 +40,16 @@ render: |
   forecast:
     source: http
     uri: https://api.esios.ree.es/indicators/{{ .indicator }}?start_date={{ now | date "2006-01-02" }}T00:00&end_date={{ (now.AddDate 0 0 1) | date "2006-01-02" }}T23:59
-    auth:
-      type: bearer
-      token: {{ .securitytoken }}
+    method: GET
+    headers:
+      x-api-key: "{{ .securitytoken }}"
+      Accept: "application/json"
     jq: |
       [.indicator.values[] 
-        | select(.geo_name == {{ if eq (printf "%v" .indicator) "1739" }}{{ "España" | printf "%q" }}{{ else }}{{ .region | printf "%q" }}{{ end }})
+        | select(.geo_name == {{ if eq .indicator "1739" }} "España" {{ else }}{{ .region | printf "%q" }}{{ end }})
         | {
           start: .datetime_utc,
           end: (.datetime_utc | strptime ("%FT%TZ") | mktime + 3600 | strftime("%FT%TZ")),
           value: (.value | tonumber) / 1000
           }
-      ]
-        | tostring
+      ] | tostring
