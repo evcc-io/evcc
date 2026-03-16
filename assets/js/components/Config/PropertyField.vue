@@ -75,7 +75,7 @@
 		:type="inputType"
 		:placeholder="placeholder"
 		:required="required"
-		:rows="rows || 4"
+		:rows="textareaRows"
 		:disabled="disabled"
 	/>
 	<PropertyZonesField v-else-if="zones" :id="id" v-model="value" :currency="currency" />
@@ -254,8 +254,17 @@ export default {
 			return (
 				this.rows ||
 				this.array ||
-				["accessToken", "refreshToken", "identifiers"].includes(this.property)
+				["accessToken", "refreshToken", "identifiers", "formula"].includes(this.property)
 			);
+		},
+		textareaRows() {
+			if (this.rows) return this.rows;
+			const autoGrow = this.property === "formula";
+			if (autoGrow) {
+				const lines = (this.value ?? "").split("\n").length;
+				return Math.max(1, lines);
+			}
+			return 4;
 		},
 		boolean() {
 			return this.type === "Bool";

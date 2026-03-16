@@ -169,20 +169,16 @@ func (wb *Nexblue) Status() (api.ChargeStatus, error) {
 	switch res.ChargingState {
 	case 0: // Idle
 		return api.StatusA, nil
-	case 1: // Connected
+	case
+		1, // Connected
+		3, // Finished
+		6, // Delayed
+		7: // EV Waiting
 		return api.StatusB, nil
-	case 2: // Charging
+	case
+		2, // Charging
+		5: // Load Balancing
 		return api.StatusC, nil
-	case 3: // Finished
-		return api.StatusB, nil
-	case 4: // Error
-		return api.StatusE, nil
-	case 5: // Load Balancing
-		return api.StatusC, nil
-	case 6: // Delayed
-		return api.StatusB, nil
-	case 7: // EV Waiting
-		return api.StatusB, nil
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %d", res.ChargingState)
 	}
