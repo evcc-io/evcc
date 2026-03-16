@@ -2,6 +2,7 @@ package vehicle
 
 import (
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -103,9 +104,9 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 		finish = func() (time.Time, error) { return conn.GetTimeState(cc.Sensors.FinishTime) }
 	}
 	if cc.Services.Start != "" && cc.Services.Stop != "" {
-		enable = func(enable bool) error { return res.enableViaScripts(cc.Services.Start, cc.Services.Stop, enable) }
-	} else if cc.Services.Start != "" {
-		enable = func(enable bool) error { return res.enableViaSwitch(cc.Services.Start, enable) }
+		enable = func(enable bool) error { return res.enable(cc.Services.Start, cc.Services.Stop, enable) }
+	} else if strings.HasPrefix(cc.Services.Start, "switch") {
+		enable = func(enable bool) error { return conn.CallSwitchService(cc.Services.Start, enable) }
 	}
 	if cc.Services.Wakeup != "" {
 		wakeup = func() error { return conn.CallSwitchService(cc.Services.Wakeup, true) }
@@ -134,14 +135,10 @@ func (v *HomeAssistant) Soc() (float64, error) {
 	return v.conn.GetFloatState(v.soc)
 }
 
-func (v *HomeAssistant) enableViaSwitch(switchEntity string, enable bool) error {
-	return v.conn.CallSwitchService(switchEntity, enable)
-}
-
-func (v *HomeAssistant) enableViaScripts(onService, offService string, enable bool) error {
+func (v *HomeAssistant) enable(on, off string, enable bool) error {
 	if enable {
-		return v.conn.CallSwitchService(offService, true)
+		return v.conn.CallSwitchService(on, true)
 	}
 
-	return v.conn.CallSwitchService(offService, true)
+	return v.conn.CallSwitchService(off, true)
 }
