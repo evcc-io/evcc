@@ -26,7 +26,7 @@ params:
     required: true
   - name: region
     description:
-      generic: "Retrieve 1 out of 5 regions from the API."
+      generic: "Retrieve 1 out of 5 regions from the API just for grid tariff."
     help:
       en: Península, Canarias, Baleares, Ceuta, Melilla
     example: Península
@@ -39,13 +39,13 @@ render: |
   {{ include "tariff-base" . }}
   forecast:
     source: http
-    uri: https://api.esios.ree.es/indicators/{{.indicator}}
+    uri: https://api.esios.ree.es/indicators/{{ .indicator }}?start_date={{ now | date "2006-01-02" }}T00:00&end_date={{ (now.AddDate 0 0 1) | date "2006-01-02" }}T23:59
     auth:
       type: bearer
       token: {{ .securitytoken }}
     jq: |
       [.indicator.values[] 
-        | select(.geo_name == "{{.region}}") 
+        | select(.geo_name == {{ if eq .indicator "1739" }}"España"{{ else }}"{{.region}}"{{ end }})
         | {
           start: .datetime_utc,
           end: (.datetime_utc | strptime ("%FT%TZ") | mktime + 3600 | strftime("%FT%TZ")),
