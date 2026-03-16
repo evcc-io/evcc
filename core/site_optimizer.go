@@ -742,7 +742,12 @@ func (site *Site) extractHeaterProfile(from, to time.Time) []float64 {
 			site.log.DEBUG.Printf("heater profile: loadpoint %d has %d slots of data", lpID, len(profile))
 			profiles = append(profiles, profile[:])
 		} else {
-			site.log.DEBUG.Printf("heater profile: loadpoint %d has no historical data", lpID)
+			// Show detailed error when insufficient data, including actual slot count
+			if errors.Is(err, metrics.ErrIncomplete) {
+				site.log.DEBUG.Printf("heater profile: loadpoint %d has insufficient historical data (%v) - need 96 slots (24 hours of 15-minute intervals)", lpID, err)
+			} else if err != nil {
+				site.log.DEBUG.Printf("heater profile: loadpoint %d has no historical data (%v) - need 96 slots (24 hours of 15-minute intervals)", lpID, err)
+			}
 		}
 	}
 
