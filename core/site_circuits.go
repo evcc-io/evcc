@@ -28,13 +28,19 @@ func (site *Site) publishCircuits() {
 	cc := config.Circuits().Devices()
 	res := make(map[string]circuitStruct, len(cc))
 
+	names := make(map[api.Circuit]string, len(cc))
+	for _, c := range cc {
+		names[c.Instance()] = c.Config().Name
+	}
+
 	for _, c := range cc {
 		instance := c.Instance()
 		props := deviceProperties(c)
 
 		data := circuitStruct{
-			Title:      props.Title,
+			Title:      instance.GetTitle(),
 			Icon:       props.Icon,
+			Parent:     names[instance.GetParent()],
 			Power:      instance.GetChargePower(),
 			MaxPower:   instance.GetMaxPower(),
 			MaxCurrent: instance.GetMaxCurrent(),

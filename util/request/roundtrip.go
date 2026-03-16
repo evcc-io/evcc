@@ -60,6 +60,45 @@ func NewTripper(log *util.Logger, base http.RoundTripper) http.RoundTripper {
 	return tripper
 }
 
+func isWebSocket(req *http.Request) bool {
+	// WebSocket handshake must be GET
+	if req.Method != http.MethodGet {
+		return false
+	}
+
+	// Must contain: Connection: Upgrade
+	if !headerContainsToken(req.Header, "Connection", "Upgrade") {
+		return false
+	}
+
+	// Must contain: Upgrade: websocket
+	if !headerContainsToken(req.Header, "Upgrade", "websocket") {
+		return false
+	}
+
+	// Must contain WebSocket-specific headers
+	if req.Header.Get("Sec-WebSocket-Key") == "" {
+		return false
+	}
+
+	if req.Header.Get("Sec-WebSocket-Version") == "" {
+		return false
+	}
+
+	return true
+}
+
+func headerContainsToken(h http.Header, key, token string) bool {
+	for _, v := range h.Values(key) {
+		for _, part := range strings.Split(v, ",") {
+			if strings.EqualFold(strings.TrimSpace(part), token) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 // copy of http.drainBody
 func drainBody(b io.ReadCloser) (r1, r2 io.ReadCloser, err error) {
 	if b == nil || b == http.NoBody {
@@ -103,17 +142,21 @@ func (r *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	var save io.ReadCloser
 
 	bld := new(strings.Builder)
-	if LogHeaders {
-		if body, err := httputil.DumpRequestOut(req, true); err == nil {
-			bld.WriteString("\n")
-			bld.Write(bytes.TrimSpace(body[:min(LogMaxLen, len(body))]))
-		}
-	} else {
-		if save, req.Body, err = drainBody(req.Body); err == nil {
-			err = dump(save, bld)
-		}
-		if err != nil {
-			return nil, err
+
+	isWebSocketReq := isWebSocket(req)
+	if !isWebSocketReq {
+		if LogHeaders {
+			if body, err := httputil.DumpRequestOut(req, true); err == nil {
+				bld.WriteString("\n")
+				bld.Write(bytes.TrimSpace(body[:min(LogMaxLen, len(body))]))
+			}
+		} else {
+			if save, req.Body, err = drainBody(req.Body); err == nil {
+				err = dump(save, bld)
+			}
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
@@ -125,17 +168,19 @@ func (r *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	if err == nil {
 		resMetric.WithLabelValues(req.URL.Hostname(), strconv.Itoa(resp.StatusCode)).Add(1)
 
-		if LogHeaders {
-			if body, err := httputil.DumpResponse(resp, true); err == nil {
-				bld.WriteString("\n\n")
-				bld.Write(bytes.TrimSpace(body[:min(LogMaxLen, len(body))]))
-			}
-		} else {
-			if save, resp.Body, err = drainBody(resp.Body); err == nil {
-				err = dump(save, bld)
-			}
-			if err != nil {
-				return nil, err
+		if !isWebSocketReq {
+			if LogHeaders {
+				if body, err := httputil.DumpResponse(resp, true); err == nil {
+					bld.WriteString("\n\n")
+					bld.Write(bytes.TrimSpace(body[:min(LogMaxLen, len(body))]))
+				}
+			} else {
+				if save, resp.Body, err = drainBody(resp.Body); err == nil {
+					err = dump(save, bld)
+				}
+				if err != nil {
+					return nil, err
+				}
 			}
 		}
 	} else {

@@ -34,7 +34,10 @@ import (
 	"golang.org/x/oauth2"
 )
 
-const nexblueAPI = "https://api.nexblue.com/third_party/openapi"
+const (
+	nexblueHost = "https://api.nexblue.com"
+	nexblueAPI  = nexblueHost + "/third_party/openapi"
+)
 
 // Nexblue charger implementation
 type Nexblue struct {
@@ -126,7 +129,7 @@ func NewNexblue(ctx context.Context, user, password, serial string, cache time.D
 	authCtx := context.WithValue(ctx, oauth2.HTTPClient, authHelper.Client)
 	wb.Client = oauth2.NewClient(authCtx, oauth.RefreshTokenSource(tok, login))
 
-	wb.serial, err = ensureCharger("", func() ([]string, error) {
+	wb.serial, err = ensureCharger(serial, func() ([]string, error) {
 		return wb.chargerSerials()
 	})
 	if err != nil {
@@ -166,20 +169,16 @@ func (wb *Nexblue) Status() (api.ChargeStatus, error) {
 	switch res.ChargingState {
 	case 0: // Idle
 		return api.StatusA, nil
-	case 1: // Connected
+	case
+		1, // Connected
+		3, // Finished
+		6, // Delayed
+		7: // EV Waiting
 		return api.StatusB, nil
-	case 2: // Charging
+	case
+		2, // Charging
+		5: // Load Balancing
 		return api.StatusC, nil
-	case 3: // Finished
-		return api.StatusB, nil
-	case 4: // Error
-		return api.StatusE, nil
-	case 5: // Load Balancing
-		return api.StatusC, nil
-	case 6: // Delayed
-		return api.StatusB, nil
-	case 7: // EV Waiting
-		return api.StatusB, nil
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %d", res.ChargingState)
 	}
@@ -267,11 +266,15 @@ var _ api.PhaseSwitcher = (*Nexblue)(nil)
 
 // Phases1p3p implements the api.PhaseSwitcher interface
 func (wb *Nexblue) Phases1p3p(phases int) error {
-	uri := fmt.Sprintf("%s/v1/charger/%s/setting", nexblueAPI, wb.serial)
+	if phases != 1 && phases != 3 {
+		return fmt.Errorf("invalid phases: %d", phases)
+	}
+
+	uri := fmt.Sprintf("%s/chargers/command/%s/switch_phase_mode", nexblueHost, wb.serial)
 	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(struct {
-		PhaseMode int `json:"phase_mode"`
+		EnforceSinglePhase bool `json:"enforce_single_phase"`
 	}{
-		phases,
+		phases == 1,
 	}), request.JSONEncoding)
 
 	_, err := wb.DoBody(req)

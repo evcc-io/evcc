@@ -7,7 +7,7 @@
 
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
-import { type Circuit } from "@/types/evcc";
+import { type Circuit, GRID_CONTROL } from "@/types/evcc";
 import formatter from "@/mixins/formatter";
 
 export default defineComponent({
@@ -18,7 +18,7 @@ export default defineComponent({
 	},
 	computed: {
 		lpcLimit(): number | null {
-			return this.circuits?.["lpc"]?.maxPower || null;
+			return this.circuits?.[GRID_CONTROL]?.maxPower || null;
 		},
 	},
 });
