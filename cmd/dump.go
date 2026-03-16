@@ -99,6 +99,10 @@ func runDump(cmd *cobra.Command, args []string) {
 	d.Header("config", "=")
 	fmt.Println("")
 
+	levels := viper.GetStringMapString("levels")
+	level := viper.GetString("level")
+	d.DumpWithHeader(fmt.Sprintf("log levels (default: %s)", level), levels)
+
 	if name := site.Meters.GridMeterRef; name != "" {
 		d.DumpWithHeader(fmt.Sprintf("grid: %s", name), handle(name, config.Meters()))
 	}
@@ -139,4 +143,5 @@ func runDump(cmd *cobra.Command, args []string) {
 			d.DumpWithHeader(fmt.Sprintf("charger: %s", name), handle(name, config.Chargers()))
 		}
 	}
+
 }
