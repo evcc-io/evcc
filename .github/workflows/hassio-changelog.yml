@@ -33,7 +33,7 @@ jobs:
             | sort_by(.published_at)
             | reverse
             | .[]
-            | "## [\(.tag_name)] - \(.published_at | split("T")[0])\n\n\(.body // "No release notes.") 
+            | "## [\(.tag_name)] - \(.published_at | split("T")[0])\n\n\((.body // "No release notes.") 
             | gsub("(?m)^\\* [0-9a-f]{40} "; "* "))\n"
           ' -r > /tmp/changelog_entries.md
 
