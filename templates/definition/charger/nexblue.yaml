@@ -3,7 +3,6 @@ products:
   - brand: Nexblue
     description:
       generic: Edge 2
-capabilities: ["1p3p"]
 requirements:
   evcc: ["sponsorship"]
 params:
