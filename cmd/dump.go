@@ -143,5 +143,4 @@ func runDump(cmd *cobra.Command, args []string) {
 			d.DumpWithHeader(fmt.Sprintf("charger: %s", name), handle(name, config.Chargers()))
 		}
 	}
-
 }

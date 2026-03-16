@@ -15,6 +15,8 @@ import (
 )
 
 // parseLogLevels parses --log area:level[,...] switch into levels per log area
+// and applies the log levels to the logging system, with command line overrides taking precedence over database settings
+// the parsed log levels are stored in viper for later reference when dumping configuration
 func parseLogLevels() {
 	var level string
 	levels := viper.GetStringMapString("levels")
@@ -48,7 +50,6 @@ func parseLogLevels() {
 	viper.Set("level", level)
 	viper.Set("levels", levels)
 	util.LogLevel(level, levels)
-	return
 }
 
 // unwrap converts a wrapped error into slice of strings
