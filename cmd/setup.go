@@ -501,20 +501,17 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) error {
 	err := wrapErrorWithClass(ClassDatabase, configureDatabase(conf.Database))
 
 	// load persisted log levels and apply logging configuration
-	if err == nil {
-		if settings.Exists(keys.Levels) {
-			if err := migrateYamlToJson(keys.Levels, &conf.Levels); err != nil {
-				return err
-			}
+	if settings.Exists(keys.Levels) {
+		if err := migrateYamlToJson(keys.Levels, &conf.Levels); err != nil {
+			return err
 		}
-		if len(conf.Levels) > 0 {
-			viper.Set("levels", conf.Levels)
-		} else {
-			log.INFO.Printf("No log levels configured in database, using defaults from command line: %v", conf.Log)
-			//viper.Set("log", conf.Log)
-		}
-		parseLogLevels()
 	}
+	if len(conf.Levels) > 0 {
+		viper.Set("levels", conf.Levels)
+	} else {
+		log.INFO.Printf("No log levels configured in database, using defaults from command line: %v", conf.Log)
+	}
+	parseLogLevels()
 
 	// setup additional templates
 	if err == nil {
