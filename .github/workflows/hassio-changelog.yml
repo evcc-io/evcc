@@ -50,7 +50,7 @@ jobs:
           fi
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git pull --rebase
           git add evcc/CHANGELOG.md
           git commit -m "Update evcc changelog"
+          git pull --rebase
           git push
