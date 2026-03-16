@@ -136,11 +136,10 @@ func NewLektricoFromConfig(other map[string]any) (api.Charger, error) {
 
 // NewLektrico creates a Lektrico charger and verifies connectivity
 func NewLektrico(host string, cache time.Duration) (*Lektrico, error) {
-	log := util.NewLogger("lektrico")
 	uri := fmt.Sprintf("http://%s/rpc", strings.TrimSuffix(host, "/"))
 
 	wb := &Lektrico{
-		Helper:  request.NewHelper(log),
+		Helper:  request.NewHelper(util.NewLogger("lektrico")),
 		uri:     uri,
 		current: 6,
 	}
