@@ -115,7 +115,7 @@ params:
     example: "script.vehicle_wakeup; button.wakeup_vehicle"
     help:
       en: Entity ID for a script or a button that wakes up the vehicle
-      de: Entitäts-ID für ein Skript oder eine Taste zum Aufwecken des Fahrzeugs
+      de: Entitäts-ID für ein Skript oder einen Schalter zum Aufwecken des Fahrzeugs
   - name: setMaxCurrent
     description:
       de: Ladestromstärke setzen [A]
