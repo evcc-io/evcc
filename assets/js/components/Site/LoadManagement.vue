@@ -181,6 +181,7 @@ import { defineComponent, type PropType, computed, getCurrentInstance } from "vu
 import type { Circuit } from "@/types/evcc";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import AnimatedNumber from "../Helper/AnimatedNumber.vue";
+import { resolveCircuitTitle } from "@/composables/useCircuitsTree";
 
 export default defineComponent({
 	name: "LoadManagement",
@@ -296,11 +297,7 @@ export default defineComponent({
 			return this.fmtW(v, POWER_UNIT.KW);
 		},
 		circuitTitle(circuit: Circuit, name: string): string {
-			return (
-				circuit.title ??
-				(circuit.config as { title?: string } | undefined)?.title ??
-				name
-			);
+			return resolveCircuitTitle(circuit, name);
 		},
 		hasLimit(circuit: Circuit): boolean {
 			return typeof circuit.maxPower === "number" && circuit.maxPower > 0;
@@ -315,13 +312,13 @@ export default defineComponent({
 		usagePercent(circuit: Circuit): number {
 			if (!this.hasLimit(circuit)) return 0;
 			const power = circuit.power ?? 0;
-			const max = circuit.maxPower;
+			const max = circuit.maxPower!;
 			return Math.min(100, Math.round((power / max) * 100));
 		},
 		currentPercent(circuit: Circuit): number {
 			if (!this.hasCurrentInfo(circuit)) return 0;
 			const current = circuit.current ?? 0;
-			const max = circuit.maxCurrent;
+			const max = circuit.maxCurrent!;
 			return Math.min(100, Math.round((current / max) * 100));
 		},
 		maxCurrentFormat(v: number): string {

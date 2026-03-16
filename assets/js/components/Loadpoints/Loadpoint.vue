@@ -82,7 +82,7 @@
 					class="circuit-indicator d-inline-flex align-items-center mt-1 small"
 					role="button"
 					tabindex="0"
-					@click="$emit('open-circuits', circuitName)"
+					@click.stop="$emit('open-circuits', circuitName)"
 					@keydown.enter.prevent="$emit('open-circuits', circuitName)"
 					@keydown.space.prevent="$emit('open-circuits', circuitName)"
 				>
@@ -134,6 +134,7 @@ import VehicleIcon from "../VehicleIcon";
 import SessionInfo from "./SessionInfo.vue";
 import Modal from "bootstrap/js/dist/modal";
 import { defineComponent, type PropType } from "vue";
+import { resolveCircuitTitle } from "@/composables/useCircuitsTree";
 import type {
 	CHARGE_MODE,
 	PHASES,
@@ -361,14 +362,7 @@ export default defineComponent({
 			if (!circuit) {
 				return this.$t("main.circuits.indicatorLabel") as string;
 			}
-			const title = (circuit.config as any)?.title || circuit.title;
-			if (title) {
-				return title as string;
-			}
-			// humanize technical keys like carport_branch -> Carport Branch
-			return (this.circuitName || "")
-				.replace(/[_-]+/g, " ")
-				.replace(/\b\w/g, (c) => c.toUpperCase());
+			return resolveCircuitTitle(circuit, this.circuitName || "");
 		},
 		circuitUtilizationText(): string {
 			const circuit = this.loadpointCircuit;

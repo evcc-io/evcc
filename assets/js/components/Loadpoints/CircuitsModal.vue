@@ -31,7 +31,7 @@
 								<div class="circuit-node-header d-flex justify-content-between align-items-start mb-1">
 									<div class="me-2 circuit-node-title">
 										<div class="fw-semibold text-truncate">
-											{{ formatCircuitName(item.node) }}
+											{{ resolveCircuitTitle(item.node.circuit, item.node.name) }}
 										</div>
 										<div v-if="item.hasLimit" class="small text-muted" >
 											<AnimatedNumber :to="item.power" :format="fmtPower" />
@@ -128,8 +128,11 @@ import { defineComponent, type PropType, computed } from "vue";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import AnimatedNumber from "../Helper/AnimatedNumber.vue";
 import type { Circuit, UiLoadpoint } from "@/types/evcc";
-import { buildCircuitsTree, type CircuitsTree } from "@/composables/useCircuitsTree";
-import type { CircuitNode } from "@/composables/useCircuitsTree";
+import {
+	buildCircuitsTree,
+	type CircuitsTree,
+} from "@/composables/useCircuitsTree";
+import { resolveCircuitTitle } from "@/composables/useCircuitsTree";
 
 export default defineComponent({
 	name: "CircuitsModal",
@@ -168,82 +171,12 @@ export default defineComponent({
 			buildCircuitsTree(props.circuits || {}, props.loadpoints)
 		);
 
-		const flatCircuits = computed(() => {
-			const items: {
-				node: CircuitNode;
-				level: number;
-				power: number;
-				maxPower: number;
-				hasLimit: boolean;
-				usagePercent: number;
-				loadpoints: UiLoadpoint[];
-			}[] = [];
-
-			const attachMetrics = (node: CircuitNode) => {
-				const circuit = node.circuit;
-				const maxPower = circuit.maxPower ?? (circuit.config as any)?.maxPower ?? 0;
-				const power = circuit.power ?? 0;
-				const hasLimit = maxPower > 0;
-				const usagePercent = hasLimit ? Math.min(100, Math.round((power / maxPower) * 100)) : 0;
-				return { power, maxPower, hasLimit, usagePercent };
-			};
-
-			const dfs = (node: CircuitNode, level: number) => {
-				const metrics = attachMetrics(node);
-				items.push({
-					node,
-					level,
-					power: metrics.power,
-					maxPower: metrics.maxPower,
-					hasLimit: metrics.hasLimit,
-					usagePercent: metrics.usagePercent,
-					loadpoints: node.loadpoints,
-				});
-				for (const child of node.children) {
-					dfs(child, level + 1);
-				}
-			};
-
-			for (const root of tree.value.roots) {
-				dfs(root, 0);
-			}
-
-			// If there are circuits but no tree roots (no parents), fall back to flat list
-			if (!items.length && props.circuits) {
-				for (const [name, circuit] of Object.entries(props.circuits as Record<string, Circuit>)) {
-					const maxPower = circuit.maxPower ?? (circuit.config as any)?.maxPower ?? 0;
-					const power = circuit.power ?? 0;
-					const hasLimit = maxPower > 0;
-					const usagePercent = hasLimit ? Math.min(100, Math.round((power / maxPower) * 100)) : 0;
-					const lps = (props.loadpoints || []).filter((lp) => lp.circuit === name);
-					items.push({
-						node: { name, circuit, children: [], loadpoints: lps },
-						level: 0,
-						power,
-						maxPower,
-						hasLimit,
-						usagePercent,
-						loadpoints: lps,
-					});
-				}
-			}
-
-			return items;
-		});
+		const flatCircuits = computed(() => tree.value.flat);
 
 		const hasTree = computed<boolean>(() => flatCircuits.value.length > 0);
 
 		const fmtPower = (value: number): string => {
 			return (formatter.methods as any).fmtW(value, POWER_UNIT.KW);
-		};
-
-		const formatCircuitName = (node: CircuitNode): string => {
-			const title = (node.circuit.config as any)?.title || node.circuit.title;
-			if (title) return title as string;
-
-			return node.name
-				.replace(/[_-]+/g, " ")
-				.replace(/\b\w/g, (c) => c.toUpperCase());
 		};
 
 		const close = () => {
@@ -255,7 +188,7 @@ export default defineComponent({
 			flatCircuits,
 			hasTree,
 			fmtPower,
-			formatCircuitName,
+			resolveCircuitTitle,
 			close,
 		};
 	},

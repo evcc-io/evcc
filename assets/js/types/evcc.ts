@@ -39,6 +39,12 @@ export interface HemsConfig {
   type: string;
 }
 
+export interface HemsStatus {
+  maxPower: number;
+}
+
+export type Hems = ConfigStatus<HemsConfig, HemsStatus>;
+
 export interface ShmConfig {
   vendorId: string;
   deviceId: string;
@@ -76,7 +82,7 @@ export interface State {
   tariffSolar?: number;
   mqtt?: MqttConfig;
   influx?: InfluxConfig;
-  hems?: ConfigStatus<HemsConfig, unknown>;
+  hems?: ConfigStatus<HemsConfig, HemsStatus>;
   shm?: ShmConfig;
   sponsor?: ConfigStatus<unknown, SponsorStatus>;
   eebus?: ConfigStatus<EebusConfig, EebusStatus>;
@@ -134,6 +140,8 @@ export interface Config {
 }
 
 export interface Circuit {
+  // logical circuit identifier; may mirror the key in the circuits map
+  name?: string;
   title?: string;
   icon?: string;
   parent?: string;
