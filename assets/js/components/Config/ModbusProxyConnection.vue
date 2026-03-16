@@ -12,9 +12,9 @@
 		:default-comset="'8N1'"
 		:default-port="502"
 		:modbus="initialModbus"
-		@update:host="(host) => updateHost(localConnection.settings, host)"
-		@update:port="(port) => updatePort(localConnection.settings, port)"
-		@update:modbus="(modbus) => updateModbus(localConnection.settings, modbus)"
+		@update:host="(host) => updateHost(host)"
+		@update:port="(port) => updatePort(port)"
+		@update:modbus="(modbus) => updateModbus(modbus)"
 	/>
 </template>
 
@@ -55,7 +55,7 @@ export default defineComponent({
 		},
 	},
 	mounted() {
-		this.initialModbus = this.getModbus(this.localConnection!.settings);
+		this.initialModbus = this.getModbus(this.localConnection.settings);
 	},
 	methods: {
 		getModbus(s: ModbusProxySettings) {
@@ -74,37 +74,37 @@ export default defineComponent({
 		getPort(uri?: string) {
 			return uri?.split(":")[1] || "";
 		},
-		updateHost(settings: ModbusProxySettings, newHost?: string) {
-			const port = this.getPort(settings.uri);
+		updateHost(newHost?: string) {
+			const port = this.getPort(this.localConnection.settings.uri);
 
 			if (port === "" && newHost === undefined) {
-				settings.uri = undefined;
+				this.localConnection.settings.uri = undefined;
 			} else {
-				settings.uri = `${newHost === undefined ? "" : newHost}:${port}`;
+				this.localConnection.settings.uri = `${newHost === undefined ? "" : newHost}:${port}`;
 			}
 		},
-		updatePort(settings: ModbusProxySettings, newPort?: string | number) {
-			const host = this.getHost(settings.uri);
+		updatePort(newPort?: string) {
+			const host = this.getHost(this.localConnection.settings.uri);
 			if (host === "" && newPort === undefined) {
-				settings.uri = undefined;
+				this.localConnection.settings.uri = undefined;
 			} else {
-				settings.uri = `${host}:${newPort === undefined ? "" : newPort}`;
+				this.localConnection.settings.uri = `${host}:${newPort === undefined ? "" : newPort}`;
 			}
 		},
-		updateModbus(settings: ModbusProxySettings, modbus: MODBUS_TYPE) {
+		updateModbus(modbus: MODBUS_TYPE) {
 			this.initialModbus = modbus;
 
 			switch (modbus) {
 				case MODBUS_TYPE.RS485_SERIAL:
-					settings.uri = undefined;
-					settings.rtu = undefined;
+					this.localConnection.settings.uri = undefined;
+					this.localConnection.settings.rtu = undefined;
 					break;
 				case MODBUS_TYPE.RS485_TCPIP:
 				case MODBUS_TYPE.TCPIP:
-					settings.device = undefined;
-					settings.baudrate = undefined;
-					settings.comset = undefined;
-					settings.rtu = modbus === MODBUS_TYPE.RS485_TCPIP;
+					this.localConnection.settings.device = undefined;
+					this.localConnection.settings.baudrate = undefined;
+					this.localConnection.settings.comset = undefined;
+					this.localConnection.settings.rtu = modbus === MODBUS_TYPE.RS485_TCPIP;
 					break;
 			}
 		},

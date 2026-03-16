@@ -88,7 +88,9 @@
 								<ModbusProxyConnection
 									:connection="c"
 									:index="index"
-									@update:connection="values[index] = c"
+									@update:connection="
+										(connection) => (values[index] = connection)
+									"
 								/>
 							</div>
 						</div>
