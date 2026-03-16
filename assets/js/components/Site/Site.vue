@@ -50,11 +50,6 @@
 				</div>
 			</div>
 			<template v-else>
-				<LoadManagement
-					v-if="hasCircuits"
-					:circuits="circuits"
-					class="mt-1 mt-sm-2"
-				/>
 				<Loadpoints
 					:key="`loadpoints-${orderedVisibleLoadpoints.length}`"
 					class="mt-1 mt-sm-2 flex-grow-1"
@@ -72,8 +67,16 @@
 					:batteryConfigured="batteryConfigured"
 					:batterySoc="batterySoc"
 					:forecast="forecast"
+					:circuits="circuits"
 					:selectedId="selectedLoadpointId"
 					@id-changed="selectedLoadpointChanged"
+					@open-circuits="openCircuitsModal"
+				/>
+				<CircuitsModal
+					v-model:show="showCircuitsModal"
+					:circuits="circuits"
+					:loadpoints="orderedVisibleLoadpoints"
+					:selectedCircuitName="selectedCircuitName"
 				/>
 			</template>
 			<Footer v-bind="footer"></Footer>
@@ -86,8 +89,8 @@ import "@h2d2/shopicons/es/regular/arrowup";
 import TopNavigationArea from "../Top/TopNavigationArea.vue";
 import Energyflow from "../Energyflow/Energyflow.vue";
 import HemsWarning from "../HemsWarning.vue";
-import LoadManagement from "./LoadManagement.vue";
 import Loadpoints from "../Loadpoints/Loadpoints.vue";
+import CircuitsModal from "../Loadpoints/CircuitsModal.vue";
 import Footer from "../Footer/Footer.vue";
 import formatter from "@/mixins/formatter";
 import collector from "@/mixins/collector.ts";
@@ -112,8 +115,8 @@ import type { Grid } from "./types";
 export default defineComponent({
 	name: "Site",
 	components: {
-		LoadManagement,
 		Loadpoints,
+		CircuitsModal,
 		Energyflow,
 		Footer,
 		HemsWarning,
@@ -173,6 +176,12 @@ export default defineComponent({
 		telemetry: Boolean,
 		experimental: Boolean,
 		evopt: { type: Object as PropType<EvOpt> },
+	},
+	data() {
+		return {
+			showCircuitsModal: false,
+			selectedCircuitName: undefined as string | undefined,
+		};
 	},
 	computed: {
 		loadpoints() {
@@ -241,6 +250,10 @@ export default defineComponent({
 	methods: {
 		selectedLoadpointChanged(id: string | undefined) {
 			this.$router.push({ query: { lp: id } });
+		},
+		openCircuitsModal(circuitName: string) {
+			this.selectedCircuitName = circuitName;
+			this.showCircuitsModal = true;
 		},
 	},
 });

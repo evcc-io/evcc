@@ -32,9 +32,12 @@
 					:batteryConfigured="batteryConfigured"
 					:batterySoc="batterySoc"
 					:forecast="forecast"
+					:circuits="circuits"
+					:circuitName="loadpoint.circuit"
 					class="h-100"
 					:class="{ 'loadpoint-unselected': !selected(loadpoint.id) }"
 					@click="goTo(loadpoint.id)"
+					@open-circuits="openCircuits"
 				/>
 			</div>
 		</div>
@@ -67,7 +70,7 @@ import "@h2d2/shopicons/es/filled/lightning";
 
 import Loadpoint from "./Loadpoint.vue";
 import { defineComponent, type PropType } from "vue";
-import type { UiLoadpoint, SMART_COST_TYPE, Timeout, Vehicle } from "@/types/evcc";
+import type { UiLoadpoint, SMART_COST_TYPE, Timeout, Vehicle, Circuit } from "@/types/evcc";
 
 export default defineComponent({
 	name: "Loadpoints",
@@ -88,8 +91,9 @@ export default defineComponent({
 		batteryConfigured: Boolean,
 		batterySoc: Number,
 		forecast: Object, // as PropType<Forecast>,
+		circuits: { type: Object as PropType<Record<string, Circuit> | undefined> },
 	},
-	emits: ["id-changed"],
+	emits: ["id-changed", "open-circuits"],
 	data() {
 		return {
 			snapTimeout: null as Timeout,
@@ -156,6 +160,11 @@ export default defineComponent({
 		},
 		goTo(id: string) {
 			this.$emit("id-changed", id);
+		},
+		openCircuits(circuitName: string | undefined) {
+			if (circuitName) {
+				this.$emit("open-circuits", circuitName);
+			}
 		},
 		isCharging(lp: UiLoadpoint) {
 			return lp.charging && lp.chargePower > 0;

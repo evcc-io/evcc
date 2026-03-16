@@ -641,6 +641,7 @@ func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan c
 
 	// publish initial values
 	lp.publish(keys.Title, lp.GetTitle())
+	lp.publish(keys.Circuit, lp.CircuitRef)
 	lp.publish(keys.Mode, lp.GetMode())
 	lp.publish(keys.Priority, lp.GetPriority())
 	lp.publish(keys.MinCurrent, lp.GetMinCurrent())

@@ -234,6 +234,8 @@ export enum LENGTH_UNIT {
 }
 
 export interface Loadpoint {
+  // Optional circuit association (by circuit name) for UI grouping
+  circuit?: string;
   batteryBoost: boolean;
   chargeCurrents?: number[];
   chargeDuration: number;

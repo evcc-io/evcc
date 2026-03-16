@@ -1033,6 +1033,14 @@
     "title": "Authentifizierung"
   },
   "main": {
+    "circuits": {
+      "title": "Stromkreise",
+      "help": "Stromkreise begrenzen die kombinierte Leistung der angeschlossenen Ladepunkte. Diese Ansicht zeigt aktuelle Auslastung und verbleibende Reserven.",
+      "none": "Es sind keine Stromkreise konfiguriert.",
+      "ungrouped": "Ladepunkte ohne Stromkreis",
+      "close": "Schließen",
+      "indicatorLabel": "Stromkreis"
+    },
     "chargingPlan": {
       "active": "Aktiv",
       "addRepeatingPlan": "Wiederholenden Plan hinzufügen",

@@ -1033,6 +1033,14 @@
     "title": "Authentication"
   },
   "main": {
+    "circuits": {
+      "title": "Circuits",
+      "help": "Circuits limit the combined power of connected loadpoints. This view shows current usage and remaining headroom.",
+      "none": "No circuits are configured.",
+      "ungrouped": "Loadpoints without a circuit",
+      "close": "Close",
+      "indicatorLabel": "Circuit"
+    },
     "chargingPlan": {
       "active": "Active",
       "addRepeatingPlan": "Add repeating plan",

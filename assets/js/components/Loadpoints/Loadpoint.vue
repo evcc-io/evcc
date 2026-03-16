@@ -77,6 +77,23 @@
 					class="opacity-transiton"
 					:class="`opacity-${showChargingIndicator ? '100' : '0'}`"
 				/>
+				<div
+					v-if="hasCircuitIndicator"
+					class="circuit-indicator d-inline-flex align-items-center mt-1 small"
+					role="button"
+					tabindex="0"
+					@click="$emit('open-circuits', circuitName)"
+					@keydown.enter.prevent="$emit('open-circuits', circuitName)"
+					@keydown.space.prevent="$emit('open-circuits', circuitName)"
+				>
+					<span class="circuit-indicator-dot me-1" :class="circuitStatusClass"></span>
+					<span class="text-truncate">
+						{{ circuitLabel }}
+						<span v-if="circuitUtilizationText" class="text-muted">
+							· {{ circuitUtilizationText }}
+						</span>
+					</span>
+				</div>
 			</div>
 			<LabelAndValue
 				v-show="socBasedCharging"
@@ -127,6 +144,7 @@ import type {
 	Vehicle,
 	Forecast,
 	SMART_COST_TYPE,
+	Circuit,
 } from "@/types/evcc";
 import type { PlanStrategy } from "@/components/ChargingPlans/types";
 
@@ -240,7 +258,10 @@ export default defineComponent({
 		forecast: Object as PropType<Forecast>,
 		lastSmartCostLimit: Number,
 		lastSmartFeedInPriorityLimit: Number,
+		circuitName: String,
+		circuits: { type: Object as PropType<Record<string, Circuit> | undefined> },
 	},
+	emits: ["open-circuits"],
 	data() {
 		return {
 			tickerHandler: null as Timeout,
@@ -325,6 +346,57 @@ export default defineComponent({
 		},
 		plannerForecast() {
 			return this.forecast?.planner;
+		},
+		loadpointCircuit(): Circuit | undefined {
+			if (!this.circuitName || !this.circuits) {
+				return undefined;
+			}
+			return this.circuits[this.circuitName];
+		},
+		hasCircuitIndicator(): boolean {
+			return !!this.loadpointCircuit;
+		},
+		circuitLabel(): string {
+			const circuit = this.loadpointCircuit;
+			if (!circuit) {
+				return this.$t("main.circuits.indicatorLabel") as string;
+			}
+			const title = (circuit.config as any)?.title || circuit.title;
+			if (title) {
+				return title as string;
+			}
+			// humanize technical keys like carport_branch -> Carport Branch
+			return (this.circuitName || "")
+				.replace(/[_-]+/g, " ")
+				.replace(/\b\w/g, (c) => c.toUpperCase());
+		},
+		circuitUtilizationText(): string {
+			const circuit = this.loadpointCircuit;
+			const maxPower = circuit?.maxPower ?? (circuit?.config as any)?.maxPower;
+			if (!circuit || !maxPower || maxPower <= 0) {
+				return "";
+			}
+			const power = circuit.power ?? 0;
+			const max = maxPower;
+			const currentText = this.fmtW(power, POWER_UNIT.KW);
+			const maxText = this.fmtW(max, POWER_UNIT.KW);
+			return `${currentText} / ${maxText}`;
+		},
+		circuitStatusClass(): string {
+			const circuit = this.loadpointCircuit;
+			const maxPower = circuit?.maxPower ?? (circuit?.config as any)?.maxPower;
+			if (!circuit || !maxPower || maxPower <= 0) {
+				return "circuit-indicator-dot--ok";
+			}
+			const power = circuit.power ?? 0;
+			const ratio = power / maxPower;
+			if (ratio >= 1) {
+				return "circuit-indicator-dot--high";
+			}
+			if (ratio >= 0.8) {
+				return "circuit-indicator-dot--warn";
+			}
+			return "circuit-indicator-dot--ok";
 		},
 	},
 	watch: {
@@ -449,5 +521,30 @@ export default defineComponent({
 	.divider {
 		margin: 0 -1.5rem;
 	}
+}
+
+.circuit-indicator {
+	cursor: pointer;
+	color: var(--evcc-default-text);
+}
+
+.circuit-indicator-dot {
+	width: 0.5rem;
+	height: 0.5rem;
+	border-radius: 999px;
+	background-color: var(--evcc-dark-green);
+	flex-shrink: 0;
+}
+
+.circuit-indicator-dot--ok {
+	background-color: var(--evcc-dark-green);
+}
+
+.circuit-indicator-dot--warn {
+	background-color: var(--evcc-orange);
+}
+
+.circuit-indicator-dot--high {
+	background-color: var(--evcc-orange);
 }
 </style>
