@@ -224,6 +224,15 @@ func (c *Connection) CallService(domain, service string, data map[string]any) er
 	return err
 }
 
+func domain(entity string) (string, error) {
+	domain, _, ok := strings.Cut(entity, ".")
+	if !ok {
+		return "", fmt.Errorf("invalid entity format: %s", entity)
+	}
+
+	return domain, nil
+}
+
 // CallSwitchService is a convenience method for switch services
 func (c *Connection) CallSwitchService(entity string, turnOn bool) error {
 	parts := strings.Split(entity, ".")
@@ -231,7 +240,6 @@ func (c *Connection) CallSwitchService(entity string, turnOn bool) error {
 		return fmt.Errorf("invalid entity format: %s", entity)
 	}
 
-	domain := parts[0]
 	service := "turn_off"
 	if turnOn {
 		service = "turn_on"
@@ -239,6 +247,11 @@ func (c *Connection) CallSwitchService(entity string, turnOn bool) error {
 
 	data := map[string]any{
 		"entity_id": entity,
+	}
+
+	domain, err := domain(entity)
+	if err != nil {
+		return err
 	}
 
 	return c.CallService(domain, service, data)
@@ -251,7 +264,12 @@ func (c *Connection) CallNumberService(entity string, value float64) error {
 		"value":     value,
 	}
 
-	return c.CallService("number", "set_value", data)
+	domain, err := domain(entity)
+	if err != nil {
+		return err
+	}
+
+	return c.CallService(domain, "set_value", data)
 }
 
 // GetPhaseFloatStates retrieves three phase values (currents, voltages, etc.)
