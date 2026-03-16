@@ -41,7 +41,7 @@ params:
     description:
       generic: Serial Number
     help:
-      en: Seriel number of your EcoFlow PowerOcean system (e.g., HJ31ZD1AZH5G0342)
+      en: Serial number of your EcoFlow PowerOcean system (e.g., HJ31ZD1AZH5G0342)
       de: Seriennummer Ihres EcoFlow PowerOcean Systems (z.B. HJ31ZD1AZH5G0342)
   - name: cache
     default: 30s
