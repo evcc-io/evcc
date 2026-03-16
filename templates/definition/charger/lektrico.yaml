@@ -7,19 +7,7 @@ requirements:
   evcc: ["sponsorship"]
 params:
   - name: host
-    required: true
-    example: 192.168.1.100
-    help:
-      en: IP address or hostname of the Lektrico charger on your local network
-      de: IP-Adresse oder Hostname der Lektrico-Ladestation im lokalen Netzwerk
   - name: cache
-    type: duration
-    default: 1s
-    advanced: true
-    help:
-      en: Cache duration for charger status
-      de: Cache-Dauer für den Laderstatus
-
 render: |
   type: lektrico
   host: {{ .host }}
