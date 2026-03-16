@@ -165,12 +165,12 @@ func (wb *Lektrico) post(method string, params map[string]any) error {
 
 	req, _ := request.New(http.MethodPost, wb.uri, request.MarshalJSON(payload), request.JSONEncoding)
 
-	var resp lektricoRPCResponse
-	if err := wb.DoJSON(req, &resp); err != nil {
+	var res lektricoRPCResponse
+	if err := wb.DoJSON(req, &res); err != nil {
 		return err
 	}
-	if resp.Error != nil {
-		return fmt.Errorf("%d: %s", resp.Error.Code, resp.Error.Message)
+	if res.Error != nil {
+		return fmt.Errorf("%d: %s", res.Error.Code, res.Error.Message)
 	}
 
 	wb.statusG.Reset()
