@@ -218,7 +218,7 @@ func (wb *Lektrico) Enabled() (bool, error) {
 }
 
 // sendCurrent sets the dynamic_current on the charger.
-func (wb *Lektrico) sendCurrent(value int64) error {
+func (wb *Lektrico) setCurrent(value int64) error {
 	return wb.post("dynamic_current.set", map[string]any{
 		"dynamic_current": value,
 	})
@@ -231,13 +231,13 @@ func (wb *Lektrico) Enable(enable bool) error {
 		curr = wb.current
 	}
 
-	return wb.sendCurrent(curr)
+	return wb.setCurrent(curr)
 }
 
 // MaxCurrent implements the api.Charger interface
 func (wb *Lektrico) MaxCurrent(current int64) error {
 	wb.current = current
-	return wb.sendCurrent(current)
+	return wb.setCurrent(current)
 }
 
 var _ api.Meter = (*Lektrico)(nil)
