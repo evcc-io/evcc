@@ -706,7 +706,14 @@ func (site *Site) applyTemperatureCorrection(profile []float64) []float64 {
 		// delta > 0: tomorrow colder than historical average → load increases
 		// delta < 0: tomorrow warmer → load decreases
 		delta := tPastAvg - tFuture
-		result[i] = profile[i] * (1 + coeff*delta)
+		oldValue := profile[i]
+		result[i] = oldValue * (1 + coeff*delta)
+
+		// Log first few adjustments for visibility
+		if i < 3 {
+			site.log.DEBUG.Printf("temperature correction: slot %s (hour %d): forecast=%.1f°C, hist_avg=%.1f°C, delta=%.1f°C, load: %.0fWh -> %.0fWh (%.1f%%)",
+				ts.Format("15:04"), h, tFuture, tPastAvg, delta, oldValue, result[i], (result[i]/oldValue-1)*100)
+		}
 	}
 
 	return result
