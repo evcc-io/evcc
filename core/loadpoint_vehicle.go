@@ -306,7 +306,7 @@ func (lp *Loadpoint) identifyVehicleByStatus() {
 // false: if vehicle position is known and outside the defined radius
 // true: in all other cases, even in cases of error or if position is unknown
 func (lp *Loadpoint) isVehicleAtHome(vehicle api.Vehicle) bool {
-	geofence := lp.Geofence  // lock values
+	geofence := lp.Geofence // lock values
 
 	if !geofence.Enabled || vehicle == nil {
 		return true
@@ -316,7 +316,7 @@ func (lp *Loadpoint) isVehicleAtHome(vehicle api.Vehicle) bool {
 	lat1 := geofence.Lat
 	lon1 := geofence.Lon
 
-	if lat1 == 0 && lon1 == 0 {  // default values not changed
+	if lat1 == 0 && lon1 == 0 { // default values not changed
 		return true
 	}
 
@@ -354,7 +354,7 @@ func (lp *Loadpoint) isVehicleAtHome(vehicle api.Vehicle) bool {
 
 	lp.log.DEBUG.Printf("vehicle distance from loadpoint: %.3fkm", distance)
 
-	return distance * 1e3 <= geofence.Radius
+	return distance*1e3 <= geofence.Radius
 }
 
 // vehicleOdometer updates odometer
