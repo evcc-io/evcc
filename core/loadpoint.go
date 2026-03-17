@@ -96,7 +96,7 @@ type Loadpoint struct {
 
 	Soc             loadpoint.SocConfig
 	Enable, Disable loadpoint.ThresholdConfig
-	Geofence		loadpoint.GeofenceConfig
+	Geofence        loadpoint.GeofenceConfig
 
 	// from yaml
 	DefaultMode api.ChargeMode `mapstructure:"mode"`     // Default charge mode, used for disconnect
