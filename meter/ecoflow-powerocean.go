@@ -82,6 +82,9 @@ func NewEcoFlowPowerOcean(ctx context.Context, accessKey, secretKey, serial, usa
 
 // getData retrieves device parameters from EcoFlow API
 func (m *EcoFlowPowerOcean) getData() (*ecoflow.GetCmdResponse, error) {
+	timedCtx, cancel := context.WithTimeout(m.ctx, 30*time.Second)
+	defer cancel()
+
 	var params []string
 	switch m.usage {
 	case "grid":
@@ -92,7 +95,7 @@ func (m *EcoFlowPowerOcean) getData() (*ecoflow.GetCmdResponse, error) {
 		params = []string{"bpPwr", "bpSoc"}
 	}
 
-	return m.client.GetDeviceParameters(m.ctx, m.serial, params)
+	return m.client.GetDeviceParameters(timedCtx, m.serial, params)
 }
 
 var _ api.Meter = (*EcoFlowPowerOcean)(nil)
