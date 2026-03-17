@@ -60,7 +60,7 @@ func NewGoodWeWifiFromConfig(other map[string]interface{}) (api.Meter, error) {
 func NewGoodWeWifi(uri, usage string) (api.Meter, error) {
 	log := util.NewLogger("goodwe-wifi").Redact(uri)
 
-	addr, err := net.ResolveUDPAddr("udp4", uri+":8899")
+	addr, err := net.ResolveUDPAddr("udp4", net.JoinHostPort(uri, "8899"))
 	if err != nil {
 		return nil, err
 	}
