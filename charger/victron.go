@@ -89,12 +89,8 @@ func NewVictronEVCSFromConfig(ctx context.Context, other map[string]any) (api.Ch
 
 // NewVictronFromConfig creates a Victron charger from generic config
 func NewVictronFromConfig(ctx context.Context, other map[string]any, regs victronRegs) (api.Charger, error) {
-	cc := struct {
-		modbus.TcpSettings `mapstructure:",squash"`
-	}{
-		TcpSettings: modbus.TcpSettings{
-			ID: cast.ToUint8(regs.isGX) * 100,
-		},
+	cc := modbus.TcpSettings{
+		ID: cast.ToUint8(regs.isGX) * 100,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
