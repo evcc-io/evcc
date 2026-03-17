@@ -47,6 +47,10 @@ func waitForPendingTick(t *testing.T, d *CommandDispatcher, ticks int64) {
 }
 
 func TestDispatcher_Dispatch_Rogue(t *testing.T) {
+	// Intentionally triggers a WARN — suppress it to keep test output clean.
+	util.LogLevel("error", nil)
+	t.Cleanup(func() { util.LogLevel("info", nil) })
+
 	d := newTestDispatcher(t)
 	assert.NotPanics(t, func() {
 		d.Dispatch(SignalRCommandResponse{
