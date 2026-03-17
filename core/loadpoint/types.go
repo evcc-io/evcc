@@ -24,7 +24,7 @@ type SocConfig struct {
 
 // GeofenceConfig defines geofence settings for vehicle detection
 type GeofenceConfig struct {
-	Enabled         bool    `json:"enabled"` // Enables geofence
+	Enabled         bool    `json:"enabled"`
 	Lat             float64 `json:"lat"`     // Latitude of loadpoint position
 	Lon             float64 `json:"lon"`     // Longitude of loadpoint position
 	Radius          float64 `json:"radius"`  // Maximum vehicle distance from loadpoint (m)	
