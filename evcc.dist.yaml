@@ -135,6 +135,13 @@ loadpoints:
     disable: # pv mode disable behavior
       delay: 3m # threshold must be exceeded for this long
       threshold: 0 # maximum import power (W)
+    geofence:
+      # geofencing improves the reliability of vehicle detection
+      # if geofencing is enabled, vehicle position is used for vehicle detection in addition to the charging status
+      enabled: false # set true to enable geofencing
+      lat: 49.1234 # latitude of loadpoint location
+      lon: 8.1234 # longitude of loadpoint location
+      radius: 100 # maximum allowed distance of vehicle from loadpoint (in meter)
 
 # tariffs are the fixed or variable tariffs
 tariffs:
