@@ -108,6 +108,7 @@ func templateForConfig(class templates.Class, conf map[string]any) (templates.Te
 	return templates.ByName(class, typ)
 }
 
+// filterValidTemplateParams removes all configuration properties that are not part of the template definition
 func filterValidTemplateParams(tmpl *templates.Template, conf map[string]any) map[string]any {
 	res := make(map[string]any)
 
@@ -170,6 +171,7 @@ func mergeMasked(class templates.Class, conf, old map[string]any) (map[string]an
 	})
 }
 
+// storedDeviceOther retrieves the 'Other' configuration properties of a stored device by its ID
 func storedDeviceOther[T any](id int, h config.Handler[T]) (map[string]any, error) {
 	dev, err := h.ByName(config.NameForID(id))
 	if err != nil {
@@ -179,6 +181,7 @@ func storedDeviceOther[T any](id int, h config.Handler[T]) (map[string]any, erro
 	return dev.Config().Other, nil
 }
 
+// mergedMaskedConfig merges a new configuration with an existing one, replacing masked values with their original counterparts
 func mergedMaskedConfig(class templates.Class, id int, conf map[string]any) (map[string]any, error) {
 	var (
 		old map[string]any
@@ -204,6 +207,8 @@ func mergedMaskedConfig(class templates.Class, id int, conf map[string]any) (map
 		return nil, err
 	}
 
+	// mergeMasked needs the template type to determine which parameters are masked.
+	// We inject the existing template from the stored config if the new config doesn't have it.
 	mergeReq := maps.Clone(conf)
 	if mergeReq[typeTemplate] == nil {
 		if tmpl, ok := old[typeTemplate]; ok {
