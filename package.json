@@ -85,6 +85,7 @@
     "jiti": "^2.6.1",
     "kill-port": "^2.0.1",
     "license-compliance": "^3.0.1",
+    "lightningcss": "^1.32.0",
     "mqtt": "^5.14.1",
     "prettier": "^3.7.4",
     "prettier-plugin-sh": "^0.18.0",

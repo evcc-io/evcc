@@ -1,10 +1,17 @@
 <template>
 	<teleport to="body">
 		<div v-if="show" class="circuits-modal-backdrop">
-			<div class="circuits-modal-dialog modal-dialog-scrollable modal-lg modal-fullscreen-md-down">
+			<div
+				ref="dialog"
+				class="circuits-modal-dialog modal-dialog-scrollable modal-lg modal-fullscreen-md-down"
+				role="dialog"
+				aria-modal="true"
+				aria-labelledby="circuitsModalLabel"
+				tabindex="-1"
+			>
 				<div class="modal-content">
 					<div class="modal-header">
-						<h5 id="circuitsModalLabel" class="modal-title" >
+						<h5 id="circuitsModalLabel" class="modal-title">
 							{{ $t("main.circuits.title") }}
 						</h5>
 						<button type="button" class="btn-close" aria-label="Close" @click="close"></button>
@@ -93,7 +100,7 @@
 									</li>
 								</ul>
 							</div>
-						<div v-if="tree.ungroupedLoadpoints.length" class="mt-3">
+							<div v-if="tree.ungroupedLoadpoints.length" class="mt-3">
 								<h6 class="text-muted small mb-2">
 									{{ $t("main.circuits.ungrouped") }}
 								</h6>
@@ -124,7 +131,14 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, type PropType, computed } from "vue";
+import {
+	defineComponent,
+	type PropType,
+	computed,
+	nextTick,
+	ref,
+	watch,
+} from "vue";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import AnimatedNumber from "../Helper/AnimatedNumber.vue";
 import type { Circuit, UiLoadpoint } from "@/types/evcc";
@@ -175,9 +189,17 @@ export default defineComponent({
 
 		const hasTree = computed<boolean>(() => flatCircuits.value.length > 0);
 
-		const fmtPower = (value: number): string => {
-			return (formatter.methods as any).fmtW(value, POWER_UNIT.KW);
-		};
+		const dialog = ref<HTMLElement | null>(null);
+
+		watch(
+			() => props.show,
+			(show) => {
+				if (!show) return;
+				nextTick(() => {
+					dialog.value?.focus();
+				});
+			}
+		);
 
 		const close = () => {
 			emit("update:show", false);
@@ -187,10 +209,15 @@ export default defineComponent({
 			tree,
 			flatCircuits,
 			hasTree,
-			fmtPower,
 			resolveCircuitTitle,
 			close,
+			dialog,
 		};
+	},
+	methods: {
+		fmtPower(value: number): string {
+			return this.fmtW(value, POWER_UNIT.KW);
+		},
 	},
 });
 </script>
