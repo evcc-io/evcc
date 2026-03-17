@@ -55,11 +55,11 @@ func TestApplyTemperatureCorrection_HappyPath(t *testing.T) {
 	defer ctrl.Finish()
 
 	now := time.Now().Truncate(15 * time.Minute)
-	
+
 	mockTariff := api.NewMockTariff(ctrl)
-	
+
 	rates := []api.Rate{}
-	
+
 	// Past 7 days - create slots for ALL hours to ensure historical data exists
 	for day := -7; day < 0; day++ {
 		for hour := 0; hour < 24; hour++ {
@@ -73,7 +73,7 @@ func TestApplyTemperatureCorrection_HappyPath(t *testing.T) {
 			}
 		}
 	}
-	
+
 	// Past 24h: 5°C (below threshold, heating active)
 	for i := -96; i < 0; i++ {
 		rates = append(rates, api.Rate{
@@ -82,7 +82,7 @@ func TestApplyTemperatureCorrection_HappyPath(t *testing.T) {
 			Value: 5.0,
 		})
 	}
-	
+
 	// Future forecast: 8 slots (2 hours)
 	// First hour: 5°C, Second hour: 15°C
 	for i := 0; i < 8; i++ {
@@ -96,22 +96,22 @@ func TestApplyTemperatureCorrection_HappyPath(t *testing.T) {
 			Value: temp,
 		})
 	}
-	
+
 	mockTariff.EXPECT().Rates().Return(rates, nil).AnyTimes()
-	
+
 	site := &Site{
 		log:                util.NewLogger("test"),
 		HeatingThreshold:   15.0,
 		HeatingCoefficient: 0.05,
 		tariffs:            &tariff.Tariffs{Temperature: mockTariff},
 	}
-	
+
 	profile := []float64{2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0}
-	
+
 	result := site.applyTemperatureCorrection(profile)
-	
+
 	require.Len(t, result, 8)
-	
+
 	// Verify correction is applied: first hour should increase, second hour should decrease
 	assert.Greater(t, result[0], 2.0, "first hour should increase (colder forecast)")
 	assert.Less(t, result[4], 2.0, "second hour should decrease (warmer forecast)")
@@ -121,11 +121,11 @@ func TestApplyTemperatureCorrection_HappyPath(t *testing.T) {
 func TestApplyTemperatureCorrection_HeatingInactive(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	
+
 	now := time.Now().Truncate(15 * time.Minute)
-	
+
 	mockTariff := api.NewMockTariff(ctrl)
-	
+
 	// Past 24h average: 20°C (above threshold of 15°C, so heating is inactive)
 	rates := []api.Rate{}
 	for i := -96; i < 0; i++ {
@@ -135,19 +135,19 @@ func TestApplyTemperatureCorrection_HeatingInactive(t *testing.T) {
 			Value: 20.0,
 		})
 	}
-	
+
 	mockTariff.EXPECT().Rates().Return(rates, nil).AnyTimes()
-	
+
 	site := &Site{
 		log:                util.NewLogger("test"),
 		HeatingThreshold:   15.0,
 		HeatingCoefficient: 0.05,
 		tariffs:            &tariff.Tariffs{Temperature: mockTariff},
 	}
-	
+
 	profile := []float64{1.0, 2.0, 3.0}
 	result := site.applyTemperatureCorrection(profile)
-	
+
 	// Should return unchanged profile when heating is inactive
 	assert.Equal(t, profile, result)
 }
@@ -180,6 +180,3 @@ func TestSumProfiles(t *testing.T) {
 		})
 	}
 }
-
-
-// Made with Bob
