@@ -20,7 +20,6 @@ type HomeAssistant struct {
 	enabled    string
 	enable     string
 	maxcurrent string
-	phases     string // optional - select entity for 1p/3p phase switching
 }
 
 func init() {
@@ -74,7 +73,6 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Charger, error) {
 		enabled:    cc.Enabled,
 		enable:     cc.Enable,
 		maxcurrent: cc.MaxCurrent,
-		phases:     cc.Phases,
 	}
 
 	// decorators for optional interfaces
@@ -106,8 +104,34 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Charger, error) {
 
 	// phase switching (optional)
 	if cc.Phases != "" {
-		phases1p3p = c.phases1p3p
-		phasesG = c.getPhases
+		phases1p3p = func(phases int) error {
+			enabled, err := c.Enabled()
+			if err != nil {
+				return err
+			}
+
+			if err := conn.CallSelectService(cc.Phases, strconv.Itoa(phases)); err != nil {
+				return err
+			}
+
+			if err := c.Enable(false); err != nil {
+				return err
+			}
+
+			if enabled {
+				return c.Enable(true)
+			}
+
+			return nil
+		}
+
+		phasesG = func() (int, error) {
+			val, err := conn.GetIntState(cc.Phases)
+			if err != nil {
+				return 0, err
+			}
+			return int(val), nil
+		}
 	}
 
 	return decorateHomeAssistant(c, power, energy, currents, voltages, phases1p3p, phasesG), nil
@@ -140,50 +164,4 @@ var _ api.ChargerEx = (*HomeAssistant)(nil)
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (c *HomeAssistant) MaxCurrentMillis(current float64) error {
 	return c.conn.CallNumberService(c.maxcurrent, current)
-}
-
-// phases1p3p implements the api.PhaseSwitcher interface.
-func (c *HomeAssistant) phases1p3p(phases int) error {
-	if c.phases == "" {
-		return errors.New("phase switching not configured")
-	}
-
-	// set phase select entity (e.g. select.wallbox_phases -> "1" or "3")
-	if err := c.conn.CallSelectService(c.phases, strconv.Itoa(phases)); err != nil {
-		return fmt.Errorf("set phases: %w", err)
-	}
-
-	// check if currently enabled
-	enabled, err := c.Enabled()
-	if err != nil {
-		return fmt.Errorf("get enabled state: %w", err)
-	}
-
-	// disable charging to apply new phase setting
-	if err := c.Enable(false); err != nil {
-		return fmt.Errorf("disable for phase switch: %w", err)
-	}
-
-	// re-enable if it was enabled before
-	if enabled {
-		if err := c.Enable(true); err != nil {
-			return fmt.Errorf("re-enable after phase switch: %w", err)
-		}
-	}
-
-	return nil
-}
-
-// getPhases implements the api.PhaseGetter interface.
-func (c *HomeAssistant) getPhases() (int, error) {
-	if c.phases == "" {
-		return 0, errors.New("phase switching not configured")
-	}
-
-	val, err := c.conn.GetIntState(c.phases)
-	if err != nil {
-		return 0, fmt.Errorf("get phases: %w", err)
-	}
-
-	return int(val), nil
 }
