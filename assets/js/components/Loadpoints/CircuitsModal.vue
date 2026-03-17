@@ -38,7 +38,7 @@
 								<div class="circuit-node-header d-flex justify-content-between align-items-start mb-1">
 									<div class="me-2 circuit-node-title">
 										<div class="fw-semibold text-truncate">
-											{{ resolveCircuitTitle(item.node.circuit, item.node.name) }}
+											{{ item.node.config?.title || item.node.title || item.node.name }}
 										</div>
 										<div v-if="item.hasLimit" class="small text-muted" >
 											<AnimatedNumber :to="item.power" :format="fmtPower" />
@@ -48,13 +48,13 @@
 									</div>
 									<div class="d-flex gap-1 flex-shrink-0">
 										<span
-											v-if="item.node.circuit.dimmed"
+											v-if="item.node.dimmed"
 											class="badge bg-warning text-dark small"
 										>
 											{{ $t("main.loadManagement.dimmed") }}
 										</span>
 										<span
-											v-if="item.node.circuit.curtailed"
+											v-if="item.node.curtailed"
 											class="badge bg-secondary small"
 										>
 											{{ $t("main.loadManagement.curtailed") }}
@@ -100,13 +100,13 @@
 									</li>
 								</ul>
 							</div>
-							<div v-if="tree.ungroupedLoadpoints.length" class="mt-3">
+							<div v-if="ungroupedLoadpoints.length" class="mt-3">
 								<h6 class="text-muted small mb-2">
 									{{ $t("main.circuits.ungrouped") }}
 								</h6>
 								<ul class="list-unstyled mb-0 small">
 									<li
-										v-for="lp in tree.ungroupedLoadpoints"
+										v-for="lp in ungroupedLoadpoints"
 										:key="lp.id"
 										class="d-flex justify-content-between align-items-center py-1"
 									>
@@ -142,11 +142,7 @@ import {
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import AnimatedNumber from "../Helper/AnimatedNumber.vue";
 import type { Circuit, UiLoadpoint } from "@/types/evcc";
-import {
-	buildCircuitsTree,
-	type CircuitsTree,
-} from "@/composables/useCircuitsTree";
-import { resolveCircuitTitle } from "@/composables/useCircuitsTree";
+import { buildCircuitsTree } from "@/composables/useCircuitsTree";
 
 export default defineComponent({
 	name: "CircuitsModal",
@@ -181,12 +177,14 @@ export default defineComponent({
 		},
 		{ emit }: { emit: (event: "update:show", value: boolean) => void }
 	) {
-		const tree = computed<CircuitsTree>(() =>
+		const tree = computed(() =>
 			buildCircuitsTree(props.circuits || {}, props.loadpoints)
 		);
 
 		const flatCircuits = computed(() => tree.value.flat);
-
+		const ungroupedLoadpoints = computed(
+			() => tree.value.ungroupedLoadpoints
+		);
 		const hasTree = computed<boolean>(() => flatCircuits.value.length > 0);
 
 		const dialog = ref<HTMLElement | null>(null);
@@ -194,10 +192,14 @@ export default defineComponent({
 		watch(
 			() => props.show,
 			(show) => {
-				if (!show) return;
-				nextTick(() => {
-					dialog.value?.focus();
-				});
+				if (show) {
+					document.body.style.overflow = "hidden";
+					nextTick(() => {
+						dialog.value?.focus();
+					});
+				} else {
+					document.body.style.overflow = "";
+				}
 			}
 		);
 
@@ -206,10 +208,9 @@ export default defineComponent({
 		};
 
 		return {
-			tree,
 			flatCircuits,
+			ungroupedLoadpoints,
 			hasTree,
-			resolveCircuitTitle,
 			close,
 			dialog,
 		};
@@ -231,7 +232,6 @@ export default defineComponent({
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	overflow-y: auto;
 }
 
 .circuits-modal-dialog {

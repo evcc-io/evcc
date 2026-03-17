@@ -181,7 +181,6 @@ import { defineComponent, type PropType, computed, getCurrentInstance } from "vu
 import type { Circuit } from "@/types/evcc";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import AnimatedNumber from "../Helper/AnimatedNumber.vue";
-import { resolveCircuitTitle } from "@/composables/useCircuitsTree";
 
 export default defineComponent({
 	name: "LoadManagement",
@@ -192,14 +191,6 @@ export default defineComponent({
 			type: Object as PropType<Record<string, Circuit>>,
 			default: () => ({}),
 		},
-	},
-	data() {
-		return {
-			open: false,
-			ready: false,
-			contentCompleteHeight: null as number | null,
-			collapsedHeight: null as number | null,
-		};
 	},
 	setup(props: { circuits?: Record<string, Circuit> }) {
 		const circuitsList = computed(() => props.circuits ?? {});
@@ -233,7 +224,7 @@ export default defineComponent({
 			pushChildren("", 0);
 			return entries;
 		});
-		return { circuitsList, orderedCircuits, transition, collapseId, headerId };
+		return { circuitsList, orderedCircuits, transition, collapseId, headerId, ready: false, open: false, contentCompleteHeight: null as number | null, collapsedHeight: null as number | null };
 	},
 	computed: {
 		rootCircuits(): { name: string; circuit: Circuit; depth: number }[] {
@@ -297,7 +288,11 @@ export default defineComponent({
 			return this.fmtW(v, POWER_UNIT.KW);
 		},
 		circuitTitle(circuit: Circuit, name: string): string {
-			return resolveCircuitTitle(circuit, name);
+			return (
+				(circuit.config as { title?: string } | undefined)?.title ??
+				circuit.title ??
+				name
+			);
 		},
 		hasLimit(circuit: Circuit): boolean {
 			return typeof circuit.maxPower === "number" && circuit.maxPower > 0;

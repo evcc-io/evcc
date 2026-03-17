@@ -134,7 +134,6 @@ export interface Config {
 }
 
 export interface Circuit {
-  // logical circuit identifier; may mirror the key in the circuits map
   name?: string;
   title?: string;
   icon?: string;
@@ -231,7 +230,6 @@ export enum LENGTH_UNIT {
 }
 
 export interface Loadpoint {
-  // Optional circuit association (by circuit name) for UI grouping
   circuit?: string;
   batteryBoost: boolean;
   chargeCurrents?: number[];

@@ -134,7 +134,6 @@ import VehicleIcon from "../VehicleIcon";
 import SessionInfo from "./SessionInfo.vue";
 import Modal from "bootstrap/js/dist/modal";
 import { defineComponent, type PropType } from "vue";
-import { resolveCircuitTitle } from "@/composables/useCircuitsTree";
 import type {
 	CHARGE_MODE,
 	PHASES,
@@ -363,7 +362,12 @@ export default defineComponent({
 			if (!circuit) {
 				return this.$t("main.circuits.indicatorLabel") as string;
 			}
-			return resolveCircuitTitle(circuit, this.circuitName || "");
+			return (
+				(circuit.config as { title?: string } | undefined)?.title ??
+				circuit.title ??
+				this.circuitName ??
+				""
+			);
 		},
 		circuitUtilizationText(): string {
 			const circuit = this.loadpointCircuit;

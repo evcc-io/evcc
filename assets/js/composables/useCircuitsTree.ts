@@ -1,14 +1,13 @@
 import type { Circuit, UiLoadpoint } from "@/types/evcc";
+import { circuitTree, type CircuitNode as BaseCircuitNode } from "@/utils/circuits";
 
-export interface CircuitNode {
-	name: string;
-	circuit: Circuit;
-	children: CircuitNode[];
+export interface CircuitNodeWithLoadpoints extends BaseCircuitNode {
+	children: CircuitNodeWithLoadpoints[];
 	loadpoints: UiLoadpoint[];
 }
 
 export interface CircuitWithMetrics {
-	node: CircuitNode;
+	node: CircuitNodeWithLoadpoints;
 	level: number;
 	power: number;
 	maxPower: number;
@@ -18,37 +17,18 @@ export interface CircuitWithMetrics {
 }
 
 export interface CircuitsTree {
-	roots: CircuitNode[];
-	byName: Record<string, CircuitNode>;
-	ungroupedLoadpoints: UiLoadpoint[];
+	root: CircuitNodeWithLoadpoints | null;
 	flat: CircuitWithMetrics[];
-};
-
-const humanizeCircuitName = (name: string): string =>
-	name
-		.replace(/[_-]+/g, " ")
-		.replace(/\b\w/g, (c) => c.toUpperCase());
-
-export const resolveCircuitTitle = (
-	circuit: Circuit | undefined,
-	name: string
-): string => {
-	const title =
-		(circuit?.config as { title?: string } | undefined)?.title ??
-		circuit?.title;
-	if (title) {
-		return title;
-	}
-	return humanizeCircuitName(name);
-};
+	ungroupedLoadpoints: UiLoadpoint[];
+}
 
 const lpsOrEmpty = (loadpoints?: UiLoadpoint[]): UiLoadpoint[] =>
 	loadpoints ?? [];
 
-const attachMetrics = (circuit: Circuit) => {
+const attachMetrics = (node: CircuitNodeWithLoadpoints) => {
 	const maxPower =
-		circuit.maxPower ?? (circuit.config as any)?.maxPower ?? 0;
-	const power = circuit.power ?? 0;
+		node.maxPower ?? (node.config as any)?.maxPower ?? 0;
+	const power = node.power ?? 0;
 	const hasLimit = maxPower > 0;
 	const usagePercent = hasLimit
 		? Math.min(100, Math.round((power / maxPower) * 100))
@@ -56,44 +36,36 @@ const attachMetrics = (circuit: Circuit) => {
 	return { power, maxPower, hasLimit, usagePercent };
 };
 
-const createCircuitNodes = (
-	circuits: Record<string, Circuit>
-): Record<string, CircuitNode> => {
-	const byName: Record<string, CircuitNode> = {};
-	for (const [name, circuit] of Object.entries(circuits)) {
-		byName[name] = {
-			name,
-			circuit,
-			children: [],
-			loadpoints: [],
-		};
-	}
-	return byName;
+const cloneTreeWithLoadpoints = (
+	root: BaseCircuitNode | null
+): CircuitNodeWithLoadpoints | null => {
+	if (!root) return null;
+	const clone = (node: BaseCircuitNode): CircuitNodeWithLoadpoints => ({
+		...node,
+		children: (node.children ?? []).map(clone),
+		loadpoints: [],
+	});
+	return clone(root);
 };
 
-const wireParents = (byName: Record<string, CircuitNode>): CircuitNode[] => {
-	const roots: CircuitNode[] = [];
-	for (const node of Object.values(byName)) {
-		const parentName = node.circuit.parent;
-		if (!parentName) {
-			roots.push(node);
-			continue;
-		}
-		const parentNode = byName[parentName];
-		if (!parentNode) {
-			roots.push(node);
-			continue;
-		}
-		parentNode.children.push(node);
-	}
-	return roots;
-};
-
-const attachLoadpointsToNodes = (
-	byName: Record<string, CircuitNode>,
+const attachLoadpointsToTree = (
+	root: CircuitNodeWithLoadpoints | null,
 	loadpoints: UiLoadpoint[]
 ): UiLoadpoint[] => {
+	const byName: Record<string, CircuitNodeWithLoadpoints> = {};
 	const ungrouped: UiLoadpoint[] = [];
+
+	if (root) {
+		const stack: CircuitNodeWithLoadpoints[] = [root];
+		while (stack.length) {
+			const node = stack.pop()!;
+			byName[node.name] = node;
+			for (const child of node.children) {
+				stack.push(child);
+			}
+		}
+	}
+
 	for (const lp of loadpoints) {
 		const circuitName = lp.circuit;
 		if (!circuitName) {
@@ -107,18 +79,21 @@ const attachLoadpointsToNodes = (
 		}
 		node.loadpoints.push(lp);
 	}
+
 	return ungrouped;
 };
 
 const buildFlatWithMetrics = (
-	circuits: Record<string, Circuit>,
-	roots: CircuitNode[],
-	loadpoints: UiLoadpoint[]
+	root: CircuitNodeWithLoadpoints | null
 ): CircuitWithMetrics[] => {
 	const flat: CircuitWithMetrics[] = [];
 
-	const dfs = (node: CircuitNode, level: number) => {
-		const metrics = attachMetrics(node.circuit);
+	if (!root) {
+		return flat;
+	}
+
+	const dfs = (node: CircuitNodeWithLoadpoints, level: number) => {
+		const metrics = attachMetrics(node);
 		flat.push({
 			node,
 			level,
@@ -130,22 +105,7 @@ const buildFlatWithMetrics = (
 		}
 	};
 
-	for (const root of roots) {
-		dfs(root, 0);
-	}
-
-	if (!flat.length) {
-		for (const [name, circuit] of Object.entries(circuits)) {
-			const metrics = attachMetrics(circuit);
-			const lps = loadpoints.filter((lp) => lp.circuit === name);
-			flat.push({
-				node: { name, circuit, children: [], loadpoints: lps },
-				level: 0,
-				...metrics,
-				loadpoints: lps,
-			});
-		}
-	}
+	dfs(root, 0);
 
 	return flat;
 };
@@ -158,18 +118,17 @@ export const buildCircuitsTree = (
 
 	if (!circuits || Object.keys(circuits).length === 0) {
 		return {
-			roots: [],
-			byName: {},
-			ungroupedLoadpoints: [...lps],
+			root: null,
 			flat: [],
+			ungroupedLoadpoints: [...lps],
 		};
 	}
 
-	const byName = createCircuitNodes(circuits);
-	const roots = wireParents(byName);
-	const ungroupedLoadpoints = attachLoadpointsToNodes(byName, lps);
-	const flat = buildFlatWithMetrics(circuits, roots, lps);
+	const rootFromCircuits = circuitTree(circuits);
+	const root = cloneTreeWithLoadpoints(rootFromCircuits as any);
+	const ungroupedLoadpoints = attachLoadpointsToTree(root, lps);
+	const flat = buildFlatWithMetrics(root);
 
-	return { roots, byName, ungroupedLoadpoints, flat };
+	return { root, flat, ungroupedLoadpoints };
 };
 

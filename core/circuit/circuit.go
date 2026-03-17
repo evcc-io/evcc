@@ -46,7 +46,7 @@ type Circuit struct {
 // NewFromConfig creates a new Circuit
 func NewFromConfig(ctx context.Context, log *util.Logger, other map[string]any) (api.Circuit, error) {
 	cc := struct {
-		Title         string         // title
+		Title         string         `mapstructure:"title"`  // title
 		ParentRef     string         `mapstructure:"parent"` // parent circuit reference
 		MeterRef      string         `mapstructure:"meter"`  // meter reference
 		MaxCurrent    float64        // the max allowed current
