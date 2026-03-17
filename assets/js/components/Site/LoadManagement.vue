@@ -102,7 +102,7 @@
 						<span class="text-nowrap">
 							0 —
 							<AnimatedNumber
-								:to="entry.circuit.maxPower"
+								:to="entry.circuit.maxPower ?? 0"
 								:format="kwFormat"
 							/>
 						</span>
@@ -112,11 +112,11 @@
 						role="progressbar"
 						:aria-valuenow="entry.circuit.power ?? 0"
 						aria-valuemin="0"
-						:aria-valuemax="entry.circuit.maxPower"
+						:aria-valuemax="entry.circuit.maxPower ?? 0"
 					>
 						<div
 							class="progress-bar load-management-bar-fill"
-							:class="{ 'load-management-bar-fill--warning': (entry.circuit.power ?? 0) >= entry.circuit.maxPower }"
+							:class="{ 'load-management-bar-fill--warning': (entry.circuit.power ?? 0) >= (entry.circuit.maxPower ?? 0) }"
 							:style="{ width: usagePercent(entry.circuit) + '%', ...transition }"
 						>
 							<span
@@ -138,7 +138,7 @@
 						<span class="text-nowrap">
 							0 —
 							<AnimatedNumber
-								:to="entry.circuit.maxCurrent"
+								:to="entry.circuit.maxCurrent ?? 0"
 								:format="maxCurrentFormat"
 							/>
 							A
@@ -149,11 +149,11 @@
 						role="progressbar"
 						:aria-valuenow="entry.circuit.current ?? 0"
 						aria-valuemin="0"
-						:aria-valuemax="entry.circuit.maxCurrent"
+						:aria-valuemax="entry.circuit.maxCurrent ?? 0"
 					>
 						<div
 							class="progress-bar load-management-bar-fill"
-							:class="{ 'load-management-bar-fill--warning': (entry.circuit.current ?? 0) >= entry.circuit.maxCurrent }"
+							:class="{ 'load-management-bar-fill--warning': (entry.circuit.current ?? 0) >= (entry.circuit.maxCurrent ?? 0) }"
 							:style="{ width: currentPercent(entry.circuit) + '%', ...transition }"
 						>
 							<span
