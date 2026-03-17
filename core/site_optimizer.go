@@ -239,6 +239,10 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		return apiError(resp)
 	}
 
+	if resp.JSON200.Status != optimizer.Optimal {
+		return errors.New(string(resp.JSON200.Status))
+	}
+
 	site.publish("evopt", struct {
 		Req     optimizer.OptimizationInput  `json:"req"`
 		Res     optimizer.OptimizationResult `json:"res"`
@@ -409,12 +413,12 @@ func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDurati
 
 func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measurement, grid api.Rates, minLen int, firstSlotDuration time.Duration) (optimizer.BatteryConfig, batteryDetail) {
 	bat := optimizer.BatteryConfig{
-		CMax:     batteryPower,
-		DMax:     batteryPower,
-		SInitial: float32(*b.Capacity * *b.Soc * 10), // Wh
+		CMax:      batteryPower,
+		DMax:      batteryPower,
+		SCapacity: float32(*b.Capacity * 1e3),         // Wh
+		SInitial:  float32(*b.Capacity * *b.Soc * 10), // Wh
 		// PA:       pa,
 	}
-	bat.SMax = max(bat.SInitial, float32(*b.Capacity*1e3)) // Wh
 
 	instance := dev.Instance()
 
@@ -430,8 +434,8 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 
 	if m, ok := instance.(api.BatterySocLimiter); ok {
 		minSoc, maxSoc := m.GetSocLimits()
-		bat.SMin = min(bat.SInitial, float32(*b.Capacity*minSoc*10)) // Wh
-		bat.SMax = max(bat.SInitial, float32(*b.Capacity*maxSoc*10)) // Wh
+		bat.SMin = float32(*b.Capacity * minSoc * 10) // Wh
+		bat.SMax = float32(*b.Capacity * maxSoc * 10) // Wh
 	}
 
 	detail := batteryDetail{

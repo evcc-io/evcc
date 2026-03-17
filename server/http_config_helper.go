@@ -133,46 +133,40 @@ func filterValidTemplateParams(tmpl *templates.Template, conf map[string]any) ma
 	return res
 }
 
-func sanitizeMasked(class templates.Class, conf map[string]any, hidePrivate bool) (map[string]any, error) {
+// mapTemplateConfig applies a mapping function to device configuration based on template parameters
+func mapTemplateConfig(class templates.Class, conf map[string]any, fun func(p templates.Param, k string, v any) any) (map[string]any, error) {
 	tmpl, err := templateForConfig(class, conf)
 	if err != nil {
 		return nil, err
 	}
 
-	res := make(map[string]any, len(conf))
-
-	for k, v := range conf {
-		if i, p := tmpl.ParamByName(k); i >= 0 {
-			if p.IsMasked() {
-				v = masked
-			} else if hidePrivate && p.IsPrivate() {
-				v = masked
-			}
+	return filterValidTemplateParams(&tmpl, lo.MapValues(conf, func(val any, key string) any {
+		if i, p := tmpl.ParamByName(key); i >= 0 {
+			val = fun(p, key, val)
 		}
 
-		res[k] = v
-	}
-
-	return filterValidTemplateParams(&tmpl, res), nil
+		return val
+	})), nil
 }
 
-func mergeMasked(class templates.Class, conf, old map[string]any) (map[string]any, error) {
-	tmpl, err := templateForConfig(class, conf)
-	if err != nil {
-		return nil, err
-	}
-
-	res := make(map[string]any, len(conf))
-
-	for k, v := range conf {
-		if i, p := tmpl.ParamByName(k); i >= 0 && p.IsMasked() && v == masked {
-			v = old[k]
+// sanitizeMasked replaces masked and private configuration properties with the `***` placeholder
+func sanitizeMasked(class templates.Class, conf map[string]any, hidePrivate bool) (map[string]any, error) {
+	return mapTemplateConfig(class, conf, func(p templates.Param, _ string, v any) any {
+		if p.IsMasked() || hidePrivate && p.IsPrivate() {
+			return masked
 		}
+		return v
+	})
+}
 
-		res[k] = v
-	}
-
-	return filterValidTemplateParams(&tmpl, res), nil
+// mergeMasked replaces masked `***` configuration properties with their actual values
+func mergeMasked(class templates.Class, conf, old map[string]any) (map[string]any, error) {
+	return mapTemplateConfig(class, conf, func(p templates.Param, k string, v any) any {
+		if p.IsMasked() && v == masked {
+			return old[k]
+		}
+		return v
+	})
 }
 
 func startDeviceTimeout() (context.Context, context.CancelFunc, chan struct{}) {
