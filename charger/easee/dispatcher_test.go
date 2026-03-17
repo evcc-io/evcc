@@ -26,6 +26,26 @@ func newTestDispatcher(t *testing.T) *CommandDispatcher {
 	return NewCommandDispatcher(h, log, 500*time.Millisecond)
 }
 
+// waitForPendingTick blocks until d.pendingTicks contains ticks, or the test fails.
+func waitForPendingTick(t *testing.T, d *CommandDispatcher, ticks int64) {
+	t.Helper()
+	deadline := time.After(2 * time.Second)
+	for {
+		select {
+		case <-deadline:
+			t.Fatalf("timed out waiting for pendingTicks registration for ticks %d", ticks)
+		default:
+		}
+		d.mu.Lock()
+		_, ok := d.pendingTicks[ticks]
+		d.mu.Unlock()
+		if ok {
+			return
+		}
+		time.Sleep(time.Millisecond)
+	}
+}
+
 func TestDispatcher_Dispatch_Rogue(t *testing.T) {
 	d := newTestDispatcher(t)
 	assert.NotPanics(t, func() {
@@ -94,6 +114,26 @@ func TestDispatcher_Send_Noop(t *testing.T) {
 	assert.NoError(t, d.Send(testURI, nil))
 }
 
+func TestDispatcher_Send_HTTP202_InvalidJSON(t *testing.T) {
+	d := newTestDispatcher(t)
+	httpmock.ActivateNonDefault(d.helper.Client)
+
+	httpmock.RegisterResponder(http.MethodPost, testURI,
+		httpmock.NewStringResponder(http.StatusAccepted, "{not-json"))
+
+	assert.Error(t, d.Send(testURI, nil))
+}
+
+func TestDispatcher_Send_HTTP202_NonNumericTicks(t *testing.T) {
+	d := newTestDispatcher(t)
+	httpmock.ActivateNonDefault(d.helper.Client)
+
+	httpmock.RegisterResponder(http.MethodPost, testURI,
+		httpmock.NewStringResponder(http.StatusAccepted, `[{"ticks":"NaN"}]`))
+
+	assert.Error(t, d.Send(testURI, nil))
+}
+
 func TestDispatcher_Send_HTTPError(t *testing.T) {
 	d := newTestDispatcher(t)
 	httpmock.ActivateNonDefault(d.helper.Client)
@@ -118,22 +158,7 @@ func TestDispatcher_Send_TicksMatch(t *testing.T) {
 		httpmock.NewStringResponder(http.StatusAccepted, body))
 
 	go func() {
-		deadline := time.After(2 * time.Second)
-		for {
-			select {
-			case <-deadline:
-				t.Error("timed out waiting for pendingTicks registration")
-				return
-			default:
-			}
-			d.mu.Lock()
-			_, ok := d.pendingTicks[ticks]
-			d.mu.Unlock()
-			if ok {
-				break
-			}
-			time.Sleep(time.Millisecond)
-		}
+		waitForPendingTick(t, d, ticks)
 		d.Dispatch(SignalRCommandResponse{Ticks: ticks, WasAccepted: true})
 	}()
 
@@ -153,22 +178,7 @@ func TestDispatcher_Send_IDFallback(t *testing.T) {
 		httpmock.NewStringResponder(http.StatusAccepted, body))
 
 	go func() {
-		deadline := time.After(2 * time.Second)
-		for {
-			select {
-			case <-deadline:
-				t.Error("timed out waiting for pendingTicks registration")
-				return
-			default:
-			}
-			d.mu.Lock()
-			_, ok := d.pendingTicks[ticks]
-			d.mu.Unlock()
-			if ok {
-				break
-			}
-			time.Sleep(time.Millisecond)
-		}
+		waitForPendingTick(t, d, ticks)
 		// Wrong Ticks (T+1), correct ID — triggers the ID fallback path
 		d.Dispatch(SignalRCommandResponse{ID: int(obsID), Ticks: ticks + 1, WasAccepted: true})
 	}()
@@ -203,22 +213,7 @@ func TestDispatcher_Send_Rejected(t *testing.T) {
 		httpmock.NewStringResponder(http.StatusAccepted, body))
 
 	go func() {
-		deadline := time.After(2 * time.Second)
-		for {
-			select {
-			case <-deadline:
-				t.Error("timed out waiting for pendingTicks registration")
-				return
-			default:
-			}
-			d.mu.Lock()
-			_, ok := d.pendingTicks[ticks]
-			d.mu.Unlock()
-			if ok {
-				break
-			}
-			time.Sleep(time.Millisecond)
-		}
+		waitForPendingTick(t, d, ticks)
 		d.Dispatch(SignalRCommandResponse{Ticks: ticks, WasAccepted: false})
 	}()
 
@@ -240,22 +235,7 @@ func TestDispatcher_Send_CommandURI(t *testing.T) {
 		httpmock.NewStringResponder(http.StatusAccepted, body))
 
 	go func() {
-		deadline := time.After(2 * time.Second)
-		for {
-			select {
-			case <-deadline:
-				t.Error("timed out waiting for pendingTicks registration")
-				return
-			default:
-			}
-			d.mu.Lock()
-			_, ok := d.pendingTicks[ticks]
-			d.mu.Unlock()
-			if ok {
-				break
-			}
-			time.Sleep(time.Millisecond)
-		}
+		waitForPendingTick(t, d, ticks)
 		d.Dispatch(SignalRCommandResponse{Ticks: ticks, WasAccepted: true})
 	}()
 
