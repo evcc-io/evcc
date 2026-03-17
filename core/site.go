@@ -805,7 +805,7 @@ func (site *Site) updateHomeConsumption(homePower float64) {
 		// next slot has started
 		if slotStart.Sub(site.householdSlotStart) >= slotDuration {
 			// more or less full slot
-			site.log.DEBUG.Printf("15min household consumption: %.0fWh", site.householdEnergy.Accumulated)
+			site.log.DEBUG.Printf("15min household consumption: %.0fWh", site.householdEnergy.Accumulated*1000)
 			if err := metrics.Persist(site.householdSlotStart, site.householdEnergy.Accumulated); err != nil {
 				site.log.ERROR.Printf("persist household consumption: %v", err)
 			}
@@ -838,7 +838,7 @@ func (site *Site) updateLoadpointConsumption(lpID int, power float64) {
 		// next slot has started
 		if slotStart.Sub(site.loadpointSlotStart[lpID]) >= slotDuration {
 			// more or less full slot
-			site.log.DEBUG.Printf("15min loadpoint %d consumption: %.0fWh", lpID, lpEnergy.Accumulated)
+			site.log.DEBUG.Printf("15min loadpoint %d consumption: %.0fWh", lpID, lpEnergy.Accumulated*1000)
 			if err := metrics.PersistLoadpoint(lpID, site.loadpointSlotStart[lpID], lpEnergy.Accumulated); err != nil {
 				site.log.ERROR.Printf("persist loadpoint %d consumption: %v", lpID, err)
 			}
