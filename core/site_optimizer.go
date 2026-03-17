@@ -615,10 +615,6 @@ func timeSteps(minLen int) []int {
 }
 
 func asTimestamps(dt []int) []time.Time {
-	if len(dt) == 0 {
-		return nil
-	}
-
 	res := make([]time.Time, 0, len(dt))
 	eoh := endOfHour(time.Now())
 	ts := eoh.Add(-time.Duration(dt[0]) * time.Second)
