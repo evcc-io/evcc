@@ -251,6 +251,13 @@ export default defineComponent({
 	overflow-y: auto;
 }
 
+.circuits-modal-dialog .modal-body,
+.circuits-modal-dialog .modal-header,
+.circuits-modal-dialog .modal-footer {
+	padding-left: calc(var(--bs-modal-padding, 1rem) + 2px);
+	padding-right: calc(var(--bs-modal-padding, 1rem) + 2px);
+}
+
 /* Mobile-friendly full-screen dialog */
 @media (max-width: 575.98px) {
 	.circuits-modal-backdrop {
