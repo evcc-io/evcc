@@ -150,7 +150,10 @@ type RatePeriod struct {
 // rate periods. It supports Dynamic, Simple, and Time-of-Use tariffs.
 // now is used as the reference time for horizon computation and ToU rate generation.
 func ratesForAgreement(agr octoDeGql.Agreement, now time.Time) ([]RatePeriod, error) {
-	horizon := computeHorizon(now, agr, planDays)
+	horizon, err := computeHorizon(now, agr, planDays)
+	if err != nil {
+		return nil, err
+	}
 
 	// Dynamic tariff: has unitRateForecast entries with per-slot prices
 	if len(agr.UnitRateForecast) > 0 {
@@ -236,22 +239,26 @@ func simpleRates(info octoDeGql.SimpleProductUnitRateInformation, horizon planni
 }
 
 // computeHorizon returns the planning window, capped by the validity of the agreement.
-func computeHorizon(now time.Time, agreement octoDeGql.Agreement, planDays int) planningHorizon {
+func computeHorizon(now time.Time, agreement octoDeGql.Agreement, planDays int) (planningHorizon, error) {
 	start := now
 	end := now.AddDate(0, 0, planDays)
 
+	// Validate agreement overlaps with planning horizon
+	if agreement.ValidFrom.After(end) || (!agreement.ValidTo.IsZero() && agreement.ValidTo.Before(start)) {
+		return planningHorizon{}, errors.New("agreement is not valid for the planning horizon")
+	}
+
+	// Cap the horizon to agreement validity period
 	if agreement.ValidFrom.After(start) {
 		start = agreement.ValidFrom
 	}
 
+	// validTo may be unset if the agreement has no defined end yet (ie. automatically renewed)
 	if !agreement.ValidTo.IsZero() && agreement.ValidTo.Before(end) {
 		end = agreement.ValidTo
 	}
 
-	return planningHorizon{
-		start: start,
-		end:   end,
-	}
+	return planningHorizon{start: start, end: end}, nil
 }
 
 // computePeriod converts day-relative time offsets into absolute start/end times,

@@ -229,3 +229,31 @@ func TestRatesForAgreement_TimeOfUse(t *testing.T) {
 	assert.Equal(t, day6.Add(22*time.Hour), rates[13].ValidFrom)
 	assert.Equal(t, day6.Add(30*time.Hour), rates[13].ValidTo)
 }
+
+// TestRatesForAgreement_InvalidAgreement verifies that an agreement with ValidFrom
+// after the planning horizon end returns an error.
+func TestRatesForAgreement_InvalidAgreement_NotYetStarted(t *testing.T) {
+	// Create an agreement that starts well into the future, beyond the 7-day planning horizon
+	futureStart := t0.AddDate(0, 0, planDays+10)
+	agr := simpleAgreement()
+	agr.ValidFrom = futureStart
+
+	rates, err := ratesForAgreement(agr, t0)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "agreement is not valid for the planning horizon")
+	assert.Nil(t, rates)
+}
+
+func TestRatesForAgreement_InvalidAgreement_AlreadyCompleted(t *testing.T) {
+	// Create an agreement that ended before the current time, beyond the 7-day planning horizon
+	pastStart := t0.AddDate(0, 0, -10)
+	pastEnd := t0.AddDate(0, 0, -3)
+	agr := simpleAgreement()
+	agr.ValidFrom = pastStart
+	agr.ValidTo = pastEnd
+
+	rates, err := ratesForAgreement(agr, t0)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "agreement is not valid for the planning horizon")
+	assert.Nil(t, rates)
+}
