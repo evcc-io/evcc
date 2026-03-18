@@ -560,6 +560,28 @@ func TestEasee_registerExpectedOrphan_multipleRegistrations(t *testing.T) {
 	assert.False(t, e.consumeExpectedOrphan(easee.CIRCUIT_MAX_CURRENT_P1))
 }
 
+func TestProductUpdate_updatesLastObsReceived_freshTimestamp(t *testing.T) {
+	e := newEasee()
+	assert.True(t, e.lastObsReceived.IsZero())
+
+	// Observation with a fresh charger-side timestamp (seconds ago)
+	now := time.Now().UTC().Truncate(0)
+	e.ProductUpdate(createPayload(easee.TOTAL_POWER, now, easee.Double, "3.5"))
+
+	assert.False(t, e.lastObsReceived.IsZero())
+	assert.WithinDuration(t, time.Now(), e.lastObsReceived, 2*time.Second)
+}
+
+func TestProductUpdate_doesNotUpdateLastObsReceived_staleTimestamp(t *testing.T) {
+	e := newEasee()
+
+	// Observation with a charger-side timestamp older than observationTimeout
+	stale := time.Now().UTC().Add(-(observationTimeout + time.Minute))
+	e.ProductUpdate(createPayload(easee.TOTAL_POWER, stale, easee.Double, "3.5"))
+
+	assert.True(t, e.lastObsReceived.IsZero(), "stale replay must not update lastObsReceived")
+}
+
 func TestEasee_Phases1p3p_registersExpectedOrphan(t *testing.T) {
 	const siteID = 12345
 	const circuitID = 67890
