@@ -270,6 +270,7 @@ export interface Loadpoint {
   limitSoc: number;
   maxCurrent: number;
   minCurrent: number;
+  minSocNotReached: boolean;
   mode: CHARGE_MODE;
   offeredCurrent: number;
   phaseAction: PHASE_ACTION;

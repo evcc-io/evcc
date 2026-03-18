@@ -1,3 +1,5 @@
+@import "./breakpoints.css";
+
 @font-face {
 	font-family: "Montserrat";
 	src: url("../font/Montserrat-Medium.woff2") format("woff2");
@@ -10,17 +12,6 @@
 	font-weight: bold;
 	font-style: normal;
 }
-
-/* Bootstrap Breakpoints as Custom Media Queries */
-@custom-media --xs-and-up (min-width: 400px);
-@custom-media --sm-and-up (min-width: 576px);
-@custom-media --md-and-up (min-width: 768px);
-@custom-media --lg-and-up (min-width: 992px);
-@custom-media --xl-and-up (min-width: 1200px);
-@custom-media --xxl-and-up (min-width: 1400px);
-
-@custom-media --light-mode (prefers-color-scheme: light);
-@custom-media --dark-mode (prefers-color-scheme: dark);
 
 :root {
 	--evcc-green: #baffcb;
@@ -375,7 +366,7 @@ a:hover {
 	background-color: var(--bs-gray-dark) !important;
 }
 
-@media screen and (min-width: 400px) and (max-width: 574px) {
+@media screen and (--xs-to-sm) {
 	.d-xs-none {
 		display: none !important;
 	}
@@ -385,7 +376,7 @@ a:hover {
 }
 
 /* breakpoint lg */
-@media (min-width: 992px) {
+@media (--lg-and-up) {
 	.modal-lg,
 	.modal-xl {
 		--bs-modal-width: 850px;
@@ -446,7 +437,7 @@ a:hover {
 }
 
 /* breakpoint sm */
-@media (min-width: 576px) {
+@media (--sm-and-up) {
 	.modal-content {
 		padding: 2rem;
 	}
@@ -674,7 +665,7 @@ input[list]::-webkit-list-button {
 	padding-left: 0.5rem;
 }
 
-@media (min-width: 576px) {
+@media (--sm-and-up) {
 	.w-sm-100 {
 		width: 100% !important;
 	}
@@ -789,7 +780,7 @@ input::-webkit-date-and-time-value {
 	font-size: 8px;
 }
 
-@media (min-width: 576px) {
+@media (--sm-and-up) {
 	.textarea--tiny {
 		font-size: 0.875em;
 	}

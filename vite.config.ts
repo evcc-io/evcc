@@ -13,6 +13,12 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./assets/js"),
     },
   },
+  css: {
+    transformer: "lightningcss",
+    lightningcss: {
+      drafts: { customMedia: true },
+    },
+  },
   build: {
     outDir: "../dist/",
     emptyOutDir: true,

@@ -58,6 +58,7 @@ export default defineComponent({
 </script>
 
 <style scoped>
+@import "../../../css/breakpoints.css";
 .tab-item {
 	--pt: 0.4rem;
 	--pb: max(0.4rem, var(--safe-area-inset-bottom));
@@ -109,13 +110,13 @@ export default defineComponent({
 	line-height: 1.2;
 }
 
-@media (min-width: 400px) {
+@media (--xs-and-up) {
 	.tab-label {
 		display: block;
 	}
 }
 
-@media (min-width: 768px) {
+@media (--md-and-up) {
 	.tab-label {
 		font-size: 14px;
 		font-weight: normal;
@@ -127,7 +128,7 @@ export default defineComponent({
 	right: -4px;
 }
 
-@media (min-width: 768px) {
+@media (--md-and-up) {
 	.tab-badge {
 		top: -6px;
 		right: -14px;
