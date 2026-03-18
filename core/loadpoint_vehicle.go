@@ -316,7 +316,8 @@ func (lp *Loadpoint) isVehicleAtHome(vehicle api.Vehicle) bool {
 	lat1 := geofence.Lat
 	lon1 := geofence.Lon
 
-	if lat1 == 0 && lon1 == 0 { // default values not changed
+	if (lat1 == 0 && lon1 == 0) || geofence.Radius < 0 || math.Abs(lat1) > 90 || math.Abs(lon1) > 180 {
+		lp.log.ERROR.Printf("invalid geofence settings: %+v", geofence)
 		return true
 	}
 
@@ -340,6 +341,17 @@ func (lp *Loadpoint) isVehicleAtHome(vehicle api.Vehicle) bool {
 		return true
 	}
 
+	d := distance(lat1, lon1, lat2, lon2)
+
+	lp.log.DEBUG.Printf("vehicle distance from loadpoint: %.3fkm", d)
+
+	return d*1e3 <= geofence.Radius
+}
+
+// calculate the distance between two points on a globe
+func distance(lat1, lon1, lat2, lon2 float64) float64 {
+	const earthRadius = 6371 // km
+
 	// Differences in radiant
 	dLat := (lat2 - lat1) * math.Pi / 180.0
 	dLon := (lon2 - lon1) * math.Pi / 180.0
@@ -350,11 +362,8 @@ func (lp *Loadpoint) isVehicleAtHome(vehicle api.Vehicle) bool {
 	// Haversine formula
 	a := math.Sin(dLat/2)*math.Sin(dLat/2) + math.Sin(dLon/2)*math.Sin(dLon/2)*math.Cos(lat1)*math.Cos(lat2)
 	c := 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1-a))
-	distance := 6371 * c // earth radius: 6371 km
 
-	lp.log.DEBUG.Printf("vehicle distance from loadpoint: %.3fkm", distance)
-
-	return distance*1e3 <= geofence.Radius
+	return c * earthRadius
 }
 
 // vehicleOdometer updates odometer
