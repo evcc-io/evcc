@@ -1313,9 +1313,9 @@ func (lp *Loadpoint) fastCharging() error {
 	// scale up: buffered and delayed
 	var waiting bool
 	if phases == 3 && activePhases == 1 {
-		const buffer = 500.0 // Watts
-		if lp.circuit != nil && powerLimit < minPower3p+buffer && lp.phasesConfigured != 3 {
-			lp.log.DEBUG.Printf("fast charging: staying at 1p (buffer), power limit %.0fW < %.0fW threshold", powerLimit, minPower3p+buffer)
+		powerLimit3p := 1.1 * minPower3p
+		if lp.circuit != nil && powerLimit < powerLimit3p && lp.phasesConfigured != 3 {
+			lp.log.DEBUG.Printf("fast charging: staying at 1p, power limit %.0fW < %.0fW threshold incl. buffer", powerLimit, powerLimit3p)
 		} else {
 			if lp.circuit == nil || !lp.charging() { // scale immediately if no circuit or not charging
 				lp.phaseTimer = elapsed
