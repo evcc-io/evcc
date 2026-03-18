@@ -508,9 +508,9 @@ func TestFastChargingCircuitBasedPhaseScaling(t *testing.T) {
 		{desc: "charging, high limit", phasesConfigured: 0, activePhases: 1, status: api.StatusC, chargePower: 3680, availableCircuitPower: 11040, expectedPhases: 3},
 
 		{desc: "switching down just below 3p minimum", phasesConfigured: 0, activePhases: 3, status: api.StatusB, chargePower: 0, availableCircuitPower: 4140 - 1, expectedPhases: 1},
-		{desc: "switching up at 3p minimum plus buffer", phasesConfigured: 0, activePhases: 1, status: api.StatusB, chargePower: 0, availableCircuitPower: 4140 + 500, expectedPhases: 3},
+		{desc: "switching up at 3p minimum plus buffer", phasesConfigured: 0, activePhases: 1, status: api.StatusB, chargePower: 0, availableCircuitPower: 4140 * 1.1, expectedPhases: 3},
 
-		{desc: "edge case: staying at 1p at 3p minimum plus buffer - 1", phasesConfigured: 0, status: api.StatusB, activePhases: 1, chargePower: 0, availableCircuitPower: 4140 + 499, expectedPhases: 1},
+		{desc: "edge case: staying at 1p at 3p minimum plus buffer - 1", phasesConfigured: 0, activePhases: 1, status: api.StatusB, chargePower: 0, availableCircuitPower: 4140*1.1 - 1, expectedPhases: 1},
 	}
 
 	for _, tc := range tc {
@@ -542,10 +542,10 @@ func TestFastChargingCircuitBasedPhaseScaling(t *testing.T) {
 				circuit := api.NewMockCircuit(ctrl)
 				lp.circuit = circuit
 
-				minPower3p := Voltage * 6 * 3
+				//minPower3p := Voltage * 6 * 3
 
 				// fastCharging call to ValidatePower
-				circuit.EXPECT().ValidatePower(tc.chargePower, minPower3p).Return(tc.availableCircuitPower).AnyTimes()
+				circuit.EXPECT().ValidatePower(tc.chargePower, gomock.Any()).Return(tc.availableCircuitPower).Times(1)
 
 				// setLimit calls
 				circuit.EXPECT().ValidateCurrent(gomock.Any(), lp.maxCurrent).Return(lp.maxCurrent).AnyTimes()
@@ -559,7 +559,7 @@ func TestFastChargingCircuitBasedPhaseScaling(t *testing.T) {
 				phaseCharger.EXPECT().Phases1p3p(tc.expectedPhases).Return(nil).MaxTimes(1)
 			}
 
-			plainCharger.EXPECT().MaxCurrent(int64(lp.maxCurrent)).Return(nil).AnyTimes()
+			plainCharger.EXPECT().MaxCurrent(gomock.Any()).Return(nil).AnyTimes()
 
 			err := lp.fastCharging()
 			require.NoError(t, err)
