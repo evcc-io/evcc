@@ -242,10 +242,6 @@ export default defineComponent({
 				errorClass ? `${errorClass}: ${error}` : error
 			);
 		},
-		hasCircuits() {
-			const c = this.circuits;
-			return c != null && Object.keys(c).length > 0;
-		},
 	},
 	methods: {
 		selectedLoadpointChanged(id: string | undefined) {

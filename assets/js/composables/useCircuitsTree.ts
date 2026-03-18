@@ -26,8 +26,7 @@ const lpsOrEmpty = (loadpoints?: UiLoadpoint[]): UiLoadpoint[] =>
 	loadpoints ?? [];
 
 const attachMetrics = (node: CircuitNodeWithLoadpoints) => {
-	const maxPower =
-		node.maxPower ?? (node.config as any)?.maxPower ?? 0;
+	const maxPower = node.maxPower ?? 0;
 	const power = node.power ?? 0;
 	const hasLimit = maxPower > 0;
 	const usagePercent = hasLimit
