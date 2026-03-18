@@ -5,7 +5,6 @@
 		class="tab-item d-flex flex-column flex-md-row align-items-center justify-content-center gap-md-1 text-decoration-none position-relative"
 		:class="{ active: !to && active }"
 		:data-testid="label ? `tab-${label.toLowerCase()}` : undefined"
-		@click="vibrate"
 	>
 		<span
 			class="tab-content d-flex flex-column flex-md-row align-items-center position-relative"
@@ -28,7 +27,6 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import { hapticFeedback } from "@/utils/haptic";
 
 export default defineComponent({
 	name: "BottomTabItem",
@@ -47,11 +45,6 @@ export default defineComponent({
 				exactActiveClass: this.exact ? "active" : undefined,
 				activeClass: this.exact ? undefined : "active",
 			};
-		},
-	},
-	methods: {
-		vibrate() {
-			hapticFeedback();
 		},
 	},
 });
