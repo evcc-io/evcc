@@ -546,6 +546,6 @@ export default defineComponent({
 }
 
 .circuit-indicator-dot--high {
-	background-color: var(--evcc-orange);
+	background-color: var(--evcc-red);
 }
 </style>
