@@ -1283,22 +1283,23 @@ func (lp *Loadpoint) fastCharging() error {
 	if !lp.hasPhaseSwitching() || !lp.phaseSwitchCompleted() {
 		return lp.setLimit(lp.effectiveMaxCurrent())
 	}
+	if lp.circuit == nil {
+		return lp.scalePhasesIfAvailable(3)
+	}
 
 	phases := 3
 	minPower3p := currentToPower(lp.effectiveMinCurrent(), 3)
-	powerLimit := minPower3p
-
-	// load management limit active
-	if lp.circuit != nil {
-		powerLimit = lp.circuit.ValidatePower(lp.chargePower, currentToPower(lp.effectiveMaxCurrent(), 3))
-		if powerLimit < minPower3p {
-			phases = 1
-		}
+	powerLimit := lp.circuit.ValidatePower(lp.chargePower, currentToPower(lp.effectiveMaxCurrent(), 3))
+	if powerLimit < minPower3p {
+		phases = 1
 	}
 
-	if lp.phasesConfigured == 3 && phases == 1 {
-		lp.log.WARN.Printf("configured fixed phase count %dp prevents switching to 1p to match %.0fW available circuit power", lp.phasesConfigured, powerLimit)
+	if lp.phasesConfigured != 0 {
+		// user configured fixed phase count overrides automatic switching
 		phases = lp.phasesConfigured
+		if lp.phasesConfigured == 3 && phases == 1 {
+			lp.log.WARN.Printf("configured fixed phase count %dp prevents switching to 1p to match %.0fW available circuit power", lp.phasesConfigured, powerLimit)
+		}
 	}
 
 	activePhases := lp.ActivePhases()
@@ -1315,10 +1316,10 @@ func (lp *Loadpoint) fastCharging() error {
 	var waiting bool
 	if phases == 3 && activePhases == 1 {
 		powerLimit3p := 1.1 * minPower3p
-		if lp.circuit != nil && powerLimit < powerLimit3p && lp.phasesConfigured != 3 {
+		if powerLimit < powerLimit3p && lp.phasesConfigured != 3 {
 			lp.log.DEBUG.Printf("fast charging: staying at 1p, power limit %.0fW < %.0fW threshold incl. buffer", powerLimit, powerLimit3p)
 		} else {
-			if lp.circuit == nil || !lp.charging() { // scale immediately if no circuit or not charging
+			if !lp.charging() { // scale immediately if no circuit or not charging
 				lp.phaseTimer = elapsed
 			}
 
