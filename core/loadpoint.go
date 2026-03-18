@@ -1315,9 +1315,9 @@ func (lp *Loadpoint) fastCharging() error {
 	// scale up: buffered and delayed
 	var waiting bool
 	if targetPhases == 3 && activePhases == 1 {
-		powerLimit3p := 1.1 * minPower3p
-		if powerLimit < powerLimit3p && lp.phasesConfigured != 3 {
-			lp.log.DEBUG.Printf("fast charging: staying at 1p, power limit %.0fW < %.0fW threshold incl. buffer", powerLimit, powerLimit3p)
+		minPower3p = 1.1 * minPower3p // add 10% buffer to prevent immediate scale up after scale down
+		if powerLimit < minPower3p && lp.phasesConfigured != 3 {
+			lp.log.DEBUG.Printf("fast charging: staying at 1p, power limit %.0fW < %.0fW threshold incl. buffer", powerLimit, minPower3p)
 		} else {
 			if !lp.charging() { // scale immediately if not charging
 				lp.phaseTimer = elapsed
