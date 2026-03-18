@@ -492,6 +492,7 @@ func TestFastChargingCircuitBasedPhaseScaling(t *testing.T) {
 		availableCircuitPower float64 // ValidatePower return for 3p request
 		expectedPhases        int
 		noCircuit             bool
+		phaseSwitchInProgress bool
 	}{
 		{desc: "no circuit", activePhases: 3, phasesConfigured: 0, status: api.StatusB, chargePower: 0, expectedPhases: 3, noCircuit: true},
 
@@ -508,9 +509,12 @@ func TestFastChargingCircuitBasedPhaseScaling(t *testing.T) {
 		{desc: "charging, high limit", phasesConfigured: 0, activePhases: 1, status: api.StatusC, chargePower: 3680, availableCircuitPower: 11040, expectedPhases: 3},
 
 		{desc: "switching down just below 3p minimum", phasesConfigured: 0, activePhases: 3, status: api.StatusB, chargePower: 0, availableCircuitPower: 4140 - 1, expectedPhases: 1},
+		{desc: "exactly at 3p minimum", phasesConfigured: 0, activePhases: 3, status: api.StatusB, chargePower: 0, availableCircuitPower: 4140, expectedPhases: 3},
 		{desc: "switching up at 3p minimum plus buffer", phasesConfigured: 0, activePhases: 1, status: api.StatusB, chargePower: 0, availableCircuitPower: 4140 * 1.1, expectedPhases: 3},
 
 		{desc: "edge case: staying at 1p at 3p minimum plus buffer - 1", phasesConfigured: 0, activePhases: 1, status: api.StatusB, chargePower: 0, availableCircuitPower: 4140*1.1 - 1, expectedPhases: 1},
+
+		{desc: "phase switch in progress", phasesConfigured: 0, activePhases: 1, status: api.StatusB, chargePower: 0, availableCircuitPower: 11040, expectedPhases: 1, phaseSwitchInProgress: true},
 	}
 
 	for _, tc := range tc {
@@ -530,6 +534,10 @@ func TestFastChargingCircuitBasedPhaseScaling(t *testing.T) {
 			lp.status = tc.status
 			lp.offeredCurrent = 0 // ensure MaxCurrent is called
 			lp.wakeUpTimer = NewTimer()
+
+			if tc.phaseSwitchInProgress {
+				lp.phasesSwitched = clck.Now()
+			}
 
 			plainCharger := api.NewMockCharger(ctrl)
 			phaseCharger := api.NewMockPhaseSwitcher(ctrl)
