@@ -1,6 +1,6 @@
 <template>
 	<teleport to="body">
-		<div v-if="show" class="circuits-modal-backdrop">
+		<div v-if="show" class="circuits-modal-backdrop" @click.self="close">
 			<div
 				ref="dialog"
 				class="circuits-modal-dialog modal-dialog-scrollable modal-lg modal-fullscreen-md-down"
@@ -8,6 +8,7 @@
 				aria-modal="true"
 				aria-labelledby="circuitsModalLabel"
 				tabindex="-1"
+				@keydown.esc.stop.prevent="close"
 			>
 				<div class="modal-content">
 					<div class="modal-header">
@@ -80,7 +81,8 @@
 											class="progress-bar"
 											:class="{
 												'circuit-bar-fill': true,
-												'circuit-bar-fill--warning': item.power >= item.maxPower,
+												'circuit-bar-fill--warn': item.usagePercent >= 80 && item.usagePercent < 100,
+												'circuit-bar-fill--high': item.usagePercent >= 100,
 											}"
 											:style="{ width: item.usagePercent + '%' }"
 										>
@@ -136,6 +138,7 @@ import {
 	type PropType,
 	computed,
 	nextTick,
+	onBeforeUnmount,
 	ref,
 	watch,
 } from "vue";
@@ -188,23 +191,33 @@ export default defineComponent({
 		const hasTree = computed<boolean>(() => flatCircuits.value.length > 0);
 
 		const dialog = ref<HTMLElement | null>(null);
+		const previousBodyOverflow = ref<string>("");
 
 		watch(
 			() => props.show,
-			(show) => {
+			(show: boolean) => {
 				if (show) {
+					previousBodyOverflow.value = document.body.style.overflow;
 					document.body.style.overflow = "hidden";
 					nextTick(() => {
 						dialog.value?.focus();
 					});
 				} else {
-					document.body.style.overflow = "";
+					document.body.style.overflow = previousBodyOverflow.value;
 				}
 			}
 		);
 
+		onBeforeUnmount(() => {
+			document.body.style.overflow = previousBodyOverflow.value;
+		});
+
 		const close = () => {
 			emit("update:show", false);
+		};
+
+		const fmtPower = (value: number): string => {
+			return (formatter.methods as any).fmtW(value, POWER_UNIT.KW);
 		};
 
 		return {
@@ -213,12 +226,8 @@ export default defineComponent({
 			hasTree,
 			close,
 			dialog,
+			fmtPower,
 		};
-	},
-	methods: {
-		fmtPower(value: number): string {
-			return this.fmtW(value, POWER_UNIT.KW);
-		},
 	},
 });
 </script>
@@ -354,8 +363,12 @@ export default defineComponent({
 	background-color: var(--evcc-dark-green);
 }
 
-.circuit-bar-fill--warning {
+.circuit-bar-fill--warn {
 	background-color: var(--evcc-orange);
+}
+
+.circuit-bar-fill--high {
+	background-color: var(--evcc-red);
 }
 </style>
 
