@@ -149,12 +149,5 @@ func (m *EcoFlowPowerOceanBattery) Soc() (float64, error) {
 		return 0, err
 	}
 
-	// Access the data from the GetCmdResponse
-	if response.Data != nil {
-		if soc, ok := response.Data["bpSoc"]; ok {
-			return cast.ToFloat64E(soc)
-		}
-	}
-
-	return 0, api.ErrNotAvailable
+	return extractFloat(response.Data, "bpSoc")
 }

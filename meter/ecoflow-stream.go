@@ -8,7 +8,6 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
-	"github.com/spf13/cast"
 	"github.com/tess1o/go-ecoflow"
 )
 
@@ -139,12 +138,5 @@ func (m *EcoFlowStreamBattery) Soc() (float64, error) {
 		return 0, err
 	}
 
-	// Access the data from the GetCmdResponse
-	if res.Data != nil {
-		if soc, ok := res.Data["cmsBattSoc"]; ok {
-			return cast.ToFloat64E(soc)
-		}
-	}
-
-	return 0, api.ErrNotAvailable
+	return extractFloat(res.Data, "cmsBattSoc")
 }
