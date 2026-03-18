@@ -11,6 +11,7 @@
 		<GlobalSettingsModal v-bind="globalSettingsProps" />
 		<BatterySettingsModal v-if="batteryModalAvailabe" v-bind="batterySettingsProps" />
 		<ForecastModal v-bind="forecastModalProps" />
+		<AboutModal v-bind="aboutModalProps" />
 		<HelpModal />
 		<PasswordModal />
 		<LoginModal v-bind="loginModalProps" />
@@ -27,6 +28,7 @@ import ForecastModal from "../components/Forecast/ForecastModal.vue";
 import OfflineIndicator from "../components/Footer/OfflineIndicator.vue";
 import PasswordModal from "../components/Auth/PasswordModal.vue";
 import LoginModal from "../components/Auth/LoginModal.vue";
+import AboutModal from "../components/AboutModal.vue";
 import HelpModal from "../components/HelpModal.vue";
 import collector from "../mixins/collector";
 import { defineComponent } from "vue";
@@ -47,6 +49,7 @@ setInterval(() => {
 export default defineComponent({
 	name: "App",
 	components: {
+		AboutModal,
 		BottomTabBar,
 		GlobalSettingsModal,
 		HelpModal,
@@ -101,8 +104,19 @@ export default defineComponent({
 		loginModalProps() {
 			return this.collectProps(LoginModal, this.state);
 		},
+		aboutModalProps() {
+			return {
+				installed: window.evcc.version,
+				commit: window.evcc.commit,
+				...this.collectProps(AboutModal, this.state),
+			};
+		},
 		bottomTabBarProps() {
-			return this.collectProps(BottomTabBar, this.state);
+			return {
+				installed: window.evcc.version,
+				commit: window.evcc.commit,
+				...this.collectProps(BottomTabBar, this.state),
+			};
 		},
 	},
 	watch: {

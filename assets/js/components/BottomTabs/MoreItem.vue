@@ -16,6 +16,8 @@
 				:fatal="fatal"
 				:experimental="experimental"
 				:evopt="evopt"
+				:installed="installed"
+				:commit="commit"
 				@close="open = false"
 			/>
 		</template>
@@ -40,6 +42,8 @@ export default defineComponent({
 		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
 		experimental: Boolean,
 		evopt: { type: Object as PropType<EvOpt>, required: false },
+		installed: String,
+		commit: String,
 	},
 	data() {
 		return { open: false };

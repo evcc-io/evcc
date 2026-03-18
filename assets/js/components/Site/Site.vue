@@ -205,10 +205,6 @@ export default defineComponent({
 					installed: window.evcc.version,
 					commit: window.evcc.commit,
 					available: this.availableVersion,
-					releaseNotes: this.releaseNotes,
-					hasUpdater: this.hasUpdater,
-					uploadMessage: this.uploadMessage,
-					uploadProgress: this.uploadProgress,
 				},
 				savings: {
 					sponsor: this.sponsor,

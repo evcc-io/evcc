@@ -32,6 +32,8 @@
 				:fatal="fatal"
 				:experimental="experimental"
 				:evopt="evopt"
+				:installed="installed"
+				:commit="commit"
 			/>
 		</div>
 	</nav>
@@ -68,6 +70,8 @@ export default defineComponent({
 		offline: Boolean,
 		startupCompleted: Boolean,
 		evopt: { type: Object as PropType<EvOpt>, required: false },
+		installed: String,
+		commit: String,
 	},
 	computed: {
 		hidden() {

@@ -6,10 +6,14 @@
 		<button type="button" class="dropdown-item" @click="openHelpModal">
 			{{ $t("header.needHelp") }}
 		</button>
-		<a class="dropdown-item d-flex" href="https://evcc.io/" target="_blank">
-			<span>evcc.io</span>
-			<shopicon-regular-newtab size="s" class="ms-2 external"></shopicon-regular-newtab>
-		</a>
+		<button
+			type="button"
+			class="dropdown-item d-flex align-items-center"
+			@click="openAboutModal"
+		>
+			<span>evcc</span>
+			<span class="ms-2 text-muted small">{{ versionLabel }}</span>
+		</button>
 		<button v-if="isApp" type="button" class="dropdown-item" @click="openNativeSettings">
 			{{ $t("header.nativeSettings") }}
 		</button>
@@ -58,9 +62,9 @@
 
 <script lang="ts">
 import Modal from "bootstrap/js/dist/modal";
-import "@h2d2/shopicons/es/regular/newtab";
 import { logout, isLoggedIn } from "../Auth/auth";
 import { isApp, sendToApp } from "@/utils/native";
+import { getShortVersion } from "@/utils/version";
 import { isUserConfigError } from "@/utils/fatal";
 import { defineComponent, type PropType } from "vue";
 import type { FatalError, Sponsor, EvOpt, AuthProviders } from "@/types/evcc";
@@ -74,6 +78,8 @@ export default defineComponent({
 		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
 		experimental: Boolean,
 		evopt: { type: Object as PropType<EvOpt>, required: false },
+		installed: String,
+		commit: String,
 	},
 	emits: ["close"],
 	data() {
@@ -106,6 +112,9 @@ export default defineComponent({
 				return "bg-danger";
 			}
 			return "bg-warning";
+		},
+		versionLabel() {
+			return getShortVersion(this.installed || "", this.commit);
 		},
 		optimizeAvailable() {
 			return !!this.evopt && this.experimental;
@@ -140,6 +149,12 @@ export default defineComponent({
 		openHelpModal() {
 			const modal = Modal.getOrCreateInstance(
 				document.getElementById("helpModal") as HTMLElement
+			);
+			modal.show();
+		},
+		openAboutModal() {
+			const modal = Modal.getOrCreateInstance(
+				document.getElementById("aboutModal") as HTMLElement
 			);
 			modal.show();
 		},
@@ -207,10 +222,5 @@ export default defineComponent({
 	background-color: transparent;
 	color: var(--bs-primary);
 	border-left: 2px solid var(--bs-primary);
-}
-
-.external {
-	width: 18px;
-	height: 20px;
 }
 </style>
