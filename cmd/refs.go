@@ -34,11 +34,6 @@ func collectRefs(conf globalconfig.All) error {
 		return err
 	}
 
-	// circuits (meter refs required so circuit meters are configured before circuits)
-	if err := collectCircuitRefs(conf.Circuits); err != nil {
-		return err
-	}
-
 	// append devices from database
 	configurable, err := config.ConfigurationsByClass(templates.Loadpoint)
 	if err != nil {
@@ -109,25 +104,6 @@ func collectTariffRefs() error {
 		references.tariff = append(references.tariff, refs.Planner)
 	}
 	references.tariff = append(references.tariff, refs.Solar...)
-
-	return nil
-}
-
-func collectCircuitRefs(circuits []config.Named) error {
-	for _, cc := range circuits {
-		var refs struct {
-			MeterRef string         `mapstructure:"meter"` // Circuit meter reference
-			Other    map[string]any `mapstructure:",remain"`
-		}
-
-		if err := util.DecodeOther(cc.Other, &refs); err != nil {
-			return err
-		}
-
-		if refs.MeterRef != "" {
-			references.meter = append(references.meter, refs.MeterRef)
-		}
-	}
 
 	return nil
 }
