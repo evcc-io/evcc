@@ -53,9 +53,8 @@ func TestApplyTemperatureCorrection_HappyPath(t *testing.T) {
 	mockTariff.EXPECT().Rates().Return(rates, nil).AnyTimes()
 
 	site := &Site{
-		log:                util.NewLogger("test"),
-		HeatingCoefficient: 0.05,
-		tariffs:            &tariff.Tariffs{Temperature: mockTariff},
+		log:     util.NewLogger("test"),
+		tariffs: &tariff.Tariffs{Temperature: mockTariff},
 	}
 
 	profile := []float64{2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0}

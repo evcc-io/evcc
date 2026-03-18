@@ -60,11 +60,10 @@ type Site struct {
 	log *util.Logger
 
 	// configuration
-	Title              string       `mapstructure:"title"`              // UI title
-	Voltage            float64      `mapstructure:"voltage"`            // Operating voltage. 230V for Germany.
-	ResidualPower      float64      `mapstructure:"residualPower"`      // PV meter only: household usage. Grid meter: household safety margin
-	Meters             MetersConfig `mapstructure:"meters"`             // Meter references
-	HeatingCoefficient float64      `mapstructure:"heatingCoefficient"` // Heating load adjustment coefficient per degree
+	Title         string       `mapstructure:"title"`         // UI title
+	Voltage       float64      `mapstructure:"voltage"`       // Operating voltage. 230V for Germany.
+	ResidualPower float64      `mapstructure:"residualPower"` // PV meter only: household usage. Grid meter: household safety margin
+	Meters        MetersConfig `mapstructure:"meters"`        // Meter references
 
 	// meters
 	circuit       api.Circuit                // Circuit
