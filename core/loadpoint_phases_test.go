@@ -572,7 +572,14 @@ func TestFastChargingCircuitBasedPhaseScaling(t *testing.T) {
 
 			// handle scale phases up delay
 			if tc.activePhases == 1 && tc.expectedPhases == 3 && tc.status == api.StatusC {
-				clck.Add(lp.Enable.Delay + time.Second)
+				require.Equal(t, 1, lp.phases, "should not scale up immediately while charging")
+
+				clck.Add(lp.Enable.Delay - time.Second)
+				err = lp.fastCharging()
+				require.NoError(t, err)
+				require.Equal(t, 1, lp.phases, "should not scale up before delay elapsed")
+
+				clck.Add(time.Second)
 				err = lp.fastCharging()
 				require.NoError(t, err)
 			}
