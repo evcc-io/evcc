@@ -64,7 +64,6 @@ type Site struct {
 	Voltage            float64      `mapstructure:"voltage"`            // Operating voltage. 230V for Germany.
 	ResidualPower      float64      `mapstructure:"residualPower"`      // PV meter only: household usage. Grid meter: household safety margin
 	Meters             MetersConfig `mapstructure:"meters"`             // Meter references
-	HeatingThreshold   float64      `mapstructure:"heatingThreshold"`   // Temperature threshold for heating (°C)
 	HeatingCoefficient float64      `mapstructure:"heatingCoefficient"` // Heating load adjustment coefficient per degree
 
 	// meters

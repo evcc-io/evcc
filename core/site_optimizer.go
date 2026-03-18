@@ -590,37 +590,18 @@ func (site *Site) homeProfile(minLen int) ([]float64, error) {
 	}), nil
 }
 
-// compute24hAverageTemperature calculates the average temperature over the past 24 hours
-// from the provided rates. Returns the average and true if data is available, or 0 and false otherwise.
-func compute24hAverageTemperature(rates []api.Rate, currentTime time.Time) (float64, bool) {
-	yesterday := currentTime.Add(-24 * time.Hour)
-	var pastSum24h float64
-	var pastCount24h int
-	for _, r := range rates {
-		if !r.Start.Before(yesterday) && r.Start.Before(currentTime) {
-			pastSum24h += r.Value
-			pastCount24h++
-		}
-	}
-	if pastCount24h == 0 {
-		return 0, false
-	}
-	return pastSum24h / float64(pastCount24h), true
-}
-
 // applyTemperatureCorrection adjusts the household load profile based on outdoor temperature.
 //
-// The correction is gated on the 24h average actual temperature of the past 24 hours:
-// if that average is at or above heatingThreshold, heating is considered off and no
-// correction is applied to any slot.
-//
-// When heating is active (past 24h avg < threshold), for each future slot i:
+// For each future slot i:
 //  1. Looks up the forecast temperature T_future at that slot's wall-clock time
 //  2. Computes the average historical temperature T_past_avg at the same hour-of-day
 //     from the past 7 days of Open-Meteo data already present in the rates slice
 //  3. Applies: load[i] = load[i] * (1 + coeff * (T_past_avg - T_future))
 //     A positive delta (tomorrow colder than historical average) increases the load estimate.
 //     A negative delta (tomorrow warmer) decreases it.
+//
+// Note: A heater decides by itself when to stop heating, and then its consumption is 0 or close to 0.
+// It doesn't matter if we continue to scale this load, it will always be 0 when the heater is off.
 func (site *Site) applyTemperatureCorrection(profile []float64) []float64 {
 	weatherTariff := site.GetTariff(api.TariffUsageTemperature)
 	if weatherTariff == nil {
@@ -632,29 +613,16 @@ func (site *Site) applyTemperatureCorrection(profile []float64) []float64 {
 		return profile
 	}
 
-	threshold := site.HeatingThreshold
 	coeff := site.HeatingCoefficient
 
 	// Require explicit configuration - no defaults
-	// If either value is not configured (0), skip temperature correction
-	if threshold == 0 || coeff == 0 {
-		site.log.DEBUG.Println("temperature correction: heatingThreshold or heatingCoefficient not configured, skipping correction")
+	// If heatingCoefficient is not configured (0), skip temperature correction
+	if coeff == 0 {
+		site.log.DEBUG.Println("temperature correction: heatingCoefficient not configured, skipping correction")
 		return profile
 	}
 
 	currentTime := time.Now()
-
-	// Compute the 24h average actual temperature from the past 24 hours
-	pastAvg24h, ok := compute24hAverageTemperature(rates, currentTime)
-	if !ok {
-		return profile
-	}
-
-	// If the past 24h average actual temperature is at or above the heating threshold,
-	// heating is considered off — no correction needed.
-	if pastAvg24h >= threshold {
-		return profile
-	}
 
 	// Pre-compute average historical temperature per hour-of-day (0..23) from past rates.
 	// Past rates are those whose Start is before the current time.
