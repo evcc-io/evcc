@@ -622,3 +622,39 @@ func TestEasee_Phases1p3p_registersExpectedOrphan(t *testing.T) {
 	e.cmdMu.Unlock()
 	assert.Equal(t, 1, count, "expected orphan should be registered before the POST")
 }
+
+func TestLivenessCheck_staleObservations(t *testing.T) {
+	e := newEasee()
+	e.opMode = easee.ModeCharging
+	e.currentPower = 7280
+	e.currentL1, e.currentL2, e.currentL3 = 16, 16, 16
+	e.lastObsReceived = time.Now().Add(-(observationTimeout + time.Minute))
+
+	power, err := e.CurrentPower()
+	assert.NoError(t, err)
+	assert.Equal(t, float64(0), power, "expired observations: CurrentPower must return 0W")
+
+	l1, l2, l3, err := e.Currents()
+	assert.NoError(t, err)
+	assert.Equal(t, float64(0), l1)
+	assert.Equal(t, float64(0), l2)
+	assert.Equal(t, float64(0), l3)
+}
+
+func TestLivenessCheck_freshObservations(t *testing.T) {
+	e := newEasee()
+	e.opMode = easee.ModeCharging
+	e.currentPower = 7280
+	e.currentL1, e.currentL2, e.currentL3 = 16, 16, 16
+	e.lastObsReceived = time.Now()
+
+	power, err := e.CurrentPower()
+	assert.NoError(t, err)
+	assert.Equal(t, float64(7280), power)
+
+	l1, l2, l3, err := e.Currents()
+	assert.NoError(t, err)
+	assert.Equal(t, float64(16), l1)
+	assert.Equal(t, float64(16), l2)
+	assert.Equal(t, float64(16), l3)
+}

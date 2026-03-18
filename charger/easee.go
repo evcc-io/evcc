@@ -763,6 +763,10 @@ func (c *Easee) CurrentPower() (float64, error) {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
 
+	if time.Since(c.lastObsReceived) > observationTimeout {
+		return 0, nil
+	}
+
 	return c.currentPower, nil
 }
 
@@ -781,6 +785,11 @@ var _ api.PhaseCurrents = (*Easee)(nil)
 func (c *Easee) Currents() (float64, float64, float64, error) {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
+
+	if time.Since(c.lastObsReceived) > observationTimeout {
+		return 0, 0, 0, nil
+	}
+
 	return c.currentL1, c.currentL2, c.currentL3, nil
 }
 
