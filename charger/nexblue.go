@@ -262,21 +262,5 @@ func (wb *Nexblue) TotalEnergy() (float64, error) {
 	return res.LifetimeEnergy, err
 }
 
-var _ api.PhaseSwitcher = (*Nexblue)(nil)
-
-// Phases1p3p implements the api.PhaseSwitcher interface
-func (wb *Nexblue) Phases1p3p(phases int) error {
-	if phases != 1 && phases != 3 {
-		return fmt.Errorf("invalid phases: %d", phases)
-	}
-
-	uri := fmt.Sprintf("%s/chargers/command/%s/switch_phase_mode", nexblueHost, wb.serial)
-	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(struct {
-		EnforceSinglePhase bool `json:"enforce_single_phase"`
-	}{
-		phases == 1,
-	}), request.JSONEncoding)
-
-	_, err := wb.DoBody(req)
-	return err
-}
+// https://github.com/evcc-io/evcc/issues/27975
+// var _ api.PhaseSwitcher = (*Nexblue)(nil)
