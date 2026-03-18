@@ -1319,7 +1319,7 @@ func (lp *Loadpoint) fastCharging() error {
 		if powerLimit < powerLimit3p && lp.phasesConfigured != 3 {
 			lp.log.DEBUG.Printf("fast charging: staying at 1p, power limit %.0fW < %.0fW threshold incl. buffer", powerLimit, powerLimit3p)
 		} else {
-			if !lp.charging() { // scale immediately if no circuit or not charging
+			if !lp.charging() { // scale immediately if not charging
 				lp.phaseTimer = elapsed
 			}
 
