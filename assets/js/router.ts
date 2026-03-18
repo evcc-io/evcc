@@ -62,6 +62,21 @@ export default function setupRouter(i18n: VueI18nInstance) {
   const router = createRouter({
     history: createWebHashHistory(),
     stringifyQuery,
+    scrollBehavior(to, from) {
+      if (to.hash) {
+        return new Promise((resolve) => {
+          const check = () => {
+            if (document.querySelector(to.hash)) {
+              setTimeout(() => resolve({ el: to.hash, behavior: "smooth" }), 200);
+            } else {
+              requestAnimationFrame(check);
+            }
+          };
+          check();
+        });
+      }
+      return to.path !== from.path ? { top: 0, behavior: "instant" } : false;
+    },
     routes: [
       {
         path: "/",

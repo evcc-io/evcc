@@ -3,26 +3,21 @@
 		<div class="more-backdrop" :class="{ open }" @click="$emit('close')"></div>
 	</Teleport>
 	<div class="more-menu dropdown-menu" :class="{ open }" @click.stop="$emit('close')">
-		<button type="button" class="dropdown-item" @click="openSettingsModal">
-			{{ $t("settings.title") }}
+		<button type="button" class="dropdown-item" @click="openHelpModal">
+			{{ $t("header.needHelp") }}
 		</button>
-		<router-link class="dropdown-item" to="/config" active-class="active">
-			<span v-if="showConfigBadge" class="circle-badge me-1" :class="badgeClass"></span>
-			{{ $t("config.main.title") }}
-		</router-link>
-		<router-link class="dropdown-item" to="/log" active-class="active">
-			{{ $t("log.title") }}
-		</router-link>
-		<router-link
-			v-if="optimizeAvailable"
-			class="dropdown-item"
-			to="/optimize"
-			active-class="active"
-		>
-			Optimize
-		</router-link>
-		<hr class="dropdown-divider" />
+		<a class="dropdown-item d-flex" href="https://evcc.io/" target="_blank">
+			<span>evcc.io</span>
+			<shopicon-regular-newtab size="s" class="ms-2 external"></shopicon-regular-newtab>
+		</a>
+		<button v-if="isApp" type="button" class="dropdown-item" @click="openNativeSettings">
+			{{ $t("header.nativeSettings") }}
+		</button>
+		<button v-if="showLogout" type="button" class="dropdown-item" @click="doLogout">
+			{{ $t("header.logout") }}
+		</button>
 		<template v-if="authorizationRequired">
+			<hr class="dropdown-divider" />
 			<h6 class="dropdown-header">
 				{{ $t("authProviders.authorizationRequired") }}
 			</h6>
@@ -38,21 +33,26 @@
 				></span>
 				{{ provider.title }}
 			</button>
-			<hr class="dropdown-divider" />
 		</template>
-		<button type="button" class="dropdown-item" @click="openHelpModal">
-			{{ $t("header.needHelp") }}
+		<hr class="dropdown-divider" />
+		<router-link class="dropdown-item" to="/log" active-class="active">
+			{{ $t("log.title") }}
+		</router-link>
+		<button type="button" class="dropdown-item" @click="openSettingsModal">
+			{{ $t("settings.title") }}
 		</button>
-		<a class="dropdown-item d-flex" href="https://evcc.io/" target="_blank">
-			<span>evcc.io</span>
-			<shopicon-regular-newtab size="s" class="ms-2 external"></shopicon-regular-newtab>
-		</a>
-		<button v-if="isApp" type="button" class="dropdown-item" @click="openNativeSettings">
-			{{ $t("header.nativeSettings") }}
-		</button>
-		<button v-if="showLogout" type="button" class="dropdown-item" @click="doLogout">
-			{{ $t("header.logout") }}
-		</button>
+		<router-link class="dropdown-item" to="/config" active-class="active">
+			<span v-if="showConfigBadge" class="circle-badge me-1" :class="badgeClass"></span>
+			{{ $t("config.main.title") }}
+		</router-link>
+		<router-link
+			v-if="optimizeAvailable"
+			class="dropdown-item"
+			to="/optimize"
+			active-class="active"
+		>
+			Optimize
+		</router-link>
 	</div>
 </template>
 

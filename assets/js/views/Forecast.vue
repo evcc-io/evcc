@@ -1,7 +1,47 @@
 <template>
-	<div class="container px-4 safe-area-inset">
-		<TopHeader :title="$t('forecast.modalTitle')" />
-		<div class="row">
+	<div
+		class="container px-4 safe-area-inset d-flex flex-column"
+		:class="{ 'empty-container': !forecastAvailable }"
+	>
+		<TopHeader v-if="forecastAvailable" :title="$t('forecast.modalTitle')" />
+		<div v-if="!forecastAvailable" class="flex-grow-1 d-flex p-3">
+			<div class="empty-box d-flex flex-column">
+				<h2 class="fs-4 mb-4">{{ $t("forecast.empty.title") }}</h2>
+				<ul class="list-unstyled mb-4">
+					<li class="d-flex align-items-start gap-2 mb-3">
+						<shopicon-regular-sun
+							size="s"
+							class="text-muted flex-shrink-0"
+						></shopicon-regular-sun>
+						<div>
+							<strong>{{ $t("forecast.type.solar") }}</strong>
+							<div class="text-muted">{{ $t("forecast.empty.solar") }}</div>
+						</div>
+					</li>
+					<li class="d-flex align-items-start gap-2 mb-3">
+						<DynamicPriceIcon class="text-muted flex-shrink-0" />
+						<div>
+							<strong>{{ $t("forecast.type.price") }}</strong>
+							<div class="text-muted">{{ $t("forecast.empty.price") }}</div>
+						</div>
+					</li>
+					<li class="d-flex align-items-start gap-2 mb-3">
+						<shopicon-regular-eco1
+							size="s"
+							class="text-muted flex-shrink-0"
+						></shopicon-regular-eco1>
+						<div>
+							<strong>{{ $t("forecast.type.co2") }}</strong>
+							<div class="text-muted">{{ $t("forecast.empty.co2") }}</div>
+						</div>
+					</li>
+				</ul>
+				<router-link to="/config#tariffs" class="btn btn-outline-primary">
+					{{ $t("forecast.empty.setup") }}
+				</router-link>
+			</div>
+		</div>
+		<div v-else class="row">
 			<main class="col-12">
 				<section v-if="forecast.solar" class="mb-5">
 					<div class="d-flex flex-wrap gap-3 align-items-baseline my-4">
@@ -104,8 +144,11 @@
 </template>
 
 <script lang="ts">
+import "@h2d2/shopicons/es/regular/sun";
+import "@h2d2/shopicons/es/regular/eco1";
 import { defineComponent } from "vue";
 import Header from "../components/Top/Header.vue";
+import DynamicPriceIcon from "../components/MaterialIcon/DynamicPrice.vue";
 import SolarChart from "../components/Forecast/SolarChart.vue";
 import PriceChart from "../components/Forecast/PriceChart.vue";
 import Co2Chart from "../components/Forecast/Co2Chart.vue";
@@ -122,6 +165,7 @@ export default defineComponent({
 	name: "Forecast",
 	components: {
 		TopHeader: Header,
+		DynamicPriceIcon,
 		SolarChart,
 		PriceChart,
 		Co2Chart,
@@ -136,6 +180,9 @@ export default defineComponent({
 	computed: {
 		forecast() {
 			return store.state?.forecast || {};
+		},
+		forecastAvailable() {
+			return !!(this.forecast.grid || this.forecast.solar || this.forecast.co2);
 		},
 		startDate(): Date {
 			const now = new Date();
@@ -255,3 +302,17 @@ export default defineComponent({
 	},
 });
 </script>
+
+<style scoped>
+.empty-container {
+	min-height: calc(100dvh - var(--tab-bar-height) - var(--safe-area-inset-bottom));
+	padding-bottom: calc(var(--tab-bar-height) + var(--safe-area-inset-bottom));
+}
+.empty-box {
+	background-color: var(--evcc-box);
+	padding: 3rem;
+	margin: auto;
+	border-radius: 2rem;
+	max-width: 480px;
+}
+</style>

@@ -905,6 +905,13 @@
       "lowestHour": "Cleanest hour",
       "range": "Range"
     },
+    "empty": {
+      "co2": "See when grid energy in your region is clean. Charging plans will optimize for low emissions and calculate CO₂ savings.",
+      "price": "Configure your dynamic electricity tariff to automatically optimize charging plans and calculate savings.",
+      "setup": "Set up tariffs and forecasts",
+      "solar": "See expected solar production for today and the coming days. Will also be used for automatic charging optimization in the future.",
+      "title": "Tariffs & Forecasts"
+    },
     "modalTitle": "Forecast",
     "price": {
       "average": "Average",

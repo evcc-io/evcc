@@ -905,6 +905,13 @@
       "lowestHour": "Sauberste Stunde",
       "range": "Bereich"
     },
+    "empty": {
+      "co2": "Erfahre, wann Netzstrom in deiner Region sauber ist. Ladepläne werden auf niedrige Emissionen optimiert und CO₂-Einsparungen berechnet.",
+      "price": "Dynamischen Stromtarif konfigurieren, um Ladepläne automatisch zu optimieren und Einsparungen zu berechnen.",
+      "setup": "Tarife und Vorhersagen einrichten",
+      "solar": "Erwartete Solarproduktion für heute und die nächsten Tage. Wird in Zukunft auch für die automatische Ladeoptimierung verwendet.",
+      "title": "Tarife & Vorhersagen"
+    },
     "modalTitle": "Vorhersage",
     "price": {
       "average": "Durchschnitt",

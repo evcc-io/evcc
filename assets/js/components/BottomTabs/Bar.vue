@@ -8,7 +8,7 @@
 				<shopicon-regular-lightning class="tab-icon"></shopicon-regular-lightning>
 			</Item>
 
-			<Item to="/battery" :label="$t('tabBar.battery')">
+			<Item v-if="batteryConfigured" to="/battery" :label="$t('tabBar.battery')">
 				<BatteryIcon
 					class="tab-icon"
 					:soc="batterySoc || 0"
@@ -78,6 +78,9 @@ export default defineComponent({
 		},
 		batteryHold() {
 			return this.batteryMode === "hold";
+		},
+		batteryConfigured() {
+			return (this.battery?.devices?.length ?? 0) > 0;
 		},
 		moreActive() {
 			const mainTabs = ["/", "/battery", "/forecast", "/sessions"];
