@@ -542,8 +542,6 @@ func TestFastChargingCircuitBasedPhaseScaling(t *testing.T) {
 				circuit := api.NewMockCircuit(ctrl)
 				lp.circuit = circuit
 
-				//minPower3p := Voltage * 6 * 3
-
 				// fastCharging call to ValidatePower
 				circuit.EXPECT().ValidatePower(tc.chargePower, gomock.Any()).Return(tc.availableCircuitPower).Times(1)
 
