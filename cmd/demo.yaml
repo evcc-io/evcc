@@ -16,11 +16,7 @@ javascript:
         gridpower: -1000,
         loadpoints: [
           { enabled: true, vehicleSoc: 62, maxcurrent: 6, phases: 1, chargepower: 0 },
-          { enabled: false, vehicleSoc: 22, maxcurrent: 0, phases: 3, chargepower: 0 },
-          { enabled: true, vehicleSoc: 45, maxcurrent: 6, phases: 1, chargepower: 0 },
-          { enabled: false, vehicleSoc: 35, maxcurrent: 0, phases: 3, chargepower: 0 },
-          { enabled: true, vehicleSoc: 50, maxcurrent: 6, phases: 1, chargepower: 0 },
-          { enabled: true, vehicleSoc: 55, maxcurrent: 6, phases: 1, chargepower: 0 }
+          { enabled: false, vehicleSoc: 22, maxcurrent: 0, phases: 3, chargepower: 0 }
         ]
       };
       function logState() {
@@ -34,14 +30,7 @@ meters:
       source: js
       vm: shared
       script: |
-        state.gridpower =
-          state.loadpoints[0].chargepower +
-          state.loadpoints[1].chargepower +
-          state.loadpoints[2].chargepower +
-          state.loadpoints[3].chargepower +
-          state.loadpoints[4].chargepower +
-          state.loadpoints[5].chargepower +
-          state.residualpower - batterypower - pvpower;
+        state.gridpower = state.loadpoints[0].chargepower + state.loadpoints[1].chargepower + state.residualpower - batterypower - pvpower;
         state.gridpower;
       in:
         - name: pvpower
@@ -102,58 +91,6 @@ meters:
       source: js
       vm: shared
       script: state.loadpoints[1].chargepower;
-
-  - name: meter_charger_3
-    type: custom
-    power:
-      source: js
-      vm: shared
-      script: state.loadpoints[2].chargepower;
-
-  - name: meter_charger_4
-    type: custom
-    power:
-      source: js
-      vm: shared
-      script: state.loadpoints[3].chargepower;
-
-  - name: meter_charger_5
-    type: custom
-    power:
-      source: js
-      vm: shared
-      script: state.loadpoints[4].chargepower;
-
-  - name: meter_charger_6
-    type: custom
-    power:
-      source: js
-      vm: shared
-      script: state.loadpoints[5].chargepower;
-
-  - name: circuit_meter
-    type: template
-    template: demo-meter
-    power: 1500
-    currentL1: 3
-    currentL2: 3
-    currentL3: 3
-
-  - name: circuit_meter_sub1
-    type: template
-    template: demo-meter
-    power: 800
-    currentL1: 2
-    currentL2: 2
-    currentL3: 2
-
-  - name: circuit_meter_sub2
-    type: template
-    template: demo-meter
-    power: 700
-    currentL1: 2
-    currentL2: 2
-    currentL3: 2
 
 chargers:
   - name: charger_1
@@ -230,122 +167,6 @@ chargers:
         if (phases === 1) lp.phases = 1; else lp.phases = 3;
         lp.phases;
 
-  - name: charger_3
-    type: custom
-    enable:
-      source: js
-      vm: shared
-      script: |
-        logState();
-        var lp = state.loadpoints[2];
-        lp.enabled = enable;
-        if (lp.enabled) lp.chargepower = lp.maxcurrent * 230 * lp.phases; else lp.chargepower = 0;
-    enabled:
-      source: js
-      vm: shared
-      script: |
-        state.loadpoints[2].enabled;
-    status:
-      source: js
-      vm: shared
-      script: |
-        if (state.loadpoints[2].enabled) "C"; else "B";
-    maxcurrent:
-      source: js
-      vm: shared
-      script: |
-        logState();
-        var lp = state.loadpoints[2];
-        lp.maxcurrent = maxcurrent;
-        if (lp.enabled) lp.chargepower = lp.maxcurrent * 230 * lp.phases; else lp.chargepower = 0;
-
-  - name: charger_4
-    type: custom
-    enable:
-      source: js
-      vm: shared
-      script: |
-        logState();
-        var lp = state.loadpoints[3];
-        lp.enabled = enable;
-        if (lp.enabled) lp.chargepower = lp.maxcurrent * 230 * lp.phases; else lp.chargepower = 0;
-    enabled:
-      source: js
-      vm: shared
-      script: |
-        state.loadpoints[3].enabled;
-    status:
-      source: js
-      vm: shared
-      script: |
-        if (state.loadpoints[3].enabled) "C"; else "B";
-    maxcurrent:
-      source: js
-      vm: shared
-      script: |
-        logState();
-        var lp = state.loadpoints[3];
-        lp.maxcurrent = maxcurrent;
-        if (lp.enabled) lp.chargepower = lp.maxcurrent * 230 * lp.phases; else lp.chargepower = 0;
-
-  - name: charger_5
-    type: custom
-    enable:
-      source: js
-      vm: shared
-      script: |
-        logState();
-        var lp = state.loadpoints[4];
-        lp.enabled = enable;
-        if (lp.enabled) lp.chargepower = lp.maxcurrent * 230 * lp.phases; else lp.chargepower = 0;
-    enabled:
-      source: js
-      vm: shared
-      script: |
-        state.loadpoints[4].enabled;
-    status:
-      source: js
-      vm: shared
-      script: |
-        if (state.loadpoints[4].enabled) "C"; else "B";
-    maxcurrent:
-      source: js
-      vm: shared
-      script: |
-        logState();
-        var lp = state.loadpoints[4];
-        lp.maxcurrent = maxcurrent;
-        if (lp.enabled) lp.chargepower = lp.maxcurrent * 230 * lp.phases; else lp.chargepower = 0;
-
-  - name: charger_6
-    type: custom
-    enable:
-      source: js
-      vm: shared
-      script: |
-        logState();
-        var lp = state.loadpoints[5];
-        lp.enabled = enable;
-        if (lp.enabled) lp.chargepower = lp.maxcurrent * 230 * lp.phases; else lp.chargepower = 0;
-    enabled:
-      source: js
-      vm: shared
-      script: |
-        state.loadpoints[5].enabled;
-    status:
-      source: js
-      vm: shared
-      script: |
-        if (state.loadpoints[5].enabled) "C"; else "B";
-    maxcurrent:
-      source: js
-      vm: shared
-      script: |
-        logState();
-        var lp = state.loadpoints[5];
-        lp.maxcurrent = maxcurrent;
-        if (lp.enabled) lp.chargepower = lp.maxcurrent * 230 * lp.phases; else lp.chargepower = 0;
-
 vehicles:
   - name: vehicle_1
     title: blauer e-Golf
@@ -411,10 +232,6 @@ vehicles:
     template: offline
     title: Wärmepumpe
     icon: waterheater
-  - name: vehicle_6
-    type: template
-    template: offline
-    title: Balkon-Speicher
 
 site:
   title: Demo Mode
@@ -422,49 +239,6 @@ site:
     grid: grid
     pv: pv
     battery: battery
-    ext:
-      - circuit_meter
-      - circuit_meter_sub1
-      - circuit_meter_sub2
-
-# Load management: root circuit and subcircuits. Optional per circuit:
-#   title, parent, meter, maxcurrent, maxpower, timeout (e.g. 1m, 30s),
-#   getmaxpower / getmaxcurrent (plugin for dynamic limits, e.g. source: const value: 11000)
-circuits:
-  # Root circuit (no parent): main house / feed
-  - name: main
-    title: Main
-    meter: circuit_meter
-    maxcurrent: 16
-    maxpower: 11000
-    timeout: 1m
-
-  # Subcircuit: Carport branch under main
-  - name: carport_branch
-    title: Carport
-    parent: main
-    meter: circuit_meter_sub1
-    maxcurrent: 10
-    maxpower: 800
-    timeout: 1m
-
-  # Subcircuit: Garage branch under main
-  - name: garage_branch
-    title: Garage
-    parent: main
-    meter: circuit_meter_sub2
-    maxcurrent: 10
-    maxpower: 6900
-    timeout: 30s
-
-  # Subcircuit with optional values omitted: no meter, no maxcurrent, no maxpower
-  - name: office_branch
-    title: Office
-    parent: main
-
-  # Minimal subcircuit: only name and parent (no title, no meter, no limits)
-  - name: shed_branch
-    parent: main
 
 loadpoints:
   - title: Carport
@@ -472,37 +246,11 @@ loadpoints:
     mode: pv
     meter: meter_charger_1
     vehicle: vehicle_1
-    circuit: carport_branch
   - title: Garage
     charger: charger_2
     mode: "off"
     meter: meter_charger_2
     vehicle: vehicle_2
-    circuit: garage_branch
-  - title: Carport 2
-    charger: charger_3
-    mode: pv
-    meter: meter_charger_3
-    vehicle: vehicle_3
-    circuit: carport_branch
-  - title: Carport 3
-    charger: charger_4
-    mode: pv
-    meter: meter_charger_4
-    vehicle: vehicle_4
-    circuit: carport_branch
-  - title: Garage Extra
-    charger: charger_5
-    mode: "off"
-    meter: meter_charger_5
-    vehicle: vehicle_5
-    circuit: garage_branch
-  - title: Office
-    charger: charger_6
-    mode: pv
-    meter: meter_charger_6
-    vehicle: vehicle_6
-    circuit: office_branch
 
 tariffs:
   currency: EUR # three letter ISO-4217 currency code (default EUR)
