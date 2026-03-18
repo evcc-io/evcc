@@ -93,20 +93,52 @@ meters:
       script: state.loadpoints[1].chargepower;
 
   - name: circuit_meter_main
-    type: template
-    template: demo-meter
-    power: 1500
-    currentL1: 3
-    currentL2: 3
-    currentL3: 3
+    type: custom
+    power:
+      source: js
+      vm: shared
+      script: |
+        state.loadpoints[0].chargepower + state.loadpoints[1].chargepower;
+    currents:
+      - source: js
+        vm: shared
+        script: |
+          var p = state.loadpoints[0].chargepower + state.loadpoints[1].chargepower;
+          (p / 230) / 3;
+      - source: js
+        vm: shared
+        script: |
+          var p = state.loadpoints[0].chargepower + state.loadpoints[1].chargepower;
+          (p / 230) / 3;
+      - source: js
+        vm: shared
+        script: |
+          var p = state.loadpoints[0].chargepower + state.loadpoints[1].chargepower;
+          (p / 230) / 3;
 
   - name: circuit_meter_branch
-    type: template
-    template: demo-meter
-    power: 700
-    currentL1: 2
-    currentL2: 2
-    currentL3: 2
+    type: custom
+    power:
+      source: js
+      vm: shared
+      script: |
+        state.loadpoints[1].chargepower;
+    currents:
+      - source: js
+        vm: shared
+        script: |
+          var p = state.loadpoints[1].chargepower;
+          (p / 230) / 3;
+      - source: js
+        vm: shared
+        script: |
+          var p = state.loadpoints[1].chargepower;
+          (p / 230) / 3;
+      - source: js
+        vm: shared
+        script: |
+          var p = state.loadpoints[1].chargepower;
+          (p / 230) / 3;
 
 chargers:
   - name: charger_1
