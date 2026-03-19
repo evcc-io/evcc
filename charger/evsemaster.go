@@ -37,17 +37,17 @@ type EVSEMaster struct {
 	log  *util.Logger
 	conn *evsemaster.Connection
 
-	mu       sync.RWMutex
-	status   *evsemaster.ACStatus
-	loggedIn bool
-	current  int // last value set by MaxCurrent
+	mu        sync.RWMutex
+	status    *evsemaster.ACStatus
+	loggedIn  bool
+	current   int       // last value set by MaxCurrent
+	updatedAt time.Time // time of last ACStatus received
 
 	// evseAddr is the EVSE's source address (e.g. 192.168.1.100:11938).
 	// It is learned from the first Login broadcast and used for all sends.
 	evseAddr *net.UDPAddr
 
-	recv  chan *evsemaster.ReceivedPacket
-	ready chan struct{} // closed once the first ACStatus is received
+	recv chan *evsemaster.ReceivedPacket
 }
 
 func init() {
@@ -68,8 +68,10 @@ func NewEVSEMasterFromConfig(ctx context.Context, other map[string]any) (api.Cha
 	return NewEVSEMaster(ctx, cc.Serial, cc.Password)
 }
 
-// NewEVSEMaster creates a new EVSEMaster charger and returns once the first
-// ACStatus is received (or ctx / 60 s timeout elapses).
+// NewEVSEMaster creates a new EVSEMaster charger. It returns immediately after
+// starting the background listener; the charger comes online once the EVSE sends
+// its first Login broadcast (typically within a few seconds). Until then,
+// Status() returns api.ErrTimeout.
 func NewEVSEMaster(ctx context.Context, serial, password string) (*EVSEMaster, error) {
 	log := util.NewLogger("evsemaster")
 
@@ -87,22 +89,11 @@ func NewEVSEMaster(ctx context.Context, serial, password string) (*EVSEMaster, e
 		conn:    conn,
 		current: 6,
 		recv:    make(chan *evsemaster.ReceivedPacket, 32),
-		ready:   make(chan struct{}),
 	}
 
 	conn.Subscribe(wb.recv)
 
 	go wb.run(ctx)
-
-	select {
-	case <-wb.ready:
-	case <-ctx.Done():
-		conn.Unsubscribe()
-		return nil, api.ErrTimeout
-	case <-time.After(10 * time.Second):
-		conn.Unsubscribe()
-		return nil, api.ErrTimeout
-	}
 
 	return wb, nil
 }
@@ -163,12 +154,9 @@ func (wb *EVSEMaster) run(ctx context.Context) {
 			case evsemaster.CmdACStatus:
 				if s, err := evsemaster.ParseACStatus(pkt.Payload); err == nil {
 					wb.mu.Lock()
-					firstStatus := wb.status == nil
 					wb.status = s
+					wb.updatedAt = time.Now()
 					wb.mu.Unlock()
-					if firstStatus {
-						close(wb.ready)
-					}
 				} else {
 					wb.log.WARN.Printf("ACStatus parse: %v", err)
 				}
@@ -208,7 +196,7 @@ func (wb *EVSEMaster) Status() (api.ChargeStatus, error) {
 	wb.mu.RLock()
 	defer wb.mu.RUnlock()
 
-	if wb.status == nil {
+	if wb.status == nil || time.Since(wb.updatedAt) > 30*time.Second {
 		return api.StatusNone, api.ErrTimeout
 	}
 
@@ -227,7 +215,7 @@ func (wb *EVSEMaster) Enabled() (bool, error) {
 	wb.mu.RLock()
 	defer wb.mu.RUnlock()
 
-	if wb.status == nil {
+	if wb.status == nil || time.Since(wb.updatedAt) > 30*time.Second {
 		return false, api.ErrTimeout
 	}
 	return wb.status.OutputState == 1, nil
@@ -244,15 +232,22 @@ func (wb *EVSEMaster) Enable(enable bool) error {
 		return api.ErrTimeout
 	}
 
+	var err error
 	if enable {
-		payload, err := evsemaster.PackChargeStart(current)
-		if err != nil {
+		var payload []byte
+		if payload, err = evsemaster.PackChargeStart(current); err != nil {
 			return err
 		}
-		return wb.send(evsemaster.CmdChargeStart, payload)
+		err = wb.send(evsemaster.CmdChargeStart, payload)
+	} else {
+		err = wb.send(evsemaster.CmdChargeStop, nil)
 	}
 
-	return wb.send(evsemaster.CmdChargeStop, nil)
+	if err == nil {
+		_ = wb.send(evsemaster.CmdHeading, nil) // request immediate status update
+	}
+
+	return err
 }
 
 // MaxCurrent implements the api.Charger interface.
@@ -265,6 +260,7 @@ func (wb *EVSEMaster) MaxCurrent(current int64) error {
 		if err := wb.send(evsemaster.CmdSetCurrent, evsemaster.PackSetCurrent(int(current))); err != nil {
 			return err
 		}
+		_ = wb.send(evsemaster.CmdHeading, nil) // request immediate status update
 	}
 
 	wb.mu.Lock()
@@ -272,6 +268,17 @@ func (wb *EVSEMaster) MaxCurrent(current int64) error {
 	wb.mu.Unlock()
 
 	return nil
+}
+
+var _ api.CurrentGetter = (*EVSEMaster)(nil)
+
+// GetMaxCurrent implements the api.CurrentGetter interface.
+// Returns the commanded current so evcc can verify consistency against its own set value
+// rather than the measured phase current (which lags behind commanded changes).
+func (wb *EVSEMaster) GetMaxCurrent() (float64, error) {
+	wb.mu.RLock()
+	defer wb.mu.RUnlock()
+	return float64(wb.current), nil
 }
 
 var _ api.Meter = (*EVSEMaster)(nil)

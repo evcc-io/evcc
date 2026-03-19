@@ -144,7 +144,7 @@ func Unpack(buf []byte) (*Packet, error) {
 }
 
 // ACStatus holds real-time charger state from command 0x0004 (SingleACStatus).
-// GunState: 0=no vehicle, 1=connected+locked, 2=connected+unlocked
+// GunState: 0=unknown, 1=disconnected, 2=connected_unlocked, 3=negotiating, 4=connected_locked
 // OutputState: 0=idle, 1=charging
 type ACStatus struct {
 	GunState    int
