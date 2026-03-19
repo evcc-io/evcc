@@ -138,6 +138,9 @@ func (c Trydan) Enable(enable bool) error {
 	if err := c.setValue("Locked", pause); err != nil {
 		return err
 	}
+	if err := c.setValue("PauseDynamic", pause); err != nil {
+		return err
+	}
 	c.enabled = enable
 
 	return nil
