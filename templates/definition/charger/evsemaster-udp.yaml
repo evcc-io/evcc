@@ -1,6 +1,14 @@
 template: evsemaster-udp
 requirements:
   evcc: ["skiptest"]
+  description:
+    de: >
+      Die Ladestation und evcc müssen sich im selben Netzwerksegment (VLAN) befinden,
+      da die Erkennung über UDP-Broadcast erfolgt. Broadcasts werden von den meisten
+      Routern nicht zwischen VLANs weitergeleitet.
+    en: >
+      The charger and evcc must be on the same network segment (VLAN).
+      Discovery relies on UDP broadcast, which most routers do not forward across VLANs.
 products:
   - brand: EVSE Master
     description:
