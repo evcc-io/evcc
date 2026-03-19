@@ -27,8 +27,6 @@ params:
   - name: region
     description:
       generic: "Region"
-    help:
-      en: "Select 1 out of 5 regions for the grid tariff (Península, Canarias, Baleares, Ceuta, Melilla)."    
     example: Península
     type: choice
     choice: ["Península", "Canarias", "Baleares", "Ceuta", "Melilla"]
