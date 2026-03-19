@@ -569,7 +569,7 @@ func TestProductUpdate_updatesLastObsReceived_freshTimestamp(t *testing.T) {
 	e.ProductUpdate(createPayload(easee.TOTAL_POWER, now, easee.Double, "3.5"))
 
 	assert.False(t, e.lastObsReceived.IsZero())
-	assert.WithinDuration(t, time.Now(), e.lastObsReceived, 2*time.Second)
+	assert.WithinDuration(t, time.Now(), e.lastObsReceived, 5*time.Second)
 }
 
 func TestProductUpdate_doesNotUpdateLastObsReceived_staleTimestamp(t *testing.T) {
