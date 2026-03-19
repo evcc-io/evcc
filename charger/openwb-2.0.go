@@ -4,18 +4,26 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
+	"net"
+	"strings"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/charger/openwb/pro"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
+	"github.com/evcc-io/evcc/util/request"
 )
 
 // OpenWB20 charger implementation
 type OpenWB20 struct {
-	conn    *modbus.Connection
-	enabled bool
-	curr    uint16
-	base    uint16
+	conn       *modbus.Connection
+	enabled    bool
+	curr       uint16
+	base       uint16
+	httpHelper *request.Helper
+	httpUri    string
+	statusG    util.Cacheable[pro.Status]
 }
 
 const (
@@ -41,13 +49,14 @@ func init() {
 
 // https://openwb.de/main/wp-content/uploads/2023/10/ModbusTCP-openWB-series2-Pro-1.pdf
 
-//go:generate go tool decorate -f decorateOpenWB20 -b *OpenWB20 -r api.Charger -t api.PhaseSwitcher,api.Identifier
+//go:generate go tool decorate -f decorateOpenWB20 -b *OpenWB20 -r api.Charger -t api.PhaseSwitcher,api.Identifier,api.Battery
 
 // NewOpenWB20FromConfig creates a OpenWB20 charger from generic config
 func NewOpenWB20FromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		Connector          uint16
 		Phases1p3p         bool
+		HttpFallback       bool
 		modbus.TcpSettings `mapstructure:",squash"`
 	}{
 		Connector: 1,
@@ -60,7 +69,7 @@ func NewOpenWB20FromConfig(ctx context.Context, other map[string]any) (api.Charg
 		return nil, err
 	}
 
-	wb, err := NewOpenWB20(ctx, cc.URI, cc.ID, cc.Connector)
+	wb, err := NewOpenWB20(ctx, cc.URI, cc.ID, cc.Connector, cc.HttpFallback)
 	if err != nil {
 		return nil, err
 	}
@@ -75,11 +84,16 @@ func NewOpenWB20FromConfig(ctx context.Context, other map[string]any) (api.Charg
 		identify = wb.identify
 	}
 
-	return decorateOpenWB20(wb, phases1p3p, identify), nil
+	var soc func() (float64, error)
+	if wb.httpHelper != nil {
+		soc = wb.soc
+	}
+
+	return decorateOpenWB20(wb, phases1p3p, identify, soc), nil
 }
 
 // NewOpenWB20 creates OpenWB20 charger
-func NewOpenWB20(ctx context.Context, uri string, slaveID uint8, connector uint16) (*OpenWB20, error) {
+func NewOpenWB20(ctx context.Context, uri string, slaveID uint8, connector uint16, httpFallback bool) (*OpenWB20, error) {
 	uri = util.DefaultPort(uri, 1502)
 
 	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
@@ -94,6 +108,22 @@ func NewOpenWB20(ctx context.Context, uri string, slaveID uint8, connector uint1
 		conn: conn,
 		curr: 6 * 100,
 		base: (connector - 1) * 100,
+	}
+
+	if httpFallback {
+		host, _, err := net.SplitHostPort(uri)
+		if err != nil {
+			return nil, fmt.Errorf("http fallback: invalid modbus uri: %w", err)
+		}
+		httpUri := fmt.Sprintf("http://%s:8080", host)
+		wb.httpHelper = request.NewHelper(log)
+		wb.httpUri = strings.TrimRight(httpUri, "/")
+		wb.statusG = util.ResettableCached(func() (pro.Status, error) {
+			var res pro.Status
+			url := fmt.Sprintf("%s/%s", wb.httpUri, "connect.php")
+			err := wb.httpHelper.GetJSON(url, &res)
+			return res, err
+		}, time.Second)
 	}
 
 	return wb, nil
@@ -226,11 +256,58 @@ func (wb *OpenWB20) WakeUp() error {
 	return err
 }
 
-// Identify implements the api.Identifier interface
-func (wb *OpenWB20) identify() (string, error) {
-	b, err := wb.conn.ReadInputRegisters(wb.base+openwbRegRfid, 10)
-	if err != nil {
-		return "", err
+// getHttpStatus returns status from connect.php (openWB-Pro+ only)
+func (wb *OpenWB20) getHttpStatus() (pro.Status, error) {
+	if wb.statusG == nil {
+		return pro.Status{}, fmt.Errorf("http fallback not configured")
 	}
-	return bytesAsString(b), nil
+	return wb.statusG.Get()
+}
+
+// identify implements the api.Identifier interface
+func (wb *OpenWB20) identify() (string, error) {
+	b, modbusErr := wb.conn.ReadInputRegisters(wb.base+openwbRegRfid, 10)
+	if modbusErr == nil {
+		if id := bytesAsString(b); id != "" {
+			return id, nil
+		}
+	}
+
+	if wb.httpHelper != nil {
+		res, httpErr := wb.getHttpStatus()
+		if httpErr == nil {
+			if res.VehicleID != "" && res.VehicleID != "--" {
+				return res.VehicleID, nil
+			}
+			if res.RfidTag != "" {
+				return res.RfidTag, nil
+			}
+		}
+		if httpErr != nil {
+			return "", httpErr
+		}
+	}
+
+	if modbusErr != nil {
+		return "", modbusErr
+	}
+	return "", nil
+}
+
+// soc implements the api.Battery interface (openWB-Pro+ only)
+func (wb *OpenWB20) soc() (float64, error) {
+	if wb.httpHelper == nil {
+		return 0, api.ErrNotAvailable
+	}
+
+	res, err := wb.getHttpStatus()
+	if err != nil {
+		return 0, err
+	}
+
+	if time.Since(time.Unix(res.SocTimestamp, 0)) > 5*time.Minute {
+		return 0, api.ErrNotAvailable
+	}
+
+	return float64(res.Soc), nil
 }

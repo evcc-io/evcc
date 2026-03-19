@@ -32,8 +32,19 @@ params:
       de: Phasenumschaltung vorhanden
     advanced: true
     default: true
+  - name: httpFallback
+    type: bool
+    description:
+      en: HTTP fallback for Pro+ (vehicle ID, SOC)
+      de: HTTP-Fallback für Pro+ (Fahrzeug-ID, Ladezustand)
+    help:
+      en: Fetches vehicle ID and SOC via connect.php (same IP as Modbus, port 8080) when Modbus does not provide them. Only available on openWB-Pro+.
+      de: Lädt Fahrzeug-ID und Ladezustand über connect.php (gleiche IP wie Modbus, Port 8080), wenn Modbus keine Daten liefert. Nur für openWB-Pro+.
+    advanced: true
+    default: false
 render: |
   type: openwb-2.0
   {{- include "modbus" . }}
   connector: {{ .connector }}
   phases1p3p: {{ .phases1p3p }}
+  httpFallback: {{ .httpFallback }}

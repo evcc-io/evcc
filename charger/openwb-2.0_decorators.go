@@ -6,12 +6,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateOpenWB20(base *OpenWB20, phaseSwitcher func(int) error, identifier func() (string, error)) api.Charger {
+func decorateOpenWB20(base *OpenWB20, phaseSwitcher func(int) error, identifier func() (string, error), battery func() (float64, error)) api.Charger {
 	switch {
-	case identifier == nil && phaseSwitcher == nil:
+	case battery == nil && identifier == nil && phaseSwitcher == nil:
 		return base
 
-	case identifier == nil && phaseSwitcher != nil:
+	case battery == nil && identifier == nil && phaseSwitcher != nil:
 		return &struct {
 			*OpenWB20
 			api.PhaseSwitcher
@@ -22,7 +22,7 @@ func decorateOpenWB20(base *OpenWB20, phaseSwitcher func(int) error, identifier 
 			},
 		}
 
-	case identifier != nil && phaseSwitcher == nil:
+	case battery == nil && identifier != nil && phaseSwitcher == nil:
 		return &struct {
 			*OpenWB20
 			api.Identifier
@@ -33,13 +33,73 @@ func decorateOpenWB20(base *OpenWB20, phaseSwitcher func(int) error, identifier 
 			},
 		}
 
-	case identifier != nil && phaseSwitcher != nil:
+	case battery == nil && identifier != nil && phaseSwitcher != nil:
 		return &struct {
 			*OpenWB20
 			api.Identifier
 			api.PhaseSwitcher
 		}{
 			OpenWB20: base,
+			Identifier: &decorateOpenWB20IdentifierImpl{
+				identifier: identifier,
+			},
+			PhaseSwitcher: &decorateOpenWB20PhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery != nil && identifier == nil && phaseSwitcher == nil:
+		return &struct {
+			*OpenWB20
+			api.Battery
+		}{
+			OpenWB20: base,
+			Battery: &decorateOpenWB20BatteryImpl{
+				battery: battery,
+			},
+		}
+
+	case battery != nil && identifier == nil && phaseSwitcher != nil:
+		return &struct {
+			*OpenWB20
+			api.Battery
+			api.PhaseSwitcher
+		}{
+			OpenWB20: base,
+			Battery: &decorateOpenWB20BatteryImpl{
+				battery: battery,
+			},
+			PhaseSwitcher: &decorateOpenWB20PhaseSwitcherImpl{
+				phaseSwitcher: phaseSwitcher,
+			},
+		}
+
+	case battery != nil && identifier != nil && phaseSwitcher == nil:
+		return &struct {
+			*OpenWB20
+			api.Battery
+			api.Identifier
+		}{
+			OpenWB20: base,
+			Battery: &decorateOpenWB20BatteryImpl{
+				battery: battery,
+			},
+			Identifier: &decorateOpenWB20IdentifierImpl{
+				identifier: identifier,
+			},
+		}
+
+	case battery != nil && identifier != nil && phaseSwitcher != nil:
+		return &struct {
+			*OpenWB20
+			api.Battery
+			api.Identifier
+			api.PhaseSwitcher
+		}{
+			OpenWB20: base,
+			Battery: &decorateOpenWB20BatteryImpl{
+				battery: battery,
+			},
 			Identifier: &decorateOpenWB20IdentifierImpl{
 				identifier: identifier,
 			},
@@ -50,6 +110,14 @@ func decorateOpenWB20(base *OpenWB20, phaseSwitcher func(int) error, identifier 
 	}
 
 	return nil
+}
+
+type decorateOpenWB20BatteryImpl struct {
+	battery func() (float64, error)
+}
+
+func (impl *decorateOpenWB20BatteryImpl) Soc() (float64, error) {
+	return impl.battery()
 }
 
 type decorateOpenWB20IdentifierImpl struct {
