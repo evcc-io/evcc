@@ -1,0 +1,9 @@
+/* Bootstrap Breakpoints as Custom Media Queries */
+@custom-media --sm-and-up (min-width: 576px);
+@custom-media --md-and-up (min-width: 768px);
+@custom-media --lg-and-up (min-width: 992px);
+@custom-media --xl-and-up (min-width: 1200px);
+@custom-media --xxl-and-up (min-width: 1400px);
+
+@custom-media --light-mode (prefers-color-scheme: light);
+@custom-media --dark-mode (prefers-color-scheme: dark);
