@@ -349,7 +349,7 @@ func (lp *Loadpoint) isVehicleAtHome(vehicle api.Vehicle) bool {
 		text = "<="
 	}
 
-	lp.log.DEBUG.Printf("vehicle distance from loadpoint: %.0fm %s %fm", d, text, geofence.Radius)
+	lp.log.DEBUG.Printf("vehicle distance from loadpoint: %.1fm %s %vm", d, text, geofence.Radius)
 
 	return atHome
 }
