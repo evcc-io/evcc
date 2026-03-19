@@ -33,6 +33,7 @@ func NewEcoFlowPowerOceanFromConfig(ctx context.Context, other map[string]any) (
 		SecretKey string
 		Serial    string
 		Usage     string
+		Region    string
 		Cache     time.Duration
 	}{
 		Cache: 30 * time.Second,
@@ -53,8 +54,21 @@ func NewEcoFlowPowerOceanFromConfig(ctx context.Context, other map[string]any) (
 	if cc.Usage == "" {
 		return nil, errors.New("missing usage")
 	}
+	var baseUrl string
+	switch cc.Region {
+	case "":
+		return nil, errors.New("missing region")
+	case "auto":
+		baseUrl = "https://api.ecoflow.com"
+	case "europe":
+		baseUrl = "https://api-e.ecoflow.com"
+	case "america":
+		baseUrl = "https://api-a.ecoflow.com"
+	default:
+		return nil, fmt.Errorf("invalid region: %s", cc.Region)
+	}
 
-	m, err := NewEcoFlowPowerOcean(ctx, cc.AccessKey, cc.SecretKey, cc.Serial, cc.Usage, cc.Cache)
+	m, err := NewEcoFlowStream(ctx, cc.AccessKey, cc.SecretKey, cc.Serial, cc.Usage, baseUrl, cc.Cache)
 	if err != nil {
 		return nil, err
 	}
@@ -67,8 +81,8 @@ func NewEcoFlowPowerOceanFromConfig(ctx context.Context, other map[string]any) (
 }
 
 // NewEcoFlowPowerOcean constructs the EcoFlowPowerOcean struct
-func NewEcoFlowPowerOcean(ctx context.Context, accessKey, secretKey, serial, usage string, cache time.Duration) (*EcoFlowPowerOcean, error) {
-	client := ecoflow.NewEcoflowClient(accessKey, secretKey)
+func NewEcoFlowPowerOcean(ctx context.Context, accessKey, secretKey, serial, usage string, baseUrl string, cache time.Duration) (*EcoFlowPowerOcean, error) {
+	client := ecoflow.NewEcoflowClient(accessKey, secretKey, ecoflow.WithBaseUrl(baseUrl))
 	m := &EcoFlowPowerOcean{
 		ctx:    ctx,
 		serial: serial,
