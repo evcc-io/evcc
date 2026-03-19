@@ -22,7 +22,7 @@ import (
 
 // EVSEMaster implements api.Charger (and api.Meter / api.MeterEnergy /
 // api.PhaseCurrents / api.PhaseVoltages) for charging stations that use the
-// EVSE Master UDP protocol – e.g. Morec and generic Chinese EVSE devices.
+// EVSE Master UDP protocol – e.g. Sync and generic Chinese EVSE devices.
 //
 // The device is auto-discovered: its IP and ephemeral port are learned from
 // its periodic Login broadcast, so only serial and password are required.
@@ -103,10 +103,20 @@ func NewEVSEMaster(serial, password string) (*EVSEMaster, error) {
 	case <-wb.ready:
 	case <-time.After(60 * time.Second):
 		lst.Unsubscribe(serial)
+		close(wb.done)
 		return nil, fmt.Errorf("evsemaster: device with serial %s not found within 60s – check serial, password, and that the EVSE Master app is not connected", serial)
 	}
 
 	return wb, nil
+}
+
+// Close stops the background goroutine and unsubscribes from the listener.
+func (wb *EVSEMaster) Close() {
+	lst, err := evsemaster.Instance(wb.log)
+	if err == nil {
+		lst.Unsubscribe(wb.serial)
+	}
+	close(wb.done)
 }
 
 // send packs and writes a datagram to the EVSE's stored source address.
@@ -153,7 +163,6 @@ func (wb *EVSEMaster) run() {
 
 		case pkt := <-wb.recv:
 			switch pkt.Command {
-
 			case evsemaster.CmdLoginBroadcast:
 				// Learn (or refresh) the EVSE's source address
 				wb.mu.Lock()

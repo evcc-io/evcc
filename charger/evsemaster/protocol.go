@@ -1,5 +1,5 @@
 // Package evsemaster implements the binary UDP protocol used by EVSE Master
-// compatible charging stations (tested on Morec and generic EVSE Master devices).
+// compatible charging stations (tested on Sync EV and generic EVSE Master devices).
 // Protocol reverse-engineered from https://github.com/johnwoo-nl/emproto
 package evsemaster
 
@@ -113,6 +113,9 @@ func Unpack(buf []byte) (*Packet, error) {
 	if uint16(sum%0xFFFF) != binary.BigEndian.Uint16(buf[totalLen-4:]) {
 		return nil, fmt.Errorf("checksum mismatch")
 	}
+	if binary.BigEndian.Uint16(buf[totalLen-2:]) != packetTail {
+		return nil, fmt.Errorf("invalid packet tail")
+	}
 
 	p := &Packet{
 		Serial:  hex.EncodeToString(buf[5:13]),
@@ -201,8 +204,8 @@ func PackChargeStart(maxAmps int) ([]byte, error) {
 
 	buf[33] = 0 // not a reservation (immediate start)
 	binary.BigEndian.PutUint32(buf[34:], uint32(time.Now().Unix()))
-	buf[38] = 1 // start_type
-	buf[39] = 1 // charge_type
+	buf[38] = 1                                  // start_type
+	buf[39] = 1                                  // charge_type
 	binary.BigEndian.PutUint16(buf[40:], 0xFFFF) // max_duration = unlimited
 	binary.BigEndian.PutUint16(buf[42:], 0xFFFF) // max_energy = unlimited
 	binary.BigEndian.PutUint16(buf[44:], 0xFFFF) // param3

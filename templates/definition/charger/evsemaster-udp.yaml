@@ -1,8 +1,10 @@
 template: evsemaster-udp
+requirements:
+  evcc: ["skiptest"]
 products:
   - brand: EVSE Master
     description:
-      generic: UDP (Morec / generic)
+      generic: UDP (Sync EV / generic)
 params:
   - name: serial
     required: true
