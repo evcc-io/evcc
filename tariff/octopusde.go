@@ -12,12 +12,18 @@ import (
 	"github.com/evcc-io/evcc/api"
 	octoDeGql "github.com/evcc-io/evcc/tariff/octopusde/graphql"
 	"github.com/evcc-io/evcc/util"
+	"github.com/jinzhu/now"
 )
 
 type OctopusDe struct {
 	log       *util.Logger
 	gqlClient *octoDeGql.OctopusDeGraphQLClient
 	data      *util.Monitor[api.Rates]
+}
+
+type planningHorizon struct {
+	start time.Time
+	end   time.Time
 }
 
 var _ api.Tariff = (*OctopusDe)(nil)
@@ -100,18 +106,10 @@ func (t *OctopusDe) run(done chan error) {
 
 		data := make(api.Rates, 0, len(rates))
 		for _, r := range rates {
-			// ValidTo can be zero which means the rate has no expected end
-			// Set it to a date far in the future in this case
-			rateEnd := r.ValidTo
-			if rateEnd.IsZero() {
-				t.log.TRACE.Printf("handling rate with indefinite length: %v", r.ValidFrom)
-				// Add a year from the start date
-				rateEnd = r.ValidFrom.AddDate(1, 0, 0)
-			}
 			ar := api.Rate{
 				Start: r.ValidFrom,
-				End:   rateEnd,
-				// Convert from cents per kWh to price per kWh (divide by 100)
+				End:   r.ValidTo,
+				// Convert from cents per kWh to € per kWh (divide by 100)
 				// Use gross price (including tax) as that's what the customer pays
 				Value: r.GrossUnitRateCentsPerKwh / 100,
 			}
@@ -137,6 +135,9 @@ func (t *OctopusDe) Type() api.TariffType {
 	return api.TariffTypePriceForecast
 }
 
+// planDays is the planning horizon used for all tariff types.
+const planDays = 7
+
 // RatePeriod represents a parsed rate period with pricing in cents per kWh.
 type RatePeriod struct {
 	ValidFrom                time.Time
@@ -147,11 +148,16 @@ type RatePeriod struct {
 
 // ratesForAgreement determines the tariff type of agr and returns the corresponding
 // rate periods. It supports Dynamic, Simple, and Time-of-Use tariffs.
-// now is used as the reference time for ToU rate generation.
+// now is used as the reference time for horizon computation and ToU rate generation.
 func ratesForAgreement(agr octoDeGql.Agreement, now time.Time) ([]RatePeriod, error) {
+	horizon, err := computeHorizon(now, agr, planDays)
+	if err != nil {
+		return nil, err
+	}
+
 	// Dynamic tariff: has unitRateForecast entries with per-slot prices
 	if len(agr.UnitRateForecast) > 0 {
-		rates, err := extractForecastRates(agr.UnitRateForecast)
+		rates, err := extractForecastRates(agr.UnitRateForecast, horizon)
 		if err != nil {
 			return nil, err
 		}
@@ -162,24 +168,25 @@ func ratesForAgreement(agr octoDeGql.Agreement, now time.Time) ([]RatePeriod, er
 
 	// Simple tariff: single fixed rate covering the agreement period
 	if agr.UnitRateInformation.SimpleProductUnitRateInformation.LatestGrossUnitRateCentsPerKwh != "" {
-		return simpleRates(agr.UnitRateInformation.SimpleProductUnitRateInformation, agr.ValidFrom, agr.ValidTo)
+		return simpleRates(agr.UnitRateInformation.SimpleProductUnitRateInformation, horizon)
 	}
 
 	// Time of Use tariff: multiple time-slot rates that repeat daily
 	if touRateSlots := agr.UnitRateInformation.TimeOfUseProductUnitRateInformation.Rates; len(touRateSlots) > 0 {
-		return generateTouRates(touRateSlots, agr.ValidTo, now)
+		return generateTouRates(touRateSlots, horizon)
 	}
 
 	return nil, errors.New("unsupported tariff type for active agreement")
 }
 
 // extractForecastRates converts dynamic-tariff UnitRateForecast entries into RatePeriod values.
-func extractForecastRates(forecasts []octoDeGql.UnitRateForecast) ([]RatePeriod, error) {
+func extractForecastRates(forecasts []octoDeGql.UnitRateForecast, horizon planningHorizon) ([]RatePeriod, error) {
 	var rates []RatePeriod
 	for _, forecast := range forecasts {
 		info := forecast.UnitRateInformation
 
 		// Dynamic forecasts typically use TimeOfUseProductUnitRateInformation
+		// We do expect that octopus will always return us data that falls within the planning horizon here
 		if info.TimeOfUseProductUnitRateInformation.Rates != nil {
 			for _, r := range info.TimeOfUseProductUnitRateInformation.Rates {
 				netRate, err := parseFloat(r.NetUnitRateCentsPerKwh)
@@ -202,7 +209,7 @@ func extractForecastRates(forecasts []octoDeGql.UnitRateForecast) ([]RatePeriod,
 
 		// Forecast that uses SimpleProductUnitRateInformation
 		if info.SimpleProductUnitRateInformation.LatestGrossUnitRateCentsPerKwh != "" {
-			r, err := simpleRates(info.SimpleProductUnitRateInformation, forecast.ValidFrom, forecast.ValidTo)
+			r, err := simpleRates(info.SimpleProductUnitRateInformation, horizon)
 			if err != nil {
 				return nil, err
 			}
@@ -213,8 +220,8 @@ func extractForecastRates(forecasts []octoDeGql.UnitRateForecast) ([]RatePeriod,
 }
 
 // simpleRates converts a SimpleProductUnitRateInformation into a single RatePeriod
-// covering from to to. A zero to means indefinite; run() handles zero ValidTo.
-func simpleRates(info octoDeGql.SimpleProductUnitRateInformation, from, to time.Time) ([]RatePeriod, error) {
+// ending at horizon, the pre-computed planning horizon.
+func simpleRates(info octoDeGql.SimpleProductUnitRateInformation, horizon planningHorizon) ([]RatePeriod, error) {
 	netRate, err := parseFloat(info.NetUnitRateCentsPerKwh)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse net unit rate: %w", err)
@@ -223,24 +230,35 @@ func simpleRates(info octoDeGql.SimpleProductUnitRateInformation, from, to time.
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse gross unit rate: %w", err)
 	}
-	if from.IsZero() {
-		from = time.Now()
-	}
 	return []RatePeriod{{
-		ValidFrom:                from,
-		ValidTo:                  to, // zero means indefinite; run() handles zero ValidTo
+		ValidFrom:                horizon.start,
+		ValidTo:                  horizon.end,
 		GrossUnitRateCentsPerKwh: grossRate,
 		NetUnitRateCentsPerKwh:   netRate,
 	}}, nil
 }
 
-// computeHorizon returns the end of the planning window, capped by agreementValidTo.
-func computeHorizon(now, agreementValidTo time.Time, planDays int) time.Time {
-	h := now.AddDate(0, 0, planDays)
-	if !agreementValidTo.IsZero() && agreementValidTo.Before(h) {
-		return agreementValidTo
+// computeHorizon returns the planning window, capped by the validity of the agreement.
+func computeHorizon(now time.Time, agreement octoDeGql.Agreement, planDays int) (planningHorizon, error) {
+	start := now
+	end := now.AddDate(0, 0, planDays)
+
+	// Validate agreement overlaps with planning horizon
+	if agreement.ValidFrom.After(end) || (!agreement.ValidTo.IsZero() && agreement.ValidTo.Before(start)) {
+		return planningHorizon{}, errors.New("agreement is not valid for the planning horizon")
 	}
-	return h
+
+	// Cap the horizon to agreement validity period
+	if agreement.ValidFrom.After(start) {
+		start = agreement.ValidFrom
+	}
+
+	// validTo may be unset if the agreement has no defined end yet (ie. automatically renewed)
+	if !agreement.ValidTo.IsZero() && agreement.ValidTo.Before(end) {
+		end = agreement.ValidTo
+	}
+
+	return planningHorizon{start: start, end: end}, nil
 }
 
 // computePeriod converts day-relative time offsets into absolute start/end times,
@@ -263,7 +281,7 @@ func computePeriod(day time.Time, fromOffset, toOffset time.Duration) (time.Time
 
 // ratePeriodsForDay expands one TouRate slot for a single day into RatePeriods,
 // filtered to the window [now, horizon].
-func ratePeriodsForDay(day, now, horizon time.Time, r octoDeGql.TouRate) ([]RatePeriod, error) {
+func ratePeriodsForDay(day time.Time, horizon planningHorizon, r octoDeGql.TouRate) ([]RatePeriod, error) {
 	grossRate, err := parseFloat(r.LatestGrossUnitRateCentsPerKwh)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse gross unit rate for slot %q: %w", r.TimeslotName, err)
@@ -285,7 +303,7 @@ func ratePeriodsForDay(day, now, horizon time.Time, r octoDeGql.TouRate) ([]Rate
 		}
 
 		start, end := computePeriod(day, fromOffset, toOffset)
-		if end.Before(now) || start.After(horizon) {
+		if end.Before(horizon.start) || start.After(horizon.end) {
 			continue
 		}
 
@@ -299,18 +317,16 @@ func ratePeriodsForDay(day, now, horizon time.Time, r octoDeGql.TouRate) ([]Rate
 	return periods, nil
 }
 
-// generateTouRates produces rate periods for a Time of Use tariff over the next 7 days
+// generateTouRates produces rate periods for a Time of Use tariff
 // by repeating each timeslot's activation window for each day in the planning horizon.
-// now is the reference time used for filtering past periods and computing the horizon.
-func generateTouRates(rates []octoDeGql.TouRate, agreementValidTo time.Time, now time.Time) ([]RatePeriod, error) {
-	const planDays = 7
-	horizon := computeHorizon(now, agreementValidTo, planDays)
-	startDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+// now is the reference time for filtering past periods; horizon is the pre-computed end of the window.
+func generateTouRates(rates []octoDeGql.TouRate, horizon planningHorizon) ([]RatePeriod, error) {
+	startDay := now.With(horizon.start).BeginningOfDay()
 
 	var result []RatePeriod
-	for day := startDay; day.Before(horizon); day = day.Add(24 * time.Hour) {
+	for day := startDay; day.Before(horizon.end); day = day.Add(24 * time.Hour) {
 		for _, r := range rates {
-			dayPeriods, err := ratePeriodsForDay(day, now, horizon, r)
+			dayPeriods, err := ratePeriodsForDay(day, horizon, r)
 			if err != nil {
 				return nil, err
 			}
@@ -319,7 +335,7 @@ func generateTouRates(rates []octoDeGql.TouRate, agreementValidTo time.Time, now
 	}
 
 	if len(result) == 0 {
-		if !agreementValidTo.IsZero() && agreementValidTo.Before(now) {
+		if horizon.end.Before(horizon.start) {
 			return nil, errors.New("time-of-use agreement has expired")
 		}
 		return nil, errors.New("time-of-use tariff has no upcoming periods")
