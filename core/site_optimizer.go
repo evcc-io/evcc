@@ -519,16 +519,12 @@ func loadpointProfile(lp loadpoint.API, minLen int) []float64 {
 func (site *Site) homeProfile(minLen int) ([]float64, error) {
 	from := now.BeginningOfDay().AddDate(0, 0, -7)
 
-	// kWh average over last 7 days - base load (excludes loadpoints)
-	// Note: metrics.Profile() returns meter=1 which is calculated as:
-	// gridPower + pvPower + batteryPower - totalChargePower
-	// So it already excludes all loadpoint consumption
+	// base load (excludes loadpoints)
 	gt_base, err := metrics.Profile(from)
 	if err != nil {
 		return nil, err
 	}
 
-	// Query heater profiles (separated by temperature sensitivity)
 	gt_heater_temp_sensitive, gt_heater_non_sensitive := site.extractHeaterProfile(from, time.Now())
 
 	hasHeaterData := false
@@ -555,22 +551,17 @@ func (site *Site) homeProfile(minLen int) ([]float64, error) {
 		res = res[:minLen]
 	}
 
-	// If no heating devices or no heater data, return base load only
 	if !hasHeaterData {
-		site.log.DEBUG.Println("home profile: no heating devices or heater data, returning base load only")
-		// convert to Wh
+		site.log.DEBUG.Println("home profile: no heating devices, returning base load only")
 		return lo.Map(res, func(v float64, i int) float64 {
 			return v * 1e3
 		}), nil
 	}
 
-	// Initialize final profile with base load
 	gt_final := make([]float64, len(res))
 	copy(gt_final, res)
 
-	// Process temperature-sensitive heaters with correction
 	if gt_heater_temp_sensitive != nil && len(gt_heater_temp_sensitive) > 0 {
-		// Prepare temperature-sensitive heater profile with same length as base profile
 		tempSensitiveSlots := make([]float64, 0, minLen+1)
 		for len(tempSensitiveSlots) <= minLen+24*4 {
 			tempSensitiveSlots = append(tempSensitiveSlots, gt_heater_temp_sensitive[:]...)
@@ -580,11 +571,9 @@ func (site *Site) homeProfile(minLen int) ([]float64, error) {
 			gt_temp_sensitive = gt_temp_sensitive[:len(res)]
 		}
 
-		// Apply temperature correction to temperature-sensitive heaters
-		site.log.DEBUG.Println("home profile: applying temperature correction to temperature-sensitive heater profile")
+		site.log.DEBUG.Println("home profile: applying temperature correction")
 		gt_temp_sensitive_corrected := site.applyTemperatureCorrection(gt_temp_sensitive)
 
-		// Add corrected temperature-sensitive heater load to final profile
 		for i := range gt_final {
 			if i < len(gt_temp_sensitive_corrected) {
 				gt_final[i] += gt_temp_sensitive_corrected[i]
@@ -592,9 +581,7 @@ func (site *Site) homeProfile(minLen int) ([]float64, error) {
 		}
 	}
 
-	// Process non-temperature-sensitive heaters without correction
 	if gt_heater_non_sensitive != nil && len(gt_heater_non_sensitive) > 0 {
-		// Prepare non-temperature-sensitive heater profile with same length as base profile
 		nonSensitiveSlots := make([]float64, 0, minLen+1)
 		for len(nonSensitiveSlots) <= minLen+24*4 {
 			nonSensitiveSlots = append(nonSensitiveSlots, gt_heater_non_sensitive[:]...)
@@ -604,8 +591,6 @@ func (site *Site) homeProfile(minLen int) ([]float64, error) {
 			gt_non_sensitive = gt_non_sensitive[:len(res)]
 		}
 
-		// Add non-temperature-sensitive heater load directly to final profile (no correction)
-		site.log.DEBUG.Println("home profile: adding non-temperature-sensitive heater profile without correction")
 		for i := range gt_final {
 			if i < len(gt_non_sensitive) {
 				gt_final[i] += gt_non_sensitive[i]
@@ -619,21 +604,8 @@ func (site *Site) homeProfile(minLen int) ([]float64, error) {
 	}), nil
 }
 
-// applyTemperatureCorrection adjusts the household load profile based on outdoor temperature.
-//
-// For each future slot i:
-//  1. Looks up the forecast temperature T_forecast[i] at that slot's wall-clock time
-//  2. Computes the average historical temperature T_past_avg[h] at the same hour-of-day
-//     from the past 7 days of Open-Meteo data already present in the rates slice
-//  3. Applies: load[i] = load_avg[i] × ((T_room − T_forecast[i]) / (T_room − T_past_avg[h]))
-//     where T_room = 21°C (constant room temperature)
-//
-// The formula models heating load as proportional to the temperature difference between
-// room temperature and outdoor temperature. When forecast temperature is lower than
-// historical average, heating load increases; when higher, it decreases.
-//
-// Note: A heater decides by itself when to stop heating, and then its consumption is 0 or close to 0.
-// It doesn't matter if we continue to scale this load, it will always be 0 when the heater is off.
+// applyTemperatureCorrection adjusts heating load based on temperature forecast.
+// Uses formula: load[i] = load_avg[i] × ((T_room − T_forecast[i]) / (T_room − T_past_avg[h]))
 func (site *Site) applyTemperatureCorrection(profile []float64) []float64 {
 	weatherTariff := site.GetTariff(api.TariffUsageTemperature)
 	if weatherTariff == nil {
@@ -645,12 +617,11 @@ func (site *Site) applyTemperatureCorrection(profile []float64) []float64 {
 		return profile
 	}
 
-	const tRoom = 21.0 // Room temperature in °C
+	const tRoom = 21.0
 
 	currentTime := time.Now()
 
-	// Pre-compute average historical temperature per hour-of-day (0..23) from past rates.
-	// Past rates are those whose Start is before the current time.
+	// compute average historical temperature per hour-of-day
 	pastTempSum := make([]float64, 24)
 	pastTempCount := make([]int, 24)
 	for _, r := range rates {
@@ -667,7 +638,6 @@ func (site *Site) applyTemperatureCorrection(profile []float64) []float64 {
 		}
 	}
 
-	// Pre-index rates by timestamp for O(1) lookup
 	ratesByTime := make(map[time.Time]float64, len(rates))
 	for _, r := range rates {
 		ratesByTime[r.Start] = r.Value
@@ -680,7 +650,6 @@ func (site *Site) applyTemperatureCorrection(profile []float64) []float64 {
 	for i := range profile {
 		ts := slotStart.Add(time.Duration(i) * tariff.SlotDuration)
 
-		// Find the forecast temperature for this slot
 		tFuture, found := ratesByTime[ts]
 		if !found {
 			continue
@@ -688,7 +657,6 @@ func (site *Site) applyTemperatureCorrection(profile []float64) []float64 {
 
 		h := ts.UTC().Hour()
 
-		// Skip correction if no historical data for this hour
 		if pastTempCount[h] == 0 {
 			site.log.DEBUG.Printf("temperature correction: no historical data for hour %d, skipping slot %s", h, ts.Format("15:04"))
 			continue
@@ -696,13 +664,9 @@ func (site *Site) applyTemperatureCorrection(profile []float64) []float64 {
 
 		tPastAvg := pastTempAvg[h]
 
-		// Calculate temperature-based correction factor
-		// load[i] = load_avg[i] × ((T_room − T_forecast[i]) / (T_room − T_past_avg[h]))
 		denominator := tRoom - tPastAvg
 		numerator := tRoom - tFuture
 
-		// Skip correction if denominator is too close to zero (historical temp near room temp)
-		// This means heating was likely not active during historical period
 		if math.Abs(denominator) < 0.5 {
 			site.log.DEBUG.Printf("temperature correction: slot %s (hour %d): historical temp %.1f°C too close to room temp %.1f°C, skipping",
 				ts.Format("15:04"), h, tPastAvg, tRoom)
@@ -713,7 +677,6 @@ func (site *Site) applyTemperatureCorrection(profile []float64) []float64 {
 		oldValue := profile[i]
 		result[i] = oldValue * correctionFactor
 
-		// Log first few adjustments for visibility
 		if i < 3 {
 			site.log.DEBUG.Printf("temperature correction: slot %s (hour %d): forecast=%.1f°C, hist_avg=%.1f°C, factor=%.3f, load: %.0fWh -> %.0fWh (%.1f%%)",
 				ts.Format("15:04"), h, tFuture, tPastAvg, correctionFactor, oldValue*1e3, result[i]*1e3, (result[i]/oldValue-1)*100)
@@ -723,7 +686,6 @@ func (site *Site) applyTemperatureCorrection(profile []float64) []float64 {
 	return result
 }
 
-// getHeatingLoadpoints returns the indices of all loadpoints with api.Heating feature
 func (site *Site) getHeatingLoadpoints() []int {
 	var heatingLPs []int
 	for i, lp := range site.loadpoints {
@@ -734,9 +696,7 @@ func (site *Site) getHeatingLoadpoints() []int {
 	return heatingLPs
 }
 
-// extractHeaterProfile queries and aggregates consumption from all heating loadpoints
-// Returns two profiles: temperature-sensitive and non-sensitive
-// Returns nil, nil if no heating devices are configured
+// extractHeaterProfile returns temperature-sensitive and non-sensitive heating profiles
 func (site *Site) extractHeaterProfile(from, to time.Time) (tempSensitive, nonSensitive []float64) {
 	heatingLPs := site.getHeatingLoadpoints()
 	if len(heatingLPs) == 0 {
@@ -746,7 +706,6 @@ func (site *Site) extractHeaterProfile(from, to time.Time) (tempSensitive, nonSe
 
 	site.log.DEBUG.Printf("heater profile: querying %d heating loadpoint(s)", len(heatingLPs))
 
-	// Separate profiles by temperature sensitivity
 	tempSensitiveProfiles := make([][]float64, 0)
 	nonSensitiveProfiles := make([][]float64, 0)
 
@@ -765,11 +724,10 @@ func (site *Site) extractHeaterProfile(from, to time.Time) (tempSensitive, nonSe
 				nonSensitiveProfiles = append(nonSensitiveProfiles, profile[:])
 			}
 		} else {
-			// Show detailed error when insufficient data
 			if errors.Is(err, metrics.ErrIncomplete) {
-				site.log.DEBUG.Printf("heater profile: loadpoint %d has insufficient historical data (%v) - need 96 slots (24 hours of 15-minute intervals)", lpID, err)
+				site.log.DEBUG.Printf("heater profile: loadpoint %d insufficient data (%v)", lpID, err)
 			} else if err != nil {
-				site.log.DEBUG.Printf("heater profile: loadpoint %d has no historical data (%v) - need 96 slots (24 hours of 15-minute intervals)", lpID, err)
+				site.log.DEBUG.Printf("heater profile: loadpoint %d no data (%v)", lpID, err)
 			}
 		}
 	}
@@ -791,13 +749,11 @@ func (site *Site) extractHeaterProfile(from, to time.Time) (tempSensitive, nonSe
 	return tempSensitiveResult, nonSensitiveResult
 }
 
-// sumProfiles sums multiple energy profiles slot-by-slot
 func sumProfiles(profiles [][]float64) []float64 {
 	if len(profiles) == 0 {
 		return nil
 	}
 
-	// Use the length of the first profile as reference
 	result := make([]float64, len(profiles[0]))
 	for _, profile := range profiles {
 		for i := 0; i < len(result) && i < len(profile); i++ {

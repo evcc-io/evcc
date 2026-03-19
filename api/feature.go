@@ -8,7 +8,7 @@ const (
 	CoarseCurrent                       // charger
 	IntegratedDevice                    // charger
 	Heating                             // charger - heating device
-	OutdoorTemperatureSensitive         // charger - heating device with outdoor temperature-dependent load
+	OutdoorTemperatureSensitive         // charger - heating with temperature-dependent load
 	Continuous                          // charger - heating device where disabled means "normal operation"
 	Average                             // tariff
 	Cacheable                           // tariff
