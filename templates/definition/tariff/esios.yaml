@@ -44,7 +44,7 @@ render: |
       Accept: "application/json"
     jq: |
       [.indicator.values[] 
-        | select(.geo_name == {{ if eq .indicator "1739" }} "España" {{ else }}{{ .region | printf "%q" }}{{ end }})
+        | select(.geo_name == {{ if eq .indicator "1739" }} "España" {{ else }}"{{.region}}"{{ end }})
         | {
           start: .datetime_utc,
           end: (.datetime_utc | strptime ("%FT%TZ") | mktime + 3600 | strftime("%FT%TZ")),
