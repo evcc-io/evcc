@@ -99,7 +99,7 @@ func NewEVSEMaster(ctx context.Context, serial, password string) (*EVSEMaster, e
 	case <-ctx.Done():
 		conn.Unsubscribe()
 		return nil, api.ErrTimeout
-	case <-time.After(60 * time.Second):
+	case <-time.After(10 * time.Second):
 		conn.Unsubscribe()
 		return nil, api.ErrTimeout
 	}
