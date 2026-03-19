@@ -278,6 +278,10 @@ func TestEasee_MaxCurrent(t *testing.T) {
 }
 
 func TestEasee_CommandResponse_rogue(t *testing.T) {
+	// Intentionally triggers a WARN — suppress it to keep test output clean.
+	util.LogLevel("error", nil)
+	t.Cleanup(func() { util.LogLevel("info", nil) })
+
 	e := newEasee()
 
 	rogueResp := easee.SignalRCommandResponse{
@@ -358,6 +362,10 @@ func TestEasee_CommandResponse_expectedOrphan(t *testing.T) {
 }
 
 func TestEasee_CommandResponse_rogueAfterOrphanConsumed(t *testing.T) {
+	// Intentionally triggers a WARN — suppress it to keep test output clean.
+	util.LogLevel("error", nil)
+	t.Cleanup(func() { util.LogLevel("info", nil) })
+
 	e := newEasee()
 
 	// Register and immediately consume via CommandResponse
