@@ -674,6 +674,12 @@ func (site *Site) applyTemperatureCorrection(profile []float64) []float64 {
 		}
 
 		correctionFactor := numerator / denominator
+
+		// Clamp to reasonable range to prevent extreme corrections from bad data
+		const minCorrectionFactor = 0.5 // -50% (warmer than expected)
+		const maxCorrectionFactor = 2.0 // +100% (colder than expected)
+		correctionFactor = math.Max(minCorrectionFactor, math.Min(maxCorrectionFactor, correctionFactor))
+
 		oldValue := profile[i]
 		result[i] = oldValue * correctionFactor
 
