@@ -1,0 +1,120 @@
+template: iotawatt
+products:
+  - brand: IoTaWatt
+    description:
+      generic: Energy Monitor
+requirements:
+  description:
+    en: |
+      Requires an IoTaWatt device accessible on the local network.
+      Find available series names on the IoTaWatt status page (http://<device-ip>).
+      For single-phase setups, configure only the main series (e.g. `GridNet`, `Solar`).
+      For three-phase, configure one series per phase (e.g. `Grid_A`, `Grid_B`, `Grid_C`).
+    de: |
+      Erfordert ein IoTaWatt-Gerät im lokalen Netzwerk.
+      Verfügbare Seriennamen finden Sie auf der IoTaWatt-Statusseite (http://<device-ip>).
+      Für einphasige Installationen nur die Hauptserie konfigurieren (z.B. `GridNet`, `Solar`).
+      Für dreiphasig je eine Serie pro Phase angeben (z.B. `Grid_A`, `Grid_B`, `Grid_C`).
+params:
+  - name: usage
+    choice: ["grid", "pv", "charge"]
+  - name: host
+  - name: series
+    required: true
+    description:
+      en: L1 / single-phase series
+      de: L1 / Einphasig-Serie
+    example: GridNet
+    help:
+      en: "IoTaWatt series name (Watts). Check the IoTaWatt status page for available series."
+      de: "IoTaWatt Serienname (Watt). Verfügbare Serien auf der IoTaWatt-Statusseite prüfen."
+  - name: seriesL2
+    advanced: true
+    description:
+      en: L2 series (three-phase)
+      de: L2 Serie (Dreiphasig)
+    help:
+      en: "Series name for phase L2. Leave empty for single-phase."
+      de: "Serienname für Phase L2. Für einphasig leer lassen."
+  - name: seriesL3
+    advanced: true
+    description:
+      en: L3 series (three-phase)
+      de: L3 Serie (Dreiphasig)
+    help:
+      en: "Series name for phase L3. Leave empty for single-phase."
+      de: "Serienname für Phase L3. Für einphasig leer lassen."
+  - name: cache
+    default: 2s
+    advanced: true
+render: |
+  type: custom
+  {{- if and .seriesL2 .seriesL3 }}
+  power:
+    source: calc
+    add:
+    - source: http
+      uri: http://{{ .host }}/query?select=%5B{{ .series }}.watts%5D&begin=s-10s&end=s&group=all
+      jq: .[0][0]
+      cache: {{ .cache }}
+    - source: http
+      uri: http://{{ .host }}/query?select=%5B{{ .seriesL2 }}.watts%5D&begin=s-10s&end=s&group=all
+      jq: .[0][0]
+      cache: {{ .cache }}
+    - source: http
+      uri: http://{{ .host }}/query?select=%5B{{ .seriesL3 }}.watts%5D&begin=s-10s&end=s&group=all
+      jq: .[0][0]
+      cache: {{ .cache }}
+  energy:
+    source: calc
+    add:
+    - source: http
+      uri: http://{{ .host }}/query?select=%5B{{ .series }}.wh%5D&begin=y-10y&end=s&group=all
+      jq: .[0][0] / 1000
+      cache: {{ .cache }}
+    - source: http
+      uri: http://{{ .host }}/query?select=%5B{{ .seriesL2 }}.wh%5D&begin=y-10y&end=s&group=all
+      jq: .[0][0] / 1000
+      cache: {{ .cache }}
+    - source: http
+      uri: http://{{ .host }}/query?select=%5B{{ .seriesL3 }}.wh%5D&begin=y-10y&end=s&group=all
+      jq: .[0][0] / 1000
+      cache: {{ .cache }}
+  currents:
+  - source: http
+    uri: http://{{ .host }}/query?select=%5B{{ .series }}.amps%5D&begin=s-10s&end=s&group=all
+    jq: .[0][0]
+    cache: {{ .cache }}
+  - source: http
+    uri: http://{{ .host }}/query?select=%5B{{ .seriesL2 }}.amps%5D&begin=s-10s&end=s&group=all
+    jq: .[0][0]
+    cache: {{ .cache }}
+  - source: http
+    uri: http://{{ .host }}/query?select=%5B{{ .seriesL3 }}.amps%5D&begin=s-10s&end=s&group=all
+    jq: .[0][0]
+    cache: {{ .cache }}
+  voltages:
+  - source: http
+    uri: http://{{ .host }}/query?select=%5B{{ .series }}.volts%5D&begin=s-10s&end=s&group=all
+    jq: .[0][0]
+    cache: {{ .cache }}
+  - source: http
+    uri: http://{{ .host }}/query?select=%5B{{ .seriesL2 }}.volts%5D&begin=s-10s&end=s&group=all
+    jq: .[0][0]
+    cache: {{ .cache }}
+  - source: http
+    uri: http://{{ .host }}/query?select=%5B{{ .seriesL3 }}.volts%5D&begin=s-10s&end=s&group=all
+    jq: .[0][0]
+    cache: {{ .cache }}
+  {{- else }}
+  power:
+    source: http
+    uri: http://{{ .host }}/query?select=%5B{{ .series }}.watts%5D&begin=s-10s&end=s&group=all
+    jq: .[0][0]
+    cache: {{ .cache }}
+  energy:
+    source: http
+    uri: http://{{ .host }}/query?select=%5B{{ .series }}.wh%5D&begin=y-10y&end=s&group=all
+    jq: .[0][0] / 1000
+    cache: {{ .cache }}
+  {{- end }}

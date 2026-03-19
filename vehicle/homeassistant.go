@@ -2,6 +2,7 @@ package vehicle
 
 import (
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -37,7 +38,7 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 			FinishTime string // optional
 		}
 		Services struct {
-			Start         string `mapstructure:"start_charging"` // script.* optional
+			Start         string `mapstructure:"start_charging"` // script.* or switch.* optional
 			Stop          string `mapstructure:"stop_charging"`  // script.* optional
 			Wakeup        string // script.* optional
 			SetMaxCurrent string // number.* or input_number.* optional
@@ -104,6 +105,8 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 	}
 	if cc.Services.Start != "" && cc.Services.Stop != "" {
 		enable = func(enable bool) error { return res.enable(cc.Services.Start, cc.Services.Stop, enable) }
+	} else if strings.HasPrefix(cc.Services.Start, "switch") {
+		enable = func(enable bool) error { return conn.CallSwitchService(cc.Services.Start, enable) }
 	}
 	if cc.Services.Wakeup != "" {
 		wakeup = func() error { return conn.CallSwitchService(cc.Services.Wakeup, true) }
