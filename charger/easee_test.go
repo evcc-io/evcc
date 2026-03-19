@@ -500,3 +500,16 @@ func TestLivenessCheck_freshObservations(t *testing.T) {
 	assert.Equal(t, float64(16), l2)
 	assert.Equal(t, float64(16), l3)
 }
+
+func TestIsTNGrid(t *testing.T) {
+	// TN grid types must return true
+	assert.True(t, isTNGrid(easee.PowerGridTN3Phase))
+	assert.True(t, isTNGrid(easee.PowerGridTN2PhasePin234))
+	assert.True(t, isTNGrid(easee.PowerGridTN1Phase))
+
+	// IT grid types, zero, and unknown values must return false
+	assert.False(t, isTNGrid(4))  // IT3Phase
+	assert.False(t, isTNGrid(5))  // IT1Phase
+	assert.False(t, isTNGrid(0))  // absent / unknown
+	assert.False(t, isTNGrid(99)) // arbitrary unknown
+}

@@ -236,6 +236,14 @@ func (c *Easee) chargerSite(charger string) (easee.Site, error) {
 	return res, err
 }
 
+func isTNGrid(gridType int) bool {
+	switch gridType {
+	case easee.PowerGridTN3Phase, easee.PowerGridTN2PhasePin234, easee.PowerGridTN1Phase:
+		return true
+	}
+	return false
+}
+
 // connect creates an HTTP connection to the signalR hub
 func (c *Easee) connect(ts oauth2.TokenSource) func() (signalr.Connection, error) {
 	bo := backoff.NewExponentialBackOff(backoff.WithMaxInterval(time.Minute), backoff.WithMaxElapsedTime(0))
