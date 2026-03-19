@@ -10,6 +10,7 @@ package charger
 // from its Login broadcast and stored; no URI/IP is needed in the config.
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"sync"
@@ -22,7 +23,7 @@ import (
 
 // EVSEMaster implements api.Charger (and api.Meter / api.MeterEnergy /
 // api.PhaseCurrents / api.PhaseVoltages) for charging stations that use the
-// EVSE Master UDP protocol – e.g. Sync and generic Chinese EVSE devices.
+// EVSE Master UDP protocol – e.g. Sync EV and generic Chinese EVSE devices.
 //
 // The device is auto-discovered: its IP and ephemeral port are learned from
 // its periodic Login broadcast, so only serial and password are required.
@@ -31,34 +32,31 @@ import (
 //
 //	type: evsemaster-udp
 //	serial:   0906252400004617   # 16-char hex serial printed on the device
-//	password: 100219             # password set in the EVSE Master mobile app
+//	password: 123456             # password set in the EVSE Master mobile app
 type EVSEMaster struct {
-	log      *util.Logger
-	serial   string
-	password string
+	log  *util.Logger
+	conn *evsemaster.Connection
 
 	mu       sync.RWMutex
 	status   *evsemaster.ACStatus
 	loggedIn bool
-	maxAmps  int // last value set by MaxCurrent
+	current  int // last value set by MaxCurrent
 
-	// evseAddr is the EVSE's source address (e.g. 10.123.10.99:11938).
+	// evseAddr is the EVSE's source address (e.g. 192.168.1.100:11938).
 	// It is learned from the first Login broadcast and used for all sends.
 	evseAddr *net.UDPAddr
 
 	recv  chan *evsemaster.ReceivedPacket
 	ready chan struct{} // closed once the first ACStatus is received
-
-	done chan struct{}
 }
 
 func init() {
-	registry.Add("evsemaster-udp", NewEVSEMasterFromConfig)
+	registry.AddCtx("evsemaster-udp", NewEVSEMasterFromConfig)
 }
 
 // NewEVSEMasterFromConfig creates an EVSEMaster charger from a generic config map.
-func NewEVSEMasterFromConfig(other map[string]any) (api.Charger, error) {
-	cc := struct {
+func NewEVSEMasterFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
+	var cc = struct {
 		Serial   string
 		Password string
 	}{}
@@ -67,124 +65,98 @@ func NewEVSEMasterFromConfig(other map[string]any) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewEVSEMaster(cc.Serial, cc.Password)
+	return NewEVSEMaster(ctx, cc.Serial, cc.Password)
 }
 
-// NewEVSEMaster creates a new EVSEMaster charger and blocks until the first
-// status update arrives (or 60 s elapses waiting for the Login broadcast).
-func NewEVSEMaster(serial, password string) (*EVSEMaster, error) {
+// NewEVSEMaster creates a new EVSEMaster charger and returns once the first
+// ACStatus is received (or ctx / 60 s timeout elapses).
+func NewEVSEMaster(ctx context.Context, serial, password string) (*EVSEMaster, error) {
 	log := util.NewLogger("evsemaster")
 
 	if len(serial) != 16 {
-		return nil, fmt.Errorf("evsemaster: serial must be a 16-character hex string, got %q", serial)
+		return nil, fmt.Errorf("serial must be a 16-character hex string, got %q", serial)
+	}
+
+	conn, err := evsemaster.NewConnection(log, serial, password)
+	if err != nil {
+		return nil, fmt.Errorf("listener: %w", err)
 	}
 
 	wb := &EVSEMaster{
-		log:      log,
-		serial:   serial,
-		password: password,
-		maxAmps:  6,
-		recv:     make(chan *evsemaster.ReceivedPacket, 32),
-		ready:    make(chan struct{}),
-		done:     make(chan struct{}),
+		log:     log,
+		conn:    conn,
+		current: 6,
+		recv:    make(chan *evsemaster.ReceivedPacket, 32),
+		ready:   make(chan struct{}),
 	}
 
-	lst, err := evsemaster.Instance(log)
-	if err != nil {
-		return nil, fmt.Errorf("evsemaster: listener: %w", err)
-	}
-	lst.Subscribe(serial, wb.recv)
+	conn.Subscribe(wb.recv)
 
-	go wb.run()
+	go wb.run(ctx)
 
-	// Block until the EVSE has broadcast, we've logged in, and the first
-	// SingleACStatus has been received.  Typical wait is < 1 broadcast cycle.
 	select {
 	case <-wb.ready:
+	case <-ctx.Done():
+		conn.Unsubscribe()
+		return nil, api.ErrTimeout
 	case <-time.After(60 * time.Second):
-		lst.Unsubscribe(serial)
-		close(wb.done)
-		return nil, fmt.Errorf("evsemaster: device with serial %s not found within 60s – check serial, password, and that the EVSE Master app is not connected", serial)
+		conn.Unsubscribe()
+		return nil, api.ErrTimeout
 	}
 
 	return wb, nil
 }
 
-// Close stops the background goroutine and unsubscribes from the listener.
-func (wb *EVSEMaster) Close() {
-	lst, err := evsemaster.Instance(wb.log)
-	if err == nil {
-		lst.Unsubscribe(wb.serial)
-	}
-	close(wb.done)
-}
-
-// send packs and writes a datagram to the EVSE's stored source address.
+// send writes a command datagram to the EVSE's stored source address.
 func (wb *EVSEMaster) send(cmd uint16, payload []byte) error {
 	wb.mu.RLock()
 	addr := wb.evseAddr
 	wb.mu.RUnlock()
 
 	if addr == nil {
-		// EVSE has not broadcast yet; silently drop – run() will retry once the address is known.
+		// EVSE has not broadcast yet; silently drop.
 		return nil
 	}
 
-	pkt := &evsemaster.Packet{
-		Serial:   wb.serial,
-		Password: wb.password,
-		Command:  cmd,
-		Payload:  payload,
-	}
-	buf, err := pkt.Pack()
-	if err != nil {
-		return err
-	}
-
-	lst, err := evsemaster.Instance(wb.log)
-	if err != nil {
-		return err
-	}
-	return lst.WriteTo(buf, addr)
+	return wb.conn.Send(cmd, payload, addr)
 }
 
 // run is the background goroutine that maintains the EVSE session.
-func (wb *EVSEMaster) run() {
+func (wb *EVSEMaster) run(ctx context.Context) {
 	var lastHeartbeat time.Time
 	keepaliveTick := time.NewTicker(15 * time.Second)
-	reloginTick := time.NewTicker(30 * time.Second)
 	defer keepaliveTick.Stop()
-	defer reloginTick.Stop()
+	defer wb.conn.Unsubscribe()
 
 	for {
 		select {
-		case <-wb.done:
+		case <-ctx.Done():
 			return
 
 		case pkt := <-wb.recv:
 			switch pkt.Command {
 			case evsemaster.CmdLoginBroadcast:
-				// Learn (or refresh) the EVSE's source address
+				// Learn (or refresh) the EVSE's source address.
 				wb.mu.Lock()
 				wb.evseAddr = pkt.From
 				wb.mu.Unlock()
 
 				if err := wb.send(evsemaster.CmdLoginConfirm, []byte{0x00}); err != nil {
-					wb.log.WARN.Printf("evsemaster: LoginConfirm: %v", err)
+					wb.log.WARN.Printf("LoginConfirm: %v", err)
 					continue
 				}
 				if err := wb.send(evsemaster.CmdHeading, nil); err != nil {
-					wb.log.WARN.Printf("evsemaster: initial Heading: %v", err)
+					wb.log.WARN.Printf("initial Heading: %v", err)
 				}
 				wb.mu.Lock()
 				wb.loggedIn = true
 				wb.mu.Unlock()
 				lastHeartbeat = time.Now()
-				wb.log.DEBUG.Printf("evsemaster: logged in, EVSE at %s", pkt.From)
+				wb.log.DEBUG.Printf("logged in, EVSE at %s", pkt.From)
 
 			case evsemaster.CmdHeadingFromEVSE:
 				if err := wb.send(evsemaster.CmdHeadingResp, nil); err != nil {
-					wb.log.WARN.Printf("evsemaster: HeadingResp: %v", err)
+					wb.log.WARN.Printf("HeadingResp: %v", err)
 				}
 				lastHeartbeat = time.Now()
 
@@ -198,7 +170,7 @@ func (wb *EVSEMaster) run() {
 						close(wb.ready)
 					}
 				} else {
-					wb.log.WARN.Printf("evsemaster: ACStatus parse: %v", err)
+					wb.log.WARN.Printf("ACStatus parse: %v", err)
 				}
 				_ = wb.send(evsemaster.CmdStatusAck, []byte{0x01})
 
@@ -207,21 +179,21 @@ func (wb *EVSEMaster) run() {
 			}
 
 		case <-keepaliveTick.C:
+			// Detect heartbeat timeout and mark offline.
+			if !lastHeartbeat.IsZero() && time.Since(lastHeartbeat) > 90*time.Second {
+				wb.log.DEBUG.Printf("heartbeat timeout – marking offline, waiting for next broadcast")
+				wb.mu.Lock()
+				wb.loggedIn = false
+				wb.mu.Unlock()
+				break
+			}
 			wb.mu.RLock()
 			li := wb.loggedIn
 			wb.mu.RUnlock()
 			if li {
 				if err := wb.send(evsemaster.CmdHeading, nil); err != nil {
-					wb.log.WARN.Printf("evsemaster: keepalive: %v", err)
+					wb.log.WARN.Printf("keepalive: %v", err)
 				}
-			}
-
-		case <-reloginTick.C:
-			if !lastHeartbeat.IsZero() && time.Since(lastHeartbeat) > 90*time.Second {
-				wb.log.DEBUG.Printf("evsemaster: heartbeat timeout – marking offline, waiting for next broadcast")
-				wb.mu.Lock()
-				wb.loggedIn = false
-				wb.mu.Unlock()
 			}
 		}
 	}
@@ -237,7 +209,7 @@ func (wb *EVSEMaster) Status() (api.ChargeStatus, error) {
 	defer wb.mu.RUnlock()
 
 	if wb.status == nil {
-		return api.StatusNone, fmt.Errorf("evsemaster: no status received yet")
+		return api.StatusNone, api.ErrTimeout
 	}
 
 	switch {
@@ -256,7 +228,7 @@ func (wb *EVSEMaster) Enabled() (bool, error) {
 	defer wb.mu.RUnlock()
 
 	if wb.status == nil {
-		return false, nil
+		return false, api.ErrTimeout
 	}
 	return wb.status.OutputState == 1, nil
 }
@@ -265,15 +237,15 @@ func (wb *EVSEMaster) Enabled() (bool, error) {
 func (wb *EVSEMaster) Enable(enable bool) error {
 	wb.mu.RLock()
 	li := wb.loggedIn
-	maxAmps := wb.maxAmps
+	current := wb.current
 	wb.mu.RUnlock()
 
 	if !li {
-		return fmt.Errorf("evsemaster: not logged in")
+		return api.ErrTimeout
 	}
 
 	if enable {
-		payload, err := evsemaster.PackChargeStart(maxAmps)
+		payload, err := evsemaster.PackChargeStart(current)
 		if err != nil {
 			return err
 		}
@@ -285,20 +257,21 @@ func (wb *EVSEMaster) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface.
 func (wb *EVSEMaster) MaxCurrent(current int64) error {
-	if current < 6 || current > 32 {
-		return fmt.Errorf("evsemaster: current %dA out of range (6-32A)", current)
+	wb.mu.RLock()
+	li := wb.loggedIn
+	wb.mu.RUnlock()
+
+	if li {
+		if err := wb.send(evsemaster.CmdSetCurrent, evsemaster.PackSetCurrent(int(current))); err != nil {
+			return err
+		}
 	}
 
 	wb.mu.Lock()
-	wb.maxAmps = int(current)
-	li := wb.loggedIn
+	wb.current = int(current)
 	wb.mu.Unlock()
 
-	if !li {
-		return nil
-	}
-
-	return wb.send(evsemaster.CmdSetCurrent, evsemaster.PackSetCurrent(int(current)))
+	return nil
 }
 
 var _ api.Meter = (*EVSEMaster)(nil)
@@ -308,7 +281,7 @@ func (wb *EVSEMaster) CurrentPower() (float64, error) {
 	wb.mu.RLock()
 	defer wb.mu.RUnlock()
 	if wb.status == nil {
-		return 0, nil
+		return 0, api.ErrTimeout
 	}
 	return wb.status.Power, nil
 }
@@ -320,7 +293,7 @@ func (wb *EVSEMaster) TotalEnergy() (float64, error) {
 	wb.mu.RLock()
 	defer wb.mu.RUnlock()
 	if wb.status == nil {
-		return 0, nil
+		return 0, api.ErrTimeout
 	}
 	return wb.status.TotalEnergy, nil
 }
@@ -332,7 +305,7 @@ func (wb *EVSEMaster) Currents() (float64, float64, float64, error) {
 	wb.mu.RLock()
 	defer wb.mu.RUnlock()
 	if wb.status == nil {
-		return 0, 0, 0, nil
+		return 0, 0, 0, api.ErrTimeout
 	}
 	return wb.status.L1Current, wb.status.L2Current, wb.status.L3Current, nil
 }
@@ -344,7 +317,7 @@ func (wb *EVSEMaster) Voltages() (float64, float64, float64, error) {
 	wb.mu.RLock()
 	defer wb.mu.RUnlock()
 	if wb.status == nil {
-		return 0, 0, 0, nil
+		return 0, 0, 0, api.ErrTimeout
 	}
 	return wb.status.L1Voltage, wb.status.L2Voltage, wb.status.L3Voltage, nil
 }

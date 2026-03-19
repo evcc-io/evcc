@@ -4,7 +4,7 @@ requirements:
 products:
   - brand: EVSE Master
     description:
-      generic: UDP (Sync EV / generic)
+      generic: UDP
 params:
   - name: serial
     required: true

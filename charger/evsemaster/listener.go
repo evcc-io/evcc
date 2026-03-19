@@ -79,10 +79,10 @@ func (l *Listener) Unsubscribe(serial string) {
 	l.mu.Unlock()
 }
 
-// WriteTo sends buf to the given address using the shared listener socket.
+// Send sends buf to the given address using the shared listener socket.
 // This is required because the EVSE sends FROM its own ephemeral port (e.g. 11938)
 // TO our port 28376, and replies must go back to that source address.
-func (l *Listener) WriteTo(buf []byte, addr *net.UDPAddr) error {
+func (l *Listener) Send(buf []byte, addr *net.UDPAddr) error {
 	_, err := l.conn.WriteTo(buf, addr)
 	return err
 }
