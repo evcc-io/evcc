@@ -303,8 +303,8 @@ func (lp *Loadpoint) identifyVehicleByStatus() {
 }
 
 // isVehicleAtHome checks whether vehicle is at home (geofencing)
-// false: if vehicle position is known and outside the defined radius
-// true: in all other cases, even in cases of error or if position is unknown
+// false: if vehicle position is available and outside the defined radius
+// true: in all other cases, even in cases of error or if position is is not available
 func (lp *Loadpoint) isVehicleAtHome(vehicle api.Vehicle) bool {
 	geofence := lp.Geofence // lock values
 
@@ -330,22 +330,28 @@ func (lp *Loadpoint) isVehicleAtHome(vehicle api.Vehicle) bool {
 	// vehicle position
 	lat2, lon2, err := vs.Position()
 	if err != nil {
-		lp.log.ERROR.Printf("vehicle position: %v", err)
+		lp.log.INFO.Printf("vehicle position: %v", err)
+		return true
+	}
+
+	if lat2 == 0 && lon2 == 0 {
+		lp.log.INFO.Println("vehicle position: not available")
 		return true
 	}
 
 	lp.log.DEBUG.Printf("vehicle position: lat %.4f, lon %.4f", lat2, lon2)
 
-	if lat2 == 0 && lon2 == 0 {
-		lp.log.INFO.Println("vehicle does not send position data")
-		return true
+	d := distance(lat1, lon1, lat2, lon2) * 1e3
+	atHome := d <= geofence.Radius
+
+	text := ">"
+	if atHome {
+		text = "<="
 	}
 
-	d := distance(lat1, lon1, lat2, lon2)
+	lp.log.DEBUG.Printf("vehicle distance from loadpoint: %.0fm %s %fm", d, text, geofence.Radius)
 
-	lp.log.DEBUG.Printf("vehicle distance from loadpoint: %.3fkm", d)
-
-	return d*1e3 <= geofence.Radius
+	return atHome
 }
 
 // calculate the distance between two points on a globe
