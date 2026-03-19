@@ -40,6 +40,13 @@ import (
 	"golang.org/x/oauth2"
 )
 
+// observationTimeout is the maximum age of the most recently received charger
+// observation before power and current readings are considered stale and zeroed.
+// The Easee charger sends a thermal heartbeat every ~15 minutes when idle, so
+// 20 minutes gives a comfortable margin above that while staying well below the
+// time a user would expect stale data to linger.
+const observationTimeout = 20 * time.Minute
+
 // Easee charger implementation
 type Easee struct {
 	*request.Helper
@@ -69,6 +76,7 @@ type Easee struct {
 	expectedOrphans map[easee.ObservationID]int
 	obsC            chan easee.Observation
 	obsTime         map[easee.ObservationID]time.Time
+	lastObsReceived time.Time
 	startDone       func()
 }
 
@@ -349,6 +357,12 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 	}
 
 	c.obsTime[res.ID] = res.Timestamp
+
+	// Update liveness timestamp for observations with a fresh charger-side timestamp.
+	// Stale cloud replay on restart has old timestamps and must not refresh this.
+	if time.Since(res.Timestamp) < observationTimeout {
+		c.lastObsReceived = time.Now()
+	}
 
 	switch res.ID {
 	case easee.USER_IDTOKEN:
@@ -749,6 +763,10 @@ func (c *Easee) CurrentPower() (float64, error) {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
 
+	if time.Since(c.lastObsReceived) > observationTimeout {
+		return 0, nil
+	}
+
 	return c.currentPower, nil
 }
 
@@ -767,6 +785,11 @@ var _ api.PhaseCurrents = (*Easee)(nil)
 func (c *Easee) Currents() (float64, float64, float64, error) {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
+
+	if time.Since(c.lastObsReceived) > observationTimeout {
+		return 0, 0, 0, nil
+	}
+
 	return c.currentL1, c.currentL2, c.currentL3, nil
 }
 
