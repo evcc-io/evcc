@@ -47,7 +47,8 @@ type EVSEMaster struct {
 	// It is learned from the first Login broadcast and used for all sends.
 	evseAddr *net.UDPAddr
 
-	recv chan *evsemaster.ReceivedPacket
+	recv  chan *evsemaster.ReceivedPacket
+	ready chan struct{} // closed once the first ACStatus is received
 }
 
 func init() {
@@ -68,10 +69,10 @@ func NewEVSEMasterFromConfig(ctx context.Context, other map[string]any) (api.Cha
 	return NewEVSEMaster(ctx, cc.Serial, cc.Password)
 }
 
-// NewEVSEMaster creates a new EVSEMaster charger. It returns immediately after
-// starting the background listener; the charger comes online once the EVSE sends
-// its first Login broadcast (typically within a few seconds). Until then,
-// Status() returns api.ErrTimeout.
+// NewEVSEMaster creates a new EVSEMaster charger. It waits up to 10 seconds for
+// the EVSE's first Login broadcast. If none arrives the charger is still returned
+// successfully and will come online automatically once the EVSE broadcasts.
+// A warning is logged so misconfiguration (wrong serial, wrong VLAN) is visible.
 func NewEVSEMaster(ctx context.Context, serial, password string) (*EVSEMaster, error) {
 	log := util.NewLogger("evsemaster")
 
@@ -89,11 +90,21 @@ func NewEVSEMaster(ctx context.Context, serial, password string) (*EVSEMaster, e
 		conn:    conn,
 		current: 6,
 		recv:    make(chan *evsemaster.ReceivedPacket, 32),
+		ready:   make(chan struct{}),
 	}
 
 	conn.Subscribe(wb.recv)
 
 	go wb.run(ctx)
+
+	select {
+	case <-wb.ready:
+	case <-ctx.Done():
+		conn.Unsubscribe()
+		return nil, ctx.Err()
+	case <-time.After(10 * time.Second):
+		log.WARN.Printf("no response from EVSE within 10s – check serial, password, and that charger is on the same network segment")
+	}
 
 	return wb, nil
 }
@@ -154,9 +165,13 @@ func (wb *EVSEMaster) run(ctx context.Context) {
 			case evsemaster.CmdACStatus:
 				if s, err := evsemaster.ParseACStatus(pkt.Payload); err == nil {
 					wb.mu.Lock()
+					firstStatus := wb.status == nil
 					wb.status = s
 					wb.updatedAt = time.Now()
 					wb.mu.Unlock()
+					if firstStatus {
+						close(wb.ready)
+					}
 				} else {
 					wb.log.WARN.Printf("ACStatus parse: %v", err)
 				}
@@ -196,7 +211,7 @@ func (wb *EVSEMaster) Status() (api.ChargeStatus, error) {
 	wb.mu.RLock()
 	defer wb.mu.RUnlock()
 
-	if wb.status == nil || time.Since(wb.updatedAt) > 30*time.Second {
+	if time.Since(wb.updatedAt) > 30*time.Second {
 		return api.StatusNone, api.ErrTimeout
 	}
 
@@ -215,7 +230,7 @@ func (wb *EVSEMaster) Enabled() (bool, error) {
 	wb.mu.RLock()
 	defer wb.mu.RUnlock()
 
-	if wb.status == nil || time.Since(wb.updatedAt) > 30*time.Second {
+	if time.Since(wb.updatedAt) > 30*time.Second {
 		return false, api.ErrTimeout
 	}
 	return wb.status.OutputState == 1, nil
@@ -268,17 +283,6 @@ func (wb *EVSEMaster) MaxCurrent(current int64) error {
 	wb.mu.Unlock()
 
 	return nil
-}
-
-var _ api.CurrentGetter = (*EVSEMaster)(nil)
-
-// GetMaxCurrent implements the api.CurrentGetter interface.
-// Returns the commanded current so evcc can verify consistency against its own set value
-// rather than the measured phase current (which lags behind commanded changes).
-func (wb *EVSEMaster) GetMaxCurrent() (float64, error) {
-	wb.mu.RLock()
-	defer wb.mu.RUnlock()
-	return float64(wb.current), nil
 }
 
 var _ api.Meter = (*EVSEMaster)(nil)
