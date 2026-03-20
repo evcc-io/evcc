@@ -10,8 +10,7 @@ import (
 
 type CurrentController struct {
 	*Loadpoint
-	charger api.Charger
-	ctrl    api.CurrentController
+	ctrl api.CurrentController
 }
 
 func newCurrentController(lp *Loadpoint, ctrl api.CurrentController) api.PowerController {
@@ -22,7 +21,8 @@ func newCurrentController(lp *Loadpoint, ctrl api.CurrentController) api.PowerCo
 }
 
 func (lp *CurrentController) MaxPower(power float64) error {
-	return api.ErrNotAvailable
+	current := powerToCurrent(power, lp.ActivePhases())
+	return lp.setLimit(current)
 }
 
 // roundedCurrent rounds current down to full amps if charger or vehicle require it
