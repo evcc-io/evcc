@@ -1,20 +1,81 @@
 template: goodwe-wifi
-# UDP implementation is broken
-# deprecated: true
+requirements:
+  evcc: ["skiptest"]
 products:
   - brand: GoodWe
     description:
-      generic: GoodWe over Wifi
-requirements:
-  evcc: ["skiptest"]
+      generic: WiFi meter (DT/DNS, ES/EM, ET/EH/BT/BH)
+
 params:
   - name: usage
-    choice: ["grid", "pv", "battery"]
+    choice: ["pv", "grid", "battery"]
+
   - name: uri
+    help:
+      en: IP address of the inverter (port 8899)
+      de: IP-Adresse des Wechselrichters (Port 8899)
+    example: 192.168.1.26
+
+  - name: family
     description:
-      en: IP address or hostname
-      de: IP-Adresse des Hostname
+      en: Inverter series
+      de: Wechselrichter-Serie
+    help:
+      en: "dt=DT/DNS, es=ES/EM hybrid, et=ET/EH/BT/BH hybrid"
+      de: "dt=DT/DNS, es=ES/EM Hybrid, et=ET/EH/BT/BH Hybrid"
+    choice: ["dt", "es", "et"]
+    default: dt
+
 render: |
-  type: goodwe-wifi
-  usage: {{ .usage }}
-  uri: {{ .uri }}
+  type: custom
+  power:
+    source: aa55udp
+    uri: {{ .uri }}
+  {{- if eq .family "dt" }}
+    register: 30127
+    count: 2
+    decode: int32be
+  {{- else if eq .family "es" }}
+    register: {{ if eq .usage "pv" }}29958{{ else if eq .usage "grid" }}29964{{ else }}29970{{ end }}
+    count: 2
+    decode: int32be
+  {{- else if eq .family "et" }}
+    register: {{ if eq .usage "pv" }}35137{{ else if eq .usage "grid" }}35139{{ else }}35182{{ end }}
+    count: 2
+    decode: int32be
+  {{- end }}
+
+  {{- if eq .family "dt" }}
+  energy:
+    source: aa55udp
+    uri: {{ .uri }}
+    register: 30145
+    count: 2
+    decode: uint32be
+    scale: 0.1
+  {{- end }}
+
+  {{- if eq .family "et" }}
+  energy:
+    source: aa55udp
+    uri: {{ .uri }}
+    register: 35191
+    count: 2
+    decode: uint32be
+    scale: 0.1
+  soc:
+    source: aa55udp
+    uri: {{ .uri }}
+    register: 37007
+    count: 1
+    decode: uint16be
+  {{- end }}
+
+  {{- if eq .family "es" }}
+  soc:
+    source: aa55udp
+    uri: {{ .uri }}
+    register: 29966
+    count: 1
+    decode: uint16be
+  {{- end }}
