@@ -47,8 +47,9 @@ type EVSEMaster struct {
 	// It is learned from the first Login broadcast and used for all sends.
 	evseAddr *net.UDPAddr
 
-	recv  chan *evsemaster.ReceivedPacket
-	ready chan struct{} // closed once the first ACStatus is received
+	recv      chan *evsemaster.ReceivedPacket
+	ready     chan struct{} // closed once the first ACStatus is received
+	readyOnce sync.Once
 }
 
 func init() {
@@ -165,13 +166,10 @@ func (wb *EVSEMaster) run(ctx context.Context) {
 			case evsemaster.CmdACStatus:
 				if s, err := evsemaster.ParseACStatus(pkt.Payload); err == nil {
 					wb.mu.Lock()
-					firstStatus := wb.status == nil
 					wb.status = s
 					wb.updatedAt = time.Now()
 					wb.mu.Unlock()
-					if firstStatus {
-						close(wb.ready)
-					}
+					wb.readyOnce.Do(func() { close(wb.ready) })
 				} else {
 					wb.log.WARN.Printf("ACStatus parse: %v", err)
 				}
