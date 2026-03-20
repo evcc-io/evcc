@@ -131,11 +131,20 @@ func (p *AA55UDP) query() (float64, error) {
 	return v * p.scale, nil
 }
 
+// aa55InverterAddr is the target address byte used in all AA55 request PDUs.
+// The GoodWe WiFi module always uses 0x7F as the inverter target address,
+// regardless of inverter family. The family only affects the source byte in
+// responses (0x7F for DT/DNS, 0xF7 for ET/EH/BT/BH).
+const aa55InverterAddr = 0x7F
+
+// aa55ReadFunc is the Modbus function code for READ HOLDING REGISTERS.
+const aa55ReadFunc = 0x03
+
 // buildPDU constructs the 6-byte Modbus PDU body for a READ HOLDING REGISTERS
-// request: function code 0x03, register address, register count.
+// request targeting the GoodWe WiFi module.
 func buildPDU(register, count uint16) []byte {
 	return []byte{
-		0x7f, 0x03,
+		aa55InverterAddr, aa55ReadFunc,
 		byte(register >> 8), byte(register),
 		byte(count >> 8), byte(count),
 	}
