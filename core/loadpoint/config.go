@@ -36,7 +36,7 @@ type DynamicConfig struct {
 
 	Thresholds ThresholdsConfig `json:"thresholds"`
 	Soc        SocConfig        `json:"soc"`
-	Geofence   GeofenceConfig   `json:"geofence"`
+	Geofence   GeofenceConfig   `json:"geofence,omitempty"`
 }
 
 func SplitConfig(payload map[string]any) (DynamicConfig, map[string]any, error) {
@@ -69,7 +69,6 @@ func (payload DynamicConfig) Apply(lp API) error {
 	lp.SetBatteryBoostLimit(payload.BatteryBoostLimit)
 	lp.SetLimitEnergy(payload.LimitEnergy)
 	lp.SetLimitSoc(payload.LimitSoc)
-	lp.SetGeofenceConfig(payload.Geofence)
 
 	// TODO mode warning
 	lp.SetSocConfig(payload.Soc)
@@ -77,6 +76,10 @@ func (payload DynamicConfig) Apply(lp API) error {
 	mode, err := api.ChargeModeString(payload.DefaultMode)
 	if err == nil {
 		lp.SetDefaultMode(mode)
+	}
+
+	if err == nil {
+		err = lp.SetGeofenceConfig(payload.Geofence)
 	}
 
 	if err == nil {

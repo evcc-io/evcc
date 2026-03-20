@@ -474,18 +474,19 @@ func (lp *Loadpoint) setGeofenceConfig(geofence loadpoint.GeofenceConfig) {
 }
 
 // SetGeofenceConfig sets the geofence settings
-func (lp *Loadpoint) SetGeofenceConfig(geofence loadpoint.GeofenceConfig) {
+func (lp *Loadpoint) SetGeofenceConfig(geofence loadpoint.GeofenceConfig) error {
 	lp.Lock()
 	defer lp.Unlock()
 
 	if err := validateGeofenceConfig(geofence); err != nil {
-		lp.log.ERROR.Println(err)
-		return
+		return err
 	}
 
 	lp.log.DEBUG.Printf("set geofence config: %+v", geofence)
 
 	lp.setGeofenceConfig(geofence)
+
+	return nil
 }
 
 // GetThresholds returns the PV mode threshold settings

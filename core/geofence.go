@@ -54,8 +54,8 @@ func (lp *Loadpoint) isVehicleAtHome(vehicle api.Vehicle) bool {
 // validate geofence settings
 func validateGeofenceConfig(geofence loadpoint.GeofenceConfig) error {
 	if geofence.Enabled {
-		if (geofence.Lat == 0 && geofence.Lon == 0) ||
-			geofence.Radius <= 0 ||
+		if (geofence.Lat == 0 && geofence.Lon == 0) || // enable geofencing without setting coordinates
+			geofence.Radius < 1 ||
 			math.Abs(geofence.Lat) > 90 ||
 			math.Abs(geofence.Lon) > 180 {
 			return fmt.Errorf("invalid geofence settings: %+v", geofence)

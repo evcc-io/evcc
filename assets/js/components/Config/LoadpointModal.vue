@@ -574,6 +574,8 @@
 											id="loadpointGeofenceLat"
 											v-model="values.geofence.lat"
 											type="Float"
+											min="-90"
+											max="90"
 											size="w-25 w-min-200"
 											required
 										/>
@@ -588,6 +590,8 @@
 											id="loadpointGeofenceLon"
 											v-model="values.geofence.lon"
 											type="Float"
+											min="-180"
+											max="180"
 											size="w-25 w-min-200"
 											required
 										/>
@@ -602,6 +606,7 @@
 											id="loadpointGeofenceRadius"
 											v-model="values.geofence.radius"
 											type="Float"
+											min="1"
 											unit="m"
 											size="w-25 w-min-200"
 											required

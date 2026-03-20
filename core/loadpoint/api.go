@@ -149,7 +149,7 @@ type API interface {
 	// GetGeofenceConfig returns the geofence settings
 	GetGeofenceConfig() GeofenceConfig
 	// SetGeofenceConfig sets the geofence settings
-	SetGeofenceConfig(geofence GeofenceConfig)
+	SetGeofenceConfig(geofence GeofenceConfig) error
 
 	// GetEnableThreshold gets the loadpoint enable threshold
 	GetEnableThreshold() float64
