@@ -86,6 +86,9 @@ func (m *Telegram) modeHandler(ctx context.Context, b *bot.Bot, update *models.U
 		ParseMode: models.ParseModeMarkdown,
 	}
 
+	// TODO remove
+	params.Text = "/mode: " + update.Message.Text
+
 	if m.lp != nil {
 		params.Text = "set mode"
 		m.log.INFO.Printf("recv: %s", update.Message.Text)
