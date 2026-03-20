@@ -18,51 +18,55 @@
 		</div>
 		<div v-else>
 			<table class="about-table">
-				<tr>
-					<th>{{ $t("footer.version.labelVersion") }}</th>
-					<td v-if="development">---</td>
-					<td v-else>
-						<div class="d-flex flex-wrap column-gap-2 align-items-baseline">
-							<span class="text-nowrap">
-								<a
-									:href="releaseNotesUrl(installed)"
-									target="_blank"
-									rel="noopener noreferrer"
-								>
-									v{{ installed }}
-								</a>
-								<template v-if="nightly">
-									(<a
-										:href="githubCommitUrl"
+				<tbody>
+					<tr>
+						<th>{{ $t("footer.version.labelVersion") }}</th>
+						<td v-if="development">---</td>
+						<td v-else>
+							<div class="d-flex flex-wrap column-gap-2 align-items-baseline">
+								<span class="text-nowrap">
+									<a
+										:href="releaseNotesUrl(installed)"
 										target="_blank"
 										rel="noopener noreferrer"
-										><span class="font-monospace">{{ shortCommit }}</span></a
-									>)
-								</template>
-							</span>
-							<span
-								v-if="!nightly && !newVersionAvailable"
-								class="text-muted text-nowrap"
-								>{{ $t("footer.version.latestVersion") }}</span
-							>
-							<span v-if="newVersionAvailable" class="text-nowrap">{{
-								$t("footer.version.availableLong")
-							}}</span>
-						</div>
-					</td>
-				</tr>
-				<tr>
-					<th>{{ $t("footer.version.labelRelease") }}</th>
-					<td>{{ releaseName }}</td>
-				</tr>
-				<tr>
-					<th>{{ $t("footer.version.labelWebsite") }}</th>
-					<td>
-						<a :href="websiteUrl" target="_blank" rel="noopener noreferrer">
-							{{ websiteDomain }}
-						</a>
-					</td>
-				</tr>
+									>
+										v{{ installed }}
+									</a>
+									<template v-if="nightly">
+										(<a
+											:href="githubCommitUrl"
+											target="_blank"
+											rel="noopener noreferrer"
+											><span class="font-monospace">{{
+												shortCommit
+											}}</span></a
+										>)
+									</template>
+								</span>
+								<span
+									v-if="!nightly && !newVersionAvailable"
+									class="text-muted text-nowrap"
+									>{{ $t("footer.version.latestVersion") }}</span
+								>
+								<span v-if="newVersionAvailable" class="text-nowrap">{{
+									$t("footer.version.availableLong")
+								}}</span>
+							</div>
+						</td>
+					</tr>
+					<tr>
+						<th>{{ $t("footer.version.labelRelease") }}</th>
+						<td>{{ releaseName }}</td>
+					</tr>
+					<tr>
+						<th>{{ $t("footer.version.labelWebsite") }}</th>
+						<td>
+							<a :href="websiteUrl" target="_blank" rel="noopener noreferrer">
+								{{ websiteDomain }}
+							</a>
+						</td>
+					</tr>
+				</tbody>
 			</table>
 
 			<!-- changelog -->
