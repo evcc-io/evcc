@@ -55,8 +55,6 @@ func NewEcoFlowStreamFromConfig(ctx context.Context, other map[string]any) (api.
 	}
 	var baseUrl string
 	switch cc.Region {
-	case "":
-		return nil, errors.New("missing region")
 	case "auto":
 		baseUrl = "https://api.ecoflow.com"
 	case "europe":

@@ -56,8 +56,6 @@ func NewEcoFlowPowerOceanFromConfig(ctx context.Context, other map[string]any) (
 	}
 	var baseUrl string
 	switch cc.Region {
-	case "":
-		return nil, errors.New("missing region")
 	case "auto":
 		baseUrl = "https://api.ecoflow.com"
 	case "europe":
@@ -148,7 +146,7 @@ func ecoflowValue(data map[string]any, key string) (float64, error) {
 			return cast.ToFloat64E(v)
 		}
 	}
-	return 0, fmt.Errorf("data not available for key: %s", key)
+	return 0, api.ErrNotAvailable
 }
 
 // EcoFlowPowerOceanBattery represents the EcoFlow PowerOcean battery decorator
