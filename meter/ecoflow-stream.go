@@ -95,7 +95,7 @@ func NewEcoFlowStream(ctx context.Context, accessKey, secretKey, serial, usage, 
 
 // getData retrieves device parameters from EcoFlow API
 func (m *EcoFlowStream) getData() (*ecoflow.GetCmdResponse, error) {
-	timedCtx, cancel := context.WithTimeout(m.ctx, 30*time.Second)
+	ctx, cancel := context.WithTimeout(m.ctx, 30*time.Second)
 	defer cancel()
 
 	var params []string
@@ -108,7 +108,7 @@ func (m *EcoFlowStream) getData() (*ecoflow.GetCmdResponse, error) {
 		params = []string{"powGetBpCms", "cmsBattSoc"}
 	}
 
-	return m.client.GetDeviceParameters(timedCtx, m.serial, params)
+	return m.client.GetDeviceParameters(ctx, m.serial, params)
 }
 
 var _ api.Meter = (*EcoFlowStream)(nil)

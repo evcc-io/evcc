@@ -68,7 +68,7 @@ func NewEcoFlowPowerOceanFromConfig(ctx context.Context, other map[string]any) (
 		return nil, fmt.Errorf("invalid region: %s", cc.Region)
 	}
 
-	m, err := NewEcoFlowStream(ctx, cc.AccessKey, cc.SecretKey, cc.Serial, cc.Usage, baseUrl, cc.Cache)
+	m, err := NewEcoFlowPowerOcean(ctx, cc.AccessKey, cc.SecretKey, cc.Serial, cc.Usage, baseUrl, cc.Cache)
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +96,7 @@ func NewEcoFlowPowerOcean(ctx context.Context, accessKey, secretKey, serial, usa
 
 // getData retrieves device parameters from EcoFlow API
 func (m *EcoFlowPowerOcean) getData() (*ecoflow.GetCmdResponse, error) {
-	timedCtx, cancel := context.WithTimeout(m.ctx, 30*time.Second)
+	ctx, cancel := context.WithTimeout(m.ctx, 30*time.Second)
 	defer cancel()
 
 	var params []string
@@ -109,7 +109,7 @@ func (m *EcoFlowPowerOcean) getData() (*ecoflow.GetCmdResponse, error) {
 		params = []string{"bpPwr", "bpSoc"}
 	}
 
-	return m.client.GetDeviceParameters(timedCtx, m.serial, params)
+	return m.client.GetDeviceParameters(ctx, m.serial, params)
 }
 
 var _ api.Meter = (*EcoFlowPowerOcean)(nil)
