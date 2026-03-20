@@ -55,7 +55,7 @@ params:
     choice: ["auto", "europe", "america"]
     default: auto
     description:
-      generic: 'API Region: auto (default), europe, or america.'
+      generic: "API Region: auto (default), europe, or america."
     help:
       en: 'If you sometimes see an error "8513: accessKey is invalid", which for example Starlink users do, you can set API region explicitly. Passible values: auto (default), europe, or america.'
       de: 'Manche Nutzer, z.B. mit Starlink-Internet, sehen in den Logs den "Fehler 8513: accessKey is invalid". Um das zu beheben, kann man die API Region manuell setzen. Mögliche Werte: auto (Standard), europe oder america.'
