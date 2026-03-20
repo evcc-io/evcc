@@ -1050,6 +1050,7 @@ func configureTariffs(conf *globalconfig.Tariffs, names ...string) (*tariff.Tari
 	eg.Go(func() error { return configureTariff(conf.Co2, refs.Co2, &tariffs.Co2) })
 	eg.Go(func() error { return configureTariff(conf.Planner, refs.Planner, &tariffs.Planner) })
 	eg.Go(func() error { return configureSolarTariffs(conf.Solar, refs.Solar, &tariffs.Solar) })
+	eg.Go(func() error { return configureTariff(conf.Temperature, refs.Temperature, &tariffs.Temperature) })
 	if err := eg.Wait(); err != nil {
 		return &tariffs, &ClassError{ClassTariff, err}
 	}
