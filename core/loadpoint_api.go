@@ -3,7 +3,6 @@ package core
 import (
 	"errors"
 	"fmt"
-	"math"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -479,11 +478,9 @@ func (lp *Loadpoint) SetGeofenceConfig(geofence loadpoint.GeofenceConfig) {
 	lp.Lock()
 	defer lp.Unlock()
 
-	if geofence.Enabled {
-		if (geofence.Lat == 0 && geofence.Lon == 0) || geofence.Radius < 0 || math.Abs(geofence.Lat) > 90 || math.Abs(geofence.Lon) > 180 {
-			lp.log.ERROR.Printf("invalid geofence settings: %+v", geofence)
-			return
-		}
+	if err := validateGeofenceConfig(geofence); err != nil {
+		lp.log.ERROR.Println(err)
+		return
 	}
 
 	lp.log.DEBUG.Printf("set geofence config: %+v", geofence)

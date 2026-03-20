@@ -2,7 +2,6 @@ package core
 
 import (
 	"errors"
-	"math"
 	"regexp"
 	"strings"
 	"time"
@@ -300,76 +299,6 @@ func (lp *Loadpoint) identifyVehicleByStatus() {
 	if _, ok := lp.GetVehicle().(api.ChargeState); ok {
 		lp.setActiveVehicle(nil)
 	}
-}
-
-// isVehicleAtHome checks whether vehicle is at home (geofencing)
-// false: if vehicle position is available and outside the defined radius
-// true: in all other cases, even in cases of error or if position is is not available
-func (lp *Loadpoint) isVehicleAtHome(vehicle api.Vehicle) bool {
-	geofence := lp.Geofence // lock values
-
-	if !geofence.Enabled || vehicle == nil {
-		return true
-	}
-
-	// loadpoint location
-	lat1 := geofence.Lat
-	lon1 := geofence.Lon
-
-	if (lat1 == 0 && lon1 == 0) || geofence.Radius < 0 || math.Abs(lat1) > 90 || math.Abs(lon1) > 180 {
-		lp.log.ERROR.Printf("invalid geofence settings: %+v", geofence)
-		return true
-	}
-
-	vs, ok := vehicle.(api.VehiclePosition)
-	if !ok {
-		lp.log.DEBUG.Println("vehicle does not support position tracking")
-		return true
-	}
-
-	// vehicle position
-	lat2, lon2, err := vs.Position()
-	if err != nil {
-		lp.log.INFO.Printf("vehicle position: %v", err)
-		return true
-	}
-
-	if lat2 == 0 && lon2 == 0 {
-		lp.log.INFO.Println("vehicle position: not available")
-		return true
-	}
-
-	lp.log.DEBUG.Printf("vehicle position: lat %.4f, lon %.4f", lat2, lon2)
-
-	d := distance(lat1, lon1, lat2, lon2) * 1e3
-	atHome := d <= geofence.Radius
-
-	text := ">"
-	if atHome {
-		text = "<="
-	}
-
-	lp.log.DEBUG.Printf("vehicle distance from loadpoint: %.1fm %s %vm", d, text, geofence.Radius)
-
-	return atHome
-}
-
-// calculate the distance between two points on a globe
-func distance(lat1, lon1, lat2, lon2 float64) float64 {
-	const earthRadius = 6371 // km
-
-	// Differences in radiant
-	dLat := (lat2 - lat1) * math.Pi / 180.0
-	dLon := (lon2 - lon1) * math.Pi / 180.0
-
-	lat1 = lat1 * math.Pi / 180.0
-	lat2 = lat2 * math.Pi / 180.0
-
-	// Haversine formula
-	a := math.Sin(dLat/2)*math.Sin(dLat/2) + math.Sin(dLon/2)*math.Sin(dLon/2)*math.Cos(lat1)*math.Cos(lat2)
-	c := 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1-a))
-
-	return c * earthRadius
 }
 
 // vehicleOdometer updates odometer
