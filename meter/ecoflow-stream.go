@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	ecoflow_util "github.com/evcc-io/evcc/meter/ecoflow"
 	"github.com/evcc-io/evcc/util"
 	"github.com/tess1o/go-ecoflow"
 )
@@ -127,11 +126,11 @@ func (m *EcoFlowStream) CurrentPower() (float64, error) {
 	// cmsBattSoc responds with int
 	switch m.usage {
 	case "grid":
-		return ecoflow_util.ExtractFloat(res.Data, "powGetSysGrid")
+		return ecoflowValue(res.Data, "powGetSysGrid")
 	case "pv":
-		return ecoflow_util.ExtractFloat(res.Data, "powGetPvSum")
+		return ecoflowValue(res.Data, "powGetPvSum")
 	case "battery":
-		pwr, err := ecoflow_util.ExtractFloat(res.Data, "powGetBpCms")
+		pwr, err := ecoflowValue(res.Data, "powGetBpCms")
 		if err != nil {
 			return 0, err
 		}
@@ -153,5 +152,5 @@ func (m *EcoFlowStreamBattery) Soc() (float64, error) {
 		return 0, err
 	}
 
-	return ecoflow_util.ExtractFloat(res.Data, "cmsBattSoc")
+	return ecoflowValue(res.Data, "cmsBattSoc")
 }
