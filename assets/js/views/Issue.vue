@@ -503,10 +503,8 @@ export default defineComponent({
 					"config/site",
 					...deviceEndpoints,
 					"config/circuits",
-					"config/eebus",
 					"config/hems",
 					"config/messaging",
-					"config/messagingEvents",
 					"config/tariffs",
 					"config/tariff",
 				];
