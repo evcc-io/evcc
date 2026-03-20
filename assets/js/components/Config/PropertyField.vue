@@ -356,11 +356,6 @@ export default {
 			},
 		},
 	},
-	mounted() {
-		if (this.choice.length > 0) {
-			this.$emit("update:modelValue", this.value);
-		}
-	},
 	methods: {
 		coerceValue(val) {
 			if (this.inputType === "number") {

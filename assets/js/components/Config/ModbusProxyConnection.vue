@@ -8,9 +8,9 @@
 		:port="getPort(localConnection.settings.uri)"
 		:capabilities="['rs485', 'tcpip']"
 		hide-modbus-id
-		:default-baudrate="1200"
-		:default-comset="'8N1'"
-		:default-port="502"
+		:default-baudrate="DEFAULT_BAUDRATE"
+		:default-comset="DEFAULT_COMSET"
+		:default-port="DEFAULT_PORT"
 		:modbus="initialModbusType"
 		@update:host="(host) => updateHost(host)"
 		@update:port="(port) => updatePort(port)"
@@ -21,8 +21,18 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import Modbus from "./DeviceModal/Modbus.vue";
-import { MODBUS_TYPE, type ModbusProxy, type ModbusProxySettings } from "@/types/evcc";
+import {
+	MODBUS_BAUDRATE,
+	MODBUS_COMSET,
+	MODBUS_TYPE,
+	type ModbusProxy,
+	type ModbusProxySettings,
+} from "@/types/evcc";
 import deepClone from "@/utils/deepClone";
+
+export const DEFAULT_BAUDRATE = MODBUS_BAUDRATE._9600;
+export const DEFAULT_COMSET = MODBUS_COMSET._8N1;
+export const DEFAULT_PORT = 502;
 
 function getModbusType(s: ModbusProxySettings) {
 	if (s.device) {
@@ -47,6 +57,9 @@ export default defineComponent({
 	emits: ["update:connection"],
 	data() {
 		return {
+			DEFAULT_BAUDRATE,
+			DEFAULT_COMSET,
+			DEFAULT_PORT,
 			localConnection: deepClone(this.connection),
 			initialModbusType: getModbusType(this.connection.settings),
 		};
@@ -92,6 +105,12 @@ export default defineComponent({
 				case MODBUS_TYPE.RS485_SERIAL:
 					this.localConnection.settings.uri = undefined;
 					this.localConnection.settings.rtu = undefined;
+					if (!this.localConnection.settings.baudrate) {
+						this.localConnection.settings.baudrate = DEFAULT_BAUDRATE;
+					}
+					if (!this.localConnection.settings.comset) {
+						this.localConnection.settings.comset = DEFAULT_COMSET;
+					}
 					break;
 				case MODBUS_TYPE.RS485_TCPIP:
 				case MODBUS_TYPE.TCPIP:

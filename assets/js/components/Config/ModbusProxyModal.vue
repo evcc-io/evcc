@@ -138,7 +138,11 @@ import "@h2d2/shopicons/es/regular/trash";
 import JsonModal from "./JsonModal.vue";
 import { MODBUS_PROXY_READONLY, type ModbusProxy } from "@/types/evcc";
 import ASCII_DIAGRAM from "./modbus-diagram.txt?raw";
-import ModbusProxyConnection from "./ModbusProxyConnection.vue";
+import ModbusProxyConnection, {
+	DEFAULT_BAUDRATE,
+	DEFAULT_COMSET,
+	DEFAULT_PORT,
+} from "./ModbusProxyConnection.vue";
 import PropertyField from "./PropertyField.vue";
 import FormRow from "./FormRow.vue";
 import SponsorTokenRequired from "./DeviceModal/SponsorTokenRequired.vue";
@@ -185,7 +189,9 @@ export default defineComponent({
 				port: highestPort + 1,
 				readonly: MODBUS_PROXY_READONLY.FALSE,
 				settings: {
-					uri: ":502",
+					uri: `:${DEFAULT_PORT}`,
+					baudrate: DEFAULT_BAUDRATE,
+					comset: DEFAULT_COMSET,
 				},
 			});
 		},
