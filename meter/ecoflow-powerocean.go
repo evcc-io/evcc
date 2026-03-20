@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	ecoflow_util "github.com/evcc-io/evcc/meter/ecoflow"
 	"github.com/evcc-io/evcc/util"
-	"github.com/spf13/cast"
 	"github.com/tess1o/go-ecoflow"
 )
 
@@ -127,11 +127,11 @@ func (m *EcoFlowPowerOcean) CurrentPower() (float64, error) {
 	// bpSoc responds with int
 	switch m.usage {
 	case "grid":
-		return extractFloat(response.Data, "sysGridPwr")
+		return ecoflow_util.ExtractFloat(response.Data, "sysGridPwr")
 	case "pv":
-		return extractFloat(response.Data, "mpptPwr")
+		return ecoflow_util.ExtractFloat(response.Data, "mpptPwr")
 	case "battery":
-		pwr, err := extractFloat(response.Data, "bpPwr")
+		pwr, err := ecoflow_util.ExtractFloat(response.Data, "bpPwr")
 		if err != nil {
 			return 0, err
 		}
@@ -139,16 +139,6 @@ func (m *EcoFlowPowerOcean) CurrentPower() (float64, error) {
 	default:
 		return 0, fmt.Errorf("invalid usage: %s", m.usage)
 	}
-}
-
-// extractFloat extracts a float64 or int value from a map by key.
-func extractFloat(data map[string]any, key string) (float64, error) {
-	if data != nil {
-		if v, ok := data[key]; ok {
-			return cast.ToFloat64E(v)
-		}
-	}
-	return 0, fmt.Errorf("data not available for key: %s", key)
 }
 
 // EcoFlowPowerOceanBattery represents the EcoFlow PowerOcean battery decorator
@@ -163,5 +153,5 @@ func (m *EcoFlowPowerOceanBattery) Soc() (float64, error) {
 		return 0, err
 	}
 
-	return extractFloat(response.Data, "bpSoc")
+	return ecoflow_util.ExtractFloat(response.Data, "bpSoc")
 }
