@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 	"github.com/go-telegram/bot"
 	"github.com/go-telegram/bot/models"
@@ -21,6 +22,7 @@ type Telegram struct {
 	log *util.Logger
 	sync.Mutex
 	bot   *bot.Bot
+	lp    loadpoint.API
 	chats map[int64]struct{}
 }
 
@@ -42,7 +44,7 @@ func NewTelegramFromConfig(ctx context.Context, other map[string]any) (api.Messe
 		chats: make(map[int64]struct{}),
 	}
 
-	bot, err := bot.New(cc.Token, bot.WithDefaultHandler(m.handler), bot.WithErrorsHandler(func(err error) {
+	b, err := bot.New(cc.Token, bot.WithDefaultHandler(m.handler), bot.WithErrorsHandler(func(err error) {
 		log.ERROR.Println(err)
 	}), bot.WithDebugHandler(func(format string, args ...any) {
 		log.TRACE.Printf(format, args...)
@@ -51,9 +53,9 @@ func NewTelegramFromConfig(ctx context.Context, other map[string]any) (api.Messe
 		return nil, errors.New("invalid bot token")
 	}
 
-	m.bot = bot
+	b.RegisterHandler(bot.HandlerTypeMessageText, "/mode", bot.MatchTypeCommandStartOnly, m.modeHandler)
 
-	go bot.Start(ctx)
+	go b.Start(ctx)
 
 	for _, chat := range cc.Chats {
 		log.Redact(strconv.FormatInt(chat, 10))
@@ -77,6 +79,23 @@ func (m *Telegram) handler(ctx context.Context, b *bot.Bot, update *models.Updat
 	}
 }
 
+func (m *Telegram) modeHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
+	params := &bot.SendMessageParams{
+		ChatID:    update.Message.Chat.ID,
+		Text:      "not available",
+		ParseMode: models.ParseModeMarkdown,
+	}
+
+	if m.lp != nil {
+		params.Text = "set mode"
+		m.log.INFO.Printf("recv: %s", update.Message.Text)
+	}
+
+	if _, err := b.SendMessage(ctx, params); err != nil {
+		m.log.ERROR.Printf("send: %v", err)
+	}
+}
+
 // Send sends to all receivers
 func (m *Telegram) Send(title, msg string) {
 	m.Lock()
@@ -92,4 +111,11 @@ func (m *Telegram) Send(title, msg string) {
 			m.log.ERROR.Println("send:", err)
 		}
 	}
+}
+
+var _ loadpoint.Controller = (*Telegram)(nil)
+
+// LoadpointControl implements loadpoint.Controller
+func (m *Telegram) LoadpointControl(lp loadpoint.API) {
+	m.lp = lp
 }
