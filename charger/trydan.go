@@ -152,6 +152,8 @@ func (c Trydan) Enable(enable bool) error {
 				return err
 			}
 		}
+	} else {
+		return err
 	}
 	c.enabled = enable
 
