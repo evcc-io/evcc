@@ -13,7 +13,7 @@ render: |
   {{- if eq .usage "grid" }}
   power:
     source: modbus
-    {{- include "modbus" . | indent 4 }}
+    {{- include "modbus" . | indent 2 }}
     register:
       # MeterPower (30108)
       address: 108
@@ -21,7 +21,7 @@ render: |
       decode: int32s
   energy:
     source: modbus
-    {{- include "modbus" . | indent 4 }}
+    {{- include "modbus" . | indent 2 }}
     register:
       # Import energy from meter (30156)
       address: 156
@@ -31,7 +31,7 @@ render: |
   {{- if eq .usage "pv" }}
   power:
     source: modbus
-    {{- include "modbus" . | indent 4 }}
+    {{- include "modbus" . | indent 2 }}
     register:
       # PV Power (30127)
       address: 127
@@ -39,7 +39,7 @@ render: |
       decode: int32s
   energy:
     source: modbus
-    {{- include "modbus" . | indent 4 }}
+    {{- include "modbus" . | indent 2 }}
     register:
       # PV kWH (30129)
       address: 129
@@ -49,7 +49,7 @@ render: |
   {{- if eq .usage "battery" }}
   power:
     source: modbus
-    {{- include "modbus" . | indent 4 }}
+    {{- include "modbus" . | indent 2 }}
     register:
       # Battery charge/discharge power (30162)
       address: 162
@@ -57,7 +57,7 @@ render: |
       decode: int32s
   energy:
     source: modbus
-    {{- include "modbus" . | indent 4 }}
+    {{- include "modbus" . | indent 2 }}
     register:
       # BatteryDischargeEnergy (30176)
       address: 176
@@ -65,7 +65,7 @@ render: |
       decode: float32
   soc:
     source: modbus
-    {{- include "modbus" . | indent 4 }}
+    {{- include "modbus" . | indent 2 }}
     register:
       # SOC (30182)
       address: 182
