@@ -13,5 +13,5 @@ func ExtractFloat(data map[string]any, key string) (float64, error) {
 			return cast.ToFloat64E(v)
 		}
 	}
-	return 0, fmt.Errorf("data not available for key: %s", key)
+	return 0, api.ErrNotAvailable
 }
