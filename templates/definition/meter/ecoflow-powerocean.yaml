@@ -38,12 +38,15 @@ params:
       de: Secret Key aus der EcoFlow Developer Console
   - name: deviceid
     deprecated: true
+    description:
+      generic: Device ID
+    help:
+      en: Device ID of your EcoFlow PowerOcean system (e.g., HJ31ZD1AZH5G0342)
+      de: Geräte-ID Ihres EcoFlow PowerOcean Systems (z.B. HJ31ZD1AZH5G0342)
   - name: serial
     required: true
-    description:
-      generic: Serial Number
     help:
-      en: Serial number of your EcoFlow PowerOcean system (e.g., HJ31ZD1AZH5G0342)
+      en: Serial of your EcoFlow PowerOcean system (e.g., HJ31ZD1AZH5G0342)
       de: Seriennummer Ihres EcoFlow PowerOcean Systems (z.B. HJ31ZD1AZH5G0342)
   - name: cache
     default: 30s
@@ -60,7 +63,11 @@ render: |
   type: ecoflow-powerocean
   accesskey: {{ .accesskey }}
   secretkey: {{ .secretkey }}
+  {{- if .serial }}
   serial: {{ .serial }}
+  {{- else }}
+  serial: {{ .deviceid }}
+  {{- end }}
   usage: {{ .usage }}
   cache: {{ .cache }}
   region: {{ .region }}

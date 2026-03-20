@@ -49,7 +49,7 @@ func NewEcoFlowPowerOceanFromConfig(ctx context.Context, other map[string]any) (
 		return nil, errors.New("missing secret key")
 	}
 	if cc.Serial == "" {
-		return nil, errors.New("missing serial number")
+		return nil, errors.New("missing serial")
 	}
 	if cc.Usage == "" {
 		return nil, errors.New("missing usage")
