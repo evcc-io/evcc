@@ -18,11 +18,6 @@ func (lp *Loadpoint) isVehicleAtHome(vehicle api.Vehicle) bool {
 		return true
 	}
 
-	if err := validateGeofenceConfig(geofence); err != nil {
-		lp.log.ERROR.Println(err)
-		return true
-	}
-
 	vs, ok := vehicle.(api.VehiclePosition)
 	if !ok {
 		lp.log.DEBUG.Println("vehicle does not support position tracking")
@@ -36,7 +31,7 @@ func (lp *Loadpoint) isVehicleAtHome(vehicle api.Vehicle) bool {
 	}
 
 	// {lat: 0, lon: 0} is a point in the atlantic ocean, not accessible by car
-	// these values indicate that the vehicle is not sending any valid position data
+	// zero values indicate that the vehicle is not sending any valid position data
 	if lat == 0 && lon == 0 {
 		lp.log.INFO.Println("vehicle position: not available")
 		return true
@@ -60,7 +55,7 @@ func (lp *Loadpoint) isVehicleAtHome(vehicle api.Vehicle) bool {
 func validateGeofenceConfig(geofence loadpoint.GeofenceConfig) error {
 	if geofence.Enabled {
 		if (geofence.Lat == 0 && geofence.Lon == 0) ||
-			geofence.Radius < 0 ||
+			geofence.Radius <= 0 ||
 			math.Abs(geofence.Lat) > 90 ||
 			math.Abs(geofence.Lon) > 180 {
 			return fmt.Errorf("invalid geofence settings: %+v", geofence)

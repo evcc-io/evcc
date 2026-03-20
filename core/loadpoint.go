@@ -376,7 +376,8 @@ func (lp *Loadpoint) restoreSettings() {
 	}
 
 	var geofenceConfig loadpoint.GeofenceConfig
-	if err := lp.settings.Json(keys.Geofence, &geofenceConfig); err == nil {
+	if err := lp.settings.Json(keys.Geofence, &geofenceConfig); err == nil &&
+		validateGeofenceConfig(geofenceConfig) == nil {
 		lp.setGeofenceConfig(geofenceConfig)
 	}
 
