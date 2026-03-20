@@ -1,0 +1,35 @@
+template: v2c-trydan
+products:
+  - brand: V2C
+    description:
+      generic: Trydan
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+    required: true
+  - name: host
+  - name: port
+    default: 80
+    advanced: true
+  - name: cache
+    default: 10s
+    advanced: true
+  - name: timeout
+    default: 30s
+    advanced: true
+render: |
+  type: custom
+  power:
+    source: http
+    uri: http://{{ .host }}:{{ .port }}/RealTimeData
+    cache: {{ .cache }}
+    timeout: {{ .timeout }}
+  {{- if eq .usage "pv" }}
+    jq: .FVPower
+  {{- end }}
+  {{- if eq .usage "grid" }}
+    jq: .HousePower - .FVPower
+  {{- end }}
+  {{- if eq .usage "battery" }}
+    jq: .BatteryPower
+  {{- end }}
