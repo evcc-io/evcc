@@ -108,6 +108,10 @@ type Loadpoint struct {
 	MinCurrent_    float64       `mapstructure:"minCurrent"`    // ignored, present for compatibility
 	MaxCurrent_    float64       `mapstructure:"maxCurrent"`    // ignored, present for compatibility
 
+	// power controller configuration
+	MinPower float64
+	MaxPower float64
+
 	title                    string   // UI title
 	priority                 int      // Priority
 	minCurrent               float64  // PV mode: start current	Min+PV mode: min current
@@ -133,6 +137,7 @@ type Loadpoint struct {
 	vehicleIdentifier   string
 
 	charger          api.Charger
+	chargeController api.PowerController
 	chargeTimer      api.ChargeTimer
 	chargeRater      api.ChargeRater
 	chargedAtStartup float64 // session energy at startup
@@ -267,6 +272,10 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, other 
 
 	lp.configureChargerType(lp.charger)
 
+	if lp.chargeController == nil {
+		return lp, errors.New("missing charger controller implementation")
+	}
+
 	// phase switching defaults based on charger capabilities
 	if !lp.hasPhaseSwitching() {
 		phases := lp.getChargerPhysicalPhases()
@@ -398,6 +407,14 @@ func (lp *Loadpoint) requestUpdate() {
 // configureChargerType ensures that chargeMeter, Rate and Timer can use charger capabilities
 func (lp *Loadpoint) configureChargerType(charger api.Charger) {
 	var integrated bool
+
+	if ctrl, ok := lp.charger.(api.PowerController); ok {
+		lp.chargeController = ctrl
+	}
+
+	if ctrl, ok := lp.charger.(api.CurrentController); ok {
+		lp.chargeController = newCurrentController(lp, ctrl)
+	}
 
 	// ensure charge meter exists
 	if lp.chargeMeter == nil {
@@ -860,108 +877,6 @@ func (lp *Loadpoint) syncCharger() error {
 func (lp *Loadpoint) coarseCurrent() bool {
 	_, ok := lp.charger.(api.ChargerEx)
 	return !ok || lp.vehicleHasFeature(api.CoarseCurrent)
-}
-
-// roundedCurrent rounds current down to full amps if charger or vehicle require it
-func (lp *Loadpoint) roundedCurrent(current float64) float64 {
-	// full amps only?
-	if lp.coarseCurrent() {
-		current = math.Trunc(current)
-	}
-	return current
-}
-
-// setLimit applies charger current limits and enables/disables accordingly
-func (lp *Loadpoint) setLimit(current float64) error {
-	current = lp.roundedCurrent(current)
-
-	// apply circuit limits
-	if lp.circuit != nil {
-		var actualCurrent float64
-		if lp.chargeCurrents != nil {
-			actualCurrent = max(lp.chargeCurrents[0], lp.chargeCurrents[1], lp.chargeCurrents[2])
-		} else if lp.charging() {
-			actualCurrent = lp.offeredCurrent
-		}
-
-		currentLimit := lp.circuit.ValidateCurrent(actualCurrent, current)
-
-		activePhases := lp.ActivePhases()
-		powerLimit := lp.circuit.ValidatePower(lp.chargePower, currentToPower(current, activePhases))
-		currentLimitViaPower := powerToCurrent(powerLimit, activePhases)
-
-		current = lp.roundedCurrent(min(currentLimit, currentLimitViaPower))
-	}
-
-	// https://github.com/evcc-io/evcc/issues/16309
-	effMinCurrent := lp.effectiveMinCurrent()
-	if effMaxCurrent := lp.effectiveMaxCurrent(); effMinCurrent > effMaxCurrent {
-		return fmt.Errorf("invalid config: min current %.3gA exceeds max current %.3gA", effMinCurrent, effMaxCurrent)
-	}
-
-	// set current
-	if current != lp.offeredCurrent && current >= effMinCurrent {
-		var err error
-		if charger, ok := lp.charger.(api.ChargerEx); ok {
-			err = charger.MaxCurrentMillis(current)
-		} else {
-			err = lp.charger.MaxCurrent(int64(current))
-		}
-
-		if err != nil {
-			v := lp.GetVehicle()
-			if vv, ok := v.(api.Resurrector); ok && errors.Is(err, api.ErrAsleep) {
-				// https://github.com/evcc-io/evcc/issues/8254
-				// wakeup vehicle
-				lp.log.DEBUG.Printf("set charge current limit: waking up vehicle")
-				if err := vv.WakeUp(); err != nil {
-					return fmt.Errorf("wake-up vehicle: %w", err)
-				}
-			}
-
-			return fmt.Errorf("set charge current limit %.3gA: %w", current, err)
-		}
-
-		lp.log.DEBUG.Printf("set charge current limit: %.3gA", current)
-		lp.offeredCurrent = current
-		lp.bus.Publish(evChargeCurrent, current)
-	}
-
-	// set enabled/disabled
-	if enabled := current >= effMinCurrent; enabled != lp.enabled {
-		if err := lp.charger.Enable(enabled); err != nil {
-			v := lp.GetVehicle()
-			if vv, ok := v.(api.Resurrector); enabled && ok && errors.Is(err, api.ErrAsleep) {
-				// https://github.com/evcc-io/evcc/issues/8254
-				// wakeup vehicle
-				lp.log.DEBUG.Printf("charger %s: waking up vehicle", status[enabled])
-				if err := vv.WakeUp(); err != nil {
-					return fmt.Errorf("wake-up vehicle: %w", err)
-				}
-			}
-
-			return fmt.Errorf("charger %s: %w", status[enabled], err)
-		}
-
-		lp.setAndPublishEnabled(enabled)
-		lp.chargerSwitched = lp.clock.Now()
-
-		// ensure we always re-set current when enabling charger
-		if !enabled {
-			lp.offeredCurrent = 0
-		}
-
-		lp.bus.Publish(evChargeCurrent, current)
-
-		// start/stop vehicle wake-up timer
-		if enabled {
-			lp.startWakeUpTimer()
-		} else {
-			lp.stopWakeUpTimer()
-		}
-	}
-
-	return nil
 }
 
 // connected returns the EVs connection state
