@@ -1471,9 +1471,13 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 	targetCurrent := max(effectiveCurrent+deltaCurrent, 0)
 
 	// in MinPV mode or under special conditions return at least minCurrent
-	if battery := batteryStart || batteryBuffered && lp.charging(); (mode == api.ModeMinPV || battery) && targetCurrent < minCurrent {
-		lp.log.DEBUG.Printf("pv charge current: min %.3gA > %.3gA (%.0fW @ %dp, battery: %t)", minCurrent, targetCurrent, sitePower, activePhases, battery)
-		return minCurrent
+	if battery := batteryStart || (batteryBuffered && lp.charging()); (mode == api.ModeMinPV || battery) && targetCurrent < minCurrent {
+		// Allow IntegratedDevice chargers to proceed to disable logic even with battery buffering
+		if !(battery && lp.chargerHasFeature(api.IntegratedDevice)) {
+			lp.log.DEBUG.Printf("pv charge current: min %.3gA > %.3gA (%.0fW @ %dp, battery: %t)", minCurrent, targetCurrent, sitePower, activePhases, battery)
+			return minCurrent
+		}
+		lp.log.DEBUG.Printf("pv charge current: bypassing min %.3gA for integrated device (%.3gA calculated, %.0fW @ %dp, battery: %t)", minCurrent, targetCurrent, sitePower, activePhases, battery)
 	}
 
 	lp.log.DEBUG.Printf("pv charge current: %.3gA = %.3gA + %.3gA (%.0fW @ %dp)", targetCurrent, effectiveCurrent, deltaCurrent, sitePower, activePhases)
