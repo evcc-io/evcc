@@ -15,14 +15,16 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 4 }}
     register:
-      address: 108 # MeterPower (30108)
+      # MeterPower (30108)
+      address: 108
       type: input
       decode: int32s
   energy:
     source: modbus
     {{- include "modbus" . | indent 4 }}
     register:
-      address: 156 # Import energy from meter (30156)
+      # Import energy from meter (30156)
+      address: 156
       type: input
       decode: float32
   {{- end }}
@@ -31,14 +33,16 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 4 }}
     register:
-      address: 127 # PV Power (30127)
+      # PV Power (30127)
+      address: 127
       type: input
       decode: int32s
   energy:
     source: modbus
     {{- include "modbus" . | indent 4 }}
     register:
-      address: 129 # PV kWH (30129)
+      # PV kWH (30129)
+      address: 129
       type: input
       decode: float32
   {{- end }}
@@ -47,21 +51,24 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 4 }}
     register:
-      address: 162 # Battery charge/discharge power (30162)
+      # Battery charge/discharge power (30162)
+      address: 162
       type: input
       decode: int32s
   energy:
     source: modbus
     {{- include "modbus" . | indent 4 }}
     register:
-      address: 176 # BatteryDischargeEnergy (30176)
+      # BatteryDischargeEnergy (30176)
+      address: 176
       type: input
       decode: float32
   soc:
     source: modbus
     {{- include "modbus" . | indent 4 }}
     register:
-      address: 182 # SOC (30182)
+      # SOC (30182)
+      address: 182
       type: input
       decode: uint16
   {{- end }}
