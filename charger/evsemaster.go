@@ -106,11 +106,10 @@ func NewEVSEMaster(ctx context.Context, serial, password string) (*EVSEMaster, e
 		data:    util.NewMonitor[*evsemaster.ACStatus](evsemasterTimeout),
 	}
 
-	done := make(chan struct{})
-	go wb.run(ctx, done)
+	go wb.run(ctx)
 
 	select {
-	case <-done:
+	case <-wb.data.Done():
 		return wb, nil
 	case <-ctx.Done():
 		return nil, ctx.Err()
@@ -134,9 +133,7 @@ func (wb *EVSEMaster) send(cmd uint16, payload []byte) error {
 }
 
 // run is the background goroutine that maintains the EVSE session.
-func (wb *EVSEMaster) run(ctx context.Context, done chan struct{}) {
-	var once sync.Once
-
+func (wb *EVSEMaster) run(ctx context.Context) {
 	recv := make(chan *evsemaster.ReceivedPacket, 32)
 	wb.conn.Subscribe(recv)
 	defer wb.conn.Unsubscribe()
@@ -181,7 +178,6 @@ func (wb *EVSEMaster) run(ctx context.Context, done chan struct{}) {
 			case evsemaster.CmdACStatus:
 				if s, err := evsemaster.ParseACStatus(pkt.Payload); err == nil {
 					wb.data.Set(s)
-					once.Do(func() { close(done) })
 				} else {
 					wb.log.WARN.Printf("ACStatus parse: %v", err)
 				}
