@@ -7,7 +7,7 @@
     "authorizationSuccessful": "Autorisatie gelukt",
     "buttonConnect": "Verbind met {provider}",
     "buttonDisconnect": "Verbinding verbreken",
-    "confirmLogout": "Weet je zeker dat je de verbinding wilt verbreken met {title}?",
+    "confirmLogout": "Weet u zeker dat u de verbinding wilt verbreken met {title}?",
     "connect": "verbinden",
     "disconnect": "verbinding verbreken",
     "loggedOut": "Succesvol uitgelogd",
@@ -130,8 +130,9 @@
       "currency": "Valuta",
       "current": "Stroomsterkte",
       "currentRange": "Stroomsterkte",
+      "curtailed": "Teruglevering beperkt",
       "detected": "Gedetecteerd",
-      "dimmed": "Gedimd",
+      "dimmed": "Verbruik gelimiteerd",
       "enabled": "Ingeschakeld",
       "energy": "Energie",
       "events": "Gebeurtenissen",
@@ -543,7 +544,7 @@
         "help": {
           "deny": "Schrijftoegang is geblokkeerd met een foutmelding op Modbus.",
           "false": "Schrijftoegang wordt doorgestuurd.",
-          "true": "Schrijftoegang is geblokkeerd zonder antwoord."
+          "true": "Schrijftoegang is geblokkeerd zonder reactie."
         },
         "label": "Alleen-lezen"
       },
@@ -646,6 +647,7 @@
       "descriptionSempUrl": "SEMP URL",
       "descriptionVendorId": "8 karakters HEX string. Algemene prefix van alle onderdelen. Standaard zal evcc zijn eigen vendor ID gebruiken.",
       "labelDeviceId": "Device ID",
+      "labelDeviceSerial": "Apparaat serienummer",
       "labelVendorId": "Vendor ID",
       "title": "SMA Sunny Home Manager"
     },
@@ -727,11 +729,13 @@
       "generic": "Generieke integraties",
       "grid": {
         "description": "Electriciteits-prijzen voor consumptie van het net. Gebruikt om de werkelijke laadkosten uit te rekenen, en voor het laden van de auto of thuis-accu en het inschakelen van verwarming tegen de beste prijs.",
-        "titleAdd": "Electriciteits tarief toevoegen voor import"
+        "titleAdd": "Electriciteits tarief toevoegen voor import",
+        "titleEdit": "Net-import tarieven aanpssen"
       },
       "option": {
         "co2": "CO₂-voorspelling toevoegen",
         "feedIn": "Net-export tarief toevoegen",
+        "planner": "Planner voorspelling toevoegen",
         "solar": "PV-voorspelling toevoegen"
       },
       "planner": {
@@ -1231,7 +1235,7 @@
       "fallbackName": "Voertuig",
       "moreActions": "Meer acties",
       "none": "Geen voertuig",
-      "notReachable": "Wagengegevens niet beschikbaar. Herstart EVCC.",
+      "notReachable": "Voertuiggegevens niet beschikbaar. Herstart EVCC.",
       "targetSoc": "Limiet",
       "temp": "Temp.",
       "tempLimit": "Temperatuur limiet",
@@ -1259,7 +1263,7 @@
       "feedinPriorityPausing": "Zonne opladen gepauzeerd om terugleveren te maximaliseren.",
       "finished": "Beëindigd.",
       "minCharge": "Minimaal opladen naar {soc}.",
-      "pvDisable": "Onvoldoende PV overschot. Laden wordt gepauzeerd.",
+      "pvDisable": "Onvoldoende PV overschot. Laden wordt binnenkort gepauzeerd.",
       "pvEnable": "Voldoende PV overschot beschikbaar. Laden wordt gestart.",
       "scale1p": "Wordt gereduceerd naar laden op 1 fase.",
       "scale3p": "Wordt verhoogd naar laden op 3 fasen.",
