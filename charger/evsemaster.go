@@ -56,10 +56,9 @@ type EVSEMaster struct {
 	log  *util.Logger
 	conn *evsemaster.Connection
 
-	mu          sync.RWMutex
-	status      *evsemaster.ACStatus
-	current     int       // last value set by MaxCurrent
-	lastUpdated time.Time // time of last ACStatus received
+	mu      sync.RWMutex
+	data    *util.Monitor[*evsemaster.ACStatus]
+	current int // last value set by MaxCurrent
 
 	// evseAddr is the EVSE's source address (e.g. 192.168.1.100:11938).
 	// It is learned from the first Login broadcast and used for all sends.
@@ -104,6 +103,7 @@ func NewEVSEMaster(ctx context.Context, serial, password string) (*EVSEMaster, e
 		log:     log,
 		conn:    conn,
 		current: 6,
+		data:    util.NewMonitor[*evsemaster.ACStatus](evsemasterTimeout),
 	}
 
 	done := make(chan struct{})
@@ -180,11 +180,8 @@ func (wb *EVSEMaster) run(ctx context.Context, done chan struct{}) {
 
 			case evsemaster.CmdACStatus:
 				if s, err := evsemaster.ParseACStatus(pkt.Payload); err == nil {
-					wb.mu.Lock()
-					wb.status = s
-					wb.lastUpdated = time.Now()
-					wb.mu.Unlock()
-					once.Do(func() { close(wb.ready) })
+					wb.data.Set(s)
+					once.Do(func() { close(done) })
 				} else {
 					wb.log.WARN.Printf("ACStatus parse: %v", err)
 				}
@@ -207,17 +204,15 @@ func (wb *EVSEMaster) run(ctx context.Context, done chan struct{}) {
 // 3=negotiating, 4=connected_locked
 // OutputState: 0=idle, 1=charging, 2+=other active state
 func (wb *EVSEMaster) Status() (api.ChargeStatus, error) {
-	wb.mu.RLock()
-	defer wb.mu.RUnlock()
-
-	if time.Since(wb.lastUpdated) > evsemasterTimeout {
-		return api.StatusNone, api.ErrTimeout
+	res, err := wb.data.Get()
+	if err != nil {
+		return api.StatusNone, err
 	}
 
 	switch {
-	case wb.status.OutputState == 1:
+	case res.OutputState == 1:
 		return api.StatusC, nil
-	case wb.status.GunState >= 2:
+	case res.GunState >= 2:
 		return api.StatusB, nil
 	default:
 		return api.StatusA, nil
@@ -226,26 +221,20 @@ func (wb *EVSEMaster) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface.
 func (wb *EVSEMaster) Enabled() (bool, error) {
-	wb.mu.RLock()
-	defer wb.mu.RUnlock()
-
-	if time.Since(wb.lastUpdated) > evsemasterTimeout {
-		return false, api.ErrTimeout
+	res, err := wb.data.Get()
+	if err != nil {
+		return false, err
 	}
 
-	return wb.status.OutputState == 1, nil
+	return res.OutputState == 1, nil
 }
 
 // Enable implements the api.Charger interface.
 func (wb *EVSEMaster) Enable(enable bool) error {
-	wb.mu.RLock()
-	current := wb.current
-	wb.mu.RUnlock()
-
 	var err error
 	if enable {
 		var b []byte
-		if b, err = evsemaster.PackChargeStart(current); err != nil {
+		if b, err = evsemaster.PackChargeStart(wb.current); err != nil {
 			return err
 		}
 		err = wb.send(evsemaster.CmdChargeStart, b)
@@ -267,9 +256,7 @@ func (wb *EVSEMaster) MaxCurrent(current int64) error {
 	}
 	_ = wb.send(evsemaster.CmdHeading, nil) // request immediate status update
 
-	wb.mu.Lock()
 	wb.current = int(current)
-	wb.mu.Unlock()
 
 	return nil
 }
@@ -278,54 +265,46 @@ var _ api.Meter = (*EVSEMaster)(nil)
 
 // CurrentPower implements the api.Meter interface.
 func (wb *EVSEMaster) CurrentPower() (float64, error) {
-	wb.mu.RLock()
-	defer wb.mu.RUnlock()
-
-	if time.Since(wb.lastUpdated) > evsemasterTimeout {
-		return 0, api.ErrTimeout
+	res, err := wb.data.Get()
+	if err != nil {
+		return 0, err
 	}
 
-	return wb.status.Power, nil
+	return res.Power, nil
 }
 
 var _ api.MeterEnergy = (*EVSEMaster)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface.
 func (wb *EVSEMaster) TotalEnergy() (float64, error) {
-	wb.mu.RLock()
-	defer wb.mu.RUnlock()
-
-	if time.Since(wb.lastUpdated) > evsemasterTimeout {
-		return 0, api.ErrTimeout
+	res, err := wb.data.Get()
+	if err != nil {
+		return 0, err
 	}
 
-	return wb.status.TotalEnergy, nil
+	return res.TotalEnergy, nil
 }
 
 var _ api.PhaseCurrents = (*EVSEMaster)(nil)
 
 // Currents implements the api.PhaseCurrents interface.
 func (wb *EVSEMaster) Currents() (float64, float64, float64, error) {
-	wb.mu.RLock()
-	defer wb.mu.RUnlock()
-
-	if time.Since(wb.lastUpdated) > evsemasterTimeout {
-		return 0, 0, 0, api.ErrTimeout
+	res, err := wb.data.Get()
+	if err != nil {
+		return 0, 0, 0, err
 	}
 
-	return wb.status.L1Current, wb.status.L2Current, wb.status.L3Current, nil
+	return res.L1Current, res.L2Current, res.L3Current, nil
 }
 
 var _ api.PhaseVoltages = (*EVSEMaster)(nil)
 
 // Voltages implements the api.PhaseVoltages interface.
 func (wb *EVSEMaster) Voltages() (float64, float64, float64, error) {
-	wb.mu.RLock()
-	defer wb.mu.RUnlock()
-
-	if time.Since(wb.lastUpdated) > evsemasterTimeout {
-		return 0, 0, 0, api.ErrTimeout
+	res, err := wb.data.Get()
+	if err != nil {
+		return 0, 0, 0, err
 	}
 
-	return wb.status.L1Voltage, wb.status.L2Voltage, wb.status.L3Voltage, nil
+	return res.L1Voltage, res.L2Voltage, res.L3Voltage, nil
 }
