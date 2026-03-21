@@ -127,7 +127,7 @@ func (wb *EVSEMaster) send(cmd uint16, payload []byte) error {
 
 	if addr == nil {
 		// EVSE has not broadcast yet; silently drop.
-		return nil
+		return api.ErrMustRetry
 	}
 
 	return wb.conn.Send(cmd, payload, addr)
