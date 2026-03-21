@@ -130,8 +130,9 @@
       "currency": "Valuutta",
       "current": "Virta",
       "currentRange": "Virta",
+      "curtailed": "Sähkönsyöttöä rajoitettu",
       "detected": "Tunnistettu",
-      "dimmed": "Himmennetty",
+      "dimmed": "Kulutusta rajoitettu",
       "enabled": "Käytössä",
       "energy": "Energia",
       "events": "Tapahtumat",
@@ -642,11 +643,13 @@
       "cardTitle": "Sunny Home Manager",
       "description": "evcc:ssä on integraatio SMA Sunny Home Manager (SHM) SEMP-protokollan välityksellä. Jos SHM on samassa lähiverkossa, kirjauduttuasi sisään Sunny Portal -tiliisi, sinulle pitäisi mahdollisuus lisätä kaikki laturit evcc:een uusina käyttölaitteina. Kaiken pitäisi olla valmiina välittömään käyttöön ilman lisämuutoksia alla oleviin asetuksiin.",
       "descriptionDeviceId": "12-merkkinen HEX-merkkijono. Etuliitteenä kaikkiin laitteisiin (latausasema, ...).",
+      "descriptionDeviceSerial": "12-merkkinen HEX-merkkijono, josta johdetaan tunnisteet kaikkille laitteille (latausasemat, ...). Vakiona evcc-johtaa tämän isännän MAC-osoitteesta.",
       "descriptionIdPattern": "Tunnistusmuoto",
       "descriptionIds": "Sunny Portal -järjestelmässä jokainen käyttölaite vaatii yksilöllisen tunnisteen. Evcc luo yksilöllisen tunnisteen laitteistosi perusteella. Jos siirrät evcc:n asennuksen toiseen laitteistoon nämä tunnisteet voivat muuttua. Jos haluat pitää vanhat tunnisteet, voit automaattiset luodut tunnisteet tässä. Avaa SEMP URL (/semp) tarkistaaksesi nykyiset tunnisteesi.",
       "descriptionSempUrl": "SEMP URL",
       "descriptionVendorId": "8-merkkinen HEX-merkkijono. Yleinen etuliite kaikille laitteille. Oletuksena evcc käyttää sisäistä valmistajatunnistettaan.",
       "labelDeviceId": "Laite-ID",
+      "labelDeviceSerial": "Laitteen tunnistenumero",
       "labelVendorId": "Valmistaja-ID",
       "title": "SMA Sunny Home Manager"
     },
@@ -1176,7 +1179,7 @@
       "vehicle": "Ajoneuvo"
     },
     "mode": {
-      "minpv": "Minimi+PV",
+      "minpv": "Min+PV",
       "now": "Välitön",
       "off": "Seis",
       "pv": "PV",
