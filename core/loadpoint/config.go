@@ -86,13 +86,11 @@ func (payload DynamicConfig) Apply(lp API) error {
 		switch {
 		case payload.MinCurrent != 0 && payload.MaxCurrent != 0:
 			if payload.MaxCurrent > lp.GetMaxCurrent() {
-				err = lp.SetMaxCurrent(payload.MaxCurrent)
-				if err == nil {
+				if err = lp.SetMaxCurrent(payload.MaxCurrent); err == nil {
 					err = lp.SetMinCurrent(payload.MinCurrent)
 				}
 			} else {
-				err = lp.SetMinCurrent(payload.MinCurrent)
-				if err == nil {
+				if err = lp.SetMinCurrent(payload.MinCurrent); err == nil {
 					err = lp.SetMaxCurrent(payload.MaxCurrent)
 				}
 			}
