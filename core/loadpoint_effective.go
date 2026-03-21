@@ -54,10 +54,10 @@ func (lp *Loadpoint) nextActivePlan(maxPower float64, plans []plan) *plan {
 	}
 
 	// manual plan takes priority over repeating plans
-	for _, p := range plans {
-		if p.Kind == planKindManual {
-			if lp.vehicleSoc == 0 || lp.vehicleSoc < float64(p.Soc) {
-				return &p
+	for i := range plans {
+		if plans[i].Kind == planKindManual {
+			if lp.vehicleSoc == 0 || lp.vehicleSoc < float64(plans[i].Soc) {
+				return &plans[i]
 			}
 			// goal already met, suppress repeating plans
 			return nil
@@ -69,9 +69,9 @@ func (lp *Loadpoint) nextActivePlan(maxPower float64, plans []plan) *plan {
 		return i.Start.Compare(j.Start)
 	})
 
-	for _, p := range plans {
-		if lp.vehicleSoc == 0 || lp.vehicleSoc < float64(p.Soc) {
-			return &p
+	for i := range plans {
+		if lp.vehicleSoc == 0 || lp.vehicleSoc < float64(plans[i].Soc) {
+			return &plans[i]
 		}
 	}
 
