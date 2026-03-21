@@ -26,21 +26,25 @@
 				@edit="$emit('edit')"
 			/>
 		</div>
-		<div v-if="$slots.tags">
+		<div v-if="$slots.tags" ref="tagsContainer" :style="tagsStyle">
 			<hr class="my-3 divide" />
-			<slot name="tags" />
+			<div ref="tagsContent">
+				<slot name="tags" />
+			</div>
 		</div>
 	</div>
 </template>
 
 <script>
 import DeviceCardEditIcon from "./DeviceCardEditIcon.vue";
+import settings from "../../settings";
 
 export default {
 	name: "DeviceCard",
 	components: { DeviceCardEditIcon },
 	props: {
 		name: String,
+		id: String,
 		title: String,
 		editable: Boolean,
 		error: Boolean,
@@ -50,6 +54,49 @@ export default {
 		badge: Boolean,
 	},
 	emits: ["edit"],
+	data() {
+		return {
+			tagsMinHeight: null,
+			resizeObserver: null,
+		};
+	},
+	computed: {
+		tagsStyle() {
+			return this.tagsMinHeight ? { minHeight: `${this.tagsMinHeight}px` } : undefined;
+		},
+	},
+	mounted() {
+		if (!this.id) return;
+		const cached = settings.cardHeights[this.id];
+		if (cached > 0) {
+			this.tagsMinHeight = cached;
+		}
+		// Cache tag heights to reduce layout shift. Hold cached min-height
+		// until async data fills the space, then save and release.
+		this.$nextTick(() => {
+			const el = this.$refs.tagsContainer;
+			const content = this.$refs.tagsContent;
+			if (!el || !content) return;
+			const initialHeight = content.offsetHeight;
+			this.resizeObserver = new ResizeObserver(() => {
+				if (content.offsetHeight <= initialHeight) return;
+				const prev = el.style.minHeight;
+				el.style.minHeight = "";
+				const naturalHeight = Math.round(el.getBoundingClientRect().height);
+				el.style.minHeight = prev;
+				if (!this.tagsMinHeight || naturalHeight >= this.tagsMinHeight) {
+					settings.cardHeights[this.id] = naturalHeight;
+					this.tagsMinHeight = null;
+					this.resizeObserver?.disconnect();
+					this.resizeObserver = null;
+				}
+			});
+			this.resizeObserver.observe(content);
+		});
+	},
+	unmounted() {
+		this.resizeObserver?.disconnect();
+	},
 };
 </script>
 
