@@ -83,3 +83,13 @@ func TestReplaceTemplate(t *testing.T) {
 		}
 	}
 }
+
+func TestReplaceCached(t *testing.T) {
+	s1, err1 := ReplaceFormatted("{{ now }}", map[string]any{})
+	assert.NoError(t, err1)
+
+	s2, err2 := ReplaceFormatted("{{ now }}", map[string]any{})
+	assert.NoError(t, err2)
+
+	assert.NotEqual(t, s1, s2)
+}
