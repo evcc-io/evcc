@@ -534,12 +534,12 @@ func TestDetermineCircuit(t *testing.T) {
 	configURI := fmt.Sprintf("%s/chargers/%s/config", easee.API, chargerID)
 
 	tests := []struct {
-		name         string
-		httpStatus   int
-		gridType     int
-		chargerIDs   []string
-		wantCircuit  int
-		suppressWarn bool
+		name        string
+		httpStatus  int
+		gridType    int
+		chargerIDs  []string
+		wantCircuit int
+		wantErr     bool
 	}{
 		{
 			name:        "TN grid, sole charger — circuit assigned",
@@ -556,11 +556,10 @@ func TestDetermineCircuit(t *testing.T) {
 			wantCircuit: 0,
 		},
 		{
-			name:         "config fetch fails — circuit not assigned",
-			httpStatus:   500,
-			chargerIDs:   []string{chargerID},
-			wantCircuit:  0,
-			suppressWarn: true,
+			name:       "config fetch fails — error returned",
+			httpStatus: 500,
+			chargerIDs: []string{chargerID},
+			wantErr:    true,
 		},
 		{
 			name:        "TN grid, multi-charger circuit — circuit not assigned",
@@ -588,14 +587,14 @@ func TestDetermineCircuit(t *testing.T) {
 					httpmock.NewStringResponder(tc.httpStatus, ""))
 			}
 
-			if tc.suppressWarn {
-				util.LogLevel("error", nil)
-				t.Cleanup(func() { util.LogLevel("info", nil) })
+			err := e.determineCircuit(makeTestSite(tc.chargerIDs...))
+
+			if tc.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tc.wantCircuit, e.circuit)
 			}
-
-			e.determineCircuit(makeTestSite(tc.chargerIDs...))
-
-			assert.Equal(t, tc.wantCircuit, e.circuit)
 		})
 	}
 }

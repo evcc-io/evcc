@@ -161,7 +161,9 @@ func NewEasee(ctx context.Context, user, password, charger string, timeout time.
 		return nil, err
 	}
 
-	c.determineCircuit(site)
+	if err := c.determineCircuit(site); err != nil {
+		return nil, err
+	}
 
 	client, err := signalr.NewClient(ctx,
 		signalr.WithConnector(c.connect(ts)),
@@ -237,14 +239,13 @@ func (c *Easee) chargerConfig(charger string) (res easee.ChargerConfig, err erro
 	return res, err
 }
 
-func (c *Easee) determineCircuit(site easee.Site) {
+func (c *Easee) determineCircuit(site easee.Site) error {
 	config, err := c.chargerConfig(c.charger)
 	if err != nil {
-		c.log.WARN.Printf("charger config unavailable, using charger-level phase control: %v", err)
-		return
+		return fmt.Errorf("charger config unavailable: %w", err)
 	}
 	if !isTNGrid(config.DetectedPowerGridType) {
-		return
+		return nil
 	}
 	for _, circuit := range site.Circuits {
 		if len(circuit.Chargers) > 1 {
@@ -254,10 +255,11 @@ func (c *Easee) determineCircuit(site easee.Site) {
 			if charger.ID == c.charger {
 				c.site = site.ID
 				c.circuit = circuit.ID
-				return
+				return nil
 			}
 		}
 	}
+	return nil
 }
 
 // connect creates an HTTP connection to the signalR hub
