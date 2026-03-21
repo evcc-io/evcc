@@ -1,12 +1,21 @@
 package metrics
 
 import (
+	"database/sql"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/tariff"
 	"gorm.io/gorm"
+)
+
+const (
+	MeterHousehold     = 1    // meter ID for household base load (backward compatible with master)
+	MeterLoadpointBase = 1000 // base offset for loadpoint meter IDs
+	// Loadpoint meter IDs: lpID + MeterLoadpointBase (to provide sufficient separation)
+	// e.g., loadpoint 0 = meter 1000, loadpoint 1 = meter 1001, etc.
 )
 
 type meter struct {
@@ -15,7 +24,7 @@ type meter struct {
 	Value     float64   `json:"val" gorm:"column:val"`
 }
 
-var ErrIncomplete = errors.New("meter profile incomplete")
+var ErrIncomplete = errors.New("insufficient historical data for meter profile (need 24 hours)")
 
 func init() {
 	db.Register(func(db *gorm.DB) error {
@@ -23,29 +32,50 @@ func init() {
 	})
 }
 
-// Persist stores 15min consumption in Wh
+// Persist stores 15min consumption in Wh for household total
 func Persist(ts time.Time, value float64) error {
 	return db.Instance.Create(meter{
-		Meter:     1,
+		Meter:     MeterHousehold,
 		Timestamp: ts.Truncate(15 * time.Minute),
 		Value:     value,
 	}).Error
 }
 
-// Profile returns a 15min average meter profile in Wh.
+// PersistLoadpoint stores 15min consumption in Wh for a specific loadpoint
+func PersistLoadpoint(lpID int, ts time.Time, value float64) error {
+	return db.Instance.Create(meter{
+		Meter:     lpID + MeterLoadpointBase,
+		Timestamp: ts.Truncate(15 * time.Minute),
+		Value:     value,
+	}).Error
+}
+
+// Profile returns a 15min average meter profile in Wh for household total.
 // Profile is sorted by timestamp starting at 00:00. It is guaranteed to contain 96 15min values.
 func Profile(from time.Time) (*[96]float64, error) {
+	return profileQuery(MeterHousehold, from)
+}
+
+// LoadpointProfile returns a 15min average meter profile in Wh for a specific loadpoint.
+// Profile is sorted by timestamp starting at 00:00. It is guaranteed to contain 96 15min values.
+func LoadpointProfile(lpID int, from time.Time) (*[96]float64, error) {
+	return profileQuery(lpID+MeterLoadpointBase, from)
+}
+
+// profileQuery is the internal implementation for querying meter profiles
+func profileQuery(meterID int, from time.Time) (*[96]float64, error) {
 	db, err := db.Instance.DB()
 	if err != nil {
 		return nil, err
 	}
 
 	// Use 'localtime' in strftime to fix https://github.com/evcc-io/evcc/discussions/23759
-	rows, err := db.Query(`SELECT min(ts) AS ts, avg(val) AS val
+	var rows *sql.Rows
+	rows, err = db.Query(`SELECT min(ts) AS ts, avg(val) AS val
 		FROM meters
 		WHERE meter = ? AND ts >= ?
 		GROUP BY strftime("%H:%M", ts, 'localtime')
-		ORDER BY strftime("%H:%M", ts, 'localtime') ASC`, 1, from,
+		ORDER BY strftime("%H:%M", ts, 'localtime') ASC`, meterID, from,
 	)
 	if err != nil {
 		return nil, err
@@ -77,7 +107,7 @@ func Profile(from time.Time) (*[96]float64, error) {
 	}
 
 	if len(res) != 96 {
-		return nil, ErrIncomplete
+		return nil, fmt.Errorf("%w: got %d slots, need 96 (24 hours of 15-minute intervals)", ErrIncomplete, len(res))
 	}
 
 	return (*[96]float64)(res), nil
