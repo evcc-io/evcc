@@ -244,7 +244,7 @@ func staticInstance[T any](typ string, cc config.Named, newFromConf newFromConfF
 	}
 
 	if e := h.Add(config.NewStaticDevice(cc, instance)); e != nil && err == nil {
-		err = &DeviceError{cc.Name, err}
+		err = &DeviceError{cc.Name, e}
 	}
 
 	// release resources
