@@ -10,7 +10,7 @@ params:
   - name: usage
     choice: ["grid", "pv", "battery"]
 
-  - name: uri
+  - name: host
     help:
       en: IP address of the inverter (port 8899)
       de: IP-Adresse des Wechselrichters (Port 8899)
@@ -20,20 +20,20 @@ render: |
   type: custom
   power:
     source: aa55udp
-    uri: {{ .uri }}
+    host: {{ .host }}
     register: {{ if eq .usage "pv" }}35137{{ else if eq .usage "grid" }}35139{{ else }}35182{{ end }}
     count: 2
     decode: int32be
   energy:
     source: aa55udp
-    uri: {{ .uri }}
+    host: {{ .host }}
     register: 35191
     count: 2
     decode: uint32be
     scale: 0.1
   soc:
     source: aa55udp
-    uri: {{ .uri }}
+    host: {{ .host }}
     register: 37007
     count: 1
     decode: uint16be

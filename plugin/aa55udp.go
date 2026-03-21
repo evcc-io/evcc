@@ -43,14 +43,14 @@ func init() {
 // NewAA55UDPFromConfig creates an AA55UDP plugin from a source block:
 //
 //	source:   aa55udp
-//	uri:      192.168.1.26   # inverter IP; port 8899 is always used
+//	host:     192.168.1.26   # inverter IP; port 8899 is always used
 //	register: 30127          # Modbus register address (0-based, uint16)
 //	count:    2              # number of registers to read (1=U16, 2=S32/U32)
 //	decode:   int32be        # int32be | uint32be | int16be | uint16be
 //	scale:    1.0            # optional multiplier (default 1.0)
 func NewAA55UDPFromConfig(_ context.Context, other map[string]interface{}) (Plugin, error) {
 	cc := struct {
-		URI      string  `mapstructure:"uri"`
+		Host     string  `mapstructure:"host"`
 		Register uint16  `mapstructure:"register"`
 		Count    uint16  `mapstructure:"count"`
 		Decode   string  `mapstructure:"decode"`
@@ -75,14 +75,14 @@ func NewAA55UDPFromConfig(_ context.Context, other map[string]interface{}) (Plug
 
 	pdu := buildPDU(cc.Register, cc.Count)
 
-	addr, err := net.ResolveUDPAddr("udp4", net.JoinHostPort(cc.URI, "8899"))
+	addr, err := net.ResolveUDPAddr("udp4", net.JoinHostPort(cc.Host, "8899"))
 	if err != nil {
-		return nil, fmt.Errorf("aa55udp: resolve %s: %w", cc.URI, err)
+		return nil, fmt.Errorf("aa55udp: resolve %s: %w", cc.Host, err)
 	}
 
 	conn, err := net.DialUDP("udp4", nil, addr)
 	if err != nil {
-		return nil, fmt.Errorf("aa55udp: dial %s: %w", cc.URI, err)
+		return nil, fmt.Errorf("aa55udp: dial %s: %w", cc.Host, err)
 	}
 
 	return &AA55UDP{
