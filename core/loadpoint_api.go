@@ -749,27 +749,6 @@ func (lp *Loadpoint) SetMaxCurrent(current float64) error {
 	return nil
 }
 
-// SetMinCurrent sets the min loadpoint current
-func (lp *Loadpoint) SetMinAndMaxCurrent(minCurrent float64, maxCurrent float64) error {
-	lp.Lock()
-	defer lp.Unlock()
-
-	if minCurrent > maxCurrent {
-		return errors.New("min current must be smaller or equal than max current")
-	}
-
-	lp.log.DEBUG.Println("set min current:", minCurrent)
-	if minCurrent != lp.minCurrent {
-		lp.setMinCurrent(minCurrent)
-	}
-
-	lp.log.DEBUG.Println("set max current:", maxCurrent)
-	if maxCurrent != lp.maxCurrent {
-		lp.setMaxCurrent(maxCurrent)
-	}
-	return nil
-}
-
 // IsFastChargingActive indicates if fast charging with maximum power is active
 func (lp *Loadpoint) IsFastChargingActive() bool {
 	lp.RLock()
