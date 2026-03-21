@@ -13,6 +13,8 @@ requirements:
 
       ```
       vehicle.body.chargingPort.status
+      vehicle.cabin.infotainment.navigation.currentLocation.latitude
+      vehicle.cabin.infotainment.navigation.currentLocation.longitude
       vehicle.cabin.hvac.preconditioning.status.comfortState
       vehicle.drivetrain.batteryManagement.header
       vehicle.drivetrain.electricEngine.charging.hvStatus
@@ -31,6 +33,8 @@ requirements:
 
       ```
       vehicle.body.chargingPort.status
+      vehicle.cabin.infotainment.navigation.currentLocation.latitude
+      vehicle.cabin.infotainment.navigation.currentLocation.longitude
       vehicle.cabin.hvac.preconditioning.status.comfortState
       vehicle.drivetrain.batteryManagement.header
       vehicle.drivetrain.electricEngine.charging.hvStatus

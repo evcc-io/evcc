@@ -740,6 +740,8 @@ export default defineComponent({
 </script>
 
 <style scoped>
+@import "../../css/breakpoints.css";
+
 .header-outer {
 	--vertical-shift: 0rem;
 	left: 0;
@@ -752,31 +754,31 @@ export default defineComponent({
 	box-shadow: 0 1px 8px 0px var(--evcc-background);
 }
 
-@media (min-width: 576px) {
+@media (--sm-and-up) {
 	.header-outer {
 		--vertical-shift: calc((100vw - 560px) / 2);
 	}
 }
 
-@media (min-width: 768px) {
+@media (--md-and-up) {
 	.header-outer {
 		--vertical-shift: calc((100vw - 740px) / 2);
 	}
 }
 
-@media (min-width: 992px) {
+@media (--lg-and-up) {
 	.header-outer {
 		--vertical-shift: calc((100vw - 980px) / 2);
 	}
 }
 
-@media (min-width: 1200px) {
+@media (--xl-and-up) {
 	.header-outer {
 		--vertical-shift: calc((100vw - 1160px) / 2);
 	}
 }
 
-@media (min-width: 1400px) {
+@media (--xxl-and-up) {
 	.header-outer {
 		--vertical-shift: calc((100vw - 1340px) / 2);
 	}
