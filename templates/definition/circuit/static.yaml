@@ -1,0 +1,24 @@
+template: static
+products:
+  - description:
+      en: Static circuit
+      de: Statischer Stromkreis
+params:
+  - name: title
+    required: true
+    example: Main circuit
+  - name: maxcircuitcurrent
+  - name: maxcircuitpower
+  - name: meter
+    # service: TODO
+  - name: parent
+    description:
+      de: Übergeordneter Stromkreis
+      en: Parent circuit
+render: |
+  type: static
+  title: {{ .title }}
+  maxCurrent: {{ .maxcircuitcurrent }}
+  maxPower: {{ .maxcircuitpower }}
+  meter: {{ .meter }}
+  parent: {{ .parent }}

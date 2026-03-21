@@ -1,8 +1,14 @@
 package circuit
 
 import (
+	"context"
+	"fmt"
+	"strings"
+
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
+	reg "github.com/evcc-io/evcc/util/registry"
 )
 
 func Root() api.Circuit {
@@ -12,4 +18,21 @@ func Root() api.Circuit {
 		}
 	}
 	return nil
+}
+
+var registry = reg.New[api.Circuit]("circuit")
+
+// NewFromConfig creates circuit from configuration
+func NewFromDeviceConfig(ctx context.Context, typ string, other map[string]any) (api.Circuit, error) {
+	factory, err := registry.Get(strings.ToLower(typ))
+	if err != nil {
+		return nil, err
+	}
+
+	v, err := factory(ctx, other)
+	if err != nil {
+		err = fmt.Errorf("cannot create circuit type '%s': %w", util.TypeWithTemplateName(typ, other), err)
+	}
+
+	return v, err
 }

@@ -71,7 +71,7 @@ func TestCircuitPower(t *testing.T) {
 
 	circ := func(t *testing.T, ctrl *gomock.Controller, maxP float64) (*Circuit, *api.MockMeter) {
 		m := api.NewMockMeter(ctrl)
-		c, err := New(log, "foo", 0, maxP, m, 0)
+		c, err := New(log, "name", "foo", 0, maxP, m, 0)
 		require.NoError(t, err)
 		return c, m
 	}
@@ -110,7 +110,7 @@ func TestCircuitCurrents(t *testing.T) {
 			api.NewMockMeter(ctrl),
 			api.NewMockPhaseCurrents(ctrl),
 		}
-		c, err := New(log, "foo", maxC, 0, m, 0)
+		c, err := New(log, "name", "foo", maxC, 0, m, 0)
 		require.NoError(t, err)
 		return c, m
 	}
@@ -143,8 +143,8 @@ func TestCircuitCurrents(t *testing.T) {
 func TestWrapCycleDetection(t *testing.T) {
 	log := util.NewLogger("foo")
 
-	pc, _ := New(log, "root", 0, 0, nil, 0)
-	lpc, _ := New(log, "lpc", 0, 0, nil, 0)
+	pc, _ := New(log, "name", "root", 0, 0, nil, 0)
+	lpc, _ := New(log, "name", "lpc", 0, 0, nil, 0)
 
 	require.NoError(t, lpc.setParent(pc))
 	require.Error(t, pc.Wrap(lpc))

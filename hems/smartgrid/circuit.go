@@ -21,7 +21,7 @@ func SetupCircuit() (api.Circuit, error) {
 	root := circuit.Root()
 
 	// create new circuit
-	circuit, err := circuit.New(util.NewLogger(GridControl), "", 0, 0, nil, time.Minute)
+	circuit, err := circuit.New(util.NewLogger(GridControl), GridControl, "", 0, 0, nil, time.Minute)
 	if err != nil {
 		return nil, err
 	}
