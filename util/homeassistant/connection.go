@@ -302,3 +302,16 @@ func ValidatePhaseEntities(phases []string) ([]string, error) {
 		return nil, errors.New("invalid phase entities")
 	}
 }
+
+// CallSelectService is a convenience method for setting select entity options.
+// This is used for phase switching via a Home Assistant select entity.
+// The select entity abstracts hardware-specific registers, e.g. the Kathrein
+// Modbus register 0x00A1 (Setpoint Relais-Matrix) for 1p/3p phase switching.
+func (c *Connection) CallSelectService(entity, option string) error {
+	data := map[string]any{
+		"entity_id": entity,
+		"option":    option,
+	}
+
+	return c.CallService("select", "select_option", data)
+}
