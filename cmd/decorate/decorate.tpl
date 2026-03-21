@@ -1,56 +1,33 @@
-{{define "case"}}
-	{{- $combo := .Combo}}
-	{{- $prefix := .Prefix}}
-	{{- $and := false}}
-
-	{{- range $typ, $def := .Types}}
-		{{- if requiredType $combo $typ}}
-			{{- range $def.Functions}}
-				{{- if $and}} &&{{else}}{{$and = true}}{{end}} {{.VarName}} {{if contains $combo $typ}}!={{else}}=={{end}} nil
-			{{- end}}
-		{{- end}}
-	{{- end}}:
-		return &struct {
-			{{.BaseType}}
-{{- range $typ, $def := .Types}}
-	{{- if contains $combo $typ}}
-			{{$typ}}
-	{{- end}}
-{{- end}}
-		}{
-			{{.ShortBase}}: base,
-{{- range $typ, $def := .Types}}
-	{{- if contains $combo $typ}}
-			{{$def.ShortType}}: &{{$prefix}}{{$def.ShortType}}Impl{
-				{{- range $def.Functions}}
-				{{.VarName}}: {{.VarName}},
-				{{- end}}
-			},
-	{{- end}}
-{{- end}}
-		}
-{{- end -}}
-
 func {{.Function}}(base {{.BaseType}}{{range ordered}}, {{.VarName}} {{.Signature}}{{end}}) {{.ReturnType}} {
 {{- $basetype := .BaseType}}
 {{- $shortbase := .ShortBase}}
 {{- $prefix := .Function}}
 {{- $types := .Types}}
 {{- $and := false}}
-	switch {
-	case {{- range $typ, $def := .Types}}
-		{{- if requiredType empty $typ}}
-			{{- range $def.Functions}}
-				{{- if $and}} &&{{else}}{{$and = true}}{{end}} {{.VarName}} == nil
-			{{- end}}
-		{{- end}}
-	{{- end}}:
-		return base
-{{range $combo := .Combinations}}
-	case {{- template "case" dict "BaseType" $basetype "Prefix" $prefix "ShortBase" $shortbase "Types" $types "Combo" $combo}}
-{{end}}	}
+	caps := make(map[reflect.Type]any)
 
-	return nil
+{{range $api, $element := .Types}}
+	// {{$api}}, {{$element}}
+	{{range $func := $element.Functions}}
+		if {{.VarName}} != nil {
+			caps[reflect.TypeFor[{{$api}}]()] = {{.VarName}}
+		}
+	{{end}}
+{{end}}
+
+	return &{{.Function}}Capable{
+		caps: caps,
+		{{.ReturnType}}: base,
+	}
+}
+
+type {{.Function}}Capable struct {
+	{{.ReturnType}}
+	caps map[reflect.Type]any
+}
+
+func (d *{{.Function}}Capable) Capability(typ reflect.Type) (any, bool) {
+	return d.caps[typ]
 }
 
 {{range $element := .Types -}}
