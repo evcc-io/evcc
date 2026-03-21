@@ -9,10 +9,8 @@ import (
 	"reflect"
 	"slices"
 	"strconv"
-	"strings"
 
 	"dario.cat/mergo"
-	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/charger"
 	"github.com/evcc-io/evcc/core/circuit"
@@ -22,42 +20,12 @@ import (
 	"github.com/evcc-io/evcc/meter"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/tariff"
-	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
-	"github.com/evcc-io/evcc/util/registry"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/evcc-io/evcc/vehicle"
 	"github.com/gorilla/mux"
 	"go.yaml.in/yaml/v4"
 )
-
-func newCircuitDeviceFromConfig(ctx context.Context, typeValue string, other map[string]any) (api.Circuit, error) {
-	if typeValue == "custom" {
-		delete(other, "type")
-		factory, err := registry.New[api.Circuit]("circuit").Get(strings.ToLower(typeValue))
-		if err != nil {
-			return nil, err
-		}
-
-		v, err := factory(ctx, other)
-		if err != nil {
-			err = fmt.Errorf("cannot create circuit type '%s': %w", util.TypeWithTemplateName(typeValue, other), err)
-		}
-
-		return v, err
-	}
-
-	templateVal, ok := other["template"]
-	if !ok {
-		return nil, fmt.Errorf("template key missing")
-	}
-
-	if templateVal == "static" {
-		return circuit.NewFromConfig(other)
-	}
-
-	return nil, fmt.Errorf("template unknown")
-}
 
 func devicesConfig[T any](class templates.Class, h config.Handler[T], hidePrivate bool) ([]map[string]any, error) {
 	var res []map[string]any
@@ -357,7 +325,7 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		conf, err = newDevice(ctx, class, req, vehicle.NewFromConfig, config.Vehicles(), force)
 
 	case templates.Circuit:
-		conf, err = newDevice(ctx, class, req, newCircuitDeviceFromConfig, config.Circuits(), force)
+		conf, err = newDevice(ctx, class, req, circuit.NewFromDeviceConfig, config.Circuits(), force)
 
 	case templates.Tariff:
 		conf, err = newDevice(ctx, class, req, tariff.NewFromConfig, config.Tariffs(), force)
@@ -442,7 +410,7 @@ func updateDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		err = updateDevice(ctx, id, class, req, vehicle.NewFromConfig, config.Vehicles(), force)
 
 	case templates.Circuit:
-		err = updateDevice(ctx, id, class, req, newCircuitDeviceFromConfig, config.Circuits(), force)
+		err = updateDevice(ctx, id, class, req, circuit.NewFromDeviceConfig, config.Circuits(), force)
 
 	case templates.Tariff:
 		err = updateDevice(ctx, id, class, req, tariff.NewFromConfig, config.Tariffs(), force)
@@ -696,7 +664,7 @@ func testConfigHandler(w http.ResponseWriter, r *http.Request) {
 		instance, err = testConfig(ctx, id, class, req, vehicle.NewFromConfig, config.Vehicles())
 
 	case templates.Circuit:
-		instance, err = testConfig(ctx, id, class, req, newCircuitDeviceFromConfig, config.Circuits())
+		instance, err = testConfig(ctx, id, class, req, circuit.NewFromDeviceConfig, config.Circuits())
 
 	case templates.Tariff:
 		instance, err = testConfig(ctx, id, class, req, tariff.NewFromConfig, config.Tariffs())
