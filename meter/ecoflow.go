@@ -14,16 +14,14 @@ import (
 
 // EcoFlow represents the EcoFlow  meter
 type EcoFlow struct {
-	ctx             context.Context
-	usage           string
-	serial          string
-	cache           time.Duration
-	client          *ecoflow.Client
-	gridPowerKey    string
-	pvPowerKey      string
-	batteryPowerKey string
-	batterySocKey   string
-	dataG           func() (*ecoflow.GetCmdResponse, error)
+	ctx    context.Context
+	usage  string
+	serial string
+	cache  time.Duration
+	client *ecoflow.Client
+	dataG  func() (*ecoflow.GetCmdResponse, error)
+
+	gridPower, pvPower, batteryPower, batterySoc string
 }
 
 func init() {
@@ -33,16 +31,10 @@ func init() {
 // NewEcoFlowFromConfig creates an EcoFlow  meter from generic config
 func NewEcoFlowFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	cc := struct {
-		AccessKey       string
-		SecretKey       string
-		Serial          string
-		Usage           string
-		Region          string
-		GridPowerKey    string
-		PvPowerKey      string
-		BatteryPowerKey string
-		BatterySocKey   string
-		Cache           time.Duration
+		Usage                                        string
+		AccessKey, SecretKey, Serial, Region         string
+		GridPower, PvPower, BatteryPower, BatterySoc string
+		Cache                                        time.Duration
 	}{
 		Cache: 30 * time.Second,
 	}
@@ -63,43 +55,20 @@ func NewEcoFlowFromConfig(ctx context.Context, other map[string]any) (api.Meter,
 		return nil, errors.New("missing usage")
 	}
 
-	var baseUrl string
+	var uri string
 	switch cc.Region {
 	case "auto":
-		baseUrl = "https://api.ecoflow.com"
+		uri = "https://api.ecoflow.com"
 	case "europe":
-		baseUrl = "https://api-e.ecoflow.com"
+		uri = "https://api-e.ecoflow.com"
 	case "america":
-		baseUrl = "https://api-a.ecoflow.com"
+		uri = "https://api-a.ecoflow.com"
 	default:
 		return nil, fmt.Errorf("invalid region: %s", cc.Region)
 	}
 
-	if cc.GridPowerKey == "" {
-		return nil, errors.New("missing grid power key")
-	}
-	if cc.PvPowerKey == "" {
-		return nil, errors.New("missing pv power key")
-	}
-	if cc.BatteryPowerKey == "" {
-		return nil, errors.New("missing battery power key")
-	}
-	if cc.BatterySocKey == "" {
-		return nil, errors.New("missing battery soc key")
-	}
-
-	m, err := NewEcoFlow(
-		ctx,
-		cc.AccessKey,
-		cc.SecretKey,
-		cc.Serial,
-		cc.Usage,
-		baseUrl,
-		cc.GridPowerKey,
-		cc.PvPowerKey,
-		cc.BatteryPowerKey,
-		cc.BatterySocKey,
-		cc.Cache)
+	m, err := NewEcoFlow(ctx, cc.AccessKey, cc.SecretKey, cc.Serial, cc.Usage, uri,
+		cc.GridPower, cc.PvPower, cc.BatteryPower, cc.BatterySoc, cc.Cache)
 	if err != nil {
 		return nil, err
 	}
@@ -112,31 +81,23 @@ func NewEcoFlowFromConfig(ctx context.Context, other map[string]any) (api.Meter,
 }
 
 // NewEcoFlow constructs the EcoFlow struct
-func NewEcoFlow(
-	ctx context.Context,
-	accessKey,
-	secretKey,
-	serial,
-	usage string,
-	baseUrl string,
-	gridPowerKey string,
-	pvPowerKey string,
-	batteryPowerKey string,
-	batterySocKey string,
-	cache time.Duration) (*EcoFlow, error) {
-	client := ecoflow.NewEcoflowClient(accessKey, secretKey, ecoflow.WithBaseUrl(baseUrl))
+func NewEcoFlow(ctx context.Context, accessKey, secretKey, serial, usage, uri string,
+	gridPower, pvPower, batteryPower, batterySoc string, cache time.Duration) (*EcoFlow, error) {
+
 	m := &EcoFlow{
-		ctx:             ctx,
-		serial:          serial,
-		usage:           usage,
-		cache:           cache,
-		client:          client,
-		gridPowerKey:    gridPowerKey,
-		pvPowerKey:      pvPowerKey,
-		batteryPowerKey: batteryPowerKey,
-		batterySocKey:   batterySocKey,
+		ctx:          ctx,
+		serial:       serial,
+		usage:        usage,
+		cache:        cache,
+		client:       ecoflow.NewEcoflowClient(accessKey, secretKey, ecoflow.WithBaseUrl(uri)),
+		gridPower:    gridPower,
+		pvPower:      pvPower,
+		batteryPower: batteryPower,
+		batterySoc:   batterySoc,
 	}
+
 	m.dataG = util.Cached(m.getData, cache)
+
 	return m, nil
 }
 
@@ -148,11 +109,11 @@ func (m *EcoFlow) getData() (*ecoflow.GetCmdResponse, error) {
 	var params []string
 	switch m.usage {
 	case "grid":
-		params = []string{m.gridPowerKey}
+		params = []string{m.gridPower}
 	case "pv":
-		params = []string{m.pvPowerKey}
+		params = []string{m.pvPower}
 	case "battery":
-		params = []string{m.batteryPowerKey, m.batterySocKey}
+		params = []string{m.batteryPower, m.batterySoc}
 	}
 
 	return m.client.GetDeviceParameters(ctx, m.serial, params)
@@ -173,11 +134,11 @@ func (m *EcoFlow) CurrentPower() (float64, error) {
 	// bpSoc responds with int
 	switch m.usage {
 	case "grid":
-		return ecoflowValue(response.Data, m.gridPowerKey)
+		return ecoflowValue(response.Data, m.gridPower)
 	case "pv":
-		return ecoflowValue(response.Data, m.pvPowerKey)
+		return ecoflowValue(response.Data, m.pvPower)
 	case "battery":
-		pwr, err := ecoflowValue(response.Data, m.batteryPowerKey)
+		pwr, err := ecoflowValue(response.Data, m.batteryPower)
 		if err != nil {
 			return 0, err
 		}
@@ -209,5 +170,5 @@ func (m *EcoFlowBattery) Soc() (float64, error) {
 		return 0, err
 	}
 
-	return ecoflowValue(response.Data, m.batterySocKey)
+	return ecoflowValue(response.Data, m.batterySoc)
 }
