@@ -85,12 +85,22 @@ type BatteryController interface {
 	SetBatteryMode(BatteryMode) error
 }
 
+// PowerController provides power-based charger control in W.
+// Chargers that natively accept power targets implement this interface.
+type PowerController interface {
+	MaxPower(power float64) error
+}
+
+// PowerLimiter returns the power limits for power-controlled devices
+type PowerLimiter interface {
+	GetMinMaxPower() (float64, float64, error)
+}
+
 // Charger provides current charging status and enable/disable charging
 type Charger interface {
 	ChargeState
 	Enabled() (bool, error)
 	Enable(enable bool) error
-	CurrentController
 }
 
 // ChargerEx provides milli-amp precision charger current control
