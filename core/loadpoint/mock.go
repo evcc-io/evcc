@@ -876,9 +876,11 @@ func (mr *MockAPIMockRecorder) SetEnableThreshold(threshold any) *gomock.Call {
 }
 
 // SetGeofenceConfig mocks base method.
-func (m *MockAPI) SetGeofenceConfig(geofence GeofenceConfig) {
+func (m *MockAPI) SetGeofenceConfig(geofence GeofenceConfig) error {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetGeofenceConfig", geofence)
+	ret := m.ctrl.Call(m, "SetGeofenceConfig", geofence)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // SetGeofenceConfig indicates an expected call of SetGeofenceConfig.
