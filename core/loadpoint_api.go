@@ -749,7 +749,7 @@ func (lp *Loadpoint) SetMaxCurrent(current float64) error {
 	return nil
 }
 
-// SetMinCurrent sets the min loadpoint current
+// SetMinAndMaxCurrent sets the min and max loadpoint current
 func (lp *Loadpoint) SetMinAndMaxCurrent(minCurrent float64, maxCurrent float64) error {
 	lp.Lock()
 	defer lp.Unlock()
