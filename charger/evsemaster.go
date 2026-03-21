@@ -64,9 +64,6 @@ type EVSEMaster struct {
 	// evseAddr is the EVSE's source address (e.g. 192.168.1.100:11938).
 	// It is learned from the first Login broadcast and used for all sends.
 	evseAddr *net.UDPAddr
-
-	recv  chan *evsemaster.ReceivedPacket
-	ready chan struct{} // closed once the first ACStatus is received
 }
 
 func init() {
@@ -107,16 +104,13 @@ func NewEVSEMaster(ctx context.Context, serial, password string) (*EVSEMaster, e
 		log:     log,
 		conn:    conn,
 		current: 6,
-		recv:    make(chan *evsemaster.ReceivedPacket, 32),
-		ready:   make(chan struct{}),
 	}
 
-	conn.Subscribe(wb.recv)
-
-	go wb.run(ctx)
+	done := make(chan struct{})
+	go wb.run(ctx, done)
 
 	select {
-	case <-wb.ready:
+	case <-done:
 		return wb, nil
 	case <-ctx.Done():
 		return nil, ctx.Err()
@@ -140,8 +134,11 @@ func (wb *EVSEMaster) send(cmd uint16, payload []byte) error {
 }
 
 // run is the background goroutine that maintains the EVSE session.
-func (wb *EVSEMaster) run(ctx context.Context) {
+func (wb *EVSEMaster) run(ctx context.Context, done chan struct{}) {
 	var once sync.Once
+
+	recv := make(chan *evsemaster.ReceivedPacket, 32)
+	wb.conn.Subscribe(recv)
 	defer wb.conn.Unsubscribe()
 
 	for tick := time.NewTicker(15 * time.Second); ; {
@@ -159,7 +156,7 @@ func (wb *EVSEMaster) run(ctx context.Context) {
 				}
 			}
 
-		case pkt := <-wb.recv:
+		case pkt := <-recv:
 			switch pkt.Command {
 			case evsemaster.CmdLoginBroadcast:
 				// Learn (or refresh) the EVSE's source address.
