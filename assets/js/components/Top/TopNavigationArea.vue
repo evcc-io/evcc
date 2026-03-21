@@ -1,7 +1,7 @@
 <template>
 	<div class="d-flex">
 		<Notifications :notifications="notifications" :loadpoints="loadpoints" class="me-2" />
-		<TopNavigation v-bind="topNavigation" @auth-required="openAuthModal" />
+		<TopNavigation v-if="!experimental" v-bind="topNavigation" @auth-required="openAuthModal" />
 		<AuthProviderModal :provider="authProvider" />
 	</div>
 </template>
@@ -35,6 +35,9 @@ export default defineComponent({
 		};
 	},
 	computed: {
+		experimental(): boolean {
+			return store.state?.experimental || false;
+		},
 		topNavigation(): any {
 			return this.collectProps(Navigation, store.state);
 		},
