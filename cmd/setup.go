@@ -158,7 +158,7 @@ func isWritable(filePath string) bool {
 
 func configureCircuits(conf *[]config.Named) error {
 	// migrate settings
-	if settings.Exists(keys.Circuits) {
+	if len(*conf) == 0 && settings.Exists(keys.Circuits) {
 		*conf = []config.Named{}
 		if err := settings.Yaml(keys.Circuits, new([]map[string]any), &conf); err != nil {
 			return err

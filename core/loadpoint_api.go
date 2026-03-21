@@ -78,6 +78,7 @@ func (lp *Loadpoint) SetCircuitRef(ref string) {
 	lp.Lock()
 	defer lp.Unlock()
 	lp.CircuitRef = ref
+	lp.publish(keys.Circuit, lp.CircuitRef)
 	lp.settings.SetString(keys.Circuit, ref)
 }
 

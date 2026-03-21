@@ -1036,6 +1036,14 @@
     "title": "Authentication"
   },
   "main": {
+    "circuits": {
+      "title": "Circuits",
+      "help": "Circuits limit the combined power of connected loadpoints. This view shows current usage and remaining headroom.",
+      "none": "No circuits are configured.",
+      "ungrouped": "Loadpoints without a circuit",
+      "close": "Close",
+      "indicatorLabel": "Circuit"
+    },
     "chargingPlan": {
       "active": "Active",
       "addRepeatingPlan": "Add repeating plan",
@@ -1102,6 +1110,16 @@
     "hemsWarning": {
       "description": "Reduced charging to not exceed {limit}.",
       "title": "External limit:"
+    },
+    "loadManagement": {
+      "curtailed": "Curtailed",
+      "curtailedTooltip": "Feed-in curtailment active (§9 EEG)",
+      "current": "Current",
+      "dimmed": "Dimmed",
+      "dimmedTooltip": "Demand reduction active (§14a EnWG)",
+      "power": "Power",
+      "title": "Load Management",
+      "toggleExpand": "Expand or collapse load management"
     },
     "loadpoint": {
       "avgPrice": "⌀ Price",
