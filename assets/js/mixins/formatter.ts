@@ -384,7 +384,7 @@ export default defineComponent({
     fmtMonthByIndex(index: number, format: Intl.DateTimeFormatOptions["month"]) {
       return new Intl.DateTimeFormat(this.$i18n?.locale, {
         month: format,
-      }).format(new Date(Date.UTC(2021, index, 1)));
+      }).format(new Date(2021, index, 1)); // local date avoids UTC timezone day shift
     },
     getWeekdaysList(
       format: Intl.DateTimeFormatOptions["weekday"]
