@@ -30,7 +30,7 @@
     "control": "Batterijsturing",
     "discharge": "Voorkom ontladen bij gebruik van de snelle modus of bij gepland laden.",
     "disclaimerHint": "Opgelet:",
-    "disclaimerText": "Deze instellingen beïnvloeden enkel de zonnemodus. Oplaadgedrag wordt overeenkomstig aangepast.",
+    "disclaimerText": "Deze instellingen beïnvloeden enkel de PV modus. Oplaadgedrag wordt overeenkomstig aangepast.",
     "gridChargeTab": "Netladen",
     "legendBottomName": "Opladen van de thuisbatterij heeft prioriteit",
     "legendBottomSubline": "tot {soc} bereikt is.",
@@ -334,6 +334,7 @@
       },
       "defaultModeHelpKeep": "Behoud de laatst-geselecteerde modus.",
       "defaultModeLabel": "Standaard mode",
+      "defaultsHint": "Standaardmodus, zonne-energiegedrag en elektrische details maken gebruik van verstandige standaardwaarden.",
       "defaultsHintLink": "Instellingen aanpassen",
       "delete": "Wissen",
       "electricalSubtitle": "Bij twijfel, raadpleeg een elektricien.",
@@ -411,7 +412,7 @@
       "addAdditional": "Extra meter toevoegen",
       "addGrid": "Netmeter toevoegen",
       "addLoadpoint": "Voeg lader of verwarmingsapparaat toe",
-      "addPvBattery": "Voeg zonnepaneel of batterij toe",
+      "addPvBattery": "Zonnepanelen of batterij toevoegen",
       "addTariffs": "Tarieven toevoegen",
       "addVehicle": "Voeg voertuig toe",
       "configured": "geconfigureerd",
@@ -624,8 +625,8 @@
       }
     },
     "pv": {
-      "titleAdd": "Voeg meter zonnepanelen toe",
-      "titleEdit": "Bewerk meter zonnepanelen"
+      "titleAdd": "Meter Zonnepanelen Toevoegen",
+      "titleEdit": "Meter Zonnepanelen Bewerken"
     },
     "section": {
       "additionalMeter": "Extra meters",
@@ -633,7 +634,7 @@
       "grid": "Netaansluiting",
       "integrations": "Integraties",
       "loadpoints": "Laden en verwarmen",
-      "meter": "Zonnepanelen & accu",
+      "meter": "Zonnepanelen & Batterij",
       "services": "Diensten",
       "system": "Systeem",
       "vehicles": "Voertuigen"
@@ -720,7 +721,7 @@
       "co2Services": "CO₂-diensten",
       "customForecast": "Gebruikers eigen voorspelling",
       "customTariff": "Gebruikers eigen tarieven",
-      "description": "Configureer uw eigen tarieven en voorspellingen. Gebruik apparaat-gebaseerde configuratie voor dynamisch beheer of gebruik YAML voor statisch beheer.",
+      "description": "Configureer uw eigen tarieven en voorspellingen. Gebruik apparaat-gebaseerde configuratie voor dynamisch beheer of gebruik YAML voor statische instellingen.",
       "feedIn": {
         "description": "Vergoeding voor energie die geëxporteerd wordt naar het net. Wordt gebruikt om de werkelijke kosten van het laden te berekenen.",
         "titleAdd": "Net-export tarief toevoegen",
@@ -729,14 +730,16 @@
       "generic": "Generieke integraties",
       "grid": {
         "description": "Electriciteits-prijzen voor consumptie van het net. Gebruikt om de werkelijke laadkosten uit te rekenen, en voor het laden van de auto of thuis-accu en het inschakelen van verwarming tegen de beste prijs.",
-        "titleAdd": "Electriciteits tarief toevoegen voor import",
-        "titleEdit": "Net-import tarieven aanpssen"
+        "titleAdd": "Net-import Tarief Toevoegen",
+        "titleEdit": "Net-import Tarief Aanpassen"
       },
+      "legacyWarning": "Nieuwe tariefconfiguratie beschikbaar! Verwijder en bewaar uw tarieven hier om het nieuwe begeleide proces te gebruiken.",
       "option": {
         "co2": "CO₂-voorspelling toevoegen",
         "feedIn": "Net-export tarief toevoegen",
+        "grid": "Net-import tarief toevoegen",
         "planner": "Planner voorspelling toevoegen",
-        "solar": "PV-voorspelling toevoegen"
+        "solar": "Zonne-energie voorspelling toevoegen"
       },
       "planner": {
         "description": "Geavanceerde instelling. Doorgaans niet nodig omdat dynamische energieprijzen en CO₂ voorspellingen gebruikt worden. Deze instelling voegt een extra methode toe die het laden planbaar maakt. Deze methode is niet voor statistieken of prijsberekeningen.",
@@ -746,8 +749,8 @@
       "services": "Diensten",
       "solar": {
         "description": "Voorspelling van zonne-energie van uw PV. Wordt weergegeven in de interface en gebruikt voor optimalisaties in de toekomst.",
-        "titleAdd": "PV voorspelling toevoegen",
-        "titleEdit": "PV voorspelling aanpassen"
+        "titleAdd": "Zonne-energie Voorspelling Toevoegen",
+        "titleEdit": "Zonne-energie Voorspelling Aanpassen"
       },
       "template": "Aanbieder",
       "title": "Tarieven & Voorspelingen",
@@ -835,9 +838,9 @@
       "greenEnergy": "Zon",
       "greenEnergySub1": "geladen met evcc",
       "greenEnergySub2": "sinds oktober 2022",
-      "greenShare": "Aandeel zon",
+      "greenShare": "Aandeel zonne-energie",
       "greenShareSub1": "van de stroom werd geleverd door",
-      "greenShareSub2": "zon- en batterij-opslag",
+      "greenShareSub2": "zonne-energie en batterij-opslag",
       "power": "Laadvermogen",
       "powerSub1": "{activeClients} van {totalClients} deelnemers",
       "powerSub2": "laden…",
@@ -921,7 +924,7 @@
       "today": "Vandaag",
       "tomorrow": "Morgen"
     },
-    "solarAdjust": "Pas de zonnevoorspelling aan op basis van echte productiegegevens{percent}.",
+    "solarAdjust": "Pas de zonne-energie voorspelling aan op basis van echte productiegegevens{percent}.",
     "type": {
       "co2": "CO₂",
       "price": "Prijs",
@@ -1093,7 +1096,7 @@
       "batteryHold": "Batterij (aanhouden)",
       "batteryTooltip": "{energy} van {total} ({soc})",
       "forecast": "Voorspelling: ",
-      "forecastTooltip": "Voorspelling: resterende zonneproductie voor vandaag",
+      "forecastTooltip": "Voorspelling: resterende zonne-energieproductie voor vandaag",
       "gridImport": "Netafname",
       "homePower": "Consumptie",
       "loadpoints": "Lader| Lader | {count} laders",
@@ -1328,7 +1331,7 @@
       "byGroupLoadpoint": "per Oplaadpunt",
       "byGroupVehicle": "per Voertuig",
       "energy": "Geladen Energie",
-      "energyGrouped": "Zon vs. Net Energie",
+      "energyGrouped": "Zonne-energie vs. Net-energie",
       "energyGroupedByGroup": "Energie {byGroup}",
       "energySubSolar": "{value} zon",
       "energySubTotal": "{value} totaal",
@@ -1458,7 +1461,7 @@
     "co2Label": "CO₂ uitstoot",
     "co2Limit": "CO₂ limiet",
     "enable": "Activeer de limiet",
-    "loadpointDescription": "Zet tijdelijk snel-laden in solar mode aan.",
+    "loadpointDescription": "Zet tijdelijk snel-laden in PV mode aan.",
     "modalTitle": "Smart Grid laden",
     "none": "geen",
     "priceLabel": "Energieprijs",
