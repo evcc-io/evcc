@@ -1,5 +1,22 @@
 package charger
 
+// LICENSE
+
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
+
+// This module is NOT covered by the MIT license. All rights reserved.
+
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
 // EVSE Master UDP charger integration.
 // Protocol credit: https://github.com/johnwoo-nl/emproto (reverse-engineering)
 // Reference implementation: https://github.com/Oniric75/evsemasterudp (Home Assistant)
@@ -39,18 +56,17 @@ type EVSEMaster struct {
 	log  *util.Logger
 	conn *evsemaster.Connection
 
-	mu        sync.RWMutex
-	status    *evsemaster.ACStatus
-	current   int       // last value set by MaxCurrent
-	updatedAt time.Time // time of last ACStatus received
+	mu          sync.RWMutex
+	status      *evsemaster.ACStatus
+	current     int       // last value set by MaxCurrent
+	lastUpdated time.Time // time of last ACStatus received
 
 	// evseAddr is the EVSE's source address (e.g. 192.168.1.100:11938).
 	// It is learned from the first Login broadcast and used for all sends.
 	evseAddr *net.UDPAddr
 
-	recv      chan *evsemaster.ReceivedPacket
-	ready     chan struct{} // closed once the first ACStatus is received
-	readyOnce sync.Once
+	recv  chan *evsemaster.ReceivedPacket
+	ready chan struct{} // closed once the first ACStatus is received
 }
 
 func init() {
@@ -59,10 +75,10 @@ func init() {
 
 // NewEVSEMasterFromConfig creates an EVSEMaster charger from a generic config map.
 func NewEVSEMasterFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
-	var cc = struct {
+	var cc struct {
 		Serial   string
 		Password string
-	}{}
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
@@ -84,7 +100,7 @@ func NewEVSEMaster(ctx context.Context, serial, password string) (*EVSEMaster, e
 
 	conn, err := evsemaster.NewConnection(log, serial, password)
 	if err != nil {
-		return nil, fmt.Errorf("listener: %w", err)
+		return nil, err
 	}
 
 	wb := &EVSEMaster{
@@ -99,17 +115,12 @@ func NewEVSEMaster(ctx context.Context, serial, password string) (*EVSEMaster, e
 
 	go wb.run(ctx)
 
-	start := time.Now()
 	select {
 	case <-wb.ready:
 		return wb, nil
 	case <-ctx.Done():
-		log.DEBUG.Printf("init: ctx cancelled after %v: %v", time.Since(start), ctx.Err())
-		conn.Unsubscribe()
 		return nil, ctx.Err()
 	case <-time.After(evsemasterTimeout):
-		log.DEBUG.Printf("init: timed out after %v waiting for first ACStatus (evseAddr=%v)", evsemasterTimeout, wb.evseAddr)
-		conn.Unsubscribe()
 		return nil, api.ErrTimeout
 	}
 }
@@ -130,14 +141,23 @@ func (wb *EVSEMaster) send(cmd uint16, payload []byte) error {
 
 // run is the background goroutine that maintains the EVSE session.
 func (wb *EVSEMaster) run(ctx context.Context) {
-	keepaliveTick := time.NewTicker(15 * time.Second)
-	defer keepaliveTick.Stop()
+	var once sync.Once
 	defer wb.conn.Unsubscribe()
 
-	for {
+	for tick := time.NewTicker(15 * time.Second); ; {
 		select {
 		case <-ctx.Done():
 			return
+
+		case <-tick.C:
+			wb.mu.RLock()
+			addr := wb.evseAddr
+			wb.mu.RUnlock()
+			if addr != nil {
+				if err := wb.send(evsemaster.CmdHeading, nil); err != nil {
+					wb.log.WARN.Printf("keepalive: %v", err)
+				}
+			}
 
 		case pkt := <-wb.recv:
 			switch pkt.Command {
@@ -148,11 +168,11 @@ func (wb *EVSEMaster) run(ctx context.Context) {
 				wb.mu.Unlock()
 
 				if err := wb.send(evsemaster.CmdLoginConfirm, []byte{0x00}); err != nil {
-					wb.log.WARN.Printf("LoginConfirm: %v", err)
+					wb.log.WARN.Printf("CmdLoginConfirm: %v", err)
 					continue
 				}
 				if err := wb.send(evsemaster.CmdHeading, nil); err != nil {
-					wb.log.WARN.Printf("initial Heading: %v", err)
+					wb.log.WARN.Printf("CmdHeading: %v", err)
 				}
 				wb.log.DEBUG.Printf("logged in, EVSE at %s", pkt.From)
 
@@ -165,25 +185,19 @@ func (wb *EVSEMaster) run(ctx context.Context) {
 				if s, err := evsemaster.ParseACStatus(pkt.Payload); err == nil {
 					wb.mu.Lock()
 					wb.status = s
-					wb.updatedAt = time.Now()
+					wb.lastUpdated = time.Now()
 					wb.mu.Unlock()
-					wb.readyOnce.Do(func() { close(wb.ready) })
+					once.Do(func() { close(wb.ready) })
 				} else {
 					wb.log.WARN.Printf("ACStatus parse: %v", err)
 				}
-				_ = wb.send(evsemaster.CmdStatusAck, []byte{0x01})
+				if err := wb.send(evsemaster.CmdStatusAck, []byte{0x01}); err != nil {
+					wb.log.WARN.Printf("ack: %v", err)
+				}
 
 			case evsemaster.CmdChargeStatus:
-				_ = wb.send(evsemaster.CmdChargingAck, []byte{0x00})
-			}
-
-		case <-keepaliveTick.C:
-			wb.mu.RLock()
-			addr := wb.evseAddr
-			wb.mu.RUnlock()
-			if addr != nil {
-				if err := wb.send(evsemaster.CmdHeading, nil); err != nil {
-					wb.log.WARN.Printf("keepalive: %v", err)
+				if err := wb.send(evsemaster.CmdChargingAck, []byte{0x00}); err != nil {
+					wb.log.WARN.Printf("ack: %v", err)
 				}
 			}
 		}
@@ -199,8 +213,7 @@ func (wb *EVSEMaster) Status() (api.ChargeStatus, error) {
 	wb.mu.RLock()
 	defer wb.mu.RUnlock()
 
-	if staleness := time.Since(wb.updatedAt); staleness > evsemasterTimeout {
-		wb.log.DEBUG.Printf("Status: stale by %v (updatedAt=%v, evseAddr=%v)", staleness, wb.updatedAt, wb.evseAddr)
+	if time.Since(wb.lastUpdated) > evsemasterTimeout {
 		return api.StatusNone, api.ErrTimeout
 	}
 
@@ -219,10 +232,10 @@ func (wb *EVSEMaster) Enabled() (bool, error) {
 	wb.mu.RLock()
 	defer wb.mu.RUnlock()
 
-	if staleness := time.Since(wb.updatedAt); staleness > evsemasterTimeout {
-		wb.log.DEBUG.Printf("Enabled: stale by %v (updatedAt=%v, evseAddr=%v)", staleness, wb.updatedAt, wb.evseAddr)
+	if time.Since(wb.lastUpdated) > evsemasterTimeout {
 		return false, api.ErrTimeout
 	}
+
 	return wb.status.OutputState == 1, nil
 }
 
@@ -234,11 +247,11 @@ func (wb *EVSEMaster) Enable(enable bool) error {
 
 	var err error
 	if enable {
-		var payload []byte
-		if payload, err = evsemaster.PackChargeStart(current); err != nil {
+		var b []byte
+		if b, err = evsemaster.PackChargeStart(current); err != nil {
 			return err
 		}
-		err = wb.send(evsemaster.CmdChargeStart, payload)
+		err = wb.send(evsemaster.CmdChargeStart, b)
 	} else {
 		err = wb.send(evsemaster.CmdChargeStop, nil)
 	}
@@ -270,10 +283,11 @@ var _ api.Meter = (*EVSEMaster)(nil)
 func (wb *EVSEMaster) CurrentPower() (float64, error) {
 	wb.mu.RLock()
 	defer wb.mu.RUnlock()
-	if staleness := time.Since(wb.updatedAt); staleness > evsemasterTimeout {
-		wb.log.DEBUG.Printf("CurrentPower: stale by %v (updatedAt=%v, evseAddr=%v)", staleness, wb.updatedAt, wb.evseAddr)
+
+	if time.Since(wb.lastUpdated) > evsemasterTimeout {
 		return 0, api.ErrTimeout
 	}
+
 	return wb.status.Power, nil
 }
 
@@ -283,10 +297,11 @@ var _ api.MeterEnergy = (*EVSEMaster)(nil)
 func (wb *EVSEMaster) TotalEnergy() (float64, error) {
 	wb.mu.RLock()
 	defer wb.mu.RUnlock()
-	if staleness := time.Since(wb.updatedAt); staleness > evsemasterTimeout {
-		wb.log.DEBUG.Printf("TotalEnergy: stale by %v (updatedAt=%v, evseAddr=%v)", staleness, wb.updatedAt, wb.evseAddr)
+
+	if time.Since(wb.lastUpdated) > evsemasterTimeout {
 		return 0, api.ErrTimeout
 	}
+
 	return wb.status.TotalEnergy, nil
 }
 
@@ -296,10 +311,11 @@ var _ api.PhaseCurrents = (*EVSEMaster)(nil)
 func (wb *EVSEMaster) Currents() (float64, float64, float64, error) {
 	wb.mu.RLock()
 	defer wb.mu.RUnlock()
-	if staleness := time.Since(wb.updatedAt); staleness > evsemasterTimeout {
-		wb.log.DEBUG.Printf("Currents: stale by %v (updatedAt=%v, evseAddr=%v)", staleness, wb.updatedAt, wb.evseAddr)
+
+	if time.Since(wb.lastUpdated) > evsemasterTimeout {
 		return 0, 0, 0, api.ErrTimeout
 	}
+
 	return wb.status.L1Current, wb.status.L2Current, wb.status.L3Current, nil
 }
 
@@ -309,9 +325,10 @@ var _ api.PhaseVoltages = (*EVSEMaster)(nil)
 func (wb *EVSEMaster) Voltages() (float64, float64, float64, error) {
 	wb.mu.RLock()
 	defer wb.mu.RUnlock()
-	if staleness := time.Since(wb.updatedAt); staleness > evsemasterTimeout {
-		wb.log.DEBUG.Printf("Voltages: stale by %v (updatedAt=%v, evseAddr=%v)", staleness, wb.updatedAt, wb.evseAddr)
+
+	if time.Since(wb.lastUpdated) > evsemasterTimeout {
 		return 0, 0, 0, api.ErrTimeout
 	}
+
 	return wb.status.L1Voltage, wb.status.L2Voltage, wb.status.L3Voltage, nil
 }
