@@ -83,7 +83,6 @@ func NewEcoFlowFromConfig(ctx context.Context, other map[string]any) (api.Meter,
 // NewEcoFlow constructs the EcoFlow struct
 func NewEcoFlow(ctx context.Context, accessKey, secretKey, serial, usage, uri string,
 	gridPower, pvPower, batteryPower, batterySoc string, cache time.Duration) (*EcoFlow, error) {
-
 	m := &EcoFlow{
 		ctx:          ctx,
 		serial:       serial,
