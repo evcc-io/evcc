@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/evcc-io/evcc/plugin/auth"
@@ -40,6 +41,29 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 	if err := util.DecodeOther(res, &cc); err != nil {
 		jsonError(w, http.StatusBadRequest, err)
 		return
+	}
+
+	// when editing existing device, merge masked values with stored config
+	if vars := mux.Vars(r); vars["class"] != "" && vars["id"] != "" {
+		id, err := strconv.Atoi(vars["id"])
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		class, err := templates.ClassString(vars["class"])
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		merged, err := mergedMaskedConfig(class, id, cc.Other)
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		cc.Other = merged
 	}
 
 	ts, err := auth.NewFromConfig(context.Background(), cc.Type, cc.Other)

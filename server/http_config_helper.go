@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"maps"
 	"reflect"
 	"slices"
 	"strings"
@@ -107,6 +108,7 @@ func templateForConfig(class templates.Class, conf map[string]any) (templates.Te
 	return templates.ByName(class, typ)
 }
 
+// filterValidTemplateParams removes all configuration properties that are not part of the template definition
 func filterValidTemplateParams(tmpl *templates.Template, conf map[string]any) map[string]any {
 	res := make(map[string]any)
 
@@ -167,6 +169,61 @@ func mergeMasked(class templates.Class, conf, old map[string]any) (map[string]an
 		}
 		return v
 	})
+}
+
+// storedDeviceOther retrieves the 'Other' configuration properties of a stored device by its ID
+func storedDeviceOther[T any](id int, h config.Handler[T]) (map[string]any, error) {
+	dev, err := h.ByName(config.NameForID(id))
+	if err != nil {
+		return nil, err
+	}
+
+	return dev.Config().Other, nil
+}
+
+// mergedMaskedConfig merges a new configuration with an existing one, replacing masked values with their original counterparts
+func mergedMaskedConfig(class templates.Class, id int, conf map[string]any) (map[string]any, error) {
+	var (
+		old map[string]any
+		err error
+	)
+
+	switch class {
+	case templates.Charger:
+		old, err = storedDeviceOther(id, config.Chargers())
+	case templates.Meter:
+		old, err = storedDeviceOther(id, config.Meters())
+	case templates.Vehicle:
+		old, err = storedDeviceOther(id, config.Vehicles())
+	case templates.Tariff:
+		old, err = storedDeviceOther(id, config.Tariffs())
+	case templates.Messenger:
+		old, err = storedDeviceOther(id, config.Messengers())
+	default:
+		return nil, errors.New("unsupported device class")
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	// mergeMasked needs the template type to determine which parameters are masked.
+	// We inject the existing template from the stored config if the new config doesn't have it.
+	mergeReq := maps.Clone(conf)
+	if mergeReq[typeTemplate] == nil {
+		if tmpl, ok := old[typeTemplate]; ok {
+			mergeReq[typeTemplate] = tmpl
+		}
+	}
+
+	merged, err := mergeMasked(class, mergeReq, old)
+	if err != nil {
+		return nil, err
+	}
+
+	delete(merged, typeTemplate)
+
+	return merged, nil
 }
 
 func startDeviceTimeout() (context.Context, context.CancelFunc, chan struct{}) {

@@ -428,7 +428,6 @@ export default defineComponent({
 			return this.template?.Auth && !this.auth.ok;
 		},
 		authValuesMissing() {
-			console.log("authValuesMissing", this.authValues);
 			return this.template?.Auth && Object.values(this.authValues).some((value) => !value);
 		},
 		authValues() {
@@ -627,7 +626,7 @@ export default defineComponent({
 			const { type } = this.template.Auth;
 			const values = this.authValues;
 			this.auth.loading = true;
-			const result = await this.device.checkAuth(type, values);
+			const result = await this.device.checkAuth(type, values, this.id);
 			this.auth.loading = false;
 			if (result.success) {
 				// login already exists

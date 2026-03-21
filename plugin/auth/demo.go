@@ -32,16 +32,21 @@ func NewDemoFromConfig(_ context.Context, other map[string]any) (oauth2.TokenSou
 		Server      string
 		Method      string
 		RedirectUri string
+		Secret      string
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewDemo(cc.Server, cc.Method, cc.RedirectUri)
+	return NewDemo(cc.Server, cc.Method, cc.RedirectUri, cc.Secret)
 }
 
-func NewDemo(server string, method string, redirectUri string) (oauth2.TokenSource, error) {
+func NewDemo(server, method, redirectUri, secret string) (oauth2.TokenSource, error) {
+	if secret != "topsecret" {
+		return nil, fmt.Errorf("invalid secret")
+	}
+
 	// reuse instance (similar to oauth.go getInstance pattern)
 	if demoInstance != nil {
 		// update existing instance with new values
