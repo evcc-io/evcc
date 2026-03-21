@@ -128,14 +128,31 @@ func (c *Trydan) setValue(param string, value int) error {
 // Enable implements the api.Charger interface
 func (c Trydan) Enable(enable bool) error {
 	var pause int
+	var pauseDynamic int
 	if !enable {
 		pause = 1
+	} else {
+		pauseDynamic = 1
 	}
 
 	if err := c.setValue("Paused", pause); err != nil {
 		return err
 	}
 	if err := c.setValue("Locked", pause); err != nil {
+		return err
+	}
+	// Pause/Unpause Dynamic Power Control if enabled.
+	// This is needed to let EVCC taking over charging power control.
+	// Charger will stop returning power readings if 'Dynamic' is disabled.
+	data, err := c.statusG.Get()
+	if err == nil {
+		if data.Dynamic == 1 {
+			if err := c.setValue("PauseDynamic", pauseDynamic); err != nil {
+				// Pause V2C 'PauseDynamic' when EVCC charging is active and vice versa.
+				return err
+			}
+		}
+	} else {
 		return err
 	}
 	c.enabled = enable
