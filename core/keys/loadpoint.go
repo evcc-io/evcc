@@ -18,6 +18,7 @@ const (
 	LimitEnergy       = "limitEnergy"      // limit energy
 	Soc               = "soc"
 	Thresholds        = "thresholds"
+	Geofence          = "geofence"
 	EnableThreshold   = "enableThreshold"
 	DisableThreshold  = "disableThreshold"
 	EnableDelay       = "enableDelay"

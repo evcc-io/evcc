@@ -280,6 +280,23 @@
                 "type": "integer"
               }
             }
+          },
+          "geofence": {
+            "type": "object",
+            "properties": {
+              "enabled": {
+                "type": "boolean"                
+              },
+              "lat": {
+                "type": "number"
+              },
+              "lon": {
+                "type": "number"
+              },
+              "radius": {
+                "type": "number"
+              }
+            }
           }
         }
       }

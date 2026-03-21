@@ -539,8 +539,80 @@
 									</div>
 								</div>
 							</div>
+
 							<div v-else>
 								<p class="text-muted">{{ $t("config.loadpoint.noVehicles") }}</p>
+							</div>
+
+							<div class="mt-4">
+								<h6>{{ $t("config.loadpoint.geofenceTitle") }}</h6>
+								<p class="form-text text-muted mb-1">
+									{{ $t("config.loadpoint.geofenceDescription1") }}
+								</p>
+								<p class="form-text text-muted mb-3">
+									{{ $t("config.loadpoint.geofenceDescription2") }}
+								</p>
+
+								<FormRow
+									id="loadpointGeofenceEnable"
+									:label="$t('config.loadpoint.geofenceEnableLabel')"
+								>
+									<PropertyField
+										id="loadpointGeofenceEnable"
+										v-model="values.geofence.enabled"
+										type="Bool"
+									/>
+								</FormRow>
+
+								<div v-if="values.geofence.enabled" class="ms-3 mb-5">
+									<FormRow
+										id="loadpointGeofenceLat"
+										:label="$t('config.loadpoint.geofenceLatLabel')"
+										:help="$t('config.loadpoint.geofenceLatHelp')"
+									>
+										<PropertyField
+											id="loadpointGeofenceLat"
+											v-model="values.geofence.lat"
+											type="Float"
+											min="-90"
+											max="90"
+											size="w-25 w-min-200"
+											required
+										/>
+									</FormRow>
+
+									<FormRow
+										id="loadpointGeofenceLon"
+										:label="$t('config.loadpoint.geofenceLonLabel')"
+										:help="$t('config.loadpoint.geofenceLonHelp')"
+									>
+										<PropertyField
+											id="loadpointGeofenceLon"
+											v-model="values.geofence.lon"
+											type="Float"
+											min="-180"
+											max="180"
+											size="w-25 w-min-200"
+											required
+										/>
+									</FormRow>
+
+									<FormRow
+										id="loadpointGeofenceRadius"
+										:label="$t('config.loadpoint.geofenceRadiusLabel')"
+										:help="$t('config.loadpoint.geofenceRadiusHelp')"
+									>
+										<PropertyField
+											id="loadpointGeofenceRadius"
+											v-model="values.geofence.radius"
+											type="Float"
+											min="1"
+											unit="m"
+											size="w-25 w-min-200"
+											required
+										/>
+									</FormRow>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -621,6 +693,12 @@ const defaultValues = {
 	soc: {
 		poll: { mode: "charging", interval: 60 * nsPerMin },
 		estimate: true,
+	},
+	geofence: {
+		enabled: false,
+		lat: 0,
+		lon: 0,
+		radius: 100,
 	},
 	vehicle: "",
 	charger: "",

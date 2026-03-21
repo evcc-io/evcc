@@ -36,6 +36,7 @@ type DynamicConfig struct {
 
 	Thresholds ThresholdsConfig `json:"thresholds"`
 	Soc        SocConfig        `json:"soc"`
+	Geofence   GeofenceConfig   `json:"geofence,omitempty"`
 }
 
 func SplitConfig(payload map[string]any) (DynamicConfig, map[string]any, error) {
@@ -75,6 +76,10 @@ func (payload DynamicConfig) Apply(lp API) error {
 	mode, err := api.ChargeModeString(payload.DefaultMode)
 	if err == nil {
 		lp.SetDefaultMode(mode)
+	}
+
+	if err == nil {
+		err = lp.SetGeofenceConfig(payload.Geofence)
 	}
 
 	if err == nil {

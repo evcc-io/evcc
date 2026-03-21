@@ -39,6 +39,7 @@ func getLoadpointDynamicConfig(lp loadpoint.API) loadpoint.DynamicConfig {
 		SmartFeedInPriorityLimit: lp.GetSmartFeedInPriorityLimit(),
 		Thresholds:               lp.GetThresholds(),
 		Soc:                      lp.GetSocConfig(),
+		Geofence:                 lp.GetGeofenceConfig(),
 		PlanEnergy:               planEnergy,
 		PlanTime:                 planTime,
 		PlanStrategy:             lp.GetPlanStrategy(),

@@ -347,6 +347,20 @@ func (mr *MockAPIMockRecorder) GetEnableThreshold() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEnableThreshold", reflect.TypeOf((*MockAPI)(nil).GetEnableThreshold))
 }
 
+// GetGeofenceConfig mocks base method.
+func (m *MockAPI) GetGeofenceConfig() GeofenceConfig {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetGeofenceConfig")
+	ret0, _ := ret[0].(GeofenceConfig)
+	return ret0
+}
+
+// GetGeofenceConfig indicates an expected call of GetGeofenceConfig.
+func (mr *MockAPIMockRecorder) GetGeofenceConfig() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGeofenceConfig", reflect.TypeOf((*MockAPI)(nil).GetGeofenceConfig))
+}
+
 // GetLimitEnergy mocks base method.
 func (m *MockAPI) GetLimitEnergy() float64 {
 	m.ctrl.T.Helper()
@@ -859,6 +873,20 @@ func (m *MockAPI) SetEnableThreshold(threshold float64) {
 func (mr *MockAPIMockRecorder) SetEnableThreshold(threshold any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetEnableThreshold", reflect.TypeOf((*MockAPI)(nil).SetEnableThreshold), threshold)
+}
+
+// SetGeofenceConfig mocks base method.
+func (m *MockAPI) SetGeofenceConfig(geofence GeofenceConfig) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetGeofenceConfig", geofence)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetGeofenceConfig indicates an expected call of SetGeofenceConfig.
+func (mr *MockAPIMockRecorder) SetGeofenceConfig(geofence any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetGeofenceConfig", reflect.TypeOf((*MockAPI)(nil).SetGeofenceConfig), geofence)
 }
 
 // SetLimitEnergy mocks base method.
