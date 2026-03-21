@@ -236,7 +236,7 @@ NEXT:
 type newFromConfFunc[T any] func(context.Context, string, map[string]any) (T, error)
 
 func staticInstance[T any](typ string, cc config.Named, newFromConf newFromConfFunc[T], h config.Handler[T]) error {
-	ctx, cancel := context.WithCancel(util.WithLogger(context.TODO(), util.NewLogger(cc.Name)))
+	ctx, cancel := context.WithCancel(util.WithLogger(context.TODO(), util.NewLogger(cc.Name))) //nolint:govet
 
 	instance, err := newFromConf(ctx, cc.Type, cc.Other)
 	if err != nil {
@@ -252,12 +252,12 @@ func staticInstance[T any](typ string, cc config.Named, newFromConf newFromConfF
 		cancel()
 	}
 
-	return err
+	return err //nolint:govet
 }
 
 func configurableInstance[T any](typ string, conf *config.Config, newFromConf newFromConfFunc[T], h config.Handler[T]) error {
 	cc := conf.Named()
-	ctx, cancel := context.WithCancel(util.WithLogger(context.TODO(), util.NewLogger(cc.Name)))
+	ctx, cancel := context.WithCancel(util.WithLogger(context.TODO(), util.NewLogger(cc.Name))) //nolint:govet
 
 	props, err := customDevice(cc.Other)
 	if err != nil {
@@ -281,7 +281,7 @@ func configurableInstance[T any](typ string, conf *config.Config, newFromConf ne
 		cancel()
 	}
 
-	return err
+	return err //nolint:govet
 }
 
 func configureMeters(static []config.Named, names ...string) error {
