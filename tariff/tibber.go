@@ -69,7 +69,7 @@ func NewTibberFromConfig(other map[string]any) (api.Tariff, error) {
 	return runOrError(t)
 }
 
-func (t *Tibber) run(done chan error) {
+func (t *Tibber) run(done chan error, stop <-chan struct{}) {
 	var once sync.Once
 
 	v := map[string]any{
@@ -88,14 +88,19 @@ func (t *Tibber) run(done chan error) {
 		}
 
 		if err := backoff.Retry(func() error {
-			ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
+			reqCtx, cancel := context.WithTimeout(context.Background(), request.Timeout)
 			defer cancel()
-			return t.client.Query(ctx, &res, v)
+			return t.client.Query(reqCtx, &res, v)
 		}, bo()); err != nil {
 			once.Do(func() { done <- err })
 
 			t.log.ERROR.Println(err)
-			continue
+			select {
+			case <-stop:
+				return
+			default:
+				continue
+			}
 		}
 
 		pi := res.Viewer.Home.CurrentSubscription.PriceInfo

@@ -76,7 +76,7 @@ func NewAmberFromConfig(other map[string]any) (api.Tariff, error) {
 	return runOrError(t)
 }
 
-func (t *Amber) run(done chan error) {
+func (t *Amber) run(done chan error, stop <-chan struct{}) {
 	var once sync.Once
 
 	for tick := time.Tick(time.Minute); ; <-tick {
@@ -88,7 +88,12 @@ func (t *Amber) run(done chan error) {
 			once.Do(func() { done <- err })
 
 			t.log.ERROR.Println(err)
-			continue
+			select {
+			case <-stop:
+				return
+			default:
+				continue
+			}
 		}
 
 		// Create and sort time-ordered list of all Amber intervals

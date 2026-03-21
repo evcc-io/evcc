@@ -82,7 +82,7 @@ func NewEntsoeFromConfig(other map[string]any) (api.Tariff, error) {
 	return runOrError(t)
 }
 
-func (t *Entsoe) run(done chan error) {
+func (t *Entsoe) run(done chan error, stop <-chan struct{}) {
 	var once sync.Once
 
 	// Data updated by ESO every half hour, but we only need data every hour to stay current.
@@ -128,13 +128,23 @@ func (t *Entsoe) run(done chan error) {
 			once.Do(func() { done <- err })
 
 			t.log.ERROR.Println(err)
-			continue
+			select {
+			case <-stop:
+				return
+			default:
+				continue
+			}
 		}
 
 		if len(tr.TimeSeries) == 0 {
 			once.Do(func() { done <- entsoe.ErrInvalidData })
 			t.log.ERROR.Println(entsoe.ErrInvalidData)
-			continue
+			select {
+			case <-stop:
+				return
+			default:
+				continue
+			}
 		}
 
 		// extract desired series
@@ -142,7 +152,12 @@ func (t *Entsoe) run(done chan error) {
 		if err != nil {
 			once.Do(func() { done <- err })
 			t.log.ERROR.Println(err)
-			continue
+			select {
+			case <-stop:
+				return
+			default:
+				continue
+			}
 		}
 
 		data := make(api.Rates, 0, len(res))
