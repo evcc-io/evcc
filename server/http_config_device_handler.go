@@ -9,6 +9,7 @@ import (
 	"reflect"
 	"slices"
 	"strconv"
+	"strings"
 
 	"dario.cat/mergo"
 	"github.com/evcc-io/evcc/api"
@@ -21,15 +22,41 @@ import (
 	"github.com/evcc-io/evcc/meter"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/tariff"
+	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/evcc-io/evcc/util/registry"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/evcc-io/evcc/vehicle"
 	"github.com/gorilla/mux"
 	"go.yaml.in/yaml/v4"
 )
 
-func newCircuitDeviceFromConfig(_ context.Context, _ string, other map[string]any) (api.Circuit, error) {
-	return circuit.NewFromConfig(other)
+func newCircuitDeviceFromConfig(ctx context.Context, typeValue string, other map[string]any) (api.Circuit, error) {
+	if typeValue == "custom" {
+		delete(other, "type")
+		factory, err := registry.New[api.Circuit]("circuit").Get(strings.ToLower(typeValue))
+		if err != nil {
+			return nil, err
+		}
+
+		v, err := factory(ctx, other)
+		if err != nil {
+			err = fmt.Errorf("cannot create circuit type '%s': %w", util.TypeWithTemplateName(typeValue, other), err)
+		}
+
+		return v, err
+	}
+
+	templateVal, ok := other["template"]
+	if !ok {
+		return nil, fmt.Errorf("template key missing")
+	}
+
+	if templateVal == "static" {
+		return circuit.NewFromConfig(other)
+	}
+
+	return nil, fmt.Errorf("template unknown")
 }
 
 func devicesConfig[T any](class templates.Class, h config.Handler[T], hidePrivate bool) ([]map[string]any, error) {
