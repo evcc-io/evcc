@@ -26,6 +26,7 @@
 				<div class="p-0 config-list">
 					<DeviceCard
 						v-for="loadpoint in loadpoints"
+						:id="`loadpoint_${loadpoint.name}`"
 						:key="loadpoint.name"
 						:title="loadpoint.title"
 						:name="loadpoint.name"
@@ -57,6 +58,7 @@
 				<div class="p-0 config-list">
 					<DeviceCard
 						v-for="vehicle in vehicles"
+						:id="`vehicle_${vehicle.name}`"
 						:key="vehicle.name"
 						:title="vehicle.config?.title || vehicle.name"
 						:name="vehicle.name"
