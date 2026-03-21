@@ -58,7 +58,7 @@ export default defineComponent({
 			try {
 				this.error = null;
 				await api.post(`config/optimizer/${(e.target as HTMLInputElement).checked}`);
-				} catch (err) {
+			} catch (err) {
 				const e = err as AxiosError<{ error: string }>;
 				this.error = e.response?.data?.error || e.message;
 			}
