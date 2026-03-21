@@ -13,7 +13,6 @@ import (
 func setOptimizer(pub publisher) func(bool) error {
 	return func(b bool) error {
 		settings.SetBool(keys.Optimizer, b)
-		setConfigDirty()
 		pub(keys.Optimizer, b)
 		return nil
 	}

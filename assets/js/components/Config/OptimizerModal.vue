@@ -40,7 +40,6 @@ import type { AxiosError } from "axios";
 export default defineComponent({
 	name: "OptimizerModal",
 	components: { GenericModal, ErrorMessage },
-	emits: ["changed"],
 	data() {
 		return {
 			error: null as string | null,
@@ -59,8 +58,7 @@ export default defineComponent({
 			try {
 				this.error = null;
 				await api.post(`config/optimizer/${(e.target as HTMLInputElement).checked}`);
-				this.$emit("changed");
-			} catch (err) {
+				} catch (err) {
 				const e = err as AxiosError<{ error: string }>;
 				this.error = e.response?.data?.error || e.message;
 			}

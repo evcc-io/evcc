@@ -413,7 +413,7 @@
 				<TariffsLegacyModal @changed="loadDirty" />
 				<TariffModal :currency="currency" @changed="tariffChanged" />
 				<TelemetryModal :sponsor="sponsor" :telemetry="telemetry" />
-				<OptimizerModal @changed="loadDirty" />
+				<OptimizerModal />
 				<ExperimentalModal :experimental="experimental" />
 				<TitleModal @changed="loadDirty" />
 				<ModbusProxyModal :is-sponsor="isSponsor" @changed="loadDirty" />
