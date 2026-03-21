@@ -85,32 +85,40 @@ func TestNextPlan(t *testing.T) {
 		plans  []plan
 	}{
 		{1, 0, []plan{
-			{Id: 1, End: clock.Now().Add(8 * time.Hour), Soc: 10},
-			{Id: 2, End: clock.Now().Add(10 * time.Hour), Soc: 10},
+			{Id: 1, Kind: planKindManual, End: clock.Now().Add(8 * time.Hour), Soc: 10},
+			{Id: 2, Kind: planKindRepeating, End: clock.Now().Add(10 * time.Hour), Soc: 10},
 		}},
 		{0, 20, []plan{
-			{Id: 1, End: clock.Now().Add(8 * time.Hour), Soc: 10},
-			{Id: 2, End: clock.Now().Add(10 * time.Hour), Soc: 10},
+			{Id: 1, Kind: planKindManual, End: clock.Now().Add(8 * time.Hour), Soc: 10},
+			{Id: 2, Kind: planKindRepeating, End: clock.Now().Add(10 * time.Hour), Soc: 10},
 		}},
 		{1, 0, []plan{
-			{Id: 1, End: clock.Now().Add(8 * time.Hour), Soc: 20},
-			{Id: 2, End: clock.Now().Add(9 * time.Hour), Soc: 20},
+			{Id: 1, Kind: planKindManual, End: clock.Now().Add(8 * time.Hour), Soc: 20},
+			{Id: 2, Kind: planKindRepeating, End: clock.Now().Add(9 * time.Hour), Soc: 20},
 		}},
-		{2, 0, []plan{
-			{Id: 2, End: clock.Now().Add(8 * time.Hour), Soc: 20},
-			{Id: 1, End: clock.Now().Add(9 * time.Hour), Soc: 20},
+		{1, 0, []plan{
+			{Id: 2, Kind: planKindRepeating, End: clock.Now().Add(8 * time.Hour), Soc: 20},
+			{Id: 1, Kind: planKindManual, End: clock.Now().Add(9 * time.Hour), Soc: 20},
 		}},
-		{2, 0, []plan{
-			{Id: 1, End: clock.Now().Add(8 * time.Hour), Soc: 10},
-			{Id: 2, End: clock.Now().Add(10 * time.Hour), Soc: 60},
+		{1, 0, []plan{
+			{Id: 1, Kind: planKindManual, End: clock.Now().Add(8 * time.Hour), Soc: 10},
+			{Id: 2, Kind: planKindRepeating, End: clock.Now().Add(10 * time.Hour), Soc: 60},
 		}},
 		{1, 5, []plan{
-			{Id: 1, End: clock.Now().Add(8 * time.Hour), Soc: 10},
-			{Id: 2, End: clock.Now().Add(10 * time.Hour), Soc: 20},
+			{Id: 1, Kind: planKindManual, End: clock.Now().Add(8 * time.Hour), Soc: 10},
+			{Id: 2, Kind: planKindRepeating, End: clock.Now().Add(10 * time.Hour), Soc: 20},
 		}},
-		{2, 15, []plan{
-			{Id: 1, End: clock.Now().Add(8 * time.Hour), Soc: 10},
-			{Id: 2, End: clock.Now().Add(10 * time.Hour), Soc: 20},
+		{0, 15, []plan{
+			{Id: 1, Kind: planKindManual, End: clock.Now().Add(8 * time.Hour), Soc: 10},
+			{Id: 2, Kind: planKindRepeating, End: clock.Now().Add(10 * time.Hour), Soc: 20},
+		}},
+		{2, 0, []plan{
+			{Id: 2, Kind: planKindRepeating, End: clock.Now().Add(8 * time.Hour), Soc: 20},
+			{Id: 3, Kind: planKindRepeating, End: clock.Now().Add(10 * time.Hour), Soc: 20},
+		}},
+		{3, 0, []plan{
+			{Id: 2, Kind: planKindRepeating, End: clock.Now().Add(10 * time.Hour), Soc: 10},
+			{Id: 3, Kind: planKindRepeating, End: clock.Now().Add(12 * time.Hour), Soc: 80},
 		}},
 	} {
 		lp.vehicleSoc = float64(tc.soc)

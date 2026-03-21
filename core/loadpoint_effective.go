@@ -32,8 +32,16 @@ func (lp *Loadpoint) EffectivePriority() int {
 	return lp.GetPriority()
 }
 
+type planKind int
+
+const (
+	planKindManual    planKind = iota // one-time plan
+	planKindRepeating                 // recurring plan
+)
+
 type plan struct {
 	Id    int
+	Kind  planKind
 	Start time.Time // last possible start time
 	End   time.Time // user-selected finish time
 	Soc   int
@@ -45,7 +53,18 @@ func (lp *Loadpoint) nextActivePlan(maxPower float64, plans []plan) *plan {
 		plans[i].Start = p.End.Add(-requiredDuration)
 	}
 
-	// sort plans by start time
+	// manual plan takes priority over repeating plans
+	for _, p := range plans {
+		if p.Kind == planKindManual {
+			if lp.vehicleSoc == 0 || lp.vehicleSoc < float64(p.Soc) {
+				return &p
+			}
+			// goal already met, suppress repeating plans
+			return nil
+		}
+	}
+
+	// sort repeating plans by start time
 	slices.SortStableFunc(plans, func(i, j plan) int {
 		return i.Start.Compare(j.Start)
 	})
@@ -73,7 +92,7 @@ func (lp *Loadpoint) nextVehiclePlan() (time.Time, int, int) {
 
 		// static plan
 		if planTime, soc := vehicle.Settings(lp.log, v).GetPlanSoc(); soc != 0 {
-			plans = append(plans, plan{Id: 1, Soc: soc, End: planTime})
+			plans = append(plans, plan{Id: 1, Kind: planKindManual, Soc: soc, End: planTime})
 		}
 
 		// repeating plans
@@ -88,7 +107,7 @@ func (lp *Loadpoint) nextVehiclePlan() (time.Time, int, int) {
 				continue
 			}
 
-			plans = append(plans, plan{Id: index + 2, Soc: rp.Soc, End: planTime})
+			plans = append(plans, plan{Id: index + 2, Kind: planKindRepeating, Soc: rp.Soc, End: planTime})
 		}
 
 		// calculate earliest required plan start
