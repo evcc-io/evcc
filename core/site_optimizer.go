@@ -37,7 +37,7 @@ var (
 type batteryType string
 
 const (
-	OPTIMIZER_URI = "https://evopt.evcc.io"
+	OPTIMIZER_URI = "https://optimizer.evcc.io"
 
 	batteryTypeLoadpoint batteryType = "loadpoint"
 	batteryTypeVehicle   batteryType = "vehicle"
