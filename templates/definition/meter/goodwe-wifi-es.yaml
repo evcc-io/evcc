@@ -8,7 +8,7 @@ products:
 
 params:
   - name: usage
-    choice: ["pv", "grid", "battery"]
+    choice: ["grid", "pv", "battery"]
 
   - name: uri
     help:
