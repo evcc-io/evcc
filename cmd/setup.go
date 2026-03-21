@@ -236,23 +236,28 @@ NEXT:
 type newFromConfFunc[T any] func(context.Context, string, map[string]any) (T, error)
 
 func staticInstance[T any](typ string, cc config.Named, newFromConf newFromConfFunc[T], h config.Handler[T]) error {
-	ctx := util.WithLogger(context.TODO(), util.NewLogger(cc.Name))
+	ctx, cancel := context.WithCancel(util.WithLogger(context.TODO(), util.NewLogger(cc.Name)))
 
 	instance, err := newFromConf(ctx, cc.Type, cc.Other)
 	if err != nil {
-		return &DeviceError{cc.Name, fmt.Errorf("cannot create %s '%s': %w", typ, cc.Name, err)}
+		err = &DeviceError{cc.Name, fmt.Errorf("cannot create %s '%s': %w", typ, cc.Name, err)}
 	}
 
-	if err := h.Add(config.NewStaticDevice(cc, instance)); err != nil {
-		return &DeviceError{cc.Name, err}
+	if e := h.Add(config.NewStaticDevice(cc, instance)); e != nil && err == nil {
+		err = &DeviceError{cc.Name, err}
 	}
 
-	return nil
+	// release resources
+	if err != nil {
+		cancel()
+	}
+
+	return err
 }
 
 func configurableInstance[T any](typ string, conf *config.Config, newFromConf newFromConfFunc[T], h config.Handler[T]) error {
 	cc := conf.Named()
-	ctx := util.WithLogger(context.TODO(), util.NewLogger(cc.Name))
+	ctx, cancel := context.WithCancel(util.WithLogger(context.TODO(), util.NewLogger(cc.Name)))
 
 	props, err := customDevice(cc.Other)
 	if err != nil {
@@ -269,6 +274,11 @@ func configurableInstance[T any](typ string, conf *config.Config, newFromConf ne
 
 	if e := h.Add(config.NewConfigurableDevice(conf, instance)); e != nil && err == nil {
 		err = &DeviceError{cc.Name, e}
+	}
+
+	// release resources
+	if err != nil {
+		cancel()
 	}
 
 	return err
