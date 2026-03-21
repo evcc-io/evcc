@@ -24,11 +24,15 @@ type gpio struct {
 // NewGpioPluginFromConfig creates a GPIO provider
 func NewGpioPluginFromConfig(ctx context.Context, other map[string]any) (Plugin, error) {
 	cc := struct {
-		Function GpioType
-		Pin      int
-		Chip     string
+		Function  GpioType
+		Pin       int
+		ActiveLow bool
+		Bias      GpioBias
+		Chip      string
 	}{
-		Chip: "gpiochip0",
+		ActiveLow: false,
+		Bias:      GpioBiasAsIs,
+		Chip:      "gpiochip0",
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -38,11 +42,28 @@ func NewGpioPluginFromConfig(ctx context.Context, other map[string]any) (Plugin,
 	var opts []gpiocdev.LineReqOption
 	switch cc.Function {
 	case GpioTypeRead:
-		opts = append(opts, gpiocdev.AsInput, gpiocdev.WithPullUp)
+		opts = append(opts, gpiocdev.AsInput)
 	case GpioTypeWrite:
 		opts = append(opts, gpiocdev.AsOutput(0))
 	default:
 		return nil, fmt.Errorf("invalid type: %s", cc.Function)
+	}
+
+	switch cc.Bias {
+	case GpioBiasAsIs:
+		opts = append(opts, gpiocdev.WithBiasAsIs)
+	case GpioBiasDisabled:
+		opts = append(opts, gpiocdev.WithBiasDisabled)
+	case GpioBiasPullUp:
+		opts = append(opts, gpiocdev.WithPullUp)
+	case GpioBiasPullDown:
+		opts = append(opts, gpiocdev.WithPullDown)
+	default:
+		return nil, fmt.Errorf("invalid bias: %s", cc.Bias)
+	}
+
+	if cc.ActiveLow {
+		opts = append(opts, gpiocdev.AsActiveLow)
 	}
 
 	line, err := gpiocdev.RequestLine(cc.Chip, cc.Pin, opts...)
