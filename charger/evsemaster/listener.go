@@ -50,7 +50,7 @@ func newListener(log *util.Logger) (*Listener, error) {
 
 	conn, err := net.ListenUDP("udp", addr)
 	if err != nil {
-		return nil, fmt.Errorf("evsemaster: bind :%d: %w (is another process using this port?)", Port, err)
+		return nil, fmt.Errorf("bind :%d: %w (is another process using this port?)", Port, err)
 	}
 
 	l := &Listener{
@@ -98,7 +98,7 @@ func (l *Listener) listen() {
 
 		pkt, err := Unpack(buf[:n])
 		if err != nil {
-			l.log.TRACE.Printf("evsemaster: unpack error: %v", err)
+			l.log.TRACE.Printf("unpack error: %v", err)
 			continue
 		}
 
@@ -107,7 +107,7 @@ func (l *Listener) listen() {
 		l.mu.RUnlock()
 
 		if !ok {
-			l.log.TRACE.Printf("evsemaster: no subscriber for serial %s (cmd 0x%04x)", pkt.Serial, pkt.Command)
+			l.log.TRACE.Printf("no subscriber for serial %s (cmd 0x%04x)", pkt.Serial, pkt.Command)
 			continue
 		}
 
@@ -116,7 +116,7 @@ func (l *Listener) listen() {
 		select {
 		case ch <- rp:
 		default:
-			l.log.TRACE.Printf("evsemaster: recv channel full for %s", pkt.Serial)
+			l.log.TRACE.Printf("recv channel full for %s", pkt.Serial)
 		}
 	}
 }
