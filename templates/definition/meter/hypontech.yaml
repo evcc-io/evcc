@@ -1,0 +1,74 @@
+template: hypontech
+products:
+  - brand: HYPONTECH
+  - brand: Enerlution
+params:
+  - name: usage
+    choice: ['grid', 'pv', 'battery']
+  - name: modbus
+    choice: ['rs485', 'tcpip']
+    baudrate: 9600
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      # MeterPower (30108)
+      address: 108
+      type: input
+      decode: int32s
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      # Import energy from meter (30156)
+      address: 156
+      type: input
+      decode: float32
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      # PV Power (30127)
+      address: 127
+      type: input
+      decode: int32s
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      # PV kWH (30129)
+      address: 129
+      type: input
+      decode: float32
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      # Battery charge/discharge power (30162)
+      address: 162
+      type: input
+      decode: int32s
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      # BatteryDischargeEnergy (30176)
+      address: 176
+      type: input
+      decode: float32
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      # SOC (30182)
+      address: 182
+      type: input
+      decode: uint16
+  {{- end }}
