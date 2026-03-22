@@ -12,7 +12,6 @@ type Status struct {
 	ManualOverride int     `json:"manual_override,omitempty"` // 1 = active, 0 = default
 	Mode           string  `json:"mode,omitempty"`            // The current mode of the EVSE
 	Pilot          int     `json:"pilot,omitempty"`           // the pilot value, in amps
-	Power          float64 `json:"power,omitempty"`           // apparent power in watts
 	State          int     `json:"state,omitempty"`           // evse state 1=A 2=B 3=C 4=D 5-11=F 254=sleeping 255=disabled
 	Status         string  `json:"status,omitempty"`          // active, disabled, none, unknown
 	Vehicle        int     `json:"vehicle,omitempty"`         // 0=not connected, 1=connected
