@@ -20,6 +20,7 @@ import (
 	"github.com/evcc-io/evcc/util/auth"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/telemetry"
+	"github.com/evcc-io/evcc/util/uilock"
 	"github.com/go-http-utils/etag"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -225,7 +226,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API) {
 }
 
 // RegisterSystemHandler provides system level handlers
-func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *util.ParamCache, auth auth.Auth, shutdown func(), configFile string) {
+func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *util.ParamCache, auth auth.Auth, uilockMgr *uilock.Manager, uilockCurrent func() globalconfig.UILock, shutdown func(), configFile string) {
 	router := s.Server.Handler.(*mux.Router)
 
 	// api
@@ -262,10 +263,13 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 		api := api.PathPrefix("/auth").Subrouter()
 
 		routes := map[string]route{
-			"password": {"PUT", "/password", updatePasswordHandler(auth)},
-			"auth":     {"GET", "/status", authStatusHandler(auth)},
-			"login":    {"POST", "/login", loginHandler(auth)},
-			"logout":   {"POST", "/logout", logoutHandler},
+			"password":     {"PUT", "/password", updatePasswordHandler(auth)},
+			"auth":         {"GET", "/status", authStatusHandler(auth)},
+			"login":        {"POST", "/login", loginHandler(auth)},
+			"logout":       {"POST", "/logout", logoutHandler},
+			"uilockstatus": {"GET", "/uilock/status", uilockStatusHandler(uilockMgr, uilockCurrent)},
+			"uilockunlock": {"POST", "/uilock/unlock", uilockUnlockHandler(uilockMgr, uilockCurrent)},
+			"uilocklock":   {"POST", "/uilock/lock", uilockLockHandler},
 		}
 
 		for _, r := range routes {
@@ -323,6 +327,9 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 			routes["update"+key] = route{Method: "POST", Pattern: "/" + key, HandlerFunc: settingsSetJsonHandler(key, pub, fun)}
 			routes["delete"+key] = route{Method: "DELETE", Pattern: "/" + key, HandlerFunc: settingsDeleteJsonHandler(key, pub, fun())}
 		}
+
+		routes["update"+keys.UILock] = route{Method: "POST", Pattern: "/" + keys.UILock, HandlerFunc: settingsSetUILockHandler(pub, uilockCurrent)}
+		routes["delete"+keys.UILock] = route{Method: "DELETE", Pattern: "/" + keys.UILock, HandlerFunc: settingsDeleteUILockHandler(pub, uilockCurrent)}
 
 		for _, r := range routes {
 			api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)

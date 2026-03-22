@@ -91,6 +91,16 @@ export interface State {
   config?: string;
   database?: string;
   ocpp?: Ocpp;
+  uilock?: UILockConfig;
+}
+
+export interface UILockConfig {
+  enabled: boolean;
+  timeout: number;
+  ips: string[];
+  trustedProxies: string[];
+  pin?: string;
+  pinConfigured?: boolean;
 }
 
 export interface ConfigStatus<C, S> {
