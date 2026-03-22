@@ -24,13 +24,13 @@ render: |
   type: custom
   power:
     source: aa55udp
-    host: {{ .host | default .uri }}
+    host: {{ if .host }}{{ .host }}{{ else }}{{ .uri }}{{ end }}
     register: {{ if eq .usage "pv" }}29958{{ else if eq .usage "grid" }}29964{{ else }}29970{{ end }}
     count: 2
     decode: int32be
   soc:
     source: aa55udp
-    host: {{ .host | default .uri }}
+    host: {{ if .host }}{{ .host }}{{ else }}{{ .uri }}{{ end }}
     register: 29966
     count: 1
     decode: uint16be
