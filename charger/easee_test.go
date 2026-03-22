@@ -500,3 +500,101 @@ func TestLivenessCheck_freshObservations(t *testing.T) {
 	assert.Equal(t, float64(16), l2)
 	assert.Equal(t, float64(16), l3)
 }
+
+func TestIsTNGrid(t *testing.T) {
+	// TN grid types must return true
+	assert.True(t, isTNGrid(easee.PowerGridTN3Phase))
+	assert.True(t, isTNGrid(easee.PowerGridTN2PhasePin234))
+	assert.True(t, isTNGrid(easee.PowerGridTN1Phase))
+
+	// IT grid types, zero, and unknown values must return false
+	assert.False(t, isTNGrid(4))  // IT3Phase
+	assert.False(t, isTNGrid(5))  // IT1Phase
+	assert.False(t, isTNGrid(0))  // absent / unknown
+	assert.False(t, isTNGrid(99)) // arbitrary unknown
+}
+
+// makeTestSite returns a Site with a single Circuit containing the given charger IDs.
+// Site.ID = 111, Circuit.ID = 222.
+func makeTestSite(chargerIDs ...string) easee.Site {
+	chargers := make([]easee.Charger, len(chargerIDs))
+	for i, id := range chargerIDs {
+		chargers[i] = easee.Charger{ID: id}
+	}
+	return easee.Site{
+		ID: 111,
+		Circuits: []easee.Circuit{
+			{ID: 222, Chargers: chargers},
+		},
+	}
+}
+
+func TestDetermineCircuit(t *testing.T) {
+	const chargerID = "TESTTEST"
+	configURI := fmt.Sprintf("%s/chargers/%s/config", easee.API, chargerID)
+
+	tests := []struct {
+		name        string
+		httpStatus  int
+		gridType    int
+		chargerIDs  []string
+		wantCircuit int
+		wantErr     bool
+	}{
+		{
+			name:        "TN grid, sole charger — circuit assigned",
+			httpStatus:  200,
+			gridType:    easee.PowerGridTN3Phase,
+			chargerIDs:  []string{chargerID},
+			wantCircuit: 222,
+		},
+		{
+			name:        "IT grid, sole charger — circuit not assigned",
+			httpStatus:  200,
+			gridType:    4, // IT3Phase
+			chargerIDs:  []string{chargerID},
+			wantCircuit: 0,
+		},
+		{
+			name:       "config fetch fails — error returned",
+			httpStatus: 500,
+			chargerIDs: []string{chargerID},
+			wantErr:    true,
+		},
+		{
+			name:        "TN grid, multi-charger circuit — circuit not assigned",
+			httpStatus:  200,
+			gridType:    easee.PowerGridTN3Phase,
+			chargerIDs:  []string{chargerID, "OTHER"},
+			wantCircuit: 0,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			e := newEasee()
+			e.charger = chargerID
+
+			httpmock.ActivateNonDefault(e.Client)
+			defer httpmock.DeactivateAndReset()
+
+			if tc.httpStatus == 200 {
+				body, _ := json.Marshal(easee.ChargerConfig{DetectedPowerGridType: tc.gridType})
+				httpmock.RegisterResponder(http.MethodGet, configURI,
+					httpmock.NewBytesResponder(200, body))
+			} else {
+				httpmock.RegisterResponder(http.MethodGet, configURI,
+					httpmock.NewStringResponder(tc.httpStatus, ""))
+			}
+
+			err := e.determineCircuit(makeTestSite(tc.chargerIDs...))
+
+			if tc.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tc.wantCircuit, e.circuit)
+			}
+		})
+	}
+}
