@@ -12,9 +12,6 @@ type ocppLogger struct {
 	t  *testing.T
 }
 
-// close clears the testing.T reference so that background goroutines
-// (e.g. the OCPP server) that keep logging after the test finishes
-// no longer call t.Log on a completed test (which panics since Go 1.24).
 func (l *ocppLogger) close() {
 	l.mu.Lock()
 	l.t = nil

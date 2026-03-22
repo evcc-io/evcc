@@ -50,8 +50,6 @@ func (suite *ocppTestSuite) SetupSuite() {
 }
 
 func (suite *ocppTestSuite) TearDownSuite() {
-	// Prevent background server goroutines from calling t.Log after the
-	// test has completed, which panics since Go 1.24.
 	suite.logger.close()
 }
 
