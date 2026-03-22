@@ -139,9 +139,9 @@ loadpoints:
       # geofencing improves the reliability of vehicle detection
       # if geofencing is enabled, vehicle position is used for vehicle detection in addition to the charging status
       enabled: false # set true to enable geofencing
-      lat: 49.1234 # latitude of loadpoint location
-      lon: 8.1234 # longitude of loadpoint location
-      radius: 100 # maximum allowed distance of vehicle from loadpoint (in meter)
+      lat: 49.1234 # latitude of loadpoint location (range: -90 to 90)
+      lon: 8.1234 # longitude of loadpoint location (range: -180 to 180)
+      radius: 100 # maximum allowed distance of vehicle from loadpoint in meter (minimum: 1)
 
 # tariffs are the fixed or variable tariffs
 tariffs:

@@ -18,6 +18,11 @@ func (lp *Loadpoint) isVehicleAtHome(vehicle api.Vehicle) bool {
 		return true
 	}
 
+	if err := validateGeofenceConfig(geofence); err != nil { // validate again (e.g. for yaml config)
+		lp.log.ERROR.Println(err)
+		return true
+	}
+
 	vs, ok := vehicle.(api.VehiclePosition)
 	if !ok {
 		lp.log.DEBUG.Println("vehicle does not support position tracking")

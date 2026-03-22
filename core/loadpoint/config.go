@@ -36,7 +36,7 @@ type DynamicConfig struct {
 
 	Thresholds ThresholdsConfig `json:"thresholds"`
 	Soc        SocConfig        `json:"soc"`
-	Geofence   GeofenceConfig   `json:"geofence,omitempty"`
+	Geofence   GeofenceConfig   `json:"geofence"`
 }
 
 func SplitConfig(payload map[string]any) (DynamicConfig, map[string]any, error) {
