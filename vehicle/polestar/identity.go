@@ -120,14 +120,7 @@ func (v *Identity) login() (*oauth2.Token, error) {
 	}
 	defer resp.Body.Close()
 
-	var code string
-	if location := resp.Header.Get("Location"); location != "" {
-		locURL, _ := url.Parse(location)
-		code = locURL.Query().Get("code")
-	} else {
-		code = resp.Request.URL.Query().Get("code")
-	}
-
+	code := resp.Request.URL.Query().Get("code")
 	if code == "" {
 		return nil, errors.New("missing authorization code")
 	}
