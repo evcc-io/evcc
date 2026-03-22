@@ -69,14 +69,14 @@ func (v *Identity) login() (*oauth2.Token, error) {
 		"redirect_uri":          {RedirectURI},
 		"response_type":         {"code"},
 		"scope":                 {"openid profile email"},
-		"state":                 {lo.RandomString(32, lo.AlphanumericCharset)}, // Python uses 32
+		"state":                 {lo.RandomString(32, lo.AlphanumericCharset)},
 		"code_challenge":        {oauth2.S256ChallengeFromVerifier(cv)},
 		"code_challenge_method": {"S256"},
-		"response_mode":         {"query"}, // Python has this
+		"response_mode":         {"query"},
 	}
 
 	// Request authorization URL with browser-like headers
-	uri := OAuthURI + "/as/authorization.oauth2?" + data.Encode() // Back to original + params
+	uri := OAuthURI + "/as/authorization.oauth2?" + data.Encode()
 
 	req, _ := request.New(http.MethodGet, uri, nil, map[string]string{
 		"Accept": "text/html,application/xhtml+xml,application/xml;",
