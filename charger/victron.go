@@ -120,8 +120,8 @@ func NewVictron(ctx context.Context, uri string, slaveID uint8, regs victronRegs
 		return nil, err
 	}
 
-	if mode := binary.BigEndian.Uint16(b); mode != 0 {
-		return nil, fmt.Errorf("charger must be in manual mode (current mode: %d)", mode)
+	if binary.BigEndian.Uint16(b) != 0 {
+		return nil, errors.New("charger must be in manual mode")
 	}
 
 	// phase switching (EVCS only, requires hardware modification with second contactor)
