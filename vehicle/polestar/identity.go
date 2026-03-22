@@ -69,7 +69,7 @@ func (v *Identity) login() (*oauth2.Token, error) {
 		"client_id":             {ClientID},
 		"redirect_uri":          {RedirectURI},
 		"response_type":         {"code"},
-		"scope":                 {"openid", "profile", "email"},
+		"scope":                 {"openid profile email"},
 		"state":                 {lo.RandomString(16, lo.AlphanumericCharset)},
 		"code_challenge":        {oauth2.S256ChallengeFromVerifier(cv)},
 		"code_challenge_method": {"S256"},
