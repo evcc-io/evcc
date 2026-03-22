@@ -8,6 +8,7 @@ params:
     choice: ["grid", "pv", "battery"]
     required: true
   - name: host
+    required: true
   - name: port
     default: 80
     advanced: true
