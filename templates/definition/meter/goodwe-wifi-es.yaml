@@ -1,6 +1,5 @@
 template: goodwe-wifi-es
-covers:
-  - goodwe-wifi
+covers: ["goodwe-wifi"]
 requirements:
   evcc: ["skiptest"]
 products:
