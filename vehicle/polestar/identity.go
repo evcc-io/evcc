@@ -2,6 +2,7 @@ package polestar
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/cookiejar"
@@ -68,15 +69,14 @@ func (v *Identity) login() (*oauth2.Token, error) {
 		"client_id":             {ClientID},
 		"redirect_uri":          {RedirectURI},
 		"response_type":         {"code"},
-		"scope":                 {"openid profile email"},
-		"state":                 {lo.RandomString(32, lo.AlphanumericCharset)},
+		"scope":                 {"openid", "profile", "email"},
+		"state":                 {lo.RandomString(16, lo.AlphanumericCharset)},
 		"code_challenge":        {oauth2.S256ChallengeFromVerifier(cv)},
 		"code_challenge_method": {"S256"},
-		"response_mode":         {"query"},
 	}
 
 	// Request authorization URL with browser-like headers
-	uri := OAuthURI + "/as/authorization.oauth2?" + data.Encode()
+	uri := fmt.Sprintf("%s/as/authorization.oauth2?%s", OAuthURI, data.Encode())
 
 	req, _ := request.New(http.MethodGet, uri, nil, map[string]string{
 		"Accept": "text/html,application/xhtml+xml,application/xml;",
