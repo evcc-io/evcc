@@ -36,6 +36,7 @@ const (
 
 type All struct {
 	Network         Network
+	UILock          UILock
 	Ocpp            ocpp.Config
 	Log             string
 	SponsorToken    string

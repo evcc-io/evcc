@@ -53,6 +53,13 @@
 		/>
 
 		<GeneralConfigEntry
+			test-id="generalconfig-uilock"
+			:label="$t('config.uilock.title')"
+			:text="uilockStatus"
+			@edit="openModal('uilock')"
+		/>
+
+		<GeneralConfigEntry
 			test-id="generalconfig-control"
 			:label="$t('config.control.title')"
 			:text="controlStatus"
@@ -66,11 +73,13 @@
 			@edit="openModal('currency')"
 		/>
 		<CurrencyModal @changed="$emit('site-changed')" />
+		<UILockModal @changed="$emit('site-changed')" />
 	</div>
 </template>
 
 <script>
 import CurrencyModal from "./CurrencyModal.vue";
+import UILockModal from "./UILockModal.vue";
 import GeneralConfigEntry from "./GeneralConfigEntry.vue";
 import { openModal } from "@/configModal";
 import store from "@/store";
@@ -78,7 +87,7 @@ import formatter from "@/mixins/formatter";
 
 export default {
 	name: "GeneralConfig",
-	components: { CurrencyModal, GeneralConfigEntry },
+	components: { CurrencyModal, UILockModal, GeneralConfigEntry },
 	mixins: [formatter],
 	props: {
 		sponsorError: Boolean,
@@ -94,6 +103,13 @@ export default {
 		},
 		networkStatus() {
 			return `${store.state?.network?.port ?? ""}`;
+		},
+		uilockStatus() {
+			const u = store.state?.uilock;
+			if (!u?.enabled) {
+				return this.$t("config.general.off");
+			}
+			return this.$t("config.general.on");
 		},
 		controlStatus() {
 			const sec = store.state?.interval;
