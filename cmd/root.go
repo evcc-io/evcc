@@ -446,7 +446,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 		site.DumpConfig()
 		site.Prepare(valueChan, pushChan)
 
-		httpd.RegisterSiteHandlers(site)
+		httpd.RegisterSiteHandlers(site, authObject)
 
 		go func() {
 			site.Run(stopC, conf.Interval)

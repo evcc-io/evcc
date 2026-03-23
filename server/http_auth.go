@@ -164,6 +164,12 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 func ensureAuthHandler(authObject auth.Auth) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// allow if route is prefixed /api/auth
+			if strings.Contains(r.RequestURI, "/api/auth") {
+				next.ServeHTTP(w, r)
+				return
+			}
+
 			if authObject.GetAuthMode() == auth.Disabled {
 				next.ServeHTTP(w, r)
 				return
@@ -181,7 +187,6 @@ func ensureAuthHandler(authObject auth.Auth) mux.MiddlewareFunc {
 				return
 			}
 
-			// all clear, continue
 			next.ServeHTTP(w, r)
 		})
 	}

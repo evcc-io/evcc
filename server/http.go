@@ -43,6 +43,7 @@ func (r route) Methods() []string {
 // HTTPd wraps an http.Server and adds the root router
 type HTTPd struct {
 	*http.Server
+	hub *SocketHub
 }
 
 // NewHTTPd creates HTTP server with configured routes for loadpoint
@@ -58,9 +59,6 @@ func NewHTTPd(addr string, hub *SocketHub, customCssFile string) *HTTPd {
 			next.ServeHTTP(w, r)
 		})
 	})
-
-	// websocket
-	router.HandleFunc("/ws", socketHandler(hub))
 
 	// static - individual handlers per root and folders
 	static := router.PathPrefix("/").Subrouter()
@@ -108,6 +106,7 @@ func NewHTTPd(addr string, hub *SocketHub, customCssFile string) *HTTPd {
 			IdleTimeout:  120 * time.Second,
 			ErrorLog:     log.ERROR,
 		},
+		hub: hub,
 	}
 	srv.SetKeepAlivesEnabled(true)
 
@@ -120,7 +119,7 @@ func (s *HTTPd) Router() *mux.Router {
 }
 
 // RegisterSiteHandlers connects the http handlers to the site
-func (s *HTTPd) RegisterSiteHandlers(site site.API) {
+func (s *HTTPd) RegisterSiteHandlers(site site.API, authObject auth.Auth) {
 	router := s.Server.Handler.(*mux.Router)
 
 	// api
@@ -130,6 +129,10 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API) {
 	api.Use(handlers.CORS(
 		handlers.AllowedHeaders([]string{"Content-Type"}),
 	))
+	api.Use(ensureAuthHandler(authObject))
+
+	// websocket (auth-protected)
+	router.Handle("/ws", ensureAuthHandler(authObject)(socketHandler(s.hub)))
 
 	// site api
 	smartCostLimit := func(lp loadpoint.API, limit *float64) {
@@ -248,12 +251,15 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 	}
 
 	{ // /api
+		protected := api.PathPrefix("").Subrouter()
+		protected.Use(ensureAuthHandler(auth))
+
 		routes := map[string]route{
 			"state": {"GET", "/state", stateHandler(cache)},
 		}
 
 		for _, r := range routes {
-			api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
+			protected.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
 		}
 	}
 

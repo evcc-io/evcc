@@ -27,6 +27,7 @@ import LoginModal from "../components/Auth/LoginModal.vue";
 import HelpModal from "../components/HelpModal.vue";
 import collector from "../mixins/collector";
 import { defineComponent } from "vue";
+import authState, { updateAuthStatus, openLoginModal } from "../components/Auth/auth";
 
 const WS_OPEN_TIMEOUT_MS = 5000;
 const WS_RETRY_PARAM = "wsRetry";
@@ -72,6 +73,9 @@ export default defineComponent({
 		version() {
 			return store.state.version;
 		},
+		authLoggedIn() {
+			return authState.loggedIn;
+		},
 		batteryModalAvailabe() {
 			return store.state.battery?.devices?.length;
 		},
@@ -109,6 +113,12 @@ export default defineComponent({
 			store.offline(offline);
 			if (offline) {
 				this.reconnect();
+			}
+		},
+		authLoggedIn(loggedIn) {
+			// connect after successful login if not already connected
+			if (loggedIn === true && !this.ws) {
+				this.connect();
 			}
 		},
 	},
@@ -190,7 +200,7 @@ export default defineComponent({
 				this.ws = null;
 			}
 		},
-		connect() {
+		async connect() {
 			console.log("websocket connect");
 			const supportsWebSockets = "WebSocket" in window;
 			if (!supportsWebSockets) {
@@ -202,6 +212,14 @@ export default defineComponent({
 
 			if (this.ws) {
 				console.log("websocket already connected");
+				return;
+			}
+
+			// Check auth before attempting WebSocket upgrade to avoid an
+			// immediate 401-close that the browser surfaces as an error.
+			await updateAuthStatus();
+			if (authState.loggedIn === false) {
+				openLoginModal();
 				return;
 			}
 
