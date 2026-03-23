@@ -41,7 +41,10 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-const standbyPower = 10 // consider less than 10W as charger in standby
+const (
+	standbyPower   = 10  // consider less than 10W as charger in standby
+	defaultVoltage = 230 // V
+)
 
 // updater abstracts the Loadpoint implementation for testing
 type updater interface {
@@ -241,7 +244,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 func NewSite() *Site {
 	site := &Site{
 		log:             util.NewLogger("site"),
-		Voltage:         230, // V
+		Voltage:         defaultVoltage,
 		pvEnergy:        make(map[string]*meterEnergy),
 		fcstEnergy:      &meterEnergy{clock: clock.New()},
 		householdEnergy: &meterEnergy{clock: clock.New()},

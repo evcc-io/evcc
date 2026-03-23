@@ -177,7 +177,7 @@ func testScale(t *testing.T, lp *Loadpoint, sitePower float64, direction string,
 		// scale-up should only execute when the 1p max current is exceeded
 		// we're testing this here and remove the upscale expectation for the following test below 1p max current
 		if maxAmp := -sitePower / Voltage; maxAmp < maxA {
-			if scaled := lp.pvScalePhases(sitePower, minA, maxAmp-0.0001); scaled != 3 {
+			if scaled := lp.pvScalePhases(sitePower, minA, maxAmp-0.0001, 0); scaled != tc.maxExpected {
 				t.Errorf("%v act=%d max=%d missing scale %s at reduced max current %.1fA", tc, act, max, direction, maxAmp)
 			}
 
@@ -186,7 +186,7 @@ func testScale(t *testing.T, lp *Loadpoint, sitePower float64, direction string,
 		}
 	}
 
-	scaled := lp.pvScalePhases(sitePower, minA, maxA)
+	scaled := lp.pvScalePhases(sitePower, minA, maxA, 0)
 
 	if strings.Contains(testExpectation, testDirection) {
 		if scaled == 0 {
@@ -352,13 +352,8 @@ func TestPvScalePhasesTimer(t *testing.T) {
 
 		// switch down from 3p/3p configured/active
 		{"3/3->1, enough power", 3, 3, 0, 3, 0, nil},
-		{"3/3->1, enough power, timer elapsed, load point enabled", 3, 3, 0, 3, 0, func(lp *Loadpoint) {
+		{"3/3->1, enough power, timer elapsed", 3, 3, 0, 1, 1, func(lp *Loadpoint) {
 			lp.phaseTimer = elapsed
-			lp.enabled = true
-		}},
-		{"3/3->1, enough power, timer elapsed, load point disabled", 3, 3, 0, 1, 1, func(lp *Loadpoint) {
-			lp.phaseTimer = elapsed
-			lp.enabled = false
 		}},
 		{"3/3->1, kickoff", 3, 3, 0.1, 3, 0, func(lp *Loadpoint) {
 			lp.phaseTimer = time.Time{}
@@ -423,7 +418,7 @@ func TestPvScalePhasesTimer(t *testing.T) {
 			charger.MockPhaseSwitcher.EXPECT().Phases1p3p(tc.toPhases).Return(nil)
 		}
 
-		res := lp.pvScalePhases(tc.sitePower, minA, maxA)
+		res := lp.pvScalePhases(tc.sitePower, minA, maxA, 0)
 
 		require.Equal(t, tc.res, res, tc.desc)
 		require.Equal(t, tc.toPhases, lp.phases, tc.desc)
