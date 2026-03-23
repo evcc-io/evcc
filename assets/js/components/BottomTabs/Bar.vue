@@ -2,6 +2,7 @@
 	<nav
 		class="bottom-tab-bar d-flex position-fixed start-0 end-0 bottom-0"
 		:class="{ 'bottom-tab-bar--hidden': hidden }"
+		data-testid="bottom-tab-bar"
 	>
 		<div class="container d-flex align-items-stretch px-0">
 			<Item to="/" :label="$t('tabBar.charge')" exact>
