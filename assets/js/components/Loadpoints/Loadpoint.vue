@@ -396,7 +396,7 @@ export default defineComponent({
 			return this.forecast?.planner;
 		},
 		shouldMaximizeFromRoute(): boolean {
-			return this.$route?.query?.maximize === this.id;
+			return this.$route?.query?.["maximize"] === this.id;
 		},
 	},
 	watch: {
@@ -512,7 +512,7 @@ export default defineComponent({
 		collapseViewport() {
 			this.loadpointViewportMaximized = false;
 			const query = { ...this.$route.query };
-			delete query.maximize;
+			delete query["maximize"];
 			this.$router.replace({ query });
 		},
 		handleViewportEscape(ev: KeyboardEvent) {
