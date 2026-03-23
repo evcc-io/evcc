@@ -4,55 +4,68 @@ import type { Meta, StoryFn } from "@storybook/vue3";
 export default {
   title: "Energyflow/BatteryIcon",
   component: BatteryIcon,
+  argTypes: {
+    soc: { control: { type: "range", min: 0, max: 100, step: 10 } },
+    hold: { control: "boolean" },
+    gridCharge: { control: "boolean" },
+  },
   parameters: {
     layout: "centered",
   },
 } as Meta<typeof BatteryIcon>;
 
-const Template: StoryFn<typeof BatteryIcon> = (args) => {
-  const story = () => ({
-    components: { BatteryIcon },
-    setup() {
-      return { args };
-    },
-    template: '<BatteryIcon v-bind="args" />',
-  });
-  story.args = args;
-  return story;
+const socLevels = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
+
+interface RowConfig {
+  label: string;
+  hold: boolean;
+  gridCharge: boolean;
+}
+
+const rows: RowConfig[] = [
+  { label: "Normal", hold: false, gridCharge: false },
+  { label: "Hold", hold: true, gridCharge: false },
+  { label: "GridCharge", hold: false, gridCharge: true },
+];
+
+export const AllStates: StoryFn<typeof BatteryIcon> = () => ({
+  components: { BatteryIcon },
+  setup() {
+    return { socLevels, rows };
+  },
+  template: `
+    <div style="font-family: sans-serif; font-size: 12px;">
+      <div style="display: grid; grid-template-columns: 100px repeat(11, 1fr); gap: 8px; align-items: center; text-align: center;">
+        <div></div>
+        <div v-for="soc in socLevels" :key="'h-'+soc" style="color: #888; font-weight: 600;">{{ soc }}%</div>
+        <template v-for="row in rows" :key="row.label">
+          <div style="text-align: right; font-weight: 600;">{{ row.label }}</div>
+          <div v-for="soc in socLevels" :key="row.label+'-'+soc">
+            <BatteryIcon
+              :soc="soc"
+              :hold="row.hold"
+              :gridCharge="row.gridCharge"
+              style="width: 48px; height: 48px;"
+            />
+          </div>
+        </template>
+      </div>
+    </div>
+  `,
+});
+AllStates.storyName = "All States (grid overview)";
+
+const Template: StoryFn<typeof BatteryIcon> = (args) => ({
+  components: { BatteryIcon },
+  setup() {
+    return { args };
+  },
+  template: '<BatteryIcon v-bind="args" style="width: 48px; height: 48px;" />',
+});
+
+export const Playground = Template.bind({});
+Playground.args = {
+  soc: 50,
+  hold: false,
+  gridCharge: false,
 };
-
-export const Empty = Template.bind({});
-Empty.args = { soc: 0 };
-
-export const Soc10 = Template.bind({});
-Soc10.args = { soc: 10 };
-
-export const Soc20 = Template.bind({});
-Soc20.args = { soc: 20 };
-
-export const Soc30 = Template.bind({});
-Soc30.args = { soc: 30 };
-
-export const Soc40 = Template.bind({});
-Soc40.args = { soc: 40 };
-
-export const Soc50 = Template.bind({});
-Soc50.args = { soc: 50 };
-
-export const Soc60 = Template.bind({});
-Soc60.args = { soc: 60 };
-
-export const Soc70 = Template.bind({});
-Soc70.args = { soc: 70 };
-
-export const Soc80 = Template.bind({});
-Soc80.args = { soc: 80 };
-
-export const Soc90 = Template.bind({});
-Soc90.args = { soc: 90 };
-
-export const Hold = Template.bind({});
-Hold.args = { hold: true };
-
-export const GridCharge = Template.bind({});
-GridCharge.args = { gridCharge: true };
