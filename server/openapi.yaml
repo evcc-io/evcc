@@ -63,6 +63,8 @@ paths:
                 type: string
                 enum:
                   - auth=; Path=/; HttpOnly
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /auth/password:
     put:
       operationId: changePassword
@@ -81,6 +83,8 @@ paths:
           description: Success
         "400":
           description: Invalid password provided
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /auth/status:
     get:
       operationId: getAuthStatus
@@ -98,6 +102,8 @@ paths:
                 enum:
                   - "true"
                   - "false"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /batterydischargecontrol/{enable}:
     post:
       operationId: setBatteryDischargeControl
@@ -112,6 +118,8 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/BooleanResult"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /batterygridchargelimit:
     delete:
       operationId: removeBatteryGridChargeLimit
@@ -124,6 +132,8 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/NullResult"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /batterygridchargelimit/{cost}:
     post:
       operationId: setBatteryGridChargeLimit
@@ -138,6 +148,8 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/NumberResult"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /batterymode:
     delete:
       operationId: disableExternalBatteryControl
@@ -148,6 +160,8 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/BatteryModeResult"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /batterymode/{batteryMode}:
     post:
       operationId: setExternalBatteryMode
@@ -160,6 +174,8 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/BatteryModeResult"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /buffersoc/{soc}:
     post:
       operationId: setBufferSoc
@@ -174,6 +190,8 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/NumberResult"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /bufferstartsoc/{soc}:
     post:
       operationId: setBufferStartSoc
@@ -188,6 +206,8 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/NumberResult"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /loadpoints/{id}/batteryboost/{enable}:
     post:
       operationId: setLoadpointBatteryBoost
@@ -203,6 +223,8 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/BooleanResult"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /loadpoints/{id}/batteryboostlimit/{soc}:
     post:
       operationId: setLoadpointBatteryBoostLimit
@@ -218,6 +240,8 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/IntegerResult"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /loadpoints/{id}/disable/delay/{delay}:
     post:
       operationId: setLoadpointDisableDelay
@@ -233,6 +257,8 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/NanoSecondsResult"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /loadpoints/{id}/disable/threshold/{threshold}:
     post:
       operationId: setLoadpointDisableThreshold
@@ -248,6 +274,8 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/NumberResult"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /loadpoints/{id}/enable/delay/{delay}:
     post:
       operationId: setLoadpointEnableDelay
@@ -263,6 +291,8 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/NanoSecondsResult"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /loadpoints/{id}/enable/threshold/{threshold}:
     post:
       operationId: setLoadpointEnableThreshold
@@ -278,6 +308,8 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/NumberResult"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /loadpoints/{id}/limitenergy/{energy}:
     post:
       operationId: setLoadpointEnergyLimit
@@ -293,6 +325,8 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/NumberResult"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /loadpoints/{id}/limitsoc/{soc}:
     post:
       operationId: setLoadpointSocLimit
@@ -308,6 +342,8 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/NumberResult"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /loadpoints/{id}/maxcurrent/{current}:
     post:
       operationId: setLoadpointMaxCurrent
@@ -321,6 +357,8 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/NumberResult"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /loadpoints/{id}/mincurrent/{current}:
     post:
       operationId: setLoadpointMinCurrent
@@ -334,6 +372,8 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/NumberResult"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /loadpoints/{id}/mode/{mode}:
     post:
       operationId: setLoadpointMode
@@ -356,6 +396,8 @@ paths:
                 properties:
                   result:
                     $ref: "#/components/schemas/Mode"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /loadpoints/{id}/phases/{phases}:
     post:
       operationId: setLoadpointPhases
@@ -373,6 +415,8 @@ paths:
           $ref: "#/components/responses/NumberResult"
         "400":
           description: "Invalid phases-value. You have most likely entered the value 0 for a wallbox that cannot switch phases automatically."
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /loadpoints/{id}/plan:
     get:
       operationId: getLoadpointPlan
@@ -399,6 +443,8 @@ paths:
                           planId:
                             $ref: "#/components/schemas/Id"
                       - $ref: "#/components/schemas/PlanRates"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /loadpoints/{id}/plan/energy:
     delete:
       operationId: deleteLoadpointEnergyPlan
@@ -413,6 +459,8 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/EmptyResult"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /loadpoints/{id}/plan/energy/{energy}/{timestamp}:
     post:
       operationId: setLoadpointEnergyPlan
@@ -436,6 +484,8 @@ paths:
                 properties:
                   result:
                     $ref: "#/components/schemas/StaticEnergyPlan"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /loadpoints/{id}/plan/repeating/preview/{soc}/{weekdays}/{hourMinuteTime}/{timezone}:
     get:
       operationId: previewLoadpointRepeatingPlan
@@ -454,6 +504,8 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/PlanRatesResult"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /loadpoints/{id}/plan/static/preview/soc/{soc}/{timestamp}:
     get:
       operationId: previewLoadpointSocPlan
@@ -470,6 +522,8 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/PlanRatesResult"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /loadpoints/{id}/plan/static/preview/energy/{energy}/{timestamp}:
     get:
       operationId: previewLoadpointEnergyPlan
@@ -486,6 +540,8 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/PlanRatesResult"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /loadpoints/{id}/plan/strategy:
     post:
       operationId: setLoadpointPlanStrategy
@@ -513,6 +569,8 @@ paths:
                 properties:
                   result:
                     $ref: "#/components/schemas/PlanStrategy"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /loadpoints/{id}/priority/{priority}:
     post:
       operationId: setLoadpointPriority
@@ -535,6 +593,8 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/IntegerResult"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /loadpoints/{id}/smartcostlimit:
     delete:
       operationId: deleteLoadpointSmartCostLimit
@@ -549,6 +609,8 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/NullResult"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /loadpoints/{id}/smartcostlimit/{cost}:
     post:
       operationId: setLoadpointSmartCostLimit
@@ -564,6 +626,8 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/NumberResult"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /loadpoints/{id}/smartfeedinprioritylimit:
     delete:
       operationId: deleteLoadpointSmartFeedInPriorityLimit
@@ -576,6 +640,8 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/NullResult"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /loadpoints/{id}/smartfeedinprioritylimit/{cost}:
     post:
       operationId: setLoadpointSmartFeedInPriorityLimit
@@ -589,6 +655,8 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/NumberResult"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /loadpoints/{id}/vehicle:
     delete:
       operationId: removeLoadpointVehicle
@@ -603,6 +671,8 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/EmptyResult"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
     patch:
       operationId: startLoadpointVehicleDetection
       summary: Start vehicle detection
@@ -616,6 +686,8 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/EmptyResult"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /loadpoints/{id}/vehicle/{name}:
     post:
       operationId: assignLoadpointVehicle
@@ -641,6 +713,8 @@ paths:
                     properties:
                       vehicle:
                         $ref: "#/components/schemas/VehicleTitle"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /prioritysoc/{soc}:
     post:
       operationId: setPrioritySoc
@@ -655,6 +729,8 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/NumberResult"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /residualpower/{power}:
     post:
       operationId: setResidualPower
@@ -669,6 +745,8 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/NumberResult"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /smartfeedinprioritylimit:
     delete:
       operationId: removeGlobalSmartFeedInPriorityLimit
@@ -679,6 +757,8 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/NullResult"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /smartfeedinprioritylimit/{cost}:
     post:
       operationId: setGlobalSmartFeedInPriorityLimit
@@ -691,6 +771,8 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/NumberResult"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /session/{id}:
     parameters:
       - $ref: "#/components/parameters/id"
@@ -716,6 +798,8 @@ paths:
       responses:
         "200":
           description: Success
+        "401":
+          $ref: "#/components/responses/Unauthorized"
     delete:
       operationId: deleteSession
       summary: Delete charging session
@@ -727,6 +811,8 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/NullResult"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /gridsessions:
     get:
       operationId: getGridSessions
@@ -763,6 +849,8 @@ paths:
                 description: Download csv-file
                 type: string
                 format: binary
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /sessions:
     get:
       operationId: getSessions
@@ -815,6 +903,8 @@ paths:
                 description: Download csv-file
                 type: string
                 format: binary
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /settings/telemetry/{enable}:
     post:
       operationId: setTelemetryStatus
@@ -831,6 +921,8 @@ paths:
           $ref: "#/components/responses/BooleanResult"
         "400":
           description: Sponsorship required
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /smartcostlimit:
     delete:
       operationId: removeGlobalSmartCostLimit
@@ -841,6 +933,8 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/NullResult"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /smartcostlimit/{cost}:
     post:
       operationId: setGlobalSmartCostLimit
@@ -853,6 +947,8 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/NumberResult"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /state:
     get:
       operationId: getState
@@ -885,6 +981,8 @@ paths:
                 properties:
                   result:
                     $ref: "#/components/schemas/State"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /system/log:
     get:
       operationId: getSystemLogs
@@ -1017,6 +1115,8 @@ paths:
                         $ref: "#/components/schemas/Rates"
         "404":
           description: Tariff not defined
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /vehicles/{name}/limitsoc/{soc}:
     post:
       operationId: setVehicleSocLimit
@@ -1032,6 +1132,8 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/SocResult"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /vehicles/{name}/minsoc/{soc}:
     post:
       operationId: setVehicleMinSoc
@@ -1047,6 +1149,8 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/SocResult"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /vehicles/{name}/plan/repeating:
     post:
       operationId: updateVehicleRepeatingPlans
@@ -1078,6 +1182,8 @@ paths:
                     type: array
                     items:
                       $ref: "#/components/schemas/RepeatingPlan"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /vehicles/{name}/plan/soc:
     delete:
       operationId: deleteVehicleSocPlan
@@ -1092,6 +1198,8 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/EmptyResult"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /vehicles/{name}/plan/soc/{soc}/{timestamp}:
     post:
       operationId: setVehicleSocPlan
@@ -1120,6 +1228,8 @@ paths:
                         $ref: "#/components/schemas/Soc"
                       time:
                         $ref: "#/components/schemas/Timestamp"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
   /vehicles/{name}/plan/strategy:
     post:
       operationId: setVehiclePlanStrategy
@@ -1147,6 +1257,8 @@ paths:
                 properties:
                   result:
                     $ref: "#/components/schemas/PlanStrategy"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 components:
   schemas:
     BatteryMode:
