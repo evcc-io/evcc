@@ -3,7 +3,7 @@
 		<span v-if="targetIsAboveLimit" class="d-block evcc-gray mb-1">
 			{{ $t("main.targetCharge.targetIsAboveLimit", { limit: limitFmt }) }}
 		</span>
-		<span v-if="mode && ['off', 'now'].includes(mode)" class="d-block evcc-gray mb-1">
+		<span v-if="mode && ['off', 'now'].includes(mode)" class="d-block text-warning mb-1">
 			{{ $t("main.targetCharge.onlyInPvMode") }}
 		</span>
 		<span v-if="timeTooFarInTheFuture" class="d-block evcc-gray mb-1">
@@ -20,9 +20,9 @@
 
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
-import formatter from "../../mixins/formatter.js";
-import type { PlanWrapper } from "./types.js";
-import type { Tariff } from "assets/js/types/evcc.js";
+import formatter from "@/mixins/formatter";
+import type { PlanWrapper } from "./types";
+import type { Tariff } from "@/types/evcc";
 
 export default defineComponent({
 	name: "ChargingPlanWarnings",
@@ -49,7 +49,7 @@ export default defineComponent({
 				return null;
 			}
 			const { plan } = this.plan;
-			return plan[plan.length - 1].end;
+			return plan[plan.length - 1]!.end;
 		},
 		overrunFmt(): string {
 			if (!this.planOverrun) {

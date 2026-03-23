@@ -2,7 +2,7 @@ template: twc3
 products:
   - brand: Tesla
     description:
-      generic: TWC3
+      generic: Wall Connector (Gen 3)
 requirements:
   description:
     en: The TWC wallbox cannot be controlled directly. Control is via the vehicle. The vehicle must be selected at the TWC3 loadpoint. At this time only [Tesla vehicles](https://docs.evcc.io/en/docs/devices/vehicles#tesla) are supported.

@@ -2,7 +2,8 @@
 	<component :is="icon" :class="`icon icon--${size}`"></component>
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent, type PropType } from "vue";
 import _1 from "./1.vue";
 import _2 from "./2.vue";
 import _3 from "./3.vue";
@@ -13,6 +14,7 @@ import _7 from "./7.vue";
 import _8 from "./8.vue";
 import _9 from "./9.vue";
 import Plus from "./Plus.vue";
+import { ICON_SIZE } from "@/types/evcc";
 
 const icons = {
 	_1,
@@ -26,18 +28,18 @@ const icons = {
 	_9,
 };
 
-export default {
+export default defineComponent({
 	name: "MultiIcon",
 	props: {
-		count: { type: Number },
-		size: { type: String, default: "s" },
+		count: { type: Number, default: 1 },
+		size: { type: String as PropType<ICON_SIZE>, default: ICON_SIZE.S },
 	},
 	computed: {
 		icon() {
-			return this.count > 9 ? Plus : icons[`_${this.count}`];
+			return this.count > 9 ? Plus : icons[`_${this.count}` as keyof typeof icons];
 		},
 	},
-};
+});
 </script>
 
 <style scoped>

@@ -35,7 +35,7 @@ type Identity struct {
 }
 
 // NewIdentity creates Polestar identity
-func NewIdentity(log *util.Logger, user, password string) (*Identity, error) {
+func NewIdentity(log *util.Logger, user, password string) (oauth2.TokenSource, error) {
 	v := &Identity{
 		Helper:   request.NewHelper(log),
 		user:     user,
@@ -57,7 +57,7 @@ func NewIdentity(log *util.Logger, user, password string) (*Identity, error) {
 		return nil, err
 	}
 
-	v.TokenSource = oauth.RefreshTokenSource(token, v)
+	v.TokenSource = oauth.RefreshTokenSource(token, v.refreshToken)
 
 	return v, nil
 }
@@ -149,8 +149,8 @@ func (v *Identity) login() (*oauth2.Token, error) {
 	return util.TokenWithExpiry(&token), nil
 }
 
-// Token implements oauth.TokenSource
-func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
+// refreshToken obtains a renewed oauth token
+func (v *Identity) refreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	data := url.Values{
 		"grant_type":    {"refresh_token"},
 		"refresh_token": {token.RefreshToken},

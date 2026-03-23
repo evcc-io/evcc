@@ -1,0 +1,15 @@
+template: sigenergy
+products:
+  - brand: Sigenergy
+    description:
+      generic: EVAC series
+capabilities: ["mA"]
+requirements:
+  evcc: ["sponsorship"]
+params:
+  - name: modbus
+    choice: ["tcpip"]
+    id: 1
+render: |
+  type: sigenergy
+  {{- include "modbus" . }}

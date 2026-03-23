@@ -19,7 +19,7 @@ func init() {
 }
 
 // NewCCUFromConfig creates a Homematic meter from generic config
-func NewCCUFromConfig(other map[string]interface{}) (api.Meter, error) {
+func NewCCUFromConfig(other map[string]any) (api.Meter, error) {
 	cc := struct {
 		URI           string
 		Device        string
@@ -43,13 +43,16 @@ func NewCCUFromConfig(other map[string]interface{}) (api.Meter, error) {
 // NewCCU creates a new connection with usage for meter
 func NewCCU(uri, deviceid, meterid, switchid, user, password, usage string, cache time.Duration) (*CCU, error) {
 	conn, err := homematic.NewConnection(uri, deviceid, meterid, switchid, user, password, cache)
+	if err != nil {
+		return nil, err
+	}
 
 	m := &CCU{
 		conn:  conn,
 		usage: usage,
 	}
 
-	return m, err
+	return m, nil
 }
 
 // CurrentPower implements the api.Meter interface

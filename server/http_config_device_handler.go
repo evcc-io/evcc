@@ -2,30 +2,38 @@ package server
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
 	"net/http"
+	"reflect"
+	"slices"
 	"strconv"
 
 	"dario.cat/mergo"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/charger"
 	"github.com/evcc-io/evcc/core/circuit"
+	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/meter"
+	"github.com/evcc-io/evcc/server/db/settings"
+	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/evcc-io/evcc/vehicle"
 	"github.com/gorilla/mux"
+	"go.yaml.in/yaml/v4"
 )
 
-func devicesConfig[T any](class templates.Class, h config.Handler[T]) ([]map[string]any, error) {
+func devicesConfig[T any](class templates.Class, h config.Handler[T], hidePrivate bool) ([]map[string]any, error) {
 	var res []map[string]any
 
 	for _, dev := range h.Devices() {
-		dc, err := deviceConfigMap(class, dev)
+		dc, err := deviceConfigMap(class, dev, hidePrivate)
 		if err != nil {
 			return nil, err
 		}
@@ -52,20 +60,29 @@ func devicesConfigHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Check if private data should be hidden (default: true, showing private data)
+	hidePrivate := r.URL.Query().Get("private") == "false"
+
 	var res []map[string]any
 
 	switch class {
 	case templates.Meter:
-		res, err = devicesConfig(class, config.Meters())
+		res, err = devicesConfig(class, config.Meters(), hidePrivate)
 
 	case templates.Charger:
-		res, err = devicesConfig(class, config.Chargers())
+		res, err = devicesConfig(class, config.Chargers(), hidePrivate)
 
 	case templates.Vehicle:
-		res, err = devicesConfig(class, config.Vehicles())
+		res, err = devicesConfig(class, config.Vehicles(), hidePrivate)
 
 	case templates.Circuit:
-		res, err = devicesConfig(class, config.Circuits())
+		res, err = devicesConfig(class, config.Circuits(), hidePrivate)
+
+	case templates.Tariff:
+		res, err = devicesConfig(class, config.Tariffs(), hidePrivate)
+
+	case templates.Messenger:
+		res, err = devicesConfig(class, config.Messengers(), hidePrivate)
 	}
 
 	if err != nil {
@@ -73,10 +90,10 @@ func devicesConfigHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jsonResult(w, res)
+	jsonWrite(w, res)
 }
 
-func deviceConfigMap[T any](class templates.Class, dev config.Device[T]) (map[string]any, error) {
+func deviceConfigMap[T any](class templates.Class, dev config.Device[T], hidePrivate bool) (map[string]any, error) {
 	conf := dev.Config()
 
 	dc := map[string]any{
@@ -99,12 +116,34 @@ func deviceConfigMap[T any](class templates.Class, dev config.Device[T]) (map[st
 			return nil, err
 		}
 
-		params, err := sanitizeMasked(class, conf.Other)
-		if err != nil {
-			return nil, err
+		if conf.Type == typeTemplate {
+			params, err := sanitizeMasked(class, conf.Other, hidePrivate)
+			if err != nil {
+				return nil, err
+			}
+			dc["config"] = params
+		} else {
+			// custom device, no masking
+			config := maps.Clone(conf.Other)
+
+			// extract title & icon if possible (user-defined vehicle embeds)
+			if yamlStr, ok := conf.Other["yaml"].(string); ok && config["title"] == nil && config["icon"] == nil {
+				var yamlData map[string]any
+				if err := yaml.Unmarshal([]byte(yamlStr), &yamlData); err == nil {
+					if title, ok := yamlData["title"].(string); ok {
+						config["title"] = title
+					}
+					if icon, ok := yamlData["icon"].(string); ok {
+						config["icon"] = icon
+					}
+				}
+			}
+
+			dc["config"] = config
 		}
-		dc["config"] = params
-	} else {
+	}
+
+	if dc["config"] == nil {
 		// add title if available
 		config := make(map[string]any)
 		if title, ok := conf.Other["title"].(string); ok {
@@ -122,13 +161,13 @@ func deviceConfigMap[T any](class templates.Class, dev config.Device[T]) (map[st
 	return dc, nil
 }
 
-func deviceConfig[T any](class templates.Class, id int, h config.Handler[T]) (map[string]any, error) {
+func deviceConfig[T any](class templates.Class, id int, h config.Handler[T], hidePrivate bool) (map[string]any, error) {
 	dev, err := h.ByName(config.NameForID(id))
 	if err != nil {
 		return nil, err
 	}
 
-	return deviceConfigMap(class, dev)
+	return deviceConfigMap(class, dev, hidePrivate)
 }
 
 // deviceConfigHandler returns a device configuration by class
@@ -147,20 +186,29 @@ func deviceConfigHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Check if private data should be hidden (default: true, showing private data)
+	hidePrivate := r.URL.Query().Get("private") == "false"
+
 	var res map[string]any
 
 	switch class {
 	case templates.Meter:
-		res, err = deviceConfig(class, id, config.Meters())
+		res, err = deviceConfig(class, id, config.Meters(), hidePrivate)
 
 	case templates.Charger:
-		res, err = deviceConfig(class, id, config.Chargers())
+		res, err = deviceConfig(class, id, config.Chargers(), hidePrivate)
 
 	case templates.Vehicle:
-		res, err = deviceConfig(class, id, config.Vehicles())
+		res, err = deviceConfig(class, id, config.Vehicles(), hidePrivate)
 
 	case templates.Circuit:
-		res, err = deviceConfig(class, id, config.Circuits())
+		res, err = deviceConfig(class, id, config.Circuits(), hidePrivate)
+
+	case templates.Tariff:
+		res, err = deviceConfig(class, id, config.Tariffs(), hidePrivate)
+
+	case templates.Messenger:
+		res, err = deviceConfig(class, id, config.Messengers(), hidePrivate)
 	}
 
 	if err != nil {
@@ -170,20 +218,28 @@ func deviceConfigHandler(w http.ResponseWriter, r *http.Request) {
 
 	// TODO return application/yaml content type if type != template
 
-	jsonResult(w, res)
+	jsonWrite(w, res)
 }
 
-func deviceStatus[T any](name string, h config.Handler[T]) (T, error) {
+func deviceStatus[T comparable](name string, h config.Handler[T]) (T, error) {
+	var zero T
+
 	dev, err := h.ByName(name)
 	if err != nil {
-		var zero T
 		return zero, err
 	}
 
-	return dev.Instance(), nil
+	instance := dev.Instance()
+
+	// check if device instance is nil (https://github.com/golang/go/issues/46320#issuecomment-965970859)
+	if rv := reflect.ValueOf(&instance); rv.Elem().IsZero() || rv.Elem().IsNil() {
+		return zero, fmt.Errorf("instance %s not initialized", name)
+	}
+
+	return instance, nil
 }
 
-// deviceStatusHandler returns a device configuration by class
+// deviceStatusHandler returns the device test status by class
 func deviceStatusHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
@@ -209,6 +265,12 @@ func deviceStatusHandler(w http.ResponseWriter, r *http.Request) {
 
 	case templates.Circuit:
 		instance, err = deviceStatus(name, config.Circuits())
+
+	case templates.Tariff:
+		instance, err = deviceStatus(name, config.Tariffs())
+
+	case templates.Messenger:
+		instance, err = deviceStatus(name, config.Messengers())
 	}
 
 	if err != nil {
@@ -216,16 +278,16 @@ func deviceStatusHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jsonResult(w, testInstance(instance))
+	jsonWrite(w, testInstance(instance))
 }
 
-func newDevice[T any](ctx context.Context, class templates.Class, req configReq, newFromConf newFromConfFunc[T], h config.Handler[T]) (*config.Config, error) {
+func newDevice[T any](ctx context.Context, class templates.Class, req configReq, newFromConf newFromConfFunc[T], h config.Handler[T], force bool) (*config.Config, error) {
 	instance, err := newFromConf(ctx, req.Type, req.Other)
-	if err != nil {
+	if err != nil && !force {
 		return nil, err
 	}
 
-	conf, err := config.AddConfig(class, req.Other, config.WithProperties(req.Properties))
+	conf, err := config.AddConfig(class, req.Serialise(), config.WithProperties(req.Properties))
 	if err != nil {
 		return nil, err
 	}
@@ -243,8 +305,8 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req configReq
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	req, err := decodeDeviceConfig(r.Body)
+	if err != nil {
 		jsonError(w, http.StatusBadRequest, err)
 		return
 	}
@@ -252,20 +314,28 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	var conf *config.Config
 	ctx, cancel, done := startDeviceTimeout()
 
+	force := r.URL.Query().Get("force") == "true"
+
 	switch class {
 	case templates.Charger:
-		conf, err = newDevice(ctx, class, req, charger.NewFromConfig, config.Chargers())
+		conf, err = newDevice(ctx, class, req, charger.NewFromConfig, config.Chargers(), force)
 
 	case templates.Meter:
-		conf, err = newDevice(ctx, class, req, meter.NewFromConfig, config.Meters())
+		conf, err = newDevice(ctx, class, req, meter.NewFromConfig, config.Meters(), force)
 
 	case templates.Vehicle:
-		conf, err = newDevice(ctx, class, req, vehicle.NewFromConfig, config.Vehicles())
+		conf, err = newDevice(ctx, class, req, vehicle.NewFromConfig, config.Vehicles(), force)
 
 	case templates.Circuit:
-		conf, err = newDevice(ctx, class, req, func(ctx context.Context, _ string, other map[string]interface{}) (api.Circuit, error) {
+		conf, err = newDevice(ctx, class, req, func(ctx context.Context, _ string, other map[string]any) (api.Circuit, error) {
 			return circuit.NewFromConfig(ctx, util.NewLogger("circuit"), other)
-		}, config.Circuits())
+		}, config.Circuits(), force)
+
+	case templates.Tariff:
+		conf, err = newDevice(ctx, class, req, tariff.NewFromConfig, config.Tariffs(), force)
+
+	case templates.Messenger:
+		conf, err = newDevice(ctx, class, req, messenger.NewFromConfig, config.Messengers(), force)
 	}
 
 	if err != nil {
@@ -287,19 +357,23 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		Name: config.NameForID(conf.ID),
 	}
 
-	jsonResult(w, res)
+	jsonWrite(w, res)
 }
 
-func updateDevice[T any](ctx context.Context, id int, class templates.Class, req configReq, newFromConf newFromConfFunc[T], h config.Handler[T]) error {
+func updateDevice[T any](ctx context.Context, id int, class templates.Class, req configReq, newFromConf newFromConfFunc[T], h config.Handler[T], force bool) error {
 	dev, instance, merged, err := deviceInstanceFromMergedConfig(ctx, id, class, req, newFromConf, h)
 	if err != nil {
-		return err
+		// allow force-updating if merged config exists
+		if !force || merged == nil {
+			return err
+		}
 	}
 
 	configurable, ok := dev.(config.ConfigurableDevice[T])
 	if !ok {
 		return errors.New("not configurable")
 	}
+
 	return configurable.Update(merged, instance, config.WithProperties(req.Properties))
 }
 
@@ -319,28 +393,36 @@ func updateDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req configReq
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	req, err := decodeDeviceConfig(r.Body)
+	if err != nil {
 		jsonError(w, http.StatusBadRequest, err)
 		return
 	}
 
 	ctx, cancel, done := startDeviceTimeout()
 
+	force := r.URL.Query().Get("force") == "true"
+
 	switch class {
 	case templates.Charger:
-		err = updateDevice(ctx, id, class, req, charger.NewFromConfig, config.Chargers())
+		err = updateDevice(ctx, id, class, req, charger.NewFromConfig, config.Chargers(), force)
 
 	case templates.Meter:
-		err = updateDevice(ctx, id, class, req, meter.NewFromConfig, config.Meters())
+		err = updateDevice(ctx, id, class, req, meter.NewFromConfig, config.Meters(), force)
 
 	case templates.Vehicle:
-		err = updateDevice(ctx, id, class, req, vehicle.NewFromConfig, config.Vehicles())
+		err = updateDevice(ctx, id, class, req, vehicle.NewFromConfig, config.Vehicles(), force)
 
 	case templates.Circuit:
-		err = updateDevice(ctx, id, class, req, func(ctx context.Context, _ string, other map[string]interface{}) (api.Circuit, error) {
+		err = updateDevice(ctx, id, class, req, func(ctx context.Context, _ string, other map[string]any) (api.Circuit, error) {
 			return circuit.NewFromConfig(ctx, util.NewLogger("circuit"), other)
-		}, config.Circuits())
+		}, config.Circuits(), force)
+
+	case templates.Tariff:
+		err = updateDevice(ctx, id, class, req, tariff.NewFromConfig, config.Tariffs(), force)
+
+	case templates.Messenger:
+		err = updateDevice(ctx, id, class, req, messenger.NewFromConfig, config.Messengers(), force)
 	}
 
 	setConfigDirty()
@@ -360,7 +442,7 @@ func updateDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		ID: id,
 	}
 
-	jsonResult(w, res)
+	jsonWrite(w, res)
 }
 
 func configurableDevice[T any](name string, h config.Handler[T]) (config.ConfigurableDevice[T], error) {
@@ -404,6 +486,27 @@ func cleanupSiteMeterRef(name string, get func() []string, set func([]string)) {
 	if len(refs) != len(res) {
 		set(res)
 	}
+}
+
+// cleanupTariffRef removes a tariff reference from settings
+func cleanupTariffRef(name string) {
+	if !settings.Exists(keys.TariffRefs) {
+		return
+	}
+
+	var refs globalconfig.TariffRefs
+	if err := settings.Json(keys.TariffRefs, &refs); err != nil {
+		return
+	}
+
+	for _, ref := range []*string{&refs.Grid, &refs.FeedIn, &refs.Co2, &refs.Planner} {
+		if *ref == name {
+			*ref = ""
+		}
+	}
+	refs.Solar = slices.DeleteFunc(refs.Solar, func(ref string) bool { return ref == name })
+
+	settings.SetJson(keys.TariffRefs, refs)
 }
 
 // deleteDeviceHandler deletes a device from database by class
@@ -479,6 +582,25 @@ func deleteDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Requ
 
 		case templates.Circuit:
 			err = deleteDevice(id, config.Circuits())
+
+			// cleanup references
+			for _, dev := range h.Devices() {
+				lp := dev.Instance()
+				if lp.GetCircuitRef() == config.NameForID(id) {
+					lp.SetCircuitRef("")
+				}
+			}
+
+		case templates.Tariff:
+			err = deleteDevice(id, config.Tariffs())
+
+			// cleanup references
+			if err == nil {
+				cleanupTariffRef(config.NameForID(id))
+			}
+
+		case templates.Messenger:
+			err = deleteDevice(id, config.Messengers())
 		}
 
 		setConfigDirty()
@@ -494,7 +616,7 @@ func deleteDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Requ
 			ID: id,
 		}
 
-		jsonResult(w, res)
+		jsonWrite(w, res)
 	}
 }
 
@@ -528,8 +650,8 @@ func testConfigHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	var req configReq
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	req, err := decodeDeviceConfig(r.Body)
+	if err != nil {
 		jsonError(w, http.StatusBadRequest, err)
 		return
 	}
@@ -549,6 +671,12 @@ func testConfigHandler(w http.ResponseWriter, r *http.Request) {
 
 	case templates.Circuit:
 		err = api.ErrNotAvailable
+
+	case templates.Tariff:
+		instance, err = testConfig(ctx, id, class, req, tariff.NewFromConfig, config.Tariffs())
+
+	case templates.Messenger:
+		instance, err = testConfig(ctx, id, class, req, messenger.NewFromConfig, config.Messengers())
 	}
 
 	if err != nil {
@@ -557,8 +685,9 @@ func testConfigHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// prevent context from being cancelled
+	// prevent context from being cancelled during test
 	close(done)
+	defer cancel()
 
-	jsonResult(w, testInstance(instance))
+	jsonWrite(w, testInstance(instance))
 }

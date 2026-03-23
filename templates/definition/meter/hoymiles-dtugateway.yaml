@@ -1,0 +1,28 @@
+template: hoymiles-dtugateway
+products:
+  - brand: Hoymiles
+    description:
+      de: HMS Serie mit integriertem WLAN (über DTU Gateway)
+      en: HMS Series with integrated Wifi (via DTU Gateway)
+requirements:
+  description:
+    de: |
+      Benötigt wird ein Hoymiles Wechselrichter der HMS Serie mit integriertem WLAN,
+      und ein ESP-32 mit firmware von https://github.com/ohAnd/dtuGateway
+    en: |
+      Requires a Hoymiles Inverter of the HMS Series with integrated Wifi,
+      and an ESP-32 with firmware from https://github.com/ohAnd/dtuGateway
+params:
+  - name: usage
+    choice: ["pv"]
+  - name: host
+render: |
+  type: custom
+  power:
+    source: http
+    uri: http://{{ .host }}/api/data.json
+    jq: .grid.p
+  energy:
+    source: http
+    uri: http://{{ .host }}/api/data.json
+    jq: .grid.tE

@@ -1,0 +1,22 @@
+template: fritzgrid
+products:
+  - brand: "FRITZ!"
+    description:
+      generic: "FRITZ!Smart Energy 250"
+params:
+  - name: usage
+    choice: ["grid"]
+  - name: uri
+    default: https://fritz.box
+  - name: user
+    required: true
+  - name: password
+    required: true
+  - name: ain
+    required: true
+render: |
+  type: fritzdect
+  uri: {{ .uri }}
+  user: {{ .user }}
+  password: {{ .password }}
+  ain: {{ .ain }} # switch actor identification number without blanks (see AIN number on switch sticker)

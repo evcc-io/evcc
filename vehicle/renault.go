@@ -27,26 +27,27 @@ type Renault struct {
 }
 
 func init() {
-	registry.Add("dacia", func(other map[string]interface{}) (api.Vehicle, error) {
+	registry.Add("dacia", func(other map[string]any) (api.Vehicle, error) {
 		return NewRenaultDaciaFromConfig("dacia", other)
 	})
-	registry.Add("renault", func(other map[string]interface{}) (api.Vehicle, error) {
+	registry.Add("renault", func(other map[string]any) (api.Vehicle, error) {
 		return NewRenaultDaciaFromConfig("renault", other)
 	})
 }
 
 // NewRenaultDaciaFromConfig creates a new Renault/Dacia vehicle
-func NewRenaultDaciaFromConfig(brand string, other map[string]interface{}) (api.Vehicle, error) {
+func NewRenaultDaciaFromConfig(brand string, other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed                       `mapstructure:",squash"`
 		User, Password, Region, VIN string
-		AlternativeWakeup           bool
+		WakeupMode                  string
 		Cache                       time.Duration
 		Timeout                     time.Duration
 	}{
-		Region:  "de_DE",
-		Cache:   interval,
-		Timeout: request.Timeout,
+		Region:     "de_DE",
+		WakeupMode: "default",
+		Cache:      interval,
+		Timeout:    request.Timeout,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -71,12 +72,12 @@ func NewRenaultDaciaFromConfig(brand string, other map[string]interface{}) (api.
 		return nil, err
 	}
 
-	api := kamereon.New(log, keys.Kamereon, identity, func() error {
+	api := kamereon.NewAPI(log, keys.Kamereon, identity, func() error {
 		return identity.Login(cc.User, cc.Password)
 	})
 	api.Client.Timeout = cc.Timeout
 
-	accountID, err := api.Person(identity.PersonID, brand)
+	accountID, err := api.AccountID(identity.PersonID, brand)
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +95,7 @@ func NewRenaultDaciaFromConfig(brand string, other map[string]interface{}) (api.
 		err = vehicle.Available()
 	}
 
-	v.Provider = renault.NewProvider(api, accountID, vehicle.VIN, cc.AlternativeWakeup, cc.Cache)
+	v.Provider = renault.NewProvider(api, accountID, vehicle.VIN, cc.WakeupMode, cc.Cache)
 
 	return v, err
 }

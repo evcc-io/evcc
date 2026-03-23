@@ -7,6 +7,9 @@ params:
   - name: usage
     choice: ["aux"]
   - name: host
+  - name: tempsource
+    choice: ["1", "2"]
+    default: "1"
 render: |
   type: custom
   power:
@@ -16,5 +19,5 @@ render: |
   soc:
     source: http
     uri: http://{{ .host }}/data.jsn
-    jq: .temp1
+    jq: .temp{{ .tempsource }}
     scale: 0.1

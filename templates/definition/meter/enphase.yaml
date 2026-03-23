@@ -4,28 +4,40 @@ products:
     description:
       generic: IQ Envoy
 requirements:
-  description:
-    de: 'Als Batteriespeicher werden seitens der Enphase-API derzeit nur die Batterien vom Typ "AC Battery" unterstützt.'
-    en: 'Only batteries of type "AC Battery" are currently supported by Enphase-API.'
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
   - name: host
+  - name: schema
+    default: https
+    advanced: true
   - name: token
     help:
       en: "Required if Envoy Firmware D7.x.xxx. Token is valid for one year. Instructions for obtaining a token via web UI: https://enphase.com/download/accessing-iq-gateway-local-apis-or-local-ui-token-based-authentication"
       de: "Ab Envoy Firmware D7.x.xxx notwendig. Token ist ein Jahr gültig. Anleitung (Obtaining a token via web UI): https://enphase.com/download/accessing-iq-gateway-local-apis-or-local-ui-token-based-authentication"
-  - name: capacity
+  - name: battery_type
+    description:
+      en: "Enphase Battery Type (AC or IQ)"
+      de: "Enphase Batterietyp (AC oder IQ)"
+    help:
+      en: "Select 'iq' for new Enphase IQ Batteries. Leave at default 'ac' for older generation AC Batteries."
+      de: "Wähle 'iq' falls die neuere 'IQ Battery' Generation installiert ist. Standardeinstellung 'ac' für die ältere 'AC Battery' Generation."
+    default: ac
+    choice: ["ac", "iq"]
     advanced: true
+  - preset: battery-params
   - name: cache
     advanced: true
     default: 1s
+  - name: timeout
+    advanced: true
+    default: 10s
 render: |
   type: custom
   {{- if eq .usage "grid" }}
   power:
     source: http
-    uri: http://{{ .host }}/production.json
+    uri: {{ .schema }}://{{ .host }}/production.json?details=1
     {{- if .token }}
     auth:
       type: bearer
@@ -33,10 +45,11 @@ render: |
     insecure: true
     {{- end }}
     cache: {{ .cache }}
+    timeout: {{ .timeout }}
     jq: .consumption[] | select(.measurementType == "net-consumption").wNow
   currents:
     - source: http
-      uri: http://{{ .host }}/production.json?details=1
+      uri: {{ .schema }}://{{ .host }}/production.json?details=1
       {{- if .token }}
       auth:
         type: bearer
@@ -44,9 +57,10 @@ render: |
       insecure: true
       {{- end }}
       cache: {{ .cache }}
+      timeout: {{ .timeout }}
       jq: if (( .consumption[] | select(.measurementType == "net-consumption").activeCount >= 1 ) and ( .consumption[] | select(.measurementType == "net-consumption").lines | length >= 1 )) then .consumption[] | select(.measurementType == "net-consumption").lines[0].rmsCurrent else 0 end
     - source: http
-      uri: http://{{ .host }}/production.json?details=1
+      uri: {{ .schema }}://{{ .host }}/production.json?details=1
       {{- if .token }}
       auth:
         type: bearer
@@ -54,9 +68,10 @@ render: |
       insecure: true
       {{- end }}
       cache: {{ .cache }}
+      timeout: {{ .timeout }}
       jq: if (( .consumption[] | select(.measurementType == "net-consumption").activeCount >= 1 ) and ( .consumption[] | select(.measurementType == "net-consumption").lines | length >= 2 )) then .consumption[] | select(.measurementType == "net-consumption").lines[1].rmsCurrent else 0 end
     - source: http
-      uri: http://{{ .host }}/production.json?details=1
+      uri: {{ .schema }}://{{ .host }}/production.json?details=1
       {{- if .token }}
       auth:
         type: bearer
@@ -64,12 +79,13 @@ render: |
       insecure: true
       {{- end }}
       cache: {{ .cache }}
+      timeout: {{ .timeout }}
       jq: if (( .consumption[] | select(.measurementType == "net-consumption").activeCount >= 1 ) and ( .consumption[] | select(.measurementType == "net-consumption").lines | length >= 3 )) then .consumption[] | select(.measurementType == "net-consumption").lines[2].rmsCurrent else 0 end
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
     source: http
-    uri: http://{{ .host }}/production.json
+    uri: {{ .schema }}://{{ .host }}/production.json?details=1
     {{- if .token }}
     auth:
       type: bearer
@@ -77,10 +93,11 @@ render: |
     insecure: true
     {{- end }}
     cache: {{ .cache }}
+    timeout: {{ .timeout }}
     jq: if (.production | length) > 1 and (.production[] | select(.measurementType == "production").activeCount >= 1) then .production[] | select(.measurementType == "production").wNow else .production[] | select(.type == "inverters").wNow end
   energy:
     source: http
-    uri: http://{{ .host }}/production.json
+    uri: {{ .schema }}://{{ .host }}/production.json?details=1
     {{- if .token }}
     auth:
       type: bearer
@@ -88,11 +105,12 @@ render: |
     insecure: true
     {{- end }}
     cache: {{ .cache }}
+    timeout: {{ .timeout }}
     jq: if (.production | length) > 1 and (.production[] | select(.measurementType == "production").activeCount >= 1) then .production[] | select(.measurementType == "production").whLifetime else .production[] | select(.type == "inverters").whLifetime end
     scale: 0.001
   currents:
     - source: http
-      uri: http://{{ .host }}/production.json?details=1
+      uri: {{ .schema }}://{{ .host }}/production.json?details=1
       {{- if .token }}
       auth:
         type: bearer
@@ -100,9 +118,10 @@ render: |
       insecure: true
       {{- end }}
       cache: {{ .cache }}
+      timeout: {{ .timeout }}
       jq: if (( .production[] | select(.measurementType == "production").activeCount >= 1 ) and ( .production[] | select(.measurementType == "production").lines | length >= 1 )) then .production[] | select(.measurementType == "production").lines[0].rmsCurrent else 0 end
     - source: http
-      uri: http://{{ .host }}/production.json?details=1
+      uri: {{ .schema }}://{{ .host }}/production.json?details=1
       {{- if .token }}
       auth:
         type: bearer
@@ -110,9 +129,10 @@ render: |
       insecure: true
       {{- end }}
       cache: {{ .cache }}
+      timeout: {{ .timeout }}
       jq: if (( .production[] | select(.measurementType == "production").activeCount >= 1 ) and ( .production[] | select(.measurementType == "production").lines | length >= 2 )) then .production[] | select(.measurementType == "production").lines[1].rmsCurrent else 0 end
     - source: http
-      uri: http://{{ .host }}/production.json?details=1
+      uri: {{ .schema }}://{{ .host }}/production.json?details=1
       {{- if .token }}
       auth:
         type: bearer
@@ -120,12 +140,17 @@ render: |
       insecure: true
       {{- end }}
       cache: {{ .cache }}
+      timeout: {{ .timeout }}
       jq: if (( .production[] | select(.measurementType == "production").activeCount >= 1 ) and ( .production[] | select(.measurementType == "production").lines | length >= 3 )) then .production[] | select(.measurementType == "production").lines[2].rmsCurrent else 0 end
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
     source: http
-    uri: http://{{ .host }}/production.json
+    {{- if eq .battery_type "iq" }}
+    uri: {{ .schema }}://{{ .host }}/ivp/livedata/status
+    {{- else }}
+    uri: {{ .schema }}://{{ .host }}/production.json?details=1
+    {{- end}}
     {{- if .token }}
     auth:
       type: bearer
@@ -133,10 +158,15 @@ render: |
     insecure: true
     {{- end }}
     cache: {{ .cache }}
+    timeout: {{ .timeout }}
+    {{- if eq .battery_type "iq" }}
+    jq: ((.meters.storage.agg_p_mw // 0) / 1000 | round)
+    {{- else }}
     jq: .storage[] | .wNow
+    {{- end}}
   soc:
     source: http
-    uri: http://{{ .host }}/ivp/ensemble/inventory
+    uri: {{ .schema }}://{{ .host }}/ivp/ensemble/inventory
     {{- if .token }}
     auth:
       type: bearer
@@ -144,6 +174,7 @@ render: |
     insecure: true
     {{- end }}
     cache: {{ .cache }}
+    timeout: {{ .timeout }}
     jq: '[.[].devices[] | select(.percentFull != null) | .percentFull] | add / length'
-  capacity: {{ .capacity }} # kWh
+  {{- include "battery-params" . }}
   {{- end }}

@@ -1,9 +1,13 @@
 package core
 
 import (
+	"errors"
+
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/session"
-	"github.com/samber/lo"
+	"github.com/evcc-io/evcc/core/wrapper"
+	"github.com/jinzhu/now"
 )
 
 func (lp *Loadpoint) chargeMeterTotal() float64 {
@@ -14,7 +18,9 @@ func (lp *Loadpoint) chargeMeterTotal() float64 {
 
 	f, err := m.TotalEnergy()
 	if err != nil {
-		lp.log.ERROR.Printf("charge total import: %v", err)
+		if !errors.Is(err, api.ErrNotAvailable) {
+			lp.log.ERROR.Printf("charge total import: %v", err)
+		}
 		return 0
 	}
 
@@ -33,8 +39,8 @@ func (lp *Loadpoint) createSession() {
 
 	lp.session = lp.db.New(lp.chargeMeterTotal())
 
-	if vehicle := lp.GetVehicle(); vehicle != nil {
-		lp.session.Vehicle = vehicle.Title()
+	if v := lp.GetVehicle(); v != nil {
+		lp.session.Vehicle = v.GetTitle()
 	} else if lp.chargerHasFeature(api.IntegratedDevice) {
 		lp.session.Vehicle = lp.GetTitle()
 	}
@@ -44,8 +50,13 @@ func (lp *Loadpoint) createSession() {
 	}
 
 	if soc, err := lp.chargerSoc(); err == nil && soc > 0 {
-		lp.session.SocStart = lo.ToPtr(soc)
+		lp.session.SocStart = new(soc)
 	}
+
+	// energy
+	lp.energyMetrics.Reset()
+	lp.energyMetrics.Publish("session", lp)
+	lp.publish(keys.ChargedEnergy, lp.GetChargedEnergy())
 }
 
 // stopSession ends a charging session segment and persists the session.
@@ -71,12 +82,12 @@ func (lp *Loadpoint) stopSession() {
 		s.SocStop = &lp.vehicleSoc
 	}
 
-	s.SolarPercentage = lo.ToPtr(lp.energyMetrics.SolarPercentage())
+	s.SolarPercentage = new(lp.energyMetrics.SolarPercentage())
 	s.Price = lp.energyMetrics.Price()
 	s.PricePerKWh = lp.energyMetrics.PricePerKWh()
 	s.Co2PerKWh = lp.energyMetrics.Co2PerKWh()
 	s.ChargedEnergy = lp.energyMetrics.TotalWh() / 1e3
-	s.ChargeDuration = lo.ToPtr(lp.chargeDuration.Abs())
+	s.ChargeDuration = new(lp.chargeDuration.Abs())
 
 	lp.db.Persist(s)
 }
@@ -107,4 +118,26 @@ func (lp *Loadpoint) clearSession() {
 	}
 
 	lp.session = nil
+}
+
+func (lp *Loadpoint) resetHeatingSession() {
+	if lp.session == nil || !lp.chargerHasFeature(api.Heating) || !lp.chargerHasFeature(api.IntegratedDevice) {
+		return
+	}
+
+	if !now.With(lp.clock.Now()).BeginningOfDay().After(lp.session.Created) {
+		return
+	}
+
+	lp.stopSession()
+	lp.clearSession()
+
+	if cr, ok := lp.chargeRater.(wrapper.ChargeResetter); ok {
+		cr.ResetCharge()
+	}
+	if ct, ok := lp.chargeTimer.(wrapper.ChargeResetter); ok {
+		ct.ResetCharge()
+	}
+
+	lp.createSession()
 }

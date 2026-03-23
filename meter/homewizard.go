@@ -19,7 +19,7 @@ func init() {
 }
 
 // NewHomeWizardFromConfig creates a HomeWizard meter from generic config
-func NewHomeWizardFromConfig(other map[string]interface{}) (api.Meter, error) {
+func NewHomeWizardFromConfig(other map[string]any) (api.Meter, error) {
 	cc := struct {
 		URI   string
 		Usage string

@@ -5,8 +5,15 @@ group: price
 countries: ["AU"]
 params:
   - name: token
+    required: true
   - name: siteid
+    description:
+      generic: Site ID
+    required: true
   - name: channel
+    type: choice
+    choice: ["general", "feedIn", "controlledLoad"]
+    required: true
   - preset: tariff-base
 render: |
   type: amber

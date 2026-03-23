@@ -28,10 +28,10 @@ func init() {
 	registry.Add("openevse", NewOpenEVSEFromConfig)
 }
 
-//go:generate go tool decorate -f decorateOpenEVSE -b *OpenEVSE -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
+//go:generate go tool decorate -f decorateOpenEVSE -b *OpenEVSE -r api.Charger -t api.PhaseSwitcher
 
 // NewOpenEVSEFromConfig creates an OpenEVSE charger from generic config
-func NewOpenEVSEFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewOpenEVSEFromConfig(other map[string]any) (api.Charger, error) {
 	cc := struct {
 		URI      string
 		User     string
@@ -93,7 +93,7 @@ func (c *OpenEVSE) setOverride() error {
 	uri := fmt.Sprintf("%s/override", c.uri)
 
 	if err := c.GetJSON(uri, &data); err != nil {
-		if err.Error() != "unexpected status: 404 (Not Found)" {
+		if se, ok := errors.AsType[*request.StatusError](err); !ok || !se.HasStatus(404) {
 			return err
 		}
 	}
@@ -199,7 +199,7 @@ func (c *OpenEVSE) ChargedEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return res.SessionEnergy / 1e3, err
+	return res.Wattsec / 3600 / 1e3, err
 }
 
 var _ api.ChargeTimer = (*OpenEVSE)(nil)
@@ -210,7 +210,7 @@ func (c *OpenEVSE) ChargeDuration() (time.Duration, error) {
 		return 0, err
 	}
 
-	return time.Duration(res.SessionElapsed) * time.Second, err
+	return time.Duration(res.Elapsed) * time.Second, err
 }
 
 var _ api.MeterEnergy = (*OpenEVSE)(nil)
@@ -222,7 +222,7 @@ func (c *OpenEVSE) TotalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return res.TotalEnergy, err
+	return res.Watthour / 1e3, err
 }
 
 var _ api.Meter = (*OpenEVSE)(nil)
@@ -233,10 +233,10 @@ func (c *OpenEVSE) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-	return res.Power, err
+	return res.Amp * res.Voltage / 1e3, err
 }
 
-// phases1p3p implements the api.ChargePhases interface
+// phases1p3p implements the api.PhaseSwitcher interface
 func (c *OpenEVSE) phases1p3p(phases int) error {
 	var set3p int
 	if phases == 3 {

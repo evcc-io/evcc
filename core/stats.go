@@ -12,7 +12,7 @@ import (
 
 // publisher gives access to the site's publish function
 type publisher interface {
-	publish(key string, val interface{})
+	publish(key string, val any)
 }
 
 // Publishes long term charging statistics
@@ -48,7 +48,7 @@ func (s *Stats) Update(p publisher) {
 func (s *Stats) calculate(fromDate time.Time) map[string]float64 {
 	result := make(map[string]float64)
 
-	executeQuery := func(selectClause string, whereClause string, fromDate time.Time, dest interface{}) {
+	executeQuery := func(selectClause string, whereClause string, fromDate time.Time, dest any) {
 		query := fmt.Sprintf(`
 		SELECT COALESCE(%s, 0)
 		FROM sessions

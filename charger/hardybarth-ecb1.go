@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2019-2022 andig
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -52,7 +52,7 @@ func init() {
 }
 
 // NewHardyBarthFromConfig creates a HardyBarth cPH1 charger from generic config
-func NewHardyBarthFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewHardyBarthFromConfig(other map[string]any) (api.Charger, error) {
 	cc := struct {
 		URI           string
 		ChargeControl int
@@ -103,9 +103,11 @@ func NewHardyBarth(uri string, chargecontrol, meter int, cache time.Duration) (a
 
 	uri = fmt.Sprintf("%s/chargecontrols/%d/mode", wb.uri, wb.chargecontrol)
 	data := url.Values{"mode": {echarge.ModeManual}}
-	err := wb.post(uri, data)
+	if err := wb.post(uri, data); err != nil {
+		return nil, err
+	}
 
-	return wb, err
+	return wb, nil
 }
 
 func (wb *HardyBarth) getChargeControl() (ecb1.ChargeControl, error) {

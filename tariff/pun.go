@@ -48,7 +48,7 @@ func init() {
 	registry.Add("pun", NewPunFromConfig)
 }
 
-func NewPunFromConfig(other map[string]interface{}) (api.Tariff, error) {
+func NewPunFromConfig(other map[string]any) (api.Tariff, error) {
 	var cc embed
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -65,11 +65,7 @@ func NewPunFromConfig(other map[string]interface{}) (api.Tariff, error) {
 		data:  util.NewMonitor[api.Rates](2 * time.Hour),
 	}
 
-	done := make(chan error)
-	go t.run(done)
-	err := <-done
-
-	return t, err
+	return runOrError(t)
 }
 
 func (t *Pun) run(done chan error) {
@@ -155,12 +151,18 @@ func (t *Pun) getData(day time.Time) (api.Rates, error) {
 		return nil, err
 	}
 
-	if len(zipReader.File) != 1 {
-		return nil, fmt.Errorf("unexpected number of files in the ZIP archive")
+	var tariffFile *zip.File
+	for _, file := range zipReader.File {
+		if strings.HasSuffix(file.Name, "Prezzi.xml") {
+			tariffFile = file
+			break
+		}
+	}
+	if tariffFile == nil {
+		return nil, fmt.Errorf("tariff file not found in downloaded ZIP archive")
 	}
 
-	zipFile := zipReader.File[0]
-	f, err := zipFile.Open()
+	f, err := tariffFile.Open()
 	if err != nil {
 		return nil, err
 	}

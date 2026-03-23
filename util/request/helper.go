@@ -2,6 +2,7 @@ package request
 
 import (
 	"encoding/json"
+	"encoding/xml"
 	"net/http"
 	"time"
 
@@ -53,7 +54,7 @@ func (r *Helper) GetBody(url string) ([]byte, error) {
 }
 
 // decodeJSON reads HTTP response and decodes JSON body if error is nil
-func decodeJSON(resp *http.Response, res interface{}) error {
+func decodeJSON(resp *http.Response, res any) error {
 	if err := ResponseError(resp); err != nil {
 		_ = json.NewDecoder(resp.Body).Decode(&res)
 		return err
@@ -62,9 +63,19 @@ func decodeJSON(resp *http.Response, res interface{}) error {
 	return json.NewDecoder(resp.Body).Decode(&res)
 }
 
+// decodeXML reads HTTP response and decodes XML body if error is nil
+func decodeXML(resp *http.Response, res any) error {
+	if err := ResponseError(resp); err != nil {
+		_ = xml.NewDecoder(resp.Body).Decode(&res)
+		return err
+	}
+
+	return xml.NewDecoder(resp.Body).Decode(&res)
+}
+
 // DoJSON executes HTTP request and decodes JSON response.
 // It returns a StatusError on response codes other than HTTP 2xx.
-func (r *Helper) DoJSON(req *http.Request, res interface{}) error {
+func (r *Helper) DoJSON(req *http.Request, res any) error {
 	resp, err := r.Do(req)
 	if err != nil {
 		return err
@@ -80,11 +91,38 @@ func (r *Helper) DoJSON(req *http.Request, res interface{}) error {
 
 // GetJSON executes HTTP GET request and decodes JSON response.
 // It returns a StatusError on response codes other than HTTP 2xx.
-func (r *Helper) GetJSON(url string, res interface{}) error {
+func (r *Helper) GetJSON(url string, res any) error {
 	req, err := New(http.MethodGet, url, nil, AcceptJSON)
 	if err != nil {
 		return err
 	}
 
 	return r.DoJSON(req, &res)
+}
+
+// DoXML executes HTTP request and decodes XML response.
+// It returns a StatusError on response codes other than HTTP 2xx.
+func (r *Helper) DoXML(req *http.Request, res any) error {
+	resp, err := r.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusNoContent {
+		return nil
+	}
+
+	return decodeXML(resp, res)
+}
+
+// GetXML executes HTTP GET request and decodes XML response.
+// It returns a StatusError on response codes other than HTTP 2xx.
+func (r *Helper) GetXML(url string, res any) error {
+	req, err := New(http.MethodGet, url, nil, AcceptXML)
+	if err != nil {
+		return err
+	}
+
+	return r.DoXML(req, res)
 }

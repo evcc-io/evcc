@@ -4,9 +4,13 @@ products:
     description:
       generic: Tapo P-Series Smart Plug
 group: switchsockets
+requirements:
+  description:
+    en: Third-party compatibility must be enabled in the Tapo app to allow evcc to control the device!
+    de: Die Kompatibilität mit Drittanbietern muss in der Tapo-App aktiviert werden, um evcc die Steuerung des Geräts zu ermöglichen!
 params:
   - name: usage
-    choice: ["pv"]
+    choice: ["pv", "charge"]
   - name: host
   - name: user
     required: true

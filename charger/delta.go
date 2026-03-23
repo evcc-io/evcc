@@ -64,7 +64,7 @@ func init() {
 }
 
 // NewDeltaFromConfig creates a Delta charger from generic config
-func NewDeltaFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewDeltaFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		Connector       uint16
 		modbus.Settings `mapstructure:",squash"`
@@ -190,8 +190,9 @@ func (wb *Delta) statusReasonDelta() (api.Reason, error) {
 	switch encoding.Uint16(b) {
 	case 1:
 		return api.ReasonWaitingForAuthorization, nil
-	case 7:
-		return api.ReasonDisconnectRequired, nil
+		// removed due to https://github.com/evcc-io/evcc/issues/21847
+		// case 7:
+		// 	return api.ReasonDisconnectRequired, nil
 	}
 
 	return api.ReasonUnknown, nil

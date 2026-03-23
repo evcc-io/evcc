@@ -3,7 +3,7 @@
 		<div
 			:id="id"
 			ref="modal"
-			:class="classes"
+			:class="['modal', 'fade', 'text-dark', fadeClass]"
 			tabindex="-1"
 			role="dialog"
 			:aria-hidden="isModalVisible ? 'false' : 'true'"
@@ -11,19 +11,22 @@
 			:data-bs-keyboard="uncloseable ? 'false' : 'true'"
 			:data-testid="dataTestid"
 		>
-			<div class="modal-dialog modal-dialog-centered" role="document">
+			<div class="modal-dialog modal-dialog-centered" :class="sizeClass" role="document">
 				<div class="modal-content">
-					<div class="modal-header">
+					<div class="modal-header d-flex justify-content-between align-items-center">
 						<h5 class="modal-title">
 							{{ title }}
 						</h5>
-						<button
-							v-if="!uncloseable"
-							type="button"
-							class="btn-close"
-							data-bs-dismiss="modal"
-							aria-label="Close"
-						></button>
+						<div class="d-flex align-items-center gap-1">
+							<slot name="header-actions"></slot>
+							<button
+								v-if="!uncloseable"
+								type="button"
+								class="btn-close"
+								data-bs-dismiss="modal"
+								aria-label="Close"
+							></button>
+						</div>
 					</div>
 					<div ref="modalBody" class="modal-body">
 						<slot />
@@ -34,92 +37,99 @@
 	</Teleport>
 </template>
 
-<script>
+<script lang="ts">
 import Modal from "bootstrap/js/dist/modal";
+import { defineComponent } from "vue";
+import { registerModal, unregisterModal, onModalHidden, getModalFade } from "@/configModal";
 
-export default {
+export default defineComponent({
 	name: "GenericModal",
 	props: {
 		id: String,
 		title: String,
 		dataTestid: String,
 		uncloseable: Boolean,
-		fade: String,
 		size: String,
+		autofocus: { type: Boolean, default: true },
+		configModalName: String,
 	},
-	emits: ["open", "opened", "close", "closed"],
+	emits: ["open", "opened", "close", "closed", "dismiss", "visibilitychange"],
 	data() {
 		return {
 			isModalVisible: false,
 		};
 	},
 	computed: {
-		classes() {
-			return [
-				"modal",
-				"fade",
-				"text-dark",
-				{ show: this.isModalVisible },
-				this.sizeClass,
-				this.fadeClass,
-			];
-		},
 		sizeClass() {
 			return this.size ? `modal-${this.size}` : "";
 		},
-		fadeClass() {
-			if (this.fade) {
-				return `fade-${this.fade}`;
-			}
-			return "";
+		fadeClass(): string {
+			const fade = this.configModalName && getModalFade(this.configModalName);
+			return fade ? `fade-${fade}` : "";
 		},
 	},
 	mounted() {
-		this.$refs.modal.addEventListener("show.bs.modal", this.handleShow);
-		this.$refs.modal.addEventListener("shown.bs.modal", this.handleShown);
-		this.$refs.modal.addEventListener("hide.bs.modal", this.handleHide);
-		this.$refs.modal.addEventListener("hidden.bs.modal", this.handleHidden);
+		this.$refs["modal"]?.addEventListener("show.bs.modal", this.handleShow);
+		this.$refs["modal"]?.addEventListener("shown.bs.modal", this.handleShown);
+		this.$refs["modal"]?.addEventListener("hide.bs.modal", this.handleHide);
+		this.$refs["modal"]?.addEventListener("hidden.bs.modal", this.handleHidden);
+		document.addEventListener("visibilitychange", this.handleVisibilityChange);
+		if (this.configModalName) {
+			registerModal(this.configModalName, this.$refs["modal"] as HTMLElement);
+		}
 	},
 	unmounted() {
-		this.$refs.modal?.removeEventListener("show.bs.modal", this.handleShow);
-		this.$refs.modal?.removeEventListener("shown.bs.modal", this.handleShown);
-		this.$refs.modal?.removeEventListener("hide.bs.modal", this.handleHide);
-		this.$refs.modal?.removeEventListener("hidden.bs.modal", this.handleHidden);
+		this.$refs["modal"]?.removeEventListener("show.bs.modal", this.handleShow);
+		this.$refs["modal"]?.removeEventListener("shown.bs.modal", this.handleShown);
+		this.$refs["modal"]?.removeEventListener("hide.bs.modal", this.handleHide);
+		this.$refs["modal"]?.removeEventListener("hidden.bs.modal", this.handleHidden);
+		document.removeEventListener("visibilitychange", this.handleVisibilityChange);
+		if (this.configModalName) {
+			unregisterModal(this.configModalName);
+		}
 	},
 	methods: {
 		handleShow() {
-			console.log(this.dataTestid, "> show");
 			this.$emit("open");
 		},
 		handleShown() {
-			console.log(this.dataTestid, "> shown");
 			this.$emit("opened");
-			// focus first input or select
-			this.$nextTick(() => {
-				const firstInput = this.$refs.modalBody.querySelector("input, select, button");
-				if (firstInput) {
-					firstInput.focus();
-				}
-			});
+			if (this.autofocus) {
+				this.$nextTick(() => {
+					const firstInput =
+						this.$refs["modalBody"]?.querySelector("input, select, button");
+					if (firstInput instanceof HTMLElement) {
+						firstInput.focus();
+					}
+				});
+			}
 			this.isModalVisible = true;
 		},
 		handleHide() {
-			console.log(this.dataTestid, "> hide");
 			this.$emit("close");
 		},
 		handleHidden() {
-			console.log(this.dataTestid, "> hidden");
 			this.$emit("closed");
 			this.isModalVisible = false;
+			if (this.configModalName) {
+				if (onModalHidden(this.configModalName)) {
+					this.$emit("dismiss");
+				}
+			}
 		},
 		open() {
-			console.log(this.dataTestid, "> open", this.$refs.modal._isShown);
-			Modal.getOrCreateInstance(this.$refs.modal).show();
+			const modal = this.$refs["modal"] as HTMLElement;
+			Modal.getOrCreateInstance(modal).show();
 		},
 		close() {
-			console.log(this.dataTestid, "> close", this.$refs.modal._isShown);
-			Modal.getOrCreateInstance(this.$refs.modal).hide();
+			const modal = this.$refs["modal"] as HTMLElement;
+			Modal.getOrCreateInstance(modal).hide();
+		},
+		handleVisibilityChange() {
+			if (document.visibilityState === "visible" && this.isModalVisible) {
+				this.$emit("visibilitychange");
+			}
 		},
 	},
-};
+});
 </script>

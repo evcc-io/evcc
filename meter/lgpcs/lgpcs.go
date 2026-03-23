@@ -83,7 +83,7 @@ func (m *Com) Login() error {
 		return errors.New("neither registration nor password provided - at least one needed")
 	}
 
-	data := map[string]interface{}{
+	data := map[string]any{
 		"password": m.password,
 	}
 	uri := fmt.Sprintf("%s/v1/user/setting/login", m.uri)
@@ -162,8 +162,9 @@ func (m *Com) GetFirmwareVersion() (int, error) {
 	if err != nil {
 		return 0, err
 	}
+
 	// extract the patch number behind a dot that is always followed by at least 4 digits
-	if match := regexp.MustCompile(`.(\d{4})`).FindStringSubmatch(systemInfo.Version.PMSVersion); len(match) > 1 {
+	if match := regexp.MustCompile(`\.(\d{4})$`).FindStringSubmatch(systemInfo.Version.PMSVersion); len(match) > 1 {
 		return strconv.Atoi(match[1])
 	}
 
@@ -200,7 +201,7 @@ func (m *Com) request(f func(any) (*http.Request, error), payload map[string]str
 	}
 
 	// re-login if request returns 405-error
-	if se := new(request.StatusError); errors.As(err, &se) && se.StatusCode() != http.StatusMethodNotAllowed {
+	if se, ok := errors.AsType[*request.StatusError](err); ok && se.StatusCode() != http.StatusMethodNotAllowed {
 		return err
 	}
 

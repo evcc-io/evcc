@@ -2,7 +2,7 @@ template: acrel-adw300
 products:
   - brand: Acrel
     description:
-      generic: ADW300 Wireless Metering Meter
+      generic: ADW300
 params:
   - name: usage
     choice: ["grid", "pv", "charge"]

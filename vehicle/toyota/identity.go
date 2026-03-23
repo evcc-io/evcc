@@ -138,11 +138,11 @@ func (v *Identity) fetchTokenCredentials(code string) error {
 	}
 
 	v.uuid = uuid
-	v.TokenSource = oauth.RefreshTokenSource(util.TokenWithExpiry(&res.Token), v)
+	v.TokenSource = oauth.RefreshTokenSource(util.TokenWithExpiry(&res.Token), v.refreshToken)
 	return nil
 }
 
-func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
+func (v *Identity) refreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	uri := fmt.Sprintf("%s/%s", BaseUrl, AccessTokenPath)
 	data := url.Values{
 		"client_id":     {ClientID},

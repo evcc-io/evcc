@@ -10,15 +10,7 @@ params:
     choice: ["battery"]
   - name: modbus
     choice: ["tcpip", "rs485"]
-  - name: capacity
-    advanced: true
-  # battery control (model 802)
-  - name: minsoc
-    type: int
-    advanced: true
-  - name: maxsoc
-    type: int
-    advanced: true
+  - preset: battery-params
 render: |
   {{- if eq .usage "battery" }}
   type: custom
@@ -34,7 +26,5 @@ render: |
     source: sunspec
     {{- include "modbus" . | indent 2 }}
     value: 802:SoCRsvMin
-  capacity: {{ .capacity }} # kWh
-  minsoc: {{ .minsoc }} # %
-  maxsoc: {{ .maxsoc }} # %
+  {{- include "battery-params" . }}
   {{- end }}

@@ -9,30 +9,34 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent, type PropType } from "vue";
 import { PolarArea } from "vue-chartjs";
-import { RadialLinearScale, ArcElement, Legend, Tooltip } from "chart.js";
-import { registerChartComponents, commonOptions, tooltipLabelColor } from "./chartConfig";
-import formatter from "../../mixins/formatter";
-import colors, { dimColor } from "../../colors";
+import { RadialLinearScale, ArcElement, Legend, Tooltip, type TooltipItem } from "chart.js";
+import { registerChartComponents, commonOptions, tooltipLabelColor } from "./chartConfig.ts";
+import formatter from "@/mixins/formatter";
+import colors, { dimColor } from "@/colors";
 import LegendList from "./LegendList.vue";
-import { GROUPS } from "./types";
+import { GROUPS, type Session } from "./types.ts";
 
 registerChartComponents([RadialLinearScale, ArcElement, Legend, Tooltip]);
 
-export default {
+export default defineComponent({
 	name: "SolarGroupedChart",
 	components: { PolarArea, LegendList },
 	mixins: [formatter],
 	props: {
-		sessions: { type: Array, default: () => [] },
-		groupBy: { type: String, default: GROUPS.LOADPOINT },
+		sessions: { type: Array as PropType<Session[]>, default: () => [] },
+		groupBy: {
+			type: String as PropType<Exclude<GROUPS, GROUPS.NONE>>,
+			default: GROUPS.LOADPOINT,
+		},
 		colorMappings: { type: Object, default: () => ({ loadpoint: {}, vehicle: {} }) },
 	},
 	computed: {
 		chartData() {
 			console.log("update solar grouped data");
-			const aggregatedData = {};
+			const aggregatedData: Record<string, { grid: number; self: number }> = {};
 
 			this.sessions.forEach((session) => {
 				const groupKey = session[this.groupBy];
@@ -57,8 +61,7 @@ export default {
 				return selfPercentage;
 			});
 
-			const colorGroup = this.groupBy === GROUPS.NONE ? "solar" : this.groupBy;
-			const borderColors = labels.map((label) => this.colorMappings[colorGroup][label]);
+			const borderColors = labels.map((label) => this.colorMappings[this.groupBy][label]);
 			const backgroundColors = borderColors.map((color) => dimColor(color));
 			return {
 				labels: labels,
@@ -72,11 +75,15 @@ export default {
 			};
 		},
 		legends() {
-			return this.chartData.labels.map((label, index) => ({
-				label: label,
-				color: this.chartData.datasets[0].borderColor[index],
-				value: this.fmtPercentage(this.chartData.datasets[0].data[index], 1),
-			}));
+			const dataset = this.chartData.datasets[0]!;
+			return this.chartData.labels.map((label, index) => {
+				const dataValue = dataset.data[index] as number;
+				return {
+					label: label,
+					color: dataset.borderColor[index],
+					value: this.fmtPercentage(dataValue, 1),
+				};
+			});
 		},
 		options() {
 			return {
@@ -96,9 +103,11 @@ export default {
 						position: "topBottomCenter",
 						callbacks: {
 							title: () => null,
-							label: (tooltipItem) => {
-								const { label, raw = 0 } = tooltipItem;
-								return label + ": " + this.fmtPercentage(raw, 1);
+							label: (tooltipItem: TooltipItem<"polarArea">) => {
+								const { label, dataset, dataIndex } = tooltipItem;
+								const d = dataset.data[dataIndex] as number;
+
+								return label + ": " + this.fmtPercentage(d, 1);
 							},
 							labelColor: tooltipLabelColor(true),
 						},
@@ -116,8 +125,8 @@ export default {
 						grid: { color: colors.border },
 					},
 				},
-			};
+			} as any;
 		},
 	},
-};
+});
 </script>

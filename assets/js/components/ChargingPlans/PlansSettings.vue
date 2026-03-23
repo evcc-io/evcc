@@ -10,9 +10,9 @@
 					:range-per-soc="rangePerSoc"
 					:soc-per-kwh="socPerKwh"
 					:soc-based-planning="socBasedPlanning"
-					:multiplePlans="multiplePlans"
-					@static-plan-updated="(data) => updateStaticPlan({ index: 0, ...data })"
-					@static-plan-removed="() => removeStaticPlan(0)"
+					:multiple-plans="multiplePlans"
+					@static-plan-updated="updateStaticPlan"
+					@static-plan-removed="removeStaticPlan"
 					@plan-preview="previewStaticPlan"
 				/>
 				<div v-if="socBasedPlanning">
@@ -36,31 +36,35 @@
 		</div>
 		<hr />
 		<h5>
-			<div class="inner" data-testid="plan-preview-title">
+			<div class="inner d-flex align-items-center gap-1" data-testid="plan-preview-title">
 				<span v-if="!multiplePlans">
 					{{ $t(`main.targetCharge.${noActivePlan ? "preview" : "currentPlan"}`) }}
 				</span>
-				<CustomSelect
-					v-else-if="noActivePlan"
-					:options="previewPlanOptions"
-					:selected="selectedPreviewId"
-					data-testid="preview-plan-select"
-					@change="selectPreviewPlan($event.target.value)"
+				<span v-else-if="noActivePlan">{{ $t("main.targetCharge.preview") }} #1</span>
+				<span v-else-if="alreadyReached">{{ $t("main.targetCharge.goalReached") }}</span>
+				<span v-else>{{ nextPlanTitle }}</span>
+				<button
+					type="button"
+					class="btn btn-sm"
+					:class="strategyOpen ? 'btn-secondary' : 'evcc-gray'"
+					:aria-label="$t('main.chargingPlan.strategySettings')"
+					tabindex="0"
+					@click="strategyOpen = !strategyOpen"
 				>
-					<span class="text-decoration-underline">
-						{{ selectedPreviewPlanTitle }}
-					</span>
-				</CustomSelect>
-				<span v-else-if="alreadyReached">
-					{{ $t("main.targetCharge.goalReached") }}
-				</span>
-				<span v-else>
-					{{ nextPlanTitle }}
-				</span>
+					<shopicon-regular-adjust size="s"></shopicon-regular-adjust>
+				</button>
 			</div>
 		</h5>
-		<ChargingPlanWarnings v-bind="chargingPlanWarningsProps" />
+		<ChargingPlanStrategy
+			:id="id"
+			:precondition="effectivePlanStrategy?.precondition"
+			:continuous="effectivePlanStrategy?.continuous"
+			:disabled="strategyDisabled"
+			:show="strategyOpen"
+			@update="updatePlanStrategy"
+		/>
 		<ChargingPlanPreview v-bind="chargingPlanPreviewProps" />
+		<ChargingPlanWarnings v-bind="chargingPlanWarningsProps" />
 	</div>
 </template>
 
@@ -68,16 +72,17 @@
 import "@h2d2/shopicons/es/regular/plus";
 import Preview from "./Preview.vue";
 import PlanStaticSettings from "./PlanStaticSettings.vue";
+import ChargingPlanStrategy from "./PlanStrategy.vue";
 import RepeatingSettings from "./PlansRepeatingSettings.vue";
 import Warnings from "./Warnings.vue";
-import formatter from "../../mixins/formatter.js";
-import collector from "../../mixins/collector.js";
-import api, { allowClientError } from "../../api.js";
-import CustomSelect from "../Helper/CustomSelect.vue";
-import deepEqual from "../../utils/deepEqual.js";
-import convertRates from "../../utils/convertRates";
+import formatter from "@/mixins/formatter";
+import collector from "@/mixins/collector";
+import api from "@/api";
+import deepEqual from "@/utils/deepEqual";
+import convertRates from "@/utils/convertRates";
+import { debounceLeading } from "@/utils/debounceLeading";
 import { defineComponent, type PropType } from "vue";
-import type { Vehicle, PartialBy, Timeout, Tariff, SelectOption, CURRENCY } from "../../types/evcc";
+import type { Vehicle, CURRENCY, Forecast } from "@/types/evcc";
 import type {
 	StaticPlan,
 	RepeatingPlan,
@@ -85,18 +90,17 @@ import type {
 	StaticSocPlan,
 	StaticEnergyPlan,
 	PlanResponse,
-} from "./types.js";
-
-const TARIFF_CACHE_TIME = 300000; // 5 minutes
+	PlanStrategy,
+} from "./types";
 
 export default defineComponent({
 	name: "ChargingPlansSettings",
 	components: {
 		ChargingPlanPreview: Preview,
 		ChargingPlanStaticSettings: PlanStaticSettings,
+		ChargingPlanStrategy,
 		ChargingPlansRepeatingSettings: RepeatingSettings,
 		ChargingPlanWarnings: Warnings,
-		CustomSelect,
 	},
 	mixins: [formatter, collector],
 	props: {
@@ -106,6 +110,7 @@ export default defineComponent({
 		effectiveLimitSoc: Number,
 		effectivePlanTime: String,
 		effectivePlanSoc: Number,
+		effectivePlanStrategy: Object as PropType<PlanStrategy>,
 		planEnergy: Number,
 		limitEnergy: Number,
 		socBasedPlanning: Boolean,
@@ -118,17 +123,23 @@ export default defineComponent({
 		vehicle: Object as PropType<Vehicle>,
 		vehicleLimitSoc: Number,
 		planOverrun: Number,
+		forecast: Object as PropType<Forecast>,
 	},
-	emits: ["static-plan-removed", "static-plan-updated", "repeating-plans-updated"],
+	emits: [
+		"static-plan-removed",
+		"static-plan-updated",
+		"repeating-plans-updated",
+		"plan-strategy-updated",
+	],
 	data() {
 		return {
 			staticPlanPreview: {} as StaticPlan,
-			tariff: {} as Tariff,
 			plan: {} as PlanWrapper,
 			activeTab: "time",
-			debounceTimer: null as Timeout,
-			selectedPreviewId: 1,
 			nextPlanId: 0,
+			strategyOpen: false,
+			updatePlanPreviewDebounced: null as any as () => void,
+			updateActivePlanDebounced: null as any as () => void,
 		};
 	},
 	computed: {
@@ -138,14 +149,12 @@ export default defineComponent({
 		multiplePlans(): boolean {
 			return this.repeatingPlans.length !== 0;
 		},
-		selectedPreviewPlanTitle(): string {
-			return this.previewPlanOptions[this.selectedPreviewId - 1]?.name;
-		},
 		chargingPlanWarningsProps(): any {
 			return this.collectProps(Warnings);
 		},
 		chargingPlanPreviewProps(): any {
-			const { rates } = this.tariff;
+			const forecastSlots = this.forecast?.planner || [];
+			const rates = convertRates(forecastSlots);
 			const { duration, plan, power, planTime } = this.plan;
 			const targetTime = planTime ? new Date(planTime) : null;
 			const { currency, smartCostType } = this;
@@ -153,29 +162,18 @@ export default defineComponent({
 				? { duration, plan, power, rates, targetTime, currency, smartCostType }
 				: null;
 		},
-		previewPlanOptions(): SelectOption<number>[] {
-			const name = (n: number) => `${this.$t("main.targetCharge.preview")} #${n}`;
-
-			// static plan
-			const options = [{ value: 1, name: name(1) }] as SelectOption<number>[];
-
-			// repeating plans
-			this.repeatingPlans.forEach((plan, index) => {
-				const number = index + 2;
-				options.push({
-					value: number,
-					name: name(number),
-					disabled: !plan.weekdays.length,
-				});
-			});
-
-			return options;
-		},
 		alreadyReached(): boolean {
 			return this.plan.duration === 0;
 		},
 		nextPlanTitle(): string {
 			return `${this.$t("main.targetCharge.nextPlan")} #${this.nextPlanId}`;
+		},
+		strategyDisabled(): boolean {
+			// options only make sense if there are variable prices
+			// TODO: make this logic more robust (api fails, missing data)
+			const slots = this.forecast?.planner || [];
+			const values = new Set(slots.map(({ value }) => value));
+			return values.size <= 1;
 		},
 	},
 	watch: {
@@ -183,6 +181,14 @@ export default defineComponent({
 			if (null !== newValue) {
 				this.updatePlanDebounced();
 			}
+		},
+		effectivePlanStrategy: {
+			deep: true,
+			handler(vNew: PlanStrategy, vOld: PlanStrategy) {
+				if (!deepEqual(vNew, vOld)) {
+					this.updatePlanDebounced();
+				}
+			},
 		},
 		staticPlan: {
 			deep: true,
@@ -196,37 +202,36 @@ export default defineComponent({
 			deep: true,
 			handler(vNew: RepeatingPlan[], vOld: RepeatingPlan[]) {
 				if (!deepEqual(vNew, vOld)) {
-					this.adjustPreviewId();
 					this.updatePlanDebounced();
 				}
 			},
 		},
 	},
+	created(): void {
+		this.updatePlanPreviewDebounced = debounceLeading(
+			async () => await this.updatePreviewPlan(),
+			300
+		);
+		this.updateActivePlanDebounced = debounceLeading(
+			async () => await this.updateActivePlan(),
+			300
+		);
+	},
 	mounted(): void {
 		this.updatePlanDebounced();
 	},
 	methods: {
-		selectPreviewPlan(id: number): void {
-			this.selectedPreviewId = id;
-			this.updatePlanDebounced();
-		},
-		async updatePlanDebounced() {
+		updatePlanDebounced(): void {
 			if (this.noActivePlan) {
-				await this.updatePlanPreviewDebounced();
+				this.updatePlanPreviewDebounced();
 			} else {
-				await this.updateActivePlanDebounced();
-			}
-		},
-		adjustPreviewId(): void {
-			if (this.selectedPreviewId > this.previewPlanOptions.length) {
-				this.selectedPreviewId = this.previewPlanOptions.length;
+				this.updateActivePlanDebounced();
 			}
 		},
 		async updateActivePlan(): Promise<void> {
-			await this.updateTariff();
 			try {
 				const res = await this.apiFetchPlan(`loadpoints/${this.id}/plan`);
-				this.plan = res?.data.result ?? ({} as PlanWrapper);
+				this.plan = res?.data ?? ({} as PlanWrapper);
 				this.nextPlanId = this.plan.planId;
 			} catch (e) {
 				console.error(e);
@@ -234,30 +239,31 @@ export default defineComponent({
 		},
 		async fetchStaticPreviewSoc(plan: StaticSocPlan): Promise<PlanResponse | undefined> {
 			const timeISO = plan.time.toISOString();
+			const params: Record<string, unknown> = {};
 			return await this.apiFetchPlan(
-				`loadpoints/${this.id}/plan/static/preview/soc/${plan.soc}/${timeISO}`
-			);
-		},
-		async fetchRepeatingPreview(
-			plan: PartialBy<RepeatingPlan, "active">
-		): Promise<PlanResponse | undefined> {
-			return await this.apiFetchPlan(
-				`loadpoints/${this.id}/plan/repeating/preview/${plan.soc}/${plan.weekdays}/${plan.time}/${encodeURIComponent(plan.tz)}`
+				`loadpoints/${this.id}/plan/static/preview/soc/${plan.soc}/${timeISO}`,
+				params
 			);
 		},
 		async fetchStaticPreviewEnergy(plan: StaticEnergyPlan): Promise<PlanResponse | undefined> {
 			const timeISO = plan.time.toISOString();
+			const params: Record<string, unknown> = {};
 			return await this.apiFetchPlan(
-				`loadpoints/${this.id}/plan/static/preview/energy/${plan.energy}/${timeISO}`
+				`loadpoints/${this.id}/plan/static/preview/energy/${plan.energy}/${timeISO}`,
+				params
 			);
 		},
-		async apiFetchPlan(url: string): Promise<PlanResponse | undefined> {
+		async apiFetchPlan(
+			url: string,
+			params?: Record<string, unknown>
+		): Promise<PlanResponse | undefined> {
 			try {
 				const res = (await api.get(url, {
 					validateStatus: (code) => [200, 404].includes(code),
+					params,
 				})) as PlanResponse;
 				if (res.status === 404) {
-					return { data: { result: {} as PlanWrapper } } as PlanResponse;
+					return { data: {} } as PlanResponse;
 				}
 				return res;
 			} catch (e) {
@@ -269,12 +275,9 @@ export default defineComponent({
 			// only show preview if no plan is active
 			if (!this.noActivePlan) return;
 
-			await this.updateTariff();
-
 			try {
 				let planRes: PlanResponse | undefined = undefined;
-
-				if (this.selectedPreviewId < 2 && this.staticPlanPreview) {
+				if (this.staticPlanPreview) {
 					// static plan
 					let plan = this.staticPlanPreview;
 					if (this.socBasedPlanning) {
@@ -290,57 +293,14 @@ export default defineComponent({
 							time: plan.time,
 						});
 					}
-				} else {
-					// repeating plan
-					const plan = this.repeatingPlans[this.selectedPreviewId - 2];
-					if (!plan) {
-						return;
-					}
-					const { weekdays, soc, time, tz } = plan;
-					if (weekdays.length === 0) {
-						return;
-					}
-					planRes = await this.fetchRepeatingPreview({ weekdays, soc, time, tz });
 				}
-				this.plan = planRes?.data.result ?? ({} as PlanWrapper);
+				this.plan = planRes?.data ?? ({} as PlanWrapper);
 			} catch (e) {
 				console.error(e);
 			}
 		},
-		async updateTariff(): Promise<void> {
-			// cache tariff for 5 minutes
-			if (
-				this.tariff?.lastUpdate &&
-				Date.now() - this.tariff.lastUpdate.getTime() <= TARIFF_CACHE_TIME
-			) {
-				return;
-			}
-
-			const res = await api.get(`tariff/planner`, allowClientError);
-
-			this.tariff = {
-				rates: res.status === 404 ? [] : convertRates(res.data.result.rates),
-				lastUpdate: new Date(),
-			};
-		},
-		async updatePlanPreviewDebounced(): Promise<void> {
-			if (!this.debounceTimer) {
-				await this.updatePreviewPlan();
-				return;
-			}
-			clearTimeout(this.debounceTimer);
-			this.debounceTimer = setTimeout(async () => await this.updatePreviewPlan(), 1000);
-		},
-		async updateActivePlanDebounced(): Promise<void> {
-			if (!this.debounceTimer) {
-				await this.updateActivePlan();
-				return;
-			}
-			clearTimeout(this.debounceTimer);
-			this.debounceTimer = setTimeout(async () => await this.updateActivePlan(), 1000);
-		},
-		removeStaticPlan(index: number): void {
-			this.$emit("static-plan-removed", index);
+		removeStaticPlan(): void {
+			this.$emit("static-plan-removed");
 		},
 		updateStaticPlan(plan: StaticPlan): void {
 			this.$emit("static-plan-updated", plan);
@@ -352,6 +312,9 @@ export default defineComponent({
 			this.staticPlanPreview = plan;
 			this.updatePlanPreviewDebounced();
 		},
+		updatePlanStrategy(strategy: PlanStrategy): void {
+			this.$emit("plan-strategy-updated", strategy);
+		},
 	},
 });
 </script>
@@ -360,13 +323,13 @@ export default defineComponent({
 h5 {
 	position: relative;
 	display: flex;
-	top: -25px;
+	top: -33px;
 	margin-bottom: -0.5rem;
 	padding: 0 0.5rem;
 	justify-content: center;
 }
 h5 .inner {
-	padding: 0 0.5rem;
+	padding: 0 1rem;
 	background-color: var(--evcc-box);
 	font-weight: normal;
 	color: var(--evcc-gray);

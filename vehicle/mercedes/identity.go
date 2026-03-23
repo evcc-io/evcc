@@ -7,7 +7,6 @@ import (
 	"net/url"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
@@ -64,22 +63,26 @@ func NewIdentity(log *util.Logger, token *oauth2.Token, account string, region s
 		return instance, nil
 	}
 
-	if !token.Valid() {
-		token.Expiry = time.Now().Add(time.Duration(10) * time.Second)
-	}
+	// store config token for potential re-use
+	var configToken = token
 
 	// database token
-	if !token.Valid() {
-		var tok oauth2.Token
-		if err := settings.Json(v.settingsKey(), &tok); err == nil {
-			v.log.DEBUG.Println("identity.NewIdentity - database token found")
-			token = &tok
-		}
+	var tok oauth2.Token
+	if err := settings.Json(v.settingsKey(), &tok); err == nil {
+		v.log.DEBUG.Println("identity.NewIdentity - database token found")
+		token = &tok
 	}
 
 	if !token.Valid() && token.RefreshToken != "" {
 		v.log.DEBUG.Println("identity.NewIdentity - refreshToken started")
-		if tok, err := v.RefreshToken(token); err == nil {
+		if tok, err := v.refreshToken(token); err == nil {
+			token = tok
+		}
+	}
+
+	if !token.Valid() {
+		v.log.DEBUG.Println("identity.NewIdentity - config refreshToken started")
+		if tok, err := v.refreshToken(configToken); err == nil {
 			token = tok
 		}
 	}
@@ -88,7 +91,7 @@ func NewIdentity(log *util.Logger, token *oauth2.Token, account string, region s
 		return nil, errors.New("token expired")
 	}
 
-	v.TokenSource = oauth.RefreshTokenSource(token, v)
+	v.TokenSource = oauth.RefreshTokenSource(token, v.refreshToken)
 
 	// add instance
 	addInstance(account, v)
@@ -100,7 +103,7 @@ func (v *Identity) settingsKey() string {
 	return fmt.Sprintf("mercedes.%s-%s", v.account, v.region)
 }
 
-func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
+func (v *Identity) refreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	v.mu.Lock()
 	defer v.mu.Unlock()
 
@@ -122,7 +125,7 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	}
 
 	tok := util.TokenWithExpiry(&res)
-	v.TokenSource = oauth.RefreshTokenSource(tok, v)
+	v.TokenSource = oauth.RefreshTokenSource(tok, v.refreshToken)
 
 	err := settings.SetJson(v.settingsKey(), tok)
 

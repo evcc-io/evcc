@@ -35,7 +35,7 @@ func init() {
 	registry.Add("edf-tempo", NewEdfTempoFromConfig)
 }
 
-func NewEdfTempoFromConfig(other map[string]interface{}) (api.Tariff, error) {
+func NewEdfTempoFromConfig(other map[string]any) (api.Tariff, error) {
 	var cc struct {
 		embed        `mapstructure:",squash"`
 		ClientID     string
@@ -79,17 +79,13 @@ func NewEdfTempoFromConfig(other map[string]interface{}) (api.Tariff, error) {
 
 	t.Client.Transport = &oauth2.Transport{
 		Base:   t.Client.Transport,
-		Source: oauth.RefreshTokenSource(new(oauth2.Token), t),
+		Source: oauth2.ReuseTokenSource(nil, oauth.BootstrapTokenSource(t.refreshToken)),
 	}
 
-	done := make(chan error)
-	go t.run(done)
-	err := <-done
-
-	return t, err
+	return runOrError(t)
 }
 
-func (t *EdfTempo) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
+func (t *EdfTempo) refreshToken() (*oauth2.Token, error) {
 	tokenURL := "https://digital.iservices.rte-france.com/token/oauth"
 	req, _ := request.New(http.MethodPost, tokenURL, nil, map[string]string{
 		"Authorization": t.basic,

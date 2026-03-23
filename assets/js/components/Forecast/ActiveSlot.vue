@@ -1,18 +1,17 @@
 <template>
-	<div v-if="isSlot" class="text-end">
+	<div v-if="isSlot" class="text-end tabular">
 		<span class="text-nowrap">{{ day }} {{ start }}</span
 		>{{ " " }}<span class="text-nowrap">– {{ end }}</span>
 	</div>
-	<div v-if="isTimeseries" class="text-end">
+	<div v-if="isTimeseries" class="text-end tabular">
 		<span class="text-nowrap">{{ time }}</span>
 	</div>
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
-import type { PropType } from "vue";
-import { isForecastSlot, type ForecastSlot, type TimeseriesEntry } from "../../utils/forecast";
-import formatter from "../../mixins/formatter";
+import { defineComponent, type PropType } from "vue";
+import formatter from "@/mixins/formatter";
+import { isForecastSlot, type ForecastSlot, type TimeseriesEntry } from "./types";
 
 export default defineComponent({
 	name: "ForecastActiveSlot",
@@ -33,15 +32,15 @@ export default defineComponent({
 		},
 		start() {
 			const startDate = new Date((this.activeSlot! as ForecastSlot).start);
-			return this.hourShort(startDate);
+			return this.fmtHourMinute(startDate);
 		},
 		end() {
 			const endDate = new Date((this.activeSlot! as ForecastSlot).end);
-			return this.hourShort(endDate);
+			return this.fmtHourMinute(endDate);
 		},
 		time() {
 			const time = new Date((this.activeSlot! as TimeseriesEntry).ts);
-			return `${this.weekdayShort(time)} ${this.hourShort(time)}`;
+			return `${this.weekdayShort(time)} ${this.fmtHourMinute(time)}`;
 		},
 	},
 });

@@ -133,13 +133,13 @@ func (v *API) AuthenticateVinService(vin, user, service string) (PinResponse, er
 }
 
 func (v *API) ChargeAction(vin, user string, start bool) error {
-	var data map[string]interface{}
+	var data map[string]any
 
 	pin, err := v.AuthenticateVinService(vin, user, "CP")
 	if err == nil {
 		onoff := map[bool]string{false: "FORCE_OFF", true: "FORCE_ON"}
 
-		data = map[string]interface{}{
+		data = map[string]any{
 			"token":             pin.Token,
 			"serviceParameters": []KeyValue{{"CHARGE_NOW_SETTING", onoff[start]}},
 		}

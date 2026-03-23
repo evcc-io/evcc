@@ -4,17 +4,18 @@
 	</button>
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent, type PropType } from "vue";
 import "@h2d2/shopicons/es/regular/angledoubleleftsmall";
 import "@h2d2/shopicons/es/regular/angledoublerightsmall";
 
-export default {
+export default defineComponent({
 	name: "DateNavigatorButton",
 	props: {
 		disabled: Boolean,
 		prev: Boolean,
 		next: Boolean,
-		onClick: Function,
+		onClick: { type: Function as PropType<(event: MouseEvent) => void> },
 	},
 	computed: {
 		icon() {
@@ -29,7 +30,7 @@ export default {
 			return this.prev ? "me-1" : this.next ? "ms-1" : "";
 		},
 	},
-};
+});
 </script>
 
 <style scoped>

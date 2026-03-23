@@ -16,6 +16,9 @@ var _ API = (*adapter)(nil)
 // Publish publishes vehicle updates at site level
 var Publish func()
 
+// ClearPlanLocks clears locked plan goals across all loadpoints
+var ClearPlanLocks func()
+
 type adapter struct {
 	log         *util.Logger
 	name        string
@@ -29,6 +32,12 @@ func (v *adapter) key() string {
 func (v *adapter) publish() {
 	if Publish != nil {
 		Publish()
+	}
+}
+
+func (v *adapter) clearPlanLocks() {
+	if ClearPlanLocks != nil {
+		ClearPlanLocks()
 	}
 }
 
@@ -100,12 +109,15 @@ func (v *adapter) SetPlanSoc(ts time.Time, soc int) error {
 	settings.SetTime(v.key()+keys.PlanTime, ts)
 	settings.SetInt(v.key()+keys.PlanSoc, int64(soc))
 
+	// note: could be optimized by only clearing plan lock of the relevant loadpoint
+	v.clearPlanLocks()
+
 	v.publish()
 
 	return nil
 }
 
-func (v *adapter) SetRepeatingPlans(plans []api.RepeatingPlanStruct) error {
+func (v *adapter) SetRepeatingPlans(plans []api.RepeatingPlan) error {
 	for _, plan := range plans {
 		for _, day := range plan.Weekdays {
 			if day < 0 || day > 6 {
@@ -120,22 +132,44 @@ func (v *adapter) SetRepeatingPlans(plans []api.RepeatingPlanStruct) error {
 		}
 	}
 
+	if err := settings.SetJson(v.key()+keys.RepeatingPlans, plans); err != nil {
+		return err
+	}
+
 	v.log.DEBUG.Printf("update repeating plans for %s to: %v", v.name, plans)
 
-	settings.SetJson(v.key()+keys.RepeatingPlans, plans)
+	// note: could be optimized by only clearing plan lock of the relevant loadpoint
+	v.clearPlanLocks()
 
 	v.publish()
 
 	return nil
 }
 
-func (v *adapter) GetRepeatingPlans() []api.RepeatingPlanStruct {
-	var plans []api.RepeatingPlanStruct
+func (v *adapter) GetRepeatingPlans() []api.RepeatingPlan {
+	var plans []api.RepeatingPlan
 
-	err := settings.Json(v.key()+keys.RepeatingPlans, &plans)
-	if err == nil {
-		return plans
+	if err := settings.Json(v.key()+keys.RepeatingPlans, &plans); err != nil {
+		return nil
 	}
 
-	return []api.RepeatingPlanStruct{}
+	return plans
+}
+
+func (v *adapter) GetPlanStrategy() api.PlanStrategy {
+	var strategy api.PlanStrategy
+	if err := settings.Json(v.key()+keys.PlanStrategy, &strategy); err != nil {
+		return api.PlanStrategy{}
+	}
+	return strategy
+}
+
+func (v *adapter) SetPlanStrategy(planStrategy api.PlanStrategy) error {
+	if err := settings.SetJson(v.key()+keys.PlanStrategy, planStrategy); err != nil {
+		return err
+	}
+
+	v.publish()
+
+	return nil
 }

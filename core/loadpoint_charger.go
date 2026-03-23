@@ -1,17 +1,13 @@
 package core
 
 import (
-	"slices"
-
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
-	"github.com/evcc-io/evcc/core/soc"
 )
 
 // chargerHasFeature checks availability of charger feature
 func (lp *Loadpoint) chargerHasFeature(f api.Feature) bool {
-	c, ok := lp.charger.(api.FeatureDescriber)
-	return ok && slices.Contains(c.Features(), f)
+	return hasFeature(lp.charger, f)
 }
 
 // publishChargerFeature publishes availability of charger features

@@ -5,40 +5,27 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
-	"github.com/evcc-io/evcc/util"
 	"github.com/gorilla/mux"
 )
 
-// remoteDemandHandler updates minimum soc
-func remoteDemandHandler(lp loadpoint.API) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
+type PlanResponse struct {
+	PlanId   int       `json:"planId"`
+	PlanTime time.Time `json:"planTime"`
+	Duration int64     `json:"duration"`
+	Plan     api.Rates `json:"plan"`
+	Power    float64   `json:"power"`
+}
 
-		source := vars["source"]
-		demand, err := loadpoint.RemoteDemandString(vars["demand"])
-		if err != nil {
-			jsonError(w, http.StatusBadRequest, err)
-			return
-		}
-
-		lp.RemoteControl(source, demand)
-
-		res := struct {
-			Demand loadpoint.RemoteDemand `json:"demand"`
-			Source string                 `json:"source"`
-		}{
-			Source: source,
-			Demand: demand,
-		}
-
-		jsonResult(w, res)
-	}
+type PlanPreviewResponse struct {
+	PlanTime time.Time `json:"planTime"`
+	Duration int64     `json:"duration"`
+	Plan     api.Rates `json:"plan"`
+	Power    float64   `json:"power"`
 }
 
 // planHandler returns the current plan
@@ -50,15 +37,10 @@ func planHandler(lp loadpoint.API) http.HandlerFunc {
 
 		goal, _ := lp.GetPlanGoal()
 		requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower)
-		plan := lp.GetPlan(planTime, requiredDuration)
+		strategy := lp.EffectivePlanStrategy()
+		plan := lp.GetPlan(planTime, requiredDuration, strategy.Precondition, strategy.Continuous)
 
-		res := struct {
-			PlanId   int       `json:"planId"`
-			PlanTime time.Time `json:"planTime"`
-			Duration int64     `json:"duration"`
-			Plan     api.Rates `json:"plan"`
-			Power    float64   `json:"power"`
-		}{
+		res := PlanResponse{
 			PlanId:   id,
 			PlanTime: planTime,
 			Duration: int64(requiredDuration.Seconds()),
@@ -66,7 +48,7 @@ func planHandler(lp loadpoint.API) http.HandlerFunc {
 			Power:    maxPower,
 		}
 
-		jsonResult(w, res)
+		jsonWrite(w, res)
 	}
 }
 
@@ -105,70 +87,18 @@ func staticPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 
 		maxPower := lp.EffectiveMaxPower()
 		requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower)
-		plan := lp.GetPlan(planTime, requiredDuration)
+		strategy := lp.EffectivePlanStrategy()
 
-		res := struct {
-			PlanTime time.Time `json:"planTime"`
-			Duration int64     `json:"duration"`
-			Plan     api.Rates `json:"plan"`
-			Power    float64   `json:"power"`
-		}{
+		plan := lp.GetPlan(planTime, requiredDuration, strategy.Precondition, strategy.Continuous)
+
+		res := PlanPreviewResponse{
 			PlanTime: planTime,
 			Duration: int64(requiredDuration.Seconds()),
 			Plan:     plan,
 			Power:    maxPower,
 		}
 
-		jsonResult(w, res)
-	}
-}
-
-func repeatingPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-
-		hourMinute := vars["time"]
-		tz := vars["tz"]
-
-		var weekdays []int
-		for _, weekdayStr := range strings.Split(vars["weekdays"], ",") {
-			weekday, err := strconv.Atoi(weekdayStr)
-			if err != nil {
-				jsonError(w, http.StatusBadRequest, fmt.Errorf("invalid weekdays format"))
-				return
-			}
-			weekdays = append(weekdays, weekday)
-		}
-
-		soc, err := strconv.ParseFloat(vars["soc"], 64)
-		if err != nil {
-			jsonError(w, http.StatusBadRequest, err)
-			return
-		}
-
-		planTime, err := util.GetNextOccurrence(weekdays, hourMinute, tz)
-		if err != nil {
-			jsonError(w, http.StatusBadRequest, err)
-			return
-		}
-
-		maxPower := lp.EffectiveMaxPower()
-		requiredDuration := lp.GetPlanRequiredDuration(soc, maxPower)
-		plan := lp.GetPlan(planTime, requiredDuration)
-
-		res := struct {
-			PlanTime time.Time `json:"planTime"`
-			Duration int64     `json:"duration"`
-			Plan     api.Rates `json:"plan"`
-			Power    float64   `json:"power"`
-		}{
-			PlanTime: planTime,
-			Duration: int64(requiredDuration.Seconds()),
-			Plan:     plan,
-			Power:    maxPower,
-		}
-
-		jsonResult(w, res)
+		jsonWrite(w, res)
 	}
 }
 
@@ -204,7 +134,7 @@ func planEnergyHandler(lp loadpoint.API) http.HandlerFunc {
 			Time:   ts,
 		}
 
-		jsonResult(w, res)
+		jsonWrite(w, res)
 	}
 }
 
@@ -216,8 +146,7 @@ func planRemoveHandler(lp loadpoint.API) http.HandlerFunc {
 			return
 		}
 
-		res := struct{}{}
-		jsonResult(w, res)
+		jsonWrite(w, struct{}{})
 	}
 }
 
@@ -238,10 +167,10 @@ func vehicleSelectHandler(site site.API, lp loadpoint.API) http.HandlerFunc {
 		res := struct {
 			Vehicle string `json:"vehicle"`
 		}{
-			Vehicle: v.Title(),
+			Vehicle: v.GetTitle(),
 		}
 
-		jsonResult(w, res)
+		jsonWrite(w, res)
 	}
 }
 
@@ -249,8 +178,7 @@ func vehicleSelectHandler(site site.API, lp loadpoint.API) http.HandlerFunc {
 func vehicleRemoveHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		lp.SetVehicle(nil)
-		res := struct{}{}
-		jsonResult(w, res)
+		jsonWrite(w, struct{}{})
 	}
 }
 
@@ -258,7 +186,20 @@ func vehicleRemoveHandler(lp loadpoint.API) http.HandlerFunc {
 func vehicleDetectHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		lp.StartVehicleDetection()
-		res := struct{}{}
-		jsonResult(w, res)
+		jsonWrite(w, struct{}{})
+	}
+}
+
+// planStrategyHandler updates plan strategy for loadpoint
+func planStrategyHandler(lp loadpoint.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if err := planStrategyHandlerSetter(r, lp.SetPlanStrategy); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		res := lp.GetPlanStrategy()
+
+		jsonWrite(w, res)
 	}
 }

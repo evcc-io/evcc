@@ -15,8 +15,10 @@
 	</div>
 </template>
 
-<script>
-export default {
+<script lang="ts">
+import { defineComponent } from "vue";
+
+export default defineComponent({
 	name: "FormRow",
 	props: {
 		id: String,
@@ -32,7 +34,7 @@ export default {
 			return this.smallValue ? "6" : "8";
 		},
 	},
-};
+});
 </script>
 <style scoped>
 .label {

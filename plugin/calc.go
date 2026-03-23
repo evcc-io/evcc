@@ -10,8 +10,8 @@ import (
 )
 
 type calcPlugin struct {
-	add, mul, div []func() (float64, error)
-	abs, sign     func() (float64, error)
+	add, mul, div, min, max []func() (float64, error)
+	abs, sign               func() (float64, error)
 }
 
 func init() {
@@ -19,11 +19,13 @@ func init() {
 }
 
 // NewCalcFromConfig creates calc provider
-func NewCalcFromConfig(ctx context.Context, other map[string]interface{}) (Plugin, error) {
+func NewCalcFromConfig(ctx context.Context, other map[string]any) (Plugin, error) {
 	var cc struct {
 		Add  []Config
 		Mul  []Config
 		Div  []Config
+		Min  []Config
+		Max  []Config
 		Abs  *Config
 		Sign *Config
 	}
@@ -32,7 +34,7 @@ func NewCalcFromConfig(ctx context.Context, other map[string]interface{}) (Plugi
 		return nil, err
 	}
 
-	cnt := min(len(cc.Add), 1) + min(len(cc.Mul), 1) + min(len(cc.Div), 1)
+	cnt := min(len(cc.Add), 1) + min(len(cc.Mul), 1) + min(len(cc.Div), 1) + min(len(cc.Min), 1) + min(len(cc.Max), 1)
 	if cc.Abs != nil {
 		cnt++
 	}
@@ -40,7 +42,7 @@ func NewCalcFromConfig(ctx context.Context, other map[string]interface{}) (Plugi
 		cnt++
 	}
 	if cnt != 1 {
-		return nil, errors.New("can only have either add, mul, div, abs or sign")
+		return nil, errors.New("can only have either add, mul, div, min, max, abs or sign")
 	}
 
 	o := new(calcPlugin)
@@ -67,6 +69,22 @@ func NewCalcFromConfig(ctx context.Context, other map[string]interface{}) (Plugi
 			return nil, fmt.Errorf("div[%d]: %w", idx, err)
 		}
 		o.div = append(o.div, f)
+	}
+
+	for idx, cc := range cc.Min {
+		f, err := cc.FloatGetter(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("min[%d]: %w", idx, err)
+		}
+		o.min = append(o.min, f)
+	}
+
+	for idx, cc := range cc.Max {
+		f, err := cc.FloatGetter(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("max[%d]: %w", idx, err)
+		}
+		o.max = append(o.max, f)
 	}
 
 	var err error
@@ -147,6 +165,32 @@ func (o *calcPlugin) floatGetter() (float64, error) {
 			} else if v == 0 {
 				res = 0
 				break
+			}
+		}
+
+	case len(o.min) > 0:
+		for idx, p := range o.min {
+			v, err := p()
+			if err != nil {
+				return 0, fmt.Errorf("min[%d]: %w", idx, err)
+			}
+			if idx == 0 {
+				res = v
+			} else {
+				res = math.Min(res, v)
+			}
+		}
+
+	case len(o.max) > 0:
+		for idx, p := range o.max {
+			v, err := p()
+			if err != nil {
+				return 0, fmt.Errorf("max[%d]: %w", idx, err)
+			}
+			if idx == 0 {
+				res = v
+			} else {
+				res = math.Max(res, v)
 			}
 		}
 

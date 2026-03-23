@@ -1,0 +1,41 @@
+template: semp-charger
+products:
+  - description:
+      de: SEMP kompatibel
+      en: SEMP compatible
+group: generic
+capabilities: ["mA", "1p3p"]
+requirements:
+  evcc: ["sponsorship", "skiptest"]
+  description:
+    en: |
+      SEMP (Smart Energy Management Protocol) compatible wallbox or device that can be controlled directly via HTTP/XML API.
+      Configure the SEMP base URL (e.g. http://192.168.1.100:8000/semp) and the device ID of the wallbox.
+      IMPORTANT: The wallbox must NOT be registered directly as a consumer in the Sunny Home Manager / Sunny Portal at the same time!
+    de: |
+      SEMP (Smart Energy Management Protocol) kompatible Wallbox oder Verbraucher, die direkt über HTTP/XML API gesteuert werden kann.
+      Konfiguriere die SEMP Basis-URL (z.B. http://192.168.1.100:8000/semp) und die Geräte-ID der Wallbox.
+      WICHTIG: Die Wallbox darf NICHT gleichzeitig im Sunny Home Manager bzw. im Sunny Portal direkt als Verbraucher registriert sein!
+params:
+  - name: uri
+    description:
+      en: SEMP base URL
+      de: SEMP Basis-URL
+    example: http://192.168.0.10:8080/semp
+    required: true
+  - name: deviceid
+    description:
+      en: Device ID (auto-detected if empty)
+      de: Geräte-ID (automatische Erkennung wenn leer)
+    help:
+      en: Explicit specification of a specific Device ID is only required for SEMP gateways with multiple subordinate devices.
+      de: Die explizite Angabe einer bestimmten Device ID ist nur bei SEMP-Gateways mit mehreren untergeordneten Geräten erforderlich.
+    example: F-12345678-ABCDEF123456-00
+    default: ""
+    advanced: true
+render: |
+  type: semp
+  uri: {{ .uri }}
+  {{- if .deviceid }}
+  deviceId: {{ .deviceid }}
+  {{- end }}

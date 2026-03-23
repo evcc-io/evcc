@@ -20,8 +20,11 @@ type Zendure struct {
 }
 
 // NewZendureFromConfig creates a Zendure meter from generic config
-func NewZendureFromConfig(other map[string]interface{}) (api.Meter, error) {
+func NewZendureFromConfig(other map[string]any) (api.Meter, error) {
 	cc := struct {
+		batteryCapacity                `mapstructure:",squash"`
+		batteryPowerLimits             `mapstructure:",squash"`
+		batterySocLimits               `mapstructure:",squash"`
 		Usage, Account, Serial, Region string
 		Timeout                        time.Duration
 	}{
@@ -38,12 +41,20 @@ func NewZendureFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, err
 	}
 
-	c := &Zendure{
+	m := &Zendure{
 		usage: cc.Usage,
 		conn:  conn,
 	}
 
-	return c, err
+	// decorate battery
+	if cc.Usage == "battery" {
+		return decorateMeterBattery(
+			m, nil, m.soc, cc.batteryCapacity.Decorator(),
+			cc.batterySocLimits.Decorator(), cc.batteryPowerLimits.Decorator(), nil,
+		), nil
+	}
+
+	return m, nil
 }
 
 // CurrentPower implements the api.Meter interface
@@ -63,8 +74,8 @@ func (c *Zendure) CurrentPower() (float64, error) {
 	}
 }
 
-// Soc implements the api.Battery interface
-func (c *Zendure) Soc() (float64, error) {
+// soc implements the api.Battery interface
+func (c *Zendure) soc() (float64, error) {
 	res, err := c.conn.Data()
 	if err != nil {
 		return 0, err

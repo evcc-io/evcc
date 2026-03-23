@@ -4,6 +4,7 @@ package updater
 
 import (
 	"compress/gzip"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -65,7 +66,7 @@ func (u *watch) execute(assetID int64, size int) error {
 	}
 
 	uri := fmt.Sprintf("http://gokrazy:%s@%s:%d/", Password, Host, Port)
-	target, err := updater.NewTarget(uri, http.DefaultClient)
+	target, err := updater.NewTarget(context.TODO(), uri, http.DefaultClient)
 	if err != nil {
 		return err
 	}
@@ -92,18 +93,18 @@ func (u *watch) executeAsync(target *updater.Target, rootFS io.ReadCloser, size 
 	}()
 
 	u.Send("uploadMessage", "uploading")
-	if err := target.StreamTo("root", io.TeeReader(rootFS, cw)); err != nil {
+	if err := target.StreamTo(context.TODO(), "root", io.TeeReader(rootFS, cw)); err != nil {
 		return fmt.Errorf("updating root file system: %w", err)
 	}
 	close(cw.C) // upload finished
 
 	u.Send("uploadMessage", "switching to non-active partition")
-	if err := target.Switch(); err != nil {
+	if err := target.Switch(context.TODO()); err != nil {
 		return fmt.Errorf("switching to non-active partition: %w", err)
 	}
 
 	u.Send("uploadMessage", "rebooting")
-	if err := target.Reboot(); err != nil {
+	if err := target.Reboot(context.TODO()); err != nil {
 		return fmt.Errorf("reboot: %w", err)
 	}
 

@@ -6,15 +6,21 @@ products:
       generic: Unite
   - brand: Vestel
     description:
-      generic: EVC04 Home Smart, Connect Plus
+      generic: EVC04 Home Smart
+  - brand: Vestel
+    description:
+      generic: Connect Plus
   - brand: Webasto
     description:
       generic: Unite
   - brand: E.ON Drive
     description:
       generic: vBox
-capabilities: ["1p3p"]
+capabilities: ["rfid", "1p3p"]
 requirements:
+  description:
+    de: 1P3P erfordert Firmware 3.187.0 oder neuer, RFID erfordert 3.156.0 oder neuer.
+    en: 1P3P requires at least firmware version 3.187.0, RFID at least 3.156.0.
   evcc: ["sponsorship"]
 params:
   - name: modbus

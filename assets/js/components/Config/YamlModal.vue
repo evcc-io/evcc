@@ -1,21 +1,32 @@
 <template>
-	<GenericModal ref="modal" :size="size" :title="title" @open="open">
+	<GenericModal
+		:id="`${name}Modal`"
+		ref="modal"
+		:size="size"
+		:title="title"
+		:data-testid="`${name}-modal`"
+		:config-modal-name="name"
+		@open="open"
+		@close="close"
+	>
 		<p v-if="description || docsLink">
 			<span v-if="description">{{ description + " " }}</span>
 			<a v-if="docsLink" :href="docsLink" target="_blank">
 				{{ $t("config.general.docsLink") }}
 			</a>
 		</p>
-		<p v-if="error" class="text-danger" data-testid="error">{{ error }}</p>
+		<slot name="afterDescription" />
+		<ErrorMessage :error="error" data-testid="error" />
 		<form ref="form" class="container mx-0 px-0">
-			<div class="editor-container" :style="{ height }">
-				<YamlEditor
+			<div v-if="!noYamlEditor" class="editor-container">
+				<YamlEditorContainer
 					v-model="yaml"
-					class="editor"
 					:errorLine="errorLine"
 					:removeKey="removeKey"
+					:hidden="!modalVisible"
 				/>
 			</div>
+			<slot name="extra" />
 
 			<div class="mt-4 d-flex justify-content-between">
 				<button
@@ -26,6 +37,7 @@
 					{{ $t("config.general.cancel") }}
 				</button>
 				<button
+					v-if="!disableSave"
 					type="submit"
 					class="btn btn-primary"
 					:disabled="saving || nothingChanged"
@@ -46,13 +58,14 @@
 
 <script>
 import GenericModal from "../Helper/GenericModal.vue";
-import api from "../../api";
-import { docsPrefix } from "../../i18n";
-import YamlEditor from "./YamlEditor.vue";
+import ErrorMessage from "../Helper/ErrorMessage.vue";
+import api from "@/api";
+import { docsPrefix } from "@/i18n";
+import YamlEditorContainer from "./YamlEditorContainer.vue";
 
 export default {
 	name: "YamlModal",
-	components: { GenericModal, YamlEditor },
+	components: { GenericModal, ErrorMessage, YamlEditorContainer },
 	props: {
 		title: String,
 		description: String,
@@ -61,8 +74,11 @@ export default {
 		defaultYaml: String,
 		removeKey: String,
 		size: { type: String, default: "xl" },
+		noYamlEditor: Boolean,
+		disableSave: Boolean,
+		name: String,
 	},
-	emits: ["changed"],
+	emits: ["changed", "open"],
 	data() {
 		return {
 			saving: false,
@@ -70,14 +86,12 @@ export default {
 			errorLine: undefined,
 			yaml: "",
 			serverYaml: "",
+			modalVisible: false,
 		};
 	},
 	computed: {
 		docsLink() {
 			return `${docsPrefix()}${this.docs}`;
-		},
-		height() {
-			return Math.max(150, this.yaml.split("\n").length * 18) + 22 + "px";
 		},
 		nothingChanged() {
 			return this.yaml === this.serverYaml && this.yaml !== "";
@@ -93,13 +107,18 @@ export default {
 		},
 		async open() {
 			this.reset();
+			this.modalVisible = true;
+			this.$emit("open");
 			await this.load();
+		},
+		close() {
+			this.modalVisible = false;
 		},
 		async load() {
 			try {
 				const { data } = await api.get(this.endpoint);
-				this.serverYaml = data.result;
-				this.yaml = data.result || this.defaultYaml;
+				this.serverYaml = data;
+				this.yaml = data || this.defaultYaml;
 			} catch (e) {
 				console.error(e);
 			}
@@ -134,14 +153,5 @@ export default {
 	margin-left: calc(var(--bs-gutter-x) * -0.5);
 	margin-right: calc(var(--bs-gutter-x) * -0.5);
 	padding-right: 0;
-}
-.editor-container {
-	margin: 0 -1rem 0 -1.25rem;
-}
-/* reset margins on lg */
-@media (min-width: 992px) {
-	.editor-container {
-		margin: 0;
-	}
 }
 </style>

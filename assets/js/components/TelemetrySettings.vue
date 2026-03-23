@@ -1,9 +1,9 @@
-<!-- eslint-disable vue/no-v-html -->
 <template>
+	<ErrorMessage :error="error" />
 	<div class="form-check form-switch my-3">
 		<input
 			id="telemetryEnabled"
-			:checked="enabled"
+			:checked="telemetry"
 			class="form-check-input"
 			type="checkbox"
 			role="switch"
@@ -25,73 +25,43 @@
 				</i18n-t>
 				<span v-else>{{ $t("footer.telemetry.optInSponsorship") }}</span>
 			</label>
-			<div v-if="error" class="errorMessage my-1 text-danger" v-html="error" />
 		</div>
 	</div>
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent } from "vue";
+import ErrorMessage from "./Helper/ErrorMessage.vue";
 import api from "../api";
 import { docsPrefix } from "../i18n";
-import settings from "../settings";
+import type { AxiosError } from "axios";
 
-function parseMarkdown(markdownText) {
-	const htmlText = markdownText
-		.replace(/\*\*(.*)\*\*/gim, "<b>$1</b>")
-		.replace(/\*(.*)\*/gim, "<i>$1</i>")
-		.replace(/`(.*)`/gim, "<pre>$1</pre>");
-	return htmlText.trim();
-}
-
-export default {
+export default defineComponent({
 	name: "TelemetrySettings",
-	props: { sponsorActive: Boolean },
+	components: { ErrorMessage },
+	props: { sponsorActive: Boolean, telemetry: Boolean },
 	data() {
 		return {
-			error: null,
+			error: null as string | null,
 		};
 	},
 	computed: {
-		enabled() {
-			return settings.telemetry;
-		},
 		docsLink() {
 			return `${docsPrefix()}/docs/faq#telemetry`;
 		},
 	},
-	async mounted() {
-		await this.update();
-	},
 	methods: {
-		async change(e) {
+		async change(e: Event) {
 			try {
 				this.error = null;
-				const response = await api.post(`settings/telemetry/${e.target.checked}`);
-				settings.telemetry = response.data.result;
+				await api.post(`settings/telemetry/${(e.target as HTMLInputElement).checked}`);
 			} catch (err) {
-				if (err.response) {
-					this.error = parseMarkdown("**Error:** " + err.response.data.error);
-					settings.telemetry = false;
-				}
-			}
-		},
-		async update() {
-			if (settings.telemetry !== null) {
-				return;
-			}
-			try {
-				const response = await api.get("settings/telemetry", {
-					validateStatus: () => true,
-				});
-				if (response.status === 200) {
-					settings.telemetry = response.data.result;
-				}
-			} catch (err) {
-				console.error(err);
+				const e = err as AxiosError<{ error: string }>;
+				this.error = e.response?.data?.error || e.message;
 			}
 		},
 	},
-};
+});
 </script>
 <style scoped>
 .form-check {
@@ -99,9 +69,5 @@ export default {
 }
 .form-check-label {
 	max-width: 100%;
-}
-.errorMessage :deep(pre) {
-	text-overflow: ellipsis;
-	font-size: 1em;
 }
 </style>

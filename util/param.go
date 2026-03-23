@@ -1,11 +1,9 @@
 package util
 
 import (
-	"fmt"
 	"maps"
 	"slices"
 	"strconv"
-	"strings"
 	"sync"
 
 	"github.com/evcc-io/evcc/util/encode"
@@ -15,20 +13,16 @@ import (
 type Param struct {
 	Loadpoint *int
 	Key       string
-	Val       interface{}
+	Val       any
 }
 
 // UniqueID returns unique identifier for parameter Loadpoint/Key combination
 func (p Param) UniqueID() string {
-	var b strings.Builder
-
 	if p.Loadpoint != nil {
-		b.WriteString(strconv.Itoa(*p.Loadpoint) + ".")
+		return strconv.Itoa(*p.Loadpoint) + "." + p.Key
 	}
 
-	b.WriteString(p.Key)
-
-	return b.String()
+	return p.Key
 }
 
 // ParamCache is a data store
@@ -56,20 +50,12 @@ func NewParamCache() *ParamCache {
 
 // Run adds input channel's values to cache
 func (c *ParamCache) Run(in <-chan Param) {
-	log := NewLogger("cache")
-
 	for p := range in {
 		if flushC, ok := p.Val.(flush); ok {
 			close(flushC)
 			continue
 		}
 
-		key := p.Key
-		if p.Loadpoint != nil {
-			key = fmt.Sprintf("lp-%d/%s", *p.Loadpoint+1, key)
-		}
-
-		log.TRACE.Printf("%s: %v", key, p.Val)
 		c.Add(p.UniqueID(), p)
 	}
 }

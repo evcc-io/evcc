@@ -1,6 +1,7 @@
 package tariff
 
 import (
+	"errors"
 	"testing"
 	"time"
 
@@ -28,8 +29,7 @@ func TestMergeRatesAfter(t *testing.T) {
 	new := api.Rates{rate(2, 2), rate(3, 3)}
 	combined := api.Rates{rate(1, 1), rate(2, 2), rate(3, 3)}
 
-	data := util.NewMonitor[api.Rates](time.Hour)
-	data.WithClock(clock)
+	data := util.NewMonitor[api.Rates](time.Hour).WithClock(clock)
 
 	data.Set(old)
 	res, err := data.Get()
@@ -41,10 +41,15 @@ func TestMergeRatesAfter(t *testing.T) {
 		ts            time.Time
 	}{
 		{new, combined, clock.Now()},
+		{new, combined, clock.Now().Add(SlotDuration)},
 		{nil, combined, clock.Now()},
+		{nil, combined, clock.Now().Add(SlotDuration)},
 		{new, combined, clock.Now().Add(time.Hour)},
+		{new, combined, clock.Now().Add(time.Hour + SlotDuration)},
 		{new, combined, now.With(clock.Now().Add(time.Hour + 30*time.Minute)).BeginningOfHour()},
+		{new, combined, now.With(clock.Now().Add(time.Hour + 30*time.Minute)).BeginningOfHour().Add(SlotDuration)},
 		{new, new, clock.Now().Add(2 * time.Hour)},
+		{new, new, clock.Now().Add(2*time.Hour + SlotDuration)},
 	} {
 		t.Logf("%d. %+v", i+1, tc)
 
@@ -53,5 +58,30 @@ func TestMergeRatesAfter(t *testing.T) {
 		res, err := data.Get()
 		require.NoError(t, err)
 		assert.Equal(t, tc.expected, res)
+	}
+}
+
+type runner struct {
+	res error
+}
+
+func (r *runner) run(done chan error) {
+	if r.res == nil {
+		close(done)
+	} else {
+		done <- r.res
+	}
+}
+
+func TestRunOrQError(t *testing.T) {
+	{
+		res, err := runOrError(&runner{nil})
+		require.NoError(t, err)
+		require.NotNil(t, res)
+	}
+	{
+		res, err := runOrError(&runner{errors.New("foo")})
+		require.Error(t, err)
+		require.Nil(t, res)
 	}
 }

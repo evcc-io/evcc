@@ -34,7 +34,7 @@ func Headers(device string, headers map[string]string) map[string]string {
 	return res
 }
 
-// NewIdentity creates Fiat identity
+// NewIdentity creates JLR identity
 func NewIdentity(log *util.Logger, user, password, device string) *Identity {
 	return &Identity{
 		Helper:   request.NewHelper(log),
@@ -71,14 +71,14 @@ func (v *Identity) Login() (Token, error) {
 
 	token, err := v.login(data)
 	if err == nil {
-		v.TokenSource = oauth.RefreshTokenSource(&token.Token, v)
+		v.TokenSource = oauth.RefreshTokenSource(&token.Token, v.refreshToken)
 	}
 
 	return token, err
 }
 
-// RefreshToken implements oauth.TokenRefresher
-func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
+// refreshToken renews the JLR token
+func (v *Identity) refreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	data := map[string]string{
 		"grant_type":    "refresh_token",
 		"refresh_token": token.RefreshToken,

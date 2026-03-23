@@ -14,22 +14,22 @@
 
 		<div v-if="showHeader" class="row d-none d-lg-flex mb-2">
 			<div class="plan-id d-none d-lg-flex"></div>
-			<div class="col-6 col-lg-3">
+			<div class="col-3">
 				<label :for="formId('weekdays')">
 					{{ $t("main.chargingPlan.weekdays") }}
 				</label>
 			</div>
-			<div class="col-6 col-lg-2">
+			<div class="col-2">
 				<label :for="formId('time')">
 					{{ $t("main.chargingPlan.time") }}
 				</label>
 			</div>
-			<div class="col-6 col-lg-3">
+			<div class="col-3">
 				<label :for="formId('goal')">
 					{{ $t("main.chargingPlan.goal") }}
 				</label>
 			</div>
-			<div class="col-6 col-lg-1">
+			<div class="col-2">
 				<label :for="formId('active')"> {{ $t("main.chargingPlan.active") }} </label>
 			</div>
 		</div>
@@ -94,7 +94,7 @@
 					{{ $t("main.chargingPlan.active") }}
 				</label>
 			</div>
-			<div class="col-2 col-lg-1 d-flex align-items-center">
+			<div class="col-3 col-lg-1 d-flex align-items-center">
 				<div class="form-check form-switch">
 					<input
 						:id="formId('active')"
@@ -109,11 +109,13 @@
 					/>
 				</div>
 			</div>
-			<div class="col-5 col-lg-2 d-flex align-items-center">
+			<div
+				class="col-4 col-lg-2 d-flex align-items-center justify-content-end justify-content-lg-start"
+			>
 				<button
 					v-if="showApply"
 					type="button"
-					class="btn btn-sm btn-outline-primary border-0 text-decoration-underline"
+					class="btn btn-sm btn-outline-primary border-0 text-decoration-underline text-truncate"
 					data-testid="repeating-plan-apply"
 					tabindex="0"
 					@click="update(true)"
@@ -137,11 +139,12 @@
 
 <script lang="ts">
 import "@h2d2/shopicons/es/regular/trash";
-import { distanceUnit } from "../../units.js";
+import "@h2d2/shopicons/es/regular/checkmark";
+import { distanceUnit } from "@/units";
 import MultiSelect from "../Helper/MultiSelect.vue";
-import formatter from "../../mixins/formatter.js";
-import deepEqual from "../../utils/deepEqual.js";
-import type { SelectOption } from "../../types/evcc";
+import formatter from "@/mixins/formatter";
+import deepEqual from "@/utils/deepEqual";
+import type { SelectOption } from "@/types/evcc";
 import { defineComponent, type PropType } from "vue";
 
 export default defineComponent({
@@ -181,7 +184,7 @@ export default defineComponent({
 			return this.dataChanged && this.selectedActive;
 		},
 		weekdaysLabel(): string {
-			return this.getShortenedWeekdaysLabel(this.selectedWeekdays);
+			return this.fmtWeekdaysRange(this.selectedWeekdays);
 		},
 		socOptions(): SelectOption<number>[] {
 			// a list of entries from 5 to 100 with a step of 5
@@ -241,6 +244,9 @@ export default defineComponent({
 });
 </script>
 <style scoped>
+.plan-id-inset {
+	margin-left: 2.5rem;
+}
 .plan-id {
 	width: 2.5rem;
 	color: var(--evcc-gray);

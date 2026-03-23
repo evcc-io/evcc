@@ -24,7 +24,7 @@ type Address struct {
 type Subscription struct {
 	ID        string
 	Status    string
-	PriceInfo PriceInfo
+	PriceInfo PriceInfo `graphql:"priceInfo(resolution: QUARTER_HOURLY)"`
 }
 
 type PriceInfo struct {

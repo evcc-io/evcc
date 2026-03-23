@@ -15,8 +15,8 @@ type Timestamp struct {
 // Layout is the time.Parse compliant parsing string for use when parsing Shortened RFC-3339 compliant timestamps.
 const Layout = "2006-01-02T15:04Z"
 
-func (ct *Timestamp) UnmarshalJSON(b []byte) (err error) {
-	s := strings.Trim(string(b), "\"")
+func (ct *Timestamp) UnmarshalJSON(data []byte) (err error) {
+	s := strings.Trim(string(data), "\"")
 	if s == "null" {
 		ct.Time = time.Time{}
 		return

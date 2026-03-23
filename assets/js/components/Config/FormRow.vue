@@ -16,11 +16,14 @@
 			<slot />
 		</div>
 		<div v-if="error" class="invalid-feedback d-block">{{ error }}</div>
+		<div v-if="warning" class="form-text text-warning mt-1" role="status">
+			{{ warning }}
+		</div>
 		<div class="form-text evcc-gray">
 			<div v-if="example" class="hyphenate">
 				{{ $t("config.form.example") }}: {{ example }}
 			</div>
-			<div v-if="help" class="d-flex gap-1">
+			<div v-if="help">
 				<Markdown :markdown="help" class="text-gray hyphenate" />
 				<a v-if="link" class="text-gray" :href="link" target="_blank">
 					{{ $t("config.general.docsLink") }}
@@ -34,7 +37,7 @@
 </template>
 
 <script>
-import { docsPrefix } from "../../i18n";
+import { docsPrefix } from "@/i18n";
 import Markdown from "./Markdown.vue";
 
 export default {
@@ -47,6 +50,7 @@ export default {
 		optional: Boolean,
 		deprecated: Boolean,
 		error: String,
+		warning: String,
 		danger: String,
 		example: String,
 		docsLink: String,

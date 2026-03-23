@@ -12,7 +12,7 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import "@h2d2/shopicons/es/regular/batterythreequarters";
 import "@h2d2/shopicons/es/regular/cablecharge";
 import "@h2d2/shopicons/es/regular/car3";
@@ -29,9 +29,10 @@ import "@h2d2/shopicons/es/regular/clock";
 import BatteryBoost from "../MaterialIcon/BatteryBoost.vue";
 import SunUp from "../MaterialIcon/SunUp.vue";
 import DynamicPrice from "../MaterialIcon/DynamicPrice.vue";
-import { markRaw } from "vue";
+import { defineComponent, markRaw } from "vue";
+import type { Timeout } from "@/types/evcc";
 
-export default {
+export default defineComponent({
 	data() {
 		return {
 			leftIconIndex: 2,
@@ -56,7 +57,7 @@ export default {
 				markRaw(SunUp),
 				markRaw(DynamicPrice),
 			],
-			interval: null,
+			interval: null as Timeout,
 		};
 	},
 	computed: {
@@ -74,10 +75,12 @@ export default {
 		this.interval = setInterval(this.rotateIcons, 3000);
 	},
 	unmounted() {
-		clearInterval(this.interval);
+		if (this.interval) {
+			clearInterval(this.interval);
+		}
 	},
 	methods: {
-		getRandomIcon(excludeIndices) {
+		getRandomIcon(excludeIndices: number[]) {
 			const availableIndices = Array.from(Array(this.icons.length).keys()).filter(
 				(i) => !excludeIndices.includes(i)
 			);
@@ -88,19 +91,19 @@ export default {
 			const excludeIndices = [this.leftIconIndex, this.centerIconIndex, this.rightIconIndex];
 			switch (this.updatePosition) {
 				case 0:
-					this.leftIconIndex = this.getRandomIcon(excludeIndices);
+					this.leftIconIndex = this.getRandomIcon(excludeIndices) || 0;
 					break;
 				case 1:
-					this.centerIconIndex = this.getRandomIcon(excludeIndices);
+					this.centerIconIndex = this.getRandomIcon(excludeIndices) || 0;
 					break;
 				case 2:
-					this.rightIconIndex = this.getRandomIcon(excludeIndices);
+					this.rightIconIndex = this.getRandomIcon(excludeIndices) || 0;
 					break;
 			}
 			this.updatePosition = (this.updatePosition + Math.ceil(Math.random() * 2)) % 3;
 		},
 	},
-};
+});
 </script>
 
 <style scoped>

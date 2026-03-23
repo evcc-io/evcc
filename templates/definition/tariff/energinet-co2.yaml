@@ -1,0 +1,39 @@
+template: energinet-co2
+products:
+  - brand: Energinet
+    description:
+      generic: CO₂
+requirements:
+  evcc: ["skiptest"]
+group: co2
+countries: ["DK"]
+params:
+  - name: region
+    example: dk1
+    type: choice
+    choice: ["dk1", "dk2"]
+    required: true
+  - preset: tariff-base
+render: |
+  type: custom
+  tariff: co2
+  forecast:
+    source: http
+    uri: https://api.energidataservice.dk/dataset/CO2EmisProg?filter={"PriceArea":["{{ .region }}"]}&start=now
+    jq: |
+      [.records[]
+        | (.Minutes5UTC | strptime("%Y-%m-%dT%H:%M:%S") | mktime) as $epoch
+        | (($epoch / 900 | floor) * 900) as $start_epoch
+        | {
+          start: ($start_epoch | strftime("%Y-%m-%dT%H:%M:%SZ")),
+          end:   (($start_epoch + 900) | strftime("%Y-%m-%dT%H:%M:%SZ")),
+          value: .CO2Emission
+        }
+      ]
+      | group_by(.start)
+      | map({
+          start: .[0].start,
+          end:   .[0].end,
+          value: (map(.value) | add / length)
+        })
+      | tostring

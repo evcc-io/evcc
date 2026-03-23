@@ -1,8 +1,8 @@
 template: eebus
 products:
   - description:
-      de: EEBUS kompatible Wallbox
-      en: EEBUS compatible Wallbox
+      de: EEBUS kompatibel
+      en: EEBUS compatible
 group: generic
 capabilities: ["mA"]
 requirements:

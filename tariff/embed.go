@@ -5,11 +5,14 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/plugin/golang/stdlib"
 	"github.com/traefik/yaegi/interp"
 )
 
 type embed struct {
+	Features_ []api.Feature `mapstructure:"features"`
+
 	Charges float64 `mapstructure:"charges"`
 	Tax     float64 `mapstructure:"tax"`
 	Formula string  `mapstructure:"formula"`
@@ -69,4 +72,10 @@ func (t *embed) totalPrice(price float64, ts time.Time) float64 {
 		return res
 	}
 	return (price + t.Charges) * (1 + t.Tax)
+}
+
+var _ api.FeatureDescriber = (*embed)(nil)
+
+func (t *embed) Features() []api.Feature {
+	return t.Features_
 }

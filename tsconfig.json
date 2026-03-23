@@ -1,6 +1,6 @@
 {
   "extends": "@vue/tsconfig/tsconfig.dom.json",
-  "include": ["env.d.ts", "assets/js/**/*"],
+  "include": ["env.d.ts", "assets/js/**/*", "tests/**/*"],
   "compilerOptions": {
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
@@ -13,7 +13,7 @@
     "allowJs": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["assets/js/*"]
     },
     "plugins": [
       {

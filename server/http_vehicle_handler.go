@@ -36,7 +36,7 @@ func minSocHandler(site site.API) http.HandlerFunc {
 			Soc: v.GetMinSoc(),
 		}
 
-		jsonResult(w, res)
+		jsonWrite(w, res)
 	}
 }
 
@@ -65,7 +65,7 @@ func limitSocHandler(site site.API) http.HandlerFunc {
 			Soc: v.GetLimitSoc(),
 		}
 
-		jsonResult(w, res)
+		jsonWrite(w, res)
 	}
 }
 
@@ -107,7 +107,37 @@ func planSocHandler(site site.API) http.HandlerFunc {
 			Time: ts,
 		}
 
-		jsonResult(w, res)
+		jsonWrite(w, res)
+	}
+}
+
+func planStrategyHandlerSetter(r *http.Request, set func(api.PlanStrategy) error) error {
+	var res api.PlanStrategy
+	if err := json.NewDecoder(r.Body).Decode(&res); err != nil {
+		return err
+	}
+
+	return set(res)
+}
+
+// updatePlanStrategyHandler updates plan strategy
+func updatePlanStrategyHandler(site site.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		v, err := site.Vehicles().ByName(vars["name"])
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		if err := planStrategyHandlerSetter(r, v.SetPlanStrategy); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		res := v.GetPlanStrategy()
+
+		jsonWrite(w, res)
 	}
 }
 
@@ -122,22 +152,18 @@ func addRepeatingPlansHandler(site site.API) http.HandlerFunc {
 			return
 		}
 
-		var plansWrapper struct {
-			RepeatingPlans []api.RepeatingPlanStruct `json:"plans"`
-		}
-
-		err = json.NewDecoder(r.Body).Decode(&plansWrapper)
-		if err != nil {
+		var res []api.RepeatingPlan
+		if err := json.NewDecoder(r.Body).Decode(&res); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
-		if err := v.SetRepeatingPlans(plansWrapper.RepeatingPlans); err != nil {
+		if err := v.SetRepeatingPlans(res); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
-		jsonResult(w, plansWrapper)
+		jsonWrite(w, res)
 	}
 }
 
@@ -157,7 +183,6 @@ func planSocRemoveHandler(site site.API) http.HandlerFunc {
 			return
 		}
 
-		res := struct{}{}
-		jsonResult(w, res)
+		jsonWrite(w, struct{}{})
 	}
 }

@@ -43,6 +43,7 @@ func (t *Template) RenderDocumentation(product Product, lang string) ([]byte, er
 	}
 
 	var modbusRender string
+	modbusData := make(map[string]any)
 	if modbusChoices := t.ModbusChoices(); len(modbusChoices) > 0 {
 		if i, _ := t.ParamByName(ParamModbus); i > -1 {
 			modbusTmpl, err := template.New("yaml").Funcs(sprig.FuncMap()).Parse(documentationModbusTmpl)
@@ -50,7 +51,6 @@ func (t *Template) RenderDocumentation(product Product, lang string) ([]byte, er
 				panic(err)
 			}
 
-			modbusData := make(map[string]interface{})
 			t.ModbusValues(RenderModeDocs, modbusData)
 
 			out := new(bytes.Buffer)
@@ -89,8 +89,9 @@ func (t *Template) RenderDocumentation(product Product, lang string) ([]byte, er
 		return 0
 	})
 
-	data := map[string]interface{}{
+	data := map[string]any{
 		"Template":               t.Template,
+		"ProductIdentifier":      product.Identifier(),
 		"ProductBrand":           product.Brand,
 		"ProductDescription":     product.Description.String(lang),
 		"ProductGroup":           t.GroupTitle(lang),
@@ -102,6 +103,7 @@ func (t *Template) RenderDocumentation(product Product, lang string) ([]byte, er
 		"AdvancedParams":         hasAdvancedParams,
 		"Usages":                 t.Usages(),
 		"Modbus":                 modbusRender,
+		"ModbusData":             modbusData,
 	}
 
 	out := new(bytes.Buffer)

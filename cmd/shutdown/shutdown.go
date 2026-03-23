@@ -18,16 +18,11 @@ func Register(cb func()) {
 
 // Cleanup executes the registered shutdown functions when the stop channel closes
 func Cleanup(doneC chan struct{}) {
-	wg := new(sync.WaitGroup)
+	var wg sync.WaitGroup
 
 	mu.Lock()
 	for _, cb := range handlers {
-		wg.Add(1)
-
-		go func(cb func()) {
-			cb()
-			wg.Done()
-		}(cb)
+		wg.Go(cb)
 	}
 	mu.Unlock()
 

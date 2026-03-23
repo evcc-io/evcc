@@ -27,7 +27,7 @@ func init() {
 }
 
 // NewJLRFromConfig creates a new vehicle
-func NewJLRFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+func NewJLRFromConfig(other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed               `mapstructure:",squash"`
 		User, Password, VIN string

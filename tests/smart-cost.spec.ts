@@ -1,0 +1,64 @@
+import { test, expect } from "@playwright/test";
+import { start, stop, baseUrl } from "./evcc";
+import {
+  startSimulator,
+  stopSimulator,
+  simulatorUrl,
+  simulatorConfig,
+  simulatorApply,
+} from "./simulator";
+
+test.use({ baseURL: baseUrl() });
+test.describe.configure({ mode: "parallel" });
+
+test.beforeEach(async () => {
+  await startSimulator();
+  await start(simulatorConfig());
+});
+
+test.afterEach(async () => {
+  await stop();
+  await stopSimulator();
+});
+
+test.beforeEach(async ({ page }) => {
+  await page.goto(simulatorUrl());
+  await page.getByLabel("PV Power").fill("6000");
+  await page.getByTestId("loadpoint0").getByLabel("Power").fill("6000");
+  await page.getByTestId("loadpoint0").getByText("C (charging)").click();
+  await page.getByTestId("loadpoint0").getByText("Enabled").check();
+  await simulatorApply(page);
+});
+
+test.describe("smart cost limit", async () => {
+  test("no limit, normal charging", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.getByTestId("vehicle-status-charger")).toHaveText("Charging…");
+  });
+  test("price below limit", async ({ page }) => {
+    await page.goto("/");
+    await page.getByTestId("loadpoint-settings-button").nth(1).click();
+    const modal = page.getByTestId("loadpoint-settings-modal");
+    await expect(modal).toBeVisible();
+    await modal.getByLabel("Enable limit").check();
+    await modal.getByLabel("Price limit").selectOption("≤ 40.0 ct/kWh");
+    await expect(modal.getByTestId("active-hours")).toHaveText(["Active time", "96 hr"].join(""));
+    await modal.getByLabel("Close").click();
+    await expect(modal).not.toBeVisible();
+    await expect(page.getByTestId("vehicle-status-charger")).toHaveText("Charging…");
+    await expect(page.getByTestId("vehicle-status-smartcost")).toHaveText(/[24]0\.0 ct ≤ 40\.0 ct/);
+  });
+  test("price above limit", async ({ page }) => {
+    await page.goto("/");
+    await page.getByTestId("loadpoint-settings-button").nth(1).click();
+    const modal = page.getByTestId("loadpoint-settings-modal");
+    await expect(modal).toBeVisible();
+    await modal.getByLabel("Enable limit").check();
+    await modal.getByLabel("Price limit").selectOption("≤ 10.0 ct/kWh");
+    await expect(modal.getByTestId("active-hours")).toHaveText("Active time");
+    await modal.getByLabel("Close").click();
+    await expect(modal).not.toBeVisible();
+    await expect(page.getByTestId("vehicle-status-charger")).toHaveText("Charging…");
+    await expect(page.getByTestId("vehicle-status-smartcost")).toHaveText("≤ 10.0 ct");
+  });
+});

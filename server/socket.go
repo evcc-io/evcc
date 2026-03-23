@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"strings"
 	"sync"
@@ -51,10 +52,11 @@ func (h *SocketHub) ServeWebsocket(w http.ResponseWriter, r *http.Request) {
 		InsecureSkipVerify: true,
 	}
 
-	// https://github.com/nhooyr/websocket/issues/218
+	// Safari deflate message compression is broken, enable for others
+	// see: https://github.com/gorilla/websocket/issues/731
 	ua := strings.ToLower(r.Header.Get("User-Agent"))
-	if strings.Contains(ua, "safari") && !strings.Contains(ua, "chrome") && !strings.Contains(ua, "android") {
-		acceptOptions.CompressionMode = websocket.CompressionDisabled
+	if strings.Contains(ua, "chrome") || strings.Contains(ua, "firefox") {
+		acceptOptions.CompressionMode = websocket.CompressionContextTakeover
 	}
 
 	conn, err := websocket.Accept(w, r, acceptOptions)
@@ -87,6 +89,7 @@ func (h *SocketHub) subscribe(ctx context.Context, conn *websocket.Conn) error {
 		select {
 		case msg := <-s.send:
 			if err := writeTimeout(ctx, socketWriteTimeout, conn, msg); err != nil {
+				log.TRACE.Printf("ws write error: %v, len: %.1fkB, msg: %s", err, float64(len(msg))/1024, msg[:min(len(msg), 20)])
 				return err
 			}
 		case <-ctx.Done():
@@ -110,33 +113,70 @@ func (h *SocketHub) deleteSubscriber(s *socketSubscriber) {
 }
 
 func (h *SocketHub) welcome(subscriber *socketSubscriber, params []util.Param) {
-	var msg strings.Builder
-	msg.WriteString("{")
-	for _, p := range params {
-		if msg.Len() > 1 {
-			msg.WriteString(",")
-		}
-		msg.WriteString(kv(p))
-	}
-	msg.WriteString("}")
+	msg := make(map[string]json.RawMessage, len(params))
+	sharders := make(map[string]util.Sharder)
 
-	// should not block
-	subscriber.send <- []byte(msg.String())
+	for _, p := range params {
+		k := p.Key
+		if p.Loadpoint != nil {
+			k = "loadpoints." + p.UniqueID()
+		}
+
+		// Sharder values are split into shards and sent as a separate message
+		if sharder, ok := (p.Val).(util.Sharder); ok {
+			sharders[k] = sharder
+		} else {
+			msg[k] = json.RawMessage(socketEncode(p.Val))
+		}
+	}
+
+	// send compact state first, then potentially large sharded data
+	if b, err := json.Marshal(msg); err == nil {
+		subscriber.send <- b
+	}
+
+	for k, sharder := range sharders {
+		for key, val := range sharder.AllShards() {
+			if b, err := json.Marshal(map[string]json.RawMessage{
+				k + "." + key: json.RawMessage(socketEncode(val)),
+			}); err == nil {
+				subscriber.send <- b
+			}
+		}
+	}
 }
 
 func (h *SocketHub) broadcast(p util.Param) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 
-	if len(h.subscribers) > 0 {
-		msg := "{" + kv(p) + "}"
+	if len(h.subscribers) == 0 {
+		return
+	}
 
-		for s := range h.subscribers {
-			select {
-			case s.send <- []byte(msg):
-			default:
-				s.closeSlow()
-			}
+	msg := make(map[string]json.RawMessage)
+
+	k := p.Key
+	if p.Loadpoint != nil {
+		k = "loadpoints." + p.UniqueID()
+	}
+
+	// Sharder splits data into chunks
+	if sp, ok := (p.Val).(util.Sharder); ok {
+		for key, val := range sp.ModifiedShards() {
+			msg[k+"."+key] = json.RawMessage(socketEncode(val))
+		}
+	} else {
+		msg[k] = json.RawMessage(socketEncode(p.Val))
+	}
+
+	b, _ := json.Marshal(msg)
+
+	for s := range h.subscribers {
+		select {
+		case s.send <- b:
+		default:
+			s.closeSlow()
 		}
 	}
 }

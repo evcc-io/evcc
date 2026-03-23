@@ -29,7 +29,7 @@ func init() {
 }
 
 // NewCloudFromConfig creates a new vehicle
-func NewCloudFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+func NewCloudFromConfig(other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed `mapstructure:",squash"`
 		Brand string

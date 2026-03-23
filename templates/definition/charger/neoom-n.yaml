@@ -1,0 +1,14 @@
+template: neoom-n
+products:
+  - brand: Neoom
+    description:
+      generic: N
+capabilities: ["mA", "1p3p"]
+requirements:
+  evcc: ["sponsorship"]
+params:
+  - name: modbus
+    choice: ["tcpip"]
+render: |
+  type: compleo
+  {{- include "modbus" . }}

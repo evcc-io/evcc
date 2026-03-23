@@ -1,7 +1,6 @@
 package modbus
 
 import (
-	"context"
 	"encoding/binary"
 	"math/rand"
 	"net"
@@ -30,12 +29,10 @@ func TestConcurrentRead(t *testing.T) {
 
 	var wg sync.WaitGroup
 
-	for i := 1; i <= 10; i++ {
-		wg.Add(1)
-
-		go func(id int) {
+	for id := 1; id <= 10; id++ {
+		wg.Go(func() {
 			// client
-			conn, err := modbus.NewConnection(context.TODO(), l.Addr().String(), "", "", 0, modbus.Tcp, uint8(id))
+			conn, err := modbus.NewConnection(t.Context(), l.Addr().String(), "", "", 0, modbus.Tcp, uint8(id))
 			require.NoError(t, err)
 
 			for range 50 {
@@ -46,16 +43,14 @@ func TestConcurrentRead(t *testing.T) {
 				require.NoError(t, err)
 
 				if err == nil {
-					for u := uint16(0); u < qty; u++ {
+					for u := range qty {
 						assert.Equal(t, addr^uint16(id)^u, binary.BigEndian.Uint16(b[2*u:]))
 					}
 				}
 
 				time.Sleep(time.Duration(rand.Int31n(1000)) * time.Microsecond)
 			}
-
-			wg.Done()
-		}(i)
+		})
 	}
 
 	wg.Wait()
@@ -79,7 +74,7 @@ func TestReadCoils(t *testing.T) {
 	require.NoError(t, err)
 	defer pl.Close()
 
-	downstreamConn, err := modbus.NewConnection(context.TODO(), l.Addr().String(), "", "", 0, modbus.Tcp, 1)
+	downstreamConn, err := modbus.NewConnection(t.Context(), l.Addr().String(), "", "", 0, modbus.Tcp, 1)
 	require.NoError(t, err)
 
 	proxy, _ := mbserver.New(&handler{
@@ -91,7 +86,7 @@ func TestReadCoils(t *testing.T) {
 
 	// test client
 	{
-		conn, err := modbus.NewConnection(context.TODO(), pl.Addr().String(), "", "", 0, modbus.Tcp, 1)
+		conn, err := modbus.NewConnection(t.Context(), pl.Addr().String(), "", "", 0, modbus.Tcp, 1)
 		require.NoError(t, err)
 
 		{ // read

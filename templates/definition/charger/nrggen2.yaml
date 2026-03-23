@@ -1,6 +1,6 @@
 template: nrggen2
 products:
-  - brand: NRGKick
+  - brand: NRGkick
     description:
       generic: Gen2
 requirements:
@@ -14,9 +14,12 @@ params:
     type: bool
     default: false
     advanced: true
+    description:
+      de: Phasenumschaltung aktiviert
+      en: Phase Switching enabled
     help:
-      de: Aktiviert Phasenumschaltung. Erweiterte Funktion "Phasenumschaltung" muss in der NRGkick App aktiviert sein.
-      en: Activates phase switching. Extended feature "Phase Switching" must be activated in the NRGKick app.
+      de: Erweiterte Funktion "Phasenumschaltung" muss in der NRGkick App aktiviert sein.
+      en: Extended feature "Phase Switching" must be activated in the NRGKick app.
 render: |
   type: nrggen2
   {{- include "modbus" . }}

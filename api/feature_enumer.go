@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _FeatureName = "OfflineCoarseCurrentIntegratedDeviceHeatingRetryableWelcomeCharge"
+const _FeatureName = "CoarseCurrentIntegratedDeviceHeatingContinuousAverageCacheableOfflineRetryableStreamingWelcomeCharge"
 
-var _FeatureIndex = [...]uint8{0, 7, 20, 36, 43, 52, 65}
+var _FeatureIndex = [...]uint8{0, 13, 29, 36, 46, 53, 62, 69, 78, 87, 100}
 
-const _FeatureLowerName = "offlinecoarsecurrentintegrateddeviceheatingretryablewelcomecharge"
+const _FeatureLowerName = "coarsecurrentintegrateddeviceheatingcontinuousaveragecacheableofflineretryablestreamingwelcomecharge"
 
 func (i Feature) String() string {
 	i -= 1
@@ -25,38 +25,54 @@ func (i Feature) String() string {
 // Re-run the stringer command to generate them again.
 func _FeatureNoOp() {
 	var x [1]struct{}
-	_ = x[Offline-(1)]
-	_ = x[CoarseCurrent-(2)]
-	_ = x[IntegratedDevice-(3)]
-	_ = x[Heating-(4)]
-	_ = x[Retryable-(5)]
-	_ = x[WelcomeCharge-(6)]
+	_ = x[CoarseCurrent-(1)]
+	_ = x[IntegratedDevice-(2)]
+	_ = x[Heating-(3)]
+	_ = x[Continuous-(4)]
+	_ = x[Average-(5)]
+	_ = x[Cacheable-(6)]
+	_ = x[Offline-(7)]
+	_ = x[Retryable-(8)]
+	_ = x[Streaming-(9)]
+	_ = x[WelcomeCharge-(10)]
 }
 
-var _FeatureValues = []Feature{Offline, CoarseCurrent, IntegratedDevice, Heating, Retryable, WelcomeCharge}
+var _FeatureValues = []Feature{CoarseCurrent, IntegratedDevice, Heating, Continuous, Average, Cacheable, Offline, Retryable, Streaming, WelcomeCharge}
 
 var _FeatureNameToValueMap = map[string]Feature{
-	_FeatureName[0:7]:        Offline,
-	_FeatureLowerName[0:7]:   Offline,
-	_FeatureName[7:20]:       CoarseCurrent,
-	_FeatureLowerName[7:20]:  CoarseCurrent,
-	_FeatureName[20:36]:      IntegratedDevice,
-	_FeatureLowerName[20:36]: IntegratedDevice,
-	_FeatureName[36:43]:      Heating,
-	_FeatureLowerName[36:43]: Heating,
-	_FeatureName[43:52]:      Retryable,
-	_FeatureLowerName[43:52]: Retryable,
-	_FeatureName[52:65]:      WelcomeCharge,
-	_FeatureLowerName[52:65]: WelcomeCharge,
+	_FeatureName[0:13]:        CoarseCurrent,
+	_FeatureLowerName[0:13]:   CoarseCurrent,
+	_FeatureName[13:29]:       IntegratedDevice,
+	_FeatureLowerName[13:29]:  IntegratedDevice,
+	_FeatureName[29:36]:       Heating,
+	_FeatureLowerName[29:36]:  Heating,
+	_FeatureName[36:46]:       Continuous,
+	_FeatureLowerName[36:46]:  Continuous,
+	_FeatureName[46:53]:       Average,
+	_FeatureLowerName[46:53]:  Average,
+	_FeatureName[53:62]:       Cacheable,
+	_FeatureLowerName[53:62]:  Cacheable,
+	_FeatureName[62:69]:       Offline,
+	_FeatureLowerName[62:69]:  Offline,
+	_FeatureName[69:78]:       Retryable,
+	_FeatureLowerName[69:78]:  Retryable,
+	_FeatureName[78:87]:       Streaming,
+	_FeatureLowerName[78:87]:  Streaming,
+	_FeatureName[87:100]:      WelcomeCharge,
+	_FeatureLowerName[87:100]: WelcomeCharge,
 }
 
 var _FeatureNames = []string{
-	_FeatureName[0:7],
-	_FeatureName[7:20],
-	_FeatureName[20:36],
-	_FeatureName[36:43],
-	_FeatureName[43:52],
-	_FeatureName[52:65],
+	_FeatureName[0:13],
+	_FeatureName[13:29],
+	_FeatureName[29:36],
+	_FeatureName[36:46],
+	_FeatureName[46:53],
+	_FeatureName[53:62],
+	_FeatureName[62:69],
+	_FeatureName[69:78],
+	_FeatureName[78:87],
+	_FeatureName[87:100],
 }
 
 // FeatureString retrieves an enum value from the enum constants string name.

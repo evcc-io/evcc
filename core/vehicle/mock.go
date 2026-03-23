@@ -84,11 +84,25 @@ func (mr *MockAPIMockRecorder) GetPlanSoc() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPlanSoc", reflect.TypeOf((*MockAPI)(nil).GetPlanSoc))
 }
 
+// GetPlanStrategy mocks base method.
+func (m *MockAPI) GetPlanStrategy() api.PlanStrategy {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPlanStrategy")
+	ret0, _ := ret[0].(api.PlanStrategy)
+	return ret0
+}
+
+// GetPlanStrategy indicates an expected call of GetPlanStrategy.
+func (mr *MockAPIMockRecorder) GetPlanStrategy() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPlanStrategy", reflect.TypeOf((*MockAPI)(nil).GetPlanStrategy))
+}
+
 // GetRepeatingPlans mocks base method.
-func (m *MockAPI) GetRepeatingPlans() []api.RepeatingPlanStruct {
+func (m *MockAPI) GetRepeatingPlans() []api.RepeatingPlan {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetRepeatingPlans")
-	ret0, _ := ret[0].([]api.RepeatingPlanStruct)
+	ret0, _ := ret[0].([]api.RepeatingPlan)
 	return ret0
 }
 
@@ -164,8 +178,22 @@ func (mr *MockAPIMockRecorder) SetPlanSoc(arg0, arg1 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPlanSoc", reflect.TypeOf((*MockAPI)(nil).SetPlanSoc), arg0, arg1)
 }
 
+// SetPlanStrategy mocks base method.
+func (m *MockAPI) SetPlanStrategy(arg0 api.PlanStrategy) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetPlanStrategy", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetPlanStrategy indicates an expected call of SetPlanStrategy.
+func (mr *MockAPIMockRecorder) SetPlanStrategy(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPlanStrategy", reflect.TypeOf((*MockAPI)(nil).SetPlanStrategy), arg0)
+}
+
 // SetRepeatingPlans mocks base method.
-func (m *MockAPI) SetRepeatingPlans(arg0 []api.RepeatingPlanStruct) error {
+func (m *MockAPI) SetRepeatingPlans(arg0 []api.RepeatingPlan) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SetRepeatingPlans", arg0)
 	ret0, _ := ret[0].(error)

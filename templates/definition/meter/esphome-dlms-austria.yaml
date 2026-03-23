@@ -1,0 +1,86 @@
+template: esphome-dlms-austria
+products:
+  - brand: ESPHome
+    description:
+      generic: DLMS Meter Austria
+requirements:
+  description:
+    de: |
+      Benötigt ein ESPHome Gerät mit der `dlms_meter` Komponente (z.B. von `github://SimonFischer04/esphome@dlms-meter`),
+      konfiguriert für österreichische DLMS-Zähler.
+    en: |
+      Requires an ESPHome node running the `dlms_meter` component (e.g., from `github://SimonFischer04/esphome@dlms-meter`),
+      configured for Austrian DLMS meters.
+params:
+  - name: usage
+    choice: ["grid"]
+  - name: host
+    required: true
+  - name: timeout
+    default: 10s
+    advanced: true
+render: |
+  type: custom
+  power: # Total power: positive for consumption, negative for production (Watts)
+    source: calc
+    add:
+    - source: http
+      uri: http://{{ .host }}/sensor/active_power_taken_from_grid # ESPHome sensor: name: "Active power taken from grid"
+      headers:
+      - content-type: application/json
+      timeout: {{ .timeout }}
+      jq: .value
+      # No scale: value is already in Watts
+    - source: http
+      uri: http://{{ .host }}/sensor/active_power_put_into_grid # ESPHome sensor: name: "Active power put into grid"
+      headers:
+      - content-type: application/json
+      timeout: {{ .timeout }}
+      jq: .value
+      scale: -1 # Invert for production, value is already in Watts
+  energy: # Total imported energy (kWh)
+    source: http
+    uri: http://{{ .host }}/sensor/active_energy_taken_from_grid # ESPHome sensor: name: "Active energy taken from grid"
+    headers:
+    - content-type: application/json
+    timeout: {{ .timeout }}
+    scale: 0.001 # Convert Wh from ESPHome to kWh for evcc
+    jq: .value
+  currents: # Phase currents (Amperes)
+  - source: http
+    uri: http://{{ .host }}/sensor/current_l1 # ESPHome sensor: name: "Current L1"
+    headers:
+    - content-type: application/json
+    timeout: {{ .timeout }}
+    jq: .value
+  - source: http
+    uri: http://{{ .host }}/sensor/current_l2 # ESPHome sensor: name: "Current L2"
+    headers:
+    - content-type: application/json
+    timeout: {{ .timeout }}
+    jq: .value
+  - source: http
+    uri: http://{{ .host }}/sensor/current_l3 # ESPHome sensor: name: "Current L3"
+    headers:
+    - content-type: application/json
+    timeout: {{ .timeout }}
+    jq: .value
+  voltages: # Phase voltages (Volts)
+  - source: http
+    uri: http://{{ .host }}/sensor/voltage_l1 # ESPHome sensor: name: "Voltage L1"
+    headers:
+    - content-type: application/json
+    timeout: {{ .timeout }}
+    jq: .value
+  - source: http
+    uri: http://{{ .host }}/sensor/voltage_l2 # ESPHome sensor: name: "Voltage L2"
+    headers:
+    - content-type: application/json
+    timeout: {{ .timeout }}
+    jq: .value
+  - source: http
+    uri: http://{{ .host }}/sensor/voltage_l3 # ESPHome sensor: name: "Voltage L3"
+    headers:
+    - content-type: application/json
+    timeout: {{ .timeout }}
+    jq: .value

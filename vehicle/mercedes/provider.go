@@ -111,13 +111,16 @@ func (v *Provider) FinishTime() (time.Time, error) {
 // 9=SLOW_CHARGING_AFTER_REACHING_TRIP_TARGET
 // 10=CHARGING_AFTER_REACHING_TRIP_TARGET
 // 11=FAST_CHARGING_AFTER_REACHING_TRIP_TARGET
-// 12=UNKNOWN
-
+// 12=COMMUNICATION_WITH_EVSE_ACTIVE_NO_ENERGY_FLOW
+// 13=AC_CHARGING_ACTIVE
+// 14=DC_CHARGING_ACTIVE
+// 15=SOH_BATTERY_CALIBRATION_ACTIVE
+// 16=UNKNOWN_STATUS
 func MapChargeStatus(lookup int) api.ChargeStatus {
 	switch lookup {
-	case 0, 5, 6, 9, 10, 11:
+	case 0, 5, 6, 9, 10, 11, 13, 14:
 		return api.StatusC
-	case 1, 2, 4, 7, 8:
+	case 1, 2, 4, 7, 8, 12, 15:
 		return api.StatusB
 	}
 	return api.StatusA

@@ -58,16 +58,12 @@ import Chart from "./Chart.vue";
 import TypeSelect from "./TypeSelect.vue";
 import Details from "./Details.vue";
 import ActiveSlot from "./ActiveSlot.vue";
-import {
-	type ForecastSlot,
-	type TimeseriesEntry,
-	type Forecast,
-	ForecastType,
-	adjustedSolar,
-} from "../../utils/forecast.ts";
-import formatter from "../../mixins/formatter.ts";
-import settings from "../../settings";
-import type { CURRENCY } from "assets/js/types/evcc.ts";
+
+import formatter from "@/mixins/formatter";
+import settings from "@/settings";
+import type { CURRENCY, Forecast } from "@/types/evcc";
+import { ForecastType, adjustedSolar } from "@/utils/forecast";
+import type { ForecastSlot, TimeseriesEntry } from "./types";
 export default defineComponent({
 	name: "ForecastModal",
 	components: {
@@ -81,6 +77,7 @@ export default defineComponent({
 	props: {
 		forecast: { type: Object as PropType<Forecast>, default: () => ({}) },
 		currency: { type: String as PropType<CURRENCY> },
+		experimental: Boolean,
 	},
 	data(): {
 		isModalVisible: boolean;
@@ -98,7 +95,7 @@ export default defineComponent({
 			return settings.solarAdjusted;
 		},
 		showSolarAdjust() {
-			return !!this.forecast.solar && this.$hiddenFeatures();
+			return !!this.forecast.solar && this.experimental;
 		},
 		solar() {
 			return this.showSolarAdjust && this.solarAdjusted
@@ -149,7 +146,7 @@ export default defineComponent({
 			// fallback to first available type
 			this.selectedType =
 				Object.values(ForecastType).find((type) => availableTypes[type]) ||
-				Object.values(ForecastType)[0];
+				Object.values(ForecastType)[0]!;
 		},
 		changeAdjusted() {
 			settings.solarAdjusted = !settings.solarAdjusted;

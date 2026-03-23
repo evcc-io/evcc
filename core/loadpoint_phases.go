@@ -143,8 +143,8 @@ func (lp *Loadpoint) maxActivePhases() int {
 }
 
 func (lp *Loadpoint) getVehiclePhases() int {
-	if vehicle := lp.GetVehicle(); vehicle != nil {
-		return vehicle.Phases()
+	if v := lp.GetVehicle(); v != nil {
+		return v.Phases()
 	}
 
 	return 0

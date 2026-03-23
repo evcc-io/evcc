@@ -18,7 +18,6 @@ params:
     required: true
     example: http://192.0.2.2
   - name: port
-    example: 5000
     default: 5000
 render: |
   type: custom
@@ -53,6 +52,10 @@ render: |
     source: http
     uri: {{ .url }}:{{ .port }}/currentjson/{{ .id }}
     jq: .charge_current_request
+  limitsoc:
+    source: http
+    uri: {{ .url }}:{{ .port }}/currentjson/{{ .id }}
+    jq: .charge_limit_soc
   wakeup:
     source: http
     uri: {{ .url }}:{{ .port }}/command/{{ .id }}/wake_up

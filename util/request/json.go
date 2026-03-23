@@ -20,7 +20,7 @@ func (r *errorReader) Seek(offset int64, whence int) (int64, error) {
 }
 
 // MarshalJSON marshals JSON into an io.ReadSeeker
-func MarshalJSON(data interface{}) io.ReadSeeker {
+func MarshalJSON(data any) io.ReadSeeker {
 	if data == nil {
 		return nil
 	}

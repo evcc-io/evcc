@@ -13,18 +13,15 @@ params:
   - name: tempsource
     type: choice
     choice: ["warmwater", "buffer"]
-    description:
-      de: "Temperaturquelle"
-      en: "Temperature source"
 render: |
   type: sgready
   getmode:
     source: go
     script: |
-      res := 1
+      res := 2 // 0/0 Normal
       switch {
-      case SG1 == 1 && SG2 == 0: res = 3
-      case SG2 == 1: res = 2
+      case SG1 == 1 && SG2 == 0: res = 1 // 1/0 Frostschutz
+      case SG2 == 1: res = 3 // x/1 Forcierter Betrieb/Sofortige Ansteuerung
       }
       res
     in:
@@ -49,7 +46,7 @@ render: |
   setmode:
     source: switch
     switch:
-    - case: 1 # normal
+    - case: 2 # normal
       set:
         source: sequence
         set:
@@ -71,7 +68,7 @@ render: |
               address: 45102 # 4002
               type: writesingle
               encoding: uint16
-    - case: 2 # boost
+    - case: 3 # boost
       set:
         source: sequence
         set:
@@ -93,7 +90,7 @@ render: |
               address: 45102
               type: writesingle
               encoding: uint16
-    - case: 3 # dimm
+    - case: 1 # dimm
       set:
         source: sequence
         set:

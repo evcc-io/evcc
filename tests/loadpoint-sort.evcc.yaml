@@ -1,0 +1,30 @@
+site:
+  title: Loadpoint Sort Test
+
+meters:
+  - name: grid
+    type: template
+    template: demo-meter
+    power: 200
+
+loadpoints:
+  - title: First Loadpoint
+    charger: charger_1
+    mode: now
+  - title: Second Loadpoint
+    charger: charger_2
+    mode: now
+  - title: Third Loadpoint
+    charger: charger_3
+    mode: now
+
+chargers:
+  - name: charger_1
+    type: template
+    template: demo-charger
+  - name: charger_2
+    type: template
+    template: demo-charger
+  - name: charger_3
+    type: template
+    template: demo-charger

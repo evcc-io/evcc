@@ -1,0 +1,12 @@
+template: ocpp-foxess
+products:
+  - brand: FoxESS
+    description:
+      generic: AC EV Charger
+capabilities: ["rfid"]
+requirements:
+  evcc: ["sponsorship", "skiptest"]
+params:
+  - preset: ocpp
+render: |
+  {{ include "ocpp" . }}

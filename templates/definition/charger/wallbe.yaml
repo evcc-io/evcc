@@ -3,7 +3,10 @@ deprecated: true
 products:
   - brand: Wallbe
     description:
-      generic: Eco, Pro
+      generic: Eco
+  - brand: Wallbe
+    description:
+      generic: Pro
 requirements:
   description:
     en: The Wallbe must be connected using Ethernet and the DIP switch 10 must be set to 'ON'.

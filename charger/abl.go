@@ -2,8 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2019-2022 andig
-// Copyright (c) 2022-2024 premultiply
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -80,7 +79,7 @@ func init() {
 // https://www.goingelectric.de/forum/viewtopic.php?p=1550459#p1550459
 
 // NewABLeMHFromConfig creates a ABLeMH charger from generic config
-func NewABLeMHFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewABLeMHFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		modbus.Settings `mapstructure:",squash"`
 		Timeout         time.Duration
@@ -97,7 +96,7 @@ func NewABLeMHFromConfig(ctx context.Context, other map[string]interface{}) (api
 	return NewABLeMH(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.ID, cc.Timeout)
 }
 
-//go:generate go tool decorate -f decorateABLeMH -b *ABLeMH -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)"
+//go:generate go tool decorate -f decorateABLeMH -b *ABLeMH -r api.Charger -t api.Meter,api.PhaseCurrents
 
 // NewABLeMH creates ABLeMH charger
 func NewABLeMH(ctx context.Context, uri, device, comset string, baudrate int, slaveID uint8, timeout time.Duration) (api.Charger, error) {
@@ -129,7 +128,7 @@ func NewABLeMH(ctx context.Context, uri, device, comset string, baudrate int, sl
 		return decorateABLeMH(wb, wb.currentPower, wb.currents), nil
 	}
 
-	return wb, err
+	return wb, nil
 }
 
 func (wb *ABLeMH) set(reg, val uint16) error {
@@ -215,11 +214,11 @@ func (wb *ABLeMH) MaxCurrentMillis(current float64) error {
 	}
 
 	// calculate duty cycle according to https://www.goingelectric.de/forum/viewtopic.php?p=1575287#p1575287
-	cur := uint16(current / 0.06)
+	curr := uint16(current / 0.06)
 
-	err := wb.set(ablRegAmpsConfig, cur)
+	err := wb.set(ablRegAmpsConfig, curr)
 	if err == nil {
-		wb.curr = cur
+		wb.curr = curr
 	}
 
 	return err

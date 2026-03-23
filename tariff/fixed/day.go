@@ -71,7 +71,7 @@ func ParseDay(s string) (Day, error) {
 func ParseDays(s string) ([]Day, error) {
 	var res []Day
 
-	for _, segment := range strings.Split(s, ",") {
+	for segment := range strings.SplitSeq(s, ",") {
 		fromto := strings.SplitN(segment, "-", 2)
 		if len(fromto) == 0 {
 			return nil, fmt.Errorf("invalid day range: %s", segment)

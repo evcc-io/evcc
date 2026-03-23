@@ -178,7 +178,12 @@ func (r Register) EncodeFunc() (func(float64) ([]byte, error), error) {
 	case strings.HasPrefix(enc, "bool"):
 		fallthrough
 
-	case strings.HasPrefix(enc, "int") || strings.HasPrefix(enc, "uint"):
+	case strings.HasPrefix(enc, "int"):
+		return r.encodeToBytes(func(v float64) uint64 {
+			return uint64(int64(v))
+		})
+
+	case strings.HasPrefix(enc, "uint"):
 		return r.encodeToBytes(func(v float64) uint64 {
 			return uint64(v)
 		})

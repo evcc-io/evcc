@@ -7,6 +7,7 @@ import (
 
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -22,6 +23,11 @@ type ChargeRater struct {
 	start         time.Time
 	startEnergy   float64
 	chargedEnergy float64
+}
+
+// ChargeResetter resets the charging session
+type ChargeResetter interface {
+	ResetCharge()
 }
 
 // NewChargeRater creates charge rater and initializes realtime clock
@@ -47,7 +53,7 @@ func (cr *ChargeRater) StartCharge(continued bool) {
 		if f, err := m.TotalEnergy(); err == nil {
 			cr.startEnergy = f
 			cr.log.DEBUG.Printf("charge start energy: %.3fkWh", f)
-		} else {
+		} else if !loadpoint.AcceptableError(err) {
 			cr.log.ERROR.Printf("charge total import: %v", err)
 		}
 	}
@@ -72,10 +78,33 @@ func (cr *ChargeRater) StopCharge() {
 		if f, err := m.TotalEnergy(); err == nil {
 			cr.chargedEnergy += f - cr.startEnergy
 			cr.log.DEBUG.Printf("charge final energy: %.3fkWh", cr.chargedEnergy)
-		} else {
+		} else if !loadpoint.AcceptableError(err) {
 			cr.log.ERROR.Printf("charge total import: %v", err)
 		}
 	}
+}
+
+var _ ChargeResetter = (*ChargeRater)(nil)
+
+// ChargeResetter resets the charging session
+func (cr *ChargeRater) ResetCharge() {
+	cr.Lock()
+	defer cr.Unlock()
+
+	// get end energy amount
+	if m, ok := cr.meter.(api.MeterEnergy); ok {
+		if f, err := m.TotalEnergy(); err == nil {
+			cr.chargedEnergy += f - cr.startEnergy
+			cr.log.DEBUG.Printf("charge final energy: %.3fkWh", cr.chargedEnergy)
+
+			cr.startEnergy = f
+		} else if !loadpoint.AcceptableError(err) {
+			cr.log.ERROR.Printf("charge total import: %v", err)
+		}
+	}
+
+	cr.chargedEnergy = 0
+	cr.start = cr.clck.Now()
 }
 
 // SetChargePower increments consumed energy by amount in kWh since last update

@@ -11,23 +11,23 @@
 		</h5>
 
 		<div class="row d-none d-lg-flex mb-2">
-			<div v-if="multiplePlans" class="plan-id d-none d-lg-flex"></div>
-			<div class="col-6" :class="multiplePlans ? 'col-lg-3' : 'col-lg-4'">
+			<div v-if="multiplePlans" class="plan-id d-flex"></div>
+			<div class="col-3">
 				<label :for="formId('day')">
 					{{ $t("main.chargingPlan.day") }}
 				</label>
 			</div>
-			<div class="col-6 col-lg-2">
+			<div class="col-2">
 				<label :for="formId('time')">
 					{{ $t("main.chargingPlan.time") }}
 				</label>
 			</div>
-			<div class="col-6 col-lg-3">
+			<div class="col-3">
 				<label :for="formId('goal')">
 					{{ $t("main.chargingPlan.goal") }}
 				</label>
 			</div>
-			<div class="col-6 col-lg-1">
+			<div class="col-2">
 				<label :for="formId('active')"> {{ $t("main.chargingPlan.active") }} </label>
 			</div>
 		</div>
@@ -43,7 +43,7 @@
 					{{ $t("main.chargingPlan.day") }}
 				</label>
 			</div>
-			<div :class="['col-7', multiplePlans ? 'col-lg-3' : 'col-lg-4', 'mb-2', 'mb-lg-0']">
+			<div class="col-7 col-lg-3 mb-2 mb-lg-0">
 				<select
 					:id="formId('day')"
 					v-model="selectedDay"
@@ -109,8 +109,8 @@
 					{{ $t("main.chargingPlan.active") }}
 				</label>
 			</div>
-			<div class="col-2 col-lg-1 d-flex align-items-center">
-				<div class="form-check form-switch">
+			<div class="col-3 col-lg-1 d-flex align-items-center">
+				<div class="form-check form-switch my-1">
 					<input
 						:id="formId('active')"
 						class="form-check-input"
@@ -124,11 +124,13 @@
 					/>
 				</div>
 			</div>
-			<div class="col-5 col-lg-2 d-flex align-items-center">
+			<div
+				class="col-4 col-lg-2 d-flex align-items-center justify-content-end justify-content-lg-start"
+			>
 				<button
 					v-if="dataChanged && !isNew"
 					type="button"
-					class="btn btn-sm btn-outline-primary border-0 text-decoration-underline"
+					class="btn btn-sm btn-outline-primary border-0 text-decoration-underline text-truncate"
 					data-testid="static-plan-apply"
 					:disabled="timeInThePast"
 					tabindex="0"
@@ -147,16 +149,13 @@
 </template>
 
 <script lang="ts">
-import "@h2d2/shopicons/es/regular/checkmark";
-import { distanceUnit } from "../../units.js";
+import { distanceUnit } from "@/units";
 
-import formatter from "../../mixins/formatter.js";
-import { energyOptions } from "../../utils/energyOptions.js";
+import formatter from "@/mixins/formatter";
+import { energyOptions } from "@/utils/energyOptions.ts";
 import { defineComponent } from "vue";
+import settings from "@/settings";
 
-const LAST_TARGET_TIME_KEY = "last_target_time";
-const LAST_SOC_GOAL_KEY = "last_soc_goal";
-const LAST_ENERGY_GOAL_KEY = "last_energy_goal";
 const DEFAULT_TARGET_TIME = "7:00";
 
 export default defineComponent({
@@ -189,18 +188,27 @@ export default defineComponent({
 		},
 		socOptions() {
 			// a list of entries from 5 to 100 with a step of 5
-			return Array.from(Array(20).keys())
+			const options = Array.from(Array(20).keys())
 				.map((i) => 5 + i * 5)
 				.map(this.socOption);
+
+			// add current soc value if it's not in the list
+			if (this.selectedSoc && !options.find((o) => o.value === this.selectedSoc)) {
+				options.push(this.socOption(this.selectedSoc));
+				options.sort((a, b) => a.value - b.value);
+			}
+
+			return options;
 		},
 		energyOptions() {
 			const options = energyOptions(
 				0,
 				this.capacity || 100,
-				this.socPerKwh,
 				this.fmtWh,
 				this.fmtPercentage,
-				"-"
+				"-",
+				this.socPerKwh,
+				Number(this.selectedEnergy)
 			);
 			// remove the first entry (0)
 			return options.slice(1);
@@ -266,11 +274,10 @@ export default defineComponent({
 		},
 		initInputFields() {
 			if (!this.selectedSoc) {
-				this.selectedSoc = window.localStorage[LAST_SOC_GOAL_KEY] || 100;
+				this.selectedSoc = settings.lastSocGoal ?? 100;
 			}
 			if (!this.selectedEnergy) {
-				this.selectedEnergy =
-					window.localStorage[LAST_ENERGY_GOAL_KEY] || this.capacity || 10;
+				this.selectedEnergy = settings.lastEnergyGoal ?? (this.capacity || 10);
 			}
 
 			let t = this.time;
@@ -311,13 +318,9 @@ export default defineComponent({
 			try {
 				const hours = this.selectedDate.getHours();
 				const minutes = this.selectedDate.getMinutes();
-				window.localStorage[LAST_TARGET_TIME_KEY] = `${hours}:${minutes}`;
-				if (this.selectedSoc) {
-					window.localStorage[LAST_SOC_GOAL_KEY] = this.selectedSoc;
-				}
-				if (this.selectedEnergy) {
-					window.localStorage[LAST_ENERGY_GOAL_KEY] = this.selectedEnergy;
-				}
+				settings.lastTargetTime = `${hours}:${minutes}`;
+				settings.lastSocGoal = this.selectedSoc;
+				settings.lastEnergyGoal = this.selectedEnergy;
 			} catch (e) {
 				console.warn(e);
 			}
@@ -348,9 +351,9 @@ export default defineComponent({
 			this.active = checked;
 		},
 		defaultTime() {
-			const [hours, minutes] = (
-				window.localStorage[LAST_TARGET_TIME_KEY] || DEFAULT_TARGET_TIME
-			).split(":");
+			const lastTargetTime = (settings.lastTargetTime || DEFAULT_TARGET_TIME).split(":");
+			const hours = Number(lastTargetTime[0]);
+			const minutes = Number(lastTargetTime[1]);
 
 			const target = new Date();
 			target.setSeconds(0);
@@ -367,6 +370,9 @@ export default defineComponent({
 });
 </script>
 <style scoped>
+.plan-id-insert {
+	margin-left: 2.5rem;
+}
 .plan-id {
 	width: 2.5rem;
 	color: var(--evcc-gray);

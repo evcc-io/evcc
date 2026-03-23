@@ -5,12 +5,10 @@ products:
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
-    allinone: true
   - name: host
   - name: port
     default: 502
-  - name: capacity
-    advanced: true
+  - preset: battery-params
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -56,5 +54,5 @@ render: |
       address: 40082 # Batterie-SOC in %
       type: holding
       decode: uint16
-  capacity: {{ .capacity }} # kWh
+  {{- include "battery-params" . }}
   {{- end }}

@@ -22,15 +22,15 @@ type circuitsTestSuite struct {
 }
 
 func (suite *circuitsTestSuite) SetupSuite() {
-	db, err := db.New("sqlite", ":memory:")
-	if err != nil {
-		suite.T().Fatal(err)
-	}
-	config.Init(db)
+	suite.Require().NoError(db.NewInstance("sqlite", ":memory:"))
 }
 
 func (suite *circuitsTestSuite) SetupTest() {
 	config.Reset()
+}
+
+func (suite *circuitsTestSuite) charger() api.Charger {
+	return api.NewMockCharger(gomock.NewController(suite.T()))
 }
 
 func (suite *circuitsTestSuite) TestCircuitConf() {
@@ -58,7 +58,7 @@ loadpoints:
 	// empty charger
 	suite.Require().NoError(config.Chargers().Add(config.NewStaticDevice(config.Named{
 		Name: "test",
-	}, api.Charger(nil))))
+	}, suite.charger())))
 
 	err := configureLoadpoints(conf)
 	suite.Require().NoError(err)
@@ -89,7 +89,7 @@ loadpoints:
 	// empty charger
 	suite.Require().NoError(config.Chargers().Add(config.NewStaticDevice(config.Named{
 		Name: "test",
-	}, api.Charger(nil))))
+	}, suite.charger())))
 
 	err := configureLoadpoints(conf)
 	suite.Require().NoError(err)
@@ -102,8 +102,7 @@ loadpoints:
 
 	// circuit without device
 	err = validateCircuits(lps)
-	suite.Require().Error(err)
-	suite.Require().Equal("circuit slave has no meter and no loadpoint assigned", err.Error())
+	suite.Require().NoError(err)
 }
 
 func (suite *circuitsTestSuite) TestMissingRootCircuit() {
@@ -147,7 +146,7 @@ loadpoints:
 	// mock charger
 	suite.Require().NoError(config.Chargers().Add(config.NewStaticDevice(config.Named{
 		Name: "test",
-	}, api.Charger(nil))))
+	}, suite.charger())))
 
 	err := configureLoadpoints(conf)
 	suite.Require().NoError(err)

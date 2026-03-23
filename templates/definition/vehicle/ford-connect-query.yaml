@@ -1,0 +1,43 @@
+template: ford-connect-query
+products:
+  - brand: Ford (FordConnect Query)
+params:
+  - preset: vehicle-common
+  - name: clientid
+    description:
+      generic: FordConnect Query Client ID
+    help:
+      de: Einrichtung unter https://developer.ford.com/developer-eu
+      en: Setup at https://developer.ford.com/developer-eu
+    required: true
+  - name: clientsecret
+    description:
+      generic: FordConnect Query Client Secret
+    help:
+      de: Einrichtung unter https://developer.ford.com/developer-eu
+      en: Setup at https://developer.ford.com/developer-eu
+    required: true
+  - name: redirecturi
+    description:
+      generic: FordConnect Query Redirect URL
+    help:
+      de: Einrichtung unter https://developer.ford.com/developer-eu
+      en: Setup at https://developer.ford.com/developer-eu
+    service: auth/redirecturi
+    required: true
+  - name: vin
+    example: WF0FXX...
+  - name: cache
+    default: 15m
+auth:
+  type: ford-connect
+  params: [clientid, clientsecret, redirecturi]
+render: |
+  type: ford-connect-query
+  vin: {{ .vin }}
+  credentials:
+    id: {{ .clientid }}
+    secret: {{ .clientsecret }}
+  redirecturi: {{ .redirecturi }}
+  {{ include "vehicle-common" . }}
+  cache: {{ .cache }}

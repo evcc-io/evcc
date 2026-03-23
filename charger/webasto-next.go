@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2022 premultiply
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -56,7 +56,7 @@ func init() {
 }
 
 // NewWebastoNextFromConfig creates a WebastoNext charger from generic config
-func NewWebastoNextFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewWebastoNextFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: 255,
 	}
@@ -227,7 +227,7 @@ var _ api.PhaseCurrents = (*WebastoNext)(nil)
 // Currents implements the api.PhaseCurrents interface
 func (wb *WebastoNext) Currents() (float64, float64, float64, error) {
 	var res [3]float64
-	for l := uint16(0); l < 3; l++ {
+	for l := range uint16(3) {
 		b, err := wb.conn.ReadInputRegisters(tqRegCurrents+2*l, 1)
 		if err != nil {
 			return 0, 0, 0, err

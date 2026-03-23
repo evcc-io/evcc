@@ -5,10 +5,24 @@ products:
       generic: AC ELWA 2
 group: heating
 requirements:
+  description:
+    de: Über das lokale Webinterface des AC ELWA 2 muss der Wert für die "Zeitablauf Ansteuerung" auf einen Wert etwas größer der Intervall Zeit von evcc (z.B. + 5s) gesetzt werden.
+    en: Use the local web interface of AC ELWA 2 to set the value "Power timeout" to a value slightly higher (e.g. + 5s) than the interval time of evcc.
   evcc: ["sponsorship"]
 params:
   - name: modbus
     choice: ["tcpip"]
+  - name: scale
+    type: float
+    default: 1
+    description:
+      en: "Scale factor for power limit"
+      de: "Skalierungsfaktor der Leistungsvorgabe"
+  - name: tempsource
+    choice: ["1", "2"]
+    default: "1"
 render: |
   type: ac-elwa-2
   {{- include "modbus" . }}
+  scale: {{ .scale }}
+  tempsource: {{ .tempsource }}

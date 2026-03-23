@@ -11,10 +11,13 @@ type krakenTokenAuthentication struct {
 // credentials used to authorize the request.
 type krakenAccountLookup struct {
 	Viewer struct {
-		Accounts []struct {
-			Number string
-		}
+		Accounts []krakenAccount
 	}
+}
+
+// krakenAccount represents an Octopus Energy account.
+type krakenAccount struct {
+	Number string
 }
 
 type tariffData struct {
@@ -35,6 +38,24 @@ func (d *tariffData) TariffCode() string {
 	return d.standardTariff.TariffCode
 }
 
+// TariffDirection defines which direction of energy flow is being denoted by the given tariff.
+type TariffDirection string
+
+const (
+	// TariffDirectionImport is for energy flow INTO the meter FROM the grid (to the property)
+	TariffDirectionImport TariffDirection = "import"
+
+	// TariffDirectionExport is for energy flow OUT OF the meter FROM the property (to the grid)
+	TariffDirectionExport TariffDirection = "export"
+)
+
+func (d *tariffData) TariffDirection() TariffDirection {
+	if d.standardTariff.IsExport {
+		return TariffDirectionExport
+	}
+	return TariffDirectionImport
+}
+
 type tariffType struct {
 	Id                   string
 	DisplayName          string
@@ -42,6 +63,9 @@ type tariffType struct {
 	ProductCode          string
 	StandingCharge       float32
 	PreVatStandingCharge float32
+	IsExport             bool
+	// UnitRate             float32
+	// UnitRateEpgApplied   bool
 }
 
 type tariffTypeWithTariffCode struct {

@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2024 evcc
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -41,14 +41,13 @@ type Peblar struct {
 
 const (
 	// Meter addresses
-	peblarRegEnergyTotal   = 30000
-	peblarRegSessionEnergy = 30004
-	peblarRegPowerPhase1   = 30008
-	peblarRegPowerPhase2   = 30010
-	peblarRegPowerPhase3   = 30012
-	peblarRegPowerTotal    = 30014
-	peblarRegVoltages      = 30016
-	peblarRegCurrents      = 30022
+	peblarRegEnergyTotal = 30000
+	peblarRegPowerPhase1 = 30008
+	peblarRegPowerPhase2 = 30010
+	peblarRegPowerPhase3 = 30012
+	peblarRegPowerTotal  = 30014
+	peblarRegVoltages    = 30016
+	peblarRegCurrents    = 30022
 
 	// Config addresses
 	peblarRegSerialNumber  = 30050
@@ -71,10 +70,10 @@ func init() {
 	registry.AddCtx("peblar", NewPeblarFromConfig)
 }
 
-//go:generate go tool decorate -f decoratePeblar -b *Peblar -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
+//go:generate go tool decorate -f decoratePeblar -b *Peblar -r api.Charger -t api.PhaseSwitcher,api.PhaseGetter
 
 // NewPeblarFromConfig creates a Peblar charger from generic config
-func NewPeblarFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewPeblarFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: 255,
 	}
@@ -122,7 +121,7 @@ func NewPeblar(ctx context.Context, uri string, id uint8) (api.Charger, error) {
 		phasesG = wb.getPhases
 	}
 
-	return decoratePeblar(wb, phasesS, phasesG), err
+	return decoratePeblar(wb, phasesS, phasesG), nil
 }
 
 // Status implements the api.Charger interface
@@ -204,17 +203,8 @@ func (wb *Peblar) CurrentPower() (float64, error) {
 	return float64(binary.BigEndian.Uint32(b)), err
 }
 
-var _ api.ChargeRater = (*Peblar)(nil)
-
-// ChargedEnergy implements the api.MeterEnergy interface
-func (wb *Peblar) ChargedEnergy() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(peblarRegSessionEnergy, 4)
-	if err != nil {
-		return 0, err
-	}
-
-	return float64(encoding.Int64(b)) / 1e3, err
-}
+// deliberately removed, see https://github.com/evcc-io/evcc/issues/25956
+// var _ api.ChargeRater = (*Peblar)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (wb *Peblar) TotalEnergy() (float64, error) {

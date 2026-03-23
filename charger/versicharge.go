@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2023 premultiply
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 // Initial implementation and testing by achgut, Flo56958
 
 // This module is NOT covered by the MIT license. All rights reserved.
@@ -60,7 +60,7 @@ func init() {
 }
 
 // NewVersichargeFromConfig creates a Versicharge charger from generic config
-func NewVersichargeFromConfig(ctx context.Context, other map[string]interface{}) (api.Charger, error) {
+func NewVersichargeFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := modbus.TcpSettings{
 		ID: 2,
 	}
@@ -127,13 +127,22 @@ func (wb *Versicharge) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (wb *Versicharge) MaxCurrent(current int64) error {
+	return wb.MaxCurrentMillis(float64(current))
+}
+
+var _ api.ChargerEx = (*Versicharge)(nil)
+
+// MaxCurrentMillis implements the api.ChargerEx interface
+func (wb *Versicharge) MaxCurrentMillis(current float64) error {
 	if current < 6 {
-		return fmt.Errorf("invalid current %d", current)
+		return fmt.Errorf("invalid current %.1f", current)
 	}
 
-	_, err := wb.conn.WriteSingleRegister(versiRegMaxCurrent, uint16(current))
+	curr := uint16(current * 100)
+
+	_, err := wb.conn.WriteSingleRegister(versiRegMaxCurrent, curr)
 	if err == nil {
-		wb.current = uint16(current)
+		wb.current = curr
 	}
 
 	return err

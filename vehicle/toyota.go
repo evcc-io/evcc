@@ -20,7 +20,7 @@ func init() {
 }
 
 // NewToyotaFromConfig creates a new vehicle
-func NewToyotaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+func NewToyotaFromConfig(other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed               `mapstructure:",squash"`
 		User, Password, VIN string
@@ -53,7 +53,7 @@ func NewToyotaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
 	if err == nil {
-		v.Provider = toyota.NewProvider(api, cc.VIN, cc.Cache)
+		v.Provider = toyota.NewProvider(log, api, cc.VIN, cc.Cache)
 	}
 
 	return v, err

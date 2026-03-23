@@ -55,6 +55,10 @@ func GetTsPriceData(ts []TimeSeries, resolution ResolutionType) ([]Rate, error) 
 	var res []Rate
 
 	for _, ts := range ts {
+		if ts.ClassificationSequenceAttributeInstanceComponentPosition > 1 {
+			continue
+		}
+
 		if unit := ts.PriceMeasureUnitName; unit != "MWH" {
 			return nil, fmt.Errorf("%w: invalid unit: %s", ErrInvalidData, unit)
 		}

@@ -1,7 +1,6 @@
 package transport
 
 import (
-	"errors"
 	"net/http"
 )
 
@@ -12,12 +11,15 @@ type Decorator struct {
 	Decorator func(*http.Request) error
 
 	// Base is the base RoundTripper used to make HTTP requests.
-	// If nil, http.DefaultTransport is used.
 	Base http.RoundTripper
 }
 
 // RoundTrip decorates the request using the Decorator.
 func (t *Decorator) RoundTrip(req *http.Request) (*http.Response, error) {
+	if t.Decorator == nil {
+		return t.Base.RoundTrip(req)
+	}
+
 	reqBodyClosed := false
 	if req.Body != nil {
 		defer func() {
@@ -27,10 +29,6 @@ func (t *Decorator) RoundTrip(req *http.Request) (*http.Response, error) {
 		}()
 	}
 
-	if t.Decorator == nil {
-		return nil, errors.New("transport: Transport's Decorator is nil")
-	}
-
 	req2 := cloneRequest(req) // per RoundTripper contract
 	if err := t.Decorator(req2); err != nil {
 		return nil, err
@@ -38,14 +36,7 @@ func (t *Decorator) RoundTrip(req *http.Request) (*http.Response, error) {
 
 	// req.Body is assumed to be closed by the base RoundTripper.
 	reqBodyClosed = true
-	return t.base().RoundTrip(req2)
-}
-
-func (t *Decorator) base() http.RoundTripper {
-	if t.Base != nil {
-		return t.Base
-	}
-	return Default()
+	return t.Base.RoundTrip(req2)
 }
 
 // cloneRequest returns a clone of the provided *http.Request.

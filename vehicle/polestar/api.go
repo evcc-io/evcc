@@ -49,12 +49,36 @@ func (v *API) Vehicles(ctx context.Context) ([]ConsumerCar, error) {
 
 func (v *API) CarTelemetry(ctx context.Context, vin string) (CarTelemetryData, error) {
 	var res struct {
-		CarTelemetryData `graphql:"carTelematics(vin: $vin)"`
+		CarTelemetryData `graphql:"carTelematicsV2(vins: $vins)"`
 	}
 
 	err := v.client.Query(ctx, &res, map[string]any{
-		"vin": vin,
-	}, graphql.OperationName("CarTelematics"))
+		"vins": []string{vin},
+	}, graphql.OperationName("CarTelematicsV2"))
 
-	return res.CarTelemetryData, err
+	// Filter data for the requested VIN
+	var filteredData CarTelemetryData
+
+	// Filter health data
+	for _, health := range res.CarTelemetryData.Health {
+		if health.VIN == vin {
+			filteredData.Health = append(filteredData.Health, health)
+		}
+	}
+
+	// Filter battery data
+	for _, battery := range res.CarTelemetryData.Battery {
+		if battery.VIN == vin {
+			filteredData.Battery = append(filteredData.Battery, battery)
+		}
+	}
+
+	// Filter odometer data
+	for _, odometer := range res.CarTelemetryData.Odometer {
+		if odometer.VIN == vin {
+			filteredData.Odometer = append(filteredData.Odometer, odometer)
+		}
+	}
+
+	return filteredData, err
 }

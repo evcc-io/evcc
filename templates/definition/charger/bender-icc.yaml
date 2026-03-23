@@ -1,0 +1,27 @@
+template: bender-icc
+products:
+  - brand: Bender
+    description:
+      generic: ICC1314
+  - brand: Bender
+    description:
+      generic: ICC1324
+  - brand: Mennekes
+    description:
+      generic: AMTRON 4You 500
+  - brand: Mennekes
+    description:
+      generic: AMTRON 4Business 700
+capabilities: ["rfid", "mA", "1p3p"]
+requirements:
+  description:
+    de: Die Konfigurationsoption 'Externes Energiemanagement' muss aktiviert sein.
+    en: The configuration option 'External Energy Management' must be enabled.
+  evcc: ["sponsorship"]
+params:
+  - name: modbus
+    choice: ["tcpip"]
+    id: 1
+render: |
+  type: bender
+  {{- include "modbus" . }}

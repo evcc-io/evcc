@@ -9,8 +9,8 @@ import (
 )
 
 // Query executes a compiled jq query against given json. It expects a single result only.
-func Query(query *gojq.Query, input []byte) (interface{}, error) {
-	var j interface{}
+func Query(query *gojq.Query, input []byte) (any, error) {
+	var j any
 	if err := json.Unmarshal(input, &j); err != nil {
 		return j, err
 	}

@@ -2,10 +2,25 @@ template: phoenix-ev-eth
 products:
   - brand: Phoenix Contact
     description:
-      generic: EV-CC-AC1-M3-CBC-RCM-ETH, EV-CC-AC1-M3-CBC-RCM-ETH-3G, EV-CC-AC1-M3-RCM-ETH-XP, EV-CC-AC1-M3-RCM-ETH-3G-XP
+      generic: EV-CC-AC1-M3-CBC-RCM-ETH
+  - brand: Phoenix Contact
+    description:
+      generic: EV-CC-AC1-M3-CBC-RCM-ETH-3G
+  - brand: Phoenix Contact
+    description:
+      generic: EV-CC-AC1-M3-RCM-ETH-XP
+  - brand: Phoenix Contact
+    description:
+      generic: EV-CC-AC1-M3-RCM-ETH-3G-XP
   - brand: Wallbe
     description:
-      generic: Eco, Eco 2.0(s), Pro
+      generic: Eco
+  - brand: Wallbe
+    description:
+      generic: Eco 2.0(s)
+  - brand: Wallbe
+    description:
+      generic: Pro
   - brand: ESL
     description:
       generic: Walli LIGHT

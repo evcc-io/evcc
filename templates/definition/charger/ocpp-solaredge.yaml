@@ -1,0 +1,15 @@
+template: ocpp-solaredge
+products:
+  - brand: SolarEdge
+    description:
+      generic: ONE EV Charger
+  - brand: SolarEdge
+    description:
+      generic: ONE EV Charger Pro
+capabilities: ["rfid"]
+requirements:
+  evcc: ["sponsorship", "skiptest"]
+params:
+  - preset: ocpp
+render: |
+  {{ include "ocpp" . }}

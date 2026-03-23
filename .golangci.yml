@@ -1,6 +1,6 @@
 version: "2"
-run:
-  go: "1.24"
+# run:
+#   go: "1.26"
 linters:
   default: none
   enable:
@@ -21,6 +21,9 @@ linters:
     - wastedassign
     - whitespace
   settings:
+    modernize:
+      disable:
+        - stringsbuilder
     staticcheck:
       checks:
         - -SA1019

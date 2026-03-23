@@ -3,20 +3,28 @@ products:
   - brand: Ginlong
     description:
       generic: Solis Hybrid Inverter (S Series)
+  - brand: Ginlong
+    description:
+      generic: Solis Storage Inverter (S Series)
   - brand: Axitec
     description:
       generic: AXIhycon 12-15H
+capabilities: ["battery-control"]
+requirements:
+  description:
+    de: |
+      Die aktive Batteriesteuerung überschreibt die Wechselrichter Einstellungen "Allow grid charging" und "Battery Reserve SOC".
+    en: |
+      Active battery control overrides the inverter settings "Allow grid charging" and "Battery Reserve SOC".
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
-    allinone: true
   - name: modbus
     choice: ["rs485"]
     baudrate: 9600
     id: 1
-  - name: capacity
-    advanced: true
   - name: maxacpower
+  - preset: battery-params
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -26,7 +34,7 @@ render: |
     register:
       address: 33263 # Meter total active power
       type: input
-      decode: int32
+      decode: int32nan
     scale: -1
   energy:
     source: modbus
@@ -115,7 +123,7 @@ render: |
         register:
           type: input
           address: 33135 # Battery current direction
-          decode: uint16 # 0：charge, 1：discharge
+          decode: uint16 # 0: charge, 1: discharge
         scale: 2
       - source: const
         value: -1
@@ -133,5 +141,74 @@ render: |
       address: 33139 # Battery capacity SOC
       type: input
       decode: uint16
-  capacity: {{ .capacity }} # kWh
+  batterymode:
+    source: switch
+    switch:
+    - case: 1  # normal
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: {{ .minsoc }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 43024 # Battery Reserve SOC
+              type: writeholding
+              decode: uint16
+        - source: const
+          value: 49 # Bits 0+4+5: Self Use Mode (1) + Battery Reserve (16) + Allow Grid Charge (32)
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 43110
+              type: writeholding
+              decode: uint16
+    - case: 2  # hold
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: {{ .maxsoc }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 43024 # Battery Reserve SOC
+              type: writeholding
+              decode: uint16
+        - source: const
+          value: 17 # Bits 0+4: Self Use (1) + Battery Reserve (16)
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 43110
+              type: writeholding
+              decode: uint16
+    - case: 3  # charge
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: {{ .maxsoc }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 43024 # Battery Reserve SOC
+              type: writeholding
+              decode: uint16
+        - source: const
+          value: 49 # Bits 0+4+5: Self Use Mode (1) + Battery Reserve (16) + Allow Grid Charge (32)
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 43110
+              type: writeholding
+              decode: uint16
+  {{- include "battery-params" . }}
   {{- end }}

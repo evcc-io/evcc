@@ -1,0 +1,11 @@
+template: skoda
+covers: ["enyaq"]
+products:
+  - brand: Skoda
+params:
+  - preset: vehicle-base
+  - name: timeout
+render: |
+  type: skoda
+  {{ include "vehicle-base" . }}
+  timeout: {{ .timeout }}

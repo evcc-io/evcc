@@ -2,14 +2,22 @@ package plugin
 
 import (
 	"context"
+	"crypto/sha256"
 	"fmt"
 	"net/http"
 	"strings"
 
 	"github.com/evcc-io/evcc/plugin/auth"
+	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/transport"
 	"github.com/jpfielding/go-http-digest/pkg/digest"
+	"golang.org/x/oauth2"
 )
+
+func init() {
+	// some servers send SHA256 instead of the RFC 7616 compliant SHA-256
+	digest.Algs["SHA256"] = sha256.New
+}
 
 // Auth is the authorization config
 type Auth struct {
@@ -19,7 +27,7 @@ type Auth struct {
 	Other  map[string]any `mapstructure:",remain"`
 }
 
-func (p *Auth) Transport(ctx context.Context, base http.RoundTripper) (http.RoundTripper, error) {
+func (p *Auth) Transport(ctx context.Context, log *util.Logger, base http.RoundTripper) (http.RoundTripper, error) {
 	switch strings.ToLower(p.Type) {
 	case "digest":
 		return digest.NewTransport(p.User, p.Password, base), nil
@@ -28,6 +36,10 @@ func (p *Auth) Transport(ctx context.Context, base http.RoundTripper) (http.Roun
 		return transport.BasicAuth(p.User, p.Password, base), nil
 
 	case "bearer":
+		if p.Token == "" && p.Password != "" {
+			p.Token = p.Password
+			log.WARN.Println("using password for bearer auth is deprecated, use token instead")
+		}
 		return transport.BearerAuth(p.Token, base), nil
 
 	default:
@@ -42,11 +54,14 @@ func (p *Auth) Transport(ctx context.Context, base http.RoundTripper) (http.Roun
 			p.Other["password"] = p.Password
 		}
 
-		authorizer, err := auth.NewFromConfig(ctx, p.Source, p.Other)
+		ts, err := auth.NewFromConfig(ctx, p.Source, p.Other)
 		if err != nil {
 			return nil, err
 		}
 
-		return authorizer.Transport(base)
+		return &oauth2.Transport{
+			Source: ts,
+			Base:   base,
+		}, nil
 	}
 }

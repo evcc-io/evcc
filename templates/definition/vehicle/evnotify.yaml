@@ -6,6 +6,8 @@ group: generic
 params:
   - name: akey
     required: true
+    description:
+      generic: API Key
   - name: token
     required: true
   - preset: vehicle-common

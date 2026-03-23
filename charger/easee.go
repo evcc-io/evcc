@@ -2,7 +2,7 @@ package charger
 
 // LICENSE
 
-// Copyright (c) 2019-2022 andig
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
 
 // This module is NOT covered by the MIT license. All rights reserved.
 
@@ -24,7 +24,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"strings"
 	"sync"
 	"time"
 
@@ -39,6 +38,13 @@ import (
 	"github.com/samber/lo"
 	"golang.org/x/oauth2"
 )
+
+// observationTimeout is the maximum age of the most recently received charger
+// observation before power and current readings are considered stale and zeroed.
+// The Easee charger sends a thermal heartbeat every ~15 minutes when idle, so
+// 20 minutes gives a comfortable margin above that while staying well below the
+// time a user would expect stale data to linger.
+const observationTimeout = 20 * time.Minute
 
 // Easee charger implementation
 type Easee struct {
@@ -61,20 +67,23 @@ type Easee struct {
 	phaseMode             int
 	currentPower, sessionEnergy, totalEnergy,
 	currentL1, currentL2, currentL3 float64
-	rfid      string
-	lp        loadpoint.API
-	cmdC      chan easee.SignalRCommandResponse
-	obsC      chan easee.Observation
-	obsTime   map[easee.ObservationID]time.Time
-	startDone func()
+	rfid string
+	lp   loadpoint.API
+
+	dispatcher *easee.CommandDispatcher
+
+	obsC            chan easee.Observation
+	obsTime         map[easee.ObservationID]time.Time
+	lastObsReceived time.Time
+	startDone       func()
 }
 
 func init() {
-	registry.Add("easee", NewEaseeFromConfig)
+	registry.AddCtx("easee", NewEaseeFromConfig)
 }
 
 // NewEaseeFromConfig creates a Easee charger from generic config
-func NewEaseeFromConfig(other map[string]interface{}) (api.Charger, error) {
+func NewEaseeFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		User      string
 		Password  string
@@ -93,11 +102,11 @@ func NewEaseeFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, api.ErrMissingCredentials
 	}
 
-	return NewEasee(cc.User, cc.Password, cc.Charger, cc.Timeout, cc.Authorize)
+	return NewEasee(ctx, cc.User, cc.Password, cc.Charger, cc.Timeout, cc.Authorize)
 }
 
 // NewEasee creates Easee charger
-func NewEasee(user, password, charger string, timeout time.Duration, authorize bool) (*Easee, error) {
+func NewEasee(ctx context.Context, user, password, charger string, timeout time.Duration, authorize bool) (*Easee, error) {
 	log := util.NewLogger("easee").Redact(user, password)
 
 	if !sponsor.IsAuthorized() {
@@ -113,16 +122,17 @@ func NewEasee(user, password, charger string, timeout time.Duration, authorize b
 		log:       log,
 		current:   6, // default current
 		startDone: sync.OnceFunc(func() { close(done) }),
-		cmdC:      make(chan easee.SignalRCommandResponse),
 		obsC:      make(chan easee.Observation),
 		obsTime:   make(map[easee.ObservationID]time.Time),
 	}
 
 	c.Client.Timeout = timeout
 
+	c.dispatcher = easee.NewCommandDispatcher(c.Helper, log, timeout)
+
 	ts, err := easee.TokenSource(log, user, password)
 	if err != nil {
-		return c, err
+		return nil, err
 	}
 
 	// replace client transport with authenticated transport
@@ -135,11 +145,11 @@ func NewEasee(user, password, charger string, timeout time.Duration, authorize b
 	if charger == "" {
 		chargers, err := c.chargers()
 		if err != nil {
-			return c, err
+			return nil, err
 		}
 
 		if len(chargers) != 1 {
-			return c, fmt.Errorf("cannot determine charger id, found: %v", lo.Map(chargers, func(c easee.Charger, _ int) string { return c.ID }))
+			return nil, fmt.Errorf("cannot determine charger id, found: %v", lo.Map(chargers, func(c easee.Charger, _ int) string { return c.ID }))
 		}
 
 		c.charger = chargers[0].ID
@@ -151,22 +161,11 @@ func NewEasee(user, password, charger string, timeout time.Duration, authorize b
 		return nil, err
 	}
 
-	// find single charger per circuit
-	for _, circuit := range site.Circuits {
-		if len(circuit.Chargers) > 1 {
-			continue
-		}
-
-		for _, charger := range circuit.Chargers {
-			if charger.ID == c.charger {
-				c.site = site.ID
-				c.circuit = circuit.ID
-				break
-			}
-		}
+	if err := c.determineCircuit(site); err != nil {
+		return nil, err
 	}
 
-	client, err := signalr.NewClient(context.Background(),
+	client, err := signalr.NewClient(ctx,
 		signalr.WithConnector(c.connect(ts)),
 		signalr.WithBackoff(func() backoff.BackOff {
 			return backoff.NewExponentialBackOff(backoff.WithMaxElapsedTime(0)) // prevents SignalR stack to silently give up after 15 mins
@@ -180,7 +179,7 @@ func NewEasee(user, password, charger string, timeout time.Duration, authorize b
 
 		client.Start()
 
-		ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
+		ctx, cancel := context.WithTimeout(ctx, request.Timeout)
 		defer cancel()
 		err = <-client.WaitForState(ctx, signalr.ClientConnected)
 	}
@@ -188,11 +187,35 @@ func NewEasee(user, password, charger string, timeout time.Duration, authorize b
 	// wait for first update
 	select {
 	case <-done:
+	case <-ctx.Done():
+		err = ctx.Err()
 	case <-time.After(request.Timeout):
 		err = os.ErrDeadlineExceeded
 	}
 
+	if err == nil {
+		c.waitForOptionalState()
+	}
+
 	return c, err
+}
+
+func (c *Easee) waitForOptionalState() {
+	for range 30 {
+		if c.optionalStatePresent() {
+			return
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+	c.log.WARN.Println("did not receive full state from cloud")
+}
+
+// check c.obsTime for presence of ALL of the following keys: easee.SESSION_ENERGY, easee.LIFETIME_ENERGY
+func (c *Easee) optionalStatePresent() bool {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+	wanted := []easee.ObservationID{easee.SESSION_ENERGY, easee.LIFETIME_ENERGY, easee.TOTAL_POWER}
+	return len(wanted) == len(lo.Intersect(wanted, lo.Keys(c.obsTime)))
 }
 
 func (c *Easee) chargerSite(charger string) (easee.Site, error) {
@@ -202,9 +225,46 @@ func (c *Easee) chargerSite(charger string) (easee.Site, error) {
 	return res, err
 }
 
+func isTNGrid(gridType int) bool {
+	switch gridType {
+	case easee.PowerGridTN3Phase, easee.PowerGridTN2PhasePin234, easee.PowerGridTN1Phase:
+		return true
+	}
+	return false
+}
+
+func (c *Easee) chargerConfig(charger string) (res easee.ChargerConfig, err error) {
+	uri := fmt.Sprintf("%s/chargers/%s/config", easee.API, charger)
+	err = c.GetJSON(uri, &res)
+	return res, err
+}
+
+func (c *Easee) determineCircuit(site easee.Site) error {
+	config, err := c.chargerConfig(c.charger)
+	if err != nil {
+		return fmt.Errorf("charger config unavailable: %w", err)
+	}
+	if !isTNGrid(config.DetectedPowerGridType) {
+		return nil
+	}
+	for _, circuit := range site.Circuits {
+		if len(circuit.Chargers) > 1 {
+			continue
+		}
+		for _, charger := range circuit.Chargers {
+			if charger.ID == c.charger {
+				c.site = site.ID
+				c.circuit = circuit.ID
+				return nil
+			}
+		}
+	}
+	return nil
+}
+
 // connect creates an HTTP connection to the signalR hub
 func (c *Easee) connect(ts oauth2.TokenSource) func() (signalr.Connection, error) {
-	bo := backoff.NewExponentialBackOff(backoff.WithMaxInterval(time.Minute))
+	bo := backoff.NewExponentialBackOff(backoff.WithMaxInterval(time.Minute), backoff.WithMaxElapsedTime(0))
 
 	return func() (conn signalr.Connection, err error) {
 		defer func() {
@@ -279,6 +339,12 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 
 	c.obsTime[res.ID] = res.Timestamp
 
+	// Update liveness timestamp for observations with a fresh charger-side timestamp.
+	// Stale cloud replay on restart has old timestamps and must not refresh this.
+	if time.Since(res.Timestamp) < observationTimeout {
+		c.lastObsReceived = time.Now()
+	}
+
 	switch res.ID {
 	case easee.USER_IDTOKEN:
 		c.rfid = res.Value
@@ -289,7 +355,11 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 	case easee.TOTAL_POWER:
 		c.currentPower = 1e3 * value.(float64)
 	case easee.SESSION_ENERGY:
-		c.sessionEnergy = value.(float64)
+		// SESSION_ENERGY must not be set to 0 by Productupdates, they occur erratic
+		// Reset to 0 is done in case CHARGER_OP_MODE
+		if value.(float64) != 0 {
+			c.sessionEnergy = value.(float64)
+		}
 	case easee.LIFETIME_ENERGY:
 		c.totalEnergy = value.(float64)
 	case easee.IN_CURRENT_T3:
@@ -311,7 +381,16 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 	case easee.DYNAMIC_CHARGER_CURRENT:
 		c.dynamicChargerCurrent = value.(float64)
 	case easee.CHARGER_OP_MODE:
-		c.opMode = value.(int)
+		opMode := value.(int)
+
+		// New charging session pending, reset internal value of SESSION_ENERGY to 0, and its observation timestamp to "now".
+		// This should be done in a proper way by the api, but it's not.
+		if c.opMode <= easee.ModeDisconnected && opMode >= easee.ModeAwaitingStart {
+			c.sessionEnergy = 0
+			c.obsTime[easee.SESSION_ENERGY] = time.Now()
+		}
+
+		c.opMode = opMode
 
 		// startup completed
 		c.startDone()
@@ -341,17 +420,12 @@ func (c *Easee) SubscribeToMyProduct(i json.RawMessage) {
 // CommandResponse implements the signalr receiver
 func (c *Easee) CommandResponse(i json.RawMessage) {
 	var res easee.SignalRCommandResponse
-
 	if err := json.Unmarshal(i, &res); err != nil {
 		c.log.ERROR.Printf("invalid message: %s %v", i, err)
 		return
 	}
 	c.log.TRACE.Printf("CommandResponse %s: %+v", res.SerialNumber, res)
-
-	select {
-	case c.cmdC <- res:
-	default:
-	}
+	c.dispatcher.Dispatch(res)
 }
 
 func (c *Easee) chargers() ([]easee.Charger, error) {
@@ -412,7 +486,7 @@ func (c *Easee) Enable(enable bool) (err error) {
 		}
 
 		uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
-		if _, err := c.postJSONAndWait(uri, data); err != nil {
+		if err := c.dispatcher.Send(uri, data); err != nil {
 			return err
 		}
 	}
@@ -434,7 +508,7 @@ func (c *Easee) Enable(enable bool) (err error) {
 	}
 
 	uri := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, c.charger, action)
-	if _, err := c.postJSONAndWait(uri, nil); err != nil {
+	if err := c.dispatcher.Send(uri, nil); err != nil {
 		return err
 	}
 
@@ -472,63 +546,6 @@ func (c *Easee) inExpectedOpMode(enable bool) bool {
 
 	// paused/stopped
 	return c.opMode == easee.ModeAwaitingStart || c.opMode == easee.ModeAwaitingAuthentication
-}
-
-// posts JSON to the Easee API endpoint and waits for the async response
-func (c *Easee) postJSONAndWait(uri string, data any) (bool, error) {
-	resp, err := c.Post(uri, request.JSONContent, request.MarshalJSON(data))
-	if err != nil {
-		return false, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode == 200 { // sync call
-		return false, nil
-	}
-
-	if resp.StatusCode == 202 { // async call, wait for response
-		var cmd easee.RestCommandResponse
-
-		if strings.Contains(uri, "/commands/") { // command endpoint
-			if err := json.NewDecoder(resp.Body).Decode(&cmd); err != nil {
-				return false, err
-			}
-		} else { // settings endpoint
-			var cmdArr []easee.RestCommandResponse
-			if err := json.NewDecoder(resp.Body).Decode(&cmdArr); err != nil {
-				return false, err
-			}
-
-			if len(cmdArr) != 0 {
-				cmd = cmdArr[0]
-			}
-		}
-
-		if cmd.Ticks == 0 { // api thinks this was a noop
-			return true, nil
-		}
-
-		return false, c.waitForTickResponse(cmd.Ticks)
-	}
-
-	// all other response codes lead to an error
-	return false, fmt.Errorf("invalid status: %d", resp.StatusCode)
-}
-
-func (c *Easee) waitForTickResponse(expectedTick int64) error {
-	for {
-		select {
-		case cmdResp := <-c.cmdC:
-			if cmdResp.Ticks == expectedTick {
-				if !cmdResp.WasAccepted {
-					return fmt.Errorf("command rejected: %d", cmdResp.Ticks)
-				}
-				return nil
-			}
-		case <-time.After(c.Client.Timeout):
-			return api.ErrTimeout
-		}
-	}
 }
 
 // wait for opMode become expected op mode
@@ -603,15 +620,11 @@ func (c *Easee) MaxCurrent(current int64) error {
 	}
 
 	uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
-	noop, err := c.postJSONAndWait(uri, data)
-	if err != nil {
+	if err := c.dispatcher.Send(uri, data); err != nil {
 		return err
 	}
-
-	if !noop {
-		if err := c.waitForDynamicChargerCurrent(float64(current)); err != nil {
-			return err
-		}
+	if err := c.waitForDynamicChargerCurrent(cur); err != nil {
+		return err
 	}
 
 	c.mux.Lock()
@@ -641,6 +654,10 @@ func (c *Easee) CurrentPower() (float64, error) {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
 
+	if time.Since(c.lastObsReceived) > observationTimeout {
+		return 0, nil
+	}
+
 	return c.currentPower, nil
 }
 
@@ -659,6 +676,11 @@ var _ api.PhaseCurrents = (*Easee)(nil)
 func (c *Easee) Currents() (float64, float64, float64, error) {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
+
+	if time.Since(c.lastObsReceived) > observationTimeout {
+		return 0, 0, 0, nil
+	}
+
 	return c.currentL1, c.currentL2, c.currentL3, nil
 }
 
@@ -707,7 +729,14 @@ func (c *Easee) Phases1p3p(phases int) error {
 			data.DynamicCircuitCurrentP3 = &max3
 		}
 
-		_, err = c.postJSONAndWait(uri, data)
+		// Register before POST so the SignalR CommandResponse that the Easee
+		// cloud sends on HTTP 200 (sync) responses is silently consumed rather
+		// than logged as rogue. On error we undo the registration.
+		c.dispatcher.ExpectOrphan(easee.CIRCUIT_MAX_CURRENT_P1)
+		err = c.dispatcher.Send(uri, data)
+		if err != nil {
+			c.dispatcher.CancelOrphan(easee.CIRCUIT_MAX_CURRENT_P1)
+		}
 	} else {
 		// charger level
 		if phases == 3 {
@@ -722,7 +751,7 @@ func (c *Easee) Phases1p3p(phases int) error {
 
 			uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
 
-			if _, err = c.postJSONAndWait(uri, data); err != nil {
+			if err = c.dispatcher.Send(uri, data); err != nil {
 				return err
 			}
 		}
@@ -757,6 +786,21 @@ func (c *Easee) GetPhases() (int, error) {
 	return phases, nil
 }
 
+var _ api.StatusReasoner = (*Easee)(nil)
+
+// StatusReason implements the api.StatusReasoner interface
+func (c *Easee) StatusReason() (api.Reason, error) {
+	c.mux.RLock()
+	defer c.mux.RUnlock()
+	switch c.opMode {
+	case easee.ModeAwaitingAuthentication:
+		return api.ReasonWaitingForAuthorization, nil
+	case easee.ModeCompleted:
+		return api.ReasonDisconnectRequired, nil
+	}
+	return api.ReasonUnknown, nil
+}
+
 var _ api.Identifier = (*Easee)(nil)
 
 // Currents implements the api.PhaseCurrents interface
@@ -787,7 +831,7 @@ func (c *Easee) updateSmartCharging() {
 
 		uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
 
-		if _, err := c.postJSONAndWait(uri, data); err != nil {
+		if err := c.dispatcher.Send(uri, data); err != nil {
 			c.log.WARN.Printf("smart charging: %v", err)
 			return
 		}

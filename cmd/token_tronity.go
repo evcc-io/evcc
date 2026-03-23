@@ -64,20 +64,18 @@ func tronityAuthorize(addr string, oc *oauth2.Config) (*oauth2.Token, error) {
 	mux := &http.ServeMux{}
 	mux.HandleFunc("/auth/tronity", handler)
 
-	wg := new(sync.WaitGroup)
 	s := &http.Server{
 		Addr:    addr,
 		Handler: mux,
 	}
 
 	// start server
-	wg.Add(1)
-	go func() {
+	var wg sync.WaitGroup
+	wg.Go(func() {
 		if err := s.ListenAndServe(); err != http.ErrServerClosed {
 			log.FATAL.Fatal(err)
 		}
-		wg.Done()
-	}()
+	})
 
 	// close on exit
 	defer func() {
@@ -105,7 +103,7 @@ func tronityToken(conf globalconfig.All, vehicleConf config.Named) (*oauth2.Toke
 	var cc struct {
 		Credentials vehicle.ClientCredentials
 		RedirectURI string
-		Other       map[string]interface{} `mapstructure:",remain"`
+		Other       map[string]any `mapstructure:",remain"`
 	}
 
 	if err := util.DecodeOther(vehicleConf.Other, &cc); err != nil {
@@ -122,7 +120,7 @@ func tronityToken(conf globalconfig.All, vehicleConf config.Named) (*oauth2.Toke
 	}
 
 	if oc.RedirectURL = cc.RedirectURI; oc.RedirectURL == "" {
-		oc.RedirectURL = fmt.Sprintf("%s/auth/tronity", conf.Network.URI())
+		oc.RedirectURL = fmt.Sprintf("%s/auth/tronity", conf.Network.ExternalURL())
 	}
 
 	return tronityAuthorize(conf.Network.HostPort(), oc)

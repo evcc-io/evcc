@@ -2,7 +2,10 @@ template: alphatec
 products:
   - brand: Alphatec
     description:
-      generic: Wallbox Mini, Power
+      generic: Wallbox Mini
+  - brand: Alphatec
+    description:
+      generic: Wallbox Power
   - brand: Alphatec
     description:
       generic: Ladesäule Twin

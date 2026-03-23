@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/evcc-io/evcc/util/redact"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/spf13/cobra"
 )
@@ -27,8 +28,8 @@ func runConfig(cmd *cobra.Command, args []string) {
 		log.FATAL.Fatal(err)
 	}
 
-	// setup environment
-	if err := configureEnvironment(cmd, &conf); err != nil {
+	// setup persistence
+	if err := configureDatabase(conf.Database); err != nil {
 		log.FATAL.Fatal(err)
 	}
 
@@ -54,7 +55,7 @@ func runConfig(cmd *cobra.Command, args []string) {
 			}
 
 			for _, c := range configurable {
-				fmt.Println(config.NameForID(c.ID), fmt.Sprintf("%+v", c.Properties), redactMap(c.Data))
+				fmt.Println(config.NameForID(c.ID), fmt.Sprintf("%+v", c.Properties), redact.Map(c.Data))
 			}
 
 			fmt.Println("")
