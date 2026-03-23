@@ -765,6 +765,48 @@ func TestPVHysteresisAfterPhaseSwitch(t *testing.T) {
 	}
 }
 
+// TestPVDisableImmediatelyAfterBatteryBufferedTransition verifies that when
+// battery-buffered mode ends (battery SoC drops below bufferSoc), the PV
+// disable timer fires immediately rather than starting a fresh delay period.
+func TestPVDisableImmediatelyAfterBatteryBufferedTransition(t *testing.T) {
+	Voltage = 100
+	const phases = 1
+	const disableDelay = time.Minute
+
+	clk := clock.NewMock()
+
+	lp := &Loadpoint{
+		log:            util.NewLogger("foo"),
+		clock:          clk,
+		minCurrent:     minA,
+		maxCurrent:     maxA,
+		phases:         phases,
+		measuredPhases: phases,
+		Disable: loadpoint.ThresholdConfig{
+			Threshold: 0,
+			Delay:     disableDelay,
+		},
+		enabled: true,
+	}
+	lp.status = api.StatusC // charging
+
+	// sitePower: positive (no solar, battery is discharging to supply car)
+	sitePower := float64(phases) * minA * Voltage
+
+	// Cycle 1 (t=0): battery buffered above bufferSoc. Early return fires at minCurrent.
+	current := lp.pvMaxCurrent(api.ModePV, sitePower, 0, true, false)
+	assert.Equal(t, minA, current, "battery buffered: should charge at minCurrent")
+
+	// Simulate time passing while battery mode was active (> disableDelay).
+	// elapsed sentinel = time.Unix(0,1); mock clock starts at time.Unix(0,0).
+	// Advance clock so that clock.Since(elapsed) > disableDelay.
+	clk.Set(elapsed.Add(disableDelay + time.Second))
+
+	// Cycle 2: battery SoC crosses bufferSoc → batteryBuffered=false.
+	current = lp.pvMaxCurrent(api.ModePV, sitePower, 0, false, false)
+	assert.Equal(t, 0.0, current, "battery threshold crossed: should disable immediately, not wait for another full delay period")
+}
+
 func TestConnectionDurationDropDetection(t *testing.T) {
 	clock := clock.NewMock()
 	ctrl := gomock.NewController(t)

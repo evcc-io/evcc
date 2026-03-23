@@ -1473,6 +1473,12 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 	// in MinPV mode or under special conditions return at least minCurrent
 	if battery := batteryStart || batteryBuffered && lp.charging(); (mode == api.ModeMinPV || battery) && targetCurrent < minCurrent {
 		lp.log.DEBUG.Printf("pv charge current: min %.3gA > %.3gA (%.0fW @ %dp, battery: %t)", minCurrent, targetCurrent, sitePower, activePhases, battery)
+		if battery {
+			// Pre-expire the pvTimer while battery mode is active. When battery
+			// mode ends (bufferSoc crossed), pvDisableDelay fires immediately
+			// instead of starting a fresh delay period.
+			lp.pvTimer = elapsed
+		}
 		return minCurrent
 	}
 
