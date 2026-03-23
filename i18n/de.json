@@ -1119,10 +1119,12 @@
     },
     "loadpoint": {
       "avgPrice": "⌀ Preis",
+      "backToOverview": "Zurück zur Übersicht",
       "charged": "Geladen",
       "co2": "⌀ CO₂",
       "duration": "Ladedauer",
       "emission": "Emission",
+      "expandViewport": "Vollansicht",
       "fallbackName": "Ladepunkt",
       "finished": "Ladeende",
       "power": "Leistung",
