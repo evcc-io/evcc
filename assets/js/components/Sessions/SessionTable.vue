@@ -210,6 +210,18 @@ export default defineComponent({
 					format: (value) => this.fmtWh(value * 1e3, POWER_UNIT.KW, false),
 				},
 				{
+					name: "chargedSoc",
+					unit: "%",
+					total: this.chargedSoc,
+					value: (session) => {
+						if (session.socStart != null && session.socStop != null) {
+							return Math.max(0, session.socStop - session.socStart);
+						}
+						return null;
+					},
+					format: (value) => `+${Math.round(value)}`,
+				},
+				{
 					name: "solar",
 					unit: "%",
 					total: this.solarPercentage,
@@ -375,6 +387,16 @@ export default defineComponent({
 				return total.emittedCo2 / total.chargedEnergy;
 			}
 			return null;
+		},
+		chargedSoc() {
+			const sessions = this.filteredSessions.filter(
+				(s) => s.socStart != null && s.socStop != null
+			);
+			if (!sessions.length) return null;
+			return sessions.reduce(
+				(total, s) => total + Math.max(0, (s.socStop || 0) - (s.socStart || 0)),
+				0
+			);
 		},
 		solarPercentage() {
 			const total = this.filteredSessions

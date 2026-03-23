@@ -49,7 +49,7 @@ func (lp *Loadpoint) createSession() {
 		lp.session.Identifier = id
 	}
 
-	if soc, err := lp.chargerSoc(); err == nil && soc > 0 {
+	if soc, err := lp.chargerSoc(); err == nil && soc > 0 && !lp.chargerHasFeature(api.Heating) {
 		lp.session.SocStart = new(soc)
 	}
 
@@ -78,7 +78,7 @@ func (lp *Loadpoint) stopSession() {
 		s.MeterStop = &meterStop
 	}
 
-	if lp.vehicleSoc > 0 {
+	if lp.vehicleSoc > 0 && !lp.chargerHasFeature(api.Heating) {
 		s.SocStop = &lp.vehicleSoc
 	}
 

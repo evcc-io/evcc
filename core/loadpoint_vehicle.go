@@ -168,6 +168,7 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 		if v != nil {
 			session.Vehicle = v.GetTitle()
 		}
+		session.SocStart = nil // reset for new vehicle
 	})
 }
 
