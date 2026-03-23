@@ -3,6 +3,7 @@ package core
 import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
+	"github.com/evcc-io/evcc/core/soc"
 )
 
 // chargerHasFeature checks availability of charger feature

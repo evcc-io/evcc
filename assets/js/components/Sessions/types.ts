@@ -14,6 +14,8 @@ export interface Session {
   price: number | null;
   pricePerKWh: number | null;
   co2PerKWh?: number | null;
+  socStart?: number | null;
+  socStop?: number | null;
 }
 
 export interface Legend {
