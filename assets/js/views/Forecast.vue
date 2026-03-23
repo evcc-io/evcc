@@ -76,7 +76,7 @@
 						:solar="solar"
 						:raw-solar="forecast.solar"
 						:chart-width="chartWidth"
-						:end-date="dataEndDate"
+						:end-date="chartEndDate"
 						:scroll-left="scrollLeft"
 						@scroll="onChartScroll"
 					/>
@@ -113,7 +113,7 @@
 						:currency="currency"
 						:zoom="priceZoom"
 						:chart-width="chartWidth"
-						:end-date="dataEndDate"
+						:end-date="chartEndDate"
 						:scroll-left="scrollLeft"
 						@scroll="onChartScroll"
 					/>
@@ -133,7 +133,7 @@
 					<Co2Chart
 						:co2="forecast.co2"
 						:chart-width="chartWidth"
-						:end-date="dataEndDate"
+						:end-date="chartEndDate"
 						:scroll-left="scrollLeft"
 						@scroll="onChartScroll"
 					/>
@@ -158,7 +158,8 @@ import store from "../store";
 import { adjustedSolar, ForecastType } from "@/utils/forecast";
 import type { ForecastSlot } from "../components/Forecast/types";
 
-const FORECASTED_HOURS = 96;
+const MIN_HOURS = 38;
+const MAX_HOURS = 96;
 const SLOTS_PER_HOUR = 4;
 
 export default defineComponent({
@@ -191,7 +192,7 @@ export default defineComponent({
 		},
 		maxEndDate(): Date {
 			const end = new Date(this.startDate);
-			end.setHours(end.getHours() + FORECASTED_HOURS);
+			end.setHours(end.getHours() + MAX_HOURS);
 			return end;
 		},
 		dataEndDate(): Date {
@@ -211,10 +212,15 @@ export default defineComponent({
 			const end = new Date(Math.min(latest, this.maxEndDate.getTime()));
 			return end;
 		},
+		chartEndDate(): Date {
+			const minEnd = new Date(this.startDate);
+			minEnd.setHours(minEnd.getHours() + MIN_HOURS);
+			return this.dataEndDate > minEnd ? this.dataEndDate : minEnd;
+		},
 		chartWidth(): number {
-			const ms = this.dataEndDate.getTime() - this.startDate.getTime();
+			const ms = this.chartEndDate.getTime() - this.startDate.getTime();
 			const slots = Math.ceil(ms / (15 * 60 * 1000));
-			return Math.max(slots * 8 + 56, 1270);
+			return slots * 8 + 56;
 		},
 		currency() {
 			return store.state?.currency;
@@ -297,7 +303,7 @@ export default defineComponent({
 			const now = new Date();
 			return slots
 				.filter((slot) => new Date(slot.end) > now)
-				.slice(0, FORECASTED_HOURS * SLOTS_PER_HOUR);
+				.slice(0, MAX_HOURS * SLOTS_PER_HOUR);
 		},
 	},
 });
