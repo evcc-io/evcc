@@ -1,22 +1,22 @@
-template: ecoflow-powerocean
+template: ecoflow-stream
 products:
   - brand: EcoFlow
     description:
-      generic: PowerOcean
+      generic: Stream
 requirements:
   description:
     de: |
-      Für die Nutzung des EcoFlow PowerOcean Meters benötigen Sie:
+      Für die Nutzung des EcoFlow Stream Meters benötigen Sie:
       - Einen gültigen Access Key von der EcoFlow Developer Console
       - Den entsprechenden Secret Key
-      - Die Seriennummer Ihres PowerOcean Systems
+      - Die Seriennummer des Hauptgerätes Ihres Stream Systems
 
       Diese Credentials erhalten Sie über die EcoFlow Developer Console nach der Registrierung Ihrer Anwendung.
     en: |
-      To use the EcoFlow PowerOcean meter you need:
+      To use the EcoFlow Stream meter you need:
       - A valid Access Key from the EcoFlow Developer Console
       - The corresponding Secret Key
-      - The serial number of your PowerOcean system
+      - The main device serial number of your Stream system
 
       These credentials can be obtained through the EcoFlow Developer Console after registering your application.
 params:
@@ -36,10 +36,7 @@ params:
     help:
       en: Secret Key from EcoFlow Developer Console
       de: Secret Key aus der EcoFlow Developer Console
-  - name: deviceid
-    deprecated: true
   - name: serial
-    required: true
   - name: region
     choice: ["auto", "europe", "america"]
     default: auto
@@ -57,9 +54,9 @@ render: |
   secretkey: {{ .secretkey }}
   serial: {{ if .serial }}{{ .serial }}{{ else }}{{ .deviceid }}{{ end }}
   usage: {{ .usage }}
-  region: {{ .region }}
   cache: {{ .cache }}
-  gridpower: sysGridPwr
-  pvpower: mpptPwr
-  batterypower: bpPwr
-  batterysoc: bpSoc
+  region: {{ .region }}
+  gridpower: powGetSysGrid
+  pvpower: powGetPvSum
+  batterypower: powGetBpCms
+  batterysoc: cmsBattSoc

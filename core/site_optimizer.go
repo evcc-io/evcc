@@ -618,7 +618,7 @@ func asTimestamps(dt []int) []time.Time {
 	res := make([]time.Time, 0, len(dt))
 	eoh := endOfHour(time.Now())
 	res = append(res, eoh.Add(-time.Duration(dt[0])*time.Second))
-	for i := range len(res) - 1 {
+	for i := range len(dt) - 1 {
 		res = append(res, eoh.Add(time.Duration(dt[i+1])*time.Second))
 	}
 	return res

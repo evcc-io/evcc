@@ -1,6 +1,8 @@
 import { defineConfig } from "vite";
 import vuePlugin from "@vitejs/plugin-vue";
 import legacy from "@vitejs/plugin-legacy";
+import { browserslistToTargets } from "lightningcss";
+import browserslist from "browserslist";
 import { visualizer } from "rollup-plugin-visualizer";
 import path from "path";
 
@@ -17,6 +19,7 @@ export default defineConfig({
     transformer: "lightningcss",
     lightningcss: {
       drafts: { customMedia: true },
+      targets: browserslistToTargets(browserslist()),
     },
   },
   build: {
@@ -36,7 +39,6 @@ export default defineConfig({
   },
   plugins: [
     legacy({
-      targets: ["defaults", "iOS >= 14"],
       modernPolyfills: ["es.promise.all-settled"],
     }),
     vuePlugin({
