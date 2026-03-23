@@ -26,62 +26,10 @@
 							{{ loadpointTitle }}
 						</div>
 					</h3>
-					<button
-						type="button"
-						class="btn btn-sm btn-outline-secondary border-0 p-2 evcc-gray flex-shrink-0 loadpoint-expand-btn"
-						:aria-label="
-							loadpointViewportMaximized
-								? $t('main.loadpoint.backToOverview')
-								: $t('main.loadpoint.expandViewport')
-						"
-						:data-testid="
-							loadpointViewportMaximized
-								? 'loadpoint-viewport-back'
-								: 'loadpoint-viewport-expand'
-						"
-						@click.stop="
-							loadpointViewportMaximized ? collapseViewport() : expandViewport()
-						"
-					>
-						<svg
-							v-if="loadpointViewportMaximized"
-							class="loadpoint-expand-icon"
-							width="18"
-							height="18"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							stroke-width="2"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							aria-hidden="true"
-							focusable="false"
-						>
-							<path d="M4 14h6v6" />
-							<path d="M20 10h-6V4" />
-							<path d="M14 10l7-7" />
-							<path d="M3 21l7-7" />
-						</svg>
-						<svg
-							v-else
-							class="loadpoint-expand-icon"
-							width="18"
-							height="18"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							stroke-width="2"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							aria-hidden="true"
-							focusable="false"
-						>
-							<path d="M8 3H5a2 2 0 0 0-2 2v3" />
-							<path d="M21 8V5a2 2 0 0 0-2-2h-3" />
-							<path d="M3 16v3a2 2 0 0 0 2 2h3" />
-							<path d="M16 21h3a2 2 0 0 0 2-2v-3" />
-						</svg>
-					</button>
+					<ViewportToggleButton
+						:expanded="loadpointViewportMaximized"
+						@toggle="toggleViewport"
+					/>
 					<Mode
 						class="loadpoint-header-wide__mode flex-shrink-0"
 						v-bind="modeProps"
@@ -108,64 +56,11 @@
 									{{ loadpointTitle }}
 								</div>
 							</h3>
-							<button
-								type="button"
-								class="btn btn-sm btn-outline-secondary border-0 p-2 evcc-gray flex-shrink-0 loadpoint-expand-btn"
-								:aria-label="
-									loadpointViewportMaximized
-										? $t('main.loadpoint.backToOverview')
-										: $t('main.loadpoint.expandViewport')
-								"
-								:data-testid="
-									loadpointViewportMaximized
-										? 'loadpoint-viewport-back-xs'
-										: 'loadpoint-viewport-expand-xs'
-								"
-								@click.stop="
-									loadpointViewportMaximized
-										? collapseViewport()
-										: expandViewport()
-								"
-							>
-								<svg
-									v-if="loadpointViewportMaximized"
-									class="loadpoint-expand-icon"
-									width="18"
-									height="18"
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke="currentColor"
-									stroke-width="2"
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									aria-hidden="true"
-									focusable="false"
-								>
-									<path d="M4 14h6v6" />
-									<path d="M20 10h-6V4" />
-									<path d="M14 10l7-7" />
-									<path d="M3 21l7-7" />
-								</svg>
-								<svg
-									v-else
-									class="loadpoint-expand-icon"
-									width="18"
-									height="18"
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke="currentColor"
-									stroke-width="2"
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									aria-hidden="true"
-									focusable="false"
-								>
-									<path d="M8 3H5a2 2 0 0 0-2 2v3" />
-									<path d="M21 8V5a2 2 0 0 0-2-2h-3" />
-									<path d="M3 16v3a2 2 0 0 0 2 2h3" />
-									<path d="M16 21h3a2 2 0 0 0 2-2v-3" />
-								</svg>
-							</button>
+							<ViewportToggleButton
+								:expanded="loadpointViewportMaximized"
+								:mobile="true"
+								@toggle="toggleViewport"
+							/>
 						</div>
 						<LoadpointSettingsButton
 							:class="expandLoadpointHeader ? 'd-lg-block d-xl-none' : ''"
@@ -261,6 +156,7 @@ import SettingsButton from "./SettingsButton.vue";
 import SettingsModal from "./SettingsModal.vue";
 import VehicleIcon from "../VehicleIcon";
 import SessionInfo from "./SessionInfo.vue";
+import ViewportToggleButton from "./ViewportToggleButton.vue";
 import Modal from "bootstrap/js/dist/modal";
 import { defineComponent, type PropType } from "vue";
 import type {
@@ -276,6 +172,26 @@ import type {
 } from "@/types/evcc";
 import type { PlanStrategy } from "@/components/ChargingPlans/types";
 
+const maximizedLoadpointIds = new Set<string>();
+let previousBodyOverflow: string | null = null;
+
+const setBodyScrollLock = (id: string, expanded: boolean) => {
+	if (expanded) {
+		if (maximizedLoadpointIds.size === 0) {
+			previousBodyOverflow = document.body.style.overflow;
+			document.body.style.overflow = "hidden";
+		}
+		maximizedLoadpointIds.add(id);
+		return;
+	}
+
+	maximizedLoadpointIds.delete(id);
+	if (maximizedLoadpointIds.size === 0) {
+		document.body.style.overflow = previousBodyOverflow ?? "";
+		previousBodyOverflow = null;
+	}
+};
+
 export default defineComponent({
 	name: "Loadpoint",
 	components: {
@@ -287,6 +203,7 @@ export default defineComponent({
 		LoadpointSettingsModal: SettingsModal,
 		LoadpointSessionInfo: SessionInfo,
 		VehicleIcon,
+		ViewportToggleButton,
 	},
 	mixins: [formatter, collector],
 	inheritAttrs: false,
@@ -397,7 +314,6 @@ export default defineComponent({
 			chargeDurationInterpolated: this.chargeDuration,
 			chargeRemainingDurationInterpolated: this.chargeRemainingDuration,
 			loadpointViewportMaximized: false,
-			bodyOverflowBefore: null as string | null,
 		};
 	},
 	computed: {
@@ -497,18 +413,12 @@ export default defineComponent({
 			this.chargeRemainingDurationInterpolated = this.chargeRemainingDuration;
 		},
 		loadpointViewportMaximized(expanded: boolean) {
-			if (expanded) {
-				this.bodyOverflowBefore = document.body.style.overflow;
-				document.body.style.overflow = "hidden";
-			} else {
-				document.body.style.overflow = this.bodyOverflowBefore ?? "";
-				this.bodyOverflowBefore = null;
-			}
+			setBodyScrollLock(this.id, expanded);
 		},
 		shouldMaximizeFromRoute: {
 			handler(shouldMaximize: boolean) {
-				if (shouldMaximize && !this.loadpointViewportMaximized) {
-					this.loadpointViewportMaximized = true;
+				if (this.loadpointViewportMaximized !== shouldMaximize) {
+					this.loadpointViewportMaximized = shouldMaximize;
 				}
 			},
 			immediate: true,
@@ -524,7 +434,7 @@ export default defineComponent({
 		}
 		window.removeEventListener("keydown", this.handleViewportEscape);
 		if (this.loadpointViewportMaximized) {
-			document.body.style.overflow = this.bodyOverflowBefore ?? "";
+			setBodyScrollLock(this.id, false);
 		}
 	},
 	methods: {
@@ -586,6 +496,13 @@ export default defineComponent({
 				document.getElementById(`loadpointSettingsModal_${this.id}`) as HTMLElement
 			);
 			modal.show();
+		},
+		toggleViewport() {
+			if (this.loadpointViewportMaximized) {
+				this.collapseViewport();
+				return;
+			}
+			this.expandViewport();
 		},
 		expandViewport() {
 			this.loadpointViewportMaximized = true;
