@@ -140,6 +140,9 @@ export default defineComponent({
 				const res = await api.get("auth/uilock/status", {
 					validateStatus: (s) => s >= 200 && s < 500,
 				});
+				if (res.status >= 500) {
+					throw new Error(`status endpoint returned ${res.status}`);
+				}
 				const data = res.data as {
 					appliesToClient?: boolean;
 					unlocked?: boolean;
@@ -153,6 +156,10 @@ export default defineComponent({
 				}
 			} catch (e) {
 				console.warn("uilock status", e);
+				if (store.state.uilock?.enabled && store.state.uilock?.pinConfigured) {
+					store.update({ startupCompleted: true });
+					this.showUiLock = true;
+				}
 			}
 			this.connect();
 		},
@@ -185,7 +192,7 @@ export default defineComponent({
 			};
 			const events = ["mousedown", "keydown", "touchstart", "scroll"];
 			events.forEach((e) =>
-				document.addEventListener(e, this.idleActivityHandler!, { passive: true }),
+				document.addEventListener(e, this.idleActivityHandler!, { passive: true })
 			);
 
 			this.resetIdleTimer();

@@ -87,10 +87,7 @@ func (m *Manager) Applies(r *http.Request, conf globalconfig.UILock) bool {
 	if !conf.Enabled || !m.PinConfigured() {
 		return false
 	}
-	nets, err := ParseCIDRList(conf.TrustedProxies)
-	if err != nil {
-		return false
-	}
+	nets := ParseCIDRList(conf.TrustedProxies)
 	clientIP := EffectiveClientIP(r, nets)
 	if clientIP == nil {
 		return false
