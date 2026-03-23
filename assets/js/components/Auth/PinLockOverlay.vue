@@ -25,10 +25,7 @@
 						@input="onDirectInput"
 						@keydown.enter="submit"
 					/>
-					<p
-						v-if="error"
-						class="text-danger text-center mb-0 pin-lock-error"
-					>
+					<p v-if="error" class="text-danger text-center mb-0 pin-lock-error">
 						{{ error }}
 					</p>
 					<button
@@ -64,18 +61,10 @@
 						>
 							0
 						</button>
-						<button
-							type="button"
-							class="btn btn-outline-warning"
-							@click="backspace"
-						>
+						<button type="button" class="btn btn-outline-warning" @click="backspace">
 							⌫
 						</button>
-						<button
-							type="button"
-							class="btn btn-outline-danger"
-							@click="clearPin"
-						>
+						<button type="button" class="btn btn-outline-danger" @click="clearPin">
 							C
 						</button>
 					</div>

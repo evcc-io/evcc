@@ -192,7 +192,7 @@ export default defineComponent({
 			};
 			const events = ["mousedown", "keydown", "touchstart", "scroll"];
 			events.forEach((e) =>
-				document.addEventListener(e, this.idleActivityHandler!, { passive: true }),
+				document.addEventListener(e, this.idleActivityHandler!, { passive: true })
 			);
 
 			this.resetIdleTimer();

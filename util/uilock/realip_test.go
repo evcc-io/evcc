@@ -73,7 +73,9 @@ func TestParseCIDRList(t *testing.T) {
 	}
 
 	for _, tc := range tests {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			nets := ParseCIDRList(tc.input)
 			require.Len(t, nets, tc.wantLen)
 			for i, want := range tc.wantNets {
@@ -169,7 +171,9 @@ func TestEffectiveClientIP(t *testing.T) {
 	}
 
 	for _, tc := range tests {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			req := httptest.NewRequest(http.MethodGet, "/", nil)
 			req.RemoteAddr = tc.remoteAddr
 			if tc.xff != "" {
@@ -243,7 +247,9 @@ func TestIpMatchesList(t *testing.T) {
 	}
 
 	for _, tc := range tests {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			ip := net.ParseIP(tc.ip)
 			require.NotNil(t, ip)
 			assert.Equal(t, tc.want, ipMatchesList(ip, tc.list))
