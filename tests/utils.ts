@@ -1,5 +1,13 @@
 import { expect, type Page, type Locator } from "@playwright/test";
 
+export async function login(page: Page, password = "secret"): Promise<void> {
+  const modal = page.getByTestId("login-modal");
+  await expectModalVisible(modal);
+  await modal.getByLabel("Administrator Password").fill(password);
+  await modal.getByRole("button", { name: "Login" }).click();
+  await expectModalHidden(modal);
+}
+
 export async function enableExperimental(page: Page): Promise<void> {
   await page.goto("/#/config");
 

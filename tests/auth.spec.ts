@@ -3,6 +3,7 @@ import { start, stop, baseUrl } from "./evcc";
 import {
   expectModalHidden,
   expectModalVisible,
+  login,
   openTopNavigation,
   expectTopNavigationClosed,
 } from "./utils";
@@ -49,19 +50,19 @@ test("login", async ({ page }) => {
   await page.goto("/");
 
   // login modal appears immediately when there is no auth cookie
-  const login = page.getByTestId("login-modal");
-  await expectModalVisible(login);
-  await expect(login.getByRole("heading", { name: "Authentication" })).toBeVisible();
+  const loginModal = page.getByTestId("login-modal");
+  await expectModalVisible(loginModal);
+  await expect(loginModal.getByRole("heading", { name: "Authentication" })).toBeVisible();
 
   // enter wrong password
-  await login.getByLabel("Administrator Password").fill("wrong");
-  await login.getByRole("button", { name: "Login" }).click();
-  await expect(login.getByText("Password is invalid.")).toBeVisible();
+  await loginModal.getByLabel("Administrator Password").fill("wrong");
+  await loginModal.getByRole("button", { name: "Login" }).click();
+  await expect(loginModal.getByText("Password is invalid.")).toBeVisible();
 
   // enter correct password
-  await login.getByLabel("Administrator Password").fill("secret");
-  await login.getByRole("button", { name: "Login" }).click();
-  await expectModalHidden(login);
+  await loginModal.getByLabel("Administrator Password").fill("secret");
+  await loginModal.getByRole("button", { name: "Login" }).click();
+  await expectModalHidden(loginModal);
 
   // after login the main ui is accessible without another login prompt
   await openTopNavigation(page);
@@ -76,8 +77,8 @@ test("http iframe hint", async ({ page }) => {
   await page.goto("/");
 
   // login modal appears immediately when there is no auth cookie
-  const login = page.getByTestId("login-modal");
-  await expectModalVisible(login);
+  const loginModal = page.getByTestId("login-modal");
+  await expectModalVisible(loginModal);
 
   // rewrite api call to simulate lost auth cookie (cookie set by login but
   // not readable due to iframe/cross-origin restrictions)
@@ -86,11 +87,11 @@ test("http iframe hint", async ({ page }) => {
   });
 
   // enter correct password
-  await login.getByLabel("Administrator Password").fill("secret");
-  await login.getByRole("button", { name: "Login" }).click();
+  await loginModal.getByLabel("Administrator Password").fill("secret");
+  await loginModal.getByRole("button", { name: "Login" }).click();
 
   // iframe hint visible (login-iframe-hint)
-  await expect(login.getByTestId("login-iframe-hint")).toBeVisible();
+  await expect(loginModal.getByTestId("login-iframe-hint")).toBeVisible();
 
   await stop();
 });
@@ -101,13 +102,8 @@ test("update password", async ({ page }) => {
   const oldPassword = "secret";
   const newPassword = "newsecret";
 
-  // login modal
   await page.goto("/#/config");
-  const loginModal = page.getByTestId("login-modal");
-  await expectModalVisible(loginModal);
-  await loginModal.getByLabel("Administrator Password").fill(oldPassword);
-  await loginModal.getByRole("button", { name: "Login" }).click();
-  await expectModalHidden(loginModal);
+  await login(page, oldPassword);
 
   // update password
   await page.getByTestId("generalconfig-password").getByRole("button", { name: "edit" }).click();
@@ -135,12 +131,8 @@ test("update password", async ({ page }) => {
   await expect(page.getByRole("button", { name: "Logout" })).not.toBeVisible();
   await page.getByRole("link", { name: "Configuration" }).click();
   await expectTopNavigationClosed(page);
-  const loginNew = page.getByTestId("login-modal");
-  await expectModalVisible(loginNew);
-  await loginNew.getByLabel("Administrator Password").fill(newPassword);
-  await loginNew.getByRole("button", { name: "Login" }).click();
+  await login(page, newPassword);
   await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible();
-  await expectModalHidden(loginNew);
 
   // revert to old password
   await page.getByTestId("generalconfig-password").getByRole("button", { name: "edit" }).click();

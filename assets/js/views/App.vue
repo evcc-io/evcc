@@ -126,9 +126,11 @@ export default defineComponent({
 				this.reconnect();
 			}
 		},
-		authLoggedIn(loggedIn) {
-			// connect after successful login if not already connected
-			if (loggedIn === true && !this.ws) {
+		authLoggedIn(loggedIn, prevLoggedIn) {
+			// connect after successful login (false → true); skip the null → true
+			// transition that happens during the initial updateAuthStatus() call
+			// inside connect() — the connection is already in progress there.
+			if (loggedIn === true && prevLoggedIn === false && !this.ws) {
 				this.connect();
 			}
 			// show login modal when auth is required (loggedIn was just determined

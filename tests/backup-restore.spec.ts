@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, baseUrl, restart } from "./evcc";
-import { openTopNavigation, expectModalVisible, expectModalHidden } from "./utils";
+import { openTopNavigation, expectModalVisible, expectModalHidden, login } from "./utils";
 import fs from "fs";
 import path from "path";
 
@@ -215,11 +215,7 @@ test.describe("backup and restore", async () => {
     await page.goto("/#/config");
 
     // login to access config
-    const loginModal = page.getByTestId("login-modal");
-    await expectModalVisible(loginModal);
-    await loginModal.getByLabel("Password").fill("secret");
-    await loginModal.getByRole("button", { name: "Login" }).click();
-    await expectModalHidden(loginModal);
+    await login(page);
 
     // open backup & restore modal
     await page.getByRole("button", { name: "Backup & Restore" }).click();
