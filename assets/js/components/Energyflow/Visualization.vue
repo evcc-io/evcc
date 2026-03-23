@@ -2,7 +2,7 @@
 	<div
 		data-testid="visualization"
 		class="visualization"
-		:class="{ 'visualization--ready': visualizationReady }"
+		:class="{ 'visualization--ready': transitionsEnabled }"
 	>
 		<div class="label-scale d-flex">
 			<div class="d-flex justify-content-start flex-grow-1">
@@ -140,7 +140,7 @@ export default defineComponent({
 		outPower: { type: Number, default: 0 },
 	},
 	data() {
-		return { width: 0 };
+		return { width: 0, transitionsEnabled: false };
 	},
 	computed: {
 		gridExport() {
@@ -189,6 +189,18 @@ export default defineComponent({
 		},
 	},
 
+	watch: {
+		visualizationReady(newVal: boolean) {
+			if (newVal && !this.transitionsEnabled) {
+				// ensure screen is drawn before enabling transitions
+				requestAnimationFrame(() => {
+					requestAnimationFrame(() => {
+						this.transitionsEnabled = true;
+					});
+				});
+			}
+		},
+	},
 	mounted() {
 		this.$nextTick(function () {
 			window.addEventListener("resize", this.updateElementWidth);
@@ -321,6 +333,8 @@ html.dark .grid-import {
 	right: -0.25rem;
 	color: var(--evcc-gray);
 	opacity: 0;
+}
+.visualization--ready .battery-hold {
 	transition-property: opacity;
 	transition-duration: var(--evcc-transition-medium);
 	transition-timing-function: linear;
