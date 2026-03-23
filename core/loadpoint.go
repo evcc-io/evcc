@@ -1413,11 +1413,11 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent, effectiveC
 		lp.publishTimer(phaseTimer, lp.GetEnableDelay(), phaseScale3p)
 	} else if !lp.phaseTimer.IsZero() {
 		// reset the timer if at least one condition is met:
-		//  - scaling is currently disallowed
+		//  - possible scaling direction is ambiguous
 		//  - the remaining delay duration already exceeds the upper limit
 		//  - the timer was put into elapsed state
 		// otherwise...
-		if !upscalable && !downscalable || lp.phaseTimer.After(now) || lp.phaseTimer.Equal(elapsed) {
+		if upscalable == downscalable || lp.phaseTimer.After(now) || lp.phaseTimer.Equal(elapsed) {
 			lp.resetPhaseTimer()
 		} else { // ...increase the remaining delay duration
 			lp.phaseTimer = lp.phaseTimer.Add(2 * now.Sub(phaseTimerLastEvaluation))
