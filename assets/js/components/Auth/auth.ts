@@ -86,6 +86,13 @@ export function openLoginModal(nextUrl: string | null = null, nextModal: Modal |
   modal.show();
 }
 
+// Show the login modal without overwriting nextUrl (used when the caller
+// does not know the intended post-login destination, e.g. App.vue on load).
+export function showLoginModal() {
+  const modal = Modal.getOrCreateInstance(document.getElementById("loginModal") as HTMLElement);
+  modal.show();
+}
+
 // show/hide password modal based on auth status
 watch(
   () => auth.configured,

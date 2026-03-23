@@ -48,12 +48,7 @@ test("login", async ({ page }) => {
   await start(BASIC, "password.sql", "");
   await page.goto("/");
 
-  // go to config
-  await openTopNavigation(page);
-  await page.getByRole("link", { name: "Configuration" }).click();
-  await expectTopNavigationClosed(page);
-
-  // login modal
+  // login modal appears immediately when there is no auth cookie
   const login = page.getByTestId("login-modal");
   await expectModalVisible(login);
   await expect(login.getByRole("heading", { name: "Authentication" })).toBeVisible();
@@ -67,6 +62,10 @@ test("login", async ({ page }) => {
   await login.getByLabel("Administrator Password").fill("secret");
   await login.getByRole("button", { name: "Login" }).click();
   await expectModalHidden(login);
+
+  // after login the main ui is accessible without another login prompt
+  await openTopNavigation(page);
+  await page.getByRole("link", { name: "Configuration" }).click();
   await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible();
 
   await stop();
@@ -76,17 +75,12 @@ test("http iframe hint", async ({ page }) => {
   await start(BASIC, "password.sql", "");
   await page.goto("/");
 
-  // go to config
-  await openTopNavigation(page);
-  await page.getByRole("link", { name: "Configuration" }).click();
-  await expectTopNavigationClosed(page);
-
-  // login modal
+  // login modal appears immediately when there is no auth cookie
   const login = page.getByTestId("login-modal");
   await expectModalVisible(login);
-  await expect(login.getByRole("heading", { name: "Authentication" })).toBeVisible();
 
-  // rewrite api call to simulate lost auth cookie
+  // rewrite api call to simulate lost auth cookie (cookie set by login but
+  // not readable due to iframe/cross-origin restrictions)
   await page.route("**/api/auth/status", (route) => {
     route.fulfill({ status: 200, body: "false" });
   });

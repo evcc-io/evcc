@@ -27,7 +27,7 @@ import LoginModal from "../components/Auth/LoginModal.vue";
 import HelpModal from "../components/HelpModal.vue";
 import collector from "../mixins/collector";
 import { defineComponent } from "vue";
-import authState, { updateAuthStatus, openLoginModal } from "../components/Auth/auth";
+import authState, { updateAuthStatus, showLoginModal } from "../components/Auth/auth";
 
 const WS_OPEN_TIMEOUT_MS = 5000;
 const WS_RETRY_PARAM = "wsRetry";
@@ -80,7 +80,10 @@ export default defineComponent({
 			return store.state.battery?.devices?.length;
 		},
 		showRoutes() {
-			return this.state.startupCompleted;
+			// show routes while WS is connected (normal) OR while we know auth is
+			// required but WS hasn't connected yet — so the navigation is rendered
+			// and the router guard can trigger the login modal.
+			return this.state.startupCompleted || this.authLoggedIn === false;
 		},
 		state() {
 			const { state, uiLoadpoints } = store;
@@ -93,7 +96,15 @@ export default defineComponent({
 			return this.collectProps(BatterySettingsModal, this.state);
 		},
 		offlineIndicatorProps() {
-			return this.collectProps(OfflineIndicator, this.state);
+			const props = this.collectProps(OfflineIndicator, this.state);
+			// While auth is pending the WS hasn't connected, so startupCompleted
+			// is absent from the store. Vue's Boolean prop coercion would turn
+			// that absent value into `false`, triggering the "starting" backdrop
+			// and covering the login modal. Suppress it explicitly.
+			if (this.authLoggedIn === false) {
+				props["startupCompleted"] = true;
+			}
+			return props;
 		},
 		forecastModalProps() {
 			return this.collectProps(ForecastModal, this.state);
@@ -120,9 +131,20 @@ export default defineComponent({
 			if (loggedIn === true && !this.ws) {
 				this.connect();
 			}
+			// show login modal when auth is required (loggedIn was just determined
+			// to be false by updateAuthStatus in connect())
+			if (loggedIn === false) {
+				showLoginModal();
+			}
 		},
 	},
 	mounted() {
+		// If the router guard already determined loggedIn=false before this
+		// component mounted (e.g. direct navigation to /#/config), the
+		// authLoggedIn watcher won't see the transition — show modal explicitly.
+		if (authState.loggedIn === false) {
+			showLoginModal();
+		}
 		this.connect();
 		document.addEventListener("visibilitychange", this.pageVisibilityChanged, false);
 		window.addEventListener("pageshow", this.pageShowHandler);
@@ -219,7 +241,6 @@ export default defineComponent({
 			// immediate 401-close that the browser surfaces as an error.
 			await updateAuthStatus();
 			if (authState.loggedIn === false) {
-				openLoginModal();
 				return;
 			}
 
