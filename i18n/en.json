@@ -1105,10 +1105,12 @@
     },
     "loadpoint": {
       "avgPrice": "⌀ Price",
+      "backToOverview": "Back to overview",
       "charged": "Charged",
       "co2": "⌀ CO₂",
       "duration": "Duration",
       "emission": "Emission",
+      "expandViewport": "Expand to full view",
       "fallbackName": "Charging point",
       "finished": "Finish time",
       "power": "Power",

@@ -1,104 +1,250 @@
 <template>
-	<div class="loadpoint d-flex flex-column pt-4 pb-2 px-3 px-sm-4 mx-2 mx-sm-0">
+	<Teleport to="body" :disabled="!loadpointViewportMaximized">
 		<div
-			class="d-block d-sm-flex justify-content-between align-items-center mb-3"
-			:class="expandLoadpointHeader ? 'd-lg-block d-xl-flex' : ''"
+			:class="
+				loadpointViewportMaximized ? 'loadpoint-viewport-overlay safe-area-inset' : 'loadpoint-inline-host'
+			"
 		>
-			<div class="d-flex justify-content-between align-items-center mb-3 text-truncate">
-				<h3 class="me-2 mb-0 text-truncate d-flex">
-					<VehicleIcon
-						v-if="chargerIcon"
-						:name="chargerIcon"
-						class="me-2 flex-shrink-0"
+			<div
+				class="loadpoint d-flex flex-column pt-4 pb-2 px-3 px-sm-4"
+				v-bind="loadpointRootAttrs"
+				:class="[
+					loadpointViewportMaximized
+						? 'loadpoint--viewport-expanded flex-grow-1 mx-0'
+						: 'mx-2 mx-sm-0',
+				]"
+			>
+				<!-- sm+: title, expand/collapse, mode, settings in one row -->
+				<div class="d-none d-sm-flex align-items-center gap-2 mb-3 flex-wrap loadpoint-header-wide">
+					<h3 class="mb-0 text-truncate d-flex min-w-0 loadpoint-header-wide__title">
+						<VehicleIcon
+							v-if="chargerIcon"
+							:name="chargerIcon"
+							class="me-2 flex-shrink-0"
+						/>
+						<div class="text-truncate">
+							{{ loadpointTitle }}
+						</div>
+					</h3>
+					<button
+						type="button"
+						class="btn btn-sm btn-outline-secondary border-0 p-2 evcc-gray flex-shrink-0 loadpoint-expand-btn"
+						:aria-label="
+							loadpointViewportMaximized
+								? $t('main.loadpoint.backToOverview')
+								: $t('main.loadpoint.expandViewport')
+						"
+						:data-testid="
+							loadpointViewportMaximized
+								? 'loadpoint-viewport-back'
+								: 'loadpoint-viewport-expand'
+						"
+						@click.stop="
+							loadpointViewportMaximized ? collapseViewport() : expandViewport()
+						"
+					>
+						<svg
+							v-if="loadpointViewportMaximized"
+							class="loadpoint-expand-icon"
+							width="18"
+							height="18"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							aria-hidden="true"
+							focusable="false"
+						>
+							<path d="M4 14h6v6" />
+							<path d="M20 10h-6V4" />
+							<path d="M14 10l7-7" />
+							<path d="M3 21l7-7" />
+						</svg>
+						<svg
+							v-else
+							class="loadpoint-expand-icon"
+							width="18"
+							height="18"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							aria-hidden="true"
+							focusable="false"
+						>
+							<path d="M8 3H5a2 2 0 0 0-2 2v3" />
+							<path d="M21 8V5a2 2 0 0 0-2-2h-3" />
+							<path d="M3 16v3a2 2 0 0 0 2 2h3" />
+							<path d="M16 21h3a2 2 0 0 0 2-2v-3" />
+						</svg>
+					</button>
+					<Mode
+						class="loadpoint-header-wide__mode flex-shrink-0"
+						v-bind="modeProps"
+						@updated="setTargetMode"
 					/>
-					<div class="text-truncate">
-						{{ loadpointTitle }}
-					</div>
-				</h3>
-				<LoadpointSettingsButton
-					:class="expandLoadpointHeader ? 'd-lg-block d-xl-none' : ''"
-					class="d-block d-sm-none"
-					@click="openSettingsModal"
-				/>
-			</div>
-			<div class="mb-3 d-flex align-items-center">
-				<Mode class="flex-grow-1" v-bind="modeProps" @updated="setTargetMode" />
-				<LoadpointSettingsButton
-					:id="id"
-					:class="expandLoadpointHeader ? 'd-lg-none d-xl-block' : ''"
-					class="d-none d-sm-block ms-2"
-					@click="openSettingsModal"
-				/>
-			</div>
-		</div>
-		<LoadpointSettingsModal
-			:id="id"
-			v-bind="settingsModal"
-			@maxcurrent-updated="setMaxCurrent"
-			@mincurrent-updated="setMinCurrent"
-			@phasesconfigured-updated="setPhasesConfigured"
-			@batteryboostlimit-updated="setBatteryBoostLimit"
-		/>
-
-		<div
-			v-if="remoteDisabled"
-			class="alert alert-warning my-4 py-2"
-			:class="`${remoteDisabled === 'hard' ? 'alert-danger' : 'alert-warning'}`"
-			role="alert"
-		>
-			{{
-				$t(
-					remoteDisabled === "hard"
-						? "main.loadpoint.remoteDisabledHard"
-						: "main.loadpoint.remoteDisabledSoft",
-					{ source: remoteDisabledSource }
-				)
-			}}
-		</div>
-
-		<div class="details d-flex align-items-start mb-2">
-			<div>
-				<div class="d-flex align-items-center">
-					<LabelAndValue
-						:label="$t('main.loadpoint.power')"
-						:value="chargePower"
-						:valueFmt="fmtPower"
-						class="mb-2 text-nowrap text-truncate-xs-only"
-						align="start"
+					<LoadpointSettingsButton
+						:id="id"
+						:class="expandLoadpointHeader ? 'd-lg-none d-xl-block' : ''"
+						class="flex-shrink-0"
+						@click="openSettingsModal"
 					/>
-					<shopicon-regular-lightning
-						class="text-evcc opacity-transiton"
-						:class="`opacity-${showChargingIndicator ? '100' : '0'}`"
-						size="m"
-					></shopicon-regular-lightning>
 				</div>
-				<Phases
-					v-bind="phasesProps"
-					class="opacity-transiton"
-					:class="`opacity-${showChargingIndicator ? '100' : '0'}`"
+				<!-- xs: stacked -->
+				<div class="d-flex d-sm-none flex-column mb-3">
+					<div class="d-flex justify-content-between align-items-center gap-2 mb-3">
+						<div class="d-flex align-items-center gap-2 min-w-0 flex-grow-1">
+							<h3 class="mb-0 text-truncate d-flex min-w-0 flex-grow-1">
+								<VehicleIcon
+									v-if="chargerIcon"
+									:name="chargerIcon"
+									class="me-2 flex-shrink-0"
+								/>
+								<div class="text-truncate">
+									{{ loadpointTitle }}
+								</div>
+							</h3>
+							<button
+								type="button"
+								class="btn btn-sm btn-outline-secondary border-0 p-2 evcc-gray flex-shrink-0 loadpoint-expand-btn"
+								:aria-label="
+									loadpointViewportMaximized
+										? $t('main.loadpoint.backToOverview')
+										: $t('main.loadpoint.expandViewport')
+								"
+								:data-testid="
+									loadpointViewportMaximized
+										? 'loadpoint-viewport-back-xs'
+										: 'loadpoint-viewport-expand-xs'
+								"
+								@click.stop="
+									loadpointViewportMaximized
+										? collapseViewport()
+										: expandViewport()
+								"
+							>
+								<svg
+									v-if="loadpointViewportMaximized"
+									class="loadpoint-expand-icon"
+									width="18"
+									height="18"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="2"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									aria-hidden="true"
+									focusable="false"
+								>
+									<path d="M4 14h6v6" />
+									<path d="M20 10h-6V4" />
+									<path d="M14 10l7-7" />
+									<path d="M3 21l7-7" />
+								</svg>
+								<svg
+									v-else
+									class="loadpoint-expand-icon"
+									width="18"
+									height="18"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="2"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									aria-hidden="true"
+									focusable="false"
+								>
+									<path d="M8 3H5a2 2 0 0 0-2 2v3" />
+									<path d="M21 8V5a2 2 0 0 0-2-2h-3" />
+									<path d="M3 16v3a2 2 0 0 0 2 2h3" />
+									<path d="M16 21h3a2 2 0 0 0 2-2v-3" />
+								</svg>
+							</button>
+						</div>
+						<LoadpointSettingsButton
+							:class="expandLoadpointHeader ? 'd-lg-block d-xl-none' : ''"
+							class="flex-shrink-0"
+							@click="openSettingsModal"
+						/>
+					</div>
+					<Mode v-bind="modeProps" @updated="setTargetMode" />
+				</div>
+				<LoadpointSettingsModal
+					:id="id"
+					v-bind="settingsModal"
+					@maxcurrent-updated="setMaxCurrent"
+					@mincurrent-updated="setMinCurrent"
+					@phasesconfigured-updated="setPhasesConfigured"
+					@batteryboostlimit-updated="setBatteryBoostLimit"
+				/>
+
+				<div
+					v-if="remoteDisabled"
+					class="alert alert-warning my-4 py-2"
+					:class="`${remoteDisabled === 'hard' ? 'alert-danger' : 'alert-warning'}`"
+					role="alert"
+				>
+					{{
+						$t(
+							remoteDisabled === "hard"
+								? "main.loadpoint.remoteDisabledHard"
+								: "main.loadpoint.remoteDisabledSoft",
+							{ source: remoteDisabledSource }
+						)
+					}}
+				</div>
+
+				<div class="details d-flex align-items-start mb-2">
+					<div>
+						<div class="d-flex align-items-center">
+							<LabelAndValue
+								:label="$t('main.loadpoint.power')"
+								:value="chargePower"
+								:valueFmt="fmtPower"
+								class="mb-2 text-nowrap text-truncate-xs-only"
+								align="start"
+							/>
+							<shopicon-regular-lightning
+								class="text-evcc opacity-transiton"
+								:class="`opacity-${showChargingIndicator ? '100' : '0'}`"
+								size="m"
+							></shopicon-regular-lightning>
+						</div>
+						<Phases
+							v-bind="phasesProps"
+							class="opacity-transiton"
+							:class="`opacity-${showChargingIndicator ? '100' : '0'}`"
+						/>
+					</div>
+					<LabelAndValue
+						v-show="socBasedCharging"
+						:label="$t('main.loadpoint.charged')"
+						:value="chargedEnergy"
+						:valueFmt="fmtEnergy"
+						align="center"
+					/>
+					<LoadpointSessionInfo v-bind="sessionInfoProps" />
+				</div>
+				<hr class="divider" />
+				<Vehicle
+					class="flex-grow-1 d-flex flex-column justify-content-end"
+					v-bind="vehicleProps"
+					@limit-soc-updated="setLimitSoc"
+					@limit-energy-updated="setLimitEnergy"
+					@change-vehicle="changeVehicle"
+					@remove-vehicle="removeVehicle"
+					@open-loadpoint-settings="openSettingsModal"
+					@batteryboost-updated="setBatteryBoost"
 				/>
 			</div>
-			<LabelAndValue
-				v-show="socBasedCharging"
-				:label="$t('main.loadpoint.charged')"
-				:value="chargedEnergy"
-				:valueFmt="fmtEnergy"
-				align="center"
-			/>
-			<LoadpointSessionInfo v-bind="sessionInfoProps" />
 		</div>
-		<hr class="divider" />
-		<Vehicle
-			class="flex-grow-1 d-flex flex-column justify-content-end"
-			v-bind="vehicleProps"
-			@limit-soc-updated="setLimitSoc"
-			@limit-energy-updated="setLimitEnergy"
-			@change-vehicle="changeVehicle"
-			@remove-vehicle="removeVehicle"
-			@open-loadpoint-settings="openSettingsModal"
-			@batteryboost-updated="setBatteryBoost"
-		/>
-	</div>
+	</Teleport>
 </template>
 
 <script lang="ts">
@@ -143,6 +289,7 @@ export default defineComponent({
 		VehicleIcon,
 	},
 	mixins: [formatter, collector],
+	inheritAttrs: false,
 	props: {
 		id: { type: String, required: true },
 		single: Boolean,
@@ -249,9 +396,14 @@ export default defineComponent({
 			pvRemainingInterpolated: this.pvRemaining,
 			chargeDurationInterpolated: this.chargeDuration,
 			chargeRemainingDurationInterpolated: this.chargeRemainingDuration,
+			loadpointViewportMaximized: false,
+			bodyOverflowBefore: null as string | null,
 		};
 	},
 	computed: {
+		loadpointRootAttrs() {
+			return this.$attrs;
+		},
 		expandLoadpointHeader() {
 			return this.multipleLoadpoints && !this.fullWidth;
 		},
@@ -327,6 +479,9 @@ export default defineComponent({
 		plannerForecast() {
 			return this.forecast?.planner;
 		},
+		shouldMaximizeFromRoute(): boolean {
+			return this.$route?.query?.maximize === this.id;
+		},
 	},
 	watch: {
 		phaseRemaining() {
@@ -341,13 +496,35 @@ export default defineComponent({
 		chargeRemainingDuration() {
 			this.chargeRemainingDurationInterpolated = this.chargeRemainingDuration;
 		},
+		loadpointViewportMaximized(expanded: boolean) {
+			if (expanded) {
+				this.bodyOverflowBefore = document.body.style.overflow;
+				document.body.style.overflow = "hidden";
+			} else {
+				document.body.style.overflow = this.bodyOverflowBefore ?? "";
+				this.bodyOverflowBefore = null;
+			}
+		},
+		shouldMaximizeFromRoute: {
+			handler(shouldMaximize: boolean) {
+				if (shouldMaximize && !this.loadpointViewportMaximized) {
+					this.loadpointViewportMaximized = true;
+				}
+			},
+			immediate: true,
+		},
 	},
 	mounted() {
 		this.tickerHandler = setInterval(this.tick, 1000);
+		window.addEventListener("keydown", this.handleViewportEscape);
 	},
 	unmounted() {
 		if (this.tickerHandler) {
 			clearInterval(this.tickerHandler);
+		}
+		window.removeEventListener("keydown", this.handleViewportEscape);
+		if (this.loadpointViewportMaximized) {
+			document.body.style.overflow = this.bodyOverflowBefore ?? "";
 		}
 	},
 	methods: {
@@ -410,6 +587,26 @@ export default defineComponent({
 			);
 			modal.show();
 		},
+		expandViewport() {
+			this.loadpointViewportMaximized = true;
+			const query = { ...this.$route.query, maximize: this.id };
+			this.$router.replace({ query });
+		},
+		collapseViewport() {
+			this.loadpointViewportMaximized = false;
+			const query = { ...this.$route.query };
+			delete query.maximize;
+			this.$router.replace({ query });
+		},
+		handleViewportEscape(ev: KeyboardEvent) {
+			if (ev.key !== "Escape" || !this.loadpointViewportMaximized) {
+				return;
+			}
+			if (document.querySelector(".modal.show")) {
+				return;
+			}
+			this.collapseViewport();
+		},
 	},
 });
 </script>
@@ -417,10 +614,44 @@ export default defineComponent({
 <style scoped>
 @import "../../../css/breakpoints.css";
 
+.loadpoint-inline-host {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	min-height: 0;
+}
+
+.loadpoint-viewport-overlay {
+	position: fixed;
+	inset: 0;
+	z-index: 1030;
+	display: flex;
+	flex-direction: column;
+	min-height: 100dvh;
+	min-height: 100vh;
+	background: var(--evcc-background);
+	overflow: hidden;
+}
+
 .loadpoint {
 	border-radius: 2rem;
 	color: var(--evcc-default-text);
 	background: var(--evcc-box);
+}
+
+.loadpoint--viewport-expanded {
+	min-height: 0;
+	flex: 1 1 auto;
+	overflow: auto;
+}
+
+.loadpoint-header-wide__title {
+	flex: 1 1 8rem;
+	min-width: 0;
+}
+
+.loadpoint-expand-icon {
+	display: block;
 }
 
 .details > div {
