@@ -4,7 +4,11 @@ import (
 	"net"
 	"net/http"
 	"strings"
+
+	"github.com/evcc-io/evcc/util"
 )
+
+var log = util.NewLogger("uilock")
 
 // EffectiveClientIP returns the client IP for access control. If trustedProxies is non-empty
 // and the direct TCP peer matches one of those CIDRs, the IP is taken from X-Forwarded-For
@@ -56,8 +60,9 @@ func ipInNets(ip net.IP, nets []*net.IPNet) bool {
 	return false
 }
 
-// ParseCIDRList parses CIDR strings; invalid entries are skipped.
-func ParseCIDRList(ss []string) ([]*net.IPNet, error) {
+// ParseCIDRList parses CIDR strings. Plain IPs are normalized to /32 or /128.
+// Invalid entries are skipped with a warning log.
+func ParseCIDRList(ss []string) []*net.IPNet {
 	var out []*net.IPNet
 	for _, s := range ss {
 		s = strings.TrimSpace(s)
@@ -75,9 +80,10 @@ func ParseCIDRList(ss []string) ([]*net.IPNet, error) {
 		}
 		_, n, err := net.ParseCIDR(s)
 		if err != nil {
-			return nil, err
+			log.WARN.Printf("ignoring invalid CIDR entry %q: %v", s, err)
+			continue
 		}
 		out = append(out, n)
 	}
-	return out, nil
+	return out
 }

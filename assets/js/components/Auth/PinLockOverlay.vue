@@ -134,6 +134,7 @@ export default {
 					this.$emit("unlocked");
 					return;
 				}
+				this.pin = "";
 				this.error = this.$t("main.uilock.wrongPin");
 			} finally {
 				this.submitting = false;
