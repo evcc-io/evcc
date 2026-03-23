@@ -199,7 +199,7 @@ func (c *OpenEVSE) ChargedEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return res.Wattsec / 3600 / 1e3, err
+	return res.SessionEnergy / 1e3, err
 }
 
 var _ api.ChargeTimer = (*OpenEVSE)(nil)
@@ -222,7 +222,7 @@ func (c *OpenEVSE) TotalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return res.Watthour / 1e3, err
+	return res.TotalEnergy, err
 }
 
 var _ api.Meter = (*OpenEVSE)(nil)
