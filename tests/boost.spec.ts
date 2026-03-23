@@ -20,15 +20,12 @@ test.describe("boost", async () => {
   test("activate and deactivate boost in solar mode", async ({ page }) => {
     await start(CONFIG_BATTERY);
     await page.goto("/");
-    const boostButton = page.getByTestId("battery-boost-button");
+    const lp = page.getByTestId("loadpoint").first();
+    const boostButton = lp.getByTestId("battery-boost-button");
     await expect(boostButton).not.toBeVisible();
-    await page
-      .getByTestId("mode")
-      .first()
-      .getByRole("button", { name: "Solar", exact: true })
-      .click();
-    await page.getByTestId("loadpoint-settings-button").nth(1).click();
-    const modal = page.getByTestId("loadpoint-settings-modal");
+    await lp.getByTestId("mode").getByRole("button", { name: "Solar", exact: true }).click();
+    await lp.getByTestId("loadpoint-settings-button").last().click();
+    const modal = page.getByTestId("loadpoint-settings-modal").first();
     await modal.getByTestId("battery-boost-limit").selectOption("20 %");
     await expect(modal.getByTestId("battery-boost")).toContainText(
       "Allow fast charging from home battery until it's drained to 20%."
@@ -48,14 +45,11 @@ test.describe("boost", async () => {
   test("battery too low for boost when limit above soc", async ({ page }) => {
     await start(CONFIG_BATTERY);
     await page.goto("/");
-    const boostButton = page.getByTestId("battery-boost-button");
-    await page
-      .getByTestId("mode")
-      .first()
-      .getByRole("button", { name: "Solar", exact: true })
-      .click();
-    await page.getByTestId("loadpoint-settings-button").nth(1).click();
-    const modal = page.getByTestId("loadpoint-settings-modal");
+    const lp = page.getByTestId("loadpoint").first();
+    const boostButton = lp.getByTestId("battery-boost-button");
+    await lp.getByTestId("mode").getByRole("button", { name: "Solar", exact: true }).click();
+    await lp.getByTestId("loadpoint-settings-button").last().click();
+    const modal = page.getByTestId("loadpoint-settings-modal").first();
     await modal.getByTestId("battery-boost-limit").selectOption("90 %");
     await expect(modal.getByTestId("battery-boost")).toContainText("drained to 90%");
     await page.waitForLoadState("networkidle");
@@ -68,22 +62,19 @@ test.describe("boost", async () => {
   test("boost button disabled in fast mode", async ({ page }) => {
     await start(CONFIG_BATTERY);
     await page.goto("/");
-    const boostButton = page.getByTestId("battery-boost-button");
+    const lp = page.getByTestId("loadpoint").first();
+    const boostButton = lp.getByTestId("battery-boost-button");
     // set a boost limit in solar mode so the boost button appears
-    await page
-      .getByTestId("mode")
-      .first()
-      .getByRole("button", { name: "Solar", exact: true })
-      .click();
-    await page.getByTestId("loadpoint-settings-button").nth(1).click();
-    const modal = page.getByTestId("loadpoint-settings-modal");
+    await lp.getByTestId("mode").getByRole("button", { name: "Solar", exact: true }).click();
+    await lp.getByTestId("loadpoint-settings-button").last().click();
+    const modal = page.getByTestId("loadpoint-settings-modal").first();
     await modal.getByTestId("battery-boost-limit").selectOption("20 %");
     await expect(modal.getByTestId("battery-boost")).toContainText("drained to 20%");
     await page.waitForLoadState("networkidle");
     await modal.getByLabel("Close").click();
     await expectModalHidden(modal);
     // switch to fast mode and verify boost button is disabled
-    await page.getByTestId("mode").first().getByRole("button", { name: "Fast" }).click();
+    await lp.getByTestId("mode").getByRole("button", { name: "Fast" }).click();
     await expect(boostButton).toBeDisabled();
   });
 
@@ -125,7 +116,7 @@ test.describe("boost", async () => {
   test("boost default for ui-created loadpoint", async ({ page }) => {
     await start(CONFIG_BATTERY);
 
-    // create a second loadpoint
+    // create a third loadpoint
     await page.goto("/#/config");
     await newLoadpoint(page, "New Charger");
     await addDemoCharger(page, undefined, ChargerStatus.Connected);
@@ -136,7 +127,7 @@ test.describe("boost", async () => {
     // restart evcc to apply new loadpoint
     await restart(CONFIG_BATTERY);
     await page.goto("/");
-    await expect(page.getByTestId("loadpoint")).toHaveCount(2);
+    await expect(page.getByTestId("loadpoint")).toHaveCount(3);
 
     const lp = page.getByTestId("loadpoint").last();
 
