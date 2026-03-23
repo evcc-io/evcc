@@ -47,6 +47,7 @@ import (
 	_ "github.com/evcc-io/evcc/util/service"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/templates"
+	"github.com/evcc-io/evcc/util/uilock"
 	"github.com/evcc-io/evcc/vehicle"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -66,6 +67,7 @@ var conf = globalconfig.All{
 		Host: "",
 		Port: 7070,
 	},
+	UILock: globalconfig.DefaultUILock(),
 	Ocpp: ocpp.Config{
 		Port: 8887,
 	},
@@ -739,6 +741,28 @@ func networkSettings(conf *globalconfig.Network) error {
 		return settings.Json(keys.Network, &conf)
 	}
 
+	return nil
+}
+
+// uilockSettings merges DB settings over YAML and applies optional YAML PIN bootstrap.
+func uilockSettings(conf *globalconfig.UILock) error {
+	yamlPin := conf.Pin
+	if settings.Exists(keys.UILock) {
+		var stored globalconfig.UILock
+		if err := settings.Json(keys.UILock, &stored); err != nil {
+			return err
+		}
+		*conf = stored
+	}
+	if yamlPin != "" {
+		mgr := uilock.NewManager()
+		if !mgr.PinConfigured() {
+			if err := mgr.SetPin(yamlPin); err != nil {
+				return err
+			}
+		}
+	}
+	conf.Pin = ""
 	return nil
 }
 

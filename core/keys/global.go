@@ -31,4 +31,5 @@ const (
 	DemoMode           = "demoMode"
 	AuthDisabled       = "authDisabled"
 	AuthProviders      = "authProviders"
+	UILock             = "uilock"
 )

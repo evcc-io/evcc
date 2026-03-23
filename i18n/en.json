@@ -790,6 +790,20 @@
       "label": "Title",
       "title": "Edit Title"
     },
+    "uilock": {
+      "confirmRemove": "Reset screen lock and delete the PIN?",
+      "descriptionEnabled": "Locks the interface after a period of inactivity. The PIN prompt only appears in the browser — API and WebSocket access is not affected.",
+      "descriptionIps": "IP addresses that will be prompted for the PIN (e.g. a kiosk display). One per line or comma-separated.",
+      "descriptionPin": "Leave empty to keep the current PIN.",
+      "descriptionTimeout": "Seconds of inactivity before the lock activates.",
+      "descriptionTrustedProxies": "CIDR ranges of trusted reverse proxies (e.g. 127.0.0.1/32). Used to determine the real client IP from X-Forwarded-For. Leave empty to ignore the header.",
+      "labelEnabled": "Screen lock",
+      "labelIps": "Locked IPs",
+      "labelPin": "PIN",
+      "labelTimeout": "Timeout (seconds)",
+      "labelTrustedProxies": "Trusted proxies",
+      "title": "Screen lock"
+    },
     "validation": {
       "failed": "failed",
       "label": "Status",
@@ -1218,6 +1232,12 @@
     "targetEnergy": {
       "label": "Limit",
       "noLimit": "none"
+    },
+    "uilock": {
+      "pinInput": "Enter PIN",
+      "title": "Locked",
+      "unlock": "OK",
+      "wrongPin": "Wrong PIN"
     },
     "vehicle": {
       "addVehicle": "Add vehicle",

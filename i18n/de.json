@@ -790,6 +790,20 @@
       "label": "Titel",
       "title": "Titel bearbeiten"
     },
+    "uilock": {
+      "confirmRemove": "Bildschirmsperre zurücksetzen und PIN löschen?",
+      "descriptionEnabled": "Sperrt die Oberfläche nach einer einstellbaren Zeit ohne Bedienung. Die PIN-Eingabe erscheint nur im Browser – API- und WebSocket-Zugriffe bleiben unberührt.",
+      "descriptionIps": "IP-Adressen, die zur PIN-Eingabe aufgefordert werden (z.\u00a0B. ein Kiosk-Display). Eine pro Zeile oder kommagetrennt.",
+      "descriptionPin": "Feld leer lassen, um die bestehende PIN beizubehalten.",
+      "descriptionTimeout": "Zeit ohne Bedienung in Sekunden, nach der die Sperre aktiv wird.",
+      "descriptionTrustedProxies": "CIDR-Bereiche vertrauenswürdiger Reverse-Proxys (z.\u00a0B. 127.0.0.1/32). Damit wird die echte Client-IP aus X-Forwarded-For ermittelt. Ohne Eintrag wird der Header ignoriert.",
+      "labelEnabled": "Bildschirmsperre",
+      "labelIps": "Gesperrte IPs",
+      "labelPin": "PIN",
+      "labelTimeout": "Timeout (Sekunden)",
+      "labelTrustedProxies": "Vertrauenswürdige Proxys",
+      "title": "Bildschirmsperre"
+    },
     "validation": {
       "failed": "fehlgeschlagen",
       "label": "Status",
@@ -1218,6 +1232,12 @@
     "targetEnergy": {
       "label": "Ladelimit",
       "noLimit": "keins"
+    },
+    "uilock": {
+      "pinInput": "PIN eingeben",
+      "title": "Gesperrt",
+      "unlock": "OK",
+      "wrongPin": "Falsche PIN"
     },
     "vehicle": {
       "addVehicle": "Fahrzeug hinzufügen",
