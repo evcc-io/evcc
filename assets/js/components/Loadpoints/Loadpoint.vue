@@ -160,6 +160,7 @@ export default defineComponent({
 		batteryBoostLimit: { type: Number, default: 100 },
 		batteryConfigured: Boolean,
 		batterySoc: Number,
+		batteryMode: String,
 
 		// session
 		sessionEnergy: Number,

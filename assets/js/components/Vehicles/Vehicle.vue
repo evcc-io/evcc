@@ -121,6 +121,7 @@ export default defineComponent({
 		batteryBoostAvailable: Boolean,
 		batteryBoostLimit: { type: Number, default: 100 },
 		batterySoc: Number,
+		batteryMode: String,
 		enabled: Boolean,
 		heating: Boolean,
 		id: [String, Number],

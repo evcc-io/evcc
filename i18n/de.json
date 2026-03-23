@@ -1128,6 +1128,7 @@
         "once": "Boost ist für diesen Ladevorgang aktiviert.",
         "stateActive": "Batterie Boost aktiv",
         "stateBelowLimit": "Batterie zu niedrig für Boost",
+        "stateHold": "Batterie gesperrt",
         "stateReady": "Batterie Boost bereit"
       },
       "batteryUsage": "Hausbatterie",
@@ -1237,6 +1238,7 @@
       "batteryBoostBelowLimit": "Batterie zu niedrig für Boost.",
       "batteryBoostDisabled": "Batterie Boost deaktiviert.",
       "batteryBoostEnabled": "Boost bis Batterie bei {limit}.",
+      "batteryBoostHold": "Batterie gesperrt. Boost nicht verfügbar.",
       "charging": "Ladevorgang aktiv …",
       "cheapEnergyCharging": "Günstige Energie verfügbar.",
       "cheapEnergyNextStart": "Günstige Energie in {duration}.",

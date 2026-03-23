@@ -1128,6 +1128,7 @@
         "once": "Boost active for this charging session.",
         "stateActive": "Battery boost active",
         "stateBelowLimit": "Battery too low for boost",
+        "stateHold": "Battery locked",
         "stateReady": "Battery boost ready"
       },
       "batteryUsage": "Home Battery",
@@ -1237,6 +1238,7 @@
       "batteryBoostBelowLimit": "Battery too low for boost.",
       "batteryBoostDisabled": "Battery boost disabled.",
       "batteryBoostEnabled": "Boost until battery at {limit}.",
+      "batteryBoostHold": "Battery locked. Boost not available.",
       "charging": "Charging…",
       "cheapEnergyCharging": "Cheap energy available.",
       "cheapEnergyNextStart": "Cheap energy in {duration}.",

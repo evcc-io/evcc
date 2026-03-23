@@ -1,6 +1,13 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
-import { expectModalHidden, newLoadpoint, addDemoCharger, ChargerStatus } from "./utils";
+import {
+  expectModalHidden,
+  expectModalVisible,
+  newLoadpoint,
+  addDemoCharger,
+  ChargerStatus,
+  openTopNavigation,
+} from "./utils";
 test.use({ baseURL: baseUrl() });
 
 const CONFIG_BATTERY = "battery-settings.evcc.yaml";
@@ -78,6 +85,41 @@ test.describe("boost", async () => {
     // switch to fast mode and verify boost button is disabled
     await page.getByTestId("mode").first().getByRole("button", { name: "Fast" }).click();
     await expect(boostButton).toBeDisabled();
+  });
+
+  test("boost button disabled when battery is on hold", async ({ page }) => {
+    await start(CONFIG_BATTERY);
+    await page.goto("/");
+
+    // LP1: set solar mode, configure boost limit
+    const lp1 = page.getByTestId("loadpoint").first();
+    await lp1.getByTestId("mode").getByRole("button", { name: "Solar", exact: true }).click();
+    await lp1.getByTestId("loadpoint-settings-button").last().click();
+    const modal = page.getByTestId("loadpoint-settings-modal").first();
+    await modal.getByTestId("battery-boost-limit").selectOption("0 %");
+    await modal.getByLabel("Close").click();
+    await expectModalHidden(modal);
+
+    // enable "Prevent discharge in fast mode"
+    await openTopNavigation(page);
+    await page.getByTestId("topnavigation-battery").click();
+    const batteryModal = page.getByTestId("battery-settings-modal");
+    await expectModalVisible(batteryModal);
+    await batteryModal.getByLabel("Prevent discharge in fast mode and planned charging.").check();
+    await page.getByRole("button", { name: "Close" }).click();
+    await expectModalHidden(batteryModal);
+
+    // LP2: switch to fast mode → triggers global battery hold
+    const lp2 = page.getByTestId("loadpoint").nth(1);
+    await lp2.getByTestId("mode").getByRole("button", { name: "Fast" }).click();
+
+    // LP1: boost button should show hold state
+    const boostButton = lp1.getByTestId("battery-boost-button");
+    await expect(boostButton).toHaveAttribute("aria-label", "Battery locked");
+
+    // clicking should not change state
+    await boostButton.click();
+    await expect(boostButton).toHaveAttribute("aria-label", "Battery locked");
   });
 
   test("boost default for ui-created loadpoint", async ({ page }) => {
