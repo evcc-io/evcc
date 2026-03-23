@@ -43,18 +43,16 @@ async function disconnect(page: Page) {
   await expect(page.getByTestId("vehicle-status")).toHaveText("Disconnected.");
 }
 
-async function verifySessionSoc(page: Page, startSoc: string, endSoc: string) {
+async function verifySessionSoc(page: Page, expectedRange: string) {
   await page.goto(`/#/sessions?year=${YEAR}&month=${MONTH}`);
   await expect(page.getByTestId("sessions-entry")).toHaveCount(1);
   await page.getByTestId("sessions-entry").click();
   const modal = page.getByTestId("session-details");
   await expectModalVisible(modal);
-  const socElement = modal.getByTestId("session-details-soc");
-  await expect(socElement).toContainText(startSoc);
-  await expect(socElement).toContainText(endSoc);
+  await expect(modal.getByTestId("session-details-soc")).toContainText(expectedRange);
 }
 
-test("session records soc range", async ({ page }) => {
+test("soc range", async ({ page }) => {
   // connect vehicle with 20% SoC
   await page.goto(simulatorUrl());
   await page.getByTestId("vehicle0").getByLabel("SoC").fill("20");
@@ -86,10 +84,10 @@ test("session records soc range", async ({ page }) => {
   await expect(page.getByTestId("current-soc")).toContainText("80");
 
   await disconnect(page);
-  await verifySessionSoc(page, "20%", "80%");
+  await verifySessionSoc(page, "20 – 80%");
 });
 
-test("session soc resets on vehicle switch", async ({ page }) => {
+test("soc reset on vehicle switch", async ({ page }) => {
   // connect golf at 20% SoC
   await page.goto(simulatorUrl());
   await page.getByTestId("vehicle0").getByLabel("SoC").fill("20");
@@ -136,5 +134,5 @@ test("session soc resets on vehicle switch", async ({ page }) => {
   await expect(page.getByTestId("current-soc")).toContainText("70");
 
   await disconnect(page);
-  await verifySessionSoc(page, "50%", "70%");
+  await verifySessionSoc(page, "50 – 70%");
 });
