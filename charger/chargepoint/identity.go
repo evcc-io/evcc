@@ -217,7 +217,7 @@ func deviceUDID(username string) string {
 	return uuid.NewSHA1(uuid.NameSpaceX500, []byte(username)).String()
 }
 
-// newDeviceData returns a stable iOS device fingerprint derived from the machine hostname.
+// newDeviceData returns a stable iOS device fingerprint derived from the username.
 func newDeviceData(username string) DeviceData {
 	return DeviceData{
 		AppID:              "com.coulomb.ChargePoint",

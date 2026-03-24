@@ -23,7 +23,11 @@ func (t *brotliTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 
 	// Clone request so we don't mutate caller's headers
 	r := req.Clone(req.Context())
-	r.Header.Set("Accept-Encoding", "br")
+	if existing := r.Header.Get("Accept-Encoding"); existing == "" {
+		r.Header.Set("Accept-Encoding", "br")
+	} else {
+		r.Header.Set("Accept-Encoding", existing+", br")
+	}
 
 	resp, err := base.RoundTrip(r)
 	if err != nil {
