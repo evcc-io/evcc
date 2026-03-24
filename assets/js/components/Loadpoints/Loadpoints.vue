@@ -241,6 +241,21 @@ export default defineComponent({
 	}
 }
 
+/* keep stacked cards on narrow desktop/laptop viewports */
+@media (max-width: 991.98px) and (hover: hover) and (pointer: fine) {
+	.carousel {
+		display: block;
+		overflow-x: visible;
+		scroll-snap-type: none;
+	}
+	.carousel > * {
+		min-width: 0;
+	}
+	.indicator {
+		display: none !important;
+	}
+}
+
 /* show truncated tiles on breakpoint sm,md */
 @media (min-width: 576px) and (max-width: 991.98px) {
 	.container--loadpoint {
