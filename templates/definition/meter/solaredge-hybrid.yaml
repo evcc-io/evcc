@@ -23,6 +23,8 @@ params:
   - preset: battery-params
   - name: maxdischargepower
     default: 5000
+  - name: curtaillimit
+  - name: feedinlimit
   - name: watchdog
     type: duration
     default: 60s
@@ -124,6 +126,8 @@ render: |
       address: 0xF001 # Active Power Limit (0-100 %)
       type: holding
       decode: uint16
+  curtaillimit: {{ .curtaillimit }} # % power limit when curtailed (0 = full shutdown)
+  feedinlimit: {{ .feedinlimit }} # % max power limit when not curtailed (e.g. 60 for 60 % of kWp)
   {{- end }}
   {{- if eq .usage "battery" }}
   power:

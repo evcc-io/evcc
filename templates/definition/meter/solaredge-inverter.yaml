@@ -16,8 +16,7 @@ params:
     id: 1
     port: 1502
   - name: curtaillimit
-    default: 0
-    advanced: true
+  - name: feedinlimit
   - name: timeout
 render: |
   type: custom
@@ -138,4 +137,5 @@ render: |
       type: holding
       decode: uint16
   curtaillimit: {{ .curtaillimit }} # % power limit when curtailed (0 = full shutdown)
+  feedinlimit: {{ .feedinlimit }} # % max power limit when not curtailed (e.g. 60 for 60 % of kWp)
   {{- end }}
