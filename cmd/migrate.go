@@ -80,6 +80,4 @@ func runMigrate(cmd *cobra.Command, args []string) {
 	// clear config table
 	result := db.Instance.Delete(&config.Config{}, "true")
 	log.INFO.Printf("  %d entries deleted", result.RowsAffected)
-	// wait for shutdown
-	<-shutdownDoneC()
 }

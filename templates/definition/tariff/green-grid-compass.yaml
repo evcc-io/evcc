@@ -1,21 +1,26 @@
 template: green-grid-compass
-deprecated: true
 products:
   - brand: Green Grid Compass
 requirements:
   description:
-    de: "Europäische CO₂-Intensitätsdaten von [greengrid-compass.eu](https://www.greengrid-compass.eu). Liefert Vorhersagen der nächsten Stunden und ist nach Registrierung kostenlos nutzbar."
-    en: "European CO₂ intensity data from [greengrid-compass.eu](https://www.greengrid-compass.eu). Provides forecasts for the next hours and is free of charge after registration."
+    de: |
+      Europäische CO₂-Intensitätsdaten von [greengrid-compass.eu](https://www.greengrid-compass.eu). Liefert Vorhersagen der nächsten Stunden und ist nach Registrierung kostenlos nutzbar.
+
+      Erstelle App nach der Anleitung auf [traxes.io](https://www.traxes.io/service/green-grid-compass/1.0.0/technical-documentation) und kopiere die Client ID und das Client Secret.
+    en: |
+      European CO₂ intensity data from [greengrid-compass.eu](https://www.greengrid-compass.eu). Provides forecasts for the next hours and is free to use after registration.
+
+      Create app according to the instructions on [traxes.io](https://www.traxes.io/service/green-grid-compass/1.0.0/technical-documentation) and copy the Client ID and Client Secret.
   evcc: ["skiptest"]
 group: co2
 countries: ["BE", "DE", "LU"]
 params:
   - name: apiKey
-    type: string
+    deprecated: true
+  - name: clientid
     required: true
-    help:
-      de: "Erstelle eine App in [api-portal.eco2grid.com](https://api-portal.eco2grid.com) und kopiere den Key"
-      en: "Create an app in [api-portal.eco2grid.com](https://api-portal.eco2grid.com) and copy the key"
+  - name: clientsecret
+    required: true
   - name: zone
     description:
       de: Zonencode
@@ -29,11 +34,17 @@ render: |
   tariff: co2
   forecast:
     source: http
-    uri: https://eco2grid.com/green-grid-compass/v2/forecast/hourly?zone_code={{ .zone }}&start={{ `{{ now | date "2006-01-02T15" }}` }}:00:00&end={{ `{{ addDate now 0 0 2 | date "2006-01-02T15" }}` }}:00:00&apikey={{ .apiKey }}
+    auth:
+      source: clientcredentials
+      clientid: {{ .clientid }}
+      clientsecret: {{ .clientsecret }}
+      tokenurl: https://signin.energy/am/oauth2/realms/root/realms/difesp/access_token
+      scopes: [esp]
+    uri: https://explore.traxes.io/greengrid-compass/v1/co2-intensity-forecast?zone={{ .zone }}&start={{ `{{ now | date "2006-01-02T" }}` }}00:00:00Z&end={{ `{{ addDate now 0 0 5 | date "2006-01-02T" }}` }}00:00:00Z&time-resolution=hourly&calculation-type=production&emission-type=operational&forecast-type=actual
     jq: |
-      .zone_data | map({ 
-        "start": (.interval + "+02:00"),
-        "end": (.interval + "+02:00" | strptime("%Y-%m-%dT%H:%M:%S%z") | mktime + 3600 | strftime("%FT%TZ")),
-        "value": .consumption_co2_intensity 
+      .measurements[0].measurementValues |  map({ 
+        "start": .timestamp,
+        "end": (.timestamp | strptime("%Y-%m-%dT%H:%M:%SZ") | mktime + 3600 | strftime("%FT%TZ")),
+        "value": .value
       }) | tostring
     cache: 1h

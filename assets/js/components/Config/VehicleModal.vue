@@ -1,7 +1,7 @@
 <template>
 	<DeviceModalBase
 		:id="id"
-		modal-id="vehicleModal"
+		name="vehicle"
 		device-type="vehicle"
 		:is-sponsor="isSponsor"
 		:modal-title="$t(`config.vehicle.${isNew ? 'titleAdd' : 'titleEdit'}`)"
@@ -140,6 +140,7 @@
 					property="identifiers"
 					size="w-100"
 					class="me-2"
+					:rows="4"
 				/>
 			</FormRow>
 		</template>
@@ -156,6 +157,7 @@ import { ConfigType } from "@/types/evcc";
 import { customTemplateOption, type TemplateGroup } from "./DeviceModal/TemplateSelector.vue";
 import type { Product, ApiData, DeviceValues, TemplateParam } from "./DeviceModal";
 import defaultVehicleYaml from "./defaultYaml/vehicle.yaml?raw";
+import { getModal } from "@/configModal";
 
 const initialValues = {
 	type: ConfigType.Template,
@@ -183,7 +185,6 @@ export default defineComponent({
 		DeviceModalBase,
 	},
 	props: {
-		id: Number,
 		isSponsor: Boolean,
 	},
 	emits: ["vehicle-changed"],
@@ -193,6 +194,9 @@ export default defineComponent({
 		};
 	},
 	computed: {
+		id(): number | undefined {
+			return getModal("vehicle")?.id;
+		},
 		isNew(): boolean {
 			return this.id === undefined;
 		},

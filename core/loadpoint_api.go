@@ -356,6 +356,9 @@ func (lp *Loadpoint) getPlanEnergy() (time.Time, float64) {
 
 // setPlanEnergy sets plan target energy (no mutex)
 func (lp *Loadpoint) setPlanEnergy(finishAt time.Time, energy float64) {
+	// clear locked goal when energy plan changes
+	lp.clearPlanLock()
+
 	lp.planEnergy = energy
 	lp.publish(keys.PlanEnergy, energy)
 	lp.settings.SetFloat(keys.PlanEnergy, energy)
@@ -402,8 +405,9 @@ func (lp *Loadpoint) setPlanStrategy(strategy api.PlanStrategy) error {
 	}
 
 	lp.planStrategy = strategy
-	lp.publish(keys.PlanPrecondition, int64(strategy.Precondition.Seconds()))
-	lp.publish(keys.PlanContinuous, strategy.Continuous)
+	lp.publish(keys.PlanStrategy, strategy)
+
+	lp.publish(keys.EffectivePlanStrategy, lp.getEffectivePlanStrategy())
 
 	lp.requestUpdate()
 
@@ -612,6 +616,27 @@ func (lp *Loadpoint) SetBatteryBoost(enable bool) error {
 	return nil
 }
 
+// GetBatteryBoostLimit returns the battery boost soc limit
+func (lp *Loadpoint) GetBatteryBoostLimit() int {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.batteryBoostLimit
+}
+
+// SetBatteryBoostLimit sets the battery boost soc limit
+func (lp *Loadpoint) SetBatteryBoostLimit(limit int) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	lp.log.DEBUG.Println("set battery boost limit:", limit)
+
+	if lp.batteryBoostLimit != limit {
+		lp.batteryBoostLimit = limit
+		lp.settings.SetInt(keys.BatteryBoostLimit, int64(limit))
+		lp.publish(keys.BatteryBoostLimit, limit)
+	}
+}
+
 // HasChargeMeter determines if a physical charge meter is attached
 func (lp *Loadpoint) HasChargeMeter() bool {
 	_, isWrapped := lp.chargeMeter.(*wrapper.ChargeMeter)
@@ -629,7 +654,7 @@ func (lp *Loadpoint) GetChargePower() float64 {
 func (lp *Loadpoint) GetChargePowerFlexibility(rates api.Rates) float64 {
 	mode := lp.GetMode()
 	if mode == api.ModeNow || !lp.charging() || lp.minSocNotReached() ||
-		lp.smartLimitActive(lp.GetSmartCostLimit(), rates, true) {
+		lp.planActive || lp.smartLimitActive(lp.GetSmartCostLimit(), rates, true) {
 		return 0
 	}
 

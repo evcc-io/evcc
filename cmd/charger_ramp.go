@@ -21,6 +21,7 @@ var chargerRampCmd = &cobra.Command{
 
 func init() {
 	chargerCmd.AddCommand(chargerRampCmd)
+	withCustomTemplate(chargerRampCmd)
 
 	chargerRampCmd.Flags().StringP(flagDigits, "", "0", "fractional digits (0..2)")
 	chargerRampCmd.Flags().StringP(flagDelay, "", "1s", "ramp delay")
@@ -97,7 +98,4 @@ func runChargerRamp(cmd *cobra.Command, args []string) {
 		}
 		ramp(v, digits, delay)
 	}
-
-	// wait for shutdown
-	<-shutdownDoneC()
 }

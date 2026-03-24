@@ -121,6 +121,8 @@ type API interface {
 	GetPlanEnergy() (time.Time, float64)
 	// SetPlanEnergy sets the charge plan energy
 	SetPlanEnergy(time.Time, float64) error
+	// ClearPlanLock clears the locked plan goal
+	ClearPlanLock()
 	// GetPlanGoal returns the plan goal and if the goal is soc based
 	GetPlanGoal() (float64, bool)
 	// GetPlanRequiredDuration returns required duration of plan to reach the goal from current state
@@ -165,6 +167,10 @@ type API interface {
 	GetBatteryBoost() int
 	// SetBatteryBoost sets the battery boost
 	SetBatteryBoost(enable bool) error
+	// GetBatteryBoostLimit returns the battery boost soc limit
+	GetBatteryBoostLimit() int
+	// SetBatteryBoostLimit sets the battery boost soc limit
+	SetBatteryBoostLimit(int)
 
 	//
 	// smart grid charging

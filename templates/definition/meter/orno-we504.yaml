@@ -2,7 +2,7 @@ template: orno-we504
 products:
   - brand: ORNO
     description:
-      generic: WE-504
+      generic: OR-WE-504
 params:
   - name: usage
     choice: ["pv", "charge"]
@@ -12,5 +12,5 @@ render: |
   type: mbmd
   {{- include "modbus" . }}
   model: orno1p504
-  power: {{ if eq .usage "pv" }}-{{ end }}Power
+  power: Power
   energy: Sum

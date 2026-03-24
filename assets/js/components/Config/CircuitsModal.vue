@@ -1,13 +1,12 @@
 <template>
 	<YamlModal
-		id="circuitsModal"
+		name="circuits"
 		:title="$t('config.circuits.title')"
 		:description="$t('config.circuits.description')"
 		docs="/docs/features/loadmanagement"
 		:defaultYaml="defaultYaml"
 		removeKey="circuits"
 		endpoint="/config/circuits"
-		data-testid="circuits-modal"
 		@changed="$emit('changed')"
 	>
 		<template #extra>

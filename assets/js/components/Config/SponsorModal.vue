@@ -1,12 +1,11 @@
 <template>
 	<JsonModal
-		id="sponsorModal"
+		name="sponsor"
 		:title="`${$t('config.sponsor.title')} 💚`"
 		:description="$t('config.sponsor.description')"
 		:error-message="$t('config.sponsor.error')"
 		endpoint="/config/sponsortoken"
 		:transform-read-values="transformReadValues"
-		data-testid="sponsor-modal"
 		size="lg"
 		:no-buttons="notUiEditable"
 		:disable-remove="!hasUiToken"
@@ -113,7 +112,7 @@ export default {
 			return this.sponsor?.status?.token;
 		},
 		fromYaml() {
-			return this.sponsor?.fromYaml;
+			return !!this.sponsor?.yamlSource;
 		},
 		name() {
 			return this.sponsor?.status?.name || "";

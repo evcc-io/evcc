@@ -25,9 +25,8 @@ func createSignature(method, path string, params url.Values, body io.Reader) (st
 			return "", "", "", err
 		}
 
-		hash := md5.New()
-		hash.Write(bytes)
-		md5Hash = base64.StdEncoding.EncodeToString(hash.Sum(nil))
+		hash := md5.Sum(bytes)
+		md5Hash = base64.StdEncoding.EncodeToString(hash[:])
 	}
 
 	payload := fmt.Sprintf(`application/json;responseformat=3

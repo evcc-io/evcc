@@ -3,7 +3,6 @@ products:
   - brand: SMA
     description:
       generic: Sunny Home Manager 2.0
-capabilities: ["smahems"]
 requirements:
   evcc: ["skiptest"]
 params:

@@ -29,7 +29,7 @@ func init() {
 	registry.Add("e3dc-rscp", NewE3dcFromConfig)
 }
 
-//go:generate go tool decorate -f decorateE3dc -b *E3dc -r api.Meter -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64" -t "api.BatteryController,SetBatteryMode,func(api.BatteryMode) error" -t "api.BatterySocLimiter,GetSocLimits,func() (float64, float64)" -t "api.BatteryPowerLimiter,GetPowerLimits,func() (float64, float64)" -t "api.MaxACPowerGetter,MaxACPower,func() float64"
+//go:generate go tool decorate -f decorateE3dc -b *E3dc -r api.Meter -t api.Battery,api.BatteryCapacity,api.BatteryController,api.BatterySocLimiter,api.BatteryPowerLimiter,api.MaxACPowerGetter
 
 func NewE3dcFromConfig(other map[string]any) (api.Meter, error) {
 	cc := struct {

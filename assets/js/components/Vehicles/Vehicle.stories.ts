@@ -10,8 +10,10 @@ const baseState = {
     features: [],
     name: "",
     repeatingPlans: [],
-    planPrecondition: 0,
-    planContinuous: false,
+    planStrategy: {
+      continuous: false,
+      precondition: 0,
+    },
   },
   enabled: false,
   connected: true,
@@ -125,6 +127,13 @@ OfflineVehicleWithTarget.args = {
     features: ["Offline"],
   },
   mode: CHARGE_MODE.PV,
+};
+
+export const WaitingForAuthorization = Template.bind({});
+WaitingForAuthorization.args = {
+  ...baseState,
+  enabled: true,
+  chargerStatusReason: "waitingforauthorization",
 };
 
 export const VehicleLimit = Template.bind({});

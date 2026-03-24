@@ -41,7 +41,7 @@ func init() {
 
 // https://openwb.de/main/wp-content/uploads/2023/10/ModbusTCP-openWB-series2-Pro-1.pdf
 
-//go:generate go tool decorate -f decorateOpenWB20 -b *OpenWB20 -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.Identifier,Identify,func() (string, error)"
+//go:generate go tool decorate -f decorateOpenWB20 -b *OpenWB20 -r api.Charger -t api.PhaseSwitcher,api.Identifier
 
 // NewOpenWB20FromConfig creates a OpenWB20 charger from generic config
 func NewOpenWB20FromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {

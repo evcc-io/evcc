@@ -43,7 +43,4 @@ func runPasswordSet(cmd *cobra.Command, args []string) {
 	} else {
 		auth.New().SetAdminPassword(password)
 	}
-
-	// wait for shutdown
-	<-shutdownDoneC()
 }

@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/server/db"
+	"github.com/evcc-io/evcc/tariff"
+	"gorm.io/gorm"
 )
 
 type meter struct {
@@ -22,6 +24,12 @@ type entity struct {
 }
 
 var ErrIncomplete = errors.New("meter profile incomplete")
+
+func init() {
+	db.Register(func(_ *gorm.DB) error {
+		return SetupSchema()
+	})
+}
 
 // SetupSchema is used for testing
 func SetupSchema() error {
@@ -116,6 +124,7 @@ func importProfile(entity entity, from time.Time) (*[96]float64, error) {
 	}
 	defer rows.Close()
 
+	var prev time.Time
 	res := make([]float64, 0, 96)
 
 	for rows.Next() {
@@ -125,6 +134,12 @@ func importProfile(entity entity, from time.Time) (*[96]float64, error) {
 		if err := rows.Scan(&ts, &val); err != nil {
 			return nil, err
 		}
+
+		// interpolate single missing value, maybe due to regular restarts?
+		if time.Time(ts).Sub(prev) == 2*tariff.SlotDuration {
+			res = append(res, (val+res[len(res)-1])/2)
+		}
+		prev = time.Time(ts)
 
 		res = append(res, val)
 	}
@@ -138,9 +153,4 @@ func importProfile(entity entity, from time.Time) (*[96]float64, error) {
 	}
 
 	return (*[96]float64)(res), nil
-}
-
-func SlotNum(ts time.Time) int {
-	ts = ts.Local()
-	return ts.Hour()*4 + ts.Minute()/15
 }

@@ -113,7 +113,8 @@ func TestPublishSocAndRangeVehiclesAndChargers(t *testing.T) {
 		charger  api.Charger
 		vehicle  api.Vehicle
 		soc      float64
-		socBased bool
+		socBased bool // soc based planning
+		socPoll  bool // may poll vehicle
 	}{
 		{
 			name:     "offline vehicle",
@@ -121,6 +122,7 @@ func TestPublishSocAndRangeVehiclesAndChargers(t *testing.T) {
 			vehicle:  offlineVehicle,
 			soc:      0.0,
 			socBased: false,
+			socPoll:  false,
 		},
 		{
 			name:     "regular vehicle",
@@ -128,6 +130,7 @@ func TestPublishSocAndRangeVehiclesAndChargers(t *testing.T) {
 			vehicle:  vehicle,
 			soc:      socVehicle,
 			socBased: true,
+			socPoll:  true,
 		},
 		{
 			name:     "offline vehicle with iso charger",
@@ -135,6 +138,7 @@ func TestPublishSocAndRangeVehiclesAndChargers(t *testing.T) {
 			vehicle:  offlineVehicle,
 			soc:      socCharger,
 			socBased: true,
+			socPoll:  false,
 		},
 		{
 			name:     "regular vehicle with iso charger",
@@ -142,6 +146,7 @@ func TestPublishSocAndRangeVehiclesAndChargers(t *testing.T) {
 			vehicle:  vehicle,
 			soc:      socCharger,
 			socBased: true,
+			socPoll:  true,
 		},
 	}
 
@@ -167,7 +172,7 @@ func TestPublishSocAndRangeVehiclesAndChargers(t *testing.T) {
 		attachChannels(lp, x, y, z)
 
 		test := func(t *testing.T) {
-			assert.True(t, lp.vehicleSocPollAllowed())
+			assert.Equal(t, tc.socPoll, lp.vehicleSocPollAllowed())
 			lp.publishSocAndRange()
 			assert.Equal(t, tc.soc, lp.vehicleSoc)
 

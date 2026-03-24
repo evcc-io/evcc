@@ -1,9 +1,27 @@
 {
+  "authProviders": {
+    "authCode": "Codi d'autenticació",
+    "authCodeHelp": "Copieu aquest codi i utilitzeu-lo al pas següent. Vàlid durant {duration}.",
+    "authorizationFailed": "L'autorització ha fallat",
+    "authorizationRequired": "Cal autorització",
+    "authorizationSuccessful": "Autorització reeixida",
+    "buttonConnect": "Connectar a {provider}",
+    "buttonDisconnect": "Desconnectar",
+    "confirmLogout": "Estàs segur que vols desconnectar {title}?",
+    "connect": "connectar",
+    "disconnect": "desconnectar",
+    "loggedOut": "Sortida reeixida",
+    "logoutFailed": "Sortida de la sessió fallida",
+    "modalDescriptionLogin": "Completeu el procés d'autorització per establir la connexió amb {provider}.",
+    "modalDescriptionLogout": "Això desconnectarà el vostre compte de {provider} i suprimirà l'accés a les seves dades.",
+    "success": "{title} ja està connectat i a punt per utilitzar.",
+    "successCloseModal": "Ara ja pots tancar aquest diàleg."
+  },
   "batterySettings": {
     "batteryLevel": "Nivell de bateria",
     "bufferStart": {
       "full": "quan gairebé ple {soc}.",
-      "never": "només amb prous excedents"
+      "never": "només amb prous excedents."
     },
     "capacity": "{energy} de {total}",
     "disclaimerHint": "Nota:",

@@ -18,20 +18,11 @@ func init() {
 
 //evcc:function decorateMeter
 //evcc:basetype api.Meter
-//evcc:type api.MeterEnergy,TotalEnergy,func() (float64, error)
-//evcc:type api.PhaseCurrents,Currents,func() (float64, float64, float64, error)
-//evcc:type api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)
-//evcc:type api.PhasePowers,Powers,func() (float64, float64, float64, error)
-//evcc:type api.MaxACPowerGetter,MaxACPower,func() float64
+//evcc:types api.MeterEnergy,api.PhaseCurrents,api.PhaseVoltages,api.PhasePowers,api.MaxACPowerGetter
 
 //evcc:function decorateMeterBattery
 //evcc:basetype api.Meter
-//evcc:type api.MeterEnergy,TotalEnergy,func() (float64, error)
-//evcc:type api.Battery,Soc,func() (float64, error)
-//evcc:type api.BatteryCapacity,Capacity,func() float64
-//evcc:type api.BatterySocLimiter,GetSocLimits,func() (float64, float64)
-//evcc:type api.BatteryPowerLimiter,GetPowerLimits,func() (float64, float64)
-//evcc:type api.BatteryController,SetBatteryMode,func(api.BatteryMode) error
+//evcc:types api.MeterEnergy,api.Battery,api.BatteryCapacity,api.BatterySocLimiter,api.BatteryPowerLimiter,api.BatteryController
 
 // NewConfigurableFromConfig creates api.Meter from config
 func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {

@@ -1,0 +1,19 @@
+template: nexblue
+products:
+  - brand: Nexblue
+    description:
+      generic: Edge 2
+requirements:
+  evcc: ["sponsorship"]
+params:
+  - name: user
+  - name: password
+  - name: serial
+    help:
+      de: Seriennummer der Wallbox (wird automatisch erkannt, wenn nur eine Wallbox im Account vorhanden ist)
+      en: Charger serial number (auto-detected if only one charger in account)
+render: |
+  type: nexblue
+  user: {{ .user }}
+  password: {{ .password }}
+  serial: {{ .serial }}

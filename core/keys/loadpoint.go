@@ -2,26 +2,28 @@ package keys
 
 const (
 	// loadpoint settings
-	Title            = "title"       // loadpoint title
-	Mode             = "mode"        // charge mode
-	DefaultMode      = "defaultMode" // default charge mode
-	Charger          = "charger"     // charger ref
-	Meter            = "meter"       // meter ref
-	Circuit          = "circuit"     // circuit ref
-	DefaultVehicle   = "vehicle"     // default vehicle ref
-	Priority         = "priority"    // priority
-	MinCurrent       = "minCurrent"  // min current
-	MaxCurrent       = "maxCurrent"  // max current
-	MinSoc           = "minSoc"      // min soc
-	LimitSoc         = "limitSoc"    // limit soc
-	LimitEnergy      = "limitEnergy" // limit energy
-	Soc              = "soc"
-	Thresholds       = "thresholds"
-	EnableThreshold  = "enableThreshold"
-	DisableThreshold = "disableThreshold"
-	EnableDelay      = "enableDelay"
-	DisableDelay     = "disableDelay"
-	BatteryBoost     = "batteryBoost"
+	Title             = "title"            // loadpoint title
+	Mode              = "mode"             // charge mode
+	DefaultMode       = "defaultMode"      // default charge mode
+	Charger           = "charger"          // charger ref
+	Meter             = "meter"            // meter ref
+	Circuit           = "circuit"          // circuit ref
+	DefaultVehicle    = "vehicle"          // default vehicle ref
+	Priority          = "priority"         // priority
+	MinCurrent        = "minCurrent"       // min current
+	MaxCurrent        = "maxCurrent"       // max current
+	MinSoc            = "minSoc"           // min soc
+	MinSocNotReached  = "minSocNotReached" // min soc not reached
+	LimitSoc          = "limitSoc"         // limit soc
+	LimitEnergy       = "limitEnergy"      // limit energy
+	Soc               = "soc"
+	Thresholds        = "thresholds"
+	EnableThreshold   = "enableThreshold"
+	DisableThreshold  = "disableThreshold"
+	EnableDelay       = "enableDelay"
+	DisableDelay      = "disableDelay"
+	BatteryBoost      = "batteryBoost"
+	BatteryBoostLimit = "batteryBoostLimit"
 
 	PhasesConfigured = "phasesConfigured" // desired phase mode (0/1/3, 0 = automatic), user selection
 	PhasesActive     = "phasesActive"     // expectedly active phases, taking vehicle into account (1/2/3)
@@ -58,10 +60,8 @@ const (
 	EffectiveMinCurrent = "effectiveMinCurrent" // effective min current
 	EffectiveMaxCurrent = "effectiveMaxCurrent" // effective max current
 
-	EffectiveLimitSoc         = "effectiveLimitSoc"         // effective limit soc
-	EffectivePlanStrategy     = "effectivePlanStrategy"     // effective plan strategy (deprecated, use individual fields)
-	EffectivePlanPrecondition = "effectivePlanPrecondition" // effective plan precondition duration
-	EffectivePlanContinuous   = "effectivePlanContinuous"   // effective plan continuous planning
+	EffectiveLimitSoc     = "effectiveLimitSoc"     // effective limit soc
+	EffectivePlanStrategy = "effectivePlanStrategy" // effective plan strategy
 
 	// measurements
 	ChargePower       = "chargePower"       // charge power
@@ -86,8 +86,6 @@ const (
 	PlanProjectedEnd   = "planProjectedEnd"   // charge plan ends (end of last slot)
 	PlanOverrun        = "planOverrun"        // charge plan goal not reachable in time
 	PlanStrategy       = "planStrategy"       // charge plan strategy (precondition, continuous)
-	PlanPrecondition   = "planPrecondition"   // charge plan precondition duration
-	PlanContinuous     = "planContinuous"     // charge plan continuous planning
 
 	// repeating plans
 	RepeatingPlans = "repeatingPlans" // key to access all repeating plans in db

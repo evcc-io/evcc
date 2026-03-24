@@ -21,7 +21,7 @@ func init() {
 	registry.Add("tasmota", NewTasmotaFromConfig)
 }
 
-//go:generate go tool decorate -f decorateTasmota -b *Tasmota -r api.Meter -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)"
+//go:generate go tool decorate -f decorateTasmota -b *Tasmota -r api.Meter -t api.PhaseVoltages,api.PhaseCurrents,api.PhasePowers
 
 // NewTasmotaFromConfig creates a Tasmota meter from generic config
 func NewTasmotaFromConfig(other map[string]any) (api.Meter, error) {
@@ -56,13 +56,19 @@ func NewTasmota(uri, user, password, usage string, channels []int, cache time.Du
 		usage: usage,
 	}
 
-	var currents, voltages func() (float64, float64, float64, error)
-	if usage != "grid" && len(channels) == 3 {
-		currents = c.currents
-		voltages = c.voltages
+	// check for SML readings
+	var hasPhases bool
+	if len(channels) == 1 {
+		if l1, l2, l3, err := c.conn.Voltages(); err == nil && l1*l2*l3 > 0 {
+			hasPhases = true
+		}
 	}
 
-	return decorateTasmota(c, voltages, currents), nil
+	if hasPhases || len(channels) == 3 {
+		return decorateTasmota(c, c.voltages, c.currents, c.powers), nil
+	}
+
+	return c, nil
 }
 
 var _ api.Meter = (*Tasmota)(nil)
@@ -87,12 +93,17 @@ func (c *Tasmota) TotalEnergy() (float64, error) {
 	return c.conn.TotalEnergy()
 }
 
-// currents implements the api.PhaseCurrents interface
-func (c *Tasmota) currents() (float64, float64, float64, error) {
-	return c.conn.Currents()
+// powers implements the api.PhasePowers interface
+func (c *Tasmota) powers() (float64, float64, float64, error) {
+	return c.conn.Powers()
 }
 
 // voltages implements the api.PhaseVoltages interface
 func (c *Tasmota) voltages() (float64, float64, float64, error) {
 	return c.conn.Voltages()
+}
+
+// currents implements the api.PhaseCurrents interface
+func (c *Tasmota) currents() (float64, float64, float64, error) {
+	return c.conn.Currents()
 }

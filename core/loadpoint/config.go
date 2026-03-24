@@ -28,6 +28,7 @@ type DynamicConfig struct {
 	PlanEnergy               float64   `json:"planEnergy"`
 	PlanTime                 time.Time `json:"planTime"`
 	PlanPrecondition_        int64     `json:"planPrecondition" mapstructure:"planPrecondition"` // TODO deprecated, keep for compatibility
+	BatteryBoostLimit        int       `json:"batteryBoostLimit"`
 	LimitEnergy              float64   `json:"limitEnergy"`
 	LimitSoc                 int       `json:"limitSoc"`
 
@@ -43,6 +44,7 @@ func SplitConfig(payload map[string]any) (DynamicConfig, map[string]any, error) 
 		DynamicConfig `mapstructure:",squash"`
 		Other         map[string]any `mapstructure:",remain"`
 	}
+	cc.BatteryBoostLimit = 100 // default: disabled
 
 	if err := util.DecodeOther(payload, &cc); err != nil {
 		return DynamicConfig{}, nil, err
@@ -63,6 +65,7 @@ func (payload DynamicConfig) Apply(lp API) error {
 	lp.SetThresholds(payload.Thresholds)
 	lp.SetPlanEnergy(payload.PlanTime, payload.PlanEnergy)
 	lp.SetPlanStrategy(payload.PlanStrategy)
+	lp.SetBatteryBoostLimit(payload.BatteryBoostLimit)
 	lp.SetLimitEnergy(payload.LimitEnergy)
 	lp.SetLimitSoc(payload.LimitSoc)
 
@@ -78,11 +81,24 @@ func (payload DynamicConfig) Apply(lp API) error {
 		err = lp.SetPhasesConfigured(payload.PhasesConfigured)
 	}
 
-	if err == nil && payload.MinCurrent != 0 {
-		err = lp.SetMinCurrent(payload.MinCurrent)
-	}
-	if err == nil && payload.MaxCurrent != 0 {
-		err = lp.SetMaxCurrent(payload.MaxCurrent)
+	if err == nil {
+		// In case both min and max current are set, we need to set them in the correct order to avoid validation errors
+		switch {
+		case payload.MinCurrent != 0 && payload.MaxCurrent != 0:
+			if payload.MaxCurrent > lp.GetMaxCurrent() {
+				if err = lp.SetMaxCurrent(payload.MaxCurrent); err == nil {
+					err = lp.SetMinCurrent(payload.MinCurrent)
+				}
+			} else {
+				if err = lp.SetMinCurrent(payload.MinCurrent); err == nil {
+					err = lp.SetMaxCurrent(payload.MaxCurrent)
+				}
+			}
+		case payload.MinCurrent != 0:
+			err = lp.SetMinCurrent(payload.MinCurrent)
+		case payload.MaxCurrent != 0:
+			err = lp.SetMaxCurrent(payload.MaxCurrent)
+		}
 	}
 
 	return err

@@ -56,7 +56,7 @@ func init() {
 	registry.AddCtx("alfen", NewAlfenFromConfig)
 }
 
-//go:generate go tool decorate -f decorateAlfen -b *Alfen -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
+//go:generate go tool decorate -f decorateAlfen -b *Alfen -r api.Charger -t api.PhaseSwitcher,api.PhaseGetter
 
 // NewAlfenFromConfig creates a Alfen charger from generic config
 func NewAlfenFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
