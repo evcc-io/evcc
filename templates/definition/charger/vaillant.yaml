@@ -14,7 +14,49 @@ params:
   - name: password
   - name: realm
     type: choice
-    choice: ['albania', 'austria', 'belgium', 'bosnia', 'bulgaria', 'croatia', 'cyprus', 'czechrepublic', 'denmark', 'estonia', 'finland', 'france', 'georgia', 'germany', 'greece', 'hungary', 'ireland', 'italy', 'kosovo', 'latvia', 'lithuania', 'luxembourg', 'moldavia', 'netherlands', 'new-zealand', 'north-macedonia', 'norway', 'poland', 'portugal', 'romania', 'serbia', 'slovakia', 'slovenia', 'spain', 'sweden', 'switzerland', 'turkiye', 'ukraine', 'unitedkingdom', 'uzbekistan']
+    choice:
+      [
+        "albania",
+        "austria",
+        "belgium",
+        "bosnia",
+        "bulgaria",
+        "croatia",
+        "cyprus",
+        "czechrepublic",
+        "denmark",
+        "estonia",
+        "finland",
+        "france",
+        "georgia",
+        "germany",
+        "greece",
+        "hungary",
+        "ireland",
+        "italy",
+        "kosovo",
+        "latvia",
+        "lithuania",
+        "luxembourg",
+        "moldavia",
+        "netherlands",
+        "new-zealand",
+        "north-macedonia",
+        "norway",
+        "poland",
+        "portugal",
+        "romania",
+        "serbia",
+        "slovakia",
+        "slovenia",
+        "spain",
+        "sweden",
+        "switzerland",
+        "turkiye",
+        "ukraine",
+        "unitedkingdom",
+        "uzbekistan",
+      ]
     default: germany
     description:
       de: Region
