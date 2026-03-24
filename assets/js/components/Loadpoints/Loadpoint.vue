@@ -150,22 +150,7 @@
 				/>
 			</div>
 		</div>
-<<<<<<< HEAD
 	</Teleport>
-=======
-		<hr class="divider" />
-		<Vehicle
-			class="flex-grow-1 d-flex flex-column"
-			v-bind="vehicleProps"
-			@limit-soc-updated="setLimitSoc"
-			@limit-energy-updated="setLimitEnergy"
-			@change-vehicle="changeVehicle"
-			@remove-vehicle="removeVehicle"
-			@open-loadpoint-settings="openSettingsModal"
-			@batteryboost-updated="setBatteryBoost"
-		/>
-	</div>
->>>>>>> d0ca0bd70 (fix(ui): restore loadpoint spacing and scrolling behavior)
 </template>
 
 <script lang="ts">

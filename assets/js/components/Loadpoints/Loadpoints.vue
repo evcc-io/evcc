@@ -280,9 +280,9 @@ export default defineComponent({
 @media (--lg-and-up) {
 	.carousel {
 		display: grid !important;
-		column-gap: clamp(1.25rem, 1.8vw, 2rem);
+		column-gap: clamp(1.75rem, 2.2vw, 2.5rem);
 		row-gap: clamp(1.5rem, 2.2vw, 2.25rem);
-		grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+		grid-template-columns: repeat(auto-fit, minmax(520px, 1fr));
 	}
 	/* breakpoint lg, full width override */
 	.carousel--fullwidth {
