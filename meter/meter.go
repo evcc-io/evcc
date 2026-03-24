@@ -34,8 +34,9 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 		pvMaxACPower `mapstructure:",squash"`
 
 		// pv curtailment
-		Curtail   *plugin.Config // optional: float setter, 0=curtailed, 100=full power
-		Curtailed *plugin.Config // optional: float getter, <100 means curtailed
+		Curtail      *plugin.Config // optional: float setter, curtailLimit=curtailed, 100=full power
+		Curtailed    *plugin.Config // optional: float getter, <100 means curtailed
+		CurtailLimit float64        // optional: power limit in % when curtailed (default: 0)
 
 		// battery
 		batteryCapacity    `mapstructure:",squash"`
@@ -127,9 +128,10 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 		}
 
 		return &curtailMeter{
-			Meter:     base,
-			curtailS:  curtailS,
-			curtailedG: curtailedG,
+			Meter:        base,
+			curtailS:     curtailS,
+			curtailedG:   curtailedG,
+			curtailLimit: cc.CurtailLimit,
 		}, nil
 	}
 
@@ -181,18 +183,19 @@ func (m *Meter) CurrentPower() (float64, error) {
 }
 
 // curtailMeter wraps api.Meter with api.Curtailer support.
-// curtailS is called with 0 to enable curtailment and 100 to disable it.
+// curtailS is called with curtailLimit to enable curtailment and 100 to disable it.
 // curtailedG returns the current active power limit (0-100); values below 100 indicate curtailment.
 type curtailMeter struct {
 	api.Meter
-	curtailS   func(float64) error
-	curtailedG func() (float64, error)
+	curtailS     func(float64) error
+	curtailedG   func() (float64, error)
+	curtailLimit float64 // power limit in % written when curtailing (0-100, default: 0)
 }
 
 var _ api.Curtailer = (*curtailMeter)(nil)
 
 // Curtail implements api.Curtailer.
-// Curtail(true) writes 0 (0 % limit = PV output suppressed).
+// Curtail(true) writes curtailLimit (default 0 %, PV output suppressed).
 // Curtail(false) writes 100 (100 % limit = full PV output).
 func (m *curtailMeter) Curtail(curtail bool) error {
 	if m.curtailS == nil {
@@ -200,7 +203,7 @@ func (m *curtailMeter) Curtail(curtail bool) error {
 	}
 	val := 100.0
 	if curtail {
-		val = 0
+		val = m.curtailLimit
 	}
 	return m.curtailS(val)
 }

@@ -15,6 +15,9 @@ params:
     choice: ["tcpip", "rs485"]
     id: 1
     port: 1502
+  - name: curtaillimit
+    default: 0
+    advanced: true
   - name: timeout
 render: |
   type: custom
@@ -134,4 +137,5 @@ render: |
       address: 0xF001 # Active Power Limit (0-100 %)
       type: holding
       decode: uint16
+  curtaillimit: {{ .curtaillimit }} # % power limit when curtailed (0 = full shutdown)
   {{- end }}
