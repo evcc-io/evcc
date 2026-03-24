@@ -105,24 +105,7 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Charger, error) {
 	// phase switching (optional)
 	if cc.Phases != "" {
 		phases1p3p = func(phases int) error {
-			enabled, err := c.Enabled()
-			if err != nil {
-				return err
-			}
-
-			if err := conn.CallSelectService(cc.Phases, strconv.Itoa(phases)); err != nil {
-				return err
-			}
-
-			if err := c.Enable(false); err != nil {
-				return err
-			}
-
-			if enabled {
-				return c.Enable(true)
-			}
-
-			return nil
+			return conn.CallSelectService(cc.Phases, strconv.Itoa(phases))
 		}
 
 		phasesG = func() (int, error) {
