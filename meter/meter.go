@@ -33,6 +33,10 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 		// pv
 		pvMaxACPower `mapstructure:",squash"`
 
+		// pv curtailment
+		Curtail   *plugin.Config // optional: float setter, 0=curtailed, 100=full power
+		Curtailed *plugin.Config // optional: float getter, <100 means curtailed
+
 		// battery
 		batteryCapacity    `mapstructure:",squash"`
 		batterySocLimits   `mapstructure:",squash"`
@@ -100,9 +104,36 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 		), nil
 	}
 
-	return m.Decorate(
+	base := m.Decorate(
 		energyG, currentsG, voltagesG, powersG, cc.pvMaxACPower.Decorator(),
-	), nil
+	)
+
+	// optionally wrap with curtailment support
+	if cc.Curtail != nil || cc.Curtailed != nil {
+		var curtailS func(float64) error
+		if cc.Curtail != nil {
+			curtailS, err = cc.Curtail.FloatSetter(ctx, "curtail")
+			if err != nil {
+				return nil, fmt.Errorf("curtail: %w", err)
+			}
+		}
+
+		var curtailedG func() (float64, error)
+		if cc.Curtailed != nil {
+			curtailedG, err = cc.Curtailed.FloatGetter(ctx)
+			if err != nil {
+				return nil, fmt.Errorf("curtailed: %w", err)
+			}
+		}
+
+		return &curtailMeter{
+			Meter:     base,
+			curtailS:  curtailS,
+			curtailedG: curtailedG,
+		}, nil
+	}
+
+	return base, nil
 }
 
 // NewConfigurable creates a new meter
@@ -147,4 +178,39 @@ func (m *Meter) DecorateBattery(
 // CurrentPower implements the api.Meter interface
 func (m *Meter) CurrentPower() (float64, error) {
 	return m.currentPowerG()
+}
+
+// curtailMeter wraps api.Meter with api.Curtailer support.
+// curtailS is called with 0 to enable curtailment and 100 to disable it.
+// curtailedG returns the current active power limit (0-100); values below 100 indicate curtailment.
+type curtailMeter struct {
+	api.Meter
+	curtailS   func(float64) error
+	curtailedG func() (float64, error)
+}
+
+var _ api.Curtailer = (*curtailMeter)(nil)
+
+// Curtail implements api.Curtailer.
+// Curtail(true) writes 0 (0 % limit = PV output suppressed).
+// Curtail(false) writes 100 (100 % limit = full PV output).
+func (m *curtailMeter) Curtail(curtail bool) error {
+	if m.curtailS == nil {
+		return api.ErrNotAvailable
+	}
+	val := 100.0
+	if curtail {
+		val = 0
+	}
+	return m.curtailS(val)
+}
+
+// Curtailed implements api.Curtailer.
+// Returns true when the active power limit is below 100 %.
+func (m *curtailMeter) Curtailed() (bool, error) {
+	if m.curtailedG == nil {
+		return false, api.ErrNotAvailable
+	}
+	val, err := m.curtailedG()
+	return val < 100, err
 }

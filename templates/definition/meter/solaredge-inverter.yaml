@@ -120,4 +120,18 @@ render: |
       value:
         - 101:AphC
         - 103:AphC
+  curtail:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 0xF001 # Active Power Limit (0-100 %)
+      type: writesingle
+      encoding: uint16
+  curtailed:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 0xF001 # Active Power Limit (0-100 %)
+      type: holding
+      decode: uint16
   {{- end }}
