@@ -210,9 +210,10 @@ export default defineComponent({
 					sponsor: this.sponsor,
 					statistics: this.statistics,
 					co2Configured: this.tariffCo2 !== undefined,
-					priceConfigured: this.tariffGrid !== undefined,
 					currency: this.currency,
 					telemetry: this.telemetry,
+					forecast: this.forecast,
+					tariffGrid: this.tariffGrid,
 				},
 			};
 		},
