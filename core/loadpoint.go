@@ -1273,6 +1273,29 @@ func (lp *Loadpoint) scalePhases(phases int) error {
 
 		// some vehicles may hang on phase switch
 		lp.startWakeUpTimer()
+	} else if phases > 1 && lp.getMeasuredPhases() == 1 && lp.charging() && lp.phaseSwitchCompleted() {
+		// phases are configured to 3p but car is only using 1p — force session restart
+		lp.log.DEBUG.Printf("phase mismatch detected: %dp configured but 1p measured, restarting session", phases)
+
+		// disable charger
+		if err := lp.charger.Enable(false); err != nil {
+			return fmt.Errorf("charger disable for phase renegotiation: %w", err)
+		}
+
+		// re-send phase configuration
+		if err := cp.Phases1p3p(phases); err != nil {
+			return fmt.Errorf("switch phases: %w", err)
+		}
+
+		// re-enable charger
+		if err := lp.charger.Enable(true); err != nil {
+			return fmt.Errorf("charger enable for phase renegotiation: %w", err)
+		}
+
+		lp.log.DEBUG.Printf("session restarted for phase renegotiation to %dp", phases)
+		lp.phasesSwitched = lp.clock.Now()
+		lp.resetMeasuredPhases()
+		lp.startWakeUpTimer()
 	}
 
 	return nil

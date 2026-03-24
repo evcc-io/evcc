@@ -56,7 +56,7 @@ var phaseTests = []testCase{
 	{0, 1, 3, 0, 1, 3, 1, "u"},
 	// 1p3p, 3 currently active
 	{0, 3, 0, 0, unknownPhases, 3, 1, "d"},
-	{0, 3, 0, 1, 1, 1, 1, ""},
+	{0, 3, 0, 1, 1, 3, 1, ""}, // measured 1p doesn't constrain max for 1p3p targeting 3p; session restart handles mismatch
 	{0, 3, 0, 2, 2, 2, 1, "d"},
 	{0, 3, 0, 3, 3, 3, 1, "d"},
 	{0, 3, 1, 0, 1, 1, 1, ""},

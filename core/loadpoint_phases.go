@@ -137,6 +137,13 @@ func (lp *Loadpoint) maxActivePhases() int {
 	// if 1p3p supported then assume configured limit or 3p
 	if lp.hasPhaseSwitching() {
 		physical = lp.phasesConfigured
+
+		// don't let 1p measured constrain when targeting 3p or auto —
+		// the car may not have renegotiated yet after a phase switch
+		// physical == 0 means auto mode (expect() treats as 3p)
+		if (physical == 0 || physical > 1) && measured == 1 {
+			measured = 0
+		}
 	}
 
 	return min(expect(vehicle), expect(physical), expect(measured), expect(charger))
