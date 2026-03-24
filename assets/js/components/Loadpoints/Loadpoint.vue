@@ -2,7 +2,9 @@
 	<Teleport to="body" :disabled="!loadpointViewportMaximized">
 		<div
 			:class="
-				loadpointViewportMaximized ? 'loadpoint-viewport-overlay safe-area-inset' : 'loadpoint-inline-host'
+				loadpointViewportMaximized
+					? 'loadpoint-viewport-overlay safe-area-inset'
+					: 'loadpoint-inline-host'
 			"
 		>
 			<div
@@ -43,7 +45,9 @@
 					<Mode v-bind="modeProps" @updated="setTargetMode" />
 				</div>
 				<!-- sm+: title, expand/collapse, mode, settings in one row -->
-				<div class="d-none d-sm-flex align-items-center gap-2 mb-3 flex-wrap loadpoint-header-wide">
+				<div
+					class="d-none d-sm-flex align-items-center gap-2 mb-3 flex-wrap loadpoint-header-wide"
+				>
 					<h3 class="mb-0 text-truncate d-flex min-w-0 loadpoint-header-wide__title">
 						<VehicleIcon
 							v-if="chargerIcon"
