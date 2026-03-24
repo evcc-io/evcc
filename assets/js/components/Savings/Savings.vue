@@ -1,14 +1,14 @@
 <template>
 	<div>
 		<button
-			class="btn btn-link px-0 text-decoration-none text-nowrap d-flex align-items-center evcc-gray"
+			class="btn btn-link p-0 text-decoration-none text-nowrap d-flex align-items-center evcc-gray"
 			data-testid="savings-button"
 			@click="openModal"
 		>
-			<span v-if="indicatorValueShort" class="indicator-value d-inline d-sm-none">{{
+			<span v-if="indicatorValueShort" class="indicator-value d-block d-sm-none">{{
 				indicatorValueShort
 			}}</span>
-			<span v-if="indicatorValue" class="indicator-value d-none d-sm-inline">{{
+			<span v-if="indicatorValue" class="indicator-value d-none d-sm-block">{{
 				indicatorValue
 			}}</span>
 			<DynamicPriceIcon v-if="indicator === 'price'" class="ms-2" />
@@ -141,85 +141,94 @@
 									/>
 								</div>
 								<table class="mt-3 mb-2 lh-2">
-									<tr>
-										<td class="pe-3 align-top">
-											{{ $t("footer.savings.periodLabel") }}
-										</td>
-										<td>
-											<CustomSelect
-												id="savingsPeriod"
-												:selected="period"
-												:options="periodOptions"
-												data-testid="savings-period-select"
-												@change="selectPeriod($event.target.value)"
-											>
-												<span class="text-decoration-underline evcc-gray">
-													{{ $t(`footer.savings.period.${period}`) }}
-												</span>
-											</CustomSelect>
-										</td>
-									</tr>
-									<tr>
-										<td class="pe-3 align-top">
-											{{ $t("footer.savings.indicatorLabel") }}
-										</td>
-										<td>
-											<CustomSelect
-												:selected="indicator"
-												:options="indicatorOptions"
-												data-testid="savings-indicator-select"
-												@change="selectIndicator($event.target.value)"
-											>
-												<span class="text-decoration-underline evcc-gray">
-													{{
-														indicatorValue
-															? `${indicatorValue} ${$t(`footer.savings.indicator.${indicator}`)}`
-															: $t(
-																	`footer.savings.indicator.${indicator}`
-																)
-													}}
-												</span>
-											</CustomSelect>
-										</td>
-									</tr>
-									<tr v-if="region" data-testid="savings-reference">
-										<td class="pe-3 align-top">
-											{{ $t("footer.savings.referenceLabel") }}
-										</td>
-										<td class="evcc-gray">
-											<div>
-												<span v-if="isDynamicPrice">⌀ </span
-												>{{
-													priceConfigured
-														? fmtPricePerKWh(referenceGrid, currency)
-														: "___"
-												}}
-												(<a
-													href="#"
-													class="evcc-gray text-decoration-underline"
-													@click.prevent="navigateToTariffs"
-													>{{ $t("config.main.title") }}</a
-												>)
-											</div>
-											<div class="d-flex">
-												<span class="me-1"
-													>⌀ {{ fmtCo2Medium(region.co2) }}</span
-												>
+									<tbody>
+										<tr>
+											<td class="pe-3 align-top">
+												{{ $t("footer.savings.periodLabel") }}
+											</td>
+											<td>
 												<CustomSelect
-													class="evcc-gray"
-													:selected="region.name"
-													:options="regionOptions"
-													data-testid="savings-region-select"
-													@change="selectRegion($event.target.value)"
+													id="savingsPeriod"
+													:selected="period"
+													:options="periodOptions"
+													data-testid="savings-period-select"
+													@change="selectPeriod($event.target.value)"
 												>
-													(<span class="text-decoration-underline">{{
-														region.name
-													}}</span
-													>)
+													<span
+														class="text-decoration-underline evcc-gray"
+													>
+														{{ $t(`footer.savings.period.${period}`) }}
+													</span>
 												</CustomSelect>
-											</div>
-										</td>
-									</tr>
+											</td>
+										</tr>
+										<tr>
+											<td class="pe-3 align-top">
+												{{ $t("footer.savings.indicatorLabel") }}
+											</td>
+											<td>
+												<CustomSelect
+													:selected="indicator"
+													:options="indicatorOptions"
+													data-testid="savings-indicator-select"
+													@change="selectIndicator($event.target.value)"
+												>
+													<span
+														class="text-decoration-underline evcc-gray"
+													>
+														{{
+															indicatorValue
+																? `${indicatorValue} ${$t(`footer.savings.indicator.${indicator}`)}`
+																: $t(
+																		`footer.savings.indicator.${indicator}`
+																	)
+														}}
+													</span>
+												</CustomSelect>
+											</td>
+										</tr>
+										<tr v-if="region" data-testid="savings-reference">
+											<td class="pe-3 align-top">
+												{{ $t("footer.savings.referenceLabel") }}
+											</td>
+											<td class="evcc-gray">
+												<div>
+													<span v-if="isDynamicPrice">⌀ </span
+													>{{
+														priceConfigured
+															? fmtPricePerKWh(
+																	referenceGrid,
+																	currency
+																)
+															: "___"
+													}}
+													(<a
+														href="#"
+														class="evcc-gray text-decoration-underline"
+														@click.prevent="navigateToTariffs"
+														>{{ $t("config.main.title") }}</a
+													>)
+												</div>
+												<div class="d-flex">
+													<span class="me-1"
+														>⌀ {{ fmtCo2Medium(region.co2) }}</span
+													>
+													<CustomSelect
+														class="evcc-gray"
+														:selected="region.name"
+														:options="regionOptions"
+														data-testid="savings-region-select"
+														@change="selectRegion($event.target.value)"
+													>
+														(<span class="text-decoration-underline">{{
+															region.name
+														}}</span
+														>)
+													</CustomSelect>
+												</div>
+											</td>
+										</tr>
+									</tbody>
 								</table>
 								<div v-if="!priceConfigured || !co2Configured">
 									<a
