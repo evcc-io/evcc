@@ -24,7 +24,7 @@ export const FONT_FAMILY = "Montserrat, sans-serif";
 
 export function markPointLabel(
   color: string,
-  data: { coord: [string, number]; value: string }[],
+  data: { coord: [string, number]; value: string; label?: { offset?: [number, number] } }[],
   startDate?: Date,
   endDate?: Date
 ) {
@@ -37,14 +37,12 @@ export function markPointLabel(
   const adjustedData = data.map((d) => {
     const ts = new Date(d.coord[0]).getTime();
     if (threshold && ts < threshold) {
-      const dl = d as Record<string, unknown>;
-      const existing = (dl["label"] as Record<string, unknown>) || {};
-      const baseOffset = (existing["offset"] as number[]) || [0, -2];
+      const baseOffset = d.label?.offset ?? [0, -2];
       return {
         ...d,
         label: {
-          ...existing,
-          offset: [(baseOffset[0] ?? 0) + 30, baseOffset[1] ?? -2],
+          ...d.label,
+          offset: [baseOffset[0] + 30, baseOffset[1]] as [number, number],
         },
       };
     }
