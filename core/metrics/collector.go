@@ -3,8 +3,19 @@ package metrics
 import (
 	"time"
 
+	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/server/db"
 )
+
+var collectors []*Collector
+
+func init() {
+	shutdown.Register(func() {
+		for _, c := range collectors {
+			c.Close()
+		}
+	})
+}
 
 const (
 	SlotDuration = 15 * time.Minute
@@ -32,10 +43,14 @@ func NewCollector(group, name string, opt ...func(*Accumulator)) (*Collector, er
 		return nil, err
 	}
 
-	return &Collector{
+	c := &Collector{
 		entity: entity,
 		accu:   NewAccumulator(opt...),
-	}, nil
+	}
+
+	collectors = append(collectors, c)
+
+	return c, nil
 }
 
 func createEntity(group, name string) (entity, error) {
@@ -61,11 +76,8 @@ func (c *Collector) process(fun func()) error {
 	fun()
 
 	if slotStart := now.Truncate(SlotDuration); slotStart.After(c.started) {
-		// full slot completed
-		if slotStart.Sub(c.started) == SlotDuration {
-			if err := c.persist(); err != nil {
-				return err
-			}
+		if err := c.persist(); err != nil {
+			return err
 		}
 
 		c.started = slotStart
@@ -78,6 +90,13 @@ func (c *Collector) process(fun func()) error {
 
 func (c *Collector) persist() error {
 	return persist(c.entity, c.started, c.accu.PosEnergy(), c.accu.NegEnergy())
+}
+
+// Close persists any remaining accumulated energy on shutdown
+func (c *Collector) Close() {
+	if !c.accu.updated.IsZero() && (c.accu.Import > 0 || c.accu.Export > 0) {
+		c.persist()
+	}
 }
 
 func (c *Collector) ImportProfile(from time.Time) (*[96]float64, error) {

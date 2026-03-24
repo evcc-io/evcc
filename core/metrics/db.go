@@ -25,6 +25,132 @@ type entity struct {
 
 var ErrIncomplete = errors.New("meter profile incomplete")
 
+// Slot represents an aggregated energy time slot
+type Slot struct {
+	Start  time.Time `json:"start"`
+	End    time.Time `json:"end"`
+	Import float64   `json:"import"`
+	Export float64   `json:"export"`
+}
+
+// Series represents a named series of energy slots
+type Series struct {
+	Name string `json:"name"`
+	Data []Slot `json:"data"`
+}
+
+var aggregateFormats = map[string]string{
+	"15m":   "%Y-%m-%d %H:%M",
+	"hour":  "%Y-%m-%d %H:00",
+	"day":   "%Y-%m-%d",
+	"month": "%Y-%m",
+}
+
+var aggregateGoFormats = map[string]string{
+	"15m":   "2006-01-02 15:04",
+	"hour":  "2006-01-02 15:00",
+	"day":   "2006-01-02",
+	"month": "2006-01",
+}
+
+var aggregateDurations = map[string]func(time.Time) time.Time{
+	"15m":   func(t time.Time) time.Time { return t.Add(15 * time.Minute) },
+	"hour":  func(t time.Time) time.Time { return t.Add(time.Hour) },
+	"day":   func(t time.Time) time.Time { return t.AddDate(0, 0, 1) },
+	"month": func(t time.Time) time.Time { return t.AddDate(0, 1, 0) },
+}
+
+// QueryEnergy returns aggregated energy data from the meters table
+func QueryEnergy(from, to time.Time, aggregate string) ([]Series, error) {
+	format, ok := aggregateFormats[aggregate]
+	if !ok {
+		return nil, errors.New("invalid aggregate value")
+	}
+
+	addDuration := aggregateDurations[aggregate]
+
+	conn, err := db.Instance.DB()
+	if err != nil {
+		return nil, err
+	}
+
+	var conditions []string
+	var args []any
+
+	if !from.IsZero() {
+		conditions = append(conditions, `m.ts >= ?`)
+		args = append(args, from.Local().Format(tsFormat))
+	}
+	if !to.IsZero() {
+		conditions = append(conditions, `m.ts < ?`)
+		args = append(args, to.Local().Format(tsFormat))
+	}
+
+	where := ""
+	if len(conditions) > 0 {
+		where = `WHERE ` + conditions[0]
+		for _, c := range conditions[1:] {
+			where += ` AND ` + c
+		}
+	}
+
+	query := `SELECT e.name AS label, strftime('` + format + `', m.ts, 'localtime') AS bucket,
+		COALESCE(SUM(m."import"), 0) AS import, COALESCE(SUM(m.export), 0) AS export
+		FROM meters m
+		JOIN entities e ON m.meter = e.id
+		` + where + `
+		GROUP BY label, bucket
+		ORDER BY label, bucket`
+
+	rows, err := conn.Query(query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	seriesMap := make(map[string][]Slot)
+	var order []string
+
+	for rows.Next() {
+		var label, bucket string
+		var imp, exp float64
+
+		if err := rows.Scan(&label, &bucket, &imp, &exp); err != nil {
+			return nil, err
+		}
+
+		start, err := time.ParseInLocation(aggregateGoFormats[aggregate], bucket, time.Now().Location())
+		if err != nil {
+			return nil, err
+		}
+
+		if _, exists := seriesMap[label]; !exists {
+			order = append(order, label)
+		}
+
+		seriesMap[label] = append(seriesMap[label], Slot{
+			Start:  start,
+			End:    addDuration(start),
+			Import: imp,
+			Export:  exp,
+		})
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	res := make([]Series, 0, len(order))
+	for _, name := range order {
+		res = append(res, Series{
+			Name: name,
+			Data: seriesMap[name],
+		})
+	}
+
+	return res, nil
+}
+
 func init() {
 	db.Register(func(_ *gorm.DB) error {
 		return SetupSchema()
@@ -94,14 +220,27 @@ func SetupSchema() error {
 	return db.Instance.AutoMigrate(new(meter))
 }
 
-// persist stores 15min consumption in Wh
+// persist stores 15min consumption in kWh, accumulating with any existing value for the same slot
 func persist(entity entity, ts time.Time, imp, exp float64) error {
-	return db.Instance.Create(&meter{
-		Entity:    entity,
+	m := meter{
+		Meter:     entity.Id,
 		Timestamp: ts.Truncate(15 * time.Minute),
 		Import:    imp,
 		Export:    exp,
-	}).Error
+	}
+
+	// accumulate with partial slot persisted on shutdown
+	res := db.Instance.Where("meter = ? AND ts = ?", m.Meter, m.Timestamp).First(&meter{})
+	if res.Error == nil {
+		return db.Instance.Model(&meter{}).
+			Where("meter = ? AND ts = ?", m.Meter, m.Timestamp).
+			Updates(map[string]any{
+				"import": gorm.Expr(`"import" + ?`, imp),
+				"export": gorm.Expr(`export + ?`, exp),
+			}).Error
+	}
+
+	return db.Instance.Create(&m).Error
 }
 
 // importProfile returns a 15min average meter profile in Wh. The profile

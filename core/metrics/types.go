@@ -6,6 +6,8 @@ import (
 	"time"
 )
 
+const tsFormat = time.DateTime + "-07:00"
+
 type SqlTime time.Time
 
 var _ sql.Scanner = (*SqlTime)(nil)
@@ -17,7 +19,7 @@ func (st *SqlTime) Scan(value any) error {
 	case int64:
 		*st = SqlTime(time.Unix(v, 0))
 	case string:
-		t, err := time.Parse(time.DateTime+"-07:00", v)
+		t, err := time.Parse(tsFormat, v)
 		if err == nil {
 			*st = SqlTime(t)
 		}
