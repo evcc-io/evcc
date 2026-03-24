@@ -19,9 +19,11 @@ const (
 )
 
 type Collector struct {
-	entity  entity
-	accu    *Accumulator
-	started time.Time
+	entity     entity
+	accu       *Accumulator
+	started    time.Time
+	lastImport *float64 // last seen import meter total (kWh)
+	lastExport *float64 // last seen export meter total (kWh)
 }
 
 func NewCollector(group, name string, opt ...func(*Accumulator)) (*Collector, error) {
@@ -106,8 +108,33 @@ func (c *Collector) SetExportMeterTotal(v float64) error {
 	})
 }
 
-func (c *Collector) AddPower(v float64) error {
+// AddPower adds power (W) and optional cumulative meter totals (kWh).
+// Prefers meter deltas over power integration when available.
+func (c *Collector) AddPower(power float64, importEnergy, exportEnergy *float64) error {
 	return c.process(func() {
-		c.accu.AddPower(v)
+		usedMeter := false
+
+		// import energy using meter reading
+		if importEnergy != nil {
+			if c.lastImport != nil && *importEnergy >= *c.lastImport {
+				c.accu.AddImportEnergy(*importEnergy - *c.lastImport)
+				usedMeter = true
+			}
+			c.lastImport = importEnergy
+		}
+
+		// export energy using meter reading
+		if exportEnergy != nil {
+			if c.lastExport != nil && *exportEnergy >= *c.lastExport {
+				c.accu.AddExportEnergy(*exportEnergy - *c.lastExport)
+				usedMeter = true
+			}
+			c.lastExport = exportEnergy
+		}
+
+		// fallback to power integration
+		if !usedMeter {
+			c.accu.AddPower(power)
+		}
 	})
 }

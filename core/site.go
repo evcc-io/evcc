@@ -722,9 +722,6 @@ func (site *Site) updateGridMeter() error {
 		mm.Power = res
 		site.gridPower = res
 		site.log.DEBUG.Printf("grid power: %.0fW", res)
-
-		// TODO handle negative/ feed-in energy
-		site.gridEnergy.AddPower(mm.Power)
 	} else {
 		return fmt.Errorf("grid power: %v", err)
 	}
@@ -752,13 +749,17 @@ func (site *Site) updateGridMeter() error {
 	}
 
 	// grid energy (import)
+	var importEnergy *float64
 	if energyMeter, ok := site.gridMeter.(api.MeterEnergy); ok {
 		if f, err := energyMeter.TotalEnergy(); err == nil {
 			mm.Energy = f
+			importEnergy = &f
 		} else {
 			site.log.ERROR.Printf("grid energy: %v", err)
 		}
 	}
+
+	site.gridEnergy.AddPower(mm.Power, importEnergy, nil)
 
 	site.publish(keys.Grid, mm)
 
@@ -931,7 +932,7 @@ func (site *Site) update(lp updater) {
 		site.publish(keys.HomePower, homePower)
 
 		if homePower > 0 {
-			if err := site.homeEnergy.AddPower(homePower); err != nil {
+			if err := site.homeEnergy.AddPower(homePower, nil, nil); err != nil {
 				site.log.ERROR.Printf("persist home consumption: %v", err)
 			}
 		}
