@@ -14,34 +14,6 @@
 						: 'mx-2 mx-sm-0',
 				]"
 			>
-				<!-- sm+: title, expand/collapse, mode, settings in one row -->
-				<div class="d-none d-sm-flex align-items-center gap-2 mb-3 flex-wrap loadpoint-header-wide">
-					<h3 class="mb-0 text-truncate d-flex min-w-0 loadpoint-header-wide__title">
-						<VehicleIcon
-							v-if="chargerIcon"
-							:name="chargerIcon"
-							class="me-2 flex-shrink-0"
-						/>
-						<div class="text-truncate">
-							{{ loadpointTitle }}
-						</div>
-					</h3>
-					<ViewportToggleButton
-						:expanded="loadpointViewportMaximized"
-						@toggle="toggleViewport"
-					/>
-					<Mode
-						class="loadpoint-header-wide__mode flex-shrink-0"
-						v-bind="modeProps"
-						@updated="setTargetMode"
-					/>
-					<LoadpointSettingsButton
-						:id="id"
-						:class="expandLoadpointHeader ? 'd-lg-none d-xl-block' : ''"
-						class="flex-shrink-0"
-						@click="openSettingsModal"
-					/>
-				</div>
 				<!-- xs: stacked -->
 				<div class="d-flex d-sm-none flex-column mb-3">
 					<div class="d-flex justify-content-between align-items-center gap-2 mb-3">
@@ -69,6 +41,34 @@
 						/>
 					</div>
 					<Mode v-bind="modeProps" @updated="setTargetMode" />
+				</div>
+				<!-- sm+: title, expand/collapse, mode, settings in one row -->
+				<div class="d-none d-sm-flex align-items-center gap-2 mb-3 flex-wrap loadpoint-header-wide">
+					<h3 class="mb-0 text-truncate d-flex min-w-0 loadpoint-header-wide__title">
+						<VehicleIcon
+							v-if="chargerIcon"
+							:name="chargerIcon"
+							class="me-2 flex-shrink-0"
+						/>
+						<div class="text-truncate">
+							{{ loadpointTitle }}
+						</div>
+					</h3>
+					<ViewportToggleButton
+						:expanded="loadpointViewportMaximized"
+						@toggle="toggleViewport"
+					/>
+					<Mode
+						class="loadpoint-header-wide__mode flex-shrink-0"
+						v-bind="modeProps"
+						@updated="setTargetMode"
+					/>
+					<LoadpointSettingsButton
+						:id="id"
+						:class="expandLoadpointHeader ? 'd-lg-none d-xl-block' : ''"
+						class="flex-shrink-0"
+						@click="openSettingsModal"
+					/>
 				</div>
 				<LoadpointSettingsModal
 					:id="id"
@@ -176,6 +176,10 @@ const maximizedLoadpointIds = new Set<string>();
 let previousBodyOverflow: string | null = null;
 
 const setBodyScrollLock = (id: string, expanded: boolean) => {
+	if (typeof document === "undefined") {
+		return;
+	}
+
 	if (expanded) {
 		if (maximizedLoadpointIds.size === 0) {
 			previousBodyOverflow = document.body.style.overflow;
@@ -516,7 +520,11 @@ export default defineComponent({
 			this.$router.replace({ query });
 		},
 		handleViewportEscape(ev: KeyboardEvent) {
-			if (ev.key !== "Escape" || !this.loadpointViewportMaximized) {
+			if (ev.defaultPrevented || ev.key !== "Escape" || !this.loadpointViewportMaximized) {
+				return;
+			}
+			const target = ev.target as HTMLElement | null;
+			if (target?.closest("input, textarea, select, [contenteditable='true']")) {
 				return;
 			}
 			if (document.querySelector(".modal.show")) {
@@ -565,10 +573,6 @@ export default defineComponent({
 .loadpoint-header-wide__title {
 	flex: 1 1 8rem;
 	min-width: 0;
-}
-
-.loadpoint-expand-icon {
-	display: block;
 }
 
 .details > div {

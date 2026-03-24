@@ -69,3 +69,9 @@ export default defineComponent({
 	emits: ["toggle"],
 });
 </script>
+
+<style scoped>
+.loadpoint-expand-icon {
+	display: block;
+}
+</style>
