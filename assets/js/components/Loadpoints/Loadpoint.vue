@@ -20,7 +20,10 @@
 				<div class="d-flex d-sm-none flex-column mb-3">
 					<div class="d-flex justify-content-between align-items-center gap-2 mb-3">
 						<div class="d-flex align-items-center gap-2 min-w-0 flex-grow-1">
-							<h3 class="mb-0 text-truncate d-flex min-w-0 flex-grow-1">
+							<h3
+								v-if="!isDesktopBreakpoint"
+								class="mb-0 text-truncate d-flex min-w-0 flex-grow-1"
+							>
 								<VehicleIcon
 									v-if="chargerIcon"
 									:name="chargerIcon"
@@ -42,13 +45,20 @@
 							@click="openSettingsModal"
 						/>
 					</div>
-					<Mode v-bind="modeProps" @updated="setTargetMode" />
+					<Mode
+						v-if="!isDesktopBreakpoint"
+						v-bind="modeProps"
+						@updated="setTargetMode"
+					/>
 				</div>
 				<!-- sm+: title, expand/collapse, mode, settings in one row -->
 				<div
 					class="d-none d-sm-flex align-items-center gap-2 mb-3 flex-wrap loadpoint-header-wide"
 				>
-					<h3 class="mb-0 text-truncate d-flex min-w-0 loadpoint-header-wide__title">
+					<h3
+						v-if="isDesktopBreakpoint"
+						class="mb-0 text-truncate d-flex min-w-0 loadpoint-header-wide__title"
+					>
 						<VehicleIcon
 							v-if="chargerIcon"
 							:name="chargerIcon"
@@ -63,6 +73,7 @@
 						@toggle="toggleViewport"
 					/>
 					<Mode
+						v-if="isDesktopBreakpoint"
 						class="loadpoint-header-wide__mode flex-shrink-0"
 						v-bind="modeProps"
 						@updated="setTargetMode"
@@ -322,6 +333,7 @@ export default defineComponent({
 			chargeDurationInterpolated: this.chargeDuration,
 			chargeRemainingDurationInterpolated: this.chargeRemainingDuration,
 			loadpointViewportMaximized: false,
+			isDesktopBreakpoint: true,
 		};
 	},
 	computed: {
@@ -434,12 +446,15 @@ export default defineComponent({
 	},
 	mounted() {
 		this.tickerHandler = setInterval(this.tick, 1000);
+		this.updateBreakpointFlags();
+		window.addEventListener("resize", this.updateBreakpointFlags);
 		window.addEventListener("keydown", this.handleViewportEscape);
 	},
 	unmounted() {
 		if (this.tickerHandler) {
 			clearInterval(this.tickerHandler);
 		}
+		window.removeEventListener("resize", this.updateBreakpointFlags);
 		window.removeEventListener("keydown", this.handleViewportEscape);
 		if (this.loadpointViewportMaximized) {
 			setBodyScrollLock(this.id, false);
@@ -511,6 +526,12 @@ export default defineComponent({
 				return;
 			}
 			this.expandViewport();
+		},
+		updateBreakpointFlags() {
+			if (typeof window === "undefined") {
+				return;
+			}
+			this.isDesktopBreakpoint = window.innerWidth >= 576;
 		},
 		expandViewport() {
 			this.loadpointViewportMaximized = true;
