@@ -129,6 +129,15 @@ func (cp *CP) Setup(ctx context.Context, meterValues string, meterInterval time.
 		}
 	}
 
+	// warn about non-compliant meters (e.g. Wallbox Pulsar Pro FW 6.x)
+	cp.mu.RLock()
+	bootResult := cp.BootNotificationResult
+	cp.mu.RUnlock()
+
+	if bootResult != nil && strings.Contains(strings.ToLower(bootResult.MeterType), "non compliant") {
+		cp.log.WARN.Printf("charger reports non-compliant meter (%s), meter values will not be available via OCPP - consider adding an external meter", bootResult.MeterType)
+	}
+
 	// autodetect measurands
 	if meterValues == "" && meterValuesSampledDataMaxLength > 0 {
 		sampledMeasurands := cp.tryMeasurands(desiredMeasurands, KeyMeterValuesSampledData)
