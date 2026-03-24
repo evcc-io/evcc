@@ -89,7 +89,7 @@
 		</div>
 		<hr class="divider" />
 		<Vehicle
-			class="flex-grow-1 d-flex flex-column justify-content-end"
+			class="flex-grow-1 d-flex flex-column"
 			v-bind="vehicleProps"
 			@limit-soc-updated="setLimitSoc"
 			@limit-energy-updated="setLimitEnergy"
