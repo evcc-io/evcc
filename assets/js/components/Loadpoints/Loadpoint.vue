@@ -45,11 +45,7 @@
 							@click="openSettingsModal"
 						/>
 					</div>
-					<Mode
-						v-if="!isDesktopBreakpoint"
-						v-bind="modeProps"
-						@updated="setTargetMode"
-					/>
+					<Mode v-if="!isDesktopBreakpoint" v-bind="modeProps" @updated="setTargetMode" />
 				</div>
 				<!-- sm+: title, expand/collapse, mode, settings in one row -->
 				<div
