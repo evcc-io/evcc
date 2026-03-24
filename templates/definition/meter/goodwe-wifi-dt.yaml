@@ -1,0 +1,33 @@
+template: goodwe-wifi-dt
+requirements:
+  evcc: ["skiptest"]
+products:
+  - brand: GoodWe
+    description:
+      generic: SDT/DT Inverter (WiFi)
+
+params:
+  - name: usage
+    choice: ["pv"]
+
+  - name: host
+    help:
+      en: IP address of the inverter (port 8899)
+      de: IP-Adresse des Wechselrichters (Port 8899)
+    example: 192.168.1.26
+
+render: |
+  type: custom
+  power:
+    source: aa55udp
+    host: {{ .host }}
+    register: 30127
+    count: 2
+    decode: int32be
+  energy:
+    source: aa55udp
+    host: {{ .host }}
+    register: 30145
+    count: 2
+    decode: uint32be
+    scale: 0.1
