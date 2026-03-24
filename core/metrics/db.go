@@ -132,7 +132,7 @@ func QueryEnergy(from, to time.Time, aggregate string) ([]Series, error) {
 			Start:  start,
 			End:    addDuration(start),
 			Import: imp,
-			Export:  exp,
+			Export: exp,
 		})
 	}
 
