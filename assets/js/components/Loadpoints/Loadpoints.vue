@@ -1,5 +1,8 @@
 <template>
-	<div class="container container--loadpoint px-0 mb-md-2 d-flex flex-column" data-testid="loadpoints">
+	<div
+		class="container container--loadpoint px-0 mb-md-2 d-flex flex-column justify-content-center"
+		data-testid="loadpoints"
+	>
 		<div
 			v-if="loadpoints.length > 0"
 			ref="carousel"
@@ -197,7 +200,6 @@ export default defineComponent({
 
 .container--loadpoint:not(:empty) {
 	min-height: 300px;
-	overflow-x: clip;
 }
 
 @media (max-width: 991.98px) {
@@ -241,31 +243,16 @@ export default defineComponent({
 	}
 }
 
-/* keep stacked cards on narrow desktop/laptop viewports */
-@media (max-width: 991.98px) and (hover: hover) and (pointer: fine) {
-	.carousel {
-		display: block;
-		overflow-x: visible;
-		scroll-snap-type: none;
-	}
-	.carousel > * {
-		min-width: 0;
-	}
-	.indicator {
-		display: none !important;
-	}
-}
-
 /* show truncated tiles on breakpoint sm,md */
 @media (min-width: 576px) and (max-width: 991.98px) {
 	.container--loadpoint {
 		max-width: none;
 	}
 	.carousel > *:first-child {
-		margin-left: max(0px, calc((100% - var(--slide-width)) / 2));
+		margin-left: calc((100vw - var(--slide-width)) / 2);
 	}
 	.carousel > *:last-child {
-		margin-right: max(0px, calc((100% - var(--slide-width)) / 2));
+		margin-right: calc((100vw - var(--slide-width)) / 2);
 	}
 	/* fixes safari issue with end-side padding https://webplatform.news/issues/2019-08-07 */
 	.carousel::after {
@@ -295,13 +282,12 @@ export default defineComponent({
 @media (--lg-and-up) {
 	.carousel {
 		display: grid !important;
-		column-gap: clamp(1.75rem, 2.2vw, 2.5rem);
-		row-gap: clamp(1.5rem, 2.2vw, 2.25rem);
-		grid-template-columns: repeat(auto-fit, minmax(520px, 1fr));
+		grid-gap: 2rem;
+		grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
 	}
 	/* breakpoint lg, full width override */
 	.carousel--fullwidth {
-		row-gap: clamp(2.25rem, 4vw, 3.5rem);
+		grid-gap: 4rem;
 		grid-template-columns: 1fr;
 	}
 }

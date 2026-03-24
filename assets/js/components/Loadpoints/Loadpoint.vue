@@ -585,6 +585,20 @@ export default defineComponent({
 	background: var(--evcc-box);
 }
 
+@media (max-width: 991.98px) {
+	.loadpoint {
+		opacity: 1;
+		transform: scale(1);
+		transition-property: opacity, transform;
+		transition-duration: var(--evcc-transition-fast);
+		transition-timing-function: ease-in;
+	}
+	.loadpoint-unselected {
+		transform: scale(0.95);
+		opacity: 0.5;
+	}
+}
+
 .loadpoint--viewport-expanded {
 	min-height: 0;
 	flex: 1 1 auto;
