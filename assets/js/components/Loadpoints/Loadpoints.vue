@@ -1,8 +1,5 @@
 <template>
-	<div
-		class="container container--loadpoint px-0 mb-md-2 d-flex flex-column justify-content-center"
-		data-testid="loadpoints"
-	>
+	<div class="container container--loadpoint px-0 mb-md-2 d-flex flex-column" data-testid="loadpoints">
 		<div
 			v-if="loadpoints.length > 0"
 			ref="carousel"
@@ -96,6 +93,7 @@ export default defineComponent({
 			scrollTimeout: null as Timeout,
 			highlightedIndex: 0,
 			viewportHeight: 0 as number,
+			viewportWidth: 0 as number,
 		};
 	},
 	computed: {
@@ -106,11 +104,15 @@ export default defineComponent({
 			return this.loadpoints.length > 1;
 		},
 		fullWidth() {
+			if (this.viewportWidth < 992) {
+				return false;
+			}
+			const landscape = this.viewportWidth > this.viewportHeight;
 			return (
-				// breakpoint lg, tall screen, 2 loadpoints rows
-				(this.loadpoints.length === 2 && this.viewportHeight >= 1450) ||
-				// breakpoint lg, taller screen, 3 loadpoints rows
-				(this.loadpoints.length === 3 && this.viewportHeight >= 1900)
+				// desktop breakpoint, 2 loadpoints rows
+				(this.loadpoints.length === 2 && this.viewportHeight >= (landscape ? 1050 : 1450)) ||
+				// desktop breakpoint, 3 loadpoints rows
+				(this.loadpoints.length === 3 && this.viewportHeight >= (landscape ? 1500 : 1900))
 			);
 		},
 	},
@@ -165,6 +167,7 @@ export default defineComponent({
 		},
 		updateViewport() {
 			this.viewportHeight = window.innerHeight;
+			this.viewportWidth = window.innerWidth;
 		},
 		left(index: number) {
 			return (this.$refs["carousel"]?.children[0] as HTMLElement).offsetWidth * index;
@@ -194,6 +197,7 @@ export default defineComponent({
 
 .container--loadpoint:not(:empty) {
 	min-height: 300px;
+	overflow-x: clip;
 }
 
 @media (max-width: 991.98px) {
@@ -243,10 +247,10 @@ export default defineComponent({
 		max-width: none;
 	}
 	.carousel > *:first-child {
-		margin-left: calc((100vw - var(--slide-width)) / 2);
+		margin-left: max(0px, calc((100% - var(--slide-width)) / 2));
 	}
 	.carousel > *:last-child {
-		margin-right: calc((100vw - var(--slide-width)) / 2);
+		margin-right: max(0px, calc((100% - var(--slide-width)) / 2));
 	}
 	/* fixes safari issue with end-side padding https://webplatform.news/issues/2019-08-07 */
 	.carousel::after {
@@ -276,12 +280,13 @@ export default defineComponent({
 @media (--lg-and-up) {
 	.carousel {
 		display: grid !important;
-		grid-gap: 2rem;
+		column-gap: clamp(1.25rem, 1.8vw, 2rem);
+		row-gap: clamp(1.5rem, 2.2vw, 2.25rem);
 		grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
 	}
 	/* breakpoint lg, full width override */
 	.carousel--fullwidth {
-		grid-gap: 4rem;
+		row-gap: clamp(2.25rem, 4vw, 3.5rem);
 		grid-template-columns: 1fr;
 	}
 }
