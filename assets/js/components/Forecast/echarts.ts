@@ -8,7 +8,7 @@ import {
   MarkPointComponent,
   AxisPointerComponent,
 } from "echarts/components";
-import { CanvasRenderer } from "echarts/renderers";
+import { SVGRenderer } from "echarts/renderers";
 
 echarts.use([
   BarChart,
@@ -17,7 +17,7 @@ echarts.use([
   TooltipComponent,
   AxisPointerComponent,
   MarkPointComponent,
-  CanvasRenderer,
+  SVGRenderer,
 ]);
 
 export const FONT_FAMILY = "Montserrat, sans-serif";
