@@ -136,9 +136,9 @@ func NewOpenWbNative(ctx context.Context, uri, device, comset string, baudrate i
 
 	go func() {
 		<-ctx.Done()
-		wb.gpio.cp.Release()
-		wb.gpio.ph1.Release()
-		wb.gpio.ph3.Release()
+		wb.gpio.cp.Close()
+		wb.gpio.ph1.Close()
+		wb.gpio.ph3.Close()
 	}()
 
 	return decorateOpenWbNative(wb, maxCurrentMillis, phases1p3p, identify), nil
