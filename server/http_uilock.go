@@ -15,8 +15,14 @@ func CurrentUILockConfig(fallback globalconfig.UILock) globalconfig.UILock {
 	if settings.Exists(keys.UILock) {
 		var u globalconfig.UILock
 		if err := settings.Json(keys.UILock, &u); err == nil {
+			if u.Timeout <= 0 {
+				u.Timeout = globalconfig.DefaultUILockTimeout
+			}
 			return u
 		}
+	}
+	if fallback.Timeout <= 0 {
+		fallback.Timeout = globalconfig.DefaultUILockTimeout
 	}
 	return fallback
 }
