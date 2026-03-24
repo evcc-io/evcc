@@ -1538,31 +1538,35 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 	pvTimerLastEvaluation := lp.pvTimerLastEvaluation
 	lp.pvTimerLastEvaluation = now
 
-	if !lp.enabled {
-		enableThreshold := lp.Enable.Threshold
-		if enableThreshold == 0 {
-			enableThreshold = -currentToPower(minCurrent, lp.MinActivePhases())
+	if lp.enabled {
+		// estimate future site power after adjusting the charge current
+		projectedDeltaCurrent := legalTargetCurrent - effectiveCurrent
+		projectedSitePower := sitePower + currentToPower(projectedDeltaCurrent, projectedActivePhases)
+
+		// adjust projectedSitePower if a phase switch down is expected to happen soon
+		if lp.phaseTimerAction == phaseScale1p {
+			projectedSitePower -= currentToPower(legalTargetCurrent, projectedActivePhases-1)
 		}
 
-		// kick off enable sequence
-		if sitePower <= enableThreshold {
-			lp.log.DEBUG.Printf("site power %.0fW <= %.0fW enable threshold", sitePower, enableThreshold)
+		// kick off disable sequence
+		if projectedSitePower >= lp.Disable.Threshold && targetCurrent < minCurrent {
+			lp.log.DEBUG.Printf("projected site power %.0fW >= %.0fW disable threshold", projectedSitePower, lp.Disable.Threshold)
 
 			if lp.pvTimer.IsZero() || lp.pvTimer.After(now) {
-				lp.log.DEBUG.Printf("pv enable timer start: %v", lp.GetEnableDelay())
+				lp.log.DEBUG.Printf("pv disable timer start: %v", lp.GetDisableDelay())
 				lp.pvTimer = now
 			}
 
-			if elapsed := now.Sub(lp.pvTimer); elapsed >= lp.GetEnableDelay() {
-				lp.log.DEBUG.Println("pv enable timer elapsed")
+			if elapsed := now.Sub(lp.pvTimer); elapsed >= lp.GetDisableDelay() {
+				lp.log.DEBUG.Println("pv disable timer elapsed")
 
-				// reset timer to prevent immediate charger re-disabling
+				// reset timer to prevent immediate charger re-enabling
 				lp.resetPVTimer()
 
-				return legalTargetCurrent
+				return 0
 			}
 
-			lp.publishTimer(pvTimer, lp.GetEnableDelay(), pvEnable)
+			lp.publishTimer(pvTimer, lp.GetDisableDelay(), pvDisable)
 		} else if !lp.pvTimer.IsZero() {
 			// reset the timer if the remaining delay duration already exceeds the upper limit or
 			// if the timer was put into elapsed state, otherwise...
@@ -1570,41 +1574,37 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 				lp.resetPVTimer()
 			} else { // ...increase the remaining delay duration
 				lp.pvTimer = lp.pvTimer.Add(2 * now.Sub(pvTimerLastEvaluation))
-				lp.publishTimer(pvTimer, lp.GetEnableDelay(), timerIncreasing)
+				lp.publishTimer(pvTimer, lp.GetDisableDelay(), timerIncreasing)
 			}
 		}
 
-		return 0
+		return legalTargetCurrent
 	}
 
-	// estimate future site power after adjusting the charge current
-	projectedDeltaCurrent := legalTargetCurrent - effectiveCurrent
-	projectedSitePower := sitePower + currentToPower(projectedDeltaCurrent, projectedActivePhases)
-
-	// adjust projectedSitePower if a phase switch down is expected to happen soon
-	if lp.phaseTimerAction == phaseScale1p {
-		projectedSitePower -= currentToPower(legalTargetCurrent, projectedActivePhases-1)
+	enableThreshold := lp.Enable.Threshold
+	if enableThreshold == 0 {
+		enableThreshold = -currentToPower(minCurrent, lp.MinActivePhases())
 	}
 
-	// kick off disable sequence
-	if projectedSitePower >= lp.Disable.Threshold && targetCurrent < minCurrent {
-		lp.log.DEBUG.Printf("projected site power %.0fW >= %.0fW disable threshold", projectedSitePower, lp.Disable.Threshold)
+	// kick off enable sequence
+	if sitePower <= enableThreshold {
+		lp.log.DEBUG.Printf("site power %.0fW <= %.0fW enable threshold", sitePower, enableThreshold)
 
 		if lp.pvTimer.IsZero() || lp.pvTimer.After(now) {
-			lp.log.DEBUG.Printf("pv disable timer start: %v", lp.GetDisableDelay())
+			lp.log.DEBUG.Printf("pv enable timer start: %v", lp.GetEnableDelay())
 			lp.pvTimer = now
 		}
 
-		if elapsed := now.Sub(lp.pvTimer); elapsed >= lp.GetDisableDelay() {
-			lp.log.DEBUG.Println("pv disable timer elapsed")
+		if elapsed := now.Sub(lp.pvTimer); elapsed >= lp.GetEnableDelay() {
+			lp.log.DEBUG.Println("pv enable timer elapsed")
 
-			// reset timer to prevent immediate charger re-enabling
+			// reset timer to prevent immediate charger re-disabling
 			lp.resetPVTimer()
 
-			return 0
+			return legalTargetCurrent
 		}
 
-		lp.publishTimer(pvTimer, lp.GetDisableDelay(), pvDisable)
+		lp.publishTimer(pvTimer, lp.GetEnableDelay(), pvEnable)
 	} else if !lp.pvTimer.IsZero() {
 		// reset the timer if the remaining delay duration already exceeds the upper limit or
 		// if the timer was put into elapsed state, otherwise...
@@ -1612,11 +1612,11 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 			lp.resetPVTimer()
 		} else { // ...increase the remaining delay duration
 			lp.pvTimer = lp.pvTimer.Add(2 * now.Sub(pvTimerLastEvaluation))
-			lp.publishTimer(pvTimer, lp.GetDisableDelay(), timerIncreasing)
+			lp.publishTimer(pvTimer, lp.GetEnableDelay(), timerIncreasing)
 		}
 	}
 
-	return legalTargetCurrent
+	return 0
 }
 
 // UpdateChargePowerAndCurrents updates charge meter power and currents for load management
