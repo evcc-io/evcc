@@ -77,7 +77,6 @@ func (v *Identity) login() (*oauth2.Token, error) {
 
 	// Request authorization URL with browser-like headers
 	uri := fmt.Sprintf("%s/as/authorization.oauth2?%s", OAuthURI, data.Encode())
-
 	req, _ := request.New(http.MethodGet, uri, nil, map[string]string{
 		"Accept": "text/html,application/xhtml+xml,application/xml;",
 	})
