@@ -79,7 +79,6 @@ func NewOpenWbNativeFromConfig(ctx context.Context, other map[string]any) (api.C
 // NewOpenWbNative creates OpenWbNative charger
 func NewOpenWbNative(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8, hasPhases1p3p bool, rfIdVidPid string, cpWait time.Duration, connector int, chip string) (api.Charger, error) {
 	log := util.NewLogger("openwb-native")
-	log.DEBUG.Printf("Creating OpenWB native with 3 phases %t, rfid %s, cpwait %s, connector %d", hasPhases1p3p, rfIdVidPid, cpWait.String(), connector)
 
 	evse, err := NewEvseDIN(ctx, uri, device, comset, baudrate, proto, slaveID)
 	if err != nil {
@@ -134,6 +133,13 @@ func NewOpenWbNative(ctx context.Context, uri, device, comset string, baudrate i
 		}
 		*gpioConfig.dst = line
 	}
+
+	go func() {
+		<-ctx.Done()
+		wb.gpio.cp.Release()
+		wb.gpio.ph1.Release()
+		wb.gpio.ph3.Release()
+	}()
 
 	return decorateOpenWbNative(wb, maxCurrentMillis, phases1p3p, identify), nil
 }
