@@ -29,17 +29,15 @@
 package chargepoint
 
 import (
-	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/cookiejar"
-	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"golang.org/x/net/publicsuffix"
 )
@@ -172,21 +170,16 @@ func (v *Identity) validate() error {
 // jwtExpired returns true if the JWT's exp claim is in the past or the token
 // cannot be parsed. The signature is not verified — we only need the expiry.
 func jwtExpired(tokenStr string) bool {
-	parts := strings.SplitN(tokenStr, ".", 3)
-	if len(parts) != 3 {
-		return true
-	}
-	payload, err := base64.RawURLEncoding.DecodeString(parts[1])
+	p := jwt.NewParser()
+	token, _, err := p.ParseUnverified(tokenStr, &jwt.RegisteredClaims{})
 	if err != nil {
 		return true
 	}
-	var claims struct {
-		Exp int64 `json:"exp"`
-	}
-	if err := json.Unmarshal(payload, &claims); err != nil || claims.Exp == 0 {
+	exp, err := token.Claims.GetExpirationTime()
+	if err != nil || exp == nil {
 		return true
 	}
-	return time.Now().Unix() > claims.Exp
+	return time.Now().After(exp.Time)
 }
 
 func discover(c *request.Helper, dev DeviceData, username string) (*globalConfig, error) {
