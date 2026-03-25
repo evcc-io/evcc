@@ -127,11 +127,11 @@ func (v *Identity) Login() error {
 
 	var res accountLoginResponse
 	if err := v.Helper.DoJSON(req, &res); err != nil {
-		return fmt.Errorf("logging in: %w", err)
+		return fmt.Errorf("login: %w", err)
 	}
 
 	if res.SessionID == "" {
-		return fmt.Errorf("no session ID in login response")
+		return errors.New("no session ID in login response")
 	}
 
 	v.UserID = res.User.UserID

@@ -141,13 +141,6 @@ func (c *ChargePoint) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface.
 func (c *ChargePoint) MaxCurrent(current int64) error {
-	if current < c.minCurrent {
-		current = c.minCurrent
-	}
-	if current > c.maxCurrent {
-		current = c.maxCurrent
-	}
-
 	if err := c.API.SetAmperageLimit(c.deviceID, current); err != nil {
 		return err
 	}
