@@ -2,7 +2,7 @@ package charger
 
 import (
 	"fmt"
-	"slices"
+	"strconv"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -19,11 +19,9 @@ func init() {
 // ChargePoint implements the api.Charger interface for ChargePoint Home Flex chargers.
 type ChargePoint struct {
 	*cpkg.API
-	deviceID   int
-	minCurrent int64
-	maxCurrent int64
-	enabled    bool
-	statusG    util.Cacheable[cpkg.HomeChargerStatus]
+	deviceID int
+	enabled  bool
+	statusG  util.Cacheable[cpkg.HomeChargerStatus]
 }
 
 // NewChargePointFromConfig creates a ChargePoint charger from generic config.
@@ -63,39 +61,26 @@ func NewChargePoint(deviceID int, user, password string, minCurrent, maxCurrent 
 
 	api := cpkg.NewAPI(log, identity)
 
-	if deviceID == 0 {
-		ids, err := api.HomeChargerIDs()
-		if err != nil {
-			return nil, fmt.Errorf("discover chargers: %w", err)
-		}
-		switch len(ids) {
-		case 0:
-			return nil, fmt.Errorf("no home chargers found")
-		case 1:
-			deviceID = ids[0]
-		default:
-			return nil, fmt.Errorf("multiple home chargers found %v, specify deviceid", ids)
-		}
+	id := ""
+	if deviceID != 0 {
+		id = strconv.Itoa(deviceID)
 	}
+	foundID, err := ensureChargerEx(id, api.HomeChargerIDs, func(v int) (string, error) {
+		return strconv.Itoa(v), nil
+	})
+	if err != nil {
+		return nil, fmt.Errorf("charger: %w", err)
+	}
+	deviceID = foundID
 
 	cp := &ChargePoint{
-		API:        api,
-		deviceID:   deviceID,
-		minCurrent: minCurrent,
-		maxCurrent: maxCurrent,
+		API:      api,
+		deviceID: deviceID,
 	}
 
 	cp.statusG = util.ResettableCached(func() (cpkg.HomeChargerStatus, error) {
 		return cp.API.HomeChargerStatus(cp.deviceID)
 	}, cache)
-
-	// Clamp our min/max based on what the device supports.
-	if status, err := cp.statusG.Get(); err == nil {
-		if limits := status.ChargeAmperageSettings.PossibleChargeLimit; len(limits) > 0 {
-			cp.minCurrent = max(cp.minCurrent, slices.Min(limits))
-			cp.maxCurrent = min(cp.maxCurrent, slices.Max(limits))
-		}
-	}
 
 	return cp, nil
 }
@@ -124,12 +109,11 @@ func (c *ChargePoint) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface.
 func (c *ChargePoint) Enable(enable bool) error {
-	var err error
+	api := c.API.StopCharging
 	if enable {
-		err = c.API.StartCharging(c.deviceID)
-	} else {
-		err = c.API.StopCharging(c.deviceID)
+		api = c.API.StartCharging
 	}
+	err := api(c.deviceID)
 	if err != nil {
 		return err
 	}

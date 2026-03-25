@@ -43,7 +43,6 @@ func NewAPI(log *util.Logger, identity *Identity) *API {
 // restore and the app always sends them as static header values.
 func (a *API) cpHeaders() map[string]string {
 	return map[string]string{
-		"Accept-Encoding":  "gzip, deflate",
 		"User-Agent":       userAgent,
 		"CP-Region":        a.region,
 		"CP-Session-Token": a.identity.SessionID,

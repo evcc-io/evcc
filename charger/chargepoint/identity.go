@@ -29,6 +29,7 @@
 package chargepoint
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/cookiejar"
@@ -122,7 +123,6 @@ func (v *Identity) Login() error {
 
 	uri := v.cfg.EndPoints.Accounts.Value + "v2/driver/profile/account/login"
 	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
-	req.Header.Set("Accept-Encoding", "gzip, deflate")
 	req.Header.Set("User-Agent", userAgent)
 
 	var res accountLoginResponse
@@ -140,7 +140,7 @@ func (v *Identity) Login() error {
 	v.SSOSessionID = res.SSOSessionID
 
 	if err := settings.SetJson(v.settingsKey, v.identityState); err != nil {
-		return fmt.Errorf("persisting chargepoint identity: %w", err)
+		return err
 	}
 
 	return nil
@@ -150,7 +150,6 @@ func (v *Identity) Login() error {
 // the user profile. Returns nil on success.
 func (v *Identity) validate() error {
 	headers := map[string]string{
-		"Accept-Encoding":  "gzip, deflate",
 		"User-Agent":       userAgent,
 		"CP-Region":        v.Region,
 		"CP-Session-Token": v.SessionID,
