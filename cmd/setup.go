@@ -64,7 +64,7 @@ var conf = globalconfig.All{
 	Log:      "info",
 	LogLevels: globalconfig.LogLevels{
 		Default: "info",
-		Levels:  make(map[string]string),
+		Levels:  nil,
 	},
 	Network: globalconfig.Network{
 		Host: "",
