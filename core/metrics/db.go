@@ -69,8 +69,11 @@ func QueryEnergy(from, to time.Time, aggregate string) ([]Series, error) {
 
 	addDuration := aggregateDurations[aggregate]
 
+	// use Go's tz offset instead of SQLite's 'localtime'
+	tz := time.Now().Format("-07:00")
+
 	tx := db.Instance.Table("meters m").
-		Select(`e.name AS label, strftime('` + format + `', m.ts, 'localtime') AS bucket,
+		Select(`e.name AS label, strftime('` + format + `', m.ts, '` + tz + `') AS bucket,
 		COALESCE(SUM(m."import"), 0) AS import, COALESCE(SUM(m.export), 0) AS export`).
 		Joins("JOIN entities e ON m.meter = e.id").
 		Group("label, bucket").
@@ -232,12 +235,14 @@ func importProfile(entity entity, from time.Time) (*[96]float64, error) {
 		return nil, err
 	}
 
-	// Use 'localtime' in strftime to fix https://github.com/evcc-io/evcc/discussions/23759
+	// use Go's tz offset instead of SQLite's 'localtime'
+	tz := time.Now().Format("-07:00")
+
 	rows, err := db.Query(`SELECT min(ts) AS ts, avg(import) AS import
 		FROM meters
 		WHERE meter = ? AND ts >= ?
-		GROUP BY strftime("%H:%M", ts, 'localtime')
-		ORDER BY strftime("%H:%M", ts, 'localtime') ASC`, 1, from,
+		GROUP BY strftime("%H:%M", ts, '`+tz+`')
+		ORDER BY strftime("%H:%M", ts, '`+tz+`') ASC`, 1, from,
 	)
 	if err != nil {
 		return nil, err
