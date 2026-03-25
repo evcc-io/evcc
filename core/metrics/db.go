@@ -11,7 +11,7 @@ import (
 
 type meter struct {
 	Meter     int       `json:"meter" gorm:"column:meter;uniqueIndex:meters_meter_ts"`
-	Timestamp time.Time `json:"ts" gorm:"column:ts;uniqueIndex:meters_meter_ts"`
+	Timestamp time.Time `json:"ts" gorm:"column:ts;uniqueIndex:meters_meter_ts"` // start of 15min slot
 	Entity    entity    `json:"-" gorm:"foreignkey:Meter;references:Id"`
 	Import    float64   `json:"import" gorm:"column:import"`
 	Export    float64   `json:"export" gorm:"column:export"`
