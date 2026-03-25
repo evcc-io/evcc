@@ -9,14 +9,14 @@ requirements:
       Für die Nutzung des EcoFlow PowerOcean Meters benötigen Sie:
       - Einen gültigen Access Key von der EcoFlow Developer Console
       - Den entsprechenden Secret Key
-      - Die Device ID Ihres PowerOcean Systems
+      - Die Seriennummer Ihres PowerOcean Systems
 
       Diese Credentials erhalten Sie über die EcoFlow Developer Console nach der Registrierung Ihrer Anwendung.
     en: |
       To use the EcoFlow PowerOcean meter you need:
       - A valid Access Key from the EcoFlow Developer Console
       - The corresponding Secret Key
-      - The Device ID of your PowerOcean system
+      - The serial number of your PowerOcean system
 
       These credentials can be obtained through the EcoFlow Developer Console after registering your application.
 params:
@@ -37,19 +37,30 @@ params:
       en: Secret Key from EcoFlow Developer Console
       de: Secret Key aus der EcoFlow Developer Console
   - name: deviceid
+    deprecated: true
+  - name: serial
     required: true
+  - name: region
+    choice: ["auto", "europe", "america"]
+    default: auto
+    advanced: true
     description:
-      generic: Device ID
+      generic: "API Region"
     help:
-      en: Device ID of your EcoFlow PowerOcean system (e.g., HJ31ZD1AZH5G0342)
-      de: Geräte-ID Ihres EcoFlow PowerOcean Systems (z.B. HJ31ZD1AZH5G0342)
+      en: "If you sometimes see error code 8513, like for example Starlink users do, automatic region detection fails. Here, you can set the API region manually. Possible values: auto (default), europe, or america."
+      de: 'Manche Nutzer, z.B. mit Starlink-Internet, sehen gelegentlich in den Logs den "error code 8513". Das passiert, wenn die API Region nicht korrekt erkannt wird. Um das zu beheben, kann man die API Region manuell setzen. Mögliche Werte: auto (Standard), europe oder america.'
   - name: cache
     default: 30s
     advanced: true
 render: |
-  type: ecoflow-powerocean
+  type: ecoflow
   accesskey: {{ .accesskey }}
   secretkey: {{ .secretkey }}
-  deviceid: {{ .deviceid }}
+  serial: {{ if .serial }}{{ .serial }}{{ else }}{{ .deviceid }}{{ end }}
   usage: {{ .usage }}
+  region: {{ .region }}
   cache: {{ .cache }}
+  gridpower: sysGridPwr
+  pvpower: mpptPwr
+  batterypower: bpPwr
+  batterysoc: bpSoc

@@ -98,9 +98,10 @@ export default defineComponent({
 			return !!this.forecast.solar && this.experimental;
 		},
 		solar() {
-			return this.showSolarAdjust && this.solarAdjusted
-				? adjustedSolar(this.forecast.solar)
-				: this.forecast.solar;
+			if (this.showSolarAdjust && this.solarAdjusted) {
+				return adjustedSolar(this.forecast.solar);
+			}
+			return this.forecast.solar ? { ...this.forecast.solar, scale: undefined } : undefined;
 		},
 		solarAdjustText() {
 			let percent = "";

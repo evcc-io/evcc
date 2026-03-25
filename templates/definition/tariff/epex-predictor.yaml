@@ -23,9 +23,11 @@ params:
     choice: ["DE", "AT", "NL", "BE", "SE_1", "SE_2", "SE_3", "SE_4", "DK_1", "DK_2"]
     required: true
   - preset: tariff-base
+  - preset: tariff-features
 render: |
   type: custom
   {{ include "tariff-base" . }}
+  {{ include "tariff-features" . }}
   forecast:
     source: http
     uri: {{ .uri }}/prices?region={{ .region }}&unit=EUR_PER_KWH&timezone=UTC

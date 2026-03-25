@@ -238,7 +238,7 @@ export default defineComponent({
 }
 
 /* show truncated tiles on breakpoint sm,md */
-@media (min-width: 576px) and (max-width: 991.98px) {
+@media (--sm-to-lg) {
 	.container--loadpoint {
 		max-width: none;
 	}
@@ -259,14 +259,14 @@ export default defineComponent({
 }
 
 /* breakpoint sm */
-@media (min-width: 576px) and (max-width: 767.98px) {
+@media (--sm-to-md) {
 	.carousel {
 		--slide-width: 540px;
 	}
 }
 
 /* breakpoint md */
-@media (min-width: 768px) and (max-width: 991.98px) {
+@media (--md-to-lg) {
 	.carousel {
 		--slide-width: 720px;
 	}
