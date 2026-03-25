@@ -1,0 +1,71 @@
+template: goodwe-wifi-et
+requirements:
+  evcc: ["skiptest"]
+products:
+  - brand: GoodWe
+    description:
+      generic: ET/EH/BT/BH Hybrid Inverter (WiFi)
+
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+
+  - name: host
+    help:
+      en: IP address of the inverter (port 8899)
+      de: IP-Adresse des Wechselrichters (Port 8899)
+    example: 192.168.1.26
+
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: aa55udp
+    host: {{ .host }}
+    register: 35139
+    count: 2
+    decode: int32be
+  energy:
+    source: aa55udp
+    host: {{ .host }}
+    register: 36017
+    count: 2
+    decode: float32
+    scale: 0.001
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: aa55udp
+    host: {{ .host }}
+    register: 35137
+    count: 2
+    decode: int32be
+  energy:
+    source: aa55udp
+    host: {{ .host }}
+    register: 35191
+    count: 2
+    decode: uint32be
+    scale: 0.1
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: aa55udp
+    host: {{ .host }}
+    register: 35182
+    count: 2
+    decode: int32be
+  energy:
+    source: aa55udp
+    host: {{ .host }}
+    register: 35209
+    count: 2
+    decode: uint32be
+    scale: 0.1
+  soc:
+    source: aa55udp
+    host: {{ .host }}
+    register: 37007
+    count: 1
+    decode: uint16be
+  {{- end }}
