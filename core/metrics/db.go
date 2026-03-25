@@ -159,7 +159,7 @@ func SetupSchema() error {
 		}
 
 		if res.Group == "" {
-			res.Group = Virtual
+			res.Group = Home
 			if err := db.Instance.Save(&res).Error; err != nil {
 				return err
 			}

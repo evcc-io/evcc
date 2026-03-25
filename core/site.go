@@ -138,7 +138,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	site.prioritizer = prioritizer.New(log)
 	site.stats = NewStats()
 
-	me, err := metrics.NewCollector(metrics.Virtual, metrics.Home)
+	me, err := metrics.NewCollector(metrics.Home, metrics.Home)
 	if err != nil {
 		return err
 	}

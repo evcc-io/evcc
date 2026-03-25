@@ -21,12 +21,9 @@ const (
 	SlotDuration = 15 * time.Minute
 
 	// groups
-	Virtual = "virtual"
-	Grid    = "grid"
-	PV      = "pv"
-
-	// meters
-	Home = "home" // virtual home meter
+	Grid = "grid"
+	PV   = "pv"
+	Home = "home" // meter and group (virtual measurement)
 )
 
 type Collector struct {
