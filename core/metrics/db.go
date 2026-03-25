@@ -69,40 +69,21 @@ func QueryEnergy(from, to time.Time, aggregate string) ([]Series, error) {
 
 	addDuration := aggregateDurations[aggregate]
 
-	conn, err := db.Instance.DB()
-	if err != nil {
-		return nil, err
-	}
-
-	var conditions []string
-	var args []any
+	tx := db.Instance.Table("meters m").
+		Select(`e.name AS label, strftime('`+format+`', m.ts, 'localtime') AS bucket,
+		COALESCE(SUM(m."import"), 0) AS import, COALESCE(SUM(m.export), 0) AS export`).
+		Joins("JOIN entities e ON m.meter = e.id").
+		Group("label, bucket").
+		Order("label, bucket")
 
 	if !from.IsZero() {
-		conditions = append(conditions, `m.ts >= ?`)
-		args = append(args, from.Local().Format(tsFormat))
+		tx = tx.Where("m.ts >= ?", from)
 	}
 	if !to.IsZero() {
-		conditions = append(conditions, `m.ts < ?`)
-		args = append(args, to.Local().Format(tsFormat))
+		tx = tx.Where("m.ts < ?", to)
 	}
 
-	where := ""
-	if len(conditions) > 0 {
-		where = `WHERE ` + conditions[0]
-		for _, c := range conditions[1:] {
-			where += ` AND ` + c
-		}
-	}
-
-	query := `SELECT e.name AS label, strftime('` + format + `', m.ts, 'localtime') AS bucket,
-		COALESCE(SUM(m."import"), 0) AS import, COALESCE(SUM(m.export), 0) AS export
-		FROM meters m
-		JOIN entities e ON m.meter = e.id
-		` + where + `
-		GROUP BY label, bucket
-		ORDER BY label, bucket`
-
-	rows, err := conn.Query(query, args...)
+	rows, err := tx.Rows()
 	if err != nil {
 		return nil, err
 	}
