@@ -62,6 +62,10 @@ import (
 var conf = globalconfig.All{
 	Interval: 30 * time.Second,
 	Log:      "info",
+	LogLevels: globalconfig.LogLevels{
+		Default: "info",
+		Levels:  make(map[string]string),
+	},
 	Network: globalconfig.Network{
 		Host: "",
 		Port: 7070,
@@ -501,16 +505,16 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) error {
 	err := wrapErrorWithClass(ClassDatabase, configureDatabase(conf.Database))
 
 	// load persisted log levels and apply logging configuration
-	if settings.Exists(keys.Levels) {
-		if err := migrateYamlToJson(keys.Levels, &conf.Levels); err != nil {
+	if settings.Exists(keys.Log) {
+		if err := settings.Json(keys.Log, &conf.LogLevels); err != nil {
 			return err
 		}
-	}
-	if len(conf.Levels) > 0 {
-		viper.Set("levels", conf.Levels)
+		viper.Set("log", conf.LogLevels.Default)
+		viper.Set("levels", conf.LogLevels.Levels)
 	} else {
-		log.INFO.Printf("No log levels configured in database, using defaults from command line: %v", conf.Log)
+		log.INFO.Printf("No log levels configured in database, using defaults (from command line): %v", conf.Log)
 	}
+
 	parseLogLevels()
 
 	// setup additional templates

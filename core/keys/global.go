@@ -6,7 +6,7 @@ const (
 	PasswordConfigured = "passwordConfigured"
 	Sponsor            = "sponsor"
 	SponsorToken       = "sponsorToken"
-	Levels             = "levels"
+	Log                = "log"
 	Network            = "network"
 	Mqtt               = "mqtt"
 	Influx             = "influx"
