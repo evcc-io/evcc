@@ -137,7 +137,7 @@ func (v *Identity) Login() error {
 	}
 
 	if res.SessionID == "" {
-		return fmt.Errorf("no session ID in login response")
+		return errors.New("no session ID in login response")
 	}
 
 	v.UserID = res.User.UserID
