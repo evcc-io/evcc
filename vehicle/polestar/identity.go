@@ -69,8 +69,8 @@ func (v *Identity) login() (*oauth2.Token, error) {
 		"client_id":             {ClientID},
 		"redirect_uri":          {RedirectURI},
 		"response_type":         {"code"},
+		"scope":                 {"openid profile email"},
 		"state":                 {lo.RandomString(16, lo.AlphanumericCharset)},
-		"scope":                 {"openid", "profile", "email"},
 		"code_challenge":        {oauth2.S256ChallengeFromVerifier(cv)},
 		"code_challenge_method": {"S256"},
 	}
@@ -93,7 +93,7 @@ func (v *Identity) login() (*oauth2.Token, error) {
 		return nil, err
 	}
 
-	matches := regexp.MustCompile(`(?:url|action):\s*"/as/(.+?)/resume/as/authorization\.ping"`).FindStringSubmatch(string(body))
+	matches := regexp.MustCompile(`(?:url|action):\s*"(.+?)"`).FindStringSubmatch(string(body))
 
 	if len(matches) < 2 {
 		return nil, errors.New("could not find resume path")
@@ -106,7 +106,8 @@ func (v *Identity) login() (*oauth2.Token, error) {
 		"client_id":   {ClientID},
 	}
 
-	uri = fmt.Sprintf("%s/as/%s/resume/as/authorization.ping", OAuthURI, matches[1])
+	uri = OAuthURI + "/" + strings.TrimLeft(matches[1], "/") // Remove leading /
+
 	req, _ = request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), map[string]string{
 		"Content-Type": "application/x-www-form-urlencoded",
 		"Accept":       "application/json",
@@ -118,7 +119,6 @@ func (v *Identity) login() (*oauth2.Token, error) {
 	}
 	defer resp.Body.Close()
 
-	// Extract authorization code from response
 	code := resp.Request.URL.Query().Get("code")
 	if code == "" {
 		return nil, errors.New("missing authorization code")
