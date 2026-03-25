@@ -16,25 +16,15 @@ const wsUserAgent = "ChargePoint/664 (iPhone; iOS 26.3; Scale/3.00)"
 
 // API is an HTTP client for the ChargePoint API.
 type API struct {
-	log         *util.Logger
-	identity    *Identity
-	wsURL       string
-	accountsURL string
-	internalURL string
-	chargersURL string
-	region      string
+	log      *util.Logger
+	identity *Identity
 }
 
 // NewAPI creates a ChargePoint API client.
 func NewAPI(log *util.Logger, identity *Identity) *API {
 	return &API{
-		log:         log,
-		identity:    identity,
-		wsURL:       identity.cfg.EndPoints.WebServices.Value,
-		accountsURL: identity.cfg.EndPoints.Accounts.Value,
-		internalURL: identity.cfg.EndPoints.InternalAPI.Value,
-		chargersURL: identity.cfg.EndPoints.Chargers.Value,
-		region:      identity.Region,
+		log:      log,
+		identity: identity,
 	}
 }
 
@@ -44,7 +34,7 @@ func NewAPI(log *util.Logger, identity *Identity) *API {
 func (a *API) cpHeaders() map[string]string {
 	return map[string]string{
 		"User-Agent":       userAgent,
-		"CP-Region":        a.region,
+		"CP-Region":        a.identity.Region,
 		"CP-Session-Token": a.identity.SessionID,
 		"CP-Session-Type":  "CP_SESSION_TOKEN",
 		"Cache-Control":    "no-store",
@@ -72,16 +62,13 @@ func (a *API) cpInternalHeaders() map[string]string {
 // doJSON executes the request produced by makeReq. If the server returns 401,
 // it re-authenticates and retries once with a freshly-built request.
 func (a *API) doJSON(makeReq func() (*http.Request, error), res any) error {
-	req, err := makeReq()
-	if err != nil {
-		return err
-	}
-	err = a.identity.DoJSON(req, res)
+	req, _ := makeReq()
+	err := a.identity.DoJSON(req, res)
 	if err == nil {
 		return nil
 	}
-	var se *request.StatusError
-	if !errors.As(err, &se) || !se.HasStatus(http.StatusUnauthorized) {
+	se, ok := errors.AsType[*request.StatusError](err)
+	if !ok || !se.HasStatus(http.StatusUnauthorized) {
 		return err
 	}
 	// Session expired — re-authenticate and retry once.
@@ -89,10 +76,7 @@ func (a *API) doJSON(makeReq func() (*http.Request, error), res any) error {
 	if loginErr := a.identity.Login(); loginErr != nil {
 		return fmt.Errorf("re-authentication failed: %w (original: %v)", loginErr, err)
 	}
-	req, err = makeReq()
-	if err != nil {
-		return err
-	}
+	req, _ = makeReq()
 	return a.identity.DoJSON(req, res)
 }
 
@@ -104,7 +88,7 @@ func (a *API) Account() (int32, error) {
 		} `json:"user"`
 	}
 	err := a.doJSON(func() (*http.Request, error) {
-		return request.New(http.MethodGet, a.accountsURL+"v1/driver/profile/user", nil,
+		return request.New(http.MethodGet, a.identity.cfg.EndPoints.Accounts.Value+"v1/driver/profile/user", nil,
 			request.JSONEncoding, a.cpHeaders())
 	}, &res)
 	if err != nil {
@@ -128,7 +112,7 @@ func (a *API) HomeChargerIDs() ([]int, error) {
 		} `json:"get_pandas"`
 	}
 	err := a.doJSON(func() (*http.Request, error) {
-		return request.New(http.MethodPost, a.wsURL+"mobileapi/v5",
+		return request.New(http.MethodPost, a.identity.cfg.EndPoints.WebServices.Value+"mobileapi/v5",
 			request.MarshalJSON(data), request.JSONEncoding, a.cpWSHeaders())
 	}, &res)
 	if err != nil {
@@ -141,7 +125,7 @@ func (a *API) HomeChargerIDs() ([]int, error) {
 // HomeChargerStatus returns the current status of a home charger via the
 // internal REST API, which returns richer data than the legacy mobileapi.
 func (a *API) HomeChargerStatus(deviceID int) (HomeChargerStatus, error) {
-	uri := fmt.Sprintf("%sapi/v1/configuration/users/%d/chargers/%d/status?", a.chargersURL, a.identity.UserID, deviceID)
+	uri := fmt.Sprintf("%sapi/v1/configuration/users/%d/chargers/%d/status?", a.identity.cfg.EndPoints.Chargers.Value, a.identity.UserID, deviceID)
 
 	var res HomeChargerStatus
 	err := a.doJSON(func() (*http.Request, error) {
@@ -165,14 +149,14 @@ func (a *API) StartCharging(deviceID int) error {
 		AckID int `json:"ackId"`
 	}
 	if err := a.doJSON(func() (*http.Request, error) {
-		return request.New(http.MethodPost, a.accountsURL+"v1/driver/station/startsession",
+		return request.New(http.MethodPost, a.identity.cfg.EndPoints.Accounts.Value+"v1/driver/station/startsession",
 			request.MarshalJSON(data), request.JSONEncoding, a.cpHeaders())
 	}, &res); err != nil {
 		// 422 means the charger received the command but responds with an ack ID
 		// in the body — decodeJSON still populates res on error, so fall through
 		// to poll. Any other error is fatal.
-		var se *request.StatusError
-		if !errors.As(err, &se) || !se.HasStatus(http.StatusUnprocessableEntity) {
+		se, ok := errors.AsType[*request.StatusError](err)
+		if !ok || !se.HasStatus(http.StatusUnprocessableEntity) {
 			return err
 		}
 	}
@@ -194,14 +178,14 @@ func (a *API) StopCharging(deviceID int) error {
 		AckID int `json:"ackId"`
 	}
 	if err := a.doJSON(func() (*http.Request, error) {
-		return request.New(http.MethodPost, a.accountsURL+"v1/driver/station/stopsession",
+		return request.New(http.MethodPost, a.identity.cfg.EndPoints.Accounts.Value+"v1/driver/station/stopsession",
 			request.MarshalJSON(data), request.JSONEncoding, a.cpHeaders())
 	}, &res); err != nil {
 		// 422 means the charger received the command but responds with an ack ID
 		// in the body — decodeJSON still populates res on error, so fall through
 		// to poll. Any other error is fatal.
-		var se *request.StatusError
-		if !errors.As(err, &se) || !se.HasStatus(http.StatusUnprocessableEntity) {
+		se, ok := errors.AsType[*request.StatusError](err)
+		if !ok || !se.HasStatus(http.StatusUnprocessableEntity) {
 			return err
 		}
 	}
@@ -225,7 +209,7 @@ func (a *API) pollAck(ackID int, action string) error {
 			time.Sleep(time.Second)
 		}
 
-		req, err := request.New(http.MethodPost, a.accountsURL+"v1/driver/station/session/ack",
+		req, err := request.New(http.MethodPost, a.identity.cfg.EndPoints.Accounts.Value+"v1/driver/station/session/ack",
 			request.MarshalJSON(ackData), request.JSONEncoding, a.cpHeaders())
 		if err != nil {
 			return err
@@ -236,8 +220,7 @@ func (a *API) pollAck(ackID int, action string) error {
 			return nil
 		}
 		// 422 is expected and indicates we should keep waiting.
-		var se *request.StatusError
-		if errors.As(err, &se) && se.HasStatus(http.StatusUnprocessableEntity) {
+		if se, ok := errors.AsType[*request.StatusError](err); ok && se.HasStatus(http.StatusUnprocessableEntity) {
 			continue
 		}
 		a.log.DEBUG.Printf("pollAck %s attempt %d/5 (ackId=%d): %v", action, i+1, ackID, err)
@@ -251,7 +234,7 @@ func (a *API) pollAck(ackID int, action string) error {
 // SetAmperageLimit sets the charge amperage limit on the given device via the
 // internal REST API using PUT, as required by that endpoint.
 func (a *API) SetAmperageLimit(deviceID int, limit int64) error {
-	uri := fmt.Sprintf("%sapi/v1/configuration/chargers/%d/charge-amperage-limit", a.chargersURL, deviceID)
+	uri := fmt.Sprintf("%sapi/v1/configuration/chargers/%d/charge-amperage-limit", a.identity.cfg.EndPoints.Chargers.Value, deviceID)
 
 	data := struct {
 		ChargeAmperageLimit int64 `json:"chargeAmperageLimit"`
