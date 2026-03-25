@@ -220,7 +220,7 @@ func (a *API) pollAck(ackID int, action string) error {
 		Action:     action,
 	}
 
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		if i > 0 {
 			time.Sleep(time.Second)
 		}
