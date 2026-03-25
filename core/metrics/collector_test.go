@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestCollectorAddPower(t *testing.T) {
+func TestCollectorAddEnergy(t *testing.T) {
 	clock := clock.NewMock()
 
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
@@ -20,23 +20,25 @@ func TestCollectorAddPower(t *testing.T) {
 	require.True(t, col.accu.updated.IsZero())
 
 	clock.Add(5 * time.Minute)
-	require.NoError(t, col.AddPower(1e3, nil, nil))
+	require.NoError(t, col.AddEnergy(nil, nil, 1e3))
 	require.False(t, col.accu.updated.IsZero())
 
 	clock.Add(5 * time.Minute)
-	require.NoError(t, col.AddPower(1e3, nil, nil))
+	require.NoError(t, col.AddEnergy(nil, nil, 1e3))
 	require.Equal(t, 1e3*5/60/1e3, col.accu.PosEnergy()) // kWh
 
 	clock.Add(5 * time.Minute)
-	require.NoError(t, col.AddPower(1e3, nil, nil))
+	require.NoError(t, col.AddEnergy(nil, nil, 1e3))
 	require.Equal(t, 0.0, col.accu.PosEnergy()) // accumulator reset after 15 minutes
 
 	clock.Add(15 * time.Minute)
-	require.NoError(t, col.AddPower(1e3, nil, nil))
+	require.NoError(t, col.AddEnergy(nil, nil, 1e3))
 	require.Equal(t, 0.0, col.accu.PosEnergy()) // accumulator reset after 15 minutes
 }
 
-func TestCollectorAddPowerWithMeter(t *testing.T) {
+func f(v float64) *float64 { return &v }
+
+func TestCollectorAddEnergyWithImportMeter(t *testing.T) {
 	clock := clock.NewMock()
 
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
@@ -45,34 +47,23 @@ func TestCollectorAddPowerWithMeter(t *testing.T) {
 	col, err := NewCollector("bar", "bar", WithClock(clock))
 	require.NoError(t, err)
 
-	f := func(v float64) *float64 { return &v }
-
-	// first call: seeds lastImport, falls back to power integration
+	// first call: seeds meter, no delta yet
 	clock.Add(5 * time.Minute)
-	require.NoError(t, col.AddPower(1e3, f(50000), nil))
-	require.Nil(t, nil) // no error
-	require.NotNil(t, col.lastImport)
-	require.Equal(t, 50000.0, *col.lastImport)
+	require.NoError(t, col.AddEnergy(f(50000), nil, 1e3))
+	require.Equal(t, 0.0, col.accu.PosEnergy())
 
-	// second call: uses meter delta (0.5 kWh), ignores power
+	// second call: meter delta of 0.5 kWh, power ignored for import
 	clock.Add(5 * time.Minute)
-	require.NoError(t, col.AddPower(1e3, f(50000.5), nil))
+	require.NoError(t, col.AddEnergy(f(50000.5), nil, 1e3))
 	require.Equal(t, 0.5, col.accu.PosEnergy())
 
-	// implausible reading (decreased): ignored, falls back to power
-	prevImport := col.accu.PosEnergy()
+	// implausible reading (decreased): ignored by guard
 	clock.Add(5 * time.Minute)
-	require.NoError(t, col.AddPower(1e3, f(49000), nil))
-	// power integration adds 1kW * 5min = 0.0833 kWh on top — but accumulator was reset at 15min boundary
-	// after 15min slot boundary, accumulator resets
+	require.NoError(t, col.AddEnergy(f(49000), nil, 1e3))
 	require.Equal(t, 0.0, col.accu.PosEnergy()) // reset at slot boundary
-	_ = prevImport
-
-	// verify lastImport was updated even though reading was implausible
-	require.Equal(t, 49000.0, *col.lastImport)
 }
 
-func TestCollectorAddPowerWithImportAndExport(t *testing.T) {
+func TestCollectorAddEnergyWithImportMeterAndExport(t *testing.T) {
 	clock := clock.NewMock()
 
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
@@ -81,37 +72,61 @@ func TestCollectorAddPowerWithImportAndExport(t *testing.T) {
 	col, err := NewCollector("baz", "baz", WithClock(clock))
 	require.NoError(t, err)
 
-	f := func(v float64) *float64 { return &v }
+	// seed import meter
+	clock.Add(3 * time.Minute)
+	require.NoError(t, col.AddEnergy(f(1000), nil, 0))
 
-	// seed both import and export
-	clock.Add(5 * time.Minute)
-	require.NoError(t, col.AddPower(0, f(1000), f(2000)))
-
-	// both deltas used
-	clock.Add(5 * time.Minute)
-	require.NoError(t, col.AddPower(0, f(1000.3), f(2000.7)))
+	// positive power: import via meter delta, no export
+	clock.Add(3 * time.Minute)
+	require.NoError(t, col.AddEnergy(f(1000.3), nil, 500))
 	require.InDelta(t, 0.3, col.accu.PosEnergy(), 1e-10)
-	require.InDelta(t, 0.7, col.accu.NegEnergy(), 1e-10)
+	require.Equal(t, 0.0, col.accu.NegEnergy())
+
+	// negative power: import via meter (no change), export via power integration
+	clock.Add(3 * time.Minute)
+	require.NoError(t, col.AddEnergy(f(1000.3), nil, -600))
+	require.InDelta(t, 0.3, col.accu.PosEnergy(), 1e-10)
+	require.InDelta(t, 600.0*3/60/1e3, col.accu.NegEnergy(), 1e-10) // 0.03 kWh
 }
 
-func TestCollectorAddPowerMixedImportOnly(t *testing.T) {
+func TestCollectorAddEnergyWithBothMeters(t *testing.T) {
 	clock := clock.NewMock()
 
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 	require.NoError(t, SetupSchema())
 
-	col, err := NewCollector("mix", "mix", WithClock(clock))
+	col, err := NewCollector("qux", "qux", WithClock(clock))
 	require.NoError(t, err)
 
-	f := func(v float64) *float64 { return &v }
+	// seed both meters
+	clock.Add(3 * time.Minute)
+	require.NoError(t, col.AddEnergy(f(1000), f(2000), 0))
 
-	// seed import, no export meter
-	clock.Add(5 * time.Minute)
-	require.NoError(t, col.AddPower(-500, f(1000), nil))
+	// both deltas used, power ignored
+	clock.Add(3 * time.Minute)
+	require.NoError(t, col.AddEnergy(f(1000.3), f(2000.7), 999))
+	require.InDelta(t, 0.3, col.accu.PosEnergy(), 1e-10)
+	require.InDelta(t, 0.7, col.accu.NegEnergy(), 1e-10)
+}
 
-	// import delta used, export direction falls back to power (but power is negative so nothing added to import)
+func TestCollectorSetImportAndExportMeterTotal(t *testing.T) {
+	clock := clock.NewMock()
+
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, SetupSchema())
+
+	col, err := NewCollector("set", "set", WithClock(clock))
+	require.NoError(t, err)
+
+	// seed both import and export
 	clock.Add(5 * time.Minute)
-	require.NoError(t, col.AddPower(-500, f(1000.2), nil))
-	require.InDelta(t, 0.2, col.accu.PosEnergy(), 1e-10)
-	require.Equal(t, 0.0, col.accu.NegEnergy()) // no export meter, no power fallback because import meter was used
+	require.NoError(t, col.SetImportMeterTotal(1000))
+	require.NoError(t, col.SetExportMeterTotal(2000))
+
+	// both deltas used
+	clock.Add(5 * time.Minute)
+	require.NoError(t, col.SetImportMeterTotal(1000.3))
+	require.NoError(t, col.SetExportMeterTotal(2000.7))
+	require.InDelta(t, 0.3, col.accu.PosEnergy(), 1e-10)
+	require.InDelta(t, 0.7, col.accu.NegEnergy(), 1e-10)
 }

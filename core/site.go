@@ -759,7 +759,7 @@ func (site *Site) updateGridMeter() error {
 		}
 	}
 
-	site.gridEnergy.AddPower(mm.Power, importEnergy, nil)
+	site.gridEnergy.AddEnergy(importEnergy, nil, mm.Power)
 
 	site.publish(keys.Grid, mm)
 
@@ -932,7 +932,7 @@ func (site *Site) update(lp updater) {
 		site.publish(keys.HomePower, homePower)
 
 		if homePower > 0 {
-			if err := site.homeEnergy.AddPower(homePower, nil, nil); err != nil {
+			if err := site.homeEnergy.AddEnergy(nil, nil, homePower); err != nil {
 				site.log.ERROR.Printf("persist home consumption: %v", err)
 			}
 		}

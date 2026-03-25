@@ -30,11 +30,9 @@ const (
 )
 
 type Collector struct {
-	entity     entity
-	accu       *Accumulator
-	started    time.Time
-	lastImport *float64 // last seen import meter total (kWh)
-	lastExport *float64 // last seen export meter total (kWh)
+	entity  entity
+	accu    *Accumulator
+	started time.Time
 }
 
 func NewCollector(group, name string, opt ...func(*Accumulator)) (*Collector, error) {
@@ -127,32 +125,26 @@ func (c *Collector) SetExportMeterTotal(v float64) error {
 	})
 }
 
-// AddPower adds power (W) and optional cumulative meter totals (kWh).
-// Prefers meter deltas over power integration when available.
-func (c *Collector) AddPower(power float64, importEnergy, exportEnergy *float64) error {
+// AddEnergy adds energy using meter totals if available, falling back to power integration.
+func (c *Collector) AddEnergy(importTotal, exportTotal *float64, power float64) error {
 	return c.process(func() {
-		usedMeter := false
-
-		// import energy using meter reading
-		if importEnergy != nil {
-			if c.lastImport != nil && *importEnergy >= *c.lastImport {
-				c.accu.AddImportEnergy(*importEnergy - *c.lastImport)
-				usedMeter = true
+		switch {
+		case importTotal != nil && exportTotal != nil:
+			c.accu.SetImportMeterTotal(*importTotal)
+			c.accu.SetExportMeterTotal(*exportTotal)
+		case importTotal != nil:
+			// export via power integration (before meter updates clock)
+			if power < 0 {
+				c.accu.AddPower(power)
 			}
-			c.lastImport = importEnergy
-		}
-
-		// export energy using meter reading
-		if exportEnergy != nil {
-			if c.lastExport != nil && *exportEnergy >= *c.lastExport {
-				c.accu.AddExportEnergy(*exportEnergy - *c.lastExport)
-				usedMeter = true
+			c.accu.SetImportMeterTotal(*importTotal)
+		case exportTotal != nil:
+			// import via power integration (before meter updates clock)
+			if power >= 0 {
+				c.accu.AddPower(power)
 			}
-			c.lastExport = exportEnergy
-		}
-
-		// fallback to power integration
-		if !usedMeter {
+			c.accu.SetExportMeterTotal(*exportTotal)
+		default:
 			c.accu.AddPower(power)
 		}
 	})

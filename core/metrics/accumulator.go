@@ -72,7 +72,9 @@ func (m *Accumulator) SetImportMeterTotal(v float64) {
 		return
 	}
 
-	m.Import += v - *m.importMeter
+	if v >= *m.importMeter {
+		m.Import += v - *m.importMeter
+	}
 }
 
 // SetExportMeterTotal adds the difference to the last total meter value in kWh
@@ -86,7 +88,9 @@ func (m *Accumulator) SetExportMeterTotal(v float64) {
 		return
 	}
 
-	m.Export += v - *m.exportMeter
+	if v >= *m.exportMeter {
+		m.Export += v - *m.exportMeter
+	}
 }
 
 // AddImportEnergy adds the given energy in kWh to the positive meter
