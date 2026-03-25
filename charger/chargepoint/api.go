@@ -152,8 +152,8 @@ func (a *API) HomeChargerStatus(deviceID int) (HomeChargerStatus, error) {
 	return res, err
 }
 
-// StartSession starts a charging session on the given device.
-func (a *API) StartSession(deviceID int) error {
+// StartCharging starts a charging session on the given device.
+func (a *API) StartCharging(deviceID int) error {
 	data := struct {
 		DeviceData DeviceData `json:"deviceData"`
 		DeviceID   int        `json:"deviceId"`
@@ -181,8 +181,8 @@ func (a *API) StartSession(deviceID int) error {
 	return a.pollAck(res.AckID, "start_session")
 }
 
-// StopSession stops the active charging session on the given device.
-func (a *API) StopSession(deviceID int) error {
+// StopCharging stops the active charging session on the given device.
+func (a *API) StopCharging(deviceID int) error {
 	data := struct {
 		DeviceData DeviceData `json:"deviceData"`
 		DeviceID   int        `json:"deviceId"`

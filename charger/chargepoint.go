@@ -126,9 +126,9 @@ func (c *ChargePoint) Enabled() (bool, error) {
 func (c *ChargePoint) Enable(enable bool) error {
 	var err error
 	if enable {
-		err = c.API.StartSession(c.deviceID)
+		err = c.API.StartCharging(c.deviceID)
 	} else {
-		err = c.API.StopSession(c.deviceID)
+		err = c.API.StopCharging(c.deviceID)
 	}
 	if err != nil {
 		return err
