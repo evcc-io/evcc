@@ -42,9 +42,8 @@ func NewAPI(log *util.Logger, identity *Identity) *API {
 // Cookies are set explicitly because the cookie jar is empty after a settings
 // restore and the app always sends them as static header values.
 func (a *API) cpHeaders() map[string]string {
-	// Accept-Encoding is intentionally omitted here; the BrotliCompression
-	// transport (set in NewIdentity) sets it to "br" on every request.
 	return map[string]string{
+		"Accept-Encoding":  "gzip, deflate",
 		"User-Agent":       userAgent,
 		"CP-Region":        a.region,
 		"CP-Session-Token": a.identity.SessionID,

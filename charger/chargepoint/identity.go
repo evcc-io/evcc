@@ -40,7 +40,6 @@ import (
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/evcc-io/evcc/util/transport"
 	"github.com/google/uuid"
 	"golang.org/x/net/publicsuffix"
 )
@@ -87,10 +86,6 @@ func NewIdentity(log *util.Logger, username, password string) (*Identity, error)
 		},
 	}
 
-	// Wrap transport for brotli decompression; must be done once here so that
-	// all requests through this Identity use brotli. NewAPI must not wrap it again.
-	v.Helper.Transport = transport.BrotliCompression(v.Helper.Transport)
-
 	v.Helper.Jar, _ = cookiejar.New(&cookiejar.Options{
 		PublicSuffixList: publicsuffix.List,
 	})
@@ -129,6 +124,7 @@ func (v *Identity) Login() error {
 
 	uri := v.cfg.EndPoints.Accounts.Value + "v2/driver/profile/account/login"
 	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
+	req.Header.Set("Accept-Encoding", "gzip, deflate")
 	req.Header.Set("User-Agent", userAgent)
 
 	var res accountLoginResponse
@@ -156,6 +152,7 @@ func (v *Identity) Login() error {
 // the user profile. Returns nil on success.
 func (v *Identity) validate() error {
 	headers := map[string]string{
+		"Accept-Encoding":  "gzip, deflate",
 		"User-Agent":       userAgent,
 		"CP-Region":        v.Region,
 		"CP-Session-Token": v.SessionID,
