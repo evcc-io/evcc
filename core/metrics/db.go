@@ -70,7 +70,7 @@ func QueryEnergy(from, to time.Time, aggregate string) ([]Series, error) {
 	addDuration := aggregateDurations[aggregate]
 
 	tx := db.Instance.Table("meters m").
-		Select(`e.name AS label, strftime('`+format+`', m.ts, 'localtime') AS bucket,
+		Select(`e.name AS label, strftime('` + format + `', m.ts, 'localtime') AS bucket,
 		COALESCE(SUM(m."import"), 0) AS import, COALESCE(SUM(m.export), 0) AS export`).
 		Joins("JOIN entities e ON m.meter = e.id").
 		Group("label, bucket").
