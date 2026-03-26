@@ -1,10 +1,15 @@
 <template>
 	<div class="app" :class="{ 'app--bottomtabs': state.experimental }">
-		<router-view
-			v-if="showRoutes"
-			:notifications="notifications"
-			:offline="offline"
-		></router-view>
+		<router-view v-if="showRoutes" v-slot="{ Component }">
+			<keep-alive>
+				<component
+					:is="Component"
+					:key="$route.path"
+					:notifications="notifications"
+					:offline="offline"
+				/>
+			</keep-alive>
+		</router-view>
 
 		<BottomTabBar v-if="state.experimental" v-bind="bottomTabBarProps" />
 
