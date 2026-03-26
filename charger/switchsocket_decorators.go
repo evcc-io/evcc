@@ -9,7 +9,6 @@ import (
 )
 
 func decorateSwitchSocket(base *SwitchSocket, meterEnergy func() (float64, error), battery func() (float64, error)) api.Charger {
-
 	caps := make(map[reflect.Type]any)
 
 	if meterEnergy != nil {

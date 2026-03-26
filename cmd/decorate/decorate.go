@@ -9,14 +9,12 @@ import (
 	"io"
 	"os"
 	"reflect"
-	"slices"
 	"strconv"
 	"strings"
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
 	"github.com/evcc-io/evcc/api"
-	"github.com/samber/lo"
 	"github.com/spf13/pflag"
 	"golang.org/x/tools/imports"
 )
@@ -32,11 +30,6 @@ var srcTmpl string
 //go:embed header.tpl
 var header string
 
-type dependentTypes struct {
-	Dependency string
-	Dependents []string
-}
-
 type funcStruct struct {
 	Signature, Function, VarName, ReturnTypes, BaseType, ShortType string
 	Params                                                         []string
@@ -48,30 +41,29 @@ type typeStruct struct {
 }
 
 var interfaces = make(map[string]reflect.Type)
-var dependents = make(map[string][]string)
 
 func init() {
-	reflectTypes := map[reflect.Type][]reflect.Type{
-		reflect.TypeFor[api.Meter]():             {reflect.TypeFor[api.MeterEnergy](), reflect.TypeFor[api.PhaseCurrents](), reflect.TypeFor[api.PhaseVoltages](), reflect.TypeFor[api.MaxACPowerGetter]()},
-		reflect.TypeFor[api.PhaseCurrents]():     {reflect.TypeFor[api.PhasePowers]()}, // phase powers are only used to determine currents sign
-		reflect.TypeFor[api.PhaseSwitcher]():     {reflect.TypeFor[api.PhaseGetter]()},
-		reflect.TypeFor[api.Battery]():           {reflect.TypeFor[api.BatteryCapacity](), reflect.TypeFor[api.SocLimiter](), reflect.TypeFor[api.BatteryController](), reflect.TypeFor[api.BatterySocLimiter](), reflect.TypeFor[api.BatteryPowerLimiter]()},
-		reflect.TypeFor[api.ChargeState]():       {reflect.TypeFor[api.ChargeController](), reflect.TypeFor[api.CurrentController]()},
-		reflect.TypeFor[api.CurrentController](): {reflect.TypeFor[api.CurrentGetter]()},
-	}
-
-	for typ, types := range reflectTypes {
-		interfaces[typ.String()] = typ
-		for _, t := range types {
-			interfaces[t.String()] = t
-		}
-
-		dependents[typ.String()] = lo.Map(types, func(typ reflect.Type, _ int) string {
-			return typ.String()
-		})
-	}
-
 	for _, typ := range []reflect.Type{
+		reflect.TypeFor[api.BatteryCapacity](),
+		reflect.TypeFor[api.SocLimiter](),
+		reflect.TypeFor[api.BatteryController](),
+		reflect.TypeFor[api.BatterySocLimiter](),
+		reflect.TypeFor[api.BatteryPowerLimiter](),
+		reflect.TypeFor[api.PhasePowers](),
+		reflect.TypeFor[api.PhaseGetter](),
+		reflect.TypeFor[api.CurrentController](),
+		reflect.TypeFor[api.ChargeController](),
+		reflect.TypeFor[api.CurrentController](),
+		reflect.TypeFor[api.PhaseCurrents](),
+		reflect.TypeFor[api.PhaseSwitcher](),
+		reflect.TypeFor[api.Battery](),
+		reflect.TypeFor[api.ChargeState](),
+		reflect.TypeFor[api.MeterEnergy](),
+		reflect.TypeFor[api.PhaseCurrents](),
+		reflect.TypeFor[api.PhaseVoltages](),
+		reflect.TypeFor[api.MaxACPowerGetter](),
+		reflect.TypeFor[api.Meter](),
+		reflect.TypeFor[api.CurrentGetter](),
 		reflect.TypeFor[api.Curtailer](),
 		reflect.TypeFor[api.Resurrector](),
 		reflect.TypeFor[api.VehicleOdometer](),
@@ -87,34 +79,8 @@ func init() {
 	}
 }
 
-func getTemplate(dtypes []reflect.Type, types map[string]typeStruct, combos []string) *template.Template {
+func getTemplate(dtypes []reflect.Type, types map[string]typeStruct) *template.Template {
 	tmpl, err := template.New("gen").Funcs(sprig.FuncMap()).Funcs(template.FuncMap{
-		"dependents": func() []dependentTypes {
-			dt := make([]dependentTypes, 0)
-			dtypesStrings := lo.Map(dtypes, func(t reflect.Type, _ int) string {
-				return t.String()
-			})
-
-			for _, t := range dtypes {
-				for key, values := range dependents {
-					if slices.Contains(dtypesStrings, key) && slices.Contains(values, t.String()) {
-						dependency := types[key].Functions[0].VarName
-						dependent := types[t.String()].Functions[0].VarName
-
-						for i, v := range dt {
-							if v.Dependency == dependency {
-								dt[i].Dependents = append(dt[i].Dependents, dependency)
-								goto NEXT
-							}
-						}
-						dt = append(dt, dependentTypes{Dependency: dependency, Dependents: []string{dependent}})
-					}
-				NEXT:
-				}
-			}
-
-			return dt
-		},
 		// orderedParams returns a slice of funcStruct ordered by dynamicType
 		"orderedParams": func() []funcStruct {
 			orderedParams := make([]funcStruct, 0)
@@ -148,13 +114,11 @@ func getTypeImport(t reflect.Type) string {
 }
 
 func generate(out io.Writer, functionName, baseType string, dtypes []reflect.Type) error {
-	var combos []string
 	types := make(map[string]typeStruct)
 
 	for _, t := range dtypes {
-		lastPart := t.Name()
-
 		var funcs []funcStruct
+		lastPart := t.Name()
 
 		for i := 0; i < t.NumMethod(); i++ {
 			m := t.Method(i)
@@ -190,8 +154,6 @@ func generate(out io.Writer, functionName, baseType string, dtypes []reflect.Typ
 			ShortType: lastPart,
 			Functions: funcs,
 		}
-
-		combos = append(combos, getTypeImport(t))
 	}
 
 	returnType := *ret
@@ -218,7 +180,7 @@ func generate(out io.Writer, functionName, baseType string, dtypes []reflect.Typ
 		Types:      types,
 	}
 
-	return getTemplate(dtypes, types, combos).Execute(out, vars)
+	return getTemplate(dtypes, types).Execute(out, vars)
 }
 
 type decorationSet struct {

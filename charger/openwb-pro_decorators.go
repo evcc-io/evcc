@@ -9,7 +9,6 @@ import (
 )
 
 func decorateOpenWBPro(base *OpenWBPro, resurrector func() error) api.Charger {
-
 	caps := make(map[reflect.Type]any)
 
 	if resurrector != nil {

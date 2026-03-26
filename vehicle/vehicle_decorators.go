@@ -10,15 +10,6 @@ import (
 )
 
 func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeState func() (api.ChargeStatus, error), vehicleRange func() (int64, error), vehicleOdometer func() (float64, error), vehicleClimater func() (bool, error), currentController func(int64) error, currentGetter func() (float64, error), vehicleFinishTimer func() (time.Time, error), resurrector func() error, chargeController func(bool) error) api.Vehicle {
-	if chargeState == nil {
-		currentController = nil
-		chargeState = nil
-	}
-
-	if currentController == nil {
-		currentGetter = nil
-	}
-
 	caps := make(map[reflect.Type]any)
 
 	if socLimiter != nil {

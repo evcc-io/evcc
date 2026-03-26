@@ -9,10 +9,6 @@ import (
 )
 
 func decorateABLeMH(base *ABLeMH, meter func() (float64, error), phaseCurrents func() (float64, float64, float64, error)) api.Charger {
-	if meter == nil {
-		phaseCurrents = nil
-	}
-
 	caps := make(map[reflect.Type]any)
 
 	if meter != nil {

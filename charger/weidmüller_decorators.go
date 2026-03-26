@@ -9,7 +9,6 @@ import (
 )
 
 func decorateWeidmüller(base *Weidmüller, meterEnergy func() (float64, error)) api.Charger {
-
 	caps := make(map[reflect.Type]any)
 
 	if meterEnergy != nil {

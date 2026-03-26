@@ -9,11 +9,6 @@ import (
 )
 
 func decorateCfos(base *CfosPowerBrain, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseSwitcher func(int) error) api.Charger {
-	if meter == nil {
-		meterEnergy = nil
-		meter = nil
-	}
-
 	caps := make(map[reflect.Type]any)
 
 	if meter != nil {

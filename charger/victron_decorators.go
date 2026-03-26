@@ -9,10 +9,6 @@ import (
 )
 
 func decorateVictron(base *Victron, phaseSwitcher func(int) error, phaseGetter func() (int, error)) api.Charger {
-	if phaseSwitcher == nil {
-		phaseGetter = nil
-	}
-
 	caps := make(map[reflect.Type]any)
 
 	if phaseSwitcher != nil {

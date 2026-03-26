@@ -9,7 +9,6 @@ import (
 )
 
 func decorateInnogy(base *Innogy, meterEnergy func() (float64, error), phaseVoltages func() (float64, float64, float64, error)) api.Charger {
-
 	caps := make(map[reflect.Type]any)
 
 	if meterEnergy != nil {

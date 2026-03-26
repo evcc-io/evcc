@@ -9,10 +9,6 @@ import (
 )
 
 func decorateTronity(base *Tronity, chargeState func() (api.ChargeStatus, error), vehicleOdometer func() (float64, error), chargeController func(bool) error) api.Vehicle {
-	if chargeState == nil {
-		chargeController = nil
-	}
-
 	caps := make(map[reflect.Type]any)
 
 	if chargeState != nil {

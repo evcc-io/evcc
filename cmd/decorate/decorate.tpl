@@ -1,13 +1,5 @@
-func {{.Function}}(base {{.BaseType}}{{range orderedParams}}, {{.VarName}} {{.Signature}}{{end}}) {{.ReturnType}} {
 {{- $prefix := .Function}}
-{{- range dependents}}
-	if {{.Dependency}} == nil {
-		{{- range .Dependents}}
-		{{.}} = nil
-		{{- end}}
-	}
-	{{end}}
-
+func {{.Function}}(base {{.BaseType}}{{range orderedParams}}, {{.VarName}} {{.Signature}}{{end}}) {{.ReturnType}} {
 	caps := make(map[reflect.Type]any)
 
 	{{range orderedParams}}

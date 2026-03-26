@@ -9,7 +9,6 @@ import (
 )
 
 func decorateNRGKickGen2(base *NRGKickGen2, phaseSwitcher func(int) error) api.Charger {
-
 	caps := make(map[reflect.Type]any)
 
 	if phaseSwitcher != nil {

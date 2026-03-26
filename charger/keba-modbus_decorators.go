@@ -9,15 +9,6 @@ import (
 )
 
 func decorateKeba(base *Keba, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), identifier func() (string, error), statusReasoner func() (api.Reason, error), phaseSwitcher func(int) error, phaseGetter func() (int, error)) api.Charger {
-	if meter == nil {
-		meterEnergy = nil
-		meter = nil
-	}
-
-	if phaseSwitcher == nil {
-		phaseGetter = nil
-	}
-
 	caps := make(map[reflect.Type]any)
 
 	if meter != nil {

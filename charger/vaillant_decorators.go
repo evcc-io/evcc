@@ -9,7 +9,6 @@ import (
 )
 
 func decorateVaillant(base *Vaillant, meter func() (float64, error), battery func() (float64, error)) api.Charger {
-
 	caps := make(map[reflect.Type]any)
 
 	if meter != nil {

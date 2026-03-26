@@ -9,10 +9,6 @@ import (
 )
 
 func decorateGoodWeWifi(base *goodWeWiFi, battery func() (float64, error), batteryCapacity func() float64) api.Meter {
-	if battery == nil {
-		batteryCapacity = nil
-	}
-
 	caps := make(map[reflect.Type]any)
 
 	if battery != nil {

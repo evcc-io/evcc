@@ -9,7 +9,6 @@ import (
 )
 
 func decorateGoE(base *GoE, chargeRater func() (float64, error), phaseSwitcher func(int) error) api.Charger {
-
 	caps := make(map[reflect.Type]any)
 
 	if chargeRater != nil {

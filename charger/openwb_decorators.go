@@ -9,7 +9,6 @@ import (
 )
 
 func decorateOpenWB(base *OpenWB, phaseSwitcher func(int) error, battery func() (float64, error)) api.Charger {
-
 	caps := make(map[reflect.Type]any)
 
 	if phaseSwitcher != nil {

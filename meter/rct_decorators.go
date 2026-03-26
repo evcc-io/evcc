@@ -9,13 +9,6 @@ import (
 )
 
 func decorateRCT(base *RCT, meterEnergy func() (float64, error), curtailer0 func(bool) error, curtailer1 func() (bool, error), battery func() (float64, error), batterySocLimiter func() (float64, float64), batteryPowerLimiter func() (float64, float64), batteryController func(api.BatteryMode) error, batteryCapacity func() float64) api.Meter {
-	if battery == nil {
-		batterySocLimiter = nil
-		battery = nil
-		battery = nil
-		battery = nil
-	}
-
 	caps := make(map[reflect.Type]any)
 
 	if meterEnergy != nil {

@@ -9,14 +9,6 @@ import (
 )
 
 func decorateSgReady(base *SgReady, meter func() (float64, error), meterEnergy func() (float64, error), battery func() (float64, error), socLimiter func() (int64, error)) api.Charger {
-	if meter == nil {
-		meterEnergy = nil
-	}
-
-	if battery == nil {
-		socLimiter = nil
-	}
-
 	caps := make(map[reflect.Type]any)
 
 	if meter != nil {

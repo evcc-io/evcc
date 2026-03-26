@@ -9,10 +9,6 @@ import (
 )
 
 func decorateEm2Go(base *Em2Go, chargerEx func(float64) error, phaseSwitcher func(int) error, phaseGetter func() (int, error)) api.Charger {
-	if phaseSwitcher == nil {
-		phaseGetter = nil
-	}
-
 	caps := make(map[reflect.Type]any)
 
 	if chargerEx != nil {

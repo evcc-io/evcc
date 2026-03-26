@@ -9,11 +9,6 @@ import (
 )
 
 func decorateEtek(base *Etek, meter func() (float64, error), meterEnergy func() (float64, error), phaseVoltages func() (float64, float64, float64, error)) api.Charger {
-	if meter == nil {
-		meterEnergy = nil
-		meter = nil
-	}
-
 	caps := make(map[reflect.Type]any)
 
 	if meter != nil {

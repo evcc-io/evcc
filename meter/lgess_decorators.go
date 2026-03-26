@@ -9,13 +9,6 @@ import (
 )
 
 func decorateLgEss(base *LgEss, meterEnergy func() (float64, error), batteryCapacity func() float64, battery func() (float64, error), batterySocLimiter func() (float64, float64), batteryPowerLimiter func() (float64, float64), batteryController func(api.BatteryMode) error) api.Meter {
-	if battery == nil {
-		batteryCapacity = nil
-		battery = nil
-		battery = nil
-		battery = nil
-	}
-
 	caps := make(map[reflect.Type]any)
 
 	if meterEnergy != nil {

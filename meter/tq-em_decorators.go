@@ -9,7 +9,6 @@ import (
 )
 
 func decorateTqEm(base api.Meter, phaseCurrents func() (float64, float64, float64, error)) api.Meter {
-
 	caps := make(map[reflect.Type]any)
 
 	if phaseCurrents != nil {

@@ -9,13 +9,6 @@ import (
 )
 
 func decorateE3dc(base *E3dc, battery func() (float64, error), batteryCapacity func() float64, batteryController func(api.BatteryMode) error, batterySocLimiter func() (float64, float64), batteryPowerLimiter func() (float64, float64), maxACPowerGetter func() float64) api.Meter {
-	if battery == nil {
-		batteryCapacity = nil
-		battery = nil
-		battery = nil
-		battery = nil
-	}
-
 	caps := make(map[reflect.Type]any)
 
 	if battery != nil {

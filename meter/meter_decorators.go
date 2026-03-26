@@ -9,10 +9,6 @@ import (
 )
 
 func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error), phasePowers func() (float64, float64, float64, error), maxACPowerGetter func() float64) api.Meter {
-	if phaseCurrents == nil {
-		phasePowers = nil
-	}
-
 	caps := make(map[reflect.Type]any)
 
 	if meterEnergy != nil {
@@ -93,13 +89,6 @@ func (impl *decorateMeterPhaseVoltagesImpl) Voltages() (float64, float64, float6
 }
 
 func decorateMeterBattery(base api.Meter, meterEnergy func() (float64, error), battery func() (float64, error), batteryCapacity func() float64, batterySocLimiter func() (float64, float64), batteryPowerLimiter func() (float64, float64), batteryController func(api.BatteryMode) error) api.Meter {
-	if battery == nil {
-		batteryCapacity = nil
-		battery = nil
-		battery = nil
-		battery = nil
-	}
-
 	caps := make(map[reflect.Type]any)
 
 	if meterEnergy != nil {

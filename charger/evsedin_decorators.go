@@ -9,7 +9,6 @@ import (
 )
 
 func decorateEvseDIN(base *EvseDIN, chargerEx func(float64) error) api.Charger {
-
 	caps := make(map[reflect.Type]any)
 
 	if chargerEx != nil {

@@ -9,10 +9,6 @@ import (
 )
 
 func decorateSEMP(base *SEMP, phaseSwitcher func(int) error, phaseGetter func() (int, error), chargeRater func() (float64, error)) api.Charger {
-	if phaseSwitcher == nil {
-		phaseGetter = nil
-	}
-
 	caps := make(map[reflect.Type]any)
 
 	if phaseSwitcher != nil {

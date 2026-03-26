@@ -9,10 +9,6 @@ import (
 )
 
 func decorateTasmota(base *Tasmota, phaseVoltages func() (float64, float64, float64, error), phaseCurrents func() (float64, float64, float64, error), phasePowers func() (float64, float64, float64, error)) api.Meter {
-	if phaseCurrents == nil {
-		phasePowers = nil
-	}
-
 	caps := make(map[reflect.Type]any)
 
 	if phaseVoltages != nil {

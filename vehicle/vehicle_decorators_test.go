@@ -117,66 +117,6 @@ func TestDecorateVehicle_AllCapabilities(t *testing.T) {
 	assert.NoError(t, chc.ChargeEnable(true))
 }
 
-func TestDecorateVehicle_DependencyRules(t *testing.T) {
-	t.Run("ChargeController requires ChargeState", func(t *testing.T) {
-		v := decorateVehicle(baseVehicle(),
-			nil,                             // socLimiter
-			nil,                             // chargeState (nil!)
-			nil,                             // vehicleRange
-			nil,                             // vehicleOdometer
-			nil,                             // vehicleClimater
-			nil,                             // currentController
-			nil,                             // currentGetter
-			nil,                             // vehicleFinishTimer
-			nil,                             // resurrector
-			func(bool) error { return nil }, // chargeController (provided but should be pruned)
-		)
-
-		_, ok := api.Cap[api.ChargeController](v)
-		assert.False(t, ok, "ChargeController should be pruned when ChargeState is nil")
-	})
-
-	t.Run("CurrentController requires ChargeState", func(t *testing.T) {
-		v := decorateVehicle(baseVehicle(),
-			nil,                              // socLimiter
-			nil,                              // chargeState (nil!)
-			nil,                              // vehicleRange
-			nil,                              // vehicleOdometer
-			nil,                              // vehicleClimater
-			func(int64) error { return nil }, // currentController (provided but should be pruned)
-			nil,                              // currentGetter
-			nil,                              // vehicleFinishTimer
-			nil,                              // resurrector
-			nil,                              // chargeController
-		)
-
-		_, ok := api.Cap[api.CurrentController](v)
-		assert.False(t, ok, "CurrentController should be pruned when ChargeState is nil")
-	})
-
-	t.Run("CurrentGetter requires CurrentController", func(t *testing.T) {
-		v := decorateVehicle(baseVehicle(),
-			nil, // socLimiter
-			func() (api.ChargeStatus, error) { return api.StatusC, nil }, // chargeState
-			nil, // vehicleRange
-			nil, // vehicleOdometer
-			nil, // vehicleClimater
-			nil, // currentController (nil!)
-			func() (float64, error) { return 16.0, nil }, // currentGetter (provided but should be pruned)
-			nil, // vehicleFinishTimer
-			nil, // resurrector
-			nil, // chargeController
-		)
-
-		_, ok := api.Cap[api.CurrentGetter](v)
-		assert.False(t, ok, "CurrentGetter should be pruned when CurrentController is nil")
-
-		// ChargeState should still work though
-		_, ok = api.Cap[api.ChargeState](v)
-		assert.True(t, ok, "ChargeState should be present")
-	})
-}
-
 func TestDecorateVehicle_PartialCapabilities(t *testing.T) {
 	v := decorateVehicle(baseVehicle(),
 		func() (int64, error) { return 80, nil }, // socLimiter

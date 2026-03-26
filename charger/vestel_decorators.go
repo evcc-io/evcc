@@ -9,10 +9,6 @@ import (
 )
 
 func decorateVestel(base *Vestel, phaseSwitcher func(int) error, phaseGetter func() (int, error), identifier func() (string, error)) api.Charger {
-	if phaseSwitcher == nil {
-		phaseGetter = nil
-	}
-
 	caps := make(map[reflect.Type]any)
 
 	if phaseSwitcher != nil {
