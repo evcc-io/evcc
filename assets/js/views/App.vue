@@ -1,7 +1,7 @@
 <template>
 	<div class="app" :class="{ 'app--bottomtabs': state.experimental }">
 		<router-view v-if="showRoutes" v-slot="{ Component }">
-			<keep-alive>
+			<keep-alive include="Main">
 				<component
 					:is="Component"
 					:key="$route.path"
