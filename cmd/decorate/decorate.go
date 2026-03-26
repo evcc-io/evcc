@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"go/format"
 	"io"
-	"maps"
 	"os"
 	"reflect"
 	"slices"
@@ -17,7 +16,6 @@ import (
 
 	"github.com/Masterminds/sprig/v3"
 	"github.com/evcc-io/evcc/api"
-	combinations "github.com/mxschmitt/golang-combinations"
 	"github.com/samber/lo"
 	"github.com/spf13/pflag"
 	"golang.org/x/tools/imports"
@@ -34,9 +32,13 @@ var srcTmpl string
 //go:embed header.tpl
 var header string
 
+type dependentTypes struct {
+	T, Dependent string
+}
+
 type funcStruct struct {
-	Signature, Function, VarName, ReturnTypes string
-	Params                                    []string
+	Signature, Function, VarName, ReturnTypes, BaseType, ShortType string
+	Params                                                         []string
 }
 
 type typeStruct struct {
@@ -84,80 +86,33 @@ func init() {
 	}
 }
 
-// hasIntersection returns if the slices intersect
-func hasIntersection[T comparable](a, b []T) bool {
-	for _, el := range a {
-		if slices.Contains(b, el) {
-			return true
-		}
-	}
-	return false
-}
-
-func getCombinations(combos []string) [][]string {
-	validCombos := make([][]string, 0)
-	sortedDependents := slices.Sorted(maps.Keys(dependents))
-
-COMBO:
-	for _, c := range combinations.All(combos) {
-		// order the cases for generation
-		for _, master := range sortedDependents {
-			details := dependents[master]
-			// prune combinations where ...
-			// - master is part of the decorators
-			// - master is not part of the currently evaluated combination
-			// - details are part of the currently evaluated combination
-			// ... and remove details from the combination
-			if slices.Contains(combos, master) && !slices.Contains(c, master) && hasIntersection(c, details) {
-				c = lo.Without(c, details...)
-
-				if len(c) == 0 {
-					continue COMBO
-				}
-			}
-		}
-
-		// prune duplicates
-		for _, v := range validCombos {
-			if slices.Equal(v, c) {
-				continue COMBO
-			}
-		}
-
-		validCombos = append(validCombos, c)
-	}
-
-	return validCombos
-}
-
 func getTemplate(dtypes []reflect.Type, types map[string]typeStruct, combos []string) *template.Template {
 	tmpl, err := template.New("gen").Funcs(sprig.FuncMap()).Funcs(template.FuncMap{
-		// contains checks if slice contains string
-		"contains": slices.Contains[[]string, string],
-		// ordered returns a slice of funcStruct ordered by dynamicType
-		"ordered": func() []funcStruct {
-			ordered := make([]funcStruct, 0)
+		"dependents": func() []dependentTypes {
+			dt := make([]dependentTypes, 0)
+			dtypesStrings := lo.Map(dtypes, func(t reflect.Type, _ int) string {
+				return t.String()
+			})
+
+			for _, t := range dtypes {
+				for key, values := range dependents {
+					if slices.Contains(dtypesStrings, key) && slices.Contains(values, t.String()) {
+						dt = append(dt, dependentTypes{T: types[key].Functions[0].VarName, Dependent: types[t.String()].Functions[0].VarName})
+					}
+				}
+			}
+
+			return dt
+		},
+		// orderedParams returns a slice of funcStruct ordered by dynamicType
+		"orderedParams": func() []funcStruct {
+			orderedParams := make([]funcStruct, 0)
 			for _, t := range dtypes {
 				for _, f := range types[getTypeImport(t)].Functions {
-					ordered = append(ordered, f)
+					orderedParams = append(orderedParams, f)
 				}
 			}
-			return ordered
-		},
-		"requiredType": func(c []string, typ string) bool {
-			for master, details := range dependents {
-				// exclude combinations where ...
-				// - master is part of the decorators
-				// - master is not part of the currently evaluated combination
-				// - details are part of the currently evaluated combination
-				if slices.Contains(combos, master) && !slices.Contains(c, master) && slices.Contains(details, typ) {
-					return false
-				}
-			}
-			return true
-		},
-		"empty": func() []string {
-			return nil
+			return orderedParams
 		},
 	}).Parse(srcTmpl)
 
@@ -214,6 +169,8 @@ func generate(out io.Writer, functionName, baseType string, dtypes []reflect.Typ
 				Function:    m.Name,
 				Params:      params,
 				ReturnTypes: fmt.Sprintf("(%s)", strings.Join(returns, ",")),
+				BaseType:    t.String(),
+				ShortType:   t.Name(),
 			})
 		}
 
@@ -243,12 +200,11 @@ func generate(out io.Writer, functionName, baseType string, dtypes []reflect.Typ
 		Types               map[string]typeStruct
 		Combinations        [][]string
 	}{
-		Function:     functionName,
-		BaseType:     baseType,
-		ShortBase:    shortBase,
-		ReturnType:   returnType,
-		Types:        types,
-		Combinations: getCombinations(combos),
+		Function:   functionName,
+		BaseType:   baseType,
+		ShortBase:  shortBase,
+		ReturnType: returnType,
+		Types:      types,
 	}
 
 	return getTemplate(dtypes, types, combos).Execute(out, vars)

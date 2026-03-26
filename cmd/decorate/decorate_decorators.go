@@ -9,7 +9,6 @@ import (
 )
 
 func decorateTest(base api.Charger, meterEnergy func() (float64, error), phaseSwitcher func(int) error, phaseGetter func() (int, error)) api.Charger {
-	// dependency rules: PhaseGetter requires PhaseSwitcher
 	if phaseSwitcher == nil {
 		phaseGetter = nil
 	}

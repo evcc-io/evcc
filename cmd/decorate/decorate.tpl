@@ -1,33 +1,34 @@
-func {{.Function}}(base {{.BaseType}}{{range ordered}}, {{.VarName}} {{.Signature}}{{end}}) {{.ReturnType}} {
-{{- $basetype := .BaseType}}
-{{- $shortbase := .ShortBase}}
+func {{.Function}}(base {{.BaseType}}{{range orderedParams}}, {{.VarName}} {{.Signature}}{{end}}) {{.ReturnType}} {
 {{- $prefix := .Function}}
-{{- $types := .Types}}
-{{- $and := false}}
+{{- range dependents}}
+	if {{.T}} == nil {
+		{{.Dependent}} = nil
+	}
+	{{end}}
+
 	caps := make(map[reflect.Type]any)
 
-{{range $api, $element := .Types}}
-	// {{$api}}, {{$element}}
-	{{range $func := $element.Functions}}
-		if {{.VarName}} != nil {
-			caps[reflect.TypeFor[{{$api}}]()] = {{.VarName}}
-		}
-	{{end}}
-{{end}}
-
-	return &{{.Function}}Capable{
-		caps: caps,
-		{{.ReturnType}}: base,
+	{{range orderedParams}}
+	if {{.VarName}} != nil {
+		caps[reflect.TypeFor[{{.BaseType}}]()] = &{{$prefix}}{{.ShortType}}Impl{ {{.VarName}}: {{.VarName}} }	
 	}
+	{{end}}
+
+	if len(caps) == 0 {
+		return base
+	}
+
+	return &{{.Function}}Capable{ {{.ShortBase}}: base, caps: caps}
 }
 
 type {{.Function}}Capable struct {
-	{{.ReturnType}}
+	{{.BaseType}}
 	caps map[reflect.Type]any
 }
 
 func (d *{{.Function}}Capable) Capability(typ reflect.Type) (any, bool) {
-	return d.caps[typ]
+	c, ok := d.caps[typ]
+	return c, ok
 }
 
 {{range $element := .Types -}}
