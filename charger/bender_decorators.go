@@ -15,6 +15,10 @@ func decorateBenderCC(base *BenderCC, meter func() (float64, error), phaseCurren
 		meter = nil
 	}
 
+	if phaseSwitcher == nil {
+		phaseGetter = nil
+	}
+
 	caps := make(map[reflect.Type]any)
 
 	if meter != nil {

@@ -15,6 +15,10 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 		chargeState = nil
 	}
 
+	if currentController == nil {
+		currentGetter = nil
+	}
+
 	caps := make(map[reflect.Type]any)
 
 	if socLimiter != nil {

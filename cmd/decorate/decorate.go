@@ -104,10 +104,9 @@ func getTemplate(dtypes []reflect.Type, types map[string]typeStruct, combos []st
 						for i, v := range dt {
 							if v.Dependency == dependency {
 								dt[i].Dependents = append(dt[i].Dependents, dependency)
+								goto NEXT
 							}
-							goto NEXT
 						}
-
 						dt = append(dt, dependentTypes{Dependency: dependency, Dependents: []string{dependent}})
 					}
 				NEXT:

@@ -13,6 +13,10 @@ func decorateSgReady(base *SgReady, meter func() (float64, error), meterEnergy f
 		meterEnergy = nil
 	}
 
+	if battery == nil {
+		socLimiter = nil
+	}
+
 	caps := make(map[reflect.Type]any)
 
 	if meter != nil {

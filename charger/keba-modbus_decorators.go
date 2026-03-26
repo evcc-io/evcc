@@ -14,6 +14,10 @@ func decorateKeba(base *Keba, meter func() (float64, error), meterEnergy func() 
 		meter = nil
 	}
 
+	if phaseSwitcher == nil {
+		phaseGetter = nil
+	}
+
 	caps := make(map[reflect.Type]any)
 
 	if meter != nil {

@@ -13,6 +13,12 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 		socLimiter = nil
 	}
 
+	if meter == nil {
+		meterEnergy = nil
+		meter = nil
+		meter = nil
+	}
+
 	caps := make(map[reflect.Type]any)
 
 	if chargerEx != nil {
