@@ -10,14 +10,9 @@ import (
 )
 
 func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeState func() (api.ChargeStatus, error), vehicleRange func() (int64, error), vehicleOdometer func() (float64, error), vehicleClimater func() (bool, error), currentController func(int64) error, currentGetter func() (float64, error), vehicleFinishTimer func() (time.Time, error), resurrector func() error, chargeController func(bool) error) api.Vehicle {
-	// dependency rules: ChargeController and CurrentController require ChargeState
 	if chargeState == nil {
-		chargeController = nil
 		currentController = nil
-	}
-	// dependency rule: CurrentGetter requires CurrentController
-	if currentController == nil {
-		currentGetter = nil
+		chargeState = nil
 	}
 
 	caps := make(map[reflect.Type]any)
@@ -25,30 +20,39 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 	if socLimiter != nil {
 		caps[reflect.TypeFor[api.SocLimiter]()] = &decorateVehicleSocLimiterImpl{socLimiter: socLimiter}
 	}
+
 	if chargeState != nil {
 		caps[reflect.TypeFor[api.ChargeState]()] = &decorateVehicleChargeStateImpl{chargeState: chargeState}
 	}
+
 	if vehicleRange != nil {
 		caps[reflect.TypeFor[api.VehicleRange]()] = &decorateVehicleVehicleRangeImpl{vehicleRange: vehicleRange}
 	}
+
 	if vehicleOdometer != nil {
 		caps[reflect.TypeFor[api.VehicleOdometer]()] = &decorateVehicleVehicleOdometerImpl{vehicleOdometer: vehicleOdometer}
 	}
+
 	if vehicleClimater != nil {
 		caps[reflect.TypeFor[api.VehicleClimater]()] = &decorateVehicleVehicleClimaterImpl{vehicleClimater: vehicleClimater}
 	}
+
 	if currentController != nil {
 		caps[reflect.TypeFor[api.CurrentController]()] = &decorateVehicleCurrentControllerImpl{currentController: currentController}
 	}
+
 	if currentGetter != nil {
 		caps[reflect.TypeFor[api.CurrentGetter]()] = &decorateVehicleCurrentGetterImpl{currentGetter: currentGetter}
 	}
+
 	if vehicleFinishTimer != nil {
 		caps[reflect.TypeFor[api.VehicleFinishTimer]()] = &decorateVehicleVehicleFinishTimerImpl{vehicleFinishTimer: vehicleFinishTimer}
 	}
+
 	if resurrector != nil {
 		caps[reflect.TypeFor[api.Resurrector]()] = &decorateVehicleResurrectorImpl{resurrector: resurrector}
 	}
+
 	if chargeController != nil {
 		caps[reflect.TypeFor[api.ChargeController]()] = &decorateVehicleChargeControllerImpl{chargeController: chargeController}
 	}

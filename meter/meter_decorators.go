@@ -9,7 +9,6 @@ import (
 )
 
 func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error), phasePowers func() (float64, float64, float64, error), maxACPowerGetter func() float64) api.Meter {
-	// dependency rule: PhasePowers requires PhaseCurrents
 	if phaseCurrents == nil {
 		phasePowers = nil
 	}
@@ -19,54 +18,21 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCur
 	if meterEnergy != nil {
 		caps[reflect.TypeFor[api.MeterEnergy]()] = &decorateMeterMeterEnergyImpl{meterEnergy: meterEnergy}
 	}
+
 	if phaseCurrents != nil {
 		caps[reflect.TypeFor[api.PhaseCurrents]()] = &decorateMeterPhaseCurrentsImpl{phaseCurrents: phaseCurrents}
 	}
+
 	if phaseVoltages != nil {
 		caps[reflect.TypeFor[api.PhaseVoltages]()] = &decorateMeterPhaseVoltagesImpl{phaseVoltages: phaseVoltages}
 	}
+
 	if phasePowers != nil {
 		caps[reflect.TypeFor[api.PhasePowers]()] = &decorateMeterPhasePowersImpl{phasePowers: phasePowers}
 	}
+
 	if maxACPowerGetter != nil {
 		caps[reflect.TypeFor[api.MaxACPowerGetter]()] = &decorateMeterMaxACPowerGetterImpl{maxACPowerGetter: maxACPowerGetter}
-	}
-
-	if len(caps) == 0 {
-		return base
-	}
-
-	return &decorateMeterCapable{Meter: base, caps: caps}
-}
-
-func decorateMeterBattery(base api.Meter, meterEnergy func() (float64, error), battery func() (float64, error), batteryCapacity func() float64, batterySocLimiter func() (float64, float64), batteryPowerLimiter func() (float64, float64), batteryController func(api.BatteryMode) error) api.Meter {
-	// dependency rules: all battery sub-interfaces require Battery
-	if battery == nil {
-		batteryCapacity = nil
-		batterySocLimiter = nil
-		batteryPowerLimiter = nil
-		batteryController = nil
-	}
-
-	caps := make(map[reflect.Type]any)
-
-	if meterEnergy != nil {
-		caps[reflect.TypeFor[api.MeterEnergy]()] = &decorateMeterBatteryMeterEnergyImpl{meterEnergy: meterEnergy}
-	}
-	if battery != nil {
-		caps[reflect.TypeFor[api.Battery]()] = &decorateMeterBatteryBatteryImpl{battery: battery}
-	}
-	if batteryCapacity != nil {
-		caps[reflect.TypeFor[api.BatteryCapacity]()] = &decorateMeterBatteryBatteryCapacityImpl{batteryCapacity: batteryCapacity}
-	}
-	if batterySocLimiter != nil {
-		caps[reflect.TypeFor[api.BatterySocLimiter]()] = &decorateMeterBatteryBatterySocLimiterImpl{batterySocLimiter: batterySocLimiter}
-	}
-	if batteryPowerLimiter != nil {
-		caps[reflect.TypeFor[api.BatteryPowerLimiter]()] = &decorateMeterBatteryBatteryPowerLimiterImpl{batteryPowerLimiter: batteryPowerLimiter}
-	}
-	if batteryController != nil {
-		caps[reflect.TypeFor[api.BatteryController]()] = &decorateMeterBatteryBatteryControllerImpl{batteryController: batteryController}
 	}
 
 	if len(caps) == 0 {
@@ -124,6 +90,57 @@ type decorateMeterPhaseVoltagesImpl struct {
 
 func (impl *decorateMeterPhaseVoltagesImpl) Voltages() (float64, float64, float64, error) {
 	return impl.phaseVoltages()
+}
+
+func decorateMeterBattery(base api.Meter, meterEnergy func() (float64, error), battery func() (float64, error), batteryCapacity func() float64, batterySocLimiter func() (float64, float64), batteryPowerLimiter func() (float64, float64), batteryController func(api.BatteryMode) error) api.Meter {
+	if battery == nil {
+		batteryCapacity = nil
+		battery = nil
+		battery = nil
+		battery = nil
+	}
+
+	caps := make(map[reflect.Type]any)
+
+	if meterEnergy != nil {
+		caps[reflect.TypeFor[api.MeterEnergy]()] = &decorateMeterBatteryMeterEnergyImpl{meterEnergy: meterEnergy}
+	}
+
+	if battery != nil {
+		caps[reflect.TypeFor[api.Battery]()] = &decorateMeterBatteryBatteryImpl{battery: battery}
+	}
+
+	if batteryCapacity != nil {
+		caps[reflect.TypeFor[api.BatteryCapacity]()] = &decorateMeterBatteryBatteryCapacityImpl{batteryCapacity: batteryCapacity}
+	}
+
+	if batterySocLimiter != nil {
+		caps[reflect.TypeFor[api.BatterySocLimiter]()] = &decorateMeterBatteryBatterySocLimiterImpl{batterySocLimiter: batterySocLimiter}
+	}
+
+	if batteryPowerLimiter != nil {
+		caps[reflect.TypeFor[api.BatteryPowerLimiter]()] = &decorateMeterBatteryBatteryPowerLimiterImpl{batteryPowerLimiter: batteryPowerLimiter}
+	}
+
+	if batteryController != nil {
+		caps[reflect.TypeFor[api.BatteryController]()] = &decorateMeterBatteryBatteryControllerImpl{batteryController: batteryController}
+	}
+
+	if len(caps) == 0 {
+		return base
+	}
+
+	return &decorateMeterBatteryCapable{Meter: base, caps: caps}
+}
+
+type decorateMeterBatteryCapable struct {
+	api.Meter
+	caps map[reflect.Type]any
+}
+
+func (d *decorateMeterBatteryCapable) Capability(typ reflect.Type) (any, bool) {
+	c, ok := d.caps[typ]
+	return c, ok
 }
 
 type decorateMeterBatteryBatteryImpl struct {

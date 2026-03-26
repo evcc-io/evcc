@@ -9,15 +9,8 @@ import (
 )
 
 func decorateCustom(base *Charger, chargerEx func(float64) error, identifier func() (string, error), phaseSwitcher func(int) error, resurrector func() error, battery func() (float64, error), socLimiter func() (int64, error), meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error)) api.Charger {
-	// dependency rules: SocLimiter requires Battery
 	if battery == nil {
 		socLimiter = nil
-	}
-	// dependency rules: MeterEnergy, PhaseCurrents, PhaseVoltages require Meter
-	if meter == nil {
-		meterEnergy = nil
-		phaseCurrents = nil
-		phaseVoltages = nil
 	}
 
 	caps := make(map[reflect.Type]any)
@@ -25,30 +18,39 @@ func decorateCustom(base *Charger, chargerEx func(float64) error, identifier fun
 	if chargerEx != nil {
 		caps[reflect.TypeFor[api.ChargerEx]()] = &decorateCustomChargerExImpl{chargerEx: chargerEx}
 	}
+
 	if identifier != nil {
 		caps[reflect.TypeFor[api.Identifier]()] = &decorateCustomIdentifierImpl{identifier: identifier}
 	}
+
 	if phaseSwitcher != nil {
 		caps[reflect.TypeFor[api.PhaseSwitcher]()] = &decorateCustomPhaseSwitcherImpl{phaseSwitcher: phaseSwitcher}
 	}
+
 	if resurrector != nil {
 		caps[reflect.TypeFor[api.Resurrector]()] = &decorateCustomResurrectorImpl{resurrector: resurrector}
 	}
+
 	if battery != nil {
 		caps[reflect.TypeFor[api.Battery]()] = &decorateCustomBatteryImpl{battery: battery}
 	}
+
 	if socLimiter != nil {
 		caps[reflect.TypeFor[api.SocLimiter]()] = &decorateCustomSocLimiterImpl{socLimiter: socLimiter}
 	}
+
 	if meter != nil {
 		caps[reflect.TypeFor[api.Meter]()] = &decorateCustomMeterImpl{meter: meter}
 	}
+
 	if meterEnergy != nil {
 		caps[reflect.TypeFor[api.MeterEnergy]()] = &decorateCustomMeterEnergyImpl{meterEnergy: meterEnergy}
 	}
+
 	if phaseCurrents != nil {
 		caps[reflect.TypeFor[api.PhaseCurrents]()] = &decorateCustomPhaseCurrentsImpl{phaseCurrents: phaseCurrents}
 	}
+
 	if phaseVoltages != nil {
 		caps[reflect.TypeFor[api.PhaseVoltages]()] = &decorateCustomPhaseVoltagesImpl{phaseVoltages: phaseVoltages}
 	}
