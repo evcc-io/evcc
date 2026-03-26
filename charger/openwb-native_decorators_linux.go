@@ -9,7 +9,6 @@ import (
 )
 
 func decorateOpenWbNative(base *OpenWbNative, chargerEx func(float64) error, phaseSwitcher func(int) error, identifier func() (string, error)) api.Charger {
-
 	caps := make(map[reflect.Type]any)
 
 	if chargerEx != nil {
