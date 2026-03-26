@@ -33,7 +33,8 @@ var srcTmpl string
 var header string
 
 type dependentTypes struct {
-	T, Dependent string
+	Dependency string
+	Dependents []string
 }
 
 type funcStruct struct {
@@ -97,8 +98,19 @@ func getTemplate(dtypes []reflect.Type, types map[string]typeStruct, combos []st
 			for _, t := range dtypes {
 				for key, values := range dependents {
 					if slices.Contains(dtypesStrings, key) && slices.Contains(values, t.String()) {
-						dt = append(dt, dependentTypes{T: types[key].Functions[0].VarName, Dependent: types[t.String()].Functions[0].VarName})
+						dependency := types[key].Functions[0].VarName
+						dependent := types[t.String()].Functions[0].VarName
+
+						for i, v := range dt {
+							if v.Dependency == dependency {
+								dt[i].Dependents = append(dt[i].Dependents, dependency)
+							}
+							goto NEXT
+						}
+
+						dt = append(dt, dependentTypes{Dependency: dependency, Dependents: []string{dependent}})
 					}
+				NEXT:
 				}
 			}
 

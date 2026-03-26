@@ -1,8 +1,10 @@
 func {{.Function}}(base {{.BaseType}}{{range orderedParams}}, {{.VarName}} {{.Signature}}{{end}}) {{.ReturnType}} {
 {{- $prefix := .Function}}
 {{- range dependents}}
-	if {{.T}} == nil {
-		{{.Dependent}} = nil
+	if {{.Dependency}} == nil {
+		{{- range .Dependents}}
+		{{.}} = nil
+		{{- end}}
 	}
 	{{end}}
 
