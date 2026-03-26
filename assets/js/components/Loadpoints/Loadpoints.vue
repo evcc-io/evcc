@@ -190,6 +190,8 @@ export default defineComponent({
 });
 </script>
 <style scoped>
+@import "../../../css/breakpoints.css";
+
 .container--loadpoint:not(:empty) {
 	min-height: 300px;
 }
@@ -236,7 +238,7 @@ export default defineComponent({
 }
 
 /* show truncated tiles on breakpoint sm,md */
-@media (min-width: 576px) and (max-width: 991.98px) {
+@media (--sm-to-lg) {
 	.container--loadpoint {
 		max-width: none;
 	}
@@ -257,21 +259,21 @@ export default defineComponent({
 }
 
 /* breakpoint sm */
-@media (min-width: 576px) and (max-width: 767.98px) {
+@media (--sm-to-md) {
 	.carousel {
 		--slide-width: 540px;
 	}
 }
 
 /* breakpoint md */
-@media (min-width: 768px) and (max-width: 991.98px) {
+@media (--md-to-lg) {
 	.carousel {
 		--slide-width: 720px;
 	}
 }
 
 /* breakpoint lg, 2-col grid */
-@media (min-width: 992px) {
+@media (--lg-and-up) {
 	.carousel {
 		display: grid !important;
 		grid-gap: 2rem;

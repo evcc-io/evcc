@@ -13,6 +13,8 @@ import {
   isConfigured,
 } from "./components/Auth/auth";
 import { initConfigModal } from "./configModal";
+import { hapticFeedback } from "./utils/haptic";
+import store from "./store";
 import type { VueI18nInstance } from "vue-i18n";
 
 function hideAllModals() {
@@ -62,6 +64,21 @@ export default function setupRouter(i18n: VueI18nInstance) {
   const router = createRouter({
     history: createWebHashHistory(),
     stringifyQuery,
+    scrollBehavior(to, from) {
+      if (to.hash) {
+        return new Promise((resolve) => {
+          const check = () => {
+            if (document.querySelector(to.hash)) {
+              setTimeout(() => resolve({ el: to.hash, behavior: "smooth" }), 200);
+            } else {
+              requestAnimationFrame(check);
+            }
+          };
+          check();
+        });
+      }
+      return to.path !== from.path ? { top: 0, behavior: "instant" } : false;
+    },
     routes: [
       {
         path: "/",
@@ -94,8 +111,13 @@ export default function setupRouter(i18n: VueI18nInstance) {
         },
       },
       {
-        path: "/energy",
-        component: () => import("./views/Energy.vue"),
+        path: "/forecast",
+        component: () => import("./views/Forecast.vue"),
+        props: true,
+      },
+      {
+        path: "/battery",
+        component: () => import("./views/Battery.vue"),
         props: true,
       },
       {
@@ -131,6 +153,9 @@ export default function setupRouter(i18n: VueI18nInstance) {
     // Only hide modals when the actual route path changes, not query parameters
     if (to.path !== from.path) {
       hideAllModals();
+      if (store.state.experimental) {
+        hapticFeedback();
+      }
     }
   });
   initConfigModal(router);

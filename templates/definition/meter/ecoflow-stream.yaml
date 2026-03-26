@@ -1,0 +1,67 @@
+template: ecoflow-stream
+products:
+  - brand: EcoFlow
+    description:
+      generic: Stream
+requirements:
+  description:
+    de: |
+      Für die Nutzung des EcoFlow Stream Meters benötigen Sie:
+      - Einen gültigen Access Key von der EcoFlow Developer Console
+      - Den entsprechenden Secret Key
+      - Die Seriennummer des Hauptgerätes Ihres Stream Systems
+
+      Diese Credentials erhalten Sie über die EcoFlow Developer Console nach der Registrierung Ihrer Anwendung.
+    en: |
+      To use the EcoFlow Stream meter you need:
+      - A valid Access Key from the EcoFlow Developer Console
+      - The corresponding Secret Key
+      - The main device serial number of your Stream system
+
+      These credentials can be obtained through the EcoFlow Developer Console after registering your application.
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: accesskey
+    required: true
+    description:
+      generic: Access Key
+    help:
+      en: Access Key from EcoFlow Developer Console
+      de: Access Key aus der EcoFlow Developer Console
+  - name: secretkey
+    required: true
+    description:
+      generic: Secret Key
+    help:
+      en: Secret Key from EcoFlow Developer Console
+      de: Secret Key aus der EcoFlow Developer Console
+  - name: serial
+    required: true
+    help:
+      en: Serial number of the main device in your Stream system, normally the first device of your system
+      de: Seriennummer des Hauptgeräts (normalerweise das erste Gerät) Ihres Stream Systems
+  - name: region
+    choice: ["auto", "europe", "america"]
+    default: auto
+    advanced: true
+    description:
+      generic: "API Region"
+    help:
+      en: "If you sometimes see error code 8513, like for example Starlink users do, automatic region detection fails. Here, you can set the API region manually. Possible values: auto (default), europe, or america."
+      de: 'Manche Nutzer, z.B. mit Starlink-Internet, sehen gelegentlich in den Logs den "error code 8513". Das passiert, wenn die API Region nicht korrekt erkannt wird. Um das zu beheben, kann man die API Region manuell setzen. Mögliche Werte: auto (Standard), europe oder america.'
+  - name: cache
+    default: 30s
+    advanced: true
+render: |
+  type: ecoflow
+  accesskey: {{ .accesskey }}
+  secretkey: {{ .secretkey }}
+  serial: {{ if .serial }}{{ .serial }}{{ else }}{{ .deviceid }}{{ end }}
+  usage: {{ .usage }}
+  cache: {{ .cache }}
+  region: {{ .region }}
+  gridpower: powGetSysGrid
+  pvpower: powGetPvSum
+  batterypower: powGetBpCms
+  batterysoc: cmsBattSoc
