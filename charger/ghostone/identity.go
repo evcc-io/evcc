@@ -58,7 +58,11 @@ func (c *tokenSource) login() (*oauth2.Token, error) {
 	if err != nil {
 		return nil, err
 	}
-	resp.Body.Close()
+	defer resp.Body.Close()
+
+	if err := request.ResponseError(resp); err != nil {
+		return nil, err
+	}
 
 	token := resp.Header.Get("Authorization")
 	if token == "" {
