@@ -60,7 +60,7 @@ func runMeter(cmd *cobra.Command, args []string) {
 		flagUsed = true
 
 		for _, v := range config.Instances(meters) {
-			if b, ok := v.(api.BatteryController); ok {
+			if b, ok := api.Cap[api.BatteryController](v); ok {
 				if err := b.SetBatteryMode(mode); err != nil {
 					log.FATAL.Fatalln("set battery mode:", err)
 				}

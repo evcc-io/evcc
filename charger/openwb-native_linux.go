@@ -99,7 +99,7 @@ func NewOpenWbNative(ctx context.Context, uri, device, comset string, baudrate i
 		maxCurrentMillis func(float64) error
 	)
 
-	if ex, ok := evse.(api.ChargerEx); ok {
+	if ex, ok := api.Cap[api.ChargerEx](evse); ok {
 		maxCurrentMillis = ex.MaxCurrentMillis
 	}
 
