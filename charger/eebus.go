@@ -64,7 +64,7 @@ func NewEEBusFromConfig(ctx context.Context, other map[string]any) (api.Charger,
 	}
 
 	// default true
-	hasChargedEnergy := cc.ChargedEnergy != nil && *cc.ChargedEnergy
+	hasChargedEnergy := cc.ChargedEnergy == nil || *cc.ChargedEnergy
 
 	return NewEEBus(ctx, cc.Ski, cc.Ip, cc.Meter, hasChargedEnergy, false)
 }
