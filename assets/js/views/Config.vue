@@ -151,7 +151,7 @@
 					/>
 				</div>
 
-				<h2 class="my-4 mt-5">{{ $t("config.tariff.title") }}</h2>
+				<h2 id="tariffs" class="my-4 mt-5">{{ $t("config.tariff.title") }}</h2>
 				<div v-if="!!tariffsYamlSource" class="p-0 config-list">
 					<DeviceCard
 						:title="$t('config.tariff.title')"

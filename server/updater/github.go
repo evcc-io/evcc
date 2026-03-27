@@ -97,7 +97,7 @@ func (r *Repo) ReleaseNotes(from string) (rendered string, err error) {
 				return
 			}
 
-			history.WriteString(fmt.Sprintf("<h1>%s</h1>\n", tag))
+			history.WriteString(fmt.Sprintf("<h1>v%s</h1>\n", tag))
 			history.WriteString(md)
 		}
 	}
