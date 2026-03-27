@@ -811,3 +811,7 @@ input::-webkit-date-and-time-value {
 	opacity: 1;
 	transition: opacity var(--evcc-transition-fast) ease 0.2s;
 }
+
+.app--bottomtabs .sticky-bottom {
+	bottom: calc(var(--tab-bar-height) + 0.25rem);
+}
