@@ -1,0 +1,12 @@
+template: stromleser
+products:
+  - brand: stromleser.one
+    description:
+      generic: IR Reader
+params:
+  - name: usage
+    choice: ["grid", "pv"]
+  - name: host
+render: |
+  type: stromleser
+  uri: http://{{ .host }}
