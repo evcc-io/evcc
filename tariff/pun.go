@@ -137,8 +137,12 @@ func (t *Pun) getData(day time.Time) (api.Rates, error) {
 	}
 
 	resp, err := client.Do(req)
-	if err != nil || resp.StatusCode == http.StatusNotFound {
+	if err != nil {
 		return nil, err
+	}
+	if resp.StatusCode == http.StatusNotFound {
+		resp.Body.Close()
+		return nil, fmt.Errorf("data not available for %s", day.Format("2006-01-02"))
 	}
 
 	body, err := request.ReadBody(resp)
@@ -174,6 +178,11 @@ func (t *Pun) getData(day time.Time) (api.Rates, error) {
 		return nil, err
 	}
 
+	location, err := time.LoadLocation("Europe/Rome")
+	if err != nil {
+		return nil, fmt.Errorf("load location: %w", err)
+	}
+
 	data := make(api.Rates, 0, len(dataSet.Prezzi))
 
 	for _, p := range dataSet.Prezzi {
@@ -191,11 +200,6 @@ func (t *Pun) getData(day time.Time) (api.Rates, error) {
 		if hour == 0 {
 			hour = 24
 			date = date.AddDate(0, 0, -1)
-		}
-
-		location, err := time.LoadLocation("Europe/Rome")
-		if err != nil {
-			return nil, fmt.Errorf("load location: %w", err)
 		}
 
 		price, err := strconv.ParseFloat(strings.ReplaceAll(p.PUN, ",", "."), 64)
