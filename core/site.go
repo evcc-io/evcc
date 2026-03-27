@@ -346,13 +346,14 @@ func (site *Site) restoreSettings() error {
 }
 
 func meterCapabilities(name string, meter any) string {
-	if !api.HasCap[api.Meter](meter) {
+	power := api.HasCap[api.Meter](meter)
+
+	if !power {
 		panic("not a meter: " + name)
 	}
 
-	_, power := api.Cap[api.Meter](meter)
-	_, energy := api.Cap[api.MeterEnergy](meter)
-	_, currents := api.Cap[api.PhaseCurrents](meter)
+	energy := api.HasCap[api.MeterEnergy](meter)
+	currents := api.HasCap[api.PhaseCurrents](meter)
 
 	name += ":"
 	return fmt.Sprintf("    %-10s power %s energy %s currents %s",
