@@ -45,8 +45,9 @@ jobs:
           printf '%s\n\n' 'Full release details: https://github.com/evcc-io/evcc/releases' > ./hassio/${{ inputs.addon_path }}/CHANGELOG.md
 
           if [ "${{ inputs.include_unreleased }}" = "true" ]; then
+            DEFAULT_BRANCH=$(gh repo view evcc-io/evcc --json defaultBranchRef --jq .defaultBranchRef.name)
             LATEST_TAG=$(gh api repos/evcc-io/evcc/releases/latest --jq .tag_name)
-            COMMITS=$(gh api repos/evcc-io/evcc/compare/${LATEST_TAG}...master \
+            COMMITS=$(gh api repos/evcc-io/evcc/compare/${LATEST_TAG}...${DEFAULT_BRANCH} \
               --jq '.commits | reverse[] | .commit.message | split("\n")[0]')
             if [ -n "$COMMITS" ]; then
               printf '## [unreleased]\n\n'
