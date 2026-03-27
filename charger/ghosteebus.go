@@ -44,8 +44,8 @@ func NewGhostEEBusFromConfig(ctx context.Context, other map[string]any) (api.Cha
 		return nil, err
 	}
 
-	// default false
-	hasChargedEnergy := cc.ChargedEnergy != nil && *cc.ChargedEnergy
+	// default true
+	hasChargedEnergy := cc.ChargedEnergy == nil || *cc.ChargedEnergy
 
 	return NewGhostEEBus(ctx, cc.Ski, cc.Ip, cc.User, cc.Password, cc.Meter, hasChargedEnergy, cc.VasVW)
 }
