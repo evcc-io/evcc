@@ -31,7 +31,9 @@ params:
 render: |
   type: ghosteebus
   ski: {{ .ski }}
-  {{ if .ip }}ip: {{ .ip }}{{ end }}
+  ip: {{ .ip }}
   meter: true
-  {{ if .password }}user: technician
-  password: {{ .password }}{{ end }}
+  {{- if .password }}
+  user: technician
+  password: {{ .password }}
+  {{- end }}
