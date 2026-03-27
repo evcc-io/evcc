@@ -11,6 +11,7 @@ import (
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
+	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/oauth2"
 )
 
@@ -72,10 +73,17 @@ func (c *tokenSource) login() (*oauth2.Token, error) {
 	// strip "Bearer " prefix if present
 	token = strings.TrimPrefix(token, "Bearer ")
 
+	// extract expiry from JWT claims
+	expiry := time.Now().Add(10 * time.Minute) // fallback
+	var claims jwt.RegisteredClaims
+	if _, _, err := jwt.NewParser(jwt.WithoutClaimsValidation()).ParseUnverified(token, &claims); err == nil && claims.ExpiresAt != nil {
+		expiry = claims.ExpiresAt.Time
+	}
+
 	return &oauth2.Token{
 		AccessToken: token,
 		TokenType:   "Bearer",
-		Expiry:      time.Now().Add(time.Hour), // assume 1h validity
+		Expiry:      expiry,
 	}, nil
 }
 
