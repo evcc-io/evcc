@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/samber/lo"
 	"golang.org/x/oauth2"
@@ -51,7 +50,8 @@ func NewIdentity(log *util.Logger, user, password string) (oauth2.TokenSource, e
 		return nil, err
 	}
 
-	return oauth.RefreshTokenSource(token, v.refreshToken), nil
+	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, v.Client)
+	return oauth2.ReuseTokenSource(token, OAuth2Config.TokenSource(ctx, token)), nil
 }
 
 func (v *Identity) login() (*oauth2.Token, error) {
@@ -112,16 +112,4 @@ func (v *Identity) login() (*oauth2.Token, error) {
 	defer cancel()
 
 	return OAuth2Config.Exchange(ctx, code, oauth2.VerifierOption(cv))
-}
-
-func (v *Identity) refreshToken(token *oauth2.Token) (*oauth2.Token, error) {
-	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, v.Client)
-	ts := oauth2.ReuseTokenSource(token, OAuth2Config.TokenSource(ctx, token))
-
-	tok, err := ts.Token()
-	if err != nil {
-		tok, err = v.login()
-	}
-
-	return tok, err
 }
