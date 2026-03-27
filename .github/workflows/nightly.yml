@@ -137,9 +137,7 @@ jobs:
     name: Update Hassio Nightly Changelog
     needs:
       - hassio
-    uses: evcc-io/evcc/.github/workflows/hassio-changelog.yml@master
-    permissions:
-      contents: read
+    uses: ./.github/workflows/hassio-changelog.yml
     with:
       addon_path: evcc-nightly
       include_unreleased: true

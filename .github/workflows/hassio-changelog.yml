@@ -18,7 +18,7 @@ jobs:
     runs-on: depot-ubuntu-24.04-arm
 
     permissions:
-      contents: read # push to hassio-addon is authenticated via HASSIO_DEPLOY_TOKEN PAT
+      contents: read # gh api calls to evcc repo; push to hassio-addon uses HASSIO_DEPLOY_TOKEN PAT
 
     steps:
       - name: Checkout hassio-addon
