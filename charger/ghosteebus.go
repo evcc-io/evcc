@@ -54,15 +54,9 @@ func NewGhostEEBusFromConfig(ctx context.Context, other map[string]any) (api.Cha
 
 // NewGhostEEBus creates a GhostEEBus charger combining EEBus with Ghost REST API
 func NewGhostEEBus(ctx context.Context, ski, ip, user, password string, hasMeter, hasChargedEnergy, vasVW bool) (api.Charger, error) {
-	// create underlying EEBus charger without meter decoration (we handle that ourselves)
-	charger, err := NewEEBus(ctx, ski, ip, false, false, vasVW)
+	eb, err := newEEBus(ctx, ski, ip, vasVW)
 	if err != nil {
 		return nil, err
-	}
-
-	eb, ok := charger.(*EEBus)
-	if !ok {
-		return nil, errors.New("unexpected charger type")
 	}
 
 	log := util.NewLogger("ghost-eebus").Redact(user, password)
