@@ -1,0 +1,19 @@
+name: Release - Create Hassio Addon Changelog
+
+permissions:
+  contents: read
+
+on:
+  release:
+    types: [edited, released]
+
+jobs:
+  update-changelog:
+    name: Update Hassio Changelog
+    uses: evcc-io/evcc/.github/workflows/hassio-changelog.yml@master
+    permissions:
+      contents: read
+    with:
+      addon_path: evcc
+      include_unreleased: false
+    secrets: inherit
