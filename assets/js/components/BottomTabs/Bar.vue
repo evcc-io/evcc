@@ -101,7 +101,7 @@ export default defineComponent({
 	background: color-mix(in srgb, var(--tab-bar-background) 60%, transparent);
 	backdrop-filter: var(--evcc-backdrop-blur);
 	border-top: 1px solid var(--evcc-gray-25);
-	box-shadow: 0 -1px 6px var(--evcc-gray-50);
+	box-shadow: 0 -1px 6px var(--evcc-gray-25);
 	transition: transform var(--evcc-transition-fast) ease-in;
 }
 
