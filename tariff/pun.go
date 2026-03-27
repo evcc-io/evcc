@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"bytes"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/cookiejar"
@@ -18,6 +19,12 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 )
+
+// ErrPunDataNotAvailable indicates that GME has not yet published prices for the requested day.
+var ErrPunDataNotAvailable = errors.New("PUN data not available")
+
+// romeLocation is resolved once at package init to avoid repeated filesystem lookups.
+var romeLocation *time.Location
 
 type Pun struct {
 	*embed
@@ -46,6 +53,7 @@ var _ api.Tariff = (*Pun)(nil)
 
 func init() {
 	registry.Add("pun", NewPunFromConfig)
+	romeLocation, _ = time.LoadLocation("Europe/Rome")
 }
 
 func NewPunFromConfig(other map[string]any) (api.Tariff, error) {
@@ -142,7 +150,7 @@ func (t *Pun) getData(day time.Time) (api.Rates, error) {
 	}
 	if resp.StatusCode == http.StatusNotFound {
 		resp.Body.Close()
-		return nil, fmt.Errorf("data not available for %s", day.Format("2006-01-02"))
+		return nil, fmt.Errorf("%w: %s", ErrPunDataNotAvailable, day.Format("2006-01-02"))
 	}
 
 	body, err := request.ReadBody(resp)
@@ -178,11 +186,6 @@ func (t *Pun) getData(day time.Time) (api.Rates, error) {
 		return nil, err
 	}
 
-	location, err := time.LoadLocation("Europe/Rome")
-	if err != nil {
-		return nil, fmt.Errorf("load location: %w", err)
-	}
-
 	data := make(api.Rates, 0, len(dataSet.Prezzi))
 
 	for _, p := range dataSet.Prezzi {
@@ -207,7 +210,7 @@ func (t *Pun) getData(day time.Time) (api.Rates, error) {
 			return nil, fmt.Errorf("parse price: %w", err)
 		}
 
-		ts := time.Date(date.Year(), date.Month(), date.Day(), hour-1, 0, 0, 0, location)
+		ts := time.Date(date.Year(), date.Month(), date.Day(), hour-1, 0, 0, 0, romeLocation)
 		ar := api.Rate{
 			Start: ts,
 			End:   ts.Add(time.Hour),
