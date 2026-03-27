@@ -78,6 +78,7 @@ export interface State {
   system?: string;
   timezone?: string;
   battery?: Battery;
+  batteryMode?: BATTERY_MODE;
   pv?: Meter[];
   aux?: Meter[];
   ext?: Meter[];
@@ -375,6 +376,13 @@ export enum CHARGE_MODE {
   NOW = "now",
   MINPV = "minpv",
   PV = "pv",
+}
+
+export enum BATTERY_MODE {
+  UNKNOWN = "unknown",
+  NORMAL = "normal",
+  HOLD = "hold",
+  CHARGE = "charge",
 }
 
 export enum PHASES {
