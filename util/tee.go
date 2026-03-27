@@ -43,7 +43,7 @@ func (t *Tee) Run(in <-chan Param) {
 		// 	}
 		// }
 
-		if val, ok := api.Cap[api.Redactor](msg.Val); ok {
+		if val, ok := (msg.Val).(api.Redactor); ok {
 			msg.Val = val.Redacted()
 		}
 

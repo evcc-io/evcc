@@ -89,7 +89,7 @@ func (m *MQTT) publishComplex(topic string, retained bool, payload any) {
 		return
 	}
 
-	if mm, ok := api.Cap[api.BytesMarshaler](payload); ok {
+	if mm, ok := payload.(api.BytesMarshaler); ok {
 		if b, err := mm.MarshalBytes(); err == nil {
 			m.publishSingleValue(topic, retained, string(b))
 		} else {
@@ -98,7 +98,7 @@ func (m *MQTT) publishComplex(topic string, retained bool, payload any) {
 		return
 	}
 
-	if mm, ok := api.Cap[api.StructMarshaler](payload); ok {
+	if mm, ok := payload.(api.StructMarshaler); ok {
 		if d, err := mm.MarshalStruct(); err != nil {
 			m.log.ERROR.Printf("marshal struct: %v", err)
 			return
