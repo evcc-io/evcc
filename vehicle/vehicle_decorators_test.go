@@ -25,12 +25,9 @@ func TestDecorateVehicle_NoCapabilities(t *testing.T) {
 	assert.Equal(t, 42.0, soc)
 
 	// no optional capabilities
-	_, ok := api.Cap[api.ChargeState](v)
-	assert.False(t, ok)
-	_, ok = api.Cap[api.VehicleRange](v)
-	assert.False(t, ok)
-	_, ok = api.Cap[api.Resurrector](v)
-	assert.False(t, ok)
+	assert.False(t, api.HasCap[api.ChargeState](v))
+	assert.False(t, api.HasCap[api.VehicleRange](v))
+	assert.False(t, api.HasCap[api.Resurrector](v))
 }
 
 func TestDecorateVehicle_AllCapabilities(t *testing.T) {
@@ -131,18 +128,9 @@ func TestDecorateVehicle_PartialCapabilities(t *testing.T) {
 		nil,                         // chargeController
 	)
 
-	_, ok := api.Cap[api.SocLimiter](v)
-	assert.True(t, ok, "SocLimiter should be present")
-
-	_, ok = api.Cap[api.VehicleRange](v)
-	assert.True(t, ok, "VehicleRange should be present")
-
-	_, ok = api.Cap[api.Resurrector](v)
-	assert.True(t, ok, "Resurrector should be present")
-
-	_, ok = api.Cap[api.ChargeState](v)
-	assert.False(t, ok, "ChargeState should not be present")
-
-	_, ok = api.Cap[api.VehicleOdometer](v)
-	assert.False(t, ok, "VehicleOdometer should not be present")
+	assert.True(t, api.HasCap[api.SocLimiter](v), "SocLimiter should be present")
+	assert.True(t, api.HasCap[api.VehicleRange](v), "VehicleRange should be present")
+	assert.True(t, api.HasCap[api.Resurrector](v), "Resurrector should be present")
+	assert.False(t, api.HasCap[api.ChargeState](v), "ChargeState should not be present")
+	assert.False(t, api.HasCap[api.VehicleOdometer](v), "VehicleOdometer should not be present")
 }
