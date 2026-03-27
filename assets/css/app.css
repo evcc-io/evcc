@@ -94,6 +94,7 @@
 
 	--tab-bar-height: 3rem;
 	--tab-bar-background: var(--evcc-background);
+	--evcc-backdrop-blur: blur(20px);
 }
 
 :root.dark {
@@ -392,8 +393,7 @@ a:hover {
 
 .modal-backdrop {
 	--bs-backdrop-bg: var(--evcc-backdrop);
-	-webkit-backdrop-filter: blur(8px);
-	backdrop-filter: blur(8px);
+	backdrop-filter: var(--evcc-backdrop-blur);
 }
 
 .modal-backdrop.fade {
