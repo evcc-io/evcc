@@ -72,6 +72,7 @@ const (
 	ChargeTotalImport = "chargeTotalImport" // charge meter total import
 
 	// session
+	SessionId               = "sessionId"               // session id
 	ConnectedDuration       = "connectedDuration"       // connected duration
 	ChargeRemainingDuration = "chargeRemainingDuration" // charge remaining duration
 	ChargeRemainingEnergy   = "chargeRemainingEnergy"   // charge remaining energy

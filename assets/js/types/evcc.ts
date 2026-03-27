@@ -302,6 +302,7 @@ export interface Loadpoint {
   pvRemaining: number;
   sessionCo2PerKWh: number | null;
   sessionEnergy: number;
+  sessionId: number | null;
   sessionPrice: number | null;
   sessionPricePerKWh: number | null;
   sessionSolarPercentage: number;
