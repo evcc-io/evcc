@@ -175,8 +175,7 @@ export default defineComponent({
 	inset: 0;
 	z-index: 1029;
 	background-color: var(--evcc-backdrop);
-	-webkit-backdrop-filter: blur(8px);
-	backdrop-filter: blur(8px);
+	backdrop-filter: var(--evcc-backdrop-blur);
 	opacity: 0;
 	visibility: hidden;
 	transition:
