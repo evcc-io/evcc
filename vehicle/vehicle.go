@@ -142,9 +142,13 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.V
 	}
 
 	// decorate chargedenergy
-	chargedEnergy, err := cc.ChargedEnergy.FloatGetter(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("chargedEnergy: %w", err)
+	var chargedEnergy func() (float64, error)
+	if cc.ChargedEnergy != nil {
+		var err error
+		chargedEnergy, err = cc.ChargedEnergy.FloatGetter(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("chargedEnergy: %w", err)
+		}
 	}
 
 	switch {
