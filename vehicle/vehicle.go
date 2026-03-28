@@ -120,16 +120,16 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.V
 		}
 		lonG, err := cc.Position.Longitude.FloatGetter(ctx)
 		if err != nil {
-			return nil, fmt.Errorf("position.longitude: %w", err)
+			return nil, fmt.Errorf("longitude: %w", err)
 		}
 		position = func() (float64, float64, error) {
 			lat, err := latG()
 			if err != nil {
-				return 0, 0, api.ErrNotAvailable
+				return 0, 0, err
 			}
 			lon, err := lonG()
 			if err != nil {
-				return 0, 0, api.ErrNotAvailable
+				return 0, 0, err
 			}
 			if lat == 0 && lon == 0 {
 				return 0, 0, api.ErrNotAvailable
