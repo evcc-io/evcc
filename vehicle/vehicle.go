@@ -116,7 +116,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.V
 	if cc.Position != nil {
 		latG, err := cc.Position.Latitude.FloatGetter(ctx)
 		if err != nil {
-			return nil, fmt.Errorf("position.latitude: %w", err)
+			return nil, fmt.Errorf("latitude: %w", err)
 		}
 		lonG, err := cc.Position.Longitude.FloatGetter(ctx)
 		if err != nil {
