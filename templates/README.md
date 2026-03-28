@@ -66,6 +66,8 @@ Either `brand`, or `description` need to be set.
 - The content supports Markdown formatting
 - External URLs should always use Markdown link format with the hostname as display text: `[docs.example.com](https://docs.example.com/path/to/page)`. This provides clear context while keeping the text readable.
 - Use code formatting `` `text` `` for technical identifiers, tokens, configuration values, and entity patterns
+- Placeholder and example URLs (IP addresses, hostnames, device endpoints) should also use code formatting: `` `http://<charger-address>:8000/semp` ``, `` `ws://<evcc-address>:8887/` ``
+- Use angle-bracket placeholders for device addresses: `<evcc-address>`, `<charger-address>`, `<meter-address>`, `<inverter-address>`
 - Use bold formatting `**text**` sparingly and only for important warnings or critical information
 
 Example:
@@ -73,6 +75,8 @@ Example:
 ```
 en: |
   Requires `hcaptcha` token from [developer.example.com](https://developer.example.com/tokens).
+  Configure the SEMP base URL (`http://<charger-address>:8000/semp`).
+  Set the backend URL to `ws://<evcc-address>:8887/`.
 
   **Attention**: Token is only valid for 2 minutes.
 ```
