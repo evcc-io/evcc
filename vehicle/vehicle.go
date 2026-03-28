@@ -147,7 +147,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.V
 		var err error
 		chargedEnergy, err = cc.ChargedEnergy.FloatGetter(ctx)
 		if err != nil {
-			return nil, fmt.Errorf("chargedEnergy: %w", err)
+			return nil, fmt.Errorf("charged energy: %w", err)
 		}
 	}
 
