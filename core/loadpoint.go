@@ -1579,7 +1579,7 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 
 	enableThreshold := lp.Enable.Threshold
 	if enableThreshold == 0 {
-		enableThreshold = -currentToPower(minCurrent, lp.MinActivePhases())
+		enableThreshold = -currentToPower(minCurrent, projectedActivePhases)
 	}
 
 	// kick off enable sequence
