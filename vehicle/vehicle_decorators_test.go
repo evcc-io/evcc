@@ -17,7 +17,7 @@ func baseVehicle() *Vehicle {
 }
 
 func TestDecorateVehicle_NoCapabilities(t *testing.T) {
-	v := decorateVehicle(baseVehicle(), nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
+	v := decorateVehicle(baseVehicle(), nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
 
 	// base vehicle interface works
 	soc, err := v.Soc()
@@ -42,6 +42,7 @@ func TestDecorateVehicle_AllCapabilities(t *testing.T) {
 		func() (time.Time, error) { return time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC), nil }, // vehicleFinishTimer
 		func() error { return nil },                                                           // resurrector
 		func(bool) error { return nil },                                                       // chargeController
+		nil,                                                                                   // chargeRater
 	)
 
 	// base interface
@@ -126,6 +127,7 @@ func TestDecorateVehicle_PartialCapabilities(t *testing.T) {
 		nil,                         // vehicleFinishTimer
 		func() error { return nil }, // resurrector
 		nil,                         // chargeController
+		nil,                         // chargeRater
 	)
 
 	assert.True(t, api.HasCap[api.SocLimiter](v), "SocLimiter should be present")
