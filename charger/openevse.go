@@ -210,7 +210,7 @@ func (c *OpenEVSE) ChargeDuration() (time.Duration, error) {
 		return 0, err
 	}
 
-	return time.Duration(res.SessionElapsed) * time.Second, err
+	return time.Duration(res.Elapsed) * time.Second, err
 }
 
 var _ api.MeterEnergy = (*OpenEVSE)(nil)
@@ -233,7 +233,7 @@ func (c *OpenEVSE) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-	return res.Power, err
+	return res.Amp * res.Voltage / 1e3, err
 }
 
 // phases1p3p implements the api.PhaseSwitcher interface

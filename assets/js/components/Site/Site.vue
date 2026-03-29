@@ -1,5 +1,8 @@
 <template>
-	<div class="d-flex flex-column site safe-area-inset">
+	<div
+		class="d-flex flex-column site safe-area-inset"
+		:class="{ 'site--bottomtabs': experimental }"
+	>
 		<div class="container px-4 top-area">
 			<div
 				class="d-flex justify-content-between align-items-center my-3 my-md-4"
@@ -66,22 +69,23 @@
 				:pvConfigured="pvConfigured"
 				:batteryConfigured="batteryConfigured"
 				:batterySoc="batterySoc"
+				:batteryMode="batteryMode"
 				:forecast="forecast"
 				:selectedId="selectedLoadpointId"
 				@id-changed="selectedLoadpointChanged"
 			/>
-			<Footer v-bind="footer"></Footer>
+			<Footer v-if="!experimental" v-bind="footer" />
 		</div>
 	</div>
 </template>
 
 <script lang="ts">
 import "@h2d2/shopicons/es/regular/arrowup";
+import Footer from "../Footer/Footer.vue";
 import TopNavigationArea from "../Top/TopNavigationArea.vue";
 import Energyflow from "../Energyflow/Energyflow.vue";
 import HemsWarning from "../HemsWarning.vue";
 import Loadpoints from "../Loadpoints/Loadpoints.vue";
-import Footer from "../Footer/Footer.vue";
 import formatter from "@/mixins/formatter";
 import collector from "@/mixins/collector.ts";
 import WelcomeIcons from "./WelcomeIcons.vue";
@@ -98,6 +102,7 @@ import type {
 	Sponsor,
 	FatalError,
 	EvOpt,
+	BATTERY_MODE,
 } from "@/types/evcc";
 import store from "@/store";
 import type { Grid } from "./types";
@@ -105,9 +110,9 @@ import type { Grid } from "./types";
 export default defineComponent({
 	name: "Site",
 	components: {
+		Footer,
 		Loadpoints,
 		Energyflow,
-		Footer,
 		HemsWarning,
 		TopNavigationArea,
 		WelcomeIcons,
@@ -129,9 +134,9 @@ export default defineComponent({
 		aux: { type: Array as PropType<Meter[]>, default: () => [] },
 		ext: { type: Array as PropType<Meter[]>, default: () => [] },
 		batteryDischargeControl: Boolean,
-		batteryGridChargeLimit: { type: Number, default: null },
+		batteryGridChargeLimit: { type: [Number, null] as PropType<number | null>, default: null },
 		batteryGridChargeActive: Boolean,
-		batteryMode: String,
+		batteryMode: String as PropType<BATTERY_MODE>,
 		battery: { type: Object as PropType<Battery> },
 		gridCurrents: Array,
 		prioritySoc: Number,
@@ -202,18 +207,15 @@ export default defineComponent({
 					installed: window.evcc.version,
 					commit: window.evcc.commit,
 					available: this.availableVersion,
-					releaseNotes: this.releaseNotes,
-					hasUpdater: this.hasUpdater,
-					uploadMessage: this.uploadMessage,
-					uploadProgress: this.uploadProgress,
 				},
 				savings: {
 					sponsor: this.sponsor,
 					statistics: this.statistics,
 					co2Configured: this.tariffCo2 !== undefined,
-					priceConfigured: this.tariffGrid !== undefined,
 					currency: this.currency,
 					telemetry: this.telemetry,
+					forecast: this.forecast,
+					tariffGrid: this.tariffGrid,
 				},
 			};
 		},
@@ -237,6 +239,10 @@ export default defineComponent({
 .site {
 	min-height: 100vh;
 	min-height: 100dvh;
+}
+.site--bottomtabs {
+	min-height: calc(100vh - var(--tab-bar-height) - var(--safe-area-inset-bottom));
+	min-height: calc(100dvh - var(--tab-bar-height) - var(--safe-area-inset-bottom));
 }
 .content-area {
 	flex-grow: 1;
