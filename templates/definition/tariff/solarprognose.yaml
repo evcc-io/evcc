@@ -65,15 +65,19 @@ render: |
   forecast:
     source: http
     # Base URL with required params (format, type, access token), then optional item-based parameters
-    uri: https://www.solarprognose.de/web/solarprediction/api/v1?_format=json&type=hourly&access-token={{ .token }}{{ if .item }}&item={{ .item }}{{ if .id }}&id={{ .id }}{{ else }}&token={{ unquote .uniquetoken }}{{ end }}{{ end }}{{ if .algorithm }}&algorithm={{ .algorithm }}{{ end }}{{ if .project }}&project={{ .project }}{{ end }}{{ if .forecast_days }}&end_day={{ .forecast_days }}{{ end }}
+    uri: https://www.solarprognose.de/web/solarprediction/api/v1?_format=json&type=hourly&access-token={{ .token }}{{ if .item }}&item={{ .item }}{{ if .id }}&id={{ .id }}{{ else }}&token={{ unquote .uniquetoken }}{{ end }}{{ end }}{{ if .algorithm }}&algorithm={{ .algorithm }}{{ end }}{{ if .project }}&project={{ urlquery .project }}{{ end }}{{ if .forecast_days }}&end_day={{ .forecast_days }}{{ end }}
     jq: |
       def step: 3600; # hourly interval
 
       def lookup:
-        .data
-        | to_entries
-        | map({ key, value: (.value[0] * 1000) }) # convert kW to W
-        | from_entries;
+        (.data // {})
+        | if type == "object" and length > 0 then
+          to_entries
+          | map({key, value: (.value[0] * 1000)})
+          | from_entries
+        else
+          {}
+        end;
 
       . as $root
       | ($root | lookup) as $L
