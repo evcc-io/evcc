@@ -61,6 +61,7 @@ params:
 render: |
   type: custom
   tariff: solar
+  features: ["cacheable"]
   forecast:
     source: http
     # Base URL with required params (format, type, access token), then optional item-based parameters
