@@ -1,5 +1,4 @@
 template: solarprognose
-deprecated: true
 products:
   - brand: Solarprognose
 requirements:
@@ -50,9 +49,25 @@ render: |
     # Base URL with required params (format, type, algorithm, access token), then optional item-based parameters
     uri: https://www.solarprognose.de/web/solarprediction/api/v1?_format=json&type=hourly{{ if .algorithm }}&algorithm={{ .algorithm }}{{ end }}&access-token={{ .token }}{{ if .item }}&item={{ .item }}{{ if .id }}&id={{ .id }}{{ else }}&token={{ unquote .uniquetoken }}{{ end }}{{ end }}
     jq: |
-      [ .data | to_entries.[] | {
-        "start": (.key | tonumber | strftime("%FT%TZ") ),
-        "end": (.key | tonumber + 3600 | strftime("%FT%TZ")  ) ,
-        "value": (.value.[0]*1000) # returned value unit is always kW
-      } ] | tostring
+      def step: 3600; # hourly interval
+
+      def lookup:
+        .data
+        | to_entries
+        | map({ key, value: (.value[0] * 1000) }) # convert kW to W
+        | from_entries;
+
+      . as $root
+      | ($root | lookup) as $L
+      | ($L | keys | map(tonumber) | sort) as $ts
+      | ($ts[0]) as $min
+      | ($ts[-1]) as $max
+      | [ range($min; $max + step; step) as $t
+          | {
+              start: ($t | strftime("%FT%TZ")),
+              end:   (($t + step) | strftime("%FT%TZ")),
+              value: ($L[($t|tostring)] // 0)
+            }
+        ]
+      | tostring
   interval: {{ .interval }}
