@@ -16,7 +16,7 @@ products:
 requirements:
   description:
     de: |
-      Anleitung: https://support.wallbox.com/en/knowledge-base/ocpp-activation-and-setup-guide/
+      Anleitung: [support.wallbox.com](https://support.wallbox.com/en/knowledge-base/ocpp-activation-and-setup-guide/)
 
       * "OCPP aktivieren" (myWallbox app) bzw. den "OCPP-WebSocket-Verbindung" Schalter (myWallbox Portal) aktivieren
       * Zusätzlich die "Verbesserte Ladegerätsteuerung" (Profil -> Experimentelle Funktionen) einschalten (myWallbox app)
@@ -24,7 +24,7 @@ requirements:
       * Ladepunktidentität: beliebiger Wert (z.B. die Seriennummer der Box), der als *stationid* verwendet wird
       * Passwort: leer lassen
     en: |
-      Setup Guide: https://support.wallbox.com/en/knowledge-base/ocpp-activation-and-setup-guide/
+      Setup Guide: [support.wallbox.com](https://support.wallbox.com/en/knowledge-base/ocpp-activation-and-setup-guide/)
 
       * Switch on "Enable OCPP" (myWallbox app) or enable the "OCPP WebSocket connection" switch (myWallbox Portal)
       * Enable "Improved charger control" (Profile -> Experimental functions) (myWallbox app) 
