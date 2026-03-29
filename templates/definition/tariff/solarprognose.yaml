@@ -12,7 +12,7 @@ params:
     description:
       en: Access Token from User Profile
       de: Zugriffs-Schlüssel aus Benutzer-Profil
-    advanced: true
+    required: true
   - name: item
     choice: ["location", "plant", "inverter", "module_field"]
     description:
