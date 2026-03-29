@@ -23,13 +23,13 @@ func (lp *Loadpoint) isVehicleAtHome(vehicle api.Vehicle) bool {
 		return true
 	}
 
-	vs, ok := vehicle.(api.VehiclePosition)
+	vp, ok := api.Cap[api.VehiclePosition](vehicle)
 	if !ok {
 		lp.log.DEBUG.Println("vehicle does not support position tracking")
 		return true
 	}
 
-	lat, lon, err := vs.Position()
+	lat, lon, err := vp.Position()
 	if err != nil {
 		lp.log.INFO.Printf("vehicle position: %v", err)
 		return true
