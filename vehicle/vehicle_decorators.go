@@ -48,16 +48,16 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 		caps[reflect.TypeFor[api.Resurrector]()] = &decorateVehicleResurrectorImpl{resurrector: resurrector}
 	}
 
-	if vehiclePosition != nil {
-		caps[reflect.TypeFor[api.VehiclePosition]()] = &decorateVehicleVehiclePositionImpl{vehiclePosition: vehiclePosition}
-	}
-
 	if chargeController != nil {
 		caps[reflect.TypeFor[api.ChargeController]()] = &decorateVehicleChargeControllerImpl{chargeController: chargeController}
 	}
 
 	if chargeRater != nil {
 		caps[reflect.TypeFor[api.ChargeRater]()] = &decorateVehicleChargeRaterImpl{chargeRater: chargeRater}
+	}
+
+	if vehiclePosition != nil {
+		caps[reflect.TypeFor[api.VehiclePosition]()] = &decorateVehicleVehiclePositionImpl{vehiclePosition: vehiclePosition}
 	}
 
 	if len(caps) == 0 {
@@ -149,20 +149,20 @@ func (impl *decorateVehicleVehicleFinishTimerImpl) FinishTime() (time.Time, erro
 	return impl.vehicleFinishTimer()
 }
 
-type decorateVehicleVehiclePositionImpl struct {
-	vehiclePosition func() (float64, float64, error)
-}
-
-func (impl *decorateVehicleVehiclePositionImpl) Position() (float64, float64, error) {
-	return impl.vehiclePosition()
-}
-
 type decorateVehicleVehicleOdometerImpl struct {
 	vehicleOdometer func() (float64, error)
 }
 
 func (impl *decorateVehicleVehicleOdometerImpl) Odometer() (float64, error) {
 	return impl.vehicleOdometer()
+}
+
+type decorateVehicleVehiclePositionImpl struct {
+	vehiclePosition func() (float64, float64, error)
+}
+
+func (impl *decorateVehicleVehiclePositionImpl) Position() (float64, float64, error) {
+	return impl.vehiclePosition()
 }
 
 type decorateVehicleVehicleRangeImpl struct {

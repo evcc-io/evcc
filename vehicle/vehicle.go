@@ -11,7 +11,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-//go:generate go tool decorate -f decorateVehicle -b api.Vehicle -t api.SocLimiter,api.ChargeState,api.VehicleRange,api.VehicleOdometer,api.VehicleClimater,api.CurrentController,api.CurrentGetter,api.VehicleFinishTimer,api.Resurrector,api.ChargeController,api.ChargeRater
+//go:generate go tool decorate -f decorateVehicle -b api.Vehicle -t api.SocLimiter,api.ChargeState,api.VehicleRange,api.VehicleOdometer,api.VehicleClimater,api.CurrentController,api.CurrentGetter,api.VehicleFinishTimer,api.Resurrector,api.ChargeController,api.ChargeRater,api.VehiclePosition
 
 // Vehicle is an api.Vehicle implementation with configurable getters and setters.
 type Vehicle struct {
@@ -131,6 +131,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.V
 			if err != nil {
 				return 0, 0, err
 			}
+			// MQTT sources may report (0,0) when no GPS fix is available
 			if lat == 0 && lon == 0 {
 				return 0, 0, api.ErrNotAvailable
 			}
