@@ -66,6 +66,7 @@ Either `brand`, or `description` need to be set.
 - The content supports Markdown formatting
 - External URLs should always use Markdown link format with the hostname as display text: `[docs.example.com](https://docs.example.com/path/to/page)`. This provides clear context while keeping the text readable.
 - Use code formatting `` `text` `` for technical identifiers, tokens, configuration values, and entity patterns
+- Use only plain ASCII quotes (`"`, `'`) — never typographic/curly quotes (`“`, `”`, `„`, `‘`, `’`)
 - Use bold formatting `**text**` sparingly and only for important warnings or critical information
 
 Example:
