@@ -82,7 +82,7 @@
     "eslint-plugin-promise": "^7.2.1",
     "eslint-plugin-vue": "^10.6.2",
     "globals": "^17.0.0",
-    "happy-dom": "^20.8.8",
+    "happy-dom": "^20.8.9",
     "jiti": "^2.6.1",
     "kill-port": "^2.0.1",
     "license-compliance": "^3.0.1",
