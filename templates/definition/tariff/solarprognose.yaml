@@ -38,6 +38,15 @@ params:
       en: Forecasting Algorithm (mosmix, own-v1 or clearsky)
       de: Prognosealgorithmus (mosmix, own-v1 oder clearsky)
     advanced: true
+  - name: forecast_days
+    description:
+      en: Number of additional days to forecast (1-6)
+      de: Anzahl zusätzlicher Tage für die Prognose (1-6)
+    help:
+      en: "Number of additional days to forecast (1-6), excluding today. Remember: evcc calculates energy for today, tomorrow, and the day after tomorrow, effectively handling up to three days of solar forecast data, but the UI shows up to 96 hours."
+      de: "Anzahl der zusätzlichen Tage für die Prognose (1-6), ohne den heutigen Tag. Bedenke: evcc berechnet die Energie für heute, morgen und übermorgen und verarbeitet dabei effektiv bis zu drei Tage Solarprognosedaten, zeigt jedoch bis zu 96 Stunden an."
+    default: 4
+    advanced: true
   - name: project
     description:
       en: Project contact (website or email address)
@@ -55,7 +64,7 @@ render: |
   forecast:
     source: http
     # Base URL with required params (format, type, access token), then optional item-based parameters
-    uri: https://www.solarprognose.de/web/solarprediction/api/v1?_format=json&type=hourly&access-token={{ .token }}{{ if .item }}&item={{ .item }}{{ if .id }}&id={{ .id }}{{ else }}&token={{ unquote .uniquetoken }}{{ end }}{{ end }}{{ if .algorithm }}&algorithm={{ .algorithm }}{{ end }}{{ if .project }}&project={{ .project }}{{ end }}
+    uri: https://www.solarprognose.de/web/solarprediction/api/v1?_format=json&type=hourly&access-token={{ .token }}{{ if .item }}&item={{ .item }}{{ if .id }}&id={{ .id }}{{ else }}&token={{ unquote .uniquetoken }}{{ end }}{{ end }}{{ if .algorithm }}&algorithm={{ .algorithm }}{{ end }}{{ if .project }}&project={{ .project }}{{ end }}{{ if .forecast_days }}&end_day={{ .forecast_days }}{{ end }}
     jq: |
       def step: 3600; # hourly interval
 
