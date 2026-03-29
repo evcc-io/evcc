@@ -68,6 +68,7 @@ Either `brand`, or `description` need to be set.
 - Omit `www.` from the display text: `[example.com](https://www.example.com/path)`
 - GitHub URLs use `github.com/user/repo` as display text: `[github.com/user/repo](https://github.com/user/repo)`
 - Use code formatting `` `text` `` for technical identifiers, tokens, configuration values, and entity patterns
+- Use only plain ASCII quotes (`"`, `'`) — never typographic/curly quotes (`“`, `”`, `„`, `‘`, `’`)
 - Use bold formatting `**text**` sparingly and only for important warnings or critical information
 
 Example:
