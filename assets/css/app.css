@@ -94,6 +94,7 @@
 
 	--tab-bar-height: 3rem;
 	--tab-bar-background: var(--evcc-background);
+	--evcc-backdrop-blur: blur(20px);
 }
 
 :root.dark {
@@ -392,8 +393,7 @@ a:hover {
 
 .modal-backdrop {
 	--bs-backdrop-bg: var(--evcc-backdrop);
-	-webkit-backdrop-filter: blur(8px);
-	backdrop-filter: blur(8px);
+	backdrop-filter: var(--evcc-backdrop-blur);
 }
 
 .modal-backdrop.fade {
@@ -458,6 +458,11 @@ a:hover {
 
 html:has(.modal.show) {
 	overflow-y: hidden;
+}
+
+/* Safari renders non-overlay scrollbars above modal backdrops at compositor level */
+body.modal-open .forecast-chart-scroll::-webkit-scrollbar {
+	opacity: 0;
 }
 
 .cursor-pointer {
@@ -810,4 +815,8 @@ input::-webkit-date-and-time-value {
 .collapsible-wrapper.open .collapsible-content {
 	opacity: 1;
 	transition: opacity var(--evcc-transition-fast) ease 0.2s;
+}
+
+.app--bottomtabs .sticky-bottom {
+	bottom: calc(var(--tab-bar-height) + 0.25rem);
 }
