@@ -65,7 +65,7 @@
     "@types/smoothscroll-polyfill": "^0.3.4",
     "@types/wait-on": "^5.3.4",
     "@types/ws": "^8.18.1",
-    "@vitejs/plugin-legacy": "^8.0.0",
+    "@vitejs/plugin-legacy": "^8.0.1",
     "@vitejs/plugin-vue": "^6.0.5",
     "@vue/compiler-sfc": "^3.2.30",
     "@vue/eslint-config-prettier": "^10.2.0",
