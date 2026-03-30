@@ -12,8 +12,8 @@ products:
 group: heating
 requirements:
   description:
-    de: "Eingebunden via [EMSESP](https://emsesp.org/)"
-    en: "Integrated via [EMSESP](https://emsesp.org/)"
+    de: "Eingebunden via [emsesp.org](https://emsesp.org/)"
+    en: "Integrated via [emsesp.org](https://emsesp.org/)"
 #   evcc: ["sponsorship"]
 params:
   - name: host

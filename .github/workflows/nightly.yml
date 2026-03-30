@@ -133,6 +133,16 @@ jobs:
           git commit -am "Mirror evcc nightly release"
           git push
 
+  hassio-changelog:
+    name: Update Hassio Nightly Changelog
+    needs:
+      - hassio
+    uses: ./.github/workflows/hassio-changelog.yml
+    with:
+      addon_path: evcc-nightly
+      include_unreleased: true
+    secrets: inherit
+
   apt:
     name: Publish APT nightly
     needs:

@@ -88,7 +88,13 @@ import LimitSocSelect from "./LimitSocSelect.vue";
 import LimitEnergySelect from "./LimitEnergySelect.vue";
 import { distanceUnit, distanceValue } from "@/units.ts";
 import { defineComponent, type PropType } from "vue";
-import { CHARGE_MODE, type Forecast, type VehicleStatus, type Vehicle } from "@/types/evcc";
+import {
+	CHARGE_MODE,
+	type BATTERY_MODE,
+	type Forecast,
+	type VehicleStatus,
+	type Vehicle,
+} from "@/types/evcc";
 import type { PlanStrategy } from "@/components/ChargingPlans/types";
 import BatteryBoostButton from "../Loadpoints/BatteryBoostButton.vue";
 
@@ -121,6 +127,7 @@ export default defineComponent({
 		batteryBoostAvailable: Boolean,
 		batteryBoostLimit: { type: Number, default: 100 },
 		batterySoc: Number,
+		batteryMode: String as PropType<BATTERY_MODE>,
 		enabled: Boolean,
 		heating: Boolean,
 		id: [String, Number],
