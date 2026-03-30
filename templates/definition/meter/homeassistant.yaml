@@ -117,12 +117,19 @@ params:
     help:
       en: Entity ID for battery state of charge in percent
       de: Entitäts-ID für Batterieladestand in Prozent
+  - name: insecure
+    type: bool
+    description:
+      de: Selbstsignierte Zertifikate akzeptieren
+      en: Accept self-signed certificates
+    advanced: true
   - name: maxacpower
   - preset: battery-params
 render: |
   type: homeassistant
   uri: {{ .uri }}
   home: {{ .home }} # deprecated
+  insecure: {{ .insecure }}
   power: {{ .power }}
   energy: {{ .energy }}
   currents:

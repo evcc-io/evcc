@@ -22,6 +22,12 @@ params:
       de: " " # overwrite default
     service: homeassistant/instances
     required: true
+  - name: insecure
+    type: bool
+    description:
+      de: Selbstsignierte Zertifikate akzeptieren
+      en: Accept self-signed certificates
+    advanced: true
   - name: status
     description:
       de: Ladestatus-Sensor
@@ -145,6 +151,7 @@ params:
 render: |
   type: homeassistant
   uri: {{ .uri }}
+  insecure: {{ .insecure }}
   status: {{ .status }}
   enabled: {{ .enabled }}
   enable: {{ .enable }}
