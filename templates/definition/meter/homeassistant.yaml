@@ -150,12 +150,19 @@ params:
     help:
       en: Optional script to grid-charge the home battery.
       de: Optionales Skript um die Heimbatterie aus dem Netz zu laden.
+  - name: insecure
+    type: bool
+    description:
+      de: Selbstsignierte Zertifikate akzeptieren
+      en: Accept self-signed certificates
+    advanced: true
   - name: maxacpower
   - preset: battery-params
 render: |
   type: homeassistant
   uri: {{ .uri }}
   home: {{ .home }} # deprecated
+  insecure: {{ .insecure }}
   power: {{ .power }}
   energy: {{ .energy }}
   currents:

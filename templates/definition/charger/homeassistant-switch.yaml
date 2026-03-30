@@ -27,6 +27,12 @@ params:
     deprecated: true
   - name: home
     deprecated: true
+  - name: insecure
+    type: bool
+    description:
+      de: Selbstsignierte Zertifikate akzeptieren
+      en: Accept self-signed certificates
+    advanced: true
   - name: switch
     description:
       de: Entity ID des schaltbaren Geräts
@@ -45,6 +51,7 @@ render: |
   type: homeassistant-switch
   uri: {{ .uri }}
   home: {{ .home }} # deprecated
+  insecure: {{ .insecure }}
   enable: {{ .switch }}
   power: {{ .power }}
   {{ include "switchsocket" . }}

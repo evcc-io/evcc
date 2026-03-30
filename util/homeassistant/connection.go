@@ -12,6 +12,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/transport"
 	"github.com/samber/lo"
 	"golang.org/x/oauth2"
 )
@@ -23,7 +24,7 @@ type Connection struct {
 }
 
 // NewConnection creates a new Home Assistant connection
-func NewConnection(log *util.Logger, uri, home string) (*Connection, error) {
+func NewConnection(log *util.Logger, uri, home string, insecure bool) (*Connection, error) {
 	if home != "" {
 		log.WARN.Printf("using deprecated 'home' parameter '%s', please use 'uri' instead", home)
 	}
@@ -38,6 +39,11 @@ func NewConnection(log *util.Logger, uri, home string) (*Connection, error) {
 			home: home,
 			uri:  util.DefaultScheme(strings.TrimSuffix(uri, "/"), "http"),
 		},
+	}
+
+	// override the transport to accept self-signed certificates
+	if insecure {
+		c.Client.Transport = request.NewTripper(log, transport.Insecure())
 	}
 
 	// Set up authentication headers

@@ -40,7 +40,7 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Messenger, error) {
 
 	log := util.NewLogger("homeassistant")
 
-	conn, err := homeassistant.NewConnection(log, cc.URI, "")
+	conn, err := homeassistant.NewConnection(log, cc.URI, "", false)
 	if err != nil {
 		return nil, err
 	}
