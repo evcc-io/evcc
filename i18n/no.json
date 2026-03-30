@@ -28,7 +28,7 @@
     },
     "capacity": "{energy} av {total}",
     "control": "Batterikontroll",
-    "discharge": "Forhindre utladning i hurtigmodus og planlagt lading.",
+    "discharge": "Forhindre utladning i hurtigmodus og planlagt lading",
     "disclaimerHint": "Merk:",
     "disclaimerText": "Kun relevant i PV-modus. Ladeadferden justeres deretter.",
     "gridChargeTab": "Nettlading",
@@ -58,9 +58,9 @@
       "titleEdit": "Rediger ladningsmåler"
     },
     "charger": {
-      "chargers": "EV-ladere",
+      "chargers": "Elbilladere",
       "generic": "Generiske integrasjoner",
-      "heatingdevices": "Oppvarmingsenheter",
+      "heatingdevices": "Varmeapparater",
       "ocppConfirmContinue": "Laderen din er ikke koblet til evcc ennå. Er du sikker på at du vil fortsette?",
       "ocppConnected": "Koblet til!",
       "ocppDescription": "evcc har en innebygd OCPP-server. Følg disse trinnene:",
@@ -71,7 +71,7 @@
       "ocppStep2": "Vent til laderen din kobles til evcc.",
       "ocppStep3": "Fortsett og fullfør konfigurasjonen.",
       "ocppWaiting": "Venter på tilkobling",
-      "switchsockets": "Omkoblingsbare stikkontakter",
+      "switchsockets": "Stikkontakter med bryter",
       "template": "Produsent",
       "titleAdd": {
         "charging": "Legg til lader",
