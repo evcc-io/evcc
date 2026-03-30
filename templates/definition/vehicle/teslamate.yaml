@@ -42,6 +42,15 @@ render: |
     source: mqtt
     topic: teslamate/cars/{{ .id }}/odometer
     timeout: {{ .timeout }}
+  position:
+    latitude:
+      source: mqtt
+      topic: teslamate/cars/{{ .id }}/latitude
+      timeout: {{ .timeout }}
+    longitude:
+      source: mqtt
+      topic: teslamate/cars/{{ .id }}/longitude
+      timeout: {{ .timeout }}
   limitsoc:
     source: mqtt
     topic: teslamate/cars/{{ .id }}/charge_limit_soc
