@@ -271,10 +271,11 @@ export default defineComponent({
 </script>
 <style scoped>
 .app {
+	--bottom-space: 1.5px;
 	min-height: 100vh;
 	min-height: 100dvh;
 }
 .app--bottomtabs {
-	padding-bottom: var(--tab-bar-height);
+	--bottom-space: calc(var(--tab-bar-height) + 1.5rem);
 }
 </style>

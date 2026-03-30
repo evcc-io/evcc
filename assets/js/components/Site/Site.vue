@@ -1,8 +1,5 @@
 <template>
-	<div
-		class="d-flex flex-column site safe-area-inset"
-		:class="{ 'site--bottomtabs': experimental }"
-	>
+	<div class="d-flex flex-column site safe-area-inset">
 		<div class="container px-4 top-area">
 			<div
 				class="d-flex justify-content-between align-items-center my-3 my-md-4"
@@ -239,10 +236,7 @@ export default defineComponent({
 .site {
 	min-height: 100vh;
 	min-height: 100dvh;
-}
-.site--bottomtabs {
-	min-height: calc(100vh - var(--tab-bar-height) - var(--safe-area-inset-bottom));
-	min-height: calc(100dvh - var(--tab-bar-height) - var(--safe-area-inset-bottom));
+	box-sizing: padding-box;
 }
 .content-area {
 	flex-grow: 1;
