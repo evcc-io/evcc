@@ -3,10 +3,9 @@
 		class="container px-4 safe-area-inset d-flex flex-column"
 		:class="{ 'empty-container': !forecastAvailable }"
 	>
-		<TopHeader v-if="forecastAvailable" :title="$t('forecast.modalTitle')" />
+		<TopHeader :title="$t('forecast.modalTitle')" />
 		<div v-if="!forecastAvailable" class="flex-grow-1 d-flex">
 			<div class="empty-box d-flex flex-column p-5">
-				<h2 class="fs-4 mb-4">{{ $t("forecast.empty.title") }}</h2>
 				<ul class="list-unstyled mb-4">
 					<li class="d-flex align-items-start gap-2 mb-3">
 						<shopicon-regular-sun

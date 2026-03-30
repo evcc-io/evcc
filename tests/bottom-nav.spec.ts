@@ -73,7 +73,7 @@ test.describe("bottom navigation", async () => {
     await expect(page.getByRole("heading", { name: "Home Battery" })).toBeVisible();
 
     await tabForecast.click();
-    await expect(page.getByRole("heading", { name: "Tariffs & Forecasts" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Forecast" })).toBeVisible();
 
     await tabSessions.click();
     await expect(page.getByRole("heading", { name: "Sessions" })).toBeVisible();

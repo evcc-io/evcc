@@ -938,8 +938,7 @@
       "co2": "Sužinokite, kada jūsų regione energija yra mažiausiai tarši. Įkrovimo planai bus optimizuoti mažiausiam išmetamųjų teršalų kiekiui, apskaičiuosime CO₂ sutaupymą.",
       "price": "Sukonfigūruokite dinaminį elektros energijos tarifą, kad automatiškai optimizuotumėte įkrovimo planus ir apskaičiuotumėte sutaupytas lėšas.",
       "setup": "Sukonfigūruoti tarifus ir prognozes",
-      "solar": "Prognozuojama saulės energijos gamyba šiandienai ir ateinančiomis dienomis. Ateityje taip pat bus naudojama automatiniam įkrovimo optimizavimui.",
-      "title": "Tarifai ir Prognozės"
+      "solar": "Prognozuojama saulės energijos gamyba šiandienai ir ateinančiomis dienomis. Ateityje taip pat bus naudojama automatiniam įkrovimo optimizavimui."
     },
     "modalTitle": "Prognozė",
     "price": {
