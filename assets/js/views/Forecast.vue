@@ -119,7 +119,7 @@
 					/>
 				</section>
 
-				<section v-if="forecast.co2" class="mb-5">
+				<section v-if="forecast.co2">
 					<h3
 						class="fw-normal my-4 d-flex gap-3 flex-wrap align-items-baseline overflow-hidden"
 					>
@@ -311,8 +311,7 @@ export default defineComponent({
 
 <style scoped>
 .empty-container {
-	min-height: calc(100dvh - var(--tab-bar-height) - var(--safe-area-inset-bottom));
-	padding-bottom: calc(var(--tab-bar-height) + var(--safe-area-inset-bottom));
+	min-height: calc(100dvh - var(--bottom-space));
 }
 .empty-box {
 	background-color: var(--evcc-box);

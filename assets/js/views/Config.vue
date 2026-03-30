@@ -6,7 +6,7 @@
 				:title="$t('config.main.title')"
 				:notifications="notifications"
 			/>
-			<div class="wrapper pb-5">
+			<div class="wrapper mb-3">
 				<AuthSuccessBanner
 					v-if="callbackCompleted || callbackError"
 					:provider-id="callbackCompleted"
@@ -357,7 +357,7 @@
 				<hr class="my-5" />
 
 				<h2 class="my-4 mt-5">{{ $t("config.section.system") }}</h2>
-				<div class="round-box p-4 d-flex gap-4 mb-5 flex-wrap">
+				<div class="round-box p-4 d-flex gap-4 flex-wrap">
 					<router-link to="/log" class="btn btn-outline-secondary">
 						{{ $t("config.system.logs") }}
 					</router-link>

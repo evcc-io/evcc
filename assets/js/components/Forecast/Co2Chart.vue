@@ -122,7 +122,6 @@ export default defineComponent({
 <style scoped>
 .forecast-chart-scroll {
 	overflow-x: auto;
-	margin-bottom: 1.5rem;
 	padding-bottom: 4px;
 }
 </style>
