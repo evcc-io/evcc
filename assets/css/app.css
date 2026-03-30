@@ -461,8 +461,8 @@ html:has(.modal.show) {
 }
 
 /* Safari renders non-overlay scrollbars above modal backdrops at compositor level */
-body.modal-open .forecast-chart-scroll::-webkit-scrollbar {
-	opacity: 0;
+body.modal-open .scroll-overlay-fix {
+	scrollbar-color: transparent transparent;
 }
 
 .cursor-pointer {
