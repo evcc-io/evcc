@@ -2,7 +2,7 @@ template: delta
 products:
   - brand: Delta
     description:
-      generic: AC Max Basic
+      generic: AC MAX Basic
   - brand: Delta
     description:
       generic: AC MAX Smart
@@ -15,6 +15,9 @@ products:
 capabilities: ["mA", "rfid"]
 requirements:
   evcc: ["sponsorship"]
+  description:
+    de: AC MAX Smart erfordert Firmware >= v01.26.38.02 für Modbus TCP via WiFi.
+    en: AC MAX Smart requires firmware >= v01.26.38.02 for Modbus TCP via WiFi.
 params:
   - name: modbus
     choice: ["rs485", "tcpip"]

@@ -14,8 +14,8 @@ params:
       en: Horizon
       de: Horizont
     help:
-      en: Simulates terrain shadows, [more information](https://doc.forecast.solar/horizon)
-      de: Simuliert Verschattung durch Gelände, [mehr Informationen](https://doc.forecast.solar/horizon)
+      en: Simulates terrain shadows, [doc.forecast.solar](https://doc.forecast.solar/horizon)
+      de: Simuliert Verschattung durch Gelände, [doc.forecast.solar](https://doc.forecast.solar/horizon)
     example: 0,0,15,30,45,60,60,60,45,30,15,0
     advanced: true
   - name: apikey

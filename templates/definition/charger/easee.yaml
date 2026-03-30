@@ -24,8 +24,8 @@ params:
   - name: password
     required: true
     help:
-      de: wie Login für Easee App oder Web Portal (https://easee.cloud)
-      en: same as Easee app or the web portal (https://easee.cloud)
+      de: wie Login für Easee App oder Web Portal ([easee.cloud](https://easee.cloud))
+      en: same as Easee app or the web portal ([easee.cloud](https://easee.cloud))
   - name: charger
     required: true
     description:

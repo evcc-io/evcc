@@ -97,5 +97,12 @@ EXPOSE 8899/udp
 # SMA Energy Manager
 EXPOSE 9522/udp
 
+HEALTHCHECK \
+  --interval=30s \
+  --timeout=5s \
+  --start-period=30s \
+  --retries=3 \
+  CMD wget -qO /dev/null http://localhost:7070 || exit 1
+
 ENTRYPOINT [ "/app/entrypoint.sh" ]
 CMD [ "evcc" ]

@@ -3,10 +3,13 @@ import { expect, type Page, type Locator } from "@playwright/test";
 export async function enableExperimental(page: Page): Promise<void> {
   await page.goto("/#/config");
 
-  await page.getByTestId("generalconfig-experimental").click();
+  await page
+    .getByTestId("generalconfig-experimental")
+    .getByRole("button", { name: "edit" })
+    .click();
   const modal = page.getByTestId("experimental-modal");
   await expectModalVisible(modal);
-  await modal.getByLabel("Show experimental UI features.").click();
+  await modal.getByLabel("Enable experimental features.").click();
   await modal.getByRole("button", { name: "Close" }).click();
   await expectModalHidden(modal);
   await expect(page.locator(".modal-backdrop")).not.toBeVisible();
