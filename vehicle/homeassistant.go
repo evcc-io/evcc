@@ -129,6 +129,7 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 		wakeup,
 		enable,
 		nil,
+		nil,
 	), nil
 }
 
