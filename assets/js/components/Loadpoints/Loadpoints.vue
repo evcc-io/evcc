@@ -31,6 +31,7 @@
 					:pvConfigured="pvConfigured"
 					:batteryConfigured="batteryConfigured"
 					:batterySoc="batterySoc"
+					:batteryMode="batteryMode"
 					:forecast="forecast"
 					class="h-100"
 					:class="{ 'loadpoint-unselected': !selected(loadpoint.id) }"
@@ -67,7 +68,7 @@ import "@h2d2/shopicons/es/filled/lightning";
 
 import Loadpoint from "./Loadpoint.vue";
 import { defineComponent, type PropType } from "vue";
-import type { UiLoadpoint, SMART_COST_TYPE, Timeout, Vehicle } from "@/types/evcc";
+import type { UiLoadpoint, SMART_COST_TYPE, Timeout, Vehicle, BATTERY_MODE } from "@/types/evcc";
 
 export default defineComponent({
 	name: "Loadpoints",
@@ -87,6 +88,7 @@ export default defineComponent({
 		pvConfigured: Boolean,
 		batteryConfigured: Boolean,
 		batterySoc: Number,
+		batteryMode: String as PropType<BATTERY_MODE>,
 		forecast: Object, // as PropType<Forecast>,
 	},
 	emits: ["id-changed"],

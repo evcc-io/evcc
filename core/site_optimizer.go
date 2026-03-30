@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
@@ -34,6 +35,22 @@ var (
 	updated time.Time
 	mu      atomic.Uint32
 )
+
+// optimizerResult wraps the optimizer publish payload to implement BytesMarshaler.
+// This ensures publishComplex serializes it as a single JSON message instead of
+// recursively decomposing each struct field and array element into individual MQTT
+// topics (~1,500 messages per optimizer run).
+type optimizerResult struct {
+	Req     optimizer.OptimizationInput  `json:"req"`
+	Res     optimizer.OptimizationResult `json:"res"`
+	Details requestDetails               `json:"details"`
+}
+
+var _ api.BytesMarshaler = (*optimizerResult)(nil)
+
+func (r optimizerResult) MarshalBytes() ([]byte, error) {
+	return json.Marshal(r)
+}
 
 type batteryType string
 
@@ -244,11 +261,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		return errors.New(string(resp.JSON200.Status))
 	}
 
-	site.publish("evopt", struct {
-		Req     optimizer.OptimizationInput  `json:"req"`
-		Res     optimizer.OptimizationResult `json:"res"`
-		Details requestDetails               `json:"details"`
-	}{
+	site.publish("evopt", optimizerResult{
 		Req:     req,
 		Res:     *resp.JSON200,
 		Details: details,

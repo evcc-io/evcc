@@ -482,7 +482,7 @@ call removeLoadpointVehicle {
 
 ## setLoadpointBatteryBoost
 
-Enable or disable battery boost. When active, the maximum available home battery power is added until the home battery is drained to configured SoC limit.
+Enable or disable battery boost. When active, the maximum available home battery power is added until the home battery is drained to configured SoC limit. Note: boost will not work while the battery is on hold (e.g. during fast charging or planned charging with discharge prevention enabled).
 
 **Tags:** loadpoints
 
