@@ -126,7 +126,7 @@ func (h *SocketHub) welcome(subscriber *socketSubscriber, params []util.Param) {
 		if sharder, ok := (p.Val).(util.Sharder); ok {
 			sharders[k] = sharder
 		} else {
-			msg[k] = json.RawMessage(socketEncode(p.Val))
+			msg[k] = json.RawMessage(socketEncode(k, p.Val))
 		}
 	}
 
@@ -138,7 +138,7 @@ func (h *SocketHub) welcome(subscriber *socketSubscriber, params []util.Param) {
 	for k, sharder := range sharders {
 		for key, val := range sharder.AllShards() {
 			if b, err := json.Marshal(map[string]json.RawMessage{
-				k + "." + key: json.RawMessage(socketEncode(val)),
+				k + "." + key: json.RawMessage(socketEncode(k, val)),
 			}); err == nil {
 				subscriber.send <- b
 			}
@@ -164,10 +164,10 @@ func (h *SocketHub) broadcast(p util.Param) {
 	// Sharder splits data into chunks
 	if sp, ok := (p.Val).(util.Sharder); ok {
 		for key, val := range sp.ModifiedShards() {
-			msg[k+"."+key] = json.RawMessage(socketEncode(val))
+			msg[k+"."+key] = json.RawMessage(socketEncode(k, val))
 		}
 	} else {
-		msg[k] = json.RawMessage(socketEncode(p.Val))
+		msg[k] = json.RawMessage(socketEncode(k, p.Val))
 	}
 
 	b, _ := json.Marshal(msg)

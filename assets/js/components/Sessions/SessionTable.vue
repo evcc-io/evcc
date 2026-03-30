@@ -436,6 +436,8 @@ export default defineComponent({
 });
 </script>
 <style scoped>
+@import "../../../css/breakpoints.css";
+
 .table {
 	border-collapse: separate;
 	border-spacing: 0;
@@ -461,7 +463,7 @@ export default defineComponent({
 .sticky-top {
 	top: 7rem;
 }
-@media (min-width: 992px) {
+@media (--lg-and-up) {
 	.sticky-top {
 		top: 4.5rem;
 	}

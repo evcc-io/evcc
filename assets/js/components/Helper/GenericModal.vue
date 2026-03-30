@@ -13,9 +13,9 @@
 		>
 			<div class="modal-dialog modal-dialog-centered" :class="sizeClass" role="document">
 				<div class="modal-content">
-					<div class="modal-header d-flex justify-content-between align-items-center">
+					<div class="modal-header d-flex justify-content-between align-items-start">
 						<h5 class="modal-title">
-							{{ title }}
+							<slot name="title">{{ title }}</slot>
 						</h5>
 						<div class="d-flex align-items-center gap-1">
 							<slot name="header-actions"></slot>

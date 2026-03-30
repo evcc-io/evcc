@@ -6,7 +6,7 @@
 				:title="$t('config.main.title')"
 				:notifications="notifications"
 			/>
-			<div class="wrapper pb-5">
+			<div class="wrapper mb-3">
 				<AuthSuccessBanner
 					v-if="callbackCompleted || callbackError"
 					:provider-id="callbackCompleted"
@@ -26,6 +26,7 @@
 				<div class="p-0 config-list">
 					<DeviceCard
 						v-for="loadpoint in loadpoints"
+						:id="`loadpoint_${loadpoint.name}`"
 						:key="loadpoint.name"
 						:title="loadpoint.title"
 						:name="loadpoint.name"
@@ -57,6 +58,7 @@
 				<div class="p-0 config-list">
 					<DeviceCard
 						v-for="vehicle in vehicles"
+						:id="`vehicle_${vehicle.name}`"
 						:key="vehicle.name"
 						:title="vehicle.config?.title || vehicle.name"
 						:name="vehicle.name"
@@ -149,7 +151,7 @@
 					/>
 				</div>
 
-				<h2 class="my-4 mt-5">{{ $t("config.tariff.title") }}</h2>
+				<h2 id="tariffs" class="my-4 mt-5">{{ $t("config.tariff.title") }}</h2>
 				<div v-if="!!tariffsYamlSource" class="p-0 config-list">
 					<DeviceCard
 						:title="$t('config.tariff.title')"
@@ -355,7 +357,7 @@
 				<hr class="my-5" />
 
 				<h2 class="my-4 mt-5">{{ $t("config.section.system") }}</h2>
-				<div class="round-box p-4 d-flex gap-4 mb-5 flex-wrap">
+				<div class="round-box p-4 d-flex gap-4 flex-wrap">
 					<router-link to="/log" class="btn btn-outline-secondary">
 						{{ $t("config.system.logs") }}
 					</router-link>

@@ -100,6 +100,12 @@ func NewEEBus(ctx context.Context, ski, ip string, hasMeter, hasChargedEnergy, v
 		return nil, err
 	}
 
+	// unregister device when context is cancelled (e.g. UI config validation)
+	go func() {
+		<-ctx.Done()
+		eebus.Instance.UnregisterDevice(ski, c)
+	}()
+
 	if hasMeter {
 		var energyG func() (float64, error)
 		if hasChargedEnergy {
