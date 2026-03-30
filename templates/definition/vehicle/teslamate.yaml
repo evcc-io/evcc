@@ -21,7 +21,7 @@ render: |
   {{- include "vehicle-common" . }}
   soc:
     source: mqtt
-    topic: teslamate/cars/{{ .id }}/battery_level
+    topic: teslamate/cars/{{ .id }}/usable_battery_level
     timeout: {{ .timeout }}
   status:
     source: combined
