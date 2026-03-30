@@ -746,7 +746,7 @@
         "titleEdit": "PV voorspelling aanpassen"
       },
       "template": "Aanbieder",
-      "title": "Tarieven & voorspelingen",
+      "title": "Tarieven & Voorspelingen",
       "titleChoice": "Wat wilt u toevoegen?",
       "type": {
         "co2": "CO₂ intensiteit",
@@ -1268,7 +1268,7 @@
       "targetChargeWaitForVehicle": "Laadplan gereed. Wachten op voertuig…",
       "vehicleLimit": "Voertuiglimiet",
       "vehicleLimitReached": "Voertuiglimiet bereikt.",
-      "waitForAuthorization": "Verebonden. Wachten op autorisatie…",
+      "waitForAuthorization": "Verbonden. Wachten op autorisatie…",
       "waitForVehicle": "Klaar. Wachten op voertuig…",
       "welcome": "Verkort initiële lading om de verbinding te bevestigen."
     },
