@@ -99,6 +99,12 @@ func NewEEBus(ctx context.Context, ski, ip string, usage *templates.Usage) (api.
 		return nil, err
 	}
 
+	// unregister device when context is cancelled (e.g. UI config validation)
+	go func() {
+		<-ctx.Done()
+		eebus.Instance.UnregisterDevice(ski, c)
+	}()
+
 	// monitoring appliance
 	eebus.LogEntities(c.log.DEBUG, "MA MPC", c.ma.MaMPCInterface)
 	eebus.LogEntities(c.log.DEBUG, "MA MGCP", c.ma.MaMGCPInterface)

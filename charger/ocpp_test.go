@@ -33,7 +33,8 @@ func TestOcpp(t *testing.T) {
 
 type ocppTestSuite struct {
 	suite.Suite
-	clock *clock.Mock
+	clock  *clock.Mock
+	logger *ocppLogger
 }
 
 func (suite *ocppTestSuite) SetupSuite() {
@@ -41,10 +42,15 @@ func (suite *ocppTestSuite) SetupSuite() {
 
 	// setup cs so we can overwrite logger afterwards
 	_ = ocpp.Instance()
-	ocppj.SetLogger(&ocppLogger{suite.T()})
+	suite.logger = &ocppLogger{t: suite.T()}
+	ocppj.SetLogger(suite.logger)
 
 	suite.clock = clock.NewMock()
 	suite.NotNil(ocpp.Instance())
+}
+
+func (suite *ocppTestSuite) TearDownSuite() {
+	suite.logger.close()
 }
 
 func (suite *ocppTestSuite) startChargePoint(id string, connectorId int) (ocpp16.ChargePoint, *ocppj.Client) {
