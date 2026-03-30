@@ -236,7 +236,6 @@ export default defineComponent({
 .site {
 	min-height: 100vh;
 	min-height: 100dvh;
-	box-sizing: padding-box;
 }
 .content-area {
 	flex-grow: 1;
