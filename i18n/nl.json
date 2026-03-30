@@ -8,7 +8,7 @@
     "buttonConnect": "Verbind met {provider}",
     "buttonDisconnect": "Verbinding verbreken",
     "confirmLogout": "Weet u zeker dat u de verbinding met {title} wilt verbreken?",
-    "connect": "verbinden",
+    "connect": "verbinding maken",
     "disconnect": "verbinding verbreken",
     "loggedOut": "Succesvol uitgelogd",
     "logoutFailed": "Uitloggen mislukt",
@@ -22,7 +22,7 @@
   "batterySettings": {
     "batteryLevel": "Batterijniveau",
     "bufferStart": {
-      "above": "{soc} bereikt heeft.",
+      "above": "Wanneer boven {soc}.",
       "full": "wanneer op {soc}.",
       "never": "enkel bij voldoende overschot."
     },
@@ -40,6 +40,7 @@
     "legendTopName": "Voertuig opladen met energie uit de thuisbatterij",
     "legendTopSubline": "zodra de thuisbatterij {soc} bereikt heeft.",
     "modalTitle": "Thuisbatterij",
+    "noBattery": "Geen accu geconfigureerd.",
     "usageTab": "Batterijgebruik"
   },
   "config": {
@@ -853,6 +854,14 @@
       "configurePriceCo2": "Meer informatie rond het configureren van prijs en CO₂ gegevens.",
       "footerLong": "{percent} zonne-energie",
       "footerShort": "{percent} zon",
+      "indicator": {
+        "co2": "CO₂ emissies",
+        "co2saved": "CO₂ bespaart",
+        "none": "Geen",
+        "price": "Energie prijs",
+        "savings": "Besparing",
+        "solar": "Zonne-Energie"
+      },
       "modalTitle": "Oplaadenergie-overzicht",
       "moneySaved": "{value} bespaard",
       "percentGrid": "{grid} kWh net",
