@@ -440,7 +440,7 @@
           "titleDefault": "Auto connessa"
         },
         "disconnect": {
-          "messageDefault": "Auto scollegata dopo {connessaDurata}",
+          "messageDefault": "Auto scollegata dopo {connectedDuration}",
           "title": "Quando una macchina si disconnette",
           "titleDefault": "Auto scollegata"
         },
