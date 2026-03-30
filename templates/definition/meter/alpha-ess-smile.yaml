@@ -34,6 +34,7 @@ render: |
     {{- include "modbus" . | indent 2 }}
     register:
       address: 18 # 0x12 Total energy consumed from grid (Grid)
+      # 0x10 (address 16) Total energy feed to grid (Grid) - for future grid energy import/export split
       type: holding
       decode: uint32
     scale: 0.01
