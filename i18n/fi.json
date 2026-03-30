@@ -937,8 +937,7 @@
       "co2": "Näytä milloin sähköverkon energia on puhdasta. Lataussuunnitelmissa optimoidaan alhaiset päästöt ja laskelmoidut CO₂-säästöt.",
       "price": "Määritä vaihteleva energian hintasi optimoidaksesi automaattisesti lataussuunnitelmasi ja laskeaksesi käytetyn energian kustannukset.",
       "setup": "Määritä hinnat ja ennusteet",
-      "solar": "Katso aurinkotuotannon ennuste täksi ja tuleviksi päiviksi. Käytetään tulevaisuudessa myös latauksien optimoitiin.",
-      "title": "Hinnat & ennusteet"
+      "solar": "Katso aurinkotuotannon ennuste täksi ja tuleviksi päiviksi. Käytetään tulevaisuudessa myös latauksien optimoitiin."
     },
     "modalTitle": "Ennuste",
     "price": {
