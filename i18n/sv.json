@@ -40,6 +40,7 @@
     "legendTopName": "Fordonsladdning med batteristöd",
     "legendTopSubline": "när hemmabatteriet är över {soc}.",
     "modalTitle": "Hemmabatteri",
+    "noBattery": "Inga batterier konfigurerade.",
     "usageTab": "Batterianvändning"
   },
   "config": {
@@ -130,8 +131,9 @@
       "currency": "Valuta",
       "current": "Ström",
       "currentRange": "Ström",
+      "curtailed": "Inmatning begränsad",
       "detected": "Upptäckt",
-      "dimmed": "Nedtonad",
+      "dimmed": "Förbrukning begränsad",
       "enabled": "Aktiverad",
       "energy": "Energi",
       "events": "Händelser",
@@ -429,7 +431,7 @@
       "description": "Få notiser om dina laddningar.",
       "event": {
         "asleep": {
-          "messageDefault": "Sluta ladda, fordonet {vehicleName} laddar inte.",
+          "messageDefault": "Koppla från laddning, fordonet {vehicleName} laddar inte.",
           "title": "Om fordonet inte laddar",
           "titleDefault": "Fordonet sover"
         },
@@ -642,11 +644,13 @@
       "cardTitle": "Sunny Home Manager",
       "description": "evcc är utrustad med en integration för SMA Sunny Home Manager (SHM) via SEMP-protokollet. Om den körs på samma nätverk, bör du efter att du har loggat in på ditt Sunny Portal-konto automatiskt erbjudas att lägga till alla laddare som är konfigurerade i evcc. Det bör fungera direkt utan att några justeringar behöver göras nedan.",
       "descriptionDeviceId": "Hexsträng med 12 tecken. Prefix för alla enheter (laddare, ..).",
+      "descriptionDeviceSerial": "12 tecken lång HEX-sträng. Basserienummer för alla enheter (laddningspunkt etc.). Som standard härleder evcc detta från värdens MAC-adress.",
       "descriptionIdPattern": "Identifieringsmönster",
       "descriptionIds": "I Sunny Portal behöver varje konsumentenhet en unik identifierare. evcc genererar en unik identifierare baserat på din hårdvara. Om du migrerar evcc till en annan hårdvara kan dessa identifierare ändras. Om du vill behålla historiken kan du åsidosätta de genererade identifierarna här. Öppna SEMP-URL:en (/semp) för att kontrollera dina aktuella identifierare.",
       "descriptionSempUrl": "SEMP URL",
       "descriptionVendorId": "Hexsträng med 8 tecken. Generellt prefix för alla entiteter. Evcc använder sitt egna tillverkar-ID som standard.",
       "labelDeviceId": "Device ID",
+      "labelDeviceSerial": "Enhetens serienummer",
       "labelVendorId": "Tillverkar-ID",
       "title": "SMA Sunny Home Manager"
     },
@@ -713,7 +717,7 @@
       "addForecast": "Lägg till prognos",
       "addTariff": "Lägg till tariff",
       "co2": {
-        "description": "CO₂-intensitetsprognos för nätel. För CO₂-optimerad laddning och beräkning av utsläppsbesparingar.",
+        "description": "CO₂-prognos för nätel. För CO₂-optimerad laddning och beräkning av utsläppsbesparingar.",
         "titleAdd": "Lägg till CO₂-prognos",
         "titleEdit": "Ändra CO₂-prognos"
       },
@@ -737,8 +741,49 @@
         "co2": "Lägg till CO₂ prognos",
         "feedIn": "Lägg till tariff för export av el",
         "grid": "Lägg till tariff för import av el",
-        "planner": "Lägg till planläggningsprognos",
+        "planner": "Lägg till planeringsprognos",
         "solar": "Lägg till solprognos"
+      },
+      "planner": {
+        "description": "Avancerad inställning. Behövs vanligtvis inte eftersom dynamiska elpriser eller CO₂-prognoser används automatiskt. Aktiverar en extra datakälla som endast används för laddningsplanering, inte för statistik och priskalkylering.",
+        "titleAdd": "Lägg till planeringsprognos",
+        "titleEdit": "Ändra planläggningsprognos"
+      },
+      "services": "Tjänster",
+      "solar": {
+        "description": "Prognos för solproduktion för din solcellsanläggning. Visas i gränssnittet och kommer framöver att användas för optimeringsalgoritmer.",
+        "titleAdd": "Lägg till solprognos",
+        "titleEdit": "Ändra solprognos"
+      },
+      "template": "Leverantör",
+      "title": "Tariffer & prognoser",
+      "titleChoice": "Vad vill du lägga till?",
+      "type": {
+        "co2": "CO₂ -prognos",
+        "feedIn": "Exportpris",
+        "grid": "Elpris från nätet",
+        "planner": "Planering",
+        "solar": "Sol"
+      },
+      "zones": {
+        "add": "Lägg till zon",
+        "allDays": "Alla dagar",
+        "allMonths": "Alla månader",
+        "allTimes": "Alla tider",
+        "cancel": "Avbryt",
+        "days": "Dagar",
+        "edit": "Ändra",
+        "hours": "Timmar",
+        "months": "Månader",
+        "price": "Pris",
+        "priceRequired": "Pris fordras",
+        "remove": "Ta bort zon",
+        "save": "Spara",
+        "selectAll": "Alla dagar",
+        "timeFrom": "Från",
+        "timeRangeError": "Starttiden måste ligga före sluttiden. För att täcka in midnatt, skapa två separata zoner.",
+        "timeTo": "Till",
+        "weekdays": "Veckodagar"
       }
     },
     "tariffs": {
@@ -810,6 +855,15 @@
       "configurePriceCo2": "Konfigurera pris och CO₂-utsläpp.",
       "footerLong": "{percent} solenergi",
       "footerShort": "{percent} sol",
+      "indicator": {
+        "co2": "CO₂-utsläpp",
+        "co2saved": "CO₂ sparat",
+        "none": "inget",
+        "price": "energipris",
+        "savings": "sparat",
+        "solar": "solenergi"
+      },
+      "indicatorLabel": "Header-info",
       "modalTitle": "Översikt laddning",
       "moneySaved": "{value} sparad",
       "percentGrid": "{grid} kWh nät",
@@ -825,6 +879,7 @@
       "priceTitle": "Energipris",
       "referenceGrid": "nät",
       "referenceLabel": "Referensdata:",
+      "sessionInfo": "Baserat på avslutade laddsessioner.",
       "tabTitle": "Mina uppgifter"
     },
     "sponsor": {
@@ -850,15 +905,24 @@
     },
     "version": {
       "availableLong": "ny version tillgänglig",
+      "community": "evcc community",
+      "labelRelease": "Release",
+      "labelVersion": "Version",
+      "labelWebsite": "Hemsida",
+      "latestVersion": "senaste version",
+      "madeByCommunity": "Utvecklad av {0}.",
       "modalCancel": "Avbryt",
       "modalDownload": "Nedladdning",
       "modalInstalledVersion": "Installerad version",
+      "modalLatest": "Du använder den senaste versionen.",
+      "modalNextRelease": "Vad kommer i nästa release",
       "modalNoReleaseNotes": "Det finns inga versionsanvisningar tillgängliga. Mer information om den nya versionen:",
       "modalTitle": "Ny version finns tillgänglig",
       "modalUpdate": "Installera",
       "modalUpdateNow": "Installera nu",
       "modalUpdateStarted": "Starta den nya versionen av evcc…",
-      "modalUpdateStatusStart": "Installationen har börjat:"
+      "modalUpdateStatusStart": "Installationen har börjat:",
+      "openSource": "open source"
     }
   },
   "forecast": {
@@ -867,6 +931,10 @@
       "constant": "CO₂ intensitet",
       "lowestHour": "Timme med lägst CO₂",
       "range": "Intervall"
+    },
+    "empty": {
+      "co2": "Se när elen i ditt område är ren. Laddningsscheman optimeras för låga utsläpp och CO₂-besparingar beräknas.",
+      "price": "Konfigurera rörligt elpris för att automatiskt optimera laddningsscheman och beräkna besparingar."
     },
     "modalTitle": "Prognos",
     "price": {
@@ -1233,6 +1301,7 @@
       "targetChargeWaitForVehicle": "Laddare beredd. Väntar på fordon…",
       "vehicleLimit": "Fordonsgräns",
       "vehicleLimitReached": "Fordonets gräns nådd.",
+      "waitForAuthorization": "Ansluten. Väntar på auktorisering …",
       "waitForVehicle": "Redo. Väntar på fordon…",
       "welcome": "Kort inledande laddning för att kontrollera förbindelsen."
     },
