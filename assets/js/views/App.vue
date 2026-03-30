@@ -271,7 +271,6 @@ export default defineComponent({
 </script>
 <style scoped>
 .app {
-	--bottom-space: 1.5px;
 	min-height: 100vh;
 	min-height: 100dvh;
 }

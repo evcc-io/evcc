@@ -93,6 +93,7 @@
 	--safe-area-inset-right: env(safe-area-inset-right, 0px);
 
 	--tab-bar-height: 3rem;
+	--bottom-space: 1.5px;
 	--tab-bar-background: var(--evcc-background);
 	--evcc-backdrop-blur: blur(20px);
 }
