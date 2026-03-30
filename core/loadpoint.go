@@ -1505,7 +1505,7 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 
 	// calculate target charge current from delta power and actual (scaled) current
 	deltaCurrent := powerToCurrent(-sitePower, projectedActivePhases)
-	targetCurrent := max(effectiveCurrent+deltaCurrent, 0)
+	targetCurrent := effectiveCurrent + deltaCurrent
 
 	// compile log message
 	options := []byte(", batteryBuffered, forcedCharging")
