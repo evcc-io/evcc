@@ -9,7 +9,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeState func() (api.ChargeStatus, error), vehicleRange func() (int64, error), vehicleOdometer func() (float64, error), vehicleClimater func() (bool, error), currentController func(int64) error, currentGetter func() (float64, error), vehicleFinishTimer func() (time.Time, error), resurrector func() error, chargeController func(bool) error) api.Vehicle {
+func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeState func() (api.ChargeStatus, error), vehicleRange func() (int64, error), vehicleOdometer func() (float64, error), vehicleClimater func() (bool, error), currentController func(int64) error, currentGetter func() (float64, error), vehicleFinishTimer func() (time.Time, error), resurrector func() error, chargeController func(bool) error, chargeRater func() (float64, error), vehiclePosition func() (float64, float64, error)) api.Vehicle {
 	caps := make(map[reflect.Type]any)
 
 	if socLimiter != nil {
@@ -52,6 +52,14 @@ func decorateVehicle(base api.Vehicle, socLimiter func() (int64, error), chargeS
 		caps[reflect.TypeFor[api.ChargeController]()] = &decorateVehicleChargeControllerImpl{chargeController: chargeController}
 	}
 
+	if chargeRater != nil {
+		caps[reflect.TypeFor[api.ChargeRater]()] = &decorateVehicleChargeRaterImpl{chargeRater: chargeRater}
+	}
+
+	if vehiclePosition != nil {
+		caps[reflect.TypeFor[api.VehiclePosition]()] = &decorateVehicleVehiclePositionImpl{vehiclePosition: vehiclePosition}
+	}
+
 	if len(caps) == 0 {
 		return base
 	}
@@ -75,6 +83,14 @@ type decorateVehicleChargeControllerImpl struct {
 
 func (impl *decorateVehicleChargeControllerImpl) ChargeEnable(p0 bool) error {
 	return impl.chargeController(p0)
+}
+
+type decorateVehicleChargeRaterImpl struct {
+	chargeRater func() (float64, error)
+}
+
+func (impl *decorateVehicleChargeRaterImpl) ChargedEnergy() (float64, error) {
+	return impl.chargeRater()
 }
 
 type decorateVehicleChargeStateImpl struct {
@@ -139,6 +155,14 @@ type decorateVehicleVehicleOdometerImpl struct {
 
 func (impl *decorateVehicleVehicleOdometerImpl) Odometer() (float64, error) {
 	return impl.vehicleOdometer()
+}
+
+type decorateVehicleVehiclePositionImpl struct {
+	vehiclePosition func() (float64, float64, error)
+}
+
+func (impl *decorateVehicleVehiclePositionImpl) Position() (float64, float64, error) {
+	return impl.vehiclePosition()
 }
 
 type decorateVehicleVehicleRangeImpl struct {
