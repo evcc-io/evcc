@@ -28,11 +28,6 @@ params:
   - name: home
     deprecated: true
   - name: insecure
-    type: bool
-    description:
-      de: Selbstsignierte Zertifikate akzeptieren
-      en: Accept self-signed certificates
-    advanced: true
   - name: switch
     description:
       de: Entity ID des schaltbaren Geräts
