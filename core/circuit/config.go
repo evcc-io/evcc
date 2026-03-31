@@ -22,7 +22,7 @@ func Root() api.Circuit {
 
 var registry = reg.New[api.Circuit]("circuit")
 
-// NewFromConfig creates circuit from configuration
+// NewFromDeviceConfig creates circuit from configuration
 func NewFromDeviceConfig(ctx context.Context, typ string, other map[string]any) (api.Circuit, error) {
 	factory, err := registry.Get(strings.ToLower(typ))
 	if err != nil {
