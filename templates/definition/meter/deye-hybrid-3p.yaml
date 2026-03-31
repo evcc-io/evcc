@@ -16,7 +16,10 @@ params:
     id: 1
   - name: maxacpower
   - name: storageunit
-    help:
+    choice: ["1", "2"]
+    default: "1"
+    advanced: true
+    description:
       de: Bei mehreren Speichereinheiten die zu überwachende Einheit auswählen
       en: Select the storage unit to monitor if you have multiple units
   - preset: battery-params
@@ -99,7 +102,7 @@ render: |
       address: 522 # "Total_GridBuy_Power Wh"
       type: holding
       decode: uint32s
-    {{- if ne .firmware1098 "true" }}
+    {{- if not .firmware1098 }}
     scale: 0.1
     {{- end }}      
   currents:
@@ -165,7 +168,7 @@ render: |
       {{- if eq .batterytype "high voltage" }}  
       scale: 10
       {{- end }}
-    {{- if eq .includegenport "true" }}
+    {{- if .includegenport }}
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
@@ -182,17 +185,17 @@ render: |
         address: 534 # "Total_PV_Power_Wh"
         type: holding
         decode: uint32s
-      {{- if ne .firmware1098 "true" }}
+      {{- if not .firmware1098 }}
       scale: 0.1
       {{- end }}
-    {{- if eq .includegenport "true" }}
+    {{- if .includegenport }}
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
         address: 537 # "Total_Gen_Power_Wh"
         type: holding
         decode: int32s
-      {{- if ne .firmware1098 "true" }}
+      {{- if not .firmware1098 }}
       scale: 0.1
       {{- end }}
     {{- end }}
@@ -221,7 +224,7 @@ render: |
       address: 518 # "Total discharge of the battery (Wh)"
       type: holding
       decode: uint32s
-    {{- if ne .firmware1098 "true" }}
+    {{- if not .firmware1098 }}
     scale: 0.1
     {{- end }}
   soc:
