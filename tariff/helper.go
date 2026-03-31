@@ -33,9 +33,8 @@ func bo() backoff.BackOff {
 func backoffPermanentError(err error) error {
 	if se, ok := errors.AsType[*request.StatusError](err); ok {
 		code := se.StatusCode()
-		// 429 Too Many Requests and 503 Service Unavailable are transient —
-		// let the exponential backoff handle them instead of giving up permanently
-		if code == http.StatusTooManyRequests || code == http.StatusServiceUnavailable {
+		// 429 Too Many Requests is transient — let the exponential backoff handle it
+		if code == http.StatusTooManyRequests {
 			return err
 		}
 		if code >= 400 && code <= 599 {

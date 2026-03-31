@@ -110,7 +110,6 @@ func TestBackoffPermanentError(t *testing.T) {
 		{name: "404 Not Found is permanent", code: http.StatusNotFound, permanent: true},
 		{name: "500 Internal Server Error is permanent", code: http.StatusInternalServerError, permanent: true},
 		{name: "429 Too Many Requests is NOT permanent (transient)", code: http.StatusTooManyRequests, permanent: false},
-		{name: "503 Service Unavailable is NOT permanent (transient)", code: http.StatusServiceUnavailable, permanent: false},
 	}
 
 	for _, tc := range tt {
