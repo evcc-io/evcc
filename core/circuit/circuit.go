@@ -60,29 +60,17 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.C
 
 // NewFromConfig creates a new Circuit
 func NewFromConfig(other map[string]any) (api.Circuit, error) {
-	// map legacy keys
-	if val, ok := other["maxcircuitcurrent"]; ok {
-		other["maxcurrent"] = val
-		delete(other, "maxcircuitcurrent")
-	}
-	if val, ok := other["maxcircuitpower"]; ok {
-		other["maxpower"] = val
-		delete(other, "maxcircuitpower")
-	}
-
 	cc := struct {
-		Name              string         // name
-		Title             string         // title
-		ParentRef         string         `mapstructure:"parent"` // parent circuit reference
-		MeterRef          string         `mapstructure:"meter"`  // meter reference
-		MaxCurrent        float64        // the max allowed current
-		MaxPower          float64        // the max allowed power
-		GetMaxCurrent     *plugin.Config // dynamic max allowed current
-		GetMaxPower       *plugin.Config // dynamic max allowed power
-		Timeout           time.Duration  // timeout between meter updates
-		Template          string
-		MaxCircuitCurrent float64
-		MaxCircuitPower   float64
+		Name          string         // name
+		Title         string         // title
+		ParentRef     string         `mapstructure:"parent"` // parent circuit reference
+		MeterRef      string         `mapstructure:"meter"`  // meter reference
+		MaxCurrent    float64        // the max allowed current
+		MaxPower      float64        // the max allowed power
+		GetMaxCurrent *plugin.Config // dynamic max allowed current
+		GetMaxPower   *plugin.Config // dynamic max allowed power
+		Timeout       time.Duration  // timeout between meter updates
+		Template      string
 	}{
 		Timeout: time.Minute,
 	}

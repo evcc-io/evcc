@@ -23,7 +23,7 @@ test.describe("circuit device api", () => {
         type: "template",
         template: "static",
         title: "Main",
-        maxcircuitcurrent: 32,
+        maxcurrent: 32,
       },
     });
     expect(createRoot.status()).toBe(200);
@@ -37,7 +37,7 @@ test.describe("circuit device api", () => {
         type: "template",
         template: "static",
         title: "Garage",
-        maxcircuitcurrent: 16,
+        maxcurrent: 16,
         parent: root.name,
       },
     });
@@ -64,7 +64,7 @@ test.describe("circuit device api", () => {
         type: "template",
         template: "static",
         title: "Main Updated",
-        maxcircuitcurrent: 48,
+        maxcurrent: 48,
       },
     });
     expect(update.status()).toBe(200);
@@ -73,7 +73,7 @@ test.describe("circuit device api", () => {
     const getUpdated = await page.request.get(`/api/config/devices/circuit/${root.id}`);
     const updatedBody = await getUpdated.json();
     expect(updatedBody.config.title).toBe("Main Updated");
-    expect(updatedBody.config.maxcircuitcurrent).toBe(48);
+    expect(updatedBody.config.maxcurrent).toBe(48);
 
     // delete child
     const del = await page.request.delete(`/api/config/devices/circuit/${child.id}`);

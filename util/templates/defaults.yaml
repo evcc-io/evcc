@@ -163,26 +163,6 @@ params:
       en: The minimum amperage per connected phase that can be used
     example: 6
     type: int
-  - name: maxcircuitcurrent
-    unit: A
-    description:
-      de: Maximale Stromstärke pro Phase
-      en: Maximum current per phase
-    help:
-      de: Vom Lastmanagement maximal erlaubte Stromstärke pro Phase.
-      en: Maximum current per phase allowed by the load management system.
-    example: 32
-    type: int
-  - name: maxcircuitpower
-    unit: W
-    description:
-      de: Maximale Leistung
-      en: Maximum power
-    help:
-      de: Vom Lastmanagement maximal erlaubte Leistung. Das System verteilt verfügbare Leistung dynamisch auf alle angeschlossenen Ladepunkte und Schaltungen.
-      en: Maximum power allowed by the load management system. The system dynamically distributes available power across all connected chargers and circuits.
-    example: 22000
-    type: int
   - name: maxcurrent
     unit: A
     description:
@@ -202,6 +182,7 @@ params:
       de: Definiert die maximale Ladeleistung des Fahrzeugs. Hilft, die Ladeplanung zu verbessern, wenn das Fahrzeug üblicherweise weniger Strom nutzt als angeboten oder höhere Ströme bei einphasigem Laden erlaubt als bei dreiphasigem. _Der bereitgestellte Strom des Ladepunktes wird nicht beeinflusst._
       en: Defines the maximum charging power of the vehicle. Helps improve charge plan accuracy when the vehicle typically uses less than the offered current or supports higher single-phase current compared to three-phase. _The offered current of the loadpoint is not affected._
     type: int
+    example: 10000
   - name: identifiers
     description:
       de: Identifikation
