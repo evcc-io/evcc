@@ -27,7 +27,7 @@ params:
 render: |
   type: static
   title: {{ .title }}
-  maxCurrent: {{ .maxcurrent }}
-  maxPower: {{ .maxpower }}
+  maxcurrent: {{ .maxcurrent }}
+  maxpower: {{ .maxpower }}
   meter: {{ .meter }}
   parent: {{ .parent }}
