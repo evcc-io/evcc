@@ -90,7 +90,7 @@ render: |
     uri: https://api.tessie.com/{{ .vin }}/state?use_cache=true
     headers:
       Authorization: Bearer {{ .token }}
-    jq: .charge_state.charge_energy_added  
+    jq: .charge_state.charge_energy_added
   chargeEnable:
     source: http
     uri: https://api.tessie.com/{{ .vin }}/command/{{`{{ if .chargeenable }}start_charging{{ else }}stop_charging{{ end }}`}}?retry_duration=40&wait_for_completion=true
