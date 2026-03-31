@@ -23,7 +23,6 @@ type Circuit struct {
 	mu  sync.RWMutex
 	log *util.Logger
 
-	name     string
 	title    string
 	parent   api.Circuit   // parent circuit
 	children []api.Circuit // child circuits
