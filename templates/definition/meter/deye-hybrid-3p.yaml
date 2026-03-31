@@ -20,6 +20,9 @@ params:
     default: "1"
     advanced: true
     description:
+      de: Wahl der zu überwachenden Speichereinheit
+      en: Select the battery unit to monitor 
+    help:
       de: Bei mehreren Speichereinheiten die zu überwachende Einheit auswählen
       en: Select the storage unit to monitor if you have multiple units
   - preset: battery-params
@@ -174,7 +177,9 @@ render: |
       register:
         address: 667 # "low word of input power at GEN-Port"
         type: holding
-        decode: int16 # "value is actually a signed 32 bit value but high word is at reg 671
+        decode: int16 # value is part of a signed 32-bit value; high word is at 671 but non-adjacent
+                      # NOTE: Only the low 16 bits of GEN power are used here. This is sufficient up to ±32 kW,
+                      # which covers existing inverter variants.
     {{- end }}
   energy:
     source: calc
