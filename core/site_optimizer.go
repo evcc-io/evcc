@@ -147,7 +147,8 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		return fmt.Errorf("not enough slots for optimization: %d (grid=%d, feedIn=%d, solar=%d)", minLen, len(grid), len(feedIn), len(solar))
 	}
 
-	dt := timeSteps(minLen)
+	now := time.Now()
+	dt := timeSteps(minLen, now)
 	firstSlotDuration := time.Duration(dt[0]) * time.Second
 
 	site.log.DEBUG.Printf("optimizer: optimizing %d slots until %v: grid=%d, feedIn=%d, solar=%d, first slot: %v",
@@ -193,7 +194,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	pa := lo.Min(req.TimeSeries.PN) * eta * 0.99
 
 	details := requestDetails{
-		Timestamps: asTimestamps(dt),
+		Timestamps: asTimestamps(dt, now),
 	}
 
 	if site.circuit != nil {
@@ -590,10 +591,6 @@ func solarRatesToEnergy(rr api.Rates) (api.Rates, error) {
 	return res, nil
 }
 
-func endOfHour(ts time.Time) time.Time {
-	return ts.Truncate(time.Hour).Add(time.Hour)
-}
-
 func currentRates(tariff api.Tariff) api.Rates {
 	if tariff == nil {
 		return nil
@@ -611,12 +608,12 @@ func currentRates(tariff api.Tariff) api.Rates {
 	})
 }
 
-func timeSteps(minLen int) []int {
+func timeSteps(minLen int, now time.Time) []int {
 	res := make([]int, 0, minLen)
 
-	bos := time.Now().Truncate(tariff.SlotDuration)
+	bos := now.Truncate(tariff.SlotDuration)
 	eos := bos.Add(tariff.SlotDuration)
-	if d := time.Until(eos); d > time.Second && d < tariff.SlotDuration {
+	if d := eos.Sub(now); d > time.Second && d < tariff.SlotDuration {
 		res = append(res, int(d.Seconds()))
 	}
 
@@ -627,12 +624,19 @@ func timeSteps(minLen int) []int {
 	return res
 }
 
-func asTimestamps(dt []int) []time.Time {
+func asTimestamps(dt []int, now time.Time) []time.Time {
 	res := make([]time.Time, 0, len(dt))
-	eoh := endOfHour(time.Now())
-	res = append(res, eoh.Add(-time.Duration(dt[0])*time.Second))
-	for i := range len(dt) - 1 {
-		res = append(res, eoh.Add(time.Duration(dt[i+1])*time.Second))
+
+	// first slot starts within the current slot boundary
+	bos := now.Truncate(tariff.SlotDuration)
+	eos := bos.Add(tariff.SlotDuration)
+	res = append(res, eos.Add(-time.Duration(dt[0])*time.Second))
+
+	// subsequent slots align to exact slot boundaries
+	ts := eos
+	for i := 1; i < len(dt); i++ {
+		res = append(res, ts)
+		ts = ts.Add(tariff.SlotDuration)
 	}
 	return res
 }
