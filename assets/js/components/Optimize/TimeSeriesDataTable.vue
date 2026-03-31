@@ -265,6 +265,7 @@ export default defineComponent({
 			if (this.timestamps.length <= index) {
 				return "";
 			}
+			// Show label on fresh hour or on first quarter hour for slot 0
 			const ts = new Date(this.timestamps[index]);
 			const minutes = ts.getMinutes();
 			if (minutes === 0 || (index === 0 && minutes < 15)) {
