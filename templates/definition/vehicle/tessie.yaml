@@ -91,6 +91,13 @@ render: |
     headers:
       Authorization: Bearer {{ .token }}
     jq: .charge_state.charge_energy_added
+  finishtime:
+    source: http
+    uri: https://api.tessie.com/{{ .vin }}/state?use_cache=true
+    headers:
+      Authorization: Bearer {{ .token }}
+    jq: if (.charge_state.time_to_full_charge == null) or (.charge_state.time_to_full_charge == 0) or (type != "number") or (.charge_state.time_to_full_charge < 0) then null else (now + (.charge_state.time_to_full_charge * 3600) | strftime("%Y-%m-%dT%H:%M:%SZ")) end
+
   chargeEnable:
     source: http
     uri: https://api.tessie.com/{{ .vin }}/command/{{`{{ if .chargeenable }}start_charging{{ else }}stop_charging{{ end }}`}}?retry_duration=40&wait_for_completion=true
