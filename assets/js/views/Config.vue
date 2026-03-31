@@ -321,6 +321,19 @@
 							<DeviceTags :tags="hemsTags" />
 						</template>
 					</DeviceCard>
+					<DeviceCard
+						v-if="remote"
+						:title="$t('config.remote.title')"
+						editable
+						:unconfigured="isUnconfigured(remoteTags)"
+						data-testid="remote-access"
+						@edit="openModal('remote')"
+					>
+						<template #icon><RemoteAccessIcon /></template>
+						<template #tags>
+							<DeviceTags :tags="remoteTags" />
+						</template>
+					</DeviceCard>
 				</div>
 
 				<h2 class="my-4 mt-5">{{ $t("config.section.services") }}</h2>
@@ -403,6 +416,7 @@
 				<TariffModal :currency="currency" @changed="tariffChanged" />
 				<TelemetryModal :sponsor="sponsor" :telemetry="telemetry" />
 				<ExperimentalModal :experimental="experimental" />
+				<RemoteModal :remote="remote" :is-sponsor="isSponsor" />
 				<TitleModal @changed="loadDirty" />
 				<ModbusProxyModal :is-sponsor="isSponsor" @changed="loadDirty" />
 				<CircuitsModal :gridMeter="gridMeter" :extMeters="extMeters" @changed="loadDirty" />
@@ -459,6 +473,8 @@ import ModbusProxyIcon from "../components/MaterialIcon/ModbusProxy.vue";
 import ModbusProxyModal from "../components/Config/ModbusProxyModal.vue";
 import MqttIcon from "../components/MaterialIcon/Mqtt.vue";
 import MqttModal from "../components/Config/MqttModal.vue";
+import RemoteAccessIcon from "../components/MaterialIcon/RemoteAccess.vue";
+import RemoteModal from "../components/Config/RemoteModal.vue";
 import NetworkModal from "../components/Config/NetworkModal.vue";
 import NotificationIcon from "../components/MaterialIcon/Notification.vue";
 import restart, { performRestart } from "../restart";
@@ -488,6 +504,7 @@ import type {
 	SiteConfig,
 	DeviceType,
 	Notification,
+	Remote,
 } from "@/types/evcc";
 import { CURRENCY, GRID_CONTROL } from "@/types/evcc";
 import { circuitTree } from "@/utils/circuits";
@@ -539,6 +556,8 @@ export default defineComponent({
 		ModbusProxyModal,
 		MqttIcon,
 		MqttModal,
+		RemoteAccessIcon,
+		RemoteModal,
 		NetworkModal,
 		NotificationIcon,
 		SponsorModal,
@@ -744,6 +763,18 @@ export default defineComponent({
 			}
 
 			return result;
+		},
+		remote(): Remote | undefined {
+			return store.state?.remote;
+		},
+		remoteTags(): DeviceTags {
+			const remote = this.remote;
+			if (!remote?.config?.enabled) {
+				return { configured: { value: false } };
+			}
+			return {
+				connected: { value: remote.status?.connected, error: !remote.status?.connected },
+			};
 		},
 		sponsor() {
 			return store.state?.sponsor;

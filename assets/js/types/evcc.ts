@@ -93,6 +93,7 @@ export interface State {
   shm?: ShmConfig;
   sponsor?: ConfigStatus<unknown, SponsorStatus>;
   eebus?: ConfigStatus<EebusConfig, EebusStatus>;
+  remote?: Remote;
   modbusproxy?: ModbusProxy[];
   messaging?: ConfigStatus<unknown, unknown>;
   messagingEvents?: MessagingEvents;
@@ -481,6 +482,17 @@ export enum MODBUS_PROTOCOL {
 export type Certificate = {
   public: string;
   private: string;
+};
+
+export type Remote = ConfigStatus<RemoteConfig, RemoteStatus>;
+
+export type RemoteConfig = {
+  enabled: boolean;
+};
+
+export type RemoteStatus = {
+  connected: boolean;
+  url?: string;
 };
 
 export type Eebus = ConfigStatus<EebusConfig, EebusStatus>;

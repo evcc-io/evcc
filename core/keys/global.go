@@ -29,6 +29,7 @@ const (
 	Plant              = "plant"
 	Telemetry          = "telemetry"
 	DemoMode           = "demoMode"
+	Remote             = "remote"
 	AuthDisabled       = "authDisabled"
 	AuthProviders      = "authProviders"
 )

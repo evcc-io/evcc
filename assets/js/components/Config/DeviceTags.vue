@@ -174,11 +174,21 @@ export default {
 	},
 	methods: {
 		valueClasses(entry) {
-			return {
-				"value--error": !!entry.error,
-				"value--warning": entry.warning,
-				"value--muted": entry.muted || entry.value === false,
-			};
+			if (entry.error) {
+				return "value--error";
+			}
+			if (entry.warning) {
+				return "value--warning";
+			}
+			if (
+				entry.muted ||
+				entry.value === false ||
+				entry.value === null ||
+				entry.value === undefined
+			) {
+				return "value--muted";
+			}
+			return "";
 		},
 		fmtDeviceValue(entry) {
 			const { name, value } = entry;
@@ -220,6 +230,7 @@ export default {
 				case "singlePhase":
 				case "enabled":
 				case "configured":
+				case "connected":
 				case "dimmed":
 					return value
 						? this.$t("config.deviceValue.yes")
