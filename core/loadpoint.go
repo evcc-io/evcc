@@ -55,6 +55,8 @@ const (
 	timerReset      = "reset"
 	timerElapse     = "elapse"
 
+	timerIncreasingSpeed = 2 // speed at which the remaining delay duration increases when switching conditions are not met
+
 	minActiveCurrent = 1.0 // minimum current at which a phase is treated as active
 	minActiveVoltage = 207 // minimum voltage at which a phase is treated as active
 
@@ -65,13 +67,13 @@ const (
 	boostDisabled = 0
 	boostStart    = 1
 	boostContinue = 2
+
+	// poll modes
+	pollInterval = 60 * time.Minute
 )
 
 // elapsed is the time an expired timer will be set to
 var elapsed = time.Unix(0, 1)
-
-// Poll modes
-const pollInterval = 60 * time.Minute
 
 // Task is the task type
 type Task = func()
@@ -1412,24 +1414,26 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent, effectiveC
 
 		lp.publishTimer(phaseTimer, lp.GetEnableDelay(), phaseScale3p)
 	} else if !lp.phaseTimer.IsZero() {
-		// reset the timer if at least one condition is met:
-		//  - possible scaling direction is ambiguous
-		//  - the remaining delay duration already exceeds the upper limit
-		//  - the timer was put into elapsed state
-		// otherwise...
-		if upscalable == downscalable || lp.phaseTimer.After(now) || lp.phaseTimer.Equal(elapsed) {
+		if upscalable == downscalable || lp.phaseTimer.Equal(elapsed) {
 			lp.resetPhaseTimer()
-		} else { // ...increase the remaining delay duration
-			lp.phaseTimer = lp.phaseTimer.Add(2 * now.Sub(phaseTimerLastEvaluation))
-
+		} else {
 			// set to timerInactive for consistency, no need to differentiate between timerInactive and timerIncreasing
 			lp.phaseTimerAction = timerInactive
 
-			delay := lp.GetDisableDelay()
-			if upscalable {
-				delay = lp.GetEnableDelay()
+			// increase the remaining delay duration
+			timeSinceLastEval := now.Sub(phaseTimerLastEvaluation)
+			lp.phaseTimer = lp.phaseTimer.Add(timeSinceLastEval * (timerIncreasingSpeed + 1))
+
+			// reset timer if the configured delay duration is still expected to be exceeded during the next evaluation
+			if cutoffTime := now.Add(timeSinceLastEval); lp.phaseTimer.After(cutoffTime) {
+				lp.resetPhaseTimer()
+			} else {
+				delay := lp.GetDisableDelay()
+				if upscalable {
+					delay = lp.GetEnableDelay()
+				}
+				lp.publishTimer(phaseTimer, delay, timerIncreasing)
 			}
-			lp.publishTimer(phaseTimer, delay, timerIncreasing)
 		}
 	}
 
@@ -1564,13 +1568,19 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 
 			lp.publishTimer(pvTimer, lp.GetDisableDelay(), pvDisable)
 		} else if !lp.pvTimer.IsZero() {
-			// reset the timer if the remaining delay duration already exceeds the upper limit or
-			// if the timer was put into elapsed state, otherwise...
-			if lp.pvTimer.After(now) || lp.pvTimer.Equal(elapsed) {
+			if lp.pvTimer.Equal(elapsed) {
 				lp.resetPVTimer()
-			} else { // ...increase the remaining delay duration
-				lp.pvTimer = lp.pvTimer.Add(2 * now.Sub(pvTimerLastEvaluation))
-				lp.publishTimer(pvTimer, lp.GetDisableDelay(), timerIncreasing)
+			} else {
+				// increase the remaining delay duration
+				timeSinceLastEval := now.Sub(pvTimerLastEvaluation)
+				lp.pvTimer = lp.pvTimer.Add(timeSinceLastEval * (timerIncreasingSpeed + 1))
+
+				// reset timer if the configured delay duration is still expected to be exceeded during the next evaluation
+				if cutoffTime := now.Add(timeSinceLastEval); lp.pvTimer.After(cutoffTime) {
+					lp.resetPVTimer()
+				} else {
+					lp.publishTimer(pvTimer, lp.GetDisableDelay(), timerIncreasing)
+				}
 			}
 		}
 
@@ -1598,13 +1608,19 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 
 		lp.publishTimer(pvTimer, lp.GetEnableDelay(), pvEnable)
 	} else if !lp.pvTimer.IsZero() {
-		// reset the timer if the remaining delay duration already exceeds the upper limit or
-		// if the timer was put into elapsed state, otherwise...
-		if lp.pvTimer.After(now) || lp.pvTimer.Equal(elapsed) {
+		if lp.pvTimer.Equal(elapsed) {
 			lp.resetPVTimer()
-		} else { // ...increase the remaining delay duration
-			lp.pvTimer = lp.pvTimer.Add(2 * now.Sub(pvTimerLastEvaluation))
-			lp.publishTimer(pvTimer, lp.GetEnableDelay(), timerIncreasing)
+		} else {
+			// increase the remaining delay duration
+			timeSinceLastEval := now.Sub(pvTimerLastEvaluation)
+			lp.pvTimer = lp.pvTimer.Add(timeSinceLastEval * (timerIncreasingSpeed + 1))
+
+			// reset timer if the configured delay duration is still expected to be exceeded during the next evaluation
+			if cutoffTime := now.Add(timeSinceLastEval); lp.pvTimer.After(cutoffTime) {
+				lp.resetPVTimer()
+			} else {
+				lp.publishTimer(pvTimer, lp.GetEnableDelay(), timerIncreasing)
+			}
 		}
 	}
 

@@ -276,10 +276,10 @@ func TestPVHysteresis(t *testing.T) {
 		{false, -500, 0, []se{
 			{-500, 0, 0},
 			{-500, 10, 0},
-			{-499, 20, 0}, // should increase timer by 2 * (20 - 10) = 20 ns
-			{-500, 30, 0}, // should not change timer
-			{-500, dt + 19, 0},
-			{-500, dt + 20, minA},
+			{-499, 20, 0}, // should increase timer by (timerIncreasingSpeed+1) * (20 - 10)
+			{-500, dt, 0},
+			{-500, dt + (timerIncreasingSpeed+1)*10 - 1, 0},
+			{-500, dt + (timerIncreasingSpeed+1)*10, minA},
 		}},
 		// reset enable timer when threshold not met while timer active and threshold not configured
 		{false, 0, 0, []se{
@@ -293,10 +293,10 @@ func TestPVHysteresis(t *testing.T) {
 		{true, 0, 500, []se{
 			{-6*100*phases + 500, 0, minA},
 			{-6*100*phases + 500, 1, minA},
-			{-6*100*phases + 499, dt - 1, minA}, // increase timer by 2 * (dt - 1 - 1) = 2*dt - 4 ns
-			{-6*100*phases + 500, dt + 1, minA}, // restart timer
-			{-6*100*phases + 500, 2 * dt, minA}, // timer not elapsed
-			{-6*100*phases + 500, 2*dt + 1, 0},  // timer elapsed
+			{-6*100*phases + 499, dt - 1, minA},   // increase timer by (timerIncreasingSpeed+1) * (dt - 1 - 1)
+			{-6*100*phases + 500, dt + 1, minA},   // restart timer
+			{-6*100*phases + 500, 2*dt - 3, minA}, // timer not elapsed
+			{-6*100*phases + 500, 2*dt + 1, 0},    // timer elapsed
 		}},
 	}
 
