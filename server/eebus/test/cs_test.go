@@ -50,7 +50,7 @@ func TestEEBus(t *testing.T) {
 	eventC := make(chan api.EventType, 1)
 	box.remoteEventC = eventC
 
-	gridcontrol, err := circuit.New(util.NewLogger("gridcontrol"), "name", "gridcontrol", 0, 0, nil, time.Minute)
+	gridcontrol, err := circuit.New(util.NewLogger("gridcontrol"), "gridcontrol", 0, 0, nil, time.Minute)
 	require.NoError(t, err)
 
 	hems, err := hems.NewEEBus(t.Context(), box.ski, eebus.Limits{}, nil, gridcontrol, time.Second)

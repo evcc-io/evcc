@@ -105,7 +105,7 @@ func NewFromConfig(other map[string]any) (api.Circuit, error) {
 
 	log := util.NewLogger("circuit-" + cc.Name)
 
-	circuit, err := New(log, cc.Name, cc.Title, cc.MaxCurrent, cc.MaxPower, meter, cc.Timeout)
+	circuit, err := New(log, cc.Title, cc.MaxCurrent, cc.MaxPower, meter, cc.Timeout)
 	if err != nil {
 		return nil, err
 	}
@@ -138,10 +138,9 @@ func NewFromConfig(other map[string]any) (api.Circuit, error) {
 }
 
 // New creates a circuit
-func New(log *util.Logger, name string, title string, maxCurrent, maxPower float64, meter api.Meter, timeout time.Duration) (*Circuit, error) {
+func New(log *util.Logger, title string, maxCurrent, maxPower float64, meter api.Meter, timeout time.Duration) (*Circuit, error) {
 	c := &Circuit{
 		log:        log,
-		name:       name,
 		title:      title,
 		maxCurrent: maxCurrent,
 		maxPower:   maxPower,
