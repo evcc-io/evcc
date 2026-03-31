@@ -372,7 +372,16 @@ func (wb *BenderCC) currentPower() (float64, error) {
 		return 0, err
 	}
 
-	return float64(binary.BigEndian.Uint32(b)), nil
+	u := binary.BigEndian.Uint32(b)
+
+	// some Bender chargers temporarily return 0xffffffff
+	// return error in this case to trigger retry and avoid wrong power readings
+	// https://github.com/evcc-io/evcc/discussions/27736
+	if u == math.MaxUint32 {
+		return 0, api.ErrMustRetry
+	}
+
+	return float64(u), nil
 }
 
 // removed: https://github.com/evcc-io/evcc/issues/13726

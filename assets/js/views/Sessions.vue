@@ -152,7 +152,7 @@
 					:currency="currency"
 					@show-session="showDetails"
 				/>
-				<div class="d-flex gap-2 mt-1 mb-5">
+				<div class="d-flex gap-2 my-3">
 					<a
 						class="btn btn-outline-secondary"
 						tabindex="0"
