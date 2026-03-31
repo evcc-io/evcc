@@ -275,6 +275,6 @@ export default defineComponent({
 	min-height: 100dvh;
 }
 .app--bottomtabs {
-	padding-bottom: var(--tab-bar-height);
+	--bottom-space: calc(var(--tab-bar-height) + 1.5rem);
 }
 </style>

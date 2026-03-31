@@ -93,6 +93,7 @@
 	--safe-area-inset-right: env(safe-area-inset-right, 0px);
 
 	--tab-bar-height: 3rem;
+	--bottom-space: 1.5px;
 	--tab-bar-background: var(--evcc-background);
 	--evcc-backdrop-blur: blur(20px);
 }
@@ -461,8 +462,8 @@ html:has(.modal.show) {
 }
 
 /* Safari renders non-overlay scrollbars above modal backdrops at compositor level */
-body.modal-open .forecast-chart-scroll::-webkit-scrollbar {
-	opacity: 0;
+body.modal-open .scroll-overlay-fix {
+	scrollbar-color: transparent transparent;
 }
 
 .cursor-pointer {
@@ -686,13 +687,13 @@ html.app .hide-in-app {
 	display: none !important;
 }
 
-html.app .safe-area-inset {
+.safe-area-inset {
 	padding: max(1rem, var(--safe-area-inset-top)) var(--safe-area-inset-right)
-		var(--safe-area-inset-bottom) var(--safe-area-inset-left);
+		calc(var(--safe-area-inset-bottom) + var(--bottom-space)) var(--safe-area-inset-left);
 	position: relative;
 }
 
-html.app .safe-area-inset::before {
+.safe-area-inset::before {
 	content: "";
 	display: block;
 	position: fixed;
