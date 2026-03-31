@@ -23,11 +23,6 @@ params:
     service: homeassistant/instances
     required: true
   - name: insecure
-    type: bool
-    description:
-      de: Selbstsignierte Zertifikate akzeptieren
-      en: Accept self-signed certificates
-    advanced: true
   - name: status
     description:
       de: Ladestatus-Sensor
