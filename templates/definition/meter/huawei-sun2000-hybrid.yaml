@@ -129,7 +129,7 @@ render: |
     register:
       address: 47418 # Maximum Feed Grid Power (0-100 %)
       type: writesingle
-      encoding: uint16
+      encoding: int16
     scale: 0.1
   curtailed:
     source: modbus
@@ -137,7 +137,7 @@ render: |
     register:
       address: 47418 # Maximum Feed Grid Power (0-100 %)
       type: holding
-      decode: uint16
+      decode: int16
     scale: 0.1
   curtaillimit: {{ .curtaillimit }} # % power limit when curtailed (0 = full shutdown)
   feedinlimit: {{ .feedinlimit }} # % max power limit when not curtailed (e.g. 60 for 60 % of kWp)
