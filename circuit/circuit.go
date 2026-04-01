@@ -11,7 +11,7 @@ func init() {
 	registry.AddCtx(api.Custom, NewConfigurableFromConfig)
 }
 
-// NewConfigurableFromConfig creates api.Circuit from config
+// NewConfigurableFromConfig creates a new circuit from config
 func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.Circuit, error) {
 	return circuit.NewFromConfig(ctx, other)
 }
