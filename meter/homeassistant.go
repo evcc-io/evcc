@@ -19,6 +19,7 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
 		URI      string
 		Token_   string `mapstructure:"token"` // TODO deprecated
 		Home_    string `mapstructure:"home"`  // TODO deprecated
+		Insecure bool
 		Power    string
 		Energy   string
 		Currents []string
@@ -50,7 +51,7 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
 
 	log := util.NewLogger("ha-meter")
 
-	conn, err := homeassistant.NewConnection(log, cc.URI, cc.Home_)
+	conn, err := homeassistant.NewConnection(log, cc.URI, cc.Home_, cc.Insecure)
 	if err != nil {
 		return nil, err
 	}

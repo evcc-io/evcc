@@ -25,6 +25,7 @@ params:
     deprecated: true
   - name: home
     deprecated: true
+  - name: insecure
   - name: soc
     description:
       de: Ladezustand [%]
@@ -134,6 +135,7 @@ render: |
   {{ include "vehicle-features" . }}
   uri: {{ .uri }}
   home: {{ .home }} # deprecated
+  insecure: {{ .insecure }}
   sensors:
     soc: {{ .soc }}
     range: {{ .range }}

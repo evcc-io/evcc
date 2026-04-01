@@ -35,7 +35,7 @@ func connectionFromRequest(req *http.Request) (*Connection, error) {
 	if uri == "" {
 		return nil, errors.New("missing uri")
 	}
-	return NewConnection(log, uri, "")
+	return NewConnection(log, uri, "", false)
 }
 
 // domainsFromRequest parses the comma-separated "domain" query parameter.
