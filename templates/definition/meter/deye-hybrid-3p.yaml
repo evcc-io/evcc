@@ -21,7 +21,7 @@ params:
     advanced: true
     description:
       de: Wahl der zu überwachenden Speichereinheit
-      en: Select the battery unit to monitor 
+      en: Select the battery unit to monitor
     help:
       de: Bei mehreren Speichereinheiten die zu überwachende Einheit auswählen
       en: Select the storage unit to monitor if you have multiple units
@@ -76,7 +76,7 @@ params:
       de: |
         Wenn aktiviert, wird der GEN-Anschluss des Wechselrichters als zusätzlicher Solar-Eingang behandelt. Dadurch werden die Leistung und Energie, die über den GEN-Port eingespeist werden, zum Gesamt-Solarertrag addiert.
       en: |
-        When enabled, the GEN port of the inverter will be treated as an additional solar input. This will add the power and energy fed in through the GEN port to the total solar yield. 
+        When enabled, the GEN port of the inverter will be treated as an additional solar input. This will add the power and energy fed in through the GEN port to the total solar yield.
   - name: firmware1098
     type: bool
     advanced: true
@@ -85,7 +85,7 @@ params:
       en: Firmware 1098 or newer (only for HV versions)
     help:
       de: |
-        Nach einem Firmware-Update haben einige Registerwerte für Hochvolt-Batterien ihren Skalierungsfaktor geändert. Wenn der Wechselrichter die Firmware-Version 1098 oder neuer hat, muss diese Option aktiviert werden, um korrekte Werte zu erhalten.  
+        Nach einem Firmware-Update haben einige Registerwerte für Hochvolt-Batterien ihren Skalierungsfaktor geändert. Wenn der Wechselrichter die Firmware-Version 1098 oder neuer hat, muss diese Option aktiviert werden, um korrekte Werte zu erhalten.
       en: |
         After a firmware update of the high voltage inverter, some register values of high voltage batteries have changed their scaling factor. If your inverter has firmware version 1098 or newer, you need to enable this option to get correct values.
 render: |
