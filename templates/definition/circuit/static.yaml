@@ -25,6 +25,7 @@ params:
       de: Übergeordneter Stromkreis
       en: Parent circuit
 render: |
+  type: custom
   title: {{ .title }}
   maxcurrent: {{ .maxcurrent }}
   maxpower: {{ .maxpower }}
