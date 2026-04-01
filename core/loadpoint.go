@@ -480,9 +480,7 @@ func (lp *Loadpoint) evChargeStartHandler() {
 		if session.Created.IsZero() {
 			session.Created = lp.clock.Now()
 		}
-		if session.SocStart == nil && lp.vehicleSoc > 0 && !lp.chargerHasFeature(api.Heating) {
-			session.SocStart = new(lp.vehicleSoc)
-		}
+		lp.updateSessionSocStart(session)
 	})
 }
 
