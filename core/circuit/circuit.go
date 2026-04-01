@@ -43,24 +43,9 @@ type Circuit struct {
 	powerUpdated   time.Time
 }
 
-func init() {
-	registry.AddCtx(api.Custom, NewConfigurableFromConfig)
-}
-
-// NewConfigurableFromConfig creates circuit from custom yaml config
-func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.Circuit, error) {
-	typ, ok := other["type"].(string)
-	if !ok {
-		return nil, fmt.Errorf("missing type in custom circuit config")
-	}
-	delete(other, "type")
-	return NewFromDeviceConfig(ctx, typ, other)
-}
-
 // NewFromConfig creates a new Circuit
 func NewFromConfig(ctx context.Context, other map[string]any) (api.Circuit, error) {
 	cc := struct {
-		Name          string         // name
 		Title         string         // title
 		ParentRef     string         `mapstructure:"parent"` // parent circuit reference
 		MeterRef      string         `mapstructure:"meter"`  // meter reference
@@ -69,7 +54,6 @@ func NewFromConfig(ctx context.Context, other map[string]any) (api.Circuit, erro
 		GetMaxCurrent *plugin.Config // dynamic max allowed current
 		GetMaxPower   *plugin.Config // dynamic max allowed power
 		Timeout       time.Duration  // timeout between meter updates
-		Template      string
 	}{
 		Timeout: time.Minute,
 	}
@@ -90,7 +74,8 @@ func NewFromConfig(ctx context.Context, other map[string]any) (api.Circuit, erro
 		}
 	}
 
-	log := util.NewLogger("circuit-" + cc.Name)
+	// TODO name
+	log := util.NewLogger("circuit-" + "NAME")
 
 	circuit, err := New(log, cc.Title, cc.MaxCurrent, cc.MaxPower, meter, cc.Timeout)
 	if err != nil {
