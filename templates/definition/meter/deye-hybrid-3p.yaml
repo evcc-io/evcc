@@ -105,7 +105,7 @@ render: |
       address: 522 # "Total_GridBuy_Power Wh"
       type: holding
       decode: uint32s
-    {{- if not .firmware1098 }}
+    {{- if and (eq .batterytype "high voltage") (not .firmware1098) }}
     scale: 0.1
     {{- end }}      
   currents:
@@ -190,7 +190,7 @@ render: |
         address: 534 # "Total_PV_Power_Wh"
         type: holding
         decode: uint32s
-      {{- if not .firmware1098 }}
+      {{- if and (eq .batterytype "high voltage") (not .firmware1098) }}
       scale: 0.1
       {{- end }}
     {{- if .includegenport }}
@@ -200,7 +200,7 @@ render: |
         address: 537 # "Total_Gen_Power_Wh"
         type: holding
         decode: int32s
-      {{- if not .firmware1098 }}
+      {{- if and (eq .batterytype "high voltage") (not .firmware1098) }}
       scale: 0.1
       {{- end }}
     {{- end }}
@@ -229,7 +229,7 @@ render: |
       address: 518 # "Total discharge of the battery (Wh)"
       type: holding
       decode: uint32s
-    {{- if not .firmware1098 }}
+    {{- if and (eq .batterytype "high voltage") (not .firmware1098) }}
     scale: 0.1
     {{- end }}
   soc:
