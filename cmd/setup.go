@@ -570,6 +570,11 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) error {
 	// setup persistence
 	err := wrapErrorWithClass(ClassDatabase, configureDatabase(conf.Database))
 
+	// configure network
+	if err == nil {
+		err = networkSettings(&conf.Network)
+	}
+
 	// setup additional templates
 	if err == nil {
 		if cmd.Flags().Changed(flagTemplate) {

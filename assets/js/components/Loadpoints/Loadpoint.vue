@@ -127,6 +127,7 @@ import type {
 	Vehicle,
 	Forecast,
 	SMART_COST_TYPE,
+	BATTERY_MODE,
 } from "@/types/evcc";
 import type { PlanStrategy } from "@/components/ChargingPlans/types";
 
@@ -160,6 +161,7 @@ export default defineComponent({
 		batteryBoostLimit: { type: Number, default: 100 },
 		batteryConfigured: Boolean,
 		batterySoc: Number,
+		batteryMode: String as PropType<BATTERY_MODE>,
 
 		// session
 		sessionEnergy: Number,

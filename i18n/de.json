@@ -40,6 +40,7 @@
     "legendTopName": "Batterieunterstütztes Fahrzeugladen",
     "legendTopSubline": "wenn Hausbatterie über {soc} ist.",
     "modalTitle": "Hausbatterie",
+    "noBattery": "Keine Batterien konfiguriert.",
     "usageTab": "Batterienutzung"
   },
   "config": {
@@ -846,6 +847,15 @@
       "configurePriceCo2": "Lerne Preis und CO₂-Emissionen zu konfigurieren.",
       "footerLong": "{percent} Sonnenenergie",
       "footerShort": "{percent} Sonne",
+      "indicator": {
+        "co2": "CO₂-Emissionen",
+        "co2saved": "CO₂ eingespart",
+        "none": "keine",
+        "price": "Energiepreis",
+        "savings": "Ersparnis",
+        "solar": "Solarenergie"
+      },
+      "indicatorLabel": "Header-Info",
       "modalTitle": "Auswertung Ladeenergie",
       "moneySaved": "{value} gespart",
       "percentGrid": "{grid} kWh Netz",
@@ -857,10 +867,11 @@
         "thisYear": "dieses Jahr",
         "total": "gesamt"
       },
-      "periodLabel": "Zeitraum:",
+      "periodLabel": "Zeitraum",
       "priceTitle": "Energiepreis",
       "referenceGrid": "Netz",
-      "referenceLabel": "Referenzdaten:",
+      "referenceLabel": "Referenzdaten",
+      "sessionInfo": "Basierend auf abgeschlossenen Ladevorgängen.",
       "tabTitle": "Meine Daten"
     },
     "sponsor": {
@@ -886,15 +897,25 @@
     },
     "version": {
       "availableLong": "neue Version verfügbar",
+      "community": "evcc Community",
+      "labelRelease": "Release",
+      "labelVersion": "Version",
+      "labelWebsite": "Website",
+      "latestVersion": "aktuelle Version",
+      "madeByCommunity": "Entwickelt von der {0}.",
       "modalCancel": "Abbrechen",
       "modalDownload": "Download",
       "modalInstalledVersion": "Installierte Version",
+      "modalNextRelease": "Was ist neu im nächsten Release",
       "modalNoReleaseNotes": "Keine Versionshinweise verfügbar. Mehr Informationen zur neuen Version:",
       "modalTitle": "Neue Version verfügbar",
       "modalUpdate": "Installieren",
       "modalUpdateNow": "Jetzt installieren",
       "modalUpdateStarted": "Starte die neue Version von evcc…",
-      "modalUpdateStatusStart": "Installation gestartet:"
+      "modalUpdateStatusStart": "Installation gestartet:",
+      "modalViewOnGitHub": "Auf GitHub ansehen",
+      "openSource": "Open Source",
+      "poweredByOpenSource": "Powered by {0}."
     }
   },
   "forecast": {
@@ -903,6 +924,12 @@
       "constant": "CO₂-Intensität",
       "lowestHour": "Sauberste Stunde",
       "range": "Bereich"
+    },
+    "empty": {
+      "co2": "Erfahre, wann Netzstrom in deiner Region sauber ist. Ladepläne werden auf niedrige Emissionen optimiert und CO₂-Einsparungen berechnet.",
+      "price": "Dynamischen Stromtarif konfigurieren, um Ladepläne automatisch zu optimieren und Einsparungen zu berechnen.",
+      "setup": "Tarife und Vorhersagen einrichten",
+      "solar": "Erwartete Solarproduktion für heute und die nächsten Tage. Wird in Zukunft auch für die automatische Ladeoptimierung verwendet."
     },
     "modalTitle": "Vorhersage",
     "price": {
@@ -1128,6 +1155,7 @@
         "once": "Boost ist für diesen Ladevorgang aktiviert.",
         "stateActive": "Batterie Boost aktiv",
         "stateBelowLimit": "Batterie zu niedrig für Boost",
+        "stateHold": "Batterie gesperrt",
         "stateReady": "Batterie Boost bereit"
       },
       "batteryUsage": "Hausbatterie",
@@ -1237,6 +1265,7 @@
       "batteryBoostBelowLimit": "Batterie zu niedrig für Boost.",
       "batteryBoostDisabled": "Batterie Boost deaktiviert.",
       "batteryBoostEnabled": "Boost bis Batterie bei {limit}.",
+      "batteryBoostHold": "Batterie gesperrt. Boost nicht verfügbar.",
       "charging": "Ladevorgang aktiv …",
       "cheapEnergyCharging": "Günstige Energie verfügbar.",
       "cheapEnergyNextStart": "Günstige Energie in {duration}.",
@@ -1476,5 +1505,13 @@
     "lineErrorLink": "Zeile {0}",
     "restartButton": "Neu starten",
     "title": "Fehler beim Starten"
+  },
+  "tabBar": {
+    "battery": "Batterie",
+    "charge": "Laden",
+    "comingSoon": "Diese Seite ist in Arbeit.",
+    "forecast": "Vorhersage",
+    "more": "Mehr",
+    "sessions": "Ladungen"
   }
 }

@@ -236,13 +236,17 @@ func (c *EEBus) UnregisterDevice(ski string, device Device) {
 	ski = shiputil.NormalizeSKI(ski)
 	c.log.TRACE.Printf("unregistering ski: %s", ski)
 
-	c.service.UnregisterRemoteSKI(ski)
-
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
 	if idx := slices.Index(c.clients[ski], device); idx != -1 {
 		c.clients[ski] = slices.Delete(c.clients[ski], idx, idx+1)
+	}
+
+	// only tear down SHIP connection when no more clients need it
+	if len(c.clients[ski]) == 0 {
+		delete(c.clients, ski)
+		c.service.UnregisterRemoteSKI(ski)
 	}
 }
 

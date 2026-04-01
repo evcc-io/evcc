@@ -152,7 +152,7 @@
 					:currency="currency"
 					@show-session="showDetails"
 				/>
-				<div class="d-flex gap-2 mt-1 mb-5">
+				<div class="d-flex gap-2 my-3">
 					<a
 						class="btn btn-outline-secondary"
 						tabindex="0"
@@ -748,8 +748,7 @@ export default defineComponent({
 	right: 0;
 	top: max(0rem, env(safe-area-inset-top)) !important;
 	margin: 0 calc(calc(1.5rem + var(--vertical-shift)) * -1);
-	-webkit-backdrop-filter: blur(35px);
-	backdrop-filter: blur(35px);
+	backdrop-filter: var(--evcc-backdrop-blur);
 	background-color: #0000;
 	box-shadow: 0 1px 8px 0px var(--evcc-background);
 }
