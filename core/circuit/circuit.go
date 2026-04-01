@@ -58,7 +58,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.C
 }
 
 // NewFromConfig creates a new Circuit
-func NewFromConfig(ctx context.Context,other map[string]any) (api.Circuit, error) {
+func NewFromConfig(ctx context.Context, other map[string]any) (api.Circuit, error) {
 	cc := struct {
 		Name          string         // name
 		Title         string         // title
