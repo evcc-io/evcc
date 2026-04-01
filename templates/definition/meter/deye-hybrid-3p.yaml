@@ -1,4 +1,5 @@
 template: deye-hybrid-3p
+covers: ["deye-hybrid","deye-hybrid-hp3"]
 products:
   - brand: Deye
     description:
@@ -17,27 +18,19 @@ params:
   - name: maxacpower
   - name: storageunit
     choice: ["1", "2"]
-    default: "1"
-    advanced: true
-    description:
-      de: Wahl der zu überwachenden Speichereinheit
-      en: Select the battery unit to monitor
-    help:
-      de: Bei mehreren Speichereinheiten die zu überwachende Einheit auswählen
-      en: Select the storage unit to monitor if you have multiple units
   - preset: battery-params
   - name: batterytype
-    choice: ["low voltage", "high voltage"]
-    default: "low voltage"
+    choice: ["lv", "hv"]
+    default: "lv"
     advanced: true
     description:
       de: Wechselrichter für LV- oder HV-Batterie
       en: Inverter for LV or HV batteries
     help:
       de: |
-        "high voltage" für eine Hochvolt-Batterie mit Nennspannung über 60V verwenden
+        "hv" für eine Hochvolt-Batterie mit Nennspannung über 60V verwenden
       en: |
-        Choose "high voltage" if you are using a high voltage battery with a nominal voltage over 60V
+        Choose "hv" if you are using a high voltage battery with a nominal voltage over 60V
   - name: maxdischargecurrent
     required: true
     default: 100
@@ -85,9 +78,9 @@ params:
       en: Firmware 1098 or newer (only for HV versions)
     help:
       de: |
-        Nach einem Firmware-Update haben einige Registerwerte für Hochvolt-Batterien ihren Skalierungsfaktor geändert. Wenn der Wechselrichter die Firmware-Version 1098 oder neuer hat, muss diese Option aktiviert werden, um korrekte Werte zu erhalten.
+        Nach einem Firmware-Update für Hochvolt-Wechselrichter haben einige Registerwerte ihren Skalierungsfaktor geändert. Wenn der Wechselrichter die Firmware-Version 1098 oder neuer hat, muss diese Option aktiviert werden, um korrekte Werte zu erhalten.
       en: |
-        After a firmware update of the high voltage inverter, some register values of high voltage batteries have changed their scaling factor. If your inverter has firmware version 1098 or newer, you need to enable this option to get correct values.
+        After a firmware update of the high voltage inverter, some register values have changed their scaling factor. If your inverter has firmware version 1098 or newer, you need to enable this option to get correct values.
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -105,7 +98,7 @@ render: |
       address: 522 # "Total_GridBuy_Power Wh"
       type: holding
       decode: uint32s
-    {{- if and (eq .batterytype "high voltage") (not .firmware1098) }}
+    {{- if and (eq .batterytype "hv") (not .firmware1098) }}
     scale: 0.1
     {{- end }}      
   currents:
@@ -141,7 +134,7 @@ render: |
         address: 672 # "PV1 input power"
         type: holding
         decode: uint16
-      {{- if eq .batterytype "high voltage" }}  
+      {{- if eq .batterytype "hv" }}  
       scale: 10
       {{- end }}
     - source: modbus
@@ -150,7 +143,7 @@ render: |
         address: 673 # "PV2 input power"
         type: holding
         decode: uint16
-      {{- if eq .batterytype "high voltage" }}  
+      {{- if eq .batterytype "hv" }}  
       scale: 10
       {{- end }}
     - source: modbus
@@ -159,7 +152,7 @@ render: |
         address: 674 # "PV3 input power"
         type: holding
         decode: uint16
-      {{- if eq .batterytype "high voltage" }}  
+      {{- if eq .batterytype "hv" }}  
       scale: 10
       {{- end }}
     - source: modbus
@@ -168,7 +161,7 @@ render: |
         address: 675 # "PV4 input power"
         type: holding
         decode: uint16
-      {{- if eq .batterytype "high voltage" }}  
+      {{- if eq .batterytype "hv" }}  
       scale: 10
       {{- end }}
     {{- if .includegenport }}
@@ -190,7 +183,7 @@ render: |
         address: 534 # "Total_PV_Power_Wh"
         type: holding
         decode: uint32s
-      {{- if and (eq .batterytype "high voltage") (not .firmware1098) }}
+      {{- if and (eq .batterytype "hv") (not .firmware1098) }}
       scale: 0.1
       {{- end }}
     {{- if .includegenport }}
@@ -200,7 +193,7 @@ render: |
         address: 537 # "Total_Gen_Power_Wh"
         type: holding
         decode: int32s
-      {{- if and (eq .batterytype "high voltage") (not .firmware1098) }}
+      {{- if and (eq .batterytype "hv") (not .firmware1098) }}
       scale: 0.1
       {{- end }}
     {{- end }}
@@ -219,7 +212,7 @@ render: |
       {{- end }}
       type: holding
       decode: int16
-  {{- if eq .batterytype "high voltage" }}  
+  {{- if eq .batterytype "hv" }}  
     scale: 10
   {{- end }}
   energy:
@@ -229,7 +222,7 @@ render: |
       address: 518 # "Total discharge of the battery (Wh)"
       type: holding
       decode: uint32s
-    {{- if and (eq .batterytype "high voltage") (not .firmware1098) }}
+    {{- if and (eq .batterytype "hv") (not .firmware1098) }}
     scale: 0.1
     {{- end }}
   soc:
