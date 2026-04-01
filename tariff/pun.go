@@ -148,8 +148,9 @@ func (t *Pun) getData(day time.Time) (api.Rates, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
+
 	if resp.StatusCode == http.StatusNotFound {
-		resp.Body.Close()
 		return nil, fmt.Errorf("%w: %s", ErrPunDataNotAvailable, day.Format("2006-01-02"))
 	}
 
