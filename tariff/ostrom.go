@@ -256,11 +256,12 @@ func (t *Ostrom) Rates() (api.Rates, error) {
 // Type implements the api.Tariff interface
 func (t *Ostrom) Type() api.TariffType {
 	switch t.contractType {
-	case ostrom.PRODUCT_DYNAMIC:
+	case ostrom.PRODUCT_DYNAMIC, ostrom.PRODUCT_DYNAMIC_V2:
 		return api.TariffTypePriceForecast
 	case ostrom.PRODUCT_FAIR, ostrom.PRODUCT_FAIR_CAP:
 		return api.TariffTypePriceStatic
 	default:
-		panic("invalid contract type: " + t.contractType)
+		log.ERROR.Printf("ostrom: unknown contract type %q, assuming dynamic", t.contractType)
+		return api.TariffTypePriceForecast
 	}
 }
