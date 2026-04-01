@@ -11,7 +11,7 @@ import (
 )
 
 func (lp *Loadpoint) chargeMeterTotal() float64 {
-	m, ok := lp.chargeMeter.(api.MeterEnergy)
+	m, ok := api.Cap[api.MeterEnergy](lp.chargeMeter)
 	if !ok {
 		return 0
 	}

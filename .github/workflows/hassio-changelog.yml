@@ -1,19 +1,24 @@
-name: Hassio Addon Changelog
-
-permissions:
-  contents: read
+name: Hassio Addon Changelog Update (Reusable)
 
 on:
-  release:
-    types: [edited, released]
-
+  workflow_call:
+    inputs:
+      addon_path:
+        description: "Path inside hassio-addon repo (evcc or evcc-nightly)"
+        required: true
+        type: string
+      include_unreleased:
+        description: "Prepend commits on master after the latest release"
+        required: false
+        type: boolean
+        default: false
 jobs:
   update-changelog:
     name: Update Hassio Changelog
     runs-on: depot-ubuntu-24.04-arm
 
     permissions:
-      contents: read # push to hassio-addon is authenticated via HASSIO_DEPLOY_TOKEN PAT
+      contents: read # gh api calls to evcc repo; push to hassio-addon uses HASSIO_DEPLOY_TOKEN PAT
 
     steps:
       - name: Checkout hassio-addon
@@ -33,12 +38,27 @@ jobs:
             | sort_by(.published_at)
             | reverse
             | .[]
-            | "## [\(.tag_name)] - \(.published_at | split("T")[0])\n\n\((.body // "No release notes.") 
+            | "## [\(.tag_name)] - \(.published_at | split("T")[0])\n\n\((.body // "No release notes.")
             | gsub("(?m)^\\* [0-9a-f]{40} "; "* "))\n"
           ' -r > /tmp/changelog_entries.md
 
-          printf '%s\n\n' 'Full release details: https://github.com/evcc-io/evcc/releases' > ./hassio/evcc/CHANGELOG.md
-          cat /tmp/changelog_entries.md >> ./hassio/evcc/CHANGELOG.md
+          printf '%s\n\n' 'Full release details: https://github.com/evcc-io/evcc/releases' > ./hassio/${{ inputs.addon_path }}/CHANGELOG.md
+
+          if [ "${{ inputs.include_unreleased }}" = "true" ]; then
+            DEFAULT_BRANCH=$(gh repo view evcc-io/evcc --json defaultBranchRef --jq .defaultBranchRef.name)
+            LATEST_TAG=$(gh api repos/evcc-io/evcc/releases/latest --jq .tag_name)
+            COMMITS=$(gh api repos/evcc-io/evcc/compare/${LATEST_TAG}...${DEFAULT_BRANCH} \
+              --jq '.commits | reverse[] | .commit.message | split("\n")[0]')
+            if [ -n "$COMMITS" ]; then
+              printf '## [unreleased]\n\n'
+              echo "$COMMITS" | while IFS= read -r line; do
+                printf '* %s\n' "$line"
+              done
+              printf '\n'
+            fi >> ./hassio/${{ inputs.addon_path }}/CHANGELOG.md
+          fi
+
+          cat /tmp/changelog_entries.md >> ./hassio/${{ inputs.addon_path }}/CHANGELOG.md
 
       - name: Push if changed
         run: |
@@ -49,7 +69,7 @@ jobs:
           fi
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git add evcc/CHANGELOG.md
-          git commit -m "Update evcc changelog"
+          git add ${{ inputs.addon_path }}/CHANGELOG.md
+          git commit -m "Update ${{ inputs.addon_path }} changelog"
           git pull --rebase
           git push

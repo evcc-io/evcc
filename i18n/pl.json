@@ -100,7 +100,7 @@
     "control": {
       "description": "Zazwyczaj wartości domyślne są w porządku. Zmień je tylko wtedy, gdy wiesz, co robisz.",
       "descriptionInterval": "Cykl aktualizacji w sekundach. Określa, jak często evcc odczytuje dane z licznika i dostosowuje naliczanie opłat. Domyślna wartość 30 sekund jest bezpiecznym wyborem. Urządzenia takie jak pojazdy, stacje ładowania i falowniki zazwyczaj potrzebują kilku sekund, aby dostosować swoje działanie. Jeśli komponenty reagują szybko, można użyć niższych wartości. Zdecydowanie zalecamy, aby nie schodzić poniżej 10 sekund. Jeśli zauważysz nieregularne działanie sterowania lub skoki wartości mocy, wybierz większy interwał.",
-      "descriptionResidualPower": "Przesuwa punkt pracy pętli sterowania. Jeśli posiadasz domową baterię, zaleca się ustawienie wartości 100 W. W ten sposób bateria uzyska niewielką przewagę nad korzystaniem z sieci energetycznej.",
+      "descriptionResidualPower": "Przesuwa punkt pracy pętli sterowania. Jeśli posiadasz domowy magazyn energii, zaleca się ustawienie wartości 100 W. W ten sposób magazyn energii uzyska niewielką przewagę przed korzystaniem z prądu sieciowego.",
       "labelInterval": "Interwał aktualizacji",
       "labelResidualPower": "Moc resztkowa",
       "title": "Ustawienia postępowania"
@@ -130,8 +130,9 @@
       "currency": "Waluta",
       "current": "Prąd",
       "currentRange": "Aktualne",
+      "curtailed": "Zasilanie sieci ograniczone",
       "detected": "Wykryto",
-      "dimmed": "Przyciemniony",
+      "dimmed": "Konsumpcja ograniczona",
       "enabled": "Włączony",
       "energy": "Energia",
       "events": "Wydarzenia",
@@ -195,7 +196,10 @@
       "port": "Port",
       "portHelp": "Port, który ma być użyty.",
       "removeConfirm": "Cała konfiguracja EEBus zostanie usunięta. Nowe certyfikaty i identyfikatory zostaną wygenerowane przy następnym uruchomieniu. Czy jesteś pewien?",
+      "shipid": "SHIP-ID",
       "shipidExplain": "Trwały identyfikator urządzenia służący do identyfikacji w sieci EEBus.",
+      "shipidHelp": "SHIP-ID połączone z poniższymi certyfikatami.",
+      "ski": "SKI",
       "skiExplain": "Unikalny identyfikator bezpieczeństwa do parowania urządzeń EEBus.",
       "title": "EEBus"
     },
@@ -238,6 +242,7 @@
       "fromYamlHint": "Uwaga: Konfiguracja odbywa się za pomocą pliku evcc.yaml. Aby umożliwić edycję w tym miejscu, usuń wpis z pliku.",
       "hideAdvancedSettings": "Ukryj ustawienia zaawansowane",
       "invalidFileSelected": "Wybrano nieprawidłowy plik",
+      "legacy": "starsze",
       "noFileSelected": "Nie wybrano pliku.",
       "off": "wyłączony",
       "on": "włączony",
@@ -574,7 +579,8 @@
       "labelHost": "Nazwa hosta mDNS",
       "labelInternalUrl": "Wewnętrzny adres URL",
       "labelPort": "Port",
-      "title": "Sieć"
+      "title": "Sieć",
+      "warningUrlPath": "Adres URL zazwyczaj nie wymaga ścieżki. Czy napewno jest to poprawne?"
     },
     "ocpp": {
       "connectedChargers": "Podłączone ładowarki",
@@ -635,11 +641,13 @@
       "cardTitle": "Sunny Home Manager",
       "description": "evcc jest wyposażony w integrację z SMA Sunny Home Manager (SHM) poprzez protokół SEMP. Jeśli działa on w tej samej sieci, po zalogowaniu się na konto Sunny Portal, powinno pojawić się automatyczne zapytanie o dodanie wszystkich ładowarek skonfigurowanych w evcc jako nowo wykrytych odbiorników. Wszystko powinno być gotowe do użycia od razu, bez konieczności dokonywania jakichkolwiek poniższych ustawień.",
       "descriptionDeviceId": "12-znakowy ciąg znaków HEX. Prefiks dla wszystkich urządzeń (punkt ładowania itp.).",
+      "descriptionDeviceSerial": "12-znakowy ciąg znaków HEX. Podstawowy numer seryjny dla wszystkich urządzeń (punkt ładowania itp.). Domyślnie evcc pobiera go z adresu MAC hosta.",
       "descriptionIdPattern": "Wzorzec identyfikatora",
       "descriptionIds": "W Sunny Portal każde urządzenie konsumenckie wymaga unikalnego identyfikatora. evcc generuje unikalny identyfikator na podstawie sprzętu użytkownika. W przypadku migracji evcc na inny sprzęt identyfikatory te mogą ulec zmianie. Jeśli chcesz zachować historię, możesz tutaj nadpisać wygenerowane identyfikatory. Otwórz adres URL SEMP (/semp), aby sprawdzić aktualne identyfikatory.",
       "descriptionSempUrl": "Adres URL SEMP",
       "descriptionVendorId": "8-znakowy ciąg znaków HEX. Ogólny prefiks wszystkich jednostek. Domyślnie evcc używa własnego wewnętrznego identyfikatora dostawcy.",
       "labelDeviceId": "Identyfikator urządzenia",
+      "labelDeviceSerial": "Nr seryjny urządzenia",
       "labelVendorId": "Identyfikator dostawcy",
       "title": "SMA Sunny Home Manager"
     },
@@ -700,6 +708,74 @@
       "restartRequiredMessage": "Konfiguracja została zmieniona.",
       "restartingDescription": "Proszę czekać…",
       "restartingMessage": "Ponowne uruchomienie evcc."
+    },
+    "tariff": {
+      "addForecast": "Dodaj prognozę",
+      "addTariff": "Dodaj taryfę",
+      "co2": {
+        "description": "Prognoza intensywności emisji CO₂ dla energii elektrycznej z sieci. Do optymalizacji opłat pod kątem emisji CO₂ i obliczania oszczędności emisji.",
+        "titleAdd": "Dodaj prognozę CO₂",
+        "titleEdit": "Edytuj prognozę CO₂"
+      },
+      "co2Services": "Serwisy CO₂",
+      "customForecast": "Prognoza zdefiniowana przez użytkownika",
+      "customTariff": "Taryfa zdefiniowana przez użytkownika",
+      "description": "Skonfiguruj swoje taryfy i prognozy dotyczące energii. Użyj konfiguracji opartej na urządzeniu do dynamicznego zarządzania lub edytora YAML do ustawień statycznych.",
+      "feedIn": {
+        "description": "Rekompensata za energię elektryczną eksportowaną do sieci. Służy do obliczania rzeczywistych kosztów ładowania.",
+        "titleAdd": "Dodaj taryfę zasilenia sieci",
+        "titleEdit": "Edytuj taryfę zasilania sieci"
+      },
+      "generic": "Integracje ogólne",
+      "grid": {
+        "description": "Cena energii elektrycznej za pobranie energii z sieci. Do obliczania rzeczywistych kosztów ładowania i optymalizacji cen ładowania pojazdów, urządzeń grzewczych lub ładowania domowego magazynu energii prądem z sieci.",
+        "titleAdd": "Dodaj taryfę pobrania energii z sieci",
+        "titleEdit": "Edytuj taryfę za pobranie energii z sieci"
+      },
+      "legacyWarning": "Dostępna jest nowa konfiguracja taryf! Usuń i zapisz swoje taryfy tutaj, aby skorzystać z nowego procesu.",
+      "option": {
+        "co2": "Dodaj prognozę CO₂",
+        "feedIn": "Dodaj taryfę za zasilanie sieci",
+        "grid": "Dodaj taryfę za pobranie energii z sieci",
+        "solar": "Dodaj prognozę nasłonecznienia"
+      },
+      "planner": {
+        "description": "Ustawienie zaawansowane. Zazwyczaj niepotrzebne, ponieważ dynamiczne taryfy za energię elektryczną lub prognozy emisji CO₂ są używane automatycznie. Włącza dodatkowe źródło danych, które służy wyłącznie do planowania ładowania, a nie do statystyk i obliczania cen."
+      },
+      "services": "Usługodawcy",
+      "solar": {
+        "description": "Prognoza produkcji energii słonecznej dla Twojego systemu fotowoltaicznego. Wyświetlana w interfejsie i wykorzystywana w przyszłych algorytmach optymalizacji.",
+        "titleAdd": "Dodawanie prognozy nasłonecznienia",
+        "titleEdit": "Edytowanie prognozy nasłonecznienia"
+      },
+      "template": "Dostawca",
+      "title": "Taryfy i Prognozy",
+      "titleChoice": "Co zamierzasz dodać?",
+      "type": {
+        "co2": "Intensywność CO₂",
+        "feedIn": "Cena za zasilanie sieci",
+        "grid": "Cena za pobranie energii z sieci"
+      },
+      "zones": {
+        "add": "Dodaj przedział",
+        "allDays": "Wszystkie dni",
+        "allMonths": "Wszystkie miesiące",
+        "allTimes": "Cały czas",
+        "cancel": "Anuluj",
+        "days": "Dni",
+        "edit": "Edytuj",
+        "hours": "Godziny",
+        "months": "Miesiące",
+        "price": "Cena",
+        "priceRequired": "Cena jest wymagana",
+        "remove": "Usuń przedział",
+        "save": "Zapisz",
+        "selectAll": "Wszystkie dni",
+        "timeFrom": "Od",
+        "timeRangeError": "Czas rozpoczęcia musi przypadać przed czasem zakończenia. Aby objąć północ, utwórz dwie oddzielne przedziały czasu.",
+        "timeTo": "Do",
+        "weekdays": "Dni powszednie"
+      }
     },
     "tariffs": {
       "description": "Określ swoje taryfy energetyczne, aby obliczyć koszty sesji ładowania.",
@@ -1033,6 +1109,7 @@
       "charged": "Zużyto",
       "co2": "⌀ CO₂",
       "duration": "Czas trwania",
+      "emission": "Emisyjność",
       "fallbackName": "Punkt odbioru energii",
       "finished": "Godzina zakończenia",
       "power": "Moc",
@@ -1160,7 +1237,7 @@
       "batteryBoost": "Turbo ładowanie aktywne.",
       "batteryBoostBelowLimit": "Magazyn energii zbyt rozładowany dla turbo ładowania.",
       "batteryBoostDisabled": "Turbo ładowanie wyłączone.",
-      "batteryBoostEnabled": "Turbo ładowanie, aż akumulator osiągnie {limit}.",
+      "batteryBoostEnabled": "Turbo ładowanie, aż do {limit} rozładowania magazynu energii.",
       "charging": "Ładuje się…",
       "cheapEnergyCharging": "Dostępna tania energia.",
       "cheapEnergyNextStart": "Tania energia za {duration}.",
@@ -1173,7 +1250,7 @@
       "disconnectRequired": "Sesja zakończona. Proszę ponownie się połączyć.",
       "disconnected": "Rozłączony.",
       "feedinPriorityNextStart": "Wysokie stawki za energię elektryczną dostarczaną do sieci zaczynają obowiązywać za {duration}.",
-      "feedinPriorityPausing": "Wstrzymano ładowanie słoneczne w celu zwiększenia dostarczania energii do sieci.",
+      "feedinPriorityPausing": "Wstrzymano ładowanie słoneczne w celu zwiększenia zasilania sieci.",
       "finished": "Zakończone.",
       "minCharge": "Minimalne ładowanie do {soc}.",
       "pvDisable": "Za mało nadwyżki. Wkrótce przerwa.",
@@ -1185,6 +1262,7 @@
       "targetChargeWaitForVehicle": "Plan ładowania gotowy. Czekam na pojazd…",
       "vehicleLimit": "Limit pojazdu",
       "vehicleLimitReached": "Osiągnięto limit pojazdu.",
+      "waitForAuthorization": "Połączony. Oczekiwanie na autoryzację…",
       "waitForVehicle": "Gotowe. Czekam na pojazd…",
       "welcome": "Krótkie ładowanie początkowe w celu potwierdzenia połączenia."
     },
@@ -1381,7 +1459,7 @@
   },
   "smartFeedInPriority": {
     "activeHoursLabel": "Czas wstrzymany",
-    "description": "Wstrzymuje ładowanie w okresach wysokich cen, aby w pierwszej kolejności skupić się na opłacalnym zasileniu do sieci.",
+    "description": "Wstrzymuje ładowanie w okresach wysokich cen, aby w pierwszej kolejności skupić się na opłacalnym zasileniu sieci.",
     "priceLabel": "Taryfa za zasilenie sieci",
     "priceLimit": "Limit zasilenia sieci",
     "resetWarning": "Nie skonfigurowano dynamicznej taryfy za zasilenie sieci. Nadal obowiązuje jednak jej limit {limit}. Czy chcesz wyczyścić konfigurację?",

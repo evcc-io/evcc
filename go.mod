@@ -74,7 +74,6 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/modelcontextprotocol/go-sdk v1.4.1
 	github.com/muka/go-bluetooth v0.0.0-20240701044517-04c4f09c514e
-	github.com/mxschmitt/golang-combinations v1.2.0
 	github.com/nicholas-fedor/shoutrrr v0.14.0
 	github.com/nicksnyder/go-i18n/v2 v2.6.1
 	github.com/olekukonko/tablewriter v1.1.4

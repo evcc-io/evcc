@@ -50,6 +50,18 @@ export interface FatalError {
   device?: string;
 }
 
+export type StatisticsPeriod = "30d" | "365d" | "thisYear" | "total";
+export type StatisticsIndicator = "none" | "solar" | "price" | "savings" | "co2" | "co2saved";
+
+export interface StatisticsData {
+  avgCo2: number;
+  avgPrice: number;
+  chargedKWh: number;
+  solarPercentage: number;
+}
+
+export type Statistics = Record<StatisticsPeriod, StatisticsData>;
+
 export interface State {
   offline: boolean;
   telemetry?: boolean;
@@ -66,6 +78,7 @@ export interface State {
   system?: string;
   timezone?: string;
   battery?: Battery;
+  batteryMode?: BATTERY_MODE;
   pv?: Meter[];
   aux?: Meter[];
   ext?: Meter[];
@@ -85,8 +98,16 @@ export interface State {
   messagingEvents?: MessagingEvents;
   interval?: number;
   circuits?: Record<string, Circuit>;
+  bufferSoc?: number;
+  prioritySoc?: number;
+  bufferStartSoc?: number;
+  batteryDischargeControl?: boolean;
+  batteryGridChargeLimit?: number | null;
+  smartCostAvailable?: boolean;
+  smartCostType?: SMART_COST_TYPE;
   siteTitle?: string;
   vehicles: Record<string, Vehicle>;
+  statistics?: Statistics;
   authDisabled?: boolean;
   config?: string;
   database?: string;
@@ -355,6 +376,13 @@ export enum CHARGE_MODE {
   NOW = "now",
   MINPV = "minpv",
   PV = "pv",
+}
+
+export enum BATTERY_MODE {
+  UNKNOWN = "unknown",
+  NORMAL = "normal",
+  HOLD = "hold",
+  CHARGE = "charge",
 }
 
 export enum PHASES {
