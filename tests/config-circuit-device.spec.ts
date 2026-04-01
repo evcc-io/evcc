@@ -118,7 +118,7 @@ test.describe("circuit device api", () => {
     const create = await page.request.post("/api/config/devices/circuit", {
       data: {
         type: "custom",
-        yaml: "type: static\ntitle: Custom Circuit\nmaxCurrent: 24\n",
+        yaml: "type: custom\ntitle: Custom Circuit\nmaxCurrent: 24\n",
       },
     });
     expect(create.status()).toBe(200);
