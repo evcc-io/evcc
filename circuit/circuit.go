@@ -13,5 +13,6 @@ func init() {
 
 // NewConfigurableFromConfig creates a new circuit from config
 func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.Circuit, error) {
+	delete(other, "type")
 	return circuit.NewFromConfig(ctx, other)
 }
