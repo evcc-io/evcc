@@ -330,7 +330,7 @@ func (wb *DaheimLaden) getPhases() (int, error) {
 
 		wb.phases = binary.BigEndian.Uint16(b)
 	} else {
-		wb.log.DEBUG("phase switch in progress")
+		wb.log.DEBUG.Println("phase switch in progress")
 	}
 
 	return int(wb.phases), nil
