@@ -1,6 +1,8 @@
 package circuit
 
 import (
+	"context"
+
 	"github.com/evcc-io/evcc/api"
 )
 
@@ -10,5 +12,5 @@ func init() {
 
 // NewStaticCircuitFromConfig creates new static circuit
 func NewStaticCircuitFromConfig(other map[string]any) (api.Circuit, error) {
-	return NewFromConfig(other)
+	return NewFromConfig(context.TODO(), other)
 }

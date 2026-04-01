@@ -227,7 +227,7 @@ NEXT:
 			return fmt.Errorf("cannot decode custom circuit '%s': %w", cc.Name, err)
 		}
 
-		instance, err := circuit.NewFromConfig(props)
+		instance, err := circuit.NewFromConfig(context.TODO(), props)
 		if err != nil {
 			return fmt.Errorf("cannot create circuit '%s': %w", cc.Name, err)
 		}

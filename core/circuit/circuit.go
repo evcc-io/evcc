@@ -58,7 +58,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.C
 }
 
 // NewFromConfig creates a new Circuit
-func NewFromConfig(other map[string]any) (api.Circuit, error) {
+func NewFromConfig(ctx context.Context,other map[string]any) (api.Circuit, error) {
 	cc := struct {
 		Name          string         // name
 		Title         string         // title
@@ -96,8 +96,6 @@ func NewFromConfig(other map[string]any) (api.Circuit, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	ctx := context.TODO()
 
 	circuit.getMaxPower, err = cc.GetMaxPower.FloatGetter(ctx)
 	if err != nil {
