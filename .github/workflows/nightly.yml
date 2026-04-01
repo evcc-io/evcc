@@ -84,7 +84,7 @@ jobs:
             type=raw,value=nightly.{{date 'YYYYMMDD'}}-{{sha}}
 
       - name: Publish
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           platforms: linux/amd64,linux/arm64,linux/arm/v6
