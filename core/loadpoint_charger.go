@@ -22,4 +22,3 @@ func (lp *Loadpoint) chargerIdentifier() (string, error) {
 	}
 	return "", api.ErrNotAvailable
 }
-
