@@ -5,17 +5,10 @@ products:
   - brand: GoodWe
     description:
       generic: SDT/DT Inverter (WiFi)
-
 params:
   - name: usage
     choice: ["pv"]
-
   - name: host
-    help:
-      en: IP address of the inverter (port 8899)
-      de: IP-Adresse des Wechselrichters (Port 8899)
-    example: 192.168.1.26
-
 render: |
   type: custom
   power:
