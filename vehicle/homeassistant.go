@@ -103,11 +103,18 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 	if cc.Sensors.FinishTime != "" {
 		finish = func() (time.Time, error) { return conn.GetTimeState(cc.Sensors.FinishTime) }
 	}
+
 	if cc.Services.Start != "" && cc.Services.Stop != "" {
-		enable = func(enable bool) error { return res.enable(cc.Services.Start, cc.Services.Stop, enable) }
+		enable = func(enable bool) error {
+			if enable {
+				return conn.CallSwitchService(cc.Services.Start, true)
+			}
+			return conn.CallSwitchService(cc.Services.Stop, true)
+		}
 	} else if strings.HasPrefix(cc.Services.Start, "switch") {
 		enable = func(enable bool) error { return conn.CallSwitchService(cc.Services.Start, enable) }
 	}
+
 	if cc.Services.Wakeup != "" {
 		wakeup = func() error { return conn.CallSwitchService(cc.Services.Wakeup, true) }
 	}
@@ -135,12 +142,4 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 
 func (v *HomeAssistant) Soc() (float64, error) {
 	return v.conn.GetFloatState(v.soc)
-}
-
-func (v *HomeAssistant) enable(on, off string, enable bool) error {
-	if enable {
-		return v.conn.CallSwitchService(on, true)
-	}
-
-	return v.conn.CallSwitchService(off, true)
 }
