@@ -314,7 +314,7 @@ func (c *EEBus) writeCurrentLimitData(evEntity spineapi.EntityRemoteInterface, c
 	}
 
 	// always set overload protection limits (obligation)
-	if _, err = c.cem.OpEV.WriteLoadControlLimits(evEntity, limits, nil); err != nil {
+	if _, err := c.cem.OpEV.WriteLoadControlLimits(evEntity, limits, nil); err != nil {
 		return err
 	}
 
