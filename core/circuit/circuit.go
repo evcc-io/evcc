@@ -43,8 +43,12 @@ type Circuit struct {
 	powerUpdated   time.Time
 }
 
-// NewFromConfig creates a new Circuit
-func NewFromConfig(ctx context.Context, other map[string]any) (api.Circuit, error) {
+func init() {
+	registry.AddCtx(api.Custom, NewConfigurableFromConfig)
+}
+
+// NewConfigurableFromConfig creates a new circuit from config
+func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.Circuit, error) {
 	cc := struct {
 		Title         string         // title
 		ParentRef     string         `mapstructure:"parent"` // parent circuit reference

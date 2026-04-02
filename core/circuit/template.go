@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/util/templates"
 )
 
@@ -18,5 +17,5 @@ func NewFromTemplateConfig(ctx context.Context, other map[string]any) (api.Circu
 		return nil, err
 	}
 
-	return circuit.NewFromConfig(ctx, instance.Other)
+	return NewConfigurableFromConfig(ctx, instance.Other)
 }
