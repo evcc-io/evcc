@@ -23,7 +23,7 @@ render: |
     host: {{ .host }}
     register: 36017
     count: 2
-    decode: float32
+    decode: float32be
     scale: 0.001
   {{- end }}
   {{- if eq .usage "pv" }}
