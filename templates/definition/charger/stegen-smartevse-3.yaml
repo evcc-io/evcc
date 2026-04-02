@@ -1,0 +1,107 @@
+template: smartevse-3
+
+products:
+- brand: Stegen Smart EVSE
+  description:
+    generic: Smart EVSE v3 (MQTT)
+  capabilities: ["1p3p"]
+
+requirements:
+  description:
+    en: |
+      Requires SmartEVSE v3 firmware with MQTT and Pause mode support (v3.6+).
+      Verified against firmware fork [dingo35/SmartEVSE-3.5](https://github.com/dingo35/SmartEVSE-3.5).
+
+      **Device setup:**
+      1. Enable MQTT on the SmartEVSE web interface (Settings → MQTT Broker)
+      2. Set the device Mode to **Normal** before connecting evcc
+      3. The MQTT topic prefix is shown on the SmartEVSE web interface (e.g. `SmartEVSE-1111`)
+
+      **evcc setup:**
+      - Configure the MQTT broker globally in evcc.yaml
+      - For phase switching, add `tos: true` to the loadpoint
+    de: |
+      Benötigt SmartEVSE v3 Firmware mit MQTT- und Pause-Modus-Unterstützung (v3.6+).
+      Verifiziert mit Firmware-Fork [dingo35/SmartEVSE-3.5](https://github.com/dingo35/SmartEVSE-3.5).
+
+      **Gerätekonfiguration:**
+      1. MQTT auf der SmartEVSE-Weboberfläche aktivieren (Einstellungen → MQTT Broker)
+      2. Gerätmodus vor dem Verbinden mit evcc auf **Normal** setzen
+      3. Das MQTT Topic-Präfix ist in der SmartEVSE-Weboberfläche ersichtlich (z.B. `SmartEVSE-1111`)
+
+      **evcc-Konfiguration:**
+      - MQTT-Broker global in evcc.yaml konfigurieren
+      - Für Phasenumschaltung `tos: true` zum Ladepunkt hinzufügen
+
+params:
+- name: topic
+  description:
+    en: MQTT topic prefix as shown on the SmartEVSE web interface
+    de: MQTT Topic-Präfix wie auf der SmartEVSE-Weboberfläche angezeigt
+  example: SmartEVSE-1111
+- name: phases1p3p
+  type: bool
+  description:
+    en: Phase switching supported (C2 contactor installed, SmartEVSE SWITCH setting configured)
+    de: Phasenumschaltung unterstützt (C2-Schütz vorhanden, SmartEVSE SWITCH-Einstellung konfiguriert)
+  advanced: true
+  default: false
+
+render: |
+  type: custom
+  status:
+    source: combined
+    plugged:
+      source: mqtt
+      topic: {{ .topic }}/EVPlugState
+      timeout: 30s
+      quote: true
+      jq: '. == "Connected"'
+    charging:
+      source: mqtt
+      topic: {{ .topic }}/State
+      timeout: 30s
+      quote: true
+      jq: '. == "Charging" or . == "D" or . == "State C OK" or . == "Stop Charging"'
+  enabled:
+    source: mqtt
+    topic: {{ .topic }}/Mode
+    timeout: 30s
+    quote: true
+    jq: '. != "Pause" and . != "Off"'
+  enable:
+    source: mqtt
+    topic: {{ .topic }}/Set/Mode
+    payload: '{{"{{"}}if .enable{{"}}"}}Normal{{"{{"}}else{{"}}"}}Pause{{"{{"}}end{{"}}"}}'
+  maxcurrent:
+    source: mqtt
+    topic: {{ .topic }}/Set/CurrentOverride
+    payload: '{{"{{"}}int .maxcurrent | mul 10{{"}}"}}'
+  power:
+    source: mqtt
+    topic: {{ .topic }}/EVChargePower
+    timeout: 30s
+  energy:
+    source: mqtt
+    topic: {{ .topic }}/EVTotalEnergyCharged
+    timeout: 30s
+    scale: 0.001
+  currents:
+  - source: mqtt
+    topic: {{ .topic }}/EVCurrentL1
+    timeout: 30s
+    scale: 0.1
+  - source: mqtt
+    topic: {{ .topic }}/EVCurrentL2
+    timeout: 30s
+    scale: 0.1
+  - source: mqtt
+    topic: {{ .topic }}/EVCurrentL3
+    timeout: 30s
+    scale: 0.1
+  {{- if ne .phases1p3p "false" }}
+  phases1p3p:
+    source: mqtt
+    topic: {{ .topic }}/Set/EnableC2
+    payload: '{{"{{"}}.phases1p3p{{"}}"}}'
+  {{- end }}
