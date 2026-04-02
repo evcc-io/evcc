@@ -76,12 +76,17 @@ render: |
       | ($L | keys | map(tonumber) | sort) as $ts
       | ($ts[0]) as $min
       | ($ts[-1]) as $max
-      | [ range($min; $max + step; step) as $t
-          | {
-              start: ($t | strftime("%FT%TZ")),
-              end:   (($t + step) | strftime("%FT%TZ")),
-              value: ($L[($t|tostring)] // 0)
-            }
-        ]
+      | reduce range($min; $max + step; step) as $t
+          ( { last: null, out: [] };
+            ($L[($t|tostring)]?) as $v
+            | .last = (if $v == null then .last else $v end)
+            | .out +=
+      [ {
+                start: ($t | strftime("%FT%TZ")),
+                end:   (($t + step) | strftime("%FT%TZ")),
+                value: (.last // 0)
+              } ]
+          )
+      | .out
       | tostring
   interval: {{ .interval }}
