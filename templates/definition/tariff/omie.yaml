@@ -32,18 +32,38 @@ render: |
   forecast:
     source: go
     script: |
-      priceIndex := 2
-      priceHeaderHint := "espa"
-      countryCode := "ES"
-      standardOffset := 3600
-      daylightOffset := 7200
-      {{- if eq .country "PT" }}
-      priceIndex = 3
-      priceHeaderHint = "portug"
-      countryCode = "PT"
-      standardOffset = 0
-      daylightOffset = 3600
-      {{- end }}
+      secondsPerHour := 3600
+      quarterHour := 15 * time.Minute
+      maxExpectedPeriod := 96
+      spanishPriceIndex := 2
+      portuguesePriceIndex := 3
+      spanishPriceHeaderHint := "espa"
+      portuguesePriceHeaderHint := "portug"
+      spanishStandardOffsetSeconds := 1 * secondsPerHour
+      spanishDaylightOffsetSeconds := 2 * secondsPerHour
+      portugueseStandardOffsetSeconds := 0
+      portugueseDaylightOffsetSeconds := 1 * secondsPerHour
+
+      marketCode := "{{ .country }}"
+      priceIndex := spanishPriceIndex
+      priceHeaderHint := spanishPriceHeaderHint
+      standardOffsetSeconds := spanishStandardOffsetSeconds
+      daylightOffsetSeconds := spanishDaylightOffsetSeconds
+
+      switch marketCode {
+      case "ES":
+      case "PT":
+        priceIndex = portuguesePriceIndex
+        priceHeaderHint = portuguesePriceHeaderHint
+        standardOffsetSeconds = portugueseStandardOffsetSeconds
+        daylightOffsetSeconds = portugueseDaylightOffsetSeconds
+      default:
+        panic(fmt.Errorf("unsupported OMIE country: %q", marketCode))
+      }
+
+      // The embedded Go runtime used by template scripts may not have IANA tzdata
+      // available. Keep the market-specific rules centralized here and only use
+      // FixedZone for the final timestamps.
 
       lastSunday := func(year int, month time.Month) int {
         day := time.Date(year, month+1, 0, 0, 0, 0, 0, time.UTC)
@@ -58,27 +78,27 @@ render: |
         dstStart := time.Date(year, time.March, lastSunday(year, time.March), 1, 0, 0, 0, time.UTC)
         dstEnd := time.Date(year, time.October, lastSunday(year, time.October), 1, 0, 0, 0, time.UTC)
         if !ts.Before(dstStart) && ts.Before(dstEnd) {
-          return daylightOffset
+          return daylightOffsetSeconds
         }
-        return standardOffset
+        return standardOffsetSeconds
       }
 
-      marketMidnightUTC := func(day time.Time) time.Time {
+      marketStartOfDayUTC := func(day time.Time) time.Time {
         midnightLocal := time.Date(day.Year(), day.Month(), day.Day(), 0, 0, 0, 0, time.UTC)
-        midnightUTC := midnightLocal.Add(-time.Duration(standardOffset) * time.Second)
-        if marketOffsetAtUTC(midnightUTC) == standardOffset {
+        midnightUTC := midnightLocal.Add(-time.Duration(standardOffsetSeconds) * time.Second)
+        if marketOffsetAtUTC(midnightUTC) == standardOffsetSeconds {
           return midnightUTC
         }
-        return midnightLocal.Add(-time.Duration(daylightOffset) * time.Second)
+        return midnightLocal.Add(-time.Duration(daylightOffsetSeconds) * time.Second)
       }
 
       marketTime := func(ts time.Time) time.Time {
         offset := marketOffsetAtUTC(ts)
-        return ts.In(time.FixedZone(countryCode, offset))
+        return ts.In(time.FixedZone(marketCode, offset))
       }
 
       var err error
-      cutoff := time.Now().UTC().Truncate(15 * time.Minute)
+      cutoff := time.Now().UTC().Truncate(quarterHour)
       lines := strings.Split(strings.ReplaceAll(raw, "\r\n", "\n"), "\n")
 
       var res strings.Builder
@@ -103,7 +123,7 @@ render: |
           if strings.EqualFold(strings.TrimSpace(fields[0]), "Fecha") && strings.EqualFold(strings.TrimSpace(fields[1]), "Periodo") {
             priceHeader := strings.ToLower(strings.TrimSpace(fields[priceIndex]))
             if !strings.Contains(priceHeader, priceHeaderHint) {
-              panic(fmt.Errorf("unexpected OMIE %s price column: %q", countryCode, strings.TrimSpace(fields[priceIndex])))
+              panic(fmt.Errorf("unexpected OMIE %s price column: %q", marketCode, strings.TrimSpace(fields[priceIndex])))
             }
             headerFound = true
           }
@@ -123,7 +143,7 @@ render: |
 
         var period int
         _, err = fmt.Sscanf(strings.TrimSpace(fields[1]), "%d", &period)
-        if err != nil || period < 1 || period > 100 {
+        if err != nil || period < 1 || period > maxExpectedPeriod {
           continue
         }
 
@@ -138,8 +158,8 @@ render: |
           continue
         }
 
-        startUTC := marketMidnightUTC(day).Add(time.Duration(period-1) * 15 * time.Minute)
-        endUTC := startUTC.Add(15 * time.Minute)
+        startUTC := marketStartOfDayUTC(day).Add(time.Duration(period-1) * quarterHour)
+        endUTC := startUTC.Add(quarterHour)
         if !endUTC.After(cutoff) {
           continue
         }
@@ -167,7 +187,7 @@ render: |
       }
 
       if parsed == 0 {
-        panic(fmt.Errorf("no OMIE %s rates parsed", countryCode))
+        panic(fmt.Errorf("no OMIE %s rates parsed", marketCode))
       }
 
       res.WriteString("]")
