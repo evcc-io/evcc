@@ -81,12 +81,6 @@ func NewRaedian(ctx context.Context, uri, device, comset string, baudrate int, p
 		curr: 6000, // assume min current
 	}
 
-	if b, err := wb.conn.ReadHoldingRegisters(raedianRegMaxCurrent, 2); err == nil {
-		if cur := binary.BigEndian.Uint32(b); cur >= 6000 {
-			wb.curr = cur
-		}
-	}
-
 	return wb, nil
 }
 
