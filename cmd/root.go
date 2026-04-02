@@ -392,6 +392,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	valueChan <- util.Param{Key: keys.System, Val: util.System()}
 	valueChan <- util.Param{Key: keys.Timezone, Val: time.Now().Format("MST -07:00")}
 	valueChan <- util.Param{Key: keys.Experimental, Val: isExperimental()}
+	valueChan <- util.Param{Key: keys.Optimizer, Val: isOptimizer()}
 
 	// run shutdown functions on stop
 	var once sync.Once

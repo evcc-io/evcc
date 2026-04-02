@@ -10,6 +10,19 @@ import (
 	"github.com/evcc-io/evcc/util/sponsor"
 )
 
+func setOptimizer(pub publisher) func(bool) error {
+	return func(b bool) error {
+		settings.SetBool(keys.Optimizer, b)
+		pub(keys.Optimizer, b)
+		return nil
+	}
+}
+
+func getOptimizer() bool {
+	b, _ := settings.Bool(keys.Optimizer)
+	return b
+}
+
 func setExperimental(pub publisher) func(bool) error {
 	return func(b bool) error {
 		settings.SetBool(keys.Experimental, b)

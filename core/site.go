@@ -767,11 +767,17 @@ func (site *Site) updateMeters() error {
 		return err
 	}
 
-	if sponsor.IsAuthorized() {
+	if sponsor.IsAuthorized() && optimizerEnabled() {
 		go site.optimizerUpdateAsync()
 	}
 
 	return nil
+}
+
+func optimizerEnabled() bool {
+	exp, _ := settings.Bool(keys.Experimental)
+	opt, _ := settings.Bool(keys.Optimizer)
+	return exp && opt
 }
 
 func (site *Site) updateHomeConsumption(homePower float64) {
