@@ -31,9 +31,10 @@ import (
 
 // Raedian charger implementation
 type Raedian struct {
-	log  *util.Logger
-	conn *modbus.Connection
-	curr uint32 // mA
+	log     *util.Logger
+	conn    *modbus.Connection
+	curr    uint32 // mA
+	enabled bool
 }
 
 const (
@@ -44,7 +45,7 @@ const (
 	raedianRegChargedEnergy = 0x801E // uint32 RO Wh
 	raedianRegMaxCurrent    = 0x8100 // uint32 WO mA
 	raedianRegPhases        = 0x8102 // uint16 WO
-	raedianRegEnable        = 0x8105 // uint16 WR 1=start, 0=stop
+	raedianRegStartStop     = 0x8105 // uint16 WR 1=start, 0=stop
 )
 
 func init() {
@@ -130,22 +131,24 @@ func (wb *Raedian) StatusReason() (api.Reason, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *Raedian) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(raedianRegEnable, 1)
-	if err != nil {
-		return false, err
-	}
-
-	return binary.BigEndian.Uint16(b) != 0, nil
+	return wb.enabled, nil
 }
 
 // Enable implements the api.Charger interface
 func (wb *Raedian) Enable(enable bool) error {
-	var u uint16
+	var cur uint32
 	if enable {
-		u = 1
+		cur = wb.curr
 	}
 
-	_, err := wb.conn.WriteSingleRegister(raedianRegEnable, u)
+	b := make([]byte, 4)
+	binary.BigEndian.PutUint32(b, cur)
+
+	_, err := wb.conn.WriteMultipleRegisters(raedianRegMaxCurrent, 2, b)
+	if err == nil {
+		wb.enabled = enable
+	}
+
 	return err
 }
 
