@@ -34,7 +34,7 @@ render: |
     script: |
       loc, err := time.LoadLocation("Europe/Madrid")
       if err != nil {
-        panic(err)
+        loc = time.Local
       }
 
       priceIndex := 2
@@ -55,13 +55,15 @@ render: |
           continue
         }
 
-        day, err := time.ParseInLocation("02/01/2006", strings.TrimSpace(fields[0]), loc)
+        var day time.Time
+        day, err = time.ParseInLocation("02/01/2006", strings.TrimSpace(fields[0]), loc)
         if err != nil {
           continue
         }
 
         var period int
-        if _, err := fmt.Sscanf(strings.TrimSpace(fields[1]), "%d", &period); err != nil || period < 1 {
+        _, err = fmt.Sscanf(strings.TrimSpace(fields[1]), "%d", &period)
+        if err != nil || period < 1 {
           continue
         }
 
@@ -71,7 +73,8 @@ render: |
         }
 
         var price float64
-        if _, err := fmt.Sscanf(priceText, "%f", &price); err != nil {
+        _, err = fmt.Sscanf(priceText, "%f", &price)
+        if err != nil {
           continue
         }
 
