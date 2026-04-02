@@ -321,6 +321,19 @@
 							<DeviceTags :tags="hemsTags" />
 						</template>
 					</DeviceCard>
+					<DeviceCard
+						v-if="experimental"
+						:title="`${$t('config.optimizer.title')} 🧪`"
+						editable
+						:unconfigured="isUnconfigured(optimizerTags)"
+						data-testid="optimizer"
+						@edit="openModal('optimizer')"
+					>
+						<template #icon><OptimizerIcon /></template>
+						<template #tags>
+							<DeviceTags :tags="optimizerTags" />
+						</template>
+					</DeviceCard>
 				</div>
 
 				<h2 class="my-4 mt-5">{{ $t("config.section.services") }}</h2>
@@ -402,6 +415,7 @@
 				<TariffsLegacyModal @changed="loadDirty" />
 				<TariffModal :currency="currency" @changed="tariffChanged" />
 				<TelemetryModal :sponsor="sponsor" :telemetry="telemetry" />
+				<OptimizerModal />
 				<ExperimentalModal :experimental="experimental" />
 				<TitleModal @changed="loadDirty" />
 				<ModbusProxyModal :is-sponsor="isSponsor" @changed="loadDirty" />
@@ -461,6 +475,8 @@ import MqttIcon from "../components/MaterialIcon/Mqtt.vue";
 import MqttModal from "../components/Config/MqttModal.vue";
 import NetworkModal from "../components/Config/NetworkModal.vue";
 import NotificationIcon from "../components/MaterialIcon/Notification.vue";
+import OptimizerIcon from "../components/MaterialIcon/Optimizer.vue";
+import OptimizerModal from "../components/Config/OptimizerModal.vue";
 import restart, { performRestart } from "../restart";
 import SponsorModal from "../components/Config/SponsorModal.vue";
 import store from "../store";
@@ -541,6 +557,8 @@ export default defineComponent({
 		MqttModal,
 		NetworkModal,
 		NotificationIcon,
+		OptimizerIcon,
+		OptimizerModal,
 		SponsorModal,
 		TariffsLegacyModal,
 		TariffCard,
@@ -762,6 +780,10 @@ export default defineComponent({
 		},
 		eebus() {
 			return store.state?.eebus;
+		},
+		optimizerTags(): DeviceTags {
+			if (!store.state?.optimizer) return { configured: { value: false } };
+			return { configured: { value: true } };
 		},
 		modbusproxyTags(): DeviceTags {
 			const config = store.state?.modbusproxy || [];
