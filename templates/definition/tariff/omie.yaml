@@ -1,0 +1,105 @@
+template: omie
+products:
+  - brand: OMIE
+    description:
+      en: Iberian day-ahead market prices
+      de: Iberische Day-Ahead-Marktpreise
+requirements:
+  evcc: ["skiptest"]
+  description:
+    en: "Day-ahead electricity prices from OMIE for Portugal and Spain. No API key is required."
+    de: "Day-Ahead-Strompreise von OMIE fuer Portugal und Spanien. Es ist kein API-Schluessel erforderlich."
+group: price
+countries: ["PT", "ES"]
+params:
+  - name: country
+    description:
+      en: Country
+      de: Land
+    help:
+      en: Select whether to use the Portuguese or Spanish market price published by OMIE.
+      de: Waehlt aus, ob der von OMIE veroeffentlichte portugiesische oder spanische Marktpreis verwendet werden soll.
+    type: choice
+    choice: ["PT", "ES"]
+    default: PT
+    required: true
+  - preset: tariff-base
+  - preset: tariff-features
+render: |
+  type: custom
+  {{ include "tariff-base" . }}
+  {{ include "tariff-features" . }}
+  forecast:
+    source: go
+    script: |
+      loc, err := time.LoadLocation("Europe/Madrid")
+      if err != nil {
+        panic(err)
+      }
+
+      priceIndex := 2
+      {{- if eq .country "PT" }}
+      priceIndex = 3
+      {{- end }}
+
+      cutoff := time.Now().In(loc).Truncate(15 * time.Minute)
+      lines := strings.Split(strings.ReplaceAll(raw, "\r\n", "\n"), "\n")
+
+      var res strings.Builder
+      res.WriteString("[")
+      first := true
+
+      for _, line := range lines {
+        fields := strings.Split(line, ";")
+        if len(fields) <= priceIndex {
+          continue
+        }
+
+        day, err := time.ParseInLocation("02/01/2006", strings.TrimSpace(fields[0]), loc)
+        if err != nil {
+          continue
+        }
+
+        var period int
+        if _, err := fmt.Sscanf(strings.TrimSpace(fields[1]), "%d", &period); err != nil || period < 1 {
+          continue
+        }
+
+        priceText := strings.ReplaceAll(strings.TrimSpace(fields[priceIndex]), ",", ".")
+        if priceText == "" {
+          continue
+        }
+
+        var price float64
+        if _, err := fmt.Sscanf(priceText, "%f", &price); err != nil {
+          continue
+        }
+
+        start := day.Add(time.Duration(period-1) * 15 * time.Minute)
+        end := start.Add(15 * time.Minute)
+        if !end.After(cutoff) {
+          continue
+        }
+
+        if !first {
+          res.WriteString(",")
+        }
+        first = false
+
+        res.WriteString(fmt.Sprintf(
+          "{\"start\":%q,\"end\":%q,\"value\":%.6f}",
+          start.Format(time.RFC3339),
+          end.Format(time.RFC3339),
+          price/1000,
+        ))
+      }
+
+      res.WriteString("]")
+      res.String()
+    in:
+      - name: raw
+        type: string
+        config:
+          source: http
+          uri: https://www.omie.es/sites/default/files/dados/NUEVA_SECCION/INT_PBC_EV_H_ACUM.TXT
+          cache: 1h
