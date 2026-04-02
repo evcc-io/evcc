@@ -32,38 +32,98 @@ render: |
   forecast:
     source: go
     script: |
-      loc, err := time.LoadLocation("Europe/Madrid")
-      if err != nil {
-        loc = time.Local
-      }
-
       priceIndex := 2
+      priceHeaderHint := "espa"
+      countryCode := "ES"
+      standardOffset := 3600
+      daylightOffset := 7200
       {{- if eq .country "PT" }}
       priceIndex = 3
+      priceHeaderHint = "portug"
+      countryCode = "PT"
+      standardOffset = 0
+      daylightOffset = 3600
       {{- end }}
 
-      cutoff := time.Now().In(loc).Truncate(15 * time.Minute)
+      lastSunday := func(year int, month time.Month) int {
+        day := time.Date(year, month+1, 0, 0, 0, 0, 0, time.UTC)
+        for day.Weekday() != time.Sunday {
+          day = day.AddDate(0, 0, -1)
+        }
+        return day.Day()
+      }
+
+      marketOffsetAtUTC := func(ts time.Time) int {
+        year := ts.UTC().Year()
+        dstStart := time.Date(year, time.March, lastSunday(year, time.March), 1, 0, 0, 0, time.UTC)
+        dstEnd := time.Date(year, time.October, lastSunday(year, time.October), 1, 0, 0, 0, time.UTC)
+        if !ts.Before(dstStart) && ts.Before(dstEnd) {
+          return daylightOffset
+        }
+        return standardOffset
+      }
+
+      marketMidnightUTC := func(day time.Time) time.Time {
+        midnightLocal := time.Date(day.Year(), day.Month(), day.Day(), 0, 0, 0, 0, time.UTC)
+        midnightUTC := midnightLocal.Add(-time.Duration(standardOffset) * time.Second)
+        if marketOffsetAtUTC(midnightUTC) == standardOffset {
+          return midnightUTC
+        }
+        return midnightLocal.Add(-time.Duration(daylightOffset) * time.Second)
+      }
+
+      marketTime := func(ts time.Time) time.Time {
+        offset := marketOffsetAtUTC(ts)
+        return ts.In(time.FixedZone(countryCode, offset))
+      }
+
+      var err error
+      cutoff := time.Now().UTC().Truncate(15 * time.Minute)
       lines := strings.Split(strings.ReplaceAll(raw, "\r\n", "\n"), "\n")
 
       var res strings.Builder
       res.WriteString("[")
       first := true
+      headerFound := false
+      parsed := 0
 
       for _, line := range lines {
+        line = strings.TrimSpace(line)
+        if line == "" {
+          continue
+        }
+
         fields := strings.Split(line, ";")
+
+        if !headerFound {
+          if len(fields) <= priceIndex {
+            continue
+          }
+
+          if strings.EqualFold(strings.TrimSpace(fields[0]), "Fecha") && strings.EqualFold(strings.TrimSpace(fields[1]), "Periodo") {
+            priceHeader := strings.ToLower(strings.TrimSpace(fields[priceIndex]))
+            if !strings.Contains(priceHeader, priceHeaderHint) {
+              panic(fmt.Errorf("unexpected OMIE %s price column: %q", countryCode, strings.TrimSpace(fields[priceIndex])))
+            }
+            headerFound = true
+          }
+
+          continue
+        }
+
         if len(fields) <= priceIndex {
           continue
         }
 
         var day time.Time
-        day, err = time.ParseInLocation("02/01/2006", strings.TrimSpace(fields[0]), loc)
+        day, err = time.Parse("02/01/2006", strings.TrimSpace(fields[0]))
         if err != nil {
           continue
         }
 
         var period int
         _, err = fmt.Sscanf(strings.TrimSpace(fields[1]), "%d", &period)
-        if err != nil || period < 1 {
+        if err != nil || period < 1 || period > 100 {
           continue
         }
 
@@ -78,11 +138,16 @@ render: |
           continue
         }
 
-        start := day.Add(time.Duration(period-1) * 15 * time.Minute)
-        end := start.Add(15 * time.Minute)
-        if !end.After(cutoff) {
+        startUTC := marketMidnightUTC(day).Add(time.Duration(period-1) * 15 * time.Minute)
+        endUTC := startUTC.Add(15 * time.Minute)
+        if !endUTC.After(cutoff) {
           continue
         }
+
+        start := marketTime(startUTC)
+        end := marketTime(endUTC)
+
+        parsed++
 
         if !first {
           res.WriteString(",")
@@ -95,6 +160,14 @@ render: |
           end.Format(time.RFC3339),
           price/1000,
         ))
+      }
+
+      if !headerFound {
+        panic(fmt.Errorf("OMIE header not found"))
+      }
+
+      if parsed == 0 {
+        panic(fmt.Errorf("no OMIE %s rates parsed", countryCode))
       }
 
       res.WriteString("]")
