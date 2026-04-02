@@ -45,7 +45,7 @@ const (
 	raedianRegChargedEnergy = 0x801E // uint32 RO Wh
 	raedianRegMaxCurrent    = 0x8100 // uint32 WO mA
 	raedianRegPhases        = 0x8102 // uint16 WO
-	raedianRegStartStop     = 0x8105 // uint16 WR 1=start, 0=stop
+	raedianRegStartStop     = 0x8105 // uint16 WO 1=start, 0=stop
 )
 
 func init() {
