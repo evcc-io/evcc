@@ -166,6 +166,7 @@ type Loadpoint struct {
 
 	// charge progress
 	vehicleSoc              float64       // Vehicle or charger soc
+	vehicleLimitSoc         int           // Vehicle api soc limit
 	chargeDuration          time.Duration // Charge duration
 	connectedDuration       time.Duration // Connection duration
 	energyMetrics           EnergyMetrics // Stats for charged energy by session
@@ -849,6 +850,10 @@ func (lp *Loadpoint) syncCharger() error {
 		}
 
 	case shouldBeConsistent && (enabled || lp.connected()):
+		if !enabled && lp.connected() && (lp.LimitSocReached() || lp.LimitEnergyReached()) {
+			break
+		}
+
 		// ignore disabled state if vehicle was disconnected (!lp.enabled && !lp.connected)
 		lp.log.WARN.Printf("charger out of sync: expected %vd, got %vd", status[lp.enabled], status[enabled])
 	}
@@ -1020,6 +1025,10 @@ func (lp *Loadpoint) LimitSocReached() bool {
 	lp.RLock()
 	defer lp.RUnlock()
 	limit := lp.effectiveLimitSoc()
+	// Use the lower of evcc limit and vehicle-reported limit
+	if lp.vehicleLimitSoc > 0 {
+		limit = min(limit, lp.vehicleLimitSoc)
+	}
 	return limit > 0 && limit < 100 && lp.vehicleSoc >= float64(limit)
 }
 
@@ -1791,8 +1800,11 @@ func (lp *Loadpoint) publishSocAndRange() {
 	lp.publish(keys.VehicleSoc, lp.vehicleSoc)
 
 	apiLimitSoc := 100
+	// Clear old limit so its old value is not used if the API retruns no limit
+	lp.vehicleLimitSoc = 0
 	if limitR != nil {
 		apiLimitSoc = int(*limitR)
+		lp.vehicleLimitSoc = apiLimitSoc
 		// https://github.com/evcc-io/evcc/issues/13349
 		lp.publish(keys.VehicleLimitSoc, float64(*limitR))
 	}
@@ -2007,12 +2019,6 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 		}
 		err = lp.setLimit(current)
 
-	// minimum or target charging
-	case minSocNotReached || plannerActive:
-		err = lp.fastCharging()
-		lp.resetPhaseTimer()
-		lp.elapsePVTimer() // let PV mode disable immediately afterwards
-
 	case lp.LimitEnergyReached():
 		lp.log.DEBUG.Printf("limitEnergy reached: %.0fkWh > %0.1fkWh", lp.GetChargedEnergy()/1e3, lp.limitEnergy)
 		err = lp.disableUnlessClimater()
@@ -2020,6 +2026,12 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 	case lp.LimitSocReached():
 		lp.log.DEBUG.Printf("limitSoc reached: %.1f%% > %d%%", lp.vehicleSoc, lp.EffectiveLimitSoc())
 		err = lp.disableUnlessClimater()
+
+	// minimum or target charging
+	case minSocNotReached || plannerActive:
+		err = lp.fastCharging()
+		lp.resetPhaseTimer()
+		lp.elapsePVTimer() // let PV mode disable immediately afterwards
 
 	// immediate charging- must be placed after limits are evaluated
 	case mode == api.ModeNow:
@@ -2068,8 +2080,7 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 
 	// Wake-up checks
 	if lp.enabled && lp.status == api.StatusB &&
-		// TODO take vehicle api limits into account
-		!lp.chargerHasFeature(api.IntegratedDevice) && int(lp.vehicleSoc) < lp.EffectiveLimitSoc() {
+		!lp.chargerHasFeature(api.IntegratedDevice) && !lp.LimitSocReached() {
 		switch lp.wakeUpTimer.Elapsed() {
 		case WakeUpTimerElapsed:
 			lp.wakeUpVehicle()

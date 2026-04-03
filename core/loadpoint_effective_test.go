@@ -17,6 +17,18 @@ func TestEffectiveLimitSoc(t *testing.T) {
 	assert.Equal(t, 100, lp.effectiveLimitSoc())
 }
 
+func TestLimitSocReachedWithVehicleApiLimit(t *testing.T) {
+	lp := NewLoadpoint(util.NewLogger("foo"), nil)
+
+	lp.limitSoc = 90
+	lp.vehicleSoc = 85
+	lp.vehicleLimitSoc = 80
+	assert.True(t, lp.LimitSocReached())
+
+	lp.vehicleLimitSoc = 0
+	assert.False(t, lp.LimitSocReached())
+}
+
 func TestEffectiveMinMaxCurrent(t *testing.T) {
 	tc := []struct {
 		chargerMin, chargerMax     float64
