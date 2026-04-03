@@ -10,6 +10,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/coder/websocket"
 	"github.com/evcc-io/evcc/util"
 	"github.com/hashicorp/yamux"
@@ -49,15 +50,13 @@ func NewTunnel(tunnelURL, token string, httpHandler http.Handler, log *util.Logg
 
 // Connect establishes the tunnel and reconnects on failure.
 func (t *Tunnel) Connect() {
-	backoff := time.Second
+	bo := backoff.NewExponentialBackOff(
+		backoff.WithInitialInterval(time.Second),
+		backoff.WithMaxInterval(60*time.Second),
+		backoff.WithMaxElapsedTime(0),
+	)
 
 	for {
-		select {
-		case <-t.done:
-			return
-		default:
-		}
-
 		connected, err := t.dial()
 		if err != nil {
 			t.log.ERROR.Printf("tunnel: %v", err)
@@ -65,17 +64,13 @@ func (t *Tunnel) Connect() {
 
 		// reset backoff after successful connection
 		if connected {
-			backoff = time.Second
+			bo.Reset()
 		}
 
 		select {
 		case <-t.done:
 			return
-		case <-time.After(backoff):
-		}
-
-		if backoff < 60*time.Second {
-			backoff *= 2
+		case <-time.After(bo.NextBackOff()):
 		}
 	}
 }
