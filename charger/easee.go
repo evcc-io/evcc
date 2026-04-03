@@ -795,8 +795,6 @@ func (c *Easee) StatusReason() (api.Reason, error) {
 	switch c.opMode {
 	case easee.ModeAwaitingAuthentication:
 		return api.ReasonWaitingForAuthorization, nil
-	case easee.ModeCompleted:
-		return api.ReasonDisconnectRequired, nil
 	}
 	return api.ReasonUnknown, nil
 }
