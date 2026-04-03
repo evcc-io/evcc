@@ -4,7 +4,7 @@ template: goodwe-wifi
 products:
   - brand: GoodWe
     description:
-      generic: ES/EM Hybrid Inverter (WiFi)
+      generic: ET Hybrid Inverter (WiFi)
 requirements:
   evcc: ["skiptest"]
 params:
