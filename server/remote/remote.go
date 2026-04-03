@@ -60,6 +60,7 @@ func (r *Remote) Enable(enable bool) error {
 	r.mu.Unlock()
 
 	if enable {
+		// TODO why do we need a go routine for this?
 		go r.connect()
 	} else {
 		r.disconnect()
@@ -78,25 +79,19 @@ func (r *Remote) Enabled() bool {
 
 func (r *Remote) connect() {
 	r.mu.Lock()
-	if r.settings.Token == "" {
-		r.mu.Unlock()
+	token := r.settings.Token
+	r.mu.Unlock()
 
+	if token == "" {
 		if err := r.register(); err != nil {
 			r.log.ERROR.Printf("registration failed: %v", err)
 			return
 		}
-
-		r.mu.Lock()
 	}
 
-	token := r.settings.Token
-	url := r.settings.URL
-	tunnelURL := r.settings.TunnelURL
-	r.mu.Unlock()
+	r.log.INFO.Printf("remote access via %s", r.settings.URL)
 
-	r.log.INFO.Printf("remote access via %s", url)
-
-	tunnel := NewTunnel(tunnelURL, token, r.httpHandler, r.log, r.publish)
+	tunnel := NewTunnel(r.settings.TunnelURL, r.settings.Token, r.httpHandler, r.log, r.publish)
 
 	r.mu.Lock()
 	r.tunnel = tunnel
@@ -152,7 +147,9 @@ func (r *Remote) register() error {
 
 // saveSettings persists the current settings. Must be called with mu held.
 func (r *Remote) saveSettings() {
-	settings.SetJson(keys.Remote, r.settings)
+	if err := settings.SetJson(keys.Remote, r.settings); err != nil {
+		r.log.ERROR.Println(err)
+	}
 }
 
 // ConfigStatus returns the current remote access config and status.
@@ -165,11 +162,16 @@ func (r *Remote) ConfigStatus() globalconfig.ConfigStatus {
 	return globalconfig.ConfigStatus{
 		Config: struct {
 			Enabled bool `json:"enabled"`
-		}{Enabled: r.settings.Enabled},
+		}{
+			Enabled: r.settings.Enabled,
+		},
 		Status: struct {
 			Connected bool   `json:"connected"`
 			URL       string `json:"url,omitempty"`
-		}{Connected: connected, URL: r.settings.URL},
+		}{
+			Connected: connected,
+			URL:       r.settings.URL,
+		},
 	}
 }
 
