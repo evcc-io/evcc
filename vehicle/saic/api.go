@@ -127,7 +127,7 @@ func doRequest[T any](v *API, req *http.Request, result *requests.Answer[T]) (st
 			return event_id, fmt.Errorf("decrypt: %w", err2)
 		}
 
-		v.log.TRACE.Printf("decoded response: %s", body)
+		v.log.TRACE.Printf("recv: %s", body)
 
 		if err2 := json.Unmarshal(body, result); err2 == nil && result.Code != 0 {
 			if result.Code == 4 {
