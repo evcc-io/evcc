@@ -1,25 +1,16 @@
 template: goodwe-wifi-es
-covers: ["goodwe-wifi"]
 requirements:
   evcc: ["skiptest"]
 products:
   - brand: GoodWe
     description:
       generic: ES/EM Hybrid Inverter (WiFi)
-
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
-
   - name: host
-    help:
-      en: IP address of the inverter (port 8899)
-      de: IP-Adresse des Wechselrichters (Port 8899)
-    example: 192.168.1.26
-
   - name: uri
     deprecated: true
-
 render: |
   type: custom
   {{- if eq .usage "grid" }}

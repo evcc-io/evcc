@@ -1315,3 +1315,9 @@ func isExperimental() bool {
 	b, _ := settings.Bool(keys.Experimental)
 	return b
 }
+
+// isOptimizer returns if optimizer is enabled
+func isOptimizer() bool {
+	b, _ := settings.Bool(keys.Optimizer)
+	return b
+}

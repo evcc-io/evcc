@@ -17,7 +17,7 @@ func baseVehicle() *Vehicle {
 }
 
 func TestDecorateVehicle_NoCapabilities(t *testing.T) {
-	v := decorateVehicle(baseVehicle(), nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
+	v := decorateVehicle(baseVehicle(), nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
 
 	// base vehicle interface works
 	soc, err := v.Soc()
@@ -43,6 +43,7 @@ func TestDecorateVehicle_AllCapabilities(t *testing.T) {
 		func() error { return nil },                                                           // resurrector
 		func(bool) error { return nil },                                                       // chargeController
 		nil,                                                                                   // chargeRater
+		func() (float64, float64, error) { return 50.1234, 8.5678, nil },                      // vehiclePosition
 	)
 
 	// base interface
@@ -109,10 +110,40 @@ func TestDecorateVehicle_AllCapabilities(t *testing.T) {
 	require.True(t, ok, "Resurrector")
 	assert.NoError(t, r.WakeUp())
 
+	// VehiclePosition
+	vp, ok := api.Cap[api.VehiclePosition](v)
+	require.True(t, ok, "VehiclePosition")
+	lat, lon, err := vp.Position()
+	assert.NoError(t, err)
+	assert.Equal(t, 50.1234, lat)
+	assert.Equal(t, 8.5678, lon)
+
 	// ChargeController
 	chc, ok := api.Cap[api.ChargeController](v)
 	require.True(t, ok, "ChargeController")
 	assert.NoError(t, chc.ChargeEnable(true))
+}
+
+func TestDecorateVehicle_PositionNotAvailable(t *testing.T) {
+	v := decorateVehicle(baseVehicle(),
+		nil, // socLimiter
+		nil, // chargeState
+		nil, // vehicleRange
+		nil, // vehicleOdometer
+		nil, // vehicleClimater
+		nil, // currentController
+		nil, // currentGetter
+		nil, // vehicleFinishTimer
+		nil, // resurrector
+		nil, // chargeController
+		nil, // chargeRater
+		func() (float64, float64, error) { return 0, 0, api.ErrNotAvailable }, // vehiclePosition
+	)
+
+	vp, ok := api.Cap[api.VehiclePosition](v)
+	require.True(t, ok, "VehiclePosition")
+	_, _, err := vp.Position()
+	assert.ErrorIs(t, err, api.ErrNotAvailable)
 }
 
 func TestDecorateVehicle_PartialCapabilities(t *testing.T) {
@@ -128,6 +159,7 @@ func TestDecorateVehicle_PartialCapabilities(t *testing.T) {
 		func() error { return nil }, // resurrector
 		nil,                         // chargeController
 		nil,                         // chargeRater
+		nil,                         // vehiclePosition
 	)
 
 	assert.True(t, api.HasCap[api.SocLimiter](v), "SocLimiter should be present")

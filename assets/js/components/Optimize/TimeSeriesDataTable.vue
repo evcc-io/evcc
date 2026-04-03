@@ -218,9 +218,9 @@ export default defineComponent({
 			type: Array as PropType<BatteryDetail[]>,
 			required: true,
 		},
-		timestamp: {
-			type: String,
-			default: "",
+		timestamps: {
+			type: Array as PropType<string[]>,
+			default: () => [],
 		},
 		currency: {
 			type: String as PropType<CURRENCY>,
@@ -262,13 +262,16 @@ export default defineComponent({
 			return (seconds / 3600).toFixed(2);
 		},
 		formatHour(index: number): string {
-			// Show label only every 4th slot (every hour for 15-minute slots)
-			if (index % 4 !== 0) {
+			if (this.timestamps.length <= index) {
 				return "";
 			}
-			const startTime = new Date(this.timestamp);
-			const currentTime = new Date(startTime.getTime() + index * 15 * 60 * 1000); // Add 15-minute intervals
-			return currentTime.getHours().toString();
+			// Show label on fresh hour or on first quarter hour for slot 0
+			const ts = new Date(this.timestamps[index]);
+			const minutes = ts.getMinutes();
+			if (minutes === 0 || (index === 0 && minutes < 15)) {
+				return ts.getHours().toString();
+			}
+			return "";
 		},
 		getBatteryTitle(index: number): string {
 			const detail = this.batteryDetails[index];
