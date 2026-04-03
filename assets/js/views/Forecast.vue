@@ -3,10 +3,9 @@
 		class="container px-4 safe-area-inset d-flex flex-column"
 		:class="{ 'empty-container': !forecastAvailable }"
 	>
-		<TopHeader v-if="forecastAvailable" :title="$t('forecast.modalTitle')" />
+		<TopHeader :title="$t('forecast.modalTitle')" />
 		<div v-if="!forecastAvailable" class="flex-grow-1 d-flex">
 			<div class="empty-box d-flex flex-column p-5">
-				<h2 class="fs-4 mb-4">{{ $t("forecast.empty.title") }}</h2>
 				<ul class="list-unstyled mb-4">
 					<li class="d-flex align-items-start gap-2 mb-3">
 						<shopicon-regular-sun
@@ -119,7 +118,7 @@
 					/>
 				</section>
 
-				<section v-if="forecast.co2" class="mb-5">
+				<section v-if="forecast.co2">
 					<h3
 						class="fw-normal my-4 d-flex gap-3 flex-wrap align-items-baseline overflow-hidden"
 					>
@@ -311,8 +310,7 @@ export default defineComponent({
 
 <style scoped>
 .empty-container {
-	min-height: calc(100dvh - var(--tab-bar-height) - var(--safe-area-inset-bottom));
-	padding-bottom: calc(var(--tab-bar-height) + var(--safe-area-inset-bottom));
+	min-height: calc(100dvh - var(--bottom-space));
 }
 .empty-box {
 	background-color: var(--evcc-box);

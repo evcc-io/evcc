@@ -5,17 +5,10 @@ products:
   - brand: GoodWe
     description:
       generic: ET/EH/BT/BH Hybrid Inverter (WiFi)
-
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
-
   - name: host
-    help:
-      en: IP address of the inverter (port 8899)
-      de: IP-Adresse des Wechselrichters (Port 8899)
-    example: 192.168.1.26
-
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -30,7 +23,7 @@ render: |
     host: {{ .host }}
     register: 36017
     count: 2
-    decode: float32
+    decode: float32be
     scale: 0.001
   {{- end }}
   {{- if eq .usage "pv" }}

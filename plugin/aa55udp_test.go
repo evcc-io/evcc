@@ -3,6 +3,7 @@ package plugin
 import (
 	"encoding/binary"
 	"encoding/hex"
+	"math"
 	"net"
 	"testing"
 
@@ -151,6 +152,15 @@ func TestDecodeAt_Int16BE_Negative(t *testing.T) {
 	v, err := decodeAt(payload, 0, "int16be")
 	require.NoError(t, err)
 	assert.InDelta(t, -300.0, v, 0)
+}
+
+func TestDecodeAt_Float32BE(t *testing.T) {
+	payload := make([]byte, 4)
+	bits := math.Float32bits(123.456)
+	binary.BigEndian.PutUint32(payload, bits)
+	v, err := decodeAt(payload, 0, "float32be")
+	require.NoError(t, err)
+	assert.InDelta(t, 123.456, v, 0.001)
 }
 
 func TestDecodeAt_TooShort(t *testing.T) {
