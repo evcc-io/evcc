@@ -81,7 +81,7 @@ render: |
             ($L[($t|tostring)]?) as $v
             | .last = (if $v == null then .last else $v end)
             | .out +=
-      [ {
+            [ {
                 start: ($t | strftime("%FT%TZ")),
                 end:   (($t + step) | strftime("%FT%TZ")),
                 value: (.last // 0)
