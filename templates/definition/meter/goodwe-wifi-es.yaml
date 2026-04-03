@@ -1,5 +1,4 @@
 template: goodwe-wifi-es
-deprecated: true
 requirements:
   evcc: ["skiptest"]
 products:
