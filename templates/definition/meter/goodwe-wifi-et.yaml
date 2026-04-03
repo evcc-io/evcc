@@ -4,7 +4,7 @@ requirements:
 products:
   - brand: GoodWe
     description:
-      generic: ET/EH/BT/BH Hybrid Inverter (WiFi)
+      generic: EH/BT/BH Hybrid Inverter (WiFi)
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
