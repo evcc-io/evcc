@@ -189,8 +189,7 @@ func (wb *DaheimLaden) Status() (api.ChargeStatus, error) {
 	case 6: // Session Terminated by EVSE
 		return api.StatusB, nil
 	case 9: //Firmware Update
-		wb.log.DEBUG.Println("Firmware Upgrade in progress")
-		return api.StatusNone, nil
+		return api.StatusA, nil
 	default: // Other
 		return api.StatusNone, fmt.Errorf("invalid status: %d", s)
 	}
