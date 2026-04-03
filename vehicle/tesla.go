@@ -11,6 +11,7 @@ import (
 	"github.com/evcc-io/evcc/util/transport"
 	"github.com/evcc-io/evcc/vehicle/tesla"
 	teslaclient "github.com/evcc-io/tesla-proxy-client"
+	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/oauth2"
 )
 
@@ -74,6 +75,15 @@ func NewTeslaFromConfig(other map[string]any) (api.Vehicle, error) {
 	tc, err := teslaclient.NewClient(context.Background(), teslaclient.WithClient(hc))
 	if err != nil {
 		return nil, err
+	}
+
+	// set base url for EU users to avoid client_not_found on NA region endpoint
+	var jwtClaims struct {
+		OuCode string `json:"ou_code"`
+		jwt.RegisteredClaims
+	}
+	if _, _, err := jwt.NewParser().ParseUnverified(token.AccessToken, &jwtClaims); err == nil && jwtClaims.OuCode == "EU" {
+		tc.SetBaseUrl(teslaclient.FleetAudienceEU)
 	}
 
 	// validate base url
