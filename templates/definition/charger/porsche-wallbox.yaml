@@ -30,7 +30,6 @@ render: |
   ski: {{ .ski }}
   ip: {{ .ip }}
   meter: true
-  vasvw: true
   {{- if .password }}
   user: technician
   password: {{ .password }}

@@ -35,7 +35,6 @@ func NewGhostEEBusFromConfig(ctx context.Context, other map[string]any) (api.Cha
 		Ip            string
 		Meter         bool
 		ChargedEnergy *bool
-		VasVW         bool
 		User          string
 		Password      string
 	}
@@ -47,14 +46,14 @@ func NewGhostEEBusFromConfig(ctx context.Context, other map[string]any) (api.Cha
 	// default true
 	hasChargedEnergy := cc.ChargedEnergy == nil || *cc.ChargedEnergy
 
-	return NewGhostEEBus(ctx, cc.Ski, cc.Ip, cc.User, cc.Password, cc.Meter, hasChargedEnergy, cc.VasVW)
+	return NewGhostEEBus(ctx, cc.Ski, cc.Ip, cc.User, cc.Password, cc.Meter, hasChargedEnergy)
 }
 
 //go:generate go tool decorate -f decorateGhostEEBus -b *GhostEEBus -r api.Charger -t api.Meter,api.PhaseCurrents,api.ChargeRater,api.PhaseSwitcher,api.PhaseGetter
 
 // NewGhostEEBus creates a GhostEEBus charger combining EEBus with Ghost REST API
-func NewGhostEEBus(ctx context.Context, ski, ip, user, password string, hasMeter, hasChargedEnergy, vasVW bool) (api.Charger, error) {
-	eb, err := newEEBus(ctx, ski, ip, vasVW)
+func NewGhostEEBus(ctx context.Context, ski, ip, user, password string, hasMeter, hasChargedEnergy bool) (api.Charger, error) {
+	eb, err := newEEBus(ctx, ski, ip)
 	if err != nil {
 		return nil, err
 	}

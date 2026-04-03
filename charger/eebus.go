@@ -66,14 +66,14 @@ func NewEEBusFromConfig(ctx context.Context, other map[string]any) (api.Charger,
 	// default true
 	hasChargedEnergy := cc.ChargedEnergy == nil || *cc.ChargedEnergy
 
-	return NewEEBus(ctx, cc.Ski, cc.Ip, cc.Meter, hasChargedEnergy, false)
+	return NewEEBus(ctx, cc.Ski, cc.Ip, cc.Meter, hasChargedEnergy)
 }
 
 //go:generate go tool decorate -f decorateEEBus -b *EEBus -r api.Charger -t api.Meter,api.PhaseCurrents,api.ChargeRater
 
 // newEEBus creates and initializes a raw *EEBus charger.
 // It registers the device with the EEBus instance and waits for the connection.
-func newEEBus(ctx context.Context, ski, ip string, vasVW bool) (*EEBus, error) {
+func newEEBus(ctx context.Context, ski, ip string) (*EEBus, error) {
 	if eebus.Instance == nil {
 		return nil, errors.New("eebus not configured")
 	}
@@ -106,8 +106,8 @@ func newEEBus(ctx context.Context, ski, ip string, vasVW bool) (*EEBus, error) {
 }
 
 // NewEEBus creates EEBus charger
-func NewEEBus(ctx context.Context, ski, ip string, hasMeter, hasChargedEnergy, vasVW bool) (api.Charger, error) {
-	c, err := newEEBus(ctx, ski, ip, vasVW)
+func NewEEBus(ctx context.Context, ski, ip string, hasMeter, hasChargedEnergy bool) (api.Charger, error) {
+	c, err := newEEBus(ctx, ski, ip)
 	if err != nil {
 		return nil, err
 	}
