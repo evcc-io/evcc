@@ -627,17 +627,13 @@ func timeSteps(minLen int, now time.Time) []int {
 func asTimestamps(dt []int, now time.Time) []time.Time {
 	res := make([]time.Time, 0, len(dt))
 
-	// first slot starts within the current slot boundary
-	bos := now.Truncate(tariff.SlotDuration)
-	eos := bos.Add(tariff.SlotDuration)
+	eos := now.Truncate(tariff.SlotDuration).Add(tariff.SlotDuration)
 	res = append(res, eos.Add(-time.Duration(dt[0])*time.Second))
 
-	// subsequent slots align to exact slot boundaries
-	ts := eos
-	for i := 1; i < len(dt); i++ {
-		res = append(res, ts)
-		ts = ts.Add(tariff.SlotDuration)
+	for i := range len(dt) - 1 {
+		res = append(res, res[i].Add(time.Duration(dt[i])*time.Second))
 	}
+
 	return res
 }
 
