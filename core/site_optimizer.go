@@ -611,8 +611,7 @@ func currentRates(tariff api.Tariff) api.Rates {
 func timeSteps(minLen int, now time.Time) []int {
 	res := make([]int, 0, minLen)
 
-	bos := now.Truncate(tariff.SlotDuration)
-	eos := bos.Add(tariff.SlotDuration)
+	eos := now.Truncate(tariff.SlotDuration).Add(tariff.SlotDuration)
 	if d := eos.Sub(now); d > time.Second && d < tariff.SlotDuration {
 		res = append(res, int(d.Seconds()))
 	}
