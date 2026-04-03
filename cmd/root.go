@@ -241,7 +241,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// remote access tunnel
 	var remoteAccess *remote.Remote
 	if remoteHost := os.Getenv("EVCC_REMOTE_ACCESS"); remoteHost != "" {
-		remoteAccess = remote.New(remoteHost, httpd.Router(), sponsor.Token, valueChan)
+		remoteAccess = remote.New(remoteHost, httpd.Router(), valueChan)
 	}
 
 	// signal ui listening

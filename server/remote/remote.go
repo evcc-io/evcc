@@ -1,19 +1,16 @@
 package remote
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
-	"strings"
 	"sync"
-	"time"
 
 	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/sponsor"
 )
 
 // Settings is the persisted remote access configuration.
@@ -26,24 +23,22 @@ type Settings struct {
 
 // Remote manages the remote access tunnel lifecycle.
 type Remote struct {
-	mu           sync.Mutex
-	cloudHost    string
-	settings     Settings
-	tunnel       *Tunnel
-	httpHandler  http.Handler
-	sponsorToken string
-	log          *util.Logger
-	publisher    chan<- util.Param
+	mu          sync.Mutex
+	cloudHost   string
+	settings    Settings
+	tunnel      *Tunnel
+	httpHandler http.Handler
+	log         *util.Logger
+	publisher   chan<- util.Param
 }
 
 // New creates a new Remote manager, loads persisted settings, and connects if enabled.
-func New(cloudHost string, httpHandler http.Handler, sponsorToken string, valueChan chan<- util.Param) *Remote {
+func New(cloudHost string, httpHandler http.Handler, valueChan chan<- util.Param) *Remote {
 	r := &Remote{
-		cloudHost:    cloudHost,
-		httpHandler:  httpHandler,
-		sponsorToken: sponsorToken,
-		log:          util.NewLogger("remote"),
-		publisher:    valueChan,
+		cloudHost:   cloudHost,
+		httpHandler: httpHandler,
+		log:         util.NewLogger("remote"),
+		publisher:   valueChan,
 	}
 
 	// load saved settings
@@ -133,27 +128,15 @@ type registerResponse struct {
 
 // register calls the cloud registration endpoint and persists the result.
 func (r *Remote) register() error {
-	body, err := json.Marshal(registerRequest{SponsorToken: r.sponsorToken})
-	if err != nil {
-		return err
-	}
-
-	url := fmt.Sprintf("https://%s/api/register", r.cloudHost)
-	client := &http.Client{Timeout: 30 * time.Second}
-	resp, err := client.Post(url, "application/json", bytes.NewReader(body))
-	if err != nil {
-		return fmt.Errorf("register request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("register: %s", strings.TrimSpace(string(body)))
-	}
+	uri := fmt.Sprintf("https://%s/api/register", r.cloudHost)
+	data := registerRequest{SponsorToken: sponsor.Token}
+	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
 
 	var res registerResponse
-	if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
-		return fmt.Errorf("register: decode: %w", err)
+
+	client := request.NewHelper(r.log)
+	if err := client.DoJSON(req, &res); err != nil {
+		return err
 	}
 
 	r.mu.Lock()
