@@ -96,8 +96,8 @@ params:
     service: homeassistant/entities?uri={uri}&domain=script,switch
     example: "script.vehicle_start_charge; switch.vehicle_charger"
     help:
-      en: Entity ID for a script or a switch that starts charging the vehicle. Only useful with the [Vehicle API-only charger](https://docs.evcc.io/en/docs/devices/chargers#vehicle-api-only-charger). If a switch is provided, Service to stop charging must be left empty.
-      de: Entitäts-ID für ein Skript oder einen Schalter zum Starten des Ladevorgangs. Nur sinnvoll mit der [Fahrzeug-API Ladesteuerung](https://docs.evcc.io/docs/devices/chargers#vehicle-api-only-charger). Wenn ein Schalter angegeben wird, muss der Service zum Stoppen des Ladens leer bleiben.
+      en: Entity ID for a script or a switch that starts charging the vehicle. Only useful with the [docs.evcc.io](https://docs.evcc.io/en/docs/devices/chargers#vehicle-api-only-charger). If a switch is provided, Service to stop charging must be left empty.
+      de: Entitäts-ID für ein Skript oder einen Schalter zum Starten des Ladevorgangs. Nur sinnvoll mit der [docs.evcc.io](https://docs.evcc.io/docs/devices/chargers#vehicle-api-only-charger). Wenn ein Schalter angegeben wird, muss der Service zum Stoppen des Ladens leer bleiben.
   - name: stop_charging
     description:
       de: Service zum Laden stoppen
@@ -105,8 +105,8 @@ params:
     service: homeassistant/entities?uri={uri}&domain=script
     example: "script.vehicle_stop_charge"
     help:
-      en: Entity ID for a script that stops charging the vehicle. Only useful with the [Vehicle API-only charger](https://docs.evcc.io/en/docs/devices/chargers#vehicle-api-only-charger).
-      de: Entitäts-ID für ein Skript zum Stoppen des Ladevorgangs. Nur sinnvoll mit der [Fahrzeug-API Ladesteuerung](https://docs.evcc.io/docs/devices/chargers#vehicle-api-only-charger).
+      en: Entity ID for a script that stops charging the vehicle. Only useful with the [docs.evcc.io](https://docs.evcc.io/en/docs/devices/chargers#vehicle-api-only-charger).
+      de: Entitäts-ID für ein Skript zum Stoppen des Ladevorgangs. Nur sinnvoll mit der [docs.evcc.io](https://docs.evcc.io/docs/devices/chargers#vehicle-api-only-charger).
   - name: wakeup
     description:
       de: Service zum Aufwecken

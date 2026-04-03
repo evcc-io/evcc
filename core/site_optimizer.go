@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -34,9 +35,27 @@ var (
 	mu      atomic.Uint32
 )
 
+// optimizerResult wraps the optimizer publish payload to implement BytesMarshaler.
+// This ensures publishComplex serializes it as a single JSON message instead of
+// recursively decomposing each struct field and array element into individual MQTT
+// topics (~1,500 messages per optimizer run).
+type optimizerResult struct {
+	Req     optimizer.OptimizationInput  `json:"req"`
+	Res     optimizer.OptimizationResult `json:"res"`
+	Details requestDetails               `json:"details"`
+}
+
+var _ api.BytesMarshaler = (*optimizerResult)(nil)
+
+func (r optimizerResult) MarshalBytes() ([]byte, error) {
+	return json.Marshal(r)
+}
+
 type batteryType string
 
 const (
+	OPTIMIZER_URI = "https://optimizer.evcc.io"
+
 	batteryTypeLoadpoint batteryType = "loadpoint"
 	batteryTypeVehicle   batteryType = "vehicle"
 	batteryTypeBattery   batteryType = "battery"
@@ -110,11 +129,6 @@ func (site *Site) optimizerUpdateAsync() {
 }
 
 func (site *Site) optimizerUpdate(battery []types.Measurement) error {
-	uri := os.Getenv("OPTIMIZER_URI")
-	if uri == "" {
-		return nil
-	}
-
 	solarTariff := site.GetTariff(api.TariffUsageSolar)
 	solar := currentRates(solarTariff)
 
@@ -220,6 +234,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	httpClient := request.NewClient(site.log)
 	httpClient.Timeout = 30 * time.Second
 
+	uri := lo.CoalesceOrEmpty(os.Getenv("OPTIMIZER_URI"), OPTIMIZER_URI)
 	apiClient, err := optimizer.NewClientWithResponses(uri, optimizer.WithHTTPClient(httpClient))
 	if err != nil {
 		return err
@@ -243,11 +258,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		return errors.New(string(resp.JSON200.Status))
 	}
 
-	site.publish("evopt", struct {
-		Req     optimizer.OptimizationInput  `json:"req"`
-		Res     optimizer.OptimizationResult `json:"res"`
-		Details requestDetails               `json:"details"`
-	}{
+	site.publish("evopt", optimizerResult{
 		Req:     req,
 		Res:     *resp.JSON200,
 		Details: details,
@@ -422,17 +433,17 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 
 	instance := dev.Instance()
 
-	if _, ok := instance.(api.BatteryController); ok {
+	if api.HasCap[api.BatteryController](instance) {
 		bat.ChargeFromGrid = true
 	}
 
-	if m, ok := instance.(api.BatteryPowerLimiter); ok {
+	if m, ok := api.Cap[api.BatteryPowerLimiter](instance); ok {
 		charge, discharge := m.GetPowerLimits()
 		bat.CMax = float32(charge)
 		bat.DMax = float32(discharge)
 	}
 
-	if m, ok := instance.(api.BatterySocLimiter); ok {
+	if m, ok := api.Cap[api.BatterySocLimiter](instance); ok {
 		minSoc, maxSoc := m.GetSocLimits()
 		bat.SMin = float32(*b.Capacity * minSoc * 10) // Wh
 		bat.SMax = float32(*b.Capacity * maxSoc * 10) // Wh
