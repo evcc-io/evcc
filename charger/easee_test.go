@@ -224,7 +224,7 @@ func TestEasee_StatusReason(t *testing.T) {
 		expectedReason api.Reason
 	}{
 		{easee.ModeAwaitingAuthentication, api.ReasonWaitingForAuthorization},
-		{easee.ModeCompleted, api.ReasonDisconnectRequired},
+		{easee.ModeCompleted, api.ReasonUnknown},
 		{easee.ModeDisconnected, api.ReasonUnknown},
 		{easee.ModeAwaitingStart, api.ReasonUnknown},
 		{easee.ModeCharging, api.ReasonUnknown},

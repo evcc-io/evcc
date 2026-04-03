@@ -106,6 +106,7 @@ export default {
 		phaseEntries() {
 			return Object.entries(this.tags)
 				.filter(([name]) => PHASE_TAGS.includes(name))
+				.sort(([a], [b]) => a.localeCompare(b))
 				.map(([name, { value, error, warning, muted }]) => {
 					return { name, value, error, warning, muted };
 				});

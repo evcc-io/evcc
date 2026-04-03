@@ -1,0 +1,19 @@
+template: goodwe-wifi
+# UDP implementation is broken
+# deprecated: true
+products:
+  - brand: GoodWe
+    description:
+      generic: ET Hybrid Inverter (WiFi)
+requirements:
+  evcc: ["skiptest"]
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: host
+  - name: uri
+    deprecated: true
+render: |
+  type: goodwe-wifi
+  usage: {{ .usage }}
+  uri: {{ if .host }}{{ .host }}{{ else }}{{ .uri }}{{ end }}

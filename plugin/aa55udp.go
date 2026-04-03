@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"math"
 	"net"
 	"strings"
 	"time"
@@ -68,9 +69,9 @@ func NewAA55UDPFromConfig(_ context.Context, other map[string]interface{}) (Plug
 	}
 
 	switch cc.Decode {
-	case "int32be", "uint32be", "int16be", "uint16be":
+	case "int32be", "uint32be", "int16be", "uint16be", "float32be":
 	default:
-		return nil, fmt.Errorf("aa55udp: unsupported decode %q (want int32be|uint32be|int16be|uint16be)", cc.Decode)
+		return nil, fmt.Errorf("aa55udp: unsupported decode %q (want int32be|uint32be|int16be|uint16be|float32be)", cc.Decode)
 	}
 
 	pdu := buildPDU(cc.Register, cc.Count)
@@ -183,6 +184,12 @@ func stripAA55Header(buf []byte) ([]byte, error) {
 // interprets it according to decode.
 func decodeAt(payload []byte, offset int, decode string) (float64, error) {
 	switch decode {
+	case "float32be":
+		if len(payload) < offset+4 {
+			return 0, fmt.Errorf("payload too short for float32be at offset %d (len=%d)", offset, len(payload))
+		}
+		bits := binary.BigEndian.Uint32(payload[offset:])
+		return float64(math.Float32frombits(bits)), nil
 	case "int32be":
 		if len(payload) < offset+4 {
 			return 0, fmt.Errorf("payload too short for int32be at offset %d (len=%d)", offset, len(payload))

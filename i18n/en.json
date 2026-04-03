@@ -599,6 +599,11 @@
       "url": "Server URL",
       "urlHelp": "Copy this URL into your charger's configuration. Check the manufacturer's manual for details. The charger is expected to automatically append its unique identifier (station ID) to the url. In rare cases, you may need to manually specify the identifier. Example: `{url}`"
     },
+    "optimizer": {
+      "description": "Analyzes solar forecast, electricity prices, and your consumption patterns to optimize battery and charging strategy. Data is sent to the evcc optimization service for processing.",
+      "enable": "Enable Optimizer",
+      "title": "Optimizer"
+    },
     "options": {
       "boolean": {
         "no": "no",
