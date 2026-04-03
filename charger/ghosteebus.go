@@ -139,29 +139,21 @@ func (wb *GhostEEBus) putJSON(url string, data any) error {
 	return err
 }
 
-var _ api.PhaseSwitchGuard = (*GhostEEBus)(nil)
-
-// PhaseSwitchAllowed implements api.PhaseSwitchGuard.
-// Returns false when the EV communicates via ISO 15118, as relay switching
-// would violate the high-level power contract. The wallbox itself would
-// also deny the switch (hlcLimitation), but checking here prevents the
-// loadpoint from even attempting it.
-func (wb *GhostEEBus) PhaseSwitchAllowed() bool {
-	evEntity, connected := wb.EEBus.isEvConnected()
-	if !connected {
-		return true
-	}
-
-	comStandard, err := wb.EEBus.cem.EvCC.CommunicationStandard(evEntity)
-	if err != nil {
-		return false
-	}
-
-	return comStandard == model.DeviceConfigurationKeyValueStringTypeIEC61851
-}
-
 // phases1p3p implements phase switching via REST API.
+// Returns api.ErrNotAvailable when the EV communicates via ISO 15118,
+// as relay switching would violate the high-level power contract.
 func (wb *GhostEEBus) phases1p3p(phases int) error {
+	evEntity, connected := wb.EEBus.isEvConnected()
+	if connected {
+		comStandard, err := wb.EEBus.cem.EvCC.CommunicationStandard(evEntity)
+		if err != nil {
+			return api.ErrNotAvailable
+		}
+		if comStandard != model.DeviceConfigurationKeyValueStringTypeIEC61851 {
+			return api.ErrNotAvailable
+		}
+	}
+
 	val := ghostone.RelaisStateOnePhase
 	if phases == 3 {
 		val = ghostone.RelaisStateThreePhase

@@ -480,52 +480,6 @@ func TestScalePhasesIfAvailable(t *testing.T) {
 	}
 }
 
-func TestPhaseSwitchAllowed(t *testing.T) {
-	ctrl := gomock.NewController(t)
-
-	t.Run("without guard", func(t *testing.T) {
-		// charger without PhaseSwitchGuard: always allowed
-		lp := &Loadpoint{
-			charger: api.NewMockCharger(ctrl),
-		}
-		require.True(t, lp.phaseSwitchAllowed())
-	})
-
-	t.Run("guard allows", func(t *testing.T) {
-		guard := api.NewMockPhaseSwitchGuard(ctrl)
-		guard.EXPECT().PhaseSwitchAllowed().Return(true)
-
-		lp := &Loadpoint{
-			charger: struct {
-				*api.MockCharger
-				*api.MockPhaseSwitchGuard
-			}{
-				api.NewMockCharger(ctrl),
-				guard,
-			},
-		}
-		require.True(t, lp.phaseSwitchAllowed())
-	})
-
-	t.Run("guard denies", func(t *testing.T) {
-		guard := api.NewMockPhaseSwitchGuard(ctrl)
-		guard.EXPECT().PhaseSwitchAllowed().Return(false)
-
-		lp := &Loadpoint{
-			charger: struct {
-				*api.MockCharger
-				*api.MockPhaseSwitchGuard
-			}{
-				api.NewMockCharger(ctrl),
-				guard,
-			},
-		}
-		require.False(t, lp.phaseSwitchAllowed())
-	})
-
-	ctrl.Finish()
-}
-
 func TestFastChargingCircuitBasedPhaseScaling(t *testing.T) {
 	Voltage = 230
 

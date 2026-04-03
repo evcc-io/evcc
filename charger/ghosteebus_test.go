@@ -21,10 +21,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// newTestGhostEEBusREST creates a GhostEEBus without EEBUS mocks, for pure REST tests.
+// newTestGhostEEBusREST creates a GhostEEBus with a minimal EEBus (no EV connected), for pure REST tests.
 func newTestGhostEEBusREST(t *testing.T) *GhostEEBus {
 	t.Helper()
 	return &GhostEEBus{
+		EEBus: &EEBus{
+			log: util.NewLogger("test"),
+			cem: &eebus.CustomerEnergyManagement{},
+		},
 		Helper: request.NewHelper(util.NewLogger("test")),
 		uri:    "https://wallbox.local/api/v2",
 	}
@@ -56,48 +60,49 @@ func newTestGhostEEBusWithEEBus(t *testing.T) (*GhostEEBus, *mocks.CemEVCCInterf
 
 const ghostEEBusRelaisStateURL = "https://wallbox.local/api/v2/system/relais-switch/state"
 
-func TestGhostEEBus_PhaseSwitchAllowed(t *testing.T) {
+func TestGhostEEBus_PhaseSwitchISO15118(t *testing.T) {
 	tests := []struct {
 		name        string
 		connected   bool
 		comStandard model.DeviceConfigurationKeyValueStringType
 		comErr      error
-		want        bool
+		wantErr     error
 	}{
 		{
 			name:      "no_ev_connected",
 			connected: false,
-			want:      true,
 		},
 		{
-			name:        "iec61851",
+			name:        "iec61851_allowed",
 			connected:   true,
 			comStandard: model.DeviceConfigurationKeyValueStringTypeIEC61851,
-			want:        true,
 		},
 		{
-			name:        "iso15118_ed1",
+			name:        "iso15118_ed1_blocked",
 			connected:   true,
 			comStandard: model.DeviceConfigurationKeyValueStringTypeISO151182ED1,
-			want:        false,
+			wantErr:     api.ErrNotAvailable,
 		},
 		{
-			name:        "iso15118_ed2",
+			name:        "iso15118_ed2_blocked",
 			connected:   true,
 			comStandard: model.DeviceConfigurationKeyValueStringTypeISO151182ED2,
-			want:        false,
+			wantErr:     api.ErrNotAvailable,
 		},
 		{
 			name:      "com_standard_error",
 			connected: true,
 			comErr:    errors.New("data not available"),
-			want:      false,
+			wantErr:   api.ErrNotAvailable,
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			wb, evccMock, evEntity := newTestGhostEEBusWithEEBus(t)
+
+			httpmock.ActivateNonDefault(wb.Client)
+			defer httpmock.DeactivateAndReset()
 
 			evccMock.EXPECT().EVConnected(evEntity).Return(tc.connected)
 			if tc.connected {
@@ -110,7 +115,26 @@ func TestGhostEEBus_PhaseSwitchAllowed(t *testing.T) {
 				}
 			}
 
-			assert.Equal(t, tc.want, wb.PhaseSwitchAllowed())
+			if tc.wantErr == nil {
+				// mock PUT + GET for successful phase switch
+				httpmock.RegisterResponder(http.MethodPut, ghostEEBusRelaisStateURL,
+					httpmock.NewStringResponder(200, ""),
+				)
+				body, _ := json.Marshal(ghostone.RelaisSwitchStateRead{
+					Value: ghostone.RelaisStateOnePhase, CurrentState: ghostone.RelaisStateOnePhase,
+				})
+				httpmock.RegisterResponder(http.MethodGet, ghostEEBusRelaisStateURL,
+					httpmock.NewBytesResponder(200, body),
+				)
+			}
+
+			err := wb.phases1p3p(1)
+
+			if tc.wantErr != nil {
+				assert.ErrorIs(t, err, tc.wantErr)
+			} else {
+				assert.NoError(t, err)
+			}
 		})
 	}
 }

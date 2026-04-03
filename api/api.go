@@ -9,7 +9,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-//go:generate go tool mockgen -package api -destination mock.go github.com/evcc-io/evcc/api Charger,ChargeState,CurrentLimiter,CurrentGetter,PhaseSwitcher,PhaseSwitchGuard,PhaseGetter,FeatureDescriber,Identifier,Meter,MeterEnergy,PhaseCurrents,Vehicle,ConnectionTimer,ChargeRater,Battery,BatteryController,BatterySocLimiter,Circuit,Dimmer,Tariff
+//go:generate go tool mockgen -package api -destination mock.go github.com/evcc-io/evcc/api Charger,ChargeState,CurrentLimiter,CurrentGetter,PhaseSwitcher,PhaseGetter,FeatureDescriber,Identifier,Meter,MeterEnergy,PhaseCurrents,Vehicle,ConnectionTimer,ChargeRater,Battery,BatteryController,BatterySocLimiter,Circuit,Dimmer,Tariff
 
 // Meter provides total active power in W
 type Meter interface {
@@ -101,15 +101,6 @@ type ChargerEx interface {
 // PhaseSwitcher provides 1p3p switching
 type PhaseSwitcher interface {
 	Phases1p3p(phases int) error
-}
-
-// PhaseSwitchGuard optionally provides dynamic phase switching availability.
-// When implemented by a charger, the loadpoint checks PhaseSwitchAllowed before
-// attempting a phase switch. This allows chargers to block phase switching at
-// runtime, e.g. when the EV communicates via ISO 15118 where relay switching
-// would violate the high-level power contract.
-type PhaseSwitchGuard interface {
-	PhaseSwitchAllowed() bool
 }
 
 type PhaseGetter interface {

@@ -1232,7 +1232,7 @@ func (lp *Loadpoint) resetPhaseTimer() {
 
 // scalePhasesRequired validates if fixed phase configuration matches enabled phases
 func (lp *Loadpoint) scalePhasesRequired() bool {
-	return lp.hasPhaseSwitching() && lp.phaseSwitchAllowed() && lp.phasesConfigured != 0 && lp.phasesConfigured != lp.GetPhases()
+	return lp.hasPhaseSwitching() && lp.phasesConfigured != 0 && lp.phasesConfigured != lp.GetPhases()
 }
 
 // scalePhasesIfAvailable scales if api.PhaseSwitcher is available and allowed
@@ -1241,7 +1241,7 @@ func (lp *Loadpoint) scalePhasesIfAvailable(phases int) error {
 		phases = lp.phasesConfigured
 	}
 
-	if lp.hasPhaseSwitching() && lp.phaseSwitchAllowed() {
+	if lp.hasPhaseSwitching() {
 		return lp.scalePhases(phases)
 	}
 
@@ -1451,7 +1451,7 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 
 	// switch phases up/down
 	var scaledTo int
-	if lp.hasPhaseSwitching() && lp.phaseSwitchAllowed() && lp.phaseSwitchCompleted() {
+	if lp.hasPhaseSwitching() && lp.phaseSwitchCompleted() {
 		scaledTo = lp.pvScalePhases(sitePower, minCurrent, maxCurrent)
 	}
 

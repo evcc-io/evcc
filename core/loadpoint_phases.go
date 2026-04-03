@@ -161,14 +161,3 @@ func (lp *Loadpoint) getChargerPhysicalPhases() int {
 func (lp *Loadpoint) hasPhaseSwitching() bool {
 	return api.HasCap[api.PhaseSwitcher](lp.charger)
 }
-
-// phaseSwitchAllowed checks if phase switching is currently allowed.
-// If the charger implements PhaseSwitchGuard, it is consulted at runtime.
-// This allows chargers to dynamically block phase switching, e.g. when
-// the EV communicates via ISO 15118.
-func (lp *Loadpoint) phaseSwitchAllowed() bool {
-	if guard, ok := lp.charger.(api.PhaseSwitchGuard); ok {
-		return guard.PhaseSwitchAllowed()
-	}
-	return true
-}
