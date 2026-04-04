@@ -425,6 +425,146 @@ func TestEasee_CommandResponse_matchedByID(t *testing.T) {
 	<-errCh
 }
 
+func TestOutputPhaseToPhases(t *testing.T) {
+	testCases := []struct {
+		outputPhase    int
+		expectedPhases int
+	}{
+		{0, 0},  // UNASSIGNED
+		{10, 1}, // P1_T2_T3_TN
+		{11, 1}, // P1_T2_T3_IT
+		{14, 1}, // P1_T2_T5_TN
+		{15, 1}, // P1_T3_T4_IT
+		{20, 2}, // P2_T2_T3_T4_TN
+		{21, 2}, // P2_T2_T4_T5_TN
+		{22, 2}, // P2_T2_T3_T4_IT
+		{30, 3}, // P3_T2_T3_T4_T5_TN
+	}
+
+	for _, tc := range testCases {
+		t.Run(fmt.Sprintf("outputPhase_%d", tc.outputPhase), func(t *testing.T) {
+			assert.Equal(t, tc.expectedPhases, outputPhaseToPhases(tc.outputPhase))
+		})
+	}
+}
+
+func TestEasee_GetPhases(t *testing.T) {
+	testCases := []struct {
+		name           string
+		outputPhase    int
+		circuit        int
+		phaseMode      int
+		dcc            [3]float64
+		expectedPhases int
+	}{
+		// --- OUTPUT_PHASE available: takes precedence ---
+		{
+			name:           "OUTPUT_PHASE 1p overrides DCC all non-zero",
+			outputPhase:    10, // P1_T2_T3_TN
+			circuit:        1,
+			dcc:            [3]float64{16, 16, 16},
+			expectedPhases: 1,
+		},
+		{
+			name:           "OUTPUT_PHASE 3p",
+			outputPhase:    30, // P3_T2_T3_T4_T5_TN
+			circuit:        1,
+			dcc:            [3]float64{16, 0, 0},
+			expectedPhases: 3,
+		},
+		{
+			name:           "OUTPUT_PHASE 1p overrides PhaseMode auto",
+			outputPhase:    14, // P1_T2_T5_TN
+			circuit:        0,
+			phaseMode:      2, // auto
+			expectedPhases: 1,
+		},
+		{
+			name:           "OUTPUT_PHASE 2p",
+			outputPhase:    20, // P2_T2_T3_T4_TN
+			circuit:        1,
+			dcc:            [3]float64{16, 16, 16},
+			expectedPhases: 2,
+		},
+		// --- OUTPUT_PHASE unassigned: fallback to config ---
+		{
+			name:           "unassigned — DCC circuit path returns 3",
+			outputPhase:    0,
+			circuit:        1,
+			dcc:            [3]float64{16, 16, 16},
+			expectedPhases: 3,
+		},
+		{
+			name:           "unassigned — DCC 1p returns 1",
+			outputPhase:    0,
+			circuit:        1,
+			dcc:            [3]float64{16, 0, 0},
+			expectedPhases: 1,
+		},
+		{
+			name:           "unassigned — PhaseMode auto maps to 3",
+			outputPhase:    0,
+			circuit:        0,
+			phaseMode:      2, // auto
+			expectedPhases: 3,
+		},
+		{
+			name:           "unassigned — PhaseMode 1 returns 1",
+			outputPhase:    0,
+			circuit:        0,
+			phaseMode:      1,
+			expectedPhases: 1,
+		},
+		{
+			name:           "unassigned — PhaseMode 3 returns 3",
+			outputPhase:    0,
+			circuit:        0,
+			phaseMode:      3,
+			expectedPhases: 3,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			e := newEasee()
+			e.outputPhase = tc.outputPhase
+			e.circuit = tc.circuit
+			e.phaseMode = tc.phaseMode
+			e.dynamicCircuitCurrent = tc.dcc
+
+			phases, err := e.GetPhases()
+			assert.NoError(t, err)
+			assert.Equal(t, tc.expectedPhases, phases)
+		})
+	}
+}
+
+func TestEasee_GetPhases_outputPhaseObservation(t *testing.T) {
+	e := newEasee()
+	e.circuit = 1
+	e.dynamicCircuitCurrent = [3]float64{16, 16, 16}
+
+	// Before OUTPUT_PHASE observation arrives, falls back to DCC
+	phases, err := e.GetPhases()
+	assert.NoError(t, err)
+	assert.Equal(t, 3, phases)
+
+	// Simulate receiving OUTPUT_PHASE observation for 1p charging
+	now := time.Now().UTC().Truncate(0)
+	e.ProductUpdate(createPayload(easee.OUTPUT_PHASE, now, easee.Integer, "10"))
+
+	phases, err = e.GetPhases()
+	assert.NoError(t, err)
+	assert.Equal(t, 1, phases, "OUTPUT_PHASE should override DCC-based detection")
+
+	// Simulate phase switch to 3p
+	e.ProductUpdate(createPayload(easee.OUTPUT_PHASE, now.Add(time.Second), easee.Integer, "30"))
+
+	phases, err = e.GetPhases()
+	assert.NoError(t, err)
+	assert.Equal(t, 3, phases)
+}
+
 func TestEasee_Phases1p3p_registersExpectedOrphan(t *testing.T) {
 	const siteID = 12345
 	const circuitID = 67890

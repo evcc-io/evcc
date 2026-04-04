@@ -65,6 +65,7 @@ type Easee struct {
 	pilotMode             string
 	reasonForNoCurrent    int
 	phaseMode             int
+	outputPhase           int
 	currentPower, sessionEnergy, totalEnergy,
 	currentL1, currentL2, currentL3 float64
 	rfid string
@@ -395,6 +396,8 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 		// startup completed
 		c.startDone()
 
+	case easee.OUTPUT_PHASE:
+		c.outputPhase = value.(int)
 	case easee.REASON_FOR_NO_CURRENT:
 		c.reasonForNoCurrent = value.(int)
 	case easee.PILOT_MODE:
@@ -768,10 +771,35 @@ func (c *Easee) Phases1p3p(phases int) error {
 
 var _ api.PhaseGetter = (*Easee)(nil)
 
+// outputPhaseToPhases converts the Easee OUTPUT_PHASE observation value
+// to the number of active phases. See the "output phase type table" in
+// the Easee API documentation.
+func outputPhaseToPhases(outputPhase int) int {
+	switch {
+	case outputPhase >= 30:
+		return 3
+	case outputPhase >= 20:
+		return 2
+	case outputPhase >= 10:
+		return 1
+	default:
+		return 0 // unassigned
+	}
+}
+
 // GetPhases implements the api.PhaseGetter interface
 func (c *Easee) GetPhases() (int, error) {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
+
+	// Use OUTPUT_PHASE observation which reports the actual active output
+	// phase(s) to the EV, rather than configuration state like DCC limits
+	// or PhaseMode which may not reflect reality.
+	if phases := outputPhaseToPhases(c.outputPhase); phases > 0 {
+		return phases, nil
+	}
+
+	// Fall back to configuration state when OUTPUT_PHASE is not yet available
 	var phases int
 	if c.circuit != 0 {
 		// circuit level controlled charger
