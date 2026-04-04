@@ -231,8 +231,7 @@ render: |
     register:
       {{- if eq .storageunit "1" }}
       address: 588 # "battery capacity"
-      {{- end }}
-      {{- if eq .storageunit "2" }}
+      {{- else }}
       address: 589 # "battery2 capacity"
       {{- end }}
       type: holding
