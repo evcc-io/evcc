@@ -21,8 +21,8 @@ params:
   - preset: battery-params
   - name: batterytype
     choice: ["lv", "hv"]
+    required: true
     default: "lv"
-    advanced: true
     description:
       de: Wechselrichter für LV- oder HV-Batterie
       en: Inverter for LV or HV batteries
