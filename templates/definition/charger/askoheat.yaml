@@ -1,0 +1,29 @@
+template: askoheat
+products:
+  - brand: Askoma
+    description:
+      generic: ASKOHEAT+
+group: heating
+requirements:
+  description:
+    de: |
+      Der ASKOHEAT+ muss mit dem lokalen Netzwerk verbunden sein.
+      Über das Webinterface sicherstellen, dass "Load Setpoint" im Input Setting aktiviert ist.
+
+      **Wichtig:** Im Loadpoint-Setup `mincurrent` passend zur minimalen Heizstufe setzen (z.B. `mincurrent: 1.1` für 250W bei 230V einphasig), sowie `phases: 1` für einphasigen Betrieb konfigurieren.
+    en: |
+      The ASKOHEAT+ must be connected to the local network.
+      Ensure "Load Setpoint" is enabled in Input Settings via the web interface.
+
+      **Important:** In the loadpoint configuration, set `mincurrent` to match the minimum heating step (e.g., `mincurrent: 1.1` for 250W at 230V single-phase), and configure `phases: 1` for single-phase operation.
+params:
+  - name: host
+  - name: tempsensor
+    default: 0
+    description:
+      de: Temperatursensor (0-5)
+      en: Temperature sensor (0-5)
+render: |
+  type: askoheat
+  uri: http://{{ .host }}
+  tempsensor: {{ .tempsensor }}

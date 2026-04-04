@@ -1,0 +1,24 @@
+template: askoheat
+products:
+  - brand: Askoma
+    description:
+      generic: ASKOHEAT+
+params:
+  - name: usage
+    choice: ["aux"]
+  - name: host
+  - name: tempsensor
+    default: 0
+    description:
+      de: Temperatursensor (0-5)
+      en: Temperature sensor (0-5)
+render: |
+  type: custom
+  power:
+    source: http
+    uri: http://{{ .host }}/GETEMA.JSON
+    jq: .MODBUS_EMA_HEATER_LOAD | tonumber
+  soc:
+    source: http
+    uri: http://{{ .host }}/GETEMA.JSON
+    jq: .MODBUS_EMA_TEMPERATURE_FLOAT_SENSOR{{ .tempsensor }} | tonumber | if . >= 9999 then 0 else . end
