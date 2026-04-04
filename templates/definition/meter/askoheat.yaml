@@ -21,4 +21,4 @@ render: |
   soc:
     source: http
     uri: http://{{ .host }}/GETEMA.JSON
-    jq: .MODBUS_EMA_TEMPERATURE_FLOAT_SENSOR{{ .tempsensor }} | tonumber | if . >= 9999 then 0 else . end
+    jq: .MODBUS_EMA_TEMPERATURE_FLOAT_SENSOR{{ .tempsensor }} | tonumber | if . >= 9999 then null else . end

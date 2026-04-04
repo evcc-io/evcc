@@ -31,6 +31,9 @@ params:
     description:
       de: Temperatursensor (0-4)
       en: Temperature sensor (0-4)
+    help:
+      de: Sensoren 0-4 sind über Modbus verfügbar. Sensor 5 nur über JSON API.
+      en: Sensors 0-4 are accessible via Modbus. Sensor 5 only via JSON API.
 render: |
   type: heatpump
   setmaxpower:

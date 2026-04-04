@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http"
 	"strconv"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -21,10 +22,11 @@ type Askoheat struct {
 	*embed
 	*request.Helper
 	log      *util.Logger
+	mu       sync.Mutex
 	lp       loadpoint.API
 	uri      string
 	power    uint32 // atomic: last setpoint in watts
-	enabled  bool
+	enabled  atomic.Bool
 	sensor   int // temp sensor index 0-5
 	maxPower int // from MODBUS_PAR_MAX_POWER
 	minPower int // from MODBUS_PAR_HEATER1_POWER
@@ -172,7 +174,7 @@ func (wb *Askoheat) heartbeat(ctx context.Context, timeout time.Duration) {
 		}
 
 		if power := atomic.LoadUint32(&wb.power); power > 0 {
-			if wb.enabled {
+			if wb.enabled.Load() {
 				if err := wb.setPower(int(power)); err != nil {
 					wb.log.ERROR.Println("heartbeat:", err)
 				}
@@ -196,6 +198,10 @@ func (wb *Askoheat) patchEMA(data map[string]string) error {
 	}
 
 	_, err = wb.DoBody(req)
+	if err == nil {
+		wb.emaG.Reset()
+	}
+
 	return err
 }
 
@@ -257,7 +263,7 @@ func (wb *Askoheat) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *Askoheat) Enabled() (bool, error) {
-	return wb.enabled, nil
+	return wb.enabled.Load(), nil
 }
 
 // Enable implements the api.Charger interface
@@ -272,7 +278,7 @@ func (wb *Askoheat) Enable(enable bool) error {
 	}
 
 	// power is set by MaxCurrentMillis; no PATCH needed for enable
-	wb.enabled = enable
+	wb.enabled.Store(enable)
 	return nil
 }
 
@@ -286,11 +292,13 @@ var _ api.ChargerEx = (*Askoheat)(nil)
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (wb *Askoheat) MaxCurrentMillis(current float64) error {
 	phases := 1
+	wb.mu.Lock()
 	if wb.lp != nil {
 		if p := wb.lp.GetPhases(); p != 0 {
 			phases = p
 		}
 	}
+	wb.mu.Unlock()
 
 	power := int(voltage * current * float64(phases))
 
@@ -350,5 +358,7 @@ var _ loadpoint.Controller = (*Askoheat)(nil)
 
 // LoadpointControl implements loadpoint.Controller
 func (wb *Askoheat) LoadpointControl(lp loadpoint.API) {
+	wb.mu.Lock()
 	wb.lp = lp
+	wb.mu.Unlock()
 }
