@@ -53,13 +53,13 @@ func init() {
 func NewAA55UDPFromConfig(_ context.Context, other map[string]interface{}) (Plugin, error) {
 	cc := struct {
 		Host     string  `mapstructure:"host"`
-		Address  byte    `mapstructure:"address"`
+		Address  int     `mapstructure:"address"`
 		Register uint16  `mapstructure:"register"`
 		Count    uint16  `mapstructure:"count"`
 		Decode   string  `mapstructure:"decode"`
 		Scale    float64 `mapstructure:"scale"`
 	}{
-		Address: aa55InverterAddr,
+		Address: int(aa55InverterAddr),
 		Count:   2,
 		Scale:   1.0,
 	}
@@ -71,13 +71,17 @@ func NewAA55UDPFromConfig(_ context.Context, other map[string]interface{}) (Plug
 		return nil, errors.New("aa55udp: count must be ≥ 1")
 	}
 
+	if cc.Address < 0 || cc.Address > 255 {
+		return nil, fmt.Errorf("aa55udp: address must be 0-255, got %d", cc.Address)
+	}
+
 	switch cc.Decode {
 	case "int32be", "uint32be", "int16be", "uint16be", "float32be":
 	default:
 		return nil, fmt.Errorf("aa55udp: unsupported decode %q (want int32be|uint32be|int16be|uint16be|float32be)", cc.Decode)
 	}
 
-	pdu := buildPDU(cc.Address, cc.Register, cc.Count)
+	pdu := buildPDU(byte(cc.Address), cc.Register, cc.Count)
 
 	addr, err := net.ResolveUDPAddr("udp4", net.JoinHostPort(cc.Host, "8899"))
 	if err != nil {

@@ -67,6 +67,13 @@ func TestBuildPDU_DTpower(t *testing.T) {
 	assert.Equal(t, []byte{0x7f, 0x03, 0x75, 0xaf, 0x00, 0x02}, got)
 }
 
+func TestBuildPDU_DefaultAddress(t *testing.T) {
+	// When address is omitted from config, aa55InverterAddr (0x7F) must be used.
+	// This guards existing DT/DNS and ES/EM setups that rely on the default.
+	got := buildPDU(aa55InverterAddr, 0x75AF, 2)
+	assert.Equal(t, byte(0x7F), got[0], "default address byte must be 0x7F")
+}
+
 func TestBuildPDU_ETgrid(t *testing.T) {
 	// ET grid: register 0x8943, count 2
 	got := buildPDU(0xF7, 0x8943, 2)
