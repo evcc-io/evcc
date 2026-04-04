@@ -4,23 +4,32 @@ requirements:
 products:
   - brand: GoodWe
     description:
-      generic: EH/BT/BH Hybrid Inverter (WiFi)
+      generic: ET/EH/BT/BH Hybrid Inverter (WiFi)
+
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
+
   - name: host
+    help:
+      en: IP address of the inverter (port 8899)
+      de: IP-Adresse des Wechselrichters (Port 8899)
+    example: 192.168.1.26
+
 render: |
   type: custom
   {{- if eq .usage "grid" }}
   power:
     source: aa55udp
     host: {{ .host }}
+    address: 0xF7
     register: 35139
     count: 2
     decode: int32be
   energy:
     source: aa55udp
     host: {{ .host }}
+    address: 0xF7
     register: 36017
     count: 2
     decode: float32be
@@ -30,12 +39,14 @@ render: |
   power:
     source: aa55udp
     host: {{ .host }}
+    address: 0xF7
     register: 35137
     count: 2
     decode: int32be
   energy:
     source: aa55udp
     host: {{ .host }}
+    address: 0xF7
     register: 35191
     count: 2
     decode: uint32be
@@ -45,12 +56,14 @@ render: |
   power:
     source: aa55udp
     host: {{ .host }}
+    address: 0xF7
     register: 35182
     count: 2
     decode: int32be
   energy:
     source: aa55udp
     host: {{ .host }}
+    address: 0xF7
     register: 35209
     count: 2
     decode: uint32be
@@ -58,6 +71,7 @@ render: |
   soc:
     source: aa55udp
     host: {{ .host }}
+    address: 0xF7
     register: 37007
     count: 1
     decode: uint16be
