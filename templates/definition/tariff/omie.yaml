@@ -45,8 +45,14 @@ render: |
         {{ end }};
 
       def quarterHourSeconds: 900;
+      def dstStartMonth: 3;
+      def dstEndMonth: 10;
       def standardOffsetSeconds: 3600;
       def daylightOffsetSeconds: 7200;
+      def shortDayPeriodCount: 92;
+      def normalDayPeriodCount: 96;
+      def longDayPeriodCount: 100;
+      def minimumRequiredColumnCount: market.priceIndex + 1;
 
       def pad2:
         tostring | if length == 1 then "0" + . else . end;
@@ -57,19 +63,32 @@ render: |
       def lastSunday($y; $m):
         first([31, 30, 29, 28, 27, 26, 25][] | select(((isoDate($y; $m; .) + "T00:00:00Z") | fromdateiso8601 | gmtime | .[6]) == 0));
 
+      def daylightSavingSwitchDay($y; $m):
+        lastSunday($y; $m);
+
+      def isStandardOffsetMonth($m):
+        $m < dstStartMonth or $m > dstEndMonth;
+
+      def isDaylightOffsetMonth($m):
+        $m > dstStartMonth and $m < dstEndMonth;
+
       def marketStartOffsetSeconds($y; $m; $d):
-        if $m < 3 or $m > 10 then
+        if isStandardOffsetMonth($m) then
           standardOffsetSeconds
-        elif $m > 3 and $m < 10 then
+        elif isDaylightOffsetMonth($m) then
           daylightOffsetSeconds
-        elif $m == 3 then
-          if $d <= lastSunday($y; 3) then standardOffsetSeconds else daylightOffsetSeconds end
+        elif $m == dstStartMonth then
+          if $d <= daylightSavingSwitchDay($y; dstStartMonth) then standardOffsetSeconds else daylightOffsetSeconds end
         else
-          if $d <= lastSunday($y; 10) then daylightOffsetSeconds else standardOffsetSeconds end
+          if $d <= daylightSavingSwitchDay($y; dstEndMonth) then daylightOffsetSeconds else standardOffsetSeconds end
         end;
 
       def marketStartUtc($y; $m; $d):
         ((isoDate($y; $m; $d) + "T00:00:00Z") | fromdateiso8601) - marketStartOffsetSeconds($y; $m; $d);
+
+      def isQuarterHourDay($day):
+        ([ $day[].period ] | length) as $count
+        | select($count == shortDayPeriodCount or $count == normalDayPeriodCount or $count == longDayPeriodCount);
 
       def parseDateParts:
         split("/") | map(tonumber) | { d: .[0], m: .[1], y: .[2] };
@@ -82,6 +101,8 @@ render: |
       | map(select(length > 0)) as $lines
       | if ($lines | length) == 0 then
           error("OMIE data rows not found")
+        elif (($lines[0] | split(";") | length) < minimumRequiredColumnCount) then
+          error("unexpected OMIE row layout")
         else
           ($lines
             | map(split(";"))
@@ -103,10 +124,7 @@ render: |
           | ($entries
               | sort_by(.date, .period)
               | group_by(.date)
-              | map(
-                  ([.[].period] | length) as $count
-                  | select($count == 92 or $count == 96 or $count == 100)
-                )
+              | map(isQuarterHourDay(.))
             ) as $quarterHourDays
           | if ($quarterHourDays | length) == 0 then
               error("no OMIE quarter-hour days parsed")
