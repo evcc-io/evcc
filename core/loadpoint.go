@@ -1235,7 +1235,7 @@ func (lp *Loadpoint) scalePhasesRequired() bool {
 	return lp.hasPhaseSwitching() && lp.phasesConfigured != 0 && lp.phasesConfigured != lp.GetPhases()
 }
 
-// scalePhasesIfAvailable scales if api.PhaseSwitcher is available
+// scalePhasesIfAvailable scales if api.PhaseSwitcher is available and allowed
 func (lp *Loadpoint) scalePhasesIfAvailable(phases int) error {
 	if lp.phasesConfigured != 0 {
 		phases = lp.phasesConfigured
