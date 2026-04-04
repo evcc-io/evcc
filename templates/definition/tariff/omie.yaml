@@ -30,172 +30,118 @@ render: |
   {{ include "tariff-base" . }}
   {{ include "tariff-features" . }}
   forecast:
-    source: go
-    script: |
-      secondsPerHour := 3600
-      quarterHour := 15 * time.Minute
-      maxExpectedPeriod := 96
-      spanishPriceIndex := 2
-      portuguesePriceIndex := 3
-      spanishPriceHeaderHint := "espa"
-      portuguesePriceHeaderHint := "portug"
-      spanishStandardOffsetSeconds := 1 * secondsPerHour
-      spanishDaylightOffsetSeconds := 2 * secondsPerHour
-      portugueseStandardOffsetSeconds := 0
-      portugueseDaylightOffsetSeconds := 1 * secondsPerHour
+    source: http
+    uri: https://www.omie.es/sites/default/files/dados/NUEVA_SECCION/INT_PBC_EV_H_ACUM.TXT
+    cache: 1h
+    regex: '(?ms)((?:^[0-9]{2}/[0-9]{2}/[0-9]{4};[^\r\n]*(?:\r?\n|$))+)'
+    default: ""
+    quote: true
+    jq: |
+      def market:
+        {{ if eq .country "PT" }}
+        { code: "PT", priceIndex: 3 }
+        {{ else }}
+        { code: "ES", priceIndex: 2 }
+        {{ end }};
 
-      marketCode := "{{ .country }}"
-      priceIndex := spanishPriceIndex
-      priceHeaderHint := spanishPriceHeaderHint
-      standardOffsetSeconds := spanishStandardOffsetSeconds
-      daylightOffsetSeconds := spanishDaylightOffsetSeconds
+      def quarterHourSeconds: 900;
+      def standardOffsetSeconds: 3600;
+      def daylightOffsetSeconds: 7200;
 
-      switch marketCode {
-      case "ES":
-      case "PT":
-        priceIndex = portuguesePriceIndex
-        priceHeaderHint = portuguesePriceHeaderHint
-        standardOffsetSeconds = portugueseStandardOffsetSeconds
-        daylightOffsetSeconds = portugueseDaylightOffsetSeconds
-      default:
-        panic(fmt.Errorf("unsupported OMIE country: %q", marketCode))
-      }
+      def pad2:
+        tostring | if length == 1 then "0" + . else . end;
 
-      // The embedded Go runtime used by template scripts may not have IANA tzdata
-      // available. Keep the market-specific rules centralized here and only use
-      // FixedZone for the final timestamps.
+      def isoDate($y; $m; $d):
+        "\($y)-\($m | pad2)-\($d | pad2)";
 
-      lastSunday := func(year int, month time.Month) int {
-        day := time.Date(year, month+1, 0, 0, 0, 0, 0, time.UTC)
-        for day.Weekday() != time.Sunday {
-          day = day.AddDate(0, 0, -1)
-        }
-        return day.Day()
-      }
+      def lastSunday($y; $m):
+        first([31, 30, 29, 28, 27, 26, 25][] | select(((isoDate($y; $m; .) + "T00:00:00Z") | fromdateiso8601 | gmtime | .[6]) == 0));
 
-      marketOffsetAtUTC := func(ts time.Time) int {
-        year := ts.UTC().Year()
-        dstStart := time.Date(year, time.March, lastSunday(year, time.March), 1, 0, 0, 0, time.UTC)
-        dstEnd := time.Date(year, time.October, lastSunday(year, time.October), 1, 0, 0, 0, time.UTC)
-        if !ts.Before(dstStart) && ts.Before(dstEnd) {
-          return daylightOffsetSeconds
-        }
-        return standardOffsetSeconds
-      }
+      def marketStartOffsetSeconds($y; $m; $d):
+        if $m < 3 or $m > 10 then
+          standardOffsetSeconds
+        elif $m > 3 and $m < 10 then
+          daylightOffsetSeconds
+        elif $m == 3 then
+          if $d <= lastSunday($y; 3) then standardOffsetSeconds else daylightOffsetSeconds end
+        else
+          if $d <= lastSunday($y; 10) then daylightOffsetSeconds else standardOffsetSeconds end
+        end;
 
-      marketStartOfDayUTC := func(day time.Time) time.Time {
-        midnightLocal := time.Date(day.Year(), day.Month(), day.Day(), 0, 0, 0, 0, time.UTC)
-        midnightUTC := midnightLocal.Add(-time.Duration(standardOffsetSeconds) * time.Second)
-        if marketOffsetAtUTC(midnightUTC) == standardOffsetSeconds {
-          return midnightUTC
-        }
-        return midnightLocal.Add(-time.Duration(daylightOffsetSeconds) * time.Second)
-      }
+      def marketStartUtc($y; $m; $d):
+        ((isoDate($y; $m; $d) + "T00:00:00Z") | fromdateiso8601) - marketStartOffsetSeconds($y; $m; $d);
 
-      marketTime := func(ts time.Time) time.Time {
-        offset := marketOffsetAtUTC(ts)
-        return ts.In(time.FixedZone(marketCode, offset))
-      }
+      def parseDateParts:
+        split("/") | map(tonumber) | { d: .[0], m: .[1], y: .[2] };
 
-      var err error
-      cutoff := time.Now().UTC().Truncate(quarterHour)
-      lines := strings.Split(strings.ReplaceAll(raw, "\r\n", "\n"), "\n")
+      def cutoffUtc:
+        ((now / quarterHourSeconds) | floor) * quarterHourSeconds;
 
-      var res strings.Builder
-      res.WriteString("[")
-      first := true
-      headerFound := false
-      parsed := 0
-
-      for _, line := range lines {
-        line = strings.TrimSpace(line)
-        if line == "" {
-          continue
-        }
-
-        fields := strings.Split(line, ";")
-
-        if !headerFound {
-          if len(fields) <= priceIndex {
-            continue
-          }
-
-          if strings.EqualFold(strings.TrimSpace(fields[0]), "Fecha") && strings.EqualFold(strings.TrimSpace(fields[1]), "Periodo") {
-            priceHeader := strings.ToLower(strings.TrimSpace(fields[priceIndex]))
-            if !strings.Contains(priceHeader, priceHeaderHint) {
-              panic(fmt.Errorf("unexpected OMIE %s price column: %q", marketCode, strings.TrimSpace(fields[priceIndex])))
-            }
-            headerFound = true
-          }
-
-          continue
-        }
-
-        if len(fields) <= priceIndex {
-          continue
-        }
-
-        var day time.Time
-        day, err = time.Parse("02/01/2006", strings.TrimSpace(fields[0]))
-        if err != nil {
-          continue
-        }
-
-        var period int
-        _, err = fmt.Sscanf(strings.TrimSpace(fields[1]), "%d", &period)
-        if err != nil || period < 1 || period > maxExpectedPeriod {
-          continue
-        }
-
-        priceText := strings.ReplaceAll(strings.TrimSpace(fields[priceIndex]), ",", ".")
-        if priceText == "" {
-          continue
-        }
-
-        var price float64
-        _, err = fmt.Sscanf(priceText, "%f", &price)
-        if err != nil {
-          continue
-        }
-
-        startUTC := marketStartOfDayUTC(day).Add(time.Duration(period-1) * quarterHour)
-        endUTC := startUTC.Add(quarterHour)
-        if !endUTC.After(cutoff) {
-          continue
-        }
-
-        start := marketTime(startUTC)
-        end := marketTime(endUTC)
-
-        parsed++
-
-        if !first {
-          res.WriteString(",")
-        }
-        first = false
-
-        res.WriteString(fmt.Sprintf(
-          "{\"start\":%q,\"end\":%q,\"value\":%.6f}",
-          start.Format(time.RFC3339),
-          end.Format(time.RFC3339),
-          price/1000,
-        ))
-      }
-
-      if !headerFound {
-        panic(fmt.Errorf("OMIE header not found"))
-      }
-
-      if parsed == 0 {
-        panic(fmt.Errorf("no OMIE %s rates parsed", marketCode))
-      }
-
-      res.WriteString("]")
-      res.String()
-    in:
-      - name: raw
-        type: string
-        config:
-          source: http
-          uri: https://www.omie.es/sites/default/files/dados/NUEVA_SECCION/INT_PBC_EV_H_ACUM.TXT
-          cache: 1h
+      split("\n")
+      | map(gsub("\r"; ""))
+      | map(select(length > 0)) as $lines
+      | if ($lines | length) == 0 then
+          error("OMIE data rows not found")
+        else
+          ($lines
+            | map(split(";"))
+            | map({
+                date: .[0],
+                dateParts: (.[0] | parseDateParts),
+                period: (.[1] | tonumber),
+                value: (.[(market.priceIndex)] | gsub(","; ".") | tonumber / 1000)
+              }
+              | . + .dateParts
+              | del(.dateParts)
+            )
+          ) as $entries
+          | if ($entries | length) == 0 then
+              error("no OMIE rows parsed")
+            else
+              $entries
+            end
+          | ($entries
+              | sort_by(.date, .period)
+              | group_by(.date)
+              | map(
+                  ([.[].period] | length) as $count
+                  | select($count == 92 or $count == 96 or $count == 100)
+                )
+            ) as $quarterHourDays
+          | if ($quarterHourDays | length) == 0 then
+              error("no OMIE quarter-hour days parsed")
+            else
+              $quarterHourDays
+            end
+          | ($quarterHourDays
+              | all(
+                  ([.[].period] | sort) as $periods
+                  | ($periods | length) as $count
+                  | ($periods == [range(1; $count + 1)])
+                )
+            ) as $validPeriods
+          | if ($validPeriods | not) then
+              error("unexpected OMIE period sequence")
+            else
+              ($quarterHourDays
+                | add
+                | sort_by(.y, .m, .d, .period)
+                | map(
+                    (marketStartUtc(.y; .m; .d) + ((.period - 1) * quarterHourSeconds)) as $start
+                    | ($start + quarterHourSeconds) as $end
+                    | select($end > cutoffUtc)
+                    | {
+                        start: ($start | todateiso8601),
+                        end: ($end | todateiso8601),
+                        value: .value
+                      }
+                  )
+              )
+            end
+          | if length == 0 then
+              error("no OMIE \(market.code) rates parsed")
+            else
+              .
+            end
+          | tostring
+        end
