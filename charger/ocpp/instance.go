@@ -99,8 +99,10 @@ func Instance() *CS {
 		go cs.Start(port, "/{ws}")
 
 		// wait for server to start
-		for range time.Tick(10 * time.Millisecond) {
+		tick := time.NewTicker(10 * time.Millisecond)
+		for range tick.C {
 			if dispatcher.IsRunning() {
+				tick.Stop()
 				break
 			}
 		}
