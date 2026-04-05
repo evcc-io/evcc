@@ -45,7 +45,7 @@ func init() {
 //
 //	source:   aa55udp
 //	host:     192.168.1.26   # inverter IP; port 8899 is always used
-//	address:  0x7F           # inverter address byte: 0x7F for DT/DNS/ES/EM, 0xF7 for ET/EH/BT/BH
+//	id:       0x7F           # inverter address byte: 0x7F for DT/DNS/ES/EM, 0xF7 for ET/EH/BT/BH
 //	register: 30127          # Modbus register address (0-based, uint16)
 //	count:    2              # number of registers to read (1=U16, 2=S32/U32)
 //	decode:   int32be        # int32be | uint32be | int16be | uint16be | float32be
@@ -53,13 +53,13 @@ func init() {
 func NewAA55UDPFromConfig(_ context.Context, other map[string]interface{}) (Plugin, error) {
 	cc := struct {
 		Host     string  `mapstructure:"host"`
-		Address  int     `mapstructure:"address"`
+		Id       int     `mapstructure:"id"`
 		Register uint16  `mapstructure:"register"`
 		Count    uint16  `mapstructure:"count"`
 		Decode   string  `mapstructure:"decode"`
 		Scale    float64 `mapstructure:"scale"`
 	}{
-		Address: int(aa55InverterAddr),
+		Id:      int(aa55InverterAddr),
 		Count:   2,
 		Scale:   1.0,
 	}
@@ -71,8 +71,8 @@ func NewAA55UDPFromConfig(_ context.Context, other map[string]interface{}) (Plug
 		return nil, errors.New("aa55udp: count must be ≥ 1")
 	}
 
-	if cc.Address < 0 || cc.Address > 255 {
-		return nil, fmt.Errorf("aa55udp: address must be 0-255, got %d", cc.Address)
+	if cc.Id < 0 || cc.Id > 255 {
+		return nil, fmt.Errorf("aa55udp: id must be 0-255, got %d", cc.Id)
 	}
 
 	switch cc.Decode {
@@ -81,7 +81,7 @@ func NewAA55UDPFromConfig(_ context.Context, other map[string]interface{}) (Plug
 		return nil, fmt.Errorf("aa55udp: unsupported decode %q (want int32be|uint32be|int16be|uint16be|float32be)", cc.Decode)
 	}
 
-	pdu := buildPDU(byte(cc.Address), cc.Register, cc.Count)
+	pdu := buildPDU(byte(cc.Id), cc.Register, cc.Count)
 
 	addr, err := net.ResolveUDPAddr("udp4", net.JoinHostPort(cc.Host, "8899"))
 	if err != nil {
