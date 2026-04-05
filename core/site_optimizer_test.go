@@ -4,12 +4,12 @@ import (
 	"testing"
 	"time"
 
-	evopt "github.com/andig/evopt/client"
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/metrics"
 	"github.com/evcc-io/evcc/server/db"
+	optimizer "github.com/evcc-io/optimizer/client"
 	"github.com/jinzhu/now"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -111,10 +111,30 @@ func TestLoadpointProfile(t *testing.T) {
 	require.Equal(t, []float64{250, 250, 250, 250, 250, 250, 250, 50}, loadpointProfile(lp, 8))
 }
 
+func TestAsTimestamps(t *testing.T) {
+	// now is 10 minutes into a 15-minute slot
+	now := time.Date(2025, 1, 1, 12, 10, 0, 0, time.UTC)
+
+	// dt[0]=300 means first event is 300s (5min) before end of current slot
+	// dt[1..] just mark subsequent slot boundaries
+	dt := []int{60 * 5, 60 * 15, 60 * 15}
+
+	got := asTimestamps(dt, now)
+
+	// current slot: 12:00–12:15
+	// first timestamp: 12:15 - 5min = 12:10
+	// subsequent: 12:15, 12:30
+	assert.Equal(t, []time.Time{
+		time.Date(2025, 1, 1, 12, 10, 0, 0, time.UTC),
+		time.Date(2025, 1, 1, 12, 15, 0, 0, time.UTC),
+		time.Date(2025, 1, 1, 12, 30, 0, 0, time.UTC),
+	}, got)
+}
+
 func TestBatteryForecastTotals(t *testing.T) {
 	site := new(Site)
 
-	req := []evopt.BatteryConfig{
+	req := []optimizer.BatteryConfig{
 		{SMax: 80},
 		{SMax: 80},
 	}
@@ -164,7 +184,7 @@ func TestBatteryForecastTotals(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			resp := []evopt.BatteryResult{
+			resp := []optimizer.BatteryResult{
 				{StateOfCharge: tc.bat1},
 				{StateOfCharge: tc.bat2},
 			}

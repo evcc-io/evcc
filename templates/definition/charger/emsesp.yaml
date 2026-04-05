@@ -12,8 +12,8 @@ products:
 group: heating
 requirements:
   description:
-    de: "Eingebunden via [EMSESP](https://emsesp.org/)"
-    en: "Integrated via [EMSESP](https://emsesp.org/)"
+    de: "Eingebunden via [emsesp.org](https://emsesp.org/)"
+    en: "Integrated via [emsesp.org](https://emsesp.org/)"
 #   evcc: ["sponsorship"]
 params:
   - name: host
@@ -28,6 +28,64 @@ params:
   - name: tempsource
     type: choice
     choice: ["warmwater"]
+  - name: sg1
+    advanced: true
+    type: choice
+    choice: ["hpin1opt", "hpin2opt", "hpin3opt", "hpin4opt"]
+    default: hpin1opt
+    description:
+      de: "SG1-Eingang"
+      en: "SG1 input"
+  - name: sg4
+    advanced: true
+    type: choice
+    choice: ["hpin1opt", "hpin2opt", "hpin3opt", "hpin4opt"]
+    default: hpin4opt
+    description:
+      de: "SG4-Eingang"
+      en: "SG4 input"
+  - name: value_normal_sg4
+    advanced: true
+    type: string
+    default: "0xxxxxxxxxxx"
+    description:
+      de: "Bitmask für SG4 im Normalbetrieb"
+      en: "Bitmask for SG4 in normal mode"
+  - name: value_normal_sg1
+    advanced: true
+    type: string
+    default: "0xxxxxxxxxxxxxx"
+    description:
+      de: "Bitmask für SG1 im Normalbetrieb"
+      en: "Bitmask for SG1 in normal mode"
+  - name: value_boost_sg4
+    advanced: true
+    type: string
+    default: "1xxxxxxxxxxx"
+    description:
+      de: "Bitmask für SG4 im Boost-Betrieb"
+      en: "Bitmask for SG4 in boost mode"
+  - name: value_boost_sg1
+    advanced: true
+    type: string
+    default: ""
+    description:
+      de: "Bitmask für SG1 im Boost-Betrieb"
+      en: "Bitmask for SG1 in boost mode"
+  - name: value_dim_sg1
+    advanced: true
+    type: string
+    default: "1xxxxxxxxxxxxxx"
+    description:
+      de: "Bitmask für SG1 im Dimm-Betrieb"
+      en: "Bitmask for SG1 in dim mode"
+  - name: value_dim_sg4
+    advanced: true
+    type: string
+    default: "0xxxxxxxxxxx"
+    description:
+      de: "Bitmask für SG4 im Dimm-Betrieb"
+      en: "Bitmask for SG4 in dim mode"
 render: |
   type: sgready
   power:
@@ -51,13 +109,13 @@ render: |
       type: string
       config: 
         source: http
-        uri: http://{{ .host }}/api/boiler/hpin1opt
+        uri: http://{{ .host }}/api/boiler/{{ .sg1 }}
         jq: '.value[0:1]'
     - name: SG4
       type: string
       config: 
         source: http
-        uri: http://{{ .host }}/api/boiler/hpin4opt
+        uri: http://{{ .host }}/api/boiler/{{ .sg4 }}
         jq: '.value[0:1]'
   setmode:
     source: switch
@@ -67,51 +125,63 @@ render: |
         source: sequence
         set:
         - source: http
-          uri: http://{{ .host }}/api/boiler/hpin4opt 
+          uri: http://{{ .host }}/api/boiler/{{ .sg4 }} 
           method: POST 
           headers:  
             - content-type: application/json
             - authorization: Bearer {{ .token}}
           body: >
-            { "value" : "0xxxxxxxxxxx" }
+            { "value" : "{{ .value_normal_sg4 }}" }
         - source: http
-          uri: http://{{ .host }}/api/boiler/hpin1opt 
+          uri: http://{{ .host }}/api/boiler/{{ .sg1 }} 
           method: POST 
           headers:  
             - content-type: application/json
             - authorization: Bearer {{ .token}}
           body: >
-            { "value" : "0xxxxxxxxxxxxxx" }
+            { "value" : "{{ .value_normal_sg1 }}" }
     - case: 3 # boost
       set:
-        source: http
-        uri: http://{{ .host }}/api/boiler/hpin4opt 
-        method: POST 
-        headers:  
-          - content-type: application/json
-          - authorization: Bearer {{ .token}}
-        body: >
-          { "value" : "1xxxxxxxxxxx" }
+        source: sequence
+        set:
+        - source: http
+          uri: http://{{ .host }}/api/boiler/{{ .sg4 }} 
+          method: POST 
+          headers:  
+            - content-type: application/json
+            - authorization: Bearer {{ .token}}
+          body: >
+            { "value" : "{{ .value_boost_sg4 }}" }
+        {{- if .value_boost_sg1 }}
+        - source: http
+          uri: http://{{ .host }}/api/boiler/{{ .sg1 }} 
+          method: POST 
+          headers:  
+            - content-type: application/json
+            - authorization: Bearer {{ .token}}
+          body: >
+            { "value" : "{{ .value_boost_sg1 }}" }
+        {{- end }}
     - case: 1 # dimm
       set:
         source: sequence
         set:
         - source: http
-          uri: http://{{ .host }}/api/boiler/hpin1opt 
+          uri: http://{{ .host }}/api/boiler/{{ .sg1 }} 
           method: POST 
           headers:  
             - content-type: application/json
             - authorization: Bearer {{ .token}}
           body: >
-            { "value" : "1xxxxxxxxxxxxxx" }
+            { "value" : "{{ .value_dim_sg1 }}" }
         - source: http
-          uri: http://{{ .host }}/api/boiler/hpin4opt 
+          uri: http://{{ .host }}/api/boiler/{{ .sg4 }} 
           method: POST 
           headers:  
             - content-type: application/json
             - authorization: Bearer {{ .token}}
           body: >
-            { "value" : "0xxxxxxxxxxx" }    
+            { "value" : "{{ .value_dim_sg4 }}" }    
   {{- if .tempsource }}
   temp:
     source: http

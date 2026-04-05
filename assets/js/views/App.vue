@@ -1,14 +1,17 @@
 <template>
-	<div class="app">
+	<div class="app" :class="{ 'app--bottomtabs': state.experimental }">
 		<router-view
 			v-if="showRoutes"
 			:notifications="notifications"
 			:offline="offline"
 		></router-view>
 
+		<BottomTabBar v-if="state.experimental" v-bind="bottomTabBarProps" />
+
 		<GlobalSettingsModal v-bind="globalSettingsProps" />
 		<BatterySettingsModal v-if="batteryModalAvailabe" v-bind="batterySettingsProps" />
 		<ForecastModal v-bind="forecastModalProps" />
+		<AboutModal v-bind="aboutModalProps" />
 		<HelpModal />
 		<PasswordModal />
 		<LoginModal v-bind="loginModalProps" />
@@ -18,12 +21,14 @@
 
 <script lang="ts">
 import store from "../store";
+import BottomTabBar from "../components/BottomTabs/Bar.vue";
 import GlobalSettingsModal from "../components/GlobalSettings/GlobalSettingsModal.vue";
 import BatterySettingsModal from "../components/Battery/BatterySettingsModal.vue";
 import ForecastModal from "../components/Forecast/ForecastModal.vue";
 import OfflineIndicator from "../components/Footer/OfflineIndicator.vue";
 import PasswordModal from "../components/Auth/PasswordModal.vue";
 import LoginModal from "../components/Auth/LoginModal.vue";
+import AboutModal from "../components/AboutModal.vue";
 import HelpModal from "../components/HelpModal.vue";
 import collector from "../mixins/collector";
 import { defineComponent } from "vue";
@@ -41,6 +46,8 @@ setInterval(() => {
 export default defineComponent({
 	name: "App",
 	components: {
+		AboutModal,
+		BottomTabBar,
 		GlobalSettingsModal,
 		HelpModal,
 		BatterySettingsModal,
@@ -57,7 +64,6 @@ export default defineComponent({
 	data: () => {
 		return {
 			reconnectTimeout: null as number | null,
-			dataTimeout: null as number | null,
 			ws: null as WebSocket | null,
 			authNotConfigured: false,
 		};
@@ -93,6 +99,20 @@ export default defineComponent({
 		},
 		loginModalProps() {
 			return this.collectProps(LoginModal, this.state);
+		},
+		aboutModalProps() {
+			return {
+				installed: window.evcc.version,
+				commit: window.evcc.commit,
+				...this.collectProps(AboutModal, this.state),
+			};
+		},
+		bottomTabBarProps() {
+			return {
+				installed: window.evcc.version,
+				commit: window.evcc.commit,
+				...this.collectProps(BottomTabBar, this.state),
+			};
 		},
 	},
 	watch: {
@@ -149,10 +169,6 @@ export default defineComponent({
 			}, 2500);
 		},
 		disconnect() {
-			if (this.dataTimeout) {
-				window.clearTimeout(this.dataTimeout);
-				this.dataTimeout = null;
-			}
 			if (this.ws) {
 				this.ws.onerror = null;
 				this.ws.onopen = null;
@@ -177,38 +193,23 @@ export default defineComponent({
 				return;
 			}
 
-			const loc = window.location;
-			const protocol = loc.protocol == "https:" ? "wss:" : "ws:";
-			const uri =
-				protocol +
-				"//" +
-				loc.hostname +
-				(loc.port ? ":" + loc.port : "") +
-				loc.pathname +
-				"ws";
+			const loc = new URL("ws", window.location.href);
+			loc.protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
 
-			this.ws = new WebSocket(uri);
+			this.ws = new WebSocket(loc.href);
 			this.ws.onerror = () => {
 				console.log({ message: "Websocket error. Trying to reconnect." });
 				this.ws?.close();
 			};
 			this.ws.onopen = () => {
 				console.log("websocket connected");
+				window.app.setOnline();
 			};
 			this.ws.onclose = () => {
-				if (this.dataTimeout) {
-					window.clearTimeout(this.dataTimeout);
-					this.dataTimeout = null;
-				}
 				window.app.setOffline();
 				this.reconnect();
 			};
 			this.ws.onmessage = (evt) => {
-				if (this.dataTimeout) {
-					window.clearTimeout(this.dataTimeout);
-					this.dataTimeout = null;
-				}
-				window.app.setOnline();
 				try {
 					const msg = JSON.parse(evt.data);
 					if (msg.startupCompleted) {
@@ -223,15 +224,6 @@ export default defineComponent({
 					});
 				}
 			};
-
-			// Safari/iOS 26 may fail WS handshake or open without delivering data.
-			// Safari/iOS 26 may fail WS handshake or open without delivering data.
-			// If no message received within 10s, tear down and retry.
-			this.dataTimeout = window.setTimeout(() => {
-				console.log("websocket data timeout, reconnecting");
-				this.dataTimeout = null;
-				this.ws?.close();
-			}, 10000);
 		},
 		reload() {
 			window.location.reload();
@@ -243,5 +235,8 @@ export default defineComponent({
 .app {
 	min-height: 100vh;
 	min-height: 100dvh;
+}
+.app--bottomtabs {
+	--bottom-space: calc(var(--tab-bar-height) + 1.5rem);
 }
 </style>

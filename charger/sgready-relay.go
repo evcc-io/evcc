@@ -34,7 +34,7 @@ func NewSgReadyRelayFromConfig(ctx context.Context, other map[string]any) (api.C
 	}{
 		embed: embed{
 			Icon_:     "heatpump",
-			Features_: []api.Feature{api.Heating, api.IntegratedDevice},
+			Features_: []api.Feature{api.Continuous, api.Heating, api.IntegratedDevice},
 		},
 	}
 

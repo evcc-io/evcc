@@ -37,9 +37,29 @@ loadpoints:
   - title: Carport
     charger: charger
     mode: now
+  - title: Garage
+    charger: charger2
+    mode: off
 
 chargers:
   - name: charger
+    type: custom
+    enable:
+      source: js
+      script:
+    enabled:
+      source: js
+      script: |
+        true
+    status:
+      source: js
+      script: |
+        "C"
+    maxcurrent:
+      source: js
+      script: |
+        16
+  - name: charger2
     type: custom
     enable:
       source: js

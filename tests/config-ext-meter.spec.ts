@@ -104,9 +104,11 @@ test.describe("ext meter", async () => {
     await meterModal.getByRole("button", { name: "Add regular consumer" }).click();
 
     await meterModal.getByLabel("Title").fill("Custom ext meter");
-    await meterModal.getByLabel("Usage").selectOption("battery");
-    await meterModal.getByLabel("Manufacturer").selectOption("Demo battery");
-    await meterModal.getByLabel("Charge").fill("50");
+    await meterModal.getByLabel("Usage").selectOption("pv");
+
+    // switch to an in-beteen template to ensure we dont leak values
+    await meterModal.getByLabel("Manufacturer").selectOption("SunSpec Hybrid Inverter");
+    await expect(meterModal.getByLabel("IP address or hostname")).toBeVisible();
 
     await meterModal.getByLabel("Manufacturer").selectOption("User-defined device");
     await page.waitForLoadState("networkidle");

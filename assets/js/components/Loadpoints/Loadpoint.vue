@@ -127,6 +127,7 @@ import type {
 	Vehicle,
 	Forecast,
 	SMART_COST_TYPE,
+	BATTERY_MODE,
 } from "@/types/evcc";
 import type { PlanStrategy } from "@/components/ChargingPlans/types";
 
@@ -160,6 +161,7 @@ export default defineComponent({
 		batteryBoostLimit: { type: Number, default: 100 },
 		batteryConfigured: Boolean,
 		batterySoc: Number,
+		batteryMode: String as PropType<BATTERY_MODE>,
 
 		// session
 		sessionEnergy: Number,
@@ -181,6 +183,7 @@ export default defineComponent({
 		vehicleDetectionActive: Boolean,
 		vehicleRange: Number,
 		vehicleSoc: { type: Number, default: 0 },
+		minSocNotReached: Boolean,
 		vehicleName: String,
 		vehicleIcon: String,
 		vehicleLimitSoc: Number,
@@ -414,6 +417,8 @@ export default defineComponent({
 </script>
 
 <style scoped>
+@import "../../../css/breakpoints.css";
+
 .loadpoint {
 	border-radius: 2rem;
 	color: var(--evcc-default-text);
@@ -445,7 +450,7 @@ export default defineComponent({
 	margin: 0 -1rem;
 }
 /* breakpoint sm */
-@media (min-width: 576px) {
+@media (--sm-and-up) {
 	.divider {
 		margin: 0 -1.5rem;
 	}

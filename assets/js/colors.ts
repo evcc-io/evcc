@@ -50,19 +50,23 @@ const colors: {
   ],
 });
 
-export const dimColor = (color: string | null) => {
-  return color?.toLowerCase().replace(/ff$/, "20");
+// normalize 6-digit hex to 8-digit, then replace alpha
+const setAlpha = (color: string | null, alpha: string): string | undefined => {
+  if (!color) return undefined;
+  const c = color.trim().toLowerCase();
+  // #rrggbb → append alpha, #rrggbbaa → replace alpha
+  if (c.length === 7) return c + alpha;
+  if (c.length === 9) return c.slice(0, 7) + alpha;
+  return c;
 };
 
-export const lighterColor = (color: string | null) => {
-  return color?.toLowerCase().replace(/ff$/, "aa");
-};
+export const dimColor = (color: string | null) => setAlpha(color, "20");
 
-export const fullColor = (color: string | null) => {
-  return color?.toLowerCase().replace(/20$/, "ff");
-};
+export const lighterColor = (color: string | null) => setAlpha(color, "aa");
 
-function updateCssColors() {
+export const fullColor = (color: string | null) => setAlpha(color, "ff");
+
+export function updateCssColors() {
   const style = window.getComputedStyle(document.documentElement);
   colors.text = style.getPropertyValue("--evcc-default-text");
   colors.muted = style.getPropertyValue("--bs-gray-medium");
@@ -77,11 +81,6 @@ function updateCssColors() {
   colors.light = style.getPropertyValue("--bs-gray-light");
 }
 
-// update colors on theme change
-const darkModeMatcher = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)");
-if (darkModeMatcher && darkModeMatcher.addEventListener) {
-  darkModeMatcher.addEventListener("change", updateCssColors);
-}
 // initialize colors
 updateCssColors();
 window.requestAnimationFrame(updateCssColors);

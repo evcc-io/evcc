@@ -6,7 +6,7 @@
 				:title="$t('config.main.title')"
 				:notifications="notifications"
 			/>
-			<div class="wrapper pb-5">
+			<div class="wrapper mb-3">
 				<AuthSuccessBanner
 					v-if="callbackCompleted || callbackError"
 					:provider-id="callbackCompleted"
@@ -26,6 +26,7 @@
 				<div class="p-0 config-list">
 					<DeviceCard
 						v-for="loadpoint in loadpoints"
+						:id="`loadpoint_${loadpoint.name}`"
 						:key="loadpoint.name"
 						:title="loadpoint.title"
 						:name="loadpoint.name"
@@ -57,6 +58,7 @@
 				<div class="p-0 config-list">
 					<DeviceCard
 						v-for="vehicle in vehicles"
+						:id="`vehicle_${vehicle.name}`"
 						:key="vehicle.name"
 						:title="vehicle.config?.title || vehicle.name"
 						:name="vehicle.name"
@@ -149,7 +151,7 @@
 					/>
 				</div>
 
-				<h2 class="my-4 mt-5">{{ $t("config.tariff.title") }}</h2>
+				<h2 id="tariffs" class="my-4 mt-5">{{ $t("config.tariff.title") }}</h2>
 				<div v-if="!!tariffsYamlSource" class="p-0 config-list">
 					<DeviceCard
 						:title="$t('config.tariff.title')"
@@ -280,28 +282,17 @@
 						:title="`${$t('config.circuits.title')}`"
 						editable
 						:error="hasClassError('circuit')"
-						:unconfigured="circuitsSorted.length === 0"
+						:unconfigured="!circuitsRoot"
 						data-testid="circuits"
 						@edit="openModal('circuits')"
 					>
 						<template #icon><CircuitsIcon /></template>
 						<template #tags>
 							<DeviceTags
-								v-if="circuitsSorted.length == 0"
+								v-if="!circuitsRoot"
 								:tags="{ configured: { value: false } }"
 							/>
-							<template
-								v-for="(circuit, idx) in circuitsSorted"
-								v-else
-								:key="circuit.name"
-							>
-								<hr v-if="Number(idx) > 0" />
-								<p class="my-2 fw-bold">
-									{{ circuit.config?.title }}
-									<code>({{ circuit.name }})</code>
-								</p>
-								<DeviceTags :tags="circuitTags(circuit)" />
-							</template>
+							<CircuitTags v-else :nodes="[circuitsRoot]" />
 						</template>
 					</DeviceCard>
 					<DeviceCard
@@ -328,6 +319,19 @@
 						<template #icon><HemsIcon /></template>
 						<template #tags>
 							<DeviceTags :tags="hemsTags" />
+						</template>
+					</DeviceCard>
+					<DeviceCard
+						v-if="experimental"
+						:title="`${$t('config.optimizer.title')} 🧪`"
+						editable
+						:unconfigured="isUnconfigured(optimizerTags)"
+						data-testid="optimizer"
+						@edit="openModal('optimizer')"
+					>
+						<template #icon><OptimizerIcon /></template>
+						<template #tags>
+							<DeviceTags :tags="optimizerTags" />
 						</template>
 					</DeviceCard>
 				</div>
@@ -366,7 +370,7 @@
 				<hr class="my-5" />
 
 				<h2 class="my-4 mt-5">{{ $t("config.section.system") }}</h2>
-				<div class="round-box p-4 d-flex gap-4 mb-5 flex-wrap">
+				<div class="round-box p-4 d-flex gap-4 flex-wrap">
 					<router-link to="/log" class="btn btn-outline-secondary">
 						{{ $t("config.system.logs") }}
 					</router-link>
@@ -411,6 +415,7 @@
 				<TariffsLegacyModal @changed="loadDirty" />
 				<TariffModal :currency="currency" @changed="tariffChanged" />
 				<TelemetryModal :sponsor="sponsor" :telemetry="telemetry" />
+				<OptimizerModal />
 				<ExperimentalModal :experimental="experimental" />
 				<TitleModal @changed="loadDirty" />
 				<ModbusProxyModal :is-sponsor="isSponsor" @changed="loadDirty" />
@@ -439,6 +444,7 @@ import api from "../api";
 import ChargerModal from "../components/Config/ChargerModal.vue";
 import CircuitsIcon from "../components/MaterialIcon/Circuits.vue";
 import CircuitsModal from "../components/Config/CircuitsModal.vue";
+import CircuitTags from "../components/Config/CircuitTags.vue";
 import collector from "../mixins/collector";
 import ControlModal from "../components/Config/ControlModal.vue";
 import DeviceCard from "../components/Config/DeviceCard.vue";
@@ -469,6 +475,8 @@ import MqttIcon from "../components/MaterialIcon/Mqtt.vue";
 import MqttModal from "../components/Config/MqttModal.vue";
 import NetworkModal from "../components/Config/NetworkModal.vue";
 import NotificationIcon from "../components/MaterialIcon/Notification.vue";
+import OptimizerIcon from "../components/MaterialIcon/Optimizer.vue";
+import OptimizerModal from "../components/Config/OptimizerModal.vue";
 import restart, { performRestart } from "../restart";
 import SponsorModal from "../components/Config/SponsorModal.vue";
 import store from "../store";
@@ -483,7 +491,6 @@ import VehicleIcon from "../components/VehicleIcon";
 import VehicleModal from "../components/Config/VehicleModal.vue";
 import { defineComponent, type PropType } from "vue";
 import type {
-	Circuit,
 	ConfigCharger,
 	ConfigVehicle,
 	ConfigCircuit,
@@ -498,7 +505,8 @@ import type {
 	DeviceType,
 	Notification,
 } from "@/types/evcc";
-import { CURRENCY } from "@/types/evcc";
+import { CURRENCY, GRID_CONTROL } from "@/types/evcc";
+import { circuitTree } from "@/utils/circuits";
 
 type DeviceValuesMap = Record<DeviceType, Record<string, any>>;
 
@@ -521,6 +529,7 @@ export default defineComponent({
 		ChargerModal,
 		CircuitsIcon,
 		CircuitsModal,
+		CircuitTags,
 		ControlModal,
 		DeviceCard,
 		DeviceTags,
@@ -548,6 +557,8 @@ export default defineComponent({
 		MqttModal,
 		NetworkModal,
 		NotificationIcon,
+		OptimizerIcon,
+		OptimizerModal,
 		SponsorModal,
 		TariffsLegacyModal,
 		TariffCard,
@@ -744,9 +755,9 @@ export default defineComponent({
 			if (["relay", "eebus"].includes(type)) {
 				result.hemsType = { value: type };
 			}
-			const lpc = store.state?.circuits?.["lpc"];
-			if (lpc) {
-				const value = lpc.maxPower || null;
+			const gc = store.state?.circuits?.[GRID_CONTROL];
+			if (gc) {
+				const value = gc.maxPower || null;
 				result.hemsActiveLimit = { value };
 			}
 
@@ -769,6 +780,10 @@ export default defineComponent({
 		},
 		eebus() {
 			return store.state?.eebus;
+		},
+		optimizerTags(): DeviceTags {
+			if (!store.state?.optimizer) return { configured: { value: false } };
+			return { configured: { value: true } };
 		},
 		modbusproxyTags(): DeviceTags {
 			const config = store.state?.modbusproxy || [];
@@ -805,11 +820,8 @@ export default defineComponent({
 				authDisabled: store.state?.authDisabled || false,
 			};
 		},
-		circuitsSorted() {
-			const sortedNames = Object.keys(store.state?.circuits || {});
-			return [...this.circuits].sort(
-				(a, b) => sortedNames.indexOf(a.name) - sortedNames.indexOf(b.name)
-			);
+		circuitsRoot() {
+			return circuitTree(store.state?.circuits || {});
 		},
 		tariffsYamlSource() {
 			return store.state?.tariffs?.yamlSource;
@@ -894,9 +906,9 @@ export default defineComponent({
 		},
 		async loadCircuits() {
 			const circuits = (await this.loadConfig("devices/circuit")) || [];
-			// set lpc default title
+			// set gridcontrol default title
 			circuits.forEach((c: ConfigCircuit) => {
-				if (c.name === "lpc" && !c.config?.title) {
+				if (c.name === GRID_CONTROL && !c.config?.title) {
 					c.config = c.config || {};
 					c.config.title = this.$t("config.hems.title");
 				}
@@ -1086,28 +1098,6 @@ export default defineComponent({
 			return { ...chargerTags, ...meterTags };
 		},
 		openModal,
-		circuitTags(circuit: ConfigCircuit) {
-			const circuits = store.state?.circuits || {};
-			const data =
-				(circuits[circuit.name] as Circuit | undefined) || ({} as Partial<Circuit>);
-			const result: Record<string, object> = {};
-			const p = data.power || 0;
-			if (data.maxPower) {
-				result["powerRange"] = {
-					value: [p, data.maxPower],
-					warning: data.power && data.power >= data.maxPower,
-				};
-			} else {
-				result["power"] = { value: p, muted: true };
-			}
-			if (data.maxCurrent) {
-				result["currentRange"] = {
-					value: [data.current || 0, data.maxCurrent],
-					warning: data.current && data.current >= data.maxCurrent,
-				};
-			}
-			return result;
-		},
 		hasDeviceError(type: DeviceType, name?: string) {
 			if (!name) return false;
 			const fatals = store.state?.fatal || [];
