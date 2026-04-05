@@ -20,7 +20,7 @@ func TestIdentityLogin(t *testing.T) {
 
 	util.LogLevel("trace", nil) // Enable trace logging
 	log := util.NewLogger("test")
-	identity := NewIdentity(log)
+	identity := NewIdentity(log, "T")
 
 	err := identity.Login(user, password)
 	require.NoError(t, err)

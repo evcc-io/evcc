@@ -1,0 +1,26 @@
+template: lexus
+products:
+  - brand: Lexus
+requirements:
+  description:
+    de: |
+      Benötigt Lexus Link+ Connected Services Account.
+    en: |
+      Requires Lexus Link+ Connected Services Account.
+params:
+  - preset: vehicle-common
+  - name: user
+    required: true
+  - name: password
+    required: true
+  - name: vin
+    example: JT...
+  - name: cache
+    default: 15m
+render: |
+  type: lexus
+  {{ include "vehicle-common" . }}
+  user: {{ .user }}
+  password: {{ .password }}
+  vin: {{ .vin }}
+  cache: {{ .cache }}
