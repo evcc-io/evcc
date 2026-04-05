@@ -35,7 +35,7 @@ func TestIdentityLogin(t *testing.T) {
 	originalAccessToken := token.AccessToken
 
 	// Test token refresh
-	newToken, err := identity.RefreshToken(token)
+	newToken, err := identity.refreshToken(token)
 	require.NoError(t, err)
 	require.NotEmpty(t, newToken.AccessToken)
 	require.NotEmpty(t, newToken.RefreshToken)
