@@ -166,9 +166,7 @@ func (v *Identity) Login(user, password string) error {
 	req, err := request.New(http.MethodPost, uri, nil, map[string]string{
 		"Accept":   "application/json",
 		"X-Brand":  v.brandCode,
-		"Brand":    v.brandCode,
 		"X-Region": "EU",
-		"Region":   "EU",
 	})
 	if err != nil {
 		return fmt.Errorf("failed to create authentication request: %w", err)
