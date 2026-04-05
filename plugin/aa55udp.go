@@ -59,9 +59,9 @@ func NewAA55UDPFromConfig(_ context.Context, other map[string]interface{}) (Plug
 		Decode   string  `mapstructure:"decode"`
 		Scale    float64 `mapstructure:"scale"`
 	}{
-		Id:      int(aa55InverterAddr),
-		Count:   2,
-		Scale:   1.0,
+		Id:    int(aa55InverterAddr),
+		Count: 2,
+		Scale: 1.0,
 	}
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
