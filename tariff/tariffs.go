@@ -67,8 +67,7 @@ func AverageRate(t api.Tariff, d time.Duration) *float64 {
 		return nil
 	}
 
-	avg := sum / float64(count)
-	return &avg
+	return new(sum / float64(count))
 }
 
 func (t *Tariffs) Get(u api.TariffUsage) api.Tariff {
