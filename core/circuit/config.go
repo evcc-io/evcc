@@ -15,7 +15,7 @@ var registry = reg.New[api.Circuit]("circuit")
 
 // NewFromConfig creates api.Circuit from configuration
 func NewFromConfig(ctx context.Context, typ string, other map[string]any) (api.Circuit, error) {
-	// treat any non-template circuit as custom
+	// treat any non-template circuit as custom in order for registry lookup to work
 	if typ == "" {
 		typ = api.Custom
 	}

@@ -62,6 +62,9 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.C
 		Timeout: time.Minute,
 	}
 
+	// drop circuit type- all circuits are custom
+	delete(other, "type")
+
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
