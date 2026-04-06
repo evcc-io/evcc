@@ -28,6 +28,8 @@ func init() {
 	//lint:ignore SA1019 as Title is safe on ascii
 	chargerCmd.Flags().BoolP(flagDisable, "d", false, strings.Title(flagDisable))
 	chargerCmd.Flags().Bool(flagDiagnose, false, flagDiagnoseDescription)
+	chargerCmd.Flags().IntP(flagCurtail, "u", -1, flagCurtailDescription)
+	chargerCmd.Flags().IntP(flagDim, "m", -1, flagDimDescription)
 	chargerCmd.Flags().BoolP(flagWakeup, "w", false, flagWakeupDescription)
 	chargerCmd.Flags().IntP(flagPhases, "p", 0, flagPhasesDescription)
 	chargerCmd.Flags().Bool(flagHeartbeat, false, flagHeartbeatDescription)
@@ -94,6 +96,36 @@ func runCharger(cmd *cobra.Command, args []string) {
 
 			if err := v.Enable(false); err != nil {
 				log.ERROR.Println("disable:", err)
+			}
+		}
+
+		if cmd.Flags().Changed(flagCurtail) {
+			flagUsed = true
+
+			if val, err := cmd.Flags().GetInt(flagCurtail); err == nil {
+				if vv, ok := api.Cap[api.Curtailer](v); ok {
+					curtail := val > 0
+					if err := vv.Curtail(curtail); err != nil {
+						log.ERROR.Println("curtail:", err)
+					}
+				} else {
+					log.ERROR.Println("curtail: not implemented")
+				}
+			}
+		}
+
+		if cmd.Flags().Changed(flagDim) {
+			flagUsed = true
+
+			if val, err := cmd.Flags().GetInt(flagDim); err == nil {
+				if vv, ok := api.Cap[api.Dimmer](v); ok {
+					dim := val > 0
+					if err := vv.Dim(dim); err != nil {
+						log.ERROR.Println("dim:", err)
+					}
+				} else {
+					log.ERROR.Println("dim: not implemented")
+				}
 			}
 		}
 

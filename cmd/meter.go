@@ -23,6 +23,8 @@ func init() {
 	meterCmd.Flags().StringP(flagBatteryMode, "b", "", flagBatteryModeDescription)
 	meterCmd.Flags().DurationP(flagBatteryModeWait, "w", 0, flagBatteryModeWaitDescription)
 	meterCmd.Flags().Bool(flagDiagnose, false, flagDiagnoseDescription)
+	meterCmd.Flags().IntP(flagCurtail, "u", -1, flagCurtailDescription)
+	meterCmd.Flags().IntP(flagDim, "m", -1, flagDimDescription)
 	meterCmd.Flags().BoolP(flagRepeat, "r", false, flagRepeatDescription)
 	meterCmd.Flags().Duration(flagRepeatInterval, 0, flagRepeatIntervalDescription)
 	meterCmd.Flags().Bool(flagHeartbeat, false, flagHeartbeatDescription)
@@ -69,6 +71,36 @@ func runMeter(cmd *cobra.Command, args []string) {
 			if d, err := cmd.Flags().GetDuration(flagBatteryModeWait); d > 0 && err == nil {
 				log.INFO.Println("waiting for:", d)
 				time.Sleep(d)
+			}
+
+			if cmd.Flags().Changed(flagCurtail) {
+				flagUsed = true
+
+				if val, err := cmd.Flags().GetInt(flagCurtail); err == nil {
+					if vv, ok := api.Cap[api.Curtailer](v); ok {
+						curtail := val > 0
+						if err := vv.Curtail(curtail); err != nil {
+							log.ERROR.Println("curtail:", err)
+						}
+					} else {
+						log.ERROR.Println("curtail: not implemented")
+					}
+				}
+			}
+
+			if cmd.Flags().Changed(flagDim) {
+				flagUsed = true
+
+				if val, err := cmd.Flags().GetInt(flagDim); err == nil {
+					if vv, ok := api.Cap[api.Dimmer](v); ok {
+						dim := val > 0
+						if err := vv.Dim(dim); err != nil {
+							log.ERROR.Println("dim:", err)
+						}
+					} else {
+						log.ERROR.Println("dim: not implemented")
+					}
+				}
 			}
 		}
 	}
