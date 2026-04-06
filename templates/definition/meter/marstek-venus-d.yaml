@@ -41,28 +41,28 @@ render: |
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
-        address: 30037 # MPPT1 power
+        address: 30037 # MPPT1 power (W)
         type: holding
         decode: uint16
       scale: 0.1
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
-        address: 30038 # MPPT2 power
+        address: 30038 # MPPT2 power (W)
         type: holding
         decode: uint16
       scale: 0.1
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
-        address: 30039 # MPPT3 power
+        address: 30039 # MPPT3 power (W)
         type: holding
         decode: uint16
       scale: 0.1
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
-        address: 30040 # MPPT4 power
+        address: 30040 # MPPT4 power (W)
         type: holding
         decode: uint16
       scale: 0.1
@@ -72,9 +72,10 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 32102 # Battery power (W)
+      address: 30001 # Battery power (W)
       type: holding
-      decode: int32
+      decode: int16
+    scale: -1
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
