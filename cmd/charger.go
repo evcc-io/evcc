@@ -99,34 +99,12 @@ func runCharger(cmd *cobra.Command, args []string) {
 			}
 		}
 
-		if cmd.Flags().Changed(flagCurtail) {
+		if handleCurtailFlag(cmd, v) {
 			flagUsed = true
-
-			if val, err := cmd.Flags().GetInt(flagCurtail); err == nil {
-				if vv, ok := api.Cap[api.Curtailer](v); ok {
-					curtail := val > 0
-					if err := vv.Curtail(curtail); err != nil {
-						log.ERROR.Println("curtail:", err)
-					}
-				} else {
-					log.ERROR.Println("curtail: not implemented")
-				}
-			}
 		}
 
-		if cmd.Flags().Changed(flagDim) {
+		if handleDimFlag(cmd, v) {
 			flagUsed = true
-
-			if val, err := cmd.Flags().GetInt(flagDim); err == nil {
-				if vv, ok := api.Cap[api.Dimmer](v); ok {
-					dim := val > 0
-					if err := vv.Dim(dim); err != nil {
-						log.ERROR.Println("dim:", err)
-					}
-				} else {
-					log.ERROR.Println("dim: not implemented")
-				}
-			}
 		}
 
 		if cmd.Flag(flagWakeup).Changed {
