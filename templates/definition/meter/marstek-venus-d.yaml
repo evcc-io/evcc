@@ -41,6 +41,9 @@ params:
       en: 0=manual, 1=anti-feed, 2=trade mode.
       de: 0=manuell, 1=Eigenverbrauch, 2=AI-Optimierung.
 render: |
+  # NOTE: MPPT1-4 registers (30037-30040) are read in both pv and battery modes.
+  # They cannot be shared via define/include because pv uses scale 0.1 (positive)
+  # while battery uses scale -0.1 (negative, to subtract PV from AC power).
   type: custom
   {{- if eq .usage "pv" }}
   power:
@@ -128,6 +131,7 @@ render: |
       set:
         source: sequence
         set:
+        # Enable RS485 Control Mode
         - source: const
           value: 21930
           set:
@@ -137,6 +141,7 @@ render: |
               address: 42000 # RS485 Control Mode = Enabled
               type: writesingle
               decode: uint16
+        # Set User Work Mode
         - source: const
           value: {{ .work_mode_normal }}
           set:
@@ -146,6 +151,7 @@ render: |
               address: 43000 # User Work Mode
               type: writesingle
               decode: uint16
+        # Disable RS485 Control Mode
         - source: const
           value: 21947
           set:
@@ -159,6 +165,7 @@ render: |
       set:
         source: sequence
         set:
+        # Enable RS485 Control Mode
         - source: const
           value: 21930
           set:
@@ -168,6 +175,7 @@ render: |
               address: 42000 # RS485 Control Mode = Enabled
               type: writesingle
               decode: uint16
+        # Set Force Charge/Discharge to Stop
         - source: const
           value: 0
           set:
@@ -177,10 +185,12 @@ render: |
               address: 42010 # Force Charge/Discharge = Stop
               type: writesingle
               decode: uint16
+    # Do not disable RS485 Control Mode because it will reset the device and let it charge/discharge again
     - case: 3 # charge
       set:
         source: sequence
         set:
+        # Enable RS485 Control Mode
         - source: const
           value: 21930
           set:
@@ -190,6 +200,7 @@ render: |
               address: 42000 # RS485 Control Mode = Enabled
               type: writesingle
               decode: uint16
+        # Set Force Charge/Discharge to Charge
         - source: const
           value: 1
           set:
@@ -199,6 +210,7 @@ render: |
               address: 42010 # Force Charge/Discharge = Charge
               type: writesingle
               decode: uint16
+        # Set Forcible Charge Power
         - source: const
           value: {{ .maxchargepower }}
           set:
@@ -208,5 +220,6 @@ render: |
               address: 42020 # Forcible Charge Power
               type: writesingle
               decode: uint16
+    # Do not disable RS485 Control Mode because it will reset the device and let it charge/discharge again
   {{- include "battery-params" . }}
   {{- end }}
