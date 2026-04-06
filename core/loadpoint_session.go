@@ -45,16 +45,23 @@ func (lp *Loadpoint) createSession() {
 		lp.session.Vehicle = lp.GetTitle()
 	}
 
-	if c, ok := api.Cap[api.Identifier](lp.charger); ok {
-		if id, err := c.Identify(); err == nil {
-			lp.session.Identifier = id
-		}
+	if id, err := lp.chargerIdentifier(); err == nil {
+		lp.session.Identifier = id
 	}
+
+	lp.updateSessionSocStart(lp.session)
 
 	// energy
 	lp.energyMetrics.Reset()
 	lp.energyMetrics.Publish("session", lp)
 	lp.publish(keys.ChargedEnergy, lp.GetChargedEnergy())
+}
+
+// updateSessionSocStart sets the session's start SoC if not already set
+func (lp *Loadpoint) updateSessionSocStart(session *session.Session) {
+	if session.SocStart == nil && lp.vehicleSoc > 0 && !lp.chargerHasFeature(api.Heating) {
+		session.SocStart = new(lp.vehicleSoc)
+	}
 }
 
 // stopSession ends a charging session segment and persists the session.
@@ -70,10 +77,14 @@ func (lp *Loadpoint) stopSession() {
 	if s.Created.IsZero() {
 		return
 	}
-
 	s.Finished = lp.clock.Now()
+
 	if meterStop := lp.chargeMeterTotal(); meterStop > 0 {
 		s.MeterStop = &meterStop
+	}
+
+	if lp.vehicleSoc > 0 && !lp.chargerHasFeature(api.Heating) {
+		s.SocStop = &lp.vehicleSoc
 	}
 
 	s.SolarPercentage = new(lp.energyMetrics.SolarPercentage())

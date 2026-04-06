@@ -79,6 +79,9 @@
 									chargedEnergy >= 1e3 ? POWER_UNIT.KW : POWER_UNIT.AUTO
 								)
 							}}
+							<div v-if="socRange" data-testid="session-details-soc">
+								{{ socRange }}
+							</div>
 							<div v-if="session.chargeDuration">
 								{{ fmtDurationNs(session.chargeDuration) }}
 								(~{{ fmtW(avgPower) }})
@@ -216,6 +219,14 @@ export default defineComponent({
 				value: loadpoint,
 				name: loadpoint,
 			}));
+		},
+		socRange() {
+			const { socStart: start, socStop: stop } = this.session;
+			if (start && stop) {
+				const added = stop - start;
+				return `${this.fmtPercentage(added, 0, true)} (${this.fmtNumber(start, 0)} – ${this.fmtPercentage(stop)})`;
+			}
+			return "";
 		},
 	},
 	methods: {

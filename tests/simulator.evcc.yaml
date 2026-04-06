@@ -86,6 +86,14 @@ vehicles:
       uri: http://localhost:7072/api/state
       jq: .vehicles[0].range
     capacity: 20
+  - name: tesla
+    title: weißes Model 3
+    type: custom
+    soc:
+      source: http
+      uri: http://localhost:7072/api/state
+      jq: .vehicles[1].soc
+    capacity: 60
   - name: honda
     type: template
     template: offline

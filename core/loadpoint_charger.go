@@ -14,3 +14,11 @@ func (lp *Loadpoint) chargerHasFeature(f api.Feature) bool {
 func (lp *Loadpoint) publishChargerFeature(f api.Feature) {
 	lp.publish(keys.ChargerFeature+f.String(), lp.chargerHasFeature(f))
 }
+
+// chargerIdentifier returns charger id if available
+func (lp *Loadpoint) chargerIdentifier() (string, error) {
+	if c, ok := api.Cap[api.Identifier](lp.charger); ok {
+		return c.Identify()
+	}
+	return "", api.ErrNotAvailable
+}
