@@ -36,7 +36,7 @@ render: |
     register:
       address: 706 # aktuelle Wärmemenge der WP
       type: holding
-      decode: unit16
+      decode: int16
     scale: 1
   {{- if .tempsource }}
   temp:
