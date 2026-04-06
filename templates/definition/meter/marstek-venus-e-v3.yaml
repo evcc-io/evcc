@@ -13,7 +13,7 @@ params:
     comset: 8N1
   - preset: battery-params
   - name: capacity
-    default: 5.12  
+    default: 5.12
   - name: minsoc
     default: 11
   - name: maxsoc
