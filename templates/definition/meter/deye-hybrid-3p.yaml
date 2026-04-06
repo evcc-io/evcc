@@ -6,7 +6,7 @@ products:
       generic: 3p hybrid inverter
   - brand: Sunsynk
     description:
-      generic: 3phase low/high voltage hybrid inverter
+      generic: 3p hybrid inverter
 capabilities: ["battery-control"]
 params:
   - name: usage
