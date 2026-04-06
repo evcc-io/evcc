@@ -3,7 +3,7 @@ covers: ["deye-hybrid", "deye-hybrid-hp3"]
 products:
   - brand: Deye
     description:
-      generic: 3p voltage hybrid inverter
+      generic: 3p hybrid inverter
   - brand: Sunsynk
     description:
       generic: 3phase low/high voltage hybrid inverter
