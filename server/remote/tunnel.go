@@ -27,12 +27,11 @@ type Tunnel struct {
 	token         string
 	httpHandler   http.Handler
 	log           *util.Logger
+	cancel        func()
 	onStateChange func()
 
-	mu        sync.Mutex
-	session   *yamux.Session
-	done      chan struct{}
-	closeOnce sync.Once
+	mu      sync.Mutex
+	session *yamux.Session
 }
 
 // NewTunnel creates a new tunnel client.
@@ -43,7 +42,6 @@ func NewTunnel(tunnelURL, token string, httpHandler http.Handler, log *util.Logg
 		httpHandler:   httpHandler,
 		log:           log,
 		onStateChange: onStateChange,
-		done:          make(chan struct{}),
 	}
 }
 
@@ -55,8 +53,11 @@ func (t *Tunnel) run() {
 		backoff.WithMaxElapsedTime(0),
 	)
 
+	ctx, cancel := context.WithCancel(context.Background())
+	t.cancel = cancel
+
 	for {
-		ok, err := t.connect()
+		ok, err := t.connect(ctx)
 		if err != nil {
 			t.log.ERROR.Printf("tunnel: %v", err)
 		}
@@ -67,9 +68,47 @@ func (t *Tunnel) run() {
 		}
 
 		select {
-		case <-t.done:
+		case <-ctx.Done():
 			return
 		case <-time.After(bo.NextBackOff()):
+		}
+	}
+}
+
+func (t *Tunnel) connect(ctx context.Context) (bool, error) {
+	conn, _, err := websocket.Dial(ctx, t.tunnelURL, &websocket.DialOptions{
+		HTTPHeader: http.Header{
+			"Authorization": []string{"Bearer " + t.token},
+		},
+	})
+	if err != nil {
+		return false, fmt.Errorf("websocket dial: %w", err)
+	}
+	defer conn.Close(websocket.StatusInternalError, "reconnect")
+
+	// wrap websocket as net.Conn for yamux
+	netConn := websocket.NetConn(ctx, conn, websocket.MessageBinary)
+
+	session, err := yamux.Client(netConn, nil)
+	if err != nil {
+		conn.CloseNow()
+		return false, fmt.Errorf("yamux client: %w", err)
+	}
+
+	t.changeState(session, nil)
+
+	// accept streams from the proxy
+	for {
+		if err := ctx.Err(); err != nil {
+			return true, err
+		}
+
+		srv := &http.Server{
+			Handler: basicAuthMiddleware(t.httpHandler),
+		}
+
+		if err := srv.Serve(session); err != nil {
+			t.changeState(nil, err)
 		}
 	}
 }
@@ -90,53 +129,6 @@ func (t *Tunnel) changeState(session *yamux.Session, err error) {
 	}
 }
 
-func (t *Tunnel) connect() (bool, error) {
-	ctx := context.Background()
-
-	conn, _, err := websocket.Dial(ctx, t.tunnelURL, &websocket.DialOptions{
-		HTTPHeader: http.Header{
-			"Authorization": []string{"Bearer " + t.token},
-		},
-	})
-	if err != nil {
-		return false, fmt.Errorf("websocket dial: %w", err)
-	}
-
-	// wrap websocket as net.Conn for yamux
-	netConn := websocket.NetConn(ctx, conn, websocket.MessageBinary)
-
-	session, err := yamux.Client(netConn, nil)
-	if err != nil {
-		conn.CloseNow()
-		return false, fmt.Errorf("yamux client: %w", err)
-	}
-
-	t.changeState(session, nil)
-
-	// accept streams from the proxy
-	for {
-		stream, err := session.Accept()
-		if err != nil {
-			t.changeState(session, err)
-			return true, err
-		}
-
-		go t.handleStream(stream)
-	}
-}
-
-func (t *Tunnel) handleStream(conn net.Conn) {
-	defer conn.Close()
-
-	srv := &http.Server{
-		Handler: basicAuthMiddleware(t.httpHandler),
-	}
-
-	// serve a single HTTP request on this stream
-	listener := &singleConnListener{conn: conn}
-	_ = srv.Serve(listener)
-}
-
 // IsConnected returns whether the tunnel is currently connected.
 func (t *Tunnel) IsConnected() bool {
 	t.mu.Lock()
@@ -146,14 +138,9 @@ func (t *Tunnel) IsConnected() bool {
 
 // Close tears down the tunnel.
 func (t *Tunnel) Close() {
-	t.closeOnce.Do(func() { close(t.done) })
-
-	t.mu.Lock()
-	defer t.mu.Unlock()
-
-	if t.session != nil {
-		t.session.Close()
-		t.session = nil
+	if t.cancel != nil {
+		t.cancel()
+		t.cancel = nil
 	}
 }
 
