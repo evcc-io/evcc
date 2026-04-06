@@ -14,7 +14,7 @@ products:
       generic: Pro Light 2
   - brand: Smartfox
     description:
-      generic: Light (EM2 firmware or newer)
+      generic: Light
 requirements:
   description:
     de: |
