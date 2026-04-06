@@ -31,7 +31,6 @@ type Tunnel struct {
 
 	mu        sync.Mutex
 	session   *yamux.Session
-	connected bool
 	done      chan struct{}
 	closeOnce sync.Once
 }
@@ -48,8 +47,8 @@ func NewTunnel(tunnelURL, token string, httpHandler http.Handler, log *util.Logg
 	}
 }
 
-// Connect establishes the tunnel and reconnects on failure.
-func (t *Tunnel) Connect() {
+// run establishes the tunnel and reconnects on failure.
+func (t *Tunnel) run() {
 	bo := backoff.NewExponentialBackOff(
 		backoff.WithInitialInterval(time.Second),
 		backoff.WithMaxInterval(60*time.Second),
@@ -57,13 +56,13 @@ func (t *Tunnel) Connect() {
 	)
 
 	for {
-		connected, err := t.dial()
+		ok, err := t.connect()
 		if err != nil {
 			t.log.ERROR.Printf("tunnel: %v", err)
 		}
 
 		// reset backoff after successful connection
-		if connected {
+		if ok {
 			bo.Reset()
 		}
 
@@ -75,7 +74,23 @@ func (t *Tunnel) Connect() {
 	}
 }
 
-func (t *Tunnel) dial() (bool, error) {
+func (t *Tunnel) changeState(session *yamux.Session, err error) {
+	t.mu.Lock()
+	t.session = session
+	t.mu.Unlock()
+
+	if t.onStateChange != nil {
+		t.onStateChange()
+	}
+
+	if session != nil {
+		t.log.INFO.Println("tunnel connected")
+	} else {
+		t.log.INFO.Println("tunnel disconnected:", err)
+	}
+}
+
+func (t *Tunnel) connect() (bool, error) {
 	ctx := context.Background()
 
 	conn, _, err := websocket.Dial(ctx, t.tunnelURL, &websocket.DialOptions{
@@ -96,32 +111,13 @@ func (t *Tunnel) dial() (bool, error) {
 		return false, fmt.Errorf("yamux client: %w", err)
 	}
 
-	t.mu.Lock()
-	t.session = session
-	t.connected = true
-	t.mu.Unlock()
-
-	t.log.INFO.Println("tunnel connected")
-
-	if t.onStateChange != nil {
-		t.onStateChange()
-	}
+	t.changeState(session, nil)
 
 	// accept streams from the proxy
 	for {
 		stream, err := session.Accept()
 		if err != nil {
-			t.mu.Lock()
-			t.connected = false
-			t.session = nil
-			t.mu.Unlock()
-
-			t.log.DEBUG.Printf("tunnel session ended: %v", err)
-
-			if t.onStateChange != nil {
-				t.onStateChange()
-			}
-
+			t.changeState(session, err)
 			return true, err
 		}
 
@@ -145,7 +141,7 @@ func (t *Tunnel) handleStream(conn net.Conn) {
 func (t *Tunnel) IsConnected() bool {
 	t.mu.Lock()
 	defer t.mu.Unlock()
-	return t.connected
+	return t.session != nil
 }
 
 // Close tears down the tunnel.
@@ -159,7 +155,6 @@ func (t *Tunnel) Close() {
 		t.session.Close()
 		t.session = nil
 	}
-	t.connected = false
 }
 
 // basicAuthMiddleware wraps a handler with HTTP basic auth.

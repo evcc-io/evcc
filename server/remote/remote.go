@@ -98,7 +98,7 @@ func (r *Remote) connect() {
 	r.mu.Unlock()
 
 	// blocks until disconnected
-	tunnel.Connect()
+	tunnel.run()
 }
 
 func (r *Remote) disconnect() {
