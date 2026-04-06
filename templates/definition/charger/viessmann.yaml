@@ -205,4 +205,4 @@ render: |
         set:
           source: error
           error: ErrNotAvailable
-  features: ["switchdevice"]
+  {{ include "heatpumpswitch" . }}

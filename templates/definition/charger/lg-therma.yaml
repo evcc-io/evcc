@@ -104,4 +104,4 @@ render: |
       type: input
       encoding: uint16
   {{- end }}
-  features: ["switchdevice"]
+  {{ include "heatpumpswitch" . }}
