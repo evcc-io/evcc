@@ -1,8 +1,9 @@
-template: marstek-venus
+template: marstek-venus-e
+covers: ["marstek-venus"]
 products:
   - brand: Marstek
     description:
-      generic: Venus Battery Storage
+      generic: Venus E
 capabilities: ["battery-control"]
 params:
   - name: usage

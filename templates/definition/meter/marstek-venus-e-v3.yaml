@@ -1,28 +1,27 @@
-template: marstek-venus-d
+template: marstek-venus-e-v3
 products:
   - brand: Marstek
     description:
-      generic: Venus D
+      generic: Venus E Gen 3.0
 capabilities: ["battery-control"]
 params:
   - name: usage
-    choice: ["pv", "battery"]
+    choice: ["battery"]
   - name: modbus
     choice: ["rs485", "tcpip"]
     baudrate: 115200
     comset: 8N1
   - preset: battery-params
   - name: capacity
-    default: 2.56
     help:
-      de: Basisgerät 2.56 kWh, jede Erweiterung zzgl. 2.56 kWh
-      en: Base unit 2.56 kWh, each extension plus 2.56 kWh
+      de: Venus-E 5.12 kWh, Venus-C 2.56 kWh
+      en: Venus-E 5.12 kWh, Venus-C 2.56 kWh
   - name: minsoc
     default: 11
   - name: maxsoc
     default: 100
   - name: maxchargepower
-    default: 2200
+    default: 2500
   - name: work_mode_normal
     default: 1
     advanced: true
@@ -34,55 +33,14 @@ params:
       de: 0=manuell, 1=Eigenverbrauch, 2=AI-Optimierung.
 render: |
   type: custom
-  {{- if eq .usage "pv" }}
-  power:
-    source: calc
-    add:
-    - source: modbus
-      {{- include "modbus" . | indent 4 }}
-      register:
-        address: 30037 # MPPT1 power
-        type: holding
-        decode: uint16
-      scale: 0.1
-    - source: modbus
-      {{- include "modbus" . | indent 4 }}
-      register:
-        address: 30038 # MPPT2 power
-        type: holding
-        decode: uint16
-      scale: 0.1
-    - source: modbus
-      {{- include "modbus" . | indent 4 }}
-      register:
-        address: 30039 # MPPT3 power
-        type: holding
-        decode: uint16
-      scale: 0.1
-    - source: modbus
-      {{- include "modbus" . | indent 4 }}
-      register:
-        address: 30040 # MPPT4 power
-        type: holding
-        decode: uint16
-      scale: 0.1
-  {{- end }}
-  {{- if eq .usage "battery" }}
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 32102 # Battery power (W)
+      address: 32202 # AC Power (Watt)
       type: holding
       decode: int32
-  energy:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 33002 # Total energy discharged from battery (kWh)
-      type: holding
-      decode: uint32
-    scale: 0.01
+    scale: 1
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -90,6 +48,7 @@ render: |
       address: 32104 # Battery SOC (%)
       type: holding
       decode: uint16
+    scale: 1
   batterymode:
     source: switch
     switch:
@@ -188,4 +147,3 @@ render: |
               decode: uint16
     # Do not disable RS485 Control Mode because it will reset the device and let it charge/discharge again
   {{- include "battery-params" . }}
-  {{- end }}

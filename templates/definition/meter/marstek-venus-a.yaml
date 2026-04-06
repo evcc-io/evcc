@@ -1,8 +1,8 @@
-template: marstek-venus-d
+template: marstek-venus-a
 products:
   - brand: Marstek
     description:
-      generic: Venus D
+      generic: Venus A
 capabilities: ["battery-control"]
 params:
   - name: usage
@@ -13,10 +13,10 @@ params:
     comset: 8N1
   - preset: battery-params
   - name: capacity
-    default: 2.56
+    default: 2.12
     help:
-      de: Basisgerät 2.56 kWh, jede Erweiterung zzgl. 2.56 kWh
-      en: Base unit 2.56 kWh, each extension plus 2.56 kWh
+      de: Basisgerät 2.12 kWh, jede Erweiterung zzgl. 2.12 kWh
+      en: Base unit 2.12 kWh, each extension plus 2.12 kWh
   - name: minsoc
     default: 11
   - name: maxsoc
