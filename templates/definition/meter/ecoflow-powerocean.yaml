@@ -52,6 +52,7 @@ params:
   - name: cache
     default: 30s
     advanced: true
+  - preset: battery-params
 render: |
   type: ecoflow
   accesskey: {{ .accesskey }}
@@ -62,5 +63,8 @@ render: |
   cache: {{ .cache }}
   gridpower: sysGridPwr
   pvpower: mpptPwr
+  {{- if eq .usage "battery" }}
   batterypower: bpPwr
   batterysoc: bpSoc
+  {{- include "battery-params" . }}
+  {{- end }}

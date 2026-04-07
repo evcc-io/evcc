@@ -31,6 +31,9 @@ func init() {
 // NewEcoFlowFromConfig creates an EcoFlow  meter from generic config
 func NewEcoFlowFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	cc := struct {
+		batteryCapacity                              `mapstructure:",squash"`
+		batteryPowerLimits                           `mapstructure:",squash"`
+		batterySocLimits                             `mapstructure:",squash"`
 		Usage                                        string
 		AccessKey, SecretKey, Serial, Region         string
 		GridPower, PvPower, BatteryPower, BatterySoc string
@@ -74,7 +77,10 @@ func NewEcoFlowFromConfig(ctx context.Context, other map[string]any) (api.Meter,
 	}
 
 	if cc.Usage == "battery" {
-		return &EcoFlowBattery{m}, nil
+		return decorateMeterBattery(
+			m, nil, m.soc, cc.batteryCapacity.Decorator(),
+			cc.batterySocLimits.Decorator(), cc.batteryPowerLimits.Decorator(), nil,
+		), nil
 	}
 
 	return m, nil
@@ -157,13 +163,8 @@ func ecoflowValue(data map[string]any, key string) (float64, error) {
 	return 0, api.ErrNotAvailable
 }
 
-// EcoFlowBattery represents the EcoFlow  battery decorator
-type EcoFlowBattery struct {
-	*EcoFlow
-}
-
-// Soc implements the api.Battery interface for battery usage
-func (m *EcoFlowBattery) Soc() (float64, error) {
+// soc returns the battery state of charge
+func (m *EcoFlow) soc() (float64, error) {
 	response, err := m.dataG()
 	if err != nil {
 		return 0, err
