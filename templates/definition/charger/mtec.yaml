@@ -10,8 +10,7 @@ params:
   - name: tempsource
     type: choice
     choice: ["warmwater_top", "buffer"]
-  - name: phases
-    deprecated: true
+
 render: |
   type: heatpump
   setmaxpower:
