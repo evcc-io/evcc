@@ -57,7 +57,7 @@ render: |
   type: ecoflow
   accesskey: {{ .accesskey }}
   secretkey: {{ .secretkey }}
-  serial: {{ if .serial }}{{ .serial }}{{ else }}{{ .deviceid }}{{ end }}
+  serial: {{ or .serial .deviceid }}
   usage: {{ .usage }}
   cache: {{ .cache }}
   region: {{ .region }}
