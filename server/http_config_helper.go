@@ -199,8 +199,6 @@ func mergedMaskedConfig(class templates.Class, id int, conf map[string]any) (map
 		old, err = storedDeviceOther(id, config.Tariffs())
 	case templates.Messenger:
 		old, err = storedDeviceOther(id, config.Messengers())
-	default:
-		return nil, errors.New("unsupported device class")
 	}
 
 	if err != nil {
