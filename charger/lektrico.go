@@ -236,8 +236,11 @@ func (wb *Lektrico) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (wb *Lektrico) MaxCurrent(current int64) error {
-	wb.current = current
-	return wb.setCurrent(current)
+	err := wb.setCurrent(current)
+	if err == nil {
+		wb.current = current
+	}
+	return err
 }
 
 var _ api.Meter = (*Lektrico)(nil)
