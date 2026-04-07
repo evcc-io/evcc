@@ -131,8 +131,8 @@ export default defineComponent({
 									? { opacity: 0.33 }
 									: undefined,
 						})),
-						barMaxWidth: 4,
-						barMinWidth: 4,
+						barMaxWidth: 2,
+						barMinWidth: 2,
 						itemStyle: {
 							color: priceColor,
 							borderRadius: 2,
@@ -164,10 +164,3 @@ export default defineComponent({
 	},
 });
 </script>
-
-<style scoped>
-.forecast-chart-scroll {
-	overflow-x: auto;
-	padding-bottom: 4px;
-}
-</style>

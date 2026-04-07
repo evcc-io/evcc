@@ -1,5 +1,6 @@
 import { defineComponent, markRaw } from "vue";
 import { echarts } from "./echarts";
+import "./chartStyles.css";
 
 // chartOption is provided by each consuming component's computed
 type WithChartOption = { chartOption: Record<string, unknown> };
@@ -62,6 +63,12 @@ export default defineComponent({
       this.chart.on("hideTip", () => {
         this.tooltipVisible = false;
       });
+      const resetTouch = () => {
+        this.chart?.dispatchAction({ type: "hideTip" });
+        this.tooltipVisible = false;
+      };
+      el.addEventListener("touchend", resetTouch);
+      el.addEventListener("touchcancel", resetTouch);
     },
   },
 });

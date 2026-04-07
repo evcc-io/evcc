@@ -118,10 +118,3 @@ export default defineComponent({
 	},
 });
 </script>
-
-<style scoped>
-.forecast-chart-scroll {
-	overflow-x: auto;
-	padding-bottom: 4px;
-}
-</style>

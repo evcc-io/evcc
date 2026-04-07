@@ -157,7 +157,7 @@ import store from "../store";
 import { adjustedSolar, ForecastType } from "@/utils/forecast";
 import type { ForecastSlot } from "../components/Forecast/types";
 
-const MIN_HOURS = 38;
+const MIN_HOURS = 76;
 const MAX_HOURS = 96;
 const SLOTS_PER_HOUR = 4;
 
@@ -219,7 +219,7 @@ export default defineComponent({
 		chartWidth(): number {
 			const ms = this.chartEndDate.getTime() - this.startDate.getTime();
 			const slots = Math.ceil(ms / (15 * 60 * 1000));
-			return slots * 8 + 56;
+			return slots * 4 + 56;
 		},
 		currency() {
 			return store.state?.currency;
@@ -242,7 +242,10 @@ export default defineComponent({
 				: this.forecast.solar;
 		},
 		solarAdjustText() {
-			return this.$t("forecast.solarAdjustShort");
+			const text = this.$t("forecast.solarAdjustShort");
+			const scale = this.forecast.solar?.scale || 1;
+			const percentDiff = scale * 100 - 100;
+			return `${text} (${this.fmtPercentage(percentDiff, 0, true)})`;
 		},
 		solarSubtitle(): string {
 			const s = this.solar;
