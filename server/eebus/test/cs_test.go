@@ -45,7 +45,7 @@ func TestEEBus(t *testing.T) {
 	box, err := createControlbox(t.Context(), server.Ski(), remotePort)
 	require.NoError(t, err, "controlbox")
 
-	eventC := make(chan api.EventType, 1)
+	eventC := make(chan api.EventType, 16)
 	box.remoteEventC = eventC
 
 	gridcontrol, err := circuit.New(util.NewLogger("gridcontrol"), "gridcontrol", 0, 0, nil, time.Minute)
@@ -56,9 +56,13 @@ func TestEEBus(t *testing.T) {
 
 	go hems.Run()
 
-	<-eventC
+	// wait for DataUpdateLimit which signals that limit descriptions and data are available
+	require.Eventually(t, func() bool {
+		return len(box.remoteEntity(lpc.DataUpdateLimit)) > 0
+	}, 30*time.Second, 100*time.Millisecond, "waiting for lpc.DataUpdateLimit")
+
 	t.Log(box.remoteEntities)
-	srvEntity := box.remoteEntity(lpc.UseCaseSupportUpdate)[0]
+	srvEntity := box.remoteEntity(lpc.DataUpdateLimit)[0]
 
 	_, err = box.uclpc.WriteConsumptionLimit(srvEntity, ucapi.LoadLimit{
 		IsActive: true,

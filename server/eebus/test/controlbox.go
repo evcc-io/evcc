@@ -118,10 +118,12 @@ func (h *controlbox) OnLPCEvent(ski string, device spineapi.DeviceRemoteInterfac
 	switch event {
 	case lpc.UseCaseSupportUpdate:
 		h.registerRemoteEntity(entity, event)
-		// case lpc.DataUpdateLimit:
-	// 	if currentLimit, err := h.uclpc.ConsumptionLimit(entity); err == nil {
-	// 		fmt.Println("New consumption limit received", currentLimit.Value, "W")
-	// 	}
+		if currentLimit, err := h.uclpc.ConsumptionLimit(entity); err == nil {
+			fmt.Println("New consumption limit received", currentLimit.Value, "W")
+		}
+
+	case lpc.DataUpdateLimit:
+		h.registerRemoteEntity(entity, event)
 	default:
 		fmt.Println("lpc:", event)
 	}
