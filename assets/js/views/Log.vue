@@ -60,6 +60,7 @@
 					<div class="filterAreas col-6 col-lg-2">
 						<MultiSelect
 							id="logAreasSelect"
+							isTopLevel
 							:modelValue="areas"
 							:options="areaOptions"
 							:selectAllLabel="$t('log.selectAll')"
