@@ -21,7 +21,7 @@ type EcoFlow struct {
 	client *ecoflow.Client
 	dataG  func() (*ecoflow.GetCmdResponse, error)
 
-	gridPower, pvPower, batteryPower, batterySoc string
+	power, batterySoc string
 }
 
 func init() {
@@ -31,13 +31,13 @@ func init() {
 // NewEcoFlowFromConfig creates an EcoFlow  meter from generic config
 func NewEcoFlowFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	cc := struct {
-		batteryCapacity                              `mapstructure:",squash"`
-		batteryPowerLimits                           `mapstructure:",squash"`
-		batterySocLimits                             `mapstructure:",squash"`
-		Usage                                        string
-		AccessKey, SecretKey, Serial, Region         string
-		GridPower, PvPower, BatteryPower, BatterySoc string
-		Cache                                        time.Duration
+		batteryCapacity                      `mapstructure:",squash"`
+		batteryPowerLimits                   `mapstructure:",squash"`
+		batterySocLimits                     `mapstructure:",squash"`
+		Usage                                string
+		AccessKey, SecretKey, Serial, Region string
+		Power, Soc                           string
+		Cache                                time.Duration
 	}{
 		Cache: 30 * time.Second,
 	}
@@ -70,8 +70,7 @@ func NewEcoFlowFromConfig(ctx context.Context, other map[string]any) (api.Meter,
 		return nil, fmt.Errorf("invalid region: %s", cc.Region)
 	}
 
-	m, err := NewEcoFlow(ctx, cc.AccessKey, cc.SecretKey, cc.Serial, cc.Usage, uri,
-		cc.GridPower, cc.PvPower, cc.BatteryPower, cc.BatterySoc, cc.Cache)
+	m, err := NewEcoFlow(ctx, cc.AccessKey, cc.SecretKey, cc.Serial, cc.Usage, uri, cc.Power, cc.Soc, cc.Cache)
 	if err != nil {
 		return nil, err
 	}
@@ -88,17 +87,15 @@ func NewEcoFlowFromConfig(ctx context.Context, other map[string]any) (api.Meter,
 
 // NewEcoFlow constructs the EcoFlow struct
 func NewEcoFlow(ctx context.Context, accessKey, secretKey, serial, usage, uri string,
-	gridPower, pvPower, batteryPower, batterySoc string, cache time.Duration) (*EcoFlow, error) {
+	power, soc string, cache time.Duration) (*EcoFlow, error) {
 	m := &EcoFlow{
-		ctx:          ctx,
-		serial:       serial,
-		usage:        usage,
-		cache:        cache,
-		client:       ecoflow.NewEcoflowClient(accessKey, secretKey, ecoflow.WithBaseUrl(uri)),
-		gridPower:    gridPower,
-		pvPower:      pvPower,
-		batteryPower: batteryPower,
-		batterySoc:   batterySoc,
+		ctx:        ctx,
+		serial:     serial,
+		usage:      usage,
+		cache:      cache,
+		client:     ecoflow.NewEcoflowClient(accessKey, secretKey, ecoflow.WithBaseUrl(uri)),
+		power:      power,
+		batterySoc: soc,
 	}
 
 	m.dataG = util.Cached(m.getData, cache)
@@ -111,14 +108,10 @@ func (m *EcoFlow) getData() (*ecoflow.GetCmdResponse, error) {
 	ctx, cancel := context.WithTimeout(m.ctx, 30*time.Second)
 	defer cancel()
 
-	var params []string
-	switch m.usage {
-	case "grid":
-		params = []string{m.gridPower}
-	case "pv":
-		params = []string{m.pvPower}
-	case "battery":
-		params = []string{m.batteryPower, m.batterySoc}
+	params := []string{m.power}
+
+	if m.usage == "battery" {
+		params = append(params, m.batterySoc)
 	}
 
 	return m.client.GetDeviceParameters(ctx, m.serial, params)
@@ -133,24 +126,16 @@ func (m *EcoFlow) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-	// sysGridPwr responds with int
-	// mpptPwr responds with an array of floats
-	// bpPwr responds with int
-	// bpSoc responds with int
-	switch m.usage {
-	case "grid":
-		return ecoflowValue(response.Data, m.gridPower)
-	case "pv":
-		return ecoflowValue(response.Data, m.pvPower)
-	case "battery":
-		pwr, err := ecoflowValue(response.Data, m.batteryPower)
-		if err != nil {
-			return 0, err
-		}
-		return -pwr, nil // invert battery power: ecoflow returns negative when discharging and positive when charging.
-	default:
-		return 0, fmt.Errorf("invalid usage: %s", m.usage)
+	pwr, err := ecoflowValue(response.Data, m.power)
+	if err != nil {
+		return 0, err
 	}
+
+	if m.usage == "battery" {
+		pwr = -pwr // invert battery power: ecoflow returns negative when discharging and positive when charging.
+	}
+
+	return pwr, nil
 }
 
 // extractFloat extracts a float64 or int value from a map by key.

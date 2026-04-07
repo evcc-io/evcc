@@ -62,10 +62,14 @@ render: |
   usage: {{ .usage }}
   cache: {{ .cache }}
   region: {{ .region }}
-  gridpower: powGetSysGrid
-  pvpower: powGetPvSum
+  {{- if eq .usage "grid" }}
+  power: powGetSysGrid
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power: powGetPvSum
+  {{- end }}
   {{- if eq .usage "battery" }}
-  batterypower: powGetBpCms
-  batterysoc: cmsBattSoc
+  power: powGetBpCms
+  soc: cmsBattSoc
   {{- include "battery-params" . }}
   {{- end }}

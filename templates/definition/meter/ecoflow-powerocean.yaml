@@ -61,10 +61,14 @@ render: |
   usage: {{ .usage }}
   region: {{ .region }}
   cache: {{ .cache }}
-  gridpower: sysGridPwr
-  pvpower: mpptPwr
+  {{- if eq .usage "grid" }}
+  power: sysGridPwr
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power: mpptPwr
+  {{- end }}
   {{- if eq .usage "battery" }}
-  batterypower: bpPwr
-  batterysoc: bpSoc
+  power: bpPwr
+  soc: bpSoc
   {{- include "battery-params" . }}
   {{- end }}
