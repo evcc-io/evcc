@@ -205,6 +205,13 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, other 
 		lp.Soc.Poll.Mode = loadpoint.PollCharging
 	}
 
+	// validate thresholds
+	if lp.Enable.Threshold > lp.Disable.Threshold {
+		lp.log.WARN.Printf("PV mode enable threshold (%.0fW) is larger than disable threshold (%.0fW)", lp.Enable.Threshold, lp.Disable.Threshold)
+	} else if lp.Enable.Threshold > 0 {
+		lp.log.WARN.Printf("PV mode enable threshold %.0fW > 0 will start PV charging on grid power consumption. Did you mean -%.0f?", lp.Enable.Threshold, lp.Enable.Threshold)
+	}
+
 	// choose sane default if mode is not set
 	if lp.mode = lp.DefaultMode; lp.mode == "" {
 		lp.mode = api.ModeOff
@@ -276,25 +283,6 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, other 
 
 		lp.phasesConfigured = phases
 		lp.phases = phases
-	}
-
-	// validate thresholds
-	if lp.Enable.Threshold > 0 {
-		lp.log.WARN.Printf("PV mode enable threshold %.0fW > 0 will start PV charging below residualPower (grid import). Did you mean %.0f?", lp.Enable.Threshold, -lp.Enable.Threshold)
-	}
-	if lp.Disable.Threshold < 0 {
-		lp.log.WARN.Printf("PV mode disable threshold %.0fW < 0 will stop PV charging above residualPower (grid export). Did you mean %.0f?", lp.Disable.Threshold, -lp.Disable.Threshold)
-	}
-	if lp.Enable.Threshold != 0 {
-		phases := lp.phasesConfigured
-		if phases == 0 {
-			phases = 3
-		}
-		minPower := defaultVoltage * lp.minCurrent * float64(phases) // "Voltage" has not yet been set
-		switchHysteresis := lp.Disable.Threshold - lp.Enable.Threshold
-		if switchHysteresis < minPower {
-			lp.log.WARN.Printf("disable threshold - enable threshold = %.0fW < %.0fW min %d-phase charge power", switchHysteresis, minPower, phases)
-		}
 	}
 
 	return lp, nil
