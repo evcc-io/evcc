@@ -29,21 +29,21 @@ render: |
   currents:
   - source: modbus
     id: 0
-    uri: {{ .host }}:{{ .port }}
+    uri: {{ joinHostPort .host .port }}
     register:
       address: 4099 # Netz Ampere L1 | Grid amps L1
       type: holding
       decode: uint16
   - source: modbus
     id: 0
-    uri: {{ .host }}:{{ .port }}
+    uri: {{ joinHostPort .host .port }}
     register:
       address: 4100 # Netz Ampere L2 | Grid amps L2
       type: holding
       decode: uint16
   - source: modbus
     id: 0
-    uri: {{ .host }}:{{ .port }}
+    uri: {{ joinHostPort .host .port }}
     register:
       address: 4101 # Netz Ampere L3 | Grid amps L3
       type: holding
@@ -51,7 +51,7 @@ render: |
   power:
     source: modbus
     id: 0
-    uri: {{ .host }}:{{ .port }}
+    uri: {{ joinHostPort .host .port }}
     register:
       type: holding
       decode: int32
@@ -63,7 +63,7 @@ render: |
     add:
     - source: modbus
       id: 0
-      uri: {{ .host }}:{{ .port }}
+      uri: {{ joinHostPort .host .port }}
       register:
         type: holding
         decode: uint32
@@ -73,7 +73,7 @@ render: |
   power:
     source: modbus
     id: 0
-    uri: {{ .host }}:{{ .port }}
+    uri: {{ joinHostPort .host .port }}
     register:
       type: holding
       decode: int32
@@ -82,7 +82,7 @@ render: |
   soc:
     source: modbus
     id: 0
-    uri: {{ .host }}:{{ .port }}
+    uri: {{ joinHostPort .host .port }}
     register:
       address: 4146 # Batterie-SOC in %
       type: holding
