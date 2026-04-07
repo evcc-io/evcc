@@ -1,0 +1,39 @@
+template: connected-cars
+products:
+  - description:
+      generic: Connected Cars (connectedcars.io)
+group: generic
+params:
+  - name: deviceToken
+    required: true
+    mask: true
+    description:
+      en: Device Token
+      de: Geräte-Token
+    help:
+      en: Obtained via Connected Cars device registration
+      de: Über die Connected Cars Geräteregistrierung erhalten
+  - name: domain
+    default: au1.connectedcars.io
+    description:
+      en: API Domain
+      de: API-Domain
+    advanced: true
+  - name: namespace
+    default: "vwaustralia:app"
+    description:
+      en: Organization Namespace
+      de: Organisations-Namespace
+    advanced: true
+  - name: vin
+  - preset: vehicle-common
+  - name: cache
+    default: 15m
+render: |
+  type: connected-cars
+  deviceToken: {{ .deviceToken }}
+  domain: {{ .domain }}
+  namespace: {{ .namespace }}
+  vin: {{ .vin }}
+  {{ include "vehicle-common" . }}
+  cache: {{ .cache }}
