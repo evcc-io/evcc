@@ -28,7 +28,7 @@
     },
     "capacity": "{energy} av {total}",
     "control": "Batterikontroll",
-    "discharge": "Forhindre utladning i hurtigmodus og planlagt lading.",
+    "discharge": "Forhindre utladning i hurtigmodus og planlagt lading",
     "disclaimerHint": "Merk:",
     "disclaimerText": "Kun relevant i PV-modus. Ladeadferden justeres deretter.",
     "gridChargeTab": "Nettlading",
@@ -40,6 +40,7 @@
     "legendTopName": "batteriassistert lading",
     "legendTopSubline": "når hjemmebatteriet er over {soc}.",
     "modalTitle": "Batteriinnstillinger",
+    "noBattery": "Ingen konfigurerte batterier.",
     "usageTab": "Batteribruk"
   },
   "config": {
@@ -57,9 +58,9 @@
       "titleEdit": "Rediger ladningsmåler"
     },
     "charger": {
-      "chargers": "EV-ladere",
+      "chargers": "Elbilladere",
       "generic": "Generiske integrasjoner",
-      "heatingdevices": "Oppvarmingsenheter",
+      "heatingdevices": "Varmeapparater",
       "ocppConfirmContinue": "Laderen din er ikke koblet til evcc ennå. Er du sikker på at du vil fortsette?",
       "ocppConnected": "Koblet til!",
       "ocppDescription": "evcc har en innebygd OCPP-server. Følg disse trinnene:",
@@ -70,7 +71,7 @@
       "ocppStep2": "Vent til laderen din kobles til evcc.",
       "ocppStep3": "Fortsett og fullfør konfigurasjonen.",
       "ocppWaiting": "Venter på tilkobling",
-      "switchsockets": "Omkoblingsbare stikkontakter",
+      "switchsockets": "Stikkontakter med bryter",
       "template": "Produsent",
       "titleAdd": {
         "charging": "Legg til lader",
@@ -105,6 +106,11 @@
       "labelResidualPower": "Restkraft",
       "title": "Kontrollatferd"
     },
+    "currency": {
+      "example": "Ladeprisen din var {price}. Du sparte {amount}.",
+      "label": "Valuta",
+      "title": "Valuta"
+    },
     "deviceValue": {
       "amount": "Beløp",
       "broker": "Megler",
@@ -128,12 +134,15 @@
       "dimmed": "Dempet",
       "enabled": "Aktivert",
       "energy": "Energi",
+      "events": "Hendelser",
       "feedinPrice": "Innmatingspris",
       "gridPrice": "Nettpris",
       "heaterTempLimit": "Varmebegrensning",
       "hemsActiveLimit": "Aktiv grense",
       "hemsType": "Kommunikasjon",
       "identifier": "RFID-Identifikator",
+      "max": "maks",
+      "messengers": "Tjenester",
       "no": "nei",
       "odometer": "Kilometer teller",
       "org": "Organisasjon",
@@ -143,6 +152,7 @@
       "phases1p3p": "Faseomkobler",
       "power": "Effekt",
       "powerRange": "Effekt",
+      "price": "Pris",
       "range": "Rekkevidde",
       "singlePhase": "Enfase",
       "soc": "Lade",
@@ -172,11 +182,27 @@
       "loading": "Laster YAML-editor…"
     },
     "eebus": {
-      "description": "Konfigurasjon som gjør det mulig for evcc å kommunisere med andre EEBus-enheter.",
+      "certificate": {
+        "private": "Privat nøkkel",
+        "public": "Offentlig sertifikat",
+        "title": "Sertifikater"
+      },
+      "description": "Konfigurasjon som gjør det mulig for evcc å kommunisere med EEBus-kompatible enheter som ladere, eller en kontrollenhet fra nettselskapet ditt. All relevant initialisering og generering av sertifikater gjøres automatisk ved første oppstart.",
+      "descriptionAdvanced": "Ingen endringer nødvendig. Bare gjør endringer dersom du virkelig vet hva du driver med. Hvis du endrer enten SHIP-iden eller sertifikatene må du pare enhetene dine på nytt.",
+      "interfaces": "Grensesnitt",
+      "interfacesHelp": "Begrens nettverksgrensesnittene EEBus bruker for å unngå kommunikasjonsproblemer. La feltet stå tomt for å bruke alle grensesnitt. Kun én oppføring per linje.",
+      "port": "Port",
+      "portHelp": "Porten som skal brukes.",
+      "removeConfirm": "All konfigurasjon av EEBus vil fjernes. Nye sertifikater og identifikatorer genereres ved neste oppstart. Er du sikker?",
+      "shipid": "SHIP-ID",
+      "shipidExplain": "Permanent enhetsidentifikator for identifisering på EEBus-nettverket.",
+      "shipidHelp": "Denne SHIP-IDen er koblet til sertifikatet under.",
+      "ski": "SKI",
+      "skiExplain": "Unik sikkerhetsidentifikator for paring av EEBus-enheter.",
       "title": "EEBus"
     },
     "experimental": {
-      "description": "Aktiver brukergrensesnitt for funksjoner som fortsatt er under testing og kan endres i fremtidige versjoner.",
+      "description": "Gir tidlig tilgang til funksjoner som fortsatt er under testing. Disse kan være ustabile og kan endres eller fjernes i fremtidige versjoner.",
       "title": "Eksperimentell"
     },
     "ext": {
@@ -198,6 +224,7 @@
       "cancel": "Avbryt",
       "clear": "Tydelig",
       "close": "Lukk",
+      "confirmSave": "Du har ulagrede endringer. Lagre nå?",
       "copied": "Kopiert!",
       "copy": "Kopier",
       "customHelp": "Opprett en brukerdefinert enhet ved hjelp av evccs plugin-system.",
@@ -207,6 +234,7 @@
       "dragHandle": "Dra i håndtaket",
       "dragItem": "Draggable: {title}",
       "dragList": "Omordningsbar liste",
+      "error": "Feil",
       "experimental": "Eksperimentell",
       "forceSave": "Lagre likevel",
       "fromYamlHint": "Merk: Konfigurert via evcc.yaml. Fjern oppføringen fra filen for å aktivere redigering her.",

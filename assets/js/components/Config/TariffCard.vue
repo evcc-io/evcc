@@ -1,5 +1,6 @@
 <template>
 	<DeviceCard
+		:id="`tariff_${tariffType}_${tariff.name}`"
 		:title="cardTitle"
 		:name="tariff.name"
 		:editable="!!tariff.id"

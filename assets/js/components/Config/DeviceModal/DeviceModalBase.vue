@@ -482,7 +482,9 @@ export default defineComponent({
 			}
 
 			const isYamlInput = this.isYamlInputTypeByValue(newValue as ConfigType);
-			if (!isYamlInput) {
+			if (isYamlInput) {
+				this.template = null;
+			} else {
 				this.loadTemplate();
 			}
 
