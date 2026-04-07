@@ -1936,7 +1936,13 @@ func (lp *Loadpoint) phaseSwitchCompleted() bool {
 
 // Update is the main control function. It reevaluates meters and charger state
 func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64) {
+	// reset timers by default
+	resetTimers := true
 	defer func() {
+		if resetTimers {
+			lp.resetPhaseTimer()
+			lp.resetPVTimer()
+		}
 		lp.lastUpdate = lp.clock.Now()
 	}()
 
@@ -2056,7 +2062,7 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 	minSocNotReached := lp.minSocNotReached()
 	lp.publish(keys.MinSocNotReached, minSocNotReached)
 
-	// execute loading strategy
+	// execute charging strategy
 	switch {
 	case !lp.connected():
 		// always disable charger if not connected
@@ -2075,6 +2081,7 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 
 	// minimum or target charging
 	case minSocNotReached || plannerActive:
+		resetTimers = false
 		err = lp.fastCharging()
 		lp.resetPhaseTimer()
 		lp.elapsePVTimer() // let PV mode disable immediately afterwards
@@ -2082,20 +2089,18 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 	case lp.LimitEnergyReached():
 		lp.log.DEBUG.Printf("limitEnergy reached: %.0fkWh > %0.1fkWh", lp.GetChargedEnergy()/1e3, lp.limitEnergy)
 		err = lp.disableUnlessClimater()
-		lp.resetPhaseTimer() // limit can be increased anytime
-		lp.resetPVTimer()
 
 	case lp.LimitSocReached():
 		lp.log.DEBUG.Printf("limitSoc reached: %.1f%% > %d%%", lp.vehicleSoc, lp.EffectiveLimitSoc())
 		err = lp.disableUnlessClimater()
-		lp.resetPhaseTimer() // limit can be increased anytime
-		lp.resetPVTimer()
 
 	// immediate charging- must be placed after limits are evaluated
 	case mode == api.ModeNow:
 		err = lp.fastCharging()
 
 	case mode == api.ModeMinPV || mode == api.ModePV:
+		resetTimers = false
+
 		// cheap tariff
 		if smartCostActive {
 			rate, _ := consumption.At(time.Now())
