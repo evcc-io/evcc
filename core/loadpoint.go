@@ -161,16 +161,15 @@ type Loadpoint struct {
 	planLocked       PlanLock         // locked plan
 
 	// cached state
-	status                   api.ChargeStatus // Charger status
-	chargePower              float64          // Charging power
-	chargeCurrents           []float64        // Phase currents
-	connectedTime            time.Time        // Time when vehicle was connected
-	pvTimer                  time.Time        // PV enable/disable timer
-	pvTimerLastEvaluation    time.Time        // PV enable/disable timer last evaluation time
-	phaseTimer               time.Time        // 1p3p switch timer
-	phaseTimerLastEvaluation time.Time        // 1p3p switch timer last evaluation time
-	phaseTimerAction         string           // 1p3p switch timer action (timerInactive, phaseScale1p, phaseScale3p)
-	wakeUpTimer              *Timer           // Vehicle wake-up timeout
+	status           api.ChargeStatus // Charger status
+	chargePower      float64          // Charging power
+	chargeCurrents   []float64        // Phase currents
+	connectedTime    time.Time        // Time when vehicle was connected
+	pvTimer          time.Time        // PV enable/disable timer
+	phaseTimer       time.Time        // 1p3p switch timer
+	phaseTimerAction string           // 1p3p switch timer action (timerInactive, phaseScale1p, phaseScale3p)
+	wakeUpTimer      *Timer           // Vehicle wake-up timeout
+	lastUpdate       time.Time        // last time Update() completed
 
 	// charge progress
 	vehicleSoc              float64       // Vehicle or charger soc
@@ -328,6 +327,7 @@ func NewLoadpoint(log *util.Logger, settings settings.Settings) *Loadpoint {
 		coordinator:      coordinator.NewDummy(),                                          // dummy vehicle coordinator
 		tasks:            util.NewQueue[Task](),                                           // task queue
 		phaseTimerAction: timerInactive,                                                   // avoid "" to improve consistency
+		lastUpdate:       clock.Now(),                                                     // initialize lastUpdate
 	}
 
 	return lp
@@ -539,7 +539,7 @@ func (lp *Loadpoint) evVehicleConnectHandler() {
 	}
 
 	// immediately allow pv mode activity
-	if lp.GetMode() == api.ModePV {
+	if !lp.enabled && lp.GetMode() == api.ModePV {
 		lp.elapsePVTimer()
 	}
 
@@ -1361,10 +1361,6 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent, effectiveC
 
 	now := lp.clock.Now()
 
-	// timestamp used to increase the remaining delay duration
-	phaseTimerLastEvaluation := lp.phaseTimerLastEvaluation
-	lp.phaseTimerLastEvaluation = now
-
 	activePhases := lp.ActivePhases()
 	maxPhases := lp.MaxActivePhases()
 	targetCurrent1P := effectiveCurrent*float64(activePhases) + powerToCurrent(-sitePower, 1)
@@ -1436,11 +1432,11 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent, effectiveC
 		}
 
 		// increase the remaining delay duration
-		timeSinceLastEval := now.Sub(phaseTimerLastEvaluation)
-		lp.phaseTimer = lp.phaseTimer.Add(timeSinceLastEval * (timerIncreasingSpeed + 1))
+		timeSinceLastUpdate := now.Sub(lp.lastUpdate)
+		lp.phaseTimer = lp.phaseTimer.Add(timeSinceLastUpdate * (timerIncreasingSpeed + 1))
 
 		// reset timer if the configured delay duration is still expected to be exceeded during the next evaluation
-		if cutoffTime := now.Add(timeSinceLastEval); lp.phaseTimer.After(cutoffTime) {
+		if cutoffTime := now.Add(timeSinceLastUpdate); lp.phaseTimer.After(cutoffTime) {
 			lp.resetPhaseTimer()
 		} else {
 			lp.publishTimer(phaseTimer, delay, timerIncreasing)
@@ -1548,10 +1544,6 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 
 	now := lp.clock.Now()
 
-	// timestamp used to increase the remaining delay duration
-	pvTimerLastEvaluation := lp.pvTimerLastEvaluation
-	lp.pvTimerLastEvaluation = now
-
 	if lp.enabled {
 		// estimate future site power after adjusting the charge current
 		projectedDeltaCurrent := legalTargetCurrent - effectiveCurrent
@@ -1587,11 +1579,11 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 			}
 
 			// increase the remaining delay duration
-			timeSinceLastEval := now.Sub(pvTimerLastEvaluation)
-			lp.pvTimer = lp.pvTimer.Add(timeSinceLastEval * (timerIncreasingSpeed + 1))
+			timeSinceLastUpdate := now.Sub(lp.lastUpdate)
+			lp.pvTimer = lp.pvTimer.Add(timeSinceLastUpdate * (timerIncreasingSpeed + 1))
 
 			// reset timer if the configured delay duration is still expected to be exceeded during the next evaluation
-			if cutoffTime := now.Add(timeSinceLastEval); lp.pvTimer.After(cutoffTime) {
+			if cutoffTime := now.Add(timeSinceLastUpdate); lp.pvTimer.After(cutoffTime) {
 				lp.resetPVTimer()
 			} else {
 				lp.publishTimer(pvTimer, delay, timerIncreasing)
@@ -1631,11 +1623,11 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 		}
 
 		// increase the remaining delay duration
-		timeSinceLastEval := now.Sub(pvTimerLastEvaluation)
-		lp.pvTimer = lp.pvTimer.Add(timeSinceLastEval * (timerIncreasingSpeed + 1))
+		timeSinceLastUpdate := now.Sub(lp.lastUpdate)
+		lp.pvTimer = lp.pvTimer.Add(timeSinceLastUpdate * (timerIncreasingSpeed + 1))
 
 		// reset timer if the configured delay duration is still expected to be exceeded during the next evaluation
-		if cutoffTime := now.Add(timeSinceLastEval); lp.pvTimer.After(cutoffTime) {
+		if cutoffTime := now.Add(timeSinceLastUpdate); lp.pvTimer.After(cutoffTime) {
 			lp.resetPVTimer()
 		} else {
 			lp.publishTimer(pvTimer, delay, timerIncreasing)
@@ -1956,6 +1948,10 @@ func (lp *Loadpoint) phaseSwitchCompleted() bool {
 
 // Update is the main control function. It reevaluates meters and charger state
 func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64) {
+	defer func() {
+		lp.lastUpdate = lp.clock.Now()
+	}()
+
 	// auto-disable battery boost when SOC drops below limit
 	if lp.GetBatteryBoost() != boostDisabled {
 		if limit := lp.GetBatteryBoostLimit(); limit < 100 {

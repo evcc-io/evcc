@@ -307,6 +307,7 @@ func TestPVHysteresis(t *testing.T) {
 			clock := clock.NewMock()
 			ctrl := gomock.NewController(t)
 			charger := api.NewMockCharger(ctrl)
+			start := clock.Now()
 
 			Voltage = 100
 			lp := &Loadpoint{
@@ -325,12 +326,11 @@ func TestPVHysteresis(t *testing.T) {
 					Threshold: tc.disable,
 					Delay:     dt,
 				},
+				lastUpdate: start,
 			}
 
 			// charging, otherwise PV mode logic is short-circuited
 			lp.status = status
-
-			start := clock.Now()
 
 			for step, se := range tc.series {
 				clock.Set(start.Add(se.delay))
@@ -340,6 +340,7 @@ func TestPVHysteresis(t *testing.T) {
 
 				lp.enabled = tc.enabled
 				current := lp.pvMaxCurrent(api.ModePV, se.site, 0, false, false)
+				lp.lastUpdate = clock.Now()
 
 				if current != se.current {
 					t.Errorf("step %d: wanted %.1f, got %.1f", step, se.current, current)
