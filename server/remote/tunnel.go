@@ -13,6 +13,7 @@ import (
 	"github.com/cenkalti/backoff/v4"
 	"github.com/coder/websocket"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/hashicorp/yamux"
 )
 
@@ -78,7 +79,8 @@ func (t *Tunnel) run() {
 func (t *Tunnel) connect(ctx context.Context) (bool, error) {
 	conn, _, err := websocket.Dial(ctx, t.tunnelURL, &websocket.DialOptions{
 		HTTPHeader: http.Header{
-			"Authorization": []string{"Bearer " + t.token},
+			"Authorization":   []string{"Bearer " + t.token},
+			"X-Sponsor-Token": []string{sponsor.Token},
 		},
 	})
 	if err != nil {
