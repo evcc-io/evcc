@@ -68,6 +68,7 @@ export type ApiData = {
   icon?: string;
   usage?: MeterTemplateUsage;
   title?: string;
+  priority?: number;
   identifiers?: string[];
   [key: string]: any;
 };

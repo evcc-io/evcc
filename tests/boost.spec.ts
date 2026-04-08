@@ -87,6 +87,7 @@ test.describe("boost", async () => {
     await lp1.getByTestId("mode").getByRole("button", { name: "Solar", exact: true }).click();
     await lp1.getByTestId("loadpoint-settings-button").last().click();
     const modal = page.getByTestId("loadpoint-settings-modal").first();
+    await expectModalVisible(modal);
     await modal.getByTestId("battery-boost-limit").selectOption("0 %");
     await modal.getByLabel("Close").click();
     await expectModalHidden(modal);
