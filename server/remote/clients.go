@@ -10,6 +10,7 @@ import (
 
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/server/db/settings"
+	"github.com/samber/lo"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -52,9 +53,9 @@ type persistedClient struct {
 
 // loadClients reads the persisted client list.
 func loadClients() []persistedClient {
-	var env clientsEnvelope
-	_ = settings.Json(keys.RemoteClients, &env)
-	return env.Clients
+	var res clientsEnvelope
+	_ = settings.Json(keys.RemoteClients, &res)
+	return res.Clients
 }
 
 // saveClients persists the given client list.
@@ -105,8 +106,7 @@ func (r *Remote) CreateClient(username string, expiresIn time.Duration) (Client,
 
 	var expires *time.Time
 	if expiresIn > 0 {
-		t := time.Now().Add(expiresIn)
-		expires = &t
+		expires = new(time.Now().Add(expiresIn))
 	}
 
 	r.mu.Lock()
@@ -153,16 +153,10 @@ func (r *Remote) DeleteClient(username string) error {
 	defer r.mu.Unlock()
 
 	list := loadClients()
-	out := make([]persistedClient, 0, len(list))
-	found := false
-	for _, c := range list {
-		if c.Username == username {
-			found = true
-			continue
-		}
-		out = append(out, c)
-	}
-	if !found {
+	out := lo.Reject(list, func(c persistedClient, _ int) bool {
+		return c.Username == username
+	})
+	if len(out) == len(list) {
 		return fmt.Errorf("client %q not found", username)
 	}
 	return saveClients(out)
