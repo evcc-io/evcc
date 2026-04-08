@@ -44,7 +44,7 @@ func NewDemoFromConfig(_ context.Context, other map[string]any) (oauth2.TokenSou
 
 func NewDemo(server, method, redirectUri, secret string) (oauth2.TokenSource, error) {
 	if secret != "topsecret" {
-		return nil, fmt.Errorf("invalid secret")
+		return nil, errors.New("invalid secret")
 	}
 
 	// reuse instance (similar to oauth.go getInstance pattern)
