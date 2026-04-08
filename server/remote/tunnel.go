@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/subtle"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -58,7 +59,7 @@ func (t *Tunnel) run() {
 
 	for {
 		ok, err := t.connect(ctx)
-		if err != nil {
+		if err != nil && !errors.Is(err, context.Canceled) {
 			t.log.ERROR.Printf("tunnel: %v", err)
 		}
 
