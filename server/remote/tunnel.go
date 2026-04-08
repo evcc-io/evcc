@@ -90,7 +90,10 @@ func (t *Tunnel) connect(ctx context.Context) (bool, error) {
 	// wrap websocket as net.Conn for yamux
 	netConn := websocket.NetConn(ctx, conn, websocket.MessageBinary)
 
-	session, err := yamux.Client(netConn, nil)
+	config := yamux.DefaultConfig()
+	config.LogOutput = t.log.TRACE.Writer()
+
+	session, err := yamux.Client(netConn, config)
 	if err != nil {
 		conn.CloseNow()
 		return false, fmt.Errorf("yamux client: %w", err)
