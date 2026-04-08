@@ -6,7 +6,6 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"net"
 	"net/http"
 	"sync"
 	"time"
@@ -162,40 +161,4 @@ func basicAuthMiddleware(next http.Handler) http.Handler {
 		}
 		next.ServeHTTP(w, r)
 	})
-}
-
-// singleConnListener implements net.Listener for a single connection.
-type singleConnListener struct {
-	conn net.Conn
-	once sync.Once
-	done chan struct{}
-}
-
-func (l *singleConnListener) Accept() (net.Conn, error) {
-	var conn net.Conn
-	l.once.Do(func() {
-		conn = l.conn
-		l.done = make(chan struct{})
-	})
-	if conn != nil {
-		return conn, nil
-	}
-	// block until closed — signal http.Server to stop
-	<-l.done
-	return nil, fmt.Errorf("listener closed")
-}
-
-func (l *singleConnListener) Close() error {
-	if l.done != nil {
-		select {
-		case <-l.done:
-		default:
-			close(l.done)
-		}
-	}
-	return nil
-}
-
-func (l *singleConnListener) Addr() net.Addr {
-	return l.conn.LocalAddr()
 }
