@@ -107,6 +107,8 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive bool, rate api.Rat
 		res = keepUnlessModified(api.BatteryCharge)
 	case site.dischargeControlActive(rate):
 		res = keepUnlessModified(api.BatteryHold)
+	case site.bufferSocHoldActive():
+		res = keepUnlessModified(api.BatteryHold)
 	case batteryModeModified(batMode):
 		res = api.BatteryNormal
 	}
@@ -211,6 +213,24 @@ func (site *Site) dischargeControlActive(rate api.Rate) bool {
 	for _, lp := range site.Loadpoints() {
 		smartCostActive := site.smartCostActive(lp, rate)
 		if lp.GetStatus() == api.StatusC && (smartCostActive || lp.IsFastChargingActive()) {
+			return true
+		}
+	}
+
+	return false
+}
+
+// bufferSocHoldActive returns true when battery is below bufferSoc and a loadpoint
+// is fast charging (plan, mode=now, minSoc). This prevents the battery from being
+// drained during fast/plan charging beyond the configured buffer threshold.
+func (site *Site) bufferSocHoldActive() bool {
+	bufferSoc := site.GetBufferSoc()
+	if bufferSoc <= 0 || site.battery.Soc >= bufferSoc {
+		return false
+	}
+
+	for _, lp := range site.Loadpoints() {
+		if lp.GetStatus() == api.StatusC && lp.IsFastChargingActive() {
 			return true
 		}
 	}
