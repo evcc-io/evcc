@@ -9,10 +9,57 @@ import (
 	"math"
 	"net"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/util"
 )
+
+// connPool holds one UDP connection per inverter host, bound to local port 8899.
+// Sharing one socket per host is required because:
+//  1. Some inverter WiFi modules only respond to requests originating from port 8899.
+//  2. Multiple aa55udp source blocks for the same meter (power + energy + soc)
+//     would otherwise each try to bind :8899 and all but the first would fail.
+var (
+	connPool   = make(map[string]*sharedConn)
+	connPoolMu sync.Mutex
+)
+
+type sharedConn struct {
+	conn *net.UDPConn
+	mu   sync.Mutex
+}
+
+// getConn returns the shared UDP connection for the given host, creating it if
+// necessary.  The connection is bound to local port 8899 so the inverter sees
+// requests arriving from the same port it listens on.
+func getConn(host string) (*sharedConn, error) {
+	connPoolMu.Lock()
+	defer connPoolMu.Unlock()
+
+	if sc, ok := connPool[host]; ok {
+		return sc, nil
+	}
+
+	laddr, err := net.ResolveUDPAddr("udp4", ":8899")
+	if err != nil {
+		return nil, fmt.Errorf("aa55udp: resolve local: %w", err)
+	}
+
+	raddr, err := net.ResolveUDPAddr("udp4", net.JoinHostPort(host, "8899"))
+	if err != nil {
+		return nil, fmt.Errorf("aa55udp: resolve %s: %w", host, err)
+	}
+
+	conn, err := net.DialUDP("udp4", laddr, raddr)
+	if err != nil {
+		return nil, fmt.Errorf("aa55udp: dial %s: %w", host, err)
+	}
+
+	sc := &sharedConn{conn: conn}
+	connPool[host] = sc
+	return sc, nil
+}
 
 // AA55UDP implements the GoodWe WiFi AA55-over-UDP wire protocol as a generic
 // evcc source plugin.
@@ -31,7 +78,7 @@ import (
 // of the response payload.
 type AA55UDP struct {
 	log    *util.Logger
-	conn   *net.UDPConn
+	sc     *sharedConn
 	pdu    []byte // 6-byte PDU body, no CRC
 	decode string // int32be | uint32be | int16be | uint16be | float32be
 	scale  float64
@@ -83,19 +130,14 @@ func NewAA55UDPFromConfig(_ context.Context, other map[string]interface{}) (Plug
 
 	pdu := buildPDU(byte(cc.Id), cc.Register, cc.Count)
 
-	addr, err := net.ResolveUDPAddr("udp4", net.JoinHostPort(cc.Host, "8899"))
+	sc, err := getConn(cc.Host)
 	if err != nil {
-		return nil, fmt.Errorf("aa55udp: resolve %s: %w", cc.Host, err)
-	}
-
-	conn, err := net.DialUDP("udp4", nil, addr)
-	if err != nil {
-		return nil, fmt.Errorf("aa55udp: dial %s: %w", cc.Host, err)
+		return nil, err
 	}
 
 	return &AA55UDP{
 		log:    util.NewLogger("aa55udp"),
-		conn:   conn,
+		sc:     sc,
 		pdu:    pdu,
 		decode: cc.Decode,
 		scale:  cc.Scale,
@@ -108,20 +150,24 @@ func (p *AA55UDP) FloatGetter() (func() (float64, error), error) {
 }
 
 // query sends the PDU and returns the decoded, scaled value at offset 0 of the
-// response payload.
+// response payload.  The shared connection is locked for the duration so
+// concurrent callers for the same host do not interleave reads and writes.
 func (p *AA55UDP) query() (float64, error) {
+	p.sc.mu.Lock()
+	defer p.sc.mu.Unlock()
+
 	packet := append(p.pdu, modbusCRC16(p.pdu)...)
 
-	if _, err := p.conn.Write(packet); err != nil {
+	if _, err := p.sc.conn.Write(packet); err != nil {
 		return 0, fmt.Errorf("aa55udp write: %w", err)
 	}
 
-	if err := p.conn.SetReadDeadline(time.Now().Add(4 * time.Second)); err != nil {
+	if err := p.sc.conn.SetReadDeadline(time.Now().Add(4 * time.Second)); err != nil {
 		return 0, fmt.Errorf("aa55udp deadline: %w", err)
 	}
 
 	buf := make([]byte, 512)
-	n, err := p.conn.Read(buf)
+	n, err := p.sc.conn.Read(buf)
 	if err != nil {
 		return 0, fmt.Errorf("aa55udp read: %w", err)
 	}
@@ -185,7 +231,7 @@ func stripAA55Header(buf []byte) ([]byte, error) {
 	return buf[5 : 5+byteCount], nil
 }
 
-// decodeAt extracts an integer at the given byte offset of payload and
+// decodeAt extracts a value at the given byte offset of payload and
 // interprets it according to decode.
 func decodeAt(payload []byte, offset int, decode string) (float64, error) {
 	switch decode {

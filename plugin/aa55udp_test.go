@@ -298,7 +298,7 @@ func TestFloatGetter_DT_Power(t *testing.T) {
 	response := singleRegResponse(t, capGW17kDT, 54, 4, 0x7f)
 	p := &AA55UDP{
 		log:    util.NewLogger("test"),
-		conn:   mockConn(t, response),
+		sc:     &sharedConn{conn: mockConn(t, response)},
 		pdu:    buildPDU(0x7F, 0x75AF, 2),
 		decode: "int32be",
 		scale:  1.0,
@@ -315,7 +315,7 @@ func TestFloatGetter_DT_Energy(t *testing.T) {
 	response := singleRegResponse(t, capGW17kDT, 90, 4, 0x7f)
 	p := &AA55UDP{
 		log:    util.NewLogger("test"),
-		conn:   mockConn(t, response),
+		sc:     &sharedConn{conn: mockConn(t, response)},
 		pdu:    buildPDU(0x7F, 0x75C1, 2),
 		decode: "uint32be",
 		scale:  0.1,
@@ -332,7 +332,7 @@ func TestFloatGetter_ET_PV(t *testing.T) {
 	response := singleRegResponse(t, capGW10kET, 74, 4, 0xf7)
 	p := &AA55UDP{
 		log:    util.NewLogger("test"),
-		conn:   mockConn(t, response),
+		sc:     &sharedConn{conn: mockConn(t, response)},
 		pdu:    buildPDU(0xF7, 0x8941, 2),
 		decode: "int32be",
 		scale:  1.0,
@@ -349,7 +349,7 @@ func TestFloatGetter_ET_Battery(t *testing.T) {
 	response := singleRegResponse(t, capGW10kET, 164, 4, 0xf7)
 	p := &AA55UDP{
 		log:    util.NewLogger("test"),
-		conn:   mockConn(t, response),
+		sc:     &sharedConn{conn: mockConn(t, response)},
 		pdu:    buildPDU(0xF7, 0x896E, 2),
 		decode: "int32be",
 		scale:  1.0,
@@ -366,7 +366,7 @@ func TestFloatGetter_ET_SoC(t *testing.T) {
 	response := singleRegResponse(t, capGW10kETBattery, 14, 2, 0xf7)
 	p := &AA55UDP{
 		log:    util.NewLogger("test"),
-		conn:   mockConn(t, response),
+		sc:     &sharedConn{conn: mockConn(t, response)},
 		pdu:    buildPDU(0xF7, 0x908F, 1),
 		decode: "uint16be",
 		scale:  1.0,
