@@ -105,5 +105,5 @@ render: |
   phases1p3p:
     source: mqtt
     topic: {{ .topic }}/Set/EnableC2
-    payload: '{{"{{"}}.phases1p3p{{"}}"}}'
+    payload: '{{"{{"}}if eq .phases1p3p 3{{"}}"}}3{{"{{"}}else{{"}}"}}1{{"{{"}}end{{"}}"}}'
   {{- end }}
