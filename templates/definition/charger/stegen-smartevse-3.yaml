@@ -4,7 +4,7 @@ products:
 - brand: Stegen
   description:
     generic: Smart EVSE v3 (MQTT)
-  capabilities: ["1p3p"]
+capabilities: ["1p3p"]
 
 requirements:
   description:
