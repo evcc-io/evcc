@@ -80,7 +80,7 @@ type AA55UDP struct {
 	log    *util.Logger
 	sc     *sharedConn
 	pdu    []byte // 6-byte PDU body, no CRC
-	decode string // int32be | uint32be | int16be | uint16be | float32be
+	decode string // int32be | uint32be | uint32nan | int16be | uint16be | float32be
 	scale  float64
 }
 
@@ -95,7 +95,7 @@ func init() {
 //	id:       0x7F           # inverter address byte: 0x7F for DT/DNS/ES/EM, 0xF7 for ET/EH/BT/BH
 //	register: 30127          # Modbus register address (0-based, uint16)
 //	count:    2              # number of registers to read (1=U16, 2=S32/U32)
-//	decode:   int32be        # int32be | uint32be | int16be | uint16be | float32be
+//	decode:   int32be        # int32be | uint32be | uint32nan | int16be | uint16be | float32be
 //	scale:    1.0            # optional multiplier (default 1.0)
 func NewAA55UDPFromConfig(_ context.Context, other map[string]interface{}) (Plugin, error) {
 	cc := struct {
@@ -123,9 +123,9 @@ func NewAA55UDPFromConfig(_ context.Context, other map[string]interface{}) (Plug
 	}
 
 	switch cc.Decode {
-	case "int32be", "uint32be", "int16be", "uint16be", "float32be":
+	case "int32be", "uint32be", "uint32nan", "int16be", "uint16be", "float32be":
 	default:
-		return nil, fmt.Errorf("aa55udp: unsupported decode %q (want int32be|uint32be|int16be|uint16be|float32be)", cc.Decode)
+		return nil, fmt.Errorf("aa55udp: unsupported decode %q (want int32be|uint32be|uint32nan|int16be|uint16be|float32be)", cc.Decode)
 	}
 
 	pdu := buildPDU(byte(cc.Id), cc.Register, cc.Count)
@@ -251,6 +251,16 @@ func decodeAt(payload []byte, offset int, decode string) (float64, error) {
 			return 0, fmt.Errorf("payload too short for uint32be at offset %d (len=%d)", offset, len(payload))
 		}
 		return float64(binary.BigEndian.Uint32(payload[offset:])), nil
+	case "uint32nan":
+		// Like uint32be but treats 0xFFFFFFFF (not-connected sentinel) as 0.
+		// Used for PV string power registers where disconnected strings report NaN.
+		if len(payload) < offset+4 {
+			return 0, fmt.Errorf("payload too short for uint32nan at offset %d (len=%d)", offset, len(payload))
+		}
+		if v := binary.BigEndian.Uint32(payload[offset:]); v != 0xFFFFFFFF {
+			return float64(v), nil
+		}
+		return 0, nil
 	case "int16be":
 		if len(payload) < offset+2 {
 			return 0, fmt.Errorf("payload too short for int16be at offset %d (len=%d)", offset, len(payload))

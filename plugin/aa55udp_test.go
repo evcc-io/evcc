@@ -170,6 +170,22 @@ func TestDecodeAt_Float32BE(t *testing.T) {
 	assert.InDelta(t, 123.456, v, 0.001)
 }
 
+func TestDecodeAt_Uint32NAN_Normal(t *testing.T) {
+	payload := make([]byte, 4)
+	binary.BigEndian.PutUint32(payload, 8310) // e.g. 83.10 W string power
+	v, err := decodeAt(payload, 0, "uint32nan")
+	require.NoError(t, err)
+	assert.InDelta(t, 8310.0, v, 0)
+}
+
+func TestDecodeAt_Uint32NAN_Disconnected(t *testing.T) {
+	payload := make([]byte, 4)
+	binary.BigEndian.PutUint32(payload, 0xFFFFFFFF) // disconnected string sentinel
+	v, err := decodeAt(payload, 0, "uint32nan")
+	require.NoError(t, err)
+	assert.InDelta(t, 0.0, v, 0) // must return 0, not 4.3GW
+}
+
 func TestDecodeAt_TooShort(t *testing.T) {
 	_, err := decodeAt([]byte{0x00}, 0, "int32be")
 	require.Error(t, err)

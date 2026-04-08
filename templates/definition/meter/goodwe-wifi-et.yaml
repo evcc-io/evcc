@@ -34,12 +34,32 @@ render: |
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
-    source: aa55udp
-    host: {{ .host }}
-    id: 247
-    register: 35137
-    count: 2
-    decode: int32be
+    source: calc
+    add:
+    - source: aa55udp
+      host: {{ .host }}
+      id: 247
+      register: 35105
+      count: 2
+      decode: uint32nan
+    - source: aa55udp
+      host: {{ .host }}
+      id: 247
+      register: 35109
+      count: 2
+      decode: uint32nan
+    - source: aa55udp
+      host: {{ .host }}
+      id: 247
+      register: 35113
+      count: 2
+      decode: uint32nan
+    - source: aa55udp
+      host: {{ .host }}
+      id: 247
+      register: 35117
+      count: 2
+      decode: uint32nan
   energy:
     source: aa55udp
     host: {{ .host }}
