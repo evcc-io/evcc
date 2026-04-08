@@ -304,11 +304,6 @@ export default {
 		},
 		value: {
 			get() {
-				// use first option if no value is set
-				if (this.selectOptions.length > 0 && !this.modelValue) {
-					return this.required ? this.selectOptions[0].key : "";
-				}
-
 				if (this.scale) {
 					return this.modelValue * this.scale;
 				}
