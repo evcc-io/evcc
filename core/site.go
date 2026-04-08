@@ -631,27 +631,19 @@ func (site *Site) updateBatteryMeters() {
 		mm[i].Controllable = new(controllable)
 	}
 
-	batterySocAcc := lo.SumBy(mm, func(m types.Measurement) float64 {
-		if m.Soc == nil {
-			return 0
-		}
-		// weigh soc by capacity
-		if m.Capacity != nil && *m.Capacity > 0 {
-			return *m.Soc * *m.Capacity
-		}
-		return *m.Soc
-	})
-	totalCapacity := lo.SumBy(mm, func(m types.Measurement) float64 {
-		if m.Capacity == nil {
-			return 0
-		}
-		return *m.Capacity
-	})
+	var batterySocAcc float64
+	var totalCapacity float64
 
-	// convert weighed socs to total soc
-	if totalCapacity == 0 {
+	if lo.SomeBy(mm, func(m types.Measurement) bool { return m.Capacity == nil || *m.Capacity <= 0 }) {
+		// any capacity is missing
+		batterySocAcc = sumOfSocs(mm)
 		totalCapacity = float64(len(site.batteryMeters))
+	} else {
+		// all capacities available - weigh soc by capacity
+		batterySocAcc = weightedSumOfSocs(mm)
+		totalCapacity = lo.SumBy(mm, func(m types.Measurement) float64 { return *m.Capacity })
 	}
+
 	site.battery.Soc = batterySocAcc / totalCapacity
 	site.battery.Capacity = totalCapacity
 
@@ -670,6 +662,25 @@ func (site *Site) updateBatteryMeters() {
 	site.battery.Devices = mm
 
 	site.publish(keys.Battery, site.battery)
+}
+
+func sumOfSocs(mm []types.Measurement) float64 {
+	return lo.SumBy(mm, func(m types.Measurement) float64 {
+		if m.Soc == nil {
+			return 0
+		}
+		return *m.Soc
+	})
+}
+
+func weightedSumOfSocs(mm []types.Measurement) float64 {
+	return lo.SumBy(mm, func(m types.Measurement) float64 {
+		if m.Soc == nil {
+			return 0
+		}
+		// weigh soc by capacity
+		return *m.Soc * *m.Capacity
+	})
 }
 
 // updateAuxMeters updates aux meters
