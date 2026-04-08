@@ -44,8 +44,8 @@ params:
     en: MQTT topic prefix (e.g. SmartEVSE-8088)
     de: MQTT-Topic-Praefix (z.B. SmartEVSE-8088)
   help:
-    en: Found in SmartEVSE settings -> MQTT -> Topic prefix. Common formats: SmartEVSE-8088 or SmartEVSE/8088
-    de: In den SmartEVSE-Einstellungen unter MQTT -> Topic-Praefix. Gaengige Formate: SmartEVSE-8088 oder SmartEVSE/8088
+    en: Found in SmartEVSE web interface under Settings, MQTT, Topic prefix. Typical values are SmartEVSE-8088 or SmartEVSE/8088
+    de: In der SmartEVSE-Weboberflaeche unter Einstellungen, MQTT, Topic-Praefix. Typische Werte sind SmartEVSE-8088 oder SmartEVSE/8088
   example: "SmartEVSE-8088"
 - name: phases1p3p
   type: bool
