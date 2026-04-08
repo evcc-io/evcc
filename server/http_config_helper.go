@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"maps"
 	"reflect"
 	"slices"
 	"strings"
@@ -171,57 +170,30 @@ func mergeMasked(class templates.Class, conf, old map[string]any) (map[string]an
 	})
 }
 
-// storedDeviceOther retrieves the 'Other' configuration properties of a stored device by its ID
-func storedDeviceOther[T any](id int, h config.Handler[T]) (map[string]any, error) {
-	dev, err := h.ByName(config.NameForID(id))
-	if err != nil {
-		return nil, err
-	}
-
-	return dev.Config().Other, nil
-}
-
-// mergedMaskedConfig merges a new configuration with an existing one, replacing masked values with their original counterparts
-func mergedMaskedConfig(class templates.Class, id int, conf map[string]any) (map[string]any, error) {
-	var (
-		old map[string]any
-		err error
-	)
-
+// deviceOther looks up a stored device's `Other` config by class and id.
+func deviceOther(class templates.Class, id int) (map[string]any, error) {
+	name := config.NameForID(id)
 	switch class {
 	case templates.Charger:
-		old, err = storedDeviceOther(id, config.Chargers())
+		return deviceOtherFromHandler(name, config.Chargers())
 	case templates.Meter:
-		old, err = storedDeviceOther(id, config.Meters())
+		return deviceOtherFromHandler(name, config.Meters())
 	case templates.Vehicle:
-		old, err = storedDeviceOther(id, config.Vehicles())
+		return deviceOtherFromHandler(name, config.Vehicles())
 	case templates.Tariff:
-		old, err = storedDeviceOther(id, config.Tariffs())
+		return deviceOtherFromHandler(name, config.Tariffs())
 	case templates.Messenger:
-		old, err = storedDeviceOther(id, config.Messengers())
+		return deviceOtherFromHandler(name, config.Messengers())
 	}
+	return nil, errors.New("unsupported class: " + class.String())
+}
 
+func deviceOtherFromHandler[T any](name string, h config.Handler[T]) (map[string]any, error) {
+	dev, err := h.ByName(name)
 	if err != nil {
 		return nil, err
 	}
-
-	// mergeMasked needs the template type to determine which parameters are masked.
-	// We inject the existing template from the stored config if the new config doesn't have it.
-	mergeReq := maps.Clone(conf)
-	if mergeReq[typeTemplate] == nil {
-		if tmpl, ok := old[typeTemplate]; ok {
-			mergeReq[typeTemplate] = tmpl
-		}
-	}
-
-	merged, err := mergeMasked(class, mergeReq, old)
-	if err != nil {
-		return nil, err
-	}
-
-	delete(merged, typeTemplate)
-
-	return merged, nil
+	return dev.Config().Other, nil
 }
 
 func startDeviceTimeout() (context.Context, context.CancelFunc, chan struct{}) {

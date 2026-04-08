@@ -57,11 +57,19 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		merged, err := mergedMaskedConfig(class, id, cc.Other)
+		old, err := deviceOther(class, id)
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
+
+		merged, err := mergeMasked(class, cc.Other, old)
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+		// strip template before the auth decoder (strict) sees it
+		delete(merged, typeTemplate)
 
 		cc.Other = merged
 	}

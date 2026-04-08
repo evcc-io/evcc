@@ -626,7 +626,8 @@ export default defineComponent({
 			if (this.authValuesMissing) return;
 
 			const { type } = this.template.Auth;
-			const values = this.authValues;
+			// include the template name so the backend can resolve masked fields
+			const values = { ...this.authValues, template: this.templateName };
 			this.auth.loading = true;
 			const result = await this.device.checkAuth(type, values, this.id);
 			this.auth.loading = false;
