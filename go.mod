@@ -85,6 +85,7 @@ require (
 	github.com/robertkrimen/otto v0.5.1
 	github.com/samber/lo v1.53.0
 	github.com/sandrolain/httpcache v1.4.0
+	github.com/sethvargo/go-password v0.3.1
 	github.com/sirupsen/logrus v1.9.4
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/smallnest/chanx v1.2.0

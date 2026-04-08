@@ -2,7 +2,6 @@ package remote
 
 import (
 	"crypto/rand"
-	"encoding/base32"
 	"errors"
 	"fmt"
 	"strings"
@@ -11,6 +10,7 @@ import (
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/samber/lo"
+	"github.com/sethvargo/go-password/password"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -63,16 +63,10 @@ func saveClients(list []persistedClient) error {
 	return settings.SetJson(keys.RemoteClients, clientsEnvelope{Clients: list})
 }
 
-// generatePassword returns a crypto-random uppercase base32 password formatted
-// as two groups of eight characters separated by a hyphen, e.g. "NLDJ6FYF-LADB5UZH".
-// 16 base32 chars = 80 bits of entropy.
+// generatePassword returns a crypto-random alphanumeric password
+// with 20 characters including 4 digits (~96 bits of entropy).
 func generatePassword() (string, error) {
-	buf := make([]byte, 10) // 10 bytes -> 16 base32 chars
-	if _, err := rand.Read(buf); err != nil {
-		return "", err
-	}
-	s := base32.StdEncoding.WithPadding(base32.NoPadding).EncodeToString(buf)
-	return s[0:8] + "-" + s[8:16], nil
+	return password.Generate(20, 4, 0, false, false)
 }
 
 // Clients returns the list of configured clients (without password hashes).
