@@ -1,6 +1,8 @@
-description:
-  de: SmartEVSE v3 (REST API)
-  en: SmartEVSE v3 (REST API)
+template: smartevse-v3-rest
+products:
+  - brand: Stegen SmartEVSE
+    description:
+      generic: v3 (REST API)
 requirements:
   description:
     de: Nutzt die REST API der SmartEVSE v3.
@@ -19,7 +21,8 @@ params:
       en: Phase switching (requires C2 contactor)
 render: |
   type: custom
-  name: smartevse
+  
+  tos: true
 
   # --- Status & Enable Data (Cached) ---
   status:
@@ -64,7 +67,7 @@ render: |
       - Connection: close
     body: ""
 
-  {{- if .phase_switching }}
+  {{- if eq (print .phase_switching) "true" }}
   phases1p3p:
     source: http
     # 1: Always Off (1 Phase), 3: Always On (3 Phase)
