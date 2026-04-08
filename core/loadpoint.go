@@ -167,7 +167,7 @@ type Loadpoint struct {
 	connectedTime    time.Time        // Time when vehicle was connected
 	pvTimer          time.Time        // PV enable/disable timer
 	phaseTimer       time.Time        // 1p3p switch timer
-	phaseTimerAction string           // 1p3p switch timer action (timerInactive, phaseScale1p, phaseScale3p)
+	phaseTimerAction string           // 1p3p switch timer action (timerInactive, timerIncreasing, phaseScale1p, phaseScale3p)
 	wakeUpTimer      *Timer           // Vehicle wake-up timeout
 	lastUpdate       time.Time        // last time Update() completed
 
@@ -1406,9 +1406,6 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent, effectiveC
 			return 0
 		}
 
-		// set to timerInactive for consistency, no need to differentiate between timerInactive and timerIncreasing
-		lp.phaseTimerAction = timerInactive
-
 		delay := lp.GetDisableDelay()
 		if upscalable {
 			delay = lp.GetEnableDelay()
@@ -1427,6 +1424,7 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent, effectiveC
 		if cutoffTime := now.Add(timeSinceLastUpdate); lp.phaseTimer.After(cutoffTime) {
 			lp.resetPhaseTimer()
 		} else {
+			lp.phaseTimerAction = timerIncreasing
 			lp.publishTimer(phaseTimer, delay, timerIncreasing)
 		}
 	}
