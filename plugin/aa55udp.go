@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"math"
 	"net"
 	"strings"
 	"time"
@@ -32,7 +33,7 @@ type AA55UDP struct {
 	log    *util.Logger
 	conn   *net.UDPConn
 	pdu    []byte // 6-byte PDU body, no CRC
-	decode string // int32be | uint32be | int16be | uint16be
+	decode string // int32be | uint32be | int16be | uint16be | float32be
 	scale  float64
 }
 
@@ -44,18 +45,21 @@ func init() {
 //
 //	source:   aa55udp
 //	host:     192.168.1.26   # inverter IP; port 8899 is always used
+//	id:       0x7F           # inverter address byte: 0x7F for DT/DNS/ES/EM, 0xF7 for ET/EH/BT/BH
 //	register: 30127          # Modbus register address (0-based, uint16)
 //	count:    2              # number of registers to read (1=U16, 2=S32/U32)
-//	decode:   int32be        # int32be | uint32be | int16be | uint16be
+//	decode:   int32be        # int32be | uint32be | int16be | uint16be | float32be
 //	scale:    1.0            # optional multiplier (default 1.0)
 func NewAA55UDPFromConfig(_ context.Context, other map[string]interface{}) (Plugin, error) {
 	cc := struct {
 		Host     string  `mapstructure:"host"`
+		Id       int     `mapstructure:"id"`
 		Register uint16  `mapstructure:"register"`
 		Count    uint16  `mapstructure:"count"`
 		Decode   string  `mapstructure:"decode"`
 		Scale    float64 `mapstructure:"scale"`
 	}{
+		Id:    int(aa55InverterAddr),
 		Count: 2,
 		Scale: 1.0,
 	}
@@ -67,13 +71,17 @@ func NewAA55UDPFromConfig(_ context.Context, other map[string]interface{}) (Plug
 		return nil, errors.New("aa55udp: count must be ≥ 1")
 	}
 
-	switch cc.Decode {
-	case "int32be", "uint32be", "int16be", "uint16be":
-	default:
-		return nil, fmt.Errorf("aa55udp: unsupported decode %q (want int32be|uint32be|int16be|uint16be)", cc.Decode)
+	if cc.Id < 0 || cc.Id > 255 {
+		return nil, fmt.Errorf("aa55udp: id must be 0-255, got %d", cc.Id)
 	}
 
-	pdu := buildPDU(cc.Register, cc.Count)
+	switch cc.Decode {
+	case "int32be", "uint32be", "int16be", "uint16be", "float32be":
+	default:
+		return nil, fmt.Errorf("aa55udp: unsupported decode %q (want int32be|uint32be|int16be|uint16be|float32be)", cc.Decode)
+	}
+
+	pdu := buildPDU(byte(cc.Id), cc.Register, cc.Count)
 
 	addr, err := net.ResolveUDPAddr("udp4", net.JoinHostPort(cc.Host, "8899"))
 	if err != nil {
@@ -131,20 +139,18 @@ func (p *AA55UDP) query() (float64, error) {
 	return v * p.scale, nil
 }
 
-// aa55InverterAddr is the target address byte used in all AA55 request PDUs.
-// The GoodWe WiFi module always uses 0x7F as the inverter target address,
-// regardless of inverter family. The family only affects the source byte in
-// responses (0x7F for DT/DNS, 0xF7 for ET/EH/BT/BH).
+// aa55InverterAddr is the default inverter address byte, used by DT/DNS and ES/EM families.
+// ET/EH/BT/BH families require 0xF7 instead.
 const aa55InverterAddr = 0x7F
 
 // aa55ReadFunc is the Modbus function code for READ HOLDING REGISTERS.
 const aa55ReadFunc = 0x03
 
-// buildPDU constructs the 6-byte Modbus PDU body for a READ HOLDING REGISTERS
-// request targeting the GoodWe WiFi module.
-func buildPDU(register, count uint16) []byte {
+// buildPDU constructs the 6-byte PDU for a READ HOLDING REGISTERS request.
+// addr is the inverter address byte: 0x7F for DT/DNS/ES/EM, 0xF7 for ET/EH/BT/BH.
+func buildPDU(addr byte, register, count uint16) []byte {
 	return []byte{
-		aa55InverterAddr, aa55ReadFunc,
+		addr, aa55ReadFunc,
 		byte(register >> 8), byte(register),
 		byte(count >> 8), byte(count),
 	}
@@ -183,6 +189,12 @@ func stripAA55Header(buf []byte) ([]byte, error) {
 // interprets it according to decode.
 func decodeAt(payload []byte, offset int, decode string) (float64, error) {
 	switch decode {
+	case "float32be":
+		if len(payload) < offset+4 {
+			return 0, fmt.Errorf("payload too short for float32be at offset %d (len=%d)", offset, len(payload))
+		}
+		bits := binary.BigEndian.Uint32(payload[offset:])
+		return float64(math.Float32frombits(bits)), nil
 	case "int32be":
 		if len(payload) < offset+4 {
 			return 0, fmt.Errorf("payload too short for int32be at offset %d (len=%d)", offset, len(payload))

@@ -66,7 +66,7 @@ export const lighterColor = (color: string | null) => setAlpha(color, "aa");
 
 export const fullColor = (color: string | null) => setAlpha(color, "ff");
 
-function updateCssColors() {
+export function updateCssColors() {
   const style = window.getComputedStyle(document.documentElement);
   colors.text = style.getPropertyValue("--evcc-default-text");
   colors.muted = style.getPropertyValue("--bs-gray-medium");
@@ -81,11 +81,6 @@ function updateCssColors() {
   colors.light = style.getPropertyValue("--bs-gray-light");
 }
 
-// update colors on theme change
-const darkModeMatcher = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)");
-if (darkModeMatcher && darkModeMatcher.addEventListener) {
-  darkModeMatcher.addEventListener("change", updateCssColors);
-}
 // initialize colors
 updateCssColors();
 window.requestAnimationFrame(updateCssColors);

@@ -3,10 +3,9 @@
 		class="container px-4 safe-area-inset d-flex flex-column"
 		:class="{ 'empty-container': !forecastAvailable }"
 	>
-		<TopHeader v-if="forecastAvailable" :title="$t('forecast.modalTitle')" />
+		<TopHeader :title="$t('forecast.modalTitle')" />
 		<div v-if="!forecastAvailable" class="flex-grow-1 d-flex">
 			<div class="empty-box d-flex flex-column p-5">
-				<h2 class="fs-4 mb-4">{{ $t("forecast.empty.title") }}</h2>
 				<ul class="list-unstyled mb-4">
 					<li class="d-flex align-items-start gap-2 mb-3">
 						<shopicon-regular-sun
@@ -119,7 +118,7 @@
 					/>
 				</section>
 
-				<section v-if="forecast.co2" class="mb-5">
+				<section v-if="forecast.co2">
 					<h3
 						class="fw-normal my-4 d-flex gap-3 flex-wrap align-items-baseline overflow-hidden"
 					>
@@ -158,7 +157,7 @@ import store from "../store";
 import { adjustedSolar, ForecastType } from "@/utils/forecast";
 import type { ForecastSlot } from "../components/Forecast/types";
 
-const MIN_HOURS = 38;
+const MIN_HOURS = 76;
 const MAX_HOURS = 96;
 const SLOTS_PER_HOUR = 4;
 
@@ -220,7 +219,7 @@ export default defineComponent({
 		chartWidth(): number {
 			const ms = this.chartEndDate.getTime() - this.startDate.getTime();
 			const slots = Math.ceil(ms / (15 * 60 * 1000));
-			return slots * 8 + 56;
+			return slots * 4 + 56;
 		},
 		currency() {
 			return store.state?.currency;
@@ -243,7 +242,10 @@ export default defineComponent({
 				: this.forecast.solar;
 		},
 		solarAdjustText() {
-			return this.$t("forecast.solarAdjustShort");
+			const text = this.$t("forecast.solarAdjustShort");
+			const scale = this.forecast.solar?.scale || 1;
+			const percentDiff = scale * 100 - 100;
+			return `${text} (${this.fmtPercentage(percentDiff, 0, true)})`;
 		},
 		solarSubtitle(): string {
 			const s = this.solar;
@@ -311,8 +313,7 @@ export default defineComponent({
 
 <style scoped>
 .empty-container {
-	min-height: calc(100dvh - var(--tab-bar-height) - var(--safe-area-inset-bottom));
-	padding-bottom: calc(var(--tab-bar-height) + var(--safe-area-inset-bottom));
+	min-height: calc(100dvh - var(--bottom-space));
 }
 .empty-box {
 	background-color: var(--evcc-box);

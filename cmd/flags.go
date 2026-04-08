@@ -51,6 +51,12 @@ const (
 	flagDiagnose            = "diagnose"
 	flagDiagnoseDescription = "Diagnose"
 
+	flagCurtail            = "curtail"
+	flagCurtailDescription = "Curtail (0/1 to switch, only available if supported by device)"
+
+	flagDim            = "dim"
+	flagDimDescription = "Dim (0/1 to switch, only available if supported by device)"
+
 	flagWakeup            = "wakeup"
 	flagWakeupDescription = "Wake up"
 

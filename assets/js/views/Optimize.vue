@@ -82,7 +82,7 @@
 						<TimeSeriesDataTable
 							:evopt="evopt"
 							:battery-details="evopt.details.batteryDetails"
-							:timestamp="evopt.details.timestamp[0]"
+							:timestamps="evopt.details.timestamp"
 							:currency="currency"
 							:battery-colors="batteryColors"
 							:dimmed-battery-colors="dimmedBatteryColors"

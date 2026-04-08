@@ -40,6 +40,7 @@
     "legendTopName": "Automobilio įkrovimas su kaupiklio pagalba",
     "legendTopSubline": "kai kaupiklis yra virš {soc}.",
     "modalTitle": "Namų kaupiklis",
+    "noBattery": "Nėra sukonfigūruotų kaupiklių.",
     "usageTab": "Kaupiklio naudojimas"
   },
   "config": {
@@ -130,8 +131,9 @@
       "currency": "Valiuta",
       "current": "Srovė",
       "currentRange": "Srovė",
+      "curtailed": "Eksportas apribotas",
       "detected": "Aptikta",
-      "dimmed": "Galia sumažinta",
+      "dimmed": "Suvartojimas apribotas",
       "enabled": "Aktyvuotas",
       "energy": "Energija",
       "events": "Įvykiai",
@@ -642,11 +644,13 @@
       "cardTitle": "Sunny Home Manager",
       "description": "evcc turi per SEMP protokolą integruotą SMA Sunny Home Manager (SHM) sistemą . Jei ji veikia tame pačiame tinkle, prisijungus prie Sunny Portal paskyros, automatiškai turėtų būti pasiūlyta pridėti visus evcc sukonfigūruotus įkroviklius kaip naujai atrastus vartotojus. Viskas turėtų būti paruošta naudoti iš karto, be jokių toliau nurodytų pakeitimų.",
       "descriptionDeviceId": "12 simbolių HEX eilutė. Visų įrenginių prefiksas (įkroviklis, ..).",
+      "descriptionDeviceSerial": "12 simbolių HEX eilutė. Bazinis įrenginių (įkroviklių ir tt) serijos numeris. Įprastai evcc naudoja įrenginio MAC adresą.",
       "descriptionIdPattern": "Identifikatoriaus šablonas",
       "descriptionIds": "Sunny Portal sistemoje kiekvienam vartotojo įrenginiui reikalingas unikalus identifikatorius. evcc generuoja unikalų identifikatorių pagal jūsų aparatinę įrangą. Jei migruosite evcc į kitą aparatinę įrangą, šie identifikatoriai gali pasikeisti. Jei norite išsaugoti istoriją, čia galite pakeisti sugeneruotus identifikatorius. Atidarykite SEMP URL (/semp), kad patikrintumėte dabartinius identifikatorius.",
       "descriptionSempUrl": "SEMP URL",
       "descriptionVendorId": "8 simbolių HEX eilutė. Bendras visų objektų prefiksas. Pagal numatytuosius nustatymus evcc naudos savo vidinį tiekėjo ID.",
       "labelDeviceId": "Įrenginio ID",
+      "labelDeviceSerial": "Įrenginio serijos numeris",
       "labelVendorId": "Gamintojo ID",
       "title": "SMA Sunny Home Manager"
     },
@@ -851,6 +855,15 @@
       "configurePriceCo2": "Išmokite sukonfigūruoti kainą ir CO₂ duomenis.",
       "footerLong": "{percent} saulės energija",
       "footerShort": "{percent} saulės",
+      "indicator": {
+        "co2": "CO₂ išmetimai",
+        "co2saved": "CO₂ sumažinta",
+        "none": "Nėra",
+        "price": "energijos kaina",
+        "savings": "sutaupyta",
+        "solar": "saulės energija"
+      },
+      "indicatorLabel": "Antraštės informacija",
       "modalTitle": "Įkrovimo energijos apžvalga",
       "moneySaved": "{value} sutaupyta",
       "percentGrid": "{grid} kWh tinklo",
@@ -862,10 +875,11 @@
         "thisYear": "šiais metais",
         "total": "Nuo pradžios"
       },
-      "periodLabel": "Laikotarpis:",
+      "periodLabel": "Laikotarpis",
       "priceTitle": "Energijos Kaina",
       "referenceGrid": "tinklas",
-      "referenceLabel": "Atskaitos duomenys:",
+      "referenceLabel": "Atskaitos duomenys",
+      "sessionInfo": "Iš atliktų įkrovimo sesijų.",
       "tabTitle": "Mano"
     },
     "sponsor": {
@@ -891,15 +905,26 @@
     },
     "version": {
       "availableLong": "yra naujesnė versija",
+      "community": "evcc bendruomenė",
+      "labelRelease": "Leidimas",
+      "labelVersion": "Versija",
+      "labelWebsite": "Svetainė",
+      "latestVersion": "naujausia versija",
+      "madeByCommunity": "Sukūrė {0}.",
       "modalCancel": "Atšaukti",
       "modalDownload": "Atsisiųsti",
       "modalInstalledVersion": "Instaliuota versija",
+      "modalLatest": "Naudojate naujausią versiją.",
+      "modalNextRelease": "Kas bus kitame leidime",
       "modalNoReleaseNotes": "Naujinimo pastabų nėra. Daugiau informacijos apie naują versiją:",
       "modalTitle": "Yra naujesnė versija",
       "modalUpdate": "Instaliuoti",
       "modalUpdateNow": "Instaliuoti dabar",
       "modalUpdateStarted": "Startuoja nauja evcc versija…",
-      "modalUpdateStatusStart": "Instaliavimas pradėtas:"
+      "modalUpdateStatusStart": "Instaliavimas pradėtas:",
+      "modalViewOnGitHub": "Peržiūrėti GitHub’e",
+      "openSource": "atvirąjį kodą",
+      "poweredByOpenSource": "Sukurta naudojant {0}."
     }
   },
   "forecast": {
@@ -909,6 +934,12 @@
       "lowestHour": "Švariausia valanda",
       "range": "Diapazonas"
     },
+    "empty": {
+      "co2": "Sužinokite, kada jūsų regione energija yra mažiausiai tarši. Įkrovimo planai bus optimizuoti mažiausiam išmetamųjų teršalų kiekiui, apskaičiuosime CO₂ sutaupymą.",
+      "price": "Sukonfigūruokite dinaminį elektros energijos tarifą, kad automatiškai optimizuotumėte įkrovimo planus ir apskaičiuotumėte sutaupytas lėšas.",
+      "setup": "Sukonfigūruoti tarifus ir prognozes",
+      "solar": "Prognozuojama saulės energijos gamyba šiandienai ir ateinančiomis dienomis. Ateityje taip pat bus naudojama automatiniam įkrovimo optimizavimui."
+    },
     "modalTitle": "Prognozė",
     "price": {
       "average": "Vidurkis",
@@ -916,6 +947,7 @@
       "lowestHour": "Pigiausia valanda",
       "range": "Diapazonas"
     },
+    "priceZoom": "priartinti",
     "solar": {
       "dayAfterTomorrow": "Poryt",
       "partly": "dalinai",
@@ -924,10 +956,11 @@
       "tomorrow": "Rytoj"
     },
     "solarAdjust": "Pakoreguoti saulės prognozę remiantis faktiškais gamybos duomenimis{percent}.",
+    "solarAdjustShort": "koreguoti pagal faktinius duomenis",
     "type": {
-      "co2": "CO₂",
-      "price": "Kainos",
-      "solar": "Saulės"
+      "co2": "CO₂ Išmetimai",
+      "price": "Pirkimo Kaina",
+      "solar": "Saulės Gamyba"
     }
   },
   "general": {
@@ -1141,6 +1174,7 @@
         "once": "Paspartinimas aktyvuotas šiai įkrovimo sesijai.",
         "stateActive": "Įkrovimo pastiprinimas kaupiklio pagalba aktyvus",
         "stateBelowLimit": "Kaupiklis išsikrovęs, jo panaudoti įkrovimo spartinimui neina",
+        "stateHold": "Kaupiklis užrakintas",
         "stateReady": "Įkrovimo spartinimas kaupikliu paruoštas"
       },
       "batteryUsage": "Namų kaupiklis",
@@ -1250,6 +1284,7 @@
       "batteryBoostBelowLimit": "Kaupiklis išsikrovęs, jo panaudoti įkrovimo spartinimui neina.",
       "batteryBoostDisabled": "Įkrovimo spartinimas kaupikliu išjungtas.",
       "batteryBoostEnabled": "Spartinti įkrovimą iki {limit}.",
+      "batteryBoostHold": "Kaupiklis užrakintas. Įkrovimo spartinimas negalimas.",
       "charging": "Įkraunama…",
       "cheapEnergyCharging": "Šiuo metu energija yra pigi.",
       "cheapEnergyNextStart": "Pigi energija už {duration}.",
@@ -1489,5 +1524,13 @@
     "lineErrorLink": "eilutė {0}",
     "restartButton": "Restartuoti",
     "title": "Klaida startuojant"
+  },
+  "tabBar": {
+    "battery": "Kaupiklis",
+    "charge": "Įkrovimas",
+    "comingSoon": "Šis puslapis yra kuriamas.",
+    "forecast": "Prognozė",
+    "more": "Daugiau",
+    "sessions": "Sesijos"
   }
 }

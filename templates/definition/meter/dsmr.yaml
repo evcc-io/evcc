@@ -18,7 +18,7 @@ params:
     type: string
 render: |
   type: dsmr
-  uri: {{ .host }}:{{ .port }}
+  uri: {{ joinHostPort .host .port }}
   {{- if .energy }}
   energy: {{ .energy }}
   {{- end }}

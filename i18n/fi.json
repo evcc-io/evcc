@@ -40,6 +40,7 @@
     "legendTopName": "Akulla tuettu ajoneuvon lataus",
     "legendTopSubline": "kun kodin akku on yli {soc}.",
     "modalTitle": "Kodin akku",
+    "noBattery": "Akkuja ei ole määritelty.",
     "usageTab": "Akun käyttö"
   },
   "config": {
@@ -130,8 +131,9 @@
       "currency": "Valuutta",
       "current": "Virta",
       "currentRange": "Virta",
+      "curtailed": "Sähkönsyöttöä rajoitettu",
       "detected": "Tunnistettu",
-      "dimmed": "Himmennetty",
+      "dimmed": "Kulutusta rajoitettu",
       "enabled": "Käytössä",
       "energy": "Energia",
       "events": "Tapahtumat",
@@ -642,11 +644,13 @@
       "cardTitle": "Sunny Home Manager",
       "description": "evcc:ssä on integraatio SMA Sunny Home Manager (SHM) SEMP-protokollan välityksellä. Jos SHM on samassa lähiverkossa, kirjauduttuasi sisään Sunny Portal -tiliisi, sinulle pitäisi mahdollisuus lisätä kaikki laturit evcc:een uusina käyttölaitteina. Kaiken pitäisi olla valmiina välittömään käyttöön ilman lisämuutoksia alla oleviin asetuksiin.",
       "descriptionDeviceId": "12-merkkinen HEX-merkkijono. Etuliitteenä kaikkiin laitteisiin (latausasema, ...).",
+      "descriptionDeviceSerial": "12-merkkinen HEX-merkkijono, josta johdetaan tunnisteet kaikkille laitteille (latausasemat, ...). Vakiona evcc-johtaa tämän isännän MAC-osoitteesta.",
       "descriptionIdPattern": "Tunnistusmuoto",
       "descriptionIds": "Sunny Portal -järjestelmässä jokainen käyttölaite vaatii yksilöllisen tunnisteen. Evcc luo yksilöllisen tunnisteen laitteistosi perusteella. Jos siirrät evcc:n asennuksen toiseen laitteistoon nämä tunnisteet voivat muuttua. Jos haluat pitää vanhat tunnisteet, voit automaattiset luodut tunnisteet tässä. Avaa SEMP URL (/semp) tarkistaaksesi nykyiset tunnisteesi.",
       "descriptionSempUrl": "SEMP URL",
       "descriptionVendorId": "8-merkkinen HEX-merkkijono. Yleinen etuliite kaikille laitteille. Oletuksena evcc käyttää sisäistä valmistajatunnistettaan.",
       "labelDeviceId": "Laite-ID",
+      "labelDeviceSerial": "Laitteen tunnistenumero",
       "labelVendorId": "Valmistaja-ID",
       "title": "SMA Sunny Home Manager"
     },
@@ -850,6 +854,15 @@
       "configurePriceCo2": "Opi kuinka voit muokata hinta- ja CO₂ arvoja.",
       "footerLong": "{percent} aurinkoenergiaa",
       "footerShort": "{percent} aurinkoenergiaa",
+      "indicator": {
+        "co2": "CO₂-päästöt",
+        "co2saved": "CO₂-säästöt",
+        "none": "ei ole",
+        "price": "energian hinta",
+        "savings": "säästöt",
+        "solar": "aurinkovoima"
+      },
+      "indicatorLabel": "Otsikko-tieto",
       "modalTitle": "Latausenergian yhteenveto",
       "moneySaved": "{value} säästetty",
       "percentGrid": "{grid} kWh verkosta",
@@ -861,10 +874,11 @@
         "thisYear": "tämä vuosi",
         "total": "kaikki"
       },
-      "periodLabel": "Jakso:",
+      "periodLabel": "Jakso",
       "priceTitle": "Energian hinta",
       "referenceGrid": "sähköverkko",
-      "referenceLabel": "Vertailutieto:",
+      "referenceLabel": "Vertailutieto",
+      "sessionInfo": "Loppuunsaatettujen lataustapahtumien perusteella.",
       "tabTitle": "Tietoni"
     },
     "sponsor": {
@@ -890,15 +904,26 @@
     },
     "version": {
       "availableLong": "uusi versio saatavilla",
+      "community": "evcc-yhteisö",
+      "labelRelease": "Julkaisu",
+      "labelVersion": "Versio",
+      "labelWebsite": "Verkkosivu",
+      "latestVersion": "uusin versio",
+      "madeByCommunity": "{0} tekemä.",
       "modalCancel": "Peruuta",
       "modalDownload": "Lataa",
       "modalInstalledVersion": "Nykyinen versio",
+      "modalLatest": "Käytät tuoreinta versiota.",
+      "modalNextRelease": "Mitä seuraavassa julkaisussa on tulossa",
       "modalNoReleaseNotes": "Julkaisutietoja ei saatavilla. Lisätietoa uudesta versiosta:",
       "modalTitle": "Uusi versio saatavilla",
       "modalUpdate": "Asenna",
       "modalUpdateNow": "Asenna nyt",
       "modalUpdateStarted": "Käynnistetään evcc:n uusin versio…",
-      "modalUpdateStatusStart": "Asennus aloitettu:"
+      "modalUpdateStatusStart": "Asennus aloitettu:",
+      "modalViewOnGitHub": "Näytä GitHubista",
+      "openSource": "avoimen lähdekoodin",
+      "poweredByOpenSource": "{0} voimalla."
     }
   },
   "forecast": {
@@ -908,6 +933,12 @@
       "lowestHour": "Puhtain tunti",
       "range": "Toimintamatka"
     },
+    "empty": {
+      "co2": "Näytä milloin sähköverkon energia on puhdasta. Lataussuunnitelmissa optimoidaan alhaiset päästöt ja laskelmoidut CO₂-säästöt.",
+      "price": "Määritä vaihteleva energian hintasi optimoidaksesi automaattisesti lataussuunnitelmasi ja laskeaksesi käytetyn energian kustannukset.",
+      "setup": "Määritä hinnat ja ennusteet",
+      "solar": "Katso aurinkotuotannon ennuste täksi ja tuleviksi päiviksi. Käytetään tulevaisuudessa myös latauksien optimoitiin."
+    },
     "modalTitle": "Ennuste",
     "price": {
       "average": "Keskimääräinen",
@@ -915,6 +946,7 @@
       "lowestHour": "Edullisin tunti",
       "range": "Toimintamatka"
     },
+    "priceZoom": "lähennä",
     "solar": {
       "dayAfterTomorrow": "Ylihuomenna",
       "partly": "osittain",
@@ -923,10 +955,11 @@
       "tomorrow": "Huomenna"
     },
     "solarAdjust": "Mukauta aurinkosääennustettu todellisten tuotantotietojen perusteella{percent}.",
+    "solarAdjustShort": "mitatun datan korjaus",
     "type": {
-      "co2": "CO₂",
-      "price": "Hinta",
-      "solar": "Aurinko"
+      "co2": "CO₂-päästöt",
+      "price": "Sähkön hinta",
+      "solar": "Aurinkotuotanto"
     }
   },
   "general": {
@@ -1140,6 +1173,7 @@
         "once": "Tehostus on aktiivinen tälle latausistunnolle.",
         "stateActive": "Akkutehostus päällä",
         "stateBelowLimit": "Akun varaus liian alhainen tehostukseen",
+        "stateHold": "Akkukäyttö lukittu",
         "stateReady": "Akkutehostus valmiina"
       },
       "batteryUsage": "Kodin akku",
@@ -1176,7 +1210,7 @@
       "vehicle": "Ajoneuvo"
     },
     "mode": {
-      "minpv": "Minimi+PV",
+      "minpv": "Min+PV",
       "now": "Välitön",
       "off": "Seis",
       "pv": "PV",
@@ -1249,6 +1283,7 @@
       "batteryBoostBelowLimit": "Akun varaus liian alhainen tehostukseen.",
       "batteryBoostDisabled": "Akkutehostus ei päällä.",
       "batteryBoostEnabled": "Tehostus kunnes akku {limit}.",
+      "batteryBoostHold": "Akkukäyttö lukittu. Tehostusta ei saatavilla.",
       "charging": "Lataa…",
       "cheapEnergyCharging": "Edullista energiaa saatavilla.",
       "cheapEnergyNextStart": "Energia on edullista {duration} ajan.",
@@ -1488,5 +1523,13 @@
     "lineErrorLink": "rivi {0}",
     "restartButton": "Käynnistä uudelleen",
     "title": "Virhe käynnistyksessä"
+  },
+  "tabBar": {
+    "battery": "Akku",
+    "charge": "Lataus",
+    "comingSoon": "Tämä sivu on vielä työn alla.",
+    "forecast": "Ennuste",
+    "more": "Lisää",
+    "sessions": "Tapahtumat"
   }
 }

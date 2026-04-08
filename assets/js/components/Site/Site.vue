@@ -1,8 +1,5 @@
 <template>
-	<div
-		class="d-flex flex-column site safe-area-inset"
-		:class="{ 'site--bottomtabs': experimental }"
-	>
+	<div class="d-flex flex-column site safe-area-inset">
 		<div class="container px-4 top-area">
 			<div
 				class="d-flex justify-content-between align-items-center my-3 my-md-4"
@@ -69,6 +66,7 @@
 				:pvConfigured="pvConfigured"
 				:batteryConfigured="batteryConfigured"
 				:batterySoc="batterySoc"
+				:batteryMode="batteryMode"
 				:forecast="forecast"
 				:selectedId="selectedLoadpointId"
 				@id-changed="selectedLoadpointChanged"
@@ -101,6 +99,7 @@ import type {
 	Sponsor,
 	FatalError,
 	EvOpt,
+	BATTERY_MODE,
 } from "@/types/evcc";
 import store from "@/store";
 import type { Grid } from "./types";
@@ -134,7 +133,7 @@ export default defineComponent({
 		batteryDischargeControl: Boolean,
 		batteryGridChargeLimit: { type: [Number, null] as PropType<number | null>, default: null },
 		batteryGridChargeActive: Boolean,
-		batteryMode: String,
+		batteryMode: String as PropType<BATTERY_MODE>,
 		battery: { type: Object as PropType<Battery> },
 		gridCurrents: Array,
 		prioritySoc: Number,
@@ -237,10 +236,6 @@ export default defineComponent({
 .site {
 	min-height: 100vh;
 	min-height: 100dvh;
-}
-.site--bottomtabs {
-	min-height: calc(100vh - var(--tab-bar-height) - var(--safe-area-inset-bottom));
-	min-height: calc(100dvh - var(--tab-bar-height) - var(--safe-area-inset-bottom));
 }
 .content-area {
 	flex-grow: 1;

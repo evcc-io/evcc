@@ -395,6 +395,14 @@ func (lp *Loadpoint) requestUpdate() {
 	}
 }
 
+// capableMeter wraps a meter with capability lookup from its source.
+// This preserves capability checks (like MeterEnergy, PhaseCurrents, PhaseVoltages) when
+// the meter was extracted from a decorated charger's capability registry.
+type capableMeter struct {
+	api.Meter
+	api.Capable
+}
+
 // configureChargerType ensures that chargeMeter, Rate and Timer can use charger capabilities
 func (lp *Loadpoint) configureChargerType(charger api.Charger) {
 	var integrated bool
@@ -404,7 +412,14 @@ func (lp *Loadpoint) configureChargerType(charger api.Charger) {
 		integrated = true
 
 		if mt, ok := api.Cap[api.Meter](charger); ok {
-			lp.chargeMeter = mt
+			// preserve charger's capability registry so that subsequent
+			// capability checks on chargeMeter (e.g. MeterEnergy, PhaseCurrents)
+			// still work for decorated chargers (https://github.com/evcc-io/evcc/issues/28915)
+			if c, ok := charger.(api.Capable); ok {
+				lp.chargeMeter = &capableMeter{Meter: mt, Capable: c}
+			} else {
+				lp.chargeMeter = mt
+			}
 		} else {
 			mt := new(wrapper.ChargeMeter)
 			_ = lp.bus.Subscribe(evChargeCurrent, lp.evChargeCurrentWrappedMeterHandler)
@@ -1235,7 +1250,7 @@ func (lp *Loadpoint) scalePhasesRequired() bool {
 	return lp.hasPhaseSwitching() && lp.phasesConfigured != 0 && lp.phasesConfigured != lp.GetPhases()
 }
 
-// scalePhasesIfAvailable scales if api.PhaseSwitcher is available
+// scalePhasesIfAvailable scales if api.PhaseSwitcher is available and allowed
 func (lp *Loadpoint) scalePhasesIfAvailable(phases int) error {
 	if lp.phasesConfigured != 0 {
 		phases = lp.phasesConfigured

@@ -1,5 +1,5 @@
 template: deye-hybrid-3p
-covers: ["deye-hybrid"]
+covers: ["deye-hybrid", "deye-hybrid-hp3"]
 products:
   - brand: Deye
     description:
@@ -16,7 +16,21 @@ params:
     baudrate: 9600
     id: 1
   - name: maxacpower
+  - name: storageunit
+    choice: ["1", "2"]
   - preset: battery-params
+  - name: batterytype
+    choice: ["lv", "hv"]
+    required: true
+    default: "lv"
+    description:
+      de: Wechselrichter für LV- oder HV-Batterie
+      en: Inverter for LV or HV batteries
+    help:
+      de: |
+        "hv" für eine Hochvolt-Batterie mit Nennspannung über 60V verwenden
+      en: |
+        Choose "hv" if you are using a high voltage battery with a nominal voltage over 60V
   - name: maxdischargecurrent
     required: true
     default: 100
@@ -27,10 +41,10 @@ params:
     help:
       en: |
         Maximum battery discharge current in Amperes (A) for normal mode. Typical range 50-350A depending on battery capacity.
-        Power calculation: P(W) = Current(A) * Voltage(V). Example with 48V battery: 100A * 48V = 4800W (4.8kW).
+        Power calculation: P(W) = Current(A) x Voltage(V). Example with 48V battery: 100A x 48V = 4800W (4.8kW).
       de: |
         Maximaler Batterieentladestrom in Ampere (A) für Normalmodus. Typischer Bereich 50-350A abhängig von Batteriekapazität.
-        Leistungsberechnung: P(W) = Strom(A) * Spannung(V). Beispiel mit 48V Batterie: 100A * 48V = 4800W (4,8kW).
+        Leistungsberechnung: P(W) = Strom(A) x Spannung(V). Beispiel mit 48V Batterie: 100A x 48V = 4800W (4,8kW).
   - name: gridchargecurrent
     required: true
     default: 60
@@ -41,10 +55,32 @@ params:
     help:
       en: |
         Maximum battery charging current in Amperes (A) from grid for charge mode. Typical range 30-350A depending on battery and inverter capacity.
-        Power calculation: P(W) = Current(A) * Voltage(V). Example with 48V battery: 60A * 48V = 2880W (2.9kW).
+        Power calculation: P(W) = Current(A) x Voltage(V). Example with 48V battery: 60A x 48V = 2880W (2.9kW).
       de: |
         Maximaler Batterieladestrom in Ampere (A) aus dem Netz für Lademodus. Typischer Bereich 30-350A abhängig von Batterie- und Wechselrichterkapazität.
-        Leistungsberechnung: P(W) = Strom(A) * Spannung(V). Beispiel mit 48V Batterie: 60A * 48V = 2880W (2,9kW).
+        Leistungsberechnung: P(W) = Strom(A) x Spannung(V). Beispiel mit 48V Batterie: 60A x 48V = 2880W (2,9kW).
+  - name: includegenport
+    type: bool
+    advanced: true
+    description:
+      de: GEN-Anschluss als Solar-Eingang verwenden
+      en: Treat GEN port as solar input
+    help:
+      de: |
+        Wenn aktiviert, wird der GEN-Anschluss des Wechselrichters als zusätzlicher Solar-Eingang behandelt. Dadurch werden die Leistung und Energie, die über den GEN-Port eingespeist werden, zum Gesamt-Solarertrag addiert.
+      en: |
+        When enabled, the GEN port of the inverter will be treated as an additional solar input. This will add the power and energy fed in through the GEN port to the total solar yield.
+  - name: firmware1098
+    type: bool
+    advanced: true
+    description:
+      de: Firmware 1098 oder neuer (nur für HV Versionen)
+      en: Firmware 1098 or newer (only for HV versions)
+    help:
+      de: |
+        Nach einem Firmware-Update für Hochvolt-Wechselrichter haben einige Registerwerte ihren Skalierungsfaktor geändert. Wenn der Wechselrichter die Firmware-Version 1098 oder neuer hat, muss diese Option aktiviert werden, um korrekte Werte zu erhalten.
+      en: |
+        After a firmware update of the high voltage inverter, some register values have changed their scaling factor. If your inverter has firmware version 1098 or newer, you need to enable this option to get correct values.
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -62,7 +98,9 @@ render: |
       address: 522 # "Total_GridBuy_Power Wh"
       type: holding
       decode: uint32s
+    {{- if and (eq .batterytype "hv") (not .firmware1098) }}
     scale: 0.1
+    {{- end }}      
   currents:
     - source: modbus
       {{- include "modbus" . | indent 4 }}
@@ -96,32 +134,69 @@ render: |
         address: 672 # "PV1 input power"
         type: holding
         decode: uint16
+      {{- if eq .batterytype "hv" }}  
+      scale: 10
+      {{- end }}
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
         address: 673 # "PV2 input power"
         type: holding
         decode: uint16
+      {{- if eq .batterytype "hv" }}  
+      scale: 10
+      {{- end }}
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
         address: 674 # "PV3 input power"
         type: holding
         decode: uint16
+      {{- if eq .batterytype "hv" }}  
+      scale: 10
+      {{- end }}
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
         address: 675 # "PV4 input power"
         type: holding
         decode: uint16
+      {{- if eq .batterytype "hv" }}  
+      scale: 10
+      {{- end }}
+    {{- if .includegenport }}
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 667 # "low word of input power at GEN-Port"
+        type: holding
+        decode: int16 # value is part of a signed 32-bit value; high word is at 671 but non-adjacent
+                      # NOTE: Only the low 16 bits of GEN power are used here. This is sufficient up to ±32 kW,
+                      # which covers existing inverter variants.
+    {{- end }}
   energy:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 534 # "Total_PV_Power_Wh"
-      type: holding
-      decode: uint32s
-    scale: 0.1
+    source: calc
+    add:    
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 534 # "Total_PV_Power_Wh"
+        type: holding
+        decode: uint32s
+      {{- if and (eq .batterytype "hv") (not .firmware1098) }}
+      scale: 0.1
+      {{- end }}
+    {{- if .includegenport }}
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 537 # "Total_Gen_Power_Wh"
+        type: holding
+        decode: int32s
+      {{- if and (eq .batterytype "hv") (not .firmware1098) }}
+      scale: 0.1
+      {{- end }}
+    {{- end }}
   maxacpower: {{ .maxacpower }}
   {{- end }}
   {{- if eq .usage "battery" }}
@@ -129,9 +204,17 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
+      {{- if eq .storageunit "1" }}
       address: 590 # "Battery output power"
+      {{- end }}
+      {{- if eq .storageunit "2" }}
+      address: 595 # "Battery2 output power"
+      {{- end }}
       type: holding
       decode: int16
+  {{- if eq .batterytype "hv" }}  
+    scale: 10
+  {{- end }}
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -139,12 +222,18 @@ render: |
       address: 518 # "Total discharge of the battery (Wh)"
       type: holding
       decode: uint32s
+    {{- if and (eq .batterytype "hv") (not .firmware1098) }}
     scale: 0.1
+    {{- end }}
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
+      {{- if eq .storageunit "1" }}
       address: 588 # "battery capacity"
+      {{- else }}
+      address: 589 # "battery2 capacity"
+      {{- end }}
       type: holding
       decode: uint16
   batterymode:

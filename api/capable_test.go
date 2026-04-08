@@ -66,6 +66,52 @@ func TestCap_CapableRegistryLookup(t *testing.T) {
 	assert.False(t, ok)
 }
 
+// decoratedCharger simulates a real decorated charger where Meter is NOT
+// directly embedded but only available through the capability registry.
+type decoratedCharger struct {
+	caps map[reflect.Type]any
+}
+
+func (d *decoratedCharger) Capability(typ reflect.Type) (any, bool) {
+	c, ok := d.caps[typ]
+	return c, ok
+}
+
+func TestCap_ExtractedCapabilityLosesRegistry(t *testing.T) {
+	// Reproduces https://github.com/evcc-io/evcc/issues/28915
+	// When a Meter is extracted from a decorated charger via Cap[Meter],
+	// the extracted impl does NOT carry the Capable interface, so
+	// subsequent Cap[MeterEnergy] on the extracted value fails.
+	decorated := &decoratedCharger{
+		caps: map[reflect.Type]any{
+			reflect.TypeFor[Meter]():       &testMeterImpl{},
+			reflect.TypeFor[MeterEnergy](): &testMeterEnergyImpl{},
+		},
+	}
+
+	// extract Meter from decorated source (slow path: from caps registry)
+	mt, ok := Cap[Meter](decorated)
+	require.True(t, ok)
+
+	// Bug: extracted meter cannot find MeterEnergy because it's a standalone impl
+	_, ok = Cap[MeterEnergy](mt)
+	assert.False(t, ok, "extracted meter should NOT have MeterEnergy capability")
+
+	// Fix: wrapping extracted meter with source's Capable preserves registry
+	type capableMeter struct {
+		Meter
+		Capable
+	}
+	wrapped := &capableMeter{Meter: mt, Capable: decorated}
+
+	me, ok := Cap[MeterEnergy](wrapped)
+	require.True(t, ok, "wrapped meter should find MeterEnergy via Capable")
+
+	energy, err := me.TotalEnergy()
+	assert.NoError(t, err)
+	assert.Equal(t, 99.0, energy)
+}
+
 func TestCap_NilValue(t *testing.T) {
 	_, ok := Cap[MeterEnergy](nil)
 	assert.False(t, ok)

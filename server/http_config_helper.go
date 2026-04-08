@@ -340,6 +340,11 @@ func testInstance(instance any) map[string]testResult {
 		makeResult("dimmed", val, err)
 	}
 
+	if dev, ok := api.Cap[api.Curtailer](instance); ok {
+		val, err := dev.Curtailed()
+		makeResult("curtailed", val, err)
+	}
+
 	if dev, ok := api.Cap[api.Identifier](instance); ok {
 		val, err := dev.Identify()
 		makeResult("identifier", val, err)
