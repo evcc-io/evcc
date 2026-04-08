@@ -50,8 +50,7 @@ test.describe("config device auth", async () => {
     await expect(meterModal.getByRole("button", { name: "Save" })).not.toBeVisible();
     await meterModal.getByLabel("Server").fill(simulatorUrl());
     await meterModal.getByLabel("Redirect URI").fill(getRedirectUri(page.url()));
-    // first choice ("redirect") should be auto-selected for required choice params
-    await expect(meterModal.getByLabel("Authentication Method")).toHaveValue("redirect");
+    await meterModal.getByLabel("Authentication Method").selectOption("redirect");
     await meterModal.getByRole("button", { name: "Prepare connection" }).click();
 
     // Get the login link and remove target="_blank" to keep it in same page
@@ -85,6 +84,7 @@ test.describe("config device auth", async () => {
     // step 2: show regular device form - auth is complete, fill in server details again
     await meterModal.getByLabel("Server").fill(simulatorUrl());
     await meterModal.getByLabel("Redirect URI").fill(getRedirectUri(page.url()));
+    await meterModal.getByLabel("Authentication Method").selectOption("redirect");
 
     // Even though auth is already done, still need to click prepare connection to proceed to device fields
     await meterModal.getByRole("button", { name: "Prepare connection" }).click();
@@ -161,6 +161,7 @@ test.describe("config device auth", async () => {
     await meterModal.getByLabel("Manufacturer").selectOption("Auth Demo Meter");
     await meterModal.getByLabel("Server").fill("invalid-url-without-scheme");
     await meterModal.getByLabel("Redirect URI").fill(getRedirectUri(page.url()));
+    await meterModal.getByLabel("Authentication Method").selectOption("redirect");
     await meterModal.getByRole("button", { name: "Prepare connection" }).click();
 
     await expect(meterModal).toContainText("server must start with http:// or https://");
@@ -198,6 +199,7 @@ test.describe("config device auth", async () => {
     await meterModal.getByLabel("Manufacturer").selectOption("Auth Demo Meter");
     await meterModal.getByLabel("Server").fill(simulatorUrl());
     await meterModal.getByLabel("Redirect URI").fill(getRedirectUri(page.url()));
+    await meterModal.getByLabel("Authentication Method").selectOption("redirect");
     await meterModal.getByRole("button", { name: "Prepare connection" }).click();
 
     // Get the login link and remove target="_blank" to keep it in same page
@@ -233,6 +235,7 @@ test.describe("config device auth", async () => {
     await meterModal.getByLabel("Manufacturer").selectOption("Auth Demo Meter");
     await meterModal.getByLabel("Server").fill(simulatorUrl());
     await meterModal.getByLabel("Redirect URI").fill(getRedirectUri(page.url()));
+    await meterModal.getByLabel("Authentication Method").selectOption("redirect");
     await meterModal.getByRole("button", { name: "Prepare connection" }).click();
 
     // verify connection link is ready but close modal instead of clicking it

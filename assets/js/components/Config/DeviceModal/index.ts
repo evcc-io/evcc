@@ -89,14 +89,9 @@ export function handleError(e: any, msg: string) {
 export function applyDefaultsFromTemplate(template: Template | null, values: DeviceValues) {
   const params = template?.Params || [];
   params
-    .filter((p) => !values[p.Name])
+    .filter((p) => p.Default && !values[p.Name])
     .forEach((p) => {
-      if (p.Default) {
-        values[p.Name] = p.Default;
-      } else if (p.Required && p.Choice?.length) {
-        // auto-select first choice for required select params without explicit default
-        values[p.Name] = p.Choice[0];
-      }
+      values[p.Name] = p.Default;
     });
 }
 
