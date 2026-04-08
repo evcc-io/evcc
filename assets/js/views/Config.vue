@@ -488,7 +488,7 @@ import ModbusProxyModal from "../components/Config/ModbusProxyModal.vue";
 import MqttIcon from "../components/MaterialIcon/Mqtt.vue";
 import MqttModal from "../components/Config/MqttModal.vue";
 import RemoteAccessIcon from "../components/MaterialIcon/RemoteAccess.vue";
-import RemoteModal from "../components/Config/RemoteModal.vue";
+import RemoteModal from "../components/Config/Remote/RemoteModal.vue";
 import NetworkModal from "../components/Config/NetworkModal.vue";
 import NotificationIcon from "../components/MaterialIcon/Notification.vue";
 import OptimizerIcon from "../components/MaterialIcon/Optimizer.vue";
@@ -787,11 +787,12 @@ export default defineComponent({
 		},
 		remoteTags(): DeviceTags {
 			const remote = this.remote;
-			if (!remote?.config?.enabled) {
+			if (!remote?.status?.url) {
 				return { configured: { value: false } };
 			}
 			return {
-				connected: { value: remote.status?.connected, error: !remote.status?.connected },
+				enabled: { value: remote.config?.enabled },
+				connected: { value: remote.status?.connected },
 			};
 		},
 		sponsor() {

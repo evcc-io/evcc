@@ -31,6 +31,7 @@ const (
 	Optimizer          = "optimizer"
 	DemoMode           = "demoMode"
 	Remote             = "remote"
+	RemoteClients      = "remoteClients"
 	AuthDisabled       = "authDisabled"
 	AuthProviders      = "authProviders"
 )

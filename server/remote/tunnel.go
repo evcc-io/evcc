@@ -2,8 +2,6 @@ package remote
 
 import (
 	"context"
-	"crypto/subtle"
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"net/http"
@@ -17,16 +15,12 @@ import (
 	"github.com/hashicorp/yamux"
 )
 
-const (
-	basicAuthUser = "admin"
-	basicAuthPass = "secret"
-)
-
 // Tunnel manages a WebSocket+yamux tunnel to the cloud proxy.
 type Tunnel struct {
 	tunnelURL     string
 	token         string
 	httpHandler   http.Handler
+	authenticate  func(user, pass string) bool
 	log           *util.Logger
 	cancel        func()
 	onStateChange func()
@@ -36,11 +30,12 @@ type Tunnel struct {
 }
 
 // NewTunnel creates a new tunnel client.
-func NewTunnel(tunnelURL, token string, httpHandler http.Handler, log *util.Logger, onStateChange func()) *Tunnel {
+func NewTunnel(tunnelURL, token string, httpHandler http.Handler, authenticate func(user, pass string) bool, log *util.Logger, onStateChange func()) *Tunnel {
 	return &Tunnel{
 		tunnelURL:     tunnelURL,
 		token:         token,
 		httpHandler:   httpHandler,
+		authenticate:  authenticate,
 		log:           log,
 		onStateChange: onStateChange,
 	}
@@ -109,7 +104,7 @@ func (t *Tunnel) connect(ctx context.Context) (bool, error) {
 		}
 
 		srv := &http.Server{
-			Handler: basicAuthMiddleware(t.httpHandler),
+			Handler: basicAuthMiddleware(t.authenticate, t.httpHandler),
 		}
 
 		if err := srv.Serve(session); err != nil {
@@ -153,14 +148,12 @@ func (t *Tunnel) Close() {
 	}
 }
 
-// basicAuthMiddleware wraps a handler with HTTP basic auth.
-func basicAuthMiddleware(next http.Handler) http.Handler {
-	expected := "Basic " + base64.StdEncoding.EncodeToString(
-		[]byte(basicAuthUser+":"+basicAuthPass),
-	)
-
+// basicAuthMiddleware wraps a handler with HTTP basic auth, validating
+// credentials against the given authenticate function per request.
+func basicAuthMiddleware(authenticate func(user, pass string) bool, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if subtle.ConstantTimeCompare([]byte(r.Header.Get("Authorization")), []byte(expected)) != 1 {
+		user, pass, ok := r.BasicAuth()
+		if !ok || authenticate == nil || !authenticate(user, pass) {
 			w.Header().Set("WWW-Authenticate", `Basic realm="evcc"`)
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return

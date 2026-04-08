@@ -496,6 +496,16 @@ export type RemoteStatus = {
   url?: string;
 };
 
+export type RemoteClient = {
+  username: string;
+  createdAt: string;
+  expiresAt?: string;
+};
+
+export type RemoteClientCreated = RemoteClient & {
+  password: string;
+};
+
 export type Eebus = ConfigStatus<EebusConfig, EebusStatus>;
 
 export type EebusConfig = {

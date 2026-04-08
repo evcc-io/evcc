@@ -91,7 +91,7 @@ func (r *Remote) connect() {
 
 	r.log.INFO.Printf("remote access via %s", r.settings.URL)
 
-	tunnel := NewTunnel(r.settings.TunnelURL, r.settings.Token, r.httpHandler, r.log, r.publish)
+	tunnel := NewTunnel(r.settings.TunnelURL, r.settings.Token, r.httpHandler, r.Authenticate, r.log, r.publish)
 
 	r.mu.Lock()
 	r.tunnel = tunnel
