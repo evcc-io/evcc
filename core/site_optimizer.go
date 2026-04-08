@@ -136,7 +136,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	feedIn := currentRates(site.GetTariff(api.TariffUsageFeedIn))
 
 	minLen := lo.Min([]int{len(grid), len(feedIn)})
-	// allow empty solar forecast
+	// exclude empty solar forecast from minLen
 	if solarTariff != nil && len(solar) > 0 {
 		minLen = min(minLen, len(solar))
 	}
