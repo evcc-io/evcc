@@ -128,7 +128,11 @@ func (t *Tunnel) changeState(session *yamux.Session, err error) {
 	if session != nil {
 		t.log.INFO.Println("tunnel connected")
 	} else {
-		t.log.INFO.Println("tunnel disconnected:", err)
+		if errors.Is(err, context.Canceled) {
+			t.log.INFO.Println("tunnel disconnected")
+		} else {
+			t.log.INFO.Println("tunnel disconnected:", err)
+		}
 	}
 }
 
