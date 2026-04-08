@@ -19,7 +19,7 @@ params:
     default: 502
 render: |
   type: wallbe
-  uri: {{ .host }}:{{ .port }}
+  uri: {{ joinHostPort .host .port }}
   legacy: true # set only for older Wallbe devices (pre ~2019, old controller firmware)
   meter: # only if a charge meter is connected to the controller
     power: true

@@ -164,6 +164,20 @@ func (d *dumper) Dump(name string, v any) {
 		fmt.Fprintf(w, "Max AC power:\t%.0fW\t\t\n", v.MaxACPower())
 	}
 
+	if v, ok := api.Cap[api.Dimmer](v); ok {
+		d.measureTime(w, "Dimmed", func() (string, error) {
+			dimmed, err := v.Dimmed()
+			return fmt.Sprintf("%t", dimmed), err
+		})
+	}
+
+	if v, ok := api.Cap[api.Curtailer](v); ok {
+		d.measureTime(w, "Curtailed", func() (string, error) {
+			curtailed, err := v.Curtailed()
+			return fmt.Sprintf("%t", curtailed), err
+		})
+	}
+
 	// charger
 
 	if v, ok := api.Cap[api.ChargeState](v); ok {
