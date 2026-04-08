@@ -36,21 +36,21 @@ render: |
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 8554 # Register 8555 (A-phase voltage)
+      address: 4356 # Register 4357 (Phase A voltage, phase-to-neutral)
       type: input
       decode: uint16
     scale: 0.1 # Factor 0.1 V
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 8555 # Register 8556 (B-phase voltage)
+      address: 4358 # Register 4359 (Phase B voltage, phase-to-neutral)
       type: input
       decode: uint16
     scale: 0.1
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 8556 # Register 8557 (C-phase voltage)
+      address: 4360 # Register 4361 (Phase C voltage, phase-to-neutral)
       type: input
       decode: uint16
     scale: 0.1
