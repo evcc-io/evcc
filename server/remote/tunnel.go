@@ -98,19 +98,15 @@ func (t *Tunnel) connect(ctx context.Context) (bool, error) {
 	t.changeState(session, nil)
 
 	// accept streams from the proxy
-	for {
-		if err := ctx.Err(); err != nil {
-			return true, err
-		}
-
-		srv := &http.Server{
-			Handler: basicAuthMiddleware(t.authenticate, t.httpHandler),
-		}
-
-		if err := srv.Serve(session); err != nil {
-			t.changeState(nil, err)
-		}
+	srv := &http.Server{
+		Handler: basicAuthMiddleware(t.authenticate, t.httpHandler),
 	}
+
+	if err := srv.Serve(session); err != nil {
+		t.changeState(nil, err)
+	}
+
+	return true, nil
 }
 
 func (t *Tunnel) changeState(session *yamux.Session, err error) {
