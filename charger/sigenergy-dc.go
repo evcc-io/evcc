@@ -108,7 +108,7 @@ func NewSigenergyDC(ctx context.Context, uri string, slaveID uint8) (*SigenergyD
 
 // Status implements the api.Charger interface
 func (wb *SigenergyDC) Status() (api.ChargeStatus, error) {
-	b, err := wb.conn.ReadHoldingRegisters(regSigDcRunningState, 1)
+	b, err := wb.conn.ReadInputRegisters(regSigDcRunningState, 1)
 	if err != nil {
 		return api.StatusNone, err
 	}
@@ -168,7 +168,7 @@ var _ api.Meter = (*SigenergyDC)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (wb *SigenergyDC) CurrentPower() (float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(regSigDcOutputPower, 2)
+	b, err := wb.conn.ReadInputRegisters(regSigDcOutputPower, 2)
 	if err != nil {
 		return 0, err
 	}
@@ -183,7 +183,7 @@ var _ api.MeterEnergy = (*SigenergyDC)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (wb *SigenergyDC) TotalEnergy() (float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(regSigDcCurrentCapacity, 2)
+	b, err := wb.conn.ReadInputRegisters(regSigDcCurrentCapacity, 2)
 	if err != nil {
 		return 0, err
 	}
@@ -196,7 +196,7 @@ var _ api.Battery = (*SigenergyDC)(nil)
 
 // Soc implements the api.Battery interface
 func (wb *SigenergyDC) Soc() (float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(regSigDcVehicleSoc, 1)
+	b, err := wb.conn.ReadInputRegisters(regSigDcVehicleSoc, 1)
 	if err != nil {
 		return 0, err
 	}
@@ -209,7 +209,7 @@ var _ api.Diagnosis = (*SigenergyDC)(nil)
 
 // Diagnose implements the api.Diagnosis interface
 func (wb *SigenergyDC) Diagnose() {
-	if b, err := wb.conn.ReadHoldingRegisters(regSigDcRunningState, 1); err == nil {
+	if b, err := wb.conn.ReadInputRegisters(regSigDcRunningState, 1); err == nil {
 		stateNames := map[uint16]string{
 			sigDcStateIdle: "Idle", sigDcStateOccupied: "Occupied",
 			sigDcStatePrepComm: "Preparing Comm", sigDcStateCharging: "Charging",
@@ -225,19 +225,19 @@ func (wb *SigenergyDC) Diagnose() {
 		}
 		fmt.Printf("\tRunning State:\t%d (%s)\n", state, name)
 	}
-	if b, err := wb.conn.ReadHoldingRegisters(regSigDcAlarm, 1); err == nil {
+	if b, err := wb.conn.ReadInputRegisters(regSigDcAlarm, 1); err == nil {
 		fmt.Printf("\tDC Alarm:\t%d\n", binary.BigEndian.Uint16(b))
 	}
-	if b, err := wb.conn.ReadHoldingRegisters(regSigDcVehicleVoltage, 1); err == nil {
+	if b, err := wb.conn.ReadInputRegisters(regSigDcVehicleVoltage, 1); err == nil {
 		fmt.Printf("\tVehicle Voltage:\t%.1f V\n", float64(binary.BigEndian.Uint16(b))/10)
 	}
-	if b, err := wb.conn.ReadHoldingRegisters(regSigDcChargingCurrent, 1); err == nil {
+	if b, err := wb.conn.ReadInputRegisters(regSigDcChargingCurrent, 1); err == nil {
 		fmt.Printf("\tCharging Current:\t%.1f A\n", float64(binary.BigEndian.Uint16(b))/10)
 	}
-	if b, err := wb.conn.ReadHoldingRegisters(regSigDcVehicleSoc, 1); err == nil {
+	if b, err := wb.conn.ReadInputRegisters(regSigDcVehicleSoc, 1); err == nil {
 		fmt.Printf("\tVehicle SOC:\t%.1f %%\n", float64(binary.BigEndian.Uint16(b))/10)
 	}
-	if b, err := wb.conn.ReadHoldingRegisters(regSigDcCurrentDuration, 2); err == nil {
+	if b, err := wb.conn.ReadInputRegisters(regSigDcCurrentDuration, 2); err == nil {
 		fmt.Printf("\tCurrent Duration:\t%d s\n", binary.BigEndian.Uint32(b))
 	}
 }
