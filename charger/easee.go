@@ -486,7 +486,7 @@ func (c *Easee) Enable(enable bool) (err error) {
 		}
 
 		uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
-		if err := c.dispatcher.Send(uri, data); err != nil {
+		if _, err := c.dispatcher.Send(uri, data); err != nil {
 			return err
 		}
 	}
@@ -508,7 +508,7 @@ func (c *Easee) Enable(enable bool) (err error) {
 	}
 
 	uri := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, c.charger, action)
-	if err := c.dispatcher.Send(uri, nil); err != nil {
+	if _, err := c.dispatcher.Send(uri, nil); err != nil {
 		return err
 	}
 
@@ -620,11 +620,15 @@ func (c *Easee) MaxCurrent(current int64) error {
 	}
 
 	uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
-	if err := c.dispatcher.Send(uri, data); err != nil {
+	noop, err := c.dispatcher.Send(uri, data)
+	if err != nil {
 		return err
 	}
-	if err := c.waitForDynamicChargerCurrent(cur); err != nil {
-		return err
+
+	if !noop {
+		if err := c.waitForDynamicChargerCurrent(cur); err != nil {
+			return err
+		}
 	}
 
 	c.mux.Lock()
@@ -733,7 +737,7 @@ func (c *Easee) Phases1p3p(phases int) error {
 		// cloud sends on HTTP 200 (sync) responses is silently consumed rather
 		// than logged as rogue. On error we undo the registration.
 		c.dispatcher.ExpectOrphan(easee.CIRCUIT_MAX_CURRENT_P1)
-		err = c.dispatcher.Send(uri, data)
+		_, err = c.dispatcher.Send(uri, data)
 		if err != nil {
 			c.dispatcher.CancelOrphan(easee.CIRCUIT_MAX_CURRENT_P1)
 		}
@@ -751,7 +755,7 @@ func (c *Easee) Phases1p3p(phases int) error {
 
 			uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
 
-			if err = c.dispatcher.Send(uri, data); err != nil {
+			if _, err = c.dispatcher.Send(uri, data); err != nil {
 				return err
 			}
 		}
@@ -829,7 +833,7 @@ func (c *Easee) updateSmartCharging() {
 
 		uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
 
-		if err := c.dispatcher.Send(uri, data); err != nil {
+		if _, err := c.dispatcher.Send(uri, data); err != nil {
 			c.log.WARN.Printf("smart charging: %v", err)
 			return
 		}
