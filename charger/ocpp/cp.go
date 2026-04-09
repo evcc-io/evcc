@@ -159,10 +159,7 @@ func (cp *CP) onTransportConnect() {
 	// This helps chargers that don't send it spontaneously (e.g. Wallbox FW 6.x).
 	// The TriggerMessage is sent directly via the OCPP instance, bypassing the
 	// Connected() check which would fail at this point.
-	id := cp.id
-	go func() {
-		time.Sleep(triggerBootDelay)
-
+	time.AfterFunc(triggerBootDelay, func() {
 		cp.mu.RLock()
 		// If BootNotification already arrived or timer was cancelled (disconnect),
 		// there is nothing to do.
@@ -175,10 +172,10 @@ func (cp *CP) onTransportConnect() {
 		cp.log.DEBUG.Printf("proactively triggering BootNotification")
 
 		err := Instance().TriggerMessage(
-			id,
+			cp.id,
 			func(conf *remotetrigger.TriggerMessageConfirmation, err error) {
 				if err != nil {
-					cp.log.DEBUG.Printf("trigger BootNotification response error: %v", err)
+					cp.log.ERROR.Printf("trigger BootNotification response error: %v", err)
 				}
 			},
 			core.BootNotificationFeatureName,
@@ -187,7 +184,7 @@ func (cp *CP) onTransportConnect() {
 		if err != nil {
 			cp.log.ERROR.Printf("failed to trigger BootNotification: %v", err)
 		}
-	}()
+	})
 }
 
 // onBootTimeout is called when the BootNotification wait timer expires.
