@@ -1,11 +1,12 @@
 package charger
 
-//go:generate go tool decorate -f decorateHomeAssistant -b *HomeAssistant -r api.Charger -t api.Meter,api.MeterEnergy,api.PhaseCurrents,api.PhaseVoltages
+//go:generate go tool decorate -f decorateHomeAssistant -b *HomeAssistant -r api.Charger -t api.Meter,api.MeterEnergy,api.PhaseCurrents,api.PhaseVoltages,api.PhaseSwitcher,api.PhaseGetter
 //  -t api.CurrentGetter
 
 import (
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -39,6 +40,7 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Charger, error) {
 		Energy     string   // optional - energy sensor
 		Currents   []string // optional - current sensors for L1, L2, L3
 		Voltages   []string // optional - voltage sensors for L1, L2, L3
+		Phases     string   // optional - select entity for 1p/3p phase switching
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -76,6 +78,8 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Charger, error) {
 	// decorators for optional interfaces
 	var power, energy func() (float64, error)
 	var currents, voltages func() (float64, float64, float64, error)
+	var phases1p3p func(int) error
+	var phasesG func() (int, error)
 
 	if cc.Power != "" {
 		power = func() (float64, error) { return conn.GetFloatState(cc.Power) }
@@ -98,7 +102,22 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Charger, error) {
 		return nil, fmt.Errorf("voltages: %w", err)
 	}
 
-	return decorateHomeAssistant(c, power, energy, currents, voltages), nil
+	// phase switching (optional)
+	if cc.Phases != "" {
+		phases1p3p = func(phases int) error {
+			return conn.CallSelectService(cc.Phases, strconv.Itoa(phases))
+		}
+
+		phasesG = func() (int, error) {
+			val, err := conn.GetIntState(cc.Phases)
+			if err != nil {
+				return 0, err
+			}
+			return int(val), nil
+		}
+	}
+
+	return decorateHomeAssistant(c, power, energy, currents, voltages, phases1p3p, phasesG), nil
 }
 
 var _ api.Charger = (*HomeAssistant)(nil)

@@ -6,24 +6,34 @@ products:
   - brand: Kontron Solar
     description:
       generic: Charger
-capabilities: ["iso151182", "mA"]
+capabilities: ["iso151182", "1p3p", "rfid", "mA"]
 requirements:
   evcc: ["eebus"]
   description:
     de: |
-      Die Wallbox muss im normalen Lademodus betrieben werden.
+      Das PV-Überschussladen der Wallbox muss deaktiviert sein (Ladeverwaltung -> Ladeeinstellungen -> PV-Überschussladen aus).
 
-      Die Nutzung der Phasenumschaltung ist in evcc momentan noch nicht möglich.
-
-      Eine Identifikation des Fahrzeugs über die RFID Karte ist nicht möglich.
+      Für Phasenumschaltung und RFID-Identifikation werden IP-Adresse und Techniker-Passwort benötigt. Die Phasenumschaltung sollte in der Wallbox aktiviert werden (Ladeverwaltung -> Ladeeinstellungen).
     en: |
-      The device has to be used in the normal charging mode.
+      The wallbox PV surplus charging must be disabled (Charging management -> Charging settings -> PV surplus charging off).
 
-      The usage of phase switching is currently not possible in evcc.
-
-      The identification of a vehicle using the RFID card is not possible.
+      Phase switching and RFID identification require the IP address and technician password. Phase switching should be enabled in the wallbox settings (Charging management -> Charging settings).
 params:
   - preset: eebus
+  - name: ip
+    help:
+      de: IP-Adresse der Wallbox. Erforderlich für Phasenumschaltung und RFID-Identifikation.
+      en: IP address of the wallbox. Required for phase switching and RFID identification.
+  - name: password
+    help:
+      de: Techniker-Passwort. Erforderlich für Phasenumschaltung und RFID-Identifikation.
+      en: Technician password. Required for phase switching and RFID identification.
 render: |
-  {{ include "eebus" . }}
+  type: ghosteebus
+  ski: {{ .ski }}
+  ip: {{ .ip }}
   meter: true
+  {{- if .password }}
+  user: technician
+  password: {{ .password }}
+  {{- end }}

@@ -192,3 +192,4 @@ render: |
     uri: http://{{ .host }}/api/boiler/dhw/settemp
     jq: .value
   {{- end }}
+  {{ include "heatpumpswitch" . }}

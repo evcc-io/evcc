@@ -15,11 +15,11 @@
 								<span class="text-nowrap text-truncate">
 									{{ $t("log.update") }}
 								</span>
-								<Record
+								<ProgressRing
 									v-if="autoFollow"
-									ref="spin"
-									class="spin flex-shrink-0"
-									:style="{ animationDuration: `${updateInterval}ms` }"
+									:key="tick"
+									class="flex-shrink-0"
+									:duration="updateInterval"
 								/>
 								<Play v-else class="flex-shrink-0 play" />
 							</button>
@@ -60,6 +60,7 @@
 					<div class="filterAreas col-6 col-lg-2">
 						<MultiSelect
 							id="logAreasSelect"
+							isTopLevel
 							:modelValue="areas"
 							:options="areaOptions"
 							:selectAllLabel="$t('log.selectAll')"
@@ -110,7 +111,7 @@
 import "@h2d2/shopicons/es/regular/download";
 import Header from "../components/Top/Header.vue";
 import Play from "../components/MaterialIcon/Play.vue";
-import Record from "../components/MaterialIcon/Record.vue";
+import ProgressRing from "../components/MaterialIcon/ProgressRing.vue";
 import MultiSelect from "../components/Helper/MultiSelect.vue";
 import api from "../api";
 import store from "../store";
@@ -126,7 +127,7 @@ export default defineComponent({
 	components: {
 		TopHeader: Header,
 		Play,
-		Record,
+		ProgressRing,
 		MultiSelect,
 	},
 	props: {
@@ -141,6 +142,7 @@ export default defineComponent({
 			timeout: null as Timeout,
 			levels: LOG_LEVELS,
 			busy: false,
+			tick: 0,
 		};
 	},
 	head() {
@@ -221,6 +223,7 @@ export default defineComponent({
 			// prevent concurrent requests
 			if (this.busy) return;
 
+			this.tick++;
 			try {
 				this.busy = true;
 				const response = await api.get("/system/log", {
@@ -326,17 +329,6 @@ export default defineComponent({
 }
 .play {
 	transform: scale(1.2);
-}
-.spin {
-	animation: rotation 3s infinite ease-in-out;
-}
-@keyframes rotation {
-	from {
-		transform: rotate(0deg) scale(1, -1);
-	}
-	to {
-		transform: rotate(1440deg) scale(1, -1);
-	}
 }
 @keyframes fadeIn {
 	from {

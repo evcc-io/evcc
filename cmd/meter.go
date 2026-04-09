@@ -23,6 +23,8 @@ func init() {
 	meterCmd.Flags().StringP(flagBatteryMode, "b", "", flagBatteryModeDescription)
 	meterCmd.Flags().DurationP(flagBatteryModeWait, "w", 0, flagBatteryModeWaitDescription)
 	meterCmd.Flags().Bool(flagDiagnose, false, flagDiagnoseDescription)
+	meterCmd.Flags().IntP(flagCurtail, "u", -1, flagCurtailDescription)
+	meterCmd.Flags().IntP(flagDim, "m", -1, flagDimDescription)
 	meterCmd.Flags().BoolP(flagRepeat, "r", false, flagRepeatDescription)
 	meterCmd.Flags().Duration(flagRepeatInterval, 0, flagRepeatIntervalDescription)
 	meterCmd.Flags().Bool(flagHeartbeat, false, flagHeartbeatDescription)
@@ -70,6 +72,16 @@ func runMeter(cmd *cobra.Command, args []string) {
 				log.INFO.Println("waiting for:", d)
 				time.Sleep(d)
 			}
+		}
+	}
+
+	for _, v := range config.Instances(meters) {
+		if handleCurtailFlag(cmd, v) {
+			flagUsed = true
+		}
+
+		if handleDimFlag(cmd, v) {
+			flagUsed = true
 		}
 	}
 

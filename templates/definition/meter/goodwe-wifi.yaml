@@ -16,4 +16,4 @@ params:
 render: |
   type: goodwe-wifi
   usage: {{ .usage }}
-  uri: {{ if .host }}{{ .host }}{{ else }}{{ .uri }}{{ end }}
+  uri: {{ or .host .uri }}

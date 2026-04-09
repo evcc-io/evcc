@@ -280,4 +280,4 @@ render: |
   features:
     - heating
     - outdoortemperaturesensitive
-  icon: heatpump
+  {{ include "heatpumpswitch" . }}
