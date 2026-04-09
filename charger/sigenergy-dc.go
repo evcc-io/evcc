@@ -67,6 +67,21 @@ const (
 	sigDcStatePrepInsul   = 0x0A
 )
 
+// sigDcStateNames maps running state codes to human-readable names for diagnostics
+var sigDcStateNames = map[uint16]string{
+	sigDcStateIdle:        "Idle",
+	sigDcStateOccupied:    "Occupied",
+	sigDcStatePrepComm:    "Preparing Comm",
+	sigDcStateCharging:    "Charging",
+	sigDcStateFault:       "Fault",
+	sigDcStateScheduled:   "Scheduled",
+	sigDcStateEnded:       "Ended",
+	sigDcStateUnavail:     "Unavailable",
+	sigDcStateDischarging: "Discharging",
+	sigDcStateAlarm:       "Alarm",
+	sigDcStatePrepInsul:   "Preparing Insulation",
+}
+
 func init() {
 	registry.AddCtx("sigenergy-dc", NewSigenergyDcFromConfig)
 }
@@ -86,13 +101,13 @@ func NewSigenergyDcFromConfig(ctx context.Context, other map[string]any) (api.Ch
 
 // NewSigenergyDC creates a new Sigenergy DC charger
 func NewSigenergyDC(ctx context.Context, uri string, slaveID uint8) (*SigenergyDC, error) {
+	if !sponsor.IsAuthorized() {
+		return nil, api.ErrSponsorRequired
+	}
+
 	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
 	if err != nil {
 		return nil, err
-	}
-
-	if !sponsor.IsAuthorized() {
-		return nil, api.ErrSponsorRequired
 	}
 
 	log := util.NewLogger("sigenergy-dc")
@@ -210,16 +225,8 @@ var _ api.Diagnosis = (*SigenergyDC)(nil)
 // Diagnose implements the api.Diagnosis interface
 func (wb *SigenergyDC) Diagnose() {
 	if b, err := wb.conn.ReadInputRegisters(regSigDcRunningState, 1); err == nil {
-		stateNames := map[uint16]string{
-			sigDcStateIdle: "Idle", sigDcStateOccupied: "Occupied",
-			sigDcStatePrepComm: "Preparing Comm", sigDcStateCharging: "Charging",
-			sigDcStateFault: "Fault", sigDcStateScheduled: "Scheduled",
-			sigDcStateEnded: "Ended", sigDcStateUnavail: "Unavailable",
-			sigDcStateDischarging: "Discharging", sigDcStateAlarm: "Alarm",
-			sigDcStatePrepInsul: "Preparing Insulation",
-		}
 		state := binary.BigEndian.Uint16(b)
-		name := stateNames[state]
+		name := sigDcStateNames[state]
 		if name == "" {
 			name = "Unknown"
 		}
