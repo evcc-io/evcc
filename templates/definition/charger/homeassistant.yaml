@@ -149,6 +149,7 @@ params:
       en: Phase switching entity
     service: homeassistant/entities?uri={uri}&domain=select,input_select
     example: "select.charger_phases"
+    type: string # override default
     advanced: true
     help:
       en: Entity ID for 1p/3p phase switching (select entity with options "1" and "3")
