@@ -267,6 +267,21 @@ func (c *Connection) CallNumberService(entity string, value float64) error {
 	return c.CallService(domain, "set_value", data)
 }
 
+// CallSelectService is a convenience method for setting select entity options.
+func (c *Connection) CallSelectService(entity, option string) error {
+	domain, err := domain(entity)
+	if err != nil {
+		return err
+	}
+
+	data := map[string]any{
+		"entity_id": entity,
+		"option":    option,
+	}
+
+	return c.CallService(domain, "select_option", data)
+}
+
 // GetPhaseFloatStates retrieves three phase values (currents, voltages, etc.)
 func (c *Connection) GetPhaseFloatStates(entities []string) (float64, float64, float64, error) {
 	if len(entities) != 3 {

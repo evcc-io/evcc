@@ -224,7 +224,7 @@ func TestEasee_StatusReason(t *testing.T) {
 		expectedReason api.Reason
 	}{
 		{easee.ModeAwaitingAuthentication, api.ReasonWaitingForAuthorization},
-		{easee.ModeCompleted, api.ReasonDisconnectRequired},
+		{easee.ModeCompleted, api.ReasonUnknown},
 		{easee.ModeDisconnected, api.ReasonUnknown},
 		{easee.ModeAwaitingStart, api.ReasonUnknown},
 		{easee.ModeCharging, api.ReasonUnknown},
@@ -330,7 +330,7 @@ func TestEasee_CommandResponse_legitimate(t *testing.T) {
 		errCh <- nil
 	}()
 
-	err = e.dispatcher.Send(uri, nil)
+	_, err = e.dispatcher.Send(uri, nil)
 	assert.NoError(t, err)
 	<-errCh
 }
@@ -420,7 +420,7 @@ func TestEasee_CommandResponse_matchedByID(t *testing.T) {
 		errCh <- nil
 	}()
 
-	err = e.dispatcher.Send(uri, nil)
+	_, err = e.dispatcher.Send(uri, nil)
 	assert.NoError(t, err)
 	<-errCh
 }

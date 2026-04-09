@@ -51,7 +51,7 @@ export function markPointLabel(
 
   return {
     animation: true,
-    clip: false,
+    clip: true,
     symbol: "rect",
     symbolSize: 1,
     label: {
@@ -76,11 +76,12 @@ export function tooltipStyle(
   getChart?: () => { convertToPixel: echarts.ECharts["convertToPixel"] } | null
 ) {
   return {
+    confine: true,
     backgroundColor: color,
     borderColor: color,
     borderWidth: 0,
     padding: [5, 10],
-    extraCssText: "box-shadow: none; border-radius: 4px; text-align: center;",
+    extraCssText: "box-shadow: none; border-radius: 4px; text-align: center; z-index: 1000;",
     position(
       point: [number, number],
       params: { value: [string, number] }[] | { value: [string, number] },
@@ -110,7 +111,7 @@ export function tooltipStyle(
 }
 
 export function forecastGrid() {
-  return { top: 36, right: 16, bottom: 4, left: 48, borderWidth: 0 };
+  return { top: 36, right: 16, bottom: 4, left: 34, borderWidth: 0 };
 }
 
 export function forecastXAxes(startDate: Date, endDate: Date, weekdayShort: (d: Date) => string) {
@@ -129,7 +130,7 @@ export function forecastXAxes(startDate: Date, endDate: Date, weekdayShort: (d: 
         formatter: (value: number) => {
           const date = new Date(value);
           const h = date.getHours();
-          if (h % 2 !== 0) return "";
+          if (h % 4 !== 0) return "";
           if (h === 0) return `${h}\n${weekdayShort(date)}`;
           return `${h}`;
         },
@@ -171,7 +172,8 @@ export function forecastYAxis(overrides: Record<string, unknown> = {}) {
       lineStyle: { color: colors.border || "" },
     },
     axisLabel: {
-      fontSize: 14,
+      fontSize: 10,
+      opacity: 0.5,
       ...(axisLabel as Record<string, unknown>),
     },
     ...rest,
@@ -188,7 +190,7 @@ export function filterForecastSlots(
   endDate: Date
 ): ForecastSlot[] {
   if (!Array.isArray(slots)) return [];
-  return slots.filter((s) => new Date(s.end) >= startDate && new Date(s.start) <= endDate);
+  return slots.filter((s) => new Date(s.end) > startDate && new Date(s.start) <= endDate);
 }
 
 export function minSlotIndex(slots: ForecastSlot[]): number {

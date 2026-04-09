@@ -652,12 +652,20 @@ export default defineComponent({
 			this.detailsCompleteHeight = this.$refs["detailsInner"]?.offsetHeight ?? 0;
 		},
 		openBatterySettingsModal() {
+			if (this.experimental) {
+				this.$router.push("/battery");
+				return;
+			}
 			const modal = Modal.getOrCreateInstance(
 				document.getElementById("batterySettingsModal") as HTMLElement
 			);
 			modal.show();
 		},
 		openForecastModal() {
+			if (this.experimental) {
+				this.$router.push("/forecast");
+				return;
+			}
 			const modal = Modal.getOrCreateInstance(
 				document.getElementById("forecastModal") as HTMLElement
 			);

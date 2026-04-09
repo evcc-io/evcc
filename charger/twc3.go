@@ -139,6 +139,11 @@ func (c *Twc3) MaxCurrent(current int64) error {
 
 	v, ok := api.Cap[api.CurrentController](c.lp.GetVehicle())
 	if !ok {
+		if c.lp.GetMode() == api.ModeNow {
+			// vehicle does not support current control- ignore silently
+			// since TWC3 cannot limit current on its own
+			return nil
+		}
 		return errors.New("vehicle not capable of current control")
 	}
 
