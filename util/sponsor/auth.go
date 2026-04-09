@@ -20,6 +20,7 @@ package sponsor
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -61,9 +62,11 @@ func ConfigureSponsorship(token string) error {
 			return nil
 		}
 
-		if sub := checkHemsPro(); sub != "" {
-			Subject = sub
-			return nil
+		if os.Getenv("HEMSPRO") != "" {
+			if sub := checkHemsPro(); sub != "" {
+				Subject = sub
+				return nil
+			}
 		}
 
 		var err error
