@@ -143,13 +143,16 @@ params:
       en: Entity ID for L3 voltage measurement in volts
       de: Entitäts-ID für L3 Spannungsmessung in Volt
 
+  # cannot uses phases as it has type int
   - name: phases
+    deprecated: true
+
+  - name: phaseswitch
     description:
       de: Phasenumschaltungs-Entität
       en: Phase switching entity
     service: homeassistant/entities?uri={uri}&domain=select,input_select
     example: "select.charger_phases"
-    type: string # override default
     advanced: true
     help:
       en: Entity ID for 1p/3p phase switching (select entity with options "1" and "3")
@@ -175,6 +178,4 @@ render: |
     - {{ .voltageL2 }}
     - {{ .voltageL3 }}
   {{- end }}
-  {{- if .phases }}
-  phases: {{ .phases }}
-  {{- end }}
+  phases: {{ .phaseswitch }}
