@@ -100,7 +100,7 @@ func (t *EdfTempo) refreshToken() (*oauth2.Token, error) {
 	return util.TokenWithExpiry(&res), err
 }
 
-func (t *EdfTempo) run(done chan error) {
+func (t *EdfTempo) run(done chan error, stop <-chan struct{}) {
 	var once sync.Once
 
 	for tick := time.Tick(time.Hour); ; <-tick {
@@ -127,7 +127,12 @@ func (t *EdfTempo) run(done chan error) {
 			once.Do(func() { done <- err })
 
 			t.log.ERROR.Println(err)
-			continue
+			select {
+			case <-stop:
+				return
+			default:
+				continue
+			}
 		}
 
 		data := make(api.Rates, 0, 24*len(res.Data.Values))

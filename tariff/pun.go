@@ -76,7 +76,7 @@ func NewPunFromConfig(other map[string]any) (api.Tariff, error) {
 	return runOrError(t)
 }
 
-func (t *Pun) run(done chan error) {
+func (t *Pun) run(done chan error, stop <-chan struct{}) {
 	var once sync.Once
 
 	for tick := time.Tick(time.Hour); ; <-tick {
@@ -88,7 +88,12 @@ func (t *Pun) run(done chan error) {
 		if err != nil {
 			once.Do(func() { done <- err })
 			t.log.ERROR.Println(err)
-			continue
+			select {
+			case <-stop:
+				return
+			default:
+				continue
+			}
 		}
 
 		// get tomorrow data
@@ -99,7 +104,12 @@ func (t *Pun) run(done chan error) {
 		if err != nil {
 			once.Do(func() { done <- err })
 			t.log.ERROR.Println(err)
-			continue
+			select {
+			case <-stop:
+				return
+			default:
+				continue
+			}
 		}
 
 		// merge today and tomorrow data

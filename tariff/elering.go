@@ -57,7 +57,7 @@ func NewEleringFromConfig(other map[string]any) (api.Tariff, error) {
 	return runOrError(t)
 }
 
-func (t *Elering) run(done chan error) {
+func (t *Elering) run(done chan error, stop <-chan struct{}) {
 	var once sync.Once
 	client := request.NewHelper(t.log)
 
@@ -75,7 +75,12 @@ func (t *Elering) run(done chan error) {
 			once.Do(func() { done <- err })
 
 			t.log.ERROR.Println(err)
-			continue
+			select {
+			case <-stop:
+				return
+			default:
+				continue
+			}
 		}
 
 		data := make(api.Rates, 0, len(res.Data[t.region]))

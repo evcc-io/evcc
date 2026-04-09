@@ -55,7 +55,7 @@ func NewGrünStromIndexFromConfig(other map[string]any) (api.Tariff, error) {
 	return runOrError(t)
 }
 
-func (t *GrünStromIndex) run(done chan error) {
+func (t *GrünStromIndex) run(done chan error, stop <-chan struct{}) {
 	var once sync.Once
 	uri := fmt.Sprintf("https://api.corrently.io/v2.0/gsi/prediction?zip=%s", t.zip)
 
@@ -78,7 +78,12 @@ func (t *GrünStromIndex) run(done chan error) {
 			once.Do(func() { done <- err })
 
 			t.log.ERROR.Println(err)
-			continue
+			select {
+			case <-stop:
+				return
+			default:
+				continue
+			}
 		}
 
 		data := make(api.Rates, 0, len(res.Forecast))
