@@ -106,18 +106,18 @@ render: |
       headers:
         - Connection: close
       cache: 5s
-      jq: .phase_currents.L1 / 10
+      jq: .ev_meter.currents.L1 / 10
     - source: http
       uri: http://{{ .host }}/settings
       method: GET
       headers:
         - Connection: close
       cache: 5s
-      jq: .phase_currents.L2 / 10
+      jq: .ev_meter.currents.L2 / 10
     - source: http
       uri: http://{{ .host }}/settings
       method: GET
       headers:
         - Connection: close
       cache: 5s
-      jq: .phase_currents.L3 / 10
+      jq: .ev_meter.currents.L3 / 10
