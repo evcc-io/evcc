@@ -314,7 +314,7 @@ func TestFloatGetter_DT_Power(t *testing.T) {
 	response := singleRegResponse(t, capGW17kDT, 54, 4, 0x7f)
 	p := &AA55UDP{
 		log:    util.NewLogger("test"),
-		sc:     &sharedConn{conn: mockConn(t, response)},
+		raddr:  mockSetup(t, response),
 		pdu:    buildPDU(0x7F, 0x75AF, 2),
 		decode: "int32be",
 		scale:  1.0,
@@ -331,7 +331,7 @@ func TestFloatGetter_DT_Energy(t *testing.T) {
 	response := singleRegResponse(t, capGW17kDT, 90, 4, 0x7f)
 	p := &AA55UDP{
 		log:    util.NewLogger("test"),
-		sc:     &sharedConn{conn: mockConn(t, response)},
+		raddr:  mockSetup(t, response),
 		pdu:    buildPDU(0x7F, 0x75C1, 2),
 		decode: "uint32be",
 		scale:  0.1,
@@ -348,7 +348,7 @@ func TestFloatGetter_ET_PV(t *testing.T) {
 	response := singleRegResponse(t, capGW10kET, 74, 4, 0xf7)
 	p := &AA55UDP{
 		log:    util.NewLogger("test"),
-		sc:     &sharedConn{conn: mockConn(t, response)},
+		raddr:  mockSetup(t, response),
 		pdu:    buildPDU(0xF7, 0x8941, 2),
 		decode: "int32be",
 		scale:  1.0,
@@ -365,7 +365,7 @@ func TestFloatGetter_ET_Battery(t *testing.T) {
 	response := singleRegResponse(t, capGW10kET, 164, 4, 0xf7)
 	p := &AA55UDP{
 		log:    util.NewLogger("test"),
-		sc:     &sharedConn{conn: mockConn(t, response)},
+		raddr:  mockSetup(t, response),
 		pdu:    buildPDU(0xF7, 0x896E, 2),
 		decode: "int32be",
 		scale:  1.0,
@@ -382,7 +382,7 @@ func TestFloatGetter_ET_SoC(t *testing.T) {
 	response := singleRegResponse(t, capGW10kETBattery, 14, 2, 0xf7)
 	p := &AA55UDP{
 		log:    util.NewLogger("test"),
-		sc:     &sharedConn{conn: mockConn(t, response)},
+		raddr:  mockSetup(t, response),
 		pdu:    buildPDU(0xF7, 0x908F, 1),
 		decode: "uint16be",
 		scale:  1.0,
@@ -436,10 +436,14 @@ func singleRegResponse(t *testing.T, capHex string, offset, valueBytes int, src 
 	return frame
 }
 
-// mockConn starts a UDP server that responds with response to every packet,
-// and returns a *net.UDPConn already dialled at that server.
-func mockConn(t *testing.T, response []byte) *net.UDPConn {
+// mockSetup starts a mock UDP inverter server that responds with response to
+// every incoming packet.  It overrides the package-level sharedSocket with a
+// socket pointed at the mock server, and returns the remote address to use as
+// p.raddr.  The original sharedSocket is restored after the test.
+func mockSetup(t *testing.T, response []byte) *net.UDPAddr {
 	t.Helper()
+
+	// Mock "inverter" server
 	srv, err := net.ListenPacket("udp4", "127.0.0.1:0")
 	require.NoError(t, err)
 	t.Cleanup(func() { srv.Close() })
@@ -455,10 +459,23 @@ func mockConn(t *testing.T, response []byte) *net.UDPConn {
 		}
 	}()
 
-	addr, err := net.ResolveUDPAddr("udp4", srv.LocalAddr().String())
+	// Client socket (replaces sharedSocket for this test)
+	clientConn, err := net.ListenUDP("udp4", &net.UDPAddr{IP: net.IPv4(127, 0, 0, 1)})
 	require.NoError(t, err)
-	conn, err := net.DialUDP("udp4", nil, addr)
+
+	sharedSocketMu.Lock()
+	orig := sharedSocket
+	sharedSocket = clientConn
+	sharedSocketMu.Unlock()
+
+	t.Cleanup(func() {
+		clientConn.Close()
+		sharedSocketMu.Lock()
+		sharedSocket = orig
+		sharedSocketMu.Unlock()
+	})
+
+	raddr, err := net.ResolveUDPAddr("udp4", srv.LocalAddr().String())
 	require.NoError(t, err)
-	t.Cleanup(func() { conn.Close() })
-	return conn
+	return raddr
 }
