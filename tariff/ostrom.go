@@ -85,7 +85,7 @@ func NewOstromFromConfig(other map[string]any) (api.Tariff, error) {
 
 	t.Client.Transport = &oauth2.Transport{
 		Base:   t.Client.Transport,
-		Source: oauth.RefreshTokenSource(nil, t),
+		Source: oauth2.ReuseTokenSource(nil, oauth.BootstrapTokenSource(t.refreshToken)),
 	}
 
 	contracts, err := t.getContracts()
@@ -100,8 +100,13 @@ func NewOstromFromConfig(other map[string]any) (api.Tariff, error) {
 	t.contractType = contract.Product
 	t.zip = contract.Address.Zip
 
+	tariffType, err := t.tariffType()
+	if err != nil {
+		return nil, err
+	}
+
 	done := make(chan error)
-	if t.Type() == api.TariffTypePriceStatic {
+	if tariffType == api.TariffTypePriceStatic {
 		t.cityId, err = t.getCityId()
 		if err != nil {
 			return nil, err
@@ -158,7 +163,7 @@ func (t *Ostrom) getFixedPrice() (float64, error) {
 	return 0, errors.New("tariff not found")
 }
 
-func (t *Ostrom) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
+func (t *Ostrom) refreshToken() (*oauth2.Token, error) {
 	uri := ostrom.URI_AUTH + "/oauth2/token"
 	data := url.Values{"grant_type": {"client_credentials"}}
 	req, _ := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), map[string]string{
@@ -253,14 +258,23 @@ func (t *Ostrom) Rates() (api.Rates, error) {
 	return res, err
 }
 
+// tariffType returns the tariff type for the current contract, or an error for unknown contract types.
+func (t *Ostrom) tariffType() (api.TariffType, error) {
+	switch t.contractType {
+	case ostrom.PRODUCT_DYNAMIC, ostrom.PRODUCT_DYNAMIC_V2:
+		return api.TariffTypePriceForecast, nil
+	case ostrom.PRODUCT_FAIR, ostrom.PRODUCT_FAIR_CAP:
+		return api.TariffTypePriceStatic, nil
+	default:
+		return 0, fmt.Errorf("invalid contract type: %s", t.contractType)
+	}
+}
+
 // Type implements the api.Tariff interface
 func (t *Ostrom) Type() api.TariffType {
-	switch t.contractType {
-	case ostrom.PRODUCT_DYNAMIC:
-		return api.TariffTypePriceForecast
-	case ostrom.PRODUCT_FAIR, ostrom.PRODUCT_FAIR_CAP:
-		return api.TariffTypePriceStatic
-	default:
-		panic("invalid contract type: " + t.contractType)
+	tariffType, err := t.tariffType()
+	if err != nil {
+		panic(err.Error())
 	}
+	return tariffType
 }

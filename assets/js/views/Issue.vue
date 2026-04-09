@@ -107,18 +107,44 @@
 									required
 								></textarea>
 							</div>
-							<div class="mb-4">
-								<label for="version" class="form-label">
-									{{ $t("issue.version") }}
-								</label>
-								<input
-									id="version"
-									v-model="versionString"
-									type="text"
-									class="form-control"
-									required
-									readonly
-								/>
+							<div class="row mb-4">
+								<div class="col-12 col-md-4 mb-4 mb-md-0">
+									<label for="version" class="form-label">
+										{{ $t("issue.version") }}
+									</label>
+									<input
+										id="version"
+										v-model="versionString"
+										type="text"
+										class="form-control"
+										required
+										readonly
+									/>
+								</div>
+								<div class="col-12 col-md-4 mb-4 mb-md-0">
+									<label for="system" class="form-label">
+										{{ $t("issue.system") }}
+									</label>
+									<input
+										id="system"
+										v-model="systemString"
+										type="text"
+										class="form-control"
+										readonly
+									/>
+								</div>
+								<div class="col-12 col-md-4">
+									<label for="timezone" class="form-label">
+										{{ $t("issue.timezone") }}
+									</label>
+									<input
+										id="timezone"
+										v-model="timezoneString"
+										type="text"
+										class="form-control"
+										readonly
+									/>
+								</div>
 							</div>
 							<div class="text-end">
 								<small class="text-muted">* required</small>
@@ -304,14 +330,13 @@ import type { State } from "@/types/evcc";
 // Keys that should be expanded (1-level expansion for arrays and objects)
 const EXPAND_KEYS = [
 	"battery",
+	"charger",
 	"forecast",
 	"loadpoints",
-	"pv",
-	"vehicles",
-	"statistics",
-	"charger",
-	"site",
+	"messenger",
 	"meter",
+	"pv",
+	"tariff",
 	"vehicle",
 ];
 
@@ -362,6 +387,12 @@ export default defineComponent({
 		versionString(): string {
 			return `v${store.state.version || ""}`;
 		},
+		systemString(): string {
+			return store.state.system || "";
+		},
+		timezoneString(): string {
+			return store.state.timezone || "";
+		},
 		configPath(): string | undefined {
 			return store.state.config;
 		},
@@ -369,7 +400,12 @@ export default defineComponent({
 			return store.state.database;
 		},
 		issueData(): IssueData {
-			return { ...this.issue, version: this.versionString };
+			return {
+				...this.issue,
+				version: this.versionString,
+				system: this.systemString,
+				timezone: this.timezoneString,
+			};
 		},
 		logAreaOptions() {
 			return this.logAvailableAreas.map((area) => ({ name: area, value: area }));
@@ -457,7 +493,9 @@ export default defineComponent({
 				const deviceEndpoints = [
 					"config/loadpoints",
 					"config/devices/charger",
+					"config/devices/messenger",
 					"config/devices/meter",
+					"config/devices/tariff",
 					"config/devices/vehicle",
 				];
 
@@ -465,10 +503,10 @@ export default defineComponent({
 					"config/site",
 					...deviceEndpoints,
 					"config/circuits",
-					"config/eebus",
 					"config/hems",
 					"config/messaging",
 					"config/tariffs",
+					"config/tariff",
 				];
 
 				const configs: any = {};
@@ -478,7 +516,11 @@ export default defineComponent({
 						// Add private=false for device endpoints to hide private data in bug reports
 						const response = await api.get(endpoint, { params: { private: false } });
 						if (response.data && Object.keys(response.data).length > 0) {
-							const key = endpoint.replace("config/", "").replace("devices/", "");
+							let key = endpoint.replace("config/", "").replace("devices/", "");
+							// avoid collision with config/devices/tariff
+							if (key === "tariff" && !deviceEndpoints.includes(endpoint)) {
+								key = "tariffRefs";
+							}
 							let data = response.data;
 
 							// Filter out entries without id property for device endpoints
@@ -496,12 +538,14 @@ export default defineComponent({
 				}
 
 				// read essential config data from state
-				["modbusproxy", "mqtt", "influx", "shm", "interval"].forEach((key) => {
-					const value = store.state[key as keyof State];
-					if (value) {
-						configs[key] = value;
+				["modbusproxy", "mqtt", "influx", "shm", "interval", "experimental"].forEach(
+					(key) => {
+						const value = store.state[key as keyof State];
+						if (value !== undefined && value !== null) {
+							configs[key] = value;
+						}
 					}
-				});
+				);
 
 				this.sections.uiConfig.content = formatJson(configs, EXPAND_KEYS);
 			} catch (error) {
@@ -567,12 +611,14 @@ export default defineComponent({
 </script>
 
 <style scoped>
+@import "../../css/breakpoints.css";
+
 .log-count-input::-webkit-outer-spin-button,
 .log-count-input::-webkit-inner-spin-button {
 	margin-left: 0.5rem;
 }
 
-@media (min-width: 768px) {
+@media (--md-and-up) {
 	.log-lines-input {
 		width: 170px;
 	}

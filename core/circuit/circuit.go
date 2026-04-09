@@ -34,9 +34,10 @@ type Circuit struct {
 	getMaxCurrent func() (float64, error) // dynamic max allowed current
 	getMaxPower   func() (float64, error) // dynamic max allowed power
 
-	current float64
-	power   float64
-	dimmed  bool
+	current   float64
+	power     float64
+	dimmed    bool
+	curtailed bool
 
 	currentUpdated time.Time
 	powerUpdated   time.Time
@@ -120,7 +121,7 @@ func New(log *util.Logger, title string, maxCurrent, maxPower float64, meter api
 
 	if maxCurrent == 0 {
 		c.log.DEBUG.Printf("validation of max phase current disabled")
-	} else if _, ok := meter.(api.PhaseCurrents); meter != nil && !ok {
+	} else if meter != nil && !api.HasCap[api.PhaseCurrents](meter) {
 		return nil, errors.New("meter does not support phase currents")
 	}
 
@@ -262,7 +263,7 @@ func (c *Circuit) updateMeters() error {
 		return fmt.Errorf("circuit power: %w", err)
 	}
 
-	if phaseMeter, ok := c.meter.(api.PhaseCurrents); ok {
+	if phaseMeter, ok := api.Cap[api.PhaseCurrents](c.meter); ok {
 		var i1, i2, i3 float64
 		if err := backoff.Retry(func() error {
 			var err error
@@ -274,7 +275,7 @@ func (c *Circuit) updateMeters() error {
 		}
 
 		var p1, p2, p3 float64
-		if phaseMeter, ok := c.meter.(api.PhasePowers); ok {
+		if phaseMeter, ok := api.Cap[api.PhasePowers](c.meter); ok {
 			var err error // phases needed for signed currents
 			if p1, p2, p3, err = phaseMeter.Powers(); err != nil {
 				return fmt.Errorf("circuit powers: %w", err)
@@ -294,9 +295,9 @@ func (c *Circuit) Update(loadpoints []api.CircuitLoad) (err error) {
 
 	defer func() {
 		if maxPower != 0 && c.power > maxPower {
-			c.log.WARN.Printf("over power detected: %.5gW > %.5gW", c.power, maxPower)
+			c.log.WARN.Printf("over power detected: %.0fW > %.0fW", c.power, maxPower)
 		} else {
-			c.log.DEBUG.Printf("power: %.5gW", c.power)
+			c.log.DEBUG.Printf("power: %.0fW", c.power)
 		}
 
 		if maxCurrent != 0 && c.current > maxCurrent {
@@ -346,10 +347,10 @@ func (c *Circuit) ValidatePower(old, new float64) float64 {
 
 		if delta > potential {
 			capped := min(new, max(0, old+potential))
-			c.log.DEBUG.Printf("validate power: %.5gW + (%.5gW -> %.5gW) > %.5gW capped at %.5gW", c.power, old, new, maxPower, capped)
+			c.log.DEBUG.Printf("validate power: %.0fW + (%.0fW -> %.0fW) > %.0fW capped at %.0fW", c.power, old, new, maxPower, capped)
 			new = capped
 		} else {
-			c.log.TRACE.Printf("validate power: %.5gW + (%.5gW -> %.5gW) <= %.5gW ok", c.power, old, new, maxPower)
+			c.log.TRACE.Printf("validate power: %.0fW + (%.0fW -> %.0fW) <= %.0fW ok", c.power, old, new, maxPower)
 		}
 	}
 
@@ -401,4 +402,25 @@ func (c *Circuit) Dimmed() bool {
 	}
 
 	return c.parent.Dimmed()
+}
+
+func (c *Circuit) Curtail(curtail bool) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.curtailed = curtail
+}
+
+func (c *Circuit) Curtailed() bool {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	if c.curtailed {
+		return true
+	}
+
+	if c.parent == nil {
+		return false
+	}
+
+	return c.parent.Curtailed()
 }

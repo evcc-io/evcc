@@ -45,8 +45,8 @@
 			type="Int"
 			class="me-2"
 			required
-			:model-value="id || defaultId || 1"
-			@change="$emit('update:id', $event.target.value)"
+			:model-value="id || defaultId"
+			@update:model-value="(v) => $emit('update:id', v)"
 		/>
 	</FormRow>
 	<div v-if="connection === MODBUS_CONNECTION.TCPIP">
@@ -62,7 +62,7 @@
 				class="me-2"
 				required
 				:model-value="host"
-				@change="$emit('update:host', $event.target.value)"
+				@update:model-value="(v) => $emit('update:host', v)"
 			/>
 		</FormRow>
 		<FormRow :id="formId('modbusPort')" :label="$t('config.modbus.port')">
@@ -72,8 +72,8 @@
 				type="Int"
 				class="me-2 w-50"
 				required
-				:model-value="port || defaultPort || 502"
-				@change="$emit('update:port', $event.target.value)"
+				:model-value="port || defaultPort"
+				@update:model-value="(v) => $emit('update:port', v)"
 			/>
 		</FormRow>
 		<FormRow
@@ -121,15 +121,16 @@
 			:id="formId('modbusDevice')"
 			:label="$t('config.modbus.device')"
 			:help="$t('config.modbus.deviceHint')"
+			data-testid="modbus-device"
 		>
 			<PropertyField
 				:id="formId('modbusDevice')"
+				v-model:model-value="deviceModel"
 				property="device"
 				type="String"
 				class="me-2"
 				required
-				:model-value="device"
-				@change="$emit('update:device', $event.target.value)"
+				:service-values="deviceServiceValues"
 			/>
 		</FormRow>
 		<FormRow :id="formId('modbusBaudrate')" :label="$t('config.modbus.baudrate')">
@@ -141,7 +142,7 @@
 				:choice="baudrateOptions"
 				required
 				:model-value="baudrate || defaultBaudrate"
-				@change="$emit('update:baudrate', parseInt($event.target.value))"
+				@update:model-value="(v) => $emit('update:baudrate', parseInt(v))"
 			/>
 		</FormRow>
 		<FormRow :id="formId('modbusComset')" :label="$t('config.modbus.comset')">
@@ -152,8 +153,8 @@
 				class="me-2 w-50"
 				:choice="comsetOptions"
 				required
-				:model-value="comset || defaultComset || '8N1'"
-				@change="$emit('update:comset', $event.target.value)"
+				:model-value="comset || defaultComset"
+				@update:model-value="(v) => $emit('update:comset', v)"
 			/>
 		</FormRow>
 	</div>
@@ -165,6 +166,7 @@ import FormRow from "../FormRow.vue";
 import PropertyField from "../PropertyField.vue";
 import type { PropType } from "vue";
 import type { ModbusCapability } from "./index";
+import { loadServiceValues } from "./index";
 import {
 	MODBUS_BAUDRATE,
 	MODBUS_COMSET,
@@ -177,6 +179,7 @@ export default defineComponent({
 	name: "Modbus",
 	components: { FormRow, PropertyField },
 	props: {
+		componentId: { type: String, required: true },
 		capabilities: {
 			type: Array as PropType<ModbusCapability[]>,
 			default: () => [],
@@ -209,9 +212,20 @@ export default defineComponent({
 			protocol: MODBUS_PROTOCOL.TCP as MODBUS_PROTOCOL,
 			MODBUS_PROTOCOL,
 			MODBUS_CONNECTION,
+			deviceServiceValues: [] as string[],
+			localDevice: undefined as string | undefined,
 		};
 	},
 	computed: {
+		deviceModel: {
+			get(): string | undefined {
+				return this.localDevice !== undefined ? this.localDevice : this.device;
+			},
+			set(value: string | undefined) {
+				this.localDevice = value;
+				this.$emit("update:device", value);
+			},
+		},
 		selectedModbus(): MODBUS_TYPE {
 			if (this.connection === MODBUS_CONNECTION.SERIAL) {
 				return MODBUS_TYPE.RS485_SERIAL;
@@ -249,15 +263,34 @@ export default defineComponent({
 			this.setProtocolByCapabilities(newValue);
 			this.$emit("update:modbus", this.selectedModbus);
 		},
-		modbus(newValue: MODBUS_TYPE) {
+		modbus(newValue: MODBUS_TYPE, oldValue: MODBUS_TYPE) {
 			if (newValue) {
-				this.setConnectionAndProtocolByModbus(newValue);
+				this.setConnectionAndProtocolByModbus(newValue, oldValue);
+			}
+		},
+		connection(newValue: MODBUS_CONNECTION, oldValue: MODBUS_CONNECTION) {
+			if (newValue !== oldValue) {
+				// Clear connection-specific parameters to ensure correct dependency group is used
+				if (newValue === MODBUS_CONNECTION.TCPIP) {
+					this.$emit("update:device", undefined);
+				} else if (newValue === MODBUS_CONNECTION.SERIAL) {
+					this.$emit("update:host", undefined);
+				}
+			}
+			this.applyServiceDefault();
+		},
+		device(newValue: string | undefined) {
+			// Sync prop to local state
+			if (newValue !== this.localDevice) {
+				this.localDevice = newValue;
 			}
 		},
 	},
 	mounted() {
+		this.localDevice = this.device;
 		this.setConnectionAndProtocolByModbus(this.modbus);
 		this.$emit("update:modbus", this.selectedModbus);
+		this.updateServiceValues();
 	},
 	methods: {
 		setProtocolByCapabilities(capabilities: ModbusCapability[]) {
@@ -265,8 +298,8 @@ export default defineComponent({
 				? MODBUS_PROTOCOL.TCP
 				: MODBUS_PROTOCOL.RTU;
 		},
-		setConnectionAndProtocolByModbus(modbus?: MODBUS_TYPE) {
-			switch (modbus) {
+		setConnectionAndProtocolByModbus(newModbus?: MODBUS_TYPE, oldModbus?: MODBUS_TYPE) {
+			switch (newModbus) {
 				case MODBUS_TYPE.RS485_SERIAL:
 					this.connection = MODBUS_CONNECTION.SERIAL;
 					this.protocol = MODBUS_PROTOCOL.RTU;
@@ -280,9 +313,28 @@ export default defineComponent({
 					this.protocol = MODBUS_PROTOCOL.TCP;
 					break;
 			}
+
+			// when switching from serial to TCP/IP, default protocol to Modbus-TCP (rtu=false)
+			if (oldModbus === MODBUS_TYPE.RS485_SERIAL && newModbus === MODBUS_TYPE.RS485_TCPIP) {
+				this.protocol = MODBUS_PROTOCOL.TCP;
+			}
 		},
 		formId(name: string): string {
-			return `${name}-${this.id}`;
+			return `${name}-${this.componentId}`;
+		},
+		async updateServiceValues() {
+			this.deviceServiceValues = await loadServiceValues("hardware/serial");
+			this.applyServiceDefault();
+		},
+		applyServiceDefault() {
+			// auto-apply device value if it's needed and exactly one option exists
+			if (
+				this.connection === MODBUS_CONNECTION.SERIAL &&
+				this.deviceServiceValues.length === 1 &&
+				!this.device
+			) {
+				this.deviceModel = this.deviceServiceValues[0];
+			}
 		},
 	},
 });

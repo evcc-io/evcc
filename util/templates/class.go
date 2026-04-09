@@ -11,4 +11,5 @@ const (
 	Tariff
 	Loadpoint
 	Circuit
+	Messenger
 )

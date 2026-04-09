@@ -96,8 +96,23 @@ func newBluelinkFromConfig(brand string, other map[string]any, settings bluelink
 
 	v := &Bluelink{
 		embed:    &cc.embed,
-		Provider: bluelink.NewProvider(api, vehicle, cc.Expiry, cc.Cache),
+		Provider: bluelink.NewProvider(api, vehicle, cc.Cache),
 	}
 
+	// Try to fetch battery capacity from vehicle if the user didn't provide one in the configuration
+	var capacity float64 = 0
+	if v.Capacity_ == 0 {
+		capacity = fetchVehicleCapacity(api, vehicle, capacity)
+	}
+
+	v.fromVehicle(vehicle.VehicleName, capacity)
+
 	return v, nil
+}
+
+func fetchVehicleCapacity(api *bluelink.API, vehicle bluelink.Vehicle, capacity float64) float64 {
+	if res, err := api.StatusLatest(vehicle); err == nil {
+		capacity, _ = res.Capacity()
+	}
+	return capacity
 }

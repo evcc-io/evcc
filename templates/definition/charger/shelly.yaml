@@ -9,18 +9,13 @@ params:
   - name: host
   - name: user
   - name: password
-    mask: true
   - name: channel
     default: 0
   - preset: switchsocket
 render: |
   type: shelly
   uri: http://{{ .host }}
-  {{- if .user }}
   user: {{ .user }}
-  {{- end }}
-  {{- if .password }}
   password: {{ .password }}
-  {{- end }}
   channel: {{ .channel }}  # shelly device relay channel
   {{ include "switchsocket" . }}

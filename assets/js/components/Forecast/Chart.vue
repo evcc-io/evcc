@@ -4,7 +4,14 @@
 			class="overflow-x-auto overflow-x-md-hidden chart-container border-1"
 			@mouseleave="onMouseLeave"
 		>
-			<div style="position: relative; height: 220px" class="chart user-select-none">
+			<div
+				:style="{
+					position: 'relative',
+					height: '240px',
+					width: `${chartWidth}px`,
+				}"
+				class="user-select-none"
+			>
 				<!-- @vue-ignore -->
 				<Bar ref="chart" :data="chartData" :options="options" />
 			</div>
@@ -217,6 +224,26 @@ export default defineComponent({
 			return {
 				datasets,
 			};
+		},
+		chartDataMaxDate() {
+			let result: Date | null = null;
+			for (const dataset of this.chartData.datasets) {
+				for (const data of dataset.data) {
+					if (!result || data.x.getTime() > result.getTime()) result = data.x;
+				}
+			}
+			return result;
+		},
+		chartWidth() {
+			const minWidth = 780;
+			const maxWidth = 1500; // allow diagram to to grow depending on available data
+			const realEndDate = this.chartDataMaxDate;
+			if (!realEndDate) return minWidth;
+			const maxRange = this.endDate.getTime() - this.startDate.getTime();
+			const realRange = realEndDate.getTime() - this.startDate.getTime();
+			if (maxRange <= 0 || realRange <= 0) return minWidth;
+			const scale = realRange / maxRange;
+			return Math.round(Math.min(maxWidth, Math.max(minWidth, scale * maxWidth)));
 		},
 		options() {
 			// eslint-disable-next-line @typescript-eslint/no-this-alias
@@ -466,8 +493,12 @@ export default defineComponent({
 			}
 		},
 		yMax(slots: ForecastSlot[] = []): number | undefined {
-			const value = this.maxValue(slots);
-			return value ? value * 1.15 : undefined;
+			const max = this.maxValue(slots);
+			if (!max) return undefined;
+			const fixedValues = slots.every((slot) => slot.value === max);
+			// add space to the top of the scale; shrink fixed-value datasets, they are not interesting and should not dominate the chart
+			const topSpace = fixedValues ? 3 : 1.15;
+			return max * topSpace;
 		},
 		yMaxEntry(entries: TimeseriesEntry[] = [], scale: number = 1): number | undefined {
 			const maxValue = this.maxEntryValue(entries);
@@ -516,15 +547,3 @@ export default defineComponent({
 	},
 });
 </script>
-
-<style scoped>
-.chart {
-	width: 780px;
-}
-
-@media (min-width: 992px) {
-	.chart {
-		width: 100%;
-	}
-}
-</style>

@@ -1,6 +1,5 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
-import { enableExperimental } from "./utils";
 
 test.use({ baseURL: baseUrl() });
 
@@ -18,7 +17,6 @@ test.describe("sponsor token", () => {
   test("token from YAML config", async ({ page }) => {
     await start("sponsor.evcc.yaml");
     await page.goto("/#/config");
-    await enableExperimental(page);
 
     // Check fatal error
     await expect(page.getByTestId("fatal-error")).toContainText("sponsorship");
@@ -40,7 +38,6 @@ test.describe("sponsor token", () => {
   test("token from database config", async ({ page }) => {
     await start(undefined, "sponsor.sql");
     await page.goto("/#/config");
-    await enableExperimental(page);
 
     // Open sponsor modal
     await page
@@ -61,7 +58,6 @@ test.describe("sponsor token", () => {
   test("insert token in new installation", async ({ page }) => {
     await start();
     await page.goto("/#/config");
-    await enableExperimental(page);
 
     // Open sponsor modal and enter token
     await page
@@ -75,6 +71,8 @@ test.describe("sponsor token", () => {
     await textarea.fill(EXPIRED_TOKEN);
     // Try to save to trigger validation
     await modal.getByRole("button", { name: "Save" }).click();
-    await expect(modal).toContainText("token is expired");
+    await expect(modal).toContainText(
+      "token is expired - get a fresh one from https://sponsor.evcc.io"
+    );
   });
 });

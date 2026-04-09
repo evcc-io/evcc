@@ -17,6 +17,7 @@ features:
 
 icon: heater # icon for UI purpose only
 
+
 ## optional attributes (read-only)
 
 #energy: # meter reading in kWh

@@ -21,8 +21,8 @@ params:
     choice: ["A", "B", "C", "D", "E", "F", "G", "H", "J", "K", "L", "M", "N", "P"]
     required: true
     help:
-      de: "Die DNO-Region, in der Sie sich befinden. Weitere Informationen: https://www.energy-stats.uk/dno-region-codes-explained/"
-      en: "The DNO region you are located in. More information: https://www.energy-stats.uk/dno-region-codes-explained/"
+      de: "Die DNO-Region, in der Sie sich befinden. Weitere Informationen: [energy-stats.uk](https://www.energy-stats.uk/dno-region-codes-explained/)"
+      en: "The DNO region you are located in. More information: [energy-stats.uk](https://www.energy-stats.uk/dno-region-codes-explained/)"
   - name: directDebit
     type: bool
     default: true

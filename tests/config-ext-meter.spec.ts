@@ -1,12 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
-import {
-  editorClear,
-  editorPaste,
-  enableExperimental,
-  expectModalHidden,
-  expectModalVisible,
-} from "./utils";
+import { editorClear, editorPaste, expectModalHidden, expectModalVisible } from "./utils";
 
 const CONFIG_GRID_ONLY = "config-grid-only.evcc.yaml";
 const CONFIG_BASICS = "basics.evcc.yaml";
@@ -37,7 +31,6 @@ test.describe("ext meter", async () => {
 
   test("template-based ext meter", async ({ page }) => {
     await page.goto("/#/config");
-    await enableExperimental(page, false);
     await expect(page.getByTestId("ext")).toHaveCount(0);
 
     await page.getByRole("button", { name: "Add additional meter" }).click();
@@ -104,7 +97,6 @@ test.describe("ext meter", async () => {
 
   test("switch from template to custom ext meter", async ({ page }) => {
     await page.goto("/#/config");
-    await enableExperimental(page, false);
 
     await page.getByRole("button", { name: "Add additional meter" }).click();
     const meterModal = page.getByTestId("meter-modal");
@@ -112,9 +104,11 @@ test.describe("ext meter", async () => {
     await meterModal.getByRole("button", { name: "Add regular consumer" }).click();
 
     await meterModal.getByLabel("Title").fill("Custom ext meter");
-    await meterModal.getByLabel("Usage").selectOption("battery");
-    await meterModal.getByLabel("Manufacturer").selectOption("Demo battery");
-    await meterModal.getByLabel("Charge").fill("50");
+    await meterModal.getByLabel("Usage").selectOption("pv");
+
+    // switch to an in-beteen template to ensure we dont leak values
+    await meterModal.getByLabel("Manufacturer").selectOption("SunSpec Hybrid Inverter");
+    await expect(meterModal.getByLabel("IP address or hostname")).toBeVisible();
 
     await meterModal.getByLabel("Manufacturer").selectOption("User-defined device");
     await page.waitForLoadState("networkidle");
@@ -187,7 +181,6 @@ test.describe("ext meter order", async () => {
 
   test("ensure order is preserved", async ({ page }) => {
     await page.goto("/#/config");
-    await enableExperimental(page, false);
     await expect(page.getByTestId("ext")).toHaveCount(0);
 
     // Create meters

@@ -1,11 +1,13 @@
 <template>
 	<div
 		class="container container--loadpoint px-0 mb-md-2 d-flex flex-column justify-content-center"
+		data-testid="loadpoints"
 	>
 		<div
+			v-if="loadpoints.length > 0"
 			ref="carousel"
 			class="carousel d-lg-flex flex-wrap"
-			:class="`carousel--${loadpoints.length}`"
+			:class="[`carousel--${loadpoints.length}`, { 'carousel--fullwidth': fullWidth }]"
 		>
 			<div
 				v-for="loadpoint in loadpoints"
@@ -23,10 +25,13 @@
 					:tariffCo2="tariffCo2"
 					:tariffFeedIn="tariffFeedIn"
 					:currency="currency"
-					:multipleLoadpoints="loadpoints.length > 1"
+					:multipleLoadpoints="multipleLoadpoints"
+					:fullWidth="fullWidth"
 					:gridConfigured="gridConfigured"
 					:pvConfigured="pvConfigured"
 					:batteryConfigured="batteryConfigured"
+					:batterySoc="batterySoc"
+					:batteryMode="batteryMode"
 					:forecast="forecast"
 					class="h-100"
 					:class="{ 'loadpoint-unselected': !selected(loadpoint.id) }"
@@ -34,7 +39,7 @@
 				/>
 			</div>
 		</div>
-		<div v-if="loadpoints.length > 1" class="d-flex d-lg-none justify-content-center">
+		<div v-if="loadpoints.length > 1" class="d-flex d-lg-none justify-content-center flex-wrap">
 			<button
 				v-for="loadpoint in loadpoints"
 				:key="loadpoint.id"
@@ -63,7 +68,7 @@ import "@h2d2/shopicons/es/filled/lightning";
 
 import Loadpoint from "./Loadpoint.vue";
 import { defineComponent, type PropType } from "vue";
-import type { UiLoadpoint, SMART_COST_TYPE, Timeout, Vehicle } from "@/types/evcc";
+import type { UiLoadpoint, SMART_COST_TYPE, Timeout, Vehicle, BATTERY_MODE } from "@/types/evcc";
 
 export default defineComponent({
 	name: "Loadpoints",
@@ -82,6 +87,8 @@ export default defineComponent({
 		gridConfigured: Boolean,
 		pvConfigured: Boolean,
 		batteryConfigured: Boolean,
+		batterySoc: Number,
+		batteryMode: String as PropType<BATTERY_MODE>,
 		forecast: Object, // as PropType<Forecast>,
 	},
 	emits: ["id-changed"],
@@ -90,11 +97,23 @@ export default defineComponent({
 			snapTimeout: null as Timeout,
 			scrollTimeout: null as Timeout,
 			highlightedIndex: 0,
+			viewportHeight: 0 as number,
 		};
 	},
 	computed: {
 		selectedIndex() {
 			return this.indexById(this.selectedId);
+		},
+		multipleLoadpoints() {
+			return this.loadpoints.length > 1;
+		},
+		fullWidth() {
+			return (
+				// breakpoint lg, tall screen, 2 loadpoints rows
+				(this.loadpoints.length === 2 && this.viewportHeight >= 1450) ||
+				// breakpoint lg, taller screen, 3 loadpoints rows
+				(this.loadpoints.length === 3 && this.viewportHeight >= 1900)
+			);
 		},
 	},
 	watch: {
@@ -103,12 +122,16 @@ export default defineComponent({
 		},
 	},
 	mounted() {
+		this.updateViewport();
+		window.addEventListener("resize", this.updateViewport);
+
 		if (this.selectedIndex > 0) {
 			this.$refs["carousel"]?.scrollTo({ top: 0, left: this.left(this.selectedIndex) });
 		}
 		this.$refs["carousel"]?.addEventListener("scroll", this.handleCarouselScroll);
 	},
 	unmounted() {
+		window.removeEventListener("resize", this.updateViewport);
 		this.$refs["carousel"]?.removeEventListener("scroll", this.handleCarouselScroll);
 	},
 	methods: {
@@ -142,6 +165,9 @@ export default defineComponent({
 		selected(id: string) {
 			return this.highlightedIndex === this.indexById(id);
 		},
+		updateViewport() {
+			this.viewportHeight = window.innerHeight;
+		},
 		left(index: number) {
 			return (this.$refs["carousel"]?.children[0] as HTMLElement).offsetWidth * index;
 		},
@@ -166,7 +192,9 @@ export default defineComponent({
 });
 </script>
 <style scoped>
-.container--loadpoint {
+@import "../../../css/breakpoints.css";
+
+.container--loadpoint:not(:empty) {
 	min-height: 300px;
 }
 
@@ -212,7 +240,7 @@ export default defineComponent({
 }
 
 /* show truncated tiles on breakpoint sm,md */
-@media (min-width: 576px) and (max-width: 991.98px) {
+@media (--sm-to-lg) {
 	.container--loadpoint {
 		max-width: none;
 	}
@@ -233,39 +261,28 @@ export default defineComponent({
 }
 
 /* breakpoint sm */
-@media (min-width: 576px) and (max-width: 767.98px) {
+@media (--sm-to-md) {
 	.carousel {
 		--slide-width: 540px;
 	}
 }
 
 /* breakpoint md */
-@media (min-width: 768px) and (max-width: 991.98px) {
+@media (--md-to-lg) {
 	.carousel {
 		--slide-width: 720px;
 	}
 }
 
 /* breakpoint lg, 2-col grid */
-@media (min-width: 992px) {
+@media (--lg-and-up) {
 	.carousel {
 		display: grid !important;
 		grid-gap: 2rem;
 		grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
 	}
-}
-
-/* breakpoint lg, tall screen, 2 loadpoints rows */
-@media (min-width: 992px) and (min-height: 1450px) {
-	.carousel--2 {
-		grid-gap: 4rem;
-		grid-template-columns: 1fr;
-	}
-}
-
-/* breakpoint lg, taller screen, 3 loadpoints rows */
-@media (min-width: 992px) and (min-height: 1900px) {
-	.carousel--3 {
+	/* breakpoint lg, full width override */
+	.carousel--fullwidth {
 		grid-gap: 4rem;
 		grid-template-columns: 1fr;
 	}

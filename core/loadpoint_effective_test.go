@@ -126,3 +126,75 @@ func TestNextPlan(t *testing.T) {
 		assert.Equal(t, tc.planId, res.Id)
 	}
 }
+
+func TestPlanLocking(t *testing.T) {
+	clk := clock.NewMock()
+	now := clk.Now()
+
+	lp := NewLoadpoint(util.NewLogger("foo"), nil)
+	lp.clock = clk
+
+	planTime := now.Add(2 * time.Hour)
+
+	t.Run("lock and unlock", func(t *testing.T) {
+		lp.lockPlanGoal(planTime, 80, 2)
+
+		// locked values returned before plan target
+		ts, soc, id := lp.nextVehiclePlan()
+		assert.Equal(t, planTime, ts)
+		assert.Equal(t, 80, soc)
+		assert.Equal(t, 2, id)
+
+		clk.Add(3 * time.Hour) // advance past plan target
+
+		// locked values persist during overrun
+		ts, soc, id = lp.nextVehiclePlan()
+		assert.Equal(t, planTime, ts)
+		assert.Equal(t, 80, soc)
+		assert.Equal(t, 2, id)
+
+		// after clearing, lock is not returned
+		lp.clearPlanLock()
+		ts, soc, id = lp.nextVehiclePlan()
+		assert.True(t, ts.IsZero())
+		assert.Equal(t, 0, soc)
+		assert.Equal(t, 0, id)
+	})
+}
+
+func TestGetChargePowerFlexibility(t *testing.T) {
+	Voltage = 230
+
+	for _, tc := range []struct {
+		mode       api.ChargeMode
+		status     api.ChargeStatus
+		planActive bool
+		want       float64
+	}{
+		// not charging → always 0
+		{api.ModePV, api.StatusB, false, 0},
+		// PV mode, charging, no plan → full power is flexible
+		{api.ModePV, api.StatusC, false, 2700},
+		// PV mode, charging, plan active → not flexible
+		{api.ModePV, api.StatusC, true, 0},
+		// MinPV mode, charging, no plan → surplus above min is flexible (230V * 6A * 1phase = 1380W)
+		{api.ModeMinPV, api.StatusC, false, 2700 - 1380},
+		// MinPV mode, charging, plan active → not flexible
+		{api.ModeMinPV, api.StatusC, true, 0},
+		// Now mode → never flexible, regardless of plan
+		{api.ModeNow, api.StatusC, false, 0},
+	} {
+		t.Run("", func(t *testing.T) {
+			lp := NewLoadpoint(util.NewLogger("foo"), nil)
+			lp.mode = tc.mode
+			lp.status = tc.status
+			lp.chargePower = 2700
+			lp.planActive = tc.planActive
+			// EffectiveMinPower() = 230V * 6A * 1phase = 1380W
+			lp.minCurrent = 6
+			lp.phases = 1
+
+			assert.Equal(t, tc.want, lp.GetChargePowerFlexibility(nil))
+		})
+	}
+}

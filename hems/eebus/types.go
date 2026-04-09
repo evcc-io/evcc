@@ -3,7 +3,6 @@ package eebus
 type status int
 
 const (
-	StatusUnlimited status = iota
-	StatusLimited
+	StatusNormal status = iota
 	StatusFailsafe
 )

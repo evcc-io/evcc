@@ -33,10 +33,8 @@ var _ api.Tariff = (*cachingProxy)(nil)
 // NewCachedFromConfig creates a proxy that controls tariff instantiation and caching
 func NewCachedFromConfig(ctx context.Context, typ string, other map[string]any) (api.Tariff, error) {
 	tariffType := typ
-	if typ == "template" {
-		if template, ok := other["template"].(string); ok {
-			tariffType = template
-		}
+	if template := util.TemplateName(typ, other); template != "" {
+		tariffType = template
 	}
 
 	p := &cachingProxy{

@@ -102,8 +102,8 @@ func (v *Identity) getDeviceID() (string, error) {
 	return res.ResMsg.DeviceID, err
 }
 
-// RefreshToken implements oauth.TokenRefresher
-func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
+// refreshToken renews BlueLink OAuth tokens
+func (v *Identity) refreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	var res oauth2.Token
 
 	uri := v.config.LoginFormHost + TokenURL
@@ -144,11 +144,11 @@ func (v *Identity) Login(user, password, language, brand string) (err error) {
 		return fmt.Errorf("unknown brand (%s)", brand)
 	}
 
-	token, err := v.RefreshToken(&oauth2.Token{RefreshToken: password})
+	token, err := v.refreshToken(&oauth2.Token{RefreshToken: password})
 	if err != nil {
 		return fmt.Errorf("login failed: %w", err)
 	}
-	v.TokenSource = oauth.RefreshTokenSource(token, v)
+	v.TokenSource = oauth.RefreshTokenSource(token, v.refreshToken)
 
 	v.deviceID, err = v.getDeviceID()
 	if err != nil {

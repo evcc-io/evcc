@@ -32,5 +32,5 @@ render: |
   type: zaptec
   id: {{ .id }}
   user: {{ .user }}
-  password: '{{ .password }}'
+  password: {{ .password }}
   passive: {{ .passive }}

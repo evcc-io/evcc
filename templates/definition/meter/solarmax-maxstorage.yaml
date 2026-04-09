@@ -11,13 +11,11 @@ requirements:
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
-    allinone: true
   - name: modbus
     choice: ["tcpip"]
     id: 1
-  - name: capacity
-    advanced: true
   - name: maxacpower
+  - preset: battery-params
   # battery control
   - name: watchdog
     type: duration
@@ -140,5 +138,5 @@ render: |
         set:
           source: error
           error: ErrNotAvailable
-  capacity: {{ .capacity }} # kWh
+  {{- include "battery-params" . }}
   {{- end }}

@@ -12,8 +12,7 @@ params:
     comset: "8N1"
     id: 247
     port: 502
-  - name: capacity
-    advanced: true
+  - preset: battery-params
 render: |
   {{- if eq .usage "grid" }}
   type: custom
@@ -107,5 +106,5 @@ render: |
       type: input
       decode: uint16
     scale: 0.1
-  capacity: {{ .capacity }} # kWh
+  {{- include "battery-params" . }}
   {{- end }}

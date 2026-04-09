@@ -3,6 +3,8 @@ export interface IssueData {
   description: string;
   steps: string;
   version: string;
+  system: string;
+  timezone: string;
 }
 
 export interface SectionData {

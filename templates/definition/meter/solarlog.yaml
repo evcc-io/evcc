@@ -13,7 +13,6 @@ requirements:
 params:
   - name: usage
     choice: ["grid", "pv"]
-    allinone: true
   - name: host
   - name: port
     default: 502
@@ -24,7 +23,7 @@ render: |
     source: calc
     add:
     - source: modbus
-      uri: {{ .host }}:{{ .port }}
+      uri: {{ joinHostPort .host .port }}
       id: 1
       register:
         address: 3502 # Pac
@@ -32,7 +31,7 @@ render: |
         decode: uint32s
       scale: -1
     - source: modbus
-      uri: {{ .host }}:{{ .port }}
+      uri: {{ joinHostPort .host .port }}
       id: 1
       register:
         address: 3518 # Pac consumption
@@ -42,7 +41,7 @@ render: |
   {{- if eq .usage "pv" }}
   power:
     source: modbus
-    uri: {{ .host }}:{{ .port }}
+    uri: {{ joinHostPort .host .port }}
     id: 1
     register:
       address: 3502 # Pac
@@ -50,7 +49,7 @@ render: |
       decode: uint32s
   energy:
     source: modbus
-    uri: {{ .host }}:{{ .port }}
+    uri: {{ joinHostPort .host .port }}
     id: 1
     register:
       address: 3516 # total yield

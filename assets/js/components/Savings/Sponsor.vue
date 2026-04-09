@@ -67,7 +67,8 @@ import "@h2d2/shopicons/es/regular/heart";
 import "@h2d2/shopicons/es/regular/stars";
 import "@h2d2/shopicons/es/regular/clock";
 import { docsPrefix } from "@/i18n";
-import { defineComponent } from "vue";
+import { defineComponent, type PropType } from "vue";
+import type { SponsorStatus } from "@/types/evcc";
 
 export const TRIAL = "trial";
 export const VICTRON_DEVICE = "victron";
@@ -75,13 +76,12 @@ export const VICTRON_DEVICE = "victron";
 export default defineComponent({
 	name: "Sponsor",
 	props: {
-		name: String,
-		expiresAt: String,
-		expiresSoon: Boolean,
-		fromYaml: Boolean,
-		token: String,
+		status: Object as PropType<SponsorStatus>,
 	},
 	computed: {
+		name() {
+			return this.status?.name;
+		},
 		isTrial() {
 			return this.name === TRIAL;
 		},
@@ -135,6 +135,8 @@ export default defineComponent({
 </script>
 
 <style scoped>
+@import "../../../css/breakpoints.css";
+
 .title-icon {
 	transform: translateY(-2px);
 }
@@ -149,7 +151,7 @@ export default defineComponent({
 }
 
 /* breakpoint sm */
-@media (min-width: 576px) {
+@media (--sm-and-up) {
 	.confetti-button,
 	.become-sponsor {
 		width: 75%;
@@ -157,7 +159,7 @@ export default defineComponent({
 }
 
 /* breakpoint lg */
-@media (min-width: 992px) {
+@media (--lg-and-up) {
 	.confetti-button,
 	.become-sponsor {
 		width: 40%;

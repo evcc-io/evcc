@@ -42,7 +42,7 @@ func NewMqttPluginFromConfig(ctx context.Context, other map[string]any) (Plugin,
 		return nil, err
 	}
 
-	log := contextLogger(ctx, util.NewLogger("mqtt"))
+	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("mqtt"))
 
 	client, err := mqtt.RegisteredClientOrDefault(log, cc.Config)
 	if err != nil {

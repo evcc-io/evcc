@@ -87,7 +87,7 @@ func NewMennekesCompactFromConfig(ctx context.Context, other map[string]any) (ap
 	return NewMennekesCompact(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Settings.Protocol(), cc.ID, cc.Timeout)
 }
 
-//go:generate go tool decorate -f decorateMennekesCompact -b *MennekesCompact -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
+//go:generate go tool decorate -f decorateMennekesCompact -b *MennekesCompact -r api.Charger -t api.PhaseSwitcher
 
 // NewMennekesCompact creates Mennekes charger
 func NewMennekesCompact(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8, timeout time.Duration) (api.Charger, error) {

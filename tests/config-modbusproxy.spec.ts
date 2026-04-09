@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, baseUrl, restart } from "./evcc";
-import { expectModalVisible, enableExperimental, expectModalHidden } from "./utils";
+import { expectModalVisible, expectModalHidden } from "./utils";
 
 test.use({ baseURL: baseUrl() });
 test.describe.configure({ mode: "parallel" });
@@ -15,7 +15,6 @@ test.describe("modbusproxy", async () => {
   test("modbusproxy not configured", async ({ page }) => {
     await start();
     await page.goto("/#/config");
-    await enableExperimental(page, false);
 
     const modbusproxyCard = page.getByTestId("modbusproxy");
 
@@ -26,7 +25,6 @@ test.describe("modbusproxy", async () => {
   test("modbusproxy via ui", async ({ page }) => {
     await start();
     await page.goto("/#/config");
-    await enableExperimental(page, false);
 
     // add connection
     const modbusproxyCard = page.getByTestId("modbusproxy");
@@ -50,7 +48,7 @@ test.describe("modbusproxy", async () => {
     await expect(evccBox.getByLabel("no")).toBeChecked();
     await evccBox.getByLabel("error").click();
 
-    await expect(deviceBox.getByText("Network")).toBeChecked();
+    await expect(deviceBox.getByLabel("Network")).toBeChecked();
     await deviceBox.getByLabel("IP address or hostname").fill("127.0.0.1");
 
     const devicePort = deviceBox.getByLabel("Port");
@@ -79,7 +77,7 @@ test.describe("modbusproxy", async () => {
 
     await expect(evccBox.getByLabel("Port")).toHaveValue("501");
     await expect(evccBox.getByLabel("error")).toBeChecked();
-    await expect(deviceBox.getByText("Network")).toBeChecked();
+    await expect(deviceBox.getByLabel("Network")).toBeChecked();
     await deviceBox.getByLabel("IP address or hostname").fill("127.0.0.1");
     await expect(deviceBox.getByLabel("Port")).toHaveValue("602");
     await expect(deviceBox.getByText("RTU")).toBeChecked();
@@ -89,10 +87,38 @@ test.describe("modbusproxy", async () => {
     await expect(modal).not.toContainText("Connection #1");
   });
 
+  test("modbusproxy serial defaults", async ({ page }) => {
+    await start();
+    await page.goto("/#/config");
+
+    const modbusproxyCard = page.getByTestId("modbusproxy");
+    await modbusproxyCard.getByRole("button", { name: "edit" }).click();
+    const modal = page.getByTestId("modbusproxy-modal");
+    await expectModalVisible(modal);
+
+    await modal.getByRole("button", { name: "Add proxy connection" }).click();
+    const deviceBox = modal.getByTestId("device-box");
+
+    await expect(deviceBox.getByLabel("Network")).toBeChecked();
+    await expect(deviceBox.getByLabel("Port")).toHaveValue("502");
+
+    // switch to RS485
+    await deviceBox.getByText("RS485", { exact: true }).click();
+    await expect(deviceBox.getByLabel("Baud rate")).toHaveValue("9600");
+    await expect(deviceBox.getByLabel("ComSet")).toHaveValue("8N1");
+
+    await deviceBox.getByLabel("Baud rate").selectOption("19200");
+
+    // switch to Network and back: defaults restored
+    await deviceBox.getByText("Network").click();
+    await deviceBox.getByText("RS485", { exact: true }).click();
+    await expect(deviceBox.getByLabel("Baud rate")).toHaveValue("9600");
+    await expect(deviceBox.getByLabel("ComSet")).toHaveValue("8N1");
+  });
+
   test("modbusproxy via db (yaml to json migration)", async ({ page }) => {
     await start(undefined, CONFIG_MODBUSPROXY_MIGRATE);
     await page.goto("/#/config");
-    await enableExperimental(page, false);
 
     const modbusproxyCard = page.getByTestId("modbusproxy");
     await expect(modbusproxyCard).toContainText(["Amount", "3"].join(""));
@@ -109,7 +135,7 @@ test.describe("modbusproxy", async () => {
     await expect(connection1).toContainText("Connection #1");
     await expect(connection1.getByTestId("evcc-box").getByLabel("Port")).toHaveValue("5021");
     const device1 = connection1.getByTestId("device-box");
-    await expect(device1.getByText("Network")).toBeChecked();
+    await expect(device1.getByLabel("Network")).toBeChecked();
     await expect(device1.getByLabel("IP address or hostname")).toHaveValue("192.0.2.2");
     await expect(device1.getByLabel("Port")).toHaveValue("502");
     await expect(device1.getByText("TCP")).toBeChecked();
@@ -121,7 +147,7 @@ test.describe("modbusproxy", async () => {
     await expect(connection2.getByTestId("evcc-box").getByLabel("Port")).toBeVisible();
     await expect(connection2.getByTestId("evcc-box").getByLabel("Port")).toHaveValue("5022");
     const device2 = connection2.getByTestId("device-box");
-    await expect(device2.getByText("Serial")).toBeChecked();
+    await expect(device2.getByLabel("RS485")).toBeChecked();
     await expect(device2.getByLabel("Device")).toHaveValue("/dev/ttyUSB0");
     await expect(device2.getByLabel("Baud rate")).toHaveValue("9600");
     await expect(device2.getByLabel("ComSet")).toHaveValue("8N1");
@@ -131,7 +157,7 @@ test.describe("modbusproxy", async () => {
     await expect(connection3).toContainText("Connection #3");
     await expect(connection3.getByTestId("evcc-box").getByLabel("Port")).toHaveValue("5023");
     const device3 = connection3.getByTestId("device-box");
-    await expect(device3.getByText("Network")).toBeChecked();
+    await expect(device3.getByLabel("Network")).toBeChecked();
     await expect(device3.getByLabel("IP address or hostname")).toHaveValue("192.0.2.3");
     await expect(device3.getByLabel("Port")).toHaveValue("502");
     await expect(device3.getByText("RTU")).toBeChecked();

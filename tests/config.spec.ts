@@ -1,7 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
 import {
-  enableExperimental,
   expectModalHidden,
   expectModalVisible,
   openTopNavigation,
@@ -39,7 +38,6 @@ test.describe("general", async () => {
 
     // change value in config
     await page.goto("/#/config");
-    await enableExperimental(page, false);
 
     await expect(page.getByTestId("generalconfig-title")).toContainText("Hello World");
     await page.getByTestId("generalconfig-title").getByRole("button", { name: "edit" }).click();
@@ -64,12 +62,37 @@ test.describe("general", async () => {
     await page.getByTestId("home-link").click();
     await expect(page.getByRole("heading", { name: "Ahoy World" })).toBeVisible();
   });
+  test("enable experimental", async ({ page }) => {
+    await page.goto("/#/config");
+
+    const experimentalEntry = page.getByTestId("generalconfig-experimental");
+
+    await expect(experimentalEntry).toContainText("off");
+    await experimentalEntry.getByRole("button", { name: "edit" }).click();
+
+    const modal = page.getByTestId("experimental-modal");
+    await expectModalVisible(modal);
+
+    const experimentalInput = modal.getByLabel("Enable experimental features.");
+    await expect(experimentalInput).not.toBeChecked();
+    await experimentalInput.click();
+    await modal.getByRole("button", { name: "Close" }).click();
+    await expectModalHidden(modal);
+    await expect(experimentalEntry).toContainText("on");
+
+    await restart(CONFIG_GRID_ONLY);
+    await page.reload();
+
+    await expect(experimentalEntry).toContainText("on");
+    await experimentalEntry.getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(modal);
+    await expect(experimentalInput).toBeChecked();
+  });
 });
 
 test.describe("network modal", async () => {
   test("persists host and external url across restart", async ({ page }) => {
     await page.goto("/#/config");
-    await enableExperimental(page, false);
 
     const networkEntry = page.getByTestId("generalconfig-network");
     await expect(networkEntry).toBeVisible();
@@ -79,7 +102,10 @@ test.describe("network modal", async () => {
     await expectModalVisible(modal);
 
     const portValue = await modal.getByLabel("Port").inputValue();
+    await modal.getByLabel("External URL").fill(NETWORK_EXTERNAL_URL + "/somepath");
+    await expect(modal.getByRole("status")).toContainText("doesn't need a path");
     await modal.getByLabel("External URL").fill(NETWORK_EXTERNAL_URL);
+    await expect(modal.getByRole("status")).not.toBeVisible();
     await modal.getByLabel("mDNS Hostname").fill(NETWORK_HOST);
 
     await modal.getByRole("button", { name: "Save" }).click();

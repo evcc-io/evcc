@@ -137,14 +137,7 @@ params:
     advanced: true
   - name: connector
     type: int
-    description:
-      en: Connector
-      de: Ladepunkt
-    help:
-      en: 1 or 2, usually 1, except for Duo
-      de: 1 oder 2, normalerweise 1, ausser bei Duo
     default: 1
-    advanced: true
 render: |
   type: openwb-native
   phases1p3p: {{ .phases1p3p }}

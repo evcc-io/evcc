@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
-import { expectModalVisible, expectModalHidden, enableExperimental } from "./utils";
+import { expectModalVisible, expectModalHidden } from "./utils";
 
 test.use({ baseURL: baseUrl() });
 
@@ -11,14 +11,15 @@ test.afterEach(async () => {
 const CONFIG = "basics.evcc.yaml";
 const VALID_VENDOR_ID = "ABCD1234";
 const VALID_DEVICE_ID = "1234567890AB";
+const VALID_DEVICE_SERIAL = "AABBCCDDEEFF";
 const INVALID_VENDOR_ID = "INVALID";
 const INVALID_DEVICE_ID = "NOTVALID";
+const INVALID_DEVICE_SERIAL = "NOTVALID";
 
 test.describe("SHM", () => {
   test("configure SHM with validation and persistence", async ({ page }) => {
     await start(CONFIG);
     await page.goto("/#/config");
-    await enableExperimental(page, false);
 
     const shmCard = page.getByTestId("shm");
 
@@ -44,6 +45,13 @@ test.describe("SHM", () => {
     await device.fill(VALID_DEVICE_ID);
     expect(await device.evaluate((el: HTMLInputElement) => el.validity.valid)).toBe(true);
 
+    // test device serial validation
+    const serial = modal.getByLabel("Device Serial");
+    await serial.fill(INVALID_DEVICE_SERIAL);
+    expect(await serial.evaluate((el: HTMLInputElement) => el.validity.valid)).toBe(false);
+    await serial.fill(VALID_DEVICE_SERIAL);
+    expect(await serial.evaluate((el: HTMLInputElement) => el.validity.valid)).toBe(true);
+
     await modal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(modal);
 
@@ -55,8 +63,9 @@ test.describe("SHM", () => {
     await expectModalVisible(modal);
     await expect(vendor).toHaveValue(VALID_VENDOR_ID);
     await expect(device).toHaveValue(VALID_DEVICE_ID);
+    await expect(serial).toHaveValue(VALID_DEVICE_SERIAL);
 
-    // verify SEMP endpoint contains configured IDs
+    // verify SEMP endpoint contains configured IDs and serial
     const [sempPage] = await Promise.all([
       page.context().waitForEvent("page"),
       modal.getByTestId("semp-url").click(),
@@ -65,6 +74,7 @@ test.describe("SHM", () => {
     expect(xml).toContain(
       `<DeviceId>F-${VALID_VENDOR_ID}-${VALID_DEVICE_ID.toLowerCase()}-00</DeviceId>`
     );
+    expect(xml).toContain(`<DeviceSerial>${VALID_DEVICE_SERIAL.toLowerCase()}-0</DeviceSerial>`);
     await sempPage.close();
   });
 });

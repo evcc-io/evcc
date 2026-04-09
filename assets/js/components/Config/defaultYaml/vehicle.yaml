@@ -8,6 +8,7 @@ soc: # state of charge
   source: const
   value: 42 # %
 
+
 ## optional attributes (read-only)
 
 #limitsoc: # in-vehicle charge limit

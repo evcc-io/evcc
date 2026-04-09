@@ -1,0 +1,16 @@
+template: ocpp-mennekes-4you
+products:
+  - brand: Mennekes
+    description:
+      generic: AMTRON 4Business
+  - brand: Mennekes
+    description:
+      generic: AMTRON 4You
+capabilities: ["rfid"]
+requirements:
+  evcc: ["sponsorship", "skiptest"]
+params:
+  - preset: ocpp
+render: |
+  {{ include "ocpp" . }}
+  connecttimeout: 15m

@@ -2,15 +2,9 @@
 #
 # Prompt: update CODEOWNERS for all all template files in templates/definition.
 # For every template, mark any prior contributors as owners.
-# Do not mention premultiply, andi and naltatis.
-# Do not mention contributors that where the template was part of mass-updates.
-# Repeat this prompt in the generated file.
-#
-# Auto-generated based on git commit history
-# Each template file is owned by its contributors (excluding premultiply, andi, naltatis, and mass-update-only contributors)
-# Mass-update threshold: commits touching 10+ template files are considered mass-updates
-
-/.github/CODEOWNERS @andig @naltatis @premultiply
+# Use the github usernames instead of actual names or email addresses.
+# Do not mention premultiply, andig and naltatis, or
+# contributors that touched the template as part of mass-updates (10+ templates).
 
 /templates/definition/charger/abl.yaml @DerAndereAndi
 /templates/definition/charger/ac-elwa-2.yaml @docolli

@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
-import { enableExperimental, expectModalHidden, expectModalVisible } from "./utils";
+import { expectModalHidden, expectModalVisible } from "./utils";
 
 const CONFIG_GRID_ONLY = "config-grid-only.evcc.yaml";
 
@@ -16,7 +16,6 @@ test.afterAll(async () => {
 test.describe("pv meter", async () => {
   test("create, edit and remove pv meter", async ({ page }) => {
     await page.goto("/#/config");
-    await enableExperimental(page, false);
 
     await expect(page.getByTestId("pv")).toHaveCount(0);
 
@@ -73,7 +72,6 @@ test.describe("pv meter", async () => {
 
   test("create broken pv meter with validation failure", async ({ page }) => {
     await page.goto("/#/config");
-    await enableExperimental(page, false);
 
     await expect(page.getByTestId("pv")).toHaveCount(0);
 

@@ -1,17 +1,5 @@
 package meter
 
-// LICENSE
-
-// Bosch is the Bosch BPT-S 5 Hybrid meter
-
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE.
-
 import (
 	"errors"
 	"strings"
@@ -22,21 +10,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-// Example config:
-// meters:
-// - name: bosch_grid
-//   type: bosch-bpt
-//   uri: http://192.168.178.22
-//   usage: grid
-// - name: bosch_pv
-//   type: bosch-bpt
-//   uri: http://192.168.178.22
-//   usage: pv
-// - name: bosch_battery
-//   type: bosch-bpt
-//   uri: http://192.168.178.22
-//   usage: battery
-
 type BoschBpts5Hybrid struct {
 	api   *bosch.API
 	usage string
@@ -46,15 +19,15 @@ func init() {
 	registry.Add("bosch-bpt", NewBoschBpts5HybridFromConfig)
 }
 
-//go:generate go tool decorate -f decorateBoschBpts5Hybrid -b api.Meter -t "api.Battery,Soc,func() (float64, error)" -t "api.BatteryCapacity,Capacity,func() float64"
-
 // NewBoschBpts5HybridFromConfig creates a Bosch BPT-S 5 Hybrid Meter from generic config
 func NewBoschBpts5HybridFromConfig(other map[string]any) (api.Meter, error) {
 	var cc struct {
-		batteryCapacity `mapstructure:",squash"`
-		URI             string
-		Usage           string
-		Cache           time.Duration
+		batteryCapacity    `mapstructure:",squash"`
+		batteryPowerLimits `mapstructure:",squash"`
+		batterySocLimits   `mapstructure:",squash"`
+		URI                string
+		Usage              string
+		Cache              time.Duration
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -65,11 +38,23 @@ func NewBoschBpts5HybridFromConfig(other map[string]any) (api.Meter, error) {
 		return nil, errors.New("missing usage")
 	}
 
-	return NewBoschBpts5Hybrid(cc.URI, cc.Usage, cc.batteryCapacity.Decorator(), cc.Cache)
+	m, err := NewBoschBpts5Hybrid(cc.URI, cc.Usage, cc.Cache)
+	if err != nil {
+		return nil, err
+	}
+
+	if cc.Usage == "battery" {
+		return decorateMeterBattery(
+			m, nil, m.soc, cc.batteryCapacity.Decorator(),
+			cc.batterySocLimits.Decorator(), cc.batteryPowerLimits.Decorator(), nil,
+		), nil
+	}
+
+	return m, nil
 }
 
 // NewBoschBpts5Hybrid creates a Bosch BPT-S 5 Hybrid Meter
-func NewBoschBpts5Hybrid(uri, usage string, capacity func() float64, cache time.Duration) (api.Meter, error) {
+func NewBoschBpts5Hybrid(uri, usage string, cache time.Duration) (*BoschBpts5Hybrid, error) {
 	log := util.NewLogger("bosch-bpt")
 
 	instance, exists := bosch.Instances.LoadOrStore(uri, bosch.NewLocal(log, uri, cache))
@@ -84,13 +69,7 @@ func NewBoschBpts5Hybrid(uri, usage string, capacity func() float64, cache time.
 		usage: strings.ToLower(usage),
 	}
 
-	// decorate battery
-	var batterySoc func() (float64, error)
-	if usage == "battery" {
-		batterySoc = m.batterySoc
-	}
-
-	return decorateBoschBpts5Hybrid(m, batterySoc, capacity), nil
+	return m, nil
 }
 
 // CurrentPower implements the api.Meter interface
@@ -109,8 +88,8 @@ func (m *BoschBpts5Hybrid) CurrentPower() (float64, error) {
 	}
 }
 
-// batterySoc implements the api.Battery interface
-func (m *BoschBpts5Hybrid) batterySoc() (float64, error) {
+// soc implements the api.Battery interface
+func (m *BoschBpts5Hybrid) soc() (float64, error) {
 	status, err := m.api.Status()
 	return status.CurrentBatterySoc, err
 }

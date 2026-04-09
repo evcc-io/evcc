@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"context"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -44,13 +45,14 @@ func NewFordConnectQueryFromConfig(other map[string]any) (api.Vehicle, error) {
 		return nil, err
 	}
 
+	log := util.NewLogger("ford").Redact(cc.Credentials.ID, cc.VIN)
+
 	oc := query.OAuth2Config(cc.Credentials.ID, cc.Credentials.Secret, cc.RedirectURI)
-	ts, err := query.NewOAuth(oc, cc.embed.GetTitle())
+	ts, err := query.NewOAuth(util.WithLogger(context.Background(), log), oc, cc.embed.GetTitle())
 	if err != nil {
 		return nil, err
 	}
 
-	log := util.NewLogger("ford").Redact(cc.VIN)
 	api := query.NewAPI(log, ts)
 
 	vehicle, err := ensureVehicleEx(cc.VIN, api.Vehicles, func(v query.Vehicle) (string, error) {

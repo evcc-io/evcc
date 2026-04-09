@@ -13,6 +13,7 @@ type ActionConfig struct {
 	Priority   int        `mapstructure:"priority,omitempty"`   // Priority
 	MinCurrent float64    `mapstructure:"minCurrent,omitempty"` // Minimum Current
 	MaxCurrent float64    `mapstructure:"maxCurrent,omitempty"` // Maximum Current
+	MaxPower   float64    `mapstructure:"maxPower,omitempty"`   // Maximum Charging Power
 }
 
 // String implements Stringer and returns the ActionConfig as comma-separated key:value string
@@ -36,6 +37,10 @@ func (a ActionConfig) GetMinCurrent() (float64, bool) {
 
 func (a ActionConfig) GetMaxCurrent() (float64, bool) {
 	return a.MaxCurrent, a.MaxCurrent > 0
+}
+
+func (a ActionConfig) GetMaxPower() (float64, bool) {
+	return a.MaxPower, a.MaxPower > 0
 }
 
 func (a ActionConfig) GetPriority() (int, bool) {

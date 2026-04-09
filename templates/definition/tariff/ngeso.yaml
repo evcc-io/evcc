@@ -11,8 +11,8 @@ params:
       en: Region
       de: Region
     help:
-      de: "Ungenauer als die Verwendung eines Postleitzahl. Siehe https://carbon-intensity.github.io/api-definitions/#region-list"
-      en: "Coarser than using a postcode. See https://carbon-intensity.github.io/api-definitions/#region-list"
+      de: "Ungenauer als die Verwendung eines Postleitzahl. Siehe [carbon-intensity.github.io](https://carbon-intensity.github.io/api-definitions/#region-list)"
+      en: "Coarser than using a postcode. See [carbon-intensity.github.io](https://carbon-intensity.github.io/api-definitions/#region-list)"
   - name: postalcode
     type: string
     example: "SW1"

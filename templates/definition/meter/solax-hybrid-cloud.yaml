@@ -17,24 +17,24 @@ requirements:
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
-    allinone: true
   - name: tokenid
     required: true
     description:
       generic: SolaxCloud TokenID
     help:
-      de: "https://www.solaxcloud.com/ -> Support -> Drittanbieter-Ökosystem (alte Website) oder Dienst -> API (neue Website), den Wert von `tokenID` hier in Anführungszeichen eintragen (Beispiel: '20241028488283838')"
-      en: "https://www.solaxcloud.com/ -> Support -> Third-party Ecology (old site) or Service -> API (new site), put the value of `tokenID` here in single quotes (Example: '20241028488283838')"
+      de: "[solaxcloud.com](https://www.solaxcloud.com/) -> Support -> Drittanbieter-Ökosystem (alte Website) oder Dienst -> API (neue Website), den Wert von `tokenID` hier in Anführungszeichen eintragen (Beispiel: '20241028488283838')"
+      en: "[solaxcloud.com](https://www.solaxcloud.com/) -> Support -> Third-party Ecology (old site) or Service -> API (new site), put the value of `tokenID` here in single quotes (Example: '20241028488283838')"
   - name: serial
     required: true
     description:
       de: Seriennummer
       en: Serial number
     help:
-      de: https://www.solaxcloud.com/ -> Gerät -> Wechselrichter (neue Website) oder Support (alte Website), Wert von Registrierungsnummer hier eintragen
-      en: https://www.solaxcloud.com/ -> Device -> Inverter (new site) or Support (old site), use the registration number
-  - name: capacity
-    advanced: true
+      de: "[solaxcloud.com](https://www.solaxcloud.com/) -> Gerät -> Wechselrichter (neue Website) oder Support (alte Website), Wert von Registrierungsnummer hier eintragen"
+      en: "[solaxcloud.com](https://www.solaxcloud.com/) -> Device -> Inverter (new site) or Support (old site), use the registration number"
+  - preset: battery-params
+  - name: cache
+    default: 1s
 render: |
   type: custom
   power:
@@ -42,33 +42,25 @@ render: |
     source: http
     uri: https://www.solaxcloud.com/proxyApp/proxy/api/getRealtimeInfo.do?tokenId={{ unquote .tokenid }}&sn={{ unquote .serial }}
     jq: .result.feedinpower
-    cache: 2m30s
+    cache: {{ .cache }}
     scale: -1
   {{- end }}
   {{- if eq .usage "pv" }}
-    source: calc
-    add:
-    # Hybrid WR XXXXXXXXXXXXXX
-    # DC MPPT1 + MPPT2
-    - source: http
-      uri: https://www.solaxcloud.com/proxyApp/proxy/api/getRealtimeInfo.do?tokenId={{ unquote .tokenid }}&sn={{ unquote .serial }}
-      jq: .result.powerdc1  # Solax API Inverter.DC.PV.power.MPPT1
-      cache: 2m30s
-    - source: http
-      uri: https://www.solaxcloud.com/proxyApp/proxy/api/getRealtimeInfo.do?tokenId={{ unquote .tokenid }}&sn={{ unquote .serial }}
-      jq: .result.powerdc2  # Solax API Inverter.DC.PV.power.MPPT2
-      cache: 2m30s
+    source: http
+    uri: https://www.solaxcloud.com/proxyApp/proxy/api/getRealtimeInfo.do?tokenId={{ unquote .tokenid }}&sn={{ unquote .serial }}
+    jq: (.result.powerdc1 // 0)+(.result.powerdc2 // 0) # Solax API Inverter.DC.PV.power.MPPT1+MPPT2
+    cache: {{ .cache }}
   {{- end }}
   {{- if eq .usage "battery" }}
     source: http
     uri: https://www.solaxcloud.com/proxyApp/proxy/api/getRealtimeInfo.do?tokenId={{ unquote .tokenid }}&sn={{ unquote .serial }}
     jq: .result.batPower  # Solax API inverter.DC.battery.power.total
     scale: -1
-    cache: 2m30s
+    cache: {{ .cache }}
   soc:
     source: http
     uri: https://www.solaxcloud.com/proxyApp/proxy/api/getRealtimeInfo.do?tokenId={{ unquote .tokenid }}&sn={{ unquote .serial }}
     jq: .result.soc  # Solax API inverter.DC.battery.energy.SOC
-    cache: 2m30s
-  capacity: {{ .capacity }} # kWh
+    cache: {{ .cache }}
+  {{- include "battery-params" . }}
   {{- end }}

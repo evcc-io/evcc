@@ -19,33 +19,31 @@ requirements:
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
-    allinone: true
   - name: host
   - name: port
     default: 502
-  - name: capacity
-    advanced: true
+  - preset: battery-params
 render: |
   type: custom
   {{- if eq .usage "grid" }}
   currents:
   - source: modbus
     id: 0
-    uri: {{ .host }}:{{ .port }}
+    uri: {{ joinHostPort .host .port }}
     register:
       address: 4099 # Netz Ampere L1 | Grid amps L1
       type: holding
       decode: uint16
   - source: modbus
     id: 0
-    uri: {{ .host }}:{{ .port }}
+    uri: {{ joinHostPort .host .port }}
     register:
       address: 4100 # Netz Ampere L2 | Grid amps L2
       type: holding
       decode: uint16
   - source: modbus
     id: 0
-    uri: {{ .host }}:{{ .port }}
+    uri: {{ joinHostPort .host .port }}
     register:
       address: 4101 # Netz Ampere L3 | Grid amps L3
       type: holding
@@ -53,7 +51,7 @@ render: |
   power:
     source: modbus
     id: 0
-    uri: {{ .host }}:{{ .port }}
+    uri: {{ joinHostPort .host .port }}
     register:
       type: holding
       decode: int32
@@ -65,7 +63,7 @@ render: |
     add:
     - source: modbus
       id: 0
-      uri: {{ .host }}:{{ .port }}
+      uri: {{ joinHostPort .host .port }}
       register:
         type: holding
         decode: uint32
@@ -75,7 +73,7 @@ render: |
   power:
     source: modbus
     id: 0
-    uri: {{ .host }}:{{ .port }}
+    uri: {{ joinHostPort .host .port }}
     register:
       type: holding
       decode: int32
@@ -84,10 +82,10 @@ render: |
   soc:
     source: modbus
     id: 0
-    uri: {{ .host }}:{{ .port }}
+    uri: {{ joinHostPort .host .port }}
     register:
       address: 4146 # Batterie-SOC in %
       type: holding
       decode: uint16
-  capacity: {{ .capacity }} # Nutzbare Kapazität in kWh | Net capacity (kWh)
+  {{- include "battery-params" . }}
   {{- end }}
