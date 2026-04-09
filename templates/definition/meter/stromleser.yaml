@@ -1,0 +1,30 @@
+template: stromleser
+products:
+  - brand: stromleser.one
+    description:
+      generic: IR Reader
+params:
+  - name: usage
+    choice: ["grid", "pv"]
+  - name: host
+  - name: cache
+    default: 15s
+render: |
+  type: custom
+  power:
+    source: http
+    uri: http://{{ .host }}/v1/data
+    cache: {{ .cache }}
+    jq: 'def toW: split(" ") | (.[0]|tonumber) * (if .[1]=="kW" then 1000 elif .[1]=="mW" then 0.001 else 1 end); try (.["16.7.0"]|toW) // ((.["1.7.0"]|toW) - (.["2.7.0"]|toW))'
+  {{- if eq .usage "pv" }}
+    scale: -1
+  {{- end }}
+  energy:
+    source: http
+    uri: http://{{ .host }}/v1/data
+    cache: {{ .cache }}
+    {{- if eq .usage "pv" }}
+    jq: 'def tokWh: split(" ") | (.[0]|tonumber) * (if .[1]=="Wh" then 0.001 elif .[1]=="MWh" then 1000 else 1 end); .["2.8.0"]|tokWh'
+    {{- else }}
+    jq: 'def tokWh: split(" ") | (.[0]|tonumber) * (if .[1]=="Wh" then 0.001 elif .[1]=="MWh" then 1000 else 1 end); .["1.8.0"]|tokWh'
+    {{- end }}
