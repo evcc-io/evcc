@@ -185,7 +185,7 @@ func (cp *CP) onTransportConnect() {
 			func(request *remotetrigger.TriggerMessageRequest) {},
 		)
 		if err != nil {
-			cp.log.DEBUG.Printf("failed to trigger BootNotification: %v", err)
+			cp.log.ERROR.Printf("failed to trigger BootNotification: %v", err)
 		}
 	}()
 }
