@@ -36,9 +36,8 @@ import (
 //   - no phase switching
 //   - only start/stop control
 type SigenergyDC struct {
-	log     *util.Logger
-	conn    *modbus.Connection
-	enabled bool
+	log  *util.Logger
+	conn *modbus.Connection
 }
 
 const (
@@ -131,12 +130,10 @@ func (wb *SigenergyDC) Status() (api.ChargeStatus, error) {
 	switch state := binary.BigEndian.Uint16(b); state {
 	case sigDcStateIdle, sigDcStateUnavail:
 		// no vehicle connected
-		wb.enabled = false
 		return api.StatusA, nil
 
 	case sigDcStateCharging, sigDcStateDischarging:
 		// actively charging/discharging
-		wb.enabled = true
 		return api.StatusC, nil
 
 	case sigDcStateOccupied, sigDcStatePrepComm, sigDcStatePrepInsul,
@@ -145,18 +142,36 @@ func (wb *SigenergyDC) Status() (api.ChargeStatus, error) {
 		return api.StatusB, nil
 
 	case sigDcStateFault, sigDcStateAlarm:
-		wb.log.WARN.Printf("charger fault/alarm (state: %d)", state)
-		wb.enabled = false
-		return api.StatusB, nil
+		return api.StatusNone, fmt.Errorf("charger fault/alarm: %d", state)
 
 	default:
-		return api.StatusNone, fmt.Errorf("unknown running state: %d", state)
+		wb.log.WARN.Printf("unknown running state: %d, assuming connected", state)
+		return api.StatusB, nil
+	}
+}
+
+func (wb *SigenergyDC) isEnabledFromState(state uint16) bool {
+	switch state {
+	case sigDcStateCharging,
+		sigDcStateOccupied,
+		sigDcStatePrepComm,
+		sigDcStatePrepInsul,
+		sigDcStateScheduled:
+		return true
+	default:
+		return false
 	}
 }
 
 // Enabled implements the api.Charger interface
 func (wb *SigenergyDC) Enabled() (bool, error) {
-	return wb.enabled, nil
+	b, err := wb.conn.ReadInputRegisters(regSigDcRunningState, 1)
+	if err != nil {
+		return false, err
+	}
+
+	state := binary.BigEndian.Uint16(b)
+	return wb.isEnabledFromState(state), nil
 }
 
 // Enable implements the api.Charger interface
@@ -167,9 +182,6 @@ func (wb *SigenergyDC) Enable(enable bool) error {
 	}
 
 	_, err := wb.conn.WriteSingleRegister(regSigDcStartStop, s)
-	if err == nil {
-		wb.enabled = enable
-	}
 	return err
 }
 
