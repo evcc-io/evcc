@@ -27,7 +27,7 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 		embed   `mapstructure:",squash"`
 		URI     string
 		Token_  string `mapstructure:"token"` // TODO deprecated
-		Home    string // TODO deprecated
+		Home_   string `mapstructure:"home"`  // TODO deprecated
 		Sensors struct {
 			Soc        string // required
 			Range      string // optional
@@ -55,7 +55,7 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 
 	log := util.NewLogger("ha-vehicle")
 
-	conn, err := homeassistant.NewConnection(log, cc.URI, cc.Home)
+	conn, err := homeassistant.NewConnection(log, cc.URI, cc.Home_)
 	if err != nil {
 		return nil, err
 	}
@@ -103,11 +103,18 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 	if cc.Sensors.FinishTime != "" {
 		finish = func() (time.Time, error) { return conn.GetTimeState(cc.Sensors.FinishTime) }
 	}
+
 	if cc.Services.Start != "" && cc.Services.Stop != "" {
-		enable = func(enable bool) error { return res.enable(cc.Services.Start, cc.Services.Stop, enable) }
+		enable = func(enable bool) error {
+			if enable {
+				return conn.CallSwitchService(cc.Services.Start, true)
+			}
+			return conn.CallSwitchService(cc.Services.Stop, true)
+		}
 	} else if strings.HasPrefix(cc.Services.Start, "switch") {
 		enable = func(enable bool) error { return conn.CallSwitchService(cc.Services.Start, enable) }
 	}
+
 	if cc.Services.Wakeup != "" {
 		wakeup = func() error { return conn.CallSwitchService(cc.Services.Wakeup, true) }
 	}
@@ -128,17 +135,11 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 		finish,
 		wakeup,
 		enable,
+		nil,
+		nil,
 	), nil
 }
 
 func (v *HomeAssistant) Soc() (float64, error) {
 	return v.conn.GetFloatState(v.soc)
-}
-
-func (v *HomeAssistant) enable(on, off string, enable bool) error {
-	if enable {
-		return v.conn.CallSwitchService(on, true)
-	}
-
-	return v.conn.CallSwitchService(off, true)
 }

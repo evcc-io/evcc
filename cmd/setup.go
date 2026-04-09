@@ -513,6 +513,11 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) error {
 	// setup persistence
 	err := wrapErrorWithClass(ClassDatabase, configureDatabase(conf.Database))
 
+	// configure network
+	if err == nil {
+		err = networkSettings(&conf.Network)
+	}
+
 	// setup additional templates
 	if err == nil {
 		if cmd.Flags().Changed(flagTemplate) {
@@ -1308,5 +1313,11 @@ func configureAuth(router *mux.Router, paramC chan<- util.Param) {
 // isExperimental returns if experimental features are enabled
 func isExperimental() bool {
 	b, _ := settings.Bool(keys.Experimental)
+	return b
+}
+
+// isOptimizer returns if optimizer is enabled
+func isOptimizer() bool {
+	b, _ := settings.Bool(keys.Optimizer)
 	return b
 }

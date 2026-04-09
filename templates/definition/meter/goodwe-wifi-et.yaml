@@ -11,9 +11,6 @@ params:
     choice: ["grid", "pv", "battery"]
 
   - name: host
-    help:
-      en: IP address of the inverter (port 8899)
-      de: IP-Adresse des Wechselrichters (Port 8899)
     example: 192.168.1.26
 
 render: |
@@ -22,27 +19,31 @@ render: |
   power:
     source: aa55udp
     host: {{ .host }}
+    id: 247
     register: 35139
     count: 2
     decode: int32be
   energy:
     source: aa55udp
     host: {{ .host }}
+    id: 247
     register: 36017
     count: 2
-    decode: float32
+    decode: float32be
     scale: 0.001
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
     source: aa55udp
     host: {{ .host }}
+    id: 247
     register: 35137
     count: 2
     decode: int32be
   energy:
     source: aa55udp
     host: {{ .host }}
+    id: 247
     register: 35191
     count: 2
     decode: uint32be
@@ -52,12 +53,14 @@ render: |
   power:
     source: aa55udp
     host: {{ .host }}
+    id: 247
     register: 35182
     count: 2
     decode: int32be
   energy:
     source: aa55udp
     host: {{ .host }}
+    id: 247
     register: 35209
     count: 2
     decode: uint32be
@@ -65,6 +68,7 @@ render: |
   soc:
     source: aa55udp
     host: {{ .host }}
+    id: 247
     register: 37007
     count: 1
     decode: uint16be

@@ -66,22 +66,23 @@
 				:pvConfigured="pvConfigured"
 				:batteryConfigured="batteryConfigured"
 				:batterySoc="batterySoc"
+				:batteryMode="batteryMode"
 				:forecast="forecast"
 				:selectedId="selectedLoadpointId"
 				@id-changed="selectedLoadpointChanged"
 			/>
-			<Footer v-bind="footer"></Footer>
+			<Footer v-if="!experimental" v-bind="footer" />
 		</div>
 	</div>
 </template>
 
 <script lang="ts">
 import "@h2d2/shopicons/es/regular/arrowup";
+import Footer from "../Footer/Footer.vue";
 import TopNavigationArea from "../Top/TopNavigationArea.vue";
 import Energyflow from "../Energyflow/Energyflow.vue";
 import HemsWarning from "../HemsWarning.vue";
 import Loadpoints from "../Loadpoints/Loadpoints.vue";
-import Footer from "../Footer/Footer.vue";
 import formatter from "@/mixins/formatter";
 import collector from "@/mixins/collector.ts";
 import WelcomeIcons from "./WelcomeIcons.vue";
@@ -98,6 +99,7 @@ import type {
 	Sponsor,
 	FatalError,
 	EvOpt,
+	BATTERY_MODE,
 } from "@/types/evcc";
 import store from "@/store";
 import type { Grid } from "./types";
@@ -105,9 +107,9 @@ import type { Grid } from "./types";
 export default defineComponent({
 	name: "Site",
 	components: {
+		Footer,
 		Loadpoints,
 		Energyflow,
-		Footer,
 		HemsWarning,
 		TopNavigationArea,
 		WelcomeIcons,
@@ -129,9 +131,9 @@ export default defineComponent({
 		aux: { type: Array as PropType<Meter[]>, default: () => [] },
 		ext: { type: Array as PropType<Meter[]>, default: () => [] },
 		batteryDischargeControl: Boolean,
-		batteryGridChargeLimit: { type: Number, default: null },
+		batteryGridChargeLimit: { type: [Number, null] as PropType<number | null>, default: null },
 		batteryGridChargeActive: Boolean,
-		batteryMode: String,
+		batteryMode: String as PropType<BATTERY_MODE>,
 		battery: { type: Object as PropType<Battery> },
 		gridCurrents: Array,
 		prioritySoc: Number,
@@ -202,18 +204,15 @@ export default defineComponent({
 					installed: window.evcc.version,
 					commit: window.evcc.commit,
 					available: this.availableVersion,
-					releaseNotes: this.releaseNotes,
-					hasUpdater: this.hasUpdater,
-					uploadMessage: this.uploadMessage,
-					uploadProgress: this.uploadProgress,
 				},
 				savings: {
 					sponsor: this.sponsor,
 					statistics: this.statistics,
 					co2Configured: this.tariffCo2 !== undefined,
-					priceConfigured: this.tariffGrid !== undefined,
 					currency: this.currency,
 					telemetry: this.telemetry,
+					forecast: this.forecast,
+					tariffGrid: this.tariffGrid,
 				},
 			};
 		},

@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -34,9 +35,27 @@ var (
 	mu      atomic.Uint32
 )
 
+// optimizerResult wraps the optimizer publish payload to implement BytesMarshaler.
+// This ensures publishComplex serializes it as a single JSON message instead of
+// recursively decomposing each struct field and array element into individual MQTT
+// topics (~1,500 messages per optimizer run).
+type optimizerResult struct {
+	Req     optimizer.OptimizationInput  `json:"req"`
+	Res     optimizer.OptimizationResult `json:"res"`
+	Details requestDetails               `json:"details"`
+}
+
+var _ api.BytesMarshaler = (*optimizerResult)(nil)
+
+func (r optimizerResult) MarshalBytes() ([]byte, error) {
+	return json.Marshal(r)
+}
+
 type batteryType string
 
 const (
+	OPTIMIZER_URI = "https://optimizer.evcc.io"
+
 	batteryTypeLoadpoint batteryType = "loadpoint"
 	batteryTypeVehicle   batteryType = "vehicle"
 	batteryTypeBattery   batteryType = "battery"
@@ -110,11 +129,6 @@ func (site *Site) optimizerUpdateAsync() {
 }
 
 func (site *Site) optimizerUpdate(battery []types.Measurement) error {
-	uri := os.Getenv("OPTIMIZER_URI")
-	if uri == "" {
-		return nil
-	}
-
 	solarTariff := site.GetTariff(api.TariffUsageSolar)
 	solar := currentRates(solarTariff)
 
@@ -122,15 +136,20 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	feedIn := currentRates(site.GetTariff(api.TariffUsageFeedIn))
 
 	minLen := lo.Min([]int{len(grid), len(feedIn)})
-	if solarTariff != nil {
-		// allow empty solar forecast
+	// exclude empty solar forecast from minLen
+	if solarTariff != nil && len(solar) > 0 {
 		minLen = min(minLen, len(solar))
 	}
-	if minLen < 8 {
-		return fmt.Errorf("not enough slots for optimization: %d (grid=%d, feedIn=%d, solar=%d)", minLen, len(grid), len(feedIn), len(solar))
+	const expectedSlots = 8
+	if minLen < expectedSlots {
+		if solarTariff != nil {
+			return fmt.Errorf("not enough forecast slots for meaningful optimization: %d < %d (grid=%d, feedIn=%d, solar=%d)", minLen, expectedSlots, len(grid), len(feedIn), len(solar))
+		}
+		return fmt.Errorf("not enough forecast slots for meaningful optimization: %d < %d (grid=%d, feedIn=%d)", minLen, expectedSlots, len(grid), len(feedIn))
 	}
 
-	dt := timeSteps(minLen)
+	now := time.Now()
+	dt := timeSteps(minLen, now)
 	firstSlotDuration := time.Duration(dt[0]) * time.Second
 
 	site.log.DEBUG.Printf("optimizer: optimizing %d slots until %v: grid=%d, feedIn=%d, solar=%d, first slot: %v",
@@ -176,7 +195,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	pa := lo.Min(req.TimeSeries.PN) * eta * 0.99
 
 	details := requestDetails{
-		Timestamps: asTimestamps(dt),
+		Timestamps: asTimestamps(dt, now),
 	}
 
 	if site.circuit != nil {
@@ -220,6 +239,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	httpClient := request.NewClient(site.log)
 	httpClient.Timeout = 30 * time.Second
 
+	uri := lo.CoalesceOrEmpty(os.Getenv("OPTIMIZER_URI"), OPTIMIZER_URI)
 	apiClient, err := optimizer.NewClientWithResponses(uri, optimizer.WithHTTPClient(httpClient))
 	if err != nil {
 		return err
@@ -243,11 +263,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		return errors.New(string(resp.JSON200.Status))
 	}
 
-	site.publish("evopt", struct {
-		Req     optimizer.OptimizationInput  `json:"req"`
-		Res     optimizer.OptimizationResult `json:"res"`
-		Details requestDetails               `json:"details"`
-	}{
+	site.publish("evopt", optimizerResult{
 		Req:     req,
 		Res:     *resp.JSON200,
 		Details: details,
@@ -422,17 +438,17 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 
 	instance := dev.Instance()
 
-	if _, ok := instance.(api.BatteryController); ok {
+	if api.HasCap[api.BatteryController](instance) {
 		bat.ChargeFromGrid = true
 	}
 
-	if m, ok := instance.(api.BatteryPowerLimiter); ok {
+	if m, ok := api.Cap[api.BatteryPowerLimiter](instance); ok {
 		charge, discharge := m.GetPowerLimits()
 		bat.CMax = float32(charge)
 		bat.DMax = float32(discharge)
 	}
 
-	if m, ok := instance.(api.BatterySocLimiter); ok {
+	if m, ok := api.Cap[api.BatterySocLimiter](instance); ok {
 		minSoc, maxSoc := m.GetSocLimits()
 		bat.SMin = float32(*b.Capacity * minSoc * 10) // Wh
 		bat.SMax = float32(*b.Capacity * maxSoc * 10) // Wh
@@ -577,10 +593,6 @@ func solarRatesToEnergy(rr api.Rates) (api.Rates, error) {
 	return res, nil
 }
 
-func endOfHour(ts time.Time) time.Time {
-	return ts.Truncate(time.Hour).Add(time.Hour)
-}
-
 func currentRates(tariff api.Tariff) api.Rates {
 	if tariff == nil {
 		return nil
@@ -598,12 +610,11 @@ func currentRates(tariff api.Tariff) api.Rates {
 	})
 }
 
-func timeSteps(minLen int) []int {
+func timeSteps(minLen int, now time.Time) []int {
 	res := make([]int, 0, minLen)
 
-	bos := time.Now().Truncate(tariff.SlotDuration)
-	eos := bos.Add(tariff.SlotDuration)
-	if d := time.Until(eos); d > time.Second && d < tariff.SlotDuration {
+	eos := now.Truncate(tariff.SlotDuration).Add(tariff.SlotDuration)
+	if d := eos.Sub(now); d > time.Second && d < tariff.SlotDuration {
 		res = append(res, int(d.Seconds()))
 	}
 
@@ -614,13 +625,16 @@ func timeSteps(minLen int) []int {
 	return res
 }
 
-func asTimestamps(dt []int) []time.Time {
+func asTimestamps(dt []int, now time.Time) []time.Time {
 	res := make([]time.Time, 0, len(dt))
-	eoh := endOfHour(time.Now())
-	res = append(res, eoh.Add(-time.Duration(dt[0])*time.Second))
+
+	eos := now.Truncate(tariff.SlotDuration).Add(tariff.SlotDuration)
+	res = append(res, eos.Add(-time.Duration(dt[0])*time.Second))
+
 	for i := range len(dt) - 1 {
-		res = append(res, eoh.Add(time.Duration(dt[i+1])*time.Second))
+		res = append(res, res[i].Add(time.Duration(dt[i])*time.Second))
 	}
+
 	return res
 }
 
