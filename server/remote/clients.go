@@ -121,11 +121,7 @@ func (r *Remote) CreateClient(username string, expiresIn time.Duration) (Client,
 		return Client{}, "", err
 	}
 
-	return Client{
-		Username:  c.Username,
-		CreatedAt: c.CreatedAt,
-		ExpiresAt: c.ExpiresAt,
-	}, password, nil
+	return c.Client, password, nil
 }
 
 // DeleteClient removes a client by username.
