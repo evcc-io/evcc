@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"sync"
 	"time"
@@ -129,7 +130,7 @@ func (t *Tunnel) changeState(session *yamux.Session, err error) {
 	if session != nil {
 		t.log.INFO.Println("tunnel connected")
 	} else {
-		if errors.Is(err, context.Canceled) {
+		if errors.Is(err, context.Canceled) || errors.Is(err, io.EOF) {
 			t.log.INFO.Println("tunnel disconnected")
 		} else {
 			t.log.INFO.Println("tunnel disconnected:", err)
@@ -152,18 +153,16 @@ func (t *Tunnel) LoginBlocked() bool {
 // Close tears down the tunnel.
 func (t *Tunnel) Close() {
 	t.mu.Lock()
-	conn := t.conn
-	cancel := t.cancel
-	t.cancel = nil
-	t.mu.Unlock()
+	defer t.mu.Unlock()
 
 	// close websocket; produces io.EOF in yamux which it handles silently
-	if conn != nil {
-		conn.Close(websocket.StatusNormalClosure, "closed")
+	if t.conn != nil {
+		t.conn.Close(websocket.StatusNormalClosure, "closed")
 	}
 
-	if cancel != nil {
-		cancel()
+	if t.cancel != nil {
+		t.cancel()
+		t.cancel = nil
 	}
 }
 
