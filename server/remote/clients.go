@@ -135,7 +135,7 @@ func (r *Remote) DeleteClient(username string) error {
 		return c.Username == username
 	})
 
-	if idx < 0 {
+	if idx == -1 {
 		return fmt.Errorf("client %s not found", username)
 	}
 
