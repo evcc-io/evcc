@@ -162,6 +162,7 @@ import { getModal } from "@/configModal";
 const initialValues = {
 	type: ConfigType.Template,
 	icon: "car",
+	priority: 0,
 	deviceProduct: undefined,
 	yaml: undefined,
 	template: null,
@@ -206,7 +207,6 @@ export default defineComponent({
 				(_, i) => ({ key: i, name: `${i}` })
 			);
 			result[0]!.name = "0 (default)";
-			result[0]!.key = undefined;
 			result[10]!.name = "10 (highest)";
 			return result;
 		},
@@ -258,6 +258,7 @@ export default defineComponent({
 			if (values.type === ConfigType.Custom) {
 				delete data.icon;
 				delete data.title;
+				delete data.priority;
 			}
 			if (Array.isArray(data.identifiers)) {
 				data.identifiers = data.identifiers.map((i) => i.trim()).filter((i) => i);

@@ -1,8 +1,8 @@
-template: marstek-venus
+template: marstek-venus-e-v3
 products:
   - brand: Marstek
     description:
-      generic: Venus Battery Storage
+      generic: Venus E Gen 3.0
 capabilities: ["battery-control"]
 params:
   - name: usage
@@ -13,9 +13,7 @@ params:
     comset: 8N1
   - preset: battery-params
   - name: capacity
-    help:
-      de: Venus-E 5.12 kWh, Venus-C 2.56 kWh
-      en: Venus-E 5.12 kWh, Venus-C 2.56 kWh
+    default: 5.12
   - name: minsoc
     default: 11
   - name: maxsoc
@@ -37,18 +35,26 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 32202 # AC Power (Watt)
+      address: 30006 # AC Power (W)
       type: holding
-      decode: int32
+      decode: int16
     scale: 1
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 33002 # Total energy discharged from battery (kWh)
+      type: holding
+      decode: uint32
+    scale: 0.01
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 32104 # Battery SOC (%)
+      address: 34002 # Battery SOC (%)
       type: holding
       decode: uint16
-    scale: 1
+    scale: 0.1
   batterymode:
     source: switch
     switch:

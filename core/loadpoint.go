@@ -395,6 +395,14 @@ func (lp *Loadpoint) requestUpdate() {
 	}
 }
 
+// capableMeter wraps a meter with capability lookup from its source.
+// This preserves capability checks (like MeterEnergy, PhaseCurrents, PhaseVoltages) when
+// the meter was extracted from a decorated charger's capability registry.
+type capableMeter struct {
+	api.Meter
+	api.Capable
+}
+
 // configureChargerType ensures that chargeMeter, Rate and Timer can use charger capabilities
 func (lp *Loadpoint) configureChargerType(charger api.Charger) {
 	var integrated bool
@@ -403,8 +411,15 @@ func (lp *Loadpoint) configureChargerType(charger api.Charger) {
 	if lp.chargeMeter == nil {
 		integrated = true
 
-		if mt, ok := charger.(api.Meter); ok {
-			lp.chargeMeter = mt
+		if mt, ok := api.Cap[api.Meter](charger); ok {
+			// preserve charger's capability registry so that subsequent
+			// capability checks on chargeMeter (e.g. MeterEnergy, PhaseCurrents)
+			// still work for decorated chargers (https://github.com/evcc-io/evcc/issues/28915)
+			if c, ok := charger.(api.Capable); ok {
+				lp.chargeMeter = &capableMeter{Meter: mt, Capable: c}
+			} else {
+				lp.chargeMeter = mt
+			}
 		} else {
 			mt := new(wrapper.ChargeMeter)
 			_ = lp.bus.Subscribe(evChargeCurrent, lp.evChargeCurrentWrappedMeterHandler)
@@ -416,7 +431,7 @@ func (lp *Loadpoint) configureChargerType(charger api.Charger) {
 	// ensure charge rater exists
 	// measurement are obtained from separate charge meter if defined
 	// (https://github.com/evcc-io/evcc/issues/2469)
-	if rt, ok := charger.(api.ChargeRater); ok && integrated {
+	if rt, ok := api.Cap[api.ChargeRater](charger); ok && integrated {
 		lp.chargeRater = rt
 
 		// when restarting in the middle of charging session, use this as negative offset
@@ -433,7 +448,7 @@ func (lp *Loadpoint) configureChargerType(charger api.Charger) {
 	}
 
 	// ensure charge timer exists
-	if ct, ok := charger.(api.ChargeTimer); ok {
+	if ct, ok := api.Cap[api.ChargeTimer](charger); ok {
 		lp.chargeTimer = ct
 	} else {
 		ct := wrapper.NewChargeTimer()
@@ -674,7 +689,7 @@ func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan c
 	}
 
 	// charger icon
-	if c, ok := lp.charger.(api.IconDescriber); ok {
+	if c, ok := api.Cap[api.IconDescriber](lp.charger); ok {
 		lp.publish(keys.ChargerIcon, c.Icon())
 	} else {
 		lp.publish(keys.ChargerIcon, nil)
@@ -777,7 +792,7 @@ func (lp *Loadpoint) syncCharger() error {
 		)
 
 		// use chargers actual set current if available
-		cg, isCg := lp.charger.(api.CurrentGetter)
+		cg, isCg := api.Cap[api.CurrentGetter](lp.charger)
 		if isCg {
 			if current, err = cg.GetMaxCurrent(); err == nil {
 				// smallest adjustment most PWM-Controllers can do is: 100%÷256×0,6A = 0.234A
@@ -806,7 +821,7 @@ func (lp *Loadpoint) syncCharger() error {
 		}
 
 		// sync phases
-		_, isPs := lp.charger.(api.PhaseSwitcher)
+		_, isPs := api.Cap[api.PhaseSwitcher](lp.charger)
 		if phases := lp.GetPhases(); isPs && shouldBeConsistent && phases > 0 {
 			// fallback to active phases from measured phases
 			chargerPhases := lp.measuredPhases
@@ -814,7 +829,7 @@ func (lp *Loadpoint) syncCharger() error {
 				chargerPhases = 3
 			}
 
-			pg, isPg := lp.charger.(api.PhaseGetter)
+			pg, isPg := api.Cap[api.PhaseGetter](lp.charger)
 			if isPg {
 				if chargerPhases, err = pg.GetPhases(); err == nil {
 					if chargerPhases > 0 && chargerPhases != phases {
@@ -858,8 +873,7 @@ func (lp *Loadpoint) syncCharger() error {
 
 // coarseCurrent returns true if charger or vehicle require full amp steps
 func (lp *Loadpoint) coarseCurrent() bool {
-	_, ok := lp.charger.(api.ChargerEx)
-	return !ok || lp.vehicleHasFeature(api.CoarseCurrent)
+	return !api.HasCap[api.ChargerEx](lp.charger) || lp.vehicleHasFeature(api.CoarseCurrent)
 }
 
 // roundedCurrent rounds current down to full amps if charger or vehicle require it
@@ -902,7 +916,7 @@ func (lp *Loadpoint) setLimit(current float64) error {
 	// set current
 	if current != lp.offeredCurrent && current >= effMinCurrent {
 		var err error
-		if charger, ok := lp.charger.(api.ChargerEx); ok {
+		if charger, ok := api.Cap[api.ChargerEx](lp.charger); ok {
 			err = charger.MaxCurrentMillis(current)
 		} else {
 			err = lp.charger.MaxCurrent(int64(current))
@@ -910,7 +924,7 @@ func (lp *Loadpoint) setLimit(current float64) error {
 
 		if err != nil {
 			v := lp.GetVehicle()
-			if vv, ok := v.(api.Resurrector); ok && errors.Is(err, api.ErrAsleep) {
+			if vv, ok := api.Cap[api.Resurrector](v); ok && errors.Is(err, api.ErrAsleep) {
 				// https://github.com/evcc-io/evcc/issues/8254
 				// wakeup vehicle
 				lp.log.DEBUG.Printf("set charge current limit: waking up vehicle")
@@ -931,7 +945,7 @@ func (lp *Loadpoint) setLimit(current float64) error {
 	if enabled := current >= effMinCurrent; enabled != lp.enabled {
 		if err := lp.charger.Enable(enabled); err != nil {
 			v := lp.GetVehicle()
-			if vv, ok := v.(api.Resurrector); enabled && ok && errors.Is(err, api.ErrAsleep) {
+			if vv, ok := api.Cap[api.Resurrector](v); enabled && ok && errors.Is(err, api.ErrAsleep) {
 				// https://github.com/evcc-io/evcc/issues/8254
 				// wakeup vehicle
 				lp.log.DEBUG.Printf("charger %s: waking up vehicle", status[enabled])
@@ -1140,7 +1154,7 @@ func (lp *Loadpoint) getStatusChanges() ([]api.ChargeStatus, error) {
 	}
 
 	// check charger connection duration
-	if ct, ok := lp.charger.(api.ConnectionTimer); ok {
+	if ct, ok := api.Cap[api.ConnectionTimer](lp.charger); ok {
 		d, err := ct.ConnectionDuration()
 		if err != nil {
 			return nil, fmt.Errorf("connection duration: %w", err)
@@ -1236,7 +1250,7 @@ func (lp *Loadpoint) scalePhasesRequired() bool {
 	return lp.hasPhaseSwitching() && lp.phasesConfigured != 0 && lp.phasesConfigured != lp.GetPhases()
 }
 
-// scalePhasesIfAvailable scales if api.PhaseSwitcher is available
+// scalePhasesIfAvailable scales if api.PhaseSwitcher is available and allowed
 func (lp *Loadpoint) scalePhasesIfAvailable(phases int) error {
 	if lp.phasesConfigured != 0 {
 		phases = lp.phasesConfigured
@@ -1252,7 +1266,7 @@ func (lp *Loadpoint) scalePhasesIfAvailable(phases int) error {
 // scalePhases adjusts the number of active phases and returns the appropriate charging current.
 // Returns api.ErrNotAvailable if api.PhaseSwitcher is not available.
 func (lp *Loadpoint) scalePhases(phases int) error {
-	cp, ok := lp.charger.(api.PhaseSwitcher)
+	cp, ok := api.Cap[api.PhaseSwitcher](lp.charger)
 	if !ok {
 		panic("charger does not implement api.PhaseSwitcher")
 	}
@@ -1589,7 +1603,7 @@ func (lp *Loadpoint) UpdateChargePowerAndCurrents() float64 {
 	// update charge currents
 	lp.chargeCurrents = nil
 
-	if phaseMeter, ok := lp.chargeMeter.(api.PhaseCurrents); ok {
+	if phaseMeter, ok := api.Cap[api.PhaseCurrents](lp.chargeMeter); ok {
 		if err := backoff.Retry(func() error {
 			i1, i2, i3, err := phaseMeter.Currents()
 			if err != nil {
@@ -1642,7 +1656,7 @@ func (lp *Loadpoint) phasesFromChargeCurrents() {
 
 // updateChargeVoltages uses PhaseVoltages interface to count phases with nominal grid voltage
 func (lp *Loadpoint) updateChargeVoltages() {
-	phaseMeter, ok := lp.chargeMeter.(api.PhaseVoltages)
+	phaseMeter, ok := api.Cap[api.PhaseVoltages](lp.chargeMeter)
 	if !ok {
 		return // don't guess
 	}
@@ -1716,7 +1730,7 @@ func (lp *Loadpoint) publishChargeProgress() {
 	// TODO deprecated: use sessionEnergy instead
 	lp.publish(keys.ChargedEnergy, lp.GetChargedEnergy())
 	lp.publish(keys.ChargeDuration, lp.chargeDuration)
-	if _, ok := lp.chargeMeter.(api.MeterEnergy); ok {
+	if api.HasCap[api.MeterEnergy](lp.chargeMeter) {
 		lp.publish(keys.ChargeTotalImport, lp.chargeMeterTotal())
 	}
 }
@@ -1739,14 +1753,14 @@ func (lp *Loadpoint) publishSocAndRange() {
 		var socR *float64
 		var limitR *int64
 
-		if battery, ok := dev.(api.Battery); ok {
+		if battery, ok := api.Cap[api.Battery](dev); ok {
 			if soc, err := soc.Guard(battery.Soc()); err == nil {
 				socR = &soc
 
 				// don't publish here in case it needs be updated by the estimator
 				lp.log.DEBUG.Printf("%s soc: %.0f%%", typ, soc)
 
-				if socLimiter, ok := dev.(api.SocLimiter); ok {
+				if socLimiter, ok := api.Cap[api.SocLimiter](dev); ok {
 					if limit, err := socLimiter.GetLimitSoc(); err == nil {
 						limitR = &limit
 
@@ -1771,7 +1785,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 		socR, limitR = socAndLimit("vehicle", lp.GetVehicle())
 
 		// range
-		if vs, ok := lp.GetVehicle().(api.VehicleRange); ok {
+		if vs, ok := api.Cap[api.VehicleRange](lp.GetVehicle()); ok {
 			if rng, err := vs.Range(); err == nil {
 				lp.log.DEBUG.Printf("vehicle range: %dkm", rng)
 				lp.publish(keys.VehicleRange, rng)
@@ -1877,12 +1891,13 @@ func (lp *Loadpoint) phaseSwitchCompleted() bool {
 func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64) {
 	// auto-disable battery boost when SOC drops below limit
 	if lp.GetBatteryBoost() != boostDisabled {
-		limit := lp.GetBatteryBoostLimit()
-		if limit < 100 {
-			batterySoc := lp.site.GetBatterySoc()
-			if batterySoc < float64(limit) {
+		if limit := lp.GetBatteryBoostLimit(); limit < 100 {
+			if batterySoc := lp.site.GetBatterySoc(); batterySoc < float64(limit) {
 				lp.log.DEBUG.Printf("battery boost disabled: soc below limit (%.0f%% < %d%%)", batterySoc, limit)
-				_ = lp.SetBatteryBoost(false)
+
+				if err := lp.SetBatteryBoost(false); err != nil {
+					lp.log.ERROR.Printf("set battery boost: %v", err)
+				}
 			}
 		}
 	}
@@ -1914,7 +1929,7 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 	lp.PublishEffectiveValues()
 
 	// §14a
-	if dimmer, ok := lp.charger.(api.Dimmer); ok {
+	if dimmer, ok := api.Cap[api.Dimmer](lp.charger); ok {
 		dimmed, err := dimmer.Dimmed()
 		if err != nil {
 			lp.log.ERROR.Printf("dimmed: %v", err)
@@ -1951,7 +1966,7 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 
 	lp.resetHeatingSession()
 
-	if sr, ok := lp.charger.(api.StatusReasoner); ok && lp.GetStatus() == api.StatusB {
+	if sr, ok := api.Cap[api.StatusReasoner](lp.charger); ok && lp.GetStatus() == api.StatusB {
 		if r, err := sr.StatusReason(); err == nil {
 			lp.publish(keys.ChargerStatusReason, r)
 		} else {

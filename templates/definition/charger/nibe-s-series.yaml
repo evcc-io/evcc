@@ -10,13 +10,13 @@ requirements:
       Modbus Verbindung zur NIBE S Wärmepumpe. Firmware 4.7.5 oder neuer benötigt.
       In der Inneneinheit muss im Menü 7.5.9 Modbus aktiviert sein.
       Zur Verwendung der Leistungssteuerung muss im Menü 7.4 unter dem Punkt AUX von Modbus ext. Leistungsbegrenzung ausgewählt sein.
-      Es muss einmalig im Holding Register 3032 der Wert „1“ (uint8) geschrieben werden.
+      Es muss einmalig im Holding Register 3032 der Wert `1` (uint8) geschrieben werden.
     en: |
       Modbus connection to the NIBE S heat pump.
       Firmware version 4.7.5 or newer is required.
       In the indoor unit, Modbus must be enabled in menu 7.5.9
       To use the power control function, external power limitation must be selected under Menu 7.4, item AUX from modbus.
-      The value “1” (uint8) must be written once to holding register 3032.
+      The value `1` (uint8) must be written once to holding register 3032.
 params:
   - name: modbus
     choice: ["tcpip"]

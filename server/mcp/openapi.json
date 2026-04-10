@@ -1089,7 +1089,7 @@
     },
     "/loadpoints/{id}/batteryboost/{enable}": {
       "post": {
-        "description": "Enable or disable battery boost. When active, the maximum available home battery power is added until the home battery is drained to configured SoC limit.",
+        "description": "Enable or disable battery boost. When active, the maximum available home battery power is added until the home battery is drained to configured SoC limit. Note: boost will not work while the battery is on hold (e.g. during fast charging or planned charging with discharge prevention enabled).",
         "externalDocs": {
           "url": "https://docs.evcc.io/en/docs/features/battery#battery-boost"
         },

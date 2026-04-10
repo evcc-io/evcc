@@ -151,16 +151,48 @@ func TestRatesForAgreement_Dynamic(t *testing.T) {
 }
 
 // TestRatesForAgreement_Simple verifies that a simple fixed-rate agreement returns
-// a single RatePeriod spanning the full agreement validity window.
+// a single RatePeriod capped to the planning horizon (7 days), not the full
+// agreement validity window. This prevents the planner from expanding a multi-year
+// agreement into thousands of 15-minute intervals.
 func TestRatesForAgreement_Simple(t *testing.T) {
 	rates, err := ratesForAgreement(simpleAgreement(), t0)
 	require.NoError(t, err)
 	require.Len(t, rates, 1)
 
 	assert.Equal(t, t0, rates[0].ValidFrom)
-	assert.Equal(t, t0.AddDate(1, 0, 0), rates[0].ValidTo)
+	assert.Equal(t, t0.AddDate(0, 0, planDays), rates[0].ValidTo)
 	assert.InDelta(t, 25.00, rates[0].NetUnitRateCentsPerKwh, 0.001)
 	assert.InDelta(t, 29.75, rates[0].GrossUnitRateCentsPerKwh, 0.001)
+}
+
+// TestSimpleRateIndefiniteEnd verifies that a simple tariff with no end date (ValidTo
+// is zero) is also capped to the planning horizon rather than being handled as
+// indefinite (which would have previously resulted in run() adding one year).
+func TestSimpleRateIndefiniteEndCappedToPlanningHorizon(t *testing.T) {
+	agr := simpleAgreement()
+	agr.ValidTo = time.Time{}
+
+	rates, err := ratesForAgreement(agr, t0)
+	require.NoError(t, err)
+	require.Len(t, rates, 1)
+
+	// A zero ValidTo has no cap from the agreement; computeHorizon returns now+planDays.
+	assert.Equal(t, t0.AddDate(0, 0, planDays), rates[0].ValidTo)
+}
+
+// TestSimpleRateStartCappedToNow verifies that when now is after the agreement's
+// ValidFrom, the rate period begins at now rather than the (past) agreement start.
+func TestSimpleRateStartCappedToNow(t *testing.T) {
+	now := t0.Add(48 * time.Hour) // 2 days after agreement start
+	agr := simpleAgreement()
+
+	rates, err := ratesForAgreement(agr, now)
+	require.NoError(t, err)
+	require.Len(t, rates, 1)
+
+	// ValidFrom should be now, not the past agreement start t0.
+	assert.Equal(t, now, rates[0].ValidFrom)
+	assert.Equal(t, now.AddDate(0, 0, planDays), rates[0].ValidTo)
 }
 
 // TestRatesForAgreement_TimeOfUse verifies that a two-slot ToU tariff is expanded
@@ -196,4 +228,32 @@ func TestRatesForAgreement_TimeOfUse(t *testing.T) {
 	// --- Day-6 night slot (starts before the 7-day horizon, so included) ---
 	assert.Equal(t, day6.Add(22*time.Hour), rates[13].ValidFrom)
 	assert.Equal(t, day6.Add(30*time.Hour), rates[13].ValidTo)
+}
+
+// TestRatesForAgreement_InvalidAgreement verifies that an agreement with ValidFrom
+// after the planning horizon end returns an error.
+func TestRatesForAgreement_InvalidAgreement_NotYetStarted(t *testing.T) {
+	// Create an agreement that starts well into the future, beyond the 7-day planning horizon
+	futureStart := t0.AddDate(0, 0, planDays+10)
+	agr := simpleAgreement()
+	agr.ValidFrom = futureStart
+
+	rates, err := ratesForAgreement(agr, t0)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "agreement is not valid for the planning horizon")
+	assert.Nil(t, rates)
+}
+
+func TestRatesForAgreement_InvalidAgreement_AlreadyCompleted(t *testing.T) {
+	// Create an agreement that ended before the current time, beyond the 7-day planning horizon
+	pastStart := t0.AddDate(0, 0, -10)
+	pastEnd := t0.AddDate(0, 0, -3)
+	agr := simpleAgreement()
+	agr.ValidFrom = pastStart
+	agr.ValidTo = pastEnd
+
+	rates, err := ratesForAgreement(agr, t0)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "agreement is not valid for the planning horizon")
+	assert.Nil(t, rates)
 }

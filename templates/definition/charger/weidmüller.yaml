@@ -10,4 +10,4 @@ params:
   - name: host
 render: |
   type: weidmüller
-  uri: {{ .host }}:502
+  uri: {{ joinHostPort .host "502" }}
