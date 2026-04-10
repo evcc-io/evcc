@@ -29,6 +29,7 @@ type Tunnel struct {
 
 	mu      sync.Mutex
 	session *yamux.Session
+	conn    *websocket.Conn
 }
 
 // NewTunnel creates a new tunnel client.
@@ -85,9 +86,8 @@ func (t *Tunnel) connect(ctx context.Context) (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("websocket dial: %w", err)
 	}
-	defer conn.Close(websocket.StatusInternalError, "reconnect")
+	defer conn.Close(websocket.StatusNormalClosure, "closed")
 
-	// wrap websocket as net.Conn for yamux
 	netConn := websocket.NetConn(ctx, conn, websocket.MessageBinary)
 
 	config := yamux.DefaultConfig()
@@ -98,6 +98,10 @@ func (t *Tunnel) connect(ctx context.Context) (bool, error) {
 		conn.CloseNow()
 		return false, fmt.Errorf("yamux client: %w", err)
 	}
+
+	t.mu.Lock()
+	t.conn = conn
+	t.mu.Unlock()
 
 	t.changeState(session, nil)
 
@@ -148,15 +152,18 @@ func (t *Tunnel) LoginBlocked() bool {
 // Close tears down the tunnel.
 func (t *Tunnel) Close() {
 	t.mu.Lock()
-	defer t.mu.Unlock()
+	conn := t.conn
+	cancel := t.cancel
+	t.cancel = nil
+	t.mu.Unlock()
 
-	if t.session != nil {
-		t.session.Close()
+	// close websocket; produces io.EOF in yamux which it handles silently
+	if conn != nil {
+		conn.Close(websocket.StatusNormalClosure, "closed")
 	}
 
-	if t.cancel != nil {
-		t.cancel()
-		t.cancel = nil
+	if cancel != nil {
+		cancel()
 	}
 }
 

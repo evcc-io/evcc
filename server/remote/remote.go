@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api/globalconfig"
+	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
@@ -53,6 +54,8 @@ func New(cloudHost string, httpHandler http.Handler, valueChan chan<- util.Param
 	if r.settings.Enabled && r.settings.Token != "" {
 		go r.connect()
 	}
+
+	shutdown.Register(r.disconnect)
 
 	go func() {
 		for range time.Tick(time.Minute) {
