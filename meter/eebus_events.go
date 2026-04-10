@@ -11,6 +11,25 @@ import (
 )
 
 var _ eebus.Device = (*EEBus)(nil)
+var _ eebus.StatefulDevice = (*EEBus)(nil)
+
+// DeviceEntities implements eebus.StatefulDevice.
+func (c *EEBus) DeviceEntities() []eebus.DeviceEntity {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	var res []eebus.DeviceEntity
+	if c.maEntity != nil {
+		res = append(res, eebus.DeviceEntity{Entity: c.maEntity, Event: mpc.UseCaseSupportUpdate})
+	}
+	if c.egLpcEntity != nil {
+		res = append(res, eebus.DeviceEntity{Entity: c.egLpcEntity, Event: lpc.UseCaseSupportUpdate})
+	}
+	if c.egLppEntity != nil {
+		res = append(res, eebus.DeviceEntity{Entity: c.egLppEntity, Event: lpp.UseCaseSupportUpdate})
+	}
+	return res
+}
 
 // UseCaseEvent implements the eebus.Device interface
 func (c *EEBus) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spineapi.EntityRemoteInterface, event eebusapi.EventType) {
