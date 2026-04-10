@@ -39,11 +39,6 @@ type Client struct {
 	ExpiresAt *time.Time `json:"expiresAt,omitempty"`
 }
 
-// clientsEnvelope wraps the persisted list so Hash can be stored too.
-type clientsEnvelope struct {
-	Clients []persistedClient `json:"clients"`
-}
-
 type persistedClient struct {
 	Username  string     `json:"username"`
 	Hash      string     `json:"hash"`
@@ -53,14 +48,14 @@ type persistedClient struct {
 
 // loadClients reads the persisted client list.
 func loadClients() []persistedClient {
-	var res clientsEnvelope
+	var res []persistedClient
 	_ = settings.Json(keys.RemoteClients, &res)
-	return res.Clients
+	return res
 }
 
 // saveClients persists the given client list.
 func saveClients(list []persistedClient) error {
-	return settings.SetJson(keys.RemoteClients, clientsEnvelope{Clients: list})
+	return settings.SetJson(keys.RemoteClients, list)
 }
 
 // generatePassword returns a crypto-random alphanumeric password
