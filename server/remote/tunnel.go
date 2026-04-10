@@ -30,7 +30,6 @@ type Tunnel struct {
 
 	mu      sync.Mutex
 	session *yamux.Session
-	conn    *websocket.Conn
 }
 
 // NewTunnel creates a new tunnel client.
@@ -90,19 +89,15 @@ func (t *Tunnel) connect(ctx context.Context) (bool, error) {
 	defer conn.Close(websocket.StatusNormalClosure, "closed")
 
 	netConn := websocket.NetConn(ctx, conn, websocket.MessageBinary)
+	defer netConn.Close()
 
 	config := yamux.DefaultConfig()
 	config.LogOutput = t.log.TRACE.Writer()
 
 	session, err := yamux.Client(netConn, config)
 	if err != nil {
-		conn.CloseNow()
 		return false, fmt.Errorf("yamux client: %w", err)
 	}
-
-	t.mu.Lock()
-	t.conn = conn
-	t.mu.Unlock()
 
 	t.changeState(session, nil)
 
@@ -156,8 +151,8 @@ func (t *Tunnel) Close() {
 	defer t.mu.Unlock()
 
 	// close websocket; produces io.EOF in yamux which it handles silently
-	if t.conn != nil {
-		t.conn.Close(websocket.StatusNormalClosure, "closed")
+	if t.session != nil {
+		t.session.Close()
 	}
 
 	if t.cancel != nil {
