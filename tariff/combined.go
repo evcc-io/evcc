@@ -1,11 +1,10 @@
 package tariff
 
 import (
-	"errors"
-	"slices"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/samber/lo"
 )
 
 type combined struct {
@@ -19,45 +18,31 @@ func NewCombined(tariffs []api.Tariff) api.Tariff {
 }
 
 func (t *combined) Rates() (api.Rates, error) {
-	var keys []time.Time
+	var rates api.Rates
+
 	for _, t := range t.tariffs {
 		rr, err := t.Rates()
 		if err != nil {
 			return nil, err
 		}
 
-		for _, r := range rr {
-			if !slices.ContainsFunc(keys, r.Start.Equal) {
-				keys = append(keys, r.Start)
-			}
-		}
+		rates = append(rates, rr...)
 	}
 
 	var res api.Rates
-	keys = slices.SortedFunc(slices.Values(keys), time.Time.Compare)
 
-	for _, ts := range keys {
-		var rate api.Rate
+	partitions := lo.PartitionBy(rates, func(r api.Rate) time.Time {
+		return r.Start
+	})
 
-		for _, t := range t.tariffs {
-			r, err := At(t, ts)
-			if err != nil {
-				continue
-			}
-
-			if rate.Start.IsZero() {
-				rate = r
-				continue
-			}
-
-			if !r.End.Equal(rate.End) {
-				return nil, errors.New("combined tariffs must have the same period length")
-			}
-
-			rate.Value += r.Value
-		}
-
-		res = append(res, rate)
+	for _, rr := range partitions {
+		res = append(res, api.Rate{
+			Start: rr[0].Start,
+			End:   rr[0].End,
+			Value: lo.SumBy(rr, func(r api.Rate) float64 {
+				return r.Value
+			}),
+		})
 	}
 
 	return res, nil
