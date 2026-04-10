@@ -65,7 +65,7 @@ render: |
     uri: http://{{ .host }}/settings?override_current={{ `{{ mul .maxcurrent 10 | int }}` }}
 
 
-  {{- if .phase_switching }}
+  {{- if eq (print .phase_switching) "true" }}
   phases1p3p:
     <<: *settings_post
     # 1: Always Off (1 Phase), 3: Always On (3 Phase)
@@ -74,7 +74,7 @@ render: |
   {{- end }}
 
 
-  {{- if .has_meter }}
+  {{- if eq (print .has_meter) "true" }}
 
   # --- Metering Data (Cached) ---
   power:
