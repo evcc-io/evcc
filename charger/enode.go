@@ -258,7 +258,11 @@ func (wb *Enode) listChargers(userID string) ([]enodeCharger, error) {
 	}
 
 	var res enodeChargerList
-	return res.Data, wb.getJSON(path, &res)
+	if err := wb.getJSON(path, &res); err != nil {
+		return nil, err
+	}
+
+	return res.Data, nil
 }
 
 func (wb *Enode) getJSON(path string, out any) error {

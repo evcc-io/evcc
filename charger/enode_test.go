@@ -10,6 +10,8 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 )
 
 type enodeTestServer struct {
@@ -268,6 +270,42 @@ func TestEnodeRequiresCharger(t *testing.T) {
 	}, "client", "secret", "", "", 0, time.Second)
 	if err == nil {
 		t.Fatal("expected error")
+	}
+}
+
+func TestEnodeListChargersReturnsDecodedData(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/chargers":
+			_ = json.NewEncoder(w).Encode(map[string]any{
+				"data": []map[string]any{
+					{"id": "charger-1", "userId": "user-1", "vendor": "TESLA"},
+					{"id": "charger-2", "userId": "user-1", "vendor": "EASEE"},
+				},
+				"pagination": map[string]any{"after": nil, "before": nil},
+			})
+		default:
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+	}))
+	defer server.Close()
+
+	wb := &Enode{
+		Helper:  request.NewHelper(util.NewLogger("test")),
+		baseURL: server.URL,
+	}
+
+	chargers, err := wb.listChargers("")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(chargers) != 2 {
+		t.Fatalf("expected 2 chargers, got %d", len(chargers))
+	}
+
+	if chargers[0].ID != "charger-1" || chargers[1].ID != "charger-2" {
+		t.Fatalf("unexpected chargers: %+v", chargers)
 	}
 }
 
