@@ -2,7 +2,6 @@ package fritzdect_new
 
 import (
 	"encoding/xml"
-	"log"
 	"strconv"
 	"strings"
 )
@@ -22,16 +21,14 @@ func (c *Connection) TotalEnergy() (float64, error) {
 
 // CurrentPower implements the api.Meter interface
 func (c *Connection) CurrentPower() (float64, error) {
-	// power value in 0,001 W (current switch power, refresh approximately every 2 minutes)
+	// power value in 0,01 W (current switch power, refresh approximately every 2 minutes)
 	resp, err := c.ExecCmd("getbasicdevicestats")
 	if err != nil {
 		return 0, err
 	}
 
 	var f = ParseFXml(resp, err)
-	//power, err := strconv.ParseFloat(resp, 64)
-
-	return (f * 10) / 1000, err // mW ==> W
+	return (f * 10) / 1000, err // 1/100W ==> W
 }
 
 func ParseFXml(s string, err error) float64 {
@@ -49,10 +46,9 @@ func ParseFXml(s string, err error) float64 {
 		//
 	}
 
-	//Parse first element into a float64
 	f, err := strconv.ParseFloat(parts[0], 64)
 	if err != nil {
-		log.Fatalf("Error converting '%s' to float: %v", parts[0], err)
+		//
 	}
 
 	return float64(f)
