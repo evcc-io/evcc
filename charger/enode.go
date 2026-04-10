@@ -202,8 +202,8 @@ func newEnode(ctx context.Context, env enodeEnvironment, clientID, clientSecret,
 	}
 
 	wb.charger = charger.ID
-	if enabled, known := enodeEnabledState(charger.ChargeState.PowerDeliveryState); known {
-		wb.enabled = enabled
+	if s := interpretEnodeState(charger.ChargeState); s.known {
+		wb.enabled = s.enabled
 	}
 	wb.updateMaxCurrent(charger.ChargeState.MaxCurrent)
 	wb.statusG = util.ResettableCached(func() (enodeCharger, error) {
@@ -211,8 +211,8 @@ func newEnode(ctx context.Context, env enodeEnvironment, clientID, clientSecret,
 		if err := wb.getJSON("/chargers/"+wb.charger, &res); err != nil {
 			return res, err
 		}
-		if enabled, known := enodeEnabledState(res.ChargeState.PowerDeliveryState); known {
-			wb.enabled = enabled
+		if s := interpretEnodeState(res.ChargeState); s.known {
+			wb.enabled = s.enabled
 		}
 		wb.updateMaxCurrent(res.ChargeState.MaxCurrent)
 		return res, nil
@@ -323,26 +323,8 @@ func (wb *Enode) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	if status.ChargeState.IsCharging != nil && *status.ChargeState.IsCharging {
-		return api.StatusC, nil
-	}
-
-	switch status.ChargeState.PowerDeliveryState {
-	case "UNPLUGGED":
-		return api.StatusA, nil
-	case "PLUGGED_IN:INITIALIZING", "PLUGGED_IN:STOPPED", "PLUGGED_IN:NO_POWER", "PLUGGED_IN:FAULT":
-		return api.StatusB, nil
-	case "PLUGGED_IN:CHARGING", "PLUGGED_IN:DISCHARGING":
-		return api.StatusC, nil
-	default:
-		if status.ChargeState.IsPluggedIn != nil {
-			if *status.ChargeState.IsPluggedIn {
-				return api.StatusB, nil
-			}
-			return api.StatusA, nil
-		}
-		return api.StatusNone, nil
-	}
+	s := interpretEnodeState(status.ChargeState)
+	return s.status, nil
 }
 
 func (wb *Enode) Enabled() (bool, error) {
@@ -351,14 +333,14 @@ func (wb *Enode) Enabled() (bool, error) {
 		return false, err
 	}
 
-	enabled, known := enodeEnabledState(status.ChargeState.PowerDeliveryState)
-	if !known {
+	s := interpretEnodeState(status.ChargeState)
+	if !s.known {
 		return false, api.ErrMustRetry
 	}
 
-	wb.enabled = enabled
+	wb.enabled = s.enabled
 
-	return verifyEnabled(wb, enabled)
+	return verifyEnabled(wb, s.enabled)
 }
 
 func (wb *Enode) Enable(enable bool) error {
@@ -367,7 +349,7 @@ func (wb *Enode) Enable(enable bool) error {
 		return err
 	}
 
-	if currentEnabled, known := enodeEnabledState(status.ChargeState.PowerDeliveryState); known && enable == currentEnabled {
+	if s := interpretEnodeState(status.ChargeState); s.known && enable == s.enabled {
 		return nil
 	}
 
@@ -469,14 +451,32 @@ func (wb *Enode) updateMaxCurrent(maxCurrent *float64) {
 	}
 }
 
-func enodeEnabledState(state string) (enabled bool, known bool) {
-	switch state {
-	case "UNPLUGGED", "PLUGGED_IN:STOPPED":
-		return false, true
-	case "PLUGGED_IN:INITIALIZING", "PLUGGED_IN:CHARGING", "PLUGGED_IN:NO_POWER", "PLUGGED_IN:FAULT", "PLUGGED_IN:DISCHARGING":
-		return true, true
+type enodeState struct {
+	status  api.ChargeStatus
+	enabled bool
+	known   bool
+}
+
+func interpretEnodeState(cs enodeChargerChargeState) enodeState {
+	if cs.IsCharging != nil && *cs.IsCharging {
+		return enodeState{status: api.StatusC, enabled: true, known: true}
+	}
+
+	switch cs.PowerDeliveryState {
+	case "UNPLUGGED":
+		return enodeState{status: api.StatusA, enabled: false, known: true}
+	case "PLUGGED_IN:INITIALIZING", "PLUGGED_IN:STOPPED", "PLUGGED_IN:NO_POWER", "PLUGGED_IN:FAULT":
+		return enodeState{status: api.StatusB, enabled: cs.PowerDeliveryState != "PLUGGED_IN:STOPPED", known: true}
+	case "PLUGGED_IN:CHARGING", "PLUGGED_IN:DISCHARGING":
+		return enodeState{status: api.StatusC, enabled: true, known: true}
 	default:
-		return false, false
+		if cs.IsPluggedIn != nil {
+			if *cs.IsPluggedIn {
+				return enodeState{status: api.StatusB, enabled: true, known: true}
+			}
+			return enodeState{status: api.StatusA, enabled: false, known: true}
+		}
+		return enodeState{status: api.StatusNone, enabled: false, known: false}
 	}
 }
 
