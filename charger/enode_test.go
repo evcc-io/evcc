@@ -131,12 +131,16 @@ func (ts *enodeTestServer) maxCurrentValue() any {
 	return ts.maxCurrent
 }
 
+func testEnodeURLs(serverURL string) enodeURLs {
+	return enodeURLs{apiBase: serverURL, tokenURL: serverURL + "/oauth2/token"}
+}
+
 func TestEnode(t *testing.T) {
 	serverState := &enodeTestServer{maxCurrent: 16, state: "PLUGGED_IN:STOPPED", reportMaxCurrent: true}
 	srv := httptest.NewServer(serverState)
 	defer srv.Close()
 
-	wb, err := newEnode(context.Background(), srv.URL, srv.URL+"/oauth2/token", "client", "secret", "", "", 0, time.Second)
+	wb, err := newEnode(context.Background(), testEnodeURLs(srv.URL), "client", "secret", "", "", 0, time.Second)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -215,7 +219,7 @@ func TestEnodeUnpluggedAndMaxCurrentFallback(t *testing.T) {
 	srv := httptest.NewServer(serverState)
 	defer srv.Close()
 
-	wb, err := newEnode(context.Background(), srv.URL, srv.URL+"/oauth2/token", "client", "secret", "", "", 0, time.Second)
+	wb, err := newEnode(context.Background(), testEnodeURLs(srv.URL), "client", "secret", "", "", 0, time.Second)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -258,7 +262,7 @@ func TestEnodeRequiresCharger(t *testing.T) {
 	}))
 	defer server.Close()
 
-	_, err := newEnode(context.Background(), server.URL, server.URL+"/oauth2/token", "client", "secret", "", "", 0, time.Second)
+	_, err := newEnode(context.Background(), testEnodeURLs(server.URL), "client", "secret", "", "", 0, time.Second)
 	if err == nil {
 		t.Fatal("expected error")
 	}
@@ -320,7 +324,7 @@ func TestEnodeRequiresChargerIDOnAmbiguousSelection(t *testing.T) {
 	}))
 	defer server.Close()
 
-	_, err := newEnode(context.Background(), server.URL, server.URL+"/oauth2/token", "client", "secret", "", "", 0, time.Second)
+	_, err := newEnode(context.Background(), testEnodeURLs(server.URL), "client", "secret", "", "", 0, time.Second)
 	if err == nil {
 		t.Fatal("expected error")
 	}
@@ -331,7 +335,7 @@ func TestEnodeAlreadyStoppedIsNoOp(t *testing.T) {
 	srv := httptest.NewServer(serverState)
 	defer srv.Close()
 
-	wb, err := newEnode(context.Background(), srv.URL, srv.URL+"/oauth2/token", "client", "secret", "", "", 0, time.Second)
+	wb, err := newEnode(context.Background(), testEnodeURLs(srv.URL), "client", "secret", "", "", 0, time.Second)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -347,7 +351,7 @@ func TestEnodeAlreadyAtCurrentSettingIsNoOp(t *testing.T) {
 	srv := httptest.NewServer(serverState)
 	defer srv.Close()
 
-	wb, err := newEnode(context.Background(), srv.URL, srv.URL+"/oauth2/token", "client", "secret", "", "", 0, time.Second)
+	wb, err := newEnode(context.Background(), testEnodeURLs(srv.URL), "client", "secret", "", "", 0, time.Second)
 	if err != nil {
 		t.Fatal(err)
 	}

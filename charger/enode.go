@@ -35,7 +35,10 @@ type enodeProblem struct {
 }
 
 func (p *enodeProblem) Error() string {
-	return p.Detail
+	if p.Detail != "" {
+		return p.Detail
+	}
+	return p.Title
 }
 
 type enodePagination struct {
@@ -103,9 +106,10 @@ type Enode struct {
 	enabled             bool
 	lastKnownMaxCurrent *float64
 	statusG             util.Cacheable[enodeCharger]
-	timeout             time.Duration
 	actionTO            time.Duration
 }
+
+var _ api.Charger = (*Enode)(nil)
 
 func init() {
 	registry.AddCtx("enode", NewEnodeFromConfig)
@@ -133,9 +137,7 @@ func NewEnodeFromConfig(ctx context.Context, other map[string]any) (api.Charger,
 		return nil, api.ErrMissingCredentials
 	}
 
-	env := resolveEnodeURLs(cc.APIURL)
-
-	return newEnode(ctx, env.apiBase, env.tokenURL, cc.ClientID, cc.ClientSecret, cc.UserID, cc.ChargerID, cc.Cache, cc.Timeout)
+	return newEnode(ctx, resolveEnodeURLs(cc.APIURL), cc.ClientID, cc.ClientSecret, cc.UserID, cc.ChargerID, cc.Cache, cc.Timeout)
 }
 
 type enodeURLs struct {
@@ -170,13 +172,13 @@ func resolveEnodeURLs(apiURL string) enodeURLs {
 	return urls
 }
 
-func newEnode(ctx context.Context, apiBase, tokenURL, clientID, clientSecret, userID, chargerID string, cache, timeout time.Duration) (*Enode, error) {
+func newEnode(ctx context.Context, urls enodeURLs, clientID, clientSecret, userID, chargerID string, cache, timeout time.Duration) (*Enode, error) {
 	log := util.NewLogger("enode").Redact(clientID, clientSecret)
 
 	oauthConfig := &clientcredentials.Config{
 		ClientID:     clientID,
 		ClientSecret: clientSecret,
-		TokenURL:     tokenURL,
+		TokenURL:     urls.tokenURL,
 	}
 
 	client := request.NewHelper(log)
@@ -185,8 +187,7 @@ func newEnode(ctx context.Context, apiBase, tokenURL, clientID, clientSecret, us
 
 	wb := &Enode{
 		Helper:   client,
-		baseURL:  apiBase,
-		timeout:  timeout,
+		baseURL:  urls.apiBase,
 		actionTO: enodeDefaultActionTimeout,
 		enabled:  true,
 	}
@@ -236,14 +237,14 @@ func (wb *Enode) resolveCharger(userID, chargerID string) (enodeCharger, error) 
 				return charger, nil
 			}
 		}
-		return enodeCharger{}, fmt.Errorf("cannot find charger, got: %v", chargerIDs(chargers))
+		return enodeCharger{}, backoff.Permanent(fmt.Errorf("cannot find charger, got: %v", chargerIDs(chargers)))
 	}
 
 	if len(chargers) == 1 {
 		return chargers[0], nil
 	}
 
-	return enodeCharger{}, fmt.Errorf("multiple chargers found, set chargerid explicitly: %v", chargerIDs(chargers))
+	return enodeCharger{}, backoff.Permanent(fmt.Errorf("multiple chargers found, set chargerid explicitly: %v", chargerIDs(chargers)))
 }
 
 func chargerIDs(chargers []enodeCharger) []string {
@@ -255,17 +256,34 @@ func chargerIDs(chargers []enodeCharger) []string {
 }
 
 func (wb *Enode) listChargers(userID string) ([]enodeCharger, error) {
-	path := "/chargers"
+	basePath := "/chargers"
 	if userID != "" {
-		path = "/users/" + userID + "/chargers"
+		basePath = "/users/" + userID + "/chargers"
 	}
 
-	var res enodeChargerList
-	if err := wb.getJSON(path, &res); err != nil {
-		return nil, err
+	var chargers []enodeCharger
+	var after string
+	for {
+		path := basePath
+		if after != "" {
+			path += "?after=" + url.QueryEscape(after)
+		}
+
+		var res enodeChargerList
+		if err := wb.getJSON(path, &res); err != nil {
+			return nil, err
+		}
+
+		chargers = append(chargers, res.Data...)
+
+		if res.Pagination.After == nil {
+			break
+		}
+
+		after = *res.Pagination.After
 	}
 
-	return res.Data, nil
+	return chargers, nil
 }
 
 func (wb *Enode) getJSON(path string, out any) error {
@@ -422,28 +440,33 @@ func (wb *Enode) MaxCurrent(current int64) error {
 }
 
 func (wb *Enode) awaitAction(actionID string) error {
-	deadline := time.Now().Add(wb.actionTO)
+	ticker := time.NewTicker(enodeActionPollInterval)
+	defer ticker.Stop()
 
-	for time.Now().Before(deadline) {
-		var res enodeAction
-		if err := wb.getJSON("/chargers/actions/"+actionID, &res); err != nil {
-			return err
-		}
+	deadline := time.NewTimer(wb.actionTO)
+	defer deadline.Stop()
 
-		switch res.State {
-		case "CONFIRMED":
-			return nil
-		case "FAILED", "CANCELLED":
-			if res.FailureReason != nil && res.FailureReason.Detail != "" {
-				return backoff.Permanent(fmt.Errorf("%s", res.FailureReason.Detail))
+	for {
+		select {
+		case <-deadline.C:
+			return api.ErrTimeout
+		case <-ticker.C:
+			var res enodeAction
+			if err := wb.getJSON("/chargers/actions/"+actionID, &res); err != nil {
+				return err
 			}
-			return backoff.Permanent(fmt.Errorf("enode action %s", strings.ToLower(res.State)))
+
+			switch res.State {
+			case "CONFIRMED":
+				return nil
+			case "FAILED", "CANCELLED":
+				if res.FailureReason != nil && res.FailureReason.Detail != "" {
+					return backoff.Permanent(fmt.Errorf("%s", res.FailureReason.Detail))
+				}
+				return backoff.Permanent(fmt.Errorf("enode action %s", strings.ToLower(res.State)))
+			}
 		}
-
-		time.Sleep(enodeActionPollInterval)
 	}
-
-	return api.ErrTimeout
 }
 
 type enodeState struct {
