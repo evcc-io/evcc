@@ -1,0 +1,60 @@
+template: enode
+products:
+  - brand: Enode
+    description:
+      generic: Charger
+requirements:
+  evcc: ["skiptest"]
+  description:
+    de: Bereits per Enode verknuepfter Charger. Unterstuetzt direktes Starten/Stoppen und das Setzen des maximalen Stroms.
+    en: Charger already linked through Enode. Supports direct start/stop control and max current changes.
+params:
+  - name: clientid
+    required: true
+    description:
+      de: Enode Client ID
+      en: Enode client ID
+    help:
+      de: Im Enode Developer Portal erzeugte OAuth Client ID.
+      en: OAuth client ID created in the Enode developer portal.
+  - name: clientsecret
+    required: true
+    description:
+      de: Enode Client Secret
+      en: Enode client secret
+    help:
+      de: Zum Client gehoeriges Secret aus dem Enode Developer Portal.
+      en: Client secret from the Enode developer portal.
+  - name: apiurl
+    advanced: true
+    description:
+      de: Enode API URL (Override)
+      en: Enode API URL (override)
+    help:
+      de: Optional. Ueberschreibt den API-Endpunkt fuer Development/Testing. Fuer bekannte Enode-Endpunkte wird die passende OAuth-URL automatisch gesetzt.
+      en: Optional. Overrides the API endpoint for development/testing. For known Enode endpoints, the matching OAuth URL is set automatically.
+  - name: userid
+    required: false
+    description:
+      de: Enode User ID
+      en: Enode user ID
+    help:
+      de: Optional zur Einschraenkung auf die Charger eines bestimmten Enode Users.
+      en: Optional to limit discovery to chargers of a specific Enode user.
+  - name: chargerid
+    required: false
+    description:
+      de: Enode Charger ID
+      en: Enode charger ID
+    help:
+      de: Optional. Bei mehreren gefundenen Chargern ist die Angabe erforderlich.
+      en: Optional. Required when multiple chargers are found.
+render: |
+  type: enode
+  clientid: {{ .clientid }}
+  clientsecret: {{ .clientsecret }}
+  {{- if .apiurl }}
+  apiurl: {{ .apiurl }}
+  {{- end }}
+  userid: {{ .userid }}
+  chargerid: {{ .chargerid }}
