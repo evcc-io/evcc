@@ -143,7 +143,11 @@ params:
       en: Entity ID for L3 voltage measurement in volts
       de: Entitäts-ID für L3 Spannungsmessung in Volt
 
+  # cannot uses phases as it has type int
   - name: phases
+    deprecated: true
+
+  - name: phaseswitch
     description:
       de: Phasenumschaltungs-Entität
       en: Phase switching entity
@@ -174,6 +178,4 @@ render: |
     - {{ .voltageL2 }}
     - {{ .voltageL3 }}
   {{- end }}
-  {{- if .phases }}
-  phases: {{ .phases }}
-  {{- end }}
+  phases: {{ .phaseswitch }}

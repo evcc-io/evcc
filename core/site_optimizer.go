@@ -136,12 +136,16 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	feedIn := currentRates(site.GetTariff(api.TariffUsageFeedIn))
 
 	minLen := lo.Min([]int{len(grid), len(feedIn)})
-	if solarTariff != nil {
-		// allow empty solar forecast
+	// exclude empty solar forecast from minLen
+	if solarTariff != nil && len(solar) > 0 {
 		minLen = min(minLen, len(solar))
 	}
-	if minLen < 8 {
-		return fmt.Errorf("not enough slots for optimization: %d (grid=%d, feedIn=%d, solar=%d)", minLen, len(grid), len(feedIn), len(solar))
+	const expectedSlots = 8
+	if minLen < expectedSlots {
+		if solarTariff != nil {
+			return fmt.Errorf("not enough forecast slots for meaningful optimization: %d < %d (grid=%d, feedIn=%d, solar=%d)", minLen, expectedSlots, len(grid), len(feedIn), len(solar))
+		}
+		return fmt.Errorf("not enough forecast slots for meaningful optimization: %d < %d (grid=%d, feedIn=%d)", minLen, expectedSlots, len(grid), len(feedIn))
 	}
 
 	now := time.Now()
