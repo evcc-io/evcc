@@ -27,7 +27,7 @@ params:
       en: An energy meter is connected to the SmartEVSE
 render: |
   type: custom
-  
+
   tos: true
 
   # --- Status & Enable Data (Cached) ---
@@ -70,9 +70,7 @@ render: |
     <<: *settings_post
     # 1: Always Off (1 Phase), 3: Always On (3 Phase)
     uri: http://{{ .host }}/settings?enable_C2={{ `{{ if eq .phases 1 }}1{{ else }}3{{ end }}` }}
-    
   {{- end }}
-
 
   {{- if eq (print .has_meter) "true" }}
 
