@@ -53,6 +53,8 @@
 
 				<RemoteClientList
 					:clients="clients"
+					:last-seen="status.lastSeen"
+					:connected="status.connected"
 					@add="view = 'create'"
 					@remove="removeClient"
 				/>

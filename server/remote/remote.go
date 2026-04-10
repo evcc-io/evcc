@@ -31,6 +31,8 @@ type Remote struct {
 	httpHandler http.Handler
 	log         *util.Logger
 	publisher   chan<- util.Param
+	lastSeen    map[string]time.Time // persisted: username → last activity
+	connected   map[string]int       // in-memory: active connection count per user
 }
 
 // New creates a new Remote manager, loads persisted settings, and connects if enabled.
@@ -40,10 +42,13 @@ func New(cloudHost string, httpHandler http.Handler, valueChan chan<- util.Param
 		httpHandler: httpHandler,
 		log:         util.NewLogger("remote"),
 		publisher:   valueChan,
+		lastSeen:    make(map[string]time.Time),
+		connected:   make(map[string]int),
 	}
 
 	// load saved settings
 	_ = settings.Json(keys.Remote, &r.settings)
+	_ = settings.Json(keys.RemoteLastSeen, &r.lastSeen)
 
 	if r.settings.Enabled && r.settings.Token != "" {
 		go r.connect()
@@ -98,7 +103,7 @@ func (r *Remote) connect() {
 
 	r.log.INFO.Printf("remote access via %s", r.settings.URL)
 
-	tunnel := NewTunnel(r.settings.TunnelURL, r.settings.Token, r.httpHandler, r.Authenticate, r.log, r.publish)
+	tunnel := NewTunnel(r.settings.TunnelURL, r.settings.Token, r.httpHandler, r.Authenticate, r.TrackActivity, r.log, r.publish)
 
 	r.mu.Lock()
 	r.tunnel = tunnel
@@ -152,6 +157,18 @@ func (r *Remote) register() error {
 	return nil
 }
 
+// TrackActivity tracks remote client connections and disconnections.
+func (r *Remote) TrackActivity(username string, active bool) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if active {
+		r.lastSeen[username] = time.Now()
+		r.connected[username]++
+	} else if r.connected[username] > 0 {
+		r.connected[username]--
+	}
+}
+
 // saveSettings persists the current settings. Must be called with mu held.
 func (r *Remote) saveSettings() {
 	if err := settings.SetJson(keys.Remote, r.settings); err != nil {
@@ -174,20 +191,35 @@ func (r *Remote) ConfigStatus() globalconfig.ConfigStatus {
 			Enabled: r.settings.Enabled,
 		},
 		Status: struct {
-			Connected    bool   `json:"connected"`
-			URL          string `json:"url,omitempty"`
-			LoginBlocked bool   `json:"loginBlocked"`
+			Connected    bool                 `json:"connected"`
+			URL          string               `json:"url,omitempty"`
+			LoginBlocked bool                 `json:"loginBlocked"`
+			LastSeen     map[string]time.Time `json:"lastSeen,omitempty"`
 		}{
 			Connected:    connected,
 			URL:          r.settings.URL,
 			LoginBlocked: loginBlocked,
+			LastSeen:     r.lastSeen,
 		},
 	}
 }
 
 // publish sends the current status to the UI via the value channel.
 func (r *Remote) publish() {
-	if r.publisher != nil {
-		r.publisher <- util.Param{Key: keys.Remote, Val: r.ConfigStatus()}
+	if r.publisher == nil {
+		return
 	}
+
+	// refresh lastSeen for open connections (auth only fires once)
+	r.mu.Lock()
+	now := time.Now()
+	for user, count := range r.connected {
+		if count > 0 {
+			r.lastSeen[user] = now
+		}
+	}
+	_ = settings.SetJson(keys.RemoteLastSeen, r.lastSeen)
+	r.mu.Unlock()
+
+	r.publisher <- util.Param{Key: keys.Remote, Val: r.ConfigStatus()}
 }

@@ -21,6 +21,7 @@ type Tunnel struct {
 	token         string
 	httpHandler   http.Handler
 	authenticate  func(user, pass string) bool
+	trackActivity func(username string, active bool)
 	log           *util.Logger
 	cancel        func()
 	onStateChange func()
@@ -31,12 +32,13 @@ type Tunnel struct {
 }
 
 // NewTunnel creates a new tunnel client.
-func NewTunnel(tunnelURL, token string, httpHandler http.Handler, authenticate func(user, pass string) bool, log *util.Logger, onStateChange func()) *Tunnel {
+func NewTunnel(tunnelURL, token string, httpHandler http.Handler, authenticate func(user, pass string) bool, trackActivity func(string, bool), log *util.Logger, onStateChange func()) *Tunnel {
 	return &Tunnel{
 		tunnelURL:     tunnelURL,
 		token:         token,
 		httpHandler:   httpHandler,
 		authenticate:  authenticate,
+		trackActivity: trackActivity,
 		log:           log,
 		onStateChange: onStateChange,
 		rateLimiter:   newAuthRateLimiter(),
@@ -178,6 +180,11 @@ func (t *Tunnel) basicAuthMiddleware(next http.Handler) http.Handler {
 			t.log.INFO.Printf("failed login attempt for %q", user)
 			rejectAuth(w)
 			return
+		}
+
+		if t.trackActivity != nil {
+			t.trackActivity(user, true)
+			defer t.trackActivity(user, false) // long-running requests (ws)
 		}
 
 		next.ServeHTTP(w, r)

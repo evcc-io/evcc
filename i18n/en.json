@@ -113,6 +113,7 @@
       "title": "Currency"
     },
     "deviceValue": {
+      "activeClients": "Active clients",
       "amount": "Amount",
       "broker": "Broker",
       "bucket": "Bucket",
@@ -634,6 +635,7 @@
       "titleEdit": "Edit Solar Meter"
     },
     "remote": {
+      "active": "Active",
       "addClient": "Add client",
       "addClientDescription": "Credentials are stored and verified only locally on your evcc instance.",
       "addClientTitle": "Add Remote Client",
@@ -651,6 +653,7 @@
       "expirationNone": "Never",
       "expired": "expired",
       "expiresIn": "expires {time}",
+      "lastActive": "active {time}",
       "loginBlocked": "Remote logins are blocked for one minute due to too many failed login attempts.",
       "manualLogin": "Or sign in manually at {url} in your browser using these credentials:",
       "noClients": "No clients yet. No one can connect yet.",

@@ -12,9 +12,20 @@
 				:class="{ 'opacity-50': isExpired(client) }"
 			>
 				<div class="flex-grow-1 fw-semibold">{{ client.username }}</div>
-				<small v-if="expiryLabel(client)" class="text-muted ms-2 me-2 text-end">
-					{{ expiryLabel(client) }}
-				</small>
+				<div class="text-end">
+					<small v-if="expiryLabel(client)" class="text-muted ms-2 me-2 text-end">
+						{{ expiryLabel(client) }}
+					</small>
+					<span v-if="isActive(client)" class="badge bg-success ms-2 me-2">
+						{{ $t("config.remote.active") }}
+					</span>
+					<small
+						v-else-if="activityLabel(client)"
+						class="text-muted ms-2 me-2 text-end d-block"
+					>
+						{{ activityLabel(client) }}
+					</small>
+				</div>
 				<button
 					type="button"
 					class="btn btn-sm btn-outline-secondary border-0"
@@ -44,15 +55,32 @@ import "@h2d2/shopicons/es/regular/trash";
 import formatter from "@/mixins/formatter";
 import minuteTicker from "@/mixins/minuteTicker";
 import type { RemoteClient } from "@/types/evcc";
+import { isRemoteClientActive } from "@/utils/remote";
 
 export default defineComponent({
 	name: "RemoteClientList",
 	mixins: [formatter, minuteTicker],
 	props: {
 		clients: { type: Array as PropType<RemoteClient[]>, required: true },
+		lastSeen: { type: Object as PropType<Record<string, string>>, default: () => ({}) },
+		connected: Boolean,
 	},
 	emits: ["add", "remove"],
 	methods: {
+		lastSeenMs(client: RemoteClient): number | null {
+			void this.everyMinute;
+			const seen = this.lastSeen[client.username];
+			if (!seen) return null;
+			return Date.now() - new Date(seen).getTime();
+		},
+		isActive(client: RemoteClient): boolean {
+			return this.connected && isRemoteClientActive(this.lastSeen, client.username);
+		},
+		activityLabel(client: RemoteClient): string {
+			const ms = this.lastSeenMs(client);
+			if (ms === null) return "";
+			return this.$t("config.remote.lastActive", { time: this.fmtTimeAgo(-ms) });
+		},
 		expiresInMs(client: RemoteClient): number | null {
 			// reference everyMinute so dependents re-evaluate on each tick
 			void this.everyMinute;

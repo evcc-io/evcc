@@ -495,6 +495,7 @@ export type RemoteStatus = {
   connected: boolean;
   url?: string;
   loginBlocked: boolean;
+  lastSeen?: Record<string, string>;
 };
 
 export type RemoteClient = {

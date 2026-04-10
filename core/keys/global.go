@@ -32,6 +32,7 @@ const (
 	DemoMode           = "demoMode"
 	Remote             = "remote"
 	RemoteClients      = "remoteClients"
+	RemoteLastSeen     = "remoteLastSeen"
 	AuthDisabled       = "authDisabled"
 	AuthProviders      = "authProviders"
 )
