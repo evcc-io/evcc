@@ -23,22 +23,21 @@ params:
     type: bool
     default: false
     description:
-      de: Ein Energiezähler ist  am SmartEVSE angeschlossen
-      en: A energy meter is connected to the SmartEVSE
+      de: Ein Energiezähler ist am SmartEVSE angeschlossen
+      en: An energy meter is connected to the SmartEVSE
 render: |
   type: custom
   
   tos: true
 
   # --- Status & Enable Data (Cached) ---
-  status:
-    <<: &settings_get
-      source: http
-      uri: http://{{ .host }}/settings
-      method: GET
-      headers:
-        - Connection: close
-      cache: 5s
+  status: &settings_get
+    source: http
+    uri: http://{{ .host }}/settings
+    method: GET
+    headers:
+      - Connection: close
+    cache: 5s
     jq: >-
       if .car_connected == false then "A"
       elif .evse.state == "Charging" then "C"
@@ -50,13 +49,12 @@ render: |
     jq: .mode_id != 0 and .mode_id != 4
 
   # --- Control Actions ---
-  enable:
-    <<: &settings_post
-      source: http
-       method: POST
-       headers:
-         - Connection: close
-       body: ""
+  enable: &settings_post
+    source: http
+    method: POST
+    headers:
+      - Connection: close
+    body: ""
     # 3: SMART mode (Enable), 4: PAUSE (Disable - preserves OCPP sessions)
     uri: http://{{ .host }}/settings?mode={{ `{{ if .enable }}3{{ else }}4{{ end }}` }}
 
