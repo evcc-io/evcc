@@ -13,12 +13,21 @@ params:
     description:
       de: IP-Adresse oder Hostname
       en: IP address or hostname
+      nl: IP adres of hostname
   - name: phase_switching
     type: bool
     default: false
     description:
       de: Phasenumschaltung (setzt C2 Schütz voraus)
       en: Phase switching (requires C2 contactor)
+      nl: Fase schakeling (vereist C2 contactor)
+  - name: has_meter
+    type: bool
+    default: false
+    description:
+      de: Ein Energiezähler ist  am SmartEVSE angeschlossen
+      en: A energy meter is connected to the SmartEVSE
+      nl: Een energiemeter is aangesloten op de SmartEVSE
 render: |
   type: custom
   
@@ -78,6 +87,9 @@ render: |
     body: ""
   {{- end }}
 
+
+  {{- if eq (print .has_meter) "true" }}
+
   # --- Metering Data (Cached) ---
   power:
     source: http
@@ -121,3 +133,4 @@ render: |
         - Connection: close
       cache: 5s
       jq: .ev_meter.currents.L3 / 10
+  {{- end }}
