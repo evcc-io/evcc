@@ -112,6 +112,51 @@ func TestCap_ExtractedCapabilityLosesRegistry(t *testing.T) {
 	assert.Equal(t, 99.0, energy)
 }
 
+func TestCap_ExtractedMeterWithOwnCapableRegistry(t *testing.T) {
+	// Reproduces https://github.com/evcc-io/evcc/issues/28978
+	// When a Meter extracted from a charger already implements Capable itself,
+	// wrapping it with capableMeter using the charger's registry must NOT
+	// override the meter's own capability registry.
+
+	// meter that carries its own capability registry (e.g. Alfen charger)
+	meterWithCaps := &decoratedMeter{
+		Meter: &testMeterImpl{},
+		caps: map[reflect.Type]any{
+			reflect.TypeFor[MeterEnergy](): &testMeterEnergyImpl{},
+		},
+	}
+
+	// charger with a different (empty) capability registry
+	charger := &decoratedCharger{
+		caps: map[reflect.Type]any{
+			reflect.TypeFor[Meter](): meterWithCaps,
+		},
+	}
+
+	// extract Meter from charger
+	mt, ok := Cap[Meter](charger)
+	require.True(t, ok)
+
+	// meter itself is Capable — should find MeterEnergy via its own registry
+	me, ok := Cap[MeterEnergy](mt)
+	require.True(t, ok, "meter with own Capable registry should find MeterEnergy")
+
+	energy, err := me.TotalEnergy()
+	assert.NoError(t, err)
+	assert.Equal(t, 99.0, energy)
+
+	// wrapping with charger's Capable would LOSE the meter's own capabilities
+	type capableMeter struct {
+		Meter
+		Capable
+	}
+	wrapped := &capableMeter{Meter: mt, Capable: charger}
+
+	// charger's registry does NOT have MeterEnergy — wrapping breaks it
+	_, ok = Cap[MeterEnergy](wrapped)
+	assert.False(t, ok, "wrapping meter that has own Capable with charger's Capable loses meter capabilities")
+}
+
 func TestCap_NilValue(t *testing.T) {
 	_, ok := Cap[MeterEnergy](nil)
 	assert.False(t, ok)

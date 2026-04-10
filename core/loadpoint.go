@@ -415,10 +415,13 @@ func (lp *Loadpoint) configureChargerType(charger api.Charger) {
 			// preserve charger's capability registry so that subsequent
 			// capability checks on chargeMeter (e.g. MeterEnergy, PhaseCurrents)
 			// still work for decorated chargers (https://github.com/evcc-io/evcc/issues/28915)
-			if c, ok := charger.(api.Capable); ok {
+			// only wrap mt if it does not carry its own capability registry (https://github.com/evcc-io/evcc/issues/28978)
+			_, mtCapable := mt.(api.Capable)
+			c, chargerCapable := charger.(api.Capable)
+
+			lp.chargeMeter = mt
+			if !mtCapable && chargerCapable {
 				lp.chargeMeter = &capableMeter{Meter: mt, Capable: c}
-			} else {
-				lp.chargeMeter = mt
 			}
 		} else {
 			mt := new(wrapper.ChargeMeter)
