@@ -21,7 +21,9 @@
 			<li>{{ $t("config.remote.qrScan") }}</li>
 		</ol>
 		<div class="text-center my-3">
-			<img v-if="qrDataUrl" :src="qrDataUrl" alt="QR Code" class="qr-code" />
+			<a v-if="qrDataUrl" :href="appUrl" class="d-inline-block">
+				<img :src="qrDataUrl" alt="QR Code" class="qr-code" />
+			</a>
 		</div>
 
 		<hr class="my-4" />
@@ -86,20 +88,32 @@ export default defineComponent({
 			qrDataUrl: null as string | null,
 		};
 	},
-	async mounted() {
-		const params = new URLSearchParams({
-			url: this.serverUrl,
-			username: this.client.username,
-			password: this.client.password,
-		});
-		try {
-			this.qrDataUrl = await QRCode.toDataURL(`evcc://server?${params.toString()}`, {
-				width: 200,
-				margin: 1,
+	computed: {
+		appUrl(): string {
+			if (!this.client || !this.serverUrl) return "";
+			const params = new URLSearchParams({
+				url: this.serverUrl,
+				username: this.client.username,
+				password: this.client.password,
 			});
-		} catch {
-			this.qrDataUrl = null;
-		}
+			return `evcc://server?${params.toString()}`;
+		},
+	},
+	watch: {
+		appUrl: {
+			immediate: true,
+			async handler(url: string) {
+				if (!url) return;
+				try {
+					this.qrDataUrl = await QRCode.toDataURL(url, {
+						width: 200,
+						margin: 1,
+					});
+				} catch {
+					this.qrDataUrl = null;
+				}
+			},
+		},
 	},
 });
 </script>

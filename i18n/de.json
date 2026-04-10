@@ -654,7 +654,7 @@
       "password": "Passwort",
       "passwordOnce": "Dieses Passwort wird nur einmal angezeigt. QR-Code scannen oder jetzt kopieren. Es wird später nicht mehr angezeigt.",
       "qrInstall": "Installiere die evcc-App für {ios} oder {android}.",
-      "qrScan": "Scanne den Code mit der Kamera deines Smartphones, um dich zu verbinden.",
+      "qrScan": "Scanne den Code mit der Kamera deines Smartphones, um dich zu verbinden. Klicke ihn an, wenn du bereits dein Handy nutzt.",
       "removeClient": "Client entfernen",
       "title": "Remotezugriff",
       "url": "Öffentliche URL",
