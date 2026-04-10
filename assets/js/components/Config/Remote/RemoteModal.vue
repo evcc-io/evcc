@@ -6,7 +6,10 @@
 		data-testid="remote-modal"
 		@open="onOpen"
 	>
-		<div class="alert alert-warning">Development preview. Not ready for general use. Use with caution and monitor your system closely. Feedback welcome!</div>
+		<div class="alert alert-warning">
+			Development preview. Not ready for general use. Use with caution and monitor your system
+			closely. Feedback welcome!
+		</div>
 		<SponsorTokenRequired v-if="!isSponsor" feature class="mt-0" />
 		<ErrorMessage :error="error" />
 
