@@ -136,10 +136,7 @@ func TestEnode(t *testing.T) {
 	srv := httptest.NewServer(serverState)
 	defer srv.Close()
 
-	wb, err := newEnode(context.Background(), enodeEnvironment{
-		apiURL:   srv.URL,
-		tokenURL: srv.URL + "/oauth2/token",
-	}, "client", "secret", "", "", 0, time.Second)
+	wb, err := newEnode(context.Background(), srv.URL, srv.URL+"/oauth2/token", "client", "secret", "", "", 0, time.Second)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -218,10 +215,7 @@ func TestEnodeUnpluggedAndMaxCurrentFallback(t *testing.T) {
 	srv := httptest.NewServer(serverState)
 	defer srv.Close()
 
-	wb, err := newEnode(context.Background(), enodeEnvironment{
-		apiURL:   srv.URL,
-		tokenURL: srv.URL + "/oauth2/token",
-	}, "client", "secret", "", "", 0, time.Second)
+	wb, err := newEnode(context.Background(), srv.URL, srv.URL+"/oauth2/token", "client", "secret", "", "", 0, time.Second)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -264,10 +258,7 @@ func TestEnodeRequiresCharger(t *testing.T) {
 	}))
 	defer server.Close()
 
-	_, err := newEnode(context.Background(), enodeEnvironment{
-		apiURL:   server.URL,
-		tokenURL: server.URL + "/oauth2/token",
-	}, "client", "secret", "", "", 0, time.Second)
+	_, err := newEnode(context.Background(), server.URL, server.URL+"/oauth2/token", "client", "secret", "", "", 0, time.Second)
 	if err == nil {
 		t.Fatal("expected error")
 	}
@@ -329,10 +320,7 @@ func TestEnodeRequiresChargerIDOnAmbiguousSelection(t *testing.T) {
 	}))
 	defer server.Close()
 
-	_, err := newEnode(context.Background(), enodeEnvironment{
-		apiURL:   server.URL,
-		tokenURL: server.URL + "/oauth2/token",
-	}, "client", "secret", "", "", 0, time.Second)
+	_, err := newEnode(context.Background(), server.URL, server.URL+"/oauth2/token", "client", "secret", "", "", 0, time.Second)
 	if err == nil {
 		t.Fatal("expected error")
 	}
@@ -343,10 +331,7 @@ func TestEnodeAlreadyStoppedIsNoOp(t *testing.T) {
 	srv := httptest.NewServer(serverState)
 	defer srv.Close()
 
-	wb, err := newEnode(context.Background(), enodeEnvironment{
-		apiURL:   srv.URL,
-		tokenURL: srv.URL + "/oauth2/token",
-	}, "client", "secret", "", "", 0, time.Second)
+	wb, err := newEnode(context.Background(), srv.URL, srv.URL+"/oauth2/token", "client", "secret", "", "", 0, time.Second)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -362,10 +347,7 @@ func TestEnodeAlreadyAtCurrentSettingIsNoOp(t *testing.T) {
 	srv := httptest.NewServer(serverState)
 	defer srv.Close()
 
-	wb, err := newEnode(context.Background(), enodeEnvironment{
-		apiURL:   srv.URL,
-		tokenURL: srv.URL + "/oauth2/token",
-	}, "client", "secret", "", "", 0, time.Second)
+	wb, err := newEnode(context.Background(), srv.URL, srv.URL+"/oauth2/token", "client", "secret", "", "", 0, time.Second)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -385,63 +367,63 @@ func TestEnodeAlreadyAtCurrentSettingIsNoOp(t *testing.T) {
 	}
 }
 
-func TestResolveEnodeEnvironmentDefaultProduction(t *testing.T) {
-	env := resolveEnodeEnvironment("")
+func TestResolveEnodeURLsDefaultProduction(t *testing.T) {
+	urls := resolveEnodeURLs("")
 
-	if env.apiURL != enodeProductionAPI {
-		t.Fatalf("unexpected api url: %s", env.apiURL)
+	if urls.apiBase != enodeProductionAPI {
+		t.Fatalf("unexpected api url: %s", urls.apiBase)
 	}
 
-	if env.tokenURL != enodeProductionToken {
-		t.Fatalf("unexpected token url: %s", env.tokenURL)
+	if urls.tokenURL != enodeProductionToken {
+		t.Fatalf("unexpected token url: %s", urls.tokenURL)
 	}
 }
 
-func TestResolveEnodeEnvironmentCustomAPIKeepsDefaultToken(t *testing.T) {
+func TestResolveEnodeURLsCustomAPIKeepsDefaultToken(t *testing.T) {
 	apiURL := "https://enode-api.custom.example"
-	env := resolveEnodeEnvironment(apiURL)
+	urls := resolveEnodeURLs(apiURL)
 
-	if env.apiURL != apiURL {
-		t.Fatalf("unexpected api url: %s", env.apiURL)
+	if urls.apiBase != apiURL {
+		t.Fatalf("unexpected api url: %s", urls.apiBase)
 	}
 
-	if env.tokenURL != enodeProductionToken {
-		t.Fatalf("unexpected token url: %s", env.tokenURL)
-	}
-}
-
-func TestResolveEnodeEnvironmentKnownSandboxAPIInfersTokenURL(t *testing.T) {
-	env := resolveEnodeEnvironment(enodeSandboxAPI)
-
-	if env.apiURL != enodeSandboxAPI {
-		t.Fatalf("unexpected api url: %s", env.apiURL)
-	}
-
-	if env.tokenURL != enodeSandboxToken {
-		t.Fatalf("unexpected token url: %s", env.tokenURL)
+	if urls.tokenURL != enodeProductionToken {
+		t.Fatalf("unexpected token url: %s", urls.tokenURL)
 	}
 }
 
-func TestResolveEnodeEnvironmentKnownSandboxAPIWithTrailingSlash(t *testing.T) {
-	env := resolveEnodeEnvironment(enodeSandboxAPI + "/")
+func TestResolveEnodeURLsKnownSandboxAPIInfersTokenURL(t *testing.T) {
+	urls := resolveEnodeURLs(enodeSandboxAPI)
 
-	if env.apiURL != enodeSandboxAPI {
-		t.Fatalf("unexpected api url: %s", env.apiURL)
+	if urls.apiBase != enodeSandboxAPI {
+		t.Fatalf("unexpected api url: %s", urls.apiBase)
 	}
 
-	if env.tokenURL != enodeSandboxToken {
-		t.Fatalf("unexpected token url: %s", env.tokenURL)
+	if urls.tokenURL != enodeSandboxToken {
+		t.Fatalf("unexpected token url: %s", urls.tokenURL)
 	}
 }
 
-func TestResolveEnodeEnvironmentKnownProductionAPIInfersTokenURL(t *testing.T) {
-	env := resolveEnodeEnvironment(enodeProductionAPI)
+func TestResolveEnodeURLsKnownSandboxAPIWithTrailingSlash(t *testing.T) {
+	urls := resolveEnodeURLs(enodeSandboxAPI + "/")
 
-	if env.apiURL != enodeProductionAPI {
-		t.Fatalf("unexpected api url: %s", env.apiURL)
+	if urls.apiBase != enodeSandboxAPI {
+		t.Fatalf("unexpected api url: %s", urls.apiBase)
 	}
 
-	if env.tokenURL != enodeProductionToken {
-		t.Fatalf("unexpected token url: %s", env.tokenURL)
+	if urls.tokenURL != enodeSandboxToken {
+		t.Fatalf("unexpected token url: %s", urls.tokenURL)
+	}
+}
+
+func TestResolveEnodeURLsKnownProductionAPIInfersTokenURL(t *testing.T) {
+	urls := resolveEnodeURLs(enodeProductionAPI)
+
+	if urls.apiBase != enodeProductionAPI {
+		t.Fatalf("unexpected api url: %s", urls.apiBase)
+	}
+
+	if urls.tokenURL != enodeProductionToken {
+		t.Fatalf("unexpected token url: %s", urls.tokenURL)
 	}
 }

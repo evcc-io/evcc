@@ -29,11 +29,6 @@ const (
 	enodeActionPollInterval   = time.Second
 )
 
-type enodeEnvironment struct {
-	apiURL   string
-	tokenURL string
-}
-
 type enodeProblem struct {
 	Title  string `json:"title"`
 	Detail string `json:"detail"`
@@ -138,50 +133,50 @@ func NewEnodeFromConfig(ctx context.Context, other map[string]any) (api.Charger,
 		return nil, api.ErrMissingCredentials
 	}
 
-	env := resolveEnodeEnvironment(cc.APIURL)
+	env := resolveEnodeURLs(cc.APIURL)
 
-	return newEnode(ctx, env, cc.ClientID, cc.ClientSecret, cc.UserID, cc.ChargerID, cc.Cache, cc.Timeout)
+	return newEnode(ctx, env.apiBase, env.tokenURL, cc.ClientID, cc.ClientSecret, cc.UserID, cc.ChargerID, cc.Cache, cc.Timeout)
 }
 
-func resolveEnodeEnvironment(apiURL string) enodeEnvironment {
-	env := enodeEnvironment{apiURL: enodeProductionAPI, tokenURL: enodeProductionToken}
+type enodeURLs struct {
+	apiBase  string
+	tokenURL string
+}
 
-	if apiURL != "" {
-		normalizedAPIURL := strings.TrimRight(strings.TrimSpace(apiURL), "/")
-		env.apiURL = normalizedAPIURL
-
-		if inferredTokenURL, ok := inferEnodeTokenURLFromAPI(normalizedAPIURL); ok {
-			env.tokenURL = inferredTokenURL
-		}
+func resolveEnodeURLs(apiURL string) enodeURLs {
+	urls := enodeURLs{
+		apiBase:  enodeProductionAPI,
+		tokenURL: enodeProductionToken,
 	}
 
-	return env
-}
+	if apiURL == "" {
+		return urls
+	}
 
-func inferEnodeTokenURLFromAPI(apiURL string) (string, bool) {
-	parsed, err := url.Parse(apiURL)
+	urls.apiBase = strings.TrimRight(strings.TrimSpace(apiURL), "/")
+
+	u, err := url.Parse(urls.apiBase)
 	if err != nil {
-		return "", false
+		return urls
 	}
 
-	host := strings.ToLower(parsed.Hostname())
-	switch host {
+	switch strings.ToLower(u.Hostname()) {
 	case "enode-api.sandbox.enode.io":
-		return enodeSandboxToken, true
+		urls.tokenURL = enodeSandboxToken
 	case "enode-api.production.enode.io":
-		return enodeProductionToken, true
-	default:
-		return "", false
+		urls.tokenURL = enodeProductionToken
 	}
+
+	return urls
 }
 
-func newEnode(ctx context.Context, env enodeEnvironment, clientID, clientSecret, userID, chargerID string, cache, timeout time.Duration) (*Enode, error) {
+func newEnode(ctx context.Context, apiBase, tokenURL, clientID, clientSecret, userID, chargerID string, cache, timeout time.Duration) (*Enode, error) {
 	log := util.NewLogger("enode").Redact(clientID, clientSecret)
 
 	oauthConfig := &clientcredentials.Config{
 		ClientID:     clientID,
 		ClientSecret: clientSecret,
-		TokenURL:     env.tokenURL,
+		TokenURL:     tokenURL,
 	}
 
 	client := request.NewHelper(log)
@@ -190,7 +185,7 @@ func newEnode(ctx context.Context, env enodeEnvironment, clientID, clientSecret,
 
 	wb := &Enode{
 		Helper:   client,
-		baseURL:  env.apiURL,
+		baseURL:  apiBase,
 		timeout:  timeout,
 		actionTO: enodeDefaultActionTimeout,
 		enabled:  true,
