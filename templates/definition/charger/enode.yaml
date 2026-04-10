@@ -56,5 +56,9 @@ render: |
   {{- if .apiurl }}
   apiurl: {{ .apiurl }}
   {{- end }}
+  {{- if .userid }}
   userid: {{ .userid }}
+  {{- end }}
+  {{- if .chargerid }}
   chargerid: {{ .chargerid }}
+  {{- end }}
