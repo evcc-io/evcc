@@ -202,14 +202,18 @@ func newEnode(ctx context.Context, env enodeEnvironment, clientID, clientSecret,
 	}
 
 	wb.charger = charger.ID
-	wb.updateEnabled(charger.ChargeState.PowerDeliveryState)
+	if enabled, known := enodeEnabledState(charger.ChargeState.PowerDeliveryState); known {
+		wb.enabled = enabled
+	}
 	wb.updateMaxCurrent(charger.ChargeState.MaxCurrent)
 	wb.statusG = util.ResettableCached(func() (enodeCharger, error) {
 		var res enodeCharger
 		if err := wb.getJSON("/chargers/"+wb.charger, &res); err != nil {
 			return res, err
 		}
-		wb.updateEnabled(res.ChargeState.PowerDeliveryState)
+		if enabled, known := enodeEnabledState(res.ChargeState.PowerDeliveryState); known {
+			wb.enabled = enabled
+		}
 		wb.updateMaxCurrent(res.ChargeState.MaxCurrent)
 		return res, nil
 	}, cache)
@@ -347,8 +351,14 @@ func (wb *Enode) Enabled() (bool, error) {
 		return false, err
 	}
 
-	wb.updateEnabled(status.ChargeState.PowerDeliveryState)
-	return verifyEnabled(wb, wb.enabled)
+	enabled, known := enodeEnabledState(status.ChargeState.PowerDeliveryState)
+	if !known {
+		return false, api.ErrMustRetry
+	}
+
+	wb.enabled = enabled
+
+	return verifyEnabled(wb, enabled)
 }
 
 func (wb *Enode) Enable(enable bool) error {
@@ -357,7 +367,7 @@ func (wb *Enode) Enable(enable bool) error {
 		return err
 	}
 
-	if enable == enodeEnabledState(status.ChargeState.PowerDeliveryState, wb.enabled) {
+	if currentEnabled, known := enodeEnabledState(status.ChargeState.PowerDeliveryState); known && enable == currentEnabled {
 		return nil
 	}
 
@@ -453,24 +463,20 @@ func (wb *Enode) awaitAction(actionID string) error {
 	return api.ErrTimeout
 }
 
-func (wb *Enode) updateEnabled(state string) {
-	wb.enabled = enodeEnabledState(state, wb.enabled)
-}
-
 func (wb *Enode) updateMaxCurrent(maxCurrent *float64) {
 	if maxCurrent != nil {
 		wb.configuredMaxCurrent = maxCurrent
 	}
 }
 
-func enodeEnabledState(state string, fallback bool) bool {
+func enodeEnabledState(state string) (enabled bool, known bool) {
 	switch state {
 	case "UNPLUGGED", "PLUGGED_IN:STOPPED":
-		return false
+		return false, true
 	case "PLUGGED_IN:INITIALIZING", "PLUGGED_IN:CHARGING", "PLUGGED_IN:NO_POWER", "PLUGGED_IN:FAULT", "PLUGGED_IN:DISCHARGING":
-		return true
+		return true, true
 	default:
-		return fallback
+		return false, false
 	}
 }
 
