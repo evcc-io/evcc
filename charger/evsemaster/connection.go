@@ -13,6 +13,7 @@ type Connection struct {
 	lst      *Listener
 	serial   string
 	password string
+	recv     chan<- *ReceivedPacket // channel passed to Subscribe, used to identify on Unsubscribe
 }
 
 // NewConnection creates a Connection for a device identified by serial and password.
@@ -41,10 +42,25 @@ func (c *Connection) Send(cmd uint16, payload []byte, addr *net.UDPAddr) error {
 
 // Subscribe registers ch to receive all packets from this device's serial.
 func (c *Connection) Subscribe(ch chan<- *ReceivedPacket) {
+	c.recv = ch
 	c.lst.Subscribe(c.serial, ch)
 }
 
-// Unsubscribe removes the subscription for this device's serial.
+// Reclaim registers ch only if no subscriber currently holds the slot.
+// Used on keepalive ticks so the long-running instance does not displace
+// a temporary validate instance that is still active.
+func (c *Connection) Reclaim(ch chan<- *ReceivedPacket) {
+	c.recv = ch
+	c.lst.Reclaim(c.serial, ch)
+}
+
+// Unsubscribe removes this connection's subscription only if its channel is
+// still the active one, so a stale unsubscribe cannot displace a newer subscriber.
 func (c *Connection) Unsubscribe() {
-	c.lst.Unsubscribe(c.serial)
+	c.lst.Unsubscribe(c.serial, c.recv)
+}
+
+// Addr gets or sets the last known EVSE address for this device.
+func (c *Connection) Addr(addr *net.UDPAddr) *net.UDPAddr {
+	return c.lst.Addr(c.serial, c.password, addr)
 }
