@@ -91,7 +91,7 @@ render: |
     - <<: *settings_get
       jq: .ev_meter.currents.L1 / 10
     - <<: *settings_get
-      jq: .ev_meter.currents.L1 / 10
+      jq: .ev_meter.currents.L2 / 10
     - <<: *settings_get
-      jq: .ev_meter.currents.L1 / 10
+      jq: .ev_meter.currents.L3 / 10
   {{- end }}
