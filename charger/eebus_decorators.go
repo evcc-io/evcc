@@ -37,8 +37,8 @@ type decorateEEBusCapable struct {
 
 func (d *decorateEEBusCapable) Capability(typ reflect.Type) (any, bool) {
 	c, ok := d.caps[typ]
-	if !ok && reflect.TypeOf(c).Implements(typ) {
-		return c, true
+	if !ok && reflect.TypeOf(d).Implements(typ) {
+		return d, true
 	}
 	return c, ok
 }
