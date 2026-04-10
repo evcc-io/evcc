@@ -32,102 +32,68 @@ render: |
 
   # --- Status & Enable Data (Cached) ---
   status:
-    source: http
-    uri: http://{{ .host }}/settings
-    method: GET
-    headers:
-      - Connection: close
-    cache: 5s
+    <<: &settings_get
+      source: http
+      uri: http://{{ .host }}/settings
+      method: GET
+      headers:
+        - Connection: close
+      cache: 5s
     jq: >-
       if .car_connected == false then "A"
       elif .evse.state == "Charging" then "C"
       else "B" end
 
   enabled:
-    source: http
-    uri: http://{{ .host }}/settings
-    method: GET
-    headers:
-      - Connection: close
-    cache: 5s
+    <<: *settings_get
     # 0 = OFF, 4 = PAUSE. Anything else (1=NORMAL, 2=SOLAR, 3=SMART) means enabled.
     jq: .mode_id != 0 and .mode_id != 4
 
   # --- Control Actions ---
   enable:
-    source: http
+    <<: &settings_post
+      source: http
+       method: POST
+       headers:
+         - Connection: close
+       body: ""
     # 3: SMART mode (Enable), 4: PAUSE (Disable - preserves OCPP sessions)
     uri: http://{{ .host }}/settings?mode={{ `{{ if .enable }}3{{ else }}4{{ end }}` }}
-    method: POST
-    headers:
-      - Connection: close
-    body: ""
 
   maxcurrent:
-    source: http
+    <<: *settings_post
     # override_current expects deci-Amps (e.g., 8.3A -> 83)
     # Multiply by 10, then pipe to 'int' to safely drop any decimals
     uri: http://{{ .host }}/settings?override_current={{ `{{ mul .maxcurrent 10 | int }}` }}
-    method: POST
-    headers:
-      - Connection: close
-    body: ""
 
-  {{- if eq (print .phase_switching) "true" }}
+
+  {{- if .phase_switching }}
   phases1p3p:
-    source: http
+    <<: *settings_post
     # 1: Always Off (1 Phase), 3: Always On (3 Phase)
     uri: http://{{ .host }}/settings?enable_C2={{ `{{ if eq .phases 1 }}1{{ else }}3{{ end }}` }}
-    method: POST
-    headers:
-      - Connection: close
-    body: ""
+    
   {{- end }}
 
 
-  {{- if eq (print .has_meter) "true" }}
+  {{- if .has_meter }}
 
   # --- Metering Data (Cached) ---
   power:
-    source: http
-    uri: http://{{ .host }}/settings
-    method: GET
-    headers:
-      - Connection: close
-    cache: 5s
+    <<: *settings_get
     jq: .ev_meter.import_active_power
 
   energy:
-    source: http
-    uri: http://{{ .host }}/settings
-    method: GET
-    headers:
-      - Connection: close
-    cache: 5s
+    <<: *settings_get
     # Convert Watt-hours (Wh) to Kilowatt-hours (kWh)
     jq: .ev_meter.total_wh / 1000
 
   currents:
     # Phase currents return as deci-Amps, divide by 10 to get standard Amps
-    - source: http
-      uri: http://{{ .host }}/settings
-      method: GET
-      headers:
-        - Connection: close
-      cache: 5s
+    - <<: *settings_get
       jq: .ev_meter.currents.L1 / 10
-    - source: http
-      uri: http://{{ .host }}/settings
-      method: GET
-      headers:
-        - Connection: close
-      cache: 5s
-      jq: .ev_meter.currents.L2 / 10
-    - source: http
-      uri: http://{{ .host }}/settings
-      method: GET
-      headers:
-        - Connection: close
-      cache: 5s
-      jq: .ev_meter.currents.L3 / 10
+    - <<: *settings_get
+      jq: .ev_meter.currents.L1 / 10
+    - <<: *settings_get
+      jq: .ev_meter.currents.L1 / 10
   {{- end }}
