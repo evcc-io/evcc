@@ -64,11 +64,7 @@ func generatePassword() (string, error) {
 // Clients returns the list of configured clients (without password hashes).
 func (r *Remote) Clients() []Client {
 	return lo.Map(loadClients(), func(c persistedClient, _ int) Client {
-		return Client{
-			Username:  c.Username,
-			CreatedAt: c.CreatedAt,
-			ExpiresAt: c.ExpiresAt,
-		}
+		return c.Client
 	})
 }
 
