@@ -103,13 +103,13 @@ type enodeAction struct {
 // Enode controls a charger via the Enode cloud API.
 type Enode struct {
 	*request.Helper
-	baseURL              string
-	charger              string
-	enabled              bool
-	configuredMaxCurrent *float64
-	statusG              util.Cacheable[enodeCharger]
-	timeout              time.Duration
-	actionTO             time.Duration
+	baseURL             string
+	charger             string
+	enabled             bool
+	lastKnownMaxCurrent *float64
+	statusG             util.Cacheable[enodeCharger]
+	timeout             time.Duration
+	actionTO            time.Duration
 }
 
 func init() {
@@ -205,7 +205,9 @@ func newEnode(ctx context.Context, env enodeEnvironment, clientID, clientSecret,
 	if s := interpretEnodeState(charger.ChargeState); s.known {
 		wb.enabled = s.enabled
 	}
-	wb.updateMaxCurrent(charger.ChargeState.MaxCurrent)
+	if charger.ChargeState.MaxCurrent != nil {
+		wb.lastKnownMaxCurrent = charger.ChargeState.MaxCurrent
+	}
 	wb.statusG = util.ResettableCached(func() (enodeCharger, error) {
 		var res enodeCharger
 		if err := wb.getJSON("/chargers/"+wb.charger, &res); err != nil {
@@ -214,7 +216,9 @@ func newEnode(ctx context.Context, env enodeEnvironment, clientID, clientSecret,
 		if s := interpretEnodeState(res.ChargeState); s.known {
 			wb.enabled = s.enabled
 		}
-		wb.updateMaxCurrent(res.ChargeState.MaxCurrent)
+		if res.ChargeState.MaxCurrent != nil {
+			wb.lastKnownMaxCurrent = res.ChargeState.MaxCurrent
+		}
 		return res, nil
 	}, cache)
 
@@ -404,7 +408,8 @@ func (wb *Enode) MaxCurrent(current int64) error {
 		MaxCurrent float64 `json:"maxCurrent"`
 	}{MaxCurrent: float64(current)}, &res); err != nil {
 		if isEnodeAlreadySetCurrent(err) {
-			wb.updateMaxCurrent(ptr(float64(current)))
+			v := float64(current)
+			wb.lastKnownMaxCurrent = &v
 			wb.statusG.Reset()
 			return nil
 		}
@@ -415,7 +420,8 @@ func (wb *Enode) MaxCurrent(current int64) error {
 		return err
 	}
 
-	wb.updateMaxCurrent(ptr(float64(current)))
+	v := float64(current)
+	wb.lastKnownMaxCurrent = &v
 	wb.statusG.Reset()
 	return nil
 }
@@ -443,12 +449,6 @@ func (wb *Enode) awaitAction(actionID string) error {
 	}
 
 	return api.ErrTimeout
-}
-
-func (wb *Enode) updateMaxCurrent(maxCurrent *float64) {
-	if maxCurrent != nil {
-		wb.configuredMaxCurrent = maxCurrent
-	}
 }
 
 type enodeState struct {
@@ -503,18 +503,15 @@ func (wb *Enode) GetMaxCurrent() (float64, error) {
 		return 0, err
 	}
 
-	if status.ChargeState.MaxCurrent == nil {
-		if wb.configuredMaxCurrent != nil {
-			return *wb.configuredMaxCurrent, nil
-		}
-		return 0, api.ErrMustRetry
+	if status.ChargeState.MaxCurrent != nil {
+		return *status.ChargeState.MaxCurrent, nil
 	}
 
-	return *status.ChargeState.MaxCurrent, nil
-}
+	if wb.lastKnownMaxCurrent != nil {
+		return *wb.lastKnownMaxCurrent, nil
+	}
 
-func ptr[T any](v T) *T {
-	return &v
+	return 0, api.ErrMustRetry
 }
 
 func isEnodeNoOpError(err error, enable bool) bool {
