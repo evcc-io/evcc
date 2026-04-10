@@ -46,7 +46,7 @@ func NewConnection(uri, ain, user, password string) (*Connection, error) {
 	return fritzdect_new, nil
 }
 
-// ExecCmd execautes an FritzDECT AHA-HTTP-Interface command
+// ExecCmd executes an FritzDECT AHA-HTTP-Interface command
 func (c *Connection) ExecCmd(function string) (string, error) {
 	// refresh Fritzbox session id
 	if time.Since(c.updated) >= sessionTimeout {

@@ -41,13 +41,13 @@ type Energy struct {
 	Values  []string `xml:"stats"`
 }
 
-// Energy structures getbasicdevicesstats command energy response (AHA-HTTP-Interface)
+// Voltage structures getbasicdevicesstats command energy response (AHA-HTTP-Interface)
 type Voltage struct {
 	XMLName xml.Name `xml:"voltage"`
 	Values  []string `xml:"stats"`
 }
 
-// Energy structures getbasicdevicesstats command energy response (AHA-HTTP-Interface)
+// Power structures getbasicdevicesstats command energy response (AHA-HTTP-Interface)
 type Power struct {
 	XMLName xml.Name `xml:"power"`
 	Values  []string `xml:"stats"`
