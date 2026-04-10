@@ -147,6 +147,13 @@ func (t *Tunnel) LoginBlocked() bool {
 
 // Close tears down the tunnel.
 func (t *Tunnel) Close() {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
+	if t.session != nil {
+		t.session.Close()
+	}
+
 	if t.cancel != nil {
 		t.cancel()
 		t.cancel = nil
