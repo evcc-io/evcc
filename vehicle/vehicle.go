@@ -23,7 +23,7 @@ func init() {
 	registry.AddCtx(api.Custom, NewConfigurableFromConfig)
 }
 
-// NewConfigurableFromConfig creates a new Vehicle
+// NewConfigurableFromConfig creates a new vehicle from config
 func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, error) {
 	var cc struct {
 		embed         `mapstructure:",squash"`
