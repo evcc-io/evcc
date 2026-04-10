@@ -790,10 +790,14 @@ export default defineComponent({
 			if (!remote?.status?.url) {
 				return { configured: { value: false } };
 			}
-			return {
+			const tags: DeviceTags = {
 				enabled: { value: remote.config?.enabled },
 				connected: { value: remote.status?.connected },
 			};
+			if (remote.status?.loginBlocked) {
+				tags["loginBlocked"] = { value: true, error: true };
+			}
+			return tags;
 		},
 		sponsor() {
 			return store.state?.sponsor;

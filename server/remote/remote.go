@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/core/keys"
@@ -47,6 +48,12 @@ func New(cloudHost string, httpHandler http.Handler, valueChan chan<- util.Param
 	if r.settings.Enabled && r.settings.Token != "" {
 		go r.connect()
 	}
+
+	go func() {
+		for range time.Tick(time.Minute) {
+			r.publish()
+		}
+	}()
 
 	return r
 }
@@ -158,6 +165,7 @@ func (r *Remote) ConfigStatus() globalconfig.ConfigStatus {
 	defer r.mu.Unlock()
 
 	connected := r.tunnel != nil && r.tunnel.IsConnected()
+	loginBlocked := r.tunnel != nil && r.tunnel.LoginBlocked()
 
 	return globalconfig.ConfigStatus{
 		Config: struct {
@@ -166,11 +174,13 @@ func (r *Remote) ConfigStatus() globalconfig.ConfigStatus {
 			Enabled: r.settings.Enabled,
 		},
 		Status: struct {
-			Connected bool   `json:"connected"`
-			URL       string `json:"url,omitempty"`
+			Connected    bool   `json:"connected"`
+			URL          string `json:"url,omitempty"`
+			LoginBlocked bool   `json:"loginBlocked"`
 		}{
-			Connected: connected,
-			URL:       r.settings.URL,
+			Connected:    connected,
+			URL:          r.settings.URL,
+			LoginBlocked: loginBlocked,
 		},
 	}
 }

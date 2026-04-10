@@ -24,6 +24,7 @@ type Tunnel struct {
 	log           *util.Logger
 	cancel        func()
 	onStateChange func()
+	rateLimiter   *authRateLimiter
 
 	mu      sync.Mutex
 	session *yamux.Session
@@ -38,6 +39,7 @@ func NewTunnel(tunnelURL, token string, httpHandler http.Handler, authenticate f
 		authenticate:  authenticate,
 		log:           log,
 		onStateChange: onStateChange,
+		rateLimiter:   newAuthRateLimiter(),
 	}
 }
 
@@ -99,7 +101,7 @@ func (t *Tunnel) connect(ctx context.Context) (bool, error) {
 
 	// accept streams from the proxy
 	srv := &http.Server{
-		Handler: basicAuthMiddleware(t.authenticate, t.httpHandler),
+		Handler: t.basicAuthMiddleware(t.httpHandler),
 	}
 
 	if err := srv.Serve(session); err != nil {
@@ -136,6 +138,11 @@ func (t *Tunnel) IsConnected() bool {
 	return t.session != nil
 }
 
+// LoginBlocked returns whether login attempts are currently blocked by the rate limiter.
+func (t *Tunnel) LoginBlocked() bool {
+	return !t.rateLimiter.allow()
+}
+
 // Close tears down the tunnel.
 func (t *Tunnel) Close() {
 	if t.cancel != nil {
@@ -146,14 +153,33 @@ func (t *Tunnel) Close() {
 
 // basicAuthMiddleware wraps a handler with HTTP basic auth, validating
 // credentials against the given authenticate function per request.
-func basicAuthMiddleware(authenticate func(user, pass string) bool, next http.Handler) http.Handler {
+// It rate-limits failed attempts to prevent brute-force attacks.
+func (t *Tunnel) basicAuthMiddleware(next http.Handler) http.Handler {
+	rejectAuth := func(w http.ResponseWriter) {
+		w.Header().Set("WWW-Authenticate", `Basic realm="evcc"`)
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+	}
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user, pass, ok := r.BasicAuth()
-		if !ok || authenticate == nil || !authenticate(user, pass) {
-			w.Header().Set("WWW-Authenticate", `Basic realm="evcc"`)
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		if !ok || t.authenticate == nil {
+			rejectAuth(w)
 			return
 		}
+
+		if !t.rateLimiter.allow() {
+			t.log.INFO.Printf("login blocked for %q (rate limited)", user)
+			http.Error(w, "Too many failed login attempts. Try again in 1 minute.", http.StatusTooManyRequests)
+			return
+		}
+
+		if !t.authenticate(user, pass) {
+			t.rateLimiter.fail()
+			t.log.INFO.Printf("failed login attempt for %q", user)
+			rejectAuth(w)
+			return
+		}
+
 		next.ServeHTTP(w, r)
 	})
 }

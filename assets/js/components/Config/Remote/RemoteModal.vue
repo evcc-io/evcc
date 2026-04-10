@@ -14,7 +14,7 @@
 			<div class="form-check form-switch my-3">
 				<input
 					id="remoteEnabled"
-					:checked="remote?.config?.enabled"
+					:checked="config.enabled"
 					class="form-check-input"
 					type="checkbox"
 					role="switch"
@@ -23,8 +23,8 @@
 				/>
 				<div class="form-check-label">
 					<label for="remoteEnabled">{{ $t("config.remote.enableLabel") }}</label>
-					<div v-if="remote?.status?.url">
-						<span v-if="remote?.status?.connected" class="text-primary">
+					<div v-if="status.url">
+						<span v-if="status.connected" class="text-primary">
 							{{ $t("config.remote.connected") }}
 						</span>
 						<span v-else class="text-muted small">
@@ -34,18 +34,22 @@
 				</div>
 			</div>
 
-			<div v-if="remote?.status?.url" class="mt-4">
+			<div v-if="status.url" class="mt-4">
 				<FormRow id="remoteServerUrl" :label="$t('config.remote.url')">
 					<input
 						id="remoteServerUrl"
 						type="text"
 						class="form-control border"
-						:value="remote?.status?.url"
+						:value="status.url"
 						readonly
 					/>
 				</FormRow>
 
 				<hr class="my-4" />
+
+				<div v-if="status.loginBlocked" class="alert alert-danger">
+					{{ $t("config.remote.loginBlocked") }}
+				</div>
 
 				<RemoteClientList
 					:clients="clients"
@@ -62,9 +66,9 @@
 		/>
 
 		<RemoteClientReveal
-			v-else-if="view === 'reveal' && createdClient && remote?.status?.url"
+			v-else-if="view === 'reveal' && createdClient && status.url"
 			:client="createdClient"
-			:server-url="remote.status.url"
+			:server-url="status.url"
 			@done="finishReveal"
 		/>
 	</GenericModal>
@@ -80,7 +84,13 @@ import RemoteClientList from "./RemoteClientList.vue";
 import RemoteClientCreate from "./RemoteClientCreate.vue";
 import RemoteClientReveal from "./RemoteClientReveal.vue";
 import api from "@/api";
-import type { Remote, RemoteClient, RemoteClientCreated } from "@/types/evcc";
+import type {
+	Remote,
+	RemoteConfig,
+	RemoteStatus,
+	RemoteClient,
+	RemoteClientCreated,
+} from "@/types/evcc";
 import type { AxiosError } from "axios";
 
 type View = "list" | "create" | "reveal";
@@ -109,6 +119,12 @@ export default defineComponent({
 		};
 	},
 	computed: {
+		config(): RemoteConfig {
+			return this.remote?.config ?? { enabled: false };
+		},
+		status(): RemoteStatus {
+			return this.remote?.status ?? { connected: false, loginBlocked: false };
+		},
 		modalTitle(): string {
 			switch (this.view) {
 				case "create":
@@ -128,7 +144,7 @@ export default defineComponent({
 			await this.loadClients();
 		},
 		async loadClients() {
-			if (!this.remote?.status?.url) {
+			if (!this.status.url) {
 				this.clients = [];
 				return;
 			}

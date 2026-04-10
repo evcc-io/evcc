@@ -233,6 +233,7 @@ export default {
 				case "configured":
 				case "connected":
 				case "dimmed":
+				case "loginBlocked":
 					return value
 						? this.$t("config.deviceValue.yes")
 						: this.$t("config.deviceValue.no");
