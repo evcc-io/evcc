@@ -2,12 +2,17 @@ package tariff
 
 import (
 	"errors"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
 	"testing"
 	"time"
 
 	"github.com/benbjohnson/clock"
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 	"github.com/jinzhu/now"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -83,5 +88,40 @@ func TestRunOrQError(t *testing.T) {
 		res, err := runOrError(&runner{errors.New("foo")})
 		require.Error(t, err)
 		require.Nil(t, res)
+	}
+}
+
+func statusError(code int) *request.StatusError {
+	rec := httptest.NewRecorder()
+	rec.Code = code
+	resp := rec.Result()
+	resp.Request = &http.Request{Method: http.MethodGet, URL: &url.URL{}}
+	return request.NewStatusError(resp)
+}
+
+func TestBackoffPermanentError(t *testing.T) {
+	tt := []struct {
+		name      string
+		code      int
+		permanent bool
+	}{
+		{name: "400 Bad Request is permanent", code: http.StatusBadRequest, permanent: true},
+		{name: "401 Unauthorized is permanent", code: http.StatusUnauthorized, permanent: true},
+		{name: "404 Not Found is permanent", code: http.StatusNotFound, permanent: true},
+		{name: "500 Internal Server Error is permanent", code: http.StatusInternalServerError, permanent: true},
+		{name: "429 Too Many Requests is NOT permanent (transient)", code: http.StatusTooManyRequests, permanent: false},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			err := backoffPermanentError(statusError(tc.code))
+			var pe *backoff.PermanentError
+			isPermanent := errors.As(err, &pe)
+			if tc.permanent {
+				assert.True(t, isPermanent, "expected permanent error for HTTP %d", tc.code)
+			} else {
+				assert.False(t, isPermanent, "expected non-permanent error for HTTP %d", tc.code)
+			}
+		})
 	}
 }
