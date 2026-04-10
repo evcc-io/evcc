@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 	"time"
 
@@ -130,13 +131,15 @@ func (r *Remote) DeleteClient(username string) error {
 	defer r.mu.Unlock()
 
 	list := loadClients()
-	out := lo.Reject(list, func(c persistedClient, _ int) bool {
+	idx := slices.IndexFunc(list, func(c persistedClient) bool {
 		return c.Username == username
 	})
-	if len(out) == len(list) {
-		return fmt.Errorf("client %q not found", username)
+
+	if idx < 0 {
+		return fmt.Errorf("client %s not found", username)
 	}
-	return saveClients(out)
+
+	return saveClients(slices.Delete(list, idx, idx+1))
 }
 
 // Authenticate validates basic-auth credentials. Always runs bcrypt
