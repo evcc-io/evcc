@@ -9,6 +9,7 @@ import (
 	"reflect"
 	"slices"
 	"strconv"
+	"sync"
 
 	"dario.cat/mergo"
 	"github.com/evcc-io/evcc/api"
@@ -28,6 +29,20 @@ import (
 	"github.com/gorilla/mux"
 	"go.yaml.in/yaml/v4"
 )
+
+// deviceCancels holds the lifetime-cancel func for each UI-created or
+// UI-updated device, keyed by config ID. The cancel is fired on delete and
+// swapped on update so resource-holding devices (e.g. EEBus chargers) can
+// unregister via their existing <-ctx.Done() goroutine.
+//
+// Known limitation: devices created at startup from the database (via
+// cmd/setup.go:configurableInstance) are NOT registered here. Deleting such a
+// device via the UI will not trigger its lifetime cancel, so any external
+// registration (e.g. EEBus SHIP) will linger until evcc restart. This is a
+// deliberate trade-off: plumbing the startup path would require cross-package
+// framework changes that are out of scope for this PR. A future per-device
+// lifecycle refactor will close this gap.
+var deviceCancels sync.Map // map[int]context.CancelFunc
 
 func devicesConfig[T any](class templates.Class, h config.Handler[T], hidePrivate bool) ([]map[string]any, error) {
 	var res []map[string]any
@@ -281,7 +296,7 @@ func deviceStatusHandler(w http.ResponseWriter, r *http.Request) {
 	jsonWrite(w, testInstance(instance))
 }
 
-func newDevice[T any](ctx context.Context, class templates.Class, req configReq, newFromConf newFromConfFunc[T], h config.Handler[T], force bool) (*config.Config, error) {
+func newDevice[T any](ctx context.Context, cancel context.CancelFunc, class templates.Class, req configReq, newFromConf newFromConfFunc[T], h config.Handler[T], force bool) (*config.Config, error) {
 	instance, err := newFromConf(ctx, req.Type, req.Other)
 	if err != nil && !force {
 		return nil, err
@@ -292,7 +307,13 @@ func newDevice[T any](ctx context.Context, class templates.Class, req configReq,
 		return nil, err
 	}
 
-	return &conf, h.Add(config.NewConfigurableDevice(&conf, instance))
+	if err := h.Add(config.NewConfigurableDevice(&conf, instance)); err != nil {
+		return &conf, err
+	}
+
+	// store the lifetime cancel so delete/update can tear down resource-holding devices
+	deviceCancels.Store(conf.ID, cancel)
+	return &conf, nil
 }
 
 // newDeviceHandler creates a new device by class
@@ -318,24 +339,24 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch class {
 	case templates.Charger:
-		conf, err = newDevice(ctx, class, req, charger.NewFromConfig, config.Chargers(), force)
+		conf, err = newDevice(ctx, cancel, class, req, charger.NewFromConfig, config.Chargers(), force)
 
 	case templates.Meter:
-		conf, err = newDevice(ctx, class, req, meter.NewFromConfig, config.Meters(), force)
+		conf, err = newDevice(ctx, cancel, class, req, meter.NewFromConfig, config.Meters(), force)
 
 	case templates.Vehicle:
-		conf, err = newDevice(ctx, class, req, vehicle.NewFromConfig, config.Vehicles(), force)
+		conf, err = newDevice(ctx, cancel, class, req, vehicle.NewFromConfig, config.Vehicles(), force)
 
 	case templates.Circuit:
-		conf, err = newDevice(ctx, class, req, func(ctx context.Context, _ string, other map[string]any) (api.Circuit, error) {
+		conf, err = newDevice(ctx, cancel, class, req, func(ctx context.Context, _ string, other map[string]any) (api.Circuit, error) {
 			return circuit.NewFromConfig(ctx, util.NewLogger("circuit"), other)
 		}, config.Circuits(), force)
 
 	case templates.Tariff:
-		conf, err = newDevice(ctx, class, req, tariff.NewFromConfig, config.Tariffs(), force)
+		conf, err = newDevice(ctx, cancel, class, req, tariff.NewFromConfig, config.Tariffs(), force)
 
 	case templates.Messenger:
-		conf, err = newDevice(ctx, class, req, messenger.NewFromConfig, config.Messengers(), force)
+		conf, err = newDevice(ctx, cancel, class, req, messenger.NewFromConfig, config.Messengers(), force)
 	}
 
 	if err != nil {
@@ -360,7 +381,7 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 	jsonWrite(w, res)
 }
 
-func updateDevice[T any](ctx context.Context, id int, class templates.Class, req configReq, newFromConf newFromConfFunc[T], h config.Handler[T], force bool) error {
+func updateDevice[T any](ctx context.Context, cancel context.CancelFunc, id int, class templates.Class, req configReq, newFromConf newFromConfFunc[T], h config.Handler[T], force bool) error {
 	dev, instance, merged, err := deviceInstanceFromMergedConfig(ctx, id, class, req, newFromConf, h)
 	if err != nil {
 		// allow force-updating if merged config exists
@@ -374,7 +395,16 @@ func updateDevice[T any](ctx context.Context, id int, class templates.Class, req
 		return errors.New("not configurable")
 	}
 
-	return configurable.Update(merged, instance, config.WithProperties(req.Properties))
+	if err := configurable.Update(merged, instance, config.WithProperties(req.Properties)); err != nil {
+		return err
+	}
+
+	// swap lifetime cancel: install the new one, fire the old (if any) so the
+	// previous instance releases external resources (e.g. EEBus SHIP registration).
+	if prev, loaded := deviceCancels.Swap(id, cancel); loaded {
+		prev.(context.CancelFunc)()
+	}
+	return nil
 }
 
 // updateDeviceHandler updates database device's configuration by class
@@ -405,24 +435,24 @@ func updateDeviceHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch class {
 	case templates.Charger:
-		err = updateDevice(ctx, id, class, req, charger.NewFromConfig, config.Chargers(), force)
+		err = updateDevice(ctx, cancel, id, class, req, charger.NewFromConfig, config.Chargers(), force)
 
 	case templates.Meter:
-		err = updateDevice(ctx, id, class, req, meter.NewFromConfig, config.Meters(), force)
+		err = updateDevice(ctx, cancel, id, class, req, meter.NewFromConfig, config.Meters(), force)
 
 	case templates.Vehicle:
-		err = updateDevice(ctx, id, class, req, vehicle.NewFromConfig, config.Vehicles(), force)
+		err = updateDevice(ctx, cancel, id, class, req, vehicle.NewFromConfig, config.Vehicles(), force)
 
 	case templates.Circuit:
-		err = updateDevice(ctx, id, class, req, func(ctx context.Context, _ string, other map[string]any) (api.Circuit, error) {
+		err = updateDevice(ctx, cancel, id, class, req, func(ctx context.Context, _ string, other map[string]any) (api.Circuit, error) {
 			return circuit.NewFromConfig(ctx, util.NewLogger("circuit"), other)
 		}, config.Circuits(), force)
 
 	case templates.Tariff:
-		err = updateDevice(ctx, id, class, req, tariff.NewFromConfig, config.Tariffs(), force)
+		err = updateDevice(ctx, cancel, id, class, req, tariff.NewFromConfig, config.Tariffs(), force)
 
 	case templates.Messenger:
-		err = updateDevice(ctx, id, class, req, messenger.NewFromConfig, config.Messengers(), force)
+		err = updateDevice(ctx, cancel, id, class, req, messenger.NewFromConfig, config.Messengers(), force)
 	}
 
 	setConfigDirty()
@@ -465,6 +495,12 @@ func deleteDevice[T any](id int, h config.Handler[T]) error {
 	configurable, err := configurableDevice(name, h)
 	if err != nil {
 		return err
+	}
+
+	// fire the stored lifetime cancel before removing so resource-holding
+	// devices (e.g. EEBus chargers) can unregister via their <-ctx.Done() path
+	if c, loaded := deviceCancels.LoadAndDelete(id); loaded {
+		c.(context.CancelFunc)()
 	}
 
 	if err := configurable.Delete(); err != nil {
