@@ -34,16 +34,13 @@ func init() {
 // Client is a single tunnel basic-auth credential used by a remote client.
 type Client struct {
 	Username  string     `json:"username"`
-	Hash      string     `json:"-"`
 	CreatedAt time.Time  `json:"createdAt"`
 	ExpiresAt *time.Time `json:"expiresAt,omitempty"`
 }
 
 type persistedClient struct {
-	Username  string     `json:"username"`
-	Hash      string     `json:"hash"`
-	CreatedAt time.Time  `json:"createdAt"`
-	ExpiresAt *time.Time `json:"expiresAt,omitempty"`
+	Client
+	Hash string `json:"hash"`
 }
 
 // loadClients reads the persisted client list.
@@ -66,16 +63,13 @@ func generatePassword() (string, error) {
 
 // Clients returns the list of configured clients (without password hashes).
 func (r *Remote) Clients() []Client {
-	list := loadClients()
-	out := make([]Client, 0, len(list))
-	for _, c := range list {
-		out = append(out, Client{
+	return lo.Map(loadClients(), func(c persistedClient, _ int) Client {
+		return Client{
 			Username:  c.Username,
 			CreatedAt: c.CreatedAt,
 			ExpiresAt: c.ExpiresAt,
-		})
-	}
-	return out
+		}
+	})
 }
 
 // CreateClient creates a new client with an auto-generated password.
@@ -119,10 +113,12 @@ func (r *Remote) CreateClient(username string, expiresIn time.Duration) (Client,
 	}
 
 	c := persistedClient{
-		Username:  username,
-		Hash:      string(hash),
-		CreatedAt: time.Now(),
-		ExpiresAt: expires,
+		Client: Client{
+			Username:  username,
+			CreatedAt: time.Now(),
+			ExpiresAt: expires,
+		},
+		Hash: string(hash),
 	}
 	list = append(list, c)
 	if err := saveClients(list); err != nil {
