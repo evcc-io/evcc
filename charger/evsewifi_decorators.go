@@ -49,6 +49,9 @@ type decorateEVSECapable struct {
 
 func (d *decorateEVSECapable) Capability(typ reflect.Type) (any, bool) {
 	c, ok := d.caps[typ]
+	if !ok && reflect.TypeOf(c).Implements(typ) {
+		return c, true
+	}
 	return c, ok
 }
 

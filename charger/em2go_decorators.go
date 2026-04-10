@@ -37,6 +37,9 @@ type decorateEm2GoCapable struct {
 
 func (d *decorateEm2GoCapable) Capability(typ reflect.Type) (any, bool) {
 	c, ok := d.caps[typ]
+	if !ok && reflect.TypeOf(c).Implements(typ) {
+		return c, true
+	}
 	return c, ok
 }
 

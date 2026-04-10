@@ -37,6 +37,9 @@ type decorateKSECapable struct {
 
 func (d *decorateKSECapable) Capability(typ reflect.Type) (any, bool) {
 	c, ok := d.caps[typ]
+	if !ok && reflect.TypeOf(c).Implements(typ) {
+		return c, true
+	}
 	return c, ok
 }
 

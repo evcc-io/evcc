@@ -45,6 +45,9 @@ type decorateMeterCapable struct {
 
 func (d *decorateMeterCapable) Capability(typ reflect.Type) (any, bool) {
 	c, ok := d.caps[typ]
+	if !ok && reflect.TypeOf(c).Implements(typ) {
+		return c, true
+	}
 	return c, ok
 }
 
@@ -129,6 +132,9 @@ type decorateMeterBatteryCapable struct {
 
 func (d *decorateMeterBatteryCapable) Capability(typ reflect.Type) (any, bool) {
 	c, ok := d.caps[typ]
+	if !ok && reflect.TypeOf(c).Implements(typ) {
+		return c, true
+	}
 	return c, ok
 }
 

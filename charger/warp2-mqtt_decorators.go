@@ -53,6 +53,9 @@ type decorateWarp2Capable struct {
 
 func (d *decorateWarp2Capable) Capability(typ reflect.Type) (any, bool) {
 	c, ok := d.caps[typ]
+	if !ok && reflect.TypeOf(c).Implements(typ) {
+		return c, true
+	}
 	return c, ok
 }
 

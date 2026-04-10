@@ -29,6 +29,9 @@ type decorateNRGKickGen2Capable struct {
 
 func (d *decorateNRGKickGen2Capable) Capability(typ reflect.Type) (any, bool) {
 	c, ok := d.caps[typ]
+	if !ok && reflect.TypeOf(c).Implements(typ) {
+		return c, true
+	}
 	return c, ok
 }
 
