@@ -35,7 +35,6 @@ func (c *Connection) CurrentPower() (float64, error) {
 }
 
 func ParseFXml(s string, err error) float64 {
-
 	var v Devicestats
 
 	err2 := xml.Unmarshal([]byte(s), &v)
