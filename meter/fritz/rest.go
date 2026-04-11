@@ -51,10 +51,10 @@ type Statistics struct {
 }
 
 type ElementFloat struct {
-	Interval      int64   `json:"interval"`
-	StasticsState string  `json:"statisticsState"`
-	Period        string  `json:"period"`
-	Values        []int64 `json:"values,omitempty"`
+	Interval      int64     `json:"interval"`
+	StasticsState string    `json:"statisticsState"`
+	Period        string    `json:"period"`
+	Values        []float64 `json:"values,omitempty"`
 }
 
 type Element struct {
