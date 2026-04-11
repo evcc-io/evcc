@@ -44,10 +44,17 @@ type Interface struct {
 }
 
 type Statistics struct {
-	Temperatures []Element `json:"temperatures,omitempty"`
-	Powers       []Element `json:"powers,omitempty"`
-	Voltages     []Element `json:"voltages,omitempty"`
-	Energies     []Element `json:"energies,omitempty"`
+	Temperatures []ElementFloat `json:"temperatures,omitempty"`
+	Powers       []Element      `json:"powers,omitempty"`
+	Voltages     []Element      `json:"voltages,omitempty"`
+	Energies     []Element      `json:"energies,omitempty"`
+}
+
+type ElementFloat struct {
+	Interval      int64   `json:"interval"`
+	StasticsState string  `json:"statisticsState"`
+	Period        string  `json:"period"`
+	Values        []int64 `json:"values,omitempty"`
 }
 
 type Element struct {
@@ -169,8 +176,6 @@ func (c *RestConnection) refreshSession() error {
 		}
 	}
 
-	fmt.Println(v.SID)
-
 	c.SID = v.SID
 	c.updated = time.Now()
 
@@ -248,15 +253,12 @@ func (c *RestConnection) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-	fmt.Println(unit)
-
 	if unit.Statistics != nil {
 		stats := unit.Statistics.Powers[0].Values
 		rawPower := stats[0]
 
 		power := (float64)(rawPower / 1000)
 
-		fmt.Println(rawPower)
 		return power, nil
 	} else {
 		return 0, errors.New("statistics are empty")
@@ -279,7 +281,6 @@ func (c *RestConnection) TotalEnergy() (float64, error) {
 
 		energy := (float64)(rawEnergy / 1000)
 
-		fmt.Println(energy)
 		return energy, nil
 	} else {
 		return 0, errors.New("statistics are empty")
