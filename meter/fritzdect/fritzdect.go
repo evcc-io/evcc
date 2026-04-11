@@ -88,7 +88,7 @@ func (c *Connection) CurrentPower() (float64, error) {
 		}
 
 		var v Devicestats
-		err = unmarshal(resp, &v)
+		err = xml.Unmarshal([]byte(resp), &v)
 		if err != nil {
 			return 0, err
 		}
@@ -120,7 +120,7 @@ func (c *Connection) TotalEnergy() (float64, error) {
 		}
 
 		var v Devicestats
-		err = unmarshal(resp, &v)
+		err = xml.Unmarshal([]byte(resp), &v)
 		if err != nil {
 			return 0, err
 		}
@@ -136,11 +136,6 @@ func (c *Connection) TotalEnergy() (float64, error) {
 	energy, err := strconv.ParseFloat(resp, 64)
 
 	return energy / 1000, err // Wh ==> KWh
-}
-
-func unmarshal(s string, v *Devicestats) error {
-	err := xml.Unmarshal([]byte(s), v)
-	return err
 }
 
 func parseXml(s []string) (float64, error) {
