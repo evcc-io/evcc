@@ -26,11 +26,6 @@ type RestConnection struct {
 	unitG   util.Cacheable[Unit]
 }
 
-// Overview response from /smarthome/overview
-type Overview struct {
-	Units []Unit `json:"units"`
-}
-
 // Unit represents a smarthome unit with its interfaces
 type Unit struct {
 	UID                 string               `json:"UID"`
@@ -43,11 +38,11 @@ type Unit struct {
 
 // MultimeterInterface contains power/energy measurements
 type MultimeterInterface struct {
-	State   string `json:"state"`
-	Power   int    `json:"power"`   // mW
-	Voltage int    `json:"voltage"` // mV
-	Current int    `json:"current"` // mA
-	Energy  int    `json:"energy"`  // Wh
+	State   string  `json:"state"`
+	Power   float64 `json:"power"`   // W
+	Voltage float64 `json:"voltage"` // V
+	Current float64 `json:"current"` // A
+	Energy  float64 `json:"energy"`  // Wh
 }
 
 // OnOffInterface contains switch state
@@ -161,10 +156,17 @@ func (c *RestConnection) getUnit() (Unit, error) {
 	}
 
 	// Try to get the specific unit first
-	uri := fmt.Sprintf("%s/smarthome/units/%s?sid=%s", c.URI, url.PathEscape(c.UID), c.SID)
+	uri := fmt.Sprintf("%s/api/smarthome/units/%s", c.URI, url.PathEscape(c.UID))
+
+	req, err := request.New("GET", uri, nil, map[string]string{
+		"Authorization": "Bearer " + c.SID,
+	}, request.AcceptJSON)
+	if err != nil {
+		return Unit{}, err
+	}
 
 	var unit Unit
-	err := c.GetJSON(uri, &unit)
+	err = c.DoJSON(req, &unit)
 	if err != nil {
 		// Fall back to getting all units and finding ours
 		return c.findUnit()
@@ -177,12 +179,19 @@ func (c *RestConnection) getUnit() (Unit, error) {
 	return unit, nil
 }
 
-// findUnit searches for our unit in the overview
+// findUnit searches for our unit in the list of all units
 func (c *RestConnection) findUnit() (Unit, error) {
-	uri := fmt.Sprintf("%s/smarthome/units?sid=%s", c.URI, c.SID)
+	uri := fmt.Sprintf("%s/api/smarthome/units", c.URI)
+
+	req, err := request.New("GET", uri, nil, map[string]string{
+		"Authorization": "Bearer " + c.SID,
+	}, request.AcceptJSON)
+	if err != nil {
+		return Unit{}, err
+	}
 
 	var units []Unit
-	if err := c.GetJSON(uri, &units); err != nil {
+	if err := c.DoJSON(req, &units); err != nil {
 		return Unit{}, err
 	}
 
@@ -215,8 +224,8 @@ func (c *RestConnection) CurrentPower() (float64, error) {
 		return 0, api.ErrNotAvailable
 	}
 
-	// Power is in mW, convert to W
-	return float64(unit.MultimeterInterface.Power) / 1000, nil
+	// Power is in W
+	return unit.MultimeterInterface.Power, nil
 }
 
 var _ api.MeterEnergy = (*RestConnection)(nil)
@@ -233,7 +242,7 @@ func (c *RestConnection) TotalEnergy() (float64, error) {
 	}
 
 	// Energy is in Wh, convert to kWh
-	return float64(unit.MultimeterInterface.Energy) / 1000, nil
+	return unit.MultimeterInterface.Energy / 1000, nil
 }
 
 // SwitchPresent checks if the device is connected
@@ -283,7 +292,7 @@ func (c *RestConnection) setSwitch(on bool) error {
 		state = "on"
 	}
 
-	uri := fmt.Sprintf("%s/smarthome/units/%s?sid=%s", c.URI, url.PathEscape(c.UID), c.SID)
+	uri := fmt.Sprintf("%s/api/smarthome/units/%s", c.URI, url.PathEscape(c.UID))
 
 	data := map[string]any{
 		"onOffInterface": map[string]string{
@@ -291,7 +300,9 @@ func (c *RestConnection) setSwitch(on bool) error {
 		},
 	}
 
-	req, err := request.New("PUT", uri, request.MarshalJSON(data), request.JSONEncoding)
+	req, err := request.New("PUT", uri, request.MarshalJSON(data), map[string]string{
+		"Authorization": "Bearer " + c.SID,
+	}, request.JSONEncoding)
 	if err != nil {
 		return err
 	}
