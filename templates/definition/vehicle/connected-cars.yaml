@@ -1,7 +1,7 @@
 template: connected-cars
 products:
   - description:
-      generic: Connected Cars (connectedcars.io)
+      generic: Connected Cars
 group: generic
 params:
   - name: deviceToken
