@@ -1,9 +1,6 @@
 package charger
 
 import (
-	"errors"
-	"strconv"
-
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/meter/fritzdect"
 	"github.com/evcc-io/evcc/util"
@@ -11,10 +8,11 @@ import (
 
 // FRITZ! FritzBox AHA interface specifications:
 // https://fritz.com/fileadmin/user_upload/Global/Service/Schnittstellen/AHA-HTTP-Interface.pdf
+// https://fritz.support/resources/SmarthomeRestApiFRITZOS82.html (REST API for FritzOS 8.2+)
 
 // FritzDECT charger implementation
 type FritzDECT struct {
-	conn *fritzdect.Connection
+	conn fritzdect.SwitchAPI
 	*switchSocket
 }
 
@@ -38,12 +36,20 @@ func NewFritzDECTFromConfig(other map[string]any) (api.Charger, error) {
 		return nil, api.ErrMissingCredentials
 	}
 
-	return NewFritzDECT(cc.embed, cc.URI, cc.AIN, cc.User, cc.Password, cc.StandbyPower)
+	return NewFritzDECT(cc.embed, cc.URI, cc.AIN, cc.User, cc.Password, cc.StandbyPower, cc.Legacy)
 }
 
 // NewFritzDECT creates a new connection with standbypower for charger
-func NewFritzDECT(embed embed, uri, ain, user, password string, standbypower float64) (*FritzDECT, error) {
-	conn, err := fritzdect.NewConnection(uri, ain, user, password)
+func NewFritzDECT(embed embed, uri, ain, user, password string, standbypower float64, legacy bool) (*FritzDECT, error) {
+	var conn fritzdect.SwitchAPI
+	var err error
+
+	// Use legacy LUA API if explicitly requested, otherwise use new REST API
+	if legacy {
+		conn, err = fritzdect.NewConnection(uri, ain, user, password)
+	} else {
+		conn, err = fritzdect.NewRestConnection(uri, ain, user, password)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -59,18 +65,13 @@ func NewFritzDECT(embed embed, uri, ain, user, password string, standbypower flo
 
 // Status implements the api.Charger interface
 func (c *FritzDECT) Status() (api.ChargeStatus, error) {
-	resp, err := c.conn.ExecCmd("getswitchpresent")
+	present, err := c.conn.SwitchPresent()
 	if err != nil {
 		return api.StatusNone, err
 	}
 
-	present, err := strconv.ParseBool(resp)
-	if err == nil && !present {
-		err = api.ErrNotAvailable
-	}
-
-	if err != nil {
-		return api.StatusNone, err
+	if !present {
+		return api.StatusNone, api.ErrNotAvailable
 	}
 
 	return c.switchSocket.Status()
@@ -78,33 +79,15 @@ func (c *FritzDECT) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (c *FritzDECT) Enabled() (bool, error) {
-	resp, err := c.conn.ExecCmd("getswitchstate")
-	if err != nil {
-		return false, err
-	}
-
-	return strconv.ParseBool(resp)
+	return c.conn.SwitchState()
 }
 
 // Enable implements the api.Charger interface
 func (c *FritzDECT) Enable(enable bool) error {
-	cmd := "setswitchoff"
 	if enable {
-		cmd = "setswitchon"
+		return c.conn.SwitchOn()
 	}
-
-	// on 0/1 - DECT Switch state off/on (empty if unknown or error)
-	resp, err := c.conn.ExecCmd(cmd)
-	if err != nil {
-		return err
-	}
-
-	on, err := strconv.ParseBool(resp)
-	if err == nil && enable != on {
-		err = errors.New("switch failed")
-	}
-
-	return err
+	return c.conn.SwitchOff()
 }
 
 var _ api.MeterEnergy = (*FritzDECT)(nil)

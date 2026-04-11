@@ -18,6 +18,11 @@ import (
 	"golang.org/x/text/encoding/unicode"
 )
 
+// parseXML is a helper for unmarshaling XML responses
+func parseXML(data []byte, v any) error {
+	return xml.Unmarshal(data, v)
+}
+
 // FRITZ! FritzBox AHA interface and authentication specifications:
 // https://fritz.com/fileadmin/user_upload/Global/Service/Schnittstellen/AHA-HTTP-Interface.pdf
 // https://fritz.com/fileadmin/user_upload/Global/Service/Schnittstellen/AVM_Technical_Note_-_Session_ID.pdf
@@ -25,6 +30,7 @@ import (
 // FritzDECT settings
 type Settings struct {
 	URI, AIN, User, Password string
+	Legacy                   bool // use legacy homeautoswitch.lua API
 }
 
 // FritzDECT connection
@@ -123,7 +129,7 @@ func (c *Connection) CurrentPower() (float64, error) {
 
 var _ api.MeterEnergy = (*Connection)(nil)
 
-// CurrentPower implements the api.MeterEnergy interface
+// TotalEnergy implements the api.MeterEnergy interface
 func (c *Connection) TotalEnergy() (float64, error) {
 	// Energy value in Wh (total switch energy, refresh approximately every 2 minutes)
 	resp, err := c.ExecCmd("getswitchenergy")
@@ -134,6 +140,52 @@ func (c *Connection) TotalEnergy() (float64, error) {
 	energy, err := strconv.ParseFloat(resp, 64)
 
 	return energy / 1000, err // Wh ==> KWh
+}
+
+// SwitchPresent checks if the device is connected
+func (c *Connection) SwitchPresent() (bool, error) {
+	resp, err := c.ExecCmd("getswitchpresent")
+	if err != nil {
+		return false, err
+	}
+	return strconv.ParseBool(resp)
+}
+
+// SwitchState returns the current switch state
+func (c *Connection) SwitchState() (bool, error) {
+	resp, err := c.ExecCmd("getswitchstate")
+	if err != nil {
+		return false, err
+	}
+	return strconv.ParseBool(resp)
+}
+
+// SwitchOn turns the switch on
+func (c *Connection) SwitchOn() error {
+	resp, err := c.ExecCmd("setswitchon")
+	if err != nil {
+		return err
+	}
+
+	on, err := strconv.ParseBool(resp)
+	if err == nil && !on {
+		err = errors.New("switch on failed")
+	}
+	return err
+}
+
+// SwitchOff turns the switch off
+func (c *Connection) SwitchOff() error {
+	resp, err := c.ExecCmd("setswitchoff")
+	if err != nil {
+		return err
+	}
+
+	off, err := strconv.ParseBool(resp)
+	if err == nil && off {
+		err = errors.New("switch off failed")
+	}
+	return err
 }
 
 // Fritzbox helpers (credits to https://github.com/rsdk/ahago)

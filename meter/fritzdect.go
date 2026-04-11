@@ -8,6 +8,7 @@ import (
 
 // AVM FritzBox AHA interface specifications:
 // https://avm.de/fileadmin/user_upload/Global/Service/Schnittstellen/AHA-HTTP-Interface.pdf
+// https://fritz.support/resources/SmarthomeRestApiFRITZOS82.html (REST API for FritzOS 8.2+)
 
 func init() {
 	registry.Add("fritzdect", NewFritzDECTFromConfig)
@@ -24,5 +25,10 @@ func NewFritzDECTFromConfig(other map[string]any) (api.Meter, error) {
 		return nil, api.ErrMissingCredentials
 	}
 
-	return fritzdect.NewConnection(cc.URI, cc.AIN, cc.User, cc.Password)
+	// Use legacy LUA API if explicitly requested, otherwise use new REST API
+	if cc.Legacy {
+		return fritzdect.NewConnection(cc.URI, cc.AIN, cc.User, cc.Password)
+	}
+
+	return fritzdect.NewRestConnection(cc.URI, cc.AIN, cc.User, cc.Password)
 }
