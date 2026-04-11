@@ -116,7 +116,7 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 	}
 
 	if cc.Services.Wakeup != "" {
-		wakeup = func() error { return conn.CallSwitchService(cc.Services.Wakeup, true) }
+		wakeup = func() error { return conn.CallButtonService(cc.Services.Wakeup) }
 	}
 	if cc.Services.SetMaxCurrent != "" {
 		maxcurrent = func(current int64) error { return conn.CallNumberService(cc.Services.SetMaxCurrent, float64(current)) }
