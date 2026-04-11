@@ -172,6 +172,95 @@ func TestComputeOscevLimits(t *testing.T) {
 	}
 }
 
+// TestFindLimitDescriptionByMeasurementID pins the per-phase description
+// lookup that buildPhaseLimitData uses to map a parameter's MeasurementId to
+// the matching LoadControl limit description. Descriptions with a nil
+// MeasurementId must be skipped; first match wins; no match returns nil.
+func TestFindLimitDescriptionByMeasurementID(t *testing.T) {
+	id := func(v model.MeasurementIdType) *model.MeasurementIdType { return &v }
+	limitID := func(v model.LoadControlLimitIdType) *model.LoadControlLimitIdType { return &v }
+
+	descs := []model.LoadControlLimitDescriptionDataType{
+		{MeasurementId: nil, LimitId: limitID(1)},
+		{MeasurementId: id(7), LimitId: limitID(2)},
+		{MeasurementId: id(9), LimitId: limitID(3)},
+		{MeasurementId: id(9), LimitId: limitID(4)},
+	}
+
+	t.Run("empty slice returns nil", func(t *testing.T) {
+		assert.Nil(t, findLimitDescriptionByMeasurementID(nil, 9))
+	})
+
+	t.Run("no match returns nil", func(t *testing.T) {
+		assert.Nil(t, findLimitDescriptionByMeasurementID(descs, 42))
+	})
+
+	t.Run("skips nil MeasurementId and returns first match", func(t *testing.T) {
+		got := findLimitDescriptionByMeasurementID(descs, 7)
+		require.NotNil(t, got)
+		require.NotNil(t, got.LimitId)
+		assert.Equal(t, model.LoadControlLimitIdType(2), *got.LimitId)
+	})
+
+	t.Run("first-match wins on duplicates", func(t *testing.T) {
+		got := findLimitDescriptionByMeasurementID(descs, 9)
+		require.NotNil(t, got)
+		require.NotNil(t, got.LimitId)
+		assert.Equal(t, model.LoadControlLimitIdType(3), *got.LimitId)
+	})
+}
+
+// TestOscevMinLimits pins the three skip conditions and the happy path of
+// the OSCEV data-availability check that writeCurrentLimitData performs
+// before including recommendation limits in the combined write.
+func TestOscevMinLimits(t *testing.T) {
+	t.Run("scenario not available returns false", func(t *testing.T) {
+		oscev := mocks.NewCemOSCEVInterface(t)
+		evEntity := spinemocks.NewEntityRemoteInterface(t)
+		oscev.EXPECT().IsScenarioAvailableAtEntity(evEntity, uint(1)).Return(false)
+
+		limits, ok := oscevMinLimits(oscev, evEntity)
+		assert.False(t, ok)
+		assert.Nil(t, limits)
+	})
+
+	t.Run("LoadControlLimits error returns false", func(t *testing.T) {
+		oscev := mocks.NewCemOSCEVInterface(t)
+		evEntity := spinemocks.NewEntityRemoteInterface(t)
+		oscev.EXPECT().IsScenarioAvailableAtEntity(evEntity, uint(1)).Return(true)
+		oscev.EXPECT().LoadControlLimits(evEntity).Return(nil, errors.New("no data"))
+
+		limits, ok := oscevMinLimits(oscev, evEntity)
+		assert.False(t, ok)
+		assert.Nil(t, limits)
+	})
+
+	t.Run("CurrentLimits error returns false", func(t *testing.T) {
+		oscev := mocks.NewCemOSCEVInterface(t)
+		evEntity := spinemocks.NewEntityRemoteInterface(t)
+		oscev.EXPECT().IsScenarioAvailableAtEntity(evEntity, uint(1)).Return(true)
+		oscev.EXPECT().LoadControlLimits(evEntity).Return(nil, nil)
+		oscev.EXPECT().CurrentLimits(evEntity).Return(nil, nil, nil, errors.New("no limits"))
+
+		limits, ok := oscevMinLimits(oscev, evEntity)
+		assert.False(t, ok)
+		assert.Nil(t, limits)
+	})
+
+	t.Run("happy path returns min limits", func(t *testing.T) {
+		oscev := mocks.NewCemOSCEVInterface(t)
+		evEntity := spinemocks.NewEntityRemoteInterface(t)
+		want := limits3p(6)
+		oscev.EXPECT().IsScenarioAvailableAtEntity(evEntity, uint(1)).Return(true)
+		oscev.EXPECT().LoadControlLimits(evEntity).Return(nil, nil)
+		oscev.EXPECT().CurrentLimits(evEntity).Return(want, limits3p(16), limits3p(10), nil)
+
+		limits, ok := oscevMinLimits(oscev, evEntity)
+		assert.True(t, ok)
+		assert.Equal(t, want, limits)
+	})
+}
+
 // TestWriteCurrentLimitData_OpevNotAvailable verifies that writeCurrentLimitData
 // returns ErrNotAvailable without touching any clients when OpEV scenario 1 is
 // not supported on the target entity.

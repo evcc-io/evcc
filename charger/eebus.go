@@ -363,13 +363,9 @@ func (c *EEBus) writeCurrentLimitData(evEntity spineapi.EntityRemoteInterface, c
 	// OSCEV: recommendation max — optional. Active only when the requested
 	// current is at least the phase min (a recommendation below min cannot
 	// drive charging and is equivalent to no recommendation).
-	if c.cem.OscEV.IsScenarioAvailableAtEntity(evEntity, 1) {
-		if _, lerr := c.cem.OscEV.LoadControlLimits(evEntity); lerr == nil {
-			if minLimits, _, _, merr := c.cem.OscEV.CurrentLimits(evEntity); merr == nil {
-				if entries := buildPhaseLimitData(loadControl, elConn, oscevFilter, computeOscevLimits(current, minLimits)); entries != nil {
-					data = append(data, entries...)
-				}
-			}
+	if minLimits, ok := oscevMinLimits(c.cem.OscEV, evEntity); ok {
+		if entries := buildPhaseLimitData(loadControl, elConn, oscevFilter, computeOscevLimits(current, minLimits)); entries != nil {
+			data = append(data, entries...)
 		}
 	}
 
@@ -426,6 +422,44 @@ func computeOscevLimits(current float64, minLimits []float64) []ucapi.LoadLimits
 	return limits
 }
 
+// oscevMinLimits fetches the OSCEV recommendation-min per-phase limits from
+// the remote EV. It returns (nil, false) if the OSCEV scenario is not
+// available, the load-control limits are missing, or the current limits
+// cannot be read — these are the three skip conditions of the OSCEV branch
+// in writeCurrentLimitData.
+func oscevMinLimits(
+	oscEV ucapi.CemOSCEVInterface,
+	evEntity spineapi.EntityRemoteInterface,
+) ([]float64, bool) {
+	if !oscEV.IsScenarioAvailableAtEntity(evEntity, 1) {
+		return nil, false
+	}
+	if _, err := oscEV.LoadControlLimits(evEntity); err != nil {
+		return nil, false
+	}
+	minLimits, _, _, err := oscEV.CurrentLimits(evEntity)
+	if err != nil {
+		return nil, false
+	}
+	return minLimits, true
+}
+
+// findLimitDescriptionByMeasurementID returns a pointer to the first limit
+// description in the slice whose MeasurementId matches the target, or nil
+// if none match. Descriptions with a nil MeasurementId are skipped. The
+// returned pointer aliases the caller's slice element.
+func findLimitDescriptionByMeasurementID(
+	descs []model.LoadControlLimitDescriptionDataType,
+	measurementID model.MeasurementIdType,
+) *model.LoadControlLimitDescriptionDataType {
+	for i := range descs {
+		if descs[i].MeasurementId != nil && *descs[i].MeasurementId == measurementID {
+			return &descs[i]
+		}
+	}
+	return nil
+}
+
 // buildPhaseLimitData converts per-phase LoadLimitsPhase tuples into spine
 // LoadControlLimitDataType entries for a given description filter. It mirrors
 // the per-phase mapping inside eebus-go usecases/internal/loadcontrol.go
@@ -457,14 +491,7 @@ func buildPhaseLimitData(
 			continue
 		}
 
-		var limitDesc *model.LoadControlLimitDescriptionDataType
-		for _, desc := range limitDescriptions {
-			if desc.MeasurementId != nil && *desc.MeasurementId == *elParamDesc[0].MeasurementId {
-				safe := desc
-				limitDesc = &safe
-				break
-			}
-		}
+		limitDesc := findLimitDescriptionByMeasurementID(limitDescriptions, *elParamDesc[0].MeasurementId)
 		if limitDesc == nil || limitDesc.LimitId == nil {
 			continue
 		}
