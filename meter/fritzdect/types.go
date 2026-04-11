@@ -31,10 +31,24 @@ const sessionTimeout = 15 * time.Minute
 type Devicestats struct {
 	XMLName xml.Name `xml:"devicestats"`
 	Energy  Energy   `xml:"energy"`
+	Power   Power    `xml:"power"`
+	Voltage Voltage  `xml:"voltage"`
 }
 
 // Energy structures getbasicdevicesstats command energy response (AHA-HTTP-Interface)
 type Energy struct {
 	XMLName xml.Name `xml:"energy"`
+	Values  []string `xml:"stats"`
+}
+
+// Voltage structures getbasicdevicesstats command energy response (AHA-HTTP-Interface)
+type Voltage struct {
+	XMLName xml.Name `xml:"voltage"`
+	Values  []string `xml:"stats"`
+}
+
+// Power structures getbasicdevicesstats command energy response (AHA-HTTP-Interface)
+type Power struct {
+	XMLName xml.Name `xml:"power"`
 	Values  []string `xml:"stats"`
 }

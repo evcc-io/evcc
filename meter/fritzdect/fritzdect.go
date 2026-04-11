@@ -81,7 +81,17 @@ func (c *Connection) CurrentPower() (float64, error) {
 	// power value in 0,001 W (current switch power, refresh approximately every 2 minutes)
 	resp, err := c.ExecCmd("getswitchpower")
 	if err != nil {
-		return 0, err
+		// new logic for Fritz 250
+		resp, err := c.ExecCmd("getbasicdevicestats")
+		if err != nil {
+			return 0, err
+		}
+
+		power, err := ParseFXml(resp, err)
+		if err != nil {
+			return 0, err
+		}
+		return (power * 10) / 1000, err // 1/100W ==> W
 	}
 
 	power, err := strconv.ParseFloat(resp, 64)
@@ -96,12 +106,69 @@ func (c *Connection) TotalEnergy() (float64, error) {
 	// Energy value in Wh (total switch energy, refresh approximately every 2 minutes)
 	resp, err := c.ExecCmd("getswitchenergy")
 	if err != nil {
-		return 0, err
+		resp, err := c.ExecCmd("getbasicdevicestats")
+		if err != nil {
+			return 0, err
+		}
+
+		energy, err := ParseFXml2(resp, err)
+		if err != nil {
+			return 0, err
+		}
+		return energy / 1000, err // Wh ==> KWh
 	}
 
 	energy, err := strconv.ParseFloat(resp, 64)
 
 	return energy / 1000, err // Wh ==> KWh
+}
+
+func ParseFXml(s string, err error) (float64, error) {
+	var v Devicestats
+
+	err2 := xml.Unmarshal([]byte(s), &v)
+	if err2 != nil {
+		return 0, err2
+	}
+
+	var csv = v.Power.Values[0]
+
+	parts := strings.Split(csv, ",")
+	if len(parts) == 0 {
+		//
+	}
+
+	f, err := strconv.ParseFloat(parts[0], 64)
+	if err != nil {
+		return 0, err
+	}
+
+	return float64(f), nil
+}
+
+func ParseFXml2(s string, err error) (float64, error) {
+	var v Devicestats
+
+	err2 := xml.Unmarshal([]byte(s), &v)
+	if err2 != nil {
+		//
+	}
+
+	//fmt.Sprintln("%v", v)
+
+	var csv = v.Energy.Values[0]
+
+	parts := strings.Split(csv, ",")
+	if len(parts) == 0 {
+		//
+	}
+
+	f, err := strconv.ParseFloat(parts[0], 64)
+	if err != nil {
+		return 0, err
+	}
+
+	return float64(f), nil
 }
 
 // Fritzbox helpers (credits to https://github.com/rsdk/ahago)
