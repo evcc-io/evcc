@@ -18,13 +18,11 @@ params:
     description:
       en: API Domain
       de: API-Domain
-    advanced: true
   - name: namespace
     default: "vwaustralia:app"
     description:
       en: Organization Namespace
       de: Organisations-Namespace
-    advanced: true
   - name: vin
   - preset: vehicle-common
   - name: cache
