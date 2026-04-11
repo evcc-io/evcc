@@ -139,6 +139,9 @@ func (c *Connection) TotalEnergy() (float64, error) {
 }
 
 func parseXml(s []string) (float64, error) {
+	if len(s) == 0 {
+		return 0, errors.New("unexpected data recieved from fritzbox")
+	}
 	parts := strings.Split(s[0], ",")
 	if len(parts) == 0 {
 		return 0, nil
