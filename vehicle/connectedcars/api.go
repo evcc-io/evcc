@@ -15,8 +15,9 @@ import (
 // API provides access to the Connected Cars GraphQL API.
 type API struct {
 	*request.Helper
-	domain    string
-	namespace string
+	authHelper *request.Helper // plain client for token refresh; no oauth2 transport to avoid circular dependency
+	domain     string
+	namespace  string
 }
 
 // graphqlRequest is a generic GraphQL request body.
@@ -28,9 +29,10 @@ type graphqlRequest struct {
 // NewAPI creates a new Connected Cars API client with device-token authentication.
 func NewAPI(log *util.Logger, domain, namespace, deviceToken string) *API {
 	api := &API{
-		Helper:    request.NewHelper(log),
-		domain:    domain,
-		namespace: namespace,
+		Helper:     request.NewHelper(log),
+		authHelper: request.NewHelper(log),
+		domain:     domain,
+		namespace:  namespace,
 	}
 
 	// Use RefreshTokenSource to handle JWT refresh via device token.
@@ -76,9 +78,8 @@ func (a *API) refreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 
 	var res TokenResponse
 
-	// Use a plain client to avoid circular dependency with oauth2 transport.
-	client := request.NewHelper(util.NewLogger("cc-auth"))
-	if err := client.DoJSON(req, &res); err != nil {
+	// Use the plain authHelper (no oauth2 transport) to avoid circular dependency.
+	if err := a.authHelper.DoJSON(req, &res); err != nil {
 		return nil, fmt.Errorf("device token login: %w", err)
 	}
 
