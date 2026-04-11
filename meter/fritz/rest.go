@@ -263,7 +263,6 @@ func (c *RestConnection) CurrentPower() (float64, error) {
 	} else {
 		return 0, errors.New("statistics are empty")
 	}
-
 }
 
 var _ api.MeterEnergy = (*RestConnection)(nil)
