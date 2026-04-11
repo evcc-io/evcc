@@ -453,7 +453,7 @@ func buildPhaseLimitData(
 			AcMeasuredPhases: lo.ToPtr(phaseLimit.Phase),
 		}
 		elParamDesc, err := elConn.GetParameterDescriptionsForFilter(paramFilter)
-		if err != nil || len(elParamDesc) == 0 || elParamDesc[0].MeasurementId == nil {
+		if err != nil || len(elParamDesc) == 0 || elParamDesc[0].MeasurementId == nil || elParamDesc[0].ParameterId == nil {
 			continue
 		}
 
