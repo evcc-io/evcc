@@ -186,12 +186,15 @@ func (p *AA55UDP) fetchPayload() ([]byte, error) {
 	if entry, ok := responseCache[key]; ok && time.Now().Before(entry.expiresAt) {
 		payload := entry.payload
 		responseCacheMu.Unlock()
+		p.log.TRACE.Printf("cache hit for %s pdu=%s", p.raddr, hex.EncodeToString(p.pdu))
 		return payload, nil
 	}
 	responseCacheMu.Unlock()
 
 	// Cache miss — send the request.
 	packet := append(p.pdu, modbusCRC16(p.pdu)...)
+
+	p.log.TRACE.Printf("send to %s: %s", p.raddr, hex.EncodeToString(packet))
 
 	if _, err := p.conn.Write(packet); err != nil {
 		return nil, fmt.Errorf("aa55udp write: %w", err)
@@ -206,6 +209,8 @@ func (p *AA55UDP) fetchPayload() ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("aa55udp read: %w", err)
 	}
+
+	p.log.TRACE.Printf("recv from %s: %s", p.raddr, hex.EncodeToString(buf[:n]))
 
 	payload, err := stripAA55Header(buf[:n])
 	if err != nil {
