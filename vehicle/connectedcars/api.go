@@ -108,6 +108,10 @@ func (a *API) Vehicles() ([]Vehicle, error) {
 		return nil, fmt.Errorf("list vehicles: %w", err)
 	}
 
+	if res.Data == nil {
+		return nil, fmt.Errorf("list vehicles: missing data in response")
+	}
+
 	return res.Data.Vehicles.Items, nil
 }
 
@@ -128,6 +132,10 @@ func (a *API) Data(vehicleID string) (VehicleData, error) {
 	var res DataResponse
 	if err := a.DoJSON(req, &res); err != nil {
 		return VehicleData{}, fmt.Errorf("vehicle data: %w", err)
+	}
+
+	if res.Data == nil {
+		return VehicleData{}, fmt.Errorf("vehicle data: missing data in response")
 	}
 
 	return res.Data.Vehicle, nil

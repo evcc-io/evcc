@@ -8,7 +8,7 @@ type TokenResponse struct {
 
 // VehiclesResponse is the GraphQL response for listing vehicles.
 type VehiclesResponse struct {
-	Data struct {
+	Data *struct {
 		Vehicles struct {
 			Items []Vehicle `json:"items"`
 		} `json:"vehicles"`
@@ -24,7 +24,7 @@ type Vehicle struct {
 
 // DataResponse is the GraphQL response for vehicle data.
 type DataResponse struct {
-	Data struct {
+	Data *struct {
 		Vehicle VehicleData `json:"vehicle"`
 	} `json:"data"`
 }
