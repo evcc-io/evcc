@@ -108,6 +108,7 @@ func (lp *Loadpoint) updateSession(opts ...sessionOption) {
 
 	if !lp.session.Created.IsZero() {
 		lp.db.Persist(lp.session)
+		lp.publish(keys.SessionId, lp.session.ID)
 	}
 }
 
@@ -119,6 +120,7 @@ func (lp *Loadpoint) clearSession() {
 	}
 
 	lp.session = nil
+	lp.publish(keys.SessionId, nil)
 }
 
 func (lp *Loadpoint) resetHeatingSession() {
