@@ -2,7 +2,7 @@ package meter
 
 import (
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/meter/fritzdect"
+	"github.com/evcc-io/evcc/meter/fritz"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -16,7 +16,7 @@ func init() {
 
 // NewFritzDECTFromConfig creates a fritzdect meter from generic config
 func NewFritzDECTFromConfig(other map[string]any) (api.Meter, error) {
-	var cc fritzdect.Settings
+	var cc fritz.Settings
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
@@ -27,8 +27,8 @@ func NewFritzDECTFromConfig(other map[string]any) (api.Meter, error) {
 
 	// Use legacy LUA API if explicitly requested, otherwise use new REST API
 	if cc.Legacy {
-		return fritzdect.NewConnection(cc.URI, cc.AIN, cc.User, cc.Password)
+		return fritz.NewConnection(cc.URI, cc.AIN, cc.User, cc.Password)
 	}
 
-	return fritzdect.NewRestConnection(cc.URI, cc.AIN, cc.User, cc.Password)
+	return fritz.NewRestConnection(cc.URI, cc.AIN, cc.User, cc.Password)
 }

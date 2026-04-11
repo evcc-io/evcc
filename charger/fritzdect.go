@@ -2,7 +2,7 @@ package charger
 
 import (
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/meter/fritzdect"
+	"github.com/evcc-io/evcc/meter/fritz"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -12,7 +12,7 @@ import (
 
 // FritzDECT charger implementation
 type FritzDECT struct {
-	conn fritzdect.SwitchAPI
+	conn fritz.Switch
 	*switchSocket
 }
 
@@ -23,9 +23,9 @@ func init() {
 // NewFritzDECTFromConfig creates a fritzdect charger from generic config
 func NewFritzDECTFromConfig(other map[string]any) (api.Charger, error) {
 	var cc struct {
-		embed              `mapstructure:",squash"`
-		fritzdect.Settings `mapstructure:",squash"`
-		StandbyPower       float64
+		embed          `mapstructure:",squash"`
+		fritz.Settings `mapstructure:",squash"`
+		StandbyPower   float64
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -41,14 +41,14 @@ func NewFritzDECTFromConfig(other map[string]any) (api.Charger, error) {
 
 // NewFritzDECT creates a new connection with standbypower for charger
 func NewFritzDECT(embed embed, uri, ain, user, password string, standbypower float64, legacy bool) (*FritzDECT, error) {
-	var conn fritzdect.SwitchAPI
+	var conn fritz.Switch
 	var err error
 
 	// Use legacy LUA API if explicitly requested, otherwise use new REST API
 	if legacy {
-		conn, err = fritzdect.NewConnection(uri, ain, user, password)
+		conn, err = fritz.NewConnection(uri, ain, user, password)
 	} else {
-		conn, err = fritzdect.NewRestConnection(uri, ain, user, password)
+		conn, err = fritz.NewRestConnection(uri, ain, user, password)
 	}
 	if err != nil {
 		return nil, err

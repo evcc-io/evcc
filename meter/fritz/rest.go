@@ -1,4 +1,4 @@
-package fritzdect
+package fritz
 
 import (
 	"errors"
