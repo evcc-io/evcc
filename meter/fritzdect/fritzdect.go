@@ -87,7 +87,7 @@ func (c *Connection) CurrentPower() (float64, error) {
 			return 0, err
 		}
 
-		power, err := ParseFXml(resp, err)
+		power, err := ParseFXml(resp)
 		if err != nil {
 			return 0, err
 		}
@@ -106,12 +106,13 @@ func (c *Connection) TotalEnergy() (float64, error) {
 	// Energy value in Wh (total switch energy, refresh approximately every 2 minutes)
 	resp, err := c.ExecCmd("getswitchenergy")
 	if err != nil {
+		// new logic for Fritz 250
 		resp, err := c.ExecCmd("getbasicdevicestats")
 		if err != nil {
 			return 0, err
 		}
 
-		energy, err := ParseFXml2(resp, err)
+		energy, err := ParseFXml2(resp)
 		if err != nil {
 			return 0, err
 		}
@@ -123,19 +124,19 @@ func (c *Connection) TotalEnergy() (float64, error) {
 	return energy / 1000, err // Wh ==> KWh
 }
 
-func ParseFXml(s string, err error) (float64, error) {
+func ParseFXml(s string) (float64, error) {
 	var v Devicestats
 
-	err2 := xml.Unmarshal([]byte(s), &v)
-	if err2 != nil {
-		return 0, err2
+	err := xml.Unmarshal([]byte(s), &v)
+	if err != nil {
+		return 0, err
 	}
 
 	var csv = v.Power.Values[0]
 
 	parts := strings.Split(csv, ",")
 	if len(parts) == 0 {
-		//
+		return 0, err
 	}
 
 	f, err := strconv.ParseFloat(parts[0], 64)
@@ -146,21 +147,24 @@ func ParseFXml(s string, err error) (float64, error) {
 	return float64(f), nil
 }
 
-func ParseFXml2(s string, err error) (float64, error) {
+func ParseFXml2(s string) (float64, error) {
 	var v Devicestats
 
-	err2 := xml.Unmarshal([]byte(s), &v)
-	if err2 != nil {
-		//
+	err := xml.Unmarshal([]byte(s), &v)
+	if err != nil {
+		return 0, err
 	}
 
-	//fmt.Sprintln("%v", v)
+	var rawEnergy = v.Energy.Values
+	if len(rawEnergy) == 0 {
+		return 0, err
+	}
 
-	var csv = v.Energy.Values[0]
+	var csv = rawEnergy[0]
 
 	parts := strings.Split(csv, ",")
 	if len(parts) == 0 {
-		//
+		return 0, err
 	}
 
 	f, err := strconv.ParseFloat(parts[0], 64)
