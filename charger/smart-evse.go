@@ -69,19 +69,20 @@ type smartEvseRestSettings struct {
 		SolarStopTime     int `json:"solar_stop_time"`
 	} `json:"settings"`
 	EvMeter struct {
-		ImportActiveEnergy float64 `json:"import_active_energy"`
-		ImportActivePower  float64 `json:"import_active_power"`
-	} `json:"ev_meter"`
-	MainsMeter struct {
+		Description       string  `json:"description"`
+		Address           int     `json:"address"`
+		ImportActivePower float64 `json:"import_active_power"`
+		TotalKwh          float64 `json:"total_kwh"`
+		ChargedKwh        float64 `json:"charged_kwh"`
+		Currents          struct {
+			Total float64 `json:"TOTAL"`
+			L1    float64 `json:"L1"`
+			L2    float64 `json:"L2"`
+			L3    float64 `json:"L3"`
+		} `json:"currents"`
 		ImportActiveEnergy float64 `json:"import_active_energy"`
 		ExportActiveEnergy float64 `json:"export_active_energy"`
-	} `json:"mains_meter"`
-	PhaseCurrents struct {
-		Total float64 `json:"TOTAL"`
-		L1    float64 `json:"L1"`
-		L2    float64 `json:"L2"`
-		L3    float64 `json:"L3"`
-	} `json:"phase_currents"`
+	} `json:"ev_meter"`
 }
 
 // SmartEVSE-3.5 operating mode IDs
@@ -284,7 +285,7 @@ func (wb *SmartEVSE3) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-	// import_active_power is reported in W when an EV meter is configured
+	// import_active_power is reported in W
 	return res.EvMeter.ImportActivePower, nil
 }
 
@@ -311,7 +312,7 @@ func (wb *SmartEVSE3) Currents() (float64, float64, float64, error) {
 	}
 
 	// phase currents are reported in 1/10 A
-	return res.PhaseCurrents.L1 / 10, res.PhaseCurrents.L2 / 10, res.PhaseCurrents.L3 / 10, nil
+	return res.EvMeter.Currents.L1 / 10, res.EvMeter.Currents.L2 / 10, res.EvMeter.Currents.L3 / 10, nil
 }
 
 var _ api.Identifier = (*SmartEVSE3)(nil)
