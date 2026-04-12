@@ -57,6 +57,7 @@ type smartEvseRestSettings struct {
 		Error          string `json:"error"`
 		ErrorID        int    `json:"error_id"`
 		RFID           string `json:"rfid"`
+		NrOfPhases     int    `json:"nrofphases"`
 	} `json:"evse"`
 	Settings struct {
 		ChargeCurrent     int `json:"charge_current"`
@@ -65,15 +66,16 @@ type smartEvseRestSettings struct {
 		CurrentMax        int `json:"current_max"`
 		CurrentMain       int `json:"current_main"`
 		SolarMaxImport    int `json:"solar_max_import"`
-		SolarStartCurrent int `json:"solar_start_current"`
-		SolarStopTime     int `json:"solar_stop_time"`
+		SolarStartCurrent int    `json:"solar_start_current"`
+		SolarStopTime     int    `json:"solar_stop_time"`
+		EnableC2          string `json:"enable_C2"`
 	} `json:"settings"`
 	EvMeter struct {
 		Description       string  `json:"description"`
 		Address           int     `json:"address"`
 		ImportActivePower float64 `json:"import_active_power"`
-		TotalKwh          float64 `json:"total_kwh"`
-		ChargedKwh        float64 `json:"charged_kwh"`
+		TotalWh           float64 `json:"total_wh"`
+		ChargedWh         float64 `json:"charged_wh"`
 		Currents          struct {
 			Total float64 `json:"TOTAL"`
 			L1    float64 `json:"L1"`
@@ -94,9 +96,20 @@ const (
 	smartEvse3ModePause  = 4
 )
 
+// SmartEVSE-3.5 C2 contactor IDs
+const (
+	smartEvse3C2NotPresent = 0
+	smartEvse3C2AlwaysOff  = 1 // single-phase
+	smartEvse3C2SolarOff   = 2
+	smartEvse3C2AlwaysOn   = 3 // three-phase
+	smartEvse3C2Auto       = 4
+)
+
 func init() {
 	registry.Add("smart-evse", NewSmartEVSE3FromConfig)
 }
+
+//go:generate go tool decorate -f decorateSmartEVSE3 -b *SmartEVSE3 -r api.Charger -t api.Meter,api.MeterEnergy,api.PhaseCurrents,api.PhaseSwitcher,api.PhaseGetter
 
 // NewSmartEVSE3FromConfig creates a SmartEVSE-3.5 REST charger from generic config
 func NewSmartEVSE3FromConfig(other map[string]any) (api.Charger, error) {
@@ -119,7 +132,7 @@ func NewSmartEVSE3FromConfig(other map[string]any) (api.Charger, error) {
 }
 
 // NewSmartEVSE3 creates a new SmartEVSE-3.5 REST charger
-func NewSmartEVSE3(uri string, cache time.Duration) (*SmartEVSE3, error) {
+func NewSmartEVSE3(uri string, cache time.Duration) (api.Charger, error) {
 	log := util.NewLogger("smart-evse")
 
 	wb := &SmartEVSE3{
@@ -151,7 +164,24 @@ func NewSmartEVSE3(uri string, cache time.Duration) (*SmartEVSE3, error) {
 		}
 	}
 
-	return wb, nil
+	// decorate optional EV meter if configured in SmartEVSE
+	var currentPower, totalEnergy func() (float64, error)
+	var currents func() (float64, float64, float64, error)
+	if res.EvMeter.Description != "" && res.EvMeter.Description != "Disabled" {
+		currentPower = wb.currentPower
+		totalEnergy = wb.totalEnergy
+		currents = wb.currents
+	}
+
+	// decorate optional 1P/3P phase switching via C2 contactor
+	var phases1p3p func(int) error
+	var getPhases func() (int, error)
+	if res.Settings.EnableC2 != "" && res.Settings.EnableC2 != "Not present" {
+		phases1p3p = wb.phases1p3p
+		getPhases = wb.getPhases
+	}
+
+	return decorateSmartEVSE3(wb, currentPower, totalEnergy, currents, phases1p3p, getPhases), nil
 }
 
 // post issues a POST request to the SmartEVSE with given query parameters.
@@ -276,10 +306,8 @@ func (wb *SmartEVSE3) MaxCurrentMillis(current float64) error {
 	return nil
 }
 
-var _ api.Meter = (*SmartEVSE3)(nil)
-
-// CurrentPower implements the api.Meter interface
-func (wb *SmartEVSE3) CurrentPower() (float64, error) {
+// currentPower implements the api.Meter interface
+func (wb *SmartEVSE3) currentPower() (float64, error) {
 	res, err := wb.apiG.Get()
 	if err != nil {
 		return 0, err
@@ -289,23 +317,47 @@ func (wb *SmartEVSE3) CurrentPower() (float64, error) {
 	return res.EvMeter.ImportActivePower, nil
 }
 
-var _ api.MeterEnergy = (*SmartEVSE3)(nil)
-
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *SmartEVSE3) TotalEnergy() (float64, error) {
+// totalEnergy implements the api.MeterEnergy interface
+func (wb *SmartEVSE3) totalEnergy() (float64, error) {
 	res, err := wb.apiG.Get()
 	if err != nil {
 		return 0, err
 	}
 
-	// import_active_energy is reported in Wh
-	return res.EvMeter.ImportActiveEnergy / 1e3, nil
+	// total_wh is reported in Wh
+	return res.EvMeter.TotalWh / 1e3, nil
 }
 
-var _ api.PhaseCurrents = (*SmartEVSE3)(nil)
+// phases1p3p implements the api.PhaseSwitcher interface
+func (wb *SmartEVSE3) phases1p3p(phases int) error {
+	var c2 int
+	switch phases {
+	case 1:
+		c2 = smartEvse3C2AlwaysOff
+	case 3:
+		c2 = smartEvse3C2AlwaysOn
+	default:
+		return fmt.Errorf("invalid phases: %d", phases)
+	}
 
-// Currents implements the api.PhaseCurrents interface
-func (wb *SmartEVSE3) Currents() (float64, float64, float64, error) {
+	// C2 switching takes effect on next state change; disable charger during switch
+	return whenDisabled(wb, func() error {
+		return wb.post("settings", fmt.Sprintf("enable_C2=%d", c2))
+	})
+}
+
+// getPhases implements the api.PhaseGetter interface
+func (wb *SmartEVSE3) getPhases() (int, error) {
+	res, err := wb.apiG.Get()
+	if err != nil {
+		return 0, err
+	}
+
+	return res.Evse.NrOfPhases, nil
+}
+
+// currents implements the api.PhaseCurrents interface
+func (wb *SmartEVSE3) currents() (float64, float64, float64, error) {
 	res, err := wb.apiG.Get()
 	if err != nil {
 		return 0, 0, 0, err
