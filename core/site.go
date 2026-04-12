@@ -91,6 +91,10 @@ type Site struct {
 	householdEnergy    *meterEnergy
 	householdSlotStart time.Time
 
+	// per-loadpoint energy tracking for heating devices
+	loadpointEnergy    map[int]*meterEnergy
+	loadpointSlotStart map[int]time.Time
+
 	// cached state
 	gridPower                float64            // Grid power
 	pvPower                  float64            // PV power
@@ -139,6 +143,16 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 
 	site.prioritizer = prioritizer.New(log)
 	site.stats = NewStats()
+
+	// initialize per-loadpoint energy tracking for heating devices
+	site.loadpointEnergy = make(map[int]*meterEnergy)
+	site.loadpointSlotStart = make(map[int]time.Time)
+	for i, lp := range loadpoints {
+		if hasFeature(lp.charger, api.Heating) {
+			site.loadpointEnergy[i] = &meterEnergy{clock: clock.New()}
+			site.loadpointSlotStart[i] = time.Time{}
+		}
+	}
 
 	// upload telemetry on shutdown
 	if telemetry.Enabled() {
@@ -807,7 +821,7 @@ func (site *Site) updateHomeConsumption(homePower float64) {
 		// next slot has started
 		if slotStart.Sub(site.householdSlotStart) >= slotDuration {
 			// more or less full slot
-			site.log.DEBUG.Printf("15min household consumption: %.0fWh", site.householdEnergy.Accumulated)
+			site.log.DEBUG.Printf("15min household consumption: %.0fWh", site.householdEnergy.Accumulated*1000)
 			if err := metrics.Persist(site.householdSlotStart, site.householdEnergy.Accumulated); err != nil {
 				site.log.ERROR.Printf("persist household consumption: %v", err)
 			}
@@ -815,6 +829,39 @@ func (site *Site) updateHomeConsumption(homePower float64) {
 
 		site.householdSlotStart = slotStart
 		site.householdEnergy.Accumulated = 0
+	}
+}
+
+// updateLoadpointConsumption tracks energy consumption for a specific loadpoint (heating devices)
+func (site *Site) updateLoadpointConsumption(lpID int, power float64) {
+	lpEnergy, exists := site.loadpointEnergy[lpID]
+	if !exists {
+		return // not a tracked heating loadpoint
+	}
+
+	lpEnergy.AddPower(power)
+
+	now := lpEnergy.clock.Now()
+	if site.loadpointSlotStart[lpID].IsZero() {
+		site.loadpointSlotStart[lpID] = now
+		return
+	}
+
+	slotDuration := 15 * time.Minute
+	slotStart := now.Truncate(slotDuration)
+
+	if slotStart.After(site.loadpointSlotStart[lpID]) {
+		// next slot has started
+		if slotStart.Sub(site.loadpointSlotStart[lpID]) >= slotDuration {
+			// more or less full slot
+			site.log.DEBUG.Printf("15min loadpoint %d consumption: %.0fWh", lpID, lpEnergy.Accumulated*1000)
+			if err := metrics.PersistLoadpoint(lpID, site.loadpointSlotStart[lpID], lpEnergy.Accumulated); err != nil {
+				site.log.ERROR.Printf("persist loadpoint %d consumption: %v", lpID, err)
+			}
+		}
+
+		site.loadpointSlotStart[lpID] = slotStart
+		lpEnergy.Accumulated = 0
 	}
 }
 
@@ -893,10 +940,17 @@ func (site *Site) updateLoadpoints(rates api.Rates) float64 {
 		sum float64
 	)
 
-	for _, lp := range site.loadpoints {
+	for i, lp := range site.loadpoints {
+		lpID := i // capture loop variable for goroutine
+		lp := lp  // capture loadpoint for goroutine
 		wg.Go(func() {
 			power := lp.UpdateChargePowerAndCurrents()
 			site.prioritizer.UpdateChargePowerFlexibility(lp, rates)
+
+			// track heating loadpoint consumption
+			if _, isHeating := site.loadpointEnergy[lpID]; isHeating && power > 0 {
+				site.updateLoadpointConsumption(lpID, power)
+			}
 
 			mu.Lock()
 			sum += power
