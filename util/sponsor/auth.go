@@ -20,6 +20,7 @@ package sponsor
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -37,10 +38,7 @@ var (
 	ExpiresAt                     time.Time
 )
 
-const (
-	unavailable = "sponsorship unavailable"
-	victron     = "victron"
-)
+const unavailable = "sponsorship unavailable"
 
 func IsAuthorized() bool {
 	mu.RLock()
@@ -94,8 +92,15 @@ func ConfigureSponsorship(token string) error {
 			return nil
 		}
 
+		if os.Getenv("HEMSPRO") != "" {
+			if sub := checkHemsPro(); sub != "" {
+				Subject = sub
+				return nil
+			}
+		}
+
 		var err error
-		if token, err = readSerial(); token == "" || err != nil {
+		if token, err = checkPulsares(); token == "" || err != nil {
 			return err
 		}
 	}
