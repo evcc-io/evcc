@@ -8,13 +8,13 @@ import (
 )
 
 func TestYamlError(t *testing.T) {
-	b := `
-block:
+	b := `block:
   data: foo
-  - mapped
-`
+  - mapped`
+
 	var res map[string]any
 	err := yaml.Unmarshal([]byte(b), &res)
+
 	require.Error(t, err)
-	require.Equal(t, 2, yamlErrorLine(err))
+	require.Equal(t, 3, yamlErrorLine(err))
 }

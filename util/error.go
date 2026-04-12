@@ -31,16 +31,8 @@ func ErrorAsJson(err error) any {
 }
 
 func yamlErrorLine(err error) int {
-	var (
-		ype *yaml.ParserError
-		yue *yaml.UnmarshalError
-	)
-	switch {
-	case errors.As(err, &ype):
-		return ype.Line
-	case errors.As(err, &yue):
-		return yue.Line
+	if err, ok := errors.AsType[*yaml.LoadError](err); ok {
+		return err.Mark.Line
 	}
-
 	return 0
 }
