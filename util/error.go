@@ -16,6 +16,7 @@ func ErrorAsJson(err error) any {
 		URI           string `json:"uri,omitempty"`
 	}{
 		Error: err.Error(),
+		Line:  yamlErrorLine(err),
 	}
 
 	if ae, ok := errors.AsType[*api.ErrLoginRequired](err); ok {
@@ -26,16 +27,20 @@ func ErrorAsJson(err error) any {
 		res.URI = ue.URL().String()
 	}
 
+	return res
+}
+
+func yamlErrorLine(err error) int {
 	var (
 		ype *yaml.ParserError
 		yue *yaml.UnmarshalError
 	)
 	switch {
 	case errors.As(err, &ype):
-		res.Line = ype.Line
+		return ype.Line
 	case errors.As(err, &yue):
-		res.Line = yue.Line
+		return yue.Line
 	}
 
-	return res
+	return 0
 }
