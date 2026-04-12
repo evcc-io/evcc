@@ -27,10 +27,10 @@ func NewFritzDECTFromConfig(other map[string]any) (api.Meter, error) {
 		return nil, api.ErrMissingCredentials
 	}
 
-	// Use legacy LUA API if explicitly requested, otherwise use new REST API
-	if cc.Legacy {
-		return aha.NewConnection(cc.URI, cc.AIN, cc.User, cc.Password)
+	// Use new REST API if firmware82 is set, otherwise use legacy LUA API
+	if cc.Firmware82 {
+		return smarthome.NewConnection(cc.URI, cc.AIN, cc.User, cc.Password)
 	}
 
-	return smarthome.NewConnection(cc.URI, cc.AIN, cc.User, cc.Password)
+	return aha.NewConnection(cc.URI, cc.AIN, cc.User, cc.Password)
 }

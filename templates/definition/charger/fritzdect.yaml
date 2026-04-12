@@ -25,15 +25,15 @@ params:
     required: true
   - name: ain
     required: true
-  - name: legacy
+  - name: firmware82
     advanced: true
     default: false
     description:
-      de: Alte API verwenden (vor FritzOS 8.2)
-      en: Use legacy API (before FritzOS 8.2)
+      de: Neue REST-API verwenden (FritzOS 8.2+)
+      en: Use new REST API (FritzOS 8.2+)
     help:
-      de: Verwende die alte homeautoswitch.lua API für FritzOS vor Version 8.2
-      en: Use the legacy homeautoswitch.lua API for FritzOS before version 8.2
+      de: Verwende die neue REST-API für FritzOS ab Version 8.2
+      en: Use the new REST API for FritzOS version 8.2 and later
   - preset: switchsocket
 render: |
   type: fritzdect
@@ -41,5 +41,5 @@ render: |
   user: {{ .user }}
   password: {{ .password }}
   ain: {{ .ain }} # switch actor identification number without blanks (see AIN number on switch sticker)
-  legacy: {{ .legacy }}
+  firmware82: {{ .firmware82 }}
   {{ include "switchsocket" . }}

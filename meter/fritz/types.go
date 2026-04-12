@@ -19,7 +19,7 @@ const SessionTimeout = 15 * time.Minute
 // FritzDECT settings
 type Settings struct {
 	URI, AIN, User, Password string
-	Legacy                   bool // use legacy homeautoswitch.lua API
+	Firmware82               bool // use new REST API (FritzOS 8.2+)
 }
 
 // Fritzbox helpers (credits to https://github.com/rsdk/ahago)
