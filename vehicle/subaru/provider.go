@@ -3,20 +3,37 @@ package subaru
 import (
 	"time"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 )
 
 type Provider struct {
-	status func() (Status, error)
+	statusG func() (Status, error)
 }
 
 func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
-		status: util.Cached(func() (Status, error) {
+		statusG: util.Cached(func() (Status, error) {
 			return api.Status(vin)
 		}, cache),
 	}
 	return impl
+}
+
+// status retrieves the vehicle status and validates the response.
+// The Subaru API may return an empty payload on transient failures,
+// indicated by a missing range unit. In that case, we signal a retry
+// so evcc keeps the last known good values instead of acting on
+// invalid data (e.g. 0% SoC triggering unwanted minSoC charging).
+func (v *Provider) status() (Status, error) {
+	res, err := v.statusG()
+	if err != nil {
+		return res, err
+	}
+	if res.Payload.EvRangeWithAc.Unit == "" {
+		return res, api.ErrMustRetry
+	}
+	return res, nil
 }
 
 func (v *Provider) Soc() (float64, error) {
@@ -24,7 +41,11 @@ func (v *Provider) Soc() (float64, error) {
 	return float64(res.Payload.BatteryLevel), err
 }
 
+// Range implements the api.VehicleRange interface
 func (v *Provider) Range() (int64, error) {
 	res, err := v.status()
-	return int64(res.Payload.EvRangeWithAc.Value), err
+	if err != nil {
+		return 0, err
+	}
+	return res.Payload.EvRangeWithAc.ValueInKilometers()
 }
