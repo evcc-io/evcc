@@ -171,17 +171,16 @@ func (cp *CP) onTransportConnect() {
 
 		cp.log.DEBUG.Printf("proactively triggering BootNotification")
 
-		err := Instance().TriggerMessage(
+		if err := Instance().TriggerMessage(
 			cp.id,
 			func(conf *remotetrigger.TriggerMessageConfirmation, err error) {
 				if err != nil {
-					cp.log.ERROR.Printf("trigger BootNotification response: %v", err)
+					cp.log.ERROR.Printf("trigger BootNotification response error: %v", err)
 				}
 			},
 			core.BootNotificationFeatureName,
 			func(request *remotetrigger.TriggerMessageRequest) {},
-		)
-		if err != nil {
+		); err != nil {
 			cp.log.ERROR.Printf("failed to trigger BootNotification: %v", err)
 		}
 	})
