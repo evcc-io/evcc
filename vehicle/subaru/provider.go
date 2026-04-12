@@ -21,16 +21,18 @@ func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 }
 
 // status retrieves the vehicle status and validates the response.
-// The Subaru API may return an empty payload on transient failures,
-// indicated by a missing range unit. In that case, we signal a retry
-// so evcc keeps the last known good values instead of acting on
-// invalid data (e.g. 0% SoC triggering unwanted minSoC charging).
+// The Subaru API may return invalid data on transient failures: either
+// an empty payload (missing range unit) or zeroed-out values with a
+// valid unit. In both cases, we signal a retry so evcc keeps the last
+// known good values instead of acting on invalid data (e.g. 0% SoC
+// triggering unwanted minSoC charging).
 func (v *Provider) status() (Status, error) {
 	res, err := v.statusG()
 	if err != nil {
 		return res, err
 	}
-	if res.Payload.EvRangeWithAc.Unit == "" {
+	if res.Payload.EvRangeWithAc.Unit == "" ||
+		res.Payload.BatteryLevel == 0 && res.Payload.EvRangeWithAc.Value == 0 {
 		return res, api.ErrMustRetry
 	}
 	return res, nil
