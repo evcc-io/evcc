@@ -104,5 +104,27 @@ render: |
             source: sunspec
             {{- include "modbus" . | indent 10 }}
             value: 124:0:InOutWRte_RvrtTms
+    - case: 4 # nocharge
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 1
+          set:
+            source: sunspec
+            {{- include "modbus" . | indent 10 }}
+            value: 124:0:StorCtl_Mod
+        - source: const
+          value: 0 # %
+          set:
+            source: sunspec
+            {{- include "modbus" . | indent 10 }}
+            value: 124:0:InWRte
+        - source: const
+          value: 0 # s
+          set:
+            source: sunspec
+            {{- include "modbus" . | indent 10 }}
+            value: 124:0:InOutWRte_RvrtTms
   {{- include "battery-params" . }}
   {{- end }}

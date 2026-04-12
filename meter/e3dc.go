@@ -227,6 +227,11 @@ func (m *E3dc) setBatteryMode(mode api.BatteryMode) error {
 			e3dcDischargeBatteryLimit(false, 0),
 			e3dcBatteryCharge(50000), // max. 50kWh
 		}
+	case api.BatteryNoCharge:
+		messages = []rscp.Message{
+			e3dcDischargeBatteryLimit(false, 0),
+			e3dcBatteryCharge(0),
+		}
 	default:
 		return api.ErrNotAvailable
 	}

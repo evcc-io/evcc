@@ -110,6 +110,10 @@ render: |
           body: '{"timeofuse":[]}'
         - source: error
           error: ErrNotAvailable
+    - case: 4 # nocharge (not implemented)
+      set:
+        source: error
+        error: ErrNotAvailable
   {{- end }}
   {{- include "battery-params" . }}
   {{- end }}
