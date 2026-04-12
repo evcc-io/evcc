@@ -266,8 +266,11 @@ func (wb *SmartEVSE3) Enable(enable bool) error {
 		return err
 	}
 
-	if enable && res.ModeID != smartEvse3ModeNormal {
-		return wb.setMode(smartEvse3ModeNormal)
+	if enable {
+		if res.ModeID != smartEvse3ModeNormal {
+			return wb.setMode(smartEvse3ModeNormal)
+		}
+		return nil
 	}
 
 	if res.ModeID != smartEvse3ModeOff && res.ModeID != smartEvse3ModePause {
