@@ -80,6 +80,32 @@ params:
     type: float
     usages: ["pv"]
     advanced: true
+  - name: curtaillimit
+    unit: "%"
+    description:
+      de: Abregelungsgrenze
+      en: Curtailment limit
+    help:
+      de: Leistungsgrenze in % bei aktiver PV-Abregelung (0 = vollständige Abschaltung)
+      en: Power limit in % when PV curtailment is active (0 = full shutdown)
+    default: 0
+    example: 0
+    type: int
+    usages: ["pv"]
+    advanced: true
+  - name: feedinlimit
+    unit: "%"
+    description:
+      de: Einspeisebegrenzung
+      en: Feed-in limit
+    help:
+      de: Maximale Einspeiseleistung in % der Nennleistung (z.B. 60 für eine 60%-Begrenzung)
+      en: Maximum feed-in power in % of nominal power (e.g. 60 for a 60 % cap)
+    default: 100
+    example: 60
+    type: int
+    usages: ["pv"]
+    advanced: true
   - name: vin
     private: true
     description:
