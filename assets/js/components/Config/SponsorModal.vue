@@ -112,6 +112,7 @@
 						spellcheck="false"
 						pattern="[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}"
 						title="XXXXX-XXXXX-XXXXX-XXXXX-XXXXX"
+						@input="values.token = values.token.toUpperCase()"
 					/>
 					<i18n-t tag="small" keypath="config.sponsor.activationKeyHint" scope="global">
 						<template #url>
