@@ -1,0 +1,95 @@
+template: smartevse-v3-rest
+products:
+  - brand: Stegen SmartEVSE
+    description:
+      generic: v3 (REST API)
+requirements:
+  description:
+    de: Nutzt die REST API der SmartEVSE v3.
+    en: Uses the SmartEVSE v3 REST API.
+params:
+  - name: host
+    default: smartevse.local
+    description:
+      de: IP-Adresse oder Hostname
+      en: IP address or hostname
+  - name: phase_switching
+    type: bool
+    default: false
+    description:
+      de: Phasenumschaltung (setzt C2 Schütz voraus)
+      en: Phase switching (requires C2 contactor)
+  - name: has_meter
+    type: bool
+    default: false
+    description:
+      de: Ein Energiezähler ist am SmartEVSE angeschlossen
+      en: An energy meter is connected to the SmartEVSE
+render: |
+  type: custom
+
+  tos: true
+
+  # --- Status & Enable Data (Cached) ---
+  status: &settings_get
+    source: http
+    uri: http://{{ .host }}/settings
+    method: GET
+    headers:
+      - Connection: close
+    cache: 5s
+    jq: >-
+      if .car_connected == false then "A"
+      elif .evse.state == "Charging" then "C"
+      else "B" end
+
+  enabled:
+    <<: *settings_get
+    # 0 = OFF, 4 = PAUSE. Anything else (1=NORMAL, 2=SOLAR, 3=SMART) means enabled.
+    jq: .mode_id != 0 and .mode_id != 4
+
+  # --- Control Actions ---
+  enable: &settings_post
+    source: http
+    method: POST
+    headers:
+      - Connection: close
+    body: ""
+    # 3: SMART mode (Enable), 4: PAUSE (Disable - preserves OCPP sessions)
+    uri: http://{{ .host }}/settings?mode={{ `{{ if .enable }}3{{ else }}4{{ end }}` }}
+
+  maxcurrent:
+    <<: *settings_post
+    # override_current expects deci-Amps (e.g., 8.3A -> 83)
+    # Multiply by 10, then pipe to 'int' to safely drop any decimals
+    uri: http://{{ .host }}/settings?override_current={{ `{{ mul .maxcurrent 10 | int }}` }}
+
+
+  {{- if eq (print .phase_switching) "true" }}
+  phases1p3p:
+    <<: *settings_post
+    # 1: Always Off (1 Phase), 3: Always On (3 Phase)
+    uri: http://{{ .host }}/settings?enable_C2={{ `{{ if eq .phases 1 }}1{{ else }}3{{ end }}` }}
+  {{- end }}
+
+  {{- if eq (print .has_meter) "true" }}
+
+  # --- Metering Data (Cached) ---
+  power:
+    <<: *settings_get
+    jq: .ev_meter.import_active_power
+
+  energy:
+    <<: *settings_get
+    # Convert Watt-hours (Wh) to Kilowatt-hours (kWh)
+    jq: .ev_meter.total_wh / 1000
+
+  currents:
+    # Phase currents return as deci-Amps, divide by 10 to get standard Amps
+    - <<: *settings_get
+      jq: .ev_meter.currents.L1 / 10
+    - <<: *settings_get
+      jq: .ev_meter.currents.L2 / 10
+    - <<: *settings_get
+      jq: .ev_meter.currents.L3 / 10
+  {{- end }}
