@@ -259,13 +259,11 @@ func (c *Connection) CallButtonService(entity string) error {
 		return err
 	}
 
-	service := "press"
-
 	data := map[string]any{
 		"entity_id": entity,
 	}
 
-	return c.CallService(domain, service, data)
+	return c.CallService(domain, "press", data)
 }
 
 // CallNumberService is a convenience method for setting number entity values
