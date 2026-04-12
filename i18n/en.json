@@ -572,8 +572,6 @@
       "error": "The sponsor token is not valid.",
       "invalid": "invalid",
       "labelToken": "Sponsor token",
-      "tabCreem": "Creem Key",
-      "tabGitHub": "Sponsor Token",
       "title": "Sponsorship",
       "tokenRequired": "You must configure a sponsor token before you can create this device.",
       "tokenRequiredFeature": "This feature requires a sponsor token.",

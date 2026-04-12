@@ -23,6 +23,7 @@
 			</div>
 			<hr class="my-4" />
 			<div v-if="showTokenForm">
+				<!-- hidden feature: tab navigation
 				<ul v-if="$hiddenFeatures()" class="nav nav-tabs mb-3" role="tablist">
 					<li class="nav-item" role="presentation">
 						<button
@@ -37,26 +38,27 @@
 								activeTab = 'github';
 							"
 						>
-							{{ $t("config.sponsor.tabGitHub") }}
+							Sponsor Token
 						</button>
 					</li>
 					<li class="nav-item" role="presentation">
 						<button
 							class="nav-link"
-							:class="{ active: activeTab === 'creem' }"
+							:class="{ active: activeTab === 'direct' }"
 							type="button"
 							@click="
-								if (activeTab !== 'creem') {
+								if (activeTab !== 'direct') {
 									values.token = '';
 									values.email = '';
 								}
-								activeTab = 'creem';
+								activeTab = 'direct';
 							"
 						>
-							{{ $t("config.sponsor.tabCreem") }} 🧪
+							Activation Key 🧪
 						</button>
 					</li>
 				</ul>
+				-->
 				<div v-if="activeTab === 'github'">
 					<label for="sponsorToken" class="my-2">
 						{{ $t("config.sponsor.enterYourToken") }}
@@ -81,7 +83,7 @@
 						</template>
 					</i18n-t>
 				</div>
-				<div v-else-if="activeTab === 'creem'">
+				<div v-else-if="activeTab === 'direct'">
 					<label for="sponsorEmail" class="my-2">{{ $t("config.sponsor.email") }}</label>
 					<input
 						id="sponsorEmail"
@@ -97,7 +99,7 @@
 						class="mb-3 d-block text-muted"
 					>
 						<template #url>
-							<a href="https://sponsor.evcc.io/#creem" target="_blank"
+							<a href="https://sponsor.evcc.io/" target="_blank"
 								>direct sponsoring</a
 							>
 						</template>
@@ -116,7 +118,7 @@
 					/>
 					<i18n-t tag="small" keypath="config.sponsor.activationKeyHint" scope="global">
 						<template #url>
-							<a href="https://www.creem.io/portal/" target="_blank">Creem Portal</a>
+							<a href="about:blank" target="_blank">Customer Portal</a>
 						</template>
 					</i18n-t>
 				</div>
@@ -257,7 +259,7 @@ export default {
 			const cleaned = cleanYaml(text, "sponsortoken");
 			values.token = cleaned;
 			if (this.activeTab === "github" && this.isLicenseKey(cleaned)) {
-				this.activeTab = "creem";
+				this.activeTab = "direct";
 			}
 		},
 		isLicenseKey(token) {

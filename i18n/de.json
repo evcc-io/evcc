@@ -572,8 +572,6 @@
       "error": "Das Sponsortoken ist ungültig.",
       "invalid": "ungültig",
       "labelToken": "Sponsortoken",
-      "tabCreem": "Creem Key",
-      "tabGitHub": "Sponsor Token",
       "title": "Sponsoring",
       "tokenRequired": "Du musst ein Sponsortoken konfigurieren, bevor du dieses Gerät anlegen kannst.",
       "tokenRequiredFeature": "Diese Funktion erfordert ein Sponsortoken.",
