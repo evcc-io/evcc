@@ -61,6 +61,9 @@ type decorateBenderCCCapable struct {
 
 func (d *decorateBenderCCCapable) Capability(typ reflect.Type) (any, bool) {
 	c, ok := d.caps[typ]
+	if !ok && reflect.TypeOf(d).Implements(typ) {
+		return d, true
+	}
 	return c, ok
 }
 
