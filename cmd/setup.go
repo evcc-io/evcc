@@ -62,6 +62,10 @@ import (
 var conf = globalconfig.All{
 	Interval: 30 * time.Second,
 	Log:      "info",
+	LogLevels: globalconfig.LogLevels{
+		Default: "info",
+		Levels:  nil,
+	},
 	Network: globalconfig.Network{
 		Host: "",
 		Port: 7070,
@@ -140,9 +144,6 @@ If you know what you're doing, you can skip the database check with the --ignore
 			`)
 		}
 	}
-
-	// parse log levels after reading config
-	parseLogLevels()
 
 	return nil
 }
@@ -512,6 +513,19 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) error {
 
 	// setup persistence
 	err := wrapErrorWithClass(ClassDatabase, configureDatabase(conf.Database))
+
+	// load persisted log levels and apply logging configuration
+	if settings.Exists(keys.Log) {
+		if err := settings.Json(keys.Log, &conf.LogLevels); err != nil {
+			return err
+		}
+		viper.Set("log", conf.LogLevels.Default)
+		viper.Set("levels", conf.LogLevels.Levels)
+	} else {
+		log.INFO.Printf("No log levels configured in database, using defaults (from command line): %v", conf.Log)
+	}
+
+	parseLogLevels()
 
 	// configure network
 	if err == nil {

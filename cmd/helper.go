@@ -17,20 +17,23 @@ import (
 // parseLogLevels parses --log area:level[,...] switch into levels per log area
 func parseLogLevels() {
 	levels := viper.GetStringMapString("levels")
-	if levels == nil {
-		levels = make(map[string]string)
-	}
-
-	var level string
-	for kv := range strings.SplitSeq(viper.GetString("log"), ",") {
-		areaLevel := strings.SplitN(kv, ":", 2)
-		if len(areaLevel) == 1 {
-			level = areaLevel[0]
-		} else {
-			levels[areaLevel[0]] = areaLevel[1]
+	level := viper.GetString("log")
+	if levels == nil || len(levels) == 0 {
+		if levels == nil {
+			levels = make(map[string]string)
+		}
+		for kv := range strings.SplitSeq(level, ",") {
+			areaLevel := strings.SplitN(kv, ":", 2)
+			if len(areaLevel) == 1 {
+				level = areaLevel[0]
+			} else {
+				levels[areaLevel[0]] = areaLevel[1]
+			}
 		}
 	}
 
+	viper.Set("log", level)
+	viper.Set("levels", levels)
 	util.LogLevel(level, levels)
 }
 

@@ -70,6 +70,21 @@ func (d *dumper) Dump(name string, v any) {
 		isHeating = slices.Contains(fd.Features(), api.Heating)
 	}
 
+	if v, ok := v.(map[string]string); ok {
+		keys := make([]string, 0, len(v))
+		for k := range v {
+			keys = append(keys, k)
+		}
+		slices.Sort(keys)
+
+		for _, k := range keys {
+			fmt.Fprintf(w, "%s:\t%s\t\t\n", k, v[k])
+		}
+
+		w.Flush()
+		return
+	}
+
 	// Start overall timing
 	totalStart := time.Now()
 

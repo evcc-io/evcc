@@ -38,13 +38,13 @@ type All struct {
 	Network         Network
 	Ocpp            ocpp.Config
 	Log             string
+	LogLevels       LogLevels
 	SponsorToken    string
 	Plant           string // telemetry plant id
 	Telemetry       bool
 	Mcp             bool
 	Metrics         bool
 	Profile         bool
-	Levels          map[string]string
 	Interval        time.Duration
 	Database        DB
 	Mqtt            Mqtt
@@ -74,6 +74,11 @@ type Javascript struct {
 type Go struct {
 	VM     string
 	Script string
+}
+
+type LogLevels struct {
+	Default string            `json:"default"`
+	Levels  map[string]string `json:"levels"`
 }
 
 type ModbusProxy struct {
