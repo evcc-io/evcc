@@ -1,0 +1,14 @@
+template: sigenergy-dc
+products:
+  - brand: Sigenergy
+    description:
+      generic: EVDC series
+requirements:
+  evcc: ["sponsorship"]
+params:
+  - name: modbus
+    choice: ["tcpip"]
+    id: 1
+render: |
+  type: sigenergy-dc
+  {{- include "modbus" . }}

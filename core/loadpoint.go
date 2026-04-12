@@ -931,9 +931,9 @@ func (lp *Loadpoint) setLimit(current float64) error {
 				if err := vv.WakeUp(); err != nil {
 					return fmt.Errorf("wake-up vehicle: %w", err)
 				}
+			} else if !loadpoint.AcceptableError(err) {
+				return fmt.Errorf("set charge current limit %.3gA: %w", current, err)
 			}
-
-			return fmt.Errorf("set charge current limit %.3gA: %w", current, err)
 		}
 
 		lp.log.DEBUG.Printf("set charge current limit: %.3gA", current)
@@ -952,9 +952,9 @@ func (lp *Loadpoint) setLimit(current float64) error {
 				if err := vv.WakeUp(); err != nil {
 					return fmt.Errorf("wake-up vehicle: %w", err)
 				}
+			} else if !loadpoint.AcceptableError(err) {
+				return fmt.Errorf("charger %s: %w", status[enabled], err)
 			}
-
-			return fmt.Errorf("charger %s: %w", status[enabled], err)
 		}
 
 		lp.setAndPublishEnabled(enabled)
