@@ -236,6 +236,12 @@ export interface ConfigLoadpoint {
     };
     estimate: boolean;
   };
+  geofence: {
+    enabled: boolean;
+    lat: number;
+    lon: number;
+    radius: number;
+  };
 }
 
 export enum SMART_COST_TYPE {

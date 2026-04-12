@@ -96,6 +96,7 @@ type Loadpoint struct {
 
 	Soc             loadpoint.SocConfig
 	Enable, Disable loadpoint.ThresholdConfig
+	Geofence        loadpoint.GeofenceConfig
 
 	// from yaml
 	DefaultMode api.ChargeMode `mapstructure:"mode"`     // Default charge mode, used for disconnect
@@ -372,6 +373,12 @@ func (lp *Loadpoint) restoreSettings() {
 	var socConfig loadpoint.SocConfig
 	if err := lp.settings.Json(keys.Soc, &socConfig); err == nil {
 		lp.setSocConfig(socConfig)
+	}
+
+	var geofenceConfig loadpoint.GeofenceConfig
+	if err := lp.settings.Json(keys.Geofence, &geofenceConfig); err == nil &&
+		validateGeofenceConfig(geofenceConfig) == nil {
+		lp.setGeofenceConfig(geofenceConfig)
 	}
 
 	t, err1 := lp.settings.Time(keys.PlanTime)
