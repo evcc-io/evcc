@@ -911,7 +911,7 @@
       "modalCancel": "Abbrechen",
       "modalDownload": "Download",
       "modalInstalledVersion": "Installierte Version",
-      "modalLatest": "Du nutzt die neueste Version.",
+      "modalLatest": "Du verwendest bereits die aktuellste Version.",
       "modalNextRelease": "Was ist neu im nächsten Release",
       "modalNoReleaseNotes": "Keine Versionshinweise verfügbar. Mehr Informationen zur neuen Version:",
       "modalTitle": "Neue Version verfügbar",
@@ -921,7 +921,7 @@
       "modalUpdateStatusStart": "Installation gestartet:",
       "modalViewOnGitHub": "Auf GitHub ansehen",
       "openSource": "Open Source",
-      "poweredByOpenSource": "Powered by {0}."
+      "poweredByOpenSource": "Unterstützt von {0}."
     }
   },
   "forecast": {
