@@ -198,20 +198,12 @@ func (c *Connection) getUnit() (Unit, error) {
 	// Try to get the specific unit first
 	uri := fmt.Sprintf("%s/api/v0/smarthome/overview/units/%s", c.URI, url.PathEscape(c.UID))
 
-	//fmt.Println(uri)
-
-	req, err := request.New("GET", uri, nil, map[string]string{
+	req, _ := request.New("GET", uri, nil, map[string]string{
 		"Authorization": "AVM-SID " + c.SID,
 	}, request.AcceptJSON)
-	if err != nil {
-		return Unit{}, err
-	}
-
-	//fmt.Println(req)
 
 	var unit Unit
-	err = c.DoJSON(req, &unit)
-	if err != nil {
+	if err := c.DoJSON(req, &unit); err != nil {
 		// Fall back to getting all units and finding ours
 		return c.findUnit()
 	}
