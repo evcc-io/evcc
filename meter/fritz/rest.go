@@ -28,12 +28,40 @@ type RestConnection struct {
 
 // Unit represents a smarthome unit with its interfaces
 type Unit struct {
-	UID                 string               `json:"UID"`
-	DeviceUID           string               `json:"deviceUid"`
-	UnitType            string               `json:"unitType"`
-	IsConnected         bool                 `json:"isConnected"`
-	MultimeterInterface *MultimeterInterface `json:"multimeterInterface,omitempty"`
-	OnOffInterface      *OnOffInterface      `json:"onOffInterface,omitempty"`
+	GroupUID    string      `json:"groupUid,omitempty"`
+	UID         string      `json:"UID,omitempty"`
+	DeviceUID   string      `json:"deviceUid"`
+	UnitType    string      `json:"unitType"`
+	IsConnected bool        `json:"isConnected"`
+	Statistics  *Statistics `json:"statistics,omitempty"`
+	Interfaces  *Interface  `json:"interfaces,omitempty"`
+}
+
+type Interface struct {
+	MultimeterInterface  *MultimeterInterface  `json:"multimeterInterface,omitempty"`
+	OnOffInterface       *OnOffInterface       `json:"onOffInterface,omitempty"`
+	TemperatureInterface *TemperatureInterface `json:"temperatureInterface,omitempty"`
+}
+
+type Statistics struct {
+	Temperatures []ElementFloat `json:"temperatures,omitempty"`
+	Powers       []Element      `json:"powers,omitempty"`
+	Voltages     []Element      `json:"voltages,omitempty"`
+	Energies     []Element      `json:"energies,omitempty"`
+}
+
+type ElementFloat struct {
+	Interval      int64     `json:"interval"`
+	StasticsState string    `json:"statisticsState"`
+	Period        string    `json:"period"`
+	Values        []float64 `json:"values,omitempty"`
+}
+
+type Element struct {
+	Interval      int64   `json:"interval"`
+	StasticsState string  `json:"statisticsState"`
+	Period        string  `json:"period"`
+	Values        []int64 `json:"values,omitempty"`
 }
 
 // MultimeterInterface contains power/energy measurements
@@ -48,6 +76,11 @@ type MultimeterInterface struct {
 // OnOffInterface contains switch state
 type OnOffInterface struct {
 	State string `json:"state"` // "on" or "off"
+}
+
+type TemperatureInterface struct {
+	State   string  `json:"state"` // "on" or "off"
+	Celsius float64 `json:"celsius"`
 }
 
 // NewRestConnection creates a new REST API connection
@@ -156,14 +189,18 @@ func (c *RestConnection) getUnit() (Unit, error) {
 	}
 
 	// Try to get the specific unit first
-	uri := fmt.Sprintf("%s/api/smarthome/units/%s", c.URI, url.PathEscape(c.UID))
+	uri := fmt.Sprintf("%s/api/v0/smarthome/overview/units/%s", c.URI, url.PathEscape(c.UID))
+
+	//fmt.Println(uri)
 
 	req, err := request.New("GET", uri, nil, map[string]string{
-		"Authorization": "Bearer " + c.SID,
+		"Authorization": "AVM-SID " + c.SID,
 	}, request.AcceptJSON)
 	if err != nil {
 		return Unit{}, err
 	}
+
+	//fmt.Println(req)
 
 	var unit Unit
 	err = c.DoJSON(req, &unit)
@@ -181,10 +218,10 @@ func (c *RestConnection) getUnit() (Unit, error) {
 
 // findUnit searches for our unit in the list of all units
 func (c *RestConnection) findUnit() (Unit, error) {
-	uri := fmt.Sprintf("%s/api/smarthome/units", c.URI)
+	uri := fmt.Sprintf("%s/api/v0/smarthome/overview/units", c.URI)
 
 	req, err := request.New("GET", uri, nil, map[string]string{
-		"Authorization": "Bearer " + c.SID,
+		"Authorization": "AVM-SID " + c.SID,
 	}, request.AcceptJSON)
 	if err != nil {
 		return Unit{}, err
@@ -216,16 +253,16 @@ func (c *RestConnection) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-	if unit.MultimeterInterface == nil {
-		return 0, errors.New("device has no power meter")
-	}
+	if unit.Statistics != nil {
+		stats := unit.Statistics.Powers[0].Values
+		rawPower := stats[0]
 
-	if unit.MultimeterInterface.State != "valid" {
-		return 0, api.ErrNotAvailable
-	}
+		power := (float64)(rawPower / 1000)
 
-	// Power is in W
-	return unit.MultimeterInterface.Power, nil
+		return power, nil
+	} else {
+		return 0, errors.New("statistics are empty")
+	}
 }
 
 var _ api.MeterEnergy = (*RestConnection)(nil)
@@ -237,12 +274,16 @@ func (c *RestConnection) TotalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	if unit.MultimeterInterface == nil {
-		return 0, errors.New("device has no energy meter")
-	}
+	if unit.Statistics != nil {
+		stats := unit.Statistics.Energies[0].Values
+		rawEnergy := stats[0]
 
-	// Energy is in Wh, convert to kWh
-	return unit.MultimeterInterface.Energy / 1000, nil
+		energy := (float64)(rawEnergy / 1000)
+
+		return energy, nil
+	} else {
+		return 0, errors.New("statistics are empty")
+	}
 }
 
 // SwitchPresent checks if the device is connected
@@ -264,11 +305,11 @@ func (c *RestConnection) SwitchState() (bool, error) {
 		return false, err
 	}
 
-	if unit.OnOffInterface == nil {
+	if unit.Interfaces.OnOffInterface == nil {
 		return false, errors.New("device has no switch")
 	}
 
-	return unit.OnOffInterface.State == "on", nil
+	return unit.Interfaces.OnOffInterface.State == "on", nil
 }
 
 // SwitchOn turns the switch on
@@ -292,7 +333,7 @@ func (c *RestConnection) setSwitch(on bool) error {
 		state = "on"
 	}
 
-	uri := fmt.Sprintf("%s/api/smarthome/units/%s", c.URI, url.PathEscape(c.UID))
+	uri := fmt.Sprintf("%s/api/v0/smarthome/overview/units/%s", c.URI, url.PathEscape(c.UID))
 
 	data := map[string]any{
 		"onOffInterface": map[string]string{
@@ -301,7 +342,7 @@ func (c *RestConnection) setSwitch(on bool) error {
 	}
 
 	req, err := request.New("PUT", uri, request.MarshalJSON(data), map[string]string{
-		"Authorization": "Bearer " + c.SID,
+		"Authorization": "AVM-SID " + c.SID,
 	}, request.JSONEncoding)
 	if err != nil {
 		return err
@@ -316,8 +357,8 @@ func (c *RestConnection) setSwitch(on bool) error {
 	c.unitG.Reset()
 
 	// Verify state was changed
-	if unit.OnOffInterface != nil {
-		actualState := unit.OnOffInterface.State == "on"
+	if unit.Interfaces.OnOffInterface != nil {
+		actualState := unit.Interfaces.OnOffInterface.State == "on"
 		if actualState != on {
 			return errors.New("switch state change failed")
 		}
