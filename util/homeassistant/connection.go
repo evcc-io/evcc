@@ -252,6 +252,20 @@ func (c *Connection) CallSwitchService(entity string, turnOn bool) error {
 	return c.CallService(domain, service, data)
 }
 
+// CallButtonService is a convenience method for button services
+func (c *Connection) CallButtonService(entity string) error {
+	domain, err := domain(entity)
+	if err != nil {
+		return err
+	}
+
+	data := map[string]any{
+		"entity_id": entity,
+	}
+
+	return c.CallService(domain, "press", data)
+}
+
 // CallNumberService is a convenience method for setting number entity values
 func (c *Connection) CallNumberService(entity string, value float64) error {
 	domain, err := domain(entity)
