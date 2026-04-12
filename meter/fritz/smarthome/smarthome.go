@@ -136,59 +136,6 @@ func ainToUID(ain string) string {
 	return ain
 }
 
-// refreshSession ensures we have a valid session ID
-func (c *Connection) refreshSession() error {
-	if time.Since(c.updated) < fritz.SessionTimeout {
-		return nil
-	}
-
-	// Use the same session mechanism as legacy connection
-	uri := fmt.Sprintf("%s/login_sid.lua", c.URI)
-	body, err := c.GetBody(uri)
-	if err != nil {
-		return err
-	}
-
-	var v struct {
-		SID       string `xml:"SID"`
-		Challenge string `xml:"Challenge"`
-	}
-
-	if err = parseXML(body, &v); err != nil {
-		return err
-	}
-
-	if v.SID == "0000000000000000" {
-		challresp, err := fritz.CreateChallengeResponse(v.Challenge, c.Password)
-		if err != nil {
-			return err
-		}
-
-		params := url.Values{
-			"username": {c.User},
-			"response": {challresp},
-		}
-
-		body, err = c.GetBody(uri + "?" + params.Encode())
-		if err != nil {
-			return err
-		}
-
-		if err = parseXML(body, &v); err != nil {
-			return err
-		}
-
-		if v.SID == "0000000000000000" {
-			return errors.New("invalid user or password")
-		}
-	}
-
-	c.SID = v.SID
-	c.updated = time.Now()
-
-	return nil
-}
-
 // getUnit fetches unit data from REST API
 func (c *Connection) getUnit() (Unit, error) {
 	if err := c.refreshSession(); err != nil {
@@ -361,6 +308,22 @@ func (c *Connection) setSwitch(on bool) error {
 		if actualState != on {
 			return errors.New("switch state change failed")
 		}
+	}
+
+	return nil
+}
+
+// refreshSession ensures we have a valid session ID
+func (c *Connection) refreshSession() error {
+	// refresh Fritzbox session id
+	if time.Since(c.updated) >= fritz.SessionTimeout {
+		sid, err := c.GetSessionID(c.Helper)
+		if err != nil {
+			return err
+		}
+		// update session timestamp
+		c.SID = sid
+		c.updated = time.Now()
 	}
 
 	return nil

@@ -73,10 +73,12 @@ func NewConnection(uri, ain, user, password string) (*Connection, error) {
 func (c *Connection) ExecCmd(function string) (string, error) {
 	// refresh Fritzbox session id
 	if time.Since(c.updated) >= fritz.SessionTimeout {
-		if err := c.getSessionID(); err != nil {
+		sid, err := c.GetSessionID(c.Helper)
+		if err != nil {
 			return "", err
 		}
 		// update session timestamp
+		c.SID = sid
 		c.updated = time.Now()
 	}
 
@@ -169,41 +171,5 @@ func (c *Connection) SwitchOff() error {
 	if err == nil && off {
 		err = errors.New("switch off failed")
 	}
-	return err
-}
-
-// Fritzbox helpers (credits to https://github.com/rsdk/ahago)
-
-// getSessionID fetches a session-id based on the username and password in the connection struct
-func (c *Connection) getSessionID() error {
-	uri := fmt.Sprintf("%s/login_sid.lua", c.URI)
-	body, err := c.GetBody(uri)
-	if err != nil {
-		return err
-	}
-
-	var v struct {
-		SID       string
-		Challenge string
-	}
-
-	if err = xml.Unmarshal(body, &v); err == nil && v.SID == "0000000000000000" {
-		var challresp string
-		if challresp, err = fritz.CreateChallengeResponse(v.Challenge, c.Password); err == nil {
-			params := url.Values{
-				"username": {c.User},
-				"response": {challresp},
-			}
-
-			if body, err = c.GetBody(uri + "?" + params.Encode()); err == nil {
-				err = xml.Unmarshal(body, &v)
-				if v.SID == "0000000000000000" {
-					return errors.New("invalid user or password")
-				}
-				c.SID = v.SID
-			}
-		}
-	}
-
 	return err
 }
