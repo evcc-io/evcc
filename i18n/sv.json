@@ -966,7 +966,7 @@
     "type": {
       "co2": "CO₂-utsläpp",
       "price": "Nätpris",
-      "solar": "Solenergi"
+      "solar": "Solenergi produktion"
     }
   },
   "general": {
