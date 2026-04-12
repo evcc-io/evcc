@@ -8,7 +8,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateSmartEVSE3(base *SmartEVSE3, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseSwitcher func(int) error, phaseGetter func() (int, error)) api.Charger {
+func decorateSmartEVSE3(base *SmartEVSE3, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseSwitcher func(int) error, phaseGetter func() (int, error), identifier func() (string, error), statusReasoner func() (api.Reason, error)) api.Charger {
 	caps := make(map[reflect.Type]any)
 
 	if meter != nil {
@@ -31,6 +31,14 @@ func decorateSmartEVSE3(base *SmartEVSE3, meter func() (float64, error), meterEn
 		caps[reflect.TypeFor[api.PhaseGetter]()] = &decorateSmartEVSE3PhaseGetterImpl{phaseGetter: phaseGetter}
 	}
 
+	if identifier != nil {
+		caps[reflect.TypeFor[api.Identifier]()] = &decorateSmartEVSE3IdentifierImpl{identifier: identifier}
+	}
+
+	if statusReasoner != nil {
+		caps[reflect.TypeFor[api.StatusReasoner]()] = &decorateSmartEVSE3StatusReasonerImpl{statusReasoner: statusReasoner}
+	}
+
 	if len(caps) == 0 {
 		return base
 	}
@@ -46,6 +54,14 @@ type decorateSmartEVSE3Capable struct {
 func (d *decorateSmartEVSE3Capable) Capability(typ reflect.Type) (any, bool) {
 	c, ok := d.caps[typ]
 	return c, ok
+}
+
+type decorateSmartEVSE3IdentifierImpl struct {
+	identifier func() (string, error)
+}
+
+func (impl *decorateSmartEVSE3IdentifierImpl) Identify() (string, error) {
+	return impl.identifier()
 }
 
 type decorateSmartEVSE3MeterImpl struct {
@@ -86,4 +102,12 @@ type decorateSmartEVSE3PhaseSwitcherImpl struct {
 
 func (impl *decorateSmartEVSE3PhaseSwitcherImpl) Phases1p3p(p0 int) error {
 	return impl.phaseSwitcher(p0)
+}
+
+type decorateSmartEVSE3StatusReasonerImpl struct {
+	statusReasoner func() (api.Reason, error)
+}
+
+func (impl *decorateSmartEVSE3StatusReasonerImpl) StatusReason() (api.Reason, error) {
+	return impl.statusReasoner()
 }

@@ -46,29 +46,26 @@ type smartEvseRestSettings struct {
 	ModeID       int    `json:"mode_id"`
 	CarConnected bool   `json:"car_connected"`
 	Evse         struct {
-		Temp           int    `json:"temp"`
-		Connected      int    `json:"connected"`
-		Access         int    `json:"access"`
-		Mode           int    `json:"mode"`
-		ChargeTimer    int    `json:"charge_timer"`
-		SolarStopTimer int    `json:"solar_stop_timer"`
-		State          string `json:"state"`
-		StateID        int    `json:"state_id"`
-		Error          string `json:"error"`
-		ErrorID        int    `json:"error_id"`
-		RFID           string `json:"rfid"`
-		NrOfPhases     int    `json:"nrofphases"`
+		Connected    int    `json:"connected"`
+		Access       int    `json:"access"`
+		Mode         int    `json:"mode"`
+		ChargeTimer  int    `json:"charge_timer"`
+		State        string `json:"state"`
+		StateID      int    `json:"state_id"`
+		Error        string `json:"error"`
+		ErrorID      int    `json:"error_id"`
+		RFID         string `json:"rfid"`
+		RFIDReader   string `json:"rfidreader"`
+		RFIDLastRead string `json:"rfid_lastread"`
+		NrOfPhases   int    `json:"nrofphases"`
 	} `json:"evse"`
 	Settings struct {
-		ChargeCurrent     int `json:"charge_current"`
-		OverrideCurrent   int `json:"override_current"`
-		CurrentMin        int `json:"current_min"`
-		CurrentMax        int `json:"current_max"`
-		CurrentMain       int `json:"current_main"`
-		SolarMaxImport    int `json:"solar_max_import"`
-		SolarStartCurrent int    `json:"solar_start_current"`
-		SolarStopTime     int    `json:"solar_stop_time"`
-		EnableC2          string `json:"enable_C2"`
+		ChargeCurrent   int    `json:"charge_current"`
+		OverrideCurrent int    `json:"override_current"`
+		CurrentMin      int    `json:"current_min"`
+		CurrentMax      int    `json:"current_max"`
+		CurrentMain     int    `json:"current_main"`
+		EnableC2        string `json:"enable_C2"`
 	} `json:"settings"`
 	EvMeter struct {
 		Description       string  `json:"description"`
@@ -109,7 +106,7 @@ func init() {
 	registry.Add("smart-evse", NewSmartEVSE3FromConfig)
 }
 
-//go:generate go tool decorate -f decorateSmartEVSE3 -b *SmartEVSE3 -r api.Charger -t api.Meter,api.MeterEnergy,api.PhaseCurrents,api.PhaseSwitcher,api.PhaseGetter
+//go:generate go tool decorate -f decorateSmartEVSE3 -b *SmartEVSE3 -r api.Charger -t api.Meter,api.MeterEnergy,api.PhaseCurrents,api.PhaseSwitcher,api.PhaseGetter,api.Identifier,api.StatusReasoner
 
 // NewSmartEVSE3FromConfig creates a SmartEVSE-3.5 REST charger from generic config
 func NewSmartEVSE3FromConfig(other map[string]any) (api.Charger, error) {
@@ -181,7 +178,15 @@ func NewSmartEVSE3(uri string, cache time.Duration) (api.Charger, error) {
 		getPhases = wb.getPhases
 	}
 
-	return decorateSmartEVSE3(wb, currentPower, totalEnergy, currents, phases1p3p, getPhases), nil
+	// decorate optional RFID identification and status reason
+	var identify func() (string, error)
+	var statusReason func() (api.Reason, error)
+	if res.Evse.RFIDReader != "" && res.Evse.RFIDReader != "Disabled" {
+		identify = wb.identify
+		statusReason = wb.statusReason
+	}
+
+	return decorateSmartEVSE3(wb, currentPower, totalEnergy, currents, phases1p3p, getPhases, identify, statusReason), nil
 }
 
 // post issues a POST request to the SmartEVSE with given query parameters.
@@ -324,8 +329,8 @@ func (wb *SmartEVSE3) totalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	// total_wh is reported in Wh
-	return res.EvMeter.TotalWh / 1e3, nil
+	// import_active_energy is reported in Wh
+	return res.EvMeter.ImportActiveEnergy / 1e3, nil
 }
 
 // phases1p3p implements the api.PhaseSwitcher interface
@@ -367,16 +372,29 @@ func (wb *SmartEVSE3) currents() (float64, float64, float64, error) {
 	return res.EvMeter.Currents.L1 / 10, res.EvMeter.Currents.L2 / 10, res.EvMeter.Currents.L3 / 10, nil
 }
 
-var _ api.Identifier = (*SmartEVSE3)(nil)
+// statusReason implements the api.StatusReasoner interface
+func (wb *SmartEVSE3) statusReason() (api.Reason, error) {
+	res, err := wb.apiG.Get()
+	if err != nil {
+		return api.ReasonUnknown, err
+	}
 
-// Identify implements the api.Identifier interface
-func (wb *SmartEVSE3) Identify() (string, error) {
+	// RFID reader enabled, car connected, but access not yet granted
+	if res.CarConnected && res.Evse.Access == 0 {
+		return api.ReasonWaitingForAuthorization, nil
+	}
+
+	return api.ReasonUnknown, nil
+}
+
+// identify implements the api.Identifier interface
+func (wb *SmartEVSE3) identify() (string, error) {
 	res, err := wb.apiG.Get()
 	if err != nil {
 		return "", err
 	}
 
-	return res.Evse.RFID, nil
+	return res.Evse.RFIDLastRead, nil
 }
 
 var _ api.Diagnosis = (*SmartEVSE3)(nil)
@@ -391,10 +409,21 @@ func (wb *SmartEVSE3) Diagnose() {
 
 	fmt.Printf("\tMode: %s (%d)\n", res.Mode, res.ModeID)
 	fmt.Printf("\tCar connected: %t\n", res.CarConnected)
+
+	fmt.Printf("\tEVSE connected: %d\n", res.Evse.Connected)
+	fmt.Printf("\tEVSE access: %d\n", res.Evse.Access)
+	fmt.Printf("\tEVSE mode: %d\n", res.Evse.Mode)
+	fmt.Printf("\tEVSE charge timer: %d\n", res.Evse.ChargeTimer)
 	fmt.Printf("\tEVSE state: %s (%d)\n", res.Evse.State, res.Evse.StateID)
 	fmt.Printf("\tEVSE error: %s (%d)\n", res.Evse.Error, res.Evse.ErrorID)
+	fmt.Printf("\tEVSE RFID: %s\n", res.Evse.RFID)
+	fmt.Printf("\tEVSE RFID reader: %s\n", res.Evse.RFIDReader)
+	fmt.Printf("\tEVSE RFID last read: %s\n", res.Evse.RFIDLastRead)
+	fmt.Printf("\tEVSE nr of phases: %d\n", res.Evse.NrOfPhases)
+
 	fmt.Printf("\tCharge current: %d A\n", res.Settings.ChargeCurrent)
 	fmt.Printf("\tOverride current: %.1f A\n", float64(res.Settings.OverrideCurrent)/10)
 	fmt.Printf("\tCurrent min/max: %d/%d A\n", res.Settings.CurrentMin, res.Settings.CurrentMax)
-	fmt.Printf("\tTemperature: %d °C\n", res.Evse.Temp)
+	fmt.Printf("\tCurrent main: %d A\n", res.Settings.CurrentMain)
+	fmt.Printf("\tEnable C2: %s\n", res.Settings.EnableC2)
 }
