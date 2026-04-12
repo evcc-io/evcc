@@ -602,6 +602,11 @@
       "url": "Palvelimen URL",
       "urlHelp": "Kopioi tämä URL laturisi asetuksiin. Tarkista laturivalmistajan ohjeista yksityiskohdat. Laturin odotetaan lisäävän URL-osoitteeseen yksilöllinen tunnus (aseman ID). Joissain harvoissa tapauksissa sinun täytyy käsin lisätä tämä tunnus. Esim: `{url}`"
     },
+    "optimizer": {
+      "description": "Analysoi aurinkoennustetta, sähkönhintaa ja kulutustottumuksiasi optimoidakseen akun ja latauspisteiden käyttöä. Tiedot lähetetään käsiteltäväksi evcc:n optimointipalveluun.",
+      "enable": "Käytä optimointia",
+      "title": "Optimointi"
+    },
     "options": {
       "boolean": {
         "no": "ei",
