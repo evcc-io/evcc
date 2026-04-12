@@ -36,10 +36,10 @@ type Unit struct {
 	UnitType    string      `json:"unitType"`
 	IsConnected bool        `json:"isConnected"`
 	Statistics  *Statistics `json:"statistics,omitempty"`
-	Interfaces  *Interface  `json:"interfaces,omitempty"`
+	Interfaces  *Interfaces `json:"interfaces,omitempty"`
 }
 
-type Interface struct {
+type Interfaces struct {
 	MultimeterInterface  *MultimeterInterface  `json:"multimeterInterface,omitempty"`
 	OnOffInterface       *OnOffInterface       `json:"onOffInterface,omitempty"`
 	TemperatureInterface *TemperatureInterface `json:"temperatureInterface,omitempty"`
