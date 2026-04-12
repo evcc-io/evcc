@@ -206,7 +206,7 @@
     },
     "experimental": {
       "description": "Suteikia išankstinę prieigą prie funkcijų, kurios vis dar testuojamos. Jos gali būti nestabilios bei gali pasikeisti arba būti pašalintos būsimose versijose.",
-      "title": "Eksperimentinis"
+      "title": "Eksperimentinės"
     },
     "ext": {
       "description": "Įrašo nekontroliuojamų įrenginių (pvz., šaldytuvo, skalbimo mašinos ir kt.) energijos vertes statistikos tikslais. Šie skaitikliai taip pat gali būti naudojami apkrovos valdymui (pvz., paskirstymui).",
@@ -238,7 +238,7 @@
       "dragItem": "Galima vilkti: {title}",
       "dragList": "Galima sukeisti vietomis",
       "error": "Klaida",
-      "experimental": "Eksperimentinis",
+      "experimental": "Eksperimentinės",
       "forceSave": "Vistiek įrašyti",
       "fromYamlHint": "Pastaba: Sukonfigūruota naudojant evcc.yaml. Pašalinkite įrašą iš failo, kad būtų galima redaguoti čia.",
       "hideAdvancedSettings": "Slėpti išplėstinius nustatymus",
@@ -602,6 +602,11 @@
       "url": "Serverio URL",
       "urlHelp": "Nukopijuokite šį URL į savo įkroviklio konfigūraciją. Išsamesnės informacijos ieškokite gamintojo vadove. Įkroviklis turėtų automatiškai pridėti savo unikalų identifikatorių (stotelės ID) prie URL. Retais atvejais gali tekti rankiniu būdu nurodyti identifikatorių. Pavyzdys: `{url}`"
     },
+    "optimizer": {
+      "description": "Analizuoja saulės energijos prognozę, elektros energijos kainas ir jūsų vartojimo įpročius, kad optimizuotų kaupiklį ir įkrovimo strategiją. Duomenys siunčiami apdorojimui į evcc optimizavimo paslaugą.",
+      "enable": "Įjungti Optimizavimą",
+      "title": "Optimizavimas"
+    },
     "options": {
       "boolean": {
         "no": "ne",
@@ -904,7 +909,7 @@
       "optInSponsorship": "Gali tik rėmėjai."
     },
     "version": {
-      "availableLong": "yra naujesnė versija",
+      "availableLong": "(yra naujesnė versija)",
       "community": "evcc bendruomenė",
       "labelRelease": "Leidimas",
       "labelVersion": "Versija",
@@ -1001,7 +1006,7 @@
     },
     "restartButton": "Restartuoti",
     "restartDescription": "Ar pabandėte išjungti ir vėl įjungti?",
-    "secondaryActions": "Vis dar nepavyksta išspręsti problemos? Čia rasite drastiškesnes opcijas."
+    "secondaryActions": "Vis dar nepavyksta išspręsti problemos? Čia rasite sudėtingesnes opcijas."
   },
   "issue": {
     "additional": {

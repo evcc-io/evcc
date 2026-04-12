@@ -602,6 +602,11 @@
       "url": "Server URL",
       "urlHelp": "Kopiera denna URL till laddarens konfiguration. Se tillverkarens manual för mer information. Laddaren ska automatiskt lägga till sin unika identifierare (stations-ID) till URL:en. I sällsynta fall kan du behöva ange identifieraren manuellt. Exempel: `{url}`Kopiera denna URL till laddarens konfiguration. Se tillverkarens manual för mer information. Laddaren ska automatiskt lägga till sin unika identifierare (stations-ID) till URL:en. I sällsynta fall kan du behöva ange identifieraren manuellt. Exempel: `{url}`"
     },
+    "optimizer": {
+      "description": "Analyserar solprognoser, elpriser och din typiska förbrukning för att optimera batteri- och laddningsstrategi. Data överförs till evcc optimeringstjänst för beräkning.",
+      "enable": "Aktivera optimerare",
+      "title": "Optimerare"
+    },
     "options": {
       "boolean": {
         "no": "nej",
@@ -875,10 +880,10 @@
         "thisYear": "detta år",
         "total": "totalt"
       },
-      "periodLabel": "Period:",
+      "periodLabel": "Period",
       "priceTitle": "Energipris",
       "referenceGrid": "nät",
-      "referenceLabel": "Referensdata:",
+      "referenceLabel": "Referensdata",
       "sessionInfo": "Baserat på avslutade laddsessioner.",
       "tabTitle": "Mina uppgifter"
     },
@@ -922,7 +927,9 @@
       "modalUpdateNow": "Installera nu",
       "modalUpdateStarted": "Starta den nya versionen av evcc…",
       "modalUpdateStatusStart": "Installationen har börjat:",
-      "openSource": "open source"
+      "modalViewOnGitHub": "Se på GitHub",
+      "openSource": "open source",
+      "poweredByOpenSource": "Powered by {0}."
     }
   },
   "forecast": {
@@ -934,7 +941,10 @@
     },
     "empty": {
       "co2": "Se när elen i ditt område är ren. Laddningsscheman optimeras för låga utsläpp och CO₂-besparingar beräknas.",
-      "price": "Konfigurera rörligt elpris för att automatiskt optimera laddningsscheman och beräkna besparingar."
+      "price": "Konfigurera rörligt elpris för att automatiskt optimera laddningsscheman och beräkna besparingar.",
+      "setup": "Lägg till tariffer och prognoser",
+      "solar": "Förväntat solproduktion idag och imorgon. Kommer i framtiden även att användas för automatisk laddningsoptimering.",
+      "title": "Tariffer & prognoser"
     },
     "modalTitle": "Prognos",
     "price": {
@@ -943,6 +953,7 @@
       "lowestHour": "Billigaste timmen",
       "range": "Intervall"
     },
+    "priceZoom": "zooma in",
     "solar": {
       "dayAfterTomorrow": "I övermorgon",
       "partly": "delvis",
@@ -951,10 +962,11 @@
       "tomorrow": "I morgon"
     },
     "solarAdjust": "Justera solprognosen baserat på verkliga produktionsvärden{percent}.",
+    "solarAdjustShort": "justera verklig data",
     "type": {
-      "co2": "CO₂",
-      "price": "Pris",
-      "solar": "Sol"
+      "co2": "CO₂-utsläpp",
+      "price": "Nätpris",
+      "solar": "Solenergi produktion"
     }
   },
   "general": {
@@ -1168,6 +1180,7 @@
         "once": "Boost är aktiverat för denna laddning.",
         "stateActive": "Batteriboost aktiv",
         "stateBelowLimit": "Batterinivå för låg för boost",
+        "stateHold": "Batteri låst",
         "stateReady": "Beredd för batteriboost"
       },
       "batteryUsage": "Hembatteri",
@@ -1277,6 +1290,7 @@
       "batteryBoostBelowLimit": "Batterinivå för låg för boost.",
       "batteryBoostDisabled": "Batteriboost avaktiverad.",
       "batteryBoostEnabled": "Boost tills batteriet är på {limit}.",
+      "batteryBoostHold": "Batteri låst. Boost ej tillgänglig.",
       "charging": "Laddar…",
       "cheapEnergyCharging": "Billig energi är tillgänglig.",
       "cheapEnergyNextStart": "Billig energi om {duration}.",
@@ -1516,5 +1530,13 @@
     "lineErrorLink": "linje {0}",
     "restartButton": "Starta om",
     "title": "Startfel"
+  },
+  "tabBar": {
+    "battery": "Batteri",
+    "charge": "Ladda",
+    "comingSoon": "Sida under uppbyggnad.",
+    "forecast": "Prognos",
+    "more": "Mer",
+    "sessions": "Laddningar"
   }
 }
