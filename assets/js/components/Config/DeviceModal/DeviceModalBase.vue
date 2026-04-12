@@ -188,6 +188,7 @@ import YamlEntry from "./YamlEntry.vue";
 import AuthCodeDisplay from "../AuthCodeDisplay.vue";
 import AuthConnectButton from "../AuthConnectButton.vue";
 import { initialTestState, performTest } from "../utils/test";
+import { reportValidityInModal } from "../utils/reportValidityInModal";
 import { initialAuthState, prepareAuthLogin } from "../utils/authProvider";
 import sleep from "@/utils/sleep";
 import { ConfigType } from "@/types/evcc";
@@ -618,7 +619,7 @@ export default defineComponent({
 
 			// trigger browser validation
 			if (this.$refs["form"]) {
-				if (!(this.$refs["form"] as HTMLFormElement).reportValidity()) {
+				if (!reportValidityInModal(this.$refs["form"] as HTMLFormElement)) {
 					return;
 				}
 			}
