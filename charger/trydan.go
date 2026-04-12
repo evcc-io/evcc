@@ -145,15 +145,15 @@ func (c Trydan) Enable(enable bool) error {
 	// This is needed to let EVCC taking over charging power control.
 	// Charger will stop returning power readings if 'Dynamic' is disabled.
 	data, err := c.statusG.Get()
-	if err == nil {
-		if data.Dynamic == 1 {
-			if err := c.setValue("PauseDynamic", pauseDynamic); err != nil {
-				// Pause V2C 'PauseDynamic' when EVCC charging is active and vice versa.
-				return err
-			}
-		}
-	} else {
+	if err != nil {
 		return err
+	}
+
+	if data.Dynamic == 1 {
+		if err := c.setValue("PauseDynamic", pauseDynamic); err != nil {
+			// Pause V2C 'PauseDynamic' when EVCC charging is active and vice versa.
+			return err
+		}
 	}
 	c.enabled = enable
 
