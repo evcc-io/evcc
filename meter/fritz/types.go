@@ -39,15 +39,12 @@ func (s Settings) GetSessionID(c *request.Helper) (string, error) {
 			}
 
 			if body, err = c.GetBody(uri + "?" + params.Encode()); err == nil {
-				err = xml.Unmarshal(body, &v)
-				if v.SID == "0000000000000000" {
+				if err = xml.Unmarshal(body, &v); err == nil && v.SID == "0000000000000000" {
 					return "", errors.New("invalid user or password")
 				}
-
-				return v.SID, nil
 			}
 		}
 	}
 
-	return "", err
+	return v.SID, err
 }
