@@ -3,7 +3,7 @@ products:
   - brand: Stegen
     description:
       generic: Smart Evse v3 / v3.5
-capabilities: ["mA", "rfid"]
+capabilities: ["mA", "rfid", "1p3p"]
 requirements:
   description:
     de: |
