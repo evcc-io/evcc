@@ -15,4 +15,4 @@ params:
     default: 502
 render: |
   type: daheimladen
-  uri: {{ .host }}:{{ .port }}
+  uri: {{ joinHostPort .host .port }}

@@ -1,10 +1,12 @@
 # evcc 🚘☀️
 
 [![Build](https://github.com/evcc-io/evcc/actions/workflows/nightly.yml/badge.svg)](https://github.com/evcc-io/evcc/actions/workflows/nightly.yml)
+[![Statuspage](https://img.shields.io/badge/status-evcc.io-green?color=brightgreen&link=https%3A%2F%2Fstatus.evcc.io)](https://status.evcc.io/)
 [![Translation](https://hosted.weblate.org/widgets/evcc/-/evcc/svg-badge.svg)](https://hosted.weblate.org/engage/evcc/)
 ![Docker Pulls](https://img.shields.io/docker/pulls/evcc/evcc)
 [![OSS hosting by cloudsmith](https://img.shields.io/badge/OSS%20hosting%20by-cloudsmith-blue?logo=cloudsmith)](https://cloudsmith.io/~evcc/packages/)
-[![Latest Version](https://img.shields.io/github/release/evcc-io/evcc.svg)](https://github.com/evcc-io/evcc/releases)<br/>
+[![Latest Version](https://img.shields.io/github/release/evcc-io/evcc.svg)](https://github.com/evcc-io/evcc/releases)
+<br/>
 [![Built with Depot](https://depot.dev/badges/built-with-depot.svg)](https://depot.dev/?utm_source=evcc)
 
 evcc is an extensible EV Charge Controller and home energy management system.

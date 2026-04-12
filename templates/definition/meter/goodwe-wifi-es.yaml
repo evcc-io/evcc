@@ -16,7 +16,7 @@ render: |
   {{- if eq .usage "grid" }}
   power:
     source: aa55udp
-    host: {{ if .host }}{{ .host }}{{ else }}{{ .uri }}{{ end }}
+    host: {{ or .host .uri }}
     register: 29964
     count: 2
     decode: int32be
@@ -24,7 +24,7 @@ render: |
   {{- if eq .usage "pv" }}
   power:
     source: aa55udp
-    host: {{ if .host }}{{ .host }}{{ else }}{{ .uri }}{{ end }}
+    host: {{ or .host .uri }}
     register: 29958
     count: 2
     decode: int32be
@@ -32,13 +32,13 @@ render: |
   {{- if eq .usage "battery" }}
   power:
     source: aa55udp
-    host: {{ if .host }}{{ .host }}{{ else }}{{ .uri }}{{ end }}
+    host: {{ or .host .uri }}
     register: 29970
     count: 2
     decode: int32be
   soc:
     source: aa55udp
-    host: {{ if .host }}{{ .host }}{{ else }}{{ .uri }}{{ end }}
+    host: {{ or .host .uri }}
     register: 29966
     count: 1
     decode: uint16be

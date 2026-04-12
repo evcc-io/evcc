@@ -41,6 +41,9 @@ type decoratePhoenixCharxCapable struct {
 
 func (d *decoratePhoenixCharxCapable) Capability(typ reflect.Type) (any, bool) {
 	c, ok := d.caps[typ]
+	if !ok && reflect.TypeOf(d).Implements(typ) {
+		return d, true
+	}
 	return c, ok
 }
 
