@@ -96,13 +96,27 @@ func newEEBus(ctx context.Context, ski, ip string) (*EEBus, error) {
 		return nil, err
 	}
 
-	// unregister device when context is cancelled (e.g. UI config validation)
+	// unregister device when the lifetime context is cancelled
+	// (config update/delete via configurableDevice cancel)
 	go func() {
 		<-ctx.Done()
 		eebus.Instance.UnregisterDevice(ski, c)
 	}()
 
 	return c, nil
+}
+
+var _ eebus.StatefulDevice = (*EEBus)(nil)
+
+// DeviceEntities implements eebus.StatefulDevice.
+func (c *EEBus) DeviceEntities() []eebus.DeviceEntity {
+	c.mux.RLock()
+	defer c.mux.RUnlock()
+
+	if c.ev == nil {
+		return nil
+	}
+	return []eebus.DeviceEntity{{Entity: c.ev, Event: evcc.EvConnected}}
 }
 
 // NewEEBus creates EEBus charger
