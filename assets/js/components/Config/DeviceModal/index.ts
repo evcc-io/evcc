@@ -236,10 +236,18 @@ export function createDeviceUtils(deviceType: DeviceType) {
     return response.data;
   }
 
-  async function checkAuth(type: string, values: Record<string, any>): Promise<AuthCheckResponse> {
-    const params = { type, ...values };
+  async function checkAuth(
+    type: string,
+    values: Record<string, any>,
+    id?: number
+  ): Promise<AuthCheckResponse> {
+    const body = { type, ...values };
+    let url = `config/auth`;
+    if (id !== undefined) {
+      url += `/${deviceType}/merge/${id}`;
+    }
     try {
-      const { status, data = {} } = await api.post(`config/auth`, params, {
+      const { status, data = {} } = await api.post(url, body, {
         validateStatus: (status) => [204, 400].includes(status),
       });
       // already set up
