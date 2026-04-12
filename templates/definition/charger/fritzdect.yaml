@@ -27,7 +27,7 @@ params:
     required: true
   - name: firmware82
     advanced: true
-    default: false
+    type: bool
     description:
       de: Neue REST-API verwenden (FritzOS 8.2+)
       en: Use new REST API (FritzOS 8.2+)
