@@ -9,6 +9,7 @@ option go_package = "proto/pb";
 service Auth {
 	rpc IsAuthorized (AuthRequest) returns (AuthReply) {}
 	rpc Activate (ActivateRequest) returns (ActivateReply) {}
+	rpc IsAuthorizedHardware (HardwareRequest) returns (HardwareReply) {}
 }
 
 message AuthRequest {
@@ -31,4 +32,15 @@ message ActivateRequest {
 message ActivateReply {
 	string token = 1;
 	string error = 2;
+}
+
+message HardwareRequest {
+	string machine_id = 1;
+	string vendor = 2;
+	map<string, string> metadata = 3;
+}
+
+message HardwareReply {
+	bool authorized = 1;
+	string subject = 2;
 }
