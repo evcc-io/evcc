@@ -3,6 +3,8 @@ package charger
 import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/meter/fritz"
+	"github.com/evcc-io/evcc/meter/fritz/aha"
+	"github.com/evcc-io/evcc/meter/fritz/smarthome"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -46,9 +48,9 @@ func NewFritzDECT(embed embed, uri, ain, user, password string, standbypower flo
 
 	// Use legacy LUA API if explicitly requested, otherwise use new REST API
 	if legacy {
-		conn, err = fritz.NewConnection(uri, ain, user, password)
+		conn, err = aha.NewConnection(uri, ain, user, password)
 	} else {
-		conn, err = fritz.NewRestConnection(uri, ain, user, password)
+		conn, err = smarthome.NewConnection(uri, ain, user, password)
 	}
 	if err != nil {
 		return nil, err

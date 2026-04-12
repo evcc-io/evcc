@@ -1,6 +1,7 @@
-package fritz
+package smarthome
 
 import (
+	"encoding/xml"
 	"errors"
 	"fmt"
 	"net/url"
@@ -8,6 +9,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/meter/fritz"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
@@ -16,10 +18,10 @@ import (
 // FRITZ! Smarthome REST API (FritzOS 8.2+)
 // https://fritz.support/resources/SmarthomeRestApiFRITZOS82.html
 
-// RestConnection implements the new REST API for Fritz smarthome devices
-type RestConnection struct {
+// Connection implements the new REST API for Fritz smarthome devices
+type Connection struct {
 	*request.Helper
-	*Settings
+	*fritz.Settings
 	SID     string
 	UID     string // device UID (AIN with space)
 	updated time.Time
@@ -83,8 +85,13 @@ type TemperatureInterface struct {
 	Celsius float64 `json:"celsius"`
 }
 
-// NewRestConnection creates a new REST API connection
-func NewRestConnection(uri, ain, user, password string) (*RestConnection, error) {
+// parseXML is a helper for unmarshaling XML responses
+func parseXML(data []byte, v any) error {
+	return xml.Unmarshal(data, v)
+}
+
+// NewConnection creates a new REST API connection
+func NewConnection(uri, ain, user, password string) (*Connection, error) {
 	if uri == "" {
 		uri = "https://fritz.box"
 	}
@@ -93,7 +100,7 @@ func NewRestConnection(uri, ain, user, password string) (*RestConnection, error)
 		return nil, errors.New("missing ain")
 	}
 
-	settings := &Settings{
+	settings := &fritz.Settings{
 		URI:      strings.TrimRight(uri, "/"),
 		AIN:      ain,
 		User:     user,
@@ -102,7 +109,7 @@ func NewRestConnection(uri, ain, user, password string) (*RestConnection, error)
 
 	log := util.NewLogger("fritzrest").Redact(password)
 
-	conn := &RestConnection{
+	conn := &Connection{
 		Helper:   request.NewHelper(log),
 		Settings: settings,
 		UID:      ainToUID(ain),
@@ -130,8 +137,8 @@ func ainToUID(ain string) string {
 }
 
 // refreshSession ensures we have a valid session ID
-func (c *RestConnection) refreshSession() error {
-	if time.Since(c.updated) < sessionTimeout {
+func (c *Connection) refreshSession() error {
+	if time.Since(c.updated) < fritz.SessionTimeout {
 		return nil
 	}
 
@@ -152,7 +159,7 @@ func (c *RestConnection) refreshSession() error {
 	}
 
 	if v.SID == "0000000000000000" {
-		challresp, err := createChallengeResponse(v.Challenge, c.Password)
+		challresp, err := fritz.CreateChallengeResponse(v.Challenge, c.Password)
 		if err != nil {
 			return err
 		}
@@ -183,7 +190,7 @@ func (c *RestConnection) refreshSession() error {
 }
 
 // getUnit fetches unit data from REST API
-func (c *RestConnection) getUnit() (Unit, error) {
+func (c *Connection) getUnit() (Unit, error) {
 	if err := c.refreshSession(); err != nil {
 		return Unit{}, err
 	}
@@ -217,7 +224,7 @@ func (c *RestConnection) getUnit() (Unit, error) {
 }
 
 // findUnit searches for our unit in the list of all units
-func (c *RestConnection) findUnit() (Unit, error) {
+func (c *Connection) findUnit() (Unit, error) {
 	uri := fmt.Sprintf("%s/api/v0/smarthome/overview/units", c.URI)
 
 	req, err := request.New("GET", uri, nil, map[string]string{
@@ -247,7 +254,7 @@ func (c *RestConnection) findUnit() (Unit, error) {
 }
 
 // CurrentPower implements the api.Meter interface
-func (c *RestConnection) CurrentPower() (float64, error) {
+func (c *Connection) CurrentPower() (float64, error) {
 	unit, err := c.unitG.Get()
 	if err != nil {
 		return 0, err
@@ -265,10 +272,10 @@ func (c *RestConnection) CurrentPower() (float64, error) {
 	}
 }
 
-var _ api.MeterEnergy = (*RestConnection)(nil)
+var _ api.MeterEnergy = (*Connection)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
-func (c *RestConnection) TotalEnergy() (float64, error) {
+func (c *Connection) TotalEnergy() (float64, error) {
 	unit, err := c.unitG.Get()
 	if err != nil {
 		return 0, err
@@ -287,7 +294,7 @@ func (c *RestConnection) TotalEnergy() (float64, error) {
 }
 
 // SwitchPresent checks if the device is connected
-func (c *RestConnection) SwitchPresent() (bool, error) {
+func (c *Connection) SwitchPresent() (bool, error) {
 	unit, err := c.unitG.Get()
 	if err != nil {
 		if errors.Is(err, api.ErrNotAvailable) {
@@ -299,7 +306,7 @@ func (c *RestConnection) SwitchPresent() (bool, error) {
 }
 
 // SwitchState returns the current switch state
-func (c *RestConnection) SwitchState() (bool, error) {
+func (c *Connection) SwitchState() (bool, error) {
 	unit, err := c.unitG.Get()
 	if err != nil {
 		return false, err
@@ -313,17 +320,17 @@ func (c *RestConnection) SwitchState() (bool, error) {
 }
 
 // SwitchOn turns the switch on
-func (c *RestConnection) SwitchOn() error {
+func (c *Connection) SwitchOn() error {
 	return c.setSwitch(true)
 }
 
 // SwitchOff turns the switch off
-func (c *RestConnection) SwitchOff() error {
+func (c *Connection) SwitchOff() error {
 	return c.setSwitch(false)
 }
 
 // setSwitch sets the switch state via REST API
-func (c *RestConnection) setSwitch(on bool) error {
+func (c *Connection) setSwitch(on bool) error {
 	if err := c.refreshSession(); err != nil {
 		return err
 	}

@@ -3,6 +3,8 @@ package meter
 import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/meter/fritz"
+	"github.com/evcc-io/evcc/meter/fritz/aha"
+	"github.com/evcc-io/evcc/meter/fritz/smarthome"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -27,8 +29,8 @@ func NewFritzDECTFromConfig(other map[string]any) (api.Meter, error) {
 
 	// Use legacy LUA API if explicitly requested, otherwise use new REST API
 	if cc.Legacy {
-		return fritz.NewConnection(cc.URI, cc.AIN, cc.User, cc.Password)
+		return aha.NewConnection(cc.URI, cc.AIN, cc.User, cc.Password)
 	}
 
-	return fritz.NewRestConnection(cc.URI, cc.AIN, cc.User, cc.Password)
+	return smarthome.NewConnection(cc.URI, cc.AIN, cc.User, cc.Password)
 }

@@ -1,8 +1,6 @@
-package fritz
+package aha
 
 import (
-	"crypto/md5"
-	"encoding/hex"
 	"encoding/xml"
 	"errors"
 	"fmt"
@@ -12,37 +10,23 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/meter/fritz"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
-	"golang.org/x/text/encoding/unicode"
 )
-
-// parseXML is a helper for unmarshaling XML responses
-func parseXML(data []byte, v any) error {
-	return xml.Unmarshal(data, v)
-}
 
 // FRITZ! FritzBox AHA interface and authentication specifications:
 // https://fritz.com/fileadmin/user_upload/Global/Service/Schnittstellen/AHA-HTTP-Interface.pdf
 // https://fritz.com/fileadmin/user_upload/Global/Service/Schnittstellen/AVM_Technical_Note_-_Session_ID.pdf
 
-// FritzDECT settings
-type Settings struct {
-	URI, AIN, User, Password string
-	Legacy                   bool // use legacy homeautoswitch.lua API
-}
-
 // FritzDECT connection
 type Connection struct {
 	*request.Helper
-	*Settings
+	*fritz.Settings
 	SID     string
 	updated time.Time
 }
-
-// https://fritz.com/fileadmin/user_upload/Global/Service/Schnittstellen/AVM_Technical_Note_-_Session_ID_english_2021-05-03.pdf
-const sessionTimeout = 15 * time.Minute
 
 // Devicestats structures getbasicdevicesstats command response (AHA-HTTP-Interface)
 type Devicestats struct {
@@ -66,7 +50,7 @@ func NewConnection(uri, ain, user, password string) (*Connection, error) {
 		return nil, errors.New("missing ain")
 	}
 
-	settings := &Settings{
+	settings := &fritz.Settings{
 		URI:      strings.TrimRight(uri, "/"),
 		AIN:      ain,
 		User:     user,
@@ -88,7 +72,7 @@ func NewConnection(uri, ain, user, password string) (*Connection, error) {
 // ExecCmd execautes an FritzDECT AHA-HTTP-Interface command
 func (c *Connection) ExecCmd(function string) (string, error) {
 	// refresh Fritzbox session id
-	if time.Since(c.updated) >= sessionTimeout {
+	if time.Since(c.updated) >= fritz.SessionTimeout {
 		if err := c.getSessionID(); err != nil {
 			return "", err
 		}
@@ -206,7 +190,7 @@ func (c *Connection) getSessionID() error {
 
 	if err = xml.Unmarshal(body, &v); err == nil && v.SID == "0000000000000000" {
 		var challresp string
-		if challresp, err = createChallengeResponse(v.Challenge, c.Password); err == nil {
+		if challresp, err = fritz.CreateChallengeResponse(v.Challenge, c.Password); err == nil {
 			params := url.Values{
 				"username": {c.User},
 				"response": {challresp},
@@ -223,18 +207,4 @@ func (c *Connection) getSessionID() error {
 	}
 
 	return err
-}
-
-// createChallengeResponse creates the Fritzbox challenge response string
-func createChallengeResponse(challenge, pass string) (string, error) {
-	encoder := unicode.UTF16(unicode.LittleEndian, unicode.IgnoreBOM).NewEncoder()
-	utf16le, err := encoder.String(challenge + "-" + pass)
-	if err != nil {
-		return "", err
-	}
-
-	hash := md5.Sum([]byte(utf16le))
-	md5hash := hex.EncodeToString(hash[:])
-
-	return challenge + "-" + md5hash, nil
 }
