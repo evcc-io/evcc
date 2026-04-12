@@ -1,0 +1,105 @@
+template: stegen-smartevse-3
+products:
+  - brand: Stegen
+    description:
+      generic: Smart EVSE v3 (MQTT)
+capabilities: ["1p3p"]
+requirements:
+  description:
+    en: |
+      Requires SmartEVSE v3 firmware with MQTT and Pause mode support (v3.6+).
+      Verified against firmware fork [dingo35/SmartEVSE-3.5](https://github.com/dingo35/SmartEVSE-3.5).
+
+      **Device setup:**
+      1. Enable MQTT on the SmartEVSE web interface (Settings -> MQTT Broker)
+      2. Set the device Mode to **Normal** before connecting evcc
+      3. Find your MQTT topic prefix and IP address on the SmartEVSE web interface (Settings -> MQTT)
+
+      **evcc setup:**
+      - Configure the MQTT broker globally in evcc.yaml
+      - Phase switching is enabled via the `phases1p3p` parameter
+    de: |
+      Benoetigt SmartEVSE v3 Firmware mit MQTT- und Pause-Modus-Unterstuetzung (v3.6+).
+      Verifiziert mit Firmware-Fork [dingo35/SmartEVSE-3.5](https://github.com/dingo35/SmartEVSE-3.5).
+
+      **Geraetekonfiguration:**
+      1. MQTT auf der SmartEVSE-Weboberflaeche aktivieren (Einstellungen -> MQTT Broker)
+      2. Geraetmodus vor dem Verbinden mit evcc auf **Normal** setzen
+      3. MQTT-Topic-Praefix und IP-Adresse in der SmartEVSE-Weboberflaeche ablesen (Einstellungen -> MQTT)
+
+      **evcc-Konfiguration:**
+      - MQTT-Broker global in evcc.yaml konfigurieren
+      - Phasenumschaltung wird ueber den Parameter `phases1p3p` aktiviert
+params:
+  - name: host
+    description:
+      en: SmartEVSE IP address or hostname
+      de: IP-Adresse oder Hostname des SmartEVSE
+    example: "192.168.1.100"
+  - name: topic
+    description:
+      en: MQTT topic prefix (e.g. SmartEVSE-8088)
+      de: MQTT-Topic-Praefix (z.B. SmartEVSE-8088)
+    help:
+      en: Found in SmartEVSE web interface under Settings, MQTT, Topic prefix. Typical values are SmartEVSE-8088 or SmartEVSE/8088
+      de: In der SmartEVSE-Weboberflaeche unter Einstellungen, MQTT, Topic-Praefix. Typische Werte sind SmartEVSE-8088 oder SmartEVSE/8088
+    example: "SmartEVSE-8088"
+  - name: phases1p3p
+    type: bool
+    description:
+      en: Phase switching (C2 contactor installed)
+      de: Phasenumschaltung (C2-Schuetz vorhanden)
+    help:
+      en: Requires C2 contactor and SmartEVSE SWITCH setting configured
+      de: Erfordert C2-Schuetz und konfigurierte SmartEVSE SWITCH-Einstellung
+    advanced: true
+    default: false
+render: |
+  type: custom
+  tos: true
+  status:
+    source: http
+    uri: http://{{ .host }}/settings
+    jq: 'if .car_connected == false then "A" elif .evse.state_id == 2 or .evse.state_id == 3 then "C" else "B" end'
+  enabled:
+    source: mqtt
+    topic: {{ .topic }}/Mode
+    timeout: 30s
+    quote: true
+    jq: '. != "Pause" and . != "Off"'
+  enable:
+    source: mqtt
+    topic: {{ .topic }}/Set/Mode
+    payload: '{{"{{"}}if .enable{{"}}"}}Normal{{"{{"}}else{{"}}"}}Pause{{"{{"}}end{{"}}"}}'
+  maxcurrent:
+    source: mqtt
+    topic: {{ .topic }}/Set/CurrentOverride
+    payload: '{{"{{"}}int .maxcurrent | mul 10{{"}}"}}'
+  power:
+    source: mqtt
+    topic: {{ .topic }}/EVChargePower
+    timeout: 30s
+  energy:
+    source: mqtt
+    topic: {{ .topic }}/EVTotalEnergyCharged
+    timeout: 30s
+    scale: 0.001
+  currents:
+  - source: mqtt
+    topic: {{ .topic }}/EVCurrentL1
+    timeout: 30s
+    scale: 0.1
+  - source: mqtt
+    topic: {{ .topic }}/EVCurrentL2
+    timeout: 30s
+    scale: 0.1
+  - source: mqtt
+    topic: {{ .topic }}/EVCurrentL3
+    timeout: 30s
+    scale: 0.1
+  {{- if ne .phases1p3p "false" }}
+  phases1p3p:
+    source: mqtt
+    topic: {{ .topic }}/Set/EnableC2
+    payload: '{{"{{"}}if eq .phases1p3p 3{{"}}"}}3{{"{{"}}else{{"}}"}}1{{"{{"}}end{{"}}"}}'
+  {{- end }}
