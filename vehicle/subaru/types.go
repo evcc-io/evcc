@@ -2,6 +2,7 @@ package subaru
 
 import (
 	"fmt"
+	"math"
 	"strings"
 )
 
@@ -34,9 +35,9 @@ func (e EvRange) ValueInKilometers() (int64, error) {
 
 	switch u {
 	case "km":
-		return int64(e.Value), nil
+		return int64(math.Round(e.Value)), nil
 	case "mi":
-		return int64(e.Value * kmPerMile), nil
+		return int64(math.Round(e.Value * kmPerMile)), nil
 	default:
 		return 0, fmt.Errorf("unsupported unit type: %s", e.Unit)
 	}
