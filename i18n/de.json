@@ -911,6 +911,7 @@
       "modalCancel": "Abbrechen",
       "modalDownload": "Download",
       "modalInstalledVersion": "Installierte Version",
+      "modalLatest": "Du nutzt die neueste Version.",
       "modalNextRelease": "Was ist neu im nächsten Release",
       "modalNoReleaseNotes": "Keine Versionshinweise verfügbar. Mehr Informationen zur neuen Version:",
       "modalTitle": "Neue Version verfügbar",
@@ -943,6 +944,7 @@
       "lowestHour": "Günstigste Stunde",
       "range": "Bereich"
     },
+    "priceZoom": "vergrößern",
     "solar": {
       "dayAfterTomorrow": "Übermorgen",
       "partly": "teilweise",
@@ -951,10 +953,11 @@
       "tomorrow": "Morgen"
     },
     "solarAdjust": "Solarprognose anhand der realen Produktionsdaten anpassen{percent}.",
+    "solarAdjustShort": "an echte Daten anpassen",
     "type": {
-      "co2": "CO₂",
-      "price": "Preis",
-      "solar": "Solar"
+      "co2": "CO₂-Emissionen",
+      "price": "Netzpreis",
+      "solar": "Solarproduktion"
     }
   },
   "general": {
