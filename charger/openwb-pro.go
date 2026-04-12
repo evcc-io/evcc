@@ -16,7 +16,7 @@ func init() {
 	registry.AddCtx("openwbpro", NewOpenWBProFromConfig)
 }
 
-//go:generate go tool decorate -f decorateOpenWBPro -b *OpenWBPro -r api.Charger -t "api.Resurrector,WakeUp,func() error"
+//go:generate go tool decorate -f decorateOpenWBPro -b *OpenWBPro -r api.Charger -t api.Resurrector
 
 // https://openwb.de/main/?page_id=771
 

@@ -28,6 +28,7 @@ func NewMyStromFromConfig(other map[string]any) (api.Charger, error) {
 	cc := struct {
 		embed        `mapstructure:",squash"`
 		URI          string
+		Token        string
 		StandbyPower float64
 		Cache        time.Duration
 	}{
@@ -39,7 +40,7 @@ func NewMyStromFromConfig(other map[string]any) (api.Charger, error) {
 	}
 
 	c := &MyStrom{
-		conn: mystrom.NewConnection(cc.URI),
+		conn: mystrom.NewConnection(cc.URI, cc.Token),
 	}
 
 	c.switchSocket = NewSwitchSocket(&cc.embed, c.Enabled, c.conn.CurrentPower, cc.StandbyPower)

@@ -68,15 +68,12 @@ func durationSetter(set func(time.Duration) error) func(string) error {
 
 func planStrategySetter(set func(api.PlanStrategy) error) func(string) error {
 	return func(payload string) error {
-		var planStrategy planStrategyPayload
-		if err := json.Unmarshal([]byte(payload), &planStrategy); err != nil {
+		var res api.PlanStrategy
+		if err := json.Unmarshal([]byte(payload), &res); err != nil {
 			return err
 		}
 
-		return set(api.PlanStrategy{
-			Continuous:   planStrategy.Continuous,
-			Precondition: time.Duration(planStrategy.Precondition) * time.Second,
-		})
+		return set(res)
 	}
 }
 

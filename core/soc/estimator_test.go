@@ -39,7 +39,7 @@ func TestSocEstimation(t *testing.T) {
 	charger := &chargerStruct{api.NewMockCharger(ctrl), api.NewMockBattery(ctrl)}
 
 	// 8.5 kWh user battery capacity is converted to initial value of 10 kWh virtual capacity (at 85% efficiency)
-	vehicle.EXPECT().Capacity().Return(8.5)
+	vehicle.EXPECT().Capacity().Return(8.5).AnyTimes()
 
 	ce := NewEstimator(util.NewLogger("foo"), charger, vehicle)
 
@@ -66,25 +66,17 @@ func TestSocEstimation(t *testing.T) {
 		{5001, 50.0, 100.0, 10000},
 		{0, 20.0, 20.0, 10000},
 		{1000, 30.0, 30.0, 10000},
+		{1000, 50.0, 50.0, 8500}, // cap virtual capacity minimum to physical capacity
 	}
 
 	for _, tc := range tc {
 		t.Logf("%+v", tc)
 
-		soc, err := ce.Soc(&tc.vehicleSoc, tc.chargedEnergy)
-		if err != nil {
-			t.Error(err)
-		}
+		soc := ce.Soc(&tc.vehicleSoc, tc.chargedEnergy)
 
-		// validate soc estimate
-		if tc.estimatedSoc != soc {
-			t.Errorf("expected estimated soc: %g, got: %g", tc.estimatedSoc, soc)
-		}
-
-		// validate capacity estimate
-		if tc.virtualCapacity != ce.virtualCapacity {
-			t.Errorf("expected virtual capacity: %v, got: %v", tc.virtualCapacity, ce.virtualCapacity)
-		}
+		// validate soc/capacity estimate
+		assert.Equal(t, tc.estimatedSoc, soc, "estimated soc")
+		assert.Equal(t, tc.virtualCapacity, ce.virtualCapacity, "virtual capacity")
 
 		// validate duration estimate
 		chargePower := 1e3
@@ -92,9 +84,7 @@ func TestSocEstimation(t *testing.T) {
 		remainingHours := (float64(targetSoc) - soc) / 100 * tc.virtualCapacity / chargePower
 		remainingDuration := time.Duration(float64(time.Hour) * remainingHours).Round(time.Second)
 
-		if rm := ce.RemainingChargeDuration(targetSoc, chargePower); rm != remainingDuration {
-			t.Errorf("expected estimated duration: %v, got: %v", remainingDuration, rm)
-		}
+		assert.Equal(t, remainingDuration, ce.RemainingChargeDuration(targetSoc, chargePower), "remaining duration")
 	}
 }
 

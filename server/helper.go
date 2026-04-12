@@ -35,9 +35,25 @@ func jsonDecoder(r io.Reader) *json.Decoder {
 	return dec
 }
 
-// omitEmpty returns true if struct field is omitempty
-func omitEmpty(f reflect.StructField) bool {
-	tag := f.Tag.Get("json")
-	values := strings.Split(tag, ",")
-	return slices.Contains(values, "omitempty")
+// jsonOmitEmpty returns true if struct field is omitempty
+func jsonOmitEmpty(f reflect.StructField) bool {
+	return tagAttribute("json", "omitempty", f)
+}
+
+// tagValue returns the given tag's primary value
+func tagValue(key string, f reflect.StructField) string {
+	if tag := f.Tag.Get(key); tag != "" {
+		return strings.Split(tag, ",")[0]
+	}
+	return ""
+}
+
+// tagAttribute returns the given tag's primary value
+func tagAttribute(key, attr string, f reflect.StructField) bool {
+	if tag := f.Tag.Get(key); tag != "" {
+		if attrs := strings.Split(tag, ","); len(attrs) > 1 {
+			return slices.Contains(attrs[1:], attr)
+		}
+	}
+	return false
 }

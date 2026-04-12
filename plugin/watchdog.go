@@ -8,18 +8,21 @@ import (
 	"sync"
 	"time"
 
+	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/util"
 )
 
 type watchdogPlugin struct {
-	mu      sync.Mutex
-	ctx     context.Context
-	log     *util.Logger
-	reset   []string
-	initial *string
-	set     Config
-	timeout time.Duration
-	cancel  func()
+	mu       sync.Mutex
+	ctx      context.Context
+	log      *util.Logger
+	reset    []string
+	initial  *string
+	set      Config
+	timeout  time.Duration
+	deferred bool
+	cancel   func()
+	clock    clock.Clock
 }
 
 func init() {
@@ -33,6 +36,7 @@ func NewWatchDogFromConfig(ctx context.Context, other map[string]any) (Plugin, e
 		Initial *string
 		Set     Config
 		Timeout time.Duration
+		Defer   bool `mapstructure:"defer"`
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -40,12 +44,14 @@ func NewWatchDogFromConfig(ctx context.Context, other map[string]any) (Plugin, e
 	}
 
 	o := &watchdogPlugin{
-		ctx:     ctx,
-		log:     util.ContextLoggerWithDefault(ctx, util.NewLogger("watchdog")),
-		reset:   cc.Reset,
-		initial: cc.Initial,
-		set:     cc.Set,
-		timeout: cc.Timeout,
+		ctx:      ctx,
+		log:      util.ContextLoggerWithDefault(ctx, util.NewLogger("watchdog")),
+		reset:    cc.Reset,
+		initial:  cc.Initial,
+		set:      cc.Set,
+		timeout:  cc.Timeout,
+		deferred: cc.Defer,
+		clock:    clock.New(),
 	}
 
 	return o, nil
@@ -64,20 +70,35 @@ func (o *watchdogPlugin) wdt(ctx context.Context, set func() error) {
 	}
 }
 
+type deferredState[T comparable] struct {
+	val   T
+	timer *clock.Timer
+}
+
 // setter is the generic setter function for watchdogPlugin
 // it is currently not possible to write this as a method
 func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(T) error {
-	return func(val T) error {
-		o.mu.Lock()
-		defer o.mu.Unlock()
+	var state *deferredState[T]
+	var lastUpdated time.Time
+	var last *T
 
-		// stop wdt on new write
+	// stop running wdt
+	stopWdt := func() {
 		if o.cancel != nil {
 			o.cancel()
 			o.cancel = nil
 		}
+	}
 
-		// start wdt on non-reset value
+	// set value and start wdt
+	setAndStartWdt := func(val T) error {
+		if err := set(val); err != nil {
+			return err
+		}
+		lastUpdated = o.clock.Now()
+		last = &val
+
+		// start wdt for non-reset value
 		if !slices.Contains(reset, val) {
 			var ctx context.Context
 			ctx, o.cancel = context.WithCancel(context.Background())
@@ -86,11 +107,65 @@ func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(
 				o.mu.Lock()
 				defer o.mu.Unlock()
 
-				return set(val)
+				if err := set(val); err != nil {
+					return err
+				}
+				lastUpdated = o.clock.Now()
+
+				return nil
 			})
 		}
 
-		return set(val)
+		return nil
+	}
+
+	return func(val T) error {
+		o.mu.Lock()
+		defer o.mu.Unlock()
+
+		// cancel deferred update
+		if state != nil {
+			state.timer.Stop()
+			state = nil
+		}
+
+		// if value unchanged, let wdt continue running
+		// TODO refactor use of last value once batterymode is set only once, currently required to avoid defer loops
+		if last != nil && *last == val && o.cancel != nil {
+			return nil
+		}
+
+		// calculate remaining deferred delay
+		delay := max(0, o.timeout+5*time.Second-o.clock.Since(lastUpdated))
+
+		// defer update to non-reset value
+		if o.deferred && delay > 0 && !lastUpdated.IsZero() && !slices.Contains(reset, val) {
+			stopWdt()
+
+			// store deferred value
+			state = &deferredState[T]{
+				val: val,
+				timer: o.clock.AfterFunc(delay, func() {
+					o.mu.Lock()
+					defer o.mu.Unlock()
+
+					state = nil
+
+					o.log.TRACE.Printf("deferred update executing: to=%v", val)
+					if err := setAndStartWdt(val); err != nil {
+						o.log.ERROR.Printf("deferred update failed: %v", err)
+						return
+					}
+					o.log.TRACE.Printf("deferred update completed: value=%v", val)
+				}),
+			}
+
+			return nil
+		}
+
+		// immediate update
+		stopWdt()
+		return setAndStartWdt(val)
 	}
 }
 

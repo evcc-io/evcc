@@ -47,7 +47,7 @@ func init() {
 	registry.Add("tronity", NewTronityFromConfig)
 }
 
-//go:generate go tool decorate -f decorateTronity -b *Tronity -r api.Vehicle -t "api.ChargeState,Status,func() (api.ChargeStatus, error)" -t "api.VehicleOdometer,Odometer,func() (float64, error)" -t "api.ChargeController,ChargeEnable,func(bool) error"
+//go:generate go tool decorate -f decorateTronity -b *Tronity -r api.Vehicle -t api.ChargeState,api.VehicleOdometer,api.ChargeController
 
 // NewTronityFromConfig creates a new vehicle
 func NewTronityFromConfig(other map[string]any) (api.Vehicle, error) {
@@ -203,7 +203,7 @@ func (v *Tronity) post(uri string) error {
 	}
 
 	// ignore HTTP 405
-	if se := new(request.StatusError); errors.As(err, &se) && se.StatusCode() == http.StatusMethodNotAllowed {
+	if se, ok := errors.AsType[*request.StatusError](err); ok && se.StatusCode() == http.StatusMethodNotAllowed {
 		err = nil
 	}
 

@@ -11,6 +11,7 @@ import (
 
 	"dario.cat/mergo"
 	"github.com/gosimple/slug"
+	"github.com/spf13/cast"
 )
 
 const (
@@ -234,6 +235,9 @@ func (p *Param) DefaultValue(renderMode int) any {
 	if p.Type == TypeList {
 		return []string{}
 	}
+	if p.Type == TypeZones {
+		return []any{}
+	}
 
 	if (renderMode == RenderModeDocs || renderMode == RenderModeUnitTest) && p.Default == "" {
 		return p.Example
@@ -267,6 +271,26 @@ func (p *Param) IsRequired() bool {
 
 func (p *Param) IsDeprecated() bool {
 	return p.Deprecated
+}
+
+func (p *Param) IsZero(s string) bool {
+	isAzDec := p.Name == "az" || p.Name == "dec"
+	switch p.Type {
+	case TypeInt:
+		if isAzDec {
+			return len(s) == 0
+		}
+		return cast.ToInt64(s) == 0
+	case TypeFloat:
+		if isAzDec {
+			return len(s) == 0
+		}
+		return cast.ToFloat64(s) == 0
+	case TypeDuration:
+		return cast.ToDuration(s) == 0
+	default:
+		return len(s) == 0
+	}
 }
 
 // yamlQuote quotes strings for yaml if they would otherwise by modified by the unmarshaler

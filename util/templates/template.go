@@ -361,12 +361,17 @@ func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, m
 
 		switch typed := val.(type) {
 		case []any:
-			var list []string
-			for _, v := range typed {
-				list = append(list, p.yamlQuote(fmt.Sprintf("%v", v)))
-			}
-			if res[out] == nil || len(res[out].([]any)) == 0 {
-				res[out] = list
+			if i != -1 && p.Type == TypeZones {
+				// keep as structured data
+				res[out] = typed
+			} else {
+				var list []string
+				for _, v := range typed {
+					list = append(list, p.yamlQuote(fmt.Sprintf("%v", v)))
+				}
+				if res[out] == nil || len(res[out].([]any)) == 0 {
+					res[out] = list
+				}
 			}
 
 		case []string:
@@ -387,7 +392,7 @@ func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, m
 				}
 
 				// validate required fields from yaml
-				if s == "" && p.IsRequired() && (renderMode == RenderModeUnitTest || renderMode == RenderModeInstance && !testing.Testing()) {
+				if p.IsRequired() && p.IsZero(s) && (renderMode == RenderModeUnitTest || renderMode == RenderModeInstance && !testing.Testing()) {
 					// validate required per usage
 					if len(p.Usages) == 0 || slices.Contains(p.Usages, usage) {
 						return nil, nil, fmt.Errorf("missing required `%s`", p.Name)

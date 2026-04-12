@@ -17,4 +17,4 @@ params:
 render: |
   type: etrel
   connector: {{ .connector }}
-  uri: {{ .host }}:{{ .port }}
+  uri: {{ joinHostPort .host .port }}

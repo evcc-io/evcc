@@ -6,7 +6,6 @@ const SETTINGS_LOCALE = "settings_locale";
 const SETTINGS_THEME = "settings_theme";
 const SETTINGS_UNIT = "settings_unit";
 const SETTINGS_12H_FORMAT = "settings_12h_format";
-const SETTINGS_HIDDEN_FEATURES = "settings_hidden_features";
 const SETTINGS_ENERGYFLOW_DETAILS = "settings_energyflow_details";
 const SETTINGS_ENERGYFLOW_CO2 = "settings_energyflow_co2";
 const SETTINGS_ENERGYFLOW_PV = "settings_energyflow_pv";
@@ -17,13 +16,16 @@ const LOADPOINTS = "loadpoints";
 const SESSION_COLUMNS = "session_columns";
 const SAVINGS_PERIOD = "savings_period";
 const SAVINGS_REGION = "savings_region";
+const SAVINGS_INDICATOR = "savings_indicator";
 const SESSIONS_GROUP = "sessions_group";
 const SESSIONS_TYPE = "sessions_type";
 const SETTINGS_SOLAR_ADJUSTED = "settings_solar_adjusted";
+const SETTINGS_PRICE_ZOOM = "settings_price_zoom";
 const LAST_BATTERY_SMART_COST_LIMIT = "last_battery_smart_cost_limit";
 const LAST_TARGET_TIME = "last_target_time";
 const LAST_SOC_GOAL = "last_soc_goal";
 const LAST_ENERGY_GOAL = "last_energy_goal";
+const CONFIG_CARD_HEIGHTS = "config_card_heights";
 
 function read(key: string) {
   return window.localStorage[key];
@@ -108,7 +110,6 @@ export interface Settings {
   theme: THEME | null;
   unit: string;
   is12hFormat: boolean;
-  hiddenFeatures: boolean;
   energyflowDetails: boolean;
   energyflowCo2: boolean;
   energyflowPv: boolean;
@@ -118,14 +119,17 @@ export interface Settings {
   sessionColumns: string[];
   savingsPeriod: string;
   savingsRegion: string;
+  savingsIndicator: string;
   sessionsGroup: string;
   sessionsType: string;
   solarAdjusted: boolean;
+  priceZoom: boolean;
   loadpoints: Record<string, LoadpointSettings>;
   lastBatterySmartCostLimit: number | undefined;
   lastTargetTime: string | null;
   lastSocGoal: number | undefined;
   lastEnergyGoal: number | undefined;
+  cardHeights: Record<string, number>;
 }
 
 const settings: Settings = reactive({
@@ -133,7 +137,6 @@ const settings: Settings = reactive({
   theme: read(SETTINGS_THEME),
   unit: read(SETTINGS_UNIT),
   is12hFormat: readBool(SETTINGS_12H_FORMAT),
-  hiddenFeatures: readBool(SETTINGS_HIDDEN_FEATURES),
   energyflowDetails: readBool(SETTINGS_ENERGYFLOW_DETAILS),
   energyflowCo2: readBool(SETTINGS_ENERGYFLOW_CO2),
   energyflowPv: readBool(SETTINGS_ENERGYFLOW_PV),
@@ -143,21 +146,23 @@ const settings: Settings = reactive({
   sessionColumns: readArray(SESSION_COLUMNS),
   savingsPeriod: read(SAVINGS_PERIOD),
   savingsRegion: read(SAVINGS_REGION),
+  savingsIndicator: read(SAVINGS_INDICATOR),
   sessionsGroup: read(SESSIONS_GROUP),
   sessionsType: read(SESSIONS_TYPE),
   solarAdjusted: readBool(SETTINGS_SOLAR_ADJUSTED),
+  priceZoom: readBool(SETTINGS_PRICE_ZOOM),
   loadpoints: readJSON(LOADPOINTS),
   lastBatterySmartCostLimit: readNumber(LAST_BATTERY_SMART_COST_LIMIT),
   lastTargetTime: read(LAST_TARGET_TIME),
   lastSocGoal: readNumber(LAST_SOC_GOAL),
   lastEnergyGoal: readNumber(LAST_ENERGY_GOAL),
+  cardHeights: readJSON(CONFIG_CARD_HEIGHTS),
 });
 
 watch(() => settings.locale, save(SETTINGS_LOCALE));
 watch(() => settings.theme, save(SETTINGS_THEME));
 watch(() => settings.unit, save(SETTINGS_UNIT));
 watch(() => settings.is12hFormat, saveBool(SETTINGS_12H_FORMAT));
-watch(() => settings.hiddenFeatures, saveBool(SETTINGS_HIDDEN_FEATURES));
 watch(() => settings.energyflowDetails, saveBool(SETTINGS_ENERGYFLOW_DETAILS));
 watch(() => settings.energyflowCo2, saveBool(SETTINGS_ENERGYFLOW_CO2));
 watch(() => settings.energyflowPv, saveBool(SETTINGS_ENERGYFLOW_PV));
@@ -167,14 +172,17 @@ watch(() => settings.energyflowConsumers, saveBool(SETTINGS_ENERGYFLOW_CONSUMERS
 watch(() => settings.sessionColumns as string[], saveArray(SESSION_COLUMNS));
 watch(() => settings.savingsPeriod, save(SAVINGS_PERIOD));
 watch(() => settings.savingsRegion, save(SAVINGS_REGION));
+watch(() => settings.savingsIndicator, save(SAVINGS_INDICATOR));
 watch(() => settings.sessionsGroup, save(SESSIONS_GROUP));
 watch(() => settings.sessionsType, save(SESSIONS_TYPE));
 watch(() => settings.solarAdjusted, saveBool(SETTINGS_SOLAR_ADJUSTED));
+watch(() => settings.priceZoom, saveBool(SETTINGS_PRICE_ZOOM));
 watch(() => settings.loadpoints, saveJSON(LOADPOINTS), { deep: true });
 watch(() => settings.lastBatterySmartCostLimit, saveNumber(LAST_BATTERY_SMART_COST_LIMIT));
 watch(() => settings.lastTargetTime, save(LAST_TARGET_TIME));
 watch(() => settings.lastSocGoal, saveNumber(LAST_SOC_GOAL));
 watch(() => settings.lastEnergyGoal, saveNumber(LAST_ENERGY_GOAL));
+watch(() => settings.cardHeights, saveJSON(CONFIG_CARD_HEIGHTS), { deep: true });
 
 export default settings;
 

@@ -77,6 +77,7 @@ export default defineComponent({
 	props: {
 		forecast: { type: Object as PropType<Forecast>, default: () => ({}) },
 		currency: { type: String as PropType<CURRENCY> },
+		experimental: Boolean,
 	},
 	data(): {
 		isModalVisible: boolean;
@@ -94,12 +95,13 @@ export default defineComponent({
 			return settings.solarAdjusted;
 		},
 		showSolarAdjust() {
-			return !!this.forecast.solar && this.$hiddenFeatures();
+			return !!this.forecast.solar && this.experimental;
 		},
 		solar() {
-			return this.showSolarAdjust && this.solarAdjusted
-				? adjustedSolar(this.forecast.solar)
-				: this.forecast.solar;
+			if (this.showSolarAdjust && this.solarAdjusted) {
+				return adjustedSolar(this.forecast.solar);
+			}
+			return this.forecast.solar ? { ...this.forecast.solar, scale: undefined } : undefined;
 		},
 		solarAdjustText() {
 			let percent = "";

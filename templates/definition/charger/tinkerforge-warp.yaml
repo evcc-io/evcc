@@ -1,4 +1,5 @@
 template: tinkerforge-warp
+deprecated: true
 covers:
   - tinkerforge-warp-pro
 products:
@@ -27,7 +28,7 @@ params:
       en: WEM Firmware v2 required.
 render: |
   type: warp2
-  {{ include "mqtt" . }}
+  {{- include "mqtt" . }}
   topic: {{ .topic }}
   {{- if .energymanager }}
   energymanager: {{ .energymanager }}

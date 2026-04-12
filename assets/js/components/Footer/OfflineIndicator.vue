@@ -3,7 +3,12 @@
 		<div v-if="offline || starting" class="modal-backdrop" />
 		<div
 			class="fixed-bottom alert d-flex justify-content-center align-items-center mb-0 rounded-0 p-2"
-			:class="{ visible: visible, 'alert-danger': showError, 'alert-secondary': !showError }"
+			:class="{
+				visible: visible,
+				'alert-danger': showError,
+				'alert-secondary': !showError,
+				'alert--bottomtabs': experimental && !blocking,
+			}"
 			role="alert"
 			data-testid="bottom-banner"
 		>
@@ -33,14 +38,14 @@
 			</div>
 			<div
 				v-else-if="showError"
-				class="d-flex align-items-center container px-4 justify-content-center"
+				class="d-flex align-items-center container px-0 px-sm-4 justify-content-center flex-wrap gap-2"
 				data-testid="fatal-error"
 			>
 				<shopicon-regular-car1
 					size="m"
-					class="fatal-icon flex-grow-0 flex-shrink-0"
+					class="fatal-icon flex-grow-0 flex-shrink-0 d-none d-sm-block"
 				></shopicon-regular-car1>
-				<div class="mx-4 mt-1">
+				<div class="mx-3 mt-1">
 					<div>
 						<strong>
 							{{ $t("offline.configurationError") }}
@@ -52,7 +57,7 @@
 						</div>
 					</div>
 				</div>
-				<RestartButton error @restart="restart" />
+				<RestartButton class="ms-auto" error @restart="restart" />
 			</div>
 		</div>
 	</div>
@@ -76,6 +81,7 @@ export default defineComponent({
 		offline: Boolean,
 		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
 		startupCompleted: Boolean,
+		experimental: Boolean,
 	},
 	data() {
 		return { dismissed: false };
@@ -89,6 +95,9 @@ export default defineComponent({
 		},
 		starting() {
 			return this.startupCompleted === false;
+		},
+		blocking() {
+			return this.offline || this.starting || this.restarting;
 		},
 		visible() {
 			return (
@@ -136,7 +145,12 @@ export default defineComponent({
 	min-height: 58px;
 	transition:
 		transform var(--evcc-transition-fast) ease-in,
-		opacity var(--evcc-transition-fast) ease-in;
+		opacity var(--evcc-transition-fast) ease-in,
+		padding-bottom var(--evcc-transition-fast) ease-in;
+	padding-bottom: max(0.5rem, var(--safe-area-inset-bottom)) !important;
+	border-bottom: none;
+	border-left: none;
+	border-right: none;
 	/* above backdrop, below modal https://getbootstrap.com/docs/5.3/layout/z-index/ */
 	z-index: 1054 !important;
 }
@@ -145,7 +159,8 @@ export default defineComponent({
 	transform: translateY(0);
 	transition:
 		transform var(--evcc-transition-medium) ease-in,
-		opacity var(--evcc-transition-medium) ease-in;
+		opacity var(--evcc-transition-medium) ease-in,
+		padding-bottom var(--evcc-transition-fast) ease-in;
 }
 
 .fatal-icon {
@@ -163,6 +178,12 @@ export default defineComponent({
 	100% {
 		transform: translateY(6px) rotate(170deg);
 	}
+}
+.alert--bottomtabs {
+	z-index: 1029 !important;
+	padding-bottom: calc(
+		var(--tab-bar-height) + max(0.4rem, var(--safe-area-inset-bottom)) + 0.75rem
+	) !important;
 }
 .btn-close {
 	filter: none;

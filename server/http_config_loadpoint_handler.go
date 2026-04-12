@@ -42,6 +42,7 @@ func getLoadpointDynamicConfig(lp loadpoint.API) loadpoint.DynamicConfig {
 		PlanEnergy:               planEnergy,
 		PlanTime:                 planTime,
 		PlanStrategy:             lp.GetPlanStrategy(),
+		BatteryBoostLimit:        lp.GetBatteryBoostLimit(),
 		LimitEnergy:              lp.GetLimitEnergy(),
 		LimitSoc:                 lp.GetLimitSoc(),
 	}

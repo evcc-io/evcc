@@ -14,7 +14,6 @@ params:
     required: true
   - name: user
   - name: password
-    mask: true
 render: |
   type: shelly-topac
   uri: http://{{ .host }}

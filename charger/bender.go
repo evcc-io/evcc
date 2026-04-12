@@ -112,7 +112,7 @@ func NewBenderCCFromConfig(ctx context.Context, other map[string]any) (api.Charg
 
 // NewBenderCC creates BenderCC charger
 //
-//go:generate go tool decorate -f decorateBenderCC -b *BenderCC -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,Soc,func() (float64, error)" -t "api.Identifier,Identify,func() (string, error)" -t "api.ChargerEx,MaxCurrentMillis,func(float64) error" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
+//go:generate go tool decorate -f decorateBenderCC -b *BenderCC -r api.Charger -t api.Meter,api.PhaseCurrents,api.PhaseVoltages,api.MeterEnergy,api.Battery,api.Identifier,api.ChargerEx,api.PhaseSwitcher,api.PhaseGetter
 func NewBenderCC(ctx context.Context, uri string, id uint8, cache time.Duration) (api.Charger, error) {
 	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
@@ -372,7 +372,16 @@ func (wb *BenderCC) currentPower() (float64, error) {
 		return 0, err
 	}
 
-	return float64(binary.BigEndian.Uint32(b)), nil
+	u := binary.BigEndian.Uint32(b)
+
+	// some Bender chargers temporarily return 0xffffffff
+	// return error in this case to trigger retry and avoid wrong power readings
+	// https://github.com/evcc-io/evcc/discussions/27736
+	if u == math.MaxUint32 {
+		return 0, api.ErrMustRetry
+	}
+
+	return float64(u), nil
 }
 
 // removed: https://github.com/evcc-io/evcc/issues/13726

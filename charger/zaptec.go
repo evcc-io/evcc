@@ -56,7 +56,7 @@ func init() {
 	registry.AddCtx("zaptec", NewZaptecFromConfig)
 }
 
-//go:generate go tool decorate -f decorateZaptec -b *Zaptec -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error"
+//go:generate go tool decorate -f decorateZaptec -b *Zaptec -r api.Charger -t api.PhaseSwitcher
 
 // NewZaptecFromConfig creates a Zaptec Pro charger from generic config
 func NewZaptecFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
@@ -121,7 +121,7 @@ func NewZaptec(ctx context.Context, user, password, id string, priority bool, pa
 	})
 
 	// Get shared token source for this user (per-user uniqueness)
-	ts, err := zaptec.GetTokenSource(tsCtx, user, password)
+	ts, err := zaptec.TokenSource(tsCtx, user, password)
 	if err != nil {
 		return nil, err
 	}

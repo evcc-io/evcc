@@ -9,7 +9,6 @@ params:
   - name: host
   - name: user
   - name: password
-    mask: true
   - name: channel
     default: 0
   - preset: switchsocket

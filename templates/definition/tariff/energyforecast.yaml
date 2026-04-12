@@ -4,10 +4,13 @@ products:
 requirements:
   evcc: ["skiptest"]
 group: price
-countries: ["DE"]
+countries: ["DE", "LU", "AT", "FR", "NL", "BE", "PL", "DK"]
 params:
   - name: token
     required: true
+  - name: domain
+    type: choice
+    choice: [DE-LU, AT, FR, NL, BE, PL, DK1, DK2]
   - preset: tariff-base
   - preset: tariff-features
 render: |
@@ -16,7 +19,7 @@ render: |
   {{ include "tariff-features" . }}
   forecast:
     source: http
-    uri: https://www.energyforecast.de/api/v1/predictions/next_96_hours?resolution=QUARTER_HOURLY&fixed_cost_cent=0&vat=0&token={{ .token }}
+    uri: https://www.energyforecast.de/api/v1/predictions/next_96_hours?resolution=QUARTER_HOURLY&fixed_cost_cent=0&vat=0&token={{ .token }}{{ if .domain }}&market_zone={{ .domain }}{{ end }}
     jq: |
       map({
         "start": .start | strptime("%Y-%m-%dT%H:%M:%S.%f%z") | mktime | strftime("%Y-%m-%dT%H:%M:%SZ"),

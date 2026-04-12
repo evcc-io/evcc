@@ -56,7 +56,9 @@
 			</div>
 		</h5>
 		<ChargingPlanStrategy
-			v-bind="chargingPlanStrategyProps"
+			:id="id"
+			:precondition="effectivePlanStrategy?.precondition"
+			:continuous="effectivePlanStrategy?.continuous"
 			:disabled="strategyDisabled"
 			:show="strategyOpen"
 			@update="updatePlanStrategy"
@@ -78,8 +80,9 @@ import collector from "@/mixins/collector";
 import api from "@/api";
 import deepEqual from "@/utils/deepEqual";
 import convertRates from "@/utils/convertRates";
+import { debounceLeading } from "@/utils/debounceLeading";
 import { defineComponent, type PropType } from "vue";
-import type { Vehicle, Timeout, CURRENCY, Forecast } from "@/types/evcc";
+import type { Vehicle, CURRENCY, Forecast } from "@/types/evcc";
 import type {
 	StaticPlan,
 	RepeatingPlan,
@@ -107,8 +110,7 @@ export default defineComponent({
 		effectiveLimitSoc: Number,
 		effectivePlanTime: String,
 		effectivePlanSoc: Number,
-		effectivePlanPrecondition: Number,
-		effectivePlanContinuous: Boolean,
+		effectivePlanStrategy: Object as PropType<PlanStrategy>,
 		planEnergy: Number,
 		limitEnergy: Number,
 		socBasedPlanning: Boolean,
@@ -134,9 +136,10 @@ export default defineComponent({
 			staticPlanPreview: {} as StaticPlan,
 			plan: {} as PlanWrapper,
 			activeTab: "time",
-			debounceTimer: null as Timeout,
 			nextPlanId: 0,
 			strategyOpen: false,
+			updatePlanPreviewDebounced: null as any as () => void,
+			updateActivePlanDebounced: null as any as () => void,
 		};
 	},
 	computed: {
@@ -159,13 +162,6 @@ export default defineComponent({
 				? { duration, plan, power, rates, targetTime, currency, smartCostType }
 				: null;
 		},
-		chargingPlanStrategyProps(): any {
-			return {
-				id: this.id,
-				precondition: this.effectivePlanPrecondition,
-				continuous: this.effectivePlanContinuous,
-			};
-		},
 		alreadyReached(): boolean {
 			return this.plan.duration === 0;
 		},
@@ -186,11 +182,13 @@ export default defineComponent({
 				this.updatePlanDebounced();
 			}
 		},
-		effectivePlanPrecondition() {
-			this.updatePlanDebounced();
-		},
-		effectivePlanContinuous() {
-			this.updatePlanDebounced();
+		effectivePlanStrategy: {
+			deep: true,
+			handler(vNew: PlanStrategy, vOld: PlanStrategy) {
+				if (!deepEqual(vNew, vOld)) {
+					this.updatePlanDebounced();
+				}
+			},
 		},
 		staticPlan: {
 			deep: true,
@@ -209,15 +207,25 @@ export default defineComponent({
 			},
 		},
 	},
+	created(): void {
+		this.updatePlanPreviewDebounced = debounceLeading(
+			async () => await this.updatePreviewPlan(),
+			300
+		);
+		this.updateActivePlanDebounced = debounceLeading(
+			async () => await this.updateActivePlan(),
+			300
+		);
+	},
 	mounted(): void {
 		this.updatePlanDebounced();
 	},
 	methods: {
-		async updatePlanDebounced() {
+		updatePlanDebounced(): void {
 			if (this.noActivePlan) {
-				await this.updatePlanPreviewDebounced();
+				this.updatePlanPreviewDebounced();
 			} else {
-				await this.updateActivePlanDebounced();
+				this.updateActivePlanDebounced();
 			}
 		},
 		async updateActivePlan(): Promise<void> {
@@ -290,22 +298,6 @@ export default defineComponent({
 			} catch (e) {
 				console.error(e);
 			}
-		},
-		async updatePlanPreviewDebounced(): Promise<void> {
-			if (!this.debounceTimer) {
-				await this.updatePreviewPlan();
-				return;
-			}
-			clearTimeout(this.debounceTimer);
-			this.debounceTimer = setTimeout(async () => await this.updatePreviewPlan(), 1000);
-		},
-		async updateActivePlanDebounced(): Promise<void> {
-			if (!this.debounceTimer) {
-				await this.updateActivePlan();
-				return;
-			}
-			clearTimeout(this.debounceTimer);
-			this.debounceTimer = setTimeout(async () => await this.updateActivePlan(), 1000);
 		},
 		removeStaticPlan(): void {
 			this.$emit("static-plan-removed");

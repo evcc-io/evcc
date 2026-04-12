@@ -46,7 +46,4 @@ func runCacheClear(cmd *cobra.Command, args []string) {
 		}
 		log.INFO.Println("Cache cleared successfully")
 	}
-
-	// wait for shutdown
-	<-shutdownDoneC()
 }

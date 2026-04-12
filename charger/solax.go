@@ -75,7 +75,7 @@ func init() {
 	registry.AddCtx("solax-g2", NewSolaxG2FromConfig)
 }
 
-//go:generate go tool decorate -f decorateSolax -b *Solax -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
+//go:generate go tool decorate -f decorateSolax -b *Solax -r api.Charger -t api.PhaseSwitcher,api.PhaseGetter
 
 func NewSolaxG1FromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	return NewSolaxFromConfig(ctx, other, true)
@@ -171,8 +171,6 @@ func (wb *Solax) Status() (api.ChargeStatus, error) {
 		return api.StatusB, nil
 	case 2: // "Charging"
 		return api.StatusC, nil
-	case 4: // "Fault"
-		return api.StatusE, nil
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %d", s)
 	}

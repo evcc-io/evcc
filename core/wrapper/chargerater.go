@@ -49,7 +49,7 @@ func (cr *ChargeRater) StartCharge(continued bool) {
 	cr.start = cr.clck.Now()
 
 	// get end energy amount
-	if m, ok := cr.meter.(api.MeterEnergy); ok {
+	if m, ok := api.Cap[api.MeterEnergy](cr.meter); ok {
 		if f, err := m.TotalEnergy(); err == nil {
 			cr.startEnergy = f
 			cr.log.DEBUG.Printf("charge start energy: %.3fkWh", f)
@@ -74,7 +74,7 @@ func (cr *ChargeRater) StopCharge() {
 	cr.charging = false
 
 	// get end energy amount
-	if m, ok := cr.meter.(api.MeterEnergy); ok {
+	if m, ok := api.Cap[api.MeterEnergy](cr.meter); ok {
 		if f, err := m.TotalEnergy(); err == nil {
 			cr.chargedEnergy += f - cr.startEnergy
 			cr.log.DEBUG.Printf("charge final energy: %.3fkWh", cr.chargedEnergy)
@@ -92,7 +92,7 @@ func (cr *ChargeRater) ResetCharge() {
 	defer cr.Unlock()
 
 	// get end energy amount
-	if m, ok := cr.meter.(api.MeterEnergy); ok {
+	if m, ok := api.Cap[api.MeterEnergy](cr.meter); ok {
 		if f, err := m.TotalEnergy(); err == nil {
 			cr.chargedEnergy += f - cr.startEnergy
 			cr.log.DEBUG.Printf("charge final energy: %.3fkWh", cr.chargedEnergy)
@@ -117,7 +117,7 @@ func (cr *ChargeRater) SetChargePower(power float64) {
 	}
 
 	// update energy amount if not provided by meter
-	if _, ok := cr.meter.(api.MeterEnergy); !ok {
+	if !api.HasCap[api.MeterEnergy](cr.meter) {
 		// convert power to energy in kWh
 		cr.chargedEnergy += power / 1e3 * float64(cr.clck.Since(cr.start)) / float64(time.Hour)
 		// move timestamp
@@ -137,7 +137,7 @@ func (cr *ChargeRater) ChargedEnergy() (float64, error) {
 	}
 
 	// get current energy amount
-	if m, ok := cr.meter.(api.MeterEnergy); ok {
+	if m, ok := api.Cap[api.MeterEnergy](cr.meter); ok {
 		f, err := m.TotalEnergy()
 		if err == nil {
 			return cr.chargedEnergy + f - cr.startEnergy, nil

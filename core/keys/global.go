@@ -2,6 +2,7 @@ package keys
 
 const (
 	Interval           = "interval"
+	Experimental       = "experimental"
 	PasswordConfigured = "passwordConfigured"
 	Sponsor            = "sponsor"
 	SponsorToken       = "sponsorToken"
@@ -12,9 +13,11 @@ const (
 	Hems               = "hems"
 	Shm                = "shm"
 	Messaging          = "messaging"
+	MessagingEvents    = "messagingEvents"
 	ModbusProxy        = "modbusproxy"
 	Ocpp               = "ocpp"
 	Tariffs            = "tariffs"
+	TariffRefs         = "tariffRefs"
 	Version            = "version"
 	Config             = "config"
 	Database           = "database"
@@ -25,6 +28,7 @@ const (
 	SetupRequired      = "setupRequired"    // initial setup is required (lp = 0), fresh installation
 	Plant              = "plant"
 	Telemetry          = "telemetry"
+	Optimizer          = "optimizer"
 	DemoMode           = "demoMode"
 	AuthDisabled       = "authDisabled"
 	AuthProviders      = "authProviders"

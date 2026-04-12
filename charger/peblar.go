@@ -70,7 +70,7 @@ func init() {
 	registry.AddCtx("peblar", NewPeblarFromConfig)
 }
 
-//go:generate go tool decorate -f decoratePeblar -b *Peblar -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.PhaseGetter,GetPhases,func() (int, error)"
+//go:generate go tool decorate -f decoratePeblar -b *Peblar -r api.Charger -t api.PhaseSwitcher,api.PhaseGetter
 
 // NewPeblarFromConfig creates a Peblar charger from generic config
 func NewPeblarFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {

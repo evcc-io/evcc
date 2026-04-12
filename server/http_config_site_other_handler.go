@@ -7,12 +7,39 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util/sponsor"
 )
 
 var licenseKeyPattern = regexp.MustCompile(`^[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}$`)
+
+func setOptimizer(pub publisher) func(bool) error {
+	return func(b bool) error {
+		settings.SetBool(keys.Optimizer, b)
+		pub(keys.Optimizer, b)
+		return nil
+	}
+}
+
+func getOptimizer() bool {
+	b, _ := settings.Bool(keys.Optimizer)
+	return b
+}
+
+func setExperimental(pub publisher) func(bool) error {
+	return func(b bool) error {
+		settings.SetBool(keys.Experimental, b)
+		pub(keys.Experimental, b)
+		return nil
+	}
+}
+
+func getExperimental() bool {
+	b, _ := settings.Bool(keys.Experimental)
+	return b
+}
 
 func updateSponsortokenHandler(pub publisher) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -54,12 +81,9 @@ func updateSponsortokenHandler(pub publisher) func(w http.ResponseWriter, r *htt
 				return
 			}
 
-			pub(keys.Sponsor, struct {
-				Status   sponsor.Status `json:"status"`
-				FromYaml bool           `json:"fromYaml"`
-			}{
-				Status:   sponsor.GetStatus(),
-				FromYaml: false,
+			pub(keys.Sponsor, globalconfig.ConfigStatus{
+				Status:     sponsor.RedactedStatus(),
+				YamlSource: globalconfig.YamlSourceNone,
 			})
 		}
 
@@ -67,7 +91,7 @@ func updateSponsortokenHandler(pub publisher) func(w http.ResponseWriter, r *htt
 		settings.SetString(keys.SponsorToken, token)
 		setConfigDirty()
 
-		jsonWrite(w, sponsor.GetStatus())
+		jsonWrite(w, sponsor.RedactedStatus())
 	}
 }
 
@@ -75,12 +99,9 @@ func deleteSponsorTokenHandler(pub publisher) func(w http.ResponseWriter, r *htt
 	return func(w http.ResponseWriter, r *http.Request) {
 		settings.SetString(keys.SponsorToken, "")
 
-		pub(keys.Sponsor, struct {
-			Status   sponsor.Status `json:"status"`
-			FromYaml bool           `json:"fromYaml"`
-		}{
-			Status:   sponsor.Status{},
-			FromYaml: false,
+		pub(keys.Sponsor, globalconfig.ConfigStatus{
+			Status:     sponsor.Status{},
+			YamlSource: globalconfig.YamlSourceNone,
 		})
 
 		setConfigDirty()

@@ -27,10 +27,13 @@ params:
     default: 2.11 # kWh
   - name: minsoc
     default: 10
+    required: true
   - name: maxsoc
     default: 100
+    required: true
   - name: maxchargepower
     default: 1200
+    required: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}

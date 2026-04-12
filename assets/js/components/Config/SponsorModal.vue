@@ -1,12 +1,11 @@
 <template>
 	<JsonModal
-		id="sponsorModal"
+		name="sponsor"
 		:title="`${$t('config.sponsor.title')} 💚`"
 		:description="$t('config.sponsor.description')"
 		:error-message="$t('config.sponsor.error')"
 		endpoint="/config/sponsortoken"
 		:transform-read-values="transformReadValues"
-		data-testid="sponsor-modal"
 		size="lg"
 		:no-buttons="notUiEditable"
 		:disable-remove="!hasUiToken"
@@ -99,9 +98,7 @@
 						class="mb-3 d-block text-muted"
 					>
 						<template #url>
-							<a href="https://sponsor.evcc.io/" target="_blank"
-								>direct sponsoring</a
-							>
+							<a href="https://sponsor.evcc.io/" target="_blank">direct sponsoring</a>
 						</template>
 					</i18n-t>
 					<label for="licenseKey" class="my-2">{{
@@ -231,7 +228,7 @@ export default {
 			return this.sponsor?.status?.activationKey;
 		},
 		fromYaml() {
-			return this.sponsor?.fromYaml;
+			return !!this.sponsor?.yamlSource;
 		},
 		name() {
 			return this.sponsor?.status?.name || "";

@@ -16,6 +16,9 @@ var _ API = (*adapter)(nil)
 // Publish publishes vehicle updates at site level
 var Publish func()
 
+// ClearPlanLocks clears locked plan goals across all loadpoints
+var ClearPlanLocks func()
+
 type adapter struct {
 	log         *util.Logger
 	name        string
@@ -29,6 +32,12 @@ func (v *adapter) key() string {
 func (v *adapter) publish() {
 	if Publish != nil {
 		Publish()
+	}
+}
+
+func (v *adapter) clearPlanLocks() {
+	if ClearPlanLocks != nil {
+		ClearPlanLocks()
 	}
 }
 
@@ -100,6 +109,9 @@ func (v *adapter) SetPlanSoc(ts time.Time, soc int) error {
 	settings.SetTime(v.key()+keys.PlanTime, ts)
 	settings.SetInt(v.key()+keys.PlanSoc, int64(soc))
 
+	// note: could be optimized by only clearing plan lock of the relevant loadpoint
+	v.clearPlanLocks()
+
 	v.publish()
 
 	return nil
@@ -125,6 +137,10 @@ func (v *adapter) SetRepeatingPlans(plans []api.RepeatingPlan) error {
 	}
 
 	v.log.DEBUG.Printf("update repeating plans for %s to: %v", v.name, plans)
+
+	// note: could be optimized by only clearing plan lock of the relevant loadpoint
+	v.clearPlanLocks()
+
 	v.publish()
 
 	return nil
@@ -153,7 +169,6 @@ func (v *adapter) SetPlanStrategy(planStrategy api.PlanStrategy) error {
 		return err
 	}
 
-	v.log.DEBUG.Printf("update plan strategy for vehicle %s (precondition: %vs, continuous: %v)", v.name, planStrategy.Continuous, planStrategy.Precondition)
 	v.publish()
 
 	return nil

@@ -24,10 +24,6 @@ export default {
       control: "text",
       description: "Sponsor token (optional)",
     },
-    fromYaml: {
-      control: "boolean",
-      description: "Whether the sponsor config comes from YAML",
-    },
   },
 } as Meta<typeof Sponsor>;
 

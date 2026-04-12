@@ -48,33 +48,33 @@ describe("basics", () => {
       { charger: "main.vehicleStatus.waitForVehicle" }
     );
   });
+  test("show waiting for authorization if enabled but charger requires auth", () => {
+    expectEntries(
+      { enabled: true, connected: true, chargerStatusReason: "waitingforauthorization" },
+      { charger: "main.vehicleStatus.waitForAuthorization" }
+    );
+  });
   test("vehicle is charging", () => {
     expectEntries({ connected: true, charging: true }, { charger: "main.vehicleStatus.charging" });
   });
 });
 
 describe("min charge", () => {
-  test("active when vehicle soc is below", () => {
+  test("active when minSocNotReached is true", () => {
     expectEntries(
-      { connected: true, minSoc: 20, vehicleSoc: 10 },
+      { connected: true, minSoc: 20, minSocNotReached: true },
       { charger: "main.vehicleStatus.connected", minsoc: "20 %" }
     );
   });
-  test("not active when vehicle soc is above", () => {
+  test("not active when minSocNotReached is false", () => {
     expectEntries(
-      { connected: true, minSoc: 20, vehicleSoc: 21 },
+      { connected: true, minSoc: 20, minSocNotReached: false },
       { charger: "main.vehicleStatus.connected", minsoc: false }
     );
   });
-  test("not active when vehicle soc is equal", () => {
+  test("not active when minSocNotReached is not set", () => {
     expectEntries(
-      { connected: true, minSoc: 20, vehicleSoc: 20 },
-      { charger: "main.vehicleStatus.connected", minsoc: false }
-    );
-  });
-  test("not active when limit is 0", () => {
-    expectEntries(
-      { connected: true, minSoc: 0, vehicleSoc: 10 },
+      { connected: true, minSoc: 20 },
       { charger: "main.vehicleStatus.connected", minsoc: false }
     );
   });
