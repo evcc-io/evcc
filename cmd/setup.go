@@ -177,24 +177,24 @@ func configureCircuits(conf *[]config.Named) error {
 	}
 
 	// load configCircuits devices from database
-	configCircuits, err := config.ConfigurationsByClass(templates.Circuit)
+	configurable, err := config.ConfigurationsByClass(templates.Circuit)
 	if err != nil {
 		return err
 	}
 
 	// device config from db
-	if yamlSource.circuits != globalconfig.YamlSourceNone && len(configCircuits) > 0 {
+	if yamlSource.circuits != globalconfig.YamlSourceNone && len(configurable) > 0 {
 		return errors.New("circuits are configured via UI; having an additional yaml config is not allowed")
 	}
 
-	if err := validateNamedCircuits(slices.Clone(*conf)); err != nil {
+	if err := validateStaticCircuits(slices.Clone(*conf)); err != nil {
 		return err
 	}
-	if err := validateConfigCircuits(configCircuits); err != nil {
+	if err := validateConfigurableCircuits(configurable); err != nil {
 		return err
 	}
 
-	for _, c := range configCircuits {
+	for _, c := range configurable {
 		*conf = append(*conf, c.Named())
 	}
 
@@ -227,7 +227,9 @@ NEXT:
 			return fmt.Errorf("cannot decode custom circuit '%s': %w", cc.Name, err)
 		}
 
-		instance, err := circuit.NewFromConfig(context.TODO(), cc.Type, props)
+		ctx := util.WithLogger(context.TODO(), util.NewLogger(cc.Name))
+
+		instance, err := circuit.NewFromConfig(ctx, cc.Type, props)
 		if err != nil {
 			return fmt.Errorf("cannot create circuit '%s': %w", cc.Name, err)
 		}
@@ -270,17 +272,17 @@ NEXT:
 	return nil
 }
 
-func validateNamedCircuits(children []config.Named) error {
+func validateStaticCircuits(children []config.Named) error {
 	return validateCircuitConfigs(
 		children,
 		func(cc config.Named) config.Named { return cc },
-		func(cn config.Named, instance api.Circuit) config.Device[api.Circuit] {
-			return config.NewStaticDevice(cn, instance)
+		func(cc config.Named, instance api.Circuit) config.Device[api.Circuit] {
+			return config.NewStaticDevice(cc, instance)
 		},
 	)
 }
 
-func validateConfigCircuits(children []config.Config) error {
+func validateConfigurableCircuits(children []config.Config) error {
 	return validateCircuitConfigs(
 		children,
 		func(cc config.Config) config.Named { return cc.Named() },

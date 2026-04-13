@@ -81,9 +81,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.C
 		}
 	}
 
-	// TODO name
-	log := util.NewLogger("circuit-" + "NAME")
-
+	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("circuit"))
 	circuit, err := New(log, cc.Title, cc.MaxCurrent, cc.MaxPower, meter, cc.Timeout)
 	if err != nil {
 		return nil, err
