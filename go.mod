@@ -54,6 +54,7 @@ require (
 	github.com/gregdel/pushover v1.4.0
 	github.com/grid-x/modbus v0.0.0-20260325140807-cf9e1b9daae0
 	github.com/hashicorp/go-version v1.9.0
+	github.com/hashicorp/yamux v0.1.2
 	github.com/hasura/go-graphql-client v0.16.0
 	github.com/holoplot/go-evdev v0.0.0-20250804134636-ab1d56a1fe83
 	github.com/influxdata/influxdb-client-go/v2 v2.14.0
@@ -85,6 +86,7 @@ require (
 	github.com/robertkrimen/otto v0.5.1
 	github.com/samber/lo v1.53.0
 	github.com/sandrolain/httpcache v1.4.0
+	github.com/sethvargo/go-password v0.3.1
 	github.com/sirupsen/logrus v1.9.4
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/smallnest/chanx v1.2.0

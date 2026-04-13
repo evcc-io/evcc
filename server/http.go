@@ -15,6 +15,7 @@ import (
 	"github.com/evcc-io/evcc/hems/shm"
 	"github.com/evcc-io/evcc/server/assets"
 	"github.com/evcc-io/evcc/server/eebus"
+	"github.com/evcc-io/evcc/server/remote"
 	"github.com/evcc-io/evcc/server/service"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/auth"
@@ -225,7 +226,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API) {
 }
 
 // RegisterSystemHandler provides system level handlers
-func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *util.ParamCache, auth auth.Auth, shutdown func(), configFile string) {
+func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *util.ParamCache, auth auth.Auth, shutdown func(), configFile string, remoteAccess *remote.Remote) {
 	router := s.Server.Handler.(*mux.Router)
 
 	// api
@@ -297,6 +298,13 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 			"deletesponsortoken": {"DELETE", "/sponsortoken", deleteSponsorTokenHandler(pub)},
 			"experimental":       {"POST", "/experimental/{value:[01truefalse]+}", boolHandler(setExperimental(pub), getExperimental)},
 			"optimizer":          {"POST", "/optimizer/{value:[01truefalse]+}", boolHandler(setOptimizer(pub), getOptimizer)},
+		}
+
+		if remoteAccess != nil {
+			routes["remote"] = route{"POST", "/remote/{value:[01truefalse]+}", boolHandler(remoteAccess.Enable, remoteAccess.Enabled)}
+			routes["remoteclients"] = route{"GET", "/remote/clients", remoteClientsHandler(remoteAccess)}
+			routes["createremoteclient"] = route{"POST", "/remote/clients", createRemoteClientHandler(remoteAccess)}
+			routes["deleteremoteclient"] = route{"DELETE", "/remote/clients", deleteRemoteClientHandler(remoteAccess)}
 		}
 
 		// yaml handlers
