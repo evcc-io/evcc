@@ -86,16 +86,15 @@ func (t *Tunnel) connect(ctx context.Context) (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("websocket dial: %w", err)
 	}
-	defer conn.Close(websocket.StatusNormalClosure, "closed")
 
 	netConn := websocket.NetConn(ctx, conn, websocket.MessageBinary)
-	defer netConn.Close()
 
 	config := yamux.DefaultConfig()
 	config.LogOutput = t.log.TRACE.Writer()
 
 	session, err := yamux.Client(netConn, config)
 	if err != nil {
+		netConn.Close() // closes the underlying socket connection
 		return false, fmt.Errorf("yamux client: %w", err)
 	}
 
@@ -152,7 +151,7 @@ func (t *Tunnel) Close() {
 
 	// close websocket; produces io.EOF in yamux which it handles silently
 	if t.session != nil {
-		t.session.Close()
+		t.session.Close() // closes the underlying socket connection
 	}
 
 	if t.cancel != nil {
