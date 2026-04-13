@@ -937,6 +937,7 @@
       "setup": "Set up tariffs and forecasts",
       "solar": "See expected solar production for today and the coming days. Will also be used for automatic charging optimization in the future."
     },
+    "hideLine": "hide line",
     "modalTitle": "Forecast",
     "price": {
       "average": "Average",
@@ -945,6 +946,7 @@
       "range": "Range"
     },
     "priceZoom": "zoom in",
+    "showLine": "show line",
     "solar": {
       "dayAfterTomorrow": "Day after tomorrow",
       "partly": "partly",
@@ -953,7 +955,8 @@
       "tomorrow": "Tomorrow"
     },
     "solarAdjust": "Adjust solar forecast based on real production data{percent}.",
-    "solarAdjustShort": "real data adjust",
+    "solarAdjustMedium": "real data adjust",
+    "solarAdjustShort": "adjust",
     "type": {
       "co2": "CO₂ Emissions",
       "price": "Grid Price",
