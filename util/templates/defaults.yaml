@@ -182,6 +182,7 @@ params:
       de: Definiert die maximale Ladeleistung des Fahrzeugs. Hilft, die Ladeplanung zu verbessern, wenn das Fahrzeug üblicherweise weniger Strom nutzt als angeboten oder höhere Ströme bei einphasigem Laden erlaubt als bei dreiphasigem. _Der bereitgestellte Strom des Ladepunktes wird nicht beeinflusst._
       en: Defines the maximum charging power of the vehicle. Helps improve charge plan accuracy when the vehicle typically uses less than the offered current or supports higher single-phase current compared to three-phase. _The offered current of the loadpoint is not affected._
     type: int
+    example: 10000
   - name: identifiers
     description:
       de: Identifikation
