@@ -144,7 +144,7 @@ func (c *Client) Read(paramID uint16) (int32, error) {
 	req := encodeFrame(encodeMessage(c.cfg.Source, c.dst, typeCanRequest, encodeCanRequest(paramID)))
 
 	var lastErr error
-	for attempt := 0; attempt <= c.retries; attempt++ {
+	for range c.retries {
 		reply, err := c.exchange(req)
 		if err == nil {
 			msg, derr := decodeMessage(reply)
