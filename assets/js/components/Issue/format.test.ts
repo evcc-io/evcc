@@ -57,7 +57,13 @@ describe("formatJson", () => {
   });
 
   it("sorts type before config", () => {
-    const obj = { name: "db:9", config: { host: "192.168.1.1" }, deviceProduct: "RCT Power", type: "template", id: 9 };
+    const obj = {
+      name: "db:9",
+      config: { host: "192.168.1.1" },
+      deviceProduct: "RCT Power",
+      type: "template",
+      id: 9,
+    };
     const result = formatJson(obj);
 
     expect(result).toBe(`{
