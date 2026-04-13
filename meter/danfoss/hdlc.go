@@ -1,6 +1,9 @@
 // Package danfoss implements the Danfoss ComLynx RS485 protocol used by
 // TripleLynx TLX PV inverters. The protocol is PPP-style HDLC framing
 // (RFC 1662) carrying Embedded CAN Kingdom parameter messages.
+//
+// The initial framing details (captured frame layout and byte-level examples)
+// were ported from https://github.com/AMajland/Danfoss-TLX.
 package danfoss
 
 import (
