@@ -86,7 +86,7 @@ params:
     help:
       de: z. B. rs485bridge.lan:4196 — Gegenseitig ausschließend mit device
       en: e.g. rs485bridge.lan:4196 — mutually exclusive with device
-    example: rs485bridge.lan:4196
+    example: localhost:4196
   - name: node
     description:
       de: Geräteadresse (hex, Format N-S-NN)
@@ -113,11 +113,10 @@ params:
 render: |
   type: danfoss-tlx
   usage: {{ .usage }}
-  {{- if .device }}
-  device: {{ .device }}
-  {{- end }}
   {{- if .uri }}
   uri: {{ .uri }}
+  {{- else if .device }}
+  device: {{ .device }}
   {{- end }}
   {{- if .node }}
   node: {{ .node }}
