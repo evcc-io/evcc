@@ -301,7 +301,7 @@ func readFrame(r io.Reader, timeout time.Duration) ([]byte, error) {
 	started := false
 	deadline := time.Now().Add(timeout)
 
-	for time.Now().Before(deadline) {
+	for time.Until(deadline) > 0 {
 		if rt != nil {
 			// Call before each read so TCP's SetReadDeadline gets refreshed;
 			// serial ignores repeated calls with the same duration.
