@@ -185,11 +185,7 @@ func (c *Client) Ping(multi bool) ([]Address, error) {
 
 	var addrs []Address
 	deadline := time.Now().Add(c.timeout)
-	for {
-		remaining := time.Until(deadline)
-		if remaining <= 0 {
-			break
-		}
+	for time.Until(deadline) > 0 {
 		frame, err := readFrame(c.t, remaining)
 		if err != nil {
 			if errors.Is(err, os.ErrDeadlineExceeded) {
