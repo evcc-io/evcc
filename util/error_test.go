@@ -7,6 +7,12 @@ import (
 	"go.yaml.in/yaml/v4"
 )
 
+func TestYamlFloat(t *testing.T) {
+	b := `example: 55.7351`
+	var res map[string]string
+	require.NoError(t, yaml.Unmarshal([]byte(b), &res))
+}
+
 func TestYamlError(t *testing.T) {
 	b := `block:
   data: foo
