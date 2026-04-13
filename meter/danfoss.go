@@ -64,6 +64,18 @@ func NewDanfossTLXFromConfig(ctx context.Context, other map[string]any) (api.Met
 		if _, err := fmt.Sscanf(cc.Node, "%x-%x-%x", &network, &subnet, &node); err != nil {
 			return nil, fmt.Errorf("node %q: expected format N-S-NN in hex (e.g. c-6-b1)", cc.Node)
 		}
+		for _, component := range []struct {
+			name  string
+			value int
+		}{
+			{name: "network", value: network},
+			{name: "subnet", value: subnet},
+			{name: "node", value: node},
+		} {
+			if component.value < 0 || component.value > 0xff {
+				return nil, fmt.Errorf("node %q: %s component %x out of range (must be 00..ff)", cc.Node, component.name, component.value)
+			}
+		}
 		cfg.Destination = danfoss.NewAddress(byte(network), byte(subnet), byte(node))
 	}
 
@@ -188,6 +200,7 @@ func (m *DanfossTLX) readThree(p1, p2, p3 uint16, divisor float64) (float64, flo
 		v, err := m.conn.Read(p)
 		if err != nil {
 			errs = append(errs, err)
+			continue
 		}
 		vals[i] = float64(v) / divisor
 	}
