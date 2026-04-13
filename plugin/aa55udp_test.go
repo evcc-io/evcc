@@ -220,7 +220,7 @@ func TestModbusCRC16_ETPdu(t *testing.T) {
 func TestModbusCRC16_KnownValue(t *testing.T) {
 	// The original block-read DT PDU 7f 03 75 94 00 49 → CRC d5 c2
 	// This is a known-good value verified against real hardware.
-	pdu, err := parsePDUHex("7f0375940049")
+	pdu, err := buildPDUFromHex("7f0375940049")
 	require.NoError(t, err)
 	assert.Equal(t, []byte{0xd5, 0xc2}, modbusCRC16(pdu))
 }
@@ -320,6 +320,7 @@ func TestFloatGetter_DT_Power(t *testing.T) {
 		decode: "int32be",
 		scale:  1.0,
 	}
+	p.fetch = p.fetchRegister
 	getter, err := p.FloatGetter()
 	require.NoError(t, err)
 	val, err := getter()
@@ -338,6 +339,7 @@ func TestFloatGetter_DT_Energy(t *testing.T) {
 		decode: "uint32be",
 		scale:  0.1,
 	}
+	p.fetch = p.fetchRegister
 	getter, err := p.FloatGetter()
 	require.NoError(t, err)
 	val, err := getter()
@@ -356,6 +358,7 @@ func TestFloatGetter_ET_PV(t *testing.T) {
 		decode: "int32be",
 		scale:  1.0,
 	}
+	p.fetch = p.fetchRegister
 	getter, err := p.FloatGetter()
 	require.NoError(t, err)
 	val, err := getter()
@@ -374,6 +377,7 @@ func TestFloatGetter_ET_Battery(t *testing.T) {
 		decode: "int32be",
 		scale:  1.0,
 	}
+	p.fetch = p.fetchRegister
 	getter, err := p.FloatGetter()
 	require.NoError(t, err)
 	val, err := getter()
@@ -392,6 +396,7 @@ func TestFloatGetter_ET_SoC(t *testing.T) {
 		decode: "uint16be",
 		scale:  1.0,
 	}
+	p.fetch = p.fetchRegister
 	getter, err := p.FloatGetter()
 	require.NoError(t, err)
 	val, err := getter()
