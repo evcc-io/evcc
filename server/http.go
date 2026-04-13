@@ -280,6 +280,7 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 
 		routes := map[string]route{
 			"auth":               {"POST", "/auth", authHandler},
+			"authmerged":         {"POST", "/auth/{class:[a-z]+}/merge/{id:[0-9.]+}", authHandler},
 			"templates":          {"GET", "/templates/{class:[a-z]+}", templatesHandler},
 			"products":           {"GET", "/products/{class:[a-z]+}", productsHandler},
 			"devices":            {"GET", "/devices/{class:[a-z]+}", devicesConfigHandler},

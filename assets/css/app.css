@@ -444,6 +444,11 @@ a:hover {
 	}
 }
 
+.modal {
+	/* prevent touch-scroll chaining from the modal to <html> on iOS Safari */
+	overscroll-behavior: contain;
+}
+
 .modal-body {
 	padding: 1rem 0 0;
 }

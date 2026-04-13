@@ -63,13 +63,14 @@ lint-ui::
 
 license::
 	go run github.com/google/go-licenses/v2@latest check \
+	--ignore github.com/evcc-io/evcc/node_modules \
 	--ignore github.com/cespare/xxhash \
 	--ignore github.com/coder/websocket \
 	--ignore github.com/cronokirby/saferith \
 	--ignore github.com/modern-go/reflect2 \
 	--ignore github.com/prometheus/client_golang \
 	--ignore golang.org/x \
-	--allowed_licenses=MIT,Apache-2.0,BSD-0-Clause,BSD-2-Clause,BSD-3-Clause,LGPL-2.1,EPL-2.0,MPL-2.0 \
+	--allowed_licenses=MIT,Apache-2.0,BSD-0-Clause,BSD-2-Clause,BSD-3-Clause,ISC,LGPL-2.1,EPL-2.0,MPL-2.0 \
 	./...
 
 license-ui::
