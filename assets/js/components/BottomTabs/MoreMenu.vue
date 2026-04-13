@@ -13,6 +13,9 @@
 		>
 			<span>evcc</span>
 			<span class="ms-2 text-muted small">{{ versionLabel }}</span>
+			<span v-if="newVersionAvailable" class="ms-2 text-nowrap new-version-badge">
+				{{ $t("footer.version.availableLong") }}
+			</span>
 		</button>
 		<button v-if="isApp" type="button" class="dropdown-item" @click="openNativeSettings">
 			{{ $t("header.nativeSettings") }}
@@ -64,7 +67,7 @@
 import Modal from "bootstrap/js/dist/modal";
 import { logout, isLoggedIn } from "../Auth/auth";
 import { isApp, sendToApp } from "@/utils/native";
-import { getShortVersion } from "@/utils/version";
+import { getShortVersion, isDevelopment } from "@/utils/version";
 import { isUserConfigError } from "@/utils/fatal";
 import { defineComponent, type PropType } from "vue";
 import type { FatalError, Sponsor, EvOpt, AuthProviders } from "@/types/evcc";
@@ -79,6 +82,7 @@ export default defineComponent({
 		experimental: Boolean,
 		evopt: { type: Object as PropType<EvOpt>, required: false },
 		installed: String,
+		availableVersion: String,
 		commit: String,
 	},
 	emits: ["close"],
@@ -115,6 +119,13 @@ export default defineComponent({
 		},
 		versionLabel() {
 			return getShortVersion(this.installed || "", this.commit);
+		},
+		newVersionAvailable() {
+			return (
+				this.availableVersion &&
+				!isDevelopment(this.installed || "") &&
+				this.availableVersion !== this.installed
+			);
 		},
 		optimizeAvailable() {
 			return !!this.evopt && this.experimental;
@@ -221,5 +232,10 @@ export default defineComponent({
 	background-color: transparent;
 	color: var(--bs-primary);
 	border-left: 2px solid var(--bs-primary);
+}
+
+.new-version-badge {
+	font-size: 0.75em;
+	color: var(--evcc-dark-green);
 }
 </style>

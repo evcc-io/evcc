@@ -34,6 +34,7 @@
 				:experimental="experimental"
 				:evopt="evopt"
 				:installed="installed"
+				:available-version="availableVersion"
 				:commit="commit"
 			/>
 		</div>
@@ -72,6 +73,7 @@ export default defineComponent({
 		startupCompleted: Boolean,
 		evopt: { type: Object as PropType<EvOpt>, required: false },
 		installed: String,
+		availableVersion: String,
 		commit: String,
 	},
 	computed: {

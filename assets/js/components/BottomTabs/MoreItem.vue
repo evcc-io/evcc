@@ -17,6 +17,7 @@
 				:experimental="experimental"
 				:evopt="evopt"
 				:installed="installed"
+				:available-version="availableVersion"
 				:commit="commit"
 				@close="open = false"
 			/>
@@ -43,6 +44,7 @@ export default defineComponent({
 		experimental: Boolean,
 		evopt: { type: Object as PropType<EvOpt>, required: false },
 		installed: String,
+		availableVersion: String,
 		commit: String,
 	},
 	data() {
