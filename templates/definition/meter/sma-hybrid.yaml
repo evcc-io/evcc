@@ -151,14 +151,6 @@ render: |
           address: 30967 # SMA Modbus Profile: DcMs.Watt [2]
           type: holding
           decode: int32nan
-  energy:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 30513 # SMA Modbus Profile: Metering.TotWhOut
-      type: holding
-      decode: uint64nan
-    scale: 0.001
   maxacpower: {{ .maxacpower }} # W
   {{- end }}
   {{- if eq .usage "battery" }}

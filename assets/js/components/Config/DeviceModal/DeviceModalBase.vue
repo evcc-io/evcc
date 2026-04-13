@@ -188,6 +188,7 @@ import YamlEntry from "./YamlEntry.vue";
 import AuthCodeDisplay from "../AuthCodeDisplay.vue";
 import AuthConnectButton from "../AuthConnectButton.vue";
 import { initialTestState, performTest } from "../utils/test";
+import { reportValidityInModal } from "../utils/reportValidityInModal";
 import { initialAuthState, prepareAuthLogin } from "../utils/authProvider";
 import sleep from "@/utils/sleep";
 import { ConfigType } from "@/types/evcc";
@@ -428,7 +429,6 @@ export default defineComponent({
 			return this.template?.Auth && !this.auth.ok;
 		},
 		authValuesMissing() {
-			console.log("authValuesMissing", this.authValues);
 			return this.template?.Auth && Object.values(this.authValues).some((value) => !value);
 		},
 		authValues() {
@@ -618,7 +618,7 @@ export default defineComponent({
 
 			// trigger browser validation
 			if (this.$refs["form"]) {
-				if (!(this.$refs["form"] as HTMLFormElement).reportValidity()) {
+				if (!reportValidityInModal(this.$refs["form"] as HTMLFormElement)) {
 					return;
 				}
 			}
@@ -627,9 +627,10 @@ export default defineComponent({
 			if (this.authValuesMissing) return;
 
 			const { type } = this.template.Auth;
-			const values = this.authValues;
+			// include the template name so the backend can resolve masked fields
+			const values = { ...this.authValues, template: this.templateName };
 			this.auth.loading = true;
-			const result = await this.device.checkAuth(type, values);
+			const result = await this.device.checkAuth(type, values, this.id);
 			this.auth.loading = false;
 			if (result.success) {
 				// login already exists

@@ -362,11 +362,11 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 		}
 	case easee.LIFETIME_ENERGY:
 		c.totalEnergy = value.(float64)
-	case easee.IN_CURRENT_T3:
+	case easee.INT_CURRENT_T3:
 		c.currentL1 = value.(float64)
-	case easee.IN_CURRENT_T4:
+	case easee.INT_CURRENT_T4:
 		c.currentL2 = value.(float64)
-	case easee.IN_CURRENT_T5:
+	case easee.INT_CURRENT_T5:
 		c.currentL3 = value.(float64)
 	case easee.PHASE_MODE:
 		c.phaseMode = value.(int)

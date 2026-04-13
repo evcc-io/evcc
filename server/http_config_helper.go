@@ -107,6 +107,7 @@ func templateForConfig(class templates.Class, conf map[string]any) (templates.Te
 	return templates.ByName(class, typ)
 }
 
+// filterValidTemplateParams removes all configuration properties that are not part of the template definition
 func filterValidTemplateParams(tmpl *templates.Template, conf map[string]any) map[string]any {
 	res := make(map[string]any)
 
@@ -167,6 +168,32 @@ func mergeMasked(class templates.Class, conf, old map[string]any) (map[string]an
 		}
 		return v
 	})
+}
+
+// deviceOther looks up a stored device's `Other` config by class and id.
+func deviceOther(class templates.Class, id int) (map[string]any, error) {
+	name := config.NameForID(id)
+	switch class {
+	case templates.Charger:
+		return deviceOtherFromHandler(name, config.Chargers())
+	case templates.Meter:
+		return deviceOtherFromHandler(name, config.Meters())
+	case templates.Vehicle:
+		return deviceOtherFromHandler(name, config.Vehicles())
+	case templates.Tariff:
+		return deviceOtherFromHandler(name, config.Tariffs())
+	case templates.Messenger:
+		return deviceOtherFromHandler(name, config.Messengers())
+	}
+	return nil, errors.New("unsupported class: " + class.String())
+}
+
+func deviceOtherFromHandler[T any](name string, h config.Handler[T]) (map[string]any, error) {
+	dev, err := h.ByName(name)
+	if err != nil {
+		return nil, err
+	}
+	return dev.Config().Other, nil
 }
 
 func startDeviceTimeout() (context.Context, context.CancelFunc, chan struct{}) {
