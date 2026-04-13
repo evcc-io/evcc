@@ -2,6 +2,9 @@ template: danfoss-triplelynx-tlx
 products:
   - brand: Danfoss
     description:
+      generic: ComLynx RS485 inverter (generic)
+  - brand: Danfoss
+    description:
       generic: TripleLynx TLX 6 kW
   - brand: Danfoss
     description:
@@ -30,12 +33,6 @@ products:
   - brand: Danfoss
     description:
       generic: TripleLynx TLX+ 15 kW
-  - brand: Danfoss
-    description:
-      generic: TripleLynx TLX Pro
-  - brand: Danfoss
-    description:
-      generic: TripleLynx TLX Pro+
 requirements:
   description:
     de: |
