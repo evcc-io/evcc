@@ -87,6 +87,7 @@ var yamlSource struct {
 	eebus     globalconfig.YamlSource
 	tariffs   globalconfig.YamlSource
 	messaging globalconfig.YamlSource
+	circuits  globalconfig.YamlSource
 }
 
 var nameRE = regexp.MustCompile(`^[a-zA-Z0-9_.:-]+$`)
@@ -157,19 +158,56 @@ func isWritable(filePath string) bool {
 }
 
 func configureCircuits(conf *[]config.Named) error {
-	// migrate settings
+	// yaml config from file
+	if len(*conf) != 0 {
+		yamlSource.circuits = globalconfig.YamlSourceFile
+	}
+
+	// yaml config from db (deprecated)
 	if settings.Exists(keys.Circuits) {
+		if yamlSource.circuits == globalconfig.YamlSourceFile {
+			// just warn, no error to not break previous behavior
+			log.WARN.Println("circuits configured via UI yaml; evcc.yaml config will be ignored")
+		}
 		*conf = []config.Named{}
 		if err := settings.Yaml(keys.Circuits, new([]map[string]any), &conf); err != nil {
 			return err
 		}
+		yamlSource.circuits = globalconfig.YamlSourceDb
 	}
 
-	children := slices.Clone(*conf)
+	// load configCircuits devices from database
+	configurable, err := config.ConfigurationsByClass(templates.Circuit)
+	if err != nil {
+		return err
+	}
 
+	// device config from db
+	if yamlSource.circuits != globalconfig.YamlSourceNone && len(configurable) > 0 {
+		return errors.New("circuits are configured via UI; having an additional yaml config is not allowed")
+	}
+
+	if err := validateStaticCircuits(slices.Clone(*conf)); err != nil {
+		return err
+	}
+	if err := validateConfigurableCircuits(configurable); err != nil {
+		return err
+	}
+
+	for _, c := range configurable {
+		*conf = append(*conf, c.Named())
+	}
+
+	return nil
+}
+
+// validateCircuitConfigs validates circuit configurations with support for both static and configurable types
+func validateCircuitConfigs[T any](children []T, getNamedConfig func(T) config.Named, getDevice func(T, api.Circuit) config.Device[api.Circuit]) error {
 	// TODO check for circular references
 NEXT:
-	for i, cc := range children {
+	for i, child := range children {
+		cc := getNamedConfig(child)
+
 		if cc.Name == "" {
 			return fmt.Errorf("cannot create circuit: missing name")
 		}
@@ -184,14 +222,14 @@ NEXT:
 			}
 		}
 
-		log := util.NewLogger("circuit-" + cc.Name)
-
 		props, err := customDevice(cc.Other)
 		if err != nil {
 			return fmt.Errorf("cannot decode custom circuit '%s': %w", cc.Name, err)
 		}
 
-		instance, err := circuit.NewFromConfig(context.TODO(), log, props)
+		ctx := util.WithLogger(context.TODO(), util.NewLogger(cc.Name))
+
+		instance, err := circuit.NewFromConfig(ctx, cc.Type, props)
 		if err != nil {
 			return fmt.Errorf("cannot create circuit '%s': %w", cc.Name, err)
 		}
@@ -202,7 +240,7 @@ NEXT:
 			instance.SetTitle(strings.Title(cc.Name))
 		}
 
-		if err := config.Circuits().Add(config.NewStaticDevice(cc, instance)); err != nil {
+		if err := config.Circuits().Add(getDevice(child, instance)); err != nil {
 			return err
 		}
 
@@ -211,7 +249,8 @@ NEXT:
 	}
 
 	if len(children) > 0 {
-		return fmt.Errorf("circuit is missing parent: %s", children[0].Name)
+		cn := getNamedConfig(children[0])
+		return fmt.Errorf("circuit is missing parent: %s", cn.Name)
 	}
 
 	var rootFound bool
@@ -231,6 +270,26 @@ NEXT:
 	}
 
 	return nil
+}
+
+func validateStaticCircuits(children []config.Named) error {
+	return validateCircuitConfigs(
+		children,
+		func(cc config.Named) config.Named { return cc },
+		func(cc config.Named, instance api.Circuit) config.Device[api.Circuit] {
+			return config.NewStaticDevice(cc, instance)
+		},
+	)
+}
+
+func validateConfigurableCircuits(children []config.Config) error {
+	return validateCircuitConfigs(
+		children,
+		func(cc config.Config) config.Named { return cc.Named() },
+		func(cc config.Config, instance api.Circuit) config.Device[api.Circuit] {
+			return config.NewConfigurableDevice(&cc, instance)
+		},
+	)
 }
 
 type newFromConfFunc[T any] func(context.Context, string, map[string]any) (T, error)
