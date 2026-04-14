@@ -58,6 +58,10 @@ func (p *AA55UDP) fetchBlock() ([]byte, error) {
 		return nil, fmt.Errorf("aa55udp: %w", err)
 	}
 
+	if len(payload) < p.minPayloadLen {
+		return nil, fmt.Errorf("aa55udp: payload too short (got %d bytes, need at least %d for offset %d and %s decode)", len(payload), p.minPayloadLen, p.offset, p.decode)
+	}
+
 	responseCacheMu.Lock()
 	// Evict expired entries before inserting to keep the map bounded.
 	if len(responseCache) >= responseCacheMaxSize {

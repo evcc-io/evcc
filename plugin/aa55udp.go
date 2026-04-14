@@ -34,13 +34,14 @@ const (
 //	               Multiple source blocks sharing the same (host, pdu) pair
 //	               share one UDP exchange per poll cycle via a response cache.
 type AA55UDP struct {
-	log    *util.Logger
-	conn   *net.UDPConn
-	pdu    []byte // 6-byte PDU body, no CRC
-	offset int    // byte offset into the response payload (0 for register reads)
-	decode string // int32be | uint32be | uint32nan | int16be | uint16be | float32be
-	scale  float64
-	mode   aa55Mode // modeRegister or modeBlock
+	log           *util.Logger
+	conn          *net.UDPConn
+	pdu           []byte   // 6-byte PDU body, no CRC
+	offset        int      // byte offset into the response payload (0 for register reads)
+	decode        string   // int32be | uint32be | uint32nan | int16be | uint16be | float32be
+	scale         float64
+	mode          aa55Mode // modeRegister or modeBlock
+	minPayloadLen int      // minimum required payload length (offset + decode size)
 }
 
 func init() {
@@ -137,6 +138,7 @@ func initBlockMode(p *AA55UDP, pduHex string, offset int, register uint16, count
 	p.pdu = pdu
 	p.offset = offset
 	p.mode = modeBlock
+	p.minPayloadLen = offset + decodeSize(p.decode)
 	return nil
 }
 
@@ -151,6 +153,7 @@ func initRegisterMode(p *AA55UDP, id int, register uint16, count uint16) error {
 	p.pdu = buildPDU(byte(id), register, count)
 	p.offset = 0
 	p.mode = modeRegister
+	p.minPayloadLen = decodeSize(p.decode)
 	return nil
 }
 
@@ -161,6 +164,17 @@ func validateDecode(decode string) error {
 		return nil
 	}
 	return fmt.Errorf("aa55udp: unsupported decode %q (want int32be|uint32be|uint32nan|int16be|uint16be|float32be)", decode)
+}
+
+// decodeSize returns the number of bytes required to decode the given type.
+func decodeSize(decode string) int {
+	switch decode {
+	case "float32be", "int32be", "uint32be", "uint32nan":
+		return 4
+	case "int16be", "uint16be":
+		return 2
+	}
+	return 0
 }
 
 // FloatGetter implements the evcc Plugin interface.

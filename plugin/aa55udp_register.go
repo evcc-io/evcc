@@ -22,6 +22,10 @@ func (p *AA55UDP) fetchRegister() ([]byte, error) {
 		return nil, fmt.Errorf("aa55udp: %w", err)
 	}
 
+	if len(payload) < p.minPayloadLen {
+		return nil, fmt.Errorf("aa55udp: payload too short (got %d bytes, need at least %d for %s decode)", len(payload), p.minPayloadLen, p.decode)
+	}
+
 	return payload, nil
 }
 
