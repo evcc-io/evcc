@@ -8,14 +8,7 @@ import (
 	"time"
 )
 
-// responseCache caches block-read payloads keyed by "raddr/pdu_hex" with a
-// short TTL.  All aa55udp source blocks sharing the same (host, pdu) pair
-// share one UDP exchange per poll cycle — e.g. the four Ppv string registers
-// from READ 125 @ 0x891C all hit the cache after the first fetch.
-//
-// TTL is set to 2 s: long enough to serve all source blocks within one evcc
-// poll cycle (which completes in well under 1 s), short enough that the next
-// cycle always fetches fresh data.
+// cacheEntry holds a cached response payload with its expiration time.
 type cacheEntry struct {
 	payload   []byte
 	expiresAt time.Time
@@ -26,26 +19,65 @@ const (
 	responseCacheMaxSize = 64 // max number of (host, pdu) pairs to cache
 )
 
-var (
-	responseCache   = make(map[string]cacheEntry, responseCacheMaxSize)
-	responseCacheMu sync.Mutex
-)
+// responseCacheT caches block-read payloads keyed by "raddr/pdu_hex" with a
+// short TTL. All aa55udp source blocks sharing the same (host, pdu) pair
+// share one UDP exchange per poll cycle — e.g. the four PV string registers
+// from READ 125 @ 0x891C all hit the cache after the first fetch.
+//
+// TTL is set to 2 s: long enough to serve all source blocks within one evcc
+// poll cycle (which completes in well under 1 s), short enough that the next
+// cycle always fetches fresh data.
+type responseCacheT struct {
+	mu   sync.Mutex
+	data map[string]cacheEntry
+}
+
+func newResponseCacheT() *responseCacheT {
+	return &responseCacheT{
+		data: make(map[string]cacheEntry, responseCacheMaxSize),
+	}
+}
+
+// get returns the cached payload if it exists and is fresh, or (nil, false) otherwise.
+func (c *responseCacheT) get(key string) ([]byte, bool) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if entry, ok := c.data[key]; ok && time.Now().Before(entry.expiresAt) {
+		return entry.payload, true
+	}
+	return nil, false
+}
+
+// put inserts a payload into the cache, evicting expired entries if needed.
+func (c *responseCacheT) put(key string, payload []byte) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if len(c.data) >= responseCacheMaxSize {
+		now := time.Now()
+		for k, v := range c.data {
+			if now.After(v.expiresAt) {
+				delete(c.data, k)
+			}
+		}
+	}
+	c.data[key] = cacheEntry{
+		payload:   payload,
+		expiresAt: time.Now().Add(responseCacheTTL),
+	}
+}
+
+var responseCache = newResponseCacheT()
 
 // fetchBlock returns the response payload for p.pdu, serving from the cache
 // if a fresh entry exists, or performing a UDP exchange otherwise.
 func (p *AA55UDP) fetchBlock() ([]byte, error) {
-	key := p.conn.RemoteAddr().String() + "/" + hex.EncodeToString(p.pdu)
+	key, pduHex := p.cacheKeyAndPDUHex()
 
-	responseCacheMu.Lock()
-	if entry, ok := responseCache[key]; ok && time.Now().Before(entry.expiresAt) {
-		payload := entry.payload
-		responseCacheMu.Unlock()
-		p.log.TRACE.Printf("cache hit for %s pdu=%s", p.conn.RemoteAddr(), hex.EncodeToString(p.pdu))
+	if payload, ok := responseCache.get(key); ok {
+		p.log.TRACE.Printf("cache hit for %s pdu=%s", p.conn.RemoteAddr(), pduHex)
 		return payload, nil
 	}
-	responseCacheMu.Unlock()
 
-	// Cache miss — send the request.
 	packet := append(p.pdu, modbusCRC16(p.pdu)...)
 
 	raw, err := p.sendRecv(packet)
@@ -62,18 +94,7 @@ func (p *AA55UDP) fetchBlock() ([]byte, error) {
 		return nil, fmt.Errorf("aa55udp: payload too short (got %d bytes, need at least %d for offset %d and %s decode)", len(payload), p.minPayloadLen, p.offset, p.decode)
 	}
 
-	responseCacheMu.Lock()
-	// Evict expired entries before inserting to keep the map bounded.
-	if len(responseCache) >= responseCacheMaxSize {
-		now := time.Now()
-		for k, v := range responseCache {
-			if now.After(v.expiresAt) {
-				delete(responseCache, k)
-			}
-		}
-	}
-	responseCache[key] = cacheEntry{payload: payload, expiresAt: time.Now().Add(responseCacheTTL)}
-	responseCacheMu.Unlock()
+	responseCache.put(key, payload)
 
 	return payload, nil
 }

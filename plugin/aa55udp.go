@@ -3,6 +3,7 @@ package plugin
 import (
 	"context"
 	"encoding/binary"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"math"
@@ -209,6 +210,13 @@ func (p *AA55UDP) query() (float64, error) {
 	}
 
 	return v * p.scale, nil
+}
+
+// cacheKeyAndPDUHex returns the cache key and hex-encoded PDU for logging and cache operations.
+func (p *AA55UDP) cacheKeyAndPDUHex() (string, string) {
+	pduHex := hex.EncodeToString(p.pdu)
+	key := p.conn.RemoteAddr().String() + "/" + pduHex
+	return key, pduHex
 }
 
 // aa55InverterAddr is the default inverter address byte, used by DT/DNS and ES/EM families.
