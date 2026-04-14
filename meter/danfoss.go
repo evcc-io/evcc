@@ -14,7 +14,6 @@ import (
 // DanfossTLX is a PV meter for Danfoss TripleLynx TLX inverters via ComLynx RS485.
 type DanfossTLX struct {
 	conn          *comlynx.Client
-	log           *util.Logger
 	powerFallback bool // some TLX variants don't support aggregate power; sum per-phase instead
 }
 
@@ -80,12 +79,12 @@ func NewDanfossTLX(ctx context.Context, cfg comlynx.Config, maxACPower func() fl
 		log.DEBUG.Printf("discovered inverter at %s", addr)
 	}
 
-	m := &DanfossTLX{conn: conn, log: log}
+	m := &DanfossTLX{conn: conn}
 
 	// Release the connection when the context is cancelled.
 	go func() {
 		<-ctx.Done()
-		_ = conn.Close()
+		conn.Close()
 	}()
 
 	aggregatePowerErr := func() error {
