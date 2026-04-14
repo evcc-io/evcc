@@ -147,8 +147,7 @@ func TestUnregisterDevice_LastClientTearsDownShip(t *testing.T) {
 
 	c.UnregisterDevice("aabbcc", dev)
 
-	assert.NotContains(t, c.clients, "aabbcc",
-		"empty client list must be removed from the map")
+	assert.Len(t, c.clients["aabbcc"], 0, "client list not empty")
 }
 
 // TestUnregisterDevice_KeepsShipWhenOtherClientsRemain pins that teardown
