@@ -70,7 +70,7 @@ func NewDanfossTLX(ctx context.Context, cfg comlynx.Config, maxACPower func() fl
 		return nil, err
 	}
 
-	if cfg.Destination == comlynx.Address{} {
+	if (cfg.Destination == comlynx.Address{}) {
 		addr, err := comlynx.Discover(conn)
 		if err != nil {
 			_ = conn.Close()
