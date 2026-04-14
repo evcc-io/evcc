@@ -3,6 +3,7 @@ package subaru
 import (
 	"time"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -10,10 +11,18 @@ type Provider struct {
 	status func() (Status, error)
 }
 
-func NewProvider(api *API, vin string, cache time.Duration) *Provider {
+func NewProvider(a *API, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
 		status: util.Cached(func() (Status, error) {
-			return api.Status(vin)
+			res, err := a.Status(vin)
+			if err != nil {
+				return res, err
+			}
+			if res.Payload.EvRangeWithAc.Unit == "" ||
+				res.Payload.BatteryLevel == 0 && res.Payload.EvRangeWithAc.Value == 0 {
+				return res, api.ErrMustRetry
+			}
+			return res, nil
 		}, cache),
 	}
 	return impl
