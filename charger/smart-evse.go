@@ -18,6 +18,7 @@ package charger
 // SOFTWARE.
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
@@ -46,7 +47,7 @@ type smartEvseRestSettings struct {
 	ModeID       int    `json:"mode_id"`
 	CarConnected bool   `json:"car_connected"`
 	Evse         struct {
-		Connected    int    `json:"connected"`
+		Connected    smartEvseConnected `json:"connected"`
 		Access       int    `json:"access"`
 		Mode         int    `json:"mode"`
 		ChargeTimer  int    `json:"charge_timer"`
@@ -82,6 +83,25 @@ type smartEvseRestSettings struct {
 		ImportActiveEnergy float64 `json:"import_active_energy"`
 		ExportActiveEnergy float64 `json:"export_active_energy"`
 	} `json:"ev_meter"`
+}
+
+// smartEvseConnected handles firmware variants reporting connected as bool or int.
+type smartEvseConnected bool
+
+func (v *smartEvseConnected) UnmarshalJSON(data []byte) error {
+	var b bool
+	if err := json.Unmarshal(data, &b); err == nil {
+		*v = smartEvseConnected(b)
+		return nil
+	}
+
+	var i int
+	if err := json.Unmarshal(data, &i); err == nil {
+		*v = smartEvseConnected(i != 0)
+		return nil
+	}
+
+	return fmt.Errorf("invalid connected value: %s", string(data))
 }
 
 // SmartEVSE-3.5 operating mode IDs
@@ -413,7 +433,7 @@ func (wb *SmartEVSE3) Diagnose() {
 	fmt.Printf("\tMode: %s (%d)\n", res.Mode, res.ModeID)
 	fmt.Printf("\tCar connected: %t\n", res.CarConnected)
 
-	fmt.Printf("\tEVSE connected: %d\n", res.Evse.Connected)
+	fmt.Printf("\tEVSE connected: %t\n", bool(res.Evse.Connected))
 	fmt.Printf("\tEVSE access: %d\n", res.Evse.Access)
 	fmt.Printf("\tEVSE mode: %d\n", res.Evse.Mode)
 	fmt.Printf("\tEVSE charge timer: %d\n", res.Evse.ChargeTimer)
