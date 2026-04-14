@@ -10,7 +10,7 @@
 			v-bind="vehicleStatus"
 			class="mb-2"
 			@open-loadpoint-settings="$emit('open-loadpoint-settings')"
-			@open-minsoc-settings="openMinSocSettings"
+			@open-minsoc-settings="openPlanModal(true)"
 			@open-plan-modal="openPlanModal"
 		/>
 		<div class="mt-2 mb-4 d-flex gap-2">
@@ -54,6 +54,7 @@
 				class="flex-grow-1 target-charge"
 				v-bind="chargingPlan"
 				:disabled="chargingPlanDisabled"
+				@open-modal="$emit('open-modal')"
 			/>
 			<LimitSocSelect
 				v-if="socBasedCharging"
@@ -97,6 +98,7 @@ import {
 } from "@/types/evcc";
 import type { PlanStrategy } from "@/components/ChargingPlans/types";
 import BatteryBoostButton from "../Loadpoints/BatteryBoostButton.vue";
+import type ChargingPlanModal from "../ChargingPlans/ChargingPlanModal.vue";
 
 export default defineComponent({
 	name: "Vehicle",
@@ -177,11 +179,15 @@ export default defineComponent({
 		"remove-vehicle",
 		"open-loadpoint-settings",
 		"batteryboost-updated",
+		"open-modal",
 	],
 	data() {
 		return {
 			displayLimitSoc: this.effectiveLimitSoc,
 			statusOverride: undefined as VehicleStatus | undefined,
+			chargingPlanModal: this.$refs["chargingPlanModal"] as
+				| InstanceType<typeof ChargingPlanModal>
+				| undefined,
 		};
 	},
 	computed: {
@@ -287,18 +293,16 @@ export default defineComponent({
 		fmtEnergy(value: number) {
 			return this.fmtWh(value, value == 0 ? POWER_UNIT.KW : POWER_UNIT.AUTO);
 		},
-		openPlanModal() {
-			(
-				this.$refs["chargingPlan"] as InstanceType<typeof ChargingPlan> | undefined
-			)?.openPlanModal();
+		openPlanModal(arrivalTab = false) {
+			if (arrivalTab) {
+				this.chargingPlanModal?.showArrivalTab();
+			} else {
+				this.chargingPlanModal?.showDepartureTab();
+			}
+			this.chargingPlanModal?.open(this.id);
 		},
 		handleBoostStatus(status: VehicleStatus) {
 			this.statusOverride = status;
-		},
-		openMinSocSettings() {
-			(
-				this.$refs["chargingPlan"] as InstanceType<typeof ChargingPlan> | undefined
-			)?.openPlanModal(true);
 		},
 	},
 });

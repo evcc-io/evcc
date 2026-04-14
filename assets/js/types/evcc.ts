@@ -324,6 +324,7 @@ export interface Loadpoint {
   vehicleSoc: number;
   vehicleTitle: string;
   vehicleWelcomeActive: boolean;
+  batteryBoostLimit: number;
 }
 
 export interface UiLoadpoint extends Loadpoint {

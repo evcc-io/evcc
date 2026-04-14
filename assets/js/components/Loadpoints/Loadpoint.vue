@@ -31,14 +31,6 @@
 				/>
 			</div>
 		</div>
-		<LoadpointSettingsModal
-			:id="id"
-			v-bind="settingsModal"
-			@maxcurrent-updated="setMaxCurrent"
-			@mincurrent-updated="setMinCurrent"
-			@phasesconfigured-updated="setPhasesConfigured"
-			@batteryboostlimit-updated="setBatteryBoostLimit"
-		/>
 
 		<div
 			v-if="remoteDisabled"
@@ -97,6 +89,7 @@
 			@remove-vehicle="removeVehicle"
 			@open-loadpoint-settings="openSettingsModal"
 			@batteryboost-updated="setBatteryBoost"
+			@open-modal="$emit('open-charging-plan-modal')"
 		/>
 	</div>
 </template>
@@ -115,11 +108,9 @@ import SettingsButton from "./SettingsButton.vue";
 import SettingsModal from "./SettingsModal.vue";
 import VehicleIcon from "../VehicleIcon";
 import SessionInfo from "./SessionInfo.vue";
-import Modal from "bootstrap/js/dist/modal";
 import { defineComponent, type PropType } from "vue";
 import type {
 	CHARGE_MODE,
-	PHASES,
 	PHASE_ACTION,
 	PV_ACTION,
 	CHARGER_STATUS_REASON,
@@ -139,7 +130,6 @@ export default defineComponent({
 		Phases,
 		LabelAndValue,
 		LoadpointSettingsButton: SettingsButton,
-		LoadpointSettingsModal: SettingsModal,
 		LoadpointSessionInfo: SessionInfo,
 		VehicleIcon,
 	},
@@ -244,6 +234,7 @@ export default defineComponent({
 		lastSmartCostLimit: Number,
 		lastSmartFeedInPriorityLimit: Number,
 	},
+	emits: ["open-charging-plan-modal", "open-settings-modal"],
 	data() {
 		return {
 			tickerHandler: null as Timeout,
@@ -379,15 +370,6 @@ export default defineComponent({
 		setLimitEnergy(kWh: number) {
 			api.post(this.apiPath("limitenergy") + "/" + kWh);
 		},
-		setMaxCurrent(maxCurrent: number) {
-			api.post(this.apiPath("maxcurrent") + "/" + maxCurrent);
-		},
-		setMinCurrent(minCurrent: number) {
-			api.post(this.apiPath("mincurrent") + "/" + minCurrent);
-		},
-		setPhasesConfigured(phases: PHASES) {
-			api.post(this.apiPath("phases") + "/" + phases);
-		},
 		changeVehicle(name: string) {
 			api.post(this.apiPath("vehicle") + `/${name}`);
 		},
@@ -397,9 +379,6 @@ export default defineComponent({
 		setBatteryBoost(batteryBoost: boolean) {
 			api.post(this.apiPath("batteryboost") + `/${batteryBoost ? "1" : "0"}`);
 		},
-		setBatteryBoostLimit(limit: number) {
-			api.post(this.apiPath("batteryboostlimit") + "/" + limit);
-		},
 		fmtPower(value: number) {
 			return this.fmtW(value, POWER_UNIT.AUTO);
 		},
@@ -407,10 +386,7 @@ export default defineComponent({
 			return this.fmtWh(value, POWER_UNIT.AUTO);
 		},
 		openSettingsModal() {
-			const modal = Modal.getOrCreateInstance(
-				document.getElementById(`loadpointSettingsModal_${this.id}`) as HTMLElement
-			);
-			modal.show();
+			this.$emit("open-settings-modal");
 		},
 	},
 });
