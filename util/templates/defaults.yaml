@@ -407,11 +407,6 @@ params:
     mask: true
     description:
       generic: PIN
-  - name: serial_number
-    private: true
-    description:
-      en: Serial Number
-      de: Seriennummer
   - name: watchdog
     description:
       generic: Watchdog
