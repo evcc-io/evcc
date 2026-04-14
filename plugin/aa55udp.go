@@ -36,9 +36,9 @@ const (
 type AA55UDP struct {
 	log    *util.Logger
 	conn   *net.UDPConn
-	pdu    []byte   // 6-byte PDU body, no CRC
-	offset int      // byte offset into the response payload (0 for register reads)
-	decode string   // int32be | uint32be | uint32nan | int16be | uint16be | float32be
+	pdu    []byte // 6-byte PDU body, no CRC
+	offset int    // byte offset into the response payload (0 for register reads)
+	decode string // int32be | uint32be | uint32nan | int16be | uint16be | float32be
 	scale  float64
 	mode   aa55Mode // modeRegister or modeBlock
 }
