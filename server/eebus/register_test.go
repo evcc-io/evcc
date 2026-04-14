@@ -196,7 +196,7 @@ func TestUnregisterDevice_MutexNotHeldDuringShipCall(t *testing.T) {
 		acquired := make(chan struct{})
 		go func() {
 			c.mux.Lock()
-			c.mux.Unlock()
+			defer c.mux.Unlock()
 			close(acquired)
 		}()
 		select {
