@@ -202,11 +202,11 @@ func configureCircuits(conf *[]config.Named) error {
 }
 
 // validateCircuitConfigs validates circuit configurations with support for both static and configurable types
-func validateCircuitConfigs[T any](children []T, getNamedConfig func(T) config.Named, getDevice func(T, api.Circuit) config.Device[api.Circuit]) error {
+func validateCircuitConfigs[T any](children []T, getConfigAndLogger func(T) (config.Named, *util.Logger), getDevice func(T, api.Circuit) config.Device[api.Circuit]) error {
 	// TODO check for circular references
 NEXT:
 	for i, child := range children {
-		cc := getNamedConfig(child)
+		cc, log := getConfigAndLogger(child)
 
 		if cc.Name == "" {
 			return fmt.Errorf("cannot create circuit: missing name")
@@ -227,7 +227,7 @@ NEXT:
 			return fmt.Errorf("cannot decode custom circuit '%s': %w", cc.Name, err)
 		}
 
-		ctx := util.WithLogger(context.TODO(), util.NewLogger(cc.Name))
+		ctx := util.WithLogger(context.TODO(), log)
 
 		instance, err := circuit.NewFromConfig(ctx, cc.Type, props)
 		if err != nil {
@@ -249,7 +249,7 @@ NEXT:
 	}
 
 	if len(children) > 0 {
-		cn := getNamedConfig(children[0])
+		cn, _ := getConfigAndLogger(children[0])
 		return fmt.Errorf("circuit is missing parent: %s", cn.Name)
 	}
 
@@ -275,7 +275,7 @@ NEXT:
 func validateStaticCircuits(children []config.Named) error {
 	return validateCircuitConfigs(
 		children,
-		func(cc config.Named) config.Named { return cc },
+		func(cc config.Named) (config.Named, *util.Logger) { return cc, util.NewLogger(cc.Name) },
 		func(cc config.Named, instance api.Circuit) config.Device[api.Circuit] {
 			return config.NewStaticDevice(cc, instance)
 		},
@@ -285,7 +285,7 @@ func validateStaticCircuits(children []config.Named) error {
 func validateConfigurableCircuits(children []config.Config) error {
 	return validateCircuitConfigs(
 		children,
-		func(cc config.Config) config.Named { return cc.Named() },
+		func(cc config.Config) (config.Named, *util.Logger) { return cc.Named(), loggerForConfig(&cc) },
 		func(cc config.Config, instance api.Circuit) config.Device[api.Circuit] {
 			return config.NewConfigurableDevice(&cc, instance)
 		},
@@ -314,9 +314,18 @@ func staticInstance[T any](typ string, cc config.Named, newFromConf newFromConfF
 	return err //nolint:govet
 }
 
+// loggerForConfig creates a logger with sensible name for (custom) configurable device
+func loggerForConfig(conf *config.Config) *util.Logger {
+	res := conf.Named().Name
+	if t := conf.Title; t != "" && t != res {
+		res += "-" + t
+	}
+	return util.NewLogger(res)
+}
+
 func configurableInstance[T any](typ string, conf *config.Config, newFromConf newFromConfFunc[T], h config.Handler[T]) error {
 	cc := conf.Named()
-	ctx, cancel := context.WithCancel(util.WithLogger(context.TODO(), util.NewLogger(cc.Name))) //nolint:govet
+	ctx, cancel := context.WithCancel(util.WithLogger(context.TODO(), loggerForConfig(conf))) //nolint:govet
 
 	props, err := customDevice(cc.Other)
 	if err != nil {
