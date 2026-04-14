@@ -70,10 +70,6 @@ params:
     advanced: true
     example: c-6-b1
   - name: baudrate
-    description:
-      de: Baudrate (Standard 19200)
-      en: Baud rate (default 19200)
-    type: int
     default: 19200
     advanced: true
   - name: maxacpower
