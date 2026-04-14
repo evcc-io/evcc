@@ -46,7 +46,7 @@ type smartEvseRestSettings struct {
 	ModeID       int    `json:"mode_id"`
 	CarConnected bool   `json:"car_connected"`
 	Evse         struct {
-		Connected    int    `json:"connected"`
+		Connected    bool   `json:"connected"`
 		Access       int    `json:"access"`
 		Mode         int    `json:"mode"`
 		ChargeTimer  int    `json:"charge_timer"`
@@ -413,7 +413,7 @@ func (wb *SmartEVSE3) Diagnose() {
 	fmt.Printf("\tMode: %s (%d)\n", res.Mode, res.ModeID)
 	fmt.Printf("\tCar connected: %t\n", res.CarConnected)
 
-	fmt.Printf("\tEVSE connected: %d\n", res.Evse.Connected)
+	fmt.Printf("\tEVSE connected: %t\n", res.Evse.Connected)
 	fmt.Printf("\tEVSE access: %d\n", res.Evse.Access)
 	fmt.Printf("\tEVSE mode: %d\n", res.Evse.Mode)
 	fmt.Printf("\tEVSE charge timer: %d\n", res.Evse.ChargeTimer)
