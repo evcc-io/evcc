@@ -81,10 +81,8 @@ render: |
   {{- else if .device }}
   device: {{ .device }}
   {{- end }}
-  {{- if .node }}
   node: {{ .node }}
-  {{- end }}
   baudrate: {{ .baudrate }}
-  {{- if .maxacpower }}
+  {{- if eq .usage "pv" }}
   maxacpower: {{ .maxacpower }}
   {{- end }}
