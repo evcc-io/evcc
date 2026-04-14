@@ -2,7 +2,6 @@ package subaru
 
 import (
 	"fmt"
-	"math"
 	"strings"
 )
 
@@ -23,24 +22,9 @@ type Status struct {
 	} `json:"payload"`
 }
 
-const kmPerMile = 1.609344
-
 type EvRange struct {
 	Unit  string  `json:"unit"`
 	Value float64 `json:"value"`
-}
-
-func (e EvRange) ValueInKilometers() (int64, error) {
-	u := strings.ToLower(strings.TrimSpace(e.Unit))
-
-	switch u {
-	case "km":
-		return int64(math.Round(e.Value)), nil
-	case "mi":
-		return int64(math.Round(e.Value * kmPerMile)), nil
-	default:
-		return 0, fmt.Errorf("unsupported unit type: %s", e.Unit)
-	}
 }
 
 type Auth struct {
