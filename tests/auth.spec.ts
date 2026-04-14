@@ -172,6 +172,7 @@ test("disable auth", async ({ page }) => {
 
   // configuration page without login
   await openTopNavigation(page);
+  await expect(page.getByRole("button", { name: "Logout" })).not.toBeVisible();
   await page.getByRole("link", { name: "Configuration" }).click();
   await expectTopNavigationClosed(page);
   await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible();
