@@ -70,8 +70,8 @@ type batteryDetail struct {
 
 type batteryResult struct {
 	batteryDetail
-	Full  *time.Time `json:"full"`
-	Empty *time.Time `json:"empty"`
+	Full  time.Time `json:"full,omitzero"`
+	Empty time.Time `json:"empty,omitzero"`
 }
 
 // func (br batteryResult) MarshalJSON() ([]byte, error) {
@@ -471,15 +471,15 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 	return bat, detail
 }
 
-func matchSoc(ts []float32, fun func(float32) bool) *time.Time {
+func matchSoc(ts []float32, fun func(float32) bool) time.Time {
 	for i, soc := range ts {
 		if fun(soc) {
 			// TODO first slot
-			return new(time.Now().Add(time.Duration(i+1) * tariff.SlotDuration))
+			return time.Now().Add(time.Duration(i+1) * tariff.SlotDuration)
 		}
 	}
 
-	return nil
+	return time.Time{}
 }
 
 // continuousDemand creates a slice of power demands depending on loadpoint mode
