@@ -277,21 +277,17 @@ func (c *EEBus) UnregisterDevice(ski string, device Device) {
 	c.mux.Lock()
 	if idx := slices.Index(c.clients[ski], device); idx != -1 {
 		c.clients[ski] = slices.Delete(c.clients[ski], idx, idx+1)
-	}
-	tearDown := len(c.clients[ski]) == 0
-	if tearDown {
-		delete(c.clients, ski)
+
+		// Tear down the SHIP session after releasing the mutex: ship-go's CloseConnection
+		// on a non-Complete state synchronously invokes HandleConnectionClosed,
+		// which calls back into evcc's connect(ski, false) — and that needs to
+		// acquire c.mux. Holding c.mux across this cross-layer call would
+		// deadlock the same goroutine on its own non-reentrant mutex. See #28942.
+		if len(c.clients[ski]) == 0 {
+			defer c.service.UnregisterRemoteSKI(ski)
+		}
 	}
 	c.mux.Unlock()
-
-	// Tear down the SHIP session outside the mutex: ship-go's CloseConnection
-	// on a non-Complete state synchronously invokes HandleConnectionClosed,
-	// which calls back into evcc's connect(ski, false) — and that needs to
-	// acquire c.mux. Holding c.mux across this cross-layer call would
-	// deadlock the same goroutine on its own non-reentrant mutex. See #28942.
-	if tearDown {
-		c.service.UnregisterRemoteSKI(ski)
-	}
 }
 
 func (c *EEBus) CustomerEnergyManagement() *CustomerEnergyManagement {
