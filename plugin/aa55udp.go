@@ -8,16 +8,9 @@ import (
 	"fmt"
 	"math"
 	"net"
+	"time"
 
 	"github.com/evcc-io/evcc/util"
-)
-
-// aa55Mode selects the fetch strategy used by query.
-type aa55Mode int
-
-const (
-	modeRegister aa55Mode = iota // single-register read, value at offset 0
-	modeBlock                    // block read, value extracted at explicit offset
 )
 
 // AA55UDP implements the GoodWe WiFi AA55-over-UDP wire protocol as a generic
@@ -35,14 +28,13 @@ const (
 //	               Multiple source blocks sharing the same (host, pdu) pair
 //	               share one UDP exchange per poll cycle via a response cache.
 type AA55UDP struct {
-	log           *util.Logger
-	conn          *net.UDPConn
-	pdu           []byte // 6-byte PDU body, no CRC
-	offset        int    // byte offset into the response payload (0 for register reads)
-	decode        string // int32be | uint32be | uint32nan | int16be | uint16be | float32be
-	scale         float64
-	mode          aa55Mode // modeRegister or modeBlock
-	minPayloadLen int      // minimum required payload length (offset + decode size)
+	log      *util.Logger
+	conn     *net.UDPConn
+	pdu      []byte  // 6-byte PDU body, no CRC
+	offset   int     // byte offset into the response payload (0 for register reads)
+	decode   string  // int32be | uint32be | uint32nan | int16be | uint16be | float32be
+	scale    float64
+	useCache bool // true for block-read/cached mode, false for simple register read
 }
 
 func init() {
@@ -80,10 +72,9 @@ func NewAA55UDPFromConfig(_ context.Context, other map[string]interface{}) (Plug
 		Decode   string  `mapstructure:"decode"`
 		Scale    float64 `mapstructure:"scale"`
 	}{
-		Id:       int(aa55InverterAddr),
-		Register: 0, // block mode requires register=0 (PDU supplies full register address)
-		Count:    2,
-		Scale:    1.0,
+		Id:    int(aa55InverterAddr),
+		Count: 2,
+		Scale: 1.0,
 	}
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
@@ -97,7 +88,6 @@ func NewAA55UDPFromConfig(_ context.Context, other map[string]interface{}) (Plug
 	if err != nil {
 		return nil, fmt.Errorf("aa55udp: resolve %s: %w", cc.Host, err)
 	}
-
 	conn, err := net.DialUDP("udp4", nil, raddr)
 	if err != nil {
 		return nil, fmt.Errorf("aa55udp: dial %s: %w", cc.Host, err)
@@ -111,51 +101,34 @@ func NewAA55UDPFromConfig(_ context.Context, other map[string]interface{}) (Plug
 	}
 
 	if cc.PDU != "" {
-		if err := initBlockMode(p, cc.PDU, cc.Offset, cc.Register, cc.Count, cc.Id); err != nil {
+		// Block mode: PDU-based read with caching.
+		if cc.Register != 0 || cc.Count != 2 || cc.Id != int(aa55InverterAddr) {
+			return nil, errors.New("aa55udp: pdu cannot be combined with register/count/id settings")
+		}
+		if cc.Offset < 0 {
+			return nil, fmt.Errorf("aa55udp: offset must be non-negative, got %d", cc.Offset)
+		}
+		pdu, err := buildPDUFromHex(cc.PDU)
+		if err != nil {
 			return nil, err
 		}
+		p.pdu = pdu
+		p.offset = cc.Offset
+		p.useCache = true
 	} else {
-		if err := initRegisterMode(p, cc.Id, cc.Register, cc.Count); err != nil {
-			return nil, err
+		// Register mode: id/register/count-based read without caching.
+		if cc.Count == 0 {
+			return nil, errors.New("aa55udp: count must be ≥ 1")
 		}
+		if cc.Id < 0 || cc.Id > 255 {
+			return nil, fmt.Errorf("aa55udp: id must be 0-255, got %d", cc.Id)
+		}
+		p.pdu = buildPDU(byte(cc.Id), cc.Register, cc.Count)
+		p.offset = 0
+		p.useCache = false
 	}
 
 	return p, nil
-}
-
-// initBlockMode configures p for block read mode.
-func initBlockMode(p *AA55UDP, pduHex string, offset int, register uint16, count uint16, id int) error {
-	// Reject mixed configuration where block-mode PDU and register parameters are both set.
-	if register != 0 || count != 2 || id != int(aa55InverterAddr) {
-		return errors.New("aa55udp: pdu cannot be combined with register/count/id settings")
-	}
-	if offset < 0 {
-		return fmt.Errorf("aa55udp: offset must be non-negative, got %d", offset)
-	}
-	pdu, err := buildPDUFromHex(pduHex)
-	if err != nil {
-		return err
-	}
-	p.pdu = pdu
-	p.offset = offset
-	p.mode = modeBlock
-	p.minPayloadLen = offset + decodeSize(p.decode)
-	return nil
-}
-
-// initRegisterMode configures p for register read mode.
-func initRegisterMode(p *AA55UDP, id int, register uint16, count uint16) error {
-	if count == 0 {
-		return errors.New("aa55udp: count must be ≥ 1")
-	}
-	if id < 0 || id > 255 {
-		return fmt.Errorf("aa55udp: id must be 0-255, got %d", id)
-	}
-	p.pdu = buildPDU(byte(id), register, count)
-	p.offset = 0
-	p.mode = modeRegister
-	p.minPayloadLen = decodeSize(p.decode)
-	return nil
 }
 
 // validateDecode returns an error if decode is not a supported type.
@@ -183,25 +156,16 @@ func (p *AA55UDP) FloatGetter() (func() (float64, error), error) {
 	return p.query, nil
 }
 
-// query fetches the payload via the mode-appropriate method and returns the
-// decoded, scaled value at p.offset.
+// query fetches the payload and returns the decoded, scaled value at p.offset.
 func (p *AA55UDP) query() (float64, error) {
-	var (
-		payload []byte
-		err     error
-	)
-
-	switch p.mode {
-	case modeRegister:
-		payload, err = p.fetchRegister()
-	case modeBlock:
-		payload, err = p.fetchBlock()
-	default:
-		err = fmt.Errorf("aa55udp: unknown mode %d", p.mode)
-	}
-
+	payload, err := p.fetch()
 	if err != nil {
 		return 0, err
+	}
+
+	minLen := p.offset + decodeSize(p.decode)
+	if len(payload) < minLen {
+		return 0, fmt.Errorf("aa55udp: payload too short (len=%d, need=%d)", len(payload), minLen)
 	}
 
 	v, err := decodeAt(payload, p.offset, p.decode)
@@ -212,11 +176,76 @@ func (p *AA55UDP) query() (float64, error) {
 	return v * p.scale, nil
 }
 
-// cacheKeyAndPDUHex returns the cache key and hex-encoded PDU for logging and cache operations.
-func (p *AA55UDP) cacheKeyAndPDUHex() (string, string) {
-	pduHex := hex.EncodeToString(p.pdu)
-	key := p.conn.RemoteAddr().String() + "/" + pduHex
-	return key, pduHex
+// fetch returns the response payload, using caching for block mode.
+func (p *AA55UDP) fetch() ([]byte, error) {
+	if p.useCache {
+		return p.fetchWithCache()
+	}
+	return p.fetchDirect()
+}
+
+// fetchDirect performs a direct UDP request/response exchange without caching.
+func (p *AA55UDP) fetchDirect() ([]byte, error) {
+	packet := append(p.pdu, modbusCRC16(p.pdu)...)
+	raw, err := p.sendRecv(packet)
+	if err != nil {
+		return nil, err
+	}
+
+	payload, err := stripAA55Header(raw)
+	if err != nil {
+		return nil, fmt.Errorf("aa55udp: %w", err)
+	}
+
+	return payload, nil
+}
+
+// fetchWithCache performs a UDP request/response with response caching for shared reads.
+func (p *AA55UDP) fetchWithCache() ([]byte, error) {
+	key := p.conn.RemoteAddr().String() + "/" + hex.EncodeToString(p.pdu)
+
+	if payload, ok := responseCache.get(key); ok {
+		pduHex := hex.EncodeToString(p.pdu)
+		p.log.TRACE.Printf("cache hit for %s pdu=%s", p.conn.RemoteAddr(), pduHex)
+		return payload, nil
+	}
+
+	packet := append(p.pdu, modbusCRC16(p.pdu)...)
+	raw, err := p.sendRecv(packet)
+	if err != nil {
+		return nil, err
+	}
+
+	payload, err := stripAA55Header(raw)
+	if err != nil {
+		return nil, fmt.Errorf("aa55udp: %w", err)
+	}
+
+	responseCache.put(key, payload)
+	return payload, nil
+}
+
+// sendRecv sends packet over p.conn and returns the raw response bytes.
+func (p *AA55UDP) sendRecv(packet []byte) ([]byte, error) {
+	p.log.TRACE.Printf("send to %s: %s", p.conn.RemoteAddr(), hex.EncodeToString(packet))
+
+	if _, err := p.conn.Write(packet); err != nil {
+		return nil, fmt.Errorf("aa55udp write: %w", err)
+	}
+
+	if err := p.conn.SetReadDeadline(time.Now().Add(4 * time.Second)); err != nil {
+		return nil, fmt.Errorf("aa55udp deadline: %w", err)
+	}
+
+	buf := make([]byte, 512)
+	n, err := p.conn.Read(buf)
+	if err != nil {
+		return nil, fmt.Errorf("aa55udp read: %w", err)
+	}
+
+	p.log.TRACE.Printf("recv from %s: %s", p.conn.RemoteAddr(), hex.EncodeToString(buf[:n]))
+
+	return buf[:n], nil
 }
 
 // aa55InverterAddr is the default inverter address byte, used by DT/DNS and ES/EM families.

@@ -319,7 +319,7 @@ func TestFloatGetter_DT_Power(t *testing.T) {
 		decode: "int32be",
 		scale:  1.0,
 	}
-	p.mode = modeRegister
+	p.useCache = false
 	getter, err := p.FloatGetter()
 	require.NoError(t, err)
 	val, err := getter()
@@ -337,7 +337,7 @@ func TestFloatGetter_DT_Energy(t *testing.T) {
 		decode: "uint32be",
 		scale:  0.1,
 	}
-	p.mode = modeRegister
+	p.useCache = false
 	getter, err := p.FloatGetter()
 	require.NoError(t, err)
 	val, err := getter()
@@ -355,7 +355,7 @@ func TestFloatGetter_ET_PV(t *testing.T) {
 		decode: "int32be",
 		scale:  1.0,
 	}
-	p.mode = modeRegister
+	p.useCache = false
 	getter, err := p.FloatGetter()
 	require.NoError(t, err)
 	val, err := getter()
@@ -373,7 +373,7 @@ func TestFloatGetter_ET_Battery(t *testing.T) {
 		decode: "int32be",
 		scale:  1.0,
 	}
-	p.mode = modeRegister
+	p.useCache = false
 	getter, err := p.FloatGetter()
 	require.NoError(t, err)
 	val, err := getter()
@@ -391,7 +391,7 @@ func TestFloatGetter_ET_SoC(t *testing.T) {
 		decode: "uint16be",
 		scale:  1.0,
 	}
-	p.mode = modeRegister
+	p.useCache = false
 	getter, err := p.FloatGetter()
 	require.NoError(t, err)
 	val, err := getter()

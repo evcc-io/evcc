@@ -68,37 +68,6 @@ func (c *responseCacheT) put(key string, payload []byte) {
 
 var responseCache = newResponseCacheT()
 
-// fetchBlock returns the response payload for p.pdu, serving from the cache
-// if a fresh entry exists, or performing a UDP exchange otherwise.
-func (p *AA55UDP) fetchBlock() ([]byte, error) {
-	key, pduHex := p.cacheKeyAndPDUHex()
-
-	if payload, ok := responseCache.get(key); ok {
-		p.log.TRACE.Printf("cache hit for %s pdu=%s", p.conn.RemoteAddr(), pduHex)
-		return payload, nil
-	}
-
-	packet := append(p.pdu, modbusCRC16(p.pdu)...)
-
-	raw, err := p.sendRecv(packet)
-	if err != nil {
-		return nil, err
-	}
-
-	payload, err := stripAA55Header(raw)
-	if err != nil {
-		return nil, fmt.Errorf("aa55udp: %w", err)
-	}
-
-	if len(payload) < p.minPayloadLen {
-		return nil, fmt.Errorf("aa55udp: payload too short (got %d bytes, need at least %d for offset %d and %s decode)", len(payload), p.minPayloadLen, p.offset, p.decode)
-	}
-
-	responseCache.put(key, payload)
-
-	return payload, nil
-}
-
 // buildPDUFromHex decodes a hex string (spaces allowed) into exactly 6 bytes,
 // representing a complete PDU body including the inverter address byte.
 // Used exclusively in block read mode where the caller supplies the full PDU.
