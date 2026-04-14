@@ -8,7 +8,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateDanfossTLX(base *DanfossTLX, meterEnergy func() (float64, error), phaseVoltages func() (float64, float64, float64, error), phaseCurrents func() (float64, float64, float64, error), phasePowers func() (float64, float64, float64, error)) api.Meter {
+func decorateDanfossTLX(base *DanfossTLX, meterEnergy func() (float64, error), phaseVoltages func() (float64, float64, float64, error), phaseCurrents func() (float64, float64, float64, error), phasePowers func() (float64, float64, float64, error), maxACPowerGetter func() float64) api.Meter {
 	caps := make(map[reflect.Type]any)
 
 	if meterEnergy != nil {
@@ -25,6 +25,10 @@ func decorateDanfossTLX(base *DanfossTLX, meterEnergy func() (float64, error), p
 
 	if phasePowers != nil {
 		caps[reflect.TypeFor[api.PhasePowers]()] = &decorateDanfossTLXPhasePowersImpl{phasePowers: phasePowers}
+	}
+
+	if maxACPowerGetter != nil {
+		caps[reflect.TypeFor[api.MaxACPowerGetter]()] = &decorateDanfossTLXMaxACPowerGetterImpl{maxACPowerGetter: maxACPowerGetter}
 	}
 
 	if len(caps) == 0 {
@@ -45,6 +49,14 @@ func (d *decorateDanfossTLXCapable) Capability(typ reflect.Type) (any, bool) {
 		return d, true
 	}
 	return c, ok
+}
+
+type decorateDanfossTLXMaxACPowerGetterImpl struct {
+	maxACPowerGetter func() float64
+}
+
+func (impl *decorateDanfossTLXMaxACPowerGetterImpl) MaxACPower() float64 {
+	return impl.maxACPowerGetter()
 }
 
 type decorateDanfossTLXMeterEnergyImpl struct {

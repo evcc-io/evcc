@@ -23,7 +23,7 @@ func init() {
 	registry.AddCtx("danfoss-tlx", NewDanfossTLXFromConfig)
 }
 
-//go:generate go tool decorate -f decorateDanfossTLX -b *DanfossTLX -r api.Meter -t api.MeterEnergy,api.PhaseVoltages,api.PhaseCurrents,api.PhasePowers
+//go:generate go tool decorate -f decorateDanfossTLX -b *DanfossTLX -r api.Meter -t api.MeterEnergy,api.PhaseVoltages,api.PhaseCurrents,api.PhasePowers,api.MaxACPowerGetter
 
 func NewDanfossTLXFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	cc := struct {
@@ -124,7 +124,7 @@ func NewDanfossTLX(ctx context.Context, cfg comlynx.Config, maxACPower func() fl
 		powers = m.phasePowers
 	}
 
-	return decorateDanfossTLX(m, totalEnergy, voltages, currents, powers), nil
+	return decorateDanfossTLX(m, totalEnergy, voltages, currents, powers, maxACPower), nil
 }
 
 func (m *DanfossTLX) probePhase(p1, p2, p3 uint16) bool {
