@@ -12,14 +12,11 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-// DanfossTLX is a PV meter implementation for Danfoss TripleLynx TLX
-// inverters using the proprietary ComLynx RS485 protocol.
+// DanfossTLX is a PV meter for Danfoss TripleLynx TLX inverters via ComLynx RS485.
 type DanfossTLX struct {
-	conn *comlynx.Client
-	log  *util.Logger
-	// powerFallback is true when the inverter didn't respond to the aggregate
-	// power parameter (0x0246); the driver falls back to summing per-phase.
-	powerFallback bool
+	conn          *comlynx.Client
+	log           *util.Logger
+	powerFallback bool // some TLX variants don't support aggregate power; sum per-phase instead
 }
 
 func init() {
@@ -28,7 +25,6 @@ func init() {
 
 //go:generate go tool decorate -f decorateDanfossTLX -b *DanfossTLX -r api.Meter -t api.MeterEnergy,api.PhaseVoltages,api.PhaseCurrents,api.PhasePowers
 
-// NewDanfossTLXFromConfig creates a DanfossTLX meter from generic config.
 func NewDanfossTLXFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	cc := struct {
 		pvMaxACPower `mapstructure:",squash"`
@@ -58,7 +54,6 @@ func NewDanfossTLXFromConfig(ctx context.Context, other map[string]any) (api.Met
 		Source:   comlynx.DefaultSource,
 	}
 
-	// Parse explicit node address if provided.
 	if cc.Node != "" {
 		var network, subnet, node int
 		if _, err := fmt.Sscanf(cc.Node, "%x-%x-%x", &network, &subnet, &node); err != nil {
@@ -82,7 +77,6 @@ func NewDanfossTLXFromConfig(ctx context.Context, other map[string]any) (api.Met
 	return NewDanfossTLX(ctx, cfg, cc.pvMaxACPower.Decorator())
 }
 
-// NewDanfossTLX constructs and probes a DanfossTLX meter.
 func NewDanfossTLX(ctx context.Context, cfg comlynx.Config, maxACPower func() float64) (api.Meter, error) {
 	log := util.NewLogger("danfoss-tlx")
 
@@ -91,7 +85,6 @@ func NewDanfossTLX(ctx context.Context, cfg comlynx.Config, maxACPower func() fl
 		return nil, err
 	}
 
-	// Address discovery when no explicit destination was configured.
 	if (cfg.Destination == comlynx.Address{}) {
 		addr, err := comlynx.Discover(conn)
 		if err != nil {
@@ -104,21 +97,17 @@ func NewDanfossTLX(ctx context.Context, cfg comlynx.Config, maxACPower func() fl
 
 	m := &DanfossTLX{conn: conn, log: log}
 
-	// Close the serial/TCP connection when the context is cancelled (e.g. after
-	// a UI "Prüfen" test completes), so the port is not held open between tests.
+	// Release the connection when the context is cancelled.
 	go func() {
 		<-ctx.Done()
 		_ = conn.Close()
 	}()
 
-	// Probe aggregate power (0x0246). Some TLX variants (notably 6 kW) don't
-	// support it — we'll fall back to summing the per-phase values.
 	if _, err := conn.Read(comlynx.ParamGridPowerTotal); err != nil {
-		log.WARN.Printf("aggregate power param not available, will sum per-phase: %v", err)
+		log.WARN.Printf("aggregate power unavailable, falling back to per-phase sum: %v", err)
 		m.powerFallback = true
 	}
 
-	// Probe optional interfaces and decorate the meter dynamically.
 	var totalEnergy func() (float64, error)
 	if _, err := conn.Read(comlynx.ParamTotalEnergy); err == nil {
 		totalEnergy = m.totalEnergy
@@ -147,7 +136,6 @@ func (m *DanfossTLX) probePhase(p1, p2, p3 uint16) bool {
 	return true
 }
 
-// CurrentPower implements api.Meter.
 func (m *DanfossTLX) CurrentPower() (float64, error) {
 	if m.powerFallback {
 		return m.sumPhasePowers()
@@ -168,27 +156,22 @@ func (m *DanfossTLX) sumPhasePowers() (float64, error) {
 	return total, nil
 }
 
-// totalEnergy implements api.MeterEnergy. Raw value from inverter is in Wh;
-// evcc expects kWh.
 func (m *DanfossTLX) totalEnergy() (float64, error) {
 	v, err := m.conn.Read(comlynx.ParamTotalEnergy)
 	if err != nil {
 		return 0, err
 	}
-	return float64(v) / 1000, nil
+	return float64(v) / 1000, nil // Wh → kWh
 }
 
-// phaseVoltages implements api.PhaseVoltages. Raw value is V * 10.
 func (m *DanfossTLX) phaseVoltages() (float64, float64, float64, error) {
-	return m.readThree(comlynx.ParamGridVoltageL1, comlynx.ParamGridVoltageL2, comlynx.ParamGridVoltageL3, 10)
+	return m.readThree(comlynx.ParamGridVoltageL1, comlynx.ParamGridVoltageL2, comlynx.ParamGridVoltageL3, 10) // raw is V*10
 }
 
-// phaseCurrents implements api.PhaseCurrents. Raw value is A * 1000 (mA).
 func (m *DanfossTLX) phaseCurrents() (float64, float64, float64, error) {
-	return m.readThree(comlynx.ParamGridCurrentL1, comlynx.ParamGridCurrentL2, comlynx.ParamGridCurrentL3, 1000)
+	return m.readThree(comlynx.ParamGridCurrentL1, comlynx.ParamGridCurrentL2, comlynx.ParamGridCurrentL3, 1000) // raw is mA
 }
 
-// phasePowers implements api.PhasePowers. Raw value is W.
 func (m *DanfossTLX) phasePowers() (float64, float64, float64, error) {
 	return m.readThree(comlynx.ParamGridPowerL1, comlynx.ParamGridPowerL2, comlynx.ParamGridPowerL3, 1)
 }
