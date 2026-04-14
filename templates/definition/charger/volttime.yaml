@@ -27,5 +27,5 @@ params:
 render: |
   type: plugchoice
   token: {{ .token }}  
-  identity: VT_{{ or .serial .serial_number }}
+  identity: {{ if (or .serial .serial_number) }}VT_{{ or .serial .serial_number }}{{ end }}
   connector: 1
