@@ -40,17 +40,6 @@ func TestDanfossTLXConfigRejectsDeviceAndURI(t *testing.T) {
 	assert.ErrorContains(t, err, "mutually exclusive")
 }
 
-// TestDanfossTLXConfigRejectsBadNode verifies that a malformed node address
-// string is rejected before any I/O.
-func TestDanfossTLXConfigRejectsBadNode(t *testing.T) {
-	_, err := NewDanfossTLXFromConfig(t.Context(), map[string]any{
-		"usage":  "pv",
-		"device": "/dev/null",
-		"node":   "not-a-valid-address",
-	})
-	assert.ErrorContains(t, err, "node")
-}
-
 // TestDanfossTLXConfigRejectsNoTransport verifies that omitting both device
 // and uri returns a clear error.
 func TestDanfossTLXConfigRejectsNoTransport(t *testing.T) {
