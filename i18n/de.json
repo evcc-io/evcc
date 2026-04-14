@@ -341,7 +341,7 @@
       "defaultsHintLink": "Einstellungen anpassen",
       "delete": "Löschen",
       "electricalSubtitle": "Im Zweifelsfall Elektriker fragen.",
-      "electricalTitle": "Elektrisch",
+      "electricalTitle": "Elektrik",
       "energyMeterHelp": "Zusätzlicher Zähler, wenn die Wallbox keinen integrierten hat.",
       "energyMeterLabel": "Energiezähler",
       "estimateLabel": "Ladestand zwischen API-Updates interpolieren",

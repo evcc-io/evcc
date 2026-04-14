@@ -342,7 +342,7 @@
       "defaultsHintLink": "Adjust settings",
       "delete": "Delete",
       "electricalSubtitle": "When in doubt, ask your electrician.",
-      "electricalTitle": "Electrical",
+      "electricalTitle": "Electrics",
       "energyMeterHelp": "Additional meter if the charger doesn't have an integrated one.",
       "energyMeterLabel": "Energy meter",
       "estimateLabel": "Interpolate charge level between API updates",
