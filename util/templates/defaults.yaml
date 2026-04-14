@@ -484,6 +484,15 @@ params:
     description:
       en: Price zones
       de: Preiszonen
+  - name: baudrate
+    description:
+      de: Baudrate
+      en: Baudrate
+    help:
+      de: Typische Werte sind 9600, 19200, 38400, 57600, 115200
+      en: Typical values are 9600, 19200, 38400, 57600, 115200
+    default: 9600
+    type: int
 
 presets:
   vehicle-base:
@@ -760,8 +769,8 @@ modbus:
         de: Baudrate
         en: Baudrate
       help:
-        de: Prüfe die Geräteeinstellungen, typische Werte sind 9600, 19200, 38400, 57600, 115200
-        en: Check the device settings, typical values are 9600, 19200, 38400, 57600, 115200
+        de: Typische Werte sind 9600, 19200, 38400, 57600, 115200
+        en: Typical values are 9600, 19200, 38400, 57600, 115200
       default: 9600
       type: int
     - name: comset
