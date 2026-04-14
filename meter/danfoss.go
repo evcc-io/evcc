@@ -70,7 +70,7 @@ func NewDanfossTLX(ctx context.Context, cfg comlynx.Config, maxACPower func() fl
 		return nil, err
 	}
 
-	if cfg.Destination == comlynx.Address{} {
+	if cfg.Destination == (comlynx.Address{}) {
 		addr, err := comlynx.Discover(conn)
 		if err != nil {
 			_ = conn.Close()
@@ -82,41 +82,43 @@ func NewDanfossTLX(ctx context.Context, cfg comlynx.Config, maxACPower func() fl
 
 	m := &DanfossTLX{conn: conn, log: log}
 
-	// Release the connection when the context is cancelled.
-	go func() {
-		<-ctx.Done()
-		_ = conn.Close()
-	}()
-
-	aggregatePowerErr := func() error {
-		_, err := conn.Read(comlynx.ParamGridPowerTotal)
-		return err
-	}()
-
-	var totalEnergy func() (float64, error)
-	if _, err := conn.Read(comlynx.ParamTotalEnergy); err == nil {
-		totalEnergy = m.totalEnergy
-	}
-
-	var voltages, currents, powers func() (float64, float64, float64, error)
-	if _, _, _, err := m.phaseVoltages(); err == nil {
-		voltages = m.phaseVoltages
-	}
-	if _, _, _, err := m.phaseCurrents(); err == nil {
-		currents = m.phaseCurrents
-	}
-	if _, _, _, err := m.phasePowers(); err == nil {
-		powers = m.phasePowers
-	}
+	// probe capabilities
+	_, aggregatePowerErr := conn.Read(comlynx.ParamGridPowerTotal)
+	_, hasEnergy := conn.Read(comlynx.ParamTotalEnergy)
+	_, _, _, hasVoltages := m.phaseVoltages()
+	_, _, _, hasCurrents := m.phaseCurrents()
+	_, _, _, hasPowers := m.phasePowers()
 
 	if aggregatePowerErr != nil {
-		if powers != nil {
+		if hasPowers == nil {
 			m.powerFallback = true
 		} else {
 			_ = conn.Close()
 			return nil, fmt.Errorf("power unavailable: aggregate read failed (%w) and per-phase powers are unavailable", aggregatePowerErr)
 		}
 	}
+
+	// build decorator functions based on capabilities
+	var totalEnergy func() (float64, error)
+	if hasEnergy == nil {
+		totalEnergy = m.totalEnergy
+	}
+
+	var voltages, currents, powers func() (float64, float64, float64, error)
+	if hasVoltages == nil {
+		voltages = m.phaseVoltages
+	}
+	if hasCurrents == nil {
+		currents = m.phaseCurrents
+	}
+	if hasPowers == nil {
+		powers = m.phasePowers
+	}
+
+	go func() {
+		<-ctx.Done()
+		_ = conn.Close()
+	}()
 
 	return decorateMeter(m, totalEnergy, currents, voltages, powers, maxACPower), nil
 }
