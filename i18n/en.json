@@ -761,8 +761,8 @@
       "titleChoice": "What Do You Want To Add?",
       "type": {
         "co2": "CO₂ Intensity",
-        "feedIn": "Feed-In Price",
-        "grid": "Grid Consumption Price",
+        "feedIn": "Grid Export Price",
+        "grid": "Grid Import Price",
         "planner": "Planner",
         "solar": "Solar"
       },
