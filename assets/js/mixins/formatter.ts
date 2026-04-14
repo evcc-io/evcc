@@ -221,6 +221,11 @@ export default defineComponent({
         weekday: "short",
       }).format(date);
     },
+    weekdayLong(date: Date) {
+      return new Intl.DateTimeFormat(this.$i18n?.locale, {
+        weekday: "long",
+      }).format(date);
+    },
     fmtAbsoluteDate(date: Date) {
       const weekday = this.weekdayPrefix(date);
       const hour = new Intl.DateTimeFormat(this.$i18n?.locale, {
