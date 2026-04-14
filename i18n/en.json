@@ -1121,7 +1121,7 @@
       "batteryTooltip": "{energy} of {total} ({soc})",
       "forecast": "Forecast: ",
       "forecastTooltip": "forecast: remaining solar production today",
-      "gridImport": "Grid use",
+      "gridImport": "Grid import",
       "homePower": "Consumption",
       "loadpoints": "Charger| Charger | {count} chargers",
       "loadpointsLimit": "{limit} limit",

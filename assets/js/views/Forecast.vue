@@ -41,7 +41,7 @@
 			</div>
 		</div>
 		<div v-else class="row">
-			<main class="col-12">
+			<main class="col-12 d-flex flex-column">
 				<section v-if="forecast.solar" class="mb-5">
 					<div class="d-flex align-items-baseline my-4">
 						<h3 class="fw-normal mb-0">{{ $t("forecast.type.solar") }}</h3>
@@ -76,7 +76,11 @@
 					<SolarDetails :solar="solar" />
 				</section>
 
-				<section v-if="forecast.grid" class="mb-5">
+				<section
+					v-if="forecast.grid"
+					class="mb-5"
+					:style="isGridStatic ? { order: 1 } : undefined"
+				>
 					<div class="d-flex align-items-baseline my-4">
 						<h3 class="fw-normal mb-0">{{ $t("forecast.type.price") }}</h3>
 						<div class="form-check form-switch ms-auto mb-0 text-nowrap">
@@ -114,7 +118,7 @@
 					/>
 				</section>
 
-				<section v-if="forecast.co2">
+				<section v-if="forecast.co2" class="mb-5">
 					<h3 class="fw-normal my-4">{{ $t("forecast.type.co2") }}</h3>
 					<div class="chart-edge">
 						<Co2Chart
@@ -147,7 +151,7 @@ import Co2Details from "../components/Forecast/Co2Details.vue";
 import formatter from "@/mixins/formatter";
 import settings from "@/settings";
 import store from "../store";
-import { adjustedSolar, ForecastType } from "@/utils/forecast";
+import { adjustedSolar, ForecastType, isStaticTariff } from "@/utils/forecast";
 
 const MIN_HOURS = 76;
 const MAX_HOURS = 96;
@@ -229,6 +233,14 @@ export default defineComponent({
 		},
 		showFeedin() {
 			return !settings.hideFeedin;
+		},
+		isGridStatic(): boolean {
+			if (!this.forecast.grid) return false;
+			if (!isStaticTariff(this.forecast.grid)) return false;
+			if (this.forecast.feedin?.length) {
+				return isStaticTariff(this.forecast.feedin);
+			}
+			return true;
 		},
 		showSolarAdjust() {
 			return !!this.forecast.solar && this.experimental;
