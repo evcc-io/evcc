@@ -6,9 +6,9 @@ import (
 	"time"
 )
 
-// fetchRegister performs a single UDP request/response exchange for the
-// register read mode.  The response payload is returned without caching —
-// each call to the getter triggers a fresh UDP exchange.
+// fetchRegister performs a single UDP request/response exchange for register
+// read mode.  The response payload is returned without caching — each call
+// triggers a fresh UDP exchange.
 func (p *AA55UDP) fetchRegister() ([]byte, error) {
 	packet := append(p.pdu, modbusCRC16(p.pdu)...)
 
@@ -28,7 +28,7 @@ func (p *AA55UDP) fetchRegister() ([]byte, error) {
 // sendRecv sends packet over p.conn and returns the raw response bytes.
 // Used by both register read and block read modes.
 func (p *AA55UDP) sendRecv(packet []byte) ([]byte, error) {
-	p.log.TRACE.Printf("send to %s: %s", p.raddr, hex.EncodeToString(packet))
+	p.log.TRACE.Printf("send to %s: %s", p.conn.RemoteAddr(), hex.EncodeToString(packet))
 
 	if _, err := p.conn.Write(packet); err != nil {
 		return nil, fmt.Errorf("aa55udp write: %w", err)
@@ -44,7 +44,7 @@ func (p *AA55UDP) sendRecv(packet []byte) ([]byte, error) {
 		return nil, fmt.Errorf("aa55udp read: %w", err)
 	}
 
-	p.log.TRACE.Printf("recv from %s: %s", p.raddr, hex.EncodeToString(buf[:n]))
+	p.log.TRACE.Printf("recv from %s: %s", p.conn.RemoteAddr(), hex.EncodeToString(buf[:n]))
 
 	return buf[:n], nil
 }

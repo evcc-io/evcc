@@ -9,36 +9,38 @@ import (
 )
 
 // responseCache caches block-read payloads keyed by "raddr/pdu_hex" with a
-// short TTL.  This allows multiple aa55udp source blocks that read different
-// offsets from the same block PDU (e.g. all four Ppv string registers from
-// READ 125 @ 0x891C) to share a single UDP exchange per poll cycle.
+// short TTL.  All aa55udp source blocks sharing the same (host, pdu) pair
+// share one UDP exchange per poll cycle — e.g. the four Ppv string registers
+// from READ 125 @ 0x891C all hit the cache after the first fetch.
+//
+// TTL is set to 2 s: long enough to serve all source blocks within one evcc
+// poll cycle (which completes in well under 1 s), short enough that the next
+// cycle always fetches fresh data.
 type cacheEntry struct {
 	payload   []byte
 	expiresAt time.Time
 }
 
+const (
+	responseCacheTTL     = 2 * time.Second
+	responseCacheMaxSize = 64 // max number of (host, pdu) pairs to cache
+)
+
 var (
-	responseCache   = make(map[string]cacheEntry)
+	responseCache   = make(map[string]cacheEntry, responseCacheMaxSize)
 	responseCacheMu sync.Mutex
 )
 
-// responseCacheTTL must be long enough to cover all sequential source reads
-// within one evcc poll cycle (typically < 1 s), but short enough that the
-// next cycle fetches fresh data.
-const responseCacheTTL = 5 * time.Second
-
 // fetchBlock returns the response payload for p.pdu, serving from the cache
 // if a fresh entry exists, or performing a UDP exchange otherwise.
-// Multiple AA55UDP instances sharing the same (raddr, pdu) will reuse the
-// same cached payload, reducing the number of UDP exchanges per poll cycle.
 func (p *AA55UDP) fetchBlock() ([]byte, error) {
-	key := p.raddr.String() + "/" + hex.EncodeToString(p.pdu)
+	key := p.conn.RemoteAddr().String() + "/" + hex.EncodeToString(p.pdu)
 
 	responseCacheMu.Lock()
 	if entry, ok := responseCache[key]; ok && time.Now().Before(entry.expiresAt) {
 		payload := entry.payload
 		responseCacheMu.Unlock()
-		p.log.TRACE.Printf("cache hit for %s pdu=%s", p.raddr, hex.EncodeToString(p.pdu))
+		p.log.TRACE.Printf("cache hit for %s pdu=%s", p.conn.RemoteAddr(), hex.EncodeToString(p.pdu))
 		return payload, nil
 	}
 	responseCacheMu.Unlock()
@@ -57,6 +59,15 @@ func (p *AA55UDP) fetchBlock() ([]byte, error) {
 	}
 
 	responseCacheMu.Lock()
+	// Evict expired entries before inserting to keep the map bounded.
+	if len(responseCache) >= responseCacheMaxSize {
+		now := time.Now()
+		for k, v := range responseCache {
+			if now.After(v.expiresAt) {
+				delete(responseCache, k)
+			}
+		}
+	}
 	responseCache[key] = cacheEntry{payload: payload, expiresAt: time.Now().Add(responseCacheTTL)}
 	responseCacheMu.Unlock()
 

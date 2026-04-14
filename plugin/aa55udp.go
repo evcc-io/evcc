@@ -11,6 +11,14 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
+// aa55Mode selects the fetch strategy used by query.
+type aa55Mode int
+
+const (
+	modeRegister aa55Mode = iota // single-register read, value at offset 0
+	modeBlock                    // block read, value extracted at explicit offset
+)
+
 // AA55UDP implements the GoodWe WiFi AA55-over-UDP wire protocol as a generic
 // evcc source plugin.
 //
@@ -28,12 +36,11 @@ import (
 type AA55UDP struct {
 	log    *util.Logger
 	conn   *net.UDPConn
-	raddr  *net.UDPAddr
-	pdu    []byte // 6-byte PDU body, no CRC
-	offset int    // byte offset into the response payload (0 for register reads)
-	decode string // int32be | uint32be | uint32nan | int16be | uint16be | float32be
+	pdu    []byte   // 6-byte PDU body, no CRC
+	offset int      // byte offset into the response payload (0 for register reads)
+	decode string   // int32be | uint32be | uint32nan | int16be | uint16be | float32be
 	scale  float64
-	fetch  func() ([]byte, error) // set to fetchRegister or fetchBlock at construction
+	mode   aa55Mode // modeRegister or modeBlock
 }
 
 func init() {
@@ -71,18 +78,17 @@ func NewAA55UDPFromConfig(_ context.Context, other map[string]interface{}) (Plug
 		Decode   string  `mapstructure:"decode"`
 		Scale    float64 `mapstructure:"scale"`
 	}{
-		Id:    int(aa55InverterAddr),
-		Count: 2,
-		Scale: 1.0,
+		Id:       int(aa55InverterAddr),
+		Register: 0, // block mode requires register=0 (PDU supplies full register address)
+		Count:    2,
+		Scale:    1.0,
 	}
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	switch cc.Decode {
-	case "int32be", "uint32be", "uint32nan", "int16be", "uint16be", "float32be":
-	default:
-		return nil, fmt.Errorf("aa55udp: unsupported decode %q (want int32be|uint32be|uint32nan|int16be|uint16be|float32be)", cc.Decode)
+	if err := validateDecode(cc.Decode); err != nil {
+		return nil, err
 	}
 
 	raddr, err := net.ResolveUDPAddr("udp4", net.JoinHostPort(cc.Host, "8899"))
@@ -95,41 +101,66 @@ func NewAA55UDPFromConfig(_ context.Context, other map[string]interface{}) (Plug
 		return nil, fmt.Errorf("aa55udp: dial %s: %w", cc.Host, err)
 	}
 
-	log := util.NewLogger("aa55udp")
-
 	p := &AA55UDP{
-		log:    log,
+		log:    util.NewLogger("aa55udp"),
 		conn:   conn,
-		raddr:  raddr,
 		decode: cc.Decode,
 		scale:  cc.Scale,
 	}
 
 	if cc.PDU != "" {
-		// Block read mode: caller supplies the full PDU hex and the byte
-		// offset of the desired value within the response payload.
-		pdu, err := buildPDUFromHex(cc.PDU)
-		if err != nil {
+		if err := initBlockMode(p, cc.PDU, cc.Offset, cc.Register, cc.Count, cc.Id); err != nil {
 			return nil, err
 		}
-		p.pdu = pdu
-		p.offset = cc.Offset
-		p.fetch = p.fetchBlock
 	} else {
-		// Register read mode: build a targeted single-register PDU; value is
-		// always at offset 0 of the (2- or 4-byte) response payload.
-		if cc.Count == 0 {
-			return nil, errors.New("aa55udp: count must be ≥ 1")
+		if err := initRegisterMode(p, cc.Id, cc.Register, cc.Count); err != nil {
+			return nil, err
 		}
-		if cc.Id < 0 || cc.Id > 255 {
-			return nil, fmt.Errorf("aa55udp: id must be 0-255, got %d", cc.Id)
-		}
-		p.pdu = buildPDU(byte(cc.Id), cc.Register, cc.Count)
-		p.offset = 0
-		p.fetch = p.fetchRegister
 	}
 
 	return p, nil
+}
+
+// initBlockMode configures p for block read mode.
+func initBlockMode(p *AA55UDP, pduHex string, offset int, register uint16, count uint16, id int) error {
+	// Reject mixed configuration where block-mode PDU and register parameters are both set.
+	if register != 0 || count != 2 || id != int(aa55InverterAddr) {
+		return errors.New("aa55udp: pdu cannot be combined with register/count/id settings")
+	}
+	if offset < 0 {
+		return fmt.Errorf("aa55udp: offset must be non-negative, got %d", offset)
+	}
+	pdu, err := buildPDUFromHex(pduHex)
+	if err != nil {
+		return err
+	}
+	p.pdu = pdu
+	p.offset = offset
+	p.mode = modeBlock
+	return nil
+}
+
+// initRegisterMode configures p for register read mode.
+func initRegisterMode(p *AA55UDP, id int, register uint16, count uint16) error {
+	if count == 0 {
+		return errors.New("aa55udp: count must be ≥ 1")
+	}
+	if id < 0 || id > 255 {
+		return fmt.Errorf("aa55udp: id must be 0-255, got %d", id)
+	}
+	p.pdu = buildPDU(byte(id), register, count)
+	p.offset = 0
+	p.mode = modeRegister
+	return nil
+}
+
+// validateDecode returns an error if decode is not a supported type.
+func validateDecode(decode string) error {
+	switch decode {
+	case "int32be", "uint32be", "uint32nan", "int16be", "uint16be", "float32be":
+		return nil
+	}
+	return fmt.Errorf("aa55udp: unsupported decode %q (want int32be|uint32be|uint32nan|int16be|uint16be|float32be)", decode)
 }
 
 // FloatGetter implements the evcc Plugin interface.
@@ -137,10 +168,23 @@ func (p *AA55UDP) FloatGetter() (func() (float64, error), error) {
 	return p.query, nil
 }
 
-// query fetches the payload via the mode-specific fetch function and returns
-// the decoded, scaled value at p.offset.
+// query fetches the payload via the mode-appropriate method and returns the
+// decoded, scaled value at p.offset.
 func (p *AA55UDP) query() (float64, error) {
-	payload, err := p.fetch()
+	var (
+		payload []byte
+		err     error
+	)
+
+	switch p.mode {
+	case modeRegister:
+		payload, err = p.fetchRegister()
+	case modeBlock:
+		payload, err = p.fetchBlock()
+	default:
+		err = fmt.Errorf("aa55udp: unknown mode %d", p.mode)
+	}
+
 	if err != nil {
 		return 0, err
 	}
