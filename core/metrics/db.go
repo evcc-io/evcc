@@ -204,27 +204,14 @@ func SetupSchema() error {
 	return db.Instance.AutoMigrate(new(meter))
 }
 
-// persist stores 15min consumption in kWh, accumulating with any existing value for the same slot
+// persist stores 15min consumption in kWh
 func persist(entity entity, ts time.Time, imp, exp float64) error {
-	m := meter{
+	return db.Instance.Create(&meter{
 		Meter:     entity.Id,
-		Timestamp: ts.Truncate(15 * time.Minute),
+		Timestamp: ts.Truncate(SlotDuration),
 		Import:    imp,
 		Export:    exp,
-	}
-
-	// accumulate with partial slot persisted on shutdown
-	res := db.Instance.Where("meter = ? AND ts = ?", m.Meter, m.Timestamp).First(&meter{})
-	if res.Error == nil {
-		return db.Instance.Model(&meter{}).
-			Where("meter = ? AND ts = ?", m.Meter, m.Timestamp).
-			Updates(map[string]any{
-				"import": gorm.Expr(`"import" + ?`, imp),
-				"export": gorm.Expr(`export + ?`, exp),
-			}).Error
-	}
-
-	return db.Instance.Create(&m).Error
+	}).Error
 }
 
 // importProfile returns a 15min average meter profile in Wh. The profile

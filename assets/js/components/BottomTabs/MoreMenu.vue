@@ -55,7 +55,10 @@
 			to="/optimize"
 			active-class="active"
 		>
-			Optimize
+			Optimize 🧪
+		</router-link>
+		<router-link v-if="experimental" class="dropdown-item" to="/history" active-class="active">
+			History 🧪
 		</router-link>
 	</div>
 </template>
