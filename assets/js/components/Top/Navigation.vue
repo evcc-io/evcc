@@ -89,6 +89,11 @@
 					Optimize 🧪
 				</router-link>
 			</li>
+			<li v-if="experimental">
+				<router-link class="dropdown-item" to="/history" active-class="active">
+					History 🧪
+				</router-link>
+			</li>
 			<li><hr class="dropdown-divider" /></li>
 			<template v-if="authorizationRequired">
 				<li>
