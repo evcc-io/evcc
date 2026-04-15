@@ -89,7 +89,7 @@
 			@remove-vehicle="removeVehicle"
 			@open-loadpoint-settings="openSettingsModal"
 			@batteryboost-updated="setBatteryBoost"
-			@open-modal="$emit('open-charging-plan-modal')"
+			@open-modal="(openArrivalTab) => $emit('open-charging-plan-modal', openArrivalTab)"
 		/>
 	</div>
 </template>

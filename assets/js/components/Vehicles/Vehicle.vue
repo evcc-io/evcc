@@ -293,13 +293,8 @@ export default defineComponent({
 		fmtEnergy(value: number) {
 			return this.fmtWh(value, value == 0 ? POWER_UNIT.KW : POWER_UNIT.AUTO);
 		},
-		openPlanModal(arrivalTab = false) {
-			if (arrivalTab) {
-				this.chargingPlanModal?.showArrivalTab();
-			} else {
-				this.chargingPlanModal?.showDepartureTab();
-			}
-			this.chargingPlanModal?.open(this.id);
+		openPlanModal(openArrivalTab = false) {
+			this.$emit("open-modal", openArrivalTab);
 		},
 		handleBoostStatus(status: VehicleStatus) {
 			this.statusOverride = status;
