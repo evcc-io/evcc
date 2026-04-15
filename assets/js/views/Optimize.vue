@@ -169,11 +169,6 @@ export default defineComponent({
 	head() {
 		return { title: "Optimize Debug" };
 	},
-	watch: {
-		evopt() {
-			this.optimizeCooldown = false;
-		},
-	},
 	computed: {
 		evopt() {
 			return store.state.evopt;
@@ -210,6 +205,11 @@ export default defineComponent({
 		},
 		formattedResponse() {
 			return this.evopt?.res ? formatCompactJson(this.evopt.res) : "";
+		},
+	},
+	watch: {
+		evopt() {
+			this.optimizeCooldown = false;
 		},
 	},
 	methods: {
