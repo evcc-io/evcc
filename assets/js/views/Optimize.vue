@@ -1,9 +1,19 @@
 <template>
 	<div class="container px-4 safe-area-inset">
 		<TopHeader title="Optimize Debug" />
-		<div class="alert alert-light mb-5">
-			This page is for development purposes only. Gives insights into the upcoming
-			optimization algorithm.
+		<div class="alert alert-light mb-5 d-flex justify-content-between align-items-center">
+			<span>
+				This page is for development purposes only. Gives insights into the upcoming
+				optimization algorithm.
+			</span>
+			<button
+				class="btn btn-sm ms-3 text-nowrap"
+				:class="optimizeCooldown ? 'btn-outline-secondary disabled' : 'btn-outline-dark'"
+				:disabled="optimizeCooldown"
+				@click="optimizeNow"
+			>
+				{{ optimizeCooldown ? "Requested" : "Optimize now" }}
+			</button>
 		</div>
 		<div class="row">
 			<main class="col-12">
@@ -133,6 +143,7 @@ import PriceChart from "../components/Optimize/PriceChart.vue";
 import TimeSeriesDataTable from "../components/Optimize/TimeSeriesDataTable.vue";
 import CopyButton from "../components/Optimize/CopyButton.vue";
 import { formatCompactJson } from "../components/Optimize/compactJson";
+import api from "../api";
 import store from "../store";
 import formatter from "../mixins/formatter";
 import colors from "../colors";
@@ -150,6 +161,11 @@ export default defineComponent({
 		CopyButton,
 	},
 	mixins: [formatter],
+	data() {
+		return {
+			optimizeCooldown: false,
+		};
+	},
 	head() {
 		return { title: "Optimize Debug" };
 	},
@@ -191,7 +207,16 @@ export default defineComponent({
 			return this.evopt?.res ? formatCompactJson(this.evopt.res) : "";
 		},
 	},
+	watch: {
+		evopt() {
+			this.optimizeCooldown = false;
+		},
+	},
 	methods: {
+		optimizeNow() {
+			api.post("optimize");
+			this.optimizeCooldown = true;
+		},
 		dimColorBy25Percent(color: string): string {
 			// Convert color to 25% opacity (40 in hex = 25% of 255)
 			return color?.toLowerCase().replace(/ff$/, "40") || color;
