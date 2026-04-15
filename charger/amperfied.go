@@ -202,16 +202,7 @@ func (wb *Amperfied) Enabled() (bool, error) {
 		return false, err
 	}
 
-	cur := binary.BigEndian.Uint16(b)
-
-	enabled := cur != 0
-	if enabled {
-		wb.mu.Lock()
-		wb.current = cur
-		wb.mu.Unlock()
-	}
-
-	return enabled, nil
+	return binary.BigEndian.Uint16(b) != 0, nil
 }
 
 // Enable implements the api.Charger interface
