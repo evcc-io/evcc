@@ -764,10 +764,10 @@ func (site *Site) updateGridMeter() error {
 	var importEnergy *float64
 	if energyMeter, ok := api.Cap[api.MeterImport](site.gridMeter); ok {
 		if f, err := energyMeter.ImportTotal(); err == nil {
-			mm.Energy = f
+			mm.Import = f
 			importEnergy = &f
 		} else {
-			site.log.ERROR.Printf("grid energy: %v", err)
+			site.log.ERROR.Printf("grid import energy: %v", err)
 		}
 	}
 

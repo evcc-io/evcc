@@ -10,13 +10,13 @@ import (
 type Measurement struct {
 	Title         string    `json:"title,omitempty"`
 	Icon          string    `json:"icon,omitempty"`
-	Power         float64   `json:"power"`
-	Energy        float64   `json:"energy,omitempty"`
-	Powers        []float64 `json:"powers,omitempty"`
-	Currents      []float64 `json:"currents,omitempty"`
-	ExcessDCPower float64   `json:"excessdcpower,omitempty"`
-	Capacity      *float64  `json:"capacity,omitempty"`
-	Soc           *float64  `json:"soc,omitempty"`
+	Power         float64   `json:"power"`                   // W
+	Import        float64   `json:"import,omitempty"`        // kWh
+	Powers        []float64 `json:"powers,omitempty"`        // W
+	Currents      []float64 `json:"currents,omitempty"`      // A
+	ExcessDCPower float64   `json:"excessdcpower,omitempty"` // W
+	Capacity      *float64  `json:"capacity,omitempty"`      // kWh
+	Soc           *float64  `json:"soc,omitempty"`           // %
 	Controllable  *bool     `json:"controllable,omitempty"`
 }
 
