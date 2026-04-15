@@ -57,7 +57,7 @@ func TestUpdateProfile(t *testing.T) {
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 	require.NoError(t, SetupSchema())
 
-	entity := entity{Name: "foo"}
+	entity := entity{Id: 2, Name: "foo"}
 	require.NoError(t, db.Instance.FirstOrCreate(&entity).Error)
 
 	// 2 days of data

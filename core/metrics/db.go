@@ -223,13 +223,13 @@ func importProfile(entity entity, from time.Time) (*[96]float64, error) {
 	}
 
 	// use Go's tz offset instead of SQLite's 'localtime'
-	tz := time.Now().Format("-07:00")
+	tz := from.Format("-07:00")
 
 	rows, err := db.Query(`SELECT min(ts) AS ts, avg(import) AS import
 		FROM meters
 		WHERE meter = ? AND ts >= ?
 		GROUP BY strftime("%H:%M", ts, '`+tz+`')
-		ORDER BY strftime("%H:%M", ts, '`+tz+`') ASC`, 1, from,
+		ORDER BY strftime("%H:%M", ts, '`+tz+`') ASC`, entity.Id, from,
 	)
 	if err != nil {
 		return nil, err
