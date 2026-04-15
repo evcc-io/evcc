@@ -182,6 +182,7 @@
       "auxMeter": "Smart consumer",
       "batteryStorage": "Battery storage",
       "consumer": "Consumer",
+      "extMeter": "Additional meter",
       "solarSystem": "Solar system"
     },
     "editor": {

@@ -163,7 +163,7 @@
                 "array"
               ],
               "items": {
-                "type": "string"
+                "$ref": "#/definitions/meterRef"
               },
               "minItems": 1,
               "uniqueItems": true
@@ -175,7 +175,7 @@
                 "array"
               ],
               "items": {
-                "type": "string"
+                "$ref": "#/definitions/meterRef"
               },
               "minItems": 1,
               "uniqueItems": true
@@ -187,7 +187,18 @@
                 "array"
               ],
               "items": {
-                "type": "string"
+                "$ref": "#/definitions/meterRef"
+              },
+              "uniqueItems": true
+            },
+            "ext": {
+              "description": "External meters (0 or more)",
+              "type": [
+                "string",
+                "array"
+              ],
+              "items": {
+                "$ref": "#/definitions/meterRef"
               },
               "uniqueItems": true
             }
@@ -318,6 +329,28 @@
           "type": "string"
         }
       }
+    },
+    "meterRef": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "required": [
+            "source"
+          ],
+          "properties": {
+            "source": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
     },
     "loglevel": {
       "enum": [

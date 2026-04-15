@@ -181,6 +181,7 @@
       "auxMeter": "Smarter Verbraucher",
       "batteryStorage": "Batterie",
       "consumer": "Verbraucher",
+      "extMeter": "Zusatzzähler",
       "solarSystem": "PV-Anlage"
     },
     "editor": {
