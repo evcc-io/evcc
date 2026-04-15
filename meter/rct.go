@@ -99,9 +99,9 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 	}
 
 	// decorate api.MeterImport
-	var ImportTotal func() (float64, error)
+	var importTotal func() (float64, error)
 	if usage == "grid" {
-		ImportTotal = m.ImportTotal
+		importTotal = m.importTotal
 	}
 
 	// decorate api.Curtailer
@@ -226,7 +226,7 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 		}
 	}
 
-	return decorateRCT(m, ImportTotal, curtail, curtailed, batterySoc, batterySocLimiter, batteryPowerLimiter, batteryMode, batteryCapacity), nil
+	return decorateRCT(m, importTotal, curtail, curtailed, batterySoc, batterySocLimiter, batteryPowerLimiter, batteryMode, batteryCapacity), nil
 }
 
 // CurrentPower implements the api.Meter interface
@@ -271,7 +271,7 @@ func (m *RCT) CurrentPower() (float64, error) {
 }
 
 // ImportTotal implements the api.MeterImport interface
-func (m *RCT) ImportTotal() (float64, error) {
+func (m *RCT) importTotal() (float64, error) {
 	switch m.usage {
 	case "grid":
 		res, err := m.queryFloat(rct.TotalEnergyGridWh)

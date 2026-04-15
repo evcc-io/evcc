@@ -53,7 +53,7 @@ func NewPhoenixEMEthFromConfig(ctx context.Context, other map[string]any) (api.C
 
 	var (
 		currentPower func() (float64, error)
-		ImportTotal  func() (float64, error)
+		importTotal  func() (float64, error)
 		currents     func() (float64, float64, float64, error)
 		voltages     func() (float64, float64, float64, error)
 	)
@@ -61,12 +61,12 @@ func NewPhoenixEMEthFromConfig(ctx context.Context, other map[string]any) (api.C
 	// check presence of meter by voltage on l1
 	if b, err := wb.conn.ReadInputRegisters(phxEMEthRegVoltages, 2); err == nil && encoding.Int32LswFirst(b) > 0 {
 		currentPower = wb.currentPower
-		ImportTotal = wb.ImportTotal
+		importTotal = wb.importTotal
 		currents = wb.currents
 		voltages = wb.voltages
 	}
 
-	return decoratePhoenixEMEth(wb, currentPower, ImportTotal, currents, voltages), nil
+	return decoratePhoenixEMEth(wb, currentPower, importTotal, currents, voltages), nil
 }
 
 // NewPhoenixEMEth creates a Phoenix charger
@@ -151,8 +151,8 @@ func (wb *PhoenixEMEth) currentPower() (float64, error) {
 	return float64(encoding.Int32LswFirst(b)*1e3) * phxEMEthSF, nil
 }
 
-// ImportTotal implements the api.MeterImport interface
-func (wb *PhoenixEMEth) ImportTotal() (float64, error) {
+// importTotal provides the api.MeterImport interface
+func (wb *PhoenixEMEth) importTotal() (float64, error) {
 	b, err := wb.conn.ReadInputRegisters(phxEMEthRegEnergy, 2)
 	if err != nil {
 		return 0, err

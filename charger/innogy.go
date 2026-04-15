@@ -70,17 +70,17 @@ func NewInnogyFromConfig(ctx context.Context, other map[string]any) (api.Charger
 		return nil, err
 	}
 
-	var ImportTotal func() (float64, error)
+	var importTotal func() (float64, error)
 	var voltages func() (float64, float64, float64, error)
 
 	// check presence of energy meter & voltages registers
 	if b, err := wb.conn.ReadInputRegisters(igyRegModbusTableVersion, 1); err == nil && binary.BigEndian.Uint16(b) >= 6 {
-		ImportTotal = wb.ImportTotal
+		importTotal = wb.importTotal
 		voltages = wb.voltages
 		wb.hasVoltages = true
 	}
 
-	return decorateInnogy(wb, ImportTotal, voltages), nil
+	return decorateInnogy(wb, importTotal, voltages), nil
 }
 
 //go:generate go tool decorate -f decorateInnogy -b *Innogy -r api.Charger -t api.MeterImport,api.PhaseVoltages
@@ -228,8 +228,8 @@ func (wb *Innogy) voltages() (float64, float64, float64, error) {
 	return res[0], res[1], res[2], nil
 }
 
-// ImportTotal implements the api.MeterImport interface
-func (wb *Innogy) ImportTotal() (float64, error) {
+// importTotal provides the api.MeterImport interface
+func (wb *Innogy) importTotal() (float64, error) {
 	b, err := wb.conn.ReadInputRegisters(igyRegEnergy, 2)
 	if err != nil {
 		return 0, err

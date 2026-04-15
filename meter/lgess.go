@@ -73,9 +73,9 @@ func NewLgEss(uri, usage, registration, password string, cache time.Duration, ca
 	}
 
 	// decorate api.MeterImport
-	var ImportTotal func() (float64, error)
+	var importTotal func() (float64, error)
 	if m.usage == "grid" && essType != lgpcs.LgEss15 {
-		ImportTotal = m.ImportTotal
+		importTotal = m.importTotal
 	}
 
 	// decorate battery
@@ -91,7 +91,7 @@ func NewLgEss(uri, usage, registration, password string, cache time.Duration, ca
 		}
 	}
 
-	return decorateLgEss(m, ImportTotal, capacity, batterySoc, batterySocLimiter, batteryPowerLimits.Decorator(), setBatteryMode), nil
+	return decorateLgEss(m, importTotal, capacity, batterySoc, batterySocLimiter, batteryPowerLimits.Decorator(), setBatteryMode), nil
 }
 
 // CurrentPower implements the api.Meter interface
@@ -114,7 +114,7 @@ func (m *LgEss) CurrentPower() (float64, error) {
 }
 
 // ImportTotal implements the api.MeterImport interface
-func (m *LgEss) ImportTotal() (float64, error) {
+func (m *LgEss) importTotal() (float64, error) {
 	data, err := m.conn.Data()
 	if err != nil {
 		return 0, err

@@ -79,7 +79,7 @@ func NewWallbeFromConfig(ctx context.Context, other map[string]any) (api.Charger
 	}
 
 	if cc.Meter.Energy {
-		energy = wb.ImportTotal
+		energy = wb.importTotal
 	}
 
 	if cc.Meter.Currents {
@@ -178,8 +178,8 @@ func (wb *Wallbe) currentPower() (float64, error) {
 	return rs485.RTUInt32ToFloat64Swapped(b), nil
 }
 
-// ImportTotal implements the api.MeterImport interface
-func (wb *Wallbe) ImportTotal() (float64, error) {
+// importTotal provides the api.MeterImport interface
+func (wb *Wallbe) importTotal() (float64, error) {
 	b, err := wb.conn.ReadInputRegisters(wbRegEnergy, 2)
 	if err != nil {
 		return 0, err

@@ -93,14 +93,14 @@ func NewMbmdFromConfig(ctx context.Context, other map[string]any) (api.Meter, er
 	}
 
 	// decorate energy
-	var ImportTotal func() (float64, error)
+	var importTotal func() (float64, error)
 	if cc.Energy != "" {
 		g, err := mbmd.deviceOp(ops, cc.Energy)
 		if err != nil {
 			return nil, fmt.Errorf("invalid measurement for energy: %s", cc.Energy)
 		}
 
-		ImportTotal = g
+		importTotal = g
 	}
 
 	// decorate currents
@@ -135,10 +135,10 @@ func NewMbmdFromConfig(ctx context.Context, other map[string]any) (api.Meter, er
 	m, _ := NewConfigurable(powerG)
 
 	if soc != nil {
-		return m.DecorateBattery(ImportTotal, soc, cc.batteryCapacity.Decorator(), cc.batterySocLimits.Decorator(), cc.batteryPowerLimits.Decorator(), nil), nil
+		return m.DecorateBattery(importTotal, soc, cc.batteryCapacity.Decorator(), cc.batterySocLimits.Decorator(), cc.batteryPowerLimits.Decorator(), nil), nil
 	}
 
-	return m.Decorate(ImportTotal, currentsG, voltagesG, powersG, nil), nil
+	return m.Decorate(importTotal, currentsG, voltagesG, powersG, nil), nil
 }
 
 // deviceOp checks is RS485 device supports operation

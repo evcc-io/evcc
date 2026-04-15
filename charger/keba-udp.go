@@ -54,13 +54,13 @@ func NewKebaUdpFromConfig(other map[string]any) (api.Charger, error) {
 		return nil, err
 	}
 
-	energy, err := k.ImportTotal()
+	energy, err := k.importTotal()
 	if err != nil {
 		return nil, err
 	}
 
 	if energy > 0 {
-		return decorateKebaUdp(k, k.currentPower, k.ImportTotal, k.currents), nil
+		return decorateKebaUdp(k, k.currentPower, k.importTotal, k.currents), nil
 	}
 
 	return k, err
@@ -281,8 +281,8 @@ func (c *KebaUdp) currentPower() (float64, error) {
 	return float64(kr.P) / 1e3, err
 }
 
-// ImportTotal implements the api.MeterImport interface
-func (c *KebaUdp) ImportTotal() (float64, error) {
+// importTotal provides the api.MeterImport interface
+func (c *KebaUdp) importTotal() (float64, error) {
 	var kr keba.Report3
 	err := c.roundtrip("report", 3, &kr)
 

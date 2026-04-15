@@ -162,11 +162,11 @@ func NewSmartEVSE3(uri string, cache time.Duration) (api.Charger, error) {
 	}
 
 	// decorate optional EV meter if configured in SmartEVSE
-	var currentPower, ImportTotal func() (float64, error)
+	var currentPower, importTotal func() (float64, error)
 	var currents func() (float64, float64, float64, error)
 	if res.EvMeter.Description != "" && res.EvMeter.Description != "Disabled" {
 		currentPower = wb.currentPower
-		ImportTotal = wb.ImportTotal
+		importTotal = wb.importTotal
 		currents = wb.currents
 	}
 
@@ -186,7 +186,7 @@ func NewSmartEVSE3(uri string, cache time.Duration) (api.Charger, error) {
 		statusReason = wb.statusReason
 	}
 
-	return decorateSmartEVSE3(wb, currentPower, ImportTotal, currents, phases1p3p, getPhases, identify, statusReason), nil
+	return decorateSmartEVSE3(wb, currentPower, importTotal, currents, phases1p3p, getPhases, identify, statusReason), nil
 }
 
 // post issues a POST request to the SmartEVSE with given query parameters.
@@ -325,8 +325,8 @@ func (wb *SmartEVSE3) currentPower() (float64, error) {
 	return res.EvMeter.ImportActivePower, nil
 }
 
-// ImportTotal implements the api.MeterImport interface
-func (wb *SmartEVSE3) ImportTotal() (float64, error) {
+// importTotal provides the api.MeterImport interface
+func (wb *SmartEVSE3) importTotal() (float64, error) {
 	res, err := wb.apiG.Get()
 	if err != nil {
 		return 0, err

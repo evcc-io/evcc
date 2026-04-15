@@ -142,7 +142,7 @@ func NewBenderCC(ctx context.Context, uri string, id uint8, cache time.Duration)
 		currentPower     func() (float64, error)
 		currents         func() (float64, float64, float64, error)
 		voltages         func() (float64, float64, float64, error)
-		ImportTotal      func() (float64, error)
+		importTotal      func() (float64, error)
 		soc              func() (float64, error)
 		identify         func() (string, error)
 		maxCurrentMillis func(float64) error
@@ -159,7 +159,7 @@ func NewBenderCC(ctx context.Context, uri string, id uint8, cache time.Duration)
 	if b, err := wb.conn.ReadHoldingRegisters(reg, 2); err == nil && binary.BigEndian.Uint32(b) != math.MaxUint32 {
 		currentPower = wb.currentPower
 		currents = wb.currents
-		ImportTotal = wb.ImportTotal
+		importTotal = wb.importTotal
 
 		// check presence of "ocpp meter"
 		if b, err := wb.conn.ReadHoldingRegisters(bendRegVoltages, 2); err == nil && binary.BigEndian.Uint32(b) > 0 {
@@ -205,7 +205,7 @@ func NewBenderCC(ctx context.Context, uri string, id uint8, cache time.Duration)
 		identify = wb.identify
 	}
 
-	return decorateBenderCC(wb, currentPower, currents, voltages, ImportTotal, soc, identify, maxCurrentMillis, phases1p3p, getPhases), nil
+	return decorateBenderCC(wb, currentPower, currents, voltages, importTotal, soc, identify, maxCurrentMillis, phases1p3p, getPhases), nil
 }
 
 // heartbeat ensures that SEMP device control updates are sent about once per minute
@@ -387,8 +387,8 @@ func (wb *BenderCC) currentPower() (float64, error) {
 // removed: https://github.com/evcc-io/evcc/issues/13726
 // var _ api.ChargeRater = (*BenderCC)(nil)
 
-// ImportTotal implements the api.MeterImport interface
-func (wb *BenderCC) ImportTotal() (float64, error) {
+// importTotal implements the api.MeterImport interface
+func (wb *BenderCC) importTotal() (float64, error) {
 	if wb.legacy {
 		b, err := wb.conn.ReadHoldingRegisters(bendRegPhaseEnergy, 6)
 		if err != nil {

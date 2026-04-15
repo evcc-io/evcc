@@ -86,7 +86,7 @@ func NewEtekFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 	// If register value is 65535 (0xffff), no external meter is configured
 	var (
 		currentPower func() (float64, error)
-		ImportTotal  func() (float64, error)
+		importTotal  func() (float64, error)
 		voltages     func() (float64, float64, float64, error)
 	)
 
@@ -100,7 +100,7 @@ func NewEtekFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 	// Check energy register (95)
 	if b, err := wb.conn.ReadHoldingRegisters(etekRegMeterImportAddr, 1); err == nil {
 		if binary.BigEndian.Uint16(b) != etekRegInvalidMeterAddr {
-			ImportTotal = wb.ImportTotal
+			importTotal = wb.importTotal
 		}
 	}
 
@@ -114,7 +114,7 @@ func NewEtekFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 		}
 	}
 
-	return decorateEtek(wb, currentPower, ImportTotal, voltages), nil
+	return decorateEtek(wb, currentPower, importTotal, voltages), nil
 }
 
 // NewEtek creates an ETEK EKEPC2 charger
@@ -250,8 +250,8 @@ func (wb *Etek) currentPower() (float64, error) {
 	return float64(binary.BigEndian.Uint16(b)), nil
 }
 
-// ImportTotal implements the api.MeterImport interface
-func (wb *Etek) ImportTotal() (float64, error) {
+// importTotal provides the api.MeterImport interface
+func (wb *Etek) importTotal() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(etekRegEnergy, 2)
 	if err != nil {
 		return 0, err

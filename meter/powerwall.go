@@ -142,9 +142,9 @@ func NewPowerWall(uri, usage, user, password string, cache time.Duration, refres
 	}
 
 	// decorate api.MeterImport
-	var ImportTotal func() (float64, error)
+	var importTotal func() (float64, error)
 	if m.usage == "load" || m.usage == "solar" {
-		ImportTotal = m.ImportTotal
+		importTotal = m.importTotal
 	}
 
 	// decorate battery
@@ -183,7 +183,7 @@ func NewPowerWall(uri, usage, user, password string, cache time.Duration, refres
 		})
 	}
 
-	return decoratePowerWall(m, ImportTotal, batterySoc, batteryCapacity, batterySocLimiter, batteryPowerLimiter, batModeS), nil
+	return decoratePowerWall(m, importTotal, batterySoc, batteryCapacity, batterySocLimiter, batteryPowerLimiter, batModeS), nil
 }
 
 var _ api.Meter = (*PowerWall)(nil)
@@ -203,7 +203,7 @@ func (m *PowerWall) CurrentPower() (float64, error) {
 }
 
 // ImportTotal implements the api.MeterImport interface
-func (m *PowerWall) ImportTotal() (float64, error) {
+func (m *PowerWall) importTotal() (float64, error) {
 	res, err := m.meterG()
 	if err != nil {
 		return 0, err

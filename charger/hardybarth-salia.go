@@ -140,7 +140,7 @@ func NewSalia(ctx context.Context, uri, user, password string, cache time.Durati
 
 	var (
 		currentPower func() (float64, error)
-		ImportTotal  func() (float64, error)
+		importTotal  func() (float64, error)
 		currents     func() (float64, float64, float64, error)
 		phasesG      func() (int, error)
 		phasesS      func(int) error
@@ -148,7 +148,7 @@ func NewSalia(ctx context.Context, uri, user, password string, cache time.Durati
 
 	if res.Secc.Port0.Metering.Meter.Available > 0 {
 		currentPower = wb.currentPower
-		ImportTotal = wb.ImportTotal
+		importTotal = wb.importTotal
 		currents = wb.currents
 	}
 
@@ -157,7 +157,7 @@ func NewSalia(ctx context.Context, uri, user, password string, cache time.Durati
 		phasesS = wb.phases1p3p
 	}
 
-	return decorateSalia(wb, currentPower, ImportTotal, currents, phasesS, phasesG), nil
+	return decorateSalia(wb, currentPower, importTotal, currents, phasesS, phasesG), nil
 }
 
 func (wb *Salia) heartbeat(ctx context.Context) {
@@ -273,8 +273,8 @@ func (wb *Salia) currentPower() (float64, error) {
 	return res.Secc.Port0.Metering.Power.ActiveTotal.Actual / 10, err
 }
 
-// ImportTotal implements the api.MeterImport interface
-func (wb *Salia) ImportTotal() (float64, error) {
+// importTotal provides the api.MeterImport interface
+func (wb *Salia) importTotal() (float64, error) {
 	res, err := wb.apiG.Get()
 	return res.Secc.Port0.Metering.Energy.ActiveImport.Actual / 1e3, err
 }

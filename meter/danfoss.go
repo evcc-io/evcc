@@ -98,9 +98,9 @@ func NewDanfossTLX(ctx context.Context, cfg comlynx.Config, maxACPower func() fl
 	}
 
 	// build decorator functions based on capabilities
-	var ImportTotal func() (float64, error)
+	var importTotal func() (float64, error)
 	if hasEnergy == nil {
-		ImportTotal = m.ImportTotal
+		importTotal = m.importTotal
 	}
 
 	var voltages, currents, powers func() (float64, float64, float64, error)
@@ -119,7 +119,7 @@ func NewDanfossTLX(ctx context.Context, cfg comlynx.Config, maxACPower func() fl
 		_ = conn.Close()
 	}()
 
-	return decorateMeter(m, ImportTotal, currents, voltages, powers, maxACPower), nil
+	return decorateMeter(m, importTotal, currents, voltages, powers, maxACPower), nil
 }
 
 func (m *DanfossTLX) CurrentPower() (float64, error) {
@@ -134,7 +134,7 @@ func (m *DanfossTLX) CurrentPower() (float64, error) {
 	return float64(v), err
 }
 
-func (m *DanfossTLX) ImportTotal() (float64, error) {
+func (m *DanfossTLX) importTotal() (float64, error) {
 	v, err := m.conn.Read(comlynx.ParamTotalEnergy)
 	if err != nil {
 		return 0, err

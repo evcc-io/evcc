@@ -114,9 +114,9 @@ func NewDsmr(uri, energy string, timeout time.Duration) (api.Meter, error) {
 	}
 
 	// decorate energy reading
-	var ImportTotal func() (float64, error)
+	var importTotal func() (float64, error)
 	if energy != "" {
-		ImportTotal = m.ImportTotal
+		importTotal = m.importTotal
 	}
 
 	// decorate currents
@@ -133,7 +133,7 @@ func NewDsmr(uri, energy string, timeout time.Duration) (api.Meter, error) {
 		currents = m.currents
 	}
 
-	return decorateDsmr(m, ImportTotal, currents), nil
+	return decorateDsmr(m, importTotal, currents), nil
 }
 
 // based on https://github.com/basvdlei/gotsmart/blob/master/gotsmart.go
@@ -287,7 +287,7 @@ func (m *Dsmr) CurrentPower() (float64, error) {
 }
 
 // ImportTotal implements the api.MeterImport interface
-func (m *Dsmr) ImportTotal() (float64, error) {
+func (m *Dsmr) importTotal() (float64, error) {
 	return m.get(m.energy)
 }
 

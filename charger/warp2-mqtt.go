@@ -61,10 +61,10 @@ func NewWarp2FromConfig(other map[string]any) (api.Charger, error) {
 		return nil, err
 	}
 
-	var currentPower, ImportTotal func() (float64, error)
+	var currentPower, importTotal func() (float64, error)
 	if wb.hasFeature(cc.Topic, warp.FeatureMeter, cc.Timeout) {
 		currentPower = wb.currentPower
-		ImportTotal = wb.ImportTotal
+		importTotal = wb.importTotal
 	}
 
 	var currents, voltages func() (float64, float64, float64, error)
@@ -87,7 +87,7 @@ func NewWarp2FromConfig(other map[string]any) (api.Charger, error) {
 		}
 	}
 
-	return decorateWarp2(wb, currentPower, ImportTotal, currents, voltages, identity, phases, getPhases), nil
+	return decorateWarp2(wb, currentPower, importTotal, currents, voltages, identity, phases, getPhases), nil
 }
 
 // NewWarp2 creates a new configurable charger
@@ -248,8 +248,8 @@ func (wb *Warp2) currentPower() (float64, error) {
 	return res.Power, err
 }
 
-// ImportTotal implements the api.MeterImport interface
-func (wb *Warp2) ImportTotal() (float64, error) {
+// importTotal provides the api.MeterImport interface
+func (wb *Warp2) importTotal() (float64, error) {
 	var res warp.MeterValues
 	err := wb.meterG(&res)
 	return res.EnergyAbs, err

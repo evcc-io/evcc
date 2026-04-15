@@ -41,9 +41,9 @@ func NewMovingAverageFromConfig(ctx context.Context, other map[string]any) (api.
 	meter, _ := NewConfigurable(mav.CurrentPower)
 
 	// decorate energy reading
-	var ImportTotal func() (float64, error)
+	var importTotal func() (float64, error)
 	if m, ok := api.Cap[api.MeterImport](m); ok {
-		ImportTotal = m.ImportTotal
+		importTotal = m.ImportTotal
 	}
 
 	// decorate battery reading
@@ -71,10 +71,10 @@ func NewMovingAverageFromConfig(ctx context.Context, other map[string]any) (api.
 	}
 
 	if batterySoc != nil {
-		return meter.DecorateBattery(ImportTotal, batterySoc, cc.Meter.batteryCapacity.Decorator(), nil, nil, nil), nil
+		return meter.DecorateBattery(importTotal, batterySoc, cc.Meter.batteryCapacity.Decorator(), nil, nil, nil), nil
 	}
 
-	return meter.Decorate(ImportTotal, currents, voltages, powers, nil), nil
+	return meter.Decorate(importTotal, currents, voltages, powers, nil), nil
 }
 
 type MovingAverage struct {
