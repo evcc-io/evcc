@@ -181,12 +181,7 @@ export default {
 			if (entry.warning) {
 				return "value--warning";
 			}
-			if (
-				entry.muted ||
-				entry.value === false ||
-				entry.value === null ||
-				entry.value === undefined
-			) {
+			if (entry.muted || entry.value === null || entry.value === undefined) {
 				return "value--muted";
 			}
 			return "";
