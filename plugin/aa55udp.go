@@ -34,11 +34,48 @@ type AA55UDP struct {
 	offset   int    // byte offset into the response payload (0 for register reads)
 	decode   string // int32be | uint32be | uint32nan | int16be | uint16be | float32be
 	scale    float64
-	useCache bool // true for block-read/cached mode, false for simple register read
+	useCache bool            // true for block-read/cached mode, false for simple register read
+	cache    *responseCacheT // response cache for block-read mode
 }
 
 func init() {
 	registry.AddCtx("aa55udp", NewAA55UDPFromConfig)
+}
+
+// readConfig holds the resolved read mode configuration.
+type readConfig struct {
+	pdu      []byte
+	offset   int
+	useCache bool
+}
+
+// buildReadConfig normalizes config input and returns the resolved read mode.
+func buildReadConfig(host string, id int, pdu string, register uint16, count uint16, offset int) (readConfig, error) {
+	// PDU/block mode
+	if pdu != "" {
+		// Reject mixed configuration where PDU and register parameters are both set.
+		if register != 0 || count != 2 || id != int(aa55InverterAddr) {
+			return readConfig{}, errors.New("aa55udp: pdu cannot be combined with register/count/id settings")
+		}
+		if offset < 0 {
+			return readConfig{}, fmt.Errorf("aa55udp: offset must be non-negative, got %d", offset)
+		}
+		pduBytes, err := pduFromHex(pdu, 6, "pdu")
+		if err != nil {
+			return readConfig{}, err
+		}
+		return readConfig{pdu: pduBytes, offset: offset, useCache: true}, nil
+	}
+
+	// Register mode
+	if count == 0 {
+		return readConfig{}, errors.New("aa55udp: count must be ≥ 1")
+	}
+	if id < 0 || id > 255 {
+		return readConfig{}, fmt.Errorf("aa55udp: id must be 0-255, got %d", id)
+	}
+	pduBytes := buildPDU(byte(id), register, count)
+	return readConfig{pdu: pduBytes, offset: 0, useCache: false}, nil
 }
 
 // NewAA55UDPFromConfig creates an AA55UDP plugin.
@@ -61,7 +98,7 @@ func init() {
 //	offset:   78              # byte offset into the response payload
 //	decode:   int32be
 //	scale:    1.0
-func NewAA55UDPFromConfig(_ context.Context, other map[string]interface{}) (Plugin, error) {
+func NewAA55UDPFromConfig(_ context.Context, other map[string]any) (Plugin, error) {
 	cc := struct {
 		Host     string  `mapstructure:"host"`
 		Id       int     `mapstructure:"id"`
@@ -93,62 +130,57 @@ func NewAA55UDPFromConfig(_ context.Context, other map[string]interface{}) (Plug
 		return nil, fmt.Errorf("aa55udp: dial %s: %w", cc.Host, err)
 	}
 
-	p := &AA55UDP{
-		log:    util.NewLogger("aa55udp"),
-		conn:   conn,
-		decode: cc.Decode,
-		scale:  cc.Scale,
+	cfg, err := buildReadConfig(cc.Host, cc.Id, cc.PDU, cc.Register, cc.Count, cc.Offset)
+	if err != nil {
+		return nil, err
 	}
 
-	if cc.PDU != "" {
-		// Block mode: PDU-based read with caching.
-		if cc.Register != 0 || cc.Count != 2 || cc.Id != int(aa55InverterAddr) {
-			return nil, errors.New("aa55udp: pdu cannot be combined with register/count/id settings")
-		}
-		if cc.Offset < 0 {
-			return nil, fmt.Errorf("aa55udp: offset must be non-negative, got %d", cc.Offset)
-		}
-		pdu, err := buildPDUFromHex(cc.PDU)
-		if err != nil {
-			return nil, err
-		}
-		p.pdu = pdu
-		p.offset = cc.Offset
-		p.useCache = true
-	} else {
-		// Register mode: id/register/count-based read without caching.
-		if cc.Count == 0 {
-			return nil, errors.New("aa55udp: count must be ≥ 1")
-		}
-		if cc.Id < 0 || cc.Id > 255 {
-			return nil, fmt.Errorf("aa55udp: id must be 0-255, got %d", cc.Id)
-		}
-		p.pdu = buildPDU(byte(cc.Id), cc.Register, cc.Count)
-		p.offset = 0
-		p.useCache = false
+	p := &AA55UDP{
+		log:      util.NewLogger("aa55udp"),
+		conn:     conn,
+		pdu:      cfg.pdu,
+		offset:   cfg.offset,
+		decode:   cc.Decode,
+		scale:    cc.Scale,
+		useCache: cfg.useCache,
+		cache:    newResponseCacheT(),
 	}
 
 	return p, nil
 }
 
+// decodeMeta describes the properties of a supported decode type.
+type decodeMeta struct {
+	size int
+}
+
+// decodeMeta returns metadata for a decode type, or false if unknown.
+func decodeMetadata(name string) (decodeMeta, bool) {
+	switch name {
+	case "float32be", "int32be", "uint32be", "uint32nan":
+		return decodeMeta{size: 4}, true
+	case "int16be", "uint16be":
+		return decodeMeta{size: 2}, true
+	default:
+		return decodeMeta{}, false
+	}
+}
+
 // validateDecode returns an error if decode is not a supported type.
 func validateDecode(decode string) error {
-	switch decode {
-	case "int32be", "uint32be", "uint32nan", "int16be", "uint16be", "float32be":
-		return nil
+	if _, ok := decodeMetadata(decode); !ok {
+		return fmt.Errorf("aa55udp: unsupported decode %q (want int32be|uint32be|uint32nan|int16be|uint16be|float32be)", decode)
 	}
-	return fmt.Errorf("aa55udp: unsupported decode %q (want int32be|uint32be|uint32nan|int16be|uint16be|float32be)", decode)
+	return nil
 }
 
 // decodeSize returns the number of bytes required to decode the given type.
+// Panics if decode type is unknown (should only happen if validateDecode was skipped).
 func decodeSize(decode string) int {
-	switch decode {
-	case "float32be", "int32be", "uint32be", "uint32nan":
-		return 4
-	case "int16be", "uint16be":
-		return 2
+	if info, ok := decodeMetadata(decode); ok {
+		return info.size
 	}
-	return 0
+	panic(fmt.Sprintf("aa55udp: unknown decode type %q", decode))
 }
 
 // FloatGetter implements the evcc Plugin interface.
@@ -176,41 +208,32 @@ func (p *AA55UDP) query() (float64, error) {
 	return v * p.scale, nil
 }
 
-// fetch returns the response payload, using caching for block mode.
+// fetch returns the response payload, using caching for block-read mode.
 func (p *AA55UDP) fetch() ([]byte, error) {
-	if p.useCache {
-		return p.fetchWithCache()
-	}
-	return p.fetchDirect()
-}
-
-// fetchDirect performs a direct UDP request/response exchange without caching.
-func (p *AA55UDP) fetchDirect() ([]byte, error) {
 	packet := append(p.pdu, modbusCRC16(p.pdu)...)
-	raw, err := p.sendRecv(packet)
-	if err != nil {
-		return nil, err
+
+	// No caching: direct send/recv
+	if !p.useCache {
+		raw, err := p.sendRecv(packet)
+		if err != nil {
+			return nil, err
+		}
+		payload, err := stripAA55Header(raw)
+		if err != nil {
+			return nil, fmt.Errorf("aa55udp: %w", err)
+		}
+		return payload, nil
 	}
 
-	payload, err := stripAA55Header(raw)
-	if err != nil {
-		return nil, fmt.Errorf("aa55udp: %w", err)
-	}
-
-	return payload, nil
-}
-
-// fetchWithCache performs a UDP request/response with response caching for shared reads.
-func (p *AA55UDP) fetchWithCache() ([]byte, error) {
+	// Caching: shared reads by (addr, pdu)
 	key := p.conn.RemoteAddr().String() + "/" + hex.EncodeToString(p.pdu)
 
-	if payload, ok := responseCache.get(key); ok {
+	if payload, ok := p.cache.get(key); ok {
 		pduHex := hex.EncodeToString(p.pdu)
 		p.log.TRACE.Printf("cache hit for %s pdu=%s", p.conn.RemoteAddr(), pduHex)
 		return payload, nil
 	}
 
-	packet := append(p.pdu, modbusCRC16(p.pdu)...)
 	raw, err := p.sendRecv(packet)
 	if err != nil {
 		return nil, err
@@ -221,7 +244,7 @@ func (p *AA55UDP) fetchWithCache() ([]byte, error) {
 		return nil, fmt.Errorf("aa55udp: %w", err)
 	}
 
-	responseCache.put(key, payload)
+	p.cache.put(key, payload)
 	return payload, nil
 }
 
@@ -329,7 +352,7 @@ func modbusCRC16(data []byte) []byte {
 	crc := uint16(0xFFFF)
 	for _, b := range data {
 		crc ^= uint16(b)
-		for i := 0; i < 8; i++ {
+		for range 8 {
 			if crc&0x0001 != 0 {
 				crc = (crc >> 1) ^ 0xA001
 			} else {

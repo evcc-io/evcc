@@ -14,10 +14,7 @@ type cacheEntry struct {
 	expiresAt time.Time
 }
 
-const (
-	responseCacheTTL     = 2 * time.Second
-	responseCacheMaxSize = 64 // max number of (host, pdu) pairs to cache
-)
+const responseCacheTTL = 2 * time.Second
 
 // responseCacheT caches block-read payloads keyed by "raddr/pdu_hex" with a
 // short TTL. All aa55udp source blocks sharing the same (host, pdu) pair
@@ -34,51 +31,53 @@ type responseCacheT struct {
 
 func newResponseCacheT() *responseCacheT {
 	return &responseCacheT{
-		data: make(map[string]cacheEntry, responseCacheMaxSize),
+		data: make(map[string]cacheEntry),
 	}
 }
 
 // get returns the cached payload if it exists and is fresh, or (nil, false) otherwise.
+// Expired entries are deleted on access.
 func (c *responseCacheT) get(key string) ([]byte, bool) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	if entry, ok := c.data[key]; ok && time.Now().Before(entry.expiresAt) {
-		return entry.payload, true
+
+	entry, ok := c.data[key]
+	if !ok {
+		return nil, false
 	}
-	return nil, false
+	if time.Now().After(entry.expiresAt) {
+		delete(c.data, key)
+		return nil, false
+	}
+	return entry.payload, true
 }
 
-// put inserts a payload into the cache, evicting expired entries if needed.
+// put inserts or overwrites a payload in the cache.
 func (c *responseCacheT) put(key string, payload []byte) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	if len(c.data) >= responseCacheMaxSize {
-		now := time.Now()
-		for k, v := range c.data {
-			if now.After(v.expiresAt) {
-				delete(c.data, k)
-			}
-		}
-	}
+
 	c.data[key] = cacheEntry{
 		payload:   payload,
 		expiresAt: time.Now().Add(responseCacheTTL),
 	}
 }
 
-var responseCache = newResponseCacheT()
-
-// buildPDUFromHex decodes a hex string (spaces allowed) into exactly 6 bytes,
-// representing a complete PDU body including the inverter address byte.
-// Used exclusively in block read mode where the caller supplies the full PDU.
-func buildPDUFromHex(s string) ([]byte, error) {
+// pduFromHex decodes a hex string (spaces allowed) into a PDU of the specified length.
+func pduFromHex(s string, wantLen int, context string) ([]byte, error) {
 	clean := strings.ReplaceAll(s, " ", "")
 	b, err := hex.DecodeString(clean)
 	if err != nil {
-		return nil, fmt.Errorf("aa55udp: invalid pdu %q: %w", s, err)
+		return nil, fmt.Errorf("aa55udp: invalid %s %q: %w", context, s, err)
 	}
-	if len(b) != 6 {
-		return nil, fmt.Errorf("aa55udp: pdu must be 6 bytes, got %d", len(b))
+	if len(b) != wantLen {
+		return nil, fmt.Errorf("aa55udp: %s must be %d bytes, got %d", context, wantLen, len(b))
 	}
 	return b, nil
+}
+
+// buildPDUFromHex decodes a hex string (spaces allowed) into exactly 6 bytes,
+// representing a complete PDU body including the inverter address byte.
+func buildPDUFromHex(s string) ([]byte, error) {
+	return pduFromHex(s, 6, "pdu")
 }
