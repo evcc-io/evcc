@@ -35,6 +35,12 @@ func filterConfigurable(ref []string) []string {
 	})
 }
 
+// Optimize updates the optimizer
+func (site *Site) Optimize() error {
+	go site.optimizerUpdateAsync()
+	return nil
+}
+
 // GetTitle returns the title
 func (site *Site) GetTitle() string {
 	site.RLock()
