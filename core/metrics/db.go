@@ -69,6 +69,10 @@ func QueryImportEnergy(from, to time.Time, aggregate string) ([]Series, error) {
 
 	addDuration := aggregateDurations[aggregate]
 
+	// match timezone of stored timestamps for correct SQLite comparison
+	from = from.Local()
+	to = to.Local()
+
 	// use Go's tz offset instead of SQLite's 'localtime'
 	tz := time.Now().Format("-07:00")
 
