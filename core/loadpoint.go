@@ -17,6 +17,7 @@ import (
 	"github.com/evcc-io/evcc/core/coordinator"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/core/metrics"
 	"github.com/evcc-io/evcc/core/planner"
 	"github.com/evcc-io/evcc/core/session"
 	"github.com/evcc-io/evcc/core/settings"
@@ -137,10 +138,11 @@ type Loadpoint struct {
 	chargeRater      api.ChargeRater
 	chargedAtStartup float64 // session energy at startup
 
-	circuit        api.Circuit // Circuit
-	chargeMeter    api.Meter   // Charger usage meter
-	vehicle        api.Vehicle // Currently active vehicle
-	defaultVehicle api.Vehicle // Default vehicle (disables detection)
+	circuit        api.Circuit        // Circuit
+	chargeMeter    api.Meter          // Charger usage meter
+	chargeEnergy   *metrics.Collector // Charger usage collector
+	vehicle        api.Vehicle        // Currently active vehicle
+	defaultVehicle api.Vehicle        // Default vehicle (disables detection)
 	coordinator    coordinator.API
 	socEstimator   *soc.Estimator
 
@@ -266,6 +268,15 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, other 
 	}
 
 	lp.configureChargerType(lp.charger)
+
+	// add collector
+	if lp.chargeMeter != nil {
+		me, err := metrics.NewCollector(metrics.Charge, lp.GetTitle())
+		if err != nil {
+			return lp, err
+		}
+		lp.chargeEnergy = me
+	}
 
 	// phase switching defaults based on charger capabilities
 	if !lp.hasPhaseSwitching() {
@@ -1730,9 +1741,17 @@ func (lp *Loadpoint) publishChargeProgress() {
 	// TODO deprecated: use sessionEnergy instead
 	lp.publish(keys.ChargedEnergy, lp.GetChargedEnergy())
 	lp.publish(keys.ChargeDuration, lp.chargeDuration)
+
+	// update energy, prefer totals
+	var importTotal *float64
 	if api.HasCap[api.MeterEnergy](lp.chargeMeter) {
-		lp.publish(keys.ChargeTotalImport, lp.chargeMeterTotal())
+		if f := lp.chargeMeterTotal(); f > 0 {
+			lp.publish(keys.ChargeTotalImport, f)
+			importTotal = &f
+		}
 	}
+
+	lp.chargeEnergy.AddEnergy(importTotal, nil, lp.chargePower)
 }
 
 // publish state of charge, remaining charge duration and range
