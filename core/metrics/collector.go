@@ -4,11 +4,10 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/server/db"
+	"github.com/evcc-io/evcc/tariff"
 )
 
 const (
-	SlotDuration = 15 * time.Minute
-
 	// groups
 	Grid = "grid"
 	PV   = "pv"
@@ -53,7 +52,7 @@ func (c *Collector) process(fun func()) error {
 
 	fun()
 
-	if slotStart := now.Truncate(SlotDuration); slotStart.After(c.started) {
+	if slotStart := now.Truncate(tariff.SlotDuration); slotStart.After(c.started) {
 		// skip incomplete first slot
 		if !c.started.IsZero() {
 			if err := c.persist(); err != nil {

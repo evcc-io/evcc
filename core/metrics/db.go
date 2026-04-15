@@ -208,7 +208,7 @@ func SetupSchema() error {
 func persist(entity entity, ts time.Time, imp, exp float64) error {
 	return db.Instance.Create(&meter{
 		Meter:     entity.Id,
-		Timestamp: ts.Truncate(SlotDuration),
+		Timestamp: ts.Truncate(tariff.SlotDuration),
 		Import:    imp,
 		Export:    exp,
 	}).Error
