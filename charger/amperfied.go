@@ -38,6 +38,7 @@ type Amperfied struct {
 	mu             sync.Mutex
 	current        uint16
 	phases         int
+	enabled        bool
 	wakeup         bool
 	phaseSwitchEnd time.Time
 }
@@ -112,14 +113,14 @@ func NewAmperfied(ctx context.Context, uri string, slaveID uint8, phases bool) (
 		go wb.heartbeat(ctx, time.Duration(u)*time.Millisecond/2)
 	}
 
-	// disable phase-switch waiting time
-	if err := wb.set(ampRegPhaseSwitchWaitingTime, 0); err != nil {
-		return nil, fmt.Errorf("phase-switch waiting time: %w", err)
-	}
-
 	var phases1p3p func(int) error
 	var phasesG func() (int, error)
 	if phases {
+		// disable phase-switch waiting time
+		if err := wb.set(ampRegPhaseSwitchWaitingTime, 0); err != nil {
+			return nil, fmt.Errorf("phase-switch waiting time: %w", err)
+		}
+
 		phases1p3p = wb.phases1p3p
 		phasesG = wb.getPhases
 	}
@@ -205,11 +206,12 @@ func (wb *Amperfied) Enabled() (bool, error) {
 	cur := binary.BigEndian.Uint16(b)
 
 	enabled := cur != 0
+	wb.mu.Lock()
+	wb.enabled = enabled
 	if enabled {
-		wb.mu.Lock()
 		wb.current = cur
-		wb.mu.Unlock()
 	}
+	wb.mu.Unlock()
 
 	return enabled, nil
 }
@@ -226,9 +228,15 @@ func (wb *Amperfied) Enable(enable bool) error {
 	b := make([]byte, 2)
 	binary.BigEndian.PutUint16(b, cur)
 
-	_, err := wb.conn.WriteMultipleRegisters(ampRegAmpsConfig, 1, b)
+	if _, err := wb.conn.WriteMultipleRegisters(ampRegAmpsConfig, 1, b); err != nil {
+		return err
+	}
 
-	return err
+	wb.mu.Lock()
+	wb.enabled = enable
+	wb.mu.Unlock()
+
+	return nil
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -384,13 +392,19 @@ func (wb *Amperfied) phases1p3p(phases int) error {
 	// re-apply current after phase-switch completes to honor interim changes
 	time.AfterFunc(duration, func() {
 		wb.mu.Lock()
+		enabled := wb.enabled
 		cur := wb.current
 		wb.mu.Unlock()
+
+		// skip re-apply if charging was disabled during the phase-switch window
+		if !enabled {
+			return
+		}
 
 		b := make([]byte, 2)
 		binary.BigEndian.PutUint16(b, cur)
 		if _, err := wb.conn.WriteMultipleRegisters(ampRegAmpsConfig, 1, b); err != nil {
-			wb.log.ERROR.Printf("re-apply current after phase switch: %v", err)
+			wb.log.DEBUG.Printf("re-apply current after phase switch: %v", err)
 		}
 	})
 
@@ -401,13 +415,11 @@ func (wb *Amperfied) phases1p3p(phases int) error {
 func (wb *Amperfied) getPhases() (int, error) {
 	b, err := wb.conn.ReadInputRegisters(ampRegPhaseSwitchState, 1)
 	if err != nil {
-		wb.log.ERROR.Println("Error reading ampRegPhaseSwitchState")
 		return 0, err
 	}
 
 	phases := int(binary.BigEndian.Uint16(b))
 	if phases == 0 {
-		wb.log.DEBUG.Println("phase-switching in progress")
 		wb.mu.Lock()
 		defer wb.mu.Unlock()
 		return wb.phases, nil
