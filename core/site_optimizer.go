@@ -9,7 +9,7 @@ import (
 	"os"
 	"slices"
 	"strings"
-	"sync/atomic"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -30,8 +30,8 @@ var (
 	eta          = float32(0.9)  // efficiency of the battery charging/discharging
 	batteryPower = float32(6000) // default power of the battery in W
 
+	mu               sync.Mutex
 	optimizerUpdated time.Time
-	mu               atomic.Uint32
 )
 
 // optimizerResult wraps the optimizer publish payload to implement BytesMarshaler.
@@ -81,19 +81,19 @@ type requestDetails struct {
 const slotsPerHour = float64(time.Hour / tariff.SlotDuration)
 
 func (site *Site) optimizerUpdateAsync() {
-	var err error
+	if !mu.TryLock() {
+		return
+	}
+	defer mu.Unlock()
 
 	if time.Since(optimizerUpdated) < 2*time.Minute {
 		return
 	}
 
-	if !mu.CompareAndSwap(0, 1) {
-		return
-	}
+	var err error
 
 	defer func() {
 		optimizerUpdated = time.Now()
-		mu.Store(0)
 
 		if r := recover(); r != nil {
 			err = fmt.Errorf("panic %v", r)
