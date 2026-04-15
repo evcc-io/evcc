@@ -428,7 +428,7 @@
 				<TariffsLegacyModal @changed="loadDirty" />
 				<TariffModal :currency="currency" @changed="tariffChanged" />
 				<TelemetryModal :sponsor="sponsor" :telemetry="telemetry" />
-				<OptimizerModal />
+				<OptimizerModal :is-sponsor="isSponsor" />
 				<ExperimentalModal :experimental="experimental" />
 				<RemoteModal :remote="remote" :is-sponsor="isSponsor" />
 				<TitleModal @changed="loadDirty" />
