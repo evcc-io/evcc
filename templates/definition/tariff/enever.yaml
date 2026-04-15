@@ -43,7 +43,7 @@ params:
       de: Preisauflösung
     type: choice
     choice: ["hourly", "quarterly"]
-    default: hourly
+    default: quarterly
     required: true
   - preset: tariff-base
   - preset: tariff-features
