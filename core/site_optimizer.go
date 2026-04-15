@@ -30,8 +30,8 @@ var (
 	eta          = float32(0.9)  // efficiency of the battery charging/discharging
 	batteryPower = float32(6000) // default power of the battery in W
 
-	updated time.Time
-	mu      atomic.Uint32
+	optimizerUpdated time.Time
+	mu               atomic.Uint32
 )
 
 // optimizerResult wraps the optimizer publish payload to implement BytesMarshaler.
@@ -73,26 +73,6 @@ type batteryResult struct {
 	Empty time.Time `json:"empty,omitzero"`
 }
 
-// func (br batteryResult) MarshalJSON() ([]byte, error) {
-// 	var full, empty int64
-// 	if !br.Full.IsZero() {
-// 		full = int64(time.Until(br.Full).Seconds())
-// 	}
-// 	if !br.Empty.IsZero() {
-// 		empty = int64(time.Until(br.Empty).Seconds())
-// 	}
-
-// 	return json.Marshal(struct {
-// 		batteryResult
-// 		UntilFull  int64 `json:"untilFull,omitempty"`
-// 		UntilEmpty int64 `json:"untilEmpty,omitempty"`
-// 	}{
-// 		batteryResult: br,
-// 		UntilFull:     full,
-// 		UntilEmpty:    empty,
-// 	})
-// }
-
 type requestDetails struct {
 	Timestamps     []time.Time     `json:"timestamp"`
 	BatteryDetails []batteryDetail `json:"batteryDetails"`
@@ -103,7 +83,7 @@ const slotsPerHour = float64(time.Hour / tariff.SlotDuration)
 func (site *Site) optimizerUpdateAsync() {
 	var err error
 
-	if time.Since(updated) < 2*time.Minute {
+	if time.Since(optimizerUpdated) < 2*time.Minute {
 		return
 	}
 
@@ -112,7 +92,7 @@ func (site *Site) optimizerUpdateAsync() {
 	}
 
 	defer func() {
-		updated = time.Now()
+		optimizerUpdated = time.Now()
 		mu.Store(0)
 
 		if r := recover(); r != nil {
