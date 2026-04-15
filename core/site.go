@@ -102,11 +102,44 @@ type Site struct {
 
 // MetersConfig contains the site's meter configuration
 type MetersConfig struct {
-	GridMeterRef     string   `mapstructure:"grid"`    // Grid usage meter
-	PVMetersRef      []string `mapstructure:"pv"`      // PV meter
-	BatteryMetersRef []string `mapstructure:"battery"` // Battery charging meter
-	ExtMetersRef     []string `mapstructure:"ext"`     // Meters used only for monitoring
-	AuxMetersRef     []string `mapstructure:"aux"`     // Auxiliary meters
+	GridMeterRef     string    `mapstructure:"grid"`    // Grid usage meter
+	PVMetersRef      MeterRefs `mapstructure:"pv"`      // PV meter
+	BatteryMetersRef MeterRefs `mapstructure:"battery"` // Battery charging meter
+	ExtMetersRef     MeterRefs `mapstructure:"ext"`     // Meters used only for monitoring
+	AuxMetersRef     MeterRefs `mapstructure:"aux"`     // Auxiliary meters
+}
+
+// MeterRef defines a meter reference with an optional display title.
+// It supports both scalar ("meter-name") and object ({source, title}) YAML notation.
+type MeterRef struct {
+	Source string `mapstructure:"source"`
+	Title  string `mapstructure:"title"`
+}
+
+func (r *MeterRef) UnmarshalText(text []byte) error {
+	r.Source = string(text)
+	return nil
+}
+
+// MeterRefs is a list of meter references.
+type MeterRefs []MeterRef
+
+func (refs MeterRefs) Sources() []string {
+	res := make([]string, 0, len(refs))
+	for _, ref := range refs {
+		if ref.Source != "" {
+			res = append(res, ref.Source)
+		}
+	}
+	return res
+}
+
+func meterRefsFromSources(sources []string) MeterRefs {
+	refs := make(MeterRefs, 0, len(sources))
+	for _, source := range sources {
+		refs = append(refs, MeterRef{Source: source})
+	}
+	return refs
 }
 
 // NewSiteFromConfig creates a new site
@@ -198,7 +231,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	}
 
 	// multiple pv
-	for _, ref := range site.Meters.PVMetersRef {
+	for _, ref := range site.Meters.PVMetersRef.Sources() {
 		dev, err := config.Meters().ByName(ref)
 		if err != nil {
 			return err
@@ -210,7 +243,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	}
 
 	// multiple batteries
-	for _, ref := range site.Meters.BatteryMetersRef {
+	for _, ref := range site.Meters.BatteryMetersRef.Sources() {
 		dev, err := config.Meters().ByName(ref)
 		if err != nil {
 			return err
@@ -219,7 +252,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	}
 
 	// meters used only for monitoring
-	for _, ref := range site.Meters.ExtMetersRef {
+	for _, ref := range site.Meters.ExtMetersRef.Sources() {
 		dev, err := config.Meters().ByName(ref)
 		if err != nil {
 			return err
@@ -228,7 +261,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	}
 
 	// auxiliary meters
-	for _, ref := range site.Meters.AuxMetersRef {
+	for _, ref := range site.Meters.AuxMetersRef.Sources() {
 		dev, err := config.Meters().ByName(ref)
 		if err != nil {
 			return err
@@ -272,16 +305,16 @@ func (site *Site) restoreMetersAndTitle() {
 		site.Meters.GridMeterRef = v
 	}
 	if v, err := settings.String(keys.PvMeters); err == nil && v != "" {
-		site.Meters.PVMetersRef = append(site.Meters.PVMetersRef, filterConfigurable(strings.Split(v, ","))...)
+		site.Meters.PVMetersRef = append(site.Meters.PVMetersRef, meterRefsFromSources(filterConfigurable(strings.Split(v, ",")))...)
 	}
 	if v, err := settings.String(keys.BatteryMeters); err == nil && v != "" {
-		site.Meters.BatteryMetersRef = append(site.Meters.BatteryMetersRef, filterConfigurable(strings.Split(v, ","))...)
+		site.Meters.BatteryMetersRef = append(site.Meters.BatteryMetersRef, meterRefsFromSources(filterConfigurable(strings.Split(v, ",")))...)
 	}
 	if v, err := settings.String(keys.ExtMeters); err == nil && v != "" {
-		site.Meters.ExtMetersRef = append(site.Meters.ExtMetersRef, filterConfigurable(strings.Split(v, ","))...)
+		site.Meters.ExtMetersRef = append(site.Meters.ExtMetersRef, meterRefsFromSources(filterConfigurable(strings.Split(v, ",")))...)
 	}
 	if v, err := settings.String(keys.AuxMeters); err == nil && v != "" {
-		site.Meters.AuxMetersRef = append(site.Meters.AuxMetersRef, filterConfigurable(strings.Split(v, ","))...)
+		site.Meters.AuxMetersRef = append(site.Meters.AuxMetersRef, meterRefsFromSources(filterConfigurable(strings.Split(v, ",")))...)
 	}
 }
 
@@ -327,7 +360,7 @@ func (site *Site) restoreSettings() error {
 
 	if err == nil && settings.Json(keys.SolarAccYield, &pvEnergy) == nil {
 		var nok bool
-		for _, name := range site.Meters.PVMetersRef {
+		for _, name := range site.Meters.PVMetersRef.Sources() {
 			if fcst, ok := pvEnergy[name]; ok {
 				site.pvEnergy[name].Import = fcst.Import
 			} else {
@@ -490,7 +523,7 @@ func (site *Site) clearPlanLocks() {
 	}
 }
 
-func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) []types.Measurement {
+func (site *Site) collectMeters(key string, meters []config.Device[api.Meter], refs MeterRefs) []types.Measurement {
 	mm := make([]types.Measurement, len(meters))
 
 	fun := func(i int, dev config.Device[api.Meter]) {
@@ -518,8 +551,12 @@ func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) [
 		}
 
 		props := deviceProperties(dev)
+		title := props.Title
+		if i < len(refs) && refs[i].Title != "" {
+			title = refs[i].Title
+		}
 		mm[i] = types.Measurement{
-			Title:  props.Title,
+			Title:  title,
 			Icon:   props.Icon,
 			Power:  power,
 			Energy: energy,
@@ -544,7 +581,7 @@ func (site *Site) updatePvMeters() {
 		return
 	}
 
-	mm := site.collectMeters("pv", site.pvMeters)
+	mm := site.collectMeters("pv", site.pvMeters, site.Meters.PVMetersRef)
 
 	for i, dev := range site.pvMeters {
 		meter := dev.Instance()
@@ -616,7 +653,7 @@ func (site *Site) updateBatteryMeters() {
 		return
 	}
 
-	mm := site.collectMeters("battery", site.batteryMeters)
+	mm := site.collectMeters("battery", site.batteryMeters, site.Meters.BatteryMetersRef)
 
 	for i, dev := range site.batteryMeters {
 		meter := dev.Instance()
@@ -699,7 +736,7 @@ func (site *Site) updateAuxMeters() {
 		return
 	}
 
-	mm := site.collectMeters("aux", site.auxMeters)
+	mm := site.collectMeters("aux", site.auxMeters, site.Meters.AuxMetersRef)
 	site.auxPower = lo.SumBy(mm, func(m types.Measurement) float64 {
 		return m.Power
 	})
@@ -718,7 +755,7 @@ func (site *Site) updateExtMeters() {
 		return
 	}
 
-	mm := site.collectMeters("ext", site.extMeters)
+	mm := site.collectMeters("ext", site.extMeters, site.Meters.ExtMetersRef)
 	site.publish(keys.Ext, mm)
 }
 

@@ -103,21 +103,21 @@ func runDump(cmd *cobra.Command, args []string) {
 		d.DumpWithHeader(fmt.Sprintf("grid: %s", name), handle(name, config.Meters()))
 	}
 
-	for id, name := range site.Meters.PVMetersRef {
-		if name != "" {
-			d.DumpWithHeader(fmt.Sprintf("pv %d: %s", id+1, name), handle(name, config.Meters()))
+	for id, ref := range site.Meters.PVMetersRef {
+		if ref.Source != "" {
+			d.DumpWithHeader(fmt.Sprintf("pv %d: %s", id+1, ref.Source), handle(ref.Source, config.Meters()))
 		}
 	}
 
-	for id, name := range site.Meters.BatteryMetersRef {
-		if name != "" {
-			d.DumpWithHeader(fmt.Sprintf("battery %d: %s", id+1, name), handle(name, config.Meters()))
+	for id, ref := range site.Meters.BatteryMetersRef {
+		if ref.Source != "" {
+			d.DumpWithHeader(fmt.Sprintf("battery %d: %s", id+1, ref.Source), handle(ref.Source, config.Meters()))
 		}
 	}
 
-	for id, name := range site.Meters.AuxMetersRef {
-		if name != "" {
-			d.DumpWithHeader(fmt.Sprintf("aux %d: %s", id+1, name), handle(name, config.Meters()))
+	for id, ref := range site.Meters.AuxMetersRef {
+		if ref.Source != "" {
+			d.DumpWithHeader(fmt.Sprintf("aux %d: %s", id+1, ref.Source), handle(ref.Source, config.Meters()))
 		}
 	}
 

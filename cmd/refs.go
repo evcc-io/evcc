@@ -60,10 +60,10 @@ func collectSiteRefs(conf globalconfig.All) error {
 	}
 
 	references.meter = append(references.meter, refs.Meters.GridMeterRef)
-	references.meter = append(references.meter, refs.Meters.PVMetersRef...)
-	references.meter = append(references.meter, refs.Meters.BatteryMetersRef...)
-	references.meter = append(references.meter, refs.Meters.ExtMetersRef...)
-	references.meter = append(references.meter, refs.Meters.AuxMetersRef...)
+	references.meter = append(references.meter, refs.Meters.PVMetersRef.Sources()...)
+	references.meter = append(references.meter, refs.Meters.BatteryMetersRef.Sources()...)
+	references.meter = append(references.meter, refs.Meters.ExtMetersRef.Sources()...)
+	references.meter = append(references.meter, refs.Meters.AuxMetersRef.Sources()...)
 
 	// append devices from settings
 	if v, err := settings.String(keys.GridMeter); err == nil && v != "" {

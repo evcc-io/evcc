@@ -72,7 +72,7 @@ func (site *Site) SetGridMeterRef(ref string) {
 func (site *Site) GetPVMeterRefs() []string {
 	site.RLock()
 	defer site.RUnlock()
-	return site.Meters.PVMetersRef
+	return site.Meters.PVMetersRef.Sources()
 }
 
 // SetPVMeterRefs sets the PvMeterRef
@@ -80,7 +80,7 @@ func (site *Site) SetPVMeterRefs(ref []string) {
 	site.Lock()
 	defer site.Unlock()
 
-	site.Meters.PVMetersRef = ref
+	site.Meters.PVMetersRef = meterRefsFromSources(ref)
 	settings.SetString(keys.PvMeters, strings.Join(filterConfigurable(ref), ","))
 }
 
@@ -88,7 +88,7 @@ func (site *Site) SetPVMeterRefs(ref []string) {
 func (site *Site) GetBatteryMeterRefs() []string {
 	site.RLock()
 	defer site.RUnlock()
-	return site.Meters.BatteryMetersRef
+	return site.Meters.BatteryMetersRef.Sources()
 }
 
 // SetBatteryMeterRefs sets the BatteryMeterRef
@@ -96,7 +96,7 @@ func (site *Site) SetBatteryMeterRefs(ref []string) {
 	site.Lock()
 	defer site.Unlock()
 
-	site.Meters.BatteryMetersRef = ref
+	site.Meters.BatteryMetersRef = meterRefsFromSources(ref)
 	settings.SetString(keys.BatteryMeters, strings.Join(filterConfigurable(ref), ","))
 }
 
@@ -104,7 +104,7 @@ func (site *Site) SetBatteryMeterRefs(ref []string) {
 func (site *Site) GetAuxMeterRefs() []string {
 	site.RLock()
 	defer site.RUnlock()
-	return site.Meters.AuxMetersRef
+	return site.Meters.AuxMetersRef.Sources()
 }
 
 // SetAuxMeterRefs sets the AuxMeterRef
@@ -112,7 +112,7 @@ func (site *Site) SetAuxMeterRefs(ref []string) {
 	site.Lock()
 	defer site.Unlock()
 
-	site.Meters.AuxMetersRef = ref
+	site.Meters.AuxMetersRef = meterRefsFromSources(ref)
 	settings.SetString(keys.AuxMeters, strings.Join(filterConfigurable(ref), ","))
 }
 
@@ -120,7 +120,7 @@ func (site *Site) SetAuxMeterRefs(ref []string) {
 func (site *Site) GetExtMeterRefs() []string {
 	site.RLock()
 	defer site.RUnlock()
-	return site.Meters.ExtMetersRef
+	return site.Meters.ExtMetersRef.Sources()
 }
 
 // SetExtMeterRefs sets the ExtMeterRef
@@ -128,7 +128,7 @@ func (site *Site) SetExtMeterRefs(ref []string) {
 	site.Lock()
 	defer site.Unlock()
 
-	site.Meters.ExtMetersRef = ref
+	site.Meters.ExtMetersRef = meterRefsFromSources(ref)
 	settings.SetString(keys.ExtMeters, strings.Join(filterConfigurable(ref), ","))
 }
 
