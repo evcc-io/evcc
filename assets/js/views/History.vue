@@ -11,7 +11,7 @@
 					</section>
 					<section v-if="energySeries.length" class="mb-5">
 						<h3 class="fw-normal mb-3">Energy <small class="ms-2">14 days</small></h3>
-						<EnergyChart :series="energySeries" :from="energyFrom" :days="15" />
+						<EnergyChart :series="energySeries" :from="energyFrom" :days="14" />
 					</section>
 					<div
 						v-if="!powerSeries.length && !energySeries.length"
@@ -71,7 +71,7 @@ export default defineComponent({
 				this.powerFrom.setHours(0, 0, 0, 0);
 
 				this.energyFrom = new Date();
-				this.energyFrom.setDate(this.energyFrom.getDate() - 14);
+				this.energyFrom.setDate(this.energyFrom.getDate() - 13);
 				this.energyFrom.setHours(0, 0, 0, 0);
 
 				const [powerRes, energyRes] = await Promise.all([
