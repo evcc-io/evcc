@@ -55,7 +55,7 @@ func TestCollectMetersUsesRefTitleOverride(t *testing.T) {
 	site := NewSite()
 
 	meters := []config.Device[api.Meter]{
-		config.NewStaticDevice(config.Named{Name: "battery-1"}, testMeter{power: 1200}),
+		config.NewStaticDevice[api.Meter](config.Named{Name: "battery-1"}, testMeter{power: 1200}),
 	}
 	refs := MeterRefs{
 		{Source: "battery-1", Title: "Battery Basement"},
