@@ -8,7 +8,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateHomeAssistant(base *HomeAssistant, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error)) api.Charger {
+func decorateHomeAssistant(base *HomeAssistant, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error), phaseSwitcher func(int) error, phaseGetter func() (int, error)) api.Charger {
 	caps := make(map[reflect.Type]any)
 
 	if meter != nil {
@@ -27,6 +27,14 @@ func decorateHomeAssistant(base *HomeAssistant, meter func() (float64, error), m
 		caps[reflect.TypeFor[api.PhaseVoltages]()] = &decorateHomeAssistantPhaseVoltagesImpl{phaseVoltages: phaseVoltages}
 	}
 
+	if phaseSwitcher != nil {
+		caps[reflect.TypeFor[api.PhaseSwitcher]()] = &decorateHomeAssistantPhaseSwitcherImpl{phaseSwitcher: phaseSwitcher}
+	}
+
+	if phaseGetter != nil {
+		caps[reflect.TypeFor[api.PhaseGetter]()] = &decorateHomeAssistantPhaseGetterImpl{phaseGetter: phaseGetter}
+	}
+
 	if len(caps) == 0 {
 		return base
 	}
@@ -41,6 +49,9 @@ type decorateHomeAssistantCapable struct {
 
 func (d *decorateHomeAssistantCapable) Capability(typ reflect.Type) (any, bool) {
 	c, ok := d.caps[typ]
+	if !ok && reflect.TypeOf(d).Implements(typ) {
+		return d, true
+	}
 	return c, ok
 }
 
@@ -66,6 +77,22 @@ type decorateHomeAssistantPhaseCurrentsImpl struct {
 
 func (impl *decorateHomeAssistantPhaseCurrentsImpl) Currents() (float64, float64, float64, error) {
 	return impl.phaseCurrents()
+}
+
+type decorateHomeAssistantPhaseGetterImpl struct {
+	phaseGetter func() (int, error)
+}
+
+func (impl *decorateHomeAssistantPhaseGetterImpl) GetPhases() (int, error) {
+	return impl.phaseGetter()
+}
+
+type decorateHomeAssistantPhaseSwitcherImpl struct {
+	phaseSwitcher func(int) error
+}
+
+func (impl *decorateHomeAssistantPhaseSwitcherImpl) Phases1p3p(p0 int) error {
+	return impl.phaseSwitcher(p0)
 }
 
 type decorateHomeAssistantPhaseVoltagesImpl struct {

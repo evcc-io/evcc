@@ -1,7 +1,7 @@
 <template>
 	<div class="root position-relative">
 		<div
-			class="chart position-relative"
+			class="chart scroll-overlay-fix position-relative"
 			:class="{ 'chart--with-target': targetText, inactive }"
 		>
 			<div

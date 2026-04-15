@@ -11,4 +11,3 @@ params:
 render: |
   {{ include "eebus" . }}
   meter: true
-  vasvw: true

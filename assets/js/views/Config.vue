@@ -6,7 +6,7 @@
 				:title="$t('config.main.title')"
 				:notifications="notifications"
 			/>
-			<div class="wrapper pb-5">
+			<div class="wrapper mb-3">
 				<AuthSuccessBanner
 					v-if="callbackCompleted || callbackError"
 					:provider-id="callbackCompleted"
@@ -321,6 +321,32 @@
 							<DeviceTags :tags="hemsTags" />
 						</template>
 					</DeviceCard>
+					<DeviceCard
+						v-if="remote"
+						:title="$t('config.remote.title')"
+						editable
+						:unconfigured="isUnconfigured(remoteTags)"
+						data-testid="remote-access"
+						@edit="openModal('remote')"
+					>
+						<template #icon><RemoteAccessIcon /></template>
+						<template #tags>
+							<DeviceTags :tags="remoteTags" />
+						</template>
+					</DeviceCard>
+					<DeviceCard
+						v-if="experimental"
+						:title="`${$t('config.optimizer.title')} 🧪`"
+						editable
+						:unconfigured="isUnconfigured(optimizerTags)"
+						data-testid="optimizer"
+						@edit="openModal('optimizer')"
+					>
+						<template #icon><OptimizerIcon /></template>
+						<template #tags>
+							<DeviceTags :tags="optimizerTags" />
+						</template>
+					</DeviceCard>
 				</div>
 
 				<h2 class="my-4 mt-5">{{ $t("config.section.services") }}</h2>
@@ -357,7 +383,7 @@
 				<hr class="my-5" />
 
 				<h2 class="my-4 mt-5">{{ $t("config.section.system") }}</h2>
-				<div class="round-box p-4 d-flex gap-4 mb-5 flex-wrap">
+				<div class="round-box p-4 d-flex gap-4 flex-wrap">
 					<router-link to="/log" class="btn btn-outline-secondary">
 						{{ $t("config.system.logs") }}
 					</router-link>
@@ -402,7 +428,9 @@
 				<TariffsLegacyModal @changed="loadDirty" />
 				<TariffModal :currency="currency" @changed="tariffChanged" />
 				<TelemetryModal :sponsor="sponsor" :telemetry="telemetry" />
+				<OptimizerModal />
 				<ExperimentalModal :experimental="experimental" />
+				<RemoteModal :remote="remote" :is-sponsor="isSponsor" />
 				<TitleModal @changed="loadDirty" />
 				<ModbusProxyModal :is-sponsor="isSponsor" @changed="loadDirty" />
 				<CircuitsModal :gridMeter="gridMeter" :extMeters="extMeters" @changed="loadDirty" />
@@ -459,8 +487,13 @@ import ModbusProxyIcon from "../components/MaterialIcon/ModbusProxy.vue";
 import ModbusProxyModal from "../components/Config/ModbusProxyModal.vue";
 import MqttIcon from "../components/MaterialIcon/Mqtt.vue";
 import MqttModal from "../components/Config/MqttModal.vue";
+import RemoteAccessIcon from "../components/MaterialIcon/RemoteAccess.vue";
+import RemoteModal from "../components/Config/Remote/RemoteModal.vue";
+import { isRemoteClientActive } from "@/utils/remote";
 import NetworkModal from "../components/Config/NetworkModal.vue";
 import NotificationIcon from "../components/MaterialIcon/Notification.vue";
+import OptimizerIcon from "../components/MaterialIcon/Optimizer.vue";
+import OptimizerModal from "../components/Config/OptimizerModal.vue";
 import restart, { performRestart } from "../restart";
 import SponsorModal from "../components/Config/SponsorModal.vue";
 import store from "../store";
@@ -488,6 +521,7 @@ import type {
 	SiteConfig,
 	DeviceType,
 	Notification,
+	Remote,
 } from "@/types/evcc";
 import { CURRENCY, GRID_CONTROL } from "@/types/evcc";
 import { circuitTree } from "@/utils/circuits";
@@ -539,8 +573,12 @@ export default defineComponent({
 		ModbusProxyModal,
 		MqttIcon,
 		MqttModal,
+		RemoteAccessIcon,
+		RemoteModal,
 		NetworkModal,
 		NotificationIcon,
+		OptimizerIcon,
+		OptimizerModal,
 		SponsorModal,
 		TariffsLegacyModal,
 		TariffCard,
@@ -745,6 +783,30 @@ export default defineComponent({
 
 			return result;
 		},
+		remote(): Remote | undefined {
+			return store.state?.remote;
+		},
+		remoteTags(): DeviceTags {
+			const remote = this.remote;
+			if (!remote?.status?.url) {
+				return { configured: { value: false } };
+			}
+			const tags: DeviceTags = {
+				enabled: { value: remote.config?.enabled },
+				connected: { value: remote.status?.connected },
+			};
+			if (remote.status?.loginBlocked) {
+				tags["loginBlocked"] = { value: true, error: true };
+			}
+			if (remote.status?.connected) {
+				const lastSeen = remote.status?.lastSeen;
+				const count = lastSeen
+					? Object.keys(lastSeen).filter((u) => isRemoteClientActive(lastSeen, u)).length
+					: 0;
+				tags["activeClients"] = { value: count };
+			}
+			return tags;
+		},
 		sponsor() {
 			return store.state?.sponsor;
 		},
@@ -762,6 +824,10 @@ export default defineComponent({
 		},
 		eebus() {
 			return store.state?.eebus;
+		},
+		optimizerTags(): DeviceTags {
+			if (!store.state?.optimizer) return { configured: { value: false } };
+			return { configured: { value: true } };
 		},
 		modbusproxyTags(): DeviceTags {
 			const config = store.state?.modbusproxy || [];

@@ -32,6 +32,7 @@
 				:sponsor="sponsor"
 				:fatal="fatal"
 				:experimental="experimental"
+				:auth-disabled="authDisabled"
 				:evopt="evopt"
 				:installed="installed"
 				:commit="commit"
@@ -68,6 +69,7 @@ export default defineComponent({
 		sponsor: { type: Object as PropType<Sponsor>, default: () => ({}) },
 		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
 		experimental: Boolean,
+		authDisabled: Boolean,
 		offline: Boolean,
 		startupCompleted: Boolean,
 		evopt: { type: Object as PropType<EvOpt>, required: false },
@@ -98,12 +100,17 @@ export default defineComponent({
 <style scoped>
 .bottom-tab-bar {
 	z-index: 1030;
-	background: color-mix(in srgb, var(--tab-bar-background) 80%, transparent);
-	backdrop-filter: blur(20px);
-	-webkit-backdrop-filter: blur(20px);
-	border-top: 1px solid var(--evcc-gray-10);
-	box-shadow: 0 -1px 6px rgba(0, 0, 0, 0.05);
+	background: var(--tab-bar-background);
+	border-top: 1px solid var(--evcc-gray-25);
+	box-shadow: 0 -1px 6px var(--evcc-gray-25);
 	transition: transform var(--evcc-transition-fast) ease-in;
+}
+
+@supports (backdrop-filter: blur(1px)) {
+	.bottom-tab-bar {
+		background: color-mix(in srgb, var(--tab-bar-background) 60%, transparent);
+		backdrop-filter: var(--evcc-backdrop-blur);
+	}
 }
 
 .bottom-tab-bar--hidden {

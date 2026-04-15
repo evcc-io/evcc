@@ -20,7 +20,7 @@ render: |
       source: delta  # nur Differenz zu der von WP berechneten Überschussleistung (Reg. 2012)
       get:
         source: modbus
-        uri: {{ .host }}:{{ .port }}
+        uri: {{ joinHostPort .host .port }}
         id: {{ .id }}
         register:
           address: 2012 # totale von der WP berechnete Überschussleistung Auflösung 1 W
@@ -28,7 +28,7 @@ render: |
           decode: int16
       set:
         source: modbus
-        uri: {{ .host }}:{{ .port }}
+        uri: {{ joinHostPort .host .port }}
         id: {{ .id }}
         register:
           address: 2201 # SUR Überschussleistung Auflösung 1 W
@@ -36,7 +36,7 @@ render: |
           decode: int16
   temp:
     source: modbus
-    uri: {{ .host }}:{{ .port }}
+    uri: {{ joinHostPort .host .port }}
     id: {{ .id }}
     register:
       address: 2000 # angezeigte Temperatur Auflösung 0,1°C
@@ -45,7 +45,7 @@ render: |
     scale: 0.1
   limittemp:
     source: modbus
-    uri: {{ .host }}:{{ .port }}
+    uri: {{ joinHostPort .host .port }}
     id: {{ .id }}
     register:
       address: 2203 # Legionellen/Überschuss Solltemperatur Auflösung 0,1°C

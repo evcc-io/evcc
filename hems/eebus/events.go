@@ -183,7 +183,7 @@ func (c *EEBus) updateFailsafeProductionActivePowerLimit() {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	c.failsafeProductionLimit = limit
+	c.failsafeProductionLimit = new(limit)
 }
 
 func (c *EEBus) updateFailsafeConsumptionDurationMinimum() {

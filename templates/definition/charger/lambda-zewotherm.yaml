@@ -58,7 +58,7 @@ render: |
     initial: 0
     set:
       source: modbus
-      uri: {{ .host }}:{{ .port }}
+      uri: {{ joinHostPort .host .port }}
       id: 1
       register:
         address: 102 # PV Überschussleistung
@@ -67,7 +67,7 @@ render: |
       scale: {{ if eq .excess "plus" }}1{{ else }}-1{{ end }}
   power:
     source: modbus
-    uri: {{ .host }}:{{ .port }}
+    uri: {{ joinHostPort .host .port }}
     id: 1
     register:
       address: 103 # aktuelle Aufnahmeleistung [E] der WP
@@ -75,7 +75,7 @@ render: |
       decode: int16
   energy:
     source: modbus
-    uri: {{ .host }}:{{ .port }}
+    uri: {{ joinHostPort .host .port }}
     id: 1
     register:
       address: 1020 # kumulierter Stromverbrauch (Energieaufnahme) [E / Wh] seit dem letzten Reset
@@ -85,7 +85,7 @@ render: |
   {{- if .tempsource }}
   temp:
     source: modbus
-    uri: {{ .host }}:{{ .port }}
+    uri: {{ joinHostPort .host .port }}
     id: 1
     register:
       address: {{ if eq .tempsource "warmwater_top" -}} 2002 {{ else if eq .tempsource "warmwater_bottom" -}} 2003 {{ else if eq .tempsource "buffer_top" -}} 3002 {{ else }} 3003 {{- end }} # 2002 Trinkwasser Oben, 2003 Trinkwasser Unten, 3002 Wärmespeicher Oben, 3003 Wärmespeicher Unten
@@ -94,7 +94,7 @@ render: |
     scale: 0.1
   limittemp:
     source: modbus
-    uri: {{ .host }}:{{ .port }}
+    uri: {{ joinHostPort .host .port }}
     id: 1
     register:
       address: {{ if eq .tempsource "warmwater_top" -}} 2050 {{ else if eq .tempsource "warmwater_bottom" -}} 2050 {{ else if eq .tempsource "buffer_top" -}} 3050 {{ else }} 3050 {{- end }} # 2050 Trinkwasser Speicher, 3050 Wärmespeicher

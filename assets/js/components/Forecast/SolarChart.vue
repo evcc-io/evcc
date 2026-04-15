@@ -1,5 +1,5 @@
 <template>
-	<div ref="scrollEl" class="forecast-chart-scroll" @scroll="onScroll">
+	<div ref="scrollEl" class="forecast-chart-scroll scroll-overlay-fix" @scroll="onScroll">
 		<div ref="chartEl" :style="{ height: '200px', width: chartWidth + 'px' }"></div>
 	</div>
 </template>
@@ -103,7 +103,7 @@ export default defineComponent({
 					{
 						type: "line",
 						data,
-						smooth: 0.05,
+						smooth: true,
 						symbol: "circle",
 						symbolSize: 6,
 						showSymbol: false,
@@ -129,11 +129,3 @@ export default defineComponent({
 	},
 });
 </script>
-
-<style scoped>
-.forecast-chart-scroll {
-	overflow-x: auto;
-	margin-bottom: 1.5rem;
-	padding-bottom: 4px;
-}
-</style>

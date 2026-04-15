@@ -77,6 +77,7 @@ export default defineComponent({
 		sponsor: { type: Object as PropType<Sponsor>, default: () => ({}) },
 		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
 		experimental: Boolean,
+		authDisabled: Boolean,
 		evopt: { type: Object as PropType<EvOpt>, required: false },
 		installed: String,
 		commit: String,
@@ -120,7 +121,7 @@ export default defineComponent({
 			return !!this.evopt && this.experimental;
 		},
 		showLogout() {
-			return isLoggedIn();
+			return !this.authDisabled && isLoggedIn();
 		},
 	},
 	mounted() {
@@ -175,8 +176,7 @@ export default defineComponent({
 	inset: 0;
 	z-index: 1029;
 	background-color: var(--evcc-backdrop);
-	-webkit-backdrop-filter: blur(8px);
-	backdrop-filter: blur(8px);
+	backdrop-filter: var(--evcc-backdrop-blur);
 	opacity: 0;
 	visibility: hidden;
 	transition:
