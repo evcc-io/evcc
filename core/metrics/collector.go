@@ -69,7 +69,7 @@ func (c *Collector) process(fun func()) error {
 }
 
 func (c *Collector) persist() error {
-	return persist(c.entity, c.started, c.accu.PosEnergy(), c.accu.NegEnergy())
+	return persist(c.entity, c.started, c.accu.Imported(), c.accu.Exported())
 }
 
 func (c *Collector) ImportProfile(from time.Time) (*[96]float64, error) {

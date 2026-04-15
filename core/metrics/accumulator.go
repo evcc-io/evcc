@@ -51,13 +51,13 @@ func (m *Accumulator) String() string {
 	return b.String()
 }
 
-// PosEnergy returns the accumulated energy in kWh
-func (m *Accumulator) PosEnergy() float64 {
+// Imported returns the accumulated import energy in kWh
+func (m *Accumulator) Imported() float64 {
 	return m.Import
 }
 
-// NegEnergy returns the accumulated energy in kWh
-func (m *Accumulator) NegEnergy() float64 {
+// Exported returns the accumulated export energy in kWh
+func (m *Accumulator) Exported() float64 {
 	return m.Export
 }
 

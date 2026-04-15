@@ -60,8 +60,8 @@ var aggregateDurations = map[string]func(time.Time) time.Time{
 	"month": func(t time.Time) time.Time { return t.AddDate(0, 1, 0) },
 }
 
-// QueryEnergy returns aggregated energy data from the meters table
-func QueryEnergy(from, to time.Time, aggregate string) ([]Series, error) {
+// QueryImportEnergy returns aggregated import energy data from the meters table
+func QueryImportEnergy(from, to time.Time, aggregate string) ([]Series, error) {
 	format, ok := aggregateFormats[aggregate]
 	if !ok {
 		return nil, errors.New("invalid aggregate value")

@@ -590,7 +590,7 @@ func (site *Site) updatePvMeters() {
 		// use stored devices, not ui-updated instances!
 		name := dev.Config().Name
 
-		prev := site.pvEnergy[name].PosEnergy()
+		prev := site.pvEnergy[name].Imported()
 		if mm[i].Energy > 0 {
 			site.log.DEBUG.Printf("!! solar production: accumulate set %s %.3fkWh meter total (was: %s)", name, mm[i].Energy, site.pvEnergy[name])
 			site.pvEnergy[name].SetImportMeterTotal(mm[i].Energy)
@@ -598,7 +598,7 @@ func (site *Site) updatePvMeters() {
 			site.log.DEBUG.Printf("!! solar production: accumulate add %s %.3fW power (was: %s)", name, mm[i].Energy, site.pvEnergy[name])
 			site.pvEnergy[name].AddPower(mm[i].Power)
 		}
-		site.log.DEBUG.Printf("!! solar production: accumulate moved %s from %.3f to %.3f", name, prev, site.pvEnergy[name].PosEnergy())
+		site.log.DEBUG.Printf("!! solar production: accumulate moved %s from %.3f to %.3f", name, prev, site.pvEnergy[name].Imported())
 	}
 
 	// store

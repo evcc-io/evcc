@@ -158,14 +158,14 @@ func (site *Site) solarDetails(solar api.Rates) solarDetails {
 	)
 
 	site.fcstEnergy.AddImportEnergy(energy)
-	settings.SetFloat(keys.SolarAccForecast, site.fcstEnergy.PosEnergy())
+	settings.SetFloat(keys.SolarAccForecast, site.fcstEnergy.Imported())
 
 	produced := lo.SumBy(slices.Collect(maps.Values(site.pvEnergy)), func(v *metrics.Accumulator) float64 {
-		return v.PosEnergy()
+		return v.Imported()
 	})
 	site.log.DEBUG.Printf("solar forecast: produced %.3f", produced)
 
-	if fcst := site.fcstEnergy.PosEnergy(); fcst > 0 {
+	if fcst := site.fcstEnergy.Imported(); fcst > 0 {
 		scale := produced / fcst
 		site.log.DEBUG.Printf("solar forecast: accumulated %.3fkWh, produced %.3fkWh, scale %.3f", fcst, produced, scale)
 
