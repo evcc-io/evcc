@@ -1,6 +1,6 @@
 # build vars
-TAG_NAME := $(shell test -d .git && git describe --abbrev=0 --tags)
-SHA := $(shell test -d .git && git rev-parse --short HEAD)
+TAG_NAME ?= $(shell test -d .git && git describe --abbrev=0 --tags)
+SHA ?= $(shell test -d .git && git rev-parse --short HEAD)
 COMMIT := $(SHA)
 # hide commit for releases
 ifeq ($(RELEASE),1)
