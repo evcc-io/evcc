@@ -16,6 +16,12 @@ type cacheEntry struct {
 
 const responseCacheTTL = 2 * time.Second
 
+// blockCache is the package-level response cache shared across all AA55UDP
+// instances.  Sharing at package level ensures that multiple source blocks
+// for the same (host, pdu) — e.g. the four Ppv string registers all using
+// READ 125 @ 0x891C — truly share one UDP exchange per poll cycle.
+var blockCache = newResponseCacheT()
+
 // responseCacheT caches block-read payloads keyed by "raddr/pdu_hex" with a
 // short TTL. All aa55udp source blocks sharing the same (host, pdu) pair
 // share one UDP exchange per poll cycle — e.g. the four PV string registers

@@ -34,8 +34,7 @@ type AA55UDP struct {
 	offset   int    // byte offset into the response payload (0 for register reads)
 	decode   string // int32be | uint32be | uint32nan | int16be | uint16be | float32be
 	scale    float64
-	useCache bool            // true for block-read/cached mode, false for simple register read
-	cache    *responseCacheT // response cache for block-read mode
+	useCache bool // true for block-read/cached mode, false for simple register read
 }
 
 func init() {
@@ -50,7 +49,7 @@ type readConfig struct {
 }
 
 // buildReadConfig normalizes config input and returns the resolved read mode.
-func buildReadConfig(host string, id int, pdu string, register uint16, count uint16, offset int) (readConfig, error) {
+func buildReadConfig(id int, pdu string, register uint16, count uint16, offset int) (readConfig, error) {
 	// PDU/block mode
 	if pdu != "" {
 		// Reject mixed configuration where PDU and register parameters are both set.
@@ -130,7 +129,7 @@ func NewAA55UDPFromConfig(_ context.Context, other map[string]any) (Plugin, erro
 		return nil, fmt.Errorf("aa55udp: dial %s: %w", cc.Host, err)
 	}
 
-	cfg, err := buildReadConfig(cc.Host, cc.Id, cc.PDU, cc.Register, cc.Count, cc.Offset)
+	cfg, err := buildReadConfig(cc.Id, cc.PDU, cc.Register, cc.Count, cc.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -143,7 +142,6 @@ func NewAA55UDPFromConfig(_ context.Context, other map[string]any) (Plugin, erro
 		decode:   cc.Decode,
 		scale:    cc.Scale,
 		useCache: cfg.useCache,
-		cache:    newResponseCacheT(),
 	}
 
 	return p, nil
@@ -228,7 +226,7 @@ func (p *AA55UDP) fetch() ([]byte, error) {
 	// Caching: shared reads by (addr, pdu)
 	key := p.conn.RemoteAddr().String() + "/" + hex.EncodeToString(p.pdu)
 
-	if payload, ok := p.cache.get(key); ok {
+	if payload, ok := blockCache.get(key); ok {
 		pduHex := hex.EncodeToString(p.pdu)
 		p.log.TRACE.Printf("cache hit for %s pdu=%s", p.conn.RemoteAddr(), pduHex)
 		return payload, nil
@@ -244,7 +242,7 @@ func (p *AA55UDP) fetch() ([]byte, error) {
 		return nil, fmt.Errorf("aa55udp: %w", err)
 	}
 
-	p.cache.put(key, payload)
+	blockCache.put(key, payload)
 	return payload, nil
 }
 
@@ -352,7 +350,7 @@ func modbusCRC16(data []byte) []byte {
 	crc := uint16(0xFFFF)
 	for _, b := range data {
 		crc ^= uint16(b)
-		for range 8 {
+		for i := 0; i < 8; i++ {
 			if crc&0x0001 != 0 {
 				crc = (crc >> 1) ^ 0xA001
 			} else {
