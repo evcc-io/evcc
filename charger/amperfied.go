@@ -246,22 +246,14 @@ func (wb *Amperfied) MaxCurrentMillis(current float64) error {
 
 	curr := uint16(10 * current)
 
-	// skip write while phase-switch is in progress; re-apply happens via timer
 	wb.mu.Lock()
 	inSwitch := time.Now().Before(wb.phaseSwitchEnd)
-	if inSwitch {
-		wb.current = curr
-	}
 	wb.mu.Unlock()
-
-	if inSwitch {
-		return nil
-	}
 
 	b := make([]byte, 2)
 	binary.BigEndian.PutUint16(b, curr)
 
-	if _, err := wb.conn.WriteMultipleRegisters(ampRegAmpsConfig, 1, b); err != nil {
+	if _, err := wb.conn.WriteMultipleRegisters(ampRegAmpsConfig, 1, b); err != nil && !inSwitch {
 		return err
 	}
 
