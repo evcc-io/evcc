@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/benbjohnson/clock"
-	"github.com/samber/lo"
 )
 
 type Accumulator struct {
@@ -38,14 +37,14 @@ func (m *Accumulator) Updated() time.Time {
 
 func (m *Accumulator) String() string {
 	b := new(bytes.Buffer)
-	fmt.Fprintf(b, "Accumulated: %.3fkWh pos, %.3fkWh neg, updated: %v", m.Import, m.Export, m.updated.Truncate(time.Second))
+	fmt.Fprintf(b, "Accumulated: %.3fkWh import, %.3fkWh export, updated: %v", m.Import, m.Export, m.updated.Truncate(time.Second))
 	if m.importMeter != nil || m.exportMeter != nil {
 		fmt.Fprintf(b, " meter: ")
 		if m.importMeter != nil {
-			fmt.Fprintf(b, " %.3fkWh pos", *m.importMeter)
+			fmt.Fprintf(b, " %.3fkWh import", *m.importMeter)
 		}
 		if m.exportMeter != nil {
-			fmt.Fprintf(b, " %.3fkWh pos", *m.exportMeter)
+			fmt.Fprintf(b, " %.3fkWh export", *m.exportMeter)
 		}
 	}
 	return b.String()
@@ -65,7 +64,7 @@ func (m *Accumulator) Exported() float64 {
 func (m *Accumulator) SetImportMeterTotal(v float64) {
 	defer func() {
 		m.updated = m.clock.Now()
-		m.importMeter = lo.ToPtr(v)
+		m.importMeter = new(v)
 	}()
 
 	if m.importMeter == nil {
@@ -81,7 +80,7 @@ func (m *Accumulator) SetImportMeterTotal(v float64) {
 func (m *Accumulator) SetExportMeterTotal(v float64) {
 	defer func() {
 		m.updated = m.clock.Now()
-		m.exportMeter = lo.ToPtr(v)
+		m.exportMeter = new(v)
 	}()
 
 	if m.exportMeter == nil {
@@ -93,26 +92,22 @@ func (m *Accumulator) SetExportMeterTotal(v float64) {
 	}
 }
 
-// AddImportEnergy adds the given energy in kWh to the positive meter
-func (m *Accumulator) AddImportEnergy(v float64) {
-	defer func() { m.updated = m.clock.Now() }()
-
+func (m *Accumulator) addEnergy(dest *float64, v float64) {
 	if m.updated.IsZero() {
 		return
 	}
+	*dest += v
+	m.updated = m.clock.Now()
+}
 
-	m.Import += v
+// AddImportEnergy adds the given energy in kWh to the positive meter
+func (m *Accumulator) AddImportEnergy(v float64) {
+	m.addEnergy(&m.Import, v)
 }
 
 // AddExportEnergy adds the given energy in kWh to the negative meter
 func (m *Accumulator) AddExportEnergy(v float64) {
-	defer func() { m.updated = m.clock.Now() }()
-
-	if m.updated.IsZero() {
-		return
-	}
-
-	m.Export += v
+	m.addEnergy(&m.Export, v)
 }
 
 // AddPower adds the given power in W, calculating the energy based on the time since the last update
