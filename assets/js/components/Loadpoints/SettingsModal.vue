@@ -5,7 +5,7 @@
 		:title="$t('main.loadpointSettings.title', [loadpoint?.title])"
 		size="xl"
 		data-testid="loadpoint-settings-modal"
-		@opened="modalVisible"
+		@open="modalVisible"
 		@closed="modalInvisible"
 	>
 		<div class="container">
