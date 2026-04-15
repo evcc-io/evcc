@@ -172,7 +172,23 @@
       "loading": "Cargando el editor YAML…"
     },
     "eebus": {
-      "description": "Configuración que permite a evcc comunicarse con otros dispositivos EEBus.",
+      "certificate": {
+        "private": "Clave privada",
+        "public": "Certificado público",
+        "title": "Certificados"
+      },
+      "description": "Configuración que permite a evcc comunicarse con dispositivos compatibles EEBus, como cargadores o una unidad de control de su operador de red. Toda la inicialización y la generación de certificados pertinentes se realizan automáticamente al iniciar del sistema.",
+      "descriptionAdvanced": "No es necesario realizar cambios. Solo realice cambios si sabe realmente lo que está haciendo. Si cambia el SHIP-id o los certificados, tendrá que volver a emparejar sus dispositivos.",
+      "interfaces": "Interfaces",
+      "interfacesHelp": "Limite las interfaces de red que EEBus debe utilizar para evitar problemas de comunicación. Deje blanco para utilizar todas las interfaces. Una entrada por línea.",
+      "port": "Puerto",
+      "portHelp": "El puerto que se va a utilizar.",
+      "removeConfirm": "Se eliminará toda la configuración de EEBus. Se generarán nuevos certificados e identificadores en el próximo inicio. ¿Está seguro?",
+      "shipid": "SHIP-ID",
+      "shipidExplain": "Identificador permanente del dispositivo para su identificación en la red EEBus.",
+      "shipidHelp": "Este SHIP-ID está vinculado a los certificados que se indican a continuación.",
+      "ski": "SKI",
+      "skiExplain": "Identificador de seguridad único para emparejar dispositivos EEBus.",
       "title": "EEBus"
     },
     "experimental": {
@@ -544,6 +560,7 @@
       "integrations": "Integraciones",
       "loadpoints": "Carga y calefacción",
       "meter": "Solar y Batería",
+      "services": "Servicios",
       "system": "Sistema",
       "vehicles": "Vehículos"
     },
@@ -956,7 +973,7 @@
     },
     "loadpointSettings": {
       "batteryBoost": {
-        "description": "Carga rápida desde la batería doméstica.",
+        "description": "Carga rápida desde la batería doméstica hasta que se descargue a {limit}.",
         "label": "Aumento de la batería",
         "mode": "Solo disponible en modo solar y min+solar.",
         "once": "Impulso activo para esta sesión de carga."
@@ -1111,7 +1128,6 @@
   "passwordModal": {
     "description": "Establezca una contraseña para proteger los ajustes de configuración. Se puede seguir utilizando la pantalla principal sin necesidad de iniciar sesión.",
     "empty": "La contraseña no debe estar vacía",
-    "error": "Error: ",
     "labelCurrent": "Contraseña actual",
     "labelNew": "Nueva contraseña",
     "labelRepeat": "Repita la contraseña",

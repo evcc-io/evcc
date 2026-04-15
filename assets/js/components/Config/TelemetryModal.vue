@@ -3,6 +3,7 @@
 		id="telemetryModal"
 		:title="$t('config.telemetry.title')"
 		size="lg"
+		config-modal-name="telemetry"
 		data-testid="telemetry-modal"
 	>
 		<p>{{ $t("config.telemetry.description") }}</p>

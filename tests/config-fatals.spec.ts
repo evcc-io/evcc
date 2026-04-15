@@ -93,8 +93,8 @@ test.describe("fatal config handling", async () => {
     // open modal and delete meter
     await page.getByTestId("loadpoint").getByRole("button", { name: "edit" }).click();
     await expectModalVisible(lpModal);
-    await expect(lpModal.getByRole("textbox", { name: "Energy meter" })).toHaveClass(/is-invalid/);
-    await lpModal.getByRole("textbox", { name: "Energy meter" }).click();
+    await expect(lpModal.getByText("Shelly 1PM")).toBeVisible();
+    await lpModal.getByText("Shelly 1PM").click();
     await expectModalVisible(meterModal);
     await meterModal.getByRole("button", { name: "Delete" }).click();
     await expectModalHidden(meterModal);

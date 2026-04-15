@@ -697,7 +697,7 @@
     },
     "loadpointSettings": {
       "batteryBoost": {
-        "description": "使用住宅电池快速充电。",
+        "description": "使用住宅电池快速充电，直到电量降至 {limit}。",
         "label": "电池快充",
         "mode": "仅在太阳能和最小+太阳能模式下可用。",
         "once": "本次充电会话已启用快充。"
@@ -849,7 +849,6 @@
   "passwordModal": {
     "description": "设置密码以保护配置设置。主屏幕仍可在未登录情况下使用。",
     "empty": "密码不能为空",
-    "error": "错误： ",
     "labelCurrent": "当前密码",
     "labelNew": "新密码",
     "labelRepeat": "重复新密码",

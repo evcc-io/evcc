@@ -172,7 +172,23 @@
       "loading": "Nalaganje urejevalnika YAML …"
     },
     "eebus": {
-      "description": "Konfiguracija, ki evcc omogoča komunikacijo z drugimi napravami EEBus.",
+      "certificate": {
+        "private": "Zasebni ključ",
+        "public": "Javni certifikat",
+        "title": "Certifikati"
+      },
+      "description": "Konfiguracija, ki omogoča komunikacijo evcc z napravami, združljivimi z EEBus, kot so polnilniki ali krmilna enota vašega omrežnega operaterja. Vsa ustrezna inicializacija in generiranje potrdil se izvedeta samodejno ob prvem zagonu.",
+      "descriptionAdvanced": "Spremembe niso potrebne. Spremembe izvajajte le, če resnično veste, kaj počnete. Če spremenite SHIP-id ali potrdila, boste morali naprave znova seznaniti.",
+      "interfaces": "Vmesniki",
+      "interfacesHelp": "Omejite omrežne vmesnike, ki jih naj EEBus uporablja, da se izognete težavam s komunikacijo. Za uporabo vseh vmesnikov pustite polje prazno. En vnos na vrstico.",
+      "port": "Port",
+      "portHelp": "Vrata, ki bodo uporabljena.",
+      "removeConfirm": "Vsa konfiguracija EEBus bo odstranjena. Ob naslednjem zagonu bodo ustvarjeni novi certifikati in identifikatorji. Ste prepričani?",
+      "shipid": "SHIP-ID",
+      "shipidExplain": "Trajni identifikator naprave za identifikacijo v omrežju EEBus.",
+      "shipidHelp": "Ta SHIP-ID je povezan s spodnjimi potrdili.",
+      "ski": "SKI",
+      "skiExplain": "Enolični varnostni identifikator za seznanjanje naprav EEBus.",
       "title": "EEBus"
     },
     "experimental": {
@@ -544,6 +560,7 @@
       "integrations": "Integracije",
       "loadpoints": "Polnjenje in ogrevanje",
       "meter": "Sončna energija in baterije",
+      "services": "Storitve",
       "system": "Sistem",
       "vehicles": "Vozila"
     },
@@ -966,7 +983,7 @@
     },
     "loadpointSettings": {
       "batteryBoost": {
-        "description": "Hitro polnjenje iz domače baterije.",
+        "description": "Hitro polnjenje iz domače baterije, dokler se ne izprazni na {limit}.",
         "label": "Pospeševanje baterije",
         "mode": "Na voljo samo v solarnem in min+solarnem načinu.",
         "once": "Pospeševanje z baterijo aktivno za to sejo polnjenja."
@@ -1121,7 +1138,6 @@
   "passwordModal": {
     "description": "Nastavite geslo za zaščito konfiguracijskih nastavitev. Uporaba glavnega vmesnika je še vedno možna brez prijave.",
     "empty": "Geslo ne sme biti prazno",
-    "error": "Napaka: ",
     "labelCurrent": "Trenutno geslo",
     "labelNew": "Novo geslo",
     "labelRepeat": "Ponovi geslo",

@@ -330,14 +330,13 @@ import type { State } from "@/types/evcc";
 // Keys that should be expanded (1-level expansion for arrays and objects)
 const EXPAND_KEYS = [
 	"battery",
+	"charger",
 	"forecast",
 	"loadpoints",
-	"pv",
-	"vehicles",
-	"statistics",
-	"charger",
-	"site",
+	"messenger",
 	"meter",
+	"pv",
+	"tariff",
 	"vehicle",
 ];
 
@@ -494,7 +493,9 @@ export default defineComponent({
 				const deviceEndpoints = [
 					"config/loadpoints",
 					"config/devices/charger",
+					"config/devices/messenger",
 					"config/devices/meter",
+					"config/devices/tariff",
 					"config/devices/vehicle",
 				];
 
@@ -502,10 +503,10 @@ export default defineComponent({
 					"config/site",
 					...deviceEndpoints,
 					"config/circuits",
-					"config/eebus",
 					"config/hems",
 					"config/messaging",
 					"config/tariffs",
+					"config/tariff",
 				];
 
 				const configs: any = {};
@@ -515,7 +516,11 @@ export default defineComponent({
 						// Add private=false for device endpoints to hide private data in bug reports
 						const response = await api.get(endpoint, { params: { private: false } });
 						if (response.data && Object.keys(response.data).length > 0) {
-							const key = endpoint.replace("config/", "").replace("devices/", "");
+							let key = endpoint.replace("config/", "").replace("devices/", "");
+							// avoid collision with config/devices/tariff
+							if (key === "tariff" && !deviceEndpoints.includes(endpoint)) {
+								key = "tariffRefs";
+							}
 							let data = response.data;
 
 							// Filter out entries without id property for device endpoints
@@ -533,9 +538,17 @@ export default defineComponent({
 				}
 
 				// read essential config data from state
-				["modbusproxy", "mqtt", "influx", "shm", "interval"].forEach((key) => {
+				[
+					"modbusproxy",
+					"mqtt",
+					"influx",
+					"shm",
+					"interval",
+					"residualPower",
+					"experimental",
+				].forEach((key) => {
 					const value = store.state[key as keyof State];
-					if (value) {
+					if (value !== undefined && value !== null) {
 						configs[key] = value;
 					}
 				});
@@ -604,12 +617,14 @@ export default defineComponent({
 </script>
 
 <style scoped>
+@import "../../css/breakpoints.css";
+
 .log-count-input::-webkit-outer-spin-button,
 .log-count-input::-webkit-inner-spin-button {
 	margin-left: 0.5rem;
 }
 
-@media (min-width: 768px) {
+@media (--md-and-up) {
 	.log-lines-input {
 		width: 170px;
 	}

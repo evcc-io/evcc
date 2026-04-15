@@ -51,7 +51,4 @@ func runSettingsSet(cmd *cobra.Command, args []string) {
 	if confirmation {
 		settings.SetString(args[0], args[1])
 	}
-
-	// wait for shutdown
-	<-shutdownDoneC()
 }

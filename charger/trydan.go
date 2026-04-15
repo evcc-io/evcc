@@ -152,21 +152,23 @@ func (c Trydan) MaxCurrent(current int64) error {
 	return err
 }
 
-var _ api.ChargeRater = (*Trydan)(nil)
+// removed broken interfaces https://github.com/evcc-io/evcc/issues/28047
 
-// ChargedEnergy implements the api.ChargeRater interface
-func (c Trydan) ChargedEnergy() (float64, error) {
-	data, err := c.statusG.Get()
-	return data.ChargeEnergy, err
-}
+// var _ api.ChargeRater = (*Trydan)(nil)
 
-var _ api.ChargeTimer = (*Trydan)(nil)
+// // ChargedEnergy implements the api.ChargeRater interface
+// func (c Trydan) ChargedEnergy() (float64, error) {
+// 	data, err := c.statusG.Get()
+// 	return data.ChargeEnergy, err
+// }
 
-// ChargeDuration implements the api.ChargeTimer interface
-func (c Trydan) ChargeDuration() (time.Duration, error) {
-	data, err := c.statusG.Get()
-	return time.Duration(data.ChargeTime) * time.Second, err
-}
+// var _ api.ChargeTimer = (*Trydan)(nil)
+
+// // ChargeDuration implements the api.ChargeTimer interface
+// func (c Trydan) ChargeDuration() (time.Duration, error) {
+// 	data, err := c.statusG.Get()
+// 	return time.Duration(data.ChargeTime) * time.Second, err
+// }
 
 var _ api.Meter = (*Trydan)(nil)
 

@@ -18,9 +18,13 @@ var meterCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(meterCmd)
+	withCustomTemplate(meterCmd)
+
 	meterCmd.Flags().StringP(flagBatteryMode, "b", "", flagBatteryModeDescription)
 	meterCmd.Flags().DurationP(flagBatteryModeWait, "w", 0, flagBatteryModeWaitDescription)
 	meterCmd.Flags().Bool(flagDiagnose, false, flagDiagnoseDescription)
+	meterCmd.Flags().IntP(flagCurtail, "u", -1, flagCurtailDescription)
+	meterCmd.Flags().IntP(flagDim, "m", -1, flagDimDescription)
 	meterCmd.Flags().BoolP(flagRepeat, "r", false, flagRepeatDescription)
 	meterCmd.Flags().Duration(flagRepeatInterval, 0, flagRepeatIntervalDescription)
 	meterCmd.Flags().Bool(flagHeartbeat, false, flagHeartbeatDescription)
@@ -58,7 +62,7 @@ func runMeter(cmd *cobra.Command, args []string) {
 		flagUsed = true
 
 		for _, v := range config.Instances(meters) {
-			if b, ok := v.(api.BatteryController); ok {
+			if b, ok := api.Cap[api.BatteryController](v); ok {
 				if err := b.SetBatteryMode(mode); err != nil {
 					log.FATAL.Fatalln("set battery mode:", err)
 				}
@@ -68,6 +72,16 @@ func runMeter(cmd *cobra.Command, args []string) {
 				log.INFO.Println("waiting for:", d)
 				time.Sleep(d)
 			}
+		}
+	}
+
+	for _, v := range config.Instances(meters) {
+		if handleCurtailFlag(cmd, v) {
+			flagUsed = true
+		}
+
+		if handleDimFlag(cmd, v) {
+			flagUsed = true
 		}
 	}
 
@@ -96,7 +110,4 @@ func runMeter(cmd *cobra.Command, args []string) {
 		log.INFO.Println("running heartbeat (if any) until interrupted (Ctrl-C to stop)")
 		time.Sleep(time.Hour)
 	}
-
-	// wait for shutdown
-	<-shutdownDoneC()
 }

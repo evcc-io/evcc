@@ -239,14 +239,22 @@ func (c *EEBus) UnregisterDevice(ski string, device Device) {
 	ski = shiputil.NormalizeSKI(ski)
 	c.log.TRACE.Printf("unregistering ski: %s", ski)
 
-	c.service.UnregisterRemoteSKI(ski)
-
 	c.mux.Lock()
-	defer c.mux.Unlock()
-
 	if idx := slices.Index(c.clients[ski], device); idx != -1 {
 		c.clients[ski] = slices.Delete(c.clients[ski], idx, idx+1)
+
+		if len(c.clients[ski]) == 0 {
+			delete(c.clients, ski)
+
+			// Tear down the SHIP session after releasing the mutex: ship-go's CloseConnection
+			// on a non-Complete state synchronously invokes HandleConnectionClosed,
+			// which calls back into evcc's connect(ski, false) — and that needs to
+			// acquire c.mux. Holding c.mux across this cross-layer call would
+			// deadlock the same goroutine on its own non-reentrant mutex. See #28942.
+			defer c.service.UnregisterRemoteSKI(ski)
+		}
 	}
+	c.mux.Unlock()
 }
 
 func (c *EEBus) CustomerEnergyManagement() *CustomerEnergyManagement {
@@ -383,6 +391,13 @@ func (c *EEBus) Infof(format string, args ...any) {
 }
 
 func (c *EEBus) Error(args ...any) {
+	if len(args) == 2 {
+		// TODO remove when enbility/ship-go is upgraded
+		if err := fmt.Sprint(args...); err == "websocket server error:http: Server closed" {
+			return
+		}
+	}
+
 	c.log.ERROR.Println(args...)
 }
 

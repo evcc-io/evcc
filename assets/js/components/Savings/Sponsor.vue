@@ -77,7 +77,6 @@ export default defineComponent({
 	name: "Sponsor",
 	props: {
 		status: Object as PropType<SponsorStatus>,
-		fromYaml: Boolean,
 	},
 	computed: {
 		name() {
@@ -136,6 +135,8 @@ export default defineComponent({
 </script>
 
 <style scoped>
+@import "../../../css/breakpoints.css";
+
 .title-icon {
 	transform: translateY(-2px);
 }
@@ -150,7 +151,7 @@ export default defineComponent({
 }
 
 /* breakpoint sm */
-@media (min-width: 576px) {
+@media (--sm-and-up) {
 	.confetti-button,
 	.become-sponsor {
 		width: 75%;
@@ -158,7 +159,7 @@ export default defineComponent({
 }
 
 /* breakpoint lg */
-@media (min-width: 992px) {
+@media (--lg-and-up) {
 	.confetti-button,
 	.become-sponsor {
 		width: 40%;

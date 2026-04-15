@@ -961,7 +961,7 @@
     },
     "loadpointSettings": {
       "batteryBoost": {
-        "description": "Gyorstöltés otthoni akkumulátorról.",
+        "description": "Gyorstöltés otthoni akkumulátorról, amíg az le nem merül {limit} szintre.",
         "label": "Akkumulátoros Rásegítés",
         "mode": "Csak szolár és min+szolár módban elérhető.",
         "once": "Rásegítés aktív ehhez a töltési folyamathoz."
@@ -1116,7 +1116,6 @@
   "passwordModal": {
     "description": "Állítson be egy jelszót a konfigurációs beállítások védelmére. A főképernyő használata továbbra is lehetséges bejelentkezés nélkül.",
     "empty": "A jelszó nem lehet üres",
-    "error": "Hiba: ",
     "labelCurrent": "Jelenlegi jelszó",
     "labelNew": "Új jelszó",
     "labelRepeat": "Jelszó megismétlése",

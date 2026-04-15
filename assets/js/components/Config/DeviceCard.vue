@@ -19,85 +19,80 @@
 				:title="name"
 				>{{ title }}</strong
 			>
-			<button
-				ref="tooltip"
-				type="button"
-				class="btn btn-sm btn-outline-secondary position-relative border-0 p-2 edit-button"
-				:class="{ 'opacity-25': !editable, invisible: noEditButton }"
-				data-bs-toggle="tooltip"
-				data-bs-html="true"
-				:title="tooltipTitle"
-				:aria-label="editable ? $t('config.main.edit') : null"
-				:disabled="!editable || noEditButton"
-				@click="edit"
-			>
-				<shopicon-regular-adjust size="s"></shopicon-regular-adjust>
-			</button>
+			<DeviceCardEditIcon
+				:editable="editable"
+				:noEditButton="noEditButton"
+				:badge="badge"
+				@edit="$emit('edit')"
+			/>
 		</div>
-		<div v-if="$slots.tags">
+		<div v-if="$slots.tags" ref="tagsContainer" :style="tagsStyle">
 			<hr class="my-3 divide" />
-			<slot name="tags" />
+			<div ref="tagsContent">
+				<slot name="tags" />
+			</div>
 		</div>
 	</div>
 </template>
 
 <script>
-import "@h2d2/shopicons/es/regular/adjust";
-import "@h2d2/shopicons/es/regular/invoice";
-import Tooltip from "bootstrap/js/dist/tooltip";
+import DeviceCardEditIcon from "./DeviceCardEditIcon.vue";
+import settings from "../../settings";
 
 export default {
 	name: "DeviceCard",
+	components: { DeviceCardEditIcon },
 	props: {
 		name: String,
+		id: String,
 		title: String,
 		editable: Boolean,
 		error: Boolean,
 		unconfigured: Boolean,
 		warning: Boolean,
 		noEditButton: Boolean,
+		badge: Boolean,
 	},
 	emits: ["edit"],
 	data() {
 		return {
-			tooltip: null,
+			tagsMinHeight: null,
+			resizeObserver: null,
 		};
 	},
 	computed: {
-		tooltipTitle() {
-			if (!this.name) {
-				return "";
-			}
-			let title = `${this.$t("config.main.name")}: <span class='font-monospace'>${this.name}</span>`;
-			if (!this.editable) {
-				title += `<div class="mt-1">${this.$t("config.general.fromYamlHint")}</div>`;
-			}
-			return `<div class="text-start">${title}</div>`;
-		},
-	},
-	watch: {
-		tooltipTitle() {
-			this.initTooltip();
+		tagsStyle() {
+			return this.tagsMinHeight ? { minHeight: `${this.tagsMinHeight}px` } : undefined;
 		},
 	},
 	mounted() {
-		this.initTooltip();
+		if (!this.id) return;
+		const cached = settings.cardHeights[this.id];
+		if (cached > 0) {
+			this.tagsMinHeight = cached;
+		}
+		// Cache tag heights to reduce layout shift. Hold cached min-height
+		// until async data fills the space, then save and release.
+		this.$nextTick(() => {
+			const el = this.$refs.tagsContainer;
+			const content = this.$refs.tagsContent;
+			if (!el || !content) return;
+			const minContentHeight = 10;
+			const check = () => {
+				if (content.offsetHeight <= minContentHeight) return;
+				// measure natural height without cached min-height
+				el.style.minHeight = "";
+				settings.cardHeights[this.id] = Math.round(el.getBoundingClientRect().height);
+				this.tagsMinHeight = null;
+				this.resizeObserver?.disconnect();
+				this.resizeObserver = null;
+			};
+			this.resizeObserver = new ResizeObserver(check);
+			this.resizeObserver.observe(content);
+		});
 	},
-	methods: {
-		edit() {
-			if (this.editable) {
-				this.tooltip?.hide();
-				this.$emit("edit");
-			}
-		},
-		initTooltip() {
-			this.$nextTick(() => {
-				this.tooltip?.dispose();
-				if (this.$refs.tooltip) {
-					this.tooltip = new Tooltip(this.$refs.tooltip);
-				}
-			});
-		},
+	unmounted() {
+		this.resizeObserver?.disconnect();
 	},
 };
 </script>
@@ -129,15 +124,8 @@ export default {
 .icon:empty {
 	display: none;
 }
-.edit-button {
-	/* transparent button, right align icon */
-	margin-right: -0.5rem;
-}
 .divide {
 	margin-left: -1.5rem;
 	margin-right: -1.5rem;
-}
-button:disabled {
-	pointer-events: auto;
 }
 </style>

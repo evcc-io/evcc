@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -11,14 +12,15 @@ import (
 	"sync/atomic"
 	"time"
 
-	evopt "github.com/andig/evopt/client"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
-	"github.com/evcc-io/evcc/core/metrics"
+	"github.com/evcc-io/evcc/core/types"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
+	optimizer "github.com/evcc-io/optimizer/client"
 	"github.com/jinzhu/now"
 	"github.com/samber/lo"
 	"golang.org/x/exp/constraints"
@@ -32,9 +34,27 @@ var (
 	mu      atomic.Uint32
 )
 
+// optimizerResult wraps the optimizer publish payload to implement BytesMarshaler.
+// This ensures publishComplex serializes it as a single JSON message instead of
+// recursively decomposing each struct field and array element into individual MQTT
+// topics (~1,500 messages per optimizer run).
+type optimizerResult struct {
+	Req     optimizer.OptimizationInput  `json:"req"`
+	Res     optimizer.OptimizationResult `json:"res"`
+	Details requestDetails               `json:"details"`
+}
+
+var _ api.BytesMarshaler = (*optimizerResult)(nil)
+
+func (r optimizerResult) MarshalBytes() ([]byte, error) {
+	return json.Marshal(r)
+}
+
 type batteryType string
 
 const (
+	OPTIMIZER_URI = "https://optimizer.evcc.io"
+
 	batteryTypeLoadpoint batteryType = "loadpoint"
 	batteryTypeVehicle   batteryType = "vehicle"
 	batteryTypeBattery   batteryType = "battery"
@@ -47,14 +67,40 @@ type batteryDetail struct {
 	Capacity float64     `json:"capacity,omitempty"`
 }
 
-type responseDetails struct {
+type batteryResult struct {
+	batteryDetail
+	Full  time.Time `json:"full,omitzero"`
+	Empty time.Time `json:"empty,omitzero"`
+}
+
+// func (br batteryResult) MarshalJSON() ([]byte, error) {
+// 	var full, empty int64
+// 	if !br.Full.IsZero() {
+// 		full = int64(time.Until(br.Full).Seconds())
+// 	}
+// 	if !br.Empty.IsZero() {
+// 		empty = int64(time.Until(br.Empty).Seconds())
+// 	}
+
+// 	return json.Marshal(struct {
+// 		batteryResult
+// 		UntilFull  int64 `json:"untilFull,omitempty"`
+// 		UntilEmpty int64 `json:"untilEmpty,omitempty"`
+// 	}{
+// 		batteryResult: br,
+// 		UntilFull:     full,
+// 		UntilEmpty:    empty,
+// 	})
+// }
+
+type requestDetails struct {
 	Timestamps     []time.Time     `json:"timestamp"`
 	BatteryDetails []batteryDetail `json:"batteryDetails"`
 }
 
 const slotsPerHour = float64(time.Hour / tariff.SlotDuration)
 
-func (site *Site) optimizerUpdateAsync(battery []measurement) {
+func (site *Site) optimizerUpdateAsync() {
 	var err error
 
 	if time.Since(updated) < 2*time.Minute {
@@ -78,15 +124,10 @@ func (site *Site) optimizerUpdateAsync(battery []measurement) {
 		}
 	}()
 
-	err = site.optimizerUpdate(battery)
+	err = site.optimizerUpdate(site.battery.Devices)
 }
 
-func (site *Site) optimizerUpdate(battery []measurement) error {
-	uri := os.Getenv("EVOPT_URI")
-	if uri == "" {
-		return nil
-	}
-
+func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	solarTariff := site.GetTariff(api.TariffUsageSolar)
 	solar := currentRates(solarTariff)
 
@@ -94,15 +135,20 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 	feedIn := currentRates(site.GetTariff(api.TariffUsageFeedIn))
 
 	minLen := lo.Min([]int{len(grid), len(feedIn)})
-	if solarTariff != nil {
-		// allow empty solar forecast
+	// exclude empty solar forecast from minLen
+	if solarTariff != nil && len(solar) > 0 {
 		minLen = min(minLen, len(solar))
 	}
-	if minLen < 8 {
-		return fmt.Errorf("not enough slots for optimization: %d (grid=%d, feedIn=%d, solar=%d)", minLen, len(grid), len(feedIn), len(solar))
+	const expectedSlots = 8
+	if minLen < expectedSlots {
+		if solarTariff != nil {
+			return fmt.Errorf("not enough forecast slots for meaningful optimization: %d < %d (grid=%d, feedIn=%d, solar=%d)", minLen, expectedSlots, len(grid), len(feedIn), len(solar))
+		}
+		return fmt.Errorf("not enough forecast slots for meaningful optimization: %d < %d (grid=%d, feedIn=%d)", minLen, expectedSlots, len(grid), len(feedIn))
 	}
 
-	dt := timeSteps(minLen)
+	now := time.Now()
+	dt := timeSteps(minLen, now)
 	firstSlotDuration := time.Duration(dt[0]) * time.Second
 
 	site.log.DEBUG.Printf("optimizer: optimizing %d slots until %v: grid=%d, feedIn=%d, solar=%d, first slot: %v",
@@ -128,14 +174,14 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 		ft = prorate(scaleAndPrune(solarEnergy, 1, minLen), firstSlotDuration)
 	}
 
-	req := evopt.OptimizationInput{
-		Strategy: evopt.OptimizerStrategy{
-			ChargingStrategy:    evopt.OptimizerStrategyChargingStrategyChargeBeforeExport, // AttenuateGridPeaks
-			DischargingStrategy: evopt.OptimizerStrategyDischargingStrategyDischargeBeforeImport,
+	req := optimizer.OptimizationInput{
+		Strategy: optimizer.OptimizerStrategy{
+			ChargingStrategy:    optimizer.OptimizerStrategyChargingStrategyChargeBeforeExport, // AttenuateGridPeaks
+			DischargingStrategy: optimizer.OptimizerStrategyDischargingStrategyDischargeBeforeImport,
 		},
 		EtaC: eta,
 		EtaD: eta,
-		TimeSeries: evopt.TimeSeries{
+		TimeSeries: optimizer.TimeSeries{
 			Dt: dt,
 			Gt: prorate(gt, firstSlotDuration),
 			Ft: ft,
@@ -147,8 +193,23 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 	// end of horizon Wh value
 	pa := lo.Min(req.TimeSeries.PN) * eta * 0.99
 
-	details := responseDetails{
-		Timestamps: asTimestamps(dt),
+	details := requestDetails{
+		Timestamps: asTimestamps(dt, now),
+	}
+
+	if site.circuit != nil {
+		if pMaxImp := site.circuit.GetMaxPower(); pMaxImp > 0 {
+			req.Grid = optimizer.GridConfig{
+				// hard grid import limit if no price penalty is set by PrcPExcImp
+				PMaxImp: float32(pMaxImp),
+			}
+		}
+	}
+
+	add := func(battery optimizer.BatteryConfig, detail batteryDetail) {
+		battery.PA = pa
+		req.Batteries = append(req.Batteries, battery)
+		details.BatteryDetails = append(details.BatteryDetails, detail)
 	}
 
 	for _, lp := range site.Loadpoints() {
@@ -157,137 +218,28 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 			continue
 		}
 
-		v := lp.GetVehicle()
-		if v == nil || v.Capacity() == 0 {
+		if v := lp.GetVehicle(); v == nil || v.Capacity() == 0 {
 			continue
 		}
 
-		bat := evopt.BatteryConfig{
-			ChargeFromGrid: true,
-			CMin:           float32(lp.EffectiveMinPower()),
-			CMax:           float32(lp.EffectiveMaxPower()),
-			DMax:           0,
-			SMin:           0,
-			PA:             pa,
-		}
-
-		if profile := loadpointProfile(lp, minLen); profile != nil {
-			bat.PDemand = prorate(profile, firstSlotDuration)
-		}
-
-		detail := batteryDetail{
-			Type:  batteryTypeLoadpoint,
-			Title: lp.GetTitle(),
-		}
-
-		// vehicle
-		maxSoc := v.Capacity() * 1e3 // Wh
-		if v := lp.EffectiveLimitSoc(); v > 0 {
-			maxSoc *= float64(v) / 100
-		} else if v := lp.GetLimitEnergy(); v > 0 {
-			maxSoc = v * 1e3
-		}
-
-		bat.SInitial = float32(v.Capacity() * lp.GetSoc() * 10) // Wh
-		bat.SMax = max(bat.SInitial, float32(maxSoc))           // prevent infeasible if current soc above maximum
-
-		detail.Type = batteryTypeVehicle
-		detail.Capacity = v.Capacity()
-
-		if vt := v.GetTitle(); vt != "" {
-			if detail.Title != "" {
-				detail.Title += " – "
-			}
-			detail.Title += vt
-		}
-
-		// find vehicle name/id
-		for _, dev := range config.Vehicles().Devices() {
-			if dev.Instance() == v {
-				detail.Name = dev.Config().Name
-			}
-		}
-
-		var demand []float32
-
-		switch lp.GetMode() {
-		case api.ModeOff:
-			// disable charging
-			bat.CMax = 0
-
-		case api.ModeNow:
-			// forced max charging
-			demand = continuousDemand(lp, minLen)
-
-		case api.ModeMinPV:
-			// forced min charging
-			demand = continuousDemand(lp, minLen)
-			// add smartcost limit and plan goal, if configured
-			demand = applySmartCostLimit(lp, demand, grid, minLen)
-			site.applyPlanGoal(lp, &bat, minLen)
-
-		case api.ModePV:
-			// add smartcost limit and plan goal, if configured
-			demand = applySmartCostLimit(lp, nil, grid, minLen)
-			site.applyPlanGoal(lp, &bat, minLen)
-		}
-
-		if demand != nil {
-			bat.PDemand = prorate(demand, firstSlotDuration)
-		}
-
-		req.Batteries = append(req.Batteries, bat)
-
-		details.BatteryDetails = append(details.BatteryDetails, detail)
+		add(site.loadpointRequest(lp, minLen, firstSlotDuration, grid))
 	}
 
-	for i, b := range battery {
+	for i, dev := range site.batteryMeters {
+		b := battery[i]
+
 		if b.Capacity == nil || *b.Capacity == 0 || b.Soc == nil {
 			continue
 		}
 
-		dev := site.batteryMeters[i]
-
-		bat := evopt.BatteryConfig{
-			CMax:     batteryPower,
-			DMax:     batteryPower,
-			SInitial: float32(*b.Capacity * *b.Soc * 10), // Wh
-			PA:       pa,
-		}
-		bat.SMax = max(bat.SInitial, float32(*b.Capacity*1e3)) // Wh
-
-		instance := dev.Instance()
-
-		if _, ok := instance.(api.BatteryController); ok {
-			bat.ChargeFromGrid = true
-		}
-
-		if m, ok := instance.(api.BatteryPowerLimiter); ok {
-			charge, discharge := m.GetPowerLimits()
-			bat.CMax = float32(charge)
-			bat.DMax = float32(discharge)
-		}
-
-		if m, ok := instance.(api.BatterySocLimiter); ok {
-			minSoc, maxSoc := m.GetSocLimits()
-			bat.SMin = min(bat.SInitial, float32(*b.Capacity*minSoc*10)) // Wh
-			bat.SMax = max(bat.SInitial, float32(*b.Capacity*maxSoc*10)) // Wh
-		}
-
-		req.Batteries = append(req.Batteries, bat)
-
-		details.BatteryDetails = append(details.BatteryDetails, batteryDetail{
-			Type:     batteryTypeBattery,
-			Name:     dev.Config().Name,
-			Title:    deviceProperties(dev).Title,
-			Capacity: *b.Capacity,
-		})
+		add(site.batteryRequest(dev, b, grid, minLen, firstSlotDuration))
 	}
 
 	httpClient := request.NewClient(site.log)
 	httpClient.Timeout = 30 * time.Second
 
-	apiClient, err := evopt.NewClientWithResponses(uri, evopt.WithHTTPClient(httpClient))
+	uri := lo.CoalesceOrEmpty(os.Getenv("OPTIMIZER_URI"), OPTIMIZER_URI)
+	apiClient, err := optimizer.NewClientWithResponses(uri, optimizer.WithHTTPClient(httpClient))
 	if err != nil {
 		return err
 	}
@@ -306,17 +258,227 @@ func (site *Site) optimizerUpdate(battery []measurement) error {
 		return apiError(resp)
 	}
 
-	site.publish("evopt", struct {
-		Req     evopt.OptimizationInput  `json:"req"`
-		Res     evopt.OptimizationResult `json:"res"`
-		Details responseDetails          `json:"details"`
-	}{
+	if resp.JSON200.Status != optimizer.Optimal {
+		return errors.New(string(resp.JSON200.Status))
+	}
+
+	site.publish("evopt", optimizerResult{
 		Req:     req,
 		Res:     *resp.JSON200,
 		Details: details,
 	})
 
+	var batteries []batteryResult
+	for i, batReq := range req.Batteries {
+		batResp := resp.JSON200.Batteries[i]
+
+		batResult := batteryResult{
+			batteryDetail: details.BatteryDetails[i],
+			Full: matchSoc(batResp.StateOfCharge, func(soc float32) bool {
+				return soc >= batReq.SMax
+			}),
+			Empty: matchSoc(batResp.StateOfCharge, func(soc float32) bool {
+				return soc <= batReq.SMin
+			}),
+		}
+
+		batteries = append(batteries, batResult)
+	}
+
+	site.publish("evopt-batteries", batteries)
+
+	site.battery.Forecast = site.addBatteryForecastTotals(req.Batteries, resp.JSON200.Batteries)
+
+	site.publish(keys.Battery, site.battery)
+
 	return nil
+}
+
+func (site *Site) addBatteryForecastTotals(req []optimizer.BatteryConfig, resp []optimizer.BatteryResult) *types.BatteryForecast {
+	if len(resp) == 0 || len(resp[0].StateOfCharge) == 0 {
+		return nil
+	}
+
+	now := time.Now().Round(tariff.SlotDuration)
+	fullSlot, emptySlot := site.batteryForecastFullAndEmptySlots(req, resp)
+
+	const zero = -1
+	if fullSlot == zero && emptySlot == zero {
+		return nil
+	}
+
+	var res types.BatteryForecast
+	if fullSlot != zero {
+		if ts := now.Add(time.Duration(fullSlot) * tariff.SlotDuration); ts.After(time.Now()) {
+			res.Full = new(ts)
+		}
+	}
+	if emptySlot != zero {
+		if ts := now.Add(time.Duration(emptySlot) * tariff.SlotDuration); ts.After(time.Now()) {
+			res.Empty = new(ts)
+		}
+	}
+
+	return &res
+}
+
+func (site *Site) batteryForecastFullAndEmptySlots(req []optimizer.BatteryConfig, resp []optimizer.BatteryResult) (int, int) {
+	matchSlot := func(fun func(soc float32, bat optimizer.BatteryConfig) bool) int {
+	NEXT:
+		for i := range resp[0].StateOfCharge {
+			for batIdx := range req {
+				if !fun(resp[batIdx].StateOfCharge[i], req[batIdx]) {
+					continue NEXT
+				}
+			}
+			return i
+		}
+		return -1
+	}
+
+	fullSlot := matchSlot(func(soc float32, bat optimizer.BatteryConfig) bool {
+		return soc >= bat.SMax
+	})
+	emptySlot := matchSlot(func(soc float32, bat optimizer.BatteryConfig) bool {
+		return soc <= bat.SMin
+	})
+
+	return fullSlot, emptySlot
+}
+
+func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDuration time.Duration, grid api.Rates) (optimizer.BatteryConfig, batteryDetail) {
+	bat := optimizer.BatteryConfig{
+		ChargeFromGrid: true,
+		CMin:           float32(lp.EffectiveMinPower()),
+		CMax:           float32(lp.EffectiveMaxPower()),
+		DMax:           0,
+		SMin:           0,
+		// PA:             pa,
+	}
+
+	if profile := loadpointProfile(lp, minLen); profile != nil {
+		bat.PDemand = prorate(profile, firstSlotDuration)
+	}
+
+	detail := batteryDetail{
+		Type:  batteryTypeLoadpoint,
+		Title: lp.GetTitle(),
+	}
+
+	// vehicle
+	v := lp.GetVehicle()
+
+	maxSoc := v.Capacity() * 1e3 // Wh
+	if v := lp.EffectiveLimitSoc(); v > 0 {
+		maxSoc *= float64(v) / 100
+	} else if v := lp.GetLimitEnergy(); v > 0 {
+		maxSoc = v * 1e3
+	}
+
+	bat.SInitial = float32(v.Capacity() * lp.GetSoc() * 10) // Wh
+	bat.SMax = max(bat.SInitial, float32(maxSoc))           // prevent infeasible if current soc above maximum
+
+	detail.Type = batteryTypeVehicle
+	detail.Capacity = v.Capacity()
+
+	if vt := v.GetTitle(); vt != "" {
+		if detail.Title != "" {
+			detail.Title += " – "
+		}
+		detail.Title += vt
+	}
+
+	// find vehicle name/id
+	for _, dev := range config.Vehicles().Devices() {
+		if dev.Instance() == v {
+			detail.Name = dev.Config().Name
+		}
+	}
+
+	var demand []float32
+
+	switch lp.GetMode() {
+	case api.ModeOff:
+		// disable charging
+		bat.CMax = 0
+
+	case api.ModeNow:
+		// forced max charging
+		demand = continuousDemand(lp, minLen)
+
+	case api.ModeMinPV:
+		// forced min charging
+		demand = continuousDemand(lp, minLen)
+		// add smartcost limit and plan goal, if configured
+		demand = applySmartCostLimit(lp, demand, grid, minLen)
+		site.applyPlanGoal(lp, &bat, minLen)
+
+	case api.ModePV:
+		// add smartcost limit and plan goal, if configured
+		demand = applySmartCostLimit(lp, nil, grid, minLen)
+		site.applyPlanGoal(lp, &bat, minLen)
+	}
+
+	if demand != nil {
+		bat.PDemand = prorate(demand, firstSlotDuration)
+	}
+
+	return bat, detail
+}
+
+func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measurement, grid api.Rates, minLen int, firstSlotDuration time.Duration) (optimizer.BatteryConfig, batteryDetail) {
+	bat := optimizer.BatteryConfig{
+		CMax:      batteryPower,
+		DMax:      batteryPower,
+		SCapacity: float32(*b.Capacity * 1e3),         // Wh
+		SInitial:  float32(*b.Capacity * *b.Soc * 10), // Wh
+		// PA:       pa,
+	}
+
+	instance := dev.Instance()
+
+	if api.HasCap[api.BatteryController](instance) {
+		bat.ChargeFromGrid = true
+	}
+
+	if m, ok := api.Cap[api.BatteryPowerLimiter](instance); ok {
+		charge, discharge := m.GetPowerLimits()
+		bat.CMax = float32(charge)
+		bat.DMax = float32(discharge)
+	}
+
+	if m, ok := api.Cap[api.BatterySocLimiter](instance); ok {
+		minSoc, maxSoc := m.GetSocLimits()
+		bat.SMin = float32(*b.Capacity * minSoc * 10) // Wh
+		bat.SMax = float32(*b.Capacity * maxSoc * 10) // Wh
+	}
+
+	detail := batteryDetail{
+		Type:     batteryTypeBattery,
+		Name:     dev.Config().Name,
+		Title:    deviceProperties(dev).Title,
+		Capacity: *b.Capacity,
+	}
+
+	// tariff forecast-based grid charging demand
+	if bat.ChargeFromGrid {
+		if demand := site.applyBatteryGridChargeLimit(bat.CMax, grid, minLen); demand != nil {
+			bat.PDemand = prorate(demand, firstSlotDuration)
+		}
+	}
+
+	return bat, detail
+}
+
+func matchSoc(ts []float32, fun func(float32) bool) time.Time {
+	for i, soc := range ts {
+		if fun(soc) {
+			// TODO first slot
+			return time.Now().Add(time.Duration(i+1) * tariff.SlotDuration)
+		}
+	}
+
+	return time.Time{}
 }
 
 // continuousDemand creates a slice of power demands depending on loadpoint mode
@@ -370,7 +532,7 @@ func loadpointProfile(lp loadpoint.API, minLen int) []float64 {
 // homeProfile returns the home base load in Wh
 func (site *Site) homeProfile(minLen int) ([]float64, error) {
 	// kWh over last 30 days
-	profile, err := metrics.Profile(now.BeginningOfDay().AddDate(0, 0, -30))
+	profile, err := site.homeEnergy.ImportProfile(now.BeginningOfDay().AddDate(0, 0, -30))
 	if err != nil {
 		return nil, err
 	}
@@ -430,10 +592,6 @@ func solarRatesToEnergy(rr api.Rates) (api.Rates, error) {
 	return res, nil
 }
 
-func endOfHour(ts time.Time) time.Time {
-	return ts.Truncate(time.Hour).Add(time.Hour)
-}
-
 func currentRates(tariff api.Tariff) api.Rates {
 	if tariff == nil {
 		return nil
@@ -451,12 +609,11 @@ func currentRates(tariff api.Tariff) api.Rates {
 	})
 }
 
-func timeSteps(minLen int) []int {
+func timeSteps(minLen int, now time.Time) []int {
 	res := make([]int, 0, minLen)
 
-	bos := time.Now().Truncate(tariff.SlotDuration)
-	eos := bos.Add(tariff.SlotDuration)
-	if d := time.Until(eos); d > time.Second && d < tariff.SlotDuration {
+	eos := now.Truncate(tariff.SlotDuration).Add(tariff.SlotDuration)
+	if d := eos.Sub(now); d > time.Second && d < tariff.SlotDuration {
 		res = append(res, int(d.Seconds()))
 	}
 
@@ -467,13 +624,16 @@ func timeSteps(minLen int) []int {
 	return res
 }
 
-func asTimestamps(dt []int) []time.Time {
+func asTimestamps(dt []int, now time.Time) []time.Time {
 	res := make([]time.Time, 0, len(dt))
-	eoh := endOfHour(time.Now())
-	res = append(res, eoh.Add(-time.Duration(dt[0])*time.Second))
-	for i := range len(res) - 1 {
-		res = append(res, eoh.Add(time.Duration(dt[i+1])*time.Second))
+
+	eos := now.Truncate(tariff.SlotDuration).Add(tariff.SlotDuration)
+	res = append(res, eos.Add(-time.Duration(dt[0])*time.Second))
+
+	for i := range len(dt) - 1 {
+		res = append(res, res[i].Add(time.Duration(dt[i])*time.Second))
 	}
+
 	return res
 }
 
@@ -490,7 +650,7 @@ func scaleAndPrune(rates api.Rates, div float64, maxLen int) []float32 {
 	return res
 }
 
-func (site *Site) applyPlanGoal(lp loadpoint.API, bat *evopt.BatteryConfig, minLen int) {
+func (site *Site) applyPlanGoal(lp loadpoint.API, bat *optimizer.BatteryConfig, minLen int) {
 	goal, socBased := lp.GetPlanGoal()
 	if goal <= 0 {
 		return
@@ -551,9 +711,33 @@ func applySmartCostLimit(lp loadpoint.API, demand []float32, grid api.Rates, min
 	return demand
 }
 
+func (site *Site) applyBatteryGridChargeLimit(cMax float32, grid api.Rates, minLen int) []float32 {
+	limit := site.GetBatteryGridChargeLimit()
+	if limit == nil {
+		return nil
+	}
+
+	maxLen := min(minLen, len(grid))
+
+	if hasAffordableSlots := slices.ContainsFunc(grid[:maxLen], func(r api.Rate) bool {
+		return r.Value <= *limit
+	}); !hasAffordableSlots {
+		return nil
+	}
+
+	demand := make([]float32, minLen)
+	for i := range maxLen {
+		if grid[i].Value <= *limit {
+			demand[i] = float32(float64(cMax) / slotsPerHour)
+		}
+	}
+
+	return demand
+}
+
 // apiError extracts error message from optimizer API response
-func apiError(resp *evopt.PostOptimizeChargeScheduleResponse) error {
-	var errObj *evopt.Error
+func apiError(resp *optimizer.PostOptimizeChargeScheduleResponse) error {
+	var errObj *optimizer.Error
 	switch resp.StatusCode() {
 	case http.StatusBadRequest:
 		errObj = resp.JSON400

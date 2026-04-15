@@ -21,7 +21,7 @@ func init() {
 	registry.Add("shelly", NewShellyFromConfig)
 }
 
-//go:generate go tool decorate -f decorateShelly -b *Shelly -r api.Meter -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhasePowers,Powers,func() (float64, float64, float64, error)"
+//go:generate go tool decorate -f decorateShelly -b *Shelly -r api.Meter -t api.PhaseVoltages,api.PhaseCurrents,api.PhasePowers
 
 // NewShellyFromConfig creates a Shelly charger from generic config
 func NewShellyFromConfig(other map[string]any) (api.Meter, error) {

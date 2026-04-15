@@ -7,13 +7,10 @@ capabilities: ["battery-control"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
-  - name: storageunit
-    type: int
-    default: 1
-    advanced: true
   - name: modbus
     choice: ["tcpip"]
   - name: maxacpower
+  - name: storageunit
   - preset: battery-params
   - name: timeout
     deprecated: true
@@ -64,7 +61,7 @@ render: |
   power:
     source: modbus
     id: 0
-    uri: {{ .host }}:{{ .port }}
+    uri: {{ joinHostPort .host .port }}
     register:
       address: 40521 # Active power
       type: holding
@@ -72,7 +69,7 @@ render: |
   energy:
     source: modbus
     id: 0
-    uri: {{ .host }}:{{ .port }}
+    uri: {{ joinHostPort .host .port }}
     register:
       address: 40560 # E-Total
       type: holding

@@ -70,7 +70,7 @@ func NewWeidmüllerFromConfig(ctx context.Context, other map[string]any) (api.Ch
 	return NewWeidmüller(ctx, cc.URI, cc.ID)
 }
 
-//go:generate go tool decorate -f decorateWeidmüller -b *Weidmüller -r api.Charger -t "api.MeterEnergy,TotalEnergy,func() (float64, error)"
+//go:generate go tool decorate -f decorateWeidmüller -b *Weidmüller -r api.Charger -t api.MeterEnergy
 
 // NewWeidmüller creates Weidmüller charger
 func NewWeidmüller(ctx context.Context, uri string, id uint8) (api.Charger, error) {

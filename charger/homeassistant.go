@@ -1,11 +1,12 @@
 package charger
 
-//go:generate go tool decorate -f decorateHomeAssistant -b *HomeAssistant -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)"
-//  -t "api.CurrentGetter,GetMaxCurrent,func() (float64, error)"
+//go:generate go tool decorate -f decorateHomeAssistant -b *HomeAssistant -r api.Charger -t api.Meter,api.MeterEnergy,api.PhaseCurrents,api.PhaseVoltages,api.PhaseSwitcher,api.PhaseGetter
+//  -t api.CurrentGetter
 
 import (
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -30,7 +31,7 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Charger, error) {
 	var cc struct {
 		URI        string
 		Token_     string   `mapstructure:"token"` // TODO deprecated
-		Home       string   // TODO deprecated
+		Home_      string   `mapstructure:"home"`  // TODO deprecated
 		Status     string   // required - sensor for charge status
 		Enabled    string   // required - sensor for enabled state
 		Enable     string   // required - switch/input_boolean for enable/disable
@@ -39,6 +40,7 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Charger, error) {
 		Energy     string   // optional - energy sensor
 		Currents   []string // optional - current sensors for L1, L2, L3
 		Voltages   []string // optional - voltage sensors for L1, L2, L3
+		Phases     string   // optional - select entity for 1p/3p phase switching
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -54,10 +56,13 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Charger, error) {
 	if cc.Enable == "" {
 		return nil, errors.New("missing enable switch entity")
 	}
+	if cc.MaxCurrent == "" {
+		return nil, errors.New("missing maxcurrent number entity")
+	}
 
 	log := util.NewLogger("ha-charger")
 
-	conn, err := homeassistant.NewConnection(log, cc.URI, cc.Home)
+	conn, err := homeassistant.NewConnection(log, cc.URI, cc.Home_)
 	if err != nil {
 		return nil, err
 	}
@@ -73,6 +78,8 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Charger, error) {
 	// decorators for optional interfaces
 	var power, energy func() (float64, error)
 	var currents, voltages func() (float64, float64, float64, error)
+	var phases1p3p func(int) error
+	var phasesG func() (int, error)
 
 	if cc.Power != "" {
 		power = func() (float64, error) { return conn.GetFloatState(cc.Power) }
@@ -95,7 +102,22 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Charger, error) {
 		return nil, fmt.Errorf("voltages: %w", err)
 	}
 
-	return decorateHomeAssistant(c, power, energy, currents, voltages), nil
+	// phase switching (optional)
+	if cc.Phases != "" {
+		phases1p3p = func(phases int) error {
+			return conn.CallSelectService(cc.Phases, strconv.Itoa(phases))
+		}
+
+		phasesG = func() (int, error) {
+			val, err := conn.GetIntState(cc.Phases)
+			if err != nil {
+				return 0, err
+			}
+			return int(val), nil
+		}
+	}
+
+	return decorateHomeAssistant(c, power, energy, currents, voltages, phases1p3p, phasesG), nil
 }
 
 var _ api.Charger = (*HomeAssistant)(nil)
@@ -117,5 +139,12 @@ func (c *HomeAssistant) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (c *HomeAssistant) MaxCurrent(current int64) error {
-	return c.conn.CallNumberService(c.maxcurrent, float64(current))
+	return c.MaxCurrentMillis(float64(current))
+}
+
+var _ api.ChargerEx = (*HomeAssistant)(nil)
+
+// MaxCurrentMillis implements the api.ChargerEx interface
+func (c *HomeAssistant) MaxCurrentMillis(current float64) error {
+	return c.conn.CallNumberService(c.maxcurrent, current)
 }

@@ -54,7 +54,7 @@ func NewMQTT(root string, site site.API) (*MQTT, error) {
 
 func (m *MQTT) encode(v any) string {
 	// nil should erase the value
-	if v == nil {
+	if v == nil || lo.IsNil(v) {
 		return ""
 	}
 
@@ -77,6 +77,10 @@ func (m *MQTT) encode(v any) string {
 	default:
 		return fmt.Sprintf("%v", val)
 	}
+}
+
+func mqttTagAttribute(attr string, f reflect.StructField) bool {
+	return tagAttribute("mqtt", attr, f)
 }
 
 func (m *MQTT) publishComplex(topic string, retained bool, payload any) {
@@ -129,9 +133,14 @@ func (m *MQTT) publishComplex(topic string, retained bool, payload any) {
 		// loop struct
 		for i := range typ.NumField() {
 			if f := typ.Field(i); f.IsExported() {
-				topic := fmt.Sprintf("%s/%s", topic, strings.ToLower(f.Name[:1])+f.Name[1:])
+				topic := topic
+				if !mqttTagAttribute("squash", f) {
+					topic = fmt.Sprintf("%s/%s", topic, strings.ToLower(f.Name[:1])+f.Name[1:])
+				} else {
+					println(1)
+				}
 
-				if val.Field(i).IsZero() && omitEmpty(f) {
+				if val.Field(i).IsZero() && jsonOmitEmpty(f) {
 					m.publishSingleValue(topic, retained, nil)
 				} else {
 					m.publishComplex(topic, retained, val.Field(i).Interface())
@@ -223,7 +232,7 @@ func (m *MQTT) listenSiteSetters(topic string, site site.API) error {
 		{"batteryGridChargeLimit", floatPtrSetter(site.SetBatteryGridChargeLimit)},
 		{"batteryMode", ptrSetter(api.BatteryModeString, func(m *api.BatteryMode) error {
 			if m == nil {
-				m = lo.ToPtr(api.BatteryUnknown)
+				m = new(api.BatteryUnknown)
 			}
 			return site.SetBatteryModeExternal(*m)
 		})},
@@ -239,7 +248,7 @@ func (m *MQTT) listenSiteSetters(topic string, site site.API) error {
 func (m *MQTT) listenLoadpointSetters(topic string, site site.API, lp loadpoint.API) error {
 	for _, s := range []setter{
 		{"mode", setterFunc(api.ChargeModeString, pass(lp.SetMode))},
-		{"phases", intSetter(lp.SetPhasesConfigured)},
+		{"phasesConfigured", intSetter(lp.SetPhasesConfigured)},
 		{"limitSoc", intSetter(pass(lp.SetLimitSoc))},
 		{"priority", intSetter(pass(lp.SetPriority))},
 		{"minCurrent", floatSetter(lp.SetMinCurrent)},
@@ -252,6 +261,7 @@ func (m *MQTT) listenLoadpointSetters(topic string, site site.API, lp loadpoint.
 		{"smartCostLimit", floatPtrSetter(pass(lp.SetSmartCostLimit))},
 		{"smartFeedInPriorityLimit", floatPtrSetter(pass(lp.SetSmartFeedInPriorityLimit))},
 		{"batteryBoost", boolSetter(lp.SetBatteryBoost)},
+		{"batteryBoostLimit", intSetter(pass(lp.SetBatteryBoostLimit))},
 		{"planStrategy", planStrategySetter(lp.SetPlanStrategy)},
 		{"planEnergy", planGoalSetter(lp.SetPlanEnergy)},
 		{"vehicle", func(payload string) error {

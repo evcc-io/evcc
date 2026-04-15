@@ -1,12 +1,11 @@
 <template>
 	<JsonModal
-		id="mqttModal"
+		name="mqtt"
 		:title="$t('config.mqtt.title')"
 		:description="$t('config.mqtt.description')"
 		docs="/docs/reference/configuration/mqtt"
 		endpoint="/config/mqtt"
 		state-key="mqtt"
-		data-testid="mqtt-modal"
 		@changed="$emit('changed')"
 	>
 		<template #default="{ values }">

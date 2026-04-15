@@ -962,7 +962,7 @@
     },
     "loadpointSettings": {
       "batteryBoost": {
-        "description": "Brzo punjenje pomoću kućne baterije.",
+        "description": "Brzo punjenje pomoću kućne baterije dok se ne isprazni na {limit}.",
         "label": "Ubrzaj punjenje s baterijom",
         "mode": "Dostupno samo u modusu 'Solarno' i 'Min+Solarno'.",
         "once": "Ubrzano punjenje je aktivno za ovu sesiju punjenja."
@@ -1117,7 +1117,6 @@
   "passwordModal": {
     "description": "Postavite lozinku za zaštitu postavki. Početna stranica se može koristiti i bez prijave.",
     "empty": "Lozinka ne bi trebala biti prazna",
-    "error": "Greška: ",
     "labelCurrent": "Trenutna lozinka",
     "labelNew": "Nova lozinka",
     "labelRepeat": "Ponovite lozinku",

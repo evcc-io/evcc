@@ -81,17 +81,14 @@ func wrapFatalError(err error) error {
 		return nil
 	}
 
-	var opErr *net.OpError
-	var pathErr *os.PathError
-
-	switch {
-	case errors.As(err, &opErr):
-		if opErr.Op == "listen" && strings.Contains(opErr.Error(), "address already in use") {
+	if err2, ok := errors.AsType[*net.OpError](err); ok {
+		if err2.Op == "listen" && strings.Contains(err2.Error(), "address already in use") {
 			err = fmt.Errorf("could not open port- check that evcc is not already running (%w)", err)
 		}
+	}
 
-	case errors.As(err, &pathErr):
-		if pathErr.Op == "remove" && strings.Contains(pathErr.Error(), "operation not permitted") {
+	if err2, ok := errors.AsType[*os.PathError](err); ok {
+		if err2.Op == "remove" && strings.Contains(err2.Error(), "operation not permitted") {
 			err = fmt.Errorf("could not remove file- check that evcc is not already running (%w)", err)
 		}
 	}

@@ -8,6 +8,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
+	"github.com/evcc-io/evcc/core/metrics"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
@@ -32,7 +33,7 @@ type dailyDetails struct {
 //   - the current green share, calculated for the part of the consumption between powerFrom and powerTo
 //     the consumption below powerFrom will get the available green power first
 func (site *Site) greenShare(powerFrom float64, powerTo float64) float64 {
-	greenPower := math.Max(0, site.pvPower) + math.Max(0, site.batteryPower)
+	greenPower := math.Max(0, site.pvPower) + math.Max(0, site.battery.Power)
 	greenPowerAvailable := math.Max(0, greenPower-powerFrom)
 
 	power := powerTo - powerFrom
@@ -115,7 +116,7 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 
 	// calculate adjusted solar rates
 	if solar := tariff.Rates(site.GetTariff(api.TariffUsageSolar)); len(solar) > 0 {
-		fc.Solar = lo.ToPtr(site.solarDetails(solar))
+		fc.Solar = new(site.solarDetails(solar))
 	}
 
 	site.publish(keys.Forecast, util.NewSharder(keys.Forecast, fc))
@@ -150,26 +151,27 @@ func (site *Site) solarDetails(solar api.Rates) solarDetails {
 	}
 
 	// accumulate forecasted energy since last update
-	energy := solarEnergy(solar, site.fcstEnergy.updated, time.Now()) / 1e3
+	fcstUpdated := site.fcstEnergy.Updated()
+	energy := solarEnergy(solar, fcstUpdated, time.Now()) / 1e3
 	site.log.DEBUG.Printf("solar forecast: accumulated %.3fWh from %v to %v",
-		energy, site.fcstEnergy.updated.Truncate(time.Second), time.Now().Truncate(time.Second),
+		energy, fcstUpdated.Truncate(time.Second), time.Now().Truncate(time.Second),
 	)
 
-	site.fcstEnergy.AddEnergy(energy)
-	settings.SetFloat(keys.SolarAccForecast, site.fcstEnergy.Accumulated)
+	site.fcstEnergy.AddImportEnergy(energy)
+	settings.SetFloat(keys.SolarAccForecast, site.fcstEnergy.Imported())
 
-	produced := lo.SumBy(slices.Collect(maps.Values(site.pvEnergy)), func(v *meterEnergy) float64 {
-		return v.AccumulatedEnergy()
+	produced := lo.SumBy(slices.Collect(maps.Values(site.pvEnergy)), func(v *metrics.Accumulator) float64 {
+		return v.Imported()
 	})
 	site.log.DEBUG.Printf("solar forecast: produced %.3f", produced)
 
-	if fcst := site.fcstEnergy.AccumulatedEnergy(); fcst > 0 {
+	if fcst := site.fcstEnergy.Imported(); fcst > 0 {
 		scale := produced / fcst
 		site.log.DEBUG.Printf("solar forecast: accumulated %.3fkWh, produced %.3fkWh, scale %.3f", fcst, produced, scale)
 
 		const minEnergy = 0.5 // kWh
 		if produced+fcst > minEnergy {
-			res.Scale = lo.ToPtr(scale)
+			res.Scale = new(scale)
 		}
 	}
 

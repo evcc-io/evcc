@@ -15,6 +15,7 @@ import (
 	"github.com/evcc-io/evcc/hems/shm"
 	"github.com/evcc-io/evcc/server/assets"
 	"github.com/evcc-io/evcc/server/eebus"
+	"github.com/evcc-io/evcc/server/remote"
 	"github.com/evcc-io/evcc/server/service"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/auth"
@@ -120,7 +121,7 @@ func (s *HTTPd) Router() *mux.Router {
 }
 
 // RegisterSiteHandlers connects the http handlers to the site
-func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param) {
+func (s *HTTPd) RegisterSiteHandlers(site site.API) {
 	router := s.Server.Handler.(*mux.Router)
 
 	// api
@@ -158,6 +159,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 		"updatesession":           {"PUT", "/session/{id:[0-9]+}", updateSessionHandler},
 		"deletesession":           {"DELETE", "/session/{id:[0-9]+}", deleteSessionHandler},
 		"gridsessions":            {"GET", "/gridsessions", gridSessionsHandler},
+		"energyhistory":           {"GET", "/history/energy", energyHistoryHandler},
 		"telemetry2":              {"POST", "/settings/telemetry/{value:[01truefalse]+}", boolHandler(telemetry.Enable, telemetry.Enabled)},
 	}
 
@@ -215,6 +217,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 			"smartFeedInPriorityDelete": {"DELETE", "/smartfeedinprioritylimit", floatPtrHandler(pass(lp.SetSmartFeedInPriorityLimit), lp.GetSmartFeedInPriorityLimit)},
 			"priority":                  {"POST", "/priority/{value:[0-9]+}", intHandler(pass(lp.SetPriority), lp.GetPriority)},
 			"batteryBoost":              {"POST", "/batteryboost/{value:[01truefalse]+}", boolHandler(lp.SetBatteryBoost, func() bool { return lp.GetBatteryBoost() > 0 })},
+			"batteryBoostLimit":         {"POST", "/batteryboostlimit/{value:[0-9]+}", intHandler(pass(lp.SetBatteryBoostLimit), lp.GetBatteryBoostLimit)},
 		}
 
 		for _, r := range routes {
@@ -224,7 +227,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API, valueChan chan<- util.Param)
 }
 
 // RegisterSystemHandler provides system level handlers
-func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *util.ParamCache, auth auth.Auth, shutdown func(), configFile string) {
+func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *util.ParamCache, auth auth.Auth, shutdown func(), configFile string, remoteAccess *remote.Remote) {
 	router := s.Server.Handler.(*mux.Router)
 
 	// api
@@ -278,6 +281,7 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 
 		routes := map[string]route{
 			"auth":               {"POST", "/auth", authHandler},
+			"authmerged":         {"POST", "/auth/{class:[a-z]+}/merge/{id:[0-9.]+}", authHandler},
 			"templates":          {"GET", "/templates/{class:[a-z]+}", templatesHandler},
 			"products":           {"GET", "/products/{class:[a-z]+}", productsHandler},
 			"devices":            {"GET", "/devices/{class:[a-z]+}", devicesConfigHandler},
@@ -293,6 +297,15 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 			"interval":           {"POST", "/interval/{value:[0-9.]+}", settingsSetDurationHandler(keys.Interval, pub)},
 			"updatesponsortoken": {"POST", "/sponsortoken", updateSponsortokenHandler(pub)},
 			"deletesponsortoken": {"DELETE", "/sponsortoken", deleteSponsorTokenHandler(pub)},
+			"experimental":       {"POST", "/experimental/{value:[01truefalse]+}", boolHandler(setExperimental(pub), getExperimental)},
+			"optimizer":          {"POST", "/optimizer/{value:[01truefalse]+}", boolHandler(setOptimizer(pub), getOptimizer)},
+		}
+
+		if remoteAccess != nil {
+			routes["remote"] = route{"POST", "/remote/{value:[01truefalse]+}", boolHandler(remoteAccess.Enable, remoteAccess.Enabled)}
+			routes["remoteclients"] = route{"GET", "/remote/clients", remoteClientsHandler(remoteAccess)}
+			routes["createremoteclient"] = route{"POST", "/remote/clients", createRemoteClientHandler(remoteAccess)}
+			routes["deleteremoteclient"] = route{"DELETE", "/remote/clients", deleteRemoteClientHandler(remoteAccess)}
 		}
 
 		// yaml handlers
@@ -310,12 +323,13 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 
 		// json handlers
 		for key, fun := range map[string]func() any{
-			keys.Network:     func() any { return new(globalconfig.Network) },       // has default
-			keys.Mqtt:        func() any { return new(globalconfig.Mqtt) },          // has default
-			keys.ModbusProxy: func() any { return new([]globalconfig.ModbusProxy) }, // slice
-			keys.Shm:         func() any { return new(shm.Config) },
-			keys.Influx:      func() any { return new(globalconfig.Influx) },
-			keys.EEBus:       func() any { return new(eebus.Config) },
+			keys.Network:         func() any { return new(globalconfig.Network) },       // has default
+			keys.Mqtt:            func() any { return new(globalconfig.Mqtt) },          // has default
+			keys.ModbusProxy:     func() any { return new([]globalconfig.ModbusProxy) }, // slice
+			keys.Shm:             func() any { return new(shm.Config) },
+			keys.Influx:          func() any { return new(globalconfig.Influx) },
+			keys.EEBus:           func() any { return new(eebus.Config) },
+			keys.MessagingEvents: func() any { return new(globalconfig.MessagingEvents) },
 		} {
 			routes["update"+key] = route{Method: "POST", Pattern: "/" + key, HandlerFunc: settingsSetJsonHandler(key, pub, fun)}
 			routes["delete"+key] = route{Method: "DELETE", Pattern: "/" + key, HandlerFunc: settingsDeleteJsonHandler(key, pub, fun())}
@@ -332,6 +346,15 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 		for _, r := range map[string]route{
 			"site":       {"GET", "/site", siteHandler(site)},
 			"updatesite": {"PUT", "/site", updateSiteHandler(site)},
+		} {
+			api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
+		}
+
+		// tariffs
+		for _, r := range map[string]route{
+			"tariff":         {"GET", "/tariff", tariffsHandler},
+			"updatetariff":   {"PUT", "/tariff", updateTariffHandler},
+			"updatecurrency": {"PUT", "/currency", updateCurrencyHandler(pub)},
 		} {
 			api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
 		}

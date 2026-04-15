@@ -1,5 +1,13 @@
 <template>
-	<GenericModal ref="modal" :title="title" :size="size" @open="open">
+	<GenericModal
+		:id="`${name}Modal`"
+		ref="modal"
+		:data-testid="`${name}-modal`"
+		:title="title"
+		:size="size"
+		:config-modal-name="name"
+		@open="open"
+	>
 		<p v-if="description || docsLink">
 			<span v-if="description">{{ description + " " }}</span>
 			<a v-if="docsLink" :href="docsLink" target="_blank">
@@ -11,7 +19,7 @@
 			{{ error }}
 		</p>
 		<form ref="form" class="container mx-0 px-0" @submit.prevent="save">
-			<slot :values="values"></slot>
+			<slot :values="values" :changes="!nothingChanged" :save="save"></slot>
 
 			<div
 				v-if="!noButtons"
@@ -46,6 +54,7 @@
 				</div>
 
 				<button
+					v-if="!disableSave"
 					type="submit"
 					class="btn btn-primary order-1 order-sm-2 flex-grow-1 flex-sm-grow-0 px-4"
 					:disabled="saving || nothingChanged"
@@ -69,6 +78,7 @@ import api from "@/api";
 import { docsPrefix } from "@/i18n";
 import store from "@/store";
 import deepClone from "@/utils/deepClone";
+import { closeModal } from "@/configModal";
 
 export default {
 	name: "JsonModal",
@@ -81,6 +91,7 @@ export default {
 		endpoint: String,
 		disableCancel: Boolean,
 		disableRemove: Boolean,
+		disableSave: Boolean,
 		noButtons: Boolean,
 		transformReadValues: Function,
 		transformWriteValues: Function,
@@ -89,6 +100,7 @@ export default {
 		storeValuesInArray: Boolean,
 		size: { type: String },
 		confirmRemove: String,
+		name: String,
 	},
 	emits: ["changed", "open"],
 	data() {
@@ -138,7 +150,7 @@ export default {
 			}
 			this.values = deepClone(this.serverValues);
 		},
-		async save() {
+		async save(shouldClose = true) {
 			this.saving = true;
 			this.error = "";
 			try {
@@ -151,7 +163,11 @@ export default {
 				});
 				if (res.status === 200 || res.status === 202) {
 					this.$emit("changed");
-					this.$refs.modal.close();
+					if (shouldClose) {
+						await closeModal();
+					} else {
+						await this.load();
+					}
 				}
 				if (res.status === 400) {
 					this.error = res.data.error;

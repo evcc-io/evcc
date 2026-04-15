@@ -37,7 +37,7 @@
 			@maxcurrent-updated="setMaxCurrent"
 			@mincurrent-updated="setMinCurrent"
 			@phasesconfigured-updated="setPhasesConfigured"
-			@batteryboost-updated="setBatteryBoost"
+			@batteryboostlimit-updated="setBatteryBoostLimit"
 		/>
 
 		<div
@@ -96,6 +96,7 @@
 			@change-vehicle="changeVehicle"
 			@remove-vehicle="removeVehicle"
 			@open-loadpoint-settings="openSettingsModal"
+			@batteryboost-updated="setBatteryBoost"
 		/>
 	</div>
 </template>
@@ -126,6 +127,7 @@ import type {
 	Vehicle,
 	Forecast,
 	SMART_COST_TYPE,
+	BATTERY_MODE,
 } from "@/types/evcc";
 import type { PlanStrategy } from "@/components/ChargingPlans/types";
 
@@ -156,7 +158,10 @@ export default defineComponent({
 		chargeDuration: { type: Number, default: 0 },
 		charging: Boolean,
 		batteryBoost: Boolean,
+		batteryBoostLimit: { type: Number, default: 100 },
 		batteryConfigured: Boolean,
+		batterySoc: Number,
+		batteryMode: String as PropType<BATTERY_MODE>,
 
 		// session
 		sessionEnergy: Number,
@@ -178,6 +183,7 @@ export default defineComponent({
 		vehicleDetectionActive: Boolean,
 		vehicleRange: Number,
 		vehicleSoc: { type: Number, default: 0 },
+		minSocNotReached: Boolean,
 		vehicleName: String,
 		vehicleIcon: String,
 		vehicleLimitSoc: Number,
@@ -316,7 +322,8 @@ export default defineComponent({
 				this.batteryBoost &&
 				this.charging &&
 				this.mode &&
-				!["off", "now"].includes(this.mode)
+				!["off", "now"].includes(this.mode) &&
+				(this.batterySoc ?? 0) >= this.batteryBoostLimit
 			);
 		},
 		plannerForecast() {
@@ -390,6 +397,9 @@ export default defineComponent({
 		setBatteryBoost(batteryBoost: boolean) {
 			api.post(this.apiPath("batteryboost") + `/${batteryBoost ? "1" : "0"}`);
 		},
+		setBatteryBoostLimit(limit: number) {
+			api.post(this.apiPath("batteryboostlimit") + "/" + limit);
+		},
 		fmtPower(value: number) {
 			return this.fmtW(value, POWER_UNIT.AUTO);
 		},
@@ -407,6 +417,8 @@ export default defineComponent({
 </script>
 
 <style scoped>
+@import "../../../css/breakpoints.css";
+
 .loadpoint {
 	border-radius: 2rem;
 	color: var(--evcc-default-text);
@@ -438,7 +450,7 @@ export default defineComponent({
 	margin: 0 -1rem;
 }
 /* breakpoint sm */
-@media (min-width: 576px) {
+@media (--sm-and-up) {
 	.divider {
 		margin: 0 -1.5rem;
 	}

@@ -1,0 +1,84 @@
+template: askoheat
+products:
+  - brand: Askoma
+    description:
+      generic: ASKOHEAT+
+group: heating
+requirements:
+  description:
+    de: |
+      Der ASKOHEAT+ muss über Modbus TCP erreichbar sein (Port 502).
+      Über das Webinterface sicherstellen, dass "Load Setpoint" im Input Setting aktiviert ist.
+
+      **Wichtig:** Im Loadpoint `mincurrent` und `maxcurrent` passend zum Gerät setzen,
+      sowie `phases: 1` für einphasigen Betrieb konfigurieren.
+      Beispiel AHIR-BI-plus-1.75: `mincurrent: 1.1`, `maxcurrent: 7.6` (bei 230V, 1 Phase).
+    en: |
+      The ASKOHEAT+ must be reachable via Modbus TCP (port 502).
+      Ensure "Load Setpoint" is enabled in Input Settings via the web interface.
+
+      **Important:** In the loadpoint configuration, set `mincurrent` and `maxcurrent` to match
+      your device, and configure `phases: 1` for single-phase operation.
+      Example AHIR-BI-plus-1.75: `mincurrent: 1.1`, `maxcurrent: 7.6` (at 230V, 1 phase).
+params:
+  - name: host
+  - name: port
+    default: 502
+  - name: id
+    default: 1
+  - name: tempsensor
+    type: choice
+    choice: ["0", "1", "2", "3", "4"]
+    default: "0"
+    description:
+      de: Temperatursensor
+      en: Temperature sensor
+render: |
+  type: heatpump
+  setmaxpower:
+    source: watchdog
+    timeout: 30s
+    set:
+      source: modbus
+      uri: {{ .host }}:{{ .port }}
+      id: {{ .id }}
+      register:
+        address: 319
+        type: writesingle
+        encoding: int16
+  getmaxpower:
+    source: modbus
+    uri: {{ .host }}:{{ .port }}
+    id: {{ .id }}
+    register:
+      address: 319
+      type: input
+      encoding: int16
+  power:
+    source: modbus
+    uri: {{ .host }}:{{ .port }}
+    id: {{ .id }}
+    register:
+      address: 317
+      type: input
+      encoding: uint16
+  temp:
+    source: modbus
+    uri: {{ .host }}:{{ .port }}
+    id: {{ .id }}
+    register:
+      address: {{ add 325 (mul (int .tempsensor) 2) }}
+      type: input
+      encoding: float32
+  limittemp:
+    source: modbus
+    uri: {{ .host }}:{{ .port }}
+    id: {{ .id }}
+    register:
+      address: 640
+      type: input
+      encoding: uint16
+  icon: waterheater
+  features:
+    - heating
+    - integrateddevice

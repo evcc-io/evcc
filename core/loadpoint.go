@@ -24,7 +24,7 @@ import (
 	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/core/vehicle"
 	"github.com/evcc-io/evcc/core/wrapper"
-	"github.com/evcc-io/evcc/push"
+	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/modbus"
@@ -79,9 +79,9 @@ type Loadpoint struct {
 	clock    clock.Clock // mockable time
 	bus      evbus.Bus   // event bus
 	site     site.API
-	pushChan chan<- push.Event // notifications
-	uiChan   chan<- util.Param // client push messages
-	lpChan   chan<- *Loadpoint // update requests
+	pushChan chan<- messenger.Event // notifications
+	uiChan   chan<- util.Param      // client push messages
+	lpChan   chan<- *Loadpoint      // update requests
 	log      *util.Logger
 
 	rwMutex      int64        // count reentrant RWMutex
@@ -118,6 +118,7 @@ type Loadpoint struct {
 	smartCostLimit           *float64 // always charge if consumption cost is below this value
 	smartFeedInPriorityLimit *float64 // prevent charging if feed-in cost is above this value
 	batteryBoost             int      // battery boost state
+	batteryBoostLimit        int      // battery boost soc limit (0-100, 100=disabled)
 
 	mode                api.ChargeMode
 	enabled             bool      // Charger enabled state
@@ -286,14 +287,15 @@ func NewLoadpoint(log *util.Logger, settings settings.Settings) *Loadpoint {
 	bus := evbus.New()
 
 	lp := &Loadpoint{
-		log:        log,      // logger
-		settings:   settings, // settings
-		clock:      clock,    // mockable time
-		bus:        bus,      // event bus
-		mode:       api.ModeOff,
-		status:     api.StatusNone,
-		minCurrent: 6,  // A
-		maxCurrent: 16, // A
+		log:               log,      // logger
+		settings:          settings, // settings
+		clock:             clock,    // mockable time
+		bus:               bus,      // event bus
+		mode:              api.ModeOff,
+		status:            api.StatusNone,
+		minCurrent:        6,   // A
+		maxCurrent:        16,  // A
+		batteryBoostLimit: 100, // disabled
 		Soc: loadpoint.SocConfig{
 			Poll: loadpoint.PollConfig{
 				Interval: pollInterval,
@@ -358,6 +360,9 @@ func (lp *Loadpoint) restoreSettings() {
 	if v, err := lp.settings.Float(keys.SmartFeedInPriorityLimit); err == nil {
 		lp.SetSmartFeedInPriorityLimit(&v)
 	}
+	if v, err := lp.settings.Int(keys.BatteryBoostLimit); err == nil {
+		lp.SetBatteryBoostLimit(int(v))
+	}
 
 	var thresholds loadpoint.ThresholdsConfig
 	if err := lp.settings.Json(keys.Thresholds, &thresholds); err == nil {
@@ -390,6 +395,14 @@ func (lp *Loadpoint) requestUpdate() {
 	}
 }
 
+// capableMeter wraps a meter with capability lookup from its source.
+// This preserves capability checks (like MeterEnergy, PhaseCurrents, PhaseVoltages) when
+// the meter was extracted from a decorated charger's capability registry.
+type capableMeter struct {
+	api.Meter
+	api.Capable
+}
+
 // configureChargerType ensures that chargeMeter, Rate and Timer can use charger capabilities
 func (lp *Loadpoint) configureChargerType(charger api.Charger) {
 	var integrated bool
@@ -398,8 +411,15 @@ func (lp *Loadpoint) configureChargerType(charger api.Charger) {
 	if lp.chargeMeter == nil {
 		integrated = true
 
-		if mt, ok := charger.(api.Meter); ok {
-			lp.chargeMeter = mt
+		if mt, ok := api.Cap[api.Meter](charger); ok {
+			// preserve charger's capability registry so that subsequent
+			// capability checks on chargeMeter (e.g. MeterEnergy, PhaseCurrents)
+			// still work for decorated chargers (https://github.com/evcc-io/evcc/issues/28915)
+			if c, ok := charger.(api.Capable); ok {
+				lp.chargeMeter = &capableMeter{Meter: mt, Capable: c}
+			} else {
+				lp.chargeMeter = mt
+			}
 		} else {
 			mt := new(wrapper.ChargeMeter)
 			_ = lp.bus.Subscribe(evChargeCurrent, lp.evChargeCurrentWrappedMeterHandler)
@@ -411,7 +431,7 @@ func (lp *Loadpoint) configureChargerType(charger api.Charger) {
 	// ensure charge rater exists
 	// measurement are obtained from separate charge meter if defined
 	// (https://github.com/evcc-io/evcc/issues/2469)
-	if rt, ok := charger.(api.ChargeRater); ok && integrated {
+	if rt, ok := api.Cap[api.ChargeRater](charger); ok && integrated {
 		lp.chargeRater = rt
 
 		// when restarting in the middle of charging session, use this as negative offset
@@ -428,7 +448,7 @@ func (lp *Loadpoint) configureChargerType(charger api.Charger) {
 	}
 
 	// ensure charge timer exists
-	if ct, ok := charger.(api.ChargeTimer); ok {
+	if ct, ok := api.Cap[api.ChargeTimer](charger); ok {
 		lp.chargeTimer = ct
 	} else {
 		ct := wrapper.NewChargeTimer()
@@ -444,7 +464,7 @@ func (lp *Loadpoint) configureChargerType(charger api.Charger) {
 
 // pushEvent sends push messages to clients
 func (lp *Loadpoint) pushEvent(event string) {
-	lp.pushChan <- push.Event{Event: event}
+	lp.pushChan <- messenger.Event{Event: event}
 }
 
 // publish sends values to UI and databases
@@ -617,7 +637,7 @@ func (lp *Loadpoint) defaultMode() {
 }
 
 // Prepare loadpoint configuration by adding missing helper elements
-func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan chan<- push.Event, lpChan chan<- *Loadpoint) {
+func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan chan<- messenger.Event, lpChan chan<- *Loadpoint) {
 	lp.site = site
 	lp.uiChan = uiChan
 	lp.pushChan = pushChan
@@ -669,7 +689,7 @@ func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan c
 	}
 
 	// charger icon
-	if c, ok := lp.charger.(api.IconDescriber); ok {
+	if c, ok := api.Cap[api.IconDescriber](lp.charger); ok {
 		lp.publish(keys.ChargerIcon, c.Icon())
 	} else {
 		lp.publish(keys.ChargerIcon, nil)
@@ -699,6 +719,7 @@ func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan c
 
 	// battery boost
 	lp.publish(keys.BatteryBoost, lp.batteryBoost != boostDisabled)
+	lp.publish(keys.BatteryBoostLimit, lp.batteryBoostLimit)
 
 	// read initial charger state to prevent immediately disabling charger
 	if enabled, err := lp.charger.Enabled(); err == nil {
@@ -771,7 +792,7 @@ func (lp *Loadpoint) syncCharger() error {
 		)
 
 		// use chargers actual set current if available
-		cg, isCg := lp.charger.(api.CurrentGetter)
+		cg, isCg := api.Cap[api.CurrentGetter](lp.charger)
 		if isCg {
 			if current, err = cg.GetMaxCurrent(); err == nil {
 				// smallest adjustment most PWM-Controllers can do is: 100%÷256×0,6A = 0.234A
@@ -800,7 +821,7 @@ func (lp *Loadpoint) syncCharger() error {
 		}
 
 		// sync phases
-		_, isPs := lp.charger.(api.PhaseSwitcher)
+		_, isPs := api.Cap[api.PhaseSwitcher](lp.charger)
 		if phases := lp.GetPhases(); isPs && shouldBeConsistent && phases > 0 {
 			// fallback to active phases from measured phases
 			chargerPhases := lp.measuredPhases
@@ -808,7 +829,7 @@ func (lp *Loadpoint) syncCharger() error {
 				chargerPhases = 3
 			}
 
-			pg, isPg := lp.charger.(api.PhaseGetter)
+			pg, isPg := api.Cap[api.PhaseGetter](lp.charger)
 			if isPg {
 				if chargerPhases, err = pg.GetPhases(); err == nil {
 					if chargerPhases > 0 && chargerPhases != phases {
@@ -852,8 +873,7 @@ func (lp *Loadpoint) syncCharger() error {
 
 // coarseCurrent returns true if charger or vehicle require full amp steps
 func (lp *Loadpoint) coarseCurrent() bool {
-	_, ok := lp.charger.(api.ChargerEx)
-	return !ok || lp.vehicleHasFeature(api.CoarseCurrent)
+	return !api.HasCap[api.ChargerEx](lp.charger) || lp.vehicleHasFeature(api.CoarseCurrent)
 }
 
 // roundedCurrent rounds current down to full amps if charger or vehicle require it
@@ -896,7 +916,7 @@ func (lp *Loadpoint) setLimit(current float64) error {
 	// set current
 	if current != lp.offeredCurrent && current >= effMinCurrent {
 		var err error
-		if charger, ok := lp.charger.(api.ChargerEx); ok {
+		if charger, ok := api.Cap[api.ChargerEx](lp.charger); ok {
 			err = charger.MaxCurrentMillis(current)
 		} else {
 			err = lp.charger.MaxCurrent(int64(current))
@@ -904,7 +924,7 @@ func (lp *Loadpoint) setLimit(current float64) error {
 
 		if err != nil {
 			v := lp.GetVehicle()
-			if vv, ok := v.(api.Resurrector); ok && errors.Is(err, api.ErrAsleep) {
+			if vv, ok := api.Cap[api.Resurrector](v); ok && errors.Is(err, api.ErrAsleep) {
 				// https://github.com/evcc-io/evcc/issues/8254
 				// wakeup vehicle
 				lp.log.DEBUG.Printf("set charge current limit: waking up vehicle")
@@ -925,7 +945,7 @@ func (lp *Loadpoint) setLimit(current float64) error {
 	if enabled := current >= effMinCurrent; enabled != lp.enabled {
 		if err := lp.charger.Enable(enabled); err != nil {
 			v := lp.GetVehicle()
-			if vv, ok := v.(api.Resurrector); enabled && ok && errors.Is(err, api.ErrAsleep) {
+			if vv, ok := api.Cap[api.Resurrector](v); enabled && ok && errors.Is(err, api.ErrAsleep) {
 				// https://github.com/evcc-io/evcc/issues/8254
 				// wakeup vehicle
 				lp.log.DEBUG.Printf("charger %s: waking up vehicle", status[enabled])
@@ -1134,7 +1154,7 @@ func (lp *Loadpoint) getStatusChanges() ([]api.ChargeStatus, error) {
 	}
 
 	// check charger connection duration
-	if ct, ok := lp.charger.(api.ConnectionTimer); ok {
+	if ct, ok := api.Cap[api.ConnectionTimer](lp.charger); ok {
 		d, err := ct.ConnectionDuration()
 		if err != nil {
 			return nil, fmt.Errorf("connection duration: %w", err)
@@ -1230,7 +1250,7 @@ func (lp *Loadpoint) scalePhasesRequired() bool {
 	return lp.hasPhaseSwitching() && lp.phasesConfigured != 0 && lp.phasesConfigured != lp.GetPhases()
 }
 
-// scalePhasesIfAvailable scales if api.PhaseSwitcher is available
+// scalePhasesIfAvailable scales if api.PhaseSwitcher is available and allowed
 func (lp *Loadpoint) scalePhasesIfAvailable(phases int) error {
 	if lp.phasesConfigured != 0 {
 		phases = lp.phasesConfigured
@@ -1246,7 +1266,7 @@ func (lp *Loadpoint) scalePhasesIfAvailable(phases int) error {
 // scalePhases adjusts the number of active phases and returns the appropriate charging current.
 // Returns api.ErrNotAvailable if api.PhaseSwitcher is not available.
 func (lp *Loadpoint) scalePhases(phases int) error {
-	cp, ok := lp.charger.(api.PhaseSwitcher)
+	cp, ok := api.Cap[api.PhaseSwitcher](lp.charger)
 	if !ok {
 		panic("charger does not implement api.PhaseSwitcher")
 	}
@@ -1276,12 +1296,14 @@ func (lp *Loadpoint) scalePhases(phases int) error {
 func (lp *Loadpoint) fastCharging() error {
 	if lp.hasPhaseSwitching() {
 		phases := 3
-		maxPower1p := Voltage * lp.effectiveMaxCurrent()
 
 		// load management limit active
-		if circuitMaxPower := circuitMaxPower(lp.circuit); circuitMaxPower > 0 && circuitMaxPower < 1.1*maxPower1p {
-			phases = 1
-			lp.log.DEBUG.Printf("fast charging: scaled to 1p to match %.0fW max circuit power", circuitMaxPower)
+		if lp.circuit != nil {
+			minPower3p := currentToPower(lp.effectiveMinCurrent(), 3)
+			if powerLimit := lp.circuit.ValidatePower(lp.chargePower, minPower3p); powerLimit < minPower3p {
+				phases = 1
+				lp.log.DEBUG.Printf("fast charging: scaled to 1p to match %.0fW available circuit power", powerLimit)
+			}
 		}
 
 		if err := lp.scalePhasesIfAvailable(phases); err != nil {
@@ -1581,7 +1603,7 @@ func (lp *Loadpoint) UpdateChargePowerAndCurrents() float64 {
 	// update charge currents
 	lp.chargeCurrents = nil
 
-	if phaseMeter, ok := lp.chargeMeter.(api.PhaseCurrents); ok {
+	if phaseMeter, ok := api.Cap[api.PhaseCurrents](lp.chargeMeter); ok {
 		if err := backoff.Retry(func() error {
 			i1, i2, i3, err := phaseMeter.Currents()
 			if err != nil {
@@ -1634,7 +1656,7 @@ func (lp *Loadpoint) phasesFromChargeCurrents() {
 
 // updateChargeVoltages uses PhaseVoltages interface to count phases with nominal grid voltage
 func (lp *Loadpoint) updateChargeVoltages() {
-	phaseMeter, ok := lp.chargeMeter.(api.PhaseVoltages)
+	phaseMeter, ok := api.Cap[api.PhaseVoltages](lp.chargeMeter)
 	if !ok {
 		return // don't guess
 	}
@@ -1708,7 +1730,7 @@ func (lp *Loadpoint) publishChargeProgress() {
 	// TODO deprecated: use sessionEnergy instead
 	lp.publish(keys.ChargedEnergy, lp.GetChargedEnergy())
 	lp.publish(keys.ChargeDuration, lp.chargeDuration)
-	if _, ok := lp.chargeMeter.(api.MeterEnergy); ok {
+	if api.HasCap[api.MeterEnergy](lp.chargeMeter) {
 		lp.publish(keys.ChargeTotalImport, lp.chargeMeterTotal())
 	}
 }
@@ -1731,14 +1753,14 @@ func (lp *Loadpoint) publishSocAndRange() {
 		var socR *float64
 		var limitR *int64
 
-		if battery, ok := dev.(api.Battery); ok {
+		if battery, ok := api.Cap[api.Battery](dev); ok {
 			if soc, err := soc.Guard(battery.Soc()); err == nil {
 				socR = &soc
 
 				// don't publish here in case it needs be updated by the estimator
 				lp.log.DEBUG.Printf("%s soc: %.0f%%", typ, soc)
 
-				if socLimiter, ok := dev.(api.SocLimiter); ok {
+				if socLimiter, ok := api.Cap[api.SocLimiter](dev); ok {
 					if limit, err := socLimiter.GetLimitSoc(); err == nil {
 						limitR = &limit
 
@@ -1757,13 +1779,13 @@ func (lp *Loadpoint) publishSocAndRange() {
 		return socR, limitR
 	}
 
-	soc, limit := socAndLimit("charger", lp.charger)
-	if soc == nil && (lp.vehicleSocPollAllowed() || lp.chargerHasFeature(api.IntegratedDevice)) {
+	socR, limitR := socAndLimit("charger", lp.charger)
+	if socR == nil && (lp.vehicleSocPollAllowed() || lp.chargerHasFeature(api.IntegratedDevice)) {
 		lp.socUpdated = lp.clock.Now()
-		soc, limit = socAndLimit("vehicle", lp.GetVehicle())
+		socR, limitR = socAndLimit("vehicle", lp.GetVehicle())
 
 		// range
-		if vs, ok := lp.GetVehicle().(api.VehicleRange); ok {
+		if vs, ok := api.Cap[api.VehicleRange](lp.GetVehicle()); ok {
 			if rng, err := vs.Range(); err == nil {
 				lp.log.DEBUG.Printf("vehicle range: %dkm", rng)
 				lp.publish(keys.VehicleRange, rng)
@@ -1773,35 +1795,42 @@ func (lp *Loadpoint) publishSocAndRange() {
 		}
 	}
 
-	if soc != nil {
+	if socR != nil {
 		if socEstimator == nil {
-			lp.vehicleSoc = *soc
+			lp.vehicleSoc = *socR
 		} else {
-			lp.vehicleSoc = socEstimator.Soc(soc, lp.GetChargedEnergy())
+			lp.vehicleSoc = socEstimator.Soc(socR, lp.GetChargedEnergy())
 			lp.log.DEBUG.Printf("vehicle soc (estimator): %.0f%%", lp.vehicleSoc)
 		}
 	}
 	lp.publish(keys.VehicleSoc, lp.vehicleSoc)
 
 	apiLimitSoc := 100
-	if limit != nil {
-		apiLimitSoc = int(*limit)
+	if limitR != nil {
+		apiLimitSoc = int(*limitR)
 		// https://github.com/evcc-io/evcc/issues/13349
-		lp.publish(keys.VehicleLimitSoc, float64(*limit))
+		lp.publish(keys.VehicleLimitSoc, float64(*limitR))
 	}
 
-	if socEstimator != nil {
-		// use minimum of vehicle and loadpoint
-		limitSoc := min(apiLimitSoc, lp.EffectiveLimitSoc())
+	limitSoc := min(apiLimitSoc, lp.EffectiveLimitSoc())
+	v := lp.GetVehicle()
 
-		var d time.Duration
+	var d time.Duration
+	var e float64
+	switch {
+	case socEstimator != nil:
 		if lp.charging() {
 			d = socEstimator.RemainingChargeDuration(float64(limitSoc), lp.chargePower)
 		}
-		lp.SetRemainingDuration(d)
-
-		lp.SetRemainingEnergy(socEstimator.RemainingChargeEnergy(limitSoc))
+		e = socEstimator.RemainingChargeEnergy(limitSoc)
+	case v != nil && v.Capacity() > 0 && lp.vehicleSoc > 0:
+		if lp.charging() {
+			d = soc.RemainingChargeDuration(float64(limitSoc), lp.chargePower, lp.vehicleSoc, v.Capacity())
+		}
+		e = soc.RemainingChargeEnergy(limitSoc, lp.vehicleSoc, v.Capacity())
 	}
+	lp.SetRemainingDuration(d)
+	lp.SetRemainingEnergy(e)
 
 	// trigger message after variables are updated
 	lp.bus.Publish(evVehicleSoc, lp.vehicleSoc)
@@ -1860,6 +1889,19 @@ func (lp *Loadpoint) phaseSwitchCompleted() bool {
 
 // Update is the main control function. It reevaluates meters and charger state
 func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64) {
+	// auto-disable battery boost when SOC drops below limit
+	if lp.GetBatteryBoost() != boostDisabled {
+		if limit := lp.GetBatteryBoostLimit(); limit < 100 {
+			if batterySoc := lp.site.GetBatterySoc(); batterySoc < float64(limit) {
+				lp.log.DEBUG.Printf("battery boost disabled: soc below limit (%.0f%% < %d%%)", batterySoc, limit)
+
+				if err := lp.SetBatteryBoost(false); err != nil {
+					lp.log.ERROR.Printf("set battery boost: %v", err)
+				}
+			}
+		}
+	}
+
 	// smart cost
 	smartCostActive, smartCostNextStart := lp.checkSmartLimit(lp.GetSmartCostLimit(), consumption, true)
 	lp.publish(keys.SmartCostActive, smartCostActive)
@@ -1887,7 +1929,7 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 	lp.PublishEffectiveValues()
 
 	// §14a
-	if dimmer, ok := lp.charger.(api.Dimmer); ok {
+	if dimmer, ok := api.Cap[api.Dimmer](lp.charger); ok {
 		dimmed, err := dimmer.Dimmed()
 		if err != nil {
 			lp.log.ERROR.Printf("dimmed: %v", err)
@@ -1924,7 +1966,7 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 
 	lp.resetHeatingSession()
 
-	if sr, ok := lp.charger.(api.StatusReasoner); ok && lp.GetStatus() == api.StatusB {
+	if sr, ok := api.Cap[api.StatusReasoner](lp.charger); ok && lp.GetStatus() == api.StatusB {
 		if r, err := sr.StatusReason(); err == nil {
 			lp.publish(keys.ChargerStatusReason, r)
 		} else {
@@ -1959,6 +2001,10 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 	// update and publish plan without being short-circuited by modes etc.
 	plannerActive := lp.plannerActive()
 
+	// update and publish min soc not reached state
+	minSocNotReached := lp.minSocNotReached()
+	lp.publish(keys.MinSocNotReached, minSocNotReached)
+
 	// execute loading strategy
 	switch {
 	case !lp.connected():
@@ -1977,7 +2023,7 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 		err = lp.setLimit(current)
 
 	// minimum or target charging
-	case lp.minSocNotReached() || plannerActive:
+	case minSocNotReached || plannerActive:
 		err = lp.fastCharging()
 		lp.resetPhaseTimer()
 		lp.elapsePVTimer() // let PV mode disable immediately afterwards

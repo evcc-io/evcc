@@ -14,6 +14,7 @@ import (
 type circuitStruct struct {
 	Title      string   `json:"title,omitempty"`
 	Icon       string   `json:"icon,omitempty"`
+	Parent     string   `json:"parent,omitempty"`
 	Power      float64  `json:"power"`
 	Current    *float64 `json:"current,omitempty"`
 	MaxPower   float64  `json:"maxPower,omitempty"`
@@ -27,13 +28,19 @@ func (site *Site) publishCircuits() {
 	cc := config.Circuits().Devices()
 	res := make(map[string]circuitStruct, len(cc))
 
+	names := make(map[api.Circuit]string, len(cc))
+	for _, c := range cc {
+		names[c.Instance()] = c.Config().Name
+	}
+
 	for _, c := range cc {
 		instance := c.Instance()
 		props := deviceProperties(c)
 
 		data := circuitStruct{
-			Title:      props.Title,
+			Title:      instance.GetTitle(),
 			Icon:       props.Icon,
+			Parent:     names[instance.GetParent()],
 			Power:      instance.GetChargePower(),
 			MaxPower:   instance.GetMaxPower(),
 			MaxCurrent: instance.GetMaxCurrent(),
@@ -55,7 +62,7 @@ func (site *Site) dimMeters(dim bool) error {
 	var errs error
 
 	for _, dev := range slices.Concat(site.auxMeters, site.extMeters) {
-		m, ok := dev.Instance().(api.Dimmer)
+		m, ok := api.Cap[api.Dimmer](dev.Instance())
 		if !ok {
 			continue
 		}
@@ -85,7 +92,7 @@ func (site *Site) curtailPV(curtail bool) error {
 	var errs error
 
 	for _, dev := range site.pvMeters {
-		m, ok := dev.Instance().(api.Curtailer)
+		m, ok := api.Cap[api.Curtailer](dev.Instance())
 		if !ok {
 			continue
 		}

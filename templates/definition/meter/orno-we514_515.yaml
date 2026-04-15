@@ -2,10 +2,10 @@ template: orno-we514_515
 products:
   - brand: ORNO
     description:
-      generic: WE-514
+      generic: OR-WE-514
   - brand: ORNO
     description:
-      generic: WE-515
+      generic: OR-WE-515
 params:
   - name: usage
     choice: ["pv", "charge"]
