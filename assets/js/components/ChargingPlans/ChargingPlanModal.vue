@@ -35,6 +35,7 @@
 				<div v-if="isModalVisible">
 					<PlansSettings
 						v-if="departureTabActive"
+						:id="id"
 						:staticPlan="vehicle?.plan"
 						:repeatingPlans="repeatingPlans"
 						:effectiveLimitSoc="loadpoint?.effectiveLimitSoc"
