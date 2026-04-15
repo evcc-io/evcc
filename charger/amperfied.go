@@ -337,11 +337,6 @@ func (wb *Amperfied) WakeUp() error {
 
 // phases1p3p implements the api.PhaseSwitcher interface
 func (wb *Amperfied) phases1p3p(phases int) error {
-	// reduce current to minimum before phase-switching
-	if err := wb.set(ampRegAmpsConfig, 60); err != nil {
-		return err
-	}
-
 	b := make([]byte, 2)
 	binary.BigEndian.PutUint16(b, uint16(phases))
 
