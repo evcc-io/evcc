@@ -125,7 +125,7 @@ export default defineComponent({
 						time: new Date(plan.time),
 					};
 				}
-				return;
+				return undefined;
 			}
 			if (this.loadpoint?.planEnergy && this.loadpoint?.planTime) {
 				return {
@@ -133,7 +133,7 @@ export default defineComponent({
 					time: new Date(this.loadpoint.planTime),
 				};
 			}
-			return;
+			return undefined;
 		},
 		// TODO: refactor, see Vehicle.vue
 		range() {
