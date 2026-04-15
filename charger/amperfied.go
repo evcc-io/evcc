@@ -367,7 +367,6 @@ func (wb *Amperfied) phases1p3p(phases int) error {
 	if err != nil {
 		return err
 	}
-	wb.phases = phases
 
 	// read phase-switch duration during which no current changes are accepted
 	d, err := wb.conn.ReadHoldingRegisters(ampRegPhaseSwitchDuration, 1)
@@ -378,6 +377,7 @@ func (wb *Amperfied) phases1p3p(phases int) error {
 	// block current writes until phase-switch completes
 	duration := time.Duration(binary.BigEndian.Uint16(d)) * time.Second
 	wb.mu.Lock()
+	wb.phases = phases
 	wb.phaseSwitchEnd = time.Now().Add(duration)
 	wb.mu.Unlock()
 
@@ -408,6 +408,8 @@ func (wb *Amperfied) getPhases() (int, error) {
 	phases := int(binary.BigEndian.Uint16(b))
 	if phases == 0 {
 		wb.log.DEBUG.Println("phase-switching in progress")
+		wb.mu.Lock()
+		defer wb.mu.Unlock()
 		return wb.phases, nil
 	}
 
