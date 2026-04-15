@@ -39,7 +39,7 @@ import minuteTicker from "@/mixins/minuteTicker";
 import { optionStep, fmtEnergy } from "@/utils/energyOptions.ts";
 import { defineComponent, type PropType } from "vue";
 import type { CURRENCY, Vehicle } from "@/types/evcc";
-import type { StaticPlan, StaticSocPlan, PlanStrategy } from "./types";
+import type { PlanStrategy } from "./types";
 import type { Forecast } from "@/types/evcc.ts";
 
 export default defineComponent({
@@ -96,25 +96,6 @@ export default defineComponent({
 		},
 		limitSoc(): number | undefined {
 			return this.vehicle?.limitSoc;
-		},
-		staticPlan(): StaticPlan | null {
-			if (this.socBasedPlanning) {
-				const plan = this.vehicle?.plan as StaticSocPlan;
-				if (plan) {
-					return {
-						soc: plan.soc,
-						time: new Date(plan.time),
-					};
-				}
-				return null;
-			}
-			if (this.planEnergy && this.planTime) {
-				return {
-					energy: this.planEnergy,
-					time: new Date(this.planTime),
-				};
-			}
-			return null;
 		},
 		enabled(): boolean {
 			return !!this.effectivePlanTime;

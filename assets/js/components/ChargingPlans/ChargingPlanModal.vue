@@ -36,7 +36,7 @@
 					<PlansSettings
 						v-if="departureTabActive"
 						:id="id"
-						:staticPlan="vehicle?.plan"
+						:staticPlan="staticPlan"
 						:repeatingPlans="repeatingPlans"
 						:effectiveLimitSoc="loadpoint?.effectiveLimitSoc"
 						:effectivePlanTime="loadpoint?.effectivePlanTime ?? undefined"
@@ -116,6 +116,25 @@ export default defineComponent({
 		};
 	},
 	computed: {
+		staticPlan(): StaticPlan | undefined {
+			if (this.socBasedPlanning) {
+				const plan = this.vehicle?.plan as StaticSocPlan;
+				if (plan) {
+					return {
+						soc: plan.soc,
+						time: new Date(plan.time),
+					};
+				}
+				return;
+			}
+			if (this.loadpoint?.planEnergy && this.loadpoint?.planTime) {
+				return {
+					energy: this.loadpoint.planEnergy,
+					time: new Date(this.loadpoint.planTime),
+				};
+			}
+			return;
+		},
 		// TODO: refactor, see Vehicle.vue
 		range() {
 			return distanceValue(this.vehicleRange);
