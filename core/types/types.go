@@ -1,6 +1,10 @@
 package types
 
-import "github.com/evcc-io/evcc/api"
+import (
+	"time"
+
+	"github.com/evcc-io/evcc/api"
+)
 
 // Measurement is the device measurements struct
 type Measurement struct {
@@ -16,6 +20,11 @@ type Measurement struct {
 	Controllable  *bool     `json:"controllable,omitempty"`
 }
 
+type BatteryForecast struct {
+	Full  *time.Time `json:"full"`
+	Empty *time.Time `json:"empty"`
+}
+
 var _ api.TitleDescriber = (*Measurement)(nil)
 
 // GetTitle implements api.TitleDescriber interface for InfluxDB tagging
@@ -24,9 +33,10 @@ func (m Measurement) GetTitle() string {
 }
 
 type BatteryState struct {
-	Power    float64       `json:"power"`
-	Energy   float64       `json:"energy,omitempty"`
-	Capacity float64       `json:"capacity,omitempty"`
-	Soc      float64       `json:"soc"`
-	Devices  []Measurement `json:"devices,omitempty" influxdb:"battery"`
+	Power    float64          `json:"power"`
+	Energy   float64          `json:"energy,omitempty"`
+	Capacity float64          `json:"capacity,omitempty"`
+	Soc      float64          `json:"soc"`
+	Devices  []Measurement    `json:"devices,omitempty" influxdb:"battery"`
+	Forecast *BatteryForecast `json:"forecast,omitempty"`
 }

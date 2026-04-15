@@ -8,3 +8,4 @@ params:
 render: |
   type: homewizard
   uri: http://{{ .host }}
+  {{ include "switchsocket" . }}

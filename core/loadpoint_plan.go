@@ -233,6 +233,8 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 			return true
 		case strategy.Continuous && requiredDuration > strategy.Precondition:
 			lp.log.DEBUG.Printf("plan: ignoring restart at %s for continuous charging", planStart.Round(time.Second).Local())
+			planStart = lp.clock.Now()
+			planEnd = planStart.Add(requiredDuration)
 			return true
 		}
 	}

@@ -105,6 +105,12 @@
       "labelResidualPower": "Potenza residua",
       "title": "Comportamento di controllo"
     },
+    "currency": {
+      "description": "Utilizzato per formattare i prezzi dell'energia, i costi e i risparmi in base alla tua tariffa.",
+      "example": "Il prezzo della ricarica era {price}. Hai risparmiato {amount}.",
+      "label": "Valuta",
+      "title": "Valuta"
+    },
     "deviceValue": {
       "amount": "Quantità",
       "broker": "Broker",
@@ -124,16 +130,21 @@
       "currency": "Valuta",
       "current": "Corrente",
       "currentRange": "Corrente",
+      "curtailed": "Alimentazione limitata",
       "detected": "Rilevato",
-      "dimmed": "Attutito",
+      "dimmed": "Consumi limitati",
       "enabled": "Abilitato",
       "energy": "Energia",
+      "events": "Stati",
       "feedinPrice": "Prezzo di vendita",
+      "forecast": "Previsione",
       "gridPrice": "Prezzo d'acquisto",
       "heaterTempLimit": "Limite del dispositivo di riscaldamento",
       "hemsActiveLimit": "Limite attivo",
       "hemsType": "Comunicazione",
       "identifier": "Identificatore RFID",
+      "max": "max",
+      "messengers": "Servizi",
       "no": "no",
       "odometer": "Chilometraggio",
       "org": "Organizzazione",
@@ -143,6 +154,7 @@
       "phases1p3p": "Commutazione di fase",
       "power": "Potenza",
       "powerRange": "Potenza",
+      "price": "Prezzo",
       "range": "Intervallo",
       "singlePhase": "Singola fase",
       "soc": "Carica",
@@ -172,11 +184,27 @@
       "loading": "Caricamento dell'editor YAML…"
     },
     "eebus": {
-      "description": "Configurazione che permette a evcc di comunicare con altri dispositivi EEBus.",
+      "certificate": {
+        "private": "Chiave privata",
+        "public": "Certificato pubblico",
+        "title": "Certificati"
+      },
+      "description": "Configurazione che consente a evcc di comunicare con dispositivi compatibili con EEBus, come i caricabatterie o un'unità di controllo del gestore della rete. Tutte le inizializzazioni e la generazione dei certificati necessari vengono eseguite automaticamente al primo avvio.",
+      "descriptionAdvanced": "Non sono necessarie modifiche. Apportate modifiche solo se sapete esattamente cosa state facendo. Se modificate lo SHIP-id o i certificati, dovrete associare nuovamente i dispositivi.",
+      "interfaces": "Interfacce",
+      "interfacesHelp": "Limita le interfacce di rete che EEBus deve utilizzare per evitare problemi di comunicazione. Lascia il campo vuoto per utilizzare tutte le interfacce. Un solo valore per riga.",
+      "port": "Porta",
+      "portHelp": "La porta da usare.",
+      "removeConfirm": "Tutte le configurazioni di EEBus verranno rimosse. Al prossimo avvio verranno generati nuovi certificati e identificativi. Sei sicuro?",
+      "shipid": "SHIP-ID",
+      "shipidExplain": "Identificativo permanente del dispositivo per l'identificazione nella rete EEBus.",
+      "shipidHelp": "Questo SHIP-ID è collegato ai certificati riportati di seguito.",
+      "ski": "SKI",
+      "skiExplain": "Identificativo di sicurezza univoco per l'associazione dei dispositivi EEBus.",
       "title": "EEBus"
     },
     "experimental": {
-      "description": "Abilita l'interfaccia utente per le funzionalità ancora in fase di test e soggette a modifiche nelle versioni future.",
+      "description": "Consente l'accesso anticipato a funzionalità ancora in fase di test. Queste potrebbero essere instabili e soggette a modifiche o rimozioni nelle versioni future.",
       "title": "Sperimentale"
     },
     "ext": {
@@ -198,6 +226,7 @@
       "cancel": "Annulla",
       "clear": "Chiaro",
       "close": "Chiudi",
+      "confirmSave": "Sono presenti modifiche non salvate. Salvare ora?",
       "copied": "Copiato!",
       "copy": "Copia",
       "customHelp": "Crea un dispositivo definito dall'utente utilizzando il sistema di plugin di evcc.",
@@ -207,11 +236,13 @@
       "dragHandle": "Maniglia di trascinamento",
       "dragItem": "Trascinabile: {title}",
       "dragList": "Elenco riordinabile",
+      "error": "Errore",
       "experimental": "Sperimentale",
       "forceSave": "Salva comunque",
       "fromYamlHint": "Nota: configurato tramite evcc.yaml. Rimuovere la voce dal file per abilitare la modifica qui.",
       "hideAdvancedSettings": "Nascondi impostazioni avanzate",
       "invalidFileSelected": "File non valido selezionato",
+      "legacy": "legacy",
       "noFileSelected": "Nessun file selezionato.",
       "off": "off",
       "on": "on",
@@ -303,6 +334,8 @@
       },
       "defaultModeHelpKeep": "Mantiene l'ultima modalità selezionata.",
       "defaultModeLabel": "Modalità predefinita",
+      "defaultsHint": "Modalità predefinita, comportamento solare e dettagli elettrici utilizzano valori predefiniti ragionevoli.",
+      "defaultsHintLink": "Regola le impostazioni",
       "delete": "Cancella",
       "electricalSubtitle": "Se non sei sicuro, chiedi al tuo elettricista.",
       "electricalTitle": "Elettricità",
@@ -393,8 +426,65 @@
       "welcomeBannerTitle": "Configuriamo il tuo sistema!"
     },
     "messaging": {
-      "description": "Ricevi messaggi sulle sessioni di ricarica.",
+      "addMessenger": "Aggiungi servizio",
+      "description": "Ricevi notifiche sulle sessioni di ricarica.",
+      "event": {
+        "asleep": {
+          "messageDefault": "Interruzione della carica, il veicolo {vehicleName} non è in carica.",
+          "title": "Durante l'attesa del veicolo",
+          "titleDefault": "Veicolo in pausa"
+        },
+        "connect": {
+          "messageDefault": "Auto collegata a {pvPower}kW Solari",
+          "title": "Quando un'auto si collega",
+          "titleDefault": "Auto connessa"
+        },
+        "disconnect": {
+          "messageDefault": "Auto scollegata dopo {connectedDuration}",
+          "title": "Quando una macchina si disconnette",
+          "titleDefault": "Auto scollegata"
+        },
+        "guest": {
+          "messageDefault": "Un veicolo sconosciuto, un ospite collegato?",
+          "title": "Quando un'auto sconosciuta si connette",
+          "titleDefault": "Veicolo sconosciuto"
+        },
+        "planoverrun": {
+          "messageDefault": "{vehicleTitle}: La programmazione subirà modifiche.",
+          "title": "Quando la programmazione sta per essere modificata",
+          "titleDefault": "Programmare modifica"
+        },
+        "soc": {
+          "messageDefault": "Batteria carica al {vehicleSoc}%",
+          "title": "Aggiornamento del livello di carica",
+          "titleDefault": "Livello di carica aggiornato"
+        },
+        "start": {
+          "messageDefault": "Ha iniziato a caricare in modalità {mode}.",
+          "title": "Quando la ricarica inizia",
+          "titleDefault": "La carica è iniziata"
+        },
+        "stop": {
+          "messageDefault": "Ricarica completata con {chargedEnergy}kWh in {chargeDuration}.",
+          "title": "Quando la ricarica si ferma",
+          "titleDefault": "Ricarica finita"
+        }
+      },
+      "eventMessage": "Messaggio",
+      "eventTitle": "Titolo",
+      "events": "Stati",
+      "legacyWarning": "Nuova configurazione di notifica disponibile! Rimuovere e salvare la configurazione qui per utilizzare il nuovo processo guidato.",
+      "messengers": "Servizi",
+      "seePlaceholders": "vedi segnaposto",
       "title": "Notifiche"
+    },
+    "messenger": {
+      "custom": "Servizio definito dall'utente",
+      "generic": "Servizio generico",
+      "primary": "Servizio specifico",
+      "template": "Servizio",
+      "titleAdd": "Aggiungi Servizio",
+      "titleEdit": "Modifica del servizio"
     },
     "meter": {
       "cancel": "Annulla",
@@ -491,7 +581,8 @@
       "labelInternalUrl": "URL interno",
       "labelPort": "Porta",
       "labelSchema": "Tipo",
-      "title": "Rete"
+      "title": "Rete",
+      "warningUrlPath": "L'URL di solito non ha bisogno di un percorso. Sei sicuro che sia corretto?"
     },
     "ocpp": {
       "connectedChargers": "Caricabatterie collegati",
@@ -544,6 +635,7 @@
       "integrations": "Integrazioni",
       "loadpoints": "Ricarica e riscaldamento",
       "meter": "Fotovoltaico e Batterie",
+      "services": "Servizi",
       "system": "Sistema",
       "vehicles": "Veicoli"
     },
@@ -551,11 +643,13 @@
       "cardTitle": "Sunny Home Manager",
       "description": "evcc è dotato di integrazione per SMA Sunny Home Manager (SHM) tramite protocollo SEMP. Se è in esecuzione sulla stessa rete, dopo aver effettuato l'accesso al proprio account Sunny Portal, dovrebbe essere automaticamente proposto di aggiungere tutti i caricatori configurati in evcc come nuovi consumatori rilevati. Tutto dovrebbe essere immediatamente pronto all'uso, senza necessità di ulteriori regolazioni.",
       "descriptionDeviceId": "Stringa HEX di 12 caratteri. Prefisso per tutti i dispositivi (punto di ricarica, ecc.).",
+      "descriptionDeviceSerial": "12 caratteri HEX string. Base seriale per tutti i dispositivi (punto di ricarica, ..). Per impostazione predefinita evcc deriva questo dall'indirizzo MAC dell'host.",
       "descriptionIdPattern": "Modello identificativo",
       "descriptionIds": "In Sunny Portal ogni dispositivo di consumo necessita di un identificativo univoco. evcc genera un identificativo univoco basato sul vostro hardware. Se migrate evcc su un altro hardware, questi identificativi potrebbero cambiare. Se desiderate mantenere la cronologia, potete sovrascrivere gli identificativi generati qui. Aprite l'URL SEMP (/semp) per controllare i vostri identificativi attuali.",
       "descriptionSempUrl": "URL SEMP",
       "descriptionVendorId": "Stringa HEX di 8 caratteri. Prefisso generale di tutte le entità. Per impostazione predefinita, evcc utilizzerà il proprio ID fornitore interno.",
       "labelDeviceId": "ID dispositivo",
+      "labelDeviceSerial": "Seriale del dispositivo",
       "labelVendorId": "ID fornitore",
       "title": "SMA Sunny Home Manager"
     },
@@ -617,6 +711,79 @@
       "restartingDescription": "Attendere prego…",
       "restartingMessage": "Riavvio evcc in corso."
     },
+    "tariff": {
+      "addForecast": "Aggiungi previsioni",
+      "addTariff": "Aggiungi tariffa",
+      "co2": {
+        "description": "Previsione dell'intensità di CO₂ per l'elettricità di rete. Per una ricarica ottimizzata in termini di CO₂ e per il calcolo del risparmio di emissioni.",
+        "titleAdd": "Aggiungi le previsioni di CO₂",
+        "titleEdit": "Modifica le previsioni di CO₂"
+      },
+      "co2Services": "Servizi CO₂",
+      "customForecast": "Previsione definita dall'utente",
+      "customTariff": "Tariffa definita dall'utente",
+      "description": "Configura le tue tariffe e previsioni energetiche. Utilizza la configurazione basata sul dispositivo per la gestione dinamica o il formato YAML per le impostazioni statiche.",
+      "feedIn": {
+        "description": "Compensazione per l'energia elettrica immessa in rete. Utilizzata per calcolare i costi effettivi di ricarica.",
+        "titleAdd": "Aggiungi tariffa di esportazione della rete",
+        "titleEdit": "Modifica griglia Esporta tariffa"
+      },
+      "generic": "Integrazioni generiche",
+      "grid": {
+        "description": "Prezzo dell'elettricità per il consumo dalla rete. Per calcolare i costi di ricarica effettivi e ottimizzare la ricarica di veicoli, dispositivi di riscaldamento o la ricarica della batteria domestica tramite la rete elettrica.",
+        "titleAdd": "Aggiungi tariffa di importazione griglia",
+        "titleEdit": "Modifica griglia Importa tariffa"
+      },
+      "legacyWarning": "Nuova configurazione tariffaria disponibile! Rimuovi e salva le tue tariffe qui per utilizzare la nuova procedura guidata.",
+      "option": {
+        "co2": "Aggiungi le previsioni di CO₂",
+        "feedIn": "Aggiungi tariffa di esportazione della rete",
+        "grid": "Aggiungi la tariffa di importazione della rete",
+        "planner": "Aggiungi previsione del pianificatore",
+        "solar": "Aggiungi previsioni solari"
+      },
+      "planner": {
+        "description": "Impostazione avanzata. Solitamente non necessaria, poiché le tariffe elettriche dinamiche o le previsioni di CO₂ vengono utilizzate automaticamente. Consente di abilitare una fonte di dati aggiuntiva utilizzata esclusivamente per la pianificazione dei costi, non per statistiche e calcoli di prezzo.",
+        "titleAdd": "Aggiungi previsione del pianificatore",
+        "titleEdit": "Modifica previsione del pianificatore"
+      },
+      "services": "Servizi",
+      "solar": {
+        "description": "Previsione della produzione solare per il tuo impianto fotovoltaico. Visualizzata nell'interfaccia, verrà utilizzata in futuro per gli algoritmi di ottimizzazione.",
+        "titleAdd": "Aggiungere la previsione solare",
+        "titleEdit": "Modificare la previsione solare"
+      },
+      "template": "Fornitore",
+      "title": "Tariffe e previsioni",
+      "titleChoice": "Cosa vuoi aggiungere?",
+      "type": {
+        "co2": "Intensità di CO2",
+        "feedIn": "Prezzo di immissione",
+        "grid": "Prezzo consumo della rete",
+        "planner": "Pianificatore",
+        "solar": "Solare"
+      },
+      "zones": {
+        "add": "Aggiungi zona",
+        "allDays": "Tutti i giorni",
+        "allMonths": "Tutti i mesi",
+        "allTimes": "Tutti i tempi",
+        "cancel": "Cancella",
+        "days": "Giorni",
+        "edit": "Modifica",
+        "hours": "Ore",
+        "months": "Mesi",
+        "price": "Prezzo",
+        "priceRequired": "Il prezzo è richiesto",
+        "remove": "Rimuovi zona",
+        "save": "Salva",
+        "selectAll": "Tutti i giorni",
+        "timeFrom": "Da",
+        "timeRangeError": "L'orario di inizio deve essere precedente all'orario di fine. Per coprire l'intervallo di tempo che va oltre la mezzanotte, è necessario creare due zone separate.",
+        "timeTo": "A",
+        "weekdays": "Giorni feriali"
+      }
+    },
     "tariffs": {
       "description": "Definisci le tue tariffe energetiche per calcolare i costi delle tue sessioni di ricarica.",
       "title": "Tariffe"
@@ -633,7 +800,7 @@
     "validation": {
       "failed": "fallito",
       "label": "Stato",
-      "running": "Verifica in corso…",
+      "running": "verifica in corso…",
       "success": "riuscito",
       "unknown": "sconosciuto",
       "validate": "convalidato"
@@ -740,12 +907,14 @@
   "forecast": {
     "co2": {
       "average": "Media",
+      "constant": "Intensità di CO₂",
       "lowestHour": "Ora più ecologica",
       "range": "Intervallo"
     },
     "modalTitle": "Previsioni",
     "price": {
       "average": "Media",
+      "constant": "Prezzo",
       "lowestHour": "Ora più economica",
       "range": "Intervallo"
     },
@@ -915,10 +1084,13 @@
       "battery": "Batteria",
       "batteryCharge": "Carica della batteria",
       "batteryDischarge": "Scarico della batteria",
-      "batteryGridChargeActive": "Ricarica dalla rete attiva",
-      "batteryGridChargeLimit": "Ricarica dalla rete quando",
+      "batteryForecastEmpty": "vuoto {time}",
+      "batteryForecastFull": "full {time}",
+      "batteryGridChargeActive": "Ricarica dalla rete: attiva",
+      "batteryGridChargeLimit": "Ricarica dalla rete: quando",
       "batteryHold": "Batteria (locked)",
       "batteryTooltip": "{energy} di {total} ({soc})",
+      "forecast": "Previsioni: ",
       "forecastTooltip": "previsioni: produzione solare rimanente per oggi",
       "gridImport": "Uso della rete",
       "homePower": "Consumo",
@@ -945,6 +1117,7 @@
       "charged": "Caricato",
       "co2": "⌀ CO₂",
       "duration": "Durata",
+      "emission": "Emissione",
       "fallbackName": "Punto di ricarica",
       "finished": "Ora di fine",
       "power": "Potenza",
@@ -957,9 +1130,14 @@
     "loadpointSettings": {
       "batteryBoost": {
         "description": "Carica rapida dalla batteria di casa fino a quando non si scarica a {limit}.",
+        "descriptionDisabled": "Selezionare un limite per consentire la ricarica rapida dalla batteria domestica.",
+        "disabled": "Disabilitato",
         "label": "Boost da batteria",
         "mode": "Disponibile solo in modalità solare e min+solare.",
-        "once": "Boost attivo per questa sessione di ricarica."
+        "once": "Boost attivo per questa sessione di ricarica.",
+        "stateActive": "Boost da batteria attivo",
+        "stateBelowLimit": "Batteria troppo scarica per il boost",
+        "stateReady": "Battery boost pronto"
       },
       "batteryUsage": "Batteria di casa",
       "currents": "Corrente di carica",
@@ -1065,6 +1243,9 @@
     "vehicleStatus": {
       "awaitingAuthorization": "Aspettando l'autorizzazione.",
       "batteryBoost": "Boost da batteria attivo.",
+      "batteryBoostBelowLimit": "Batteria troppo scarica per il boost",
+      "batteryBoostDisabled": "Battery boost disabilitato.",
+      "batteryBoostEnabled": "Boost fino al {limit}.",
       "charging": "In carica…",
       "cheapEnergyCharging": "Corrente economica disponibile.",
       "cheapEnergyNextStart": "Corrente economica in {duration}.",
@@ -1089,6 +1270,7 @@
       "targetChargeWaitForVehicle": "Piano di ricarica pronto. In attesa del veicolo…",
       "vehicleLimit": "Limite del veicolo",
       "vehicleLimitReached": "Limite del veicolo raggiunto.",
+      "waitForAuthorization": "Collegato. Aspettando l'autorizzazione..",
       "waitForVehicle": "Pronto. In attesa del veicolo…",
       "welcome": "Piccola carica iniziale per confermare la connessione."
     },
@@ -1224,7 +1406,7 @@
     },
     "hiddenFeatures": {
       "label": "Sperimentale",
-      "value": "Mostra le funzionalità sperimentali."
+      "value": "Abilita le funzionalità sperimentali."
     },
     "language": {
       "auto": "Automatico",

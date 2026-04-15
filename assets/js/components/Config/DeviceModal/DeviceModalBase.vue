@@ -58,6 +58,7 @@
 							v-bind="param"
 							v-model="values[param.Name]"
 							:service-values="serviceValues[param.Name]"
+							:currency="currency"
 						/>
 
 						<div v-if="auth.code">
@@ -129,6 +130,7 @@
 								v-bind="param"
 								v-model="values[param.Name]"
 								:service-values="serviceValues[param.Name]"
+								:currency="currency"
 							/>
 
 							<PropertyCollapsible>
@@ -140,6 +142,7 @@
 										v-bind="param"
 										v-model="values[param.Name]"
 										:service-values="serviceValues[param.Name]"
+										:currency="currency"
 									/>
 								</template>
 								<template v-if="$slots['collapsible-more']" #more>
@@ -158,6 +161,7 @@
 					:is-succeeded="succeeded"
 					:is-new="isNew"
 					:sponsor-token-required="sponsorTokenRequired"
+					:currency="currency"
 					@save="handleSave"
 					@remove="handleRemove"
 					@test="testManually"
@@ -184,10 +188,12 @@ import YamlEntry from "./YamlEntry.vue";
 import AuthCodeDisplay from "../AuthCodeDisplay.vue";
 import AuthConnectButton from "../AuthConnectButton.vue";
 import { initialTestState, performTest } from "../utils/test";
+import { reportValidityInModal } from "../utils/reportValidityInModal";
 import { initialAuthState, prepareAuthLogin } from "../utils/authProvider";
 import sleep from "@/utils/sleep";
 import { ConfigType } from "@/types/evcc";
 import type { DeviceType, Timeout } from "@/types/evcc";
+import { CURRENCY } from "@/types/evcc";
 import {
 	handleError,
 	type DeviceValues,
@@ -235,6 +241,7 @@ export default defineComponent({
 		showMainContent: { type: Boolean, default: true },
 		// Optional: usage parameter for loadProducts (e.g., meter type: "pv", "battery", "aux", "ext")
 		usage: String,
+		currency: { type: String as PropType<CURRENCY>, default: CURRENCY.EUR },
 		// Optional: custom product name computation
 		getProductName: Function as PropType<
 			(values: DeviceValues, templateName: string | null) => string
@@ -422,7 +429,6 @@ export default defineComponent({
 			return this.template?.Auth && !this.auth.ok;
 		},
 		authValuesMissing() {
-			console.log("authValuesMissing", this.authValues);
 			return this.template?.Auth && Object.values(this.authValues).some((value) => !value);
 		},
 		authValues() {
@@ -459,7 +465,6 @@ export default defineComponent({
 				this.$emit("update:externalTemplate", newValue);
 			}
 
-			console.log("templateName changed", { newValue, oldValue });
 			// Reset values when template changes (except on initial load or when switching to YAML input)
 			// YAML input types set values.type and values.yaml in handleTemplateChange callback
 			if (oldValue != null) {
@@ -478,7 +483,9 @@ export default defineComponent({
 			}
 
 			const isYamlInput = this.isYamlInputTypeByValue(newValue as ConfigType);
-			if (!isYamlInput) {
+			if (isYamlInput) {
+				this.template = null;
+			} else {
 				this.loadTemplate();
 			}
 
@@ -505,7 +512,6 @@ export default defineComponent({
 		},
 		values: {
 			handler() {
-				this.test = initialTestState();
 				this.updateServiceValues();
 			},
 			deep: true,
@@ -612,7 +618,7 @@ export default defineComponent({
 
 			// trigger browser validation
 			if (this.$refs["form"]) {
-				if (!(this.$refs["form"] as HTMLFormElement).reportValidity()) {
+				if (!reportValidityInModal(this.$refs["form"] as HTMLFormElement)) {
 					return;
 				}
 			}
@@ -621,9 +627,10 @@ export default defineComponent({
 			if (this.authValuesMissing) return;
 
 			const { type } = this.template.Auth;
-			const values = this.authValues;
+			// include the template name so the backend can resolve masked fields
+			const values = { ...this.authValues, template: this.templateName };
 			this.auth.loading = true;
-			const result = await this.device.checkAuth(type, values);
+			const result = await this.device.checkAuth(type, values, this.id);
 			this.auth.loading = false;
 			if (result.success) {
 				// login already exists
@@ -676,7 +683,6 @@ export default defineComponent({
 			return this.device.test(this.id, this.apiData);
 		},
 		async update(force = false) {
-			console.log("update called", { force, isUnknown: this.test.isUnknown, id: this.id });
 			if (this.test.isUnknown && !force) {
 				const success = await performTest(
 					this.test,
@@ -690,7 +696,6 @@ export default defineComponent({
 			}
 			this.saving = true;
 			try {
-				console.log("calling device.update", this.apiData);
 				await this.device.update(this.id!, this.apiData, force);
 				this.saving = false;
 				this.succeeded = true;

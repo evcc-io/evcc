@@ -3,10 +3,13 @@ import { expect, type Page, type Locator } from "@playwright/test";
 export async function enableExperimental(page: Page): Promise<void> {
   await page.goto("/#/config");
 
-  await page.getByTestId("generalconfig-experimental").click();
+  await page
+    .getByTestId("generalconfig-experimental")
+    .getByRole("button", { name: "edit" })
+    .click();
   const modal = page.getByTestId("experimental-modal");
   await expectModalVisible(modal);
-  await modal.getByLabel("Show experimental UI features.").click();
+  await modal.getByLabel("Enable experimental features.").click();
   await modal.getByRole("button", { name: "Close" }).click();
   await expectModalHidden(modal);
   await expect(page.locator(".modal-backdrop")).not.toBeVisible();
@@ -63,9 +66,16 @@ export enum LoadpointType {
   Heating = "heating",
 }
 
+export enum ChargerStatus {
+  Disconnected = "A",
+  Connected = "B",
+  Charging = "C",
+}
+
 export async function addDemoCharger(
   page: Page,
-  type: LoadpointType = LoadpointType.Charging
+  type: LoadpointType = LoadpointType.Charging,
+  status?: ChargerStatus
 ): Promise<void> {
   const lpModal = page.getByTestId("loadpoint-modal");
   await lpModal
@@ -77,6 +87,9 @@ export async function addDemoCharger(
   await modal
     .getByLabel("Manufacturer")
     .selectOption(type === LoadpointType.Heating ? "Demo heat pump" : "Demo charger");
+  if (status) {
+    await modal.getByLabel("Charge status").selectOption(status);
+  }
   await modal.getByRole("button", { name: "Save" }).click();
   await expectModalHidden(modal);
   await expectModalVisible(lpModal);

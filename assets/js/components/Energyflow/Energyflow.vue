@@ -126,8 +126,25 @@
 								@details-clicked="openBatterySettingsModal"
 								@toggle="toggleBattery"
 							>
-								<template v-if="batteryGridChargeLimitSet" #subline>
-									<div class="d-none d-md-block">&nbsp;</div>
+								<template
+									v-if="batteryForecastExists || batteryGridChargeLimitSet"
+									#subline
+								>
+									<div
+										v-if="batteryForecastEmpty"
+										class="d-flex align-items-center mb-2"
+									>
+										<ForecastMessage :message="batteryForecastEmpty" />
+									</div>
+									<div
+										v-else-if="batteryForecastFull"
+										class="d-none d-md-block mb-2"
+									>
+										&nbsp;
+									</div>
+									<div v-if="batteryGridChargeLimitSet" class="d-none d-md-block">
+										&nbsp;
+									</div>
 								</template>
 								<template v-if="hasMultipleBatteries" #expanded>
 									<EnergyflowEntry
@@ -250,8 +267,24 @@
 								@details-clicked="openBatterySettingsModal"
 								@toggle="toggleBattery"
 							>
-								<template v-if="batteryGridChargeLimitSet" #subline>
+								<template
+									v-if="batteryForecastExists || batteryGridChargeLimitSet"
+									#subline
+								>
+									<div
+										v-if="batteryForecastFull"
+										class="d-flex align-items-center mb-2"
+									>
+										<ForecastMessage :message="batteryForecastFull" />
+									</div>
+									<div
+										v-else-if="batteryForecastEmpty"
+										class="d-none d-md-block mb-2"
+									>
+										&nbsp;
+									</div>
 									<button
+										v-if="batteryGridChargeLimitSet"
 										type="button"
 										class="btn-reset d-flex justify-content-between text-start pe-4"
 										@click.stop="openBatterySettingsModal"
@@ -311,6 +344,7 @@ import Visualization from "./Visualization.vue";
 import Entry from "./Entry.vue";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import AnimatedNumber from "../Helper/AnimatedNumber.vue";
+import ForecastMessage from "./ForecastMessage.vue";
 import settings from "@/settings";
 import collector from "@/mixins/collector.js";
 import { defineComponent, type PropType } from "vue";
@@ -329,6 +363,7 @@ export default defineComponent({
 		Visualization,
 		EnergyflowEntry: Entry,
 		AnimatedNumber,
+		ForecastMessage,
 	},
 	mixins: [formatter, collector],
 	props: {
@@ -363,7 +398,11 @@ export default defineComponent({
 		forecast: { type: Object as PropType<Forecast>, default: () => ({}) },
 	},
 	data: () => {
-		return { detailsOpen: false, detailsCompleteHeight: null as number | null, ready: false };
+		return {
+			detailsOpen: false,
+			detailsCompleteHeight: null as number | null,
+			ready: false,
+		};
 	},
 	computed: {
 		showCo2() {
@@ -545,6 +584,15 @@ export default defineComponent({
 		consumers() {
 			return [...this.aux, ...this.ext];
 		},
+		batteryForecastFull(): string | undefined {
+			return this.fmtForecast(this.battery?.forecast, true);
+		},
+		batteryForecastEmpty(): string | undefined {
+			return this.fmtForecast(this.battery?.forecast, false);
+		},
+		batteryForecastExists(): boolean {
+			return !!(this.batteryForecastEmpty || this.batteryForecastFull);
+		},
 	},
 	watch: {
 		pvConfigured() {
@@ -604,12 +652,20 @@ export default defineComponent({
 			this.detailsCompleteHeight = this.$refs["detailsInner"]?.offsetHeight ?? 0;
 		},
 		openBatterySettingsModal() {
+			if (this.experimental) {
+				this.$router.push("/battery");
+				return;
+			}
 			const modal = Modal.getOrCreateInstance(
 				document.getElementById("batterySettingsModal") as HTMLElement
 			);
 			modal.show();
 		},
 		openForecastModal() {
+			if (this.experimental) {
+				this.$router.push("/forecast");
+				return;
+			}
 			const modal = Modal.getOrCreateInstance(
 				document.getElementById("forecastModal") as HTMLElement
 			);
@@ -645,6 +701,18 @@ export default defineComponent({
 		},
 		genericConsumerTitle(index: number) {
 			return `${this.$t("config.devices.consumer")} #${index + 1}`;
+		},
+		fmtForecast(
+			forecast: { full?: string | null; empty?: string | null } | undefined,
+			full: boolean
+		): string | undefined {
+			const isoString = full ? forecast?.full : forecast?.empty;
+			if (!isoString) return undefined;
+			const time = this.fmtAbsoluteDate(new Date(isoString));
+			const key = full
+				? "main.energyflow.batteryForecastFull"
+				: "main.energyflow.batteryForecastEmpty";
+			return this.$t(key, { time });
 		},
 	},
 });

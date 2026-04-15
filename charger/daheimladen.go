@@ -107,7 +107,7 @@ func NewDaheimLaden(ctx context.Context, uri string, id uint8, phases bool) (api
 	if err != nil {
 		return nil, fmt.Errorf("current limit: %w", err)
 	}
-	if curr > 0 {
+	if curr >= 60 {
 		wb.curr = curr
 	}
 
@@ -188,6 +188,8 @@ func (wb *DaheimLaden) Status() (api.ChargeStatus, error) {
 		return api.StatusB, nil
 	case 6: // Session Terminated by EVSE
 		return api.StatusB, nil
+	case 9: // Firmware Update
+		return api.StatusA, nil
 	default: // Other
 		return api.StatusNone, fmt.Errorf("invalid status: %d", s)
 	}
@@ -197,12 +199,13 @@ func (wb *DaheimLaden) Status() (api.ChargeStatus, error) {
 func (wb *DaheimLaden) Enabled() (bool, error) {
 	curr, err := wb.getCurrent()
 
-	return curr > 0, err
+	return curr >= 60, err
 }
 
 // Enable implements the api.Charger interface
 func (wb *DaheimLaden) Enable(enable bool) error {
-	var current uint16
+	// must be > 0 to disable unauthorised autostart
+	current := uint16(1)
 	if enable {
 		current = wb.curr
 	}
@@ -328,6 +331,8 @@ func (wb *DaheimLaden) getPhases() (int, error) {
 		}
 
 		wb.phases = binary.BigEndian.Uint16(b)
+	} else {
+		wb.log.DEBUG.Println("phase switch in progress")
 	}
 
 	return int(wb.phases), nil

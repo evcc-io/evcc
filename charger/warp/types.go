@@ -38,6 +38,13 @@ type MeterValues struct {
 	TmpValues []float64
 }
 
+type Name struct {
+	Name        string `json:"name"`
+	WarpType    string `json:"type"`
+	DisplayType string `json:"display_type"`
+	Uid         string `json:"uid"`
+}
+
 type PhasePair struct {
 	CurrentID int
 	VoltageID int

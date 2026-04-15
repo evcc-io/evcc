@@ -17,6 +17,7 @@ const (
 	ModbusProxy        = "modbusproxy"
 	Ocpp               = "ocpp"
 	Tariffs            = "tariffs"
+	TariffRefs         = "tariffRefs"
 	Version            = "version"
 	Config             = "config"
 	Database           = "database"
@@ -27,7 +28,11 @@ const (
 	SetupRequired      = "setupRequired"    // initial setup is required (lp = 0), fresh installation
 	Plant              = "plant"
 	Telemetry          = "telemetry"
+	Optimizer          = "optimizer"
 	DemoMode           = "demoMode"
+	Remote             = "remote"
+	RemoteClients      = "remoteClients"
+	RemoteLastSeen     = "remoteLastSeen"
 	AuthDisabled       = "authDisabled"
 	AuthProviders      = "authProviders"
 )

@@ -26,13 +26,15 @@ type Identity struct {
 	log *util.Logger
 	*request.Helper
 	oauth2.TokenSource
-	uuid string
+	uuid      string
+	brandCode string
 }
 
-func NewIdentity(log *util.Logger) *Identity {
+func NewIdentity(log *util.Logger, brandCode string) *Identity {
 	return &Identity{
-		log:    log,
-		Helper: request.NewHelper(log),
+		log:       log,
+		Helper:    request.NewHelper(log),
+		brandCode: brandCode,
 	}
 }
 
@@ -162,7 +164,9 @@ func (v *Identity) refreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 func (v *Identity) Login(user, password string) error {
 	uri := fmt.Sprintf("%s/%s", BaseUrl, AuthenticationPath)
 	req, err := request.New(http.MethodPost, uri, nil, map[string]string{
-		"Accept": "application/json",
+		"Accept":   "application/json",
+		"X-Brand":  v.brandCode,
+		"X-Region": "EU",
 	})
 	if err != nil {
 		return fmt.Errorf("failed to create authentication request: %w", err)

@@ -1,0 +1,130 @@
+<template>
+	<component
+		:is="to ? 'router-link' : 'div'"
+		v-bind="linkProps"
+		class="tab-item d-flex flex-column flex-md-row align-items-center justify-content-center gap-md-1 text-decoration-none position-relative"
+		:class="{ active: !to && active }"
+		:data-testid="label ? `tab-${label.toLowerCase()}` : undefined"
+	>
+		<span
+			class="tab-content d-flex flex-column flex-md-row align-items-center position-relative"
+		>
+			<span
+				v-if="badge"
+				class="tab-badge circle-badge position-absolute"
+				:class="badge"
+			></span>
+			<slot />
+			<span
+				v-if="label"
+				class="tab-label mt-1 mt-md-0 ms-md-1 text-truncate text-center text-md-start"
+				>{{ label }}</span
+			>
+		</span>
+		<slot name="menu" />
+	</component>
+</template>
+
+<script lang="ts">
+import { defineComponent } from "vue";
+
+export default defineComponent({
+	name: "BottomTabItem",
+	props: {
+		to: { type: String, default: undefined },
+		label: { type: String, default: undefined },
+		exact: { type: Boolean, default: false },
+		active: { type: Boolean, default: false },
+		badge: { type: String, default: undefined },
+	},
+	computed: {
+		linkProps() {
+			if (!this.to) return {};
+			return {
+				to: this.to,
+				exactActiveClass: this.exact ? "active" : undefined,
+				activeClass: this.exact ? undefined : "active",
+			};
+		},
+	},
+});
+</script>
+
+<style scoped>
+@import "../../../css/breakpoints.css";
+.tab-item {
+	--pt: 0.4rem;
+	--pb: max(0.4rem, var(--safe-area-inset-bottom));
+	flex: 1 1 0;
+	min-width: 0;
+	height: calc(var(--tab-bar-height) + var(--pb));
+	padding-top: var(--pt);
+	padding-bottom: var(--pb);
+	color: var(--evcc-gray);
+	touch-action: manipulation;
+	-webkit-tap-highlight-color: transparent;
+	-webkit-touch-callout: none;
+	-webkit-user-select: none;
+	user-select: none;
+	transition: color var(--evcc-transition-fast);
+}
+
+.tab-item::before {
+	content: "";
+	position: absolute;
+	top: 0;
+	left: 15%;
+	width: 70%;
+	height: 2px;
+	border-radius: 0 0 2px 2px;
+	background: transparent;
+	transition: background var(--evcc-transition-fast);
+}
+
+.tab-item:hover {
+	color: color-mix(in srgb, var(--evcc-gray) 70%, white);
+}
+
+.tab-item:active {
+	color: color-mix(in srgb, var(--evcc-gray) 70%, black);
+}
+
+.tab-item.active {
+	color: var(--bs-primary);
+}
+
+.tab-item.active::before {
+	background: var(--bs-primary);
+}
+
+.tab-label {
+	display: none;
+	font-size: 10px;
+	line-height: 1.2;
+}
+
+@media (--xs-and-up) {
+	.tab-label {
+		display: block;
+	}
+}
+
+@media (--md-and-up) {
+	.tab-label {
+		font-size: 14px;
+		font-weight: normal;
+	}
+}
+
+.tab-badge {
+	top: -4px;
+	right: -4px;
+}
+
+@media (--md-and-up) {
+	.tab-badge {
+		top: -6px;
+		right: -14px;
+	}
+}
+</style>
