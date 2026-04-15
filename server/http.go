@@ -159,6 +159,8 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API) {
 		"updatesession":           {"PUT", "/session/{id:[0-9]+}", updateSessionHandler},
 		"deletesession":           {"DELETE", "/session/{id:[0-9]+}", deleteSessionHandler},
 		"gridsessions":            {"GET", "/gridsessions", gridSessionsHandler},
+		"energyhistory":           {"GET", "/history/energy", energyHistoryHandler},
+		"optimize":                {"POST", "/optimize", getHandler(site.Optimize)},
 		"telemetry2":              {"POST", "/settings/telemetry/{value:[01truefalse]+}", boolHandler(telemetry.Enable, telemetry.Enabled)},
 	}
 
