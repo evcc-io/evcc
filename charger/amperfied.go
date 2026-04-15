@@ -38,7 +38,6 @@ type Amperfied struct {
 	mu             sync.Mutex
 	current        uint16
 	phases         int
-	enabled        bool
 	wakeup         bool
 	phaseSwitchEnd time.Time
 }
@@ -206,12 +205,11 @@ func (wb *Amperfied) Enabled() (bool, error) {
 	cur := binary.BigEndian.Uint16(b)
 
 	enabled := cur != 0
-	wb.mu.Lock()
-	wb.enabled = enabled
 	if enabled {
+		wb.mu.Lock()
 		wb.current = cur
+		wb.mu.Unlock()
 	}
-	wb.mu.Unlock()
 
 	return enabled, nil
 }
@@ -228,15 +226,9 @@ func (wb *Amperfied) Enable(enable bool) error {
 	b := make([]byte, 2)
 	binary.BigEndian.PutUint16(b, cur)
 
-	if _, err := wb.conn.WriteMultipleRegisters(ampRegAmpsConfig, 1, b); err != nil {
-		return err
-	}
+	_, err := wb.conn.WriteMultipleRegisters(ampRegAmpsConfig, 1, b)
 
-	wb.mu.Lock()
-	wb.enabled = enable
-	wb.mu.Unlock()
-
-	return nil
+	return err
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -391,15 +383,14 @@ func (wb *Amperfied) phases1p3p(phases int) error {
 
 	// re-apply current after phase-switch completes to honor interim changes
 	time.AfterFunc(duration, func() {
-		wb.mu.Lock()
-		enabled := wb.enabled
-		cur := wb.current
-		wb.mu.Unlock()
-
 		// skip re-apply if charging was disabled during the phase-switch window
-		if !enabled {
+		if enabled, err := wb.Enabled(); err != nil || !enabled {
 			return
 		}
+
+		wb.mu.Lock()
+		cur := wb.current
+		wb.mu.Unlock()
 
 		b := make([]byte, 2)
 		binary.BigEndian.PutUint16(b, cur)
