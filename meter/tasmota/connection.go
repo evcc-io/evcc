@@ -222,8 +222,8 @@ func (c *Connection) CurrentPower() (float64, error) {
 	return res, nil
 }
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (c *Connection) TotalEnergy() (float64, error) {
+// ImportTotal implements the api.MeterImport interface
+func (c *Connection) ImportTotal() (float64, error) {
 	res, err := c.statusSnsG.Get()
 	if err != nil {
 		return 0, err

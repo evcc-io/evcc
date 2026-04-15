@@ -32,8 +32,8 @@ func TestEvseWifi(t *testing.T) {
 		t.Error("missing api.Meter")
 	}
 
-	if _, ok := api.Cap[api.MeterEnergy](wb); !ok {
-		t.Error("missing api.MeterEnergy")
+	if _, ok := api.Cap[api.MeterImport](wb); !ok {
+		t.Error("missing api.MeterImport")
 	}
 
 	if _, ok := api.Cap[api.PhaseCurrents](wb); !ok {

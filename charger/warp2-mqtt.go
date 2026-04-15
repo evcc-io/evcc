@@ -38,7 +38,7 @@ func init() {
 	registry.Add("warp-fw2", NewWarp2FromConfig) // deprecated
 }
 
-//go:generate go tool decorate -f decorateWarp2 -b *Warp2 -r api.Charger -t api.Meter,api.MeterEnergy,api.PhaseCurrents,api.PhaseVoltages,api.Identifier,api.PhaseSwitcher,api.PhaseGetter
+//go:generate go tool decorate -f decorateWarp2 -b *Warp2 -r api.Charger -t api.Meter,api.MeterImport,api.PhaseCurrents,api.PhaseVoltages,api.Identifier,api.PhaseSwitcher,api.PhaseGetter
 
 // NewWarpFromConfig creates a new configurable charger
 func NewWarp2FromConfig(other map[string]any) (api.Charger, error) {
@@ -61,10 +61,10 @@ func NewWarp2FromConfig(other map[string]any) (api.Charger, error) {
 		return nil, err
 	}
 
-	var currentPower, totalEnergy func() (float64, error)
+	var currentPower, ImportTotal func() (float64, error)
 	if wb.hasFeature(cc.Topic, warp.FeatureMeter, cc.Timeout) {
 		currentPower = wb.currentPower
-		totalEnergy = wb.totalEnergy
+		ImportTotal = wb.ImportTotal
 	}
 
 	var currents, voltages func() (float64, float64, float64, error)
@@ -87,7 +87,7 @@ func NewWarp2FromConfig(other map[string]any) (api.Charger, error) {
 		}
 	}
 
-	return decorateWarp2(wb, currentPower, totalEnergy, currents, voltages, identity, phases, getPhases), nil
+	return decorateWarp2(wb, currentPower, ImportTotal, currents, voltages, identity, phases, getPhases), nil
 }
 
 // NewWarp2 creates a new configurable charger
@@ -248,8 +248,8 @@ func (wb *Warp2) currentPower() (float64, error) {
 	return res.Power, err
 }
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *Warp2) totalEnergy() (float64, error) {
+// ImportTotal implements the api.MeterImport interface
+func (wb *Warp2) ImportTotal() (float64, error) {
 	var res warp.MeterValues
 	err := wb.meterG(&res)
 	return res.EnergyAbs, err

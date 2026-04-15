@@ -1,6 +1,6 @@
 package charger
 
-//go:generate go tool decorate -f decorateHomeAssistant -b *HomeAssistant -r api.Charger -t api.Meter,api.MeterEnergy,api.PhaseCurrents,api.PhaseVoltages,api.PhaseSwitcher,api.PhaseGetter
+//go:generate go tool decorate -f decorateHomeAssistant -b *HomeAssistant -r api.Charger -t api.Meter,api.MeterImport,api.PhaseCurrents,api.PhaseVoltages,api.PhaseSwitcher,api.PhaseGetter
 //  -t api.CurrentGetter
 
 import (

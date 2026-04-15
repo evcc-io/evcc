@@ -8,11 +8,11 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateTest(base api.Charger, meterEnergy func() (float64, error), phaseSwitcher func(int) error, phaseGetter func() (int, error)) api.Charger {
+func decorateTest(base api.Charger, meterImport func() (float64, error), phaseSwitcher func(int) error, phaseGetter func() (int, error)) api.Charger {
 	caps := make(map[reflect.Type]any)
 
-	if meterEnergy != nil {
-		caps[reflect.TypeFor[api.MeterEnergy]()] = &decorateTestMeterEnergyImpl{meterEnergy: meterEnergy}
+	if meterImport != nil {
+		caps[reflect.TypeFor[api.MeterImport]()] = &decorateTestMeterImportImpl{meterImport: meterImport}
 	}
 
 	if phaseSwitcher != nil {
@@ -43,12 +43,12 @@ func (d *decorateTestCapable) Capability(typ reflect.Type) (any, bool) {
 	return c, ok
 }
 
-type decorateTestMeterEnergyImpl struct {
-	meterEnergy func() (float64, error)
+type decorateTestMeterImportImpl struct {
+	meterImport func() (float64, error)
 }
 
-func (impl *decorateTestMeterEnergyImpl) TotalEnergy() (float64, error) {
-	return impl.meterEnergy()
+func (impl *decorateTestMeterImportImpl) ImportTotal() (float64, error) {
+	return impl.meterImport()
 }
 
 type decorateTestPhaseGetterImpl struct {

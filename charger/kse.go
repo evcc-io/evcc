@@ -186,7 +186,7 @@ func (wb *KSE) CurrentPower() (float64, error) {
 
 var _ api.ChargeRater = (*KSE)(nil)
 
-// ChargedEnergy implements the api.MeterEnergy interface
+// ChargedEnergy implements the api.MeterImport interface
 func (wb *KSE) ChargedEnergy() (float64, error) {
 	b, err := wb.conn.ReadInputRegisters(kseRegCurrentLoadedEnergy, 1)
 	if err != nil {
@@ -196,10 +196,10 @@ func (wb *KSE) ChargedEnergy() (float64, error) {
 	return float64(binary.BigEndian.Uint16(b)) / 100, err
 }
 
-var _ api.MeterEnergy = (*KSE)(nil)
+var _ api.MeterImport = (*KSE)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *KSE) TotalEnergy() (float64, error) {
+// ImportTotal implements the api.MeterImport interface
+func (wb *KSE) ImportTotal() (float64, error) {
 	b, err := wb.conn.ReadInputRegisters(kseRegEnergy, 2)
 	if err != nil {
 		return 0, err

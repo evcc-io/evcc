@@ -65,7 +65,7 @@ type Easee struct {
 	pilotMode             string
 	reasonForNoCurrent    int
 	phaseMode             int
-	currentPower, sessionEnergy, totalEnergy,
+	currentPower, sessionEnergy, importTotal,
 	currentL1, currentL2, currentL3 float64
 	rfid string
 	lp   loadpoint.API
@@ -361,7 +361,7 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 			c.sessionEnergy = value.(float64)
 		}
 	case easee.LIFETIME_ENERGY:
-		c.totalEnergy = value.(float64)
+		c.importTotal = value.(float64)
 	case easee.INT_CURRENT_T3:
 		c.currentL1 = value.(float64)
 	case easee.INT_CURRENT_T4:
@@ -688,15 +688,15 @@ func (c *Easee) Currents() (float64, float64, float64, error) {
 	return c.currentL1, c.currentL2, c.currentL3, nil
 }
 
-var _ api.MeterEnergy = (*Easee)(nil)
+var _ api.MeterImport = (*Easee)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (c *Easee) TotalEnergy() (float64, error) {
+// ImportTotal implements the api.MeterImport interface
+func (c *Easee) ImportTotal() (float64, error) {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
 	// updates for this are only sent once an hour, so inaccurate by design
 	// see also https://github.com/evcc-io/evcc/issues/20594
-	return c.totalEnergy, nil
+	return c.importTotal, nil
 }
 
 var _ api.PhaseSwitcher = (*Easee)(nil)

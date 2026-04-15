@@ -49,7 +49,7 @@ const (
 	solaxRegVoltages           = 0x0000 // 3x uint16 0.01V
 	solaxRegCurrents           = 0x0004 // 3x uint16 0.01A
 	solaxRegActivePower        = 0x000B // uint16 1W
-	solaxRegTotalEnergy        = 0x0010 // uint32 0.1kWh
+	solaxRegImportTotal        = 0x0010 // uint32 0.1kWh
 	solaxRegState              = 0x001D // uint16
 	solaxRegFaultCode          = 0x001E // 2x uint32
 	solaxRegFirmwareVersion    = 0x0025 // uint16 Vx.xx
@@ -227,11 +227,11 @@ func (wb *Solax) CurrentPower() (float64, error) {
 	return float64(binary.BigEndian.Uint16(b)), err
 }
 
-var _ api.MeterEnergy = (*Solax)(nil)
+var _ api.MeterImport = (*Solax)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *Solax) TotalEnergy() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(solaxRegTotalEnergy, 2)
+// ImportTotal implements the api.MeterImport interface
+func (wb *Solax) ImportTotal() (float64, error) {
+	b, err := wb.conn.ReadInputRegisters(solaxRegImportTotal, 2)
 	if err != nil {
 		return 0, err
 	}

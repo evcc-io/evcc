@@ -8,11 +8,11 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateMeter(base api.Meter, meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error), phasePowers func() (float64, float64, float64, error), maxACPowerGetter func() float64) api.Meter {
+func decorateMeter(base api.Meter, meterImport func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error), phasePowers func() (float64, float64, float64, error), maxACPowerGetter func() float64) api.Meter {
 	caps := make(map[reflect.Type]any)
 
-	if meterEnergy != nil {
-		caps[reflect.TypeFor[api.MeterEnergy]()] = &decorateMeterMeterEnergyImpl{meterEnergy: meterEnergy}
+	if meterImport != nil {
+		caps[reflect.TypeFor[api.MeterImport]()] = &decorateMeterMeterImportImpl{meterImport: meterImport}
 	}
 
 	if phaseCurrents != nil {
@@ -59,12 +59,12 @@ func (impl *decorateMeterMaxACPowerGetterImpl) MaxACPower() float64 {
 	return impl.maxACPowerGetter()
 }
 
-type decorateMeterMeterEnergyImpl struct {
-	meterEnergy func() (float64, error)
+type decorateMeterMeterImportImpl struct {
+	meterImport func() (float64, error)
 }
 
-func (impl *decorateMeterMeterEnergyImpl) TotalEnergy() (float64, error) {
-	return impl.meterEnergy()
+func (impl *decorateMeterMeterImportImpl) ImportTotal() (float64, error) {
+	return impl.meterImport()
 }
 
 type decorateMeterPhaseCurrentsImpl struct {
@@ -91,11 +91,11 @@ func (impl *decorateMeterPhaseVoltagesImpl) Voltages() (float64, float64, float6
 	return impl.phaseVoltages()
 }
 
-func decorateMeterBattery(base api.Meter, meterEnergy func() (float64, error), battery func() (float64, error), batteryCapacity func() float64, batterySocLimiter func() (float64, float64), batteryPowerLimiter func() (float64, float64), batteryController func(api.BatteryMode) error) api.Meter {
+func decorateMeterBattery(base api.Meter, meterImport func() (float64, error), battery func() (float64, error), batteryCapacity func() float64, batterySocLimiter func() (float64, float64), batteryPowerLimiter func() (float64, float64), batteryController func(api.BatteryMode) error) api.Meter {
 	caps := make(map[reflect.Type]any)
 
-	if meterEnergy != nil {
-		caps[reflect.TypeFor[api.MeterEnergy]()] = &decorateMeterBatteryMeterEnergyImpl{meterEnergy: meterEnergy}
+	if meterImport != nil {
+		caps[reflect.TypeFor[api.MeterImport]()] = &decorateMeterBatteryMeterImportImpl{meterImport: meterImport}
 	}
 
 	if battery != nil {
@@ -178,10 +178,10 @@ func (impl *decorateMeterBatteryBatterySocLimiterImpl) GetSocLimits() (float64, 
 	return impl.batterySocLimiter()
 }
 
-type decorateMeterBatteryMeterEnergyImpl struct {
-	meterEnergy func() (float64, error)
+type decorateMeterBatteryMeterImportImpl struct {
+	meterImport func() (float64, error)
 }
 
-func (impl *decorateMeterBatteryMeterEnergyImpl) TotalEnergy() (float64, error) {
-	return impl.meterEnergy()
+func (impl *decorateMeterBatteryMeterImportImpl) ImportTotal() (float64, error) {
+	return impl.meterImport()
 }

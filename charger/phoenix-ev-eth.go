@@ -62,7 +62,7 @@ func init() {
 	registry.AddCtx("phoenix-ev-eth", NewPhoenixEVEthFromConfig)
 }
 
-//go:generate go tool decorate -f decoratePhoenixEVEth -b *PhoenixEVEth -r api.Charger -t api.Meter,api.MeterEnergy,api.PhaseCurrents,api.PhaseVoltages,api.ChargerEx,api.Identifier
+//go:generate go tool decorate -f decoratePhoenixEVEth -b *PhoenixEVEth -r api.Charger -t api.Meter,api.MeterImport,api.PhaseCurrents,api.PhaseVoltages,api.ChargerEx,api.Identifier
 
 // NewPhoenixEVEthFromConfig creates a PhoenixEVEth charger from generic config
 func NewPhoenixEVEthFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
@@ -97,7 +97,7 @@ func NewPhoenixEVEth(ctx context.Context, uri string, slaveID uint8) (api.Charge
 
 	var (
 		currentPower     func() (float64, error)
-		totalEnergy      func() (float64, error)
+		ImportTotal      func() (float64, error)
 		currents         func() (float64, float64, float64, error)
 		voltages         func() (float64, float64, float64, error)
 		maxCurrentMillis func(float64) error
@@ -107,7 +107,7 @@ func NewPhoenixEVEth(ctx context.Context, uri string, slaveID uint8) (api.Charge
 	// check presence of meter by voltage on l1
 	if b, err := wb.conn.ReadInputRegisters(phxRegVoltages, 2); err == nil && encoding.Uint32LswFirst(b) > 0 {
 		currentPower = wb.currentPower
-		totalEnergy = wb.totalEnergy
+		ImportTotal = wb.ImportTotal
 		currents = wb.currents
 		voltages = wb.voltages
 	}
@@ -123,7 +123,7 @@ func NewPhoenixEVEth(ctx context.Context, uri string, slaveID uint8) (api.Charge
 		maxCurrentMillis = wb.maxCurrentMillis
 	}
 
-	return decoratePhoenixEVEth(wb, currentPower, totalEnergy, currents, voltages, maxCurrentMillis, identify), nil
+	return decoratePhoenixEVEth(wb, currentPower, ImportTotal, currents, voltages, maxCurrentMillis, identify), nil
 }
 
 // Status implements the api.Charger interface
@@ -192,8 +192,8 @@ func (wb *PhoenixEVEth) currentPower() (float64, error) {
 	return float64(encoding.Int32LswFirst(b)), nil
 }
 
-// totalEnergy implements the api.MeterEnergy interface
-func (wb *PhoenixEVEth) totalEnergy() (float64, error) {
+// ImportTotal implements the api.MeterImport interface
+func (wb *PhoenixEVEth) ImportTotal() (float64, error) {
 	if wb.isWallbe {
 		b, err := wb.conn.ReadHoldingRegisters(phxRegEnergyWallbe, 4)
 		if err != nil {

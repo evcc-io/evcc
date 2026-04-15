@@ -8,15 +8,15 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decoratePhoenixCharx(base *PhoenixCharx, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error)) api.Charger {
+func decoratePhoenixCharx(base *PhoenixCharx, meter func() (float64, error), meterImport func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error)) api.Charger {
 	caps := make(map[reflect.Type]any)
 
 	if meter != nil {
 		caps[reflect.TypeFor[api.Meter]()] = &decoratePhoenixCharxMeterImpl{meter: meter}
 	}
 
-	if meterEnergy != nil {
-		caps[reflect.TypeFor[api.MeterEnergy]()] = &decoratePhoenixCharxMeterEnergyImpl{meterEnergy: meterEnergy}
+	if meterImport != nil {
+		caps[reflect.TypeFor[api.MeterImport]()] = &decoratePhoenixCharxMeterImportImpl{meterImport: meterImport}
 	}
 
 	if phaseCurrents != nil {
@@ -55,12 +55,12 @@ func (impl *decoratePhoenixCharxMeterImpl) CurrentPower() (float64, error) {
 	return impl.meter()
 }
 
-type decoratePhoenixCharxMeterEnergyImpl struct {
-	meterEnergy func() (float64, error)
+type decoratePhoenixCharxMeterImportImpl struct {
+	meterImport func() (float64, error)
 }
 
-func (impl *decoratePhoenixCharxMeterEnergyImpl) TotalEnergy() (float64, error) {
-	return impl.meterEnergy()
+func (impl *decoratePhoenixCharxMeterImportImpl) ImportTotal() (float64, error) {
+	return impl.meterImport()
 }
 
 type decoratePhoenixCharxPhaseCurrentsImpl struct {

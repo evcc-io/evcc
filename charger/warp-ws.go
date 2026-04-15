@@ -54,7 +54,7 @@ func init() {
 	registry.AddCtx("warp-ws", NewWarpWSFromConfig)
 }
 
-//go:generate go tool decorate -f decorateWarpWS -b *WarpWS -r api.Charger -t api.Meter,api.MeterEnergy,api.PhaseCurrents,api.PhaseVoltages,api.Identifier,api.PhaseSwitcher,api.PhaseGetter
+//go:generate go tool decorate -f decorateWarpWS -b *WarpWS -r api.Charger -t api.Meter,api.MeterImport,api.PhaseCurrents,api.PhaseVoltages,api.Identifier,api.PhaseSwitcher,api.PhaseGetter
 
 func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	var cc struct {
@@ -79,10 +79,10 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 	}
 
 	// Feature: Meter -> Meter is legacy API, Meters is the new API
-	var currentPower, totalEnergy func() (float64, error)
+	var currentPower, ImportTotal func() (float64, error)
 	if w.hasFeature(warp.FeatureMeter) || w.hasFeature(warp.FeatureMeters) {
 		currentPower = w.currentPower
-		totalEnergy = w.totalEnergy
+		ImportTotal = w.ImportTotal
 	}
 
 	// Feature: Meters | MeterAllValues
@@ -123,7 +123,7 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 		w.log.TRACE.Println("disabled phase auto switching")
 	}
 
-	return decorateWarpWS(w, currentPower, totalEnergy, currents, voltages, identify, phases, getPhases), nil
+	return decorateWarpWS(w, currentPower, ImportTotal, currents, voltages, identify, phases, getPhases), nil
 }
 
 func NewWarpWS(ctx context.Context, uri, user, pass, emURI, emUser, emPass string, meterIndex uint) (*WarpWS, error) {
@@ -375,7 +375,7 @@ func (w *WarpWS) currentPower() (float64, error) {
 	return w.meter.Power, nil
 }
 
-func (w *WarpWS) totalEnergy() (float64, error) {
+func (w *WarpWS) ImportTotal() (float64, error) {
 	w.mu.RLock()
 	defer w.mu.RUnlock()
 	return w.meter.EnergyAbs, nil

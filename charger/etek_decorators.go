@@ -8,15 +8,15 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateEtek(base *Etek, meter func() (float64, error), meterEnergy func() (float64, error), phaseVoltages func() (float64, float64, float64, error)) api.Charger {
+func decorateEtek(base *Etek, meter func() (float64, error), meterImport func() (float64, error), phaseVoltages func() (float64, float64, float64, error)) api.Charger {
 	caps := make(map[reflect.Type]any)
 
 	if meter != nil {
 		caps[reflect.TypeFor[api.Meter]()] = &decorateEtekMeterImpl{meter: meter}
 	}
 
-	if meterEnergy != nil {
-		caps[reflect.TypeFor[api.MeterEnergy]()] = &decorateEtekMeterEnergyImpl{meterEnergy: meterEnergy}
+	if meterImport != nil {
+		caps[reflect.TypeFor[api.MeterImport]()] = &decorateEtekMeterImportImpl{meterImport: meterImport}
 	}
 
 	if phaseVoltages != nil {
@@ -51,12 +51,12 @@ func (impl *decorateEtekMeterImpl) CurrentPower() (float64, error) {
 	return impl.meter()
 }
 
-type decorateEtekMeterEnergyImpl struct {
-	meterEnergy func() (float64, error)
+type decorateEtekMeterImportImpl struct {
+	meterImport func() (float64, error)
 }
 
-func (impl *decorateEtekMeterEnergyImpl) TotalEnergy() (float64, error) {
-	return impl.meterEnergy()
+func (impl *decorateEtekMeterImportImpl) ImportTotal() (float64, error) {
+	return impl.meterImport()
 }
 
 type decorateEtekPhaseVoltagesImpl struct {

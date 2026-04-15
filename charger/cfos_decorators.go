@@ -8,15 +8,15 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateCfos(base *CfosPowerBrain, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseSwitcher func(int) error) api.Charger {
+func decorateCfos(base *CfosPowerBrain, meter func() (float64, error), meterImport func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseSwitcher func(int) error) api.Charger {
 	caps := make(map[reflect.Type]any)
 
 	if meter != nil {
 		caps[reflect.TypeFor[api.Meter]()] = &decorateCfosMeterImpl{meter: meter}
 	}
 
-	if meterEnergy != nil {
-		caps[reflect.TypeFor[api.MeterEnergy]()] = &decorateCfosMeterEnergyImpl{meterEnergy: meterEnergy}
+	if meterImport != nil {
+		caps[reflect.TypeFor[api.MeterImport]()] = &decorateCfosMeterImportImpl{meterImport: meterImport}
 	}
 
 	if phaseCurrents != nil {
@@ -55,12 +55,12 @@ func (impl *decorateCfosMeterImpl) CurrentPower() (float64, error) {
 	return impl.meter()
 }
 
-type decorateCfosMeterEnergyImpl struct {
-	meterEnergy func() (float64, error)
+type decorateCfosMeterImportImpl struct {
+	meterImport func() (float64, error)
 }
 
-func (impl *decorateCfosMeterEnergyImpl) TotalEnergy() (float64, error) {
-	return impl.meterEnergy()
+func (impl *decorateCfosMeterImportImpl) ImportTotal() (float64, error) {
+	return impl.meterImport()
 }
 
 type decorateCfosPhaseCurrentsImpl struct {

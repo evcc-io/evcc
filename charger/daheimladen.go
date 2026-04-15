@@ -41,7 +41,7 @@ const (
 	dlRegConnectorState  = 2   // Uint16 RO ENUM
 	dlRegCurrents        = 6   // 3xUint16 plus placeholder RO 0.1A
 	dlRegActivePower     = 12  // Uint32 RO 1W
-	dlRegTotalEnergy     = 28  // Uint32 RO 0.1KWh
+	dlRegImportTotal     = 28  // Uint32 RO 0.1KWh
 	dlRegEvseMaxCurrent  = 32  // Uint16 RO 0.1A
 	dlRegCableMaxCurrent = 36  // Uint16 RO 0.1A
 	dlRegStationId       = 38  // Chr[16] RO UTF16
@@ -251,11 +251,11 @@ func (wb *DaheimLaden) CurrentPower() (float64, error) {
 	return float64(binary.BigEndian.Uint32(b)), err
 }
 
-var _ api.MeterEnergy = (*DaheimLaden)(nil)
+var _ api.MeterImport = (*DaheimLaden)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *DaheimLaden) TotalEnergy() (float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(dlRegTotalEnergy, 2)
+// ImportTotal implements the api.MeterImport interface
+func (wb *DaheimLaden) ImportTotal() (float64, error) {
+	b, err := wb.conn.ReadHoldingRegisters(dlRegImportTotal, 2)
 	if err != nil {
 		return 0, err
 	}

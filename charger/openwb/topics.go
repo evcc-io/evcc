@@ -26,7 +26,7 @@ const (
 
 	// charge power
 	ChargePowerTopic       = "W"
-	ChargeTotalEnergyTopic = "kWhCounter"
+	ChargeImportTotalTopic = "kWhCounter"
 
 	// vehicle
 	VehicleSocTopic = "Soc"

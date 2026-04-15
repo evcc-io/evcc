@@ -50,7 +50,7 @@ func NewSMAFromConfig(other map[string]any) (api.Meter, error) {
 
 	if cc.Usage == "battery" {
 		return decorateMeterBattery(
-			sm, sm.TotalEnergy,
+			sm, sm.ImportTotal,
 			sm.soc, cc.batteryCapacity.Decorator(),
 			cc.batterySocLimits.Decorator(), cc.batteryPowerLimits.Decorator(), nil,
 		), nil
@@ -105,10 +105,10 @@ func (sm *SMA) CurrentPower() (float64, error) {
 	return sm.scale * (sma.AsFloat(values[sunny.ActivePowerPlus]) - sma.AsFloat(values[sunny.ActivePowerMinus])), err
 }
 
-var _ api.MeterEnergy = (*SMA)(nil)
+var _ api.MeterImport = (*SMA)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (sm *SMA) TotalEnergy() (float64, error) {
+// ImportTotal implements the api.MeterImport interface
+func (sm *SMA) ImportTotal() (float64, error) {
 	values, err := sm.device.Values()
 	if sm.scale < 0 {
 		return sma.AsFloat(values[sunny.ActiveEnergyMinus]) / 3600000, err

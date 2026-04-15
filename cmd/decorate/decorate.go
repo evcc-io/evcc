@@ -22,7 +22,7 @@ import (
 //go:generate go tool decorate
 //evcc:function decorateTest
 //evcc:basetype api.Charger
-//evcc:types api.MeterEnergy,api.PhaseSwitcher,api.PhaseGetter
+//evcc:types api.MeterImport,api.PhaseSwitcher,api.PhaseGetter
 
 //go:embed decorate.tpl
 var srcTmpl string
@@ -58,7 +58,7 @@ func init() {
 		reflect.TypeFor[api.PhaseSwitcher](),
 		reflect.TypeFor[api.Battery](),
 		reflect.TypeFor[api.ChargeState](),
-		reflect.TypeFor[api.MeterEnergy](),
+		reflect.TypeFor[api.MeterImport](),
 		reflect.TypeFor[api.PhaseCurrents](),
 		reflect.TypeFor[api.PhaseVoltages](),
 		reflect.TypeFor[api.MaxACPowerGetter](),

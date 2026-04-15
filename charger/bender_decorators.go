@@ -8,7 +8,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateBenderCC(base *BenderCC, meter func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error), meterEnergy func() (float64, error), battery func() (float64, error), identifier func() (string, error), chargerEx func(float64) error, phaseSwitcher func(int) error, phaseGetter func() (int, error)) api.Charger {
+func decorateBenderCC(base *BenderCC, meter func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error), meterImport func() (float64, error), battery func() (float64, error), identifier func() (string, error), chargerEx func(float64) error, phaseSwitcher func(int) error, phaseGetter func() (int, error)) api.Charger {
 	caps := make(map[reflect.Type]any)
 
 	if meter != nil {
@@ -23,8 +23,8 @@ func decorateBenderCC(base *BenderCC, meter func() (float64, error), phaseCurren
 		caps[reflect.TypeFor[api.PhaseVoltages]()] = &decorateBenderCCPhaseVoltagesImpl{phaseVoltages: phaseVoltages}
 	}
 
-	if meterEnergy != nil {
-		caps[reflect.TypeFor[api.MeterEnergy]()] = &decorateBenderCCMeterEnergyImpl{meterEnergy: meterEnergy}
+	if meterImport != nil {
+		caps[reflect.TypeFor[api.MeterImport]()] = &decorateBenderCCMeterImportImpl{meterImport: meterImport}
 	}
 
 	if battery != nil {
@@ -99,12 +99,12 @@ func (impl *decorateBenderCCMeterImpl) CurrentPower() (float64, error) {
 	return impl.meter()
 }
 
-type decorateBenderCCMeterEnergyImpl struct {
-	meterEnergy func() (float64, error)
+type decorateBenderCCMeterImportImpl struct {
+	meterImport func() (float64, error)
 }
 
-func (impl *decorateBenderCCMeterEnergyImpl) TotalEnergy() (float64, error) {
-	return impl.meterEnergy()
+func (impl *decorateBenderCCMeterImportImpl) ImportTotal() (float64, error) {
+	return impl.meterImport()
 }
 
 type decorateBenderCCPhaseCurrentsImpl struct {

@@ -43,7 +43,7 @@ const (
 	sgRegWorkMode          = 21262 // uint16 [0: Network, 2: Plug&Play, 6: EMS]
 	sgRegRemCtrlStatus     = 21267 // uint16 [0: Disable, 1: Enable]
 	sgRegPhaseSwitchStatus = 21269 // uint16 [0: Three-phase, 1: Single-phase]
-	sgRegTotalEnergy       = 21299 // uint32s 1Wh
+	sgRegImportTotal       = 21299 // uint32s 1Wh
 	sgRegActivePower       = 21307 // uint32s 1W
 	sgRegChargedEnergy     = 21309 // uint32s 1Wh
 	sgRegStartMode         = 21313 // uint16 [1: Started by EMS, 2: Started by swiping card]
@@ -240,11 +240,11 @@ func (wb *Sungrow) Voltages() (float64, float64, float64, error) {
 	return wb.getPhaseValues(sgRegVoltages, 10)
 }
 
-var _ api.MeterEnergy = (*Sungrow)(nil)
+var _ api.MeterImport = (*Sungrow)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *Sungrow) TotalEnergy() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(sgRegTotalEnergy, 2)
+// ImportTotal implements the api.MeterImport interface
+func (wb *Sungrow) ImportTotal() (float64, error) {
+	b, err := wb.conn.ReadInputRegisters(sgRegImportTotal, 2)
 	if err != nil {
 		return 0, err
 	}

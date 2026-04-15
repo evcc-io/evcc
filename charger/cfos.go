@@ -38,7 +38,7 @@ func init() {
 	registry.AddCtx("cfos", NewCfosPowerBrainFromConfig)
 }
 
-//go:generate go tool decorate -f decorateCfos -b *CfosPowerBrain -r api.Charger -t api.Meter,api.MeterEnergy,api.PhaseCurrents,api.PhaseSwitcher
+//go:generate go tool decorate -f decorateCfos -b *CfosPowerBrain -r api.Charger -t api.Meter,api.MeterImport,api.PhaseCurrents,api.PhaseSwitcher
 
 // NewCfosPowerBrainFromConfig creates a cFos charger from generic config
 func NewCfosPowerBrainFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
@@ -80,7 +80,7 @@ func NewCfosPowerBrain(ctx context.Context, uri string, id uint8) (api.Charger, 
 	)
 	if b, err := wb.conn.ReadHoldingRegisters(cfosRegMeter, 1); err == nil && binary.BigEndian.Uint16(b) != 0 {
 		power = wb.currentPower
-		energy = wb.totalEnergy
+		energy = wb.ImportTotal
 
 		if b, err := wb.conn.ReadHoldingRegisters(cfosRegMeterFlags, 1); err == nil && binary.BigEndian.Uint16(b) != 0 {
 			currents = wb.currents
@@ -160,8 +160,8 @@ func (wb *CfosPowerBrain) currentPower() (float64, error) {
 	return float64(binary.BigEndian.Uint32(b)), nil
 }
 
-// totalEnergy implements the api.MeterEnergy interface
-func (wb *CfosPowerBrain) totalEnergy() (float64, error) {
+// ImportTotal implements the api.MeterImport interface
+func (wb *CfosPowerBrain) ImportTotal() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(cfosRegEnergy, 4)
 	if err != nil {
 		return 0, err

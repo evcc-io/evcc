@@ -25,7 +25,7 @@ func init() {
 	registry.AddCtx(api.Custom, NewConfigurableFromConfig)
 }
 
-//go:generate go tool decorate -f decorateCustom -b *Charger -r api.Charger -t api.ChargerEx,api.Identifier,api.PhaseSwitcher,api.Resurrector,api.Battery,api.SocLimiter,api.Meter,api.MeterEnergy,api.PhaseCurrents,api.PhaseVoltages
+//go:generate go tool decorate -f decorateCustom -b *Charger -r api.Charger -t api.ChargerEx,api.Identifier,api.PhaseSwitcher,api.Resurrector,api.Battery,api.SocLimiter,api.Meter,api.MeterImport,api.PhaseCurrents,api.PhaseVoltages
 
 // NewConfigurableFromConfig creates a new charger from config
 func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {

@@ -8,15 +8,15 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateKeba(base *Keba, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), identifier func() (string, error), statusReasoner func() (api.Reason, error), phaseSwitcher func(int) error, phaseGetter func() (int, error)) api.Charger {
+func decorateKeba(base *Keba, meter func() (float64, error), meterImport func() (float64, error), phaseCurrents func() (float64, float64, float64, error), identifier func() (string, error), statusReasoner func() (api.Reason, error), phaseSwitcher func(int) error, phaseGetter func() (int, error)) api.Charger {
 	caps := make(map[reflect.Type]any)
 
 	if meter != nil {
 		caps[reflect.TypeFor[api.Meter]()] = &decorateKebaMeterImpl{meter: meter}
 	}
 
-	if meterEnergy != nil {
-		caps[reflect.TypeFor[api.MeterEnergy]()] = &decorateKebaMeterEnergyImpl{meterEnergy: meterEnergy}
+	if meterImport != nil {
+		caps[reflect.TypeFor[api.MeterImport]()] = &decorateKebaMeterImportImpl{meterImport: meterImport}
 	}
 
 	if phaseCurrents != nil {
@@ -75,12 +75,12 @@ func (impl *decorateKebaMeterImpl) CurrentPower() (float64, error) {
 	return impl.meter()
 }
 
-type decorateKebaMeterEnergyImpl struct {
-	meterEnergy func() (float64, error)
+type decorateKebaMeterImportImpl struct {
+	meterImport func() (float64, error)
 }
 
-func (impl *decorateKebaMeterEnergyImpl) TotalEnergy() (float64, error) {
-	return impl.meterEnergy()
+func (impl *decorateKebaMeterImportImpl) ImportTotal() (float64, error) {
+	return impl.meterImport()
 }
 
 type decorateKebaPhaseCurrentsImpl struct {

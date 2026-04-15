@@ -41,7 +41,7 @@ func init() {
 	registry.AddCtx("wallbe", NewWallbeFromConfig)
 }
 
-//go:generate go tool decorate -f decorateWallbe -b *Wallbe -r api.Charger -t api.Meter,api.MeterEnergy,api.PhaseCurrents,api.ChargerEx
+//go:generate go tool decorate -f decorateWallbe -b *Wallbe -r api.Charger -t api.Meter,api.MeterImport,api.PhaseCurrents,api.ChargerEx
 
 // NewWallbeFromConfig creates a Wallbe charger from generic config
 func NewWallbeFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
@@ -79,7 +79,7 @@ func NewWallbeFromConfig(ctx context.Context, other map[string]any) (api.Charger
 	}
 
 	if cc.Meter.Energy {
-		energy = wb.totalEnergy
+		energy = wb.ImportTotal
 	}
 
 	if cc.Meter.Currents {
@@ -178,8 +178,8 @@ func (wb *Wallbe) currentPower() (float64, error) {
 	return rs485.RTUInt32ToFloat64Swapped(b), nil
 }
 
-// totalEnergy implements the api.MeterEnergy interface
-func (wb *Wallbe) totalEnergy() (float64, error) {
+// ImportTotal implements the api.MeterImport interface
+func (wb *Wallbe) ImportTotal() (float64, error) {
 	b, err := wb.conn.ReadInputRegisters(wbRegEnergy, 2)
 	if err != nil {
 		return 0, err

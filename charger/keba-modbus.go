@@ -72,7 +72,7 @@ func init() {
 	registry.AddCtx("keba-modbus", NewKebaFromConfig)
 }
 
-//go:generate go tool decorate -f decorateKeba -b *Keba -r api.Charger -t api.Meter,api.MeterEnergy,api.PhaseCurrents,api.Identifier,api.StatusReasoner,api.PhaseSwitcher,api.PhaseGetter
+//go:generate go tool decorate -f decorateKeba -b *Keba -r api.Charger -t api.Meter,api.MeterImport,api.PhaseCurrents,api.Identifier,api.StatusReasoner,api.PhaseSwitcher,api.PhaseGetter
 
 // NewKebaFromConfig creates a new Keba ModbusTCP charger
 func NewKebaFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
@@ -96,7 +96,7 @@ func NewKebaFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 
 	// optional features
 	var (
-		currentPower, totalEnergy func() (float64, error)
+		currentPower, ImportTotal func() (float64, error)
 		currents                  func() (float64, float64, float64, error)
 		identify                  func() (string, error)
 		reason                    func() (api.Reason, error)
@@ -141,7 +141,7 @@ func NewKebaFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 
 	if hasEnergyMeter {
 		currentPower = wb.currentPower
-		totalEnergy = wb.totalEnergy
+		ImportTotal = wb.ImportTotal
 		currents = wb.currents
 	}
 
@@ -168,7 +168,7 @@ func NewKebaFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 		go wb.heartbeat(ctx, u)
 	}
 
-	return decorateKeba(wb, currentPower, totalEnergy, currents, identify, reason, phasesS, phasesG), nil
+	return decorateKeba(wb, currentPower, ImportTotal, currents, identify, reason, phasesS, phasesG), nil
 }
 
 // NewKeba creates a new charger
@@ -338,8 +338,8 @@ func (wb *Keba) currentPower() (float64, error) {
 	return float64(binary.BigEndian.Uint32(b)) / 1e3, nil
 }
 
-// totalEnergy implements the api.MeterEnergy interface
-func (wb *Keba) totalEnergy() (float64, error) {
+// ImportTotal implements the api.MeterImport interface
+func (wb *Keba) ImportTotal() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(kebaRegEnergy, 2)
 	if err != nil {
 		return 0, err

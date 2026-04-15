@@ -9,7 +9,8 @@ import (
 
 type Energy struct {
 	Power  plugin.Config
-	Energy *plugin.Config // optional
+	Energy *plugin.Config // TODO deprecated
+	Import *plugin.Config // optional
 }
 
 func (cc *Energy) Configure(ctx context.Context) (
@@ -22,10 +23,15 @@ func (cc *Energy) Configure(ctx context.Context) (
 		return nil, nil, fmt.Errorf("power: %w", err)
 	}
 
-	energyG, err := cc.Energy.FloatGetter(ctx)
+	// TODO deprecated - remove fallback
+	if cc.Import == nil && cc.Energy != nil {
+		cc.Import = cc.Energy
+	}
+
+	importG, err := cc.Import.FloatGetter(ctx)
 	if err != nil {
 		return nil, nil, fmt.Errorf("energy: %w", err)
 	}
 
-	return powerG, energyG, nil
+	return powerG, importG, nil
 }

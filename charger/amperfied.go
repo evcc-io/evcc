@@ -256,10 +256,10 @@ func (wb *Amperfied) CurrentPower() (float64, error) {
 	return float64(binary.BigEndian.Uint16(b)), nil
 }
 
-var _ api.MeterEnergy = (*Amperfied)(nil)
+var _ api.MeterImport = (*Amperfied)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *Amperfied) TotalEnergy() (float64, error) {
+// ImportTotal implements the api.MeterImport interface
+func (wb *Amperfied) ImportTotal() (float64, error) {
 	b, err := wb.conn.ReadInputRegisters(ampRegEnergy, 2)
 	if err != nil {
 		return 0, err

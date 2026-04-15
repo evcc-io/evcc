@@ -8,11 +8,11 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateInnogy(base *Innogy, meterEnergy func() (float64, error), phaseVoltages func() (float64, float64, float64, error)) api.Charger {
+func decorateInnogy(base *Innogy, meterImport func() (float64, error), phaseVoltages func() (float64, float64, float64, error)) api.Charger {
 	caps := make(map[reflect.Type]any)
 
-	if meterEnergy != nil {
-		caps[reflect.TypeFor[api.MeterEnergy]()] = &decorateInnogyMeterEnergyImpl{meterEnergy: meterEnergy}
+	if meterImport != nil {
+		caps[reflect.TypeFor[api.MeterImport]()] = &decorateInnogyMeterImportImpl{meterImport: meterImport}
 	}
 
 	if phaseVoltages != nil {
@@ -39,12 +39,12 @@ func (d *decorateInnogyCapable) Capability(typ reflect.Type) (any, bool) {
 	return c, ok
 }
 
-type decorateInnogyMeterEnergyImpl struct {
-	meterEnergy func() (float64, error)
+type decorateInnogyMeterImportImpl struct {
+	meterImport func() (float64, error)
 }
 
-func (impl *decorateInnogyMeterEnergyImpl) TotalEnergy() (float64, error) {
-	return impl.meterEnergy()
+func (impl *decorateInnogyMeterImportImpl) ImportTotal() (float64, error) {
+	return impl.meterImport()
 }
 
 type decorateInnogyPhaseVoltagesImpl struct {

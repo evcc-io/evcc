@@ -30,7 +30,7 @@ func init() {
 	registry.Add("pcelectric", NewPCElectricFromConfig)
 }
 
-//go:generate go tool decorate -f decoratePCE -b *PCElectric -r api.Charger -t api.Meter,api.MeterEnergy,api.PhaseCurrents
+//go:generate go tool decorate -f decoratePCE -b *PCElectric -r api.Charger -t api.Meter,api.MeterImport,api.PhaseCurrents
 
 // NewPCElectricFromConfig creates a PCElectric charger from generic config
 func NewPCElectricFromConfig(other map[string]any) (api.Charger, error) {
@@ -50,7 +50,7 @@ func NewPCElectricFromConfig(other map[string]any) (api.Charger, error) {
 	if err == nil && wb.slaveIndex == 0 { // Nur Master hat den Zähler...leider
 		var res pcelectric.MeterInfo
 		if err := wb.GetJSON(wb.meter, &res); err == nil && res.MeterSerial != "" {
-			return decoratePCE(wb, wb.currentPower, wb.totalEnergy, wb.currents), nil
+			return decoratePCE(wb, wb.currentPower, wb.ImportTotal, wb.currents), nil
 		}
 
 		wb.meter = ""
@@ -244,8 +244,8 @@ func (wb *PCElectric) currentPower() (float64, error) {
 	return 230 * (l1 + l2 + l3), err
 }
 
-// TotalEnergy implements the api.MeterEnergy interface kwh
-func (wb *PCElectric) totalEnergy() (float64, error) {
+// ImportTotal implements the api.MeterImport interface kwh
+func (wb *PCElectric) ImportTotal() (float64, error) {
 	var res pcelectric.MeterInfo
 	uri := fmt.Sprintf("%s/meterinfo/%s", wb.uri, wb.meter)
 	err := wb.GetJSON(uri, &res)

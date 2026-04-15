@@ -213,10 +213,10 @@ func (wb *Alfen) CurrentPower() (float64, error) {
 	return rs485.RTUIeee754ToFloat64(b), err
 }
 
-var _ api.MeterEnergy = (*Alfen)(nil)
+var _ api.MeterImport = (*Alfen)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *Alfen) TotalEnergy() (float64, error) {
+// ImportTotal implements the api.MeterImport interface
+func (wb *Alfen) ImportTotal() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(alfenRegEnergy, 4)
 	if err != nil {
 		return 0, err

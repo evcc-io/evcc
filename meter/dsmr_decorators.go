@@ -8,11 +8,11 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateDsmr(base api.Meter, meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error)) api.Meter {
+func decorateDsmr(base api.Meter, meterImport func() (float64, error), phaseCurrents func() (float64, float64, float64, error)) api.Meter {
 	caps := make(map[reflect.Type]any)
 
-	if meterEnergy != nil {
-		caps[reflect.TypeFor[api.MeterEnergy]()] = &decorateDsmrMeterEnergyImpl{meterEnergy: meterEnergy}
+	if meterImport != nil {
+		caps[reflect.TypeFor[api.MeterImport]()] = &decorateDsmrMeterImportImpl{meterImport: meterImport}
 	}
 
 	if phaseCurrents != nil {
@@ -39,12 +39,12 @@ func (d *decorateDsmrCapable) Capability(typ reflect.Type) (any, bool) {
 	return c, ok
 }
 
-type decorateDsmrMeterEnergyImpl struct {
-	meterEnergy func() (float64, error)
+type decorateDsmrMeterImportImpl struct {
+	meterImport func() (float64, error)
 }
 
-func (impl *decorateDsmrMeterEnergyImpl) TotalEnergy() (float64, error) {
-	return impl.meterEnergy()
+func (impl *decorateDsmrMeterImportImpl) ImportTotal() (float64, error) {
+	return impl.meterImport()
 }
 
 type decorateDsmrPhaseCurrentsImpl struct {

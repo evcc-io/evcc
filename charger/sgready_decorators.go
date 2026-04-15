@@ -8,15 +8,15 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateSgReady(base *SgReady, meter func() (float64, error), meterEnergy func() (float64, error), battery func() (float64, error), socLimiter func() (int64, error)) api.Charger {
+func decorateSgReady(base *SgReady, meter func() (float64, error), meterImport func() (float64, error), battery func() (float64, error), socLimiter func() (int64, error)) api.Charger {
 	caps := make(map[reflect.Type]any)
 
 	if meter != nil {
 		caps[reflect.TypeFor[api.Meter]()] = &decorateSgReadyMeterImpl{meter: meter}
 	}
 
-	if meterEnergy != nil {
-		caps[reflect.TypeFor[api.MeterEnergy]()] = &decorateSgReadyMeterEnergyImpl{meterEnergy: meterEnergy}
+	if meterImport != nil {
+		caps[reflect.TypeFor[api.MeterImport]()] = &decorateSgReadyMeterImportImpl{meterImport: meterImport}
 	}
 
 	if battery != nil {
@@ -63,12 +63,12 @@ func (impl *decorateSgReadyMeterImpl) CurrentPower() (float64, error) {
 	return impl.meter()
 }
 
-type decorateSgReadyMeterEnergyImpl struct {
-	meterEnergy func() (float64, error)
+type decorateSgReadyMeterImportImpl struct {
+	meterImport func() (float64, error)
 }
 
-func (impl *decorateSgReadyMeterEnergyImpl) TotalEnergy() (float64, error) {
-	return impl.meterEnergy()
+func (impl *decorateSgReadyMeterImportImpl) ImportTotal() (float64, error) {
+	return impl.meterImport()
 }
 
 type decorateSgReadySocLimiterImpl struct {

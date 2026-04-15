@@ -43,7 +43,7 @@ const (
 	vestelRegChargeTime      = 1508
 	vestelRegMaxCurrent      = 5004
 	vestelRegPower           = 1020
-	vestelRegTotalEnergy     = 1036
+	vestelRegImportTotal     = 1036
 	vestelRegSessionEnergy   = 1502
 	vestelRegRFID            = 1516
 	vestelRegFailsafeTimeout = 2002
@@ -255,11 +255,11 @@ func (wb *Vestel) CurrentPower() (float64, error) {
 	return float64(binary.BigEndian.Uint32(b)), err
 }
 
-var _ api.MeterEnergy = (*Vestel)(nil)
+var _ api.MeterImport = (*Vestel)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *Vestel) TotalEnergy() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(vestelRegTotalEnergy, 2)
+// ImportTotal implements the api.MeterImport interface
+func (wb *Vestel) ImportTotal() (float64, error) {
+	b, err := wb.conn.ReadInputRegisters(vestelRegImportTotal, 2)
 	if err != nil {
 		return 0, err
 	}

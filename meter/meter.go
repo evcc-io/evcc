@@ -18,11 +18,11 @@ func init() {
 
 //evcc:function decorateMeter
 //evcc:basetype api.Meter
-//evcc:types api.MeterEnergy,api.PhaseCurrents,api.PhaseVoltages,api.PhasePowers,api.MaxACPowerGetter
+//evcc:types api.MeterImport,api.PhaseCurrents,api.PhaseVoltages,api.PhasePowers,api.MaxACPowerGetter
 
 //evcc:function decorateMeterBattery
 //evcc:basetype api.Meter
-//evcc:types api.MeterEnergy,api.Battery,api.BatteryCapacity,api.BatterySocLimiter,api.BatteryPowerLimiter,api.BatteryController
+//evcc:types api.MeterImport,api.Battery,api.BatteryCapacity,api.BatterySocLimiter,api.BatteryPowerLimiter,api.BatteryController
 
 // NewConfigurableFromConfig creates a new meter from config
 func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
@@ -120,24 +120,24 @@ type Meter struct {
 
 // Decorate attaches additional capabilities to the base meter
 func (m *Meter) Decorate(
-	totalEnergy func() (float64, error),
+	ImportTotal func() (float64, error),
 	currents, voltages, powers func() (float64, float64, float64, error),
 	maxACPower func() float64,
 ) api.Meter {
 	return decorateMeter(m,
-		totalEnergy, currents, voltages, powers,
+		ImportTotal, currents, voltages, powers,
 		maxACPower,
 	)
 }
 
 func (m *Meter) DecorateBattery(
-	totalEnergy func() (float64, error),
+	ImportTotal func() (float64, error),
 	soc func() (float64, error), capacity func() float64,
 	socLimits, powerLimits func() (float64, float64),
 	setMode func(api.BatteryMode) error,
 ) api.Meter {
 	return decorateMeterBattery(m,
-		totalEnergy,
+		ImportTotal,
 		soc, capacity,
 		socLimits, powerLimits,
 		setMode,

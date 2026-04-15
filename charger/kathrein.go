@@ -68,7 +68,7 @@ const (
 	kathreinRegCurrents         = 0x0036 // float32 Line 1 Current (A)
 	kathreinRegPowers           = 0x003C // float32 Line 1 Power (W)
 	kathreinRegTotalActivePower = 0x0054 // float32 Total active power (W)
-	kathreinRegTotalEnergy      = 0x005C // float32 Total Energy (since production) (Wh)
+	kathreinRegImportTotal      = 0x005C // float32 Total Energy (since production) (Wh)
 
 	// EVSE - Charging state (uint16)
 	//   0 : Idle
@@ -314,11 +314,11 @@ func (wb *Kathrein) Voltages() (float64, float64, float64, error) {
 // removed since broken, see https://github.com/evcc-io/evcc/pull/25427
 // var _ api.ChargeRater = (*Kathrein)(nil)
 
-var _ api.MeterEnergy = (*Kathrein)(nil)
+var _ api.MeterImport = (*Kathrein)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *Kathrein) TotalEnergy() (float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(kathreinRegTotalEnergy, 2)
+// ImportTotal implements the api.MeterImport interface
+func (wb *Kathrein) ImportTotal() (float64, error) {
+	b, err := wb.conn.ReadHoldingRegisters(kathreinRegImportTotal, 2)
 	if err != nil {
 		return 0, err
 	}

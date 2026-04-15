@@ -8,15 +8,15 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateWarp2(base *Warp2, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error), identifier func() (string, error), phaseSwitcher func(int) error, phaseGetter func() (int, error)) api.Charger {
+func decorateWarp2(base *Warp2, meter func() (float64, error), meterImport func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error), identifier func() (string, error), phaseSwitcher func(int) error, phaseGetter func() (int, error)) api.Charger {
 	caps := make(map[reflect.Type]any)
 
 	if meter != nil {
 		caps[reflect.TypeFor[api.Meter]()] = &decorateWarp2MeterImpl{meter: meter}
 	}
 
-	if meterEnergy != nil {
-		caps[reflect.TypeFor[api.MeterEnergy]()] = &decorateWarp2MeterEnergyImpl{meterEnergy: meterEnergy}
+	if meterImport != nil {
+		caps[reflect.TypeFor[api.MeterImport]()] = &decorateWarp2MeterImportImpl{meterImport: meterImport}
 	}
 
 	if phaseCurrents != nil {
@@ -75,12 +75,12 @@ func (impl *decorateWarp2MeterImpl) CurrentPower() (float64, error) {
 	return impl.meter()
 }
 
-type decorateWarp2MeterEnergyImpl struct {
-	meterEnergy func() (float64, error)
+type decorateWarp2MeterImportImpl struct {
+	meterImport func() (float64, error)
 }
 
-func (impl *decorateWarp2MeterEnergyImpl) TotalEnergy() (float64, error) {
-	return impl.meterEnergy()
+func (impl *decorateWarp2MeterImportImpl) ImportTotal() (float64, error) {
+	return impl.meterImport()
 }
 
 type decorateWarp2PhaseCurrentsImpl struct {

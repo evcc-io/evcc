@@ -43,7 +43,7 @@ const (
 	etekRegMeterVoltagesAddr = 90 // Meter voltages address
 	etekRegMeterCurrentAddr  = 93 // Meter total current address
 	etekRegMeterPowerAddr    = 94 // Meter total power address
-	etekRegMeterEnergyAddr   = 95 // Meter total energy address
+	etekRegMeterImportAddr   = 95 // Meter total energy address
 
 	// Write registers
 	etekRegRemoteControl = 89  // Remote start/stop (0=invalid, 1=start, 2=stop)
@@ -65,7 +65,7 @@ func init() {
 	registry.AddCtx("etek", NewEtekFromConfig)
 }
 
-//go:generate go tool decorate -f decorateEtek -b *Etek -r api.Charger -t api.Meter,api.MeterEnergy,api.PhaseVoltages
+//go:generate go tool decorate -f decorateEtek -b *Etek -r api.Charger -t api.Meter,api.MeterImport,api.PhaseVoltages
 
 // NewEtekFromConfig creates an ETEK EKEPC2 charger from generic config
 func NewEtekFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
@@ -86,7 +86,7 @@ func NewEtekFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 	// If register value is 65535 (0xffff), no external meter is configured
 	var (
 		currentPower func() (float64, error)
-		totalEnergy  func() (float64, error)
+		ImportTotal  func() (float64, error)
 		voltages     func() (float64, float64, float64, error)
 	)
 
@@ -98,9 +98,9 @@ func NewEtekFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 	}
 
 	// Check energy register (95)
-	if b, err := wb.conn.ReadHoldingRegisters(etekRegMeterEnergyAddr, 1); err == nil {
+	if b, err := wb.conn.ReadHoldingRegisters(etekRegMeterImportAddr, 1); err == nil {
 		if binary.BigEndian.Uint16(b) != etekRegInvalidMeterAddr {
-			totalEnergy = wb.totalEnergy
+			ImportTotal = wb.ImportTotal
 		}
 	}
 
@@ -114,7 +114,7 @@ func NewEtekFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 		}
 	}
 
-	return decorateEtek(wb, currentPower, totalEnergy, voltages), nil
+	return decorateEtek(wb, currentPower, ImportTotal, voltages), nil
 }
 
 // NewEtek creates an ETEK EKEPC2 charger
@@ -250,8 +250,8 @@ func (wb *Etek) currentPower() (float64, error) {
 	return float64(binary.BigEndian.Uint16(b)), nil
 }
 
-// totalEnergy implements the api.MeterEnergy interface
-func (wb *Etek) totalEnergy() (float64, error) {
+// ImportTotal implements the api.MeterImport interface
+func (wb *Etek) ImportTotal() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(etekRegEnergy, 2)
 	if err != nil {
 		return 0, err
