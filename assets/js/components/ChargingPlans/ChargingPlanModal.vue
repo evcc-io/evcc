@@ -35,7 +35,25 @@
 				<div v-if="isModalVisible">
 					<PlansSettings
 						v-if="departureTabActive"
-						v-bind="chargingPlansSettingsProps"
+						:staticPlan="vehicle?.plan"
+						:repeatingPlans="repeatingPlans"
+						:effectiveLimitSoc="loadpoint?.effectiveLimitSoc"
+						:effectivePlanTime="loadpoint?.effectivePlanTime ?? undefined"
+						:effectivePlanSoc="loadpoint?.effectivePlanSoc"
+						:effectivePlanStrategy="loadpoint?.effectivePlanStrategy"
+						:planEnergy="loadpoint?.planEnergy"
+						:limitEnergy="loadpoint?.limitEnergy"
+						:socBasedPlanning="!!socBasedPlanning"
+						:socPerKwh="socPerKwh"
+						:rangePerSoc="rangePerSoc"
+						:smartCostType="smartCostType"
+						:currency="currency"
+						:mode="loadpoint?.mode"
+						:capacity="vehicle?.capacity"
+						:vehicle="vehicle"
+						:vehicleLimitSoc="loadpoint?.vehicleLimitSoc"
+						:planOverrun="loadpoint?.planOverrun"
+						:forecast="forecast"
 						@static-plan-updated="updateStaticPlan"
 						@static-plan-removed="removeStaticPlan"
 						@repeating-plans-updated="updateRepeatingPlans"
@@ -43,7 +61,13 @@
 					/>
 					<Arrival
 						v-if="arrivalTabActive"
-						v-bind="chargingPlanArrival"
+						:id="id"
+						:minSoc="vehicle?.minSoc"
+						:limitSoc="vehicle?.limitSoc"
+						:vehicleName="vehicle?.name"
+						:vehicleNotReachable="vehicleNotReachable"
+						:socBasedCharging="socBasedCharging"
+						:rangePerSoc="rangePerSoc"
 						@minsoc-updated="setMinSoc"
 						@limitsoc-updated="setLimitSoc"
 					/>
@@ -58,7 +82,6 @@ import { defineComponent, type PropType } from "vue";
 import GenericModal from "../Helper/GenericModal.vue";
 import PlansSettings from "./PlansSettings.vue";
 import Arrival from "./Arrival.vue";
-import collector from "@/mixins/collector";
 import api from "@/api";
 import type {
 	PlanStrategy,
@@ -67,7 +90,8 @@ import type {
 	StaticPlan,
 	StaticSocPlan,
 } from "./types";
-import type { Vehicle } from "@/types/evcc";
+import type { CURRENCY, Forecast, SMART_COST_TYPE, UiLoadpoint, Vehicle } from "@/types/evcc";
+import { distanceValue } from "@/units";
 
 export default defineComponent({
 	name: "ChargingPlanModal",
@@ -76,10 +100,12 @@ export default defineComponent({
 		PlansSettings,
 		Arrival,
 	},
-	mixins: [collector],
 	props: {
-		socBasedPlanning: Boolean,
-		vehicle: Object as PropType<Vehicle>,
+		loadpoints: { type: Array as PropType<UiLoadpoint[]>, default: () => [] },
+		vehicles: { type: Array as PropType<Vehicle[]>, default: () => [] },
+		smartCostType: String as PropType<SMART_COST_TYPE>,
+		currency: String as PropType<CURRENCY>,
+		forecast: Object as PropType<Forecast>,
 	},
 	data() {
 		return {
@@ -89,6 +115,64 @@ export default defineComponent({
 		};
 	},
 	computed: {
+		// TODO: refactor, see Vehicle.vue
+		range() {
+			return distanceValue(this.vehicleRange);
+		},
+		// TODO: refactor, see Vehicle.vue
+		vehicleRange() {
+			return this.loadpoint?.vehicleRange || 0;
+		},
+		// TODO: refactor, see Vehicle.vue
+		vehicleSoc() {
+			return this.loadpoint?.vehicleSoc || 0;
+		},
+		// TODO: refactor, see Vehicle.vue
+		capacity() {
+			return this.vehicle?.capacity || 0;
+		},
+		// TODO: refactor, see Vehicle.vue
+		rangePerSoc() {
+			if (this.vehicleSoc > 10 && this.range) {
+				return Math.round((this.range / this.vehicleSoc) * 1e2) / 1e2;
+			}
+			return undefined;
+		},
+		// TODO: refactor, see Vehicle.vue
+		socPerKwh() {
+			if (this.capacity > 0) {
+				return 100 / this.capacity;
+			}
+			return 0;
+		},
+		// TODO: refactor, see Loadpoint.vue
+		vehicleNotReachable() {
+			// online vehicle that was not reachable at startup
+			const features = this.vehicle?.features || [];
+			return features.includes("Offline") && features.includes("Retryable");
+		},
+		// TODO: refactor, see Loadpoint.vue
+		vehicleKnown() {
+			return !!this.loadpoint?.vehicleName;
+		},
+		// TODO: refactor, see Loadpoint.vue
+		vehicleHasSoc() {
+			return this.vehicleKnown && !this.vehicle?.features?.includes("Offline");
+		},
+		// TODO: refactor, see Loadpoint.vue
+		socBasedCharging() {
+			return this.vehicleHasSoc || (this.loadpoint && this.loadpoint?.vehicleSoc > 0);
+		},
+		// TODO: refactor, see Loadpoint.vue
+		socBasedPlanning() {
+			return this.socBasedCharging && this.vehicle?.capacity && this.vehicle?.capacity > 0;
+		},
+		loadpoint() {
+			return this.loadpoints.find((loadpoint) => loadpoint.id === this.id);
+		},
+		vehicle() {
+			return this.vehicles?.find((v) => v.name === this.loadpoint?.vehicleName);
+		},
 		modalTitle(): string {
 			const baseTitle = this.$t("main.chargingPlan.modalTitle");
 			if (this.socBasedPlanning && this.vehicle) {
@@ -102,17 +186,21 @@ export default defineComponent({
 		arrivalTabActive(): boolean {
 			return this.activeTab === "arrival";
 		},
-		chargingPlansSettingsProps(): any {
-			return this.collectProps(PlansSettings);
-		},
-		chargingPlanArrival(): any {
-			return this.collectProps(Arrival);
-		},
 		apiVehicle(): string {
 			return `vehicles/${this.vehicle?.name}/`;
 		},
 		apiLoadpoint(): string {
 			return `loadpoints/${this.id}/`;
+		},
+		repeatingPlans(): RepeatingPlan[] {
+			if (
+				this.vehicle &&
+				this.vehicle.repeatingPlans &&
+				this.vehicle.repeatingPlans.length > 0
+			) {
+				return this.vehicle.repeatingPlans || [];
+			}
+			return [];
 		},
 	},
 	methods: {

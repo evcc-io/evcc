@@ -166,7 +166,6 @@ export default defineComponent({
 	mixins: [formatter, collector],
 	props: {
 		loadpoints: { type: Array as PropType<UiLoadpoint[]>, default: () => [] },
-
 		batteryConfigured: Boolean,
 		smartCostType: String as PropType<SMART_COST_TYPE>,
 		smartCostAvailable: Boolean,

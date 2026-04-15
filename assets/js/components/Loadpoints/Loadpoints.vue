@@ -61,7 +61,14 @@
 			</button>
 		</div>
 		<div>
-			<ChargingPlanModal ref="chargingPlanModal" />
+			<ChargingPlanModal
+				ref="chargingPlanModal"
+				:loadpoints="loadpoints"
+				:vehicles="vehicles"
+				:smartCostType="smartCostType"
+				:currency="currency"
+				:forecast="forecast"
+			/>
 			<SettingsModal
 				ref="settingsModal"
 				:loadpoints="loadpoints"
