@@ -654,7 +654,7 @@ func (site *Site) updateBatteryMeters() {
 		totalCapacity = lo.SumBy(mm, func(m types.Measurement) float64 { return *m.Capacity })
 	}
 
-	site.battery.Soc = batterySocAcc / totalCapacity
+	site.battery.Soc = math.Min(100, batterySocAcc / totalCapacity)
 	site.battery.Capacity = totalCapacity
 
 	site.battery.Power = lo.SumBy(mm, func(m types.Measurement) float64 {
