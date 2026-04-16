@@ -205,7 +205,10 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 			continue
 		}
 
-		add(site.loadpointRequest(lp, minLen, firstSlotDuration, grid))
+		// skip disabled loadpoints
+		if req, detail := site.loadpointRequest(lp, minLen, firstSlotDuration, grid); req.CMax > 0 {
+			add(req, detail)
+		}
 	}
 
 	for i, dev := range site.batteryMeters {
