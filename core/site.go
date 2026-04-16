@@ -327,13 +327,20 @@ func (site *Site) restoreSettings() error {
 
 	if err == nil && settings.Json(keys.SolarAccYield, &pvEnergy) == nil {
 		var nok bool
+		var produced float64
 		for _, name := range site.Meters.PVMetersRef {
 			if fcst, ok := pvEnergy[name]; ok {
 				site.pvEnergy[name].Import = fcst.Import
+				produced += fcst.Import
 			} else {
 				nok = true
 				site.log.WARN.Printf("accumulated solar yield: cannot restore %s", name)
 			}
+		}
+
+		// reset if produced is 0 but forecast is not (inconsistent state)
+		if produced == 0 && fcstEnergy > 0 {
+			nok = true
 		}
 
 		if !nok {
