@@ -1806,6 +1806,11 @@ func (lp *Loadpoint) publishSocAndRange() {
 	lp.publish(keys.VehicleSoc, lp.vehicleSoc)
 
 	apiLimitSoc := 100
+
+	if lp.chargerHasFeature(api.Heating) {
+		apiLimitSoc = 70
+	}
+
 	if limitR != nil {
 		apiLimitSoc = int(*limitR)
 		// https://github.com/evcc-io/evcc/issues/13349
