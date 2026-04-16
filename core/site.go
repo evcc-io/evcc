@@ -643,6 +643,7 @@ func (site *Site) updateBatteryMeters() {
 
 	var batterySocAcc float64
 	var totalCapacity float64
+	var calculatedBatterySoc float64
 
 	if lo.SomeBy(mm, func(m types.Measurement) bool { return m.Capacity == nil || *m.Capacity <= 0 }) {
 		// any capacity is missing
@@ -654,7 +655,9 @@ func (site *Site) updateBatteryMeters() {
 		totalCapacity = lo.SumBy(mm, func(m types.Measurement) float64 { return *m.Capacity })
 	}
 
-	site.battery.Soc = math.Min(100, batterySocAcc / totalCapacity)
+	calculatedBatterySoc = batterySocAcc / totalCapacity;
+	//Limit SoC to 0-100 to prevent floating point issues
+	site.battery.Soc = math.Min(100, calculatedBatterySoc)
 	site.battery.Capacity = totalCapacity
 
 	site.battery.Power = lo.SumBy(mm, func(m types.Measurement) float64 {
