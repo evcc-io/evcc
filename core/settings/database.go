@@ -69,5 +69,5 @@ func (s *dbSettings) Bool(key string) (bool, error) {
 }
 
 func (s *dbSettings) Json(key string, res any) error {
-	return db.Json(s.Key+key, &res)
+	return db.Json(s.Key+key, res)
 }

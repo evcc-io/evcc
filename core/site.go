@@ -79,13 +79,14 @@ type Site struct {
 	batteryDischargeControl bool     // prevent battery discharge for fast and planned charging
 	batteryGridChargeLimit  *float64 // grid charging limit
 
-	loadpoints  []*Loadpoint             // Loadpoints
-	tariffs     *tariff.Tariffs          // Tariffs
-	coordinator *coordinator.Coordinator // Vehicles
-	prioritizer *prioritizer.Prioritizer // Power budgets
-	stats       *Stats                   // Stats
-	fcstEnergy  *metrics.Accumulator
-	pvEnergy    map[string]*metrics.Accumulator
+	loadpoints   []*Loadpoint             // Loadpoints
+	tariffs      *tariff.Tariffs          // Tariffs
+	coordinator  *coordinator.Coordinator // Vehicles
+	prioritizer  *prioritizer.Prioritizer // Power budgets
+	stats        *Stats                   // Stats
+	fcstEnergy   *metrics.Accumulator
+	pvEnergy     map[string]*metrics.Accumulator
+	pvEnergyBase map[string]float64
 
 	homeEnergy, gridEnergy *metrics.Collector
 
@@ -251,10 +252,11 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 // NewSite creates a Site with sane defaults
 func NewSite() *Site {
 	site := &Site{
-		log:        util.NewLogger("site"),
-		Voltage:    230, // V
-		pvEnergy:   make(map[string]*metrics.Accumulator),
-		fcstEnergy: metrics.NewAccumulator(),
+		log:          util.NewLogger("site"),
+		Voltage:      230, // V
+		pvEnergy:     make(map[string]*metrics.Accumulator),
+		pvEnergyBase: make(map[string]float64),
+		fcstEnergy:   metrics.NewAccumulator(),
 	}
 
 	return site
@@ -323,8 +325,11 @@ func (site *Site) restoreSettings() error {
 
 	// restore accumulated energy
 	pvEnergy := make(map[string]metrics.Accumulator)
+	pvEnergyBase := make(map[string]float64)
 	fcstEnergy, err := settings.Float(keys.SolarAccForecast)
 	fcstUpdated, tsErr := settings.Time(keys.SolarAccForecastTs)
+	baseErr := settings.Json(keys.SolarAccYieldBase, &pvEnergyBase)
+	scale, scaleErr := settings.Float(keys.SolarScale)
 
 	if err == nil && settings.Json(keys.SolarAccYield, &pvEnergy) == nil {
 		var nok bool
@@ -339,21 +344,28 @@ func (site *Site) restoreSettings() error {
 
 		if !nok {
 			switch {
-			case tsErr == nil:
+			case tsErr == nil && baseErr == nil:
 				site.fcstEnergy.Restore(fcstEnergy, 0, fcstUpdated)
+				site.pvEnergyBase = pvEnergyBase
+				if scaleErr == nil && scale > 0 {
+					site.log.DEBUG.Printf("accumulated solar yield: restored scale %.3f", scale)
+				}
 				site.log.DEBUG.Printf("accumulated solar yield: restored %.3fkWh forecasted, %+v produced", fcstEnergy, pvEnergy)
 			case fcstEnergy > 0:
-				// Older installs persisted only the forecast sum, which causes double counting after restarts.
-				site.log.WARN.Printf("accumulated solar yield: forecast timestamp missing, resetting forecast adjustment")
-				settings.Delete(keys.SolarAccForecast)
-				settings.Delete(keys.SolarAccForecastTs)
+				legacyProduced := site.legacySolarProduced(pvEnergy)
+				if legacyScale := site.legacySolarScale(legacyProduced, fcstEnergy); legacyScale != nil {
+					settings.SetFloat(keys.SolarScale, *legacyScale)
+					site.log.WARN.Printf("accumulated solar yield: derived legacy scale %.3f before resetting incomplete forecast state", *legacyScale)
+				}
+				// Older installs persisted incomplete forecast adjustment state, which causes invalid scaling after restarts.
+				site.log.WARN.Printf("accumulated solar yield: forecast baseline missing, resetting forecast adjustment")
+				site.resetSolarAdjustmentState(true)
 			}
 		} else {
 			// reset metrics
 			site.log.WARN.Printf("accumulated solar yield: metrics reset")
 
-			settings.Delete(keys.SolarAccForecast)
-			settings.Delete(keys.SolarAccForecastTs)
+			site.resetSolarAdjustmentState(true)
 			settings.Delete(keys.SolarAccYield)
 
 			for _, pe := range site.pvEnergy {
@@ -363,6 +375,32 @@ func (site *Site) restoreSettings() error {
 	}
 
 	return nil
+}
+
+func (site *Site) legacySolarProduced(pvEnergy map[string]metrics.Accumulator) float64 {
+	var produced float64
+
+	for _, name := range site.Meters.PVMetersRef {
+		if acc, ok := pvEnergy[name]; ok {
+			produced += acc.Imported()
+		}
+	}
+
+	return produced
+}
+
+func (site *Site) legacySolarScale(produced, forecasted float64) *float64 {
+	if forecasted <= 0 {
+		return nil
+	}
+
+	scale := produced / forecasted
+	const minEnergy = 0.5 // kWh
+	if produced+forecasted <= minEnergy || scale <= 0 {
+		return nil
+	}
+
+	return &scale
 }
 
 func meterCapabilities(name string, meter any) string {

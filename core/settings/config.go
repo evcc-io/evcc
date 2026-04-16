@@ -118,5 +118,5 @@ func (s *ConfigSettings) Json(key string, res any) error {
 	if str == "" || err != nil {
 		return err
 	}
-	return json.Unmarshal([]byte(str), &res)
+	return json.Unmarshal([]byte(str), res)
 }

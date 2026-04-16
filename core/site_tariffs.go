@@ -1,19 +1,15 @@
 package core
 
 import (
-	"maps"
 	"math"
-	"slices"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
-	"github.com/evcc-io/evcc/core/metrics"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
 	"github.com/jinzhu/now"
-	"github.com/samber/lo"
 )
 
 type solarDetails struct {
@@ -150,33 +146,93 @@ func (site *Site) solarDetails(solar api.Rates) solarDetails {
 		Complete: !last.Before(eot.AddDate(0, 0, 1)),
 	}
 
+	now := time.Now()
+	site.ensureSolarAdjustmentBaseline(now)
+
 	// accumulate forecasted energy since last update
 	fcstUpdated := site.fcstEnergy.Updated()
-	energy := solarEnergy(solar, fcstUpdated, time.Now()) / 1e3
+	energy := solarEnergy(solar, fcstUpdated, now) / 1e3
 	site.log.DEBUG.Printf("solar forecast: accumulated %.3fkWh from %v to %v",
-		energy, fcstUpdated.Truncate(time.Second), time.Now().Truncate(time.Second),
+		energy, fcstUpdated.Truncate(time.Second), now.Truncate(time.Second),
 	)
 
 	site.fcstEnergy.AddImportEnergy(energy)
 	settings.SetFloat(keys.SolarAccForecast, site.fcstEnergy.Imported())
 	settings.SetTime(keys.SolarAccForecastTs, site.fcstEnergy.Updated())
 
-	produced := lo.SumBy(slices.Collect(maps.Values(site.pvEnergy)), func(v *metrics.Accumulator) float64 {
-		return v.Imported()
-	})
+	produced := site.solarProducedSinceStart()
 	site.log.DEBUG.Printf("solar forecast: produced %.3f", produced)
 
+	const minEnergy = 0.5 // kWh
 	if fcst := site.fcstEnergy.Imported(); fcst > 0 {
 		scale := produced / fcst
 		site.log.DEBUG.Printf("solar forecast: accumulated %.3fkWh, produced %.3fkWh, scale %.3f", fcst, produced, scale)
 
-		const minEnergy = 0.5 // kWh
 		if produced+fcst > minEnergy {
+			settings.SetFloat(keys.SolarScale, scale)
 			res.Scale = new(scale)
 		}
+	} else if scale, err := settings.Float(keys.SolarScale); err == nil && scale > 0 {
+		site.log.DEBUG.Printf("solar forecast: reusing persisted scale %.3f", scale)
+		res.Scale = new(scale)
 	}
 
 	return res
+}
+
+func (site *Site) resetSolarAdjustmentState(deletePersisted bool) {
+	site.fcstEnergy.Restore(0, 0, time.Time{})
+	site.pvEnergyBase = make(map[string]float64)
+
+	if deletePersisted {
+		settings.Delete(keys.SolarAccForecast)
+		settings.Delete(keys.SolarAccForecastTs)
+		settings.Delete(keys.SolarAccYieldBase)
+	}
+}
+
+func (site *Site) ensureSolarAdjustmentBaseline(now time.Time) {
+	needsReset := site.fcstEnergy.Updated().IsZero()
+
+	for _, name := range site.Meters.PVMetersRef {
+		if _, ok := site.pvEnergyBase[name]; !ok {
+			needsReset = true
+			break
+		}
+	}
+
+	if !needsReset {
+		return
+	}
+
+	site.fcstEnergy.Restore(0, 0, now)
+	clear(site.pvEnergyBase)
+
+	for _, name := range site.Meters.PVMetersRef {
+		if accu, ok := site.pvEnergy[name]; ok {
+			site.pvEnergyBase[name] = accu.Imported()
+		}
+	}
+
+	settings.SetFloat(keys.SolarAccForecast, 0)
+	settings.SetTime(keys.SolarAccForecastTs, now)
+	settings.SetJson(keys.SolarAccYieldBase, site.pvEnergyBase)
+}
+
+func (site *Site) solarProducedSinceStart() float64 {
+	var produced float64
+
+	for _, name := range site.Meters.PVMetersRef {
+		accu, ok := site.pvEnergy[name]
+		if !ok {
+			continue
+		}
+
+		base := site.pvEnergyBase[name]
+		produced += max(0, accu.Imported()-base)
+	}
+
+	return produced
 }
 
 func (site *Site) isDynamicTariff(usage api.TariffUsage) bool {

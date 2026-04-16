@@ -201,7 +201,7 @@ func Json(key string, res any) error {
 	if s == "" {
 		return ErrNotFound
 	}
-	return json.Unmarshal([]byte(s), &res)
+	return json.Unmarshal([]byte(s), res)
 }
 
 func DecodeOtherSliceOrMap(other, res any) error {

@@ -2,8 +2,10 @@ package core
 
 import (
 	"testing"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/metrics"
 	"github.com/evcc-io/evcc/core/types"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/stretchr/testify/assert"
@@ -156,5 +158,37 @@ func TestRequiredBatteryMode(t *testing.T) {
 
 		res := s.requiredBatteryMode(tc.gridChargeActive, api.Rate{})
 		assert.Equal(t, tc.res, res, "expected %s, got %s", tc.res, res)
+	}
+}
+
+func TestSolarProducedSinceStart(t *testing.T) {
+	now := time.Now()
+
+	s := &Site{
+		Meters: MetersConfig{
+			PVMetersRef: []string{"pv1", "pv2"},
+		},
+		pvEnergy: map[string]*metrics.Accumulator{
+			"pv1": metrics.NewAccumulator(),
+			"pv2": metrics.NewAccumulator(),
+		},
+		pvEnergyBase: map[string]float64{
+			"pv1": 100,
+			"pv2": 50,
+		},
+	}
+
+	s.pvEnergy["pv1"].Restore(101.5, 0, now)
+	s.pvEnergy["pv2"].Restore(49, 0, now)
+
+	assert.Equal(t, 1.5, s.solarProducedSinceStart())
+}
+
+func TestLegacySolarScale(t *testing.T) {
+	s := &Site{}
+
+	scale := s.legacySolarScale(8290.909545053732, 7471.252823475356)
+	if assert.NotNil(t, scale) {
+		assert.InDelta(t, 1.1097080691745485, *scale, 1e-12)
 	}
 }
