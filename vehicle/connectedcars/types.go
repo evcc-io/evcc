@@ -40,7 +40,4 @@ type VehicleData struct {
 	RangeTotalKm *struct {
 		Km float64 `json:"km"`
 	} `json:"rangeTotalKm"`
-	ChargingState *struct {
-		Enabled bool `json:"enabled"`
-	} `json:"chargingState"`
 }
