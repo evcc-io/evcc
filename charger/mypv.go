@@ -303,7 +303,6 @@ func (wb *MyPv) CurrentPower() (float64, error) {
 	// Added for "warm water 9 + 9kW" operation mode (#3) of AC Thor with extra heater on internal relay
 	// see https://github.com/evcc-io/evcc/discussions/23708
 	if wb.name == "ac-thor" {
-
 		c, err := wb.conn.ReadHoldingRegisters(elwaRegOperationMode, 1)
 		if err != nil {
 			return 0, err
