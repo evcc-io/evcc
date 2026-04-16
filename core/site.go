@@ -522,7 +522,7 @@ func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) [
 			Title:  props.Title,
 			Icon:   props.Icon,
 			Power:  power,
-			Energy: energy,
+			Import: energy,
 		}
 	}
 
@@ -569,7 +569,7 @@ func (site *Site) updatePvMeters() {
 		return math.Abs(m.ExcessDCPower)
 	})
 	ImportTotal := lo.SumBy(mm, func(m types.Measurement) float64 {
-		return m.Energy
+		return m.Import
 	})
 
 	if len(site.pvMeters) > 1 {
@@ -591,11 +591,11 @@ func (site *Site) updatePvMeters() {
 		name := dev.Config().Name
 
 		prev := site.pvEnergy[name].Imported()
-		if mm[i].Energy > 0 {
-			site.log.DEBUG.Printf("!! solar production: accumulate set %s %.3fkWh meter total (was: %s)", name, mm[i].Energy, site.pvEnergy[name])
-			site.pvEnergy[name].SetImportMeterTotal(mm[i].Energy)
+		if mm[i].Import > 0 {
+			site.log.DEBUG.Printf("!! solar production: accumulate set %s %.3fkWh meter total (was: %s)", name, mm[i].Import, site.pvEnergy[name])
+			site.pvEnergy[name].SetImportMeterTotal(mm[i].Import)
 		} else {
-			site.log.DEBUG.Printf("!! solar production: accumulate add %s %.3fW power (was: %s)", name, mm[i].Energy, site.pvEnergy[name])
+			site.log.DEBUG.Printf("!! solar production: accumulate add %s %.3fW power (was: %s)", name, mm[i].Import, site.pvEnergy[name])
 			site.pvEnergy[name].AddPower(mm[i].Power)
 		}
 		site.log.DEBUG.Printf("!! solar production: accumulate moved %s from %.3f to %.3f", name, prev, site.pvEnergy[name].Imported())
@@ -661,7 +661,7 @@ func (site *Site) updateBatteryMeters() {
 		return m.Power
 	})
 	site.battery.Energy = lo.SumBy(mm, func(m types.Measurement) float64 {
-		return m.Energy
+		return m.Import
 	})
 
 	if len(site.batteryMeters) > 1 {
