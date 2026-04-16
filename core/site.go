@@ -324,12 +324,13 @@ func (site *Site) restoreSettings() error {
 	// restore accumulated energy
 	pvEnergy := make(map[string]metrics.Accumulator)
 	fcstEnergy, err := settings.Float(keys.SolarAccForecast)
+	fcstUpdated, tsErr := settings.Time(keys.SolarAccForecastTs)
 
 	if err == nil && settings.Json(keys.SolarAccYield, &pvEnergy) == nil {
 		var nok bool
 		for _, name := range site.Meters.PVMetersRef {
 			if fcst, ok := pvEnergy[name]; ok {
-				site.pvEnergy[name].Import = fcst.Import
+				site.pvEnergy[name].Restore(fcst.Imported(), fcst.Exported(), fcst.Updated())
 			} else {
 				nok = true
 				site.log.WARN.Printf("accumulated solar yield: cannot restore %s", name)
@@ -337,17 +338,26 @@ func (site *Site) restoreSettings() error {
 		}
 
 		if !nok {
-			site.fcstEnergy.Import = fcstEnergy
-			site.log.DEBUG.Printf("accumulated solar yield: restored %.3fkWh forecasted, %+v produced", fcstEnergy, pvEnergy)
+			switch {
+			case tsErr == nil:
+				site.fcstEnergy.Restore(fcstEnergy, 0, fcstUpdated)
+				site.log.DEBUG.Printf("accumulated solar yield: restored %.3fkWh forecasted, %+v produced", fcstEnergy, pvEnergy)
+			case fcstEnergy > 0:
+				// Older installs persisted only the forecast sum, which causes double counting after restarts.
+				site.log.WARN.Printf("accumulated solar yield: forecast timestamp missing, resetting forecast adjustment")
+				settings.Delete(keys.SolarAccForecast)
+				settings.Delete(keys.SolarAccForecastTs)
+			}
 		} else {
 			// reset metrics
 			site.log.WARN.Printf("accumulated solar yield: metrics reset")
 
 			settings.Delete(keys.SolarAccForecast)
+			settings.Delete(keys.SolarAccForecastTs)
 			settings.Delete(keys.SolarAccYield)
 
 			for _, pe := range site.pvEnergy {
-				pe.Import = 0
+				pe.Restore(0, 0, time.Time{})
 			}
 		}
 	}

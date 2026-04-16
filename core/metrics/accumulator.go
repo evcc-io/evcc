@@ -2,6 +2,7 @@ package metrics
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -15,6 +16,13 @@ type Accumulator struct {
 	exportMeter *float64 // kWh
 	Import      float64  `json:"import"` // kWh
 	Export      float64  `json:"export"` // kWh
+}
+
+type accumulatorJSON struct {
+	Import      *float64   `json:"import,omitempty"`
+	Export      *float64   `json:"export,omitempty"`
+	Updated     *time.Time `json:"updated,omitempty"`
+	Accumulated *float64   `json:"accumulated,omitempty"`
 }
 
 func WithClock(clock clock.Clock) func(*Accumulator) {
@@ -33,6 +41,58 @@ func NewAccumulator(opt ...func(*Accumulator)) *Accumulator {
 
 func (m *Accumulator) Updated() time.Time {
 	return m.updated
+}
+
+// Restore sets persisted accumulator values and clears transient meter totals.
+func (m *Accumulator) Restore(imp, exp float64, updated time.Time) {
+	m.Import = imp
+	m.Export = exp
+	m.updated = updated
+	m.importMeter = nil
+	m.exportMeter = nil
+}
+
+func (m Accumulator) MarshalJSON() ([]byte, error) {
+	payload := accumulatorJSON{
+		Import:  &m.Import,
+		Export:  &m.Export,
+		Updated: &m.updated,
+	}
+
+	return json.Marshal(payload)
+}
+
+func (m *Accumulator) UnmarshalJSON(data []byte) error {
+	var payload accumulatorJSON
+	if err := json.Unmarshal(data, &payload); err != nil {
+		return err
+	}
+
+	if m.clock == nil {
+		m.clock = clock.New()
+	}
+
+	var imp float64
+	switch {
+	case payload.Import != nil:
+		imp = *payload.Import
+	case payload.Accumulated != nil:
+		imp = *payload.Accumulated
+	}
+
+	var exp float64
+	if payload.Export != nil {
+		exp = *payload.Export
+	}
+
+	var updated time.Time
+	if payload.Updated != nil {
+		updated = *payload.Updated
+	}
+
+	m.Restore(imp, exp, updated)
+
+	return nil
 }
 
 func (m *Accumulator) String() string {
