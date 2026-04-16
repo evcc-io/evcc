@@ -1,7 +1,7 @@
 template: connected-cars
 products:
   - description:
-      generic: Connected Cars
+      generic: Connected Cars (Volkswagen Australia)
 group: generic
 params:
   - name: deviceToken
