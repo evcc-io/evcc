@@ -643,7 +643,6 @@ func (site *Site) updateBatteryMeters() {
 
 	var batterySocAcc float64
 	var totalCapacity float64
-	var calculatedBatterySoc float64
 
 	if lo.SomeBy(mm, func(m types.Measurement) bool { return m.Capacity == nil || *m.Capacity <= 0 }) {
 		// any capacity is missing
