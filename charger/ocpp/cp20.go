@@ -67,13 +67,6 @@ func (cp *CS20CP) registerEVSE(id int, evse *EVSE) error {
 	return nil
 }
 
-func (cp *CS20CP) deregisterEVSE(id int) {
-	cp.mu.Lock()
-	defer cp.mu.Unlock()
-
-	delete(cp.evses, id)
-}
-
 func (cp *CS20CP) evseByID(id int) *EVSE {
 	cp.mu.RLock()
 	defer cp.mu.RUnlock()

@@ -388,23 +388,6 @@ func (c *OCPP20) MaxCurrentMillis(current float64) error {
 	return err
 }
 
-// phases1p3p implements the api.PhaseSwitcher interface
-func (c *OCPP20) phases1p3p(phases int) error {
-	c.phases = phases
-
-	enabled, err := c.Enabled()
-	if err != nil {
-		return err
-	}
-
-	var current float64
-	if enabled {
-		current = c.current
-	}
-
-	return c.setCurrent(current)
-}
-
 var _ api.Identifier = (*OCPP20)(nil)
 
 // Identify implements the api.Identifier interface
