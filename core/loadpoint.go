@@ -1751,7 +1751,9 @@ func (lp *Loadpoint) publishChargeProgress() {
 		}
 	}
 
-	lp.chargeEnergy.AddEnergy(importTotal, nil, lp.chargePower)
+	if lp.chargeEnergy != nil {
+		lp.chargeEnergy.AddEnergy(importTotal, nil, lp.chargePower)
+	}
 }
 
 // publish state of charge, remaining charge duration and range
