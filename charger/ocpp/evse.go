@@ -31,11 +31,11 @@ type EVSE struct {
 	cp    *CS20CP
 	id    int
 
-	status       *availability.StatusNotificationRequest
-	statusC      chan struct{}
-	statusOnce   sync.Once
-	statusTime   time.Time
-	connectorID  int // connector ID from last status notification
+	status      *availability.StatusNotificationRequest
+	statusC     chan struct{}
+	statusOnce  sync.Once
+	statusTime  time.Time
+	connectorID int // connector ID from last status notification
 
 	meterUpdated time.Time
 	measurements map[types.Measurand][]types.SampledValue // stores all samples including per-phase

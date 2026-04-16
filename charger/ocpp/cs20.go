@@ -12,8 +12,8 @@ import (
 
 type registration20 struct {
 	mu     sync.RWMutex
-	setup  sync.RWMutex                                   // serialises charging station setup
-	cs     *CS20CP                                        // guarded by setup and CSMS mutexes
+	setup  sync.RWMutex                                    // serialises charging station setup
+	cs     *CS20CP                                         // guarded by setup and CSMS mutexes
 	status map[int]*availability.StatusNotificationRequest // guarded by mu mutex
 }
 
