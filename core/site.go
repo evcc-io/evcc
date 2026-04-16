@@ -395,8 +395,7 @@ func (site *Site) legacySolarScale(produced, forecasted float64) *float64 {
 	}
 
 	scale := produced / forecasted
-	const minEnergy = 0.5 // kWh
-	if produced+forecasted <= minEnergy || scale <= 0 {
+	if produced+forecasted <= solarAdjustMinEnergy || scale <= 0 {
 		return nil
 	}
 

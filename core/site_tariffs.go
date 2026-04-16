@@ -25,6 +25,8 @@ type dailyDetails struct {
 	Complete bool    `json:"complete"`
 }
 
+const solarAdjustMinEnergy = 0.5 // kWh
+
 // greenShare returns
 //   - the current green share, calculated for the part of the consumption between powerFrom and powerTo
 //     the consumption below powerFrom will get the available green power first
@@ -163,12 +165,11 @@ func (site *Site) solarDetails(solar api.Rates) solarDetails {
 	produced := site.solarProducedSinceStart()
 	site.log.DEBUG.Printf("solar forecast: produced %.3f", produced)
 
-	const minEnergy = 0.5 // kWh
 	if fcst := site.fcstEnergy.Imported(); fcst > 0 {
 		scale := produced / fcst
 		site.log.DEBUG.Printf("solar forecast: accumulated %.3fkWh, produced %.3fkWh, scale %.3f", fcst, produced, scale)
 
-		if produced+fcst > minEnergy {
+		if produced+fcst > solarAdjustMinEnergy {
 			settings.SetFloat(keys.SolarScale, scale)
 			res.Scale = new(scale)
 		}
@@ -193,9 +194,18 @@ func (site *Site) resetSolarAdjustmentState(deletePersisted bool) {
 
 func (site *Site) ensureSolarAdjustmentBaseline(now time.Time) {
 	needsReset := site.fcstEnergy.Updated().IsZero()
+	configured := make(map[string]struct{}, len(site.Meters.PVMetersRef))
 
 	for _, name := range site.Meters.PVMetersRef {
+		configured[name] = struct{}{}
 		if _, ok := site.pvEnergyBase[name]; !ok {
+			needsReset = true
+			break
+		}
+	}
+
+	for name := range site.pvEnergyBase {
+		if _, ok := configured[name]; !ok {
 			needsReset = true
 			break
 		}
@@ -228,7 +238,11 @@ func (site *Site) solarProducedSinceStart() float64 {
 			continue
 		}
 
-		base := site.pvEnergyBase[name]
+		base, ok := site.pvEnergyBase[name]
+		if !ok {
+			continue
+		}
+
 		produced += max(0, accu.Imported()-base)
 	}
 
