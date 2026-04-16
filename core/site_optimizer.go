@@ -119,8 +119,11 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	if solarTariff != nil && len(solar) > 0 {
 		minLen = min(minLen, len(solar))
 	}
-	const expectedSlots = 8
-	if minLen < expectedSlots {
+
+	// limit to 2 days for sake of performance
+	minLen = min(96, minLen)
+
+	if expectedSlots := 8; minLen < expectedSlots {
 		if solarTariff != nil {
 			return fmt.Errorf("not enough forecast slots for meaningful optimization: %d < %d (grid=%d, feedIn=%d, solar=%d)", minLen, expectedSlots, len(grid), len(feedIn), len(solar))
 		}
@@ -202,7 +205,10 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 			continue
 		}
 
-		add(site.loadpointRequest(lp, minLen, firstSlotDuration, grid))
+		// skip disabled loadpoints
+		if req, detail := site.loadpointRequest(lp, minLen, firstSlotDuration, grid); req.CMax > 0 {
+			add(req, detail)
+		}
 	}
 
 	for i, dev := range site.batteryMeters {
