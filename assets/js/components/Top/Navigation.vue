@@ -89,6 +89,11 @@
 					Optimize 🧪
 				</router-link>
 			</li>
+			<li v-if="experimental">
+				<router-link class="dropdown-item" to="/history" active-class="active">
+					History 🧪
+				</router-link>
+			</li>
 			<li><hr class="dropdown-divider" /></li>
 			<template v-if="authorizationRequired">
 				<li>
@@ -167,6 +172,7 @@ export default defineComponent({
 		evopt: { type: Object as PropType<EvOpt>, required: false },
 		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
 		experimental: Boolean,
+		authDisabled: Boolean,
 	},
 	emits: ["auth-required"],
 	data() {
@@ -217,7 +223,7 @@ export default defineComponent({
 			return !!this.evopt && this.experimental;
 		},
 		showLogout() {
-			return isLoggedIn();
+			return !this.authDisabled && isLoggedIn();
 		},
 	},
 	mounted() {
@@ -249,12 +255,20 @@ export default defineComponent({
 			modal.show();
 		},
 		openBatterySettingsModal() {
+			if (this.experimental) {
+				this.$router.push("/battery");
+				return;
+			}
 			const modal = Modal.getOrCreateInstance(
 				document.getElementById("batterySettingsModal") as HTMLElement
 			);
 			modal.show();
 		},
 		openForecastModal() {
+			if (this.experimental) {
+				this.$router.push("/forecast");
+				return;
+			}
 			const modal = Modal.getOrCreateInstance(
 				document.getElementById("forecastModal") as HTMLElement
 			);

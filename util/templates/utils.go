@@ -3,6 +3,7 @@ package templates
 import (
 	"bytes"
 	"fmt"
+	"net"
 	"net/url"
 	"strings"
 	"text/template"
@@ -69,6 +70,13 @@ func FuncMap(tmpl *template.Template) *template.Template {
 		},
 		"timeRound": func(t time.Time, d time.Duration) time.Time {
 			return t.Round(d)
+		},
+		"joinHostPort": func(host, port string) string {
+			res := net.JoinHostPort(host, port)
+			if strings.Contains(host, ":") {
+				return `"` + res + `"`
+			}
+			return res
 		},
 		"urlEncode": url.QueryEscape,
 		"unquote":   unquote,

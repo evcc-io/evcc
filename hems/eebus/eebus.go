@@ -38,7 +38,7 @@ type EEBus struct {
 	smartgridProductionId    uint
 	productionLimit          ucapi.LoadLimit
 	productionLimitActivated time.Time
-	failsafeProductionLimit  float64
+	failsafeProductionLimit  *float64
 
 	heartbeat *util.Value[struct{}]
 	interval  time.Duration
@@ -49,7 +49,7 @@ type Limits struct {
 	FailsafeConsumptionActivePowerLimit float64
 
 	ProductionNominalMax               float64
-	FailsafeProductionActivePowerLimit float64
+	FailsafeProductionActivePowerLimit *float64
 
 	FailsafeDurationMinimum time.Duration
 }
@@ -67,7 +67,7 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*E
 			FailsafeConsumptionActivePowerLimit: 4200,
 
 			ProductionNominalMax:               0,
-			FailsafeProductionActivePowerLimit: 0,
+			FailsafeProductionActivePowerLimit: nil, // 0 is a valid limit
 
 			FailsafeDurationMinimum: 2 * time.Hour,
 		},
@@ -144,8 +144,8 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, passthrough func(b
 	if err := c.cs.CsLPPInterface.SetProductionNominalMax(limits.ProductionNominalMax); err != nil {
 		c.log.ERROR.Println("CS LPP SetProductionNominalMax:", err)
 	}
-	if c.failsafeProductionLimit > 0 {
-		if err := c.cs.CsLPPInterface.SetFailsafeProductionActivePowerLimit(c.failsafeProductionLimit, true); err != nil {
+	if c.failsafeProductionLimit != nil && *c.failsafeProductionLimit >= 0 {
+		if err := c.cs.CsLPPInterface.SetFailsafeProductionActivePowerLimit(*c.failsafeProductionLimit, true); err != nil {
 			c.log.ERROR.Println("CS LPP SetFailsafeProductionActivePowerLimit:", err)
 		}
 	}
@@ -181,7 +181,14 @@ func (c *EEBus) run() error {
 	if heartbeatErr != nil && c.status != StatusFailsafe {
 		// LPC-914/2
 		c.log.WARN.Println("missing heartbeat- entering failsafe mode")
-		c.setStatusAndLimit(StatusFailsafe, c.failsafeConsumptionLimit, c.failsafeProductionLimit)
+		c.setStatus(StatusFailsafe)
+
+		c.setConsumptionLimit(c.failsafeConsumptionLimit)
+
+		if c.failsafeProductionLimit != nil {
+			// production limit is negative, failsafe limits are always positive
+			c.setProductionLimit(-*c.failsafeProductionLimit, true)
+		}
 
 		return nil
 	}
@@ -193,7 +200,10 @@ func (c *EEBus) run() error {
 		}
 
 		c.log.DEBUG.Println("heartbeat returned or failsafe duration exceeded- leaving failsafe mode")
-		c.setStatusAndLimit(StatusNormal, 0, 0)
+		c.setStatus(StatusNormal)
+
+		c.setConsumptionLimit(0)
+		c.setProductionLimit(0, false)
 	}
 
 	// LPC-914/1
@@ -227,12 +237,9 @@ func (c *EEBus) run() error {
 	return nil
 }
 
-func (c *EEBus) setStatusAndLimit(status status, consumption, production float64) {
+func (c *EEBus) setStatus(status status) {
 	c.status = status
 	c.statusUpdated = time.Now()
-
-	c.setConsumptionLimit(consumption)
-	c.setProductionLimit(production, true)
 }
 
 func (c *EEBus) setConsumptionLimit(limit float64) {

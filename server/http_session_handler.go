@@ -21,7 +21,7 @@ func csvResult(ctx context.Context, w http.ResponseWriter, res any, filename str
 	w.Header().Set("Content-Type", "text/csv")
 	w.Header().Set("Content-Disposition", `attachment; filename="`+filename+`.csv"`)
 
-	if ww, ok := res.(api.CsvWriter); ok {
+	if ww, ok := api.Cap[api.CsvWriter](res); ok {
 		_ = ww.WriteCsv(ctx, w)
 	} else {
 		w.WriteHeader(http.StatusInternalServerError)

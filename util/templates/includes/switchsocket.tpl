@@ -1,6 +1,7 @@
 {{ define "switchsocket" }}
 standbypower: {{ .standbypower }}
 features:
+- switchdevice
 {{- if and .integrateddevice (ne .integrateddevice "false") }}
 - integrateddevice
 {{- end }}

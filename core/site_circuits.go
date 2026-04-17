@@ -62,7 +62,7 @@ func (site *Site) dimMeters(dim bool) error {
 	var errs error
 
 	for _, dev := range slices.Concat(site.auxMeters, site.extMeters) {
-		m, ok := dev.Instance().(api.Dimmer)
+		m, ok := api.Cap[api.Dimmer](dev.Instance())
 		if !ok {
 			continue
 		}
@@ -92,7 +92,7 @@ func (site *Site) curtailPV(curtail bool) error {
 	var errs error
 
 	for _, dev := range site.pvMeters {
-		m, ok := dev.Instance().(api.Curtailer)
+		m, ok := api.Cap[api.Curtailer](dev.Instance())
 		if !ok {
 			continue
 		}

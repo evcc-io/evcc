@@ -19,7 +19,8 @@ func TestPV(t *testing.T) {
 	require.NoError(t, err)
 
 	// must not have soc/capacity
-	assert.Implements(t, new(api.MaxACPowerGetter), m)
+	_, ok := api.Cap[api.MaxACPowerGetter](m)
+	assert.True(t, ok, "MaxACPowerGetter")
 }
 func TestBattery(t *testing.T) {
 	m, err := NewConfigurableFromConfig(t.Context(), map[string]any{
@@ -35,6 +36,8 @@ func TestBattery(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	assert.Implements(t, new(api.Battery), m)
-	assert.Implements(t, new(api.BatteryCapacity), m)
+	_, ok := api.Cap[api.Battery](m)
+	assert.True(t, ok, "Battery")
+	_, ok = api.Cap[api.BatteryCapacity](m)
+	assert.True(t, ok, "BatteryCapacity")
 }

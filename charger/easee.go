@@ -161,19 +161,8 @@ func NewEasee(ctx context.Context, user, password, charger string, timeout time.
 		return nil, err
 	}
 
-	// find single charger per circuit
-	for _, circuit := range site.Circuits {
-		if len(circuit.Chargers) > 1 {
-			continue
-		}
-
-		for _, charger := range circuit.Chargers {
-			if charger.ID == c.charger {
-				c.site = site.ID
-				c.circuit = circuit.ID
-				break
-			}
-		}
+	if err := c.determineCircuit(site); err != nil {
+		return nil, err
 	}
 
 	client, err := signalr.NewClient(ctx,
@@ -234,6 +223,43 @@ func (c *Easee) chargerSite(charger string) (easee.Site, error) {
 	uri := fmt.Sprintf("%s/chargers/%s/site", easee.API, charger)
 	err := c.GetJSON(uri, &res)
 	return res, err
+}
+
+func isTNGrid(gridType int) bool {
+	switch gridType {
+	case easee.PowerGridTN3Phase, easee.PowerGridTN2PhasePin234, easee.PowerGridTN1Phase:
+		return true
+	}
+	return false
+}
+
+func (c *Easee) chargerConfig(charger string) (res easee.ChargerConfig, err error) {
+	uri := fmt.Sprintf("%s/chargers/%s/config", easee.API, charger)
+	err = c.GetJSON(uri, &res)
+	return res, err
+}
+
+func (c *Easee) determineCircuit(site easee.Site) error {
+	config, err := c.chargerConfig(c.charger)
+	if err != nil {
+		return fmt.Errorf("charger config unavailable: %w", err)
+	}
+	if !isTNGrid(config.DetectedPowerGridType) {
+		return nil
+	}
+	for _, circuit := range site.Circuits {
+		if len(circuit.Chargers) > 1 {
+			continue
+		}
+		for _, charger := range circuit.Chargers {
+			if charger.ID == c.charger {
+				c.site = site.ID
+				c.circuit = circuit.ID
+				return nil
+			}
+		}
+	}
+	return nil
 }
 
 // connect creates an HTTP connection to the signalR hub
@@ -336,11 +362,11 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 		}
 	case easee.LIFETIME_ENERGY:
 		c.totalEnergy = value.(float64)
-	case easee.IN_CURRENT_T3:
+	case easee.INT_CURRENT_T3:
 		c.currentL1 = value.(float64)
-	case easee.IN_CURRENT_T4:
+	case easee.INT_CURRENT_T4:
 		c.currentL2 = value.(float64)
-	case easee.IN_CURRENT_T5:
+	case easee.INT_CURRENT_T5:
 		c.currentL3 = value.(float64)
 	case easee.PHASE_MODE:
 		c.phaseMode = value.(int)
@@ -460,7 +486,7 @@ func (c *Easee) Enable(enable bool) (err error) {
 		}
 
 		uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
-		if err := c.dispatcher.Send(uri, data); err != nil {
+		if _, err := c.dispatcher.Send(uri, data); err != nil {
 			return err
 		}
 	}
@@ -482,7 +508,7 @@ func (c *Easee) Enable(enable bool) (err error) {
 	}
 
 	uri := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, c.charger, action)
-	if err := c.dispatcher.Send(uri, nil); err != nil {
+	if _, err := c.dispatcher.Send(uri, nil); err != nil {
 		return err
 	}
 
@@ -594,11 +620,15 @@ func (c *Easee) MaxCurrent(current int64) error {
 	}
 
 	uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
-	if err := c.dispatcher.Send(uri, data); err != nil {
+	noop, err := c.dispatcher.Send(uri, data)
+	if err != nil {
 		return err
 	}
-	if err := c.waitForDynamicChargerCurrent(cur); err != nil {
-		return err
+
+	if !noop {
+		if err := c.waitForDynamicChargerCurrent(cur); err != nil {
+			return err
+		}
 	}
 
 	c.mux.Lock()
@@ -707,7 +737,7 @@ func (c *Easee) Phases1p3p(phases int) error {
 		// cloud sends on HTTP 200 (sync) responses is silently consumed rather
 		// than logged as rogue. On error we undo the registration.
 		c.dispatcher.ExpectOrphan(easee.CIRCUIT_MAX_CURRENT_P1)
-		err = c.dispatcher.Send(uri, data)
+		_, err = c.dispatcher.Send(uri, data)
 		if err != nil {
 			c.dispatcher.CancelOrphan(easee.CIRCUIT_MAX_CURRENT_P1)
 		}
@@ -725,7 +755,7 @@ func (c *Easee) Phases1p3p(phases int) error {
 
 			uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
 
-			if err = c.dispatcher.Send(uri, data); err != nil {
+			if _, err = c.dispatcher.Send(uri, data); err != nil {
 				return err
 			}
 		}
@@ -769,8 +799,6 @@ func (c *Easee) StatusReason() (api.Reason, error) {
 	switch c.opMode {
 	case easee.ModeAwaitingAuthentication:
 		return api.ReasonWaitingForAuthorization, nil
-	case easee.ModeCompleted:
-		return api.ReasonDisconnectRequired, nil
 	}
 	return api.ReasonUnknown, nil
 }
@@ -805,7 +833,7 @@ func (c *Easee) updateSmartCharging() {
 
 		uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
 
-		if err := c.dispatcher.Send(uri, data); err != nil {
+		if _, err := c.dispatcher.Send(uri, data); err != nil {
 			c.log.WARN.Printf("smart charging: %v", err)
 			return
 		}

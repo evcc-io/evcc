@@ -859,7 +859,7 @@
         "30d": "30 derniers jours",
         "365d": "365 derniers jours",
         "thisYear": "cette année",
-        "total": "tout le temps"
+        "total": "depuis le début"
       },
       "periodLabel": "Période :",
       "priceTitle": "Prix de l'énergie",
