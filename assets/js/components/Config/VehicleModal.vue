@@ -124,7 +124,6 @@
 					size="w-100"
 					class="me-2"
 					:choice="priorityOptions"
-					required
 				/>
 			</FormRow>
 
