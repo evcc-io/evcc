@@ -158,7 +158,9 @@ func (c *Connection) TotalEnergy() (float64, error) {
 	}
 
 	if unit.Statistics != nil {
-		stats := unit.Statistics.Energies[0].Values
+		//use longer time range
+		arrLen := len(unit.Statistics.Energies)
+		stats := unit.Statistics.Energies[arrLen-1].Values
 		rawEnergy := (float64)(stats[0])
 
 		energy := (float64)(rawEnergy / 1000)
