@@ -8,6 +8,7 @@ require (
 	github.com/Masterminds/sprig/v3 v3.3.0
 	github.com/PanterSoft/comlynx-go v0.1.0
 	github.com/PuerkitoBio/goquery v1.12.0
+	github.com/SherClockHolmes/webpush-go v1.4.0
 	github.com/WulfgarW/sensonet v0.0.7
 	github.com/andig/go-powerwall v0.3.0
 	github.com/andig/gosunspec v0.0.0-20240918203654-860ce51d602b

@@ -476,6 +476,9 @@
       "events": "Evénements",
       "legacyWarning": "Un nouveau mode de configuration des notifications est disponible ! Supprimez la configuration ci-dessous et enregistrez pour utiliser le nouveau mode de configuration par assistant.",
       "messengers": "Services",
+      "pushNotifications": "Notifications push du navigateur",
+      "pushNotificationsHelp": "Envoyer des notifications directement à ce navigateur. Nécessite l'accord de l'utilisateur lors de la demande de permission.",
+      "pushPermissionDenied": "La permission de notification a été refusée. Veuillez autoriser les notifications dans les paramètres de votre navigateur.",
       "seePlaceholders": "voir les champs de saisie",
       "title": "Notifications"
     },

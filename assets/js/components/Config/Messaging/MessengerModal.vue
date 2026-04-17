@@ -1,15 +1,16 @@
 <template>
 	<DeviceModalBase
 		:id="id"
+		ref="base"
 		name="messenger"
 		device-type="messenger"
 		:modal-title="$t(`config.messenger.${isNew ? 'titleAdd' : 'titleEdit'}`)"
 		:provide-template-options="provideTemplateOptions"
 		:initial-values="initialValues"
 		:on-template-change="handleTemplateChange"
-		@added="$emit('changed', $event)"
+		@added="onAdded($event)"
 		@updated="$emit('changed')"
-		@removed="$emit('changed')"
+		@removed="onRemoved"
 	></DeviceModalBase>
 </template>
 
@@ -21,6 +22,9 @@ import { type TemplateGroup, customTemplateOption } from "../DeviceModal/Templat
 import { ConfigType } from "@/types/evcc";
 import defaultMessengerYaml from "../defaultYaml/messenger.yaml?raw";
 import { getModal } from "@/configModal";
+import { registerServiceWorker, unsubscribeCurrentBrowser } from "@/utils/push";
+
+const PUSH_TEMPLATE = "webpush";
 
 const initialValues = {
 	type: ConfigType.Template,
@@ -68,6 +72,20 @@ export default defineComponent({
 				values.type = ConfigType.Custom;
 				values.yaml = defaultMessengerYaml;
 			}
+		},
+		async onAdded(event: unknown) {
+			const base = this.$refs["base"] as unknown as InstanceType<typeof DeviceModalBase>;
+			if (base?.templateName === PUSH_TEMPLATE) {
+				await registerServiceWorker();
+			}
+			this.$emit("changed", event);
+		},
+		async onRemoved() {
+			const base = this.$refs["base"] as unknown as InstanceType<typeof DeviceModalBase>;
+			if (base?.templateName === PUSH_TEMPLATE) {
+				await unsubscribeCurrentBrowser();
+			}
+			this.$emit("changed");
 		},
 	},
 });

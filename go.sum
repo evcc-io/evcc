@@ -21,6 +21,8 @@ github.com/PanterSoft/comlynx-go v0.1.0/go.mod h1:X+jgiMXuPftrh5cpoMm648+DpTM2Rd
 github.com/PuerkitoBio/goquery v1.12.0 h1:pAcL4g3WRXekcB9AU/y1mbKez2dbY2AajVhtkO8RIBo=
 github.com/PuerkitoBio/goquery v1.12.0/go.mod h1:802ej+gV2y7bbIhOIoPY5sT183ZW0YFofScC4q/hIpQ=
 github.com/RaveNoX/go-jsoncommentstrip v1.0.0/go.mod h1:78ihd09MekBnJnxpICcwzCMzGrKSKYe4AqU6PDYYpjk=
+github.com/SherClockHolmes/webpush-go v1.4.0 h1:ocnzNKWN23T9nvHi6IfyrQjkIc0oJWv1B1pULsf9i3s=
+github.com/SherClockHolmes/webpush-go v1.4.0/go.mod h1:XSq8pKX11vNV8MJEMwjrlTkxhAj1zKfxmyhdV7Pd6UA=
 github.com/Shopify/sarama v1.19.0/go.mod h1:FVkBWblsNy7DGZRfXLU0O9RCGt5g3g3yEuWXgklEdEo=
 github.com/Shopify/toxiproxy v2.1.4+incompatible h1:TKdv8HiTLgE5wdJuEML90aBgNWsokNbMijUGhmcoBJc=
 github.com/Shopify/toxiproxy v2.1.4+incompatible/go.mod h1:OXgGpZ6Cli1/URJOF1DMxUHB2q5Ap20/P/eIdh4G0pI=
@@ -295,6 +297,7 @@ github.com/gokrazy/tools v0.0.0-20260109180632-8ed49b4fafc7 h1:eC9rmwSgeXHqX2ViT
 github.com/gokrazy/tools v0.0.0-20260109180632-8ed49b4fafc7/go.mod h1:UE7KvEl3CClC9Z4Yb/r2kkxAymDi9wL5yNjqdPztGp4=
 github.com/gokrazy/updater v0.0.0-20250705135802-db129c40879c h1:j4/v9FR/cOy6nog5rmXUtauBsOU3mm+rTPn5IENUbmg=
 github.com/gokrazy/updater v0.0.0-20250705135802-db129c40879c/go.mod h1:EtAn+BPibqnAHnYGj3FW5e284xNsiOOMOL2dJiwu7H4=
+github.com/golang-jwt/jwt/v5 v5.2.1/go.mod h1:pqrtFR0X4osieyHYxtmOUWsAWrfe1Q5UVIyoH402zdk=
 github.com/golang-jwt/jwt/v5 v5.3.1 h1:kYf81DTWFe7t+1VvL7eS+jKFVWaUnK9cB1qbwn63YCY=
 github.com/golang-jwt/jwt/v5 v5.3.1/go.mod h1:fxCRLWMO43lRc8nhHWY6LGqRcf+1gQWArsqaEUEa5bE=
 github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b/go.mod h1:SBH7ygxi8pfUlaOkMMuAQtPIUF8ecWP5IEl/CR7VP2Q=

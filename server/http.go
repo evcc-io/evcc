@@ -94,6 +94,12 @@ func NewHTTPd(addr string, hub *SocketHub, customCssFile string) *HTTPd {
 	}
 
 	static.HandleFunc("/", indexHandler(customCssFile != ""))
+	// Service worker must be served from root scope with no-cache headers.
+	static.HandleFunc("/sw.js", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/javascript")
+		w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+		http.ServeFileFS(w, r, assets.Web, "sw.js")
+	})
 	for _, dir := range []string{"assets", "meta"} {
 		static.PathPrefix("/" + dir).Handler(http.FileServer(http.FS(assets.Web)))
 	}
@@ -252,7 +258,11 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 
 	{ // /api
 		routes := map[string]route{
-			"state": {"GET", "/state", stateHandler(cache)},
+			"state":           {"GET", "/state", stateHandler(cache)},
+			"pushvapidkey":    {"GET", "/push/vapidkey", pushVapidKeyHandler()},
+			"pushcheck":       {"GET", "/push/check", pushCheckHandler()},
+			"pushsubscribe":   {"POST", "/push/subscribe", pushSubscribeHandler()},
+			"pushunsubscribe": {"DELETE", "/push/subscribe", pushUnsubscribeHandler()},
 		}
 
 		for _, r := range routes {

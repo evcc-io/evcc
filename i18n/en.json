@@ -478,6 +478,9 @@
       "events": "Events",
       "legacyWarning": "New notification configuration available! Remove and save your configuration here to use the new guided process.",
       "messengers": "Services",
+      "pushNotifications": "Browser push notifications",
+      "pushNotificationsHelp": "Send notifications directly to this browser. Requires permission to be granted when prompted.",
+      "pushPermissionDenied": "Notification permission was denied. Please allow notifications in your browser settings.",
       "seePlaceholders": "see placeholders",
       "title": "Notifications"
     },

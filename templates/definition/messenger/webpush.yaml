@@ -1,0 +1,10 @@
+template: webpush
+products:
+  - brand: Browser Push Notifications
+requirements:
+  description:
+    en: Requires a browser with push notification support.
+    de: Erfordert einen Browser mit Push-Benachrichtigungsunterstützung.
+group: generic
+render: |
+  type: webpush

@@ -7,6 +7,7 @@ import setupRouter from "./router.ts";
 import setupI18n from "./i18n.ts";
 import { watchThemeChanges } from "./theme.ts";
 import { appDetection, sendToApp } from "./utils/native";
+import { registerServiceWorker } from "./utils/push";
 import type { Notification } from "./types/evcc";
 
 // lazy load smoothscroll polyfill. mainly for safari < 15.4
@@ -79,6 +80,7 @@ window.app = app.mount("#app");
 
 watchThemeChanges();
 appDetection();
+registerServiceWorker();
 
 if (window.evcc.customCss === "true") {
   const link = document.createElement("link");
