@@ -427,8 +427,8 @@
 				<MessengerModal @changed="messengerChanged" />
 				<TariffsLegacyModal @changed="loadDirty" />
 				<TariffModal :currency="currency" @changed="tariffChanged" />
-				<TelemetryModal :is-sponsor="isSponsor" :telemetry="telemetry" />
-				<OptimizerModal :is-sponsor="isSponsor" />
+				<TelemetryModal :sponsor="sponsor" :telemetry="telemetry" />
+				<OptimizerModal />
 				<ExperimentalModal :experimental="experimental" />
 				<RemoteModal :remote="remote" :is-sponsor="isSponsor" />
 				<TitleModal @changed="loadDirty" />
