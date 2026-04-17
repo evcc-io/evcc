@@ -1139,6 +1139,26 @@
       "pvProduction": "Gamyba",
       "selfConsumption": "Sunaudojama iškart"
     },
+    "pvTile": {
+      "cumulative": "Sukaupta",
+      "currentPower": "Dabartinė gamyba",
+      "day24h": "Šiandien (24 val.)",
+      "forecastPossible": "Galima prognozė",
+      "generatedToday": "Sugeneruota šiandien",
+      "generated": "Gamyba",
+      "history": "Istorija",
+      "historyRange": "Laikotarpis",
+      "historyTitle": "PV istorija",
+      "loading": "Įkeliama istorija...",
+      "noHistory": "Nėra istorinių duomenų",
+      "rangeDay": "Diena",
+      "rangeMonth": "Mėnuo",
+      "rangeWeek": "Savaitė",
+      "rangeYear": "Metai",
+      "systems": "Sistemos",
+      "total": "Iš viso",
+      "theoreticalTotal": "Teorinis šiandienos iš viso"
+    },
     "heatingStatus": {
       "charging": "Šildoma…",
       "connected": "Budėjimo režimas.",

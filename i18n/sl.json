@@ -957,6 +957,26 @@
       "pvProduction": "Proizvodnja",
       "selfConsumption": "Samoporaba"
     },
+    "pvTile": {
+      "cumulative": "Kumulativno",
+      "currentPower": "Trenutna proizvodnja",
+      "day24h": "Danes (24h)",
+      "forecastPossible": "Možna napoved",
+      "generatedToday": "Danes proizvedeno",
+      "generated": "Proizvodnja",
+      "history": "Zgodovina",
+      "historyRange": "Obdobje",
+      "historyTitle": "PV zgodovina",
+      "loading": "Nalaganje zgodovine...",
+      "noHistory": "Ni zgodovinskih podatkov",
+      "rangeDay": "Dan",
+      "rangeMonth": "Mesec",
+      "rangeWeek": "Teden",
+      "rangeYear": "Leto",
+      "systems": "Sistemi",
+      "total": "Skupaj",
+      "theoreticalTotal": "Teoretično skupaj danes"
+    },
     "heatingStatus": {
       "charging": "Gretje…",
       "connected": "V stanju pripravljenosti.",

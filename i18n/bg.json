@@ -930,6 +930,26 @@
       "pvProduction": "Производство",
       "selfConsumption": "Самопотребление"
     },
+    "pvTile": {
+      "cumulative": "Натрупано",
+      "currentPower": "Текущо производство",
+      "day24h": "Днес (24ч)",
+      "forecastPossible": "Възможна прогноза",
+      "generatedToday": "Произведено днес",
+      "generated": "Производство",
+      "history": "История",
+      "historyRange": "Период",
+      "historyTitle": "PV история",
+      "loading": "Зареждане на историята...",
+      "noHistory": "Няма исторически данни",
+      "rangeDay": "Ден",
+      "rangeMonth": "Месец",
+      "rangeWeek": "Седмица",
+      "rangeYear": "Година",
+      "systems": "Системи",
+      "total": "Общо",
+      "theoreticalTotal": "Теоретично общо за днес"
+    },
     "heatingStatus": {
       "charging": "Загряване…",
       "connected": "В режим на изчакване.",

@@ -1014,6 +1014,26 @@
       "pvProduction": "விளைவாக்கம்",
       "selfConsumption": "தன்-நுகர்வு"
     },
+    "pvTile": {
+      "cumulative": "மொத்தம்",
+      "currentPower": "தற்போதைய உற்பத்தி",
+      "day24h": "இன்று (24ம)",
+      "forecastPossible": "சாத்தியமான முன்னறிவு",
+      "generatedToday": "இன்று உற்பத்தி செய்தது",
+      "generated": "உற்பத்தி",
+      "history": "வரலாறு",
+      "historyRange": "காலவரம்பு",
+      "historyTitle": "PV வரலாறு",
+      "loading": "வரலாறு ஏற்றப்படுகிறது...",
+      "noHistory": "வரலாறு தரவு இல்லை",
+      "rangeDay": "நாள்",
+      "rangeMonth": "மாதம்",
+      "rangeWeek": "வாரம்",
+      "rangeYear": "ஆண்டு",
+      "systems": "அமைப்புகள்",
+      "total": "மொத்தம்",
+      "theoreticalTotal": "இன்றைய கோட்பாட்டு மொத்தம்"
+    },
     "heatingStatus": {
       "charging": "வெப்பமாக்கல்…",
       "connected": "காத்திருப்பு.",

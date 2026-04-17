@@ -137,6 +137,26 @@
       "pvProduction": "Producció",
       "selfConsumption": "Autoconsum"
     },
+    "pvTile": {
+      "cumulative": "Acumulat",
+      "currentPower": "Producció actual",
+      "day24h": "Avui (24h)",
+      "forecastPossible": "Previsió possible",
+      "generatedToday": "Generat avui",
+      "generated": "Generació",
+      "history": "Historial",
+      "historyRange": "Període",
+      "historyTitle": "Historial FV",
+      "loading": "Carregant historial...",
+      "noHistory": "No hi ha dades d'historial",
+      "rangeDay": "Dia",
+      "rangeMonth": "Mes",
+      "rangeWeek": "Setmana",
+      "rangeYear": "Any",
+      "systems": "Sistemes",
+      "total": "Total",
+      "theoreticalTotal": "Total teòric d'avui"
+    },
     "loadpoint": {
       "avgPrice": "Preu ⌀",
       "charged": "Carregat",

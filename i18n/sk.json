@@ -39,5 +39,27 @@
     "charger": {
       "chargers": "EV nabíjačky"
     }
+  },
+  "main": {
+    "pvTile": {
+      "cumulative": "Kumulatívne",
+      "currentPower": "Aktuálna výroba",
+      "day24h": "Dnes (24 h)",
+      "forecastPossible": "Možná predpoveď",
+      "generatedToday": "Vyrobené dnes",
+      "generated": "Výroba",
+      "history": "História",
+      "historyRange": "Obdobie",
+      "historyTitle": "História FV",
+      "loading": "Načítava sa história...",
+      "noHistory": "Žiadne historické dáta",
+      "rangeDay": "Deň",
+      "rangeMonth": "Mesiac",
+      "rangeWeek": "Týždeň",
+      "rangeYear": "Rok",
+      "systems": "Systémy",
+      "total": "Celkom",
+      "theoreticalTotal": "Teoreticky spolu dnes"
+    }
   }
 }

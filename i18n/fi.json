@@ -1138,6 +1138,26 @@
       "pvProduction": "Tuotanto",
       "selfConsumption": "Tuotannon kulutus"
     },
+    "pvTile": {
+      "cumulative": "Kumulatiivinen",
+      "currentPower": "Nykyinen tuotanto",
+      "day24h": "Tänään (24 h)",
+      "forecastPossible": "Mahdollinen ennuste",
+      "generatedToday": "Tuotettu tänään",
+      "generated": "Tuotanto",
+      "history": "Historia",
+      "historyRange": "Jakso",
+      "historyTitle": "PV-historia",
+      "loading": "Ladataan historiaa...",
+      "noHistory": "Ei historiatietoja",
+      "rangeDay": "Päivä",
+      "rangeMonth": "Kuukausi",
+      "rangeWeek": "Viikko",
+      "rangeYear": "Vuosi",
+      "systems": "Järjestelmät",
+      "total": "Yhteensä",
+      "theoreticalTotal": "Teoreettinen kokonaismäärä tänään"
+    },
     "heatingStatus": {
       "charging": "Lämmitys…",
       "connected": "Valmiustila.",

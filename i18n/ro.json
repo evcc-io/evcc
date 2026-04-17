@@ -1096,6 +1096,26 @@
       "pvProduction": "Producție",
       "selfConsumption": "Consum propriu"
     },
+    "pvTile": {
+      "cumulative": "Cumulat",
+      "currentPower": "Producție curentă",
+      "day24h": "Astăzi (24h)",
+      "forecastPossible": "Prognoză posibilă",
+      "generatedToday": "Generat astăzi",
+      "generated": "Generare",
+      "history": "Istoric",
+      "historyRange": "Perioadă",
+      "historyTitle": "Istoric PV",
+      "loading": "Se încarcă istoricul...",
+      "noHistory": "Nu există date istorice",
+      "rangeDay": "Zi",
+      "rangeMonth": "Lună",
+      "rangeWeek": "Săptămână",
+      "rangeYear": "An",
+      "systems": "Sisteme",
+      "total": "Total",
+      "theoreticalTotal": "Total teoretic astăzi"
+    },
     "heatingStatus": {
       "charging": "Încălzire…",
       "connected": "Așteptați.",

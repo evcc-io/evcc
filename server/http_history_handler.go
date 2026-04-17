@@ -41,7 +41,9 @@ func energyHistoryHandler(w http.ResponseWriter, r *http.Request) {
 		aggregate = "15m"
 	}
 
-	res, err := metrics.QueryImportEnergy(from, to, aggregate)
+	group := q.Get("group")
+
+	res, err := metrics.QueryImportEnergy(from, to, aggregate, group)
 	if err != nil {
 		jsonError(w, http.StatusInternalServerError, err)
 		return

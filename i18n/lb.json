@@ -1104,6 +1104,26 @@
       "pvProduction": "Produktioun",
       "selfConsumption": "eegene Verbrauch"
     },
+    "pvTile": {
+      "cumulative": "Kumuléiert",
+      "currentPower": "Aktuell Produktioun",
+      "day24h": "Haut (24h)",
+      "forecastPossible": "Méiglech Prognos",
+      "generatedToday": "Haut produzéiert",
+      "generated": "Produktioun",
+      "history": "Verlaf",
+      "historyRange": "Zäitraum",
+      "historyTitle": "PV Verlaf",
+      "loading": "Verlaf gëtt gelueden...",
+      "noHistory": "Keng Verlafsdaten",
+      "rangeDay": "Dag",
+      "rangeMonth": "Mount",
+      "rangeWeek": "Woch",
+      "rangeYear": "Joer",
+      "systems": "Anlagen",
+      "total": "Gesamt",
+      "theoreticalTotal": "Theoretesch haut gesamt"
+    },
     "heatingStatus": {
       "charging": "Wiermen…",
       "connected": "Standby.",

@@ -1159,6 +1159,26 @@
       "pvProduction": "Erzeugung",
       "selfConsumption": "Eigenverbrauch"
     },
+    "pvTile": {
+      "cumulative": "Kumuliert",
+      "currentPower": "Aktuelle Erzeugung",
+      "day24h": "Heute (24h)",
+      "forecastPossible": "Forecast möglich",
+      "generatedToday": "Heute erzeugt",
+      "generated": "Erzeugung",
+      "history": "Verlauf",
+      "historyRange": "Zeitraum",
+      "historyTitle": "PV Verlauf",
+      "loading": "Lade Verlauf...",
+      "noHistory": "Keine Verlaufsdaten",
+      "rangeDay": "Tag",
+      "rangeMonth": "Monat",
+      "rangeWeek": "Woche",
+      "rangeYear": "Jahr",
+      "systems": "Anlagen",
+      "total": "Gesamt",
+      "theoreticalTotal": "Theoretisch heute gesamt"
+    },
     "heatingStatus": {
       "charging": "Heize …",
       "connected": "Standby.",

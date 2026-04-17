@@ -60,8 +60,9 @@ var aggregateDurations = map[string]func(time.Time) time.Time{
 	"month": func(t time.Time) time.Time { return t.AddDate(0, 1, 0) },
 }
 
-// QueryImportEnergy returns aggregated import energy data from the meters table
-func QueryImportEnergy(from, to time.Time, aggregate string) ([]Series, error) {
+// QueryImportEnergy returns aggregated import energy data from the meters table.
+// If group is set, only entities of that group are returned.
+func QueryImportEnergy(from, to time.Time, aggregate, group string) ([]Series, error) {
 	format, ok := aggregateFormats[aggregate]
 	if !ok {
 		return nil, errors.New("invalid aggregate value")
@@ -78,6 +79,10 @@ func QueryImportEnergy(from, to time.Time, aggregate string) ([]Series, error) {
 		Joins("JOIN entities e ON m.meter = e.id").
 		Group("label, bucket").
 		Order("label, bucket")
+
+	if group != "" {
+		tx = tx.Where("e.\"group\" = ?", group)
+	}
 
 	if !from.IsZero() {
 		tx = tx.Where("m.ts >= ?", from)

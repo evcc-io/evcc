@@ -1107,6 +1107,26 @@
       "pvProduction": "Üretim",
       "selfConsumption": "Öz tüketim"
     },
+    "pvTile": {
+      "cumulative": "Kümülatif",
+      "currentPower": "Anlık üretim",
+      "day24h": "Bugün (24s)",
+      "forecastPossible": "Olası tahmin",
+      "generatedToday": "Bugün üretilen",
+      "generated": "Üretim",
+      "history": "Geçmiş",
+      "historyRange": "Aralık",
+      "historyTitle": "PV geçmişi",
+      "loading": "Geçmiş yükleniyor...",
+      "noHistory": "Geçmiş verisi yok",
+      "rangeDay": "Gün",
+      "rangeMonth": "Ay",
+      "rangeWeek": "Hafta",
+      "rangeYear": "Yıl",
+      "systems": "Sistemler",
+      "total": "Toplam",
+      "theoreticalTotal": "Bugünün teorik toplamı"
+    },
     "heatingStatus": {
       "charging": "Isıtılıyor…",
       "connected": "Beklemede.",

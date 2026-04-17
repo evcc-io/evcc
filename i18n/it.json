@@ -1102,6 +1102,26 @@
       "pvProduction": "Produzione",
       "selfConsumption": "Autoconsumo"
     },
+    "pvTile": {
+      "cumulative": "Cumulativo",
+      "currentPower": "Produzione attuale",
+      "day24h": "Oggi (24h)",
+      "forecastPossible": "Previsione possibile",
+      "generatedToday": "Prodotto oggi",
+      "generated": "Produzione",
+      "history": "Storico",
+      "historyRange": "Periodo",
+      "historyTitle": "Storico FV",
+      "loading": "Caricamento storico...",
+      "noHistory": "Nessun dato storico",
+      "rangeDay": "Giorno",
+      "rangeMonth": "Mese",
+      "rangeWeek": "Settimana",
+      "rangeYear": "Anno",
+      "systems": "Sistemi",
+      "total": "Totale",
+      "theoreticalTotal": "Totale teorico di oggi"
+    },
     "heatingStatus": {
       "charging": "Scaldando…",
       "connected": "In attesa.",

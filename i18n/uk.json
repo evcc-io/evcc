@@ -939,6 +939,26 @@
       "pvProduction": "Виробництво",
       "selfConsumption": "Власне споживання"
     },
+    "pvTile": {
+      "cumulative": "Накопичено",
+      "currentPower": "Поточне виробництво",
+      "day24h": "Сьогодні (24 год)",
+      "forecastPossible": "Можливий прогноз",
+      "generatedToday": "Вироблено сьогодні",
+      "generated": "Виробництво",
+      "history": "Історія",
+      "historyRange": "Період",
+      "historyTitle": "Історія PV",
+      "loading": "Завантаження історії...",
+      "noHistory": "Немає історичних даних",
+      "rangeDay": "День",
+      "rangeMonth": "Місяць",
+      "rangeWeek": "Тиждень",
+      "rangeYear": "Рік",
+      "systems": "Системи",
+      "total": "Разом",
+      "theoreticalTotal": "Теоретичний підсумок за сьогодні"
+    },
     "heatingStatus": {
       "charging": "Опалення…",
       "connected": "Режим очікування.",

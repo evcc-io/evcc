@@ -675,6 +675,26 @@
       "pvProduction": "太阳能发电",
       "selfConsumption": "太阳能自用"
     },
+    "pvTile": {
+      "cumulative": "累计",
+      "currentPower": "当前发电量",
+      "day24h": "今天 (24小时)",
+      "forecastPossible": "预测可发电量",
+      "generatedToday": "今日已发电",
+      "generated": "发电量",
+      "history": "历史",
+      "historyRange": "范围",
+      "historyTitle": "光伏历史",
+      "loading": "正在加载历史...",
+      "noHistory": "没有历史数据",
+      "rangeDay": "天",
+      "rangeMonth": "月",
+      "rangeWeek": "周",
+      "rangeYear": "年",
+      "systems": "系统",
+      "total": "总计",
+      "theoreticalTotal": "今日理论总量"
+    },
     "heatingStatus": {
       "charging": "加热中…",
       "connected": "待机。",

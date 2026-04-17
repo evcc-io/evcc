@@ -1117,6 +1117,26 @@
       "pvProduction": "Productie",
       "selfConsumption": "Zelfverbruik"
     },
+    "pvTile": {
+      "cumulative": "Cumulatief",
+      "currentPower": "Huidige productie",
+      "day24h": "Vandaag (24u)",
+      "forecastPossible": "Mogelijke prognose",
+      "generatedToday": "Vandaag opgewekt",
+      "generated": "Opwekking",
+      "history": "Historie",
+      "historyRange": "Periode",
+      "historyTitle": "PV-historie",
+      "loading": "Historie laden...",
+      "noHistory": "Geen historische gegevens",
+      "rangeDay": "Dag",
+      "rangeMonth": "Maand",
+      "rangeWeek": "Week",
+      "rangeYear": "Jaar",
+      "systems": "Systemen",
+      "total": "Totaal",
+      "theoreticalTotal": "Theoretisch totaal vandaag"
+    },
     "heatingStatus": {
       "charging": "Bezig met verwarmen…",
       "connected": "Stand-by.",

@@ -935,6 +935,26 @@
       "pvProduction": "Παραγωγή",
       "selfConsumption": "«Αυτοκατανάλωση»"
     },
+    "pvTile": {
+      "cumulative": "Σωρευτικά",
+      "currentPower": "Τρέχουσα παραγωγή",
+      "day24h": "Σήμερα (24ω)",
+      "forecastPossible": "Πιθανή πρόβλεψη",
+      "generatedToday": "Παράχθηκε σήμερα",
+      "generated": "Παραγωγή",
+      "history": "Ιστορικό",
+      "historyRange": "Περίοδος",
+      "historyTitle": "Ιστορικό PV",
+      "loading": "Φόρτωση ιστορικού...",
+      "noHistory": "Δεν υπάρχουν ιστορικά δεδομένα",
+      "rangeDay": "Ημέρα",
+      "rangeMonth": "Μήνας",
+      "rangeWeek": "Εβδομάδα",
+      "rangeYear": "Έτος",
+      "systems": "Συστήματα",
+      "total": "Σύνολο",
+      "theoreticalTotal": "Θεωρητικό σύνολο σήμερα"
+    },
     "heatingStatus": {
       "charging": "Θερμαίνεται…",
       "connected": "Αναμονή.",

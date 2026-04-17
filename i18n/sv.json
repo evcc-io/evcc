@@ -1133,6 +1133,26 @@
       "pvProduction": "Produktion",
       "selfConsumption": "Egenförbrukning"
     },
+    "pvTile": {
+      "cumulative": "Kumulativt",
+      "currentPower": "Aktuell produktion",
+      "day24h": "Idag (24 h)",
+      "forecastPossible": "Möjlig prognos",
+      "generatedToday": "Producerat idag",
+      "generated": "Produktion",
+      "history": "Historik",
+      "historyRange": "Period",
+      "historyTitle": "PV-historik",
+      "loading": "Laddar historik...",
+      "noHistory": "Ingen historikdata",
+      "rangeDay": "Dag",
+      "rangeMonth": "Månad",
+      "rangeWeek": "Vecka",
+      "rangeYear": "År",
+      "systems": "System",
+      "total": "Totalt",
+      "theoreticalTotal": "Teoretiskt totalt idag"
+    },
     "heatingStatus": {
       "charging": "Värmer…",
       "connected": "Standby.",

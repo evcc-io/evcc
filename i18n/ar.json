@@ -73,5 +73,27 @@
       "footerLong": "{percent} من الطاقة الشمسية",
       "footerShort": "{percent} شمسي\""
     }
+  },
+  "main": {
+    "pvTile": {
+      "cumulative": "تراكمي",
+      "currentPower": "الإنتاج الحالي",
+      "day24h": "اليوم (24 ساعة)",
+      "forecastPossible": "التوقع الممكن",
+      "generatedToday": "تم إنتاجه اليوم",
+      "generated": "الإنتاج",
+      "history": "السجل",
+      "historyRange": "النطاق",
+      "historyTitle": "سجل الطاقة الشمسية",
+      "loading": "جارٍ تحميل السجل...",
+      "noHistory": "لا توجد بيانات سجل",
+      "rangeDay": "يوم",
+      "rangeMonth": "شهر",
+      "rangeWeek": "أسبوع",
+      "rangeYear": "سنة",
+      "systems": "الأنظمة",
+      "total": "الإجمالي",
+      "theoreticalTotal": "الإجمالي النظري اليوم"
+    }
   }
 }

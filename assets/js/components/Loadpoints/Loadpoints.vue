@@ -4,18 +4,29 @@
 		data-testid="loadpoints"
 	>
 		<div
-			v-if="loadpoints.length > 0"
+			v-if="slides.length > 0"
 			ref="carousel"
 			class="carousel d-lg-flex flex-wrap"
-			:class="[`carousel--${loadpoints.length}`, { 'carousel--fullwidth': fullWidth }]"
+			:class="[`carousel--${slides.length}`, { 'carousel--fullwidth': fullWidth }]"
 		>
 			<div
-				v-for="loadpoint in loadpoints"
-				:key="loadpoint.id"
+				v-for="(slide, index) in slides"
+				:key="slide.key"
 				class="flex-grow-1 mb-3 m-lg-0 p-lg-0"
+				:class="{ 'loadpoint-unselected': !selected(index) }"
 			>
+				<PvCard
+					v-if="slide.type === 'pv'"
+					class="h-100 loadpoint"
+					:pv="pv"
+					:pvPower="pvPower"
+					:pvEnergy="pvEnergy"
+					:forecast="forecast"
+					:experimental="experimental"
+				/>
 				<Loadpoint
-					v-bind="loadpoint"
+					v-else
+					v-bind="slide.loadpoint"
 					data-testid="loadpoint"
 					:vehicles="vehicles"
 					:smartCostType="smartCostType"
@@ -34,25 +45,25 @@
 					:batteryMode="batteryMode"
 					:forecast="forecast"
 					class="h-100"
-					:class="{ 'loadpoint-unselected': !selected(loadpoint.id) }"
-					@click="goTo(loadpoint.id)"
+					@click="goTo(slide.loadpoint.id)"
 				/>
 			</div>
 		</div>
-		<div v-if="loadpoints.length > 1" class="d-flex d-lg-none justify-content-center flex-wrap">
+		<div v-if="slides.length > 1" class="d-flex d-lg-none justify-content-center flex-wrap">
 			<button
-				v-for="loadpoint in loadpoints"
-				:key="loadpoint.id"
+				v-for="(slide, index) in slides"
+				:key="`indicator-${slide.key}`"
 				class="btn btn-sm btn-link p-0 mx-1 indicator d-flex justify-content-center align-items-center evcc-default-text"
-				:class="{ 'indicator--selected': selected(loadpoint.id) }"
-				@click="goTo(loadpoint.id)"
+				:class="{ 'indicator--selected': selected(index) }"
+				@click="goTo(slide.type === 'pv' ? 'pv' : slide.loadpoint.id)"
 			>
+				<shopicon-regular-sun v-if="slide.type === 'pv'" class="indicator-icon" />
 				<shopicon-filled-lightning
-					v-if="isCharging(loadpoint)"
+					v-else-if="isCharging(slide.loadpoint)"
 					class="indicator-icon"
 				></shopicon-filled-lightning>
 				<shopicon-filled-circle
-					v-else-if="loadpoint.connected"
+					v-else-if="slide.loadpoint.connected"
 					class="indicator-icon"
 				></shopicon-filled-circle>
 				<shopicon-bold-circle v-else class="indicator-icon"></shopicon-bold-circle>
@@ -65,16 +76,30 @@
 import "@h2d2/shopicons/es/filled/circle";
 import "@h2d2/shopicons/es/bold/circle";
 import "@h2d2/shopicons/es/filled/lightning";
+import "@h2d2/shopicons/es/regular/sun";
 
 import Loadpoint from "./Loadpoint.vue";
+import PvCard from "../Site/PvCard.vue";
 import { defineComponent, type PropType } from "vue";
-import type { UiLoadpoint, SMART_COST_TYPE, Timeout, Vehicle, BATTERY_MODE } from "@/types/evcc";
+import type {
+	UiLoadpoint,
+	SMART_COST_TYPE,
+	Timeout,
+	Vehicle,
+	BATTERY_MODE,
+	Meter,
+} from "@/types/evcc";
+
+const PV_SLIDE_ID = "pv";
 
 export default defineComponent({
 	name: "Loadpoints",
-	components: { Loadpoint },
+	components: { Loadpoint, PvCard },
 	props: {
 		loadpoints: { type: Array as PropType<UiLoadpoint[]>, default: () => [] },
+		pv: { type: Array as PropType<Meter[]>, default: () => [] },
+		pvPower: { type: Number, default: 0 },
+		pvEnergy: Number,
 		vehicles: { type: Array as PropType<Vehicle[]> },
 		smartCostType: String as PropType<SMART_COST_TYPE>,
 		smartCostAvailable: Boolean,
@@ -89,6 +114,7 @@ export default defineComponent({
 		batteryConfigured: Boolean,
 		batterySoc: Number,
 		batteryMode: String as PropType<BATTERY_MODE>,
+		experimental: Boolean,
 		forecast: Object, // as PropType<Forecast>,
 	},
 	emits: ["id-changed"],
@@ -101,6 +127,15 @@ export default defineComponent({
 		};
 	},
 	computed: {
+		slides() {
+			const loadpointSlides = this.loadpoints.map((loadpoint) => ({
+				type: "loadpoint" as const,
+				key: `lp-${loadpoint.id}`,
+				loadpoint,
+			}));
+			const pvSlides = this.pvConfigured ? [{ type: "pv" as const, key: "pv" as const }] : [];
+			return [...loadpointSlides, ...pvSlides];
+		},
 		selectedIndex() {
 			return this.indexById(this.selectedId);
 		},
@@ -108,11 +143,12 @@ export default defineComponent({
 			return this.loadpoints.length > 1;
 		},
 		fullWidth() {
+			const tiles = this.slides.length;
 			return (
 				// breakpoint lg, tall screen, 2 loadpoints rows
-				(this.loadpoints.length === 2 && this.viewportHeight >= 1450) ||
+				(tiles === 2 && this.viewportHeight >= 1450) ||
 				// breakpoint lg, taller screen, 3 loadpoints rows
-				(this.loadpoints.length === 3 && this.viewportHeight >= 1900)
+				(tiles === 3 && this.viewportHeight >= 1900)
 			);
 		},
 	},
@@ -136,9 +172,16 @@ export default defineComponent({
 	},
 	methods: {
 		indexById(id: string | undefined) {
-			return this.loadpoints.findIndex((lp) => lp.id === id) || 0;
+			if (!id) return 0;
+			if (this.pvConfigured && id === PV_SLIDE_ID) {
+				return this.loadpoints.length;
+			}
+			const lpIndex = this.loadpoints.findIndex((lp) => lp.id === id);
+			if (lpIndex < 0) return 0;
+			return lpIndex;
 		},
 		idByIndex(index: number) {
+			if (this.pvConfigured && index >= this.loadpoints.length) return PV_SLIDE_ID;
 			return this.loadpoints[index]?.id;
 		},
 		handleCarouselScroll() {
@@ -156,14 +199,14 @@ export default defineComponent({
 				}
 			}, 2000);
 		},
-		goTo(id: string) {
+		goTo(id?: string) {
 			this.$emit("id-changed", id);
 		},
 		isCharging(lp: UiLoadpoint) {
 			return lp.charging && lp.chargePower > 0;
 		},
-		selected(id: string) {
-			return this.highlightedIndex === this.indexById(id);
+		selected(index: number) {
+			return this.highlightedIndex === index;
 		},
 		updateViewport() {
 			this.viewportHeight = window.innerHeight;
@@ -202,6 +245,7 @@ export default defineComponent({
 	.carousel {
 		scroll-snap-type: x mandatory;
 		overflow-x: scroll;
+		padding-top: 0.75rem;
 		display: flex;
 		flex-wrap: nowrap !important;
 		scrollbar-width: none; /* Firefox */

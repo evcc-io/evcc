@@ -501,6 +501,26 @@
       "battery": "バッテリー",
       "pv": "ソーラーシステム"
     },
+    "pvTile": {
+      "cumulative": "累積",
+      "currentPower": "現在の発電量",
+      "day24h": "今日 (24時間)",
+      "forecastPossible": "予測可能量",
+      "generatedToday": "今日の発電量",
+      "generated": "発電量",
+      "history": "履歴",
+      "historyRange": "期間",
+      "historyTitle": "PV履歴",
+      "loading": "履歴を読み込み中...",
+      "noHistory": "履歴データがありません",
+      "rangeDay": "日",
+      "rangeMonth": "月",
+      "rangeWeek": "週",
+      "rangeYear": "年",
+      "systems": "システム",
+      "total": "合計",
+      "theoreticalTotal": "今日の理論合計"
+    },
     "loadpoint": {
       "fallbackName": "充電ポイント",
       "price": "コスト",

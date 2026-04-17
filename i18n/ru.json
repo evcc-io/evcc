@@ -926,6 +926,26 @@
       "pvProduction": "Генерация",
       "selfConsumption": "Собственное потребление"
     },
+    "pvTile": {
+      "cumulative": "Накопительно",
+      "currentPower": "Текущая генерация",
+      "day24h": "Сегодня (24ч)",
+      "forecastPossible": "Возможный прогноз",
+      "generatedToday": "Выработано сегодня",
+      "generated": "Генерация",
+      "history": "История",
+      "historyRange": "Период",
+      "historyTitle": "История PV",
+      "loading": "Загрузка истории...",
+      "noHistory": "Нет исторических данных",
+      "rangeDay": "День",
+      "rangeMonth": "Месяц",
+      "rangeWeek": "Неделя",
+      "rangeYear": "Год",
+      "systems": "Системы",
+      "total": "Итого",
+      "theoreticalTotal": "Теоретический итог за сегодня"
+    },
     "heatingStatus": {
       "charging": "Отопление…",
       "connected": "Ожидание.",

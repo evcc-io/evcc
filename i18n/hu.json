@@ -935,6 +935,26 @@
       "pvProduction": "Napelem termelés",
       "selfConsumption": "Saját fogyasztás"
     },
+    "pvTile": {
+      "cumulative": "Halmozott",
+      "currentPower": "Aktuális termelés",
+      "day24h": "Ma (24 óra)",
+      "forecastPossible": "Lehetséges előrejelzés",
+      "generatedToday": "Ma termelve",
+      "generated": "Termelés",
+      "history": "Előzmények",
+      "historyRange": "Időszak",
+      "historyTitle": "PV előzmények",
+      "loading": "Előzmények betöltése...",
+      "noHistory": "Nincs előzményadat",
+      "rangeDay": "Nap",
+      "rangeMonth": "Hónap",
+      "rangeWeek": "Hét",
+      "rangeYear": "Év",
+      "systems": "Rendszerek",
+      "total": "Összesen",
+      "theoreticalTotal": "Mai elméleti összesen"
+    },
     "heatingStatus": {
       "charging": "Fűtés…",
       "connected": "Készenlét.",

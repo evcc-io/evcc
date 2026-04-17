@@ -1107,6 +1107,26 @@
       "pvProduction": "Výroba",
       "selfConsumption": "Vlastní výroba"
     },
+    "pvTile": {
+      "cumulative": "Kumulativně",
+      "currentPower": "Aktuální výroba",
+      "day24h": "Dnes (24 h)",
+      "forecastPossible": "Možná předpověď",
+      "generatedToday": "Vyrobeno dnes",
+      "generated": "Výroba",
+      "history": "Historie",
+      "historyRange": "Období",
+      "historyTitle": "Historie FV",
+      "loading": "Načítání historie...",
+      "noHistory": "Žádná historická data",
+      "rangeDay": "Den",
+      "rangeMonth": "Měsíc",
+      "rangeWeek": "Týden",
+      "rangeYear": "Rok",
+      "systems": "Systémy",
+      "total": "Celkem",
+      "theoreticalTotal": "Teoreticky celkem dnes"
+    },
     "heatingStatus": {
       "charging": "Ohřívání…",
       "connected": "Pohotovostní režim.",

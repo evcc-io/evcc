@@ -394,6 +394,26 @@
       "loadpoints": "Punjač | Punjač | {count} punjača",
       "loadpointsLimit": "{limit} ograničenje"
     },
+    "pvTile": {
+      "cumulative": "Kumulativno",
+      "currentPower": "Trenutna proizvodnja",
+      "day24h": "Danas (24h)",
+      "forecastPossible": "Moguća prognoza",
+      "generatedToday": "Danas proizvedeno",
+      "generated": "Proizvodnja",
+      "history": "Historija",
+      "historyRange": "Period",
+      "historyTitle": "PV historija",
+      "loading": "Učitavanje historije...",
+      "noHistory": "Nema historijskih podataka",
+      "rangeDay": "Dan",
+      "rangeMonth": "Mjesec",
+      "rangeWeek": "Sedmica",
+      "rangeYear": "Godina",
+      "systems": "Sistemi",
+      "total": "Ukupno",
+      "theoreticalTotal": "Teoretski ukupno danas"
+    },
     "hemsWarning": {
       "description": "Smanjiti punjenje kako ne bi prelazilo {limit}."
     },

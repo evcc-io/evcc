@@ -3,5 +3,27 @@
     "batteryLevel": "Akutase",
     "capacity": "{energy} / {total}",
     "control": "Akuhaldus"
+  },
+  "main": {
+    "pvTile": {
+      "cumulative": "Kumulatiivne",
+      "currentPower": "Praegune tootmine",
+      "day24h": "Täna (24h)",
+      "forecastPossible": "Võimalik prognoos",
+      "generatedToday": "Täna toodetud",
+      "generated": "Tootmine",
+      "history": "Ajalugu",
+      "historyRange": "Periood",
+      "historyTitle": "PV ajalugu",
+      "loading": "Ajaloo laadimine...",
+      "noHistory": "Ajalooandmed puuduvad",
+      "rangeDay": "Päev",
+      "rangeMonth": "Kuu",
+      "rangeWeek": "Nädal",
+      "rangeYear": "Aasta",
+      "systems": "Süsteemid",
+      "total": "Kokku",
+      "theoreticalTotal": "Teoreetiline kogutoodang täna"
+    }
   }
 }

@@ -49,28 +49,33 @@
 					</router-link>
 				</div>
 			</div>
-			<Loadpoints
-				v-else
-				:key="`loadpoints-${orderedVisibleLoadpoints.length}`"
-				class="mt-1 mt-sm-2 flex-grow-1"
-				:loadpoints="orderedVisibleLoadpoints"
-				:vehicles="vehicleList"
-				:smartCostType="smartCostType"
-				:smartCostAvailable="smartCostAvailable"
-				:smartFeedInPriorityAvailable="smartFeedInPriorityAvailable"
-				:tariffGrid="tariffGrid"
-				:tariffCo2="tariffCo2"
-				:tariffFeedIn="tariffFeedIn"
-				:currency="currency"
-				:gridConfigured="gridConfigured"
-				:pvConfigured="pvConfigured"
-				:batteryConfigured="batteryConfigured"
-				:batterySoc="batterySoc"
-				:batteryMode="batteryMode"
-				:forecast="forecast"
-				:selectedId="selectedLoadpointId"
-				@id-changed="selectedLoadpointChanged"
-			/>
+			<div v-else>
+				<Loadpoints
+					:key="`loadpoints-${orderedVisibleLoadpoints.length}`"
+					class="mt-1 mt-sm-2 flex-grow-1"
+					:loadpoints="orderedVisibleLoadpoints"
+					:pv="pv"
+					:pvPower="pvPower"
+					:pvEnergy="pvEnergy"
+					:vehicles="vehicleList"
+					:smartCostType="smartCostType"
+					:smartCostAvailable="smartCostAvailable"
+					:smartFeedInPriorityAvailable="smartFeedInPriorityAvailable"
+					:tariffGrid="tariffGrid"
+					:tariffCo2="tariffCo2"
+					:tariffFeedIn="tariffFeedIn"
+					:currency="currency"
+					:gridConfigured="gridConfigured"
+					:pvConfigured="pvConfigured"
+					:batteryConfigured="batteryConfigured"
+					:batterySoc="batterySoc"
+					:batteryMode="batteryMode"
+					:experimental="experimental"
+					:forecast="forecast"
+					:selectedId="selectedLoadpointId"
+					@id-changed="selectedLoadpointChanged"
+				/>
+			</div>
 			<Footer v-if="!experimental" v-bind="footer" />
 		</div>
 	</div>
@@ -127,6 +132,7 @@ export default defineComponent({
 		grid: Object as PropType<Grid>,
 		homePower: Number,
 		pvPower: Number,
+		pvEnergy: Number,
 		pv: { type: Array as PropType<Meter[]>, default: () => [] },
 		aux: { type: Array as PropType<Meter[]>, default: () => [] },
 		ext: { type: Array as PropType<Meter[]>, default: () => [] },
