@@ -602,9 +602,8 @@
       "urlHelp": "Kopiere diese URL in die Konfiguration deiner Wallbox. Details findest du im Handbuch des Herstellers. Die Wallbox sollte automatisch ihre eindeutige Kennung (Station-ID) an die URL anhängen. In seltenen Fällen musst du die Kennung manuell angeben. Beispiel: `{url}`"
     },
     "optimizer": {
-      "description": "Analysiert Solarprognose, Strompreise und deinen typischen Verbrauch, um Batterie- und Ladestrategie zu optimieren. Daten werden zur Berechnung an den evcc Optimierungsdienst übertragen. Berechnet und visualisiert aktuell nur. Steuert noch keine Geräte.",
+      "description": "Analysiert Solarprognose, Strompreise und deinen typischen Verbrauch, um Batterie- und Ladestrategie zu optimieren. Daten werden zur Berechnung an den evcc Optimierungsdienst übertragen.",
       "enable": "Optimizer aktivieren",
-      "info": "Es kann einige Minuten dauern, bis der Optimizer-Menüeintrag sichtbar wird. Bei neuen Installationen kann es bis zu 24 Stunden dauern, bis evcc genügend Daten gesammelt hat.",
       "title": "Optimizer"
     },
     "options": {
