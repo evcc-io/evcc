@@ -1,0 +1,52 @@
+template: afore-hybrid
+products:
+  - brand: Afore
+    description:
+      generic: Hybrid Inverter (Battery)
+requirements:
+  description:
+    en: |
+      Requires direct Modbus TCP access via an RS485-to-TCP gateway
+      (e.g. Waveshare, USR-TCP232, Elfin-EW11). Solarman logger sticks
+      in their default mode are NOT supported.
+      The inverter's RS485 port must be switched to "Modbus" protocol
+      in the inverter menu.
+    de: |
+      Benötigt direkten Modbus-TCP-Zugriff über ein RS485-zu-TCP-Gateway
+      (z.B. Waveshare, USR-TCP232, Elfin-EW11). Solarman-Logger-Sticks
+      im Standardmodus werden NICHT unterstützt.
+      Der RS485-Port des Wechselrichters muss im Wechselrichtermenü auf
+      das "Modbus"-Protokoll umgestellt werden.
+params:
+  - name: usage
+    choice: ["battery"]
+  - name: modbus
+    choice: ["tcpip"]
+    port: 502
+    id: 1
+  - preset: battery-params
+render: |
+  type: custom
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 2007 # Battery total power (S32, W, positive = discharging)
+      type: input
+      decode: int32
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 2002 # Battery SoC (U16, %)
+      type: input
+      decode: uint16
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 2013 # Battery total discharge (U32, 0.1 kWh)
+      type: input
+      decode: uint32
+    scale: 0.1
+  {{- include "battery-params" . }}
