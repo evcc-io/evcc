@@ -157,7 +157,7 @@ func (c *Connection) TotalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	if unit.Statistics != nil {
+	if (unit.Statistics != nil) && (len(unit.Statistics.Energies) != 0) {
 		//use longer time range
 		arrLen := len(unit.Statistics.Energies)
 		stats := unit.Statistics.Energies[arrLen-1].Values
