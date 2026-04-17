@@ -127,8 +127,7 @@ func (c *Trydan) setValue(param string, value int) error {
 
 // Enable implements the api.Charger interface
 func (c Trydan) Enable(enable bool) error {
-	var pause int
-	var pauseDynamic int
+var pause, pauseDynamic int
 	if !enable {
 		pause = 1
 	} else {
