@@ -37,6 +37,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/evsemaster"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/sponsor"
 )
 
 const (
@@ -101,6 +102,10 @@ func NewEVSEMaster(ctx context.Context, serial, password string) (*EVSEMaster, e
 	conn, err := evsemaster.NewConnection(log, serial, password)
 	if err != nil {
 		return nil, err
+	}
+
+	if !sponsor.IsAuthorized() {
+		return nil, api.ErrSponsorRequired
 	}
 
 	wb := &EVSEMaster{
