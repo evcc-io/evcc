@@ -138,7 +138,7 @@ func (c *Connection) CurrentPower() (float64, error) {
 
 	if unit.Statistics != nil {
 		stats := unit.Statistics.Powers[0].Values
-		rawPower := stats[0]
+		rawPower := (float64)(stats[0])
 
 		power := (float64)(rawPower / 1000)
 
@@ -159,7 +159,7 @@ func (c *Connection) TotalEnergy() (float64, error) {
 
 	if unit.Statistics != nil {
 		stats := unit.Statistics.Energies[0].Values
-		rawEnergy := stats[0]
+		rawEnergy := (float64)(stats[0])
 
 		energy := (float64)(rawEnergy / 1000)
 
