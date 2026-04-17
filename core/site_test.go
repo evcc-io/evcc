@@ -192,3 +192,8 @@ func TestLegacySolarScale(t *testing.T) {
 		assert.InDelta(t, 1.1097080691745485, *scale, 1e-12)
 	}
 }
+
+func TestBlendSolarScale(t *testing.T) {
+	assert.InDelta(t, 0.95, blendSolarScale(1.0, 0.5), 1e-12)
+	assert.InDelta(t, 0.5, blendSolarScale(0, 0.5), 1e-12)
+}

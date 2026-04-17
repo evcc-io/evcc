@@ -25,7 +25,9 @@ type dailyDetails struct {
 	Complete bool    `json:"complete"`
 }
 
-const solarAdjustMinEnergy = 0.5 // kWh
+const solarAdjustMinEnergy = 0.5    // kWh
+const solarAdjustUpdateEnergy = 5.0 // kWh
+const solarAdjustSmoothing = 0.1
 
 // greenShare returns
 //   - the current green share, calculated for the part of the consumption between powerFrom and powerTo
@@ -148,14 +150,15 @@ func (site *Site) solarDetails(solar api.Rates) solarDetails {
 		Complete: !last.Before(eot.AddDate(0, 0, 1)),
 	}
 
-	now := time.Now()
-	site.ensureSolarAdjustmentBaseline(now)
+	currentTime := time.Now()
+	site.finalizeSolarAdjustmentDay(currentTime)
+	site.ensureSolarAdjustmentBaseline(currentTime)
 
 	// accumulate forecasted energy since last update
 	fcstUpdated := site.fcstEnergy.Updated()
-	energy := solarEnergy(solar, fcstUpdated, now) / 1e3
+	energy := solarEnergy(solar, fcstUpdated, currentTime) / 1e3
 	site.log.DEBUG.Printf("solar forecast: accumulated %.3fkWh from %v to %v",
-		energy, fcstUpdated.Truncate(time.Second), now.Truncate(time.Second),
+		energy, fcstUpdated.Truncate(time.Second), currentTime.Truncate(time.Second),
 	)
 
 	site.fcstEnergy.AddImportEnergy(energy)
@@ -165,17 +168,25 @@ func (site *Site) solarDetails(solar api.Rates) solarDetails {
 	produced := site.solarProducedSinceStart()
 	site.log.DEBUG.Printf("solar forecast: produced %.3f", produced)
 
+	persistedScale, persistedScaleErr := settings.Float(keys.SolarScale)
+	if persistedScaleErr == nil && persistedScale > 0 {
+		site.log.DEBUG.Printf("solar forecast: using persisted long-term scale %.3f", persistedScale)
+		res.Scale = new(persistedScale)
+	}
+
 	if fcst := site.fcstEnergy.Imported(); fcst > 0 {
 		scale := produced / fcst
 		site.log.DEBUG.Printf("solar forecast: accumulated %.3fkWh, produced %.3fkWh, scale %.3f", fcst, produced, scale)
 
 		if produced+fcst > solarAdjustMinEnergy {
-			settings.SetFloat(keys.SolarScale, scale)
-			res.Scale = new(scale)
+			if persistedScaleErr != nil || persistedScale <= 0 {
+				settings.SetFloat(keys.SolarScale, scale)
+				settings.SetTime(keys.SolarScaleTs, currentTime)
+				res.Scale = new(scale)
+			} else if smoothedScale := site.updateSolarScale(currentTime, persistedScale, scale, produced+fcst, false); smoothedScale != nil {
+				res.Scale = smoothedScale
+			}
 		}
-	} else if scale, err := settings.Float(keys.SolarScale); err == nil && scale > 0 {
-		site.log.DEBUG.Printf("solar forecast: reusing persisted scale %.3f", scale)
-		res.Scale = new(scale)
 	}
 
 	return res
@@ -189,12 +200,75 @@ func (site *Site) resetSolarAdjustmentState(deletePersisted bool) {
 		settings.Delete(keys.SolarAccForecast)
 		settings.Delete(keys.SolarAccForecastTs)
 		settings.Delete(keys.SolarAccYieldBase)
+		settings.Delete(keys.SolarScaleTs)
 	}
 }
 
-func (site *Site) ensureSolarAdjustmentBaseline(now time.Time) {
+func (site *Site) finalizeSolarAdjustmentDay(currentTime time.Time) {
+	lastForecastUpdate := site.fcstEnergy.Updated()
+	if lastForecastUpdate.IsZero() {
+		return
+	}
+
+	dayStart := beginningOfDay(currentTime)
+	if !lastForecastUpdate.Before(dayStart) {
+		return
+	}
+
+	fcst := site.fcstEnergy.Imported()
+	if fcst <= 0 {
+		return
+	}
+
+	produced := site.solarProducedSinceStart()
+	_ = site.updateSolarScale(lastForecastUpdate, site.currentSolarScale(), produced/fcst, produced+fcst, true)
+}
+
+func (site *Site) currentSolarScale() float64 {
+	scale, err := settings.Float(keys.SolarScale)
+	if err != nil || scale <= 0 {
+		return 0
+	}
+
+	return scale
+}
+
+func blendSolarScale(currentScale, measuredScale float64) float64 {
+	if currentScale <= 0 {
+		return measuredScale
+	}
+
+	return currentScale*(1-solarAdjustSmoothing) + measuredScale*solarAdjustSmoothing
+}
+
+func (site *Site) updateSolarScale(currentTime time.Time, currentScale, measuredScale, totalEnergy float64, force bool) *float64 {
+	if measuredScale <= 0 || totalEnergy <= solarAdjustMinEnergy {
+		return nil
+	}
+
+	dayStart := beginningOfDay(currentTime)
+	lastUpdated, err := settings.Time(keys.SolarScaleTs)
+	if err == nil && !lastUpdated.Before(dayStart) {
+		return nil
+	}
+
+	// Update once per day after enough solar production, otherwise keep collecting until the day is over.
+	if !force && totalEnergy < solarAdjustUpdateEnergy {
+		return nil
+	}
+
+	smoothed := blendSolarScale(currentScale, measuredScale)
+
+	settings.SetFloat(keys.SolarScale, smoothed)
+	settings.SetTime(keys.SolarScaleTs, currentTime)
+
+	return &smoothed
+}
+
+func (site *Site) ensureSolarAdjustmentBaseline(currentTime time.Time) {
 	needsReset := site.fcstEnergy.Updated().IsZero()
 	configured := make(map[string]struct{}, len(site.Meters.PVMetersRef))
+	dayStart := beginningOfDay(currentTime)
 
 	for _, name := range site.Meters.PVMetersRef {
 		configured[name] = struct{}{}
@@ -211,11 +285,15 @@ func (site *Site) ensureSolarAdjustmentBaseline(now time.Time) {
 		}
 	}
 
+	if site.fcstEnergy.Updated().Before(dayStart) {
+		needsReset = true
+	}
+
 	if !needsReset {
 		return
 	}
 
-	site.fcstEnergy.Restore(0, 0, now)
+	site.fcstEnergy.Restore(0, 0, currentTime)
 	clear(site.pvEnergyBase)
 
 	for _, name := range site.Meters.PVMetersRef {
@@ -225,8 +303,12 @@ func (site *Site) ensureSolarAdjustmentBaseline(now time.Time) {
 	}
 
 	settings.SetFloat(keys.SolarAccForecast, 0)
-	settings.SetTime(keys.SolarAccForecastTs, now)
+	settings.SetTime(keys.SolarAccForecastTs, currentTime)
 	settings.SetJson(keys.SolarAccYieldBase, site.pvEnergyBase)
+}
+
+func beginningOfDay(t time.Time) time.Time {
+	return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
 }
 
 func (site *Site) solarProducedSinceStart() float64 {

@@ -25,6 +25,7 @@ const (
 	SolarAccForecast      = "solarAccForecast"
 	SolarAccForecastTs    = "solarAccForecastTs"
 	SolarScale            = "solarScale"
+	SolarScaleTs          = "solarScaleTs"
 	TariffCo2             = "tariffCo2"
 	TariffCo2Home         = "tariffCo2Home"
 	TariffCo2Loadpoints   = "tariffCo2Loadpoints"
