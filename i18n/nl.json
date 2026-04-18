@@ -126,6 +126,7 @@
       "chargedEnergy": "Geladen",
       "co2": "Stroomnet-CO₂",
       "configured": "Geconfigureerd",
+      "connected": "Verbonden",
       "connections": "Verbindingen",
       "controllable": "Stuurbaar",
       "currency": "Valuta",
@@ -602,6 +603,11 @@
       "url": "Server URL",
       "urlHelp": "Kopieer deze URL naar de configuratie van uw lader. Raadpleeg de handleiding van de fabrikant voor meer informatie. De lader voegt naar verwachting automatisch zijn unieke identificatiecode (station-ID) toe aan de URL. In zeldzame gevallen moet u de identificatiecode mogelijk handmatig ingeven. Voorbeeld: `{url}`"
     },
+    "optimizer": {
+      "description": "Analyseert zonne-energieprognoses, elektriciteitsprijzen en je verbruikspatronen om de batterij- en laadstrategie te optimaliseren. Gegevens worden naar de evcc-optimalisatiedienst gestuurd voor verwerking.",
+      "enable": "Activeer optimizer",
+      "title": "Optimizer"
+    },
     "options": {
       "boolean": {
         "no": "nee",
@@ -628,6 +634,16 @@
     "pv": {
       "titleAdd": "Meter Zonnepanelen Toevoegen",
       "titleEdit": "Meter Zonnepanelen Bewerken"
+    },
+    "remote": {
+      "active": "Actief",
+      "connected": "Verbonden",
+      "deviceName": "Apparaat naam",
+      "done": "Klaar",
+      "expirationNone": "Nooit",
+      "expired": "verlopen",
+      "expiresIn": "verloopt {time}",
+      "password": "Wachtwoord"
     },
     "section": {
       "additionalMeter": "Extra meters",
@@ -862,6 +878,7 @@
         "savings": "Besparing",
         "solar": "Zonne-Energie"
       },
+      "indicatorLabel": "Header info",
       "modalTitle": "Oplaadenergie-overzicht",
       "moneySaved": "{value} bespaard",
       "percentGrid": "{grid} kWh net",
@@ -873,10 +890,11 @@
         "thisYear": "dit jaar",
         "total": "aller tijden"
       },
-      "periodLabel": "Periode:",
+      "periodLabel": "Periode",
       "priceTitle": "Energieprijs",
       "referenceGrid": "net",
-      "referenceLabel": "Referentiedata:",
+      "referenceLabel": "Referentiedata",
+      "sessionInfo": "Op basis van voltooide laadsessies.",
       "tabTitle": "Mijn data"
     },
     "sponsor": {
@@ -902,15 +920,26 @@
     },
     "version": {
       "availableLong": "nieuwe versie beschikbaar",
+      "community": "evcc coomunity",
+      "labelRelease": "Release",
+      "labelVersion": "Versie",
+      "labelWebsite": "Website",
+      "latestVersion": "Nieuwste versie",
+      "madeByCommunity": "Gemaakt door de {0}.",
       "modalCancel": "Annuleer",
       "modalDownload": "Download",
       "modalInstalledVersion": "Geïnstalleerde versie",
+      "modalLatest": "U heeft de nieuwste versie.",
+      "modalNextRelease": "Wat zit er in de volgende release",
       "modalNoReleaseNotes": "Geen release notes beschikbaar. Meer info over de nieuwe versie:",
       "modalTitle": "Nieuwe versie beschikbaar",
       "modalUpdate": "Installeren",
       "modalUpdateNow": "Nu installeren",
       "modalUpdateStarted": "Starten van de nieuwe versie van evcc…",
-      "modalUpdateStatusStart": "Installatie gestart:"
+      "modalUpdateStatusStart": "Installatie gestart:",
+      "modalViewOnGitHub": "Op GitHub bekijken",
+      "openSource": "open source",
+      "poweredByOpenSource": "Powered by {0}."
     }
   },
   "forecast": {
@@ -920,6 +949,12 @@
       "lowestHour": "Schoonste uur",
       "range": "Bereik"
     },
+    "empty": {
+      "co2": "Kijk wanneer de netstroom in uw regio schoon is. Laadplanning wordt geoptimaliseerd voor minimale emissie en CO₂ besparing wordt berekend.",
+      "price": "Stel uw dynamische stroomprijzen in om laadplannen te optimaliseren en om uw besparingen mee te berekenen.",
+      "setup": "Tarieven en voorspellingen instellen",
+      "solar": "Bekijk de verwachtte zonne opbrengt voor vandaag en de komende dagen. Wordt ook gebruikt voor automatische laadplan optimalisatie in de toekomst."
+    },
     "modalTitle": "Voorspelling",
     "price": {
       "average": "Gemiddeld",
@@ -927,6 +962,7 @@
       "lowestHour": "Goedkoopste uur",
       "range": "Bereik"
     },
+    "priceZoom": "zoom in",
     "solar": {
       "dayAfterTomorrow": "Overmorgen",
       "partly": "gedeeltelijk",
@@ -935,10 +971,11 @@
       "tomorrow": "Morgen"
     },
     "solarAdjust": "Pas de zonne-energie voorspelling aan op basis van echte productiegegevens{percent}.",
+    "solarAdjustShort": "aanpassen",
     "type": {
-      "co2": "CO₂",
-      "price": "Prijs",
-      "solar": "Zonne-energie"
+      "co2": "CO₂ Uitstoot",
+      "price": "Net-Prijs",
+      "solar": "Zonne-energie opbrengst"
     }
   },
   "general": {
@@ -1152,6 +1189,7 @@
         "once": "Boost geactiveerd voor deze laadsessie.",
         "stateActive": "Batterijboost actief",
         "stateBelowLimit": "Batterij te laag voor boost",
+        "stateHold": "Batterij vergrendeld",
         "stateReady": "Batterijboost klaar"
       },
       "batteryUsage": "Thuisbatterij",
@@ -1261,6 +1299,7 @@
       "batteryBoostBelowLimit": "Batterij te laag voor boost.",
       "batteryBoostDisabled": "Batterijboost uitgeschakeld.",
       "batteryBoostEnabled": "Boost de batterij tot {limit}.",
+      "batteryBoostHold": "Batterij vergrendeld. Boost niet beschikbaar.",
       "charging": "Opladen…",
       "cheapEnergyCharging": "Goedkope energie beschikbaar.",
       "cheapEnergyNextStart": "Goedkope energie in {duration}.",
@@ -1500,5 +1539,13 @@
     "lineErrorLink": "lijn {0}",
     "restartButton": "Herstart",
     "title": "Opstart fout"
+  },
+  "tabBar": {
+    "battery": "Batterij",
+    "charge": "Laden",
+    "comingSoon": "Deze pagina is in ontwikkeling.",
+    "forecast": "Voorspelling",
+    "more": "Meer",
+    "sessions": "Sessies"
   }
 }
