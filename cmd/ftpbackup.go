@@ -30,6 +30,10 @@ func runFTPBackupRoutine(stopC <-chan struct{}, conf globalconfig.FTPBackup) {
 		conf.Schedule = "03:00"
 	}
 
+	if conf.Timeout <= 0 {
+		conf.Timeout = 30 * time.Second
+	}
+
 	log.INFO.Printf("FTP backup enabled: host=%s, directory=%s, schedule=%s", conf.Host, conf.Directory, conf.Schedule)
 
 	go func() {
