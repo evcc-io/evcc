@@ -7,6 +7,7 @@ import (
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 	"github.com/stretchr/testify/suite"
 )
@@ -150,6 +151,96 @@ func (suite *connTestSuite) TestConnectorMeasurementsRunningTxn() {
 	suite.NoError(err, "Currents")
 	_, _, _, err = suite.conn.Voltages()
 	suite.NoError(err, "Voltages")
+}
+
+func (suite *connTestSuite) TestStatusNotificationPreparingNonBlocking() {
+	// set remoteIdTag to simulate remoteStart=true
+	suite.conn.remoteIdTag = "evcc"
+	suite.conn.status = nil
+
+	// first StatusNotification(Preparing) should set status and trigger remote start asynchronously
+	req := &core.StatusNotificationRequest{
+		ConnectorId: 1,
+		ErrorCode:   core.NoError,
+		Status:      core.ChargePointStatusPreparing,
+	}
+
+	// OnStatusNotification must return immediately (non-blocking), even though
+	// RemoteStartTransactionRequest would block if called synchronously
+	done := make(chan struct{})
+	go func() {
+		_, err := suite.conn.OnStatusNotification(req)
+		suite.NoError(err)
+		close(done)
+	}()
+
+	select {
+	case <-done:
+		// handler returned promptly
+	case <-time.After(time.Second):
+		suite.Fail("OnStatusNotification blocked for too long")
+	}
+
+	// status should be Preparing and waiting for auth
+	suite.True(suite.conn.NeedsAuthentication(), "should need authentication after Preparing status")
+}
+
+func (suite *connTestSuite) TestRemoteStartAfterReconnect() {
+	// set remoteIdTag to simulate remoteStart=true
+	suite.conn.remoteIdTag = "evcc"
+	suite.conn.status = nil
+
+	// 1st connection: StatusNotification(Preparing) -> isWaitingForAuth should be true
+	req := &core.StatusNotificationRequest{
+		ConnectorId: 1,
+		ErrorCode:   core.NoError,
+		Status:      core.ChargePointStatusPreparing,
+	}
+	_, err := suite.conn.OnStatusNotification(req)
+	suite.NoError(err)
+	suite.True(suite.conn.NeedsAuthentication(), "should need authentication")
+
+	// simulate StartTransaction (charger accepted remote start)
+	startReq := &core.StartTransactionRequest{
+		ConnectorId: 1,
+		IdTag:       "evcc",
+		MeterStart:  0,
+		Timestamp:   types.NewDateTime(suite.clock.Now()),
+	}
+	_, err = suite.conn.OnStartTransaction(startReq)
+	suite.NoError(err)
+
+	// no longer waiting for auth (txnId is set)
+	suite.False(suite.conn.NeedsAuthentication(), "should not need authentication during transaction")
+	suite.Equal("evcc", suite.conn.IdTag())
+
+	// simulate StopTransaction (vehicle unplugged)
+	_, err = suite.conn.OnStopTransaction(nil)
+	suite.NoError(err)
+
+	txnId, err := suite.conn.TransactionID()
+	suite.NoError(err)
+	suite.Equal(0, txnId, "txnId should be reset after StopTransaction")
+
+	// simulate StatusNotification(Available) during disconnect
+	availReq := &core.StatusNotificationRequest{
+		ConnectorId: 1,
+		ErrorCode:   core.NoError,
+		Status:      core.ChargePointStatusAvailable,
+	}
+	_, err = suite.conn.OnStatusNotification(availReq)
+	suite.NoError(err)
+	suite.False(suite.conn.NeedsAuthentication(), "should not need authentication when Available")
+
+	// 2nd connection: StatusNotification(Preparing) should again trigger waiting for auth
+	req2 := &core.StatusNotificationRequest{
+		ConnectorId: 1,
+		ErrorCode:   core.NoError,
+		Status:      core.ChargePointStatusPreparing,
+	}
+	_, err = suite.conn.OnStatusNotification(req2)
+	suite.NoError(err)
+	suite.True(suite.conn.NeedsAuthentication(), "should need authentication again after reconnect")
 }
 
 func (suite *connTestSuite) TestOnStopTransactionResetsReportedPower() {
