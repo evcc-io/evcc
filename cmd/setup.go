@@ -586,6 +586,11 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) error {
 		err = networkSettings(&conf.Network)
 	}
 
+	// configure ftp backup
+	if err == nil {
+		err = configureFTPBackup(&conf.FTPBackup)
+	}
+
 	// setup additional templates
 	if err == nil {
 		if cmd.Flags().Changed(flagTemplate) {
@@ -698,6 +703,16 @@ func configureInflux(conf *globalconfig.Influx) (*server.Influx, error) {
 	)
 
 	return influx, nil
+}
+
+func configureFTPBackup(conf *globalconfig.FTPBackup) error {
+	if settings.Exists(keys.FTPBackup) {
+		if err := settings.Json(keys.FTPBackup, &conf); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // setup mqtt

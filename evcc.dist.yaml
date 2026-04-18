@@ -15,6 +15,18 @@ interval: 30s # control cycle interval. Interval <30s can lead to unexpected beh
 #   type: sqlite
 #   dsn: <path-to-db-file>
 
+# daily FTP backup of the sqlite database
+# ftpbackup:
+#   host: 192.168.1.10
+#   port: 21
+#   user: my-user
+#   password: my-password
+#   directory: /evcc/backups
+#   schedule: "03:00" # daily time in local timezone, HH:MM
+#   timeout: 30s
+#   tls: false
+#   insecureskipverify: false
+
 # sponsor token enables optional features (request at https://sponsor.evcc.io)
 # sponsortoken:
 

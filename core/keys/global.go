@@ -8,6 +8,7 @@ const (
 	SponsorToken       = "sponsorToken"
 	Network            = "network"
 	Mqtt               = "mqtt"
+	FTPBackup          = "ftpbackup"
 	Influx             = "influx"
 	EEBus              = "eebus"
 	Hems               = "hems"

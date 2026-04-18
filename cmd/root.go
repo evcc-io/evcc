@@ -374,6 +374,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	valueChan <- util.Param{Key: keys.MessagingEvents, Val: conf.MessagingEvents}
 	valueChan <- util.Param{Key: keys.ModbusProxy, Val: conf.ModbusProxy}
 	valueChan <- util.Param{Key: keys.Mqtt, Val: conf.Mqtt}
+	valueChan <- util.Param{Key: keys.FTPBackup, Val: conf.FTPBackup}
 	valueChan <- util.Param{Key: keys.Network, Val: conf.Network}
 	valueChan <- util.Param{Key: keys.Ocpp, Val: globalconfig.ConfigStatus{
 		Config: conf.Ocpp,
@@ -409,6 +410,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// run shutdown functions on stop
 	var once sync.Once
 	stopC := make(chan struct{})
+
+	// run automated ftp backups
+	runFTPBackupRoutine(stopC, conf.FTPBackup)
 
 	// catch signals
 	go func() {
