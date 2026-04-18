@@ -95,6 +95,11 @@ func (conn *Connector) IdTag() string {
 	return conn.idTag
 }
 
+// RemoteIdTag returns the configured remote start ID tag
+func (conn *Connector) RemoteIdTag() string {
+	return conn.remoteIdTag
+}
+
 // getScheduleLimit queries the current or power limit the charge point is currently set to offer
 func (conn *Connector) GetScheduleLimit(duration int) (float64, error) {
 	schedule, err := conn.cp.GetCompositeScheduleRequest(conn.id, duration)

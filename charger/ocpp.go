@@ -44,6 +44,7 @@ type OCPP struct {
 	enabled bool
 	current float64
 
+	remoteStart         bool
 	stackLevelZero      bool
 	profileKindRelative bool
 	lp                  loadpoint.API
@@ -190,6 +191,7 @@ func NewOCPP(ctx context.Context,
 		log:                 log,
 		cp:                  cp,
 		conn:                conn,
+		remoteStart:         remoteStart,
 		stackLevelZero:      stackLevelZero,
 		profileKindRelative: profileKindRelative,
 	}
@@ -269,6 +271,17 @@ func (c *OCPP) Enabled() (bool, error) {
 			core.ChargePointStatusCharging,
 			core.ChargePointStatusSuspendedEV:
 			return true, nil
+		case
+			core.ChargePointStatusPreparing:
+			if c.remoteStart {
+				// Return cached state to prevent "out of sync" flip-flop.
+				// Self-healing: if we should be enabled but there's no active
+				// transaction, re-send RemoteStartTransaction.
+				if c.enabled && c.conn.NeedsAuthentication() {
+					go c.conn.RemoteStartTransactionRequest(c.conn.RemoteIdTag())
+				}
+				return c.enabled, nil
+			}
 		}
 	}
 
@@ -295,18 +308,35 @@ func (c *OCPP) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (c *OCPP) Enable(enable bool) error {
+	if c.remoteStart && enable {
+		// ensure transaction is active
+		if c.conn.NeedsAuthentication() {
+			if err := c.conn.RemoteStartTransactionRequest(c.conn.RemoteIdTag()); err != nil {
+				return err
+			}
+		}
+	}
+
 	var current float64
 	if enable {
 		current = c.current
 	}
 
-	err := c.setCurrent(current)
-	if err == nil {
-		// cache enabled state as last fallback option
-		c.enabled = enable
+	// For remoteStart chargers, skip setCurrent(0) since some chargers
+	// (e.g. Huawei SCharger) interpret a 0W profile as "stop transaction".
+	if c.remoteStart && current == 0 {
+		// stop transaction instead of sending 0W profile
+		c.conn.RemoteStopTransactionRequest()
+	} else {
+		if err := c.setCurrent(current); err != nil {
+			return err
+		}
 	}
 
-	return err
+	// cache enabled state as last fallback option
+	c.enabled = enable
+
+	return nil
 }
 
 // setCurrent sets the TxDefaultChargingProfile with given current
