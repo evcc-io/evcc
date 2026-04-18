@@ -143,10 +143,10 @@
       "feedinPrice": "Feed-in price",
       "forecast": "Forecast",
       "gridPrice": "Grid price",
-      "host": "Host",
       "heaterTempLimit": "Heater limit",
       "hemsActiveLimit": "Active limit",
       "hemsType": "Communication",
+      "host": "Host",
       "identifier": "RFID-Identifier",
       "loginBlocked": "Login limit reached",
       "max": "max",
@@ -225,6 +225,21 @@
       "deprecated": "deprecated",
       "example": "Example",
       "optional": "optional"
+    },
+    "ftpbackup": {
+      "description": "Creates a daily database backup and uploads it to an FTP server.",
+      "labelCheckInsecureSkipVerify": "Skip certificate verification",
+      "labelCheckTls": "Use explicit TLS (FTPS)",
+      "labelDirectory": "Remote directory",
+      "labelHost": "Host",
+      "labelInsecureSkipVerify": "TLS certificate validation",
+      "labelPassword": "Password",
+      "labelPort": "Port",
+      "labelSchedule": "Daily schedule (HH:MM)",
+      "labelTimeout": "Connection timeout",
+      "labelTls": "Encryption",
+      "labelUser": "Username",
+      "title": "FTP Backup"
     },
     "general": {
       "applyAndClose": "Apply & close",
@@ -308,21 +323,6 @@
       "title": "InfluxDB",
       "v1Support": "Need support for InfluxDB 1.x?",
       "v2Support": "Back to InfluxDB 2.x"
-    },
-    "ftpbackup": {
-      "description": "Creates a daily database backup and uploads it to an FTP server.",
-      "labelCheckInsecureSkipVerify": "Skip certificate verification",
-      "labelCheckTls": "Use explicit TLS (FTPS)",
-      "labelDirectory": "Remote directory",
-      "labelHost": "Host",
-      "labelInsecureSkipVerify": "TLS certificate validation",
-      "labelPassword": "Password",
-      "labelPort": "Port",
-      "labelSchedule": "Daily schedule (HH:MM)",
-      "labelTimeout": "Connection timeout",
-      "labelTls": "Encryption",
-      "labelUser": "Username",
-      "title": "FTP Backup"
     },
     "loadpoint": {
       "addCharger": {
