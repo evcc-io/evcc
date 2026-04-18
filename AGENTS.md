@@ -24,6 +24,30 @@ This file provides guidance to AI coding agents when working with code in this r
 - `evcc --template-type [type] --template [file]` - test device templates
 - `make docs` - generate template documentation
 
+## Domain Knowledge
+
+Deep documentation on specific subsystems is available in `docs/agents/`. Load what you need based on the task:
+
+| File | When to load |
+|------|-------------|
+| [Core Domain](docs/agents/core-domain.md) | Control loop, loadpoint logic, PV surplus, charge modes, tariffs, interfaces |
+| [Hardware Integrations](docs/agents/hardware-integrations.md) | Charger/meter/vehicle implementations, adding new devices |
+| [Easee Architecture](docs/agents/easee-architecture.md) | Easee charger (REST+SignalR, async correlation, concurrency) |
+| [Plugin System](docs/agents/plugin-system.md) | Plugin layer (HTTP, MQTT, Modbus, SunSpec, JS) |
+| [Web UI & API](docs/agents/web-ui-api.md) | REST API, WebSocket, Vue frontend, authentication |
+
+### Loading guide by task type
+
+- **Charger implementation** — hardware-integrations + core-domain
+- **Easee charger work** — easee-architecture + core-domain
+- **Meter implementation** — hardware-integrations + plugin-system
+- **Vehicle implementation** — hardware-integrations
+- **UI/frontend work** — web-ui-api
+- **API endpoint work** — web-ui-api + core-domain
+- **Config/template work** — plugin-system
+- **Control loop / charging logic** — core-domain
+- **Bug in any area** — core-domain + relevant topic file(s)
+
 ## Architecture Guidelines
 
 ### Core Components
