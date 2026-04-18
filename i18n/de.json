@@ -127,6 +127,7 @@
       "chargedEnergy": "Geladen",
       "co2": "Netz-CO₂",
       "configured": "Konfiguriert",
+      "connected": "Verbunden",
       "connections": "Verbindungen",
       "controllable": "Steuerbar",
       "currency": "Währung",
@@ -972,6 +973,7 @@
       "setup": "Tarife und Vorhersagen einrichten",
       "solar": "Erwartete Solarproduktion für heute und die nächsten Tage. Wird in Zukunft auch für die automatische Ladeoptimierung verwendet."
     },
+    "hideLine": "Linie ausblenden",
     "modalTitle": "Vorhersage",
     "price": {
       "average": "Durchschnitt",
@@ -980,6 +982,7 @@
       "range": "Bereich"
     },
     "priceZoom": "vergrößern",
+    "showLine": "Linie anzeigen",
     "solar": {
       "dayAfterTomorrow": "Übermorgen",
       "partly": "teilweise",
@@ -988,7 +991,8 @@
       "tomorrow": "Morgen"
     },
     "solarAdjust": "Solarprognose anhand der realen Produktionsdaten anpassen{percent}.",
-    "solarAdjustShort": "an echte Daten anpassen",
+    "solarAdjustMedium": "an reale Produktionsdaten anpassen",
+    "solarAdjustShort": "anpassen",
     "type": {
       "co2": "CO₂-Emissionen",
       "price": "Netzpreis",
