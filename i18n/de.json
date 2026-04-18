@@ -127,6 +127,7 @@
       "chargedEnergy": "Geladen",
       "co2": "Netz-CO₂",
       "configured": "Konfiguriert",
+      "connected": "Verbunden",
       "connections": "Verbindungen",
       "controllable": "Steuerbar",
       "currency": "Währung",
@@ -946,6 +947,7 @@
       "modalCancel": "Abbrechen",
       "modalDownload": "Download",
       "modalInstalledVersion": "Installierte Version",
+      "modalLatest": "Du verwendest bereits die aktuellste Version.",
       "modalNextRelease": "Was ist neu im nächsten Release",
       "modalNoReleaseNotes": "Keine Versionshinweise verfügbar. Mehr Informationen zur neuen Version:",
       "modalTitle": "Neue Version verfügbar",
@@ -955,7 +957,7 @@
       "modalUpdateStatusStart": "Installation gestartet:",
       "modalViewOnGitHub": "Auf GitHub ansehen",
       "openSource": "Open Source",
-      "poweredByOpenSource": "Powered by {0}."
+      "poweredByOpenSource": "Unterstützt von {0}."
     }
   },
   "forecast": {
@@ -971,6 +973,7 @@
       "setup": "Tarife und Vorhersagen einrichten",
       "solar": "Erwartete Solarproduktion für heute und die nächsten Tage. Wird in Zukunft auch für die automatische Ladeoptimierung verwendet."
     },
+    "hideLine": "Linie ausblenden",
     "modalTitle": "Vorhersage",
     "price": {
       "average": "Durchschnitt",
@@ -978,6 +981,8 @@
       "lowestHour": "Günstigste Stunde",
       "range": "Bereich"
     },
+    "priceZoom": "vergrößern",
+    "showLine": "Linie anzeigen",
     "solar": {
       "dayAfterTomorrow": "Übermorgen",
       "partly": "teilweise",
@@ -986,10 +991,12 @@
       "tomorrow": "Morgen"
     },
     "solarAdjust": "Solarprognose anhand der realen Produktionsdaten anpassen{percent}.",
+    "solarAdjustMedium": "an reale Produktionsdaten anpassen",
+    "solarAdjustShort": "anpassen",
     "type": {
-      "co2": "CO₂",
-      "price": "Preis",
-      "solar": "Solar"
+      "co2": "CO₂-Emissionen",
+      "price": "Netzpreis",
+      "solar": "Solarproduktion"
     }
   },
   "general": {

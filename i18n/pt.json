@@ -40,6 +40,7 @@
     "legendTopName": "Carregamento de veículos com a bateria",
     "legendTopSubline": "quando a bateria da casa está acima de {soc}.",
     "modalTitle": "Bateria da Casa",
+    "noBattery": "Não há baterias configuradas.",
     "usageTab": "Gestão da bateria"
   },
   "config": {
@@ -130,8 +131,9 @@
       "currency": "Moeda",
       "current": "Corrente",
       "currentRange": "Corrente",
+      "curtailed": "Limitação da injeção na rede",
       "detected": "Detectado",
-      "dimmed": "Escurecido",
+      "dimmed": "Consumo limitado",
       "enabled": "Ativado",
       "energy": "Energia",
       "events": "Eventos",
@@ -600,6 +602,11 @@
       "url": "URL do Servidor",
       "urlHelp": "Copie este URL para a configuração do seu carregador. Consulte o manual do fabricante para obter mais detalhes. O carregador deve anexar automaticamente o seu identificador único (ID da estação) ao URL. Em casos raros, pode ser necessário especificar manualmente o identificador. Exemplo: `{url}`"
     },
+    "optimizer": {
+      "description": "Analisa as previsões de energia solar, os preços da eletricidade e os seus padrões de consumo para otimizar a estratégia de utilização da bateria e de carregamento. Os dados são enviados para o serviço de otimização evcc para serem processados.",
+      "enable": "Ativar o Otimizador",
+      "title": "Otimizador"
+    },
     "options": {
       "boolean": {
         "no": "não",
@@ -642,11 +649,13 @@
       "cardTitle": "Sunny Home Manager",
       "description": "evcc tem integração com SMA Sunny Manager (SHM) via protocolo SEMP. Se estiver a ser executado na mesma rede, depois de aceder à sua conta no Sunny Portal, deverá aparecer automaticamente a opção de adicionar todos os Carregadores configurados no evcc como novos clientes. Tudo deverá ficar pronto a usar imediatamente sem necessidade de quaisquer ajustes.",
       "descriptionDeviceId": "String 12 caracteres HEX. Prefixo para todos os dispositivos (ponto de carregamento, ..).",
+      "descriptionDeviceSerial": "Cadeia HEX de 12 caracteres. Número de série padrão para todos os dispositivos (ponto de carregamento, etc.). Por predefinição, o evcc obtém este valor a partir do endereço MAC do host.",
       "descriptionIdPattern": "Padrão de identidade",
       "descriptionIds": "No Sunny Portal cada dispositivo necessita duma identidade única. O evcc gera uma identidade única com base no seu hardware. Se migrar o evcc para outro hardware estas identidades podem mudar. Se quiser manter o histórico pode substituir as identidades geradas aqui. Abra o SEMP URL(/semp) para ver as identidade atuais.",
       "descriptionSempUrl": "SEMP URL",
       "descriptionVendorId": "string 8 caratecteres HEX. Prefixo geral de todas as entidades. O evcc usa o seu próprio vendor ID interno Por defeito.",
       "labelDeviceId": "Device ID",
+      "labelDeviceSerial": "Número de série do equipamento",
       "labelVendorId": "Vendor ID",
       "title": "SMA Sunny Home Manager"
     },
@@ -850,6 +859,15 @@
       "configurePriceCo2": "Saiba como configurar os dados de preço e CO₂.",
       "footerLong": "{percent} energia solar",
       "footerShort": "{percent} Sol",
+      "indicator": {
+        "co2": "Emissões de CO₂",
+        "co2saved": "CO₂ poupado",
+        "none": "nenhum",
+        "price": "preço da energia",
+        "savings": "poupança",
+        "solar": "energia solar"
+      },
+      "indicatorLabel": "Informações do cabeçalho",
       "modalTitle": "Dados da energia carregada",
       "moneySaved": "{value} poupado",
       "percentGrid": "{grid} kWh Rede",
@@ -861,10 +879,11 @@
         "thisYear": "este ano",
         "total": "total"
       },
-      "periodLabel": "Período:",
+      "periodLabel": "Período",
       "priceTitle": "Preço da energia",
       "referenceGrid": "Rede",
-      "referenceLabel": "Dados de referência:",
+      "referenceLabel": "Dados de referência",
+      "sessionInfo": "Com base nas sessões de carregamento concluídas.",
       "tabTitle": "Os meus dados"
     },
     "sponsor": {
@@ -890,15 +909,26 @@
     },
     "version": {
       "availableLong": "nova versão disponível",
+      "community": "comunidade evcc",
+      "labelRelease": "Lançamento",
+      "labelVersion": "Versão",
+      "labelWebsite": "Website",
+      "latestVersion": "versão mais recente",
+      "madeByCommunity": "Realizado por {0}.",
       "modalCancel": "Cancelar",
       "modalDownload": "Download",
       "modalInstalledVersion": "Versão instalada",
+      "modalLatest": "Está a utilizar a versão mais recente.",
+      "modalNextRelease": "O que está previsto para a próxima versão",
       "modalNoReleaseNotes": "Sem notas da versão disponível. Mais informações sobre a nova versão:",
       "modalTitle": "Nova versão disponível",
       "modalUpdate": "Instalar",
       "modalUpdateNow": "Instalar agora",
       "modalUpdateStarted": "Iniciando a nova versão do evcc…",
-      "modalUpdateStatusStart": "Instalação iniciada:"
+      "modalUpdateStatusStart": "Instalação iniciada:",
+      "modalViewOnGitHub": "Ver no GitHub",
+      "openSource": "código aberto",
+      "poweredByOpenSource": "Desenvolvido por {0}."
     }
   },
   "forecast": {
@@ -908,6 +938,12 @@
       "lowestHour": "Horário mais \"Verde\"",
       "range": "Intervalo"
     },
+    "empty": {
+      "co2": "Veja quando a energia da rede na sua região é verde. Os planos de carregamento serão otimizados para reduzir as emissões e calcular a redução de CO₂.",
+      "price": "Configure a sua tarifa de eletricidade dinâmica para otimizar automaticamente os planos de carregamento e calcular as poupanças.",
+      "setup": "Definir tarifas e previsões",
+      "solar": "Veja a produção solar prevista para hoje e para os próximos dias. Esta informação será também utilizada para a otimização automática do carregamento no futuro."
+    },
     "modalTitle": "Previsões",
     "price": {
       "average": "Média",
@@ -915,6 +951,7 @@
       "lowestHour": "Horário mais barato",
       "range": "Intervalo"
     },
+    "priceZoom": "ampliar",
     "solar": {
       "dayAfterTomorrow": "Depois de amanhã",
       "partly": "parcialmente",
@@ -923,10 +960,11 @@
       "tomorrow": "Amanhã"
     },
     "solarAdjust": "Ajustar a previsão solar com base em dados reais de produção{percent}.",
+    "solarAdjustShort": "ajuste com dados reais",
     "type": {
-      "co2": "CO₂",
-      "price": "Preço",
-      "solar": "Solar"
+      "co2": "Emissões de CO₂",
+      "price": "Preço da rede",
+      "solar": "Produção solar"
     }
   },
   "general": {
@@ -1139,6 +1177,7 @@
         "once": "Boost ativo para esta sessão de carga.",
         "stateActive": "Boost de bateria ativo",
         "stateBelowLimit": "Bateria com carga insuficiente para o boost",
+        "stateHold": "Bateria bloqueada",
         "stateReady": "Boost da bateria pronto"
       },
       "batteryUsage": "Bateria de casa",
@@ -1248,6 +1287,7 @@
       "batteryBoostBelowLimit": "Bateria com carga insuficiente para boost.",
       "batteryBoostDisabled": "Boost da bateria desativado.",
       "batteryBoostEnabled": "Boost até a bateria atingir {limit}.",
+      "batteryBoostHold": "Bateria bloqueada. Função Boost não disponível.",
       "charging": "A carregar…",
       "cheapEnergyCharging": "Energia barata disponível.",
       "cheapEnergyNextStart": "Energia barata em {duration}.",
@@ -1487,5 +1527,13 @@
     "lineErrorLink": "linha {0}",
     "restartButton": "Reiniciar",
     "title": "Erro ao iniciar"
+  },
+  "tabBar": {
+    "battery": "Bateria",
+    "charge": "Carga",
+    "comingSoon": "Esta página está em construção.",
+    "forecast": "Previsão",
+    "more": "Mais",
+    "sessions": "Sessões"
   }
 }
