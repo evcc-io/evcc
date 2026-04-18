@@ -1,0 +1,86 @@
+template: ecoflow-stream-mqtt
+products:
+  - brand: EcoFlow
+    description:
+      generic: Stream (MQTT)
+requirements:
+  description:
+    de: |
+      Diese Variante des EcoFlow Stream Meters verwendet die offizielle MQTT
+      API und liefert dadurch Live-Daten (z. B. PV pro String, Batterie
+      Ein-/Ausgangsleistung, SoC je Sekunde). Sie benötigen:
+      - Einen gültigen Access Key von der EcoFlow Developer Console
+      - Den entsprechenden Secret Key
+      - Die Seriennummer des Hauptgeräts Ihres Stream Systems
+
+      Der MQTT-Client ist pro Account gemeinsam genutzt (eine Verbindung
+      für alle Stream-Meter). EcoFlow erlaubt pro Konto 10 unterschiedliche
+      Client-IDs pro Tag; evcc nutzt deshalb eine stabile ID pro Host.
+    en: |
+      This variant of the EcoFlow Stream meter uses the official MQTT API
+      for live data (per-string PV, battery in/out power, per-second SoC,
+      etc.). You need:
+      - A valid Access Key from the EcoFlow Developer Console
+      - The corresponding Secret Key
+      - The main device serial number of your Stream system
+
+      A single shared MQTT client is used for the whole account (one
+      connection for all Stream meters). EcoFlow allows 10 unique client
+      IDs per account per day; evcc therefore uses one stable ID per host.
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: accesskey
+    required: true
+    description:
+      generic: Access Key
+    help:
+      en: Access Key from EcoFlow Developer Console
+      de: Access Key aus der EcoFlow Developer Console
+  - name: secretkey
+    required: true
+    description:
+      generic: Secret Key
+    help:
+      en: Secret Key from EcoFlow Developer Console
+      de: Secret Key aus der EcoFlow Developer Console
+  - name: serial
+    required: true
+    help:
+      en: Serial number of the main (master) device of your Stream system
+      de: Seriennummer des Hauptgeräts (Master) Ihres Stream Systems
+  - name: discover
+    type: bool
+    default: true
+    advanced: true
+    description:
+      en: Auto-discover siblings
+      de: Andere Geräte automatisch erkennen
+    help:
+      en: When enabled, all Stream devices on the same account (sharing the same 2-char serial prefix) are aggregated into this meter. Their power is summed and SoC is averaged, matching the cascade view shown in the EcoFlow app.
+      de: Wenn aktiviert, werden alle Stream-Geräte des Kontos (mit gleichem 2-Zeichen-Seriennummern-Präfix) zu diesem Zähler aggregiert. Leistungen werden summiert, SoC wird gemittelt – entsprechend der Kaskadenansicht in der EcoFlow App.
+  - name: region
+    choice: ["auto", "europe", "america"]
+    default: auto
+    advanced: true
+    description:
+      generic: "API Region"
+    help:
+      en: "If you sometimes see error code 8513, like for example Starlink users do, automatic region detection fails. Here, you can set the API region manually. Possible values: auto (default), europe, or america."
+      de: 'Manche Nutzer, z.B. mit Starlink-Internet, sehen gelegentlich in den Logs den "error code 8513". Das passiert, wenn die API Region nicht korrekt erkannt wird. Um das zu beheben, kann man die API Region manuell setzen. Mögliche Werte: auto (Standard), europe oder america.'
+  - name: cache
+    default: 30s
+    advanced: true
+  - preset: battery-params
+render: |
+  type: ecoflow-stream-mqtt
+  accesskey: {{ .accesskey }}
+  secretkey: {{ .secretkey }}
+  serial: {{ or .serial .deviceid }}
+  discover: {{ .discover }}
+  usage: {{ .usage }}
+  cache: {{ .cache }}
+  region: {{ .region }}
+  {{- if eq .usage "battery" }}
+  {{- include "battery-params" . }}
+  {{- end }}
