@@ -96,13 +96,8 @@ func currentFTPBackupConfig(base globalconfig.FTPBackup) (globalconfig.FTPBackup
 		conf.Timeout = "30s"
 	}
 
-	if _, err := nextDailyRun(time.Now(), conf.Schedule); err != nil {
+	if err := conf.Validate(); err != nil {
 		return conf, err
-	}
-
-	timeout, err := time.ParseDuration(conf.Timeout)
-	if err != nil || timeout <= 0 {
-		return conf, fmt.Errorf("invalid timeout %q", conf.Timeout)
 	}
 
 	return conf, nil
@@ -145,10 +140,7 @@ func uploadBackup(conf globalconfig.FTPBackup) error {
 
 	addr := net.JoinHostPort(conf.Host, strconv.Itoa(conf.Port))
 
-	timeout, err := time.ParseDuration(conf.Timeout)
-	if conf.Timeout == "" || err != nil || timeout <= 0 {
-		timeout = 30 * time.Second
-	}
+	timeout, _ := time.ParseDuration(conf.Timeout)
 
 	options := []ftp.Option{ftp.WithTimeout(timeout)}
 	if conf.TLS {

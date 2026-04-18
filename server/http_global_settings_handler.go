@@ -2,7 +2,6 @@ package server
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"reflect"
@@ -127,38 +126,10 @@ func settingsSetJsonHandler(key string, pub publisher, newStruc func() any) http
 }
 
 func validateJSONSetting(key string, struc any) error {
-	if key != keys.FTPBackup {
-		return nil
-	}
-
-	conf, ok := struc.(*globalconfig.FTPBackup)
-	if !ok {
-		return nil
-	}
-
-	schedule := strings.TrimSpace(conf.Schedule)
-	if schedule != "" {
-		parts := strings.Split(schedule, ":")
-		if len(parts) != 2 {
-			return fmt.Errorf("invalid schedule %q: expected format HH:MM", conf.Schedule)
-		}
-
-		hour, err := strconv.Atoi(parts[0])
-		if err != nil || hour < 0 || hour > 23 {
-			return fmt.Errorf("invalid schedule %q: hour must be between 00 and 23", conf.Schedule)
-		}
-
-		minute, err := strconv.Atoi(parts[1])
-		if err != nil || minute < 0 || minute > 59 {
-			return fmt.Errorf("invalid schedule %q: minute must be between 00 and 59", conf.Schedule)
-		}
-	}
-
-	timeout := strings.TrimSpace(conf.Timeout)
-	if timeout != "" {
-		duration, err := time.ParseDuration(timeout)
-		if err != nil || duration <= 0 {
-			return fmt.Errorf("invalid timeout %q: expected a positive duration", conf.Timeout)
+	switch key {
+	case keys.FTPBackup:
+		if conf, ok := struc.(*globalconfig.FTPBackup); ok {
+			return conf.Validate()
 		}
 	}
 
