@@ -47,6 +47,7 @@ type All struct {
 	Levels          map[string]string
 	Interval        time.Duration
 	Database        DB
+	FTPBackup       FTPBackup
 	Mqtt            Mqtt
 	ModbusProxy     []ModbusProxy
 	Javascript      []Javascript
@@ -145,6 +146,18 @@ func (c Influx) Redacted() any {
 type DB struct {
 	Type string
 	Dsn  string
+}
+
+type FTPBackup struct {
+	Host               string
+	Port               int
+	User               string
+	Password           string
+	Directory          string
+	Schedule           string
+	Timeout            time.Duration
+	TLS                bool
+	InsecureSkipVerify bool
 }
 
 type Messaging struct {

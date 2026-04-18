@@ -410,6 +410,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 	var once sync.Once
 	stopC := make(chan struct{})
 
+	// run automated ftp backups
+	runFTPBackupRoutine(stopC, conf.FTPBackup)
+
 	// catch signals
 	go func() {
 		signalC := make(chan os.Signal, 1)
