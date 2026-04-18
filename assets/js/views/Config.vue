@@ -266,6 +266,18 @@
 						</template>
 					</DeviceCard>
 					<DeviceCard
+						:title="$t('config.ftpbackup.title')"
+						editable
+						:unconfigured="isUnconfigured(ftpbackupTags)"
+						data-testid="ftpbackup"
+						@edit="openModal('ftpbackup')"
+					>
+						<template #icon><FtpBackupIcon /></template>
+						<template #tags>
+							<DeviceTags :tags="ftpbackupTags" />
+						</template>
+					</DeviceCard>
+					<DeviceCard
 						:title="$t('config.influx.title')"
 						editable
 						:error="hasClassError('influx')"
@@ -417,6 +429,7 @@
 				<MeterModal :is-sponsor="isSponsor" @changed="meterChanged" />
 				<ChargerModal :is-sponsor="isSponsor" :ocpp="ocpp" @changed="chargerChanged" />
 				<InfluxModal @changed="loadDirty" />
+				<FtpBackupModal @changed="loadDirty" />
 				<MqttModal @changed="loadDirty" />
 				<NetworkModal @changed="loadDirty" />
 				<ControlModal @changed="loadDirty" />
@@ -475,6 +488,8 @@ import ShmIcon from "../components/MaterialIcon/Shm.vue";
 import ShmModal from "@/components/Config/ShmModal.vue";
 import InfluxIcon from "../components/MaterialIcon/Influx.vue";
 import InfluxModal from "../components/Config/InfluxModal.vue";
+import FtpBackupIcon from "../components/MaterialIcon/FtpBackup.vue";
+import FtpBackupModal from "../components/Config/FtpBackupModal.vue";
 import LoadpointModal from "../components/Config/LoadpointModal.vue";
 import LoadpointIcon from "../components/MaterialIcon/Loadpoint.vue";
 import MessagingModal from "../components/Config/Messaging/MessagingModal.vue";
@@ -562,6 +577,8 @@ export default defineComponent({
 		ShmIcon,
 		InfluxIcon,
 		InfluxModal,
+		FtpBackupIcon,
+		FtpBackupModal,
 		MessagingLegacyModal,
 		MessagingModal,
 		MessengerModal,
@@ -756,6 +773,16 @@ export default defineComponent({
 			if (database) result.bucket = { value: database };
 			if (org) result.org = { value: org };
 			return result;
+		},
+		ftpbackupTags(): DeviceTags {
+			const { host, directory, schedule, tls } = store.state?.ftpbackup || {};
+			if (!host) return { configured: { value: false } };
+			return {
+				host: { value: host },
+				directory: { value: directory || "/" },
+				schedule: { value: schedule || "03:00" },
+				tls: { value: !!tls },
+			};
 		},
 		vehicleOptions(): VehicleOption[] {
 			return this.vehicles.map((v) => ({ key: v.name, name: v.config?.title || v.name }));

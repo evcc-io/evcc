@@ -324,8 +324,9 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 
 		// json handlers
 		for key, fun := range map[string]func() any{
-			keys.Network:         func() any { return new(globalconfig.Network) },       // has default
-			keys.Mqtt:            func() any { return new(globalconfig.Mqtt) },          // has default
+			keys.Network:         func() any { return new(globalconfig.Network) }, // has default
+			keys.Mqtt:            func() any { return new(globalconfig.Mqtt) },    // has default
+			keys.FTPBackup:       func() any { return new(globalconfig.FTPBackup) },
 			keys.ModbusProxy:     func() any { return new([]globalconfig.ModbusProxy) }, // slice
 			keys.Shm:             func() any { return new(shm.Config) },
 			keys.Influx:          func() any { return new(globalconfig.Influx) },

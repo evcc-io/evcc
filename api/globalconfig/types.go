@@ -155,7 +155,7 @@ type FTPBackup struct {
 	Password           string
 	Directory          string
 	Schedule           string
-	Timeout            time.Duration
+	Timeout            string
 	TLS                bool
 	InsecureSkipVerify bool
 }

@@ -97,7 +97,12 @@ func uploadBackup(conf globalconfig.FTPBackup) error {
 
 	addr := net.JoinHostPort(conf.Host, strconv.Itoa(conf.Port))
 
-	options := []ftp.DialOption{ftp.DialWithTimeout(conf.Timeout)}
+	timeout, err := time.ParseDuration(conf.Timeout)
+	if conf.Timeout == "" || err != nil || timeout <= 0 {
+		timeout = 30 * time.Second
+	}
+
+	options := []ftp.DialOption{ftp.DialWithTimeout(timeout)}
 	if conf.TLS {
 		options = append(options, ftp.DialWithExplicitTLS(&tls.Config{
 			ServerName:         conf.Host,

@@ -35,6 +35,18 @@ export interface InfluxConfig {
   org: any;
 }
 
+export interface FtpBackupConfig {
+  host?: string;
+  port?: number;
+  user?: string;
+  password?: string;
+  directory?: string;
+  schedule?: string;
+  timeout?: string;
+  tls?: boolean;
+  insecureSkipVerify?: boolean;
+}
+
 export interface HemsConfig {
   type: string;
 }
@@ -88,6 +100,7 @@ export interface State {
   tariffCo2?: number;
   tariffSolar?: number;
   mqtt?: MqttConfig;
+  ftpbackup?: FtpBackupConfig;
   influx?: InfluxConfig;
   hems?: ConfigStatus<HemsConfig, unknown>;
   shm?: ShmConfig;
