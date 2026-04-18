@@ -40,6 +40,7 @@
     "legendTopName": "Ładowanie pojazdu z wykorzystaniem domowego magazynu energii",
     "legendTopSubline": "gdy poziom naładowania domowego magazynu energii jest wyższy niż {soc}.",
     "modalTitle": "Domowy magazyn energii",
+    "noBattery": "Brak skonfigurowanego magazynu energii.",
     "usageTab": "Użycie magazynu"
   },
   "config": {
@@ -446,7 +447,7 @@
         "guest": {
           "messageDefault": "Nieznany pojazd, połączony gość?",
           "title": "Kiedy podłączy się nieznany samochód",
-          "titleDefault": "Nieznany samochód"
+          "titleDefault": "Nieznany pojazd"
         },
         "planoverrun": {
           "messageDefault": "{vehicleTitle}: Plan zostanie przekroczony.",
