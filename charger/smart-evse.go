@@ -26,7 +26,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/evcc-io/evcc/util/sponsor"
 )
 
 // SmartEVSE-3.5 REST API charger implementation
@@ -136,10 +135,6 @@ func NewSmartEVSE3(uri string, cache time.Duration) (api.Charger, error) {
 		Helper: request.NewHelper(log),
 		uri:    strings.TrimRight(util.DefaultScheme(uri, "http"), "/"),
 		curr:   60, // 6 A in 1/10 A
-	}
-
-	if !sponsor.IsAuthorized() {
-		return nil, api.ErrSponsorRequired
 	}
 
 	wb.apiG = util.ResettableCached(func() (smartEvseRestSettings, error) {

@@ -113,6 +113,7 @@
       "title": "Valuta"
     },
     "deviceValue": {
+      "activeClients": "Aktiva klienter",
       "amount": "Belopp",
       "broker": "Broker",
       "bucket": "Bucket",
@@ -126,6 +127,7 @@
       "chargedEnergy": "Laddad",
       "co2": "Elnät CO₂",
       "configured": "Konfigurerad",
+      "connected": "Ansluten",
       "connections": "Anslutningar",
       "controllable": "Kontrollerbar",
       "currency": "Valuta",
@@ -144,6 +146,7 @@
       "hemsActiveLimit": "Aktiv begränsning",
       "hemsType": "Kommunikation",
       "identifier": "RFID-identifierare",
+      "loginBlocked": "Inloggningsgräns nådd",
       "max": "max",
       "messengers": "Tjänster",
       "no": "nej",
@@ -339,7 +342,7 @@
       "defaultsHintLink": "Ändra inställningar",
       "delete": "Radera",
       "electricalSubtitle": "Om du är osäker, kontakta elektriker.",
-      "electricalTitle": "Elektrisk",
+      "electricalTitle": "Elektricitet",
       "energyMeterHelp": "Extern mätare (Om laddaren inte har en integrerad mätare).",
       "energyMeterLabel": "Energimätare",
       "estimateLabel": "Interpolera laddningsnivå mellan API uppdateringar",
@@ -602,6 +605,12 @@
       "url": "Server URL",
       "urlHelp": "Kopiera denna URL till laddarens konfiguration. Se tillverkarens manual för mer information. Laddaren ska automatiskt lägga till sin unika identifierare (stations-ID) till URL:en. I sällsynta fall kan du behöva ange identifieraren manuellt. Exempel: `{url}`Kopiera denna URL till laddarens konfiguration. Se tillverkarens manual för mer information. Laddaren ska automatiskt lägga till sin unika identifierare (stations-ID) till URL:en. I sällsynta fall kan du behöva ange identifieraren manuellt. Exempel: `{url}`"
     },
+    "optimizer": {
+      "description": "Analyserar solprognoser, elpriser och din typiska förbrukning för att optimera batteri- och laddningsstrategi. Data överförs till evcc optimeringstjänst för beräkning.",
+      "enable": "Aktivera optimerare",
+      "info": "Det kan ta några minuter innan optimeringsmenyn blir synlig. För nya installationer kan det ta upp till 24 timmar innan evcc har samlat in tillräckligt med data.",
+      "title": "Optimerare"
+    },
     "options": {
       "boolean": {
         "no": "nej",
@@ -628,6 +637,38 @@
     "pv": {
       "titleAdd": "Lägg till solcellsmätare",
       "titleEdit": "Ändra solcellsmätare"
+    },
+    "remote": {
+      "active": "Aktiv",
+      "addClient": "Lägg till klient",
+      "addClientDescription": "Inloggningsuppgifter lagras och verifieras endast lokalt på din evcc-instans.",
+      "addClientTitle": "Lägg till fjärklient",
+      "clientCreated": "Klient skapad",
+      "clients": "Klienter",
+      "confirmDelete": "Ta bort klient?",
+      "connected": "Ansluten",
+      "createClient": "Skapa klient",
+      "description": "Nå din evcc-installation från var som helst med evcc-mobilappen. Du behöver varken portvidarebefordran eller VPN.",
+      "deviceName": "Enhetsnamn",
+      "disconnected": "Frånkopplad",
+      "done": "Klar",
+      "enableLabel": "Aktivera fjärråtkomst",
+      "expiration": "Upphör",
+      "expirationNone": "Aldrig",
+      "expired": "utgången",
+      "expiresIn": "upphör {time}",
+      "lastActive": "activ {time}",
+      "loginBlocked": "Fjärrinloggningar blockeras i en minut efter för många misslyckade inloggningsförsök.",
+      "manualLogin": "Eller logga in manuellt på {url} i din webbläsare med dessa inloggningsuppgifter:",
+      "noClients": "Det finns inga klienter än. Ingen kan ansluta just nu.",
+      "password": "Lösenord",
+      "passwordOnce": "Det här lösenordet visas bara en gång. Skanna QR-koden eller kopiera den nu. Du kommer inte att kunna se den igen.",
+      "qrInstall": "Installera evcc-appen för {ios} eller {android}.",
+      "qrScan": "Skanna koden med din telefons kamera för att ansluta. Klicka på den om du redan använder din telefon.",
+      "removeClient": "Ta bort klient",
+      "title": "Fjärråtkomst",
+      "url": "Publik URL",
+      "username": "Användarnamn"
     },
     "section": {
       "additionalMeter": "Ytterligare mätare",
@@ -875,10 +916,10 @@
         "thisYear": "detta år",
         "total": "totalt"
       },
-      "periodLabel": "Period:",
+      "periodLabel": "Period",
       "priceTitle": "Energipris",
       "referenceGrid": "nät",
-      "referenceLabel": "Referensdata:",
+      "referenceLabel": "Referensdata",
       "sessionInfo": "Baserat på avslutade laddsessioner.",
       "tabTitle": "Mina uppgifter"
     },
@@ -922,7 +963,9 @@
       "modalUpdateNow": "Installera nu",
       "modalUpdateStarted": "Starta den nya versionen av evcc…",
       "modalUpdateStatusStart": "Installationen har börjat:",
-      "openSource": "open source"
+      "modalViewOnGitHub": "Se på GitHub",
+      "openSource": "open source",
+      "poweredByOpenSource": "Powered by {0}."
     }
   },
   "forecast": {
@@ -934,8 +977,12 @@
     },
     "empty": {
       "co2": "Se när elen i ditt område är ren. Laddningsscheman optimeras för låga utsläpp och CO₂-besparingar beräknas.",
-      "price": "Konfigurera rörligt elpris för att automatiskt optimera laddningsscheman och beräkna besparingar."
+      "price": "Konfigurera rörligt elpris för att automatiskt optimera laddningsscheman och beräkna besparingar.",
+      "setup": "Lägg till tariffer och prognoser",
+      "solar": "Förväntat solproduktion idag och imorgon. Kommer i framtiden även att användas för automatisk laddningsoptimering.",
+      "title": "Tariffer & prognoser"
     },
+    "hideLine": "göm linje",
     "modalTitle": "Prognos",
     "price": {
       "average": "Genomsnitt",
@@ -943,18 +990,22 @@
       "lowestHour": "Billigaste timmen",
       "range": "Intervall"
     },
+    "priceZoom": "zooma in",
+    "showLine": "visa linje",
     "solar": {
       "dayAfterTomorrow": "I övermorgon",
       "partly": "delvis",
       "remaining": "återstående",
       "today": "Idag",
-      "tomorrow": "I morgon"
+      "tomorrow": "i morgon"
     },
     "solarAdjust": "Justera solprognosen baserat på verkliga produktionsvärden{percent}.",
+    "solarAdjustMedium": "Justera med verkliga data",
+    "solarAdjustShort": "justera",
     "type": {
-      "co2": "CO₂",
-      "price": "Pris",
-      "solar": "Sol"
+      "co2": "CO₂-utsläpp",
+      "price": "Nätpris",
+      "solar": "Solenergi produktion"
     }
   },
   "general": {
@@ -1168,6 +1219,7 @@
         "once": "Boost är aktiverat för denna laddning.",
         "stateActive": "Batteriboost aktiv",
         "stateBelowLimit": "Batterinivå för låg för boost",
+        "stateHold": "Batteri låst",
         "stateReady": "Beredd för batteriboost"
       },
       "batteryUsage": "Hembatteri",
@@ -1277,6 +1329,7 @@
       "batteryBoostBelowLimit": "Batterinivå för låg för boost.",
       "batteryBoostDisabled": "Batteriboost avaktiverad.",
       "batteryBoostEnabled": "Boost tills batteriet är på {limit}.",
+      "batteryBoostHold": "Batteri låst. Boost ej tillgänglig.",
       "charging": "Laddar…",
       "cheapEnergyCharging": "Billig energi är tillgänglig.",
       "cheapEnergyNextStart": "Billig energi om {duration}.",
@@ -1516,5 +1569,13 @@
     "lineErrorLink": "linje {0}",
     "restartButton": "Starta om",
     "title": "Startfel"
+  },
+  "tabBar": {
+    "battery": "Batteri",
+    "charge": "Ladda",
+    "comingSoon": "Sida under uppbyggnad.",
+    "forecast": "Prognos",
+    "more": "Mer",
+    "sessions": "Laddningar"
   }
 }
