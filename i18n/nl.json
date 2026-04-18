@@ -645,12 +645,19 @@
       "confirmDelete": "Client verwijderen?",
       "connected": "Verbonden",
       "createClient": "Client aanmaken",
+      "description": "Toegang tot uw evcc installatie via de evcc mobile app. Zonder port-forwarding en zonder VPN.",
       "deviceName": "Apparaat naam",
+      "disconnected": "Niet verbonden",
       "done": "Klaar",
+      "enableLabel": "Toegang op afstand inschakelen",
       "expirationNone": "Nooit",
       "expired": "verlopen",
       "expiresIn": "verloopt {time}",
-      "password": "Wachtwoord"
+      "lastActive": "actief {time}",
+      "loginBlocked": "Inloggen op afstand is voor een minuut geblokkeerd, omdat er te veel mislukte inlogpogingen waren.",
+      "manualLogin": "Of log handmatig in via uw browser op {url}, met de volgende credentials:",
+      "password": "Wachtwoord",
+      "username": "Gebruikersnaam"
     },
     "section": {
       "additionalMeter": "Extra meters",
@@ -962,6 +969,7 @@
       "setup": "Tarieven en voorspellingen instellen",
       "solar": "Bekijk de verwachtte zonne opbrengt voor vandaag en de komende dagen. Wordt ook gebruikt voor automatische laadplan optimalisatie in de toekomst."
     },
+    "hideLine": "regel verbergen",
     "modalTitle": "Voorspelling",
     "price": {
       "average": "Gemiddeld",
@@ -970,6 +978,7 @@
       "range": "Bereik"
     },
     "priceZoom": "zoom in",
+    "showLine": "regel tonen",
     "solar": {
       "dayAfterTomorrow": "Overmorgen",
       "partly": "gedeeltelijk",
