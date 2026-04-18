@@ -47,6 +47,7 @@ require (
 	github.com/godbus/dbus/v5 v5.2.2
 	github.com/gokrazy/updater v0.0.0-20250705135802-db129c40879c
 	github.com/golang-jwt/jwt/v5 v5.3.1
+	github.com/gonzalop/ftp v1.6.0
 	github.com/google/go-github/v32 v32.1.0
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/handlers v1.5.2
@@ -64,7 +65,6 @@ require (
 	github.com/jarcoal/httpmock v1.4.1
 	github.com/jeremywohl/flatten v1.0.1
 	github.com/jinzhu/now v1.1.5
-	github.com/jlaffaye/ftp v0.2.0
 	github.com/joeshaw/carwings v0.0.0-20250704173606-1708e349f36c
 	github.com/joho/godotenv v1.5.1
 	github.com/jpfielding/go-http-digest v0.0.0-20240123121450-cffc47d5d6d8
@@ -183,8 +183,6 @@ require (
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/gosimple/unidecode v1.0.1 // indirect
 	github.com/grid-x/serial v0.0.0-20211107191517-583c7356b3aa // indirect
-	github.com/hashicorp/errwrap v1.0.0 // indirect
-	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/huandu/xstrings v1.5.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/influxdata/line-protocol v0.0.0-20210922203350-b1ad95c89adf // indirect

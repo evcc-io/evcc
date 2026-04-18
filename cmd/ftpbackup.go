@@ -15,7 +15,7 @@ import (
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/server/db/settings"
-	"github.com/jlaffaye/ftp"
+	"github.com/gonzalop/ftp"
 )
 
 func runFTPBackupRoutine(stopC <-chan struct{}, conf globalconfig.FTPBackup) {
@@ -150,9 +150,9 @@ func uploadBackup(conf globalconfig.FTPBackup) error {
 		timeout = 30 * time.Second
 	}
 
-	options := []ftp.DialOption{ftp.DialWithTimeout(timeout)}
+	options := []ftp.Option{ftp.WithTimeout(timeout)}
 	if conf.TLS {
-		options = append(options, ftp.DialWithExplicitTLS(&tls.Config{
+		options = append(options, ftp.WithExplicitTLS(&tls.Config{
 			ServerName:         conf.Host,
 			InsecureSkipVerify: conf.InsecureSkipVerify,
 			MinVersion:         tls.VersionTLS12,
@@ -172,7 +172,7 @@ func uploadBackup(conf globalconfig.FTPBackup) error {
 	remoteName := "evcc-backup-" + time.Now().Format("2006-01-02--15-04") + ".db"
 	remotePath := path.Join("/", strings.TrimSpace(conf.Directory), remoteName)
 
-	if err := client.Stor(remotePath, file); err != nil {
+	if err := client.Store(remotePath, file); err != nil {
 		return fmt.Errorf("upload backup to %s: %w", remotePath, err)
 	}
 
