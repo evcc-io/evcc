@@ -136,16 +136,13 @@ func (c *Connection) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-	if unit.Statistics != nil {
-		stats := unit.Statistics.Powers[0].Values
-		rawPower := stats[0]
-
-		power := (float64)(rawPower / 1000)
-
-		return power, nil
-	} else {
-		return 0, errors.New("statistics are empty")
+	if unit.Statistics != nil && len(unit.Statistics.Powers) > 0 {
+		if stats := unit.Statistics.Powers[0].Values; len(stats) > 0 {
+			return (float64)(stats[0]) / 1000, nil
+		}
 	}
+
+	return 0, api.ErrNotAvailable
 }
 
 var _ api.MeterEnergy = (*Connection)(nil)
@@ -157,16 +154,13 @@ func (c *Connection) TotalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	if unit.Statistics != nil {
-		stats := unit.Statistics.Energies[0].Values
-		rawEnergy := stats[0]
-
-		energy := (float64)(rawEnergy / 1000)
-
-		return energy, nil
-	} else {
-		return 0, errors.New("statistics are empty")
+	if unit.Statistics != nil && len(unit.Statistics.Energies) > 0 {
+		if stats := unit.Statistics.Energies[0].Values; len(stats) > 0 {
+			return (float64)(stats[0]) / 1000, nil
+		}
 	}
+
+	return 0, api.ErrNotAvailable
 }
 
 // SwitchPresent checks if the device is connected
