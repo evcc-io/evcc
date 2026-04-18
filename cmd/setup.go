@@ -707,7 +707,7 @@ func configureInflux(conf *globalconfig.Influx) (*server.Influx, error) {
 
 func configureFTPBackup(conf *globalconfig.FTPBackup) error {
 	if settings.Exists(keys.FTPBackup) {
-		if err := settings.Json(keys.FTPBackup, &conf); err != nil {
+		if err := settings.Json(keys.FTPBackup, conf); err != nil {
 			return err
 		}
 	}

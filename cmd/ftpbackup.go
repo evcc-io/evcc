@@ -12,14 +12,76 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api/globalconfig"
+	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/jlaffaye/ftp"
 )
 
 func runFTPBackupRoutine(stopC <-chan struct{}, conf globalconfig.FTPBackup) {
-	if strings.TrimSpace(conf.Host) == "" {
-		return
+	go func() {
+		const retryInterval = 5 * time.Minute
+
+		for {
+			currentConf, err := currentFTPBackupConfig(conf)
+			if err != nil {
+				log.ERROR.Printf("ftp backup disabled due to invalid configuration: %v", err)
+				if !waitOrStop(stopC, retryInterval) {
+					return
+				}
+				continue
+			}
+
+			if strings.TrimSpace(currentConf.Host) == "" {
+				if !waitOrStop(stopC, retryInterval) {
+					return
+				}
+				continue
+			}
+
+			log.INFO.Printf("FTP backup enabled: host=%s, directory=%s, schedule=%s", currentConf.Host, currentConf.Directory, currentConf.Schedule)
+
+			runAt, err := nextDailyRun(time.Now(), currentConf.Schedule)
+			if err != nil {
+				log.ERROR.Printf("ftp backup disabled due to invalid schedule %q: %v", currentConf.Schedule, err)
+				if !waitOrStop(stopC, retryInterval) {
+					return
+				}
+				continue
+			}
+
+			if !waitOrStop(stopC, time.Until(runAt)) {
+				return
+			}
+
+			if err := uploadBackup(currentConf); err != nil {
+				log.ERROR.Printf("ftp backup failed: %v", err)
+			} else {
+				log.INFO.Println("ftp backup completed successfully")
+			}
+		}
+	}()
+}
+
+func waitOrStop(stopC <-chan struct{}, duration time.Duration) bool {
+	timer := time.NewTimer(duration)
+	defer timer.Stop()
+
+	select {
+	case <-stopC:
+		return false
+	case <-timer.C:
+		return true
+	}
+}
+
+func currentFTPBackupConfig(base globalconfig.FTPBackup) (globalconfig.FTPBackup, error) {
+	conf := base
+
+	if settings.Exists(keys.FTPBackup) {
+		if err := settings.Json(keys.FTPBackup, &conf); err != nil {
+			return conf, fmt.Errorf("load ftp backup settings: %w", err)
+		}
 	}
 
 	if conf.Port == 0 {
@@ -34,30 +96,16 @@ func runFTPBackupRoutine(stopC <-chan struct{}, conf globalconfig.FTPBackup) {
 		conf.Timeout = "30s"
 	}
 
-	log.INFO.Printf("FTP backup enabled: host=%s, directory=%s, schedule=%s", conf.Host, conf.Directory, conf.Schedule)
+	if _, err := nextDailyRun(time.Now(), conf.Schedule); err != nil {
+		return conf, err
+	}
 
-	go func() {
-		for {
-			runAt, err := nextDailyRun(time.Now(), conf.Schedule)
-			if err != nil {
-				log.ERROR.Printf("ftp backup disabled due to invalid schedule %q: %v", conf.Schedule, err)
-				return
-			}
+	timeout, err := time.ParseDuration(conf.Timeout)
+	if err != nil || timeout <= 0 {
+		return conf, fmt.Errorf("invalid timeout %q", conf.Timeout)
+	}
 
-			timer := time.NewTimer(time.Until(runAt))
-			select {
-			case <-stopC:
-				timer.Stop()
-				return
-			case <-timer.C:
-				if err := uploadBackup(conf); err != nil {
-					log.ERROR.Printf("ftp backup failed: %v", err)
-				} else {
-					log.INFO.Println("ftp backup completed successfully")
-				}
-			}
-		}
-	}()
+	return conf, nil
 }
 
 func nextDailyRun(now time.Time, schedule string) (time.Time, error) {
