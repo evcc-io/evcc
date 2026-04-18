@@ -24,7 +24,7 @@ func init() {
 //evcc:basetype api.Meter
 //evcc:types api.MeterEnergy,api.Battery,api.BatteryCapacity,api.BatterySocLimiter,api.BatteryPowerLimiter,api.BatteryController
 
-// NewConfigurableFromConfig creates api.Meter from config
+// NewConfigurableFromConfig creates a new meter from config
 func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	cc := struct {
 		measurement.Energy `mapstructure:",squash"` // energy optional

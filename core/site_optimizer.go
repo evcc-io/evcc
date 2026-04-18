@@ -10,7 +10,7 @@ import (
 	"os"
 	"slices"
 	"strings"
-	"sync/atomic"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -32,8 +32,8 @@ var (
 	eta          = float32(0.9)  // efficiency of the battery charging/discharging
 	batteryPower = float32(6000) // default power of the battery in W
 
-	updated time.Time
-	mu      atomic.Uint32
+	mu               sync.Mutex
+	optimizerUpdated time.Time
 )
 
 // optimizerResult wraps the optimizer publish payload to implement BytesMarshaler.
@@ -71,29 +71,9 @@ type batteryDetail struct {
 
 type batteryResult struct {
 	batteryDetail
-	Full  *time.Time `json:"full"`
-	Empty *time.Time `json:"empty"`
+	Full  time.Time `json:"full,omitzero"`
+	Empty time.Time `json:"empty,omitzero"`
 }
-
-// func (br batteryResult) MarshalJSON() ([]byte, error) {
-// 	var full, empty int64
-// 	if !br.Full.IsZero() {
-// 		full = int64(time.Until(br.Full).Seconds())
-// 	}
-// 	if !br.Empty.IsZero() {
-// 		empty = int64(time.Until(br.Empty).Seconds())
-// 	}
-
-// 	return json.Marshal(struct {
-// 		batteryResult
-// 		UntilFull  int64 `json:"untilFull,omitempty"`
-// 		UntilEmpty int64 `json:"untilEmpty,omitempty"`
-// 	}{
-// 		batteryResult: br,
-// 		UntilFull:     full,
-// 		UntilEmpty:    empty,
-// 	})
-// }
 
 type requestDetails struct {
 	Timestamps     []time.Time     `json:"timestamp"`
@@ -103,19 +83,19 @@ type requestDetails struct {
 const slotsPerHour = float64(time.Hour / tariff.SlotDuration)
 
 func (site *Site) optimizerUpdateAsync() {
+	if !mu.TryLock() {
+		return
+	}
+	defer mu.Unlock()
+
+	if time.Since(optimizerUpdated) < 2*time.Minute {
+		return
+	}
+
 	var err error
 
-	if time.Since(updated) < 2*time.Minute {
-		return
-	}
-
-	if !mu.CompareAndSwap(0, 1) {
-		return
-	}
-
 	defer func() {
-		updated = time.Now()
-		mu.Store(0)
+		optimizerUpdated = time.Now()
 
 		if r := recover(); r != nil {
 			err = fmt.Errorf("panic %v", r)
@@ -141,8 +121,11 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	if solarTariff != nil && len(solar) > 0 {
 		minLen = min(minLen, len(solar))
 	}
-	const expectedSlots = 8
-	if minLen < expectedSlots {
+
+	// limit to 2 days for sake of performance
+	minLen = min(96, minLen)
+
+	if expectedSlots := 8; minLen < expectedSlots {
 		if solarTariff != nil {
 			return fmt.Errorf("not enough forecast slots for meaningful optimization: %d < %d (grid=%d, feedIn=%d, solar=%d)", minLen, expectedSlots, len(grid), len(feedIn), len(solar))
 		}
@@ -224,7 +207,10 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 			continue
 		}
 
-		add(site.loadpointRequest(lp, minLen, firstSlotDuration, grid))
+		// skip disabled loadpoints
+		if req, detail := site.loadpointRequest(lp, minLen, firstSlotDuration, grid); req.CMax > 0 {
+			add(req, detail)
+		}
 	}
 
 	for i, dev := range site.batteryMeters {
@@ -235,6 +221,11 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		}
 
 		add(site.batteryRequest(dev, b, grid, minLen, firstSlotDuration))
+	}
+
+	// empty request- all loadpoints disabled
+	if len(req.Batteries) == 0 {
+		return nil
 	}
 
 	httpClient := request.NewClient(site.log)
@@ -472,15 +463,15 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 	return bat, detail
 }
 
-func matchSoc(ts []float32, fun func(float32) bool) *time.Time {
+func matchSoc(ts []float32, fun func(float32) bool) time.Time {
 	for i, soc := range ts {
 		if fun(soc) {
 			// TODO first slot
-			return new(time.Now().Add(time.Duration(i+1) * tariff.SlotDuration))
+			return time.Now().Add(time.Duration(i+1) * tariff.SlotDuration)
 		}
 	}
 
-	return nil
+	return time.Time{}
 }
 
 // continuousDemand creates a slice of power demands depending on loadpoint mode
@@ -535,8 +526,8 @@ func loadpointProfile(lp loadpoint.API, minLen int) []float64 {
 func (site *Site) homeProfile(minLen int) ([]float64, error) {
 	from := now.BeginningOfDay().AddDate(0, 0, -7)
 
-	// base load (excludes loadpoints)
-	gt_base, err := metrics.Profile(from)
+	// base load (excludes loadpoints) - kWh over last 30 days
+	gt_base, err := site.homeEnergy.ImportProfile(now.BeginningOfDay().AddDate(0, 0, -30))
 	if err != nil {
 		return nil, err
 	}
@@ -618,6 +609,88 @@ func (site *Site) homeProfile(minLen int) ([]float64, error) {
 	return lo.Map(gt_final, func(v float64, i int) float64 {
 		return v * 1e3
 	}), nil
+}
+
+// getHeatingLoadpoints returns indices of loadpoints with Heating feature
+func (site *Site) getHeatingLoadpoints() []int {
+	var heatingLPs []int
+	for i, lp := range site.loadpoints {
+		if hasFeature(lp.charger, api.Heating) {
+			heatingLPs = append(heatingLPs, i)
+		}
+	}
+	return heatingLPs
+}
+
+// extractHeaterProfile returns temperature-sensitive and non-sensitive heating profiles
+func (site *Site) extractHeaterProfile(from, to time.Time) (tempSensitive, nonSensitive []float64) {
+	heatingLPs := site.getHeatingLoadpoints()
+	if len(heatingLPs) == 0 {
+		site.log.DEBUG.Println("heater profile: no heating loadpoints configured")
+		return nil, nil
+	}
+
+	site.log.DEBUG.Printf("heater profile: querying %d heating loadpoint(s)", len(heatingLPs))
+
+	tempSensitiveProfiles := make([][]float64, 0)
+	nonSensitiveProfiles := make([][]float64, 0)
+
+	for _, lpID := range heatingLPs {
+		if collector, ok := site.loadpointEnergy[lpID]; ok {
+			profile, err := collector.ImportProfile(from)
+			if err == nil && profile != nil {
+				lp := site.loadpoints[lpID]
+				isTempSensitive := hasFeature(lp.charger, api.OutdoorTemperatureSensitive)
+
+				site.log.DEBUG.Printf("heater profile: loadpoint %d has %d slots of data (temperature-sensitive: %v)",
+					lpID, len(profile), isTempSensitive)
+
+				if isTempSensitive {
+					tempSensitiveProfiles = append(tempSensitiveProfiles, profile[:])
+				} else {
+					nonSensitiveProfiles = append(nonSensitiveProfiles, profile[:])
+				}
+			} else {
+				var incompleteErr *metrics.IncompleteError
+				if errors.As(err, &incompleteErr) {
+					site.log.DEBUG.Printf("heater profile: loadpoint %d insufficient data (%d/%d slots)",
+						lpID, incompleteErr.Found, incompleteErr.Required)
+				} else if err != nil {
+					site.log.DEBUG.Printf("heater profile: loadpoint %d no data (%v)", lpID, err)
+				}
+			}
+		}
+	}
+
+	var tempSensitiveResult, nonSensitiveResult []float64
+
+	if len(tempSensitiveProfiles) > 0 {
+		tempSensitiveResult = sumProfiles(tempSensitiveProfiles)
+		site.log.DEBUG.Printf("heater profile: aggregated %d temperature-sensitive heating loadpoint(s) into %d slots",
+			len(tempSensitiveProfiles), len(tempSensitiveResult))
+	}
+
+	if len(nonSensitiveProfiles) > 0 {
+		nonSensitiveResult = sumProfiles(nonSensitiveProfiles)
+		site.log.DEBUG.Printf("heater profile: aggregated %d non-temperature-sensitive heating loadpoint(s) into %d slots",
+			len(nonSensitiveProfiles), len(nonSensitiveResult))
+	}
+
+	return tempSensitiveResult, nonSensitiveResult
+}
+
+func sumProfiles(profiles [][]float64) []float64 {
+	if len(profiles) == 0 {
+		return nil
+	}
+
+	result := make([]float64, len(profiles[0]))
+	for _, profile := range profiles {
+		for i := 0; i < len(result) && i < len(profile); i++ {
+			result[i] += profile[i]
+		}
+	}
+	return result
 }
 
 // applyTemperatureCorrection adjusts heating load based on temperature forecast.
@@ -705,83 +778,6 @@ func (site *Site) applyTemperatureCorrection(profile []float64) []float64 {
 		}
 	}
 
-	return result
-}
-
-func (site *Site) getHeatingLoadpoints() []int {
-	var heatingLPs []int
-	for i, lp := range site.loadpoints {
-		if hasFeature(lp.charger, api.Heating) {
-			heatingLPs = append(heatingLPs, i)
-		}
-	}
-	return heatingLPs
-}
-
-// extractHeaterProfile returns temperature-sensitive and non-sensitive heating profiles
-func (site *Site) extractHeaterProfile(from, to time.Time) (tempSensitive, nonSensitive []float64) {
-	heatingLPs := site.getHeatingLoadpoints()
-	if len(heatingLPs) == 0 {
-		site.log.DEBUG.Println("heater profile: no heating loadpoints configured")
-		return nil, nil
-	}
-
-	site.log.DEBUG.Printf("heater profile: querying %d heating loadpoint(s)", len(heatingLPs))
-
-	tempSensitiveProfiles := make([][]float64, 0)
-	nonSensitiveProfiles := make([][]float64, 0)
-
-	for _, lpID := range heatingLPs {
-		profile, err := metrics.LoadpointProfile(lpID, from)
-		if err == nil && profile != nil {
-			lp := site.loadpoints[lpID]
-			isTempSensitive := hasFeature(lp.charger, api.OutdoorTemperatureSensitive)
-
-			site.log.DEBUG.Printf("heater profile: loadpoint %d has %d slots of data (temperature-sensitive: %v)",
-				lpID, len(profile), isTempSensitive)
-
-			if isTempSensitive {
-				tempSensitiveProfiles = append(tempSensitiveProfiles, profile[:])
-			} else {
-				nonSensitiveProfiles = append(nonSensitiveProfiles, profile[:])
-			}
-		} else {
-			if errors.Is(err, metrics.ErrIncomplete) {
-				site.log.DEBUG.Printf("heater profile: loadpoint %d insufficient data (%v)", lpID, err)
-			} else if err != nil {
-				site.log.DEBUG.Printf("heater profile: loadpoint %d no data (%v)", lpID, err)
-			}
-		}
-	}
-
-	var tempSensitiveResult, nonSensitiveResult []float64
-
-	if len(tempSensitiveProfiles) > 0 {
-		tempSensitiveResult = sumProfiles(tempSensitiveProfiles)
-		site.log.DEBUG.Printf("heater profile: aggregated %d temperature-sensitive heating loadpoint(s) into %d slots",
-			len(tempSensitiveProfiles), len(tempSensitiveResult))
-	}
-
-	if len(nonSensitiveProfiles) > 0 {
-		nonSensitiveResult = sumProfiles(nonSensitiveProfiles)
-		site.log.DEBUG.Printf("heater profile: aggregated %d non-temperature-sensitive heating loadpoint(s) into %d slots",
-			len(nonSensitiveProfiles), len(nonSensitiveResult))
-	}
-
-	return tempSensitiveResult, nonSensitiveResult
-}
-
-func sumProfiles(profiles [][]float64) []float64 {
-	if len(profiles) == 0 {
-		return nil
-	}
-
-	result := make([]float64, len(profiles[0]))
-	for _, profile := range profiles {
-		for i := 0; i < len(result) && i < len(profile); i++ {
-			result[i] += profile[i]
-		}
-	}
 	return result
 }
 

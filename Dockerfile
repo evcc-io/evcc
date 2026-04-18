@@ -13,6 +13,7 @@ RUN --mount=type=cache,target=/root/.npm npm ci
 COPY Makefile .
 COPY *.js ./
 COPY *.ts *.mts ./
+COPY .browserslistrc .
 COPY assets assets
 COPY i18n i18n
 

@@ -21,7 +21,7 @@
 	--evcc-darkest-green: #076f20ff;
 	--evcc-darkest-green-rgb: 7, 111, 32;
 	--evcc-yellow: #faf000;
-	--evcc-dark-yellow: #bbb400;
+	--evcc-dark-yellow: #f6bb0f;
 	--evcc-orange: #ff9000;
 	--evcc-orange-rgb: 255, 144, 0;
 	--evcc-red: #fc440f;
@@ -39,6 +39,7 @@
 	--evcc-pv: var(--evcc-dark-green);
 	--evcc-battery: var(--evcc-darker-green);
 	--evcc-export: var(--evcc-yellow);
+	--evcc-export-contrast: var(--evcc-dark-yellow);
 	--evcc-price: #ff912fff;
 	--evcc-co2: #00916eff;
 	--evcc-background: var(--bs-gray-bright);
@@ -100,6 +101,8 @@
 
 :root.dark {
 	--evcc-grid: var(--bs-gray-medium);
+	--evcc-export: var(--evcc-yellow);
+	--evcc-export-contrast: var(--evcc-yellow);
 	--evcc-background: var(--bs-gray-deep);
 	--evcc-box: var(--bs-gray-dark);
 	--evcc-box-border: var(--bs-gray-darker);
@@ -184,6 +187,10 @@ h5 {
 
 .text-co2 {
 	color: var(--evcc-co2) !important;
+}
+
+.text-export {
+	color: var(--evcc-export-contrast) !important;
 }
 
 a {
@@ -442,6 +449,11 @@ a:hover {
 	.modal-content {
 		padding: 2rem;
 	}
+}
+
+.modal {
+	/* prevent touch-scroll chaining from the modal to <html> on iOS Safari */
+	overscroll-behavior: contain;
 }
 
 .modal-body {
