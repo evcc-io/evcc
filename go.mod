@@ -64,6 +64,7 @@ require (
 	github.com/jarcoal/httpmock v1.4.1
 	github.com/jeremywohl/flatten v1.0.1
 	github.com/jinzhu/now v1.1.5
+	github.com/jlaffaye/ftp v0.2.0
 	github.com/joeshaw/carwings v0.0.0-20250704173606-1708e349f36c
 	github.com/joho/godotenv v1.5.1
 	github.com/jpfielding/go-http-digest v0.0.0-20240123121450-cffc47d5d6d8
@@ -190,7 +191,6 @@ require (
 	github.com/insomniacslk/xjson v0.0.0-20231023101448-2249e546a131 // indirect
 	github.com/itchyny/timefmt-go v0.1.8 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
-	github.com/jlaffaye/ftp v0.2.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
