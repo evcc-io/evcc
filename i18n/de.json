@@ -143,10 +143,10 @@
       "feedinPrice": "Einspeisevergütung",
       "forecast": "Vorhersage",
       "gridPrice": "Netzpreis",
-      "host": "Host",
       "heaterTempLimit": "Heizungslimit",
       "hemsActiveLimit": "Aktives Limit",
       "hemsType": "Kommunikation",
+      "host": "Host",
       "identifier": "RFID-Kennung",
       "loginBlocked": "Login-Limit erreicht",
       "max": "max",
@@ -225,6 +225,21 @@
       "deprecated": "veraltet",
       "example": "Beispiel",
       "optional": "optional"
+    },
+    "ftpbackup": {
+      "description": "Erstellt täglich ein Datenbank-Backup und lädt es auf einen FTP-Server hoch.",
+      "labelCheckInsecureSkipVerify": "Zertifikatsprüfung überspringen",
+      "labelCheckTls": "Explizites TLS (FTPS) verwenden",
+      "labelDirectory": "Zielverzeichnis",
+      "labelHost": "Host",
+      "labelInsecureSkipVerify": "TLS-Zertifikatsprüfung",
+      "labelPassword": "Passwort",
+      "labelPort": "Port",
+      "labelSchedule": "Täglicher Zeitplan (HH:MM)",
+      "labelTimeout": "Verbindungs-Timeout",
+      "labelTls": "Verschlüsselung",
+      "labelUser": "Benutzername",
+      "title": "FTP-Backup"
     },
     "general": {
       "applyAndClose": "Übernehmen & schließen",
@@ -308,21 +323,6 @@
       "title": "InfluxDB",
       "v1Support": "Unterstützung für InfluxDB 1.x?",
       "v2Support": "Zurück zu InfluxDB 2.x"
-    },
-    "ftpbackup": {
-      "description": "Erstellt täglich ein Datenbank-Backup und lädt es auf einen FTP-Server hoch.",
-      "labelCheckInsecureSkipVerify": "Zertifikatsprüfung überspringen",
-      "labelCheckTls": "Explizites TLS (FTPS) verwenden",
-      "labelDirectory": "Zielverzeichnis",
-      "labelHost": "Host",
-      "labelInsecureSkipVerify": "TLS-Zertifikatsprüfung",
-      "labelPassword": "Passwort",
-      "labelPort": "Port",
-      "labelSchedule": "Täglicher Zeitplan (HH:MM)",
-      "labelTimeout": "Verbindungs-Timeout",
-      "labelTls": "Verschlüsselung",
-      "labelUser": "Benutzername",
-      "title": "FTP-Backup"
     },
     "loadpoint": {
       "addCharger": {

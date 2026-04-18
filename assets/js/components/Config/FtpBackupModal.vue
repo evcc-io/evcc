@@ -8,14 +8,40 @@
 		@changed="$emit('changed')"
 	>
 		<template #default="{ values }">
-			<FormRow id="ftpBackupHost" :label="$t('config.ftpbackup.labelHost')" example="192.168.1.10">
+			<FormRow
+				id="ftpBackupHost"
+				:label="$t('config.ftpbackup.labelHost')"
+				example="192.168.1.10"
+			>
 				<input id="ftpBackupHost" v-model="values.host" class="form-control" required />
 			</FormRow>
-			<FormRow id="ftpBackupPort" :label="$t('config.ftpbackup.labelPort')" example="21" optional>
-				<input id="ftpBackupPort" v-model.number="values.port" class="form-control" type="number" min="1" max="65535" />
+			<FormRow
+				id="ftpBackupPort"
+				:label="$t('config.ftpbackup.labelPort')"
+				example="21"
+				optional
+			>
+				<input
+					id="ftpBackupPort"
+					v-model.number="values.port"
+					class="form-control"
+					type="number"
+					min="1"
+					max="65535"
+				/>
 			</FormRow>
-			<FormRow id="ftpBackupUser" :label="$t('config.ftpbackup.labelUser')" example="evcc" optional>
-				<input id="ftpBackupUser" v-model="values.user" class="form-control" autocomplete="username" />
+			<FormRow
+				id="ftpBackupUser"
+				:label="$t('config.ftpbackup.labelUser')"
+				example="evcc"
+				optional
+			>
+				<input
+					id="ftpBackupUser"
+					v-model="values.user"
+					class="form-control"
+					autocomplete="username"
+				/>
 			</FormRow>
 			<FormRow id="ftpBackupPassword" :label="$t('config.ftpbackup.labelPassword')" optional>
 				<input
@@ -34,7 +60,12 @@
 			>
 				<input id="ftpBackupDirectory" v-model="values.directory" class="form-control" />
 			</FormRow>
-			<FormRow id="ftpBackupSchedule" :label="$t('config.ftpbackup.labelSchedule')" example="03:00" optional>
+			<FormRow
+				id="ftpBackupSchedule"
+				:label="$t('config.ftpbackup.labelSchedule')"
+				example="03:00"
+				optional
+			>
 				<input
 					id="ftpBackupSchedule"
 					v-model="values.schedule"
@@ -43,8 +74,18 @@
 					placeholder="03:00"
 				/>
 			</FormRow>
-			<FormRow id="ftpBackupTimeout" :label="$t('config.ftpbackup.labelTimeout')" example="30s" optional>
-				<input id="ftpBackupTimeout" v-model="values.timeout" class="form-control" placeholder="30s" />
+			<FormRow
+				id="ftpBackupTimeout"
+				:label="$t('config.ftpbackup.labelTimeout')"
+				example="30s"
+				optional
+			>
+				<input
+					id="ftpBackupTimeout"
+					v-model="values.timeout"
+					class="form-control"
+					placeholder="30s"
+				/>
 			</FormRow>
 			<FormRow id="ftpBackupTls" :label="$t('config.ftpbackup.labelTls')">
 				<div class="d-flex">
