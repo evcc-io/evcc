@@ -342,7 +342,7 @@
       "defaultsHintLink": "Ändra inställningar",
       "delete": "Radera",
       "electricalSubtitle": "Om du är osäker, kontakta elektriker.",
-      "electricalTitle": "Elektrisk",
+      "electricalTitle": "Elektricitet",
       "energyMeterHelp": "Extern mätare (Om laddaren inte har en integrerad mätare).",
       "energyMeterLabel": "Energimätare",
       "estimateLabel": "Interpolera laddningsnivå mellan API uppdateringar",
@@ -1001,11 +1001,11 @@
     },
     "solarAdjust": "Justera solprognosen baserat på verkliga produktionsvärden{percent}.",
     "solarAdjustMedium": "Justera med verkliga data",
-    "solarAdjustShort": "justera verklig data",
+    "solarAdjustShort": "justera",
     "type": {
       "co2": "CO₂-utsläpp",
       "price": "Nätpris",
-      "solar": "Solenergi"
+      "solar": "Solenergi produktion"
     }
   },
   "general": {
