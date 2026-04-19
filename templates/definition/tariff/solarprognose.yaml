@@ -65,7 +65,10 @@ render: |
         (.data // {})
         | if type == "object" and length > 0 then
           to_entries
-          | map({key, value: (.value[0] * 1000)})
+          | map(
+              select(.value | type == "array" and length > 0)
+              | {key, value: ((.value[0] // 0) * 1000)}
+            )
           | from_entries
         else
           {}
@@ -74,19 +77,21 @@ render: |
       . as $root
       | ($root | lookup) as $L
       | ($L | keys | map(tonumber) | sort) as $ts
-      | ($ts[0]) as $min
-      | ($ts[-1]) as $max
-      | reduce range($min; $max + step; step) as $t
-          ( { last: null, out: [] };
-            ($L[($t|tostring)]?) as $v
-            | .last = (if $v == null then .last else $v end)
-            | .out +=
-            [ {
-                start: ($t | strftime("%FT%TZ")),
-                end:   (($t + step) | strftime("%FT%TZ")),
-                value: (.last // 0)
-              } ]
-          )
-      | .out
+      | if ($ts | length) == 0 then
+          []
+        else
+          reduce range($ts[0]; $ts[-1] + step; step) as $t
+            ( { last: null, out: [] };
+              ($L[($t|tostring)]?) as $v
+              | .last = (if $v == null then .last else $v end)
+              | .out +=
+              [ {
+                  start: ($t | strftime("%FT%TZ")),
+                  end:   (($t + step) | strftime("%FT%TZ")),
+                  value: (.last // 0)
+                } ]
+            )
+          | .out
+        end
       | tostring
   interval: {{ .interval }}
