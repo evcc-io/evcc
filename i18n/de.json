@@ -113,6 +113,7 @@
       "title": "Währung"
     },
     "deviceValue": {
+      "activeClients": "Aktive Clients",
       "amount": "Anzahl",
       "broker": "Broker",
       "bucket": "Bucket",
@@ -126,6 +127,7 @@
       "chargedEnergy": "Geladen",
       "co2": "Netz-CO₂",
       "configured": "Konfiguriert",
+      "connected": "Verbunden",
       "connections": "Verbindungen",
       "controllable": "Steuerbar",
       "currency": "Währung",
@@ -144,6 +146,7 @@
       "hemsActiveLimit": "Aktives Limit",
       "hemsType": "Kommunikation",
       "identifier": "RFID-Kennung",
+      "loginBlocked": "Login-Limit erreicht",
       "max": "max",
       "messengers": "Dienste",
       "no": "Nein",
@@ -339,7 +342,7 @@
       "defaultsHintLink": "Einstellungen anpassen",
       "delete": "Löschen",
       "electricalSubtitle": "Im Zweifelsfall Elektriker fragen.",
-      "electricalTitle": "Elektrisch",
+      "electricalTitle": "Elektrik",
       "energyMeterHelp": "Zusätzlicher Zähler, wenn die Wallbox keinen integrierten hat.",
       "energyMeterLabel": "Energiezähler",
       "estimateLabel": "Ladestand zwischen API-Updates interpolieren",
@@ -610,8 +613,9 @@
       "urlHelp": "Kopiere diese URL in die Konfiguration deiner Wallbox. Details findest du im Handbuch des Herstellers. Die Wallbox sollte automatisch ihre eindeutige Kennung (Station-ID) an die URL anhängen. In seltenen Fällen musst du die Kennung manuell angeben. Beispiel: `{url}`"
     },
     "optimizer": {
-      "description": "Analysiert Solarprognose, Strompreise und deinen typischen Verbrauch, um Batterie- und Ladestrategie zu optimieren. Daten werden zur Berechnung an den evcc Optimierungsdienst übertragen.",
+      "description": "Analysiert Solarprognose, Strompreise und deinen typischen Verbrauch, um Batterie- und Ladestrategie zu optimieren. Daten werden zur Berechnung an den evcc Optimierungsdienst übertragen. Berechnet und visualisiert aktuell nur. Steuert noch keine Geräte.",
       "enable": "Optimizer aktivieren",
+      "info": "Es kann einige Minuten dauern, bis der Optimizer-Menüeintrag sichtbar wird. Bei neuen Installationen kann es bis zu 24 Stunden dauern, bis evcc genügend Daten gesammelt hat.",
       "title": "Optimizer"
     },
     "options": {
@@ -640,6 +644,38 @@
     "pv": {
       "titleAdd": "PV-Anlage hinzufügen",
       "titleEdit": "PV-Zähler bearbeiten"
+    },
+    "remote": {
+      "active": "Aktiv",
+      "addClient": "Client hinzufügen",
+      "addClientDescription": "Zugangsdaten werden ausschließlich lokal auf deiner evcc-Instanz gespeichert und überprüft.",
+      "addClientTitle": "Remote-Client hinzufügen",
+      "clientCreated": "Client erstellt",
+      "clients": "Clients",
+      "confirmDelete": "Client löschen?",
+      "connected": "Verbunden",
+      "createClient": "Client erstellen",
+      "description": "Externer Zugriff auf die evcc-Installation über die evcc-App. Ohne Portfreigabe oder VPN.",
+      "deviceName": "Gerätename",
+      "disconnected": "Nicht verbunden",
+      "done": "Fertig",
+      "enableLabel": "Remotezugriff aktivieren",
+      "expiration": "Ablauf",
+      "expirationNone": "Nie",
+      "expired": "abgelaufen",
+      "expiresIn": "läuft {time} ab",
+      "lastActive": "aktiv {time}",
+      "loginBlocked": "Remote-Logins sind wegen zu vieler fehlgeschlagener Anmeldeversuche für eine Minute gesperrt.",
+      "manualLogin": "Oder melde dich manuell unter {url} in deinem Browser mit diesen Zugangsdaten an:",
+      "noClients": "Noch keine Clients. Niemand kann sich verbinden.",
+      "password": "Passwort",
+      "passwordOnce": "Dieses Passwort wird nur einmal angezeigt. QR-Code scannen oder jetzt kopieren. Es wird später nicht mehr angezeigt.",
+      "qrInstall": "Installiere die evcc-App für {ios} oder {android}.",
+      "qrScan": "Scanne den Code mit der Kamera deines Smartphones, um dich zu verbinden. Klicke ihn an, wenn du bereits dein Handy nutzt.",
+      "removeClient": "Client entfernen",
+      "title": "Remotezugriff",
+      "url": "Öffentliche URL",
+      "username": "Benutzername"
     },
     "section": {
       "additionalMeter": "Zusätzliche Zähler",
@@ -921,6 +957,7 @@
       "modalCancel": "Abbrechen",
       "modalDownload": "Download",
       "modalInstalledVersion": "Installierte Version",
+      "modalLatest": "Du verwendest bereits die aktuellste Version.",
       "modalNextRelease": "Was ist neu im nächsten Release",
       "modalNoReleaseNotes": "Keine Versionshinweise verfügbar. Mehr Informationen zur neuen Version:",
       "modalTitle": "Neue Version verfügbar",
@@ -930,7 +967,7 @@
       "modalUpdateStatusStart": "Installation gestartet:",
       "modalViewOnGitHub": "Auf GitHub ansehen",
       "openSource": "Open Source",
-      "poweredByOpenSource": "Powered by {0}."
+      "poweredByOpenSource": "Unterstützt von {0}."
     }
   },
   "forecast": {
@@ -946,6 +983,7 @@
       "setup": "Tarife und Vorhersagen einrichten",
       "solar": "Erwartete Solarproduktion für heute und die nächsten Tage. Wird in Zukunft auch für die automatische Ladeoptimierung verwendet."
     },
+    "hideLine": "Linie ausblenden",
     "modalTitle": "Vorhersage",
     "price": {
       "average": "Durchschnitt",
@@ -953,6 +991,8 @@
       "lowestHour": "Günstigste Stunde",
       "range": "Bereich"
     },
+    "priceZoom": "vergrößern",
+    "showLine": "Linie anzeigen",
     "solar": {
       "dayAfterTomorrow": "Übermorgen",
       "partly": "teilweise",
@@ -961,10 +1001,12 @@
       "tomorrow": "Morgen"
     },
     "solarAdjust": "Solarprognose anhand der realen Produktionsdaten anpassen{percent}.",
+    "solarAdjustMedium": "an reale Produktionsdaten anpassen",
+    "solarAdjustShort": "anpassen",
     "type": {
-      "co2": "CO₂",
-      "price": "Preis",
-      "solar": "Solar"
+      "co2": "CO₂-Emissionen",
+      "price": "Netzpreis",
+      "solar": "Solarproduktion"
     }
   },
   "general": {

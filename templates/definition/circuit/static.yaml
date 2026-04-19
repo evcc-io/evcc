@@ -1,0 +1,33 @@
+template: static
+products:
+  - description:
+      en: Static circuit
+      de: Statischer Stromkreis
+params:
+  - name: title
+    required: true
+    example: Main circuit
+  - name: maxcurrent
+    help:
+      de: Vom Lastmanagement maximal erlaubte Stromstärke pro Phase.
+      en: Maximum current per phase allowed by the load management system.
+  - name: maxpower
+    description:
+      de: Maximale Leistung
+      en: Maximum power
+    help:
+      de: Vom Lastmanagement maximal erlaubte Leistung. Das System verteilt verfügbare Leistung dynamisch auf alle angeschlossenen Ladepunkte und Schaltungen.
+      en: Maximum power allowed by the load management system. The system dynamically distributes available power across all connected chargers and circuits.
+  - name: meter
+    # service: TODO
+  - name: parent
+    description:
+      de: Übergeordneter Stromkreis
+      en: Parent circuit
+render: |
+  type: custom
+  title: {{ .title }}
+  maxcurrent: {{ .maxcurrent }}
+  maxpower: {{ .maxpower }}
+  meter: {{ .meter }}
+  parent: {{ .parent }}

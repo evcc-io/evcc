@@ -121,6 +121,11 @@ export default function setupRouter(i18n: VueI18nInstance) {
         props: true,
       },
       {
+        path: "/history",
+        component: () => import("./views/History.vue"),
+        props: true,
+      },
+      {
         path: "/optimize",
         component: () => import("./views/Optimize.vue"),
         props: true,
