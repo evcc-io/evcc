@@ -901,8 +901,8 @@ func (site *Site) updateLoadpoints(rates api.Rates) float64 {
 			site.prioritizer.UpdateChargePowerFlexibility(lp, rates)
 
 			// track heating loadpoint energy
-			if collector, ok := site.loadpointEnergy[i]; ok && power > 0 {
-				if err := collector.AddImportEnergy(power / 1e3 * float64(tariff.SlotDuration) / float64(time.Hour)); err != nil {
+			if collector, ok := site.loadpointEnergy[i]; ok {
+				if err := collector.AddEnergy(nil, nil, power); err != nil {
 					site.log.ERROR.Printf("persist loadpoint %d consumption: %v", i, err)
 				}
 			}
