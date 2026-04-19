@@ -53,7 +53,7 @@ export function markPointLabel(
     animation: true,
     clip: true,
     symbol: "rect",
-    symbolSize: 1,
+    symbolSize: 0,
     label: {
       show: true,
       position: "top",
@@ -63,7 +63,7 @@ export function markPointLabel(
       color: colors.background,
       backgroundColor: color,
       borderRadius: 4,
-      padding: [5, 10],
+      padding: [5, 15],
       offset: [0, -2],
       formatter: (p: { data: { value: string } }) => p.data.value,
     },
@@ -111,7 +111,7 @@ export function tooltipStyle(
 }
 
 export function forecastGrid() {
-  return { top: 36, right: 16, bottom: 4, left: 34, borderWidth: 0 };
+  return { top: 36, right: 16, bottom: 16, left: 24, borderWidth: 0 };
 }
 
 export function forecastXAxes(startDate: Date, endDate: Date, weekdayShort: (d: Date) => string) {
@@ -167,13 +167,13 @@ export function forecastYAxis(overrides: Record<string, unknown> = {}) {
     axisLine: { show: false },
     axisTick: { show: false },
     splitLine: {
-      showMinLine: false,
+      showMinLine: true,
       showMaxLine: false,
       lineStyle: { color: colors.border || "" },
     },
     axisLabel: {
       fontSize: 10,
-      opacity: 0.5,
+      opacity: 0.75,
       ...(axisLabel as Record<string, unknown>),
     },
     ...rest,

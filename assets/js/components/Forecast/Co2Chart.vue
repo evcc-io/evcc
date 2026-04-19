@@ -95,7 +95,7 @@ export default defineComponent({
 					{
 						type: "line",
 						data: this.slots.map((s) => [s.start, s.value]),
-						smooth: 0.05,
+						smooth: true,
 						symbol: "circle",
 						symbolSize: 6,
 						showSymbol: false,

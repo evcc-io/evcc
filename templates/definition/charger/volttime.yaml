@@ -20,13 +20,12 @@ params:
     help:
       de: API Token ([developer.volttime.com](https://developer.volttime.com/api-reference/authentication#personal-access-tokens))
       en: API Token ([developer.volttime.com](https://developer.volttime.com/api-reference/authentication#personal-access-tokens))
-  - name: serial_number
+  - name: serial
     required: true
-    help:
-      de: Seriennummer (z. B. 1008621)
-      en: Serial number (e.g. 1008621)
+  - name: serial_number
+    deprecated: true
 render: |
   type: plugchoice
   token: {{ .token }}  
-  identity: {{ if .serial_number }}VT_{{ .serial_number }}{{ end }}
+  identity: {{ if (or .serial .serial_number) }}VT_{{ or .serial .serial_number }}{{ end }}
   connector: 1

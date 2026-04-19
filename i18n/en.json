@@ -113,6 +113,7 @@
       "title": "Currency"
     },
     "deviceValue": {
+      "activeClients": "Active clients",
       "amount": "Amount",
       "broker": "Broker",
       "bucket": "Bucket",
@@ -126,6 +127,7 @@
       "chargedEnergy": "Charged",
       "co2": "Grid CO₂",
       "configured": "Configured",
+      "connected": "Connected",
       "connections": "Connections",
       "controllable": "Controllable",
       "currency": "Currency",
@@ -144,6 +146,7 @@
       "hemsActiveLimit": "Active limit",
       "hemsType": "Communication",
       "identifier": "RFID-Identifier",
+      "loginBlocked": "Login limit reached",
       "max": "max",
       "messengers": "Services",
       "no": "no",
@@ -339,7 +342,7 @@
       "defaultsHintLink": "Adjust settings",
       "delete": "Delete",
       "electricalSubtitle": "When in doubt, ask your electrician.",
-      "electricalTitle": "Electrical",
+      "electricalTitle": "Electrics",
       "energyMeterHelp": "Additional meter if the charger doesn't have an integrated one.",
       "energyMeterLabel": "Energy meter",
       "estimateLabel": "Interpolate charge level between API updates",
@@ -600,8 +603,9 @@
       "urlHelp": "Copy this URL into your charger's configuration. Check the manufacturer's manual for details. The charger is expected to automatically append its unique identifier (station ID) to the url. In rare cases, you may need to manually specify the identifier. Example: `{url}`"
     },
     "optimizer": {
-      "description": "Analyzes solar forecast, electricity prices, and your consumption patterns to optimize battery and charging strategy. Data is sent to the evcc optimization service for processing.",
+      "description": "Analyzes solar forecast, electricity prices, and your consumption patterns to optimize battery and charging strategy. Data is sent to the evcc optimization service for processing. Currently only calculates and visualizes. Does not control devices yet.",
       "enable": "Enable Optimizer",
+      "info": "It may take a few minutes for the optimizer menu entry to become visible. For new installations, it may take up to 24 hours until evcc has collected enough data.",
       "title": "Optimizer"
     },
     "options": {
@@ -630,6 +634,38 @@
     "pv": {
       "titleAdd": "Add Solar Meter",
       "titleEdit": "Edit Solar Meter"
+    },
+    "remote": {
+      "active": "Active",
+      "addClient": "Add client",
+      "addClientDescription": "Credentials are stored and verified only locally on your evcc instance.",
+      "addClientTitle": "Add Remote Client",
+      "clientCreated": "Client created",
+      "clients": "Clients",
+      "confirmDelete": "Delete client?",
+      "connected": "Connected",
+      "createClient": "Create client",
+      "description": "Access your evcc installation from anywhere using the evcc mobile app. No port forwarding or VPN required.",
+      "deviceName": "Device name",
+      "disconnected": "Disconnected",
+      "done": "Done",
+      "enableLabel": "Enable remote access",
+      "expiration": "Expiration",
+      "expirationNone": "Never",
+      "expired": "expired",
+      "expiresIn": "expires {time}",
+      "lastActive": "active {time}",
+      "loginBlocked": "Remote logins are blocked for one minute due to too many failed login attempts.",
+      "manualLogin": "Or sign in manually at {url} in your browser using these credentials:",
+      "noClients": "No clients yet. No one can connect yet.",
+      "password": "Password",
+      "passwordOnce": "This password is shown only once. Scan the QR code or copy it now. You won't be able to see it again.",
+      "qrInstall": "Install the evcc app for {ios} or {android}.",
+      "qrScan": "Scan the code with your phone's camera to connect. Click it, if you're already using your phone.",
+      "removeClient": "Remove client",
+      "title": "Remote Access",
+      "url": "Public URL",
+      "username": "Username"
     },
     "section": {
       "additionalMeter": "Additional meters",
@@ -761,8 +797,8 @@
       "titleChoice": "What Do You Want To Add?",
       "type": {
         "co2": "CO₂ Intensity",
-        "feedIn": "Feed-In Price",
-        "grid": "Grid Consumption Price",
+        "feedIn": "Grid Export Price",
+        "grid": "Grid Import Price",
         "planner": "Planner",
         "solar": "Solar"
       },
@@ -937,6 +973,7 @@
       "setup": "Set up tariffs and forecasts",
       "solar": "See expected solar production for today and the coming days. Will also be used for automatic charging optimization in the future."
     },
+    "hideLine": "hide line",
     "modalTitle": "Forecast",
     "price": {
       "average": "Average",
@@ -945,6 +982,7 @@
       "range": "Range"
     },
     "priceZoom": "zoom in",
+    "showLine": "show line",
     "solar": {
       "dayAfterTomorrow": "Day after tomorrow",
       "partly": "partly",
@@ -953,7 +991,8 @@
       "tomorrow": "Tomorrow"
     },
     "solarAdjust": "Adjust solar forecast based on real production data{percent}.",
-    "solarAdjustShort": "real data adjust",
+    "solarAdjustMedium": "real data adjust",
+    "solarAdjustShort": "adjust",
     "type": {
       "co2": "CO₂ Emissions",
       "price": "Grid Price",
@@ -1118,7 +1157,7 @@
       "batteryTooltip": "{energy} of {total} ({soc})",
       "forecast": "Forecast: ",
       "forecastTooltip": "forecast: remaining solar production today",
-      "gridImport": "Grid use",
+      "gridImport": "Grid import",
       "homePower": "Consumption",
       "loadpoints": "Charger| Charger | {count} chargers",
       "loadpointsLimit": "{limit} limit",

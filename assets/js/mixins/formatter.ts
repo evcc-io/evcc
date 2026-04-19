@@ -180,6 +180,10 @@ export default defineComponent({
       const formatter = new Intl.DurationFormat(this.$i18n?.locale, { style });
       return formatter.format({ minutes, hours });
     },
+    fmtDurationParts(parts: Record<string, number>) {
+      // @ts-expect-error - Intl.DurationFormat is a new API not yet in TS types
+      return new Intl.DurationFormat(this.$i18n?.locale, { style: "long" }).format(parts);
+    },
     fmtDayString(date: Date) {
       const YY = `${date.getFullYear()}`;
       const MM = `${date.getMonth() + 1}`.padStart(2, "0");
@@ -215,6 +219,11 @@ export default defineComponent({
     weekdayShort(date: Date) {
       return new Intl.DateTimeFormat(this.$i18n?.locale, {
         weekday: "short",
+      }).format(date);
+    },
+    weekdayLong(date: Date) {
+      return new Intl.DateTimeFormat(this.$i18n?.locale, {
+        weekday: "long",
       }).format(date);
     },
     fmtAbsoluteDate(date: Date) {

@@ -182,6 +182,7 @@ params:
       de: Definiert die maximale Ladeleistung des Fahrzeugs. Hilft, die Ladeplanung zu verbessern, wenn das Fahrzeug üblicherweise weniger Strom nutzt als angeboten oder höhere Ströme bei einphasigem Laden erlaubt als bei dreiphasigem. _Der bereitgestellte Strom des Ladepunktes wird nicht beeinflusst._
       en: Defines the maximum charging power of the vehicle. Helps improve charge plan accuracy when the vehicle typically uses less than the offered current or supports higher single-phase current compared to three-phase. _The offered current of the loadpoint is not affected._
     type: int
+    example: 10000
   - name: identifiers
     description:
       de: Identifikation
@@ -406,11 +407,6 @@ params:
     mask: true
     description:
       generic: PIN
-  - name: serial_number
-    private: true
-    description:
-      en: Serial Number
-      de: Seriennummer
   - name: watchdog
     description:
       generic: Watchdog
@@ -483,6 +479,15 @@ params:
     description:
       en: Price zones
       de: Preiszonen
+  - name: baudrate
+    description:
+      de: Baudrate
+      en: Baudrate
+    help:
+      de: Typische Werte sind 9600, 19200, 38400, 57600, 115200
+      en: Typical values are 9600, 19200, 38400, 57600, 115200
+    default: 9600
+    type: int
 
 presets:
   vehicle-base:
@@ -759,8 +764,8 @@ modbus:
         de: Baudrate
         en: Baudrate
       help:
-        de: Prüfe die Geräteeinstellungen, typische Werte sind 9600, 19200, 38400, 57600, 115200
-        en: Check the device settings, typical values are 9600, 19200, 38400, 57600, 115200
+        de: Typische Werte sind 9600, 19200, 38400, 57600, 115200
+        en: Typical values are 9600, 19200, 38400, 57600, 115200
       default: 9600
       type: int
     - name: comset

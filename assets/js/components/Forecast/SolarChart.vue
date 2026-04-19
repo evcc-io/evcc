@@ -103,7 +103,7 @@ export default defineComponent({
 					{
 						type: "line",
 						data,
-						smooth: 0.05,
+						smooth: true,
 						symbol: "circle",
 						symbolSize: 6,
 						showSymbol: false,

@@ -113,6 +113,7 @@
       "title": "Valiuta"
     },
     "deviceValue": {
+      "activeClients": "Aktyvūs vartotojai",
       "amount": "Kiekis",
       "broker": "Broker sistema",
       "bucket": "Bucket",
@@ -126,6 +127,7 @@
       "chargedEnergy": "Įkrauta",
       "co2": "Tinklo CO₂",
       "configured": "Sukonfigūruota",
+      "connected": "Prisijungta",
       "connections": "Jungtys",
       "controllable": "Valdomas",
       "currency": "Valiuta",
@@ -144,6 +146,7 @@
       "hemsActiveLimit": "Aktyvus limitas",
       "hemsType": "Komunikacija",
       "identifier": "RFID-Identifikatorius",
+      "loginBlocked": "Pasiektas prisijungimų limitas",
       "max": "max",
       "messengers": "Paslaugos",
       "no": "ne",
@@ -206,7 +209,7 @@
     },
     "experimental": {
       "description": "Suteikia išankstinę prieigą prie funkcijų, kurios vis dar testuojamos. Jos gali būti nestabilios bei gali pasikeisti arba būti pašalintos būsimose versijose.",
-      "title": "Eksperimentinis"
+      "title": "Eksperimentinės"
     },
     "ext": {
       "description": "Įrašo nekontroliuojamų įrenginių (pvz., šaldytuvo, skalbimo mašinos ir kt.) energijos vertes statistikos tikslais. Šie skaitikliai taip pat gali būti naudojami apkrovos valdymui (pvz., paskirstymui).",
@@ -238,7 +241,7 @@
       "dragItem": "Galima vilkti: {title}",
       "dragList": "Galima sukeisti vietomis",
       "error": "Klaida",
-      "experimental": "Eksperimentinis",
+      "experimental": "Eksperimentinės",
       "forceSave": "Vistiek įrašyti",
       "fromYamlHint": "Pastaba: Sukonfigūruota naudojant evcc.yaml. Pašalinkite įrašą iš failo, kad būtų galima redaguoti čia.",
       "hideAdvancedSettings": "Slėpti išplėstinius nustatymus",
@@ -602,6 +605,12 @@
       "url": "Serverio URL",
       "urlHelp": "Nukopijuokite šį URL į savo įkroviklio konfigūraciją. Išsamesnės informacijos ieškokite gamintojo vadove. Įkroviklis turėtų automatiškai pridėti savo unikalų identifikatorių (stotelės ID) prie URL. Retais atvejais gali tekti rankiniu būdu nurodyti identifikatorių. Pavyzdys: `{url}`"
     },
+    "optimizer": {
+      "description": "Analizuoja saulės energijos prognozę, elektros energijos kainas ir jūsų vartojimo įpročius, kad optimizuotų kaupiklį ir įkrovimo strategiją. Duomenys siunčiami apdorojimui į evcc optimizavimo paslaugą. Šiuo metu tik apskaičiuoja ir vizualizuoja, įrenginių kol kas nevaldo.",
+      "enable": "Įjungti Optimizavimą",
+      "info": "Gali užtrukti kelias minutes, kol meniu pasirodys optimizatoriaus eilutė. Naujoms evcc instaliacijoms gali užtrukti iki 24 valandų, kol evcc turės pakankamai duomenų veikimui.",
+      "title": "Optimizavimas"
+    },
     "options": {
       "boolean": {
         "no": "ne",
@@ -628,6 +637,38 @@
     "pv": {
       "titleAdd": "Pridėti saulės skaitiklį",
       "titleEdit": "Redaguoti saulės skaitiklį"
+    },
+    "remote": {
+      "active": "Aktyvus",
+      "addClient": "Pridėti vartotoją",
+      "addClientDescription": "Įgaliojimai saugomi ir tikrinami tik lokaliai, jūsų evcc egzemplioriuje.",
+      "addClientTitle": "Pridėti nutolusį vartotoją",
+      "clientCreated": "Vartotojas sukurtas",
+      "clients": "Vartotojai",
+      "confirmDelete": "Ištrinti vartotoją?",
+      "connected": "Prijungta",
+      "createClient": "Sukurti vartotoją",
+      "description": "Pasiekite savo evcc sistemą iš bet kurios vietos, naudodami evcc mobiliąją programėlę. Nereikia jokio prievado peradresavimo ar VPN.",
+      "deviceName": "Įrenginio pavadinimas",
+      "disconnected": "Atjungta",
+      "done": "Atlikta",
+      "enableLabel": "Įgalinti nuotolinę prieigą",
+      "expiration": "Galiojimo laikas",
+      "expirationNone": "Niekada",
+      "expired": "pasibaigęs",
+      "expiresIn": "pasibaigs {time}",
+      "lastActive": "aktyvus {time}",
+      "loginBlocked": "Nuotoliniai prisijungimai blokuojami vienai minutei dėl per daug nepavykusių prisijungimo bandymų.",
+      "manualLogin": "Arba prisijunkite rankiniu būdu adresu {url} naršyklėje naudodami šiuos prisijungimo duomenis:",
+      "noClients": "Kol kas nėra vartotojų. Niekas dar negali prisijungti.",
+      "password": "Slaptažodis",
+      "passwordOnce": "Šis slaptažodis rodomas tik vieną kartą. Nuskaitykite QR kodą arba nukopijuokite jį dabar. Daugiau jo nebegalėsite pamatyti.",
+      "qrInstall": "Įdiekite evcc programėlę, skirtą {ios} arba {android}.",
+      "qrScan": "Nuskaitykite kodą telefono kamera, kad prisijungtumėte. Bakstelėkite ant jo, jei jau naudojate telefoną.",
+      "removeClient": "Pašalinti vartotoją",
+      "title": "Nuotolinė Prieiga",
+      "url": "Viešas URL",
+      "username": "Vartotojo vardas"
     },
     "section": {
       "additionalMeter": "Papildomi skaitikliai",
@@ -904,7 +945,7 @@
       "optInSponsorship": "Gali tik rėmėjai."
     },
     "version": {
-      "availableLong": "yra naujesnė versija",
+      "availableLong": "(yra naujesnė versija)",
       "community": "evcc bendruomenė",
       "labelRelease": "Leidimas",
       "labelVersion": "Versija",
@@ -940,6 +981,7 @@
       "setup": "Sukonfigūruoti tarifus ir prognozes",
       "solar": "Prognozuojama saulės energijos gamyba šiandienai ir ateinančiomis dienomis. Ateityje taip pat bus naudojama automatiniam įkrovimo optimizavimui."
     },
+    "hideLine": "paslėpti liniją",
     "modalTitle": "Prognozė",
     "price": {
       "average": "Vidurkis",
@@ -948,6 +990,7 @@
       "range": "Diapazonas"
     },
     "priceZoom": "priartinti",
+    "showLine": "rodyti liniją",
     "solar": {
       "dayAfterTomorrow": "Poryt",
       "partly": "dalinai",
@@ -956,7 +999,8 @@
       "tomorrow": "Rytoj"
     },
     "solarAdjust": "Pakoreguoti saulės prognozę remiantis faktiškais gamybos duomenimis{percent}.",
-    "solarAdjustShort": "koreguoti pagal faktinius duomenis",
+    "solarAdjustMedium": "koreguoti pagal faktinius duomenis",
+    "solarAdjustShort": "koreguoti",
     "type": {
       "co2": "CO₂ Išmetimai",
       "price": "Pirkimo Kaina",
@@ -1001,7 +1045,7 @@
     },
     "restartButton": "Restartuoti",
     "restartDescription": "Ar pabandėte išjungti ir vėl įjungti?",
-    "secondaryActions": "Vis dar nepavyksta išspręsti problemos? Čia rasite drastiškesnes opcijas."
+    "secondaryActions": "Vis dar nepavyksta išspręsti problemos? Čia rasite sudėtingesnes opcijas."
   },
   "issue": {
     "additional": {

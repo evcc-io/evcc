@@ -26,7 +26,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/evcc-io/evcc/util/sponsor"
 )
 
 // SmartEVSE-3.5 REST API charger implementation
@@ -46,7 +45,7 @@ type smartEvseRestSettings struct {
 	ModeID       int    `json:"mode_id"`
 	CarConnected bool   `json:"car_connected"`
 	Evse         struct {
-		Connected    int    `json:"connected"`
+		Connected    bool   `json:"connected"`
 		Access       int    `json:"access"`
 		Mode         int    `json:"mode"`
 		ChargeTimer  int    `json:"charge_timer"`
@@ -136,10 +135,6 @@ func NewSmartEVSE3(uri string, cache time.Duration) (api.Charger, error) {
 		Helper: request.NewHelper(log),
 		uri:    strings.TrimRight(util.DefaultScheme(uri, "http"), "/"),
 		curr:   60, // 6 A in 1/10 A
-	}
-
-	if !sponsor.IsAuthorized() {
-		return nil, api.ErrSponsorRequired
 	}
 
 	wb.apiG = util.ResettableCached(func() (smartEvseRestSettings, error) {
@@ -413,7 +408,7 @@ func (wb *SmartEVSE3) Diagnose() {
 	fmt.Printf("\tMode: %s (%d)\n", res.Mode, res.ModeID)
 	fmt.Printf("\tCar connected: %t\n", res.CarConnected)
 
-	fmt.Printf("\tEVSE connected: %d\n", res.Evse.Connected)
+	fmt.Printf("\tEVSE connected: %t\n", res.Evse.Connected)
 	fmt.Printf("\tEVSE access: %d\n", res.Evse.Access)
 	fmt.Printf("\tEVSE mode: %d\n", res.Evse.Mode)
 	fmt.Printf("\tEVSE charge timer: %d\n", res.Evse.ChargeTimer)

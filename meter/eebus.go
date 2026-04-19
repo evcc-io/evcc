@@ -249,8 +249,8 @@ func (c *EEBus) Curtailed() (bool, error) {
 		return false, err
 	}
 
-	// Check if limit is active and has a valid power value
-	return limit.IsActive && limit.Value > 0, nil
+	// Check if limit is active and has a valid power value (valid is zero or negative)
+	return limit.IsActive && limit.Value <= 0, nil
 }
 
 // Curtail implements the api.Curtailer interface

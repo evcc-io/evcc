@@ -40,6 +40,7 @@
     "legendTopName": "Batteri-understøttet opladning af køretøj",
     "legendTopSubline": "når husbatteriet er over {soc}.",
     "modalTitle": "Hus batteri",
+    "noBattery": "Ingen batterier er konfigurerede.",
     "usageTab": "Batteri anvendelse"
   },
   "config": {
@@ -112,6 +113,7 @@
       "title": "Møntfod"
     },
     "deviceValue": {
+      "activeClients": "Aktive klienter",
       "amount": "Mængde",
       "broker": "Broker",
       "bucket": "Bucket",
@@ -125,6 +127,7 @@
       "chargedEnergy": "Opladet",
       "co2": "Elnettet CO₂",
       "configured": "Konfigureret",
+      "connected": "Forbundet",
       "connections": "Tilslutninger",
       "controllable": "Kan styres",
       "currency": "Møntenhed",
@@ -143,6 +146,7 @@
       "hemsActiveLimit": "Aktiv begrænsning",
       "hemsType": "Kommunikation",
       "identifier": "RFID-identifikator",
+      "loginBlocked": "Grænsen for loginforsøg er nået",
       "max": "max",
       "messengers": "Tjenester",
       "no": "nej",
@@ -601,6 +605,12 @@
       "url": "Server URL",
       "urlHelp": "Kopier denne URL til din laders opsætning. Tjek producentens vejledning for detaljer. Laderen tilføjer normalt automatisk sit unikke ID (stations-id) til URL’en. I sjældne tilfælde skal ID’et angives manuelt. Eksempel: {url}"
     },
+    "optimizer": {
+      "description": "Analyserer sol-prognose, el-priser, og forbrugsmønstre for at optimere batteri og opladning. Data sendes til evcc optimerings-service for at blive beregnet. Aktuelt beregnes og vises data kun, der er ingen styring af enheder endnu.",
+      "enable": "Aktiver Optimering",
+      "info": "Det kan tage et par minutter for optimerings-menuen er synlig. For nye installationer kan det tage op til 24 timer før der er opsamlet tilstrækkelig med data.",
+      "title": "Optimering"
+    },
     "options": {
       "boolean": {
         "no": "nej",
@@ -627,6 +637,38 @@
     "pv": {
       "titleAdd": "Tilføj solmåler",
       "titleEdit": "Rediger solmåler"
+    },
+    "remote": {
+      "active": "Aktiv",
+      "addClient": "Tilføj klient",
+      "addClientDescription": "Oplysningerne gemmes og verificeres kun lokalt på din evcc-enhed.",
+      "addClientTitle": "Tilføj fjernklient",
+      "clientCreated": "Klient oprettet",
+      "clients": "Klienter",
+      "confirmDelete": "Slet klient?",
+      "connected": "Forbundet",
+      "createClient": "Opret klient",
+      "description": "Få adgang til din evcc-installation hvor som helst via evcc-mobilappen. Ingen viderestilling af porte eller VPN er krævet.",
+      "deviceName": "Navn på enhed",
+      "disconnected": "Afbrudt",
+      "done": "Færdig",
+      "enableLabel": "Tillad fjernadgang",
+      "expiration": "Udløbet",
+      "expirationNone": "Aldrig",
+      "expired": "Udløbet",
+      "expiresIn": "udløber {time}",
+      "lastActive": "aktiv {time}",
+      "loginBlocked": "Fjernadgang blokeret i ét minut på grund af for mange loginforsøg.",
+      "manualLogin": "Eller login manuelt ved {url} i din browser med disse oplysninger:",
+      "noClients": "Ingen klient endnu. Ingen kan forbindes endnu.",
+      "password": "Kode",
+      "passwordOnce": "Denne kode vises kun én gang. Skan QR koden eller kopier den nu. Den kan ikke vises igen.",
+      "qrInstall": "Installer evcc appen for {ios} eller {android}.",
+      "qrScan": "Skan koden med telefonens kamera for at forbinde. Klik på det hvis du allerede bruger telefonen.",
+      "removeClient": "Fjern klient",
+      "title": "Fjernadgang",
+      "url": "Offentlig URL",
+      "username": "Brugernavn"
     },
     "section": {
       "additionalMeter": "Tilføj ekstra målere",
@@ -760,7 +802,7 @@
       "type": {
         "co2": "CO₂ Intensitet",
         "feedIn": "Indfødningspris",
-        "grid": "Forbrugspris fra elnettet",
+        "grid": "Købspris fra elnettet",
         "planner": "Planlægning",
         "solar": "Sol"
       },
@@ -854,6 +896,15 @@
       "configurePriceCo2": "Lær hvordan man indstiller pris og CO₂ data.",
       "footerLong": "{percent} Solenergi",
       "footerShort": "{percent} Solenergi",
+      "indicator": {
+        "co2": "CO₂ emission",
+        "co2saved": "CO₂ sparet",
+        "none": "ingen",
+        "price": "energipris",
+        "savings": "sparet",
+        "solar": "solenergi"
+      },
+      "indicatorLabel": "Overskriftsinformation",
       "modalTitle": "Oversigt over ladeenergi",
       "moneySaved": "{value} sparet",
       "percentGrid": "{grid} kWh elnettet",
@@ -865,10 +916,11 @@
         "thisYear": "dette år",
         "total": "hele tiden"
       },
-      "periodLabel": "Periode:",
+      "periodLabel": "Periode",
       "priceTitle": "Energipris",
       "referenceGrid": "elnet",
-      "referenceLabel": "Referencedata:",
+      "referenceLabel": "Referencedata",
+      "sessionInfo": "Baseret på gennemførte opladninger.",
       "tabTitle": "Mine data"
     },
     "sponsor": {
@@ -894,15 +946,26 @@
     },
     "version": {
       "availableLong": "ny version tilgængelig",
+      "community": "evcc-fællesskabet",
+      "labelRelease": "Udgivet",
+      "labelVersion": "Version",
+      "labelWebsite": "Hjemmeside",
+      "latestVersion": "nyeste version",
+      "madeByCommunity": "Lavet af {0}.",
       "modalCancel": "Annuller",
       "modalDownload": "Hent",
       "modalInstalledVersion": "Installeret version",
+      "modalLatest": "Du bruger den nyeste version.",
+      "modalNextRelease": "Hvad er i næste udgave",
       "modalNoReleaseNotes": "Der er ingen tilgængelige release notes. Mere info om den nye version:",
       "modalTitle": "Ny version tilgængelig",
       "modalUpdate": "Installere",
       "modalUpdateNow": "Installer nu",
       "modalUpdateStarted": "Starter den nye version af evcc…",
-      "modalUpdateStatusStart": "Installation startede:"
+      "modalUpdateStatusStart": "Installation startede:",
+      "modalViewOnGitHub": "Se på GitHub",
+      "openSource": "open source",
+      "poweredByOpenSource": "Drevet af {0}."
     }
   },
   "forecast": {
@@ -912,6 +975,13 @@
       "lowestHour": "Reneste time",
       "range": "spændvidde"
     },
+    "empty": {
+      "co2": "Se når strøm i din region er grøn. Opladningsplaner bliver optimeret til lav-emission og sparet CO₂ beregnes.",
+      "price": "Konfigurér din dynamiske eltarif for automatisk at optimere ladeplaner og beregne besparelser.",
+      "setup": "Indstil tariffer og prognoser",
+      "solar": "Vis forventet solenergi produceret i dag og de nærmeste dage. Bliver også brugt til automatisk optimering af opladninger i fremtiden."
+    },
+    "hideLine": "skjul linjen",
     "modalTitle": "Prognose",
     "price": {
       "average": "Gennemsnit",
@@ -919,6 +989,8 @@
       "lowestHour": "Billigste time",
       "range": "Spændvidde"
     },
+    "priceZoom": "zoom ind",
+    "showLine": "vis linjen",
     "solar": {
       "dayAfterTomorrow": "I overmorgen",
       "partly": "delvis",
@@ -927,10 +999,12 @@
       "tomorrow": "I morgen"
     },
     "solarAdjust": "Juster solprognosen på baggrund af produktions data{percent}.",
+    "solarAdjustMedium": "Justering baseret på faktiske data",
+    "solarAdjustShort": "justering",
     "type": {
-      "co2": "CO₂",
-      "price": "Pris",
-      "solar": "Sol"
+      "co2": "CO₂ Emissioner",
+      "price": "Strømpris",
+      "solar": "Solenergiproduktion"
     }
   },
   "general": {
@@ -1099,7 +1173,7 @@
       "batteryTooltip": "{energy} af {total} ({soc})",
       "forecast": "Prognose: ",
       "forecastTooltip": "prognose: resterende solenergi produktion i dag",
-      "gridImport": "Forbrug fra elnet",
+      "gridImport": "Import fra elnet",
       "homePower": "Forbrug",
       "loadpoints": "Oplader| Oplader | {count} opladere",
       "loadpointsLimit": "{limit} begrænsning",
@@ -1144,6 +1218,7 @@
         "once": "Boost er aktiveret for denne opladning.",
         "stateActive": "Batteriboost er aktiv",
         "stateBelowLimit": "Batteriniveau er for lav til boost",
+        "stateHold": "Batteriet er låst",
         "stateReady": "Batteriboost er klar"
       },
       "batteryUsage": "Husbatteri",
@@ -1253,6 +1328,7 @@
       "batteryBoostBelowLimit": "Batteriniveau er for lav til boost.",
       "batteryBoostDisabled": "Batteriboost er deaktiveret.",
       "batteryBoostEnabled": "Boost indtil batteri er på {limit}.",
+      "batteryBoostHold": "Batteriet låst. Boost er ikke muligt.",
       "charging": "Oplader…",
       "cheapEnergyCharging": "Billig energi er tilgængelig.",
       "cheapEnergyNextStart": "Billig energi i {duration}.",
@@ -1492,5 +1568,13 @@
     "lineErrorLink": "linje {0}",
     "restartButton": "Genstart",
     "title": "Fejl ved opstart"
+  },
+  "tabBar": {
+    "battery": "Batteri",
+    "charge": "Oplader",
+    "comingSoon": "Siden under opbygning.",
+    "forecast": "Prognose",
+    "more": "Mere",
+    "sessions": "Sessioner"
   }
 }

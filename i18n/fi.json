@@ -113,6 +113,7 @@
       "title": "Valuutta"
     },
     "deviceValue": {
+      "activeClients": "Aktiiviset asiakasyhteydet",
       "amount": "Määrä",
       "broker": "Välittäjä (Broker)",
       "bucket": "Tietosäiliö (Bucket)",
@@ -126,6 +127,7 @@
       "chargedEnergy": "Ladattu",
       "co2": "Verkon CO₂",
       "configured": "Määritetty",
+      "connected": "Yhdistetty",
       "connections": "Yhteydet",
       "controllable": "Hallittava",
       "currency": "Valuutta",
@@ -144,6 +146,7 @@
       "hemsActiveLimit": "Aktiivinen raja",
       "hemsType": "Kommunikaatiomenetelmä",
       "identifier": "RFID-tunniste",
+      "loginBlocked": "Sisäänkirjoitumisyritysten raja saavutettu",
       "max": "maksimi",
       "messengers": "Palvelut",
       "no": "ei",
@@ -602,6 +605,11 @@
       "url": "Palvelimen URL",
       "urlHelp": "Kopioi tämä URL laturisi asetuksiin. Tarkista laturivalmistajan ohjeista yksityiskohdat. Laturin odotetaan lisäävän URL-osoitteeseen yksilöllinen tunnus (aseman ID). Joissain harvoissa tapauksissa sinun täytyy käsin lisätä tämä tunnus. Esim: `{url}`"
     },
+    "optimizer": {
+      "description": "Analysoi aurinkoennustetta, sähkönhintaa ja kulutustottumuksiasi optimoidakseen akun ja latauspisteiden käyttöä. Tiedot lähetetään käsiteltäväksi evcc:n optimointipalveluun.",
+      "enable": "Käytä optimointia",
+      "title": "Optimointi"
+    },
     "options": {
       "boolean": {
         "no": "ei",
@@ -628,6 +636,38 @@
     "pv": {
       "titleAdd": "Lisää aurinkovoimalan mittari",
       "titleEdit": "Muokkaa aurinkovoimalan mittaria"
+    },
+    "remote": {
+      "active": "Aktiivinen",
+      "addClient": "Lisää etäkäyttäjä",
+      "addClientDescription": "Käyttäjätunnustiedot tallennetaan ja varmennetaan vain paikallisesti sinun evcc-asennuksessasi.",
+      "addClientTitle": "Lisää etäkäyttäjäasiakas",
+      "clientCreated": "Etäkäyttäjä luotu",
+      "clients": "Etäkäyttäjät",
+      "confirmDelete": "Poista etäkäyttäjä?",
+      "connected": "Yhdistetty",
+      "createClient": "Luo etäkäyttäjäasiakas",
+      "description": "Pääse käsiksi evcc-asennukseesi mistä vain käyttäen evcc-kännykkäsovellusta. Ei vaadi VPN:ää tai reititinohjausasetuksia.",
+      "deviceName": "Laitteen nimi",
+      "disconnected": "Ei yhteydessä",
+      "done": "Valmis",
+      "enableLabel": "Salli etäkäyttö",
+      "expiration": "Umpeutuu",
+      "expirationNone": "Ei koskaan",
+      "expired": "umpeutunut",
+      "expiresIn": "umpeutuu {time}",
+      "lastActive": "aktiivinen {time}",
+      "loginBlocked": "Etäkirjautumiset on estetty minuutiksi, koska liian monta kirjautumisyritystä on epäonnistunut.",
+      "manualLogin": "tai kirjaudu {url} selaimessa käyttäen seuraavia tunnuksia:",
+      "noClients": "Ei vielä etäyhteysasiakkaita. Kukaan ei vielä voi kirjautua etänä.",
+      "password": "Salasana",
+      "passwordOnce": "Tämä salasana näytetään vain kerran. Skannaa QR-koodi tai kopioi se, sillä et voi nähdä sitä enää uudelleen.",
+      "qrInstall": "Asenna evcc-sovellus {ios}:sta tai {android}:sta.",
+      "qrScan": "Skannaa koodi puhelimesi kameralla yhdistääksesi. Klikkaa linkkiä, jos jo käytät puhelimesi kameraa.",
+      "removeClient": "Poista etäyhteysasiakas",
+      "title": "Etäyhteys",
+      "url": "Julkinen URL-osoite",
+      "username": "Käyttäjätunnus"
     },
     "section": {
       "additionalMeter": "Ylimääräiset mittarit",
@@ -759,8 +799,8 @@
       "titleChoice": "Mitä haluat lisätä?",
       "type": {
         "co2": "CO₂-intensiteetti",
-        "feedIn": "Syöttöhinta",
-        "grid": "Verkkosähkön hinta",
+        "feedIn": "Sähkön myyntihinta verkkoon",
+        "grid": "Verkkosähkön ostohinta",
         "planner": "Suunnitelma",
         "solar": "Aurinko"
       },
@@ -939,6 +979,7 @@
       "setup": "Määritä hinnat ja ennusteet",
       "solar": "Katso aurinkotuotannon ennuste täksi ja tuleviksi päiviksi. Käytetään tulevaisuudessa myös latauksien optimoitiin."
     },
+    "hideLine": "piilota viiva",
     "modalTitle": "Ennuste",
     "price": {
       "average": "Keskimääräinen",
@@ -947,6 +988,7 @@
       "range": "Toimintamatka"
     },
     "priceZoom": "lähennä",
+    "showLine": "näytä viiva",
     "solar": {
       "dayAfterTomorrow": "Ylihuomenna",
       "partly": "osittain",
@@ -955,7 +997,8 @@
       "tomorrow": "Huomenna"
     },
     "solarAdjust": "Mukauta aurinkosääennustettu todellisten tuotantotietojen perusteella{percent}.",
-    "solarAdjustShort": "mitatun datan korjaus",
+    "solarAdjustMedium": "mitatun datan korjaus",
+    "solarAdjustShort": "korjaus",
     "type": {
       "co2": "CO₂-päästöt",
       "price": "Sähkön hinta",

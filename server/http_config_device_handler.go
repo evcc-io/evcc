@@ -11,7 +11,6 @@ import (
 	"strconv"
 
 	"dario.cat/mergo"
-	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/charger"
 	"github.com/evcc-io/evcc/core/circuit"
@@ -21,7 +20,6 @@ import (
 	"github.com/evcc-io/evcc/meter"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/tariff"
-	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/evcc-io/evcc/vehicle"
@@ -327,9 +325,7 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		conf, err = newDevice(ctx, class, req, vehicle.NewFromConfig, config.Vehicles(), force)
 
 	case templates.Circuit:
-		conf, err = newDevice(ctx, class, req, func(ctx context.Context, _ string, other map[string]any) (api.Circuit, error) {
-			return circuit.NewFromConfig(ctx, util.NewLogger("circuit"), other)
-		}, config.Circuits(), force)
+		conf, err = newDevice(ctx, class, req, circuit.NewFromConfig, config.Circuits(), force)
 
 	case templates.Tariff:
 		conf, err = newDevice(ctx, class, req, tariff.NewFromConfig, config.Tariffs(), force)
@@ -414,9 +410,7 @@ func updateDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		err = updateDevice(ctx, id, class, req, vehicle.NewFromConfig, config.Vehicles(), force)
 
 	case templates.Circuit:
-		err = updateDevice(ctx, id, class, req, func(ctx context.Context, _ string, other map[string]any) (api.Circuit, error) {
-			return circuit.NewFromConfig(ctx, util.NewLogger("circuit"), other)
-		}, config.Circuits(), force)
+		err = updateDevice(ctx, id, class, req, circuit.NewFromConfig, config.Circuits(), force)
 
 	case templates.Tariff:
 		err = updateDevice(ctx, id, class, req, tariff.NewFromConfig, config.Tariffs(), force)
@@ -670,7 +664,7 @@ func testConfigHandler(w http.ResponseWriter, r *http.Request) {
 		instance, err = testConfig(ctx, id, class, req, vehicle.NewFromConfig, config.Vehicles())
 
 	case templates.Circuit:
-		err = api.ErrNotAvailable
+		instance, err = testConfig(ctx, id, class, req, circuit.NewFromConfig, config.Circuits())
 
 	case templates.Tariff:
 		instance, err = testConfig(ctx, id, class, req, tariff.NewFromConfig, config.Tariffs())

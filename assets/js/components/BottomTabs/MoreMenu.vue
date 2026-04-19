@@ -55,7 +55,10 @@
 			to="/optimize"
 			active-class="active"
 		>
-			Optimize
+			Optimize 🧪
+		</router-link>
+		<router-link v-if="experimental" class="dropdown-item" to="/history" active-class="active">
+			History 🧪
 		</router-link>
 	</div>
 </template>
@@ -77,6 +80,7 @@ export default defineComponent({
 		sponsor: { type: Object as PropType<Sponsor>, default: () => ({}) },
 		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
 		experimental: Boolean,
+		authDisabled: Boolean,
 		evopt: { type: Object as PropType<EvOpt>, required: false },
 		installed: String,
 		commit: String,
@@ -120,7 +124,7 @@ export default defineComponent({
 			return !!this.evopt && this.experimental;
 		},
 		showLogout() {
-			return isLoggedIn();
+			return !this.authDisabled && isLoggedIn();
 		},
 	},
 	mounted() {

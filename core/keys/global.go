@@ -30,6 +30,9 @@ const (
 	Telemetry          = "telemetry"
 	Optimizer          = "optimizer"
 	DemoMode           = "demoMode"
+	Remote             = "remote"
+	RemoteClients      = "remoteClients"
+	RemoteLastSeen     = "remoteLastSeen"
 	AuthDisabled       = "authDisabled"
 	AuthProviders      = "authProviders"
 )

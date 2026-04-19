@@ -41,19 +41,10 @@
 			</div>
 		</div>
 		<div v-else class="row">
-			<main class="col-12">
+			<main class="col-12 d-flex flex-column">
 				<section v-if="forecast.solar" class="mb-5">
-					<div class="d-flex flex-wrap gap-3 align-items-baseline my-4">
-						<h3
-							class="fw-normal mb-0 d-flex gap-3 flex-wrap align-items-baseline overflow-hidden"
-						>
-							<span class="d-block text-nowrap text-truncate">{{
-								$t("forecast.type.solar")
-							}}</span>
-							<small v-if="solarSubtitle" class="d-block text-nowrap text-truncate">{{
-								solarSubtitle
-							}}</small>
-						</h3>
+					<div class="d-flex align-items-baseline my-4">
+						<h3 class="fw-normal mb-0">{{ $t("forecast.type.solar") }}</h3>
 						<div
 							v-if="showSolarAdjust"
 							class="form-check form-switch ms-auto mb-0 text-nowrap"
@@ -67,32 +58,31 @@
 								@change="changeAdjusted"
 							/>
 							<label class="form-check-label text-muted" for="solarForecastAdjust">
-								{{ solarAdjustText }}
+								<span class="d-md-none">{{ solarAdjustTextShort }}</span>
+								<span class="d-none d-md-inline">{{ solarAdjustTextMedium }}</span>
 							</label>
 						</div>
 					</div>
-					<SolarChart
-						:solar="solar"
-						:raw-solar="forecast.solar"
-						:chart-width="chartWidth"
-						:end-date="chartEndDate"
-						:scroll-left="scrollLeft"
-						@scroll="onChartScroll"
-					/>
+					<div class="chart-edge">
+						<SolarChart
+							:solar="solar"
+							:raw-solar="forecast.solar"
+							:chart-width="chartWidth"
+							:end-date="chartEndDate"
+							:scroll-left="scrollLeft"
+							@scroll="onChartScroll"
+						/>
+					</div>
+					<SolarDetails :solar="solar" />
 				</section>
 
-				<section v-if="forecast.grid" class="mb-5">
-					<div class="d-flex flex-wrap gap-3 align-items-baseline my-4">
-						<h3
-							class="fw-normal mb-0 d-flex gap-3 flex-wrap align-items-baseline overflow-hidden"
-						>
-							<span class="d-block text-nowrap text-truncate">{{
-								$t("forecast.type.price")
-							}}</span>
-							<small v-if="priceSubtitle" class="d-block text-nowrap text-truncate">{{
-								priceSubtitle
-							}}</small>
-						</h3>
+				<section
+					v-if="forecast.grid"
+					class="mb-5"
+					:style="isGridStatic ? { order: 1 } : undefined"
+				>
+					<div class="d-flex align-items-baseline my-4">
+						<h3 class="fw-normal mb-0">{{ $t("forecast.type.price") }}</h3>
 						<div class="form-check form-switch ms-auto mb-0 text-nowrap">
 							<input
 								id="priceZoom"
@@ -107,35 +97,39 @@
 							</label>
 						</div>
 					</div>
-					<PriceChart
+					<div class="chart-edge">
+						<PriceChart
+							:grid="forecast.grid"
+							:feedin="showFeedin ? forecast.feedin : undefined"
+							:currency="currency"
+							:zoom="priceZoom"
+							:chart-width="chartWidth"
+							:end-date="chartEndDate"
+							:scroll-left="scrollLeft"
+							@scroll="onChartScroll"
+						/>
+					</div>
+					<GridDetails
 						:grid="forecast.grid"
+						:feedin="forecast.feedin"
 						:currency="currency"
-						:zoom="priceZoom"
-						:chart-width="chartWidth"
-						:end-date="chartEndDate"
-						:scroll-left="scrollLeft"
-						@scroll="onChartScroll"
+						:show-feedin="showFeedin"
+						@toggle-feedin="toggleFeedin"
 					/>
 				</section>
 
-				<section v-if="forecast.co2">
-					<h3
-						class="fw-normal my-4 d-flex gap-3 flex-wrap align-items-baseline overflow-hidden"
-					>
-						<span class="d-block text-nowrap text-truncate">{{
-							$t("forecast.type.co2")
-						}}</span>
-						<small v-if="co2Subtitle" class="d-block text-nowrap text-truncate">{{
-							co2Subtitle
-						}}</small>
-					</h3>
-					<Co2Chart
-						:co2="forecast.co2"
-						:chart-width="chartWidth"
-						:end-date="chartEndDate"
-						:scroll-left="scrollLeft"
-						@scroll="onChartScroll"
-					/>
+				<section v-if="forecast.co2" class="mb-5">
+					<h3 class="fw-normal my-4">{{ $t("forecast.type.co2") }}</h3>
+					<div class="chart-edge">
+						<Co2Chart
+							:co2="forecast.co2"
+							:chart-width="chartWidth"
+							:end-date="chartEndDate"
+							:scroll-left="scrollLeft"
+							@scroll="onChartScroll"
+						/>
+					</div>
+					<Co2Details :co2="forecast.co2" />
 				</section>
 			</main>
 		</div>
@@ -149,17 +143,18 @@ import { defineComponent } from "vue";
 import Header from "../components/Top/Header.vue";
 import DynamicPriceIcon from "../components/MaterialIcon/DynamicPrice.vue";
 import SolarChart from "../components/Forecast/SolarChart.vue";
+import SolarDetails from "../components/Forecast/SolarDetails.vue";
 import PriceChart from "../components/Forecast/PriceChart.vue";
+import GridDetails from "../components/Forecast/GridDetails.vue";
 import Co2Chart from "../components/Forecast/Co2Chart.vue";
-import formatter, { POWER_UNIT } from "@/mixins/formatter";
+import Co2Details from "../components/Forecast/Co2Details.vue";
+import formatter from "@/mixins/formatter";
 import settings from "@/settings";
 import store from "../store";
-import { adjustedSolar, ForecastType } from "@/utils/forecast";
-import type { ForecastSlot } from "../components/Forecast/types";
+import { adjustedSolar, ForecastType, isStaticTariff } from "@/utils/forecast";
 
 const MIN_HOURS = 76;
 const MAX_HOURS = 96;
-const SLOTS_PER_HOUR = 4;
 
 export default defineComponent({
 	name: "Forecast",
@@ -167,8 +162,11 @@ export default defineComponent({
 		TopHeader: Header,
 		DynamicPriceIcon,
 		SolarChart,
+		SolarDetails,
 		PriceChart,
+		GridDetails,
 		Co2Chart,
+		Co2Details,
 	},
 	mixins: [formatter],
 	data() {
@@ -233,6 +231,17 @@ export default defineComponent({
 		priceZoom() {
 			return settings.priceZoom;
 		},
+		showFeedin() {
+			return !settings.hideFeedin;
+		},
+		isGridStatic(): boolean {
+			if (!this.forecast.grid) return false;
+			if (!isStaticTariff(this.forecast.grid)) return false;
+			if (this.forecast.feedin?.length) {
+				return isStaticTariff(this.forecast.feedin);
+			}
+			return true;
+		},
 		showSolarAdjust() {
 			return !!this.forecast.solar && this.experimental;
 		},
@@ -241,48 +250,16 @@ export default defineComponent({
 				? adjustedSolar(this.forecast.solar)
 				: this.forecast.solar;
 		},
-		solarAdjustText() {
-			const text = this.$t("forecast.solarAdjustShort");
+		solarAdjustPercent(): string {
 			const scale = this.forecast.solar?.scale || 1;
 			const percentDiff = scale * 100 - 100;
-			return `${text} (${this.fmtPercentage(percentDiff, 0, true)})`;
+			return this.fmtPercentage(percentDiff, 0, true);
 		},
-		solarSubtitle(): string {
-			const s = this.solar;
-			if (!s) return "";
-			const today = s.today?.energy ? this.fmtWh(s.today.energy, POWER_UNIT.AUTO) : "";
-			const tomorrow = s.tomorrow?.energy
-				? this.fmtWh(s.tomorrow.energy, POWER_UNIT.AUTO)
-				: "";
-			if (!today && !tomorrow) return "";
-			const parts = [];
-			if (today) parts.push(`${today} ${this.$t("forecast.solar.remaining")}`);
-			if (tomorrow) parts.push(`${tomorrow} ${this.$t("forecast.solar.tomorrow")}`);
-			return parts.join(" ・ ");
+		solarAdjustTextShort(): string {
+			return `${this.$t("forecast.solarAdjustShort")} (${this.solarAdjustPercent})`;
 		},
-		priceSubtitle(): string {
-			const slots = this.upcomingSlots(this.forecast.grid);
-			if (slots.length === 0) return "";
-			const values = slots.map((s) => s.value);
-			const min = Math.min(...values);
-			const max = Math.max(...values);
-			const avg = values.reduce((a, b) => a + b, 0) / values.length;
-			const fmtMin = this.fmtPricePerKWh(min, this.currency, false, false);
-			const fmtMax = this.fmtPricePerKWh(max, this.currency, false, true);
-			const fmtAvg = this.fmtPricePerKWh(avg, this.currency, false, true);
-			return `⌀ ${fmtAvg} ・ ${fmtMin} – ${fmtMax}`;
-		},
-		co2Subtitle(): string {
-			const slots = this.upcomingSlots(this.forecast.co2);
-			if (slots.length === 0) return "";
-			const values = slots.map((s) => s.value);
-			const min = Math.min(...values);
-			const max = Math.max(...values);
-			const avg = values.reduce((a, b) => a + b, 0) / values.length;
-			const fmtMin = this.fmtNumber(min, 0);
-			const fmtMax = this.fmtCo2Medium(max);
-			const fmtAvg = this.fmtCo2Medium(avg);
-			return `⌀ ${fmtAvg} ・ ${fmtMin} – ${fmtMax}`;
+		solarAdjustTextMedium(): string {
+			return `${this.$t("forecast.solarAdjustMedium")} (${this.solarAdjustPercent})`;
 		},
 	},
 	methods: {
@@ -292,6 +269,9 @@ export default defineComponent({
 		togglePriceZoom() {
 			settings.priceZoom = !settings.priceZoom;
 		},
+		toggleFeedin() {
+			settings.hideFeedin = !settings.hideFeedin;
+		},
 		onChartScroll(val: number) {
 			if (this.isScrolling) return;
 			this.isScrolling = true;
@@ -299,13 +279,6 @@ export default defineComponent({
 			this.$nextTick(() => {
 				this.isScrolling = false;
 			});
-		},
-		upcomingSlots(slots?: ForecastSlot[]): ForecastSlot[] {
-			if (!Array.isArray(slots)) return [];
-			const now = new Date();
-			return slots
-				.filter((slot) => new Date(slot.end) > now)
-				.slice(0, MAX_HOURS * SLOTS_PER_HOUR);
 		},
 	},
 });
@@ -320,5 +293,11 @@ export default defineComponent({
 	margin: auto;
 	border-radius: 2rem;
 	max-width: 480px;
+}
+@media (max-width: 575.98px) {
+	.chart-edge {
+		margin-left: -1.5rem;
+		margin-right: -1.5rem;
+	}
 }
 </style>

@@ -56,6 +56,43 @@ describe("formatJson", () => {
 }`);
   });
 
+  it("sorts type before config", () => {
+    const obj = {
+      name: "db:9",
+      config: { host: "192.168.1.1" },
+      deviceProduct: "RCT Power",
+      type: "template",
+      id: 9,
+    };
+    const result = formatJson(obj);
+
+    expect(result).toBe(`{
+  "id": 9,
+  "name": "db:9",
+  "type": "template",
+  "config": {"host":"192.168.1.1"},
+  "deviceProduct": "RCT Power"
+}`);
+  });
+
+  it("sorts template first inside config", () => {
+    const obj = {
+      other: { gamma: 3 },
+      config: { cache: 37000000000, host: "192.168.1.1", template: "rct-power", usage: "pv" },
+    };
+    const result = formatJson(obj, ["config"]);
+
+    expect(result).toBe(`{
+  "config": {
+    "template": "rct-power",
+    "cache": 37000000000,
+    "host": "192.168.1.1",
+    "usage": "pv"
+  },
+  "other": {"gamma":3}
+}`);
+  });
+
   it("keeps nested objects in arrays single-lined with sorted keys", () => {
     const obj = {
       items: [
