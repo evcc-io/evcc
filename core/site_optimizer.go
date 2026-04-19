@@ -9,7 +9,7 @@ import (
 	"os"
 	"slices"
 	"strings"
-	"sync/atomic"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -30,8 +30,8 @@ var (
 	eta          = float32(0.9)  // efficiency of the battery charging/discharging
 	batteryPower = float32(6000) // default power of the battery in W
 
-	updated time.Time
-	mu      atomic.Uint32
+	mu               sync.Mutex
+	optimizerUpdated time.Time
 )
 
 // optimizerResult wraps the optimizer publish payload to implement BytesMarshaler.
@@ -73,26 +73,6 @@ type batteryResult struct {
 	Empty time.Time `json:"empty,omitzero"`
 }
 
-// func (br batteryResult) MarshalJSON() ([]byte, error) {
-// 	var full, empty int64
-// 	if !br.Full.IsZero() {
-// 		full = int64(time.Until(br.Full).Seconds())
-// 	}
-// 	if !br.Empty.IsZero() {
-// 		empty = int64(time.Until(br.Empty).Seconds())
-// 	}
-
-// 	return json.Marshal(struct {
-// 		batteryResult
-// 		UntilFull  int64 `json:"untilFull,omitempty"`
-// 		UntilEmpty int64 `json:"untilEmpty,omitempty"`
-// 	}{
-// 		batteryResult: br,
-// 		UntilFull:     full,
-// 		UntilEmpty:    empty,
-// 	})
-// }
-
 type requestDetails struct {
 	Timestamps     []time.Time     `json:"timestamp"`
 	BatteryDetails []batteryDetail `json:"batteryDetails"`
@@ -101,19 +81,19 @@ type requestDetails struct {
 const slotsPerHour = float64(time.Hour / tariff.SlotDuration)
 
 func (site *Site) optimizerUpdateAsync() {
+	if !mu.TryLock() {
+		return
+	}
+	defer mu.Unlock()
+
+	if time.Since(optimizerUpdated) < 2*time.Minute {
+		return
+	}
+
 	var err error
 
-	if time.Since(updated) < 2*time.Minute {
-		return
-	}
-
-	if !mu.CompareAndSwap(0, 1) {
-		return
-	}
-
 	defer func() {
-		updated = time.Now()
-		mu.Store(0)
+		optimizerUpdated = time.Now()
 
 		if r := recover(); r != nil {
 			err = fmt.Errorf("panic %v", r)
@@ -139,8 +119,11 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	if solarTariff != nil && len(solar) > 0 {
 		minLen = min(minLen, len(solar))
 	}
-	const expectedSlots = 8
-	if minLen < expectedSlots {
+
+	// limit to 2 days for sake of performance
+	minLen = min(96, minLen)
+
+	if expectedSlots := 8; minLen < expectedSlots {
 		if solarTariff != nil {
 			return fmt.Errorf("not enough forecast slots for meaningful optimization: %d < %d (grid=%d, feedIn=%d, solar=%d)", minLen, expectedSlots, len(grid), len(feedIn), len(solar))
 		}
@@ -222,7 +205,10 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 			continue
 		}
 
-		add(site.loadpointRequest(lp, minLen, firstSlotDuration, grid))
+		// skip disabled loadpoints
+		if req, detail := site.loadpointRequest(lp, minLen, firstSlotDuration, grid); req.CMax > 0 {
+			add(req, detail)
+		}
 	}
 
 	for i, dev := range site.batteryMeters {
@@ -233,6 +219,11 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		}
 
 		add(site.batteryRequest(dev, b, grid, minLen, firstSlotDuration))
+	}
+
+	// empty request- all loadpoints disabled
+	if len(req.Batteries) == 0 {
+		return nil
 	}
 
 	httpClient := request.NewClient(site.log)
