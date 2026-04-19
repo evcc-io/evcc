@@ -182,23 +182,24 @@ func SetupSchema() error {
 		}
 	}
 
-	// meter: split energy direction
-	if old := "val"; m.HasColumn(new(meter), old) {
-		if err := m.RenameColumn(new(meter), old, "import"); err != nil {
-			return err
+	rename := func(from, to string) error {
+		if table := new(meter); m.HasColumn(table, from) && !m.HasColumn(table, to) {
+			return m.RenameColumn(table, from, to)
 		}
+		return nil
+	}
+
+	// meter: split energy direction
+	if err := rename("val", "import"); err != nil {
+		return err
 	}
 
 	// meter: split energy direction #2
-	if old := "pos"; m.HasColumn(new(meter), old) {
-		if err := m.RenameColumn(new(meter), old, "import"); err != nil {
-			return err
-		}
+	if err := rename("pos", "import"); err != nil {
+		return err
 	}
-	if old := "neg"; m.HasColumn(new(meter), old) {
-		if err := m.RenameColumn(new(meter), old, "export"); err != nil {
-			return err
-		}
+	if err := rename("neg", "export"); err != nil {
+		return err
 	}
 
 	return db.Instance.AutoMigrate(new(meter))

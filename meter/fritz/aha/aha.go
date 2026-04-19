@@ -1,9 +1,6 @@
-package fritzdect
+package aha
 
 import (
-	"crypto/md5"
-	"encoding/hex"
-	"encoding/xml"
 	"errors"
 	"fmt"
 	"net/url"
@@ -12,42 +9,22 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/meter/fritz"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
-	"golang.org/x/text/encoding/unicode"
 )
 
 // FRITZ! FritzBox AHA interface and authentication specifications:
 // https://fritz.com/fileadmin/user_upload/Global/Service/Schnittstellen/AHA-HTTP-Interface.pdf
 // https://fritz.com/fileadmin/user_upload/Global/Service/Schnittstellen/AVM_Technical_Note_-_Session_ID.pdf
 
-// FritzDECT settings
-type Settings struct {
-	URI, AIN, User, Password string
-}
-
 // FritzDECT connection
 type Connection struct {
 	*request.Helper
-	*Settings
+	*fritz.Settings
 	SID     string
 	updated time.Time
-}
-
-// https://fritz.com/fileadmin/user_upload/Global/Service/Schnittstellen/AVM_Technical_Note_-_Session_ID_english_2021-05-03.pdf
-const sessionTimeout = 15 * time.Minute
-
-// Devicestats structures getbasicdevicesstats command response (AHA-HTTP-Interface)
-type Devicestats struct {
-	XMLName xml.Name `xml:"devicestats"`
-	Energy  Energy   `xml:"energy"`
-}
-
-// Energy structures getbasicdevicesstats command energy response (AHA-HTTP-Interface)
-type Energy struct {
-	XMLName xml.Name `xml:"energy"`
-	Values  []string `xml:"stats"`
 }
 
 // NewConnection creates FritzDECT connection
@@ -60,7 +37,7 @@ func NewConnection(uri, ain, user, password string) (*Connection, error) {
 		return nil, errors.New("missing ain")
 	}
 
-	settings := &Settings{
+	settings := &fritz.Settings{
 		URI:      strings.TrimRight(uri, "/"),
 		AIN:      ain,
 		User:     user,
@@ -82,11 +59,13 @@ func NewConnection(uri, ain, user, password string) (*Connection, error) {
 // ExecCmd execautes an FritzDECT AHA-HTTP-Interface command
 func (c *Connection) ExecCmd(function string) (string, error) {
 	// refresh Fritzbox session id
-	if time.Since(c.updated) >= sessionTimeout {
-		if err := c.getSessionID(); err != nil {
+	if time.Since(c.updated) >= fritz.SessionTimeout {
+		sid, err := c.GetSessionID(c.Helper)
+		if err != nil {
 			return "", err
 		}
 		// update session timestamp
+		c.SID = sid
 		c.updated = time.Now()
 	}
 
@@ -123,7 +102,7 @@ func (c *Connection) CurrentPower() (float64, error) {
 
 var _ api.MeterEnergy = (*Connection)(nil)
 
-// CurrentPower implements the api.MeterEnergy interface
+// TotalEnergy implements the api.MeterEnergy interface
 func (c *Connection) TotalEnergy() (float64, error) {
 	// Energy value in Wh (total switch energy, refresh approximately every 2 minutes)
 	resp, err := c.ExecCmd("getswitchenergy")
@@ -136,53 +115,48 @@ func (c *Connection) TotalEnergy() (float64, error) {
 	return energy / 1000, err // Wh ==> KWh
 }
 
-// Fritzbox helpers (credits to https://github.com/rsdk/ahago)
+// SwitchPresent checks if the device is connected
+func (c *Connection) SwitchPresent() (bool, error) {
+	resp, err := c.ExecCmd("getswitchpresent")
+	if err != nil {
+		return false, err
+	}
+	return strconv.ParseBool(resp)
+}
 
-// getSessionID fetches a session-id based on the username and password in the connection struct
-func (c *Connection) getSessionID() error {
-	uri := fmt.Sprintf("%s/login_sid.lua", c.URI)
-	body, err := c.GetBody(uri)
+// SwitchState returns the current switch state
+func (c *Connection) SwitchState() (bool, error) {
+	resp, err := c.ExecCmd("getswitchstate")
+	if err != nil {
+		return false, err
+	}
+	return strconv.ParseBool(resp)
+}
+
+// SwitchOn turns the switch on
+func (c *Connection) SwitchOn() error {
+	resp, err := c.ExecCmd("setswitchon")
 	if err != nil {
 		return err
 	}
 
-	var v struct {
-		SID       string
-		Challenge string
-		BlockTime string
+	on, err := strconv.ParseBool(resp)
+	if err == nil && !on {
+		err = errors.New("switch on failed")
 	}
-
-	if err = xml.Unmarshal(body, &v); err == nil && v.SID == "0000000000000000" {
-		var challresp string
-		if challresp, err = createChallengeResponse(v.Challenge, c.Password); err == nil {
-			params := url.Values{
-				"username": {c.User},
-				"response": {challresp},
-			}
-
-			if body, err = c.GetBody(uri + "?" + params.Encode()); err == nil {
-				err = xml.Unmarshal(body, &v)
-				if v.SID == "0000000000000000" {
-					return errors.New("invalid user or password")
-				}
-				c.SID = v.SID
-			}
-		}
-	}
-
 	return err
 }
 
-// createChallengeResponse creates the Fritzbox challenge response string
-func createChallengeResponse(challenge, pass string) (string, error) {
-	encoder := unicode.UTF16(unicode.LittleEndian, unicode.IgnoreBOM).NewEncoder()
-	utf16le, err := encoder.String(challenge + "-" + pass)
+// SwitchOff turns the switch off
+func (c *Connection) SwitchOff() error {
+	resp, err := c.ExecCmd("setswitchoff")
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	hash := md5.Sum([]byte(utf16le))
-	md5hash := hex.EncodeToString(hash[:])
-
-	return challenge + "-" + md5hash, nil
+	off, err := strconv.ParseBool(resp)
+	if err == nil && off {
+		err = errors.New("switch off failed")
+	}
+	return err
 }

@@ -39,13 +39,7 @@ params:
       de: Prognosealgorithmus (mosmix, own-v1 oder clearsky)
     advanced: true
   - name: forecast_days
-    description:
-      en: Number of additional days to forecast (1-6)
-      de: Anzahl zusätzlicher Tage für die Prognose (1-6)
-    help:
-      en: "Number of additional days to forecast (1-6), excluding today. Remember: evcc calculates energy for today, tomorrow, and the day after tomorrow, effectively handling up to three days of solar forecast data, but the UI shows up to 96 hours."
-      de: "Anzahl der zusätzlichen Tage für die Prognose (1-6), ohne den heutigen Tag. Bedenke: evcc berechnet die Energie für heute, morgen und übermorgen und verarbeitet dabei effektiv bis zu drei Tage Solarprognosedaten, zeigt jedoch bis zu 96 Stunden an."
-    default: 4
+    deprecated: true
     advanced: true
   - name: interval
     default: 1h
@@ -57,7 +51,7 @@ render: |
   forecast:
     source: http
     # Base URL with required params (format, type, access token), then optional item-based parameters
-    uri: https://www.solarprognose.de/web/solarprediction/api/v1?_format=json&type=hourly&project=https://evcc.io&access-token={{ .token }}{{ if .item }}&item={{ .item }}{{ if .id }}&id={{ .id }}{{ else }}&token={{ unquote .uniquetoken }}{{ end }}{{ end }}{{ if .algorithm }}&algorithm={{ .algorithm }}{{ end }}{{ if .forecast_days }}&end_day={{ .forecast_days }}{{ end }}
+    uri: https://www.solarprognose.de/web/solarprediction/api/v1?_format=json&type=hourly&project=https://evcc.io&access-token={{ .token }}{{ if .item }}&item={{ .item }}{{ if .id }}&id={{ .id }}{{ else }}&token={{ unquote .uniquetoken }}{{ end }}{{ end }}{{ if .algorithm }}&algorithm={{ .algorithm }}{{ end }}
     jq: |
       def step: 3600; # hourly interval
 
@@ -65,7 +59,10 @@ render: |
         (.data // {})
         | if type == "object" and length > 0 then
           to_entries
-          | map({key, value: (.value[0] * 1000)})
+          | map(
+              select(.value | type == "array" and length > 0)
+              | {key, value: ((.value[0] // 0) * 1000)}
+            )
           | from_entries
         else
           {}
@@ -74,19 +71,21 @@ render: |
       . as $root
       | ($root | lookup) as $L
       | ($L | keys | map(tonumber) | sort) as $ts
-      | ($ts[0]) as $min
-      | ($ts[-1]) as $max
-      | reduce range($min; $max + step; step) as $t
-          ( { last: null, out: [] };
-            ($L[($t|tostring)]?) as $v
-            | .last = (if $v == null then .last else $v end)
-            | .out +=
-            [ {
-                start: ($t | strftime("%FT%TZ")),
-                end:   (($t + step) | strftime("%FT%TZ")),
-                value: (.last // 0)
-              } ]
-          )
-      | .out
+      | if ($ts | length) == 0 then
+          []
+        else
+          reduce range($ts[0]; $ts[-1] + step; step) as $t
+            ( { last: null, out: [] };
+              ($L[($t|tostring)]?) as $v
+              | .last = (if $v == null then .last else $v end)
+              | .out +=
+              [ {
+                  start: ($t | strftime("%FT%TZ")),
+                  end:   (($t + step) | strftime("%FT%TZ")),
+                  value: (.last // 0)
+                } ]
+            )
+          | .out
+        end
       | tostring
   interval: {{ .interval }}
