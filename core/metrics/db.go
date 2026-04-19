@@ -187,17 +187,17 @@ func SetupSchema() error {
 		if err := m.RenameColumn(new(meter), old, "import"); err != nil {
 			return err
 		}
-	}
-
-	// meter: split energy direction #2
-	if old := "pos"; m.HasColumn(new(meter), old) {
-		if err := m.RenameColumn(new(meter), old, "import"); err != nil {
-			return err
+	} else {
+		// meter: split energy direction #2
+		if old := "pos"; m.HasColumn(new(meter), old) {
+			if err := m.RenameColumn(new(meter), old, "import"); err != nil {
+				return err
+			}
 		}
-	}
-	if old := "neg"; m.HasColumn(new(meter), old) {
-		if err := m.RenameColumn(new(meter), old, "export"); err != nil {
-			return err
+		if old := "neg"; m.HasColumn(new(meter), old) {
+			if err := m.RenameColumn(new(meter), old, "export"); err != nil {
+				return err
+			}
 		}
 	}
 
