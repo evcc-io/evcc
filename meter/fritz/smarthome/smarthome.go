@@ -155,7 +155,7 @@ func (c *Connection) TotalEnergy() (float64, error) {
 	}
 
 	if unit.Statistics != nil && len(unit.Statistics.Energies) > 0 {
-		if stats := unit.Statistics.Energies[0].Values; len(stats) > 0 {
+		if stats := unit.Statistics.Energies[len(unit.Statistics.Energies)-1].Values; len(stats) > 0 {
 			return (float64)(stats[0]) / 1000, nil
 		}
 	}
