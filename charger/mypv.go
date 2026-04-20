@@ -340,6 +340,7 @@ func (wb *MyPv) CurrentPower() (float64, error) {
 				return 0, err
 			}
 
+			p = float64(binary.BigEndian.Uint16(b))
 			if binary.BigEndian.Uint16(f) == 1 {
 				p = p + rp
 				wb.log.DEBUG.Printf("relay [%.0f W] on / total power = %.0f", rp, p)
