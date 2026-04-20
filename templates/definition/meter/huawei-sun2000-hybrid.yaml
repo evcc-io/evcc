@@ -280,16 +280,14 @@ render: |
             # only charging requires repeated requests
             - case: 3 # charge
               set:
-                source: sequence
+                source: const
+                value: 1 # Minute
                 set:
-                  - source: const
-                    value: 1 # Minute
-                    set:
-                      source: modbus
-                      {{- include "modbus" . | indent 12 }}
-                      register:
-                        address: 47083 # Forced charging and discharging period
-                        type: writesingle
-                        encoding: uint16
+                  source: modbus
+                  {{- include "modbus" . | indent 12 }}
+                  register:
+                    address: 47083 # Forced charging and discharging period
+                    type: writesingle
+                    encoding: uint16
   {{- include "battery-params" . }}
   {{- end }}
