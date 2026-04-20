@@ -58,7 +58,7 @@ render: |
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 8558 # Register 8559 (Phase A active power, U32)
+      address: 8558 # Register 8559 (Phase A active power, S32, signed import/export)
       type: input
       decode: int32s
   - source: modbus
