@@ -948,6 +948,8 @@ func (site *Site) update(lp updater) {
 		homePower := site.gridPower + max(0, site.pvPower) + site.battery.Power - totalChargePower
 		homePower = max(homePower, 0)
 		site.publish(keys.HomePower, homePower)
+		site.publish(keys.BatteryBuffered, batteryBuffered)
+		site.publish(keys.BatteryStart, batteryStart)
 
 		if homePower > 0 {
 			if err := site.homeEnergy.AddEnergy(nil, nil, homePower); err != nil {
@@ -1017,6 +1019,8 @@ func (site *Site) prepare() {
 	site.publish(keys.PrioritySoc, site.prioritySoc)
 	site.publish(keys.BufferSoc, site.bufferSoc)
 	site.publish(keys.BufferStartSoc, site.bufferStartSoc)
+	site.publish(keys.BatteryBuffered, false)
+	site.publish(keys.BatteryStart, false)
 	site.publish(keys.BatteryMode, site.batteryMode)
 	site.publish(keys.BatteryDischargeControl, site.batteryDischargeControl)
 	site.publish(keys.ResidualPower, site.GetResidualPower())

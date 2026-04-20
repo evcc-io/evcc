@@ -4,7 +4,10 @@ import (
 	"testing"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/types"
+	"github.com/evcc-io/evcc/tariff"
+	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/stretchr/testify/assert"
 )
@@ -157,4 +160,22 @@ func TestRequiredBatteryMode(t *testing.T) {
 		res := s.requiredBatteryMode(tc.gridChargeActive, api.Rate{})
 		assert.Equal(t, tc.res, res, "expected %s, got %s", tc.res, res)
 	}
+}
+
+func TestPreparePublishesBatteryFlags(t *testing.T) {
+	site := NewSite()
+	site.tariffs = &tariff.Tariffs{}
+	valueChan := make(chan util.Param, 256)
+	site.valueChan = valueChan
+
+	site.prepare()
+
+	params := make(map[string]any)
+	for len(valueChan) > 0 {
+		p := <-valueChan
+		params[p.Key] = p.Val
+	}
+
+	assert.False(t, params[keys.BatteryBuffered].(bool))
+	assert.False(t, params[keys.BatteryStart].(bool))
 }

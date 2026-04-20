@@ -45,6 +45,8 @@ const (
 	BatteryGridChargeActive = "batteryGridChargeActive"
 	BufferSoc               = "bufferSoc"
 	BufferStartSoc          = "bufferStartSoc"
+	BatteryBuffered         = "batteryBuffered"
+	BatteryStart            = "batteryStart"
 
 	// battery status
 	Battery     = "battery"
