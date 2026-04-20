@@ -174,7 +174,7 @@ func NewSmartEVSE3(uri string, cache time.Duration, chargeMode int) (api.Charger
 	var phases1p3p func(int) error
 	var getPhases func() (int, error)
 	if res.Settings.EnableC2 != "" &&
-		res.Settings.EnableC2 != "Not present" && // Asume 3 phase
+		res.Settings.EnableC2 != "Not present" && // Assume 3 phase
 		res.Settings.EnableC2 != "Always Off" { // assume single phase
 		phases1p3p = wb.phases1p3p
 		getPhases = wb.getPhases
