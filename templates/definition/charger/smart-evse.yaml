@@ -17,7 +17,7 @@ params:
   - name: cache
     default: 1s
     advanced: true
-  - name: charge_mode
+  - name: chargeMode
     default: smart
     advanced: true
     type: choice
@@ -30,4 +30,4 @@ render: |
   type: smart-evse
   uri: http://{{ .host }}
   cache: {{ .cache }}
-  chargemode: {{ .charge_mode }}
+  chargeMode: {{ .chargeMode }}
