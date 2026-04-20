@@ -151,7 +151,7 @@ const settings: Settings = reactive({
   savingsIndicator: read(SAVINGS_INDICATOR),
   sessionsGroup: read(SESSIONS_GROUP),
   sessionsType: read(SESSIONS_TYPE),
-  solarAdjusted: readBool(SETTINGS_SOLAR_ADJUSTED),
+  solarAdjusted: false, //readBool(SETTINGS_SOLAR_ADJUSTED), # temporarily disable, https://github.com/evcc-io/evcc/issues/29165
   priceZoom: readBool(SETTINGS_PRICE_ZOOM),
   hideFeedin: readBool(SETTINGS_HIDE_FEEDIN),
   loadpoints: readJSON(LOADPOINTS),
