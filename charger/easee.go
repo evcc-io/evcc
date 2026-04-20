@@ -733,6 +733,13 @@ func (c *Easee) Phases1p3p(phases int) error {
 			data.DynamicCircuitCurrentP3 = &max3
 		}
 
+		// Car must stop charging during a phase transition; loadpoint will
+		// re-enable via syncCharger, same as the charger-level path below.
+		c.log.TRACE.Printf("phase switch (circuit-level): pausing charger before switching to %dp", phases)
+		if err := c.Enable(false); err != nil {
+			return err
+		}
+
 		// Register before POST so the SignalR CommandResponse that the Easee
 		// cloud sends on HTTP 200 (sync) responses is silently consumed rather
 		// than logged as rogue. On error we undo the registration.
