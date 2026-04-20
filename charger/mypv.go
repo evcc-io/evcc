@@ -315,7 +315,7 @@ func (wb *MyPv) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-	// relay inactive or scale factor not set
+	// relay inactive
 	if binary.BigEndian.Uint16(f) != 1 {
 		return res, nil
 	}
