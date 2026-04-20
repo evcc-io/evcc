@@ -40,6 +40,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.C
 		Tos                                 bool
 		measurement.Energy                  `mapstructure:",squash"` // optional
 		meter.Phases                        `mapstructure:",squash"` // optional
+		measurement.Temperature             `mapstructure:",squash"` // optional, for heating devices
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -114,16 +115,31 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.C
 		}
 	}
 
-	// decorate soc
+	// decorate soc; for heating devices (api.Heating feature), the soc slot holds
+	// temperature in °C — fall back to temp getter when no soc getter is configured.
 	soc, err := cc.Soc.FloatGetter(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("soc: %w", err)
 	}
+	if soc == nil && cc.Temp != nil {
+		tempG, _, err := cc.Temperature.Configure(ctx)
+		if err != nil {
+			return nil, err
+		}
+		soc = tempG
+	}
 
-	// decorate limitsoc
+	// decorate limitsoc; similarly, fall back to limittemp getter when no limitsoc is configured.
 	limitsoc, err := cc.LimitSoc.IntGetter(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("limitsoc: %w", err)
+	}
+	if limitsoc == nil && cc.LimitTemp != nil {
+		_, limitTempG, err := cc.Temperature.Configure(ctx)
+		if err != nil {
+			return nil, err
+		}
+		limitsoc = limitTempG
 	}
 
 	// decorate measurements
