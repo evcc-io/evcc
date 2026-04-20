@@ -1,0 +1,158 @@
+template: roche-energy-rel261
+covers: ["roche-energy"]
+products:
+  - brand: Roche Energy
+    description:
+      generic: REL261 Energy Storage Cabinet (261 kWh / 125 kW)
+capabilities: ["battery-control"]
+requirements:
+  description:
+    en: |
+      Manufacturer: Shanghai Shenyi Roche Energy Technology Co., Ltd.
+      ([rochenergy.com](https://www.rochenergy.com)).
+
+      Connects to the REL261 cabinet EMS via Modbus TCP (North
+      interface, protocol `CE_single_unit_modbustcp_north`). The EMS
+      device address is `1` by default and the default TCP port is
+      `502`. Register values use big-endian byte order.
+
+      The cabinet is an AC-coupled all-in-one system with integrated
+      PCS/inverter (125 kW rated, 832 VDC LFP 261 kWh), so the battery
+      is controlled directly via the EMS; no separate inverter entry
+      is required. Only `battery` usage is supported at this time.
+    de: |
+      Hersteller: Shanghai Shenyi Roche Energy Technology Co., Ltd.
+      ([rochenergy.com](https://www.rochenergy.com)).
+
+      Verbindet sich via Modbus TCP mit dem EMS des REL261 Schranks
+      (North Interface, Protokoll `CE_single_unit_modbustcp_north`).
+      Die EMS-Geräteadresse ist standardmäßig `1`, der Standard-
+      TCP-Port ist `502`. Registerwerte sind big-endian kodiert.
+
+      Der Schrank ist ein AC-gekoppeltes All-in-One-System mit
+      integriertem PCS/Wechselrichter (125 kW Nennleistung, 832 VDC
+      LFP 261 kWh), die Batterie wird daher direkt über das EMS
+      angesteuert; ein separater Wechselrichter-Eintrag ist nicht
+      erforderlich. Aktuell wird nur die `battery`-Nutzung unterstützt.
+params:
+  - name: usage
+    choice: ["battery"]
+  - name: modbus
+    choice: ["tcpip"]
+    id: 1
+    port: 502
+  - preset: battery-params
+  - name: capacity
+    default: 261
+  - name: minsoc
+    default: 10
+  - name: maxsoc
+    default: 95
+  - name: maxchargepower
+    default: 125000
+render: |
+  type: custom
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 40053 # Energy storage active power (kW); +discharge / -charge
+      type: input
+      decode: float32
+    scale: 1000
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 40061 # Energy storage SOC (%)
+      type: input
+      decode: float32
+    scale: 1
+  batterymode:
+    source: switch
+    switch:
+    - case: 1 # normal - return device to its own strategy mode
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 1
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 30085 # Power on/off = On
+              type: writesingle
+              decode: int16
+        - source: const
+          value: 1
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 30005 # Set working mode = Strategy (self-consumption)
+              type: writesingle
+              decode: int16
+    - case: 2 # hold - remote control with zero setpoint
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 1
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 30085 # Power on/off = On
+              type: writesingle
+              decode: int16
+        - source: const
+          value: 2
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 30005 # Set working mode = Remote
+              type: writesingle
+              decode: int16
+        - source: const
+          value: 0
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 30086 # Set active power (kW) = 0
+              type: writemultiple
+              decode: float32
+    - case: 3 # charge - remote control, negative setpoint
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 1
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 30085 # Power on/off = On
+              type: writesingle
+              decode: int16
+        - source: const
+          value: 2
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 30005 # Set working mode = Remote
+              type: writesingle
+              decode: int16
+        - source: const
+          value: {{ divf .maxchargepower -1000.0 }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 30086 # Set active power (kW, negative = charge)
+              type: writemultiple
+              decode: float32
+  {{- include "battery-params" . }}
