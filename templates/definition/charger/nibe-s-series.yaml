@@ -9,7 +9,8 @@ requirements:
     de: |
       Modbus Verbindung zur NIBE S Wärmepumpe. Firmware 4.7.5 oder neuer benötigt.
       In der Inneneinheit muss im Menü 7.5.9 Modbus aktiviert sein.
-      Zur Verwendung der Leistungssteuerung muss im Menü 7.4 unter dem Punkt AUX von Modbus ext. Leistungsbegrenzung ausgewählt sein.
+      Zur Verwendung der Leistungssteuerung muss im Menü 7.4 unter dem Punkt AUX von Modbus ext. Leistungsbegrenzung ausgewählt sein. In den Ladepunkteinstellungen muss eine minimale Leistung von 1,2kW eingestellt werden. Sollte der Normalverbrauch höher sein, muss dieser als minimale Leistung eingestellt werden.
+      Im Menü 7.4 dürfen die Optionen SG-Ready A und SG-Ready B nicht vergeben sein.
       Es muss einmalig im Holding Register 3032 der Wert `1` (uint8) geschrieben werden.
     en: |
       Modbus connection to the NIBE S heat pump.
