@@ -165,7 +165,7 @@ render: |
                 value: 0 # stop
                 set:
                   source: modbus
-                  {{- include "modbus" . | indent 12 }}
+                  {{- include "modbus" . | indent 16 }}
                   register:
                     address: 47100 # Forcible charge/discharge
                     type: writesingle
@@ -174,22 +174,11 @@ render: |
                 value: {{ .maxdischargepower }}
                 set:
                   source: modbus
-                  {{- include "modbus" . | indent 12 }}
+                  {{- include "modbus" . | indent 16 }}
                   register:
                     address: 47077 # Max. Discharge Power
                     type: writemultiple
                     encoding: uint32
-              {{- if eq .forceaccharging "false" }}
-              - source: const
-                value: 0 # Disable
-                set:
-                  source: modbus
-                  {{- include "modbus" . | indent 12 }}
-                  register:
-                    address: 47087 # Charge from grid
-                    type: writesingle
-                    encoding: uint16
-              {{- end }}
           - case: 2 # hold
             set:
               source: sequence
@@ -198,7 +187,7 @@ render: |
                 value: 0 # stop
                 set:
                   source: modbus
-                  {{- include "modbus" . | indent 12 }}
+                  {{- include "modbus" . | indent 16 }}
                   register:
                     address: 47100 # Forcible charge/discharge
                     type: writesingle
@@ -207,22 +196,11 @@ render: |
                 value: 0 # W Discharge Power
                 set:
                   source: modbus
-                  {{- include "modbus" . | indent 12 }}
+                  {{- include "modbus" . | indent 16 }}
                   register:
                     address: 47077 # Max. Discharge Power
                     type: writemultiple
                     encoding: uint32
-              {{- if eq .forceaccharging "false" }}
-              - source: const
-                value: 0 # Disable
-                set:
-                  source: modbus
-                  {{- include "modbus" . | indent 12 }}
-                  register:
-                    address: 47087 # Charge from grid
-                    type: writesingle
-                    encoding: uint16
-              {{- end }}
           - case: 3 # charge
             set:
               source: sequence
@@ -231,7 +209,7 @@ render: |
                 value: 1 # charge
                 set:
                   source: modbus
-                  {{- include "modbus" . | indent 12 }}
+                  {{- include "modbus" . | indent 16 }}
                   register:
                     address: 47100 # Forcible charge/discharge
                     type: writesingle
@@ -240,7 +218,7 @@ render: |
                 value: 0 # duration
                 set:
                   source: modbus
-                  {{- include "modbus" . | indent 12 }}
+                  {{- include "modbus" . | indent 16 }}
                   register:
                     address: 47246 # Forcible charge/discharge setting mode
                     type: writesingle
@@ -249,7 +227,7 @@ render: |
                 value: {{ .maxchargepower }} # W
                 set:
                   source: modbus
-                  {{- include "modbus" . | indent 12 }}
+                  {{- include "modbus" . | indent 16 }}
                   register:
                     address: 47247 # Forcible charge power
                     type: writemultiple
@@ -258,7 +236,7 @@ render: |
                 value: 1 # Enable
                 set:
                   source: modbus
-                  {{- include "modbus" . | indent 12 }}
+                  {{- include "modbus" . | indent 16 }}
                   register:
                     address: 47087 # Charge from grid
                     type: writesingle
@@ -284,7 +262,7 @@ render: |
                 value: 1 # Minute
                 set:
                   source: modbus
-                  {{- include "modbus" . | indent 12 }}
+                  {{- include "modbus" . | indent 16 }}
                   register:
                     address: 47083 # Forced charging and discharging period
                     type: writesingle
