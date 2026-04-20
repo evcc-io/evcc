@@ -2,8 +2,8 @@ template: hoymiles-dtu-mb
 products:
   - brand: Hoymiles
     description:
-      de: HMT/HMS-Serie mit DTU PRO S / MODBUS TCP
-      en: HMT/HMS-Series with DTU PRO S / MODBUS TCP
+      de: "HMT/HMS-Serie mit DTU PRO S / MODBUS TCP"
+      en: "HMT/HMS-Series with DTU PRO S / MODBUS TCP"
 requirements:
   description:
     de: |
