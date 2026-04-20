@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"net"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -15,27 +16,32 @@ func init() {
 	registry.Add("hoymiles-dtu", NewHoymilesDTUFromConfig)
 }
 
-// 2. Define the configuration struct
-// This automatically maps to the YAML settings
 type HoymilesDTUConfig struct {
-	Host string
-	Port string
-	ID   uint8
+	Host       string
+	Port       string
+	ID         uint8
+	MaxACPower int
+	Cache      time.Duration
 }
 
-// 3. Define the main struct that holds your state
+type hoymilesDTUValues struct {
+	power       float64
+	totalEnergy float64
+}
+
 type HoymilesDTU struct {
-	conn      *modbus.Connection
-	registers []uint16 // We will store the discovered panel registers here
+	log     *util.Logger
+	conn    *modbus.Connection
+	maxAC   float64
+	valuesG func() (hoymilesDTUValues, error)
 }
 
 // NewHoymilesDTUFromConfig creates a Hoymiles DTU meter from generic config
-// what we need to know:
-// - IP address and port of the DTU (default 502)
 func NewHoymilesDTUFromConfig(other map[string]any) (api.Meter, error) {
 	cc := HoymilesDTUConfig{
-		Port: "502",
-		ID:   1,
+		Port:  "502",
+		ID:    1,
+		Cache: time.Second * 10,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -43,17 +49,28 @@ func NewHoymilesDTUFromConfig(other map[string]any) (api.Meter, error) {
 	}
 
 	uri := net.JoinHostPort(cc.Host, cc.Port)
+
+	modbus.Lock()
+	defer modbus.Unlock()
+
 	conn, err := modbus.NewConnection(context.Background(), uri, "", "", 0, modbus.Tcp, cc.ID)
 	if err != nil {
 		return nil, err
 	}
 
 	res := &HoymilesDTU{
-		conn: conn,
+		log:   util.NewLogger("hoymiles-dtu"),
+		conn:  conn,
+		maxAC: float64(cc.MaxACPower),
 	}
 
-	return res, nil
+	res.valuesG = util.Cached(res.readCurrentValues, cc.Cache)
+
+	maxACPower := pvMaxACPower{MaxACPower: float64(cc.MaxACPower)}
+	return decorateMeter(res, res.TotalEnergy, nil, nil, nil, maxACPower.Decorator()), nil
 }
+
+var _ api.Meter = (*HoymilesDTU)(nil)
 
 // define noMorePanels type to indicate that there are no more panels to read
 type noMorePanels struct{}
@@ -75,7 +92,7 @@ func (m *HoymilesDTU) PanelPower(panelIndex int, conn *modbus.Connection) (float
 	// read PORT_LENGTH bytes from the DTU starting at startRegister
 	results, err := conn.ReadHoldingRegisters(startRegister, PORT_LENGTH)
 	if err != nil {
-		return 0, 0, fmt.Errorf("failed to read panel %d: %w", panelIndex, err)
+		return 0, 0, fmt.Errorf("Failed to read hoymiles-dtu panel %d: %w", panelIndex, err)
 	}
 	// inverterSerial in 0x1 - 0x6, hex to string
 	inverterSerial := string(results[1:6])
@@ -88,34 +105,35 @@ func (m *HoymilesDTU) PanelPower(panelIndex int, conn *modbus.Connection) (float
 	power := binary.BigEndian.Uint16(results[16:18]) / 10 // power is located at bytes 16-17 of the panel data, and is diveded by 10 to get the actual power in watts
 	// totalCumulativeProduction in 20 - 24
 	totalCumulativeProduction := binary.BigEndian.Uint32(results[20:24]) // total cumulative production is located at bytes 20-23 of the panel data, and is in Wh
+	m.log.TRACE.Printf("Panel %d: Inverter Serial: %s, Port Number: %d, Power: %d W, Total Cumulative Production: %d Wh", panelIndex, inverterSerial, portNumber, power, totalCumulativeProduction)
 	return float64(power), float64(totalCumulativeProduction), nil
 }
 
-func (m *HoymilesDTU) ReadCurrentValues() (float64, float64, error) {
-	// panel power is the sum of all panels, so we need to read each panel and sum their power
-	totalPower := 0.0
-	totalCumulativeProduction := 0.0
-	for i := 0; i < 99; i++ { // we will read up to 99 panels, but will stop if we get no more panels error
+func (m *HoymilesDTU) readCurrentValues() (hoymilesDTUValues, error) {
+	var values hoymilesDTUValues
+	for i := 0; i < 99; i++ {
 		power, cumulative, err := m.PanelPower(i, m.conn)
 		if err != nil {
 			if _, ok := err.(noMorePanels); ok {
-				break // no more panels to read, exit the loop
+				break
 			}
-			return 0, 0, fmt.Errorf("failed to read panel %d: %w", i, err)
+			return hoymilesDTUValues{}, fmt.Errorf("Failed to read hoymiles-dtu-panel %d: %w", i, err)
 		}
-		totalPower += power
-		totalCumulativeProduction += cumulative
+		values.power += power
+		values.totalEnergy += cumulative
 	}
-
-	return totalPower, totalCumulativeProduction, nil
+	m.log.DEBUG.Printf("Total power from all panels: %.2f W / %.2f W, Total cumulative production: %.2f Wh", values.power, m.maxAC, values.totalEnergy)
+	return values, nil
 }
 
+// CurrentPower implements the api.Meter interface
 func (m *HoymilesDTU) CurrentPower() (float64, error) {
-	power, _, err := m.ReadCurrentValues()
-	return power, err
+	res, err := m.valuesG()
+	return res.power, err
 }
 
-func (m *HoymilesDTU) TotalCumulativeProduction() (float64, error) {
-	_, cumulative, err := m.ReadCurrentValues()
-	return cumulative, err
+// TotalEnergy implements the api.MeterEnergy interface
+func (m *HoymilesDTU) TotalEnergy() (float64, error) {
+	res, err := m.valuesG()
+	return res.totalEnergy / 1e3, err // Wh to kWh
 }

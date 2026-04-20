@@ -33,7 +33,7 @@ params:
       de: "Gesamtleistung der Wechselrichter in Watt (z.B. 3000)"
       en: "Total power of the inverters in watt (e.g. 3000)"
 render: |
-  - type: hoymiles-dtu
-    host: "{host}"
-    port: "{port}"
-    maxacpower: "{maxacpower}"
+  type: hoymiles-dtu
+  host: {{ .host }}
+  port: {{ .port }}
+  maxacpower: {{ .maxacpower }}
