@@ -65,7 +65,7 @@ func NewSgReadyFromConfig(ctx context.Context, other map[string]any) (api.Charge
 	}{
 		embed: embed{
 			Icon_:     "heatpump",
-			Features_: []api.Feature{api.Heating, api.IntegratedDevice},
+			Features_: []api.Feature{api.Continuous, api.Heating, api.IntegratedDevice},
 		},
 	}
 
@@ -73,9 +73,23 @@ func NewSgReadyFromConfig(ctx context.Context, other map[string]any) (api.Charge
 		return nil, err
 	}
 
-	modeS, err := cc.SetMode.IntSetter(ctx, "mode")
+	modeSet, err := cc.SetMode.IntSetter(ctx, "mode")
 	if err != nil {
 		return nil, err
+	}
+
+	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("sgready"))
+
+	modeS := func(mode int64) error {
+		switch mode {
+		case Dim:
+			log.DEBUG.Printf("set sgready mode: %s", "dim")
+		case Normal:
+			log.DEBUG.Printf("set sgready mode: %s", "normal")
+		case Boost:
+			log.DEBUG.Printf("set sgready mode: %s", "boost")
+		}
+		return modeSet(mode)
 	}
 
 	modeG, err := cc.GetMode.IntGetter(ctx)

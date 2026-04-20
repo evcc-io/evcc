@@ -13,6 +13,7 @@ RUN --mount=type=cache,target=/root/.npm npm ci
 COPY Makefile .
 COPY *.js ./
 COPY *.ts *.mts ./
+COPY .browserslistrc .
 COPY assets assets
 COPY i18n i18n
 
@@ -96,6 +97,13 @@ EXPOSE 8887/tcp
 EXPOSE 8899/udp
 # SMA Energy Manager
 EXPOSE 9522/udp
+
+HEALTHCHECK \
+  --interval=30s \
+  --timeout=5s \
+  --start-period=30s \
+  --retries=3 \
+  CMD wget -qO /dev/null http://localhost:7070 || exit 1
 
 ENTRYPOINT [ "/app/entrypoint.sh" ]
 CMD [ "evcc" ]

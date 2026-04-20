@@ -1,0 +1,49 @@
+template: MTec
+products:
+  - brand: M-Tec
+group: heating
+requirements:
+  # evcc: ["sponsorship"]
+params:
+  - name: modbus
+    choice: ["tcpip"]
+  - name: tempsource
+    type: choice
+    choice: ["warmwater_top", "buffer"]
+
+render: |
+  type: heatpump
+  setmaxpower:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 1000 # PV Überschussleistung in Watt
+      type: writeholdings
+      decode: int16
+    scale: 1
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 707 # aktuelle Aufnahmeleistung der WP
+      type: holding
+      decode: int16
+    scale: 1
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 706 # aktuelle Wärmemenge der WP
+      type: holding
+      decode: int16
+    scale: 1
+  {{- if .tempsource }}
+  temp:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: {{ if eq .tempsource "warmwater_top" -}} 401 {{ else if eq .tempsource "buffer" -}} 601  {{- end }} # 
+      type: holding
+      decode: int16
+    scale: 0.1
+  {{- end }}

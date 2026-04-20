@@ -65,9 +65,11 @@ export default defineComponent({
 			// Smart feed-in priority: pause when rates are above or equal to limit
 			return value >= this.currentLimit;
 		},
-		async saveLimit(limit: number) {
+		async saveLimit(limit: number, active: boolean) {
 			// save last selected value to be suggest again when reactivating limit
 			this.saveLastLimit(limit);
+
+			if (!active) return;
 
 			const url = `loadpoints/${this.loadpointId}/smartfeedinprioritylimit`;
 			await api.post(`${url}/${encodeURIComponent(limit)}`);

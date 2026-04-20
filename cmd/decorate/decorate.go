@@ -7,18 +7,14 @@ import (
 	"fmt"
 	"go/format"
 	"io"
-	"maps"
 	"os"
 	"reflect"
-	"slices"
 	"strconv"
 	"strings"
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
 	"github.com/evcc-io/evcc/api"
-	combinations "github.com/mxschmitt/golang-combinations"
-	"github.com/samber/lo"
 	"github.com/spf13/pflag"
 	"golang.org/x/tools/imports"
 )
@@ -35,8 +31,8 @@ var srcTmpl string
 var header string
 
 type funcStruct struct {
-	Signature, Function, VarName, ReturnTypes string
-	Params                                    []string
+	Signature, Function, VarName, ReturnTypes, BaseType, ShortType string
+	Params                                                         []string
 }
 
 type typeStruct struct {
@@ -45,36 +41,36 @@ type typeStruct struct {
 }
 
 var interfaces = make(map[string]reflect.Type)
-var dependents = make(map[string][]string)
 
 func init() {
-	reflectTypes := map[reflect.Type][]reflect.Type{
-		reflect.TypeFor[api.Meter]():             {reflect.TypeFor[api.MeterEnergy](), reflect.TypeFor[api.PhaseCurrents](), reflect.TypeFor[api.PhaseVoltages](), reflect.TypeFor[api.MaxACPowerGetter]()},
-		reflect.TypeFor[api.PhaseCurrents]():     {reflect.TypeFor[api.PhasePowers]()}, // phase powers are only used to determine currents sign
-		reflect.TypeFor[api.PhaseSwitcher]():     {reflect.TypeFor[api.PhaseGetter]()},
-		reflect.TypeFor[api.Battery]():           {reflect.TypeFor[api.BatteryCapacity](), reflect.TypeFor[api.SocLimiter](), reflect.TypeFor[api.BatteryController](), reflect.TypeFor[api.BatterySocLimiter](), reflect.TypeFor[api.BatteryPowerLimiter]()},
-		reflect.TypeFor[api.ChargeState]():       {reflect.TypeFor[api.ChargeController](), reflect.TypeFor[api.CurrentController]()},
-		reflect.TypeFor[api.CurrentController](): {reflect.TypeFor[api.CurrentGetter]()},
-	}
-
-	for typ, types := range reflectTypes {
-		interfaces[typ.String()] = typ
-		for _, t := range types {
-			interfaces[t.String()] = t
-		}
-
-		dependents[typ.String()] = lo.Map(types, func(typ reflect.Type, _ int) string {
-			return typ.String()
-		})
-	}
-
 	for _, typ := range []reflect.Type{
+		reflect.TypeFor[api.BatteryCapacity](),
+		reflect.TypeFor[api.SocLimiter](),
+		reflect.TypeFor[api.BatteryController](),
+		reflect.TypeFor[api.BatterySocLimiter](),
+		reflect.TypeFor[api.BatteryPowerLimiter](),
+		reflect.TypeFor[api.PhasePowers](),
+		reflect.TypeFor[api.PhaseGetter](),
+		reflect.TypeFor[api.CurrentController](),
+		reflect.TypeFor[api.ChargeController](),
+		reflect.TypeFor[api.CurrentController](),
+		reflect.TypeFor[api.PhaseCurrents](),
+		reflect.TypeFor[api.PhaseSwitcher](),
+		reflect.TypeFor[api.Battery](),
+		reflect.TypeFor[api.ChargeState](),
+		reflect.TypeFor[api.MeterEnergy](),
+		reflect.TypeFor[api.PhaseCurrents](),
+		reflect.TypeFor[api.PhaseVoltages](),
+		reflect.TypeFor[api.MaxACPowerGetter](),
+		reflect.TypeFor[api.Meter](),
+		reflect.TypeFor[api.CurrentGetter](),
 		reflect.TypeFor[api.Curtailer](),
 		reflect.TypeFor[api.Resurrector](),
 		reflect.TypeFor[api.VehicleOdometer](),
 		reflect.TypeFor[api.VehicleRange](),
 		reflect.TypeFor[api.VehicleClimater](),
 		reflect.TypeFor[api.VehicleFinishTimer](),
+		reflect.TypeFor[api.VehiclePosition](),
 		reflect.TypeFor[api.Identifier](),
 		reflect.TypeFor[api.ChargerEx](),
 		reflect.TypeFor[api.ChargeRater](),
@@ -84,80 +80,17 @@ func init() {
 	}
 }
 
-// hasIntersection returns if the slices intersect
-func hasIntersection[T comparable](a, b []T) bool {
-	for _, el := range a {
-		if slices.Contains(b, el) {
-			return true
-		}
-	}
-	return false
-}
-
-func getCombinations(combos []string) [][]string {
-	validCombos := make([][]string, 0)
-	sortedDependents := slices.Sorted(maps.Keys(dependents))
-
-COMBO:
-	for _, c := range combinations.All(combos) {
-		// order the cases for generation
-		for _, master := range sortedDependents {
-			details := dependents[master]
-			// prune combinations where ...
-			// - master is part of the decorators
-			// - master is not part of the currently evaluated combination
-			// - details are part of the currently evaluated combination
-			// ... and remove details from the combination
-			if slices.Contains(combos, master) && !slices.Contains(c, master) && hasIntersection(c, details) {
-				c = lo.Without(c, details...)
-
-				if len(c) == 0 {
-					continue COMBO
-				}
-			}
-		}
-
-		// prune duplicates
-		for _, v := range validCombos {
-			if slices.Equal(v, c) {
-				continue COMBO
-			}
-		}
-
-		validCombos = append(validCombos, c)
-	}
-
-	return validCombos
-}
-
-func getTemplate(dtypes []reflect.Type, types map[string]typeStruct, combos []string) *template.Template {
+func getTemplate(dtypes []reflect.Type, types map[string]typeStruct) *template.Template {
 	tmpl, err := template.New("gen").Funcs(sprig.FuncMap()).Funcs(template.FuncMap{
-		// contains checks if slice contains string
-		"contains": slices.Contains[[]string, string],
-		// ordered returns a slice of funcStruct ordered by dynamicType
-		"ordered": func() []funcStruct {
-			ordered := make([]funcStruct, 0)
+		// orderedParams returns a slice of funcStruct ordered by dynamicType
+		"orderedParams": func() []funcStruct {
+			orderedParams := make([]funcStruct, 0)
 			for _, t := range dtypes {
 				for _, f := range types[getTypeImport(t)].Functions {
-					ordered = append(ordered, f)
+					orderedParams = append(orderedParams, f)
 				}
 			}
-			return ordered
-		},
-		"requiredType": func(c []string, typ string) bool {
-			for master, details := range dependents {
-				// exclude combinations where ...
-				// - master is part of the decorators
-				// - master is not part of the currently evaluated combination
-				// - details are part of the currently evaluated combination
-				if slices.Contains(combos, master) && !slices.Contains(c, master) && slices.Contains(details, typ) {
-					return false
-				}
-			}
-			return true
-		},
-		"empty": func() []string {
-			return nil
+			return orderedParams
 		},
 	}).Parse(srcTmpl)
 
@@ -182,13 +115,11 @@ func getTypeImport(t reflect.Type) string {
 }
 
 func generate(out io.Writer, functionName, baseType string, dtypes []reflect.Type) error {
-	var combos []string
 	types := make(map[string]typeStruct)
 
 	for _, t := range dtypes {
-		lastPart := t.Name()
-
 		var funcs []funcStruct
+		lastPart := t.Name()
 
 		for i := 0; i < t.NumMethod(); i++ {
 			m := t.Method(i)
@@ -214,6 +145,8 @@ func generate(out io.Writer, functionName, baseType string, dtypes []reflect.Typ
 				Function:    m.Name,
 				Params:      params,
 				ReturnTypes: fmt.Sprintf("(%s)", strings.Join(returns, ",")),
+				BaseType:    t.String(),
+				ShortType:   t.Name(),
 			})
 		}
 
@@ -222,8 +155,6 @@ func generate(out io.Writer, functionName, baseType string, dtypes []reflect.Typ
 			ShortType: lastPart,
 			Functions: funcs,
 		}
-
-		combos = append(combos, getTypeImport(t))
 	}
 
 	returnType := *ret
@@ -243,15 +174,14 @@ func generate(out io.Writer, functionName, baseType string, dtypes []reflect.Typ
 		Types               map[string]typeStruct
 		Combinations        [][]string
 	}{
-		Function:     functionName,
-		BaseType:     baseType,
-		ShortBase:    shortBase,
-		ReturnType:   returnType,
-		Types:        types,
-		Combinations: getCombinations(combos),
+		Function:   functionName,
+		BaseType:   baseType,
+		ShortBase:  shortBase,
+		ReturnType: returnType,
+		Types:      types,
 	}
 
-	return getTemplate(dtypes, types, combos).Execute(out, vars)
+	return getTemplate(dtypes, types).Execute(out, vars)
 }
 
 type decorationSet struct {

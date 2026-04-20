@@ -1,17 +1,26 @@
 <template>
 	<div>
 		<button
-			class="btn btn-link pe-0 text-decoration-none evcc-default-text text-nowrap d-flex align-items-end"
+			class="btn btn-link p-0 text-decoration-none text-nowrap d-flex align-items-center evcc-gray"
 			data-testid="savings-button"
 			@click="openModal"
 		>
-			<span class="d-inline d-sm-none text-decoration-underline">{{
-				$t("footer.savings.footerShort", { percent })
-			}}</span
-			><span class="d-none d-sm-inline text-decoration-underline">{{
-				$t("footer.savings.footerLong", { percent })
+			<span v-if="indicatorValueShort" class="indicator-value d-block d-sm-none">{{
+				indicatorValueShort
 			}}</span>
-			<shopicon-regular-sun class="ms-2 text-evcc"></shopicon-regular-sun>
+			<span v-if="indicatorValue" class="indicator-value d-none d-sm-block">{{
+				indicatorValue
+			}}</span>
+			<DynamicPriceIcon v-if="indicator === 'price'" class="ms-2" />
+			<shopicon-regular-sun
+				v-else-if="indicator === 'solar' || indicator === 'none'"
+				class="ms-2"
+			></shopicon-regular-sun>
+			<shopicon-regular-receivepayment
+				v-else-if="indicator === 'savings'"
+				class="ms-2"
+			></shopicon-regular-receivepayment>
+			<shopicon-regular-eco1 v-else class="ms-2"></shopicon-regular-eco1>
 		</button>
 
 		<Teleport to="body">
@@ -103,7 +112,7 @@
 										:sub1="
 											priceConfigured && referenceGrid
 												? `${fmtMoney(
-														(referenceGrid - avgPrice) * totalCharged,
+														moneySaved,
 														currency,
 														false
 													)} ${fmtCurrencySymbol(currency)} ${$t(
@@ -123,8 +132,7 @@
 										:sub1="
 											region && co2Configured
 												? `${fmtNumber(
-														((region.co2 - avgCo2) * totalCharged) /
-															1000,
+														co2Saved,
 														0,
 														'kilogram'
 													)} ${$t('footer.savings.co2Saved')}`
@@ -132,60 +140,107 @@
 										"
 									/>
 								</div>
-								<div class="my-3 lh-2">
-									<div class="d-flex">
-										<label for="savingsPeriod" class="me-1">
-											{{ $t("footer.savings.periodLabel") }}
-										</label>
-										<CustomSelect
-											id="savingsPeriod"
-											:selected="period"
-											:options="periodOptions"
-											data-testid="savings-period-select"
-											@change="selectPeriod($event.target.value)"
-										>
-											<span class="text-decoration-underline evcc-gray">
-												{{ $t(`footer.savings.period.${period}`) }}
-											</span>
-										</CustomSelect>
-									</div>
-									<div
-										v-if="region"
-										class="d-flex flex-wrap"
-										data-testid="savings-reference"
+								<table class="mt-3 mb-2 lh-2">
+									<tbody>
+										<tr>
+											<td class="pe-3 align-top">
+												{{ $t("footer.savings.periodLabel") }}
+											</td>
+											<td>
+												<CustomSelect
+													id="savingsPeriod"
+													:selected="period"
+													:options="periodOptions"
+													data-testid="savings-period-select"
+													@change="selectPeriod($event.target.value)"
+												>
+													<span
+														class="text-decoration-underline evcc-gray"
+													>
+														{{ $t(`footer.savings.period.${period}`) }}
+													</span>
+												</CustomSelect>
+											</td>
+										</tr>
+										<tr>
+											<td class="pe-3 align-top">
+												{{ $t("footer.savings.indicatorLabel") }}
+											</td>
+											<td>
+												<CustomSelect
+													:selected="indicator"
+													:options="indicatorOptions"
+													data-testid="savings-indicator-select"
+													@change="selectIndicator($event.target.value)"
+												>
+													<span
+														class="text-decoration-underline evcc-gray"
+													>
+														{{
+															indicatorValue
+																? `${indicatorValue} ${$t(`footer.savings.indicator.${indicator}`)}`
+																: $t(
+																		`footer.savings.indicator.${indicator}`
+																	)
+														}}
+													</span>
+												</CustomSelect>
+											</td>
+										</tr>
+										<tr v-if="region" data-testid="savings-reference">
+											<td class="pe-3 align-top">
+												{{ $t("footer.savings.referenceLabel") }}
+											</td>
+											<td class="evcc-gray">
+												<div>
+													<span v-if="isDynamicPrice">⌀ </span
+													>{{
+														priceConfigured
+															? fmtPricePerKWh(
+																	referenceGrid,
+																	currency
+																)
+															: "___"
+													}}
+													(<a
+														href="#"
+														class="evcc-gray text-decoration-underline"
+														@click.prevent="navigateToTariffs"
+														>{{ $t("config.main.title") }}</a
+													>)
+												</div>
+												<div class="d-flex">
+													<span class="me-1"
+														>⌀ {{ fmtCo2Medium(region.co2) }}</span
+													>
+													<CustomSelect
+														class="evcc-gray"
+														:selected="region.name"
+														:options="regionOptions"
+														data-testid="savings-region-select"
+														@change="selectRegion($event.target.value)"
+													>
+														(<span class="text-decoration-underline">{{
+															region.name
+														}}</span
+														>)
+													</CustomSelect>
+												</div>
+											</td>
+										</tr>
+									</tbody>
+								</table>
+								<div v-if="!priceConfigured || !co2Configured">
+									<a
+										href="#"
+										class="evcc-gray"
+										@click.prevent="navigateToTariffs"
 									>
-										<div class="me-1">
-											{{ $t("footer.savings.referenceLabel") }}
-										</div>
-										<div class="evcc-gray me-1">
-											{{
-												priceConfigured
-													? fmtPricePerKWh(referenceGrid, currency)
-													: "___"
-											}}
-											({{ $t("footer.savings.referenceGrid") }}),
-										</div>
-										<div class="evcc-gray d-flex">
-											<div class="me-1">⌀ {{ fmtCo2Medium(region.co2) }}</div>
-											<CustomSelect
-												class="me-1 evcc-gray"
-												:selected="region.name"
-												:options="regionOptions"
-												data-testid="savings-region-select"
-												@change="selectRegion($event.target.value)"
-											>
-												(<span class="text-decoration-underline">{{
-													region.name
-												}}</span
-												>)
-											</CustomSelect>
-										</div>
-									</div>
-									<div v-if="!priceConfigured || !co2Configured">
-										<a :href="tariffLink" class="evcc-gray" target="_blank">
-											{{ $t("footer.savings.configurePriceCo2") }}
-										</a>
-									</div>
+										{{ $t("footer.savings.configurePriceCo2") }}
+									</a>
+								</div>
+								<div class="evcc-gray small">
+									{{ $t("footer.savings.sessionInfo") }}
 								</div>
 							</div>
 							<div v-else class="my-4">
@@ -212,17 +267,31 @@ import Tile from "./Tile.vue";
 import LiveCommunity from "./LiveCommunity.vue";
 import TelemetrySettings from "../TelemetrySettings.vue";
 import CustomSelect from "../Helper/CustomSelect.vue";
+import DynamicPriceIcon from "../MaterialIcon/DynamicPrice.vue";
+import "@h2d2/shopicons/es/regular/receivepayment";
+import "@h2d2/shopicons/es/regular/eco1";
 import settings from "@/settings.ts";
-import api, { allowClientError } from "@/api.ts";
-import { docsPrefix } from "@/i18n.ts";
 import { defineComponent, type PropType } from "vue";
-import type { CURRENCY, Rate, SelectOption, Sponsor as SponsorType } from "@/types/evcc";
-import type { Period } from "./types";
+import type {
+	CURRENCY,
+	Forecast,
+	StatisticsIndicator,
+	StatisticsPeriod,
+	SelectOption,
+	Sponsor as SponsorType,
+} from "@/types/evcc";
 import co2Reference from "./co2Reference.ts";
 
 export default defineComponent({
 	name: "Savings",
-	components: { Sponsor, SavingsTile: Tile, LiveCommunity, TelemetrySettings, CustomSelect },
+	components: {
+		Sponsor,
+		SavingsTile: Tile,
+		LiveCommunity,
+		TelemetrySettings,
+		CustomSelect,
+		DynamicPriceIcon,
+	},
 	mixins: [formatter],
 	props: {
 		statistics: { type: Object, default: () => ({}) },
@@ -230,22 +299,20 @@ export default defineComponent({
 		sponsor: Object as PropType<SponsorType>,
 		currency: String as PropType<CURRENCY>,
 		telemetry: Boolean,
+		forecast: Object as PropType<Forecast>,
+		tariffGrid: Number,
 	},
 	data() {
 		return {
 			communityView: false,
 			telemetryEnabled: false,
-			period: settings.savingsPeriod || ("30d" as Period),
+			period: settings.savingsPeriod || ("30d" as StatisticsPeriod),
 			selectedRegion: settings.savingsRegion || ("Germany" as string),
-			referenceGrid: undefined as number | undefined,
 		};
 	},
 	computed: {
 		sponsorActive(): boolean {
 			return !!this.sponsor?.status?.name;
-		},
-		tariffLink() {
-			return `${docsPrefix()}/docs/reference/configuration/tariffs`;
 		},
 		percent() {
 			return this.fmtPercentage(this.solarPercentage || 0);
@@ -268,8 +335,8 @@ export default defineComponent({
 			// first region
 			return co2Reference.regions[0];
 		},
-		periodOptions(): SelectOption<Period>[] {
-			return (["30d", "365d", "thisYear", "total"] as Period[]).map((p) => ({
+		periodOptions(): SelectOption<StatisticsPeriod>[] {
+			return (["30d", "365d", "thisYear", "total"] as StatisticsPeriod[]).map((p) => ({
 				value: p,
 				name: this.$t(`footer.savings.period.${p}`),
 			}));
@@ -305,8 +372,50 @@ export default defineComponent({
 		avgCo2() {
 			return this.currentStatistics.avgCo2;
 		},
+		referenceGrid(): number | undefined {
+			const grid = this.forecast?.grid;
+			if (grid?.length) {
+				return grid.reduce((acc, slot) => acc + slot.value, 0) / grid.length;
+			}
+			return this.tariffGrid;
+		},
+		isDynamicPrice(): boolean {
+			const grid = this.forecast?.grid;
+			if (!grid?.length) return false;
+			return grid.some((slot) => slot.value !== grid[0].value);
+		},
 		priceConfigured() {
 			return this.referenceGrid !== undefined;
+		},
+		moneySaved(): number {
+			return Math.max(0, ((this.referenceGrid ?? 0) - this.avgPrice) * this.totalCharged);
+		},
+		co2Saved(): number {
+			return Math.max(
+				0,
+				(((this.region?.co2 ?? 0) - this.avgCo2) * this.totalCharged) / 1000
+			);
+		},
+		indicator(): StatisticsIndicator {
+			return (settings.savingsIndicator as StatisticsIndicator) || "solar";
+		},
+		indicatorOptions(): SelectOption<StatisticsIndicator>[] {
+			return (
+				["none", "solar", "price", "savings", "co2", "co2saved"] as StatisticsIndicator[]
+			).map((key) => {
+				const label = this.$t(`footer.savings.indicator.${key}`);
+				const val = this.indicatorValueFor(key);
+				return {
+					value: key,
+					name: val ? `${val} ${label}` : label,
+				};
+			});
+		},
+		indicatorValue(): string | undefined {
+			return this.indicatorValueFor(this.indicator);
+		},
+		indicatorValueShort(): string | undefined {
+			return this.indicatorValueFor(this.indicator, true);
 		},
 	},
 	methods: {
@@ -317,13 +426,10 @@ export default defineComponent({
 			this.communityView = false;
 		},
 		openModal() {
-			const modal = Modal.getOrCreateInstance(
-				document.getElementById("savingsModal") as HTMLElement
-			);
+			const modal = Modal.getOrCreateInstance(this.$refs["modal"] as HTMLElement);
 			modal.show();
-			this.updateReferenceGrid();
 		},
-		selectPeriod(period: Period) {
+		selectPeriod(period: StatisticsPeriod) {
 			this.period = period;
 			settings.savingsPeriod = period;
 		},
@@ -331,19 +437,40 @@ export default defineComponent({
 			this.selectedRegion = region;
 			settings.savingsRegion = region;
 		},
-		async updateReferenceGrid() {
-			try {
-				const res = await api.get(`tariff/grid`, allowClientError);
-				const { rates } = res.data as { rates: Rate[] };
-				this.referenceGrid =
-					rates.reduce((acc, slot) => {
-						return acc + slot.value;
-					}, 0) / rates.length;
-			} catch (e) {
-				this.referenceGrid = undefined;
-				console.error(e);
+		selectIndicator(value: StatisticsIndicator) {
+			settings.savingsIndicator = value;
+		},
+		navigateToTariffs() {
+			const modal = Modal.getInstance(this.$refs["modal"] as HTMLElement);
+			modal?.hide();
+			this.$router.push("/config#tariffs");
+		},
+		indicatorValueFor(key: StatisticsIndicator, short = false): string | undefined {
+			switch (key) {
+				case "solar":
+					return this.percent;
+				case "price":
+					if (this.avgPrice === undefined || !this.priceConfigured) return undefined;
+					return this.fmtPricePerKWh(this.avgPrice, this.currency, short);
+				case "savings":
+					if (!this.priceConfigured || this.referenceGrid === undefined) return undefined;
+					return `${this.fmtMoney(this.moneySaved, this.currency)} ${this.fmtCurrencySymbol(this.currency)}`;
+				case "co2":
+					if (this.avgCo2 === undefined || !this.co2Configured) return undefined;
+					return short ? this.fmtCo2Short(this.avgCo2) : this.fmtCo2Medium(this.avgCo2);
+				case "co2saved":
+					if (!this.co2Configured || !this.region) return undefined;
+					return `${this.fmtNumber(this.co2Saved, 0, "kilogram")}`;
+				default:
+					return undefined;
 			}
 		},
 	},
 });
 </script>
+
+<style scoped>
+.indicator-value {
+	font-size: 1rem;
+}
+</style>

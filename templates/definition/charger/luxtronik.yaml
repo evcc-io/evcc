@@ -277,3 +277,4 @@ render: |
       type: input
       decode: uint16
     scale: 0.1
+  {{ include "heatpumpswitch" . }}

@@ -4,98 +4,13 @@ import (
 	"testing"
 	"time"
 
-	evopt "github.com/andig/evopt/client"
-	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
-	"github.com/evcc-io/evcc/core/metrics"
-	"github.com/evcc-io/evcc/server/db"
-	"github.com/jinzhu/now"
+	optimizer "github.com/evcc-io/optimizer/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
-
-func TestSqliteTimestamp(t *testing.T) {
-	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
-
-	clock := clock.NewMock()
-	clock.Add(time.Hour)
-	metrics.Persist(clock.Now(), 0)
-
-	db, err := db.Instance.DB()
-	require.NoError(t, err)
-
-	var (
-		ts  metrics.SqlTime
-		val float64
-	)
-
-	for _, sql := range []string{
-		`SELECT ts, val FROM meters`,
-		`SELECT min(ts), val FROM meters`,
-		`SELECT unixepoch(ts), val FROM meters`,
-		`SELECT unixepoch(min(ts)), val FROM meters`,
-		`SELECT min(ts) AS ts, avg(val) AS val
-			FROM meters
-			GROUP BY strftime("%H:%M", ts)
-			ORDER BY ts`,
-	} {
-		require.NoError(t, db.QueryRow(sql).Scan(&ts, &val))
-		require.True(t, clock.Now().Equal(time.Time(ts)), "expected %v, got %v", clock.Now().Local(), time.Time(ts).Local())
-	}
-
-	require.NoError(t, db.QueryRow(`SELECT ts, val FROM meters WHERE ts >= ?`, clock.Now()).Scan(&ts, &val))
-	require.True(t, clock.Now().Equal(time.Time(ts)), "expected %v, got %v", clock.Now().Local(), time.Time(ts).Local())
-}
-
-func TestUpdateHouseholdProfile(t *testing.T) {
-	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
-
-	// make sure test data added starting 00:00 local time
-	clock := clock.NewMock()
-	clock.Set(now.With(clock.Now()).BeginningOfDay())
-
-	// 2 days of data
-	// day 1:   0 ...  95
-	// day 2:  96 ... 181
-	for i := range 4 * 2 * 24 {
-		metrics.Persist(clock.Now(), float64(i))
-		clock.Add(15 * time.Minute)
-	}
-
-	{
-		from := clock.Now().Local().AddDate(0, 0, -2).Add(12 * time.Hour) // 12:00 of day 0
-
-		prof, err := metrics.Profile(from)
-		require.NoError(t, err)
-
-		var expected [96]float64
-		for i := range expected {
-			if i < 48 {
-				expected[i] = float64(48+i+144+i) / 2
-				continue
-			}
-			expected[i] = float64(96 - 48 + i)
-		}
-
-		require.Equal(t, expected, *prof, "partial profile: expected %v, got %v", expected, *prof)
-	}
-
-	{
-		from := clock.Now().Local().AddDate(0, 0, -3).Add(12 * time.Hour) // 12:00 of day -1
-
-		prof, err := metrics.Profile(from)
-		require.NoError(t, err)
-
-		var expected [96]float64
-		for i := range expected {
-			expected[i] = float64(0+96+2*i) / 2
-		}
-
-		require.Equal(t, expected, *prof, "full profile: expected %v, got %v", expected, *prof)
-	}
-}
 
 func TestLoadpointProfile(t *testing.T) {
 	ctrl := gomock.NewController(t)
@@ -111,10 +26,30 @@ func TestLoadpointProfile(t *testing.T) {
 	require.Equal(t, []float64{250, 250, 250, 250, 250, 250, 250, 50}, loadpointProfile(lp, 8))
 }
 
+func TestAsTimestamps(t *testing.T) {
+	// now is 10 minutes into a 15-minute slot
+	now := time.Date(2025, 1, 1, 12, 10, 0, 0, time.UTC)
+
+	// dt[0]=300 means first event is 300s (5min) before end of current slot
+	// dt[1..] just mark subsequent slot boundaries
+	dt := []int{60 * 5, 60 * 15, 60 * 15}
+
+	got := asTimestamps(dt, now)
+
+	// current slot: 12:00–12:15
+	// first timestamp: 12:15 - 5min = 12:10
+	// subsequent: 12:15, 12:30
+	assert.Equal(t, []time.Time{
+		time.Date(2025, 1, 1, 12, 10, 0, 0, time.UTC),
+		time.Date(2025, 1, 1, 12, 15, 0, 0, time.UTC),
+		time.Date(2025, 1, 1, 12, 30, 0, 0, time.UTC),
+	}, got)
+}
+
 func TestBatteryForecastTotals(t *testing.T) {
 	site := new(Site)
 
-	req := []evopt.BatteryConfig{
+	req := []optimizer.BatteryConfig{
 		{SMax: 80},
 		{SMax: 80},
 	}
@@ -164,7 +99,7 @@ func TestBatteryForecastTotals(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			resp := []evopt.BatteryResult{
+			resp := []optimizer.BatteryResult{
 				{StateOfCharge: tc.bat1},
 				{StateOfCharge: tc.bat2},
 			}

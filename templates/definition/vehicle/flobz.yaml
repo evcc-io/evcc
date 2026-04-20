@@ -5,7 +5,7 @@ products:
 group: generic
 requirements:
   description:
-    generic: Remote Control of PSA car https://github.com/flobz/psa_car_controller
+    generic: Remote Control of PSA car [github.com/flobz/psa_car_controller](https://github.com/flobz/psa_car_controller)
 params:
   - name: url
     example: http://192.0.2.2

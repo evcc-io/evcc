@@ -68,7 +68,7 @@ func New(log *util.Logger, cc Settings) (*Pipeline, error) {
 func (p *Pipeline) WithRegex(regex, dflt string) (*Pipeline, error) {
 	re, err := regexp.Compile(regex)
 	if err != nil {
-		return nil, fmt.Errorf("invalid regex '%s': %w", re, err)
+		return nil, fmt.Errorf("invalid regex '%s': %w", regex, err)
 	}
 
 	p.re = re

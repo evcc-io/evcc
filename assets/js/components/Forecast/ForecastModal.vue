@@ -95,12 +95,14 @@ export default defineComponent({
 			return settings.solarAdjusted;
 		},
 		showSolarAdjust() {
-			return !!this.forecast.solar && this.experimental;
+			// TODO fix https://github.com/evcc-io/evcc/issues/29165
+			return !!this.forecast.solar && this.experimental && false;
 		},
 		solar() {
-			return this.showSolarAdjust && this.solarAdjusted
-				? adjustedSolar(this.forecast.solar)
-				: this.forecast.solar;
+			if (this.showSolarAdjust && this.solarAdjusted) {
+				return adjustedSolar(this.forecast.solar);
+			}
+			return this.forecast.solar ? { ...this.forecast.solar, scale: undefined } : undefined;
 		},
 		solarAdjustText() {
 			let percent = "";
