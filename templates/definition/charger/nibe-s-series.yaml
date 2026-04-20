@@ -7,7 +7,7 @@ group: heating
 requirements:
   description:
     de: |
-      Modbus Verbindung zur NIBE S Wärmepumpe. 
+      Modbus Verbindung zur NIBE S Wärmepumpe.
       Firmware 4.7.5 oder neuer benötigt.
       Benötigte Einstellung in der Steuereinheit:
       - In der Inneneinheit muss im Menü 7.5.9 Modbus aktiviert sein.
