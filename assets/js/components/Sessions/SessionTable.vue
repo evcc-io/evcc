@@ -96,11 +96,11 @@
 							@change="selectColumnPosition(index, $event.target.value)"
 						>
 							<span class="text-decoration-underline">
-								{{ $t(`sessions.${column.name}`) }}
+								{{ column.label || $t(`sessions.${column.name}`) }}
 							</span>
 						</CustomSelect>
 						<span v-else>
-							{{ $t(`sessions.${column.name}`) }}
+							{{ column.label || $t(`sessions.${column.name}`) }}
 						</span>
 						<div class="text-gray fw-normal">{{ column.unit }}</div>
 					</th>
@@ -162,6 +162,7 @@ import CustomSelect from "../Helper/CustomSelect.vue";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import breakpoint from "@/mixins/breakpoint.ts";
 import settings from "@/settings.ts";
+import { distanceUnit, distanceValue } from "@/units";
 import type { CURRENCY } from "@/types/evcc";
 import type { Session, Column } from "./types";
 
@@ -245,6 +246,14 @@ export default defineComponent({
 					format: (value) => this.fmtDurationNs(value, false, "h"),
 				},
 				{
+					name: "odometer",
+					label: this.$t("session.odometer"),
+					unit: distanceUnit(),
+					total: 0,
+					value: (session) => session.odometer || null,
+					format: (value) => (value ? this.fmtNumber(distanceValue(value), 0) : "-"),
+				},
+				{
 					name: "avgPower",
 					unit: "kW",
 					total: this.avgPower,
@@ -290,7 +299,7 @@ export default defineComponent({
 		columnOptions() {
 			return this.columns.map((column) => {
 				return {
-					name: this.$t(`sessions.${column.name}`),
+					name: column.label || this.$t(`sessions.${column.name}`),
 					value: column.name,
 					disabled: this.columnsPerBreakpoint.some((c) => c.name === column.name),
 				};
