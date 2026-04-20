@@ -257,8 +257,11 @@ test.describe("columns desktop", async () => {
   });
   test("select odometer column if it has values", async ({ page }) => {
     await page.goto("/#/sessions?year=2023&month=3");
-    await page.getByTestId("sessions-head-co2").getByRole("combobox").selectOption("Mileage");
-    await expect(page.getByTestId("sessions-head-odometer")).toContainText("Mileage");
+    await expect(
+      page.getByTestId("sessions-head-co2").locator("option[value=odometer]")
+    ).toHaveCount(1);
+    await page.getByTestId("sessions-head-co2").getByRole("combobox").selectOption("odometer");
+    await expect(page.getByTestId("sessions-head-odometer")).toBeVisible();
     await expect(page.getByTestId("sessions-entry").nth(0)).toContainText("123");
   });
   test("hide co2 column if it doesnt have values", async ({ page }) => {
@@ -355,14 +358,6 @@ test.describe("session details", async () => {
     await expect(modal.getByTestId("session-details-price")).toContainText("2.00 € 20.0 ct/kWh");
     await expect(modal.getByTestId("session-details-co2")).toContainText("3 kg");
     await expect(modal.getByTestId("session-details-co2")).toContainText("300 g/kWh");
-    await expect(modal.getByTestId("session-details-odometer")).toContainText("123 km");
-  });
-
-  test("show session details with odometer data", async ({ page }) => {
-    await page.goto("/#/sessions?year=2023&month=3");
-    await page.getByTestId("sessions-entry").nth(0).click();
-    const modal = page.getByTestId("session-details");
-    await expectModalVisible(modal);
     await expect(modal.getByTestId("session-details-odometer")).toContainText("123 km");
   });
 

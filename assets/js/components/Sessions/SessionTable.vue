@@ -121,7 +121,8 @@
 						scope="col"
 						class="align-top text-end"
 					>
-						{{ column.format(column.total || 0) }}
+						<span v-if="column.total === null" class="text-gray"> - </span>
+						<span v-else>{{ column.format(column.total || 0) }}</span>
 					</th>
 				</tr>
 			</tfoot>
@@ -249,9 +250,9 @@ export default defineComponent({
 					name: "odometer",
 					label: this.$t("session.odometer"),
 					unit: distanceUnit(),
-					total: 0,
+					total: null,
 					value: (session) => session.odometer || null,
-					format: (value) => (value ? this.fmtNumber(distanceValue(value), 0) : "-"),
+					format: (value) => this.fmtNumber(distanceValue(value), 0),
 				},
 				{
 					name: "avgPower",
