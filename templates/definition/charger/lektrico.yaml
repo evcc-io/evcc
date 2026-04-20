@@ -1,0 +1,14 @@
+template: lektrico
+products:
+  - brand: Lektrico
+    description:
+      generic: 1P7K / 3P22K Charging Station
+requirements:
+  evcc: ["sponsorship"]
+params:
+  - name: host
+  - name: cache
+render: |
+  type: lektrico
+  host: {{ .host }}
+  cache: {{ .cache }}

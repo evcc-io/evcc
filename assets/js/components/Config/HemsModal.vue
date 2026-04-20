@@ -80,7 +80,9 @@ export default {
 	methods: {
 		async loadSessions() {
 			try {
-				const response = await api.get("gridsessions");
+				const response = await api.get("gridsessions", {
+					validateStatus: (code) => [200, 404].includes(code),
+				});
 				this.sessions = response.data || [];
 			} catch (e) {
 				// Silently fail if no sessions available

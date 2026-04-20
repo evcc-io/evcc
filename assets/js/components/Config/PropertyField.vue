@@ -51,9 +51,10 @@
 		v-model="value"
 		class="form-select"
 		:class="inputClasses"
+		:required="required"
 		:disabled="disabled"
 	>
-		<option v-if="!required" value="" :disabled="disabled">---</option>
+		<option v-if="!required || !modelValue" value="" :disabled="disabled">---</option>
 		<template v-for="({ key, name }, idx) in selectOptions">
 			<option
 				v-if="key !== null && name !== null"
@@ -75,7 +76,7 @@
 		:type="inputType"
 		:placeholder="placeholder"
 		:required="required"
-		:rows="rows || 4"
+		:rows="textareaRows"
 		:disabled="disabled"
 	/>
 	<PropertyZonesField v-else-if="zones" :id="id" v-model="value" :currency="currency" />
@@ -254,8 +255,17 @@ export default {
 			return (
 				this.rows ||
 				this.array ||
-				["accessToken", "refreshToken", "identifiers"].includes(this.property)
+				["accessToken", "refreshToken", "identifiers", "formula"].includes(this.property)
 			);
+		},
+		textareaRows() {
+			if (this.rows) return this.rows;
+			const autoGrow = this.property === "formula";
+			if (autoGrow) {
+				const lines = (this.value ?? "").split("\n").length;
+				return Math.max(1, lines);
+			}
+			return 4;
 		},
 		boolean() {
 			return this.type === "Bool";
@@ -295,9 +305,8 @@ export default {
 		},
 		value: {
 			get() {
-				// use first option if no value is set
-				if (this.selectOptions.length > 0 && !this.modelValue) {
-					return this.required ? this.selectOptions[0].key : "";
+				if (this.select && this.modelValue == null) {
+					return "";
 				}
 
 				if (this.scale) {

@@ -2,16 +2,18 @@ package core
 
 import (
 	"errors"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/session"
 	"github.com/evcc-io/evcc/core/wrapper"
+	"github.com/evcc-io/evcc/tariff"
 	"github.com/jinzhu/now"
 )
 
 func (lp *Loadpoint) chargeMeterTotal() float64 {
-	m, ok := lp.chargeMeter.(api.MeterEnergy)
+	m, ok := api.Cap[api.MeterEnergy](lp.chargeMeter)
 	if !ok {
 		return 0
 	}
@@ -45,10 +47,15 @@ func (lp *Loadpoint) createSession() {
 		lp.session.Vehicle = lp.GetTitle()
 	}
 
-	if c, ok := lp.charger.(api.Identifier); ok {
+	if c, ok := api.Cap[api.Identifier](lp.charger); ok {
 		if id, err := c.Identify(); err == nil {
 			lp.session.Identifier = id
 		}
+	}
+
+	if lp.site != nil {
+		lp.session.ReferencePricePerKWh = tariff.AverageRate(lp.site.GetTariff(api.TariffUsageGrid), 24*time.Hour)
+		lp.session.ReferenceCo2PerKWh = tariff.AverageRate(lp.site.GetTariff(api.TariffUsageCo2), 24*time.Hour)
 	}
 
 	// energy

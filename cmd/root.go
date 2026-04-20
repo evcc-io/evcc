@@ -16,13 +16,13 @@ import (
 	"github.com/evcc-io/evcc/charger/ocpp"
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/core/keys"
-	hemsapi "github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/server/mcp"
 	"github.com/evcc-io/evcc/server/network"
+	"github.com/evcc-io/evcc/server/remote"
 	"github.com/evcc-io/evcc/server/updater"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/auth"
@@ -190,11 +190,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 		err = configureEnvironment(cmd, &conf)
 	}
 
-	// configure network
-	if err == nil {
-		err = networkSettings(&conf.Network)
-	}
-
 	// configure plugin external url
 	if err == nil {
 		// network configuration complete, start dependent services like HomeAssistant discovery
@@ -242,6 +237,12 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// publish to UI
 	go socketHub.Run(pipe.NewDropper(ignoreEmpty).Pipe(tee.Attach()), cache)
+
+	// remote access tunnel
+	var remoteAccess *remote.Remote
+	if remoteHost := os.Getenv("EVCC_REMOTE_ACCESS"); remoteHost != "" {
+		remoteAccess = remote.New(remoteHost, httpd.Router(), valueChan)
+	}
 
 	// signal ui listening
 	valueChan <- util.Param{Key: keys.StartupCompleted, Val: false}
@@ -334,9 +335,8 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}
 
 	// start HEMS server
-	var hems hemsapi.API
 	if err == nil {
-		hems, err = configureHEMS(&conf.HEMS, site)
+		_, err = configureHEMS(&conf.HEMS, site)
 		if err != nil {
 			err = wrapErrorWithClass(ClassHEMS, err)
 		}
@@ -386,12 +386,16 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	valueChan <- util.Param{Key: keys.Hems, Val: globalconfig.ConfigStatus{
 		Config:     conf.HEMS.Redacted(),
-		Status:     hemsapi.GetStatus(hems),
 		YamlSource: yamlSource.hems,
 	}}
 	valueChan <- util.Param{Key: keys.Tariffs, Val: globalconfig.ConfigStatus{
 		YamlSource: yamlSource.tariffs,
 	}}
+
+	// publish remote access status
+	if remoteAccess != nil {
+		valueChan <- util.Param{Key: keys.Remote, Val: remoteAccess.ConfigStatus()}
+	}
 
 	// publish system infos
 	valueChan <- util.Param{Key: keys.Version, Val: util.FormattedVersion()}
@@ -400,6 +404,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	valueChan <- util.Param{Key: keys.System, Val: util.System()}
 	valueChan <- util.Param{Key: keys.Timezone, Val: time.Now().Format("MST -07:00")}
 	valueChan <- util.Param{Key: keys.Experimental, Val: isExperimental()}
+	valueChan <- util.Param{Key: keys.Optimizer, Val: isOptimizer()}
 
 	// run shutdown functions on stop
 	var once sync.Once
@@ -436,7 +441,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 		log.INFO.Println("evcc was stopped by user. OS should restart the service. Or restart manually.")
 		err = errors.New("restart required") // https://gokrazy.org/development/process-interface/
 		once.Do(func() { close(stopC) })     // signal loop to end
-	}, viper.ConfigFileUsed())
+	}, viper.ConfigFileUsed(), remoteAccess)
 
 	// show and check version, reduce api load during development
 	if util.Version != util.DevVersion {

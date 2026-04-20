@@ -99,6 +99,12 @@ func NewEEBus(ctx context.Context, ski, ip string, usage *templates.Usage) (api.
 		return nil, err
 	}
 
+	// unregister device when context is cancelled (e.g. UI config validation)
+	go func() {
+		<-ctx.Done()
+		eebus.Instance.UnregisterDevice(ski, c)
+	}()
+
 	// monitoring appliance
 	eebus.LogEntities(c.log.DEBUG, "MA MPC", c.ma.MaMPCInterface)
 	eebus.LogEntities(c.log.DEBUG, "MA MGCP", c.ma.MaMGCPInterface)
@@ -243,8 +249,8 @@ func (c *EEBus) Curtailed() (bool, error) {
 		return false, err
 	}
 
-	// Check if limit is active and has a valid power value
-	return limit.IsActive && limit.Value > 0, nil
+	// Check if limit is active and has a valid power value (valid is zero or negative)
+	return limit.IsActive && limit.Value <= 0, nil
 }
 
 // Curtail implements the api.Curtailer interface

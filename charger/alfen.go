@@ -229,18 +229,18 @@ var _ api.PhaseCurrents = (*Alfen)(nil)
 
 // Currents implements the api.PhaseCurrents interface
 func (wb *Alfen) Currents() (float64, float64, float64, error) {
-	return wb.voltagesOrCurrents(alfenRegCurrents)
+	return wb.getPhaseValues(alfenRegCurrents)
 }
 
 var _ api.PhaseVoltages = (*Alfen)(nil)
 
 // Voltages implements the api.PhaseVoltages interface (tbc)
 func (wb *Alfen) Voltages() (float64, float64, float64, error) {
-	return wb.voltagesOrCurrents(alfenRegVoltages)
+	return wb.getPhaseValues(alfenRegVoltages)
 }
 
-// voltagesOrCurrents returns 3 sequential float registers
-func (wb *Alfen) voltagesOrCurrents(reg uint16) (float64, float64, float64, error) {
+// getPhaseValues returns 3 sequential float registers
+func (wb *Alfen) getPhaseValues(reg uint16) (float64, float64, float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(reg, 6)
 	if err != nil {
 		return 0, 0, 0, err

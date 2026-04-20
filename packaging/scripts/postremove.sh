@@ -16,6 +16,12 @@ if [ "$1" = "purge" ]; then
 		deb-systemd-helper purge evcc.service > /dev/null || true
 		deb-systemd-helper unmask evcc.service > /dev/null || true
 	fi
+
+	# Remove the user choices config file and deregister it from ucfr
+	if [ -x /usr/bin/ucfr ]; then
+		ucfr --purge evcc /etc/evcc-userchoices.sh || true
+	fi
+	rm -f /etc/evcc-userchoices.sh
 fi
 
 # if interactive: call `/usr/bin/evcc checkconfig` and check the return code (newer version)

@@ -40,6 +40,7 @@
     "legendTopName": "Batterie-ënnerstëtzt Opluede vum Gefier",
     "legendTopSubline": "wann d'Hausbatterie iwwer {soc} ass.",
     "modalTitle": "Hausbatterie",
+    "noBattery": "Keng Batterien konfiguréiert.",
     "usageTab": "Batterieverbrauch"
   },
   "config": {
@@ -130,8 +131,9 @@
       "currency": "Wärung",
       "current": "Stroum",
       "currentRange": "Stroum",
+      "curtailed": "Einspeisung limitéiert",
       "detected": "Erkannt",
-      "dimmed": "Gedimmt",
+      "dimmed": "Verbrauch limitéiert",
       "enabled": "Ageschalt",
       "energy": "Energie",
       "events": "Evenementer",
@@ -600,6 +602,11 @@
       "url": "Server-URL",
       "urlHelp": "Kopéier dës URL fir d'Konfiguratioun vun denger Wallbox. Kuck am Handbuch vum Hiersteller no Detailer. Et gëtt erwaart, datt d'Wallbox automatesch säin eenzegaartegen Identifikator (Statiouns-ID) un d'URL bäifügt. A rare Fäll musst Dir den Identifikator eventuell manuell spezifizéieren. Beispill: `{url}`"
     },
+    "optimizer": {
+      "description": "Analyséiert d'Solarprognos, d'Stroumpräisser an Är Verbrauchssmuster, fir d'Batterie- a Luedstrategie ze optiméieren. D'Donnéeë ginn un den evcc-Optimiséierungsservice fir d'Berechnen geschéckt.",
+      "enable": "Optimizer aktivéieren",
+      "title": "Optimizer"
+    },
     "options": {
       "boolean": {
         "no": "nee",
@@ -642,11 +649,13 @@
       "cardTitle": "Sunny Home Manager",
       "description": "Den evcc ass mat enger Integratioun fir den SMA Sunny Home Manager (SHM) iwwert den SEMP-Protokoll ausgestatt. Wann den SHM am selwechte Netzwierk leeft, sollt Dir no der Aschreiwung an Ärem Sunny Portal-Kont automatesch d'Méiglechkeet kréien, all an evcc konfiguréiert Luedpunkten als nei detektéiert Laaschten derbäizesetzen. Alles sollt direkt gebrauchsfäeg sinn, ouni weider Upassungen.",
       "descriptionDeviceId": "12-stellegen HEX-String. Präfix fir all Geräter (Luedpunkt, ..).",
+      "descriptionDeviceSerial": "HEX-String mat 12-Zeechen. Basis-Seriennummer fir all Apparater (Luedpunkt, ...). Standardméisseg kritt den evcc dës aus der MAC-Adress vum Host.",
       "descriptionIdPattern": "Identifikatiounsmuster",
       "descriptionIds": "Am Sunny Portal brauch all Ladung (Luedpunkt, etc.) eng eenzegaarteg Identifikatioun. evcc generéiert eng eenzegaarteg Identifikatioun, déi op Ärer Hardware baséiert. Wann Dir evcc op aner Hardware migréiert, kann dësen Identifikator sech änneren. Fir den Historique ze späicheren, kënnt Dir déi generéiert Identifikatoren hei iwwerschreiwen. Maacht d'SEMP URL op (/semp) fir Är aktuell Identifikatoren ze kontrolléieren.",
       "descriptionSempUrl": "SEMP-URL",
       "descriptionVendorId": "8-stellegen HEX-String. Allgemenge Präfix fir all Entiéiten. Standardméisseg verwennt evcc seng eegen intern Hiersteller-ID.",
       "labelDeviceId": "Geräter-ID",
+      "labelDeviceSerial": "Apparat-Seriennummer",
       "labelVendorId": "Hiersteller-ID",
       "title": "SMA Sunny Home Manager"
     },
@@ -833,7 +842,7 @@
   },
   "footer": {
     "community": {
-      "greenEnergy": "Solarenergie",
+      "greenEnergy": "Solar",
       "greenEnergySub1": "opgelueden mat evcc",
       "greenEnergySub2": "zënter Oktober 2022",
       "greenShare": "Sonnenundeel",
@@ -850,6 +859,15 @@
       "configurePriceCo2": "Léiert wéi een de Präis an d'CO₂-Daten konfiguréiert.",
       "footerLong": "{percent} Solarenergie",
       "footerShort": "{percent} Solar",
+      "indicator": {
+        "co2": "CO₂-Emissiounen",
+        "co2saved": "CO₂ agespuert",
+        "none": "keng",
+        "price": "Energiepräis",
+        "savings": "Erspuernesser",
+        "solar": "Solarenergie"
+      },
+      "indicatorLabel": "Header-Info",
       "modalTitle": "Iwwersiicht vum opgeluedene Stroum",
       "moneySaved": "{value} gespuert",
       "percentGrid": "{grid} kWh Stroumnetz",
@@ -861,10 +879,11 @@
         "thisYear": "dëst Joer",
         "total": "gesamt"
       },
-      "periodLabel": "Zäitraum:",
+      "periodLabel": "Zäitraum",
       "priceTitle": "Energiepräis",
       "referenceGrid": "Netz",
-      "referenceLabel": "Referenzdaten:",
+      "referenceLabel": "Referenzdaten",
+      "sessionInfo": "Baséiert op ofgeschlossen Opluedsessiounen.",
       "tabTitle": "Meng Daten"
     },
     "sponsor": {
@@ -890,15 +909,26 @@
     },
     "version": {
       "availableLong": "nei Versioun verfügbar",
+      "community": "evcc Communautéit",
+      "labelRelease": "Verëffentlechung",
+      "labelVersion": "Versioun",
+      "labelWebsite": "Websäit",
+      "latestVersion": "lescht Versioun",
+      "madeByCommunity": "Entwéckelt vun der {0}.",
       "modalCancel": "Ofbriechen",
       "modalDownload": "Download",
       "modalInstalledVersion": "Aktuell installéiert Versioun",
+      "modalLatest": "Dir benotzt déi lescht Versioun.",
+      "modalNextRelease": "Wat gëtt et an der nächster Versioun",
       "modalNoReleaseNotes": "Keng Versiounshiweiser verfügbar. Méi Informatioun iwwert déi nei Versioun:",
       "modalTitle": "Aktualiséierung verfügbar",
       "modalUpdate": "Installéieren",
       "modalUpdateNow": "Elo installéieren",
       "modalUpdateStarted": "Déi nei Versioun vun evcc starten…",
-      "modalUpdateStatusStart": "Installatioun ugefaang:"
+      "modalUpdateStatusStart": "Installatioun ugefaang:",
+      "modalViewOnGitHub": "Op GitHub kucken",
+      "openSource": "Open Source",
+      "poweredByOpenSource": "Bedriwwen vun {0}."
     }
   },
   "forecast": {
@@ -908,6 +938,12 @@
       "lowestHour": "Déi properst Stonn",
       "range": "Beräich"
     },
+    "empty": {
+      "co2": "Iwwerpréiwt, wéini d'Netzenergie an Ärer Regioun propper ass. Luedpläng ginn optimiséiert fir d'Emissiounen ze reduzéieren an CO₂ anzespueren.",
+      "price": "Konfiguréiert Ären dynameschen Stromtarif, fir d'Luedpläng automatesch ze optiméieren an d'Erspuernësser ze berechnen.",
+      "setup": "Tariffer a Prognosen opstellen",
+      "solar": "Kuckt déi erwaart Solarproduktioun fir haut an déi nächst Deeg. Et gëtt och an der Zukunft fir d'automatiséiert Luedoptimiséierung benotzt."
+    },
     "modalTitle": "Prognose",
     "price": {
       "average": "Duerchschnitt",
@@ -915,6 +951,7 @@
       "lowestHour": "Bëllegst Stonn",
       "range": "Beräich"
     },
+    "priceZoom": "erazoomen",
     "solar": {
       "dayAfterTomorrow": "Iwwermuer",
       "partly": "deelweis",
@@ -923,10 +960,11 @@
       "tomorrow": "Muer"
     },
     "solarAdjust": "Solarprognose unhand vun de reale Produktionsdaten upassen{percent}.",
+    "solarAdjustShort": "u reell Daten upassen",
     "type": {
-      "co2": "CO₂",
-      "price": "Präis",
-      "solar": "Solar"
+      "co2": "CO₂-Emissiounen",
+      "price": "Netzpräis",
+      "solar": "Solar-Productioun"
     }
   },
   "general": {
@@ -1139,6 +1177,7 @@
         "once": "Boost ass dir dës Luedsessioun aktivéiert.",
         "stateActive": "Batterieboost aktiv",
         "stateBelowLimit": "Batterie ze niddereg fir de Boost",
+        "stateHold": "Batterie gespaart",
         "stateReady": "Batterieboost bereet"
       },
       "batteryUsage": "Hausbatterie",
@@ -1248,6 +1287,7 @@
       "batteryBoostBelowLimit": "Batterie ze niddereg fir de Boost.",
       "batteryBoostDisabled": "Batterieboost deaktivéiert.",
       "batteryBoostEnabled": "Boost bis d'Batterie bei {limit} ass.",
+      "batteryBoostHold": "Batterie gespaart. Boost net verfügbar.",
       "charging": "Luet…",
       "cheapEnergyCharging": "Gënschteg Energie verfügbar.",
       "cheapEnergyNextStart": "Gënschteg Energie an {duration}.",
@@ -1487,5 +1527,13 @@
     "lineErrorLink": "Linn {0}",
     "restartButton": "Neistart",
     "title": "Startup Feeler"
+  },
+  "tabBar": {
+    "battery": "Batterie",
+    "charge": "Lueden",
+    "comingSoon": "Dës Säit ass amgaang gebaut ze ginn.",
+    "forecast": "Viraussoen",
+    "more": "Méi",
+    "sessions": "Sessiounen"
   }
 }

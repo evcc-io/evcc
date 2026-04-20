@@ -27,9 +27,19 @@ params:
     required: true
   - name: ain
     required: true
+  - name: firmware82
+    advanced: true
+    type: bool
+    description:
+      de: Neue REST-API verwenden (FritzOS 8.2+)
+      en: Use new REST API (FritzOS 8.2+)
+    help:
+      de: Verwende die neue REST-API für FritzOS ab Version 8.2
+      en: Use the new REST API for FritzOS version 8.2 and later
 render: |
   type: fritzdect
   uri: {{ .uri }}
   user: {{ .user }}
   password: {{ .password }}
   ain: {{ .ain }} # switch actor identification number without blanks (see AIN number on switch sticker)
+  firmware82: {{ .firmware82 }}
