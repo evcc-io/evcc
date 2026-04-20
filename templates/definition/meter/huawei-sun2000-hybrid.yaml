@@ -195,7 +195,7 @@ render: |
                 value: 0 # Disable
                 set:
                   source: modbus
-                  {{- include "modbus" . | indent 12 }}
+                  {{- include "modbus" . | indent 16 }}
                   register:
                     address: 47087 # Charge from grid
                     type: writesingle
