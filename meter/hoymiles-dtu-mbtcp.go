@@ -60,7 +60,7 @@ func NewHoymilesDTUModbusTcpFromConfig(other map[string]any) (api.Meter, error) 
 	}
 
 	res := &HoymilesDTUModbusTcp{
-		log:   util.NewLogger("hoymiles-dtu"),
+		log:   util.NewLogger("hoymiles-dtu-mb"),
 		conn:  conn,
 		maxAC: float64(cc.MaxACPower),
 	}
@@ -73,29 +73,26 @@ func NewHoymilesDTUModbusTcpFromConfig(other map[string]any) (api.Meter, error) 
 
 var _ api.Meter = (*HoymilesDTUModbusTcp)(nil)
 
-// define noMorePanels type to indicate that there are no more panels to read
-type noMoreHoymilesPanels struct{}
-
-func (e noMoreHoymilesPanels) Error() string {
-	return "no more panels"
-}
-
 // Function to read single panel power from the DTU
 // param panelIndex: the index of the panel to read (starting from 0),
 // and modbus session, and returns the power in watts, or an error if the read fails
-// returns the power in watts, totalCumulativeProduction in Wh, or an error if the read fails
-// returns noMorePanels if panelIndex is out of range
-func (m *HoymilesDTUModbusTcp) PanelPower(panelIndex int, conn *modbus.Connection) (float64, float64, error) {
+// returns the power in watts, totalCumulativeProduction in Wh, a flag indicating whether a panel exists, or an error if the read fails
+func (m *HoymilesDTUModbusTcp) PanelPower(panelIndex int) (float64, float64, bool, error) {
 	PORT_LENGTH := uint16(0x28)      // length of the data for each panel in bytes
 	START_REGISTER := uint16(0x1000) // starting register for the first panel
 	// calculate the starting register for the panel based on the index
 	startRegister := START_REGISTER + uint16(panelIndex)*PORT_LENGTH
 	// read PORT_LENGTH bytes from the DTU starting at startRegister
-	results, err := conn.ReadHoldingRegisters(startRegister, PORT_LENGTH)
+	results, err := m.conn.ReadHoldingRegisters(startRegister, PORT_LENGTH)
 	if err != nil {
-		return 0, 0, fmt.Errorf("Failed to read hoymiles-dtu panel %d: %w", panelIndex, err)
+		return 0, 0, false, fmt.Errorf("Failed to read hoymiles-dtu panel %d: %w", panelIndex, err)
 	}
-	// inverterSerial in 0x1 - 0x6, hex to string
+	// check that results has at least 24 bytes (to read power and total cumulative production)
+	if len(results) < 24 {
+		return 0, 0, false, fmt.Errorf("Invalid response length for panel %d: expected at least 24 bytes, got %d", panelIndex, len(results))
+	}
+
+	// inverterSerial in 0x1 – 0x6, hex to string
 	serialBytes := results[1:6]
 	inverterSerial := fmt.Sprintf("%X", serialBytes)
 	serialIsZero := binary.BigEndian.Uint32(serialBytes[:4]) == 0 && serialBytes[4] == 0
@@ -103,25 +100,26 @@ func (m *HoymilesDTUModbusTcp) PanelPower(panelIndex int, conn *modbus.Connectio
 	portNumber := int(results[7])
 	if serialIsZero || portNumber == 0 {
 		m.log.TRACE.Printf("Panel %d: No more panels to read", panelIndex)
-		return 0, 0, noMoreHoymilesPanels{}
+		// if the serial number is all zeros or the port number is zero, we assume there are no more panels to read
+		return 0, 0, false, nil
 	}
-	// power in 0x10 - 0x11, hex to int, divided by 10 to get actual power in watts
-	power := binary.BigEndian.Uint16(results[16:18]) / 10 // power is located at bytes 16-17 of the panel data, and is diveded by 10 to get the actual power in watts
-	// totalCumulativeProduction in 20 - 24
-	totalCumulativeProduction := binary.BigEndian.Uint32(results[20:24]) // total cumulative production is located at bytes 20-23 of the panel data, and is in Wh
-	m.log.TRACE.Printf("Panel %d: Inverter Serial: %s, Port Number: %d, Power: %d W, Total Cumulative Production: %d Wh", panelIndex, inverterSerial, portNumber, power, totalCumulativeProduction)
-	return float64(power), float64(totalCumulativeProduction), nil
+	// power in 0x10 – 0x11, hex to uint16, divided by 10 to get actual power in watts (one decimal place precision)
+	power := float64(binary.BigEndian.Uint16(results[16:18])) / 10.0
+	// totalCumulativeProduction in bytes 0x14 – 0x17, hex to uint32, in Wh
+	totalCumulativeProduction := binary.BigEndian.Uint32(results[20:24]) // in Wh
+	m.log.TRACE.Printf("Panel %d: Inverter Serial: %s, Port Number: %d, Power: %.1f W, Total Cumulative Production: %d Wh", panelIndex, inverterSerial, portNumber, power, totalCumulativeProduction)
+	return power, float64(totalCumulativeProduction), true, nil
 }
 
 func (m *HoymilesDTUModbusTcp) readCurrentValues() (hoymilesDTUValues, error) {
 	var values hoymilesDTUValues
 	for i := 0; i < 99; i++ {
-		power, cumulative, err := m.PanelPower(i, m.conn)
+		power, cumulative, found, err := m.PanelPower(i)
 		if err != nil {
-			if _, ok := err.(noMoreHoymilesPanels); ok {
-				break
-			}
 			return hoymilesDTUValues{}, fmt.Errorf("Failed to read hoymiles-dtu-panel %d: %w", i, err)
+		}
+		if !found {
+			break
 		}
 		values.power += power
 		values.totalEnergy += cumulative
