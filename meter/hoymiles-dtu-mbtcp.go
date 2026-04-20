@@ -78,24 +78,33 @@ var _ api.Meter = (*HoymilesDTUModbusTcp)(nil)
 // and modbus session, and returns the power in watts, or an error if the read fails
 // returns the power in watts, totalCumulativeProduction in Wh, a flag indicating whether a panel exists, or an error if the read fails
 func (m *HoymilesDTUModbusTcp) PanelPower(panelIndex int) (float64, float64, bool, error) {
-	PORT_LENGTH := uint16(0x28)      // length of the data for each panel in bytes
-	START_REGISTER := uint16(0x1000) // starting register for the first panel
+	// Length of the data for each panel in bytes is 0x28 (40 bytes),
+	// starting register for the first panel is 0x1000, and each panel's data is located at an offset of 0x28 from the previous one
+	// This has been confirmed by testing with a Hoymiles DTU PRO S hardware and matches the documentation for the Modbus register map of the DTU PRO S
+	// Despite this being a bit unusual that registers are in bytes instead of words, we have to read the data in bytes and then parse it accordingly
+	PORT_LENGTH_BYTES := uint16(0x28)      // length of the data for each panel in bytes
+	START_REGISTER_BYTES := uint16(0x1000) // starting register for the first panel
 	// calculate the starting register for the panel based on the index
-	startRegister := START_REGISTER + uint16(panelIndex)*PORT_LENGTH
-	// read PORT_LENGTH bytes from the DTU starting at startRegister
-	results, err := m.conn.ReadHoldingRegisters(startRegister, PORT_LENGTH)
+	// Hoymiles DTU PRO registermap is in bytes
+	startRegister := START_REGISTER_BYTES + uint16(panelIndex)*PORT_LENGTH_BYTES
+	// read PORT_LENGTH_BYTES bytes from the DTU starting at startRegister
+	// readlength in registers is PORT_LENGTH_BYTES / 2 because each register read is 2 bytes
+	results, err := m.conn.ReadHoldingRegisters(startRegister, PORT_LENGTH_BYTES/2)
 	if err != nil {
 		return 0, 0, false, fmt.Errorf("Failed to read hoymiles-dtu panel %d: %w", panelIndex, err)
 	}
 	// check that results has at least 24 bytes (to read power and total cumulative production)
+	// results now again in bytes, not registers, because we read in bytes and not words, so we can directly check the length in bytes
 	if len(results) < 24 {
 		return 0, 0, false, fmt.Errorf("Invalid response length for panel %d: expected at least 24 bytes, got %d", panelIndex, len(results))
 	}
 
 	// inverterSerial in 0x1 – 0x6, hex to string
-	serialBytes := results[1:6]
+	serialBytes := results[1:7] // bytes 0x1 to 0x6 (6 bytes)
 	inverterSerial := fmt.Sprintf("%X", serialBytes)
-	serialIsZero := binary.BigEndian.Uint32(serialBytes[:4]) == 0 && serialBytes[4] == 0
+	// check if 6 byte serial number is all zeros, which indicates that there are no more panels to read, as the DTU returns all zeros for non-existing panels
+	serialIsZero := binary.BigEndian.Uint32(serialBytes[:4]) == 0 &&
+		binary.BigEndian.Uint16(serialBytes[4:6]) == 0
 	// portNumber in 0x7, hex to int
 	portNumber := int(results[7])
 	if serialIsZero || portNumber == 0 {
