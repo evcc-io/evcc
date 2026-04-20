@@ -191,6 +191,7 @@ render: |
                     encoding: uint16
               {{- end }}
           - case: 2 # hold
+            set:
               source: sequence
               set:
               - source: const
