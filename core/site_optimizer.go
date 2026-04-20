@@ -221,6 +221,11 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		add(site.batteryRequest(dev, b, grid, minLen, firstSlotDuration))
 	}
 
+	// empty request- all loadpoints disabled
+	if len(req.Batteries) == 0 {
+		return nil
+	}
+
 	httpClient := request.NewClient(site.log)
 	httpClient.Timeout = 30 * time.Second
 
