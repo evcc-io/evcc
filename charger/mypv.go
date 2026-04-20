@@ -340,10 +340,14 @@ func (wb *MyPv) CurrentPower() (float64, error) {
 				return 0, err
 			}
 
-			p = float64(binary.BigEndian.Uint16(b))
 			if binary.BigEndian.Uint16(f) == 1 {
-				p = p + rp
+				p = float64(binary.BigEndian.Uint16(b)) + rp
+				// wb.log.DEBUG.Printf("relay on / relay heater power %.0f W / total power %.0f W", rp, p)
 				wb.log.DEBUG.Printf("relay [%.0f W] on / total power = %.0f", rp, p)
+			} else {
+				p = float64(binary.BigEndian.Uint16(b))
+				// wb.log.DEBUG.Printf("relay off / relay heater power %.0f W / total power %.0f W", rp, p)
+				wb.log.DEBUG.Printf("relay [%.0f W] off / total power = %.0f", rp, p)
 			}
 		}
 	}
