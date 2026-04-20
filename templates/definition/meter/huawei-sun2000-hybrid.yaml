@@ -223,6 +223,17 @@ render: |
                     address: 47077 # Max. Discharge Power
                     type: writemultiple
                     encoding: uint32
+              {{- if eq .forceaccharging "false" }}
+              - source: const
+                value: 0 # Disable
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 47087 # Charge from grid
+                    type: writesingle
+                    encoding: uint16
+              {{- end }}
           - case: 3 # charge
             set:
               source: const
