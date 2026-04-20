@@ -272,15 +272,9 @@ func (wb *MyPv) MaxCurrentMillis(current float64) error {
 		}
 	}
 
-	b, err := wb.conn.ReadHoldingRegisters(elwaRegVoltage, 1)
-	if err != nil {
-		return err
-	}
-	wb.log.TRACE.Printf("voltage L1: %.1f V", float64(binary.BigEndian.Uint16(b)))
+	power := uint16(voltage * current * float64(phases))
 
-	power := uint16(float64(binary.BigEndian.Uint16(b)) * current * float64(phases))
-
-	err = wb.setPower(power)
+	err := wb.setPower(power)
 	if err == nil {
 		atomic.StoreUint32(&wb.power, uint32(power))
 	}
@@ -297,58 +291,52 @@ func (wb *MyPv) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-	var p float64
-	p = float64(binary.BigEndian.Uint16(b))
-
-	// Added for "warm water 9 + 9kW" operation mode (#3) of AC Thor with extra heater on internal relay
-	// see https://github.com/evcc-io/evcc/discussions/23708
-	if wb.name == "ac-thor" {
-		c, err := wb.conn.ReadHoldingRegisters(elwaRegOperationMode, 1)
-		if err != nil {
-			return 0, err
-		}
-		wb.log.TRACE.Printf("operation mode %.0f", float64(binary.BigEndian.Uint16(c)))
-
-		if binary.BigEndian.Uint16(c) == 3 {
-			// get power of heater on relay as set in web interface
-			// (scale factor must be used for correct setting in web interface)
-			d, err := wb.conn.ReadHoldingRegisters(elwaRegMaxControlledPower, 1)
-			if err != nil {
-				return 0, err
-			}
-
-			e, err := wb.conn.ReadHoldingRegisters(elwaRegMaxCombinedPower, 1)
-			if err != nil {
-				return 0, err
-			}
-			wb.log.TRACE.Printf("max. power: controlled %.0f W / combined %.0f W", float64(binary.BigEndian.Uint16(d)), float64(binary.BigEndian.Uint16(e)))
-
-			// relay power = combined power - controlled power, finally corrected with 110% factor
-			var rp float64 = float64((binary.BigEndian.Uint16(e) - binary.BigEndian.Uint16(d))) / float64(1.1)
-
-			// relay power value from AC Thor must be calculated back with scale factor
-			if wb.scale != 0 {
-				wb.log.TRACE.Printf("scale factor: %.2f / relay power: %.0f", wb.scale, rp)
-				rp = rp / wb.scale
-			} else {
-				rp = 0
-			}
-			wb.log.TRACE.Printf("power on relay: register difference %.0f W / corrected %.0f W", float64(binary.BigEndian.Uint16(e)-binary.BigEndian.Uint16(d)), rp)
-
-			f, err := wb.conn.ReadHoldingRegisters(elwaRegRelayState, 1)
-			if err != nil {
-				return 0, err
-			}
-
-			if binary.BigEndian.Uint16(f) == 1 {
-				p = p + rp
-				// wb.log.DEBUG.Printf("relay on / relay heater power %.0f W / total power %.0f W", rp, p)
-				wb.log.DEBUG.Printf("relay [%.0f W] on / total power = %.0f", rp, p)
-			}
-		}
+	res := float64(binary.BigEndian.Uint16(b))
+	if wb.name != "ac-thor" {
+		return res, nil
 	}
 
-	return p, nil
+	c, err := wb.conn.ReadHoldingRegisters(elwaRegOperationMode, 1)
+	if err != nil {
+		return 0, err
+	}
+	wb.log.TRACE.Printf("operation mode %d", binary.BigEndian.Uint16(c))
+
+	// AC Thor operation mode != 3
+	if binary.BigEndian.Uint16(c) != 3 {
+		return res, nil
+	}
+
+	// AC Thor operation mode == 3 "Warm water 9 + 9kW"
+	// with extra heater on internal relay
+	// see https://github.com/evcc-io/evcc/discussions/23708
+	f, err := wb.conn.ReadHoldingRegisters(elwaRegRelayState, 1)
+	if err != nil {
+		return 0, err
+	}
+
+	// relay inactive or scale factor not set
+	if binary.BigEndian.Uint16(f) != 1 {
+		return res, nil
+	}
+
+	// get power of heater on relay as set in web interface
+	// (scale factor must be used for correct setting in web interface)
+	d, err := wb.conn.ReadHoldingRegisters(elwaRegMaxControlledPower, 1)
+	if err != nil {
+		return 0, err
+	}
+
+	e, err := wb.conn.ReadHoldingRegisters(elwaRegMaxCombinedPower, 1)
+	if err != nil {
+		return 0, err
+	}
+	wb.log.TRACE.Printf("max. power: controlled %.0f W / combined %.0f W", float64(binary.BigEndian.Uint16(d)), float64(binary.BigEndian.Uint16(e)))
+
+	// relay power = combined power - controlled power, finally corrected with 110% factor
+	res += float64(int(binary.BigEndian.Uint16(e))-int(binary.BigEndian.Uint16(d))) / wb.scale / 1.1
+
+	return res, nil
 }
 
 var _ api.Battery = (*MyPv)(nil)
