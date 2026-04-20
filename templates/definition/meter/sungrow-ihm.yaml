@@ -60,22 +60,19 @@ render: |
     register:
       address: 8558 # Register 8559 (Phase A active power, U32)
       type: input
-      decode: uint32s
-    scale: 1 # Factor 1 W
+      decode: int32s
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
       address: 8560 # Register 8561 (Phase B active power)
       type: input
-      decode: uint32s
-    scale: 1
+      decode: int32s
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
       address: 8562 # Register 8563 (Phase C active power)
       type: input
-      decode: uint32s
-    scale: 1
+      decode: int32s
   {{- end }}
   {{- if eq .usage "pv" }}
   type: custom
