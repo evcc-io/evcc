@@ -111,9 +111,11 @@ func (m *HoymilesDTUModbusTcp) PanelPower(panelIndex int) (float64, float64, boo
 	return power, float64(totalCumulativeProduction), true, nil
 }
 
+const maxPanels = 99
+
 func (m *HoymilesDTUModbusTcp) readCurrentValues() (hoymilesDTUValues, error) {
 	var values hoymilesDTUValues
-	for i := 0; i < 99; i++ {
+	for i := 0; i < maxPanels; i++ {
 		power, cumulative, found, err := m.PanelPower(i)
 		if err != nil {
 			return hoymilesDTUValues{}, fmt.Errorf("Failed to read hoymiles-dtu-panel %d: %w", i, err)
