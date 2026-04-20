@@ -1,4 +1,4 @@
-template: hoymiles-dtu
+template: hoymiles-dtu-mb
 products:
   - brand: Hoymiles
     description:
@@ -27,13 +27,13 @@ params:
     advanced: true
     default: "0"
     description:
-      de: "Gesamtleistung der Wechselrichter in Watt"
-      en: "Total power of the inverters in watt"
+      de: "Gesamtleistung der Wechselrichter"
+      en: "Total maximum power of the inverters"
     help:
       de: "Gesamtleistung der Wechselrichter in Watt (z.B. 3000)"
-      en: "Total power of the inverters in watt (e.g. 3000)"
+      en: "Total maximum power of the inverters in watt (e.g. 3000)"
 render: |
-  type: hoymiles-dtu
+  type: hoymiles-dtu-mb
   host: {{ .host }}
   port: {{ .port }}
   maxacpower: {{ .maxacpower }}
