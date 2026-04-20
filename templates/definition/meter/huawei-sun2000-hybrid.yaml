@@ -26,6 +26,8 @@ params:
   - name: maxacpower
     service: modbus/read?address=30073&type=holding&encoding=uint32&{modbus}
   - name: storageunit
+  - name: forceaccharging
+    deprecated: true
   - preset: battery-params
   - name: capacity
     service: modbus/read?address=37758&type=holding&encoding=uint32&scale=0.001&{modbus}
