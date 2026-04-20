@@ -1,7 +1,22 @@
 {
   "name": "evcc",
+  "version": "1.0.0",
   "description": "evcc UI",
+  "homepage": "https://github.com/evcc-io/evcc#readme",
+  "bugs": {
+    "url": "https://github.com/evcc-io/evcc/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/evcc-io/evcc.git"
+  },
+  "license": "MIT",
   "author": "evcc-io",
+  "type": "module",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
   "scripts": {
     "build": "vite build",
     "test": "cross-env TZ=Europe/Berlin vitest",
@@ -17,8 +32,6 @@
     "storybook": "storybook dev -p 6006",
     "license": "license-compliance --production --report detailed --allow \"MIT;Apache-2.0;ISC;BSD-2-Clause;BSD-3-Clause;0BSD\""
   },
-  "type": "module",
-  "main": "index.js",
   "dependencies": {
     "@formkit/drag-and-drop": "^0.5.3",
     "@guolao/vue-monaco-editor": "1.5.5",
@@ -34,6 +47,7 @@
     "countup.js": "^2.10.0",
     "dayjs": "^1.11.20",
     "echarts": "^6.0.0",
+    "lightningcss": "^1.32.0",
     "monaco-editor": "0.52.2",
     "qrcode": "^1.5.4",
     "smoothscroll-polyfill": "^0.4.4",
@@ -43,15 +57,6 @@
     "vue-i18n": "^11.3.0",
     "vue-router": "^5.0.4"
   },
-  "overrides": {
-    "@monaco-editor/loader": "1.5.0"
-  },
-  "engines": {
-    "npm": ">=10.0.0",
-    "node": ">=24.0.0"
-  },
-  "license": "MIT",
-  "repository": "github:evcc-io/evcc",
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.5",
     "@eslint/js": "^9.13.0",
@@ -105,5 +110,12 @@
     "vue-tsc": "^3.2.6",
     "wait-on": "^9.0.4",
     "ws": "^8.20.0"
+  },
+  "engines": {
+    "npm": ">=10.0.0",
+    "node": ">=24.0.0"
+  },
+  "overrides": {
+    "@monaco-editor/loader": "1.5.0"
   }
 }
