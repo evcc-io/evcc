@@ -2,6 +2,7 @@ package core
 
 import (
 	"testing"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
@@ -169,6 +170,25 @@ func TestPreparePublishesBatteryFlags(t *testing.T) {
 	site.valueChan = valueChan
 
 	site.prepare()
+
+	params := make(map[string]any)
+	for len(valueChan) > 0 {
+		p := <-valueChan
+		params[p.Key] = p.Val
+	}
+
+	assert.False(t, params[keys.BatteryBuffered].(bool))
+	assert.False(t, params[keys.BatteryStart].(bool))
+}
+
+func TestUpdatePublishesBatteryFlags(t *testing.T) {
+	site := NewSite()
+	site.tariffs = &tariff.Tariffs{}
+	site.stats = &Stats{updated: time.Now()}
+	valueChan := make(chan util.Param, 256)
+	site.valueChan = valueChan
+
+	site.update(nil)
 
 	params := make(map[string]any)
 	for len(valueChan) > 0 {
