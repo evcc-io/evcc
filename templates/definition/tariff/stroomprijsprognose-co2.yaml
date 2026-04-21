@@ -1,6 +1,6 @@
 template: stroomprijsprognose-co2
 products:
-  - brand: stroomprijsprognose.nl
+  - brand: stroomprijsprognose-co2.nl
 requirements:
   description:
     de: "5 Tage Prognose [stroomprijsprognose.nl](https://stroomprijsprognose.nl/de/evcc-strompreis-co2-prognose/)"
