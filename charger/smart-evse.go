@@ -34,10 +34,10 @@ import (
 // SmartEVSE3 charger implementation
 type SmartEVSE3 struct {
 	*request.Helper
-	uri        string
-	curr       int64
-	chargeMode int
-	apiG       util.Cacheable[smartEvseRestSettings]
+	uri  string
+	curr int64
+	mode int
+	apiG util.Cacheable[smartEvseRestSettings]
 }
 
 // smartEvseRestSettings represents the JSON returned by GET /settings
@@ -127,23 +127,23 @@ func NewSmartEVSE3FromConfig(other map[string]any) (api.Charger, error) {
 		return nil, fmt.Errorf("missing uri")
 	}
 
-	chargeMode := smartEvse3ModeNormal
+	mode := smartEvse3ModeNormal
 	if cc.ChargeMode == "smart" {
-		chargeMode = smartEvse3ModeSmart
+		mode = smartEvse3ModeSmart
 	}
 
-	return NewSmartEVSE3(cc.URI, cc.Cache, chargeMode)
+	return NewSmartEVSE3(cc.URI, cc.Cache, mode)
 }
 
 // NewSmartEVSE3 creates a new SmartEVSE-3.5 REST charger
-func NewSmartEVSE3(uri string, cache time.Duration, chargeMode int) (api.Charger, error) {
+func NewSmartEVSE3(uri string, cache time.Duration, mode int) (api.Charger, error) {
 	log := util.NewLogger("smart-evse")
 
 	wb := &SmartEVSE3{
-		Helper:     request.NewHelper(log),
-		uri:        strings.TrimRight(util.DefaultScheme(uri, "http"), "/"),
-		curr:       60, // 6 A in 1/10 A
-		chargeMode: chargeMode,
+		Helper: request.NewHelper(log),
+		uri:    strings.TrimRight(util.DefaultScheme(uri, "http"), "/"),
+		curr:   60, // 6 A in 1/10 A
+		mode:   mode,
 	}
 
 	wb.apiG = util.ResettableCached(func() (smartEvseRestSettings, error) {
@@ -264,8 +264,8 @@ func (wb *SmartEVSE3) Enable(enable bool) error {
 	}
 
 	if enable {
-		if res.ModeID != wb.chargeMode {
-			return wb.setMode(wb.chargeMode)
+		if res.ModeID != wb.mode {
+			return wb.setMode(wb.mode)
 		}
 		return nil
 	}
