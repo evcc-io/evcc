@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Sanitized fixture: real SmileID, serials, MACs, IP, hostname, UUIDs and timestamps redacted. Measurement values preserved. -->
+<domain_objects>
+	<location id='00000000-0000-0000-0000-000000000001'>
+		<name>Home</name>
+		<description>A building with a smart meter.</description>
+		<type>building</type>
+		<created_date>2021-01-01T00:00:00.000+01:00</created_date>
+		<modified_date>2024-01-01T00:00:00.000+01:00</modified_date>
+		<deleted_date></deleted_date>
+		<preset>home</preset>
+		<clients/>
+		<appliances/>
+		<logs>
+			<cumulative_log id='00000000-0000-0000-0000-000000000010'>
+				<type>electricity_produced</type>
+				<unit>Wh</unit>
+				<updated_date>2024-01-01T00:00:00+01:00</updated_date>
+				<last_consecutive_log_date>2024-01-01T00:00:00+01:00</last_consecutive_log_date>
+				<interval/>
+				<electricity_cumulative_meter id='00000000000000000000000000000040'/>
+				<period start_date="2024-01-01T00:00:00+01:00" end_date="2024-01-01T00:00:00+01:00">
+					<measurement log_date="2024-01-01T00:00:00.000+01:00" tariff="nl_peak">6908460.00</measurement>
+					<measurement log_date="2024-01-01T00:00:00.000+01:00" tariff="nl_offpeak">2714941.00</measurement>
+				</period>
+			</cumulative_log>
+			<point_log id='00000000-0000-0000-0000-000000000011'>
+				<type>electricity_phase_one_produced</type>
+				<unit>W</unit>
+				<updated_date>2024-01-01T00:00:00+01:00</updated_date>
+				<last_consecutive_log_date>2024-01-01T00:00:00+01:00</last_consecutive_log_date>
+				<interval/>
+				<electricity_point_meter id='00000000000000000000000000000037'/>
+				<period start_date="2024-01-01T00:00:00+01:00" end_date="2024-01-01T00:00:00+01:00">
+					<measurement log_date="2024-01-01T00:00:00.000+01:00">0.00</measurement>
+				</period>
+			</point_log>
+			<cumulative_log id='00000000-0000-0000-0000-000000000012'>
+				<type>gas_consumed</type>
+				<unit>m3</unit>
+				<updated_date>2024-01-01T00:00:00+01:00</updated_date>
+				<last_consecutive_log_date>2024-01-01T00:00:00+01:00</last_consecutive_log_date>
+				<interval/>
+				<gas_cumulative_meter id='00000000000000000000000000000023'/>
+				<period start_date="2024-01-01T00:00:00+01:00" end_date="2024-01-01T00:00:00+01:00">
+					<measurement log_date="2024-01-01T00:00:00.000+01:00">10987.49</measurement>
+				</period>
+			</cumulative_log>
+			<cumulative_log id='00000000-0000-0000-0000-000000000013'>
+				<type>electricity_consumed</type>
+				<unit>Wh</unit>
+				<updated_date>2024-01-01T00:00:00+01:00</updated_date>
+				<last_consecutive_log_date>2024-01-01T00:00:00+01:00</last_consecutive_log_date>
+				<interval/>
+				<electricity_cumulative_meter id='00000000000000000000000000000040'/>
+				<period start_date="2024-01-01T00:00:00+01:00" end_date="2024-01-01T00:00:00+01:00">
+					<measurement log_date="2024-01-01T00:00:00.000+01:00" tariff="nl_peak">7090519.00</measurement>
+					<measurement log_date="2024-01-01T00:00:00.000+01:00" tariff="nl_offpeak">8884177.00</measurement>
+				</period>
+			</cumulative_log>
+			<point_log id='00000000-0000-0000-0000-000000000014'>
+				<type>electricity_produced</type>
+				<unit>W</unit>
+				<updated_date>2024-01-01T00:00:00+01:00</updated_date>
+				<last_consecutive_log_date>2024-01-01T00:00:00+01:00</last_consecutive_log_date>
+				<interval/>
+				<electricity_point_meter id='00000000000000000000000000000034'/>
+				<period start_date="2024-01-01T00:00:00+01:00" end_date="2024-01-01T00:00:00+01:00">
+					<measurement log_date="2024-01-01T00:00:00.000+01:00" tariff="nl_offpeak">0.00</measurement>
+					<measurement log_date="2024-01-01T00:00:00.000+01:00" tariff="nl_peak">0.00</measurement>
+				</period>
+			</point_log>
+			<point_log id='00000000-0000-0000-0000-000000000015'>
+				<type>electricity_consumed</type>
+				<unit>W</unit>
+				<updated_date>2024-01-01T00:00:00+01:00</updated_date>
+				<last_consecutive_log_date>2024-01-01T00:00:00+01:00</last_consecutive_log_date>
+				<interval/>
+				<electricity_point_meter id='00000000000000000000000000000034'/>
+				<period start_date="2024-01-01T00:00:00+01:00" end_date="2024-01-01T00:00:00+01:00">
+					<measurement log_date="2024-01-01T00:00:00.000+01:00" tariff="nl_offpeak">0.00</measurement>
+					<measurement log_date="2024-01-01T00:00:00.000+01:00" tariff="nl_peak">312.00</measurement>
+				</period>
+			</point_log>
+			<point_log id='00000000-0000-0000-0000-000000000016'>
+				<type>electricity_phase_one_consumed</type>
+				<unit>W</unit>
+				<updated_date>2024-01-01T00:00:00+01:00</updated_date>
+				<last_consecutive_log_date>2024-01-01T00:00:00+01:00</last_consecutive_log_date>
+				<interval/>
+				<electricity_point_meter id='00000000000000000000000000000037'/>
+				<period start_date="2024-01-01T00:00:00+01:00" end_date="2024-01-01T00:00:00+01:00">
+					<measurement log_date="2024-01-01T00:00:00.000+01:00">31.00</measurement>
+				</period>
+			</point_log>
+			<point_log id='00000000-0000-0000-0000-000000000017'>
+				<type>voltage_phase_two</type>
+				<unit>V</unit>
+				<updated_date>2024-01-01T00:00:00+01:00</updated_date>
+				<last_consecutive_log_date>2024-01-01T00:00:00+01:00</last_consecutive_log_date>
+				<interval/>
+				<voltage_meter id='00000000000000000000000000000045'/>
+				<period start_date="2024-01-01T00:00:00+01:00" end_date="2024-01-01T00:00:00+01:00">
+					<measurement log_date="2024-01-01T00:00:00.000+01:00">229.80</measurement>
+				</period>
+			</point_log>
+			<interval_log id='00000000-0000-0000-0000-000000000018'>
+				<type>gas_consumed</type>
+				<unit>m3</unit>
+				<updated_date>2024-01-01T00:00:00+01:00</updated_date>
+				<last_consecutive_log_date>2024-01-01T00:00:00+01:00</last_consecutive_log_date>
+				<interval>PT1H</interval>
+				<gas_interval_meter id='00000000000000000000000000000021'/>
+				<period start_date="2024-01-01T00:00:00+01:00" end_date="2024-01-01T00:00:00+01:00" interval="PT1H">
+					<measurement log_date="2024-01-01T00:00:00.000+01:00">0.00</measurement>
+				</period>
+			</interval_log>
+			<point_log id='00000000-0000-0000-0000-000000000019'>
+				<type>voltage_phase_one</type>
+				<unit>V</unit>
+				<updated_date>2024-01-01T00:00:00+01:00</updated_date>
+				<last_consecutive_log_date>2024-01-01T00:00:00+01:00</last_consecutive_log_date>
+				<interval/>
+				<voltage_meter id='00000000000000000000000000000043'/>
+				<period start_date="2024-01-01T00:00:00+01:00" end_date="2024-01-01T00:00:00+01:00">
+					<measurement log_date="2024-01-01T00:00:00.000+01:00">232.30</measurement>
+				</period>
+			</point_log>
+			<point_log id='00000000-0000-0000-0000-000000000020'>
+				<type>electricity_phase_two_consumed</type>
+				<unit>W</unit>
+				<updated_date>2024-01-01T00:00:00+01:00</updated_date>
+				<last_consecutive_log_date>2024-01-01T00:00:00+01:00</last_consecutive_log_date>
+				<interval/>
+				<electricity_point_meter id='00000000000000000000000000000047'/>
+				<period start_date="2024-01-01T00:00:00+01:00" end_date="2024-01-01T00:00:00+01:00">
+					<measurement log_date="2024-01-01T00:00:00.000+01:00">203.00</measurement>
+				</period>
+			</point_log>
+			<interval_log id='00000000-0000-0000-0000-000000000021'>
+				<type>electricity_produced</type>
+				<unit>Wh</unit>
+				<updated_date>2024-01-01T00:00:00+01:00</updated_date>
+				<last_consecutive_log_date>2024-01-01T00:00:00+01:00</last_consecutive_log_date>
+				<interval>PT5M</interval>
+				<electricity_interval_meter id='00000000000000000000000000000031'/>
+				<period start_date="2024-01-01T00:00:00+01:00" end_date="2024-01-01T00:00:00+01:00" interval="PT5M">
+					<measurement log_date="2024-01-01T00:00:00.000+01:00" tariff="nl_peak">0.00</measurement>
+					<measurement log_date="2024-01-01T00:00:00.000+01:00" tariff="nl_offpeak">0.00</measurement>
+				</period>
+			</interval_log>
+			<point_log id='00000000-0000-0000-0000-000000000022'>
+				<type>electricity_phase_three_consumed</type>
+				<unit>W</unit>
+				<updated_date>2024-01-01T00:00:00+01:00</updated_date>
+				<last_consecutive_log_date>2024-01-01T00:00:00+01:00</last_consecutive_log_date>
+				<interval/>
+				<electricity_point_meter id='00000000000000000000000000000050'/>
+				<period start_date="2024-01-01T00:00:00+01:00" end_date="2024-01-01T00:00:00+01:00">
+					<measurement log_date="2024-01-01T00:00:00.000+01:00">77.00</measurement>
+				</period>
+			</point_log>
+			<point_log id='00000000-0000-0000-0000-000000000023'>
+				<type>voltage_phase_three</type>
+				<unit>V</unit>
+				<updated_date>2024-01-01T00:00:00+01:00</updated_date>
+				<last_consecutive_log_date>2024-01-01T00:00:00+01:00</last_consecutive_log_date>
+				<interval/>
+				<voltage_meter id='00000000000000000000000000000053'/>
+				<period start_date="2024-01-01T00:00:00+01:00" end_date="2024-01-01T00:00:00+01:00">
+					<measurement log_date="2024-01-01T00:00:00.000+01:00">231.20</measurement>
+				</period>
+			</point_log>
+			<interval_log id='00000000-0000-0000-0000-000000000024'>
+				<type>electricity_consumed</type>
+				<unit>Wh</unit>
+				<updated_date>2024-01-01T00:00:00+01:00</updated_date>
+				<last_consecutive_log_date>2024-01-01T00:00:00+01:00</last_consecutive_log_date>
+				<interval>PT5M</interval>
+				<electricity_interval_meter id='00000000000000000000000000000031'/>
+				<period start_date="2024-01-01T00:00:00+01:00" end_date="2024-01-01T00:00:00+01:00" interval="PT5M">
+					<measurement log_date="2024-01-01T00:00:00.000+01:00" tariff="nl_peak">11.00</measurement>
+					<measurement log_date="2024-01-01T00:00:00.000+01:00" tariff="nl_offpeak">0.00</measurement>
+				</period>
+			</interval_log>
+			<point_log id='00000000-0000-0000-0000-000000000025'>
+				<type>electricity_phase_two_produced</type>
+				<unit>W</unit>
+				<updated_date>2024-01-01T00:00:00+01:00</updated_date>
+				<last_consecutive_log_date>2024-01-01T00:00:00+01:00</last_consecutive_log_date>
+				<interval/>
+				<electricity_point_meter id='00000000000000000000000000000047'/>
+				<period start_date="2024-01-01T00:00:00+01:00" end_date="2024-01-01T00:00:00+01:00">
+					<measurement log_date="2024-01-01T00:00:00.000+01:00">0.00</measurement>
+				</period>
+			</point_log>
+			<point_log id='00000000-0000-0000-0000-000000000026'>
+				<type>electricity_phase_three_produced</type>
+				<unit>W</unit>
+				<updated_date>2024-01-01T00:00:00+01:00</updated_date>
+				<last_consecutive_log_date>2024-01-01T00:00:00+01:00</last_consecutive_log_date>
+				<interval/>
+				<electricity_point_meter id='00000000000000000000000000000050'/>
+				<period start_date="2024-01-01T00:00:00+01:00" end_date="2024-01-01T00:00:00+01:00">
+					<measurement log_date="2024-01-01T00:00:00.000+01:00">0.00</measurement>
+				</period>
+			</point_log>
+		</logs>
+		<actuator_functionalities/>
+	</location>
+	<gateway id='00000000-0000-0000-0000-000000000002'>
+		<created_date>2020-01-01T00:00:00.000+01:00</created_date>
+		<modified_date>2024-01-01T00:00:00.000+01:00</modified_date>
+		<deleted_date/>
+		<name></name>
+		<description></description>
+		<enabled>true</enabled>
+		<firmware_locked>false</firmware_locked>
+		<prevent_default_update>false</prevent_default_update>
+		<last_reset_date>2020-01-01T00:00:00.000+01:00</last_reset_date>
+		<last_boot_date>2024-01-01T00:00:00.000+01:00</last_boot_date>
+		<vendor_name>Plugwise</vendor_name>
+		<vendor_model>smile</vendor_model>
+		<hardware_version>AME Smile 2.0 board</hardware_version>
+		<firmware_version>4.4.4</firmware_version>
+		<mac_address>AABBCCDDEEFF01</mac_address>
+		<wifi_mac_address>AABBCCDDEEFF02</wifi_mac_address>
+		<short_id>REDACTED</short_id>
+		<send_data>true</send_data>
+		<anonymous>false</anonymous>
+		<lan_ip>192.168.0.1</lan_ip>
+		<wifi_ip></wifi_ip>
+		<hostname>smileREDACTED</hostname>
+		<time>2024-01-01T00:00:00+01:00</time>
+		<timezone>Europe/Amsterdam</timezone>
+		<ssh_relay>disabled</ssh_relay>
+	</gateway>
+</domain_objects>
