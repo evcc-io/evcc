@@ -118,9 +118,9 @@ export default defineComponent({
 	},
 	watch: {
 		version(now) {
-			if (now === undefined) return;
+			if (!now) return;
 
-			if (this.currentVersion === undefined) {
+			if (!this.currentVersion) {
 				this.currentVersion = now;
 				return;
 			}
@@ -130,7 +130,6 @@ export default defineComponent({
 					now,
 					prev: this.currentVersion,
 				});
-				this.currentVersion = now;
 				this.reload();
 			}
 		},
