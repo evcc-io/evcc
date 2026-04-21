@@ -1,6 +1,10 @@
 <template>
 	<div class="container px-4 safe-area-inset">
 		<TopHeader title="History" />
+		<div class="alert alert-light mb-5">
+			This page is for development purposes only. Helps verify logged data. A proper
+			visualization is coming soon, stay tuned.
+		</div>
 		<div class="row">
 			<main class="col-12">
 				<div v-if="loading" class="my-5 text-center text-muted">loading...</div>

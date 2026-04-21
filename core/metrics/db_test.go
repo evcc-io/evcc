@@ -47,6 +47,39 @@ func TestSqliteTimestamp(t *testing.T) {
 	require.True(t, clock.Now().Equal(time.Time(ts)), "expected %v, got %v", clock.Now().Local(), time.Time(ts).Local())
 }
 
+func TestQueryImportEnergyUTCFilter(t *testing.T) {
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, SetupSchema())
+
+	e := entity{Name: "grid", Group: "grid"}
+	require.NoError(t, db.Instance.FirstOrCreate(&e).Error)
+
+	// insert 4 slots at 16:00, 16:15, 16:30, 16:45 local time
+	loc := time.Now().Location()
+	base := time.Date(2026, 4, 15, 16, 0, 0, 0, loc)
+
+	for i := range 4 {
+		ts := base.Add(time.Duration(i) * 15 * time.Minute)
+		require.NoError(t, persist(e, ts, 0, float64(i+1)))
+	}
+
+	// query with UTC times that cover all 4 slots
+	// base is 16:00 local, convert to UTC and use a from before and to after
+	from := base.Add(-time.Hour).UTC()
+	to := base.Add(time.Hour).UTC()
+
+	res, err := QueryImportEnergy(from, to, "15m")
+	require.NoError(t, err)
+	require.Len(t, res, 1)
+	require.Len(t, res[0].Data, 4, "expected all 4 slots, got %d", len(res[0].Data))
+
+	var totalExport float64
+	for _, s := range res[0].Data {
+		totalExport += s.Export
+	}
+	require.InDelta(t, 1+2+3+4, totalExport, 0.001)
+}
+
 func TestUpdateProfile(t *testing.T) {
 	clock := clock.NewMock()
 
