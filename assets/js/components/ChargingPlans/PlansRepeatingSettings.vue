@@ -63,7 +63,7 @@ export default defineComponent({
 				time: DEFAULT_TARGET_TIME,
 				soc: DEFAULT_TARGET_SOC,
 				active: false,
-				tz: this.timezone(),
+				tz: this.timezone,
 			};
 
 			// update the plan without storing non-applied changes from other plans
