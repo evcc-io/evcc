@@ -2,6 +2,8 @@ package metrics
 
 import (
 	"errors"
+	"slices"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/server/db"
@@ -198,6 +200,29 @@ func SetupSchema() error {
 	}
 	if err := rename("neg", "export"); err != nil {
 		return err
+	}
+
+	// meter: ts migration
+	types, err := m.ColumnTypes(new(meter))
+	if err != nil {
+		return err
+	}
+	tsIdx := slices.IndexFunc(types, func(typ gorm.ColumnType) bool {
+		return typ.Name() == "ts"
+	})
+	if tsIdx == -1 {
+		return errors.New("missing meters.ts")
+	}
+
+	if tsTyp, _ := types[tsIdx].ColumnType(); !strings.EqualFold(tsTyp, "INTEGER") {
+		db, err := db.Instance.DB()
+		if err != nil {
+			return err
+		}
+
+		if _, err := db.Exec(`UPDATE meters SET ts = unixepoch(ts)`); err != nil {
+			return err
+		}
 	}
 
 	return db.Instance.AutoMigrate(new(meter))
