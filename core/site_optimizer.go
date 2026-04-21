@@ -120,10 +120,10 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		minLen = min(minLen, len(solar))
 	}
 
-	uri := os.Getenv("OPTIMIZER_URI")
-	if uri == "" {
-		uri = OPTIMIZER_URI
-		minLen = min(2*96, minLen) // limit to 2 days for sake of performance
+	uri := lo.CoalesceOrEmpty(os.Getenv("OPTIMIZER_URI"), OPTIMIZER_URI)
+	if uri == OPTIMIZER_URI {
+		// limit to 2 days for sake of performance
+		minLen = min(2*96, minLen)
 	}
 
 	if expectedSlots := 8; minLen < expectedSlots {
