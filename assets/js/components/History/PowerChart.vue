@@ -48,7 +48,8 @@ interface Slot {
 }
 
 export interface SeriesData {
-	name: string;
+	name?: string;
+	group: string;
 	data: Slot[];
 }
 
@@ -58,7 +59,7 @@ function slotPower(slot: Slot, field: "import" | "export"): number {
 }
 
 export default defineComponent({
-	name: "HistoryChart",
+	name: "HistoryPowerChart",
 	components: { Line, LegendList },
 	mixins: [formatter],
 	props: {
@@ -82,7 +83,7 @@ export default defineComponent({
 				});
 
 				return {
-					label: s.name,
+					label: s.group,
 					data: points,
 					borderColor: color,
 					backgroundColor: fill,
@@ -171,7 +172,7 @@ export default defineComponent({
 		},
 		legends(): Legend[] {
 			return this.series.map((s, i) => ({
-				label: s.name,
+				label: s.group,
 				color: colors.palette[i % colors.palette.length],
 				value: "",
 			}));
