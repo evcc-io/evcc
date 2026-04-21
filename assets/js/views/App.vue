@@ -117,7 +117,7 @@ export default defineComponent({
 	},
 	watch: {
 		version(now, prev) {
-			if (!!prev && !!now) {
+			if (prev !== undefined && now !== prev) {
 				console.log("new version detected. reloading browser", { now, prev });
 				this.reload();
 			}
