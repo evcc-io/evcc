@@ -7,12 +7,12 @@ requirements:
     en: "5 days prognosis [stroomprijsprognose.nl](https://stroomprijsprognose.nl)"
   evcc: ["skiptest"]
 group: co2
-countries: ["DE","NL","BE","DK"]
+countries: ["DE", "NL", "BE", "DK"]
 params:
   - name: region
     example: DE
     type: choice
-    choice: ["DE","NL","BE","DK1","DK2"]
+    choice: ["DE", "NL", "BE", "DK1", "DK2"]
     required: true
   - name: hours
     default: 120
