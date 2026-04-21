@@ -140,9 +140,12 @@ func TestTimeMigration(t *testing.T) {
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 	mig := db.Instance.Migrator()
 
+	require.NoError(t, db.Instance.AutoMigrate(new(entity)))
+
 	type v1 struct {
 		Meter     int       `json:"meter" gorm:"column:meter;uniqueIndex:idx_meter_ts"`
 		Timestamp time.Time `json:"ts" gorm:"column:ts;uniqueIndex:idx_meter_ts"`
+		Entity    entity    `json:"-" gorm:"foreignkey:Meter;references:Id"`
 	}
 
 	require.NoError(t, db.Instance.AutoMigrate(new(v1)))
@@ -155,8 +158,9 @@ func TestTimeMigration(t *testing.T) {
 	require.NoError(t, mig.RenameTable("v1", "v2"))
 
 	type v2 struct {
-		Meter     int   `json:"meter" gorm:"column:meter;uniqueIndex:idx_meter_ts"`
-		Timestamp int64 `json:"ts" gorm:"column:ts;uniqueIndex:idx_meter_ts"`
+		Meter     int    `json:"meter" gorm:"column:meter;uniqueIndex:idx_meter_ts"`
+		Timestamp int64  `json:"ts" gorm:"column:ts;uniqueIndex:idx_meter_ts"`
+		Entity    entity `json:"-" gorm:"foreignkey:Meter;references:Id"`
 	}
 
 	require.NoError(t, db.Instance.AutoMigrate(new(v2)))
