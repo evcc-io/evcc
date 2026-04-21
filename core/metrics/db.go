@@ -70,10 +70,8 @@ func QueryImportEnergy(from, to time.Time, aggregate string) ([]Series, error) {
 	addDuration := aggregateDurations[aggregate]
 
 	// match timezone for day boundary
-	tz := from.Format("-07:00")
-
 	tx := db.Instance.Table("meters m").
-		Select(`e.name AS label, strftime('` + format + `', m.ts, '` + tz + `') AS bucket,
+		Select(`e.name AS label, strftime('` + format + `', m.ts, 'unixepoch', 'localtime') AS bucket,
 		COALESCE(SUM(m."import"), 0) AS import, COALESCE(SUM(m.export), 0) AS export`).
 		Joins("JOIN entities e ON m.meter = e.id").
 		Group("label, bucket").
@@ -226,8 +224,9 @@ func importProfile(entity entity, from time.Time) (*[96]float64, error) {
 	rows, err := db.Query(`SELECT min(ts) AS ts, avg(import) AS import
 		FROM meters
 		WHERE meter = ? AND ts >= ?
-		GROUP BY strftime("%H:%M", ts)
-		ORDER BY strftime("%H:%M", ts) ASC`, entity.Id, from.Unix(),
+		GROUP BY strftime("%H:%M", ts, 'unixepoch', 'localtime')
+		ORDER BY strftime("%H:%M", ts, 'unixepoch', 'localtime') ASC`,
+		entity.Id, from.Unix(),
 	)
 	if err != nil {
 		return nil, err
