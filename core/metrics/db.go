@@ -10,11 +10,11 @@ import (
 )
 
 type meter struct {
-	Meter     int       `json:"meter" gorm:"column:meter;uniqueIndex:meters_meter_ts"`
-	Timestamp time.Time `json:"ts" gorm:"column:ts;uniqueIndex:meters_meter_ts"` // start of 15min slot
-	Entity    entity    `json:"-" gorm:"foreignkey:Meter;references:Id"`
-	Import    float64   `json:"import" gorm:"column:import"`
-	Export    float64   `json:"export" gorm:"column:export"`
+	Meter     int     `json:"meter" gorm:"column:meter;uniqueIndex:meters_meter_ts"`
+	Timestamp int64   `json:"ts" gorm:"column:ts;uniqueIndex:meters_meter_ts"` // start of 15min slot
+	Entity    entity  `json:"-" gorm:"foreignkey:Meter;references:Id"`
+	Import    float64 `json:"import" gorm:"column:import"`
+	Export    float64 `json:"export" gorm:"column:export"`
 }
 
 type entity struct {
@@ -69,9 +69,7 @@ func QueryImportEnergy(from, to time.Time, aggregate string) ([]Series, error) {
 
 	addDuration := aggregateDurations[aggregate]
 
-	// match timezone of stored timestamps for correct SQLite comparison
-	from = from.Local()
-	to = to.Local()
+	// match timezone for day boundary
 	tz := from.Format("-07:00")
 
 	tx := db.Instance.Table("meters m").
@@ -82,10 +80,10 @@ func QueryImportEnergy(from, to time.Time, aggregate string) ([]Series, error) {
 		Order("label, bucket")
 
 	if !from.IsZero() {
-		tx = tx.Where("m.ts >= ?", from)
+		tx = tx.Where("m.ts >= ?", int64(from.Unix()))
 	}
 	if !to.IsZero() {
-		tx = tx.Where("m.ts < ?", to)
+		tx = tx.Where("m.ts < ?", int64(to.Unix()))
 	}
 
 	rows, err := tx.Rows()
@@ -211,7 +209,7 @@ func SetupSchema() error {
 func persist(entity entity, ts time.Time, imp, exp float64) error {
 	return db.Instance.Create(&meter{
 		Meter:     entity.Id,
-		Timestamp: ts.Truncate(tariff.SlotDuration),
+		Timestamp: ts.Truncate(tariff.SlotDuration).Unix(),
 		Import:    imp,
 		Export:    exp,
 	}).Error
@@ -225,13 +223,11 @@ func importProfile(entity entity, from time.Time) (*[96]float64, error) {
 		return nil, err
 	}
 
-	tz := from.Format("-07:00")
-
 	rows, err := db.Query(`SELECT min(ts) AS ts, avg(import) AS import
 		FROM meters
 		WHERE meter = ? AND ts >= ?
-		GROUP BY strftime("%H:%M", ts, '`+tz+`')
-		ORDER BY strftime("%H:%M", ts, '`+tz+`') ASC`, entity.Id, from,
+		GROUP BY strftime("%H:%M", ts)
+		ORDER BY strftime("%H:%M", ts) ASC`, entity.Id, from.Unix(),
 	)
 	if err != nil {
 		return nil, err

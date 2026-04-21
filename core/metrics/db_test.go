@@ -24,26 +24,22 @@ func TestSqliteTimestamp(t *testing.T) {
 	db, err := db.Instance.DB()
 	require.NoError(t, err)
 
-	var (
-		ts  SqlTime
-		val float64
-	)
+	var ts SqlTime
 
 	for _, sql := range []string{
-		`SELECT ts, import FROM meters`,
-		`SELECT min(ts), import FROM meters`,
-		`SELECT unixepoch(ts), import FROM meters`,
-		`SELECT unixepoch(min(ts)), import FROM meters`,
-		`SELECT min(ts) AS ts, avg(import) AS import
-			FROM meters
+		`SELECT ts FROM meters`,
+		`SELECT min(ts) FROM meters`,
+		// `SELECT unixepoch(ts) FROM meters`,
+		// `SELECT unixepoch(min(ts)) FROM meters`,
+		`SELECT min(ts) AS ts FROM meters
 			GROUP BY strftime("%H:%M", ts)
 			ORDER BY ts`,
 	} {
-		require.NoError(t, db.QueryRow(sql).Scan(&ts, &val))
-		require.True(t, clock.Now().Equal(time.Time(ts)), "expected %v, got %v", clock.Now().Local(), time.Time(ts).Local())
+		require.NoError(t, db.QueryRow(sql).Scan(&ts))
+		require.True(t, clock.Now().Equal(time.Time(ts)), "expected %v, got %v (%s)", clock.Now().Local(), time.Time(ts).Local(), sql)
 	}
 
-	require.NoError(t, db.QueryRow(`SELECT ts, import FROM meters WHERE ts >= ?`, clock.Now()).Scan(&ts, &val))
+	require.NoError(t, db.QueryRow(`SELECT ts FROM meters WHERE ts >= ?`, clock.Now().Unix()).Scan(&ts))
 	require.True(t, clock.Now().Equal(time.Time(ts)), "expected %v, got %v", clock.Now().Local(), time.Time(ts).Local())
 }
 
