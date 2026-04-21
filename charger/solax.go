@@ -188,12 +188,10 @@ func (wb *Solax) Enabled() (bool, error) {
 	case
 		8: // "SuspendedEVSE"
 		wb.enabled = false
-		return false, nil
 	case
 		2, // "Charging"
 		7: // "SuspendedEV"
 		wb.enabled = true
-		return true, nil
 	}
 
 	return wb.enabled, nil
