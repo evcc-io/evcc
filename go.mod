@@ -272,4 +272,4 @@ replace github.com/lorenzodonini/ocpp-go => github.com/evcc-io/ocpp-go v0.0.0-20
 
 replace go.yaml.in/yaml/v4 => go.yaml.in/yaml/v4 v4.0.0-rc.3
 
-replace github.com/glebarez/sqlite => github.com/evcc-io/sqlite v0.0.0-20260421112709-2d559fa39dd4
+replace github.com/glebarez/sqlite => github.com/evcc-io/sqlite v0.0.0-20260421120918-e1639d08b06e
