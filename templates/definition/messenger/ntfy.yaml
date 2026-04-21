@@ -6,6 +6,12 @@ params:
     required: true
     example: ntfy.sh
     default: ntfy.sh
+    description:
+      de: IP-Adresse oder Hostname (mit optionalem Pfad)
+      en: IP address or hostname (with optional path)
+    pattern:
+      regex: "^[^\\/\\s]+(:[0-9]{1,5})?(\\/\\S*)?$"
+      examples: ["ntfy.sh", "192.168.1.100", "myserver.com:8080", "myserver.com/ntfy"]
   - name: topics
     required: true
     type: list
@@ -57,7 +63,7 @@ params:
         For more details, see [docs.ntfy.sh](https://docs.ntfy.sh/publish#tags-emojis). One entry per line.
 render: |
   type: ntfy
-  uri: https://{{ .host }}/{{ .topics | join "," }}
+  uri: https://{{ .host | trimSuffix "/" }}/{{ .topics | join "," }}
   priority: {{ .priority }}
   tags: {{ .tags | join "," }}
   authtoken: {{ .authtoken }}
