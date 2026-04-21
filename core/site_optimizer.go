@@ -121,7 +121,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	}
 
 	// limit to 2 days for sake of performance
-	minLen = min(96, minLen)
+	minLen = min(2*96, minLen)
 
 	if expectedSlots := 8; minLen < expectedSlots {
 		if solarTariff != nil {
