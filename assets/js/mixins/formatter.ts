@@ -1,6 +1,44 @@
 import { defineComponent } from "vue";
 import { is12hFormat } from "@/units";
 import { CURRENCY } from "../types/evcc";
+import settings from "@/settings";
+import type { DateFormat } from "@/settings";
+
+// Format the day+month portion of a date according to the user's date-order
+// preference.  Month names are always rendered in the given UI locale so they
+// stay translated regardless of the ordering choice.
+//   dmy  → "17 May"   (or "17 Mai" in German)
+//   mdy  → "May 17"
+//   ymd  → "2025-05-17"
+//   ""   → locale-native (existing behaviour, auto)
+function formatDayMonth(date: Date, locale: string | undefined, fmt: DateFormat): string {
+  const monthName = new Intl.DateTimeFormat(locale, { month: "short" }).format(date);
+  const day = date.getDate();
+  const year = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(day).padStart(2, "0");
+  if (fmt === "mdy") return `${monthName} ${day}`;
+  if (fmt === "ymd") return `${year}-${mm}-${dd}`;
+  if (fmt === "dmy") return `${day} ${monthName}`;
+  // auto: use locale-native ordering
+  return new Intl.DateTimeFormat(locale, { month: "short", day: "numeric" }).format(date);
+}
+
+// Format the numeric date portion (no month names) with the right day/month
+// ordering.  Used in the compact "short" date format.
+//   dmy  → "17/05"  (via en-GB locale)
+//   mdy  → "5/17"   (via en-US locale)
+//   ymd  → "2025-05-17" (explicit construction — Intl does not include year with only month+day)
+//   ""   → locale-native
+function formatNumericDate(date: Date, locale: string | undefined, fmt: DateFormat): string {
+  if (fmt === "ymd") {
+    const mm = String(date.getMonth() + 1).padStart(2, "0");
+    const dd = String(date.getDate()).padStart(2, "0");
+    return `${date.getFullYear()}-${mm}-${dd}`;
+  }
+  const orderLocale = fmt === "mdy" ? "en-US" : fmt === "dmy" ? "en-GB" : locale;
+  return new Intl.DateTimeFormat(orderLocale, { month: "numeric", day: "numeric" }).format(date);
+}
 
 const CURRENCY_SYMBOLS: Record<CURRENCY, string> = {
   AUD: "$",
@@ -55,6 +93,11 @@ export default defineComponent({
       fmtLimit: 100,
       fmtDigits: 1,
     };
+  },
+  computed: {
+    dateFormat(): DateFormat {
+      return settings.dateFormat || "";
+    },
   },
   methods: {
     energyPriceSubunit(currency: CURRENCY): string | undefined {
@@ -244,14 +287,29 @@ export default defineComponent({
       }).format(date);
     },
     fmtFullDateTime(date: Date, short: boolean) {
-      return new Intl.DateTimeFormat(this.$i18n?.locale, {
-        weekday: short ? undefined : "short",
-        month: short ? "numeric" : "short",
-        day: "numeric",
+      const locale = this.$i18n?.locale;
+      const fmt = this.dateFormat;
+      if (!fmt) {
+        // auto: single Intl call preserves locale-native separators (e.g. German "So., 15. Jan.,")
+        return new Intl.DateTimeFormat(locale, {
+          weekday: short ? undefined : "short",
+          month: short ? "numeric" : "short",
+          day: "numeric",
+          hour: "numeric",
+          minute: "numeric",
+          hour12: is12hFormat(),
+        }).format(date);
+      }
+      const time = new Intl.DateTimeFormat(locale, {
         hour: "numeric",
         minute: "numeric",
         hour12: is12hFormat(),
       }).format(date);
+      if (short) {
+        return `${formatNumericDate(date, locale, fmt)} ${time}`.trim();
+      }
+      const weekday = new Intl.DateTimeFormat(locale, { weekday: "short" }).format(date);
+      return `${weekday} ${formatDayMonth(date, locale, fmt)} ${time}`.trim();
     },
     fmtWeekdayTime(date: Date) {
       return new Intl.DateTimeFormat(this.$i18n?.locale, {
@@ -273,11 +331,17 @@ export default defineComponent({
       }).format(date);
     },
     fmtDayMonth(date: Date) {
-      return new Intl.DateTimeFormat(this.$i18n?.locale, {
-        weekday: "short",
-        day: "numeric",
-        month: "short",
-      }).format(date);
+      const locale = this.$i18n?.locale;
+      const fmt = this.dateFormat;
+      if (!fmt) {
+        return new Intl.DateTimeFormat(locale, {
+          weekday: "short",
+          day: "numeric",
+          month: "short",
+        }).format(date);
+      }
+      const weekday = new Intl.DateTimeFormat(locale, { weekday: "short" }).format(date);
+      return `${weekday} ${formatDayMonth(date, locale, fmt)}`.trim();
     },
     fmtDurationUnit(value: number, unit = "second") {
       return new Intl.NumberFormat(this.$i18n?.locale, {
