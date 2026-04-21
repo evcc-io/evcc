@@ -20,7 +20,7 @@ params:
     description:
       en: Currency
       de: Währung
-    choice: ["DKK", "EUR"]
+    choice: ["EUR","DKK"]
     required: true
   - name: hours
     default: 120
@@ -37,4 +37,4 @@ render: |
   {{ include "tariff-features" . }}
   forecast:
     source: http
-    uri: https://stroomprijsprognose.nl/api/v1/evcc/tariff?country={{.region}}&type=grid&hours={{.hours}}
+    uri: https://stroomprijsprognose.nl/api/v1/evcc/tariff?country={{.region}}&type=grid&currency={{.currency}}&hours={{.hours}}
