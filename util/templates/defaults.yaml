@@ -59,8 +59,8 @@ params:
       de: Passwort
       en: Password
     help:
-      de: Bei führenden Nullen bitte in einfache Hochkommata setzen
-      en: Use single quotes in case of leading zeros
+      de: Zugangspasswort des Dienstes
+      en: Service account password
     mask: true
   - name: capacity
     unit: kWh
@@ -292,8 +292,8 @@ params:
       en: Actor Identification Number (AIN)
       de: Aktoridentifikationsnummer (AIN)
     help:
-      en: Printed on the type label on the back of the device. Embed it in double quotes in case of leading zeroes.
-      de: Ist auf dem Typenschild auf der Geräterückseite aufgedruckt. Bei führenden Nullen bitte in doppelte Hochkommata setzen.
+      en: Printed on the type label on the back of the device.
+      de: Ist auf dem Typenschild auf der Geräterückseite aufgedruckt.
   - name: coarsecurrent
     type: bool
     description:
@@ -407,11 +407,6 @@ params:
     mask: true
     description:
       generic: PIN
-  - name: serial_number
-    private: true
-    description:
-      en: Serial Number
-      de: Seriennummer
   - name: watchdog
     description:
       generic: Watchdog
@@ -484,6 +479,15 @@ params:
     description:
       en: Price zones
       de: Preiszonen
+  - name: baudrate
+    description:
+      de: Baudrate
+      en: Baudrate
+    help:
+      de: Typische Werte sind 9600, 19200, 38400, 57600, 115200
+      en: Typical values are 9600, 19200, 38400, 57600, 115200
+    default: 9600
+    type: int
 
 presets:
   vehicle-base:
@@ -760,8 +764,8 @@ modbus:
         de: Baudrate
         en: Baudrate
       help:
-        de: Prüfe die Geräteeinstellungen, typische Werte sind 9600, 19200, 38400, 57600, 115200
-        en: Check the device settings, typical values are 9600, 19200, 38400, 57600, 115200
+        de: Typische Werte sind 9600, 19200, 38400, 57600, 115200
+        en: Typical values are 9600, 19200, 38400, 57600, 115200
       default: 9600
       type: int
     - name: comset

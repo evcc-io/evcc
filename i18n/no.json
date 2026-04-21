@@ -28,7 +28,7 @@
     },
     "capacity": "{energy} av {total}",
     "control": "Batterikontroll",
-    "discharge": "Forhindre utladning i hurtigmodus og planlagt lading",
+    "discharge": "Forhindre utladning i hurtigmodus og planlagt lading.",
     "disclaimerHint": "Merk:",
     "disclaimerText": "Kun relevant i PV-modus. Ladeadferden justeres deretter.",
     "gridChargeTab": "Nettlading",

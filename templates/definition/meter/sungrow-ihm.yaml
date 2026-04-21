@@ -36,21 +36,21 @@ render: |
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 8554 # Register 8555 (A-phase voltage)
+      address: 4356 # Register 4357 (Phase A voltage, phase-to-neutral)
       type: input
       decode: uint16
     scale: 0.1 # Factor 0.1 V
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 8555 # Register 8556 (B-phase voltage)
+      address: 4358 # Register 4359 (Phase B voltage, phase-to-neutral)
       type: input
       decode: uint16
     scale: 0.1
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 8556 # Register 8557 (C-phase voltage)
+      address: 4360 # Register 4361 (Phase C voltage, phase-to-neutral)
       type: input
       decode: uint16
     scale: 0.1
@@ -58,24 +58,21 @@ render: |
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 8558 # Register 8559 (Phase A active power, U32)
+      address: 8558 # Register 8559 (Phase A active power, S32, signed import/export)
       type: input
-      decode: uint32s
-    scale: 1 # Factor 1 W
+      decode: int32s
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
       address: 8560 # Register 8561 (Phase B active power)
       type: input
-      decode: uint32s
-    scale: 1
+      decode: int32s
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
       address: 8562 # Register 8563 (Phase C active power)
       type: input
-      decode: uint32s
-    scale: 1
+      decode: int32s
   {{- end }}
   {{- if eq .usage "pv" }}
   type: custom
