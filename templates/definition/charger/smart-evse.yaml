@@ -18,14 +18,10 @@ params:
     default: 1s
     advanced: true
   - name: chargeMode
-    default: smart
+    default: normal
     advanced: true
     type: choice
-    choice: ["smart", "normal"]
-    description:
-      en: Charge mode (smart or normal)
-      de: Lademodus (smart oder normal)
-
+    choice: ["normal", "smart"]
 render: |
   type: smart-evse
   uri: http://{{ .host }}

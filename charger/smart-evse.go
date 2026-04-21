@@ -116,7 +116,7 @@ func NewSmartEVSE3FromConfig(other map[string]any) (api.Charger, error) {
 		ChargeMode string
 	}{
 		Cache:      time.Second,
-		ChargeMode: "smart",
+		ChargeMode: "normal",
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -127,9 +127,9 @@ func NewSmartEVSE3FromConfig(other map[string]any) (api.Charger, error) {
 		return nil, fmt.Errorf("missing uri")
 	}
 
-	chargeMode := smartEvse3ModeSmart
-	if cc.ChargeMode == "normal" {
-		chargeMode = smartEvse3ModeNormal
+	chargeMode := smartEvse3ModeNormal
+	if cc.ChargeMode == "smart" {
+		chargeMode = smartEvse3ModeSmart
 	}
 
 	return NewSmartEVSE3(cc.URI, cc.Cache, chargeMode)
@@ -144,9 +144,6 @@ func NewSmartEVSE3(uri string, cache time.Duration, chargeMode int) (api.Charger
 		uri:        strings.TrimRight(util.DefaultScheme(uri, "http"), "/"),
 		curr:       60, // 6 A in 1/10 A
 		chargeMode: chargeMode,
-	}
-	wb.Helper.Client.Transport = &http.Transport{
-		DisableKeepAlives: true,
 	}
 
 	wb.apiG = util.ResettableCached(func() (smartEvseRestSettings, error) {
@@ -173,9 +170,7 @@ func NewSmartEVSE3(uri string, cache time.Duration, chargeMode int) (api.Charger
 	// decorate optional 1P/3P phase switching via C2 contactor
 	var phases1p3p func(int) error
 	var getPhases func() (int, error)
-	if res.Settings.EnableC2 != "" &&
-		res.Settings.EnableC2 != "Not present" && // Assume 3 phase
-		res.Settings.EnableC2 != "Always Off" { // assume single phase
+	if res.Settings.EnableC2 != "" && res.Settings.EnableC2 != "Not present" {
 		phases1p3p = wb.phases1p3p
 		getPhases = wb.getPhases
 	}
