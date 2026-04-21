@@ -206,8 +206,8 @@ github.com/evcc-io/optimizer v0.0.0-20260411145738-bf13a64d411c h1:KUJqCEBzEXepn
 github.com/evcc-io/optimizer v0.0.0-20260411145738-bf13a64d411c/go.mod h1:cHMeq6GfoXQ8LxqY4LH1wn/hrgYEn+ka5RPI1CF37SY=
 github.com/evcc-io/rct v0.2.0 h1:qjXKI7NKwW5YpEKEb27MwLMBaR4ne2Kd2cPV2PYTKn4=
 github.com/evcc-io/rct v0.2.0/go.mod h1:n6MTBU36QOadGlxxiADu86VaT5l0eYdbmFBHF14AD/s=
-github.com/evcc-io/sqlite v0.0.0-20260421120918-e1639d08b06e h1:DU9spMQsNQcqFB4Mue+AqW73Y7Z2jiDNskzwDBUDxh0=
-github.com/evcc-io/sqlite v0.0.0-20260421120918-e1639d08b06e/go.mod h1:h8/o8j5wiAsqSPoWELDUdJXhjAhsVliSn7bWZjOhrgQ=
+github.com/evcc-io/sqlite v0.0.0-20260421123006-d66e0643f9bb h1:k0oq1Bcuidy30jREK6drmSVk0i5M9PENZULzBfk9Amw=
+github.com/evcc-io/sqlite v0.0.0-20260421123006-d66e0643f9bb/go.mod h1:jTnU6XZ6pKY74rm4VrCSxgXmH0x3p3PcA00uAzr0OtQ=
 github.com/evcc-io/tesla-proxy-client v0.0.0-20260324063928-151fe10796ae h1:0ihqBMBjkekSlwD3ZYQIiYite6ZAln9ze60evOE6FkQ=
 github.com/evcc-io/tesla-proxy-client v0.0.0-20260324063928-151fe10796ae/go.mod h1:L8AR3E7/MbbvCgnrtzsT6YsgQJtN5gk/LumR1gDBeJM=
 github.com/fatih/camelcase v1.0.0/go.mod h1:yN2Sb0lFhZJUdVvtELVWefmrXpuZESvPmqwoZc+/fpc=
