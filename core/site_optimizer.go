@@ -120,8 +120,11 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		minLen = min(minLen, len(solar))
 	}
 
-	// limit to 2 days for sake of performance
-	minLen = min(96, minLen)
+	uri := lo.CoalesceOrEmpty(os.Getenv("OPTIMIZER_URI"), OPTIMIZER_URI)
+	if uri == OPTIMIZER_URI {
+		// limit to 2 days for sake of performance
+		minLen = min(2*96, minLen)
+	}
 
 	if expectedSlots := 8; minLen < expectedSlots {
 		if solarTariff != nil {
@@ -229,7 +232,6 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	httpClient := request.NewClient(site.log)
 	httpClient.Timeout = 30 * time.Second
 
-	uri := lo.CoalesceOrEmpty(os.Getenv("OPTIMIZER_URI"), OPTIMIZER_URI)
 	apiClient, err := optimizer.NewClientWithResponses(uri, optimizer.WithHTTPClient(httpClient))
 	if err != nil {
 		return err

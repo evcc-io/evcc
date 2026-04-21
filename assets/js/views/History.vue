@@ -1,6 +1,10 @@
 <template>
 	<div class="container px-4 safe-area-inset">
 		<TopHeader title="History" />
+		<div class="alert alert-light mb-5">
+			This page is for development purposes only. Helps verify logged data. A proper
+			visualization is coming soon, stay tuned.
+		</div>
 		<div class="row">
 			<main class="col-12">
 				<div v-if="loading" class="my-5 text-center text-muted">loading...</div>
@@ -28,7 +32,7 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import Header from "../components/Top/Header.vue";
-import PowerChart from "../components/History/Chart.vue";
+import PowerChart from "../components/History/PowerChart.vue";
 import EnergyChart from "../components/History/EnergyChart.vue";
 import api from "../api";
 
@@ -79,6 +83,7 @@ export default defineComponent({
 						params: {
 							from: this.powerFrom.toISOString(),
 							to: this.powerTo.toISOString(),
+							grouped: true,
 						},
 					}),
 					api.get("history/energy", {
@@ -86,6 +91,7 @@ export default defineComponent({
 							from: this.energyFrom.toISOString(),
 							to: this.powerTo.toISOString(),
 							aggregate: "day",
+							grouped: true,
 						},
 					}),
 				]);
