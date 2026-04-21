@@ -22,6 +22,9 @@ params:
     advanced: true
     type: choice
     choice: ["normal", "smart"]
+    description:
+      en: Charge mode
+      de: Lademodus
 render: |
   type: smart-evse
   uri: http://{{ .host }}
