@@ -78,10 +78,10 @@ func QueryImportEnergy(from, to time.Time, aggregate string) ([]Series, error) {
 		Order("label, bucket")
 
 	if !from.IsZero() {
-		tx = tx.Where("m.ts >= ?", int64(from.Unix()))
+		tx = tx.Where("m.ts >= ?", from.Unix())
 	}
 	if !to.IsZero() {
-		tx = tx.Where("m.ts < ?", int64(to.Unix()))
+		tx = tx.Where("m.ts < ?", to.Unix())
 	}
 
 	rows, err := tx.Rows()
