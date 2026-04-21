@@ -72,9 +72,7 @@ func QueryImportEnergy(from, to time.Time, aggregate string) ([]Series, error) {
 	// match timezone of stored timestamps for correct SQLite comparison
 	from = from.Local()
 	to = to.Local()
-
-	// use Go's tz offset instead of SQLite's 'localtime'
-	tz := time.Now().Format("-07:00")
+	tz := from.Format("-07:00")
 
 	tx := db.Instance.Table("meters m").
 		Select(`e.name AS label, strftime('` + format + `', m.ts, '` + tz + `') AS bucket,
@@ -226,7 +224,6 @@ func importProfile(entity entity, from time.Time) (*[96]float64, error) {
 		return nil, err
 	}
 
-	// use Go's tz offset instead of SQLite's 'localtime'
 	tz := from.Format("-07:00")
 
 	rows, err := db.Query(`SELECT min(ts) AS ts, avg(import) AS import
