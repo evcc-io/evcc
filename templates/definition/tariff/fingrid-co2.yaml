@@ -1,0 +1,46 @@
+template: fingrid-co2
+products:
+  - brand: FinGrid
+    description:
+      generic: CO₂
+requirements:
+  evcc: ["skiptest"]
+group: co2
+countries: ["FI"]
+params:
+  - name: region
+    example: fi
+    type: choice
+    choice: ["fi"]
+  - preset: tariff-base
+  - name: apiKey
+    description:
+      en: "FinGrid API Key"
+      de: "FinGrid API Schlüssel"
+    type: string
+    required: true
+    help:
+      en: Get your API key by registering an account at https://data.fingrid.fi/instructions, creating a new API key and enter it here.
+      de: Erstellen Sie Ihren API-Schlüssel, indem Sie ein Konto unter https://data.fingrid.fi/instructions registrieren, einen neuen API-Schlüssel erstellen und diesen hier eingeben.
+render: |
+  type: custom
+  tariff: co2
+  forecast:
+    source: http
+    uri: https://data.fingrid.fi/api/datasets/265/data?pageSize=90
+    headers:
+      x-api-key: {{ .apiKey }}
+    jq: |
+      (
+        if type == "array" then .
+        elif has("data") then .data
+        else []
+        end
+      )
+      | map({
+          start: .startTime,
+          end: .endTime,
+          value: .value
+        })
+      | sort_by(.start)
+      | tostring
