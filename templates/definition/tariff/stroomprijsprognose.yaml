@@ -7,12 +7,12 @@ requirements:
     en: "Spot prices in day-ahead market plus 4 days prognosis [stroomprijsprognose.nl](https://stroomprijsprognose.nl)"
   evcc: ["skiptest"]
 group: price
-countries: ["DE","NL","BE","DK","FR"]
+countries: ["DE", "NL", "BE", "DK", "FR"]
 params:
   - name: region
     example: DE
     type: choice
-    choice: ["DE","NL","BE","DK1","DK2","FR"]
+    choice: ["DE", "NL", "BE", "DK1", "DK2", "FR"]
     required: true
   - name: currency
     default: EUR
@@ -20,7 +20,7 @@ params:
     description:
       en: Currency
       de: Währung
-    choice: ["EUR","DKK"]
+    choice: ["EUR", "DKK"]
     required: true
   - name: hours
     default: 120
