@@ -97,6 +97,11 @@ func TestUpdateProfile(t *testing.T) {
 		clock.Add(15 * time.Minute)
 	}
 
+	// validate records written
+	var count int64
+	require.NoError(t, db.Instance.Model(new(meter)).Count(&count).Error)
+	require.Equal(t, int64(24*2*4), count)
+
 	{
 		from := clock.Now().Local().AddDate(0, 0, -2).Add(12 * time.Hour) // 12:00 of day 0
 
