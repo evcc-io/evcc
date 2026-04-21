@@ -2,7 +2,7 @@ template: stroomprijsprognose-co2
 products:
   - brand: stroomprijsprognose.nl
 requirements:
-  description:    
+  description:
     de: "5 Tage Prognose [stroomprijsprognose.nl](https://stroomprijsprognose.nl/de/evcc-strompreis-co2-prognose/)"
     en: "5 days prognosis [stroomprijsprognose.nl](https://stroomprijsprognose.nl)"
   evcc: ["skiptest"]
