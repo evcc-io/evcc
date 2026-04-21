@@ -159,24 +159,19 @@ func (wb *Solax) Status() (api.ChargeStatus, error) {
 	case
 		0, // "Available"
 		5: // "Unavailable"
-		wb.enabled = false
 		return api.StatusA, nil
 	case
 		1,  // "Preparing"
 		3,  // "Finish"
+		7,  // "SuspendedEV"
 		8,  // "SuspendedEVSE"
 		11, // "StartDelay"
 		12, // "ChargPause"
 		13, // "Stopping"
 		17: // "PhaseSwitching"
-		wb.enabled = false
 		return api.StatusB, nil
 	case
-		7: // "SuspendedEV"
-		wb.enabled = true
-		return api.StatusB, nil
-	case 2: // "Charging"
-		wb.enabled = true
+		2: // "Charging"
 		return api.StatusC, nil
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %d", s)
@@ -185,10 +180,22 @@ func (wb *Solax) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *Solax) Enabled() (bool, error) {
-	_, err := wb.Status() // update enabled state
+	b, err := wb.conn.ReadInputRegisters(solaxRegState, 1)
 	if err != nil {
 		return false, err
 	}
+	switch s := encoding.Uint16(b); s {
+	case
+		8: // "SuspendedEVSE"
+		wb.enabled = false
+		return false, nil
+	case
+		2, // "Charging"
+		7: // "SuspendedEV"
+		wb.enabled = true
+		return true, nil
+	}
+
 	return wb.enabled, nil
 }
 
