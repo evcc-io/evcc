@@ -1,6 +1,6 @@
 template: stroomprijsprognose-co2
 products:
-  - brand: stroomprijsprognose-co2.nl
+  - brand: stroomprijsprognose.nl/co2
 requirements:
   description:
     de: "5 Tage Prognose [stroomprijsprognose.nl](https://stroomprijsprognose.nl/de/evcc-strompreis-co2-prognose/)"
@@ -16,7 +16,7 @@ params:
     required: true
   - name: hours
     default: 120
-    type: Int
+    type: int
     description:
       en: Forecast horizon in hours
       de: Prognosehorizont in Stunden
