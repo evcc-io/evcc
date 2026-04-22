@@ -23,7 +23,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
@@ -102,45 +101,11 @@ func NewEm2GoDuo(ctx context.Context, uri string, slaveID uint8, connector int) 
 		connector: connector,
 	}
 
-	// Read failsafe timeout from charger and start heartbeat;
-	// retry with backoff to allow the charger's TCP stack time to come up.
-	bo := backoff.NewExponentialBackOff(
-		backoff.WithInitialInterval(2*time.Second),
-		backoff.WithMaxInterval(10*time.Second),
-		backoff.WithMaxElapsedTime(30*time.Second),
-	)
-
-	var timeout uint16
-	if err := backoff.Retry(func() error {
-		b, err := wb.conn.ReadHoldingRegisters(em2GoDuoRegCommTimeout, 1)
-		if err != nil {
-			return err
-		}
-		timeout = binary.BigEndian.Uint16(b)
-		return nil
-	}, bo); err != nil {
-		return nil, fmt.Errorf("failsafe timeout: %w", err)
-	}
-	if timeout > 0 {
-		go wb.heartbeat(ctx, time.Duration(timeout)*time.Second/2)
+	if err := setupFailsafeHeartbeat(ctx, wb.log, wb.conn, em2GoDuoRegCommTimeout, em2GoDuoRegSafeCurrent); err != nil {
+		return nil, err
 	}
 
 	return wb, nil
-}
-
-// heartbeat keeps the Modbus connection alive to prevent the charger from
-// entering its failsafe state when the configured communication timeout expires.
-func (wb *Em2GoDuo) heartbeat(ctx context.Context, timeout time.Duration) {
-	for tick := time.Tick(timeout); ; {
-		select {
-		case <-tick:
-		case <-ctx.Done():
-			return
-		}
-		if _, err := wb.conn.ReadHoldingRegisters(em2GoDuoRegSafeCurrent, 1); err != nil {
-			wb.log.ERROR.Println("heartbeat:", err)
-		}
-	}
 }
 
 // Status implements the api.Charger interface
