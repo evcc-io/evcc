@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
@@ -108,8 +109,18 @@ func NewEm2Go(ctx context.Context, uri string, slaveID uint8) (api.Charger, erro
 		current: 60,
 	}
 
-	charger, err := wb.initialize()
-	if err != nil {
+	bo := backoff.NewExponentialBackOff(
+		backoff.WithInitialInterval(2*time.Second),
+		backoff.WithMaxInterval(10*time.Second),
+		backoff.WithMaxElapsedTime(30*time.Second),
+	)
+
+	var charger api.Charger
+	if err := backoff.Retry(func() error {
+		var err error
+		charger, err = wb.initialize()
+		return err
+	}, bo); err != nil {
 		return nil, err
 	}
 
