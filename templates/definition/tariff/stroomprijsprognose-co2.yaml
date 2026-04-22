@@ -14,9 +14,10 @@ params:
     type: choice
     choice: ["DE", "NL", "BE", "DK1", "DK2"]
     required: true
-  - name: hours
+  - name: horizon
     default: 120
     type: int
+    unit: h
     description:
       en: Forecast horizon in hours
       de: Prognosehorizont in Stunden
@@ -26,4 +27,4 @@ render: |
   tariff: co2
   forecast:
     source: http
-    uri: https://stroomprijsprognose.nl/api/v1/evcc/tariff?country={{.region}}&type=co2&hours={{.hours}}
+    uri: https://stroomprijsprognose.nl/api/v1/evcc/tariff?country={{.region}}&type=co2&hours={{.horizon}}
