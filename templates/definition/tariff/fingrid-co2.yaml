@@ -15,7 +15,7 @@ params:
   - name: apiKey
     description:
       en: "API Key"
-      de: "API Schlüssel"
+      de: "API-Schlüssel"
     type: string
     required: true
     help:
