@@ -19,8 +19,8 @@ params:
     type: int
     unit: h
     description:
-      en: Forecast horizon in hours
-      de: Prognosehorizont in Stunden
+      en: Forecast horizon
+      de: Prognosehorizont
     required: true
 render: |
   type: custom
