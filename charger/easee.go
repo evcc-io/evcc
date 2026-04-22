@@ -383,10 +383,21 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 		c.dynamicChargerCurrent = value.(float64)
 	case easee.CHARGER_OP_MODE:
 		opMode := value.(int)
+		prevOpMode := c.opMode
+
+		disconnected := opMode <= easee.ModeDisconnected
+		sessionStarted := prevOpMode <= easee.ModeDisconnected && opMode >= easee.ModeAwaitingStart
+
+		// OUTPUT_PHASE belongs to a specific charging session. Invalidate it
+		// both when the charger becomes disconnected/offline and when a new
+		// session starts, so replayed cloud state cannot leak across sessions.
+		if disconnected || sessionStarted {
+			c.clearOutputPhase(res.Timestamp)
+		}
 
 		// New charging session pending, reset internal value of SESSION_ENERGY to 0, and its observation timestamp to "now".
 		// This should be done in a proper way by the api, but it's not.
-		if c.opMode <= easee.ModeDisconnected && opMode >= easee.ModeAwaitingStart {
+		if sessionStarted {
 			c.sessionEnergy = 0
 			c.obsTime[easee.SESSION_ENERGY] = time.Now()
 		}
@@ -787,6 +798,25 @@ func outputPhaseToPhases(outputPhase int) int {
 	}
 }
 
+// clearOutputPhase invalidates the cached OUTPUT_PHASE state and advances its
+// observation timestamp so stale replay from a previous session gets ignored.
+func (c *Easee) clearOutputPhase(timestamp time.Time) {
+	c.outputPhase = 0
+	c.obsTime[easee.OUTPUT_PHASE] = timestamp
+}
+
+// outputPhases returns the current OUTPUT_PHASE-derived phase count if the
+// observation is fresh enough to trust. Replayed cloud state on reconnect can
+// otherwise describe an old charging session.
+func (c *Easee) outputPhases() int {
+	timestamp, ok := c.obsTime[easee.OUTPUT_PHASE]
+	if !ok || time.Since(timestamp) > observationTimeout {
+		return 0
+	}
+
+	return outputPhaseToPhases(c.outputPhase)
+}
+
 // GetPhases implements the api.PhaseGetter interface
 func (c *Easee) GetPhases() (int, error) {
 	c.mux.RLock()
@@ -795,7 +825,7 @@ func (c *Easee) GetPhases() (int, error) {
 	// Use OUTPUT_PHASE observation which reports the actual active output
 	// phase(s) to the EV, rather than configuration state like DCC limits
 	// or PhaseMode which may not reflect reality.
-	if phases := outputPhaseToPhases(c.outputPhase); phases > 0 {
+	if phases := c.outputPhases(); phases > 0 {
 		return phases, nil
 	}
 

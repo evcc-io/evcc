@@ -450,41 +450,53 @@ func TestOutputPhaseToPhases(t *testing.T) {
 
 func TestEasee_GetPhases(t *testing.T) {
 	testCases := []struct {
-		name           string
-		outputPhase    int
-		circuit        int
-		phaseMode      int
-		dcc            [3]float64
-		expectedPhases int
+		name             string
+		outputPhase      int
+		freshOutputPhase bool
+		circuit          int
+		phaseMode        int
+		dcc              [3]float64
+		expectedPhases   int
 	}{
 		// --- OUTPUT_PHASE available: takes precedence ---
 		{
-			name:           "OUTPUT_PHASE 1p overrides DCC all non-zero",
-			outputPhase:    10, // P1_T2_T3_TN
-			circuit:        1,
-			dcc:            [3]float64{16, 16, 16},
-			expectedPhases: 1,
+			name:             "OUTPUT_PHASE 1p overrides DCC all non-zero",
+			outputPhase:      10, // P1_T2_T3_TN
+			freshOutputPhase: true,
+			circuit:          1,
+			dcc:              [3]float64{16, 16, 16},
+			expectedPhases:   1,
 		},
 		{
-			name:           "OUTPUT_PHASE 3p",
-			outputPhase:    30, // P3_T2_T3_T4_T5_TN
+			name:             "OUTPUT_PHASE 3p",
+			outputPhase:      30, // P3_T2_T3_T4_T5_TN
+			freshOutputPhase: true,
+			circuit:          1,
+			dcc:              [3]float64{16, 0, 0},
+			expectedPhases:   3,
+		},
+		{
+			name:             "OUTPUT_PHASE 1p overrides PhaseMode auto",
+			outputPhase:      14, // P1_T2_T5_TN
+			freshOutputPhase: true,
+			circuit:          0,
+			phaseMode:        2, // auto
+			expectedPhases:   1,
+		},
+		{
+			name:             "OUTPUT_PHASE 2p",
+			outputPhase:      20, // P2_T2_T3_T4_TN
+			freshOutputPhase: true,
+			circuit:          1,
+			dcc:              [3]float64{16, 16, 16},
+			expectedPhases:   2,
+		},
+		{
+			name:           "stale OUTPUT_PHASE falls back to DCC",
+			outputPhase:    10,
 			circuit:        1,
-			dcc:            [3]float64{16, 0, 0},
+			dcc:            [3]float64{16, 16, 16},
 			expectedPhases: 3,
-		},
-		{
-			name:           "OUTPUT_PHASE 1p overrides PhaseMode auto",
-			outputPhase:    14, // P1_T2_T5_TN
-			circuit:        0,
-			phaseMode:      2, // auto
-			expectedPhases: 1,
-		},
-		{
-			name:           "OUTPUT_PHASE 2p",
-			outputPhase:    20, // P2_T2_T3_T4_TN
-			circuit:        1,
-			dcc:            [3]float64{16, 16, 16},
-			expectedPhases: 2,
 		},
 		// --- OUTPUT_PHASE unassigned: fallback to config ---
 		{
@@ -528,6 +540,9 @@ func TestEasee_GetPhases(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			e := newEasee()
 			e.outputPhase = tc.outputPhase
+			if tc.freshOutputPhase {
+				e.obsTime[easee.OUTPUT_PHASE] = time.Now()
+			}
 			e.circuit = tc.circuit
 			e.phaseMode = tc.phaseMode
 			e.dynamicCircuitCurrent = tc.dcc
@@ -563,6 +578,50 @@ func TestEasee_GetPhases_outputPhaseObservation(t *testing.T) {
 	phases, err = e.GetPhases()
 	assert.NoError(t, err)
 	assert.Equal(t, 3, phases)
+}
+
+func TestEasee_GetPhases_staleOutputPhaseFallsBack(t *testing.T) {
+	e := newEasee()
+	e.circuit = 1
+	e.dynamicCircuitCurrent = [3]float64{16, 16, 16}
+	e.outputPhase = 10
+	e.obsTime[easee.OUTPUT_PHASE] = time.Now().Add(-(observationTimeout + time.Minute))
+
+	phases, err := e.GetPhases()
+	assert.NoError(t, err)
+	assert.Equal(t, 3, phases)
+}
+
+func TestEasee_GetPhases_outputPhaseResetOnSessionStart(t *testing.T) {
+	e := newEasee()
+	e.circuit = 1
+	e.dynamicCircuitCurrent = [3]float64{16, 16, 16}
+	e.outputPhase = 10
+	e.obsTime[easee.OUTPUT_PHASE] = time.Now().UTC().Truncate(0)
+	e.opMode = easee.ModeDisconnected
+
+	now := time.Now().UTC().Truncate(0)
+
+	// Starting a new session must invalidate the previous session's OUTPUT_PHASE state.
+	e.ProductUpdate(createPayload(easee.CHARGER_OP_MODE, now, easee.Integer, "2"))
+
+	phases, err := e.GetPhases()
+	assert.NoError(t, err)
+	assert.Equal(t, 3, phases, "new session should not inherit previous OUTPUT_PHASE")
+
+	// A replay older than the session start must be ignored.
+	e.ProductUpdate(createPayload(easee.OUTPUT_PHASE, now.Add(-time.Second), easee.Integer, "10"))
+
+	phases, err = e.GetPhases()
+	assert.NoError(t, err)
+	assert.Equal(t, 3, phases, "stale OUTPUT_PHASE replay should be ignored after session reset")
+
+	// Fresh OUTPUT_PHASE from the current session should be used.
+	e.ProductUpdate(createPayload(easee.OUTPUT_PHASE, now.Add(time.Second), easee.Integer, "10"))
+
+	phases, err = e.GetPhases()
+	assert.NoError(t, err)
+	assert.Equal(t, 1, phases)
 }
 
 func TestEasee_Phases1p3p_registersExpectedOrphan(t *testing.T) {
