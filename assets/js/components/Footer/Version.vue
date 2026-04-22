@@ -40,7 +40,7 @@ import Modal from "bootstrap/js/dist/modal";
 import "@h2d2/shopicons/es/regular/gift";
 import "@h2d2/shopicons/es/regular/moonstars";
 import Logo from "./Logo.vue";
-import { isDevelopment } from "@/utils/version";
+import { isNewVersionAvailable } from "@/utils/version";
 import { defineComponent } from "vue";
 
 export default defineComponent({
@@ -56,11 +56,7 @@ export default defineComponent({
 			return `https://github.com/evcc-io/evcc/commit/${this.commit}`;
 		},
 		newVersionAvailable() {
-			return (
-				this.available &&
-				!isDevelopment(this.installed || "") &&
-				this.available !== this.installed
-			);
+			return isNewVersionAvailable(this.installed, this.available);
 		},
 	},
 	methods: {

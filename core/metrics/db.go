@@ -35,8 +35,9 @@ type Slot struct {
 
 // Series represents a named series of energy slots
 type Series struct {
-	Name string `json:"name"`
-	Data []Slot `json:"data"`
+	Name  string `json:"name,omitempty"`
+	Group string `json:"group"`
+	Data  []Slot `json:"data"`
 }
 
 var aggregateFormats = map[string]string{
@@ -60,8 +61,8 @@ var aggregateDurations = map[string]func(time.Time) time.Time{
 	"month": func(t time.Time) time.Time { return t.AddDate(0, 1, 0) },
 }
 
-// QueryImportEnergy returns aggregated import energy data from the meters table
-func QueryImportEnergy(from, to time.Time, aggregate string) ([]Series, error) {
+// QueryImportEnergy returns aggregated energy data, per entity or per group.
+func QueryImportEnergy(from, to time.Time, aggregate string, grouped bool) ([]Series, error) {
 	format, ok := aggregateFormats[aggregate]
 	if !ok {
 		return nil, errors.New("invalid aggregate value")
@@ -69,15 +70,30 @@ func QueryImportEnergy(from, to time.Time, aggregate string) ([]Series, error) {
 
 	addDuration := aggregateDurations[aggregate]
 
-	// use Go's tz offset instead of SQLite's 'localtime'
-	tz := time.Now().Format("-07:00")
+	// match timezone of stored timestamps for correct SQLite comparison
+	from = from.Local()
+	to = to.Local()
+	tz := from.Format("-07:00")
+
+	groupCols := `e.name, e."group", bucket`
+	if grouped {
+		groupCols = `e."group", bucket`
+	}
+
+	type row struct {
+		Name   string
+		Group  string
+		Bucket string
+		Import float64
+		Export float64
+	}
 
 	tx := db.Instance.Table("meters m").
-		Select(`e.name AS label, strftime('` + format + `', m.ts, '` + tz + `') AS bucket,
-		COALESCE(SUM(m."import"), 0) AS import, COALESCE(SUM(m.export), 0) AS export`).
+		Select(`e.name, e."group", strftime(?, m.ts, ?) AS bucket,
+			COALESCE(SUM(m."import"), 0) AS import, COALESCE(SUM(m.export), 0) AS export`, format, tz).
 		Joins("JOIN entities e ON m.meter = e.id").
-		Group("label, bucket").
-		Order("label, bucket")
+		Group(groupCols).
+		Order(groupCols)
 
 	if !from.IsZero() {
 		tx = tx.Where("m.ts >= ?", from)
@@ -86,49 +102,33 @@ func QueryImportEnergy(from, to time.Time, aggregate string) ([]Series, error) {
 		tx = tx.Where("m.ts < ?", to)
 	}
 
-	rows, err := tx.Rows()
-	if err != nil {
+	var rows []row
+	if err := tx.Scan(&rows).Error; err != nil {
 		return nil, err
 	}
-	defer rows.Close()
 
-	seriesMap := make(map[string][]Slot)
-	var order []string
-
-	for rows.Next() {
-		var label, bucket string
-		var imp, exp float64
-
-		if err := rows.Scan(&label, &bucket, &imp, &exp); err != nil {
-			return nil, err
-		}
-
-		start, err := time.ParseInLocation(aggregateGoFormats[aggregate], bucket, time.Now().Location())
+	var res []Series
+	for _, r := range rows {
+		start, err := time.ParseInLocation(aggregateGoFormats[aggregate], r.Bucket, time.Now().Location())
 		if err != nil {
 			return nil, err
 		}
 
-		if _, exists := seriesMap[label]; !exists {
-			order = append(order, label)
+		name := r.Name
+		if grouped {
+			name = ""
 		}
 
-		seriesMap[label] = append(seriesMap[label], Slot{
+		if n := len(res); n == 0 || res[n-1].Name != name || res[n-1].Group != r.Group {
+			res = append(res, Series{Name: name, Group: r.Group})
+		}
+
+		s := &res[len(res)-1]
+		s.Data = append(s.Data, Slot{
 			Start:  start,
 			End:    addDuration(start),
-			Import: imp,
-			Export: exp,
-		})
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-
-	res := make([]Series, 0, len(order))
-	for _, name := range order {
-		res = append(res, Series{
-			Name: name,
-			Data: seriesMap[name],
+			Import: r.Import,
+			Export: r.Export,
 		})
 	}
 
@@ -223,7 +223,6 @@ func importProfile(entity entity, from time.Time) (*[96]float64, error) {
 		return nil, err
 	}
 
-	// use Go's tz offset instead of SQLite's 'localtime'
 	tz := from.Format("-07:00")
 
 	rows, err := db.Query(`SELECT min(ts) AS ts, avg(import) AS import

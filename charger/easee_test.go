@@ -501,6 +501,109 @@ func TestLivenessCheck_freshObservations(t *testing.T) {
 	assert.Equal(t, float64(16), l3)
 }
 
+func TestChargeSessionStart_SetsFields(t *testing.T) {
+	e := newEasee()
+	e.totalEnergy = 9100.0
+
+	data := easee.ChargingSessionStartData{ID: 801, MeterValue: 9141.414622}
+	jsonData, _ := json.Marshal(data)
+	e.ProductUpdate(createPayload(easee.CHARGE_SESSION_START, time.Now(), easee.String, string(jsonData)))
+
+	assert.Equal(t, 801, e.currentSessionID)
+	assert.Equal(t, 9141.414622, e.sessionStartMeter)
+
+	assert.Equal(t, 9141.414622, e.SessionStartMeter())
+
+	total, err := e.TotalEnergy()
+	assert.NoError(t, err)
+	assert.Equal(t, 9141.414622, total)
+}
+
+func TestChargingSession_UpdatesBothWhenIdMatches(t *testing.T) {
+	e := newEasee()
+	e.currentSessionID = 801
+	e.totalEnergy = 9100.0
+
+	data := easee.ChargingSessionData{ID: 801, EnergyKwh: 16.2, MeterValueStop: 9173.5}
+	jsonData, _ := json.Marshal(data)
+	e.ProductUpdate(createPayload(easee.CHARGING_SESSION, time.Now(), easee.String, string(jsonData)))
+
+	charged, err := e.ChargedEnergy()
+	assert.NoError(t, err)
+	assert.Equal(t, 16.2, charged)
+
+	total, err := e.TotalEnergy()
+	assert.NoError(t, err)
+	assert.Equal(t, 9173.5, total)
+}
+
+func TestChargingSession_MismatchedId_ProtectsSessionEnergy(t *testing.T) {
+	e := newEasee()
+	e.currentSessionID = 100
+	e.sessionEnergy = 5.0
+	e.totalEnergy = 9150.0
+
+	data := easee.ChargingSessionData{ID: 99, EnergyKwh: 7.5, MeterValueStop: 9173.5}
+	jsonData, _ := json.Marshal(data)
+	e.ProductUpdate(createPayload(easee.CHARGING_SESSION, time.Now(), easee.String, string(jsonData)))
+
+	charged, err := e.ChargedEnergy()
+	assert.NoError(t, err)
+	assert.Equal(t, 5.0, charged) // sessionEnergy unchanged
+
+	total, err := e.TotalEnergy()
+	assert.NoError(t, err)
+	assert.Equal(t, 9173.5, total) // totalEnergy updated
+}
+
+func TestChargingSession_AtStartup_ProtectsSessionEnergy(t *testing.T) {
+	e := newEasee()
+	// currentSessionId is 0 by default
+	e.sessionEnergy = 0
+	e.totalEnergy = 9150.0
+
+	data := easee.ChargingSessionData{ID: 803, EnergyKwh: 19.08, MeterValueStop: 9173.5}
+	jsonData, _ := json.Marshal(data)
+	e.ProductUpdate(createPayload(easee.CHARGING_SESSION, time.Now(), easee.String, string(jsonData)))
+
+	charged, err := e.ChargedEnergy()
+	assert.NoError(t, err)
+	assert.Equal(t, 0.0, charged) // sessionEnergy protected (Id 803 != 0)
+
+	total, err := e.TotalEnergy()
+	assert.NoError(t, err)
+	assert.Equal(t, 9173.5, total) // totalEnergy updated
+}
+
+func TestLifetimeEnergy_DoesNotDecreaseTotalEnergy(t *testing.T) {
+	e := newEasee()
+	e.totalEnergy = 9173.5
+
+	e.ProductUpdate(createPayload(easee.LIFETIME_ENERGY, time.Now(), easee.Double, "9170.0"))
+
+	total, err := e.TotalEnergy()
+	assert.NoError(t, err)
+	assert.Equal(t, 9173.5, total)
+}
+
+func TestChargerOpMode_ConnectResetsSessionFields(t *testing.T) {
+	e := newEasee()
+	e.opMode = easee.ModeDisconnected
+	e.currentSessionID = 803
+	e.sessionStartMeter = 9157.3
+	e.sessionEnergy = 5.0
+
+	// Transition from disconnected to awaiting start
+	e.ProductUpdate(createPayload(easee.CHARGER_OP_MODE, time.Now(), easee.Integer, fmt.Sprintf("%d", easee.ModeAwaitingStart)))
+
+	assert.Equal(t, 0, e.currentSessionID)
+	assert.Equal(t, 0.0, e.SessionStartMeter())
+
+	charged, err := e.ChargedEnergy()
+	assert.NoError(t, err)
+	assert.Equal(t, 0.0, charged)
+}
+
 func TestIsTNGrid(t *testing.T) {
 	// TN grid types must return true
 	assert.True(t, isTNGrid(easee.PowerGridTN3Phase))

@@ -66,6 +66,7 @@ export default defineComponent({
 			reconnectTimeout: null as number | null,
 			ws: null as WebSocket | null,
 			authNotConfigured: false,
+			currentVersion: undefined as string | undefined,
 		};
 	},
 	head() {
@@ -116,9 +117,19 @@ export default defineComponent({
 		},
 	},
 	watch: {
-		version(now, prev) {
-			if (!!prev && !!now) {
-				console.log("new version detected. reloading browser", { now, prev });
+		version(now) {
+			if (!now) return;
+
+			if (!this.currentVersion) {
+				this.currentVersion = now;
+				return;
+			}
+
+			if (now !== this.currentVersion) {
+				console.log("new version detected. reloading browser", {
+					now,
+					prev: this.currentVersion,
+				});
 				this.reload();
 			}
 		},

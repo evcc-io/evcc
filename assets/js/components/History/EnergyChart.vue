@@ -25,7 +25,7 @@ import { commonOptions } from "../Sessions/chartConfig";
 import LegendList from "../Sessions/LegendList.vue";
 import type { Legend } from "../Sessions/types";
 import formatter from "@/mixins/formatter";
-import type { SeriesData } from "./Chart.vue";
+import type { SeriesData } from "./PowerChart.vue";
 
 ChartJS.register(CategoryScale, LinearScale, BarController, BarElement, Tooltip);
 
@@ -79,7 +79,7 @@ export default defineComponent({
 				const exportData = dayKeys.map((key) => -(byDay[key]?.export ?? 0));
 				const hasExport = exportData.some((v) => v !== 0);
 
-				const importLabel = hasExport ? `${s.name} (import)` : s.name;
+				const importLabel = hasExport ? `${s.group} (import)` : s.group;
 
 				datasets.push({
 					label: importLabel,
@@ -90,7 +90,7 @@ export default defineComponent({
 
 				if (hasExport) {
 					datasets.push({
-						label: `${s.name} (export)`,
+						label: `${s.group} (export)`,
 						data: exportData,
 						backgroundColor: lighterColor(color),
 						stack: `s${i}`,
@@ -153,11 +153,11 @@ export default defineComponent({
 				const color = colors.palette[i % colors.palette.length];
 				const hasExport = s.data.some((slot) => slot.export > 0);
 
-				const importLabel = hasExport ? `${s.name} (import)` : s.name;
+				const importLabel = hasExport ? `${s.group} (import)` : s.group;
 				result.push({ label: importLabel, color, value: "" });
 				if (hasExport) {
 					result.push({
-						label: `${s.name} (export)`,
+						label: `${s.group} (export)`,
 						color: lighterColor(color),
 						value: "",
 					});
