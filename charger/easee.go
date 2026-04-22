@@ -67,8 +67,10 @@ type Easee struct {
 	phaseMode             int
 	currentPower, sessionEnergy, totalEnergy,
 	currentL1, currentL2, currentL3 float64
-	rfid string
-	lp   loadpoint.API
+	currentSessionID  int
+	sessionStartMeter float64
+	rfid              string
+	lp                loadpoint.API
 
 	dispatcher *easee.CommandDispatcher
 
@@ -361,7 +363,9 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 			c.sessionEnergy = value.(float64)
 		}
 	case easee.LIFETIME_ENERGY:
-		c.totalEnergy = value.(float64)
+		if v := value.(float64); v >= c.totalEnergy {
+			c.totalEnergy = v
+		}
 	case easee.INT_CURRENT_T3:
 		c.currentL1 = value.(float64)
 	case easee.INT_CURRENT_T4:
@@ -380,6 +384,32 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 		c.maxChargerCurrent = value.(float64)
 	case easee.DYNAMIC_CHARGER_CURRENT:
 		c.dynamicChargerCurrent = value.(float64)
+	case easee.CHARGE_SESSION_START:
+		var data easee.ChargingSessionStartData
+		if err := json.Unmarshal([]byte(res.Value), &data); err != nil {
+			c.log.ERROR.Printf("CHARGE_SESSION_START: %v", err)
+			break
+		}
+		c.currentSessionID = data.ID
+		c.sessionStartMeter = data.MeterValue
+		if data.MeterValue >= c.totalEnergy {
+			c.totalEnergy = data.MeterValue
+		}
+
+	case easee.CHARGING_SESSION:
+		var data easee.ChargingSessionData
+		if err := json.Unmarshal([]byte(res.Value), &data); err != nil {
+			c.log.ERROR.Printf("CHARGING_SESSION: %v", err)
+			break
+		}
+		if data.MeterValueStop >= c.totalEnergy {
+			c.totalEnergy = data.MeterValueStop
+		}
+		if data.ID != c.currentSessionID {
+			break
+		}
+		c.sessionEnergy = data.EnergyKwh
+
 	case easee.CHARGER_OP_MODE:
 		opMode := value.(int)
 
@@ -387,6 +417,8 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 		// This should be done in a proper way by the api, but it's not.
 		if c.opMode <= easee.ModeDisconnected && opMode >= easee.ModeAwaitingStart {
 			c.sessionEnergy = 0
+			c.currentSessionID = 0
+			c.sessionStartMeter = 0
 			c.obsTime[easee.SESSION_ENERGY] = time.Now()
 		}
 
@@ -686,6 +718,15 @@ func (c *Easee) Currents() (float64, float64, float64, error) {
 	}
 
 	return c.currentL1, c.currentL2, c.currentL3, nil
+}
+
+var _ api.SessionStartMeter = (*Easee)(nil)
+
+// SessionStartMeter implements the api.SessionStartMeter interface
+func (c *Easee) SessionStartMeter() float64 {
+	c.mux.RLock()
+	defer c.mux.RUnlock()
+	return c.sessionStartMeter
 }
 
 var _ api.MeterEnergy = (*Easee)(nil)
