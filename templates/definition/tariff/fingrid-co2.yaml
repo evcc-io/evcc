@@ -13,10 +13,6 @@ countries: ["FI"]
 params:
   - preset: tariff-base
   - name: apiKey
-    description:
-      en: "API Key"
-      de: "API-Schlüssel"
-    type: string
     required: true
     help:
       en: "Get your API key by registering an account at [https://data.fingrid.fi/instructions](https://data.fingrid.fi/instructions), creating a new API key and enter it here."
