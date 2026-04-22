@@ -11,11 +11,11 @@ requirements:
   description:
     de: |
       Über das lokale Webinterface des AC•THOR muss der Wert für die "Zeitablauf Ansteuerung" auf einen Wert etwas größer der Intervall Zeit von evcc (z.B. + 5s) gesetzt werden.
-      Hat der Heizstab am geregelten Ausgang <9kW muss der Skalierungsfaktor gesetzt werden. 
+      Hat der Heizstab am geregelten Ausgang < 9 kW muss der Skalierungsfaktor gesetzt werden. 
 
-      Die Betriebsart M3: 9 + 9 kW mit einem zusätzlichen Heizstab am Relais-Ausgang wird unterstützt. Ohne Lastmessung mittels my-PV Meter muss "Last am Relais" im lokalen Webinterface des AC•THOR passend zur nominalen Leistung des Heizstabs am Relais gesetzt werden.
-      Hat der Heizstab am geregelten Ausgang <9kW ist AC•THOR Firmware a0022200 oder höher erforderlich und der Wert für "Last am Relais" muss folgendermaßen mit dem Skalierungsfaktor umgerechnet werden:
-      Last am Relais = nominale Leistung des Heizstabs am Relais * Skalierungsfaktor
+      Die Betriebsart M3: 9 + 9 kW mit einem zusätzlichen Heizstab am Relais-Ausgang wird unterstützt. Ohne Lastmessung mittels my-PV Meter muss "Last am Relais" im lokalen Webinterface des AC•THOR passend zur Nennleistung des Heizstabs am Relais gesetzt werden.
+      Hat der Heizstab am geregelten Ausgang < 9 kW ist AC•THOR Firmware a0022200 oder höher erforderlich und der Wert für "Last am Relais" muss folgendermaßen mit dem Skalierungsfaktor umgerechnet werden:
+      Last am Relais = Nennleistung des Heizstabs am Relais * Skalierungsfaktor
     en: |
       Use the local web interface of AC•THOR to set the value "Power timeout" to a value slightly higher (e.g. + 5s) than the interval time of evcc.
       If the heating element at the controlled output has <9kW, the scaling factor must be set.
