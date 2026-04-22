@@ -110,11 +110,13 @@ func NewEm2Go(ctx context.Context, uri string, slaveID uint8) (api.Charger, erro
 	}
 
 	var charger api.Charger
-	if err := backoff.Retry(func() error {
+	if err := backoff.RetryNotify(func() error {
 		var err error
 		charger, err = wb.initialize()
 		return err
-	}, newCommsBackoff(ctx)); err != nil {
+	}, newCommsBackoff(ctx), func(err error, d time.Duration) {
+		log.WARN.Printf("charger not reachable, retrying in %v: %v", d, err)
+	}); err != nil {
 		return nil, err
 	}
 

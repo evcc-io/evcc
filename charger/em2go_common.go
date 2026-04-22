@@ -65,19 +65,23 @@ func heartbeat(ctx context.Context, log *util.Logger, conn *modbus.Connection, r
 // The backoff retry allows the charger's TCP stack time to come up after a reboot.
 func setupFailsafeHeartbeat(ctx context.Context, log *util.Logger, conn *modbus.Connection, timeoutReg, heartbeatReg uint16) error {
 	var timeout uint16
-	if err := backoff.Retry(func() error {
+	if err := backoff.RetryNotify(func() error {
 		b, err := conn.ReadHoldingRegisters(timeoutReg, 1)
 		if err != nil {
 			return err
 		}
 		timeout = binary.BigEndian.Uint16(b)
 		return nil
-	}, newCommsBackoff(ctx)); err != nil {
+	}, newCommsBackoff(ctx), func(err error, d time.Duration) {
+		log.WARN.Printf("charger not reachable, retrying in %v: %v", d, err)
+	}); err != nil {
 		return fmt.Errorf("failsafe timeout: %w", err)
 	}
 
 	if timeout > 0 {
-		go heartbeat(ctx, log, conn, heartbeatReg, time.Duration(timeout)*time.Second/2)
+		interval := time.Duration(timeout) * time.Second / 2
+		log.DEBUG.Printf("failsafe timeout: %ds, heartbeat interval: %v", timeout, interval)
+		go heartbeat(ctx, log, conn, heartbeatReg, interval)
 	}
 
 	return nil
