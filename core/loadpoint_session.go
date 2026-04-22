@@ -135,6 +135,7 @@ func (lp *Loadpoint) finalizeSessionEnergy() {
 
 	f, err := lp.chargeRater.ChargedEnergy()
 	if err != nil {
+		lp.log.DEBUG.Printf("session energy: %v", err)
 		return
 	}
 
@@ -149,7 +150,7 @@ func (lp *Loadpoint) finalizeSessionEnergy() {
 	lp.energyMetrics.Update(chargedKWh)
 
 	if sm, ok := api.Cap[api.SessionStartMeter](lp.chargeMeter); ok {
-		if meterStart := sm.SessionStartMeter(); meterStart > 0 && s.MeterStart != nil {
+		if meterStart := sm.SessionStartMeter(); meterStart > 0 {
 			s.MeterStart = &meterStart
 		}
 	}
