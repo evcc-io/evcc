@@ -38,8 +38,19 @@ params:
       de: Phasenumschaltung vorhanden
     advanced: true
     default: true
+  - name: identify
+    type: bool
+    description:
+      en: Use RFID-Reader
+      de: RFID-Reader verwenden
+    help:
+      en: Be sure to check openWB Issue 2832 before enabling this, should not be used for access protection!
+      de: Unbedingt openWB Issue 2832 beachten, sollte nicht für Zugangsschutz verwendet werden!
+    advanced: true
+    default: false
 render: |
   type: openwb-2.0
   {{- include "modbus" . }}
   connector: {{ .connector }}
   phases1p3p: {{ .phases1p3p }}
+  identify: {{ .identify }}
