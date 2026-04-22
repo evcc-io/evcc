@@ -3,6 +3,7 @@
 package updater
 
 import (
+	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/util"
 	"github.com/google/go-github/v32/github"
 )
@@ -19,6 +20,6 @@ func Run(log *util.Logger, httpd webServer, outChan chan<- util.Param) {
 	go u.watchReleases(util.Version, c) // endless
 
 	for rel := range c {
-		u.Send("availableVersion", *rel.TagName)
+		u.Send(keys.AvailableVersion, *rel.TagName)
 	}
 }

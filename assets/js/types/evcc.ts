@@ -75,6 +75,8 @@ export interface State {
   authProviders?: AuthProviders;
   evopt?: EvOpt;
   version?: string;
+  availableVersion?: string;
+  acknowledgedVersion?: string;
   system?: string;
   timezone?: string;
   battery?: Battery;

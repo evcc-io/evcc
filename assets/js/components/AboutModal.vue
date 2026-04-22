@@ -1,5 +1,5 @@
 <template>
-	<GenericModal id="aboutModal" :size="modalSize">
+	<GenericModal id="aboutModal" :size="modalSize" @opened="acknowledge">
 		<template #title>
 			<a :href="websiteUrl" target="_blank" rel="noopener noreferrer"
 				><Logo class="about-logo"
@@ -133,7 +133,14 @@ import "@h2d2/shopicons/es/filled/heart";
 import Logo from "./Footer/Logo.vue";
 import api from "@/api";
 import { extractDomain } from "@/utils/extractDomain";
-import { isDevelopment, isNightly, getReleaseName, shortCommit } from "@/utils/version";
+import {
+	isDevelopment,
+	isNightly,
+	getReleaseName,
+	shortCommit,
+	isNewVersionAvailable,
+	isNewVersionUnacknowledged,
+} from "@/utils/version";
 import { defineComponent } from "vue";
 
 const GITHUB_REPO = "https://github.com/evcc-io/evcc";
@@ -146,6 +153,7 @@ export default defineComponent({
 		installed: { type: String, default: "" },
 		commit: String,
 		availableVersion: String,
+		acknowledgedVersion: String,
 		releaseNotes: String,
 		hasUpdater: Boolean,
 		uploadMessage: String,
@@ -193,11 +201,7 @@ export default defineComponent({
 			return this.releaseNotes.replaceAll("<h2>Changelog</h2>", "");
 		},
 		newVersionAvailable() {
-			return (
-				this.availableVersion &&
-				!this.development &&
-				this.availableVersion !== this.installed
-			);
+			return isNewVersionAvailable(this.installed, this.availableVersion);
 		},
 	},
 	methods: {
@@ -212,6 +216,30 @@ export default defineComponent({
 		},
 		releaseNotesUrl(version?: string) {
 			return `${GITHUB_REPO}/releases/tag/${version}`;
+		},
+		acknowledge() {
+			console.log("[AboutModal] opened", {
+				installed: this.installed,
+				available: this.availableVersion,
+				acknowledged: this.acknowledgedVersion,
+				gate: isNewVersionUnacknowledged(
+					this.installed,
+					this.availableVersion,
+					this.acknowledgedVersion
+				),
+			});
+			if (
+				!isNewVersionUnacknowledged(
+					this.installed,
+					this.availableVersion,
+					this.acknowledgedVersion
+				)
+			) {
+				return;
+			}
+			api.post(`version/acknowledge/${encodeURIComponent(this.availableVersion!)}`).catch(
+				() => {}
+			);
 		},
 	},
 });
