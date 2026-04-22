@@ -434,6 +434,7 @@ func TestEasee_Phases1p3p_registersExpectedOrphan(t *testing.T) {
 	e.charger = chargerID
 	e.site = siteID
 	e.circuit = circuitID
+	e.opMode = easee.ModeDisconnected // Enable(false) is a no-op when disconnected
 
 	httpmock.ActivateNonDefault(e.Client)
 	defer httpmock.DeactivateAndReset()
