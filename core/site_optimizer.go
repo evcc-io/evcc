@@ -151,7 +151,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 
 	// allow empty solar forecast
 	ft := lo.RepeatBy(minLen, func(i int) float32 { return float32(0) })
-	if solarTariff != nil {
+	if solarTariff != nil && len(solar) > {
 		solarEnergy, err := solarRatesToEnergy(solar)
 		if err != nil {
 			return err
