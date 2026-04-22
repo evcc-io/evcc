@@ -22,9 +22,10 @@ params:
       de: Währung
     choice: ["EUR", "DKK"]
     required: true
-  - name: hours
+  - name: horizon
     default: 120
     type: int
+    unit: h
     description:
       en: Forecast horizon in hours
       de: Prognosehorizont in Stunden
@@ -37,4 +38,4 @@ render: |
   {{ include "tariff-features" . }}
   forecast:
     source: http
-    uri: https://stroomprijsprognose.nl/api/v1/evcc/tariff?country={{.region}}&type=grid&currency={{.currency}}&hours={{.hours}}
+    uri: https://stroomprijsprognose.nl/api/v1/evcc/tariff?country={{.region}}&type=grid&currency={{.currency}}&hours={{.horizon}}
