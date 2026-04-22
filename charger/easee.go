@@ -800,9 +800,25 @@ func outputPhaseToPhases(outputPhase int) int {
 
 // clearOutputPhase invalidates the cached OUTPUT_PHASE state and advances its
 // observation timestamp so stale replay from a previous session gets ignored.
+// The fence must move forward even if the clearing event carries an old or
+// zero timestamp.
 func (c *Easee) clearOutputPhase(timestamp time.Time) {
 	c.outputPhase = 0
-	c.obsTime[easee.OUTPUT_PHASE] = timestamp
+
+	fence := timestamp
+	if fence.IsZero() {
+		fence = time.Now()
+	}
+
+	if prev, ok := c.obsTime[easee.OUTPUT_PHASE]; ok && !fence.After(prev) {
+		if now := time.Now(); now.After(prev) {
+			fence = now
+		} else {
+			fence = prev.Add(time.Nanosecond)
+		}
+	}
+
+	c.obsTime[easee.OUTPUT_PHASE] = fence
 }
 
 // outputPhases returns the current OUTPUT_PHASE-derived phase count if the

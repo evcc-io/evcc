@@ -624,6 +624,41 @@ func TestEasee_GetPhases_outputPhaseResetOnSessionStart(t *testing.T) {
 	assert.Equal(t, 1, phases)
 }
 
+func TestEasee_GetPhases_outputPhaseResetAdvancesFence(t *testing.T) {
+	e := newEasee()
+	e.circuit = 1
+	e.dynamicCircuitCurrent = [3]float64{16, 16, 16}
+	e.outputPhase = 10
+	e.opMode = easee.ModeDisconnected
+
+	previousOutputPhase := time.Now().UTC().Truncate(0)
+	e.obsTime[easee.OUTPUT_PHASE] = previousOutputPhase
+
+	// Use an older CHARGER_OP_MODE timestamp to simulate replay / out-of-order delivery.
+	e.ProductUpdate(createPayload(easee.CHARGER_OP_MODE, previousOutputPhase.Add(-time.Second), easee.Integer, "2"))
+
+	assert.True(t, e.obsTime[easee.OUTPUT_PHASE].After(previousOutputPhase), "session reset should advance the OUTPUT_PHASE fence")
+
+	// The stale OUTPUT_PHASE from the previous session must remain ignored.
+	e.ProductUpdate(createPayload(easee.OUTPUT_PHASE, previousOutputPhase, easee.Integer, "10"))
+
+	phases, err := e.GetPhases()
+	assert.NoError(t, err)
+	assert.Equal(t, 3, phases)
+}
+
+func TestEasee_ClearOutputPhase_zeroTimestampUsesLocalFence(t *testing.T) {
+	e := newEasee()
+	previousOutputPhase := time.Now().UTC().Truncate(0)
+	e.outputPhase = 10
+	e.obsTime[easee.OUTPUT_PHASE] = previousOutputPhase
+
+	e.clearOutputPhase(time.Time{})
+
+	assert.Zero(t, e.outputPhase)
+	assert.True(t, e.obsTime[easee.OUTPUT_PHASE].After(previousOutputPhase), "zero timestamp should still advance the OUTPUT_PHASE fence")
+}
+
 func TestEasee_Phases1p3p_registersExpectedOrphan(t *testing.T) {
 	const siteID = 12345
 	const circuitID = 67890
