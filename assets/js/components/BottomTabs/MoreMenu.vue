@@ -79,6 +79,7 @@ import {
 	isNewVersionAvailable,
 	isNewVersionUnacknowledged,
 } from "@/utils/version";
+import settings from "@/settings";
 import { isUserConfigError } from "@/utils/fatal";
 import { defineComponent, type PropType } from "vue";
 import type { FatalError, Sponsor, EvOpt, AuthProviders } from "@/types/evcc";
@@ -96,7 +97,6 @@ export default defineComponent({
 		installed: String,
 		commit: String,
 		availableVersion: String,
-		acknowledgedVersion: String,
 	},
 	emits: ["close"],
 	data() {
@@ -140,7 +140,7 @@ export default defineComponent({
 			return isNewVersionUnacknowledged(
 				this.installed,
 				this.availableVersion,
-				this.acknowledgedVersion
+				settings.lastAcknowledgedVersion
 			);
 		},
 		optimizeAvailable() {

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/util"
 	"github.com/google/go-github/v32/github"
 )
@@ -31,7 +30,7 @@ func Run(log *util.Logger, httpd webServer, outChan chan<- util.Param) {
 
 	for rel := range c {
 		latest = rel
-		u.Send(keys.AvailableVersion, *latest.TagName)
+		u.Send("availableVersion", *latest.TagName)
 	}
 }
 

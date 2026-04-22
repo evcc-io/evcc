@@ -76,7 +76,6 @@ export interface State {
   evopt?: EvOpt;
   version?: string;
   availableVersion?: string;
-  acknowledgedVersion?: string;
   system?: string;
   timezone?: string;
   battery?: Battery;

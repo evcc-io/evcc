@@ -132,6 +132,7 @@ import "@h2d2/shopicons/es/regular/gift";
 import "@h2d2/shopicons/es/filled/heart";
 import Logo from "./Footer/Logo.vue";
 import api from "@/api";
+import settings from "@/settings";
 import { extractDomain } from "@/utils/extractDomain";
 import {
 	isDevelopment,
@@ -139,7 +140,6 @@ import {
 	getReleaseName,
 	shortCommit,
 	isNewVersionAvailable,
-	isNewVersionUnacknowledged,
 } from "@/utils/version";
 import { defineComponent } from "vue";
 
@@ -153,7 +153,6 @@ export default defineComponent({
 		installed: { type: String, default: "" },
 		commit: String,
 		availableVersion: String,
-		acknowledgedVersion: String,
 		releaseNotes: String,
 		hasUpdater: Boolean,
 		uploadMessage: String,
@@ -218,28 +217,8 @@ export default defineComponent({
 			return `${GITHUB_REPO}/releases/tag/${version}`;
 		},
 		acknowledge() {
-			console.log("[AboutModal] opened", {
-				installed: this.installed,
-				available: this.availableVersion,
-				acknowledged: this.acknowledgedVersion,
-				gate: isNewVersionUnacknowledged(
-					this.installed,
-					this.availableVersion,
-					this.acknowledgedVersion
-				),
-			});
-			if (
-				!isNewVersionUnacknowledged(
-					this.installed,
-					this.availableVersion,
-					this.acknowledgedVersion
-				)
-			) {
-				return;
-			}
-			api.post(`version/acknowledge/${encodeURIComponent(this.availableVersion!)}`).catch(
-				() => {}
-			);
+			if (!this.newVersionAvailable) return;
+			settings.lastAcknowledgedVersion = this.availableVersion!;
 		},
 	},
 });

@@ -37,7 +37,6 @@
 				:installed="installed"
 				:commit="commit"
 				:available-version="availableVersion"
-				:acknowledged-version="acknowledgedVersion"
 			/>
 		</div>
 	</nav>
@@ -78,7 +77,6 @@ export default defineComponent({
 		installed: String,
 		commit: String,
 		availableVersion: String,
-		acknowledgedVersion: String,
 	},
 	computed: {
 		hidden() {

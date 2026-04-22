@@ -20,7 +20,6 @@
 				:installed="installed"
 				:commit="commit"
 				:available-version="availableVersion"
-				:acknowledged-version="acknowledgedVersion"
 				@close="open = false"
 			/>
 		</template>
@@ -34,6 +33,7 @@ import MoreIcon from "../MaterialIcon/More.vue";
 import MoreMenu from "./MoreMenu.vue";
 import { isUserConfigError } from "@/utils/fatal";
 import { isNewVersionAvailable, isNewVersionUnacknowledged } from "@/utils/version";
+import settings from "@/settings";
 import type { FatalError, Sponsor, EvOpt, AuthProviders } from "@/types/evcc";
 
 export default defineComponent({
@@ -50,7 +50,6 @@ export default defineComponent({
 		installed: String,
 		commit: String,
 		availableVersion: String,
-		acknowledgedVersion: String,
 	},
 	data() {
 		return { open: false };
@@ -81,7 +80,7 @@ export default defineComponent({
 			return isNewVersionUnacknowledged(
 				this.installed,
 				this.availableVersion,
-				this.acknowledgedVersion
+				settings.lastAcknowledgedVersion
 			);
 		},
 		showRootBadge() {

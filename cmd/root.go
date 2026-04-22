@@ -19,7 +19,6 @@ import (
 	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/server/db"
-	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/server/mcp"
 	"github.com/evcc-io/evcc/server/network"
@@ -406,9 +405,6 @@ func runRoot(cmd *cobra.Command, args []string) {
 	valueChan <- util.Param{Key: keys.Timezone, Val: time.Now().Format("MST -07:00")}
 	valueChan <- util.Param{Key: keys.Experimental, Val: isExperimental()}
 	valueChan <- util.Param{Key: keys.Optimizer, Val: isOptimizer()}
-	if v, _ := settings.String(keys.AcknowledgedVersion); v != "" {
-		valueChan <- util.Param{Key: keys.AcknowledgedVersion, Val: v}
-	}
 
 	// run shutdown functions on stop
 	var once sync.Once

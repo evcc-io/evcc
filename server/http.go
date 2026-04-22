@@ -252,8 +252,7 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 
 	{ // /api
 		routes := map[string]route{
-			"state":              {"GET", "/state", stateHandler(cache)},
-			"acknowledgeVersion": {"POST", "/version/acknowledge/{version:[0-9A-Za-z.+-]{1,30}}", acknowledgeVersionHandler(pub)},
+			"state": {"GET", "/state", stateHandler(cache)},
 		}
 
 		for _, r := range routes {

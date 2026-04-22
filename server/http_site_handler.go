@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/server/assets"
@@ -26,7 +25,6 @@ import (
 	"github.com/evcc-io/evcc/util/jq"
 	"github.com/evcc-io/evcc/util/logstash"
 	"github.com/gorilla/mux"
-	"github.com/hashicorp/go-version"
 	"github.com/itchyny/gojq"
 	"golang.org/x/text/language"
 )
@@ -237,23 +235,6 @@ func stateHandler(cache *util.ParamCache) http.HandlerFunc {
 		}
 
 		jsonWrite(w, res)
-	}
-}
-
-// acknowledgeVersionHandler marks the given version as seen by the user.
-// Client sends the version via URL; router regex and semver parsing gate input.
-func acknowledgeVersionHandler(pub publisher) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		v := mux.Vars(r)["version"]
-		if _, err := version.NewVersion(v); err != nil {
-			jsonError(w, http.StatusBadRequest, err)
-			return
-		}
-
-		settings.SetString(keys.AcknowledgedVersion, v)
-		pub(keys.AcknowledgedVersion, v)
-
-		w.WriteHeader(http.StatusNoContent)
 	}
 }
 
