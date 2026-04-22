@@ -3,7 +3,7 @@ products:
   - brand: stroomprijsprognose.nl
 requirements:
   description:
-    de: "Day-Ahead-Strompreise plus 4 Tage Prognose[stroomprijsprognose.nl](https://stroomprijsprognose.nl/de/evcc-strompreis-co2-prognose/)"
+    de: "Day-Ahead-Strompreise plus 4 Tage Prognose [stroomprijsprognose.nl](https://stroomprijsprognose.nl/de/evcc-strompreis-co2-prognose/)"
     en: "Spot prices in day-ahead market plus 4 days prognosis [stroomprijsprognose.nl](https://stroomprijsprognose.nl)"
   evcc: ["skiptest"]
 group: price
