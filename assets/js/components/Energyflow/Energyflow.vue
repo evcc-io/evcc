@@ -482,14 +482,7 @@ export default defineComponent({
 			return Math.max(0, this.gridPower * -1);
 		},
 		powerUnit() {
-			const watt = Math.max(this.gridImport, this.selfPv, this.selfBattery, this.pvExport);
-			if (watt >= 1_000_000) {
-				return POWER_UNIT.MW;
-			} else if (watt >= 1000) {
-				return POWER_UNIT.KW;
-			} else {
-				return POWER_UNIT.W;
-			}
+			return POWER_UNIT.AUTO;
 		},
 		inPower() {
 			return this.gridImport + this.pvProduction + this.batteryDischarge;
