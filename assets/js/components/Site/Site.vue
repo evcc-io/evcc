@@ -71,14 +71,12 @@
 				:selectedId="selectedLoadpointId"
 				@id-changed="selectedLoadpointChanged"
 			/>
-			<Footer v-if="!experimental" v-bind="footer" />
 		</div>
 	</div>
 </template>
 
 <script lang="ts">
 import "@h2d2/shopicons/es/regular/arrowup";
-import Footer from "../Footer/Footer.vue";
 import TopNavigationArea from "../Top/TopNavigationArea.vue";
 import Energyflow from "../Energyflow/Energyflow.vue";
 import HemsWarning from "../HemsWarning.vue";
@@ -96,7 +94,6 @@ import type {
 	Notification,
 	Circuit,
 	SMART_COST_TYPE,
-	Sponsor,
 	FatalError,
 	EvOpt,
 	BATTERY_MODE,
@@ -107,7 +104,6 @@ import type { Grid } from "./types";
 export default defineComponent({
 	name: "Site",
 	components: {
-		Footer,
 		Loadpoints,
 		Energyflow,
 		HemsWarning,
@@ -143,7 +139,6 @@ export default defineComponent({
 		vehicles: Object,
 		authProviders: { type: Object as PropType<AuthProviders>, default: () => ({}) },
 		currency: { type: String as PropType<CURRENCY> },
-		statistics: Object,
 		tariffFeedIn: Number,
 		tariffGrid: Number,
 		tariffCo2: Number,
@@ -152,20 +147,12 @@ export default defineComponent({
 		tariffPriceLoadpoints: Number,
 		tariffCo2Loadpoints: Number,
 
-		availableVersion: String,
-		releaseNotes: String,
-		hasUpdater: Boolean,
-		uploadMessage: String,
-		uploadProgress: Number,
-		sponsor: { type: Object as PropType<Sponsor>, default: () => ({}) },
 		smartCostType: String as PropType<SMART_COST_TYPE>,
 		smartCostAvailable: Boolean,
 		smartFeedInPriorityAvailable: Boolean,
 		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
 		forecast: Object as PropType<Forecast>,
 		circuits: Object as PropType<Record<string, Circuit>>,
-		telemetry: Boolean,
-		experimental: Boolean,
 		evopt: { type: Object as PropType<EvOpt> },
 	},
 	computed: {
@@ -197,24 +184,6 @@ export default defineComponent({
 		showParkingLot() {
 			// work in progess
 			return false;
-		},
-		footer() {
-			return {
-				version: {
-					installed: window.evcc.version,
-					commit: window.evcc.commit,
-					available: this.availableVersion,
-				},
-				savings: {
-					sponsor: this.sponsor,
-					statistics: this.statistics,
-					co2Configured: this.tariffCo2 !== undefined,
-					currency: this.currency,
-					telemetry: this.telemetry,
-					forecast: this.forecast,
-					tariffGrid: this.tariffGrid,
-				},
-			};
 		},
 		hasFatalError() {
 			return this.fatal.length > 0;
