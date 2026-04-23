@@ -9,7 +9,7 @@ capabilities: ["battery-control"]
 requirements:
   description:
     de: |
-      Netz und Batterie erfordern den Huawei Smart Power Sensor (DDSU/DTSU666 or SmartPS).
+      Netz und Batterie erfordern einen Zähler am Einspeisepunkt (EnFluRi) (Huawei Smart Power Sensor DDSU/DTSU666 bzw. SmartPS oder EMMA/SmartAssistant).
 
       Modbus TCP erfordert die Freischaltung in den Kommunikationseinstellungen des Wechselrichters via "Installateur Zugang", siehe [Modbus TCP Aktivierungs-Anleitung](https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264).
 
@@ -20,7 +20,7 @@ requirements:
       - Änderung von Wechselrichter/Speicher-Einstellungen über das Huawei FusionSolar-Portal
       - weitere Anwendungen (z.B. Home Assistant) greifen über einen Modbus Proxy auf die Anlage zu (auch abhängig von der Anlagenkomplexität, z.B. Anzahl kaskadierter Wechselrichter)
     en: |
-      Grid and Battery require the Huawei Smart Power Sensor (DDSU/DTSU666 or SmartPS).
+      Grid and Battery require a bidirectional grid meter (Huawei Smart Power Sensor DDSU/DTSU666 resp. SmartPS or EMMA/SmartAssistant).
 
       Modbus TCP requires activation within the communication settings of the inverter using an "installer account", see [Modbus TCP Activation Guide](https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264).
 
