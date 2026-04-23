@@ -2,6 +2,7 @@ package plugwise
 
 import (
 	"errors"
+	"net/http"
 	"strings"
 	"time"
 
@@ -36,7 +37,11 @@ func NewConnection(uri, password string, cache time.Duration) (*Connection, erro
 
 	c.dataG = util.Cached(func() (DomainObjects, error) {
 		var res DomainObjects
-		err := c.GetXML(c.uri+"/core/domain_objects", &res)
+		req, err := request.New(http.MethodGet, c.uri+"/core/domain_objects", nil)
+		if err != nil {
+			return res, err
+		}
+		err = c.DoXML(req, &res)
 		return res, err
 	}, cache)
 
