@@ -25,7 +25,7 @@ export interface Legend {
 
 export interface Column {
   name: string;
-  label?: string;
+  label: string;
   unit: string;
   total: number | null;
   value: (session: Session) => number | null;

@@ -96,11 +96,11 @@
 							@change="selectColumnPosition(index, $event.target.value)"
 						>
 							<span class="text-decoration-underline">
-								{{ column.label || $t(`sessions.${column.name}`) }}
+								{{ column.label }}
 							</span>
 						</CustomSelect>
 						<span v-else>
-							{{ column.label || $t(`sessions.${column.name}`) }}
+							{{ column.label }}
 						</span>
 						<div class="text-gray fw-normal">{{ column.unit }}</div>
 					</th>
@@ -206,6 +206,7 @@ export default defineComponent({
 			const columns: Column[] = [
 				{
 					name: "energy",
+					label: this.$t("sessions.energy"),
 					unit: "kWh",
 					total: this.chargedEnergy,
 					value: (session) => session.chargedEnergy,
@@ -213,6 +214,7 @@ export default defineComponent({
 				},
 				{
 					name: "solar",
+					label: this.$t("sessions.solar"),
 					unit: "%",
 					total: this.solarPercentage,
 					value: (session) => session.solarPercentage,
@@ -220,6 +222,7 @@ export default defineComponent({
 				},
 				{
 					name: "price",
+					label: this.$t("sessions.price"),
 					unit: this.fmtCurrencySymbol(this.currency),
 					total: this.price,
 					value: (session) => session.price,
@@ -227,6 +230,7 @@ export default defineComponent({
 				},
 				{
 					name: "avgPrice",
+					label: this.$t("sessions.avgPrice"),
 					unit: this.pricePerKWhUnit(this.currency),
 					total: this.pricePerKWh,
 					value: (session) => session.pricePerKWh,
@@ -234,6 +238,7 @@ export default defineComponent({
 				},
 				{
 					name: "co2",
+					label: this.$t("sessions.co2"),
 					unit: "g/kWh",
 					total: this.co2PerKWh,
 					value: (session) => session.co2PerKWh || null,
@@ -241,6 +246,7 @@ export default defineComponent({
 				},
 				{
 					name: "chargeDuration",
+					label: this.$t("sessions.chargeDuration"),
 					unit: "h:mm",
 					total: this.chargeDuration,
 					value: (session) => session.chargeDuration,
@@ -256,6 +262,7 @@ export default defineComponent({
 				},
 				{
 					name: "avgPower",
+					label: this.$t("sessions.avgPower"),
 					unit: "kW",
 					total: this.avgPower,
 					value: (session) => {
@@ -300,7 +307,7 @@ export default defineComponent({
 		columnOptions() {
 			return this.columns.map((column) => {
 				return {
-					name: column.label || this.$t(`sessions.${column.name}`),
+					name: column.label,
 					value: column.name,
 					disabled: this.columnsPerBreakpoint.some((c) => c.name === column.name),
 				};
