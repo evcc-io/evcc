@@ -51,3 +51,19 @@ func (logs Logs) PowerWatts(typeName string) float64 {
 	}
 	return total
 }
+
+// VoltageVolts returns the measurement value for the given log type where unit is "V".
+// Voltage point_log entries have a single measurement (no tariff attribute); summing
+// is correct and symmetric with PowerWatts.
+// Returns 0.0 if the log type is not present or has no measurements with unit "V".
+func (logs Logs) VoltageVolts(typeName string) float64 {
+	var total float64
+	for _, pl := range logs.PointLogs {
+		if pl.Type == typeName && pl.Unit == "V" {
+			for _, m := range pl.Period.Measurements {
+				total += m.Value
+			}
+		}
+	}
+	return total
+}
