@@ -111,10 +111,9 @@ func customDevice(typ string, other map[string]any) (string, map[string]any, err
 
 	if typ := cast.ToString(res["type"]); typ != "" {
 		delete(res, "type")
-		return typ, res, nil
 	}
 
-	return typ, other, nil
+	return typ, res, nil
 }
 
 func deviceHeader[T any](dev config.Device[T]) string {
