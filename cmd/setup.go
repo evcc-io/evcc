@@ -1302,18 +1302,25 @@ func configureSite(conf map[string]any, loadpoints []*core.Loadpoint, tariffs *t
 	return site, nil
 }
 
+func newLoadpoint(idx int, name string, other map[string]any, settingsFn func(*util.Logger) coresettings.Settings) (*core.Loadpoint, error) {
+	log := util.NewLoggerWithLoadpoint("lp-"+strconv.Itoa(idx), idx)
+
+	collector, err := metrics.NewCollector(metrics.Charge, name)
+	if err != nil {
+		return nil, err
+	}
+
+	return core.NewLoadpointFromConfig(log, settingsFn(log), collector, other)
+}
+
 func configureLoadpoints(conf globalconfig.All) error {
 	for id, cc := range conf.Loadpoints {
-		cc.Name = "lp-" + strconv.Itoa(id+1)
+		idx := id + 1
+		cc.Name = "lp-" + strconv.Itoa(idx)
 
-		log := util.NewLoggerWithLoadpoint(cc.Name, id+1)
-		settings := coresettings.NewDatabaseSettingsAdapter(fmt.Sprintf("lp%d.", id+1))
-		collector, err := metrics.NewCollector(metrics.Charge, cc.Name)
-		if err != nil {
-			return &DeviceError{cc.Name, err}
-		}
-
-		instance, err := core.NewLoadpointFromConfig(log, settings, collector, cc.Other)
+		instance, err := newLoadpoint(idx, cc.Name, cc.Other, func(*util.Logger) coresettings.Settings {
+			return coresettings.NewDatabaseSettingsAdapter(fmt.Sprintf("lp%d.", idx))
+		})
 		if err != nil {
 			return &DeviceError{cc.Name, err}
 		}
@@ -1331,24 +1338,16 @@ func configureLoadpoints(conf globalconfig.All) error {
 
 	for _, conf := range configurable {
 		cc := conf.Named()
-
-		id := len(config.Loadpoints().Devices())
-		name := "lp-" + strconv.Itoa(id+1)
-		log := util.NewLoggerWithLoadpoint(name, id+1)
-
-		settings := coresettings.NewConfigSettingsAdapter(log, &conf)
-
-		collector, err := metrics.NewCollector(metrics.Charge, cc.Name)
-		if err != nil {
-			return &DeviceError{cc.Name, err}
-		}
+		idx := len(config.Loadpoints().Devices()) + 1
 
 		dynamic, static, err := loadpoint.SplitConfig(cc.Other)
 		if err != nil {
 			return &DeviceError{cc.Name, err}
 		}
 
-		instance, err := core.NewLoadpointFromConfig(log, settings, collector, static)
+		instance, err := newLoadpoint(idx, cc.Name, static, func(log *util.Logger) coresettings.Settings {
+			return coresettings.NewConfigSettingsAdapter(log, &conf)
+		})
 		if err != nil {
 			err = &DeviceError{cc.Name, err}
 		}
