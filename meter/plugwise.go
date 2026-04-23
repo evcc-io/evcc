@@ -34,6 +34,7 @@ func NewPlugwiseFromConfig(other map[string]any) (api.Meter, error) {
 	cc := struct {
 		URI      string
 		Password string
+		Usage    string
 		Cache    time.Duration
 	}{
 		Cache: time.Second,

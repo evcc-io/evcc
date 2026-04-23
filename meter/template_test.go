@@ -15,7 +15,9 @@ var acceptable = []string{
 	"missing mqtt broker configuration",
 	"mqtt not configured",
 	"not a SunSpec device",
-	"connect: connection refused", // sockets
+	"connect: connection refused",                        // sockets (Linux)
+	"connectex: No connection could be made",             // sockets (Windows)
+	"No connection could be made because the target machine actively refused it.", // sockets (Windows alt)
 	"power: timeout",              // sockets
 	"missing password",            // Powerwall
 	"connect: no route to host",

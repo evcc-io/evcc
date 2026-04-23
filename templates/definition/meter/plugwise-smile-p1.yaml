@@ -1,0 +1,17 @@
+template: plugwise
+products:
+  - brand: Plugwise
+    description:
+      generic: Smile P1
+params:
+  - name: usage
+    choice: ["grid"]
+  - name: host
+  - name: password
+    help:
+      en: SmileID — 8-character code on the label on the back of the device
+render: |
+  type: plugwise
+  uri: http://{{ .host }}
+  password: {{ .password }}
+  usage: {{ .usage }}
