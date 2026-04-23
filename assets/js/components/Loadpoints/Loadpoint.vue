@@ -83,6 +83,7 @@
 		<Vehicle
 			class="flex-grow-1 d-flex flex-column justify-content-end"
 			v-bind="vehicleProps"
+			:soc-per-kwh="socPerKwh"
 			@limit-soc-updated="setLimitSoc"
 			@limit-energy-updated="setLimitEnergy"
 			@change-vehicle="changeVehicle"
@@ -233,6 +234,15 @@ export default defineComponent({
 		forecast: Object as PropType<Forecast>,
 		lastSmartCostLimit: Number,
 		lastSmartFeedInPriorityLimit: Number,
+		vehicleKnown: Boolean,
+		vehicleHasSoc: Boolean,
+		vehicleNotReachable: Boolean,
+		socBasedCharging: Boolean,
+		socBasedPlanning: Boolean,
+		capacity: Number,
+		range: Number,
+		rangePerSoc: Number,
+		socPerKwh: { type: Number, required: true },
 	},
 	emits: ["open-charging-plan-modal", "open-settings-modal"],
 	data() {
@@ -281,26 +291,9 @@ export default defineComponent({
 		showChargingIndicator() {
 			return this.charging && this.chargePower > 0;
 		},
-		vehicleKnown() {
-			return !!this.vehicleName;
-		},
-		vehicleHasSoc() {
-			return this.vehicleKnown && !this.vehicle?.features?.includes("Offline");
-		},
-		vehicleNotReachable() {
-			// online vehicle that was not reachable at startup
-			const features = this.vehicle?.features || [];
-			return features.includes("Offline") && features.includes("Retryable");
-		},
 		planTimeUnreachable() {
 			// 1 minute tolerance
 			return this.planOverrun > 60;
-		},
-		socBasedCharging() {
-			return this.vehicleHasSoc || this.vehicleSoc > 0;
-		},
-		socBasedPlanning() {
-			return this.socBasedCharging && this.vehicle?.capacity && this.vehicle?.capacity > 0;
 		},
 		pvPossible() {
 			return this.pvConfigured || this.gridConfigured;

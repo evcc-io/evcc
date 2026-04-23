@@ -44,9 +44,9 @@
 						:effectivePlanStrategy="loadpoint?.effectivePlanStrategy"
 						:planEnergy="loadpoint?.planEnergy"
 						:limitEnergy="loadpoint?.limitEnergy"
-						:socBasedPlanning="!!socBasedPlanning"
-						:socPerKwh="socPerKwh"
-						:rangePerSoc="rangePerSoc"
+						:socBasedPlanning="!!loadpoint?.socBasedPlanning"
+						:socPerKwh="loadpoint?.socPerKwh"
+						:rangePerSoc="loadpoint?.rangePerSoc"
 						:smartCostType="smartCostType"
 						:currency="currency"
 						:mode="loadpoint?.mode"
@@ -66,9 +66,9 @@
 						:minSoc="vehicle?.minSoc"
 						:limitSoc="vehicle?.limitSoc"
 						:vehicleName="vehicle?.name"
-						:vehicleNotReachable="vehicleNotReachable"
-						:socBasedCharging="socBasedCharging"
-						:rangePerSoc="rangePerSoc"
+						:vehicleNotReachable="loadpoint?.vehicleNotReachable"
+						:socBasedCharging="loadpoint?.socBasedCharging"
+						:rangePerSoc="loadpoint?.rangePerSoc"
 						@minsoc-updated="setMinSoc"
 						@limitsoc-updated="setLimitSoc"
 					/>
@@ -92,7 +92,6 @@ import type {
 	StaticSocPlan,
 } from "./types";
 import type { CURRENCY, Forecast, SMART_COST_TYPE, UiLoadpoint, Vehicle } from "@/types/evcc";
-import { distanceValue } from "@/units";
 
 export default defineComponent({
 	name: "ChargingPlanModal",
@@ -117,7 +116,7 @@ export default defineComponent({
 	},
 	computed: {
 		staticPlan(): StaticPlan | undefined {
-			if (this.socBasedPlanning) {
+			if (this.loadpoint?.socBasedPlanning) {
 				const plan = this.vehicle?.plan as StaticSocPlan;
 				if (plan) {
 					return {
@@ -135,58 +134,6 @@ export default defineComponent({
 			}
 			return undefined;
 		},
-		// TODO: refactor, see Vehicle.vue
-		range() {
-			return distanceValue(this.vehicleRange);
-		},
-		// TODO: refactor, see Vehicle.vue
-		vehicleRange() {
-			return this.loadpoint?.vehicleRange || 0;
-		},
-		// TODO: refactor, see Vehicle.vue
-		vehicleSoc() {
-			return this.loadpoint?.vehicleSoc || 0;
-		},
-		// TODO: refactor, see Vehicle.vue
-		capacity() {
-			return this.vehicle?.capacity || 0;
-		},
-		// TODO: refactor, see Vehicle.vue
-		rangePerSoc() {
-			if (this.vehicleSoc > 10 && this.range) {
-				return Math.round((this.range / this.vehicleSoc) * 1e2) / 1e2;
-			}
-			return undefined;
-		},
-		// TODO: refactor, see Vehicle.vue
-		socPerKwh() {
-			if (this.capacity > 0) {
-				return 100 / this.capacity;
-			}
-			return 0;
-		},
-		// TODO: refactor, see Loadpoint.vue
-		vehicleNotReachable() {
-			// online vehicle that was not reachable at startup
-			const features = this.vehicle?.features || [];
-			return features.includes("Offline") && features.includes("Retryable");
-		},
-		// TODO: refactor, see Loadpoint.vue
-		vehicleKnown() {
-			return !!this.loadpoint?.vehicleName;
-		},
-		// TODO: refactor, see Loadpoint.vue
-		vehicleHasSoc() {
-			return this.vehicleKnown && !this.vehicle?.features?.includes("Offline");
-		},
-		// TODO: refactor, see Loadpoint.vue
-		socBasedCharging() {
-			return this.vehicleHasSoc || (this.loadpoint && this.loadpoint?.vehicleSoc > 0);
-		},
-		// TODO: refactor, see Loadpoint.vue
-		socBasedPlanning() {
-			return this.socBasedCharging && this.vehicle?.capacity && this.vehicle?.capacity > 0;
-		},
 		loadpoint() {
 			return this.loadpoints.find((loadpoint) => loadpoint.id === this.id);
 		},
@@ -195,7 +142,7 @@ export default defineComponent({
 		},
 		modalTitle(): string {
 			const baseTitle = this.$t("main.chargingPlan.modalTitle");
-			if (this.socBasedPlanning && this.vehicle) {
+			if (this.loadpoint?.socBasedPlanning && this.vehicle) {
 				return `${baseTitle}: ${this.vehicle.title}`;
 			}
 			return baseTitle;
@@ -243,7 +190,7 @@ export default defineComponent({
 		},
 		updateStaticPlan(plan: StaticPlan): void {
 			const timeISO = plan.time.toISOString();
-			if (this.socBasedPlanning) {
+			if (this.loadpoint?.socBasedPlanning) {
 				const p = plan as StaticSocPlan;
 				api.post(`${this.apiVehicle}plan/soc/${p.soc}/${timeISO}`, null);
 			} else {
@@ -252,7 +199,7 @@ export default defineComponent({
 			}
 		},
 		removeStaticPlan(): void {
-			if (this.socBasedPlanning) {
+			if (this.loadpoint?.socBasedPlanning) {
 				api.delete(`${this.apiVehicle}plan/soc`);
 			} else {
 				api.delete(`${this.apiLoadpoint}plan/energy`);
@@ -262,7 +209,7 @@ export default defineComponent({
 			api.post(`${this.apiVehicle}plan/repeating`, plans);
 		},
 		updatePlanStrategy(strategy: PlanStrategy): void {
-			if (this.socBasedPlanning) {
+			if (this.loadpoint?.socBasedPlanning) {
 				api.post(`${this.apiVehicle}plan/strategy`, strategy);
 			} else {
 				api.post(`${this.apiLoadpoint}plan/strategy`, strategy);
