@@ -40,6 +40,17 @@ params:
   - name: maxacpower
     service: modbus/read?address=30075&type=holding&encoding=uint32&{modbus}
   - name: storageunit
+  - name: watchdog
+    default: 120
+    advanced: true
+    type: int
+    usages: ["battery"]
+    description:
+      en: Watchdog timeout (seconds)
+      de: Watchdog-Timeout (Sekunden)
+    help:
+      en: Timeout in seconds for the forced charge watchdog.
+      de: Timeout in Sekunden für den Zwangsladen-Watchdog.
   - name: forceaccharging
     default: false
     advanced: true
@@ -271,7 +282,7 @@ render: |
                     type: writemultiple
                     encoding: uint32
               - source: const
-                value: 1 # Minute
+                value: {{ div (add .watchdog 29) 30 }} # Minutes (at least 2x watchdog[s])
                 set:
                   source: modbus
                   {{- include "modbus" . | indent 16 }}
@@ -289,7 +300,7 @@ render: |
                     type: writesingle
                     encoding: uint16
       - source: watchdog
-        timeout: 30s
+        timeout: {{ .watchdog }}s
         reset: 1
         set:
           source: switch
@@ -314,6 +325,5 @@ render: |
                     address: 47100 # Forcible charge/discharge
                     type: writesingle
                     encoding: uint16
-
   {{- include "battery-params" . }}
   {{- end }}
