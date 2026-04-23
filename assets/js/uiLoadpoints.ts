@@ -16,15 +16,15 @@ export const convertToUiLoadpoints = (
   if (loadpoints.length === 0) return [];
 
   const mappedLoadpoints = loadpoints.map((lp, originalIndex) => {
-    const vehicle = vehicles[lp.vehicleName];
+    const vehicle = vehicles[lp.vehicleName] as Vehicle | undefined;
     const id = `${originalIndex + 1}`;
 
     const vehicleRange = lp.vehicleRange;
     const vehicleSoc = lp.vehicleSoc;
-    const capacity = vehicle.capacity || 0;
+    const capacity = vehicle?.capacity || 0;
     const range = distanceValue(vehicleRange);
     const vehicleKnown = !!lp.vehicleName;
-    const vehicleHasSoc = vehicleKnown && !vehicle.features?.includes("Offline");
+    const vehicleHasSoc = vehicleKnown && !vehicle?.features?.includes("Offline");
     const socBasedCharging = vehicleHasSoc || lp.vehicleSoc > 0;
     const socBasedPlanning = !!(socBasedCharging && capacity > 0);
 
