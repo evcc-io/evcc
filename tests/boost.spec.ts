@@ -6,7 +6,6 @@ import {
   newLoadpoint,
   addDemoCharger,
   ChargerStatus,
-  openTopNavigation,
 } from "./utils";
 test.use({ baseURL: baseUrl() });
 
@@ -93,13 +92,10 @@ test.describe("boost", async () => {
     await expectModalHidden(modal);
 
     // enable "Prevent discharge in fast mode"
-    await openTopNavigation(page);
-    await page.getByTestId("topnavigation-battery").click();
-    const batteryModal = page.getByTestId("battery-settings-modal");
-    await expectModalVisible(batteryModal);
-    await batteryModal.getByLabel("Prevent discharge in fast mode and planned charging.").check();
-    await page.getByRole("button", { name: "Close" }).click();
-    await expectModalHidden(batteryModal);
+    await page.goto("/#/battery");
+    await page.getByLabel("Prevent discharge in fast mode and planned charging.").check();
+    await page.waitForLoadState("networkidle");
+    await page.goto("/");
 
     // LP2: switch to fast mode → triggers global battery hold
     const lp2 = page.getByTestId("loadpoint").nth(1);
