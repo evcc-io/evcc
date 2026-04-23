@@ -143,8 +143,8 @@ func TestCurrentsZeroVoltage(t *testing.T) {
 	// Inline-mutate the raw XML bytes: zero out voltage_phase_one (232.30 -> 0.00).
 	// Keeps testdata/ minimal; self-documenting per research open question #1.
 	zeroFixture := bytes.ReplaceAll(fixture, []byte(">232.30<"), []byte(">0.00<"))
-	require.NotEqual(t, len(fixture), 0)
-	require.Contains(t, string(zeroFixture), ">0.00<", "substitution must have occurred")
+	require.NotContains(t, string(zeroFixture), ">232.30<",
+		"bytes.ReplaceAll must have removed the original voltage value")
 
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/xml")
