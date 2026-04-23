@@ -94,16 +94,20 @@ func (c *Connection) PhaseVoltages() (float64, float64, float64, error) {
 // Currents returns per-phase current derived as I = P / V.
 // Returns api.ErrNotAvailable if any phase voltage is zero (D-05) to avoid
 // division by zero and to signal the runtime that this reading is unusable.
-// util.Cached coalesces the two inner dataG() calls inside the TTL window.
+// A single dataG() call is used so that powers and voltages always come from
+// the same HTTP response, even when the cache TTL is zero.
 func (c *Connection) Currents() (float64, float64, float64, error) {
-	p1, p2, p3, err := c.PhasePowers()
+	res, err := c.dataG()
 	if err != nil {
 		return 0, 0, 0, err
 	}
-	v1, v2, v3, err := c.PhaseVoltages()
-	if err != nil {
-		return 0, 0, 0, err
-	}
+	l := res.Location.Logs
+	p1 := l.PowerWatts("electricity_phase_one_consumed") - l.PowerWatts("electricity_phase_one_produced")
+	p2 := l.PowerWatts("electricity_phase_two_consumed") - l.PowerWatts("electricity_phase_two_produced")
+	p3 := l.PowerWatts("electricity_phase_three_consumed") - l.PowerWatts("electricity_phase_three_produced")
+	v1 := l.VoltageVolts("voltage_phase_one")
+	v2 := l.VoltageVolts("voltage_phase_two")
+	v3 := l.VoltageVolts("voltage_phase_three")
 	if v1 == 0 || v2 == 0 || v3 == 0 {
 		return 0, 0, 0, api.ErrNotAvailable
 	}
