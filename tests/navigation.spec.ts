@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
-import { enableExperimental, expectModalHidden, expectModalVisible } from "./utils";
+import { expectModalHidden, expectModalVisible } from "./utils";
 
 test.use({ baseURL: baseUrl() });
 
@@ -15,13 +15,6 @@ test.describe("bottom navigation", async () => {
     await page.goto("/");
 
     const bottomNav = page.getByTestId("bottom-tab-bar");
-
-    // bottom nav not visible without experimental
-    await expect(bottomNav).not.toBeVisible();
-
-    // enable experimental feature
-    await enableExperimental(page);
-    await page.goto("/");
     await expect(bottomNav).toBeVisible();
 
     const tabCharge = bottomNav.getByRole("link", { name: "Charge" });

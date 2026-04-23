@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/benbjohnson/clock"
-	"github.com/samber/lo"
 )
 
 type Accumulator struct {
@@ -65,7 +64,7 @@ func (m *Accumulator) Exported() float64 {
 func (m *Accumulator) SetImportMeterTotal(v float64) {
 	defer func() {
 		m.updated = m.clock.Now()
-		m.importMeter = lo.ToPtr(v)
+		m.importMeter = new(v)
 	}()
 
 	if m.importMeter == nil {
@@ -81,7 +80,7 @@ func (m *Accumulator) SetImportMeterTotal(v float64) {
 func (m *Accumulator) SetExportMeterTotal(v float64) {
 	defer func() {
 		m.updated = m.clock.Now()
-		m.exportMeter = lo.ToPtr(v)
+		m.exportMeter = new(v)
 	}()
 
 	if m.exportMeter == nil {
