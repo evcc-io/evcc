@@ -146,24 +146,13 @@ func SetupSchema() error {
 	m := db.Instance.Migrator()
 
 	// entites: create entity first to make sure foreign keys for existing data work
-	hasTable := m.HasTable(new(entity))
 	if err := db.Instance.AutoMigrate(new(entity)); err != nil {
 		return err
 	}
 
-	// entites: add entity id 1
-	if hasTable {
-		var res entity
-		if err := db.Instance.Where(&entity{Id: 1, Name: Home}).FirstOrCreate(&res).Error; err != nil {
-			return err
-		}
-
-		if res.Group == "" {
-			res.Group = Home
-			if err := db.Instance.Save(&res).Error; err != nil {
-				return err
-			}
-		}
+	// ensure home entity exists (reserves id=1 for legacy meter FK references)
+	if _, err := createEntity(Home, Home); err != nil {
+		return err
 	}
 
 	// drop obsolete indexes
