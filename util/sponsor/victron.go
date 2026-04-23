@@ -24,52 +24,21 @@ import (
 	"runtime"
 	"strings"
 	"time"
-
-	"github.com/evcc-io/evcc/api/proto/pb"
-	"github.com/evcc-io/evcc/util/cloud"
-	"github.com/evcc-io/evcc/util/request"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
-
-const victron = "victron"
 
 // checkVictron checks if the hardware is a supported victron device and returns sponsor subject
 func checkVictron() string {
 	vd, err := victronDeviceInfo()
 	if err != nil {
-		// unable to retrieve all device info
 		return ""
 	}
 
-	conn, err := cloud.Connection()
-	if err != nil {
-		// unable to connect to cloud
-		return unavailable
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
-	defer cancel()
-
-	client := pb.NewVictronClient(conn)
-	res, err := client.IsValidDevice(ctx, &pb.VictronRequest{
-		ProductId: vd.ProductId,
-		VrmId:     vd.VrmId,
-		Serial:    vd.Serial,
-		Board:     vd.Board,
+	return checkHardware("victron", map[string]string{
+		"board":     vd.Board,
+		"productId": vd.ProductId,
+		"vrmId":     vd.VrmId,
+		"serial":    vd.Serial,
 	})
-
-	if err == nil && res.Authorized {
-		// cloud check successful
-		return victron
-	}
-
-	if s, ok := status.FromError(err); ok && s.Code() != codes.Unknown {
-		// technical error during validation
-		return unavailable
-	}
-
-	return ""
 }
 
 type victronDevice struct {

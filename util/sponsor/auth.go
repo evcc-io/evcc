@@ -36,6 +36,7 @@ var (
 	mu                            sync.RWMutex
 	Subject, Token, ActivationKey string
 	ExpiresAt                     time.Time
+	machineID                     = machine.ProtectedID("evcc-sponsor")
 )
 
 const unavailable = "sponsorship unavailable"
@@ -67,7 +68,7 @@ func ActivateSponsorship(licenseKey, email string) (string, error) {
 	res, err := client.Activate(ctx, &pb.ActivateRequest{
 		Key:       licenseKey,
 		Email:     email,
-		MachineId: machine.ProtectedID("evcc-sponsor"),
+		MachineId: machineID,
 	})
 
 	if err != nil {
