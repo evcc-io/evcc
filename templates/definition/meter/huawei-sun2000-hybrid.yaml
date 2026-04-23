@@ -12,10 +12,24 @@ requirements:
       Netz und Batterie erfordern den Huawei Smart Power Sensor (DDSU/DTSU666 or SmartPS).
 
       Modbus TCP erfordert die Freischaltung in den Kommunikationseinstellungen des Wechselrichters via "Installateur Zugang", siehe [Modbus TCP Aktivierungs-Anleitung](https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264).
+
+
+      ##### WARNUNG!
+      Die folgendenden Gegebenheiten können zu Unterbrechungen in der Modbus-Kommunikation führen:
+      - veraltete Firmware
+      - Änderung von Wechselrichter/Speicher-Einstellungen über das Huawei FusionSolar-Portal
+      - weitere Anwendungen (z.B. Home Assistant) greifen über einen Modbus Proxy auf die Anlage zu (auch abhängig von der Anlagenkomplexität, z.B. Anzahl kaskadierter Wechselrichter)
     en: |
       Grid and Battery require the Huawei Smart Power Sensor (DDSU/DTSU666 or SmartPS).
 
       Modbus TCP requires activation within the communication settings of the inverter using an "installer account", see [Modbus TCP Activation Guide](https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264).
+
+
+      ##### WARNING!
+      Please beware that the following circumstances may lead to Modbus communication interruptions:
+      - outdated firmware
+      - altering inverter/battery configuration settings via Huawei FusionSolar portal
+      - other applications (e.g. Home Assistant) accessing the inverter via Modbus proxy (also depending on plant complexity, e.g. number of cascaded inverters)
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
