@@ -262,7 +262,8 @@ test.describe("columns desktop", async () => {
     ).toHaveCount(1);
     await page.getByTestId("sessions-head-co2").getByRole("combobox").selectOption("odometer");
     await expect(page.getByTestId("sessions-head-odometer")).toBeVisible();
-    await expect(page.getByTestId("sessions-entry").nth(0)).toContainText("123");
+    await expect(page.getByTestId("sessions-entry").nth(0)).toContainText("12,345");
+    await expect(page.getByTestId("sessions-foot-odometer")).toHaveText("");
   });
   test("hide co2 column if it doesnt have values", async ({ page }) => {
     await page.goto("/#/sessions?year=2023&month=5");
@@ -358,7 +359,7 @@ test.describe("session details", async () => {
     await expect(modal.getByTestId("session-details-price")).toContainText("2.00 € 20.0 ct/kWh");
     await expect(modal.getByTestId("session-details-co2")).toContainText("3 kg");
     await expect(modal.getByTestId("session-details-co2")).toContainText("300 g/kWh");
-    await expect(modal.getByTestId("session-details-odometer")).toContainText("123 km");
+    await expect(modal.getByTestId("session-details-odometer")).toContainText("12,345 km");
   });
 
   test("edit session (session 5)", async ({ page }) => {

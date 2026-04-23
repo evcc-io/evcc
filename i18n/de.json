@@ -1445,6 +1445,7 @@
     },
     "loadpoint": "Ladepunkt",
     "noData": "Noch keine Ladevorgänge in diesem Monat.",
+    "odometer": "Kilometerstand",
     "overview": "Übersicht",
     "period": {
       "month": "Monat",
