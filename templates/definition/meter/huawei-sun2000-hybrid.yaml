@@ -236,15 +236,44 @@ render: |
               {{- end }}
           - case: 3 # charge
             set:
-              source: const
-              value: 1 # Enable
+              source: sequence
               set:
-                source: modbus
-                {{- include "modbus" . | indent 14 }}
-                register:
-                  address: 47087 # Charge from grid
-                  type: writesingle
-                  encoding: uint16
+              - source: const
+                value: 1 # Enable
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 47087 # Charge from grid
+                    type: writesingle
+                    encoding: uint16
+              - source: const
+                value: {{ .maxchargepower }} # W
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 47247 # Forcible charge power
+                    type: writemultiple
+                    encoding: uint32
+              - source: const
+                value: 1 # Minute
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 47083 # Forced charging and discharging period
+                    type: writesingle
+                    encoding: uint16
+              - source: const
+                value: 0 # duration
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 47246 # Forcible charge/discharge setting mode
+                    type: writesingle
+                    encoding: uint16
       - source: watchdog
         timeout: 30s
         reset: 1
@@ -262,43 +291,15 @@ render: |
             # only charging requires repeated requests
             - case: 3 # charge
               set:
-                source: sequence
+                source: const
+                value: 1 # charge
                 set:
-                - source: const
-                  value: 1 # charge
-                  set:
-                    source: modbus
-                    {{- include "modbus" . | indent 18 }}
-                    register:
-                      address: 47100 # Forcible charge/discharge
-                      type: writesingle
-                      encoding: uint16
-                - source: const
-                  value: 0 # duration
-                  set:
-                    source: modbus
-                    {{- include "modbus" . | indent 18 }}
-                    register:
-                      address: 47246 # Forcible charge/discharge setting mode
-                      type: writesingle
-                      encoding: uint16
-                - source: const
-                  value: 1 # Minute
-                  set:
-                    source: modbus
-                    {{- include "modbus" . | indent 18 }}
-                    register:
-                      address: 47083 # Forced charging and discharging period
-                      type: writesingle
-                      encoding: uint16
-                - source: const
-                  value: {{ .maxchargepower }} # W
-                  set:
-                    source: modbus
-                    {{- include "modbus" . | indent 18 }}
-                    register:
-                      address: 47247 # Forcible charge power
-                      type: writemultiple
-                      encoding: uint32
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 47100 # Forcible charge/discharge
+                    type: writesingle
+                    encoding: uint16
+
   {{- include "battery-params" . }}
   {{- end }}
