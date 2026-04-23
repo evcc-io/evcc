@@ -109,22 +109,46 @@ func NewEm2Go(ctx context.Context, uri string, slaveID uint8) (api.Charger, erro
 		current: 60,
 	}
 
-	var charger api.Charger
-	if err := backoff.RetryNotify(func() error {
-		var err error
-		charger, err = wb.initialize()
-		return err
-	}, newCommsBackoff(ctx), func(err error, d time.Duration) {
+	bo := backoff.WithContext(
+		backoff.NewExponentialBackOff(
+			backoff.WithInitialInterval(2*time.Second),
+			backoff.WithMaxInterval(10*time.Second),
+			backoff.WithMaxElapsedTime(30*time.Second),
+		), ctx)
+
+	charger, err := backoff.RetryNotifyWithData(wb.initialize, bo, func(err error, d time.Duration) {
 		log.WARN.Printf("charger not reachable, retrying in %v: %v", d, err)
-	}); err != nil {
+	})
+	if err != nil {
 		return nil, err
 	}
 
-	if err := setupFailsafeHeartbeat(ctx, wb.log, wb.conn, em2GoRegCommTimeout, em2GoRegSafeCurrent); err != nil {
-		return nil, err
+	b, err := wb.conn.ReadHoldingRegisters(em2GoRegCommTimeout, 1)
+	if err != nil {
+		return nil, fmt.Errorf("failsafe timeout: %w", err)
+	}
+	if u := binary.BigEndian.Uint16(b); u > 0 {
+		interval := time.Duration(u) * time.Second / 2
+		log.DEBUG.Printf("failsafe timeout: %ds, heartbeat interval: %v", u, interval)
+		go wb.heartbeat(ctx, interval)
 	}
 
 	return charger, nil
+}
+
+// heartbeat keeps the Modbus connection alive to prevent the charger from
+// entering its failsafe state when the configured communication timeout expires.
+func (wb *Em2Go) heartbeat(ctx context.Context, interval time.Duration) {
+	for tick := time.Tick(interval); ; {
+		select {
+		case <-tick:
+		case <-ctx.Done():
+			return
+		}
+		if _, err := wb.conn.ReadHoldingRegisters(em2GoRegSafeCurrent, 1); err != nil {
+			wb.log.ERROR.Println("heartbeat:", err)
+		}
+	}
 }
 
 // initialize performs common initialization for both Em2Go models
