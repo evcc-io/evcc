@@ -41,16 +41,9 @@ params:
     service: modbus/read?address=30075&type=holding&encoding=uint32&{modbus}
   - name: storageunit
   - name: watchdog
-    default: 120
+    type: duration
+    default: 60s
     advanced: true
-    type: int
-    usages: ["battery"]
-    description:
-      en: Watchdog timeout (seconds)
-      de: Watchdog-Timeout (Sekunden)
-    help:
-      en: Timeout in seconds for the forced charge watchdog.
-      de: Timeout in Sekunden für den Zwangsladen-Watchdog.
   - name: forceaccharging
     default: false
     advanced: true
@@ -300,7 +293,7 @@ render: |
                     type: writesingle
                     encoding: uint16
       - source: watchdog
-        timeout: {{ .watchdog }}s
+        timeout: {{ .watchdog }}
         reset: 1
         set:
           source: switch
