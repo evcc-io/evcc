@@ -32,7 +32,7 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import Header from "../components/Top/Header.vue";
-import PowerChart from "../components/History/Chart.vue";
+import PowerChart from "../components/History/PowerChart.vue";
 import EnergyChart from "../components/History/EnergyChart.vue";
 import api from "../api";
 
@@ -83,6 +83,7 @@ export default defineComponent({
 						params: {
 							from: this.powerFrom.toISOString(),
 							to: this.powerTo.toISOString(),
+							grouped: true,
 						},
 					}),
 					api.get("history/energy", {
@@ -90,6 +91,7 @@ export default defineComponent({
 							from: this.energyFrom.toISOString(),
 							to: this.powerTo.toISOString(),
 							aggregate: "day",
+							grouped: true,
 						},
 					}),
 				]);

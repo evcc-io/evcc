@@ -11,6 +11,7 @@ import (
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/spf13/cast"
 	"go.yaml.in/yaml/v4"
 )
 
@@ -96,15 +97,27 @@ func wrapFatalError(err error) error {
 	return &FatalError{err}
 }
 
-func customDevice(other map[string]any) (map[string]any, error) {
+// customDevice promotes yaml type to top level type
+func customDevice(typ string, other map[string]any) (string, map[string]any, error) {
+	// no embedded yaml
 	customYaml, ok := other["yaml"].(string)
 	if !ok {
-		return other, nil
+		return typ, other, nil
 	}
 
 	var res map[string]any
-	err := yaml.Unmarshal([]byte(customYaml), &res)
-	return res, err
+	if err := yaml.Unmarshal([]byte(customYaml), &res); err != nil {
+		return typ, nil, err
+	}
+
+	// type override
+	if typ := cast.ToString(res["type"]); typ != "" {
+		delete(res, "type")
+		return typ, res, nil
+	}
+
+	// no override
+	return typ, res, nil
 }
 
 func deviceHeader[T any](dev config.Device[T]) string {
