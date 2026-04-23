@@ -99,6 +99,7 @@ func wrapFatalError(err error) error {
 
 // customDevice promotes yaml type to top level type
 func customDevice(typ string, other map[string]any) (string, map[string]any, error) {
+	// no embedded yaml
 	customYaml, ok := other["yaml"].(string)
 	if !ok {
 		return typ, other, nil
@@ -109,10 +110,13 @@ func customDevice(typ string, other map[string]any) (string, map[string]any, err
 		return typ, nil, err
 	}
 
+	// type override
 	if typ := cast.ToString(res["type"]); typ != "" {
 		delete(res, "type")
+		return typ, res, nil
 	}
 
+	// no override
 	return typ, res, nil
 }
 
