@@ -185,7 +185,7 @@ type Loadpoint struct {
 }
 
 // NewLoadpointFromConfig creates a new loadpoint
-func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, other map[string]any) (*Loadpoint, error) {
+func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, collector *metrics.Collector, other map[string]any) (*Loadpoint, error) {
 	lp := NewLoadpoint(log, settings)
 	if err := util.DecodeOther(other, lp); err != nil {
 		return lp, err
@@ -268,14 +268,9 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, other 
 	}
 
 	lp.configureChargerType(lp.charger)
-
 	// add collector
 	if lp.chargeMeter != nil {
-		me, err := metrics.NewCollector(metrics.Charge, lp.GetTitle())
-		if err != nil {
-			return lp, err
-		}
-		lp.chargeEnergy = me
+		lp.chargeEnergy = collector
 	}
 
 	// phase switching defaults based on charger capabilities

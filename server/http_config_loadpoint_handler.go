@@ -9,6 +9,7 @@ import (
 	"dario.cat/mergo"
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/core/metrics"
 	coresettings "github.com/evcc-io/evcc/core/settings"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
@@ -165,7 +166,14 @@ func newLoadpointHandler() http.HandlerFunc {
 		}
 
 		settings := coresettings.NewConfigSettingsAdapter(log, &conf)
-		instance, err := core.NewLoadpointFromConfig(log, settings, static)
+
+		collector, err := metrics.NewCollector(metrics.Charge, name)
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		instance, err := core.NewLoadpointFromConfig(log, settings, collector, static)
 		if err != nil {
 			conf.Delete()
 			jsonError(w, http.StatusBadRequest, err)

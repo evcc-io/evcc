@@ -23,6 +23,7 @@ import (
 	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/core/metrics"
 	coresettings "github.com/evcc-io/evcc/core/settings"
 	"github.com/evcc-io/evcc/hems"
 	hemsapi "github.com/evcc-io/evcc/hems/hems"
@@ -1307,8 +1308,12 @@ func configureLoadpoints(conf globalconfig.All) error {
 
 		log := util.NewLoggerWithLoadpoint(cc.Name, id+1)
 		settings := coresettings.NewDatabaseSettingsAdapter(fmt.Sprintf("lp%d.", id+1))
+		collector, err := metrics.NewCollector(metrics.Charge, cc.Name)
+		if err != nil {
+			return &DeviceError{cc.Name, err}
+		}
 
-		instance, err := core.NewLoadpointFromConfig(log, settings, cc.Other)
+		instance, err := core.NewLoadpointFromConfig(log, settings, collector, cc.Other)
 		if err != nil {
 			return &DeviceError{cc.Name, err}
 		}
@@ -1333,12 +1338,17 @@ func configureLoadpoints(conf globalconfig.All) error {
 
 		settings := coresettings.NewConfigSettingsAdapter(log, &conf)
 
+		collector, err := metrics.NewCollector(metrics.Charge, cc.Name)
+		if err != nil {
+			return &DeviceError{cc.Name, err}
+		}
+
 		dynamic, static, err := loadpoint.SplitConfig(cc.Other)
 		if err != nil {
 			return &DeviceError{cc.Name, err}
 		}
 
-		instance, err := core.NewLoadpointFromConfig(log, settings, static)
+		instance, err := core.NewLoadpointFromConfig(log, settings, collector, static)
 		if err != nil {
 			err = &DeviceError{cc.Name, err}
 		}
