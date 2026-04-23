@@ -6,7 +6,7 @@
 		size="xl"
 		data-testid="loadpoint-settings-modal"
 		@open="modalVisible"
-		@closed="modalInvisible"
+		@close="modalInvisible"
 	>
 		<div class="container">
 			<SmartCostLimit
