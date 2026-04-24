@@ -23,7 +23,7 @@ params:
     default: 1
     description:
       en: "Scale factor for power limit. If an electric heater with <9kW power is connected to the relay, the scaling factor has to be calculated as follows: `scale = 9000 W / nominal power` of the connected heater."
-      de: "Skalierungsfaktor der Leistungsvorgabe. Falls am Relais ein Heizstab mit <9kW Leistung angeschlossen wird, ist der Skalierungsfaktor wie folgt zu berechnen: `scale = 9000W / nominale Leistung` des angeschlossenen Heizstabs."
+      de: "Skalierungsfaktor der Leistungsvorgabe. Falls am Relais ein Heizstab mit <9kW Leistung angeschlossen wird, ist der Skalierungsfaktor wie folgt zu berechnen: `scale = 9000 W / nominale Leistung` des angeschlossenen Heizstabs."
 render: |
   type: ac-thor
   {{- include "modbus" . }}
