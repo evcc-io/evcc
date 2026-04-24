@@ -128,13 +128,13 @@ func deviceConfigMap[T any](class templates.Class, dev config.Device[T], hidePri
 			if yamlStr, ok := conf.Other["yaml"].(string); ok {
 				var yamlData map[string]any
 				if err := yaml.Unmarshal([]byte(yamlStr), &yamlData); err == nil {
-					if config["title"] == nil && config["icon"] == nil {
-						if title, ok := yamlData["title"].(string); ok {
-							config["title"] = title
-						}
-						if icon, ok := yamlData["icon"].(string); ok {
-							config["icon"] = icon
-						}
+					// apply title from yaml
+					if title, ok := yamlData["title"].(string); ok && config["title"] == nil {
+						config["title"] = title
+					}
+					// apply icon from yaml
+					if icon, ok := yamlData["icon"].(string); ok && config["icon"] == nil {
+						config["icon"] = icon
 					}
 					// yaml with embedded type, surface as custom device
 					if typ, ok := yamlData["type"].(string); ok && typ != "" {
