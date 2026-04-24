@@ -1,0 +1,30 @@
+template: stroomprijsprognose-co2
+products:
+  - brand: stroomprijsprognose.nl/co2
+requirements:
+  description:
+    de: "5 Tage Prognose [stroomprijsprognose.nl](https://stroomprijsprognose.nl/de/evcc-strompreis-co2-prognose/)"
+    en: "5 days prognosis [stroomprijsprognose.nl](https://stroomprijsprognose.nl)"
+  evcc: ["skiptest"]
+group: co2
+countries: ["DE", "NL", "BE", "DK"]
+params:
+  - name: region
+    example: DE
+    type: choice
+    choice: ["DE", "NL", "BE", "DK1", "DK2"]
+    required: true
+  - name: horizon
+    default: 120
+    type: int
+    unit: h
+    description:
+      en: Forecast horizon
+      de: Prognosehorizont
+    required: true
+render: |
+  type: custom
+  tariff: co2
+  forecast:
+    source: http
+    uri: https://stroomprijsprognose.nl/api/v1/evcc/tariff?country={{.region}}&type=co2&hours={{.horizon}}
