@@ -2,11 +2,13 @@ package meter
 
 import (
 	"errors"
+	"net/http"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/meter/plugwise"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 )
 
 func init() {
@@ -53,9 +55,22 @@ func NewPlugwiseFromConfig(other map[string]any) (api.Meter, error) {
 		return nil, err
 	}
 
-	// Probe for three-phase phase support. If any voltage is zero or the call
-	// errors, leave all three optional-interface function variables nil; the
-	// generated decoratePlugwise will then return the bare *Connection.
+	// Verify connectivity and credentials before doing anything else.
+	// A 401 response means the SmileID (password) is wrong — surface that
+	// immediately so the UI shows "wrong password" instead of "status: successful
+	// but no values". Other errors (timeout, connection refused) are transient and
+	// tolerated: the device may simply be unreachable at startup.
+	if _, probeErr := c.CurrentPower(); probeErr != nil {
+		var se *request.StatusError
+		if errors.As(probeErr, &se) && se.HasStatus(http.StatusUnauthorized) {
+			return nil, errors.New("wrong password")
+		}
+	}
+
+	// Probe for three-phase support. If all three phase voltages come back
+	// non-zero, activate optional phase interfaces via the generated decorator.
+	// Errors here are silently tolerated — the cached dataG response from the
+	// CurrentPower probe above is reused, so a 401 would already have been caught.
 	var (
 		vol func() (float64, float64, float64, error)
 		cur func() (float64, float64, float64, error)
