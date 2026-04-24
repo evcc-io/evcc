@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -18,6 +19,27 @@ func TestNewConnection(t *testing.T) {
 	c, err := NewConnection("192.168.0.1", "testpass", time.Second)
 	require.NoError(t, err)
 	assert.NotNil(t, c)
+}
+
+func TestNewConnectionValidation(t *testing.T) {
+	tests := []struct {
+		name     string
+		uri      string
+		password string
+		wantErr  string
+	}{
+		{"missing uri", "", "abcdefgh", "missing uri"},
+		{"empty password", "192.168.0.1", "", "missing password"},
+		{"password too long", "192.168.0.1", strings.Repeat("a", 65), "password too long"},
+		{"password with control char", "192.168.0.1", "abc\x01def", "password contains invalid characters"},
+		{"password with null byte", "192.168.0.1", "abc\x00def", "password contains invalid characters"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := NewConnection(tt.uri, tt.password, time.Second)
+			require.EqualError(t, err, tt.wantErr)
+		})
+	}
 }
 
 func TestCurrentPower(t *testing.T) {

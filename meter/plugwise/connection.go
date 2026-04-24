@@ -24,6 +24,17 @@ func NewConnection(uri, password string, cache time.Duration) (*Connection, erro
 	if uri == "" {
 		return nil, errors.New("missing uri")
 	}
+	if password == "" {
+		return nil, errors.New("missing password")
+	}
+	if len(password) > 64 {
+		return nil, errors.New("password too long")
+	}
+	for _, ch := range password {
+		if ch < 0x20 || ch > 0x7e {
+			return nil, errors.New("password contains invalid characters")
+		}
+	}
 
 	log := util.NewLogger("plugwise")
 	basicAuth := transport.BasicAuthHeader("smile", password)
