@@ -772,9 +772,9 @@ func (site *Site) applyTemperatureCorrection(profile []float64) []float64 {
 		oldValue := profile[i]
 		result[i] = oldValue * correctionFactor
 
-		if i < 3 && !(oldValue == 0 && result[i] == 0) {
+		if i < 3 && oldValue != 0 {
 			site.log.DEBUG.Printf("temperature correction: slot %s (hour %d): forecast=%.1f°C, hist_avg=%.1f°C, factor=%.3f, load: %.0fWh -> %.0fWh (%.1f%%)",
-				ts.Format("15:04"), h, tFuture, tPastAvg, correctionFactor, oldValue*1e3, result[i]*1e3, (result[i]/oldValue-1)*100)
+				ts.Format("15:04"), h, tFuture, tPastAvg, correctionFactor, oldValue*1e3, result[i]*1e3, ((result[i]/oldValue)-1)*100)
 		}
 	}
 
