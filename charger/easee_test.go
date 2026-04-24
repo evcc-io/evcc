@@ -510,9 +510,6 @@ func TestChargeSessionStart_SetsFields(t *testing.T) {
 	e.ProductUpdate(createPayload(easee.CHARGE_SESSION_START, time.Now(), easee.String, string(jsonData)))
 
 	assert.Equal(t, 801, e.currentSessionID)
-	assert.Equal(t, 9141.414622, e.sessionStartMeter)
-
-	assert.Equal(t, 9141.414622, e.SessionStartMeter())
 
 	total, err := e.TotalEnergy()
 	assert.NoError(t, err)
@@ -590,14 +587,12 @@ func TestChargerOpMode_ConnectResetsSessionFields(t *testing.T) {
 	e := newEasee()
 	e.opMode = easee.ModeDisconnected
 	e.currentSessionID = 803
-	e.sessionStartMeter = 9157.3
 	e.sessionEnergy = 5.0
 
 	// Transition from disconnected to awaiting start
 	e.ProductUpdate(createPayload(easee.CHARGER_OP_MODE, time.Now(), easee.Integer, fmt.Sprintf("%d", easee.ModeAwaitingStart)))
 
 	assert.Equal(t, 0, e.currentSessionID)
-	assert.Equal(t, 0.0, e.SessionStartMeter())
 
 	charged, err := e.ChargedEnergy()
 	assert.NoError(t, err)

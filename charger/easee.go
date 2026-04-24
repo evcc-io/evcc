@@ -67,10 +67,9 @@ type Easee struct {
 	phaseMode             int
 	currentPower, sessionEnergy, totalEnergy,
 	currentL1, currentL2, currentL3 float64
-	currentSessionID  int
-	sessionStartMeter float64
-	rfid              string
-	lp                loadpoint.API
+	currentSessionID int
+	rfid             string
+	lp               loadpoint.API
 
 	dispatcher *easee.CommandDispatcher
 
@@ -391,7 +390,6 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 			break
 		}
 		c.currentSessionID = data.ID
-		c.sessionStartMeter = data.MeterValue
 		if data.MeterValue >= c.totalEnergy {
 			c.totalEnergy = data.MeterValue
 		}
@@ -418,7 +416,6 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 		if c.opMode <= easee.ModeDisconnected && opMode >= easee.ModeAwaitingStart {
 			c.sessionEnergy = 0
 			c.currentSessionID = 0
-			c.sessionStartMeter = 0
 			c.obsTime[easee.SESSION_ENERGY] = time.Now()
 		}
 
@@ -718,15 +715,6 @@ func (c *Easee) Currents() (float64, float64, float64, error) {
 	}
 
 	return c.currentL1, c.currentL2, c.currentL3, nil
-}
-
-var _ api.SessionStartMeter = (*Easee)(nil)
-
-// SessionStartMeter implements the api.SessionStartMeter interface
-func (c *Easee) SessionStartMeter() float64 {
-	c.mux.RLock()
-	defer c.mux.RUnlock()
-	return c.sessionStartMeter
 }
 
 var _ api.MeterEnergy = (*Easee)(nil)

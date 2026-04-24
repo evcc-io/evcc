@@ -149,12 +149,6 @@ func (lp *Loadpoint) finalizeSessionEnergy() {
 
 	lp.energyMetrics.Update(chargedKWh)
 
-	if sm, ok := api.Cap[api.SessionStartMeter](lp.chargeMeter); ok {
-		if meterStart := sm.SessionStartMeter(); meterStart > 0 {
-			s.MeterStart = &meterStart
-		}
-	}
-
 	lp.applyEnergyMetrics(s)
 }
 
