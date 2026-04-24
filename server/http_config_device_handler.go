@@ -125,14 +125,20 @@ func deviceConfigMap[T any](class templates.Class, dev config.Device[T], hidePri
 			config := maps.Clone(conf.Other)
 
 			// extract title & icon if possible (user-defined vehicle embeds)
-			if yamlStr, ok := conf.Other["yaml"].(string); ok && config["title"] == nil && config["icon"] == nil {
+			if yamlStr, ok := conf.Other["yaml"].(string); ok {
 				var yamlData map[string]any
 				if err := yaml.Unmarshal([]byte(yamlStr), &yamlData); err == nil {
-					if title, ok := yamlData["title"].(string); ok {
-						config["title"] = title
+					if config["title"] == nil && config["icon"] == nil {
+						if title, ok := yamlData["title"].(string); ok {
+							config["title"] = title
+						}
+						if icon, ok := yamlData["icon"].(string); ok {
+							config["icon"] = icon
+						}
 					}
-					if icon, ok := yamlData["icon"].(string); ok {
-						config["icon"] = icon
+					// yaml with embedded type, surface as custom device
+					if typ, ok := yamlData["type"].(string); ok && typ != "" {
+						dc["type"] = "custom"
 					}
 				}
 			}
