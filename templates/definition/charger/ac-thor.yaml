@@ -34,8 +34,8 @@ params:
     type: float
     default: 1
     description:
-      de: "Skalierungsfaktor der Leistungsvorgabe (optional)."
-      en: "Scale factor for power target value (optional)."
+      de: "Skalierungsfaktor der Leistungsvorgabe"
+      en: "Scale factor for power target value"
 render: |
   type: ac-thor
   {{- include "modbus" . }}
