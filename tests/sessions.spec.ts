@@ -1,11 +1,6 @@
 import { test, expect, devices, type Page } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
-import {
-  expectModalVisible,
-  expectModalHidden,
-  openTopNavigation,
-  expectTopNavigationClosed,
-} from "./utils";
+import { expectModalVisible, expectModalHidden } from "./utils";
 
 test.use({ baseURL: baseUrl() });
 
@@ -38,12 +33,7 @@ async function selectVehicleFilter(page: Page, value: string) {
 test.describe("basics", async () => {
   test("navigation to sessions", async ({ page }) => {
     await page.goto("/");
-    await openTopNavigation(page);
-    await page
-      .getByTestId("topnavigation-dropdown")
-      .getByRole("link", { name: "Charging sessions" })
-      .click();
-    await expectTopNavigationClosed(page);
+    await page.getByRole("link", { name: "Sessions" }).click();
     await expect(page.getByRole("heading", { name: "Charging Sessions" })).toBeVisible();
   });
   test("month without data", async ({ page }) => {
