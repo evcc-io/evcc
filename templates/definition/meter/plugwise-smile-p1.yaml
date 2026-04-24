@@ -8,6 +8,7 @@ params:
     choice: ["grid"]
   - name: host
   - name: password
+    required: true
     help:
       en: SmileID — 8-character code on the label on the back of the device
 render: |
