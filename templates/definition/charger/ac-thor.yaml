@@ -11,18 +11,22 @@ requirements:
   description:
     de: |
       Über das lokale Webinterface des AC•THOR muss der Wert für die "Zeitablauf Ansteuerung" auf einen Wert etwas größer der Intervall Zeit von evcc (z.B. + 5s) gesetzt werden.
-      Hat der Heizstab am geregelten Ausgang < 9 kW muss der Skalierungsfaktor wie folgt berechnet und gesetzt werden: `scale = 9000 / Nennleistung` des angeschlossenen Heizstabs. 
+      
+      AC•THOR 9s:
+      Hat der Heizstab am geregelten Ausgang < 9 kW muss der Parameter `heaterpower` gesetzt werden.
 
       Die Betriebsart M3: 9 + 9 kW mit einem zusätzlichen Heizstab am Relais-Ausgang wird unterstützt. Ohne Lastmessung mittels my-PV Meter muss "Last am Relais" im lokalen Webinterface des AC•THOR passend zur Nennleistung des Heizstabs am Relais gesetzt werden.
-      Hat der Heizstab am geregelten Ausgang < 9 kW ist AC•THOR Firmware a0022200 oder höher erforderlich und der Wert für "Last am Relais" muss folgendermaßen mit dem Skalierungsfaktor umgerechnet werden:
-      Last am Relais = Nennleistung des Heizstabs am Relais * Skalierungsfaktor
+      Hat der Heizstab am geregelten Ausgang < 9 kW ist AC•THOR Firmware a0022200 oder höher erforderlich und der Wert für "Last am Relais" muss folgendermaßen berechnet werden:
+      Last am Relais = Nennleistung des Heizstabs am Relais * 9000 / Nennleistung des Heizstabs am Relais
     en: |
       Use the local web interface of AC•THOR to set the value "Power timeout" to a value slightly higher (e.g. + 5s) than the interval time of evcc.
-      If the heating element at the controlled output has <9kW, the scaling factor has to be calculated as follows: `scale = 9000 / nominal power` of the connected heater.
+
+      AC•THOR 9s:
+      If the heating element at the controlled output has < 9kW, the parameter `heaterpower` must be set.
 
       Operation mode M3: 9 + 9 kW with an additional heater connected to the relay output is supported. Without load measurement using my-PV meter, the "Load at relay" setting in the local web interface of the AC•THOR must be set to match the nominal power of the heating element at the relay.
-      If the heater at the controlled output has <9kW, AC•THOR firmware a0022200 or higher is required and the value for "Load at relay" must be converted using the scaling factor as follows:
-      Load at relay = nominal power of the heater at the relay * scale factor
+      If the heater at the controlled output has < 9kW, AC•THOR firmware a0022200 or higher is required and the value for "Load at relay" must be calculated as follows:
+      Load at relay = nominal power of the heater at the relay * 9000 / nominal power of the heater at the relay
   evcc: ["sponsorship"]
 params:
   - name: modbus
@@ -30,12 +34,12 @@ params:
   - name: tempsource
     choice: ["1", "2", "3"]
     default: "1"
-  - name: scale
+  - name: heaterpower
     type: float
-    default: 1
-    description:
-      de: "Skalierungsfaktor der Leistungsvorgabe"
-      en: "Scale factor for power target value"
+    default: 0
+    decription:
+      de: "Nennleistung des Heizstabs am geregelten Ausgang"
+      en: "Nominal power of the heater connected to controlled output"
 render: |
   type: ac-thor
   {{- include "modbus" . }}
