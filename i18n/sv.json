@@ -802,7 +802,7 @@
       "type": {
         "co2": "CO₂ -prognos",
         "feedIn": "Exportpris",
-        "grid": "Elpris från nätet",
+        "grid": "Importpris från nätet",
         "planner": "Planering",
         "solar": "Sol"
       },
