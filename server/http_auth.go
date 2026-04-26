@@ -240,4 +240,3 @@ func regenerateApiKeyHandler(authObject auth.Auth) http.HandlerFunc {
 		jsonWrite(w, map[string]string{"key": key})
 	}
 }
-
