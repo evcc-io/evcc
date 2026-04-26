@@ -26,6 +26,15 @@ call changePassword {
 }
 ```
 
+## getApiKeyStatus
+
+Reports whether an API key has been generated. The key itself is
+only returned once at creation time (POST), never on subsequent
+reads.
+
+
+**Tags:** auth
+
 ## getAuthStatus
 
 Whether the current user is logged in.
@@ -57,6 +66,33 @@ call login {
 Logout and delete authorization cookie
 
 **Tags:** auth
+
+## regenerateApiKey
+
+Generates a fresh API key, replacing any existing one. The
+returned key is shown only once; store it immediately.
+
+Even when the request is authenticated via API key (Bearer), the
+admin password must be supplied in the request body to prevent a
+leaked key from rotating itself. The password check is skipped
+when the server is started with `--disable-auth`.
+
+
+**Tags:** auth
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| requestBody | object | The JSON request body. |
+
+**Example call:**
+
+```json
+call regenerateApiKey {
+  "requestBody": "..."
+}
+```
 
 ## disableExternalBatteryControl
 

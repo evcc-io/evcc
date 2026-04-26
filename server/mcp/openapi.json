@@ -747,6 +747,11 @@
       }
     },
     "securitySchemes": {
+      "bearerAuth": {
+        "description": "Long-lived API key (prefixed `evcc_`, managed via /auth/apikey).\nBypasses the in-body admin-password check on /system/backup,\n/system/restore, /system/reset.\n",
+        "scheme": "bearer",
+        "type": "http"
+      },
       "cookieAuth": {
         "in": "cookie",
         "name": "auth",
@@ -764,6 +769,100 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/auth/apikey": {
+      "get": {
+        "description": "Reports whether an API key has been generated. The key itself is\nonly returned once at creation time (POST), never on subsequent\nreads.\n",
+        "operationId": "getApiKeyStatus",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "configured": {
+                      "type": "boolean"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "API key status",
+        "tags": [
+          "auth"
+        ]
+      },
+      "post": {
+        "description": "Generates a fresh API key, replacing any existing one. The\nreturned key is shown only once; store it immediately.\n\nEven when the request is authenticated via API key (Bearer), the\nadmin password must be supplied in the request body to prevent a\nleaked key from rotating itself. The password check is skipped\nwhen the server is started with `--disable-auth`.\n",
+        "operationId": "regenerateApiKey",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "password": {
+                    "$ref": "#/components/schemas/Password"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "key": {
+                      "description": "The new API key (cleartext, shown once).",
+                      "example": "evcc_aB3xYz7k0Pq2sN5mWtR4",
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "401": {
+            "description": "Invalid admin password"
+          },
+          "403": {
+            "description": "Forbidden in demo mode"
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Generate or rotate the API key",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
     "/auth/login": {
       "post": {
         "description": "Administrator login. Returns authorization cookie required for all protected endpoints.",
@@ -2213,6 +2312,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
           }
         ],
         "summary": "Clear cache",
@@ -2289,6 +2391,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
           }
         ],
         "summary": "Logs",
@@ -2324,6 +2429,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
           }
         ],
         "summary": "List of all log areas",
@@ -2347,6 +2455,9 @@
         "security": [
           {
             "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
           }
         ],
         "summary": "Shutdown evcc",
