@@ -5,7 +5,6 @@ products:
       generic: Smart Evse v3 / v3.5
 capabilities: ["mA", "rfid", "1p3p"]
 requirements:
-  evcc: ["sponsorship"]
   description:
     de: |
       Anbindung über die REST API der Smart Evse Firmware (FW >= 3.6.0).

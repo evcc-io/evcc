@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
-import { openTopNavigation, expectTopNavigationClosed } from "./utils";
+import { openMoreMenu } from "./utils";
 
 test.use({ baseURL: baseUrl() });
 
@@ -14,17 +14,16 @@ test.afterAll(async () => {
 test.describe("opening logs", async () => {
   test("via config", async ({ page }) => {
     await page.goto("/");
-    await openTopNavigation(page);
-    await page.getByRole("link", { name: "Configuration" }).click();
-    await expectTopNavigationClosed(page);
-    await page.getByRole("link", { name: "Logs" }).click();
+    const menu = await openMoreMenu(page);
+    await menu.getByRole("link", { name: "Configuration" }).click();
+    await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible();
+    await page.getByTestId("config-system").getByRole("link", { name: "Logs" }).click();
     await expect(page.getByRole("heading", { name: "Logs", exact: false })).toBeVisible();
   });
-  test("via top navigation", async ({ page }) => {
+  test("via more menu", async ({ page }) => {
     await page.goto("/");
-    await openTopNavigation(page);
-    await page.getByRole("link", { name: "Logs" }).click();
-    await expectTopNavigationClosed(page);
+    const menu = await openMoreMenu(page);
+    await menu.getByRole("link", { name: "Logs" }).click();
     await expect(page.getByRole("heading", { name: "Logs", exact: false })).toBeVisible();
   });
   test("via notifications", async ({ page }) => {
@@ -36,9 +35,8 @@ test.describe("opening logs", async () => {
   });
   test("via need help", async ({ page }) => {
     await page.goto("/");
-    await openTopNavigation(page);
-    await page.getByRole("button", { name: "Need Help?" }).click();
-    await expectTopNavigationClosed(page);
+    const menu = await openMoreMenu(page);
+    await menu.getByRole("button", { name: "Need Help?" }).click();
     await page.getByRole("link", { name: "View logs" }).click();
     await expect(page.getByRole("heading", { name: "Logs", exact: false })).toBeVisible();
   });
