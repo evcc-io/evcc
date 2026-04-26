@@ -44,6 +44,22 @@
     "usageTab": "Battery usage"
   },
   "config": {
+    "apiKey": {
+      "description": "Use an API key to give automation and scripts (e.g. scheduled backups) access without sharing your admin password.",
+      "done": "Done",
+      "entryDescription": "Give automation and scripts access without sharing your admin password.",
+      "exampleLabel": "Try it: download a backup with curl",
+      "generate": "Generate API Key",
+      "generateConfirm": "Enter your admin password to generate a new API key.",
+      "keyLabel": "API Key",
+      "regenerate": "Regenerate API Key",
+      "regenerateConfirm": "Enter your admin password to regenerate the API key.",
+      "regenerateWarning": "Regenerating will invalidate the existing key and any automation using it will stop working. Continue?",
+      "revealSuccess": "Your new API key is ready to use.",
+      "revealTitle": "API Key Created",
+      "shownOnce": "This key is shown only once. Store it somewhere safe; you cannot retrieve it later.",
+      "title": "API Key"
+    },
     "aux": {
       "description": "Device that adjusts its consumption based on available surplus (like smart water heaters). evcc expects that this device reduces its power consumption if needed.",
       "titleAdd": "Add Self-Regulating Consumer",
@@ -250,7 +266,6 @@
       "noFileSelected": "No file selected.",
       "off": "off",
       "on": "on",
-      "password": "Password",
       "readFromFile": "Read from file",
       "remove": "Remove",
       "required": "required",
@@ -677,6 +692,14 @@
       "services": "Services",
       "system": "System",
       "vehicles": "Vehicles"
+    },
+    "security": {
+      "authDisabledHint": "Authentication is disabled. Credential management is unavailable.",
+      "description": "Manage authentication and credentials for this instance.",
+      "passwordDescription": "Update the password used to log in to the configuration UI.",
+      "passwordTitle": "Admin password",
+      "title": "Security",
+      "updatePassword": "Update password"
     },
     "shm": {
       "cardTitle": "Sunny Home Manager",

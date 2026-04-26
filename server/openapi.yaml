@@ -98,6 +98,72 @@ paths:
                 enum:
                   - "true"
                   - "false"
+  /auth/apikey:
+    get:
+      operationId: getApiKeyStatus
+      summary: API key status
+      description: |
+        Reports whether an API key has been generated. The key itself is
+        only returned once at creation time (POST), never on subsequent
+        reads.
+      tags:
+        - auth
+      security:
+        - cookieAuth: []
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  configured:
+                    type: boolean
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      operationId: regenerateApiKey
+      summary: Generate or rotate the API key
+      description: |
+        Generates a fresh API key, replacing any existing one. The
+        returned key is shown only once; store it immediately.
+
+        Even when the request is authenticated via API key (Bearer), the
+        admin password must be supplied in the request body to prevent a
+        leaked key from rotating itself. The password check is skipped
+        when the server is started with `--disable-auth`.
+      tags:
+        - auth
+      security:
+        - cookieAuth: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                password:
+                  $ref: "#/components/schemas/Password"
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  key:
+                    type: string
+                    description: The new API key (cleartext, shown once).
+                    example: evcc_aB3xYz7k0Pq2sN5mWtR4
+        "401":
+          description: Invalid admin password
+        "403":
+          description: Forbidden in demo mode
   /batterydischargecontrol/{enable}:
     post:
       operationId: setBatteryDischargeControl
@@ -894,6 +960,7 @@ paths:
         url: https://docs.evcc.io/en/docs/reference/configuration/log
       security:
         - cookieAuth: []
+        - bearerAuth: []
       tags:
         - system
       parameters:
@@ -938,6 +1005,7 @@ paths:
       description: "Returns a list of all log areas (e.g. `lp-1`, `site`, `db`)."
       security:
         - cookieAuth: []
+        - bearerAuth: []
       tags:
         - system
       responses:
@@ -959,6 +1027,7 @@ paths:
       description: "Clears all cached data. This resets all cached values from tariffs, vehicle APIs, and other components that use caching."
       security:
         - cookieAuth: []
+        - bearerAuth: []
       tags:
         - system
       responses:
@@ -973,6 +1042,7 @@ paths:
       description: "Shut down instance. There is no reboot command. We expect the underlying system (docker, systemd, etc.) to restart the evcc instance once it's terminated."
       security:
         - cookieAuth: []
+        - bearerAuth: []
       tags:
         - system
       responses:
@@ -1690,3 +1760,10 @@ components:
       type: apiKey
       in: cookie
       name: auth
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: |
+        Long-lived API key (prefixed `evcc_`, managed via /auth/apikey).
+        Bypasses the in-body admin-password check on /system/backup,
+        /system/restore, /system/reset.
