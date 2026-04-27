@@ -35,6 +35,14 @@ type configReq struct {
 	config.Properties `json:",inline" mapstructure:",squash"`
 	Yaml              string
 	Other             map[string]any `json:",inline" mapstructure:",remain"`
+	yamlType          string         // embedded yaml type override, separate from Type used for storage
+}
+
+func (c *configReq) instanceType() string {
+	if c.yamlType != "" {
+		return c.yamlType
+	}
+	return c.Type
 }
 
 // TODO get rid of this 2-pass unmarshal once https://github.com/golang/go/issues/71497 is implemented
@@ -226,7 +234,7 @@ func deviceInstanceFromMergedConfig[T any](ctx context.Context, id int, class te
 
 	// TODO merge custom config
 	if req.Yaml != "" {
-		instance, err := newFromConf(ctx, conf.Type, req.Other)
+		instance, err := newFromConf(ctx, req.instanceType(), req.Other)
 		return dev, instance, req.Serialise(), err
 	}
 
@@ -441,7 +449,7 @@ func (maskedTransformer) Transformer(typ reflect.Type) func(dst, src reflect.Val
 	}
 }
 
-// decodeDeviceConfig extracts device configuration and yaml details plus type override
+// decodeDeviceConfig extracts device configuration and yaml details
 func decodeDeviceConfig(r io.Reader) (configReq, error) {
 	var res configReq
 
@@ -467,8 +475,9 @@ func decodeDeviceConfig(r io.Reader) (configReq, error) {
 		return configReq{}, err
 	}
 
+	// embedded type override; keep Type for storage
 	if typ := cast.ToString(res.Other["type"]); typ != "" {
-		res.Type = typ
+		res.yamlType = typ
 		delete(res.Other, "type")
 	}
 

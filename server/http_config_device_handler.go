@@ -125,20 +125,14 @@ func deviceConfigMap[T any](class templates.Class, dev config.Device[T], hidePri
 			config := maps.Clone(conf.Other)
 
 			// extract title & icon if possible (user-defined vehicle embeds)
-			if yamlStr, ok := conf.Other["yaml"].(string); ok {
+			if yamlStr, ok := conf.Other["yaml"].(string); ok && config["title"] == nil && config["icon"] == nil {
 				var yamlData map[string]any
 				if err := yaml.Unmarshal([]byte(yamlStr), &yamlData); err == nil {
-					// apply title from yaml
-					if title, ok := yamlData["title"].(string); ok && config["title"] == nil {
+					if title, ok := yamlData["title"].(string); ok {
 						config["title"] = title
 					}
-					// apply icon from yaml
-					if icon, ok := yamlData["icon"].(string); ok && config["icon"] == nil {
+					if icon, ok := yamlData["icon"].(string); ok {
 						config["icon"] = icon
-					}
-					// yaml with embedded type, surface as custom device
-					if typ, ok := yamlData["type"].(string); ok && typ != "" {
-						dc["type"] = "custom"
 					}
 				}
 			}
@@ -286,7 +280,7 @@ func deviceStatusHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func newDevice[T any](ctx context.Context, class templates.Class, req configReq, newFromConf newFromConfFunc[T], h config.Handler[T], force bool) (*config.Config, error) {
-	instance, err := newFromConf(ctx, req.Type, req.Other)
+	instance, err := newFromConf(ctx, req.instanceType(), req.Other)
 	if err != nil && !force {
 		return nil, err
 	}
@@ -622,7 +616,7 @@ func deleteDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Requ
 
 func testConfig[T any](ctx context.Context, id int, class templates.Class, req configReq, newFromConf newFromConfFunc[T], h config.Handler[T]) (T, error) {
 	if id == 0 {
-		return newFromConf(ctx, req.Type, req.Other)
+		return newFromConf(ctx, req.instanceType(), req.Other)
 	}
 
 	_, instance, _, err := deviceInstanceFromMergedConfig(ctx, id, class, req, newFromConf, h)
