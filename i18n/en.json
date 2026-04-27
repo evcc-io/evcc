@@ -602,6 +602,44 @@
       "url": "Server URL",
       "urlHelp": "Copy this URL into your charger's configuration. Check the manufacturer's manual for details. The charger is expected to automatically append its unique identifier (station ID) to the url. In rare cases, you may need to manually specify the identifier. Example: `{url}`"
     },
+    "ocppforwarder": {
+      "add": "Add rule",
+      "charger": "Charger",
+      "connectionStatus": "Connection status",
+      "description": "Forward OCPP calls to an external server (billing platform, DSO, etc.) in addition to evcc. Use \"*\" as station ID to match all chargers.",
+      "labelCaCert": "Server certificate (CA)",
+      "labelCheckInsecure": "Allow self-signed certificates",
+      "labelInsecure": "Certificate validation",
+      "noConnections": "No active charger connections.",
+      "option": {
+        "false": "off",
+        "true": "on"
+      },
+      "password": "Upstream password",
+      "passwordHelp": "Optional password for HTTP Basic Auth to the upstream server. The upstream station ID is used as username.",
+      "readOnly": {
+        "help": {
+          "false": "Upstream can send commands to the charger via evcc.",
+          "true": "Upstream receives all charger messages but cannot send commands. evcc retains exclusive control."
+        },
+        "label": "Read-only"
+      },
+      "rule": "Rule {number}",
+      "stationId": "Station ID",
+      "stationIdHelp": "Station ID of the charger, or \"*\" to match all chargers without a specific rule.",
+      "title": "OCPP Forwarder",
+      "upstream": "Upstream",
+      "upstreamConnected": "Connected",
+      "upstreamConnectedHelp": "A charger is connected and the upstream link is alive.",
+      "upstreamDisconnected": "Disconnected",
+      "upstreamDisconnectedHelp": "A charger is connected but the upstream dial failed.",
+      "upstreamIdle": "No charger",
+      "upstreamIdleHelp": "Forwarder is enabled but no charger has connected through this rule yet.",
+      "upstreamStationId": "Upstream station ID",
+      "upstreamStationIdHelp": "Override the station ID sent to the upstream server. Leave empty to use the charger's own ID.",
+      "upstreamUrl": "Upstream server URL",
+      "upstreamUrlHelp": "OCPP WebSocket URL of the external server (e.g. wss://billing.example.com/ocpp)."
+    },
     "optimizer": {
       "description": "Analyzes solar forecast, electricity prices, and your consumption patterns to optimize battery and charging strategy. Data is sent to the evcc optimization service for processing. Currently only calculates and visualizes. Does not control devices yet.",
       "enable": "Enable Optimizer",

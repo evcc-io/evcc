@@ -309,6 +309,18 @@
 						</template>
 					</DeviceCard>
 					<DeviceCard
+						:title="$t('config.ocppforwarder.title')"
+						editable
+						:unconfigured="isUnconfigured(ocppforwarderTags)"
+						data-testid="ocppforwarder"
+						@edit="openModal('ocppforwarder')"
+					>
+						<template #icon><OcppForwarderIcon /></template>
+						<template #tags>
+							<DeviceTags :tags="ocppforwarderTags" />
+						</template>
+					</DeviceCard>
+					<DeviceCard
 						:title="$t('config.hems.title')"
 						editable
 						:error="hasClassError('hems')"
@@ -440,6 +452,7 @@
 					@changed="loadDirty"
 				/>
 				<OcppModal :ocpp="ocpp" />
+				<OcppForwarderModal @changed="loadDirty" />
 				<BackupRestoreModal v-bind="backupRestoreProps" />
 				<PasswordModal update-mode />
 				<SponsorModal :error="hasClassError('sponsorship')" @changed="loadDirty" />
@@ -467,6 +480,8 @@ import EebusIcon from "../components/MaterialIcon/Eebus.vue";
 import EebusModal from "../components/Config/EebusModal.vue";
 import OcppIcon from "../components/MaterialIcon/Ocpp.vue";
 import OcppModal from "../components/Config/OcppModal.vue";
+import OcppForwarderIcon from "../components/MaterialIcon/OcppForwarder.vue";
+import OcppForwarderModal from "../components/Config/OcppForwarderModal.vue";
 import formatter from "../mixins/formatter";
 import GeneralConfig from "../components/Config/GeneralConfig.vue";
 import HemsIcon from "../components/MaterialIcon/Hems.vue";
@@ -555,6 +570,8 @@ export default defineComponent({
 		EebusModal,
 		OcppIcon,
 		OcppModal,
+		OcppForwarderIcon,
+		OcppForwarderModal,
 		GeneralConfig,
 		HemsIcon,
 		HemsModal,
@@ -833,6 +850,13 @@ export default defineComponent({
 			const config = store.state?.modbusproxy || [];
 			if (config.length > 0) {
 				return { amount: { value: config.length } };
+			}
+			return { configured: { value: false } };
+		},
+		ocppforwarderTags(): DeviceTags {
+			const rules = store.state?.ocppforwarder || [];
+			if (rules.length > 0) {
+				return { amount: { value: rules.length } };
 			}
 			return { configured: { value: false } };
 		},
