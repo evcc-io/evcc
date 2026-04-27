@@ -34,6 +34,10 @@ type configReq struct {
 	config.Properties `json:",inline" mapstructure:",squash"`
 	Yaml              string
 	Other             map[string]any `json:",inline" mapstructure:",remain"`
+
+	// parsedYAML* is set by decodeDeviceConfig when the client sends embedded YAML (single parse for the HTTP request).
+	parsedYAMLType string
+	parsedYAMLCfg  map[string]any
 }
 
 // TODO get rid of this 2-pass unmarshal once https://github.com/golang/go/issues/71497 is implemented
@@ -59,6 +63,14 @@ func (c *configReq) Serialise() map[string]any {
 		}
 	}
 	return c.Other
+}
+
+// embeddedYAMLFromRequest reports whether decodeDeviceConfig already parsed embedded YAML using the request's top-level type.
+func (c *configReq) embeddedYAMLFromRequest() (typ string, cfg map[string]any, ok bool) {
+	if c.parsedYAMLCfg == nil {
+		return "", nil, false
+	}
+	return c.parsedYAMLType, c.parsedYAMLCfg, true
 }
 
 func propsToMap(props config.Properties) (map[string]any, error) {
@@ -225,7 +237,7 @@ func deviceInstanceFromMergedConfig[T any](ctx context.Context, id int, class te
 
 	// TODO merge custom config
 	if req.Yaml != "" {
-		typ, other, err := config.CustomDevice(conf.Type, req.Other)
+		typ, other, err := config.ParseEmbeddedDeviceYAML(conf.Type, req.Yaml)
 		if err != nil {
 			return nil, zero, nil, err
 		}
@@ -466,12 +478,12 @@ func decodeDeviceConfig(r io.Reader) (configReq, error) {
 		return configReq{}, errors.New("invalid config: cannot mix yaml and other")
 	}
 
-	// validate yaml syntax
-	var tmp map[string]any
-	if err := yaml.Unmarshal([]byte(res.Yaml), &tmp); err != nil && err != io.EOF {
+	resolvedType, parsedCfg, err := config.ParseEmbeddedDeviceYAML(res.Type, res.Yaml)
+	if err != nil {
 		return configReq{}, err
 	}
-
+	res.parsedYAMLType = resolvedType
+	res.parsedYAMLCfg = parsedCfg
 	res.Other = map[string]any{"yaml": res.Yaml}
 
 	return res, nil

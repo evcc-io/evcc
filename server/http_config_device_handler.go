@@ -280,9 +280,23 @@ func deviceStatusHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func newDevice[T any](ctx context.Context, class templates.Class, req configReq, newFromConf newFromConfFunc[T], h config.Handler[T], force bool) (*config.Config, error) {
-	typ, other, err := config.CustomDevice(req.Type, req.Other)
-	if err != nil && !force {
-		return nil, err
+	var typ string
+	var other map[string]any
+	var err error
+
+	if t, o, ok := req.embeddedYAMLFromRequest(); ok {
+		typ, other = t, o
+	} else {
+		typ, other, err = config.CustomDevice(req.Type, req.Other)
+		if err != nil && !force {
+			return nil, err
+		}
+		if err != nil && force {
+			typ, other = req.Type, req.Other
+			if other == nil {
+				other = map[string]any{}
+			}
+		}
 	}
 
 	instance, err := newFromConf(ctx, typ, other)
@@ -621,10 +635,17 @@ func deleteDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Requ
 
 func testConfig[T any](ctx context.Context, id int, class templates.Class, req configReq, newFromConf newFromConfFunc[T], h config.Handler[T]) (T, error) {
 	if id == 0 {
-		typ, other, err := config.CustomDevice(req.Type, req.Other)
-		if err != nil {
-			var zero T
-			return zero, err
+		var typ string
+		var other map[string]any
+		var err error
+		if t, o, ok := req.embeddedYAMLFromRequest(); ok {
+			typ, other = t, o
+		} else {
+			typ, other, err = config.CustomDevice(req.Type, req.Other)
+			if err != nil {
+				var zero T
+				return zero, err
+			}
 		}
 		return newFromConf(ctx, typ, other)
 	}
