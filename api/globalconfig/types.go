@@ -49,6 +49,7 @@ type All struct {
 	Database        DB
 	Mqtt            Mqtt
 	ModbusProxy     []ModbusProxy
+	OcppForwarder   []OcppForwarder
 	Javascript      []Javascript
 	Go              []Go
 	Influx          Influx
@@ -65,6 +66,9 @@ type All struct {
 	Loadpoints      []config.Named
 	Circuits        []config.Named
 }
+
+// OcppForwarder is an alias for ocpp.ForwarderRule used in YAML/DB configuration.
+type OcppForwarder = ocpp.ForwarderRule
 
 type Javascript struct {
 	VM     string

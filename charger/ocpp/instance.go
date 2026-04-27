@@ -24,6 +24,23 @@ type Config struct {
 	Port int `json:"port"`
 }
 
+// ForwarderRule maps a station ID (or "*" for all chargers) to an upstream OCPP server URL.
+type ForwarderRule struct {
+	StationID         string `json:"stationId" yaml:"stationId"`
+	UpstreamURL       string `json:"upstreamUrl" yaml:"upstreamUrl"`
+	Password          string `json:"password,omitempty" yaml:"password,omitempty"`
+	UpstreamStationID string `json:"upstreamStationId,omitempty" yaml:"upstreamStationId,omitempty"`
+	Insecure          bool   `json:"insecure,omitempty" yaml:"insecure,omitempty"`
+	CaCert            string `json:"caCert,omitempty" yaml:"caCert,omitempty"`
+	ReadOnly          bool   `json:"readOnly,omitempty" yaml:"readOnly,omitempty"`
+}
+
+func (r ForwarderRule) Redacted() ForwarderRule {
+	r.Password = util.Masked(r.Password)
+	r.CaCert = util.Masked(r.CaCert)
+	return r
+}
+
 var (
 	once        sync.Once
 	instance    *CS
@@ -57,6 +74,11 @@ func ExternalUrl() string {
 	return u.String()
 }
 
+// CurrentConfig returns the current runtime OCPP configuration.
+func CurrentConfig() Config {
+	return Config{Port: port}
+}
+
 // Init initializes the OCPP server
 func Init(cfg Config, networkExternalUrl string) {
 	port = cfg.Port
@@ -67,7 +89,7 @@ func Instance() *CS {
 	once.Do(func() {
 		log := util.NewLogger("ocpp")
 
-		server := ws.NewServer()
+		server := newInterceptingServer()
 		server.SetCheckOriginHandler(func(r *http.Request) bool { return true })
 
 		dispatcher := ocppj.NewDefaultServerDispatcher(ocppj.NewFIFOQueueMap(0))
