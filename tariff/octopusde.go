@@ -98,8 +98,8 @@ func (t *OctopusDe) run(done chan error) {
 			agr, err := t.gqlClient.ActiveAgreement()
 			if err != nil {
 				// Wrap authentication errors with a sentinel to identify them clearly
-				if isAuthError(err) {
-					return backoff.Permanent(fmt.Errorf("%w: %w", ErrAuthFailed, err))
+				if strings.Contains(err.Error(), "authentication failed") {
+					return backoff.Permanent(err)
 				}
 				return backoffPermanentError(err)
 			}
