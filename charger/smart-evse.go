@@ -227,17 +227,11 @@ func (wb *SmartEVSE3) Status() (api.ChargeStatus, error) {
 
 	// state IDs from SmartEVSE firmware (main_c.h)
 	switch res.Evse.StateID {
-	case 0: // STATE_A
-		return api.StatusA, nil
-	case 1, 4, 5, 8, 9, 11, 12, 13, 14:
-		// STATE_B, STATE_COMM_B, STATE_COMM_B_OK, STATE_ACTSTART, STATE_B1,
-		// STATE_MODEM_REQUEST, STATE_MODEM_WAIT, STATE_MODEM_DONE, STATE_MODEM_DENIED
-		return api.StatusB, nil
 	case 2, 3, 6, 7, 10:
 		// STATE_C, STATE_D, STATE_COMM_C, STATE_COMM_C_OK, STATE_C1
 		return api.StatusC, nil
 	default:
-		return api.StatusNone, fmt.Errorf("invalid state: %d (%s)", res.Evse.StateID, res.Evse.State)
+		return api.StatusB, nil
 	}
 }
 
