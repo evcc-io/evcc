@@ -113,6 +113,7 @@
       "title": "Valuta"
     },
     "deviceValue": {
+      "activeClients": "Actieve clients",
       "amount": "Aantal",
       "broker": "Agent",
       "bucket": "Bucket",
@@ -607,6 +608,7 @@
     "optimizer": {
       "description": "Analyseert zonne-energieprognoses, elektriciteitsprijzen en je verbruikspatronen om de batterij- en laadstrategie te optimaliseren. Gegevens worden naar de evcc-optimalisatiedienst gestuurd voor verwerking.",
       "enable": "Activeer optimizer",
+      "info": "Het duurt enkele minuten eer het optimizer menu item zichtbaar wordt. Voor nieuwe installaties kan het tot 24 uur duren tot dat evcc voldoende data verzameld heeft.",
       "title": "Optimizer"
     },
     "options": {
