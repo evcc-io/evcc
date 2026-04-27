@@ -2,12 +2,9 @@ package core
 
 import (
 	"testing"
-	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/types"
-	"github.com/evcc-io/evcc/tariff"
-	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/stretchr/testify/assert"
 )
