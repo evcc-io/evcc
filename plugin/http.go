@@ -42,6 +42,7 @@ func NewHTTPPluginFromConfig(ctx context.Context, other map[string]any) (Plugin,
 		Body              string
 		pipeline.Settings `mapstructure:",squash"`
 		Scale             float64
+		Offset            float64
 		Insecure          bool
 		Auth              Auth
 		Timeout           time.Duration
@@ -75,6 +76,7 @@ func NewHTTPPluginFromConfig(ctx context.Context, other map[string]any) (Plugin,
 	p.Client.Timeout = cc.Timeout
 
 	p.getter = defaultGetters(p, cc.Scale)
+	p.getter.offset = cc.Offset
 
 	if cc.Auth.Type != "" || cc.Auth.Source != "" {
 		transport, err := cc.Auth.Transport(ctx, log, p.Client.Transport)

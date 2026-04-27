@@ -11,6 +11,23 @@ params:
     default: 8081
   - name: uuid
     required: true
+  - name: energyuuid
+    advanced: true
+    description:
+      de: Energiezählerstand
+      en: Energy meter reading
+    help:
+      de: Die vzlogger Kanal uuid für den Energiezählerstand (OBIS Code 1.8.0)
+      en: The vzlogger channel uuid for the energy meter reading (OBIS Code 1.8.0)
+  - name: offset
+    advanced: true
+    default: 0
+    description:
+      de: Zählerstartwert (kWh)
+      en: Meter start value (kWh)
+    help:
+      de: Subtrahiere diesen Wert vom Energiezählerstand (z.B. Vorverbrauch des vorherigen Nutzers)
+      en: Subtract this value from the energy reading (e.g. previous customer's meter reading)
   - name: scale
     advanced: true
     default: 1
@@ -105,6 +122,19 @@ render: |
     {{- if .scale }}
     scale: {{ .scale }}
     {{- end }}
+  {{ if .energyuuid -}}
+  energy:
+    source: http
+    uri: http://{{ .host }}:{{ .port }}/
+    jq: .data[] | select(.uuid=="{{ unquote .energyuuid }}") | .tuples[0][1]
+    cache: {{ .cache }}
+    {{- if .offset }}
+    offset: {{ .offset }}
+    {{- end }}
+    {{- if .scale }}
+    scale: {{ .scale }}
+    {{- end }}
+  {{ end -}}
   {{ if and .l1currentuuid .l2currentuuid .l3currentuuid -}}
   currents:
   - source: http

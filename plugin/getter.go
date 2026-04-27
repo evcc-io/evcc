@@ -5,8 +5,9 @@ import (
 )
 
 type getter struct {
-	get   StringGetter
-	scale float64
+	get    StringGetter
+	scale  float64
+	offset float64
 }
 
 func defaultGetters(get StringGetter, scale float64) *getter {
@@ -33,7 +34,7 @@ func (p *getter) FloatGetter() (func() (float64, error), error) {
 			return 0, err
 		}
 
-		return f * p.scale, nil
+		return (f - p.offset) * p.scale, nil
 	}, err
 }
 
