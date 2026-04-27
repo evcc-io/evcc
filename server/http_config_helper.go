@@ -18,7 +18,6 @@ import (
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/go-viper/mapstructure/v2"
 	"github.com/samber/lo"
-	"go.yaml.in/yaml/v4"
 )
 
 const (
