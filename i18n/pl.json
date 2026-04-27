@@ -600,6 +600,12 @@
       "url": "Adres URL serwera",
       "urlHelp": "Skopiuj ten adres URL do konfiguracji ładowarki. Szczegółowe informacje znajdziesz w instrukcji producenta. Ładowarka powinna automatycznie dodać swój unikalny identyfikator (station ID) do adresu URL. W rzadkich przypadkach może być konieczne ręczne podanie identyfikatora. Przykład: `{url}`"
     },
+    "optimizer": {
+      "description": "Analizuje prognozy dotyczące energii słonecznej, cen energii elektrycznej i wzorce zużycia, aby zoptymalizować strategię ładowania akumulatorów. Dane są przesyłane do usługi optymalizacji evcc w celu przetworzenia. Obecnie wykonuje tylko obliczenia i wizualizacje. Nie kontroluje jeszcze urządzeń.",
+      "enable": "Włącz optymalizator",
+      "info": "Wyświetlenie pozycji menu optymalizatora może potrwać kilka minut. W przypadku nowych instalacji zebranie wystarczającej ilości danych przez evcc może potrwać do 24 godzin.",
+      "title": "Optymalizator"
+    },
     "options": {
       "boolean": {
         "no": "nie",
