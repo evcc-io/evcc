@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"slices"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -89,16 +90,29 @@ func (t *OctopusDe) run(done chan error) {
 
 	for tick := time.Tick(time.Hour); ; <-tick {
 		var rates []RatePeriod
+		var authErr bool
 
 		if err := backoff.Retry(func() error {
 			agr, err := t.gqlClient.ActiveAgreement()
 			if err != nil {
+				// Check for authentication errors and mark them as permanent
+				errMsg := err.Error()
+				if strings.Contains(errMsg, "authentication failed") || strings.Contains(errMsg, "Invalid data") {
+					authErr = true
+					return backoff.Permanent(err)
+				}
 				return backoffPermanentError(err)
 			}
 			rates, err = ratesForAgreement(agr, time.Now())
 			return backoffPermanentError(err)
 		}, bo()); err != nil {
 			once.Do(func() { done <- err })
+
+			// Exit immediately on authentication errors instead of retrying
+			if authErr {
+				t.log.ERROR.Printf("authentication failed - configuration error: %v", err)
+				return
+			}
 
 			t.log.ERROR.Printf("failed to fetch unit rate forecast: %v", err)
 			continue
