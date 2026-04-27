@@ -18,6 +18,7 @@ import (
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/go-viper/mapstructure/v2"
 	"github.com/samber/lo"
+	"github.com/spf13/cast"
 	"go.yaml.in/yaml/v4"
 )
 
@@ -440,6 +441,7 @@ func (maskedTransformer) Transformer(typ reflect.Type) func(dst, src reflect.Val
 	}
 }
 
+// decodeDeviceConfig extracts device configuration and yaml details plus type override
 func decodeDeviceConfig(r io.Reader) (configReq, error) {
 	var res configReq
 
@@ -463,6 +465,11 @@ func decodeDeviceConfig(r io.Reader) (configReq, error) {
 
 	if err := yaml.Unmarshal([]byte(res.Yaml), &res.Other); err != nil && err != io.EOF {
 		return configReq{}, err
+	}
+
+	if typ := cast.ToString(res.Other["type"]); typ != "" {
+		res.Type = typ
+		delete(res.Other, "type")
 	}
 
 	return res, nil

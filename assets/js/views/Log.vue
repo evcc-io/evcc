@@ -171,7 +171,10 @@ export default defineComponent({
 			});
 		},
 		areaOptions() {
-			return this.availableAreas.map((area) => ({ name: area, value: area }));
+			return this.availableAreas
+				.slice()
+				.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+				.map((area) => ({ name: area, value: area }));
 		},
 		areasLabel() {
 			if (this.areas.length === 0) {

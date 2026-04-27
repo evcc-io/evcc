@@ -606,7 +606,7 @@
       "urlHelp": "Kopiera denna URL till laddarens konfiguration. Se tillverkarens manual för mer information. Laddaren ska automatiskt lägga till sin unika identifierare (stations-ID) till URL:en. I sällsynta fall kan du behöva ange identifieraren manuellt. Exempel: `{url}`Kopiera denna URL till laddarens konfiguration. Se tillverkarens manual för mer information. Laddaren ska automatiskt lägga till sin unika identifierare (stations-ID) till URL:en. I sällsynta fall kan du behöva ange identifieraren manuellt. Exempel: `{url}`"
     },
     "optimizer": {
-      "description": "Analyserar solprognoser, elpriser och din typiska förbrukning för att optimera batteri- och laddningsstrategi. Data överförs till evcc optimeringstjänst för beräkning.",
+      "description": "Analyserar solprognoser, elpriser och din typiska förbrukning för att optimera batteri- och laddningsstrategi. Data överförs till evcc optimeringstjänst för beräkning. Beräknar och visualiserar för närvarande endast. Styr ännu inga enheter.",
       "enable": "Aktivera optimerare",
       "info": "Det kan ta några minuter innan optimeringsmenyn blir synlig. För nya installationer kan det ta upp till 24 timmar innan evcc har samlat in tillräckligt med data.",
       "title": "Optimerare"
@@ -802,7 +802,7 @@
       "type": {
         "co2": "CO₂ -prognos",
         "feedIn": "Exportpris",
-        "grid": "Elpris från nätet",
+        "grid": "Importpris från nätet",
         "planner": "Planering",
         "solar": "Sol"
       },

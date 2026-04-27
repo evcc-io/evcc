@@ -49,8 +49,8 @@ params:
       en: Cooling type [Ross Model]
       de: Kühlung [Ross-Modell]
     help:
-      en: Well Cooled (0.0200), Free Standing (0.0208), Flat on Roof (0.0260), Not So Well Cooled (0.0342), Transparent PV (0.0455), Facade Integrated (0.0538), On Sloped Roof (0.0563) [sciencedirect.com](https://www.sciencedirect.com/science/article/pii/S0038092X20309107)
-      de: Gut Gekühlt (0.0200), Freistehend (0.0208), Flach auf Dach (0.0260), Nicht So Gut Gekühlt (0.0342), Transparentes PV (0.0455), Fassadenintegriert (0.0538), Auf Schrägdach (0.0563) [sciencedirect.com](https://www.sciencedirect.com/science/article/pii/S0038092X20309107)
+      en: Well Cooled (0.0200), Free Standing (0.0208), Flat on Roof (0.0260), Not So Well Cooled (0.0342), Transparent PV (0.0455), Facade Integrated (0.0538), On Sloped Roof (0.0563) [sciencedirect.com](https://www.sciencedirect.com/science/article/pii/S2352484722024805)
+      de: Gut Gekühlt (0.0200), Freistehend (0.0208), Flach auf Dach (0.0260), Nicht So Gut Gekühlt (0.0342), Transparentes PV (0.0455), Fassadenintegriert (0.0538), Auf Schrägdach (0.0563) [sciencedirect.com](https://www.sciencedirect.com/science/article/pii/S2352484722024805)
     type: float
     default: 0.0342
     advanced: true

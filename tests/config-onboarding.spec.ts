@@ -85,7 +85,7 @@ test.describe("onboarding", async () => {
     await expect(restartButton).not.toBeVisible();
 
     // navigate to main screen
-    await page.getByTestId("home-link").click();
+    await page.getByRole("link", { name: "Charge" }).click();
 
     // verify configuration
     await page.getByTestId("visualization").click();
