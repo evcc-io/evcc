@@ -18,7 +18,6 @@ import (
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/go-viper/mapstructure/v2"
 	"github.com/samber/lo"
-	"github.com/spf13/cast"
 	"go.yaml.in/yaml/v4"
 )
 
@@ -35,14 +34,6 @@ type configReq struct {
 	config.Properties `json:",inline" mapstructure:",squash"`
 	Yaml              string
 	Other             map[string]any `json:",inline" mapstructure:",remain"`
-	yamlType          string         // embedded yaml type override, separate from Type used for storage
-}
-
-func (c *configReq) instanceType() string {
-	if c.yamlType != "" {
-		return c.yamlType
-	}
-	return c.Type
 }
 
 // TODO get rid of this 2-pass unmarshal once https://github.com/golang/go/issues/71497 is implemented
@@ -234,7 +225,11 @@ func deviceInstanceFromMergedConfig[T any](ctx context.Context, id int, class te
 
 	// TODO merge custom config
 	if req.Yaml != "" {
-		instance, err := newFromConf(ctx, req.instanceType(), req.Other)
+		typ, other, err := config.CustomDevice(conf.Type, req.Other)
+		if err != nil {
+			return nil, zero, nil, err
+		}
+		instance, err := newFromConf(ctx, typ, other)
 		return dev, instance, req.Serialise(), err
 	}
 
@@ -471,15 +466,13 @@ func decodeDeviceConfig(r io.Reader) (configReq, error) {
 		return configReq{}, errors.New("invalid config: cannot mix yaml and other")
 	}
 
-	if err := yaml.Unmarshal([]byte(res.Yaml), &res.Other); err != nil && err != io.EOF {
+	// validate yaml syntax
+	var tmp map[string]any
+	if err := yaml.Unmarshal([]byte(res.Yaml), &tmp); err != nil && err != io.EOF {
 		return configReq{}, err
 	}
 
-	// embedded type override; keep Type for storage
-	if typ := cast.ToString(res.Other["type"]); typ != "" {
-		res.yamlType = typ
-		delete(res.Other, "type")
-	}
+	res.Other = map[string]any{"yaml": res.Yaml}
 
 	return res, nil
 }
