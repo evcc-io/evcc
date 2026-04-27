@@ -146,6 +146,10 @@ func NewSmartEVSE3(uri string, cache time.Duration, mode int) (api.Charger, erro
 		mode:   mode,
 	}
 
+	wb.Helper.Client.Transport = &http.Transport{
+		DisableKeepAlives: true,
+	}
+
 	wb.apiG = util.ResettableCached(func() (smartEvseRestSettings, error) {
 		var res smartEvseRestSettings
 		err := wb.GetJSON(wb.uri+"/settings", &res)
