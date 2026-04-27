@@ -2,6 +2,7 @@ package core
 
 import (
 	"errors"
+	"math"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -11,6 +12,20 @@ import (
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/jinzhu/now"
 )
+
+func roundFloat64(value float64, digits int) float64 {
+	factor := math.Pow10(digits)
+	return math.Round(value*factor) / factor
+}
+
+func roundFloat64Ptr(value *float64, digits int) *float64 {
+	if value == nil {
+		return nil
+	}
+
+	rounded := roundFloat64(*value, digits)
+	return &rounded
+}
 
 func (lp *Loadpoint) chargeMeterTotal() float64 {
 	m, ok := api.Cap[api.MeterEnergy](lp.chargeMeter)
@@ -55,7 +70,9 @@ func (lp *Loadpoint) createSession() {
 
 	if lp.site != nil {
 		lp.session.ReferencePricePerKWh = tariff.AverageRate(lp.site.GetTariff(api.TariffUsageGrid), 24*time.Hour)
-		lp.session.ReferenceCo2PerKWh = tariff.AverageRate(lp.site.GetTariff(api.TariffUsageCo2), 24*time.Hour)
+		lp.session.ReferenceCo2PerKWh = roundFloat64Ptr(
+			tariff.AverageRate(lp.site.GetTariff(api.TariffUsageCo2), 24*time.Hour), 4,
+		)
 	}
 
 	// energy
@@ -70,11 +87,11 @@ func (lp *Loadpoint) applyEnergyMetrics(s *session.Session) {
 		s.MeterStop = &meterStop
 	}
 
-	s.SolarPercentage = new(lp.energyMetrics.SolarPercentage())
+	s.SolarPercentage = roundFloat64Ptr(new(lp.energyMetrics.SolarPercentage()), 4)
 	s.Price = lp.energyMetrics.Price()
-	s.PricePerKWh = lp.energyMetrics.PricePerKWh()
-	s.Co2PerKWh = lp.energyMetrics.Co2PerKWh()
-	s.ChargedEnergy = lp.energyMetrics.TotalWh() / 1e3
+	s.PricePerKWh = roundFloat64Ptr(lp.energyMetrics.PricePerKWh(), 5)
+	s.Co2PerKWh = roundFloat64Ptr(lp.energyMetrics.Co2PerKWh(), 4)
+	s.ChargedEnergy = roundFloat64(lp.energyMetrics.TotalWh()/1e3, 5)
 
 	lp.db.Persist(s)
 }

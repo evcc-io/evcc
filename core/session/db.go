@@ -1,6 +1,8 @@
 package session
 
 import (
+	"math"
+
 	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/util"
 	"gorm.io/gorm"
@@ -88,7 +90,7 @@ func (s *DB) ClosePendingSessionsInHistory(chargeMeterTotal float64) error {
 		}
 
 		if session.MeterStart != nil && session.MeterStop != nil {
-			session.ChargedEnergy = *session.MeterStop - *session.MeterStart
+			session.ChargedEnergy = math.Round((*session.MeterStop-*session.MeterStart)*1e5) / 1e5
 			s.Persist(session)
 		}
 	}
