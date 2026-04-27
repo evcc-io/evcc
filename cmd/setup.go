@@ -333,7 +333,7 @@ func configurableInstance[T any](typ string, conf *config.Config, newFromConf ne
 	}
 
 	var instance T
-	if err == nil {
+	if err == nil && !conf.Disable {
 		instance, err = newFromConf(ctx, typ, other)
 		if err != nil {
 			err = &DeviceError{cc.Name, fmt.Errorf("cannot create %s '%s': %w", typ, cc.Name, err)}
@@ -1338,9 +1338,12 @@ func configureLoadpoints(conf globalconfig.All) error {
 			return &DeviceError{cc.Name, err}
 		}
 
-		instance, err := core.NewLoadpointFromConfig(log, settings, static)
-		if err != nil {
-			err = &DeviceError{cc.Name, err}
+		var instance *core.Loadpoint
+		if !conf.Disable {
+			instance, err = core.NewLoadpointFromConfig(log, settings, static)
+			if err != nil {
+				err = &DeviceError{cc.Name, err}
+			}
 		}
 
 		dev := config.NewConfigurableDevice[loadpoint.API](&conf, instance)
