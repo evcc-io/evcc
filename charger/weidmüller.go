@@ -44,7 +44,7 @@ const (
 	wmRegVoltages     = 400   // GD_ID_CM_VOLTAGE_PHASE UINT32
 	wmRegCurrents     = 406   // GD_ID_CM_CURRENT_PHASE UINT32
 	wmRegActivePower  = 418   // GD_ID_CM_ACTIVE_POWER UINT32
-	wmRegTotalEnergy  = 457   // GD_ID_CM_CONSUMED_ENERGY_TOTAL_WH UINT64
+	wmRegImportTotal  = 457   // GD_ID_CM_CONSUMED_ENERGY_TOTAL_WH UINT64
 	wmRegCardId       = 1000  // GD_ID_RFID_TAG_UID CHAR[21]
 	wmRegTimeout      = 11050 // GD_ID_LCM_TIMEOUT UINT32
 	wmRegCurrentLimit = 11052 // GD_ID_LCM_ACTUAL_CURRENT_LIMIT UINT16 (A)
@@ -70,7 +70,7 @@ func NewWeidmüllerFromConfig(ctx context.Context, other map[string]any) (api.Ch
 	return NewWeidmüller(ctx, cc.URI, cc.ID)
 }
 
-//go:generate go tool decorate -f decorateWeidmüller -b *Weidmüller -r api.Charger -t api.MeterEnergy
+//go:generate go tool decorate -f decorateWeidmüller -b *Weidmüller -r api.Charger -t api.MeterImport
 
 // NewWeidmüller creates Weidmüller charger
 func NewWeidmüller(ctx context.Context, uri string, id uint8) (api.Charger, error) {
@@ -105,8 +105,8 @@ func NewWeidmüller(ctx context.Context, uri string, id uint8) (api.Charger, err
 	go wb.heartbeat(ctx, wmHeartbeatInterval)
 
 	// check presence of energy meter
-	if b, err := wb.conn.ReadHoldingRegisters(wmRegTotalEnergy, 2); err == nil && binary.BigEndian.Uint32(b) > 0 {
-		return decorateWeidmüller(wb, wb.totalEnergy), nil
+	if b, err := wb.conn.ReadHoldingRegisters(wmRegImportTotal, 2); err == nil && binary.BigEndian.Uint32(b) > 0 {
+		return decorateWeidmüller(wb, wb.ImportTotal), nil
 	}
 
 	return wb, nil
@@ -217,9 +217,9 @@ func (wb *Weidmüller) CurrentPower() (float64, error) {
 	return float64(encoding.Uint32LswFirst(b)) / 1e3, err
 }
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *Weidmüller) totalEnergy() (float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(wmRegTotalEnergy, 2)
+// ImportTotal implements the api.MeterImport interface
+func (wb *Weidmüller) ImportTotal() (float64, error) {
+	b, err := wb.conn.ReadHoldingRegisters(wmRegImportTotal, 2)
 	if err != nil {
 		return 0, err
 	}

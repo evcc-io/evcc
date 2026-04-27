@@ -34,7 +34,7 @@ func init() {
 	registry.AddCtx("rct", NewRCTFromConfig)
 }
 
-//go:generate go tool decorate -f decorateRCT -b *RCT -r api.Meter -t api.MeterEnergy,api.Curtailer,api.Battery,api.BatterySocLimiter,api.BatteryPowerLimiter,api.BatteryController,api.BatteryCapacity
+//go:generate go tool decorate -f decorateRCT -b *RCT -r api.Meter -t api.MeterImport,api.Curtailer,api.Battery,api.BatterySocLimiter,api.BatteryPowerLimiter,api.BatteryController,api.BatteryCapacity
 
 // NewRCTFromConfig creates an RCT from generic config
 func NewRCTFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
@@ -98,10 +98,10 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 		externalPower: externalPower,
 	}
 
-	// decorate api.MeterEnergy
-	var totalEnergy func() (float64, error)
+	// decorate api.MeterImport
+	var importTotal func() (float64, error)
 	if usage == "grid" {
-		totalEnergy = m.totalEnergy
+		importTotal = m.importTotal
 	}
 
 	// decorate api.Curtailer
@@ -226,7 +226,7 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 		}
 	}
 
-	return decorateRCT(m, totalEnergy, curtail, curtailed, batterySoc, batterySocLimiter, batteryPowerLimiter, batteryMode, batteryCapacity), nil
+	return decorateRCT(m, importTotal, curtail, curtailed, batterySoc, batterySocLimiter, batteryPowerLimiter, batteryMode, batteryCapacity), nil
 }
 
 // CurrentPower implements the api.Meter interface
@@ -270,8 +270,8 @@ func (m *RCT) CurrentPower() (float64, error) {
 	}
 }
 
-// totalEnergy implements the api.MeterEnergy interface
-func (m *RCT) totalEnergy() (float64, error) {
+// ImportTotal implements the api.MeterImport interface
+func (m *RCT) importTotal() (float64, error) {
 	switch m.usage {
 	case "grid":
 		res, err := m.queryFloat(rct.TotalEnergyGridWh)

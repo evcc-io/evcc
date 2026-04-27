@@ -103,7 +103,7 @@ func NewOCPPFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 	}
 
 	var (
-		powerG, totalEnergyG, socG func() (float64, error)
+		powerG, ImportTotalG, socG func() (float64, error)
 		currentsG, voltagesG       func() (float64, float64, float64, error)
 	)
 
@@ -112,7 +112,7 @@ func NewOCPPFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 	}
 
 	if c.cp.HasMeasurement(types.MeasurandEnergyActiveImportRegister) {
-		totalEnergyG = c.conn.TotalEnergy
+		ImportTotalG = c.conn.ImportTotal
 	}
 
 	if c.cp.HasMeasurement(types.MeasurandCurrentImport) {
@@ -137,10 +137,10 @@ func NewOCPPFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 		currentG = c.conn.GetMaxCurrent
 	}
 
-	return decorateOCPP(c, powerG, totalEnergyG, currentsG, voltagesG, currentG, phasesS, socG), nil
+	return decorateOCPP(c, powerG, ImportTotalG, currentsG, voltagesG, currentG, phasesS, socG), nil
 }
 
-//go:generate go tool decorate -f decorateOCPP -b *OCPP -r api.Charger -t api.Meter,api.MeterEnergy,api.PhaseCurrents,api.PhaseVoltages,api.CurrentGetter,api.PhaseSwitcher,api.Battery
+//go:generate go tool decorate -f decorateOCPP -b *OCPP -r api.Charger -t api.Meter,api.MeterImport,api.PhaseCurrents,api.PhaseVoltages,api.CurrentGetter,api.PhaseSwitcher,api.Battery
 
 // NewOCPP creates OCPP charger
 func NewOCPP(ctx context.Context,

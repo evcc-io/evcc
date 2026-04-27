@@ -8,15 +8,15 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateSmartEVSE3(base *SmartEVSE3, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseSwitcher func(int) error, phaseGetter func() (int, error), identifier func() (string, error), statusReasoner func() (api.Reason, error)) api.Charger {
+func decorateSmartEVSE3(base *SmartEVSE3, meter func() (float64, error), meterImport func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseSwitcher func(int) error, phaseGetter func() (int, error), identifier func() (string, error), statusReasoner func() (api.Reason, error)) api.Charger {
 	caps := make(map[reflect.Type]any)
 
 	if meter != nil {
 		caps[reflect.TypeFor[api.Meter]()] = &decorateSmartEVSE3MeterImpl{meter: meter}
 	}
 
-	if meterEnergy != nil {
-		caps[reflect.TypeFor[api.MeterEnergy]()] = &decorateSmartEVSE3MeterEnergyImpl{meterEnergy: meterEnergy}
+	if meterImport != nil {
+		caps[reflect.TypeFor[api.MeterImport]()] = &decorateSmartEVSE3MeterImportImpl{meterImport: meterImport}
 	}
 
 	if phaseCurrents != nil {
@@ -75,12 +75,12 @@ func (impl *decorateSmartEVSE3MeterImpl) CurrentPower() (float64, error) {
 	return impl.meter()
 }
 
-type decorateSmartEVSE3MeterEnergyImpl struct {
-	meterEnergy func() (float64, error)
+type decorateSmartEVSE3MeterImportImpl struct {
+	meterImport func() (float64, error)
 }
 
-func (impl *decorateSmartEVSE3MeterEnergyImpl) TotalEnergy() (float64, error) {
-	return impl.meterEnergy()
+func (impl *decorateSmartEVSE3MeterImportImpl) ImportTotal() (float64, error) {
+	return impl.meterImport()
 }
 
 type decorateSmartEVSE3PhaseCurrentsImpl struct {

@@ -69,7 +69,7 @@ const (
 	ChargeVoltages    = "chargeVoltages"    // charge voltages
 	ChargedEnergy     = "chargedEnergy"     // charged energy
 	ChargeDuration    = "chargeDuration"    // charge duration
-	ChargeTotalImport = "chargeTotalImport" // charge meter total import
+	ChargeImportTotal = "chargeImportTotal" // charge meter total import
 
 	// session
 	ConnectedDuration       = "connectedDuration"       // connected duration

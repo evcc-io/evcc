@@ -206,8 +206,8 @@ func (wb *Peblar) CurrentPower() (float64, error) {
 // deliberately removed, see https://github.com/evcc-io/evcc/issues/25956
 // var _ api.ChargeRater = (*Peblar)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *Peblar) TotalEnergy() (float64, error) {
+// ImportTotal implements the api.MeterImport interface
+func (wb *Peblar) ImportTotal() (float64, error) {
 	b, err := wb.conn.ReadInputRegisters(peblarRegEnergyTotal, 4)
 	if err != nil {
 		return 0, err

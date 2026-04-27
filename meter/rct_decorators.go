@@ -8,11 +8,11 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateRCT(base *RCT, meterEnergy func() (float64, error), curtailer0 func(bool) error, curtailer1 func() (bool, error), battery func() (float64, error), batterySocLimiter func() (float64, float64), batteryPowerLimiter func() (float64, float64), batteryController func(api.BatteryMode) error, batteryCapacity func() float64) api.Meter {
+func decorateRCT(base *RCT, meterImport func() (float64, error), curtailer0 func(bool) error, curtailer1 func() (bool, error), battery func() (float64, error), batterySocLimiter func() (float64, float64), batteryPowerLimiter func() (float64, float64), batteryController func(api.BatteryMode) error, batteryCapacity func() float64) api.Meter {
 	caps := make(map[reflect.Type]any)
 
-	if meterEnergy != nil {
-		caps[reflect.TypeFor[api.MeterEnergy]()] = &decorateRCTMeterEnergyImpl{meterEnergy: meterEnergy}
+	if meterImport != nil {
+		caps[reflect.TypeFor[api.MeterImport]()] = &decorateRCTMeterImportImpl{meterImport: meterImport}
 	}
 
 	if curtailer0 != nil {
@@ -116,10 +116,10 @@ func (impl *decorateRCTCurtailerImpl) Curtailed() (bool, error) {
 	return impl.curtailer1()
 }
 
-type decorateRCTMeterEnergyImpl struct {
-	meterEnergy func() (float64, error)
+type decorateRCTMeterImportImpl struct {
+	meterImport func() (float64, error)
 }
 
-func (impl *decorateRCTMeterEnergyImpl) TotalEnergy() (float64, error) {
-	return impl.meterEnergy()
+func (impl *decorateRCTMeterImportImpl) ImportTotal() (float64, error) {
+	return impl.meterImport()
 }

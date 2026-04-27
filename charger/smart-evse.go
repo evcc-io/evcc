@@ -105,7 +105,7 @@ func init() {
 	registry.Add("smart-evse", NewSmartEVSE3FromConfig)
 }
 
-//go:generate go tool decorate -f decorateSmartEVSE3 -b *SmartEVSE3 -r api.Charger -t api.Meter,api.MeterEnergy,api.PhaseCurrents,api.PhaseSwitcher,api.PhaseGetter,api.Identifier,api.StatusReasoner
+//go:generate go tool decorate -f decorateSmartEVSE3 -b *SmartEVSE3 -r api.Charger -t api.Meter,api.MeterImport,api.PhaseCurrents,api.PhaseSwitcher,api.PhaseGetter,api.Identifier,api.StatusReasoner
 
 // NewSmartEVSE3FromConfig creates a SmartEVSE-3.5 REST charger from generic config
 func NewSmartEVSE3FromConfig(other map[string]any) (api.Charger, error) {
@@ -157,11 +157,11 @@ func NewSmartEVSE3(uri string, cache time.Duration) (api.Charger, error) {
 	}
 
 	// decorate optional EV meter if configured in SmartEVSE
-	var currentPower, totalEnergy func() (float64, error)
+	var currentPower, importTotal func() (float64, error)
 	var currents func() (float64, float64, float64, error)
 	if res.EvMeter.Description != "" && res.EvMeter.Description != "Disabled" {
 		currentPower = wb.currentPower
-		totalEnergy = wb.totalEnergy
+		importTotal = wb.importTotal
 		currents = wb.currents
 	}
 
@@ -181,7 +181,7 @@ func NewSmartEVSE3(uri string, cache time.Duration) (api.Charger, error) {
 		statusReason = wb.statusReason
 	}
 
-	return decorateSmartEVSE3(wb, currentPower, totalEnergy, currents, phases1p3p, getPhases, identify, statusReason), nil
+	return decorateSmartEVSE3(wb, currentPower, importTotal, currents, phases1p3p, getPhases, identify, statusReason), nil
 }
 
 // post issues a POST request to the SmartEVSE with given query parameters.
@@ -320,8 +320,8 @@ func (wb *SmartEVSE3) currentPower() (float64, error) {
 	return res.EvMeter.ImportActivePower, nil
 }
 
-// totalEnergy implements the api.MeterEnergy interface
-func (wb *SmartEVSE3) totalEnergy() (float64, error) {
+// importTotal provides the api.MeterImport interface
+func (wb *SmartEVSE3) importTotal() (float64, error) {
 	res, err := wb.apiG.Get()
 	if err != nil {
 		return 0, err

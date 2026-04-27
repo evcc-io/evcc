@@ -53,7 +53,7 @@ func init() {
 	registry.AddCtx("hardybarth-salia", NewSaliaFromConfig)
 }
 
-//go:generate go tool decorate -f decorateSalia -b *Salia -r api.Charger -t api.Meter,api.MeterEnergy,api.PhaseCurrents,api.PhaseSwitcher,api.PhaseGetter
+//go:generate go tool decorate -f decorateSalia -b *Salia -r api.Charger -t api.Meter,api.MeterImport,api.PhaseCurrents,api.PhaseSwitcher,api.PhaseGetter
 
 // NewSaliaFromConfig creates a Salia cPH2 charger from generic config
 func NewSaliaFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
@@ -140,7 +140,7 @@ func NewSalia(ctx context.Context, uri, user, password string, cache time.Durati
 
 	var (
 		currentPower func() (float64, error)
-		totalEnergy  func() (float64, error)
+		importTotal  func() (float64, error)
 		currents     func() (float64, float64, float64, error)
 		phasesG      func() (int, error)
 		phasesS      func(int) error
@@ -148,7 +148,7 @@ func NewSalia(ctx context.Context, uri, user, password string, cache time.Durati
 
 	if res.Secc.Port0.Metering.Meter.Available > 0 {
 		currentPower = wb.currentPower
-		totalEnergy = wb.totalEnergy
+		importTotal = wb.importTotal
 		currents = wb.currents
 	}
 
@@ -157,7 +157,7 @@ func NewSalia(ctx context.Context, uri, user, password string, cache time.Durati
 		phasesS = wb.phases1p3p
 	}
 
-	return decorateSalia(wb, currentPower, totalEnergy, currents, phasesS, phasesG), nil
+	return decorateSalia(wb, currentPower, importTotal, currents, phasesS, phasesG), nil
 }
 
 func (wb *Salia) heartbeat(ctx context.Context) {
@@ -273,8 +273,8 @@ func (wb *Salia) currentPower() (float64, error) {
 	return res.Secc.Port0.Metering.Power.ActiveTotal.Actual / 10, err
 }
 
-// totalEnergy implements the api.MeterEnergy interface
-func (wb *Salia) totalEnergy() (float64, error) {
+// importTotal provides the api.MeterImport interface
+func (wb *Salia) importTotal() (float64, error) {
 	res, err := wb.apiG.Get()
 	return res.Secc.Port0.Metering.Energy.ActiveImport.Actual / 1e3, err
 }

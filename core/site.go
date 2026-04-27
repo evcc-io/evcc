@@ -362,7 +362,7 @@ func meterCapabilities(name string, meter any) string {
 		panic("not a meter: " + name)
 	}
 
-	energy := api.HasCap[api.MeterEnergy](meter)
+	energy := api.HasCap[api.MeterImport](meter)
 	currents := api.HasCap[api.PhaseCurrents](meter)
 
 	name += ":"
@@ -447,7 +447,7 @@ func (site *Site) DumpConfig() {
 		lp.log.INFO.Printf("  mode:        %s", lp.GetMode())
 
 		_, power := api.Cap[api.Meter](lp.charger)
-		_, energy := api.Cap[api.MeterEnergy](lp.charger)
+		_, energy := api.Cap[api.MeterImport](lp.charger)
 		_, currents := api.Cap[api.PhaseCurrents](lp.charger)
 		_, phases := api.Cap[api.PhaseSwitcher](lp.charger)
 		_, wakeup := api.Cap[api.Resurrector](lp.charger)
@@ -510,8 +510,8 @@ func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) [
 
 		// energy (production)
 		var energy float64
-		if m, ok := api.Cap[api.MeterEnergy](meter); err == nil && ok {
-			energy, err = m.TotalEnergy()
+		if m, ok := api.Cap[api.MeterImport](meter); err == nil && ok {
+			energy, err = m.ImportTotal()
 			if err != nil {
 				site.log.ERROR.Printf("%s %d energy: %v", key, i+1, err)
 			}
@@ -522,7 +522,7 @@ func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) [
 			Title:  props.Title,
 			Icon:   props.Icon,
 			Power:  power,
-			Energy: energy,
+			Import: energy,
 		}
 	}
 
@@ -568,8 +568,8 @@ func (site *Site) updatePvMeters() {
 	site.excessDCPower = lo.SumBy(mm, func(m types.Measurement) float64 {
 		return math.Abs(m.ExcessDCPower)
 	})
-	totalEnergy := lo.SumBy(mm, func(m types.Measurement) float64 {
-		return m.Energy
+	ImportTotal := lo.SumBy(mm, func(m types.Measurement) float64 {
+		return m.Import
 	})
 
 	if len(site.pvMeters) > 1 {
@@ -582,7 +582,7 @@ func (site *Site) updatePvMeters() {
 	}
 
 	site.publish(keys.PvPower, site.pvPower)
-	site.publish(keys.PvEnergy, totalEnergy)
+	site.publish(keys.PvEnergy, ImportTotal)
 	site.publish(keys.Pv, mm)
 
 	// update solar yield
@@ -591,11 +591,11 @@ func (site *Site) updatePvMeters() {
 		name := dev.Config().Name
 
 		prev := site.pvEnergy[name].Imported()
-		if mm[i].Energy > 0 {
-			site.log.DEBUG.Printf("!! solar production: accumulate set %s %.3fkWh meter total (was: %s)", name, mm[i].Energy, site.pvEnergy[name])
-			site.pvEnergy[name].SetImportMeterTotal(mm[i].Energy)
+		if mm[i].Import > 0 {
+			site.log.DEBUG.Printf("!! solar production: accumulate set %s %.3fkWh meter total (was: %s)", name, mm[i].Import, site.pvEnergy[name])
+			site.pvEnergy[name].SetImportMeterTotal(mm[i].Import)
 		} else {
-			site.log.DEBUG.Printf("!! solar production: accumulate add %s %.3fW power (was: %s)", name, mm[i].Energy, site.pvEnergy[name])
+			site.log.DEBUG.Printf("!! solar production: accumulate add %s %.3fW power (was: %s)", name, mm[i].Power, site.pvEnergy[name])
 			site.pvEnergy[name].AddPower(mm[i].Power)
 		}
 		site.log.DEBUG.Printf("!! solar production: accumulate moved %s from %.3f to %.3f", name, prev, site.pvEnergy[name].Imported())
@@ -661,7 +661,7 @@ func (site *Site) updateBatteryMeters() {
 		return m.Power
 	})
 	site.battery.Energy = lo.SumBy(mm, func(m types.Measurement) float64 {
-		return m.Energy
+		return m.Import
 	})
 
 	if len(site.batteryMeters) > 1 {
@@ -762,12 +762,12 @@ func (site *Site) updateGridMeter() error {
 
 	// grid energy (import)
 	var importEnergy *float64
-	if energyMeter, ok := api.Cap[api.MeterEnergy](site.gridMeter); ok {
-		if f, err := energyMeter.TotalEnergy(); err == nil {
-			mm.Energy = f
+	if energyMeter, ok := api.Cap[api.MeterImport](site.gridMeter); ok {
+		if f, err := energyMeter.ImportTotal(); err == nil {
+			mm.Import = f
 			importEnergy = &f
 		} else {
-			site.log.ERROR.Printf("grid energy: %v", err)
+			site.log.ERROR.Printf("grid import energy: %v", err)
 		}
 	}
 

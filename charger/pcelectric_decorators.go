@@ -8,15 +8,15 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decoratePCE(base *PCElectric, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error)) api.Charger {
+func decoratePCE(base *PCElectric, meter func() (float64, error), meterImport func() (float64, error), phaseCurrents func() (float64, float64, float64, error)) api.Charger {
 	caps := make(map[reflect.Type]any)
 
 	if meter != nil {
 		caps[reflect.TypeFor[api.Meter]()] = &decoratePCEMeterImpl{meter: meter}
 	}
 
-	if meterEnergy != nil {
-		caps[reflect.TypeFor[api.MeterEnergy]()] = &decoratePCEMeterEnergyImpl{meterEnergy: meterEnergy}
+	if meterImport != nil {
+		caps[reflect.TypeFor[api.MeterImport]()] = &decoratePCEMeterImportImpl{meterImport: meterImport}
 	}
 
 	if phaseCurrents != nil {
@@ -51,12 +51,12 @@ func (impl *decoratePCEMeterImpl) CurrentPower() (float64, error) {
 	return impl.meter()
 }
 
-type decoratePCEMeterEnergyImpl struct {
-	meterEnergy func() (float64, error)
+type decoratePCEMeterImportImpl struct {
+	meterImport func() (float64, error)
 }
 
-func (impl *decoratePCEMeterEnergyImpl) TotalEnergy() (float64, error) {
-	return impl.meterEnergy()
+func (impl *decoratePCEMeterImportImpl) ImportTotal() (float64, error) {
+	return impl.meterImport()
 }
 
 type decoratePCEPhaseCurrentsImpl struct {

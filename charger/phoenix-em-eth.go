@@ -34,7 +34,7 @@ func init() {
 	registry.AddCtx("phoenix-em-eth", NewPhoenixEMEthFromConfig)
 }
 
-//go:generate go tool decorate -f decoratePhoenixEMEth -b *PhoenixEMEth -r api.Charger -t api.Meter,api.MeterEnergy,api.PhaseCurrents,api.PhaseVoltages
+//go:generate go tool decorate -f decoratePhoenixEMEth -b *PhoenixEMEth -r api.Charger -t api.Meter,api.MeterImport,api.PhaseCurrents,api.PhaseVoltages
 
 // NewPhoenixEMEthFromConfig creates a Phoenix charger from generic config
 func NewPhoenixEMEthFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
@@ -53,7 +53,7 @@ func NewPhoenixEMEthFromConfig(ctx context.Context, other map[string]any) (api.C
 
 	var (
 		currentPower func() (float64, error)
-		totalEnergy  func() (float64, error)
+		importTotal  func() (float64, error)
 		currents     func() (float64, float64, float64, error)
 		voltages     func() (float64, float64, float64, error)
 	)
@@ -61,12 +61,12 @@ func NewPhoenixEMEthFromConfig(ctx context.Context, other map[string]any) (api.C
 	// check presence of meter by voltage on l1
 	if b, err := wb.conn.ReadInputRegisters(phxEMEthRegVoltages, 2); err == nil && encoding.Int32LswFirst(b) > 0 {
 		currentPower = wb.currentPower
-		totalEnergy = wb.totalEnergy
+		importTotal = wb.importTotal
 		currents = wb.currents
 		voltages = wb.voltages
 	}
 
-	return decoratePhoenixEMEth(wb, currentPower, totalEnergy, currents, voltages), nil
+	return decoratePhoenixEMEth(wb, currentPower, importTotal, currents, voltages), nil
 }
 
 // NewPhoenixEMEth creates a Phoenix charger
@@ -151,8 +151,8 @@ func (wb *PhoenixEMEth) currentPower() (float64, error) {
 	return float64(encoding.Int32LswFirst(b)*1e3) * phxEMEthSF, nil
 }
 
-// totalEnergy implements the api.MeterEnergy interface
-func (wb *PhoenixEMEth) totalEnergy() (float64, error) {
+// importTotal provides the api.MeterImport interface
+func (wb *PhoenixEMEth) importTotal() (float64, error) {
 	b, err := wb.conn.ReadInputRegisters(phxEMEthRegEnergy, 2)
 	if err != nil {
 		return 0, err

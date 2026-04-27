@@ -8,11 +8,11 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateLgEss(base *LgEss, meterEnergy func() (float64, error), batteryCapacity func() float64, battery func() (float64, error), batterySocLimiter func() (float64, float64), batteryPowerLimiter func() (float64, float64), batteryController func(api.BatteryMode) error) api.Meter {
+func decorateLgEss(base *LgEss, meterImport func() (float64, error), batteryCapacity func() float64, battery func() (float64, error), batterySocLimiter func() (float64, float64), batteryPowerLimiter func() (float64, float64), batteryController func(api.BatteryMode) error) api.Meter {
 	caps := make(map[reflect.Type]any)
 
-	if meterEnergy != nil {
-		caps[reflect.TypeFor[api.MeterEnergy]()] = &decorateLgEssMeterEnergyImpl{meterEnergy: meterEnergy}
+	if meterImport != nil {
+		caps[reflect.TypeFor[api.MeterImport]()] = &decorateLgEssMeterImportImpl{meterImport: meterImport}
 	}
 
 	if batteryCapacity != nil {
@@ -95,10 +95,10 @@ func (impl *decorateLgEssBatterySocLimiterImpl) GetSocLimits() (float64, float64
 	return impl.batterySocLimiter()
 }
 
-type decorateLgEssMeterEnergyImpl struct {
-	meterEnergy func() (float64, error)
+type decorateLgEssMeterImportImpl struct {
+	meterImport func() (float64, error)
 }
 
-func (impl *decorateLgEssMeterEnergyImpl) TotalEnergy() (float64, error) {
-	return impl.meterEnergy()
+func (impl *decorateLgEssMeterImportImpl) ImportTotal() (float64, error) {
+	return impl.meterImport()
 }

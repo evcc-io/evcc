@@ -37,7 +37,7 @@ type Sigenergy struct {
 
 const (
 	regSigSystemState         = 32000 // System states according to IEC61851-1 definition
-	regSigTotalEnergyConsumed = 32001 // kWh*100, total energy consumed during charging
+	regSigImportTotalConsumed = 32001 // kWh*100, total energy consumed during charging
 	regSigChargingPower       = 32003 // W, instantaneous charging power
 	regSigStartStop           = 42000 // Start/Stop charger (0: Start 1: Stop), WO
 	regSigOutputCurrent       = 42001 // Amperes, R/W, charger output current ([6, X] X is the smaller value between the rated current and the AC-Charger input breaker rated current.)
@@ -159,11 +159,11 @@ func (wb *Sigenergy) CurrentPower() (float64, error) {
 	return float64(binary.BigEndian.Uint32(b)), nil
 }
 
-var _ api.MeterEnergy = (*Sigenergy)(nil)
+var _ api.MeterImport = (*Sigenergy)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *Sigenergy) TotalEnergy() (float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(regSigTotalEnergyConsumed, 2)
+// ImportTotal implements the api.MeterImport interface
+func (wb *Sigenergy) ImportTotal() (float64, error) {
+	b, err := wb.conn.ReadHoldingRegisters(regSigImportTotalConsumed, 2)
 	if err != nil {
 		return 0, err
 	}

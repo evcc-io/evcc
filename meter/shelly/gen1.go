@@ -106,7 +106,7 @@ func (c *gen1) Enable(enable bool) error {
 	return c.GetJSON(uri, &res)
 }
 
-func (c *gen1) TotalEnergy() (float64, error) {
+func (c *gen1) ImportTotal() (float64, error) {
 	var energy float64
 	res, err := c.status.Get()
 	if err != nil {

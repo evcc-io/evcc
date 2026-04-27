@@ -219,8 +219,8 @@ func (c *gen2) Enable(enable bool) error {
 	return c.execEnableCmd(c.switchchannel, "Switch.Set", enable, &res)
 }
 
-// TotalEnergy implements the api.Meter interface
-func (c *gen2) TotalEnergy() (float64, error) {
+// ImportTotal implements the api.Meter interface
+func (c *gen2) ImportTotal() (float64, error) {
 	switch {
 	case c.hasEM1Endpoint():
 		res, err := c.em1data()

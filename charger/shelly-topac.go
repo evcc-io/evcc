@@ -183,10 +183,10 @@ func (c *ShellyTopAC) CurrentPower() (float64, error) {
 	return phase.TotalPower * 1e3, nil
 }
 
-var _ api.MeterEnergy = (*ShellyTopAC)(nil)
+var _ api.MeterImport = (*ShellyTopAC)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (c *ShellyTopAC) TotalEnergy() (float64, error) {
+// ImportTotal implements the api.MeterImport interface
+func (c *ShellyTopAC) ImportTotal() (float64, error) {
 	res, err := c.phaseG.Get()
 	if err != nil {
 		return 0, err

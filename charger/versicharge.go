@@ -44,7 +44,7 @@ const (
 	versiRegCurrents       = 1647 //  3 RO UINT16
 	versiRegVoltages       = 1651 //  3 RO UINT16
 	versiRegPowers         = 1662 //  3 RO UINT16
-	versiRegTotalEnergy    = 1692 //  2 RO UINT32
+	versiRegImportTotal    = 1692 //  2 RO UINT32
 )
 
 // Versicharge is an api.Charger implementation for Versicharge wallboxes with Ethernet (SW modells).
@@ -167,11 +167,11 @@ func (wb *Versicharge) CurrentPower() (float64, error) {
 	return sum, nil
 }
 
-var _ api.MeterEnergy = (*Versicharge)(nil)
+var _ api.MeterImport = (*Versicharge)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *Versicharge) TotalEnergy() (float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(versiRegTotalEnergy, 2)
+// ImportTotal implements the api.MeterImport interface
+func (wb *Versicharge) ImportTotal() (float64, error) {
+	b, err := wb.conn.ReadHoldingRegisters(versiRegImportTotal, 2)
 	if err != nil {
 		return 0, err
 	}

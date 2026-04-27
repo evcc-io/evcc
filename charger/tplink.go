@@ -92,9 +92,9 @@ func (c *TPLink) Enable(enable bool) error {
 	return nil
 }
 
-var _ api.MeterEnergy = (*TPLink)(nil)
+var _ api.MeterImport = (*TPLink)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (c *TPLink) TotalEnergy() (float64, error) {
-	return c.conn.TotalEnergy()
+// ImportTotal implements the api.MeterImport interface
+func (c *TPLink) ImportTotal() (float64, error) {
+	return c.conn.ImportTotal()
 }

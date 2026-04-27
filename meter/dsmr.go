@@ -71,7 +71,7 @@ func init() {
 	registry.Add("dsmr", NewDsmrFromConfig)
 }
 
-//go:generate go tool decorate -f decorateDsmr -b api.Meter -t api.MeterEnergy,api.PhaseCurrents
+//go:generate go tool decorate -f decorateDsmr -b api.Meter -t api.MeterImport,api.PhaseCurrents
 
 // NewDsmrFromConfig creates a DSMR meter from generic config
 func NewDsmrFromConfig(other map[string]any) (api.Meter, error) {
@@ -114,9 +114,9 @@ func NewDsmr(uri, energy string, timeout time.Duration) (api.Meter, error) {
 	}
 
 	// decorate energy reading
-	var totalEnergy func() (float64, error)
+	var importTotal func() (float64, error)
 	if energy != "" {
-		totalEnergy = m.totalEnergy
+		importTotal = m.importTotal
 	}
 
 	// decorate currents
@@ -133,7 +133,7 @@ func NewDsmr(uri, energy string, timeout time.Duration) (api.Meter, error) {
 		currents = m.currents
 	}
 
-	return decorateDsmr(m, totalEnergy, currents), nil
+	return decorateDsmr(m, importTotal, currents), nil
 }
 
 // based on https://github.com/basvdlei/gotsmart/blob/master/gotsmart.go
@@ -286,8 +286,8 @@ func (m *Dsmr) CurrentPower() (float64, error) {
 	return (bezug - lief) * 1e3, errors.Join(err1, err2)
 }
 
-// totalEnergy implements the api.MeterEnergy interface
-func (m *Dsmr) totalEnergy() (float64, error) {
+// ImportTotal implements the api.MeterImport interface
+func (m *Dsmr) importTotal() (float64, error) {
 	return m.get(m.energy)
 }
 

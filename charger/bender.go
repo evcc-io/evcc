@@ -60,7 +60,7 @@ const (
 	bendRegChargePointState   = 122  // Vehicle (Control Pilot) state
 	bendRegPhaseEnergy        = 200  // Phase energy from primary meter (Wh)
 	bendRegCurrents           = 212  // Currents from primary meter (mA)
-	bendRegTotalEnergy        = 218  // Total Energy from primary meter (Wh)
+	bendRegImportTotal        = 218  // Total Energy from primary meter (Wh)
 	bendRegActivePower        = 220  // Active Power from primary meter (W)
 	bendRegVoltages           = 222  // Voltages of the ocpp meter (V)
 	bendRegUserID             = 720  // User ID (OCPP IdTag) from the current session. Bytes 0 to 19.
@@ -112,7 +112,7 @@ func NewBenderCCFromConfig(ctx context.Context, other map[string]any) (api.Charg
 
 // NewBenderCC creates BenderCC charger
 //
-//go:generate go tool decorate -f decorateBenderCC -b *BenderCC -r api.Charger -t api.Meter,api.PhaseCurrents,api.PhaseVoltages,api.MeterEnergy,api.Battery,api.Identifier,api.ChargerEx,api.PhaseSwitcher,api.PhaseGetter
+//go:generate go tool decorate -f decorateBenderCC -b *BenderCC -r api.Charger -t api.Meter,api.PhaseCurrents,api.PhaseVoltages,api.MeterImport,api.Battery,api.Identifier,api.ChargerEx,api.PhaseSwitcher,api.PhaseGetter
 func NewBenderCC(ctx context.Context, uri string, id uint8, cache time.Duration) (api.Charger, error) {
 	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
 	if err != nil {
@@ -142,7 +142,7 @@ func NewBenderCC(ctx context.Context, uri string, id uint8, cache time.Duration)
 		currentPower     func() (float64, error)
 		currents         func() (float64, float64, float64, error)
 		voltages         func() (float64, float64, float64, error)
-		totalEnergy      func() (float64, error)
+		importTotal      func() (float64, error)
 		soc              func() (float64, error)
 		identify         func() (string, error)
 		maxCurrentMillis func(float64) error
@@ -159,7 +159,7 @@ func NewBenderCC(ctx context.Context, uri string, id uint8, cache time.Duration)
 	if b, err := wb.conn.ReadHoldingRegisters(reg, 2); err == nil && binary.BigEndian.Uint32(b) != math.MaxUint32 {
 		currentPower = wb.currentPower
 		currents = wb.currents
-		totalEnergy = wb.totalEnergy
+		importTotal = wb.importTotal
 
 		// check presence of "ocpp meter"
 		if b, err := wb.conn.ReadHoldingRegisters(bendRegVoltages, 2); err == nil && binary.BigEndian.Uint32(b) > 0 {
@@ -205,7 +205,7 @@ func NewBenderCC(ctx context.Context, uri string, id uint8, cache time.Duration)
 		identify = wb.identify
 	}
 
-	return decorateBenderCC(wb, currentPower, currents, voltages, totalEnergy, soc, identify, maxCurrentMillis, phases1p3p, getPhases), nil
+	return decorateBenderCC(wb, currentPower, currents, voltages, importTotal, soc, identify, maxCurrentMillis, phases1p3p, getPhases), nil
 }
 
 // heartbeat ensures that SEMP device control updates are sent about once per minute
@@ -387,8 +387,8 @@ func (wb *BenderCC) currentPower() (float64, error) {
 // removed: https://github.com/evcc-io/evcc/issues/13726
 // var _ api.ChargeRater = (*BenderCC)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *BenderCC) totalEnergy() (float64, error) {
+// importTotal implements the api.MeterImport interface
+func (wb *BenderCC) importTotal() (float64, error) {
 	if wb.legacy {
 		b, err := wb.conn.ReadHoldingRegisters(bendRegPhaseEnergy, 6)
 		if err != nil {
@@ -403,7 +403,7 @@ func (wb *BenderCC) totalEnergy() (float64, error) {
 		return total, nil
 	}
 
-	b, err := wb.conn.ReadHoldingRegisters(bendRegTotalEnergy, 2)
+	b, err := wb.conn.ReadHoldingRegisters(bendRegImportTotal, 2)
 	if err != nil {
 		return 0, err
 	}

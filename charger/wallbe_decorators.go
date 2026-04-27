@@ -8,15 +8,15 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateWallbe(base *Wallbe, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), chargerEx func(float64) error) api.Charger {
+func decorateWallbe(base *Wallbe, meter func() (float64, error), meterImport func() (float64, error), phaseCurrents func() (float64, float64, float64, error), chargerEx func(float64) error) api.Charger {
 	caps := make(map[reflect.Type]any)
 
 	if meter != nil {
 		caps[reflect.TypeFor[api.Meter]()] = &decorateWallbeMeterImpl{meter: meter}
 	}
 
-	if meterEnergy != nil {
-		caps[reflect.TypeFor[api.MeterEnergy]()] = &decorateWallbeMeterEnergyImpl{meterEnergy: meterEnergy}
+	if meterImport != nil {
+		caps[reflect.TypeFor[api.MeterImport]()] = &decorateWallbeMeterImportImpl{meterImport: meterImport}
 	}
 
 	if phaseCurrents != nil {
@@ -63,12 +63,12 @@ func (impl *decorateWallbeMeterImpl) CurrentPower() (float64, error) {
 	return impl.meter()
 }
 
-type decorateWallbeMeterEnergyImpl struct {
-	meterEnergy func() (float64, error)
+type decorateWallbeMeterImportImpl struct {
+	meterImport func() (float64, error)
 }
 
-func (impl *decorateWallbeMeterEnergyImpl) TotalEnergy() (float64, error) {
-	return impl.meterEnergy()
+func (impl *decorateWallbeMeterImportImpl) ImportTotal() (float64, error) {
+	return impl.meterImport()
 }
 
 type decorateWallbePhaseCurrentsImpl struct {

@@ -211,10 +211,10 @@ func (wb *AlpitronicHYC) ChargedEnergy() (float64, error) {
 	return float64(encoding.Uint16(b)) / 100, err
 }
 
-var _ api.MeterEnergy = (*AlpitronicHYC)(nil)
+var _ api.MeterImport = (*AlpitronicHYC)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *AlpitronicHYC) TotalEnergy() (float64, error) {
+// ImportTotal implements the api.MeterImport interface
+func (wb *AlpitronicHYC) ImportTotal() (float64, error) {
 	b, err := wb.conn.ReadInputRegisters(wb.reg(hycRegTotalChargedEnergy), 4)
 	if err != nil {
 		return 0, err

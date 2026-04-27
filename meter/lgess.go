@@ -22,7 +22,7 @@ func init() {
 	registry.Add("lgess15", NewLgEss15FromConfig)
 }
 
-//go:generate go tool decorate -f decorateLgEss -b *LgEss -r api.Meter -t api.MeterEnergy,api.BatteryCapacity,api.Battery,api.BatterySocLimiter,api.BatteryPowerLimiter,api.BatteryController
+//go:generate go tool decorate -f decorateLgEss -b *LgEss -r api.Meter -t api.MeterImport,api.BatteryCapacity,api.Battery,api.BatterySocLimiter,api.BatteryPowerLimiter,api.BatteryController
 
 func NewLgEss8FromConfig(other map[string]any) (api.Meter, error) {
 	return NewLgEssFromConfig(other, lgpcs.LgEss8)
@@ -72,10 +72,10 @@ func NewLgEss(uri, usage, registration, password string, cache time.Duration, ca
 		conn:  conn,
 	}
 
-	// decorate api.MeterEnergy
-	var totalEnergy func() (float64, error)
+	// decorate api.MeterImport
+	var importTotal func() (float64, error)
 	if m.usage == "grid" && essType != lgpcs.LgEss15 {
-		totalEnergy = m.totalEnergy
+		importTotal = m.importTotal
 	}
 
 	// decorate battery
@@ -91,7 +91,7 @@ func NewLgEss(uri, usage, registration, password string, cache time.Duration, ca
 		}
 	}
 
-	return decorateLgEss(m, totalEnergy, capacity, batterySoc, batterySocLimiter, batteryPowerLimits.Decorator(), setBatteryMode), nil
+	return decorateLgEss(m, importTotal, capacity, batterySoc, batterySocLimiter, batteryPowerLimits.Decorator(), setBatteryMode), nil
 }
 
 // CurrentPower implements the api.Meter interface
@@ -113,8 +113,8 @@ func (m *LgEss) CurrentPower() (float64, error) {
 	}
 }
 
-// totalEnergy implements the api.MeterEnergy interface
-func (m *LgEss) totalEnergy() (float64, error) {
+// ImportTotal implements the api.MeterImport interface
+func (m *LgEss) importTotal() (float64, error) {
 	data, err := m.conn.Data()
 	if err != nil {
 		return 0, err

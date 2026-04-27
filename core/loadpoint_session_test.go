@@ -36,14 +36,14 @@ func TestSession(t *testing.T) {
 	defer ctrl.Finish()
 
 	mm := api.NewMockMeter(ctrl)
-	me := api.NewMockMeterEnergy(ctrl)
+	me := api.NewMockMeterImport(ctrl)
 
 	type EnergyDecorator struct {
 		api.Meter
-		api.MeterEnergy
+		api.MeterImport
 	}
 
-	cm := &EnergyDecorator{Meter: mm, MeterEnergy: me}
+	cm := &EnergyDecorator{Meter: mm, MeterImport: me}
 
 	lp := &Loadpoint{
 		log:         util.NewLogger("foo"),
@@ -53,7 +53,7 @@ func TestSession(t *testing.T) {
 	}
 
 	// create session
-	me.EXPECT().TotalEnergy().Return(1.0, nil)
+	me.EXPECT().ImportTotal().Return(1.0, nil)
 	lp.createSession()
 	assert.NotNil(t, lp.session)
 
@@ -64,7 +64,7 @@ func TestSession(t *testing.T) {
 	// stop charging
 	clock.Add(time.Hour)
 	lp.energyMetrics.Update(1.23)
-	me.EXPECT().TotalEnergy().Return(1.0+lp.getChargedEnergy()/1e3, nil) // match chargedEnergy
+	me.EXPECT().ImportTotal().Return(1.0+lp.getChargedEnergy()/1e3, nil) // match chargedEnergy
 
 	lp.stopSession()
 	assert.NotNil(t, lp.session)
@@ -79,7 +79,7 @@ func TestSession(t *testing.T) {
 	// stop charging - 2nd leg
 	clock.Add(time.Hour)
 	lp.energyMetrics.Update(lp.getChargedEnergy() * 2)
-	me.EXPECT().TotalEnergy().Return(3.0, nil) // doesn't match chargedEnergy
+	me.EXPECT().ImportTotal().Return(3.0, nil) // doesn't match chargedEnergy
 
 	lp.stopSession()
 	assert.NotNil(t, lp.session)
@@ -213,14 +213,14 @@ func TestResetHeatingSession(t *testing.T) {
 	})
 
 	mm := api.NewMockMeter(ctrl)
-	me := api.NewMockMeterEnergy(ctrl)
+	me := api.NewMockMeterImport(ctrl)
 
 	type EnergyDecorator struct {
 		api.Meter
-		api.MeterEnergy
+		api.MeterImport
 	}
 
-	cm := &EnergyDecorator{Meter: mm, MeterEnergy: me}
+	cm := &EnergyDecorator{Meter: mm, MeterImport: me}
 
 	lp := &Loadpoint{
 		log:         util.NewLogger("foo"),
@@ -231,7 +231,7 @@ func TestResetHeatingSession(t *testing.T) {
 	}
 
 	// create session
-	me.EXPECT().TotalEnergy().Return(1.0, nil)
+	me.EXPECT().ImportTotal().Return(1.0, nil)
 	lp.createSession()
 	require.NotNil(t, lp.session)
 	assert.True(t, lp.session.Created.IsZero())
@@ -241,7 +241,7 @@ func TestResetHeatingSession(t *testing.T) {
 	assert.Equal(t, clock.Now(), lp.session.Created)
 
 	clock.Add(36 * time.Hour)
-	me.EXPECT().TotalEnergy().Return(1.0, nil).MaxTimes(2)
+	me.EXPECT().ImportTotal().Return(1.0, nil).MaxTimes(2)
 
 	lp.resetHeatingSession()
 	require.NotNil(t, lp.session)
@@ -250,7 +250,7 @@ func TestResetHeatingSession(t *testing.T) {
 	lp.updateSession(sessionStart(lp))
 	assert.Equal(t, clock.Now(), lp.session.Created)
 
-	me.EXPECT().TotalEnergy().Return(3.0, nil)
+	me.EXPECT().ImportTotal().Return(3.0, nil)
 	lp.stopSession()
 
 	assert.NotNil(t, lp.session)

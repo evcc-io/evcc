@@ -94,8 +94,8 @@ func (d *Connection) CurrentPower() (float64, error) {
 	return power, nil
 }
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (d *Connection) TotalEnergy() (float64, error) {
+// ImportTotal implements the api.MeterImport interface
+func (d *Connection) ImportTotal() (float64, error) {
 	var res EmeterResponse
 	if err := d.ExecCmd(`{"emeter":{"get_realtime":null}}`, &res); err != nil {
 		return 0, err

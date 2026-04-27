@@ -8,15 +8,15 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateOCPP(base *OCPP, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error), currentGetter func() (float64, error), phaseSwitcher func(int) error, battery func() (float64, error)) api.Charger {
+func decorateOCPP(base *OCPP, meter func() (float64, error), meterImport func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error), currentGetter func() (float64, error), phaseSwitcher func(int) error, battery func() (float64, error)) api.Charger {
 	caps := make(map[reflect.Type]any)
 
 	if meter != nil {
 		caps[reflect.TypeFor[api.Meter]()] = &decorateOCPPMeterImpl{meter: meter}
 	}
 
-	if meterEnergy != nil {
-		caps[reflect.TypeFor[api.MeterEnergy]()] = &decorateOCPPMeterEnergyImpl{meterEnergy: meterEnergy}
+	if meterImport != nil {
+		caps[reflect.TypeFor[api.MeterImport]()] = &decorateOCPPMeterImportImpl{meterImport: meterImport}
 	}
 
 	if phaseCurrents != nil {
@@ -83,12 +83,12 @@ func (impl *decorateOCPPMeterImpl) CurrentPower() (float64, error) {
 	return impl.meter()
 }
 
-type decorateOCPPMeterEnergyImpl struct {
-	meterEnergy func() (float64, error)
+type decorateOCPPMeterImportImpl struct {
+	meterImport func() (float64, error)
 }
 
-func (impl *decorateOCPPMeterEnergyImpl) TotalEnergy() (float64, error) {
-	return impl.meterEnergy()
+func (impl *decorateOCPPMeterImportImpl) ImportTotal() (float64, error) {
+	return impl.meterImport()
 }
 
 type decorateOCPPPhaseCurrentsImpl struct {

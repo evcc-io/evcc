@@ -8,15 +8,15 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateHomeAssistant(base *HomeAssistant, meter func() (float64, error), meterEnergy func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error), phaseSwitcher func(int) error, phaseGetter func() (int, error)) api.Charger {
+func decorateHomeAssistant(base *HomeAssistant, meter func() (float64, error), meterImport func() (float64, error), phaseCurrents func() (float64, float64, float64, error), phaseVoltages func() (float64, float64, float64, error), phaseSwitcher func(int) error, phaseGetter func() (int, error)) api.Charger {
 	caps := make(map[reflect.Type]any)
 
 	if meter != nil {
 		caps[reflect.TypeFor[api.Meter]()] = &decorateHomeAssistantMeterImpl{meter: meter}
 	}
 
-	if meterEnergy != nil {
-		caps[reflect.TypeFor[api.MeterEnergy]()] = &decorateHomeAssistantMeterEnergyImpl{meterEnergy: meterEnergy}
+	if meterImport != nil {
+		caps[reflect.TypeFor[api.MeterImport]()] = &decorateHomeAssistantMeterImportImpl{meterImport: meterImport}
 	}
 
 	if phaseCurrents != nil {
@@ -63,12 +63,12 @@ func (impl *decorateHomeAssistantMeterImpl) CurrentPower() (float64, error) {
 	return impl.meter()
 }
 
-type decorateHomeAssistantMeterEnergyImpl struct {
-	meterEnergy func() (float64, error)
+type decorateHomeAssistantMeterImportImpl struct {
+	meterImport func() (float64, error)
 }
 
-func (impl *decorateHomeAssistantMeterEnergyImpl) TotalEnergy() (float64, error) {
-	return impl.meterEnergy()
+func (impl *decorateHomeAssistantMeterImportImpl) ImportTotal() (float64, error) {
+	return impl.meterImport()
 }
 
 type decorateHomeAssistantPhaseCurrentsImpl struct {

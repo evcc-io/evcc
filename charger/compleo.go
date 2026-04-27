@@ -235,7 +235,7 @@ func (wb *Compleo) CurrentPower() (float64, error) {
 
 var _ api.ChargeRater = (*Compleo)(nil)
 
-// ChargedEnergy implements the api.MeterEnergy interface
+// ChargedEnergy implements the api.MeterImport interface
 func (wb *Compleo) ChargedEnergy() (float64, error) {
 	b, err := wb.conn.ReadInputRegisters(wb.reg(compleoRegEnergy), 1)
 	if err != nil {

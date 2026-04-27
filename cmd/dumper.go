@@ -85,9 +85,9 @@ func (d *dumper) Dump(name string, v any) {
 		})
 	}
 
-	if v, ok := api.Cap[api.MeterEnergy](v); ok {
+	if v, ok := api.Cap[api.MeterImport](v); ok {
 		d.measureTime(w, "Energy", func() (string, error) {
-			energy, err := v.TotalEnergy()
+			energy, err := v.ImportTotal()
 			return fmt.Sprintf("%.1fkWh", energy), err
 		})
 	}

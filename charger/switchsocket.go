@@ -19,7 +19,7 @@ type SwitchSocket struct {
 	*switchSocket
 }
 
-//go:generate go tool decorate -f decorateSwitchSocket -b *SwitchSocket -r api.Charger -t api.MeterEnergy,api.Battery
+//go:generate go tool decorate -f decorateSwitchSocket -b *SwitchSocket -r api.Charger -t api.MeterImport,api.Battery
 
 func NewSwitchSocketFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	var cc struct {

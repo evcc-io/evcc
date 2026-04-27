@@ -24,7 +24,7 @@ type OpenWB struct {
 	statusG       func() (string, error)
 	currentS      func(int64) error
 	currentPowerG func() (float64, error)
-	totalEnergyG  func() (float64, error)
+	ImportTotalG  func() (float64, error)
 	currentsG     []func() (float64, error)
 	wakeupS       func(int64) error
 	authS         func(string) error
@@ -130,7 +130,7 @@ func NewOpenWB(log *util.Logger, mqttconf mqtt.Config, id int, topic string, p1p
 	if err != nil {
 		return nil, err
 	}
-	totalEnergyG, err := to.FloatGetter(mq(openwb.ChargeTotalEnergyTopic))
+	ImportTotalG, err := to.FloatGetter(mq(openwb.ChargeImportTotalTopic))
 	if err != nil {
 		return nil, err
 	}
@@ -148,7 +148,7 @@ func NewOpenWB(log *util.Logger, mqttconf mqtt.Config, id int, topic string, p1p
 		currentS:      currentS,
 		statusG:       statusG,
 		currentPowerG: currentPowerG,
-		totalEnergyG:  totalEnergyG,
+		ImportTotalG:  ImportTotalG,
 		currentsG:     currentsG,
 		wakeupS:       wakeupS,
 		authS:         authS,
@@ -241,11 +241,11 @@ func (m *OpenWB) CurrentPower() (float64, error) {
 	return m.currentPowerG()
 }
 
-var _ api.MeterEnergy = (*OpenWB)(nil)
+var _ api.MeterImport = (*OpenWB)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
-func (m *OpenWB) TotalEnergy() (float64, error) {
-	return m.totalEnergyG()
+// ImportTotal implements the api.MeterImport interface
+func (m *OpenWB) ImportTotal() (float64, error) {
+	return m.ImportTotalG()
 }
 
 var _ api.PhaseCurrents = (*OpenWB)(nil)

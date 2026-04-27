@@ -40,7 +40,7 @@ func init() {
 	registry.AddCtx("heatpump", NewHeatpumpFromConfig)
 }
 
-//go:generate go tool decorate -f decorateHeatpump -b *Heatpump -r api.Charger -t api.Meter,api.MeterEnergy,api.Battery,api.SocLimiter
+//go:generate go tool decorate -f decorateHeatpump -b *Heatpump -r api.Charger -t api.Meter,api.MeterImport,api.Battery,api.SocLimiter
 
 // NewHeatpumpFromConfig creates heatpump configurable charger from generic config
 func NewHeatpumpFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
