@@ -47,7 +47,6 @@ params:
       en: Be sure to check openWB Issue 2832 before enabling this, should not be used for access protection!
       de: Unbedingt openWB Issue 2832 beachten, sollte nicht für Zugangsschutz verwendet werden!
     advanced: true
-    default: false
 render: |
   type: openwb-2.0
   {{- include "modbus" . }}

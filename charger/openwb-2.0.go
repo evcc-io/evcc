@@ -55,7 +55,6 @@ func NewOpenWB20FromConfig(ctx context.Context, other map[string]any) (api.Charg
 		TcpSettings: modbus.TcpSettings{
 			ID: 1,
 		},
-		Identify: false,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
