@@ -106,9 +106,7 @@ func NewEm2GoDuo(ctx context.Context, uri string, slaveID uint8, connector int) 
 		return nil, fmt.Errorf("failsafe timeout: %w", err)
 	}
 	if u := binary.BigEndian.Uint16(b); u > 0 {
-		interval := time.Duration(u) * time.Second / 2
-		log.DEBUG.Printf("failsafe timeout: %ds, heartbeat interval: %v", u, interval)
-		go wb.heartbeat(ctx, interval)
+		go wb.heartbeat(ctx, time.Duration(u)*time.Second/2)
 	}
 
 	return wb, nil
@@ -120,11 +118,11 @@ func (wb *Em2GoDuo) heartbeat(ctx context.Context, interval time.Duration) {
 	for tick := time.Tick(interval); ; {
 		select {
 		case <-tick:
+			if _, err := wb.conn.ReadHoldingRegisters(em2GoDuoRegSafeCurrent, 1); err != nil {
+				wb.log.ERROR.Println("heartbeat:", err)
+			}
 		case <-ctx.Done():
 			return
-		}
-		if _, err := wb.conn.ReadHoldingRegisters(em2GoDuoRegSafeCurrent, 1); err != nil {
-			wb.log.ERROR.Println("heartbeat:", err)
 		}
 	}
 }
