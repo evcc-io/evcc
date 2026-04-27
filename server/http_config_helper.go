@@ -18,8 +18,6 @@ import (
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/go-viper/mapstructure/v2"
 	"github.com/samber/lo"
-	"github.com/spf13/cast"
-	"go.yaml.in/yaml/v4"
 )
 
 const (
@@ -35,6 +33,10 @@ type configReq struct {
 	config.Properties `json:",inline" mapstructure:",squash"`
 	Yaml              string
 	Other             map[string]any `json:",inline" mapstructure:",remain"`
+
+	// parsedYAML* is set by decodeDeviceConfig when the client sends embedded YAML (single parse for the HTTP request).
+	parsedYAMLType string
+	parsedYAMLCfg  map[string]any
 }
 
 // TODO get rid of this 2-pass unmarshal once https://github.com/golang/go/issues/71497 is implemented
@@ -60,6 +62,14 @@ func (c *configReq) Serialise() map[string]any {
 		}
 	}
 	return c.Other
+}
+
+// embeddedYAMLFromRequest reports whether decodeDeviceConfig already parsed embedded YAML using the request's top-level type.
+func (c *configReq) embeddedYAMLFromRequest() (typ string, cfg map[string]any, ok bool) {
+	if c.parsedYAMLCfg == nil {
+		return "", nil, false
+	}
+	return c.parsedYAMLType, c.parsedYAMLCfg, true
 }
 
 func propsToMap(props config.Properties) (map[string]any, error) {
@@ -226,7 +236,11 @@ func deviceInstanceFromMergedConfig[T any](ctx context.Context, id int, class te
 
 	// TODO merge custom config
 	if req.Yaml != "" {
-		instance, err := newFromConf(ctx, conf.Type, req.Other)
+		typ, other, err := config.ParseEmbeddedDeviceYAML(conf.Type, req.Yaml)
+		if err != nil {
+			return nil, zero, nil, err
+		}
+		instance, err := newFromConf(ctx, typ, other)
 		return dev, instance, req.Serialise(), err
 	}
 
@@ -441,7 +455,7 @@ func (maskedTransformer) Transformer(typ reflect.Type) func(dst, src reflect.Val
 	}
 }
 
-// decodeDeviceConfig extracts device configuration and yaml details plus type override
+// decodeDeviceConfig extracts device configuration and yaml details
 func decodeDeviceConfig(r io.Reader) (configReq, error) {
 	var res configReq
 
@@ -463,14 +477,13 @@ func decodeDeviceConfig(r io.Reader) (configReq, error) {
 		return configReq{}, errors.New("invalid config: cannot mix yaml and other")
 	}
 
-	if err := yaml.Unmarshal([]byte(res.Yaml), &res.Other); err != nil && err != io.EOF {
+	resolvedType, parsedCfg, err := config.ParseEmbeddedDeviceYAML(res.Type, res.Yaml)
+	if err != nil {
 		return configReq{}, err
 	}
-
-	if typ := cast.ToString(res.Other["type"]); typ != "" {
-		res.Type = typ
-		delete(res.Other, "type")
-	}
+	res.parsedYAMLType = resolvedType
+	res.parsedYAMLCfg = parsedCfg
+	res.Other = map[string]any{"yaml": res.Yaml}
 
 	return res, nil
 }
