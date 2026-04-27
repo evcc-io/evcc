@@ -455,7 +455,7 @@ func TestEasee_Phases1p3p_registersExpectedOrphan(t *testing.T) {
 	httpmock.RegisterResponder(http.MethodPost, getURI,
 		httpmock.NewStringResponder(200, ""))
 
-	// Mock POST charger settings (DCC:0 sent on scale-down) — return 202 noop
+	// Mock POST charger settings (DCC:7 sent on scale-down) — return 202 noop
 	chargerURI := fmt.Sprintf("%s/chargers/%s/settings", easee.API, chargerID)
 	httpmock.RegisterResponder(http.MethodPost, chargerURI,
 		httpmock.NewStringResponder(202, "[]"))
@@ -509,12 +509,12 @@ func TestEasee_Phases1p3p_scaleDown_resetsDCC(t *testing.T) {
 	err = e.Phases1p3p(1)
 	assert.NoError(t, err)
 
-	// Verify DCC:0 was sent to force a cloud-level value change
+	// Verify DCC:7 was sent to force a cloud-level value change
 	info := httpmock.GetCallCountInfo()
-	assert.Equal(t, 1, info["POST "+chargerURI], "expected one POST to charger settings with DCC:0")
+	assert.Equal(t, 1, info["POST "+chargerURI], "expected one POST to charger settings with DCC:7")
 
-	// Verify c.current was reset to 0
-	assert.Equal(t, 0.0, e.current, "c.current should be reset to 0 after scale-down")
+	// Verify c.current was set to 7
+	assert.Equal(t, 7.0, e.current, "c.current should be set to 7 after scale-down")
 }
 
 func TestEasee_Phases1p3p_scaleUp_noChargerCurrentResent(t *testing.T) {
@@ -584,7 +584,7 @@ func TestEasee_Phases1p3p_scaleDown_zeroCurrent_stillResetsDCC(t *testing.T) {
 	httpmock.RegisterResponder(http.MethodPost, getURI,
 		httpmock.NewStringResponder(200, ""))
 
-	// Mock POST charger settings — DCC:0 is sent even when c.current is already 0
+	// Mock POST charger settings — DCC:7 is sent even when c.current is already 0
 	chargerURI := fmt.Sprintf("%s/chargers/%s/settings", easee.API, chargerID)
 	httpmock.RegisterResponder(http.MethodPost, chargerURI,
 		httpmock.NewStringResponder(202, "[]"))
@@ -593,7 +593,7 @@ func TestEasee_Phases1p3p_scaleDown_zeroCurrent_stillResetsDCC(t *testing.T) {
 	assert.NoError(t, err)
 
 	info := httpmock.GetCallCountInfo()
-	assert.Equal(t, 1, info["POST "+chargerURI], "DCC:0 should be sent even when c.current is already 0")
+	assert.Equal(t, 1, info["POST "+chargerURI], "DCC:7 should be sent even when c.current is already 0")
 }
 
 func TestLivenessCheck_staleObservations(t *testing.T) {

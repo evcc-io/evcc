@@ -772,27 +772,27 @@ func (c *Easee) Phases1p3p(phases int) error {
 		}
 
 		// When scaling down to 1p, the Easee charger interprets zeroed P2/P3
-		// circuit currents as a stop signal. Send DCC:0 to force a value change
+		// circuit currents as a stop signal. Send DCC:7 to force a value change
 		// at the cloud level (the cloud deduplicates same-value DCC commands).
 		// The loadpoint's next control interval will send the real target current,
-		// which is then also a change (0 → target) that the cloud accepts.
+		// which is then also a change (7 → target) that the cloud accepts.
 		if err == nil && phases == 1 {
-			var zero float64
+			override := 7.0
 			chargerData := easee.ChargerSettings{
-				DynamicChargerCurrent: &zero,
+				DynamicChargerCurrent: &override,
 			}
 			chargerURI := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
 			noop, sendErr := c.dispatcher.Send(chargerURI, chargerData)
 			if sendErr != nil {
-				c.log.WARN.Printf("phase switch: failed to reset charger current: %v", sendErr)
+				c.log.WARN.Printf("phase switch: failed to set charger current override: %v", sendErr)
 			} else if !noop {
-				if waitErr := c.waitForDynamicChargerCurrent(zero); waitErr != nil {
-					c.log.WARN.Printf("phase switch: charger current reset confirmation timeout: %v", waitErr)
+				if waitErr := c.waitForDynamicChargerCurrent(override); waitErr != nil {
+					c.log.WARN.Printf("phase switch: charger current override confirmation timeout: %v", waitErr)
 				}
 			}
 
 			c.mux.Lock()
-			c.current = zero
+			c.current = override
 			c.mux.Unlock()
 		}
 	} else {
