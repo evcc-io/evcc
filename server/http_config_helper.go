@@ -18,7 +18,6 @@ import (
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/go-viper/mapstructure/v2"
 	"github.com/samber/lo"
-	"github.com/spf13/cast"
 	"go.yaml.in/yaml/v4"
 )
 
@@ -226,7 +225,11 @@ func deviceInstanceFromMergedConfig[T any](ctx context.Context, id int, class te
 
 	// TODO merge custom config
 	if req.Yaml != "" {
-		instance, err := newFromConf(ctx, conf.Type, req.Other)
+		typ, other, err := config.CustomDevice(conf.Type, req.Other)
+		if err != nil {
+			return nil, zero, nil, err
+		}
+		instance, err := newFromConf(ctx, typ, other)
 		return dev, instance, req.Serialise(), err
 	}
 
@@ -441,7 +444,7 @@ func (maskedTransformer) Transformer(typ reflect.Type) func(dst, src reflect.Val
 	}
 }
 
-// decodeDeviceConfig extracts device configuration and yaml details plus type override
+// decodeDeviceConfig extracts device configuration and yaml details
 func decodeDeviceConfig(r io.Reader) (configReq, error) {
 	var res configReq
 
@@ -463,14 +466,13 @@ func decodeDeviceConfig(r io.Reader) (configReq, error) {
 		return configReq{}, errors.New("invalid config: cannot mix yaml and other")
 	}
 
-	if err := yaml.Unmarshal([]byte(res.Yaml), &res.Other); err != nil && err != io.EOF {
+	// validate yaml syntax
+	var tmp map[string]any
+	if err := yaml.Unmarshal([]byte(res.Yaml), &tmp); err != nil && err != io.EOF {
 		return configReq{}, err
 	}
 
-	if typ := cast.ToString(res.Other["type"]); typ != "" {
-		res.Type = typ
-		delete(res.Other, "type")
-	}
+	res.Other = map[string]any{"yaml": res.Yaml}
 
 	return res, nil
 }
