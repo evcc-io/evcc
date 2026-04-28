@@ -14,6 +14,7 @@
 		@added="$emit('vehicle-changed', $event)"
 		@updated="$emit('vehicle-changed')"
 		@removed="$emit('vehicle-changed')"
+		@disable="$emit('disable', $event)"
 	>
 		<template #collapsible-more="{ values }">
 			<h6 class="mt-3">{{ $t("config.vehicle.chargingSettings") }}</h6>
@@ -187,7 +188,7 @@ export default defineComponent({
 	props: {
 		isSponsor: Boolean,
 	},
-	emits: ["vehicle-changed"],
+	emits: ["vehicle-changed", "disable"],
 	data() {
 		return {
 			initialValues,

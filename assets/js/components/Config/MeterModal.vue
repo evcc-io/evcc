@@ -20,6 +20,7 @@
 		@added="(name) => emitChanged('added', name)"
 		@updated="() => emitChanged('updated')"
 		@removed="() => emitChanged('removed')"
+		@disable="$emit('disable', $event)"
 		@close="handleClose"
 	>
 		<template #pre-content>
@@ -135,7 +136,7 @@ export default defineComponent({
 	props: {
 		isSponsor: Boolean,
 	},
-	emits: ["changed", "close"],
+	emits: ["changed", "disable", "close"],
 	data() {
 		return {
 			extMeterUsage: "charge" as MeterTemplateUsage,

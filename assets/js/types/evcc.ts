@@ -174,6 +174,7 @@ export interface Entity {
   type: string;
   id: number;
   config: Config;
+  deviceDisable?: boolean;
 }
 
 export enum ConfigType {
