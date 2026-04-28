@@ -71,6 +71,7 @@ func (a *auth) getAdminPasswordHash() string {
 func (a *auth) RemoveAdminPassword() {
 	a.settings.SetString(keys.AdminPassword, "")
 	a.settings.SetString(keys.JwtSecret, "")
+	a.settings.SetString(keys.ApiKey, "")
 }
 
 // IsAdminPasswordConfigured checks if the admin password is already set

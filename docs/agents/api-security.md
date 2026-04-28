@@ -64,9 +64,10 @@ Admin password and API key are stored as bcrypt hashes. The JWT signing
 secret is a per-installation random value. Plaintext credentials are never
 persisted.
 
-Removing the admin password (CLI recovery) also clears the JWT secret, which
-invalidates all outstanding sessions. Regenerating the API key replaces the
-stored hash; the previous key stops working immediately.
+Removing the admin password (CLI recovery) also clears the JWT secret and the
+API key, which invalidates all outstanding sessions and any previously-issued
+API key. Regenerating the API key replaces the stored hash; the previous key
+stops working immediately.
 
 ## API Key Lifecycle
 

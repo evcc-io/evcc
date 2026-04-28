@@ -32,6 +32,7 @@ func TestRemoveAdminPassword(t *testing.T) {
 
 	mock.EXPECT().SetString(keys.JwtSecret, "")
 	mock.EXPECT().SetString(keys.AdminPassword, "")
+	mock.EXPECT().SetString(keys.ApiKey, "")
 	auth.RemoveAdminPassword()
 }
 

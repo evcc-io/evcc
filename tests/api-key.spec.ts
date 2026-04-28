@@ -58,7 +58,7 @@ test("generate first key", async ({ page }) => {
   const key = await generateKey(page, modal, "Generate API Key");
   expect(key).toMatch(/^evcc_/);
 
-  await modal.getByRole("button", { name: "Close" }).click();
+  await modal.getByRole("button", { name: "Close" }).last().click();
   await expectModalHidden(modal);
 
   // closing reveal returns to security modal — now offering Regenerate
@@ -74,7 +74,7 @@ test("regenerate replaces old key", async ({ page, request }) => {
   const modal = await loginAndOpenApiKey(page);
 
   const first = await generateKey(page, modal, "Generate API Key");
-  await modal.getByRole("button", { name: "Close" }).click();
+  await modal.getByRole("button", { name: "Close" }).last().click();
   await expectModalHidden(modal);
 
   const securityModal = page.getByTestId("security-modal");
@@ -82,7 +82,7 @@ test("regenerate replaces old key", async ({ page, request }) => {
   await securityModal.getByRole("button", { name: "Regenerate" }).click();
   await expectModalVisible(modal);
   const second = await generateKey(page, modal, "Regenerate API Key");
-  await modal.getByRole("button", { name: "Close" }).click();
+  await modal.getByRole("button", { name: "Close" }).last().click();
   expect(second).not.toBe(first);
 
   const oldRes = await request.get("/api/config/site", {
