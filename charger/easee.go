@@ -771,11 +771,8 @@ func (c *Easee) Phases1p3p(phases int) error {
 			c.dispatcher.CancelOrphan(easee.CIRCUIT_MAX_CURRENT_P1)
 		}
 
-		// When scaling down to 1p, the Easee charger interprets zeroed P2/P3
-		// circuit currents as a stop signal. Send DCC:7 to force a value change
-		// at the cloud level (the cloud deduplicates same-value DCC commands).
-		// The loadpoint's next control interval will send the real target current,
-		// which is then also a change (7 → target) that the cloud accepts.
+		// Sending DCC:7 to skip charge pause after scaling down to 1p.
+		// The loadpoint's next control interval will send the real target current.
 		if err == nil && phases == 1 {
 			override := 7.0
 			chargerData := easee.ChargerSettings{
