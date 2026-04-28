@@ -124,6 +124,11 @@ test("update password", async ({ page }) => {
     modal.getByRole("heading", { name: "Update Administrator Password" })
   ).not.toBeVisible();
 
+  // close security modal that reappears underneath
+  await expectModalVisible(securityModal);
+  await page.keyboard.press("Escape");
+  await expectModalHidden(securityModal);
+
   // logout
   const menu = await openMoreMenu(page);
   await menu.getByRole("button", { name: "Logout" }).click();
