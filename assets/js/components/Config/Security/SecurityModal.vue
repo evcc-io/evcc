@@ -28,7 +28,7 @@
 
 		<div class="mb-3">
 			<h6>{{ $t("config.apiKey.title") }}</h6>
-			<p>{{ $t("config.apiKey.entryDescription") }}</p>
+			<p>{{ $t("config.apiKey.description") }}</p>
 
 			<template v-if="apiKeyConfigured">
 				<input

@@ -45,9 +45,7 @@
   },
   "config": {
     "apiKey": {
-      "description": "Use an API key to give automation and scripts (e.g. scheduled backups) access without sharing your admin password.",
-      "done": "Done",
-      "entryDescription": "Give automation and scripts access without sharing your admin password.",
+      "description": "Give scripts and automation tasks like scheduled backups secure access without sharing your admin password.",
       "exampleLabel": "Try it: download a backup with curl",
       "generate": "Generate API Key",
       "generateConfirm": "Enter your admin password to generate a new API key.",

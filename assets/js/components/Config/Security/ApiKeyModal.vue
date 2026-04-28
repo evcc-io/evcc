@@ -85,7 +85,7 @@
 
 			<div class="d-flex justify-content-end mt-3">
 				<button type="button" class="btn btn-primary" data-bs-dismiss="modal">
-					{{ $t("config.apiKey.done") }}
+					{{ $t("config.general.close") }}
 				</button>
 			</div>
 		</template>
