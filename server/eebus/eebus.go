@@ -115,6 +115,7 @@ func NewServer(other Config) (*EEBus, error) {
 
 	configuration, err := eebusapi.NewConfiguration(
 		BrandName, BrandName, Model, serial,
+		[]shipapi.DeviceCategoryType{shipapi.DeviceCategoryTypeEnergyManagementSystem},
 		model.DeviceTypeTypeEnergyManagementSystem,
 		[]model.EntityTypeType{model.EntityTypeTypeCEM},
 		cc.Port, certificate, time.Second*4,
@@ -223,7 +224,9 @@ func (c *EEBus) RegisterDevice(ski, ip string, device Device) error {
 	if len(ip) > 0 {
 		c.service.RemoteServiceForSKI(ski).SetIPv4(ip)
 	}
-	c.service.RegisterRemoteSKI(ski)
+
+	// TODO add SHIP-ID
+	c.service.RegisterRemoteSKI(ski, "")
 
 	c.mux.Lock()
 	defer c.mux.Unlock()

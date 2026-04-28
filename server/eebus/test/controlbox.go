@@ -50,7 +50,7 @@ func createControlbox(ctx context.Context, remoteSki string, port int) (*control
 
 	configuration, err := api.NewConfiguration(
 		"Demo", "Demo", "ControlBox", "123456789",
-		// []shipapi.DeviceCategoryType{shipapi.DeviceCategoryTypeGridConnectionHub},
+		[]shipapi.DeviceCategoryType{shipapi.DeviceCategoryTypeGridConnectionHub},
 		model.DeviceTypeTypeElectricitySupplySystem,
 		[]model.EntityTypeType{model.EntityTypeTypeGridGuard},
 		port, certificate, time.Second*60)
@@ -73,7 +73,8 @@ func createControlbox(ctx context.Context, remoteSki string, port int) (*control
 	h.uclpp = lpp.NewLPP(localEntity, h.OnLPPEvent)
 	h.myService.AddUseCase(h.uclpp)
 
-	h.myService.RegisterRemoteSKI(remoteSki)
+	// TODO add SHIP-ID
+	h.myService.RegisterRemoteSKI(remoteSki, "")
 	h.myService.Start()
 
 	go func() {
@@ -117,10 +118,12 @@ func (h *controlbox) OnLPCEvent(ski string, device spineapi.DeviceRemoteInterfac
 	switch event {
 	case lpc.UseCaseSupportUpdate:
 		h.registerRemoteEntity(entity, event)
-		// case lpc.DataUpdateLimit:
-	// 	if currentLimit, err := h.uclpc.ConsumptionLimit(entity); err == nil {
-	// 		fmt.Println("New consumption limit received", currentLimit.Value, "W")
-	// 	}
+		if currentLimit, err := h.uclpc.ConsumptionLimit(entity); err == nil {
+			fmt.Println("New consumption limit received", currentLimit.Value, "W")
+		}
+
+	case lpc.DataUpdateLimit:
+		h.registerRemoteEntity(entity, event)
 	default:
 		fmt.Println("lpc:", event)
 	}
