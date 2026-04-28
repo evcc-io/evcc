@@ -18,7 +18,7 @@ jobs:
       contents: read
 
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/checkout@v6
         with:
           persist-credentials: false
       - uses: nwisbeta/validate-yaml-schema@c3734e647d2a3beb98b9132330067e900fdbd1a2 # v2.0.0
