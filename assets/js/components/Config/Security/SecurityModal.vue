@@ -24,19 +24,36 @@
 			</button>
 		</div>
 
+		<hr class="my-4" />
+
 		<div class="mb-3">
 			<h6>{{ $t("config.apiKey.title") }}</h6>
 			<p>{{ $t("config.apiKey.entryDescription") }}</p>
-			<button
-				type="button"
-				class="btn btn-outline-secondary"
-				:disabled="authDisabled"
-				@click="open('apikey')"
-			>
-				{{
-					apiKeyConfigured ? $t("config.apiKey.regenerate") : $t("config.apiKey.generate")
-				}}
-			</button>
+
+			<template v-if="apiKeyConfigured">
+				<input
+					type="text"
+					class="form-control font-monospace"
+					:value="fakeKey"
+					readonly
+					aria-label="API Key"
+				/>
+				<div class="d-flex justify-content-end mt-2">
+					<button
+						type="button"
+						class="btn btn-link btn-sm text-muted px-0"
+						:disabled="authDisabled"
+						@click="open('apikey')"
+					>
+						{{ $t("config.apiKey.regenerateLink") }}
+					</button>
+				</div>
+			</template>
+
+			<PlaceholderButton v-else :disabled="authDisabled" @click="open('apikey')">
+				<shopicon-regular-plus class="me-1"></shopicon-regular-plus>
+				<span>{{ $t("config.apiKey.generate") }}</span>
+			</PlaceholderButton>
 		</div>
 	</GenericModal>
 </template>
@@ -44,18 +61,23 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import GenericModal from "../../Helper/GenericModal.vue";
-import { replaceModal } from "@/configModal";
+import PlaceholderButton from "../../Helper/PlaceholderButton.vue";
+import { openModal } from "@/configModal";
 import api from "@/api";
+import "@h2d2/shopicons/es/regular/plus";
+
+const FAKE_KEY = "evcc_" + "•".repeat(30);
 
 export default defineComponent({
 	name: "SecurityModal",
-	components: { GenericModal },
+	components: { GenericModal, PlaceholderButton },
 	props: {
 		authDisabled: Boolean,
 	},
 	data() {
 		return {
 			apiKeyConfigured: false,
+			fakeKey: FAKE_KEY,
 		};
 	},
 	methods: {
@@ -69,7 +91,7 @@ export default defineComponent({
 		},
 		open(name: string) {
 			if (this.authDisabled) return;
-			replaceModal(name);
+			openModal(name);
 		},
 	},
 });

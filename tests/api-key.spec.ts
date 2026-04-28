@@ -23,7 +23,7 @@ async function openApiKeyModal(page: Page): Promise<Locator> {
   await page.getByTestId("generalconfig-security").getByRole("button", { name: "edit" }).click();
   const securityModal = page.getByTestId("security-modal");
   await expectModalVisible(securityModal);
-  await securityModal.getByRole("button", { name: /^(?:Generate|Regenerate) API Key$/ }).click();
+  await securityModal.getByRole("button", { name: "Generate API Key" }).click();
 
   const apiKeyModal = page.getByTestId("api-key-modal");
   await expectModalVisible(apiKeyModal);
@@ -38,7 +38,6 @@ async function generateKey(
   if (action === "Regenerate API Key") {
     page.once("dialog", (dialog) => dialog.accept());
   }
-  await modal.getByRole("button", { name: action, exact: true }).click();
   await modal.getByLabel("Administrator Password").fill(PASSWORD);
   await modal.getByRole("button", { name: action, exact: true }).click();
 
@@ -62,9 +61,10 @@ test("generate first key", async ({ page }) => {
   await modal.getByRole("button", { name: "Done" }).click();
   await expectModalHidden(modal);
 
-  // reopen and verify the regenerate path is now offered
-  const reopened = await openApiKeyModal(page);
-  await expect(reopened.getByRole("button", { name: "Regenerate API Key" })).toBeVisible();
+  // closing reveal returns to security modal — now offering Regenerate
+  const securityModal = page.getByTestId("security-modal");
+  await expectModalVisible(securityModal);
+  await expect(securityModal.getByRole("button", { name: "Regenerate" })).toBeVisible();
 
   await stop();
 });
@@ -77,9 +77,12 @@ test("regenerate replaces old key", async ({ page, request }) => {
   await modal.getByRole("button", { name: "Done" }).click();
   await expectModalHidden(modal);
 
-  const reopened = await openApiKeyModal(page);
-  const second = await generateKey(page, reopened, "Regenerate API Key");
-  await reopened.getByRole("button", { name: "Done" }).click();
+  const securityModal = page.getByTestId("security-modal");
+  await expectModalVisible(securityModal);
+  await securityModal.getByRole("button", { name: "Regenerate" }).click();
+  await expectModalVisible(modal);
+  const second = await generateKey(page, modal, "Regenerate API Key");
+  await modal.getByRole("button", { name: "Done" }).click();
   expect(second).not.toBe(first);
 
   const oldRes = await request.get("/api/config/site", {

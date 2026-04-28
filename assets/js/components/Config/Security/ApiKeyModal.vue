@@ -14,76 +14,46 @@
 
 		<ErrorMessage :error="error" />
 
-		<template v-if="view === 'overview'">
-			<form v-if="!passwordPrompt" @submit.prevent="">
-				<p>{{ $t("config.apiKey.description") }}</p>
-				<div class="d-flex justify-content-end">
-					<button
-						type="button"
-						class="btn btn-primary"
-						:disabled="authDisabled"
-						@click="startGenerate"
-					>
-						{{
-							configured
-								? $t("config.apiKey.regenerate")
-								: $t("config.apiKey.generate")
-						}}
-					</button>
-				</div>
-			</form>
+		<form v-if="view === 'overview'" @submit.prevent="submitGenerate">
+			<p>{{ $t("config.apiKey.description") }}</p>
 
-			<form v-else @submit.prevent="submitGenerate">
-				<p class="mt-3">
+			<div class="mb-4">
+				<label for="apiKeyPassword" class="col-form-label">
+					<span class="label">{{ $t("loginModal.password") }}</span>
+				</label>
+				<input
+					id="apiKeyPassword"
+					v-model="password"
+					class="form-control"
+					autocomplete="current-password"
+					type="password"
+					required
+					:disabled="authDisabled"
+				/>
+				<p v-if="passwordError" class="text-danger my-2">{{ passwordError }}</p>
+			</div>
+
+			<div class="d-flex justify-content-end">
+				<button
+					type="submit"
+					class="btn btn-primary"
+					:disabled="authDisabled || loading || !password"
+				>
+					<span
+						v-if="loading"
+						class="spinner-border spinner-border-sm me-1"
+						role="status"
+						aria-hidden="true"
+					></span>
 					<span v-if="configured">
-						{{ $t("config.apiKey.regenerateConfirm") }}
+						{{ $t("config.apiKey.regenerate") }}
 					</span>
 					<span v-else>
-						{{ $t("config.apiKey.generateConfirm") }}
+						{{ $t("config.apiKey.generate") }}
 					</span>
-				</p>
-
-				<div class="mb-4">
-					<label for="apiKeyPassword" class="col-form-label">
-						<span class="label">{{ $t("loginModal.password") }}</span>
-					</label>
-					<input
-						id="apiKeyPassword"
-						v-model="password"
-						class="form-control"
-						autocomplete="current-password"
-						type="password"
-						required
-					/>
-					<p v-if="passwordError" class="text-danger my-2">{{ passwordError }}</p>
-				</div>
-
-				<div class="d-flex justify-content-between gap-2 flex-wrap">
-					<button
-						type="button"
-						class="btn btn-link text-muted btn-cancel"
-						:disabled="loading"
-						@click="cancelGenerate"
-					>
-						{{ $t("config.general.cancel") }}
-					</button>
-					<button type="submit" class="btn btn-primary" :disabled="loading || !password">
-						<span
-							v-if="loading"
-							class="spinner-border spinner-border-sm me-1"
-							role="status"
-							aria-hidden="true"
-						></span>
-						<span v-if="configured">
-							{{ $t("config.apiKey.regenerate") }}
-						</span>
-						<span v-else>
-							{{ $t("config.apiKey.generate") }}
-						</span>
-					</button>
-				</div>
-			</form>
-		</template>
+				</button>
+			</div>
+		</form>
 
 		<template v-else-if="view === 'reveal'">
 			<p>{{ $t("config.apiKey.revealSuccess") }}</p>
@@ -102,7 +72,7 @@
 			<FormRow id="apiKeyExample" :label="$t('config.apiKey.exampleLabel')">
 				<pre
 					id="apiKeyExample"
-					class="form-control border font-monospace small mb-0 api-key-example"
+					class="form-control border font-monospace small mb-2 api-key-example"
 					>{{ curlExample }}</pre
 				>
 				<CopyLink :text="curlExample" />
@@ -143,7 +113,6 @@ export default defineComponent({
 		return {
 			view: "overview" as View,
 			configured: false,
-			passwordPrompt: false,
 			password: "",
 			passwordError: "",
 			error: "" as string | null,
@@ -177,7 +146,6 @@ export default defineComponent({
 		},
 		resetState() {
 			this.view = "overview";
-			this.passwordPrompt = false;
 			this.password = "";
 			this.passwordError = "";
 			this.error = "";
@@ -192,22 +160,11 @@ export default defineComponent({
 				this.handleError(err);
 			}
 		},
-		startGenerate() {
+		async submitGenerate() {
 			if (this.authDisabled) return;
 			if (this.configured && !window.confirm(this.$t("config.apiKey.regenerateWarning"))) {
 				return;
 			}
-			this.passwordPrompt = true;
-			this.password = "";
-			this.passwordError = "";
-			this.error = "";
-		},
-		cancelGenerate() {
-			this.passwordPrompt = false;
-			this.password = "";
-			this.passwordError = "";
-		},
-		async submitGenerate() {
 			this.loading = true;
 			this.passwordError = "";
 			this.error = "";
@@ -223,7 +180,6 @@ export default defineComponent({
 				}
 				this.revealedKey = res.data?.key ?? null;
 				this.configured = true;
-				this.passwordPrompt = false;
 				this.password = "";
 				this.view = "reveal";
 			} catch (err) {

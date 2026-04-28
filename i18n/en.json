@@ -54,10 +54,11 @@
       "keyLabel": "API Key",
       "regenerate": "Regenerate API Key",
       "regenerateConfirm": "Enter your admin password to regenerate the API key.",
+      "regenerateLink": "Regenerate",
       "regenerateWarning": "Regenerating will invalidate the existing key and any automation using it will stop working. Continue?",
       "revealSuccess": "Your new API key is ready to use.",
       "revealTitle": "API Key Created",
-      "shownOnce": "This key is shown only once. Store it somewhere safe; you cannot retrieve it later.",
+      "shownOnce": "This key is shown only once. Store it somewhere safe. You cannot retrieve it later.",
       "title": "API Key"
     },
     "aux": {
