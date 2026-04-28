@@ -51,7 +51,6 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/libp2p/zeroconf/v2"
-	"github.com/samber/lo"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	vpr "github.com/spf13/viper"
@@ -1232,9 +1231,12 @@ func configureSiteAndLoadpoints(conf *globalconfig.All) (*core.Site, error) {
 		errs = append(errs, &ClassError{ClassTariff, err})
 	}
 
-	loadpoints := lo.Map(config.Loadpoints().Devices(), func(dev config.Device[loadpoint.API], _ int) *core.Loadpoint {
-		return dev.Instance().(*core.Loadpoint)
-	})
+	var loadpoints []*core.Loadpoint
+	for _, dev := range config.Loadpoints().Devices() {
+		if inst := dev.Instance(); inst != nil {
+			loadpoints = append(loadpoints, inst.(*core.Loadpoint))
+		}
+	}
 
 	site, err := configureSite(conf.Site, loadpoints, tariffs)
 	if err != nil {
