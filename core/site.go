@@ -128,10 +128,6 @@ func NewSiteFromConfig(other map[string]any) (*Site, error) {
 }
 
 func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tariff.Tariffs) error {
-	if len(loadpoints) == 0 {
-		return errors.New("no loadpoint available")
-	}
-
 	site.loadpoints = loadpoints
 	site.tariffs = tariffs
 
