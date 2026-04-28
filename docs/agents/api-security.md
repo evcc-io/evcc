@@ -36,7 +36,7 @@ for configuration and system administration.
 handler. Used for destructive or credential-scoped operations.
 
 For some Critical endpoints (backup, restore, reset) the password check is
-**skipped when the caller authed via API key**, so unattended automation
+**skipped when the caller is authenticated via API key**, so unattended automation
 doesn't need to embed the admin password. For credential-management
 endpoints (rotate API key, change admin password) the password check is
 **strict**: a leaked API key must not be able to rotate itself or change
