@@ -231,25 +231,25 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	}
 
 	// multiple batteries
-	if mm, err := activeMeters(site.Meters.BatteryMetersRef); err != nil {
-		site.batteryMeters = mm
-	} else {
+	mm, err := activeMeters(site.Meters.BatteryMetersRef)
+	if err != nil {
 		return err
 	}
+	site.batteryMeters = mm
 
 	// meters used only for monitoring
-	if mm, err := activeMeters(site.Meters.ExtMetersRef); err != nil {
-		site.extMeters = mm
-	} else {
+	mm, err = activeMeters(site.Meters.ExtMetersRef)
+	if err != nil {
 		return err
 	}
+	site.extMeters = mm
 
 	// auxiliary meters
-	if mm, err := activeMeters(site.Meters.AuxMetersRef); err != nil {
-		site.auxMeters = mm
-	} else {
+	mm, err = activeMeters(site.Meters.AuxMetersRef)
+	if err != nil {
 		return err
 	}
+	site.auxMeters = mm
 
 	// revert battery mode on shutdown
 	shutdown.Register(func() {
