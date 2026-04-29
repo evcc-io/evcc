@@ -14,14 +14,6 @@ params:
     description:
       de: Die vzlogger Kanal uuid für die Leistung
       en: The vzlogger channel uuid for power
-  - name: energyuuid
-    advanced: true
-    description:
-      de: Die vzlogger Kanal uuid für den Zählerstand
-      en: The vzlogger channel uuid for the meter reading
-    help:
-      de: Die vzlogger Kanal uuid für den Zählerstand (OBIS Code 1.8.0, Strombezug)
-      en: The vzlogger channel uuid for the meter reading (OBIS Code 1.8.0, electricity consumption)
   - name: scale
     advanced: true
     default: 1
@@ -31,6 +23,14 @@ params:
     help:
       de: Multipliziere Leistungs-Rohwert mit diesem Faktor
       en: Multiply power raw value by this factor
+  - name: energyuuid
+    advanced: true
+    description:
+      de: Die vzlogger Kanal uuid für den Zählerstand
+      en: The vzlogger channel uuid for the meter reading
+    help:
+      de: Die vzlogger Kanal uuid für den Zählerstand (OBIS Code 1.8.0, Strombezug)
+      en: The vzlogger channel uuid for the meter reading (OBIS Code 1.8.0, electricity consumption)
   - name: energyscale
     advanced: true
     default: 0.001
