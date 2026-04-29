@@ -653,10 +653,8 @@ func (site *Site) extractHeaterProfile(from, to time.Time) (tempSensitive, nonSe
 					nonSensitiveProfiles = append(nonSensitiveProfiles, profile[:])
 				}
 			} else {
-				var incompleteErr *metrics.IncompleteError
-				if errors.As(err, &incompleteErr) {
-					site.log.DEBUG.Printf("heater profile: loadpoint %d insufficient data (%d/%d slots)",
-						lpID, incompleteErr.Found, incompleteErr.Required)
+				if errors.Is(err, metrics.ErrIncomplete) {
+					site.log.DEBUG.Printf("heater profile: loadpoint %d insufficient data", lpID)
 				} else if err != nil {
 					site.log.DEBUG.Printf("heater profile: loadpoint %d no data (%v)", lpID, err)
 				}
