@@ -119,7 +119,7 @@
 						:key="column.name"
 						:data-testid="`sessions-foot-${column.name}`"
 						scope="col"
-						class="align-top text-end"
+						class="align-top text-end tabular"
 					>
 						<span v-if="column.total === null"> </span>
 						<span v-else>{{ column.format(column.total || 0) }}</span>
@@ -134,7 +134,7 @@
 					data-testid="sessions-entry"
 					@click="showDetails(session.id)"
 				>
-					<td class="ps-0">
+					<td class="ps-0 tabular">
 						{{ fmtFullDateTime(new Date(session.created), true) }}
 					</td>
 					<td class="d-none d-md-table-cell">
@@ -147,7 +147,11 @@
 						<div>{{ session.loadpoint }}</div>
 						<div>{{ session.vehicle }}</div>
 					</td>
-					<td v-for="column in columnsPerBreakpoint" :key="column.name" class="text-end">
+					<td
+						v-for="column in columnsPerBreakpoint"
+						:key="column.name"
+						class="text-end tabular"
+					>
 						<span v-if="column.value(session) === null" class="text-gray"> - </span>
 						<span v-else>{{ column.format(column.value(session) || 0) }}</span>
 					</td>
