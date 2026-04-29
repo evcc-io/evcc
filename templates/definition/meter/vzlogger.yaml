@@ -11,6 +11,17 @@ params:
     default: 8081
   - name: uuid
     required: true
+    description:
+      de: Die vzlogger Kanal uuid für die Leistung
+      en: The vzlogger channel uuid for power
+  - name: energyuuid
+    advanced: true
+    description:
+      de: Zählerstand
+      en: Meter reading
+    help:
+      de: Die vzlogger Kanal uuid für den Zählerstand (OBIS Code 1.8.0, Strombezug)
+      en: The vzlogger channel uuid for the meter reading (OBIS Code 1.8.0, electricity consumption)
   - name: scale
     advanced: true
     default: 1
@@ -105,6 +116,16 @@ render: |
     {{- if .scale }}
     scale: {{ .scale }}
     {{- end }}
+  {{ if .energyuuid -}}
+  energy: # meter reading in kWh
+    source: http
+    uri: http://{{ .host }}:{{ .port }}/
+    jq: .data[] | select(.uuid=="{{ unquote .energyuuid }}") | .tuples[0][1]
+    cache: {{ .cache }}
+    {{- if .scale }}
+    scale: {{ .scale }}
+    {{- end }}
+  {{ end -}}
   {{ if and .l1currentuuid .l2currentuuid .l3currentuuid -}}
   currents:
   - source: http
