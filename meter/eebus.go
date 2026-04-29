@@ -34,8 +34,6 @@ type EEBus struct {
 	maEntity    spineapi.EntityRemoteInterface
 	egLpcEntity spineapi.EntityRemoteInterface
 	egLppEntity spineapi.EntityRemoteInterface
-
-	consumptionLimit *ucapi.LoadLimit
 }
 
 type measurements interface {
