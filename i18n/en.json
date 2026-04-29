@@ -1445,6 +1445,7 @@
     },
     "loadpoint": "Charging point",
     "noData": "No charging sessions this month.",
+    "odometer": "Mileage",
     "overview": "Overview",
     "period": {
       "month": "Month",
