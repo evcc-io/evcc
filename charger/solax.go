@@ -162,7 +162,7 @@ func (wb *Solax) Status() (api.ChargeStatus, error) {
 		return api.StatusA, nil
 	case
 		1,  // "Preparing"
-		3,  // "Finish"
+		3,  // "Finishing"
 		7,  // "SuspendedEV"
 		8,  // "SuspendedEVSE"
 		11, // "StartDelay"
@@ -170,8 +170,7 @@ func (wb *Solax) Status() (api.ChargeStatus, error) {
 		13, // "Stopping"
 		17: // "PhaseSwitching"
 		return api.StatusB, nil
-	case
-		2: // "Charging"
+	case 2: // "Charging"
 		return api.StatusC, nil
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %d", s)
