@@ -26,11 +26,20 @@ params:
     advanced: true
     default: 1
     description:
-      de: Skalierungsfaktor
-      en: Scale factor
+      de: Skalierungsfaktor Leistung
+      en: Scale factor power
     help:
-      de: Multipliziere Rohwert mit diesem Faktor
-      en: Multiply by this value
+      de: Multipliziere Leistungs-Rohwert mit diesem Faktor
+      en: Multiply power raw value by this factor
+  - name: energyscale
+    advanced: true
+    default: 0.001
+    description:
+      de: Skalierungsfaktor Energie
+      en: Scale factor energy
+    help:
+      de: Multipliziere Energie-Rohwert mit diesem Faktor (Standard 0.001 für Wh nach kWh). Bei Messwandlern ist zusätzlich der Wandlerfaktor zu berücksichtigen.
+      en: Multiply energy raw value by this factor (default 0.001 for Wh to kWh). For current transformers additionally the transformer factor needs to be considered.
   - name: l1currentuuid
     advanced: true
     description:
@@ -122,8 +131,8 @@ render: |
     uri: http://{{ .host }}:{{ .port }}/
     jq: .data[] | select(.uuid=="{{ unquote .energyuuid }}") | .tuples[0][1]
     cache: {{ .cache }}
-    {{- if .scale }}
-    scale: {{ .scale }}
+    {{- if .energyscale }}
+    scale: {{ .energyscale }}
     {{- end }}
   {{- end }}
   {{ if and .l1currentuuid .l2currentuuid .l3currentuuid -}}
