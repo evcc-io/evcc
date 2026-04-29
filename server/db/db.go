@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/evcc-io/evcc/util"
-	"github.com/glebarez/sqlite"
+	"github.com/libtnb/sqlite"
 	"github.com/mitchellh/go-homedir"
 	"gorm.io/gorm"
 )
