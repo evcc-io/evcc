@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"slices"
 	"testing"
 	"time"
 
@@ -24,27 +25,93 @@ func TestSqliteTimestamp(t *testing.T) {
 	db, err := db.Instance.DB()
 	require.NoError(t, err)
 
-	var (
-		ts  SqlTime
-		val float64
-	)
+	var ts SqlTime
 
 	for _, sql := range []string{
-		`SELECT ts, import FROM meters`,
-		`SELECT min(ts), import FROM meters`,
-		`SELECT unixepoch(ts), import FROM meters`,
-		`SELECT unixepoch(min(ts)), import FROM meters`,
-		`SELECT min(ts) AS ts, avg(import) AS import
-			FROM meters
+		`SELECT ts FROM meters`,
+		`SELECT min(ts) FROM meters`,
+		// `SELECT unixepoch(ts) FROM meters`,
+		// `SELECT unixepoch(min(ts)) FROM meters`,
+		`SELECT min(ts) AS ts FROM meters
 			GROUP BY strftime("%H:%M", ts)
 			ORDER BY ts`,
 	} {
-		require.NoError(t, db.QueryRow(sql).Scan(&ts, &val))
-		require.True(t, clock.Now().Equal(time.Time(ts)), "expected %v, got %v", clock.Now().Local(), time.Time(ts).Local())
+		require.NoError(t, db.QueryRow(sql).Scan(&ts))
+		require.True(t, clock.Now().Equal(time.Time(ts)), "expected %v, got %v (%s)", clock.Now().Local(), time.Time(ts).Local(), sql)
 	}
 
-	require.NoError(t, db.QueryRow(`SELECT ts, import FROM meters WHERE ts >= ?`, clock.Now()).Scan(&ts, &val))
+	require.NoError(t, db.QueryRow(`SELECT ts FROM meters WHERE ts >= ?`, clock.Now().Unix()).Scan(&ts))
 	require.True(t, clock.Now().Equal(time.Time(ts)), "expected %v, got %v", clock.Now().Local(), time.Time(ts).Local())
+}
+
+func TestQueryImportEnergyUTCFilter(t *testing.T) {
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, SetupSchema())
+
+	e := entity{Name: "grid", Group: "grid"}
+	require.NoError(t, db.Instance.FirstOrCreate(&e).Error)
+
+	// insert 4 slots at 16:00, 16:15, 16:30, 16:45 local time
+	loc := time.Now().Location()
+	base := time.Date(2026, 4, 15, 16, 0, 0, 0, loc)
+
+	for i := range 4 {
+		ts := base.Add(time.Duration(i) * 15 * time.Minute)
+		require.NoError(t, persist(e, ts, 0, float64(i+1)))
+	}
+
+	// query with UTC times that cover all 4 slots
+	// base is 16:00 local, convert to UTC and use a from before and to after
+	from := base.Add(-time.Hour).UTC()
+	to := base.Add(time.Hour).UTC()
+
+	res, err := QueryImportEnergy(from, to, "15m", false)
+	require.NoError(t, err)
+	require.Len(t, res, 1)
+	require.Len(t, res[0].Data, 4, "expected all 4 slots, got %d", len(res[0].Data))
+
+	var totalExport float64
+	for _, s := range res[0].Data {
+		totalExport += s.Export
+	}
+	require.InDelta(t, 1+2+3+4, totalExport, 0.001)
+}
+
+func TestQueryImportEnergyGrouped(t *testing.T) {
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, SetupSchema())
+
+	// two entities sharing the same group, different names
+	e1 := entity{Id: 2, Name: "db:12", Group: "grid"}
+	require.NoError(t, db.Instance.Create(&e1).Error)
+	e2 := entity{Id: 3, Name: "db:13", Group: "grid"}
+	require.NoError(t, db.Instance.Create(&e2).Error)
+
+	loc := time.Now().Location()
+	base := time.Date(2026, 4, 15, 16, 0, 0, 0, loc)
+
+	require.NoError(t, persist(e1, base, 1, 0))
+	require.NoError(t, persist(e2, base, 2, 0))
+	require.NoError(t, persist(e1, base.Add(15*time.Minute), 3, 0))
+	require.NoError(t, persist(e2, base.Add(15*time.Minute), 4, 0))
+
+	from := base.Add(-time.Hour).UTC()
+	to := base.Add(time.Hour).UTC()
+
+	// ungrouped: 2 series
+	res, err := QueryImportEnergy(from, to, "15m", false)
+	require.NoError(t, err)
+	require.Len(t, res, 2)
+
+	// grouped: 1 series, values summed per bucket
+	res, err = QueryImportEnergy(from, to, "15m", true)
+	require.NoError(t, err)
+	require.Len(t, res, 1)
+	require.Equal(t, "grid", res[0].Group)
+	require.Empty(t, res[0].Name)
+	require.Len(t, res[0].Data, 2)
+	require.InDelta(t, 1+2, res[0].Data[0].Import, 0.001)
+	require.InDelta(t, 3+4, res[0].Data[1].Import, 0.001)
 }
 
 func TestUpdateProfile(t *testing.T) {
@@ -67,6 +134,11 @@ func TestUpdateProfile(t *testing.T) {
 		persist(entity, clock.Now(), float64(i), float64(i))
 		clock.Add(15 * time.Minute)
 	}
+
+	// validate records written
+	var count int64
+	require.NoError(t, db.Instance.Model(new(meter)).Count(&count).Error)
+	require.Equal(t, int64(24*2*4), count)
 
 	{
 		from := clock.Now().Local().AddDate(0, 0, -2).Add(12 * time.Hour) // 12:00 of day 0
@@ -98,5 +170,41 @@ func TestUpdateProfile(t *testing.T) {
 		}
 
 		require.Equal(t, expected, *prof, "full profile: expected %v, got %v", expected, *prof)
+	}
+}
+
+func TestTimeMigration(t *testing.T) {
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	mig := db.Instance.Migrator()
+
+	require.NoError(t, db.Instance.AutoMigrate(new(entity)))
+
+	type v1 struct {
+		Meter     int       `json:"meter" gorm:"column:meter;uniqueIndex:idx_meter_ts"`
+		Timestamp time.Time `json:"ts" gorm:"column:ts;uniqueIndex:idx_meter_ts"`
+		Entity    entity    `json:"-" gorm:"foreignkey:Meter;references:Id"`
+	}
+
+	require.NoError(t, db.Instance.AutoMigrate(new(v1)))
+	{
+		tables, err := mig.GetTables()
+		require.NoError(t, err)
+		require.True(t, slices.Contains(tables, "v1"))
+	}
+
+	require.NoError(t, mig.RenameTable("v1", "v2"))
+
+	type v2 struct {
+		Meter     int    `json:"meter" gorm:"column:meter;uniqueIndex:idx_meter_ts"`
+		Timestamp int64  `json:"ts" gorm:"column:ts;uniqueIndex:idx_meter_ts"`
+		Entity    entity `json:"-" gorm:"foreignkey:Meter;references:Id"`
+	}
+
+	require.NoError(t, db.Instance.AutoMigrate(new(v2)))
+	{
+		tables, err := mig.GetTables()
+		require.NoError(t, err)
+		require.False(t, slices.Contains(tables, "v1"))
+		require.True(t, slices.Contains(tables, "v2"))
 	}
 }

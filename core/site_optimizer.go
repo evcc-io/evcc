@@ -119,8 +119,14 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	if solarTariff != nil && len(solar) > 0 {
 		minLen = min(minLen, len(solar))
 	}
-	const expectedSlots = 8
-	if minLen < expectedSlots {
+
+	uri := lo.CoalesceOrEmpty(os.Getenv("OPTIMIZER_URI"), OPTIMIZER_URI)
+	if uri == OPTIMIZER_URI {
+		// limit to 2 days for sake of performance
+		minLen = min(2*96, minLen)
+	}
+
+	if expectedSlots := 8; minLen < expectedSlots {
 		if solarTariff != nil {
 			return fmt.Errorf("not enough forecast slots for meaningful optimization: %d < %d (grid=%d, feedIn=%d, solar=%d)", minLen, expectedSlots, len(grid), len(feedIn), len(solar))
 		}
@@ -202,7 +208,10 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 			continue
 		}
 
-		add(site.loadpointRequest(lp, minLen, firstSlotDuration, grid))
+		// skip disabled loadpoints
+		if req, detail := site.loadpointRequest(lp, minLen, firstSlotDuration, grid); req.CMax > 0 {
+			add(req, detail)
+		}
 	}
 
 	for i, dev := range site.batteryMeters {
@@ -215,10 +224,14 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		add(site.batteryRequest(dev, b, grid, minLen, firstSlotDuration))
 	}
 
+	// empty request- all loadpoints disabled
+	if len(req.Batteries) == 0 {
+		return nil
+	}
+
 	httpClient := request.NewClient(site.log)
 	httpClient.Timeout = 30 * time.Second
 
-	uri := lo.CoalesceOrEmpty(os.Getenv("OPTIMIZER_URI"), OPTIMIZER_URI)
 	apiClient, err := optimizer.NewClientWithResponses(uri, optimizer.WithHTTPClient(httpClient))
 	if err != nil {
 		return err
@@ -546,6 +559,11 @@ func profileSlotsFromNow(profile []float64) []float64 {
 
 // prorate adjusts the first slot's energy amount according to remaining duration
 func prorate[T constraints.Float](slots []T, firstSlotDuration time.Duration) []float32 {
+	// return empty slice instead of nil to make api happy
+	if len(slots) == 0 {
+		return []float32{}
+	}
+
 	res := slices.Clone(slots)
 	res[0] = res[0] * T(firstSlotDuration) / T(tariff.SlotDuration)
 	return lo.Map(res, func(f T, _ int) float32 {
