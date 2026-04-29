@@ -45,10 +45,15 @@ params:
     help:
       de: Steuert ob evcc die Authentifizierung am Charger vornimmt. Vorteil ist ein kontrollierter Ladestart. Nicht kompatibel mit RFID Identifikation von Fahrzeugen.
       en: Controls wether evcc shall perform authentication against charger. Benefit is a contolled start of charging. Not compatible with RFID identification of vehicles.
+auth:
+  type: easee
+  params: [user, password]
 render: |
   type: easee
-  user: {{ .user }}
-  password: {{ .password }}
+  auth:
+    source: easee
+    user: {{ .user }}
+    password: {{ .password }}
   charger: {{ .charger }}
   timeout: {{ .timeout }}
   authorize: {{ .authorize }}
