@@ -25,7 +25,8 @@ test.describe("boost", async () => {
     await lp.getByTestId("mode").getByRole("button", { name: "Solar", exact: true }).click();
     await lp.getByTestId("loadpoint-settings-button").last().click();
     const modal = page.getByTestId("loadpoint-settings-modal").first();
-    await modal.getByTestId("battery-boost-limit").selectOption("20 %");
+    await expectModalVisible(modal);
+    await modal.getByLabel("Battery Boost").selectOption("20 %");
     await expect(modal.getByTestId("battery-boost")).toContainText(
       "Allow fast charging from home battery until it's drained to 20%."
     );
@@ -49,7 +50,8 @@ test.describe("boost", async () => {
     await lp.getByTestId("mode").getByRole("button", { name: "Solar", exact: true }).click();
     await lp.getByTestId("loadpoint-settings-button").last().click();
     const modal = page.getByTestId("loadpoint-settings-modal").first();
-    await modal.getByTestId("battery-boost-limit").selectOption("90 %");
+    await expectModalVisible(modal);
+    await modal.getByLabel("Battery Boost").selectOption("90 %");
     await expect(modal.getByTestId("battery-boost")).toContainText("drained to 90%");
     await page.waitForLoadState("networkidle");
     await modal.getByLabel("Close").click();
@@ -67,7 +69,8 @@ test.describe("boost", async () => {
     await lp.getByTestId("mode").getByRole("button", { name: "Solar", exact: true }).click();
     await lp.getByTestId("loadpoint-settings-button").last().click();
     const modal = page.getByTestId("loadpoint-settings-modal").first();
-    await modal.getByTestId("battery-boost-limit").selectOption("20 %");
+    await expectModalVisible(modal);
+    await modal.getByLabel("Battery Boost").selectOption("20 %");
     await expect(modal.getByTestId("battery-boost")).toContainText("drained to 20%");
     await page.waitForLoadState("networkidle");
     await modal.getByLabel("Close").click();
@@ -87,7 +90,7 @@ test.describe("boost", async () => {
     await lp1.getByTestId("loadpoint-settings-button").last().click();
     const modal = page.getByTestId("loadpoint-settings-modal").first();
     await expectModalVisible(modal);
-    await modal.getByTestId("battery-boost-limit").selectOption("0 %");
+    await modal.getByLabel("Battery Boost").selectOption("0 %");
     await modal.getByLabel("Close").click();
     await expectModalHidden(modal);
 
@@ -135,7 +138,8 @@ test.describe("boost", async () => {
     // visible after setting limit
     await lp.getByTestId("loadpoint-settings-button").last().click();
     const modal = page.getByTestId("loadpoint-settings-modal").last();
-    await modal.getByTestId("battery-boost-limit").selectOption("50 %");
+    await expectModalVisible(modal);
+    await modal.getByLabel("Battery Boost").selectOption("50 %");
     await page.waitForLoadState("networkidle");
     await modal.getByLabel("Close").click();
     await expectModalHidden(modal);
