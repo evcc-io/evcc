@@ -16,6 +16,9 @@ var _ API = (*adapter)(nil)
 // Publish publishes vehicle updates at site level
 var Publish func()
 
+// ClearPlanLocks clears locked plan goals across all loadpoints
+var ClearPlanLocks func()
+
 type adapter struct {
 	log         *util.Logger
 	name        string
@@ -29,6 +32,12 @@ func (v *adapter) key() string {
 func (v *adapter) publish() {
 	if Publish != nil {
 		Publish()
+	}
+}
+
+func (v *adapter) clearPlanLocks() {
+	if ClearPlanLocks != nil {
+		ClearPlanLocks()
 	}
 }
 
@@ -71,24 +80,20 @@ func (v *adapter) SetLimitSoc(soc int) {
 }
 
 // GetPlanSoc returns the charge plan soc
-func (v *adapter) GetPlanSoc() (time.Time, time.Duration, int) {
+func (v *adapter) GetPlanSoc() (time.Time, int) {
 	var ts time.Time
 	if v, err := settings.Time(v.key() + keys.PlanTime); err == nil {
 		ts = v
-	}
-	var precondition time.Duration
-	if v, err := settings.Int(v.key() + keys.PlanPrecondition); err == nil {
-		precondition = time.Duration(v) * time.Second
 	}
 	var soc int
 	if v, err := settings.Int(v.key() + keys.PlanSoc); err == nil {
 		soc = int(v)
 	}
-	return ts, precondition, soc
+	return ts, soc
 }
 
 // SetPlanSoc sets the charge plan soc
-func (v *adapter) SetPlanSoc(ts time.Time, precondition time.Duration, soc int) error {
+func (v *adapter) SetPlanSoc(ts time.Time, soc int) error {
 	if !ts.IsZero() && ts.Before(time.Now()) {
 		return errors.New("timestamp is in the past")
 	}
@@ -98,12 +103,14 @@ func (v *adapter) SetPlanSoc(ts time.Time, precondition time.Duration, soc int) 
 		ts = time.Time{}
 		v.log.DEBUG.Printf("delete %s plan", v.name)
 	} else {
-		v.log.DEBUG.Printf("set %s plan soc: %d @ %v (precondition: %v)", v.name, soc, ts.Round(time.Second).Local(), precondition)
+		v.log.DEBUG.Printf("set %s plan soc: %d @ %v", v.name, soc, ts.Round(time.Second).Local())
 	}
 
 	settings.SetTime(v.key()+keys.PlanTime, ts)
-	settings.SetInt(v.key()+keys.PlanPrecondition, int64(precondition.Seconds()))
 	settings.SetInt(v.key()+keys.PlanSoc, int64(soc))
+
+	// note: could be optimized by only clearing plan lock of the relevant loadpoint
+	v.clearPlanLocks()
 
 	v.publish()
 
@@ -125,9 +132,14 @@ func (v *adapter) SetRepeatingPlans(plans []api.RepeatingPlan) error {
 		}
 	}
 
+	if err := settings.SetJson(v.key()+keys.RepeatingPlans, plans); err != nil {
+		return err
+	}
+
 	v.log.DEBUG.Printf("update repeating plans for %s to: %v", v.name, plans)
 
-	settings.SetJson(v.key()+keys.RepeatingPlans, plans)
+	// note: could be optimized by only clearing plan lock of the relevant loadpoint
+	v.clearPlanLocks()
 
 	v.publish()
 
@@ -142,4 +154,22 @@ func (v *adapter) GetRepeatingPlans() []api.RepeatingPlan {
 	}
 
 	return plans
+}
+
+func (v *adapter) GetPlanStrategy() api.PlanStrategy {
+	var strategy api.PlanStrategy
+	if err := settings.Json(v.key()+keys.PlanStrategy, &strategy); err != nil {
+		return api.PlanStrategy{}
+	}
+	return strategy
+}
+
+func (v *adapter) SetPlanStrategy(planStrategy api.PlanStrategy) error {
+	if err := settings.SetJson(v.key()+keys.PlanStrategy, planStrategy); err != nil {
+		return err
+	}
+
+	v.publish()
+
+	return nil
 }

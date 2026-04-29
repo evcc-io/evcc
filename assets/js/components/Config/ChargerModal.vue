@@ -1,9 +1,8 @@
 <template>
 	<DeviceModalBase
 		:id="id"
-		modal-id="chargerModal"
+		name="charger"
 		device-type="charger"
-		:fade="fade"
 		:is-sponsor="isSponsor"
 		:modal-title="modalTitle"
 		:provide-template-options="provideTemplateOptions"
@@ -16,10 +15,10 @@
 		:apply-custom-defaults="applyCustomDefaults"
 		:custom-fields="customFields"
 		:get-product-name="getProductName"
-		:hide-template-fields="hideTemplateFields"
-		@added="$emit('added', $event)"
-		@updated="$emit('updated')"
-		@removed="$emit('removed')"
+		:hide-template-fields="showOcppOnboarding"
+		@added="(name) => emitChanged('added', name)"
+		@updated="() => emitChanged('updated')"
+		@removed="() => emitChanged('removed')"
 		@close="$emit('close')"
 		@reset="reset"
 	>
@@ -48,7 +47,7 @@
 			</FormRow>
 
 			<div
-				v-if="!ocppNextStepConfirmed && !values.stationid"
+				v-if="showOcppOnboarding"
 				class="my-4 d-flex justify-content-end gap-2 align-items-center"
 			>
 				<span v-if="ocppStationIdDetected">{{ $t("config.charger.ocppConnected") }}</span>
@@ -86,7 +85,7 @@ import { defineComponent, type PropType } from "vue";
 import FormRow from "./FormRow.vue";
 import DeviceModalBase from "./DeviceModal/DeviceModalBase.vue";
 import { ConfigType } from "@/types/evcc";
-import type { ModalFade } from "../Helper/GenericModal.vue";
+import { getModal } from "@/configModal";
 import {
 	type DeviceValues,
 	type Template,
@@ -123,16 +122,13 @@ export default defineComponent({
 		DeviceModalBase,
 	},
 	props: {
-		id: Number,
-		loadpointType: { type: String as PropType<LoadpointType>, default: null },
-		fade: String as PropType<ModalFade>,
 		ocpp: {
 			type: Object as PropType<Ocpp>,
 			default: () => ({ config: { port: 0 }, status: { stations: [] } }),
 		},
 		isSponsor: Boolean,
 	},
-	emits: ["added", "updated", "removed", "close"],
+	emits: ["changed", "close"],
 	data() {
 		return {
 			initialValues,
@@ -143,6 +139,12 @@ export default defineComponent({
 		};
 	},
 	computed: {
+		id(): number | undefined {
+			return getModal("charger")?.id;
+		},
+		loadpointType(): LoadpointType | null {
+			return (getModal("charger")?.type as LoadpointType) || null;
+		},
 		modalTitle(): string {
 			if (this.isNew) {
 				return this.$t(`config.charger.titleAdd.${this.loadpointType}`);
@@ -175,8 +177,11 @@ export default defineComponent({
 			const stations = this.ocpp.status.stations;
 			return stations.find((station) => station.status === "unknown")?.id;
 		},
-		hideTemplateFields(): boolean {
-			return this.isOcpp && !this.ocppNextStepConfirmed;
+		showOcppOnboarding(): boolean {
+			if (!this.isOcpp) return false;
+			if (this.ocppNextStepConfirmed) return false;
+			if (this.currentValues.stationid) return false;
+			return true;
 		},
 	},
 	methods: {
@@ -315,6 +320,10 @@ export default defineComponent({
 			if (window.confirm(this.$t("config.charger.ocppConfirmContinue"))) {
 				this.ocppNextStepConfirmed = true;
 			}
+		},
+		async emitChanged(action: "added" | "updated" | "removed", name?: string) {
+			const result = { action, name };
+			this.$emit("changed", result);
 		},
 		reset() {
 			this.ocppNextStepConfirmed = false;

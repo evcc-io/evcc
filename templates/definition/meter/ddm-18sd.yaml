@@ -12,10 +12,5 @@ render: |
   type: mbmd
   {{- include "modbus" . }}
   model: ddm
-  {{- if ne .usage "pv" }}
   power: Power
-  energy: Import
-  {{- else }}
-  power: -Power
-  energy: Export
-  {{- end }}
+  energy: Sum

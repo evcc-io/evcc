@@ -1,5 +1,5 @@
-<!-- eslint-disable vue/no-v-html -->
 <template>
+	<ErrorMessage :error="error" />
 	<div class="form-check form-switch my-3">
 		<input
 			id="telemetryEnabled"
@@ -25,27 +25,20 @@
 				</i18n-t>
 				<span v-else>{{ $t("footer.telemetry.optInSponsorship") }}</span>
 			</label>
-			<div v-if="error" class="errorMessage my-1 text-danger" v-html="error" />
 		</div>
 	</div>
 </template>
 
 <script lang="ts">
 import { defineComponent } from "vue";
+import ErrorMessage from "./Helper/ErrorMessage.vue";
 import api from "../api";
 import { docsPrefix } from "../i18n";
 import type { AxiosError } from "axios";
 
-function parseMarkdown(markdownText: string) {
-	const htmlText = markdownText
-		.replace(/\*\*(.*)\*\*/gim, "<b>$1</b>")
-		.replace(/\*(.*)\*/gim, "<i>$1</i>")
-		.replace(/`(.*)`/gim, "<pre>$1</pre>");
-	return htmlText.trim();
-}
-
 export default defineComponent({
 	name: "TelemetrySettings",
+	components: { ErrorMessage },
 	props: { sponsorActive: Boolean, telemetry: Boolean },
 	data() {
 		return {
@@ -64,9 +57,7 @@ export default defineComponent({
 				await api.post(`settings/telemetry/${(e.target as HTMLInputElement).checked}`);
 			} catch (err) {
 				const e = err as AxiosError<{ error: string }>;
-				if (e.response) {
-					this.error = parseMarkdown("**Error:** " + e.response.data.error);
-				}
+				this.error = e.response?.data?.error || e.message;
 			}
 		},
 	},
@@ -78,9 +69,5 @@ export default defineComponent({
 }
 .form-check-label {
 	max-width: 100%;
-}
-.errorMessage :deep(pre) {
-	text-overflow: ellipsis;
-	font-size: 1em;
 }
 </style>

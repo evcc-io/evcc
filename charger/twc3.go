@@ -104,7 +104,7 @@ func (c *Twc3) Enabled() (bool, error) {
 // Enable implements the api.Charger interface
 func (c *Twc3) Enable(enable bool) error {
 	if c.lp == nil {
-		return errors.New("loadpoint not initialized")
+		return ErrLoadpointNotInitialized
 	}
 
 	// ignore disabling when vehicle is already disconnected
@@ -118,7 +118,7 @@ func (c *Twc3) Enable(enable bool) error {
 		return nil
 	}
 
-	v, ok := c.lp.GetVehicle().(api.ChargeController)
+	v, ok := api.Cap[api.ChargeController](c.lp.GetVehicle())
 	if !ok {
 		return errors.New("vehicle not capable of start/stop")
 	}
@@ -134,11 +134,16 @@ func (c *Twc3) Enable(enable bool) error {
 // MaxCurrent implements the api.Charger interface
 func (c *Twc3) MaxCurrent(current int64) error {
 	if c.lp == nil {
-		return errors.New("loadpoint not initialized")
+		return ErrLoadpointNotInitialized
 	}
 
-	v, ok := c.lp.GetVehicle().(api.CurrentController)
+	v, ok := api.Cap[api.CurrentController](c.lp.GetVehicle())
 	if !ok {
+		if c.lp.GetMode() == api.ModeNow {
+			// vehicle does not support current control- ignore silently
+			// since TWC3 cannot limit current on its own
+			return nil
+		}
 		return errors.New("vehicle not capable of current control")
 	}
 
@@ -149,7 +154,7 @@ var _ api.CurrentGetter = (*Twc3)(nil)
 
 // GetMaxCurrent implements the api.CurrentGetter interface
 func (c *Twc3) GetMaxCurrent() (float64, error) {
-	v, ok := c.lp.GetVehicle().(api.CurrentGetter)
+	v, ok := api.Cap[api.CurrentGetter](c.lp.GetVehicle())
 	if !ok {
 		return 0, api.ErrNotAvailable
 	}
@@ -163,6 +168,14 @@ var _ api.ChargeRater = (*Twc3)(nil)
 func (v *Twc3) ChargedEnergy() (float64, error) {
 	res, err := v.vitalsG()
 	return res.SessionEnergyWh / 1e3, err
+}
+
+var _ api.ConnectionTimer = (*Twc3)(nil)
+
+// ConnectionDuration implements the api.ConnectionTimer interface
+func (v *Twc3) ConnectionDuration() (time.Duration, error) {
+	res, err := v.vitalsG()
+	return time.Duration(res.SessionS) * time.Second, err
 }
 
 // removed: https://github.com/evcc-io/evcc/issues/13555

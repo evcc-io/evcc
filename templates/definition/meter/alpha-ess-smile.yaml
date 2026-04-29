@@ -13,18 +13,12 @@ requirements:
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
-    allinone: true
   - name: modbus
     choice: ["rs485", "tcpip"]
     baudrate: 9600
     id: 85
-  - name: capacity
-    advanced: true
-  - name: minsoc
-    advanced: true
-  - name: maxsoc
-    advanced: true
   - name: maxacpower
+  - preset: battery-params
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -40,6 +34,7 @@ render: |
     {{- include "modbus" . | indent 2 }}
     register:
       address: 18 # 0x12 Total energy consumed from grid (Grid)
+      # 0x10 (address 16) Total energy feed to grid (Grid) - for future grid energy import/export split
       type: holding
       decode: uint32
     scale: 0.01
@@ -116,10 +111,10 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 16 # 0x10 Total energy feed to Grid (Grid Meter)
+      address: 1086 # 0x43E Inverter Total PV Energy
       type: holding
       decode: uint32
-    scale: 0.01
+    scale: 0.1
   maxacpower: {{ .maxacpower }}
   {{- end }}
   {{- if eq .usage "battery" }}
@@ -204,5 +199,5 @@ render: |
               address: 2133 # 0x855 Charge Cut Soc
               type: writemultiple
               decode: uint16
-  capacity: {{ .capacity }} # kWh
+  {{- include "battery-params" . }}
   {{- end }}

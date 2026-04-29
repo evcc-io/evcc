@@ -7,15 +7,15 @@ baudrate: {{ .baudrate }}
 comset: {{ .comset }}
 {{- else if or (eq .modbus "rs485tcpip") .rs485tcpip }}
 # RS485 via TCP/IP (Modbus RTU)
-uri: {{ .host }}:{{ .port }}
+uri: {{ joinHostPort .host .port }}
 rtu: true
 {{- else if or (eq .modbus "tcpip") .tcpip }}
 # Modbus TCP
-uri: {{ .host }}:{{ .port }}
+uri: {{ joinHostPort .host .port }}
 rtu: false
 {{- else if or (eq .modbus "udp") .udp }}
 # Modbus UDP
-uri: {{ .host }}:{{ if (ne .port "502") }}{{ .port }}{{ else }}8899{{ end }}
+uri: {{ joinHostPort .host .port }}
 udp: true
 rtu: true
 {{- else }}

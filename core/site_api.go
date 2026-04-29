@@ -11,6 +11,7 @@ import (
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/samber/lo"
 )
 
@@ -33,6 +34,16 @@ func filterConfigurable(ref []string) []string {
 	return lo.Filter(ref, func(ref string, _ int) bool {
 		return isConfigurable(ref)
 	})
+}
+
+// Optimize updates the optimizer
+func (site *Site) Optimize() error {
+	if !sponsor.IsAuthorized() || !optimizerEnabled() {
+		return api.ErrNotAvailable
+	}
+
+	go site.optimizerUpdateAsync()
+	return nil
 }
 
 // GetTitle returns the title
@@ -132,9 +143,24 @@ func (site *Site) SetExtMeterRefs(ref []string) {
 	settings.SetString(keys.ExtMeters, strings.Join(filterConfigurable(ref), ","))
 }
 
+// GetBatterySoc returns the current battery soc
+func (site *Site) GetBatterySoc() float64 {
+	site.RLock()
+	defer site.RUnlock()
+	return site.battery.Soc
+}
+
 // Loadpoints returns the loadpoints as api interfaces
 func (site *Site) Loadpoints() []loadpoint.API {
 	return lo.Map(site.loadpoints, func(lp *Loadpoint, _ int) loadpoint.API { return lp })
+}
+
+func (site *Site) hasMeters() bool {
+	return site.gridMeter != nil || len(site.pvMeters) > 0 || len(site.batteryMeters) > 0 || len(site.auxMeters) > 0 || len(site.extMeters) > 0
+}
+
+func (site *Site) IsConfigured() bool {
+	return len(site.loadpoints) > 0 || site.hasMeters()
 }
 
 // loadpointsAsCircuitDevices returns the loadpoints as circuit devices

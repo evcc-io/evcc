@@ -1,11 +1,6 @@
 import { test, expect, devices, type Page } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
-import {
-  expectModalVisible,
-  expectModalHidden,
-  openTopNavigation,
-  expectTopNavigationClosed,
-} from "./utils";
+import { expectModalVisible, expectModalHidden } from "./utils";
 
 test.use({ baseURL: baseUrl() });
 
@@ -38,12 +33,7 @@ async function selectVehicleFilter(page: Page, value: string) {
 test.describe("basics", async () => {
   test("navigation to sessions", async ({ page }) => {
     await page.goto("/");
-    await openTopNavigation(page);
-    await page
-      .getByTestId("topnavigation-dropdown")
-      .getByRole("link", { name: "Charging sessions" })
-      .click();
-    await expectTopNavigationClosed(page);
+    await page.getByRole("link", { name: "Sessions" }).click();
     await expect(page.getByRole("heading", { name: "Charging Sessions" })).toBeVisible();
   });
   test("month without data", async ({ page }) => {
@@ -343,6 +333,7 @@ test.describe("session details", async () => {
     await expect(modal.getByTestId("session-details-energy")).toContainText("1:00");
     await expect(modal.getByTestId("session-details-solar")).toContainText("100.0% (10.0 kWh)");
     await expect(modal.getByTestId("session-details-price")).toContainText("2.00 € 20.0 ct/kWh");
+    await expect(modal.getByTestId("session-details-co2")).toContainText("3 kg");
     await expect(modal.getByTestId("session-details-co2")).toContainText("300 g/kWh");
   });
 
@@ -352,6 +343,17 @@ test.describe("session details", async () => {
     const modal = page.getByTestId("session-details");
     await expectModalVisible(modal);
 
+    // select guest vehicle
+    await modal.getByLabel("Vehicle").selectOption("Guest vehicle");
+    await modal.getByRole("button", { name: "Close" }).click();
+    await expectModalHidden(modal);
+
+    page.reload();
+    await page.getByTestId("sessions-entry").nth(0).click();
+    await expectModalVisible(modal);
+    await expect(modal.getByLabel("Vehicle")).toHaveValue("");
+
+    // edit carport and select known vehicle
     await modal.getByLabel("Charging point").selectOption("Carport");
     await modal.getByLabel("Vehicle").selectOption("blauer e-Golf");
     await modal.getByRole("button", { name: "Close" }).click();

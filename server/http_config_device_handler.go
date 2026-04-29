@@ -7,15 +7,19 @@ import (
 	"maps"
 	"net/http"
 	"reflect"
+	"slices"
 	"strconv"
 
 	"dario.cat/mergo"
-	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/charger"
 	"github.com/evcc-io/evcc/core/circuit"
+	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/meter"
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/server/db/settings"
+	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/evcc-io/evcc/vehicle"
@@ -71,6 +75,12 @@ func devicesConfigHandler(w http.ResponseWriter, r *http.Request) {
 
 	case templates.Circuit:
 		res, err = devicesConfig(class, config.Circuits(), hidePrivate)
+
+	case templates.Tariff:
+		res, err = devicesConfig(class, config.Tariffs(), hidePrivate)
+
+	case templates.Messenger:
+		res, err = devicesConfig(class, config.Messengers(), hidePrivate)
 	}
 
 	if err != nil {
@@ -191,6 +201,12 @@ func deviceConfigHandler(w http.ResponseWriter, r *http.Request) {
 
 	case templates.Circuit:
 		res, err = deviceConfig(class, id, config.Circuits(), hidePrivate)
+
+	case templates.Tariff:
+		res, err = deviceConfig(class, id, config.Tariffs(), hidePrivate)
+
+	case templates.Messenger:
+		res, err = deviceConfig(class, id, config.Messengers(), hidePrivate)
 	}
 
 	if err != nil {
@@ -247,6 +263,12 @@ func deviceStatusHandler(w http.ResponseWriter, r *http.Request) {
 
 	case templates.Circuit:
 		instance, err = deviceStatus(name, config.Circuits())
+
+	case templates.Tariff:
+		instance, err = deviceStatus(name, config.Tariffs())
+
+	case templates.Messenger:
+		instance, err = deviceStatus(name, config.Messengers())
 	}
 
 	if err != nil {
@@ -258,7 +280,12 @@ func deviceStatusHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func newDevice[T any](ctx context.Context, class templates.Class, req configReq, newFromConf newFromConfFunc[T], h config.Handler[T], force bool) (*config.Config, error) {
-	instance, err := newFromConf(ctx, req.Type, req.Other)
+	typ, other, err := config.CustomDevice(req.Type, req.Other)
+	if err != nil && !force {
+		return nil, err
+	}
+
+	instance, err := newFromConf(ctx, typ, other)
 	if err != nil && !force {
 		return nil, err
 	}
@@ -303,9 +330,13 @@ func newDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		conf, err = newDevice(ctx, class, req, vehicle.NewFromConfig, config.Vehicles(), force)
 
 	case templates.Circuit:
-		conf, err = newDevice(ctx, class, req, func(ctx context.Context, _ string, other map[string]any) (api.Circuit, error) {
-			return circuit.NewFromConfig(ctx, util.NewLogger("circuit"), other)
-		}, config.Circuits(), force)
+		conf, err = newDevice(ctx, class, req, circuit.NewFromConfig, config.Circuits(), force)
+
+	case templates.Tariff:
+		conf, err = newDevice(ctx, class, req, tariff.NewFromConfig, config.Tariffs(), force)
+
+	case templates.Messenger:
+		conf, err = newDevice(ctx, class, req, messenger.NewFromConfig, config.Messengers(), force)
 	}
 
 	if err != nil {
@@ -384,9 +415,13 @@ func updateDeviceHandler(w http.ResponseWriter, r *http.Request) {
 		err = updateDevice(ctx, id, class, req, vehicle.NewFromConfig, config.Vehicles(), force)
 
 	case templates.Circuit:
-		err = updateDevice(ctx, id, class, req, func(ctx context.Context, _ string, other map[string]any) (api.Circuit, error) {
-			return circuit.NewFromConfig(ctx, util.NewLogger("circuit"), other)
-		}, config.Circuits(), force)
+		err = updateDevice(ctx, id, class, req, circuit.NewFromConfig, config.Circuits(), force)
+
+	case templates.Tariff:
+		err = updateDevice(ctx, id, class, req, tariff.NewFromConfig, config.Tariffs(), force)
+
+	case templates.Messenger:
+		err = updateDevice(ctx, id, class, req, messenger.NewFromConfig, config.Messengers(), force)
 	}
 
 	setConfigDirty()
@@ -450,6 +485,27 @@ func cleanupSiteMeterRef(name string, get func() []string, set func([]string)) {
 	if len(refs) != len(res) {
 		set(res)
 	}
+}
+
+// cleanupTariffRef removes a tariff reference from settings
+func cleanupTariffRef(name string) {
+	if !settings.Exists(keys.TariffRefs) {
+		return
+	}
+
+	var refs globalconfig.TariffRefs
+	if err := settings.Json(keys.TariffRefs, &refs); err != nil {
+		return
+	}
+
+	for _, ref := range []*string{&refs.Grid, &refs.FeedIn, &refs.Co2, &refs.Planner} {
+		if *ref == name {
+			*ref = ""
+		}
+	}
+	refs.Solar = slices.DeleteFunc(refs.Solar, func(ref string) bool { return ref == name })
+
+	settings.SetJson(keys.TariffRefs, refs)
 }
 
 // deleteDeviceHandler deletes a device from database by class
@@ -533,6 +589,17 @@ func deleteDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Requ
 					lp.SetCircuitRef("")
 				}
 			}
+
+		case templates.Tariff:
+			err = deleteDevice(id, config.Tariffs())
+
+			// cleanup references
+			if err == nil {
+				cleanupTariffRef(config.NameForID(id))
+			}
+
+		case templates.Messenger:
+			err = deleteDevice(id, config.Messengers())
 		}
 
 		setConfigDirty()
@@ -554,7 +621,12 @@ func deleteDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Requ
 
 func testConfig[T any](ctx context.Context, id int, class templates.Class, req configReq, newFromConf newFromConfFunc[T], h config.Handler[T]) (T, error) {
 	if id == 0 {
-		return newFromConf(ctx, req.Type, req.Other)
+		typ, other, err := config.CustomDevice(req.Type, req.Other)
+		if err != nil {
+			var zero T
+			return zero, err
+		}
+		return newFromConf(ctx, typ, other)
 	}
 
 	_, instance, _, err := deviceInstanceFromMergedConfig(ctx, id, class, req, newFromConf, h)
@@ -602,7 +674,13 @@ func testConfigHandler(w http.ResponseWriter, r *http.Request) {
 		instance, err = testConfig(ctx, id, class, req, vehicle.NewFromConfig, config.Vehicles())
 
 	case templates.Circuit:
-		err = api.ErrNotAvailable
+		instance, err = testConfig(ctx, id, class, req, circuit.NewFromConfig, config.Circuits())
+
+	case templates.Tariff:
+		instance, err = testConfig(ctx, id, class, req, tariff.NewFromConfig, config.Tariffs())
+
+	case templates.Messenger:
+		instance, err = testConfig(ctx, id, class, req, messenger.NewFromConfig, config.Messengers())
 	}
 
 	if err != nil {

@@ -13,8 +13,8 @@ params:
     choice: ["rs485"]
     baudrate: 9600
     id: 1
-  - name: capacity
-    advanced: true
+  - name: maxacpower
+  - preset: battery-params
   - name: maxchargepower
     default: 10000
   - name: maxdischargepower
@@ -23,7 +23,6 @@ params:
     default: 10
   - name: maxsoc
     default: 100
-  - name: maxacpower
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -220,9 +219,5 @@ render: |
               address: 0x214C # Time-based control Enable
               type: writesingle
               encoding: uint16
-  capacity: {{ .capacity }} # kWh
-  maxchargepower: {{ .maxchargepower }} # W
-  maxdischargepower: {{ .maxdischargepower }} # W
-  minsoc: {{ .minsoc }} # %
-  maxsoc: {{ .maxsoc }} # %
+  {{- include "battery-params" . }}
   {{- end }}

@@ -46,7 +46,7 @@ func init() {
 	registry.Add("evecube", NewEVECUBEFromConfig)
 }
 
-//go:generate go tool decorate -f decorateEVECUBE -b *EVECUBE -r api.Charger -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.Identifier,Identify,func() (string, error)"
+//go:generate go tool decorate -f decorateEVECUBE -b *EVECUBE -r api.Charger -t api.PhaseSwitcher,api.Identifier
 
 // EVECUBEUnitConfig is the /api/admin/unitconfig response
 type EVECUBEUnitConfig struct {

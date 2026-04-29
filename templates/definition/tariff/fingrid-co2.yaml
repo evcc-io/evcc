@@ -1,0 +1,28 @@
+template: fingrid-co2
+products:
+  - brand: Fingrid
+    description:
+      generic: CO₂
+requirements:
+  description:
+    de: "CO₂-Daten für das finnische nationale Netz von [Fingrid OpenData](https://www.fingrid.fi/en/electricity-market-information/real-time-co2-emissions-estimate/). Erhalte deinen API-Schlüssel, indem du ein Konto unter [https://data.fingrid.fi/instructions](https://data.fingrid.fi/instructions) registrierst."
+    en: "CO₂ data for Finnish national grid from [Fingrid OpenData](https://www.fingrid.fi/en/electricity-market-information/real-time-co2-emissions-estimate/). Get your API key by registering an account at [https://data.fingrid.fi/instructions](https://data.fingrid.fi/instructions)."
+  evcc: ["skiptest"]
+group: co2
+countries: ["FI"]
+params:
+  - preset: tariff-base
+  - name: apiKey
+    required: true
+    help:
+      en: "Get your API key by registering an account at [https://data.fingrid.fi/instructions](https://data.fingrid.fi/instructions), creating a new API key and enter it here."
+      de: "Erstellen Sie Ihren API-Schlüssel, indem Sie ein Konto unter [https://data.fingrid.fi/instructions](https://data.fingrid.fi/instructions) registrieren, einen neuen API-Schlüssel erstellen und diesen hier eingeben."
+render: |
+  type: custom
+  tariff: co2
+  price:
+    source: http
+    uri: https://data.fingrid.fi/api/datasets/265/data/latest
+    headers:
+      x-api-key: {{ .apiKey }}
+    jq: .value

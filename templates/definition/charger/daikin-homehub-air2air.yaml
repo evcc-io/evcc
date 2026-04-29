@@ -1,4 +1,5 @@
-template: daikin-homehub-air2air
+template: daikin-altherma
+covers: ["daikin-homehub-air2air"]
 products:
   - brand: Daikin
     description:

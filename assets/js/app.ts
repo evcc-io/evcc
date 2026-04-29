@@ -5,7 +5,6 @@ import { VueHeadMixin, createHead } from "@unhead/vue/client";
 import App from "./views/App.vue";
 import setupRouter from "./router.ts";
 import setupI18n from "./i18n.ts";
-import featureflags from "./featureflags.ts";
 import { watchThemeChanges } from "./theme.ts";
 import { appDetection, sendToApp } from "./utils/native";
 import type { Notification } from "./types/evcc";
@@ -34,7 +33,7 @@ const app = createApp(
         if (!msg.level) msg.level = "error";
         const now = new Date();
         const existingMsg = this.notifications.find(
-          (n) => n.message === msg.message && n.lp === msg.lp
+          (n: Notification) => n.message === msg.message && n.lp === msg.lp
         );
         if (existingMsg) {
           existingMsg.count++;
@@ -42,7 +41,7 @@ const app = createApp(
           // move to front
           this.notifications = [
             existingMsg,
-            ...this.notifications.filter((n) => n !== existingMsg),
+            ...this.notifications.filter((n: Notification) => n !== existingMsg),
           ];
         } else {
           this.notifications = [
@@ -74,7 +73,6 @@ const head = createHead();
 
 app.use(i18n);
 app.use(setupRouter(i18n.global));
-app.use(featureflags);
 app.use(head);
 app.mixin(VueHeadMixin);
 window.app = app.mount("#app");

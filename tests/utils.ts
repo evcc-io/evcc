@@ -1,37 +1,10 @@
 import { expect, type Page, type Locator } from "@playwright/test";
 
-export async function enableExperimental(page: Page): Promise<void> {
-  await page.goto("/#/config");
-
-  await page.getByTestId("generalconfig-experimental").click();
-  const modal = page.getByTestId("experimental-modal");
-  await expectModalVisible(modal);
-  await modal.getByLabel("Show experimental UI features.").click();
-  await modal.getByRole("button", { name: "Close" }).click();
-  await expectModalHidden(modal);
-  await expect(page.locator(".modal-backdrop")).not.toBeVisible();
-}
-
-export async function openTopNavigation(page: Page): Promise<void> {
-  await expect(page.getByTestId("topnavigation-button")).toBeVisible();
-  await page.getByTestId("topnavigation-button").click();
-  await expectTopNavigationOpened(page);
-}
-
-export async function closeTopNavigation(page: Page): Promise<void> {
-  await expectTopNavigationOpened(page);
-  await page.getByTestId("topnavigation-button").click();
-  await expectTopNavigationClosed(page);
-}
-
-export async function expectTopNavigationOpened(page: Page): Promise<void> {
-  await expect(page.getByTestId("topnavigation-dropdown")).toBeVisible();
-  await expect(page.getByTestId("topnavigation-button")).toHaveAttribute("aria-expanded", "true");
-}
-
-export async function expectTopNavigationClosed(page: Page): Promise<void> {
-  await expect(page.getByTestId("topnavigation-button")).toHaveAttribute("aria-expanded", "false");
-  await expect(page.getByTestId("topnavigation-dropdown")).not.toBeVisible();
+export async function openMoreMenu(page: Page): Promise<Locator> {
+  const moreButton = page.getByTestId("tab-more");
+  await expect(moreButton).toBeVisible();
+  await moreButton.click();
+  return moreButton;
 }
 
 export async function expectModalVisible(modal: Locator): Promise<void> {
@@ -63,9 +36,16 @@ export enum LoadpointType {
   Heating = "heating",
 }
 
+export enum ChargerStatus {
+  Disconnected = "A",
+  Connected = "B",
+  Charging = "C",
+}
+
 export async function addDemoCharger(
   page: Page,
-  type: LoadpointType = LoadpointType.Charging
+  type: LoadpointType = LoadpointType.Charging,
+  status?: ChargerStatus
 ): Promise<void> {
   const lpModal = page.getByTestId("loadpoint-modal");
   await lpModal
@@ -77,6 +57,9 @@ export async function addDemoCharger(
   await modal
     .getByLabel("Manufacturer")
     .selectOption(type === LoadpointType.Heating ? "Demo heat pump" : "Demo charger");
+  if (status) {
+    await modal.getByLabel("Charge status").selectOption(status);
+  }
   await modal.getByRole("button", { name: "Save" }).click();
   await expectModalHidden(modal);
   await expectModalVisible(lpModal);

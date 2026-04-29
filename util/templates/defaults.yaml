@@ -14,12 +14,16 @@ params:
     description:
       en: Modbus Type
       de: Modbus Typ
+    required: true
   - name: host
     required: true
     description:
       de: IP-Adresse oder Hostname
       en: IP address or hostname
     example: 192.0.2.2
+    pattern:
+      regex: "^[^\\/\\s]+(:[0-9]{1,5})?$" # any char except slash/space, optional :port
+      examples: ["192.168.1.100", "example.com", "server.local:8080"]
   - name: ip
     description:
       de: IP-Adresse
@@ -55,8 +59,8 @@ params:
       de: Passwort
       en: Password
     help:
-      de: Bei führenden Nullen bitte in einfache Hochkommata setzen
-      en: Use single quotes in case of leading zeros
+      de: Zugangspasswort des Dienstes
+      en: Service account password
     mask: true
   - name: capacity
     unit: kWh
@@ -96,8 +100,11 @@ params:
     type: int
   - name: connector
     description:
-      de: Ladepunkt (falls >1 Ladepunkt)
-      en: Loadpoint (if >1 loadpoint)
+      en: Connector number
+      de: Anschlussnummer
+    help:
+      en: For multi-connector stations. Numbering starts at 1.
+      de: Bei Ladestationen mit mehreren Anschlüssen. Zählung beginnt bei 1.
     advanced: true
     default: 1
   - name: cache
@@ -169,12 +176,13 @@ params:
   - name: maxpower
     unit: W
     description:
-      de: Maximale Ladeleistung des Fahrzeugs
-      en: Maximum vehicle charging power
+      de: Ladeleistungs-Hinweis
+      en: Maximum charging power hint
     help:
-      de: Definiert die maximale Ladeleistung des Fahrzeugs. Hilft, die Ladeplanung zu verbessern, wenn das Fahrzeug üblicherweise weniger Strom nutzt als angeboten oder höhere Ströme bei einphasigem Laden erlaubt als bei dreiphasigem. Der bereitgestellte Strom des Ladepunktes wird nicht beeinflusst.
-      en: Defines the maximum charging power of the vehicle. Helps improve charge plan accuracy when the vehicle typically uses less than the offered current or supports higher single-phase current compared to three-phase. The offered current of the loadpoint is not affected.
+      de: Definiert die maximale Ladeleistung des Fahrzeugs. Hilft, die Ladeplanung zu verbessern, wenn das Fahrzeug üblicherweise weniger Strom nutzt als angeboten oder höhere Ströme bei einphasigem Laden erlaubt als bei dreiphasigem. _Der bereitgestellte Strom des Ladepunktes wird nicht beeinflusst._
+      en: Defines the maximum charging power of the vehicle. Helps improve charge plan accuracy when the vehicle typically uses less than the offered current or supports higher single-phase current compared to three-phase. _The offered current of the loadpoint is not affected._
     type: int
+    example: 10000
   - name: identifiers
     description:
       de: Identifikation
@@ -265,6 +273,7 @@ params:
     help:
       en: Usually found on the web interface of the wallbox
       de: Üblicherweise im Web Interface der Wallbox zu finden
+    service: eebus/services
   - name: uri
     private: true
     description:
@@ -283,8 +292,8 @@ params:
       en: Actor Identification Number (AIN)
       de: Aktoridentifikationsnummer (AIN)
     help:
-      en: Printed on the type label on the back of the device. Embed it in double quotes in case of leading zeroes.
-      de: Ist auf dem Typenschild auf der Geräterückseite aufgedruckt. Bei führenden Nullen bitte in doppelte Hochkommata setzen.
+      en: Printed on the type label on the back of the device.
+      de: Ist auf dem Typenschild auf der Geräterückseite aufgedruckt.
   - name: coarsecurrent
     type: bool
     description:
@@ -373,6 +382,7 @@ params:
     description:
       en: Channel
       de: Kanal
+    type: int
   - name: clientid
     description:
       generic: Client ID
@@ -397,11 +407,6 @@ params:
     mask: true
     description:
       generic: PIN
-  - name: serial_number
-    private: true
-    description:
-      en: Serial Number
-      de: Seriennummer
   - name: watchdog
     description:
       generic: Watchdog
@@ -415,6 +420,10 @@ params:
       en: ZIP code
       de: Postleitzahl
   - name: storageunit
+    type: int
+    default: 1
+    advanced: true
+    usages: ["battery"]
     description:
       en: Battery storage unit index
       de: Nummer des Batteriespeichers
@@ -429,6 +438,11 @@ params:
     type: string
     description:
       generic: Station ID
+    help:
+      en: Unique identifier of the charger. Automatically detected once the charger connects.
+      de: Eindeutige Wallbox-Kennung. Wird automatisch erkannt, sobald sich die Wallbox verbindet.
+    example: EVB-P12354
+    private: true
   - name: meter
     description:
       en: Meter ID
@@ -439,6 +453,7 @@ params:
   - name: apikey
     description:
       generic: API Key
+    mask: true
   - name: tempsource
     description:
       de: Temperaturquelle
@@ -450,6 +465,7 @@ params:
       de: Breitengrad
     type: float
     example: 55.7351
+    service: location/lat
   - name: lon
     private: true
     description:
@@ -457,6 +473,21 @@ params:
       de: Längengrad
     type: float
     example: 9.1275
+    service: location/lon
+  - name: zones
+    type: zones
+    description:
+      en: Price zones
+      de: Preiszonen
+  - name: baudrate
+    description:
+      de: Baudrate
+      en: Baudrate
+    help:
+      de: Typische Werte sind 9600, 19200, 38400, 57600, 115200
+      en: Typical values are 9600, 19200, 38400, 57600, 115200
+    default: 9600
+    type: int
 
 presets:
   vehicle-base:
@@ -518,16 +549,16 @@ presets:
     - name: language
   tariff-base:
     - name: charges
-      type: int
+      type: pricePerKWh
       advanced: true
       description:
         en: Charge
         de: Aufschlag
       help:
-        de: Zusätzlicher fester Aufschlag pro kWh (z.B. 0.05 für 5 Cent)
-        en: Additional fixed charge per kWh (e.g. 0.05 for 5 cents)
+        de: Zusätzlicher fester Aufschlag pro kWh
+        en: Additional fixed charge per kWh
     - name: tax
-      type: int
+      type: float
       advanced: true
       description:
         en: Tax
@@ -556,6 +587,16 @@ presets:
     - name: lat
       required: true
     - name: lon
+      required: true
+    - name: az
+      description:
+        en: Azimuth
+        de: Azimut
+      help:
+        en: Orientation of PV modules in degree. -180 = north, -90 = east, 0 = south, 90 = west, 180 = north
+        de: Ausrichtung der PV-Module in Grad. -180 = Norden, -90 = Osten, 0 = Süden, 90 = Westen, 180 = Norden
+      type: int
+      example: 0
       required: true
     - name: dec
       description:
@@ -605,21 +646,7 @@ presets:
 
   ocpp:
     - name: stationid
-      type: string
-      description:
-        generic: Station ID
-      help:
-        en: Unique identifier of the charger. evcc auto-detects this once the charger connects.
-        de: Eindeutige Wallbox-Kennung. evcc erkennt diese automatisch, sobald sich die Wallbox verbindet.
-      example: EVB-P12354
     - name: connector
-      description:
-        en: Connector number
-        de: Anschlussnummer
-      help:
-        de: Bei Ladestationen mit mehreren Anschlüssen. Die Zählung beginnt bei 1 für den ersten Anschluss.
-        en: For charging stations with multiple connectors. Counting starts at 1 for the first connector.
-      default: 1
     - name: remotestart
       advanced: true
       type: bool
@@ -680,6 +707,10 @@ presets:
       help:
         de: IP Adresse oder der Hostname des MQTT Brokers
         en: IP address or hostname of the MQTT broker
+      pattern:
+        regex: "^(tls://)?[^\\/\\s]+(:[0-9]{1,5})?$" # optional tls:// prefix, any char except slash/space, optional :port
+        examples:
+          ["192.168.1.100", "example.com", "server.local:8080", "tls://mqtt.example.com:8883"]
     - name: port
       default: 1883
       help:
@@ -700,6 +731,13 @@ presets:
       help:
         de: Akzeptiere keine Daten die älter sind als dieser Wert
         en: Don't accept values older than this value
+
+  battery-params:
+    - name: capacity
+    - name: minsoc
+    - name: maxsoc
+    - name: maxchargepower
+    - name: maxdischargepower
 
 modbus:
   interfaces:
@@ -726,8 +764,8 @@ modbus:
         de: Baudrate
         en: Baudrate
       help:
-        de: Prüfe die Geräteeinstellungen, typische Werte sind 9600, 19200, 38400, 57600, 115200
-        en: Check the device settings, typical values are 9600, 19200, 38400, 57600, 115200
+        de: Typische Werte sind 9600, 19200, 38400, 57600, 115200
+        en: Typical values are 9600, 19200, 38400, 57600, 115200
       default: 9600
       type: int
     - name: comset
@@ -738,6 +776,12 @@ modbus:
         de: Kommunikationsparameter des Adapters
         en: Communication parameter for the adapter
       default: 8N1
+    - name: port
+      description:
+        de: Port
+        en: Port
+      default: 502
+      type: int
   types:
     rs485serial:
       description:

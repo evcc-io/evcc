@@ -20,6 +20,8 @@ var vehicleCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(vehicleCmd)
+	withCustomTemplate(vehicleCmd)
+
 	vehicleCmd.Flags().Int64P(flagCurrent, "i", 0, flagCurrentDescription)
 	vehicleCmd.Flags().BoolP(flagStart, "a", false, flagStartDescription)
 	vehicleCmd.Flags().BoolP(flagStop, "o", false, flagStopDescription)
@@ -62,11 +64,11 @@ func runVehicle(cmd *cobra.Command, args []string) {
 			if err != nil {
 				log.ERROR.Println("max current:", err)
 			} else {
-				if vv, ok := v.(api.ChargerEx); ok {
+				if vv, ok := api.Cap[api.ChargerEx](v); ok {
 					if err := vv.MaxCurrentMillis(f); err != nil {
 						log.ERROR.Println("max current:", err)
 					}
-				} else if vv, ok := v.(api.CurrentController); ok {
+				} else if vv, ok := api.Cap[api.CurrentController](v); ok {
 					if err := vv.MaxCurrent(int64(f)); err != nil {
 						log.ERROR.Println("max current:", err)
 					}
@@ -79,7 +81,7 @@ func runVehicle(cmd *cobra.Command, args []string) {
 		if cmd.Flag(flagWakeup).Changed {
 			flagUsed = true
 
-			if vv, ok := v.(api.Resurrector); ok {
+			if vv, ok := api.Cap[api.Resurrector](v); ok {
 				if err := vv.WakeUp(); err != nil {
 					log.ERROR.Println("wakeup:", err)
 				}
@@ -91,7 +93,7 @@ func runVehicle(cmd *cobra.Command, args []string) {
 		if cmd.Flag(flagStart).Changed {
 			flagUsed = true
 
-			if vv, ok := v.(api.ChargeController); ok {
+			if vv, ok := api.Cap[api.ChargeController](v); ok {
 				if err := vv.ChargeEnable(true); err != nil {
 					log.ERROR.Println("start charge:", err)
 				}
@@ -103,7 +105,7 @@ func runVehicle(cmd *cobra.Command, args []string) {
 		if cmd.Flag(flagStop).Changed {
 			flagUsed = true
 
-			if vv, ok := v.(api.ChargeController); ok {
+			if vv, ok := api.Cap[api.ChargeController](v); ok {
 				if err := vv.ChargeEnable(false); err != nil {
 					log.ERROR.Println("stop charge:", err)
 				}
@@ -132,7 +134,4 @@ func runVehicle(cmd *cobra.Command, args []string) {
 			}
 		}
 	}
-
-	// wait for shutdown
-	<-shutdownDoneC()
 }

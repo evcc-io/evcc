@@ -71,6 +71,8 @@ test.describe("sponsor token", () => {
     await textarea.fill(EXPIRED_TOKEN);
     // Try to save to trigger validation
     await modal.getByRole("button", { name: "Save" }).click();
-    await expect(modal).toContainText("token is expired");
+    await expect(modal).toContainText(
+      "token is expired - get a fresh one from https://sponsor.evcc.io"
+    );
   });
 });

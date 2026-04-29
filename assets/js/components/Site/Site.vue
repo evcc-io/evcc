@@ -50,7 +50,8 @@
 				</div>
 			</div>
 			<Loadpoints
-				v-else-if="loadpoints.length > 0"
+				v-else
+				:key="`loadpoints-${orderedVisibleLoadpoints.length}`"
 				class="mt-1 mt-sm-2 flex-grow-1"
 				:loadpoints="orderedVisibleLoadpoints"
 				:vehicles="vehicleList"
@@ -65,11 +66,11 @@
 				:pvConfigured="pvConfigured"
 				:batteryConfigured="batteryConfigured"
 				:batterySoc="batterySoc"
+				:batteryMode="batteryMode"
 				:forecast="forecast"
 				:selectedId="selectedLoadpointId"
 				@id-changed="selectedLoadpointChanged"
 			/>
-			<Footer v-bind="footer"></Footer>
 		</div>
 	</div>
 </template>
@@ -80,23 +81,22 @@ import TopNavigationArea from "../Top/TopNavigationArea.vue";
 import Energyflow from "../Energyflow/Energyflow.vue";
 import HemsWarning from "../HemsWarning.vue";
 import Loadpoints from "../Loadpoints/Loadpoints.vue";
-import Footer from "../Footer/Footer.vue";
 import formatter from "@/mixins/formatter";
 import collector from "@/mixins/collector.ts";
 import WelcomeIcons from "./WelcomeIcons.vue";
 import { defineComponent, type PropType } from "vue";
 import type {
 	AuthProviders,
-	BatteryMeter,
+	Battery,
 	Meter,
 	CURRENCY,
 	Forecast,
 	Notification,
 	Circuit,
 	SMART_COST_TYPE,
-	Sponsor,
 	FatalError,
 	EvOpt,
+	BATTERY_MODE,
 } from "@/types/evcc";
 import store from "@/store";
 import type { Grid } from "./types";
@@ -106,7 +106,6 @@ export default defineComponent({
 	components: {
 		Loadpoints,
 		Energyflow,
-		Footer,
 		HemsWarning,
 		TopNavigationArea,
 		WelcomeIcons,
@@ -127,13 +126,11 @@ export default defineComponent({
 		pv: { type: Array as PropType<Meter[]>, default: () => [] },
 		aux: { type: Array as PropType<Meter[]>, default: () => [] },
 		ext: { type: Array as PropType<Meter[]>, default: () => [] },
-		batteryPower: Number,
-		batterySoc: Number,
 		batteryDischargeControl: Boolean,
-		batteryGridChargeLimit: { type: Number, default: null },
+		batteryGridChargeLimit: { type: [Number, null] as PropType<number | null>, default: null },
 		batteryGridChargeActive: Boolean,
-		batteryMode: String,
-		battery: { type: Array as PropType<BatteryMeter[]>, default: () => [] },
+		batteryMode: String as PropType<BATTERY_MODE>,
+		battery: { type: Object as PropType<Battery> },
 		gridCurrents: Array,
 		prioritySoc: Number,
 		bufferSoc: Number,
@@ -142,7 +139,6 @@ export default defineComponent({
 		vehicles: Object,
 		authProviders: { type: Object as PropType<AuthProviders>, default: () => ({}) },
 		currency: { type: String as PropType<CURRENCY> },
-		statistics: Object,
 		tariffFeedIn: Number,
 		tariffGrid: Number,
 		tariffCo2: Number,
@@ -151,19 +147,12 @@ export default defineComponent({
 		tariffPriceLoadpoints: Number,
 		tariffCo2Loadpoints: Number,
 
-		availableVersion: String,
-		releaseNotes: String,
-		hasUpdater: Boolean,
-		uploadMessage: String,
-		uploadProgress: Number,
-		sponsor: { type: Object as PropType<Sponsor>, default: () => ({}) },
 		smartCostType: String as PropType<SMART_COST_TYPE>,
 		smartCostAvailable: Boolean,
 		smartFeedInPriorityAvailable: Boolean,
 		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
 		forecast: Object as PropType<Forecast>,
 		circuits: Object as PropType<Record<string, Circuit>>,
-		telemetry: Boolean,
 		evopt: { type: Object as PropType<EvOpt> },
 	},
 	computed: {
@@ -173,8 +162,11 @@ export default defineComponent({
 		orderedVisibleLoadpoints() {
 			return this.loadpoints.filter((lp) => lp.visible);
 		},
+		batterySoc() {
+			return this.battery?.soc;
+		},
 		batteryConfigured() {
-			return this.battery?.length > 0;
+			return (this.battery?.devices?.length ?? 0) > 0;
 		},
 		pvConfigured() {
 			return this.pv?.length > 0;
@@ -192,27 +184,6 @@ export default defineComponent({
 		showParkingLot() {
 			// work in progess
 			return false;
-		},
-		footer() {
-			return {
-				version: {
-					installed: window.evcc.version,
-					commit: window.evcc.commit,
-					available: this.availableVersion,
-					releaseNotes: this.releaseNotes,
-					hasUpdater: this.hasUpdater,
-					uploadMessage: this.uploadMessage,
-					uploadProgress: this.uploadProgress,
-				},
-				savings: {
-					sponsor: this.sponsor,
-					statistics: this.statistics,
-					co2Configured: this.tariffCo2 !== undefined,
-					priceConfigured: this.tariffGrid !== undefined,
-					currency: this.currency,
-					telemetry: this.telemetry,
-				},
-			};
 		},
 		hasFatalError() {
 			return this.fatal.length > 0;

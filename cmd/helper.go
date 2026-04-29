@@ -8,9 +8,9 @@ import (
 	"strings"
 
 	"github.com/evcc-io/evcc/cmd/shutdown"
+	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
-	"go.yaml.in/yaml/v4"
 )
 
 // parseLogLevels parses --log area:level[,...] switch into levels per log area
@@ -80,33 +80,19 @@ func wrapFatalError(err error) error {
 		return nil
 	}
 
-	var opErr *net.OpError
-	var pathErr *os.PathError
-
-	switch {
-	case errors.As(err, &opErr):
-		if opErr.Op == "listen" && strings.Contains(opErr.Error(), "address already in use") {
+	if err2, ok := errors.AsType[*net.OpError](err); ok {
+		if err2.Op == "listen" && strings.Contains(err2.Error(), "address already in use") {
 			err = fmt.Errorf("could not open port- check that evcc is not already running (%w)", err)
 		}
+	}
 
-	case errors.As(err, &pathErr):
-		if pathErr.Op == "remove" && strings.Contains(pathErr.Error(), "operation not permitted") {
+	if err2, ok := errors.AsType[*os.PathError](err); ok {
+		if err2.Op == "remove" && strings.Contains(err2.Error(), "operation not permitted") {
 			err = fmt.Errorf("could not remove file- check that evcc is not already running (%w)", err)
 		}
 	}
 
 	return &FatalError{err}
-}
-
-func customDevice(other map[string]any) (map[string]any, error) {
-	customYaml, ok := other["yaml"].(string)
-	if !ok {
-		return other, nil
-	}
-
-	var res map[string]any
-	err := yaml.Unmarshal([]byte(customYaml), &res)
-	return res, err
 }
 
 func deviceHeader[T any](dev config.Device[T]) string {
@@ -119,4 +105,17 @@ func deviceHeader[T any](dev config.Device[T]) string {
 	}
 
 	return name
+}
+
+// migrateYamlToJson converts a settings value from yaml to json if needed
+func migrateYamlToJson[T any](key string, res *T) error {
+	if settings.IsJson(key) {
+		return settings.Json(key, res)
+	}
+
+	if err := settings.Yaml(key, new(T), res); err != nil {
+		return err
+	}
+
+	return settings.SetJson(key, res)
 }

@@ -1,8 +1,27 @@
 package sponsor
 
+// LICENSE
+
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
+
+// This module is NOT covered by the MIT license. All rights reserved.
+
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
 import (
 	"context"
 	"fmt"
+	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -18,10 +37,7 @@ var (
 	ExpiresAt      time.Time
 )
 
-const (
-	unavailable = "sponsorship unavailable"
-	victron     = "victron"
-)
+const unavailable = "sponsorship unavailable"
 
 func IsAuthorized() bool {
 	mu.RLock()
@@ -46,8 +62,15 @@ func ConfigureSponsorship(token string) error {
 			return nil
 		}
 
+		if os.Getenv("HEMSPRO") != "" {
+			if sub := checkHemsPro(); sub != "" {
+				Subject = sub
+				return nil
+			}
+		}
+
 		var err error
-		if token, err = readSerial(); token == "" || err != nil {
+		if token, err = checkPulsares(); token == "" || err != nil {
 			return err
 		}
 	}
@@ -75,7 +98,11 @@ func ConfigureSponsorship(token string) error {
 			Subject = unavailable
 			err = nil
 		} else {
-			err = fmt.Errorf("sponsortoken: %w", err)
+			if strings.Contains(err.Error(), "token is expired") {
+				err = fmt.Errorf("%w - get a fresh one from https://sponsor.evcc.io", err)
+			} else {
+				err = fmt.Errorf("sponsortoken: %w", err)
+			}
 		}
 	}
 
@@ -97,8 +124,8 @@ type Status struct {
 	Token       string    `json:"token,omitempty"`
 }
 
-// GetStatus returns the sponsorship status
-func GetStatus() Status {
+// RedactedStatus returns the sponsorship status
+func RedactedStatus() Status {
 	mu.RLock()
 	defer mu.RUnlock()
 

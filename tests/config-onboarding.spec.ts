@@ -29,14 +29,7 @@ test.describe("onboarding", async () => {
     await expect(page.locator("body")).toContainText("Hello aboard!");
     await page.getByRole("link", { name: "Let's start configuration" }).click();
 
-    // login
-    const login = page.getByTestId("login-modal");
-    await expectModalVisible(login);
-    await login.getByLabel("Administrator Password").fill(PASSWORD);
-    await login.getByRole("button", { name: "Login" }).click();
-    await expectModalHidden(login);
-
-    // config page
+    // config page (already logged in from password creation)
     await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible();
     await expect(page.getByTestId("welcome-banner")).toBeVisible();
     await expect(page.getByTestId("welcome-banner")).toContainText("Start with creating a");
@@ -58,6 +51,9 @@ test.describe("onboarding", async () => {
     await expectModalVisible(lpModal);
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(lpModal);
+
+    await restart();
+
     await expect(page.getByTestId("welcome-banner")).not.toBeVisible();
 
     // create grid meter
@@ -89,7 +85,7 @@ test.describe("onboarding", async () => {
     await expect(restartButton).not.toBeVisible();
 
     // navigate to main screen
-    await page.getByTestId("home-link").click();
+    await page.getByRole("link", { name: "Charge" }).click();
 
     // verify configuration
     await page.getByTestId("visualization").click();

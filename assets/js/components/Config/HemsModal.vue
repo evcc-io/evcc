@@ -1,15 +1,14 @@
 <template>
 	<YamlModal
-		id="hemsModal"
+		name="hems"
 		:title="$t('config.hems.title')"
 		:description="$t('config.hems.description')"
-		docs="/docs/features/14a-enwg-steuve"
+		docs="/docs/features/external-control"
 		:defaultYaml="defaultYaml"
 		endpoint="/config/hems"
 		removeKey="hems"
 		:noYamlEditor="fromYaml"
 		:disableSave="fromYaml"
-		data-testid="hems-modal"
 		@changed="$emit('changed')"
 		@open="loadSessions"
 	>
@@ -31,7 +30,7 @@
 				</a>
 			</div>
 			<p v-if="fromYaml" class="text-muted">
-				{{ $t("config.hems.yamlConfigured") }}
+				{{ $t("config.general.fromYamlHint") }}
 			</p>
 		</template>
 	</YamlModal>
@@ -48,7 +47,7 @@ export default {
 	components: { YamlModal },
 	mixins: [formatter],
 	props: {
-		fromYaml: Boolean,
+		yamlSource: String,
 	},
 	emits: ["changed"],
 	data() {
@@ -58,6 +57,9 @@ export default {
 		};
 	},
 	computed: {
+		fromYaml() {
+			return this.yamlSource === "file";
+		},
 		sessionCount() {
 			return this.sessions.length;
 		},
@@ -78,7 +80,9 @@ export default {
 	methods: {
 		async loadSessions() {
 			try {
-				const response = await api.get("gridsessions");
+				const response = await api.get("gridsessions", {
+					validateStatus: (code) => [200, 404].includes(code),
+				});
 				this.sessions = response.data || [];
 			} catch (e) {
 				// Silently fail if no sessions available

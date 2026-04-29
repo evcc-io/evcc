@@ -17,7 +17,6 @@ requirements:
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
-    allinone: true
   - name: region
     description:
       de: Region
@@ -30,18 +29,17 @@ params:
     description:
       generic: QcellsCloud TokenID
     help:
-      de: Token ID von https://qhome-ess-g3.q-cells.eu/#/api/ oder https://qhome-ess-g3.q-cells.us/#/api/ hier eintragen.
-      en: Go to https://qhome-ess-g3.q-cells.eu/#/api/ or https://qhome-ess-g3.q-cells.us/#/api/ and take the value of "ObtaintokenID".
+      de: Token ID von [qhome-ess-g3.q-cells.eu](https://qhome-ess-g3.q-cells.eu/#/api/) oder [qhome-ess-g3.q-cells.us](https://qhome-ess-g3.q-cells.us/#/api/) hier eintragen.
+      en: Go to [qhome-ess-g3.q-cells.eu](https://qhome-ess-g3.q-cells.eu/#/api/) or [qhome-ess-g3.q-cells.us](https://qhome-ess-g3.q-cells.us/#/api/) and take the value of "ObtaintokenID".
   - name: serial
     required: true
     description:
       de: Seriennummer
       en: Serial number
     help:
-      de: Registriernummer von https://qhome-ess-g3.q-cells.eu/blue/#/inverter oder https://qhome-ess-g3.q-cells.us/blue/#/inverter hier eintragen.
-      en: Go to https://qhome-ess-g3.q-cells.eu/blue/#/inverter or https://qhome-ess-g3.q-cells.us/blue/#/inverter and take the value of registration number.
-  - name: capacity
-    advanced: true
+      de: Registriernummer von [qhome-ess-g3.q-cells.eu](https://qhome-ess-g3.q-cells.eu/blue/#/inverter) oder [qhome-ess-g3.q-cells.us](https://qhome-ess-g3.q-cells.us/blue/#/inverter) hier eintragen.
+      en: Go to [qhome-ess-g3.q-cells.eu](https://qhome-ess-g3.q-cells.eu/blue/#/inverter) or [qhome-ess-g3.q-cells.us](https://qhome-ess-g3.q-cells.us/blue/#/inverter) and take the value of registration number.
+  - preset: battery-params
 render: |
   type: custom
   power:
@@ -77,5 +75,5 @@ render: |
     uri: https://qhome-ess-g3.q-cells.{{ lower .region }}/proxyApp/proxy/api/getRealtimeInfo.do?tokenId={{ urlEncode .tokenid }}&sn={{ urlEncode .serial }}
     jq: .result.soc  # Solax API inverter.DC.battery.energy.SOC
     cache: 2m30s
-  capacity: {{ .capacity }} # kWh
+  {{- include "battery-params" . }}
   {{- end }}

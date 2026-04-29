@@ -1,7 +1,7 @@
 <template>
 	<DeviceModalBase
 		:id="id"
-		modal-id="vehicleModal"
+		name="vehicle"
 		device-type="vehicle"
 		:is-sponsor="isSponsor"
 		:modal-title="$t(`config.vehicle.${isNew ? 'titleAdd' : 'titleEdit'}`)"
@@ -124,7 +124,6 @@
 					size="w-100"
 					class="me-2"
 					:choice="priorityOptions"
-					required
 				/>
 			</FormRow>
 
@@ -140,6 +139,7 @@
 					property="identifiers"
 					size="w-100"
 					class="me-2"
+					:rows="4"
 				/>
 			</FormRow>
 		</template>
@@ -156,10 +156,12 @@ import { ConfigType } from "@/types/evcc";
 import { customTemplateOption, type TemplateGroup } from "./DeviceModal/TemplateSelector.vue";
 import type { Product, ApiData, DeviceValues, TemplateParam } from "./DeviceModal";
 import defaultVehicleYaml from "./defaultYaml/vehicle.yaml?raw";
+import { getModal } from "@/configModal";
 
 const initialValues = {
 	type: ConfigType.Template,
 	icon: "car",
+	priority: 0,
 	deviceProduct: undefined,
 	yaml: undefined,
 	template: null,
@@ -183,7 +185,6 @@ export default defineComponent({
 		DeviceModalBase,
 	},
 	props: {
-		id: Number,
 		isSponsor: Boolean,
 	},
 	emits: ["vehicle-changed"],
@@ -193,6 +194,9 @@ export default defineComponent({
 		};
 	},
 	computed: {
+		id(): number | undefined {
+			return getModal("vehicle")?.id;
+		},
 		isNew(): boolean {
 			return this.id === undefined;
 		},
@@ -202,7 +206,6 @@ export default defineComponent({
 				(_, i) => ({ key: i, name: `${i}` })
 			);
 			result[0]!.name = "0 (default)";
-			result[0]!.key = undefined;
 			result[10]!.name = "10 (highest)";
 			return result;
 		},
@@ -254,6 +257,7 @@ export default defineComponent({
 			if (values.type === ConfigType.Custom) {
 				delete data.icon;
 				delete data.title;
+				delete data.priority;
 			}
 			if (Array.isArray(data.identifiers)) {
 				data.identifiers = data.identifiers.map((i) => i.trim()).filter((i) => i);

@@ -10,6 +10,13 @@ const (
 	ChargeResume = "resume_charging"
 )
 
+// DetectedPowerGridType values
+const (
+	PowerGridTN3Phase       = 1
+	PowerGridTN2PhasePin234 = 2
+	PowerGridTN1Phase       = 3
+)
+
 // charge mode definition
 const (
 	ModeOffline                int = 0

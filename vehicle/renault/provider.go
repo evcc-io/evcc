@@ -50,8 +50,7 @@ func NewProvider(api *kamereon.API, accountID, vin string, wakeupMode string, ca
 				_, err = api.WakeUp(accountID, vin)
 
 				// Check if default wakeup is unsupported
-				var se *request.StatusError
-				if errors.As(err, &se) && se.HasStatus(http.StatusForbidden, http.StatusNotFound, http.StatusBadGateway) {
+				if se, ok := errors.AsType[*request.StatusError](err); ok && se.HasStatus(http.StatusForbidden, http.StatusNotFound, http.StatusBadGateway) {
 					_, err = api.WakeUpMy24(accountID, vin)
 				}
 			}
@@ -138,8 +137,7 @@ func (v *Provider) GetLimitSoc() (int64, error) {
 	res, err := v.socLevelsG()
 
 	// Check if endpoint is unavailable
-	var se *request.StatusError
-	if errors.As(err, &se) && se.HasStatus(http.StatusForbidden, http.StatusNotFound, http.StatusBadGateway) {
+	if se, ok := errors.AsType[*request.StatusError](err); ok && se.HasStatus(http.StatusForbidden, http.StatusNotFound, http.StatusBadGateway) {
 		return 0, api.ErrNotAvailable
 	}
 
@@ -180,8 +178,7 @@ func (v *Provider) Climater() (bool, error) {
 	res, err := v.hvacG()
 
 	// Zoe Ph2, Megane e-tech
-	var se *request.StatusError
-	if errors.As(err, &se) && se.HasStatus(http.StatusForbidden, http.StatusNotFound, http.StatusBadGateway) {
+	if se, ok := errors.AsType[*request.StatusError](err); ok && se.HasStatus(http.StatusForbidden, http.StatusNotFound, http.StatusBadGateway) {
 		return false, api.ErrNotAvailable
 	}
 

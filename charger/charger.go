@@ -25,9 +25,9 @@ func init() {
 	registry.AddCtx(api.Custom, NewConfigurableFromConfig)
 }
 
-//go:generate go tool decorate -f decorateCustom -b *Charger -r api.Charger -t "api.ChargerEx,MaxCurrentMillis,func(float64) error" -t "api.Identifier,Identify,func() (string, error)" -t "api.PhaseSwitcher,Phases1p3p,func(int) error" -t "api.Resurrector,WakeUp,func() error" -t "api.Battery,Soc,func() (float64, error)" -t "api.SocLimiter,GetLimitSoc,func() (int64, error)" -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.PhaseCurrents,Currents,func() (float64, float64, float64, error)" -t "api.PhaseVoltages,Voltages,func() (float64, float64, float64, error)"
+//go:generate go tool decorate -f decorateCustom -b *Charger -r api.Charger -t api.ChargerEx,api.Identifier,api.PhaseSwitcher,api.Resurrector,api.Battery,api.SocLimiter,api.Meter,api.MeterEnergy,api.PhaseCurrents,api.PhaseVoltages
 
-// NewConfigurableFromConfig creates a new configurable charger
+// NewConfigurableFromConfig creates a new charger from config
 func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	var cc struct {
 		embed                               `mapstructure:",squash"`
@@ -38,6 +38,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.C
 		Soc                                 *plugin.Config
 		LimitSoc                            *plugin.Config
 		Tos                                 bool
+		measurement.Temperature             `mapstructure:",squash"` // optional, for heating devices
 		measurement.Energy                  `mapstructure:",squash"` // optional
 		meter.Phases                        `mapstructure:",squash"` // optional
 	}
@@ -114,16 +115,29 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.C
 		}
 	}
 
-	// decorate soc
+	// decorate soc; for heating devices (api.Heating feature), the soc slot holds
+	// temperature in °C — fall back to temp getter when no soc getter is configured.
 	soc, err := cc.Soc.FloatGetter(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("soc: %w", err)
 	}
 
-	// decorate limitsoc
+	// decorate limitsoc; similarly, fall back to limittemp getter when no limitsoc is configured.
 	limitsoc, err := cc.LimitSoc.IntGetter(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("limitsoc: %w", err)
+	}
+
+	// heating fallbacks
+	temp, limitTemp, err := cc.Temperature.Configure(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if soc == nil && temp != nil {
+		soc = temp
+	}
+	if limitsoc == nil && limitTemp != nil {
+		limitsoc = limitTemp
 	}
 
 	// decorate measurements
