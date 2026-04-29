@@ -91,6 +91,8 @@ EXPOSE 5353/udp
 EXPOSE 7070/tcp
 # KEBA charger
 EXPOSE 7090/udp
+# EVSE Master charger
+EXPOSE 28376/udp
 # OCPP charger
 EXPOSE 8887/tcp
 # Modbus UDP

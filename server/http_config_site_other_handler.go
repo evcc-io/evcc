@@ -2,13 +2,18 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"regexp"
+	"strings"
 
 	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util/sponsor"
 )
+
+var licenseKeyPattern = regexp.MustCompile(`^[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}$`)
 
 func setOptimizer(pub publisher) func(bool) error {
 	return func(b bool) error {
@@ -40,6 +45,7 @@ func updateSponsortokenHandler(pub publisher) func(w http.ResponseWriter, r *htt
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req struct {
 			Token string `json:"token"`
+			Email string `json:"email"`
 		}
 
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -47,8 +53,30 @@ func updateSponsortokenHandler(pub publisher) func(w http.ResponseWriter, r *htt
 			return
 		}
 
-		if req.Token != "" {
-			if err := sponsor.ConfigureSponsorship(req.Token); err != nil {
+		var token string
+
+		// License key activation flow
+		if req.Email != "" {
+			// Validate token matches license key pattern
+			if !licenseKeyPattern.MatchString(strings.ToUpper(req.Token)) {
+				jsonError(w, http.StatusBadRequest, fmt.Errorf("invalid license key format"))
+				return
+			}
+
+			// Activate license key and receive JWT token
+			var err error
+			token, err = sponsor.ActivateSponsorship(req.Token, req.Email)
+			if err != nil {
+				jsonError(w, http.StatusBadRequest, err)
+				return
+			}
+		} else {
+			// Use provided JWT token directly
+			token = req.Token
+		}
+
+		if token != "" {
+			if err := sponsor.ConfigureSponsorship(token); err != nil {
 				jsonError(w, http.StatusBadRequest, err)
 				return
 			}
@@ -60,7 +88,7 @@ func updateSponsortokenHandler(pub publisher) func(w http.ResponseWriter, r *htt
 		}
 
 		// TODO find better place
-		settings.SetString(keys.SponsorToken, req.Token)
+		settings.SetString(keys.SponsorToken, token)
 		setConfigDirty()
 
 		jsonWrite(w, sponsor.RedactedStatus())
