@@ -73,8 +73,11 @@ func NewOpenWB20FromConfig(ctx context.Context, other map[string]any) (api.Charg
 
 	var identify func() (string, error)
 	if cc.Identify {
-		if _, err := wb.identify(); err == nil {
+		_, err := wb.identify()
+		if err == nil {
 			identify = wb.identify
+		} else {
+			return nil, err
 		}
 	}
 
