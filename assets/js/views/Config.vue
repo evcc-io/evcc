@@ -1163,6 +1163,7 @@ export default defineComponent({
 				} as Record<DeviceType, any[]>;
 				for (const type in devices) {
 					for (const device of devices[type as DeviceType]) {
+						if (device.deviceDisable) continue;
 						if (this.isComponentMounted && this.isPageVisible) {
 							await this.updateDeviceValue(type as DeviceType, device.name);
 						}
