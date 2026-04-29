@@ -6,9 +6,10 @@
 			:offline="offline"
 		></router-view>
 
+		<BottomTabBar v-bind="bottomTabBarProps" />
+
 		<GlobalSettingsModal v-bind="globalSettingsProps" />
-		<BatterySettingsModal v-if="batteryModalAvailabe" v-bind="batterySettingsProps" />
-		<ForecastModal v-bind="forecastModalProps" />
+		<AboutModal v-bind="aboutModalProps" />
 		<HelpModal />
 		<PasswordModal />
 		<LoginModal v-bind="loginModalProps" />
@@ -18,18 +19,15 @@
 
 <script lang="ts">
 import store from "../store";
+import BottomTabBar from "../components/BottomTabs/Bar.vue";
 import GlobalSettingsModal from "../components/GlobalSettings/GlobalSettingsModal.vue";
-import BatterySettingsModal from "../components/Battery/BatterySettingsModal.vue";
-import ForecastModal from "../components/Forecast/ForecastModal.vue";
 import OfflineIndicator from "../components/Footer/OfflineIndicator.vue";
 import PasswordModal from "../components/Auth/PasswordModal.vue";
 import LoginModal from "../components/Auth/LoginModal.vue";
+import AboutModal from "../components/AboutModal.vue";
 import HelpModal from "../components/HelpModal.vue";
 import collector from "../mixins/collector";
 import { defineComponent } from "vue";
-
-const WS_OPEN_TIMEOUT_MS = 5000;
-const WS_RETRY_PARAM = "wsRetry";
 
 // assume offline if not data received for 5 minutes
 let lastDataReceived = new Date();
@@ -44,10 +42,10 @@ setInterval(() => {
 export default defineComponent({
 	name: "App",
 	components: {
+		AboutModal,
+		BottomTabBar,
 		GlobalSettingsModal,
 		HelpModal,
-		BatterySettingsModal,
-		ForecastModal,
 		PasswordModal,
 		LoginModal,
 		OfflineIndicator,
@@ -60,9 +58,9 @@ export default defineComponent({
 	data: () => {
 		return {
 			reconnectTimeout: null as number | null,
-			openTimeout: null as number | null,
 			ws: null as WebSocket | null,
 			authNotConfigured: false,
+			currentVersion: undefined as string | undefined,
 		};
 	},
 	head() {
@@ -71,9 +69,6 @@ export default defineComponent({
 	computed: {
 		version() {
 			return store.state.version;
-		},
-		batteryModalAvailabe() {
-			return store.state.battery?.devices?.length;
 		},
 		showRoutes() {
 			return this.state.startupCompleted;
@@ -85,23 +80,41 @@ export default defineComponent({
 		globalSettingsProps() {
 			return this.collectProps(GlobalSettingsModal, this.state);
 		},
-		batterySettingsProps() {
-			return this.collectProps(BatterySettingsModal, this.state);
-		},
 		offlineIndicatorProps() {
 			return this.collectProps(OfflineIndicator, this.state);
-		},
-		forecastModalProps() {
-			return this.collectProps(ForecastModal, this.state);
 		},
 		loginModalProps() {
 			return this.collectProps(LoginModal, this.state);
 		},
+		aboutModalProps() {
+			return {
+				installed: window.evcc.version,
+				commit: window.evcc.commit,
+				...this.collectProps(AboutModal, this.state),
+			};
+		},
+		bottomTabBarProps() {
+			return {
+				installed: window.evcc.version,
+				commit: window.evcc.commit,
+				...this.collectProps(BottomTabBar, this.state),
+			};
+		},
 	},
 	watch: {
-		version(now, prev) {
-			if (!!prev && !!now) {
-				console.log("new version detected. reloading browser", { now, prev });
+		version(now) {
+			if (!now) return;
+
+			if (!this.currentVersion) {
+				this.currentVersion = now;
+				return;
+			}
+
+			if (now !== this.currentVersion) {
+				console.log("new version detected. reloading browser", {
+					now,
+					prev: this.currentVersion,
+				});
 				this.reload();
 			}
 		},
@@ -129,34 +142,6 @@ export default defineComponent({
 				window.clearTimeout(this.reconnectTimeout);
 			}
 		},
-		// Safari 26 bug: with hash fragment URLs the HTTP upgrade
-		// request is sometimes silently dropped when serving from cache.
-		// Recover by navigating without hash, once (wsRetry guards against loops).
-		startOpenTimeout() {
-			const url = new URL(window.location.href);
-			if (url.searchParams.has(WS_RETRY_PARAM)) return;
-			this.openTimeout = window.setTimeout(() => {
-				console.warn("websocket open timeout, forcing navigation");
-				this.ws?.close();
-				url.hash = "";
-				url.searchParams.set(WS_RETRY_PARAM, "true");
-				window.location.href = url.href;
-			}, WS_OPEN_TIMEOUT_MS);
-		},
-		clearOpenTimeout(success = false) {
-			if (this.openTimeout) {
-				window.clearTimeout(this.openTimeout);
-				this.openTimeout = null;
-			}
-			if (success) {
-				const url = new URL(window.location.href);
-				if (url.searchParams.has(WS_RETRY_PARAM)) {
-					console.warn("websocket open timeout recovered, clearing retry param");
-					url.searchParams.delete(WS_RETRY_PARAM);
-					window.history.replaceState(window.history.state, "", url.href);
-				}
-			}
-		},
 		pageShowHandler(event: PageTransitionEvent) {
 			if (event.persisted) {
 				this.clearReconnectTimeout();
@@ -180,7 +165,6 @@ export default defineComponent({
 			}, 2500);
 		},
 		disconnect() {
-			this.clearOpenTimeout();
 			if (this.ws) {
 				this.ws.onerror = null;
 				this.ws.onopen = null;
@@ -207,22 +191,17 @@ export default defineComponent({
 
 			const loc = new URL("ws", window.location.href);
 			loc.protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+
 			this.ws = new WebSocket(loc.href);
-
-			this.startOpenTimeout();
-
 			this.ws.onerror = () => {
 				console.log({ message: "Websocket error. Trying to reconnect." });
-				this.clearOpenTimeout();
 				this.ws?.close();
 			};
 			this.ws.onopen = () => {
-				this.clearOpenTimeout(true);
 				console.log("websocket connected");
 				window.app.setOnline();
 			};
 			this.ws.onclose = () => {
-				this.clearOpenTimeout();
 				window.app.setOffline();
 				this.reconnect();
 			};

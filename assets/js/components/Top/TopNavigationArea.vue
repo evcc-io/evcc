@@ -1,7 +1,11 @@
 <template>
-	<div class="d-flex">
-		<Notifications :notifications="notifications" :loadpoints="loadpoints" class="me-2" />
-		<TopNavigation v-bind="topNavigation" @auth-required="openAuthModal" />
+	<div class="d-flex gap-2">
+		<Notifications
+			:notifications="notifications"
+			:loadpoints="loadpoints"
+			class="d-flex align-items-center"
+		/>
+		<Savings v-bind="savings" />
 		<AuthProviderModal :provider="authProvider" />
 	</div>
 </template>
@@ -9,22 +13,20 @@
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
 import Modal from "bootstrap/js/dist/modal";
-import Navigation from "./Navigation.vue";
 import Notifications from "./Notifications.vue";
 import AuthProviderModal from "./AuthProviderModal.vue";
+import Savings from "../Savings/Savings.vue";
 import type { Provider } from "./types";
 import type { Notification } from "@/types/evcc";
-import collector from "@/mixins/collector";
 import store from "@/store";
 
 export default defineComponent({
 	name: "TopNavigationArea",
 	components: {
-		TopNavigation: Navigation,
 		Notifications,
 		AuthProviderModal,
+		Savings,
 	},
-	mixins: [collector],
 	props: {
 		notifications: { type: Array as PropType<Notification[]>, default: () => [] },
 	},
@@ -35,8 +37,16 @@ export default defineComponent({
 		};
 	},
 	computed: {
-		topNavigation(): any {
-			return this.collectProps(Navigation, store.state);
+		savings() {
+			return {
+				sponsor: store.state.sponsor,
+				statistics: store.state.statistics,
+				co2Configured: store.state.tariffCo2 !== undefined,
+				currency: store.state.currency,
+				telemetry: store.state.telemetry,
+				forecast: store.state.forecast,
+				tariffGrid: store.state.tariffGrid,
+			};
 		},
 		loadpoints() {
 			return store.uiLoadpoints.value || [];

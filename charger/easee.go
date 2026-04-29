@@ -67,8 +67,9 @@ type Easee struct {
 	phaseMode             int
 	currentPower, sessionEnergy, totalEnergy,
 	currentL1, currentL2, currentL3 float64
-	rfid string
-	lp   loadpoint.API
+	currentSessionID int
+	rfid             string
+	lp               loadpoint.API
 
 	dispatcher *easee.CommandDispatcher
 
@@ -361,12 +362,14 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 			c.sessionEnergy = value.(float64)
 		}
 	case easee.LIFETIME_ENERGY:
-		c.totalEnergy = value.(float64)
-	case easee.IN_CURRENT_T3:
+		if v := value.(float64); v >= c.totalEnergy {
+			c.totalEnergy = v
+		}
+	case easee.INT_CURRENT_T3:
 		c.currentL1 = value.(float64)
-	case easee.IN_CURRENT_T4:
+	case easee.INT_CURRENT_T4:
 		c.currentL2 = value.(float64)
-	case easee.IN_CURRENT_T5:
+	case easee.INT_CURRENT_T5:
 		c.currentL3 = value.(float64)
 	case easee.PHASE_MODE:
 		c.phaseMode = value.(int)
@@ -380,6 +383,31 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 		c.maxChargerCurrent = value.(float64)
 	case easee.DYNAMIC_CHARGER_CURRENT:
 		c.dynamicChargerCurrent = value.(float64)
+	case easee.CHARGE_SESSION_START:
+		var data easee.ChargingSessionStartData
+		if err := json.Unmarshal([]byte(res.Value), &data); err != nil {
+			c.log.ERROR.Printf("CHARGE_SESSION_START: %v", err)
+			break
+		}
+		c.currentSessionID = data.ID
+		if data.MeterValue >= c.totalEnergy {
+			c.totalEnergy = data.MeterValue
+		}
+
+	case easee.CHARGING_SESSION:
+		var data easee.ChargingSessionData
+		if err := json.Unmarshal([]byte(res.Value), &data); err != nil {
+			c.log.ERROR.Printf("CHARGING_SESSION: %v", err)
+			break
+		}
+		if data.MeterValueStop >= c.totalEnergy {
+			c.totalEnergy = data.MeterValueStop
+		}
+		if data.ID != c.currentSessionID {
+			break
+		}
+		c.sessionEnergy = data.EnergyKwh
+
 	case easee.CHARGER_OP_MODE:
 		opMode := value.(int)
 
@@ -387,6 +415,7 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 		// This should be done in a proper way by the api, but it's not.
 		if c.opMode <= easee.ModeDisconnected && opMode >= easee.ModeAwaitingStart {
 			c.sessionEnergy = 0
+			c.currentSessionID = 0
 			c.obsTime[easee.SESSION_ENERGY] = time.Now()
 		}
 
@@ -486,7 +515,7 @@ func (c *Easee) Enable(enable bool) (err error) {
 		}
 
 		uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
-		if err := c.dispatcher.Send(uri, data); err != nil {
+		if _, err := c.dispatcher.Send(uri, data); err != nil {
 			return err
 		}
 	}
@@ -508,7 +537,7 @@ func (c *Easee) Enable(enable bool) (err error) {
 	}
 
 	uri := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, c.charger, action)
-	if err := c.dispatcher.Send(uri, nil); err != nil {
+	if _, err := c.dispatcher.Send(uri, nil); err != nil {
 		return err
 	}
 
@@ -620,11 +649,15 @@ func (c *Easee) MaxCurrent(current int64) error {
 	}
 
 	uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
-	if err := c.dispatcher.Send(uri, data); err != nil {
+	noop, err := c.dispatcher.Send(uri, data)
+	if err != nil {
 		return err
 	}
-	if err := c.waitForDynamicChargerCurrent(cur); err != nil {
-		return err
+
+	if !noop {
+		if err := c.waitForDynamicChargerCurrent(cur); err != nil {
+			return err
+		}
 	}
 
 	c.mux.Lock()
@@ -733,9 +766,31 @@ func (c *Easee) Phases1p3p(phases int) error {
 		// cloud sends on HTTP 200 (sync) responses is silently consumed rather
 		// than logged as rogue. On error we undo the registration.
 		c.dispatcher.ExpectOrphan(easee.CIRCUIT_MAX_CURRENT_P1)
-		err = c.dispatcher.Send(uri, data)
+		_, err = c.dispatcher.Send(uri, data)
 		if err != nil {
 			c.dispatcher.CancelOrphan(easee.CIRCUIT_MAX_CURRENT_P1)
+		}
+
+		// Sending DCC:7 to skip charge pause after scaling down to 1p.
+		// The loadpoint's next control interval will send the real target current.
+		if err == nil && phases == 1 {
+			override := 7.0
+			chargerData := easee.ChargerSettings{
+				DynamicChargerCurrent: &override,
+			}
+			chargerURI := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
+			noop, sendErr := c.dispatcher.Send(chargerURI, chargerData)
+			if sendErr != nil {
+				c.log.WARN.Printf("phase switch: failed to set charger current override: %v", sendErr)
+			} else if !noop {
+				if waitErr := c.waitForDynamicChargerCurrent(override); waitErr != nil {
+					c.log.WARN.Printf("phase switch: charger current override confirmation timeout: %v", waitErr)
+				}
+			}
+
+			c.mux.Lock()
+			c.current = override
+			c.mux.Unlock()
 		}
 	} else {
 		// charger level
@@ -751,7 +806,7 @@ func (c *Easee) Phases1p3p(phases int) error {
 
 			uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
 
-			if err = c.dispatcher.Send(uri, data); err != nil {
+			if _, err = c.dispatcher.Send(uri, data); err != nil {
 				return err
 			}
 		}
@@ -795,8 +850,6 @@ func (c *Easee) StatusReason() (api.Reason, error) {
 	switch c.opMode {
 	case easee.ModeAwaitingAuthentication:
 		return api.ReasonWaitingForAuthorization, nil
-	case easee.ModeCompleted:
-		return api.ReasonDisconnectRequired, nil
 	}
 	return api.ReasonUnknown, nil
 }
@@ -831,7 +884,7 @@ func (c *Easee) updateSmartCharging() {
 
 		uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
 
-		if err := c.dispatcher.Send(uri, data); err != nil {
+		if _, err := c.dispatcher.Send(uri, data); err != nil {
 			c.log.WARN.Printf("smart charging: %v", err)
 			return
 		}

@@ -31,6 +31,7 @@
 					:pvConfigured="pvConfigured"
 					:batteryConfigured="batteryConfigured"
 					:batterySoc="batterySoc"
+					:batteryMode="batteryMode"
 					:forecast="forecast"
 					:circuits="circuits"
 					:circuitName="loadpoint.circuit"
@@ -70,7 +71,7 @@ import "@h2d2/shopicons/es/filled/lightning";
 
 import Loadpoint from "./Loadpoint.vue";
 import { defineComponent, type PropType } from "vue";
-import type { UiLoadpoint, SMART_COST_TYPE, Timeout, Vehicle, Circuit } from "@/types/evcc";
+import type { UiLoadpoint, SMART_COST_TYPE, Timeout, Vehicle, Circuit, BATTERY_MODE } from "@/types/evcc";
 
 export default defineComponent({
 	name: "Loadpoints",
@@ -90,6 +91,7 @@ export default defineComponent({
 		pvConfigured: Boolean,
 		batteryConfigured: Boolean,
 		batterySoc: Number,
+		batteryMode: String as PropType<BATTERY_MODE>,
 		forecast: Object, // as PropType<Forecast>,
 		circuits: { type: Object as PropType<Record<string, Circuit> | undefined> },
 	},
@@ -247,7 +249,7 @@ export default defineComponent({
 }
 
 /* show truncated tiles on breakpoint sm,md */
-@media (min-width: 576px) and (max-width: 991.98px) {
+@media (--sm-to-lg) {
 	.container--loadpoint {
 		max-width: none;
 	}
@@ -268,14 +270,14 @@ export default defineComponent({
 }
 
 /* breakpoint sm */
-@media (min-width: 576px) and (max-width: 767.98px) {
+@media (--sm-to-md) {
 	.carousel {
 		--slide-width: 540px;
 	}
 }
 
 /* breakpoint md */
-@media (min-width: 768px) and (max-width: 991.98px) {
+@media (--md-to-lg) {
 	.carousel {
 		--slide-width: 720px;
 	}

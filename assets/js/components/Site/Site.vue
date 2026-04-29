@@ -49,37 +49,39 @@
 					</router-link>
 				</div>
 			</div>
-			<template v-else>
-				<Loadpoints
-					:key="`loadpoints-${orderedVisibleLoadpoints.length}`"
-					class="mt-1 mt-sm-2 flex-grow-1"
-					:loadpoints="orderedVisibleLoadpoints"
-					:vehicles="vehicleList"
-					:smartCostType="smartCostType"
-					:smartCostAvailable="smartCostAvailable"
-					:smartFeedInPriorityAvailable="smartFeedInPriorityAvailable"
-					:tariffGrid="tariffGrid"
-					:tariffCo2="tariffCo2"
-					:tariffFeedIn="tariffFeedIn"
-					:currency="currency"
-					:gridConfigured="gridConfigured"
-					:pvConfigured="pvConfigured"
-					:batteryConfigured="batteryConfigured"
-					:batterySoc="batterySoc"
-					:forecast="forecast"
-					:circuits="circuits"
-					:selectedId="selectedLoadpointId"
-					@id-changed="selectedLoadpointChanged"
-					@open-circuits="openCircuitsModal"
-				/>
-				<CircuitsModal
-					v-model:show="showCircuitsModal"
-					:circuits="circuits"
-					:loadpoints="orderedVisibleLoadpoints"
-					:selectedCircuitName="selectedCircuitName"
-				/>
-			</template>
-			<Footer v-bind="footer"></Footer>
+<template v-else>
+	<Loadpoints
+		:key="`loadpoints-${orderedVisibleLoadpoints.length}`"
+		class="mt-1 mt-sm-2 flex-grow-1"
+		:loadpoints="orderedVisibleLoadpoints"
+		:vehicles="vehicleList"
+		:smartCostType="smartCostType"
+		:smartCostAvailable="smartCostAvailable"
+		:smartFeedInPriorityAvailable="smartFeedInPriorityAvailable"
+		:tariffGrid="tariffGrid"
+		:tariffCo2="tariffCo2"
+		:tariffFeedIn="tariffFeedIn"
+		:currency="currency"
+		:gridConfigured="gridConfigured"
+		:pvConfigured="pvConfigured"
+		:batteryConfigured="batteryConfigured"
+		:batterySoc="batterySoc"
+		:batteryMode="batteryMode"
+		:forecast="forecast"
+		:circuits="circuits"
+		:selectedId="selectedLoadpointId"
+		@id-changed="selectedLoadpointChanged"
+		@open-circuits="openCircuitsModal"
+	/>
+	<CircuitsModal
+		v-model:show="showCircuitsModal"
+		:circuits="circuits"
+		:loadpoints="orderedVisibleLoadpoints"
+		:selectedCircuitName="selectedCircuitName"
+	/>
+</template>
+
+<Footer v-bind="footer"></Footer>
 		</div>
 	</div>
 </template>
@@ -105,9 +107,9 @@ import type {
 	Notification,
 	Circuit,
 	SMART_COST_TYPE,
-	Sponsor,
 	FatalError,
 	EvOpt,
+	BATTERY_MODE,
 } from "@/types/evcc";
 import store from "@/store";
 import type { Grid } from "./types";
@@ -118,7 +120,6 @@ export default defineComponent({
 		Loadpoints,
 		CircuitsModal,
 		Energyflow,
-		Footer,
 		HemsWarning,
 		TopNavigationArea,
 		WelcomeIcons,
@@ -140,9 +141,9 @@ export default defineComponent({
 		aux: { type: Array as PropType<Meter[]>, default: () => [] },
 		ext: { type: Array as PropType<Meter[]>, default: () => [] },
 		batteryDischargeControl: Boolean,
-		batteryGridChargeLimit: { type: Number, default: null },
+		batteryGridChargeLimit: { type: [Number, null] as PropType<number | null>, default: null },
 		batteryGridChargeActive: Boolean,
-		batteryMode: String,
+		batteryMode: String as PropType<BATTERY_MODE>,
 		battery: { type: Object as PropType<Battery> },
 		gridCurrents: Array,
 		prioritySoc: Number,
@@ -152,7 +153,6 @@ export default defineComponent({
 		vehicles: Object,
 		authProviders: { type: Object as PropType<AuthProviders>, default: () => ({}) },
 		currency: { type: String as PropType<CURRENCY> },
-		statistics: Object,
 		tariffFeedIn: Number,
 		tariffGrid: Number,
 		tariffCo2: Number,
@@ -161,20 +161,12 @@ export default defineComponent({
 		tariffPriceLoadpoints: Number,
 		tariffCo2Loadpoints: Number,
 
-		availableVersion: String,
-		releaseNotes: String,
-		hasUpdater: Boolean,
-		uploadMessage: String,
-		uploadProgress: Number,
-		sponsor: { type: Object as PropType<Sponsor>, default: () => ({}) },
 		smartCostType: String as PropType<SMART_COST_TYPE>,
 		smartCostAvailable: Boolean,
 		smartFeedInPriorityAvailable: Boolean,
 		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
 		forecast: Object as PropType<Forecast>,
 		circuits: Object as PropType<Record<string, Circuit>>,
-		telemetry: Boolean,
-		experimental: Boolean,
 		evopt: { type: Object as PropType<EvOpt> },
 	},
 	data() {
@@ -212,27 +204,6 @@ export default defineComponent({
 		showParkingLot() {
 			// work in progess
 			return false;
-		},
-		footer() {
-			return {
-				version: {
-					installed: window.evcc.version,
-					commit: window.evcc.commit,
-					available: this.availableVersion,
-					releaseNotes: this.releaseNotes,
-					hasUpdater: this.hasUpdater,
-					uploadMessage: this.uploadMessage,
-					uploadProgress: this.uploadProgress,
-				},
-				savings: {
-					sponsor: this.sponsor,
-					statistics: this.statistics,
-					co2Configured: this.tariffCo2 !== undefined,
-					priceConfigured: this.tariffGrid !== undefined,
-					currency: this.currency,
-					telemetry: this.telemetry,
-				},
-			};
 		},
 		hasFatalError() {
 			return this.fatal.length > 0;

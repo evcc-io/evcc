@@ -18,4 +18,4 @@ params:
     default: 502
 render: |
   type: etrel
-  uri: {{ .host }}:{{ .port }}
+  uri: {{ joinHostPort .host .port }}

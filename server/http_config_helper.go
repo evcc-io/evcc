@@ -107,6 +107,7 @@ func templateForConfig(class templates.Class, conf map[string]any) (templates.Te
 	return templates.ByName(class, typ)
 }
 
+// filterValidTemplateParams removes all configuration properties that are not part of the template definition
 func filterValidTemplateParams(tmpl *templates.Template, conf map[string]any) map[string]any {
 	res := make(map[string]any)
 
@@ -169,6 +170,32 @@ func mergeMasked(class templates.Class, conf, old map[string]any) (map[string]an
 	})
 }
 
+// deviceOther looks up a stored device's `Other` config by class and id.
+func deviceOther(class templates.Class, id int) (map[string]any, error) {
+	name := config.NameForID(id)
+	switch class {
+	case templates.Charger:
+		return deviceOtherFromHandler(name, config.Chargers())
+	case templates.Meter:
+		return deviceOtherFromHandler(name, config.Meters())
+	case templates.Vehicle:
+		return deviceOtherFromHandler(name, config.Vehicles())
+	case templates.Tariff:
+		return deviceOtherFromHandler(name, config.Tariffs())
+	case templates.Messenger:
+		return deviceOtherFromHandler(name, config.Messengers())
+	}
+	return nil, errors.New("unsupported class: " + class.String())
+}
+
+func deviceOtherFromHandler[T any](name string, h config.Handler[T]) (map[string]any, error) {
+	dev, err := h.ByName(name)
+	if err != nil {
+		return nil, err
+	}
+	return dev.Config().Other, nil
+}
+
 func startDeviceTimeout() (context.Context, context.CancelFunc, chan struct{}) {
 	done := make(chan struct{})
 	ctx, cancel := context.WithCancel(context.Background())
@@ -198,7 +225,11 @@ func deviceInstanceFromMergedConfig[T any](ctx context.Context, id int, class te
 
 	// TODO merge custom config
 	if req.Yaml != "" {
-		instance, err := newFromConf(ctx, conf.Type, req.Other)
+		typ, other, err := config.CustomDevice(conf.Type, req.Other)
+		if err != nil {
+			return nil, zero, nil, err
+		}
+		instance, err := newFromConf(ctx, typ, other)
 		return dev, instance, req.Serialise(), err
 	}
 
@@ -218,7 +249,7 @@ type testResult = struct {
 }
 
 func hasFeature(instance any, f api.Feature) bool {
-	fd, ok := instance.(api.FeatureDescriber)
+	fd, ok := api.Cap[api.FeatureDescriber](instance)
 	return ok && slices.Contains(fd.Features(), f)
 }
 
@@ -238,17 +269,17 @@ func testInstance(instance any) map[string]testResult {
 		res[key] = tr
 	}
 
-	if dev, ok := instance.(api.Meter); ok {
+	if dev, ok := api.Cap[api.Meter](instance); ok {
 		val, err := dev.CurrentPower()
 		makeResult("power", val, err)
 	}
 
-	if dev, ok := instance.(api.MeterEnergy); ok {
+	if dev, ok := api.Cap[api.MeterEnergy](instance); ok {
 		val, err := dev.TotalEnergy()
 		makeResult("energy", val, err)
 	}
 
-	if dev, ok := instance.(api.Battery); ok {
+	if dev, ok := api.Cap[api.Battery](instance); ok {
 		val, err := dev.Soc()
 		key := "soc"
 		if hasFeature(instance, api.Heating) {
@@ -257,51 +288,51 @@ func testInstance(instance any) map[string]testResult {
 		makeResult(key, val, err)
 	}
 
-	if _, ok := instance.(api.BatteryController); ok {
+	if api.HasCap[api.BatteryController](instance) {
 		makeResult("controllable", true, nil)
 	}
 
-	if dev, ok := instance.(api.VehicleOdometer); ok {
+	if dev, ok := api.Cap[api.VehicleOdometer](instance); ok {
 		val, err := dev.Odometer()
 		makeResult("odometer", val, err)
 	}
 
-	if dev, ok := instance.(api.BatteryCapacity); ok {
+	if dev, ok := api.Cap[api.BatteryCapacity](instance); ok {
 		val := dev.Capacity()
 		makeResult("capacity", val, nil)
 	}
 
-	if dev, ok := instance.(api.PhaseCurrents); ok {
+	if dev, ok := api.Cap[api.PhaseCurrents](instance); ok {
 		i1, i2, i3, err := dev.Currents()
 		makeResult("phaseCurrents", []float64{i1, i2, i3}, err)
 	}
 
-	if dev, ok := instance.(api.PhaseVoltages); ok {
+	if dev, ok := api.Cap[api.PhaseVoltages](instance); ok {
 		u1, u2, u3, err := dev.Voltages()
 		makeResult("phaseVoltages", []float64{u1, u2, u3}, err)
 	}
 
-	if dev, ok := instance.(api.PhasePowers); ok {
+	if dev, ok := api.Cap[api.PhasePowers](instance); ok {
 		p1, p2, p3, err := dev.Powers()
 		makeResult("phasePowers", []float64{p1, p2, p3}, err)
 	}
 
-	if dev, ok := instance.(api.ChargeState); ok {
+	if dev, ok := api.Cap[api.ChargeState](instance); ok {
 		val, err := dev.Status()
 		makeResult("chargeStatus", val, err)
 	}
 
-	if dev, ok := instance.(api.Charger); ok {
+	if dev, ok := api.Cap[api.Charger](instance); ok {
 		val, err := dev.Enabled()
 		makeResult("enabled", val, err)
 	}
 
-	if dev, ok := instance.(api.ChargeRater); ok {
+	if dev, ok := api.Cap[api.ChargeRater](instance); ok {
 		val, err := dev.ChargedEnergy()
 		makeResult("chargedEnergy", val, err)
 	}
 
-	if _, ok := instance.(api.PhaseSwitcher); ok {
+	if api.HasCap[api.PhaseSwitcher](instance) {
 		makeResult("phases1p3p", true, nil)
 	}
 
@@ -313,20 +344,20 @@ func testInstance(instance any) map[string]testResult {
 		makeResult("integratedDevice", true, nil)
 	}
 
-	if dev, ok := instance.(api.IconDescriber); ok && dev.Icon() != "" {
+	if dev, ok := api.Cap[api.IconDescriber](instance); ok && dev.Icon() != "" {
 		makeResult("icon", dev.Icon(), nil)
 	}
 
-	if cc, ok := instance.(api.PhaseDescriber); ok && cc.Phases() == 1 {
+	if cc, ok := api.Cap[api.PhaseDescriber](instance); ok && cc.Phases() == 1 {
 		makeResult("singlePhase", true, nil)
 	}
 
-	if dev, ok := instance.(api.VehicleRange); ok {
+	if dev, ok := api.Cap[api.VehicleRange](instance); ok {
 		val, err := dev.Range()
 		makeResult("range", val, err)
 	}
 
-	if dev, ok := instance.(api.SocLimiter); ok {
+	if dev, ok := api.Cap[api.SocLimiter](instance); ok {
 		val, err := dev.GetLimitSoc()
 		key := "vehicleLimitSoc"
 		if hasFeature(instance, api.Heating) {
@@ -335,17 +366,22 @@ func testInstance(instance any) map[string]testResult {
 		makeResult(key, val, err)
 	}
 
-	if dev, ok := instance.(api.Dimmer); ok {
+	if dev, ok := api.Cap[api.Dimmer](instance); ok {
 		val, err := dev.Dimmed()
 		makeResult("dimmed", val, err)
 	}
 
-	if dev, ok := instance.(api.Identifier); ok {
+	if dev, ok := api.Cap[api.Curtailer](instance); ok {
+		val, err := dev.Curtailed()
+		makeResult("curtailed", val, err)
+	}
+
+	if dev, ok := api.Cap[api.Identifier](instance); ok {
 		val, err := dev.Identify()
 		makeResult("identifier", val, err)
 	}
 
-	if dev, ok := instance.(api.Tariff); ok {
+	if dev, ok := api.Cap[api.Tariff](instance); ok {
 		rates, err := dev.Rates()
 
 		// Determine field names based on tariff type
@@ -408,6 +444,7 @@ func (maskedTransformer) Transformer(typ reflect.Type) func(dst, src reflect.Val
 	}
 }
 
+// decodeDeviceConfig extracts device configuration and yaml details
 func decodeDeviceConfig(r io.Reader) (configReq, error) {
 	var res configReq
 
@@ -429,9 +466,13 @@ func decodeDeviceConfig(r io.Reader) (configReq, error) {
 		return configReq{}, errors.New("invalid config: cannot mix yaml and other")
 	}
 
-	if err := yaml.Unmarshal([]byte(res.Yaml), &res.Other); err != nil && err != io.EOF {
+	// validate yaml syntax
+	var tmp map[string]any
+	if err := yaml.Unmarshal([]byte(res.Yaml), &tmp); err != nil && err != io.EOF {
 		return configReq{}, err
 	}
+
+	res.Other = map[string]any{"yaml": res.Yaml}
 
 	return res, nil
 }
