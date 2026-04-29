@@ -21,10 +21,8 @@ params:
     required: true
 render: |
   type: custom
-  features:
-    - coarsecurrent
   {{- include "vehicle-common" . }}
-  soc:
+  soc: # battery state of charge (%)
     source: http
     uri: https://api.tessie.com/{{ .vin }}/state?use_cache=true
     headers:
@@ -117,3 +115,4 @@ render: |
     headers:
       Authorization: Bearer {{ .token }}
     method: POST
+  features: ["coarsecurrent"]
