@@ -44,7 +44,7 @@ func New(driver, dsn string) (*gorm.DB, error) {
 		// Store the expanded file path for later use
 		FilePath = file
 
-		for _, pragma := range []string{"journal_mode(WAL)", "busy_timeout(5000)", "foreign_keys(1)", "synchronous(NORMAL)"} {
+		for _, pragma := range []string{"busy_timeout(5000)", "foreign_keys(1)", "synchronous(NORMAL)"} {
 			// Add busy_timeout pragma if not already present
 			if param, _, _ := strings.Cut(pragma, "("); strings.Contains(connectionParams, "_pragma="+param) {
 				continue
