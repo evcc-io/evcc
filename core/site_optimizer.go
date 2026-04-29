@@ -9,13 +9,12 @@ import (
 	"os"
 	"slices"
 	"strings"
-	"sync/atomic"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
-	"github.com/evcc-io/evcc/core/metrics"
 	"github.com/evcc-io/evcc/core/types"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util/config"
@@ -31,8 +30,8 @@ var (
 	eta          = float32(0.9)  // efficiency of the battery charging/discharging
 	batteryPower = float32(6000) // default power of the battery in W
 
-	updated time.Time
-	mu      atomic.Uint32
+	mu               sync.Mutex
+	optimizerUpdated time.Time
 )
 
 // optimizerResult wraps the optimizer publish payload to implement BytesMarshaler.
@@ -70,29 +69,9 @@ type batteryDetail struct {
 
 type batteryResult struct {
 	batteryDetail
-	Full  *time.Time `json:"full"`
-	Empty *time.Time `json:"empty"`
+	Full  time.Time `json:"full,omitzero"`
+	Empty time.Time `json:"empty,omitzero"`
 }
-
-// func (br batteryResult) MarshalJSON() ([]byte, error) {
-// 	var full, empty int64
-// 	if !br.Full.IsZero() {
-// 		full = int64(time.Until(br.Full).Seconds())
-// 	}
-// 	if !br.Empty.IsZero() {
-// 		empty = int64(time.Until(br.Empty).Seconds())
-// 	}
-
-// 	return json.Marshal(struct {
-// 		batteryResult
-// 		UntilFull  int64 `json:"untilFull,omitempty"`
-// 		UntilEmpty int64 `json:"untilEmpty,omitempty"`
-// 	}{
-// 		batteryResult: br,
-// 		UntilFull:     full,
-// 		UntilEmpty:    empty,
-// 	})
-// }
 
 type requestDetails struct {
 	Timestamps     []time.Time     `json:"timestamp"`
@@ -102,19 +81,19 @@ type requestDetails struct {
 const slotsPerHour = float64(time.Hour / tariff.SlotDuration)
 
 func (site *Site) optimizerUpdateAsync() {
+	if !mu.TryLock() {
+		return
+	}
+	defer mu.Unlock()
+
+	if time.Since(optimizerUpdated) < 2*time.Minute {
+		return
+	}
+
 	var err error
 
-	if time.Since(updated) < 2*time.Minute {
-		return
-	}
-
-	if !mu.CompareAndSwap(0, 1) {
-		return
-	}
-
 	defer func() {
-		updated = time.Now()
-		mu.Store(0)
+		optimizerUpdated = time.Now()
 
 		if r := recover(); r != nil {
 			err = fmt.Errorf("panic %v", r)
@@ -140,8 +119,14 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	if solarTariff != nil && len(solar) > 0 {
 		minLen = min(minLen, len(solar))
 	}
-	const expectedSlots = 8
-	if minLen < expectedSlots {
+
+	uri := lo.CoalesceOrEmpty(os.Getenv("OPTIMIZER_URI"), OPTIMIZER_URI)
+	if uri == OPTIMIZER_URI {
+		// limit to 2 days for sake of performance
+		minLen = min(2*96, minLen)
+	}
+
+	if expectedSlots := 8; minLen < expectedSlots {
 		if solarTariff != nil {
 			return fmt.Errorf("not enough forecast slots for meaningful optimization: %d < %d (grid=%d, feedIn=%d, solar=%d)", minLen, expectedSlots, len(grid), len(feedIn), len(solar))
 		}
@@ -223,7 +208,10 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 			continue
 		}
 
-		add(site.loadpointRequest(lp, minLen, firstSlotDuration, grid))
+		// skip disabled loadpoints
+		if req, detail := site.loadpointRequest(lp, minLen, firstSlotDuration, grid); req.CMax > 0 {
+			add(req, detail)
+		}
 	}
 
 	for i, dev := range site.batteryMeters {
@@ -236,10 +224,14 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		add(site.batteryRequest(dev, b, grid, minLen, firstSlotDuration))
 	}
 
+	// empty request- all loadpoints disabled
+	if len(req.Batteries) == 0 {
+		return nil
+	}
+
 	httpClient := request.NewClient(site.log)
 	httpClient.Timeout = 30 * time.Second
 
-	uri := lo.CoalesceOrEmpty(os.Getenv("OPTIMIZER_URI"), OPTIMIZER_URI)
 	apiClient, err := optimizer.NewClientWithResponses(uri, optimizer.WithHTTPClient(httpClient))
 	if err != nil {
 		return err
@@ -471,15 +463,15 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 	return bat, detail
 }
 
-func matchSoc(ts []float32, fun func(float32) bool) *time.Time {
+func matchSoc(ts []float32, fun func(float32) bool) time.Time {
 	for i, soc := range ts {
 		if fun(soc) {
 			// TODO first slot
-			return new(time.Now().Add(time.Duration(i+1) * tariff.SlotDuration))
+			return time.Now().Add(time.Duration(i+1) * tariff.SlotDuration)
 		}
 	}
 
-	return nil
+	return time.Time{}
 }
 
 // continuousDemand creates a slice of power demands depending on loadpoint mode
@@ -533,7 +525,7 @@ func loadpointProfile(lp loadpoint.API, minLen int) []float64 {
 // homeProfile returns the home base load in Wh
 func (site *Site) homeProfile(minLen int) ([]float64, error) {
 	// kWh over last 30 days
-	profile, err := metrics.Profile(now.BeginningOfDay().AddDate(0, 0, -30))
+	profile, err := site.homeEnergy.ImportProfile(now.BeginningOfDay().AddDate(0, 0, -30))
 	if err != nil {
 		return nil, err
 	}
@@ -567,6 +559,11 @@ func profileSlotsFromNow(profile []float64) []float64 {
 
 // prorate adjusts the first slot's energy amount according to remaining duration
 func prorate[T constraints.Float](slots []T, firstSlotDuration time.Duration) []float32 {
+	// return empty slice instead of nil to make api happy
+	if len(slots) == 0 {
+		return []float32{}
+	}
+
 	res := slices.Clone(slots)
 	res[0] = res[0] * T(firstSlotDuration) / T(tariff.SlotDuration)
 	return lo.Map(res, func(f T, _ int) float32 {

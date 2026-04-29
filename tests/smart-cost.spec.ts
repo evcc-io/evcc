@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
+import { expectModalHidden, expectModalVisible } from "./utils";
 import {
   startSimulator,
   stopSimulator,
@@ -39,12 +40,12 @@ test.describe("smart cost limit", async () => {
     await page.goto("/");
     await page.getByTestId("loadpoint-settings-button").nth(1).click();
     const modal = page.getByTestId("loadpoint-settings-modal");
-    await expect(modal).toBeVisible();
+    await expectModalVisible(modal);
     await modal.getByLabel("Enable limit").check();
     await modal.getByLabel("Price limit").selectOption("≤ 40.0 ct/kWh");
     await expect(modal.getByTestId("active-hours")).toHaveText(["Active time", "96 hr"].join(""));
     await modal.getByLabel("Close").click();
-    await expect(modal).not.toBeVisible();
+    await expectModalHidden(modal);
     await expect(page.getByTestId("vehicle-status-charger")).toHaveText("Charging…");
     await expect(page.getByTestId("vehicle-status-smartcost")).toHaveText(/[24]0\.0 ct ≤ 40\.0 ct/);
   });
@@ -52,12 +53,12 @@ test.describe("smart cost limit", async () => {
     await page.goto("/");
     await page.getByTestId("loadpoint-settings-button").nth(1).click();
     const modal = page.getByTestId("loadpoint-settings-modal");
-    await expect(modal).toBeVisible();
+    await expectModalVisible(modal);
     await modal.getByLabel("Enable limit").check();
     await modal.getByLabel("Price limit").selectOption("≤ 10.0 ct/kWh");
     await expect(modal.getByTestId("active-hours")).toHaveText("Active time");
     await modal.getByLabel("Close").click();
-    await expect(modal).not.toBeVisible();
+    await expectModalHidden(modal);
     await expect(page.getByTestId("vehicle-status-charger")).toHaveText("Charging…");
     await expect(page.getByTestId("vehicle-status-smartcost")).toHaveText("≤ 10.0 ct");
   });

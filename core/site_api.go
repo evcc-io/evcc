@@ -11,6 +11,7 @@ import (
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/samber/lo"
 )
 
@@ -33,6 +34,16 @@ func filterConfigurable(ref []string) []string {
 	return lo.Filter(ref, func(ref string, _ int) bool {
 		return isConfigurable(ref)
 	})
+}
+
+// Optimize updates the optimizer
+func (site *Site) Optimize() error {
+	if !sponsor.IsAuthorized() || !optimizerEnabled() {
+		return api.ErrNotAvailable
+	}
+
+	go site.optimizerUpdateAsync()
+	return nil
 }
 
 // GetTitle returns the title

@@ -16,7 +16,7 @@ func init() {
 	registry.AddCtx(api.Custom, NewConfigurableFromConfig)
 }
 
-// NewConfigurableFromConfig creates Messenger from config
+// NewConfigurableFromConfig creates a new messenger from config
 func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.Messenger, error) {
 	var cc struct {
 		Send     plugin.Config

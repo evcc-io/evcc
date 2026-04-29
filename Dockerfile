@@ -13,6 +13,7 @@ RUN --mount=type=cache,target=/root/.npm npm ci
 COPY Makefile .
 COPY *.js ./
 COPY *.ts *.mts ./
+COPY .browserslistrc .
 COPY assets assets
 COPY i18n i18n
 
@@ -90,6 +91,8 @@ EXPOSE 5353/udp
 EXPOSE 7070/tcp
 # KEBA charger
 EXPOSE 7090/udp
+# EVSE Master charger
+EXPOSE 28376/udp
 # OCPP charger
 EXPOSE 8887/tcp
 # Modbus UDP

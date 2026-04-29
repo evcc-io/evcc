@@ -6,6 +6,7 @@ require (
 	dario.cat/mergo v1.0.2
 	github.com/AlecAivazis/survey/v2 v2.3.7
 	github.com/Masterminds/sprig/v3 v3.3.0
+	github.com/PanterSoft/comlynx-go v0.1.0
 	github.com/PuerkitoBio/goquery v1.12.0
 	github.com/WulfgarW/sensonet v0.0.7
 	github.com/andig/go-powerwall v0.3.0
@@ -54,6 +55,7 @@ require (
 	github.com/gregdel/pushover v1.4.0
 	github.com/grid-x/modbus v0.0.0-20260325140807-cf9e1b9daae0
 	github.com/hashicorp/go-version v1.9.0
+	github.com/hashicorp/yamux v0.1.2
 	github.com/hasura/go-graphql-client v0.16.0
 	github.com/holoplot/go-evdev v0.0.0-20250804134636-ab1d56a1fe83
 	github.com/influxdata/influxdb-client-go/v2 v2.14.0
@@ -85,6 +87,7 @@ require (
 	github.com/robertkrimen/otto v0.5.1
 	github.com/samber/lo v1.53.0
 	github.com/sandrolain/httpcache v1.4.0
+	github.com/sethvargo/go-password v0.3.1
 	github.com/sirupsen/logrus v1.9.4
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/smallnest/chanx v1.2.0
@@ -268,3 +271,5 @@ replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20250501165
 replace github.com/lorenzodonini/ocpp-go => github.com/evcc-io/ocpp-go v0.0.0-20251212212612-b7f92ee0443b
 
 replace go.yaml.in/yaml/v4 => go.yaml.in/yaml/v4 v4.0.0-rc.3
+
+replace github.com/glebarez/sqlite => github.com/evcc-io/sqlite v0.0.0-20260421123006-d66e0643f9bb
