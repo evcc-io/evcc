@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
+import { expectModalHidden, expectModalVisible } from "./utils";
 
 test.use({ baseURL: baseUrl() });
 
@@ -20,21 +21,21 @@ test.describe("footer", async () => {
     // last 365 days
     await page.getByTestId("savings-button").click();
     const savingsModal = page.getByTestId("savings-modal");
-    await expect(savingsModal).toBeVisible();
+    await expectModalVisible(savingsModal);
     await page
       .getByTestId("savings-period-select")
       .getByRole("combobox")
       .selectOption("last 365 days");
     await page.getByRole("button", { name: "Close" }).click();
-    await expect(savingsModal).not.toBeVisible();
+    await expectModalHidden(savingsModal);
     await expect(page.getByTestId("savings-button")).toContainText("30%");
 
     // all time
     await page.getByTestId("savings-button").click();
-    await expect(savingsModal).toBeVisible();
+    await expectModalVisible(savingsModal);
     await page.getByTestId("savings-period-select").getByRole("combobox").selectOption("all time");
     await page.getByRole("button", { name: "Close" }).click();
-    await expect(savingsModal).not.toBeVisible();
+    await expectModalHidden(savingsModal);
     await expect(page.getByTestId("savings-button")).toContainText("50%");
   });
 });
@@ -43,7 +44,7 @@ test.describe("statistics values", async () => {
   test("last 30 days", async ({ page }) => {
     await page.goto("/");
     await page.getByTestId("savings-button").click();
-    await expect(page.getByTestId("savings-modal")).toBeVisible();
+    await expectModalVisible(page.getByTestId("savings-modal"));
 
     await page
       .getByTestId("savings-period-select")
@@ -64,7 +65,7 @@ test.describe("statistics values", async () => {
   test("last 365 days", async ({ page }) => {
     await page.goto("/");
     await page.getByTestId("savings-button").click();
-    await expect(page.getByTestId("savings-modal")).toBeVisible();
+    await expectModalVisible(page.getByTestId("savings-modal"));
     await page
       .getByTestId("savings-period-select")
       .getByRole("combobox")
@@ -84,7 +85,7 @@ test.describe("statistics values", async () => {
   test("reference data", async ({ page }) => {
     await page.goto("/");
     await page.getByTestId("savings-button").click();
-    await expect(page.getByTestId("savings-modal")).toBeVisible();
+    await expectModalVisible(page.getByTestId("savings-modal"));
 
     await expect(page.getByTestId("savings-reference")).toContainText("Reference data");
     await expect(page.getByTestId("savings-reference")).toContainText("30.0 ct./kWh");
@@ -117,7 +118,7 @@ test.describe("header savings", async () => {
     // open modal, verify values still work
     await page.getByTestId("savings-button").click();
     const savingsModal = page.getByTestId("savings-modal");
-    await expect(savingsModal).toBeVisible();
+    await expectModalVisible(savingsModal);
 
     await expect(page.getByTestId("savings-tile-solar")).toContainText("60.0%");
     await expect(page.getByTestId("savings-tile-price")).toContainText("18.0ct./kWh");
@@ -126,7 +127,7 @@ test.describe("header savings", async () => {
     // switch indicator to "price"
     await page.getByTestId("savings-indicator-select").getByRole("combobox").selectOption("price");
     await page.getByRole("button", { name: "Close" }).click();
-    await expect(savingsModal).not.toBeVisible();
+    await expectModalHidden(savingsModal);
 
     // verify button now shows price
     await expect(page.getByTestId("savings-button")).toContainText("18.0");
