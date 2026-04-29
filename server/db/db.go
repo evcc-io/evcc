@@ -33,7 +33,7 @@ func New(driver, dsn string) (*gorm.DB, error) {
 		// ":memory:"
 
 		// Split database path and connection parameters
-		dbPath, connectionParams, _ := strings.Cut(dsn, "?")
+		dbPath, params, _ := strings.Cut(dsn, "?")
 
 		file, err := homedir.Expand(dbPath)
 		if err != nil {
@@ -49,20 +49,20 @@ func New(driver, dsn string) (*gorm.DB, error) {
 
 		for _, pragma := range []string{"busy_timeout(5000)", "foreign_keys(1)", "synchronous(NORMAL)"} {
 			// Add busy_timeout pragma if not already present
-			if param, _, _ := strings.Cut(pragma, "("); strings.Contains(connectionParams, "_pragma="+param) {
+			if param, _, _ := strings.Cut(pragma, "("); strings.Contains(params, "_pragma="+param) {
 				continue
 			}
 
 			// Append '&' if there are existing connection parameters
-			if len(connectionParams) > 0 {
-				connectionParams += "&"
+			if len(params) > 0 {
+				params += "&"
 			}
 
 			// Add busy_timeout pragma to connection parameters
-			connectionParams += "_pragma=" + pragma
+			params += "_pragma=" + pragma
 		}
 
-		connectionStr := file + "?" + connectionParams
+		connectionStr := file + "?" + params
 
 		util.NewLogger("main").INFO.Println("using sqlite database:", connectionStr)
 
