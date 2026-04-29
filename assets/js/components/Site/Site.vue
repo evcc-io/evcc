@@ -49,39 +49,38 @@
 					</router-link>
 				</div>
 			</div>
-<template v-else>
-	<Loadpoints
-		:key="`loadpoints-${orderedVisibleLoadpoints.length}`"
-		class="mt-1 mt-sm-2 flex-grow-1"
-		:loadpoints="orderedVisibleLoadpoints"
-		:vehicles="vehicleList"
-		:smartCostType="smartCostType"
-		:smartCostAvailable="smartCostAvailable"
-		:smartFeedInPriorityAvailable="smartFeedInPriorityAvailable"
-		:tariffGrid="tariffGrid"
-		:tariffCo2="tariffCo2"
-		:tariffFeedIn="tariffFeedIn"
-		:currency="currency"
-		:gridConfigured="gridConfigured"
-		:pvConfigured="pvConfigured"
-		:batteryConfigured="batteryConfigured"
-		:batterySoc="batterySoc"
-		:batteryMode="batteryMode"
-		:forecast="forecast"
-		:circuits="circuits"
-		:selectedId="selectedLoadpointId"
-		@id-changed="selectedLoadpointChanged"
-		@open-circuits="openCircuitsModal"
-	/>
-	<CircuitsModal
-		v-model:show="showCircuitsModal"
-		:circuits="circuits"
-		:loadpoints="orderedVisibleLoadpoints"
-		:selectedCircuitName="selectedCircuitName"
-	/>
-</template>
+			<template v-else>
+				<Loadpoints
+					:key="`loadpoints-${orderedVisibleLoadpoints.length}`"
+					class="mt-1 mt-sm-2 flex-grow-1"
+					:loadpoints="orderedVisibleLoadpoints"
+					:vehicles="vehicleList"
+					:smartCostType="smartCostType"
+					:smartCostAvailable="smartCostAvailable"
+					:smartFeedInPriorityAvailable="smartFeedInPriorityAvailable"
+					:tariffGrid="tariffGrid"
+					:tariffCo2="tariffCo2"
+					:tariffFeedIn="tariffFeedIn"
+					:currency="currency"
+					:gridConfigured="gridConfigured"
+					:pvConfigured="pvConfigured"
+					:batteryConfigured="batteryConfigured"
+					:batterySoc="batterySoc"
+					:batteryMode="batteryMode"
+					:forecast="forecast"
+					:circuits="circuits"
+					:selectedId="selectedLoadpointId"
+					@id-changed="selectedLoadpointChanged"
+					@open-circuits="openCircuitsModal"
+				/>
+				<CircuitsModal
+					v-model:show="showCircuitsModal"
+					:circuits="circuits"
+					:loadpoints="orderedVisibleLoadpoints"
+					:selectedCircuitName="selectedCircuitName"
+				/>
+			</template>
 
-<Footer v-bind="footer"></Footer>
 		</div>
 	</div>
 </template>
@@ -93,7 +92,6 @@ import Energyflow from "../Energyflow/Energyflow.vue";
 import HemsWarning from "../HemsWarning.vue";
 import Loadpoints from "../Loadpoints/Loadpoints.vue";
 import CircuitsModal from "../Loadpoints/CircuitsModal.vue";
-import Footer from "../Footer/Footer.vue";
 import formatter from "@/mixins/formatter";
 import collector from "@/mixins/collector.ts";
 import WelcomeIcons from "./WelcomeIcons.vue";
