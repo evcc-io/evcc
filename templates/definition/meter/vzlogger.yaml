@@ -17,8 +17,8 @@ params:
   - name: energyuuid
     advanced: true
     description:
-      de: Zählerstand
-      en: Meter reading
+      de: Die vzlogger Kanal uuid für den Zählerstand
+      en: The vzlogger channel uuid for the meter reading
     help:
       de: Die vzlogger Kanal uuid für den Zählerstand (OBIS Code 1.8.0, Strombezug)
       en: The vzlogger channel uuid for the meter reading (OBIS Code 1.8.0, electricity consumption)
@@ -116,7 +116,7 @@ render: |
     {{- if .scale }}
     scale: {{ .scale }}
     {{- end }}
-  {{ if .energyuuid -}}
+  {{- if .energyuuid }}
   energy: # meter reading in kWh
     source: http
     uri: http://{{ .host }}:{{ .port }}/
@@ -125,7 +125,7 @@ render: |
     {{- if .scale }}
     scale: {{ .scale }}
     {{- end }}
-  {{ end -}}
+  {{- end }}
   {{ if and .l1currentuuid .l2currentuuid .l3currentuuid -}}
   currents:
   - source: http
