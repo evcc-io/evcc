@@ -559,6 +559,11 @@ func profileSlotsFromNow(profile []float64) []float64 {
 
 // prorate adjusts the first slot's energy amount according to remaining duration
 func prorate[T constraints.Float](slots []T, firstSlotDuration time.Duration) []float32 {
+	// return empty slice instead of nil to make api happy
+	if len(slots) == 0 {
+		return []float32{}
+	}
+
 	res := slices.Clone(slots)
 	res[0] = res[0] * T(firstSlotDuration) / T(tariff.SlotDuration)
 	return lo.Map(res, func(f T, _ int) float32 {
