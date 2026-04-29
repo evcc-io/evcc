@@ -1110,6 +1110,14 @@
     "title": "Authentifizierung"
   },
   "main": {
+    "circuits": {
+      "title": "Stromkreise",
+      "help": "Stromkreise begrenzen die kombinierte Leistung der angeschlossenen Ladepunkte. Diese Ansicht zeigt aktuelle Auslastung und verbleibende Reserven.",
+      "none": "Es sind keine Stromkreise konfiguriert.",
+      "ungrouped": "Ladepunkte ohne Stromkreis",
+      "close": "Schließen",
+      "indicatorLabel": "Stromkreis"
+    },
     "chargingPlan": {
       "active": "Aktiv",
       "addRepeatingPlan": "Wiederholenden Plan hinzufügen",
@@ -1176,6 +1184,16 @@
     "hemsWarning": {
       "description": "Reduziere Ladeleistung, um {limit} nicht zu überschreiten.",
       "title": "Externe Begrenzung:"
+    },
+    "loadManagement": {
+      "curtailed": "Abgeregelt",
+      "curtailedTooltip": "Einspeisereduktion aktiv (§9 EEG)",
+      "current": "Strom",
+      "dimmed": "Gedimmt",
+      "dimmedTooltip": "Lastreduktion aktiv (§14a EnWG)",
+      "power": "Leistung",
+      "title": "Lastmanagement",
+      "toggleExpand": "Lastmanagement ein- oder ausklappen"
     },
     "loadpoint": {
       "avgPrice": "⌀ Preis",

@@ -92,6 +92,54 @@ meters:
       vm: shared
       script: state.loadpoints[1].chargepower;
 
+  - name: circuit_meter_main
+    type: custom
+    power:
+      source: js
+      vm: shared
+      script: |
+        state.loadpoints[0].chargepower + state.loadpoints[1].chargepower;
+    currents:
+      - source: js
+        vm: shared
+        script: |
+          var p = state.loadpoints[0].chargepower + state.loadpoints[1].chargepower;
+          (p / 230) / 3;
+      - source: js
+        vm: shared
+        script: |
+          var p = state.loadpoints[0].chargepower + state.loadpoints[1].chargepower;
+          (p / 230) / 3;
+      - source: js
+        vm: shared
+        script: |
+          var p = state.loadpoints[0].chargepower + state.loadpoints[1].chargepower;
+          (p / 230) / 3;
+
+  - name: circuit_meter_branch
+    type: custom
+    power:
+      source: js
+      vm: shared
+      script: |
+        state.loadpoints[1].chargepower;
+    currents:
+      - source: js
+        vm: shared
+        script: |
+          var p = state.loadpoints[1].chargepower;
+          (p / 230) / 3;
+      - source: js
+        vm: shared
+        script: |
+          var p = state.loadpoints[1].chargepower;
+          (p / 230) / 3;
+      - source: js
+        vm: shared
+        script: |
+          var p = state.loadpoints[1].chargepower;
+          (p / 230) / 3;
+
 chargers:
   - name: charger_1
     type: custom
@@ -239,6 +287,25 @@ site:
     grid: grid
     pv: pv
     battery: battery
+    ext:
+      - circuit_meter_main
+      - circuit_meter_branch
+
+circuits:
+  - name: main
+    title: Main
+    meter: circuit_meter_main
+    maxcurrent: 16
+    maxpower: 11000
+    timeout: 1m
+
+  - name: branch
+    title: Branch
+    parent: main
+    meter: circuit_meter_branch
+    maxcurrent: 10
+    maxpower: 6900
+    timeout: 30s
 
 loadpoints:
   - title: Carport
@@ -246,11 +313,13 @@ loadpoints:
     mode: pv
     meter: meter_charger_1
     vehicle: vehicle_1
+    circuit: main
   - title: Garage
     charger: charger_2
     mode: "off"
     meter: meter_charger_2
     vehicle: vehicle_2
+    circuit: branch
 
 tariffs:
   currency: EUR # three letter ISO-4217 currency code (default EUR)

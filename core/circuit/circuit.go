@@ -50,7 +50,7 @@ func init() {
 // NewConfigurableFromConfig creates a new circuit from config
 func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.Circuit, error) {
 	cc := struct {
-		Title         string         // title
+		Title         string         `mapstructure:"title"`  // title
 		ParentRef     string         `mapstructure:"parent"` // parent circuit reference
 		MeterRef      string         `mapstructure:"meter"`  // meter reference
 		MaxCurrent    float64        // the max allowed current
@@ -87,14 +87,18 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.C
 		return nil, err
 	}
 
-	circuit.getMaxPower, err = cc.GetMaxPower.FloatGetter(ctx)
-	if err != nil {
-		return nil, err
+	if cc.GetMaxPower != nil {
+		circuit.getMaxPower, err = cc.GetMaxPower.FloatGetter(ctx)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	circuit.getMaxCurrent, err = cc.GetMaxCurrent.FloatGetter(ctx)
-	if err != nil {
-		return nil, err
+	if cc.GetMaxCurrent != nil {
+		circuit.getMaxCurrent, err = cc.GetMaxCurrent.FloatGetter(ctx)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if cc.ParentRef != "" {

@@ -48,6 +48,15 @@ func (site *Site) publishCircuits() {
 			Curtailed:  instance.Curtailed(),
 		}
 
+		if parent := instance.GetParent(); parent != nil {
+			for _, d := range cc {
+				if d.Instance() == parent {
+					data.Parent = d.Config().Name
+					break
+				}
+			}
+		}
+
 		if instance.GetMaxCurrent() > 0 {
 			data.Current = lo.EmptyableToPtr(instance.GetMaxPhaseCurrent())
 		}

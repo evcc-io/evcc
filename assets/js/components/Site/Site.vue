@@ -49,28 +49,38 @@
 					</router-link>
 				</div>
 			</div>
-			<Loadpoints
-				v-else
-				:key="`loadpoints-${orderedVisibleLoadpoints.length}`"
-				class="mt-1 mt-sm-2 flex-grow-1"
-				:loadpoints="orderedVisibleLoadpoints"
-				:vehicles="vehicleList"
-				:smartCostType="smartCostType"
-				:smartCostAvailable="smartCostAvailable"
-				:smartFeedInPriorityAvailable="smartFeedInPriorityAvailable"
-				:tariffGrid="tariffGrid"
-				:tariffCo2="tariffCo2"
-				:tariffFeedIn="tariffFeedIn"
-				:currency="currency"
-				:gridConfigured="gridConfigured"
-				:pvConfigured="pvConfigured"
-				:batteryConfigured="batteryConfigured"
-				:batterySoc="batterySoc"
-				:batteryMode="batteryMode"
-				:forecast="forecast"
-				:selectedId="selectedLoadpointId"
-				@id-changed="selectedLoadpointChanged"
-			/>
+			<template v-else>
+				<Loadpoints
+					:key="`loadpoints-${orderedVisibleLoadpoints.length}`"
+					class="mt-1 mt-sm-2 flex-grow-1"
+					:loadpoints="orderedVisibleLoadpoints"
+					:vehicles="vehicleList"
+					:smartCostType="smartCostType"
+					:smartCostAvailable="smartCostAvailable"
+					:smartFeedInPriorityAvailable="smartFeedInPriorityAvailable"
+					:tariffGrid="tariffGrid"
+					:tariffCo2="tariffCo2"
+					:tariffFeedIn="tariffFeedIn"
+					:currency="currency"
+					:gridConfigured="gridConfigured"
+					:pvConfigured="pvConfigured"
+					:batteryConfigured="batteryConfigured"
+					:batterySoc="batterySoc"
+					:batteryMode="batteryMode"
+					:forecast="forecast"
+					:circuits="circuits"
+					:selectedId="selectedLoadpointId"
+					@id-changed="selectedLoadpointChanged"
+					@open-circuits="openCircuitsModal"
+				/>
+				<CircuitsModal
+					v-model:show="showCircuitsModal"
+					:circuits="circuits"
+					:loadpoints="orderedVisibleLoadpoints"
+					:selectedCircuitName="selectedCircuitName"
+				/>
+			</template>
+
 		</div>
 	</div>
 </template>
@@ -81,6 +91,7 @@ import TopNavigationArea from "../Top/TopNavigationArea.vue";
 import Energyflow from "../Energyflow/Energyflow.vue";
 import HemsWarning from "../HemsWarning.vue";
 import Loadpoints from "../Loadpoints/Loadpoints.vue";
+import CircuitsModal from "../Loadpoints/CircuitsModal.vue";
 import formatter from "@/mixins/formatter";
 import collector from "@/mixins/collector.ts";
 import WelcomeIcons from "./WelcomeIcons.vue";
@@ -105,6 +116,7 @@ export default defineComponent({
 	name: "Site",
 	components: {
 		Loadpoints,
+		CircuitsModal,
 		Energyflow,
 		HemsWarning,
 		TopNavigationArea,
@@ -155,6 +167,12 @@ export default defineComponent({
 		circuits: Object as PropType<Record<string, Circuit>>,
 		evopt: { type: Object as PropType<EvOpt> },
 	},
+	data() {
+		return {
+			showCircuitsModal: false,
+			selectedCircuitName: undefined as string | undefined,
+		};
+	},
 	computed: {
 		loadpoints() {
 			return store.uiLoadpoints.value || [];
@@ -197,6 +215,10 @@ export default defineComponent({
 	methods: {
 		selectedLoadpointChanged(id: string | undefined) {
 			this.$router.push({ query: { lp: id } });
+		},
+		openCircuitsModal(circuitName: string) {
+			this.selectedCircuitName = circuitName;
+			this.showCircuitsModal = true;
 		},
 	},
 });

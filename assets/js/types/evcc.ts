@@ -158,13 +158,15 @@ export interface Config {
 }
 
 export interface Circuit {
+  name?: string;
   title?: string;
   icon?: string;
   parent?: string;
-  power: number;
+  power?: number;
   current?: number;
   maxPower?: number;
   maxCurrent?: number;
+  config?: Config;
   dimmed?: boolean;
   curtailed?: boolean;
 }
@@ -252,6 +254,7 @@ export enum LENGTH_UNIT {
 }
 
 export interface Loadpoint {
+  circuit?: string;
   batteryBoost: boolean;
   chargeCurrents?: number[];
   chargeDuration: number;
