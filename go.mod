@@ -118,6 +118,7 @@ require (
 	google.golang.org/grpc v1.80.0
 	google.golang.org/protobuf v1.36.11
 	gorm.io/gorm v1.31.1
+	modernc.org/sqlite v1.50.0
 )
 
 require (
@@ -252,7 +253,6 @@ require (
 	modernc.org/libc v1.72.0 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
-	modernc.org/sqlite v1.50.0 // indirect
 )
 
 tool (
