@@ -6,7 +6,7 @@
 		size="xl"
 		data-testid="loadpoint-settings-modal"
 		@open="modalVisible"
-		@close="modalInvisible"
+		@closed="modalInvisible"
 	>
 		<div class="container">
 			<SmartCostLimit
@@ -253,14 +253,12 @@ export default defineComponent({
 			this.selectedPhases = value;
 		},
 	},
-	mounted() {
-		this.selectedPhases = this.phasesConfigured;
-		this.selectedMaxCurrent = this.maxCurrent;
-		this.selectedMinCurrent = this.minCurrent;
-	},
 	methods: {
 		open(loadpointId: string) {
 			this.id = loadpointId;
+			this.selectedPhases = this.phasesConfigured;
+			this.selectedMaxCurrent = this.maxCurrent;
+			this.selectedMinCurrent = this.minCurrent;
 			const modalRef = this.$refs["modal"] as InstanceType<typeof GenericModal> | undefined;
 			modalRef?.open();
 		},

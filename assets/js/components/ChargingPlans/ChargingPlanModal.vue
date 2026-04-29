@@ -7,7 +7,7 @@
 			size="xl"
 			data-testid="charging-plan-modal"
 			@open="modalVisible"
-			@close="modalInvisible"
+			@closed="modalInvisible"
 		>
 			<div class="pt-2">
 				<ul class="nav nav-tabs">
