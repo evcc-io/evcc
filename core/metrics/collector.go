@@ -9,11 +9,11 @@ import (
 
 const (
 	// groups
-	Battery = "battery"
-	Charge  = "charge"
-	Grid    = "grid"
-	PV      = "pv"
-	Home    = "home" // meter and group (virtual measurement)
+	Battery   = "battery"
+	Grid      = "grid"
+	PV        = "pv"
+	Home      = "home" // meter and group (virtual measurement)
+	Loadpoint = "loadpoint"
 )
 
 type Collector struct {

@@ -1305,7 +1305,7 @@ func configureSite(conf map[string]any, loadpoints []*core.Loadpoint, tariffs *t
 func newLoadpoint(idx int, name string, other map[string]any, settingsFn func(*util.Logger) coresettings.Settings) (*core.Loadpoint, error) {
 	log := util.NewLoggerWithLoadpoint("lp-"+strconv.Itoa(idx), idx)
 
-	collector, err := metrics.NewCollector(metrics.Charge, name)
+	collector, err := metrics.NewCollector(metrics.Loadpoint, name)
 	if err != nil {
 		return nil, err
 	}
