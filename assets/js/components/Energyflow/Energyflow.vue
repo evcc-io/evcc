@@ -92,7 +92,7 @@
 							:powerUnit="powerUnit"
 							:expanded="pvExpanded"
 							data-testid="energyflow-entry-production"
-							@details-clicked="openForecastModal"
+							@details-clicked="openForecastView"
 							@toggle="togglePv"
 						>
 							<template v-if="pv.length > 1" #expanded>
@@ -123,7 +123,7 @@
 								:expanded="batteryExpanded"
 								detailsClickable
 								data-testid="energyflow-entry-batterydischarge"
-								@details-clicked="openBatterySettingsModal"
+								@details-clicked="openBatteryView"
 								@toggle="toggleBattery"
 							>
 								<template
@@ -264,7 +264,7 @@
 								:expanded="batteryExpanded"
 								detailsClickable
 								data-testid="energyflow-entry-batterycharge"
-								@details-clicked="openBatterySettingsModal"
+								@details-clicked="openBatteryView"
 								@toggle="toggleBattery"
 							>
 								<template
@@ -287,7 +287,7 @@
 										v-if="batteryGridChargeLimitSet"
 										type="button"
 										class="btn-reset d-flex justify-content-between text-start pe-4"
-										@click.stop="openBatterySettingsModal"
+										@click.stop="openBatteryView"
 									>
 										<span v-if="batteryGridChargeActive">
 											{{ $t("main.energyflow.batteryGridChargeActive") }}
@@ -339,7 +339,6 @@
 
 <script lang="ts">
 import "@h2d2/shopicons/es/filled/square";
-import Modal from "bootstrap/js/dist/modal";
 import Visualization from "./Visualization.vue";
 import Entry from "./Entry.vue";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
@@ -651,25 +650,11 @@ export default defineComponent({
 		updateHeight() {
 			this.detailsCompleteHeight = this.$refs["detailsInner"]?.offsetHeight ?? 0;
 		},
-		openBatterySettingsModal() {
-			if (this.experimental) {
-				this.$router.push("/battery");
-				return;
-			}
-			const modal = Modal.getOrCreateInstance(
-				document.getElementById("batterySettingsModal") as HTMLElement
-			);
-			modal.show();
+		openBatteryView() {
+			this.$router.push("/battery");
 		},
-		openForecastModal() {
-			if (this.experimental) {
-				this.$router.push("/forecast");
-				return;
-			}
-			const modal = Modal.getOrCreateInstance(
-				document.getElementById("forecastModal") as HTMLElement
-			);
-			modal.show();
+		openForecastView() {
+			this.$router.push("/forecast");
 		},
 		dischargePower(power: number) {
 			return Math.abs(Math.max(0, power));
