@@ -135,6 +135,7 @@ test.describe("boost", async () => {
     // visible after setting limit
     await lp.getByTestId("loadpoint-settings-button").last().click();
     const modal = page.getByTestId("loadpoint-settings-modal").last();
+    await expectModalVisible(modal);
     await modal.getByTestId("battery-boost-limit").selectOption("50 %");
     await page.waitForLoadState("networkidle");
     await modal.getByLabel("Close").click();
