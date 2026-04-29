@@ -1,6 +1,8 @@
 package db
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -10,6 +12,7 @@ import (
 	"github.com/libtnb/sqlite"
 	"github.com/mitchellh/go-homedir"
 	"gorm.io/gorm"
+	sqlite3 "modernc.org/sqlite"
 )
 
 var (
@@ -84,6 +87,37 @@ func NewInstance(driver, dsn string) error {
 	}
 
 	Instance = db
+
+	live, err := Instance.DB()
+	if err != nil {
+		panic(err)
+	}
+
+	conn, err := live.Conn(context.Background())
+	if err != nil {
+		panic(err)
+	}
+
+	if err := conn.Raw(func(driverConn any) error {
+		type backuper interface {
+			NewBackup(string) (*sqlite3.Backup, error)
+			NewRestore(string) (*sqlite3.Backup, error)
+		}
+		conn, ok := driverConn.(backuper)
+		if !ok {
+			return errors.New("invalid db type")
+		}
+		bck, err := conn.NewBackup("foo")
+		if err != nil {
+			return err
+		}
+		if _, err := bck.Step(-1); err != nil {
+			return err
+		}
+		return bck.Finish()
+	}); err != nil {
+		panic(err)
+	}
 
 	mu.Lock()
 	defer mu.Unlock()
