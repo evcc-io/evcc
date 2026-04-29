@@ -111,7 +111,7 @@ render: |
   power: # power reading
     source: http # use http plugin
     uri: http://{{ .host }}:{{ .port }}/
-    jq: .data[] | select(.uuid=="{{ unquote .uuid }}") | .tuples[0][1] # parse response json
+    jq: .data[] | select(.uuid=="{{ unquote .uuid }}") | (.tuples[0][1]? // 0) # parse response json
     cache: {{ .cache }}
     {{- if .scale }}
     scale: {{ .scale }}
