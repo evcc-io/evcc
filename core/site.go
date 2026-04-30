@@ -642,7 +642,7 @@ func (site *Site) updateBatteryMeters() {
 			mm[i].MaxDischargePower = &discharge
 		}
 
-		_, controllable := meter.(api.BatteryController)
+		_, controllable := api.Cap[api.BatteryController](meter)
 		mm[i].Controllable = new(controllable)
 	}
 
