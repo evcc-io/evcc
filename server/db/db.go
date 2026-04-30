@@ -124,7 +124,7 @@ type backuper interface {
 	NewRestore(string) (*sqlite3.Backup, error)
 }
 
-func runWithBackuper(ctx context.Context, fun func(backuper) error) error {
+func runWithBackuper(ctx context.Context, fun func(backuper) (*sqlite3.Backup, error)) error {
 	live, err := Instance.DB()
 	if err != nil {
 		return err
@@ -142,36 +142,27 @@ func runWithBackuper(ctx context.Context, fun func(backuper) error) error {
 			return errors.New("invalid db type")
 		}
 
-		return fun(conn)
+		bck, err := fun(conn)
+		if err != nil {
+			return err
+		}
+
+		if _, err := bck.Step(-1); err != nil {
+			return err
+		}
+
+		return bck.Finish()
 	})
 }
 
 func Backup(ctx context.Context, target string) error {
-	return runWithBackuper(ctx, func(conn backuper) error {
-		bck, err := conn.NewBackup(target)
-		if err != nil {
-			return err
-		}
-
-		if _, err := bck.Step(-1); err != nil {
-			return err
-		}
-
-		return bck.Finish()
+	return runWithBackuper(ctx, func(conn backuper) (*sqlite3.Backup, error) {
+		return conn.NewBackup(target)
 	})
 }
 
 func Restore(ctx context.Context, target string) error {
-	return runWithBackuper(ctx, func(conn backuper) error {
-		bck, err := conn.NewRestore(target)
-		if err != nil {
-			return err
-		}
-
-		if _, err := bck.Step(-1); err != nil {
-			return err
-		}
-
-		return bck.Finish()
+	return runWithBackuper(ctx, func(conn backuper) (*sqlite3.Backup, error) {
+		return conn.NewRestore(target)
 	})
 }
