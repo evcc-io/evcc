@@ -59,7 +59,7 @@ func TestUnitNewDriver(t *testing.T) {
 				assert.NotNil(t, driver)
 			}
 
-			assert.Equal(t, test.expectedFilePath, FilePath)
+			assert.Equal(t, test.expectedFilePath, FilePath())
 		})
 	}
 }
