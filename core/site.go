@@ -656,26 +656,6 @@ func (site *Site) updateBatteryMeters() {
 		maxDischargePower += *m.MaxDischargePower
 	}
 
-	batterySocAcc := lo.SumBy(mm, func(m types.Measurement) float64 {
-		if m.Soc == nil {
-			return 0
-		}
-		// weigh soc by capacity
-		if m.Capacity != nil && *m.Capacity > 0 {
-			return *m.Soc * *m.Capacity
-		}
-		return *m.Soc
-	})
-	totalCapacity := lo.SumBy(mm, func(m types.Measurement) float64 {
-		if m.Capacity == nil {
-			return 0
-		}
-		return *m.Capacity
-	})
-		_, controllable := api.Cap[api.BatteryController](meter)
-		mm[i].Controllable = new(controllable)
-	}
-
 	var batterySocAcc float64
 	var totalCapacity float64
 
