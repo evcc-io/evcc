@@ -17,8 +17,12 @@ import (
 
 var (
 	Instance *gorm.DB
-	FilePath string // Store the actual SQLite file path
+	filePath string // Store the actual SQLite file path
 )
+
+func FilePath() string {
+	return filePath
+}
 
 func New(driver, dsn string) (*gorm.DB, error) {
 	var dialect gorm.Dialector
@@ -45,7 +49,7 @@ func New(driver, dsn string) (*gorm.DB, error) {
 		}
 
 		// Store the expanded file path for later use
-		FilePath = file
+		filePath = file
 
 		addParam := func(typ, param string) {
 			// Add busy_timeout pragma if not already present
@@ -62,7 +66,7 @@ func New(driver, dsn string) (*gorm.DB, error) {
 			params += typ + "=" + param
 		}
 
-		for _, pragma := range []string{"busy_timeout(5000)", "foreign_keys(1)", "synchronous(NORMAL)"} {
+		for _, pragma := range []string{"busy_timeout(5000)", "foreign_keys(1)", "journal_mode(WAL)", "synchronous(NORMAL)"} {
 			addParam("_pragma", pragma)
 		}
 
@@ -115,7 +119,12 @@ func Close() error {
 	return db.Close()
 }
 
-func Backup(ctx context.Context, target string) error {
+type backuper interface {
+	NewBackup(string) (*sqlite3.Backup, error)
+	NewRestore(string) (*sqlite3.Backup, error)
+}
+
+func runWithBackuper(ctx context.Context, fun func(backuper) error) error {
 	live, err := Instance.DB()
 	if err != nil {
 		return err
@@ -128,17 +137,33 @@ func Backup(ctx context.Context, target string) error {
 	defer conn.Close()
 
 	return conn.Raw(func(driverConn any) error {
-		type backuper interface {
-			NewBackup(string) (*sqlite3.Backup, error)
-			NewRestore(string) (*sqlite3.Backup, error)
-		}
-
 		conn, ok := driverConn.(backuper)
 		if !ok {
 			return errors.New("invalid db type")
 		}
 
+		return fun(conn)
+	})
+}
+
+func Backup(ctx context.Context, target string) error {
+	return runWithBackuper(ctx, func(conn backuper) error {
 		bck, err := conn.NewBackup(target)
+		if err != nil {
+			return err
+		}
+
+		if _, err := bck.Step(-1); err != nil {
+			return err
+		}
+
+		return bck.Finish()
+	})
+}
+
+func Restore(ctx context.Context, target string) error {
+	return runWithBackuper(ctx, func(conn backuper) error {
+		bck, err := conn.NewRestore(target)
 		if err != nil {
 			return err
 		}

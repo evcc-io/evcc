@@ -48,7 +48,7 @@ func TestUnitNewDriver(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			// Reset file path
-			FilePath = ""
+			filePath = ""
 
 			driver, err := New(test.driver, test.dsn)
 			if test.wantErr {
