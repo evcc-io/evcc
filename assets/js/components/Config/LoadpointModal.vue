@@ -544,23 +544,38 @@
 				</div>
 			</div>
 
-			<div v-if="values.charger" class="mt-5 mb-4 d-flex justify-content-between">
-				<button
-					v-if="isDeletable"
-					type="button"
-					class="btn btn-link text-danger"
-					@click.prevent="remove"
-				>
-					{{ $t("config.meter.delete") }}
-				</button>
-				<button
-					v-else
-					type="button"
-					class="btn btn-link text-muted btn-cancel"
-					data-bs-dismiss="modal"
-				>
-					{{ $t("config.loadpoint.cancel") }}
-				</button>
+			<div
+				v-if="values.charger"
+				class="mt-5 mb-4 d-flex flex-wrap justify-content-between align-items-center gap-2"
+			>
+				<div class="d-flex flex-wrap align-items-center gap-1">
+					<button
+						v-if="isDeletable"
+						type="button"
+						class="btn btn-link text-danger"
+						@click.prevent="remove"
+					>
+						{{ $t("config.meter.delete") }}
+					</button>
+					<button
+						v-else
+						type="button"
+						class="btn btn-link text-muted btn-cancel"
+						data-bs-dismiss="modal"
+					>
+						{{ $t("config.loadpoint.cancel") }}
+					</button>
+					<button
+						v-if="isDeletable"
+						type="button"
+						class="btn btn-link text-muted"
+						@click.prevent="handleDisable(!isDisabled)"
+					>
+						{{
+							isDisabled ? $t("config.general.enable") : $t("config.general.disable")
+						}}
+					</button>
+				</div>
 				<button type="submit" class="btn btn-primary" :disabled="saving">
 					<span
 						v-if="saving"
@@ -654,7 +669,7 @@ export default {
 			default: () => false,
 		},
 	},
-	emits: ["changed", "dismissed"],
+	emits: ["changed", "dismissed", "disable"],
 	data() {
 		return {
 			isModalVisible: false,
@@ -731,6 +746,9 @@ export default {
 		},
 		isDeletable() {
 			return !this.isNew;
+		},
+		isDisabled() {
+			return Boolean(this.values.disable);
 		},
 		showPriority() {
 			return this.isNew ? this.loadpointCount > 0 : this.loadpointCount > 1;
@@ -863,6 +881,11 @@ export default {
 				console.error(e);
 				alert("delete failed");
 			}
+		},
+		async handleDisable(disable: boolean) {
+			if (this.id === undefined) return;
+			this.$emit("disable", { id: this.id, disable });
+			await closeModal();
 		},
 		async create() {
 			this.saving = true;

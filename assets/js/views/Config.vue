@@ -32,8 +32,10 @@
 						:name="loadpoint.name"
 						:editable="!!loadpoint.id"
 						:error="hasDeviceError('loadpoint', loadpoint.name)"
+						:disabled="!!loadpoint.disable"
 						data-testid="loadpoint"
 						@edit="openModal('loadpoint', { id: loadpoint.id })"
+						@enable="handleDisable('loadpoint', loadpoint.id!, false)"
 					>
 						<template #tags>
 							<DeviceTags :tags="loadpointTags(loadpoint)" />
@@ -424,6 +426,7 @@
 					:hasDeviceError="hasDeviceError"
 					@changed="loadpointChanged"
 					@dismissed="loadpointDismissed"
+					@disable="({ id, disable }) => handleDisable('loadpoint', id, disable)"
 				/>
 				<VehicleModal
 					:is-sponsor="isSponsor"
@@ -938,9 +941,15 @@ export default defineComponent({
 				meter: () => this.meterChanged({ action: "updated" }),
 				tariff: () => this.tariffChanged({ action: "updated" }),
 				vehicle: () => this.vehicleChanged(),
+				loadpoint: () => this.loadpointChanged(),
 			};
 			try {
-				await createDeviceUtils(deviceClass).disable(id, disable);
+				if (deviceClass === "loadpoint") {
+					const { data } = await api.get(`config/loadpoints/${id}`);
+					await api.put(`config/loadpoints/${id}`, { ...data, disable });
+				} else {
+					await createDeviceUtils(deviceClass).disable(id, disable);
+				}
 				refresh[deviceClass]?.();
 				await this.loadDirty();
 			} catch (e) {

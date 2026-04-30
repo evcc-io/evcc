@@ -212,6 +212,7 @@ export interface LoadpointThreshold {
 export interface ConfigLoadpoint {
   id?: number;
   name?: string;
+  disable?: boolean;
   charger: string;
   meter: string;
   vehicle: string;

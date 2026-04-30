@@ -1233,8 +1233,8 @@ func configureSiteAndLoadpoints(conf *globalconfig.All) (*core.Site, error) {
 
 	var loadpoints []*core.Loadpoint
 	for _, dev := range config.Loadpoints().Devices() {
-		if inst := dev.Instance(); inst != nil {
-			loadpoints = append(loadpoints, inst.(*core.Loadpoint))
+		if inst, _ := dev.Instance().(*core.Loadpoint); inst != nil {
+			loadpoints = append(loadpoints, inst)
 		}
 	}
 
