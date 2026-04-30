@@ -104,9 +104,11 @@ test.describe("ext meter", async () => {
     await meterModal.getByRole("button", { name: "Add regular consumer" }).click();
 
     await meterModal.getByLabel("Title").fill("Custom ext meter");
-    await meterModal.getByLabel("Usage").selectOption("battery");
-    await meterModal.getByLabel("Manufacturer").selectOption("Demo battery");
-    await meterModal.getByLabel("Charge").fill("50");
+    await meterModal.getByLabel("Usage").selectOption("pv");
+
+    // switch to an in-beteen template to ensure we dont leak values
+    await meterModal.getByLabel("Manufacturer").selectOption("SunSpec Hybrid Inverter");
+    await expect(meterModal.getByLabel("IP address or hostname")).toBeVisible();
 
     await meterModal.getByLabel("Manufacturer").selectOption("User-defined device");
     await page.waitForLoadState("networkidle");
@@ -205,9 +207,10 @@ test.describe("ext meter order", async () => {
 
     // Verify order in main UI consumer dropdown
     await page.goto("/#/");
+    await expect(page.getByTestId("loadpoint")).toHaveCount(1);
     await page.getByTestId("energyflow").click();
     await page.getByRole("button", { name: "Consumption" }).click();
-    const consumers = await page.getByTestId("energyflow-entry-consumer");
+    const consumers = page.getByTestId("energyflow-entry-consumer");
     await expect(consumers.nth(0)).toContainText("Meter 1");
     await expect(consumers.nth(1)).toContainText("Meter 2");
     await expect(consumers.nth(2)).toContainText("Meter 3");

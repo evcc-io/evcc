@@ -50,6 +50,18 @@ export interface FatalError {
   device?: string;
 }
 
+export type StatisticsPeriod = "30d" | "365d" | "thisYear" | "total";
+export type StatisticsIndicator = "none" | "solar" | "price" | "savings" | "co2" | "co2saved";
+
+export interface StatisticsData {
+  avgCo2: number;
+  avgPrice: number;
+  chargedKWh: number;
+  solarPercentage: number;
+}
+
+export type Statistics = Record<StatisticsPeriod, StatisticsData>;
+
 export interface State {
   offline: boolean;
   telemetry?: boolean;
@@ -63,9 +75,11 @@ export interface State {
   authProviders?: AuthProviders;
   evopt?: EvOpt;
   version?: string;
+  availableVersion?: string;
   system?: string;
   timezone?: string;
   battery?: Battery;
+  batteryMode?: BATTERY_MODE;
   pv?: Meter[];
   aux?: Meter[];
   ext?: Meter[];
@@ -80,17 +94,27 @@ export interface State {
   shm?: ShmConfig;
   sponsor?: ConfigStatus<unknown, SponsorStatus>;
   eebus?: ConfigStatus<EebusConfig, EebusStatus>;
+  remote?: Remote;
   modbusproxy?: ModbusProxy[];
   messaging?: ConfigStatus<unknown, unknown>;
   messagingEvents?: MessagingEvents;
   interval?: number;
   circuits?: Record<string, Circuit>;
+  bufferSoc?: number;
+  prioritySoc?: number;
+  bufferStartSoc?: number;
+  batteryDischargeControl?: boolean;
+  batteryGridChargeLimit?: number | null;
+  smartCostAvailable?: boolean;
+  smartCostType?: SMART_COST_TYPE;
   siteTitle?: string;
   vehicles: Record<string, Vehicle>;
+  statistics?: Statistics;
   authDisabled?: boolean;
   config?: string;
   database?: string;
   ocpp?: Ocpp;
+  optimizer?: boolean;
 }
 
 export interface ConfigStatus<C, S> {
@@ -263,6 +287,7 @@ export interface Loadpoint {
   limitSoc: number;
   maxCurrent: number;
   minCurrent: number;
+  minSocNotReached: boolean;
   mode: CHARGE_MODE;
   offeredCurrent: number;
   phaseAction: PHASE_ACTION;
@@ -300,6 +325,7 @@ export interface Loadpoint {
   vehicleSoc: number;
   vehicleTitle: string;
   vehicleWelcomeActive: boolean;
+  batteryBoostLimit: number;
 }
 
 export interface UiLoadpoint extends Loadpoint {
@@ -311,6 +337,18 @@ export interface UiLoadpoint extends Loadpoint {
   visible: boolean;
   lastSmartCostLimit: number | undefined;
   lastSmartFeedInPriorityLimit: number | undefined;
+  range: number;
+  vehicleRange: number;
+  vehicleSoc: number;
+  capacity: number;
+  vehicleKnown: boolean;
+  vehicleHasSoc: boolean;
+  socBasedCharging: boolean;
+  socBasedPlanning: boolean;
+  sessionInfo: SessionInfoKey | undefined;
+  rangePerSoc: number | undefined;
+  socPerKwh: number;
+  vehicleNotReachable: boolean;
 }
 
 export enum THEME {
@@ -354,6 +392,13 @@ export enum CHARGE_MODE {
   NOW = "now",
   MINPV = "minpv",
   PV = "pv",
+}
+
+export enum BATTERY_MODE {
+  UNKNOWN = "unknown",
+  NORMAL = "normal",
+  HOLD = "hold",
+  CHARGE = "charge",
 }
 
 export enum PHASES {
@@ -452,6 +497,29 @@ export enum MODBUS_PROTOCOL {
 export type Certificate = {
   public: string;
   private: string;
+};
+
+export type Remote = ConfigStatus<RemoteConfig, RemoteStatus>;
+
+export type RemoteConfig = {
+  enabled: boolean;
+};
+
+export type RemoteStatus = {
+  connected: boolean;
+  url?: string;
+  loginBlocked: boolean;
+  lastSeen?: Record<string, string>;
+};
+
+export type RemoteClient = {
+  username: string;
+  createdAt: string;
+  expiresAt?: string;
+};
+
+export type RemoteClientCreated = RemoteClient & {
+  password: string;
 };
 
 export type Eebus = ConfigStatus<EebusConfig, EebusStatus>;

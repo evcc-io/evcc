@@ -99,6 +99,12 @@ func NewEEBus(ctx context.Context, ski, ip string, usage *templates.Usage) (api.
 		return nil, err
 	}
 
+	// unregister device when context is cancelled (e.g. UI config validation)
+	go func() {
+		<-ctx.Done()
+		eebus.Instance.UnregisterDevice(ski, c)
+	}()
+
 	// monitoring appliance
 	eebus.LogEntities(c.log.DEBUG, "MA MPC", c.ma.MaMPCInterface)
 	eebus.LogEntities(c.log.DEBUG, "MA MGCP", c.ma.MaMGCPInterface)
@@ -110,7 +116,7 @@ func NewEEBus(ctx context.Context, ski, ip string, usage *templates.Usage) (api.
 	return c, nil
 }
 
-func eebusReadValue[T any](scenario uint, uc eebusapi.UseCaseBaseInterface, entity spineapi.EntityRemoteInterface, update func(entity spineapi.EntityRemoteInterface) (T, error)) (T, error) {
+func eebusReadValue[T any](uc eebusapi.UseCaseBaseInterface, entity spineapi.EntityRemoteInterface, scenario uint, update func(entity spineapi.EntityRemoteInterface) (T, error)) (T, error) {
 	var zero T
 
 	if entity == nil || !uc.IsScenarioAvailableAtEntity(entity, scenario) {
@@ -132,7 +138,7 @@ func eebusReadValue[T any](scenario uint, uc eebusapi.UseCaseBaseInterface, enti
 func (c *EEBus) readValue(scenario uint, update func(entity spineapi.EntityRemoteInterface) (float64, error)) (float64, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	return eebusReadValue(scenario, c.mm, c.maEntity, update)
+	return eebusReadValue(c.mm, c.maEntity, scenario, update)
 }
 
 var _ api.Meter = (*EEBus)(nil)
@@ -151,7 +157,7 @@ func (c *EEBus) readPhases(scenario uint, update func(entity spineapi.EntityRemo
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	res, err := eebusReadValue(scenario, c.mm, c.maEntity, update)
+	res, err := eebusReadValue(c.mm, c.maEntity, scenario, update)
 	if err != nil {
 		// announced but not provided
 		if errors.Is(err, eebusapi.ErrDataNotAvailable) {
@@ -194,7 +200,7 @@ func (c *EEBus) Dimmed() (bool, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	limit, err := eebusReadValue(1, c.eg.EgLPCInterface, c.egLpcEntity, c.eg.EgLPCInterface.ConsumptionLimit)
+	limit, err := eebusReadValue(c.eg.EgLPCInterface, c.egLpcEntity, 1, c.eg.EgLPCInterface.ConsumptionLimit)
 	if err != nil {
 		return false, err
 	}
@@ -238,13 +244,13 @@ func (c *EEBus) Curtailed() (bool, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	limit, err := eebusReadValue(1, c.eg.EgLPPInterface, c.egLppEntity, c.eg.EgLPPInterface.ProductionLimit)
+	limit, err := eebusReadValue(c.eg.EgLPPInterface, c.egLppEntity, 1, c.eg.EgLPPInterface.ProductionLimit)
 	if err != nil {
 		return false, err
 	}
 
-	// Check if limit is active and has a valid power value
-	return limit.IsActive && limit.Value > 0, nil
+	// Check if limit is active and has a valid power value (valid is zero or negative)
+	return limit.IsActive && limit.Value <= 0, nil
 }
 
 // Curtail implements the api.Curtailer interface

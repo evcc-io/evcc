@@ -40,7 +40,7 @@ render: |
   {{- if eq .usage "grid" }}
   power:
     source: sunspec
-    uri: {{ .host }}:{{ .port }}
+    uri: {{ joinHostPort .host .port }}
     id: {{ .id }}
     value:
       - 201:W
@@ -49,7 +49,7 @@ render: |
       - 213:W
   energy:
     source: sunspec
-    uri: {{ .host }}:{{ .port }}
+    uri: {{ joinHostPort .host .port }}
     id: {{ .id }}
     value:
       - 201:TotWhImp
@@ -59,7 +59,7 @@ render: |
     scale: 0.001
   currents:
     - source: sunspec
-      uri: {{ .host }}:{{ .port }}
+      uri: {{ joinHostPort .host .port }}
       id: {{ .id }}
       value:
         - 201:AphA
@@ -67,7 +67,7 @@ render: |
         - 203:AphA
         - 213:AphA
     - source: sunspec
-      uri: {{ .host }}:{{ .port }}
+      uri: {{ joinHostPort .host .port }}
       id: {{ .id }}
       value:
         - 201:AphB
@@ -75,7 +75,7 @@ render: |
         - 203:AphB
         - 213:AphB
     - source: sunspec
-      uri: {{ .host }}:{{ .port }}
+      uri: {{ joinHostPort .host .port }}
       id: {{ .id }}
       value:
         - 201:AphC
@@ -84,7 +84,7 @@ render: |
         - 213:AphC
   voltages:
     - source: sunspec
-      uri: {{ .host }}:{{ .port }}
+      uri: {{ joinHostPort .host .port }}
       id: {{ .id }}
       value:
         - 201:PhVphA
@@ -92,7 +92,7 @@ render: |
         - 203:PhVphA
         - 213:PhVphA
     - source: sunspec
-      uri: {{ .host }}:{{ .port }}
+      uri: {{ joinHostPort .host .port }}
       id: {{ .id }}
       value:
         - 201:PhVphB
@@ -100,7 +100,7 @@ render: |
         - 203:PhVphB
         - 213:PhVphB
     - source: sunspec
-      uri: {{ .host }}:{{ .port }}
+      uri: {{ joinHostPort .host .port }}
       id: {{ .id }}
       value:
         - 201:PhVphC
@@ -109,7 +109,7 @@ render: |
         - 213:PhVphC
   powers:
     - source: sunspec
-      uri: {{ .host }}:{{ .port }}
+      uri: {{ joinHostPort .host .port }}
       id: {{ .id }}
       value:
         - 201:WphA
@@ -117,7 +117,7 @@ render: |
         - 203:WphA
         - 213:WphA
     - source: sunspec
-      uri: {{ .host }}:{{ .port }}
+      uri: {{ joinHostPort .host .port }}
       id: {{ .id }}
       value:
         - 201:WphB
@@ -125,7 +125,7 @@ render: |
         - 203:WphB
         - 213:WphB
     - source: sunspec
-      uri: {{ .host }}:{{ .port }}
+      uri: {{ joinHostPort .host .port }}
       id: {{ .id }}
       value:
         - 201:WphC
@@ -138,23 +138,23 @@ render: |
     source: calc
     add:
     - source: sunspec
-      uri: {{ .host }}:{{ .port }}
+      uri: {{ joinHostPort .host .port }}
       id: 1
       value: 160:1:DCW # mppt 1
     - source: sunspec
-      uri: {{ .host }}:{{ .port }}
+      uri: {{ joinHostPort .host .port }}
       id: 1
       value: 160:2:DCW # mppt 2
   energy:
     source: calc
     add:
     - source: sunspec
-      uri: {{ .host }}:{{ .port }}
+      uri: {{ joinHostPort .host .port }}
       id: 1
       value: 160:1:DCWH # mppt 1
       scale: 0.001
     - source: sunspec
-      uri: {{ .host }}:{{ .port }}
+      uri: {{ joinHostPort .host .port }}
       id: 1
       value: 160:2:DCWH # mppt 2
       scale: 0.001
@@ -165,23 +165,23 @@ render: |
     source: calc
     add:
     - source: sunspec
-      uri: {{ .host }}:{{ .port }}
+      uri: {{ joinHostPort .host .port }}
       id: 1
       value: 160:3:DCW # mppt 3 charge
       scale: -1
     - source: sunspec
-      uri: {{ .host }}:{{ .port }}
+      uri: {{ joinHostPort .host .port }}
       id: 1
       value: 160:4:DCW # mppt 4 discharge
   energy:
     source: sunspec
-    uri: {{ .host }}:{{ .port }}
+    uri: {{ joinHostPort .host .port }}
     id: 1
     value: 160:4:DCWH # mppt 4 (discharge)
     scale: 0.001
   soc:
     source: sunspec
-    uri: {{ .host }}:{{ .port }}
+    uri: {{ joinHostPort .host .port }}
     id: 1
     value: 124:0:ChaState
   batterymode: # model 124
@@ -195,14 +195,14 @@ render: |
           value: 0
           set:
             source: sunspec
-            uri: {{ .host }}:{{ .port }}
+            uri: {{ joinHostPort .host .port }}
             id: 1
             value: 124:0:StorCtl_Mod
         - source: const
           value: 100 # %
           set:
             source: sunspec
-            uri: {{ .host }}:{{ .port }}
+            uri: {{ joinHostPort .host .port }}
             id: 1
             value: 124:0:OutWRte
     - case: 2 # hold
@@ -213,14 +213,14 @@ render: |
           value: 2
           set:
             source: sunspec
-            uri: {{ .host }}:{{ .port }}
+            uri: {{ joinHostPort .host .port }}
             id: 1
             value: 124:0:StorCtl_Mod
         - source: const
           value: 0 # %
           set:
             source: sunspec
-            uri: {{ .host }}:{{ .port }}
+            uri: {{ joinHostPort .host .port }}
             id: 1
             value: 124:0:OutWRte
     - case: 3 # charge
@@ -231,21 +231,21 @@ render: |
           value: 1 # off
           set:
             source: sunspec
-            uri: {{ .host }}:{{ .port }}
+            uri: {{ joinHostPort .host .port }}
             id: 1
             value: 124:0:ChaGriSet
         - source: const
           value: 2
           set:
             source: sunspec
-            uri: {{ .host }}:{{ .port }}
+            uri: {{ joinHostPort .host .port }}
             id: 1
             value: 124:0:StorCtl_Mod
         - source: const
           value: {{ if .maxchargerate }}-{{ .maxchargerate }}{{ end }} # %
           set:
             source: sunspec
-            uri: {{ .host }}:{{ .port }}
+            uri: {{ joinHostPort .host .port }}
             id: 1
             value: 124:0:OutWRte
   {{- include "battery-params" . }}

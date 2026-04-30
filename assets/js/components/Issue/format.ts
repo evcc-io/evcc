@@ -1,5 +1,5 @@
 function sortedEntries(obj: object): [string, any][] {
-  const firstKeys = ["id", "name"];
+  const firstKeys = ["id", "name", "type", "template"];
   return Object.entries(obj).sort(([a], [b]) => {
     const ai = firstKeys.indexOf(a);
     const bi = firstKeys.indexOf(b);

@@ -160,6 +160,7 @@ When submitting AI-assisted contributions, keep these principles in mind:
 - **Understanding**: Fully understand all changes and be prepared to answer questions about them.
 - **Human-written intent**: Write issue descriptions, PR explanations, and commit messages in your own words. Keep them clear and concise, not lengthy generated text.
 - **Value**: Ensure contributions justify the review effort required from maintainers.
+- **Prior consensus**: Only open a PR if there is a related issue or discussion where the team has indicated a positive tendency toward the proposed change. Link to it in your PR description.
 
 Contributors remain responsible for their work regardless of which tools were used to create it.
 

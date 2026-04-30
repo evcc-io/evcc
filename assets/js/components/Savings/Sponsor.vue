@@ -66,7 +66,6 @@ import confetti from "canvas-confetti";
 import "@h2d2/shopicons/es/regular/heart";
 import "@h2d2/shopicons/es/regular/stars";
 import "@h2d2/shopicons/es/regular/clock";
-import { docsPrefix } from "@/i18n";
 import { defineComponent, type PropType } from "vue";
 import type { SponsorStatus } from "@/types/evcc";
 
@@ -92,7 +91,7 @@ export default defineComponent({
 			return this.name && !this.isTrial && !this.isVictronDevice;
 		},
 		sponsorLink() {
-			return `${docsPrefix()}/docs/sponsorship`;
+			return "https://sponsor.evcc.io";
 		},
 	},
 	methods: {
@@ -135,6 +134,8 @@ export default defineComponent({
 </script>
 
 <style scoped>
+@import "../../../css/breakpoints.css";
+
 .title-icon {
 	transform: translateY(-2px);
 }
@@ -149,7 +150,7 @@ export default defineComponent({
 }
 
 /* breakpoint sm */
-@media (min-width: 576px) {
+@media (--sm-and-up) {
 	.confetti-button,
 	.become-sponsor {
 		width: 75%;
@@ -157,7 +158,7 @@ export default defineComponent({
 }
 
 /* breakpoint lg */
-@media (min-width: 992px) {
+@media (--lg-and-up) {
 	.confetti-button,
 	.become-sponsor {
 		width: 40%;

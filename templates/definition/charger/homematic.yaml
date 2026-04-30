@@ -58,7 +58,7 @@ params:
   - preset: switchsocket
 render: |
   type: homematic
-  uri: {{ .host }}:{{ .port }}
+  uri: {{ joinHostPort .host .port }}
   device: {{ .device }}
   user: {{ .user }}
   password: {{ .password }}

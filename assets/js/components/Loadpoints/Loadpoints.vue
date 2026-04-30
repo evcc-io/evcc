@@ -31,10 +31,15 @@
 					:pvConfigured="pvConfigured"
 					:batteryConfigured="batteryConfigured"
 					:batterySoc="batterySoc"
+					:batteryMode="batteryMode"
 					:forecast="forecast"
 					class="h-100"
 					:class="{ 'loadpoint-unselected': !selected(loadpoint.id) }"
 					@click="goTo(loadpoint.id)"
+					@open-charging-plan-modal="
+						(openArrivalTab) => openChargingPlanModal(loadpoint.id, openArrivalTab)
+					"
+					@open-settings-modal="openSettingsModal(loadpoint.id)"
 				/>
 			</div>
 		</div>
@@ -57,6 +62,28 @@
 				<shopicon-bold-circle v-else class="indicator-icon"></shopicon-bold-circle>
 			</button>
 		</div>
+		<div>
+			<ChargingPlanModal
+				ref="chargingPlanModal"
+				:loadpoints="loadpoints"
+				:vehicles="vehicles"
+				:smartCostType="smartCostType"
+				:currency="currency"
+				:forecast="forecast"
+			/>
+			<SettingsModal
+				ref="settingsModal"
+				:loadpoints="loadpoints"
+				:multipleLoadpoints="multipleLoadpoints"
+				:currency="currency"
+				:tariffGrid="tariffGrid"
+				:smartFeedInPriorityAvailable="smartFeedInPriorityAvailable"
+				:smartCostAvailable="smartCostAvailable"
+				:smartCostType="smartCostType"
+				:battery-configured="batteryConfigured"
+				:forecast="forecast"
+			/>
+		</div>
 	</div>
 </template>
 
@@ -67,11 +94,21 @@ import "@h2d2/shopicons/es/filled/lightning";
 
 import Loadpoint from "./Loadpoint.vue";
 import { defineComponent, type PropType } from "vue";
-import type { UiLoadpoint, SMART_COST_TYPE, Timeout, Vehicle } from "@/types/evcc";
+import type {
+	UiLoadpoint,
+	SMART_COST_TYPE,
+	Timeout,
+	Vehicle,
+	BATTERY_MODE,
+	Forecast,
+	CURRENCY,
+} from "@/types/evcc";
+import ChargingPlanModal from "../ChargingPlans/ChargingPlanModal.vue";
+import SettingsModal from "../Loadpoints/SettingsModal.vue";
 
 export default defineComponent({
 	name: "Loadpoints",
-	components: { Loadpoint },
+	components: { Loadpoint, ChargingPlanModal, SettingsModal },
 	props: {
 		loadpoints: { type: Array as PropType<UiLoadpoint[]>, default: () => [] },
 		vehicles: { type: Array as PropType<Vehicle[]> },
@@ -81,13 +118,14 @@ export default defineComponent({
 		tariffGrid: Number,
 		tariffCo2: Number,
 		tariffFeedIn: Number,
-		currency: String,
+		currency: String as PropType<CURRENCY>,
 		selectedId: String,
 		gridConfigured: Boolean,
 		pvConfigured: Boolean,
 		batteryConfigured: Boolean,
 		batterySoc: Number,
-		forecast: Object, // as PropType<Forecast>,
+		batteryMode: String as PropType<BATTERY_MODE>,
+		forecast: Object as PropType<Forecast>,
 	},
 	emits: ["id-changed"],
 	data() {
@@ -186,10 +224,31 @@ export default defineComponent({
 				}
 			}, 1000);
 		},
+		openChargingPlanModal(loadpointId: string, openArrivalTab = false) {
+			const modal = this.$refs["chargingPlanModal"] as
+				| InstanceType<typeof ChargingPlanModal>
+				| undefined;
+
+			if (openArrivalTab) {
+				modal?.showArrivalTab();
+			} else {
+				modal?.showDepartureTab();
+			}
+
+			modal?.open(loadpointId);
+		},
+		openSettingsModal(loadpointId: string) {
+			const modal = this.$refs["settingsModal"] as
+				| InstanceType<typeof SettingsModal>
+				| undefined;
+			modal?.open(loadpointId);
+		},
 	},
 });
 </script>
 <style scoped>
+@import "../../../css/breakpoints.css";
+
 .container--loadpoint:not(:empty) {
 	min-height: 300px;
 }
@@ -236,7 +295,7 @@ export default defineComponent({
 }
 
 /* show truncated tiles on breakpoint sm,md */
-@media (min-width: 576px) and (max-width: 991.98px) {
+@media (--sm-to-lg) {
 	.container--loadpoint {
 		max-width: none;
 	}
@@ -257,21 +316,21 @@ export default defineComponent({
 }
 
 /* breakpoint sm */
-@media (min-width: 576px) and (max-width: 767.98px) {
+@media (--sm-to-md) {
 	.carousel {
 		--slide-width: 540px;
 	}
 }
 
 /* breakpoint md */
-@media (min-width: 768px) and (max-width: 991.98px) {
+@media (--md-to-lg) {
 	.carousel {
 		--slide-width: 720px;
 	}
 }
 
 /* breakpoint lg, 2-col grid */
-@media (min-width: 992px) {
+@media (--lg-and-up) {
 	.carousel {
 		display: grid !important;
 		grid-gap: 2rem;
