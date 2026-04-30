@@ -125,6 +125,7 @@ func Backup(ctx context.Context, target string) error {
 	if err != nil {
 		return err
 	}
+	defer conn.Close()
 
 	return conn.Raw(func(driverConn any) error {
 		type backuper interface {
