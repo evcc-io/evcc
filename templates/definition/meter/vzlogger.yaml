@@ -38,8 +38,8 @@ params:
       de: Skalierungsfaktor Energie
       en: Scale factor energy
     help:
-      de: Multipliziere Energie-Rohwert mit diesem Faktor (Standard 0.001 für Wh nach kWh).
-      en: Multiply energy raw value by this factor (default 0.001 for Wh to kWh).
+      de: Multipliziere Energie-Rohwert mit diesem Faktor
+      en: Multiply energy raw value by this factor
   - name: l1currentuuid
     advanced: true
     description:
