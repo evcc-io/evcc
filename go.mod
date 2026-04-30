@@ -70,7 +70,7 @@ require (
 	github.com/koron/go-ssdp v0.1.0
 	github.com/korylprince/ipnetgen v1.0.1
 	github.com/libp2p/zeroconf/v2 v2.2.0
-	github.com/libtnb/sqlite v1.0.4
+	github.com/libtnb/sqlite v1.1.1
 	github.com/lorenzodonini/ocpp-go v0.19.0
 	github.com/lunixbochs/struc v0.0.0-20241101090106-8d528fa2c543
 	github.com/mabunixda/wattpilot v1.8.5
