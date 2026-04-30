@@ -14,7 +14,7 @@ requirements:
       * Steuerung über Modbus als secondary: `An`
 
       RFID-Autorisierung ist mit openWB Software 2.x leider aktuell nicht sinnvoll nutzbar, siehe
-      [`Issue 2832`](https://github.com/openWB/core/issues/2832)
+      [`openWB Issue 2832`](https://github.com/openWB/core/issues/2832)
     en: |
       Requires [`Software 2.x`](https://github.com/openWB/core).
       The following changes are necessary under the 'Einstellungen' tab:
@@ -44,8 +44,8 @@ params:
       en: Use RFID-Reader
       de: RFID-Reader verwenden
     help:
-      en: Be sure to check openWB Issue 2832 before enabling this, should not be used for access protection!
-      de: Unbedingt openWB Issue 2832 beachten, sollte nicht für Zugangsschutz verwendet werden!
+      en: Be sure to check [`openWB Issue 2832`](https://github.com/openWB/core/issues/2832) before enabling this, should not be used for access protection!
+      de: Unbedingt [`openWB Issue 2832`](https://github.com/openWB/core/issues/2832) beachten, sollte nicht für Zugangsschutz verwendet werden!
     advanced: true
 render: |
   type: openwb-2.0
