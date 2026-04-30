@@ -47,10 +47,10 @@ func New(driver, dsn string) (*gorm.DB, error) {
 		// Store the expanded file path for later use
 		FilePath = file
 
-		for _, pragma := range []string{"busy_timeout(5000)", "foreign_keys(1)", "synchronous(NORMAL)"} {
+		addParam := func(typ, param string) {
 			// Add busy_timeout pragma if not already present
-			if param, _, _ := strings.Cut(pragma, "("); strings.Contains(params, "_pragma="+param) {
-				continue
+			if short, _, _ := strings.Cut(param, "("); strings.Contains(params, typ+"="+short) {
+				return
 			}
 
 			// Append '&' if there are existing connection parameters
@@ -59,8 +59,15 @@ func New(driver, dsn string) (*gorm.DB, error) {
 			}
 
 			// Add busy_timeout pragma to connection parameters
-			params += "_pragma=" + pragma
+			params += typ + "=" + param
 		}
+
+		for _, pragma := range []string{"busy_timeout(5000)", "foreign_keys(1)", "synchronous(NORMAL)"} {
+			addParam("_pragma", pragma)
+		}
+
+		// https://github.com/libtnb/sqlite/issues/15
+		addParam("_time_format", "sqlite")
 
 		connectionStr := file + "?" + params
 
