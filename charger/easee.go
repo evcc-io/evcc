@@ -67,10 +67,9 @@ type Easee struct {
 	phaseMode             int
 	currentPower, sessionEnergy, totalEnergy,
 	currentL1, currentL2, currentL3 float64
-	currentSessionID  int
-	sessionStartMeter float64
-	rfid              string
-	lp                loadpoint.API
+	currentSessionID int
+	rfid             string
+	lp               loadpoint.API
 
 	dispatcher *easee.CommandDispatcher
 
@@ -391,7 +390,6 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 			break
 		}
 		c.currentSessionID = data.ID
-		c.sessionStartMeter = data.MeterValue
 		if data.MeterValue >= c.totalEnergy {
 			c.totalEnergy = data.MeterValue
 		}
@@ -418,7 +416,6 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 		if c.opMode <= easee.ModeDisconnected && opMode >= easee.ModeAwaitingStart {
 			c.sessionEnergy = 0
 			c.currentSessionID = 0
-			c.sessionStartMeter = 0
 			c.obsTime[easee.SESSION_ENERGY] = time.Now()
 		}
 
@@ -720,15 +717,6 @@ func (c *Easee) Currents() (float64, float64, float64, error) {
 	return c.currentL1, c.currentL2, c.currentL3, nil
 }
 
-var _ api.SessionStartMeter = (*Easee)(nil)
-
-// SessionStartMeter implements the api.SessionStartMeter interface
-func (c *Easee) SessionStartMeter() float64 {
-	c.mux.RLock()
-	defer c.mux.RUnlock()
-	return c.sessionStartMeter
-}
-
 var _ api.MeterEnergy = (*Easee)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
@@ -781,6 +769,28 @@ func (c *Easee) Phases1p3p(phases int) error {
 		_, err = c.dispatcher.Send(uri, data)
 		if err != nil {
 			c.dispatcher.CancelOrphan(easee.CIRCUIT_MAX_CURRENT_P1)
+		}
+
+		// Sending DCC:7 to skip charge pause after scaling down to 1p.
+		// The loadpoint's next control interval will send the real target current.
+		if err == nil && phases == 1 {
+			override := 7.0
+			chargerData := easee.ChargerSettings{
+				DynamicChargerCurrent: &override,
+			}
+			chargerURI := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
+			noop, sendErr := c.dispatcher.Send(chargerURI, chargerData)
+			if sendErr != nil {
+				c.log.WARN.Printf("phase switch: failed to set charger current override: %v", sendErr)
+			} else if !noop {
+				if waitErr := c.waitForDynamicChargerCurrent(override); waitErr != nil {
+					c.log.WARN.Printf("phase switch: charger current override confirmation timeout: %v", waitErr)
+				}
+			}
+
+			c.mux.Lock()
+			c.current = override
+			c.mux.Unlock()
 		}
 	} else {
 		// charger level

@@ -40,6 +40,7 @@
     "legendTopName": "Nabíjení vozidla s využitím baterie domu",
     "legendTopSubline": "když je baterie domu nad {soc}.",
     "modalTitle": "Nastavení baterie",
+    "noBattery": "Nejsou nakonfigurovány žádné baterie.",
     "usageTab": "Využití baterie"
   },
   "config": {
@@ -112,8 +113,9 @@
       "title": "Měna"
     },
     "deviceValue": {
+      "activeClients": "Aktivní klienti",
       "amount": "Množství",
-      "broker": "Broker",
+      "broker": "Zprostředkovatel",
       "bucket": "Úložiště (bucket)",
       "capacity": "Kapacita",
       "chargeStatus": "Stav",
@@ -125,6 +127,7 @@
       "chargedEnergy": "Nabito",
       "co2": "CO₂ ze sítě",
       "configured": "Nastaveno",
+      "connected": "Připojeno",
       "connections": "Spojení",
       "controllable": "Ovládatelné",
       "currency": "Měna",
@@ -143,6 +146,7 @@
       "hemsActiveLimit": "Aktivní limit",
       "hemsType": "Komunikace",
       "identifier": "RFID identifikátor",
+      "loginBlocked": "Dosažen limit přihlášení",
       "max": "maximum",
       "messengers": "Služby",
       "no": "ne",
@@ -334,11 +338,11 @@
       },
       "defaultModeHelpKeep": "Zachová naposledy zvolený režim.",
       "defaultModeLabel": "Výchozí režim",
-      "defaultsHint": "Výchozí hodnoty, chování FVE aj. elektrikářské detaily používají rozumné výchozí hodnoty.",
+      "defaultsHint": "Výchozí hodnoty, chování FVE aj. elektrické parametry používají rozumné výchozí hodnoty.",
       "defaultsHintLink": "Uprav nastavení",
       "delete": "Smazat",
       "electricalSubtitle": "Pokud váháte, konzultujte se svým elektrikářem.",
-      "electricalTitle": "Elektrické",
+      "electricalTitle": "Elektřina",
       "energyMeterHelp": "Doplňkový měřič, pokud nabíječka nemá integrovaný.",
       "energyMeterLabel": "Elektroměr",
       "estimateLabel": "Odhadovat úroveň nabití vozu mezi aktualizacemi z API",
@@ -601,6 +605,12 @@
       "url": "Adresa URL serveru",
       "urlHelp": "Zkopírujte tuto adresu URL do konfigurace nabíječky. Podrobnosti najdete v příručce výrobce. Nabíječka by měla automaticky připojit svůj jedinečný identifikátor (ID stanice) k adrese URL. Ve výjimečných případech může být nutné identifikátor zadat ručně. Příklad: `{url}`"
     },
+    "optimizer": {
+      "description": "Analyzuje solární předpověď, ceny elektřiny a vaše vzorce spotřeby, aby optimalizoval strategii baterie a nabíjení. Data jsou odesílána do optimalizační služby evcc ke zpracování. Aktuálně pouze počítá a vizualizuje. Zařízení zatím neovládá.",
+      "enable": "Povolit optimalizátor",
+      "info": "Může trvat několik minut, než se položka nabídky optimalizátoru zobrazí. U nových instalací může trvat až 24 hodin, než evcc shromáždí dostatek dat.",
+      "title": "Optimalizátor"
+    },
     "options": {
       "boolean": {
         "no": "ne",
@@ -627,6 +637,38 @@
     "pv": {
       "titleAdd": "Přidat měřič solární energie",
       "titleEdit": "Editovat měřič solární energie"
+    },
+    "remote": {
+      "active": "Aktivní",
+      "addClient": "Přidat klienta",
+      "addClientDescription": "Přihlašovací údaje jsou ukládány a ověřovány pouze lokálně ve vaší instanci evcc.",
+      "addClientTitle": "Přidat vzdáleného klienta",
+      "clientCreated": "Klient vytvořen",
+      "clients": "Klient",
+      "confirmDelete": "Smazat klienta?",
+      "connected": "Připojeno",
+      "createClient": "Vytvořit klienta",
+      "description": "Přistupujte ke své instalaci evcc odkudkoli pomocí mobilní aplikace evcc. Není potřeba přesměrování portů ani VPN.",
+      "deviceName": "Název zařízení",
+      "disconnected": "Odpojeno",
+      "done": "Hotovo",
+      "enableLabel": "Povolit vzdálený přístup",
+      "expiration": "Platnost",
+      "expirationNone": "Nikdy",
+      "expired": "vypršelo",
+      "expiresIn": "vypršelo {time}",
+      "lastActive": "aktivní {time}",
+      "loginBlocked": "Vzdálená přihlášení jsou na jednu minutu zablokována z důvodu příliš mnoha neúspěšných pokusů o přihlášení.",
+      "manualLogin": "Nebo se přihlaste ručně v prohlížeči na adrese {url} pomocí těchto přihlašovacích údajů:",
+      "noClients": "Zatím žádní klienti. Nikdo se zatím nemůže připojit.",
+      "password": "Heslo",
+      "passwordOnce": "Toto heslo se zobrazí pouze jednou. Naskenujte QR kód nebo si jej nyní zkopírujte. Později už ho znovu neuvidíte.",
+      "qrInstall": "Nainstalujte si aplikaci evcc pro {ios} nebo {android}.",
+      "qrScan": "Naskenujte kód fotoaparátem telefonu pro připojení. Pokud už telefon používáte, klikněte na něj.",
+      "removeClient": "Odebrat klienta",
+      "title": "Vzdálený přístup",
+      "url": "Veřejná URL adresa",
+      "username": "Uživatelské jméno"
     },
     "section": {
       "additionalMeter": "Další měřiče",
@@ -758,8 +800,8 @@
       "titleChoice": "Co chcete přidat?",
       "type": {
         "co2": "Intenzita uhlíkové stopy",
-        "feedIn": "Cena za výkup energie",
-        "grid": "Cena za dodávku energie",
+        "feedIn": "Výkupní cena elektřiny do sítě",
+        "grid": "Cena elektřiny ze sítě",
         "planner": "Plánovač",
         "solar": "Solár"
       },
@@ -853,6 +895,15 @@
       "configurePriceCo2": "Zjistit jak nastavit cenu a data CO₂.",
       "footerLong": "{percent} solární energie",
       "footerShort": "{percent} solár",
+      "indicator": {
+        "co2": "Emise CO₂",
+        "co2saved": "Ušetřené emise CO₂",
+        "none": "žádné",
+        "price": "cena energie",
+        "savings": "úspory",
+        "solar": "solární energie"
+      },
+      "indicatorLabel": "Informace v záhlaví",
       "modalTitle": "Přehled energie",
       "moneySaved": "{value} uložena",
       "percentGrid": "{grid} kWh síť",
@@ -868,6 +919,7 @@
       "priceTitle": "Ceny energií",
       "referenceGrid": "síť",
       "referenceLabel": "Referenční data",
+      "sessionInfo": "Na základě dokončených nabíjecích relací.",
       "tabTitle": "Moje údaje"
     },
     "sponsor": {
@@ -893,15 +945,26 @@
     },
     "version": {
       "availableLong": "nová verze je k dispozici",
+      "community": "evcc komunita",
+      "labelRelease": "Vydání",
+      "labelVersion": "Verze",
+      "labelWebsite": "Webové stránky",
+      "latestVersion": "nejnovější verze",
+      "madeByCommunity": "Vytvořeno {0}.",
       "modalCancel": "Zrušit",
       "modalDownload": "Stáhnout",
       "modalInstalledVersion": "Instalovaná verze",
+      "modalLatest": "Používáte nejnovější verzi.",
+      "modalNextRelease": "Co je v příštím vydání",
       "modalNoReleaseNotes": "Žádné bližší informace k vydání nejsou k dispozici. Více informací o nové verzi:",
       "modalTitle": "Nová verze nalezena",
       "modalUpdate": "Instalovat",
       "modalUpdateNow": "Instalovat nyní",
       "modalUpdateStarted": "Spouštění nové verze EVCC…",
-      "modalUpdateStatusStart": "Instalace spuštěna:"
+      "modalUpdateStatusStart": "Instalace spuštěna:",
+      "modalViewOnGitHub": "Zobrazit na GitHubu",
+      "openSource": "open source",
+      "poweredByOpenSource": "Běží na {0}."
     }
   },
   "forecast": {
@@ -911,6 +974,13 @@
       "lowestHour": "Nejčistší hodina",
       "range": "Rozsah"
     },
+    "empty": {
+      "co2": "Zjistěte, kdy je elektřina ze sítě ve vašem regionu ekologičtější. Nabíjecí plány budou optimalizovány pro nižší emise a vypočítají úsporu CO₂.",
+      "price": "Nastavte svůj dynamický tarif elektřiny, aby se nabíjecí plány automaticky optimalizovaly a počítaly úspory.",
+      "setup": "Nastavit tarify a předpovědi",
+      "solar": "Zobrazte očekávanou solární výrobu pro dnešek a následující dny. V budoucnu bude také využita pro automatickou optimalizaci nabíjení."
+    },
+    "hideLine": "skrýt řádek",
     "modalTitle": "Předpověď",
     "price": {
       "average": "Průměr",
@@ -918,6 +988,8 @@
       "lowestHour": "Nejlevnější hodina",
       "range": "Rozsah"
     },
+    "priceZoom": "přiblížit",
+    "showLine": "zobrazit řádek",
     "solar": {
       "dayAfterTomorrow": "Pozítří",
       "partly": "Částečně",
@@ -926,10 +998,12 @@
       "tomorrow": "Zítra"
     },
     "solarAdjust": "Upravit solární předpověď na základě skutečných výrobních dat {percent}.",
+    "solarAdjustMedium": "korekce podle reálných dat",
+    "solarAdjustShort": "korekce",
     "type": {
-      "co2": "CO₂",
-      "price": "Cena",
-      "solar": "Solár"
+      "co2": "CO₂ emise",
+      "price": "Cena elektřiny ze sítě",
+      "solar": "Solární výroba"
     }
   },
   "general": {
@@ -1142,6 +1216,7 @@
         "once": "Rychlé dobití je aktivováno pro tuto nabíjecí relaci.",
         "stateActive": "Rychlé dobití aktivní",
         "stateBelowLimit": "Baterie má příliš nízký stav nabití pro funkci rychlého dobití",
+        "stateHold": "Baterie uzamčena",
         "stateReady": "Funkce rychlého dobití je k dispozici a připravena"
       },
       "batteryUsage": "Domácí baterie",
@@ -1251,6 +1326,7 @@
       "batteryBoostBelowLimit": "Baterie má příliš nízký stav nabití pro funkci rychlého dobití.",
       "batteryBoostDisabled": "Funkce rychlého dobití je zakázána.",
       "batteryBoostEnabled": "Režim boost dokud baterie nedosáhne {limit}.",
+      "batteryBoostHold": "Baterie je uzamčena. Režim Boost není dostupný.",
       "charging": "Nabíjení…",
       "cheapEnergyCharging": "Levná energie je k dispozici.",
       "cheapEnergyNextStart": "Levná energie za {duration}.",
@@ -1455,7 +1531,7 @@
     "activeHours": "{active} z {total}",
     "activeHoursLabel": "Aktivní čas",
     "applyToAll": "Aplikovat všude?",
-    "batteryDescription": "Nabíjí baterii FVE ze distribuční sítě.",
+    "batteryDescription": "Nabíjí baterii FVE z distribuční sítě.",
     "cheapTitle": "Levné nabíjení ze sítě",
     "cleanTitle": "Čisté nabíjení ze sítě",
     "co2Label": "CO₂ emise",
@@ -1490,5 +1566,13 @@
     "lineErrorLink": "řádek {0}",
     "restartButton": "Restart",
     "title": "Chyba při spuštění"
+  },
+  "tabBar": {
+    "battery": "Baterie",
+    "charge": "Nabíjení",
+    "comingSoon": "Tato stránka je ve vývoji.",
+    "forecast": "Předpověď",
+    "more": "Více",
+    "sessions": "Relace"
   }
 }

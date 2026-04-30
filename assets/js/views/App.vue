@@ -1,16 +1,14 @@
 <template>
-	<div class="app" :class="{ 'app--bottomtabs': state.experimental }">
+	<div class="app">
 		<router-view
 			v-if="showRoutes"
 			:notifications="notifications"
 			:offline="offline"
 		></router-view>
 
-		<BottomTabBar v-if="state.experimental" v-bind="bottomTabBarProps" />
+		<BottomTabBar v-bind="bottomTabBarProps" />
 
 		<GlobalSettingsModal v-bind="globalSettingsProps" />
-		<BatterySettingsModal v-if="batteryModalAvailabe" v-bind="batterySettingsProps" />
-		<ForecastModal v-bind="forecastModalProps" />
 		<AboutModal v-bind="aboutModalProps" />
 		<HelpModal />
 		<PasswordModal />
@@ -23,8 +21,6 @@
 import store from "../store";
 import BottomTabBar from "../components/BottomTabs/Bar.vue";
 import GlobalSettingsModal from "../components/GlobalSettings/GlobalSettingsModal.vue";
-import BatterySettingsModal from "../components/Battery/BatterySettingsModal.vue";
-import ForecastModal from "../components/Forecast/ForecastModal.vue";
 import OfflineIndicator from "../components/Footer/OfflineIndicator.vue";
 import PasswordModal from "../components/Auth/PasswordModal.vue";
 import LoginModal from "../components/Auth/LoginModal.vue";
@@ -50,8 +46,6 @@ export default defineComponent({
 		BottomTabBar,
 		GlobalSettingsModal,
 		HelpModal,
-		BatterySettingsModal,
-		ForecastModal,
 		PasswordModal,
 		LoginModal,
 		OfflineIndicator,
@@ -76,9 +70,6 @@ export default defineComponent({
 		version() {
 			return store.state.version;
 		},
-		batteryModalAvailabe() {
-			return store.state.battery?.devices?.length;
-		},
 		showRoutes() {
 			return this.state.startupCompleted;
 		},
@@ -89,14 +80,8 @@ export default defineComponent({
 		globalSettingsProps() {
 			return this.collectProps(GlobalSettingsModal, this.state);
 		},
-		batterySettingsProps() {
-			return this.collectProps(BatterySettingsModal, this.state);
-		},
 		offlineIndicatorProps() {
 			return this.collectProps(OfflineIndicator, this.state);
-		},
-		forecastModalProps() {
-			return this.collectProps(ForecastModal, this.state);
 		},
 		loginModalProps() {
 			return this.collectProps(LoginModal, this.state);
@@ -246,8 +231,5 @@ export default defineComponent({
 .app {
 	min-height: 100vh;
 	min-height: 100dvh;
-}
-.app--bottomtabs {
-	--bottom-space: calc(var(--tab-bar-height) + 1.5rem);
 }
 </style>

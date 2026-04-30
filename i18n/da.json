@@ -608,7 +608,7 @@
     "optimizer": {
       "description": "Analyserer sol-prognose, el-priser, og forbrugsmønstre for at optimere batteri og opladning. Data sendes til evcc optimerings-service for at blive beregnet. Aktuelt beregnes og vises data kun, der er ingen styring af enheder endnu.",
       "enable": "Aktiver Optimering",
-      "info": "Det kan tage et par minutter for optimerings-menuen er synlig. For nye installationer kan det tage op til 24 timer før der er opsamlet tilstrækkelig med data.",
+      "info": "Det kan tage et par minutter for optimerings-menuen er synlig. For nye installationer kan det tage op til 24 timer, før der er opsamlet tilstrækkelig med data.",
       "title": "Optimering"
     },
     "options": {

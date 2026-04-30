@@ -14,10 +14,6 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-type sessionStartMeterMock struct{ val float64 }
-
-func (m *sessionStartMeterMock) SessionStartMeter() float64 { return m.val }
-
 func sessionStart(lp *Loadpoint) func(session *session.Session) {
 	return func(session *session.Session) {
 		if session.Created.IsZero() {
@@ -264,12 +260,6 @@ func TestResetHeatingSession(t *testing.T) {
 }
 
 func TestFinalizeSessionEnergy(t *testing.T) {
-	type meterWithSSM struct {
-		api.Meter
-		api.MeterEnergy
-		*sessionStartMeterMock
-	}
-
 	setup := func(t *testing.T) (*Loadpoint, *api.MockMeterEnergy, *api.MockChargeRater) {
 		t.Helper()
 		var err error
@@ -283,10 +273,14 @@ func TestFinalizeSessionEnergy(t *testing.T) {
 		me := api.NewMockMeterEnergy(ctrl)
 		rater := api.NewMockChargeRater(ctrl)
 
-		cm := &meterWithSSM{
-			Meter:                 mm,
-			MeterEnergy:           me,
-			sessionStartMeterMock: &sessionStartMeterMock{val: 9157.3},
+		type EnergyDecorator struct {
+			api.Meter
+			api.MeterEnergy
+		}
+
+		cm := &EnergyDecorator{
+			Meter:       mm,
+			MeterEnergy: me,
 		}
 
 		lp := &Loadpoint{
@@ -302,7 +296,7 @@ func TestFinalizeSessionEnergy(t *testing.T) {
 	t.Run("corrects session when ChargedEnergy increased", func(t *testing.T) {
 		lp, me, rater := setup(t)
 
-		me.EXPECT().TotalEnergy().Return(9154.4, nil)
+		me.EXPECT().TotalEnergy().Return(9157.3, nil)
 		lp.createSession()
 		lp.session.Created = lp.clock.Now()
 

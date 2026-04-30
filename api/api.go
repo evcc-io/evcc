@@ -26,12 +26,6 @@ type PhaseCurrents interface {
 	Currents() (float64, float64, float64, error)
 }
 
-// SessionStartMeter is an optional interface for chargers that can provide
-// an authoritative meter reading at the start of a charge session.
-type SessionStartMeter interface {
-	SessionStartMeter() float64
-}
-
 // PhaseVoltages provides per-phase voltage V
 type PhaseVoltages interface {
 	Voltages() (float64, float64, float64, error)

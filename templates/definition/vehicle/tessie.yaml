@@ -115,3 +115,4 @@ render: |
     headers:
       Authorization: Bearer {{ .token }}
     method: POST
+  features: ["coarsecurrent"]

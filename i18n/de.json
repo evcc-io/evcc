@@ -228,6 +228,7 @@
       "authPerformHint": "Öffnet ein neues Tab. Anschließend hier weiter machen.",
       "authPrepare": "Verbindung vorbereiten",
       "cancel": "Abbrechen",
+      "change": "Ändern",
       "clear": "Löschen",
       "close": "Schließen",
       "confirmSave": "Es gibt ungespeicherte Änderungen. Jetzt speichern?",
@@ -693,11 +694,15 @@
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
+      "activationKey": "Lizenzschlüssel",
+      "activationKeyHint": "Per E-Mail zugesandt. Kann im {url} gefunden werden.",
       "addToken": "Token eingeben",
       "changeToken": "Token ändern",
       "description": "Das Sponsoring-Modell hilft uns, das Projekt zu pflegen und nachhaltig neue und spannende Funktionen zu entwickeln. Als Sponsor erhältst du Zugriff auf alle Wallbox-Implementierungen.",
-      "descriptionToken": "Als Sponsor erhältst du dein Token auf {url}. Zum Ausprobieren gibts ein {trialToken}.",
-      "enterYourToken": "Token eingeben",
+      "descriptionToken": "Als GitHub-Sponsor findest du dein Token auf {url}. Zum Ausprobieren gibt's ein {trialToken}.",
+      "email": "E-Mail",
+      "emailHint": "E-Mail-Adresse, die du für {url} verwendet hast",
+      "enterYourToken": "Dein Sponsor Token",
       "error": "Das Sponsortoken ist ungültig.",
       "invalid": "ungültig",
       "labelToken": "Sponsortoken",
@@ -708,7 +713,7 @@
       "tokenRequiredShort": "Kein Sponsortoken konfiguriert.",
       "trialToken": "Testtoken",
       "viaYaml": "über evcc.yaml",
-      "yourToken": "Dein Token"
+      "yourToken": "Sponsor Token"
     },
     "system": {
       "backupRestore": {
@@ -1445,6 +1450,7 @@
     },
     "loadpoint": "Ladepunkt",
     "noData": "Noch keine Ladevorgänge in diesem Monat.",
+    "odometer": "Kilometerstand",
     "overview": "Übersicht",
     "period": {
       "month": "Monat",

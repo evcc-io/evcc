@@ -479,7 +479,7 @@
       "events": "Tapahtumat",
       "legacyWarning": "Uusi ilmoitusasetus saatavilla! Poista ja tallenna uudet asetuksesi ohjatusti täällä.",
       "messengers": "Palvelut",
-      "seePlaceholders": "katso tilapäiset",
+      "seePlaceholders": "näytä korvattavat arvot",
       "title": "Ilmoitukset"
     },
     "messenger": {
@@ -606,8 +606,9 @@
       "urlHelp": "Kopioi tämä URL laturisi asetuksiin. Tarkista laturivalmistajan ohjeista yksityiskohdat. Laturin odotetaan lisäävän URL-osoitteeseen yksilöllinen tunnus (aseman ID). Joissain harvoissa tapauksissa sinun täytyy käsin lisätä tämä tunnus. Esim: `{url}`"
     },
     "optimizer": {
-      "description": "Analysoi aurinkoennustetta, sähkönhintaa ja kulutustottumuksiasi optimoidakseen akun ja latauspisteiden käyttöä. Tiedot lähetetään käsiteltäväksi evcc:n optimointipalveluun.",
+      "description": "Analysoi aurinkoennustetta, sähkönhintaa ja kulutustottumuksiasi optimoidakseen akun ja latauspisteiden käyttöä. Tiedot lähetetään käsiteltäväksi evcc:n optimointipalveluun. Tällä hetkellä luo vain laskelman ja visualisoinnin eikä suoraan hallinnoi laitteita.",
       "enable": "Käytä optimointia",
+      "info": "Voi kestää pari minuuttia ennen kuin optimoija-valinta tulee näkyväksi. Uusissa asennuksessa voi kestaa jopa 24 tuntia ennen kuin evcc on koonnut tarpeeksi dataa.",
       "title": "Optimointi"
     },
     "options": {
@@ -979,7 +980,7 @@
       "setup": "Määritä hinnat ja ennusteet",
       "solar": "Katso aurinkotuotannon ennuste täksi ja tuleviksi päiviksi. Käytetään tulevaisuudessa myös latauksien optimoitiin."
     },
-    "hideLine": "piilota viiva",
+    "hideLine": "piilota kuvaaja",
     "modalTitle": "Ennuste",
     "price": {
       "average": "Keskimääräinen",
@@ -988,7 +989,7 @@
       "range": "Toimintamatka"
     },
     "priceZoom": "lähennä",
-    "showLine": "näytä viiva",
+    "showLine": "näytä kuvaaja",
     "solar": {
       "dayAfterTomorrow": "Ylihuomenna",
       "partly": "osittain",

@@ -33,7 +33,7 @@ const app = createApp(
         if (!msg.level) msg.level = "error";
         const now = new Date();
         const existingMsg = this.notifications.find(
-          (n) => n.message === msg.message && n.lp === msg.lp
+          (n: Notification) => n.message === msg.message && n.lp === msg.lp
         );
         if (existingMsg) {
           existingMsg.count++;
@@ -41,7 +41,7 @@ const app = createApp(
           // move to front
           this.notifications = [
             existingMsg,
-            ...this.notifications.filter((n) => n !== existingMsg),
+            ...this.notifications.filter((n: Notification) => n !== existingMsg),
           ];
         } else {
           this.notifications = [

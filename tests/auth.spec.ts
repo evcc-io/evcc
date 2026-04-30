@@ -1,11 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
-import {
-  expectModalHidden,
-  expectModalVisible,
-  openTopNavigation,
-  expectTopNavigationClosed,
-} from "./utils";
+import { expectModalHidden, expectModalVisible, openMoreMenu } from "./utils";
 test.use({ baseURL: baseUrl() });
 
 const BASIC = "basics.evcc.yaml";
@@ -49,9 +44,8 @@ test("login", async ({ page }) => {
   await page.goto("/");
 
   // go to config
-  await openTopNavigation(page);
+  await openMoreMenu(page);
   await page.getByRole("link", { name: "Configuration" }).click();
-  await expectTopNavigationClosed(page);
 
   // login modal
   const login = page.getByTestId("login-modal");
@@ -77,9 +71,8 @@ test("http iframe hint", async ({ page }) => {
   await page.goto("/");
 
   // go to config
-  await openTopNavigation(page);
+  await openMoreMenu(page);
   await page.getByRole("link", { name: "Configuration" }).click();
-  await expectTopNavigationClosed(page);
 
   // login modal
   const login = page.getByTestId("login-modal");
@@ -129,18 +122,16 @@ test("update password", async ({ page }) => {
   ).not.toBeVisible();
 
   // logout
-  await openTopNavigation(page);
-  await page.getByRole("button", { name: "Logout" }).click();
-  await expectTopNavigationClosed(page);
+  const menu = await openMoreMenu(page);
+  await menu.getByRole("button", { name: "Logout" }).click();
 
   // should be redirected to home page after logout
   await expect(page).toHaveURL("/#/");
 
   // login modal
-  await openTopNavigation(page);
-  await expect(page.getByRole("button", { name: "Logout" })).not.toBeVisible();
-  await page.getByRole("link", { name: "Configuration" }).click();
-  await expectTopNavigationClosed(page);
+  const menu2 = await openMoreMenu(page);
+  await expect(menu2.getByRole("button", { name: "Logout" })).not.toBeVisible();
+  await menu2.getByRole("link", { name: "Configuration" }).click();
   const loginNew = page.getByTestId("login-modal");
   await expectModalVisible(loginNew);
   await loginNew.getByLabel("Administrator Password").fill(newPassword);
@@ -171,10 +162,9 @@ test("disable auth", async ({ page }) => {
   await expectModalHidden(modal);
 
   // configuration page without login
-  await openTopNavigation(page);
-  await expect(page.getByRole("button", { name: "Logout" })).not.toBeVisible();
-  await page.getByRole("link", { name: "Configuration" }).click();
-  await expectTopNavigationClosed(page);
+  const menu = await openMoreMenu(page);
+  await expect(menu.getByRole("button", { name: "Logout" })).not.toBeVisible();
+  await menu.getByRole("link", { name: "Configuration" }).click();
   await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible();
 
   await stop();

@@ -66,7 +66,6 @@ import confetti from "canvas-confetti";
 import "@h2d2/shopicons/es/regular/heart";
 import "@h2d2/shopicons/es/regular/stars";
 import "@h2d2/shopicons/es/regular/clock";
-import { docsPrefix } from "@/i18n";
 import { defineComponent, type PropType } from "vue";
 import type { SponsorStatus } from "@/types/evcc";
 
@@ -92,7 +91,7 @@ export default defineComponent({
 			return this.name && !this.isTrial && !this.isVictronDevice;
 		},
 		sponsorLink() {
-			return `${docsPrefix()}/docs/sponsorship`;
+			return "https://sponsor.evcc.io";
 		},
 	},
 	methods: {

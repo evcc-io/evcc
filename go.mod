@@ -39,7 +39,6 @@ require (
 	github.com/evcc-io/tesla-proxy-client v0.0.0-20260324063928-151fe10796ae
 	github.com/fatih/structs v1.1.0
 	github.com/getkin/kin-openapi v0.135.0
-	github.com/glebarez/sqlite v1.11.0
 	github.com/go-http-utils/etag v0.0.0-20161124023236-513ea8f21eb1
 	github.com/go-playground/validator/v10 v10.30.2
 	github.com/go-telegram/bot v1.20.0
@@ -71,6 +70,7 @@ require (
 	github.com/koron/go-ssdp v0.1.0
 	github.com/korylprince/ipnetgen v1.0.1
 	github.com/libp2p/zeroconf/v2 v2.2.0
+	github.com/libtnb/sqlite v1.0.4
 	github.com/lorenzodonini/ocpp-go v0.19.0
 	github.com/lunixbochs/struc v0.0.0-20241101090106-8d528fa2c543
 	github.com/mabunixda/wattpilot v1.8.5
@@ -118,6 +118,7 @@ require (
 	google.golang.org/grpc v1.80.0
 	google.golang.org/protobuf v1.36.11
 	gorm.io/gorm v1.31.1
+	modernc.org/sqlite v1.50.0
 )
 
 require (
@@ -162,7 +163,6 @@ require (
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.13 // indirect
-	github.com/glebarez/go-sqlite v1.22.0 // indirect
 	github.com/go-http-utils/fresh v0.0.0-20161124030543-7231e26a4b27 // indirect
 	github.com/go-http-utils/headers v0.0.0-20181008091004-fed159eddc2a // indirect
 	github.com/go-jose/go-jose/v4 v4.1.4 // indirect
@@ -250,10 +250,9 @@ require (
 	gopkg.in/go-playground/validator.v9 v9.30.0 // indirect
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	modernc.org/libc v1.70.0 // indirect
+	modernc.org/libc v1.72.0 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
-	modernc.org/sqlite v1.48.2 // indirect
 )
 
 tool (
