@@ -72,7 +72,7 @@ func getDevices(w http.ResponseWriter, r *http.Request) {
 }
 
 func jsonWrite(w http.ResponseWriter, data any) {
-	w.Header().Set("Cache-control", "max-age=60")
+	w.Header().Set("Cache-control", "max-age=300")
 	json.NewEncoder(w).Encode(data)
 }
 
