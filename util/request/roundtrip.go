@@ -130,8 +130,6 @@ func dump(r io.ReadCloser, w *strings.Builder) error {
 }
 
 func (r *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
-	r.log.TRACE.Printf("%s %s", req.Method, req.URL.String())
-
 	// add evcc user agent
 	if req.Header.Get("User-Agent") == "" {
 		req = req.Clone(req.Context())
@@ -166,9 +164,11 @@ func (r *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 
 	reqMetric.WithLabelValues(req.URL.Hostname()).Observe(time.Since(startTime).Seconds())
 
+	suffix := ""
 	if err == nil && resp.Header.Get(httpcache.XFromCache) != "" {
-		r.log.TRACE.Println("(cached)")
+		suffix = " (cached)"
 	}
+	r.log.TRACE.Printf("%s %s%s", req.Method, req.URL.String(), suffix)
 
 	if err == nil {
 		resMetric.WithLabelValues(req.URL.Hostname(), strconv.Itoa(resp.StatusCode)).Add(1)
