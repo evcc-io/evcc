@@ -71,9 +71,7 @@ func NewEcoFlowFromConfig(ctx context.Context, other map[string]any) (api.Meter,
 		return nil, fmt.Errorf("invalid region: %s", cc.Region)
 	}
 
-	log := util.NewLogger("ecoflow").Redact(cc.AccessKey, cc.SecretKey, cc.Serial)
-
-	m, err := NewEcoFlow(ctx, log, cc.AccessKey, cc.SecretKey, cc.Serial, cc.Usage, uri, cc.Power, cc.Soc, cc.Cache)
+	m, err := NewEcoFlow(ctx, cc.AccessKey, cc.SecretKey, cc.Serial, cc.Usage, uri, cc.Power, cc.Soc, cc.Cache)
 	if err != nil {
 		return nil, err
 	}
@@ -89,8 +87,10 @@ func NewEcoFlowFromConfig(ctx context.Context, other map[string]any) (api.Meter,
 }
 
 // NewEcoFlow constructs the EcoFlow struct
-func NewEcoFlow(ctx context.Context, log *util.Logger, accessKey, secretKey, serial, usage, uri string,
+func NewEcoFlow(ctx context.Context, accessKey, secretKey, serial, usage, uri string,
 	power, soc string, cache time.Duration) (*EcoFlow, error) {
+	log := util.NewLogger("ecoflow").Redact(accessKey, secretKey, serial)
+
 	m := &EcoFlow{
 		ctx:    ctx,
 		serial: serial,
