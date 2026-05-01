@@ -4,7 +4,7 @@ products:
   - brand: TinkerForge
     description:
       generic: WARP3 Charger Pro
-capabilities: ["mA", "1p3p", "rfid"]
+capabilities: ["mA", "rfid", "1p3p"]
 requirements:
   description:
     de: Die automatische Phasenumschaltung bei 1p Fahrzeugen muss deaktiviert sein. Siehe [docs.warp-charger.com](https://docs.warp-charger.com/docs/mqtt_http/api_reference/evse#evse_phase_auto_switch_warp3).
