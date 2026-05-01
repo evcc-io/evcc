@@ -360,7 +360,6 @@ func configureMeters(static []config.Named, names ...string) error {
 			return fmt.Errorf("cannot create meter %d: missing name", i+1)
 		}
 
-		// configure all, if no name refs are given
 		if len(names) > 0 && !slices.Contains(names, cc.Name) {
 			continue
 		}
@@ -384,8 +383,7 @@ func configureMeters(static []config.Named, names ...string) error {
 		eg.Go(func() error {
 			cc := conf.Named()
 
-			// always skip unreferenced db devices
-			if !slices.Contains(names, cc.Name) {
+			if len(names) > 0 && !slices.Contains(names, cc.Name) {
 				return nil
 			}
 
@@ -404,7 +402,6 @@ func configureChargers(static []config.Named, names ...string) error {
 			return fmt.Errorf("cannot create charger %d: missing name", i+1)
 		}
 
-		// configure all, if no name refs are given
 		if len(names) > 0 && !slices.Contains(names, cc.Name) {
 			continue
 		}
@@ -428,8 +425,7 @@ func configureChargers(static []config.Named, names ...string) error {
 		eg.Go(func() error {
 			cc := conf.Named()
 
-			// always skip unreferenced db devices
-			if !slices.Contains(names, cc.Name) {
+			if len(names) > 0 && !slices.Contains(names, cc.Name) {
 				return nil
 			}
 
