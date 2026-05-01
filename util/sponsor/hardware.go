@@ -39,7 +39,7 @@ func checkHardware(vendor string, metadata map[string]string) string {
 
 	client := pb.NewAuthClient(conn)
 	res, err := client.IsAuthorizedHardware(ctx, &pb.HardwareRequest{
-		MachineId: machineID,
+		MachineId: machineID(),
 		Vendor:    vendor,
 		Metadata:  metadata,
 	})
