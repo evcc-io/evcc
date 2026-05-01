@@ -76,7 +76,7 @@ jobs:
 
       - name: Define tags
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: evcc/evcc
           tags: |

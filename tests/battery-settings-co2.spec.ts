@@ -1,6 +1,5 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
-import { expectModalVisible, expectModalHidden, openTopNavigation } from "./utils";
 test.use({ baseURL: baseUrl() });
 
 test.beforeAll(async () => {
@@ -12,28 +11,24 @@ test.afterAll(async () => {
 
 test.describe("battery settings co2", async () => {
   test("grid charging", async ({ page }) => {
-    await page.goto("/");
-    await openTopNavigation(page);
-    await page.getByTestId("topnavigation-battery").click();
-    const modal = page.getByTestId("battery-settings-modal");
-    await expectModalVisible(modal);
+    await page.goto("/#/battery");
 
-    await modal.getByRole("link", { name: "Grid charging" }).click();
-    await modal.getByLabel("Enable limit").check();
-    await modal.getByLabel("CO₂ limit").selectOption({ label: "≤ 150 g/kWh" });
+    await page.getByLabel("Enable limit").check();
+    await page.getByLabel("CO₂ limit").selectOption({ label: "≤ 150 g/kWh" });
     // CO2 demo tariff provides 72 hours, so active hours vary by test execution time
-    await expect(modal.getByTestId("active-hours").locator(".value")).toHaveText(/^\d+ hr/);
-    await expect(modal).toContainText("20 g – 150 g");
-    await page.getByRole("button", { name: "Close" }).click();
-    await expectModalHidden(modal);
+    await expect(page.getByTestId("active-hours").locator(".value")).toHaveText(/^\d+ hr/);
+    await expect(page.locator("body")).toContainText("20 g – 150 g");
+
+    // navigate back to main via bottom nav, open via energyflow deep-link
+    await page.getByRole("link", { name: "Charge" }).click();
     await page.getByTestId("energyflow").click();
     await page.getByRole("button", { name: "Grid charging: active (≤ 150 g)" }).click();
-    await expectModalVisible(modal);
-    await modal.getByLabel("CO₂ limit").selectOption({ label: "≤ 10 g/kWh" });
-    await expect(modal.getByTestId("active-hours")).toHaveText("Active time");
-    await modal.getByRole("button", { name: "Close" }).click();
-    await expectModalHidden(modal);
-    await expect(modal).not.toBeVisible();
+    await expect(page).toHaveURL(/#\/battery/);
+
+    await page.getByLabel("CO₂ limit").selectOption({ label: "≤ 10 g/kWh" });
+    await expect(page.getByTestId("active-hours")).toHaveText("Active time");
+
+    await page.getByRole("link", { name: "Charge" }).click();
     await expect(page.getByRole("button", { name: "Grid charging: when ≤ 10 g" })).toBeVisible();
   });
 });
