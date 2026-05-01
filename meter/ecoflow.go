@@ -15,7 +15,6 @@ import (
 
 // EcoFlow represents the EcoFlow  meter
 type EcoFlow struct {
-	ctx    context.Context
 	usage  string
 	serial string
 	cache  time.Duration
@@ -26,11 +25,11 @@ type EcoFlow struct {
 }
 
 func init() {
-	registry.AddCtx("ecoflow", NewEcoFlowFromConfig)
+	registry.Add("ecoflow", NewEcoFlowFromConfig)
 }
 
 // NewEcoFlowFromConfig creates an EcoFlow  meter from generic config
-func NewEcoFlowFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
+func NewEcoFlowFromConfig(other map[string]any) (api.Meter, error) {
 	cc := struct {
 		batteryCapacity                      `mapstructure:",squash"`
 		batteryPowerLimits                   `mapstructure:",squash"`
@@ -71,7 +70,7 @@ func NewEcoFlowFromConfig(ctx context.Context, other map[string]any) (api.Meter,
 		return nil, fmt.Errorf("invalid region: %s", cc.Region)
 	}
 
-	m, err := NewEcoFlow(ctx, cc.AccessKey, cc.SecretKey, cc.Serial, cc.Usage, uri, cc.Power, cc.Soc, cc.Cache)
+	m, err := NewEcoFlow(cc.AccessKey, cc.SecretKey, cc.Serial, cc.Usage, uri, cc.Power, cc.Soc, cc.Cache)
 	if err != nil {
 		return nil, err
 	}
@@ -87,12 +86,11 @@ func NewEcoFlowFromConfig(ctx context.Context, other map[string]any) (api.Meter,
 }
 
 // NewEcoFlow constructs the EcoFlow struct
-func NewEcoFlow(ctx context.Context, accessKey, secretKey, serial, usage, uri string,
+func NewEcoFlow(accessKey, secretKey, serial, usage, uri string,
 	power, soc string, cache time.Duration) (*EcoFlow, error) {
 	log := util.NewLogger("ecoflow").Redact(accessKey, secretKey, serial)
 
 	m := &EcoFlow{
-		ctx:    ctx,
 		serial: serial,
 		usage:  usage,
 		cache:  cache,
@@ -111,7 +109,7 @@ func NewEcoFlow(ctx context.Context, accessKey, secretKey, serial, usage, uri st
 
 // getData retrieves device parameters from EcoFlow API
 func (m *EcoFlow) getData() (*ecoflow.GetCmdResponse, error) {
-	ctx, cancel := context.WithTimeout(m.ctx, 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	params := []string{m.power}
