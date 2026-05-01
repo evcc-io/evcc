@@ -50,7 +50,7 @@ func init() {
 //	count:    2              # number of registers to read (1=U16, 2=S32/U32)
 //	decode:   int32be        # int32be | uint32be | int16be | uint16be | float32be
 //	scale:    1.0            # optional multiplier (default 1.0)
-func NewAA55UDPFromConfig(_ context.Context, other map[string]interface{}) (Plugin, error) {
+func NewAA55UDPFromConfig(_ context.Context, other map[string]any) (Plugin, error) {
 	cc := struct {
 		Host     string  `mapstructure:"host"`
 		Id       int     `mapstructure:"id"`

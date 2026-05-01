@@ -15,7 +15,7 @@ func (r TaskHandlerRegistry) Add(name TaskType, factory func(map[string]any) (Ta
 	r[name] = factory
 }
 
-// func (r TaskHandlerRegistry) Get(name string) (func(map[string]interface{}) (TaskHandler, error), error) {
+// func (r TaskHandlerRegistry) Get(name string) (func(map[string]any) (TaskHandler, error), error) {
 // 	factory, exists := r[name]
 // 	if !exists {
 // 		return nil, fmt.Errorf("charger type not registered: %s", name)
