@@ -4,8 +4,6 @@ products:
     description:
       generic: Mobile Charger Plus
 capabilities: ["meter"]
-requirements:
-  evcc: ["eebus"]
 params:
   - preset: eebus
 render: |

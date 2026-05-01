@@ -5,8 +5,6 @@ products:
       en: EEBUS compatible
 group: generic
 capabilities: ["mA", "meter"]
-requirements:
-  evcc: ["eebus"]
 params:
   - preset: eebus
 render: |

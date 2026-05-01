@@ -4,8 +4,6 @@ products:
     description:
       generic: Mobile Charger Connect
 capabilities: ["iso151182", "mA", "meter"]
-requirements:
-  evcc: ["eebus"]
 params:
   - preset: eebus
 render: |
