@@ -164,11 +164,11 @@ func (r *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 
 	reqMetric.WithLabelValues(req.URL.Hostname()).Observe(time.Since(startTime).Seconds())
 
-	suffix := ""
+	var cached string
 	if err == nil && resp.Header.Get(httpcache.XFromCache) != "" {
-		suffix = " (cached)"
+		cached = " CACHED"
 	}
-	r.log.TRACE.Printf("%s %s%s", req.Method, req.URL.String(), suffix)
+	r.log.TRACE.Printf("%s%s %s", req.Method, cached, req.URL.String())
 
 	if err == nil {
 		resMetric.WithLabelValues(req.URL.Hostname(), strconv.Itoa(resp.StatusCode)).Add(1)
