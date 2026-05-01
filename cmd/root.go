@@ -99,9 +99,6 @@ func init() {
 	rootCmd.Flags().Bool("profile", false, "Expose pprof profiles")
 	bind(rootCmd, "profile")
 
-	rootCmd.Flags().Bool("mcp", false, "Expose MCP service (experimental)")
-	bind(rootCmd, "mcp")
-
 	rootCmd.Flags().Bool(flagDisableAuth, false, flagDisableAuthDescription)
 	rootCmd.Flags().Bool(flagDemoMode, false, flagDemoModeDescription)
 	rootCmd.Flags().StringVar(&customCssFile, flagCustomCss, "", flagCustomCssDescription)
@@ -343,7 +340,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}
 
 	// setup MCP
-	if viper.GetBool("mcp") || isMcp() {
+	if isMcp() {
 		router := httpd.Router()
 
 		var handler http.Handler
