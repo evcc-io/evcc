@@ -3,7 +3,7 @@ products:
   - brand: ABB
     description:
       generic: Terra AC
-capabilities: ["mA"]
+capabilities: ["mA", "meter"]
 requirements:
   description:
     de: Erfordert Firmware >= 1.6.5

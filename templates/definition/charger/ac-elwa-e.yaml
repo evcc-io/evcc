@@ -3,6 +3,7 @@ products:
   - brand: my-PV
     description:
       generic: AC ELWA-E
+capabilities: ["meter"]
 group: heating
 requirements:
   description:

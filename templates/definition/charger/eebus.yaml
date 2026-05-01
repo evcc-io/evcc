@@ -4,7 +4,7 @@ products:
       de: EEBUS kompatibel
       en: EEBUS compatible
 group: generic
-capabilities: ["mA"]
+capabilities: ["mA", "meter"]
 requirements:
   evcc: ["eebus"]
 params:

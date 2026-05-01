@@ -9,6 +9,7 @@ products:
     description:
       de: Pro (vor ~2019, ohne Strommessgerät)
       en: Pro (pre ~2019, without meter)
+capabilities: ["meter"]
 requirements:
   description:
     en: DIP switch 10 must be set to 'ON'.

@@ -3,7 +3,7 @@ products:
   - brand: SENEC
     description:
       generic: Plus
-capabilities: ["mA", "1p3p"]
+capabilities: ["mA", "1p3p", "meter"]
 requirements:
   evcc: ["sponsorship"]
 params:

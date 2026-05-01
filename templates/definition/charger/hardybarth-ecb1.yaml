@@ -6,6 +6,7 @@ products:
   - brand: echarge
     description:
       generic: cPH1
+capabilities: ["meter"]
 requirements:
   evcc: ["sponsorship"]
   description:

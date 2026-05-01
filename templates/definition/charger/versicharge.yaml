@@ -3,7 +3,7 @@ products:
   - brand: Siemens
     description:
       generic: Versicharge GEN3
-capabilities: ["mA"]
+capabilities: ["mA", "meter"]
 requirements:
   evcc: ["sponsorship"]
   description:

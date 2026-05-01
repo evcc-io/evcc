@@ -6,7 +6,7 @@ products:
   - brand: Amperfied
     description:
       generic: Wallbox connect.business
-capabilities: ["mA", "rfid"]
+capabilities: ["mA", "rfid", "meter"]
 requirements:
   evcc: ["sponsorship"]
 params:

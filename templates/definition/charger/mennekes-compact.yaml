@@ -10,7 +10,7 @@ products:
   - brand: Kostal
     description:
       generic: Enector
-capabilities: ["1p3p", "mA"]
+capabilities: ["1p3p", "mA", "meter"]
 requirements:
   description:
     de: |

@@ -6,7 +6,7 @@ products:
   - brand: RAEDIAN
     description:
       generic: NEX AC Wallbox
-capabilities: ["1p3p", "mA"]
+capabilities: ["1p3p", "mA", "meter"]
 params:
   - name: modbus
     choice: ["rs485", "tcpip"]

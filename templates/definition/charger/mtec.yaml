@@ -1,6 +1,7 @@
 template: MTec
 products:
   - brand: M-Tec
+capabilities: ["meter"]
 group: heating
 requirements:
   # evcc: ["sponsorship"]

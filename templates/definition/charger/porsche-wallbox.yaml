@@ -3,7 +3,7 @@ products:
   - brand: Porsche
     description:
       generic: Wallbox
-capabilities: ["iso151182", "1p3p", "rfid", "mA"]
+capabilities: ["iso151182", "1p3p", "rfid", "mA", "meter"]
 requirements:
   evcc: ["eebus"]
   description:

@@ -3,7 +3,7 @@ products:
   - brand: Etrel
     description:
       generic: INCH Duo
-capabilities: ["mA"]
+capabilities: ["mA", "meter"]
 requirements:
   evcc: ["sponsorship"]
   description:
