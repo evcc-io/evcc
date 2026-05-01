@@ -131,7 +131,7 @@ func (m *Influx) writeComplexPoint(writer pointWriter, key string, val any, tags
 
 		switch typ := reflect.TypeOf(val); {
 		// pointer
-		case typ.Kind() == reflect.Ptr:
+		case typ.Kind() == reflect.Pointer:
 			if val := reflect.ValueOf(val); !val.IsNil() {
 				m.writeComplexPoint(writer, key, reflect.Indirect(val).Interface(), tags)
 			}

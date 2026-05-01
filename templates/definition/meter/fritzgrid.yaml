@@ -14,9 +14,11 @@ params:
     required: true
   - name: ain
     required: true
+    service: fritz/devices?uri={uri}&user={user}&password={password}
 render: |
   type: fritzdect
   uri: {{ .uri }}
   user: {{ .user }}
   password: {{ .password }}
   ain: {{ .ain }} # switch actor identification number without blanks (see AIN number on switch sticker)
+  firmware82: true

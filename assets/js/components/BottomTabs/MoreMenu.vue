@@ -11,8 +11,14 @@
 			class="dropdown-item d-flex align-items-center"
 			@click="openAboutModal"
 		>
+			<span v-if="showVersionBadge" class="circle-badge me-1 bg-darker-green"></span>
 			<span>evcc</span>
 			<span class="ms-2 text-muted small">{{ versionLabel }}</span>
+			<shopicon-regular-gift
+				v-if="newVersionAvailable"
+				size="s"
+				class="ms-2 text-gray-light gift-icon"
+			></shopicon-regular-gift>
 		</button>
 		<button v-if="isApp" type="button" class="dropdown-item" @click="openNativeSettings">
 			{{ $t("header.nativeSettings") }}
@@ -55,16 +61,25 @@
 			to="/optimize"
 			active-class="active"
 		>
-			Optimize
+			Optimize 🧪
+		</router-link>
+		<router-link v-if="experimental" class="dropdown-item" to="/history" active-class="active">
+			History 🧪
 		</router-link>
 	</div>
 </template>
 
 <script lang="ts">
 import Modal from "bootstrap/js/dist/modal";
+import "@h2d2/shopicons/es/regular/gift";
 import { logout, isLoggedIn } from "../Auth/auth";
 import { isApp, sendToApp } from "@/utils/native";
-import { getShortVersion } from "@/utils/version";
+import {
+	getShortVersion,
+	isNewVersionAvailable,
+	isNewVersionUnacknowledged,
+} from "@/utils/version";
+import settings from "@/settings";
 import { isUserConfigError } from "@/utils/fatal";
 import { defineComponent, type PropType } from "vue";
 import type { FatalError, Sponsor, EvOpt, AuthProviders } from "@/types/evcc";
@@ -77,9 +92,11 @@ export default defineComponent({
 		sponsor: { type: Object as PropType<Sponsor>, default: () => ({}) },
 		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
 		experimental: Boolean,
+		authDisabled: Boolean,
 		evopt: { type: Object as PropType<EvOpt>, required: false },
 		installed: String,
 		commit: String,
+		availableVersion: String,
 	},
 	emits: ["close"],
 	data() {
@@ -116,11 +133,21 @@ export default defineComponent({
 		versionLabel() {
 			return getShortVersion(this.installed || "", this.commit);
 		},
+		newVersionAvailable() {
+			return isNewVersionAvailable(this.installed, this.availableVersion);
+		},
+		showVersionBadge() {
+			return isNewVersionUnacknowledged(
+				this.installed,
+				this.availableVersion,
+				settings.lastAcknowledgedVersion
+			);
+		},
 		optimizeAvailable() {
 			return !!this.evopt && this.experimental;
 		},
 		showLogout() {
-			return isLoggedIn();
+			return !this.authDisabled && isLoggedIn();
 		},
 	},
 	mounted() {
@@ -221,5 +248,10 @@ export default defineComponent({
 	background-color: transparent;
 	color: var(--bs-primary);
 	border-left: 2px solid var(--bs-primary);
+}
+
+.gift-icon {
+	position: relative;
+	top: -2px;
 }
 </style>

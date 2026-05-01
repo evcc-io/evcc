@@ -15,9 +15,11 @@
 				:sponsor="sponsor"
 				:fatal="fatal"
 				:experimental="experimental"
+				:auth-disabled="authDisabled"
 				:evopt="evopt"
 				:installed="installed"
 				:commit="commit"
+				:available-version="availableVersion"
 				@close="open = false"
 			/>
 		</template>
@@ -30,6 +32,8 @@ import Item from "./Item.vue";
 import MoreIcon from "../MaterialIcon/More.vue";
 import MoreMenu from "./MoreMenu.vue";
 import { isUserConfigError } from "@/utils/fatal";
+import { isNewVersionAvailable, isNewVersionUnacknowledged } from "@/utils/version";
+import settings from "@/settings";
 import type { FatalError, Sponsor, EvOpt, AuthProviders } from "@/types/evcc";
 
 export default defineComponent({
@@ -41,9 +45,11 @@ export default defineComponent({
 		sponsor: { type: Object as PropType<Sponsor>, default: () => ({}) },
 		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
 		experimental: Boolean,
+		authDisabled: Boolean,
 		evopt: { type: Object as PropType<EvOpt>, required: false },
 		installed: String,
 		commit: String,
+		availableVersion: String,
 	},
 	data() {
 		return { open: false };
@@ -67,14 +73,27 @@ export default defineComponent({
 		showConfigBadge() {
 			return this.sponsorExpires || isUserConfigError(this.fatal);
 		},
+		newVersionAvailable() {
+			return isNewVersionAvailable(this.installed, this.availableVersion);
+		},
+		showVersionBadge() {
+			return isNewVersionUnacknowledged(
+				this.installed,
+				this.availableVersion,
+				settings.lastAcknowledgedVersion
+			);
+		},
 		showRootBadge() {
-			return this.authorizationRequired || this.showConfigBadge;
+			return this.authorizationRequired || this.showConfigBadge || this.showVersionBadge;
 		},
 		badgeClass() {
 			if (this.fatal.length > 0) {
 				return "bg-danger";
 			}
-			return "bg-warning";
+			if (this.authorizationRequired || this.showConfigBadge) {
+				return "bg-warning";
+			}
+			return "bg-darker-green";
 		},
 	},
 	methods: {

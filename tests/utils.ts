@@ -1,40 +1,10 @@
 import { expect, type Page, type Locator } from "@playwright/test";
 
-export async function enableExperimental(page: Page): Promise<void> {
-  await page.goto("/#/config");
-
-  await page
-    .getByTestId("generalconfig-experimental")
-    .getByRole("button", { name: "edit" })
-    .click();
-  const modal = page.getByTestId("experimental-modal");
-  await expectModalVisible(modal);
-  await modal.getByLabel("Enable experimental features.").click();
-  await modal.getByRole("button", { name: "Close" }).click();
-  await expectModalHidden(modal);
-  await expect(page.locator(".modal-backdrop")).not.toBeVisible();
-}
-
-export async function openTopNavigation(page: Page): Promise<void> {
-  await expect(page.getByTestId("topnavigation-button")).toBeVisible();
-  await page.getByTestId("topnavigation-button").click();
-  await expectTopNavigationOpened(page);
-}
-
-export async function closeTopNavigation(page: Page): Promise<void> {
-  await expectTopNavigationOpened(page);
-  await page.getByTestId("topnavigation-button").click();
-  await expectTopNavigationClosed(page);
-}
-
-export async function expectTopNavigationOpened(page: Page): Promise<void> {
-  await expect(page.getByTestId("topnavigation-dropdown")).toBeVisible();
-  await expect(page.getByTestId("topnavigation-button")).toHaveAttribute("aria-expanded", "true");
-}
-
-export async function expectTopNavigationClosed(page: Page): Promise<void> {
-  await expect(page.getByTestId("topnavigation-button")).toHaveAttribute("aria-expanded", "false");
-  await expect(page.getByTestId("topnavigation-dropdown")).not.toBeVisible();
+export async function openMoreMenu(page: Page): Promise<Locator> {
+  const moreButton = page.getByTestId("tab-more");
+  await expect(moreButton).toBeVisible();
+  await moreButton.click();
+  return moreButton;
 }
 
 export async function expectModalVisible(modal: Locator): Promise<void> {

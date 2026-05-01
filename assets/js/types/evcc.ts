@@ -75,6 +75,7 @@ export interface State {
   authProviders?: AuthProviders;
   evopt?: EvOpt;
   version?: string;
+  availableVersion?: string;
   system?: string;
   timezone?: string;
   battery?: Battery;
@@ -93,6 +94,7 @@ export interface State {
   shm?: ShmConfig;
   sponsor?: ConfigStatus<unknown, SponsorStatus>;
   eebus?: ConfigStatus<EebusConfig, EebusStatus>;
+  remote?: Remote;
   modbusproxy?: ModbusProxy[];
   messaging?: ConfigStatus<unknown, unknown>;
   messagingEvents?: MessagingEvents;
@@ -323,6 +325,7 @@ export interface Loadpoint {
   vehicleSoc: number;
   vehicleTitle: string;
   vehicleWelcomeActive: boolean;
+  batteryBoostLimit: number;
 }
 
 export interface UiLoadpoint extends Loadpoint {
@@ -334,6 +337,18 @@ export interface UiLoadpoint extends Loadpoint {
   visible: boolean;
   lastSmartCostLimit: number | undefined;
   lastSmartFeedInPriorityLimit: number | undefined;
+  range: number;
+  vehicleRange: number;
+  vehicleSoc: number;
+  capacity: number;
+  vehicleKnown: boolean;
+  vehicleHasSoc: boolean;
+  socBasedCharging: boolean;
+  socBasedPlanning: boolean;
+  sessionInfo: SessionInfoKey | undefined;
+  rangePerSoc: number | undefined;
+  socPerKwh: number;
+  vehicleNotReachable: boolean;
 }
 
 export enum THEME {
@@ -482,6 +497,29 @@ export enum MODBUS_PROTOCOL {
 export type Certificate = {
   public: string;
   private: string;
+};
+
+export type Remote = ConfigStatus<RemoteConfig, RemoteStatus>;
+
+export type RemoteConfig = {
+  enabled: boolean;
+};
+
+export type RemoteStatus = {
+  connected: boolean;
+  url?: string;
+  loginBlocked: boolean;
+  lastSeen?: Record<string, string>;
+};
+
+export type RemoteClient = {
+  username: string;
+  createdAt: string;
+  expiresAt?: string;
+};
+
+export type RemoteClientCreated = RemoteClient & {
+  password: string;
 };
 
 export type Eebus = ConfigStatus<EebusConfig, EebusStatus>;

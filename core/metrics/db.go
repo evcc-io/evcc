@@ -2,6 +2,8 @@ package metrics
 
 import (
 	"errors"
+	"slices"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/server/db"
@@ -10,75 +12,120 @@ import (
 )
 
 type meter struct {
-	Meter     int       `json:"meter" gorm:"column:meter;uniqueIndex:meter_ts"`
-	Timestamp time.Time `json:"ts" gorm:"column:ts;uniqueIndex:meter_ts"`
-	Value     float64   `json:"val" gorm:"column:val"`
+	Meter     int     `json:"meter" gorm:"column:meter;uniqueIndex:meters_meter_ts"`
+	Timestamp int64   `json:"ts" gorm:"column:ts;uniqueIndex:meters_meter_ts"` // start of 15min slot
+	Entity    entity  `json:"-" gorm:"foreignkey:Meter;references:Id"`
+	Import    float64 `json:"import" gorm:"column:import"`
+	Export    float64 `json:"export" gorm:"column:export"`
 }
 
-var ErrIncomplete = errors.New("meter profile incomplete")
+type entity struct {
+	Id    int    `gorm:"column:id;primarykey"`
+	Group string `gorm:"column:group;uniqueIndex:entities_group_name"`
+	Name  string `gorm:"column:name;uniqueIndex:entities_group_name"`
+}
 
 func init() {
-	db.Register(func(db *gorm.DB) error {
-		return db.AutoMigrate(new(meter))
+	db.Register(func(_ *gorm.DB) error {
+		return SetupSchema()
 	})
 }
 
-// Persist stores 15min consumption in Wh
-func Persist(ts time.Time, value float64) error {
-	return db.Instance.Create(meter{
-		Meter:     1,
-		Timestamp: ts.Truncate(15 * time.Minute),
-		Value:     value,
-	}).Error
+// SetupSchema is used for testing
+func SetupSchema() error {
+	m := db.Instance.Migrator()
+
+	// entites: create entity first to make sure foreign keys for existing data work
+	hasTable := m.HasTable(new(entity))
+	if err := db.Instance.AutoMigrate(new(entity)); err != nil {
+		return err
+	}
+
+	// entites: add entity id 1
+	if hasTable {
+		var res entity
+		if err := db.Instance.Where(&entity{Id: 1, Name: Home}).FirstOrCreate(&res).Error; err != nil {
+			return err
+		}
+
+		if res.Group == "" {
+			res.Group = Home
+			if err := db.Instance.Save(&res).Error; err != nil {
+				return err
+			}
+		}
+	}
+
+	// drop obsolete indexes
+	for _, idx := range []struct {
+		name string
+		obj  any
+	}{
+		{"name_idx", new(entity)},
+		{"group_name", new(entity)},
+		{"meter_ts", new(meter)},
+	} {
+		if m.HasIndex(idx.obj, idx.name) {
+			if err := m.DropIndex(idx.obj, idx.name); err != nil {
+				return err
+			}
+		}
+	}
+
+	rename := func(from, to string) error {
+		if table := new(meter); m.HasColumn(table, from) && !m.HasColumn(table, to) {
+			return m.RenameColumn(table, from, to)
+		}
+		return nil
+	}
+
+	// meter: split energy direction
+	if err := rename("val", "import"); err != nil {
+		return err
+	}
+
+	// meter: split energy direction #2
+	if err := rename("pos", "import"); err != nil {
+		return err
+	}
+	if err := rename("neg", "export"); err != nil {
+		return err
+	}
+
+	// meter: ts migration
+	if m.HasTable(new(meter)) {
+		types, err := m.ColumnTypes(new(meter))
+		if err != nil {
+			return err
+		}
+		tsIdx := slices.IndexFunc(types, func(typ gorm.ColumnType) bool {
+			return typ.Name() == "ts"
+		})
+		if tsIdx == -1 {
+			return errors.New("missing meters.ts")
+		}
+
+		if tsTyp, _ := types[tsIdx].ColumnType(); !strings.EqualFold(tsTyp, "INTEGER") {
+			db, err := db.Instance.DB()
+			if err != nil {
+				return err
+			}
+
+			if _, err := db.Exec(`UPDATE meters SET ts = unixepoch(ts)`); err != nil {
+				return err
+			}
+		}
+	}
+
+	return db.Instance.AutoMigrate(new(meter))
 }
 
-// Profile returns a 15min average meter profile in Wh.
-// Profile is sorted by timestamp starting at 00:00. It is guaranteed to contain 96 15min values.
-func Profile(from time.Time) (*[96]float64, error) {
-	db, err := db.Instance.DB()
-	if err != nil {
-		return nil, err
-	}
-
-	// Use 'localtime' in strftime to fix https://github.com/evcc-io/evcc/discussions/23759
-	rows, err := db.Query(`SELECT min(ts) AS ts, avg(val) AS val
-		FROM meters
-		WHERE meter = ? AND ts >= ?
-		GROUP BY strftime("%H:%M", ts, 'localtime')
-		ORDER BY strftime("%H:%M", ts, 'localtime') ASC`, 1, from,
-	)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var prev time.Time
-	res := make([]float64, 0, 96)
-
-	for rows.Next() {
-		var ts SqlTime
-		var val float64
-
-		if err := rows.Scan(&ts, &val); err != nil {
-			return nil, err
-		}
-
-		// interpolate single missing value, maybe due to regular restarts?
-		if time.Time(ts).Sub(prev) == 2*tariff.SlotDuration {
-			res = append(res, (val+res[len(res)-1])/2)
-		}
-		prev = time.Time(ts)
-
-		res = append(res, val)
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-
-	if len(res) != 96 {
-		return nil, ErrIncomplete
-	}
-
-	return (*[96]float64)(res), nil
+// persist stores 15min consumption in kWh
+func persist(entity entity, ts time.Time, imp, exp float64) error {
+	return db.Instance.Create(&meter{
+		Meter:     entity.Id,
+		Timestamp: ts.Truncate(tariff.SlotDuration).Unix(),
+		Import:    imp,
+		Export:    exp,
+	}).Error
 }

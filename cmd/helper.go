@@ -11,7 +11,6 @@ import (
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
-	"go.yaml.in/yaml/v4"
 )
 
 // parseLogLevels parses --log area:level[,...] switch into levels per log area
@@ -94,17 +93,6 @@ func wrapFatalError(err error) error {
 	}
 
 	return &FatalError{err}
-}
-
-func customDevice(other map[string]any) (map[string]any, error) {
-	customYaml, ok := other["yaml"].(string)
-	if !ok {
-		return other, nil
-	}
-
-	var res map[string]any
-	err := yaml.Unmarshal([]byte(customYaml), &res)
-	return res, err
 }
 
 func deviceHeader[T any](dev config.Device[T]) string {
