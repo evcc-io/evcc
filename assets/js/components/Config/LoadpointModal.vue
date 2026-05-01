@@ -177,7 +177,6 @@
 											type="Float"
 											unit="W"
 											size="w-25 w-min-200"
-											required
 										/>
 									</FormRow>
 									<FormRow
@@ -240,7 +239,6 @@
 											type="Float"
 											unit="W"
 											size="w-25 w-min-200"
-											required
 										/>
 									</FormRow>
 									<FormRow
