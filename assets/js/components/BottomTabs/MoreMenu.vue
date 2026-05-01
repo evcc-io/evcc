@@ -14,7 +14,13 @@
 			<span>evcc</span>
 			<span class="ms-2 text-muted small">{{ versionLabel }}</span>
 		</button>
-		<button v-if="isApp" type="button" class="dropdown-item" @click="openNativeSettings">
+		<button
+			v-if="isApp"
+			data-testid="tab-more-app"
+			type="button"
+			class="dropdown-item"
+			@click="openNativeSettings"
+		>
 			{{ $t("header.nativeSettings") }}
 		</button>
 		<button v-if="showLogout" type="button" class="dropdown-item" @click="doLogout">
