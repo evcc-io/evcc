@@ -11,6 +11,7 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/sandrolain/httpcache"
 )
 
 type roundTripper struct {
@@ -164,6 +165,10 @@ func (r *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	resp, err := r.base.RoundTrip(req)
 
 	reqMetric.WithLabelValues(req.URL.Hostname()).Observe(time.Since(startTime).Seconds())
+
+	if err == nil && resp.Header.Get(httpcache.XFromCache) != "" {
+		r.log.TRACE.Println("(cached)")
+	}
 
 	if err == nil {
 		resMetric.WithLabelValues(req.URL.Hostname(), strconv.Itoa(resp.StatusCode)).Add(1)
