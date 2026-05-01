@@ -347,6 +347,8 @@ func runRoot(cmd *cobra.Command, args []string) {
 		if handler, err = mcp.NewHandler(router); err == nil {
 			router.PathPrefix("/mcp").Handler(handler)
 		}
+	} else if conf.Mcp {
+		log.WARN.Println("mcp: yaml config is deprecated")
 	}
 
 	// setup messaging
