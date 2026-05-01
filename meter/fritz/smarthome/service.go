@@ -13,6 +13,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
+	"github.com/samber/lo"
 )
 
 func init() {
@@ -51,9 +52,9 @@ func getDevices(w http.ResponseWriter, r *http.Request) {
 	}
 
 	req, _ := request.New(http.MethodGet,
-		fmt.Sprintf("%s/api/v0/smarthome/overview/devices", uri), nil,
-		map[string]string{"Authorization": "AVM-SID " + sid},
-		request.AcceptJSON,
+		fmt.Sprintf("%s/api/v0/smarthome/overview/devices", uri), nil, map[string]string{
+			"Authorization": "AVM-SID " + sid,
+		}, request.AcceptJSON,
 	)
 
 	var devices []Device
@@ -62,20 +63,16 @@ func getDevices(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ains := make([]string, 0, len(devices))
-	for _, d := range devices {
-		if ain := strings.ReplaceAll(d.UID, " ", ""); ain != "" {
-			ains = append(ains, ain)
-		}
-	}
+	ains := lo.Map(devices, func(d Device, _ int) string {
+		return d.AIN
+	})
 	slices.Sort(ains)
-	ains = slices.Compact(ains)
 
-	w.Header().Set("Cache-control", "max-age=60")
 	jsonWrite(w, ains)
 }
 
 func jsonWrite(w http.ResponseWriter, data any) {
+	w.Header().Set("Cache-control", "max-age=60")
 	json.NewEncoder(w).Encode(data)
 }
 
