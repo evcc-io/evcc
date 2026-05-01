@@ -68,11 +68,12 @@ func getDevices(w http.ResponseWriter, r *http.Request) {
 	})
 	slices.Sort(ains)
 
+	w.Header().Set("Cache-control", "max-age=60")
 	jsonWrite(w, ains)
 }
 
 func jsonWrite(w http.ResponseWriter, data any) {
-	w.Header().Set("Cache-control", "max-age=60")
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(data)
 }
 
