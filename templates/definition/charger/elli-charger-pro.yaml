@@ -15,7 +15,7 @@ products:
   - brand: Audi
     description:
       generic: Wallbox pro
-capabilities: ["mA"]
+capabilities: ["mA", "meter"]
 requirements:
   description:
     de: |

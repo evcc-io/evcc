@@ -6,6 +6,7 @@ products:
   - brand: Kermi
     description:
       generic: x-center pro
+capabilities: ["meter"]
 group: heating
 # requirements:
 #   evcc: ["sponsorship"]

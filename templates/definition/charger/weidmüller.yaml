@@ -3,7 +3,7 @@ products:
   - brand: Weidmüller
     description:
       generic: AC Smart
-capabilities: ["1p3p", "rfid"]
+capabilities: ["rfid", "1p3p", "meter"]
 requirements:
   evcc: ["sponsorship"]
 params:

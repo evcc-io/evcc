@@ -3,7 +3,7 @@ products:
   - brand: E3/DC
     description:
       generic: Multi Connect II Wallbox
-capabilities: ["1p3p", "rfid"]
+capabilities: ["rfid", "1p3p", "meter"]
 requirements:
   description:
     de: |

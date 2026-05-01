@@ -4,7 +4,7 @@ products:
       de: SEMP kompatibel
       en: SEMP compatible
 group: generic
-capabilities: ["mA", "1p3p"]
+capabilities: ["mA", "1p3p", "meter"]
 requirements:
   evcc: ["sponsorship", "skiptest"]
   description:

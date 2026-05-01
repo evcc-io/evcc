@@ -1,6 +1,7 @@
 template: plugchoice
 products:
   - brand: Plugchoice
+capabilities: ["meter"]
 requirements:
   evcc: ["sponsorship", "skiptest"]
   description:

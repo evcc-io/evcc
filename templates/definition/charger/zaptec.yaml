@@ -9,7 +9,7 @@ products:
   - brand: Zaptec
     description:
       generic: Pro
-capabilities: ["rfid"]
+capabilities: ["rfid", "meter"]
 requirements:
   evcc: ["sponsorship"]
 params:

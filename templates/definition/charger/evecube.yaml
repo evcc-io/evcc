@@ -3,7 +3,7 @@ products:
   - brand: EV Expert
     description:
       generic: EVECUBE
-capabilities: ["1p3p", "rfid"]
+capabilities: ["rfid", "1p3p", "meter"]
 requirements:
   description:
     en: Requires HTTP API access.

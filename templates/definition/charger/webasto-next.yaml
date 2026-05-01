@@ -6,7 +6,7 @@ products:
   - brand: Webasto
     description:
       generic: NEXT
-capabilities: ["rfid"]
+capabilities: ["rfid", "meter"]
 requirements:
   description:
     de: Modus "HEMS activated" muss aktiviert sein. RFID-Tags können durch evcc nur gelesen werden.

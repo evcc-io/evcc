@@ -36,7 +36,7 @@ products:
   - brand: Cupra
     description:
       generic: Charger Pro Eichrecht 2
-capabilities: ["iso151182", "1p3p", "rfid", "mA"]
+capabilities: ["iso151182", "mA", "rfid", "1p3p", "meter"]
 requirements:
   description:
     de: |

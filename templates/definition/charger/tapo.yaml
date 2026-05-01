@@ -3,6 +3,7 @@ products:
   - brand: TP-Link
     description:
       generic: Tapo P-Series Smart Plug
+capabilities: ["meter"]
 group: switchsockets
 requirements:
   description:

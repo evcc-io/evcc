@@ -12,7 +12,7 @@ products:
   - brand: Mennekes
     description:
       generic: AMTRON 4Business 700
-capabilities: ["rfid", "mA", "1p3p"]
+capabilities: ["mA", "rfid", "1p3p"]
 requirements:
   description:
     de: Die Konfigurationsoption 'Externes Energiemanagement' muss aktiviert sein.

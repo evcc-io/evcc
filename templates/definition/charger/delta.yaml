@@ -12,7 +12,7 @@ products:
   - brand: Delta
     description:
       generic: Ultra Fast Charger
-capabilities: ["mA", "rfid"]
+capabilities: ["mA", "rfid", "meter"]
 requirements:
   evcc: ["sponsorship"]
   description:

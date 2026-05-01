@@ -3,6 +3,7 @@ products:
   - brand: Askoma
     description:
       generic: ASKOHEAT+
+capabilities: ["meter"]
 group: heating
 requirements:
   description:

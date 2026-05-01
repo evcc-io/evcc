@@ -1,6 +1,7 @@
 template: idm
 products:
   - brand: IDM
+capabilities: ["meter"]
 group: heating
 requirements:
   # evcc: ["sponsorship"]

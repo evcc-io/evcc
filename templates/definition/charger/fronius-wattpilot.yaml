@@ -4,7 +4,7 @@ products:
   - brand: Fronius
     description:
       generic: Wattpilot
-capabilities: ["1p3p", "rfid"]
+capabilities: ["rfid", "1p3p", "meter"]
 requirements:
   description:
     de: |

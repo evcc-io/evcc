@@ -15,6 +15,7 @@ products:
   - brand: "FRITZ!"
     description:
       generic: "FRITZ!Smart Energy 210"
+capabilities: ["meter"]
 group: switchsockets
 params:
   - name: uri

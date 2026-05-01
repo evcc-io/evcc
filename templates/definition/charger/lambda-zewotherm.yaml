@@ -8,6 +8,7 @@ products:
     description:
       de: EU-L Serie
       en: EU-L Series
+capabilities: ["meter"]
 group: heating
 requirements:
   # evcc: ["sponsorship"]

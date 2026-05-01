@@ -2,6 +2,7 @@ template: tessie
 products:
   - description:
       generic: Tessie
+capabilities: ["meter"]
 requirements:
   description:
     en: Charger connected via the Tessie API. Allows control of charging state and configuration of maximum current.

@@ -15,7 +15,7 @@ products:
   - brand: SolarEdge
     description:
       generic: Home EV Charger
-capabilities: ["1p3p", "mA", "rfid"]
+capabilities: ["mA", "rfid", "1p3p"]
 requirements:
   evcc: ["sponsorship"]
   description:
