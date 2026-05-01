@@ -429,6 +429,12 @@
       "welcomeBannerText": "Lege zunächst eine **Wallbox**, **Heizung**, **Netzzähler**, **Solar**, **Batterie** oder **zusätzlichen Zähler** an. Falls du nur testen möchtest, wähle ein **Demogerät**.",
       "welcomeBannerTitle": "Los geht's mit der Konfiguration!"
     },
+    "mcp": {
+      "description": "Stellt evcc als Model Context Protocol Server bereit. Damit können KI-Assistenten wie Claude deine evcc-Installation auslesen und steuern. Standardmäßig deaktiviert. Die Schnittstelle ist aktuell nicht authentifiziert, daher nur in vertrauenswürdigen Netzwerken aktivieren.",
+      "enable": "MCP-Server aktivieren",
+      "restartHint": "evcc neu starten, um die Änderung zu übernehmen.",
+      "title": "MCP Server"
+    },
     "messaging": {
       "addMessenger": "Dienst hinzufügen",
       "description": "Benachrichtigungen über Ladevorgänge erhalten.",

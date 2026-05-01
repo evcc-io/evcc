@@ -343,7 +343,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}
 
 	// setup MCP
-	if viper.GetBool("mcp") {
+	if viper.GetBool("mcp") || isMcp() {
 		router := httpd.Router()
 
 		var handler http.Handler
@@ -405,6 +405,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	valueChan <- util.Param{Key: keys.Timezone, Val: time.Now().Format("MST -07:00")}
 	valueChan <- util.Param{Key: keys.Experimental, Val: isExperimental()}
 	valueChan <- util.Param{Key: keys.Optimizer, Val: isOptimizer()}
+	valueChan <- util.Param{Key: keys.Mcp, Val: isMcp()}
 
 	// run shutdown functions on stop
 	var once sync.Once

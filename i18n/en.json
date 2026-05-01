@@ -429,6 +429,12 @@
       "welcomeBannerText": "Start with creating at least one **charger**, **heater**, **grid**, **solar**, **battery** or **additional meter**. If you just want to test, pick a **demo device**.",
       "welcomeBannerTitle": "Let's configure your system!"
     },
+    "mcp": {
+      "description": "Exposes evcc as a Model Context Protocol server, allowing AI assistants like Claude to read and control your evcc setup. Disabled by default. The endpoint is currently unauthenticated, only enable in trusted networks.",
+      "enable": "Enable MCP server",
+      "restartHint": "Restart evcc to apply the change.",
+      "title": "MCP Server"
+    },
     "messaging": {
       "addMessenger": "Add service",
       "description": "Receive notifications about your charging sessions.",

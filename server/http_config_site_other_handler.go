@@ -28,6 +28,19 @@ func getOptimizer() bool {
 	return b
 }
 
+func setMcp(pub publisher) func(bool) error {
+	return func(b bool) error {
+		settings.SetBool(keys.Mcp, b)
+		pub(keys.Mcp, b)
+		return nil
+	}
+}
+
+func getMcp() bool {
+	b, _ := settings.Bool(keys.Mcp)
+	return b
+}
+
 func setExperimental(pub publisher) func(bool) error {
 	return func(b bool) error {
 		settings.SetBool(keys.Experimental, b)
