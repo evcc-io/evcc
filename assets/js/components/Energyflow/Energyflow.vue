@@ -691,8 +691,10 @@ export default defineComponent({
 		fmtForecastPoint(point: BatteryForecastPoint | undefined): string | undefined {
 			if (!point) return undefined;
 			const time = this.fmtAbsoluteDate(new Date(point.time));
-			if (point.limit === "full") return this.$t("main.energyflow.batteryForecastFull", { time });
-			if (point.limit === "empty") return this.$t("main.energyflow.batteryForecastEmpty", { time });
+			if (point.limit === "full")
+				return this.$t("main.energyflow.batteryForecastFull", { time });
+			if (point.limit === "empty")
+				return this.$t("main.energyflow.batteryForecastEmpty", { time });
 			const soc = `${Math.round(point.soc)}%`;
 			return this.$t("main.energyflow.batteryForecastSoc", { soc, time });
 		},
