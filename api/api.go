@@ -154,6 +154,7 @@ type Vehicle interface {
 	SetTitle(string)
 	Identifiers() []string
 	OnIdentified() ActionConfig
+	ExcludedFromAutoDiscovery() bool
 }
 
 // VehicleFinishTimer provides estimated charge cycle finish time.
