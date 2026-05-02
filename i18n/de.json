@@ -668,6 +668,21 @@
       "url": "Öffentliche URL",
       "username": "Benutzername"
     },
+    "restapi": {
+      "description": "evcc stellt eine REST API bereit, die es externen Systemen ermöglicht, Daten zu lesen und das Ladeverhalten zu steuern. {docs}.",
+      "docsLink": "API-Dokumentation",
+      "labelUrl": "API-Basis-URL",
+      "protected": "geschützt",
+      "protectedDescription": "Diese Endpunkte erfordern eine Administratoranmeldung, wenn ein Passwort konfiguriert ist.",
+      "protectedTitle": "Geschützte Endpunkte",
+      "public": "öffentlich",
+      "publicDescription": "Diese Endpunkte sind immer ohne Authentifizierung zugänglich.",
+      "publicTitle": "Öffentliche Endpunkte",
+      "securityNoPassword": "Kein Passwort konfiguriert. Alle Endpunkte, auch normalerweise geschützte, sind ohne Authentifizierung zugänglich. Erwäge, ein Passwort im Abschnitt Allgemein zu setzen, wenn evcc aus nicht vertrauenswürdigen Netzwerken erreichbar ist.",
+      "securityTitle": "Sicherheit",
+      "securityWithPassword": "Ein Passwort ist konfiguriert. Öffentliche Endpunkte bleiben ohne Authentifizierung zugänglich. Geschützte Endpunkte erfordern eine Administratoranmeldung.",
+      "title": "REST API"
+    },
     "section": {
       "additionalMeter": "Zusätzliche Zähler",
       "general": "Allgemein",

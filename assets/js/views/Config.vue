@@ -378,6 +378,14 @@
 					>
 						<template #icon><EebusIcon /></template>
 					</DeviceCard>
+					<DeviceCard
+						:title="$t('config.restapi.title')"
+						editable
+						data-testid="restapi"
+						@edit="openModal('restapi')"
+					>
+						<template #icon><RestApiIcon /></template>
+					</DeviceCard>
 				</div>
 
 				<hr class="my-5" />
@@ -440,6 +448,7 @@
 					@changed="loadDirty"
 				/>
 				<OcppModal :ocpp="ocpp" />
+				<RestApiModal />
 				<BackupRestoreModal v-bind="backupRestoreProps" />
 				<PasswordModal update-mode />
 				<SponsorModal :error="hasClassError('sponsorship')" @changed="loadDirty" />
@@ -490,6 +499,8 @@ import MqttModal from "../components/Config/MqttModal.vue";
 import RemoteAccessIcon from "../components/MaterialIcon/RemoteAccess.vue";
 import RemoteModal from "../components/Config/Remote/RemoteModal.vue";
 import { isRemoteClientActive } from "@/utils/remote";
+import RestApiIcon from "../components/MaterialIcon/RestApi.vue";
+import RestApiModal from "../components/Config/RestApiModal.vue";
 import NetworkModal from "../components/Config/NetworkModal.vue";
 import NotificationIcon from "../components/MaterialIcon/Notification.vue";
 import OptimizerIcon from "../components/MaterialIcon/Optimizer.vue";
@@ -575,6 +586,8 @@ export default defineComponent({
 		MqttModal,
 		RemoteAccessIcon,
 		RemoteModal,
+		RestApiIcon,
+		RestApiModal,
 		NetworkModal,
 		NotificationIcon,
 		OptimizerIcon,

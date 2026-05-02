@@ -668,6 +668,21 @@
       "url": "Public URL",
       "username": "Username"
     },
+    "restapi": {
+      "description": "evcc provides a REST API that allows external systems to read data and control charging behavior. {docs}.",
+      "docsLink": "API documentation",
+      "labelUrl": "API base URL",
+      "protected": "protected",
+      "protectedDescription": "These endpoints require administrator login when a password is configured.",
+      "protectedTitle": "Protected endpoints",
+      "public": "public",
+      "publicDescription": "These endpoints are always accessible without authentication.",
+      "publicTitle": "Public endpoints",
+      "securityNoPassword": "No password is configured. All endpoints, including normally protected ones, are accessible without authentication. Consider setting a password in the General section if evcc is reachable from untrusted networks.",
+      "securityTitle": "Security",
+      "securityWithPassword": "A password is configured. Public endpoints remain accessible without authentication. Protected endpoints require administrator login.",
+      "title": "REST API"
+    },
     "section": {
       "additionalMeter": "Additional meters",
       "general": "General",
