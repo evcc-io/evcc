@@ -89,11 +89,8 @@ func (c *Connection) resolveUnitUID(unit int) (string, error) {
 		if d.AIN != c.AIN {
 			continue
 		}
-		if len(d.UnitUids) == 0 {
-			return "", fmt.Errorf("device %s has no units", c.AIN)
-		}
-		if unit < 0 || unit >= len(d.UnitUids) {
-			return "", fmt.Errorf("unit %d out of range (device has %d unit(s))", unit, len(d.UnitUids))
+		if len(d.UnitUids) < unit+1 {
+			return "", fmt.Errorf("invalid unit %d, got %v", unit, d.UnitUids)
 		}
 		return d.UnitUids[unit], nil
 	}
